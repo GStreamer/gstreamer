@@ -27,7 +27,7 @@ set(GSTREAMER_PLUGINS         coreelements)
 find_library(LOG_LIB log REQUIRED)
 find_package(GStreamerMobile COMPONENTS ${GSTREAMER_PLUGINS} fonts REQUIRED)
 
-add_library(tutorial-1 SHARED tutorial-1.c dummy.cpp)
+add_library(tutorial-1 SHARED tutorial-1.c)
 target_link_libraries(tutorial-1
     PUBLIC
         GStreamer::mobile
@@ -38,4 +38,5 @@ set_target_properties(tutorial-1
     PROPERTIES
         C_VISIBILITY_PRESET hidden
         CXX_VISIBILITY_PRESET hidden
+        LINKER_LANGUAGE CXX
 )

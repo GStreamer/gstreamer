@@ -75,26 +75,28 @@ if (NOT DEFINED GStreamer_ROOT_DIR AND DEFINED GSTREAMER_ROOT)
     set(GStreamer_ROOT_DIR ${GSTREAMER_ROOT})
 endif()
 
-if (NOT GStreamer_ROOT_DIR)
-    set(GStreamer_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/../../")
-endif()
-
-if (NOT EXISTS "${GStreamer_ROOT_DIR}")
-    message(FATAL_ERROR "The directory GStreamer_ROOT_DIR=${GStreamer_ROOT_DIR} does not exist")
-endif()
-
 if (NOT DEFINED GStreamer_USE_STATIC_LIBS)
 set(GStreamer_USE_STATIC_LIBS OFF)
 endif()
 
+if (DEFINED GStreamer_ROOT_DIR)
+if (NOT EXISTS "${GStreamer_ROOT_DIR}")
+    message(FATAL_ERROR "The directory GStreamer_ROOT_DIR=${GStreamer_ROOT_DIR} does not exist")
+endif()
+
 # Set the environment for pkg-config
+set(_old_pkg_config_path "$ENV{PKG_CONFIG_PATH}")
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
     set(ENV{PKG_CONFIG_PATH} "${GStreamer_ROOT_DIR}/lib/pkgconfig;${GStreamer_ROOT_DIR}/lib/gstreamer-1.0/pkgconfig;${GStreamer_ROOT_DIR}/lib/gio/modules/pkgconfig")
-    # Block pkgconf's forced relocation for non-lib/pkgconfig modules on Windows -- https://github.com/pkgconf/pkgconf/commit/dcf529b83d621ed09e99e41fc35fdffd068bd87a
+    # Block pkgconfig's forced relocation for non-lib/pkgconfig modules on Windows -- https://github.com/pkgconf/pkgconf/commit/dcf529b83d621ed09e99e41fc35fdffd068bd87a
+    set(_old_pkg_config_dont_define_prefix "$ENV{PKG_CONFIG_DONT_DEFINE_PREFIX}")
     set(ENV{PKG_CONFIG_DONT_DEFINE_PREFIX} 1)
 else()
-    set(ENV{PKG_CONFIG_PATH} "${GStreamer_ROOT_DIR}/lib/pkgconfig:${GStreamer_ROOT_DIR}/lib/gstreamer-1.0/pkgconfig:${GStreamer_ROOT_DIR}/lib/gio/modules/pkgconfig")
+    include(GNUInstallDirs)
+    set(ENV{PKG_CONFIG_PATH} "${GStreamer_ROOT_DIR}/${CMAKE_INSTALL_LIBDIR}/pkgconfig:${GStreamer_ROOT_DIR}/${CMAKE_INSTALL_LIBDIR}/gstreamer-1.0/pkgconfig:${GStreamer_ROOT_DIR}/${CMAKE_INSTALL_LIBDIR}/gio/modules/pkgconfig")
+    message(STATUS "PKG_CONFIG_PATH is $ENV{PKG_CONFIG_PATH}")
 endif()
+endif() # GStreamer_ROOT_DIR
 
 # Set the list of extra dependencies
 if (NOT DEFINED GStreamer_EXTRA_DEPS)
@@ -104,6 +106,28 @@ if (NOT DEFINED GStreamer_EXTRA_DEPS)
     endif()
 endif()
 
+macro(_gst_set_library_prefixes)
+    set(_gst_suffixes "${CMAKE_FIND_LIBRARY_SUFFIXES}")
+    set(_gst_prefixes "${CMAKE_FIND_LIBRARY_PREFIXES}")
+    if (APPLE)
+        set(CMAKE_FIND_LIBRARY_SUFFIXES ".a" ".dylib" ".so" ".tbd")
+        set(CMAKE_FIND_LIBRARY_PREFIXES ";lib")
+    elseif (UNIX)
+        set(CMAKE_FIND_LIBRARY_SUFFIXES ".a" ".so")
+        set(CMAKE_FIND_LIBRARY_PREFIXES ";lib")
+    else()
+        set(CMAKE_FIND_LIBRARY_SUFFIXES ".a" ".lib")
+        set(CMAKE_FIND_LIBRARY_PREFIXES ";lib")
+    endif()
+endmacro()
+
+macro(_gst_unset_library_prefixes)
+    set(CMAKE_FIND_LIBRARY_SUFFIXES "${_gst_suffixes}")
+    set(CMAKE_FIND_LIBRARY_PREFIXES "${_gst_prefixes}")
+    unset(_gst_suffixes)
+    unset(_gst_prefixes)
+endmacro()
+
 # Find libraries. This is meant to be used with static libraries
 # (hence the reprioritization) but I've added a fallback to shared libraries
 # and stub modules in case any are non-existent.
@@ -112,22 +136,13 @@ function(_gst_find_library LOCAL_LIB GST_LOCAL_LIB)
         return()
     endif()
 
-    set(_gst_suffixes ${CMAKE_FIND_LIBRARY_SUFFIXES})
-    set(_gst_prefixes ${CMAKE_FIND_LIBRARY_PREFIXES})
-    if (APPLE)
-        set(CMAKE_FIND_LIBRARY_SUFFIXES ".a" ".dylib" ".so" ".tbd")
-        set(CMAKE_FIND_LIBRARY_PREFIXES "" "lib")
-    elseif (UNIX)
-        set(CMAKE_FIND_LIBRARY_SUFFIXES ".a" ".so")
-        set(CMAKE_FIND_LIBRARY_PREFIXES "" "lib")
-    else()
-        set(CMAKE_FIND_LIBRARY_SUFFIXES ".a" ".lib")
-        set(CMAKE_FIND_LIBRARY_PREFIXES "" "lib")
-    endif()
+    _gst_set_library_prefixes()
 
     if ("${LOCAL_LIB}" IN_LIST _gst_IGNORED_SYSTEM_LIBRARIES)
         set(${GST_LOCAL_LIB} ${LOCAL_LIB} PARENT_SCOPE)
     else()
+        # NO_DEFAULT_PATH is to avoid CMake's application of
+        # CMAKE_SYSROOT to every path in HINTS
         find_library(${GST_LOCAL_LIB}
             ${LOCAL_LIB}
             HINTS ${ARGN}
@@ -135,14 +150,14 @@ function(_gst_find_library LOCAL_LIB GST_LOCAL_LIB)
             NO_CMAKE_FIND_ROOT_PATH
             REQUIRED
         )
-        set(${GST_LOCAL_LIB} "${${GST_LOCAL_LIB}}" PARENT_SCOPE)
-        if (NOT ${GST_LOCAL_LIB})
+        if (${GST_LOCAL_LIB})
+            set(${GST_LOCAL_LIB} "${${GST_LOCAL_LIB}}" PARENT_SCOPE)
+        else()
             message(FATAL_ERROR "${LOCAL_LIB} was unexpectedly not found.")
         endif()
     endif()
 
-    set(CMAKE_FIND_LIBRARY_SUFFIXES ${_gst_suffixes})
-    set(CMAKE_FIND_LIBRARY_PREFIXES ${_gst_prefixes})
+    _gst_unset_library_prefixes()
 endfunction()
 
 macro(_gst_apply_link_libraries HIDE PC_LIBRARIES PC_HINTS GST_TARGET)
@@ -159,21 +174,11 @@ macro(_gst_apply_link_libraries HIDE PC_LIBRARIES PC_HINTS GST_TARGET)
         if (NOT ${GST_LOCAL_LIB})
             _gst_find_library(${LOCAL_LIB} ${GST_LOCAL_LIB} ${${PC_HINTS}})
         endif()
-        if ("${${GST_LOCAL_LIB}}" IN_LIST _gst_IGNORED_SYSTEM_LIBRARIES)
-            target_link_libraries(${GST_TARGET} INTERFACE
-                ${${GST_LOCAL_LIB}})
-        elseif (APPLE AND ${HIDE})
-            set(LOCAL_FILE)
-            get_filename_component(LOCAL_FILE ${${GST_LOCAL_LIB}} NAME)
-            target_link_libraries(${GST_TARGET} INTERFACE
-                "-hidden-l${LOCAL_FILE}")
-        elseif((UNIX OR ANDROID) AND ${HIDE})
-            target_link_libraries(${GST_TARGET} INTERFACE
-                -Wl,--exclude-libs,${${GST_LOCAL_LIB}})
-        else()
-            target_link_libraries(${GST_TARGET} INTERFACE
-                ${${GST_LOCAL_LIB}})
-        endif()
+        # Do not use --exclude-libs on ELF platforms as it
+        # neuters the effect of whole_archive
+        target_link_libraries(${GST_TARGET} INTERFACE
+            ${${GST_LOCAL_LIB}})
+        unset(GST_LOCAL_LIB)
     endforeach()
 endmacro()
 
@@ -194,6 +199,7 @@ macro(_gst_filter_missing_directories GST_INCLUDE_DIRS)
         endif()
     endforeach()
     set(${GST_INCLUDE_DIRS} "${_gst_include_dirs}")
+    unset(DIR)
 endmacro()
 
 macro(_gst_apply_frameworks PC_STATIC_LDFLAGS_OTHER GST_TARGET)
@@ -218,9 +224,12 @@ macro(_gst_apply_frameworks PC_STATIC_LDFLAGS_OTHER GST_TARGET)
                 list(APPEND new_ldflags "${_arg}")
             endif()
         endforeach()
+        unset(_arg)
         set_target_properties(${GST_TARGET} PROPERTIES
             INTERFACE_LINK_OPTIONS "${new_ldflags}"
         )
+        unset(new_ldflags)
+        unset(assemble_framework)
     else()
         set_target_properties(${TARGET} PROPERTIES
             INTERFACE_LINK_OPTIONS "${${PC_STATIC_LDFLAGS_OTHER}}"
@@ -234,6 +243,8 @@ endmacro()
 
 find_package(PkgConfig REQUIRED)
 
+# For metadata only -- needed in UNIX
+pkg_check_modules(PC_GST gstreamer-1.0)
 # GStreamer's pkg-config modules are a MUST -- but we'll test them below
 pkg_check_modules(PC_GStreamer gstreamer-1.0 ${GStreamer_EXTRA_DEPS})
 # Simulate the list that'll be wholearchive'd.
@@ -243,7 +254,17 @@ pkg_check_modules(PC_GStreamer gstreamer-1.0 ${GStreamer_EXTRA_DEPS})
 # pkg_check_modules(PC_GStreamer_NoDeps QUIET REQUIRED gstreamer-1.0 ${GStreamer_EXTRA_DEPS})
 # set(PKG_CONFIG_EXECUTABLE "${_old_pkg_config_executable}")
 
-set(GStreamer_VERSION "${PC_GStreamer_VERSION}")
+set(GStreamer_VERSION "${PC_GST_VERSION}")
+
+# Now, let's set up targets for each of the components supplied
+# These are the required plugins
+set(GSTREAMER_PLUGINS ${GStreamer_FIND_COMPONENTS})
+# These are the API packages
+set(GSTREAMER_APIS ${GSTREAMER_PLUGINS})
+list(FILTER GSTREAMER_APIS INCLUDE REGEX "^api_")
+# Filter them out, although they're handled the same
+# they cannot be considered for the purposes of initialization
+list(FILTER GSTREAMER_PLUGINS EXCLUDE REGEX "^api_")
 
 # Test validity of the paths
 # NOTE: only paths that must be considered are those provided by pkg-config
@@ -257,6 +278,12 @@ find_path(GStreamer_INCLUDE_DIR
     REQUIRED
 )
 
+if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+    set(_gst_suffixes "${CMAKE_FIND_LIBRARY_SUFFIXES}")
+    set(_gst_prefixes "${CMAKE_FIND_LIBRARY_PREFIXES}")
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".a" ".lib")
+    set(CMAKE_FIND_LIBRARY_PREFIXES "" "lib")
+endif()
 find_library(GStreamer_LIBRARY
     NAMES gstreamer-1.0
     PATHS ${PC_GStreamer_LIBRARY_DIRS}
@@ -264,11 +291,19 @@ find_library(GStreamer_LIBRARY
     NO_CMAKE_FIND_ROOT_PATH
     REQUIRED
 )
+if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+    set(CMAKE_FIND_LIBRARY_SUFFIXES "${_gst_suffixes}")
+    set(CMAKE_FIND_LIBRARY_PREFIXES "${_gst_prefixes}")
+    unset(_gst_suffixes)
+    unset(_gst_prefixes)
+endif()
 
 # Android: Ignore these libraries when constructing the IMPORTED_LOCATION
-set(_gst_IGNORED_SYSTEM_LIBRARIES c c++ unwind m dl atomic)
+set(_gst_IGNORED_SYSTEM_LIBRARIES c stdc++ c++ unwind m dl atomic)
 if (ANDROID)
     list(APPEND _gst_IGNORED_SYSTEM_LIBRARIES log GLESv2 EGL OpenSLES android vulkan)
+elseif(WIN32)
+    list(APPEND _gst_IGNORED_SYSTEM_LIBRARIES ws2_32 kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 winmm shlwapi dnsapi iphlpapi opengl32 crypt32 d3d11 dxgi d2d1 runtimeobject mf mfplat mfreadwrite mfuuid strmiids ksuser mmdevapi)
 elseif(APPLE)
     list(APPEND _gst_IGNORED_SYSTEM_LIBRARIES iconv resolv System)
 endif()
@@ -331,9 +366,11 @@ if(PC_GStreamer_FOUND AND (NOT TARGET GStreamer::GStreamer))
             target_link_libraries(GStreamer::GStreamer INTERFACE
                 "${${GST_LOCAL_LIB}}"
             )
+            unset(GST_LOCAL_LIB)
         endforeach()
 
         _gst_apply_link_libraries(ON PC_GStreamer_STATIC_LIBRARIES PC_GStreamer_STATIC_LIBRARY_DIRS GStreamer::deps)
+        unset(LOCAL_LIB)
     endif()
 
     target_link_libraries(GStreamer::GStreamer
@@ -358,7 +395,7 @@ foreach(_gst_PLUGIN IN LISTS GSTREAMER_PLUGINS)
         set(_gst_PLUGIN_REQUIRED)
     endif()
 
-    pkg_check_modules(PC_GStreamer_${_gst_PLUGIN} "gst${_gst_PLUGIN}")
+    pkg_check_modules(PC_GStreamer_${_gst_PLUGIN} "gst${_gst_PLUGIN}" IMPORTED_TARGET)
 
     set(GStreamer_${_gst_PLUGIN}_FOUND "${PC_GStreamer_${_gst_PLUGIN}_FOUND}")
     if (NOT GStreamer_${_gst_PLUGIN}_FOUND)
@@ -375,19 +412,17 @@ foreach(_gst_PLUGIN IN LISTS GSTREAMER_PLUGINS)
             INTERFACE_INCLUDE_DIRECTORIES "${PC_GStreamer_${_gst_PLUGIN}_INCLUDE_DIRS}"
         )
     endif()
-    if (GStreamer_USE_STATIC_LIBS)
+    if (GStreamer_USE_STATIC_LIBS AND NOT WIN32)
         _gst_apply_frameworks(PC_GStreamer_${_gst_PLUGIN}_STATIC_LDFLAGS_OTHER GStreamer::${_gst_PLUGIN})
+        _gst_apply_link_libraries(OFF PC_GStreamer_${_gst_PLUGIN}_STATIC_LIBRARIES PC_GStreamer_${_gst_PLUGIN}_STATIC_LIBRARY_DIRS GStreamer::${_gst_PLUGIN})
     else()
-        set_target_properties(GStreamer::${_gst_PLUGIN} PROPERTIES
-            INTERFACE_LINK_OPTIONS "${PC_GStreamer_${_gst_PLUGIN}_LDFLAGS_OTHER}"
-            INTERFACE_LINK_LIBRARIES "${PC_GStreamer_${_gst_PLUGIN}_LINK_LIBRARIES}"
+        target_link_libraries(GStreamer::${_gst_PLUGIN} INTERFACE 
+            $<TARGET_PROPERTY:PkgConfig::PC_GStreamer_${_gst_PLUGIN},INTERFACE_LINK_LIBRARIES>
         )
-        # We're done
-        continue()
+        target_link_options(GStreamer::${_gst_PLUGIN} INTERFACE 
+            $<TARGET_PROPERTY:PkgConfig::PC_GStreamer_${_gst_PLUGIN},INTERFACE_LINK_OPTIONS>
+        )
     endif()
-
-    # Handle all libraries, even those specified with -l:libfoo.a (srt)
-    _gst_apply_link_libraries(OFF PC_GStreamer_${_gst_PLUGIN}_STATIC_LIBRARIES PC_GStreamer_${_gst_PLUGIN}_STATIC_LIBRARY_DIRS GStreamer::${_gst_PLUGIN})
 endforeach()
 
 foreach(_gst_PLUGIN IN LISTS GSTREAMER_APIS)
@@ -409,7 +444,7 @@ foreach(_gst_PLUGIN IN LISTS GSTREAMER_APIS)
     string(REGEX REPLACE "^api_(.+)" "\\1" _gst_PLUGIN_PC "${_gst_PLUGIN}")
     string(REPLACE "_" "-" _gst_PLUGIN_PC "${_gst_PLUGIN_PC}")
 
-    pkg_check_modules(PC_GStreamer_${_gst_PLUGIN} "gstreamer-${_gst_PLUGIN_PC}-1.0")
+    pkg_check_modules(PC_GStreamer_${_gst_PLUGIN} "gstreamer-${_gst_PLUGIN_PC}-1.0" IMPORTED_TARGET)
 
     set(GStreamer_${_gst_PLUGIN}_FOUND "${PC_GStreamer_${_gst_PLUGIN}_FOUND}")
     if (NOT GStreamer_${_gst_PLUGIN}_FOUND)
@@ -417,29 +452,24 @@ foreach(_gst_PLUGIN IN LISTS GSTREAMER_APIS)
     endif()
 
     add_library(GStreamer::${_gst_PLUGIN} INTERFACE IMPORTED)
-    _gst_filter_missing_directories(PC_GStreamer_${_gst_PLUGIN}_INCLUDE_DIRS)
-    set_target_properties(GStreamer::${_gst_PLUGIN} PROPERTIES
-        INTERFACE_COMPILE_OPTIONS "${PC_GStreamer_${_gst_PLUGIN}_CFLAGS_OTHER}"
-        INTERFACE_LINK_OPTIONS "${PC_GStreamer_${_gst_PLUGIN}_LDFLAGS_OTHER}"
-    )
-    if (PC_GStreamer_${_gst_PLUGIN}_INCLUDE_DIRS)
-        set_target_properties(GStreamer::${_gst_PLUGIN} PROPERTIES
-            INTERFACE_INCLUDE_DIRECTORIES "${PC_GStreamer_${_gst_PLUGIN}_INCLUDE_DIRS}"
-        )
-    endif()
-    if (GStreamer_USE_STATIC_LIBS)
+    if (GStreamer_USE_STATIC_LIBS AND NOT WIN32)
         _gst_apply_frameworks(PC_GStreamer_${_gst_PLUGIN}_STATIC_LDFLAGS_OTHER GStreamer::${_gst_PLUGIN})
-    else()
-        set_target_properties(GStreamer::${_gst_PLUGIN} PROPERTIES
-            INTERFACE_LINK_OPTIONS "${PC_GStreamer_${_gst_PLUGIN}_LDFLAGS_OTHER}"
-            INTERFACE_LINK_LIBRARIES "${PC_GStreamer_${_gst_PLUGIN}_LINK_LIBRARIES}"
+        # Handle all libraries, even those specified with -l:libfoo.a (srt)
+        _gst_apply_link_libraries(OFF PC_GStreamer_${_gst_PLUGIN}_STATIC_LIBRARIES PC_GStreamer_${_gst_PLUGIN}_STATIC_LIBRARY_DIRS GStreamer::${_gst_PLUGIN})
+        target_link_options(GStreamer::${_gst_PLUGIN}
+            INTERFACE
+                $<TARGET_PROPERTY:PkgConfig::PC_GStreamer_${_gst_PLUGIN},INTERFACE_LINK_OPTIONS>
         )
-        # We're done
-        continue()
-    endif()
+        target_include_directories(GStreamer::${_gst_PLUGIN}
+            INTERFACE
+                $<TARGET_PROPERTY:PkgConfig::PC_GStreamer_${_gst_PLUGIN},INTERFACE_INCLUDE_DIRECTORIES>
 
-    # Handle all libraries, even those specified with -l:libfoo.a (srt)
-    _gst_apply_link_libraries(OFF PC_GStreamer_${_gst_PLUGIN}_STATIC_LIBRARIES PC_GStreamer_${_gst_PLUGIN}_STATIC_LIBRARY_DIRS GStreamer::${_gst_PLUGIN})
+        )
+    else()
+        target_link_libraries(GStreamer::${_gst_PLUGIN} INTERFACE 
+            PkgConfig::PC_GStreamer_${_gst_PLUGIN}
+        )
+    endif()
 endforeach()
 
 # Perform final validation
@@ -448,11 +478,28 @@ set(_gst_handle_version_range)
 if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.19.0")
     set(_gst_handle_version_range "HANDLE_VERSION_RANGE")
 endif()
+set(GStreamer_PKG_CONFIG_DIRS "$ENV{PKG_CONFIG_PATH}")
 find_package_handle_standard_args(GStreamer
     REQUIRED_VARS
         GStreamer_LIBRARY
         GStreamer_INCLUDE_DIR
+        GStreamer_PKG_CONFIG_DIRS
     VERSION_VAR GStreamer_VERSION
     ${_gst_handle_version_range}
     HANDLE_COMPONENTS
 )
+
+if (DEFINED GStreamer_ROOT_DIR)
+if (_old_pkg_config_path)
+    set(ENV{PKG_CONFIG_PATH} "${_old_pkg_config_path}")
+else()
+    unset(ENV{PKG_CONFIG_PATH})
+endif()
+if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+    if(_old_pkg_config_dont_define_prefix)
+        set(ENV{PKG_CONFIG_DONT_DEFINE_PREFIX} "${_old_pkg_config_dont_define_prefix}")
+    else()
+        unset(ENV{PKG_CONFIG_DONT_DEFINE_PREFIX})
+    endif()
+endif()
+endif() # GStreamer_ROOT_DIR

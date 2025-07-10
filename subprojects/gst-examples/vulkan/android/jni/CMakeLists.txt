@@ -30,7 +30,7 @@ find_library(ANDROID_LIB android REQUIRED)
 find_library(LOG_LIB log REQUIRED)
 find_package(GStreamerMobile COMPONENTS ${GSTREAMER_PLUGINS} fonts ca_certificates REQUIRED)
 
-add_library(vulkan-1 SHARED vulkan-1.c dummy.cpp)
+add_library(vulkan-1 SHARED vulkan-1.c)
 target_link_libraries(vulkan-1
     PUBLIC
         GStreamer::mobile
@@ -41,4 +41,5 @@ set_target_properties(vulkan-1
     PROPERTIES
         C_VISIBILITY_PRESET hidden
         CXX_VISIBILITY_PRESET hidden
+        LINKER_LANGUAGE CXX
 )

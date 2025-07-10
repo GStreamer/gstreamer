@@ -35,7 +35,7 @@ find_library(ANDROID_LIB android REQUIRED)
 find_library(LOG_LIB log REQUIRED)
 find_package(GStreamerMobile COMPONENTS ${GSTREAMER_PLUGINS} fonts ca_certificates REQUIRED)
 
-add_library(tutorial-5 SHARED tutorial-5.c dummy.cpp)
+add_library(tutorial-5 SHARED tutorial-5.c)
 target_link_libraries(tutorial-5
     PUBLIC
         GStreamer::mobile
@@ -46,4 +46,5 @@ set_target_properties(tutorial-5
     PROPERTIES
         C_VISIBILITY_PRESET hidden
         CXX_VISIBILITY_PRESET hidden
+        LINKER_LANGUAGE CXX
 )

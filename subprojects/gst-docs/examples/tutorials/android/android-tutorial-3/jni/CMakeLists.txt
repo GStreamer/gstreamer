@@ -30,9 +30,9 @@ set(GSTREAMER_PLUGINS coreelements videoconvertscale videotestsrc autodetect eff
 set(GStreamer_EXTRA_DEPS gstreamer-video-1.0 gobject-2.0)
 find_library(ANDROID_LIB android REQUIRED)
 find_library(LOG_LIB log REQUIRED)
-find_package(GStreamerMobile COMPONENTS ${GSTREAMER_PLUGINS} fonts REQUIRED)
+find_package(GStreamerMobile COMPONENTS fonts ${GSTREAMER_PLUGINS} REQUIRED)
 
-add_library(tutorial-3 SHARED tutorial-3.c dummy.cpp)
+add_library(tutorial-3 SHARED tutorial-3.c)
 target_link_libraries(tutorial-3
     PUBLIC
         GStreamer::mobile
@@ -43,4 +43,5 @@ set_target_properties(tutorial-3
     PROPERTIES
         C_VISIBILITY_PRESET hidden
         CXX_VISIBILITY_PRESET hidden
+        LINKER_LANGUAGE CXX
 )

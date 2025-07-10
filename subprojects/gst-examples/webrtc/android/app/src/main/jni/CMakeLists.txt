@@ -32,9 +32,10 @@ set(GStreamer_EXTRA_DEPS gstreamer-webrtc-1.0 gstreamer-sdp-1.0 gstreamer-video-
 set(G_IO_MODULES openssl)
 find_library(ANDROID_LIB android REQUIRED)
 find_library(LOG_LIB log REQUIRED)
+set(GStreamer_Mobile_SYMBOLS json_ soup_ _SOUP_)
 find_package(GStreamerMobile COMPONENTS ${GSTREAMER_PLUGINS} fonts ca_certificates REQUIRED)
 
-add_library(gstwebrtc SHARED webrtc.c dummy.cpp)
+add_library(gstwebrtc SHARED webrtc.c)
 target_link_libraries(gstwebrtc
     PUBLIC
         GStreamer::mobile
@@ -45,4 +46,5 @@ set_target_properties(gstwebrtc
     PROPERTIES
         C_VISIBILITY_PRESET hidden
         CXX_VISIBILITY_PRESET hidden
+        LINKER_LANGUAGE CXX
 )
