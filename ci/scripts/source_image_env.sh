@@ -50,7 +50,7 @@ if [[ -e "$ci_image_info" ]]; then
   # have the expected owenership.
   # Always chown until we have cycled out all the cached volumes from the runners.
   if [[ -n "${CI:-}" ]]; then
-    sudo chown containeruser:containeruser --recursive "${CI_PROJECT_DIR}"
+    sudo chown containeruser:containeruser --recursive .
 
     # Make sure the directory exists
     sudo mkdir -p "${CCACHE_DIR}"
