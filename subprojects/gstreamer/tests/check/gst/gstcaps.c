@@ -343,6 +343,19 @@ GST_START_TEST (test_fixate)
   fail_if (caps == NULL);
   fail_unless (gst_caps_is_empty (caps));
   gst_caps_unref (caps);
+
+  caps =
+      gst_caps_from_string
+      ("video/x-raw, tensor = (GstCaps)[tensor/strided, dims=<0, [5, MAX]>]");
+  caps = gst_caps_fixate (caps);
+  expected =
+      gst_caps_from_string
+      ("video/x-raw, tensor = (GstCaps)[tensor/strided, dims=<0, 5>]");
+
+  fail_unless (gst_caps_is_equal (caps, expected));
+  gst_caps_unref (caps);
+  gst_caps_unref (expected);
+
 }
 
 GST_END_TEST;
@@ -1855,6 +1868,22 @@ GST_START_TEST (test_fixed)
   gst_caps_unref (caps);
 
   caps = gst_caps_from_string ("video/x-raw, format=I420");
+  fail_unless (gst_caps_is_fixed (caps));
+  gst_caps_unref (caps);
+
+  caps = gst_caps_from_string ("video/x-raw, f=<0, [5, MAX]>");
+  fail_if (gst_caps_is_fixed (caps));
+  gst_caps_unref (caps);
+
+  caps =
+      gst_caps_from_string
+      ("video/x-raw, tensor=(GstCaps)[tensor/strided, dims=<0, [5, MAX]>]");
+  fail_if (gst_caps_is_fixed (caps));
+  gst_caps_unref (caps);
+
+  caps =
+      gst_caps_from_string
+      ("video/x-raw, tensor = (GstCaps)[tensor/strided, dims=<0, 5>]");
   fail_unless (gst_caps_is_fixed (caps));
   gst_caps_unref (caps);
 }

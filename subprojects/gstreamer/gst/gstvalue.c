@@ -7084,6 +7084,8 @@ gst_value_is_fixed (const GValue * value)
   } else if (GST_VALUE_HOLDS_STRUCTURE (value)) {
     return gst_structure_foreach_id_str (gst_value_get_structure (value),
         structure_field_is_fixed, NULL);
+  } else if (type == GST_TYPE_CAPS) {
+    return gst_caps_is_fixed (gst_value_get_caps (value));
   }
   return gst_type_is_fixed (type);
 }
@@ -7171,6 +7173,13 @@ gst_value_fixate (GValue * dest, const GValue * src)
     g_value_init (dest, GST_TYPE_STRUCTURE);
     gst_value_set_structure (dest, kid);
     gst_structure_free (kid);
+    return TRUE;
+  } else if (G_VALUE_TYPE (src) == GST_TYPE_CAPS) {
+    g_value_init (dest, GST_TYPE_CAPS);
+    GstCaps *caps = gst_caps_copy (gst_value_get_caps (src));
+    caps = gst_caps_fixate (caps);
+    gst_value_set_caps (dest, caps);
+    gst_caps_unref (caps);
     return TRUE;
   } else {
     return FALSE;
