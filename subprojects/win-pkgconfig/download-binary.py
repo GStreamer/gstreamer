@@ -14,13 +14,14 @@ ctx = ssl.create_default_context()
 ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
-BASENAME = 'pkg-config.zip'
-GSTREAMER_URL = 'https://gstreamer.freedesktop.org/src/mirror/pkg-config.zip'
+MIRROR_URL = 'https://gstreamer.freedesktop.org/src/mirror/pkg-config/pkg-config-{}.zip'
 
-zip_sha256 = sys.argv[1]
+version = sys.argv[1]
+zip_sha256 = sys.argv[2]
 source_dir = os.path.join(
     os.environ['MESON_SOURCE_ROOT'], os.environ['MESON_SUBDIR'])
-dest = BASENAME
+url = MIRROR_URL.format(version)
+dest = os.path.basename(url)
 dest_path = os.path.join(source_dir, dest)
 
 
@@ -39,8 +40,7 @@ if os.path.isfile(dest_path):
     else:
         print('{} checksum mismatch, redownloading'.format(dest))
 
-url = GSTREAMER_URL.format(dest)
-print('Downloading {} to {}'.format(GSTREAMER_URL.format(dest), dest))
+print('Downloading {} to {}'.format(url, dest))
 try:
     with open(dest_path, 'wb') as d:
         f = urllib.request.urlopen(url, context=ctx)
