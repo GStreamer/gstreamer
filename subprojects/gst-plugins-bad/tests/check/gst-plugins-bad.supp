@@ -154,3 +154,13 @@
    fun:ossl_ec_key_gen
    fun:EC_KEY_generate_key
 }
+
+{
+   <Mesa llvmpipe 0 realloc error, see https://gitlab.freedesktop.org/mesa/mesa/-/issues/13539>
+   Memcheck:ReallocZero
+   fun:realloc
+   fun:llvmpipe_register_texture
+   fun:llvmpipe_create_image_handle
+   fun:lvp_CreateDevice
+   ...
+}
