@@ -56,7 +56,7 @@ index 826489a1..a7af6152 100644
 +        os.add_dll_directory(bindir)
  
  from . import _gi
- from ._gi import _API  # noqa: F401
+ from ._gi import _API
 -- 
 2.45.2.windows.1
 
