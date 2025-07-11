@@ -1,4 +1,4 @@
-project('win-pkgconfig', version : '0.29.2')
+project('win-pkgconfig', version : '0.28')
 
 py3 = import('python3').find_python()
 

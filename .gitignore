@@ -60,7 +60,12 @@ subprojects/.wraplock
 !subprojects/macos-bison-binary
 !subprojects/win-flex-bison-binaries
 !subprojects/win-nasm
+!subprojects/win-pkgconfig
 !subprojects/packagefiles
+subprojects/*/*.zip
+subprojects/*/*.exe
+subprojects/*/*.tar.*
+subprojects/macos-bison-binary/bison*/
 
 # VSCode integration
 # launch.json will be modified by users depending on the pipeline to test
