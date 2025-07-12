@@ -1551,6 +1551,94 @@ gst_webrtc_nice_get_http_proxy (GstWebRTCICE * ice)
     return NULL;
 }
 
+struct close_data
+{
+  GWeakRef nice_weak;
+  GstPromise *promise;
+  gboolean agent_closed;
+};
+
+static struct close_data *
+close_data_new (GstWebRTCNice * ice, GstPromise * p)
+{
+  struct close_data *d = g_atomic_rc_box_new0 (struct close_data);
+  g_weak_ref_init (&d->nice_weak, ice);
+  d->promise = p;
+  d->agent_closed = FALSE;
+  return d;
+}
+
+static void
+close_data_clear (struct close_data *d)
+{
+  g_weak_ref_clear (&d->nice_weak);
+  if (d->promise)
+    gst_promise_unref (d->promise);
+}
+
+static struct close_data *
+close_data_ref (struct close_data *d)
+{
+  return (struct close_data *) g_atomic_rc_box_acquire (d);
+}
+
+static void
+close_data_unref (struct close_data *d)
+{
+  g_atomic_rc_box_release_full (d, (GDestroyNotify) close_data_clear);
+}
+
+static void
+on_agent_closed (GObject * src, GAsyncResult * result, gpointer user_data)
+{
+  struct close_data *d = (struct close_data *) user_data;
+
+  /* 9. Set the [[IceTransportState]] slot of each of connection's
+   * RTCIceTransports to "closed". */
+  /* FIXME: We don't expose IceTransportState yet. */
+
+  if (d->promise) {
+    gst_promise_reply (d->promise, NULL);
+  }
+
+  d->agent_closed = TRUE;
+  close_data_unref (d);
+}
+
+static gboolean
+close_main_cb (gpointer user_data)
+{
+  struct close_data *d = (struct close_data *) user_data;
+  GstWebRTCNice *nice = g_weak_ref_get (&d->nice_weak);
+
+  if (nice) {
+    /* 8. Destroy connection's ICE Agent, abruptly ending any active ICE
+     * processing and releasing any relevant resources (e.g. TURN permissions). */
+    nice_agent_close_async (NICE_AGENT (nice->priv->nice_agent),
+        on_agent_closed, close_data_ref (d));
+    if (!d->promise) {
+      while (!d->agent_closed) {
+        g_main_context_iteration (nice->priv->main_context, TRUE);
+      }
+    }
+    gst_object_unref (nice);
+  }
+
+  return G_SOURCE_REMOVE;
+}
+
+static void
+gst_webrtc_nice_close (GstWebRTCICE * ice, GstPromise * promise)
+{
+  GstWebRTCNice *nice = GST_WEBRTC_NICE (ice);
+  struct close_data *d = close_data_new (nice, promise);
+
+  /* https://www.w3.org/TR/webrtc/#dom-rtcpeerconnection-close */
+
+  g_main_context_invoke_full (nice->priv->main_context, G_PRIORITY_DEFAULT,
+      close_main_cb, d, (GDestroyNotify) close_data_unref);
+}
+
 static void
 gst_webrtc_nice_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -1709,6 +1797,7 @@ gst_webrtc_nice_class_init (GstWebRTCNiceClass * klass)
   gst_webrtc_ice_class->get_remote_candidates =
       gst_webrtc_nice_get_remote_candidates;
   gst_webrtc_ice_class->get_selected_pair = gst_webrtc_nice_get_selected_pair;
+  gst_webrtc_ice_class->close = gst_webrtc_nice_close;
 
   gobject_class->constructed = gst_webrtc_nice_constructed;
   gobject_class->get_property = gst_webrtc_nice_get_property;
