@@ -829,6 +829,25 @@ for more information.</doc>
           </parameter>
         </parameters>
       </virtual-method>
+      <virtual-method name="close" invoker="close" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">Invoke the close procedure as specified in
+https://www.w3.org/TR/webrtc/#dom-rtcpeerconnection-close.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="promise" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">a #GstPromise to be notified when the task is
+complete.</doc>
+            <type name="Gst.Promise" c:type="GstPromise*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
       <virtual-method name="find_transport" invoker="find_transport" version="1.22">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
         <return-value transfer-ownership="full" nullable="1">
@@ -1207,6 +1226,25 @@ Get HTTP Proxy to be used when connecting to TURN server.</doc>
           <parameter name="uri" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the TURN server</doc>
             <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="close" c:identifier="gst_webrtc_ice_close" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">Invoke the close procedure as specified in
+https://www.w3.org/TR/webrtc/#dom-rtcpeerconnection-close.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="promise" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">a #GstPromise to be notified when the task is
+complete.</doc>
+            <type name="Gst.Promise" c:type="GstPromise*"/>
           </parameter>
         </parameters>
       </method>
@@ -2104,8 +2142,27 @@ Get HTTP Proxy to be used when connecting to TURN server.</doc>
           </parameters>
         </callback>
       </field>
+      <field name="close">
+        <callback name="close">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="none">
+            <type name="none" c:type="void"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+            <parameter name="promise" transfer-ownership="full" nullable="1" allow-none="1">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">a #GstPromise to be notified when the task is
+complete.</doc>
+              <type name="Gst.Promise" c:type="GstPromise*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
       <field name="_gst_reserved">
-        <array zero-terminated="0" fixed-size="4">
+        <array zero-terminated="0" fixed-size="3">
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>

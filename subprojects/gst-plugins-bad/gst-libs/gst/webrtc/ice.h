@@ -320,7 +320,22 @@ struct _GstWebRTCICEClass {
                                                        GstWebRTCICEStream * stream,
                                                        GstWebRTCICECandidateStats ** local_stats,
                                                        GstWebRTCICECandidateStats ** remote_stats);
-  gpointer _gst_reserved[GST_PADDING];
+
+  /**
+   * GstWebRTCICEClass::close:
+   * @ice: a #GstWebRTCICE
+   * @promise: (transfer full) (nullable): a #GstPromise to be notified when the task is
+   * complete.
+   *
+   * Invoke the close procedure as specified in
+   * https://www.w3.org/TR/webrtc/#dom-rtcpeerconnection-close.
+   *
+   * Since: 1.28
+   */
+  void (*close)                                       (GstWebRTCICE * ice,
+                                                       GstPromise * promise);
+
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 GST_WEBRTC_API
@@ -428,6 +443,10 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstWebRTCICE, gst_object_unref)
 
 GST_WEBRTC_API
 GstWebRTCICECandidateStats * gst_webrtc_ice_candidate_stats_copy   (GstWebRTCICECandidateStats *stats);
+
+GST_WEBRTC_API
+void                         gst_webrtc_ice_close                  (GstWebRTCICE * ice,
+                                                                    GstPromise * promise);
 
 G_END_DECLS
 

@@ -503,6 +503,25 @@ gst_webrtc_ice_get_http_proxy (GstWebRTCICE * ice)
   return GST_WEBRTC_ICE_GET_CLASS (ice)->get_http_proxy (ice);
 }
 
+/**
+ * gst_webrtc_ice_close:
+ * @ice: The #GstWebRTCICE
+ * @promise: (transfer full) (nullable): a #GstPromise to be notified when the task is
+ * complete.
+ *
+ * Invoke the close procedure as specified in
+ * https://www.w3.org/TR/webrtc/#dom-rtcpeerconnection-close.
+ *
+ * Since: 1.28
+ */
+void
+gst_webrtc_ice_close (GstWebRTCICE * ice, GstPromise * promise)
+{
+  g_return_if_fail (GST_IS_WEBRTC_ICE (ice));
+  g_assert (GST_WEBRTC_ICE_GET_CLASS (ice)->close);
+
+  GST_WEBRTC_ICE_GET_CLASS (ice)->close (ice, promise);
+}
 
 static void
 gst_webrtc_ice_set_property (GObject * object, guint prop_id,
@@ -574,6 +593,7 @@ gst_webrtc_ice_class_init (GstWebRTCICEClass * klass)
   klass->get_local_candidates = NULL;
   klass->get_remote_candidates = NULL;
   klass->get_selected_pair = NULL;
+  klass->close = NULL;
 
   gobject_class->get_property = gst_webrtc_ice_get_property;
   gobject_class->set_property = gst_webrtc_ice_set_property;
