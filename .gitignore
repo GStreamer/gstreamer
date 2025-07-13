@@ -40,6 +40,7 @@ subprojects/abseil-cpp.wrap
 subprojects/sysprof.wrap
 
 subprojects/*/
+subprojects/.wraplock
 !subprojects/gst-devtools
 !subprojects/gst-docs
 !subprojects/gst-editing-services
