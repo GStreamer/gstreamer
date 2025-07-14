@@ -282,13 +282,7 @@ validate_flow_override_event_handler (GstValidateOverride * override,
   if (flow->error_writing_file)
     return;
 
-  event_string = validate_flow_format_event (event,
-      (const gchar * const *) flow->caps_properties,
-      flow->logged_fields,
-      flow->ignored_fields,
-      (const gchar * const *) flow->ignored_event_types,
-      (const gchar * const *) flow->logged_event_types,
-      (const gchar * const *) flow->logged_upstream_event_types);
+  event_string = validate_flow_format_event (flow, event);
 
   if (event_string) {
     validate_flow_override_printf (flow, "event %s\n", event_string);
@@ -306,9 +300,7 @@ validate_flow_override_buffer_handler (GstValidateOverride * override,
   if (flow->error_writing_file || !flow->record_buffers)
     return;
 
-  buffer_str = validate_flow_format_buffer (buffer, flow->checksum_type,
-      flow->logged_fields, flow->ignored_fields,
-      flow->logged_unregistered_sei_uuids);
+  buffer_str = validate_flow_format_buffer (flow, buffer);
   validate_flow_override_printf (flow, "buffer: %s\n", buffer_str);
   g_free (buffer_str);
 }

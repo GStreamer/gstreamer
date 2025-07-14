@@ -400,14 +400,17 @@ buffer_get_meta_string (GstBuffer * buffer, gchar ** logged_sei_uuids)
 }
 
 gchar *
-validate_flow_format_buffer (GstBuffer * buffer, gint checksum_type,
-    GstStructure * logged_fields_struct, GstStructure * ignored_fields_struct,
-    gchar ** logged_sei_uuids)
+validate_flow_format_buffer (const ValidateFlowOverride * flow,
+    GstBuffer * buffer)
 {
   gchar *flags_str, *meta_str, *buffer_str;
   gchar *buffer_parts[7];
   int buffer_parts_index = 0;
   GstMapInfo map;
+  gint checksum_type = flow->checksum_type;
+  GstStructure *logged_fields_struct = flow->logged_fields;
+  GstStructure *ignored_fields_struct = flow->ignored_fields;
+
   gchar **logged_fields =
       logged_fields_struct ? gst_validate_utils_get_strv (logged_fields_struct,
       "buffer") : NULL;
@@ -515,19 +518,21 @@ validate_flow_format_buffer (GstBuffer * buffer, gint checksum_type,
 }
 
 gchar *
-validate_flow_format_event (GstEvent * event,
-    const gchar * const *caps_properties,
-    GstStructure * logged_fields_struct,
-    GstStructure * ignored_fields_struct,
-    const gchar * const *ignored_event_types,
-    const gchar * const *logged_event_types,
-    const gchar * const *logged_upstream_event_types)
+validate_flow_format_event (const ValidateFlowOverride * flow, GstEvent * event)
 {
   const gchar *event_type;
   gchar *structure_string;
   gchar *event_string;
   gchar **ignored_fields;
   gchar **logged_fields;
+  gchar **caps_properties = flow->caps_properties;
+  GstStructure *logged_fields_struct = flow->logged_fields;
+  GstStructure *ignored_fields_struct = flow->ignored_fields;
+  const gchar *const *ignored_event_types =
+      CONSTIFY (flow->ignored_event_types);
+  const gchar *const *logged_event_types = CONSTIFY (flow->logged_event_types);
+  const gchar *const *logged_upstream_event_types =
+      CONSTIFY (flow->logged_upstream_event_types);
 
   event_type = gst_event_type_get_name (GST_EVENT_TYPE (event));
 
