@@ -452,6 +452,8 @@ void            gst_aggregator_set_force_live       (GstAggregator *self,
  * the first buffer that is received.
  * @GST_AGGREGATOR_START_TIME_SELECTION_SET: Start at the running time
  * selected by the `start-time` property.
+ * @GST_AGGREGATOR_START_TIME_SELECTION_NOW: Start at the current running time
+ * when reaching %GST_STATE_PLAYING.
  *
  * Since: 1.18
  */
@@ -459,7 +461,16 @@ typedef enum
 {
   GST_AGGREGATOR_START_TIME_SELECTION_ZERO,
   GST_AGGREGATOR_START_TIME_SELECTION_FIRST,
-  GST_AGGREGATOR_START_TIME_SELECTION_SET
+  GST_AGGREGATOR_START_TIME_SELECTION_SET,
+
+  /**
+   * GST_AGGREGATOR_START_TIME_SELECTION_NOW:
+   *
+   * Start at the current running time when reaching %GST_STATE_PLAYING.
+   *
+   * Since: 1.28
+   */
+  GST_AGGREGATOR_START_TIME_SELECTION_NOW,
 } GstAggregatorStartTimeSelection;
 
 GST_BASE_API

@@ -125,6 +125,8 @@ gst_aggregator_start_time_selection_get_type (void)
           "GST_AGGREGATOR_START_TIME_SELECTION_FIRST", "first"},
       {GST_AGGREGATOR_START_TIME_SELECTION_SET,
           "GST_AGGREGATOR_START_TIME_SELECTION_SET", "set"},
+      {GST_AGGREGATOR_START_TIME_SELECTION_NOW,
+          "GST_AGGREGATOR_START_TIME_SELECTION_NOW", "now"},
       {0, NULL, NULL}
     };
     GType new_type =
@@ -886,9 +888,12 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
     return FALSE;
   }
 
-  if (self->priv->force_live && self->priv->first_buffer
-      && self->priv->start_time_selection ==
-      GST_AGGREGATOR_START_TIME_SELECTION_FIRST) {
+  if ((self->priv->force_live && self->priv->first_buffer
+          && self->priv->start_time_selection ==
+          GST_AGGREGATOR_START_TIME_SELECTION_FIRST) ||
+      (self->priv->start_time_selection ==
+          GST_AGGREGATOR_START_TIME_SELECTION_NOW
+          && self->priv->first_buffer)) {
     GstClockTime start_time;
     GstAggregatorPad *srcpad = GST_AGGREGATOR_PAD (self->srcpad);
     start_time = gst_element_get_current_running_time (GST_ELEMENT (self));
@@ -904,6 +909,7 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
       self->priv->first_buffer = FALSE;
     }
   }
+
 
   start = gst_aggregator_get_next_time (self);
 
@@ -3422,6 +3428,9 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
         start_time = self->priv->start_time;
         if (start_time == -1)
           start_time = 0;
+        break;
+      case GST_AGGREGATOR_START_TIME_SELECTION_NOW:
+        start_time = gst_element_get_current_running_time (GST_ELEMENT (self));
         break;
     }
 

@@ -2616,6 +2616,9 @@ the first buffer that is received.</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Start at the running time
 selected by the `start-time` property.</doc>
       </member>
+      <member name="now" value="3" c:identifier="GST_AGGREGATOR_START_TIME_SELECTION_NOW" version="1.28" glib:nick="now" glib:name="GST_AGGREGATOR_START_TIME_SELECTION_NOW">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Start at the current running time when reaching %GST_STATE_PLAYING.</doc>
+      </member>
     </enumeration>
     <function-macro name="BASE_DEPRECATED_FOR" c:identifier="GST_BASE_DEPRECATED_FOR" introspectable="0">
       <source-position filename="../subprojects/gstreamer/libs/gst/base/base-prelude.h"/>
