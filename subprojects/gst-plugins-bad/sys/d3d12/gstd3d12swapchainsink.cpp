@@ -528,8 +528,8 @@ gst_d3d12_swapchain_sink_set_property (GObject * object, guint prop_id,
       auto val = g_value_get_boolean (value);
       if (val != priv->force_aspect_ratio) {
         priv->force_aspect_ratio = val;
-        gst_d3d12_swapchain_sink_resize_internal (self,
-            priv->width, priv->height);
+        priv->output_updated = true;
+        gst_d3d12_swapchain_sink_redraw (self);
       }
       break;
     }
