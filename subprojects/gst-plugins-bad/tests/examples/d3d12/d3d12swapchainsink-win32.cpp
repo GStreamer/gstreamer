@@ -232,6 +232,7 @@ keyboard_cb (gchar input, gboolean is_ascii, AppData * app_data)
 {
   static gboolean set_remap = FALSE;
   static GstState state = GST_STATE_PLAYING;
+  static gboolean force_aspect_ratio = TRUE;
 
   if (is_ascii) {
     switch (input) {
@@ -243,6 +244,13 @@ keyboard_cb (gchar input, gboolean is_ascii, AppData * app_data)
         gst_println ("Change state to %s", gst_element_state_get_name (state));
 
         gst_element_set_state (app_data->pipeline, state);
+        break;
+      case 'f':
+      case 'F':
+        force_aspect_ratio = force_aspect_ratio ? FALSE : TRUE;
+        g_object_set (app_data->sink,
+            "force-aspect-ratio", force_aspect_ratio, nullptr);
+        gst_println ("Change force-aspect-ratio to %d", force_aspect_ratio);
         break;
       case 'm':
       case 'M':
