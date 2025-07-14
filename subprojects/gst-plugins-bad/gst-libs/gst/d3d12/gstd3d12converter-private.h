@@ -64,6 +64,7 @@ gboolean  gst_d3d12_converter_convert_buffer_for_uv_remap (GstD3D12Converter * c
                                                            gboolean execute_gpu_wait,
                                                            guint num_remap,
                                                            ID3D12Resource ** lut,
-                                                           GstVideoRectangle * viewport);
+                                                           GstVideoRectangle * viewport,
+                                                           guint64 * border_color);
 
 G_END_DECLS

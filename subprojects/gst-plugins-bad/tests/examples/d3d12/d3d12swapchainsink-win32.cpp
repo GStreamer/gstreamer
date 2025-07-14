@@ -259,6 +259,8 @@ keyboard_cb (gchar input, gboolean is_ascii, AppData * app_data)
         if (set_remap) {
           ID3D12Resource *remap[2];
           D3D12_VIEWPORT viewport[2];
+          guint64 bg_colors[2] = { G_GUINT64_CONSTANT(0xffff000000000000),
+              G_GUINT64_CONSTANT(0xffff000000000000) };
 
           /* top-left, draw original image */
           remap[0] = nullptr;
@@ -274,11 +276,12 @@ keyboard_cb (gchar input, gboolean is_ascii, AppData * app_data)
           viewport[1].Width = 0.5;
           viewport[1].Height = 0.5;
 
-          g_signal_emit_by_name (app_data->sink, "uv-remap", 2, remap, viewport);
+          g_signal_emit_by_name (app_data->sink, "uv-remap", 2, remap, viewport,
+              bg_colors);
         } else {
           /* Clear remap */
           g_signal_emit_by_name (app_data->sink,
-              "uv-remap", 0, nullptr, nullptr);
+              "uv-remap", 0, nullptr, nullptr, nullptr);
         }
 
         /* Redraw to update view */

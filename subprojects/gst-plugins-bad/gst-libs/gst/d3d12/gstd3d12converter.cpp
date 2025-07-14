@@ -1767,6 +1767,7 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
     comm->const_data_dyn.bgColor[i] = CLAMP (comm->const_data_dyn.bgColor[i],
         in_m->min[i], in_m->max[i]);
   }
+  comm->const_data_dyn.bgColor[3] = a;
 
   GST_DEBUG_OBJECT (self, "Calculated background color ARGB: %f, %f, %f, %f",
       a, converted[0], converted[1], converted[2]);
@@ -1953,6 +1954,36 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
         break;
     }
   }
+}
+
+static void
+gst_d3d12_converter_calculate_remap_border_color (GstD3D12Converter * self,
+    guint64 color)
+{
+  auto priv = self->priv;
+  GstD3D12ColorMatrix *in_m = &priv->in_clear_color_matrix;
+  gdouble a;
+  gdouble rgb[3];
+  auto comm = priv->main_ctx->comm;
+
+  a = ((color & 0xffff000000000000) >> 48) / (gdouble) G_MAXUINT16;
+  rgb[0] = ((color & 0x0000ffff00000000) >> 32) / (gdouble) G_MAXUINT16;
+  rgb[1] = ((color & 0x00000000ffff0000) >> 16) / (gdouble) G_MAXUINT16;
+  rgb[2] = (color & 0x000000000000ffff) / (gdouble) G_MAXUINT16;
+
+  for (guint i = 0; i < 3; i++) {
+    comm->const_data_dyn.bgColor[i] = 0;
+
+    for (guint j = 0; j < 3; j++)
+      comm->const_data_dyn.bgColor[i] += in_m->matrix[i][j] * rgb[j];
+
+    comm->const_data_dyn.bgColor[i] += in_m->offset[i];
+
+    comm->const_data_dyn.bgColor[i] = CLAMP (comm->const_data_dyn.bgColor[i],
+        in_m->min[i], in_m->max[i]);
+  }
+
+  comm->const_data_dyn.bgColor[3] = a;
 }
 
 static gboolean
@@ -2685,7 +2716,8 @@ static gboolean
 gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
     GstBuffer * in_buf, GstBuffer * out_buf, GstD3D12FenceData * fence_data,
     ID3D12GraphicsCommandList * command_list, gboolean execute_gpu_wait,
-    guint num_remap, ID3D12Resource ** lut, GstVideoRectangle * viewport)
+    guint num_remap, ID3D12Resource ** lut, GstVideoRectangle * viewport,
+    guint64 * border_color)
 {
   GstD3D12Frame in_frame;
   GstD3D12Frame out_frame;
@@ -2932,11 +2964,16 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
       auto prev_y = priv->dest_y;
       auto prev_w = priv->dest_width;
       auto prev_h = priv->dest_height;
+      FLOAT prev_color[4];
+      for (guint i = 0; i < 4; i++)
+        prev_color[i] = priv->main_ctx->comm->const_data_dyn.bgColor[i];
 
       for (guint i = 0; i < num_remap; i++) {
         gst_d3d12_converter_set_remap_unlocked (converter, lut[i]);
         gst_d3d12_converter_update_viewport_unlocked (converter,
             viewport[i].x, viewport[i].y, viewport[i].w, viewport[i].h);
+        gst_d3d12_converter_calculate_remap_border_color (converter,
+            border_color[i]);
 
         if (priv->post_mipgen_ctx) {
           ret = gst_d3d12_converter_execute (converter,
@@ -2956,6 +2993,8 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
       gst_d3d12_converter_set_remap_unlocked (converter, prev_remap.Get ());
       gst_d3d12_converter_update_viewport_unlocked (converter,
           prev_x, prev_y, prev_w, prev_h);
+      for (guint i = 0; i < 4; i++)
+        priv->main_ctx->comm->const_data_dyn.bgColor[i] = prev_color[i];
     }
 
     gst_d3d12_frame_unmap (&mipgen_frame);
@@ -3046,14 +3085,15 @@ gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
 
   return gst_d3d12_converter_convert_buffer_internal (converter,
       in_buf, out_buf, fence_data, command_list, execute_gpu_wait,
-      0, nullptr, nullptr);
+      0, nullptr, nullptr, nullptr);
 }
 
 gboolean
 gst_d3d12_converter_convert_buffer_for_uv_remap (GstD3D12Converter * converter,
     GstBuffer * in_buf, GstBuffer * out_buf, GstD3D12FenceData * fence_data,
     ID3D12GraphicsCommandList * command_list, gboolean execute_gpu_wait,
-    guint num_remap, ID3D12Resource ** lut, GstVideoRectangle * viewport)
+    guint num_remap, ID3D12Resource ** lut, GstVideoRectangle * viewport,
+    guint64 * border_color)
 {
   g_return_val_if_fail (GST_IS_D3D12_CONVERTER (converter), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (in_buf), FALSE);
@@ -3066,7 +3106,7 @@ gst_d3d12_converter_convert_buffer_for_uv_remap (GstD3D12Converter * converter,
 
   return gst_d3d12_converter_convert_buffer_internal (converter,
       in_buf, out_buf, fence_data, command_list, execute_gpu_wait,
-      num_remap, lut, viewport);
+      num_remap, lut, viewport, border_color);
 }
 
 /**

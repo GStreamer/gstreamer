@@ -233,6 +233,7 @@ struct GstD3D12SwapChainSinkPrivate
   std::vector<ComPtr<ID3D12Resource>> uv_remap;
   std::vector<D3D12_VIEWPORT> uv_remap_viewport_origin;
   std::vector<GstVideoRectangle> uv_remap_viewport;
+  std::vector<guint64> uv_remap_bg_color;
 
   gint adapter = DEFAULT_ADAPTER;
   gint force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
@@ -281,7 +282,8 @@ static GstFlowReturn gst_d3d12_swapchain_sink_show_frame (GstVideoSink * sink,
 static void gst_d3d12_swapchain_sink_resize (GstD3D12SwapChainSink * self,
     guint width, guint height);
 static void gst_d3d12_swapchain_sink_uv_remap (GstD3D12SwapChainSink * self,
-    guint num_lut, ID3D12Resource ** lut, D3D12_VIEWPORT * viewport);
+    guint num_lut, ID3D12Resource ** lut, D3D12_VIEWPORT * viewport,
+    guint64 * bg_color);
 static void gst_d3d12_swapchain_sink_redraw (GstD3D12SwapChainSink * self);
 static void
 gst_d3d12_swapchain_sink_resize_internal (GstD3D12SwapChainSink * self,
@@ -405,6 +407,7 @@ gst_d3d12_swapchain_sink_class_init (GstD3D12SwapChainSinkClass * klass)
    * @num_lut: LUT resource array length
    * @lut: Array of ID3D12Resource used for UV remap operation
    * @viewport: Array of D3D12_VIEWPORT
+   * @bg_color: Array of background color represented via ARGB64 value
    *
    * Sets list of ID3D12Resource for UV coordinates remapping.
    * Valid formats are R8G8B8A8_UNORM and R16G16B16A16_UNORM.
@@ -421,7 +424,8 @@ gst_d3d12_swapchain_sink_class_init (GstD3D12SwapChainSinkClass * klass)
       g_signal_new_class_handler ("uv-remap", G_TYPE_FROM_CLASS (klass),
       (GSignalFlags) (G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION),
       G_CALLBACK (gst_d3d12_swapchain_sink_uv_remap), nullptr, nullptr, nullptr,
-      G_TYPE_NONE, 3, G_TYPE_UINT, G_TYPE_POINTER, G_TYPE_POINTER);
+      G_TYPE_NONE, 4, G_TYPE_UINT, G_TYPE_POINTER, G_TYPE_POINTER,
+      G_TYPE_POINTER);
 
   /**
    * GstD3D12SwapChainSink::redraw
@@ -1092,7 +1096,7 @@ gst_d3d12_swapchain_sink_render (GstD3D12SwapChainSink * self)
     if (!gst_d3d12_converter_convert_buffer_for_uv_remap (priv->conv,
             priv->cached_buf, conv_outbuf, fence_data, cl.Get (), TRUE,
             (guint) priv->uv_remap.size (), uv_remap.data (),
-            priv->uv_remap_viewport.data ())) {
+            priv->uv_remap_viewport.data (), priv->uv_remap_bg_color.data ())) {
       GST_ERROR_OBJECT (self, "Couldn't build convert command");
       gst_d3d12_fence_data_unref (fence_data);
       return FALSE;
@@ -1392,7 +1396,7 @@ gst_d3d12_swapchain_sink_resize (GstD3D12SwapChainSink * self, guint width,
 
 static void
 gst_d3d12_swapchain_sink_uv_remap (GstD3D12SwapChainSink * self, guint num_lut,
-    ID3D12Resource ** lut, D3D12_VIEWPORT * viewport)
+    ID3D12Resource ** lut, D3D12_VIEWPORT * viewport, guint64 * bg_color)
 {
   auto priv = self->priv;
 
@@ -1400,11 +1404,13 @@ gst_d3d12_swapchain_sink_uv_remap (GstD3D12SwapChainSink * self, guint num_lut,
   priv->uv_remap.clear ();
   priv->uv_remap_viewport.clear ();
   priv->uv_remap_viewport_origin.clear ();
+  priv->uv_remap_bg_color.clear ();
 
   for (guint i = 0; i < num_lut; i++) {
     ComPtr < ID3D12Resource > remap = lut[i];
     priv->uv_remap.push_back (remap);
     priv->uv_remap_viewport_origin.push_back (viewport[i]);
+    priv->uv_remap_bg_color.push_back (bg_color[i]);
 
     GstVideoRectangle rect = { };
     calculate_remap_viewport (self, &viewport[i], &rect);
