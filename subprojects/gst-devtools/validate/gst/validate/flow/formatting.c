@@ -45,6 +45,12 @@ static GstStructure *checksums_as_id = NULL;
 
 #define CONSTIFY(strv) ((const gchar * const *) strv)
 
+static void format_time (gchar * dest_str, guint64 time);
+static gchar *validate_flow_format_segment (const GstSegment * segment,
+    gchar ** logged_fields, gchar ** ignored_fields);
+static gchar *validate_flow_format_caps (const GstCaps * caps,
+    gchar ** wanted_fields, gchar ** ignored_fields);
+
 static gboolean
 use_field (const gchar * field, gchar ** logged, gchar ** ignored)
 {

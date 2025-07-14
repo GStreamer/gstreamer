@@ -31,12 +31,6 @@
 #define CHECKSUM_TYPE_CONTENT_HEX -3
 #define CHECKSUM_TYPE_CONTENT_TEXT -4
 
-void format_time(gchar* dest_str, guint64 time);
-
-gchar* validate_flow_format_segment(const GstSegment* segment, gchar** logged_fields, gchar** ignored_fields);
-
-gchar* validate_flow_format_caps (const GstCaps* caps, gchar **wanted_fields, gchar **ignored_fields);
-
 gchar* validate_flow_format_buffer(const ValidateFlowOverride *flow, GstBuffer* buffer);
 
 gchar* validate_flow_format_event(const ValidateFlowOverride *flow, GstEvent* event);
