@@ -97,7 +97,6 @@ vkmemory_suite (void)
   suite_add_tcase (s, tc_basic);
   tcase_add_checked_fixture (tc_basic, setup, teardown);
 
-  /* FIXME: CI doesn't have a software vulkan renderer (and none exists currently) */
   instance = gst_vulkan_instance_new ();
   have_instance = gst_vulkan_instance_open (instance, NULL);
   gst_object_unref (instance);

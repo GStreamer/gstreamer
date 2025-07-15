@@ -157,7 +157,6 @@ vkinstance_suite (void)
   tcase_add_test (tc_basic, test_instance_new);
   tcase_add_test (tc_basic, test_instance_version_before_open);
 
-  /* FIXME: CI doesn't have a software vulkan renderer (and none exists currently) */
   instance = gst_vulkan_instance_new ();
   have_instance = gst_vulkan_instance_open (instance, NULL);
   gst_object_unref (instance);
