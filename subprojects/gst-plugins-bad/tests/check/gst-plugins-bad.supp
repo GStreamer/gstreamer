@@ -131,3 +131,26 @@
    fun:srtp_element_init
    fun:gst_element_register_srtpenc
 }
+{
+   <The OpenSSL version shipping in Fedora 40 leaks memory, the issue is fixed in F42>
+   Memcheck:Leak
+   match-leak-kinds: indirect
+   fun:malloc
+   fun:CRYPTO_malloc
+   ...
+   fun:tls1_change_cipher_state
+   fun:ossl_statem_client_post_work
+   fun:UnknownInlinedFun
+   fun:state_machine
+}
+{
+   <The OpenSSL version shipping in Fedora 40 leaks memory, the issue is fixed in F42>
+   Memcheck:Leak
+   match-leak-kinds: indirect
+   fun:malloc
+   fun:CRYPTO_malloc
+   ...
+   fun:ossl_ec_key_simple_generate_key
+   fun:ossl_ec_key_gen
+   fun:EC_KEY_generate_key
+}
