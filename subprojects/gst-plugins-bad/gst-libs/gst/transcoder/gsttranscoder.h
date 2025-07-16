@@ -93,10 +93,10 @@ GST_TRANSCODER_API
 void           gst_transcoder_message_parse_state              (GstMessage * msg, GstTranscoderState * state);
 
 GST_TRANSCODER_API
-void           gst_transcoder_message_parse_error              (GstMessage * msg, GError * error, GstStructure ** details);
+void           gst_transcoder_message_parse_error              (GstMessage * msg, GError ** error, GstStructure ** details);
 
 GST_TRANSCODER_API
-void           gst_transcoder_message_parse_warning            (GstMessage * msg, GError * error, GstStructure ** details);
+void           gst_transcoder_message_parse_warning            (GstMessage * msg, GError ** error, GstStructure ** details);
 
 
 

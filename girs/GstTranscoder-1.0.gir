@@ -439,9 +439,9 @@ See also #gst_transcoder_get_message_bus()</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">A #GstMessage</doc>
             <type name="Gst.Message" c:type="GstMessage*"/>
           </parameter>
-          <parameter name="error" direction="out" caller-allocates="1" transfer-ownership="full" optional="1" allow-none="1">
+          <parameter name="error" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">the resulting error</doc>
-            <type name="GLib.Error" c:type="GError*"/>
+            <type name="GLib.Error" c:type="GError**"/>
           </parameter>
           <parameter name="details" direction="out" caller-allocates="0" transfer-ownership="full">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">(transfer full): A GstStructure containing extra details about the error</doc>
@@ -494,9 +494,9 @@ See also #gst_transcoder_get_message_bus()</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">A #GstMessage</doc>
             <type name="Gst.Message" c:type="GstMessage*"/>
           </parameter>
-          <parameter name="error" direction="out" caller-allocates="1" transfer-ownership="full" optional="1" allow-none="1">
+          <parameter name="error" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">the resulting warning</doc>
-            <type name="GLib.Error" c:type="GError*"/>
+            <type name="GLib.Error" c:type="GError**"/>
           </parameter>
           <parameter name="details" direction="out" caller-allocates="0" transfer-ownership="full">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">(transfer full): A GstStructure containing extra details about the warning</doc>
@@ -680,9 +680,9 @@ stream.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">A #GstMessage</doc>
           <type name="Gst.Message" c:type="GstMessage*"/>
         </parameter>
-        <parameter name="error" direction="out" caller-allocates="1" transfer-ownership="full" optional="1" allow-none="1">
+        <parameter name="error" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">the resulting error</doc>
-          <type name="GLib.Error" c:type="GError*"/>
+          <type name="GLib.Error" c:type="GError**"/>
         </parameter>
         <parameter name="details" direction="out" caller-allocates="0" transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">(transfer full): A GstStructure containing extra details about the error</doc>
@@ -735,9 +735,9 @@ stream.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">A #GstMessage</doc>
           <type name="Gst.Message" c:type="GstMessage*"/>
         </parameter>
-        <parameter name="error" direction="out" caller-allocates="1" transfer-ownership="full" optional="1" allow-none="1">
+        <parameter name="error" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">the resulting warning</doc>
-          <type name="GLib.Error" c:type="GError*"/>
+          <type name="GLib.Error" c:type="GError**"/>
         </parameter>
         <parameter name="details" direction="out" caller-allocates="0" transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">(transfer full): A GstStructure containing extra details about the warning</doc>

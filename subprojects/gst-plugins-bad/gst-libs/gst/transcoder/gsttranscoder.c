@@ -1470,7 +1470,7 @@ gst_transcoder_message_parse_state (GstMessage * msg,
  * Since: 1.20
  */
 void
-gst_transcoder_message_parse_error (GstMessage * msg, GError * error,
+gst_transcoder_message_parse_error (GstMessage * msg, GError ** error,
     GstStructure ** details)
 {
   PARSE_MESSAGE_FIELD (msg, GST_TRANSCODER_MESSAGE_DATA_ERROR, G_TYPE_ERROR,
@@ -1490,7 +1490,7 @@ gst_transcoder_message_parse_error (GstMessage * msg, GError * error,
  * Since: 1.20
  */
 void
-gst_transcoder_message_parse_warning (GstMessage * msg, GError * error,
+gst_transcoder_message_parse_warning (GstMessage * msg, GError ** error,
     GstStructure ** details)
 {
   PARSE_MESSAGE_FIELD (msg, GST_TRANSCODER_MESSAGE_DATA_WARNING, G_TYPE_ERROR,
