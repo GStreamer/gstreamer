@@ -308,6 +308,8 @@ gst_face_detector_tensor_decoder_get_tensor_meta (GstFaceDetectorTensorDecoder
     const GstTensor ** scores_tensor)
 {
   GstTensorMeta *tensor_meta;
+  static const gsize BOXES_DIMS[] = { 1, G_MAXSIZE, 4 };
+  static const gsize SCORES_DIMS[] = { 1, G_MAXSIZE, 2 };
 
   g_return_val_if_fail (boxes_tensor != NULL, FALSE);
   g_return_val_if_fail (scores_tensor != NULL, FALSE);
@@ -330,7 +332,13 @@ gst_face_detector_tensor_decoder_get_tensor_meta (GstFaceDetectorTensorDecoder
    * 3 dimensions and the data type matching with GST_TENSOR_DATA_TYPE_FLOAT32 */
   *boxes_tensor =
       gst_tensor_meta_get_typed_tensor (tensor_meta, BOXES_TENSOR_ID_QUARK,
-      GST_TENSOR_DIM_ORDER_ROW_MAJOR, 3, GST_TENSOR_DATA_TYPE_FLOAT32, buf);
+      GST_TENSOR_DATA_TYPE_FLOAT32, GST_TENSOR_DIM_ORDER_ROW_MAJOR, 3,
+      BOXES_DIMS);
+
+  if (*boxes_tensor == NULL) {
+    GST_WARNING_OBJECT (self, "Can't retrieve boxes tensor");
+    return FALSE;
+  }
 
   /* Retrieve the tensor that has a tensor-id matching
    * SCORES_TENSOR_ID_QUARK in the GstTensorMeta along with
@@ -338,10 +346,13 @@ gst_face_detector_tensor_decoder_get_tensor_meta (GstFaceDetectorTensorDecoder
    * 3 dimensions and the data type matching with GST_TENSOR_DATA_TYPE_FLOAT32 */
   *scores_tensor =
       gst_tensor_meta_get_typed_tensor (tensor_meta, SCORES_TENSOR_ID_QUARK,
-      GST_TENSOR_DIM_ORDER_ROW_MAJOR, 3, GST_TENSOR_DATA_TYPE_FLOAT32, buf);
+      GST_TENSOR_DATA_TYPE_FLOAT32, GST_TENSOR_DIM_ORDER_ROW_MAJOR, 3,
+      SCORES_DIMS);
 
-  if (*boxes_tensor == NULL || *scores_tensor == NULL)
+  if (*scores_tensor == NULL) {
+    GST_WARNING_OBJECT (self, "Can't retrieve boxes tensor");
     return FALSE;
+  }
 
   return TRUE;
 }
@@ -644,7 +655,7 @@ gst_face_detector_tensor_decoder_transform_ip (GstBaseTransform * trans,
   if (!gst_face_detector_tensor_decoder_get_tensor_meta (self, buf,
           &boxes_tensor, &scores_tensor)) {
     GST_ELEMENT_ERROR (self, STREAM, DECODE, (NULL),
-        ("Tensor doens't have the expected data type or shape."));
+        ("Tensor doesn't have the expected data type or shape."));
     return GST_FLOW_ERROR;
   }
 

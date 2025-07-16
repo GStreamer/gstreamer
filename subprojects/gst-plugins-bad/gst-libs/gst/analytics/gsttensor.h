@@ -221,8 +221,9 @@ GST_ANALYTICS_META_API
 const gchar *gst_tensor_data_type_get_name (GstTensorDataType data_type);
 
 GST_ANALYTICS_META_API
-gboolean gst_tensor_check_type(const GstTensor * tensor, GstTensorDimOrder order,
-          gsize num_dims, GstTensorDataType data_type, GstBuffer * data);
+gboolean gst_tensor_check_type(const GstTensor * tensor,
+    GstTensorDataType data_type, GstTensorDimOrder order, gsize num_dims,
+    const gsize *dims);
 
 G_END_DECLS
 
