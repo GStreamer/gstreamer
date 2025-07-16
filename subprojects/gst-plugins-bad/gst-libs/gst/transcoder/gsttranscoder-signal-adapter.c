@@ -110,7 +110,8 @@ gst_transcoder_signal_adapter_emit (GstTranscoderSignalAdapter * self,
       GstStructure *details = NULL;
 
       gst_structure_get (message_data, GST_TRANSCODER_MESSAGE_DATA_ERROR,
-          G_TYPE_ERROR, &error, GST_TYPE_STRUCTURE, &details, NULL);
+          G_TYPE_ERROR, &error, GST_TRANSCODER_MESSAGE_DATA_ISSUE_DETAILS,
+          GST_TYPE_STRUCTURE, &details, NULL);
       g_signal_emit (self, signals[SIGNAL_ERROR], 0, error, details);
       g_error_free (error);
       if (details)
@@ -122,7 +123,8 @@ gst_transcoder_signal_adapter_emit (GstTranscoderSignalAdapter * self,
       GError *error = NULL;
 
       gst_structure_get (message_data, GST_TRANSCODER_MESSAGE_DATA_WARNING,
-          G_TYPE_ERROR, &error, GST_TYPE_STRUCTURE, &details, NULL);
+          G_TYPE_ERROR, &error, GST_TRANSCODER_MESSAGE_DATA_ISSUE_DETAILS,
+          GST_TYPE_STRUCTURE, &details, NULL);
       g_signal_emit (self, signals[SIGNAL_WARNING], 0, error, details);
       g_error_free (error);
       if (details)
