@@ -35,6 +35,16 @@ might be widely known to present patent problems.
 
  <release>
   <Version>
+   <revision>1.26.4</revision>
+   <branch>1.26</branch>
+   <name></name>
+   <created>2025-07-16</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.26.4.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>1.26.3</revision>
    <branch>1.26</branch>
    <name></name>

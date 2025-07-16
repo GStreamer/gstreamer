@@ -1,5 +1,5 @@
 project('gst-examples', 'c',
-  version : '1.26.3.1',
+  version : '1.26.4',
   meson_version : '>=1.0')
 
 static_build = get_option('default_library') == 'static'
