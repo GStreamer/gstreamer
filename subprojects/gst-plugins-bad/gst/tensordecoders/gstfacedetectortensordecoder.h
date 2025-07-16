@@ -36,9 +36,14 @@ G_DECLARE_FINAL_TYPE (GstFaceDetectorTensorDecoder,
 typedef struct
 {
   guint16 index;
-  gfloat *box;
-  gfloat *score;
+  gfloat box[4];
+  gfloat score;
 } Candidate;
+
+
+typedef struct {
+  gfloat cx, cy, w, h;
+} Anchor;
 
 /**
  * GstFaceDetectorTensorDecoder:
@@ -57,6 +62,10 @@ struct _GstFaceDetectorTensorDecoder
 
   /* Video Info */
   GstVideoInfo video_info;
+
+  /* Center (cx,cy) and width, height */
+  Anchor *anchors;
+  guint anchor_count;
 
   /* Candidates with a class confidence level above threshold. */
   GPtrArray *sel_candidates;

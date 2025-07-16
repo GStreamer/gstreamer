@@ -50,6 +50,8 @@
 
 #include "gstfacedetectortensordecoder.h"
 
+#include <math.h>
+
 #include <gio/gio.h>
 
 #include <gst/gst.h>
@@ -58,6 +60,7 @@
 
 /* Face detection tensor id strings */
 #define BOXES_TENSOR_ID "ssd-mobilenet-v1-variant-1-out-boxes"
+#define BOXES_WITHOUT_POSTPROC_TENSOR_ID "ultra-lightweight-face-detection-rfb-320-v1-variant-1-out-boxes-without-postproc"
 #define SCORES_TENSOR_ID "ultra-lightweight-face-detection-rfb-320-v1-variant-1-out-scores"
 #define GROUP_ID "ultra-lightweight-face-detection-rfb-320-v1-variant-1-out"
 
@@ -87,6 +90,7 @@ static const gfloat DEFAULT_IOU_THRESHOLD = 0.3f;       /* NMS IoU threshold */
  * just calculate the hash once during initialization and store the value in
  * these variables. */
 GQuark BOXES_TENSOR_ID_QUARK;
+GQuark BOXES_WITHOUT_POSTPROC_TENSOR_ID_QUARK;
 GQuark SCORES_TENSOR_ID_QUARK;
 
 GQuark FACE_QUARK;
@@ -227,6 +231,8 @@ gst_face_detector_tensor_decoder_class_init (GstFaceDetectorTensorDecoderClass
       GST_DEBUG_FUNCPTR (gst_face_detector_tensor_decoder_set_caps);
 
   BOXES_TENSOR_ID_QUARK = g_quark_from_static_string (BOXES_TENSOR_ID);
+  BOXES_WITHOUT_POSTPROC_TENSOR_ID_QUARK =
+      g_quark_from_static_string (BOXES_WITHOUT_POSTPROC_TENSOR_ID);
   SCORES_TENSOR_ID_QUARK = g_quark_from_static_string (SCORES_TENSOR_ID);
   FACE_QUARK = g_quark_from_static_string ("face");
 }
@@ -249,6 +255,7 @@ gst_face_detector_tensor_decoder_finalize (GObject * object)
   GstFaceDetectorTensorDecoder *self =
       GST_FACE_DETECTOR_TENSOR_DECODER (object);
 
+  g_clear_pointer (&self->anchors, g_free);
   g_clear_pointer (&self->sel_candidates, g_ptr_array_unref);
   g_clear_pointer (&self->selected, g_ptr_array_unref);
   g_clear_pointer (&self->candidates, g_free);
@@ -297,6 +304,81 @@ gst_face_detector_tensor_decoder_get_property (GObject * object, guint prop_id,
   }
 }
 
+/* Generate all anchors in normalized coords [0..1]. */
+static void
+generate_anchors (GstFaceDetectorTensorDecoder * self, guint input_w,
+    guint input_h)
+{
+  static const int FEATURE_MAPS[4][2] = {
+    {40, 30},                   // (width=40, height=30)
+    {20, 15},
+    {10, 8},
+    {5, 4}
+  };
+  static const int MIN_BOXES[4][3] = {
+    {10, 16, 24},               // 3 sizes
+    {32, 48, 0},                // 2 sizes (the 3rd is 0 -> skip)
+    {64, 96, 0},                // 2 sizes
+    {128, 192, 256}             // 3 sizes
+  };
+  int total = 0;
+
+  g_clear_pointer (&self->anchors, g_free);
+  self->anchor_count = 0;
+
+  for (int i = 0; i < 4; i++) {
+    int fmW = FEATURE_MAPS[i][0];
+    int fmH = FEATURE_MAPS[i][1];
+
+    int nBoxes = 0;
+    for (int mb = 0; mb < 3; mb++) {
+      if (MIN_BOXES[i][mb] > 0)
+        nBoxes++;
+    }
+    total += (fmW * fmH * nBoxes);
+  }
+
+  self->anchor_count = total;
+  self->anchors = g_new0 (Anchor, self->anchor_count);
+
+  int index = 0;
+  for (int i = 0; i < 4; i++) {
+    int fmW = FEATURE_MAPS[i][0];
+    int fmH = FEATURE_MAPS[i][1];
+
+    int nBoxes = 0;
+    float boxesArr[3];
+    for (int mb = 0; mb < 3; mb++) {
+      int val = MIN_BOXES[i][mb];
+      if (val > 0) {
+        boxesArr[nBoxes++] = (float) val;
+      }
+    }
+
+    for (int y = 0; y < fmH; y++) {
+      for (int x = 0; x < fmW; x++) {
+        float cx = ((float) x + 0.5f) / (float) fmW;
+        float cy = ((float) y + 0.5f) / (float) fmH;
+
+        for (int mb = 0; mb < nBoxes; mb++) {
+          float bw = boxesArr[mb] / (float) input_w;
+          float bh = boxesArr[mb] / (float) input_h;
+
+          /* clip to [0, 1.0] */
+          self->anchors[index].cx = CLAMP (cx, 0.0, 1.0);
+          self->anchors[index].cy = CLAMP (cy, 0.0, 1.0);
+          self->anchors[index].w = CLAMP (bw, 0.0, 1.0);
+          self->anchors[index].h = CLAMP (bh, 0.0, 1.0);
+          index++;
+        }
+      }
+    }
+  }
+
+  GST_DEBUG_OBJECT (self, "Generated %d anchors for input %dx%d",
+      total, input_w, input_h);
+}
+
 /* gst_face_detector_tensor_decoder_set_caps:
  *
  * Callback on caps negotiation completed. We use it here to retrieve
@@ -312,6 +394,8 @@ gst_face_detector_tensor_decoder_set_caps (GstBaseTransform * trans,
     GST_ERROR_OBJECT (self, "Failed to parse caps");
     return FALSE;
   }
+
+  generate_anchors (self, self->video_info.width, self->video_info.height);
 
   return TRUE;
 }
@@ -329,7 +413,7 @@ gst_face_detector_tensor_decoder_set_caps (GstBaseTransform * trans,
 static gboolean
 gst_face_detector_tensor_decoder_get_tensor_meta (GstFaceDetectorTensorDecoder
     * self, GstBuffer * buf, const GstTensor ** boxes_tensor,
-    const GstTensor ** scores_tensor)
+    const GstTensor ** scores_tensor, gboolean * do_postproc)
 {
   GstMeta *meta;
   gpointer state = NULL;
@@ -346,6 +430,7 @@ gst_face_detector_tensor_decoder_get_tensor_meta (GstFaceDetectorTensorDecoder
   while ((meta = gst_buffer_iterate_meta_filtered (buf, &state,
               GST_TENSOR_META_API_TYPE))) {
     GstTensorMeta *tensor_meta = (GstTensorMeta *) meta;
+    *do_postproc = FALSE;
 
     GST_LOG_OBJECT (self, "Num tensors %zu", tensor_meta->num_tensors);
 
@@ -357,6 +442,15 @@ gst_face_detector_tensor_decoder_get_tensor_meta (GstFaceDetectorTensorDecoder
         gst_tensor_meta_get_typed_tensor (tensor_meta, BOXES_TENSOR_ID_QUARK,
         GST_TENSOR_DATA_TYPE_FLOAT32, GST_TENSOR_DIM_ORDER_ROW_MAJOR, 3,
         BOXES_DIMS);
+
+    if (*boxes_tensor == NULL) {
+      *boxes_tensor =
+          gst_tensor_meta_get_typed_tensor (tensor_meta,
+          BOXES_WITHOUT_POSTPROC_TENSOR_ID_QUARK,
+          GST_TENSOR_DATA_TYPE_FLOAT32, GST_TENSOR_DIM_ORDER_ROW_MAJOR, 3,
+          BOXES_DIMS);
+      *do_postproc = TRUE;
+    }
 
     if (*boxes_tensor == NULL)
       continue;
@@ -398,9 +492,9 @@ gst_face_detector_tensor_decoder_sort_candidates (gconstpointer c1,
   const Candidate *candidate1 = *((Candidate **) c1);
   const Candidate *candidate2 = *((Candidate **) c2);
 
-  if (*candidate1->score < *candidate2->score) {
+  if (candidate1->score < candidate2->score) {
     return 1;
-  } else if (*candidate1->score > *candidate2->score) {
+  } else if (candidate1->score > candidate2->score) {
     return -1;
   } else {
     return 0;
@@ -516,11 +610,12 @@ hard_nms (const GPtrArray * sel_candidates,
 static void
 gst_face_detector_tensor_decoder_decode_boxes_f32 (GstFaceDetectorTensorDecoder
     * self, const GstTensor * boxes_tensor, const GstTensor * scores_tensor,
-    GstAnalyticsRelationMeta * rmeta)
+    gboolean do_postproc, GstAnalyticsRelationMeta * rmeta)
 {
   GstMapInfo map_info_boxes, map_info_scores;
-  gfloat *candidate, *score;
+  gfloat *candidates, *scores;
   gboolean rv GST_UNUSED_ASSERT;
+
   GPtrArray *sel_candidates = self->sel_candidates, *selected = self->selected;
 
   rv = gst_buffer_map (boxes_tensor->data, &map_info_boxes, GST_MAP_READ);
@@ -563,10 +658,13 @@ gst_face_detector_tensor_decoder_decode_boxes_f32 (GstFaceDetectorTensorDecoder
     g_ptr_array_set_size (selected, 0);
   }
 
-  score = (gfloat *) map_info_scores.data;
-  candidate = (gfloat *) map_info_boxes.data;
+  scores = (gfloat *) map_info_scores.data;
+  candidates = (gfloat *) map_info_boxes.data;
 
   gsize idx = 0;
+
+  gsize num_boxes = MIN (scores_tensor->dims[1], self->anchor_count);
+  num_boxes = MIN (num_boxes, boxes_tensor->dims[1]);
 
   /* For UltraLightFaceDetection:
    *  "boxes" => shape [N,4], where N = 4420
@@ -579,11 +677,58 @@ gst_face_detector_tensor_decoder_decode_boxes_f32 (GstFaceDetectorTensorDecoder
    * Check whether the score exceeds default threshold, if it does, select the score and corresponding box.
    * Add these selected boxes to the sel_candidates array.
    * */
-  for (gsize i = 1, j = 0; i < scores_tensor->dims[1] * 2; i += 2, j += 4) {
-    if (score[i] >= self->score_threshold) {
+  for (gsize i = 0; i < num_boxes; i++) {
+    gsize j = i * 4;
+    float score = scores[i * 2 + 1];
+
+    if (score >= self->score_threshold) {
       self->candidates[idx].index = idx;
-      self->candidates[idx].box = &candidate[j];
-      self->candidates[idx].score = &score[i];
+
+      if (do_postproc) {
+        const float CENTER_VARIANCE = 0.1f;     /* from Python center_variance */
+        const float SIZE_VARIANCE = 0.2f;       /* from Python size_variance */
+
+        float anchor_cx = self->anchors[i].cx;
+        float anchor_cy = self->anchors[i].cy;
+        float anchor_w = self->anchors[i].w;
+        float anchor_h = self->anchors[i].h;
+
+        float dx = candidates[j + 0];
+        float dy = candidates[j + 1];
+        float dw = candidates[j + 2];
+        float dh = candidates[j + 3];
+
+        /* decode regression */
+
+        float pred_cx = dx * CENTER_VARIANCE * anchor_w + anchor_cx;
+        float pred_cy = dy * CENTER_VARIANCE * anchor_h + anchor_cy;
+
+        /* center_wh */
+        float pred_w = expf (dw * SIZE_VARIANCE) * anchor_w / 2.f;
+        float pred_h = expf (dh * SIZE_VARIANCE) * anchor_h / 2.f;
+
+        float x1 = pred_cx - pred_w;
+        float y1 = pred_cy - pred_h;
+        float x2 = pred_cx + pred_w;
+        float y2 = pred_cy + pred_h;
+
+        /* clamp to [0..1] */
+        x1 = CLAMP (x1, 0.0, 1.0);
+        x2 = CLAMP (x2, 0.0, 1.0);
+        y1 = CLAMP (y1, 0.0, 1.0);
+        y2 = CLAMP (y2, 0.0, 1.0);
+
+        self->candidates[idx].box[0] = x1;
+        self->candidates[idx].box[1] = y1;
+        self->candidates[idx].box[2] = x2;
+        self->candidates[idx].box[3] = y2;
+      } else {
+        self->candidates[idx].box[0] = candidates[j + 0];
+        self->candidates[idx].box[1] = candidates[j + 1];
+        self->candidates[idx].box[2] = candidates[j + 2];
+        self->candidates[idx].box[3] = candidates[j + 3];
+      }
+      self->candidates[idx].score = score;
 
       g_ptr_array_add (sel_candidates, &self->candidates[idx]);
       idx++;
@@ -607,7 +752,7 @@ gst_face_detector_tensor_decoder_decode_boxes_f32 (GstFaceDetectorTensorDecoder
         GST_TRACE_OBJECT (self, "sel_candidates[%zu] = %1.5f ", i + j,
             c->box[j]);
       }
-      GST_TRACE_OBJECT (self, "score[%zu] = %1.5f", i + j, c->score[0]);
+      GST_TRACE_OBJECT (self, "score[%zu] = %1.5f", i + j, c->score);
     }
   }
 
@@ -620,7 +765,7 @@ gst_face_detector_tensor_decoder_decode_boxes_f32 (GstFaceDetectorTensorDecoder
   if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_TRACE) {
     for (gsize i = 0; i < sel_candidates->len; i++) {
       Candidate *c = (Candidate *) g_ptr_array_index (sel_candidates, i);
-      GST_TRACE_OBJECT (self, "c[%zu] = %1.5f index = %d", i, c->score[0],
+      GST_TRACE_OBJECT (self, "c[%zu] = %1.5f index = %d", i, c->score,
           c->index);
     }
   }
@@ -634,8 +779,7 @@ gst_face_detector_tensor_decoder_decode_boxes_f32 (GstFaceDetectorTensorDecoder
       Candidate *c = (Candidate *) g_ptr_array_index (selected, i);
       GST_TRACE_OBJECT (self,
           "%zu x1 = %1.5f y1 = %1.5f x2 = %1.5f y2 = %1.5f score = %1.5f",
-          i + 1, c->box[i + 0], c->box[i + 1], c->box[i + 2], c->box[i + 3],
-          c->score[0]);
+          i + 1, c->box[0], c->box[1], c->box[2], c->box[3], c->score);
     }
   }
 
@@ -655,7 +799,7 @@ gst_face_detector_tensor_decoder_decode_boxes_f32 (GstFaceDetectorTensorDecoder
     /* Add to analytics meta: (x, y, width, height). */
     gst_analytics_relation_meta_add_od_mtd (rmeta, FACE_QUARK,
         (gint) (x1 + 0.5f), (gint) (y1 + 0.5f),
-        (gint) (w_ + 0.5f), (gint) (h_ + 0.5f), c->score[0], NULL);
+        (gint) (w_ + 0.5f), (gint) (h_ + 0.5f), c->score, NULL);
   }
 
 cleanup:
@@ -679,12 +823,13 @@ gst_face_detector_tensor_decoder_transform_ip (GstBaseTransform * trans,
 {
   GstFaceDetectorTensorDecoder *self = GST_FACE_DETECTOR_TENSOR_DECODER (trans);
   const GstTensor *boxes_tensor, *scores_tensor;
+  gboolean do_postproc = FALSE;
   GstAnalyticsRelationMeta *rmeta;
 
   /* Retrive the desired Face Detection tensors.
    * Return Flow Error if the desired tensors were not supported. */
   if (!gst_face_detector_tensor_decoder_get_tensor_meta (self, buf,
-          &boxes_tensor, &scores_tensor)) {
+          &boxes_tensor, &scores_tensor, &do_postproc)) {
     GST_ELEMENT_ERROR (self, STREAM, DECODE, (NULL),
         ("Tensor doesn't have the expected data type or shape."));
     return GST_FLOW_ERROR;
@@ -696,7 +841,7 @@ gst_face_detector_tensor_decoder_transform_ip (GstBaseTransform * trans,
   /* Decode boxes_tensor, scores_tensor and attach the information in a structured way
    * to rmeta. */
   gst_face_detector_tensor_decoder_decode_boxes_f32 (self, boxes_tensor,
-      scores_tensor, rmeta);
+      scores_tensor, do_postproc, rmeta);
 
   return GST_FLOW_OK;
 }
