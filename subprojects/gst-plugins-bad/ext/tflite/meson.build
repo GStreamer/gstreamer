@@ -6,11 +6,17 @@ tflite_sources = [
 
 tflite_headers = [
   'gsttfliteinference.h',
-  'gsttfliteedgetpuinference.h'
+  'gsttfliteedgetpuinference.h',
+  'gsttflitevsiinference.h',
 ]
 
 edgetpu_sources = [
   'gsttfliteedgetpuinference.c'
+]
+
+vsi_sources = [
+  'gsttflitevsiinference.c',
+  'VX/vsi_npu_custom_op.cc'
 ]
 
 doc_sources = []
@@ -64,6 +70,10 @@ if tensorflow_lite_dep.found() and tensorflow_lite_header_found
     tflite_extra_dep += [edgetpu_dep]
   endif
 
+  if get_option('tflite-vsi').allowed()
+    tflite_sources += vsi_sources
+    tflite_c_args += ['-Wno-aggregate-return', '-DTFLITE_VSI']
+  endif
 
   gsttflite = library('gsttflite',
     tflite_sources,
