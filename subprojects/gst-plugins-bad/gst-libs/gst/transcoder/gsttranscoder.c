@@ -80,7 +80,6 @@ struct _GstTranscoder
   GMainLoop *loop;
 
   GstElement *transcodebin;
-  GstBus *bus;
   GstState target_state, current_state;
   gboolean is_live, is_eos;
   GSource *tick_source, *ready_timeout_source;
@@ -802,7 +801,7 @@ gst_transcoder_main (gpointer data)
   g_source_attach (source, self->context);
   g_source_unref (source);
 
-  self->bus = bus = gst_element_get_bus (self->transcodebin);
+  bus = gst_element_get_bus (self->transcodebin);
   gst_bus_add_signal_watch (bus);
 
   g_signal_connect (G_OBJECT (bus), "message::error", G_CALLBACK (error_cb),
