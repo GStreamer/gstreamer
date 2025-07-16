@@ -236,9 +236,11 @@ gst_tensor_meta_get_typed_tensor (GstTensorMeta * tmeta,
 
   tensor = gst_tensor_meta_get_by_id (tmeta, tensor_id);
 
-  if (!gst_tensor_check_type (tensor, order, num_dims, data_type, data)) {
+  if (tensor == NULL)
     return NULL;
-  }
+
+  if (!gst_tensor_check_type (tensor, order, num_dims, data_type, data))
+    return NULL;
 
   return tensor;
 }
