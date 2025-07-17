@@ -284,18 +284,20 @@ gst_tensor_check_type (const GstTensor * tensor, GstTensorDataType data_type,
   gsize num_elements = 1, tensor_size, i;
 
   if (tensor->dims_order != order) {
-    GST_DEBUG ("Tensor has order %d, expected %d", tensor->dims_order, order);
+    GST_DEBUG ("Tensor \"%s\" has order %d, expected %d",
+        g_quark_to_string (tensor->id), tensor->dims_order, order);
     return FALSE;
   }
 
   if (tensor->num_dims != num_dims) {
-    GST_DEBUG ("Tensor has %zu dimensions, expected %zu", tensor->num_dims,
-        num_dims);
+    GST_DEBUG ("Tensor \"%s\" has %zu dimensions, expected %zu",
+        g_quark_to_string (tensor->id), tensor->num_dims, num_dims);
     return FALSE;
   }
 
   if (tensor->data_type != data_type) {
-    GST_DEBUG ("Tensor has data type \"%s\", expected \"%s\".",
+    GST_DEBUG ("Tensor \"%s\" has data type \"%s\", expected \"%s\".",
+        g_quark_to_string (tensor->id),
         gst_tensor_data_type_get_name (tensor->data_type),
         gst_tensor_data_type_get_name (data_type));
     return FALSE;
@@ -306,8 +308,8 @@ gst_tensor_check_type (const GstTensor * tensor, GstTensorDataType data_type,
 
     if (dims) {
       if (dims[i] != G_MAXSIZE && dims[i] != tensor->dims[i]) {
-        GST_DEBUG ("Tensor has dim[%zu]=%zu but expect dim[%zu]=%zu",
-            i, tensor->dims[i], i, dims[i]);
+        GST_DEBUG ("Tensor \"%s\" has dim[%zu]=%zu but expect dim[%zu]=%zu",
+            g_quark_to_string (tensor->id), i, tensor->dims[i], i, dims[i]);
         return FALSE;
       }
     }
@@ -316,12 +318,11 @@ gst_tensor_check_type (const GstTensor * tensor, GstTensorDataType data_type,
   tensor_size = size_for_elements (tensor->data_type, num_elements);
 
   if (gst_buffer_get_size (tensor->data) < tensor_size) {
-    GST_ERROR ("Expected buffer of size %zu (%zu elements),"
-        " but buffer has size %zu", tensor_size, num_elements,
-        gst_buffer_get_size (tensor->data));
+    GST_ERROR ("Expected tensor \"%s\" buffer of size %zu (%zu elements),"
+        " but buffer has size %zu", g_quark_to_string (tensor->id),
+        tensor_size, num_elements, gst_buffer_get_size (tensor->data));
     return FALSE;
   }
-
 
   return TRUE;
 }
