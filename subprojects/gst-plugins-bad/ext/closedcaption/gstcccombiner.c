@@ -869,11 +869,13 @@ gst_cc_combiner_aggregate (GstAggregator * aggregator, gboolean timeout)
     }
   }
 
+  if (!GST_CLOCK_TIME_IS_VALID (self->current_video_running_time_end))
+    return GST_FLOW_OK;
+
   /* At this point we have a video buffer queued and can start collecting
    * caption buffers for it */
   g_assert (self->current_video_buffer != NULL);
   g_assert (GST_CLOCK_TIME_IS_VALID (self->current_video_running_time));
-  g_assert (GST_CLOCK_TIME_IS_VALID (self->current_video_running_time_end));
 
   flow_ret = gst_cc_combiner_collect_captions (self, timeout);
 
