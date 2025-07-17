@@ -487,6 +487,32 @@ build debian x86_64:
       -Dgst-plugins-good:cairo=enabled
       -Dgst-plugins-good:soup=enabled
       -Dgst-plugins-bad:d3d11-wgc=enabled
+      -Dnls=disabled
+      -Dcairo:tests=disabled
+      -Dlibdv:tests=disabled
+      -Dfribidi:tests=false
+      -Dfribidi:bin=false
+      -Dglib:tests=false
+      -Dharfbuzz:tests=disabled
+      -Dharfbuzz:utilities=disabled
+      -Djson-glib:tests=false
+      -Dlibmicrodns:tests=disabled
+      -Dlibmicrodns:examples=disabled
+      -Dlibnice:tests=disabled
+      -Dlibnice:examples=disabled
+      -Dlibsrtp2:tests=disabled
+      -Dopenh264:tests=disabled
+      -Dopus:tests=disabled
+      -Dorc:benchmarks=disabled
+      -Dorc:tests=disabled
+      -Dorc:examples=disabled
+      -Dpango:build-testsuite=false
+      -Dpango:build-examples=false
+      -Dpixman:tests=disabled
+      -Dpixman:demos=disabled
+      -Dvpx:examples=disabled
+      -Dvpx:tools=disabled
+
   rules:
     - !reference [.upstream-branch-rules, rules]
     - changes:
