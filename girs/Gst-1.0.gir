@@ -37809,7 +37809,7 @@ the nano version from the string and do this check that way if needed.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_rank" c:identifier="gst_plugin_feature_get_rank">
+      <method name="get_rank" c:identifier="gst_plugin_feature_get_rank" glib:get-property="rank">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpluginfeature.c">Gets the rank of a plugin feature.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstpluginfeature.h"/>
         <return-value transfer-ownership="none">
@@ -37849,7 +37849,7 @@ feature, or %NULL on error</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="set_rank" c:identifier="gst_plugin_feature_set_rank">
+      <method name="set_rank" c:identifier="gst_plugin_feature_set_rank" glib:set-property="rank">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpluginfeature.c">Specifies a rank for a plugin feature, so that autoplugging uses
 the most appropriate feature.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstpluginfeature.h"/>
@@ -37867,6 +37867,11 @@ the most appropriate feature.</doc>
           </parameter>
         </parameters>
       </method>
+      <property name="rank" version="1.30" writable="1" transfer-ownership="none" setter="set_rank" getter="get_rank" default-value="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpluginfeature.c">The rank of the plugin feature, used in autoplugging to select
+the most appropriate feature.</doc>
+        <type name="gint" c:type="gint"/>
+      </property>
     </class>
     <record name="PluginFeatureClass" c:type="GstPluginFeatureClass" disguised="1" opaque="1" glib:is-gtype-struct-for="PluginFeature">
       <source-position filename="../subprojects/gstreamer/gst/gstpluginfeature.h"/>

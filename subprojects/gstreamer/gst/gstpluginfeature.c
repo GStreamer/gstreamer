@@ -35,6 +35,7 @@
 #include "gstplugin.h"
 #include "gstregistry.h"
 #include "gstinfo.h"
+#include "gstenumtypes.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -42,15 +43,44 @@
 #define GST_CAT_DEFAULT GST_CAT_PLUGIN_LOADING
 
 static void gst_plugin_feature_finalize (GObject * object);
+static void gst_plugin_feature_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_plugin_feature_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 /* static guint gst_plugin_feature_signals[LAST_SIGNAL] = { 0 }; */
+
+enum
+{
+  PROP_0,
+  PROP_RANK,
+  PROP_LAST
+};
 
 G_DEFINE_ABSTRACT_TYPE (GstPluginFeature, gst_plugin_feature, GST_TYPE_OBJECT);
 
 static void
 gst_plugin_feature_class_init (GstPluginFeatureClass * klass)
 {
-  G_OBJECT_CLASS (klass)->finalize = gst_plugin_feature_finalize;
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+  gobject_class->finalize = gst_plugin_feature_finalize;
+  gobject_class->set_property = gst_plugin_feature_set_property;
+  gobject_class->get_property = gst_plugin_feature_get_property;
+
+  /**
+   * GstPluginFeature:rank:
+   *
+   * The rank of the plugin feature, used in autoplugging to select
+   * the most appropriate feature.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_RANK,
+      g_param_spec_int ("rank", "Rank", "The rank of the plugin feature",
+          0, G_MAXINT, GST_RANK_NONE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          G_PARAM_EXPLICIT_NOTIFY));
 }
 
 static void
@@ -72,6 +102,38 @@ gst_plugin_feature_finalize (GObject * object)
   }
 
   G_OBJECT_CLASS (gst_plugin_feature_parent_class)->finalize (object);
+}
+
+static void
+gst_plugin_feature_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstPluginFeature *feature = GST_PLUGIN_FEATURE (object);
+
+  switch (prop_id) {
+    case PROP_RANK:
+      gst_plugin_feature_set_rank (feature, g_value_get_int (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_plugin_feature_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstPluginFeature *feature = GST_PLUGIN_FEATURE (object);
+
+  switch (prop_id) {
+    case PROP_RANK:
+      g_value_set_int (value, gst_plugin_feature_get_rank (feature));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 /**
@@ -164,7 +226,14 @@ gst_plugin_feature_set_rank (GstPluginFeature * feature, guint rank)
   g_return_if_fail (feature != NULL);
   g_return_if_fail (GST_IS_PLUGIN_FEATURE (feature));
 
-  feature->rank = rank;
+  GST_OBJECT_LOCK (feature);
+  if (feature->rank != rank) {
+    feature->rank = rank;
+    GST_OBJECT_UNLOCK (feature);
+    g_object_notify (G_OBJECT (feature), "rank");
+  } else {
+    GST_OBJECT_UNLOCK (feature);
+  }
 }
 
 /**
@@ -178,9 +247,15 @@ gst_plugin_feature_set_rank (GstPluginFeature * feature, guint rank)
 guint
 gst_plugin_feature_get_rank (GstPluginFeature * feature)
 {
+  guint rank;
+
   g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), GST_RANK_NONE);
 
-  return feature->rank;
+  GST_OBJECT_LOCK (feature);
+  rank = feature->rank;
+  GST_OBJECT_UNLOCK (feature);
+
+  return rank;
 }
 
 /**
