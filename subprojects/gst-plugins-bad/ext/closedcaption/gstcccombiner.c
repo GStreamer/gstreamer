@@ -934,7 +934,7 @@ gst_cc_combiner_sink_event (GstAggregator * aggregator,
         self->progressive = !interlace_mode
             || !g_strcmp0 (interlace_mode, "progressive");
 
-        if (fps_d > 0)
+        if (fps_n > 0 && fps_d > 0)
           frame_duration = gst_util_uint64_scale (GST_SECOND, fps_d, fps_n);
         if (!GST_CLOCK_TIME_IS_VALID (frame_duration) || frame_duration == 0)
           frame_duration = FALLBACK_FRAME_DURATION;
