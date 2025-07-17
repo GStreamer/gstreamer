@@ -284,28 +284,42 @@ gst_classifier_tensor_decoder_get_property (GObject * object, guint prop_id,
   }
 }
 
-static gboolean
+static guint
 gst_classifier_tensor_decoder_load_labels (GstClassifierTensorDecoder * self)
 {
-  gboolean rv;
   gchar *content = NULL;
   gchar **tokens = NULL;
   gsize len;
-  GError *err;
+  GError *err = NULL;
   GQuark val;
 
-  g_return_val_if_fail (self->labels_file != NULL, FALSE);
+  if (self->labels_file == NULL) {
+    GST_ERROR_OBJECT (self, "Missing label file");
+    return 0;
+  }
+  if (!g_file_get_contents (self->labels_file, &content, &len, &err)) {
+    GST_ERROR_OBJECT (self, "Could not load labels file %s: %s",
+        self->labels_file, err->message);
+    g_error_free (err);
+    return 0;
+  }
 
-  rv = g_file_get_contents (self->labels_file, &content, &len, &err);
-  g_return_val_if_fail (rv, FALSE);
-  g_return_val_if_fail (len != 0, FALSE);
+  if (len == 0) {
+    GST_ERROR_OBJECT (self, "Labels file %s is empty", self->labels_file);
+    g_free (content);
+    return 0;
+  }
 
   tokens = g_strsplit (content, "\n", 0);
   g_free (content);
 
-  if (tokens[0] != NULL) {
-    self->class_quark = g_array_new (FALSE, FALSE, sizeof (GQuark));
+  if (tokens[0] == NULL) {
+    GST_ERROR_OBJECT (self, "Labels file %s has no labels", self->labels_file);
+    g_free (content);
+    return 0;
   }
+
+  self->class_quark = g_array_new (FALSE, FALSE, sizeof (GQuark));
 
   for (int i = 0; tokens[i] != NULL && tokens[i][0] != '\0'; i++) {
     val = g_quark_from_string (tokens[i]);
@@ -316,7 +330,7 @@ gst_classifier_tensor_decoder_load_labels (GstClassifierTensorDecoder * self)
       self->class_quark->len);
 
   g_strfreev (tokens);
-  return rv;
+  return self->class_quark->len;
 }
 
 static GstStateChangeReturn
