@@ -40,6 +40,7 @@ using namespace Microsoft::WRL;
 
 static GMainLoop *loop_ = nullptr;
 static HWND hwnd_ = nullptr;
+static gchar *snapshot_location = nullptr;
 #define VIEW_WIDTH 640
 #define VIEW_HEIGHT 480
 #define REMAP_SIZE 1024
@@ -288,6 +289,35 @@ keyboard_cb (gchar input, gboolean is_ascii, AppData * app_data)
         if (state == GST_STATE_PAUSED)
           g_signal_emit_by_name (app_data->sink, "redraw");
         break;
+      case 'c':
+      case 'C':
+        if (snapshot_location) {
+          GstSample *sample = nullptr;
+          GstSample *out_sample = nullptr;
+          gboolean remove_borders = TRUE;
+          g_signal_emit_by_name (app_data->sink, "last-rendered-sample",
+              remove_borders, &sample);
+          if (sample) {
+            auto caps = gst_caps_new_simple ("image/jpeg", nullptr);
+            out_sample = gst_video_convert_sample (sample, caps, 10 * GST_SECOND,
+                nullptr);
+            gst_caps_unref (caps);
+            gst_sample_unref (sample);
+          }
+
+          if (out_sample) {
+            auto buf = gst_sample_get_buffer (out_sample);
+            GstMapInfo map;
+            gst_buffer_map (buf, &map, GST_MAP_READ);
+            gst_println ("Writing snapshot to %s", snapshot_location);
+            g_file_set_contents (snapshot_location, (gchar *) map.data,
+                map.size, nullptr);
+
+            gst_buffer_unmap (buf, &map);
+            gst_sample_unref (out_sample);
+          }
+        }
+        break;
       case 'q':
         g_main_loop_quit (loop_);
         break;
@@ -472,6 +502,7 @@ print_keyboard_help (void)
   } key_controls[] = {
     {"m", "Toggle remap on/off"},
     {"space", "Toggle pause/play"},
+    {"c", "Capture snapshot"},
     {"q", "Quit"},
   };
 
@@ -503,6 +534,8 @@ main (int argc, char ** argv)
   gchar *uri = nullptr;
   GOptionEntry options[] = {
     {"uri", 0, 0, G_OPTION_ARG_STRING, &uri, "URI to play"},
+    {"snapshot-location", 0, 0, G_OPTION_ARG_STRING, &snapshot_location,
+        "JPEG file path for saving the snapshot image"},
     {nullptr}
   };
 
