@@ -475,6 +475,34 @@ GST_START_TEST (test_serialize_flags_invalid)
 
 GST_END_TEST;
 
+GST_START_TEST (test_serialize_deserialize_set)
+{
+  GValue set = { 0 };
+  GValue val = { 0 };
+  gchar *str;
+
+  GValue res = { 0 };
+
+  g_value_init (&set, GST_TYPE_SET);
+  g_value_init (&val, G_TYPE_INT);
+  g_value_set_int (&val, 1);
+  gst_value_set_append_value (&set, &val);
+
+  str = gst_value_serialize (&set);
+
+  fail_unless (g_strcmp0 (str, "(/set){ (int)1 }") == 0);
+  g_value_init (&res, GST_TYPE_SET);
+  fail_unless (gst_value_deserialize (&res, str));
+  fail_unless (gst_value_compare (&res, &set) == GST_VALUE_EQUAL);
+
+  g_value_unset (&set);
+  g_value_unset (&val);
+  g_value_unset (&res);
+  g_free (str);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_deserialize_flags)
 {
   GValue value = { 0 };
@@ -2271,6 +2299,127 @@ GST_START_TEST (test_value_subtract_fraction_list)
 
 GST_END_TEST;
 
+/* Test set subtraction operations on sets */
+GST_START_TEST (test_value_subtract_sets)
+{
+  GValue set1 = { 0 };
+  GValue set2 = { 0 };
+
+  GValue val1 = { 0 };
+  GValue val2 = { 0 };
+  GValue val3 = { 0 };
+  GValue val4 = { 0 };
+
+  GValue res = { 0 };
+
+  GValue expect_result = { 0 };
+
+
+  /* Check (/set){1} - (/set){1} => (/set){} */
+  g_value_init (&set1, GST_TYPE_SET);
+  g_value_init (&val1, G_TYPE_INT);
+  g_value_set_int (&val1, 2);
+  gst_value_set_append_value (&set1, &val1);
+
+  g_value_init (&set2, GST_TYPE_SET);
+  g_value_init (&val2, G_TYPE_INT);
+  g_value_set_int (&val2, 2);
+  gst_value_set_append_value (&set2, &val2);
+
+  fail_if (gst_value_subtract (&res, &set1, &set2));
+
+  g_value_unset (&set1);
+  g_value_unset (&set2);
+  g_value_unset (&val1);
+  g_value_unset (&val2);
+  g_value_unset (&res);
+
+  /* Check (/set){2} - (/set){1} => (/set){2} */
+  g_value_init (&set1, GST_TYPE_SET);
+  g_value_init (&val1, G_TYPE_INT);
+  g_value_set_int (&val1, 2);
+  gst_value_set_append_value (&set1, &val1);
+
+  g_value_init (&set2, GST_TYPE_SET);
+  g_value_init (&val2, G_TYPE_INT);
+  g_value_set_int (&val2, 1);
+  gst_value_set_append_value (&set2, &val2);
+
+  fail_unless (gst_value_subtract (&res, &set1, &set2));
+
+  g_value_init (&expect_result, GST_TYPE_SET);
+  gst_value_set_append_value (&expect_result, &val1);
+
+  fail_unless (gst_value_compare (&res, &expect_result) == GST_VALUE_EQUAL);
+
+  g_value_unset (&set1);
+  g_value_unset (&set2);
+  g_value_unset (&val1);
+  g_value_unset (&val2);
+  g_value_unset (&res);
+  g_value_unset (&expect_result);
+
+
+  /* Check (/set){1, 2} - (/set){2, 1} => (/set){} */
+  g_value_init (&set1, GST_TYPE_SET);
+  g_value_init (&val1, G_TYPE_INT);
+  g_value_set_int (&val1, 1);
+  gst_value_set_append_value (&set1, &val1);
+  g_value_init (&val2, G_TYPE_INT);
+  g_value_set_int (&val2, 2);
+  gst_value_set_append_value (&set1, &val2);
+
+  g_value_init (&set2, GST_TYPE_SET);
+  g_value_init (&val3, G_TYPE_INT);
+  g_value_set_int (&val3, 2);
+  gst_value_set_append_value (&set2, &val3);
+  g_value_init (&val4, G_TYPE_INT);
+  g_value_set_int (&val4, 1);
+  gst_value_set_append_value (&set2, &val4);
+
+  fail_if (gst_value_subtract (&res, &set1, &set2));
+
+  g_value_unset (&set1);
+  g_value_unset (&set2);
+  g_value_unset (&val1);
+  g_value_unset (&val2);
+  g_value_unset (&val3);
+  g_value_unset (&val4);
+  g_value_unset (&res);
+
+  /* Check (/set){1, 2} - (/set){1} => (/set){2} */
+  g_value_init (&set1, GST_TYPE_SET);
+  g_value_init (&val1, G_TYPE_INT);
+  g_value_set_int (&val1, 1);
+  gst_value_set_append_value (&set1, &val1);
+  g_value_init (&val2, G_TYPE_INT);
+  g_value_set_int (&val2, 2);
+  gst_value_set_append_value (&set1, &val2);
+
+  g_value_init (&set2, GST_TYPE_SET);
+  g_value_init (&val4, G_TYPE_INT);
+  g_value_set_int (&val4, 1);
+  gst_value_set_append_value (&set2, &val4);
+
+  fail_unless (gst_value_subtract (&res, &set1, &set2));
+
+  g_value_init (&expect_result, GST_TYPE_SET);
+  gst_value_set_append_value (&expect_result, &val2);
+
+  fail_unless (gst_value_compare (&res, &expect_result) == GST_VALUE_EQUAL);
+
+  g_value_unset (&set1);
+  g_value_unset (&set2);
+  g_value_unset (&val1);
+  g_value_unset (&val2);
+  g_value_unset (&val4);
+  g_value_unset (&res);
+  g_value_unset (&expect_result);
+
+}
+
+GST_END_TEST;
+
 /* Test gst_value_is_subset(set, superset) for general case.
  *
  * Special cases:
@@ -2285,6 +2434,7 @@ GST_END_TEST;
  * | GST_TYPE_LIST            | GST_TYPE_LIST         |
  * | ANY                      | GST_TYPE_CAPS         |
  * | GST_TYPE_ARRAY           | GST_TYPE_ARRAY        |
+ * | GST_TYPE_SET             | GST_TYPE_SET          |
  *
  * Other cases are the general case and require a 'set' not to be equal to
  * a the superset to be considered a subset. (use strict subset definition)
@@ -2662,6 +2812,181 @@ GST_START_TEST (test_value_is_subset_fixed_array)
 }
 
 GST_END_TEST;
+
+/* Test gst_value_is_subset on fixed arrays. */
+GST_START_TEST (test_value_set_concat)
+{
+  {
+    /* Check that concatenating a set and a value already contained in the set
+     * has no effect */
+
+    GValue set1 = { 0 };
+    GValue val = { 0 };
+    GValue res = { 0 };
+    gchar str[] = "(int/set){1, 2, 3}";
+
+    g_value_init (&set1, GST_TYPE_SET);
+    g_value_init (&val, G_TYPE_INT);
+    g_value_set_int (&val, 1);
+    gst_value_deserialize (&set1, str);
+    gst_value_set_concat (&res, &set1, &val);
+    fail_unless (gst_value_compare (&res, &set1) == GST_VALUE_EQUAL);
+    g_value_unset (&set1);
+    g_value_unset (&val);
+    g_value_unset (&res);
+  }
+
+  {
+    /* Check that concatenating a value and a set that already contain in the set
+     * has no effect. */
+
+    GValue set1 = { 0 };
+    GValue val = { 0 };
+    GValue res = { 0 };
+    gchar str[] = "(int/set){1, 2, 3}";
+
+    g_value_init (&set1, GST_TYPE_SET);
+    g_value_init (&val, G_TYPE_INT);
+    g_value_set_int (&val, 1);
+    gst_value_deserialize (&set1, str);
+    gst_value_set_concat (&res, &val, &set1);
+    fail_unless (gst_value_compare (&res, &set1) == GST_VALUE_EQUAL);
+    g_value_unset (&set1);
+    g_value_unset (&val);
+    g_value_unset (&res);
+  }
+
+  {
+    /* Check that concatenating a set  and a value not contained in the set has
+     * result in a set that has all values */
+
+    GValue val1 = { 0 };
+    GValue val2 = { 0 };
+    GValue res = { 0 };
+    GValue valexp = { 0 };
+    gchar val1_str[] = "(int/set){1, 2, 3}";
+    gchar valexp_str[] = "(int/set){1, 2, 3, 4}";
+
+    g_value_init (&val1, GST_TYPE_SET);
+    g_value_init (&val2, G_TYPE_INT);
+    g_value_set_int (&val2, 4);
+    gst_value_deserialize (&val1, val1_str);
+    gst_value_set_concat (&res, &val1, &val2);
+    fail_unless (gst_value_set_get_size (&res) == 4);
+
+    g_value_init (&valexp, GST_TYPE_SET);
+    gst_value_deserialize (&valexp, valexp_str);
+    fail_unless (gst_value_compare (&res, &valexp) == GST_VALUE_EQUAL);
+
+    g_value_unset (&val1);
+    g_value_unset (&val2);
+    g_value_unset (&res);
+    g_value_unset (&valexp);
+  }
+
+  {
+    /* Check that concatenating a set  and a value not contained in the set has
+     * result in a set that has all values */
+
+    GValue res = { 0 };
+
+    GValue val1 = { 0 };
+    gchar val1_str[] = "(int/set){1, 2, 3}";
+
+    GValue val2 = { 0 };
+    gchar val2_str[] = "(int/set){2, 3, 4}";
+
+    GValue valexp = { 0 };
+    gchar valexp_str[] = "(int/set){1, 2, 3, 4}";
+
+    g_value_init (&val1, GST_TYPE_SET);
+    g_value_init (&val2, GST_TYPE_SET);
+    gst_value_deserialize (&val1, val1_str);
+    gst_value_deserialize (&val2, val2_str);
+
+    gst_value_set_concat (&res, &val1, &val2);
+
+    g_value_init (&valexp, GST_TYPE_SET);
+    gst_value_deserialize (&valexp, valexp_str);
+    fail_unless (gst_value_compare (&res, &valexp) == GST_VALUE_EQUAL);
+
+    g_value_unset (&val1);
+    g_value_unset (&val2);
+    g_value_unset (&res);
+    g_value_unset (&valexp);
+  }
+
+  {
+    /* Check that concatenating a set  and a value not contained in the set has
+     * result in a set that has all values */
+
+    GValue res = { 0 };
+
+    GValue val1 = { 0 };
+    gchar val1_str[] = "(int/set){1, 2, 3}";
+
+    GValue val2 = { 0 };
+    gchar val2_str[] = "(int/set){2, 4, 1}";
+
+    GValue valexp = { 0 };
+    gchar valexp_str[] = "(int/set){1, 2, 3, 4}";
+
+    g_value_init (&val1, GST_TYPE_SET);
+    g_value_init (&val2, GST_TYPE_SET);
+    gst_value_deserialize (&val1, val1_str);
+    gst_value_deserialize (&val2, val2_str);
+
+    gst_value_set_concat (&res, &val1, &val2);
+
+    g_value_init (&valexp, GST_TYPE_SET);
+    gst_value_deserialize (&valexp, valexp_str);
+    fail_unless (gst_value_compare (&res, &valexp) == GST_VALUE_EQUAL);
+
+    g_value_unset (&val1);
+    g_value_unset (&val2);
+    g_value_unset (&res);
+    g_value_unset (&valexp);
+  }
+
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_value_union_on_set)
+{
+  /* Check union of two set */
+
+  GValue res = { 0 };
+
+  GValue val1 = { 0 };
+  gchar val1_str[] = "(int/set){1, 2, 3}";
+
+  GValue val2 = { 0 };
+  gchar val2_str[] = "(int/set){2, 4, 1}";
+
+  GValue valexp = { 0 };
+  gchar valexp_str[] = "(int/set){1, 2, 3, 4}";
+
+  g_value_init (&val1, GST_TYPE_SET);
+  g_value_init (&val2, GST_TYPE_SET);
+  gst_value_deserialize (&val1, val1_str);
+  gst_value_deserialize (&val2, val2_str);
+
+  gst_value_union (&res, &val1, &val2);
+
+  g_value_init (&valexp, GST_TYPE_SET);
+  gst_value_deserialize (&valexp, valexp_str);
+  fail_unless (gst_value_compare (&res, &valexp) == GST_VALUE_EQUAL);
+
+  g_value_unset (&val1);
+  g_value_unset (&val2);
+  g_value_unset (&res);
+  g_value_unset (&valexp);
+
+}
+
+GST_END_TEST;
+
 
 GST_START_TEST (test_date)
 {
@@ -4108,6 +4433,97 @@ GST_START_TEST (test_deserialize_array)
 
 GST_END_TEST;
 
+GST_START_TEST (test_deserialize_set)
+{
+  GValue value = { 0 };
+  gchar *str;
+
+  str = g_strdup ("{ test }");
+  g_value_init (&value, GST_TYPE_SET);
+  fail_unless (gst_value_deserialize (&value, str));
+  g_value_unset (&value);
+  g_free (str);
+
+  str = g_strdup ("(/set){ test }");
+  g_value_init (&value, GST_TYPE_SET);
+  fail_unless (gst_value_deserialize (&value, str));
+  g_value_unset (&value);
+  g_free (str);
+
+  str = g_strdup ("(/set){ test }");
+  g_value_init (&value, GST_TYPE_SET);
+  fail_unless (gst_value_deserialize (&value, str));
+  g_value_unset (&value);
+  g_free (str);
+
+  str = g_strdup ("(string/set){ test }");
+  g_value_init (&value, GST_TYPE_SET);
+  fail_unless (gst_value_deserialize (&value, str));
+  g_value_unset (&value);
+  g_free (str);
+
+  str = g_strdup ("(caps/set){ [s-name, sf-1=1] }");
+  g_value_init (&value, GST_TYPE_SET);
+  fail_unless (gst_value_deserialize (&value, str));
+  g_value_unset (&value);
+  g_free (str);
+
+  str = g_strdup ("(caps/set){ [s-name, sf-1=1;s-name, sf-1=2] }");
+  g_value_init (&value, GST_TYPE_SET);
+  fail_unless (gst_value_deserialize (&value, str));
+  g_value_unset (&value);
+  g_free (str);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_deserialize_caps_in_set_in_caps)
+{
+  GstCaps *caps = gst_caps_from_string ("video/x-raw,"
+      " width = (int)10,"
+      " tensors = (caps/set) {"
+      "   ["
+      "     tensor/strided,"
+      "       tensor-id=tensor-a,"
+      "       dims=<3>"
+      "   ], ["
+      "     tensor/strided,"
+      "       tensor-id=tensor-b," "       dims=<3,5>" "   ]" "}");
+
+  fail_unless (caps != NULL);
+  gst_caps_unref (caps);
+
+  caps = gst_caps_from_string ("video/x-raw,"
+      " width = (int)10,"
+      " tensors = (caps/set) {"
+      "   ["
+      "     tensor/strided,"
+      "       tensor-id=tensor-a,"
+      "       dims=<[3, 5]>"
+      "   ], ["
+      "     tensor/strided,"
+      "       tensor-id=tensor-b," "       dims=<3, 5>" "   ]" "}");
+
+  fail_unless (caps != NULL);
+  gst_caps_unref (caps);
+
+  caps = gst_caps_from_string ("video/x-raw,"
+      " width = (int)10,"
+      " tensors = (caps/set) {"
+      "   ["
+      "     tensor/strided,"
+      "       tensor-id=tensor-a,"
+      "       dims=<3>;"
+      "     tensor/strided,"
+      "       tensor-id=tensor-a," "       dims=<3, 5>" "   ]" "}");
+
+  fail_unless (caps != NULL);
+  gst_caps_unref (caps);
+
+}
+
+GST_END_TEST;
+
 #define TEST_FLAGS_TYPE (test_flags_get_type())
 static GType
 test_flags_get_type (void)
@@ -4909,11 +5325,14 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_deserialize_gtype_failures);
   tcase_add_test (tc_chain, test_deserialize_bitmask);
   tcase_add_test (tc_chain, test_deserialize_array);
+  tcase_add_test (tc_chain, test_deserialize_set);
+  tcase_add_test (tc_chain, test_deserialize_caps_in_set_in_caps);
   tcase_add_test (tc_chain, test_serialize_flags);
   tcase_add_test (tc_chain, test_serialize_flags_invalid);
   tcase_add_test (tc_chain, test_deserialize_flags);
   tcase_add_test (tc_chain, test_serialize_deserialize_format_enum);
   tcase_add_test (tc_chain, test_serialize_deserialize_value_array);
+  tcase_add_test (tc_chain, test_serialize_deserialize_set);
   tcase_add_test (tc_chain, test_string);
   tcase_add_test (tc_chain, test_deserialize_string);
   tcase_add_test (tc_chain, test_value_compare);
@@ -4924,9 +5343,12 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_value_subtract_fraction);
   tcase_add_test (tc_chain, test_value_subtract_fraction_range);
   tcase_add_test (tc_chain, test_value_subtract_fraction_list);
+  tcase_add_test (tc_chain, test_value_subtract_sets);
   tcase_add_test (tc_chain, test_value_is_subset_general_cases);
   tcase_add_test (tc_chain, test_value_is_subset_not_fixed);
   tcase_add_test (tc_chain, test_value_is_subset_fixed_array);
+  tcase_add_test (tc_chain, test_value_set_concat);
+  tcase_add_test (tc_chain, test_value_union_on_set);
   tcase_add_test (tc_chain, test_date);
   tcase_add_test (tc_chain, test_date_time);
   tcase_add_test (tc_chain, test_fraction_range);
