@@ -3289,7 +3289,7 @@ gst_structure_parse_field (gchar * str,
   while (g_ascii_isspace (*s) || (s[0] == '\\' && g_ascii_isspace (s[1])))
     s++;
   name = s;
-  if (G_UNLIKELY (!_priv_gst_value_parse_simple_string (s, &name_end))) {
+  if (G_UNLIKELY (!_priv_gst_value_parse_simple_string (s, &name_end, '\0'))) {
     GST_WARNING ("failed to parse simple string, str=%s", str);
     return FALSE;
   }

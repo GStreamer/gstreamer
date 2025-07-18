@@ -138,6 +138,16 @@ G_BEGIN_DECLS
 #define GST_VALUE_HOLDS_ARRAY(x)        ((gpointer)(x) != NULL && G_VALUE_TYPE(x) == _gst_value_array_type)
 
 /**
+ * GST_VALUE_HOLDS_SET:
+ * @x: the #GValue to check
+ *
+ * Checks if the given #GValue contains a #GstValueList value.
+ *
+ * Since: 1.28
+ */
+#define GST_VALUE_HOLDS_SET(x)         ((gpointer)(x) != NULL && G_VALUE_TYPE(x) == _gst_value_set_type)
+
+/**
  * GST_VALUE_HOLDS_CAPS:
  * @x: the #GValue to check
  *
@@ -310,6 +320,27 @@ GST_API GType _gst_value_list_type;
  * Returns: the #GType of GstValueList (which is not explicitly typed)
  */
 #define GST_TYPE_LIST                    (_gst_value_list_type)
+
+GST_API GType _gst_value_set_type;
+
+/**
+ * GstValueSet:
+ *
+ * A fundamental type that describes a set of #GValue
+ *
+ * Since: 1.28
+ */
+
+/**
+ * GST_TYPE_SET:
+ *
+ * a #GValue type that represents a set of #GValue values.
+ *
+ * Returns: the #GType of GstValueSet
+ *
+ * Since: 1.28
+ */
+#define GST_TYPE_SET           (_gst_value_set_type)
 
 GST_API GType _gst_value_array_type;
 
@@ -562,6 +593,9 @@ GST_API
 GType gst_value_array_get_type (void);
 
 GST_API
+GType gst_value_set_get_type (void);
+
+GST_API
 GType gst_bitmask_get_type (void);
 
 GST_API
@@ -644,6 +678,26 @@ const GValue *  gst_value_array_get_value       (const GValue   *value,
 GST_API
 GValue *        gst_value_array_init            (GValue *value,
 						 guint prealloc);
+
+GST_API
+void            gst_value_set_append_value     (GValue         *value,
+                                                 const GValue   *append_value);
+GST_API
+void            gst_value_set_append_and_take_value (GValue         *value,
+                                                 GValue   *append_value);
+GST_API
+void            gst_value_set_prepend_value    (GValue         *value,
+                                                 const GValue   *prepend_value);
+GST_API
+void            gst_value_set_concat           (GValue         *dest,
+                                                 const GValue   *value1,
+                                                 const GValue   *value2);
+GST_API
+guint           gst_value_set_get_size         (const GValue   *value);
+
+GST_API
+const GValue *  gst_value_set_get_value        (const GValue   *value,
+                                                 guint          index);
 
 /* int range */
 
