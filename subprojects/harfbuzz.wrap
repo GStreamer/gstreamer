@@ -1,11 +1,10 @@
 [wrap-file]
-directory = harfbuzz-10.4.0
-source_url = https://github.com/harfbuzz/harfbuzz/releases/download/10.4.0/harfbuzz-10.4.0.tar.xz
-source_filename = harfbuzz-10.4.0.tar.xz
-source_hash = 480b6d25014169300669aa1fc39fb356c142d5028324ea52b3a27648b9beaad8
+directory = harfbuzz-11.2.1
+source_url = https://github.com/harfbuzz/harfbuzz/releases/download/11.2.1/harfbuzz-11.2.1.tar.xz
+source_filename = harfbuzz-11.2.1.tar.xz
+source_hash = 093714c8548a285094685f0bdc999e202d666b59eeb3df2ff921ab68b8336a49
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/harfbuzz_11.2.1-1/harfbuzz-11.2.1.tar.xz
+wrapdb_version = 11.2.1-1
 
 [provide]
-harfbuzz = libharfbuzz_dep
-harfbuzz-icu = libharfbuzz_icu_dep
-harfbuzz-subset = libharfbuzz_subset_dep
-harfbuzz-gobject = libharfbuzz_gobject_dep
+dependency_names = harfbuzz, harfbuzz-cairo, harfbuzz-gobject, harfbuzz-icu, harfbuzz-subset
