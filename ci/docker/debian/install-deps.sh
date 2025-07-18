@@ -9,6 +9,6 @@ sudo apt install -y $(<./ci/docker/debian/deps.txt)
 sudo apt remove -y rustc cargo
 
 sudo bash ./ci/scripts/create-pip-config.sh
-sudo pip3 install --break-system-packages meson==1.7.2 hotdoc python-gitlab tomli junitparser
+sudo pip3 install --break-system-packages meson==1.9.0 hotdoc python-gitlab tomli junitparser
 
 sudo apt clean all

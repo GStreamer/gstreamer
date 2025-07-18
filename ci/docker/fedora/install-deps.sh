@@ -29,7 +29,7 @@ sudo dnf install -y glib2-doc gdk-pixbuf2-devel gtk3-devel-docs gtk4-devel-docs 
 sudo dnf remove -y "gstreamer1*-devel" rust cargo meson 'fdk-aac-free*'
 
 sudo bash ./ci/scripts/create-pip-config.sh
-sudo pip3 install meson==1.7.2 python-gitlab tomli junitparser bs4
+sudo pip3 install meson==1.9.0 python-gitlab tomli junitparser bs4
 sudo pip3 install git+https://github.com/hotdoc/hotdoc.git@8c1cc997f5bc16e068710a8a8121f79ac25cbcce
 
 # Install most debug symbols, except the big ones from things we use
