@@ -78,6 +78,8 @@ gboolean ks_video_fixate_media_type (const KSDATARANGE * range, guint8 * format,
 
 GstCaps * ks_video_get_all_caps (void);
 
+void gst_ks_debug_init (void);
+
 G_END_DECLS
 
 #endif /* __KSVIDEOHELPERS_H__ */

@@ -66,6 +66,8 @@ gst_ks_device_provider_class_init (GstKsDeviceProviderClass * klass)
       "KernelStreaming Device Provider", "Sink/Source/Audio/Video",
       "List and provide KernelStreaming source and sink devices",
       "Руслан Ижбулатов <lrn1986@gmail.com>");
+
+  gst_ks_debug_init ();
 }
 
 static void
@@ -658,6 +660,8 @@ gst_ks_device_class_init (GstKsDeviceClass * klass)
       g_param_spec_string ("path", "System device path",
           "The system path to the device", "",
           G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
+  gst_ks_debug_init ();
 }
 
 static void

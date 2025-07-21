@@ -547,7 +547,7 @@ gst_udpsrc_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 /* not 100% correct, but a good upper bound for memory allocation purposes */
 #define MAX_IPV4_UDP_PACKET_SIZE (65536 - 8)
 
-GST_DEBUG_CATEGORY_STATIC (udpsrc_debug);
+GST_DEBUG_CATEGORY (udpsrc_debug);
 #define GST_CAT_DEFAULT (udpsrc_debug)
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",

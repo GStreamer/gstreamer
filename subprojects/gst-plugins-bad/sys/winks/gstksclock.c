@@ -65,6 +65,8 @@ gst_ks_clock_class_init (GstKsClockClass * klass)
 
   gobject_class->dispose = gst_ks_clock_dispose;
   gobject_class->finalize = gst_ks_clock_finalize;
+
+  gst_ks_debug_init ();
 }
 
 static void

@@ -748,3 +748,14 @@ ks_video_get_all_caps (void)
 
   return caps;
 }
+
+void
+gst_ks_debug_init (void)
+{
+  static gsize res = 0;
+  if (g_once_init_enter (&res)) {
+    GST_DEBUG_CATEGORY_INIT (gst_ks_debug, "ksvideosrc",
+        0, "Kernel streaming video source");
+    g_once_init_leave (&res, 1);
+  }
+}

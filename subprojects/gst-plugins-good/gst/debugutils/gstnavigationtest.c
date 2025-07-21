@@ -522,6 +522,9 @@ gst_navigationtest_class_init (GstNavigationtestClass * klass)
 
   vfilter_class->transform_frame =
       GST_DEBUG_FUNCPTR (gst_navigationtest_transform_frame);
+
+  GST_DEBUG_CATEGORY_INIT (navigationtest_debug, "navigationtest", 0,
+      "navigationtest");
 }
 
 static void
@@ -536,9 +539,6 @@ gst_navigationtest_init (GstNavigationtest * navtest)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (navigationtest_debug, "navigationtest", 0,
-      "navigationtest");
-
   return GST_ELEMENT_REGISTER (navigationtest, plugin);
 }
 

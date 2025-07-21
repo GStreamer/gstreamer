@@ -627,6 +627,9 @@ gst_svthevc_enc_class_init (GstSvtHevcEncClass * klass)
   gst_type_mark_as_plugin_api (GST_SVTHEVC_ENC_PRED_STRUCT_TYPE, 0);
   gst_type_mark_as_plugin_api (GST_SVTHEVC_ENC_RC_TYPE, 0);
   gst_type_mark_as_plugin_api (GST_SVTHEVC_ENC_TUNE_TYPE, 0);
+
+  GST_DEBUG_CATEGORY_INIT (svthevc_enc_debug, "svthevcenc", 0,
+      "h265 encoding element");
 }
 
 static void
@@ -2283,9 +2286,6 @@ gst_svthevc_enc_get_property (GObject * object, guint prop_id,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (svthevc_enc_debug, "svthevcenc", 0,
-      "h265 encoding element");
-
   return gst_element_register (plugin, "svthevcenc",
       GST_RANK_PRIMARY, GST_TYPE_SVTHEVC_ENC);
 }

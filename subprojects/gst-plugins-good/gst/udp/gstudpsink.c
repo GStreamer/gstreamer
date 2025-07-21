@@ -38,6 +38,9 @@
 #include "gstudpelements.h"
 #include "gstudpsink.h"
 
+GST_DEBUG_CATEGORY_EXTERN (multiudpsink_debug);
+#define GST_CAT_DEFAULT (multiudpsink_debug)
+
 #define UDP_DEFAULT_HOST        "localhost"
 #define UDP_DEFAULT_PORT        5004
 

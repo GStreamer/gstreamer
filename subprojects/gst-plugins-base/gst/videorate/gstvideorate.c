@@ -352,6 +352,9 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
       &gst_video_rate_sink_template);
   gst_element_class_add_static_pad_template (element_class,
       &gst_video_rate_src_template);
+
+  GST_DEBUG_CATEGORY_INIT (video_rate_debug, "videorate", 0,
+      "VideoRate stream fixer");
 }
 
 static void
@@ -2239,9 +2242,6 @@ gst_video_rate_get_property (GObject * object,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (video_rate_debug, "videorate", 0,
-      "VideoRate stream fixer");
-
   return GST_ELEMENT_REGISTER (videorate, plugin);
 }
 

@@ -131,6 +131,8 @@ gst_ks_video_device_class_init (GstKsVideoDeviceClass * klass)
       g_param_spec_string ("device-path", "Device Path",
           "The device path", DEFAULT_DEVICE_PATH,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
+
+  gst_ks_debug_init ();
 }
 
 static void

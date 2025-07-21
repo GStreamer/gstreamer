@@ -47,7 +47,7 @@
 #include "gst/net/net.h"
 #include "gst/glib-compat-private.h"
 
-GST_DEBUG_CATEGORY_STATIC (multiudpsink_debug);
+GST_DEBUG_CATEGORY (multiudpsink_debug);
 #define GST_CAT_DEFAULT (multiudpsink_debug)
 
 #define UDP_MAX_SIZE 65507

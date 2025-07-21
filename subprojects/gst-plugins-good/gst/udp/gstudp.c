@@ -30,8 +30,6 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
 
-  GST_DEBUG_CATEGORY_INIT (gst_udp_debug, "udp", 0, "udp");
-
   ret |= GST_ELEMENT_REGISTER (udpsink, plugin);
   ret |= GST_ELEMENT_REGISTER (multiudpsink, plugin);
   ret |= GST_ELEMENT_REGISTER (dynudpsink, plugin);

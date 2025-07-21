@@ -2338,6 +2338,10 @@ gst_ogg_demux_class_init (GstOggDemuxClass * klass)
   gstelement_class->send_event = gst_ogg_demux_receive_event;
 
   gobject_class->finalize = gst_ogg_demux_finalize;
+
+  GST_DEBUG_CATEGORY_INIT (gst_ogg_demux_debug, "oggdemux", 0, "ogg demuxer");
+  GST_DEBUG_CATEGORY_INIT (gst_ogg_demux_setup_debug, "oggdemux_setup", 0,
+      "ogg demuxer setup stage when parsing pipeline");
 }
 
 static void
@@ -5295,13 +5299,7 @@ gst_ogg_demux_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 gst_ogg_demux_plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_ogg_demux_debug, "oggdemux", 0, "ogg demuxer");
-  GST_DEBUG_CATEGORY_INIT (gst_ogg_demux_setup_debug, "oggdemux_setup", 0,
-      "ogg demuxer setup stage when parsing pipeline");
-
 #ifdef ENABLE_NLS
-  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
-      LOCALEDIR);
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif

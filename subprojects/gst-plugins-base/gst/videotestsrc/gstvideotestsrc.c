@@ -405,6 +405,9 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
   gst_type_mark_as_plugin_api (GST_TYPE_VIDEO_TEST_SRC_ANIMATION_MODE, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_VIDEO_TEST_SRC_MOTION_TYPE, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_VIDEO_TEST_SRC_PATTERN, 0);
+
+  GST_DEBUG_CATEGORY_INIT (video_test_src_debug, "videotestsrc", 0,
+      "Video Test Source");
 }
 
 static void
@@ -1462,9 +1465,6 @@ gst_video_test_src_stop (GstBaseSrc * basesrc)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (video_test_src_debug, "videotestsrc", 0,
-      "Video Test Source");
-
   return GST_ELEMENT_REGISTER (videotestsrc, plugin);
 }
 

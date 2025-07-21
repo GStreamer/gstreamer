@@ -873,6 +873,9 @@ gst_adder_class_init (GstAdderClass * klass)
       GST_DEBUG_FUNCPTR (gst_adder_request_new_pad);
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_adder_release_pad);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_adder_change_state);
+
+  GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "adder", 0,
+      "audio channel mixing element");
 }
 
 static void
@@ -1587,13 +1590,7 @@ gst_adder_child_proxy_init (gpointer g_iface, gpointer iface_data)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
-  GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "adder", 0,
-      "audio channel mixing element");
-
-  ret |= GST_ELEMENT_REGISTER (adder, plugin);
-
-  return ret;
+  return GST_ELEMENT_REGISTER (adder, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

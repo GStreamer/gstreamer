@@ -221,6 +221,8 @@ gst_ks_video_src_class_init (GstKsVideoSrcClass * klass)
       g_param_spec_boolean ("enable-quirks", "Enable quirks",
           "Enable driver-specific quirks", DEFAULT_ENABLE_QUIRKS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_ks_debug_init ();
 }
 
 static void
@@ -1028,8 +1030,7 @@ error_alloc_buffer:
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_ks_debug, "ksvideosrc",
-      0, "Kernel streaming video source");
+  gst_ks_debug_init ();
 
   if (!gst_element_register (plugin, "ksvideosrc",
           GST_RANK_PRIMARY, GST_TYPE_KS_VIDEO_SRC))

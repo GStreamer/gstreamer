@@ -198,6 +198,9 @@ gst_cd_paranoia_src_class_init (GstCdParanoiaSrcClass * klass)
       NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_INT);
 
   gst_type_mark_as_plugin_api (GST_TYPE_CD_PARANOIA_MODE, 0);
+
+  GST_DEBUG_CATEGORY_INIT (gst_cd_paranoia_src_debug, "cdparanoiasrc", 0,
+      "CD Paranoia Source");
 }
 
 static gboolean
@@ -514,9 +517,6 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
-
-  GST_DEBUG_CATEGORY_INIT (gst_cd_paranoia_src_debug, "cdparanoiasrc", 0,
-      "CD Paranoia Source");
 
   ret |= GST_ELEMENT_REGISTER (cdparanoiasrc, plugin);
 

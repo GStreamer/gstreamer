@@ -209,6 +209,9 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
   * Since: 1.22
   */
   gst_video_overlay_install_properties (gobject_class, PROP_LAST);
+
+  GST_DEBUG_CATEGORY_INIT (gstwayland_debug, "waylandsink", 0,
+      " wayland video sink");
 }
 
 static void
@@ -1252,9 +1255,6 @@ gst_wayland_sink_expose (GstVideoOverlay * overlay)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gstwayland_debug, "waylandsink", 0,
-      " wayland video sink");
-
   return GST_ELEMENT_REGISTER (waylandsink, plugin);
 }
 

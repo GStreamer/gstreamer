@@ -28,8 +28,8 @@
 
 #include "gstudpnetutils.h"
 
-GST_DEBUG_CATEGORY_EXTERN (gst_udp_debug);
-#define GST_CAT_DEFAULT gst_udp_debug
+GST_DEBUG_CATEGORY_EXTERN (udpsrc_debug);
+#define GST_CAT_DEFAULT (udpsrc_debug)
 
 gboolean
 gst_udp_parse_uri (const gchar * uristr, gchar ** host, guint16 * port,
@@ -50,8 +50,8 @@ gst_udp_parse_uri (const gchar * uristr, gchar ** host, guint16 * port,
     GST_ERROR ("error parsing uri %s: no protocol", uristr);
     goto error;
   } else if (g_strcmp0 (protocol, "udp")) {
-    GST_ERROR ("error parsing uri %s: wrong protocol (%s != udp)", uristr,
-        protocol);
+    GST_ERROR ("error parsing uri %s: wrong protocol (%s != udp)",
+        uristr, protocol);
     goto error;
   }
 
@@ -112,8 +112,8 @@ gst_udp_parse_multicast_source (const gchar * multicast_source,
 
     /* Begin without '+' or '-' prefix, assume it's positive filter */
     if (prefix == multicast_source) {
-      GST_WARNING ("%s without prefix, assuming that it's positive filter",
-          list[i]);
+      GST_WARNING ("%s without prefix, assuming that it's positive "
+          "filter", list[i]);
       is_positive = TRUE;
     } else if (*(prefix - 1) == '+') {
       is_positive = TRUE;

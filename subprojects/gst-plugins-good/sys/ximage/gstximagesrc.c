@@ -1409,6 +1409,9 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
   bc->unlock = gst_ximage_src_unlock;
   push_class->create = gst_ximage_src_create;
   bc->event = gst_ximage_src_event;
+
+  GST_DEBUG_CATEGORY_INIT (gst_debug_ximage_src, "ximagesrc", 0,
+      "ximagesrc element debug");
 }
 
 static void
@@ -1438,9 +1441,6 @@ plugin_init (GstPlugin * plugin)
 
   if (g_getenv ("GST_XINITTHREADS"))
     XInitThreads ();
-
-  GST_DEBUG_CATEGORY_INIT (gst_debug_ximage_src, "ximagesrc", 0,
-      "ximagesrc element debug");
 
   ret = gst_element_register (plugin, "ximagesrc", GST_RANK_NONE,
       GST_TYPE_XIMAGE_SRC);
