@@ -397,6 +397,7 @@ gst_gl_overlay_set_caps (GstGLFilter * filter, GstCaps * incaps,
 
   overlay->window_width = width;
   overlay->window_height = height;
+  overlay->geometry_change = TRUE;
 
   return TRUE;
 }
