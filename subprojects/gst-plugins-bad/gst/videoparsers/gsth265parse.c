@@ -3439,6 +3439,7 @@ remove_fields (GstCaps * caps, gboolean all)
       gst_structure_remove_field (s, "stream-format");
     }
     gst_structure_remove_field (s, "parsed");
+    gst_structure_remove_field (s, "lcevc");
   }
 }
 
