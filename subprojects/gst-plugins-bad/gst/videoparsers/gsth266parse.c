@@ -2100,7 +2100,7 @@ gst_h266_parse_ensure_compatible_profiles (GstH266Parse * h266parse,
         g_value_unset (&value);
       }
 
-      gst_caps_set_value (caps, "profile", &compat_profiles);
+      gst_caps_set_value (compat_caps, "profile", &compat_profiles);
       g_value_unset (&compat_profiles);
       g_array_unref (profiles);
     }
