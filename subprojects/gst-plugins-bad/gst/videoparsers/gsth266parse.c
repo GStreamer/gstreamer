@@ -3234,10 +3234,7 @@ gst_h266_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     h266parse->nal_length_size = 4;
   }
 
-  if (format == h266parse->format && align == h266parse->align) {
-    /* we did parse codec-data and might supplement src caps */
-    gst_h266_parse_update_src_caps (h266parse, caps);
-  } else if (format == GST_H266_PARSE_FORMAT_VVC1
+  if (format == GST_H266_PARSE_FORMAT_VVC1
       || format == GST_H266_PARSE_FORMAT_VVI1) {
     /* if input != output, and input is vvc, must split before anything else */
     /* arrange to insert codec-data in-stream if needed.
