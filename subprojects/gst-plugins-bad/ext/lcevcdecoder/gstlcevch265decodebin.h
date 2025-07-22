@@ -1,5 +1,5 @@
 /* GStreamer
- *  Copyright (C) <2024> V-Nova International Limited
+ *  Copyright (C) <2025> V-Nova International Limited
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,32 +17,18 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
+#ifndef __GST_LCEVC_H265_DECODE_BIN_H__
+#define __GST_LCEVC_H265_DECODE_BIN_H__
+
+#include "gstlcevcdecodebin.h"
+
+G_BEGIN_DECLS
+
+#define GST_TYPE_LCEVC_H265_DECODE_BIN (gst_lcevc_h265_decode_bin_get_type())
+G_DECLARE_FINAL_TYPE (GstLcevcH265DecodeBin, gst_lcevc_h265_decode_bin,
+    GST, LCEVC_H265_DECODE_BIN, GstLcevcDecodeBin);
+
+GST_ELEMENT_REGISTER_DECLARE (lcevch265decodebin);
+
+G_END_DECLS
 #endif
-
-#include <gst/gst.h>
-
-#include "gstlcevcdec.h"
-#include "gstlcevch264decodebin.h"
-#include "gstlcevch265decodebin.h"
-#include "gstlcevch266decodebin.h"
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gboolean ret = FALSE;
-
-  ret |= GST_ELEMENT_REGISTER (lcevcdec, plugin);
-  ret |= GST_ELEMENT_REGISTER (lcevch264decodebin, plugin);
-  ret |= GST_ELEMENT_REGISTER (lcevch265decodebin, plugin);
-  ret |= GST_ELEMENT_REGISTER (lcevch266decodebin, plugin);
-
-  return ret;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    lcevcdecoder,
-    "LCEVC decoder",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

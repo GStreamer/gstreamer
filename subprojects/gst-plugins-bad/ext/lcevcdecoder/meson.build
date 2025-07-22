@@ -4,11 +4,15 @@ lcevcdecoder_sources = [
   'gstlcevcdec.c',
   'gstlcevcdecodebin.c',
   'gstlcevch264decodebin.c',
+  'gstlcevch265decodebin.c',
+  'gstlcevch266decodebin.c',
 ]
 
 lcevcdecoder_headers = [
   'gstlcevcdec.h',
   'gstlcevch264decodebin.h',
+  'gstlcevch265decodebin.h',
+  'gstlcevch266decodebin.h',
   'gstlcevcdecutils.h',
   'gstlcevcdecodebin.h',
 ]
