@@ -586,6 +586,57 @@ GST_START_TEST (test_keyframe_flag_propagation)
 
 GST_END_TEST;
 
+static GstBusSyncReply
+caps_noop_change_bus_cb (GstBus * bus, GstMessage * message, gpointer user_data)
+{
+  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
+    GST_ERROR ("Got bus message %" GST_PTR_FORMAT, message);
+    fail_unless (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ERROR);
+  }
+  return GST_BUS_PASS;
+}
+
+GST_START_TEST (test_caps_noop_change)
+{
+  GstElement *pipeline =
+      gst_parse_launch
+      ("audiotestsrc ! opusenc ! .sink_65 mpegtsmux name=mux ! fakesink",
+      NULL);
+  fail_unless (pipeline != NULL, "Could not create pipeline");
+
+  /* Check that we do not receive any ERROR message */
+  GstBus *bus = gst_element_get_bus (pipeline);
+  gst_bus_set_sync_handler (bus, caps_noop_change_bus_cb, NULL, NULL);
+  gst_object_unref (bus);
+
+  /* Wait for the pipeline to be playing */
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_unless (gst_element_get_state (pipeline, NULL, NULL,
+          GST_CLOCK_TIME_NONE) == GST_STATE_CHANGE_SUCCESS);
+
+  /* Resend the same caps, this used to post an ERROR message on the bus:
+   * error: Stream type change from 06 to 8f not supported */
+  GstElement *mux = gst_bin_get_by_name (GST_BIN (pipeline), "mux");
+  fail_unless (mux != NULL);
+
+  GstPad *sinkpad = gst_element_get_static_pad (mux, "sink_65");
+  fail_unless (sinkpad != NULL);
+
+  GstEvent *caps_event = gst_pad_get_sticky_event (sinkpad, GST_EVENT_CAPS, 0);
+  gst_pad_send_event (sinkpad, caps_event);
+
+  gst_object_unref (sinkpad);
+  gst_object_unref (mux);
+
+  /* Wait for the caps event to be processed */
+  g_usleep (1000);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 mpegtsmux_suite (void)
 {
@@ -602,6 +653,7 @@ mpegtsmux_suite (void)
   tcase_add_test (tc_chain, test_reappearing_pad_while_playing);
   tcase_add_test (tc_chain, test_reappearing_pad_while_stopped);
   tcase_add_test (tc_chain, test_unused_pad);
+  tcase_add_test (tc_chain, test_caps_noop_change);
 
   return s;
 }
