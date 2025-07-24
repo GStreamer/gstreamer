@@ -386,6 +386,9 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):debug_parent(debug_paren
           return false;
         }
 
+        GST_DEBUG_OBJECT (debug_parent, "Tensor %zu (%s) has id \"%s\"", i, name,
+			  g_quark_to_string (outputIds.back ()));
+
         /* tensor description */
         GstStructure *tensor_desc = gst_structure_new_empty("tensor/strided");
 
@@ -536,7 +539,7 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):debug_parent(debug_paren
 
     std::ostringstream buffer;
     buffer << inputDims;
-    GST_DEBUG_OBJECT (debug_parent, "Input dimensions: %s", buffer.str ().c_str ());
+    GST_LOG_OBJECT (debug_parent, "Input dimensions: %s", buffer.str ().c_str ());
 
     // copy video frame
     uint8_t *srcPtr[3] = { img_data, img_data + 1, img_data + 2 };
