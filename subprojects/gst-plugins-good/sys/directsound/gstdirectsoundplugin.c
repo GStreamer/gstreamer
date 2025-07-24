@@ -35,12 +35,12 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "directsoundsink", GST_RANK_SECONDARY,
+  if (!gst_element_register (plugin, "directsoundsink", GST_RANK_MARGINAL,
           GST_TYPE_DIRECTSOUND_SINK))
     return FALSE;
 
   if (!gst_device_provider_register (plugin, "directsoundsinkdeviceprovider",
-          GST_RANK_PRIMARY, GST_TYPE_DIRECTSOUND_DEVICE_PROVIDER))
+          GST_RANK_NONE, GST_TYPE_DIRECTSOUND_DEVICE_PROVIDER))
     return FALSE;
 
   return TRUE;

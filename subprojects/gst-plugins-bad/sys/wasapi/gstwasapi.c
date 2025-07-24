@@ -41,7 +41,7 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_device_provider_register (plugin, "wasapideviceprovider",
-          GST_RANK_PRIMARY, GST_TYPE_WASAPI_DEVICE_PROVIDER))
+          GST_RANK_NONE, GST_TYPE_WASAPI_DEVICE_PROVIDER))
     return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (gst_wasapi_debug, "wasapi",
