@@ -570,7 +570,7 @@ gst_core_audio_dump_channel_layout (AudioChannelLayout * channel_layout)
 
 #ifndef HAVE_IOS
 char *
-gst_core_audio_device_get_prop (AudioDeviceID device_id,
+gst_core_audio_device_get_prop_str (AudioDeviceID device_id,
     AudioObjectPropertyElement prop_id)
 {
   OSStatus status = noErr;
@@ -614,6 +614,32 @@ gst_core_audio_device_get_prop (AudioDeviceID device_id,
   CFRelease (prop_val);
 
 beach:
+  return result;
+}
+
+UInt32
+gst_core_audio_device_get_prop_uint32 (AudioDeviceID device_id,
+    AudioObjectPropertyElement prop_id)
+{
+  OSStatus status = noErr;
+  UInt32 propertySize = sizeof (UInt32);
+  UInt32 result = UINT32_MAX;
+
+  AudioObjectPropertyAddress propAddress = {
+    .mSelector = prop_id,
+    .mScope = kAudioObjectPropertyScopeGlobal,
+    .mElement = kAudioObjectPropertyElementMain,
+  };
+
+  /* Get the requested property */
+  status = AudioObjectGetPropertyData (device_id,
+      &propAddress, 0, NULL, &propertySize, &result);
+  if (status != noErr) {
+    GST_WARNING ("Device %i, error code %i while fetching property %"
+        GST_FOURCC_FORMAT, device_id, status,
+        GST_FOURCC_ARGS (GUINT32_FROM_BE (prop_id)));
+  }
+
   return result;
 }
 #endif

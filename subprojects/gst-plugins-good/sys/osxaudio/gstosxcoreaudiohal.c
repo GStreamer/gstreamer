@@ -1306,6 +1306,11 @@ gst_core_audio_select_device_impl (GstCoreAudio * core_audio)
   if (res) {
     core_audio->device_id = device_id;
     core_audio->is_default = (device_id == default_device_id);
+
+    g_free (core_audio->unique_id);
+    core_audio->unique_id =
+        gst_core_audio_device_get_prop_str (core_audio->device_id,
+        kAudioDevicePropertyDeviceUID);
   }
 
   return res;

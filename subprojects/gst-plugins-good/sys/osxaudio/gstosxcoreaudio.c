@@ -449,7 +449,7 @@ gst_core_audio_select_device (GstCoreAudio * core_audio)
 #ifndef HAVE_IOS
   if (core_audio->device_id != kAudioDeviceUnknown)
     core_audio->unique_id =
-        gst_core_audio_device_get_prop (core_audio->device_id,
+        gst_core_audio_device_get_prop_str (core_audio->device_id,
         kAudioDevicePropertyDeviceUID);
 #endif
 
