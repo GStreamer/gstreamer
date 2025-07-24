@@ -115,7 +115,7 @@ gstvalidate_dep = dependency('gstreamer-validate-1.0', version : gst_req, requir
 gio_dep = dependency('gio-2.0', version: glib_req)
 gmodule_dep = dependency('gmodule-no-export-2.0')
 libdl = cc.find_library('dl', required: false)
-libxml_dep = dependency('libxml-2.0', required: get_option('xptv'))
+libxml_dep = dependency('libxml-2.0', required: get_option('xptv'), default_options: {'python': false})
 cdata.set('DISABLE_XPTV', not libxml_dep.found())
 
 # TODO Properly port to Gtk 3

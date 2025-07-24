@@ -1,4 +1,5 @@
-libxml_dep = dependency('libxml-2.0', version : '>= 2.9.2', required : get_option('ttml'))
+libxml_dep = dependency('libxml-2.0', version : '>= 2.9.2', required : get_option('ttml'),
+    default_options: {'python': false})
 pango_dep = dependency('pango', required : get_option('ttml'))
 cairo_dep = dependency('cairo', required : get_option('ttml'))
 pangocairo_dep = dependency('pangocairo', required : get_option('ttml'))
