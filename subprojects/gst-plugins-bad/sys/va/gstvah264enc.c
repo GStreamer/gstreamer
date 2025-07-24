@@ -1681,10 +1681,9 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
 
   /* Set the latency */
   latency = gst_util_uint64_scale (latency_num,
-      GST_VIDEO_INFO_FPS_D (&base->input_state->info) * GST_SECOND,
-      GST_VIDEO_INFO_FPS_N (&base->input_state->info));
+      GST_VIDEO_INFO_FPS_D (&base->in_info) * GST_SECOND,
+      GST_VIDEO_INFO_FPS_N (&base->in_info));
   gst_video_encoder_set_latency (venc, latency, latency);
-
 
   max_ref_frames = self->gop.b_pyramid ?
       self->gop.highest_pyramid_level + 2 : self->gop.num_ref_frames;
