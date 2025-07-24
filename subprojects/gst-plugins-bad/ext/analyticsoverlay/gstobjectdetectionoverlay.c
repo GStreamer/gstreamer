@@ -179,6 +179,13 @@ gst_object_detection_overlay_render_text_annotation (GstObjectDetectionOverlay
     GstAnalyticsODMtd * od_mtd, const gchar * annotation);
 
 static void
+    gst_object_detection_overlay_render_tracking_text_annotation
+    (GstObjectDetectionOverlay * overlay,
+    GstObjectDetectionOverlayPangoCairoContext * ctx,
+    GstAnalyticsRelationMeta * rmeta, const GstAnalyticsODMtd * od_mtd);
+
+
+static void
 gst_object_detection_overlay_class_init (GstObjectDetectionOverlayClass * klass)
 {
   GObjectClass *gobject_class;
@@ -842,6 +849,9 @@ gst_object_detection_overlay_transform_frame_ip (GstVideoFilter * filter,
 
         g_free (text);
       }
+
+      gst_object_detection_overlay_render_tracking_text_annotation
+          (GST_OBJECT_DETECTION_OVERLAY (filter), &cairo_ctx, rmeta, od_mtd);
     }
 
     rectangle = gst_video_overlay_rectangle_new_raw (overlay->canvas,
@@ -955,6 +965,65 @@ gst_object_detection_overlay_render_text_annotation (GstObjectDetectionOverlay
       ink_rect.width, ink_rect.height);
   cairo_move_to (ctx->cr, x + overlay->labels_outline_ofs,
       y - logical_rect.height - overlay->labels_outline_ofs);
+
+  pango_cairo_layout_path (ctx->cr, overlay->pango_layout);
+  cairo_stroke (ctx->cr);
+  cairo_restore (ctx->cr);
+}
+
+static void
+    gst_object_detection_overlay_render_tracking_text_annotation
+    (GstObjectDetectionOverlay * overlay,
+    GstObjectDetectionOverlayPangoCairoContext * ctx,
+    GstAnalyticsRelationMeta * rmeta, const GstAnalyticsODMtd * od_mtd)
+{
+  GstAnalyticsMtd tracking_mtd;
+  guint64 tid;
+  gboolean lost;
+  PangoRectangle ink_rect, logical_rect;
+  gint x, y, w, h;
+  gint maxw = GST_VIDEO_INFO_WIDTH (overlay->in_info) - 1;
+  gint maxh = GST_VIDEO_INFO_HEIGHT (overlay->in_info) - 1;
+
+  gchar *annotation;
+
+  if (!gst_analytics_relation_meta_get_direct_related (rmeta, od_mtd->id,
+          GST_ANALYTICS_REL_TYPE_RELATE_TO,
+          gst_analytics_tracking_mtd_get_mtd_type (), NULL, &tracking_mtd))
+    return;
+
+  gst_analytics_od_mtd_get_location (od_mtd, &x, &y, &w, &h, NULL);
+  gst_analytics_tracking_mtd_get_info (&tracking_mtd, &tid, NULL, NULL, &lost);
+
+  cairo_save (ctx->cr);
+  x = CLAMP (x, 0, maxw);
+  y = CLAMP (y, 0, maxh);
+  w = CLAMP (w, 0, maxw - x);
+  h = CLAMP (h, 0, maxh - y);
+
+  /* Set label strokes color and width */
+  cairo_set_source_rgba (ctx->cr,
+      ((overlay->labels_color >> 16) & 0xFF) / 255.0,
+      ((overlay->labels_color >> 8) & 0xFF) / 255.0,
+      ((overlay->labels_color) & 0xFF) / 255.0,
+      ((overlay->labels_color >> 24) & 0xFF) / 255.0);
+
+  cairo_set_line_width (ctx->cr, overlay->labels_stroke_width);
+
+  annotation = g_strdup_printf ("Track: %" G_GUINT64_FORMAT, tid);
+  pango_layout_set_markup (overlay->pango_layout, annotation,
+      strlen (annotation));
+  g_free (annotation);
+
+  pango_layout_get_pixel_extents (overlay->pango_layout, &ink_rect,
+      &logical_rect);
+
+  GST_LOG_OBJECT (overlay, "logical_rect:(%d,%d),%dx%d", logical_rect.x,
+      logical_rect.y, logical_rect.width, logical_rect.height);
+  GST_LOG_OBJECT (overlay, "ink_rect:(%d,%d),%dx%d", ink_rect.x, ink_rect.y,
+      ink_rect.width, ink_rect.height);
+  cairo_move_to (ctx->cr, x + overlay->labels_outline_ofs,
+      y + h - logical_rect.height - overlay->labels_outline_ofs);
 
   pango_cairo_layout_path (ctx->cr, overlay->pango_layout);
   cairo_stroke (ctx->cr);
