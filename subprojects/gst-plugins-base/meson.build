@@ -324,7 +324,7 @@ core_conf.set('HAVE_LIBDRM', libdrm_dep.found())
 # X11 checks are for sys/ and tests/
 x11_dep = dependency('x11', required : get_option('x11'))
 # GIO is used by the GIO plugin, and by the TCP, SDP, and RTSP plugins
-gio_dep = dependency('gio-2.0', version: glib_req)
+gio_dep = dependency('gio-2.0', version: glib_req, default_options: {'sysprof': 'disabled'})
 giounix_dep = dependency('', required: false)
 if host_system != 'windows'
   giounix_dep = dependency('gio-unix-2.0')

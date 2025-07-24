@@ -396,7 +396,7 @@ if gstgl_dep.found()
 endif
 
 libm = cc.find_library('m', required : false)
-gio_dep = dependency('gio-2.0', version: glib_req)
+gio_dep = dependency('gio-2.0', version: glib_req, default_options: {'sysprof': 'disabled'})
 gmodule_dep = dependency('gmodule-no-export-2.0')
 # gio-unix-2.0 is used by sys/bluez
 

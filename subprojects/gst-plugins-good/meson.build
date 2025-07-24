@@ -409,7 +409,7 @@ endif
 zlib_dep = dependency('zlib')
 cdata.set('HAVE_ZLIB', true)
 
-gio_dep = dependency('gio-2.0', version: glib_req)
+gio_dep = dependency('gio-2.0', version: glib_req, default_options: {'sysprof': 'disabled'})
 gmodule_dep = dependency('gmodule-no-export-2.0')
 
 gst_plugins_good_args = ['-DHAVE_CONFIG_H']

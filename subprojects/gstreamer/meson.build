@@ -569,7 +569,7 @@ glib_req = '>= 2.64.0'
 
 # Find dependencies
 glib_dep = dependency('glib-2.0', version: glib_req,
-  fallback: ['glib', 'libglib_dep'])
+    default_options: {'sysprof': 'disabled'})
 gobject_dep = dependency('gobject-2.0')
 gmodule_dep = dependency('gmodule-no-export-2.0')
 if host_system == 'windows'
