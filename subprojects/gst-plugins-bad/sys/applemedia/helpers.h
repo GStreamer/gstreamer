@@ -31,6 +31,12 @@ G_BEGIN_DECLS
 #endif
 #define GST_APPLEMEDIA_HAVE_64RGBALE __builtin_available(macOS 11.3, *)
 
+// kCMVideoCodecType_AV1 is only available for M3 series or later
+// The actual FourCC value for AV1 is 'av01'
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED < 130100
+#define kCMVideoCodecType_AV1 'av01'
+#endif
+
 #define GST_CVPIXELFORMAT_FOURCC_ARGS(fourcc) \
   __GST_PRINT_CHAR(((fourcc) >> 24) & 0xff),  \
   __GST_PRINT_CHAR(((fourcc) >> 16) & 0xff),  \

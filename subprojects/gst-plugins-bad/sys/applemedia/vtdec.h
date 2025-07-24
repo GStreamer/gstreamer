@@ -32,6 +32,7 @@
 #include <gst/vulkan/vulkan.h>
 #endif
 #include <gst/codecparsers/gsth264parser.h>
+#include <gst/codecparsers/gstav1parser.h>
 
 G_BEGIN_DECLS
 
@@ -72,6 +73,9 @@ struct _GstVtdec
 #endif
 
   gboolean require_hardware;
+
+  gboolean av1_needs_sequence_header;  /* TRUE if we need to wait for sequence header OBU before creating session */
+  GstBuffer *av1_sequence_header_obu;  /* Store the sequence header OBU for format description */
 
   guint8* vp9_vpcc;
   gsize   vp9_vpcc_size;
