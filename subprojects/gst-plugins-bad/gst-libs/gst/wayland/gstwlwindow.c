@@ -1059,7 +1059,7 @@ gst_wl_window_set_image_description (GstWlWindow * self,
         minfo->display_primaries[0].x * f, minfo->display_primaries[0].y * f,
         minfo->display_primaries[1].x * f, minfo->display_primaries[1].y * f,
         minfo->display_primaries[2].x * f, minfo->display_primaries[2].y * f,
-        minfo->white_point.x, minfo->white_point.y);
+        minfo->white_point.x * f, minfo->white_point.y * f);
     wp_image_description_creator_params_v1_set_mastering_luminance (params,
         minfo->min_display_mastering_luminance, max_luminance);
 
