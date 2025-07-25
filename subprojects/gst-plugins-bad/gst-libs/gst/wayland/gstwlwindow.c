@@ -1028,7 +1028,12 @@ gst_wl_window_set_image_description (GstWlWindow * self,
 
   color_manager_wrapper = wl_proxy_create_wrapper (color_manager);
   wl_display = gst_wl_display_get_display (priv->display);
+#ifdef HAVE_WL_EVENT_QUEUE_NAME
+  color_manager_queue = wl_display_create_queue_with_name (wl_display,
+      "GStreamer color manager queue");
+#else
   color_manager_queue = wl_display_create_queue (wl_display);
+#endif
   wl_proxy_set_queue ((struct wl_proxy *) color_manager_wrapper,
       color_manager_queue);
 
