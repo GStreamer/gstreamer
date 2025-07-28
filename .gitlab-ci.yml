@@ -1026,6 +1026,14 @@ valgrind ges:
     paths:
     - documentation/
     - diffs/
+  rules:
+    - !reference [.upstream-branch-rules, rules]
+    - changes:
+        paths:
+          *modules_changes
+    - changes:
+        paths:
+          - "scripts/generate_plugins_path.py"
 
 #
 # This jobs runs in gstreamer namespace when after the merge into main branch.
