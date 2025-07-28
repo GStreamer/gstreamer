@@ -48,14 +48,6 @@ gst_init_static_plugins (void)
 ''')
 
 
-# Retrieve the plugin name as it can be a plugin filename
-# Retrieve the plugin name as it can be a plugin filename
-def get_plugin_name(name):
-    if name in plugins or f'libgst{name}.a' in plugins:
-        return name
-    return None
-
-
 def process_features(features_list, plugins, feature_prefix):
     plugins_list = plugins
     feature_declaration = []
@@ -66,8 +58,13 @@ def process_features(features_list, plugins, feature_prefix):
             split = plugin.split(':')
             plugin_name = split[0].strip()
             if len(split) == 2:
-                if get_plugin_name(plugin_name) is not None:
-                    plugins_list.remove(get_plugin_name(plugin_name))
+                if plugin_name in plugins_list:
+                    plugins_list.remove(plugin_name)
+                else:
+                    # The plugin name can be a filename
+                    fname = f'libgst{plugin_name}.a'
+                    if fname in plugins_list:
+                        plugins_list.remove(fname)
                 features = split[1].split(',')
                 for feature in features:
                     feature = feature.replace("-", "_")
