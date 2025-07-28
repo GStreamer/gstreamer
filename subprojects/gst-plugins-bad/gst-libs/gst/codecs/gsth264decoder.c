@@ -1323,7 +1323,8 @@ gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu)
         ret = klass->new_picture (self, priv->current_frame, picture);
 
       if (ret != GST_FLOW_OK) {
-        GST_WARNING_OBJECT (self, "subclass does not want accept new picture");
+        GST_WARNING_OBJECT (self,
+            "subclass does not want to accept new picture");
         priv->current_picture = NULL;
         gst_h264_picture_unref (picture);
         return ret;
