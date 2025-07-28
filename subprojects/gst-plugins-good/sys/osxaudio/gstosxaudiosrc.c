@@ -446,7 +446,7 @@ gst_osx_audio_src_io_proc (GstOsxAudioRingBuffer * buf,
 #ifdef HAVE_IOS
   /* Timestamps don't always start from 0 on iOS, have to offset */
   if (buf->core_audio->first_sample_time == -1) {
-    GST_ERROR ("Setting first CoreAudio timestamp to %f",
+    GST_DEBUG ("Setting first CoreAudio timestamp to %f",
         inTimeStamp->mSampleTime);
     buf->core_audio->first_sample_time = inTimeStamp->mSampleTime;
   }
