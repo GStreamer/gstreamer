@@ -419,12 +419,12 @@ if building_full
   init_static_plugins_c = configure_file(
     output: 'gstinitstaticplugins.c',
     command : [generate_init_static_plugins,
-               '-o ' + '@OUTPUT@',
-               '-p ' + all_plugin_names,
-               '-e ' + get_option('gst-full-elements'),
-               '-t ' + get_option('gst-full-typefind-functions'),
-               '-d ' + get_option('gst-full-device-providers'),
-               '-T ' + get_option('gst-full-dynamic-types'),
+               '-o', '@OUTPUT@',
+               '-p', all_plugin_names,
+               '-e', get_option('gst-full-elements'),
+               '-t', get_option('gst-full-typefind-functions'),
+               '-d', get_option('gst-full-device-providers'),
+               '-T', get_option('gst-full-dynamic-types'),
                '--giomodules', ';'.join(giomodules),
                ]
   )

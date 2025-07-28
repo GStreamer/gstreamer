@@ -803,6 +803,14 @@ gstreamer-full static build:
   script:
   - $CI_PROJECT_DIR/ci/scripts/build.sh build/
   - meson test -C build -v test-gst-full
+  rules:
+    - !reference [.upstream-branch-rules, rules]
+    - changes:
+        paths:
+          *modules_changes
+    - changes:
+        paths:
+          - "scripts/generate_init_static_plugins.py"
 
 gstreamer-full-minimal static build:
   extends: 'gstreamer-full static build'
