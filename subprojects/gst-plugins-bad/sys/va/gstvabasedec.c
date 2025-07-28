@@ -685,17 +685,25 @@ gst_va_base_dec_negotiate (GstVideoDecoder * decoder)
   if (!gst_va_decoder_config_is_equal (base->decoder, base->profile,
           base->rt_format, base->width, base->height)) {
     if (gst_va_decoder_is_open (base->decoder) &&
-        !gst_va_decoder_close (base->decoder))
+        !gst_va_decoder_close (base->decoder)) {
+      GST_WARNING_OBJECT (decoder, "Failed to close decoder");
       return FALSE;
-    if (!gst_va_decoder_open (base->decoder, base->profile, base->rt_format))
+    }
+    if (!gst_va_decoder_open (base->decoder, base->profile, base->rt_format)) {
+      GST_WARNING_OBJECT (decoder, "Failed to open decoder");
       return FALSE;
+    }
     if (!gst_va_decoder_set_frame_size (base->decoder, base->width,
-            base->height))
+            base->height)) {
+      GST_WARNING_OBJECT (decoder, "Failed to set frame size");
       return FALSE;
+    }
   }
 
-  if (!gst_va_base_dec_set_output_state (base))
+  if (!gst_va_base_dec_set_output_state (base)) {
+    GST_WARNING_OBJECT (decoder, "Failed to set output state");
     return FALSE;
+  }
 
 done:
   return GST_VIDEO_DECODER_CLASS (GST_VA_BASE_DEC_GET_PARENT_CLASS (decoder))
