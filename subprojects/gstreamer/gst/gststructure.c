@@ -3064,9 +3064,14 @@ priv_gst_structure_append_to_gstring (const GstStructure * structure,
     g_string_append_len (s, ", ", 2);
     /* FIXME: do we need to escape fieldnames? */
     g_string_append (s, gst_id_str_as_str (&field->name));
-    g_string_append_len (s, "=(", 2);
-    g_string_append (s, _priv_gst_value_gtype_to_abbr (type));
-    g_string_append_c (s, ')');
+
+    if (t != NULL && t[0] == '(') {
+      g_string_append_len (s, "=", 1);
+    } else {
+      g_string_append_len (s, "=(", 2);
+      g_string_append (s, _priv_gst_value_gtype_to_abbr (type));
+      g_string_append_c (s, ')');
+    }
     if (nested_structs_brackets
         && G_VALUE_TYPE (&field->value) == GST_TYPE_STRUCTURE) {
       const GstStructure *substruct = gst_value_get_structure (&field->value);
