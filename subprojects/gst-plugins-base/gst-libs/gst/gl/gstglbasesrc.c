@@ -746,3 +746,23 @@ gst_gl_base_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
 
   return GST_BASE_SRC_CLASS (parent_class)->do_seek (basesrc, segment);
 }
+
+/**
+ * gst_gl_base_src_get_gl_context:
+ * @base_src: a #GstGLBaseSrc
+ *
+ * Returns: (nullable) (transfer full): the configured #GstGLContext.
+ * Since: 1.28
+ */
+GstGLContext *
+gst_gl_base_src_get_gl_context (GstGLBaseSrc * base_src)
+{
+  GstGLContext *ret = NULL;
+
+  g_rec_mutex_lock (&base_src->priv->context_lock);
+  if (base_src->context)
+    ret = gst_object_ref (base_src->context);
+  g_rec_mutex_unlock (&base_src->priv->context_lock);
+
+  return ret;
+}

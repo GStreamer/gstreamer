@@ -1243,6 +1243,19 @@ current in the calling thread.</doc>
           </instance-parameter>
         </parameters>
       </virtual-method>
+      <method name="get_gl_context" c:identifier="gst_gl_base_src_get_gl_context" version="1.28">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasesrc.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasesrc.c">the configured #GstGLContext.</doc>
+          <type name="GLContext" c:type="GstGLContext*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="base_src" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasesrc.c">a #GstGLBaseSrc</doc>
+            <type name="GLBaseSrc" c:type="GstGLBaseSrc*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <property name="timestamp-offset" writable="1" transfer-ownership="none" default-value="0">
         <type name="gint64" c:type="gint64"/>
       </property>

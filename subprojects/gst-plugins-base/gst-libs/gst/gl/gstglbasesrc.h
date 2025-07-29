@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) 2002,2007 David A. Schleef <ds@schleef.org>
@@ -94,6 +94,9 @@ struct _GstGLBaseSrcClass {
   /*< private >*/
   gpointer _padding[GST_PADDING];
 };
+
+GST_GL_API
+GstGLContext * gst_gl_base_src_get_gl_context (GstGLBaseSrc *base_src);
 
 G_END_DECLS
 
