@@ -1,0 +1,7 @@
+subprojects/gst-devtools/dots-viewer/static/dist/**
+macbuild/**
+builddir/**
+*.min.js
+*.min.css
+node_modules/
+
