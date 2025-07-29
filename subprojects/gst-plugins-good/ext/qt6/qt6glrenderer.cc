@@ -206,7 +206,10 @@ GstQt6QuickRenderer::GstQt6QuickRenderer()
       gl_allocator(NULL),
       gl_params(NULL),
       gl_mem(NULL),
-      m_sharedRenderData(NULL)
+      m_sharedRenderData(NULL),
+      m_needsGenerateCallback(NULL),
+      m_needsGenerateCallbackData(NULL),
+      m_needsGenerateCallbackDestroy(NULL)
 {
   init_debug ();
 }
@@ -406,6 +409,10 @@ bool GstQt6QuickRenderer::init (GstGLContext * context, GError ** error)
     }
 
     m_renderControl = new QQuickRenderControl();
+    connect(m_renderControl, &QQuickRenderControl::sceneChanged, this,
+        &GstQt6QuickRenderer::sceneChanged);
+    connect(m_renderControl, &QQuickRenderControl::renderRequested, this,
+        &GstQt6QuickRenderer::renderRequested);
     /* Create a QQuickWindow that is associated with our render control. Note that this
      * window never gets created or shown, meaning that it will never get an underlying
      * native (platform) window.
@@ -468,6 +475,9 @@ GstQt6QuickRenderer::~GstQt6QuickRenderer()
     if (gl_params)
         gst_gl_allocation_params_free (gl_params);
     gst_clear_object (&gl_allocator);
+
+    if (m_needsGenerateCallbackDestroy)
+      m_needsGenerateCallbackDestroy (m_needsGenerateCallbackData);
 }
 
 void GstQt6QuickRenderer::stopGL ()
@@ -595,8 +605,11 @@ GstQt6QuickRenderer::renderGstGL ()
     m_quickWindow->setRenderTarget(QQuickRenderTarget::fromOpenGLTexture(gst_gl_memory_get_texture_id (gl_mem), gl_memory_get_QSize(gl_mem)));
 
     m_renderControl->beginFrame();
-    if (m_renderControl->sync())
-        GST_LOG ("sync successful");
+    if (this->m_needsSync) {
+        if (m_renderControl->sync())
+            GST_LOG ("sync successful");
+        this->m_needsSync = false;
+    }
 
     m_renderControl->render();
     m_renderControl->endFrame();
@@ -641,7 +654,10 @@ void GstQt6QuickRenderer::generate(GstClockTime input_ns)
   m_quickWindow->update();
 
   /* Polishing happens on the gui thread. */
-  m_renderControl->polishItems();
+  if (this->m_needsPolish) {
+    m_renderControl->polishItems();
+    this->m_needsPolish = false;
+  }
 
   /* TODO: an async version could be used instead */
   gst_gl_context_thread_add (gl_context,
@@ -719,6 +735,41 @@ void GstQt6QuickRenderer::initializeQml()
     }
 
     initializeWinsys();
+}
+
+void GstQt6QuickRenderer::sceneChanged()
+{
+    GST_TRACE("%p sceneChanged", this);
+    this->m_needsPolish = true;
+    this->m_needsSync = true;
+    callNeedsGenerateCB();
+}
+
+void GstQt6QuickRenderer::renderRequested()
+{
+    GST_TRACE("%p renderRequested", this);
+    this->m_needsSync = true;
+    callNeedsGenerateCB();
+}
+
+void GstQt6QuickRenderer::callNeedsGenerateCB()
+{
+  if (m_needsGenerateCallback)
+    ((GDestroyNotify) m_needsGenerateCallback) (m_needsGenerateCallbackData);
+}
+
+bool GstQt6QuickRenderer::needsGenerate()
+{
+    return this->m_needsSync || this->m_needsPolish;
+}
+
+void GstQt6QuickRenderer::setNeedsGenerateCallback(GCallback cb, gpointer data, GDestroyNotify destroy_notify)
+{
+  if (m_needsGenerateCallbackDestroy)
+    m_needsGenerateCallbackDestroy (m_needsGenerateCallbackData);
+  m_needsGenerateCallback = cb;
+  m_needsGenerateCallbackData = data;
+  m_needsGenerateCallbackDestroy = destroy_notify;
 }
 
 void GstQt6QuickRenderer::initializeWinsys()

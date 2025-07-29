@@ -47,7 +47,15 @@ Rectangle {
         style: Text.Outline
         styleColor: "blue"
 
+        Timer {
+          interval: 3000
+          onTriggered: rotater.running = !rotater.running
+          repeat: true
+          running: true
+        }
+
         RotationAnimator {
+            id: rotater
             target: rotatingText;
             from: 0;
             to: 360;

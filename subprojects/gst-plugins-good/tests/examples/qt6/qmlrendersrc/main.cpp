@@ -68,8 +68,12 @@ public:
 int main(int argc, char *argv[])
 {
   int ret;
+  bool do_switch = false;
 
   gst_init (&argc, &argv);
+
+  if (argc >= 2 && g_strcmp0(argv[1], "switch") == 0)
+    do_switch = true;
 
   {
     QGuiApplication app(argc, argv);
@@ -78,8 +82,13 @@ int main(int argc, char *argv[])
 
     GstElement *pipeline = gst_pipeline_new (NULL);
     GstElement *src = gst_element_factory_make ("qml6glrendersrc", NULL);
+    gst_util_set_object_arg (G_OBJECT (src), "max-framerate", "10/1");
     GstElement *capsfilter = gst_element_factory_make ("capsfilter", NULL);
-    GstCaps *caps = gst_caps_from_string ("video/x-raw(ANY),width=640,height=240,framerate=10/1");
+    GstCaps *caps;
+    if (do_switch)
+      caps = gst_caps_from_string ("video/x-raw(ANY),width=640,height=240,framerate=20/1");
+    else
+      caps = gst_caps_from_string ("video/x-raw(ANY),width=640,height=240,framerate=0/1");
     g_object_set (capsfilter, "caps", caps, NULL);
     gst_clear_caps (&caps);
     GstElement *download = gst_element_factory_make ("identity", NULL);
@@ -103,12 +112,17 @@ int main(int argc, char *argv[])
 
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-    SwitchFramerate *timer = new SwitchFramerate(capsfilter);
-    timer->start(2000);
+    SwitchFramerate *timer = nullptr;
+    if (do_switch) {
+      SwitchFramerate *timer = new SwitchFramerate(capsfilter);
+      timer->start(2000);
+    }
 
     ret = app.exec();
 
-    delete timer;
+    if (do_switch) {
+      delete timer;
+    }
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
     gst_object_unref (pipeline);

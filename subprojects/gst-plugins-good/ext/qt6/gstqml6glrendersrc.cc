@@ -39,6 +39,7 @@
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
 #define DEFAULT_IS_LIVE FALSE
+#define DEFAULT_MAX_FRAMERATE_NUMER 25
 
 static void gst_qml6_gl_render_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -51,6 +52,10 @@ static gboolean gst_qml6_gl_render_src_set_caps (GstBaseSrc * bsrc, GstCaps * ca
 static GstCaps *gst_qml6_gl_render_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 static GstStateChangeReturn gst_qml6_gl_render_src_change_state (GstElement * element,
     GstStateChange transition);
+static gboolean gst_qml6_gl_render_src_unlock (GstBaseSrc * bsrc);
+static gboolean gst_qml6_gl_render_src_unlock_stop (GstBaseSrc * bsrc);
+static GstFlowReturn gst_qml6_gl_render_src_create (GstBaseSrc * bsrc,
+    guint64 offset, guint size, GstBuffer ** buf);
 static void gst_qml6_gl_render_src_gl_stop (GstGLBaseSrc * basesrc);
 static gboolean gst_qml6_gl_render_src_fill_gl_memory (GstGLBaseSrc * basesrc, GstGLMemory * gl_mem);
 
@@ -70,6 +75,7 @@ enum
   PROP_0,
   PROP_ROOT_ITEM,
   PROP_QML_SCENE,
+  PROP_MAX_FRAMERATE,
 };
 
 enum
@@ -118,6 +124,12 @@ gst_qml6_gl_render_src_class_init (GstQml6GLRenderSrcClass * klass)
           "The contents of the QML scene", NULL,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_MAX_FRAMERATE,
+      gst_param_spec_fraction ("max-framerate", "Maximum framerate",
+          "The maximum framerate to render when running with a variable framerate",
+          0, G_MAXINT, G_MAXINT, 1, DEFAULT_MAX_FRAMERATE_NUMER, 1,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   /**
    * GstQmlGLOverlay::qml-scene-initialized
    * @element: the #GstQmlGLOverlay
@@ -140,6 +152,9 @@ gst_qml6_gl_render_src_class_init (GstQml6GLRenderSrcClass * klass)
 
   gstbasesrc_class->set_caps = gst_qml6_gl_render_src_set_caps;
   gstbasesrc_class->fixate = gst_qml6_gl_render_src_fixate;
+  gstbasesrc_class->unlock = gst_qml6_gl_render_src_unlock;
+  gstbasesrc_class->unlock_stop = gst_qml6_gl_render_src_unlock_stop;
+  gstbasesrc_class->create = gst_qml6_gl_render_src_create;
   gstglbasesrc_class->gl_stop = gst_qml6_gl_render_src_gl_stop;
   gstglbasesrc_class->fill_gl_memory = gst_qml6_gl_render_src_fill_gl_memory;
 }
@@ -156,6 +171,12 @@ gst_qml6_gl_render_src_init (GstQml6GLRenderSrc * src)
   glbase_src->display = gst_qml6_get_gl_display (FALSE);
   if (glbase_src->display)
     src->display = (GstGLDisplay *) gst_object_ref (glbase_src->display);
+
+  g_mutex_init (&src->update_lock);
+  g_cond_init (&src->update_cond);
+
+  g_value_init (&src->max_framerate, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&src->max_framerate, DEFAULT_MAX_FRAMERATE_NUMER, 1);
 }
 
 static void
@@ -173,6 +194,11 @@ gst_qml6_gl_render_src_set_property (GObject * object, guint prop_id,
     case PROP_QML_SCENE:
       GST_OBJECT_LOCK (src);
       src->qml_scene = g_value_dup_string (value);
+      GST_OBJECT_UNLOCK (src);
+      break;
+    case PROP_MAX_FRAMERATE:
+      GST_OBJECT_LOCK (src);
+      g_value_copy (value, &src->max_framerate);
       GST_OBJECT_UNLOCK (src);
       break;
     default:
@@ -203,6 +229,11 @@ gst_qml6_gl_render_src_get_property (GObject * object, guint prop_id,
       g_value_set_string (value, src->qml_scene);
       GST_OBJECT_UNLOCK (src);
       break;
+    case PROP_MAX_FRAMERATE:
+      GST_OBJECT_LOCK (src);
+      g_value_copy (&src->max_framerate, value);
+      GST_OBJECT_UNLOCK (src);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -226,6 +257,9 @@ gst_qml6_gl_render_src_finalize (GObject * object)
   g_free (qt_src->qml_scene);
   qt_src->qml_scene = NULL;
 
+  g_mutex_clear (&qt_src->update_lock);
+  g_cond_clear (&qt_src->update_cond);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -237,6 +271,13 @@ gst_qml6_gl_render_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
 
   if (!GST_BASE_SRC_CLASS (parent_class)->set_caps (bsrc, caps))
     return FALSE;
+
+  src->render_on_demand = FALSE;
+  if (GST_VIDEO_INFO_FPS_N (&gl_src->out_info) == 0) {
+    GST_VIDEO_INFO_FPS_N(&gl_src->out_info) = 10;
+    GST_VIDEO_INFO_FPS_D(&gl_src->out_info) = 1;
+    src->render_on_demand = TRUE;
+  }
 
   if (src->renderer)
     src->renderer->setSize (GST_VIDEO_INFO_WIDTH (&gl_src->out_info), GST_VIDEO_INFO_HEIGHT (&gl_src->out_info));
@@ -290,14 +331,21 @@ gst_qml6_gl_render_src_gl_stop (GstGLBaseSrc * glbase_src)
   GST_GL_BASE_SRC_CLASS (parent_class)->gl_stop (glbase_src);
 }
 
-static gboolean
-gst_qml6_gl_render_src_fill_gl_memory (GstGLBaseSrc * glbase_src, GstGLMemory * gl_mem)
+static void
+needs_generate (GstQml6GLRenderSrc * src)
 {
-  GstQml6GLRenderSrc *src = GST_QML6_GL_RENDER_SRC (glbase_src);
+  g_cond_signal (&src->update_cond);
+}
+
+static gboolean
+ensure_init_renderer_gl (GstGLContext *context, GstQml6GLRenderSrc * src)
+{
+  GstGLBaseSrc *glbase_src = GST_GL_BASE_SRC (src);
   gboolean have_scene;
   GError *error = NULL;
 
   have_scene = src->qml_scene && g_strcmp0 (src->qml_scene, "") != 0;
+
   if (!have_scene && !src->root_item) {
     GST_ELEMENT_ERROR (glbase_src, RESOURCE, NOT_FOUND, ("root-item property not set"), (NULL));
     return FALSE;
@@ -329,6 +377,7 @@ gst_qml6_gl_render_src_fill_gl_memory (GstGLBaseSrc * glbase_src, GstGLMemory * 
         goto fail_renderer;
       }
       src->renderer->setSize (GST_VIDEO_INFO_WIDTH (&glbase_src->out_info), GST_VIDEO_INFO_HEIGHT (&glbase_src->out_info));
+      src->renderer->setNeedsGenerateCallback (G_CALLBACK (needs_generate), src, NULL);
       GST_OBJECT_UNLOCK (glbase_src);
 
       g_object_notify (G_OBJECT (src), "root-item");
@@ -340,17 +389,13 @@ gst_qml6_gl_render_src_fill_gl_memory (GstGLBaseSrc * glbase_src, GstGLMemory * 
       }
       src->renderer->setRootItem(src->root_item);
       src->renderer->setSize (GST_VIDEO_INFO_WIDTH (&glbase_src->out_info), GST_VIDEO_INFO_HEIGHT (&glbase_src->out_info));
+      src->renderer->setNeedsGenerateCallback (G_CALLBACK (needs_generate), src, NULL);
       GST_OBJECT_UNLOCK (glbase_src);
     }
 
     g_signal_emit (src, gst_qml6_gl_render_src_signals[SIGNAL_QML_SCENE_INITIALIZED], 0);
 
     src->initted = TRUE;
-  }
-
-  if (!src->renderer->generateInto (glbase_src->running_time, gl_mem)) {
-    GST_ERROR_OBJECT (glbase_src, "Failed to generate output");
-    return FALSE;
   }
 
   return TRUE;
@@ -363,6 +408,22 @@ fail_renderer:
     GST_OBJECT_UNLOCK (glbase_src);
     return FALSE;
   }
+}
+
+static gboolean
+gst_qml6_gl_render_src_fill_gl_memory (GstGLBaseSrc * glbase_src, GstGLMemory * gl_mem)
+{
+  GstQml6GLRenderSrc *src = GST_QML6_GL_RENDER_SRC (glbase_src);
+
+  if (!ensure_init_renderer_gl (NULL, src))
+    return FALSE;
+
+  if (!src->renderer->generateInto (glbase_src->running_time, gl_mem)) {
+    GST_ERROR_OBJECT (glbase_src, "Failed to generate output");
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 static GstStateChangeReturn
@@ -415,4 +476,98 @@ gst_qml6_gl_render_src_change_state (GstElement * element, GstStateChange transi
   }
 
   return ret;
+}
+
+static gboolean
+gst_qml6_gl_render_src_unlock (GstBaseSrc * bsrc)
+{
+  GstQml6GLRenderSrc *src = GST_QML6_GL_RENDER_SRC (bsrc);
+
+  g_mutex_lock (&src->update_lock);
+  src->flushing = TRUE;
+  g_cond_broadcast (&src->update_cond);
+  g_mutex_unlock (&src->update_lock);
+
+  return TRUE;
+}
+
+static gboolean
+gst_qml6_gl_render_src_unlock_stop (GstBaseSrc * bsrc)
+{
+  GstQml6GLRenderSrc *src = GST_QML6_GL_RENDER_SRC (bsrc);
+
+  g_mutex_lock (&src->update_lock);
+  src->flushing = FALSE;
+  g_cond_broadcast (&src->update_cond);
+  g_mutex_unlock (&src->update_lock);
+
+  return TRUE;
+}
+
+static GstFlowReturn gst_qml6_gl_render_src_create (GstBaseSrc * bsrc,
+    guint64 offset, guint size, GstBuffer ** buf)
+{
+  GstQml6GLRenderSrc *src = GST_QML6_GL_RENDER_SRC (bsrc);
+  GstGLBaseSrc *glbase_src = GST_GL_BASE_SRC (bsrc);
+  GstClockTime running_time;
+  GstFlowReturn ret;
+
+  if (!src->render_on_demand)
+    return GST_BASE_SRC_CLASS (parent_class)->create (bsrc, offset, size, buf);
+
+  if (!gst_base_src_negotiate (bsrc))
+    return GST_FLOW_ERROR;
+
+  if (!src->initted) {
+    GstGLContext *gl_context = gst_gl_base_src_get_gl_context(GST_GL_BASE_SRC (bsrc));
+
+    if (gl_context)
+      gst_gl_context_thread_add (gl_context, (GstGLContextThreadFunc) ensure_init_renderer_gl, bsrc);
+    gst_clear_object (&gl_context);
+
+    if (!src->initted) {
+      GST_ERROR_OBJECT (bsrc, "Failed to initialize");
+      return GST_FLOW_ERROR;
+    }
+  }
+
+  g_mutex_lock (&src->update_lock);
+  while (!src->renderer->needsGenerate()) {
+    if (G_UNLIKELY (src->flushing)) {
+      goto flushing;
+    }
+
+    g_cond_wait (&src->update_cond, &src->update_lock);
+
+    if (G_UNLIKELY (src->flushing)) {
+      goto flushing;
+    }
+  }
+
+  running_time = glbase_src->running_time;
+  ret = GST_BASE_SRC_CLASS (parent_class)->create (bsrc, offset, size, buf);
+  if (ret == GST_FLOW_OK && *buf) {
+    GST_BUFFER_DURATION (*buf) = GST_CLOCK_TIME_NONE;
+
+    int numer = gst_value_get_fraction_numerator (&src->max_framerate);
+    int denom = gst_value_get_fraction_denominator (&src->max_framerate);
+
+    GstClockTime interval = 0;
+    if (numer > 0)
+      interval = gst_util_uint64_scale_int (GST_SECOND, denom, numer);
+    else
+      interval = 40 * GST_MSECOND;
+
+    glbase_src->running_time = running_time + interval;
+    GST_BUFFER_TIMESTAMP (*buf) = glbase_src->running_time;
+  }
+  g_mutex_unlock (&src->update_lock);
+
+  return ret;
+
+flushing:
+  {
+    g_mutex_unlock (&src->update_lock);
+    return GST_FLOW_FLUSHING;
+  }
 }

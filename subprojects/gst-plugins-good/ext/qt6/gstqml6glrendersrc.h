@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2016 Freescale Semiconductor, Inc. All rights reserved.
+ * Copyright (C) 2025 Matthew Waters, <matthew@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -47,8 +47,16 @@ struct _GstQml6GLRenderSrc
   /* properties */
   QQuickItem             *root_item;
   char                   *qml_scene;
+  // GST_TYPE_FRACTION
+  GValue                  max_framerate;
 
   gboolean                initted;
+
+  gboolean                render_on_demand;
+  gboolean                flushing;
+  GCond                   update_cond;
+  GMutex                  update_lock;
+  GstClockTime            last_render_time;
 };
 
 G_END_DECLS
