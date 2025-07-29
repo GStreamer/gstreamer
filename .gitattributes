@@ -1,1 +1,2 @@
 subprojects/packagefiles/*/*.patch  text eol=lf
+subprojects/gst-devtools/dots-viewer/static/dist/** binary
