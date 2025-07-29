@@ -272,6 +272,9 @@ gst_lcevc_dec_stop (GstVideoDecoder * decoder)
 {
   GstLcevcDec *lcevc = GST_LCEVC_DEC (decoder);
 
+  /* Clear input state */
+  g_clear_pointer (&lcevc->input_state, gst_video_codec_state_unref);
+
   /* Destry LCEVC decoder */
   LCEVC_DestroyDecoder (lcevc->decoder_handle);
 
@@ -294,20 +297,22 @@ gst_lcevc_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 }
 
 static gboolean
-ensure_output_resolution (GstLcevcDec * lcevc, guint32 width, guint32 height,
-    GstVideoCodecState * state)
+ensure_output_resolution (GstLcevcDec * lcevc, guint32 width, guint32 height)
 {
-  /* Set output state with input resolution to do passthrough */
   if (width != lcevc->out_width || height != lcevc->out_height) {
     GstVideoCodecState *s;
 
     s = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (lcevc),
-        GST_VIDEO_INFO_FORMAT (&lcevc->in_info), width, height, state);
+        GST_VIDEO_INFO_FORMAT (&lcevc->input_state->info), width, height,
+        lcevc->input_state);
     if (!s)
       return FALSE;
 
     lcevc->out_width = width;
     lcevc->out_height = height;
+
+    GST_INFO_OBJECT (lcevc, "Set output resolution to %dx%d", lcevc->out_width,
+        lcevc->out_height);
 
     gst_video_codec_state_unref (s);
   }
@@ -320,8 +325,6 @@ gst_lcevc_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 {
   GstLcevcDec *lcevc = GST_LCEVC_DEC (decoder);
   LCEVC_ColorFormat format;
-  gint par_n, par_d;
-  guint32 w, h;
 
   /* Make sure format is supported */
   format =
@@ -330,30 +333,13 @@ gst_lcevc_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
   if (format == LCEVC_ColorFormat_Unknown)
     return FALSE;
 
-  /* Keep input info */
-  lcevc->in_info = state->info;
+  /* Keep input state reference */
+  g_clear_pointer (&lcevc->input_state, gst_video_codec_state_unref);
+  lcevc->input_state = gst_video_codec_state_ref (state);
 
-  /* Output resultion is always twice as big as input resultion divided by
-   * pixel aspect ratio */
-  par_n = GST_VIDEO_INFO_PAR_N (&state->info);
-  if (par_n == 0)
-    par_n = 1;
-  par_d = GST_VIDEO_INFO_PAR_D (&state->info);
-  if (par_d == 0)
-    par_d = 1;
-  w = (GST_VIDEO_INFO_WIDTH (&state->info) * 2) / par_d;
-  h = (GST_VIDEO_INFO_HEIGHT (&state->info) * 2) / par_n;
-
-  /* Set pixel aspect ratio back to 1/1 */
-  GST_VIDEO_INFO_PAR_N (&state->info) = 1;
-  GST_VIDEO_INFO_PAR_D (&state->info) = 1;
-
-  /* Set output resolution */
-  if (!ensure_output_resolution (lcevc, w, h, state))
-    return FALSE;
-
-  /* We always work with full RAW video frames */
-  gst_video_decoder_set_subframe_mode (decoder, FALSE);
+  GST_INFO_OBJECT (lcevc, "Input resolution changed to %dx%d",
+      GST_VIDEO_INFO_WIDTH (&lcevc->input_state->info),
+      GST_VIDEO_INFO_HEIGHT (&lcevc->input_state->info));
 
   return TRUE;
 }
@@ -406,6 +392,14 @@ receive_enhanced_picture (GstLcevcDec * lcevc)
       return FALSE;
     }
 
+    /* Enhanced resolution should always match the output width and height */
+    if (pic_desc.width != lcevc->out_width ||
+        pic_desc.height != lcevc->out_height) {
+      GST_ELEMENT_ERROR (lcevc, STREAM, DECODE, (NULL),
+          ("Decoded LCEVC picture has wrong resolution"));
+      return FALSE;
+    }
+
     GST_INFO_OBJECT (lcevc,
         "Received enhanced picture: ts=%" G_GINT64_FORMAT " e=%d w=%d h=%d"
         " t=%d b=%d l=%d r=%d",
@@ -416,13 +410,6 @@ receive_enhanced_picture (GstLcevcDec * lcevc)
     received_frame = find_pending_frame_from_picture_handle (lcevc,
         picture_handle);
     if (received_frame) {
-      /* Change output allocation if enhanced picutre resolution changed */
-      if (!ensure_output_resolution (lcevc, pic_desc.width, pic_desc.height,
-              NULL)) {
-        gst_video_codec_frame_unref (received_frame);
-        return FALSE;
-      }
-
       /* Add crop meta if downstream can crop */
       if (lcevc->can_crop) {
         cmeta = gst_buffer_add_video_crop_meta (received_frame->output_buffer);
@@ -517,6 +504,10 @@ send_enhancement_data (GstLcevcDec * lcevc, GstBuffer * input_buffer)
   gboolean ret = FALSE;
   GstLcevcMeta *lcevc_meta;
   GstMapInfo enhancement_info;
+  uint32_t out_w, out_h;
+
+  out_w = GST_VIDEO_INFO_WIDTH (&lcevc->input_state->info);
+  out_h = GST_VIDEO_INFO_HEIGHT (&lcevc->input_state->info);
 
   lcevc_meta = gst_buffer_get_lcevc_meta (input_buffer);
   if (!lcevc_meta) {
@@ -524,11 +515,7 @@ send_enhancement_data (GstLcevcDec * lcevc, GstBuffer * input_buffer)
         "Input buffer %" GST_TIME_FORMAT
         " enhancement data not found, doing passthrough",
         GST_TIME_ARGS (GST_BUFFER_PTS (input_buffer)));
-
-    /* Set output state with input resolution to do passthrough */
-    return ensure_output_resolution (lcevc,
-        GST_VIDEO_INFO_WIDTH (&lcevc->in_info),
-        GST_VIDEO_INFO_HEIGHT (&lcevc->in_info), NULL);
+    return ensure_output_resolution (lcevc, out_w, out_h);
   }
 
   if (!gst_buffer_map (lcevc_meta->enhancement_data, &enhancement_info,
@@ -545,6 +532,18 @@ send_enhancement_data (GstLcevcDec * lcevc, GstBuffer * input_buffer)
         "Could not send input buffer %" GST_TIME_FORMAT
         " enhancement data with size %zu",
         GST_TIME_ARGS (GST_BUFFER_PTS (input_buffer)), enhancement_info.size);
+    goto done;
+  }
+
+  /* Now peek and update the output resolution */
+  if (LCEVC_PeekDecoder (lcevc->decoder_handle, input_buffer->pts,
+          &out_w, &out_h) != LCEVC_Success) {
+    GST_INFO_OBJECT (lcevc, "Could not peek decoder for output resolution");
+    goto done;
+  }
+  if (!ensure_output_resolution (lcevc, out_w, out_h)) {
+    GST_INFO_OBJECT (lcevc, "Could not set output resolution to %dx%d", out_w,
+        out_h);
     goto done;
   }
 
@@ -565,7 +564,7 @@ send_base_picture (GstLcevcDec * lcevc, GstBuffer * input_buffer)
   LCEVC_PictureHandle picture_handle;
   GstVideoFrame frame = { 0, };
 
-  if (!gst_video_frame_map (&frame, &lcevc->in_info, input_buffer,
+  if (!gst_video_frame_map (&frame, &lcevc->input_state->info, input_buffer,
           GST_MAP_READ)) {
     GST_ELEMENT_ERROR (lcevc, STREAM, DECODE, (NULL),
         ("Could not map input buffer %" GST_TIME_FORMAT,
@@ -589,8 +588,10 @@ send_base_picture (GstLcevcDec * lcevc, GstBuffer * input_buffer)
     goto done;
   }
 
-  GST_INFO_OBJECT (lcevc, "Sent input buffer %" GST_TIME_FORMAT " base picture",
-      GST_TIME_ARGS (GST_BUFFER_PTS (input_buffer)));
+  GST_INFO_OBJECT (lcevc,
+      "Sent input buffer %" GST_TIME_FORMAT " base picture %dx%d",
+      GST_TIME_ARGS (GST_BUFFER_PTS (input_buffer)),
+      GST_VIDEO_FRAME_WIDTH (&frame), GST_VIDEO_FRAME_HEIGHT (&frame));
   ret = TRUE;
 
 done:

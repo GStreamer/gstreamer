@@ -51,7 +51,7 @@ struct _GstLcevcDec {
   gint max_latency;
 
   LCEVC_DecoderHandle decoder_handle;
-  GstVideoInfo in_info;
+  GstVideoCodecState *input_state;
   gboolean can_crop;
 
   guint32 out_width;
