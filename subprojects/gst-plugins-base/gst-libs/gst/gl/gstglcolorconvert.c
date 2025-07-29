@@ -1679,7 +1679,7 @@ _init_supported_formats (GstGLContext * context, gboolean output,
   if (!context || gst_gl_format_is_supported (context, GST_GL_RGB10_A2)) {
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
     _append_value_string_list (supported_formats, "BGR10A2_LE", "RGB10A2_LE",
-        "Y410", "v210", NULL);
+        "BGR10x2_LE", "RGB10x2_LE", "Y410", "v210", NULL);
 #else
     _append_value_string_list (supported_formats, "Y410", NULL);
 #endif
@@ -1758,8 +1758,8 @@ gst_gl_color_convert_caps_transform_format_info (GstGLContext * context,
 
   _init_value_string_list (&rgb_formats, "RGBA", "ARGB", "BGRA", "ABGR", "RGBx",
       "xRGB", "BGRx", "xBGR", "RGB", "BGR", "ARGB64", "BGR10A2_LE",
-      "RGB10A2_LE", "RGBA64_LE", "RGBA64_BE", "RBGA", "GBRA", "GBR",
-      "RGBP", "BGRP", "RGB16", "BGR16", NULL);
+      "RGB10A2_LE", "BGR10x2_LE", "RGB10x2_LE", "RGBA64_LE", "RGBA64_BE",
+      "RBGA", "GBRA", "GBR", "RGBP", "BGRP", "RGB16", "BGR16", NULL);
   _init_value_string_list (&planar_yuv_formats, "Y444", "Y444_10LE",
       "Y444_16LE", "Y444_10BE", "Y444_16BE", "I420", "Y42B", "Y41B", "A420",
       "A444", "A422", "A420_10LE", "A422_10LE", "A444_10LE", "A444_12LE",

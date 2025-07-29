@@ -562,10 +562,12 @@ _drm_rgba_fourcc_from_format (GstVideoFormat format, int plane,
       return DRM_FORMAT_R8;
 
     case GST_VIDEO_FORMAT_BGR10A2_LE:
+    case GST_VIDEO_FORMAT_BGR10x2_LE:
       *out_format = GST_GL_RGB10_A2;
       return DRM_FORMAT_BGRA1010102;
 
     case GST_VIDEO_FORMAT_RGB10A2_LE:
+    case GST_VIDEO_FORMAT_RGB10x2_LE:
       *out_format = GST_GL_RGB10_A2;
       return DRM_FORMAT_RGBA1010102;
 
