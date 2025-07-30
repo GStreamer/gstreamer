@@ -195,6 +195,64 @@ def run_doc_checks(modified_files):
     for conf_path in confs_need_rebuild:
         subprocess.run(['hotdoc', 'run', '--fatal-warnings', '--disable-warnings', '--enabled-warnings', 'missing-since-marker', '--conf-file', conf_path, '--previous-symbol-index', 'subprojects/gst-docs/symbols/symbol_index.json'], check=True)
 
+def check_ges_children_props_docs(modified_files):
+    """Check if GES children properties documentation is up to date"""
+    # Check if any GES source files were modified
+    ges_source_modified = any(
+        ('subprojects/gst-editing-services/ges/' in f and (f.endswith('.c') or f.endswith('.h')) or f.endswith('document-children-props.py'))
+        for f in modified_files
+    )
+
+    if not ges_source_modified:
+        return
+
+    print('GES source files modified, checking children properties documentation...')
+
+    # Path to the script relative to git root
+    srcdir = Path(os.getcwd())
+    script_path = srcdir / 'subprojects/gst-editing-services/docs/libs/document-children-props.py'
+    if not script_path.exists():
+        print('WARNING: document-children-props.py script not found, skipping check')
+        return
+
+    # Run the script in gst-env (needs build environment)
+    builddir = find_builddir()
+    if builddir is None:
+        print('WARNING: No build directory found, cannot run document-children-props.py')
+        return
+
+    try:
+        # Generate environment file to be sourced
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.sh', delete=False) as env_file:
+            env_temp_name = env_file.name
+
+        cmd = f'./gst-env.py --builddir {builddir} --only-environment > {env_temp_name} && source {env_temp_name} && cd {script_path.parent} && python3 document-children-props.py && rm {env_temp_name}'
+        subprocess.run(cmd, shell=True, check=True)
+
+        # Check if there are any diffs in the children-props markdown files
+        script_dir = script_path.parent
+        docs_files = list(script_dir.glob('*-children-props.md'))
+        if docs_files:
+            # Convert paths to be relative to git root for git diff
+            relative_docs_files = [str(f.relative_to(srcdir)) for f in docs_files]
+            try:
+                subprocess.run(['git', 'diff', '--ignore-submodules', '--exit-code'] + relative_docs_files, check=True)
+                print('GES children properties documentation is up to date')
+            except subprocess.CalledProcessError:
+                print('WARNING: You have changes in GES children properties documentation')
+                # Automatically stage the updated documentation files
+                subprocess.run(['git', 'add'] + relative_docs_files, check=True)
+                print('Updated documentation files have been automatically staged.')
+                print('Please verify the changes and proceed with your commit.')
+        else:
+            print('No GES children properties documentation files found')
+
+    except subprocess.CalledProcessError as e:
+        print(f'WARNING: Failed to run document-children-props.py: {e}')
+        print('Please check the script manually if you modified GES properties')
+    except Exception as e:
+        print(f'WARNING: Error checking GES children properties documentation: {e}')
+
 def main():
     modified_files = system('git', 'diff-index', '--cached',
                             '--name-only', 'HEAD', '--diff-filter=ACMR').split("\n")[:-1]
@@ -203,6 +261,7 @@ def main():
         with StashManager():
             try:
                 run_doc_checks(modified_files)
+                check_ges_children_props_docs(modified_files)
             except Exception as e:
                 print (e)
                 sys.exit(1)
