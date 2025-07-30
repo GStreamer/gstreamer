@@ -220,6 +220,8 @@ struct _GstH264EncoderPrivate
   } params;
 
   GstClockTime frame_duration;
+  guint fps_n;
+  guint fps_d;
 
   GQueue output_list;
   GQueue ref_list;
@@ -539,9 +541,7 @@ gst_h264_encoder_generate_gop_structure (GstH264Encoder * self)
 
   /* If not set, generate a idr every second */
   if (priv->gop.idr_period == 0) {
-    priv->gop.idr_period = (GST_VIDEO_INFO_FPS_N (&priv->input_state->info)
-        + GST_VIDEO_INFO_FPS_D (&priv->input_state->info) - 1) /
-        GST_VIDEO_INFO_FPS_D (&priv->input_state->info);
+    priv->gop.idr_period = (priv->fps_n + priv->fps_d - 1) / priv->fps_d;
   }
 
   /* Prefer have more than 1 reference for the GOP which is not very small. */
@@ -877,6 +877,15 @@ gst_h264_encoder_set_format (GstVideoEncoder * encoder,
   if (priv->input_state)
     gst_video_codec_state_unref (priv->input_state);
   priv->input_state = gst_video_codec_state_ref (state);
+
+  priv->fps_d = GST_VIDEO_INFO_FPS_D (&priv->input_state->info);
+  priv->fps_n = GST_VIDEO_INFO_FPS_N (&priv->input_state->info);
+
+  /* if still image */
+  if (priv->fps_d == 0 || priv->fps_n == 0) {
+    priv->fps_d = 1;
+    priv->fps_n = 30;
+  }
 
   /* in case live streaming, we should run on low-latency mode */
   priv->is_live = FALSE;
@@ -2499,8 +2508,7 @@ gst_h264_encoder_configure (GstH264Encoder * self)
     guint frames_latency =
         priv->config.preferred_output_delay + priv->gop.ip_period - 1;
     GstClockTime latency = gst_util_uint64_scale (frames_latency,
-        GST_VIDEO_INFO_FPS_D (&priv->input_state->info) * GST_SECOND,
-        GST_VIDEO_INFO_FPS_N (&priv->input_state->info));
+        priv->fps_d * GST_SECOND, priv->fps_n);
     gst_video_encoder_set_latency (encoder, latency, latency);
   }
 
