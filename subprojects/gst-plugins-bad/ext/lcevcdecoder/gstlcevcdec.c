@@ -88,7 +88,7 @@ typedef struct
 {
   LCEVC_DecoderHandle decoder_handle;
   LCEVC_PictureHandle picture_handle;
-  guint32 width;
+  guint width;
   guint height;
 } PictureData;
 
