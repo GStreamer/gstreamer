@@ -35,7 +35,7 @@ LCEVC_ColorFormat gst_lcevc_dec_utils_get_color_format (GstVideoFormat format);
 
 gboolean gst_lcevc_dec_utils_alloc_picture_handle (
     LCEVC_DecoderHandle decoder_handle, GstVideoFrame *frame,
-    LCEVC_PictureHandle *picture_handle);
+    LCEVC_PictureHandle *picture_handle, LCEVC_Access access);
 
 G_END_DECLS
 

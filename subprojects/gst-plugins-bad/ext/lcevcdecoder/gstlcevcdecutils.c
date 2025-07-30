@@ -50,7 +50,8 @@ gst_lcevc_dec_utils_get_color_format (GstVideoFormat format)
 
 gboolean
 gst_lcevc_dec_utils_alloc_picture_handle (LCEVC_DecoderHandle decoder_handle,
-    GstVideoFrame * frame, LCEVC_PictureHandle * picture_handle)
+    GstVideoFrame * frame, LCEVC_PictureHandle * picture_handle,
+    LCEVC_Access access)
 {
   LCEVC_PictureDesc picture_desc = { 0, };
   LCEVC_PictureBufferDesc buffer_desc = { 0, };
@@ -71,7 +72,7 @@ gst_lcevc_dec_utils_alloc_picture_handle (LCEVC_DecoderHandle decoder_handle,
   /* Set buffer description */
   buffer_desc.data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   buffer_desc.byteSize = GST_VIDEO_FRAME_SIZE (frame);
-  buffer_desc.access = LCEVC_Access_Write;
+  buffer_desc.access = access;
 
   /* Set plane description */
   for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (frame); i++) {

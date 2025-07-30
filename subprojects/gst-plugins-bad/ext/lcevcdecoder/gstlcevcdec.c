@@ -103,7 +103,7 @@ picture_data_new (LCEVC_DecoderHandle decoder_handle, GstVideoFrame * frame)
 
   /* Alloc LCEVC picture handle */
   if (!gst_lcevc_dec_utils_alloc_picture_handle (decoder_handle, frame,
-          &ret->picture_handle)) {
+          &ret->picture_handle, LCEVC_Access_Write)) {
     g_free (ret);
     return NULL;
   }
@@ -574,7 +574,7 @@ send_base_picture (GstLcevcDec * lcevc, GstBuffer * input_buffer)
   }
 
   if (!gst_lcevc_dec_utils_alloc_picture_handle (lcevc->decoder_handle,
-          &frame, &picture_handle)) {
+          &frame, &picture_handle, LCEVC_Access_Read)) {
     GST_ELEMENT_ERROR (lcevc, STREAM, DECODE, (NULL),
         ("Could not allocate input picture handle %" GST_TIME_FORMAT,
             GST_TIME_ARGS (GST_BUFFER_PTS (input_buffer))));
