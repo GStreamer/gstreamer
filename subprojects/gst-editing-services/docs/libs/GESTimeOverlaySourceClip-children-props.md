@@ -69,8 +69,8 @@ Valid values:
   - **left** (0) – left
   - **center** (1) – center
   - **right** (2) – right
-  - **Value_3** (3) – value-3
   - **position** (4) – Absolute position clamped to canvas
+  - **absolute** (5) – Absolute position
 
 See #GstBaseTextOverlay:halignment
 
