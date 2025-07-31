@@ -28,6 +28,7 @@
 #include <wrl.h>
 #include <functiondiscoverykeys_devpkey.h>
 #include <string>
+#include <atomic>
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -265,6 +266,7 @@ struct GstWasapi2EnumeratorPrivate
   ComPtr<IMMNotificationClient> client;
   Wasapi2ActivationHandler *capture_activator = nullptr;
   Wasapi2ActivationHandler *render_activator = nullptr;
+  std::atomic<int> notify_count = { 0 };
 
   void ClearCOM ()
   {
@@ -342,12 +344,26 @@ static void
 gst_wasapi2_on_device_updated (GstWasapi2Enumerator * object)
 {
   /* *INDENT-OFF* */
-  g_main_context_invoke_full (object->context, G_PRIORITY_DEFAULT,
+  auto priv = object->priv;
+
+  auto count = priv->notify_count.fetch_add (1);
+  GST_LOG ("notify count before scheduling %d", count);
+
+  auto source = g_timeout_source_new (100);
+  g_source_set_callback (source,
       [] (gpointer obj) -> gboolean {
-        g_signal_emit (obj, wasapi2_device_signals[SIGNAL_UPDATED], 0);
+        auto self = GST_WASAPI2_ENUMERATOR (obj);
+        auto priv = self->priv;
+        auto count = priv->notify_count.fetch_sub (1);
+        GST_LOG ("scheduled notify count %d", count);
+        if (count == 1)
+          g_signal_emit (obj, wasapi2_device_signals[SIGNAL_UPDATED], 0);
         return G_SOURCE_REMOVE;
       },
       gst_object_ref (object), (GDestroyNotify) gst_object_unref);
+
+  g_source_attach (source, object->context);
+  g_source_unref (source);
   /* *INDENT-ON* */
 }
 
