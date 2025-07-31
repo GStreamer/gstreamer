@@ -259,6 +259,19 @@ static guint wasapi2_device_signals[SIGNAL_LAST] = { };
 
 struct GstWasapi2EnumeratorPrivate
 {
+  GstWasapi2EnumeratorPrivate ()
+  {
+    device_list = g_ptr_array_new_with_free_func ((GDestroyNotify)
+        gst_wasapi2_enumerator_entry_free);
+    scaps = gst_static_caps_get (&template_caps);
+  }
+
+  ~GstWasapi2EnumeratorPrivate ()
+  {
+    g_ptr_array_unref (device_list);
+    gst_caps_unref (scaps);
+  }
+
   ComPtr<IMMDeviceEnumerator> handle;
   std::mutex lock;
   std::condition_variable cond;
@@ -267,6 +280,8 @@ struct GstWasapi2EnumeratorPrivate
   Wasapi2ActivationHandler *capture_activator = nullptr;
   Wasapi2ActivationHandler *render_activator = nullptr;
   std::atomic<int> notify_count = { 0 };
+  GPtrArray *device_list;
+  GstCaps *scaps;
 
   void ClearCOM ()
   {
@@ -669,29 +684,17 @@ probe_default_device_props (GstWasapi2Enumerator * self, EDataFlow flow,
 }
 
 static gboolean
-gst_wasapi2_enumerator_enumerate_internal (EnumerateData * data)
+gst_wasapi2_enumerator_execute (GstWasapi2Enumerator * self,
+    IMMDeviceCollection * collection, gboolean ignore_error)
 {
-  auto self = data->self;
   auto priv = self->priv;
-  ComPtr < IMMDeviceCollection > collection;
-
-  auto hr = priv->handle->EnumAudioEndpoints (eAll, DEVICE_STATE_ACTIVE,
-      &collection);
-  if (!gst_wasapi2_result (hr)) {
-    SetEvent (data->event);
-    return G_SOURCE_REMOVE;
-  }
-
-  UINT count = 0;
-  hr = collection->GetCount (&count);
-  if (!gst_wasapi2_result (hr) || count == 0) {
-    SetEvent (data->event);
-    return G_SOURCE_REMOVE;
-  }
-
-  auto scaps = gst_static_caps_get (&template_caps);
 
   GST_DEBUG_OBJECT (self, "Start enumerate");
+
+  UINT count = 0;
+  auto hr = collection->GetCount (&count);
+  if (!gst_wasapi2_result (hr) || count == 0)
+    return TRUE;
 
   ComPtr < IAudioClient > default_capture_client;
   ComPtr < IAudioClient > default_render_client;
@@ -711,10 +714,10 @@ gst_wasapi2_enumerator_enumerate_internal (EnumerateData * data)
         &actual_device_name);
 
     gst_wasapi2_enumerator_add_entry (self, default_capture_client.Get (),
-        scaps, eCapture, TRUE,
+        priv->scaps, eCapture, TRUE,
         g_strdup (gst_wasapi2_get_default_device_id (eCapture)),
         g_strdup ("Default Audio Capture Device"), actual_device_id,
-        actual_device_name, &props, data->device_list);
+        actual_device_name, &props, priv->device_list);
   }
 
   if (default_render_client) {
@@ -728,10 +731,10 @@ gst_wasapi2_enumerator_enumerate_internal (EnumerateData * data)
         &actual_device_name);
 
     gst_wasapi2_enumerator_add_entry (self, default_render_client.Get (),
-        scaps, eRender, TRUE,
+        priv->scaps, eRender, TRUE,
         g_strdup (gst_wasapi2_get_default_device_id (eRender)),
         g_strdup ("Default Audio Render Device"), actual_device_id,
-        actual_device_name, &props, data->device_list);
+        actual_device_name, &props, priv->device_list);
   }
 
   for (UINT i = 0; i < count; i++) {
@@ -784,23 +787,66 @@ gst_wasapi2_enumerator_enumerate_internal (EnumerateData * data)
     ComPtr < IAudioClient > client;
     hr = device->Activate (__uuidof (IAudioClient), CLSCTX_ALL, nullptr,
         &client);
+
     if (!gst_wasapi2_result (hr)) {
+      /* Requested active devices via DEVICE_STATE_ACTIVE but activate fail here.
+       * That means devices were changed while we were enumerating.
+       * Need retry here */
       GST_DEBUG_OBJECT (self, "Couldn't activate device %s (%s)",
           device_id, desc);
       g_free (device_id);
       g_free (desc);
-      continue;
+
+      if (!ignore_error && hr == AUDCLNT_E_DEVICE_INVALIDATED)
+        return FALSE;
     }
 
     gst_wasapi2_enumerator_probe_props (prop.Get (), &props);
 
-    gst_wasapi2_enumerator_add_entry (self, client.Get (), scaps, flow, FALSE,
-        device_id, desc, nullptr, nullptr, &props, data->device_list);
+    gst_wasapi2_enumerator_add_entry (self, client.Get (), priv->scaps, flow,
+        FALSE, device_id, desc, nullptr, nullptr, &props, priv->device_list);
   }
 
-  gst_caps_unref (scaps);
+  return TRUE;
+}
 
-  GST_DEBUG_OBJECT (self, "End enumerate");
+static gboolean
+gst_wasapi2_enumerator_enumerate_internal (EnumerateData * data)
+{
+  auto self = data->self;
+  auto priv = self->priv;
+  /* Upto 3 times retry */
+  const guint num_retry = 5;
+
+  for (guint i = 0; i < num_retry; i++) {
+    ComPtr < IMMDeviceCollection > collection;
+    gboolean is_last = FALSE;
+
+    if (i + 1 == num_retry)
+      is_last = TRUE;
+
+    g_ptr_array_set_size (priv->device_list, 0);
+
+    auto hr = priv->handle->EnumAudioEndpoints (eAll, DEVICE_STATE_ACTIVE,
+        &collection);
+    if (!gst_wasapi2_result (hr)) {
+      SetEvent (data->event);
+      return G_SOURCE_REMOVE;
+    }
+
+    if (gst_wasapi2_enumerator_execute (self, collection.Get (), is_last))
+      break;
+
+    if (!is_last) {
+      GST_DEBUG_OBJECT (self, "Sleep for retrying");
+      Sleep (50);
+    }
+  }
+
+  while (priv->device_list->len > 0) {
+    g_ptr_array_add (data->device_list,
+        g_ptr_array_steal_index (priv->device_list, 0));
+  }
 
   SetEvent (data->event);
   return G_SOURCE_REMOVE;
