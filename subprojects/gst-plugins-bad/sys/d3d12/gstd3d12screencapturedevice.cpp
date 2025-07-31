@@ -72,8 +72,11 @@ struct _GstD3D12ScreenCaptureDevice
   GstDevice parent;
 
   HMONITOR monitor_handle;
+
+  gchar *device_path;
 };
 
+static void gst_d3d12_screen_capture_device_finalize (GObject * object);
 static void gst_d3d12_screen_capture_device_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_d3d12_screen_capture_device_set_property (GObject * object,
@@ -81,6 +84,7 @@ static void gst_d3d12_screen_capture_device_set_property (GObject * object,
 static GstElement *gst_d3d12_screen_capture_device_create_element (GstDevice *
     device, const gchar * name);
 
+#define gst_d3d12_screen_capture_device_parent_class device_parent_class
 G_DEFINE_TYPE (GstD3D12ScreenCaptureDevice,
     gst_d3d12_screen_capture_device, GST_TYPE_DEVICE);
 
@@ -91,6 +95,7 @@ gst_d3d12_screen_capture_device_class_init (GstD3D12ScreenCaptureDeviceClass *
   auto object_class = G_OBJECT_CLASS (klass);
   auto dev_class = GST_DEVICE_CLASS (klass);
 
+  object_class->finalize = gst_d3d12_screen_capture_device_finalize;
   object_class->get_property = gst_d3d12_screen_capture_device_get_property;
   object_class->set_property = gst_d3d12_screen_capture_device_set_property;
 
@@ -106,6 +111,16 @@ gst_d3d12_screen_capture_device_class_init (GstD3D12ScreenCaptureDeviceClass *
 static void
 gst_d3d12_screen_capture_device_init (GstD3D12ScreenCaptureDevice * self)
 {
+}
+
+static void
+gst_d3d12_screen_capture_device_finalize (GObject * object)
+{
+  auto self = GST_D3D12_SCREEN_CAPTURE_DEVICE (object);
+
+  g_free (self->device_path);
+
+  G_OBJECT_CLASS (device_parent_class)->finalize (object);
 }
 
 static void
@@ -482,6 +497,9 @@ create_device (const DXGI_ADAPTER_DESC * adapter_desc,
       "Source/Monitor", "properties", props, "monitor-handle",
       (guint64) output_desc->Monitor, nullptr);
 
+  auto screen_dev = GST_D3D12_SCREEN_CAPTURE_DEVICE (device);
+  screen_dev->device_path = g_strdup (device_path.c_str ());
+
   gst_caps_unref (caps);
 
   return device;
@@ -594,7 +612,7 @@ gst_d3d12_screen_capture_device_provider_update (gpointer self)
   GList *new_devices = nullptr;
   GList *to_add = nullptr;
   GList *to_remove = nullptr;
-  GList *iter;
+  GList *iter, *walk;
 
   GST_DEBUG_OBJECT (self, "Device updated");
 
@@ -624,6 +642,44 @@ gst_d3d12_screen_capture_device_provider_update (gpointer self)
     if (!gst_d3d12_screen_capture_device_is_in_list (new_devices,
             GST_DEVICE (iter->data))) {
       to_remove = g_list_prepend (to_remove, gst_object_ref (iter->data));
+    }
+  }
+
+  iter = to_remove;
+  while (iter) {
+    auto prev_dev = GST_D3D12_SCREEN_CAPTURE_DEVICE (iter->data);
+
+    if (!prev_dev->device_path) {
+      iter = g_list_next (iter);
+      continue;
+    }
+
+    walk = to_add;
+    bool found = false;
+    while (walk) {
+      auto new_dev = GST_D3D12_SCREEN_CAPTURE_DEVICE (walk->data);
+
+      if (!new_dev->device_path ||
+          g_strcmp0 (prev_dev->device_path, new_dev->device_path)) {
+        walk = g_list_next (walk);
+        continue;
+      }
+
+      gst_device_provider_device_changed (provider, GST_DEVICE (new_dev),
+          GST_DEVICE (prev_dev));
+      gst_object_unref (new_dev);
+      to_add = g_list_delete_link (to_add, walk);
+      found = true;
+      break;
+    }
+
+    if (found) {
+      gst_object_unref (prev_dev);
+      auto next = iter->next;
+      to_remove = g_list_delete_link (to_remove, iter);
+      iter = next;
+    } else {
+      iter = g_list_next (iter);
     }
   }
 
