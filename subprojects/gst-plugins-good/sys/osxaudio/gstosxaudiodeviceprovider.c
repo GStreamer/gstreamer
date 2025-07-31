@@ -467,14 +467,17 @@ done:
 enum
 {
   PROP_DEVICE_ID = 1,
+  PROP_UNIQUE_ID = 2,
 };
 
+#define gst_osx_audio_device_parent_class parent_class
 G_DEFINE_TYPE (GstOsxAudioDevice, gst_osx_audio_device, GST_TYPE_DEVICE);
 
 static void gst_osx_audio_device_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_osx_audio_device_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
+static void gst_osx_audio_device_finalize (GObject * object);
 static GstElement *gst_osx_audio_device_create_element (GstDevice * device,
     const gchar * name);
 
@@ -488,15 +491,29 @@ gst_osx_audio_device_class_init (GstOsxAudioDeviceClass * klass)
 
   object_class->get_property = gst_osx_audio_device_get_property;
   object_class->set_property = gst_osx_audio_device_set_property;
+  object_class->finalize = gst_osx_audio_device_finalize;
 
   g_object_class_install_property (object_class, PROP_DEVICE_ID,
-      g_param_spec_int ("device-id", "Device ID", "Device ID of input device",
+      g_param_spec_int ("device-id", "Device ID", "Device ID of audio device",
           0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (object_class, PROP_UNIQUE_ID,
+      g_param_spec_string ("unique-id", "Unique ID",
+          "Unique ID of audio device", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
 gst_osx_audio_device_init (GstOsxAudioDevice * device)
 {
+}
+
+static void
+gst_osx_audio_device_finalize (GObject * object)
+{
+  GstOsxAudioDevice *osxdev = GST_OSX_AUDIO_DEVICE (object);
+  g_clear_pointer (&osxdev->unique_id, g_free);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstElement *
@@ -506,7 +523,7 @@ gst_osx_audio_device_create_element (GstDevice * device, const gchar * name)
   GstElement *elem;
 
   elem = gst_element_factory_make (osxdev->element, name);
-  g_object_set (elem, "device", osxdev->device_id, NULL);
+  g_object_set (elem, "unique-id", osxdev->unique_id, NULL);
 
   return elem;
 }
@@ -562,9 +579,9 @@ gst_osx_audio_device_new (AudioDeviceID device_id, const gchar * device_name,
       break;
   }
 
-  gstdev = g_object_new (GST_TYPE_OSX_AUDIO_DEVICE, "device-id",
-      device_id, "display-name", device_name, "caps", caps,
-      "properties", props, "device-class", klass, NULL);
+  gstdev = g_object_new (GST_TYPE_OSX_AUDIO_DEVICE, "device-id", device_id,
+      "unique-id", core_audio->unique_id, "display-name", device_name, "caps",
+      caps, "properties", props, "device-class", klass, NULL);
 
   gstdev->element = element_name;
 
@@ -584,6 +601,9 @@ gst_osx_audio_device_get_property (GObject * object, guint prop_id,
     case PROP_DEVICE_ID:
       g_value_set_int (value, device->device_id);
       break;
+    case PROP_UNIQUE_ID:
+      g_value_set_string (value, device->unique_id);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -602,6 +622,9 @@ gst_osx_audio_device_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_DEVICE_ID:
       device->device_id = g_value_get_int (value);
+      break;
+    case PROP_UNIQUE_ID:
+      device->unique_id = g_value_dup_string (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

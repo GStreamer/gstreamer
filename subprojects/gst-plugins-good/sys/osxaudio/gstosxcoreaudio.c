@@ -42,6 +42,7 @@ enum
   PROP_DEVICE,
   PROP_IS_SRC,
   PROP_CONFIGURE_SESSION,
+  PROP_UNIQUE_ID,
 };
 
 static void gst_core_audio_set_property (GObject * object, guint prop_id,
@@ -54,7 +55,7 @@ gst_core_audio_finalize (GObject * object)
 {
   GstCoreAudio *core_audio = GST_CORE_AUDIO (object);
   g_mutex_clear (&core_audio->timing_lock);
-  g_free (core_audio->unique_id);
+  g_clear_pointer (&core_audio->unique_id, g_free);
 
   G_OBJECT_CLASS (gst_core_audio_parent_class)->finalize (object);
 }
@@ -67,6 +68,11 @@ gst_core_audio_class_init (GstCoreAudioClass * klass)
 
   object_klass->set_property = gst_core_audio_set_property;
   object_klass->get_property = gst_core_audio_get_property;
+
+  g_object_class_install_property (object_klass, PROP_UNIQUE_ID,
+      g_param_spec_string ("unique-id", "Unique ID",
+          "Unique ID of audio device", NULL,
+          G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   g_object_class_install_property (object_klass, PROP_DEVICE,
       g_param_spec_int ("device", "Device ID", "Device ID of input device",
@@ -118,6 +124,9 @@ gst_core_audio_set_property (GObject * object, guint prop_id,
     case PROP_IS_SRC:
       self->is_src = g_value_get_boolean (value);
       break;
+    case PROP_UNIQUE_ID:
+      self->unique_id = g_value_dup_string (value);
+      break;
     case PROP_DEVICE:
       self->device_id = g_value_get_int (value);
       break;
@@ -141,6 +150,9 @@ gst_core_audio_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_IS_SRC:
       g_value_set_boolean (value, self->is_src);
+      break;
+    case PROP_UNIQUE_ID:
+      g_value_set_string (value, self->unique_id);
       break;
     case PROP_DEVICE:
       g_value_set_int (value, self->device_id);

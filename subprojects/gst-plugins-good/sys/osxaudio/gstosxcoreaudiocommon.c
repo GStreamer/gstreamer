@@ -205,8 +205,8 @@ gst_core_audio_bind_device (GstCoreAudio * core_audio)
   OSStatus status;
 
   /* Specify which device we're using. */
-  GST_DEBUG_OBJECT (core_audio->osxbuf, "Bind AudioUnit to device %d",
-      (int) core_audio->device_id);
+  GST_DEBUG_OBJECT (core_audio->osxbuf, "Bind AudioUnit to device %s",
+      core_audio->unique_id);
   status = AudioUnitSetProperty (core_audio->audiounit,
       kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0,
       &core_audio->device_id, sizeof (AudioDeviceID));

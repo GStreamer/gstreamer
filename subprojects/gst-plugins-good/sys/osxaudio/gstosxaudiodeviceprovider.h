@@ -78,6 +78,7 @@ struct _GstOsxAudioDevice
 
   const gchar *element;
   AudioDeviceID device_id;
+  char *unique_id;
 };
 
 struct _GstOsxAudioDeviceClass

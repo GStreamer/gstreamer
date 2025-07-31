@@ -82,7 +82,7 @@ struct _GstOsxAudioSink
   GstAudioBaseSink sink;
 
   AudioDeviceID device_id;
-  const char *unique_id;
+  char *unique_id;
 
   AudioUnit audiounit;
   double volume;
