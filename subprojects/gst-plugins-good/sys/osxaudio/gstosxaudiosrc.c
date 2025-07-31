@@ -244,9 +244,7 @@ gst_osx_audio_src_get_property (GObject * object, guint prop_id,
       g_value_set_int (value, src->device_id);
       break;
     case ARG_UNIQUE_ID:
-      GST_OBJECT_LOCK (src);
       g_value_set_string (value, src->unique_id);
-      GST_OBJECT_UNLOCK (src);
       break;
 #ifdef HAVE_IOS
     case ARG_CONFIGURE_SESSION:

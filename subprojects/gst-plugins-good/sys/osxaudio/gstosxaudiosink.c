@@ -335,9 +335,7 @@ gst_osx_audio_sink_get_property (GObject * object, guint prop_id,
       g_value_set_int (value, sink->device_id);
       break;
     case ARG_UNIQUE_ID:
-      GST_OBJECT_LOCK (sink);
       g_value_set_string (value, sink->unique_id);
-      GST_OBJECT_UNLOCK (sink);
       break;
 #else
     case ARG_CONFIGURE_SESSION:
