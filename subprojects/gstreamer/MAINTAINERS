@@ -1,11 +1,8 @@
 GStreamer is currently maintained by the consensus of a number
-of people, including, but not limited to:
+of people. The current list of maintainers is the developers, maintainers
+and owners in the GitLab GStreamer project at:
 
- Jan Schmidt <thaytan@noraisin.net>
- Wim Taymans <wim.taymans@gmail.com>
- David Schleef <ds@schleef.org>
- Tim-Philipp Müller <tim centricular net>
- Sebastian Dröge <slomo@coaxion.net>
+https://gitlab.freedesktop.org/groups/gstreamer/-/group_members
 
 Maintainer-related issues should be addressed to:
 
