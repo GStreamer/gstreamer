@@ -600,3 +600,37 @@ gst_wasapi2_get_default_device_id (EDataFlow flow)
 
   return (const char *) render;
 }
+
+const gchar *
+gst_wasapi2_data_flow_to_string (EDataFlow flow)
+{
+  switch (flow) {
+    case eRender:
+      return "eRender";
+    case eCapture:
+      return "eCapture";
+    case eAll:
+      return "eAll";
+    default:
+      break;
+  }
+
+  return "Unknown";
+}
+
+const gchar *
+gst_wasapi2_role_to_string (ERole role)
+{
+  switch (role) {
+    case eConsole:
+      return "eConsole";
+    case eMultimedia:
+      return "eMultimedia";
+    case eCommunications:
+      return "eCommunications";
+    default:
+      break;
+  }
+
+  return "Unknown";
+}

@@ -117,6 +117,10 @@ const wchar_t * gst_wasapi2_get_default_device_id_wide (EDataFlow flow);
 
 const char * gst_wasapi2_get_default_device_id (EDataFlow flow);
 
+const gchar * gst_wasapi2_data_flow_to_string (EDataFlow flow);
+
+const gchar * gst_wasapi2_role_to_string (ERole role);
+
 G_END_DECLS
 
 #ifdef __cplusplus
