@@ -46,6 +46,65 @@ typedef struct
 
 static gboolean bus_msg_handler (GstBus * bus, GstMessage * msg, gpointer data);
 
+typedef enum
+{
+  SHELL_POSIX,
+  SHELL_CMD,
+  SHELL_POWERSHELL,
+} ShellType;
+
+static ShellType
+get_shell_type (void)
+{
+  if (g_getenv ("PSModulePath") != NULL)
+    return SHELL_POWERSHELL;
+  if (g_getenv ("ComSpec") != NULL)
+    return SHELL_CMD;
+  return SHELL_POSIX;
+}
+
+static char *
+do_shell_quote (const char *s)
+{
+  switch (get_shell_type ()) {
+    case SHELL_POSIX:
+      return g_shell_quote (s);
+    case SHELL_CMD:
+    case SHELL_POWERSHELL:
+      /* TODO: implement some kind of quoting for cmd.exe and powershell.exe */
+      return g_strdup (s);
+  }
+  g_assert_not_reached ();
+}
+
+static char *
+value_to_string (const GValue * v)
+{
+  const char *d, *s = g_value_get_string (v);
+  char *ret, *ser = NULL;
+  gboolean need_quote = FALSE;
+
+  /* Don't mess around if the value is weird */
+  if (!G_VALUE_HOLDS_STRING (v) || !g_str_is_ascii (s)) {
+    ser = gst_value_serialize (v);
+    ret = do_shell_quote (ser);
+    g_free (ser);
+    return ret;
+  }
+
+  d = s;
+  while (*++d) {
+    if (!g_ascii_isalnum (*d)) {
+      need_quote = TRUE;
+      break;
+    }
+  }
+
+  if (need_quote)
+    return do_shell_quote (s);
+  return g_strdup (s);
+}
+
 static gchar *
 get_launch_line (GstDevice * device)
 {
@@ -112,7 +171,7 @@ get_launch_line (GstDevice * device)
       g_object_get_property (G_OBJECT (element), property->name, &value);
       g_object_get_property (G_OBJECT (pureelement), property->name, &pvalue);
       if (gst_value_compare (&value, &pvalue) != GST_VALUE_EQUAL) {
-        gchar *valuestr = gst_value_serialize (&value);
+        char *valuestr = value_to_string (&value);
 
         if (!valuestr) {
           GST_WARNING ("Could not serialize property %s:%s",
@@ -124,7 +183,6 @@ get_launch_line (GstDevice * device)
         g_string_append_printf (launch_line, " %s=%s",
             property->name, valuestr);
         g_free (valuestr);
-
       }
 
     next:
