@@ -3171,9 +3171,14 @@ mq_slot_check_reconfiguration (MultiQueueSlot * slot)
     /* Slot is not used. */
     no_more_streams = no_more_streams_locked (dbin);
     SELECTION_UNLOCK (dbin);
-    if (no_more_streams)
+    if (no_more_streams && slot->type != GST_STREAM_TYPE_UNKNOWN) {
+      /* Only error for known stream types, as there are cases where
+       * an upstream legacy collection might not yet be complete and
+       * rtsp for example might deliver a single ONVIF metadata stream
+       * to begin */
       GST_ELEMENT_ERROR (slot->dbin, STREAM, FAILED, (NULL),
           ("No streams to output"));
+    }
     return;
   }
 
