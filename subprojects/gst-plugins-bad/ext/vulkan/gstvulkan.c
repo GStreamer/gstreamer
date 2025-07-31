@@ -109,7 +109,7 @@ plugin_init (GstPlugin * plugin)
               VK_KHR_VIDEO_ENCODE_H264_EXTENSION_NAME)) {
         ret |= gst_vulkan_h264_encoder_register (plugin, device, GST_RANK_NONE);
       }
-#endif
+#endif /* GST_VULKAN_HAVE_VIDEO_EXTENSIONS */
       ret |= gst_vulkan_sink_register (plugin, device, GST_RANK_NONE);
       gst_object_unref (device);
     }

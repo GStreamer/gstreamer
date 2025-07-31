@@ -1079,7 +1079,7 @@ gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
       VkQueueFamilyProperties2 *props;
       int i;
       void *next = NULL;
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+#if defined(VK_KHR_video_queue)
       VkQueueFamilyVideoPropertiesKHR *queue_family_video_props;
       VkQueueFamilyQueryResultStatusPropertiesKHR *queue_family_query_props;
 
@@ -1091,7 +1091,7 @@ gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
 #endif
       props = g_new0 (VkQueueFamilyProperties2, device->n_queue_families);
       for (i = 0; i < device->n_queue_families; i++) {
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+#if defined(VK_KHR_video_queue)
         queue_family_query_props[i].sType =
             VK_STRUCTURE_TYPE_QUEUE_FAMILY_QUERY_RESULT_STATUS_PROPERTIES_KHR;
 
@@ -1115,7 +1115,7 @@ gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
         memcpy (&device->queue_family_props[i], &props[i].queueFamilyProperties,
             sizeof (device->queue_family_props[i]));
 
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+#if defined(VK_KHR_video_queue)
         device->queue_family_ops[i].video =
             queue_family_video_props[i].videoCodecOperations;
         device->queue_family_ops[i].query_result_status =
@@ -1123,7 +1123,7 @@ gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
 #endif
       }
       g_free (props);
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+#if defined(VK_KHR_video_queue)
       g_free (queue_family_video_props);
       g_free (queue_family_query_props);
 #endif
