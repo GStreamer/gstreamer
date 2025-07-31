@@ -26,8 +26,21 @@
 #include "gstwasapi2util.h"
 #include "gstwasapi2enumerator.h"
 
-GST_DEBUG_CATEGORY_EXTERN (gst_wasapi2_debug);
-#define GST_CAT_DEFAULT gst_wasapi2_debug
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT ensure_debug_category()
+static GstDebugCategory *
+ensure_debug_category (void)
+{
+  static GstDebugCategory *cat = nullptr;
+
+  GST_WASAPI2_CALL_ONCE_BEGIN {
+    cat = _gst_debug_category_new ("wasapi2deviceprovider",
+        0, "wasapi2deviceprovider");
+  } GST_WASAPI2_CALL_ONCE_END;
+
+  return cat;
+}
+#endif
 
 enum
 {
@@ -356,6 +369,63 @@ gst_wasapi2_device_is_in_list (GList * list, GstDevice * device)
   return found;
 }
 
+static gboolean
+dump_structure_field (const GstIdStr * fieldname, const GValue * value,
+    gpointer user_data)
+{
+  auto str = (GString *) user_data;
+  gchar *val;
+
+  if (G_VALUE_HOLDS_UINT (value)) {
+    val = g_strdup_printf ("%u (0x%08x)", g_value_get_uint (value),
+        g_value_get_uint (value));
+  } else if (G_VALUE_HOLDS_STRING (value)) {
+    val = g_value_dup_string (value);
+  } else {
+    val = gst_value_serialize (value);
+  }
+
+  if (val) {
+    g_string_append_printf (str,
+        "\t%s = %s\n", gst_id_str_as_str (fieldname), val);
+  }
+
+  g_free (val);
+
+  return TRUE;
+}
+
+static gchar *
+gst_wasapi2_dump_devices (GList * device_list)
+{
+#ifndef GST_DISABLE_GST_DEBUG
+  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) < GST_LEVEL_LOG ||
+      !device_list) {
+    return nullptr;
+  }
+
+  auto str = g_string_new (nullptr);
+  GList *iter;
+  for (iter = device_list; iter; iter = g_list_next (iter)) {
+    auto device = GST_DEVICE (iter->data);
+    auto name = gst_device_get_display_name (device);
+    auto device_class = gst_device_get_device_class (device);
+    auto prop = gst_device_get_properties (device);
+    g_string_append_printf (str, "%s (%s)\n", name, device_class);
+    gst_structure_foreach_id_str (prop, dump_structure_field, str);
+    g_string_append_c (str, '\n');
+
+    g_free (name);
+    g_free (device_class);
+    gst_structure_free (prop);
+  }
+
+  return g_string_free (str, FALSE);
+#else
+  return nullptr;
+#endif
+}
+
 static void
 gst_wasapi2_device_provider_update_devices (GstWasapi2DeviceProvider * self)
 {
@@ -428,6 +498,32 @@ gst_wasapi2_device_provider_update_devices (GstWasapi2DeviceProvider * self)
       iter = next;
     } else {
       iter = g_list_next (iter);
+    }
+  }
+
+  if (to_add || to_remove) {
+    auto dump = gst_wasapi2_dump_devices (prev_devices);
+    if (dump) {
+      GST_LOG_OBJECT (self, "Previous devices:\n%s", dump);
+      g_free (dump);
+    }
+
+    dump = gst_wasapi2_dump_devices (new_devices);
+    if (dump) {
+      GST_LOG_OBJECT (self, "Probed devices:\n%s", dump);
+      g_free (dump);
+    }
+
+    dump = gst_wasapi2_dump_devices (to_add);
+    if (dump) {
+      GST_LOG_OBJECT (self, "New devices:\n%s", dump);
+      g_free (dump);
+    }
+
+    dump = gst_wasapi2_dump_devices (to_remove);
+    if (dump) {
+      GST_LOG_OBJECT (self, "Removed devices:\n%s", dump);
+      g_free (dump);
     }
   }
 
