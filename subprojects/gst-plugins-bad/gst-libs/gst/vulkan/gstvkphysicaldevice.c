@@ -71,6 +71,10 @@ struct _GstVulkanPhysicalDevicePrivate
   VkPhysicalDeviceVulkan13Features features13;
   VkPhysicalDeviceVulkan13Properties properties13;
 #endif
+#if defined (VK_API_VERSION_1_4)
+  VkPhysicalDeviceVulkan14Features features14;
+  VkPhysicalDeviceVulkan14Properties properties14;
+#endif
 #if defined (VK_KHR_sampler_ycbcr_conversion)
   VkPhysicalDeviceSamplerYcbcrConversionFeaturesKHR sampler_ycbcr_conversion;
 #endif
@@ -213,6 +217,15 @@ gst_vulkan_physical_device_init (GstVulkanPhysicalDevice * device)
   priv->features13.sType =
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
   priv->features12.pNext = &priv->features13;
+#endif
+#if defined (VK_API_VERSION_1_4)
+  priv->properties14.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_PROPERTIES;
+  priv->properties13.pNext = &priv->properties14;
+
+  priv->features14.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_FEATURES;
+  priv->features13.pNext = &priv->features14;
 #endif
 #if defined (VK_KHR_sampler_ycbcr_conversion)
   priv->sampler_ycbcr_conversion.sType =
@@ -513,6 +526,37 @@ dump_features13 (GstVulkanPhysicalDevice * device,
 }
 #endif /* defined (VK_API_VERSION_1_3) */
 
+#if defined (VK_API_VERSION_1_4)
+static void
+dump_features14 (GstVulkanPhysicalDevice * device,
+    VkPhysicalDeviceVulkan14Features * features)
+{
+  /* *INDENT-OFF* */
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, globalPriorityQuery);
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, shaderSubgroupRotate);
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, shaderSubgroupRotateClustered);
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, shaderFloatControls2);
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, shaderExpectAssume);
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, rectangularLines);
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, bresenhamLines);
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, smoothLines);
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, stippledRectangularLines);
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, stippledBresenhamLines);
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, stippledSmoothLines);
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, vertexAttributeInstanceRateDivisor);
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, vertexAttributeInstanceRateZeroDivisor);
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, indexTypeUint8);
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, dynamicRenderingLocalRead);
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, maintenance5);
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, maintenance6);
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, pipelineProtectedAccess);
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, pipelineRobustness);
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, hostImageCopy);
+  DEBUG_BOOL_STRUCT ("support for (1.4)", features, pushDescriptor);
+  /* *INDENT-ON* */
+}
+#endif /* defined (VK_API_VERSION_1_4) */
+
 static void
 dump_extras (GstVulkanPhysicalDevice * device, VkBaseOutStructure * chain)
 {
@@ -573,11 +617,17 @@ dump_features (GstVulkanPhysicalDevice * device, GError ** error)
           VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES)
         dump_features13 (device, (VkPhysicalDeviceVulkan13Features *) iter);
 #endif
+#if defined (VK_API_VERSION_1_4)
+      else if (gst_vulkan_physical_device_check_api_version (device, 1, 4, 0)
+          && iter->sType ==
+          VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_FEATURES)
+        dump_features14 (device, (VkPhysicalDeviceVulkan14Features *) iter);
+#endif
       else
         dump_extras (device, iter);
     }
   } else
-#endif
+#endif /* VK_API_VERSION_1_2 */
   {
     dump_features10 (device, &device->features);
   }
@@ -923,6 +973,41 @@ dump_properties13 (GstVulkanPhysicalDevice * device,
 }
 #endif
 
+#if defined (VK_API_VERSION_1_4)
+static void
+dump_properties14 (GstVulkanPhysicalDevice * device,
+    VkPhysicalDeviceVulkan14Properties * properties)
+{
+  /* *INDENT-OFF* */
+  DEBUG_UINT32 ("properties (1.4)", properties, lineSubPixelPrecisionBits);
+  DEBUG_UINT32 ("properties (1.4)", properties, maxVertexAttribDivisor);
+  DEBUG_BOOL_STRUCT ("properties (1.4)", properties, supportsNonZeroFirstInstance);
+  DEBUG_UINT32 ("properties (1.4)", properties, maxPushDescriptors);
+  DEBUG_BOOL_STRUCT ("properties (1.4)", properties, dynamicRenderingLocalReadDepthStencilAttachments);
+  DEBUG_BOOL_STRUCT ("properties (1.4)", properties, dynamicRenderingLocalReadMultisampledAttachments);
+  DEBUG_BOOL_STRUCT ("properties (1.4)", properties, earlyFragmentMultisampleCoverageAfterSampleCounting);
+  DEBUG_BOOL_STRUCT ("properties (1.4)", properties, earlyFragmentSampleMaskTestBeforeSampleCounting);
+  DEBUG_BOOL_STRUCT ("properties (1.4)", properties, depthStencilSwizzleOneSupport);
+  DEBUG_BOOL_STRUCT ("properties (1.4)", properties, polygonModePointSize);
+  DEBUG_BOOL_STRUCT ("properties (1.4)", properties, nonStrictSinglePixelWideLinesUseParallelogram);
+  DEBUG_BOOL_STRUCT ("properties (1.4)", properties, nonStrictWideLinesUseParallelogram);
+  DEBUG_BOOL_STRUCT ("properties (1.4)", properties, blockTexelViewCompatibleMultipleLayers);
+  DEBUG_UINT32 ("properties (1.4)", properties, maxCombinedImageSamplerDescriptorCount);
+  DEBUG_BOOL_STRUCT ("properties (1.4)", properties, fragmentShadingRateClampCombinerInputs);
+  /* VkPipelineRobustnessBufferBehavior    defaultRobustnessStorageBuffers; */
+  /* VkPipelineRobustnessBufferBehavior    defaultRobustnessUniformBuffers; */
+  /* VkPipelineRobustnessBufferBehavior    defaultRobustnessVertexInputs; */
+  /* VkPipelineRobustnessImageBehavior     defaultRobustnessImages; */
+  DEBUG_UINT32 ("properties (1.4)", properties, copySrcLayoutCount);
+  /* VkImageLayout*                        pCopySrcLayouts); */
+  DEBUG_UINT32 ("properties (1.4)", properties, copyDstLayoutCount);
+  /* VkImageLayout*                        pCopyDstLayouts); */
+  /* uint8_t                               optimalTilingLayoutUUID[VK_UUID_SIZE]); */
+  DEBUG_BOOL_STRUCT ("properties (1.4)", properties, identicalMemoryTypeRequirements);
+  /* *INDENT-ON* */
+}
+#endif
+
 static gboolean
 physical_device_info (GstVulkanPhysicalDevice * device, GError ** error)
 {
@@ -970,9 +1055,15 @@ physical_device_info (GstVulkanPhysicalDevice * device, GError ** error)
           VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES)
         dump_properties13 (device, (VkPhysicalDeviceVulkan13Properties *) iter);
 #endif
+#if defined (VK_API_VERSION_1_4)
+      else if (gst_vulkan_physical_device_check_api_version (device, 1, 4, 0)
+          && iter->sType ==
+          VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_PROPERTIES)
+        dump_properties14 (device, (VkPhysicalDeviceVulkan14Properties *) iter);
+#endif
     }
   }
-#endif
+#endif /* VK_API_VERSION_1_2 */
 
   return TRUE;
 }
