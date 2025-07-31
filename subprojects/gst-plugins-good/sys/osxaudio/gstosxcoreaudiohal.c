@@ -302,43 +302,6 @@ _audio_device_set_mixing (AudioDeviceID device_id, gboolean enable_mix)
   return res;
 }
 
-static inline gchar *
-_audio_device_get_name (AudioDeviceID device_id, gboolean output)
-{
-  OSStatus status = noErr;
-  UInt32 propertySize = 0;
-  gchar *device_name = NULL;
-  AudioObjectPropertyScope prop_scope;
-
-  prop_scope = output ? kAudioDevicePropertyScopeOutput :
-      kAudioDevicePropertyScopeInput;
-
-  AudioObjectPropertyAddress deviceNameAddress = {
-    kAudioDevicePropertyDeviceName,
-    prop_scope,
-    kAudioObjectPropertyElementMain
-  };
-
-  /* Get the length of the device name */
-  status = AudioObjectGetPropertyDataSize (device_id,
-      &deviceNameAddress, 0, NULL, &propertySize);
-  if (status != noErr) {
-    goto beach;
-  }
-
-  /* Get the name of the device */
-  device_name = (gchar *) g_malloc (propertySize);
-  status = AudioObjectGetPropertyData (device_id,
-      &deviceNameAddress, 0, NULL, &propertySize, device_name);
-  if (status != noErr) {
-    g_free (device_name);
-    device_name = NULL;
-  }
-
-beach:
-  return device_name;
-}
-
 static inline gboolean
 _audio_device_has_output (AudioDeviceID device_id)
 {
@@ -362,74 +325,6 @@ _audio_device_has_output (AudioDeviceID device_id)
 
   return TRUE;
 }
-
-#ifdef GST_CORE_AUDIO_DEBUG
-static AudioChannelLayout *
-gst_core_audio_audio_device_get_channel_layout (AudioDeviceID device_id,
-    gboolean output)
-{
-  OSStatus status = noErr;
-  UInt32 propertySize = 0;
-  AudioChannelLayout *layout = NULL;
-  AudioObjectPropertyScope prop_scope;
-
-  prop_scope = output ? kAudioDevicePropertyScopeOutput :
-      kAudioDevicePropertyScopeInput;
-
-  AudioObjectPropertyAddress channelLayoutAddress = {
-    kAudioDevicePropertyPreferredChannelLayout,
-    prop_scope,
-    kAudioObjectPropertyElementMain
-  };
-
-  /* Get the length of the default channel layout structure */
-  status = AudioObjectGetPropertyDataSize (device_id,
-      &channelLayoutAddress, 0, NULL, &propertySize);
-  if (status != noErr) {
-    GST_ERROR ("failed to get preferred layout: %d", (int) status);
-    goto beach;
-  }
-
-  /* Get the default channel layout of the device */
-  layout = (AudioChannelLayout *) g_malloc (propertySize);
-  status = AudioObjectGetPropertyData (device_id,
-      &channelLayoutAddress, 0, NULL, &propertySize, layout);
-  if (status != noErr) {
-    GST_ERROR ("failed to get preferred layout: %d", (int) status);
-    goto failed;
-  }
-
-  if (layout->mChannelLayoutTag == kAudioChannelLayoutTag_UseChannelBitmap) {
-    /* bitmap defined channellayout */
-    status =
-        AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutForBitmap,
-        sizeof (UInt32), &layout->mChannelBitmap, &propertySize, layout);
-    if (status != noErr) {
-      GST_ERROR ("failed to get layout for bitmap: %d", (int) status);
-      goto failed;
-    }
-  } else if (layout->mChannelLayoutTag !=
-      kAudioChannelLayoutTag_UseChannelDescriptions) {
-    /* layouttags defined channellayout */
-    status = AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutForTag,
-        sizeof (AudioChannelLayoutTag), &layout->mChannelLayoutTag,
-        &propertySize, layout);
-    if (status != noErr) {
-      GST_ERROR ("failed to get layout for tag: %d", (int) status);
-      goto failed;
-    }
-  }
-
-  gst_core_audio_dump_channel_layout (layout);
-
-beach:
-  return layout;
-
-failed:
-  g_free (layout);
-  return NULL;
-}
-#endif
 
 static inline AudioStreamID *
 _audio_device_get_streams (AudioDeviceID device_id, gint * nstreams)
@@ -1245,9 +1140,6 @@ gst_core_audio_select_device_impl (GstCoreAudio * core_audio)
   char *unique_id = core_audio->unique_id;
   gboolean output = !core_audio->is_src;
   const char *audio_type = output ? "output" : "input";
-#ifdef GST_CORE_AUDIO_DEBUG
-  AudioChannelLayout *channel_layout;
-#endif
   int i, ndevices = 0;
   GPtrArray *devices = _audio_system_get_devices (&ndevices);
   GstOsxAudioDevice *default_device =
@@ -1298,32 +1190,6 @@ gst_core_audio_select_device_impl (GstCoreAudio * core_audio)
       res = FALSE;
     }
   } else {
-#ifdef GST_CORE_AUDIO_DEBUG
-    for (i = 0; i < ndevices; i++) {
-      gchar *device_name;
-
-      if ((device_name = _audio_device_get_name (devices[i], output))) {
-        if (!_audio_device_has_output (devices[i])) {
-          GST_DEBUG ("Input Device ID: %u Name: %s",
-              (unsigned) devices[i], device_name);
-        } else {
-          GST_DEBUG ("Output Device ID: %u Name: %s",
-              (unsigned) devices[i], device_name);
-
-          channel_layout =
-              gst_core_audio_audio_device_get_channel_layout (devices[i],
-              output);
-          if (channel_layout) {
-            gst_core_audio_dump_channel_layout (channel_layout);
-            g_free (channel_layout);
-          }
-        }
-
-        g_free (device_name);
-      }
-    }
-#endif
-
     for (i = 0; i < ndevices; i++) {
       GstOsxAudioDevice *d = g_ptr_array_index (devices, i);
       if (device_id == d->id) {
