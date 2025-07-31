@@ -95,8 +95,10 @@ get_launch_line (GstDevice * device)
         continue;
 
       for (j = 0; ignored_propnames[j]; j++)
-        if (!g_strcmp0 (ignored_propnames[j], property->name))
+        if (!g_strcmp0 (ignored_propnames[j], property->name)) {
           ignore = TRUE;
+          break;
+        }
 
       if (ignore)
         continue;
