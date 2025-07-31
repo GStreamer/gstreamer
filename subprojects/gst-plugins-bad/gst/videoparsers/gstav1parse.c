@@ -884,7 +884,7 @@ gst_av1_parse_update_src_caps (GstAV1Parse * self, GstCaps * caps)
   if (s)
     mdi_str = gst_structure_get_string (s, "mastering-display-info");
   if (mdi_str) {
-    gst_caps_set_simple (caps, "mastering-display-info", G_TYPE_STRING,
+    gst_caps_set_simple (final_caps, "mastering-display-info", G_TYPE_STRING,
         mdi_str, NULL);
   } else if (self->mastering_display_info_state != GST_AV1_PARSE_OBU_EXPIRED &&
       !gst_video_mastering_display_info_add_to_caps
