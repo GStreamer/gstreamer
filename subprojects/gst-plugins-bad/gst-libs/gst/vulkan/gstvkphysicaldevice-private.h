@@ -28,6 +28,17 @@ G_BEGIN_DECLS
 const
 VkPhysicalDeviceFeatures2 * gst_vulkan_physical_device_get_features         (GstVulkanPhysicalDevice * device);
 
+static inline void
+vk_link_struct (gpointer chain, gconstpointer in)
+{
+  VkBaseOutStructure *out = chain;
+
+  while (out->pNext)
+    out = out->pNext;
+
+  out->pNext = (void *) in;
+}
+
 G_END_DECLS
 
 #endif /* __GST_VULKAN_PHYSICAL_DEVICE_PRIVATE_H__ */
