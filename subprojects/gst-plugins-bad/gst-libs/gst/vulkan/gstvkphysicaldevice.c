@@ -70,9 +70,18 @@ struct _GstVulkanPhysicalDevicePrivate
 #if defined (VK_API_VERSION_1_3)
   VkPhysicalDeviceVulkan13Features features13;
   VkPhysicalDeviceVulkan13Properties properties13;
+#endif
+#if defined (VK_KHR_sampler_ycbcr_conversion)
+  VkPhysicalDeviceSamplerYcbcrConversionFeaturesKHR sampler_ycbcr_conversion;
+#endif
+#if defined (VK_KHR_synchronization2)
+  VkPhysicalDeviceSynchronization2FeaturesKHR synchronization2;
+#endif
+#if defined (VK_KHR_timeline_semaphore)
+  VkPhysicalDeviceTimelineSemaphoreFeaturesKHR timeline_semaphore;
+#endif
 #if defined (VK_KHR_video_maintenance1)
   VkPhysicalDeviceVideoMaintenance1FeaturesKHR videomaintenance1;
-#endif
 #endif
 };
 
@@ -204,11 +213,26 @@ gst_vulkan_physical_device_init (GstVulkanPhysicalDevice * device)
   priv->features13.sType =
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
   priv->features12.pNext = &priv->features13;
+#endif
+#if defined (VK_KHR_sampler_ycbcr_conversion)
+  priv->sampler_ycbcr_conversion.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SAMPLER_YCBCR_CONVERSION_FEATURES_KHR;
+  vk_link_struct (&priv->features12, &priv->sampler_ycbcr_conversion);
+#endif
+#if defined (VK_KHR_synchronization2)
+  priv->synchronization2.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES_KHR;
+  vk_link_struct (&priv->features12, &priv->synchronization2);
+#endif
+#if defined (VK_KHR_timeline_semaphore)
+  priv->timeline_semaphore.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES_KHR;
+  vk_link_struct (&priv->features12, &priv->timeline_semaphore);
+#endif
 #if defined (VK_KHR_video_maintenance1)
   priv->videomaintenance1.sType =
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VIDEO_MAINTENANCE_1_FEATURES_KHR;
-  priv->features13.pNext = &priv->videomaintenance1;
-#endif
+  vk_link_struct (&priv->features12, &priv->videomaintenance1);
 #endif
 }
 
@@ -487,16 +511,42 @@ dump_features13 (GstVulkanPhysicalDevice * device,
   DEBUG_BOOL_STRUCT ("support for (1.3)", features, maintenance4);
   /* *INDENT-ON* */
 }
-
-#if defined(VK_KHR_video_maintenance1)
-static void
-dump_videomaintenance1 (GstVulkanPhysicalDevice * device,
-    VkPhysicalDeviceVideoMaintenance1FeaturesKHR * features)
-{
-  DEBUG_BOOL_STRUCT ("support for (1.3)", features, videoMaintenance1);
-}
-#endif
 #endif /* defined (VK_API_VERSION_1_3) */
+
+static void
+dump_extras (GstVulkanPhysicalDevice * device, VkBaseOutStructure * chain)
+{
+  GstVulkanPhysicalDevicePrivate *priv = GET_PRIV (device);
+
+#if defined (VK_KHR_sampler_ycbcr_conversion)
+  if (chain->sType ==
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SAMPLER_YCBCR_CONVERSION_FEATURES_KHR) {
+    DEBUG_BOOL_STRUCT ("support for", &priv->sampler_ycbcr_conversion,
+        samplerYcbcrConversion);
+  }
+#endif
+#if defined (VK_KHR_synchronization2)
+  if (chain->sType ==
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES_KHR) {
+    DEBUG_BOOL_STRUCT ("support for", &priv->synchronization2,
+        synchronization2);
+  }
+#endif
+#if defined (VK_KHR_timeline_semaphore)
+  if (chain->sType ==
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES_KHR) {
+    DEBUG_BOOL_STRUCT ("support for", &priv->timeline_semaphore,
+        timelineSemaphore);
+  }
+#endif
+#if defined (VK_KHR_video_maintenance1)
+  if (chain->sType ==
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VIDEO_MAINTENANCE_1_FEATURES_KHR) {
+    DEBUG_BOOL_STRUCT ("support for", &priv->videomaintenance1,
+        videoMaintenance1);
+  }
+#endif
+}
 
 static gboolean
 dump_features (GstVulkanPhysicalDevice * device, GError ** error)
@@ -522,14 +572,9 @@ dump_features (GstVulkanPhysicalDevice * device, GError ** error)
           && iter->sType ==
           VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES)
         dump_features13 (device, (VkPhysicalDeviceVulkan13Features *) iter);
-#if defined(VK_KHR_video_maintenance1)
-      else if (gst_vulkan_physical_device_check_api_version (device, 1, 3, 283)
-          && iter->sType ==
-          VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VIDEO_MAINTENANCE_1_FEATURES_KHR)
-        dump_videomaintenance1 (device,
-            (VkPhysicalDeviceVideoMaintenance1FeaturesKHR *) iter);
 #endif
-#endif
+      else
+        dump_extras (device, iter);
     }
   } else
 #endif
