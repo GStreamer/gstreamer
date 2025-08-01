@@ -314,7 +314,5 @@ gst_osx_audio_ring_buffer_delay (GstAudioRingBuffer * buf)
           GST_AUDIO_INFO_RATE (&buf->spec.info), &samples, &latency)) {
     return 0;
   }
-  GST_DEBUG_OBJECT (buf, "Got latency: %f seconds -> %d samples",
-      latency, samples);
   return samples;
 }

@@ -349,7 +349,7 @@ gst_core_audio_get_samples_and_latency (GstCoreAudio * core_audio,
           core_audio->anchor_pend_samples;
     }
 
-    GST_DEBUG_OBJECT (core_audio,
+    GST_LOG_OBJECT (core_audio,
         "now_ns %" G_GUINT64_FORMAT " anchor %" G_GUINT64_FORMAT " elapsed ns %"
         G_GINT64_FORMAT " rate %f captured_ns %" G_GINT64_FORMAT
         " anchor_pend_samples %u samples_remain %u", now_ns, anchor_ns,
@@ -371,7 +371,7 @@ gst_core_audio_get_samples_and_latency (GstCoreAudio * core_audio,
       }
     }
 
-    GST_DEBUG_OBJECT (core_audio,
+    GST_LOG_OBJECT (core_audio,
         "now_ns %" G_GUINT64_FORMAT " anchor %" G_GUINT64_FORMAT " elapsed ns %"
         G_GINT64_FORMAT " rate %f unplayed_ns %" G_GINT64_FORMAT
         " anchor_pend_samples %u", now_ns, anchor_ns, now_ns - anchor_ns, rate,
