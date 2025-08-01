@@ -457,7 +457,7 @@ gst_audio_channel_position_to_core_audio (GstAudioChannelPosition
 /* Performs a best-effort conversion. 'channel' is used for warnings only. */
 GstAudioChannelPosition
 gst_core_audio_channel_label_to_gst (AudioChannelLabel label,
-    int channel, gboolean warn)
+    int channel, gboolean warn, AudioDeviceID device_id)
 {
   switch (label) {
     case kAudioChannelLabel_Left:
@@ -531,14 +531,14 @@ gst_core_audio_channel_label_to_gst (AudioChannelLabel label,
         /* no way to store discrete channel order */
         if (warn)
           GST_WARNING
-              ("Core Audio channel %u labeled kAudioChannelLabel_Discrete_%u -- discrete order will be lost",
-              channel, ((unsigned int) label) & 0xFFFF);
+              ("Device %d has kAudioChannelLabel_Discrete_N channels, order will be lost",
+              device_id);
         return GST_AUDIO_CHANNEL_POSITION_NONE;
       } else {
         if (warn)
           GST_WARNING
-              ("Core Audio channel %u has unsupported label %d and will be skipped",
-              channel, (int) label);
+              ("Device %d channel %u has unsupported label %d, skipping",
+              device_id, channel, (int) label);
         return GST_AUDIO_CHANNEL_POSITION_INVALID;
       }
   }

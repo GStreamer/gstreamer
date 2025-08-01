@@ -67,7 +67,10 @@ OSStatus gst_core_audio_render_notify                     (GstCoreAudio * core_a
 
 AudioChannelLabel gst_audio_channel_position_to_core_audio (GstAudioChannelPosition position, int channel);
 
-GstAudioChannelPosition gst_core_audio_channel_label_to_gst (AudioChannelLabel label, int channel, gboolean warn);
+GstAudioChannelPosition gst_core_audio_channel_label_to_gst (AudioChannelLabel label,
+                                                             int channel,
+                                                             gboolean warn,
+                                                             AudioDeviceID device_id);
 
 #ifndef HAVE_IOS
 

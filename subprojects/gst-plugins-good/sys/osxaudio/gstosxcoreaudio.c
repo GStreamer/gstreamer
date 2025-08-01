@@ -495,7 +495,7 @@ _is_core_audio_layout_positioned (AudioChannelLayout * layout)
   for (i = 0; i < layout->mNumberChannelDescriptions; ++i) {
     GstAudioChannelPosition p =
         gst_core_audio_channel_label_to_gst
-        (layout->mChannelDescriptions[i].mChannelLabel, i, FALSE);
+        (layout->mChannelDescriptions[i].mChannelLabel, i, FALSE, 0);
 
     if (p >= 0)                 /* not special positition */
       return TRUE;
@@ -518,7 +518,7 @@ _core_audio_has_invalid_channel_labels (AudioChannelLayout * layout)
      * aren't useful to us anyway. */
     GstAudioChannelPosition p =
         gst_core_audio_channel_label_to_gst
-        (layout->mChannelDescriptions[i].mChannelLabel, i, FALSE);
+        (layout->mChannelDescriptions[i].mChannelLabel, i, FALSE, 0);
 
     if (p == GST_AUDIO_CHANNEL_POSITION_INVALID)
       return TRUE;
@@ -529,8 +529,10 @@ _core_audio_has_invalid_channel_labels (AudioChannelLayout * layout)
 
 static void
 _core_audio_parse_channel_descriptions (AudioChannelLayout * layout,
-    guint * channels, guint64 * channel_mask, GstAudioChannelPosition * pos)
+    AudioDeviceID device_id, guint * channels, guint64 * channel_mask,
+    GstAudioChannelPosition * pos)
 {
+  gboolean should_warn = TRUE;
   gboolean positioned;
   guint i;
 
@@ -568,9 +570,14 @@ _core_audio_parse_channel_descriptions (AudioChannelLayout * layout,
    */
   *channels = 0;
   for (i = 0; i < layout->mNumberChannelDescriptions; ++i) {
+    AudioChannelLabel label = layout->mChannelDescriptions[i].mChannelLabel;
     GstAudioChannelPosition p =
-        gst_core_audio_channel_label_to_gst
-        (layout->mChannelDescriptions[i].mChannelLabel, i, TRUE);
+        gst_core_audio_channel_label_to_gst (label, i, should_warn, device_id);
+
+    if (p == GST_AUDIO_CHANNEL_POSITION_NONE && label >> 16 != 0) {
+      /* Avoid warning spam for kAudioChannelLabel_Discrete_N channels losing order */
+      should_warn = FALSE;
+    }
 
     /* In positioned layouts, skip all unpositioned channels.
      * In unpositioned layouts, skip all invalid channels. */
@@ -590,7 +597,8 @@ _core_audio_parse_channel_descriptions (AudioChannelLayout * layout,
 
 gboolean
 gst_core_audio_parse_channel_layout (AudioChannelLayout * layout,
-    guint * channels, guint64 * channel_mask, GstAudioChannelPosition * pos)
+    AudioDeviceID device_id, guint * channels, guint64 * channel_mask,
+    GstAudioChannelPosition * pos)
 {
   g_assert (channels != NULL);
   g_assert (channel_mask != NULL);
@@ -623,8 +631,8 @@ gst_core_audio_parse_channel_layout (AudioChannelLayout * layout,
             GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT);
         return TRUE;
       default:
-        _core_audio_parse_channel_descriptions (layout, channels, channel_mask,
-            pos);
+        _core_audio_parse_channel_descriptions (layout, device_id, channels,
+            channel_mask, pos);
         return TRUE;
     }
   } else if (layout->mChannelLayoutTag == kAudioChannelLayoutTag_Mono) {
@@ -727,7 +735,7 @@ gst_core_audio_parse_channel_layout (AudioChannelLayout * layout,
  */
 GstCaps *
 gst_core_audio_asbd_to_caps (AudioStreamBasicDescription * asbd,
-    AudioChannelLayout * layout)
+    AudioDeviceID device_id, AudioChannelLayout * layout)
 {
   GstAudioInfo info;
   GstAudioFormat format = GST_AUDIO_FORMAT_UNKNOWN;
@@ -785,8 +793,8 @@ gst_core_audio_asbd_to_caps (AudioStreamBasicDescription * asbd,
   }
 
   if (layout) {
-    if (!gst_core_audio_parse_channel_layout (layout, &channels, &channel_mask,
-            pos)) {
+    if (!gst_core_audio_parse_channel_layout (layout, device_id, &channels,
+            &channel_mask, pos)) {
       GST_WARNING
           ("Failed to parse channel layout, best effort channels layout mapping will be used");
       layout = NULL;
@@ -904,8 +912,8 @@ gst_core_audio_probe_caps (GstCoreAudio * core_audio, GstCaps * in_caps)
       (unsigned) core_audio->device_id, spdif_allowed);
 
   if (layout) {
-    if (!gst_core_audio_parse_channel_layout (layout, &channels, &channel_mask,
-            NULL)) {
+    if (!gst_core_audio_parse_channel_layout (layout, core_audio->device_id,
+            &channels, &channel_mask, NULL)) {
       GST_WARNING_OBJECT (core_audio, "Failed to parse channel layout");
       channel_mask = 0;
     }
@@ -923,14 +931,17 @@ gst_core_audio_probe_caps (GstCoreAudio * core_audio, GstCaps * in_caps)
 
     /* If available, start with the preferred caps. */
     if (got_outer_asbd)
-      caps = gst_core_audio_asbd_to_caps (&outer_asbd, layout);
+      caps =
+          gst_core_audio_asbd_to_caps (&outer_asbd, core_audio->device_id,
+          layout);
 
     g_free (layout);
   } else if (got_outer_asbd) {
     channels = outer_asbd.mChannelsPerFrame;
     channel_mask = 0;
     /* If available, start with the preferred caps */
-    caps = gst_core_audio_asbd_to_caps (&outer_asbd, NULL);
+    caps =
+        gst_core_audio_asbd_to_caps (&outer_asbd, core_audio->device_id, NULL);
   } else {
     GST_ERROR_OBJECT (core_audio,
         "Unable to get any information about hardware");
