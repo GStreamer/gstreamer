@@ -3389,6 +3389,8 @@ gst_gl_upload_fixate_caps (GstGLUpload * upload, GstPadDirection direction,
     GstCaps *current_method_caps =
         upload->priv->method->transform_caps (upload->priv->method_impl,
         upload->context, GST_PAD_SINK, caps);
+    if (!current_method_caps)
+      goto done;
     GstCaps *tmp = gst_caps_intersect_full (current_method_caps, othercaps,
         GST_CAPS_INTERSECT_FIRST);
 
@@ -3400,6 +3402,7 @@ gst_gl_upload_fixate_caps (GstGLUpload * upload, GstPadDirection direction,
     }
     gst_caps_unref (current_method_caps);
   }
+done:
   GST_OBJECT_UNLOCK (upload);
 
   /* Prefer target 2D->rectangle->oes */
