@@ -437,6 +437,17 @@ for more information.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">max-bundle</doc>
       </member>
     </enumeration>
+    <enumeration name="WebRTCDTLSRole" version="1.28" glib:type-name="GstWebRTCDTLSRole" glib:get-type="gst_webrtc_dtls_role_get_type" c:type="GstWebRTCDTLSRole">
+      <member name="client" value="0" c:identifier="GST_WEBRTC_DTLS_ROLE_CLIENT" glib:nick="client" glib:name="GST_WEBRTC_DTLS_ROLE_CLIENT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">client</doc>
+      </member>
+      <member name="server" value="1" c:identifier="GST_WEBRTC_DTLS_ROLE_SERVER" glib:nick="server" glib:name="GST_WEBRTC_DTLS_ROLE_SERVER">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">server</doc>
+      </member>
+      <member name="unknown" value="2" c:identifier="GST_WEBRTC_DTLS_ROLE_UNKNOWN" glib:nick="unknown" glib:name="GST_WEBRTC_DTLS_ROLE_UNKNOWN">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">unknown</doc>
+      </member>
+    </enumeration>
     <enumeration name="WebRTCDTLSSetup" glib:type-name="GstWebRTCDTLSSetup" glib:get-type="gst_webrtc_dtls_setup_get_type" c:type="GstWebRTCDTLSSetup">
       <member name="none" value="0" c:identifier="GST_WEBRTC_DTLS_SETUP_NONE" glib:nick="none" glib:name="GST_WEBRTC_DTLS_SETUP_NONE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">none</doc>

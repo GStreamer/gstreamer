@@ -763,6 +763,7 @@ _get_stats_from_dtls_transport (GstWebRTCBin * webrtc,
   gchar *id;
   double ts;
   gchar *ice_id;
+  GstWebRTCDTLSRole dtls_role = GST_WEBRTC_DTLS_ROLE_UNKNOWN;
 
   gst_structure_get_double (s, "timestamp", &ts);
 
@@ -798,6 +799,17 @@ _get_stats_from_dtls_transport (GstWebRTCBin * webrtc,
         ice_id, NULL);
     g_free (ice_id);
   }
+
+  if (transport->state > GST_WEBRTC_DTLS_TRANSPORT_STATE_NEW) {
+    if (transport->client) {
+      dtls_role = GST_WEBRTC_DTLS_ROLE_CLIENT;
+    } else {
+      dtls_role = GST_WEBRTC_DTLS_ROLE_SERVER;
+    }
+  }
+  gst_structure_set (stats, "dtls-role", GST_TYPE_WEBRTC_DTLS_ROLE, dtls_role,
+      "dtls-state", GST_TYPE_WEBRTC_DTLS_TRANSPORT_STATE, transport->state,
+      NULL);
 
   gst_structure_set (s, id, GST_TYPE_STRUCTURE, stats, NULL);
   gst_structure_free (stats);

@@ -167,6 +167,21 @@ typedef enum /*< underscore_name=gst_webrtc_dtls_transport_state >*/
 } GstWebRTCDTLSTransportState;
 
 /**
+ * GstWebRTCDTLSRole:
+ * @GST_WEBRTC_DTLS_ROLE_CLIENT: client
+ * @GST_WEBRTC_DTLS_ROLE_SERVER: server
+ * @GST_WEBRTC_DTLS_ROLE_UNKNOWN: unknown
+ *
+ * Since: 1.28
+ */
+typedef enum /*< underscore_name=gst_webrtc_dtls_role >*/
+{
+  GST_WEBRTC_DTLS_ROLE_CLIENT,
+  GST_WEBRTC_DTLS_ROLE_SERVER,
+  GST_WEBRTC_DTLS_ROLE_UNKNOWN
+} GstWebRTCDTLSRole;
+
+/**
  * GstWebRTCICEGatheringState:
  * @GST_WEBRTC_ICE_GATHERING_STATE_NEW: new
  * @GST_WEBRTC_ICE_GATHERING_STATE_GATHERING: gathering

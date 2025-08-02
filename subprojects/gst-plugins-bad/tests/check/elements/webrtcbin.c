@@ -1800,6 +1800,23 @@ validate_candidate_stats (const GstStructure * s, const GstStructure * stats)
 }
 
 static void
+validate_transport_stats (const GstStructure * s, const GstStructure * stats)
+{
+  gchar *selected_candidate_pair_id;
+  GstWebRTCDTLSTransportState state;
+  GstWebRTCDTLSRole dtls_role;
+
+  fail_unless (gst_structure_get (s, "selected-candidate-pair-id",
+          G_TYPE_STRING, &selected_candidate_pair_id, NULL));
+  fail_unless (gst_structure_get (s, "dtls-state",
+          GST_TYPE_WEBRTC_DTLS_TRANSPORT_STATE, &state, NULL));
+  fail_unless (gst_structure_get (s, "dtls-role", GST_TYPE_WEBRTC_DTLS_ROLE,
+          &dtls_role, NULL));
+
+  g_free (selected_candidate_pair_id);
+}
+
+static void
 validate_peer_connection_stats (const GstStructure * s)
 {
   guint opened, closed;
@@ -1862,6 +1879,7 @@ validate_stats_foreach (const GstIdStr * fieldname, const GValue * value,
   } else if (type == GST_WEBRTC_STATS_DATA_CHANNEL) {
   } else if (type == GST_WEBRTC_STATS_STREAM) {
   } else if (type == GST_WEBRTC_STATS_TRANSPORT) {
+    validate_transport_stats (s, stats);
   } else if (type == GST_WEBRTC_STATS_CANDIDATE_PAIR) {
   } else if (type == GST_WEBRTC_STATS_LOCAL_CANDIDATE) {
     validate_candidate_stats (s, stats);
