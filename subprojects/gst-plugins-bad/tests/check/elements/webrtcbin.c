@@ -6921,6 +6921,91 @@ a=rtcp-rsize\r\n";
 
 GST_END_TEST;
 
+static void
+validate_ice_attr (struct test_webrtc *t, GstElement * element,
+    const gchar * sdp_str, const gchar * expected_error_message)
+{
+  GstPromise *promise;
+  GstSDPMessage *sdp;
+  const GstStructure *reply;
+  GstWebRTCSessionDescription *desc;
+  GError *error = NULL;
+
+  gst_sdp_message_new_from_text (sdp_str, &sdp);
+  desc = gst_webrtc_session_description_new (GST_WEBRTC_SDP_TYPE_OFFER, sdp);
+  promise = gst_promise_new ();
+  g_signal_emit_by_name (t->webrtc1, "set-remote-description", desc, promise);
+  gst_promise_wait (promise);
+  reply = gst_promise_get_reply (promise);
+  if (expected_error_message) {
+    fail_unless (gst_structure_get (reply, "error", G_TYPE_ERROR, &error,
+            NULL));
+    fail_unless (g_error_matches (error, GST_WEBRTC_ERROR,
+            GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR));
+    fail_unless_equals_string (error->message, expected_error_message);
+    g_clear_error (&error);
+  } else {
+    fail_if (reply != NULL);
+  }
+  gst_promise_unref (promise);
+  gst_webrtc_session_description_free (desc);
+}
+
+GST_START_TEST (test_invalid_ice_attrs)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  const gchar *sdp_preamble = "v=0\r\n\
+o=- 0 3 IN IP4 127.0.0.1\r\n\
+s=-\r\n\
+t=0 0\r\n\
+a=fingerprint:sha-256 A7:24:72:CA:6E:02:55:39:BA:66:DF:6E:CC:4C:D8:B0:1A:BF:1A:56:65:7D:F4:03:AD:7E:77:43:2A:29:EC:93\r\n\
+m=video 1 RTP/SAVPF 100\r\n\
+c=IN IP4 0.0.0.0\r\n\
+a=rtcp-mux\r\n\
+a=sendonly\r\n\
+a=mid:video\r\n\
+a=rtpmap:100 VP8\r\n\
+a=setup:actpass\r\n";
+  const gchar *valid_ufrag = "a=ice-ufrag:ETEn\r\n";
+  const gchar *valid_pwd = "a=ice-pwd:OtSK0WpNtpUjkY4+86js7Z/l\r\n";
+  const gchar *invalid_ufrag = "a=ice-ufrag:ETEn$\r\n";
+  const gchar *invalid_pwd = "a=ice-pwd:OtSK0WpNtpUjk$Y4+86js7Z/l\r\n";
+  const gchar *too_short_ufrag = "a=ice-ufrag:foo\r\n";
+  const gchar *too_short_pwd = "a=ice-pwd:thisistooshort\r\n";
+  const gchar *invalid_ufrag_error_message =
+      "media 0 has an invalid \'ice-ufrag\' attribute";
+  const gchar *invalid_pwd_error_message =
+      "media 0 has an invalid \'ice-pwd\' attribute";
+  gchar *sdp_str;
+
+  t->on_negotiation_needed = NULL;
+  t->on_offer_created = NULL;
+  t->on_answer_created = NULL;
+  gst_element_set_state (t->webrtc1, GST_STATE_READY);
+
+  sdp_str = g_strconcat (sdp_preamble, invalid_ufrag, valid_pwd, NULL);
+  validate_ice_attr (t, t->webrtc1, sdp_str, invalid_ufrag_error_message);
+  g_free (sdp_str);
+
+  sdp_str = g_strconcat (sdp_preamble, valid_ufrag, invalid_pwd, NULL);
+  validate_ice_attr (t, t->webrtc1, sdp_str, invalid_pwd_error_message);
+  g_free (sdp_str);
+
+  sdp_str = g_strconcat (sdp_preamble, too_short_ufrag, valid_pwd, NULL);
+  validate_ice_attr (t, t->webrtc1, sdp_str, invalid_ufrag_error_message);
+  g_free (sdp_str);
+
+  sdp_str = g_strconcat (sdp_preamble, valid_ufrag, too_short_pwd, NULL);
+  validate_ice_attr (t, t->webrtc1, sdp_str, invalid_pwd_error_message);
+  g_free (sdp_str);
+
+  sdp_str = g_strconcat (sdp_preamble, valid_ufrag, valid_pwd, NULL);
+  validate_ice_attr (t, t->webrtc1, sdp_str, NULL);
+  g_free (sdp_str);
+
+  test_webrtc_free (t);
+} GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -7027,6 +7112,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_offer_rollback);
     tcase_add_test (tc, test_video_rtx_no_duplicate_payloads);
     tcase_add_test (tc, test_bundle_with_different_ice_credentials);
+    tcase_add_test (tc, test_invalid_ice_attrs);
   } else {
     GST_WARNING ("Some required elements were not found. "
         "All media tests are disabled. nicesrc %p, nicesink %p, "
