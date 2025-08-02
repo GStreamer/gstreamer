@@ -6852,6 +6852,75 @@ GST_START_TEST (test_video_rtx_no_duplicate_payloads)
 
 GST_END_TEST;
 
+/* Using different ice-ufrag in bundled medias is allowed as long as they don't share the same ice-pwd.  */
+GST_START_TEST (test_bundle_with_different_ice_credentials)
+{
+  GstPromise *promise;
+  struct test_webrtc *t = test_webrtc_new ();
+  const gchar *sdp_str = "v=0\r\n\
+o=- 4962303333179871722 1 IN IP4 0.0.0.0\r\n\
+s=-\r\n\
+t=0 0\r\n\
+a=ice-options:trickle\r\n\
+a=group:BUNDLE a1 v1\r\n\
+m=audio 10100 UDP/TLS/RTP/SAVPF 96\r\n\
+c=IN IP4 0.0.0.0\r\n\
+a=mid:a1\r\n\
+a=sendrecv\r\n\
+a=rtpmap:96 opus/48000/2\r\n\
+a=extmap:1 urn:ietf:params:rtp-hdrext:sdes:mid\r\n\
+a=extmap:2 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r\n\
+a=msid:47017fee-b6c1-4162-929c-a25110252400 f83006c5-a0ff-4e0a-9ed9-d3e6747be7d9\r\n\
+a=ice-ufrag:ETEn\r\n\
+a=ice-pwd:OtSK0WpNtpUjkY4+86js7ZQl\r\n\
+a=fingerprint:sha-256 19:E2:1C:3B:4B:9F:81:E6:B8:5C:F4:A5:A8:D8:73:04:BB:05:2F:70:9F:04:A9:0E:05:E9:26:33:E8:70:88:A2\r\n\
+a=setup:actpass\r\n\
+a=rtcp-mux\r\n\
+a=rtcp-rsize\r\n\
+m=video 10102 UDP/TLS/RTP/SAVPF 100\r\n\
+c=IN IP4 0.0.0.0\r\n\
+a=mid:v1\r\n\
+a=sendrecv\r\n\
+a=rtpmap:100 VP8/90000\r\n\
+a=extmap:1 urn:ietf:params:rtp-hdrext:sdes:mid\r\n\
+a=msid:47017fee-b6c1-4162-929c-a25110252400 f30bdb4a-5db8-49b5-bcdc-e0c9a23172e0\r\n\
+a=ice-ufrag:BGKk\r\n\
+a=ice-pwd:mqyWsAjvtKwTGnvhPztQ9mIf\r\n\
+a=fingerprint:sha-256 19:E2:1C:3B:4B:9F:81:E6:B8:5C:F4:A5:A8:D8:73:04:BB:05:2F:70:9F:04:A9:0E:05:E9:26:33:E8:70:88:A2\r\n\
+a=setup:actpass\r\n\
+a=rtcp-mux\r\n\
+a=rtcp-rsize\r\n";
+  GstSDPMessage *sdp;
+  const GstStructure *reply;
+
+  t->on_negotiation_needed = NULL;
+  t->on_offer_created = NULL;
+  t->on_answer_created = NULL;
+
+  gst_sdp_message_new_from_text (sdp_str, &sdp);
+  GstWebRTCSessionDescription *desc =
+      gst_webrtc_session_description_new (GST_WEBRTC_SDP_TYPE_OFFER,
+      sdp);
+  gst_element_set_state (t->webrtc1, GST_STATE_READY);
+
+  promise = gst_promise_new ();
+  g_signal_emit_by_name (t->webrtc1, "set-remote-description", desc, promise);
+  gst_promise_wait (promise);
+  gst_promise_unref (promise);
+  gst_webrtc_session_description_free (desc);
+
+  promise = gst_promise_new ();
+  g_signal_emit_by_name (t->webrtc1, "create-answer", NULL, promise);
+  gst_promise_wait (promise);
+  reply = gst_promise_get_reply (promise);
+  fail_if (gst_structure_has_field (reply, "error"));
+  gst_promise_unref (promise);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -6957,6 +7026,7 @@ webrtcbin_suite (void)
     }
     tcase_add_test (tc, test_offer_rollback);
     tcase_add_test (tc, test_video_rtx_no_duplicate_payloads);
+    tcase_add_test (tc, test_bundle_with_different_ice_credentials);
   } else {
     GST_WARNING ("Some required elements were not found. "
         "All media tests are disabled. nicesrc %p, nicesink %p, "

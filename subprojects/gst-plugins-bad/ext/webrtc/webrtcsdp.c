@@ -322,26 +322,26 @@ validate_sdp (GstWebRTCSignalingState state, SDPSource source,
     }
     if (!has_session_setup && !_media_has_setup (media, i, error))
       goto fail;
-    /* check parameters in bundle are the same */
+    /* Validate ICE ufrag and pwd attributes. According to RFC 8839 section 5.4:
+     * If two data streams have identical "ice-ufrag"s, they MUST have
+     * identical "ice-pwd"s.
+     */
     if (media_in_bundle) {
       const gchar *ice_ufrag =
           gst_sdp_media_get_attribute_val (media, "ice-ufrag");
       const gchar *ice_pwd = gst_sdp_media_get_attribute_val (media, "ice-pwd");
       if (!bundle_ice_ufrag)
         bundle_ice_ufrag = ice_ufrag;
-      else if (g_strcmp0 (bundle_ice_ufrag, ice_ufrag) != 0) {
-        g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
-            "media %u has different ice-ufrag values in bundle. "
-            "%s != %s", i, bundle_ice_ufrag, ice_ufrag);
-        goto fail;
-      }
-      if (!bundle_ice_pwd) {
-        bundle_ice_pwd = ice_pwd;
-      } else if (g_strcmp0 (bundle_ice_pwd, ice_pwd) != 0) {
-        g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
-            "media %u has different ice-pwd values in bundle. "
-            "%s != %s", i, bundle_ice_pwd, ice_pwd);
-        goto fail;
+      else if (g_strcmp0 (bundle_ice_ufrag, ice_ufrag) == 0) {
+        if (!bundle_ice_pwd) {
+          bundle_ice_pwd = ice_pwd;
+        } else if (g_strcmp0 (bundle_ice_pwd, ice_pwd) != 0) {
+          g_set_error (error, GST_WEBRTC_ERROR,
+              GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
+              "media %u shares ice-ufrag with another bundled media but has different ice-pwd values. "
+              "%s != %s", i, bundle_ice_pwd, ice_pwd);
+          goto fail;
+        }
       }
     }
   }
