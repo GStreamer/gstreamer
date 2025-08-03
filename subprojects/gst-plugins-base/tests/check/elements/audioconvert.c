@@ -2365,6 +2365,57 @@ GST_START_TEST (test_dynamic_mix_matrix)
 
 GST_END_TEST;
 
+/* Regression test for https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4579 */
+GST_START_TEST (test_mix_matrix_sets_channel_masks)
+{
+  GstCaps *incaps = gst_caps_from_string ("audio/x-raw, "
+      "format = (string) S16LE, "
+      "layout = (string) interleaved, "
+      "channel-mask = (bitmask) 0, "
+      "rate = (int) 44100, " "channels = (int) 2 ");
+  GstCaps *outcaps = gst_caps_from_string ("audio/x-raw,channels = (int) 8");
+
+  /* Create 2:8 mix matrix */
+  GValue mix_matrix = G_VALUE_INIT;
+  g_value_init (&mix_matrix, GST_TYPE_ARRAY);
+  for (int i = 0; i < 8; i++) {
+    GValue row = G_VALUE_INIT;
+    g_value_init (&row, GST_TYPE_ARRAY);
+    for (int j = 0; j < 2; j++) {
+      GValue value = G_VALUE_INIT;
+      g_value_init (&value, G_TYPE_FLOAT);
+      g_value_set_float (&value, (i == j) ? 1.0 : 0.0);
+      gst_value_array_append_value (&row, &value);
+      g_value_unset (&value);
+    }
+    gst_value_array_append_value (&mix_matrix, &row);
+    g_value_unset (&row);
+  }
+  GstElement *audioconvert = setup_audioconvert (outcaps, TRUE, &mix_matrix);
+  fail_unless (gst_element_set_state (audioconvert,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+  gst_check_setup_events (mysrcpad, audioconvert, incaps, GST_FORMAT_TIME);
+
+  /* Pushing a buffer should work */
+  GstBuffer *outbuffer = NULL;
+  GstBuffer *buffer = gst_buffer_new_and_alloc (1 * 2 * 2);
+  fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
+  fail_unless (g_list_length (buffers) == 1);
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless_equals_int (gst_buffer_get_size (outbuffer), 1 * 2 * 8);
+  buffers = g_list_remove (buffers, outbuffer);
+  gst_buffer_unref (outbuffer);
+
+  /* cleanup */
+  cleanup_audioconvert (audioconvert);
+  gst_caps_unref (incaps);
+  gst_caps_unref (outcaps);
+  g_value_unset (&mix_matrix);
+}
+
+GST_END_TEST;
+
 static Suite *
 audioconvert_suite (void)
 {
@@ -2391,6 +2442,7 @@ audioconvert_suite (void)
   tcase_add_test (tc_chain, test_layout_conv_fixate_caps);
   tcase_add_test (tc_chain, test_96_channels_conversion);
   tcase_add_test (tc_chain, test_dynamic_mix_matrix);
+  tcase_add_test (tc_chain, test_mix_matrix_sets_channel_masks);
 
   return s;
 }

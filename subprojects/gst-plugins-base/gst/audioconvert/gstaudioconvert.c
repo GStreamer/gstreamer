@@ -1456,7 +1456,11 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
      * channel position array or something else that's not a list; we assume
      * the input if half-way sane and don't try to fall back on other list items
      * if the first one is something unexpected or non-channel-pos-array-y */
-    if (n_bits_set (out_mask) >= out_chans) {
+    if (has_out_mask && out_mask == 0) {
+      gst_structure_set_static_str (outs, "channel-mask", GST_TYPE_BITMASK,
+          out_mask, NULL);
+      return;
+    } else if (n_bits_set (out_mask) >= out_chans) {
       intersection = find_suitable_mask (out_mask, out_chans);
       gst_structure_set_static_str (outs, "channel-mask", GST_TYPE_BITMASK,
           intersection, NULL);
@@ -1464,11 +1468,10 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
     } else if (this->mix_matrix_is_set) {
       /* Assume the matrix matches the number of in/out channels. This will be
        * validated when creating the converter. */
-      return;
+    } else {
+      /* what now?! Just ignore what we're given and use default positions */
+      GST_WARNING_OBJECT (base, "invalid or unexpected channel-positions");
     }
-
-    /* what now?! Just ignore what we're given and use default positions */
-    GST_WARNING_OBJECT (base, "invalid or unexpected channel-positions");
   }
 
   /* missing or invalid output layout and we can't use the input layout for
