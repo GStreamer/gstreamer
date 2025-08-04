@@ -386,6 +386,7 @@ gst_base_transform_init (GstBaseTransform * trans,
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (bclass), "sink");
   g_return_if_fail (pad_template != NULL);
   trans->sinkpad = gst_pad_new_from_template (pad_template, "sink");
+  GST_PAD_SET_ACCEPT_INTERSECT (trans->sinkpad);
   gst_pad_set_event_function (trans->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_sink_event));
   gst_pad_set_chain_function (trans->sinkpad,
@@ -1263,10 +1264,17 @@ gst_base_transform_acceptcaps_default (GstBaseTransform * trans,
   otempl = gst_pad_get_pad_template_caps (otherpad);
 
   /* get all the formats we can handle on this pad */
-  GST_DEBUG_OBJECT (trans, "intersect with pad template: %" GST_PTR_FORMAT,
-      templ);
-  if (!gst_caps_can_intersect (caps, templ))
-    goto reject_caps;
+  if (GST_PAD_IS_ACCEPT_INTERSECT (trans->sinkpad)) {
+    GST_DEBUG_OBJECT (trans, "intersect with pad template: %" GST_PTR_FORMAT,
+        templ);
+    if (!gst_caps_can_intersect (caps, templ))
+      goto reject_caps;
+  } else {
+    GST_DEBUG_OBJECT (trans, "subset with pad template: %" GST_PTR_FORMAT,
+        templ);
+    if (!gst_caps_is_subset (caps, templ))
+      goto reject_caps;
+  }
 
   GST_DEBUG_OBJECT (trans, "trying to transform with filter: %"
       GST_PTR_FORMAT " (the other pad template)", otempl);
