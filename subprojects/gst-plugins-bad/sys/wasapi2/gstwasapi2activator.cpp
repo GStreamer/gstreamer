@@ -89,16 +89,32 @@ Wasapi2ActivationHandler::ActivateCompleted (IActivateAudioInterfaceAsyncOperati
 {
   ComPtr<IUnknown> iface;
   HRESULT hr = S_OK;
-  hr = op->GetActivateResult (&hr, &iface);
-  if (FAILED (hr)) {
+  HRESULT activate_hr = S_OK;
+  hr = op->GetActivateResult (&activate_hr, &iface);
+  if (!gst_wasapi2_result (hr))
     GST_ERROR ("Couldn't get activate result, hr: 0x%x", (guint) hr);
+
+  if (!gst_wasapi2_result (activate_hr)) {
+    GST_ERROR ("GetActivateResult failed, hr: 0x%x", (guint) activate_hr);
+    hr = activate_hr;
+  }
+
+  if (SUCCEEDED (hr) && !iface) {
+    GST_ERROR ("Couldn't get inteface from asyncop");
+    hr = E_FAIL;
+  }
+
+  if (FAILED (hr)) {
     activate_hr_ = hr;
     SetEvent (event_);
     return hr;
   }
 
-  hr = iface.As (&client_);
-  activate_hr_ = hr;
+  {
+    std::lock_guard<std::mutex> lk (lock_);
+    hr = iface.As (&client_);
+    activate_hr_ = hr;
+  }
 
   GST_LOG ("Activation result 0x%x", (guint) hr);
 
@@ -132,6 +148,10 @@ Wasapi2ActivationHandler::GetClient (IAudioClient ** client, DWORD timeout)
 
   if (!client)
     return S_OK;
+
+  std::lock_guard<std::mutex> lk (lock_);
+  if (!client_)
+    return E_FAIL;
 
   *client = client_.Get ();
   (*client)->AddRef ();
