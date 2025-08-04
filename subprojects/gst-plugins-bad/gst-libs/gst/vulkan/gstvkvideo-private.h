@@ -97,6 +97,4 @@ GstVulkanImageView *    gst_vulkan_video_image_create_view     (GstBuffer * buf,
                                                                 gboolean is_out,
                                                                 GstVulkanHandle * sampler);
 
-gboolean                gst_vulkan_video_has_maintenance1      (GstVulkanDevice * device);
-
 G_END_DECLS

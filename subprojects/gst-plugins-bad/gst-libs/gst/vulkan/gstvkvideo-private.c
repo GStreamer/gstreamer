@@ -116,7 +116,8 @@ gst_vulkan_video_session_create (GstVulkanVideoSession * session,
   g_return_val_if_fail (session_create, FALSE);
 
 #if defined(VK_KHR_video_maintenance1)
-  if (gst_vulkan_video_has_maintenance1 (device)) {
+  if (gst_vulkan_physical_device_has_feature_video_maintenance1
+      (device->physical_device)) {
     session_create->flags |= VK_VIDEO_SESSION_CREATE_INLINE_QUERIES_BIT_KHR;
   }
 #endif
@@ -318,24 +319,4 @@ gst_vulkan_video_image_create_view (GstBuffer * buf, gboolean layered_dpb,
 
   return gst_vulkan_get_or_create_image_view_with_info (vkmem,
       &view_create_info);
-}
-
-gboolean
-gst_vulkan_video_has_maintenance1 (GstVulkanDevice * device)
-{
-#if defined(VK_KHR_video_maintenance1)
-  const VkPhysicalDeviceFeatures2 *features;
-  const VkBaseOutStructure *iter;
-
-  features = gst_vulkan_physical_device_get_features (device->physical_device);
-  for (iter = (const VkBaseOutStructure *) features; iter; iter = iter->pNext) {
-    if (iter->sType ==
-        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VIDEO_MAINTENANCE_1_FEATURES_KHR) {
-      const VkPhysicalDeviceVideoMaintenance1FeaturesKHR *video_maintenance1 =
-          (const VkPhysicalDeviceVideoMaintenance1FeaturesKHR *) iter;
-      return video_maintenance1->videoMaintenance1;
-    }
-  }
-#endif
-  return FALSE;
 }

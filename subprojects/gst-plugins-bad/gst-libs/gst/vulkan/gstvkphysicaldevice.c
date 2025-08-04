@@ -1314,6 +1314,63 @@ gst_vulkan_physical_device_get_features (GstVulkanPhysicalDevice * device)
   return NULL;
 }
 
+gboolean
+    gst_vulkan_physical_device_has_feature_sampler_ycbrc_conversion
+    (GstVulkanPhysicalDevice * device) {
+#if defined (VK_KHR_sampler_ycbcr_conversion)
+  GstVulkanPhysicalDevicePrivate *priv;
+
+  g_return_val_if_fail (GST_IS_VULKAN_PHYSICAL_DEVICE (device), FALSE);
+
+  priv = GET_PRIV (device);
+  return priv->sampler_ycbcr_conversion.samplerYcbcrConversion;
+#endif
+  return FALSE;
+}
+
+gboolean
+gst_vulkan_physical_device_has_feature_synchronization2 (GstVulkanPhysicalDevice
+    * device)
+{
+#if defined (VK_KHR_synchronization2)
+  GstVulkanPhysicalDevicePrivate *priv;
+
+  g_return_val_if_fail (GST_IS_VULKAN_PHYSICAL_DEVICE (device), FALSE);
+
+  priv = GET_PRIV (device);
+  return priv->synchronization2.synchronization2;
+#endif
+  return FALSE;
+}
+
+gboolean
+    gst_vulkan_physical_device_has_feature_timeline_sempahore
+    (GstVulkanPhysicalDevice * device) {
+#if defined (VK_KHR_timeline_semaphore)
+  GstVulkanPhysicalDevicePrivate *priv;
+
+  g_return_val_if_fail (GST_IS_VULKAN_PHYSICAL_DEVICE (device), FALSE);
+
+  priv = GET_PRIV (device);
+  return priv->timeline_semaphore.timelineSemaphore;
+#endif
+  return FALSE;
+}
+
+gboolean
+    gst_vulkan_physical_device_has_feature_video_maintenance1
+    (GstVulkanPhysicalDevice * device) {
+#if defined (VK_KHR_video_maintenance1)
+  GstVulkanPhysicalDevicePrivate *priv;
+
+  g_return_val_if_fail (GST_IS_VULKAN_PHYSICAL_DEVICE (device), FALSE);
+
+  priv = GET_PRIV (device);
+  return priv->videomaintenance1.videoMaintenance1;
+#endif
+  return FALSE;
+}
+
 /**
  * gst_vulkan_physical_device_get_api_version:
  * @device: a #GstVulkanPhysicalDevice

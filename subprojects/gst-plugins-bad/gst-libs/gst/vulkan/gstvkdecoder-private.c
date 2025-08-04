@@ -1001,43 +1001,21 @@ gst_vulkan_decoder_update_ycbcr_sampler (GstVulkanDecoder * self,
     VkSamplerYcbcrRange range, VkChromaLocation xloc,
     VkChromaLocation yloc, GError ** error)
 {
-  const VkPhysicalDeviceFeatures2 *features;
-  const VkBaseOutStructure *iter;
   GstVulkanDevice *device;
   GstVulkanDecoderPrivate *priv;
   GstVulkanHandle *handle;
   VkSamplerYcbcrConversionCreateInfo create_info;
   VkSamplerYcbcrConversion ycbr_conversion;
   VkResult res;
-  gboolean found = FALSE;
 
   g_return_val_if_fail (GST_IS_VULKAN_DECODER (self), FALSE);
 
   device = self->queue->device;
 
-  if (!gst_vulkan_physical_device_check_api_version (device->physical_device, 1,
-          2, 0)) {
+  if (!gst_vulkan_physical_device_has_feature_sampler_ycbrc_conversion
+      (device->physical_device)) {
     g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
         "Sampler Ycbcr conversion not available in API");
-    return FALSE;
-  }
-
-  features = gst_vulkan_physical_device_get_features (device->physical_device);
-  for (iter = (const VkBaseOutStructure *) features; iter; iter = iter->pNext) {
-    if (iter->sType == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES) {
-      const VkPhysicalDeviceVulkan11Features *features11 =
-          (const VkPhysicalDeviceVulkan11Features *) iter;
-
-      if (!features11->samplerYcbcrConversion)
-        return FALSE;
-      found = TRUE;
-      break;
-    }
-  }
-
-  if (!found) {
-    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-        "Sampler Ycbcr conversion not available in driver");
     return FALSE;
   }
 

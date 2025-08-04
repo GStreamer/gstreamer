@@ -23,9 +23,7 @@
 #endif
 
 #include "gstvkoperation.h"
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-# include "gstvkvideo-private.h"
-#endif
+#include "gstvkphysicaldevice-private.h"
 
 /**
  * SECTION:vkoperation
@@ -161,10 +159,9 @@ gst_vulkan_operation_constructed (GObject * object)
 
 #if defined(VK_KHR_synchronization2)
   priv->has_sync2 =
-      gst_vulkan_physical_device_check_api_version (device->physical_device, 1,
-      3, 0)
-      || gst_vulkan_device_is_extension_enabled (device,
-      VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME);
+      gst_vulkan_physical_device_has_feature_synchronization2
+      (device->physical_device);
+
 
   if (priv->has_sync2) {
     if (gst_vulkan_physical_device_check_api_version (device->physical_device,
@@ -195,15 +192,13 @@ gst_vulkan_operation_constructed (GObject * object)
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   priv->has_video = gst_vulkan_device_is_extension_enabled (device,
       VK_KHR_VIDEO_QUEUE_EXTENSION_NAME);
-  priv->has_video_maintenance1 = gst_vulkan_video_has_maintenance1 (device);
+  priv->has_video_maintenance1 =
+      gst_vulkan_physical_device_has_feature_video_maintenance1
+      (device->physical_device);
 #endif
-#if defined(VK_KHR_timeline_semaphore)
   priv->has_timeline =
-      gst_vulkan_physical_device_check_api_version (device->physical_device, 1,
-      2, 0)
-      || gst_vulkan_device_is_extension_enabled (device,
-      VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
-#endif
+      gst_vulkan_physical_device_has_feature_timeline_sempahore
+      (device->physical_device);
 #endif
 
   G_OBJECT_CLASS (parent_class)->constructed (object);

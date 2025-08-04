@@ -25,8 +25,20 @@
 
 G_BEGIN_DECLS
 
-const
-VkPhysicalDeviceFeatures2 * gst_vulkan_physical_device_get_features         (GstVulkanPhysicalDevice * device);
+const VkPhysicalDeviceFeatures2 *
+                            gst_vulkan_physical_device_get_features         (GstVulkanPhysicalDevice * device);
+
+gboolean                    gst_vulkan_physical_device_has_feature_sampler_ycbrc_conversion
+                                                                            (GstVulkanPhysicalDevice * device);
+
+gboolean                    gst_vulkan_physical_device_has_feature_synchronization2
+                                                                            (GstVulkanPhysicalDevice * device);
+
+gboolean                    gst_vulkan_physical_device_has_feature_timeline_sempahore
+                                                                            (GstVulkanPhysicalDevice * device);
+
+gboolean                    gst_vulkan_physical_device_has_feature_video_maintenance1
+                                                                            (GstVulkanPhysicalDevice * device);
 
 static inline void
 vk_link_struct (gpointer chain, gconstpointer in)
