@@ -577,12 +577,11 @@ gst_wasapi2_device_manager_create_ctx (IMMDeviceEnumerator * enumerator,
           Wasapi2ActivationHandler::CreateInstance (&activator,
               gst_wasapi2_get_default_device_id_wide (eCapture), nullptr);
           GST_LOG ("Creating default capture device");
-        } else {
-          GST_LOG ("Creating default capture MMdevice");
-          ComPtr<IMMDevice> device;
-          hr = enumerator->GetDefaultAudioEndpoint (eCapture,
-              eConsole, &device);
         }
+
+        GST_LOG ("Creating default capture MMdevice");
+        hr = enumerator->GetDefaultAudioEndpoint (eCapture,
+            eConsole, &device);
       } else {
         auto wstr = g_utf8_to_utf16 (desc->device_id.c_str (),
             -1, nullptr, nullptr, nullptr);
@@ -605,13 +604,10 @@ gst_wasapi2_device_manager_create_ctx (IMMDeviceEnumerator * enumerator,
              Wasapi2ActivationHandler::CreateInstance (&dummy_activator,
                 gst_wasapi2_get_default_device_id_wide (eRender), nullptr);
           }
-
-          is_default = true;
-        } else {
-          GST_LOG ("Creating default render MMdevice");
-          hr = enumerator->GetDefaultAudioEndpoint (eRender,
-              eConsole, &device);
         }
+
+        hr = enumerator->GetDefaultAudioEndpoint (eRender,
+            eConsole, &device);
       } else {
         auto wstr = g_utf8_to_utf16 (desc->device_id.c_str (),
             -1, nullptr, nullptr, nullptr);
@@ -650,6 +646,7 @@ gst_wasapi2_device_manager_create_ctx (IMMDeviceEnumerator * enumerator,
 
   auto ctx = std::make_shared<RbufCtx> (desc->device_id);
   if (activator) {
+    is_default = true;
     activator->ActivateAsync ();
     activator->GetClient (&ctx->client, INFINITE);
     activator->Release ();
@@ -660,10 +657,12 @@ gst_wasapi2_device_manager_create_ctx (IMMDeviceEnumerator * enumerator,
 
       if (!ctx->dummy_client) {
         GST_WARNING ("Couldn't get dummy audio client");
-        return;
+        ctx->client = nullptr;
       }
     }
-  } else {
+  }
+
+  if (!ctx->client) {
     if (!device) {
       GST_WARNING ("Couldn't get IMMDevice");
       return;
