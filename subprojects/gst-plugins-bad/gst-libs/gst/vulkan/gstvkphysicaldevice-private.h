@@ -51,6 +51,20 @@ vk_link_struct (gpointer chain, gconstpointer in)
   out->pNext = (void *) in;
 }
 
+static inline gconstpointer
+vk_find_struct (gconstpointer chain, VkStructureType stype)
+{
+  const VkBaseInStructure *in = chain;
+
+  while (in) {
+    if (in->sType == stype)
+      return in;
+    in = in->pNext;
+  }
+
+  return NULL;
+}
+
 G_END_DECLS
 
 #endif /* __GST_VULKAN_PHYSICAL_DEVICE_PRIVATE_H__ */

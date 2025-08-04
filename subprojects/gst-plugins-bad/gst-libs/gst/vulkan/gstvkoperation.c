@@ -147,38 +147,37 @@ gst_vulkan_operation_get_property (GObject * object, guint prop_id,
   }
 }
 
-
-
 static void
 gst_vulkan_operation_constructed (GObject * object)
 {
-#if defined(VK_KHR_timeline_semaphore) || defined(VK_KHR_synchronization2)
   GstVulkanOperation *self = GST_VULKAN_OPERATION (object);
   GstVulkanOperationPrivate *priv = GET_PRIV (self);
   GstVulkanDevice *device = priv->cmd_pool->queue->device;
 
-#if defined(VK_KHR_synchronization2)
   priv->has_sync2 =
       gst_vulkan_physical_device_has_feature_synchronization2
       (device->physical_device);
 
+  priv->has_timeline =
+      gst_vulkan_physical_device_has_feature_timeline_sempahore
+      (device->physical_device);
 
   if (priv->has_sync2) {
-    if (gst_vulkan_physical_device_check_api_version (device->physical_device,
-            1, 3, 0))
+    gboolean vulkan_1_3 =
+        gst_vulkan_physical_device_check_api_version (device->physical_device,
+        1, 3, 0);
+
+    if (vulkan_1_3) {
       priv->QueueSubmit2 =
           gst_vulkan_device_get_proc_address (device, "vkQueueSubmit2");
+      priv->CmdPipelineBarrier2 =
+          gst_vulkan_device_get_proc_address (device, "vkCmdPipelineBarrier2");
+    }
 
     if (!priv->QueueSubmit2) {
       priv->QueueSubmit2 =
           gst_vulkan_device_get_proc_address (device, "vkQueueSubmit2KHR");
     }
-
-    if (gst_vulkan_physical_device_check_api_version (device->physical_device,
-            1, 3, 0))
-      priv->CmdPipelineBarrier2 =
-          gst_vulkan_device_get_proc_address (device, "vkCmdPipelineBarrier2");
-
     if (!priv->CmdPipelineBarrier2) {
       priv->CmdPipelineBarrier2 =
           gst_vulkan_device_get_proc_address (device,
@@ -187,19 +186,13 @@ gst_vulkan_operation_constructed (GObject * object)
 
     priv->has_sync2 = (priv->QueueSubmit2 && priv->CmdPipelineBarrier2);
   }
-#endif
-
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+#if defined(VK_KHR_video_queue)
   priv->has_video = gst_vulkan_device_is_extension_enabled (device,
       VK_KHR_VIDEO_QUEUE_EXTENSION_NAME);
+#endif
   priv->has_video_maintenance1 =
       gst_vulkan_physical_device_has_feature_video_maintenance1
       (device->physical_device);
-#endif
-  priv->has_timeline =
-      gst_vulkan_physical_device_has_feature_timeline_sempahore
-      (device->physical_device);
-#endif
 
   G_OBJECT_CLASS (parent_class)->constructed (object);
 }
@@ -1201,6 +1194,20 @@ gst_vulkan_operation_discard_dependencies (GstVulkanOperation * self)
   GST_OBJECT_UNLOCK (self);
 }
 
+#if defined(VK_KHR_video_queue)
+static inline gboolean
+_query_type_is_video (VkQueryType query_type)
+{
+  if (query_type == VK_QUERY_TYPE_RESULT_STATUS_ONLY_KHR)
+    return TRUE;
+# if defined(VK_KHR_video_encode_queue)
+  if (query_type == VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR)
+    return TRUE;
+# endif
+  return FALSE;
+}
+#endif /* defined(VK_KHR_video_queue) */
+
 /**
  * gst_vulkan_operation_enable_query:
  * @self: a #GstVulkanOperation
@@ -1221,10 +1228,6 @@ gst_vulkan_operation_enable_query (GstVulkanOperation * self,
     VkQueryType query_type, guint n_queries, gpointer pnext, GError ** error)
 {
   GstVulkanOperationPrivate *priv;
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-  GstVulkanPhysicalDevice *device;
-  guint32 queue_family;
-#endif
   VkQueryPoolCreateInfo query_pool_info = {
     .sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO,
     .pNext = pnext,
@@ -1242,34 +1245,31 @@ gst_vulkan_operation_enable_query (GstVulkanOperation * self,
   if (priv->query_pool)
     return TRUE;
 
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-  queue_family = priv->cmd_pool->queue->family;
-  device = priv->cmd_pool->queue->device->physical_device;
-  /*
-   * The VK_QUERY_TYPE_RESULT_STATUS_ONLY_KHR can be optional, so .query_result_status
-   * can be FALSE, see AMD's case.
-   * vkCreateQueryPool needs to be called when the query is
-   * VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR to enable it anyway.
-   */
-  if (!device->queue_family_ops[queue_family].query_result_status &&
-      query_type == VK_QUERY_TYPE_RESULT_STATUS_ONLY_KHR) {
-    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_FEATURE_NOT_PRESENT,
-        "Queue %" GST_PTR_FORMAT
-        " doesn't support result status query operations",
-        priv->cmd_pool->queue);
-    return FALSE;
-  }
+#if defined(VK_KHR_video_queue)
+  {
+    guint32 queue_family = priv->cmd_pool->queue->family;
+    GstVulkanPhysicalDevice *device =
+        priv->cmd_pool->queue->device->physical_device;
 
-  if ((query_type == VK_QUERY_TYPE_RESULT_STATUS_ONLY_KHR
-          || query_type == VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR)
-      && priv->has_video && priv->has_video_maintenance1) {
-    VkBaseInStructure *base;
-    for (base = pnext; base; base = (VkBaseInStructure *) base->pNext) {
-      if (base->sType == VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR) {
-        priv->use_inline_query = TRUE;
-        break;
-      }
+    /*
+     * The VK_QUERY_TYPE_RESULT_STATUS_ONLY_KHR can be optional, so .query_result_status
+     * can be FALSE, see AMD's case.
+     * vkCreateQueryPool needs to be called when the query is
+     * VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR to enable it anyway.
+     */
+    if (!device->queue_family_ops[queue_family].query_result_status &&
+        query_type == VK_QUERY_TYPE_RESULT_STATUS_ONLY_KHR) {
+      g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_FEATURE_NOT_PRESENT,
+          "Queue %" GST_PTR_FORMAT
+          " doesn't support result status query operations",
+          priv->cmd_pool->queue);
+      return FALSE;
     }
+
+    priv->use_inline_query = (_query_type_is_video (query_type)
+        && priv->has_video && priv->has_video_maintenance1
+        && (vk_find_struct (pnext,
+                VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR) != NULL));
   }
 #endif
 
@@ -1287,17 +1287,18 @@ gst_vulkan_operation_enable_query (GstVulkanOperation * self,
    * + result support other structures besides a guint32 array
    */
   switch (query_type) {
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+#if defined(VK_KHR_video_queue)
     case VK_QUERY_TYPE_RESULT_STATUS_ONLY_KHR:
       if (priv->has_video)
         stride = sizeof (guint32);
       break;
+#endif
+#if defined(VK_KHR_video_encode_queue)
     case VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR:
       if (priv->has_video)
         stride = sizeof (GstVulkanEncodeQueryResult);
       break;
 #endif
-
     default:
       break;
   }
@@ -1337,10 +1338,8 @@ gst_vulkan_operation_get_query (GstVulkanOperation * self, gpointer * result,
   if (!priv->query_pool || !priv->query_data || !priv->op_submitted)
     return TRUE;
 
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-  if (priv->has_video
-      && (priv->query_type == VK_QUERY_TYPE_RESULT_STATUS_ONLY_KHR
-          || priv->query_type == VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR)) {
+#if defined(VK_KHR_video_queue)
+  if (priv->has_video && _query_type_is_video (priv->query_type)) {
     flags |= VK_QUERY_RESULT_WITH_STATUS_BIT_KHR;
   }
 #endif
@@ -1392,11 +1391,10 @@ gst_vulkan_operation_begin_query (GstVulkanOperation * self,
     return FALSE;
   }
 
-  if (priv->use_inline_query)
-    g_return_val_if_fail (base, FALSE);
-
 #if defined(VK_KHR_video_maintenance1)
   if (priv->use_inline_query) {
+    g_return_val_if_fail (base, FALSE);
+
     /* *INDENT-OFF* */
     priv->inline_query = (VkVideoInlineQueryInfoKHR) {
       .sType = VK_STRUCTURE_TYPE_VIDEO_INLINE_QUERY_INFO_KHR,
