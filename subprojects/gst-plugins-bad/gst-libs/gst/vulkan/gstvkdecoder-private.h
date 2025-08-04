@@ -21,6 +21,7 @@
 #pragma once
 
 #include <gst/vulkan/gstvkqueue.h>
+#include "gstvkvideoutils-private.h"
 
 G_BEGIN_DECLS
 

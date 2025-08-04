@@ -21,6 +21,7 @@
 #pragma once
 
 #include <gst/vulkan/vulkan.h>
+#include "gstvkvideoutils-private.h"
 
 #define GST_TYPE_VULKAN_ENCODER         (gst_vulkan_encoder_get_type())
 #define GST_VULKAN_ENCODER(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_VULKAN_ENCODER, GstVulkanEncoder))

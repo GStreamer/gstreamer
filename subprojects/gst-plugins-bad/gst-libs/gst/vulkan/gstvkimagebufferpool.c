@@ -24,6 +24,10 @@
 
 #include "gstvkimagebufferpool.h"
 
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+#include "gst/vulkan/gstvkvideoutils-private.h"
+#endif
+
 /**
  * SECTION:vkimagebufferpool
  * @title: GstVulkanImageBufferPool
@@ -54,8 +58,10 @@ struct _GstVulkanImageBufferPoolPrivate
   VkFormat vk_fmts[GST_VIDEO_MAX_PLANES];
   int n_imgs;
   guint32 n_layers;
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   guint32 n_profiles;
   GstVulkanVideoProfile profiles[2];
+#endif
   GstVulkanOperation *exec;
   gboolean add_videometa;
 };

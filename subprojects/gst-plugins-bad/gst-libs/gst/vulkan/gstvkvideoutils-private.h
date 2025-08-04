@@ -25,6 +25,9 @@
 
 G_BEGIN_DECLS
 
+typedef struct _GstVulkanVideoProfile GstVulkanVideoProfile;
+typedef struct _GstVulkanVideoCapabilities GstVulkanVideoCapabilities;
+
 /**
  * GstVulkanVideoProfile:
  * @profile: the generic vulkan video profile
@@ -35,7 +38,6 @@ G_BEGIN_DECLS
 struct _GstVulkanVideoProfile
 {
   /*< private >*/
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   VkVideoProfileInfoKHR profile;
   union {
     VkVideoDecodeUsageInfoKHR decode;
@@ -64,7 +66,6 @@ struct _GstVulkanVideoProfile
      **/
     VkVideoEncodeH265ProfileInfoKHR h265enc;
   } codec;
-#endif
   gpointer _reserved[GST_PADDING];
 };
 
@@ -76,7 +77,6 @@ struct _GstVulkanVideoProfile
 struct _GstVulkanVideoCapabilities
 {
   /*< private >*/
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   VkVideoCapabilitiesKHR caps;
   union
   {
@@ -103,7 +103,6 @@ struct _GstVulkanVideoCapabilities
       } codec;
     } encoder;
   };
-#endif
   /*< private >*/
   gpointer _reserved[GST_PADDING];
 };

@@ -26,6 +26,10 @@
 #include <gst/check/gstcheck.h>
 #include <gst/vulkan/vulkan.h>
 
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+#include "gst/vulkan/gstvkvideoutils-private.h"
+#endif
+
 static GstVulkanInstance *instance;
 static GstVulkanDevice *device;
 static GstVulkanQueue *queue = NULL;
@@ -206,7 +210,7 @@ GST_START_TEST (test_decoding_image)
 }
 
 GST_END_TEST;
-#endif
+#endif /* GST_VULKAN_HAVE_VIDEO_EXTENSIONS */
 
 static Suite *
 vkimagebufferpool_suite (void)

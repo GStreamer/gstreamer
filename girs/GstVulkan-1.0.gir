@@ -6039,50 +6039,6 @@ signalled and freed.</doc>
         </parameter>
       </parameters>
     </callback>
-    <record name="VulkanVideoCapabilities" c:type="GstVulkanVideoCapabilities" version="1.24">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
-      <field name="caps" introspectable="0" readable="0" private="1">
-        <type c:type="VkVideoCapabilitiesKHR"/>
-      </field>
-      <union>
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
-        <record name="decoder" c:type="decoder">
-          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
-          <field name="caps" introspectable="0" readable="0" private="1">
-            <type c:type="VkVideoDecodeCapabilitiesKHR"/>
-          </field>
-          <union name="codec" c:type="codec">
-            <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
-            <field name="h264" introspectable="0" readable="0" private="1">
-              <type c:type="VkVideoDecodeH264CapabilitiesKHR"/>
-            </field>
-            <field name="h265" introspectable="0" readable="0" private="1">
-              <type c:type="VkVideoDecodeH265CapabilitiesKHR"/>
-            </field>
-          </union>
-        </record>
-        <record name="encoder" c:type="encoder">
-          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
-          <field name="caps" introspectable="0" readable="0" private="1">
-            <type c:type="VkVideoEncodeCapabilitiesKHR"/>
-          </field>
-          <union name="codec" c:type="codec">
-            <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
-            <field name="h264" introspectable="0" readable="0" private="1">
-              <type c:type="VkVideoEncodeH264CapabilitiesKHR"/>
-            </field>
-            <field name="h265" introspectable="0" readable="0" private="1">
-              <type c:type="VkVideoEncodeH265CapabilitiesKHR"/>
-            </field>
-          </union>
-        </record>
-      </union>
-      <field name="_reserved" readable="0" private="1">
-        <array zero-terminated="0" fixed-size="4">
-          <type name="gpointer" c:type="gpointer"/>
-        </array>
-      </field>
-    </record>
     <class name="VulkanVideoFilter" c:symbol-prefix="vulkan_video_filter" c:type="GstVulkanVideoFilter" version="1.18" parent="GstBase.BaseTransform" glib:type-name="GstVulkanVideoFilter" glib:get-type="gst_vulkan_video_filter_get_type" glib:type-struct="VulkanVideoFilterClass">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.h"/>
       <method name="get_device" c:identifier="gst_vulkan_video_filter_get_device" version="1.26">
@@ -6176,125 +6132,6 @@ signalled and freed.</doc>
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>
-    </record>
-    <enumeration name="VulkanVideoOperation" version="1.24" glib:type-name="GstVulkanVideoOperation" glib:get-type="gst_vulkan_video_operation_get_type" c:type="GstVulkanVideoOperation">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h">The type of video operation.</doc>
-      <member name="decode" value="0" c:identifier="GST_VULKAN_VIDEO_OPERATION_DECODE" glib:nick="decode" glib:name="GST_VULKAN_VIDEO_OPERATION_DECODE">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h">decode operation</doc>
-      </member>
-      <member name="encode" value="1" c:identifier="GST_VULKAN_VIDEO_OPERATION_ENCODE" glib:nick="encode" glib:name="GST_VULKAN_VIDEO_OPERATION_ENCODE">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h">encode operation</doc>
-      </member>
-      <member name="unknown" value="2" c:identifier="GST_VULKAN_VIDEO_OPERATION_UNKNOWN" glib:nick="unknown" glib:name="GST_VULKAN_VIDEO_OPERATION_UNKNOWN">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h">unknown</doc>
-      </member>
-    </enumeration>
-    <record name="VulkanVideoProfile" c:type="GstVulkanVideoProfile" version="1.24">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
-      <field name="profile" introspectable="0" readable="0" private="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h">the generic vulkan video profile</doc>
-        <type c:type="VkVideoProfileInfoKHR"/>
-      </field>
-      <union name="usage" c:type="usage">
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
-        <field name="decode" introspectable="0" writable="1">
-          <type c:type="VkVideoDecodeUsageInfoKHR"/>
-        </field>
-        <field name="encode" introspectable="0" writable="1">
-          <type c:type="VkVideoEncodeUsageInfoKHR"/>
-        </field>
-      </union>
-      <union name="codec" c:type="codec">
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
-        <field name="base" writable="1">
-          <type name="Vulkan.BaseInStructure" c:type="VkBaseInStructure"/>
-        </field>
-        <field name="h264dec" introspectable="0" writable="1">
-          <type c:type="VkVideoDecodeH264ProfileInfoKHR"/>
-        </field>
-        <field name="h265dec" introspectable="0" writable="1">
-          <type c:type="VkVideoDecodeH265ProfileInfoKHR"/>
-        </field>
-        <field name="h264enc" introspectable="0" writable="1">
-          <type c:type="VkVideoEncodeH264ProfileInfoKHR"/>
-        </field>
-        <field name="h265enc" introspectable="0" writable="1">
-          <type c:type="VkVideoEncodeH265ProfileInfoKHR"/>
-        </field>
-      </union>
-      <field name="_reserved" writable="1">
-        <array zero-terminated="0" fixed-size="4">
-          <type name="gpointer" c:type="gpointer"/>
-        </array>
-      </field>
-      <method name="is_equal" c:identifier="gst_vulkan_video_profile_is_equal">
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">whether @a and @b contains the same information.</doc>
-          <type name="gboolean" c:type="gboolean"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="a" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">a #GstVulkanVideoProfile</doc>
-            <type name="VulkanVideoProfile" c:type="const GstVulkanVideoProfile*"/>
-          </instance-parameter>
-          <parameter name="b" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">another #GstVulkanVideoProfile</doc>
-            <type name="VulkanVideoProfile" c:type="const GstVulkanVideoProfile*"/>
-          </parameter>
-        </parameters>
-      </method>
-      <method name="is_valid" c:identifier="gst_vulkan_video_profile_is_valid" version="1.24" introspectable="0">
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">%TRUE if @profile is correct and matches with @codec</doc>
-          <type name="gboolean" c:type="gboolean"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="profile" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">the output profile</doc>
-            <type name="VulkanVideoProfile" c:type="GstVulkanVideoProfile*"/>
-          </instance-parameter>
-          <parameter name="codec" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">VkVideoCodecOperationFlagBitsKHR described by @profile</doc>
-            <type name="guint" c:type="guint"/>
-          </parameter>
-        </parameters>
-      </method>
-      <method name="to_caps" c:identifier="gst_vulkan_video_profile_to_caps" version="1.24" introspectable="0">
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
-        <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">a #GstCaps from @profile</doc>
-          <type name="Gst.Caps" c:type="GstCaps*"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="profile" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">#GstVulkanVideoProfile to convert into a #GstCaps</doc>
-            <type name="VulkanVideoProfile" c:type="const GstVulkanVideoProfile*"/>
-          </instance-parameter>
-        </parameters>
-      </method>
-      <function name="from_caps" c:identifier="gst_vulkan_video_profile_from_caps" version="1.24" introspectable="0">
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">%TRUE if @caps was parsed correctly, otherwise %FALSE</doc>
-          <type name="gboolean" c:type="gboolean"/>
-        </return-value>
-        <parameters>
-          <parameter name="profile" direction="out" caller-allocates="1" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">the output profile</doc>
-            <type name="VulkanVideoProfile" c:type="GstVulkanVideoProfile*"/>
-          </parameter>
-          <parameter name="caps" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">a #GstCaps to parse</doc>
-            <type name="Gst.Caps" c:type="GstCaps*"/>
-          </parameter>
-          <parameter name="video_operation" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">a supported video operation</doc>
-            <type name="VulkanVideoOperation" c:type="GstVulkanVideoOperation"/>
-          </parameter>
-        </parameters>
-      </function>
     </record>
     <class name="VulkanWindow" c:symbol-prefix="vulkan_window" c:type="GstVulkanWindow" version="1.18" parent="Gst.Object" abstract="1" glib:type-name="GstVulkanWindow" glib:get-type="gst_vulkan_window_get_type" glib:type-struct="VulkanWindowClass">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h">#GstVulkanWindow is an opaque struct and should only be accessed through the
@@ -7914,27 +7751,6 @@ associated #GstVulkanFence is signalled</doc>
         <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktrash.c">the #GstMiniObject</doc>
           <type name="gpointer" c:type="gpointer"/>
-        </parameter>
-      </parameters>
-    </function>
-    <function name="vulkan_video_profile_from_caps" c:identifier="gst_vulkan_video_profile_from_caps" moved-to="VulkanVideoProfile.from_caps" version="1.24" introspectable="0">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
-      <return-value transfer-ownership="none">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">%TRUE if @caps was parsed correctly, otherwise %FALSE</doc>
-        <type name="gboolean" c:type="gboolean"/>
-      </return-value>
-      <parameters>
-        <parameter name="profile" direction="out" caller-allocates="1" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">the output profile</doc>
-          <type name="VulkanVideoProfile" c:type="GstVulkanVideoProfile*"/>
-        </parameter>
-        <parameter name="caps" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">a #GstCaps to parse</doc>
-          <type name="Gst.Caps" c:type="GstCaps*"/>
-        </parameter>
-        <parameter name="video_operation" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">a supported video operation</doc>
-          <type name="VulkanVideoOperation" c:type="GstVulkanVideoOperation"/>
         </parameter>
       </parameters>
     </function>

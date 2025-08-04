@@ -22,9 +22,8 @@
 #include "config.h"
 #endif
 
-#include "gstvkvideoutils.h"
+#include "gstvkvideoutils-private.h"
 
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
 /* *INDENT-OFF* */
 static const struct {
   GstVulkanVideoOperation video_operation;
@@ -94,7 +93,6 @@ static const struct {
 };
 
 /* *INDENT-ON* */
-#endif
 
 /**
  * gst_vulkan_video_profile_to_caps: (skip)
@@ -107,7 +105,6 @@ static const struct {
 GstCaps *
 gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
 {
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   const char *mime = NULL, *chroma_sub = NULL;
   const char *profile_str = NULL, *layout = NULL;
   int i, luma = 0, chroma = 0;
@@ -218,9 +215,6 @@ gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
     gst_caps_set_simple (caps, "interlace-mode", G_TYPE_STRING, layout, NULL);
 
   return caps;
-
-#endif
-  return NULL;
 }
 
 /**
@@ -237,7 +231,6 @@ gboolean
 gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
     GstCaps * caps, GstVulkanVideoOperation video_operation)
 {
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   const GstStructure *structure;
   const gchar *mime, *chroma_sub, *profile_str = NULL, *layout = NULL;
   gint i, luma, chroma;
@@ -386,7 +379,6 @@ gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
   }
   if (i == G_N_ELEMENTS (bit_depth_map))
     return FALSE;
-#endif
   return TRUE;
 }
 
@@ -402,7 +394,6 @@ gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
 gboolean
 gst_vulkan_video_profile_is_valid (GstVulkanVideoProfile * profile, guint codec)
 {
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   int i;
   VkVideoCodecOperationFlagBitsKHR op = codec;
   VkStructureType stype = VK_STRUCTURE_TYPE_MAX_ENUM;
@@ -427,9 +418,6 @@ gst_vulkan_video_profile_is_valid (GstVulkanVideoProfile * profile, guint codec)
     return FALSE;
 
   return TRUE;
-
-#endif
-  return FALSE;
 }
 
 /**
@@ -443,7 +431,6 @@ gboolean
 gst_vulkan_video_profile_is_equal (const GstVulkanVideoProfile * a,
     const GstVulkanVideoProfile * b)
 {
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   gboolean profile;
 
   g_return_val_if_fail (a && b, FALSE);
@@ -468,7 +455,4 @@ gst_vulkan_video_profile_is_equal (const GstVulkanVideoProfile * a,
   }
 
   g_assert_not_reached ();
-#else
-  return FALSE;
-#endif
 }

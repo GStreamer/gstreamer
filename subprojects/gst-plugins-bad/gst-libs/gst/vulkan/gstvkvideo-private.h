@@ -22,7 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/vulkan/gstvkapi.h>
-#include <gst/vulkan/gstvkvideoutils.h>
+#include "gstvkvideoutils-private.h"
 
 G_BEGIN_DECLS
 

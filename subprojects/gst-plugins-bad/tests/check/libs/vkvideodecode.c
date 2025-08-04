@@ -27,6 +27,7 @@
 #include <gst/vulkan/vulkan.h>
 
 #include "gst/vulkan/gstvkdecoder-private.h"
+#include "gst/vulkan/gstvkvideoutils-private.h"
 
 static GstVulkanInstance *instance;
 static GstVulkanDevice *device;
