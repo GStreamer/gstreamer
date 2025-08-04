@@ -24,6 +24,7 @@
 #include <wrl.h>
 #include <atomic>
 #include <string>
+#include <mutex>
 
 /* Copy of audioclientactivationparams.h since those types are defined only for
  * NTDDI_VERSION >= NTDDI_WIN10_FE */
@@ -85,6 +86,7 @@ private:
 private:
   Microsoft::WRL::ComPtr<IAudioClient> client_;
   std::atomic<HRESULT> activate_hr_ = { E_FAIL };
+  std::mutex lock_;
   HANDLE event_;
   PROPVARIANT prop_ = { };
   AUDIOCLIENT_ACTIVATION_PARAMS params_ = { };
