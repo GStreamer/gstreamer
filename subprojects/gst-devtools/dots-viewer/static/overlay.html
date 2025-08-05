@@ -65,6 +65,10 @@ furnished to do so, subject to the following conditions:
 
         graphDiv.addEventListener('mousedown', function(e) {
           if (e.target.tagName === 'text' || e.target.tagName === 'tspan') {
+            if (e.target.textContent && e.target.textContent.startsWith("pipeline-dot=") && e.target.textContent.includes(".dot")) {
+              // Let the pipeline dot click handler take precedence
+              return;
+            }
             e.stopPropagation();
             // Allow normal text selection behavior
             return true;
@@ -73,14 +77,17 @@ furnished to do so, subject to the following conditions:
 
         graphDiv.addEventListener('mouseover', function(e) {
           if (e.target.tagName === 'text' || e.target.tagName === 'tspan') {
-            e.target.style.cursor = 'text';
+            if (!(e.target.textContent && e.target.textContent.startsWith("pipeline-dot=") && e.target.textContent.includes(".dot"))) {
+              e.target.style.cursor = 'text';
+            }
           }
         });
 
         graphDiv.addEventListener('mouseout', function(e) {
           if (e.target.tagName === 'text' || e.target.tagName === 'tspan') {
-            // Reset cursor when leaving text elements
-            e.target.style.cursor = '';
+            if (!(e.target.textContent && e.target.textContent.startsWith("pipeline-dot=") && e.target.textContent.includes(".dot"))) {
+              e.target.style.cursor = '';
+            }
           }
         });
       }
@@ -124,6 +131,53 @@ furnished to do so, subject to the following conditions:
               downloadLink.click();
               document.body.removeChild(downloadLink);
               URL.revokeObjectURL(url);
+            });
+
+            // Make pipeline dot references clickable for navigation between pipeline views
+            $("#graph svg .cluster").each(function() {
+              $(this).find("text, tspan").each(function() {
+                var element = this;
+                if (element.textContent && element.textContent.startsWith("pipeline-dot=") && element.textContent.includes(".dot")) {
+                  // Extract the pipeline dot filename from the text
+                  var pipelineDot = element.textContent;
+                  if (pipelineDot.includes("pipeline-dot=\"")) {
+                    pipelineDot = pipelineDot.replace(/pipeline-dot="([^"]+)"/, "$1");
+                  } else {
+                    pipelineDot = pipelineDot.replace(/pipeline-dot=([^\s]+)/, "$1");
+                  }
+
+                  // Style as a clickable link
+                  $(element).css({
+                    'text-decoration': 'underline',
+                    'cursor': 'pointer',
+                    'color': '#007acc'
+                  });
+
+                  // Add click handler for navigation
+                  $(element).off('click.pipeline-nav').on('click.pipeline-nav', function(evt) {
+                    evt.preventDefault();
+                    evt.stopPropagation();
+                    var newUrl = window.location.origin + "/?pipeline=" + encodeURIComponent(pipelineDot);
+                    window.location.href = newUrl;
+                  });
+
+                  // Add hover effects
+                  $(element).hover(
+                    function() {
+                      $(this).css({
+                        'color': '#0056b3',
+                        'cursor': 'pointer'
+                      });
+                    },
+                    function() {
+                      $(this).css({
+                        'color': '#007acc',
+                        'cursor': 'pointer'
+                      });
+                    }
+                  );
+                }
+              });
             });
           }
         });
