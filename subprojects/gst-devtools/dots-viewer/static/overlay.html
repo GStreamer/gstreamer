@@ -59,7 +59,36 @@ furnished to do so, subject to the following conditions:
       let searchParams = new URLSearchParams(url.search);
       document.getElementById("title").innerHTML = searchParams.get("title");
 
+      // Make text selection work while preserving drag functionality
+      function setupTextSelectionWithDrag() {
+        const graphDiv = document.getElementById('graph');
+
+        graphDiv.addEventListener('mousedown', function(e) {
+          if (e.target.tagName === 'text' || e.target.tagName === 'tspan') {
+            e.stopPropagation();
+            // Allow normal text selection behavior
+            return true;
+          }
+        }, true);
+
+        graphDiv.addEventListener('mouseover', function(e) {
+          if (e.target.tagName === 'text' || e.target.tagName === 'tspan') {
+            e.target.style.cursor = 'text';
+          }
+        });
+
+        graphDiv.addEventListener('mouseout', function(e) {
+          if (e.target.tagName === 'text' || e.target.tagName === 'tspan') {
+            // Reset cursor when leaving text elements
+            e.target.style.cursor = '';
+          }
+        });
+      }
+
       $(document).ready(function(){
+        // Setup text selection behavior
+        setupTextSelectionWithDrag();
+
         $("#graph").graphviz({
           url: searchParams.get("svg"),
           ready: function() {
