@@ -550,7 +550,8 @@ existing_rendition_stream (GList * streams, GstHLSRenditionStream * media)
     if (demux_stream->rendition_type == stream_type) {
       if (!g_strcmp0 (demux_stream->name, media->name))
         return demux_stream;
-      if (media->lang && !g_strcmp0 (demux_stream->lang, media->lang))
+      if (media->name == NULL && media->lang
+          && !g_strcmp0 (demux_stream->lang, media->lang))
         return demux_stream;
     }
   }
