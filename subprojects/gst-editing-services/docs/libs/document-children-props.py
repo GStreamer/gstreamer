@@ -42,8 +42,18 @@ def get_enum_values_from_property(prop):
 
     values = []
 
+    # In some cases there are 'gaps' like in the GstBaseTextOverlayHAlign where
+    # value 3 is GST_BASE_TEXT_OVERLAY_HALIGN_UNUSED - so we need to compensate
+    # for the gap
+    n_values = enum_class.n_values
+    for i in range(n_values):
+        try:
+            enum_type(i)
+        except Exception:
+            n_values += 1
+
     # Get all enum values by creating them with integer values
-    for i in range(enum_class.n_values):
+    for i in range(n_values):
         try:
             # For other values, create them using the enum type
             enum_val = enum_type(i)
@@ -56,9 +66,9 @@ def get_enum_values_from_property(prop):
                     first_val = enum_class.values
                     values.append((first_val.value, first_val.value_name, first_val.value_nick))
                 except Exception:
-                    values.append((i, f"Value_{i}", f"value-{i}"))
+                    continue
             else:
-                values.append((i, f"Value_{i}", f"value-{i}"))
+                continue
 
     return values
 
@@ -98,7 +108,6 @@ if __name__ == "__main__":
             element, gtype = element
         else:
             gtype = element.__gtype__.name
-        print(gtype)
         with open(gtype + '-children-props.md', 'w') as f:
             for prop in GES.TimelineElement.list_children_properties(element):
                 prefix = '#### `%s`\n\n' % (prop.name)
