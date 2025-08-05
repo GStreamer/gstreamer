@@ -87,7 +87,7 @@ value_to_string (const GValue * v)
 
   if (G_VALUE_HOLDS_STRING (v)) {
     s = g_value_get_string (v);
-    need_serialize = !g_str_is_ascii (s);
+    need_serialize = !g_utf8_validate (s, -1, NULL);
   } else {
     need_serialize = TRUE;
   }
