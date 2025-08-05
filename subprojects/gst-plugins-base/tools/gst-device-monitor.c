@@ -80,12 +80,20 @@ do_shell_quote (const char *s)
 static char *
 value_to_string (const GValue * v)
 {
-  const char *d, *s = g_value_get_string (v);
+  const char *d, *s = NULL;
   char *ret, *ser = NULL;
   gboolean need_quote = FALSE;
+  gboolean need_serialize = FALSE;
+
+  if (G_VALUE_HOLDS_STRING (v)) {
+    s = g_value_get_string (v);
+    need_serialize = !g_str_is_ascii (s);
+  } else {
+    need_serialize = TRUE;
+  }
 
   /* Don't mess around if the value is weird */
-  if (!G_VALUE_HOLDS_STRING (v) || !g_str_is_ascii (s)) {
+  if (need_serialize) {
     ser = gst_value_serialize (v);
     ret = do_shell_quote (ser);
     g_free (ser);
