@@ -643,6 +643,14 @@ G_STMT_START{                                        \
  * Initializes a new #GstDebugCategory with the given properties and set to
  * the default threshold.
  *
+ * If your element uses static features, this should be called in
+ * `class_init()` for the feature, and not in `plugin_init()` since that will
+ * not be called if a static feature is registered manually.
+ *
+ * If you need to share the same category across multiple features, you can
+ * move the call to a shared function and use #GOnce to make it re-entrant so
+ * that the category is initialized exactly once.
+ *
  * > This macro expands to nothing if debugging is disabled.
  * >
  * > When naming your category, please follow the following conventions to ensure
