@@ -3620,7 +3620,7 @@ restart:
         } else if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
           /* If there is a pending next period, don't send the EOS */
           if (demux->output_period->has_next_period) {
-            GST_LOG_OBJECT (track->id, "Dropping EOS before next period");
+            GST_LOG_ID (track->id, "Dropping EOS before next period");
             gst_event_store_mark_delivered (&track->sticky_events, event);
             gst_event_unref (event);
             event = NULL;
