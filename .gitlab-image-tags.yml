@@ -5,12 +5,12 @@ variables:
   # If you are hacking on them or need a them to rebuild, its enough
   # to change any part of the string of the image you want.
   ###
-  FEDORA_TAG:  '2025-07-16.0-fluster-kernel'
+  FEDORA_TAG:  '2025-08-10.0-fluster-kernel'
 
-  DEBIAN_TAG:  '2025-07-01.0'
+  DEBIAN_TAG:  '2025-08-10.0'
 
   CHECKS_TAG: '2025-05-24.0'
 
   ABI_CHECK_TAG: '2025-08-05.0'
 
-  WINDOWS_TAG: '2025-07-03.0'
+  WINDOWS_TAG: '2025-08-10.0'
