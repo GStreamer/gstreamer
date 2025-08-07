@@ -973,10 +973,10 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
     goto error;
   }
 
-  if (ts_pad->stream && st != ts_pad->stream->stream_type) {
+  if (ts_pad->stream && st != ts_pad->stream->internal_stream_type) {
     GST_ELEMENT_ERROR (mux, STREAM, MUX,
         ("Stream type change from %02x to %02x not supported",
-            ts_pad->stream->stream_type, st), NULL);
+            ts_pad->stream->internal_stream_type, st), NULL);
     goto error;
   }
 
