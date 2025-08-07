@@ -763,6 +763,46 @@ GST_START_TEST (parser_convert_duration)
 
 GST_END_TEST;
 
+GST_START_TEST (parser_sticky_events_after_flush)
+{
+  GstHarness *h;
+  GstEvent *e;
+  GstSegment segment;
+  GstStreamCollection *collection;
+
+  parsetest = g_object_new (GST_PARSER_TESTER_TYPE, NULL);
+
+  h = gst_harness_new_with_element (parsetest, "sink", "src");
+  gst_harness_set_caps (h, gst_caps_new_empty_simple ("video/x-test-custom"),
+      gst_caps_new_empty_simple ("video/x-test-custom"));
+
+  collection = gst_stream_collection_new ("test");
+  fail_unless (gst_harness_push_event (h,
+          gst_event_new_stream_collection (collection)));
+  gst_object_unref (collection);
+
+  fail_unless (gst_harness_push_event (h, gst_event_new_flush_start ()));
+  fail_unless (gst_harness_push_event (h, gst_event_new_flush_stop (FALSE)));
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_harness_push_event (h, gst_event_new_segment (&segment)));
+  fail_unless (gst_harness_push (h, create_test_buffer (1)) == GST_FLOW_OK);
+
+  // FLUSH_STOP should not clear STREAM_COLLECTION
+  while (TRUE) {
+    fail_unless (e = gst_harness_pull_event (h));
+    if (GST_EVENT_TYPE (e) == GST_EVENT_STREAM_COLLECTION)
+      break;
+    gst_event_unref (e);
+  }
+  gst_event_unref (e);
+
+  gst_harness_teardown (h);
+  gst_object_unref (parsetest);
+}
+
+GST_END_TEST;
+
 
 static void
 baseparse_setup (void)
@@ -797,6 +837,7 @@ gst_baseparse_suite (void)
   tcase_add_test (tc, parser_pull_frame_growth);
   tcase_add_test (tc, parser_initial_gap_prefer_upstream_caps);
   tcase_add_test (tc, parser_convert_duration);
+  tcase_add_test (tc, parser_sticky_events_after_flush);
 
   return s;
 }
