@@ -1295,6 +1295,16 @@ CUDA device/host memory</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
+    <constant name="MAP_READ_CUDA" value="131073" c:type="GST_MAP_READ_CUDA" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h">GstMapFlags value alias for GST_MAP_READ | GST_MAP_CUDA</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>
+      <type name="Gst.MapFlags" c:type="GstMapFlags"/>
+    </constant>
+    <constant name="MAP_WRITE_CUDA" value="131074" c:type="GST_MAP_WRITE_CUDA" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h">GstMapFlags value alias for GST_MAP_WRITE | GST_MAP_CUDA</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>
+      <type name="Gst.MapFlags" c:type="GstMapFlags"/>
+    </constant>
     <function name="buffer_pool_config_get_cuda_alloc_method" c:identifier="gst_buffer_pool_config_get_cuda_alloc_method" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudabufferpool.cpp">Gets configured allocation method</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudabufferpool.h"/>

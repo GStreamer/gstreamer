@@ -84,6 +84,24 @@ typedef struct _GstCudaPoolAllocatorPrivate GstCudaPoolAllocatorPrivate;
 #define GST_MAP_CUDA (GST_MAP_FLAG_LAST << 1)
 
 /**
+ * GST_MAP_READ_CUDA: (value 131073) (type GstMapFlags)
+ *
+ * GstMapFlags value alias for GST_MAP_READ | GST_MAP_CUDA
+ *
+ * Since: 1.28
+ */
+#define GST_MAP_READ_CUDA ((GstMapFlags) (GST_MAP_READ | GST_MAP_CUDA))
+
+/**
+ * GST_MAP_WRITE_CUDA: (value 131074) (type GstMapFlags)
+ *
+ * GstMapFlags value alias for GST_MAP_WRITE | GST_MAP_CUDA
+ *
+ * Since: 1.28
+ */
+#define GST_MAP_WRITE_CUDA ((GstMapFlags) (GST_MAP_WRITE | GST_MAP_CUDA))
+
+/**
  * GST_CUDA_MEMORY_TYPE_NAME:
  *
  * Name of cuda memory type
