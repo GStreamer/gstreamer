@@ -320,6 +320,12 @@ GstMemory *     gst_cuda_allocator_alloc    (GstCudaAllocator * allocator,
                                              const GstVideoInfo * info);
 
 GST_CUDA_API
+GstMemory *     gst_cuda_allocator_alloc_stream_ordered (GstCudaAllocator * allocator,
+                                                         GstCudaContext * context,
+                                                         GstCudaStream * stream,
+                                                         const GstVideoInfo * info);
+
+GST_CUDA_API
 gboolean        gst_cuda_allocator_set_active (GstCudaAllocator * allocator,
                                                gboolean active);
 

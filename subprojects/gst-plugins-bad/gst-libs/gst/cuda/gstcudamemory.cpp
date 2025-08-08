@@ -1169,6 +1169,42 @@ gst_cuda_allocator_alloc (GstCudaAllocator * allocator,
 }
 
 /**
+ * gst_cuda_allocator_alloc_stream_ordered:
+ * @allocator: (transfer none) (allow-none): a #GstCudaAllocator
+ * @context: (transfer none): a #GstCudaContext
+ * @stream: (transfer none): a #GstCudaStream
+ * @info: a #GstVideoInfo
+ *
+ * Returns: (transfer full) (nullable): a newly allocated #GstCudaMemory
+ *
+ * Since: 1.28
+ */
+GstMemory *
+gst_cuda_allocator_alloc_stream_ordered (GstCudaAllocator * allocator,
+    GstCudaContext * context, GstCudaStream * stream, const GstVideoInfo * info)
+{
+  guint alloc_height;
+
+  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), nullptr);
+  g_return_val_if_fail (GST_IS_CUDA_STREAM (stream), nullptr);
+  g_return_val_if_fail (info != nullptr, nullptr);
+
+  if (stream->context != context) {
+    GST_ERROR_OBJECT (context,
+        "stream object is holding different CUDA context");
+    return nullptr;
+  }
+
+  if (!allocator)
+    allocator = (GstCudaAllocator *) _gst_cuda_allocator;
+
+  alloc_height = gst_cuda_allocator_calculate_alloc_height (info);
+
+  return gst_cuda_allocator_alloc_internal (allocator, context, stream,
+      info, info->stride[0], alloc_height, TRUE, nullptr);
+}
+
+/**
  * gst_cuda_allocator_set_active:
  * @allocator: a #GstCudaAllocator
  * @active: the new active state

@@ -205,6 +205,31 @@ This method is conceptually identical to gst_buffer_pool_set_active method.</doc
           </parameter>
         </parameters>
       </method>
+      <method name="alloc_stream_ordered" c:identifier="gst_cuda_allocator_alloc_stream_ordered" version="1.28">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">a newly allocated #GstCudaMemory</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="allocator" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">a #GstCudaAllocator</doc>
+            <type name="CudaAllocator" c:type="GstCudaAllocator*"/>
+          </instance-parameter>
+          <parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">a #GstCudaContext</doc>
+            <type name="CudaContext" c:type="GstCudaContext*"/>
+          </parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">a #GstCudaStream</doc>
+            <type name="CudaStream" c:type="GstCudaStream*"/>
+          </parameter>
+          <parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">a #GstVideoInfo</doc>
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="alloc_wrapped" c:identifier="gst_cuda_allocator_alloc_wrapped" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">Allocates a new memory that wraps the given CUDA device memory.
 
