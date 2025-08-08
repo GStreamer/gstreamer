@@ -64,3 +64,10 @@ Validate testfile will define some variables to make those files relocable:
                   different sinks for the audio. It allows the tool to use
                   fakesinks when the user doesn't want to have audio feedback
                   for example.
+
+## `tested-elements`
+
+To register action types for specific GStreamer plugins and elements this field
+can be used so GstValidate will ensure that the `class_init` function of that
+specific element will be called before running the scenario. Such elements
+should register action types from there.

@@ -606,6 +606,21 @@ gst_validate_get_test_file_scenario (GList ** structs,
     res = g_list_append (res, structure);
   }
 
+  gchar **elements = gst_validate_utils_get_strv (meta, "tested-elements");
+  for (gint i = 0; elements && elements[i]; i++) {
+    GstElementFactory *element_factory = gst_element_factory_find (elements[i]);
+
+    if (!element_factory)
+      gst_validate_abort ("Element `%s` required but not found", elements[i]);
+
+    /* Ensure that the element class_init function is called */
+    g_type_class_unref (g_type_class_ref (gst_element_factory_get_element_type
+            (element_factory)));
+
+    gst_object_unref (element_factory);
+  }
+  g_strfreev (elements);
+
   *structs = res;
   *original_name = global_testfile;
   testfile_used = TRUE;
