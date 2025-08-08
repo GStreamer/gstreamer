@@ -752,7 +752,7 @@ gst_wasapi2_enumerator_execute (GstWasapi2Enumerator * self,
     props.form_factor = UnknownFormFactor;
     props.enumerator_name = "UNKNOWN";
 
-    if (default_capture_prop)
+    if (default_render_prop)
       gst_wasapi2_enumerator_probe_props (default_render_prop.Get (), &props);
 
     gst_wasapi2_enumerator_add_entry (self, default_render_client.Get (),
