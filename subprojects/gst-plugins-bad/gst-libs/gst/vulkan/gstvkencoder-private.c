@@ -26,9 +26,6 @@
 
 #include "gstvkvideo-private.h"
 
-extern const VkExtensionProperties vk_codec_extensions[3];
-extern const uint32_t _vk_codec_supported_extensions[4];
-
 typedef struct _GstVulkanEncoderPrivate GstVulkanEncoderPrivate;
 
 struct _GstVulkanEncoderPrivate
