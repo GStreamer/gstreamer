@@ -44,10 +44,12 @@ struct ConstBuffer
   float border_z;
   float border_w;
   int fill_border;
-  int video_direction;
   float alpha;
   int do_blend;
   int do_convert;
+  float transform_u[2];
+  float transform_v[2];
+  float transform_offset[2];
 };
 
 __device__ inline float
@@ -1351,76 +1353,6 @@ struct OutputVUYA : public IOutput
   }
 };
 
-__device__ inline float2
-rotate_identity (float x, float y)
-{
-  return make_float2(x, y);
-}
-
-__device__ inline float2
-rotate_90r (float x, float y)
-{
-  return make_float2(y, 1.0 - x);
-}
-
-__device__ inline float2
-rotate_180 (float x, float y)
-{
-  return make_float2(1.0 - x, 1.0 - y);
-}
-
-__device__ inline float2
-rotate_90l (float x, float y)
-{
-  return make_float2(1.0 - y, x);
-}
-
-__device__ inline float2
-rotate_horiz (float x, float y)
-{
-  return make_float2(1.0 - x, y);
-}
-
-__device__ inline float2
-rotate_vert (float x, float y)
-{
-  return make_float2(x, 1.0 - y);
-}
-
-__device__ inline float2
-rotate_ul_lr (float x, float y)
-{
-  return make_float2(y, x);
-}
-
-__device__ inline float2
-rotate_ur_ll (float x, float y)
-{
-  return make_float2(1.0 - y, 1.0 - x);
-}
-__device__ inline float2
-do_rotate (float x, float y, int direction)
-{
-  switch (direction) {
-    case 1:
-      return rotate_90r (x, y);
-    case 2:
-      return rotate_180 (x, y);
-    case 3:
-      return rotate_90l (x, y);
-    case 4:
-      return rotate_horiz (x, y);
-    case 5:
-      return rotate_vert (x, y);
-    case 6:
-      return rotate_ul_lr (x, y);
-    case 7:
-      return rotate_ur_ll (x, y);
-    default:
-      return rotate_identity (x, y);
-  }
-}
-
 extern "C" {
 __global__ void
 GstCudaConverterMain (cudaTextureObject_t tex0, cudaTextureObject_t tex1,
@@ -1450,7 +1382,11 @@ GstCudaConverterMain (cudaTextureObject_t tex0, cudaTextureObject_t tex1,
     float y = (__int2float_rz (y_pos - const_buf.top) + 0.5) / const_buf.view_height;
     if (y < 0.0 || y > 1.0)
       return;
-    float2 rotated = do_rotate (x, y, const_buf.video_direction);
+    float2 rotated;
+    rotated.x = fmaf (x, const_buf.transform_u[0],
+        fmaf (y, const_buf.transform_v[0], const_buf.transform_offset[0]));
+    rotated.y = fmaf (x, const_buf.transform_u[1],
+        fmaf (y, const_buf.transform_v[1], const_buf.transform_offset[1]));
     float4 s = g_sampler.Execute (tex0, tex1, tex2, tex3, rotated.x, rotated.y);
     float3 rgb = make_float3 (s.x, s.y, s.z);
     float3 yuv;
@@ -1496,10 +1432,12 @@ static const char GstCudaConverterMain_str[] =
 "  float border_z;\n"
 "  float border_w;\n"
 "  int fill_border;\n"
-"  int video_direction;\n"
 "  float alpha;\n"
 "  int do_blend;\n"
 "  int do_convert;\n"
+"  float transform_u[2];\n"
+"  float transform_v[2];\n"
+"  float transform_offset[2];\n"
 "};\n"
 "\n"
 "__device__ inline float\n"
@@ -2803,76 +2741,6 @@ static const char GstCudaConverterMain_str[] =
 "  }\n"
 "};\n"
 "\n"
-"__device__ inline float2\n"
-"rotate_identity (float x, float y)\n"
-"{\n"
-"  return make_float2(x, y);\n"
-"}\n"
-"\n"
-"__device__ inline float2\n"
-"rotate_90r (float x, float y)\n"
-"{\n"
-"  return make_float2(y, 1.0 - x);\n"
-"}\n"
-"\n"
-"__device__ inline float2\n"
-"rotate_180 (float x, float y)\n"
-"{\n"
-"  return make_float2(1.0 - x, 1.0 - y);\n"
-"}\n"
-"\n"
-"__device__ inline float2\n"
-"rotate_90l (float x, float y)\n"
-"{\n"
-"  return make_float2(1.0 - y, x);\n"
-"}\n"
-"\n"
-"__device__ inline float2\n"
-"rotate_horiz (float x, float y)\n"
-"{\n"
-"  return make_float2(1.0 - x, y);\n"
-"}\n"
-"\n"
-"__device__ inline float2\n"
-"rotate_vert (float x, float y)\n"
-"{\n"
-"  return make_float2(x, 1.0 - y);\n"
-"}\n"
-"\n"
-"__device__ inline float2\n"
-"rotate_ul_lr (float x, float y)\n"
-"{\n"
-"  return make_float2(y, x);\n"
-"}\n"
-"\n"
-"__device__ inline float2\n"
-"rotate_ur_ll (float x, float y)\n"
-"{\n"
-"  return make_float2(1.0 - y, 1.0 - x);\n"
-"}\n"
-"__device__ inline float2\n"
-"do_rotate (float x, float y, int direction)\n"
-"{\n"
-"  switch (direction) {\n"
-"    case 1:\n"
-"      return rotate_90r (x, y);\n"
-"    case 2:\n"
-"      return rotate_180 (x, y);\n"
-"    case 3:\n"
-"      return rotate_90l (x, y);\n"
-"    case 4:\n"
-"      return rotate_horiz (x, y);\n"
-"    case 5:\n"
-"      return rotate_vert (x, y);\n"
-"    case 6:\n"
-"      return rotate_ul_lr (x, y);\n"
-"    case 7:\n"
-"      return rotate_ur_ll (x, y);\n"
-"    default:\n"
-"      return rotate_identity (x, y);\n"
-"  }\n"
-"}\n"
-"\n"
 "extern \"C\" {\n"
 "__global__ void\n"
 "GstCudaConverterMain (cudaTextureObject_t tex0, cudaTextureObject_t tex1,\n"
@@ -2902,7 +2770,11 @@ static const char GstCudaConverterMain_str[] =
 "    float y = (__int2float_rz (y_pos - const_buf.top) + 0.5) / const_buf.view_height;\n"
 "    if (y < 0.0 || y > 1.0)\n"
 "      return;\n"
-"    float2 rotated = do_rotate (x, y, const_buf.video_direction);\n"
+"    float2 rotated;\n"
+"    rotated.x = fmaf (x, const_buf.transform_u[0],\n"
+"        fmaf (y, const_buf.transform_v[0], const_buf.transform_offset[0]));\n"
+"    rotated.y = fmaf (x, const_buf.transform_u[1],\n"
+"        fmaf (y, const_buf.transform_v[1], const_buf.transform_offset[1]));\n"
 "    float4 s = g_sampler.Execute (tex0, tex1, tex2, tex3, rotated.x, rotated.y);\n"
 "    float3 rgb = make_float3 (s.x, s.y, s.z);\n"
 "    float3 yuv;\n"

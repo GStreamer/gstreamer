@@ -61,6 +61,9 @@ struct _GstCudaBaseConvert
   gint borders_h;
   gint borders_w;
   gboolean add_borders;
+  gboolean downstream_supports_crop_meta;
+  gboolean same_caps;
+  GstVideoRectangle in_rect;
 
   /* orientation */
   /* method configured via property */
@@ -86,10 +89,12 @@ gst_cuda_base_convert_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query);
 static gboolean gst_cuda_base_convert_decide_allocation (GstBaseTransform *
     trans, GstQuery * query);
-static gboolean gst_cuda_base_convert_filter_meta (GstBaseTransform * trans,
-    GstQuery * query, GType api, const GstStructure * params);
+static gboolean gst_cuda_base_convert_transform_meta (GstBaseTransform * trans,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
 static GstFlowReturn gst_cuda_base_convert_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
+static GstFlowReturn gst_cuda_base_convert_generate_output (GstBaseTransform *
+    trans, GstBuffer ** buffer);
 static gboolean gst_cuda_base_convert_set_info (GstCudaBaseTransform * btrans,
     GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
     GstVideoInfo * out_info);
@@ -122,7 +127,7 @@ gst_cuda_base_convert_class_init (GstCudaBaseConvertClass * klass)
   gst_element_class_add_static_pad_template (element_class, &sink_template);
   gst_element_class_add_static_pad_template (element_class, &src_template);
 
-  trans_class->passthrough_on_same_caps = TRUE;
+  trans_class->passthrough_on_same_caps = FALSE;
 
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_cuda_base_convert_transform_caps);
@@ -132,9 +137,11 @@ gst_cuda_base_convert_class_init (GstCudaBaseConvertClass * klass)
       GST_DEBUG_FUNCPTR (gst_cuda_base_convert_propose_allocation);
   trans_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_cuda_base_convert_decide_allocation);
-  trans_class->filter_meta =
-      GST_DEBUG_FUNCPTR (gst_cuda_base_convert_filter_meta);
+  trans_class->transform_meta =
+      GST_DEBUG_FUNCPTR (gst_cuda_base_convert_transform_meta);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_cuda_base_convert_transform);
+  trans_class->generate_output =
+      GST_DEBUG_FUNCPTR (gst_cuda_base_convert_generate_output);
 
   btrans_class->set_info = GST_DEBUG_FUNCPTR (gst_cuda_base_convert_set_info);
 
@@ -1173,9 +1180,14 @@ gst_cuda_base_convert_propose_allocation (GstBaseTransform * trans,
           decide_query, query))
     return FALSE;
 
-  /* passthrough, we're done */
-  if (decide_query == NULL)
+  if (self->same_caps) {
+    if (!gst_pad_peer_query (trans->srcpad, query))
+      return FALSE;
+
+    gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+    gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
     return TRUE;
+  }
 
   gst_query_parse_allocation (query, &caps, NULL);
 
@@ -1223,6 +1235,7 @@ gst_cuda_base_convert_propose_allocation (GstBaseTransform * trans,
   }
 
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
 
   return TRUE;
 }
@@ -1243,6 +1256,11 @@ gst_cuda_base_convert_decide_allocation (GstBaseTransform * trans,
 
   if (!outcaps)
     return FALSE;
+
+  self->downstream_supports_crop_meta = gst_query_find_allocation_meta (query,
+      GST_VIDEO_CROP_META_API_TYPE, NULL);
+  GST_DEBUG_OBJECT (self, "Downstream crop meta support: %d",
+      self->downstream_supports_crop_meta);
 
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
@@ -1348,6 +1366,12 @@ gst_cuda_base_convert_set_info (GstCudaBaseTransform * btrans,
   if (active_method != GST_VIDEO_ORIENTATION_IDENTITY)
     need_flip = TRUE;
 
+  if (!need_flip && gst_caps_is_equal (incaps, outcaps)) {
+    self->same_caps = TRUE;
+  } else {
+    self->same_caps = FALSE;
+  }
+
   switch (active_method) {
     case GST_VIDEO_ORIENTATION_90R:
     case GST_VIDEO_ORIENTATION_90L:
@@ -1413,23 +1437,21 @@ gst_cuda_base_convert_set_info (GstCudaBaseTransform * btrans,
       && in_info->finfo == out_info->finfo && self->borders_w == 0 &&
       self->borders_h == 0 && !need_flip &&
       !needs_color_convert (in_info, out_info)) {
-    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (self), TRUE);
-  } else {
-    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (self), FALSE);
-
-    self->converter = gst_cuda_converter_new (in_info,
-        out_info, btrans->context, NULL);
-    if (!self->converter) {
-      GST_ERROR_OBJECT (self, "Couldn't create converter");
-      return FALSE;
-    }
-
-    g_object_set (self->converter, "dest-x", self->borders_w / 2,
-        "dest-y", self->borders_h / 2,
-        "dest-width", out_info->width - self->borders_w,
-        "dest-height", out_info->height - self->borders_h,
-        "fill-border", TRUE, "video-direction", active_method, NULL);
+    self->same_caps = TRUE;
   }
+
+  self->converter = gst_cuda_converter_new (in_info,
+      out_info, btrans->context, NULL);
+  if (!self->converter) {
+    GST_ERROR_OBJECT (self, "Couldn't create converter");
+    return FALSE;
+  }
+
+  g_object_set (self->converter, "dest-x", self->borders_w / 2,
+      "dest-y", self->borders_h / 2,
+      "dest-width", out_info->width - self->borders_w,
+      "dest-height", out_info->height - self->borders_h,
+      "fill-border", TRUE, "video-direction", active_method, NULL);
 
   GST_DEBUG_OBJECT (self, "%s from=%dx%d (par=%d/%d dar=%d/%d), size %"
       G_GSIZE_FORMAT " -> %s to=%dx%d (par=%d/%d dar=%d/%d borders=%d:%d), "
@@ -1442,21 +1464,23 @@ gst_cuda_base_convert_set_info (GstCudaBaseTransform * btrans,
       out_info->height, out_info->par_n, out_info->par_d, to_dar_n, to_dar_d,
       self->borders_w, self->borders_h, out_info->size);
 
+  self->in_rect.x = 0;
+  self->in_rect.y = 0;
+  self->in_rect.w = in_info->width;
+  self->in_rect.h = in_info->height;
+
   return TRUE;
 }
 
 static gboolean
-gst_cuda_base_convert_filter_meta (GstBaseTransform * trans, GstQuery * query,
-    GType api, const GstStructure * params)
+gst_cuda_base_convert_transform_meta (GstBaseTransform * trans,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
 {
-  /* This element cannot passthrough the crop meta, because it would convert the
-   * wrong sub-region of the image, and worst, our output image may not be large
-   * enough for the crop to be applied later */
-  if (api == GST_VIDEO_CROP_META_API_TYPE)
+  if (meta->info->api == GST_VIDEO_CROP_META_API_TYPE)
     return FALSE;
 
-  /* propose all other metadata upstream */
-  return TRUE;
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (trans,
+      outbuf, meta, inbuf);
 }
 
 static GstFlowReturn
@@ -1472,6 +1496,20 @@ gst_cuda_base_convert_transform (GstBaseTransform * trans,
   GstCudaStream *in_stream, *out_stream;
   GstCudaStream *selected_stream = NULL;
   gboolean sync_done = FALSE;
+  GstVideoRectangle in_rect;
+
+  GstVideoCropMeta *crop_meta = gst_buffer_get_video_crop_meta (inbuf);
+  if (crop_meta) {
+    in_rect.x = crop_meta->x;
+    in_rect.y = crop_meta->y;
+    in_rect.w = crop_meta->width;
+    in_rect.h = crop_meta->height;
+  } else {
+    in_rect = self->in_rect;
+  }
+
+  g_object_set (self->converter, "src-x", in_rect.x, "src-y", in_rect.y,
+      "src-width", in_rect.w, "src-height", in_rect.h, NULL);
 
   if (gst_buffer_n_memory (inbuf) != 1) {
     GST_ERROR_OBJECT (self, "Invalid input buffer");
@@ -1554,6 +1592,35 @@ gst_cuda_base_convert_transform (GstBaseTransform * trans,
   gst_video_frame_unmap (&in_frame);
 
   return ret;
+}
+
+static GstFlowReturn
+gst_cuda_base_convert_generate_output (GstBaseTransform * trans,
+    GstBuffer ** buffer)
+{
+  GstCudaBaseConvert *self = GST_CUDA_BASE_CONVERT (trans);
+  gboolean passthrough = self->same_caps;
+
+  if (!trans->queued_buf)
+    return GST_FLOW_OK;
+
+  if (passthrough && !self->downstream_supports_crop_meta) {
+    if (gst_buffer_get_video_crop_meta (trans->queued_buf)) {
+      GST_LOG_OBJECT (self,
+          "Buffer has crop meta but downstream does not support crop");
+      passthrough = FALSE;
+    }
+  }
+
+  if (!passthrough) {
+    return GST_BASE_TRANSFORM_CLASS (parent_class)->generate_output (trans,
+        buffer);
+  }
+
+  *buffer = trans->queued_buf;
+  trans->queued_buf = NULL;
+
+  return GST_FLOW_OK;
 }
 
 static void
