@@ -1,0 +1,37 @@
+From 88629d7277139ec53e71bd54fce5e8ae8cc6fe99 Mon Sep 17 00:00:00 2001
+From: "L. E. Segovia" <amy@centricular.com>
+Date: Thu, 7 Aug 2025 20:20:29 -0300
+Subject: [PATCH] dumper: Fix introspection binaries missing rpaths for
+ uninstalled ELF shlibs
+
+Same as 6ffb7c06a35c05661dce997af4dfd83e8b3e024d, in this case
+dependencies that were resolved by pkg-config to uninstalled modules do
+not entail adding RPATH entries. This will affect gio and gmodule by
+default (see DumpCompiler.__init__), but also any dependency supplied with
+--pkg.
+
+Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4561
+---
+ giscanner/dumper.py | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/giscanner/dumper.py b/giscanner/dumper.py
+index 96bcd845..e5678637 100644
+--- a/giscanner/dumper.py
++++ b/giscanner/dumper.py
+@@ -253,9 +253,11 @@ class DumpCompiler(object):
+             args.extend(pkg_config_libs)
+             self._compiler.get_external_link_flags(args, self._options.libraries)
+ 
+-        if sys.platform == 'darwin':
++        if sys.platform in ('darwin', 'linux'):
+             # If the libraries' ID are of the form (@rpath/libfoo.dylib),
+             # then nothing previously can have added the needed rpaths
++            # For the linux case, covers when uninstalled libraries
++            # supplied transitive requirements
+             rpath_entries_to_add = [lib.replace('-L/', '-Wl,-rpath,/') for lib in pkg_config_libs if lib.startswith('-L/')]
+             args.extend(rpath_entries_to_add)
+ 
+-- 
+2.39.5 (Apple Git-154)
+
