@@ -5,7 +5,7 @@ source_fallback_url = https://ftp.acc.umu.se/pub/gnome/sources/gobject-introspec
 source_filename = gobject-introspection-1.84.0.tar.xz
 source_hash = 945b57da7ec262e5c266b89e091d14be800cc424277d82a02872b7d794a84779
 wrapdb_version = 1.84.0-0
-diff_files = gobject-introspection-1.84.0/0003-girepository-Load-typelibs-from-a-relocatable-prefix.patch, gobject-introspection-1.84.0/0004-build-Fix-b_vscrt-value-use-without-converting-it-to.patch, gobject-introspection-1.84.0/0006-tests-Fix-path-parsing-for-Windows.patch, gobject-introspection-1.84.0/0007-g-ir-tools-Support-reading-rspfiles-for-arguments.patch, gobject-introspection-1.84.0/0008-meson-Fix-fs.copyfile-semantics-breaking-GIR-build-w.patch, gobject-introspection-1.84.0/0009-giscanner-Deduplicate-arguments-and-use-response-fil.patch
+diff_files = gobject-introspection-1.84.0/0003-girepository-Load-typelibs-from-a-relocatable-prefix.patch, gobject-introspection-1.84.0/0004-build-Fix-b_vscrt-value-use-without-converting-it-to.patch, gobject-introspection-1.84.0/0006-tests-Fix-path-parsing-for-Windows.patch, gobject-introspection-1.84.0/0007-g-ir-tools-Support-reading-rspfiles-for-arguments.patch, gobject-introspection-1.84.0/0008-meson-Fix-fs.copyfile-semantics-breaking-GIR-build-w.patch, gobject-introspection-1.84.0/0009-giscanner-Deduplicate-arguments-and-use-response-fil.patch, gobject-introspection-1.84.0/0010-dumper-Fix-introspection-binaries-missing-rpaths-for.patch
 
 [provide]
 dependency_names = gobject-introspection-1.0
