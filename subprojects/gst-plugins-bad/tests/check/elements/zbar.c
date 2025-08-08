@@ -85,6 +85,8 @@ GST_START_TEST (test_still_image)
   int qual;
   const GValue *value;
   GBytes *symbol_bytes;
+  gconstpointer bytes_data;
+  gsize bytes_size;
 
   pipeline = setup_pipeline ();
 
@@ -112,8 +114,10 @@ GST_START_TEST (test_still_image)
   value = gst_structure_get_value (s, "symbol-bytes");
   fail_unless (G_VALUE_HOLDS (value, G_TYPE_BYTES));
   symbol_bytes = g_value_get_boxed (value);
-  fail_unless_equals_string (g_bytes_get_data (symbol_bytes, 0),
-      "9876543210128");
+  bytes_data = g_bytes_get_data (symbol_bytes, &bytes_size);
+  fail_unless_equals_uint64 (bytes_size, 13);
+  fail_unless (memcmp (bytes_data, "9876543210128", 13) == 0,
+      "Bad symbol-bytes data: %.13s", bytes_data);
 
   fail_if (gst_structure_has_field (s, "frame"));
 
