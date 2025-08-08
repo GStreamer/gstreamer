@@ -300,13 +300,15 @@ pkgconfig.generate(libgst,
 
 if build_gir
   gst_gir_extra_args = gir_init_section + ['--c-include=gst/gst.h']
+  gst_gir_extra_args += ['--cflags-begin',
+    '-DGST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS',
+    '--cflags-end']
   if meson.is_subproject()
     # FIXME: There must be a better way to do this
     # Need to pass the include path to find gst/gst.h and gst/gstenumtypes.h (built)
     gst_gir_extra_args += ['--cflags-begin',
       '-I' + meson.current_source_dir() + '/..',
       '-I' + meson.current_build_dir() + '/..',
-      '-DGST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS',
       '--cflags-end']
   endif
 
