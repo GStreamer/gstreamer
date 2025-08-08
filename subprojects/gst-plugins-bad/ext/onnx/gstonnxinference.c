@@ -71,12 +71,6 @@
 #include <core/providers/vsinpu/vsinpu_provider_factory.h>
 #endif
 
-#ifdef CPUPROVIDER_IN_SUBDIR
-#include <core/providers/cpu/cpu_provider_factory.h>
-#else
-#include <cpu_provider_factory.h>
-#endif
-
 typedef enum
 {
   GST_ONNX_OPTIMIZATION_LEVEL_DISABLE_ALL,
@@ -733,8 +727,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
             "Failed to create CUDA provider - dropping back to CPU: %s",
             api->GetErrorMessage (status));
         api->ReleaseStatus (status);
-        status =
-            OrtSessionOptionsAppendExecutionProvider_CPU (session_options, 1);
+        status = NULL;
       } else {
         status =
             api->SessionOptionsAppendExecutionProvider_CUDA_V2 (session_options,
@@ -744,9 +737,8 @@ gst_onnx_inference_start (GstBaseTransform * trans)
           GST_WARNING_OBJECT (self,
               "Failed to append CUDA provider - dropping back to CPU: %s",
               api->GetErrorMessage (status));
-          api->ReleaseStatus (status);
-          status =
-              OrtSessionOptionsAppendExecutionProvider_CPU (session_options, 1);
+          api->ReleaseStatus (status);;
+          status = NULL;
         }
       }
     }
@@ -764,13 +756,6 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       break;
 #endif
     default:
-      status =
-          OrtSessionOptionsAppendExecutionProvider_CPU (session_options, 1);
-      if (status) {
-        GST_ERROR_OBJECT (self, "Failed to append CPU provider: %s",
-            api->GetErrorMessage (status));
-        goto error;
-      }
       break;
   }
 

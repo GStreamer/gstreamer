@@ -52,12 +52,6 @@ if gstcuda_dep.found()
     extra_deps += [gstcuda_dep]
 endif
 
-if cc.has_header('core/providers/cpu/cpu_provider_factory.h',
-		  dependencies: onnxrt_dep,
-		  include_directories: extra_incs)
-  extra_args += ['-DCPUPROVIDER_IN_SUBDIR']
-endif
-
 if cc.has_function('OrtSessionOptionsAppendExecutionProvider_VSINPU',
 		    dependencies: onnxrt_dep) and \
    cc.has_header('core/providers/vsinpu/vsinpu_provider_factory.h',
