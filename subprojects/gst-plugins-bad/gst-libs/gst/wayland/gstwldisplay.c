@@ -363,8 +363,12 @@ gst_wl_display_thread_run (gpointer data)
   /* main loop */
   while (1) {
     g_rec_mutex_lock (&priv->sync_mutex);
-    while (wl_display_prepare_read_queue (priv->display, priv->queue) != 0)
-      wl_display_dispatch_queue_pending (priv->display, priv->queue);
+    while (wl_display_prepare_read_queue (priv->display, priv->queue) != 0) {
+      if (wl_display_dispatch_queue_pending (priv->display, priv->queue) == -1) {
+        g_rec_mutex_unlock (&priv->sync_mutex);
+        goto error;
+      }
+    }
     g_rec_mutex_unlock (&priv->sync_mutex);
     wl_display_flush (priv->display);
 
@@ -380,7 +384,10 @@ gst_wl_display_thread_run (gpointer data)
       goto error;
 
     g_rec_mutex_lock (&priv->sync_mutex);
-    wl_display_dispatch_queue_pending (priv->display, priv->queue);
+    if (wl_display_dispatch_queue_pending (priv->display, priv->queue) == -1) {
+      g_rec_mutex_unlock (&priv->sync_mutex);
+      goto error;
+    }
     g_rec_mutex_unlock (&priv->sync_mutex);
   }
 
