@@ -269,6 +269,7 @@ gst_cuda_allocator_update_info (const GstVideoInfo * reference,
     case GST_VIDEO_FORMAT_BGRx:
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_ARGB64:
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
     case GST_VIDEO_FORMAT_BGR10A2_LE:
