@@ -62,7 +62,7 @@ mod imp {
                 }
             }
 
-            fn iter(&self) -> IfaddrsIter {
+            fn iter(&self) -> IfaddrsIter<'_> {
                 IfaddrsIter {
                     ptr: ptr::NonNull::new(self.0),
                     phantom: marker::PhantomData,
