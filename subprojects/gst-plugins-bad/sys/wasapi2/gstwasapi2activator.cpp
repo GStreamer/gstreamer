@@ -92,10 +92,10 @@ Wasapi2ActivationHandler::ActivateCompleted (IActivateAudioInterfaceAsyncOperati
   HRESULT activate_hr = S_OK;
   hr = op->GetActivateResult (&activate_hr, &iface);
   if (!gst_wasapi2_result (hr))
-    GST_ERROR ("Couldn't get activate result, hr: 0x%x", (guint) hr);
+    GST_WARNING ("Couldn't get activate result, hr: 0x%x", (guint) hr);
 
   if (!gst_wasapi2_result (activate_hr)) {
-    GST_ERROR ("GetActivateResult failed, hr: 0x%x", (guint) activate_hr);
+    GST_WARNING ("GetActivateResult failed, hr: 0x%x", (guint) activate_hr);
     hr = activate_hr;
   }
 
