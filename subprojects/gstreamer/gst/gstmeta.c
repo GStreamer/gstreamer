@@ -824,7 +824,7 @@ gst_meta_serialize_simple (const GstMeta * meta, GByteArray * data)
 /**
  * gst_meta_deserialize:
  * @buffer: a #GstBuffer
- * @data: serialization data obtained from gst_meta_serialize()
+ * @data: (array length=size): serialization data obtained from gst_meta_serialize()
  * @size: size of @data
  * @consumed: (out): total size used by this meta, could be less than @size
  *
