@@ -3676,8 +3676,8 @@ gst_util_greatest_common_divisor_int64 (gint64 a, gint64 b)
 
 /**
  * gst_util_simplify_fraction:
- * @numerator: First value as #gint
- * @denominator: Second value as #gint
+ * @numerator: (inout): First value as #gint
+ * @denominator: (inout): Second value as #gint
  * @n_terms: non-significative terms (typical value: 8)
  * @threshold: threshold (typical value: 333)
  *
