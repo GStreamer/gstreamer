@@ -158,6 +158,7 @@ struct GstCudaCompositorPadPrivate
   GstCudaConverter *conv = nullptr;
   GstBufferPool *fallback_pool = nullptr;
   GstBuffer *prepared_buf = nullptr;
+  GstVideoInfo pool_info;
 
   gboolean config_updated = FALSE;
 
@@ -586,6 +587,24 @@ gst_cuda_compositor_upload_frame (GstCudaCompositor * self,
       return gst_buffer_ref (buffer);
   }
 
+  if (!gst_video_frame_map (&src, &pad->info, buffer, GST_MAP_READ)) {
+    GST_ERROR_OBJECT (pad, "Couldn't map src frame");
+    return nullptr;
+  }
+
+  auto frame_width = GST_VIDEO_FRAME_WIDTH (&src);
+  auto frame_height = GST_VIDEO_FRAME_HEIGHT (&src);
+
+  if (priv->fallback_pool &&
+      (priv->pool_info.width != frame_width ||
+          priv->pool_info.height != frame_height)) {
+    /* Size can be different if crop meta is in use */
+    GST_DEBUG_OBJECT (pad,
+        "Fallback pool size mismatch, releasing old fallback pool");
+    gst_buffer_pool_set_active (priv->fallback_pool, FALSE);
+    gst_clear_object (&priv->fallback_pool);
+  }
+
   if (!priv->fallback_pool) {
     priv->fallback_pool = gst_cuda_buffer_pool_new (self->context);
     auto config = gst_buffer_pool_get_config (priv->fallback_pool);
@@ -593,8 +612,12 @@ gst_cuda_compositor_upload_frame (GstCudaCompositor * self,
     if (self->stream)
       gst_buffer_pool_config_set_cuda_stream (config, self->stream);
 
-    auto caps = gst_video_info_to_caps (&pad->info);
-    gst_buffer_pool_config_set_params (config, caps, pad->info.size, 0, 0);
+    gst_video_info_set_format (&priv->pool_info,
+        GST_VIDEO_INFO_FORMAT (&pad->info), frame_width, frame_height);
+
+    auto caps = gst_video_info_to_caps (&priv->pool_info);
+    gst_buffer_pool_config_set_params (config,
+        caps, priv->pool_info.size, 0, 0);
     gst_caps_unref (caps);
     if (!gst_buffer_pool_set_config (priv->fallback_pool, config)) {
       GST_ERROR_OBJECT (pad, "Set config failed");
@@ -613,12 +636,7 @@ gst_cuda_compositor_upload_frame (GstCudaCompositor * self,
   gst_buffer_pool_acquire_buffer (priv->fallback_pool, &outbuf, nullptr);
   if (!outbuf) {
     GST_ERROR_OBJECT (self, "Couldn't acquire buffer");
-    return nullptr;
-  }
-
-  if (!gst_video_frame_map (&src, &pad->info, buffer, GST_MAP_READ)) {
-    GST_ERROR_OBJECT (pad, "Couldn't map src frame");
-    gst_buffer_unref (outbuf);
+    gst_video_frame_unmap (&src);
     return nullptr;
   }
 
@@ -637,6 +655,18 @@ gst_cuda_compositor_upload_frame (GstCudaCompositor * self,
     GST_ERROR_OBJECT (pad, "Couldn't copy frame");
     gst_buffer_unref (outbuf);
     return nullptr;
+  }
+
+  auto cmeta = gst_buffer_get_video_crop_meta (buffer);
+  if (cmeta) {
+    auto new_cmeta = gst_buffer_get_video_crop_meta (outbuf);
+    if (!new_cmeta)
+      new_cmeta = gst_buffer_add_video_crop_meta (outbuf);
+
+    new_cmeta->x = cmeta->x;
+    new_cmeta->y = cmeta->y;
+    new_cmeta->width = cmeta->width;
+    new_cmeta->width = cmeta->width;
   }
 
   return outbuf;
@@ -1330,6 +1360,7 @@ gst_cuda_compositor_propose_allocation (GstAggregator * agg,
   }
 
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, nullptr);
+  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, nullptr);
 
   return TRUE;
 }
@@ -1651,6 +1682,31 @@ gst_cuda_compositor_aggregate_frames (GstVideoAggregator * vagg,
     auto in_stream = gst_cuda_memory_get_stream (in_cmem);
     if (in_stream != stream)
       gst_cuda_memory_sync (in_cmem);
+
+    gint x, y, w, h;
+    gint x_offset = 0;
+    gint y_offset = 0;
+
+    if (pad_priv->xpos < 0)
+      x_offset = pad_priv->xpos;
+
+    if (pad_priv->ypos < 0)
+      y_offset = pad_priv->ypos;
+
+    auto crop_meta = gst_buffer_get_video_crop_meta (in_frame->buffer);
+    if (crop_meta) {
+      x = crop_meta->x;
+      y = crop_meta->y;
+      w = crop_meta->width;
+      h = crop_meta->height;
+    } else {
+      x = y = 0;
+      w = pad->info.width;
+      h = pad->info.height;
+    }
+
+    g_object_set (pad_priv->conv, "src-x", x - x_offset, "src-y", y - y_offset,
+        "src-width", w + x_offset, "src-height", h + y_offset, nullptr);
 
     if (!gst_cuda_converter_convert_frame (pad_priv->conv, in_frame,
             &frame, stream_handle, nullptr)) {
