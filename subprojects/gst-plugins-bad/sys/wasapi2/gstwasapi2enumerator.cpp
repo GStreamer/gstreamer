@@ -651,7 +651,7 @@ get_default_device (GstWasapi2Enumerator * self, EDataFlow flow,
   *actual_device_id = nullptr;
   *actual_device_name = nullptr;
 
-  auto hr = priv->handle->GetDefaultAudioEndpoint (eCapture,
+  auto hr = priv->handle->GetDefaultAudioEndpoint (flow,
       eConsole, &rst_device);
   if (FAILED (hr))
     return;
