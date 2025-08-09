@@ -1297,6 +1297,7 @@ gst_tag_list_add_valist (GstTagList * list, GstTagMergeMode mode,
       g_warning ("unknown tag '%s'", tag);
       return;
     }
+    memset (&value, 0, sizeof (value));
     G_VALUE_COLLECT_INIT (&value, info->type, var_args, 0, &error);
     if (error) {
       g_warning ("%s: %s", G_STRLOC, error);

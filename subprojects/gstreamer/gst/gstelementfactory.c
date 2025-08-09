@@ -426,6 +426,7 @@ gst_element_factory_property_valist_to_array (const gchar * first,
 
     names_array[n_params] = name;
 
+    memset (&values_array[n_params], 0, sizeof (values_array[n_params]));
     G_VALUE_COLLECT_INIT (&values_array[n_params], pspec->value_type,
         properties, 0, &error);
 
