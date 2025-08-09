@@ -1232,6 +1232,8 @@ gst_structure_set_valist_internal (GstStructure * structure,
   while (fieldname) {
     GstStructureField field = { GST_ID_STR_INIT, G_VALUE_INIT };
 
+    memset (&field.value, 0, sizeof (field.value));
+
     if (static_string)
       gst_id_str_set_static_str (&field.name, fieldname);
     else
@@ -1356,6 +1358,8 @@ gst_structure_id_set_valist_internal (GstStructure * structure,
   while (fieldname) {
     GstStructureField field = { GST_ID_STR_INIT, G_VALUE_INIT };
 
+    memset (&field.value, 0, sizeof (field.value));
+
     gst_id_str_set_static_str (&field.name, g_quark_to_string (fieldname));
     type = va_arg (varargs, GType);
 
@@ -1427,6 +1431,8 @@ gst_structure_id_str_set_valist_internal (GstStructure * structure,
 
   while (fieldname) {
     GstStructureField field = { GST_ID_STR_INIT, G_VALUE_INIT };
+
+    memset (&field.value, 0, sizeof (field.value));
 
     gst_id_str_copy_into (&field.name, fieldname);
     type = va_arg (varargs, GType);
