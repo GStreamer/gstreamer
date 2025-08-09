@@ -501,7 +501,7 @@ gst_caps_features_new_id_str_valist (const GstIdStr * feature1, va_list varargs)
 }
 
 /**
- * gst_caps_features_set_parent_refcount:
+ * gst_caps_features_set_parent_refcount: (skip):
  * @features: a #GstCapsFeatures
  * @refcount: (in): a pointer to the parent's refcount
  *

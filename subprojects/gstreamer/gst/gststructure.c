@@ -661,7 +661,7 @@ gst_structure_new_static_str_valist (const gchar * name,
 }
 
 /**
- * gst_structure_set_parent_refcount:
+ * gst_structure_set_parent_refcount: (skip):
  * @structure: a #GstStructure
  * @refcount: (in): a pointer to the parent's refcount
  *
