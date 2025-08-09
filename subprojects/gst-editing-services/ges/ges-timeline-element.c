@@ -2035,6 +2035,7 @@ ges_timeline_element_set_child_property_valist (GESTimelineElement * self,
     if (!ges_timeline_element_lookup_child (self, name, NULL, &pspec))
       goto not_found;
 
+    memset (&value, 0, sizeof (value));
     G_VALUE_COLLECT_INIT (&value, pspec->value_type, var_args,
         G_VALUE_NOCOPY_CONTENTS, &error);
 

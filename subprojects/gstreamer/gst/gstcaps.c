@@ -1142,6 +1142,7 @@ gst_caps_set_simple_valist (GstCaps * caps, const char *field, va_list varargs)
 
     type = va_arg (varargs, GType);
 
+    memset (&value, 0, sizeof (value));
     G_VALUE_COLLECT_INIT (&value, type, varargs, 0, &err);
     if (G_UNLIKELY (err)) {
       g_critical ("%s", err);

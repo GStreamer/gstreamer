@@ -822,6 +822,8 @@ gst_structure_set_valist_internal (GstStructure * structure,
 
     field.name = g_quark_from_string (fieldname);
 
+    memset (&field.value, 0, sizeof (field.value));
+
     type = va_arg (varargs, GType);
 
     G_VALUE_COLLECT_INIT (&field.value, type, varargs, 0, &err);
@@ -889,6 +891,8 @@ gst_structure_id_set_valist_internal (GstStructure * structure,
     GstStructureField field = { 0 };
 
     field.name = fieldname;
+    memset (&field.value, 0, sizeof (field.value));
+
     type = va_arg (varargs, GType);
 
     G_VALUE_COLLECT_INIT (&field.value, type, varargs, 0, &err);
