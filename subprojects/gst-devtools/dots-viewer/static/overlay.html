@@ -39,13 +39,51 @@ furnished to do so, subject to the following conditions:
         text-align: left;
       }
 
+      .custom-tooltip {
+        position: absolute;
+        background-color: #333;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 10000;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s;
+        max-width: 400px;
+        word-wrap: break-word;
+        white-space: normal;
+        user-select: text;
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+      }
+
+      .custom-tooltip.show {
+        opacity: 1;
+      }
+
+      .custom-tooltip.interactive {
+        pointer-events: auto;
+        cursor: text;
+        border: 2px solid #555;
+      }
+
+      .custom-tooltip.interactive::after {
+        content: " (Text selected - Ctrl+C to copy)";
+        font-size: 10px;
+        color: #aaa;
+        font-style: italic;
+      }
+
     </style>
   <body>
     <h1 style="text-align: center" id="title"> {{ TITLE }}</h1>
 
     <div id="graph" class="dragscroll" style="width: 100%; height: 100%; overflow: scroll;"></div>
     <div class="floating-rectangle" id="instructions">
-      Click node to highlight<br/>Shift-Ctrl-scroll or w/s to zoom<br/>Esc to unhighlight
+      Click node to highlight<br/>Shift-Ctrl-scroll or w/s to zoom<br/>Esc to unhighlight<br/>Double-click ellipsized text to copy
     </div>
 
     <div class="floating-rectangle" id="actions" style="top: auto; bottom: 100px; left: 10px;">
@@ -54,133 +92,15 @@ furnished to do so, subject to the following conditions:
 
     <script src='/dist/bundle.js'></script>
     <script type="text/javascript" src="/js/jquery.graphviz.svg.js"></script>
+    <script type="text/javascript" src="/js/tooltip.js"></script>
+    <script type="text/javascript" src="/js/pipeline-navigation.js"></script>
+    <script type="text/javascript" src="/js/text-ellipsizer.js"></script>
+    <script type="text/javascript" src="/js/svg-overlay-manager.js"></script>
     <script type="text/javascript">
-      let url = new URL(window.location.href);
-      let searchParams = new URLSearchParams(url.search);
-      document.getElementById("title").innerHTML = searchParams.get("title");
-
-      // Make text selection work while preserving drag functionality
-      function setupTextSelectionWithDrag() {
-        const graphDiv = document.getElementById('graph');
-
-        graphDiv.addEventListener('mousedown', function(e) {
-          if (e.target.tagName === 'text' || e.target.tagName === 'tspan') {
-            if (e.target.textContent && e.target.textContent.startsWith("pipeline-dot=") && e.target.textContent.includes(".dot")) {
-              // Let the pipeline dot click handler take precedence
-              return;
-            }
-            e.stopPropagation();
-            // Allow normal text selection behavior
-            return true;
-          }
-        }, true);
-
-        graphDiv.addEventListener('mouseover', function(e) {
-          if (e.target.tagName === 'text' || e.target.tagName === 'tspan') {
-            if (!(e.target.textContent && e.target.textContent.startsWith("pipeline-dot=") && e.target.textContent.includes(".dot"))) {
-              e.target.style.cursor = 'text';
-            }
-          }
-        });
-
-        graphDiv.addEventListener('mouseout', function(e) {
-          if (e.target.tagName === 'text' || e.target.tagName === 'tspan') {
-            if (!(e.target.textContent && e.target.textContent.startsWith("pipeline-dot=") && e.target.textContent.includes(".dot"))) {
-              e.target.style.cursor = '';
-            }
-          }
-        });
-      }
-
-      $(document).ready(function(){
-        // Setup text selection behavior
-        setupTextSelectionWithDrag();
-
-        $("#graph").graphviz({
-          url: searchParams.get("svg"),
-          ready: function() {
-            var gv = this;
-            gv.nodes().click(function () {
-              var $set = $();
-              $set.push(this);
-              $set = $set.add(gv.linkedFrom(this, true));
-              $set = $set.add(gv.linkedTo(this, true));
-              gv.highlight($set, true);
-              gv.bringToFront($set);
-            });
-            $(document).keydown(function (evt) {
-              if (evt.key == "Escape") {
-                gv.highlight();
-              } else if (evt.key == "w") {
-                gv.scaleInView((gv.zoom.percentage + 100));
-              } else if (evt.key == "s") {
-                gv.scaleInView((gv.zoom.percentage - 100) || 100);
-              }
-            });
-
-            $("#save-svg").click(function() {
-              const svgElement = $("#graph svg")[0];
-              const svgData = new XMLSerializer().serializeToString(svgElement);
-              const blob = new Blob([svgData], {type: "image/svg+xml;charset=utf-8"});
-              const url = URL.createObjectURL(blob);
-              const title = document.getElementById("title").textContent.trim();
-              const downloadLink = document.createElement("a");
-              downloadLink.href = url;
-              downloadLink.download = title + ".svg";
-              document.body.appendChild(downloadLink);
-              downloadLink.click();
-              document.body.removeChild(downloadLink);
-              URL.revokeObjectURL(url);
-            });
-
-            // Make pipeline dot references clickable for navigation between pipeline views
-            $("#graph svg .cluster").each(function() {
-              $(this).find("text, tspan").each(function() {
-                var element = this;
-                if (element.textContent && element.textContent.startsWith("pipeline-dot=") && element.textContent.includes(".dot")) {
-                  // Extract the pipeline dot filename from the text
-                  var pipelineDot = element.textContent;
-                  if (pipelineDot.includes("pipeline-dot=\"")) {
-                    pipelineDot = pipelineDot.replace(/pipeline-dot="([^"]+)"/, "$1");
-                  } else {
-                    pipelineDot = pipelineDot.replace(/pipeline-dot=([^\s]+)/, "$1");
-                  }
-
-                  // Style as a clickable link
-                  $(element).css({
-                    'text-decoration': 'underline',
-                    'cursor': 'pointer',
-                    'color': '#007acc'
-                  });
-
-                  // Add click handler for navigation
-                  $(element).off('click.pipeline-nav').on('click.pipeline-nav', function(evt) {
-                    evt.preventDefault();
-                    evt.stopPropagation();
-                    var newUrl = window.location.origin + "/?pipeline=" + encodeURIComponent(pipelineDot);
-                    window.location.href = newUrl;
-                  });
-
-                  // Add hover effects
-                  $(element).hover(
-                    function() {
-                      $(this).css({
-                        'color': '#0056b3',
-                        'cursor': 'pointer'
-                      });
-                    },
-                    function() {
-                      $(this).css({
-                        'color': '#007acc',
-                        'cursor': 'pointer'
-                      });
-                    }
-                  );
-                }
-              });
-            });
-          }
-        });
+      $(document).ready(() => {
+        const svgOverlayManager = new SvgOverlayManager();
+        svgOverlayManager.setTitle();
+        svgOverlayManager.init();
       });
       </script>
   </body>
