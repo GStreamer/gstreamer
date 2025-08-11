@@ -194,12 +194,18 @@ gst_alsa_device_provider_probe_pcm_sinks (GstDeviceProvider * provider,
     if (!gst_alsa_pcm_name_matches_any_pattern (name, allow_patterns))
       goto next_hint;
 
+    /* Skip devices without a description. */
+    if (!desc) {
+      GST_DEBUG_OBJECT (provider, "No desc hint for %s", name);
+      goto next_hint;
+    }
+
     /*
-     * Skip devices without description or that have a valid IOID hint.
-     * The latter seems to be always NULL for "virtual" PCM sinks.
+     * The input/output identification (IOID) may be "Input", "Output",
+     * or NULL to indicate both. Skip input-only devices.
      */
-    if (!desc || io) {
-      GST_DEBUG_OBJECT (provider, "No io or desc hint for %s", name);
+    if (io && strcmp (io, "Input") == 0) {
+      GST_DEBUG_OBJECT (provider, "Device '%s' is not an output", name);
       goto next_hint;
     }
 
