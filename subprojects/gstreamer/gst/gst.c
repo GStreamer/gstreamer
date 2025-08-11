@@ -379,8 +379,8 @@ gst_get_main_executable_path (void)
 
 /**
  * gst_init_check:
- * @argc: (inout) (allow-none): pointer to application's argc
- * @argv: (inout) (array length=argc) (allow-none): pointer to application's argv
+ * @argc: (inout) (optional): pointer to application's argc
+ * @argv: (inout) (array length=argc) (optional): pointer to application's argv
  * @error: pointer to a #GError to which a message will be posted on error
  *
  * Initializes the GStreamer library, setting up internal path lists,
@@ -430,8 +430,8 @@ gst_init_check (int *argc, char **argv[], GError ** error)
 
 /**
  * gst_init:
- * @argc: (inout) (allow-none): pointer to application's argc
- * @argv: (inout) (array length=argc) (allow-none): pointer to application's argv
+ * @argc: (inout) (optional): pointer to application's argc
+ * @argv: (inout) (array length=argc) (optional): pointer to application's argv
  *
  * Initializes the GStreamer library, setting up internal path lists,
  * registering built-in elements, and loading standard plugins.
