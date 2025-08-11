@@ -663,7 +663,7 @@ gst_structure_new_static_str_valist (const gchar * name,
 /**
  * gst_structure_set_parent_refcount: (skip):
  * @structure: a #GstStructure
- * @refcount: (in): a pointer to the parent's refcount
+ * @refcount: (type gpointer) (nullable): a pointer to the parent's refcount
  *
  * Sets the parent_refcount field of #GstStructure. This field is used to
  * determine whether a structure is mutable or not. This function should only be
