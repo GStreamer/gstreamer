@@ -2171,6 +2171,60 @@ GST_START_TEST (test_segment_update)
 
 GST_END_TEST;
 
+static GstFlowReturn
+gst_check_drop_only_ref_chain_func (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
+{
+  GST_DEBUG_OBJECT (pad, "chain_func: received buffer %p", buffer);
+  ASSERT_BUFFER_REFCOUNT (buffer, "buf", 1);
+  buffers = g_list_append (buffers, buffer);
+
+  g_mutex_lock (&check_mutex);
+  g_cond_signal (&check_cond);
+  g_mutex_unlock (&check_mutex);
+
+  return GST_FLOW_OK;
+}
+
+
+GST_START_TEST (test_drop_only_ref_count)
+{
+  GstElement *videorate;
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstSegment segment;
+
+  /* Create a videorate that outputs at most 1 frame per second. */
+  videorate = gst_check_setup_element ("videorate");
+  mysrcpad = gst_check_setup_src_pad (videorate, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (videorate, &sinktemplate);
+  gst_pad_set_chain_function (mysinkpad, gst_check_drop_only_ref_chain_func);
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  g_object_set (videorate, "drop-only", TRUE, NULL);
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  /* Segment starts at 0  */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_PTS (buf) = 0;
+  fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+
+  /* cleanup */
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
+
 static Suite *
 videorate_suite (void)
 {
@@ -2202,6 +2256,7 @@ videorate_suite (void)
   tcase_add_test (tc_chain, test_segment_update_same);
   tcase_add_test (tc_chain, test_segment_update_average_period);
   tcase_add_test (tc_chain, test_segment_update);
+  tcase_add_test (tc_chain, test_drop_only_ref_count);
 
   return s;
 }

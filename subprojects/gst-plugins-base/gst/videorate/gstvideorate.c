@@ -784,6 +784,12 @@ gst_video_rate_push_buffer (GstVideoRate * videorate, GstBuffer * outbuf,
   /* We do not need to update time in VFR (variable frame rate) mode */
   if (!videorate->drop_only) {
     GST_BUFFER_PTS (outbuf) = push_ts;
+  } else {
+    /* In drop-only mode, we want GstBaseTransform to push the buffer.
+     * This avoids storing extra reference to the buffer. */
+    gst_buffer_unref (outbuf);
+
+    return res;
   }
 
   if (videorate->drop_out_of_segment
@@ -1895,17 +1901,8 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
     if (videorate->drop_only) {
       if ((videorate->segment.rate > 0.0 && in_ts >= videorate->next_ts) ||
           (videorate->segment.rate < 0.0 && in_ts <= videorate->next_ts)) {
-        GstFlowReturn r;
-
-        /* The buffer received from basetransform is guaranteed to be writable.
-         * It just needs to be reffed so the buffer won't be consumed once pushed and
-         * GstBaseTransform can get its reference back. */
-        if ((r = gst_video_rate_push_buffer (videorate,
-                    gst_buffer_ref (buffer), FALSE,
-                    GST_CLOCK_TIME_NONE, FALSE)) != GST_FLOW_OK) {
-          res = r;
-          goto done;
-        }
+        res = gst_video_rate_push_buffer (videorate,
+            gst_buffer_ref (buffer), FALSE, GST_CLOCK_TIME_NONE, FALSE);
       } else {
         videorate->drop++;
       }
