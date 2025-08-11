@@ -1075,6 +1075,7 @@ gst_hls_media_playlist_parse (gchar * data,
         }
       } else if (g_str_has_prefix (data_ext_x, "MAP:")) {
         gchar *v, *a, *header_uri = NULL;
+        gint64 init_size = -1, init_offset = -1;
 
         data = data + 11;
 
@@ -1083,11 +1084,11 @@ gst_hls_media_playlist_parse (gchar * data,
             header_uri =
                 uri_join (self->base_uri ? self->base_uri : self->uri, v);
           } else if (strcmp (a, "BYTERANGE") == 0) {
-            if (!int64_from_string (v, &v, &size)) {
+            if (!int64_from_string (v, &v, &init_size)) {
               g_free (header_uri);
               goto next_line;
             }
-            if (*v == '@' && !int64_from_string (v + 1, &v, &offset)) {
+            if (*v == '@' && !int64_from_string (v + 1, &v, &init_offset)) {
               g_free (header_uri);
               goto next_line;
             }
@@ -1096,7 +1097,8 @@ gst_hls_media_playlist_parse (gchar * data,
 
         if (header_uri) {
           GstM3U8InitFile *init_file;
-          init_file = gst_m3u8_init_file_new (header_uri, size, offset);
+          init_file =
+              gst_m3u8_init_file_new (header_uri, init_size, init_offset);
 
           if (last_init_file)
             gst_m3u8_init_file_unref (last_init_file);
