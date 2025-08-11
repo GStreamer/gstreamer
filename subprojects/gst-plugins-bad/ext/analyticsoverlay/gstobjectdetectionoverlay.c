@@ -983,7 +983,6 @@ static void
 {
   GstAnalyticsMtd tracking_mtd;
   guint64 tid;
-  gboolean lost;
   PangoRectangle ink_rect, logical_rect;
   gint x, y, w, h;
   gint maxw = GST_VIDEO_INFO_WIDTH (overlay->in_info) - 1;
@@ -997,7 +996,7 @@ static void
     return;
 
   gst_analytics_od_mtd_get_location (od_mtd, &x, &y, &w, &h, NULL);
-  gst_analytics_tracking_mtd_get_info (&tracking_mtd, &tid, NULL, NULL, &lost);
+  gst_analytics_tracking_mtd_get_info (&tracking_mtd, &tid, NULL, NULL, NULL);
 
   cairo_save (ctx->cr);
   x = CLAMP (x, 0, maxw);
