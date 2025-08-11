@@ -724,6 +724,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data)
         }
       } else if (g_str_has_prefix (data_ext_x, "MAP:")) {
         gchar *v, *a, *header_uri = NULL;
+        gint64 init_size = -1, init_offset = -1;
 
         data = data + 11;
 
@@ -732,8 +733,8 @@ gst_m3u8_update (GstM3U8 * self, gchar * data)
             header_uri =
                 uri_join (self->base_uri ? self->base_uri : self->uri, v);
           } else if (strcmp (a, "BYTERANGE") == 0) {
-            if (int64_from_string (v, &v, &size)) {
-              if (*v == '@' && !int64_from_string (v + 1, &v, &offset)) {
+            if (int64_from_string (v, &v, &init_size)) {
+              if (*v == '@' && !int64_from_string (v + 1, &v, &init_offset)) {
                 g_free (header_uri);
                 goto next_line;
               }
@@ -748,10 +749,10 @@ gst_m3u8_update (GstM3U8 * self, gchar * data)
           GstM3U8InitFile *init_file;
           init_file = gst_m3u8_init_file_new (header_uri);
 
-          if (size != -1) {
-            init_file->size = size;
-            if (offset != -1)
-              init_file->offset = offset;
+          if (init_size != -1) {
+            init_file->size = init_size;
+            if (init_offset != -1)
+              init_file->offset = init_offset;
             else
               init_file->offset = 0;
           } else {
