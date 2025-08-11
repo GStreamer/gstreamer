@@ -235,6 +235,7 @@ gst_alsa_device_provider_probe_pcm_sinks (GstDeviceProvider * provider,
     GstStructure *props = gst_structure_new ("alsa-proplist",
         "device.api", G_TYPE_STRING, "alsa",
         "device.class", G_TYPE_STRING, "sound",
+        "alsa.name", G_TYPE_STRING, desc,
         NULL);
     GstAlsaDevice *gstdev = g_object_new (GST_TYPE_ALSA_DEVICE,
         "display-name", desc,
