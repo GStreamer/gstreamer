@@ -72,6 +72,7 @@ struct _GstObjectDetectionOverlay
   guint od_outline_color;
   guint od_outline_stroke_width;
   gboolean draw_labels;
+  gboolean draw_tracking_labels;
   gboolean filled_box;
   guint labels_color;
   gdouble labels_stroke_width;
@@ -101,6 +102,7 @@ enum
 {
   PROP_OD_OUTLINE_COLOR = 1,
   PROP_DRAW_LABELS,
+  PROP_DRAW_TRACKING_LABELS,
   PROP_LABELS_COLOR,
   PROP_FILLED_BOX,
   PROP_EXPIRE_OVERLAY,
@@ -226,6 +228,19 @@ gst_object_detection_overlay_class_init (GstObjectDetectionOverlayClass * klass)
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstObjectDetectionOverlay:draw-tracking-labels
+   *
+   * Control tracking labels drawing
+   *
+   * Since: 1.28
+   */
+  g_object_class_install_property (gobject_class, PROP_DRAW_TRACKING_LABELS,
+      g_param_spec_boolean ("draw-tracking-labels",
+          "Draw tracking labels",
+          "Draw object tracking labels",
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstObjectDetectionOverlay:labels-color
    *
    * Control labels color
@@ -322,6 +337,7 @@ gst_object_detection_overlay_init (GstObjectDetectionOverlay * overlay)
   overlay->pango_layout = NULL;
   overlay->od_outline_color = 0xFFFFFFFF;
   overlay->draw_labels = TRUE;
+  overlay->draw_tracking_labels = TRUE;
   overlay->labels_color = 0xFFFFFFFF;
   overlay->filled_box = FALSE;
   overlay->in_info = &GST_VIDEO_FILTER (overlay)->in_info;
@@ -350,6 +366,9 @@ gst_object_detection_overlay_set_property (GObject * object, guint prop_id,
     case PROP_DRAW_LABELS:
       overlay->draw_labels = g_value_get_boolean (value);
       break;
+    case PROP_DRAW_TRACKING_LABELS:
+      overlay->draw_tracking_labels = g_value_get_boolean (value);
+      break;
     case PROP_LABELS_COLOR:
       overlay->labels_color = g_value_get_uint (value);
       break;
@@ -377,6 +396,9 @@ gst_object_detection_overlay_get_property (GObject * object,
       break;
     case PROP_DRAW_LABELS:
       g_value_set_boolean (value, od_overlay->draw_labels);
+      break;
+    case PROP_DRAW_TRACKING_LABELS:
+      g_value_set_boolean (value, od_overlay->draw_tracking_labels);
       break;
     case PROP_LABELS_COLOR:
       g_value_set_uint (value, od_overlay->labels_color);
@@ -831,8 +853,9 @@ gst_object_detection_overlay_transform_frame_ip (GstVideoFilter * filter,
         g_free (text);
       }
 
-      gst_object_detection_overlay_render_tracking_text_annotation
-          (GST_OBJECT_DETECTION_OVERLAY (filter), &cairo_ctx, rmeta, od_mtd);
+      if (overlay->draw_tracking_labels)
+        gst_object_detection_overlay_render_tracking_text_annotation
+            (GST_OBJECT_DETECTION_OVERLAY (filter), &cairo_ctx, rmeta, od_mtd);
     }
 
     rectangle = gst_video_overlay_rectangle_new_raw (overlay->canvas,
