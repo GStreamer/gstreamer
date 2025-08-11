@@ -788,7 +788,7 @@ mod imp {
                 }
             }
 
-            fn iter(&self) -> AdapterAddressesIter {
+            fn iter(&self) -> AdapterAddressesIter<'_> {
                 AdapterAddressesIter {
                     ptr: Some(self.addresses),
                     phantom: marker::PhantomData,
