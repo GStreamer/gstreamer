@@ -78,9 +78,11 @@ create_buffer_pool (const char *format, VkImageUsageFlags usage,
   gst_buffer_pool_config_set_params (config, caps, 1024, 1, 0);
   gst_caps_unref (caps);
 
-  gst_vulkan_image_buffer_pool_config_set_allocation_params (config,
-      usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, initial_layout,
-      initial_access);
+  if (usage != 0) {
+    gst_vulkan_image_buffer_pool_config_set_allocation_params (config,
+        usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, initial_layout,
+        initial_access);
+  }
 
   if (dec_caps)
     gst_vulkan_image_buffer_pool_config_set_decode_caps (config, dec_caps);
