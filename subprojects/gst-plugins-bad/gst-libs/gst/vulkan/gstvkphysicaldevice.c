@@ -71,9 +71,6 @@ struct _GstVulkanPhysicalDevicePrivate
   VkPhysicalDeviceVulkan13Features features13;
   VkPhysicalDeviceVulkan13Properties properties13;
 #endif
-#if defined (VK_KHR_sampler_ycbcr_conversion)
-  VkPhysicalDeviceSamplerYcbcrConversionFeaturesKHR sampler_ycbcr_conversion;
-#endif
 #if defined (VK_KHR_synchronization2)
   VkPhysicalDeviceSynchronization2FeaturesKHR synchronization2;
 #endif
@@ -213,26 +210,6 @@ gst_vulkan_physical_device_init (GstVulkanPhysicalDevice * device)
   priv->features13.sType =
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
   priv->features12.pNext = &priv->features13;
-#endif
-#if defined (VK_KHR_sampler_ycbcr_conversion)
-  priv->sampler_ycbcr_conversion.sType =
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SAMPLER_YCBCR_CONVERSION_FEATURES_KHR;
-  vk_link_struct (&priv->features12, &priv->sampler_ycbcr_conversion);
-#endif
-#if defined (VK_KHR_synchronization2)
-  priv->synchronization2.sType =
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES_KHR;
-  vk_link_struct (&priv->features12, &priv->synchronization2);
-#endif
-#if defined (VK_KHR_timeline_semaphore)
-  priv->timeline_semaphore.sType =
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES_KHR;
-  vk_link_struct (&priv->features12, &priv->timeline_semaphore);
-#endif
-#if defined (VK_KHR_video_maintenance1)
-  priv->videomaintenance1.sType =
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VIDEO_MAINTENANCE_1_FEATURES_KHR;
-  vk_link_struct (&priv->features12, &priv->videomaintenance1);
 #endif
 }
 
@@ -514,17 +491,11 @@ dump_features13 (GstVulkanPhysicalDevice * device,
 #endif /* defined (VK_API_VERSION_1_3) */
 
 static void
-dump_extras (GstVulkanPhysicalDevice * device, VkBaseOutStructure * chain)
+dump_features_extras (GstVulkanPhysicalDevice * device,
+    VkBaseOutStructure * chain)
 {
   GstVulkanPhysicalDevicePrivate *priv = GET_PRIV (device);
 
-#if defined (VK_KHR_sampler_ycbcr_conversion)
-  if (chain->sType ==
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SAMPLER_YCBCR_CONVERSION_FEATURES_KHR) {
-    DEBUG_BOOL_STRUCT ("support for", &priv->sampler_ycbcr_conversion,
-        samplerYcbcrConversion);
-  }
-#endif
 #if defined (VK_KHR_synchronization2)
   if (chain->sType ==
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES_KHR) {
@@ -574,7 +545,7 @@ dump_features (GstVulkanPhysicalDevice * device, GError ** error)
         dump_features13 (device, (VkPhysicalDeviceVulkan13Features *) iter);
 #endif
       else
-        dump_extras (device, iter);
+        dump_features_extras (device, iter);
     }
   } else
 #endif
@@ -977,6 +948,36 @@ physical_device_info (GstVulkanPhysicalDevice * device, GError ** error)
   return TRUE;
 }
 
+/* it's required to add this extra features when the properties are filled and
+ * the instances assigned */
+#if defined (VK_API_VERSION_1_2)
+static void
+add_extra_features (GstVulkanPhysicalDevice * device)
+{
+  GstVulkanPhysicalDevicePrivate *priv = GET_PRIV (device);
+
+#if defined (VK_KHR_timeline_semaphore)
+  if (!gst_vulkan_physical_device_check_api_version (device, 1, 2, 0)) {
+    priv->timeline_semaphore.sType =
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES_KHR;
+    vk_link_struct (&priv->features12, &priv->timeline_semaphore);
+  }
+#endif
+#if defined (VK_KHR_synchronization2)
+  if (!gst_vulkan_physical_device_check_api_version (device, 1, 3, 0)) {
+    priv->synchronization2.sType =
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES_KHR;
+    vk_link_struct (&priv->features12, &priv->synchronization2);
+  }
+#endif
+#if defined (VK_KHR_video_maintenance1)
+  priv->videomaintenance1.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VIDEO_MAINTENANCE_1_FEATURES_KHR;
+  vk_link_struct (&priv->features13, &priv->videomaintenance1);
+#endif
+}
+#endif /* VK_API_VERSION_1_2 */
+
 static gboolean
 gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
     GError ** error)
@@ -1064,6 +1065,7 @@ gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
     memcpy (&device->memory_properties, &mem_properties10.memoryProperties,
         sizeof (device->memory_properties));
 
+    add_extra_features (device);
     get_features2 = (PFN_vkGetPhysicalDeviceFeatures2)
         gst_vulkan_instance_get_proc_address (device->instance,
         "vkGetPhysicalDeviceFeatures2");
