@@ -874,6 +874,9 @@ gst_wasapi2_device_manager_create_ctx (IMMDeviceEnumerator * enumerator,
     auto hr = ctx->client->GetCurrentPadding (&padding);
     if (SUCCEEDED (hr) && padding < ctx->client_buf_size) {
       auto can_write = ctx->client_buf_size - padding;
+      if (can_write > ctx->period)
+        can_write = ctx->period;
+
       BYTE *data;
       hr = ctx->render_client->GetBuffer (can_write, &data);
       if (SUCCEEDED (hr)) {
