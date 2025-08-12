@@ -286,9 +286,9 @@ _priv_gst_tracing_init (void)
   _priv_tracers = g_hash_table_new (NULL, NULL);
 
 
-  if (G_N_ELEMENTS (_quark_strings) + 1 != GST_TRACER_QUARK_MAX)
+  if (G_N_ELEMENTS (_quark_strings) != GST_TRACER_QUARK_MAX + 1)
     g_warning ("the quark table is not consistent! %d != %d",
-        (gint) G_N_ELEMENTS (_quark_strings), GST_TRACER_QUARK_MAX);
+        (gint) G_N_ELEMENTS (_quark_strings), GST_TRACER_QUARK_MAX + 1);
 
   for (i = 0; i <= GST_TRACER_QUARK_MAX; i++) {
     _priv_gst_tracer_quark_table[i] =

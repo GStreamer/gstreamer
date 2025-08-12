@@ -120,6 +120,38 @@ debug_dump_get_object_params (GObject * object,
   gchar *tmp, *value_str;
   const gchar *ellipses;
 
+  if (details == GST_DEBUG_GRAPH_SHOW_ALL) {
+    static gsize dots_tracer_enabled = 0;
+
+    if (g_once_init_enter (&dots_tracer_enabled)) {
+      GList *tracers, *tmp;
+      gsize enabled = 1;        /* 1 = not enabled, 2 = enabled */
+
+      tracers = gst_tracing_get_active_tracers ();
+
+      for (tmp = tracers; tmp; tmp = tmp->next) {
+        GObject *tracer = G_OBJECT (tmp->data);
+        const gchar *type_name = G_OBJECT_TYPE_NAME (tracer);
+
+        if (g_strcmp0 (type_name, "GstDotsTracer") == 0) {
+          enabled = 2;
+          break;
+        }
+      }
+
+      g_list_free_full (tracers, gst_object_unref);
+      g_once_init_leave (&dots_tracer_enabled, enabled);
+    }
+
+    /* If dots tracer is enabled, use SHOW_FULL_PARAMS instead of SHOW_ALL.
+     * The dots tracer is meant to be used with gst-dots-viewer which will
+     * ellipsize long lines for us, so we should always keep the full text
+     * in the dot files in that case. */
+    if (dots_tracer_enabled == 2) {
+      details = GST_DEBUG_GRAPH_SHOW_FULL_PARAMS;
+    }
+  }
+
   /* get paramspecs and show non-default properties */
   properties =
       g_object_class_list_properties (G_OBJECT_GET_CLASS (object),
