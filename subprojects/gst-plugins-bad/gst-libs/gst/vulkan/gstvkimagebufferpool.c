@@ -219,6 +219,7 @@ gst_vulkan_image_buffer_pool_fill_buffer (GstVulkanImageBufferPool * vk_pool,
   VkVideoProfileInfoKHR profiles[2];
   VkVideoProfileListInfoKHR profile_list = {
     .sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_LIST_INFO_KHR,
+    .profileCount = priv->n_profiles,
     .pProfiles = profiles,
   };
 #endif
