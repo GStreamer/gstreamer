@@ -353,8 +353,8 @@ struct _DecodebinInput
    * be avoided */
   gboolean input_is_parsed;
 
-  /* List of events that need to be pushed once we get the first
-   * GST_EVENT_STREAM_COLLECTION */
+  /* List of events that need to be pushed once we get the
+   * GST_EVENT_STREAM_COLLECTION for a GstStream */
   GList *events_waiting_for_collection;
 
   /* input buffer probe for detecting whether input has caps or not */
@@ -566,6 +566,8 @@ static GstStateChangeReturn gst_decodebin3_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean gst_decodebin3_send_event (GstElement * element,
     GstEvent * event);
+static const gchar *stream_in_collection (GstStreamCollection * collection,
+    const gchar * sid);
 
 static void gst_decode_bin_update_factories_list (GstDecodebin3 * dbin);
 
@@ -991,8 +993,9 @@ gst_decodebin_input_stream_src_probe (GstPad * pad, GstPadProbeInfo * info,
             SELECTION_LOCK (input->dbin);
             gst_decodebin_input_link_to_slot (input);
             SELECTION_UNLOCK (input->dbin);
-          } else
+          } else {
             gst_object_unref (stream);
+          }
         }
       }
         break;
@@ -1824,8 +1827,9 @@ gst_decodebin_input_reset (DecodebinInput * input)
     gst_bin_remove (GST_BIN (dbin), input->identity);
     gst_clear_object (&input->identity);
   }
-  if (input->collection)
+  if (input->collection) {
     gst_clear_object (&input->collection);
+  }
 
   if (input->input_probe) {
     gst_pad_remove_probe (input->ghost_sink, input->input_probe);
@@ -1986,6 +1990,8 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
       }
       gst_query_unref (q);
 
+      INPUT_LOCK (dbin);
+
       /* FIXME : We force `decodebin3` to upstream selection mode if *any* of the
          inputs is. This means things might break if there's a mix */
       if (input->upstream_selected)
@@ -2004,8 +2010,24 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
 
       /* Make sure group ids will be recalculated */
       input->group_id = GST_GROUP_ID_INVALID;
-      INPUT_LOCK (dbin);
       recalculate_group_id (dbin);
+
+      GstStream *stream = NULL;
+
+      gst_event_parse_stream (event, &stream);
+      if (stream) {
+        const gchar *stream_id = gst_stream_get_stream_id (stream);
+        if (input->collection != NULL
+            && !stream_in_collection (input->collection, stream_id)) {
+          GST_DEBUG_OBJECT (sinkpad,
+              "Stream %" GST_PTR_FORMAT
+              " is from a new collection on this input", stream);
+          /* This is a stream from a new collection. Invalidate the old collection */
+          gst_clear_object (&input->collection);
+        }
+        gst_object_unref (stream);
+      }
+
       INPUT_UNLOCK (dbin);
       break;
     }
@@ -2569,7 +2591,7 @@ find_message_parsebin (GstDecodebin3 * dbin, GstElement * child)
 }
 
 static const gchar *
-stream_in_collection (GstStreamCollection * collection, gchar * sid)
+stream_in_collection (GstStreamCollection * collection, const gchar * sid)
 {
   guint i, len;
 
