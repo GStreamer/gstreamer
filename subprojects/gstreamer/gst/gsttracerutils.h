@@ -132,7 +132,7 @@ typedef enum /*< skip >*/
   GST_TRACER_QUARK_MAX
 } GstTracerQuarkId;
 
-extern GQuark _priv_gst_tracer_quark_table[GST_TRACER_QUARK_MAX];
+extern GQuark _priv_gst_tracer_quark_table[GST_TRACER_QUARK_MAX + 1];
 
 #define GST_TRACER_QUARK(q) _priv_gst_tracer_quark_table[GST_TRACER_QUARK_##q]
 
