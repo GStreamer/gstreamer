@@ -23,6 +23,7 @@
 #endif
 
 #include "gstvkimagebufferpool.h"
+#include "gstvkphysicaldevice-private.h"
 
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
 #include "gst/vulkan/gstvkvideoutils-private.h"
@@ -208,6 +209,24 @@ internal_config_get_allocation_params (GstStructure * config,
 }
 
 static gboolean
+_is_video_usage (VkImageUsageFlags requested_usage)
+{
+  VkImageUsageFlags video_usage = 0;
+
+#if defined(VK_KHR_video_decode_queue)
+  video_usage |= (VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR
+      | VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR);
+#endif
+#if defined(VK_KHR_video_encode_queue)
+  video_usage |= (VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR
+      | VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR);
+#endif
+
+  return ((requested_usage & video_usage) != 0);
+}
+
+
+static gboolean
 gst_vulkan_image_buffer_pool_fill_buffer (GstVulkanImageBufferPool * vk_pool,
     VkImageTiling tiling, gsize offset[GST_VIDEO_MAX_PLANES],
     GstBuffer * buffer)
@@ -216,6 +235,7 @@ gst_vulkan_image_buffer_pool_fill_buffer (GstVulkanImageBufferPool * vk_pool,
   int i;
   VkImageCreateInfo image_info;
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+  GstVulkanPhysicalDevice *gpu;
   VkVideoProfileInfoKHR profiles[2];
   VkVideoProfileListInfoKHR profile_list = {
     .sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_LIST_INFO_KHR,
@@ -246,11 +266,19 @@ gst_vulkan_image_buffer_pool_fill_buffer (GstVulkanImageBufferPool * vk_pool,
   };
   /* *INDENT-ON* */
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-  if (priv->n_profiles > 0) {
-    for (i = 0; i < priv->n_profiles; i++)
-      profiles[i] = priv->profiles[i].profile;
+  gpu = vk_pool->device->physical_device;
+  if (_is_video_usage (priv->usage)) {
+#if defined(VK_KHR_video_maintenance1)
+    if (gst_vulkan_physical_device_has_feature_video_maintenance1 (gpu)) {
+      image_info.flags |= VK_IMAGE_CREATE_VIDEO_PROFILE_INDEPENDENT_BIT_KHR;
+    } else
+#endif
+    if (priv->n_profiles > 0) {
+      for (i = 0; i < priv->n_profiles; i++)
+        profiles[i] = priv->profiles[i].profile;
 
-    image_info.pNext = &profile_list;
+      image_info.pNext = &profile_list;
+    }
   }
 #endif
 
@@ -335,7 +363,8 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
   priv->n_profiles = 0;
 
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-  {
+  if (!gst_vulkan_physical_device_has_feature_video_maintenance1
+      (vk_pool->device->physical_device)) {
     guint n = 0;
 
 #if defined(VK_KHR_video_decode_queue)
@@ -361,6 +390,9 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
 
     if (priv->n_profiles != n)
       goto missing_profile;
+  } else if (_is_video_usage (requested_usage)) {
+    /* HACK: to force multiplane images below  */
+    priv->n_profiles = 1;
   }
 #endif /* GST_VULKAN_HAVE_VIDEO_EXTENSIONS */
 
@@ -377,25 +409,13 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
     goto no_vk_format;
 
   {
-    gboolean video = FALSE, sampleable;
+    gboolean sampleable;
     const GstVulkanFormatMap *vkmap;
-    VkImageUsageFlags video_usage = 0;
-
-#if defined(VK_KHR_video_decode_queue)
-    video_usage |= (VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR
-        | VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR);
-#endif
-#if defined(VK_KHR_video_encode_queue)
-    video_usage |= (VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR
-        | VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR);
-#endif
-
-    video = ((requested_usage & video_usage) != 0);
 
     sampleable = ((requested_usage &
             (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT)) != 0);
 
-    if (sampleable && !video) {
+    if (sampleable && !_is_video_usage (requested_usage)) {
       vkmap = gst_vulkan_format_get_map (GST_VIDEO_INFO_FORMAT (&priv->v_info));
       priv->img_flags = VK_IMAGE_CREATE_ALIAS_BIT;
       if (GST_VIDEO_INFO_N_PLANES (&priv->v_info) > 1
