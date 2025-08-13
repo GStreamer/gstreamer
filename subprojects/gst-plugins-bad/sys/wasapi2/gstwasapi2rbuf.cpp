@@ -887,6 +887,13 @@ gst_wasapi2_device_manager_create_ctx (IMMDeviceEnumerator * enumerator,
     }
   }
 
+  /* Warm up device, first Start() call may take long if device is in idle state */
+  if (ctx->capture_client && !ctx->dummy_client) {
+    ctx->client->Start ();
+    ctx->client->Stop ();
+    ctx->client->Reset ();
+  }
+
   ctx->is_default = is_default;
   ctx->endpoint_class = endpoint_class;
 
