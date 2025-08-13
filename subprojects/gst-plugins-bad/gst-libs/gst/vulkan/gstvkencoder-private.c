@@ -1406,7 +1406,8 @@ gst_vulkan_encoder_create_from_queue (GstVulkanQueue * queue, guint codec)
     g_once_init_leave (&cat_gonce, TRUE);
   }
 
-  if (device->properties.apiVersion < VK_MAKE_VERSION (1, 3, 275)) {
+  /* XXX: sync with the meson version for vulkan video enabling */
+  if (!gst_vulkan_physical_device_check_api_version (device, 1, 3, 275)) {
     GST_WARNING_OBJECT (queue,
         "API version %d.%d.%d doesn't support video encode extensions",
         VK_VERSION_MAJOR (device->properties.apiVersion),
