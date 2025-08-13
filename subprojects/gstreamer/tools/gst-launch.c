@@ -1084,7 +1084,6 @@ real_main (int argc, char *argv[])
 #if 0
   gboolean check_index = FALSE;
 #endif
-  gchar *savefile = NULL;
   gboolean no_position = FALSE;
   gboolean force_position = FALSE;
 #ifndef GST_DISABLE_OPTION_PARSING
@@ -1226,155 +1225,153 @@ real_main (int argc, char *argv[])
 
   loop = g_main_loop_new (NULL, FALSE);
 
-  if (!savefile) {
-    GstStateChangeReturn ret;
-    GstBus *bus;
+  GstStateChangeReturn ret;
+  GstBus *bus;
 
-    /* If the top-level object is not a pipeline, place it in a pipeline. */
-    if (!GST_IS_PIPELINE (pipeline)) {
-      GstElement *real_pipeline = gst_element_factory_make ("pipeline", NULL);
+  /* If the top-level object is not a pipeline, place it in a pipeline. */
+  if (!GST_IS_PIPELINE (pipeline)) {
+    GstElement *real_pipeline = gst_element_factory_make ("pipeline", NULL);
 
-      if (real_pipeline == NULL) {
-        gst_printerr (_("ERROR: the 'pipeline' element wasn't found.\n"));
-        return 1;
-      }
-      gst_bin_add (GST_BIN (real_pipeline), pipeline);
-      pipeline = real_pipeline;
+    if (real_pipeline == NULL) {
+      gst_printerr (_("ERROR: the 'pipeline' element wasn't found.\n"));
+      return 1;
     }
-#ifdef HAVE_WINMM
-    /* Enable high-precision clock which will improve accuracy of various
-     * Windows timer APIs (e.g., Sleep()), and it will increase the precision
-     * of GstSystemClock as well
-     */
-
-    /* NOTE: Once timer resolution is updated via timeBeginPeriod(),
-     * application should undo it by calling timeEndPeriod()
-     *
-     * Prior to Windows 10, version 2004, timeBeginPeriod() affects global
-     * Windows setting (meaning that it will affect other processes),
-     * but starting with Windows 10, version 2004, this function no longer
-     * affects global timer resolution
-     */
-    winmm_timer_resolution = enable_winmm_timer_resolution ();
-#endif
-
-    if (verbose) {
-      deep_notify_id =
-          gst_element_add_property_deep_notify_watch (pipeline, NULL, TRUE);
-    }
-#if 0
-    if (check_index) {
-      /* gst_index_new() creates a null-index, it does not store anything, but
-       * the entry-added signal works and this is what we use to build the
-       * statistics */
-      index = gst_index_new ();
-      if (index) {
-        index_stats = g_ptr_array_new ();
-        g_signal_connect (G_OBJECT (index), "entry-added",
-            G_CALLBACK (entry_added), index_stats);
-        g_object_set (G_OBJECT (index), "resolver", GST_INDEX_RESOLVER_GTYPE,
-            NULL);
-        gst_element_set_index (pipeline, index);
-      }
-    }
-#endif
-
-    bus = gst_element_get_bus (pipeline);
-    gst_bus_set_sync_handler (bus, bus_sync_handler, (gpointer) pipeline, NULL);
-    bus_watch_id = gst_bus_add_watch (bus, bus_handler, NULL);
-    gst_object_unref (bus);
-
-    PRINT (_("Setting pipeline to PAUSED ...\n"));
-    ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
-
-    switch (ret) {
-      case GST_STATE_CHANGE_FAILURE:
-        gst_printerr (_("Failed to set pipeline to PAUSED.\n"));
-        last_launch_code = LEC_STATE_CHANGE_FAILURE;
-        goto end;
-      case GST_STATE_CHANGE_NO_PREROLL:
-        PRINT (_("Pipeline is live and does not need PREROLL ...\n"));
-        is_live = TRUE;
-        break;
-      case GST_STATE_CHANGE_ASYNC:
-        PRINT (_("Pipeline is PREROLLING ...\n"));
-        break;
-      default:
-        break;
-    }
-
-#ifdef G_OS_UNIX
-    signal_watch_intr_id =
-        g_unix_signal_add (SIGINT, (GSourceFunc) intr_handler, pipeline);
-    signal_watch_hup_id =
-        g_unix_signal_add (SIGHUP, (GSourceFunc) hup_handler, pipeline);
-#elif defined(G_OS_WIN32)
-    SetConsoleCtrlHandler (w32_intr_handler, TRUE);
-#endif
-    if (!no_position) {
-      gboolean output_is_tty = TRUE;
-
-      if (!isatty (STDOUT_FILENO))
-        output_is_tty = FALSE;
-
-      if (output_is_tty || (!output_is_tty && force_position)) {
-        position_source = g_timeout_source_new (100);
-        g_source_set_callback (position_source, query_pipeline_position,
-            GINT_TO_POINTER (output_is_tty), NULL);
-        g_source_attach (position_source, NULL);
-      }
-    }
-
-    /* playing state will be set on state-changed message handler */
-    g_main_loop_run (loop);
-
-    if (position_source) {
-      g_source_destroy (position_source);
-      g_source_unref (position_source);
-    }
-
-    {
-      GstClockTime tfnow;
-      GstClockTimeDiff diff;
-
-      if (GST_CLOCK_TIME_IS_VALID (tfthen)) {
-        tfnow = gst_util_get_timestamp ();
-        diff = GST_CLOCK_DIFF (tfthen, tfnow);
-
-        PRINT (_("Execution ended after %" GST_TIME_FORMAT "\n"),
-            GST_TIME_ARGS (diff));
-      }
-    }
-
-    /* No need to see all those pad caps going to NULL etc., it's just noise */
-    if (deep_notify_id != 0)
-      g_signal_handler_disconnect (pipeline, deep_notify_id);
-
-#if 0
-    if (check_index) {
-      print_index_stats (index_stats);
-      g_ptr_array_free (index_stats, TRUE);
-    }
-#endif
-
-  end:
-    PRINT (_("Setting pipeline to NULL ...\n"));
-    gst_element_set_state (pipeline, GST_STATE_NULL);
-
-#ifdef G_OS_UNIX
-    if (signal_watch_intr_id > 0)
-      g_source_remove (signal_watch_intr_id);
-    if (signal_watch_hup_id > 0)
-      g_source_remove (signal_watch_hup_id);
-#endif
-    g_source_remove (bus_watch_id);
-    g_main_loop_unref (loop);
-
-#ifdef HAVE_WINMM
-    /* Undo timeBeginPeriod() if required */
-    clear_winmm_timer_resolution (winmm_timer_resolution);
-#endif
+    gst_bin_add (GST_BIN (real_pipeline), pipeline);
+    pipeline = real_pipeline;
   }
+#ifdef HAVE_WINMM
+  /* Enable high-precision clock which will improve accuracy of various
+   * Windows timer APIs (e.g., Sleep()), and it will increase the precision
+   * of GstSystemClock as well
+   */
+
+  /* NOTE: Once timer resolution is updated via timeBeginPeriod(),
+   * application should undo it by calling timeEndPeriod()
+   *
+   * Prior to Windows 10, version 2004, timeBeginPeriod() affects global
+   * Windows setting (meaning that it will affect other processes),
+   * but starting with Windows 10, version 2004, this function no longer
+   * affects global timer resolution
+   */
+  winmm_timer_resolution = enable_winmm_timer_resolution ();
+#endif
+
+  if (verbose) {
+    deep_notify_id =
+        gst_element_add_property_deep_notify_watch (pipeline, NULL, TRUE);
+  }
+#if 0
+  if (check_index) {
+    /* gst_index_new() creates a null-index, it does not store anything, but
+     * the entry-added signal works and this is what we use to build the
+     * statistics */
+    index = gst_index_new ();
+    if (index) {
+      index_stats = g_ptr_array_new ();
+      g_signal_connect (G_OBJECT (index), "entry-added",
+          G_CALLBACK (entry_added), index_stats);
+      g_object_set (G_OBJECT (index), "resolver", GST_INDEX_RESOLVER_GTYPE,
+          NULL);
+      gst_element_set_index (pipeline, index);
+    }
+  }
+#endif
+
+  bus = gst_element_get_bus (pipeline);
+  gst_bus_set_sync_handler (bus, bus_sync_handler, (gpointer) pipeline, NULL);
+  bus_watch_id = gst_bus_add_watch (bus, bus_handler, NULL);
+  gst_object_unref (bus);
+
+  PRINT (_("Setting pipeline to PAUSED ...\n"));
+  ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
+
+  switch (ret) {
+    case GST_STATE_CHANGE_FAILURE:
+      gst_printerr (_("Failed to set pipeline to PAUSED.\n"));
+      last_launch_code = LEC_STATE_CHANGE_FAILURE;
+      goto end;
+    case GST_STATE_CHANGE_NO_PREROLL:
+      PRINT (_("Pipeline is live and does not need PREROLL ...\n"));
+      is_live = TRUE;
+      break;
+    case GST_STATE_CHANGE_ASYNC:
+      PRINT (_("Pipeline is PREROLLING ...\n"));
+      break;
+    default:
+      break;
+  }
+
+#ifdef G_OS_UNIX
+  signal_watch_intr_id =
+      g_unix_signal_add (SIGINT, (GSourceFunc) intr_handler, pipeline);
+  signal_watch_hup_id =
+      g_unix_signal_add (SIGHUP, (GSourceFunc) hup_handler, pipeline);
+#elif defined(G_OS_WIN32)
+  SetConsoleCtrlHandler (w32_intr_handler, TRUE);
+#endif
+  if (!no_position) {
+    gboolean output_is_tty = TRUE;
+
+    if (!isatty (STDOUT_FILENO))
+      output_is_tty = FALSE;
+
+    if (output_is_tty || (!output_is_tty && force_position)) {
+      position_source = g_timeout_source_new (100);
+      g_source_set_callback (position_source, query_pipeline_position,
+          GINT_TO_POINTER (output_is_tty), NULL);
+      g_source_attach (position_source, NULL);
+    }
+  }
+
+  /* playing state will be set on state-changed message handler */
+  g_main_loop_run (loop);
+
+  if (position_source) {
+    g_source_destroy (position_source);
+    g_source_unref (position_source);
+  }
+
+  {
+    GstClockTime tfnow;
+    GstClockTimeDiff diff;
+
+    if (GST_CLOCK_TIME_IS_VALID (tfthen)) {
+      tfnow = gst_util_get_timestamp ();
+      diff = GST_CLOCK_DIFF (tfthen, tfnow);
+
+      PRINT (_("Execution ended after %" GST_TIME_FORMAT "\n"),
+          GST_TIME_ARGS (diff));
+    }
+  }
+
+  /* No need to see all those pad caps going to NULL etc., it's just noise */
+  if (deep_notify_id != 0)
+    g_signal_handler_disconnect (pipeline, deep_notify_id);
+
+#if 0
+  if (check_index) {
+    print_index_stats (index_stats);
+    g_ptr_array_free (index_stats, TRUE);
+  }
+#endif
+
+end:
+  PRINT (_("Setting pipeline to NULL ...\n"));
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+#ifdef G_OS_UNIX
+  if (signal_watch_intr_id > 0)
+    g_source_remove (signal_watch_intr_id);
+  if (signal_watch_hup_id > 0)
+    g_source_remove (signal_watch_hup_id);
+#endif
+  g_source_remove (bus_watch_id);
+  g_main_loop_unref (loop);
+
+#ifdef HAVE_WINMM
+  /* Undo timeBeginPeriod() if required */
+  clear_winmm_timer_resolution (winmm_timer_resolution);
+#endif
 
   PRINT (_("Freeing pipeline ...\n"));
   gst_object_unref (pipeline);
