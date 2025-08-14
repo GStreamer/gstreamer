@@ -24,6 +24,8 @@
 #endif
 
 #include "gstalsadeviceprovider.h"
+#include "gstalsasink.h"
+#include "gstalsasrc.h"
 #include <gst/gst.h>
 
 static GstDevice *gst_alsa_device_new (const gchar * device_name,
@@ -381,6 +383,16 @@ static gboolean
 gst_alsa_device_reconfigure_element (GstDevice * device, GstElement * element)
 {
   GstAlsaDevice *alsa_dev = GST_ALSA_DEVICE (device);
+
+  if (strcmp (alsa_dev->element, "alsasrc") == 0) {
+    if (!GST_IS_ALSA_SRC (element))
+      return FALSE;
+  } else if (strcmp (alsa_dev->element, "alsasink") == 0) {
+    if (!GST_IS_ALSA_SINK (element))
+      return FALSE;
+  } else {
+    g_assert_not_reached ();
+  }
 
   g_object_set (element, "device", alsa_dev->internal_name, NULL);
 
