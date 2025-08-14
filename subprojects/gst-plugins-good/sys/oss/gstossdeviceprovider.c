@@ -25,6 +25,8 @@
 
 #include "gstossdeviceprovider.h"
 #include "gstosshelper.h"
+#include "gstosssink.h"
+#include "gstosssrc.h"
 #include <glib/gstdio.h>
 #include <gst/gst.h>
 #include <fcntl.h>
@@ -189,6 +191,16 @@ static gboolean
 gst_oss_device_reconfigure_element (GstDevice * device, GstElement * element)
 {
   GstOssDevice *oss_dev = GST_OSS_DEVICE (device);
+
+  if (strcmp (oss_dev->element, "osssrc") == 0) {
+    if (!GST_IS_OSS_SRC (element))
+      return FALSE;
+  } else if (strcmp (oss_dev->element, "osssink") == 0) {
+    if (!GST_IS_OSSSINK (element))
+      return FALSE;
+  } else {
+    g_assert_not_reached ();
+  }
 
   g_object_set (element, "device", oss_dev->device_path, NULL);
 
