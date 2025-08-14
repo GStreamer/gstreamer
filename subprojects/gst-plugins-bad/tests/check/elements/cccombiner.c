@@ -29,6 +29,8 @@
 #include <string.h>
 
 static GstStaticCaps foo_bar_caps = GST_STATIC_CAPS ("foo/bar");
+static GstStaticCaps foo_bar_caps_0fps =
+GST_STATIC_CAPS ("foo/bar,framerate=0/1");
 static GstStaticCaps foo_bar_caps_25fps =
 GST_STATIC_CAPS ("foo/bar,framerate=25/1");
 static GstStaticCaps foo_bar_caps_60fps =
@@ -61,6 +63,49 @@ GST_START_TEST (no_captions)
   gst_caps_unref (caps);
 
   gst_buffer_unref (buf);
+  gst_buffer_unref (outbuf);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (no_captions_no_duration)
+{
+  GstHarness *h;
+  GstBuffer *buf1, *buf2, *outbuf;
+
+  h = gst_harness_new_with_padnames ("cccombiner", "sink", "src");
+
+  gst_harness_set_src_caps_str (h, foo_bar_caps_0fps.string);
+
+  /* When sending in frames without durations, we lag one frame */
+
+  buf1 = gst_buffer_new_and_alloc (128);
+  GST_BUFFER_PTS (buf1) = 0;
+  gst_harness_push (h, gst_buffer_ref (buf1));
+
+  buf2 = gst_buffer_new_and_alloc (128);
+  GST_BUFFER_PTS (buf2) = 10;
+  outbuf = gst_harness_push_and_pull (h, gst_buffer_ref (buf2));
+  fail_unless (outbuf != NULL);
+  fail_unless_equals_pointer (outbuf, buf1);
+  gst_buffer_unref (buf1);
+  gst_buffer_unref (outbuf);
+
+  buf1 = gst_buffer_new_and_alloc (128);
+  GST_BUFFER_PTS (buf1) = 15;
+  outbuf = gst_harness_push_and_pull (h, gst_buffer_ref (buf1));
+  fail_unless (outbuf != NULL);
+  fail_unless_equals_pointer (outbuf, buf2);
+  gst_buffer_unref (buf2);
+  gst_buffer_unref (outbuf);
+
+  gst_harness_push_event (h, gst_event_new_eos ());
+  outbuf = gst_harness_pull (h);
+  fail_unless (outbuf != NULL);
+  fail_unless_equals_pointer (outbuf, buf1);
+  gst_buffer_unref (buf1);
   gst_buffer_unref (outbuf);
 
   gst_harness_teardown (h);
@@ -609,6 +654,7 @@ cccombiner_suite (void)
   suite_add_tcase (s, tc);
 
   tcase_add_test (tc, no_captions);
+  tcase_add_test (tc, no_captions_no_duration);
   tcase_add_test (tc, captions_and_eos);
   tcase_add_test (tc, captions_no_output_padding_60fps_608_field1_only);
   tcase_add_test (tc, captions_50fps_to_25fps);
