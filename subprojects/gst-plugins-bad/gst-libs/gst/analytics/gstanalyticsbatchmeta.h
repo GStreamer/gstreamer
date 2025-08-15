@@ -34,62 +34,23 @@
 G_BEGIN_DECLS
 
 /**
- * GstAnalyticsBatchBuffer:
- * @sticky_events: (nullable) (array length=n_sticky_events): All sticky #GstEvent that relate to this buffer
- * @n_sticky_events: Number of sticky events.
- * @serialized_events: (nullable) (array length=n_serialized_events): All non-sticky, serialized #GstEvent that arrived
- *                     after the previous and before this buffer
- * @n_serialized_events: Number of serialized events.
- * @buffer: (nullable): The buffer, if any.
- * @buffer_list: (nullable): The buffer list, if any.
- *
- * The intended use of this struct is that analytics elements read the buffer or
- * buffer list and potentially attach new #GstMeta with additional information.
- * Only one of @buffer or @buffer_list is going to be set, or both are %NULL.
- *
- * Elements that need to modify @buffer (e.g. to attach a new meta) must first
- * call gst_buffer_make_writable() and store the writable buffer in this struct.
- * Similarly, a writable @buffer_list must be ensured with
- * gst_buffer_list_make_writable().
- *
- * Modifying any other fields must be done with special care to ensure that the
- * data flow of the stream is not broken.
- *
- * It is possible for @buffer and @buffer_list to be %NULL, e.g. if there was no
- * buffer for this batch but there were serialized events like a gap event.
- *
- * Note that @serialized_events always contains all currently active serialized
- * events and not only the changed events compared to the previous buffer.
- *
- * Since: 1.28
- */
-typedef struct _GstAnalyticsBatchBuffer {
-  GstEvent **sticky_events;
-  gsize n_sticky_events;
-
-  GstEvent **serialized_events;
-  gsize n_serialized_events;
-
-  GstBuffer *buffer;
-  GstBufferList *buffer_list;
-
-  /* <private> */
-  gpointer padding[GST_PADDING];
-} GstAnalyticsBatchBuffer;
-
-/**
  * GstAnalyticsBatchStream:
  * @index: Index of the stream in the meta's stream array
- * @buffers: (nullable) (array length=n_buffers): #GstAnalyticsBatchBuffer in this batch for this stream
- * @n_buffers: Number of buffers
+ * @sticky_events: (array length=n_sticky_events): The sticky events store before any of the mini objects in the @objects fields are processed
+ * @n_sticky_events: Number of sticky events
+ * @objects: (nullable) (array length=n_objects): #GstMiniObject in this batch for this stream. Those are serialized mini objects: buffers, bufferlists and serialized events
+ * @n_objects: Number of objects
  *
  * Since: 1.28
  */
 typedef struct _GstAnalyticsBatchStream {
   guint index;
 
-  GstAnalyticsBatchBuffer *buffers;
-  gsize n_buffers;
+  GstEvent **sticky_events;
+  gsize n_sticky_events;
+
+  GstMiniObject **objects;
+  gsize n_objects;
 
   /* <private> */
   gpointer padding[GST_PADDING];
@@ -177,15 +138,15 @@ gst_buffer_get_analytics_batch_meta (GstBuffer * buffer);
 
 GST_ANALYTICS_META_API
 const gchar *
-gst_analytics_batch_buffer_get_stream_id (GstAnalyticsBatchBuffer * buffer);
+gst_analytics_batch_stream_get_stream_id (GstAnalyticsBatchStream * stream);
 
 GST_ANALYTICS_META_API
 GstCaps *
-gst_analytics_batch_buffer_get_caps (GstAnalyticsBatchBuffer * buffer);
+gst_analytics_batch_stream_get_caps (GstAnalyticsBatchStream * stream);
 
 GST_ANALYTICS_META_API
 const GstSegment *
-gst_analytics_batch_buffer_get_segment (GstAnalyticsBatchBuffer * buffer);
+gst_analytics_batch_stream_get_segment (GstAnalyticsBatchStream * stream);
 
 G_END_DECLS
 

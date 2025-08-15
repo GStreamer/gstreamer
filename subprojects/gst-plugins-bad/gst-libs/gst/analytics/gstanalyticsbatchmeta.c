@@ -44,32 +44,18 @@ gst_analytics_batch_meta_transform (GstBuffer * dest, GstMeta * meta,
       GstAnalyticsBatchStream *dstream = &dmeta->streams[i];
 
       dstream->index = sstream->index;
-      dstream->buffers = g_new (GstAnalyticsBatchBuffer, sstream->n_buffers);
-      for (gsize j = 0; j < sstream->n_buffers; j++) {
-        GstAnalyticsBatchBuffer *sbuffer = &sstream->buffers[j];
-        GstAnalyticsBatchBuffer *dbuffer = &dstream->buffers[j];
 
-        dbuffer->sticky_events = g_new (GstEvent *, sbuffer->n_sticky_events);
-        for (gsize k = 0; k < sbuffer->n_sticky_events; k++) {
-          dbuffer->sticky_events[k] = gst_event_ref (sbuffer->sticky_events[k]);
-        }
-        dbuffer->n_sticky_events = sbuffer->n_sticky_events;
-
-        dbuffer->serialized_events =
-            g_new (GstEvent *, sbuffer->n_serialized_events);
-        for (gsize k = 0; k < sbuffer->n_serialized_events; k++) {
-          dbuffer->serialized_events[k] =
-              gst_event_ref (sbuffer->serialized_events[k]);
-        }
-        dbuffer->n_serialized_events = sbuffer->n_serialized_events;
-
-        dbuffer->buffer =
-            sbuffer->buffer ? gst_buffer_ref (sbuffer->buffer) : NULL;
-        dbuffer->buffer_list =
-            sbuffer->
-            buffer_list ? gst_buffer_list_ref (sbuffer->buffer_list) : NULL;
+      dstream->sticky_events = g_new (GstEvent *, sstream->n_sticky_events);
+      for (gsize j = 0; j < sstream->n_sticky_events; j++) {
+        dstream->sticky_events[j] = gst_event_ref (sstream->sticky_events[j]);
       }
-      dstream->n_buffers = sstream->n_buffers;
+      dstream->n_sticky_events = sstream->n_sticky_events;
+
+      dstream->objects = g_new (GstMiniObject *, sstream->n_objects);
+      for (gsize j = 0; j < sstream->n_objects; j++) {
+        dstream->objects[j] = gst_mini_object_ref (sstream->objects[j]);
+      }
+      dstream->n_objects = sstream->n_objects;
     }
     dmeta->n_streams = smeta->n_streams;
 
@@ -102,22 +88,13 @@ gst_analytics_batch_meta_free (GstMeta * meta, GstBuffer * buffer)
   for (gsize i = 0; i < bmeta->n_streams; i++) {
     GstAnalyticsBatchStream *stream = &bmeta->streams[i];
 
-    for (gsize j = 0; j < stream->n_buffers; j++) {
-      GstAnalyticsBatchBuffer *buffer = &stream->buffers[j];
+    for (gsize j = 0; j < stream->n_sticky_events; j++)
+      gst_event_unref (stream->sticky_events[j]);
 
-      for (gsize k = 0; k < buffer->n_sticky_events; k++) {
-        gst_clear_event (&buffer->sticky_events[k]);
-      }
-      g_clear_pointer (&buffer->sticky_events, g_free);
-      for (gsize k = 0; k < buffer->n_serialized_events; k++) {
-        gst_clear_event (&buffer->serialized_events[k]);
-      }
-      g_clear_pointer (&buffer->serialized_events, g_free);
-      gst_clear_buffer (&buffer->buffer);
-      gst_clear_buffer_list (&buffer->buffer_list);
-    }
+    for (gsize j = 0; j < stream->n_objects; j++)
+      gst_mini_object_unref (stream->objects[j]);
 
-    g_clear_pointer (&stream->buffers, g_free);
+    g_clear_pointer (&stream->objects, g_free);
   }
 
   g_free (bmeta->streams);
@@ -201,25 +178,22 @@ gst_buffer_get_analytics_batch_meta (GstBuffer * buffer)
 }
 
 /**
- * gst_analytics_batch_buffer_get_stream_id:
- * @buffer: A #GstAnalyticsBatchBuffer
+ * gst_analytics_batch_stream_get_stream_id:
+ * @stream: A #GstAnalyticsBatchStream
  *
- * Gets the current stream id from a buffer
+ * Gets the current stream id from a stream
  *
  * Returns: (nullable) (transfer none): The stream id if there is any
  *
  * Since: 1.28
  */
 const gchar *
-gst_analytics_batch_buffer_get_stream_id (GstAnalyticsBatchBuffer * buffer)
+gst_analytics_batch_stream_get_stream_id (GstAnalyticsBatchStream * stream)
 {
-  g_return_val_if_fail (buffer != NULL, NULL);
+  g_return_val_if_fail (stream != NULL, NULL);
 
-  if (!buffer->sticky_events)
-    return NULL;
-
-  for (gsize i = 0; i < buffer->n_sticky_events; i++) {
-    GstEvent *event = buffer->sticky_events[i];
+  for (gsize i = 0; i < stream->n_sticky_events; i++) {
+    GstEvent *event = stream->sticky_events[i];
 
     if (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START) {
       const gchar *stream_id;
@@ -234,25 +208,22 @@ gst_analytics_batch_buffer_get_stream_id (GstAnalyticsBatchBuffer * buffer)
 }
 
 /**
- * gst_analytics_batch_buffer_get_caps:
- * @buffer: A #GstAnalyticsBatchBuffer
+ * gst_analytics_batch_stream_get_caps:
+ * @stream: A #GstAnalyticsBatchStream
  *
- * Gets the #GstCaps from a buffer
+ * Gets the #GstCaps from a stream
  *
  * Returns: (nullable) (transfer none): The #GstCaps if there are any
  *
  * Since: 1.28
  */
 GstCaps *
-gst_analytics_batch_buffer_get_caps (GstAnalyticsBatchBuffer * buffer)
+gst_analytics_batch_stream_get_caps (GstAnalyticsBatchStream * stream)
 {
-  g_return_val_if_fail (buffer != NULL, NULL);
+  g_return_val_if_fail (stream != NULL, NULL);
 
-  if (!buffer->sticky_events)
-    return NULL;
-
-  for (gsize i = 0; i < buffer->n_sticky_events; i++) {
-    GstEvent *event = buffer->sticky_events[i];
+  for (gsize i = 0; i < stream->n_sticky_events; i++) {
+    GstEvent *event = stream->sticky_events[i];
 
     if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
       GstCaps *caps;
@@ -267,25 +238,22 @@ gst_analytics_batch_buffer_get_caps (GstAnalyticsBatchBuffer * buffer)
 }
 
 /**
- * gst_analytics_batch_buffer_get_segment:
- * @buffer: A #GstAnalyticsBatchBuffer
+ * gst_analytics_batch_stream_get_segment:
+ * @stream: A #GstAnalyticsBatchStream
  *
- * Gets the #GstSegment from a buffer
+ * Gets the #GstSegment from a stream
  *
  * Returns: (nullable) (transfer none): The #GstSegment if there is one
  *
  * Since: 1.28
  */
 const GstSegment *
-gst_analytics_batch_buffer_get_segment (GstAnalyticsBatchBuffer * buffer)
+gst_analytics_batch_stream_get_segment (GstAnalyticsBatchStream * stream)
 {
-  g_return_val_if_fail (buffer != NULL, NULL);
+  g_return_val_if_fail (stream != NULL, NULL);
 
-  if (!buffer->sticky_events)
-    return NULL;
-
-  for (gsize i = 0; i < buffer->n_sticky_events; i++) {
-    GstEvent *event = buffer->sticky_events[i];
+  for (gsize i = 0; i < stream->n_sticky_events; i++) {
+    GstEvent *event = stream->sticky_events[i];
 
     if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
       const GstSegment *segment;
