@@ -2086,7 +2086,7 @@ gst_buffer_memcmp (GstBuffer * buffer, gsize offset, gconstpointer mem,
   if (offset)
     i = _find_mapping (buffer, &offset);
 
-  for (i = 0; i < len && size > 0 && res == 0; i++) {
+  for (; i < len && size > 0 && res == 0; i++) {
     GstMapInfo info;
     gsize tocmp;
     GstMemory *mem;
@@ -2133,7 +2133,7 @@ gst_buffer_memset (GstBuffer * buffer, gsize offset, guint8 val, gsize size)
   if (offset)
     i = _find_mapping (buffer, &offset);
 
-  for (i = 0; i < len && left > 0; i++) {
+  for (; i < len && left > 0; i++) {
     GstMapInfo info;
     gsize toset;
     GstMemory *mem;
