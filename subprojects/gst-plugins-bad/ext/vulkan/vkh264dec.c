@@ -305,8 +305,11 @@ gst_vulkan_h264_decoder_negotiate (GstVideoDecoder * decoder)
   GstVideoFormat format;
 
   /* Ignore downstream renegotiation request. */
-  if (!self->need_negotiation)
-    return TRUE;
+  if (!self->need_negotiation) {
+    GST_DEBUG_OBJECT (decoder,
+        "Input state hasn't changed, no need to reconfigure downstream caps");
+    goto bail;
+  }
 
   if (!gst_vulkan_decoder_out_format (self->decoder, &format_prop))
     return FALSE;
@@ -333,6 +336,7 @@ gst_vulkan_h264_decoder_negotiate (GstVideoDecoder * decoder)
   GST_INFO_OBJECT (self, "Negotiated caps %" GST_PTR_FORMAT,
       self->output_state->caps);
 
+bail:
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
 
