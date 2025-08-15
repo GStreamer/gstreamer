@@ -1,0 +1,78 @@
+From 15304efa27fe3cb848997c1c33f2b230bd17020c Mon Sep 17 00:00:00 2001
+From: Dan Yeaw <dan@yeaw.me>
+Date: Sat, 9 Nov 2024 17:05:17 -0500
+Subject: [PATCH] Windows: fix Python path cannot contain spaces
+
+Move the shebang line from the full Python path of the build
+machine to the first Python on the path during runtime. Set
+the shebang in the main meson.build file so that it can be
+overridden in one place if needed.
+
+Fixes: #3331
+(cherry picked from commit 160e55575e2183464dbf5aa733d6c2df3c674c4c)
+---
+ gio/gdbus-2.0/codegen/meson.build | 2 +-
+ glib/meson.build                  | 2 +-
+ gobject/meson.build               | 2 +-
+ meson.build                       | 6 ++++++
+ 4 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/gio/gdbus-2.0/codegen/meson.build b/gio/gdbus-2.0/codegen/meson.build
+index 67ea9f2ee..246ad4f3f 100644
+--- a/gio/gdbus-2.0/codegen/meson.build
++++ b/gio/gdbus-2.0/codegen/meson.build
+@@ -31,7 +31,7 @@ gdbus_codegen_conf = configuration_data()
+ gdbus_codegen_conf.set('VERSION', glib_version)
+ gdbus_codegen_conf.set('MAJOR_VERSION', major_version)
+ gdbus_codegen_conf.set('MINOR_VERSION', minor_version)
+-gdbus_codegen_conf.set('PYTHON', python.full_path())
++gdbus_codegen_conf.set('PYTHON', python_shebang)
+ gdbus_codegen_conf.set('DATADIR', glib_datadir)
+ 
+ # Install gdbus-codegen executable
+diff --git a/glib/meson.build b/glib/meson.build
+index 9f1515b82..6b98ef6ce 100644
+--- a/glib/meson.build
++++ b/glib/meson.build
+@@ -505,7 +505,7 @@ endif
+ 
+ report_conf = configuration_data()
+ report_conf.set('GLIB_VERSION', glib_version)
+-report_conf.set('PYTHON', python.full_path())
++report_conf.set('PYTHON', python_shebang)
+ configure_file(
+   input: 'gtester-report.in',
+   output: 'gtester-report',
+diff --git a/gobject/meson.build b/gobject/meson.build
+index 78b732bf3..32c90de1a 100644
+--- a/gobject/meson.build
++++ b/gobject/meson.build
+@@ -87,7 +87,7 @@ python_tools = [
+ 
+ python_tools_conf = configuration_data()
+ python_tools_conf.set('VERSION', glib_version)
+-python_tools_conf.set('PYTHON', python.full_path())
++python_tools_conf.set('PYTHON', python_shebang)
+ 
+ foreach tool: python_tools
+   tool_bin = configure_file(
+diff --git a/meson.build b/meson.build
+index a99804441..429d50282 100644
+--- a/meson.build
++++ b/meson.build
+@@ -2460,6 +2460,12 @@ glib_conf.set('HAVE_PROC_SELF_CMDLINE', have_proc_self_cmdline)
+ 
+ python = import('python').find_installation()
+ 
++# Sets the shebang on script files. This has been changed many times including
++# using env, the absolute path to the Python executable, and using both python
++# and python3 names. Please review the history here, prior to suggesting
++# further changes: https://gitlab.gnome.org/GNOME/glib/-/merge_requests/439
++python_shebang = '/usr/bin/env python3'
++
+ python_version = python.language_version()
+ python_version_req = '>=3.7'
+ if not python_version.version_compare(python_version_req)
+-- 
+2.50.1.windows.1
+
