@@ -157,8 +157,8 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
 static gpointer
 _register_debug_category (gpointer data)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_vulkan_h265_decoder_debug,
-      "gst_vulkan_h265_decoder_debug", 0, "Vulkan H.265 decoder");
+  GST_DEBUG_CATEGORY_INIT (gst_vulkan_h265_decoder_debug, "vulkanh265dec", 0,
+      "Vulkan H.265 decoder");
 
   return NULL;
 }
