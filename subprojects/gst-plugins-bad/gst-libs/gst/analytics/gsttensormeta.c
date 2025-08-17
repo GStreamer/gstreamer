@@ -90,7 +90,7 @@ gst_tensor_meta_get_info (void)
  * gst_buffer_add_tensor_meta:
  * @buffer: A writable #GstBuffer
  *
- * Adds a #GstTensorMeta to a buffer or returns the existing one
+ * Adds a #GstTensorMeta to a buffer
  *
  * Returns: (transfer none): The new #GstTensorMeta
  *
@@ -100,12 +100,6 @@ gst_tensor_meta_get_info (void)
 GstTensorMeta *
 gst_buffer_add_tensor_meta (GstBuffer * buffer)
 {
-  GstTensorMeta *tmeta;
-
-  tmeta = gst_buffer_get_tensor_meta (buffer);
-  if (tmeta)
-    return tmeta;
-
   return (GstTensorMeta *) gst_buffer_add_meta (buffer,
       gst_tensor_meta_get_info (), NULL);
 }
