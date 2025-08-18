@@ -257,6 +257,10 @@ gst_lcevc_dec_start (GstVideoDecoder * decoder)
 {
   GstLcevcDec *lcevc = GST_LCEVC_DEC (decoder);
 
+  /* Reset */
+  lcevc->out_alloc_width = 0;
+  lcevc->out_alloc_height = 0;
+
   /* Initialize LCEVC decoder */
   if (!initialize_lcevc_decoder (lcevc)) {
     GST_ELEMENT_ERROR (decoder, LIBRARY, INIT, (NULL),
@@ -274,6 +278,9 @@ gst_lcevc_dec_stop (GstVideoDecoder * decoder)
 
   /* Clear input state */
   g_clear_pointer (&lcevc->input_state, gst_video_codec_state_unref);
+
+  /* Clear output state */
+  g_clear_pointer (&lcevc->output_state, gst_video_codec_state_unref);
 
   /* Destry LCEVC decoder */
   LCEVC_DestroyDecoder (lcevc->decoder_handle);
@@ -297,25 +304,67 @@ gst_lcevc_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 }
 
 static gboolean
-ensure_output_resolution (GstLcevcDec * lcevc, guint32 width, guint32 height)
+ensure_output_resolution (GstLcevcDec * lcevc, guint32 width, guint32 height,
+    guint32 alloc_width, guint32 alloc_height)
 {
-  if (width != lcevc->out_width || height != lcevc->out_height) {
-    GstVideoCodecState *s;
+  GstVideoCodecState *curr_s, *new_s;
 
-    s = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (lcevc),
-        GST_VIDEO_INFO_FORMAT (&lcevc->input_state->info), width, height,
-        lcevc->input_state);
-    if (!s)
-      return FALSE;
+  curr_s = lcevc->output_state ? lcevc->output_state : lcevc->input_state;
+  if (curr_s &&
+      width == GST_VIDEO_INFO_WIDTH (&curr_s->info) &&
+      height == GST_VIDEO_INFO_HEIGHT (&curr_s->info) &&
+      alloc_width == lcevc->out_alloc_width &&
+      alloc_height == lcevc->out_alloc_height)
+    return TRUE;
 
-    lcevc->out_width = width;
-    lcevc->out_height = height;
+  new_s = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (lcevc),
+      GST_VIDEO_INFO_FORMAT (&lcevc->input_state->info), width, height, curr_s);
+  if (!new_s)
+    return FALSE;
 
-    GST_INFO_OBJECT (lcevc, "Set output resolution to %dx%d", lcevc->out_width,
-        lcevc->out_height);
+  /* Set allocation caps */
+  new_s->allocation_caps = gst_video_info_to_caps (&new_s->info);
+  gst_caps_set_simple (new_s->allocation_caps, "width", G_TYPE_INT, alloc_width,
+      "height", G_TYPE_INT, alloc_height, NULL);
+  lcevc->out_alloc_width = alloc_width;
+  lcevc->out_alloc_height = alloc_height;
 
-    gst_video_codec_state_unref (s);
-  }
+  g_clear_pointer (&lcevc->output_state, gst_video_codec_state_unref);
+  lcevc->output_state = new_s;
+
+  GST_INFO_OBJECT (lcevc, "Set output resolution to %dx%d", width, height);
+
+  return TRUE;
+}
+
+static gboolean
+ensure_output_par (GstLcevcDec * lcevc, guint32 par_n, guint32 par_d)
+{
+  GstVideoCodecState *curr_s, *new_s;
+
+  curr_s = lcevc->output_state ? lcevc->output_state : lcevc->input_state;
+  if (curr_s &&
+      par_n == GST_VIDEO_INFO_PAR_N (&curr_s->info) &&
+      par_d == GST_VIDEO_INFO_PAR_D (&curr_s->info))
+    return TRUE;
+
+  new_s = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (lcevc),
+      GST_VIDEO_INFO_FORMAT (&curr_s->info),
+      GST_VIDEO_INFO_WIDTH (&curr_s->info),
+      GST_VIDEO_INFO_HEIGHT (&curr_s->info), curr_s);
+  if (!new_s)
+    return FALSE;
+
+  new_s->allocation_caps =
+      curr_s->allocation_caps ? gst_caps_ref (curr_s->allocation_caps) : NULL;
+
+  GST_VIDEO_INFO_PAR_N (&new_s->info) = par_n;
+  GST_VIDEO_INFO_PAR_D (&new_s->info) = par_d;
+
+  g_clear_pointer (&lcevc->output_state, gst_video_codec_state_unref);
+  lcevc->output_state = new_s;
+
+  GST_INFO_OBJECT (lcevc, "Set output par to %d/%d", par_n, par_d);
 
   return TRUE;
 }
@@ -383,7 +432,6 @@ receive_enhanced_picture (GstLcevcDec * lcevc)
               &picture_handle, &decode_info)) == LCEVC_Success) {
     LCEVC_PictureDesc pic_desc = { 0, };
     GstVideoCodecFrame *received_frame;
-    GstVideoCropMeta *cmeta;
 
     if (LCEVC_GetPictureDesc (lcevc->decoder_handle, picture_handle,
             &pic_desc) != LCEVC_Success) {
@@ -392,70 +440,88 @@ receive_enhanced_picture (GstLcevcDec * lcevc)
       return FALSE;
     }
 
-    /* Enhanced resolution should always match the output width and height */
-    if (pic_desc.width != lcevc->out_width ||
-        pic_desc.height != lcevc->out_height) {
+    GST_INFO_OBJECT (lcevc,
+        "Received enhanced picture: ts=%" G_GINT64_FORMAT " e=%d w=%d h=%d"
+        " t=%d b=%d l=%d r=%d par=%d/%d",
+        decode_info.timestamp, decode_info.enhanced, pic_desc.width,
+        pic_desc.height, pic_desc.cropTop, pic_desc.cropBottom,
+        pic_desc.cropLeft, pic_desc.cropRight, pic_desc.sampleAspectRatioNum,
+        pic_desc.sampleAspectRatioDen);
+
+    /* Get the pending frame */
+    received_frame = find_pending_frame_from_picture_handle (lcevc,
+        picture_handle);
+    if (!received_frame) {
       GST_ELEMENT_ERROR (lcevc, STREAM, DECODE, (NULL),
-          ("Decoded LCEVC picture has wrong resolution"));
+          ("Decoded LCEVC picture has no pending frame"));
       return FALSE;
     }
 
-    GST_INFO_OBJECT (lcevc,
-        "Received enhanced picture: ts=%" G_GINT64_FORMAT " e=%d w=%d h=%d"
-        " t=%d b=%d l=%d r=%d",
-        decode_info.timestamp, decode_info.enhanced, pic_desc.width,
-        pic_desc.height, pic_desc.cropTop, pic_desc.cropBottom,
-        pic_desc.cropLeft, pic_desc.cropRight);
+    /* Make sure enhanced resolution is valid */
+    if (pic_desc.width != GST_VIDEO_INFO_WIDTH (&lcevc->output_state->info) ||
+        pic_desc.height != GST_VIDEO_INFO_HEIGHT (&lcevc->output_state->info)) {
+      GST_ELEMENT_ERROR (lcevc, STREAM, DECODE, (NULL),
+          ("Decoded LCEVC picture has wrong resolution"));
+      gst_video_codec_frame_unref (received_frame);
+      return FALSE;
+    }
 
-    received_frame = find_pending_frame_from_picture_handle (lcevc,
-        picture_handle);
-    if (received_frame) {
-      /* Add crop meta if downstream can crop */
+    /* Check if decoded picture is cropped */
+    if (pic_desc.cropTop > 0 || pic_desc.cropBottom > 0 ||
+        pic_desc.cropLeft > 0 || pic_desc.cropRight > 0) {
+      guint32 crop_width, crop_height;
+
+      /* Make sure enhanced crop dimensions are valid */
+      if (pic_desc.width <= pic_desc.cropLeft + pic_desc.cropRight ||
+          pic_desc.height <= pic_desc.cropTop + pic_desc.cropBottom) {
+        GST_ELEMENT_ERROR (lcevc, STREAM, DECODE, (NULL),
+            ("Decoded LCEVC picture has wrong crop dimensions"));
+        gst_video_codec_frame_unref (received_frame);
+        return FALSE;
+      }
+
+      crop_width = pic_desc.width - (pic_desc.cropLeft + pic_desc.cropRight);
+      crop_height = pic_desc.height - (pic_desc.cropTop + pic_desc.cropBottom);
+
+      /* Attach crop meta if downstream can crop */
       if (lcevc->can_crop) {
+        GstVideoCropMeta *cmeta;
         cmeta = gst_buffer_add_video_crop_meta (received_frame->output_buffer);
         cmeta->x = pic_desc.cropLeft;
         cmeta->y = pic_desc.cropTop;
-        cmeta->width =
-            pic_desc.width - (pic_desc.cropLeft + pic_desc.cropRight);
-        cmeta->height =
-            pic_desc.height - (pic_desc.cropTop + pic_desc.cropBottom);
+        cmeta->width = crop_width;
+        cmeta->height = crop_height;
 
-        /* Change output caps if crop values changed */
-        if (lcevc->out_crop_top != pic_desc.cropTop ||
-            lcevc->out_crop_bottom != pic_desc.cropBottom ||
-            lcevc->out_crop_left != pic_desc.cropLeft ||
-            lcevc->out_crop_right != pic_desc.cropRight) {
-          GstVideoCodecState *s;
-
-          lcevc->out_crop_top = pic_desc.cropTop;
-          lcevc->out_crop_bottom = pic_desc.cropBottom;
-          lcevc->out_crop_left = pic_desc.cropLeft;
-          lcevc->out_crop_right = pic_desc.cropRight;
-
-          s = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (lcevc));
-          if (!s) {
-            gst_video_codec_frame_unref (received_frame);
-            return FALSE;
-          }
-
-          s->caps = gst_video_info_to_caps (&s->info);
-          gst_caps_set_simple (s->caps,
-              "width", G_TYPE_INT,
-              pic_desc.width - (pic_desc.cropLeft + pic_desc.cropRight),
-              "height", G_TYPE_INT,
-              pic_desc.height - (pic_desc.cropTop + pic_desc.cropBottom), NULL);
-          gst_video_decoder_negotiate (GST_VIDEO_DECODER (lcevc));
-
-          gst_video_codec_state_unref (s);
+        /* Update the crop resolution */
+        if (!ensure_output_resolution (lcevc, crop_width, crop_height,
+                lcevc->out_alloc_width, lcevc->out_alloc_width)) {
+          GST_ELEMENT_ERROR (lcevc, STREAM, DECODE, (NULL),
+              ("Could not update output crop resolution"));
+          gst_video_codec_frame_unref (received_frame);
+          return FALSE;
         }
+      } else {
+        /* FIXME: Do a copy of the cropped area instead of error */
+        GST_ELEMENT_ERROR (lcevc, STREAM, DECODE, (NULL),
+            ("Decoded LCEVC picture is cropped but downstream cannot crop"));
+        gst_video_codec_frame_unref (received_frame);
+        return FALSE;
       }
-
-      /* Finish frame */
-      received_frame->output_buffer->pts = decode_info.timestamp;
-      gst_video_decoder_finish_frame (GST_VIDEO_DECODER (lcevc),
-          received_frame);
-      gst_video_codec_frame_unref (received_frame);
     }
+
+    /* Update the pixel aspect ratio */
+    if (!ensure_output_par (lcevc, pic_desc.sampleAspectRatioNum,
+            pic_desc.sampleAspectRatioDen)) {
+      GST_ELEMENT_ERROR (lcevc, STREAM, DECODE, (NULL),
+          ("Could not update output pixel aspect ratio"));
+      gst_video_codec_frame_unref (received_frame);
+      return FALSE;
+    }
+
+    /* Finish frame */
+    received_frame->output_buffer->pts = decode_info.timestamp;
+    gst_video_decoder_finish_frame (GST_VIDEO_DECODER (lcevc), received_frame);
+    gst_video_codec_frame_unref (received_frame);
   }
 
   /* Make sure no errors happened */
@@ -515,7 +581,7 @@ send_enhancement_data (GstLcevcDec * lcevc, GstBuffer * input_buffer)
         "Input buffer %" GST_TIME_FORMAT
         " enhancement data not found, doing passthrough",
         GST_TIME_ARGS (GST_BUFFER_PTS (input_buffer)));
-    return ensure_output_resolution (lcevc, out_w, out_h);
+    return ensure_output_resolution (lcevc, out_w, out_h, out_w, out_h);
   }
 
   if (!gst_buffer_map (lcevc_meta->enhancement_data, &enhancement_info,
@@ -541,7 +607,8 @@ send_enhancement_data (GstLcevcDec * lcevc, GstBuffer * input_buffer)
     GST_INFO_OBJECT (lcevc, "Could not peek decoder for output resolution");
     goto done;
   }
-  if (!ensure_output_resolution (lcevc, out_w, out_h)) {
+
+  if (!ensure_output_resolution (lcevc, out_w, out_h, out_w, out_h)) {
     GST_INFO_OBJECT (lcevc, "Could not set output resolution to %dx%d", out_w,
         out_h);
     goto done;
@@ -626,7 +693,8 @@ send_enhanced_picture (GstLcevcDec * lcevc, GstVideoCodecFrame * frame)
   /* Get pic data if any and size didn't change, otherwise create a new one */
   pd = gst_mini_object_get_qdata (GST_MINI_OBJECT (frame->output_buffer),
       GST_LCEVC_DEC_PICTURE_DATA);
-  if (!pd || pd->width != lcevc->out_width || pd->height != lcevc->out_height) {
+  if (!pd || pd->width != lcevc->out_alloc_width ||
+      pd->height != lcevc->out_alloc_height) {
     /* Create picture data */
     pd = picture_data_new (lcevc->decoder_handle, &map);
     if (!pd) {

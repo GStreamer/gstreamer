@@ -68,6 +68,8 @@ gst_lcevc_dec_utils_alloc_picture_handle (LCEVC_DecoderHandle decoder_handle,
           GST_VIDEO_FRAME_WIDTH (frame), GST_VIDEO_FRAME_HEIGHT (frame))
       != LCEVC_Success)
     return FALSE;
+  picture_desc.sampleAspectRatioNum = GST_VIDEO_INFO_PAR_N (&frame->info);
+  picture_desc.sampleAspectRatioDen = GST_VIDEO_INFO_PAR_D (&frame->info);
 
   /* Set buffer description */
   buffer_desc.data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);

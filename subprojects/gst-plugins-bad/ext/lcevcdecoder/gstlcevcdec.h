@@ -52,14 +52,11 @@ struct _GstLcevcDec {
 
   LCEVC_DecoderHandle decoder_handle;
   GstVideoCodecState *input_state;
+  GstVideoCodecState *output_state;
   gboolean can_crop;
 
-  guint32 out_width;
-  guint32 out_height;
-  guint32 out_crop_top;
-  guint32 out_crop_bottom;
-  guint32 out_crop_left;
-  guint32 out_crop_right;
+  guint32 out_alloc_width;
+  guint32 out_alloc_height;
 };
 
 struct _GstLcevcDecClass {
