@@ -82,10 +82,6 @@ gst_lcevc_dec_utils_alloc_picture_handle (LCEVC_DecoderHandle decoder_handle,
     plane_desc[i].rowByteStride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, i);
   }
 
-  /* FIXME: We set the stride on all the array (needed for LCEVCdec 2.0.0) */
-  for (; i < GST_VIDEO_MAX_PLANES; i++)
-    plane_desc[i].rowByteStride = GST_VIDEO_FRAME_WIDTH (frame);
-
   /* Allocate LCEVC Picture */
   if (LCEVC_AllocPictureExternal (decoder_handle, &picture_desc, &buffer_desc,
           plane_desc, picture_handle) != LCEVC_Success)
