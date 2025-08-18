@@ -6355,6 +6355,19 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
             message.type);
         break;
     }
+
+    /* In interleaved mode, we expect to receive a continuous stream of data,
+     * but we still need to do keepalives, so even without an GST_RTSP_ETIMEOUT
+     * check the timeout timer */
+    gint64 timeout =
+        gst_rtsp_connection_next_timeout_usec (src->conninfo.connection);
+    if (timeout == 0) {
+      GST_DEBUG_OBJECT (src,
+          "Keepalive timeout expired. Sending keep-alive request");
+      if ((res = gst_rtspsrc_send_keep_alive (src)) == GST_RTSP_EINTR) {
+        goto interrupt;
+      }
+    }
   }
   g_assert_not_reached ();
 
