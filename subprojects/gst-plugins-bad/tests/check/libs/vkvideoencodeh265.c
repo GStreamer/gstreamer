@@ -489,7 +489,7 @@ setup_h265_encoder (uint32_t width, uint32_t height, gint vps_id,
   };
   /* *INDENT-ON* */
 
-  setup_queue (VK_QUEUE_VIDEO_DECODE_BIT_KHR,
+  setup_queue (VK_QUEUE_VIDEO_ENCODE_BIT_KHR,
       VK_VIDEO_CODEC_OPERATION_ENCODE_H265_BIT_KHR);
 
   if (!video_queue) {
