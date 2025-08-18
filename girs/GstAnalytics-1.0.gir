@@ -1652,7 +1652,7 @@ analysis meta.</doc>
       </parameters>
     </function>
     <function name="buffer_add_tensor_meta" c:identifier="gst_buffer_add_tensor_meta" version="1.26">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">Adds a #GstTensorMeta to a buffer or returns the existing one</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">Adds a #GstTensorMeta to a buffer</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">The new #GstTensorMeta</doc>
