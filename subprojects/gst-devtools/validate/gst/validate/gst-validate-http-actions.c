@@ -59,28 +59,31 @@ static gboolean
 parse_uri (const gchar * uri, gchar ** host, gint * port, gchar ** path,
     GError ** error)
 {
-  GUri *guri;
+  GstUri *gst_uri;
   gboolean ret = FALSE;
 
-  guri = g_uri_parse (uri, 0 /* G_URI_FLAGS_NONE in 2.66 */ , error);
-  if (!guri)
+  gst_uri = gst_uri_from_string (uri);
+  if (!gst_uri) {
+    g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
+        "Invalid URI: %s", uri);
     return FALSE;
+  }
 
-  *host = g_strdup (g_uri_get_host (guri));
+  *host = g_strdup (gst_uri_get_host (gst_uri));
   if (!*host) {
     g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
         "Invalid URI: missing host");
     goto cleanup;
   }
 
-  *port = g_uri_get_port (guri);
-  if (*port == -1) {
+  *port = gst_uri_get_port (gst_uri);
+  if (*port == GST_URI_NO_PORT) {
     g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
         "Invalid URI: missing port");
     goto cleanup;
   }
 
-  *path = g_strdup (g_uri_get_path (guri));
+  *path = g_strdup (gst_uri_get_path (gst_uri));
   if (!*path) {
     g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
         "Invalid URI: missing path");
@@ -94,7 +97,7 @@ cleanup:
     g_clear_pointer (host, g_free);
     g_clear_pointer (path, g_free);
   }
-  g_uri_unref (guri);
+  gst_uri_unref (gst_uri);
   return ret;
 }
 
