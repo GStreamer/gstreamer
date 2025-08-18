@@ -225,6 +225,23 @@ _is_video_usage (VkImageUsageFlags requested_usage)
   return ((requested_usage & video_usage) != 0);
 }
 
+static gboolean
+_is_video_profile_independent (VkImageUsageFlags requested_usage)
+{
+  VkImageUsageFlags video_dependent = 0;
+
+#if defined(VK_KHR_video_encode_queue)
+  video_dependent |= VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR;
+#endif
+#if defined(VK_KHR_video_encode_quantization_map)
+  video_dependent |= VK_IMAGE_USAGE_VIDEO_ENCODE_QUANTIZATION_DELTA_MAP_BIT_KHR;
+#endif
+#if defined(VK_KHR_video_encode_quantization_map)
+  video_dependent |= VK_IMAGE_USAGE_VIDEO_ENCODE_EMPHASIS_MAP_BIT_KHR;
+#endif
+
+  return ((requested_usage & video_dependent) == 0);
+}
 
 static gboolean
 gst_vulkan_image_buffer_pool_fill_buffer (GstVulkanImageBufferPool * vk_pool,
@@ -235,7 +252,6 @@ gst_vulkan_image_buffer_pool_fill_buffer (GstVulkanImageBufferPool * vk_pool,
   int i;
   VkImageCreateInfo image_info;
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-  GstVulkanPhysicalDevice *gpu;
   VkVideoProfileInfoKHR profiles[2];
   VkVideoProfileListInfoKHR profile_list = {
     .sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_LIST_INFO_KHR,
@@ -265,22 +281,22 @@ gst_vulkan_image_buffer_pool_fill_buffer (GstVulkanImageBufferPool * vk_pool,
                      : VK_IMAGE_LAYOUT_UNDEFINED,
   };
   /* *INDENT-ON* */
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-  gpu = vk_pool->device->physical_device;
   if (_is_video_usage (priv->usage)) {
+    GstVulkanPhysicalDevice *gpu = vk_pool->device->physical_device;
+    if (gst_vulkan_physical_device_has_feature_video_maintenance1 (gpu)
+        && _is_video_profile_independent (priv->usage)) {
 #if defined(VK_KHR_video_maintenance1)
-    if (gst_vulkan_physical_device_has_feature_video_maintenance1 (gpu)) {
       image_info.flags |= VK_IMAGE_CREATE_VIDEO_PROFILE_INDEPENDENT_BIT_KHR;
-    } else
 #endif
-    if (priv->n_profiles > 0) {
+    } else if (priv->n_profiles > 0) {
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
       for (i = 0; i < priv->n_profiles; i++)
         profiles[i] = priv->profiles[i].profile;
 
       image_info.pNext = &profile_list;
+#endif
     }
   }
-#endif
 
   priv->v_info.size = 0;
   for (i = 0; i < priv->n_imgs; i++) {
@@ -363,43 +379,47 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
   priv->n_profiles = 0;
 
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-  if (!gst_vulkan_physical_device_has_feature_video_maintenance1
-      (vk_pool->device->physical_device)) {
-    guint n = 0;
+  if (_is_video_usage (requested_usage)) {
+    GstVulkanPhysicalDevice *gpu = vk_pool->device->physical_device;
+    if (!gst_vulkan_physical_device_has_feature_video_maintenance1 (gpu)
+        || !_is_video_profile_independent (requested_usage)) {
+      guint n = 0;
 
 #if defined(VK_KHR_video_decode_queue)
-    if (decode_caps && ((requested_usage
-                & (VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
-                    | VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR)) != 0)) {
-      n++;
-      if (gst_vulkan_video_profile_from_caps (&priv->profiles[priv->n_profiles],
-              decode_caps, GST_VULKAN_VIDEO_OPERATION_DECODE))
-        priv->n_profiles++;
-    }
+      if (decode_caps && ((requested_usage
+                  & (VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
+                      | VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR)) != 0)) {
+        n++;
+        if (gst_vulkan_video_profile_from_caps (&priv->
+                profiles[priv->n_profiles], decode_caps,
+                GST_VULKAN_VIDEO_OPERATION_DECODE))
+          priv->n_profiles++;
+      }
 #endif
 #if defined(VK_KHR_video_encode_queue)
-    if (encode_caps && ((requested_usage
-                & (VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR
-                    | VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR)) != 0)) {
-      n++;
-      if (gst_vulkan_video_profile_from_caps (&priv->profiles[priv->n_profiles],
-              encode_caps, GST_VULKAN_VIDEO_OPERATION_ENCODE))
-        priv->n_profiles++;
-    }
+      if (encode_caps && ((requested_usage
+                  & (VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR
+                      | VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR)) != 0)) {
+        n++;
+        if (gst_vulkan_video_profile_from_caps (&priv->
+                profiles[priv->n_profiles], encode_caps,
+                GST_VULKAN_VIDEO_OPERATION_ENCODE))
+          priv->n_profiles++;
+      }
 #endif
-
-    if (priv->n_profiles != n)
-      goto missing_profile;
-  } else if (_is_video_usage (requested_usage)) {
-    /* HACK: to force multiplane images below  */
-    priv->n_profiles = 1;
+      if (priv->n_profiles != n)
+        goto missing_profile;
+      if (priv->n_profiles == 0)
+        GST_WARNING ("Vulkan video image allocation without video profiles");
+    }
   }
 #endif /* GST_VULKAN_HAVE_VIDEO_EXTENSIONS */
 
   gst_clear_caps (&decode_caps);
   gst_clear_caps (&encode_caps);
 
-  no_multiplane = (priv->n_profiles == 0);
+  no_multiplane = !(GST_VIDEO_INFO_IS_YUV (&priv->v_info) &&
+      _is_video_usage (requested_usage));
 
   tiling = priv->raw_caps ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
   found = gst_vulkan_format_from_video_info_2 (vk_pool->device,
