@@ -1431,7 +1431,7 @@ _gst_buffer_get_dts (PyObject * self, PyObject * args)
 {
   DECLARE_BUFFER (args);
 
-  return PyLong_FromUnsignedLong (buffer->dts);
+  return PyLong_FromUnsignedLongLong (buffer->dts);
 }
 
 static gboolean
@@ -1485,7 +1485,7 @@ _gst_buffer_get_pts (PyObject * self, PyObject * args)
 {
   DECLARE_BUFFER (args);
 
-  return PyLong_FromUnsignedLong (buffer->pts);
+  return PyLong_FromUnsignedLongLong (buffer->pts);
 }
 
 static PyObject *
@@ -1516,7 +1516,7 @@ _gst_buffer_get_duration (PyObject * self, PyObject * args)
 {
   DECLARE_BUFFER (args);
 
-  return PyLong_FromUnsignedLong (buffer->duration);
+  return PyLong_FromUnsignedLongLong (buffer->duration);
 }
 
 static PyObject *
@@ -1547,7 +1547,7 @@ _gst_buffer_get_offset (PyObject * self, PyObject * args)
 {
   DECLARE_BUFFER (args);
 
-  return PyLong_FromUnsignedLong (buffer->offset);
+  return PyLong_FromUnsignedLongLong (buffer->offset);
 }
 
 static PyObject *
@@ -1578,7 +1578,7 @@ _gst_buffer_get_offset_end (PyObject * self, PyObject * args)
 {
   DECLARE_BUFFER (args);
 
-  return PyLong_FromUnsignedLong (buffer->offset_end);
+  return PyLong_FromUnsignedLongLong (buffer->offset_end);
 }
 
 static PyObject *
