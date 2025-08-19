@@ -837,10 +837,10 @@ GstStream      *gst_message_streams_selected_get_stream (GstMessage *message, gu
 /* REDIRECT */
 
 GST_API
-GstMessage *    gst_message_new_redirect             (GstObject * src, const gchar * location, GstTagList * tag_list, const GstStructure * entry_struct) G_GNUC_MALLOC;
+GstMessage *    gst_message_new_redirect             (GstObject * src, const gchar * location, GstTagList * tag_list, GstStructure * entry_struct) G_GNUC_MALLOC;
 
 GST_API
-void            gst_message_add_redirect_entry       (GstMessage * message, const gchar * location, GstTagList * tag_list, const GstStructure * entry_struct);
+void            gst_message_add_redirect_entry       (GstMessage * message, const gchar * location, GstTagList * tag_list, GstStructure * entry_struct);
 
 GST_API
 void            gst_message_parse_redirect_entry     (GstMessage * message, gsize entry_index, const gchar ** location, GstTagList ** tag_list, const GstStructure ** entry_struct);

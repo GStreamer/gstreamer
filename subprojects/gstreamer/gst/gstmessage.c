@@ -3193,7 +3193,7 @@ gst_message_parse_streams_selected (GstMessage * message,
  */
 GstMessage *
 gst_message_new_redirect (GstObject * src, const gchar * location,
-    GstTagList * tag_list, const GstStructure * entry_struct)
+    GstTagList * tag_list, GstStructure * entry_struct)
 {
   GstStructure *structure;
   GstMessage *message;
@@ -3239,7 +3239,7 @@ gst_message_new_redirect (GstObject * src, const gchar * location,
  */
 void
 gst_message_add_redirect_entry (GstMessage * message, const gchar * location,
-    GstTagList * tag_list, const GstStructure * entry_struct)
+    GstTagList * tag_list, GstStructure * entry_struct)
 {
   GValue val = G_VALUE_INIT;
   GstStructure *structure;
