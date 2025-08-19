@@ -27,9 +27,11 @@
 
 G_BEGIN_DECLS
 
-/* TODO: Only I420 and NV12 are currently working with the SDK */
+/* RGB and GRAY formats are only placeholders in LCEVCDec and therefore are not
+ * supported yet. */
 #define GST_LCEVC_DEC_UTILS_SUPPORTED_FORMATS \
-    "{ I420, NV12 }"
+    "{ I420, I420_10LE, I420_12LE, Y42B, I422_10LE, I422_12LE, Y444, \
+    Y444_10LE, Y444_12LE, NV12, NV21 }"
 
 LCEVC_ColorFormat gst_lcevc_dec_utils_get_color_format (GstVideoFormat format);
 

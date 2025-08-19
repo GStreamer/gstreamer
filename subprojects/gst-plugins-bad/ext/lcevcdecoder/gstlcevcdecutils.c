@@ -25,10 +25,30 @@ gst_lcevc_dec_utils_get_color_format (GstVideoFormat format)
   switch (format) {
     case GST_VIDEO_FORMAT_I420:
       return LCEVC_I420_8;
+    case GST_VIDEO_FORMAT_I420_10LE:
+      return LCEVC_I420_10_LE;
+    case GST_VIDEO_FORMAT_I420_12LE:
+      return LCEVC_I420_12_LE;
+
+    case GST_VIDEO_FORMAT_Y42B:
+      return LCEVC_I422_8;
+    case GST_VIDEO_FORMAT_I422_10LE:
+      return LCEVC_I422_10_LE;
+    case GST_VIDEO_FORMAT_I422_12LE:
+      return LCEVC_I422_12_LE;
+
+    case GST_VIDEO_FORMAT_Y444:
+      return LCEVC_I444_8;
+    case GST_VIDEO_FORMAT_Y444_10LE:
+      return LCEVC_I444_10_LE;
+    case GST_VIDEO_FORMAT_Y444_12LE:
+      return LCEVC_I444_12_LE;
+
     case GST_VIDEO_FORMAT_NV12:
       return LCEVC_NV12_8;
     case GST_VIDEO_FORMAT_NV21:
       return LCEVC_NV21_8;
+
     case GST_VIDEO_FORMAT_RGB:
       return LCEVC_RGB_8;
     case GST_VIDEO_FORMAT_BGR:
@@ -41,6 +61,12 @@ gst_lcevc_dec_utils_get_color_format (GstVideoFormat format)
       return LCEVC_ARGB_8;
     case GST_VIDEO_FORMAT_ABGR:
       return LCEVC_ABGR_8;
+
+    case GST_VIDEO_FORMAT_GRAY8:
+      return LCEVC_GRAY_8;
+    case GST_VIDEO_FORMAT_GRAY16_LE:
+      return LCEVC_GRAY_16_LE;
+
     default:
       break;
   }
