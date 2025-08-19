@@ -122,6 +122,7 @@ gst_wasapi2_src_loopback_mode_get_type (void)
 #define DEFAULT_LOOPBACK_MODE GST_WASAPI2_SRC_LOOPBACK_DEFAULT
 #define DEFAULT_LOOPBACK_SILENCE_ON_DEVICE_MUTE FALSE
 #define DEFAULT_CONTINUE_ON_ERROR FALSE
+#define DEFAULT_EXCLUSIVE FALSE
 
 enum
 {
@@ -136,6 +137,7 @@ enum
   PROP_LOOPBACK_TARGET_PID,
   PROP_LOOPBACK_SILENCE_ON_DEVICE_MUTE,
   PROP_CONTINUE_ON_ERROR,
+  PROP_EXCLUSIVE,
 };
 
 /* *INDENT-OFF* */
@@ -161,6 +163,7 @@ struct GstWasapi2SrcPrivate
   gboolean loopback_silence_on_device_mute =
       DEFAULT_LOOPBACK_SILENCE_ON_DEVICE_MUTE;
   gboolean continue_on_error = DEFAULT_CONTINUE_ON_ERROR;
+  gboolean exclusive = DEFAULT_EXCLUSIVE;
 };
 /* *INDENT-ON* */
 
@@ -323,6 +326,17 @@ gst_wasapi2_src_class_init (GstWasapi2SrcClass * klass)
           DEFAULT_CONTINUE_ON_ERROR, (GParamFlags) (GST_PARAM_MUTABLE_READY |
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstWasapi2Src:exclusive:
+   *
+   * Since: 1.28
+   */
+  g_object_class_install_property (gobject_class, PROP_EXCLUSIVE,
+      g_param_spec_boolean ("exclusive", "Exclusive",
+          "Open the device in exclusive mode",
+          DEFAULT_EXCLUSIVE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_element_class_add_static_pad_template (element_class, &src_template);
   gst_element_class_set_static_metadata (element_class, "Wasapi2Src",
       "Source/Audio/Hardware",
@@ -361,7 +375,8 @@ gst_wasapi2_src_init (GstWasapi2Src * self)
 
   priv->rbuf = gst_wasapi2_rbuf_new (self, gst_wasapi2_src_on_invalidated);
   gst_wasapi2_rbuf_set_device (priv->rbuf, nullptr,
-      GST_WASAPI2_ENDPOINT_CLASS_CAPTURE, 0, DEFAULT_LOW_LATENCY);
+      GST_WASAPI2_ENDPOINT_CLASS_CAPTURE, 0, DEFAULT_LOW_LATENCY,
+      DEFAULT_EXCLUSIVE);
 
   self->priv = priv;
 }
@@ -402,7 +417,7 @@ gst_wasapi2_src_set_device (GstWasapi2Src * self, bool updated)
   }
 
   gst_wasapi2_rbuf_set_device (priv->rbuf, priv->device_id, device_class,
-      priv->loopback_pid, priv->low_latency);
+      priv->loopback_pid, priv->low_latency, priv->exclusive);
 }
 
 static void
@@ -495,6 +510,18 @@ gst_wasapi2_src_set_property (GObject * object, guint prop_id,
       gst_wasapi2_rbuf_set_continue_on_error (priv->rbuf,
           priv->continue_on_error);
       break;
+    case PROP_EXCLUSIVE:
+    {
+      auto new_val = g_value_get_boolean (value);
+      bool updated = false;
+      if (new_val != priv->exclusive) {
+        priv->exclusive = new_val;
+        updated = true;
+      }
+
+      gst_wasapi2_src_set_device (self, updated);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -537,6 +564,9 @@ gst_wasapi2_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CONTINUE_ON_ERROR:
       g_value_set_boolean (value, priv->continue_on_error);
+      break;
+    case PROP_EXCLUSIVE:
+      g_value_set_boolean (value, priv->exclusive);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
