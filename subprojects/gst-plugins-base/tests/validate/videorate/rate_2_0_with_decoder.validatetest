@@ -1,5 +1,4 @@
 # Using an encoder/decoder to test QoS handling
-# FIXME: Use a fakevideodec once merged!
-set-globals, rate=(string)"0.5", decoder="! theoraenc ! theoradec !"
+set-globals, rate=(string)"2.0", num_buffers=(string)"20", n_cranks_to_eos=(string)"2"
 
 include, location="check-rate-prop-with-decoder.meta"
