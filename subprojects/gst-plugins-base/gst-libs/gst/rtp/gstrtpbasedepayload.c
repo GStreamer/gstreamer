@@ -497,8 +497,7 @@ gst_rtp_base_depayload_finalize (GObject * object)
 
   g_ptr_array_unref (rtpbasedepayload->priv->header_exts);
   gst_clear_buffer_list (&rtpbasedepayload->priv->hdrext_buffers);
-  if (priv->hdrext_delayed)
-    gst_buffer_unref (priv->hdrext_delayed);
+  gst_clear_buffer (&priv->hdrext_delayed);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1758,8 +1757,7 @@ gst_rtp_base_depayload_change_state (GstElement * element,
       priv->discont = FALSE;
       priv->segment_seqnum = GST_SEQNUM_INVALID;
       priv->hdrext_seen = FALSE;
-      if (priv->hdrext_delayed)
-        gst_buffer_unref (priv->hdrext_delayed);
+      gst_clear_buffer (&priv->hdrext_delayed);
       gst_rtp_base_depayload_reset_hdrext_buffers (filter);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
