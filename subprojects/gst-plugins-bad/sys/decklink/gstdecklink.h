@@ -596,7 +596,7 @@ struct _GstDecklinkInput {
   gboolean audio_enabled;
   GstElement *videosrc;
   gboolean video_enabled;
-  void (*start_streams) (GstElement *videosrc);
+  gboolean (*start_streams) (GstElement *videosrc);
 };
 
 GstDecklinkOutput * gst_decklink_acquire_nth_output (gint n, gint64 persistent_id, GstElement * sink, gboolean is_audio);

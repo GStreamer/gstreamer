@@ -247,7 +247,7 @@ static gboolean gst_decklink_video_src_close (GstDecklinkVideoSrc * self);
 
 static gboolean gst_decklink_video_src_stop (GstDecklinkVideoSrc * self);
 
-static void gst_decklink_video_src_start_streams (GstElement * element);
+static gboolean gst_decklink_video_src_start_streams (GstElement * element);
 
 #define parent_class gst_decklink_video_src_parent_class
 G_DEFINE_TYPE (GstDecklinkVideoSrc, gst_decklink_video_src, GST_TYPE_PUSH_SRC);
@@ -693,8 +693,12 @@ gst_decklink_video_src_start (GstDecklinkVideoSrc * self)
   g_mutex_lock (&self->input->lock);
   self->input->mode = mode;
   self->input->video_enabled = TRUE;
-  if (self->input->start_streams)
-    self->input->start_streams (self->input->videosrc);
+  if (self->input->start_streams) {
+    if (!self->input->start_streams (self->input->videosrc)) {
+      g_mutex_unlock (&self->input->lock);
+      return FALSE;
+    }
+  }
   g_mutex_unlock (&self->input->lock);
 
   self->skipped_last = 0;
@@ -1897,7 +1901,11 @@ gst_decklink_video_src_stop (GstDecklinkVideoSrc * self)
     self->input->video_enabled = FALSE;
     g_mutex_unlock (&self->input->lock);
 
-    self->input->input->DisableVideoInput ();
+    const HRESULT res = self->input->input->DisableVideoInput ();
+    if (FAILED(res)) {
+      GST_ELEMENT_ERROR (self, STREAM, FAILED,
+          (NULL), ("Failed to disable video input: 0x%08lx", (unsigned long) res));
+    }
   }
 
   if (self->vbiparser) {
@@ -1910,11 +1918,10 @@ gst_decklink_video_src_stop (GstDecklinkVideoSrc * self)
   return TRUE;
 }
 
-static void
+static gboolean
 gst_decklink_video_src_start_streams (GstElement * element)
 {
   GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (element);
-  HRESULT res;
 
   if (self->input->video_enabled && (!self->input->audiosrc
           || self->input->audio_enabled)
@@ -1937,15 +1944,18 @@ gst_decklink_video_src_start_streams (GstElement * element)
     self->next_time_mapping.num = 1;
     self->next_time_mapping.den = 1;
     g_mutex_unlock (&self->lock);
-    res = self->input->input->StartStreams ();
-    if (res != S_OK) {
+
+    const HRESULT res = self->input->input->StartStreams ();
+    if (FAILED(res)) {
       GST_ELEMENT_ERROR (self, STREAM, FAILED,
           (NULL), ("Failed to start streams: 0x%08lx", (unsigned long) res));
-      return;
+      return FALSE;
     }
   } else {
     GST_DEBUG_OBJECT (self, "Not starting streams yet");
   }
+
+  return TRUE;
 }
 
 static GstStateChangeReturn
@@ -1997,19 +2007,24 @@ gst_decklink_video_src_change_state (GstElement * element,
       HRESULT res;
 
       GST_DEBUG_OBJECT (self, "Stopping streams");
-
+      // Even if StopStreams() fails we consider the element state change to
+      // have succeeded. This can happen if the earlier call to StartStreams()
+      // failed. Downward state changes should never fail since doing so would
+      // prevent the element being disposed (and so prevent the associated
+      // hardware resource being released).
       res = self->input->input->StopStreams ();
       if (res != S_OK) {
         GST_ELEMENT_ERROR (self, STREAM, FAILED,
             (NULL), ("Failed to stop streams: 0x%08lx", (unsigned long) res));
-        ret = GST_STATE_CHANGE_FAILURE;
       }
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:{
       g_mutex_lock (&self->input->lock);
-      if (self->input->start_streams)
-        self->input->start_streams (self->input->videosrc);
+      if (self->input->start_streams) {
+        if (!self->input->start_streams (self->input->videosrc))
+          ret = GST_STATE_CHANGE_FAILURE;
+      }
       g_mutex_unlock (&self->input->lock);
 
       break;
