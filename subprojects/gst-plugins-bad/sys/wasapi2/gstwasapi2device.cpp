@@ -257,6 +257,11 @@ gst_wasapi2_device_provider_probe (GstDeviceProvider * provider)
       gst_structure_set (props,
           "wasapi2.device.loopback", G_TYPE_BOOLEAN, FALSE, nullptr);
 
+      if (!entry->is_default && entry->exclusive_caps) {
+        gst_structure_set (props, "device.exclusive-caps", GST_TYPE_CAPS,
+            entry->exclusive_caps, nullptr);
+      }
+
       auto device = (GstDevice *) g_object_new (GST_TYPE_WASAPI2_DEVICE,
           "device", entry->device_id.c_str (),
           "display-name", entry->device_name.c_str (), "caps", entry->caps,
@@ -273,6 +278,11 @@ gst_wasapi2_device_provider_probe (GstDeviceProvider * provider)
       auto prop_copy = gst_structure_copy (props);
       gst_structure_set (prop_copy,
           "wasapi2.device.loopback", G_TYPE_BOOLEAN, TRUE, nullptr);
+
+      if (!entry->is_default && entry->exclusive_caps) {
+        gst_structure_set (props, "device.exclusive-caps", GST_TYPE_CAPS,
+            entry->exclusive_caps, nullptr);
+      }
 
       auto device = (GstDevice *) g_object_new (GST_TYPE_WASAPI2_DEVICE,
           "device", entry->device_id.c_str (),

@@ -29,9 +29,17 @@
 #include <winternl.h>
 #include <mutex>
 #include <string.h>
+#include <wrl.h>
+#include <vector>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_wasapi2_debug);
 #define GST_CAT_DEFAULT gst_wasapi2_debug
+
+static GstStaticCaps template_caps = GST_STATIC_CAPS (GST_WASAPI2_STATIC_CAPS);
+
+/* *INDENT-OFF* */
+using namespace Microsoft::WRL;
+/* *INDENT-ON* */
 
 /* Define GUIDs instead of linking ksuser.lib */
 DEFINE_GUID (GST_KSDATAFORMAT_SUBTYPE_PCM, 0x00000001, 0x0000, 0x0010,
@@ -412,8 +420,7 @@ gst_wasapi2_util_waveformatex_to_audio_format (WAVEFORMATEX * format)
 
 gboolean
 gst_wasapi2_util_parse_waveformatex (WAVEFORMATEX * format,
-    GstCaps * template_caps, GstCaps ** out_caps,
-    GstAudioChannelPosition ** out_positions)
+    GstCaps ** out_caps, GstAudioChannelPosition ** out_positions)
 {
   const gchar *afmt;
   guint64 channel_mask;
@@ -437,20 +444,23 @@ gst_wasapi2_util_parse_waveformatex (WAVEFORMATEX * format,
   if (afmt == NULL)
     return FALSE;
 
-  *out_caps = gst_caps_copy (template_caps);
+  auto caps = gst_static_caps_get (&template_caps);
+  caps = gst_caps_make_writable (caps);
 
   channel_mask = gst_wasapi2_util_waveformatex_to_channel_mask (format,
       out_positions);
 
-  gst_caps_set_simple (*out_caps,
+  gst_caps_set_simple (caps,
       "format", G_TYPE_STRING, afmt,
       "channels", G_TYPE_INT, format->nChannels,
       "rate", G_TYPE_INT, format->nSamplesPerSec, NULL);
 
   if (channel_mask) {
-    gst_caps_set_simple (*out_caps,
+    gst_caps_set_simple (caps,
         "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
   }
+
+  *out_caps = caps;
 
   return TRUE;
 }
@@ -634,3 +644,185 @@ gst_wasapi2_role_to_string (ERole role)
 
   return "Unknown";
 }
+
+void
+gst_wasapi2_free_wfx (WAVEFORMATEX * wfx)
+{
+  if (wfx)
+    CoTaskMemFree (wfx);
+}
+
+void
+gst_wasapi2_clear_wfx (WAVEFORMATEX ** wfx)
+{
+  if (*wfx) {
+    CoTaskMemFree (*wfx);
+    *wfx = nullptr;
+  }
+}
+
+WAVEFORMATEX *
+gst_wasapi2_copy_wfx (WAVEFORMATEX * src)
+{
+  guint total_size = sizeof (WAVEFORMATEX) + src->cbSize;
+  auto dst = (WAVEFORMATEX *) CoTaskMemAlloc (total_size);
+  memcpy (dst, src, total_size);
+
+  return dst;
+}
+
+static DWORD
+make_channel_mask (WORD nChannels)
+{
+  switch (nChannels) {
+    case 1:
+      return KSAUDIO_SPEAKER_MONO;
+    case 2:
+      return KSAUDIO_SPEAKER_STEREO;
+    case 4:
+      return KSAUDIO_SPEAKER_3POINT1;
+    case 6:
+      return KSAUDIO_SPEAKER_5POINT1;
+    case 8:
+      return KSAUDIO_SPEAKER_7POINT1;
+    default:
+      return 0;
+  }
+}
+
+static WAVEFORMATEXTENSIBLE
+make_wfx_ext (DWORD nSamplesPerSec, WORD nChannels, WORD wBitsPerSample,
+    WORD wValidBitsPerSample, bool is_float)
+{
+  WAVEFORMATEXTENSIBLE w = { };
+  w.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+  w.Format.nChannels = nChannels;
+  w.Format.nSamplesPerSec = nSamplesPerSec;
+
+  w.Format.wBitsPerSample = wBitsPerSample;
+  w.Samples.wValidBitsPerSample = wValidBitsPerSample;
+
+  w.dwChannelMask = make_channel_mask (nChannels);
+  w.SubFormat = is_float ? GST_KSDATAFORMAT_SUBTYPE_IEEE_FLOAT
+      : GST_KSDATAFORMAT_SUBTYPE_PCM;
+
+  w.Format.nBlockAlign = (wBitsPerSample / 8) * nChannels;
+  w.Format.nAvgBytesPerSec = w.Format.nSamplesPerSec * w.Format.nBlockAlign;
+  w.Format.cbSize = sizeof (WAVEFORMATEXTENSIBLE) - sizeof (WAVEFORMATEX);
+
+  return w;
+}
+/* *INDENT-OFF* */
+gboolean
+gst_wasapi2_get_exclusive_formats (IAudioClient * client,
+    IPropertyStore * props, GPtrArray * list)
+{
+  PROPVARIANT var;
+  PropVariantInit (&var);
+  WAVEFORMATEX *device_format = nullptr;
+  WAVEFORMATEX *closest = nullptr;
+
+  /* Prefer device format if supported */
+  auto hr = props->GetValue (PKEY_AudioEngine_DeviceFormat, &var);
+  if (gst_wasapi2_result (hr)) {
+    if (var.vt == VT_BLOB && var.blob.cbSize >= sizeof (WAVEFORMATEX)
+        && var.blob.pBlobData) {
+      device_format = (WAVEFORMATEX *) CoTaskMemAlloc (var.blob.cbSize);
+
+      memcpy (device_format, var.blob.pBlobData, var.blob.cbSize);
+    }
+    PropVariantClear (&var);
+  }
+
+  if (device_format) {
+    hr = client->IsFormatSupported (AUDCLNT_SHAREMODE_EXCLUSIVE, device_format,
+        &closest);
+
+    if (hr == S_OK) {
+      g_ptr_array_add (list, device_format);
+      device_format = nullptr;
+    } else if (hr == S_FALSE && closest) {
+      g_ptr_array_add (list, closest);
+      closest = nullptr;
+    }
+  }
+
+  gst_wasapi2_clear_wfx (&device_format);
+
+  /* Checks using pre-defined format list */
+  struct DepthPair
+  {
+    WORD wBitsPerSample;
+    WORD wValidBitsPerSample;
+    bool is_float;
+  };
+
+  const DepthPair depth_pairs[] = {
+    {32, 32, true},  /* 32-float */
+    {32, 32, false}, /* 32-int */
+    {32, 24, false}, /* 24-in-32 */
+    {24, 24, false}, /* 24-packed */
+    {16, 16, false}, /* 16-int */
+  };
+
+  const DWORD rates[] = { 192000, 176400, 96000, 88200, 48000, 44100 };
+  const WORD chs[] = { 8, 6, 2, 1 };
+
+  for (auto r : rates) {
+    for (auto c : chs) {
+      for (auto d : depth_pairs) {
+        auto wfx = make_wfx_ext (r, c, d.wBitsPerSample, d.wValidBitsPerSample,
+            d.is_float);
+        hr = client->IsFormatSupported (AUDCLNT_SHAREMODE_EXCLUSIVE,
+            (WAVEFORMATEX *) &wfx, &closest);
+        if (hr == S_OK) {
+          g_ptr_array_add (list, gst_wasapi2_copy_wfx ((WAVEFORMATEX *) &wfx));
+        } else if (hr == S_FALSE && closest) {
+          g_ptr_array_add (list, closest);
+          closest = nullptr;
+        }
+      }
+    }
+  }
+
+  return TRUE;
+}
+
+GstCaps *
+gst_wasapi2_wfx_list_to_caps (GPtrArray * list)
+{
+  if (!list || list->len == 0)
+    return nullptr;
+
+  std::vector <GstCaps *> caps_list;
+
+  for (guint i = 0; i < list->len; i++) {
+    auto wfx = (WAVEFORMATEX *) g_ptr_array_index (list, i);
+    GstCaps *tmp;
+
+    if (gst_wasapi2_util_parse_waveformatex (wfx, &tmp, nullptr)) {
+      bool unique = true;
+      for (auto it : caps_list) {
+        if (gst_caps_is_equal (it, tmp)) {
+          unique = false;
+          break;
+        }
+      }
+
+      if (unique)
+        caps_list.push_back (tmp);
+      else
+        gst_caps_unref (tmp);
+    }
+  }
+
+  if (caps_list.empty ())
+    return nullptr;
+
+  auto caps = gst_caps_new_empty ();
+  for (auto it : caps_list)
+    gst_caps_append (caps, it);
+
+  return caps;
+}
+/* *INDENT-ON* */

@@ -48,8 +48,6 @@ ensure_debug_category (void)
 }
 #endif
 
-static GstStaticCaps template_caps = GST_STATIC_CAPS (GST_WASAPI2_STATIC_CAPS);
-
 static void gst_wasapi2_on_device_updated (GstWasapi2Enumerator * object);
 
 static std::string
@@ -263,13 +261,14 @@ struct GstWasapi2EnumeratorPrivate
   {
     device_list = g_ptr_array_new_with_free_func ((GDestroyNotify)
         gst_wasapi2_enumerator_entry_free);
-    scaps = gst_static_caps_get (&template_caps);
+    exclusive_formats = g_ptr_array_new_with_free_func ((GDestroyNotify)
+        gst_wasapi2_free_wfx);
   }
 
   ~GstWasapi2EnumeratorPrivate ()
   {
     g_ptr_array_unref (device_list);
-    gst_caps_unref (scaps);
+    g_ptr_array_unref (exclusive_formats);
   }
 
   ComPtr<IMMDeviceEnumerator> handle;
@@ -281,7 +280,7 @@ struct GstWasapi2EnumeratorPrivate
   Wasapi2ActivationHandler *render_activator = nullptr;
   std::atomic<int> notify_count = { 0 };
   GPtrArray *device_list;
-  GstCaps *scaps;
+  GPtrArray *exclusive_formats;
 
   void ClearCOM ()
   {
@@ -556,13 +555,12 @@ struct EnumerateData
 };
 /* *INDENT-ON* */
 
-static void
-gst_wasapi2_enumerator_add_entry (GstWasapi2Enumerator * self,
-    IAudioClient * client,
-    GstCaps * static_caps, EDataFlow flow, gboolean is_default,
+static GstWasapi2EnumeratorEntry *
+gst_wasapi2_enumerator_build_entry (GstWasapi2Enumerator * self,
+    IAudioClient * client, EDataFlow flow, gboolean is_default,
     gchar * device_id, gchar * device_name,
     gchar * actual_device_id, gchar * actual_device_name,
-    GstWasapi2DeviceProps * device_props, GPtrArray * device_list)
+    GstWasapi2DeviceProps * device_props)
 {
   WAVEFORMATEX *mix_format = nullptr;
   GstCaps *supported_caps = nullptr;
@@ -573,11 +571,10 @@ gst_wasapi2_enumerator_add_entry (GstWasapi2Enumerator * self,
     g_free (device_name);
     g_free (actual_device_id);
     g_free (actual_device_name);
-    return;
+    return nullptr;
   }
 
-  gst_wasapi2_util_parse_waveformatex (mix_format,
-      static_caps, &supported_caps, nullptr);
+  gst_wasapi2_util_parse_waveformatex (mix_format, &supported_caps, nullptr);
   CoTaskMemFree (mix_format);
 
   if (!supported_caps) {
@@ -585,7 +582,7 @@ gst_wasapi2_enumerator_add_entry (GstWasapi2Enumerator * self,
     g_free (device_name);
     g_free (actual_device_id);
     g_free (actual_device_name);
-    return;
+    return nullptr;
   }
 
   auto entry = new GstWasapi2EnumeratorEntry ();
@@ -612,7 +609,7 @@ gst_wasapi2_enumerator_add_entry (GstWasapi2Enumerator * self,
   g_free (actual_device_id);
   g_free (actual_device_name);
 
-  g_ptr_array_add (device_list, entry);
+  return entry;
 }
 
 static void
@@ -739,12 +736,15 @@ gst_wasapi2_enumerator_execute (GstWasapi2Enumerator * self,
     if (default_capture_prop)
       gst_wasapi2_enumerator_probe_props (default_capture_prop.Get (), &props);
 
-    gst_wasapi2_enumerator_add_entry (self, default_capture_client.Get (),
-        priv->scaps, eCapture, TRUE,
+    auto entry = gst_wasapi2_enumerator_build_entry (self,
+        default_capture_client.Get (), eCapture, TRUE,
         g_strdup (gst_wasapi2_get_default_device_id (eCapture)),
         g_strdup ("Default Audio Capture Device"),
         g_strdup (default_capture_device_id),
-        g_strdup (default_capture_device_name), &props, priv->device_list);
+        g_strdup (default_capture_device_name), &props);
+
+    if (entry)
+      g_ptr_array_add (priv->device_list, entry);
   }
 
   if (default_render_client) {
@@ -755,12 +755,15 @@ gst_wasapi2_enumerator_execute (GstWasapi2Enumerator * self,
     if (default_render_prop)
       gst_wasapi2_enumerator_probe_props (default_render_prop.Get (), &props);
 
-    gst_wasapi2_enumerator_add_entry (self, default_render_client.Get (),
-        priv->scaps, eRender, TRUE,
+    auto entry = gst_wasapi2_enumerator_build_entry (self,
+        default_render_client.Get (), eRender, TRUE,
         g_strdup (gst_wasapi2_get_default_device_id (eRender)),
         g_strdup ("Default Audio Render Device"),
         g_strdup (default_render_device_id),
-        g_strdup (default_render_device_name), &props, priv->device_list);
+        g_strdup (default_render_device_name), &props);
+
+    if (entry)
+      g_ptr_array_add (priv->device_list, entry);
   }
 
   for (UINT i = 0; i < count; i++) {
@@ -829,8 +832,19 @@ gst_wasapi2_enumerator_execute (GstWasapi2Enumerator * self,
 
     gst_wasapi2_enumerator_probe_props (prop.Get (), &props);
 
-    gst_wasapi2_enumerator_add_entry (self, client.Get (), priv->scaps, flow,
-        FALSE, device_id, desc, nullptr, nullptr, &props, priv->device_list);
+    auto entry = gst_wasapi2_enumerator_build_entry (self, client.Get (), flow,
+        FALSE, device_id, desc, nullptr, nullptr, &props);
+    if (entry) {
+      g_ptr_array_set_size (priv->exclusive_formats, 0);
+      gst_wasapi2_get_exclusive_formats (client.Get (),
+          prop.Get (), priv->exclusive_formats);
+      auto exclusive_caps =
+          gst_wasapi2_wfx_list_to_caps (priv->exclusive_formats);
+      g_ptr_array_set_size (priv->exclusive_formats, 0);
+
+      entry->exclusive_caps = exclusive_caps;
+      g_ptr_array_add (priv->device_list, entry);
+    }
   }
 
   g_free (default_capture_device_id);

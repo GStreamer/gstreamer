@@ -42,6 +42,7 @@ struct GstWasapi2EnumeratorEntry
   ~GstWasapi2EnumeratorEntry()
   {
     gst_clear_caps (&caps);
+    gst_clear_caps (&exclusive_caps);
   }
 
   std::string device_id;
@@ -50,6 +51,7 @@ struct GstWasapi2EnumeratorEntry
   std::string actual_device_name;
   gboolean is_default = FALSE;
   GstCaps *caps = nullptr;
+  GstCaps *exclusive_caps = nullptr;
   EDataFlow flow;
   GstWasapi2DeviceProps device_props = { };
 };
