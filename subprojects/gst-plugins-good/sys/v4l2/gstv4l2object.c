@@ -276,6 +276,7 @@ static GstV4L2FormatDesc gst_v4l2_formats[] = {
   {MAP_ENC_FMT (VC1_ANNEX_L, ENCODED),  GST_V4L2_CODEC},
   {MAP_ENC_FMT (VP8, ENCODED),          GST_V4L2_CODEC | GST_V4L2_NO_PARSE},
   {MAP_ENC_FMT (VP9, ENCODED),          GST_V4L2_CODEC | GST_V4L2_NO_PARSE},
+  {MAP_ENC_FMT (AV1, ENCODED),          GST_V4L2_CODEC},
 
   /*  Vendor-specific formats   */
   {MAP_ENC_FMT (WNVA, ENCODED),     GST_V4L2_CODEC | GST_V4L2_RESOLUTION_AND_RATE},
@@ -1639,6 +1640,11 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc,
     case V4L2_PIX_FMT_VP9:
       structure = gst_structure_new_empty ("video/x-vp9");
       break;
+    case V4L2_PIX_FMT_AV1:
+      structure = gst_structure_new ("video/x-av1",
+          "stream-format", G_TYPE_STRING, "obu-stream", "alignment",
+          G_TYPE_STRING, "tu", NULL);
+      break;
     case V4L2_PIX_FMT_DV:
       structure =
           gst_structure_new ("video/x-dv", "systemstream", G_TYPE_BOOLEAN, TRUE,
@@ -2096,6 +2102,8 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
     fourcc = V4L2_PIX_FMT_VP8;
   } else if (g_str_equal (mimetype, "video/x-vp9")) {
     fourcc = V4L2_PIX_FMT_VP9;
+  } else if (g_str_equal (mimetype, "video/x-av1")) {
+    fourcc = V4L2_PIX_FMT_AV1;
   } else if (g_str_equal (mimetype, "video/x-bayer")) {
     const gchar *format = gst_structure_get_string (structure, "format");
     if (format) {
