@@ -628,9 +628,9 @@ initialize_audio_client (IAudioClient * client_handle,
      */
     default_period = (20 * GST_MSECOND) / 100;
     hr = client_handle->Initialize (AUDCLNT_SHAREMODE_SHARED,
-        AUDCLNT_STREAMFLAGS_LOOPBACK | AUDCLNT_STREAMFLAGS_EVENTCALLBACK,
-        default_period,
-        AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM, mix_format, nullptr);
+        AUDCLNT_STREAMFLAGS_LOOPBACK | AUDCLNT_STREAMFLAGS_EVENTCALLBACK |
+        AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM,
+        default_period, 0, mix_format, nullptr);
   }
 
   if (!gst_wasapi2_result (hr)) {
