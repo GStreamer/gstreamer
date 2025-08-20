@@ -230,6 +230,11 @@ _is_video_profile_independent (VkImageUsageFlags requested_usage)
 {
   VkImageUsageFlags video_dependent = 0;
 
+#if defined(VK_KHR_video_decode_queue)
+  if ((requested_usage & VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR) != 0
+      && (requested_usage & VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR) == 0)
+    return FALSE;
+#endif
 #if defined(VK_KHR_video_encode_queue)
   video_dependent |= VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR;
 #endif
