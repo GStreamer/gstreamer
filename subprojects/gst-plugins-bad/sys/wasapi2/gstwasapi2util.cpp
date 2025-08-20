@@ -565,6 +565,7 @@ gst_wasapi2_get_default_mix_format (void)
   format->wBitsPerSample = 16;
   format->nBlockAlign = format->nChannels * format->wBitsPerSample / 8;
   format->nAvgBytesPerSec = format->nSamplesPerSec * format->nBlockAlign;
+  format->cbSize = 0;
 
   return format;
 }
@@ -713,6 +714,7 @@ make_wfx_ext (DWORD nSamplesPerSec, WORD nChannels, WORD wBitsPerSample,
 
   return w;
 }
+
 /* *INDENT-OFF* */
 gboolean
 gst_wasapi2_get_exclusive_formats (IAudioClient * client,
@@ -722,6 +724,7 @@ gst_wasapi2_get_exclusive_formats (IAudioClient * client,
   PropVariantInit (&var);
   WAVEFORMATEX *device_format = nullptr;
   WAVEFORMATEX *closest = nullptr;
+  WAVEFORMATEX *basis = nullptr;
 
   /* Prefer device format if supported */
   auto hr = props->GetValue (PKEY_AudioEngine_DeviceFormat, &var);
@@ -740,9 +743,11 @@ gst_wasapi2_get_exclusive_formats (IAudioClient * client,
         &closest);
 
     if (hr == S_OK) {
+      basis = gst_wasapi2_copy_wfx (device_format);
       g_ptr_array_add (list, device_format);
       device_format = nullptr;
     } else if (hr == S_FALSE && closest) {
+      basis = gst_wasapi2_copy_wfx (closest);
       g_ptr_array_add (list, closest);
       closest = nullptr;
     }
@@ -761,9 +766,9 @@ gst_wasapi2_get_exclusive_formats (IAudioClient * client,
   const DepthPair depth_pairs[] = {
     {32, 32, true},  /* 32-float */
     {32, 32, false}, /* 32-int */
-    {32, 24, false}, /* 24-in-32 */
     {24, 24, false}, /* 24-packed */
     {16, 16, false}, /* 16-int */
+    {32, 24, false}, /* 24-in-32 */
   };
 
   const DWORD rates[] = { 192000, 176400, 96000, 88200, 48000, 44100 };
@@ -785,6 +790,18 @@ gst_wasapi2_get_exclusive_formats (IAudioClient * client,
       }
     }
   }
+
+  if (!basis) {
+    if (list && list->len > 0) {
+      auto first = (WAVEFORMATEX *) g_ptr_array_index (list, 0);
+      basis = gst_wasapi2_copy_wfx (first);
+    } else {
+      basis = gst_wasapi2_get_default_mix_format ();
+    }
+  }
+
+  gst_wasapi2_sort_wfx (list, basis);
+  gst_wasapi2_free_wfx (basis);
 
   return TRUE;
 }
@@ -835,6 +852,7 @@ struct FormatView
   GUID subformat;
   WORD bits_per_sample;
   WORD valid_bits_per_sample;
+  WORD raw_valid_bits_per_sample;
   DWORD channel_mask;
   WORD format_tag;
 };
@@ -844,6 +862,36 @@ is_extensible_format (const WAVEFORMATEX * wfx)
 {
   return wfx->wFormatTag == WAVE_FORMAT_EXTENSIBLE &&
       wfx->cbSize >= (sizeof (WAVEFORMATEXTENSIBLE) - sizeof (WAVEFORMATEX));
+}
+
+static inline gboolean
+is_float_subformat (const FormatView * v)
+{
+  return IsEqualGUID (v->subformat, GST_KSDATAFORMAT_SUBTYPE_IEEE_FLOAT);
+}
+
+static inline gboolean
+is_pcm_subformat (const FormatView * v)
+{
+  return IsEqualGUID (v->subformat, GST_KSDATAFORMAT_SUBTYPE_PCM);
+}
+
+static inline gint
+effective_bits (const FormatView * v)
+{
+  if (is_float_subformat (v))
+    return 32;
+
+  return v->valid_bits_per_sample ? v->
+      valid_bits_per_sample : v->bits_per_sample;
+}
+
+static inline gboolean
+is_s24_in_32 (const FormatView * v)
+{
+  return is_pcm_subformat (v) &&
+      v->bits_per_sample == 32 &&
+      (v->raw_valid_bits_per_sample == 24 || v->valid_bits_per_sample == 24);
 }
 
 static FormatView
@@ -859,10 +907,10 @@ make_view (const WAVEFORMATEX * wfx)
   if (is_extensible_format (wfx)) {
     auto wfe = (const WAVEFORMATEXTENSIBLE *) wfx;
     view.subformat = wfe->SubFormat;
-    view.valid_bits_per_sample = wfe->Samples.wValidBitsPerSample;
+    view.raw_valid_bits_per_sample = wfe->Samples.wValidBitsPerSample;
+    view.valid_bits_per_sample = view.raw_valid_bits_per_sample ?
+        view.raw_valid_bits_per_sample : view.bits_per_sample;
     view.channel_mask = wfe->dwChannelMask;
-    if (view.valid_bits_per_sample == 0)
-      view.valid_bits_per_sample = view.bits_per_sample;
   } else {
     if (wfx->wFormatTag == WAVE_FORMAT_PCM) {
       view.subformat = GST_KSDATAFORMAT_SUBTYPE_PCM;
@@ -870,6 +918,7 @@ make_view (const WAVEFORMATEX * wfx)
       view.subformat = GST_KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
     }
 
+    view.raw_valid_bits_per_sample = view.bits_per_sample;
     view.valid_bits_per_sample = view.bits_per_sample;
     view.channel_mask = 0;
   }
@@ -936,6 +985,12 @@ compare_wfx_func (gconstpointer pa, gconstpointer pb, gpointer user_data)
   FormatView b = make_view (B);
   FormatView basis = make_view (basis_wfx);
 
+  /* S24_32LE is the lowest */
+  gboolean a_s2432 = is_s24_in_32 (&a);
+  gboolean b_s2432 = is_s24_in_32 (&b);
+  if (a_s2432 != b_s2432)
+    return a_s2432 ? 1 : -1;
+
   /* Prefer same channel */
   gint dch_a = abs ((gint) a.channels - (gint) basis.channels);
   gint dch_b = abs ((gint) b.channels - (gint) basis.channels);
@@ -950,6 +1005,16 @@ compare_wfx_func (gconstpointer pa, gconstpointer pb, gpointer user_data)
   if (dra != drb)
     return (dra < drb) ? -1 : 1;
 
+  /* Prefere higher sample rate */
+  if (a.sample_rate != b.sample_rate)
+    return (a.sample_rate > b.sample_rate) ? -1 : +1;
+
+  /* High bit first */
+  gint a_bits = effective_bits (&a);
+  gint b_bits = effective_bits (&b);
+  if (a_bits != b_bits)
+    return (a_bits > b_bits) ? -1 : +1;
+
   /* format compare */
   gint fcmp = compare_format_similarity (&a, &b, &basis);
   if (fcmp != 0)
@@ -958,6 +1023,37 @@ compare_wfx_func (gconstpointer pa, gconstpointer pb, gpointer user_data)
   return 0;
 }
 
+/* *INDENT-OFF* */
+static void
+demote_s24_32le (GPtrArray *list)
+{
+  if (!list || list->len == 0)
+    return;
+
+  std::vector<gpointer> head;
+  std::vector<gpointer> tail;
+
+  head.reserve (list->len);
+  tail.reserve (list->len);
+
+  for (guint i = 0; i < list->len; i++) {
+    auto wfx = (WAVEFORMATEX *) g_ptr_array_index (list, i);
+    FormatView v = make_view (wfx);
+    if (is_s24_in_32 (&v))
+      tail.push_back ((gpointer) wfx);
+    else
+      head.push_back ((gpointer) wfx);
+  }
+
+  guint idx = 0;
+  for (gpointer p : head)
+    list->pdata[idx++] = p;
+
+  for (gpointer p : tail)
+    list->pdata[idx++] = p;
+}
+/* *INDENT-ON* */
+
 void
 gst_wasapi2_sort_wfx (GPtrArray * list, WAVEFORMATEX * wfx)
 {
@@ -965,4 +1061,5 @@ gst_wasapi2_sort_wfx (GPtrArray * list, WAVEFORMATEX * wfx)
     return;
 
   g_ptr_array_sort_with_data (list, compare_wfx_func, wfx);
+  demote_s24_32le (list);
 }
