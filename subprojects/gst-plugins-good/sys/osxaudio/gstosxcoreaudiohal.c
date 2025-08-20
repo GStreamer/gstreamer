@@ -1184,7 +1184,19 @@ gst_core_audio_select_device_impl (GstCoreAudio * core_audio)
     }
   } else if (_audio_device_is_hidden (device_id)) {
     if (_audio_device_is_alive (device_id, output)) {
-      res = TRUE;
+      for (i = 0; i < ndevices; i++) {
+        GstOsxAudioDevice *d = g_ptr_array_index (devices, i);
+        if (device_id == d->id) {
+          unique_id = d->unique_id;
+          d->unique_id = NULL;
+          res = TRUE;
+          break;
+        }
+      }
+
+      if (res == FALSE) {
+        GST_ERROR ("Requested hidden device with id %u not found", device_id);
+      }
     } else {
       GST_ERROR ("Requested hidden device not usable");
       res = FALSE;
