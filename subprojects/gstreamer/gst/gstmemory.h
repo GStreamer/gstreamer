@@ -340,12 +340,29 @@ gst_memory_unref (GstMemory * memory)
 {
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (memory));
 }
+
+static inline gboolean
+gst_memory_is_writable (const GstMemory * memory)
+{
+  return gst_mini_object_is_writable (GST_MINI_OBJECT_CONST_CAST (memory));
+}
+
+G_GNUC_WARN_UNUSED_RESULT static inline GstMemory *
+gst_memory_make_writable (GstMemory * memory)
+{
+  return GST_MEMORY_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (memory)));
+}
 #else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 GST_API
 GstMemory *    gst_memory_ref   (GstMemory * memory);
 
 GST_API
 void           gst_memory_unref (GstMemory * memory);
+
+GST_API
+GstMemory *    gst_memory_make_writable (GstMemory * memory) G_GNUC_WARN_UNUSED_RESULT;
+GST_API
+gboolean       gst_memory_is_writable   (const GstMemory * memory);
 #endif /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 
 /* getting/setting memory properties */
@@ -358,18 +375,6 @@ void           gst_memory_resize       (GstMemory *mem, gssize offset, gsize siz
 
 #define        gst_memory_lock(m,f)        gst_mini_object_lock (GST_MINI_OBJECT_CAST (m), (f))
 #define        gst_memory_unlock(m,f)      gst_mini_object_unlock (GST_MINI_OBJECT_CAST (m), (f))
-#define        gst_memory_is_writable(m)   gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (m))
-/**
- * gst_memory_make_writable:
- * @m: (transfer full): a #GstMemory
- *
- * Returns a writable copy of @m. If the source memory is
- * already writable, this will simply return the same memory.
- *
- * Returns: (transfer full) (nullable): a writable memory (which may or may not be the
- *     same as @m) or %NULL if copying is required but not possible.
- */
-#define        gst_memory_make_writable(m) GST_MEMORY_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (m)))
 
 /* retrieving data */
 

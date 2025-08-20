@@ -358,7 +358,7 @@ GST_API
 GHashTable * gst_uri_get_media_fragment_table  (const GstUri * uri);
 
 #ifndef GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
-static inline GstUri *
+G_GNUC_WARN_UNUSED_RESULT static inline GstUri *
 gst_uri_copy (const GstUri * uri)
 {
   return GST_URI_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (uri)));
@@ -383,7 +383,7 @@ gst_clear_uri (GstUri ** uri_ptr)
 }
 #else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 GST_API
-GstUri * gst_uri_copy  (const GstUri * uri);
+GstUri * gst_uri_copy  (const GstUri * uri) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 GstUri * gst_uri_ref   (GstUri * uri);

@@ -2953,6 +2953,21 @@ gst_buffer_is_writable() to check that if needed.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="is_writable" c:identifier="gst_buffer_is_writable" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">Tests if you can safely write to a buffer's metadata or its memory array.
+It is only safe to change buffer metadata when the current reference is
+writable, i.e. nobody can see the modifications you will make.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstbuffer.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="buf" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">a #GstBuffer</doc>
+            <type name="Buffer" c:type="const GstBuffer*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="iterate_meta" c:identifier="gst_buffer_iterate_meta" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">Retrieves the next #GstMeta after @current. If @state points
 to %NULL, the first metadata is returned.
@@ -3000,6 +3015,38 @@ type @meta_api_type is returned.
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">only return #GstMeta of this type</doc>
             <type name="GType" c:type="GType"/>
           </parameter>
+        </parameters>
+      </method>
+      <method name="make_writable" c:identifier="gst_buffer_make_writable" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">Returns a writable copy of @buf. If the source buffer is
+already writable, this will simply return the same buffer.
+
+Use this function to ensure that a buffer can be safely modified before
+making changes to it, including changing the metadata such as PTS/DTS.
+
+If the reference count of the source buffer @buf is exactly one, the caller
+is the sole owner and this function will return the buffer object unchanged.
+
+If there is more than one reference on the object, a copy will be made using
+gst_buffer_copy(). The passed-in @buf will be unreffed in that case, and the
+caller will now own a reference to the new returned buffer object. Note
+that this just copies the buffer structure itself, the underlying memory is
+not copied if it can be shared amongst multiple buffers.
+
+In short, this function unrefs the buf in the argument and refs the buffer
+that it returns. Don't access the argument after calling this function unless
+you have an additional reference to it.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstbuffer.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">a writable buffer (which may or may not be the
+    same as @buf) or %NULL if copying is required but not possible.</doc>
+          <type name="Buffer" c:type="GstBuffer*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="buf" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">a #GstBuffer</doc>
+            <type name="Buffer" c:type="GstBuffer*"/>
+          </instance-parameter>
         </parameters>
       </method>
       <method name="map" c:identifier="gst_buffer_map">
@@ -3829,6 +3876,20 @@ A -1 value for @idx will append the buffer at the end.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="is_writable" c:identifier="gst_buffer_list_is_writable">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.c">Tests if you can safely modify @list. It is only safe to modify buffer list when
+there is only one owner of the buffer list - ie, the object is writable.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstbufferlist.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="list" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.c">a #GstEvent</doc>
+            <type name="BufferList" c:type="const GstBufferList*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="length" c:identifier="gst_buffer_list_length">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.c">Returns the number of buffers in @list.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstbufferlist.h"/>
@@ -3838,6 +3899,31 @@ A -1 value for @idx will append the buffer at the end.</doc>
         </return-value>
         <parameters>
           <instance-parameter name="list" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.c">a #GstBufferList</doc>
+            <type name="BufferList" c:type="GstBufferList*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="make_writable" c:identifier="gst_buffer_list_make_writable">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.c">Returns a writable copy of @list.
+
+If there is only one reference count on @list, the caller must be the owner,
+and so this function will return the buffer list object unchanged. If on the other
+hand there is more than one reference on the object, a new buffer list object will
+be returned. The caller's reference on @list will be removed, and instead the
+caller will own a reference to the returned object.
+
+In short, this function unrefs the buffer_list in the argument and refs the buffer list
+that it returns. Don't access the argument after calling this function. See
+also: gst_buffer_list_ref().</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstbufferlist.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.c">a writable buffer list which may or may not be the
+    same as @buffer list</doc>
+          <type name="BufferList" c:type="GstBufferList*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="list" transfer-ownership="full">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.c">a #GstBufferList</doc>
             <type name="BufferList" c:type="GstBufferList*"/>
           </instance-parameter>
@@ -7709,6 +7795,45 @@ for more information.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="is_writable" c:identifier="gst_caps_is_writable">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Tests if you can safely modify @caps. It is only safe to modify caps when
+there is only one owner of the caps - ie, the object is writable.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="caps" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">a #GstCaps</doc>
+            <type name="Caps" c:type="const GstCaps*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="make_writable" c:identifier="gst_caps_make_writable">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Returns a writable copy of @caps.
+
+If there is only one reference count on @caps, the caller must be the owner,
+and so this function will return the caps object unchanged. If on the other
+hand there is more than one reference on the object, a new caps object will
+be returned. The caller's reference on @caps will be removed, and instead the
+caller will own a reference to the returned object.
+
+In short, this function unrefs the caps in the argument and refs the caps
+that it returns. Don't access the argument after calling this function. See
+also: gst_caps_ref().</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">a writable caps which may or may not be the
+    same as @caps</doc>
+          <type name="Caps" c:type="GstCaps*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="caps" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">a #GstCaps</doc>
+            <type name="Caps" c:type="GstCaps*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="map_in_place" c:identifier="gst_caps_map_in_place" version="1.6">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Calls the provided function once for each structure and caps feature in the
 #GstCaps. In contrast to gst_caps_foreach(), the function may modify but not
@@ -10914,6 +11039,45 @@ free it and that the pointer becomes invalid when you free the context.</doc>
           <instance-parameter name="context" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcontext.c">The #GstContext.</doc>
             <type name="Context" c:type="const GstContext*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="is_writable" c:identifier="gst_context_is_writable">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcontext.c">Tests if you can safely modify @context. It is only safe to modify context when
+there is only one owner of the context - ie, the object is writable.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcontext.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcontext.c">a #GstContext</doc>
+            <type name="Context" c:type="const GstContext*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="make_writable" c:identifier="gst_context_make_writable">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcontext.c">Returns a writable copy of @context.
+
+If there is only one reference count on @context, the caller must be the owner,
+and so this function will return the context object unchanged. If on the other
+hand there is more than one reference on the object, a new context object will
+be returned. The caller's reference on @context will be removed, and instead the
+caller will own a reference to the returned object.
+
+In short, this function unrefs the context in the argument and refs the context
+that it returns. Don't access the argument after calling this function. See
+also: gst_context_ref().</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcontext.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcontext.c">a writable context which may or may not be the
+    same as @context</doc>
+          <type name="Context" c:type="GstContext*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="context" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcontext.c">a #GstContext</doc>
+            <type name="Context" c:type="GstContext*"/>
           </instance-parameter>
         </parameters>
       </method>
@@ -20306,6 +20470,45 @@ check the name of a custom event.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="is_writable" c:identifier="gst_event_is_writable">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstevent.c">Tests if you can safely modify @event. It is only safe to modify event when
+there is only one owner of the event - ie, the object is writable.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstevent.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="event" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstevent.c">a #GstEvent</doc>
+            <type name="Event" c:type="const GstEvent*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="make_writable" c:identifier="gst_event_make_writable">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstevent.c">Returns a writable copy of @event.
+
+If there is only one reference count on @event, the caller must be the owner,
+and so this function will return the event object unchanged. If on the other
+hand there is more than one reference on the object, a new event object will
+be returned. The caller's reference on @event will be removed, and instead the
+caller will own a reference to the returned object.
+
+In short, this function unrefs the event in the argument and refs the event
+that it returns. Don't access the argument after calling this function. See
+also: gst_event_ref().</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstevent.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstevent.c">a writable event which may or may not be the
+    same as @event</doc>
+          <type name="Event" c:type="GstEvent*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="event" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstevent.c">a #GstEvent</doc>
+            <type name="Event" c:type="GstEvent*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="parse_buffer_size" c:identifier="gst_event_parse_buffer_size">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstevent.c">Get the format, minsize, maxsize and async-flag in the buffersize event.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstevent.h"/>
@@ -24815,6 +25018,20 @@ the returned @offset.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="is_writable" c:identifier="gst_memory_is_writable">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">Tests if you can safely modify @memory. It is only safe to modify memory when
+there is only one owner of the memory - ie, the object is writable.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmemory.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="memory" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">a #GstMemory</doc>
+            <type name="Memory" c:type="const GstMemory*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="make_mapped" c:identifier="gst_memory_make_mapped">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">Create a #GstMemory object that is mapped with @flags. If @mem is mappable
 with @flags, this function returns the mapped @mem directly. Otherwise a
@@ -24841,6 +25058,31 @@ with @flags or %NULL when a mapping is not possible.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">mapping flags</doc>
             <type name="MapFlags" c:type="GstMapFlags"/>
           </parameter>
+        </parameters>
+      </method>
+      <method name="make_writable" c:identifier="gst_memory_make_writable">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">Returns a writable copy of @memory.
+
+If there is only one reference count on @memory, the caller must be the owner,
+and so this function will return the memory object unchanged. If on the other
+hand there is more than one reference on the object, a new memory object will
+be returned. The caller's reference on @memory will be removed, and instead the
+caller will own a reference to the returned object.
+
+In short, this function unrefs the memory in the argument and refs the memory
+that it returns. Don't access the argument after calling this function. See
+also: gst_memory_ref().</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmemory.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">a writable memory which may or may not be the
+    same as @memory</doc>
+          <type name="Memory" c:type="GstMemory*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="memory" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">a #GstMemory</doc>
+            <type name="Memory" c:type="GstMemory*"/>
+          </instance-parameter>
         </parameters>
       </method>
       <method name="map" c:identifier="gst_memory_map">
@@ -26465,6 +26707,45 @@ check the name of a custom message.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">name to check</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
+        </parameters>
+      </method>
+      <method name="is_writable" c:identifier="gst_message_is_writable">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">Tests if you can safely modify @message. It is only safe to modify message when
+there is only one owner of the message - ie, the object is writable.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmessage.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="message" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">a #GstMessage</doc>
+            <type name="Message" c:type="const GstMessage*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="make_writable" c:identifier="gst_message_make_writable">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">Returns a writable copy of @message.
+
+If there is only one reference count on @message, the caller must be the owner,
+and so this function will return the message object unchanged. If on the other
+hand there is more than one reference on the object, a new message object will
+be returned. The caller's reference on @message will be removed, and instead the
+caller will own a reference to the returned object.
+
+In short, this function unrefs the message in the argument and refs the message
+that it returns. Don't access the argument after calling this function. See
+also: gst_message_ref().</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmessage.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">a writable message which may or may not be the
+    same as @message</doc>
+          <type name="Message" c:type="GstMessage*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="message" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">a #GstMessage</doc>
+            <type name="Message" c:type="GstMessage*"/>
+          </instance-parameter>
         </parameters>
       </method>
       <method name="parse_async_done" c:identifier="gst_message_parse_async_done">
@@ -38765,6 +39046,45 @@ query scheduling flags.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="is_writable" c:identifier="gst_query_is_writable">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.c">Tests if you can safely modify @query. It is only safe to modify query when
+there is only one owner of the query - ie, the object is writable.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstquery.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="query" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.c">a #GstQuery</doc>
+            <type name="Query" c:type="const GstQuery*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="make_writable" c:identifier="gst_query_make_writable">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.c">Returns a writable copy of @query.
+
+If there is only one reference count on @query, the caller must be the owner,
+and so this function will return the query object unchanged. If on the other
+hand there is more than one reference on the object, a new query object will
+be returned. The caller's reference on @query will be removed, and instead the
+caller will own a reference to the returned object.
+
+In short, this function unrefs the query in the argument and refs the query
+that it returns. Don't access the argument after calling this function. See
+also: gst_query_ref().</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstquery.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.c">a writable query which may or may not be the
+    same as @query</doc>
+          <type name="Query" c:type="GstQuery*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="query" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.c">a #GstQuery</doc>
+            <type name="Query" c:type="GstQuery*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="parse_accept_caps" c:identifier="gst_query_parse_accept_caps">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.c">Get the caps from @query. The caps remains valid as long as @query remains
 valid.</doc>
@@ -41689,6 +42009,49 @@ copy of the data the source sample contains.</doc>
         <parameters>
           <instance-parameter name="sample" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsample.c">a #GstSample</doc>
+            <type name="Sample" c:type="GstSample*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="is_writable" c:identifier="gst_sample_is_writable" version="1.16">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsample.c">Tests if you can safely set the buffer and / or buffer list of @sample.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstsample.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="sample" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsample.c">A #GstSample</doc>
+            <type name="Sample" c:type="const GstSample*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="make_writable" c:identifier="gst_sample_make_writable" version="1.16">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsample.c">Returns a writable copy of @sample. If the source sample is
+already writable, this will simply return the same sample.
+
+Use this function to ensure that a sample can be safely modified before
+making changes to it, for example before calling gst_sample_set_buffer()
+
+If the reference count of the source sample @sample is exactly one, the caller
+is the sole owner and this function will return the sample object unchanged.
+
+If there is more than one reference on the object, a copy will be made using
+gst_sample_copy(). The passed-in @sample will be unreffed in that case, and the
+caller will now own a reference to the new returned sample object.
+
+In short, this function unrefs the sample in the argument and refs the sample
+that it returns. Don't access the argument after calling this function unless
+you have an additional reference to it.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstsample.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsample.c">a writable sample which may or may not be the
+    same as @sample</doc>
+          <type name="Sample" c:type="GstSample*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="sample" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsample.c">A #GstSample</doc>
             <type name="Sample" c:type="GstSample*"/>
           </instance-parameter>
         </parameters>
@@ -48554,6 +48917,45 @@ list.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="is_writable" c:identifier="gst_tag_list_is_writable">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.c">Tests if you can safely modify @taglist. It is only safe to modify taglist when
+there is only one owner of the taglist - ie, the object is writable.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gsttaglist.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="taglist" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.c">a #GstTagList</doc>
+            <type name="TagList" c:type="const GstTagList*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="make_writable" c:identifier="gst_tag_list_make_writable">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.c">Returns a writable copy of @taglist.
+
+If there is only one reference count on @taglist, the caller must be the owner,
+and so this function will return the taglist object unchanged. If on the other
+hand there is more than one reference on the object, a new taglist object will
+be returned. The caller's reference on @taglist will be removed, and instead the
+caller will own a reference to the returned object.
+
+In short, this function unrefs the taglist in the argument and refs the taglist
+that it returns. Don't access the argument after calling this function. See
+also: gst_tag_list_ref().</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gsttaglist.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.c">a writable taglist which may or may not be the
+    same as @taglist</doc>
+          <type name="TagList" c:type="GstTagList*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="taglist" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.c">a #GstTagList</doc>
+            <type name="TagList" c:type="GstTagList*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="merge" c:identifier="gst_tag_list_merge">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.c">Merges the two given lists into a new list. If one of the lists is %NULL, a
 copy of the other is returned. If both lists are %NULL, %NULL is returned.
@@ -53780,17 +54182,6 @@ buffer</doc>
         </parameter>
       </parameters>
     </function-macro>
-    <function-macro name="buffer_is_writable" c:identifier="gst_buffer_is_writable" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.h">Tests if you can safely write to a buffer's metadata or its memory array.
-It is only safe to change buffer metadata when the current reference is
-writable, i.e. nobody can see the modifications you will make.</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstbuffer.h"/>
-      <parameters>
-        <parameter name="buf">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.h">a #GstBuffer</doc>
-        </parameter>
-      </parameters>
-    </function-macro>
     <function-macro name="buffer_list_add" c:identifier="gst_buffer_list_add" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.c">Append @b at the end of @l.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstbufferlist.h"/>
@@ -53800,26 +54191,6 @@ writable, i.e. nobody can see the modifications you will make.</doc>
         </parameter>
         <parameter name="b">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.c">a #GstBuffer</doc>
-        </parameter>
-      </parameters>
-    </function-macro>
-    <function-macro name="buffer_list_is_writable" c:identifier="gst_buffer_list_is_writable" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.h">Tests if you can safely add buffers and groups into a buffer list.</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstbufferlist.h"/>
-      <parameters>
-        <parameter name="list">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.h">a #GstBufferList</doc>
-        </parameter>
-      </parameters>
-    </function-macro>
-    <function-macro name="buffer_list_make_writable" c:identifier="gst_buffer_list_make_writable" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.h">Makes a writable buffer list from the given buffer list. If the source buffer
-list is already writable, this will simply return the same buffer list. A
-copy will otherwise be made using gst_buffer_list_copy().</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstbufferlist.h"/>
-      <parameters>
-        <parameter name="list">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.h">a #GstBufferList</doc>
         </parameter>
       </parameters>
     </function-macro>
@@ -53870,32 +54241,6 @@ that it takes ownership of @new_list.</doc>
         </parameter>
       </parameters>
     </function>
-    <function-macro name="buffer_make_writable" c:identifier="gst_buffer_make_writable" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.h">Returns a writable copy of @buf. If the source buffer is
-already writable, this will simply return the same buffer.
-
-Use this function to ensure that a buffer can be safely modified before
-making changes to it, including changing the metadata such as PTS/DTS.
-
-If the reference count of the source buffer @buf is exactly one, the caller
-is the sole owner and this function will return the buffer object unchanged.
-
-If there is more than one reference on the object, a copy will be made using
-gst_buffer_copy(). The passed-in @buf will be unreffed in that case, and the
-caller will now own a reference to the new returned buffer object. Note
-that this just copies the buffer structure itself, the underlying memory is
-not copied if it can be shared amongst multiple buffers.
-
-In short, this function unrefs the buf in the argument and refs the buffer
-that it returns. Don't access the argument after calling this function unless
-you have an additional reference to it.</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstbuffer.h"/>
-      <parameters>
-        <parameter name="buf">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.h">a #GstBuffer</doc>
-        </parameter>
-      </parameters>
-    </function-macro>
     <function-macro name="buffer_new_and_alloc" c:identifier="gst_buffer_new_and_alloc" introspectable="0">
       <source-position filename="../subprojects/gstreamer/gst/gstcompat.h"/>
       <parameters>
@@ -54017,35 +54362,6 @@ when there were nested #GstCaps / #GstStructure deeper than one level.</doc>
         </parameter>
       </parameters>
     </function>
-    <function-macro name="caps_is_writable" c:identifier="gst_caps_is_writable" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.h">Tests if you can safely modify @caps. It is only safe to modify caps when
-there is only one owner of the caps - ie, the object is writable.</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
-      <parameters>
-        <parameter name="caps">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.h">a #GstCaps</doc>
-        </parameter>
-      </parameters>
-    </function-macro>
-    <function-macro name="caps_make_writable" c:identifier="gst_caps_make_writable" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.h">Returns a writable copy of @caps.
-
-If there is only one reference count on @caps, the caller must be the owner,
-and so this function will return the caps object unchanged. If on the other
-hand there is more than one reference on the object, a new caps object will
-be returned. The caller's reference on @caps will be removed, and instead the
-caller will own a reference to the returned object.
-
-In short, this function unrefs the caps in the argument and refs the caps
-that it returns. Don't access the argument after calling this function. See
-also: gst_caps_ref().</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
-      <parameters>
-        <parameter name="caps">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.h">a #GstCaps</doc>
-        </parameter>
-      </parameters>
-    </function-macro>
     <function name="caps_replace" c:identifier="gst_caps_replace" moved-to="Caps.replace" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Modifies a pointer to a #GstCaps to point to a different #GstCaps. The
 modification is done atomically (so this is useful for ensuring thread safety
@@ -54357,26 +54673,6 @@ reference count of the uri is decreased and the pointer is set to %NULL.</doc>
         </parameter>
       </parameters>
     </function>
-    <function-macro name="context_is_writable" c:identifier="gst_context_is_writable" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcontext.h">Tests if you can safely write into a context's structure or validly
-modify the seqnum and timestamp fields.</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstcontext.h"/>
-      <parameters>
-        <parameter name="context">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcontext.h">a #GstContext</doc>
-        </parameter>
-      </parameters>
-    </function-macro>
-    <function-macro name="context_make_writable" c:identifier="gst_context_make_writable" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcontext.h">Checks if a context is writable. If not, a writable copy is made and
-returned.</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstcontext.h"/>
-      <parameters>
-        <parameter name="context">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcontext.h">the context to make writable</doc>
-        </parameter>
-      </parameters>
-    </function-macro>
     <function name="context_replace" c:identifier="gst_context_replace" moved-to="Context.replace" version="1.2">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcontext.c">Modifies a pointer to a #GstContext to point to a different #GstContext. The
 modification is done atomically (so this is useful for ensuring thread safety
@@ -55595,27 +55891,6 @@ as well.</doc>
         </parameter>
       </parameters>
     </function>
-    <function-macro name="event_is_writable" c:identifier="gst_event_is_writable" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstevent.h">Tests if you can safely write data into a event's structure or validly
-modify the seqnum and timestamp field.</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstevent.h"/>
-      <parameters>
-        <parameter name="ev">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstevent.h">a #GstEvent</doc>
-        </parameter>
-      </parameters>
-    </function-macro>
-    <function-macro name="event_make_writable" c:identifier="gst_event_make_writable" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstevent.h">Makes a writable event from the given event. If the source event is
-already writable, this will simply return the same event. A copy will
-otherwise be made using gst_event_copy().</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstevent.h"/>
-      <parameters>
-        <parameter name="ev">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstevent.h">a #GstEvent</doc>
-        </parameter>
-      </parameters>
-    </function-macro>
     <function name="event_replace" c:identifier="gst_event_replace" moved-to="Event.replace" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstevent.c">Modifies a pointer to a #GstEvent to point to a different #GstEvent. The
 modification is done atomically (so this is useful for ensuring thread safety
@@ -56423,13 +56698,6 @@ debug category and flags.</doc>
         </parameter>
       </parameters>
     </function>
-    <function-macro name="memory_is_writable" c:identifier="gst_memory_is_writable" introspectable="0">
-      <source-position filename="../subprojects/gstreamer/gst/gstmemory.h"/>
-      <parameters>
-        <parameter name="m">
-        </parameter>
-      </parameters>
-    </function-macro>
     <function-macro name="memory_lock" c:identifier="gst_memory_lock" introspectable="0">
       <source-position filename="../subprojects/gstreamer/gst/gstmemory.h"/>
       <parameters>
@@ -56439,42 +56707,12 @@ debug category and flags.</doc>
         </parameter>
       </parameters>
     </function-macro>
-    <function-macro name="memory_make_writable" c:identifier="gst_memory_make_writable" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.h">Returns a writable copy of @m. If the source memory is
-already writable, this will simply return the same memory.</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstmemory.h"/>
-      <parameters>
-        <parameter name="m">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.h">a #GstMemory</doc>
-        </parameter>
-      </parameters>
-    </function-macro>
     <function-macro name="memory_unlock" c:identifier="gst_memory_unlock" introspectable="0">
       <source-position filename="../subprojects/gstreamer/gst/gstmemory.h"/>
       <parameters>
         <parameter name="m">
         </parameter>
         <parameter name="f">
-        </parameter>
-      </parameters>
-    </function-macro>
-    <function-macro name="message_is_writable" c:identifier="gst_message_is_writable" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.h">Tests if you can safely write into a message's structure or validly
-modify the seqnum and timestamp fields.</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstmessage.h"/>
-      <parameters>
-        <parameter name="msg">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.h">a #GstMessage</doc>
-        </parameter>
-      </parameters>
-    </function-macro>
-    <function-macro name="message_make_writable" c:identifier="gst_message_make_writable" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.h">Checks if a message is writable. If not, a writable copy is made and
-returned.</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstmessage.h"/>
-      <parameters>
-        <parameter name="msg">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.h">the message to make writable</doc>
         </parameter>
       </parameters>
     </function-macro>
@@ -57700,24 +57938,6 @@ checked.</doc>
         </parameter>
       </parameters>
     </function>
-    <function-macro name="query_is_writable" c:identifier="gst_query_is_writable" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.h">Tests if you can safely write data into a query's structure.</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstquery.h"/>
-      <parameters>
-        <parameter name="q">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.h">a #GstQuery</doc>
-        </parameter>
-      </parameters>
-    </function-macro>
-    <function-macro name="query_make_writable" c:identifier="gst_query_make_writable" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.h">Makes a writable query from the given query.</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstquery.h"/>
-      <parameters>
-        <parameter name="q">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.h">a #GstQuery to make writable</doc>
-        </parameter>
-      </parameters>
-    </function-macro>
     <function name="query_replace" c:identifier="gst_query_replace" moved-to="Query.replace" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.c">Modifies a pointer to a #GstQuery to point to a different #GstQuery. The
 modification is done atomically (so this is useful for ensuring thread safety
@@ -57830,39 +58050,6 @@ Either @new_query or the #GstQuery pointed to by @old_query may be %NULL.</doc>
         <type name="GLib.Quark" c:type="GQuark"/>
       </return-value>
     </function>
-    <function-macro name="sample_is_writable" c:identifier="gst_sample_is_writable" version="1.16" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsample.h">Tests if you can safely set the buffer and / or buffer list of @sample.</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstsample.h"/>
-      <parameters>
-        <parameter name="sample">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsample.h">A #GstSample</doc>
-        </parameter>
-      </parameters>
-    </function-macro>
-    <function-macro name="sample_make_writable" c:identifier="gst_sample_make_writable" version="1.16" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsample.h">Returns a writable copy of @sample. If the source sample is
-already writable, this will simply return the same sample.
-
-Use this function to ensure that a sample can be safely modified before
-making changes to it, for example before calling gst_sample_set_buffer()
-
-If the reference count of the source sample @sample is exactly one, the caller
-is the sole owner and this function will return the sample object unchanged.
-
-If there is more than one reference on the object, a copy will be made using
-gst_sample_copy(). The passed-in @sample will be unreffed in that case, and the
-caller will now own a reference to the new returned sample object.
-
-In short, this function unrefs the sample in the argument and refs the sample
-that it returns. Don't access the argument after calling this function unless
-you have an additional reference to it.</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstsample.h"/>
-      <parameters>
-        <parameter name="sample">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsample.h">A #GstSample</doc>
-        </parameter>
-      </parameters>
-    </function-macro>
     <function name="segtrap_is_enabled" c:identifier="gst_segtrap_is_enabled">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gst.c">Some functions in the GStreamer core might install a custom SIGSEGV handler
 to better catch and report errors to the application. Currently this feature
@@ -58083,36 +58270,6 @@ You must g_value_unset() the value after use.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstcompat.h"/>
       <parameters>
         <parameter name="taglist">
-        </parameter>
-      </parameters>
-    </function-macro>
-    <function-macro name="tag_list_is_writable" c:identifier="gst_tag_list_is_writable" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.h">Tests if you can safely modify @taglist. It is only safe to modify taglist
-when there is only one owner of the taglist - ie, the refcount is 1.</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gsttaglist.h"/>
-      <parameters>
-        <parameter name="taglist">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.h">a #GstTagList</doc>
-        </parameter>
-      </parameters>
-    </function-macro>
-    <function-macro name="tag_list_make_writable" c:identifier="gst_tag_list_make_writable" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.h">Returns a writable copy of @taglist.
-
-If there is only one reference count on @taglist, the caller must be the
-owner, and so this function will return the taglist object unchanged. If on
-the other hand there is more than one reference on the object, a new taglist
-object will be returned (which will be a copy of @taglist). The caller's
-reference on @taglist will be removed, and instead the caller will own a
-reference to the returned object.
-
-In short, this function unrefs the taglist in the argument and refs the
-taglist that it returns. Don't access the argument after calling this
-function. See also: gst_tag_list_ref().</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gsttaglist.h"/>
-      <parameters>
-        <parameter name="taglist">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.h">a #GstTagList</doc>
         </parameter>
       </parameters>
     </function-macro>

@@ -263,43 +263,24 @@ gst_clear_query (GstQuery ** query_ptr)
 }
 
 /* copy query */
-static inline GstQuery *
+G_GNUC_WARN_UNUSED_RESULT static inline GstQuery *
 gst_query_copy (const GstQuery * q)
 {
   return GST_QUERY_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (q)));
 }
-#else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
-GST_API
-GstQuery *  gst_query_ref   (GstQuery * q);
 
-GST_API
-void        gst_query_unref (GstQuery * q);
+static inline gboolean
+gst_query_is_writable (const GstQuery * query)
+{
+  return gst_mini_object_is_writable (GST_MINI_OBJECT_CONST_CAST (query));
+}
 
-GST_API
-void        gst_clear_query (GstQuery ** query_ptr);
+G_GNUC_WARN_UNUSED_RESULT static inline GstQuery *
+gst_query_make_writable (GstQuery * query)
+{
+  return GST_QUERY_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (query)));
+}
 
-GST_API
-GstQuery *  gst_query_copy  (const GstQuery * q);
-#endif /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
-
-/**
- * gst_query_is_writable:
- * @q: a #GstQuery
- *
- * Tests if you can safely write data into a query's structure.
- */
-#define         gst_query_is_writable(q)     gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (q))
-/**
- * gst_query_make_writable:
- * @q: (transfer full): a #GstQuery to make writable
- *
- * Makes a writable query from the given query.
- *
- * Returns: (transfer full): a new writable query (possibly same as @q)
- */
-#define         gst_query_make_writable(q)      GST_QUERY_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (q)))
-
-#ifndef GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 static inline gboolean
 gst_query_replace (GstQuery **old_query, GstQuery *new_query)
 {
@@ -313,6 +294,23 @@ gst_query_take (GstQuery **old_query, GstQuery *new_query)
       (GstMiniObject *) new_query);
 }
 #else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
+GST_API
+GstQuery *  gst_query_ref   (GstQuery * q);
+
+GST_API
+void        gst_query_unref (GstQuery * q);
+
+GST_API
+void        gst_clear_query (GstQuery ** query_ptr);
+
+GST_API
+GstQuery *  gst_query_copy  (const GstQuery * q) G_GNUC_WARN_UNUSED_RESULT;
+
+GST_API
+GstQuery *  gst_query_make_writable (GstQuery * query) G_GNUC_WARN_UNUSED_RESULT;
+GST_API
+gboolean    gst_query_is_writable   (const GstQuery * query);
+
 GST_API
 gboolean        gst_query_replace               (GstQuery ** old_query,
                                                  GstQuery * new_query);

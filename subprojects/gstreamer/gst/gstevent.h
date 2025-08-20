@@ -306,28 +306,19 @@ GST_API GType _gst_event_type;
  */
 #define GST_EVENT_IS_STICKY(ev)     !!(GST_EVENT_TYPE (ev) & GST_EVENT_TYPE_STICKY)
 
-/**
- * gst_event_is_writable:
- * @ev: a #GstEvent
- *
- * Tests if you can safely write data into a event's structure or validly
- * modify the seqnum and timestamp field.
- */
-#define         gst_event_is_writable(ev)     gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (ev))
-/**
- * gst_event_make_writable:
- * @ev: (transfer full): a #GstEvent
- *
- * Makes a writable event from the given event. If the source event is
- * already writable, this will simply return the same event. A copy will
- * otherwise be made using gst_event_copy().
- *
- * Returns: (transfer full): a writable event which may or may not be the
- *     same as @ev
- */
-#define         gst_event_make_writable(ev)   GST_EVENT_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (ev)))
-
 #ifndef GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
+static inline gboolean
+gst_event_is_writable (const GstEvent * event)
+{
+  return gst_mini_object_is_writable (GST_MINI_OBJECT_CONST_CAST (event));
+}
+
+G_GNUC_WARN_UNUSED_RESULT static inline GstEvent *
+gst_event_make_writable (GstEvent * event)
+{
+  return GST_EVENT_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (event)));
+}
+
 static inline gboolean
 gst_event_replace(GstEvent** old_event, GstEvent* new_event)
 {
@@ -346,6 +337,11 @@ gst_event_take (GstEvent **old_event, GstEvent *new_event)
   return gst_mini_object_take ((GstMiniObject **) old_event, (GstMiniObject *) new_event);
 }
 #else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
+GST_API
+GstEvent *  gst_event_make_writable (GstEvent * event) G_GNUC_WARN_UNUSED_RESULT;
+GST_API
+gboolean    gst_event_is_writable   (const GstEvent * event);
+
 GST_API
 gboolean    gst_event_replace (GstEvent ** old_event,
                                GstEvent * new_event);
@@ -447,7 +443,7 @@ gst_clear_event (GstEvent ** event_ptr)
 }
 
 /* copy event */
-static inline GstEvent *
+G_GNUC_WARN_UNUSED_RESULT static inline GstEvent *
 gst_event_copy (const GstEvent * event)
 {
   return GST_EVENT_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (event)));
@@ -463,7 +459,7 @@ GST_API
 void            gst_clear_event                 (GstEvent ** event_ptr);
 
 GST_API
-GstEvent *      gst_event_copy                  (const GstEvent * event);
+GstEvent *      gst_event_copy                  (const GstEvent * event) G_GNUC_WARN_UNUSED_RESULT;
 #endif /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 
 GST_API

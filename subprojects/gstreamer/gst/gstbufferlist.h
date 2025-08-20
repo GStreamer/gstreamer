@@ -80,7 +80,7 @@ gst_clear_buffer_list (GstBufferList ** list_ptr)
 }
 
 /* copy */
-static inline GstBufferList *
+G_GNUC_WARN_UNUSED_RESULT static inline GstBufferList *
 gst_buffer_list_copy (const GstBufferList * list)
 {
   return GST_BUFFER_LIST_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (list)));
@@ -99,6 +99,18 @@ gst_buffer_list_take (GstBufferList **old_list, GstBufferList *new_list)
   return gst_mini_object_take ((GstMiniObject **) old_list,
       (GstMiniObject *) new_list);
 }
+
+static inline gboolean
+gst_buffer_list_is_writable (const GstBufferList * list)
+{
+  return gst_mini_object_is_writable (GST_MINI_OBJECT_CONST_CAST (list));
+}
+
+G_GNUC_WARN_UNUSED_RESULT static inline GstBufferList *
+gst_buffer_list_make_writable (GstBufferList * list)
+{
+  return GST_BUFFER_LIST_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (list)));
+}
 #else  /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 GST_API
 GstBufferList * gst_buffer_list_ref     (GstBufferList * list);
@@ -110,7 +122,7 @@ GST_API
 void            gst_clear_buffer_list   (GstBufferList ** list_ptr);
 
 GST_API
-GstBufferList * gst_buffer_list_copy    (const GstBufferList * list);
+GstBufferList * gst_buffer_list_copy    (const GstBufferList * list) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 gboolean        gst_buffer_list_replace (GstBufferList ** old_list,
@@ -119,28 +131,12 @@ gboolean        gst_buffer_list_replace (GstBufferList ** old_list,
 GST_API
 gboolean        gst_buffer_list_take    (GstBufferList ** old_list,
                                          GstBufferList * new_list);
+
+GST_API
+GstBufferList * gst_buffer_list_make_writable (GstBufferList * list) G_GNUC_WARN_UNUSED_RESULT;
+GST_API
+gboolean        gst_buffer_list_is_writable   (const GstBufferList * list);
 #endif /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
-
-/**
- * gst_buffer_list_is_writable:
- * @list: a #GstBufferList
- *
- * Tests if you can safely add buffers and groups into a buffer list.
- */
-#define gst_buffer_list_is_writable(list) gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (list))
-
-/**
- * gst_buffer_list_make_writable:
- * @list: (transfer full): a #GstBufferList
- *
- * Makes a writable buffer list from the given buffer list. If the source buffer
- * list is already writable, this will simply return the same buffer list. A
- * copy will otherwise be made using gst_buffer_list_copy().
- *
- * Returns: (transfer full): a writable list, which may or may not be the
- *     same as @list
- */
-#define gst_buffer_list_make_writable(list) GST_BUFFER_LIST_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (list)))
 
 GST_API
 GType                    gst_buffer_list_get_type              (void);

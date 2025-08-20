@@ -381,49 +381,24 @@ gst_clear_message (GstMessage ** msg_ptr)
 }
 
 /* copy message */
-static inline GstMessage * gst_message_copy (const GstMessage * msg);
-static inline GstMessage *
+G_GNUC_WARN_UNUSED_RESULT static inline GstMessage *
 gst_message_copy (const GstMessage * msg)
 {
   return GST_MESSAGE_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (msg)));
 }
-#else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
-GST_API
-GstMessage *  gst_message_ref   (GstMessage * msg);
 
-GST_API
-void          gst_message_unref (GstMessage * msg);
+static inline gboolean
+gst_message_is_writable (const GstMessage * message)
+{
+  return gst_mini_object_is_writable (GST_MINI_OBJECT_CONST_CAST (message));
+}
 
-GST_API
-void          gst_clear_message (GstMessage ** msg_ptr);
+G_GNUC_WARN_UNUSED_RESULT static inline GstMessage *
+gst_message_make_writable (GstMessage * message)
+{
+  return GST_MESSAGE_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (message)));
+}
 
-GST_API
-GstMessage *  gst_message_copy  (const GstMessage * msg);
-#endif /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
-
-/**
- * gst_message_is_writable:
- * @msg: a #GstMessage
- *
- * Tests if you can safely write into a message's structure or validly
- * modify the seqnum and timestamp fields.
- */
-#define         gst_message_is_writable(msg)     gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (msg))
-/**
- * gst_message_make_writable:
- * @msg: (transfer full): the message to make writable
- *
- * Checks if a message is writable. If not, a writable copy is made and
- * returned.
- *
- * Returns: (transfer full): a message (possibly a duplicate) that is writable.
- *
- * MT safe
- */
-#define         gst_message_make_writable(msg)  GST_MESSAGE_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (msg)))
-
-#ifndef GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
-static inline gboolean gst_message_replace (GstMessage **old_message, GstMessage *new_message);
 static inline gboolean
 gst_message_replace (GstMessage **old_message, GstMessage *new_message)
 {
@@ -437,6 +412,23 @@ gst_message_take (GstMessage **old_message, GstMessage *new_message)
       (GstMiniObject *) new_message);
 }
 #else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
+GST_API
+GstMessage *  gst_message_ref   (GstMessage * msg);
+
+GST_API
+void          gst_message_unref (GstMessage * msg);
+
+GST_API
+void          gst_clear_message (GstMessage ** msg_ptr);
+
+GST_API
+GstMessage *  gst_message_copy  (const GstMessage * msg) G_GNUC_WARN_UNUSED_RESULT;
+
+GST_API
+GstMessage *  gst_message_make_writable (GstMessage * message) G_GNUC_WARN_UNUSED_RESULT;
+GST_API
+gboolean      gst_message_is_writable   (const GstMessage * message);
+
 GST_API
 gboolean  gst_message_replace                   (GstMessage ** old_message,
                                                  GstMessage * new_message);

@@ -3062,9 +3062,10 @@ gst_caps_filter_and_map_in_place (GstCaps * caps, GstCapsFilterMapFunc func,
  *
  * Returns: (transfer full): the new #GstCaps
  */
-GstCaps *(gst_caps_copy) (const GstCaps * caps)
+GstCaps *
+gst_caps_copy (const GstCaps * caps)
 {
-  return GST_CAPS (gst_mini_object_copy (GST_MINI_OBJECT_CAST (caps)));
+  return GST_CAPS_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CAST (caps)));
 }
 
 /**
@@ -3161,4 +3162,44 @@ gst_caps_take (GstCaps ** old_caps, GstCaps * new_caps)
 {
   return gst_mini_object_take ((GstMiniObject **) old_caps,
       (GstMiniObject *) new_caps);
+}
+
+/**
+ * gst_caps_is_writable:
+ * @caps: a #GstCaps
+ *
+ * Tests if you can safely modify @caps. It is only safe to modify caps when
+ * there is only one owner of the caps - ie, the object is writable.
+ */
+gboolean
+gst_caps_is_writable (const GstCaps * caps)
+{
+  return gst_mini_object_is_writable (GST_MINI_OBJECT_CONST_CAST (caps));
+}
+
+/**
+ * gst_caps_make_writable:
+ * @caps: (transfer full): a #GstCaps
+ *
+ * Returns a writable copy of @caps.
+ *
+ * If there is only one reference count on @caps, the caller must be the owner,
+ * and so this function will return the caps object unchanged. If on the other
+ * hand there is more than one reference on the object, a new caps object will
+ * be returned. The caller's reference on @caps will be removed, and instead the
+ * caller will own a reference to the returned object.
+ *
+ * In short, this function unrefs the caps in the argument and refs the caps
+ * that it returns. Don't access the argument after calling this function. See
+ * also: gst_caps_ref().
+ *
+ * Returns: (transfer full): a writable caps which may or may not be the
+ *     same as @caps
+ */
+GstCaps *
+gst_caps_make_writable (GstCaps * caps)
+{
+  return
+      GST_CAPS_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST
+          (caps)));
 }

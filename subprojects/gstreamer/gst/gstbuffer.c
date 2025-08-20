@@ -3162,3 +3162,51 @@ gst_buffer_replace (GstBuffer ** obuf, GstBuffer * nbuf)
   return gst_mini_object_replace ((GstMiniObject **) obuf,
       (GstMiniObject *) nbuf);
 }
+
+/**
+ * gst_buffer_is_writable: (skip)
+ * @buf: a #GstBuffer
+ *
+ * Tests if you can safely write to a buffer's metadata or its memory array.
+ * It is only safe to change buffer metadata when the current reference is
+ * writable, i.e. nobody can see the modifications you will make.
+ */
+gboolean
+gst_buffer_is_writable (const GstBuffer * buf)
+{
+  return gst_mini_object_is_writable (GST_MINI_OBJECT_CONST_CAST (buf));
+}
+
+/**
+ * gst_buffer_make_writable: (skip)
+ * @buf: (transfer full): a #GstBuffer
+ *
+ * Returns a writable copy of @buf. If the source buffer is
+ * already writable, this will simply return the same buffer.
+ *
+ * Use this function to ensure that a buffer can be safely modified before
+ * making changes to it, including changing the metadata such as PTS/DTS.
+ *
+ * If the reference count of the source buffer @buf is exactly one, the caller
+ * is the sole owner and this function will return the buffer object unchanged.
+ *
+ * If there is more than one reference on the object, a copy will be made using
+ * gst_buffer_copy(). The passed-in @buf will be unreffed in that case, and the
+ * caller will now own a reference to the new returned buffer object. Note
+ * that this just copies the buffer structure itself, the underlying memory is
+ * not copied if it can be shared amongst multiple buffers.
+ *
+ * In short, this function unrefs the buf in the argument and refs the buffer
+ * that it returns. Don't access the argument after calling this function unless
+ * you have an additional reference to it.
+ *
+ * Returns: (transfer full) (nullable): a writable buffer (which may or may not be the
+ *     same as @buf) or %NULL if copying is required but not possible.
+ */
+GstBuffer *
+gst_buffer_make_writable (GstBuffer * buf)
+{
+  return
+      GST_BUFFER_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST
+          (buf)));
+}

@@ -2153,7 +2153,7 @@ out:
 
 static GstCaps *
 _add_supported_attributes_to_caps (GstWebRTCBin * webrtc,
-    WebRTCTransceiver * trans, const GstCaps * caps)
+    WebRTCTransceiver * trans, GstCaps * caps)
 {
   GstWebRTCKind kind;
   GstCaps *ret;

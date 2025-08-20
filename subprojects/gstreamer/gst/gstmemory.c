@@ -494,3 +494,43 @@ gst_memory_unref (GstMemory * memory)
 {
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (memory));
 }
+
+/**
+ * gst_memory_is_writable:
+ * @memory: a #GstMemory
+ *
+ * Tests if you can safely modify @memory. It is only safe to modify memory when
+ * there is only one owner of the memory - ie, the object is writable.
+ */
+gboolean
+gst_memory_is_writable (const GstMemory * memory)
+{
+  return gst_mini_object_is_writable (GST_MINI_OBJECT_CONST_CAST (memory));
+}
+
+/**
+ * gst_memory_make_writable:
+ * @memory: (transfer full): a #GstMemory
+ *
+ * Returns a writable copy of @memory.
+ *
+ * If there is only one reference count on @memory, the caller must be the owner,
+ * and so this function will return the memory object unchanged. If on the other
+ * hand there is more than one reference on the object, a new memory object will
+ * be returned. The caller's reference on @memory will be removed, and instead the
+ * caller will own a reference to the returned object.
+ *
+ * In short, this function unrefs the memory in the argument and refs the memory
+ * that it returns. Don't access the argument after calling this function. See
+ * also: gst_memory_ref().
+ *
+ * Returns: (transfer full): a writable memory which may or may not be the
+ *     same as @memory
+ */
+GstMemory *
+gst_memory_make_writable (GstMemory * memory)
+{
+  return
+      GST_MEMORY_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST
+          (memory)));
+}

@@ -207,54 +207,14 @@ gst_clear_caps (GstCaps ** caps_ptr)
 {
   gst_clear_mini_object ((GstMiniObject **) caps_ptr);
 }
-#else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
-GST_API
-GstCaps * gst_caps_ref   (GstCaps * caps);
-
-GST_API
-void      gst_caps_unref (GstCaps * caps);
-
-GST_API
-void      gst_clear_caps (GstCaps ** caps_ptr);
-#endif /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 
 /* copy caps */
-GST_API
-GstCaps * gst_caps_copy (const GstCaps * caps);
+G_GNUC_WARN_UNUSED_RESULT static inline GstCaps *
+gst_caps_copy (const GstCaps * caps)
+{
+  return GST_CAPS_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CAST (caps)));
+}
 
-#define gst_caps_copy(caps) GST_CAPS (gst_mini_object_copy (GST_MINI_OBJECT_CAST (caps)))
-
-/**
- * gst_caps_is_writable:
- * @caps: a #GstCaps
- *
- * Tests if you can safely modify @caps. It is only safe to modify caps when
- * there is only one owner of the caps - ie, the object is writable.
- */
-#define         gst_caps_is_writable(caps)     gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (caps))
-
-/**
- * gst_caps_make_writable:
- * @caps: (transfer full): a #GstCaps
- *
- * Returns a writable copy of @caps.
- *
- * If there is only one reference count on @caps, the caller must be the owner,
- * and so this function will return the caps object unchanged. If on the other
- * hand there is more than one reference on the object, a new caps object will
- * be returned. The caller's reference on @caps will be removed, and instead the
- * caller will own a reference to the returned object.
- *
- * In short, this function unrefs the caps in the argument and refs the caps
- * that it returns. Don't access the argument after calling this function. See
- * also: gst_caps_ref().
- *
- * Returns: (transfer full): a writable caps which may or may not be the
- *     same as @caps
- */
-#define         gst_caps_make_writable(caps)   GST_CAPS_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (caps)))
-
-#ifndef GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 static inline gboolean
 gst_caps_replace (GstCaps **old_caps, GstCaps *new_caps)
 {
@@ -266,10 +226,39 @@ gst_caps_take (GstCaps **old_caps, GstCaps *new_caps)
 {
     return gst_mini_object_take ((GstMiniObject **) old_caps, (GstMiniObject *) new_caps);
 }
-#else  /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
+
+static inline gboolean
+gst_caps_is_writable (const GstCaps * caps)
+{
+  return gst_mini_object_is_writable (GST_MINI_OBJECT_CONST_CAST (caps));
+}
+
+G_GNUC_WARN_UNUSED_RESULT static inline GstCaps *
+gst_caps_make_writable (GstCaps * caps)
+{
+  return GST_CAPS_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (caps)));
+}
+#else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
+GST_API
+GstCaps * gst_caps_ref   (GstCaps * caps);
+
+GST_API
+void      gst_caps_unref (GstCaps * caps);
+
+GST_API
+void      gst_clear_caps (GstCaps ** caps_ptr);
+
+GST_API
+GstCaps * gst_caps_copy (const GstCaps * caps) G_GNUC_WARN_UNUSED_RESULT;
+
 GST_API
 gboolean  gst_caps_replace (GstCaps ** old_caps,
                             GstCaps * new_caps);
+
+GST_API
+GstCaps * gst_caps_make_writable (GstCaps * caps) G_GNUC_WARN_UNUSED_RESULT;
+GST_API
+gboolean  gst_caps_is_writable (const GstCaps * caps);
 
 GST_API
 gboolean  gst_caps_take    (GstCaps ** old_caps,

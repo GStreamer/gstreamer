@@ -418,23 +418,13 @@ gst_clear_tag_list (GstTagList ** taglist_ptr)
 {
   gst_clear_mini_object ((GstMiniObject **) taglist_ptr);
 }
-#else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
-GST_API
-GstTagList *  gst_tag_list_ref   (GstTagList * taglist);
 
-GST_API
-void          gst_tag_list_unref (GstTagList * taglist);
+G_GNUC_WARN_UNUSED_RESULT static inline GstTagList *
+gst_tag_list_copy (const GstTagList * taglist)
+{
+  return (GstTagList *) (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (taglist)));
+}
 
-GST_API
-void          gst_clear_tag_list (GstTagList ** taglist_ptr);
-#endif /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
-
-GST_API
-GstTagList* gst_tag_list_copy(const GstTagList* taglist);
-
-#define gst_tag_list_copy(taglist) GST_TAG_LIST (gst_mini_object_copy (GST_MINI_OBJECT_CAST (taglist)))
-
-#ifndef GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 static inline gboolean
 gst_tag_list_replace (GstTagList **old_taglist, GstTagList *new_taglist)
 {
@@ -448,46 +438,44 @@ gst_tag_list_take (GstTagList **old_taglist, GstTagList *new_taglist)
   return gst_mini_object_take ((GstMiniObject **) old_taglist,
       (GstMiniObject *) new_taglist);
 }
+
+static inline gboolean
+gst_tag_list_is_writable (const GstTagList * taglist)
+{
+  return gst_mini_object_is_writable (GST_MINI_OBJECT_CONST_CAST (taglist));
+}
+
+G_GNUC_WARN_UNUSED_RESULT static inline GstTagList *
+gst_tag_list_make_writable (GstTagList * taglist)
+{
+  return (GstTagList *) (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (taglist)));
+}
 #else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 GST_API
-gboolean  gst_tag_list_replace (GstTagList ** old_taglist,
-                                GstTagList * new_taglist);
+GstTagList *  gst_tag_list_ref   (GstTagList * taglist);
 
 GST_API
-gboolean  gst_tag_list_take    (GstTagList ** old_taglist,
-                                GstTagList * new_taglist);
+void          gst_tag_list_unref (GstTagList * taglist);
+
+GST_API
+void          gst_clear_tag_list (GstTagList ** taglist_ptr);
+
+GST_API
+GstTagList*   gst_tag_list_copy  (const GstTagList* taglist) G_GNUC_WARN_UNUSED_RESULT;
+
+GST_API
+gboolean      gst_tag_list_replace (GstTagList ** old_taglist,
+                                    GstTagList * new_taglist);
+
+GST_API
+gboolean      gst_tag_list_take    (GstTagList ** old_taglist,
+                                    GstTagList * new_taglist);
+
+GST_API
+GstTagList * gst_tag_list_make_writable (GstTagList * taglist) G_GNUC_WARN_UNUSED_RESULT;
+GST_API
+gboolean     gst_tag_list_is_writable   (const GstTagList * taglist);
 #endif
-
-/**
- * gst_tag_list_is_writable:
- * @taglist: a #GstTagList
- *
- * Tests if you can safely modify @taglist. It is only safe to modify taglist
- * when there is only one owner of the taglist - ie, the refcount is 1.
- */
-#define gst_tag_list_is_writable(taglist)    gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (taglist))
-
-/**
- * gst_tag_list_make_writable:
- * @taglist: (transfer full): a #GstTagList
- *
- * Returns a writable copy of @taglist.
- *
- * If there is only one reference count on @taglist, the caller must be the
- * owner, and so this function will return the taglist object unchanged. If on
- * the other hand there is more than one reference on the object, a new taglist
- * object will be returned (which will be a copy of @taglist). The caller's
- * reference on @taglist will be removed, and instead the caller will own a
- * reference to the returned object.
- *
- * In short, this function unrefs the taglist in the argument and refs the
- * taglist that it returns. Don't access the argument after calling this
- * function. See also: gst_tag_list_ref().
- *
- * Returns: (transfer full): a writable taglist which may or may not be the
- *     same as @taglist
- */
-#define gst_tag_list_make_writable(taglist)   GST_TAG_LIST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (taglist)))
 
 /* GStreamer core tags */
 /**

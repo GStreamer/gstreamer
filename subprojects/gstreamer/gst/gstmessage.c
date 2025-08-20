@@ -3550,3 +3550,43 @@ gst_message_take (GstMessage ** old_message, GstMessage * new_message)
   return gst_mini_object_take ((GstMiniObject **) old_message,
       (GstMiniObject *) new_message);
 }
+
+/**
+ * gst_message_is_writable:
+ * @message: a #GstMessage
+ *
+ * Tests if you can safely modify @message. It is only safe to modify message when
+ * there is only one owner of the message - ie, the object is writable.
+ */
+gboolean
+gst_message_is_writable (const GstMessage * message)
+{
+  return gst_mini_object_is_writable (GST_MINI_OBJECT_CONST_CAST (message));
+}
+
+/**
+ * gst_message_make_writable:
+ * @message: (transfer full): a #GstMessage
+ *
+ * Returns a writable copy of @message.
+ *
+ * If there is only one reference count on @message, the caller must be the owner,
+ * and so this function will return the message object unchanged. If on the other
+ * hand there is more than one reference on the object, a new message object will
+ * be returned. The caller's reference on @message will be removed, and instead the
+ * caller will own a reference to the returned object.
+ *
+ * In short, this function unrefs the message in the argument and refs the message
+ * that it returns. Don't access the argument after calling this function. See
+ * also: gst_message_ref().
+ *
+ * Returns: (transfer full): a writable message which may or may not be the
+ *     same as @message
+ */
+GstMessage *
+gst_message_make_writable (GstMessage * message)
+{
+  return
+      GST_MESSAGE_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST
+          (message)));
+}
