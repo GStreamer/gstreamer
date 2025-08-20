@@ -115,12 +115,10 @@ gst_vulkan_video_session_create (GstVulkanVideoSession * session,
   g_return_val_if_fail (vk, FALSE);
   g_return_val_if_fail (session_create, FALSE);
 
-#if defined(VK_KHR_video_maintenance1)
   if (gst_vulkan_physical_device_has_feature_video_maintenance1
       (device->physical_device)) {
     session_create->flags |= VK_VIDEO_SESSION_CREATE_INLINE_QUERIES_BIT_KHR;
   }
-#endif
 
   res = vk->CreateVideoSession (device->device, session_create, NULL,
       &vk_session);
