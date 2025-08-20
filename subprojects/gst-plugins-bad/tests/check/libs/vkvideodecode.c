@@ -395,6 +395,12 @@ GST_START_TEST (test_h264_decoder)
       .sliceCount = pic.slice_offs->len - 1,
       .pSliceOffsets = (guint32 *) pic.slice_offs->data,
     };
+    VkVideoDecodeH264InlineSessionParametersInfoKHR inline_params = {
+      .sType =
+          VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_INLINE_SESSION_PARAMETERS_INFO_KHR,
+      .pStdSPS = &h264_std_sps,
+      .pStdPPS = &h264_std_pps,
+    };
 
     /* *INDENT-OFF* */
     pic.pic_res = (VkVideoPictureResourceInfoKHR) {
@@ -427,6 +433,10 @@ GST_START_TEST (test_h264_decoder)
       .pReferenceSlots = pic.slots,
     };
     /* *INDENT-ON* */
+
+    if ((dec->features & GST_VULKAN_DECODER_FEATURES_VIDEO_MAINTEINANCE2) != 0) {
+      vk_pic.pNext = &inline_params;
+    }
 
     fail_unless (gst_vulkan_decoder_decode (dec, &pic, &err));
   }
@@ -562,6 +572,13 @@ GST_START_TEST (test_h265_decoder)
       .sliceSegmentCount = pic.slice_offs->len - 1,
       .pSliceSegmentOffsets = (guint32 *) pic.slice_offs->data,
     };
+    VkVideoDecodeH265InlineSessionParametersInfoKHR inline_params = {
+      .sType =
+          VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_INLINE_SESSION_PARAMETERS_INFO_KHR,
+      .pStdSPS = &h265_std_sps,
+      .pStdPPS = &h265_std_pps,
+      .pStdVPS = &h265_std_vps,
+    };
 
     /* *INDENT-OFF* */
     pic.pic_res = (VkVideoPictureResourceInfoKHR) {
@@ -594,6 +611,10 @@ GST_START_TEST (test_h265_decoder)
       .pReferenceSlots = pic.slots,
     };
     /* *INDENT-ON* */
+
+    if ((dec->features & GST_VULKAN_DECODER_FEATURES_VIDEO_MAINTEINANCE2) != 0) {
+      vk_pic.pNext = &inline_params;
+    }
 
     fail_unless (gst_vulkan_decoder_decode (dec, &pic, &err));
   }

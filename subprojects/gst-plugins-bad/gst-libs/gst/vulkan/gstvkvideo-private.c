@@ -119,6 +119,13 @@ gst_vulkan_video_session_create (GstVulkanVideoSession * session,
       (device->physical_device)) {
     session_create->flags |= VK_VIDEO_SESSION_CREATE_INLINE_QUERIES_BIT_KHR;
   }
+  /* for now we only support decoders with inline session parameters */
+  if (((session_create->pVideoProfile->videoCodecOperation & 0xFF) != 0)
+      && gst_vulkan_physical_device_has_feature_video_maintenance2
+      (device->physical_device)) {
+    session_create->flags |=
+        VK_VIDEO_SESSION_CREATE_INLINE_SESSION_PARAMETERS_BIT_KHR;
+  }
 
   res = vk->CreateVideoSession (device->device, session_create, NULL,
       &vk_session);

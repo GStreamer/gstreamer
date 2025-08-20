@@ -34,6 +34,10 @@ G_BEGIN_DECLS
 GST_VULKAN_API
 GType gst_vulkan_decoder_get_type       (void);
 
+enum {
+  GST_VULKAN_DECODER_FEATURES_VIDEO_MAINTEINANCE2 = 1 << 0,
+};
+
 typedef struct _GstVulkanDecoder GstVulkanDecoder;
 typedef struct _GstVulkanDecoderClass GstVulkanDecoderClass;
 typedef struct _GstVulkanDecoderPicture GstVulkanDecoderPicture;
@@ -103,6 +107,8 @@ struct _GstVulkanDecoder
 
   gboolean dedicated_dpb;
   gboolean layered_dpb;
+
+  guint32 features;
 
   /*< private >*/
   gpointer _reserved        [GST_PADDING];

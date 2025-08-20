@@ -27,6 +27,7 @@
 #include <gst/vulkan/vulkan.h>
 
 #include "gst/vulkan/gstvkdecoder-private.h"
+#include "gst/vulkan/gstvkphysicaldevice-private.h"
 #include "gstvulkanelements.h"
 
 
@@ -1291,6 +1292,12 @@ gst_vulkan_h264_decoder_end_picture (GstH264Decoder * decoder,
   GstVulkanH264Decoder *self = GST_VULKAN_H264_DECODER (decoder);
   GstVulkanH264Picture *pic;
   GError *error = NULL;
+  VkVideoDecodeH264InlineSessionParametersInfoKHR inline_params = {
+    .sType =
+        VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_INLINE_SESSION_PARAMETERS_INFO_KHR,
+    .pStdSPS = &self->std_sps.sps,
+    .pStdPPS = &self->std_pps.pps,
+  };
 
   GST_TRACE_OBJECT (self, "End picture");
 
@@ -1299,6 +1306,11 @@ gst_vulkan_h264_decoder_end_picture (GstH264Decoder * decoder,
 
   pic->vk_h264pic.sliceCount = pic->base.slice_offs->len - 1;
   pic->vk_h264pic.pSliceOffsets = (const guint32 *) pic->base.slice_offs->data;
+
+  if ((self->
+          decoder->features & GST_VULKAN_DECODER_FEATURES_VIDEO_MAINTEINANCE2)
+      != 0)
+    vk_link_struct (&pic->base.decode_info, &inline_params);
 
   GST_LOG_OBJECT (self, "Decoding frame, %d bytes %d slices",
       pic->vk_h264pic.pSliceOffsets[pic->vk_h264pic.sliceCount],

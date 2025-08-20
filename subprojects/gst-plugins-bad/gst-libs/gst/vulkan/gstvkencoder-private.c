@@ -1407,9 +1407,9 @@ gst_vulkan_encoder_create_from_queue (GstVulkanQueue * queue, guint codec)
   }
 
   /* XXX: sync with the meson version for vulkan video enabling */
-  if (!gst_vulkan_physical_device_check_api_version (device, 1, 3, 275)) {
+  if (!gst_vulkan_physical_device_check_api_version (device, 1, 4, 306)) {
     GST_WARNING_OBJECT (queue,
-        "API version %d.%d.%d doesn't support video encode extensions",
+        "Driver version [%d.%d.%d] doesn't support required video extensions",
         VK_VERSION_MAJOR (device->properties.apiVersion),
         VK_VERSION_MINOR (device->properties.apiVersion),
         VK_VERSION_PATCH (device->properties.apiVersion));

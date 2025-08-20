@@ -40,6 +40,9 @@ gboolean                    gst_vulkan_physical_device_has_feature_timeline_semp
 gboolean                    gst_vulkan_physical_device_has_feature_video_maintenance1
                                                                             (GstVulkanPhysicalDevice * device);
 
+gboolean                    gst_vulkan_physical_device_has_feature_video_maintenance2
+                                                                            (GstVulkanPhysicalDevice * device);
+
 static inline void
 vk_link_struct (gpointer chain, gconstpointer in)
 {

@@ -320,8 +320,8 @@ if get_option('vulkan-video').allowed()
   video_test = '''
 #include <vulkan/vulkan.h>
 
-#if !(defined(VK_VERSION_1_4) || (defined(VK_VERSION_1_3) && VK_HEADER_VERSION >= 275))
-#error "Need at least Vulkan 1.3.275"
+#if !(defined(VK_VERSION_1_5) || (defined(VK_VERSION_1_4) && VK_HEADER_VERSION >= 306))
+#error "Need at least Vulkan 1.4.306"
 #endif
 
 /* vk_video/vulkan_video_codec_h264std.h */
