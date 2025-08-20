@@ -64,7 +64,6 @@
 #include <memory>
 #include <atomic>
 #include <vector>
-#include <endpointvolume.h>
 #include <mutex>
 #include <condition_variable>
 #include <wrl.h>
@@ -105,6 +104,9 @@ struct RbufCtx
     if (mix_format)
       CoTaskMemFree (mix_format);
     gst_clear_caps (&caps);
+
+    if (conv)
+      gst_audio_converter_free (conv);
 
     CloseHandle (capture_event);
     CloseHandle (render_event);
@@ -196,6 +198,13 @@ struct RbufCtx
   std::vector<guint8> exclusive_staging;
   size_t exclusive_staging_filled = 0;
   size_t exclusive_period_bytes = 0;
+  GstAudioInfo device_info;
+  GstAudioInfo host_info;
+  std::vector<guint8> device_fifo;
+  std::vector<guint8> host_fifo;
+  size_t device_fifo_bytes = 0;
+  size_t host_fifo_bytes = 0;
+  GstAudioConverter *conv = nullptr;
 
   UINT32 period = 0;
   UINT32 client_buf_size = 0;
@@ -563,6 +572,8 @@ initialize_audio_client_exclusive (IMMDevice * device,
     return E_FAIL;
   }
 
+  GST_DEBUG ("Configured exclusive mode period: %d frames", buffer_size);
+
   if (period)
     *period = buffer_size;
 
@@ -804,117 +815,201 @@ gst_wasapi2_device_manager_create_ctx (IMMDeviceEnumerator * enumerator,
     }
   }
 
-  DWORD stream_flags = 0;
-  if (!desc->mix_format) {
-    if (desc->exclusive) {
-      g_assert (exclusive_formats->len > 0);
-
+  if (desc->exclusive) {
+    bool need_format_conv = false;
+    if (!desc->mix_format) {
       auto format = (WAVEFORMATEX *) g_ptr_array_index (exclusive_formats, 0);
       ctx->mix_format = gst_wasapi2_copy_wfx (format);
     } else {
-      ctx->client->GetMixFormat (&ctx->mix_format);
-      if (!ctx->mix_format && gst_wasapi2_is_process_loopback_class (endpoint_class)) {
-        ctx->mix_format = gst_wasapi2_get_default_mix_format ();
-      }
-    }
-
-    if (!ctx->mix_format) {
-      GST_ERROR ("Couldn't get mix format");
-      return;
-    }
-  } else {
-    /* TODO: support exclusive mode device swich */
-
-    /* Check format support */
-    WAVEFORMATEX *closest = nullptr;
-    hr = ctx->client->IsFormatSupported (AUDCLNT_SHAREMODE_SHARED,
-        desc->mix_format, &closest);
-    if (hr == S_OK) {
-      ctx->mix_format = gst_wasapi2_copy_wfx (desc->mix_format);
-      /* format supported */
-    } else if (hr == S_FALSE) {
-      if (!closest) {
-        GST_ERROR ("Couldn't get closest format");
-        return;
-      }
-
-      GstCaps *old_caps = nullptr;
-      GstCaps *new_caps = nullptr;
-
-      gst_wasapi2_util_parse_waveformatex (desc->mix_format,
-          &old_caps, nullptr);
-      gst_wasapi2_util_parse_waveformatex (closest,
-          &new_caps, nullptr);
-
-      if (!new_caps || !old_caps) {
-        GST_ERROR ("Couldn't get caps from format");
-        gst_clear_caps (&new_caps);
-        gst_clear_caps (&old_caps);
-        CoTaskMemFree (closest);
-        return;
-      }
-
-      if (!gst_caps_is_equal (new_caps, old_caps)) {
-        GST_INFO ("Closest caps is different, old: %" GST_PTR_FORMAT
-            ", new : %" GST_PTR_FORMAT, old_caps, new_caps);
-        /* Hope OS mixer can convert the format */
-        gst_caps_unref (new_caps);
-        gst_caps_unref (old_caps);
-        CoTaskMemFree (closest);
+      /* Try current format */
+      hr = ctx->client->IsFormatSupported (AUDCLNT_SHAREMODE_EXCLUSIVE,
+        desc->mix_format, nullptr);
+      if (hr == S_OK) {
         ctx->mix_format = gst_wasapi2_copy_wfx (desc->mix_format);
-        stream_flags = AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM |
-            AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY;
       } else {
+        /* Use closest format */
+        gst_wasapi2_sort_wfx (exclusive_formats, desc->mix_format);
+
+        auto format = (WAVEFORMATEX *) g_ptr_array_index (exclusive_formats, 0);
+
+        GstCaps *old_caps = nullptr;
+        GstCaps *new_caps = nullptr;
+
+        gst_wasapi2_util_parse_waveformatex (desc->mix_format,
+            &old_caps, nullptr);
+        gst_wasapi2_util_parse_waveformatex (format,
+            &new_caps, nullptr);
+
+        if (!new_caps || !old_caps) {
+          GST_ERROR ("Couldn't get caps from format");
+          gst_clear_caps (&new_caps);
+          gst_clear_caps (&old_caps);
+          return;
+        }
+
+        if (!gst_caps_is_equal (new_caps, old_caps)) {
+          GST_INFO ("Closest caps is different, old: %" GST_PTR_FORMAT
+              ", new : %" GST_PTR_FORMAT, old_caps, new_caps);
+          need_format_conv = true;
+          gst_audio_info_from_caps (&ctx->host_info, old_caps);
+        }
+
         gst_caps_unref (new_caps);
         gst_caps_unref (old_caps);
 
-        ctx->mix_format = closest;
+        ctx->mix_format = gst_wasapi2_copy_wfx (format);
       }
-    } else {
-      GST_ERROR ("Format not supported");
-      return;
     }
-  }
 
-  gst_wasapi2_util_parse_waveformatex (ctx->mix_format, &ctx->caps, nullptr);
+    gst_wasapi2_util_parse_waveformatex (ctx->mix_format, &ctx->caps, nullptr);
+    gst_audio_info_from_caps (&ctx->device_info, ctx->caps);
+    if (!need_format_conv)
+      ctx->host_info = ctx->device_info;
 
-  hr = E_FAIL;
-  if (desc->exclusive) {
     hr = initialize_audio_client_exclusive (device.Get (), ctx->client,
         ctx->mix_format, &ctx->period, desc);
     if (FAILED (hr)) {
       desc->exclusive = false;
-      if (!ctx->client) {
+      ctx->client = nullptr;
+      gst_wasapi2_clear_wfx (&ctx->mix_format);
+      gst_clear_caps (&ctx->caps);
+
+      hr = device->Activate (__uuidof (IAudioClient), CLSCTX_ALL,
+          nullptr, &ctx->client);
+      if (!gst_wasapi2_result (hr)) {
+        GST_WARNING ("Couldn't get IAudioClient from IMMDevice");
+        return;
+      }
+    } else if (need_format_conv) {
+      GstAudioInfo *in_info, *out_info;
+      if (endpoint_class == GST_WASAPI2_ENDPOINT_CLASS_CAPTURE) {
+        in_info = &ctx->device_info;
+        out_info = &ctx->host_info;
+      } else {
+        in_info = &ctx->host_info;
+        out_info = &ctx->device_info;
+      }
+
+      auto config = gst_structure_new_static_str ("converter-config",
+          GST_AUDIO_CONVERTER_OPT_DITHER_METHOD, GST_TYPE_AUDIO_DITHER_METHOD,
+          GST_AUDIO_DITHER_TPDF,
+          GST_AUDIO_CONVERTER_OPT_RESAMPLER_METHOD,
+          GST_TYPE_AUDIO_RESAMPLER_METHOD, GST_AUDIO_RESAMPLER_METHOD_KAISER,
+          nullptr);
+
+      gst_audio_resampler_options_set_quality (GST_AUDIO_RESAMPLER_METHOD_KAISER,
+          GST_AUDIO_RESAMPLER_QUALITY_DEFAULT, GST_AUDIO_INFO_RATE (in_info),
+            GST_AUDIO_INFO_RATE (out_info), config);
+
+      ctx->conv = gst_audio_converter_new (GST_AUDIO_CONVERTER_FLAG_NONE,
+          in_info, out_info, config);
+      if (!ctx->conv) {
+        GST_ERROR ("Couldn't create converter");
+        desc->exclusive = false;
+        ctx->client = nullptr;
+        gst_wasapi2_clear_wfx (&ctx->mix_format);
+        gst_clear_caps (&ctx->caps);
+
         hr = device->Activate (__uuidof (IAudioClient), CLSCTX_ALL,
             nullptr, &ctx->client);
         if (!gst_wasapi2_result (hr)) {
           GST_WARNING ("Couldn't get IAudioClient from IMMDevice");
           return;
         }
+      } else {
+        GST_INFO ("converter configured");
       }
     }
   }
 
-  /* Try IAudioClient3 if low-latency is requested */
-  if (FAILED (hr) && desc->low_latency &&
-      !gst_wasapi2_is_loopback_class (endpoint_class) &&
-      !gst_wasapi2_is_process_loopback_class (endpoint_class) &&
-      !desc->exclusive) {
-    hr = initialize_audio_client3 (ctx->client.Get (), ctx->mix_format,
-        &ctx->period, stream_flags);
+  if (!desc->exclusive) {
+    DWORD stream_flags = 0;
+    if (!desc->mix_format) {
+      ctx->client->GetMixFormat (&ctx->mix_format);
+      if (!ctx->mix_format && gst_wasapi2_is_process_loopback_class (endpoint_class)) {
+        ctx->mix_format = gst_wasapi2_get_default_mix_format ();
+      }
+
+      if (!ctx->mix_format) {
+        GST_ERROR ("Couldn't get mix format");
+        return;
+      }
+    } else {
+      /* Check format support */
+      WAVEFORMATEX *closest = nullptr;
+      hr = ctx->client->IsFormatSupported (AUDCLNT_SHAREMODE_SHARED,
+          desc->mix_format, &closest);
+      if (hr == S_OK) {
+        ctx->mix_format = gst_wasapi2_copy_wfx (desc->mix_format);
+        /* format supported */
+      } else if (hr == S_FALSE) {
+        if (!closest) {
+          GST_ERROR ("Couldn't get closest format");
+          return;
+        }
+
+        GstCaps *old_caps = nullptr;
+        GstCaps *new_caps = nullptr;
+
+        gst_wasapi2_util_parse_waveformatex (desc->mix_format,
+            &old_caps, nullptr);
+        gst_wasapi2_util_parse_waveformatex (closest,
+            &new_caps, nullptr);
+
+        if (!new_caps || !old_caps) {
+          GST_ERROR ("Couldn't get caps from format");
+          gst_clear_caps (&new_caps);
+          gst_clear_caps (&old_caps);
+          CoTaskMemFree (closest);
+          return;
+        }
+
+        if (!gst_caps_is_equal (new_caps, old_caps)) {
+          GST_INFO ("Closest caps is different, old: %" GST_PTR_FORMAT
+              ", new : %" GST_PTR_FORMAT, old_caps, new_caps);
+          /* Hope OS mixer can convert the format */
+          gst_caps_unref (new_caps);
+          gst_caps_unref (old_caps);
+          CoTaskMemFree (closest);
+          ctx->mix_format = gst_wasapi2_copy_wfx (desc->mix_format);
+          stream_flags = AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM |
+              AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY;
+        } else {
+          gst_caps_unref (new_caps);
+          gst_caps_unref (old_caps);
+
+          ctx->mix_format = closest;
+        }
+      } else {
+        GST_ERROR ("Format not supported");
+        return;
+      }
+    }
+
+    gst_wasapi2_util_parse_waveformatex (ctx->mix_format, &ctx->caps, nullptr);
+
+    hr = E_FAIL;
+    /* Try IAudioClient3 if low-latency is requested */
+    if (desc->low_latency &&
+        !gst_wasapi2_is_loopback_class (endpoint_class) &&
+        !gst_wasapi2_is_process_loopback_class (endpoint_class) &&
+        !desc->exclusive) {
+      hr = initialize_audio_client3 (ctx->client.Get (), ctx->mix_format,
+          &ctx->period, stream_flags);
+    }
+
+    if (FAILED (hr)) {
+      DWORD extra_flags = stream_flags;
+      if (gst_wasapi2_is_loopback_class (endpoint_class))
+        extra_flags = AUDCLNT_STREAMFLAGS_LOOPBACK;
+
+      hr = initialize_audio_client (ctx->client.Get (), ctx->mix_format,
+          &ctx->period, extra_flags, endpoint_class, desc);
+    }
+
+    if (FAILED (hr))
+      return;
   }
-
-  if (FAILED (hr)) {
-    DWORD extra_flags = stream_flags;
-    if (gst_wasapi2_is_loopback_class (endpoint_class))
-      extra_flags = AUDCLNT_STREAMFLAGS_LOOPBACK;
-
-    hr = initialize_audio_client (ctx->client.Get (), ctx->mix_format,
-        &ctx->period, extra_flags, endpoint_class, desc);
-  }
-
-  if (FAILED (hr))
-    return;
 
   if (endpoint_class == GST_WASAPI2_ENDPOINT_CLASS_RENDER) {
     hr = ctx->client->SetEventHandle (ctx->render_event);
@@ -1248,7 +1343,7 @@ struct GstWasapi2RbufPrivate
   gboolean exclusive = FALSE;
 
   std::shared_ptr<RbufCtx> ctx;
-  std::atomic<bool> monitor_device_mute;
+  std::atomic<bool> monitor_device_mute = { false };
   GThread *thread = nullptr;
   HANDLE command_handle;
   GstCaps *caps = nullptr;
@@ -1279,6 +1374,8 @@ struct GstWasapi2RbufPrivate
 
   HANDLE monitor_timer = nullptr;
   bool monitor_timer_armed = false;
+
+  std::vector<guint8> temp_data;
 
   GWeakRef parent;
   GstWasapi2RbufCallback invalidated_cb;
@@ -1611,18 +1708,9 @@ gst_wasapi2_rbuf_process_read (GstWasapi2Rbuf * self)
   auto rb = GST_AUDIO_RING_BUFFER_CAST (self);
   auto priv = self->priv;
   BYTE *data = nullptr;
-  UINT32 to_read = 0;
-  guint32 to_read_bytes;
+  UINT32 to_read_frames = 0;
   DWORD flags = 0;
-  HRESULT hr;
   guint64 position = 0;
-  GstAudioInfo *info = &rb->spec.info;
-  guint gap_size = 0;
-  guint offset = 0;
-  gint segment;
-  guint8 *readptr;
-  gint len;
-  bool is_device_muted;
   UINT64 qpc_pos = 0;
   GstClockTime qpc_time;
 
@@ -1631,108 +1719,228 @@ gst_wasapi2_rbuf_process_read (GstWasapi2Rbuf * self)
     return E_FAIL;
   }
 
+  auto & ctx = priv->ctx;
   auto client = priv->ctx->capture_client;
 
-  hr = client->GetBuffer (&data, &to_read, &flags, &position, &qpc_pos);
+  auto hr =
+      client->GetBuffer (&data, &to_read_frames, &flags, &position, &qpc_pos);
   /* 100 ns unit */
   qpc_time = qpc_pos * 100;
 
   GST_LOG_OBJECT (self, "Reading %d frames offset at %" G_GUINT64_FORMAT
       ", expected position %" G_GUINT64_FORMAT ", qpc-time %"
-      GST_TIME_FORMAT "(%" G_GUINT64_FORMAT "), flags 0x%x", to_read, position,
-      priv->expected_position, GST_TIME_ARGS (qpc_time), qpc_pos,
+      GST_TIME_FORMAT "(%" G_GUINT64_FORMAT "), flags 0x%x", to_read_frames,
+      position, priv->expected_position, GST_TIME_ARGS (qpc_time), qpc_pos,
       (guint) flags);
 
-  if (hr == AUDCLNT_S_BUFFER_EMPTY || to_read == 0) {
+  if (hr == AUDCLNT_S_BUFFER_EMPTY || to_read_frames == 0) {
     GST_LOG_OBJECT (self, "Empty buffer");
     return S_OK;
   }
 
-  is_device_muted =
-      priv->monitor_device_mute.load (std::memory_order_acquire) &&
-      priv->ctx->IsEndpointMuted ();
+  if (!gst_wasapi2_result (hr))
+    return hr;
 
-  to_read_bytes = to_read * GST_AUDIO_INFO_BPF (info);
-
-  /* XXX: position might not be increased in case of process loopback  */
+  guint gap_dev_frames = 0;
   if (!gst_wasapi2_is_process_loopback_class (priv->ctx->endpoint_class)) {
+    /* XXX: position might not be increased in case of process loopback  */
     if (priv->is_first) {
-      priv->expected_position = position + to_read;
+      priv->expected_position = position + to_read_frames;
       priv->is_first = false;
     } else {
       if (position > priv->expected_position) {
-        guint gap_frames;
-
-        gap_frames = (guint) (position - priv->expected_position);
-        GST_WARNING_OBJECT (self, "Found %u frames gap", gap_frames);
-        gap_size = gap_frames * GST_AUDIO_INFO_BPF (info);
+        gap_dev_frames = (guint) (position - priv->expected_position);
+        GST_WARNING_OBJECT (self, "Found %u frames gap", gap_dev_frames);
       }
 
-      priv->expected_position = position + to_read;
+      priv->expected_position = position + to_read_frames;
     }
   } else if (priv->mute) {
     /* volume clinet might not be available in case of process loopback */
     flags |= AUDCLNT_BUFFERFLAGS_SILENT;
   }
 
+  gboolean device_muted =
+      priv->monitor_device_mute.load (std::memory_order_acquire) &&
+      priv->ctx->IsEndpointMuted ();
+  gboolean force_silence =
+      ((flags & AUDCLNT_BUFFERFLAGS_SILENT) == AUDCLNT_BUFFERFLAGS_SILENT) ||
+      device_muted;
+
+  gsize host_bpf = (gsize) GST_AUDIO_INFO_BPF (&rb->spec.info);
+  gsize device_bpf = (ctx->conv)
+      ? (gsize) GST_AUDIO_INFO_BPF (&ctx->device_info)
+      : (gsize) GST_AUDIO_INFO_BPF (&rb->spec.info);
+
   /* Fill gap data if any */
-  while (gap_size > 0) {
-    if (!gst_audio_ring_buffer_prepare_read (rb, &segment, &readptr, &len)) {
-      GST_INFO_OBJECT (self, "No segment available");
-      hr = client->ReleaseBuffer (to_read);
-      gst_wasapi2_result (hr);
-      return S_OK;
-    }
-
-    g_assert (priv->segoffset >= 0);
-
-    len -= priv->segoffset;
-    if (len > (gint) gap_size)
-      len = gap_size;
-
-    gst_audio_format_info_fill_silence (info->finfo,
-        readptr + priv->segoffset, len);
-
-    priv->segoffset += len;
-    gap_size -= len;
-
-    if (priv->segoffset == rb->spec.segsize) {
-      gst_audio_ring_buffer_advance (rb, 1);
-      priv->segoffset = 0;
-    }
-  }
-
-  while (to_read_bytes) {
-    if (!gst_audio_ring_buffer_prepare_read (rb, &segment, &readptr, &len)) {
-      GST_INFO_OBJECT (self, "No segment available");
-      hr = client->ReleaseBuffer (to_read);
-      gst_wasapi2_result (hr);
-      return S_OK;
-    }
-
-    len -= priv->segoffset;
-    if (len > (gint) to_read_bytes)
-      len = to_read_bytes;
-
-    if (((flags & AUDCLNT_BUFFERFLAGS_SILENT) == AUDCLNT_BUFFERFLAGS_SILENT) ||
-        is_device_muted) {
-      gst_audio_format_info_fill_silence (info->finfo,
-          readptr + priv->segoffset, len);
+  if (gap_dev_frames > 0) {
+    if (ctx->conv) {
+      auto gap_bytes = (gsize) gap_dev_frames * device_bpf;
+      auto old = ctx->device_fifo_bytes;
+      ctx->device_fifo.resize (old + gap_bytes);
+      gst_audio_format_info_fill_silence (ctx->device_info.finfo,
+          ctx->device_fifo.data () + old, (gint) gap_bytes);
+      ctx->device_fifo_bytes += gap_bytes;
     } else {
-      memcpy (readptr + priv->segoffset, data + offset, len);
-    }
+      auto gap_bytes = (gsize) gap_dev_frames * host_bpf;
+      while (gap_bytes > 0) {
+        gint segment;
+        guint8 *dstptr;
+        gint len;
 
-    priv->segoffset += len;
-    offset += len;
-    to_read_bytes -= len;
+        if (!gst_audio_ring_buffer_prepare_read (rb, &segment, &dstptr, &len))
+          break;
 
-    if (priv->segoffset == rb->spec.segsize) {
-      gst_audio_ring_buffer_advance (rb, 1);
-      priv->segoffset = 0;
+        len -= priv->segoffset;
+        if (len <= 0)
+          break;
+
+        gsize to_write = MIN ((gsize) len, gap_bytes);
+        gst_audio_format_info_fill_silence (rb->spec.info.finfo,
+            dstptr + priv->segoffset, (gint) to_write);
+
+        priv->segoffset += (gint) to_write;
+        gap_bytes -= to_write;
+
+        if (priv->segoffset == rb->spec.segsize) {
+          gst_audio_ring_buffer_advance (rb, 1);
+          priv->segoffset = 0;
+        }
+      }
     }
   }
 
-  hr = client->ReleaseBuffer (to_read);
+  if (ctx->conv) {
+    /* push device data to device_fifo */
+    const size_t in_bytes = (size_t) to_read_frames * device_bpf;
+    if (in_bytes > 0) {
+      const size_t old = ctx->device_fifo_bytes;
+      ctx->device_fifo.resize (old + in_bytes);
+      if (force_silence) {
+        gst_audio_format_info_fill_silence (ctx->device_info.finfo,
+            ctx->device_fifo.data () + old, (gint) in_bytes);
+      } else {
+        memcpy (ctx->device_fifo.data () + old, data, in_bytes);
+      }
+      ctx->device_fifo_bytes += in_bytes;
+    }
+
+    /* convert device_fifo -> host_fifo */
+    while (ctx->device_fifo_bytes >= device_bpf) {
+      auto in_frames_avail = (gsize) (ctx->device_fifo_bytes / device_bpf);
+      auto out_frames = gst_audio_converter_get_out_frames (ctx->conv,
+          (gint) in_frames_avail);
+      if (out_frames == 0)
+        break;
+
+      auto out_bytes = (size_t) (out_frames * host_bpf);
+      priv->temp_data.resize (out_bytes);
+
+      gpointer in_planes[1] = { ctx->device_fifo.data () };
+      gpointer out_planes[1] = { priv->temp_data.data () };
+
+      if (!gst_audio_converter_samples (ctx->conv,
+              GST_AUDIO_CONVERTER_FLAG_NONE,
+              in_planes, (gint) in_frames_avail,
+              out_planes, (gint) out_frames)) {
+        GST_ERROR_OBJECT (self, "Couldn't convert sample");
+        client->ReleaseBuffer (to_read_frames);
+        return E_FAIL;
+      }
+
+      auto consumed_in = (size_t) (in_frames_avail * device_bpf);
+      if (consumed_in < ctx->device_fifo_bytes) {
+        memmove (ctx->device_fifo.data (),
+            ctx->device_fifo.data () + consumed_in,
+            ctx->device_fifo_bytes - consumed_in);
+      }
+      ctx->device_fifo_bytes -= consumed_in;
+      ctx->device_fifo.resize (ctx->device_fifo_bytes);
+
+      /* Push converted data to host_fifo */
+      if (out_bytes > 0) {
+        auto hold = ctx->host_fifo_bytes;
+        ctx->host_fifo.resize (hold + out_bytes);
+        memcpy (ctx->host_fifo.data () + hold, priv->temp_data.data (),
+            out_bytes);
+        ctx->host_fifo_bytes += out_bytes;
+      }
+
+      if (ctx->device_fifo_bytes < device_bpf)
+        break;
+    }
+
+    /* host_fifo -> ringbuffer */
+    while (ctx->host_fifo_bytes > 0) {
+      gint segment;
+      guint8 *dstptr;
+      gint len;
+
+      if (!gst_audio_ring_buffer_prepare_read (rb, &segment, &dstptr, &len))
+        break;
+
+      len -= priv->segoffset;
+      if (len <= 0)
+        break;
+
+      auto to_copy = MIN ((size_t) len, ctx->host_fifo_bytes);
+      memcpy (dstptr + priv->segoffset, ctx->host_fifo.data (), to_copy);
+
+      priv->segoffset += (gint) to_copy;
+
+      if (to_copy < ctx->host_fifo_bytes) {
+        memmove (ctx->host_fifo.data (),
+            ctx->host_fifo.data () + to_copy, ctx->host_fifo_bytes - to_copy);
+      }
+      ctx->host_fifo_bytes -= to_copy;
+      ctx->host_fifo.resize (ctx->host_fifo_bytes);
+
+      if (priv->segoffset == rb->spec.segsize) {
+        gst_audio_ring_buffer_advance (rb, 1);
+        priv->segoffset = 0;
+      }
+
+      if (to_copy == 0)
+        break;
+    }
+  } else {
+    gsize remain = (gsize) to_read_frames * device_bpf;
+    gsize offset = 0;
+
+    while (remain > 0) {
+      gint segment;
+      guint8 *dstptr;
+      gint len;
+
+      if (!gst_audio_ring_buffer_prepare_read (rb, &segment, &dstptr, &len)) {
+        GST_INFO_OBJECT (self, "No segment available");
+        break;
+      }
+
+      len -= priv->segoffset;
+      if (len <= 0)
+        break;
+
+      auto to_write = MIN ((gsize) len, remain);
+      if (force_silence) {
+        gst_audio_format_info_fill_silence (rb->spec.info.finfo,
+            dstptr + priv->segoffset, (gint) to_write);
+      } else {
+        memcpy (dstptr + priv->segoffset, data + offset, to_write);
+      }
+
+      priv->segoffset += (gint) to_write;
+      offset += to_write;
+      remain -= to_write;
+
+      if (priv->segoffset == rb->spec.segsize) {
+        gst_audio_ring_buffer_advance (rb, 1);
+        priv->segoffset = 0;
+      }
+    }
+  }
+
+  hr = client->ReleaseBuffer (to_read_frames);
   gst_wasapi2_result (hr);
 
   return S_OK;
@@ -1846,31 +2054,137 @@ gst_wasapi2_rbuf_process_write_exclusive (GstWasapi2Rbuf * self)
   auto client = priv->ctx->client;
   auto render_client = priv->ctx->render_client;
 
-  while (ctx->exclusive_staging_filled < ctx->exclusive_staging.size ()) {
-    gint segment;
-    guint8 *readptr;
-    gint len;
+  auto period_bytes = ctx->exclusive_period_bytes;
 
-    if (!gst_audio_ring_buffer_prepare_read (rb, &segment, &readptr, &len))
-      break;
+  if (ctx->conv) {
+    auto host_bpf = (gsize) GST_AUDIO_INFO_BPF (&ctx->host_info);
+    auto device_bpf = (gsize) GST_AUDIO_INFO_BPF (&ctx->device_info);
 
-    len -= priv->segoffset;
-    if (len <= 0)
-      break;
+    while (ctx->exclusive_staging_filled < period_bytes) {
+      bool processed_any = false;
+      gint segment;
+      guint8 *readptr;
+      gint len;
 
-    auto remain = ctx->exclusive_period_bytes - ctx->exclusive_staging_filled;
-    auto to_copy = (guint) MIN ((guint) len, (guint) remain);
+      /* read data from ringbuffer */
+      if (gst_audio_ring_buffer_prepare_read (rb, &segment, &readptr, &len)) {
+        len -= priv->segoffset;
+        if (len > 0) {
+          auto old = ctx->host_fifo_bytes;
+          ctx->host_fifo.resize (old + (size_t) len);
+          memcpy (ctx->host_fifo.data () + old, readptr + priv->segoffset,
+              (size_t) len);
+          ctx->host_fifo_bytes += (size_t) len;
+          processed_any = true;
 
-    memcpy (ctx->exclusive_staging.data () + ctx->exclusive_staging_filled,
-        readptr + priv->segoffset, to_copy);
+          priv->segoffset += len;
+          if (priv->segoffset == rb->spec.segsize) {
+            gst_audio_ring_buffer_clear (rb, segment);
+            gst_audio_ring_buffer_advance (rb, 1);
+            priv->segoffset = 0;
+          }
+        }
+      }
 
-    priv->segoffset += to_copy;
-    ctx->exclusive_staging_filled += to_copy;
+      /* do conversion */
+      {
+        auto host_frames_avail = (gsize) (ctx->host_fifo_bytes / host_bpf);
+        if (host_frames_avail > 0) {
+          auto out_frames =
+              gst_audio_converter_get_out_frames (ctx->conv, host_frames_avail);
+          if (out_frames > 0) {
+            auto out_bytes = (size_t) (out_frames * device_bpf);
+            priv->temp_data.resize (out_bytes);
 
-    if (priv->segoffset == rb->spec.segsize) {
-      gst_audio_ring_buffer_clear (rb, segment);
-      gst_audio_ring_buffer_advance (rb, 1);
-      priv->segoffset = 0;
+            gpointer in_planes[1] = { ctx->host_fifo.data () };
+            gpointer out_planes[1] = { priv->temp_data.data () };
+
+            if (!gst_audio_converter_samples (ctx->conv,
+                    GST_AUDIO_CONVERTER_FLAG_NONE,
+                    in_planes, host_frames_avail, out_planes, out_frames)) {
+              GST_ERROR_OBJECT (self, "gst_audio_converter_samples() failed");
+              return E_FAIL;
+            }
+
+            auto consumed_host = (size_t) (host_frames_avail * host_bpf);
+            if (consumed_host < ctx->host_fifo_bytes) {
+              memmove (ctx->host_fifo.data (),
+                  ctx->host_fifo.data () + consumed_host,
+                  ctx->host_fifo_bytes - consumed_host);
+            }
+            ctx->host_fifo_bytes -= consumed_host;
+            ctx->host_fifo.resize (ctx->host_fifo_bytes);
+
+            auto old_dev = ctx->device_fifo_bytes;
+            ctx->device_fifo.resize (old_dev + out_bytes);
+            memcpy (ctx->device_fifo.data () + old_dev, priv->temp_data.data (),
+                out_bytes);
+            ctx->device_fifo_bytes += out_bytes;
+
+            processed_any = true;
+          }
+        }
+      }
+
+      /* move device fifo to staging */
+      if (ctx->device_fifo_bytes > 0 &&
+          ctx->exclusive_staging_filled < period_bytes) {
+        auto need = period_bytes - ctx->exclusive_staging_filled;
+        auto to_copy = MIN (need, ctx->device_fifo_bytes);
+
+        memcpy (ctx->exclusive_staging.data () + ctx->exclusive_staging_filled,
+            ctx->device_fifo.data (), to_copy);
+        ctx->exclusive_staging_filled += to_copy;
+
+        if (to_copy < ctx->device_fifo_bytes) {
+          memmove (ctx->device_fifo.data (),
+              ctx->device_fifo.data () + to_copy,
+              ctx->device_fifo_bytes - to_copy);
+        }
+
+        ctx->device_fifo_bytes -= to_copy;
+        ctx->device_fifo.resize (ctx->device_fifo_bytes);
+
+        if (to_copy > 0)
+          processed_any = true;
+      }
+
+      if (!processed_any)
+        break;
+
+      if (ctx->exclusive_staging_filled >= period_bytes)
+        break;
+    }
+  } else {
+    while (ctx->exclusive_staging_filled < period_bytes) {
+      gint segment;
+      guint8 *readptr;
+      gint len;
+
+      if (!gst_audio_ring_buffer_prepare_read (rb, &segment, &readptr, &len))
+        break;
+
+      len -= priv->segoffset;
+      if (len <= 0)
+        break;
+
+      auto remain = period_bytes - ctx->exclusive_staging_filled;
+      auto to_copy = (size_t) MIN ((gsize) len, (gsize) remain);
+
+      memcpy (ctx->exclusive_staging.data () + ctx->exclusive_staging_filled,
+          readptr + priv->segoffset, to_copy);
+
+      priv->segoffset += (gint) to_copy;
+      ctx->exclusive_staging_filled += to_copy;
+
+      if (priv->segoffset == rb->spec.segsize) {
+        gst_audio_ring_buffer_clear (rb, segment);
+        gst_audio_ring_buffer_advance (rb, 1);
+        priv->segoffset = 0;
+      }
+
+      if (ctx->exclusive_staging_filled >= period_bytes)
+        break;
     }
   }
 
@@ -2088,6 +2402,13 @@ gst_wasapi2_rbuf_process_start (GstWasapi2Rbuf * self, gboolean reset_offset)
 
   if (priv->ctx) {
     priv->ctx->exclusive_staging_filled = 0;
+    priv->ctx->device_fifo_bytes = 0;
+    priv->ctx->host_fifo_bytes = 0;
+    priv->ctx->device_fifo.clear ();
+    priv->ctx->host_fifo.clear ();
+
+    if (priv->ctx->conv)
+      gst_audio_converter_reset (priv->ctx->conv);
 
     auto hr = priv->ctx->Start ();
 
@@ -2107,15 +2428,6 @@ gst_wasapi2_rbuf_process_start (GstWasapi2Rbuf * self, gboolean reset_offset)
   priv->running = true;
 
   return S_OK;
-}
-
-static inline void
-ClearMixFormat (WAVEFORMATEX ** mix_format)
-{
-  if (*mix_format) {
-    CoTaskMemFree (*mix_format);
-    *mix_format = nullptr;
-  }
 }
 
 static HRESULT
@@ -2287,7 +2599,8 @@ gst_wasapi2_rbuf_loop_thread (GstWasapi2Rbuf * self)
 
         LONGLONG elapsed = qpc_now.QuadPart - priv->fallback_qpc_base.QuadPart;
         UINT64 elapsed_100ns = elapsed * 10000000ULL / priv->qpc_freq.QuadPart;
-        UINT32 rate = priv->mix_format->nSamplesPerSec;
+        auto rb = GST_AUDIO_RING_BUFFER_CAST (self);
+        UINT32 rate = GST_AUDIO_INFO_RATE (&rb->spec.info);
         UINT64 expected_frames = (elapsed_100ns * rate) / 10000000ULL;
         UINT64 delta = expected_frames - priv->fallback_frames_processed;
 
@@ -2406,7 +2719,7 @@ gst_wasapi2_rbuf_loop_thread (GstWasapi2Rbuf * self)
           }
           case CommandType::Open:
             priv->configured_allow_dummy = priv->allow_dummy;
-            ClearMixFormat (&priv->mix_format);
+            gst_wasapi2_clear_wfx (&priv->mix_format);
             priv->ctx = gst_wasapi2_rbuf_create_ctx (self);
 
             if (priv->ctx) {
@@ -2450,7 +2763,7 @@ gst_wasapi2_rbuf_loop_thread (GstWasapi2Rbuf * self)
             cmd->hr = S_OK;
             SetEvent (cmd->event_handle);
             priv->opened = false;
-            ClearMixFormat (&priv->mix_format);
+            gst_wasapi2_clear_wfx (&priv->mix_format);
             gst_wasapi2_rbuf_stop_fallback_timer (self);
             break;
           case CommandType::Acquire:
@@ -2483,7 +2796,7 @@ gst_wasapi2_rbuf_loop_thread (GstWasapi2Rbuf * self)
               else
                 priv->ctx->SetVolume (priv->volume);
 
-              ClearMixFormat (&priv->mix_format);
+              gst_wasapi2_clear_wfx (&priv->mix_format);
               priv->mix_format = gst_wasapi2_copy_wfx (priv->ctx->mix_format);
             } else {
               waitables[0] = dummy_render;
@@ -2539,7 +2852,7 @@ gst_wasapi2_rbuf_loop_thread (GstWasapi2Rbuf * self)
 
   priv->ctx = nullptr;
   priv->cmd_queue = { };
-  ClearMixFormat (&priv->mix_format);
+  gst_wasapi2_clear_wfx (&priv->mix_format);
 
   CoUninitialize ();
 

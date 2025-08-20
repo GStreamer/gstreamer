@@ -31,6 +31,7 @@
 #include <string.h>
 #include <wrl.h>
 #include <vector>
+#include <math.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_wasapi2_debug);
 #define GST_CAT_DEFAULT gst_wasapi2_debug
@@ -826,3 +827,142 @@ gst_wasapi2_wfx_list_to_caps (GPtrArray * list)
   return caps;
 }
 /* *INDENT-ON* */
+
+struct FormatView
+{
+  WORD channels;
+  DWORD sample_rate;
+  GUID subformat;
+  WORD bits_per_sample;
+  WORD valid_bits_per_sample;
+  DWORD channel_mask;
+  WORD format_tag;
+};
+
+static inline gboolean
+is_extensible_format (const WAVEFORMATEX * wfx)
+{
+  return wfx->wFormatTag == WAVE_FORMAT_EXTENSIBLE &&
+      wfx->cbSize >= (sizeof (WAVEFORMATEXTENSIBLE) - sizeof (WAVEFORMATEX));
+}
+
+static FormatView
+make_view (const WAVEFORMATEX * wfx)
+{
+  FormatView view = { };
+
+  view.channels = wfx->nChannels;
+  view.sample_rate = wfx->nSamplesPerSec;
+  view.bits_per_sample = wfx->wBitsPerSample;
+  view.format_tag = wfx->wFormatTag;
+
+  if (is_extensible_format (wfx)) {
+    auto wfe = (const WAVEFORMATEXTENSIBLE *) wfx;
+    view.subformat = wfe->SubFormat;
+    view.valid_bits_per_sample = wfe->Samples.wValidBitsPerSample;
+    view.channel_mask = wfe->dwChannelMask;
+    if (view.valid_bits_per_sample == 0)
+      view.valid_bits_per_sample = view.bits_per_sample;
+  } else {
+    if (wfx->wFormatTag == WAVE_FORMAT_PCM) {
+      view.subformat = GST_KSDATAFORMAT_SUBTYPE_PCM;
+    } else if (wfx->wFormatTag == WAVE_FORMAT_IEEE_FLOAT) {
+      view.subformat = GST_KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
+    }
+
+    view.valid_bits_per_sample = view.bits_per_sample;
+    view.channel_mask = 0;
+  }
+
+  return view;
+}
+
+static gint
+compare_format_similarity (const FormatView * a, const FormatView * b,
+    const FormatView * basis)
+{
+  gboolean a_sub_eq = IsEqualGUID (a->subformat, basis->subformat);
+  gboolean b_sub_eq = IsEqualGUID (b->subformat, basis->subformat);
+
+  /* Check subformat (e.g., PCM vs FLOAT) */
+  if (a_sub_eq != b_sub_eq)
+    return a_sub_eq ? -1 : 1;
+
+  /* BPS diff */
+  gint da_bits =
+      abs ((gint) a->bits_per_sample - (gint) basis->bits_per_sample);
+  gint db_bits =
+      abs ((gint) b->bits_per_sample - (gint) basis->bits_per_sample);
+  if (da_bits != db_bits)
+    return (da_bits < db_bits) ? -1 : 1;
+
+  gint a_valid = a->valid_bits_per_sample ?
+      a->valid_bits_per_sample : a->bits_per_sample;
+  gint b_valid = b->valid_bits_per_sample ?
+      b->valid_bits_per_sample : b->bits_per_sample;
+  gint basis_valid = basis->valid_bits_per_sample ?
+      basis->valid_bits_per_sample : basis->bits_per_sample;
+
+  gint da_valid = abs (a_valid - basis_valid);
+  gint db_valid = abs (b_valid - basis_valid);
+  if (da_valid != db_valid)
+    return (da_valid < db_valid) ? -1 : 1;
+
+  /* Checks sample mask */
+  gboolean a_mask_eq = (a->channel_mask != 0 && basis->channel_mask != 0 &&
+      a->channel_mask == basis->channel_mask);
+  gboolean b_mask_eq = (b->channel_mask != 0 && basis->channel_mask != 0 &&
+      b->channel_mask == basis->channel_mask);
+  if (a_mask_eq != b_mask_eq)
+    return a_mask_eq ? -1 : 1;
+
+  /* Check format tag */
+  gint dtag_a = abs ((gint) a->format_tag - (gint) basis->format_tag);
+  gint dtag_b = abs ((gint) b->format_tag - (gint) basis->format_tag);
+  if (dtag_a != dtag_b)
+    return (dtag_a < dtag_b) ? -1 : 1;
+
+  return 0;
+}
+
+static gint
+compare_wfx_func (gconstpointer pa, gconstpointer pb, gpointer user_data)
+{
+  const WAVEFORMATEX *A = (const WAVEFORMATEX *) pa;
+  const WAVEFORMATEX *B = (const WAVEFORMATEX *) pb;
+  const WAVEFORMATEX *basis_wfx = (const WAVEFORMATEX *) user_data;
+
+  FormatView a = make_view (A);
+  FormatView b = make_view (B);
+  FormatView basis = make_view (basis_wfx);
+
+  /* Prefer same channel */
+  gint dch_a = abs ((gint) a.channels - (gint) basis.channels);
+  gint dch_b = abs ((gint) b.channels - (gint) basis.channels);
+  if (dch_a != dch_b)
+    return (dch_a < dch_b) ? -1 : 1;
+
+  /* Then sample rate */
+  gint64 dra = (gint64) a.sample_rate - (gint64) basis.sample_rate;
+  gint64 drb = (gint64) b.sample_rate - (gint64) basis.sample_rate;
+  dra = dra >= 0 ? dra : -dra;
+  drb = drb >= 0 ? drb : -drb;
+  if (dra != drb)
+    return (dra < drb) ? -1 : 1;
+
+  /* format compare */
+  gint fcmp = compare_format_similarity (&a, &b, &basis);
+  if (fcmp != 0)
+    return fcmp;
+
+  return 0;
+}
+
+void
+gst_wasapi2_sort_wfx (GPtrArray * list, WAVEFORMATEX * wfx)
+{
+  if (!list || list->len == 0 || !wfx)
+    return;
+
+  g_ptr_array_sort_with_data (list, compare_wfx_func, wfx);
+}

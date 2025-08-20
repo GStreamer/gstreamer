@@ -132,6 +132,9 @@ gboolean gst_wasapi2_get_exclusive_formats (IAudioClient * client,
 
 GstCaps * gst_wasapi2_wfx_list_to_caps (GPtrArray * list);
 
+void      gst_wasapi2_sort_wfx (GPtrArray * list,
+                                WAVEFORMATEX * wfx);
+
 G_END_DECLS
 
 #ifdef __cplusplus
