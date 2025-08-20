@@ -178,6 +178,8 @@ struct extension;
 typedef gboolean (*CanExtensionBeEnabled) (const struct extension * extension,
     GstVulkanPhysicalDevice * phy_dev);
 
+typedef gboolean (*IsFeatureEnabled) (GstVulkanPhysicalDevice * phy_dev);
+
 struct extension
 {
   /* name of the extension */
@@ -192,7 +194,15 @@ struct extension
   guint promoted_api_version;
   /* other extension in which this depend on */
   const char *dependency;
+  /* function to check it the feature is enabled in physical device */
+  IsFeatureEnabled is_enabled;
 };
+
+static inline gboolean
+gst_vulkan_physical_device_has_feature_none (GstVulkanPhysicalDevice * phy_dev)
+{
+  return TRUE;
+}
 
 #define NEVER_VK_VERSION VK_MAKE_VERSION (999, 0, 0)
 
@@ -211,6 +221,8 @@ can_enable_api_version (const struct extension *extension,
           VK_VERSION_MAJOR (extension->min_api_version),
           VK_VERSION_MINOR (extension->min_api_version),
           VK_VERSION_PATCH (extension->min_api_version))) {
+    if (!extension->is_enabled)
+      return FALSE;
     if (extension->dependency) {
       return gst_vulkan_physical_device_get_extension_info (phy_dev,
           extension->dependency, NULL);
@@ -222,11 +234,12 @@ can_enable_api_version (const struct extension *extension,
 }
 
 #define OPTIONAL_EXTENSION_VERSION(name, min, promoted)   \
-  { name, can_enable_api_version, min, promoted, NULL, }
+  { name, can_enable_api_version, min, promoted, NULL, \
+      gst_vulkan_physical_device_has_feature_none }
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-#define OPTIONAL_VIDEO_EXTENSION(name, dep)                             \
+#define OPTIONAL_VIDEO_EXTENSION(name, dep, feat)                       \
   { name, can_enable_api_version, VK_MAKE_VERSION (1, 3, 0),            \
-      NEVER_VK_VERSION, dep, }
+      NEVER_VK_VERSION, dep, gst_vulkan_physical_device_has_feature_##feat }
 #endif
 
 static const struct extension optional_extensions[] = {
@@ -246,35 +259,35 @@ static const struct extension optional_extensions[] = {
 # if defined(VK_KHR_video_queue)
   /* synchronization2 was promoted in 1.3 */
   OPTIONAL_VIDEO_EXTENSION (VK_KHR_VIDEO_QUEUE_EXTENSION_NAME,
-      /* VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME */ NULL),
+      /* VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME */ NULL, none),
 #endif
 # if defined(VK_KHR_video_decode_queue)
   OPTIONAL_VIDEO_EXTENSION (VK_KHR_VIDEO_DECODE_QUEUE_EXTENSION_NAME,
-      VK_KHR_VIDEO_QUEUE_EXTENSION_NAME),
+      VK_KHR_VIDEO_QUEUE_EXTENSION_NAME, none),
 # endif
 # if defined(VK_KHR_video_decode_h264)
   OPTIONAL_VIDEO_EXTENSION (VK_KHR_VIDEO_DECODE_H264_EXTENSION_NAME,
-      VK_KHR_VIDEO_DECODE_QUEUE_EXTENSION_NAME),
+      VK_KHR_VIDEO_DECODE_QUEUE_EXTENSION_NAME, none),
 # endif
 # if defined(VK_KHR_video_decode_h265)
   OPTIONAL_VIDEO_EXTENSION (VK_KHR_VIDEO_DECODE_H265_EXTENSION_NAME,
-      VK_KHR_VIDEO_DECODE_QUEUE_EXTENSION_NAME),
+      VK_KHR_VIDEO_DECODE_QUEUE_EXTENSION_NAME, none),
 # endif
 # if defined(VK_KHR_video_encode_queue)
   OPTIONAL_VIDEO_EXTENSION (VK_KHR_VIDEO_ENCODE_QUEUE_EXTENSION_NAME,
-      VK_KHR_VIDEO_QUEUE_EXTENSION_NAME),
+      VK_KHR_VIDEO_QUEUE_EXTENSION_NAME, none),
 # endif
 # if defined(VK_KHR_video_encode_h264)
   OPTIONAL_VIDEO_EXTENSION (VK_KHR_VIDEO_ENCODE_H264_EXTENSION_NAME,
-      VK_KHR_VIDEO_ENCODE_QUEUE_EXTENSION_NAME),
+      VK_KHR_VIDEO_ENCODE_QUEUE_EXTENSION_NAME, none),
 # endif
 # if defined(VK_KHR_video_encode_h265)
   OPTIONAL_VIDEO_EXTENSION (VK_KHR_VIDEO_ENCODE_H265_EXTENSION_NAME,
-      VK_KHR_VIDEO_ENCODE_QUEUE_EXTENSION_NAME),
+      VK_KHR_VIDEO_ENCODE_QUEUE_EXTENSION_NAME, none),
 # endif
 # if defined(VK_KHR_video_maintenance1)
   OPTIONAL_VIDEO_EXTENSION (VK_KHR_VIDEO_MAINTENANCE_1_EXTENSION_NAME,
-      VK_KHR_VIDEO_QUEUE_EXTENSION_NAME),
+      VK_KHR_VIDEO_QUEUE_EXTENSION_NAME, video_maintenance1),
 # endif
 #endif /* GST_VULKAN_HAVE_VIDEO_EXTENSIONS */
 };
