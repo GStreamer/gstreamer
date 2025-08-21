@@ -813,7 +813,7 @@ gst_wasapi2_device_manager_create_ctx (IMMDeviceEnumerator * enumerator,
     if (!gst_wasapi2_result (hr))
       return;
 
-    gst_wasapi2_get_exclusive_formats (ctx->client.Get (), prop.Get (),
+    gst_wasapi2_get_exclusive_mode_formats (ctx->client.Get (), prop.Get (),
         exclusive_formats);
     if (exclusive_formats->len == 0) {
       GST_WARNING ("Couldn't get exclusive mode formats");

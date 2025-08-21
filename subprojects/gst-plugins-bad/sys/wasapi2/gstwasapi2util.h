@@ -126,9 +126,12 @@ void gst_wasapi2_clear_wfx (WAVEFORMATEX ** wfx);
 
 WAVEFORMATEX * gst_wasapi2_copy_wfx (WAVEFORMATEX * format);
 
-gboolean gst_wasapi2_get_exclusive_formats (IAudioClient * client,
-                                            IPropertyStore * props,
-                                            GPtrArray * list);
+gboolean gst_wasapi2_get_exclusive_mode_formats (IAudioClient * client,
+                                                 IPropertyStore * props,
+                                                 GPtrArray * list);
+
+gboolean gst_wasapi2_get_shared_mode_formats (IAudioClient * client,
+                                              GPtrArray * list);
 
 GstCaps * gst_wasapi2_wfx_list_to_caps (GPtrArray * list);
 

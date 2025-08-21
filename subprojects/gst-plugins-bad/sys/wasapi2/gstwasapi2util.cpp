@@ -717,7 +717,7 @@ make_wfx_ext (DWORD nSamplesPerSec, WORD nChannels, WORD wBitsPerSample,
 
 /* *INDENT-OFF* */
 gboolean
-gst_wasapi2_get_exclusive_formats (IAudioClient * client,
+gst_wasapi2_get_exclusive_mode_formats (IAudioClient * client,
     IPropertyStore * props, GPtrArray * list)
 {
   PROPVARIANT var;
@@ -766,8 +766,8 @@ gst_wasapi2_get_exclusive_formats (IAudioClient * client,
   const DepthPair depth_pairs[] = {
     {32, 32, true},  /* 32-float */
     {32, 32, false}, /* 32-int */
-    {24, 24, false}, /* 24-packed */
     {16, 16, false}, /* 16-int */
+    {24, 24, false}, /* 24-packed */
     {32, 24, false}, /* 24-in-32 */
   };
 
@@ -802,6 +802,58 @@ gst_wasapi2_get_exclusive_formats (IAudioClient * client,
 
   gst_wasapi2_sort_wfx (list, basis);
   gst_wasapi2_free_wfx (basis);
+
+  return TRUE;
+}
+
+gboolean
+gst_wasapi2_get_shared_mode_formats (IAudioClient * client, GPtrArray * list)
+{
+  PROPVARIANT var;
+  PropVariantInit (&var);
+  WAVEFORMATEX *mix_format = nullptr;
+  WAVEFORMATEX *closest = nullptr;
+
+  auto hr = client->GetMixFormat (&mix_format);
+  if (!gst_wasapi2_result (hr))
+    return FALSE;
+
+  g_ptr_array_add (list, gst_wasapi2_copy_wfx (mix_format));
+
+  /* Checks using pre-defined format list */
+  struct DepthPair
+  {
+    WORD wBitsPerSample;
+    WORD wValidBitsPerSample;
+    bool is_float;
+  };
+
+  const DepthPair depth_pairs[] = {
+    {32, 32, true},  /* 32-float */
+    {32, 32, false}, /* 32-int */
+    {16, 16, false}, /* 16-int */
+    {24, 24, false}, /* 24-packed */
+  };
+
+  const DWORD rates[] = { 192000, 176400, 96000, 88200, 48000, 44100 };
+
+  for (auto r : rates) {
+    for (auto d : depth_pairs) {
+      auto wfx = make_wfx_ext (r, mix_format->nChannels, d.wBitsPerSample,
+          d.wValidBitsPerSample, d.is_float);
+      hr = client->IsFormatSupported (AUDCLNT_SHAREMODE_SHARED,
+          (WAVEFORMATEX *) &wfx, &closest);
+      if (hr == S_OK) {
+        g_ptr_array_add (list, gst_wasapi2_copy_wfx ((WAVEFORMATEX *) &wfx));
+      } else if (hr == S_FALSE && closest) {
+        g_ptr_array_add (list, closest);
+        closest = nullptr;
+      }
+    }
+  }
+
+  gst_wasapi2_sort_wfx (list, mix_format);
+  gst_wasapi2_free_wfx (mix_format);
 
   return TRUE;
 }
