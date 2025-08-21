@@ -2918,3 +2918,19 @@ gst_query_make_writable (GstQuery * query)
       GST_QUERY_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST
           (query)));
 }
+
+/**
+ * gst_query_steal: (skip)
+ * @old_query: (inout) (transfer full) (nullable): pointer to a
+ *     pointer to a #GstQuery to be stolen.
+ *
+ * Atomically replace the #GstQuery pointed to by @old_query with %NULL and
+ * return the original query.
+ * Since: 1.28
+ */
+GstQuery *
+gst_query_steal (GstQuery ** old_query)
+{
+  return GST_QUERY_CAST (gst_mini_object_steal ((GstMiniObject **)
+          old_query));
+}

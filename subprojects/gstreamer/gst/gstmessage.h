@@ -411,6 +411,12 @@ gst_message_take (GstMessage **old_message, GstMessage *new_message)
   return gst_mini_object_take ((GstMiniObject **) old_message,
       (GstMiniObject *) new_message);
 }
+
+static inline GstMessage *
+gst_message_steal(GstMessage **old_message)
+{
+  return GST_MESSAGE_CAST(gst_mini_object_steal((GstMiniObject **)old_message));
+}
 #else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 GST_API
 GstMessage *  gst_message_ref   (GstMessage * msg);
@@ -436,6 +442,9 @@ gboolean  gst_message_replace                   (GstMessage ** old_message,
 GST_API
 gboolean  gst_message_take                      (GstMessage ** old_message,
                                                  GstMessage * new_message);
+
+GST_API
+GstMessage *gst_message_steal (GstMessage **old_message);
 #endif /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 
 /* custom messages */

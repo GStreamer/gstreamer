@@ -534,3 +534,67 @@ gst_memory_make_writable (GstMemory * memory)
       GST_MEMORY_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST
           (memory)));
 }
+
+/**
+ * gst_memory_replace: (skip)
+ * @old_memory: (inout) (transfer full) (nullable): pointer to a pointer to
+ *     a #GstMemory to be replaced.
+ * @new_memory: (transfer none) (allow-none): pointer to a #GstMemory that will
+ *     replace the memory pointed to by @old_memory.
+ *
+ * Modifies a pointer to a #GstMemory to point to a different #GstMemory. The
+ * modification is done atomically (so this is useful for ensuring thread safety
+ * in some cases), and the reference counts are updated appropriately (the old
+ * memory is unreffed, the new is reffed).
+ *
+ * Either @new_memory or the #GstMemory pointed to by @old_memory may be %NULL.
+ *
+ * Returns: %TRUE when @old_memory was different from @new_memory.
+ *
+ * Since: 1.28
+ */
+gboolean
+gst_memory_replace (GstMemory ** old_memory, GstMemory * new_memory)
+{
+  return gst_mini_object_replace ((GstMiniObject **) old_memory,
+      (GstMiniObject *) new_memory);
+}
+
+/**
+ * gst_memory_steal: (skip)
+ * @old_memory: (inout) (transfer full) (nullable): pointer to a
+ *     pointer to a #GstMemory to be stolen.
+ *
+ * Atomically replace the #GstMemory pointed to by @old_memory with %NULL and
+ * return the original memory.
+ * Since: 1.28
+ */
+GstMemory *
+gst_memory_steal (GstMemory ** old_memory)
+{
+  return GST_MEMORY_CAST (gst_mini_object_steal ((GstMiniObject **)
+          old_memory));
+}
+
+/**
+ * gst_memory_take: (skip)
+ * @old_memory: (inout) (transfer full) (nullable): pointer to a
+ *     pointer to a #GstMemory to be stolen.
+ * @new_memory: (nullable) (transfer full): pointer to a #GstMemory that will
+ *     replace the memory pointed to by @old_memory.
+ *
+ * Modifies a pointer to a #GstMemory to point to a different #GstMemory. This
+ * function is similar to gst_memory_replace() except that it takes ownership of
+ * @new_memory.
+ *
+ * Either @new_memory or the #GstMemory pointed to by @old_memory may be %NULL.
+ *
+ * Returns: %TRUE if @new_memory was different from @old_memory
+ * Since: 1.28
+ */
+gboolean
+gst_memory_take (GstMemory ** old_memory, GstMemory * new_memory)
+{
+  return gst_mini_object_take ((GstMiniObject **) old_memory,
+      (GstMiniObject *) new_memory);
+}

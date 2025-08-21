@@ -3210,3 +3210,42 @@ gst_buffer_make_writable (GstBuffer * buf)
       GST_BUFFER_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST
           (buf)));
 }
+
+/**
+ * gst_buffer_steal: (skip)
+ * @old_buffer: (inout) (transfer full) (nullable): pointer to a
+ *     pointer to a #GstBuffer to be stolen.
+ *
+ * Atomically replace the #GstBuffer pointed to by @old_buffer with %NULL and
+ * return the original buffer.
+ * Since: 1.28
+ */
+GstBuffer *
+gst_buffer_steal (GstBuffer ** old_buffer)
+{
+  return GST_BUFFER_CAST (gst_mini_object_steal ((GstMiniObject **)
+          old_buffer));
+}
+
+/**
+ * gst_buffer_take: (skip)
+ * @old_buffer: (inout) (transfer full) (nullable): pointer to a
+ *     pointer to a #GstBuffer to be stolen.
+ * @new_buffer: (nullable) (transfer full): pointer to a #GstBuffer that will
+ *     replace the buffer pointed to by @old_buffer.
+ *
+ * Modifies a pointer to a #GstBuffer to point to a different #GstBuffer. This
+ * function is similar to gst_buffer_replace() except that it takes ownership of
+ * @new_buffer.
+ *
+ * Either @new_buffer or the #GstBuffer pointed to by @old_buffer may be %NULL.
+ *
+ * Returns: %TRUE if @new_buffer was different from @old_buffer
+ * Since: 1.28
+ */
+gboolean
+gst_buffer_take (GstBuffer ** old_buffer, GstBuffer * new_buffer)
+{
+  return gst_mini_object_take ((GstMiniObject **) old_buffer,
+      (GstMiniObject *) new_buffer);
+}

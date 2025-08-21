@@ -3569,6 +3569,45 @@ Either @nbuf or the #GstBuffer pointed to by @obuf may be %NULL.</doc>
           </parameter>
         </parameters>
       </function>
+      <function name="steal" c:identifier="gst_buffer_steal" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">Atomically replace the #GstBuffer pointed to by @old_buffer with %NULL and
+return the original buffer.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstbuffer.h"/>
+        <return-value transfer-ownership="full">
+          <type name="Buffer" c:type="GstBuffer*"/>
+        </return-value>
+        <parameters>
+          <parameter name="old_buffer" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">pointer to a
+    pointer to a #GstBuffer to be stolen.</doc>
+            <type name="Buffer" c:type="GstBuffer**"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="take" c:identifier="gst_buffer_take" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">Modifies a pointer to a #GstBuffer to point to a different #GstBuffer. This
+function is similar to gst_buffer_replace() except that it takes ownership of
+@new_buffer.
+
+Either @new_buffer or the #GstBuffer pointed to by @old_buffer may be %NULL.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstbuffer.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">%TRUE if @new_buffer was different from @old_buffer</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="old_buffer" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">pointer to a
+    pointer to a #GstBuffer to be stolen.</doc>
+            <type name="Buffer" c:type="GstBuffer**"/>
+          </parameter>
+          <parameter name="new_buffer" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">pointer to a #GstBuffer that will
+    replace the buffer pointed to by @old_buffer.</doc>
+            <type name="Buffer" c:type="GstBuffer*"/>
+          </parameter>
+        </parameters>
+      </function>
     </record>
     <bitfield name="BufferCopyFlags" glib:type-name="GstBufferCopyFlags" glib:get-type="gst_buffer_copy_flags_get_type" c:type="GstBufferCopyFlags">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.h">A set of flags that can be provided to the gst_buffer_copy_into()
@@ -4006,6 +4045,21 @@ Either @new_list or the #GstBufferList pointed to by @old_list may be %NULL.</do
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.c">pointer to a #GstBufferList that
     will replace the buffer list pointed to by @old_list.</doc>
             <type name="BufferList" c:type="GstBufferList*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="steal" c:identifier="gst_buffer_list_steal" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.c">Atomically replace the #GstBufferList pointed to by @old_list with %NULL and
+return the original buffer list.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstbufferlist.h"/>
+        <return-value transfer-ownership="full">
+          <type name="BufferList" c:type="GstBufferList*"/>
+        </return-value>
+        <parameters>
+          <parameter name="old_list" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.c">pointer to a
+    pointer to a #GstBufferList to be stolen.</doc>
+            <type name="BufferList" c:type="GstBufferList**"/>
           </parameter>
         </parameters>
       </function>
@@ -8351,6 +8405,21 @@ Either @new_caps or the #GstCaps pointed to by @old_caps may be %NULL.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">pointer to a #GstCaps that will
     replace the caps pointed to by @old_caps.</doc>
             <type name="Caps" c:type="GstCaps*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="steal" c:identifier="gst_caps_steal" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Atomically replace the #GstCaps pointed to by @old_caps with %NULL and
+return the original caps.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
+        <return-value transfer-ownership="full">
+          <type name="Caps" c:type="GstCaps*"/>
+        </return-value>
+        <parameters>
+          <parameter name="old_caps" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">pointer to a
+    pointer to a #GstCaps to be stolen.</doc>
+            <type name="Caps" c:type="GstCaps**"/>
           </parameter>
         </parameters>
       </function>
@@ -25212,6 +25281,70 @@ copy from @offset to the end of the memory region.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <function name="replace" c:identifier="gst_memory_replace" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">Modifies a pointer to a #GstMemory to point to a different #GstMemory. The
+modification is done atomically (so this is useful for ensuring thread safety
+in some cases), and the reference counts are updated appropriately (the old
+memory is unreffed, the new is reffed).
+
+Either @new_memory or the #GstMemory pointed to by @old_memory may be %NULL.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmemory.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">%TRUE when @old_memory was different from @new_memory.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="old_memory" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">pointer to a pointer to
+    a #GstMemory to be replaced.</doc>
+            <type name="Memory" c:type="GstMemory**"/>
+          </parameter>
+          <parameter name="new_memory" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">pointer to a #GstMemory that will
+    replace the memory pointed to by @old_memory.</doc>
+            <type name="Memory" c:type="GstMemory*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="steal" c:identifier="gst_memory_steal" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">Atomically replace the #GstMemory pointed to by @old_memory with %NULL and
+return the original memory.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmemory.h"/>
+        <return-value transfer-ownership="full">
+          <type name="Memory" c:type="GstMemory*"/>
+        </return-value>
+        <parameters>
+          <parameter name="old_memory" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">pointer to a
+    pointer to a #GstMemory to be stolen.</doc>
+            <type name="Memory" c:type="GstMemory**"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="take" c:identifier="gst_memory_take" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">Modifies a pointer to a #GstMemory to point to a different #GstMemory. This
+function is similar to gst_memory_replace() except that it takes ownership of
+@new_memory.
+
+Either @new_memory or the #GstMemory pointed to by @old_memory may be %NULL.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmemory.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">%TRUE if @new_memory was different from @old_memory</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="old_memory" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">pointer to a
+    pointer to a #GstMemory to be stolen.</doc>
+            <type name="Memory" c:type="GstMemory**"/>
+          </parameter>
+          <parameter name="new_memory" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">pointer to a #GstMemory that will
+    replace the memory pointed to by @old_memory.</doc>
+            <type name="Memory" c:type="GstMemory*"/>
+          </parameter>
+        </parameters>
+      </function>
     </record>
     <callback name="MemoryCopyFunction" c:type="GstMemoryCopyFunction">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.h">Copy @size bytes from @mem starting at @offset and return them wrapped in a
@@ -28110,6 +28243,21 @@ Either @new_message or the #GstMessage pointed to by @old_message may be %NULL.<
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">pointer to a #GstMessage that will
     replace the message pointed to by @old_message.</doc>
             <type name="Message" c:type="GstMessage*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="steal" c:identifier="gst_message_steal" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">Atomically replace the #GstMessage pointed to by @old_message with %NULL and
+return the original message.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmessage.h"/>
+        <return-value transfer-ownership="full">
+          <type name="Message" c:type="GstMessage*"/>
+        </return-value>
+        <parameters>
+          <parameter name="old_message" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">pointer to a
+    pointer to a #GstMessage to be stolen.</doc>
+            <type name="Message" c:type="GstMessage**"/>
           </parameter>
         </parameters>
       </function>
@@ -40404,6 +40552,21 @@ Either @new_query or the #GstQuery pointed to by @old_query may be %NULL.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.c">pointer to a #GstQuery that will
     replace the query pointed to by @old_query.</doc>
             <type name="Query" c:type="GstQuery*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="steal" c:identifier="gst_query_steal" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.c">Atomically replace the #GstQuery pointed to by @old_query with %NULL and
+return the original query.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstquery.h"/>
+        <return-value transfer-ownership="full">
+          <type name="Query" c:type="GstQuery*"/>
+        </return-value>
+        <parameters>
+          <parameter name="old_query" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.c">pointer to a
+    pointer to a #GstQuery to be stolen.</doc>
+            <type name="Query" c:type="GstQuery**"/>
           </parameter>
         </parameters>
       </function>
@@ -54219,6 +54382,21 @@ Either @new_list or the #GstBufferList pointed to by @old_list may be %NULL.</do
         </parameter>
       </parameters>
     </function>
+    <function name="buffer_list_steal" c:identifier="gst_buffer_list_steal" moved-to="BufferList.steal" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.c">Atomically replace the #GstBufferList pointed to by @old_list with %NULL and
+return the original buffer list.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstbufferlist.h"/>
+      <return-value transfer-ownership="full">
+        <type name="BufferList" c:type="GstBufferList*"/>
+      </return-value>
+      <parameters>
+        <parameter name="old_list" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.c">pointer to a
+    pointer to a #GstBufferList to be stolen.</doc>
+          <type name="BufferList" c:type="GstBufferList**"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="buffer_list_take" c:identifier="gst_buffer_list_take" moved-to="BufferList.take" version="1.16">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.c">Modifies a pointer to a #GstBufferList to point to a different
 #GstBufferList. This function is similar to gst_buffer_list_replace() except
@@ -54269,6 +54447,45 @@ Either @nbuf or the #GstBuffer pointed to by @obuf may be %NULL.</doc>
         <parameter name="nbuf" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">pointer to a #GstBuffer that will
     replace the buffer pointed to by @obuf.</doc>
+          <type name="Buffer" c:type="GstBuffer*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="buffer_steal" c:identifier="gst_buffer_steal" moved-to="Buffer.steal" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">Atomically replace the #GstBuffer pointed to by @old_buffer with %NULL and
+return the original buffer.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstbuffer.h"/>
+      <return-value transfer-ownership="full">
+        <type name="Buffer" c:type="GstBuffer*"/>
+      </return-value>
+      <parameters>
+        <parameter name="old_buffer" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">pointer to a
+    pointer to a #GstBuffer to be stolen.</doc>
+          <type name="Buffer" c:type="GstBuffer**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="buffer_take" c:identifier="gst_buffer_take" moved-to="Buffer.take" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">Modifies a pointer to a #GstBuffer to point to a different #GstBuffer. This
+function is similar to gst_buffer_replace() except that it takes ownership of
+@new_buffer.
+
+Either @new_buffer or the #GstBuffer pointed to by @old_buffer may be %NULL.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstbuffer.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">%TRUE if @new_buffer was different from @old_buffer</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="old_buffer" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">pointer to a
+    pointer to a #GstBuffer to be stolen.</doc>
+          <type name="Buffer" c:type="GstBuffer**"/>
+        </parameter>
+        <parameter name="new_buffer" transfer-ownership="full" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">pointer to a #GstBuffer that will
+    replace the buffer pointed to by @old_buffer.</doc>
           <type name="Buffer" c:type="GstBuffer*"/>
         </parameter>
       </parameters>
@@ -54384,6 +54601,21 @@ Either @new_caps or the #GstCaps pointed to by @old_caps may be %NULL.</doc>
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">pointer to a #GstCaps that will
     replace the caps pointed to by @old_caps.</doc>
           <type name="Caps" c:type="GstCaps*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="caps_steal" c:identifier="gst_caps_steal" moved-to="Caps.steal" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Atomically replace the #GstCaps pointed to by @old_caps with %NULL and
+return the original caps.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
+      <return-value transfer-ownership="full">
+        <type name="Caps" c:type="GstCaps*"/>
+      </return-value>
+      <parameters>
+        <parameter name="old_caps" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">pointer to a
+    pointer to a #GstCaps to be stolen.</doc>
+          <type name="Caps" c:type="GstCaps**"/>
         </parameter>
       </parameters>
     </function>
@@ -56707,6 +56939,70 @@ debug category and flags.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function name="memory_replace" c:identifier="gst_memory_replace" moved-to="Memory.replace" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">Modifies a pointer to a #GstMemory to point to a different #GstMemory. The
+modification is done atomically (so this is useful for ensuring thread safety
+in some cases), and the reference counts are updated appropriately (the old
+memory is unreffed, the new is reffed).
+
+Either @new_memory or the #GstMemory pointed to by @old_memory may be %NULL.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstmemory.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">%TRUE when @old_memory was different from @new_memory.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="old_memory" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">pointer to a pointer to
+    a #GstMemory to be replaced.</doc>
+          <type name="Memory" c:type="GstMemory**"/>
+        </parameter>
+        <parameter name="new_memory" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">pointer to a #GstMemory that will
+    replace the memory pointed to by @old_memory.</doc>
+          <type name="Memory" c:type="GstMemory*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="memory_steal" c:identifier="gst_memory_steal" moved-to="Memory.steal" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">Atomically replace the #GstMemory pointed to by @old_memory with %NULL and
+return the original memory.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstmemory.h"/>
+      <return-value transfer-ownership="full">
+        <type name="Memory" c:type="GstMemory*"/>
+      </return-value>
+      <parameters>
+        <parameter name="old_memory" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">pointer to a
+    pointer to a #GstMemory to be stolen.</doc>
+          <type name="Memory" c:type="GstMemory**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="memory_take" c:identifier="gst_memory_take" moved-to="Memory.take" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">Modifies a pointer to a #GstMemory to point to a different #GstMemory. This
+function is similar to gst_memory_replace() except that it takes ownership of
+@new_memory.
+
+Either @new_memory or the #GstMemory pointed to by @old_memory may be %NULL.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstmemory.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">%TRUE if @new_memory was different from @old_memory</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="old_memory" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">pointer to a
+    pointer to a #GstMemory to be stolen.</doc>
+          <type name="Memory" c:type="GstMemory**"/>
+        </parameter>
+        <parameter name="new_memory" transfer-ownership="full" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">pointer to a #GstMemory that will
+    replace the memory pointed to by @old_memory.</doc>
+          <type name="Memory" c:type="GstMemory*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function-macro name="memory_unlock" c:identifier="gst_memory_unlock" introspectable="0">
       <source-position filename="../subprojects/gstreamer/gst/gstmemory.h"/>
       <parameters>
@@ -56760,6 +57056,21 @@ Either @new_message or the #GstMessage pointed to by @old_message may be %NULL.<
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">pointer to a #GstMessage that will
     replace the message pointed to by @old_message.</doc>
           <type name="Message" c:type="GstMessage*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="message_steal" c:identifier="gst_message_steal" moved-to="Message.steal" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">Atomically replace the #GstMessage pointed to by @old_message with %NULL and
+return the original message.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstmessage.h"/>
+      <return-value transfer-ownership="full">
+        <type name="Message" c:type="GstMessage*"/>
+      </return-value>
+      <parameters>
+        <parameter name="old_message" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">pointer to a
+    pointer to a #GstMessage to be stolen.</doc>
+          <type name="Message" c:type="GstMessage**"/>
         </parameter>
       </parameters>
     </function>
@@ -57960,6 +58271,21 @@ Either @new_query or the #GstQuery pointed to by @old_query may be %NULL.</doc>
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.c">pointer to a #GstQuery that will
     replace the query pointed to by @old_query.</doc>
           <type name="Query" c:type="GstQuery*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="query_steal" c:identifier="gst_query_steal" moved-to="Query.steal" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.c">Atomically replace the #GstQuery pointed to by @old_query with %NULL and
+return the original query.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstquery.h"/>
+      <return-value transfer-ownership="full">
+        <type name="Query" c:type="GstQuery*"/>
+      </return-value>
+      <parameters>
+        <parameter name="old_query" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.c">pointer to a
+    pointer to a #GstQuery to be stolen.</doc>
+          <type name="Query" c:type="GstQuery**"/>
         </parameter>
       </parameters>
     </function>

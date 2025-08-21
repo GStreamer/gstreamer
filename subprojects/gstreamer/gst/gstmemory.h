@@ -352,6 +352,24 @@ gst_memory_make_writable (GstMemory * memory)
 {
   return GST_MEMORY_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (memory)));
 }
+
+static inline gboolean
+gst_memory_replace (GstMemory **old_memory, GstMemory *new_memory)
+{
+  return gst_mini_object_replace ((GstMiniObject **) old_memory, (GstMiniObject *) new_memory);
+}
+
+static inline GstMemory *
+gst_memory_steal(GstMemory **old_memory)
+{
+  return GST_MEMORY_CAST(gst_mini_object_steal((GstMiniObject **)old_memory));
+}
+
+static inline gboolean
+gst_memory_take(GstMemory **old_memory, GstMemory *new_memory)
+{
+  return gst_mini_object_take((GstMiniObject **)old_memory, (GstMiniObject *)new_memory);
+}
 #else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 GST_API
 GstMemory *    gst_memory_ref   (GstMemory * memory);
@@ -363,6 +381,17 @@ GST_API
 GstMemory *    gst_memory_make_writable (GstMemory * memory) G_GNUC_WARN_UNUSED_RESULT;
 GST_API
 gboolean       gst_memory_is_writable   (const GstMemory * memory);
+
+GST_API
+gboolean        gst_memory_replace              (GstMemory ** old_memory,
+                                                 GstMemory * new_memory);
+
+GST_API
+GstMemory *gst_memory_steal (GstMemory **old_memory);
+
+GST_API
+gboolean gst_memory_take (GstMemory **old_memory,
+                          GstMemory *new_memory);
 #endif /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 
 /* getting/setting memory properties */

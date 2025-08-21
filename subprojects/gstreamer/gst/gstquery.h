@@ -293,6 +293,12 @@ gst_query_take (GstQuery **old_query, GstQuery *new_query)
   return gst_mini_object_take ((GstMiniObject **) old_query,
       (GstMiniObject *) new_query);
 }
+
+static inline GstQuery *
+gst_query_steal(GstQuery **old_query)
+{
+  return GST_QUERY_CAST(gst_mini_object_steal((GstMiniObject **)old_query));
+}
 #else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 GST_API
 GstQuery *  gst_query_ref   (GstQuery * q);
@@ -318,6 +324,9 @@ gboolean        gst_query_replace               (GstQuery ** old_query,
 GST_API
 gboolean        gst_query_take                  (GstQuery ** old_query,
                                                  GstQuery * new_query);
+
+GST_API
+GstQuery *gst_query_steal (GstQuery **old_query);
 #endif /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 
 /* application specific query */

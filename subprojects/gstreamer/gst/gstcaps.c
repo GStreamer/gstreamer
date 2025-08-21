@@ -3165,6 +3165,22 @@ gst_caps_take (GstCaps ** old_caps, GstCaps * new_caps)
 }
 
 /**
+ * gst_caps_steal: (skip)
+ * @old_caps: (inout) (transfer full) (nullable): pointer to a
+ *     pointer to a #GstCaps to be stolen.
+ *
+ * Atomically replace the #GstCaps pointed to by @old_caps with %NULL and
+ * return the original caps.
+ * Since: 1.28
+ */
+GstCaps *
+gst_caps_steal (GstCaps ** old_caps)
+{
+  return GST_CAPS_CAST (gst_mini_object_steal ((GstMiniObject **)
+          old_caps));
+}
+
+/**
  * gst_caps_is_writable:
  * @caps: a #GstCaps
  *

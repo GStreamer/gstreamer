@@ -659,6 +659,22 @@ gst_buffer_list_take (GstBufferList ** old_list, GstBufferList * new_list)
 }
 
 /**
+ * gst_buffer_list_steal: (skip)
+ * @old_list: (inout) (transfer full) (nullable): pointer to a
+ *     pointer to a #GstBufferList to be stolen.
+ *
+ * Atomically replace the #GstBufferList pointed to by @old_list with %NULL and
+ * return the original buffer list.
+ * Since: 1.28
+ */
+GstBufferList *
+gst_buffer_list_steal (GstBufferList ** old_list)
+{
+  return GST_BUFFER_LIST_CAST (gst_mini_object_steal ((GstMiniObject **)
+          old_list));
+}
+
+/**
  * gst_buffer_list_is_writable:
  * @list: a #GstEvent
  *

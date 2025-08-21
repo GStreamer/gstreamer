@@ -553,10 +553,29 @@ gst_buffer_replace (GstBuffer **obuf, GstBuffer *nbuf)
 {
   return gst_mini_object_replace ((GstMiniObject **) obuf, (GstMiniObject *) nbuf);
 }
+
+static inline GstBuffer *
+gst_buffer_steal(GstBuffer **old_buffer)
+{
+  return GST_BUFFER_CAST(gst_mini_object_steal((GstMiniObject **)old_buffer));
+}
+
+static inline gboolean
+gst_buffer_take(GstBuffer **old_buffer, GstBuffer *new_buffer)
+{
+  return gst_mini_object_take((GstMiniObject **)old_buffer, (GstMiniObject *)new_buffer);
+}
 #else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 GST_API
 gboolean        gst_buffer_replace              (GstBuffer ** obuf,
                                                  GstBuffer * nbuf);
+
+GST_API
+GstBuffer *gst_buffer_steal (GstBuffer **old_buffer);
+
+GST_API
+gboolean gst_buffer_take (GstBuffer ** old_buffer,
+                          GstBuffer *new_buffer);
 
 GST_API
 GstBuffer * gst_buffer_make_writable            (GstBuffer * buf) G_GNUC_WARN_UNUSED_RESULT;

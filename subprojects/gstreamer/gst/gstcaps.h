@@ -227,6 +227,12 @@ gst_caps_take (GstCaps **old_caps, GstCaps *new_caps)
     return gst_mini_object_take ((GstMiniObject **) old_caps, (GstMiniObject *) new_caps);
 }
 
+static inline GstCaps *
+gst_caps_steal(GstCaps **old_caps)
+{
+  return GST_CAPS_CAST(gst_mini_object_steal((GstMiniObject **)old_caps));
+}
+
 static inline gboolean
 gst_caps_is_writable (const GstCaps * caps)
 {
@@ -263,6 +269,9 @@ gboolean  gst_caps_is_writable (const GstCaps * caps);
 GST_API
 gboolean  gst_caps_take    (GstCaps ** old_caps,
                             GstCaps * new_caps);
+
+GST_API
+GstCaps *gst_caps_steal (GstCaps **old_caps);
 #endif /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 
 /**

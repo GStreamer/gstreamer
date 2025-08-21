@@ -100,6 +100,12 @@ gst_buffer_list_take (GstBufferList **old_list, GstBufferList *new_list)
       (GstMiniObject *) new_list);
 }
 
+static inline GstBufferList *
+gst_buffer_list_steal(GstBufferList **old_list)
+{
+  return GST_BUFFER_LIST_CAST(gst_mini_object_steal((GstMiniObject **)old_list));
+}
+
 static inline gboolean
 gst_buffer_list_is_writable (const GstBufferList * list)
 {
@@ -131,6 +137,9 @@ gboolean        gst_buffer_list_replace (GstBufferList ** old_list,
 GST_API
 gboolean        gst_buffer_list_take    (GstBufferList ** old_list,
                                          GstBufferList * new_list);
+
+GST_API
+GstBufferList *gst_buffer_list_steal    (GstBufferList **old_list);
 
 GST_API
 GstBufferList * gst_buffer_list_make_writable (GstBufferList * list) G_GNUC_WARN_UNUSED_RESULT;

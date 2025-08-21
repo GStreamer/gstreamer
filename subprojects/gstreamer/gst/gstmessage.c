@@ -3590,3 +3590,19 @@ gst_message_make_writable (GstMessage * message)
       GST_MESSAGE_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST
           (message)));
 }
+
+/**
+ * gst_message_steal: (skip)
+ * @old_message: (inout) (transfer full) (nullable): pointer to a
+ *     pointer to a #GstMessage to be stolen.
+ *
+ * Atomically replace the #GstMessage pointed to by @old_message with %NULL and
+ * return the original message.
+ * Since: 1.28
+ */
+GstMessage *
+gst_message_steal (GstMessage ** old_message)
+{
+  return GST_MESSAGE_CAST (gst_mini_object_steal ((GstMiniObject **)
+          old_message));
+}
