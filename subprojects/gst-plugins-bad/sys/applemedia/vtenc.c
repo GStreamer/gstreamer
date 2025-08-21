@@ -966,6 +966,7 @@ gst_vtenc_h264_parse_profile_level_key (GstVTEnc * self, const gchar * profile,
   if (strlen (level) == 1) {
     level[1] = '_';
     level[2] = '0';
+    level[3] = 0;
   } else if (strlen (level) == 3) {
     level[1] = '_';
   }
