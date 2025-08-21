@@ -1144,9 +1144,16 @@ update_upstream_provided (const GstIdStr * field, const GValue * value,
     GstStructure *structure = gst_caps_get_structure (default_caps, i);
     if (!gst_structure_has_field (structure, gst_id_str_as_str (field))) {
       gst_structure_id_str_set_value (structure, field, value);
+    } else {
+      const GValue *v = gst_structure_id_str_get_value (structure, field);
+
+      // If a downstream caps field is not fixed and the upstream value is a
+      // subset, take over the value from the upstream caps.
+      // Otherwise let gst_caps_fixate() take care of it later.
+      if (!gst_value_is_fixed (v) && gst_value_is_subset (value, v)) {
+        gst_structure_id_str_set_value (structure, field, value);
+      }
     }
-    /* XXX: maybe try to fixate better than gst_caps_fixate() the
-     * downstream caps based on upstream values if possible */
   }
 
   return TRUE;
