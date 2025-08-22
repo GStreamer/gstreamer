@@ -25,6 +25,7 @@
 
 #include "gstlcevcdecutils.h"
 #include "gstlcevcdecodebin.h"
+#include "gstlcevcdec.h"
 
 enum
 {
@@ -40,8 +41,10 @@ typedef struct
   /* Props */
   gchar *base_decoder;
 
-  gboolean constructed;
-  const gchar *missing_element;
+  GstPad *sink_pad;
+  GstPad *src_pad;
+  GstElement *base_decoder_element;
+  GstElement *lcevcdec_element;
 } GstLcevcDecodeBinPrivate;
 
 #define gst_lcevc_decode_bin_parent_class parent_class
@@ -58,42 +61,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
         (GST_LCEVC_DEC_UTILS_SUPPORTED_FORMATS))
     );
-
-static gboolean
-gst_lcevc_decode_bin_open (GstLcevcDecodeBin * self)
-{
-  GstLcevcDecodeBinPrivate *priv =
-      gst_lcevc_decode_bin_get_instance_private (self);
-
-  if (priv->missing_element) {
-    gst_element_post_message (GST_ELEMENT (self),
-        gst_missing_element_message_new (GST_ELEMENT (self),
-            priv->missing_element));
-  } else if (!priv->constructed) {
-    GST_ELEMENT_ERROR (self, CORE, FAILED, (NULL),
-        ("Failed to construct or link LCEVC decoder elements."));
-  }
-
-  return priv->constructed;
-}
-
-static GstStateChangeReturn
-gst_lcevc_decode_bin_change_state (GstElement * element,
-    GstStateChange transition)
-{
-  GstLcevcDecodeBin *self = GST_LCEVC_DECODE_BIN (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!gst_lcevc_decode_bin_open (self))
-        return GST_STATE_CHANGE_FAILURE;
-      break;
-    default:
-      break;
-  }
-
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-}
 
 static char *
 gst_lcevc_decode_bin_find_base_decoder (GstLcevcDecodeBin * self)
@@ -158,78 +125,135 @@ gst_lcevc_decode_bin_find_base_decoder (GstLcevcDecodeBin * self)
   return res;
 }
 
-static void
-gst_lcevc_decode_bin_constructed (GObject * obj)
+static gboolean
+gst_lcevc_decode_bin_open (GstLcevcDecodeBin * self)
 {
-  GstLcevcDecodeBin *self = GST_LCEVC_DECODE_BIN (obj);
-  GstLcevcDecodeBinClass *klass = GST_LCEVC_DECODE_BIN_GET_CLASS (self);
   GstLcevcDecodeBinPrivate *priv =
       gst_lcevc_decode_bin_get_instance_private (self);
-  GstPad *src_gpad, *sink_gpad;
-  GstPad *src_pad = NULL, *sink_pad = NULL;
-  GstElement *base_decoder = NULL;
-  GstElement *lcevcdec = NULL;
+  GstPad *sink_pad = NULL, *src_pad = NULL;
 
-  /* setup ghost pads */
-  sink_gpad = gst_ghost_pad_new_no_target_from_template ("sink",
-      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (klass), "sink"));
-  gst_element_add_pad (GST_ELEMENT (self), sink_gpad);
+  /* Create and add the LCEVC decoder */
+  priv->lcevcdec_element = g_object_new (GST_TYPE_LCEVC_DEC, NULL);
+  gst_bin_add (GST_BIN (self), gst_object_ref (priv->lcevcdec_element));
 
-  src_gpad = gst_ghost_pad_new_no_target_from_template ("src",
-      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (klass), "src"));
-  gst_element_add_pad (GST_ELEMENT (self), src_gpad);
-
-  /* Create base decoder if name is given, otherwise fine one */
+  /* Create the base decoder if name is given, otherwise find one */
   if (priv->base_decoder) {
-    base_decoder = gst_element_factory_make (priv->base_decoder, NULL);
-    if (!base_decoder) {
-      priv->missing_element = priv->base_decoder;
+    priv->base_decoder_element = gst_element_factory_make (priv->base_decoder,
+        NULL);
+    if (!priv->base_decoder_element) {
+      GST_ELEMENT_ERROR (self, CORE, FAILED, (NULL),
+          ("Could not create %s element", priv->base_decoder));
       goto error;
     }
   } else {
     gchar *name = gst_lcevc_decode_bin_find_base_decoder (self);
-    if (!name)
+    if (!name) {
+      GST_ELEMENT_ERROR (self, CORE, FAILED, (NULL),
+          ("Could not find any base decoder element"));
       goto error;
-    base_decoder = gst_element_factory_make (name, NULL);
+    }
+    priv->base_decoder_element = gst_element_factory_make (name, NULL);
+    g_assert (priv->base_decoder_element);
     g_free (name);
-    if (!base_decoder)
-      goto error;
   }
 
-  /* Create LCEVC decoder */
-  lcevcdec = gst_element_factory_make ("lcevcdec", NULL);
-  if (!lcevcdec) {
-    priv->missing_element = "lcevcdec";
+  /* Add the base decoder to bin */
+  gst_bin_add (GST_BIN (self), gst_object_ref (priv->base_decoder_element));
+
+  /* Link the base decoder with the LCEVC decoder */
+  if (!gst_element_link (priv->base_decoder_element, priv->lcevcdec_element)) {
+    GST_ELEMENT_ERROR (self, CORE, FAILED, (NULL),
+        ("Could not link base decoder with LCEVC decoder"));
     goto error;
   }
 
-  if (!gst_bin_add (GST_BIN (self), base_decoder))
-    goto error;
-  if (!gst_bin_add (GST_BIN (self), lcevcdec))
-    goto error;
-
-  if (!gst_element_link (base_decoder, lcevcdec))
-    goto error;
-
-  /* link elements */
-  sink_pad = gst_element_get_static_pad (base_decoder, "sink");
-  gst_ghost_pad_set_target (GST_GHOST_PAD (sink_gpad), sink_pad);
+  /* Set sink ghost pad target */
+  sink_pad = gst_element_get_static_pad (priv->base_decoder_element, "sink");
+  gst_ghost_pad_set_target (GST_GHOST_PAD (priv->sink_pad), sink_pad);
   gst_clear_object (&sink_pad);
 
-  src_pad = gst_element_get_static_pad (lcevcdec, "src");
-  gst_ghost_pad_set_target (GST_GHOST_PAD (src_gpad), src_pad);
+  /* Set src ghost pad target */
+  src_pad = gst_element_get_static_pad (priv->lcevcdec_element, "src");
+  gst_ghost_pad_set_target (GST_GHOST_PAD (priv->src_pad), src_pad);
   gst_object_unref (src_pad);
 
-  /* signal success, we will handle this in NULL->READY transition */
-  priv->constructed = TRUE;
-  G_OBJECT_CLASS (parent_class)->constructed (obj);
-  return;
+  return TRUE;
 
 error:
-  gst_clear_object (&base_decoder);
-  gst_clear_object (&lcevcdec);
+  if (priv->base_decoder_element) {
+    gst_bin_remove (GST_BIN (self), priv->base_decoder_element);
+    priv->base_decoder_element = NULL;
+  }
+  if (priv->lcevcdec_element) {
+    gst_bin_remove (GST_BIN (self), priv->lcevcdec_element);
+    priv->lcevcdec_element = NULL;
+  }
+  return FALSE;
+}
 
-  priv->constructed = FALSE;
+static void
+gst_lcevc_decode_bin_close (GstLcevcDecodeBin * self)
+{
+  GstLcevcDecodeBinPrivate *priv =
+      gst_lcevc_decode_bin_get_instance_private (self);
+
+  g_assert (priv->base_decoder_element);
+
+  /* Unset sink ghost pad target */
+  gst_ghost_pad_set_target (GST_GHOST_PAD (priv->sink_pad), NULL);
+
+  /* Unset source ghost pad target */
+  gst_ghost_pad_set_target (GST_GHOST_PAD (priv->src_pad), NULL);
+
+  /* Unlink and remove base decoder */
+  if (priv->base_decoder_element) {
+    gst_element_unlink (priv->base_decoder_element, priv->lcevcdec_element);
+    gst_bin_remove (GST_BIN (self), priv->base_decoder_element);
+    priv->base_decoder_element = NULL;
+  }
+
+  /* Remove LCEVC decoder */
+  gst_bin_remove (GST_BIN (self), priv->lcevcdec_element);
+  priv->lcevcdec_element = NULL;
+}
+
+static GstStateChangeReturn
+gst_lcevc_decode_bin_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstLcevcDecodeBin *self = GST_LCEVC_DECODE_BIN (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      if (!gst_lcevc_decode_bin_open (self))
+        return GST_STATE_CHANGE_FAILURE;
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_lcevc_decode_bin_close (self);
+      break;
+    default:
+      break;
+  }
+
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+}
+
+static void
+gst_lcevc_decode_bin_constructed (GObject * obj)
+{
+  GstLcevcDecodeBin *self = GST_LCEVC_DECODE_BIN (obj);
+  GstLcevcDecodeBinPrivate *priv =
+      gst_lcevc_decode_bin_get_instance_private (self);
+  GstLcevcDecodeBinClass *klass = GST_LCEVC_DECODE_BIN_GET_CLASS (self);
+
+  priv->sink_pad = gst_ghost_pad_new_no_target_from_template ("sink",
+      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (klass), "sink"));
+  gst_element_add_pad (GST_ELEMENT (self), gst_object_ref (priv->sink_pad));
+
+  priv->src_pad = gst_ghost_pad_new_no_target_from_template ("src",
+      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (klass), "src"));
+  gst_element_add_pad (GST_ELEMENT (self), gst_object_ref (priv->src_pad));
+
   G_OBJECT_CLASS (parent_class)->constructed (obj);
 }
 
@@ -240,6 +264,10 @@ gst_lcevc_decode_bin_finalize (GObject * obj)
   GstLcevcDecodeBinPrivate *priv =
       gst_lcevc_decode_bin_get_instance_private (self);
 
+  gst_clear_object (&priv->sink_pad);
+  gst_clear_object (&priv->src_pad);
+
+  /* Props */
   g_free (priv->base_decoder);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
@@ -256,9 +284,15 @@ gst_lcevc_decode_bin_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_BASE_DECODER:
+      if (GST_STATE (self) != GST_STATE_NULL) {
+        GST_WARNING_OBJECT (self,
+            "Can't set base decoder property if not on NULL state");
+        break;
+      }
       g_clear_pointer (&priv->base_decoder, g_free);
       priv->base_decoder = g_value_dup_string (value);
       break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
