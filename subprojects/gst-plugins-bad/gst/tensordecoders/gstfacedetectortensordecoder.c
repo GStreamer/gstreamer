@@ -296,9 +296,9 @@ gst_face_detector_tensor_decoder_set_caps (GstBaseTransform * trans,
  * @buf:in: buffer
  * @boxes_tensor:out: Boxes tensor
  * @scores_tensor:out: scores tensor
- * 
+ *
  * Retrieve FaceDetection boxes and scores tensors from buffer.
- * 
+ *
  * @return: TRUE if buf has boxes and scores tensor with desired features are attached to it.
  * Otherwise FALSE will be returned.
  */
@@ -307,7 +307,8 @@ gst_face_detector_tensor_decoder_get_tensor_meta (GstFaceDetectorTensorDecoder
     * self, GstBuffer * buf, const GstTensor ** boxes_tensor,
     const GstTensor ** scores_tensor)
 {
-  GstTensorMeta *tensor_meta;
+  GstMeta *meta;
+  gpointer state = NULL;
   static const gsize BOXES_DIMS[] = { 1, G_MAXSIZE, 4 };
   static const gsize SCORES_DIMS[] = { 1, G_MAXSIZE, 2 };
 
@@ -317,37 +318,43 @@ gst_face_detector_tensor_decoder_get_tensor_meta (GstFaceDetectorTensorDecoder
   *boxes_tensor = NULL;
   *scores_tensor = NULL;
 
-  /* Retrieve all TensorMeta attach the buffer */
-  tensor_meta = gst_buffer_get_tensor_meta (buf);
-  if (!tensor_meta) {
-    GST_LOG_OBJECT (self, "No tensor meta");
-    return FALSE;
+  /* Find ultralightfacedetectortensordec TensorMeta */
+  while ((meta = gst_buffer_iterate_meta_filtered (buf, &state,
+              GST_TENSOR_META_API_TYPE))) {
+    GstTensorMeta *tensor_meta = (GstTensorMeta *) meta;
+
+    GST_LOG_OBJECT (self, "Num tensors %zu", tensor_meta->num_tensors);
+
+    /* Retrieve the tensor that has a tensor-id matching
+     * BOXES_TENSOR_ID_QUARK in the GstTensorMeta along with
+     * the reading order from the memory matching with GST_TENSOR_DIM_ORDER_ROW_MAJOR,
+     * 3 dimensions and the data type matching with GST_TENSOR_DATA_TYPE_FLOAT32 */
+    *boxes_tensor =
+        gst_tensor_meta_get_typed_tensor (tensor_meta, BOXES_TENSOR_ID_QUARK,
+        GST_TENSOR_DATA_TYPE_FLOAT32, GST_TENSOR_DIM_ORDER_ROW_MAJOR, 3,
+        BOXES_DIMS);
+
+    if (*boxes_tensor == NULL)
+      continue;
+
+    /* Retrieve the tensor that has a tensor-id matching
+     * SCORES_TENSOR_ID_QUARK in the GstTensorMeta along with
+     * the reading order from the memory matching with GST_TENSOR_DIM_ORDER_ROW_MAJOR,
+     * 3 dimensions and the data type matching with GST_TENSOR_DATA_TYPE_FLOAT32 */
+    *scores_tensor =
+        gst_tensor_meta_get_typed_tensor (tensor_meta, SCORES_TENSOR_ID_QUARK,
+        GST_TENSOR_DATA_TYPE_FLOAT32, GST_TENSOR_DIM_ORDER_ROW_MAJOR, 3,
+        SCORES_DIMS);
+
+    if (*scores_tensor == NULL)
+      continue;
+
   }
-
-  GST_LOG_OBJECT (self, "Num tensors %zu", tensor_meta->num_tensors);
-
-  /* Retrieve the tensor that has a tensor-id matching
-   * BOXES_TENSOR_ID_QUARK in the GstTensorMeta along with
-   * the reading order from the memory matching with GST_TENSOR_DIM_ORDER_ROW_MAJOR,
-   * 3 dimensions and the data type matching with GST_TENSOR_DATA_TYPE_FLOAT32 */
-  *boxes_tensor =
-      gst_tensor_meta_get_typed_tensor (tensor_meta, BOXES_TENSOR_ID_QUARK,
-      GST_TENSOR_DATA_TYPE_FLOAT32, GST_TENSOR_DIM_ORDER_ROW_MAJOR, 3,
-      BOXES_DIMS);
 
   if (*boxes_tensor == NULL) {
     GST_WARNING_OBJECT (self, "Can't retrieve boxes tensor");
     return FALSE;
   }
-
-  /* Retrieve the tensor that has a tensor-id matching
-   * SCORES_TENSOR_ID_QUARK in the GstTensorMeta along with
-   * the reading order from the memory matching with GST_TENSOR_DIM_ORDER_ROW_MAJOR,
-   * 3 dimensions and the data type matching with GST_TENSOR_DATA_TYPE_FLOAT32 */
-  *scores_tensor =
-      gst_tensor_meta_get_typed_tensor (tensor_meta, SCORES_TENSOR_ID_QUARK,
-      GST_TENSOR_DATA_TYPE_FLOAT32, GST_TENSOR_DIM_ORDER_ROW_MAJOR, 3,
-      SCORES_DIMS);
 
   if (*scores_tensor == NULL) {
     GST_WARNING_OBJECT (self, "Can't retrieve boxes tensor");
