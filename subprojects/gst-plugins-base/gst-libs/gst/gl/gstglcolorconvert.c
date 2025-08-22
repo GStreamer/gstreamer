@@ -1652,7 +1652,7 @@ _init_supported_formats (GstGLContext * context, gboolean output,
   if (!output || (!context || context->gl_vtable->DrawBuffers))
     _append_value_string_list (supported_formats, "GBRA", "GBR", "RGBP", "BGRP",
         "Y444", "I420", "YV12", "Y42B", "Y41B", "NV12", "NV21", "NV16", "NV61",
-        "A420", "AV12", "A444", "A422", NULL);
+        "NV24", "A420", "AV12", "A444", "A422", NULL);
 
   /* Requires reading from a RG/LA framebuffer... */
   if (!context || (USING_GLES3 (context) || USING_OPENGL (context)))
@@ -2566,6 +2566,7 @@ _YUV_to_RGB (GstGLColorConvert * convert)
       }
       case GST_VIDEO_FORMAT_NV12:
       case GST_VIDEO_FORMAT_NV16:
+      case GST_VIDEO_FORMAT_NV24:
       case GST_VIDEO_FORMAT_NV21:
       case GST_VIDEO_FORMAT_NV61:
       case GST_VIDEO_FORMAT_P010_10LE:
@@ -2699,11 +2700,15 @@ _RGB_to_YUV (GstGLColorConvert * convert)
         break;
       case GST_VIDEO_FORMAT_NV12:
       case GST_VIDEO_FORMAT_NV16:
+      case GST_VIDEO_FORMAT_NV24:
         info->templ = &templ_RGB_to_SEMI_PLANAR_YUV;
         info->frag_body =
             g_strdup_printf (templ_RGB_to_SEMI_PLANAR_YUV_BODY, "");
         if (out_format == GST_VIDEO_FORMAT_NV16) {
           info->chroma_sampling[0] = 2.0f;
+          info->chroma_sampling[1] = 1.0f;
+        } else if (out_format == GST_VIDEO_FORMAT_NV24) {
+          info->chroma_sampling[0] = 1.0f;
           info->chroma_sampling[1] = 1.0f;
         } else {
           info->chroma_sampling[0] = info->chroma_sampling[1] = 2.0f;
