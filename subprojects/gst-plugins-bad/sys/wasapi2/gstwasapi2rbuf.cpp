@@ -72,6 +72,11 @@
 #include <queue>
 #include <avrt.h>
 
+#if defined(__SSE2__) || (defined(_MSC_VER) && (defined(_M_X64) || (_M_IX86_FP >= 2)))
+#include <emmintrin.h>
+#define GST_WASAPI2_HAVE_SSE2
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_wasapi2_rbuf_debug);
 #define GST_CAT_DEFAULT gst_wasapi2_rbuf_debug
 
@@ -213,6 +218,7 @@ struct RbufCtx
   bool running = false;
   bool error_posted = false;
   bool is_exclusive = false;
+  bool is_s24in32 = false;
 };
 
 typedef std::shared_ptr<RbufCtx> RbufCtxPtr;
@@ -1146,11 +1152,17 @@ gst_wasapi2_device_manager_create_ctx (IMMDeviceEnumerator * enumerator,
   ctx->endpoint_class = endpoint_class;
   ctx->is_exclusive = desc->exclusive;
 
+  GstAudioInfo info;
+  gst_audio_info_from_caps (&info, ctx->caps);
+
+  /* Due to format mismatch between Windows and GStreamer,
+   * we need to convert format */
+  if (GST_AUDIO_INFO_FORMAT (&info) == GST_AUDIO_FORMAT_S24_32LE)
+    ctx->is_s24in32 = true;
+
   /* Allocates staging buffer for exclusive mode, since we should fill
    * endpoint buffer at once */
   if (ctx->is_exclusive && ctx->render_client) {
-    GstAudioInfo info;
-    gst_audio_info_from_caps (&info, ctx->caps);
     ctx->exclusive_period_bytes = ctx->period * GST_AUDIO_INFO_BPF (&info);
     ctx->exclusive_staging.resize (ctx->exclusive_period_bytes);
     ctx->exclusive_staging_filled = 0;
@@ -1702,6 +1714,73 @@ gst_wasapi2_rbuf_pause (GstAudioRingBuffer * buf)
   return gst_wasapi2_rbuf_stop_internal (self);
 }
 
+static inline gint32
+rshift8_32 (gint32 x)
+{
+  guint32 s = ((guint32) x) >> 8;
+  guint32 signmask = (x < 0) ? 0xff000000u : 0u;
+
+  return (gint32) (s | signmask);
+}
+
+static inline void
+shift32_right8_copy (const gint32 * src, gint32 * dst, size_t n)
+{
+#ifdef GST_WASAPI2_HAVE_SSE2
+  size_t i = 0;
+  size_t step = 4;
+  for (; i + step <= n; i += step) {
+    __m128i v = _mm_loadu_si128 ((const __m128i *) (src + i));
+    __m128i y = _mm_srai_epi32 (v, 8);
+    _mm_storeu_si128 ((__m128i *) (dst + i), y);
+  }
+
+  for (; i < n; i++)
+    dst[i] = rshift8_32 (src[i]);
+#else
+  for (size_t i = 0; i < n; i++)
+    dst[i] = rshift8_32 (src[i]);
+#endif
+}
+
+static inline void
+shift32_left8_copy (const gint32 * src, gint32 * dst, size_t n)
+{
+#ifdef GST_WASAPI2_HAVE_SSE2
+  size_t i = 0;
+  size_t step = 4;
+  for (; i + step <= n; i += 4) {
+    __m128i v = _mm_loadu_si128 ((const __m128i *) (src + i));
+    __m128i y = _mm_slli_epi32 (v, 8);
+    _mm_storeu_si128 ((__m128i *) (dst + i), y);
+  }
+
+  for (; i < n; i++)
+    dst[i] = (gint32) ((guint32) src[i] << 8);
+#else
+  for (size_t i = 0; i < n; i++)
+    dst[i] = (gint32) ((guint32) src[i] << 8);
+#endif
+}
+
+static inline void
+s24_msb_to_s24lsb (guint8 * dst, const guint8 * src, size_t bytes)
+{
+  if ((bytes & 3) == 0)
+    shift32_right8_copy ((const gint32 *) src, (gint32 *) dst, bytes >> 2);
+  else
+    memcpy (dst, src, bytes);
+}
+
+static inline void
+s24lsb_to_s24_msb (guint8 * dst, const guint8 * src, size_t bytes)
+{
+  if ((bytes & 3) == 0)
+    shift32_left8_copy ((const gint32 *) src, (gint32 *) dst, bytes >> 2);
+  else
+    memcpy (dst, src, bytes);
+}
+
 static HRESULT
 gst_wasapi2_rbuf_process_read (GstWasapi2Rbuf * self)
 {
@@ -1820,7 +1899,11 @@ gst_wasapi2_rbuf_process_read (GstWasapi2Rbuf * self)
         gst_audio_format_info_fill_silence (ctx->device_info.finfo,
             ctx->device_fifo.data () + old, (gint) in_bytes);
       } else {
-        memcpy (ctx->device_fifo.data () + old, data, in_bytes);
+        if (ctx->is_s24in32) {
+          s24_msb_to_s24lsb (ctx->device_fifo.data () + old, data, in_bytes);
+        } else {
+          memcpy (ctx->device_fifo.data () + old, data, in_bytes);
+        }
       }
       ctx->device_fifo_bytes += in_bytes;
     }
@@ -1926,7 +2009,10 @@ gst_wasapi2_rbuf_process_read (GstWasapi2Rbuf * self)
         gst_audio_format_info_fill_silence (rb->spec.info.finfo,
             dstptr + priv->segoffset, (gint) to_write);
       } else {
-        memcpy (dstptr + priv->segoffset, data + offset, to_write);
+        if (ctx->is_s24in32)
+          s24_msb_to_s24lsb (dstptr + priv->segoffset, data + offset, to_write);
+        else
+          memcpy (dstptr + priv->segoffset, data + offset, to_write);
       }
 
       priv->segoffset += (gint) to_write;
@@ -2016,7 +2102,11 @@ gst_wasapi2_rbuf_process_write (GstWasapi2Rbuf * self)
     if (!gst_wasapi2_result (hr))
       return hr;
 
-    memcpy (data, readptr + priv->segoffset, len);
+    if (priv->ctx->is_s24in32)
+      s24lsb_to_s24_msb (data, readptr + priv->segoffset, len);
+    else
+      memcpy (data, readptr + priv->segoffset, len);
+
     hr = render_client->ReleaseBuffer (can_write, 0);
 
     priv->segoffset += len;
@@ -2117,8 +2207,15 @@ gst_wasapi2_rbuf_process_write_exclusive (GstWasapi2Rbuf * self)
 
             auto old_dev = ctx->device_fifo_bytes;
             ctx->device_fifo.resize (old_dev + out_bytes);
-            memcpy (ctx->device_fifo.data () + old_dev, priv->temp_data.data (),
-                out_bytes);
+
+            if (ctx->is_s24in32) {
+              s24lsb_to_s24_msb (ctx->device_fifo.data () +
+                  old_dev, priv->temp_data.data (), out_bytes);
+            } else {
+              memcpy (ctx->device_fifo.data () + old_dev,
+                  priv->temp_data.data (), out_bytes);
+            }
+
             ctx->device_fifo_bytes += out_bytes;
 
             processed_any = true;
@@ -2171,8 +2268,13 @@ gst_wasapi2_rbuf_process_write_exclusive (GstWasapi2Rbuf * self)
       auto remain = period_bytes - ctx->exclusive_staging_filled;
       auto to_copy = (size_t) MIN ((gsize) len, (gsize) remain);
 
-      memcpy (ctx->exclusive_staging.data () + ctx->exclusive_staging_filled,
-          readptr + priv->segoffset, to_copy);
+      if (ctx->is_s24in32) {
+        s24lsb_to_s24_msb (ctx->exclusive_staging.data () +
+            ctx->exclusive_staging_filled, readptr + priv->segoffset, to_copy);
+      } else {
+        memcpy (ctx->exclusive_staging.data () + ctx->exclusive_staging_filled,
+            readptr + priv->segoffset, to_copy);
+      }
 
       priv->segoffset += (gint) to_copy;
       ctx->exclusive_staging_filled += to_copy;
