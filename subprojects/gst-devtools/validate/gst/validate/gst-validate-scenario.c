@@ -2436,7 +2436,7 @@ _execute_set_rank_or_disable_feature (GstValidateScenario * scenario,
   GstPluginFeature *feature;
   const gchar *name;
   gboolean removing_feature =
-      gst_structure_has_name (action->structure, "remove-plugin-feature");
+      gst_structure_has_name (action->structure, "remove-feature");
   GstRegistry *registry = gst_registry_get ();
 
   REPORT_UNLESS (
@@ -2444,7 +2444,7 @@ _execute_set_rank_or_disable_feature (GstValidateScenario * scenario,
       (name = gst_structure_get_string (action->structure, "name")), done,
       "Could not find the name of the plugin/feature(s) to tweak");
 
-  if (removing_feature)
+  if (!removing_feature)
     REPORT_UNLESS (
         (gst_structure_get_uint (action->structure, "rank", &rank)) ||
         (gst_structure_get_int (action->structure, "rank", (gint *) & rank)),
@@ -2452,10 +2452,17 @@ _execute_set_rank_or_disable_feature (GstValidateScenario * scenario,
 
   feature = gst_registry_lookup_feature (registry, name);
   if (feature) {
-    if (removing_feature)
+    if (!removing_feature) {
       gst_plugin_feature_set_rank (feature, rank);
-    else
+    } else {
+      /* Load the feature first to ensure the plugin is initialized before removal
+       * as otherwise the feature will be re added when loading the plugin
+       * again. */
+      GstPluginFeature *loaded_feature = gst_plugin_feature_load (feature);
+      if (loaded_feature)
+        gst_object_unref (loaded_feature);
       gst_registry_remove_feature (registry, feature);
+    }
     gst_object_unref (feature);
 
     goto done;
