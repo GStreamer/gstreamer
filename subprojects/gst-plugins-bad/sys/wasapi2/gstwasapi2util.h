@@ -138,6 +138,8 @@ GstCaps * gst_wasapi2_wfx_list_to_caps (GPtrArray * list);
 void      gst_wasapi2_sort_wfx (GPtrArray * list,
                                 WAVEFORMATEX * wfx);
 
+WAVEFORMATEX * gst_wasapi2_audio_info_to_wfx (const GstAudioInfo * info);
+
 G_END_DECLS
 
 #ifdef __cplusplus

@@ -1115,3 +1115,122 @@ gst_wasapi2_sort_wfx (GPtrArray * list, WAVEFORMATEX * wfx)
   g_ptr_array_sort_with_data (list, compare_wfx_func, wfx);
   demote_s24_32le (list);
 }
+
+static DWORD
+gst_wasapi2_mask_from_gst_positions (const GstAudioInfo * info)
+{
+  DWORD mask = 0;
+
+  for (guint i = 0; i < (guint) GST_AUDIO_INFO_CHANNELS (info); i++) {
+    auto p = info->position[i];
+
+    if (p == GST_AUDIO_CHANNEL_POSITION_NONE ||
+        p == GST_AUDIO_CHANNEL_POSITION_INVALID) {
+      continue;
+    }
+
+    for (guint k = 0; k < G_N_ELEMENTS (wasapi_to_gst_pos); k++) {
+      if (wasapi_to_gst_pos[k].gst_pos == p) {
+        mask |= (DWORD) wasapi_to_gst_pos[k].wasapi_pos;
+        break;
+      }
+    }
+  }
+
+  if (mask == 0) {
+    guint ch = GST_AUDIO_INFO_CHANNELS (info);
+    if (ch < G_N_ELEMENTS (default_ch_masks))
+      mask = default_ch_masks[ch];
+  }
+
+  return mask;
+}
+
+WAVEFORMATEX *
+gst_wasapi2_audio_info_to_wfx (const GstAudioInfo * info)
+{
+  if (!info)
+    return nullptr;
+
+  auto channels = GST_AUDIO_INFO_CHANNELS (info);
+  auto rate = GST_AUDIO_INFO_RATE (info);
+  auto fmt = GST_AUDIO_INFO_FORMAT (info);
+
+  bool is_float = false;
+  WORD bits = 0;
+  WORD valid_bits = 0;
+
+  switch (fmt) {
+    case GST_AUDIO_FORMAT_S16LE:
+      bits = 16;
+      valid_bits = 16;
+      break;
+    case GST_AUDIO_FORMAT_S24LE:
+      bits = 24;
+      valid_bits = 24;
+      break;
+    case GST_AUDIO_FORMAT_S24_32LE:
+      bits = 32;
+      valid_bits = 24;
+      break;
+    case GST_AUDIO_FORMAT_S32LE:
+      bits = 32;
+      valid_bits = 32;
+      break;
+    case GST_AUDIO_FORMAT_F32LE:
+      is_float = true;
+      bits = 32;
+      valid_bits = 32;
+      break;
+    case GST_AUDIO_FORMAT_F64LE:
+      is_float = true;
+      bits = 64;
+      valid_bits = 64;
+      break;
+    default:
+      return nullptr;
+  }
+
+  DWORD ch_mask = gst_wasapi2_mask_from_gst_positions (info);
+  bool need_ext = false;
+  if ((!is_float && bits > 16) ||
+      (valid_bits != bits) || (channels > 2) || (is_float && channels > 2)) {
+    need_ext = true;
+  }
+
+  if (need_ext) {
+    auto w = (WAVEFORMATEXTENSIBLE *)
+        CoTaskMemAlloc (sizeof (WAVEFORMATEXTENSIBLE));
+
+    memset (w, 0, sizeof (WAVEFORMATEXTENSIBLE));
+    w->Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+    w->Format.nChannels = (WORD) channels;
+    w->Format.nSamplesPerSec = rate;
+    w->Format.wBitsPerSample = bits;
+
+    w->Samples.wValidBitsPerSample = valid_bits;
+    w->dwChannelMask = ch_mask ? ch_mask : make_channel_mask ((WORD) channels);
+    w->SubFormat = is_float ? GST_KSDATAFORMAT_SUBTYPE_IEEE_FLOAT
+        : GST_KSDATAFORMAT_SUBTYPE_PCM;
+
+    w->Format.nBlockAlign = (WORD) ((bits / 8) * channels);
+    w->Format.nAvgBytesPerSec =
+        w->Format.nSamplesPerSec * w->Format.nBlockAlign;
+    w->Format.cbSize = sizeof (WAVEFORMATEXTENSIBLE) - sizeof (WAVEFORMATEX);
+
+    return (WAVEFORMATEX *) w;
+  }
+
+  auto w = (WAVEFORMATEX *) CoTaskMemAlloc (sizeof (WAVEFORMATEX));
+
+  memset (w, 0, sizeof (WAVEFORMATEX));
+  w->wFormatTag = is_float ? WAVE_FORMAT_IEEE_FLOAT : WAVE_FORMAT_PCM;
+  w->nChannels = (WORD) channels;
+  w->nSamplesPerSec = rate;
+  w->wBitsPerSample = bits;
+  w->nBlockAlign = (WORD) ((bits / 8) * channels);
+  w->nAvgBytesPerSec = w->nSamplesPerSec * w->nBlockAlign;
+  w->cbSize = 0;
+
+  return w;
+}

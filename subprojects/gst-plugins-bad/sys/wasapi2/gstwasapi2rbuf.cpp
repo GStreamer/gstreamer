@@ -97,6 +97,8 @@ struct RbufCtx
   {
     capture_event = CreateEvent (nullptr, FALSE, FALSE, nullptr);
     render_event = CreateEvent (nullptr, FALSE, FALSE, nullptr);
+    formats = g_ptr_array_new_with_free_func ((GDestroyNotify)
+        gst_wasapi2_free_wfx);
   }
 
   ~RbufCtx ()
@@ -109,12 +111,15 @@ struct RbufCtx
     if (mix_format)
       CoTaskMemFree (mix_format);
     gst_clear_caps (&caps);
+    gst_clear_caps (&supported_caps);
 
     if (conv)
       gst_audio_converter_free (conv);
 
     CloseHandle (capture_event);
     CloseHandle (render_event);
+
+    g_ptr_array_unref (formats);
   }
 
   HRESULT Start ()
@@ -186,6 +191,7 @@ struct RbufCtx
   }
 
   GstWasapi2EndpointClass endpoint_class;
+  ComPtr<IMMDevice> device;
   ComPtr<IAudioClient> client;
   ComPtr<IAudioClient> dummy_client;
   ComPtr<IAudioCaptureClient> capture_client;
@@ -199,6 +205,7 @@ struct RbufCtx
   HANDLE capture_event;
   HANDLE render_event;
   GstCaps *caps = nullptr;
+  GstCaps *supported_caps = nullptr;
   WAVEFORMATEX *mix_format = nullptr;
   std::vector<guint8> exclusive_staging;
   size_t exclusive_staging_filled = 0;
@@ -210,6 +217,7 @@ struct RbufCtx
   size_t device_fifo_bytes = 0;
   size_t host_fifo_bytes = 0;
   GstAudioConverter *conv = nullptr;
+  GPtrArray *formats = nullptr;
 
   UINT32 period = 0;
   UINT32 client_buf_size = 0;
@@ -219,6 +227,10 @@ struct RbufCtx
   bool error_posted = false;
   bool is_exclusive = false;
   bool is_s24in32 = false;
+  bool init_done = false;
+  bool low_latency = false;
+  gint64 latency_time = 0;
+  gint64 buffer_time = 0;
 };
 
 typedef std::shared_ptr<RbufCtx> RbufCtxPtr;
@@ -490,7 +502,7 @@ initialize_audio_client3 (IAudioClient * client_handle,
 static HRESULT
 initialize_audio_client_exclusive (IMMDevice * device,
     ComPtr<IAudioClient> & client, WAVEFORMATEX * wfx, guint * period,
-    RbufCtxDesc * desc)
+    bool low_latency, gint64 latency_time)
 {
   /* Format must be validated by caller */
   auto hr = client->IsFormatSupported (AUDCLNT_SHAREMODE_EXCLUSIVE,
@@ -535,8 +547,8 @@ initialize_audio_client_exclusive (IMMDevice * device,
     max_hns = default_period;
 
   REFERENCE_TIME target = min_hns;
-  if (!desc->low_latency && desc->latency_time > 0)
-    target = desc->latency_time * 10;
+  if (!low_latency && latency_time > 0)
+    target = latency_time * 10;
 
   if (target < min_hns)
     target = min_hns;
@@ -592,7 +604,7 @@ static HRESULT
 initialize_audio_client (IAudioClient * client_handle,
     WAVEFORMATEX * mix_format, guint * period,
     DWORD extra_flags, GstWasapi2EndpointClass device_class,
-    RbufCtxDesc * desc)
+    bool low_latency, gint64 latency_time, gint64 buffer_time)
 {
   REFERENCE_TIME default_period, min_period;
   DWORD stream_flags =
@@ -622,14 +634,13 @@ initialize_audio_client (IAudioClient * client_handle,
      * like wasapi plugin does. Note that MS example code uses non-zero
      * buffer duration for event-driven shared-mode case as well.
      */
-    if (desc && !desc->low_latency && desc->latency_time > 0 &&
-        desc->buffer_time > 0) {
+    if (low_latency && latency_time > 0 && buffer_time > 0) {
       /* Ensure that the period (latency_time) used is an integral multiple of
        * either the default period or the minimum period */
-      guint64 factor = (desc->latency_time * 10) / default_period;
+      guint64 factor = (latency_time * 10) / default_period;
       REFERENCE_TIME period = default_period * MAX (factor, 1);
 
-      buf_dur = desc->buffer_time * 10;
+      buf_dur = buffer_time * 10;
       if (buf_dur < 2 * period)
         buf_dur = 2 * period;
     }
@@ -663,9 +674,355 @@ initialize_audio_client (IAudioClient * client_handle,
   return S_OK;
 }
 
+static gboolean
+gst_wasapi2_rbuf_ctx_init (RbufCtxPtr & ctx, WAVEFORMATEX * selected_format)
+{
+  if (ctx->init_done) {
+    GST_DEBUG ("Already initialized");
+    return TRUE;
+  }
+
+  if (!selected_format) {
+    GST_ERROR ("No selected format");
+    return FALSE;
+  }
+
+  HRESULT hr;
+  if (ctx->is_exclusive) {
+    bool need_format_conv = false;
+    /* Try current format */
+    hr = ctx->client->IsFormatSupported (AUDCLNT_SHAREMODE_EXCLUSIVE,
+      selected_format, nullptr);
+    if (hr == S_OK) {
+      ctx->mix_format = gst_wasapi2_copy_wfx (selected_format);
+    } else {
+      /* Use closest format */
+      gst_wasapi2_sort_wfx (ctx->formats, selected_format);;
+
+      auto format = (WAVEFORMATEX *) g_ptr_array_index (ctx->formats, 0);
+
+      GstCaps *old_caps = nullptr;
+      GstCaps *new_caps = nullptr;
+
+      gst_wasapi2_util_parse_waveformatex (selected_format,
+          &old_caps, nullptr);
+      gst_wasapi2_util_parse_waveformatex (format,
+          &new_caps, nullptr);
+
+      if (!new_caps || !old_caps) {
+        GST_ERROR ("Couldn't get caps from format");
+        gst_clear_caps (&new_caps);
+        gst_clear_caps (&old_caps);
+        return FALSE;
+      }
+
+      if (!gst_caps_is_equal (new_caps, old_caps)) {
+        GST_INFO ("Closest caps is different, old: %" GST_PTR_FORMAT
+            ", new : %" GST_PTR_FORMAT, old_caps, new_caps);
+        need_format_conv = true;
+        gst_audio_info_from_caps (&ctx->host_info, old_caps);
+      }
+
+      gst_caps_unref (new_caps);
+      gst_caps_unref (old_caps);
+
+      ctx->mix_format = gst_wasapi2_copy_wfx (format);
+    }
+
+    gst_wasapi2_util_parse_waveformatex (ctx->mix_format, &ctx->caps, nullptr);
+    gst_audio_info_from_caps (&ctx->device_info, ctx->caps);
+    if (!need_format_conv)
+      ctx->host_info = ctx->device_info;
+
+    hr = initialize_audio_client_exclusive (ctx->device.Get (), ctx->client,
+        ctx->mix_format, &ctx->period, ctx->low_latency, ctx->latency_time);
+    if (FAILED (hr)) {
+      ctx->is_exclusive = false;
+      ctx->client = nullptr;
+      gst_wasapi2_clear_wfx (&ctx->mix_format);
+      gst_clear_caps (&ctx->caps);
+
+      hr = ctx->device->Activate (__uuidof (IAudioClient), CLSCTX_ALL,
+          nullptr, &ctx->client);
+      if (!gst_wasapi2_result (hr)) {
+        GST_WARNING ("Couldn't get IAudioClient from IMMDevice");
+        return FALSE;
+      }
+    } else if (need_format_conv) {
+      GstAudioInfo *in_info, *out_info;
+      if (ctx->endpoint_class == GST_WASAPI2_ENDPOINT_CLASS_CAPTURE) {
+        in_info = &ctx->device_info;
+        out_info = &ctx->host_info;
+      } else {
+        in_info = &ctx->host_info;
+        out_info = &ctx->device_info;
+      }
+
+      auto config = gst_structure_new_static_str ("converter-config",
+          GST_AUDIO_CONVERTER_OPT_DITHER_METHOD, GST_TYPE_AUDIO_DITHER_METHOD,
+          GST_AUDIO_DITHER_TPDF,
+          GST_AUDIO_CONVERTER_OPT_RESAMPLER_METHOD,
+          GST_TYPE_AUDIO_RESAMPLER_METHOD, GST_AUDIO_RESAMPLER_METHOD_KAISER,
+          nullptr);
+
+      gst_audio_resampler_options_set_quality (GST_AUDIO_RESAMPLER_METHOD_KAISER,
+          GST_AUDIO_RESAMPLER_QUALITY_DEFAULT, GST_AUDIO_INFO_RATE (in_info),
+            GST_AUDIO_INFO_RATE (out_info), config);
+
+      ctx->conv = gst_audio_converter_new (GST_AUDIO_CONVERTER_FLAG_NONE,
+          in_info, out_info, config);
+      if (!ctx->conv) {
+        GST_ERROR ("Couldn't create converter");
+        ctx->is_exclusive = false;
+        ctx->client = nullptr;
+        gst_wasapi2_clear_wfx (&ctx->mix_format);
+        gst_clear_caps (&ctx->caps);
+
+        hr = ctx->device->Activate (__uuidof (IAudioClient), CLSCTX_ALL,
+            nullptr, &ctx->client);
+        if (!gst_wasapi2_result (hr)) {
+          GST_WARNING ("Couldn't get IAudioClient from IMMDevice");
+          return FALSE;
+        }
+      } else {
+        GST_INFO ("converter configured");
+      }
+    }
+  }
+
+  if (!ctx->is_exclusive) {
+    DWORD stream_flags = 0;
+    /* Check format support */
+    WAVEFORMATEX *closest = nullptr;
+    hr = ctx->client->IsFormatSupported (AUDCLNT_SHAREMODE_SHARED,
+        selected_format, &closest);
+    if (hr == S_OK) {
+      ctx->mix_format = gst_wasapi2_copy_wfx (selected_format);
+      /* format supported */
+    } else if (hr == S_FALSE) {
+      if (!closest) {
+        GST_ERROR ("Couldn't get closest format");
+        return FALSE;
+      }
+
+      GstCaps *old_caps = nullptr;
+      GstCaps *new_caps = nullptr;
+
+      gst_wasapi2_util_parse_waveformatex (selected_format,
+          &old_caps, nullptr);
+      gst_wasapi2_util_parse_waveformatex (closest,
+          &new_caps, nullptr);
+
+      if (!new_caps || !old_caps) {
+        GST_ERROR ("Couldn't get caps from format");
+        gst_clear_caps (&new_caps);
+        gst_clear_caps (&old_caps);
+        CoTaskMemFree (closest);
+        return FALSE;
+      }
+
+      if (!gst_caps_is_equal (new_caps, old_caps)) {
+        GST_INFO ("Closest caps is different, old: %" GST_PTR_FORMAT
+            ", new : %" GST_PTR_FORMAT, old_caps, new_caps);
+        /* Hope OS mixer can convert the format */
+        gst_caps_unref (new_caps);
+        gst_caps_unref (old_caps);
+        CoTaskMemFree (closest);
+        ctx->mix_format = gst_wasapi2_copy_wfx (selected_format);
+        stream_flags = AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM |
+            AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY;
+      } else {
+        gst_caps_unref (new_caps);
+        gst_caps_unref (old_caps);
+
+        ctx->mix_format = closest;
+      }
+    } else {
+      ctx->mix_format = gst_wasapi2_copy_wfx (selected_format);
+      stream_flags = AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM |
+          AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY;
+    }
+
+    gst_wasapi2_util_parse_waveformatex (ctx->mix_format, &ctx->caps, nullptr);
+
+    hr = E_FAIL;
+    /* Try IAudioClient3 if low-latency is requested */
+    if (ctx->low_latency &&
+        !gst_wasapi2_is_loopback_class (ctx->endpoint_class) &&
+        !gst_wasapi2_is_process_loopback_class (ctx->endpoint_class)) {
+      hr = initialize_audio_client3 (ctx->client.Get (), ctx->mix_format,
+          &ctx->period, stream_flags);
+    }
+
+    if (FAILED (hr)) {
+      DWORD extra_flags = stream_flags;
+      if (gst_wasapi2_is_loopback_class (ctx->endpoint_class))
+        extra_flags = AUDCLNT_STREAMFLAGS_LOOPBACK;
+
+      hr = initialize_audio_client (ctx->client.Get (), ctx->mix_format,
+          &ctx->period, extra_flags, ctx->endpoint_class, ctx->low_latency,
+          ctx->latency_time, ctx->buffer_time);
+    }
+
+    if (FAILED (hr))
+      return FALSE;
+  }
+
+  if (ctx->endpoint_class == GST_WASAPI2_ENDPOINT_CLASS_RENDER) {
+    hr = ctx->client->SetEventHandle (ctx->render_event);
+    if (!gst_wasapi2_result (hr)) {
+      GST_ERROR ("Couldn't set event handle");
+      return FALSE;
+    }
+
+    hr = ctx->client->GetService (IID_PPV_ARGS (&ctx->render_client));
+    if (!gst_wasapi2_result (hr)) {
+      GST_ERROR ("Couldn't get render client handle");
+      return FALSE;
+    }
+  } else {
+    hr = ctx->client->SetEventHandle (ctx->capture_event);
+    if (!gst_wasapi2_result (hr)) {
+      GST_ERROR ("Couldn't set event handle");
+      return FALSE;
+    }
+
+    hr = ctx->client->GetService (IID_PPV_ARGS (&ctx->capture_client));
+    if (!gst_wasapi2_result (hr)) {
+      GST_ERROR ("Couldn't get capture client handle");
+      return FALSE;
+    }
+  }
+
+  if (!ctx->is_exclusive) {
+    hr = ctx->client->GetService (IID_PPV_ARGS (&ctx->stream_volume));
+    if (!gst_wasapi2_result (hr))
+      GST_WARNING ("Couldn't get ISimpleAudioVolume interface");
+  }
+
+  hr = ctx->client->GetBufferSize (&ctx->client_buf_size);
+  if (!gst_wasapi2_result (hr)) {
+    GST_ERROR ("Couldn't get buffer size");
+    return FALSE;
+  }
+
+  /* Activate silence feed client */
+  if (ctx->dummy_client) {
+    WAVEFORMATEX *mix_format = nullptr;
+    hr = ctx->dummy_client->GetMixFormat (&mix_format);
+    if (!gst_wasapi2_result (hr)) {
+      GST_ERROR ("Couldn't get mix format");
+      return FALSE;
+    }
+
+    hr = initialize_audio_client (ctx->dummy_client.Get (), mix_format, nullptr,
+        0, GST_WASAPI2_ENDPOINT_CLASS_RENDER, false, 0, 0);
+    CoTaskMemFree (mix_format);
+
+    if (!gst_wasapi2_result (hr)) {
+      GST_ERROR ("Couldn't initialize dummy client");
+      return FALSE;
+    }
+
+    hr = ctx->dummy_client->SetEventHandle (ctx->render_event);
+    if (!gst_wasapi2_result (hr)) {
+      GST_ERROR ("Couldn't set event handle");
+      return FALSE;
+    }
+
+    hr = ctx->dummy_client->GetBufferSize (&ctx->dummy_buf_size);
+    if (!gst_wasapi2_result (hr)) {
+      GST_ERROR ("Couldn't get buffer size");
+      return FALSE;
+    }
+
+    hr = ctx->dummy_client->GetService (IID_PPV_ARGS (&ctx->render_client));
+    if (!gst_wasapi2_result (hr)) {
+      GST_ERROR ("Couldn't get render client");
+      return FALSE;
+    }
+
+    if (ctx->device) {
+      hr = ctx->device->Activate (__uuidof (IAudioEndpointVolume),
+          CLSCTX_ALL, nullptr, &ctx->endpoint_volume);
+      if (gst_wasapi2_result (hr)) {
+        Wasapi2EndpointVolumeCallback::CreateInstance (&ctx->volume_callback,
+            ctx);
+
+        hr = ctx->endpoint_volume->RegisterControlChangeNotify (
+            ctx->volume_callback.Get ());
+        if (!gst_wasapi2_result (hr)) {
+          ctx->volume_callback = nullptr;
+        } else {
+          BOOL muted = FALSE;
+          hr = ctx->endpoint_volume->GetMute (&muted);
+          if (gst_wasapi2_result (hr))
+            ctx->endpoint_muted = muted;
+        }
+      }
+    }
+  }
+
+  /* Preroll data with silent data */
+  if (ctx->render_client && !ctx->dummy_client) {
+    if (ctx->is_exclusive) {
+      BYTE *data;
+      hr = ctx->render_client->GetBuffer (ctx->client_buf_size, &data);
+      if (SUCCEEDED (hr)) {
+        GST_DEBUG ("Prefill %u frames", ctx->client_buf_size);
+        ctx->render_client->ReleaseBuffer (ctx->client_buf_size,
+            AUDCLNT_BUFFERFLAGS_SILENT);
+      }
+    } else {
+      UINT32 padding = 0;
+      auto hr = ctx->client->GetCurrentPadding (&padding);
+      if (SUCCEEDED (hr) && padding < ctx->client_buf_size) {
+        auto can_write = ctx->client_buf_size - padding;
+        if (can_write > ctx->period)
+          can_write = ctx->period;
+
+        BYTE *data;
+        hr = ctx->render_client->GetBuffer (can_write, &data);
+        if (SUCCEEDED (hr)) {
+          GST_DEBUG ("Prefill %u frames", can_write);
+          ctx->render_client->ReleaseBuffer (can_write,
+              AUDCLNT_BUFFERFLAGS_SILENT);
+        }
+      }
+    }
+  }
+
+  /* Warm up device, first Start() call may take long if device is in idle state */
+  if (ctx->capture_client && !ctx->dummy_client) {
+    ctx->client->Start ();
+    ctx->client->Stop ();
+    ctx->client->Reset ();
+  }
+
+  GstAudioInfo info;
+  gst_audio_info_from_caps (&info, ctx->caps);
+
+  /* Due to format mismatch between Windows and GStreamer,
+   * we need to convert format */
+  if (GST_AUDIO_INFO_FORMAT (&info) == GST_AUDIO_FORMAT_S24_32LE)
+    ctx->is_s24in32 = true;
+
+  /* Allocates staging buffer for exclusive mode, since we should fill
+   * endpoint buffer at once */
+  if (ctx->is_exclusive && ctx->render_client) {
+    ctx->exclusive_period_bytes = ctx->period * GST_AUDIO_INFO_BPF (&info);
+    ctx->exclusive_staging.resize (ctx->exclusive_period_bytes);
+    ctx->exclusive_staging_filled = 0;
+  }
+
+  ctx->init_done = true;
+
+  return TRUE;
+}
+
 static void
 gst_wasapi2_device_manager_create_ctx (IMMDeviceEnumerator * enumerator,
-    RbufCtxDesc * desc, GPtrArray * exclusive_formats)
+    RbufCtxDesc * desc)
 {
   HRESULT hr = S_OK;
   Wasapi2ActivationHandler *activator = nullptr;
@@ -813,362 +1170,49 @@ gst_wasapi2_device_manager_create_ctx (IMMDeviceEnumerator * enumerator,
     if (!gst_wasapi2_result (hr))
       return;
 
+    g_ptr_array_set_size (ctx->formats, 0);
     gst_wasapi2_get_exclusive_mode_formats (ctx->client.Get (), prop.Get (),
-        exclusive_formats);
-    if (exclusive_formats->len == 0) {
+        ctx->formats);
+    if (ctx->formats->len == 0) {
       GST_WARNING ("Couldn't get exclusive mode formats");
       desc->exclusive = false;
     }
   }
 
-  if (desc->exclusive) {
-    bool need_format_conv = false;
-    if (!desc->mix_format) {
-      auto format = (WAVEFORMATEX *) g_ptr_array_index (exclusive_formats, 0);
-      ctx->mix_format = gst_wasapi2_copy_wfx (format);
-    } else {
-      /* Try current format */
-      hr = ctx->client->IsFormatSupported (AUDCLNT_SHAREMODE_EXCLUSIVE,
-        desc->mix_format, nullptr);
-      if (hr == S_OK) {
-        ctx->mix_format = gst_wasapi2_copy_wfx (desc->mix_format);
-      } else {
-        /* Use closest format */
-        gst_wasapi2_sort_wfx (exclusive_formats, desc->mix_format);
-
-        auto format = (WAVEFORMATEX *) g_ptr_array_index (exclusive_formats, 0);
-
-        GstCaps *old_caps = nullptr;
-        GstCaps *new_caps = nullptr;
-
-        gst_wasapi2_util_parse_waveformatex (desc->mix_format,
-            &old_caps, nullptr);
-        gst_wasapi2_util_parse_waveformatex (format,
-            &new_caps, nullptr);
-
-        if (!new_caps || !old_caps) {
-          GST_ERROR ("Couldn't get caps from format");
-          gst_clear_caps (&new_caps);
-          gst_clear_caps (&old_caps);
-          return;
-        }
-
-        if (!gst_caps_is_equal (new_caps, old_caps)) {
-          GST_INFO ("Closest caps is different, old: %" GST_PTR_FORMAT
-              ", new : %" GST_PTR_FORMAT, old_caps, new_caps);
-          need_format_conv = true;
-          gst_audio_info_from_caps (&ctx->host_info, old_caps);
-        }
-
-        gst_caps_unref (new_caps);
-        gst_caps_unref (old_caps);
-
-        ctx->mix_format = gst_wasapi2_copy_wfx (format);
-      }
-    }
-
-    gst_wasapi2_util_parse_waveformatex (ctx->mix_format, &ctx->caps, nullptr);
-    gst_audio_info_from_caps (&ctx->device_info, ctx->caps);
-    if (!need_format_conv)
-      ctx->host_info = ctx->device_info;
-
-    hr = initialize_audio_client_exclusive (device.Get (), ctx->client,
-        ctx->mix_format, &ctx->period, desc);
-    if (FAILED (hr)) {
-      desc->exclusive = false;
-      ctx->client = nullptr;
-      gst_wasapi2_clear_wfx (&ctx->mix_format);
-      gst_clear_caps (&ctx->caps);
-
-      hr = device->Activate (__uuidof (IAudioClient), CLSCTX_ALL,
-          nullptr, &ctx->client);
-      if (!gst_wasapi2_result (hr)) {
-        GST_WARNING ("Couldn't get IAudioClient from IMMDevice");
-        return;
-      }
-    } else if (need_format_conv) {
-      GstAudioInfo *in_info, *out_info;
-      if (endpoint_class == GST_WASAPI2_ENDPOINT_CLASS_CAPTURE) {
-        in_info = &ctx->device_info;
-        out_info = &ctx->host_info;
-      } else {
-        in_info = &ctx->host_info;
-        out_info = &ctx->device_info;
-      }
-
-      auto config = gst_structure_new_static_str ("converter-config",
-          GST_AUDIO_CONVERTER_OPT_DITHER_METHOD, GST_TYPE_AUDIO_DITHER_METHOD,
-          GST_AUDIO_DITHER_TPDF,
-          GST_AUDIO_CONVERTER_OPT_RESAMPLER_METHOD,
-          GST_TYPE_AUDIO_RESAMPLER_METHOD, GST_AUDIO_RESAMPLER_METHOD_KAISER,
-          nullptr);
-
-      gst_audio_resampler_options_set_quality (GST_AUDIO_RESAMPLER_METHOD_KAISER,
-          GST_AUDIO_RESAMPLER_QUALITY_DEFAULT, GST_AUDIO_INFO_RATE (in_info),
-            GST_AUDIO_INFO_RATE (out_info), config);
-
-      ctx->conv = gst_audio_converter_new (GST_AUDIO_CONVERTER_FLAG_NONE,
-          in_info, out_info, config);
-      if (!ctx->conv) {
-        GST_ERROR ("Couldn't create converter");
-        desc->exclusive = false;
-        ctx->client = nullptr;
-        gst_wasapi2_clear_wfx (&ctx->mix_format);
-        gst_clear_caps (&ctx->caps);
-
-        hr = device->Activate (__uuidof (IAudioClient), CLSCTX_ALL,
-            nullptr, &ctx->client);
-        if (!gst_wasapi2_result (hr)) {
-          GST_WARNING ("Couldn't get IAudioClient from IMMDevice");
-          return;
-        }
-      } else {
-        GST_INFO ("converter configured");
-      }
-    }
-  }
-
   if (!desc->exclusive) {
-    DWORD stream_flags = 0;
-    if (!desc->mix_format) {
-      ctx->client->GetMixFormat (&ctx->mix_format);
-      if (!ctx->mix_format && gst_wasapi2_is_process_loopback_class (endpoint_class)) {
-        ctx->mix_format = gst_wasapi2_get_default_mix_format ();
-      }
-
-      if (!ctx->mix_format) {
-        GST_ERROR ("Couldn't get mix format");
-        return;
-      }
-    } else {
-      /* Check format support */
-      WAVEFORMATEX *closest = nullptr;
-      hr = ctx->client->IsFormatSupported (AUDCLNT_SHAREMODE_SHARED,
-          desc->mix_format, &closest);
-      if (hr == S_OK) {
-        ctx->mix_format = gst_wasapi2_copy_wfx (desc->mix_format);
-        /* format supported */
-      } else if (hr == S_FALSE) {
-        if (!closest) {
-          GST_ERROR ("Couldn't get closest format");
-          return;
-        }
-
-        GstCaps *old_caps = nullptr;
-        GstCaps *new_caps = nullptr;
-
-        gst_wasapi2_util_parse_waveformatex (desc->mix_format,
-            &old_caps, nullptr);
-        gst_wasapi2_util_parse_waveformatex (closest,
-            &new_caps, nullptr);
-
-        if (!new_caps || !old_caps) {
-          GST_ERROR ("Couldn't get caps from format");
-          gst_clear_caps (&new_caps);
-          gst_clear_caps (&old_caps);
-          CoTaskMemFree (closest);
-          return;
-        }
-
-        if (!gst_caps_is_equal (new_caps, old_caps)) {
-          GST_INFO ("Closest caps is different, old: %" GST_PTR_FORMAT
-              ", new : %" GST_PTR_FORMAT, old_caps, new_caps);
-          /* Hope OS mixer can convert the format */
-          gst_caps_unref (new_caps);
-          gst_caps_unref (old_caps);
-          CoTaskMemFree (closest);
-          ctx->mix_format = gst_wasapi2_copy_wfx (desc->mix_format);
-          stream_flags = AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM |
-              AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY;
-        } else {
-          gst_caps_unref (new_caps);
-          gst_caps_unref (old_caps);
-
-          ctx->mix_format = closest;
-        }
+    gst_wasapi2_get_shared_mode_formats (ctx->client.Get (), ctx->formats);
+    if (ctx->formats->len == 0) {
+      if (gst_wasapi2_is_process_loopback_class (endpoint_class)) {
+        g_ptr_array_add (ctx->formats, gst_wasapi2_get_default_mix_format ());
       } else {
-        GST_ERROR ("Format not supported");
+        GST_ERROR ("Couldn't find supported formats");
         return;
       }
     }
-
-    gst_wasapi2_util_parse_waveformatex (ctx->mix_format, &ctx->caps, nullptr);
-
-    hr = E_FAIL;
-    /* Try IAudioClient3 if low-latency is requested */
-    if (desc->low_latency &&
-        !gst_wasapi2_is_loopback_class (endpoint_class) &&
-        !gst_wasapi2_is_process_loopback_class (endpoint_class) &&
-        !desc->exclusive) {
-      hr = initialize_audio_client3 (ctx->client.Get (), ctx->mix_format,
-          &ctx->period, stream_flags);
-    }
-
-    if (FAILED (hr)) {
-      DWORD extra_flags = stream_flags;
-      if (gst_wasapi2_is_loopback_class (endpoint_class))
-        extra_flags = AUDCLNT_STREAMFLAGS_LOOPBACK;
-
-      hr = initialize_audio_client (ctx->client.Get (), ctx->mix_format,
-          &ctx->period, extra_flags, endpoint_class, desc);
-    }
-
-    if (FAILED (hr))
-      return;
   }
 
-  if (endpoint_class == GST_WASAPI2_ENDPOINT_CLASS_RENDER) {
-    hr = ctx->client->SetEventHandle (ctx->render_event);
-    if (!gst_wasapi2_result (hr)) {
-      GST_ERROR ("Couldn't set event handle");
-      return;
-    }
-
-    hr = ctx->client->GetService (IID_PPV_ARGS (&ctx->render_client));
-    if (!gst_wasapi2_result (hr)) {
-      GST_ERROR ("Couldn't get render client handle");
-      return;
-    }
-  } else {
-    hr = ctx->client->SetEventHandle (ctx->capture_event);
-    if (!gst_wasapi2_result (hr)) {
-      GST_ERROR ("Couldn't set event handle");
-      return;
-    }
-
-    hr = ctx->client->GetService (IID_PPV_ARGS (&ctx->capture_client));
-    if (!gst_wasapi2_result (hr)) {
-      GST_ERROR ("Couldn't get capture client handle");
-      return;
-    }
-  }
-
-  if (!desc->exclusive) {
-    hr = ctx->client->GetService (IID_PPV_ARGS (&ctx->stream_volume));
-    if (!gst_wasapi2_result (hr))
-      GST_WARNING ("Couldn't get ISimpleAudioVolume interface");
-  }
-
-  hr = ctx->client->GetBufferSize (&ctx->client_buf_size);
-  if (!gst_wasapi2_result (hr)) {
-    GST_ERROR ("Couldn't get buffer size");
+  ctx->supported_caps = gst_wasapi2_wfx_list_to_caps (ctx->formats);
+  if (!ctx->supported_caps) {
+    GST_ERROR ("Couldn't build caps from format");
     return;
-  }
-
-  /* Activate silence feed client */
-  if (ctx->dummy_client) {
-    WAVEFORMATEX *mix_format = nullptr;
-    hr = ctx->dummy_client->GetMixFormat (&mix_format);
-    if (!gst_wasapi2_result (hr)) {
-      GST_ERROR ("Couldn't get mix format");
-      return;
-    }
-
-    hr = initialize_audio_client (ctx->dummy_client.Get (), mix_format, nullptr,
-        0, GST_WASAPI2_ENDPOINT_CLASS_RENDER, nullptr);
-    CoTaskMemFree (mix_format);
-
-    if (!gst_wasapi2_result (hr)) {
-      GST_ERROR ("Couldn't initialize dummy client");
-      return;
-    }
-
-    hr = ctx->dummy_client->SetEventHandle (ctx->render_event);
-    if (!gst_wasapi2_result (hr)) {
-      GST_ERROR ("Couldn't set event handle");
-      return;
-    }
-
-    hr = ctx->dummy_client->GetBufferSize (&ctx->dummy_buf_size);
-    if (!gst_wasapi2_result (hr)) {
-      GST_ERROR ("Couldn't get buffer size");
-      return;
-    }
-
-    hr = ctx->dummy_client->GetService (IID_PPV_ARGS (&ctx->render_client));
-    if (!gst_wasapi2_result (hr)) {
-      GST_ERROR ("Couldn't get render client");
-      return;
-    }
-
-    if (device && !desc->exclusive) {
-      hr = device->Activate (__uuidof (IAudioEndpointVolume),
-          CLSCTX_ALL, nullptr, &ctx->endpoint_volume);
-      if (gst_wasapi2_result (hr)) {
-        Wasapi2EndpointVolumeCallback::CreateInstance (&ctx->volume_callback,
-            ctx);
-
-        hr = ctx->endpoint_volume->RegisterControlChangeNotify (
-            ctx->volume_callback.Get ());
-        if (!gst_wasapi2_result (hr)) {
-          ctx->volume_callback = nullptr;
-        } else {
-          BOOL muted = FALSE;
-          hr = ctx->endpoint_volume->GetMute (&muted);
-          if (gst_wasapi2_result (hr))
-            ctx->endpoint_muted = muted;
-        }
-      }
-    }
-  }
-
-  /* Preroll data with silent data */
-  if (ctx->render_client && !ctx->dummy_client) {
-    if (desc->exclusive) {
-      BYTE *data;
-      hr = ctx->render_client->GetBuffer (ctx->client_buf_size, &data);
-      if (SUCCEEDED (hr)) {
-        GST_DEBUG ("Prefill %u frames", ctx->client_buf_size);
-        ctx->render_client->ReleaseBuffer (ctx->client_buf_size,
-            AUDCLNT_BUFFERFLAGS_SILENT);
-      }
-    } else {
-      UINT32 padding = 0;
-      auto hr = ctx->client->GetCurrentPadding (&padding);
-      if (SUCCEEDED (hr) && padding < ctx->client_buf_size) {
-        auto can_write = ctx->client_buf_size - padding;
-        if (can_write > ctx->period)
-          can_write = ctx->period;
-
-        BYTE *data;
-        hr = ctx->render_client->GetBuffer (can_write, &data);
-        if (SUCCEEDED (hr)) {
-          GST_DEBUG ("Prefill %u frames", can_write);
-          ctx->render_client->ReleaseBuffer (can_write,
-              AUDCLNT_BUFFERFLAGS_SILENT);
-        }
-      }
-    }
-  }
-
-  /* Warm up device, first Start() call may take long if device is in idle state */
-  if (ctx->capture_client && !ctx->dummy_client) {
-    ctx->client->Start ();
-    ctx->client->Stop ();
-    ctx->client->Reset ();
   }
 
   ctx->is_default = is_default;
   ctx->endpoint_class = endpoint_class;
   ctx->is_exclusive = desc->exclusive;
+  ctx->device = device;
+  ctx->low_latency = desc->low_latency;
+  ctx->latency_time = desc->latency_time;
+  ctx->buffer_time = desc->buffer_time;
 
-  GstAudioInfo info;
-  gst_audio_info_from_caps (&info, ctx->caps);
-
-  /* Due to format mismatch between Windows and GStreamer,
-   * we need to convert format */
-  if (GST_AUDIO_INFO_FORMAT (&info) == GST_AUDIO_FORMAT_S24_32LE)
-    ctx->is_s24in32 = true;
-
-  /* Allocates staging buffer for exclusive mode, since we should fill
-   * endpoint buffer at once */
-  if (ctx->is_exclusive && ctx->render_client) {
-    ctx->exclusive_period_bytes = ctx->period * GST_AUDIO_INFO_BPF (&info);
-    ctx->exclusive_staging.resize (ctx->exclusive_period_bytes);
-    ctx->exclusive_staging_filled = 0;
+  if (!desc->mix_format) {
+    /* format not fixated, return ctx without init */
+    desc->ctx = ctx;
+    return;
   }
 
-  desc->ctx = ctx;
+  if (gst_wasapi2_rbuf_ctx_init (ctx, desc->mix_format))
+    desc->ctx = ctx;
 }
 
 struct Wasapi2DeviceManager
@@ -1192,15 +1236,12 @@ struct Wasapi2DeviceManager
     interrupt_handle = CreateEvent (nullptr, FALSE, FALSE, nullptr);
     com_thread = g_thread_new ("Wasapi2DeviceManager",
         (GThreadFunc) device_manager_com_thread, this);
-    exclusive_formats = g_ptr_array_new_with_free_func ((GDestroyNotify)
-        gst_wasapi2_free_wfx);
   }
 
   ~Wasapi2DeviceManager ()
   {
     CloseHandle (shutdown_handle);
     CloseHandle (interrupt_handle);
-    g_ptr_array_unref (exclusive_formats);
   }
 
   RbufCtxPtr
@@ -1261,7 +1302,6 @@ struct Wasapi2DeviceManager
   HANDLE shutdown_handle;
   HANDLE interrupt_handle;
   GThread *com_thread;
-  GPtrArray *exclusive_formats;
 };
 
 static gpointer
@@ -1293,10 +1333,7 @@ device_manager_com_thread (gpointer manager)
           lk.unlock ();
           GST_LOG ("Creating new context");
 
-          g_ptr_array_set_size (self->exclusive_formats, 0);
-          gst_wasapi2_device_manager_create_ctx (enumerator.Get (), desc.get (),
-              self->exclusive_formats);
-          g_ptr_array_set_size (self->exclusive_formats, 0);
+          gst_wasapi2_device_manager_create_ctx (enumerator.Get (), desc.get ());
 
           if (desc->mix_format)
             CoTaskMemFree (desc->mix_format);
@@ -2354,7 +2391,7 @@ fill_loopback_silence (GstWasapi2Rbuf * self)
   return gst_wasapi2_result (hr);
 }
 
-static void
+static gboolean
 gst_wasapi2_rbuf_process_acquire (GstWasapi2Rbuf * self,
     GstAudioRingBufferSpec * spec)
 {
@@ -2364,10 +2401,61 @@ gst_wasapi2_rbuf_process_acquire (GstWasapi2Rbuf * self,
   guint client_buf_size = 0;
   gint period_frames = 480;
 
+  auto rbuf_caps = gst_audio_info_to_caps (&spec->info);
+  if (!rbuf_caps) {
+    GST_ERROR_OBJECT (self, "Couldn't get caps from info");
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (self, "Acquire with caps %" GST_PTR_FORMAT, rbuf_caps);
+
+  gst_wasapi2_clear_wfx (&priv->mix_format);
+
   if (priv->ctx) {
+    if (!priv->ctx->init_done) {
+      WAVEFORMATEX *matching = nullptr;
+      for (guint i = 0; i < priv->ctx->formats->len && !matching; i++) {
+        GstCaps *format_caps = nullptr;
+        auto format =
+            (WAVEFORMATEX *) g_ptr_array_index (priv->ctx->formats, i);
+        gst_wasapi2_util_parse_waveformatex (format, &format_caps, nullptr);
+        if (!format_caps)
+          continue;
+
+        if (gst_caps_can_intersect (rbuf_caps, format_caps))
+          matching = gst_wasapi2_copy_wfx (format);
+
+        gst_caps_unref (format_caps);
+      }
+
+      if (!matching)
+        matching = gst_wasapi2_audio_info_to_wfx (&spec->info);
+
+      if (!matching) {
+        GST_ERROR_OBJECT (self, "Couldn't build wave format from caps %"
+            GST_PTR_FORMAT, rbuf_caps);
+        gst_clear_caps (&rbuf_caps);
+        return FALSE;
+      }
+
+      auto ret = gst_wasapi2_rbuf_ctx_init (priv->ctx, matching);
+      gst_wasapi2_free_wfx (matching);
+
+      if (!ret) {
+        GST_ERROR_OBJECT (self, "Couldn't initialize ctx");
+        return FALSE;
+      }
+    }
+
     client_buf_size = priv->ctx->client_buf_size;
     period_frames = priv->ctx->period;
+
+    priv->mix_format = gst_wasapi2_copy_wfx (priv->ctx->mix_format);
+  } else {
+    priv->mix_format = gst_wasapi2_audio_info_to_wfx (&spec->info);
   }
+
+  gst_clear_caps (&rbuf_caps);
 
   gint bpf = GST_AUDIO_INFO_BPF (&buf->spec.info);
   gint rate = GST_AUDIO_INFO_RATE (&buf->spec.info);
@@ -2396,6 +2484,8 @@ gst_wasapi2_rbuf_process_acquire (GstWasapi2Rbuf * self,
   buf->memory = (guint8 *) g_malloc (buf->size);
   gst_audio_format_info_fill_silence (buf->spec.info.finfo,
       buf->memory, buf->size);
+
+  return TRUE;
 }
 
 static HRESULT
@@ -2648,6 +2738,10 @@ gst_wasapi2_rbuf_loop_thread (GstWasapi2Rbuf * self)
 
   GST_DEBUG_OBJECT (self, "Entering loop");
 
+  auto default_format = gst_wasapi2_get_default_mix_format ();
+  GstCaps *default_caps;
+  gst_wasapi2_util_parse_waveformatex (default_format, &default_caps, nullptr);
+
   while (loop_running) {
     auto wait_ret = WaitForMultipleObjects (G_N_ELEMENTS (waitables),
         waitables, FALSE, INFINITE);
@@ -2791,6 +2885,13 @@ gst_wasapi2_rbuf_loop_thread (GstWasapi2Rbuf * self)
 
               priv->ctx = ucmd->ctx;
 
+              if (priv->ctx && !priv->ctx->init_done && priv->mix_format) {
+                if (!gst_wasapi2_rbuf_ctx_init (priv->ctx, priv->mix_format)) {
+                  GST_WARNING_OBJECT (self, "Couldn't initialize context");
+                  priv->ctx = nullptr;
+                }
+              }
+
               if (priv->ctx) {
                 waitables[0] = priv->ctx->render_event;
                 waitables[1] = priv->ctx->capture_event;
@@ -2827,15 +2928,9 @@ gst_wasapi2_rbuf_loop_thread (GstWasapi2Rbuf * self)
             if (priv->ctx) {
               waitables[0] = priv->ctx->render_event;
               waitables[1] = priv->ctx->capture_event;
-              gst_caps_replace (&priv->caps, priv->ctx->caps);
-
-              if (priv->mute)
-                priv->ctx->SetVolume (0);
-              else
-                priv->ctx->SetVolume (priv->volume);
+              gst_caps_replace (&priv->caps, priv->ctx->supported_caps);
 
               priv->opened = true;
-              priv->mix_format = gst_wasapi2_copy_wfx (priv->ctx->mix_format);
               cmd->hr = S_OK;
             } else {
               gst_clear_caps (&priv->caps);
@@ -2844,12 +2939,9 @@ gst_wasapi2_rbuf_loop_thread (GstWasapi2Rbuf * self)
               gst_wasapi2_rbuf_post_open_error (self, priv->device_id.c_str ());
 
               if (priv->configured_allow_dummy) {
-                priv->mix_format = gst_wasapi2_get_default_mix_format ();
+                gst_caps_replace (&priv->caps, default_caps);
 
-                gst_wasapi2_util_parse_waveformatex (priv->mix_format,
-                    &priv->caps, nullptr);
                 priv->opened = true;
-
                 cmd->hr = S_OK;
               } else {
                 cmd->hr = E_FAIL;
@@ -2887,25 +2979,31 @@ gst_wasapi2_rbuf_loop_thread (GstWasapi2Rbuf * self)
               }
             }
 
+            if (!gst_wasapi2_rbuf_process_acquire (self, acquire_cmd->spec)) {
+              cmd->hr = E_FAIL;
+              SetEvent (cmd->event_handle);
+              break;
+            }
+
             priv->opened = true;
+
+            /* Since format selected now, use fixated one */
+            gst_clear_caps (&priv->caps);
+            gst_wasapi2_util_parse_waveformatex (priv->mix_format,
+                &priv->caps, nullptr);
+
             if (priv->ctx) {
               waitables[0] = priv->ctx->render_event;
               waitables[1] = priv->ctx->capture_event;
-              gst_caps_replace (&priv->caps, priv->ctx->caps);
 
               if (priv->mute)
                 priv->ctx->SetVolume (0);
               else
                 priv->ctx->SetVolume (priv->volume);
-
-              gst_wasapi2_clear_wfx (&priv->mix_format);
-              priv->mix_format = gst_wasapi2_copy_wfx (priv->ctx->mix_format);
             } else {
               waitables[0] = dummy_render;
               waitables[1] = dummy_capture;
             }
-
-            gst_wasapi2_rbuf_process_acquire (self, acquire_cmd->spec);
 
             cmd->hr = S_OK;
             SetEvent (cmd->event_handle);
@@ -2952,6 +3050,8 @@ gst_wasapi2_rbuf_loop_thread (GstWasapi2Rbuf * self)
     }
   }
 
+  gst_wasapi2_free_wfx (default_format);
+  gst_clear_caps (&default_caps);
   priv->ctx = nullptr;
   priv->cmd_queue = { };
   gst_wasapi2_clear_wfx (&priv->mix_format);
