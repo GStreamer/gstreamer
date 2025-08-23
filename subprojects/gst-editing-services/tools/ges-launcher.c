@@ -333,7 +333,7 @@ _parse_test_file (const gchar * option_name, const gchar * value,
 {
   opts->testfile = g_strdup (value);
   gst_validate_init_debug ();
-  gst_validate_setup_test_file (opts->testfile, FALSE);
+  gst_validate_setup_test_file (opts->testfile, opts->mute);
   return TRUE;
 }
 #endif
