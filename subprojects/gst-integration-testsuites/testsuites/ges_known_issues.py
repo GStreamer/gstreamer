@@ -15,7 +15,7 @@ KNOWN_ISSUES = {
             },
         ]
     },
-    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4020" {
+    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4020": {
         "tests": [
             "ges.playback.scrub_backward_seeking.test_transition.*"
         ],
