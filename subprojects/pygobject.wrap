@@ -1,8 +1,9 @@
 [wrap-file]
-directory = pygobject-3.50.0
-source_url = https://download.gnome.org/sources/pygobject/3.50/pygobject-3.50.0.tar.xz
-source_filename = pygobject-3.50.0.tar.xz
-source_hash = 8d836e75b5a881d457ee1622cae4a32bcdba28a0ba562193adb3bbb472472212
+directory = pygobject-3.50.1
+source_url = https://download.gnome.org/sources/pygobject/3.50/pygobject-3.50.1.tar.gz
+source_filename = pygobject-3.50.1.tar.gz
+source_hash = a4df4e7adef7f4f01685a763d138eac9396585bfc68a7d31bbe4fbca2de0d7cb
+diff_files = pygobject-3.50.1/0001-gi-Call-os.add_dll_directory-on-Windows-when-possibl.patch
 
 [provide]
 pygobject-3.0 = pygobject_dep
