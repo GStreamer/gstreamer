@@ -50,6 +50,7 @@ struct _GstX265Enc
   x265_param x265param;
   GstClockTime dts_offset;
   gboolean push_header;
+  GstBuffer *header_buffer;
   const x265_api *api;
 
   /* List of frame/buffer mapping structs for
