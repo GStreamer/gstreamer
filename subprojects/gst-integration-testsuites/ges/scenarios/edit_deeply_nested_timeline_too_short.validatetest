@@ -7,7 +7,7 @@ meta,
     args = {
         "--track-types=video",
         --videosink, "$(videosink) sync=true name=videosink",
-        --video-caps, "video/x-raw,format=I420,chroma-site=mpeg2,colorimetry=bt709",
+        --video-caps, "video/x-raw,format=I420,chroma-site=mpeg2,colorimetry=bt709,framerate=1/1,height=720,width=1080",
     },
     configs = {
         "$(validateflow), pad=videosink:sink, record-buffers=true,
@@ -24,7 +24,6 @@ set-vars,
     nested_timeline_depth2_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nested_timeline_depth2.xges",
     project_uri="file://$(logsdir)/ges/scenarios/$(test_name)/project.xges"
 
-set-track-restriction-caps, track-type="video", caps="video/x-raw,width=1080,height=720,format=I420"
 # Make sure the asset ID is the project_uri and serialize the empty timeline for each nested projects uris
 serialize-project, uri="$(project_uri)"
 serialize-project, uri="$(nested_timeline_uri)"
@@ -48,7 +47,7 @@ commit
 play
 crank-clock
 check-position, expected-position=3.0
-crank-clock, repeat=30
+crank-clock, repeat=1
 check-position, expected-position=4.0
 crank-clock
 stop, on-message=eos
