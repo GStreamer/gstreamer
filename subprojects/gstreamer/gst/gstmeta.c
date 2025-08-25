@@ -48,6 +48,7 @@
 
 #include "gstbuffer.h"
 #include "gstmeta.h"
+#include "gstmetafactory.h"
 #include "gstinfo.h"
 #include "gstutils.h"
 
@@ -871,9 +872,12 @@ gst_meta_deserialize (GstBuffer * buffer, const guint8 * data, gsize size,
 
   const GstMetaInfo *info = gst_meta_get_info (name);
   if (info == NULL) {
-    GST_CAT_WARNING (GST_CAT_META,
-        "%s does not correspond to a registered meta", name);
-    return NULL;
+    info = gst_meta_factory_load (name);
+    if (info == NULL) {
+      GST_CAT_WARNING (GST_CAT_META,
+          "%s does not correspond to a registered meta", name);
+      return NULL;
+    }
   }
 
   if (info->deserialize_func == NULL) {

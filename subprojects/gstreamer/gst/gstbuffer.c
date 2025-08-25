@@ -501,6 +501,8 @@ _priv_gst_buffer_initialize (void)
 {
   _gst_buffer_type = gst_buffer_get_type ();
 
+  gst_reference_timestamp_meta_get_info ();
+
 #ifdef NO_64BIT_ATOMIC_INT_FOR_PLATFORM
   GST_CAT_WARNING (GST_CAT_PERFORMANCE,
       "No 64-bit atomic int defined for this platform/toolchain!");

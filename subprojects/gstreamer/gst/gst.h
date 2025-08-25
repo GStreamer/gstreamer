@@ -59,6 +59,7 @@
 #include <gst/gstmessage.h>
 #include <gst/gstmemory.h>
 #include <gst/gstmeta.h>
+#include <gst/gstmetafactory.h>
 #include <gst/gstminiobject.h>
 #include <gst/gstobject.h>
 #include <gst/gststreamcollection.h>

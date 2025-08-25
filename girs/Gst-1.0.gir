@@ -22490,6 +22490,13 @@ character, a newline character will be added automatically.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="IS_META_FACTORY" c:identifier="GST_IS_META_FACTORY" introspectable="0">
+      <source-position filename="../subprojects/gstreamer/gst/gstmetafactory.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="IS_MINI_OBJECT_TYPE" c:identifier="GST_IS_MINI_OBJECT_TYPE" introspectable="0">
       <source-position filename="../subprojects/gstreamer/gst/gstminiobject.h"/>
       <parameters>
@@ -24613,6 +24620,13 @@ was created.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
       <parameters>
         <parameter name="meta">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="META_FACTORY" c:identifier="GST_META_FACTORY" introspectable="0">
+      <source-position filename="../subprojects/gstreamer/gst/gstmetafactory.h"/>
+      <parameters>
+        <parameter name="obj">
         </parameter>
       </parameters>
     </function-macro>
@@ -28930,6 +28944,60 @@ when a pooled buffer is returned.</doc>
         </parameter>
       </parameters>
     </callback>
+    <class name="MetaFactory" c:symbol-prefix="meta_factory" c:type="GstMetaFactory" version="1.28" parent="PluginFeature" glib:type-name="GstMetaFactory" glib:get-type="gst_meta_factory_get_type" glib:type-struct="MetaFactoryClass">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmetafactory.c">Register a #GstMetaInfo that can be automatically loaded the first time it is
+used.
+
+In general, applications and plugins don't need to use the factory
+beyond registering the meta in a plugin init function. Once that is
+done, the meta is stored in the registry, and ready as soon as the
+registry is loaded.
+
+## Registering a meta for dynamic loading
+
+|[&lt;!-- language="C" --&gt;
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  return gst_meta_factory_register (plugin, my_meta_get_info());
+}
+]|</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstmetafactory.h"/>
+      <function name="load" c:identifier="gst_meta_factory_load" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmetafactory.c">Loads a previously registered #GstMetaInfo from the registry.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmetafactory.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmetafactory.c">A #GstMetaInfo or NULL if not found</doc>
+          <type name="MetaInfo" c:type="const GstMetaInfo*"/>
+        </return-value>
+        <parameters>
+          <parameter name="factoryname" transfer-ownership="none">
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="register" c:identifier="gst_meta_factory_register" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmetafactory.c">Registers a new #GstMetaInfo in the registry</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmetafactory.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="plugin" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmetafactory.c">The #GstPlugin to register @meta_info for</doc>
+            <type name="Plugin" c:type="GstPlugin*"/>
+          </parameter>
+          <parameter name="meta_info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmetafactory.c">The #GstMetaInfo to register</doc>
+            <type name="MetaInfo" c:type="const GstMetaInfo*"/>
+          </parameter>
+        </parameters>
+      </function>
+    </class>
+    <record name="MetaFactoryClass" c:type="GstMetaFactoryClass" disguised="1" opaque="1" glib:is-gtype-struct-for="MetaFactory">
+      <source-position filename="../subprojects/gstreamer/gst/gstmetafactory.h"/>
+    </record>
     <bitfield name="MetaFlags" glib:type-name="GstMetaFlags" glib:get-type="gst_meta_flags_get_type" c:type="GstMetaFlags">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">Extra metadata flags.</doc>
       <member name="none" value="0" c:identifier="GST_META_FLAG_NONE" glib:nick="none" glib:name="GST_META_FLAG_NONE">

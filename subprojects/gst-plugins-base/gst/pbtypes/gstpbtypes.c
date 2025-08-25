@@ -24,6 +24,7 @@
 #endif
 
 #include <gst/video/video.h>
+#include <gst/audio/audio.h>
 #include "gstpbtypes.h"
 
 GST_DYNAMIC_TYPE_REGISTER_DEFINE (video_multiview_flagset,
@@ -32,7 +33,9 @@ GST_DYNAMIC_TYPE_REGISTER_DEFINE (video_multiview_flagset,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return GST_DYNAMIC_TYPE_REGISTER (video_multiview_flagset, plugin);
+  return GST_DYNAMIC_TYPE_REGISTER (video_multiview_flagset, plugin) &&
+      gst_meta_factory_register (plugin, gst_video_meta_get_info ()) &&
+      gst_meta_factory_register (plugin, gst_audio_meta_get_info ());
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
