@@ -183,12 +183,12 @@ from the parent buffer of this meta.</doc>
 is generally expected to be allocated on the stack.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance identifier</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance identifier</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
+identified by @id is stored</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_index_by_quark" c:identifier="gst_analytics_cls_mtd_get_index_by_quark" version="1.24">
@@ -292,12 +292,12 @@ infinite.</doc>
 is generally expected to be allocated on the stack.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance identifier</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance identifier</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
+identified by @id is stored</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_id" c:identifier="gst_analytics_mtd_get_id" version="1.24">
@@ -423,12 +423,12 @@ resources it was using.</doc>
 is generally expected to be allocated on the stack.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance identifier</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance identifier</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
+identified by @id is stored</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_confidence_lvl" c:identifier="gst_analytics_od_mtd_get_confidence_lvl" version="1.24">
@@ -814,6 +814,76 @@ must have a #GstVideoMeta attached</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="add_tensor_mtd" c:identifier="gst_analytics_relation_meta_add_tensor_mtd" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Add a new #GstAnalyticsTensorMtd holding a #GstTensor to @instance. The
+#GstTensor needs to be filled.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Added successfully</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Instance</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="num_dims" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">The number of dimensions in the tensor</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="tensor_mtd" direction="out" caller-allocates="1" transfer-ownership="none" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Handle update with newly added tensor mtd.
+ Add tensor mtd to @instance.</doc>
+            <type name="TensorMtd" c:type="GstAnalyticsTensorMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="add_tensor_mtd_simple" c:identifier="gst_analytics_relation_meta_add_tensor_mtd_simple" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Add a new #GstAnalyticsTensorMtd holding a #GstTensor to @instance.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Added successfully</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Instance</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">semantically identify the contents of the tensor</doc>
+            <type name="GLib.Quark" c:type="GQuark"/>
+          </parameter>
+          <parameter name="data_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">#GstTensorDataType of tensor data</doc>
+            <type name="TensorDataType" c:type="GstTensorDataType"/>
+          </parameter>
+          <parameter name="data" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">#GstBuffer holding tensor data</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+          <parameter name="dims_order" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Indicate tensor dimension indexing order</doc>
+            <type name="TensorDimOrder" c:type="GstTensorDimOrder"/>
+          </parameter>
+          <parameter name="num_dims" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">number of tensor dimensions</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="dims" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">size of tensor in each dimension.
+    A value of 0 means the dimension is dynamic.</doc>
+            <array length="4" zero-terminated="0" c:type="gsize*">
+              <type name="gsize" c:type="gsize"/>
+            </array>
+          </parameter>
+          <parameter name="tensor_mtd" direction="out" caller-allocates="1" transfer-ownership="none" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Handle update with newly added tensor mtd.
+ Add tensor mtd to @instance.</doc>
+            <type name="TensorMtd" c:type="GstAnalyticsTensorMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="add_tracking_mtd" c:identifier="gst_analytics_relation_meta_add_tracking_mtd" version="1.24">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
         <return-value transfer-ownership="none">
@@ -1067,6 +1137,30 @@ otherwise this method return FALSE and @rlt is invalid.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="get_tensor_mtd" c:identifier="gst_analytics_relation_meta_get_tensor_mtd" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Fill @rlt if a analytics-meta with id == @an_meta_id exist in @meta instance,
+otherwise this method return FALSE and @rlt is invalid.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">TRUE if successful.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Instance of #GstAnalyticsRelationMeta</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="an_meta_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Id of #GstAnalyticsTensorMtd instance to retrieve</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="rlt" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Will be filled with relatable
+   meta</doc>
+            <type name="TensorMtd" c:type="GstAnalyticsTensorMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="get_tracking_mtd" c:identifier="gst_analytics_relation_meta_get_tracking_mtd" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Fill @rlt if a analytics-meta with id == @an_meta_id exist in @meta instance,
 otherwise this method return FALSE and @rlt is invalid.</doc>
@@ -1299,12 +1393,12 @@ Ids must have been obtained a call to
  Since: 1.26</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance identifier</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance identifier</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
+identified by @id is stored</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_mask" c:identifier="gst_analytics_segmentation_mtd_get_mask" version="1.26">
@@ -1589,6 +1683,51 @@ Otherwise FALSE will be returned.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="set_simple" c:identifier="gst_tensor_set_simple" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Sets the content of a #GstTensor of @dims_order ROW_MAJOR or COLUMN_MAJOR and
+with an interleaved layout. The #GstTensor must have exactly num_dims.
+
+For example, a two-dimensional tensor with 32 rows and 4 columns, @dims would
+be the two element array `[32, 4]`.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">TRUE if it coudl be set correctly</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="tensor" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">a #GstTensor</doc>
+            <type name="Tensor" c:type="GstTensor*"/>
+          </instance-parameter>
+          <parameter name="id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">semantically identify the contents of the tensor</doc>
+            <type name="GLib.Quark" c:type="GQuark"/>
+          </parameter>
+          <parameter name="data_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">#GstTensorDataType of tensor data</doc>
+            <type name="TensorDataType" c:type="GstTensorDataType"/>
+          </parameter>
+          <parameter name="data" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">#GstBuffer holding tensor data</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+          <parameter name="dims_order" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Indicate tensor dimension indexing order</doc>
+            <type name="TensorDimOrder" c:type="GstTensorDimOrder"/>
+          </parameter>
+          <parameter name="num_dims" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">number of tensor dimensions</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="dims" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">size of tensor in each dimension.
+    A value of 0 means the dimension is dynamic.</doc>
+            <array length="4" zero-terminated="0" c:type="gsize*">
+              <type name="gsize" c:type="gsize"/>
+            </array>
+          </parameter>
+        </parameters>
+      </method>
       <function name="data_type_get_name" c:identifier="gst_tensor_data_type_get_name" version="1.28">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Get a string version of the data type</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
@@ -1835,16 +1974,62 @@ otherwise NULL</doc>
         </return-value>
       </function>
     </record>
+    <record name="TensorMtd" c:type="GstAnalyticsTensorMtd" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">This type of metadata holds a tensor. It can be used to store tensor as
+analytics-meta for their ability to relate to each others. For example
+in a multi-model analytics pipeline, we sometime have one model input match
+the output of the other model. In this context it can be useful to keep the
+ancestry relation between first tensor, output of first inference, and the
+second tensor, output from second inference. Another use-case for
+#GstAnalyticsTensorMtd is to transport tensors from inference element to a
+post-processing element using a computing graph framework, like ONNX.
+Essentially #GstAnalyticsTensorMtd is a GstBuffer encapsulated by a
+analytics-meta with additional parameters describing the tensor.
+
+Since 1.28</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h"/>
+      <field name="id" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance identifier</doc>
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="meta" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
+identified by @id is stored</doc>
+        <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+      </field>
+      <method name="get_tensor" c:identifier="gst_analytics_tensor_mtd_get_tensor" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Get tensor</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">a #GstTensor</doc>
+          <type name="Tensor" c:type="GstTensor*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Instance of #GstAnalyticsTensorMtd</doc>
+            <type name="TensorMtd" c:type="const GstAnalyticsTensorMtd*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <function name="get_mtd_type" c:identifier="gst_analytics_tensor_mtd_get_mtd_type" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Get an id that represent tensor metadata type</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Opaque id of the #GstAnalyticsMtd type</doc>
+          <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+        </return-value>
+      </function>
+    </record>
     <record name="TrackingMtd" c:type="GstAnalyticsTrackingMtd" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Store information on results of object tracking</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance identifier</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance identifier</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
+identified by @id is stored</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_info" c:identifier="gst_analytics_tracking_mtd_get_info" version="1.24">
@@ -2241,6 +2426,14 @@ metadata type.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.h"/>
       <return-value transfer-ownership="none">
         <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
+      </return-value>
+    </function>
+    <function name="tensor_mtd_get_mtd_type" c:identifier="gst_analytics_tensor_mtd_get_mtd_type" moved-to="TensorMtd.get_mtd_type" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Get an id that represent tensor metadata type</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Opaque id of the #GstAnalyticsMtd type</doc>
+        <type name="MtdType" c:type="GstAnalyticsMtdType"/>
       </return-value>
     </function>
     <function name="tracking_mtd_get_mtd_type" c:identifier="gst_analytics_tracking_mtd_get_mtd_type" moved-to="TrackingMtd.get_mtd_type" version="1.24">
