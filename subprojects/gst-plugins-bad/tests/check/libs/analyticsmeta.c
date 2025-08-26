@@ -1787,6 +1787,54 @@ GST_START_TEST (test_associate_segmentation_meta)
 
 GST_END_TEST;
 
+GST_START_TEST (test_add_tensor_mtd)
+{
+  /* Verify we can add a tensor to analytics-meta and retrieve it */
+  GstBuffer *vbuf, *tbuf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstTensor *tensor2;
+  GstTensor *tensor3;
+  GstAnalyticsTensorMtd tensor_mtd;
+  gboolean ret;
+  gsize dims[2] = { 2, 3 };
+
+  vbuf = gst_buffer_new ();
+
+  rmeta = gst_buffer_add_analytics_relation_meta (vbuf);
+  ret = gst_analytics_relation_meta_add_tensor_mtd (rmeta, 22, &tensor_mtd);
+  fail_unless (ret == TRUE);
+
+  tensor2 = gst_analytics_tensor_mtd_get_tensor (&tensor_mtd);
+  fail_unless (tensor2);
+
+  fail_unless_equals_int (tensor2->num_dims, 22);
+  fail_unless_equals_int (tensor2->id, 0);
+  fail_unless (tensor2->data == NULL);
+
+  tbuf = gst_buffer_new_allocate (NULL, sizeof (float) * dims[0] * dims[1],
+      NULL);
+
+  ret = gst_analytics_relation_meta_add_tensor_mtd_simple (rmeta,
+      g_quark_from_string ("test2"), GST_TENSOR_DATA_TYPE_FLOAT32,
+      tbuf, GST_TENSOR_DIM_ORDER_ROW_MAJOR, G_N_ELEMENTS (dims), dims,
+      &tensor_mtd);
+  fail_unless (ret == TRUE);
+
+  tensor3 = gst_analytics_tensor_mtd_get_tensor (&tensor_mtd);
+  fail_unless (tensor3);
+
+  fail_unless_equals_int (tensor3->num_dims, 2);
+  fail_unless_equals_int (tensor3->id, g_quark_from_string ("test2"));
+  fail_unless_equals_int (tensor3->dims_order, GST_TENSOR_DIM_ORDER_ROW_MAJOR);
+  fail_unless_equals_int (tensor3->dims[0], 2);
+  fail_unless_equals_int (tensor3->dims[1], 3);
+  fail_unless (tensor3->data == tbuf);
+
+  gst_buffer_unref (vbuf);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_iou_int)
 {
   gint bb1_x = 30, bb1_y = 30, bb1_w = 10, bb1_h = 10;
@@ -2072,6 +2120,7 @@ analyticmeta_suite (void)
   TCase *tc_chain_segmentation;
   TCase *tc_chain_util;
   TCase *tc_chain_tensors;
+  TCase *tc_chain_tensor_mtd;
 
   s = suite_create ("Analytic Meta Library");
 
@@ -2128,6 +2177,9 @@ analyticmeta_suite (void)
   suite_add_tcase (s, tc_chain_tensors);
   tcase_add_test (tc_chain_tensors, test_get_tensor);
 
+  tc_chain_tensor_mtd = tcase_create ("Tensor Mtd");
+  suite_add_tcase (s, tc_chain_tensor_mtd);
+  tcase_add_test (tc_chain_tensor_mtd, test_add_tensor_mtd);
   return s;
 }
 
