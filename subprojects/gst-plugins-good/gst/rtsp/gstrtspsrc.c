@@ -6028,7 +6028,9 @@ gst_rtspsrc_send_keep_alive (GstRTSPSrc * src)
   GST_DEBUG_OBJECT (src, "creating server keep-alive");
 
   /* find a method to use for keep-alive */
-  if (src->methods & GST_RTSP_GET_PARAMETER)
+  if (src->methods & GST_RTSP_SET_PARAMETER)
+    method = GST_RTSP_SET_PARAMETER;
+  else if (src->methods & GST_RTSP_GET_PARAMETER)
     method = GST_RTSP_GET_PARAMETER;
   else
     method = GST_RTSP_OPTIONS;
