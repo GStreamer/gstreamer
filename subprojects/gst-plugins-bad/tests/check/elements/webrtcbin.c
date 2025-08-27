@@ -5352,6 +5352,81 @@ GST_START_TEST (test_missing_mid_in_answer)
 GST_END_TEST;
 
 static void
+assert_promise_raises_invalid_state_error (GstPromise * p,
+    const gchar * expected_message)
+{
+  GstPromiseResult res;
+  const GstStructure *reply;
+  GError *error = NULL;
+
+  res = gst_promise_wait (p);
+  fail_unless (res == GST_PROMISE_RESULT_REPLIED);
+  reply = gst_promise_get_reply (p);
+  fail_unless (reply != NULL);
+  fail_unless (gst_structure_has_field_typed (reply, "error", G_TYPE_ERROR));
+  gst_structure_get (reply, "error", G_TYPE_ERROR, &error, NULL);
+  fail_unless (g_error_matches (error, GST_WEBRTC_ERROR,
+          GST_WEBRTC_ERROR_INVALID_STATE));
+  fail_unless_matches_string (error->message, expected_message);
+  g_clear_error (&error);
+  gst_promise_unref (p);
+}
+
+GST_START_TEST (test_using_webrtcbin_once_closed)
+{
+  GstElement *webrtcbin = gst_element_factory_make ("webrtcbin", NULL);
+  GstPromise *p;
+  GstPromiseResult res;
+  GstWebRTCDataChannel *channel;
+
+  /* Closing an already closed connection should fail. */
+  p = gst_promise_new ();
+  g_signal_emit_by_name (webrtcbin, "close", p);
+  assert_promise_raises_invalid_state_error (p, "Connection is already closed");
+
+  /* Create an offer, that shouldn't fail. */
+  p = gst_promise_new ();
+  g_signal_emit_by_name (webrtcbin, "create-offer", NULL, p);
+  res = gst_promise_wait (p);
+  fail_unless (res == GST_PROMISE_RESULT_REPLIED);
+  gst_promise_unref (p);
+
+  /* Close the connection shouldn't fail now. */
+  p = gst_promise_new ();
+  g_signal_emit_by_name (webrtcbin, "close", p);
+  res = gst_promise_wait (p);
+  fail_unless (res == GST_PROMISE_RESULT_REPLIED);
+  gst_promise_unref (p);
+
+  /* Creating an offer on a closed connection should fail. */
+  p = gst_promise_new ();
+  g_signal_emit_by_name (webrtcbin, "create-offer", NULL, p);
+  assert_promise_raises_invalid_state_error (p,
+      "Could not create offer. webrtcbin is closed");
+
+  /* Creating an answer on a closed connection should fail. */
+  p = gst_promise_new ();
+  g_signal_emit_by_name (webrtcbin, "create-answer", NULL, p);
+  assert_promise_raises_invalid_state_error (p,
+      "Could not create answer. webrtcbin is closed");
+
+  /* Creating a data-channel on a closed connection should fail. */
+  g_signal_emit_by_name (webrtcbin, "create-data-channel", "label", NULL,
+      &channel);
+  fail_unless (channel == NULL);
+
+  p = gst_promise_new ();
+  g_signal_emit_by_name (webrtcbin, "add-ice-candidate-full", 0,
+      "a=candidate:1 foo", p);
+  assert_promise_raises_invalid_state_error (p,
+      "Could not add ICE candidate. webrtcbin is closed");
+
+  gst_object_unref (webrtcbin);
+}
+
+GST_END_TEST;
+
+static void
 new_jitterbuffer_set_fast_start (GstElement * rtpbin,
     GstElement * rtpjitterbuffer, guint session_id, guint ssrc,
     gpointer user_data)
@@ -7088,6 +7163,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_invalid_bundle_in_pending_remote_description);
     tcase_add_test (tc, test_missing_mid_in_offer);
     tcase_add_test (tc, test_missing_mid_in_answer);
+    tcase_add_test (tc, test_using_webrtcbin_once_closed);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_create_two_channels);
