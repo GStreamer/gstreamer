@@ -199,7 +199,7 @@ push buffer  |---------------->| Process buffer of type B
     - sink pushes `RECONFIGURE` event upstream
     - src receives the `RECONFIGURE` event and marks renegotiation
     - On the next buffer push, the source renegotiates the caps and the
-    bufferpool. The sink will put the new new preferred format high in the list
+    bufferpool. The sink will put the new preferred format high in the list
     of caps it returns from its caps query.
 
 ##### `videotestsrc ! queue ! xvimagesink`
