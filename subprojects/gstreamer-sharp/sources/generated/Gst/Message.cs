@@ -151,6 +151,26 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_message_is_writable(IntPtr raw);
+
+		public new bool IsWritable {
+			get {
+				bool raw_ret = gst_message_is_writable(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_message_make_writable(IntPtr raw);
+
+		public Gst.Message MakeWritable() {
+			IntPtr raw_ret = gst_message_make_writable(Handle);
+			Gst.Message ret = raw_ret == IntPtr.Zero ? null : (Gst.Message) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Message), true);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_message_parse_async_done(IntPtr raw, out ulong running_time);
 
 		public ulong ParseAsyncDone() {

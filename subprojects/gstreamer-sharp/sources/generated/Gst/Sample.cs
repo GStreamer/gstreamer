@@ -104,6 +104,26 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_sample_is_writable(IntPtr raw);
+
+		public new bool IsWritable {
+			get {
+				bool raw_ret = gst_sample_is_writable(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_sample_make_writable(IntPtr raw);
+
+		public Gst.Sample MakeWritable() {
+			IntPtr raw_ret = gst_sample_make_writable(Handle);
+			Gst.Sample ret = raw_ret == IntPtr.Zero ? null : (Gst.Sample) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Sample), true);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_sample_set_info(IntPtr raw, IntPtr info);
 
 		public bool SetInfo(Gst.Structure info) {

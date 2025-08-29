@@ -104,6 +104,34 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_context_is_writable(IntPtr raw);
+
+		public bool IsWritable {
+			get {
+				IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+				System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+				bool raw_ret = gst_context_is_writable(this_as_native);
+				bool ret = raw_ret;
+				ReadNative (this_as_native, ref this);
+				System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_context_make_writable(IntPtr raw);
+
+		public Gst.Context MakeWritable() {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr raw_ret = gst_context_make_writable(this_as_native);
+			Gst.Context ret = Gst.Context.New (raw_ret);
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_context_ref(IntPtr raw);
 
 		public Gst.Context Ref() {

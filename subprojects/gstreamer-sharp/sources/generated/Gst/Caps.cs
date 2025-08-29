@@ -267,6 +267,26 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_caps_is_writable(IntPtr raw);
+
+		public new bool IsWritable {
+			get {
+				bool raw_ret = gst_caps_is_writable(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_caps_make_writable(IntPtr raw);
+
+		public Gst.Caps MakeWritable() {
+			IntPtr raw_ret = gst_caps_make_writable(Handle);
+			Gst.Caps ret = raw_ret == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Caps), true);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_caps_map_in_place(IntPtr raw, GstSharp.CapsMapFuncNative func, IntPtr user_data);
 
 		public bool MapInPlace(Gst.CapsMapFunc func) {

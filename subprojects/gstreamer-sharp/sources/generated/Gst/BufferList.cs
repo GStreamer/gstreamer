@@ -77,11 +77,31 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_buffer_list_is_writable(IntPtr raw);
+
+		public bool IsWritable {
+			get {
+				bool raw_ret = gst_buffer_list_is_writable(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_buffer_list_length(IntPtr raw);
 
 		public uint Length() {
 			uint raw_ret = gst_buffer_list_length(Handle);
 			uint ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_buffer_list_make_writable(IntPtr raw);
+
+		public Gst.BufferList MakeWritable() {
+			IntPtr raw_ret = gst_buffer_list_make_writable(Handle);
+			Gst.BufferList ret = raw_ret == IntPtr.Zero ? null : (Gst.BufferList) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.BufferList), true);
 			return ret;
 		}
 

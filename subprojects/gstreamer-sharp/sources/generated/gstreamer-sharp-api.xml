@@ -6988,8 +6988,18 @@
           </parameter>
         </parameters>
       </method>
+      <method name="IsWritable" cname="gst_buffer_list_is_writable">
+        <return-type type="gboolean" />
+        <parameters />
+      </method>
       <method name="Length" cname="gst_buffer_list_length">
         <return-type type="guint" />
+        <parameters />
+      </method>
+      <method name="MakeWritable" cname="gst_buffer_list_make_writable">
+        <return-type type="GstBufferList*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
         <parameters />
       </method>
       <method name="Remove" cname="gst_buffer_list_remove">
@@ -7253,6 +7263,16 @@
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
+      </method>
+      <method name="IsWritable" cname="gst_caps_is_writable">
+        <return-type type="gboolean" />
+        <parameters />
+      </method>
+      <method name="MakeWritable" cname="gst_caps_make_writable">
+        <return-type type="GstCaps*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters />
       </method>
       <method name="MapInPlace" cname="gst_caps_map_in_place" version="1.6">
         <return-type type="gboolean" />
@@ -7587,6 +7607,16 @@
       </method>
       <method name="IsPersistent" cname="gst_context_is_persistent" version="1.2">
         <return-type type="gboolean" />
+        <parameters />
+      </method>
+      <method name="IsWritable" cname="gst_context_is_writable">
+        <return-type type="gboolean" />
+        <parameters />
+      </method>
+      <method name="MakeWritable" cname="gst_context_make_writable">
+        <return-type type="GstContext*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
         <parameters />
       </method>
       <method name="Ref" cname="gst_context_ref" version="1.2">
@@ -8040,6 +8070,16 @@
         <parameters>
           <parameter name="name" type="guint32" />
         </parameters>
+      </method>
+      <method name="IsWritable" cname="gst_event_is_writable">
+        <return-type type="gboolean" />
+        <parameters />
+      </method>
+      <method name="MakeWritable" cname="gst_event_make_writable">
+        <return-type type="GstEvent*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters />
       </method>
       <method name="ParseBufferSize" cname="gst_event_parse_buffer_size">
         <return-type type="void" />
@@ -8552,6 +8592,10 @@
           <parameter name="mem_type" type="const-gchar*" />
         </parameters>
       </method>
+      <method name="IsWritable" cname="gst_memory_is_writable">
+        <return-type type="gboolean" />
+        <parameters />
+      </method>
       <method name="MakeMapped" cname="gst_memory_make_mapped">
         <return-type type="GstMemory*" owned="true">
           <warning>missing glib:type-name</warning>
@@ -8562,6 +8606,12 @@
           </parameter>
           <parameter name="flags" type="GstMapFlags" />
         </parameters>
+      </method>
+      <method name="MakeWritable" cname="gst_memory_make_writable">
+        <return-type type="GstMemory*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters />
       </method>
       <method name="Map" cname="gst_memory_map">
         <return-type type="gboolean" />
@@ -8983,6 +9033,16 @@
         <parameters>
           <parameter name="name" type="const-gchar*" />
         </parameters>
+      </method>
+      <method name="IsWritable" cname="gst_message_is_writable">
+        <return-type type="gboolean" />
+        <parameters />
+      </method>
+      <method name="MakeWritable" cname="gst_message_make_writable">
+        <return-type type="GstMessage*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters />
       </method>
       <method name="ParseAsyncDone" cname="gst_message_parse_async_done">
         <return-type type="void" />
@@ -10100,6 +10160,16 @@
           <parameter name="flags" type="GstSchedulingFlags" />
         </parameters>
       </method>
+      <method name="IsWritable" cname="gst_query_is_writable">
+        <return-type type="gboolean" />
+        <parameters />
+      </method>
+      <method name="MakeWritable" cname="gst_query_make_writable">
+        <return-type type="GstQuery*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters />
+      </method>
       <method name="ParseAcceptCaps" cname="gst_query_parse_accept_caps">
         <return-type type="void" />
         <parameters>
@@ -10588,6 +10658,16 @@
       </method>
       <method name="GetSegment" cname="gst_sample_get_segment">
         <return-type type="GstSegment*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters />
+      </method>
+      <method name="IsWritable" cname="gst_sample_is_writable" version="1.16">
+        <return-type type="gboolean" />
+        <parameters />
+      </method>
+      <method name="MakeWritable" cname="gst_sample_make_writable" version="1.16">
+        <return-type type="GstSample*" owned="true">
           <warning>missing glib:type-name</warning>
         </return-type>
         <parameters />
@@ -11264,6 +11344,10 @@
           </parameter>
         </parameters>
       </method>
+      <method name="IsWritable" cname="gst_structure_is_writable" version="1.28">
+        <return-type type="gboolean" />
+        <parameters />
+      </method>
       <method name="MapInPlace" cname="gst_structure_map_in_place" deprecated="true" deprecated-version="1.26">
         <return-type type="gboolean" />
         <parameters>
@@ -11674,6 +11758,16 @@
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
+      </method>
+      <method name="IsWritable" cname="gst_tag_list_is_writable">
+        <return-type type="gboolean" />
+        <parameters />
+      </method>
+      <method name="MakeWritable" cname="gst_tag_list_make_writable">
+        <return-type type="GstTagList*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters />
       </method>
       <method name="Merge" cname="gst_tag_list_merge">
         <return-type type="GstTagList*" owned="true">

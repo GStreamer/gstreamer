@@ -157,6 +157,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_memory_is_writable(IntPtr raw);
+
+		public new bool IsWritable {
+			get {
+				bool raw_ret = gst_memory_is_writable(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_memory_make_mapped(IntPtr raw, IntPtr info, int flags);
 
 		public Gst.Memory MakeMapped(out Gst.MapInfo info, Gst.MapFlags flags) {
@@ -165,6 +176,15 @@ namespace Gst {
 			Gst.Memory ret = raw_ret == IntPtr.Zero ? null : (Gst.Memory) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Memory), true);
 			info = Gst.MapInfo.New (native_info);
 			Marshal.FreeHGlobal (native_info);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_memory_make_writable(IntPtr raw);
+
+		public Gst.Memory MakeWritable() {
+			IntPtr raw_ret = gst_memory_make_writable(Handle);
+			Gst.Memory ret = raw_ret == IntPtr.Zero ? null : (Gst.Memory) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Memory), true);
 			return ret;
 		}
 

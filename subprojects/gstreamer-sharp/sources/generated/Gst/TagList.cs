@@ -397,6 +397,26 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_tag_list_is_writable(IntPtr raw);
+
+		public new bool IsWritable {
+			get {
+				bool raw_ret = gst_tag_list_is_writable(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_tag_list_make_writable(IntPtr raw);
+
+		public Gst.TagList MakeWritable() {
+			IntPtr raw_ret = gst_tag_list_make_writable(Handle);
+			Gst.TagList ret = raw_ret == IntPtr.Zero ? null : (Gst.TagList) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.TagList), true);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_tag_list_merge(IntPtr raw, IntPtr list2, int mode);
 
 		public Gst.TagList Merge(Gst.TagList list2, Gst.TagMergeMode mode) {

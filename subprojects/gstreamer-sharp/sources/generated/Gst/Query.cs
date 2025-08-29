@@ -182,6 +182,26 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_query_is_writable(IntPtr raw);
+
+		public new bool IsWritable {
+			get {
+				bool raw_ret = gst_query_is_writable(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_query_make_writable(IntPtr raw);
+
+		public Gst.Query MakeWritable() {
+			IntPtr raw_ret = gst_query_make_writable(Handle);
+			Gst.Query ret = raw_ret == IntPtr.Zero ? null : (Gst.Query) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Query), true);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_accept_caps(IntPtr raw, out IntPtr caps);
 
 		public Gst.Caps ParseAcceptCaps() {

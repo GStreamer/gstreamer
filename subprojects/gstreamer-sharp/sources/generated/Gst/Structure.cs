@@ -618,6 +618,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_structure_is_writable(IntPtr raw);
+
+		public bool IsWritable {
+			get {
+				bool raw_ret = gst_structure_is_writable(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_map_in_place(IntPtr raw, GstSharp.StructureMapFuncNative func, IntPtr user_data);
 
 		[Obsolete]
