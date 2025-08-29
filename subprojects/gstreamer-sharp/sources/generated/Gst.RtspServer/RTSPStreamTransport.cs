@@ -29,6 +29,22 @@ namespace Gst.RtspServer {
 			Marshal.FreeHGlobal (native_tr);
 		}
 
+		[DllImport("gstrtspserver-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_rtsp_stream_transport_set_timed_out(IntPtr raw, bool timedout);
+
+		[GLib.Property ("timed-out")]
+		public bool TimedOut {
+			get {
+				GLib.Value val = GetProperty ("timed-out");
+				bool ret = (bool) val;
+				val.Dispose ();
+				return ret;
+			}
+			set  {
+				gst_rtsp_stream_transport_set_timed_out(Handle, value);
+			}
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -249,15 +265,6 @@ namespace Gst.RtspServer {
 					notify = GLib.DestroyHelper.NotifyHandler;
 				}
 				gst_rtsp_stream_transport_set_message_sent_full(Handle, value_wrapper.NativeDelegate, user_data, notify);
-			}
-		}
-
-		[DllImport("gstrtspserver-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_rtsp_stream_transport_set_timed_out(IntPtr raw, bool timedout);
-
-		public bool TimedOut { 
-			set {
-				gst_rtsp_stream_transport_set_timed_out(Handle, value);
 			}
 		}
 

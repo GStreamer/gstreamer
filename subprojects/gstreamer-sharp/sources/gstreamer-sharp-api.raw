@@ -38732,6 +38732,7 @@
           </parameter>
         </parameters>
       </method>
+      <property name="TimedOut" cname="timed-out" type="gboolean" readable="true" writeable="false" construct="false" construct-only="false" version="1.28"/>
       <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject*"/>
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GstRTSPStreamTransportPrivate*">
         <warning>missing glib:type-name</warning>
