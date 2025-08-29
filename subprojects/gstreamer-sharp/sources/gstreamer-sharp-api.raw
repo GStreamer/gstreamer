@@ -14205,8 +14205,8 @@
       <constant value="-1" ctype="gint" gtype="gint" name="VALUE_LESS_THAN"/>
       <constant value="2" ctype="gint" gtype="gint" name="VALUE_UNORDERED"/>
       <constant value="1" ctype="gint" gtype="gint" name="VERSION_MAJOR"/>
-      <constant value="90" ctype="gint" gtype="gint" name="VERSION_MICRO"/>
-      <constant value="25" ctype="gint" gtype="gint" name="VERSION_MINOR"/>
+      <constant value="1" ctype="gint" gtype="gint" name="VERSION_MICRO"/>
+      <constant value="27" ctype="gint" gtype="gint" name="VERSION_MINOR"/>
       <constant value="1" ctype="gint" gtype="gint" name="VERSION_NANO"/>
     </object>
   </namespace>
@@ -23265,8 +23265,8 @@
       <constant value="online-service" ctype="gchar*" gtype="gchar*" name="ENCODING_CATEGORY_ONLINE_SERVICE"/>
       <constant value="storage-editing" ctype="gchar*" gtype="gchar*" name="ENCODING_CATEGORY_STORAGE_EDITING"/>
       <constant value="1" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MAJOR"/>
-      <constant value="90" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MICRO"/>
-      <constant value="25" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MINOR"/>
+      <constant value="1" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MICRO"/>
+      <constant value="27" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MINOR"/>
       <constant value="1" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_NANO"/>
     </object>
   </namespace>
