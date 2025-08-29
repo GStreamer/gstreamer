@@ -14296,6 +14296,12 @@
         <return-type type="gboolean"/>
         <parameters/>
       </method>
+      <method name="PullObject" cname="gst_app_sink_pull_object" version="1.20">
+        <return-type type="GstMiniObject*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
       <method name="PullPreroll" cname="gst_app_sink_pull_preroll">
         <return-type type="GstSample*" owned="true">
           <warning>missing glib:type-name</warning>
@@ -14362,6 +14368,14 @@
         <return-type type="void"/>
         <parameters>
           <parameter name="wait" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="TryPullObject" cname="gst_app_sink_try_pull_object" version="1.20">
+        <return-type type="GstMiniObject*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="timeout" type="guint64"/>
         </parameters>
       </method>
       <method name="TryPullPreroll" cname="gst_app_sink_try_pull_preroll" version="1.10">

@@ -935,6 +935,15 @@ namespace Gst.App {
 		}
 
 		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_app_sink_pull_object(IntPtr raw);
+
+		public Gst.MiniObject PullObject() {
+			IntPtr raw_ret = gst_app_sink_pull_object(Handle);
+			Gst.MiniObject ret = raw_ret == IntPtr.Zero ? null : (Gst.MiniObject) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.MiniObject), true);
+			return ret;
+		}
+
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_app_sink_pull_preroll(IntPtr raw);
 
 		public Gst.Sample PullPreroll() {
@@ -949,6 +958,15 @@ namespace Gst.App {
 		public Gst.Sample PullSample() {
 			IntPtr raw_ret = gst_app_sink_pull_sample(Handle);
 			Gst.Sample ret = raw_ret == IntPtr.Zero ? null : (Gst.Sample) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Sample), true);
+			return ret;
+		}
+
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_app_sink_try_pull_object(IntPtr raw, ulong timeout);
+
+		public Gst.MiniObject TryPullObject(ulong timeout) {
+			IntPtr raw_ret = gst_app_sink_try_pull_object(Handle, timeout);
+			Gst.MiniObject ret = raw_ret == IntPtr.Zero ? null : (Gst.MiniObject) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.MiniObject), true);
 			return ret;
 		}
 
