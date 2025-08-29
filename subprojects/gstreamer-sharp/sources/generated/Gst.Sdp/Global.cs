@@ -40,6 +40,18 @@ namespace Gst.Sdp {
 		}
 
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_sdp_media_add_media_from_structure(IntPtr structure, IntPtr media);
+
+		public static Gst.Sdp.SDPResult SdpMediaAddMediaFromStructure(Gst.Structure structure, out Gst.Sdp.SDPMedia media) {
+			IntPtr native_media = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Sdp.SDPMedia)));
+			int raw_ret = gst_sdp_media_add_media_from_structure(structure == null ? IntPtr.Zero : structure.Handle, native_media);
+			Gst.Sdp.SDPResult ret = (Gst.Sdp.SDPResult) raw_ret;
+			media = Gst.Sdp.SDPMedia.New (native_media);
+			Marshal.FreeHGlobal (native_media);
+			return ret;
+		}
+
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_sdp_media_init(IntPtr media);
 
 		public static Gst.Sdp.SDPResult SdpMediaInit(out Gst.Sdp.SDPMedia media) {

@@ -28032,6 +28032,17 @@
         <return-type type="GstSDPResult"/>
         <parameters/>
       </method>
+      <method name="AddMediaFromStructure" cname="gst_sdp_media_add_media_from_structure" shared="true" version="1.28">
+        <return-type type="GstSDPResult"/>
+        <parameters>
+          <parameter name="structure" type="GstStructure*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="media" type="GstSDPMedia*" pass_as="out">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
       <method name="Init" cname="gst_sdp_media_init" shared="true">
         <return-type type="GstSDPResult"/>
         <parameters>
@@ -28602,6 +28613,17 @@
         <parameters>
           <parameter name="uri" type="const-gchar*"/>
           <parameter name="base64" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="SdpMediaAddMediaFromStructure" cname="gst_sdp_media_add_media_from_structure" shared="true" version="1.28">
+        <return-type type="GstSDPResult"/>
+        <parameters>
+          <parameter name="structure" type="GstStructure*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="media" type="GstSDPMedia*" pass_as="out">
+            <warning>missing glib:type-name</warning>
+          </parameter>
         </parameters>
       </method>
       <method name="SdpMediaInit" cname="gst_sdp_media_init" shared="true">
