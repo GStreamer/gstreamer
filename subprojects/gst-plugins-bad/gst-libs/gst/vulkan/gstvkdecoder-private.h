@@ -35,7 +35,7 @@ GST_VULKAN_API
 GType gst_vulkan_decoder_get_type       (void);
 
 enum {
-  GST_VULKAN_DECODER_FEATURES_VIDEO_MAINTEINANCE2 = 1 << 0,
+  GST_VULKAN_DECODER_FEATURE_INLINE_PARAMS = 1 << 0,
 };
 
 typedef struct _GstVulkanDecoder GstVulkanDecoder;

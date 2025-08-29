@@ -1003,7 +1003,7 @@ gst_vulkan_decoder_update_video_session_parameters (GstVulkanDecoder * self,
 
   /* if inline session parameters are enabled, there's no need to update session
    * parameters. This function is no-op */
-  if ((self->features & GST_VULKAN_DECODER_FEATURES_VIDEO_MAINTEINANCE2) != 0)
+  if ((self->features & GST_VULKAN_DECODER_FEATURE_INLINE_PARAMS) != 0)
     return TRUE;
 
   handle =
@@ -1397,8 +1397,8 @@ gst_vulkan_decoder_new_from_queue (GstVulkanQueue * queue, guint codec)
 
   /* physical device features getters aren't exported. This is a bitwise proxy
    * for elements */
-  decoder->features =
-      gst_vulkan_physical_device_has_feature_video_maintenance2 (device);
+  if (gst_vulkan_physical_device_has_feature_video_maintenance2 (device))
+    decoder->features |= GST_VULKAN_DECODER_FEATURE_INLINE_PARAMS;
 
   return decoder;
 }

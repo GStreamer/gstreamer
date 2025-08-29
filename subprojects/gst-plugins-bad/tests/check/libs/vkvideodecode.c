@@ -434,7 +434,7 @@ GST_START_TEST (test_h264_decoder)
     };
     /* *INDENT-ON* */
 
-    if ((dec->features & GST_VULKAN_DECODER_FEATURES_VIDEO_MAINTEINANCE2) != 0) {
+    if ((dec->features & GST_VULKAN_DECODER_FEATURE_INLINE_PARAMS) != 0) {
       vk_pic.pNext = &inline_params;
     }
 
@@ -612,7 +612,7 @@ GST_START_TEST (test_h265_decoder)
     };
     /* *INDENT-ON* */
 
-    if ((dec->features & GST_VULKAN_DECODER_FEATURES_VIDEO_MAINTEINANCE2) != 0) {
+    if ((dec->features & GST_VULKAN_DECODER_FEATURE_INLINE_PARAMS) != 0) {
       vk_pic.pNext = &inline_params;
     }
 
