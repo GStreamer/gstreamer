@@ -125,6 +125,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_meta_api_type_tags_contain_only(IntPtr api, IntPtr valid_tags);
+
+		public static bool ApiTypeTagsContainOnly(GLib.GType api, string[] valid_tags) {
+			IntPtr native_valid_tags = GLib.Marshaller.StringArrayToStrvPtr(valid_tags, true);
+			bool raw_ret = gst_meta_api_type_tags_contain_only(api.Val, native_valid_tags);
+			bool ret = raw_ret;
+			GLib.Marshaller.StrFreeV (native_valid_tags);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_meta_deserialize(IntPtr buffer, byte data, UIntPtr size, out uint consumed);
 
 		public static Gst.Meta Deserialize(Gst.Buffer buffer, byte data, ulong size, out uint consumed) {

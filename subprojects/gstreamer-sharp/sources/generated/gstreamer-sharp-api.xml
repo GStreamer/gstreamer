@@ -9560,6 +9560,13 @@
           <parameter scope="forever" name="aggregator" type="GstAllocationMetaParamsAggregator" />
         </parameters>
       </method>
+      <method name="ApiTypeTagsContainOnly" cname="gst_meta_api_type_tags_contain_only" shared="true" version="1.28">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter name="api" type="GType" />
+          <parameter name="valid_tags" type="const gchar**" array="true" null_term_array="true" element_type="gchar*" />
+        </parameters>
+      </method>
       <method name="Deserialize" cname="gst_meta_deserialize" shared="true" version="1.24">
         <return-type type="GstMeta*">
           <warning>missing glib:type-name</warning>
@@ -10637,6 +10644,9 @@
       </field>
       <field cname="timestamp" access="public" writeable="true" readable="true" is_callback="false" name="Timestamp" type="guint64" />
       <field cname="duration" access="public" writeable="true" readable="true" is_callback="false" name="Duration" type="guint64" />
+      <field cname="info" access="public" writeable="true" readable="true" is_callback="false" name="Info" type="GstStructure*">
+        <warning>missing glib:type-name</warning>
+      </field>
       <method name="GetInfo" cname="gst_reference_timestamp_meta_get_info" shared="true" version="1.14">
         <return-type type="GstMetaInfo*">
           <warning>missing glib:type-name</warning>
@@ -11082,6 +11092,15 @@
         <parameters>
           <parameter name="fieldname" type="const-gchar*" />
           <parameter name="value" type="gboolean*" owned="true" pass_as="out" />
+        </parameters>
+      </method>
+      <method name="GetCaps" cname="gst_structure_get_caps" version="1.28">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter name="fieldname" type="const-gchar*" />
+          <parameter name="caps" type="GstCaps**" owned="true" pass_as="out">
+            <warning>missing glib:type-name</warning>
+          </parameter>
         </parameters>
       </method>
       <method name="GetClockTime" cname="gst_structure_get_clock_time">
@@ -12619,6 +12638,13 @@
         <parameters>
           <parameter name="api" type="GType" />
           <parameter scope="forever" name="aggregator" type="GstAllocationMetaParamsAggregator" />
+        </parameters>
+      </method>
+      <method name="MetaApiTypeTagsContainOnly" cname="gst_meta_api_type_tags_contain_only" shared="true" version="1.28">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter name="api" type="GType" />
+          <parameter name="valid_tags" type="const gchar**" array="true" null_term_array="true" element_type="gchar*" />
         </parameters>
       </method>
       <method name="MetaDeserialize" cname="gst_meta_deserialize" shared="true" version="1.24">
