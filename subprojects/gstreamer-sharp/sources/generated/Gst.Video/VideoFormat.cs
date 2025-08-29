@@ -149,6 +149,9 @@ namespace Gst.Video {
 		Y416Le = 136,
 		Y416Be = 137,
 		Gray10Le16 = 138,
+		Nv1610le40 = 139,
+		Bgr10x2Le = 140,
+		Rgb10x2Le = 141,
 	}
 
 	internal class VideoFormatGType {
