@@ -14559,12 +14559,28 @@
         </return-type>
         <parameters />
       </method>
-      <method name="GetDrop" cname="gst_app_sink_get_drop">
+      <method name="GetCurrentLevelBuffers" cname="gst_app_sink_get_current_level_buffers" version="1.28">
+        <return-type type="guint64" />
+        <parameters />
+      </method>
+      <method name="GetCurrentLevelBytes" cname="gst_app_sink_get_current_level_bytes" version="1.28">
+        <return-type type="guint64" />
+        <parameters />
+      </method>
+      <method name="GetCurrentLevelTime" cname="gst_app_sink_get_current_level_time" version="1.28">
+        <return-type type="guint64" />
+        <parameters />
+      </method>
+      <method name="GetDrop" cname="gst_app_sink_get_drop" deprecated="true" deprecated-version="1.28">
         <return-type type="gboolean" />
         <parameters />
       </method>
       <method name="GetEmitSignals" cname="gst_app_sink_get_emit_signals">
         <return-type type="gboolean" />
+        <parameters />
+      </method>
+      <method name="GetLeakyType" cname="gst_app_sink_get_leaky_type" version="1.28">
+        <return-type type="GstAppLeakyType" />
         <parameters />
       </method>
       <method name="GetMaxBuffers" cname="gst_app_sink_get_max_buffers">
@@ -14613,7 +14629,7 @@
           </parameter>
         </parameters>
       </method>
-      <method name="SetDrop" cname="gst_app_sink_set_drop">
+      <method name="SetDrop" cname="gst_app_sink_set_drop" deprecated="true" deprecated-version="1.28">
         <return-type type="void" />
         <parameters>
           <parameter name="drop" type="gboolean" />
@@ -14623,6 +14639,12 @@
         <return-type type="void" />
         <parameters>
           <parameter name="emit" type="gboolean" />
+        </parameters>
+      </method>
+      <method name="SetLeakyType" cname="gst_app_sink_set_leaky_type" version="1.28">
+        <return-type type="void" />
+        <parameters>
+          <parameter name="leaky" type="GstAppLeakyType" />
         </parameters>
       </method>
       <method name="SetMaxBuffers" cname="gst_app_sink_set_max_buffers">
@@ -14667,12 +14689,20 @@
       </method>
       <property name="BufferList" cname="buffer-list" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" />
       <property name="Caps" cname="caps" type="GstCaps*" readable="true" writeable="true" construct="false" construct-only="false" />
-      <property name="Drop" cname="drop" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" />
+      <property name="CurrentLevelBuffers" cname="current-level-buffers" type="guint64" readable="true" writeable="false" construct="false" construct-only="false" version="1.28" />
+      <property name="CurrentLevelBytes" cname="current-level-bytes" type="guint64" readable="true" writeable="false" construct="false" construct-only="false" version="1.28" />
+      <property name="CurrentLevelTime" cname="current-level-time" type="guint64" readable="true" writeable="false" construct="false" construct-only="false" version="1.28" />
+      <property name="Drop" cname="drop" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" deprecated="true" deprecated-version="1.28" />
+      <property name="Dropped" cname="dropped" type="guint64" readable="true" writeable="false" construct="false" construct-only="false" version="1.28" />
       <property name="EmitSignals" cname="emit-signals" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" />
       <property name="EosProp&#xA;						" cname="eos" type="gboolean" readable="true" writeable="false" construct="false" construct-only="false" />
+      <property name="In" cname="in" type="guint64" readable="true" writeable="false" construct="false" construct-only="false" version="1.28" />
+      <property name="LeakyType" cname="leaky-type" type="GstAppLeakyType" readable="true" writeable="true" construct="false" construct-only="false" version="1.28" />
       <property name="MaxBuffers" cname="max-buffers" type="guint" readable="true" writeable="true" construct="false" construct-only="false" />
       <property name="MaxBytes" cname="max-bytes" type="guint64" readable="true" writeable="true" construct="false" construct-only="false" version="1.24" />
       <property name="MaxTime" cname="max-time" type="guint64" readable="true" writeable="true" construct="false" construct-only="false" version="1.24" />
+      <property name="Out" cname="out" type="guint64" readable="true" writeable="false" construct="false" construct-only="false" version="1.28" />
+      <property name="Silent" cname="silent" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" version="1.28" />
       <property name="WaitOnEos" cname="wait-on-eos" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" version="1.8" />
       <field cname="basesink" access="public" writeable="false" readable="true" is_callback="false" name="Basesink" type="GstBaseSink*" />
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GstAppSinkPrivate*">
@@ -14918,10 +14948,12 @@
       <property name="CurrentLevelBuffers" cname="current-level-buffers" type="guint64" readable="true" writeable="false" construct="false" construct-only="false" version="1.20" />
       <property name="CurrentLevelBytes" cname="current-level-bytes" type="guint64" readable="true" writeable="false" construct="false" construct-only="false" version="1.2" />
       <property name="CurrentLevelTime" cname="current-level-time" type="guint64" readable="true" writeable="false" construct="false" construct-only="false" version="1.20" />
+      <property name="Dropped" cname="dropped" type="guint64" readable="true" writeable="false" construct="false" construct-only="false" version="1.28" />
       <property name="Duration" cname="duration" type="guint64" readable="true" writeable="true" construct="false" construct-only="false" version="1.10" />
       <property name="EmitSignals" cname="emit-signals" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" />
       <property name="Format" cname="format" type="GstFormat" readable="true" writeable="true" construct="false" construct-only="false" />
       <property name="HandleSegmentChange" cname="handle-segment-change" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" version="1.18" />
+      <property name="In" cname="in" type="guint64" readable="true" writeable="false" construct="false" construct-only="false" version="1.28" />
       <property name="IsLive" cname="is-live" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" />
       <property name="LeakyType" cname="leaky-type" type="GstAppLeakyType" readable="true" writeable="true" construct="false" construct-only="false" version="1.20" />
       <property name="MaxBuffers" cname="max-buffers" type="guint64" readable="true" writeable="true" construct="false" construct-only="false" version="1.20" />
@@ -14930,6 +14962,8 @@
       <property name="MaxTime" cname="max-time" type="guint64" readable="true" writeable="true" construct="false" construct-only="false" version="1.20" />
       <property name="MinLatency" cname="min-latency" type="gint64" readable="true" writeable="true" construct="false" construct-only="false" />
       <property name="MinPercent" cname="min-percent" type="guint" readable="true" writeable="true" construct="false" construct-only="false" />
+      <property name="Out" cname="out" type="guint64" readable="true" writeable="false" construct="false" construct-only="false" version="1.28" />
+      <property name="Silent" cname="silent" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" version="1.28" />
       <property name="Size" cname="size" type="gint64" readable="true" writeable="true" construct="false" construct-only="false" />
       <property name="StreamType" cname="stream-type" type="GstAppStreamType" readable="true" writeable="true" construct="false" construct-only="false" />
       <field cname="basesrc" access="public" writeable="false" readable="true" is_callback="false" name="Basesrc" type="GstBaseSrc*" />

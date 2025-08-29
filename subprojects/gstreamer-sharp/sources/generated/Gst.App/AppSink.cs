@@ -52,11 +52,48 @@ namespace Gst.App {
 		}
 
 		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ulong gst_app_sink_get_current_level_buffers(IntPtr raw);
+
+		[GLib.Property ("current-level-buffers")]
+		public ulong CurrentLevelBuffers {
+			get  {
+				ulong raw_ret = gst_app_sink_get_current_level_buffers(Handle);
+				ulong ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ulong gst_app_sink_get_current_level_bytes(IntPtr raw);
+
+		[GLib.Property ("current-level-bytes")]
+		public ulong CurrentLevelBytes {
+			get  {
+				ulong raw_ret = gst_app_sink_get_current_level_bytes(Handle);
+				ulong ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ulong gst_app_sink_get_current_level_time(IntPtr raw);
+
+		[GLib.Property ("current-level-time")]
+		public ulong CurrentLevelTime {
+			get  {
+				ulong raw_ret = gst_app_sink_get_current_level_time(Handle);
+				ulong ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_app_sink_get_drop(IntPtr raw);
 
 		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_app_sink_set_drop(IntPtr raw, bool drop);
 
+		[Obsolete]
 		[GLib.Property ("drop")]
 		public bool Drop {
 			get  {
@@ -66,6 +103,16 @@ namespace Gst.App {
 			}
 			set  {
 				gst_app_sink_set_drop(Handle, value);
+			}
+		}
+
+		[GLib.Property ("dropped")]
+		public ulong Dropped {
+			get {
+				GLib.Value val = GetProperty ("dropped");
+				ulong ret = (ulong) val;
+				val.Dispose ();
+				return ret;
 			}
 		}
 
@@ -95,6 +142,34 @@ namespace Gst.App {
 				bool ret = (bool) val;
 				val.Dispose ();
 				return ret;
+			}
+		}
+
+		[GLib.Property ("in")]
+		public ulong In {
+			get {
+				GLib.Value val = GetProperty ("in");
+				ulong ret = (ulong) val;
+				val.Dispose ();
+				return ret;
+			}
+		}
+
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_app_sink_get_leaky_type(IntPtr raw);
+
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_app_sink_set_leaky_type(IntPtr raw, int leaky);
+
+		[GLib.Property ("leaky-type")]
+		public Gst.App.AppLeakyType LeakyType {
+			get  {
+				int raw_ret = gst_app_sink_get_leaky_type(Handle);
+				Gst.App.AppLeakyType ret = (Gst.App.AppLeakyType) raw_ret;
+				return ret;
+			}
+			set  {
+				gst_app_sink_set_leaky_type(Handle, (int) value);
 			}
 		}
 
@@ -149,6 +224,31 @@ namespace Gst.App {
 			}
 			set  {
 				gst_app_sink_set_max_time(Handle, value);
+			}
+		}
+
+		[GLib.Property ("out")]
+		public ulong Out {
+			get {
+				GLib.Value val = GetProperty ("out");
+				ulong ret = (ulong) val;
+				val.Dispose ();
+				return ret;
+			}
+		}
+
+		[GLib.Property ("silent")]
+		public bool Silent {
+			get {
+				GLib.Value val = GetProperty ("silent");
+				bool ret = (bool) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("silent", val);
+				val.Dispose ();
 			}
 		}
 
