@@ -13,6 +13,7 @@ namespace Gst.Base {
 		Zero = 0,
 		First = 1,
 		Set = 2,
+		Now = 3,
 	}
 
 	internal class AggregatorStartTimeSelectionGType {

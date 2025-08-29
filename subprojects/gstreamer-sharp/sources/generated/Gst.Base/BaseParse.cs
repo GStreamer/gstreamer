@@ -18,6 +18,21 @@ namespace Gst.Base {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
+		[GLib.Property ("disable-clip")]
+		public bool DisableClip {
+			get {
+				GLib.Value val = GetProperty ("disable-clip");
+				bool ret = (bool) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("disable-clip", val);
+				val.Dispose ();
+			}
+		}
+
 		[GLib.Property ("disable-passthrough")]
 		public bool DisablePassthrough {
 			get {

@@ -18,6 +18,36 @@ namespace Gst.Base {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
+		[GLib.Property ("current-level-buffers")]
+		public ulong CurrentLevelBuffers {
+			get {
+				GLib.Value val = GetProperty ("current-level-buffers");
+				ulong ret = (ulong) val;
+				val.Dispose ();
+				return ret;
+			}
+		}
+
+		[GLib.Property ("current-level-bytes")]
+		public ulong CurrentLevelBytes {
+			get {
+				GLib.Value val = GetProperty ("current-level-bytes");
+				ulong ret = (ulong) val;
+				val.Dispose ();
+				return ret;
+			}
+		}
+
+		[GLib.Property ("current-level-time")]
+		public ulong CurrentLevelTime {
+			get {
+				GLib.Value val = GetProperty ("current-level-time");
+				ulong ret = (ulong) val;
+				val.Dispose ();
+				return ret;
+			}
+		}
+
 		[GLib.Property ("emit-signals")]
 		public bool EmitSignals {
 			get {

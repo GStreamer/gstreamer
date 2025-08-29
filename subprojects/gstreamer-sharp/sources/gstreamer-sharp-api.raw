@@ -17810,6 +17810,7 @@
       <member cname="GST_AGGREGATOR_START_TIME_SELECTION_ZERO" name="Zero" value="0"/>
       <member cname="GST_AGGREGATOR_START_TIME_SELECTION_FIRST" name="First" value="1"/>
       <member cname="GST_AGGREGATOR_START_TIME_SELECTION_SET" name="Set" value="2"/>
+      <member cname="GST_AGGREGATOR_START_TIME_SELECTION_NOW" name="Now" value="3"/>
     </enum>
     <enum name="BaseParseFrameFlags" cname="GstBaseParseFrameFlags" type="flags">
       <member cname="GST_BASE_PARSE_FRAME_FLAG_NONE" name="None" value="0"/>
@@ -18552,6 +18553,9 @@
         </return-type>
         <parameters/>
       </method>
+      <property name="CurrentLevelBuffers" cname="current-level-buffers" type="guint64" readable="true" writeable="false" construct="false" construct-only="false" version="1.28"/>
+      <property name="CurrentLevelBytes" cname="current-level-bytes" type="guint64" readable="true" writeable="false" construct="false" construct-only="false" version="1.28"/>
+      <property name="CurrentLevelTime" cname="current-level-time" type="guint64" readable="true" writeable="false" construct="false" construct-only="false" version="1.28"/>
       <property name="EmitSignals" cname="emit-signals" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" version="1.16"/>
       <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstPad*"/>
       <field cname="segment" access="public" writeable="false" readable="true" is_callback="false" name="Segment" type="GstSegment">
@@ -18804,6 +18808,7 @@
           <parameter name="offset" type="gsize"/>
         </parameters>
       </method>
+      <property name="DisableClip" cname="disable-clip" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" version="1.28"/>
       <property name="DisablePassthrough" cname="disable-passthrough" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
       <field cname="element" access="public" writeable="false" readable="true" is_callback="false" name="Element" type="GstElement*"/>
       <field cname="sinkpad" access="public" writeable="false" readable="true" is_callback="false" name="Sinkpad" type="GstPad*"/>
