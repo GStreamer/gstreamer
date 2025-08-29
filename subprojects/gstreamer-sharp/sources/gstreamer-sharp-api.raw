@@ -34826,6 +34826,11 @@
       <member cname="GST_WEBRTC_BUNDLE_POLICY_MAX_COMPAT" name="MaxCompat" value="2"/>
       <member cname="GST_WEBRTC_BUNDLE_POLICY_MAX_BUNDLE" name="MaxBundle" value="3"/>
     </enum>
+    <enum name="WebRTCDTLSRole" cname="GstWebRTCDTLSRole" type="enum" gtype="gst_webrtc_dtls_role_get_type" version="1.28">
+      <member cname="GST_WEBRTC_DTLS_ROLE_CLIENT" name="Client" value="0"/>
+      <member cname="GST_WEBRTC_DTLS_ROLE_SERVER" name="Server" value="1"/>
+      <member cname="GST_WEBRTC_DTLS_ROLE_UNKNOWN" name="Unknown" value="2"/>
+    </enum>
     <enum name="WebRTCDTLSSetup" cname="GstWebRTCDTLSSetup" type="enum" gtype="gst_webrtc_dtls_setup_get_type">
       <member cname="GST_WEBRTC_DTLS_SETUP_NONE" name="None" value="0"/>
       <member cname="GST_WEBRTC_DTLS_SETUP_ACTPASS" name="Actpass" value="1"/>
@@ -34883,6 +34888,12 @@
     <enum name="WebRTCICERole" cname="GstWebRTCICERole" type="enum" gtype="gst_webrtc_ice_role_get_type">
       <member cname="GST_WEBRTC_ICE_ROLE_CONTROLLED" name="Controlled" value="0"/>
       <member cname="GST_WEBRTC_ICE_ROLE_CONTROLLING" name="Controlling" value="1"/>
+    </enum>
+    <enum name="WebRTCICETcpCandidateType" cname="GstWebRTCICETcpCandidateType" type="enum" gtype="gst_webrtc_ice_tcp_candidate_type_get_type" version="1.28">
+      <member cname="GST_WEBRTC_ICE_TCP_CANDIDATE_TYPE_ACTIVE" name="Active" value="0"/>
+      <member cname="GST_WEBRTC_ICE_TCP_CANDIDATE_TYPE_PASSIVE" name="Passive" value="1"/>
+      <member cname="GST_WEBRTC_ICE_TCP_CANDIDATE_TYPE_SO" name="So" value="2"/>
+      <member cname="GST_WEBRTC_ICE_TCP_CANDIDATE_TYPE_NONE" name="None" value="3"/>
     </enum>
     <enum name="WebRTCICETransportPolicy" cname="GstWebRTCICETransportPolicy" type="enum" gtype="gst_webrtc_ice_transport_policy_get_type" version="1.16">
       <member cname="GST_WEBRTC_ICE_TRANSPORT_POLICY_ALL" name="All" value="0"/>
@@ -34980,7 +34991,7 @@
         <return-type type="void"/>
         <parameters/>
       </method>
-      <method name="SendData" cname="gst_webrtc_data_channel_send_data">
+      <method name="SendData" cname="gst_webrtc_data_channel_send_data" deprecated="true" deprecated-version="1.22">
         <return-type type="void"/>
         <parameters>
           <parameter allow-none="1" name="data" type="GBytes*">
@@ -34997,7 +35008,7 @@
           <parameter name="error" type="GError**"/>
         </parameters>
       </method>
-      <method name="SendString" cname="gst_webrtc_data_channel_send_string">
+      <method name="SendString" cname="gst_webrtc_data_channel_send_string" deprecated="true" deprecated-version="1.22">
         <return-type type="void"/>
         <parameters>
           <parameter allow-none="1" name="str" type="const-gchar*"/>
@@ -35060,7 +35071,7 @@
         <return-type type="void"/>
         <parameters/>
       </signal>
-      <signal name="SendDataEvent" cname="send-data" when="last">
+      <signal name="SendDataEvent" cname="send-data" when="last" deprecated="true" deprecated-version="1.22">
         <return-type type="void"/>
         <parameters>
           <parameter allow-none="1" name="data" type="GBytes*">
@@ -35069,7 +35080,7 @@
         </parameters>
         <warning>Signal renamed because of existing method with same name</warning>
       </signal>
-      <signal name="SendStringEvent" cname="send-string" when="last">
+      <signal name="SendStringEvent" cname="send-string" when="last" deprecated="true" deprecated-version="1.22">
         <return-type type="void"/>
         <parameters>
           <parameter allow-none="1" name="data" type="const-gchar*"/>
@@ -35552,7 +35563,16 @@
       <field cname="relay_proto" access="public" writeable="true" readable="true" is_callback="false" name="RelayProto" type="gchar*"/>
       <field cname="prio" access="public" writeable="true" readable="true" is_callback="false" name="Prio" type="guint"/>
       <field cname="url" access="public" writeable="true" readable="true" is_callback="false" name="Url" type="gchar*"/>
-      <field cname="_gst_reserved" access="public" writeable="true" readable="true" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="20" element_type="gpointer"/>
+      <union name="ABI" cname="ABI">
+        <struct name="abi" cname="abi" opaque="false" hidden="false">
+          <field cname="foundation" access="public" writeable="true" readable="true" is_callback="false" name="Foundation" type="gchar*"/>
+          <field cname="related_address" access="public" writeable="true" readable="true" is_callback="false" name="RelatedAddress" type="gchar*"/>
+          <field cname="related_port" access="public" writeable="true" readable="true" is_callback="false" name="RelatedPort" type="guint"/>
+          <field cname="username_fragment" access="public" writeable="true" readable="true" is_callback="false" name="UsernameFragment" type="gchar*"/>
+          <field cname="tcp_type" access="public" writeable="true" readable="true" is_callback="false" name="TcpType" type="GstWebRTCICETcpCandidateType"/>
+        </struct>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="20" element_type="gpointer"/>
+      </union>
       <method name="Copy" cname="gst_webrtc_ice_candidate_stats_copy" version="1.22">
         <return-type type="GstWebRTCICECandidateStats*" owned="true">
           <warning>missing glib:type-name</warning>

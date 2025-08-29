@@ -651,6 +651,7 @@ namespace Gst.WebRTC {
 		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_webrtc_data_channel_send_data(IntPtr raw, IntPtr data);
 
+		[Obsolete]
 		public void SendData(GLib.Bytes data) {
 			gst_webrtc_data_channel_send_data(Handle, data == null ? IntPtr.Zero : data.Handle);
 		}
@@ -677,6 +678,7 @@ namespace Gst.WebRTC {
 		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_webrtc_data_channel_send_string(IntPtr raw, IntPtr str);
 
+		[Obsolete]
 		public void SendString(string str) {
 			IntPtr native_str = GLib.Marshaller.StringToPtrGStrdup (str);
 			gst_webrtc_data_channel_send_string(Handle, native_str);

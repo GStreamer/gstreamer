@@ -20,8 +20,6 @@ namespace Gst.WebRTC {
 		public string RelayProto;
 		public uint Prio;
 		public string Url;
-		[MarshalAs (UnmanagedType.ByValArray, SizeConst=20)]
-		public IntPtr[] _gstGstReserved;
 
 		public static Gst.WebRTC.WebRTCICECandidateStats Zero = new Gst.WebRTC.WebRTCICECandidateStats ();
 
