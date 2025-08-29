@@ -505,6 +505,18 @@
       <member cname="GST_LOCK_FLAG_EXCLUSIVE" name="Exclusive" value="4"/>
       <member cname="GST_LOCK_FLAG_LAST" name="Last" value="256"/>
     </enum>
+    <enum name="LogContextFlags" cname="GstLogContextFlags" type="flags" gtype="gst_log_context_flags_get_type" version="1.28">
+      <member cname="GST_LOG_CONTEXT_FLAG_NONE" name="None" value="0"/>
+      <member cname="GST_LOG_CONTEXT_FLAG_THROTTLE" name="Throttle" value="1"/>
+    </enum>
+    <enum name="LogContextHashFlags" cname="GstLogContextHashFlags" type="flags" gtype="gst_log_context_hash_flags_get_type" version="1.28">
+      <member cname="GST_LOG_CONTEXT_DEFAULT" name="Default" value="0"/>
+      <member cname="GST_LOG_CONTEXT_IGNORE_OBJECT" name="IgnoreObject" value="1"/>
+      <member cname="GST_LOG_CONTEXT_IGNORE_FORMAT" name="IgnoreFormat" value="2"/>
+      <member cname="GST_LOG_CONTEXT_IGNORE_FILE" name="IgnoreFile" value="4"/>
+      <member cname="GST_LOG_CONTEXT_USE_LINE_NUMBER" name="UseLineNumber" value="8"/>
+      <member cname="GST_LOG_CONTEXT_USE_STRING_ARGS" name="UseStringArgs" value="16"/>
+    </enum>
     <enum name="MapFlags" cname="GstMapFlags" type="flags" gtype="gst_map_flags_get_type">
       <member cname="GST_MAP_READ" name="Read" value="1"/>
       <member cname="GST_MAP_WRITE" name="Write" value="2"/>
@@ -8525,6 +8537,17 @@
         <parameters/>
       </method>
     </boxed>
+    <struct name="LogContext" cname="GstLogContext" opaque="true" hidden="false" version="1.28">
+      <method name="Free" cname="gst_log_context_free" version="1.28">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="Reset" cname="gst_log_context_reset" version="1.28">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+    </struct>
+    <struct name="LogContextBuilder" cname="GstLogContextBuilder" opaque="true" hidden="false" version="1.28"/>
     <struct name="MapInfo" cname="GstMapInfo" opaque="false" hidden="false">
       <field cname="memory" access="public" writeable="true" readable="true" is_callback="false" name="Memory" type="GstMemory*">
         <warning>missing glib:type-name</warning>
@@ -12583,6 +12606,20 @@
           <parameter name="message_string" type="const-gchar*"/>
         </parameters>
       </method>
+      <method name="DebugLogIdLiteralWithContext" cname="gst_debug_log_id_literal_with_context" shared="true" version="1.28">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="ctx" type="GstLogContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="level" type="GstDebugLevel"/>
+          <parameter name="file" type="const-gchar*"/>
+          <parameter name="function" type="const-gchar*"/>
+          <parameter name="line" type="gint"/>
+          <parameter allow-none="1" name="id" type="const-gchar*"/>
+          <parameter name="message" type="const-gchar*"/>
+        </parameters>
+      </method>
       <method name="DebugLogLiteral" cname="gst_debug_log_literal" shared="true" version="1.20">
         <return-type type="void"/>
         <parameters>
@@ -12595,6 +12632,20 @@
           <parameter name="line" type="gint"/>
           <parameter allow-none="1" name="_object" type="GObject*"/>
           <parameter name="message_string" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="DebugLogLiteralWithContext" cname="gst_debug_log_literal_with_context" shared="true" version="1.28">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="ctx" type="GstLogContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="level" type="GstDebugLevel"/>
+          <parameter name="file" type="const-gchar*"/>
+          <parameter name="function" type="const-gchar*"/>
+          <parameter name="line" type="gint"/>
+          <parameter allow-none="1" name="_object" type="GObject*"/>
+          <parameter name="message" type="const-gchar*"/>
         </parameters>
       </method>
       <method name="DebugPrintObject" cname="gst_debug_print_object" shared="true" version="1.26">
