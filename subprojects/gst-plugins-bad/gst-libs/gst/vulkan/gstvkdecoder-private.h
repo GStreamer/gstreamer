@@ -108,7 +108,7 @@ struct _GstVulkanDecoder
   gboolean dedicated_dpb;
   gboolean layered_dpb;
 
-  guint32 features;
+
 
   /*< private >*/
   gpointer _reserved        [GST_PADDING];
@@ -204,5 +204,8 @@ gboolean                gst_vulkan_decoder_append_slice         (GstVulkanDecode
 
 GST_VULKAN_API
 gboolean               gst_vulkan_decoder_wait                  (GstVulkanDecoder * self);
+
+GST_VULKAN_API
+gboolean               gst_vulkan_decoder_has_feature           (GstVulkanDecoder * self, guint32 feature);
 
 G_END_DECLS

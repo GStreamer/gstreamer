@@ -1633,7 +1633,8 @@ gst_vulkan_h265_decoder_end_picture (GstH265Decoder * decoder,
   pic->vk_h265pic.pSliceSegmentOffsets =
       (const guint32 *) pic->base.slice_offs->data;
 
-  if ((self->decoder->features & GST_VULKAN_DECODER_FEATURE_INLINE_PARAMS) != 0)
+  if (gst_vulkan_decoder_has_feature (self->decoder,
+          GST_VULKAN_DECODER_FEATURE_INLINE_PARAMS))
     vk_link_struct (&pic->base.decode_info, &inline_params);
 
   GST_LOG_OBJECT (self, "Decoding frame, %d bytes %d slices",

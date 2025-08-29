@@ -59,6 +59,8 @@ struct _GstVulkanDecoderPrivate
   GstVulkanVideoFunctions vk;
 
   gboolean started;
+
+  guint32 features;
 };
 
 #define GST_CAT_DEFAULT gst_vulkan_decoder_debug
@@ -418,13 +420,20 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
   };
   /* *INDENT-ON* */
 
+  if (gst_vulkan_physical_device_has_feature_video_maintenance2 (self->
+          queue->device->physical_device)) {
+    priv->features |= GST_VULKAN_DECODER_FEATURE_INLINE_PARAMS;
+    session_create.flags |=
+        VK_VIDEO_SESSION_CREATE_INLINE_SESSION_PARAMETERS_BIT_KHR;
+  }
+
   /* create video session */
   if (!gst_vulkan_video_session_create (&priv->session, self->queue->device,
           &priv->vk, &session_create, error))
     goto failed;
 
-  if ((session_create.flags &
-          VK_VIDEO_SESSION_CREATE_INLINE_SESSION_PARAMETERS_BIT_KHR) == 0) {
+  if (!gst_vulkan_decoder_has_feature (self,
+          GST_VULKAN_DECODER_FEATURE_INLINE_PARAMS)) {
     if (!_create_empty_params (self, error))
       goto failed;
   }
@@ -496,6 +505,8 @@ gst_vulkan_decoder_stop (GstVulkanDecoder * self)
   gst_clear_object (&priv->dpb_pool);
 
   gst_vulkan_video_session_destroy (&priv->session);
+
+  priv->features = 0;
 
   gst_clear_caps (&priv->profile_caps);
 
@@ -1003,7 +1014,8 @@ gst_vulkan_decoder_update_video_session_parameters (GstVulkanDecoder * self,
 
   /* if inline session parameters are enabled, there's no need to update session
    * parameters. This function is no-op */
-  if ((self->features & GST_VULKAN_DECODER_FEATURE_INLINE_PARAMS) != 0)
+  if (gst_vulkan_decoder_has_feature (self,
+          GST_VULKAN_DECODER_FEATURE_INLINE_PARAMS))
     return TRUE;
 
   handle =
@@ -1395,10 +1407,26 @@ gst_vulkan_decoder_new_from_queue (GstVulkanQueue * queue, guint codec)
   decoder->queue = gst_object_ref (queue);
   decoder->codec = codec;
 
-  /* physical device features getters aren't exported. This is a bitwise proxy
-   * for elements */
-  if (gst_vulkan_physical_device_has_feature_video_maintenance2 (device))
-    decoder->features |= GST_VULKAN_DECODER_FEATURE_INLINE_PARAMS;
-
   return decoder;
+}
+
+/**
+ * gst_vulkan_decoder_has_feature:
+ * @self: a #GstVulkanDecoder
+ * @features: (type guint32): the features to support
+ *
+ * Check if the #GstVulkanDecoder supports the given features
+ *
+ * Returns: whether the features are supported
+  */
+gboolean
+gst_vulkan_decoder_has_feature (GstVulkanDecoder * self, guint32 features)
+{
+  GstVulkanDecoderPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_VULKAN_DECODER (self), FALSE);
+
+  priv = gst_vulkan_decoder_get_instance_private (self);
+
+  return ((priv->features & features) != 0);
 }
