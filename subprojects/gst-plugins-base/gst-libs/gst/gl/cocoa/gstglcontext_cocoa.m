@@ -270,7 +270,7 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
     /* core profile is only available in >= 10.7 */
     if (kCGLNoError == CGLDescribePixelFormat (fmt, 0, kCGLPFAOpenGLProfile,
           &profile)) {
-      if (profile == kCGLOGLPVersion_3_2_Core) {
+      if (profile >= kCGLOGLPVersion_3_2_Core) {
         context_api = GST_GL_API_OPENGL3;
       } else {
         context_api =GST_GL_API_OPENGL;
