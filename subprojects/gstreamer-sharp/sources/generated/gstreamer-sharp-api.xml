@@ -21558,6 +21558,9 @@
           <parameter name="base_time" type="guint64" />
         </parameters>
       </constructor>
+      <method name="Deinit" cname="gst_net_client_clock_deinit" shared="true" version="1.28">
+        <return-type type="void" />
+      </method>
       <property name="Address" cname="address" type="gchar*" readable="true" writeable="true" construct="true" construct-only="false" />
       <property name="BaseTime" cname="base-time" type="guint64" readable="true" writeable="true" construct="false" construct-only="true" />
       <property name="Bus" cname="bus" type="GstBus*" readable="true" writeable="true" construct="false" construct-only="false" />

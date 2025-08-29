@@ -180,6 +180,13 @@ namespace Gst.Net {
 			}
 		}
 
+		[DllImport("gstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_net_client_clock_deinit();
+
+		public static void Deinit() {
+			gst_net_client_clock_deinit();
+		}
+
 
 		static NetClientClock ()
 		{
