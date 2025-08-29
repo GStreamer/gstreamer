@@ -1474,6 +1474,15 @@
         <parameter name="pspec" type="GParamSpec*" />
       </parameters>
     </callback>
+    <callback name="ValueHashFunc" cname="GstValueHashFunc" version="1.28">
+      <return-type type="gboolean" />
+      <parameters>
+        <parameter name="value" type="GValue*">
+          <warning>missing glib:type-name</warning>
+        </parameter>
+        <parameter name="res" type="guint*" owned="true" pass_as="out" />
+      </parameters>
+    </callback>
     <callback name="ValueSerializeFunc" cname="GstValueSerializeFunc">
       <return-type type="gchar*" owned="true" />
       <parameters>
@@ -12396,7 +12405,8 @@
       <field cname="serialize" access="public" writeable="true" readable="true" is_callback="false" name="Serialize" type="GstValueSerializeFunc" />
       <field cname="deserialize" access="public" writeable="true" readable="true" is_callback="false" name="Deserialize" type="GstValueDeserializeFunc" />
       <field cname="deserialize_with_pspec" access="public" writeable="true" readable="true" is_callback="false" name="DeserializeWithPspec" type="GstValueDeserializeWithPSpecFunc" />
-      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="3" element_type="gpointer" padding="true" />
+      <field cname="hash" access="public" writeable="true" readable="true" is_callback="false" name="Hash" type="GstValueHashFunc" />
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="2" element_type="gpointer" padding="true" />
     </struct>
     <struct name="VecDeque" cname="GstVecDeque" opaque="true" hidden="false" version="1.26" />
     <object name="Global" cname="GstGlobal" opaque="true">
@@ -13624,6 +13634,15 @@
           <parameter name="value" type="GValue*">
             <warning>missing glib:type-name</warning>
           </parameter>
+        </parameters>
+      </method>
+      <method name="ValueHash" cname="gst_value_hash" shared="true" version="1.28">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter name="value" type="GValue*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="res" type="guint*" owned="true" pass_as="out" />
         </parameters>
       </method>
       <method name="ValueInitAndCopy" cname="gst_value_init_and_copy" shared="true">

@@ -348,6 +348,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_value_hash(IntPtr value, out uint res);
+
+		public static bool Hash(GLib.Value value, out uint res) {
+			IntPtr native_value = GLib.Marshaller.StructureToPtrAlloc (value);
+			bool raw_ret = gst_value_hash(native_value, out res);
+			bool ret = raw_ret;
+			Marshal.FreeHGlobal (native_value);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_value_init_and_copy(IntPtr dest, IntPtr src);
 
 		public static GLib.Value InitAndCopy(GLib.Value src) {
