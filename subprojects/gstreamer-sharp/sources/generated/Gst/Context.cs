@@ -106,7 +106,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_context_is_writable(IntPtr raw);
 
-		public bool IsWritable {
+		public bool IsWritable { 
 			get {
 				IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 				System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);

@@ -79,7 +79,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_list_is_writable(IntPtr raw);
 
-		public bool IsWritable {
+		public bool IsWritable { 
 			get {
 				bool raw_ret = gst_buffer_list_is_writable(Handle);
 				bool ret = raw_ret;
