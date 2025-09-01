@@ -2442,18 +2442,27 @@ gst_wasapi2_rbuf_process_acquire (GstWasapi2Rbuf * self,
       gst_wasapi2_free_wfx (matching);
 
       if (!ret) {
-        GST_ERROR_OBJECT (self, "Couldn't initialize ctx");
-        return FALSE;
+        GST_WARNING_OBJECT (self, "Couldn't initialize ctx");
+        gst_wasapi2_rbuf_post_open_error (self, priv->device_id.c_str ());
+
+        if (!priv->configured_allow_dummy)
+          return FALSE;
+
+        priv->ctx = nullptr;
+      } else {
+        client_buf_size = priv->ctx->client_buf_size;
+        period_frames = priv->ctx->period;
       }
+    } else {
+      client_buf_size = priv->ctx->client_buf_size;
+      period_frames = priv->ctx->period;
     }
-
-    client_buf_size = priv->ctx->client_buf_size;
-    period_frames = priv->ctx->period;
-
-    priv->mix_format = gst_wasapi2_copy_wfx (priv->ctx->mix_format);
-  } else {
-    priv->mix_format = gst_wasapi2_audio_info_to_wfx (&spec->info);
   }
+
+  if (priv->ctx)
+    priv->mix_format = gst_wasapi2_copy_wfx (priv->ctx->mix_format);
+  else
+    priv->mix_format = gst_wasapi2_audio_info_to_wfx (&spec->info);
 
   gst_clear_caps (&rbuf_caps);
 
