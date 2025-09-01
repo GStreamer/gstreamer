@@ -484,8 +484,7 @@ have_orcc = false
 orcc_args = []
 orc_targets = []
 # Used by various libraries/elements that use Orc code
-orc_dep = dependency('orc-0.4', version : orc_req, required : get_option('orc'),
-    fallback : ['orc', 'orc_dep'])
+orc_dep = dependency('orc-0.4', version : orc_req, required : get_option('orc'), allow_fallback: true)
 orcc = find_program('orcc', required : get_option('orc'))
 if orc_dep.found() and orcc.found()
   have_orcc = true

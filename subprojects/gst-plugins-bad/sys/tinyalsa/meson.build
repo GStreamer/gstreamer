@@ -22,8 +22,7 @@ if get_option('tinyalsa').disabled()
 endif
 
 tinyalsa_dep = dependency('tinyalsa', required: get_option('tinyalsa'),
-                          version: '>= 1.1.0',
-                          fallback: ['tinyalsa', 'tinyalsa_dep'])
+                          version: '>= 1.1.0')
 have_tinyalsa = tinyalsa_dep.found()
 
 if have_tinyalsa

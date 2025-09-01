@@ -24,8 +24,7 @@ if get_option('soundtouch').disabled()
   subdir_done()
 endif
 
-soundtouch_dep = dependency('soundtouch', required : false,
-                                          fallback : ['soundtouch', 'soundtouch_dep'])
+soundtouch_dep = dependency('soundtouch', required : false)
 if soundtouch_dep.found()
   soundtouch_cargs += ['-DHAVE_SOUNDTOUCH_1_4']
 else

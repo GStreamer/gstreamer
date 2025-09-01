@@ -22,7 +22,6 @@ plugin_sources += {
 openjpeg_cargs = []
 
 openjpeg_dep = dependency('libopenjp2', version : '>=2.2',
-                          fallback : ['libopenjp2', 'libopenjp2_dep'],
                           required : get_option('openjpeg'),
                           default_options: ['build_codec_apps=false'])
 

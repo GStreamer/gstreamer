@@ -3,8 +3,7 @@ iqa_opt = get_option('iqa').require(gpl_allowed, error_message: '''
   Pass option -Dgpl=enabled to Meson to allow (A)GPL-licensed plugins to be built.
   ''')
 
-dssim_dep = dependency('dssim', required: iqa_opt,
-    fallback: ['dssim', 'dssim_dep'])
+dssim_dep = dependency('dssim', required: iqa_opt)
 
 iqa_sources = [
   'iqa.c',

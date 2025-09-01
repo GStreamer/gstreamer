@@ -22,8 +22,7 @@ plugin_sources += {
   'dv': pathsep.join(doc_sources)
 }
 
-dv_dep = dependency('libdv', version : '>= 0.100', required : get_option('dv'),
-  fallback: ['dv', 'dv_dep'])
+dv_dep = dependency('libdv', version : '>= 0.100', required : get_option('dv'))
 
 if dv_dep.found()
   gstdv = library('gstdv',

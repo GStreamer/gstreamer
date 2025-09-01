@@ -18,16 +18,12 @@ gst_version_is_stable = gst_version_minor.is_even()
 gst_version_is_dev = gst_version_minor.is_odd() and gst_version_micro < 90
 
 api_version = '1.0'
-libavfilter_dep = dependency('libavfilter', version: '>= 7.16.100',
-  fallback: ['FFmpeg', 'libavfilter_dep'])
-libavformat_dep = dependency('libavformat', version: '>= 58.12.100',
-  fallback: ['FFmpeg', 'libavformat_dep'])
-libavcodec_dep = dependency('libavcodec', version: '>= 58.18.100',
-  fallback: ['FFmpeg', 'libavcodec_dep'])
-libavutil_dep = dependency('libavutil', version: '>= 56.14.100',
-  fallback: ['FFmpeg', 'libavutil_dep'])
+libavcodec_dep = dependency('libavcodec', version: '>= 58.18.100', allow_fallback: true)
+libavfilter_dep = dependency('libavfilter', version: '>= 7.16.100')
+libavformat_dep = dependency('libavformat', version: '>= 58.12.100')
+libavutil_dep = dependency('libavutil', version: '>= 56.14.100')
 
-libav_deps = [libavfilter_dep, libavformat_dep, libavcodec_dep, libavutil_dep]
+libav_deps = [libavcodec_dep, libavfilter_dep, libavformat_dep, libavutil_dep]
 
 cc = meson.get_compiler('c')
 static_build = get_option('default_library') == 'static'

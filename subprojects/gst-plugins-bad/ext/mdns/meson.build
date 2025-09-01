@@ -1,5 +1,4 @@
-microdns_dep = dependency('microdns', required: get_option('microdns'),
-  fallback: ['libmicrodns', 'mdns_dep'])
+microdns_dep = dependency('microdns', required: get_option('microdns'))
 
 microdns_sources = [
   'gstmicrodns.c',

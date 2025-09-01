@@ -110,7 +110,6 @@ endif
 graphene_dep = dependency('graphene-gobject-1.0',
   version : '>=1.4.0',
   required : get_option('gl-graphene'),
-  fallback: ['graphene', 'graphene_gobject_dep'],
   default_options: ['introspection=disabled', 'installed_tests=false', 'tests=false'])
 
 if graphene_dep.found()

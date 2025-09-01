@@ -25,7 +25,7 @@ plugin_sources += {
 }
 
 if qrencode_dep.found()
-  json_dep = dependency('json-glib-1.0', fallback : ['json-glib', 'json_glib_dep'], required: get_option('qroverlay'))
+  json_dep = dependency('json-glib-1.0', required: get_option('qroverlay'))
   if json_dep.found()
     gstqroverlay = library('gstqroverlay',
       qroverlay_sources,

@@ -1,7 +1,8 @@
 [wrap-git]
-directory=dv
-url=https://gitlab.freedesktop.org/gstreamer/meson-ports/libdv.git
-revision=meson
+directory = dv
+url = https://gitlab.freedesktop.org/gstreamer/meson-ports/libdv.git
+revision = meson
+depth = 1
 
 [provide]
 libdv=dv_dep
