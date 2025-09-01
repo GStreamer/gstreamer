@@ -1871,7 +1871,9 @@ gst_wasapi2_rbuf_process_read (GstWasapi2Rbuf * self)
 
       priv->expected_position = position + to_read_frames;
     }
-  } else if (priv->mute) {
+  }
+
+  if (priv->mute) {
     /* volume clinet might not be available in case of process loopback */
     flags |= AUDCLNT_BUFFERFLAGS_SILENT;
   }
@@ -2090,6 +2092,7 @@ gst_wasapi2_rbuf_process_write (GstWasapi2Rbuf * self)
 
   auto client = priv->ctx->client;
   auto render_client = priv->ctx->render_client;
+  bool force_silence = priv->mute;
 
   hr = client->GetCurrentPadding (&padding_frames);
   if (!gst_wasapi2_result (hr))
@@ -2139,12 +2142,16 @@ gst_wasapi2_rbuf_process_write (GstWasapi2Rbuf * self)
     if (!gst_wasapi2_result (hr))
       return hr;
 
-    if (priv->ctx->is_s24in32)
-      s24lsb_to_s24_msb (data, readptr + priv->segoffset, len);
-    else
-      memcpy (data, readptr + priv->segoffset, len);
+    if (force_silence) {
+      hr = render_client->ReleaseBuffer (can_write, AUDCLNT_BUFFERFLAGS_SILENT);
+    } else {
+      if (priv->ctx->is_s24in32)
+        s24lsb_to_s24_msb (data, readptr + priv->segoffset, len);
+      else
+        memcpy (data, readptr + priv->segoffset, len);
 
-    hr = render_client->ReleaseBuffer (can_write, 0);
+      hr = render_client->ReleaseBuffer (can_write, 0);
+    }
 
     priv->segoffset += len;
     can_write_bytes -= len;
@@ -2342,8 +2349,15 @@ gst_wasapi2_rbuf_process_write_exclusive (GstWasapi2Rbuf * self)
     hr = render_client->ReleaseBuffer (ctx->period, AUDCLNT_BUFFERFLAGS_SILENT);
     gst_wasapi2_result (hr);
   } else {
-    memcpy (data, ctx->exclusive_staging.data (), ctx->exclusive_period_bytes);
-    hr = ctx->render_client->ReleaseBuffer (ctx->period, 0);
+    if (priv->mute) {
+      hr = ctx->render_client->ReleaseBuffer (ctx->period,
+          AUDCLNT_BUFFERFLAGS_SILENT);
+    } else {
+      memcpy (data, ctx->exclusive_staging.data (),
+          ctx->exclusive_period_bytes);
+      hr = ctx->render_client->ReleaseBuffer (ctx->period, 0);
+    }
+
     gst_wasapi2_result (hr);
     ctx->exclusive_staging_filled = 0;
   }
