@@ -52,12 +52,11 @@ plugin_sources += {
   'ivorbisdec': pathsep.join(doc_sources)
 }
 
-vorbis_dep = dependency('vorbis', version : '>= 1.3.1', allow_fallback: true,
-                        include_type: 'system', required : get_option('vorbis'))
-vorbisenc_dep = dependency('vorbisenc', version : '>= 1.3.1', allow_fallback: true,
-                           include_type: 'system', required : get_option('vorbis'))
-vorbisidec_dep = dependency('vorbisidec', allow_fallback: true,
-                            include_type: 'system', required : get_option('tremor'))
+vorbis_dep = dependency('vorbis', version : '>= 1.3.1', include_type: 'system',
+                        required : get_option('vorbis'))
+vorbisenc_dep = dependency('vorbisenc', version : '>= 1.3.1', include_type: 'system',
+                           required : get_option('vorbis'))
+vorbisidec_dep = dependency('vorbisidec', include_type: 'system', required : get_option('tremor'))
 
 if vorbis_dep.found()
   vorbis_deps = [vorbis_dep]

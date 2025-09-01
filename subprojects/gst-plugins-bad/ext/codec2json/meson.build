@@ -26,7 +26,7 @@ plugin_sources += {
   'codec2json': pathsep.join(doc_sources)
 }
 
-json_dep = dependency('json-glib-1.0', version : '>=1.6.6', fallback : ['json-glib', 'json_glib_dep'], required: get_option('codec2json'))
+json_dep = dependency('json-glib-1.0', version : '>=1.6.6', required: get_option('codec2json'))
 
 if json_dep.found()
   gstcodec2json = library('gstcodec2json',

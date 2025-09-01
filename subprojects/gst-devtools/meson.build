@@ -100,8 +100,7 @@ gmodule_dep = dependency('gmodule-no-export-2.0')
 gtk_dep = dependency('gtk+-3.0', required: false)
 mathlib = cc.find_library('m', required : false)
 dl = cc.find_library('dl', required : false)
-json_dep = dependency('json-glib-1.0',
-    fallback : ['json-glib', 'json_glib_dep'])
+json_dep = dependency('json-glib-1.0')
 
 gst_c_args = ['-DHAVE_CONFIG_H', '-DGST_USE_UNSTABLE_API']
 

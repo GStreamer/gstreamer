@@ -26,7 +26,7 @@ plugin_sources += {
 }
 
 jpeglib = dependency('libjpeg', required : get_option('jpeg'),
-  fallback: ['libjpeg-turbo', 'jpeg_dep'])
+    allow_fallback: true)
 
 if jpeglib.found()
   gstjpeg = library('gstjpeg',

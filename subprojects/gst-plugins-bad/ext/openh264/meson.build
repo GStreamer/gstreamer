@@ -21,7 +21,7 @@ plugin_sources += {
 
 openh264_dep = dependency('openh264', version : '>= 1.3.0',
                           required : get_option('openh264'),
-                          fallback: ['openh264', 'openh264_dep'])
+                          allow_fallback: true)
 
 if openh264_dep.found()
   gstopenh264 = library('gstopenh264',

@@ -1,5 +1,5 @@
 validate_video_dep = dependency('', required: false)
-cairo_dep = dependency('cairo-png', required: get_option('cairo'), fallback: 'cairo')
+cairo_dep = dependency('cairo-png', required: get_option('cairo'), allow_fallback: true)
 
 if cairo_dep.found()
     video = static_library(

@@ -23,7 +23,7 @@ plugin_sources += {
 }
 
 x264_dep = dependency('x264', version : '>=0.156', required : x264_opt,
-                      fallback: ['x264', 'libx264_dep'])
+    allow_fallback: true)
 
 if x264_dep.found()
   x264_libraries = get_option('x264_libraries')

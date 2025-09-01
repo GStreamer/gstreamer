@@ -18,7 +18,7 @@ plugin_sources += {
 
 gstanalyticsoverlay_ext_dep = dependency('pangocairo', version : '>=1.22.0',
   required : get_option('analyticsoverlay'),
-  fallback: ['pango', 'libpangocairo_dep'],
+  allow_fallback: true,
   default_options: ['cairo=enabled'])
 
 if gstanalyticsoverlay_ext_dep.found()
