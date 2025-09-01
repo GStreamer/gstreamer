@@ -1088,6 +1088,10 @@ def init(argv=None):
     if Gst.is_initialized():
         return True
 
+    # FIXME: Workaround for pygobject handling nullability wrong
+    if argv is None:
+        argv = []
+
     return real_init(argv)
 
 
