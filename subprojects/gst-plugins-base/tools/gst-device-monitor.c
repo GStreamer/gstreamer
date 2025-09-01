@@ -134,25 +134,21 @@ do_shell_quote (const char *s)
 static inline char *
 value_to_string (const GValue * v)
 {
-  const char *d, *s = NULL;
-  char *ret, *ser = NULL;
+  const char *d;
+  char *ret, *s;
   gboolean need_quote = FALSE;
-  gboolean need_serialize = FALSE;
 
   if (G_VALUE_HOLDS_STRING (v)) {
-    s = g_value_get_string (v);
-    need_serialize = !g_utf8_validate (s, -1, NULL);
+    const char *str = g_value_get_string (v);
+    if (!g_utf8_validate (str, -1, NULL)) {
+      s = gst_value_serialize (v);
+    } else {
+      s = g_strdup (str);
+    }
   } else {
-    need_serialize = TRUE;
+    s = gst_value_serialize (v);
   }
 
-  /* Don't mess around if the value is weird */
-  if (need_serialize) {
-    ser = gst_value_serialize (v);
-    ret = do_shell_quote (ser);
-    g_free (ser);
-    return ret;
-  }
 
   d = s;
   while (*++d) {
@@ -162,9 +158,12 @@ value_to_string (const GValue * v)
     }
   }
 
-  if (need_quote)
-    return do_shell_quote (s);
-  return g_strdup (s);
+  if (need_quote) {
+    ret = do_shell_quote (s);
+    g_free (s);
+    return ret;
+  }
+  return s;
 }
 
 static gchar *
