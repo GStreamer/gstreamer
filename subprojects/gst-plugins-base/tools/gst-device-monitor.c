@@ -53,7 +53,7 @@ typedef enum
   SHELL_POWERSHELL,
 } ShellType;
 
-static ShellType
+static inline ShellType
 get_shell_type (void)
 {
   if (g_getenv ("PSModulePath") != NULL)
@@ -63,21 +63,75 @@ get_shell_type (void)
   return SHELL_POSIX;
 }
 
-static char *
+/*
+ * Some quoting rules here:
+ * https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/cmd
+ *
+ * The rest has been deduced from trial-and-error, since command-line parsing
+ * is different on Windows compared to UNIX. There is no char* argument array
+ * when processes are created. There is a single argument, and the CRT splits
+ * it into an array based on its own arcane rules when running a POSIX
+ * command-line app with a `main()` instead of `WinMain()`.
+ *
+ * https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-winmain
+ *
+ * So for arguments passed to gst-launch, we need to deal with both how cmd.exe
+ * handles quoting/escaping and also how the UCRT does argument splitting. The
+ * current algorithm is:
+ *
+ * - Everything is quoted with " except
+ * - % needs to be escaped with ^ otherwise it will undergo variable expansion
+ * - % must not be quoted with " otherwise the caret-escaping doesn't work
+ * - " needs to be escaped as "" when inside " quotes
+ *
+ * So for example `%PATH% bar" wdwd |` becomes `""^%"PATH"^%" bar"" wdwd |"`
+ */
+static inline char *
+cmd_quote (const char *s)
+{
+  GString *str = g_string_new (s);
+  g_string_replace (str, "\"", "\"\"", 0);
+  str = g_string_prepend_c (str, '"');
+  str = g_string_append_c (str, '"');
+  /* Very simple and very ugly: simply terminate the " quoting when we
+   * encounter % then escape it and continue the " quoting  */
+  g_string_replace (str, "%", "\"^%\"", 0);
+  return g_string_free (str, FALSE);
+}
+
+/* Verbatim quoting rules:
+ * https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_quoting_rules
+ *
+ * The main vs WinMain issue exists here, but the quoting rules are simple
+ * enough to cover both.
+ */
+static inline char *
+powershell_quote (const char *s)
+{
+  GString *str = g_string_new (s);
+  g_string_replace (str, "'", "''", 0);
+  g_string_replace (str, "‘", "‘‘", 0);
+  g_string_replace (str, "’", "’’", 0);
+  str = g_string_prepend_c (str, '\'');
+  str = g_string_append_c (str, '\'');
+  return g_string_free (str, FALSE);
+}
+
+static inline char *
 do_shell_quote (const char *s)
 {
   switch (get_shell_type ()) {
     case SHELL_POSIX:
       return g_shell_quote (s);
     case SHELL_CMD:
+      return cmd_quote (s);
     case SHELL_POWERSHELL:
-      /* TODO: implement some kind of quoting for cmd.exe and powershell.exe */
-      return g_strdup (s);
+      return powershell_quote (s);
   }
   g_assert_not_reached ();
 }
 
-static char *
+static inline char *
 value_to_string (const GValue * v)
 {
   const char *d, *s = NULL;
