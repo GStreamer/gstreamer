@@ -7160,7 +7160,7 @@ are not copied; the returned #GstCaps owns the structures.</doc>
           <type name="Caps" c:type="GstCaps*"/>
         </return-value>
         <parameters>
-          <parameter name="struct1" transfer-ownership="none">
+          <parameter name="struct1" transfer-ownership="full">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">the first structure to add</doc>
             <type name="Structure" c:type="GstStructure*"/>
           </parameter>
@@ -7180,7 +7180,7 @@ are not copied; the returned #GstCaps owns the structures.</doc>
           <type name="Caps" c:type="GstCaps*"/>
         </return-value>
         <parameters>
-          <parameter name="structure" transfer-ownership="none">
+          <parameter name="structure" transfer-ownership="full">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">the first structure to add</doc>
             <type name="Structure" c:type="GstStructure*"/>
           </parameter>
@@ -8979,7 +8979,7 @@ have a parent when this function is called.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_parent_refcount" c:identifier="gst_caps_features_set_parent_refcount" version="1.2">
+      <method name="set_parent_refcount" c:identifier="gst_caps_features_set_parent_refcount" version="1.2" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">Sets the parent_refcount field of #GstCapsFeatures. This field is used to
 determine whether a caps features is mutable or not. This function should only be
 called by code implementing parent objects of #GstCapsFeatures, as described in
@@ -8994,9 +8994,9 @@ called by code implementing parent objects of #GstCapsFeatures, as described in
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a #GstCapsFeatures</doc>
             <type name="CapsFeatures" c:type="GstCapsFeatures*"/>
           </instance-parameter>
-          <parameter name="refcount" transfer-ownership="none">
+          <parameter name="refcount" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a pointer to the parent's refcount</doc>
-            <type name="gint" c:type="gint*"/>
+            <type name="gpointer" c:type="gint*"/>
           </parameter>
         </parameters>
       </method>
@@ -23292,10 +23292,10 @@ MT safe.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstiterator.c">pointer to a #GMutex.</doc>
             <type name="GLib.Mutex" c:type="GMutex*"/>
           </parameter>
-          <parameter name="master_cookie" transfer-ownership="none">
+          <parameter name="master_cookie" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstiterator.c">pointer to a guint32 that is changed when the items in the
    iterator changed.</doc>
-            <type name="guint32" c:type="guint32*"/>
+            <type name="gpointer" c:type="guint32*"/>
           </parameter>
           <parameter name="copy" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstiterator.c">copy function</doc>
@@ -23348,10 +23348,10 @@ MT safe.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstiterator.c">pointer to a #GMutex protecting the list.</doc>
             <type name="GLib.Mutex" c:type="GMutex*"/>
           </parameter>
-          <parameter name="master_cookie" transfer-ownership="none">
+          <parameter name="master_cookie" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstiterator.c">pointer to a guint32 that is incremented when the list
     is changed.</doc>
-            <type name="guint32" c:type="guint32*"/>
+            <type name="gpointer" c:type="guint32*"/>
           </parameter>
           <parameter name="list" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstiterator.c">pointer to the list</doc>
@@ -26224,7 +26224,7 @@ list and structure are transferred to the message.</doc>
           </parameter>
           <parameter name="entry_struct" transfer-ownership="full" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">structure for the new entry</doc>
-            <type name="Structure" c:type="const GstStructure*"/>
+            <type name="Structure" c:type="GstStructure*"/>
           </parameter>
         </parameters>
       </constructor>
@@ -26712,7 +26712,7 @@ list and structure are transferred to the message.</doc>
           </parameter>
           <parameter name="entry_struct" transfer-ownership="full" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">structure for the new entry</doc>
-            <type name="Structure" c:type="const GstStructure*"/>
+            <type name="Structure" c:type="GstStructure*"/>
           </parameter>
         </parameters>
       </method>
@@ -28753,7 +28753,9 @@ not allow to determine that size, @consumed is set to 0.</doc>
           </parameter>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">serialization data obtained from gst_meta_serialize()</doc>
-            <type name="guint8" c:type="const guint8*"/>
+            <array length="2" zero-terminated="0" c:type="const guint8*">
+              <type name="guint8" c:type="guint8"/>
+            </array>
           </parameter>
           <parameter name="size" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">size of @data</doc>
@@ -46483,7 +46485,7 @@ to be a static string.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_parent_refcount" c:identifier="gst_structure_set_parent_refcount">
+      <method name="set_parent_refcount" c:identifier="gst_structure_set_parent_refcount" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Sets the parent_refcount field of #GstStructure. This field is used to
 determine whether a structure is mutable or not. This function should only be
 called by code implementing parent objects of #GstStructure, as described in
@@ -46498,9 +46500,9 @@ the MT Refcounting section of the design documents.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
             <type name="Structure" c:type="GstStructure*"/>
           </instance-parameter>
-          <parameter name="refcount" transfer-ownership="none">
+          <parameter name="refcount" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a pointer to the parent's refcount</doc>
-            <type name="gint" c:type="gint*"/>
+            <type name="gpointer" c:type="gint*"/>
           </parameter>
         </parameters>
       </method>
@@ -51470,7 +51472,9 @@ returns and must not be freed.</doc>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttypefind.c">the
     requested data, or %NULL if that data is not available.</doc>
-          <type name="guint8" c:type="const guint8*"/>
+          <array length="1" zero-terminated="0" c:type="const guint8*">
+            <type name="guint8" c:type="guint8"/>
+          </array>
         </return-value>
         <parameters>
           <instance-parameter name="find" transfer-ownership="none">
@@ -51481,7 +51485,7 @@ returns and must not be freed.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttypefind.c">The offset</doc>
             <type name="gint64" c:type="gint64"/>
           </parameter>
-          <parameter name="size" transfer-ownership="none">
+          <parameter name="size" direction="out" caller-allocates="0" transfer-ownership="full">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttypefind.c">The number of bytes to return</doc>
             <type name="guint" c:type="guint"/>
           </parameter>
@@ -54515,7 +54519,9 @@ amount of memory allocated as @xy, i.e. 2*n*sizeof(GstClockTime).
       <parameters>
         <parameter name="xy" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Pairs of (x,y) values</doc>
-          <type name="ClockTime" c:type="const GstClockTime*"/>
+          <array zero-terminated="0" c:type="const GstClockTime*">
+            <type name="ClockTime" c:type="GstClockTime"/>
+          </array>
         </parameter>
         <parameter name="temp" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Temporary scratch space used by the function</doc>
@@ -56810,11 +56816,11 @@ use gst_init_check() instead.</doc>
         <type name="none" c:type="void"/>
       </return-value>
       <parameters>
-        <parameter name="argc" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+        <parameter name="argc" direction="inout" caller-allocates="0" transfer-ownership="full" optional="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gst.c">pointer to application's argc</doc>
           <type name="gint" c:type="int*"/>
         </parameter>
-        <parameter name="argv" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+        <parameter name="argv" direction="inout" caller-allocates="0" transfer-ownership="full" optional="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gst.c">pointer to application's argv</doc>
           <array length="0" zero-terminated="0" c:type="char***">
             <type name="utf8" c:type="char**"/>
@@ -56835,11 +56841,11 @@ use gst_init() instead.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </return-value>
       <parameters>
-        <parameter name="argc" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+        <parameter name="argc" direction="inout" caller-allocates="0" transfer-ownership="full" optional="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gst.c">pointer to application's argc</doc>
           <type name="gint" c:type="int*"/>
         </parameter>
-        <parameter name="argv" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+        <parameter name="argv" direction="inout" caller-allocates="0" transfer-ownership="full" optional="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gst.c">pointer to application's argv</doc>
           <array length="0" zero-terminated="0" c:type="char***">
             <type name="utf8" c:type="char**"/>
@@ -57268,7 +57274,9 @@ not allow to determine that size, @consumed is set to 0.</doc>
         </parameter>
         <parameter name="data" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">serialization data obtained from gst_meta_serialize()</doc>
-          <type name="guint8" c:type="const guint8*"/>
+          <array length="2" zero-terminated="0" c:type="const guint8*">
+            <type name="guint8" c:type="guint8"/>
+          </array>
         </parameter>
         <parameter name="size" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">size of @data</doc>
@@ -59732,11 +59740,11 @@ the simple continued fraction decomposition. Using 8 and 333 for
         <type name="none" c:type="void"/>
       </return-value>
       <parameters>
-        <parameter name="numerator" transfer-ownership="none">
+        <parameter name="numerator" direction="inout" caller-allocates="0" transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">First value as #gint</doc>
           <type name="gint" c:type="gint*"/>
         </parameter>
-        <parameter name="denominator" transfer-ownership="none">
+        <parameter name="denominator" direction="inout" caller-allocates="0" transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Second value as #gint</doc>
           <type name="gint" c:type="gint*"/>
         </parameter>
