@@ -37,4 +37,5 @@
 #include <gst/d3d12/gstd3d12frame.h>
 #include <gst/d3d12/gstd3d12memory.h>
 #include <gst/d3d12/gstd3d12utils.h>
-
+#include <gst/d3d12/gstd3d12stagingmemory.h>
+#include <gst/d3d12/gstd3d12stagingbufferpool.h>

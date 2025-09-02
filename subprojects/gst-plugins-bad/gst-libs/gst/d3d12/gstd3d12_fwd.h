@@ -49,6 +49,9 @@ typedef struct _GstD3D12DevicePrivate GstD3D12DevicePrivate;
 typedef struct _GstD3D12Memory GstD3D12Memory;
 typedef struct _GstD3D12MemoryPrivate GstD3D12MemoryPrivate;
 
+typedef struct _GstD3D12StagingMemory GstD3D12StagingMemory;
+typedef struct _GstD3D12StagingMemoryPrivate GstD3D12StagingMemoryPrivate;
+
 typedef struct _GstD3D12Allocator GstD3D12Allocator;
 typedef struct _GstD3D12AllocatorClass GstD3D12AllocatorClass;
 typedef struct _GstD3D12AllocatorPrivate GstD3D12AllocatorPrivate;
@@ -57,6 +60,10 @@ typedef struct _GstD3D12PoolAllocator GstD3D12PoolAllocator;
 typedef struct _GstD3D12PoolAllocatorClass GstD3D12PoolAllocatorClass;
 typedef struct _GstD3D12PoolAllocatorPrivate GstD3D12PoolAllocatorPrivate;
 
+typedef struct _GstD3D12StagingAllocator GstD3D12StagingAllocator;
+typedef struct _GstD3D12StagingAllocatorClass GstD3D12StagingAllocatorClass;
+typedef struct _GstD3D12StagingAllocatorPrivate GstD3D12StagingAllocatorPrivate;
+
 typedef struct _GstD3D12Format GstD3D12Format;
 
 typedef struct _GstD3D12AllocationParams GstD3D12AllocationParams;
@@ -64,6 +71,10 @@ typedef struct _GstD3D12AllocationParams GstD3D12AllocationParams;
 typedef struct _GstD3D12BufferPool GstD3D12BufferPool;
 typedef struct _GstD3D12BufferPoolClass GstD3D12BufferPoolClass;
 typedef struct _GstD3D12BufferPoolPrivate GstD3D12BufferPoolPrivate;
+
+typedef struct _GstD3D12StagingBufferPool GstD3D12StagingBufferPool;
+typedef struct _GstD3D12StagingBufferPoolClass GstD3D12StagingBufferPoolClass;
+typedef struct _GstD3D12StagingBufferPoolPrivate GstD3D12StagingBufferPoolPrivate;
 
 typedef struct _GstD3D12CmdAllocPool GstD3D12CmdAllocPool;
 typedef struct _GstD3D12CmdAllocPoolClass GstD3D12CmdAllocPoolClass;

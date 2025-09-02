@@ -14,6 +14,8 @@ d3d12_sources = [
   'gstd3d12frame.cpp',
   'gstd3d12memory.cpp',
   'gstd3d12mipgen.cpp',
+  'gstd3d12stagingbufferpool.cpp',
+  'gstd3d12stagingmemory.cpp',
   'gstd3d12utils.cpp',
 ]
 
@@ -31,6 +33,8 @@ d3d12_headers = [
   'gstd3d12format.h',
   'gstd3d12frame.h',
   'gstd3d12memory.h',
+  'gstd3d12stagingbufferpool.h',
+  'gstd3d12stagingmemory.h',
   'gstd3d12utils.h',
 ]
 
