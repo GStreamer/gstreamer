@@ -56,10 +56,10 @@ typedef enum
 static inline ShellType
 get_shell_type (void)
 {
+  if (g_getenv ("PROMPT") != NULL)
+    return SHELL_CMD;
   if (g_getenv ("PSModulePath") != NULL)
     return SHELL_POWERSHELL;
-  if (g_getenv ("ComSpec") != NULL)
-    return SHELL_CMD;
   return SHELL_POSIX;
 }
 
