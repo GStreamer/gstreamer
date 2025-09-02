@@ -1040,6 +1040,73 @@ GST_START_TEST (test_reference_timestamp_meta_with_info_serialization)
 
 GST_END_TEST;
 
+GST_START_TEST (test_set_and_cmp)
+{
+  static const gchar set_and_cmp_sha1[] =
+      "bb155a387903c569611f3d3e74f114f545819213";
+
+  gsize copied;
+  gint rc;
+  gchar *s;
+  guint8 tmp[128];
+
+  guint8 *base = g_malloc0 (1024);
+  GstMemory *mem1 = gst_memory_new_wrapped (0, base, 256, 0, 256, NULL, NULL);
+  GstMemory *mem2 =
+      gst_memory_new_wrapped (0, base + 256, 512, 128, 256, NULL, NULL);
+  GstMemory *mem3 =
+      gst_memory_new_wrapped (0, base + 768, 256, 0, 128, NULL, NULL);
+
+  GstBuffer *buf = gst_buffer_new ();
+  gst_buffer_append_memory (buf, mem1);
+  gst_buffer_append_memory (buf, mem2);
+  gst_buffer_append_memory (buf, mem3);
+
+  copied = gst_buffer_memset (buf, 256, 0x77, 256);
+  fail_unless_equals_uint64 (copied, 256);
+
+  copied = gst_buffer_memset (buf, 0, 0x11, 64);
+  fail_unless_equals_uint64 (copied, 64);
+  copied = gst_buffer_memset (buf, 256 - 32, 0x22, 64);
+  fail_unless_equals_uint64 (copied, 64);
+  copied = gst_buffer_memset (buf, 512 - 32, 0x33, 64);
+  fail_unless_equals_uint64 (copied, 64);
+  copied = gst_buffer_memset (buf, 640 - 32, 0x44, 64);
+  fail_unless_equals_uint64 (copied, 32);
+
+  s = g_compute_checksum_for_data (G_CHECKSUM_SHA1, base, 1024);
+  ck_assert_str_eq (s, set_and_cmp_sha1);
+  g_free (s);
+
+  memset (tmp, 0x11, 64);
+  memset (tmp + 64, 0x00, 32);
+  rc = gst_buffer_memcmp (buf, 0, tmp, 64 + 32);
+  fail_unless_equals_uint64 (rc, 0);
+
+  memset (tmp, 0x00, 32);
+  memset (tmp + 32, 0x22, 64);
+  memset (tmp + 96, 0x77, 32);
+  rc = gst_buffer_memcmp (buf, 256 - 64, tmp, 128);
+  fail_unless_equals_uint64 (rc, 0);
+
+  memset (tmp, 0x77, 32);
+  memset (tmp + 32, 0x33, 64);
+  memset (tmp + 96, 0x00, 32);
+  rc = gst_buffer_memcmp (buf, 512 - 64, tmp, 128);
+  fail_unless_equals_uint64 (rc, 0);
+
+  memset (tmp, 0x00, 32);
+  memset (tmp + 32, 0x44, 32);
+  rc = gst_buffer_memcmp (buf, 640 - 64, tmp, 64);
+  fail_unless_equals_uint64 (rc, 0);
+
+  gst_buffer_unref (buf);
+  g_free (base);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 gst_buffer_suite (void)
 {
@@ -1070,6 +1137,7 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_reference_timestamp_meta_serialization);
   tcase_add_test (tc_chain,
       test_reference_timestamp_meta_with_info_serialization);
+  tcase_add_test (tc_chain, test_set_and_cmp);
 
   return s;
 }
