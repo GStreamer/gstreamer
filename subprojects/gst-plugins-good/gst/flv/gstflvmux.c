@@ -46,6 +46,7 @@
 #include "gstflvelements.h"
 #include "gstflvmux.h"
 #include "amfdefs.h"
+#include "flvdefs.h"
 
 #include <gst/glib-compat-private.h>
 
@@ -141,6 +142,8 @@ static gboolean gst_flv_mux_are_all_pads_eos (GstFlvMux * mux);
 static GstClockTime gst_flv_mux_query_upstream_duration (GstFlvMux * mux);
 static GstClockTime gst_flv_mux_segment_to_running_time (const GstSegment *
     segment, GstClockTime t);
+
+static gboolean gst_flv_mux_pads_codec_valid (GList * pads);
 
 static GstFlowReturn
 gst_flv_mux_pad_flush (GstAggregatorPad * pad, GstAggregator * aggregator)
@@ -450,7 +453,7 @@ gst_flv_mux_sink_event (GstAggregator * aggregator, GstAggregatorPad * pad,
 
       if (mux->video_pad == flvpad) {
         ret = gst_flv_mux_video_pad_setcaps (flvpad, caps);
-      } else if (mux->audio_pad == flvpad) {
+      } else if (flvpad->type == GST_FLV_MUX_TRACK_TYPE_AUDIO) {
         ret = gst_flv_mux_audio_pad_setcaps (flvpad, caps);
       } else {
         g_assert_not_reached ();
@@ -579,7 +582,7 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
   if (strcmp (gst_structure_get_name (s), "audio/x-adpcm") == 0) {
     const gchar *layout = gst_structure_get_string (s, "layout");
     if (layout && strcmp (layout, "swf") == 0) {
-      pad->codec = 1;
+      pad->codec = ADPCM;
     } else {
       ret = FALSE;
     }
@@ -590,18 +593,20 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
       if (mpegversion == 1) {
         gint layer;
 
+        pad->codec_fourcc = GST_STR_FOURCC (".mp3");
         if (gst_structure_get_int (s, "layer", &layer) && layer == 3) {
           gint rate;
 
           if (gst_structure_get_int (s, "rate", &rate) && rate == 8000)
-            pad->codec = 14;
+            pad->codec = MP3_8K;
           else
-            pad->codec = 2;
+            pad->codec = MP3;
         } else {
           ret = FALSE;
         }
       } else if (mpegversion == 4 || mpegversion == 2) {
-        pad->codec = 10;
+        pad->codec_fourcc = GST_STR_FOURCC ("mp4a");
+        pad->codec = AAC;
       } else {
         ret = FALSE;
       }
@@ -614,19 +619,19 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
     if (gst_structure_get_int (s, "rate", &rate)
         && gst_structure_get_int (s, "channels", &channels)) {
       if (channels == 1 && rate == 16000)
-        pad->codec = 4;
+        pad->codec = NELLYMOSER_16K;
       else if (channels == 1 && rate == 8000)
-        pad->codec = 5;
+        pad->codec = NELLYMOSER_8K;
       else
-        pad->codec = 6;
+        pad->codec = NELLYMOSER;
     } else {
-      pad->codec = 6;
+      pad->codec = NELLYMOSER;
     }
   } else if (strcmp (gst_structure_get_name (s), "audio/x-raw") == 0) {
     GstAudioInfo info;
 
     if (gst_audio_info_from_caps (&info, caps)) {
-      pad->codec = 3;
+      pad->codec = LINEAR_PCM_LE;
 
       if (GST_AUDIO_INFO_WIDTH (&info) == 8)
         pad->width = 0;
@@ -637,11 +642,11 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
     } else
       ret = FALSE;
   } else if (strcmp (gst_structure_get_name (s), "audio/x-alaw") == 0) {
-    pad->codec = 7;
+    pad->codec = G711_ALAW;
   } else if (strcmp (gst_structure_get_name (s), "audio/x-mulaw") == 0) {
-    pad->codec = 8;
+    pad->codec = G711_MULAW;
   } else if (strcmp (gst_structure_get_name (s), "audio/x-speex") == 0) {
-    pad->codec = 11;
+    pad->codec = SPEEX;
   } else {
     ret = FALSE;
   }
@@ -650,7 +655,7 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
     gint rate, channels;
 
     if (gst_structure_get_int (s, "rate", &rate)) {
-      if (pad->codec == 10)
+      if (pad->codec == AAC)
         pad->rate = 3;
       else if (rate == 5512)
         pad->rate = 0;
@@ -660,24 +665,26 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
         pad->rate = 2;
       else if (rate == 44100)
         pad->rate = 3;
-      else if (rate == 8000 && (pad->codec == 5 || pad->codec == 14
-              || pad->codec == 7 || pad->codec == 8))
+      else if (rate == 8000 && (pad->codec == NELLYMOSER_8K
+              || pad->codec == MP3_8K || pad->codec == G711_ALAW
+              || pad->codec == G711_MULAW))
         pad->rate = 0;
-      else if (rate == 16000 && (pad->codec == 4 || pad->codec == 11))
+      else if (rate == 16000 && (pad->codec == NELLYMOSER_16K
+              || pad->codec == SPEEX))
         pad->rate = 0;
       else
         ret = FALSE;
-    } else if (pad->codec == 10) {
+    } else if (pad->codec == AAC) {
       pad->rate = 3;
     } else {
       ret = FALSE;
     }
 
     if (gst_structure_get_int (s, "channels", &channels)) {
-      if (pad->codec == 4 || pad->codec == 5
-          || pad->codec == 6 || pad->codec == 11)
+      if (pad->codec == NELLYMOSER_16K || pad->codec == NELLYMOSER_8K
+          || pad->codec == NELLYMOSER || pad->codec == SPEEX)
         pad->channels = 0;
-      else if (pad->codec == 10)
+      else if (pad->codec == AAC)
         pad->channels = 1;
       else if (channels == 1)
         pad->channels = 0;
@@ -685,15 +692,16 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
         pad->channels = 1;
       else
         ret = FALSE;
-    } else if (pad->codec == 4 || pad->codec == 5 || pad->codec == 6) {
+    } else if (pad->codec == NELLYMOSER_16K || pad->codec == NELLYMOSER_8K
+        || pad->codec == NELLYMOSER) {
       pad->channels = 0;
-    } else if (pad->codec == 10) {
+    } else if (pad->codec == AAC) {
       pad->channels = 1;
     } else {
       ret = FALSE;
     }
 
-    if (pad->codec != 3)
+    if (pad->codec != LINEAR_PCM_LE)
       pad->width = 1;
   }
 
@@ -757,6 +765,8 @@ gst_flv_mux_reset_pad (GstFlvMuxPad * pad)
   pad->channels = G_MAXUINT;
   pad->info_changed = FALSE;
   pad->drop_deltas = FALSE;
+  pad->track_id = -1;
+  pad->codec_fourcc = 0;
 
   gst_flv_mux_pad_flush (GST_AGGREGATOR_PAD_CAST (pad), NULL);
 }
@@ -772,6 +782,7 @@ gst_flv_mux_create_new_pad (GstAggregator * agg,
   const gchar *name = NULL;
   gboolean video;
 
+
   if (mux->state != GST_FLV_MUX_STATE_HEADER && !mux->streamable) {
     GST_ELEMENT_WARNING (mux, STREAM, MUX,
         ("Requested a late stream in a non-streamable file"),
@@ -779,12 +790,10 @@ gst_flv_mux_create_new_pad (GstAggregator * agg,
     return NULL;
   }
 
-  if (templ == gst_element_class_get_pad_template (klass, "audio")) {
-    if (mux->audio_pad) {
-      GST_WARNING_OBJECT (mux, "Already have an audio pad");
-      return NULL;
-    }
-    name = "audio";
+  if (templ == gst_element_class_get_pad_template (klass, "audio") ||
+      templ == gst_element_class_get_pad_template (klass, "audio_%u")) {
+    name = req_name ? req_name : GST_PAD_TEMPLATE_NAME_TEMPLATE (templ);
+    GST_TRACE_OBJECT (mux, "templ name is %s", name);
     video = FALSE;
   } else if (templ == gst_element_class_get_pad_template (klass, "video")) {
     if (mux->video_pad) {
@@ -808,10 +817,38 @@ gst_flv_mux_create_new_pad (GstAggregator * agg,
 
   gst_flv_mux_reset_pad (pad);
 
-  if (video)
+  if (video) {
+    pad->type = GST_FLV_MUX_TRACK_TYPE_VIDEO;
     mux->video_pad = pad;
-  else
-    mux->audio_pad = pad;
+  } else {
+    pad->type = GST_FLV_MUX_TRACK_TYPE_AUDIO;
+    gsize len = sizeof ("audio_") - 1;
+    gchar *pad_name = gst_pad_get_name (aggpad);
+    GST_TRACE_OBJECT (mux, "pad name %s", pad_name);
+    if (g_str_has_prefix (pad_name, "audio_")) {
+      // use the pad index as the track id
+      pad->track_id = g_ascii_strtoll (pad_name + len, NULL, 10);
+
+      GST_TRACE_OBJECT (mux, "enhanced FLV, track id %d", pad->track_id);
+
+      if (pad->track_id >= MAX_TRACKS) {
+        GST_WARNING_OBJECT (mux, "invalid track id %d, not adding",
+            pad->track_id);
+        gst_object_unref (pad);
+        g_free (pad_name);
+        return NULL;
+      }
+    } else {
+      GST_TRACE_OBJECT (mux, "legacy FLV; no track id");
+      pad->track_id = -1;
+    }
+
+    GST_OBJECT_LOCK (mux);
+    mux->audio_pads = g_list_prepend (mux->audio_pads, pad);
+    GST_OBJECT_UNLOCK (mux);
+
+    g_free (pad_name);
+  }
 
   return aggpad;
 }
@@ -828,8 +865,10 @@ gst_flv_mux_release_pad (GstElement * element, GstPad * pad)
 
   if (flvpad == mux->video_pad) {
     mux->video_pad = NULL;
-  } else if (flvpad == mux->audio_pad) {
-    mux->audio_pad = NULL;
+  } else if (flvpad->type == GST_FLV_MUX_TRACK_TYPE_AUDIO) {
+    GST_OBJECT_LOCK (mux);
+    mux->audio_pads = g_list_remove (mux->audio_pads, flvpad);
+    GST_OBJECT_UNLOCK (mux);
   } else {
     GST_WARNING_OBJECT (pad, "Pad is not known audio or video pad");
   }
@@ -847,6 +886,16 @@ gst_flv_mux_push (GstFlvMux * mux, GstBuffer * buffer)
   return gst_aggregator_finish_buffer (GST_AGGREGATOR_CAST (mux), buffer);
 }
 
+static GstFlowReturn
+gst_flv_mux_push_list (GstFlvMux * mux, GstBufferList * buffers)
+{
+  /* pushing the buffer that rewrites the header will make it no longer be the
+   * total output size in bytes, but it doesn't matter at that point */
+  mux->byte_count += gst_buffer_list_calculate_size (buffers);
+
+  return gst_aggregator_finish_buffer_list (GST_AGGREGATOR_CAST (mux), buffers);
+}
+
 static GstBuffer *
 gst_flv_mux_create_header (GstFlvMux * mux)
 {
@@ -862,7 +911,7 @@ gst_flv_mux_create_header (GstFlvMux * mux)
   data[2] = 'V';
   data[3] = 0x01;               /* Version */
 
-  have_audio = (mux->audio_pad && mux->audio_pad->codec != G_MAXUINT);
+  have_audio = mux->audio_pads != NULL;
   have_video = (mux->video_pad && mux->video_pad->codec != G_MAXUINT);
 
   data[4] = (have_audio << 2) | have_video;     /* flags */
@@ -921,6 +970,39 @@ gst_flv_mux_create_number_script_value (const gchar * name, gdouble value)
 }
 
 static GstBuffer *
+gst_flv_mux_create_object_script_start_marker (const gchar * name)
+{
+  GstBuffer *tmp;
+  guint8 *data;
+  gsize len = strlen (name);
+
+  _gst_buffer_new_and_alloc (2 + len + 1, &tmp, &data);
+
+  GST_WRITE_UINT16_BE (data, len);
+  data += 2;                    /* name length */
+  memcpy (data, name, len);
+  data += len;
+  *data++ = AMF0_OBJECT_MARKER; /* Object type */
+
+  return tmp;
+}
+
+static GstBuffer *
+gst_flv_mux_create_object_script_end_marker (void)
+{
+  GstBuffer *tmp;
+  guint8 *data;
+  gsize len = 2;                /* preceeding empty 16 bit length */
+
+  _gst_buffer_new_and_alloc (len + 1, &tmp, &data);
+  memset (data, 0, len);
+  data += len;
+  *data = AMF0_OBJECT_END_MARKER;       /* Object type */
+
+  return tmp;
+}
+
+static GstBuffer *
 gst_flv_mux_create_metadata (GstFlvMux * mux)
 {
   const GstTagList *tags;
@@ -929,6 +1011,8 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
   guint64 dts;
   guint8 *data;
   gint i, n_tags, tags_written = 0;
+  GstFlvMuxPad *legacy_flv_audio_pad = NULL;
+  guint16 num_eflv_audio_pads = 0;
 
   tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux));
 
@@ -1056,6 +1140,7 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
     GST_WRITE_DOUBLE_BE (map.data + 29 + 2 + 8 + 1, d);
     gst_buffer_unmap (script_tag, &map);
   }
+  // TODO: add audioTrackIdInfoMap with video eFLV support
 
   if (mux->video_pad && mux->video_pad->codec != G_MAXUINT) {
     GstCaps *caps = NULL;
@@ -1133,19 +1218,93 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
     }
   }
 
-  if (mux->audio_pad && mux->audio_pad->codec != G_MAXUINT) {
-    GST_DEBUG_OBJECT (mux, "putting audiocodecid %d in the metadata",
-        mux->audio_pad->codec);
+  GST_OBJECT_LOCK (mux);
+  for (GList * p = mux->audio_pads; p; p = p->next) {
+    GstCaps *caps = NULL;
+    GstFlvMuxPad *pad = p->data;
+    gchar id[4];
+    GstStructure *s;
+    gint samplerate, channels;
 
-    tmp = gst_flv_mux_create_number_script_value ("audiocodecid",
-        mux->audio_pad->codec);
+    if (pad->track_id < 0) {
+      legacy_flv_audio_pad = pad;
+      continue;
+    }
+
+    caps = gst_pad_get_current_caps (GST_PAD (pad));
+    if (caps == NULL)
+      continue;
+
+    num_eflv_audio_pads++;
+    if (num_eflv_audio_pads == 1) {
+      // create the object at the first eFLV pad/track
+      tmp =
+          gst_flv_mux_create_object_script_start_marker ("audioTrackIdInfoMap");
+      script_tag = gst_buffer_append (script_tag, tmp);
+      GST_DEBUG_OBJECT (mux, "opening `audioTrackIdInfoMap` in the metadata");
+    }
+
+    s = gst_caps_get_structure (caps, 0);
+
+    g_snprintf (id, sizeof (id), "%d", pad->track_id);
+
+    tmp = gst_flv_mux_create_object_script_start_marker (id);
+    script_tag = gst_buffer_append (script_tag, tmp);
+
+    if (gst_structure_get_int (s, "channels", &channels)) {
+      tmp = gst_flv_mux_create_number_script_value ("channels", channels);
+      script_tag = gst_buffer_append (script_tag, tmp);
+      tags_written++;
+      GST_DEBUG_OBJECT (mux, "putting `channels` for track %d in the metadata",
+          pad->track_id);
+    }
+
+    tmp = gst_flv_mux_create_number_script_value ("audiodatarate",
+        pad->bitrate / 1024);
+    script_tag = gst_buffer_append (script_tag, tmp);
+    tags_written++;
+    GST_DEBUG_OBJECT (mux,
+        "putting `audiodatarate` for track %d in the metadata", pad->track_id);
+
+    if (gst_structure_get_int (s, "rate", &samplerate)) {
+      tmp = gst_flv_mux_create_number_script_value ("samplerate", samplerate);
+      script_tag = gst_buffer_append (script_tag, tmp);
+      tags_written++;
+      GST_DEBUG_OBJECT (mux,
+          "putting `samplerate` for track %d in the metadata", pad->track_id);
+    }
+
+    gst_caps_unref (caps);
+
+    tmp = gst_flv_mux_create_object_script_end_marker ();       // end track object
+    script_tag = gst_buffer_append (script_tag, tmp);
+    tags_written++;
+  }
+  GST_OBJECT_UNLOCK (mux);
+
+  if (num_eflv_audio_pads > 0) {
+    tmp = gst_flv_mux_create_object_script_end_marker ();       // end `audioTrackIdInfoMap` object
+    script_tag = gst_buffer_append (script_tag, tmp);
+    tags_written++;
+    GST_DEBUG_OBJECT (mux, "closing audioTrackIdInfoMap in the metadata");
+  }
+  // go with legacy flv audio track pad values as standard configuration
+  if (legacy_flv_audio_pad && legacy_flv_audio_pad->codec != G_MAXUINT) {
+    GST_DEBUG_OBJECT (mux,
+        "found a legacy audio track/pad, adding default configuration in the metadata");
+    GST_DEBUG_OBJECT (mux, "putting audiocodecid %d in the metadata",
+        legacy_flv_audio_pad->codec);
+
+    tmp =
+        gst_flv_mux_create_number_script_value ("audiocodecid",
+        legacy_flv_audio_pad->codec);
     script_tag = gst_buffer_append (script_tag, tmp);
     tags_written++;
 
     GST_DEBUG_OBJECT (mux, "putting audiodatarate %u KB/s in the metadata",
-        mux->audio_pad->bitrate / 1024);
+        legacy_flv_audio_pad->bitrate / 1024);
     tmp = gst_flv_mux_create_number_script_value ("audiodatarate",
-        mux->audio_pad->bitrate / 1024);
+        legacy_flv_audio_pad->bitrate / 1024);
     script_tag = gst_buffer_append (script_tag, tmp);
     tags_written++;
   }
@@ -1251,7 +1410,7 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
 {
   GstBuffer *tag;
   GstMapInfo map;
-  guint size;
+  guint size = MESSAGE_HEADER_LEN;
   guint64 pts, dts, cts;
   guint8 *data, *bdata = NULL;
   gsize bsize = 0;
@@ -1328,7 +1487,6 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
     bsize = map.size;
   }
 
-  size = 11;
   if (mux->video_pad == pad) {
     size += 1;
     if (pad->codec == 7)
@@ -1336,29 +1494,37 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
     else
       size += bsize;
   } else {
-    size += 1;
-    if (pad->codec == 10)
-      size += 1 + bsize;
-    else
-      size += bsize;
+    if (pad->track_id >= 0) {
+      size += EXHEADER_PLUS_PACKETYPE_LEN + MUTLITRACKTYPE_PLUS_PACKETYPE_LEN
+          + FOURCC_LEN + TRACK_ID_LEN + bsize;
+    } else {
+      size += 1;                //Sound format + rate + size + type
+      if (pad->codec == 10)
+        size += 1 + bsize;      // aac packettype
+      else
+        size += bsize;
+    }
   }
-  size += 4;
+  size += TAG_SIZE_LEN;
+
 
   _gst_buffer_new_and_alloc (size, &tag, &data);
   memset (data, 0, size);
 
-  data[0] = (mux->video_pad == pad) ? 9 : 8;
+  GST_DEBUG_OBJECT (mux, "buffer %" GST_PTR_FORMAT " size %u", tag, size);
 
-  data[1] = ((size - 11 - 4) >> 16) & 0xff;
-  data[2] = ((size - 11 - 4) >> 8) & 0xff;
-  data[3] = ((size - 11 - 4) >> 0) & 0xff;
+  data[0] = (pad->type == GST_FLV_MUX_TRACK_TYPE_VIDEO) ? 9 : 8;        // message type
 
-  GST_WRITE_UINT24_BE (data + 4, dts);
-  data[7] = (((guint) dts) >> 24) & 0xff;
+  data[1] = ((size - 11 - 4) >> 16) & 0xff;     // payload len LSB
+  data[2] = ((size - 11 - 4) >> 8) & 0xff;      // payload len LSB2
+  data[3] = ((size - 11 - 4) >> 0) & 0xff;      // payload len MSB
 
-  data[8] = data[9] = data[10] = 0;
+  GST_WRITE_UINT24_BE (data + 4, dts);  // timestamp
+  data[7] = (((guint) dts) >> 24) & 0xff;       // timestamp
 
-  if (mux->video_pad == pad) {
+  data[8] = data[9] = data[10] = 0;     // stream ID always zero as per section E.4.1 FLV spec v10-1
+
+  if (pad->type == GST_FLV_MUX_TRACK_TYPE_VIDEO) {
     if (buffer && GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT))
       data[11] |= 2 << 4;
     else
@@ -1384,28 +1550,61 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
       memcpy (data + 11 + 1, bdata, bsize);
     }
   } else {
-    data[11] |= (pad->codec << 4) & 0xf0;
-    data[11] |= (pad->rate << 2) & 0x0c;
-    data[11] |= (pad->width << 1) & 0x02;
-    data[11] |= (pad->channels << 0) & 0x01;
+    GST_DEBUG_OBJECT (mux, "is codec data %d for track %d", is_codec_data,
+        pad->track_id);
+    GstEFlvAudioPacketType type = is_codec_data ? SEQUENCE_START : CODED_FRAMES;
+    if (pad->track_id >= 0) {
+      /* having valid track id so eFLV */
 
-    GST_LOG_OBJECT (mux, "Creating byte %02x with "
-        "codec:%d, rate:%d, width:%d, channels:%d",
-        data[11], pad->codec, pad->rate, pad->width, pad->channels);
+      // start of Audio tag header
+      gsize offset = MESSAGE_HEADER_LEN;
 
-    if (pad->codec == 10) {
-      data[12] = is_codec_data ? 0 : 1;
+      // set the AVMultitrackType to OneTrack
+      // we do one track per pad so ONETRACK always
+      GstEFlvAvMultiTrackType multitrack_type = ONETRACK;
 
-      memcpy (data + 11 + 1 + 1, bdata, bsize);
+      // indicate that SoundFormat is ExHeader in the MSbits
+      data[offset] = (EXTENDED_AUDIO_HEADER << 4) & 0xf0;
+      data[offset++] |= MULTITRACK & 0x0f;
+
+      // TODO: add ModEx packetype
+
+      data[offset] = ((multitrack_type << 4) & 0xf0);
+      // set the packet type in the MSBs
+      data[offset++] |= (type & 0x0f);
+
+      // add the FOURCC in 4 bytes
+      GST_WRITE_UINT32_LE (data + offset, pad->codec_fourcc);
+      offset += 4;
+
+      data[offset++] = pad->track_id;
+
+      memcpy (data + offset, bdata, bsize);
     } else {
-      memcpy (data + 11 + 1, bdata, bsize);
+      // legacy flv using single track with old codecs
+      data[11] |= (pad->codec << 4) & 0xf0;
+      data[11] |= (pad->rate << 2) & 0x0c;
+      data[11] |= (pad->width << 1) & 0x02;
+      data[11] |= (pad->channels << 0) & 0x01;
+
+      GST_LOG_OBJECT (mux, "Creating byte %02x with "
+          "codec:%d, rate:%d, width:%d, channels:%d",
+          data[11], pad->codec, pad->rate, pad->width, pad->channels);
+
+      if (pad->codec == 10) {
+        data[12] = is_codec_data ? 0 : 1;
+
+        memcpy (data + 11 + 1 + 1, bdata, bsize);
+      } else {
+        memcpy (data + 11 + 1, bdata, bsize);
+      }
     }
   }
 
   if (buffer)
     gst_buffer_unmap (buffer, &map);
 
-  GST_WRITE_UINT32_BE (data + size - 4, size - 4);
+  GST_WRITE_UINT32_BE (data + size - TAG_SIZE_LEN, size - TAG_SIZE_LEN);
 
   GST_BUFFER_PTS (tag) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DTS (tag) = GST_CLOCK_TIME_NONE;
@@ -1481,40 +1680,60 @@ gst_flv_mux_put_buffer_in_streamheader (GValue * streamheader,
 
 static GstCaps *
 gst_flv_mux_prepare_src_caps (GstFlvMux * mux, GstBuffer ** header_buf,
-    GstBuffer ** metadata_buf, GstBuffer ** video_codec_data_buf,
-    GstBuffer ** audio_codec_data_buf)
+    GstBuffer ** metadata_buf, GstBufferList ** codec_buf_list)
 {
   GstBuffer *header, *metadata;
-  GstBuffer *video_codec_data, *audio_codec_data;
+  GstBuffer *codec_data_tag;
   GstCaps *caps;
   GstStructure *structure;
   GValue streamheader = { 0 };
   GList *l;
+  GstBufferList *codec_tag_list = NULL;
+  GstBufferList *changed_codec_tag_list = NULL;
 
   header = gst_flv_mux_create_header (mux);
   metadata = gst_flv_mux_create_metadata (mux);
-  video_codec_data = NULL;
-  audio_codec_data = NULL;
+  codec_data_tag = NULL;
 
   GST_OBJECT_LOCK (mux);
   for (l = GST_ELEMENT_CAST (mux)->sinkpads; l != NULL; l = l->next) {
     GstFlvMuxPad *pad = l->data;
 
     /* Get H.264 and AAC codec data, if present */
-    if (pad && mux->video_pad == pad && pad->codec == 7) {
-      if (pad->codec_data == NULL)
-        GST_WARNING_OBJECT (mux, "Codec data for video stream not found, "
-            "output might not be playable");
-      else
-        video_codec_data =
-            gst_flv_mux_codec_data_buffer_to_tag (mux, pad->codec_data, pad);
-    } else if (pad && mux->audio_pad == pad && pad->codec == 10) {
-      if (pad->codec_data == NULL)
+    if (pad && (
+            (pad->type == GST_FLV_MUX_TRACK_TYPE_VIDEO && pad->codec == 7) ||
+            ((pad->type == GST_FLV_MUX_TRACK_TYPE_AUDIO && pad->codec == AAC))
+        )) {
+      if (pad->codec_data == NULL) {
         GST_WARNING_OBJECT (mux, "Codec data for audio stream not found, "
             "output might not be playable");
-      else
-        audio_codec_data =
+      } else {
+        codec_data_tag =
             gst_flv_mux_codec_data_buffer_to_tag (mux, pad->codec_data, pad);
+
+        if (pad->type == GST_FLV_MUX_TRACK_TYPE_VIDEO) {
+          /* mark as a delta unit, so downstream will not try to synchronize on that
+           * buffer - to actually start playback you need a real video keyframe */
+          GST_BUFFER_FLAG_SET (codec_data_tag, GST_BUFFER_FLAG_DELTA_UNIT);
+        }
+
+        GST_BUFFER_FLAG_SET (codec_data_tag, GST_BUFFER_FLAG_HEADER);
+
+        if (codec_data_tag != NULL) {
+          if (codec_tag_list == NULL)
+            codec_tag_list = gst_buffer_list_new ();
+          gst_buffer_list_add (codec_tag_list, codec_data_tag);
+
+          // create a shorter (duplicate) list in case of only info changed to send it downstream
+          if (mux->streamable && mux->sent_header && pad->info_changed) {
+            GstBuffer *changed_codec_data = gst_buffer_copy (codec_data_tag);
+            if (changed_codec_tag_list == NULL)
+              changed_codec_tag_list = gst_buffer_list_new ();
+            gst_buffer_list_add (changed_codec_tag_list, changed_codec_data);
+
+          }
+        }
+      }
     }
   }
   GST_OBJECT_UNLOCK (mux);
@@ -1522,24 +1741,18 @@ gst_flv_mux_prepare_src_caps (GstFlvMux * mux, GstBuffer ** header_buf,
   /* mark buffers that will go in the streamheader */
   GST_BUFFER_FLAG_SET (header, GST_BUFFER_FLAG_HEADER);
   GST_BUFFER_FLAG_SET (metadata, GST_BUFFER_FLAG_HEADER);
-  if (video_codec_data != NULL) {
-    GST_BUFFER_FLAG_SET (video_codec_data, GST_BUFFER_FLAG_HEADER);
-    /* mark as a delta unit, so downstream will not try to synchronize on that
-     * buffer - to actually start playback you need a real video keyframe */
-    GST_BUFFER_FLAG_SET (video_codec_data, GST_BUFFER_FLAG_DELTA_UNIT);
-  }
-  if (audio_codec_data != NULL) {
-    GST_BUFFER_FLAG_SET (audio_codec_data, GST_BUFFER_FLAG_HEADER);
-  }
 
   /* put buffers in streamheader */
   g_value_init (&streamheader, GST_TYPE_ARRAY);
   gst_flv_mux_put_buffer_in_streamheader (&streamheader, header);
   gst_flv_mux_put_buffer_in_streamheader (&streamheader, metadata);
-  if (video_codec_data != NULL)
-    gst_flv_mux_put_buffer_in_streamheader (&streamheader, video_codec_data);
-  if (audio_codec_data != NULL)
-    gst_flv_mux_put_buffer_in_streamheader (&streamheader, audio_codec_data);
+
+  if (codec_tag_list != NULL) {
+    for (guint i = 0; i < gst_buffer_list_length (codec_tag_list); i++) {
+      codec_data_tag = gst_buffer_list_get (codec_tag_list, i);
+      gst_flv_mux_put_buffer_in_streamheader (&streamheader, codec_data_tag);
+    }
+  }
 
   /* create the caps and put the streamheader in them */
   caps = gst_caps_new_empty_simple ("video/x-flv");
@@ -1559,16 +1772,12 @@ gst_flv_mux_prepare_src_caps (GstFlvMux * mux, GstBuffer ** header_buf,
     gst_buffer_unref (metadata);
   }
 
-  if (video_codec_data_buf) {
-    *video_codec_data_buf = video_codec_data;
-  } else if (video_codec_data) {
-    gst_buffer_unref (video_codec_data);
-  }
-
-  if (audio_codec_data_buf) {
-    *audio_codec_data_buf = audio_codec_data;
-  } else if (audio_codec_data) {
-    gst_buffer_unref (audio_codec_data);
+  if (mux->streamable && mux->sent_header) {
+    /* only send the codec data of the changed pads */
+    *codec_buf_list = changed_codec_tag_list;
+    gst_buffer_list_unref (codec_tag_list);
+  } else {
+    *codec_buf_list = codec_tag_list;
   }
 
   return caps;
@@ -1578,11 +1787,11 @@ static GstFlowReturn
 gst_flv_mux_write_header (GstFlvMux * mux)
 {
   GstBuffer *header, *metadata;
-  GstBuffer *video_codec_data, *audio_codec_data;
+  GstBufferList *codec_data_list = NULL;
   GstCaps *caps;
   GstFlowReturn ret;
 
-  header = metadata = video_codec_data = audio_codec_data = NULL;
+  header = metadata = NULL;
 
   /* if not streaming, check if downstream is seekable */
   if (!mux->streamable) {
@@ -1609,18 +1818,10 @@ gst_flv_mux_write_header (GstFlvMux * mux)
   }
 
   if (mux->streamable && mux->sent_header) {
-    GstBuffer **video_codec_data_p = NULL, **audio_codec_data_p = NULL;
-
-    if (mux->video_pad && mux->video_pad->info_changed)
-      video_codec_data_p = &video_codec_data;
-    if (mux->audio_pad && mux->audio_pad->info_changed)
-      audio_codec_data_p = &audio_codec_data;
-
-    caps = gst_flv_mux_prepare_src_caps (mux,
-        NULL, NULL, video_codec_data_p, audio_codec_data_p);
+    caps = gst_flv_mux_prepare_src_caps (mux, NULL, NULL, &codec_data_list);
   } else {
     caps = gst_flv_mux_prepare_src_caps (mux,
-        &header, &metadata, &video_codec_data, &audio_codec_data);
+        &header, &metadata, &codec_data_list);
   }
 
   gst_aggregator_set_src_caps (GST_AGGREGATOR_CAST (mux), caps);
@@ -1640,17 +1841,18 @@ gst_flv_mux_write_header (GstFlvMux * mux)
       goto failure_metadata;
     mux->new_metadata = FALSE;
   }
-  if (video_codec_data != NULL) {
-    ret = gst_flv_mux_push (mux, video_codec_data);
+
+  if (codec_data_list != NULL && gst_buffer_list_length (codec_data_list) != 0) {
+    ret = gst_flv_mux_push_list (mux, codec_data_list);
     if (ret != GST_FLOW_OK)
-      goto failure_video_codec_data;
-    mux->video_pad->info_changed = FALSE;
-  }
-  if (audio_codec_data != NULL) {
-    ret = gst_flv_mux_push (mux, audio_codec_data);
-    if (ret != GST_FLOW_OK)
-      goto failure_audio_codec_data;
-    mux->audio_pad->info_changed = FALSE;
+      goto failure_codec_data;
+
+    GST_OBJECT_LOCK (mux);
+    for (GList * p = mux->audio_pads; p; p = p->next) {
+      GstFlvMuxPad *a_pad = p->data;
+      a_pad->info_changed = FALSE;
+    }
+    GST_OBJECT_UNLOCK (mux);
   }
   return GST_FLOW_OK;
 
@@ -1658,14 +1860,9 @@ failure_header:
   gst_buffer_unref (metadata);
 
 failure_metadata:
-  if (video_codec_data != NULL)
-    gst_buffer_unref (video_codec_data);
+  gst_buffer_list_unref (codec_data_list);
 
-failure_video_codec_data:
-  if (audio_codec_data != NULL)
-    gst_buffer_unref (audio_codec_data);
-
-failure_audio_codec_data:
+failure_codec_data:
   return ret;
 }
 
@@ -2233,8 +2430,8 @@ gst_flv_mux_get_next_time (GstAggregator * aggregator)
 
   GST_OBJECT_LOCK (aggregator);
   if (mux->state == GST_FLV_MUX_STATE_HEADER &&
-      ((mux->audio_pad && mux->audio_pad->codec == G_MAXUINT) ||
-          (mux->video_pad && mux->video_pad->codec == G_MAXUINT)))
+      (!gst_flv_mux_pads_codec_valid (mux->audio_pads) || (mux->video_pad
+              && mux->video_pad->codec == G_MAXUINT)))
     goto wait_for_data;
   GST_OBJECT_UNLOCK (aggregator);
 
@@ -2246,4 +2443,20 @@ gst_flv_mux_get_next_time (GstAggregator * aggregator)
 wait_for_data:
   GST_OBJECT_UNLOCK (aggregator);
   return GST_CLOCK_TIME_NONE;
+}
+
+static gboolean
+gst_flv_mux_pads_codec_valid (GList * pads)
+{
+  guint len = 0;
+  guint valid_codec_pads = 0;
+
+  for (GList * l = pads; l; l = l->next) {
+    GstFlvMuxPad *pad = l->data;
+    len++;
+    if (pad->codec == G_MAXUINT)
+      break;
+    valid_codec_pads++;
+  }
+  return (len == valid_codec_pads);
 }
