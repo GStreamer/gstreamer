@@ -83,6 +83,7 @@ get_shell_type (void)
  * - % needs to be escaped with ^ otherwise it will undergo variable expansion
  * - % must not be quoted with " otherwise the caret-escaping doesn't work
  * - " needs to be escaped as "" when inside " quotes
+ * - \ needs to be escaped as \\ due to gst_value_deserialize()
  *
  * So for example `%PATH% bar" wdwd |` becomes `""^%"PATH"^%" bar"" wdwd |"`
  */
@@ -91,6 +92,7 @@ cmd_quote (const char *s)
 {
   GString *str = g_string_new (s);
   g_string_replace (str, "\"", "\"\"", 0);
+  g_string_replace (str, "\\", "\\\\", 0);
   str = g_string_prepend_c (str, '"');
   str = g_string_append_c (str, '"');
   /* Very simple and very ugly: simply terminate the " quoting when we
@@ -102,6 +104,9 @@ cmd_quote (const char *s)
 /* Verbatim quoting rules:
  * https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_quoting_rules
  *
+ * On top of this, \ needs to be escaped as \\ due to gst_value_deserialize()
+ * when parsing launch-lines.
+ *
  * The main vs WinMain issue exists here, but the quoting rules are simple
  * enough to cover both.
  */
@@ -112,6 +117,7 @@ powershell_quote (const char *s)
   g_string_replace (str, "'", "''", 0);
   g_string_replace (str, "‘", "‘‘", 0);
   g_string_replace (str, "’", "’’", 0);
+  g_string_replace (str, "\\", "\\\\", 0);
   str = g_string_prepend_c (str, '\'');
   str = g_string_append_c (str, '\'');
   return g_string_free (str, FALSE);
