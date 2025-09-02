@@ -31,9 +31,6 @@
 #include <gst/gst.h>
 #include <stdlib.h>
 
-//#define GETTEXT_PACKAGE "intertest"
-
-
 typedef struct _GstInterTest GstInterTest;
 struct _GstInterTest
 {
@@ -51,7 +48,7 @@ struct _GstInterTest
 GstInterTest *gst_inter_test_new (void);
 void gst_inter_test_free (GstInterTest * intertest);
 void gst_inter_test_create_pipeline_server (GstInterTest * intertest);
-void gst_inter_test_create_pipeline_vts (GstInterTest * intertest);
+void gst_inter_test_create_pipeline_test_sources (GstInterTest * intertest);
 void gst_inter_test_create_pipeline_playbin (GstInterTest * intertest,
     const char *uri);
 void gst_inter_test_start (GstInterTest * intertest);
@@ -64,8 +61,12 @@ static gboolean onesecond_timer (gpointer priv);
 
 gboolean verbose;
 
+static const gchar **uri_arg = NULL;
+
 static GOptionEntry entries[] = {
   {"verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Be verbose", NULL},
+  {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &uri_arg, 0,
+      "[URL]"},
 
   {NULL}
 
@@ -79,24 +80,28 @@ main (int argc, char *argv[])
   GstInterTest *intertest1;
   GstInterTest *intertest2;
   GMainLoop *main_loop;
+  const gchar *uri = NULL;
 
   context = g_option_context_new ("- Internal src/sink test");
   g_option_context_add_main_entries (context, entries, GETTEXT_PACKAGE);
   g_option_context_add_group (context, gst_init_get_option_group ());
   if (!g_option_context_parse (context, &argc, &argv, &error)) {
-    g_print ("option parsing failed: %s\n", error->message);
+    gst_println ("option parsing failed: %s", error->message);
     g_option_context_free (context);
     g_clear_error (&error);
     exit (1);
   }
   g_option_context_free (context);
 
+  if (uri_arg)
+    uri = uri_arg[0];
+
   intertest1 = gst_inter_test_new ();
   gst_inter_test_create_pipeline_server (intertest1);
   gst_inter_test_start (intertest1);
 
   intertest2 = gst_inter_test_new ();
-  gst_inter_test_create_pipeline_playbin (intertest2, NULL);
+  gst_inter_test_create_pipeline_playbin (intertest2, uri);
   gst_inter_test_start (intertest2);
 
   main_loop = g_main_loop_new (NULL, TRUE);
@@ -106,6 +111,10 @@ main (int argc, char *argv[])
   g_main_loop_run (main_loop);
   g_main_loop_unref (main_loop);
 
+  gst_inter_test_free (intertest1);
+  gst_inter_test_free (intertest2);
+
+  gst_deinit ();
   exit (0);
 }
 
@@ -123,24 +132,21 @@ gst_inter_test_new (void)
 void
 gst_inter_test_free (GstInterTest * intertest)
 {
-  if (intertest->source_element) {
-    gst_object_unref (intertest->source_element);
-    intertest->source_element = NULL;
-  }
-  if (intertest->sink_element) {
-    gst_object_unref (intertest->sink_element);
-    intertest->sink_element = NULL;
-  }
+  if (!intertest)
+    return;
+
+  gst_clear_object (&intertest->source_element);
+  gst_clear_object (&intertest->sink_element);
 
   if (intertest->bus) {
-    gst_object_unref (intertest->bus);
-    intertest->bus = NULL;
+    gst_bus_remove_watch (intertest->bus);
+    gst_bus_set_flushing (intertest->bus, TRUE);
+    gst_clear_object (&intertest->bus);
   }
 
   if (intertest->pipeline) {
     gst_element_set_state (intertest->pipeline, GST_STATE_NULL);
-    gst_object_unref (intertest->pipeline);
-    intertest->pipeline = NULL;
+    gst_clear_object (&intertest->pipeline);
   }
   g_free (intertest);
 }
@@ -150,15 +156,22 @@ gst_inter_test_create_pipeline_playbin (GstInterTest * intertest,
     const char *uri)
 {
   GstElement *pipeline;
+  GstElement *playbin;
+  GstElement *audio_sink;
+  GstElement *video_sink;
 
   if (uri == NULL) {
-    gst_inter_test_create_pipeline_vts (intertest);
+    gst_inter_test_create_pipeline_test_sources (intertest);
     return;
   }
 
   pipeline = gst_pipeline_new (NULL);
-  gst_bin_add (GST_BIN (pipeline),
-      gst_element_factory_make ("playbin", "source"));
+  playbin = gst_element_factory_make ("playbin3", "source");
+  audio_sink = gst_element_factory_make ("interaudiosink", NULL);
+  video_sink = gst_element_factory_make ("intervideosink", NULL);
+  g_object_set (playbin, "audio-sink", audio_sink, "video-sink", video_sink,
+      NULL);
+  gst_bin_add (GST_BIN_CAST (pipeline), playbin);
 
   intertest->pipeline = pipeline;
 
@@ -168,14 +181,14 @@ gst_inter_test_create_pipeline_playbin (GstInterTest * intertest,
 
   intertest->source_element =
       gst_bin_get_by_name (GST_BIN (pipeline), "source");
-  g_print ("source_element is %p\n", intertest->source_element);
+  gst_println ("source_element is %" GST_PTR_FORMAT, intertest->source_element);
 
-  g_print ("setting uri to %s\n", uri);
+  gst_println ("setting uri to %s", uri);
   g_object_set (intertest->source_element, "uri", uri, NULL);
 }
 
 void
-gst_inter_test_create_pipeline_vts (GstInterTest * intertest)
+gst_inter_test_create_pipeline_test_sources (GstInterTest * intertest)
 {
   GString *pipe_desc;
   GstElement *pipeline;
@@ -189,17 +202,17 @@ gst_inter_test_create_pipeline_vts (GstInterTest * intertest)
   g_string_append (pipe_desc, "timeoverlay ! ");
   g_string_append (pipe_desc, "intervideosink name=sink sync=true ");
   g_string_append (pipe_desc,
-      "audiotestsrc samplesperbuffer=1600 num-buffers=100 ! audioconvert ! ");
+      "audiotestsrc samplesperbuffer=1600 num-buffers=100 ! audio/x-raw,format=F32LE ! audioconvert ! ");
   g_string_append (pipe_desc, "interaudiosink sync=true ");
 
   if (verbose)
-    g_print ("pipeline: %s\n", pipe_desc->str);
+    gst_println ("pipeline: %s", pipe_desc->str);
 
-  pipeline = (GstElement *) gst_parse_launch (pipe_desc->str, &error);
+  pipeline = gst_parse_launch (pipe_desc->str, &error);
   g_string_free (pipe_desc, TRUE);
 
   if (error) {
-    g_print ("pipeline parsing error: %s\n", error->message);
+    gst_println ("pipeline parsing error: %s", error->message);
     gst_object_unref (pipeline);
     g_clear_error (&error);
     return;
@@ -226,18 +239,18 @@ gst_inter_test_create_pipeline_server (GstInterTest * intertest)
   pipe_desc = g_string_new ("");
 
   g_string_append (pipe_desc, "intervideosrc ! queue ! ");
-  g_string_append (pipe_desc, "xvimagesink name=sink ");
+  g_string_append (pipe_desc, "autovideosink name=sink ");
   g_string_append (pipe_desc, "interaudiosrc ! queue ! ");
-  g_string_append (pipe_desc, "alsasink ");
+  g_string_append (pipe_desc, "autoaudiosink ");
 
   if (verbose)
-    g_print ("pipeline: %s\n", pipe_desc->str);
+    gst_println ("pipeline: %s", pipe_desc->str);
 
   pipeline = (GstElement *) gst_parse_launch (pipe_desc->str, &error);
   g_string_free (pipe_desc, TRUE);
 
   if (error) {
-    g_print ("pipeline parsing error: %s\n", error->message);
+    gst_println ("pipeline parsing error: %s", error->message);
     gst_object_unref (pipeline);
     g_clear_error (&error);
     return;
@@ -259,7 +272,7 @@ gst_inter_test_start (GstInterTest * intertest)
 {
   gst_element_set_state (intertest->pipeline, GST_STATE_READY);
 
-  intertest->timer_id = g_timeout_add (1000, onesecond_timer, intertest);
+  intertest->timer_id = g_timeout_add_seconds (1, onesecond_timer, intertest);
 }
 
 void
@@ -280,7 +293,7 @@ static void
 gst_inter_test_handle_error (GstInterTest * intertest, GError * error,
     const char *debug)
 {
-  g_print ("error: %s\n", error->message);
+  gst_printerrln ("error: %s", error->message);
   gst_inter_test_stop (intertest);
 }
 
@@ -288,14 +301,14 @@ static void
 gst_inter_test_handle_warning (GstInterTest * intertest, GError * error,
     const char *debug)
 {
-  g_print ("warning: %s\n", error->message);
+  gst_printerrln ("warning: %s", error->message);
 }
 
 static void
 gst_inter_test_handle_info (GstInterTest * intertest, GError * error,
     const char *debug)
 {
-  g_print ("info: %s\n", error->message);
+  gst_println ("info: %s", error->message);
 }
 
 static void
@@ -334,8 +347,7 @@ gst_inter_test_handle_paused_to_ready (GstInterTest * intertest)
 static void
 gst_inter_test_handle_ready_to_null (GstInterTest * intertest)
 {
-  //g_main_loop_quit (intertest->main_loop);
-
+  g_main_loop_quit (intertest->main_loop);
 }
 
 
@@ -388,7 +400,8 @@ gst_inter_test_handle_message (GstBus * bus, GstMessage * message,
 
       gst_message_parse_tag (message, &tag_list);
       if (verbose)
-        g_print ("tag\n");
+        gst_println ("tag: %" GST_PTR_FORMAT, tag_list);
+      gst_tag_list_unref (tag_list);
     }
       break;
     case GST_MESSAGE_STATE_CHANGED:
@@ -398,7 +411,7 @@ gst_inter_test_handle_message (GstBus * bus, GstMessage * message,
       gst_message_parse_state_changed (message, &oldstate, &newstate, &pending);
       if (GST_ELEMENT (message->src) == intertest->pipeline) {
         if (verbose)
-          g_print ("state change from %s to %s\n",
+          gst_println ("state change from %s to %s",
               gst_element_state_get_name (oldstate),
               gst_element_state_get_name (newstate));
         switch (GST_STATE_TRANSITION (oldstate, newstate)) {
@@ -422,7 +435,7 @@ gst_inter_test_handle_message (GstBus * bus, GstMessage * message,
             break;
           default:
             if (verbose)
-              g_print ("unknown state change from %s to %s\n",
+              gst_println ("unknown state change from %s to %s",
                   gst_element_state_get_name (oldstate),
                   gst_element_state_get_name (newstate));
         }
@@ -433,13 +446,13 @@ gst_inter_test_handle_message (GstBus * bus, GstMessage * message,
     {
       int percent;
       gst_message_parse_buffering (message, &percent);
-      //g_print("buffering %d\n", percent);
+      //gst_println("buffering %d", percent);
       if (!intertest->paused_for_buffering && percent < 100) {
-        g_print ("pausing for buffing\n");
+        gst_println ("pausing for buffing");
         intertest->paused_for_buffering = TRUE;
         gst_element_set_state (intertest->pipeline, GST_STATE_PAUSED);
       } else if (intertest->paused_for_buffering && percent == 100) {
-        g_print ("unpausing for buffing\n");
+        gst_println ("unpausing for buffing");
         intertest->paused_for_buffering = FALSE;
         gst_element_set_state (intertest->pipeline, GST_STATE_PLAYING);
       }
@@ -464,7 +477,7 @@ gst_inter_test_handle_message (GstBus * bus, GstMessage * message,
     case GST_MESSAGE_STEP_START:
     default:
       if (verbose) {
-        g_print ("message: %s\n", GST_MESSAGE_TYPE_NAME (message));
+        gst_println ("message: %s", GST_MESSAGE_TYPE_NAME (message));
       }
       break;
     case GST_MESSAGE_QOS:
@@ -474,34 +487,12 @@ gst_inter_test_handle_message (GstBus * bus, GstMessage * message,
   return TRUE;
 }
 
-
-
 static gboolean
 onesecond_timer (gpointer priv)
 {
   //GstInterTest *intertest = (GstInterTest *)priv;
 
-  g_print (".\n");
+  gst_println (".");
 
-  return TRUE;
+  return G_SOURCE_CONTINUE;
 }
-
-
-
-/* helper functions */
-
-#if 0
-gboolean
-have_element (const gchar * element_name)
-{
-  GstPluginFeature *feature;
-
-  feature = gst_default_registry_find_feature (element_name,
-      GST_TYPE_ELEMENT_FACTORY);
-  if (feature) {
-    g_object_unref (feature);
-    return TRUE;
-  }
-  return FALSE;
-}
-#endif
