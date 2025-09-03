@@ -106,27 +106,6 @@ that surface.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
-    <function-macro name="VA_ALLOCATOR" c:identifier="GST_VA_ALLOCATOR" introspectable="0">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
-      <parameters>
-        <parameter name="obj">
-        </parameter>
-      </parameters>
-    </function-macro>
-    <function-macro name="VA_ALLOCATOR_CLASS" c:identifier="GST_VA_ALLOCATOR_CLASS" introspectable="0">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
-      <parameters>
-        <parameter name="klass">
-        </parameter>
-      </parameters>
-    </function-macro>
-    <function-macro name="VA_ALLOCATOR_GET_CLASS" c:identifier="GST_VA_ALLOCATOR_GET_CLASS" introspectable="0">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
-      <parameters>
-        <parameter name="obj">
-        </parameter>
-      </parameters>
-    </function-macro>
     <function-macro name="VA_DISPLAY" c:identifier="GST_VA_DISPLAY" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
       <parameters>
@@ -200,48 +179,6 @@ that surface.</doc>
     </function-macro>
     <function-macro name="VA_DISPLAY_WRAPPED_GET_CLASS" c:identifier="GST_VA_DISPLAY_WRAPPED_GET_CLASS" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_wrapped.h"/>
-      <parameters>
-        <parameter name="obj">
-        </parameter>
-      </parameters>
-    </function-macro>
-    <function-macro name="VA_DMABUF_ALLOCATOR" c:identifier="GST_VA_DMABUF_ALLOCATOR" introspectable="0">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
-      <parameters>
-        <parameter name="obj">
-        </parameter>
-      </parameters>
-    </function-macro>
-    <function-macro name="VA_DMABUF_ALLOCATOR_CLASS" c:identifier="GST_VA_DMABUF_ALLOCATOR_CLASS" introspectable="0">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
-      <parameters>
-        <parameter name="klass">
-        </parameter>
-      </parameters>
-    </function-macro>
-    <function-macro name="VA_DMABUF_ALLOCATOR_GET_CLASS" c:identifier="GST_VA_DMABUF_ALLOCATOR_GET_CLASS" introspectable="0">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
-      <parameters>
-        <parameter name="obj">
-        </parameter>
-      </parameters>
-    </function-macro>
-    <function-macro name="VA_POOL" c:identifier="GST_VA_POOL" introspectable="0">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.h"/>
-      <parameters>
-        <parameter name="obj">
-        </parameter>
-      </parameters>
-    </function-macro>
-    <function-macro name="VA_POOL_CLASS" c:identifier="GST_VA_POOL_CLASS" introspectable="0">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.h"/>
-      <parameters>
-        <parameter name="klass">
-        </parameter>
-      </parameters>
-    </function-macro>
-    <function-macro name="VA_POOL_GET_CLASS" c:identifier="GST_VA_POOL_GET_CLASS" introspectable="0">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.h"/>
       <parameters>
         <parameter name="obj">
         </parameter>

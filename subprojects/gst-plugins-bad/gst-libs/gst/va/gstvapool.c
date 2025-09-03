@@ -40,6 +40,10 @@
 GST_DEBUG_CATEGORY_STATIC (gst_va_pool_debug);
 #define GST_CAT_DEFAULT gst_va_pool_debug
 
+#define GST_VA_POOL(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_VA_POOL, GstVaPool))
+#define GST_VA_POOL_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_VA_POOL, GstVaPoolClass))
+#define GST_VA_POOL_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_VA_POOL, GstVaPoolClass))
+
 /**
  * GstVaPool:
  *

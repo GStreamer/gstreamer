@@ -29,11 +29,8 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_VA_DMABUF_ALLOCATOR (gst_va_dmabuf_allocator_get_type())
-#define GST_VA_DMABUF_ALLOCATOR(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_VA_DMABUF_ALLOCATOR, GstVaDmabufAllocator))
-#define GST_VA_DMABUF_ALLOCATOR_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_VA_DMABUF_ALLOCATOR, GstVaDmabufAllocatorClass))
 #define GST_IS_VA_DMABUF_ALLOCATOR(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_VA_DMABUF_ALLOCATOR))
 #define GST_IS_VA_DMABUF_ALLOCATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VA_DMABUF_ALLOCATOR))
-#define GST_VA_DMABUF_ALLOCATOR_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_VA_DMABUF_ALLOCATOR, GstVaDmabufAllocatorClass))
 
 GST_VA_API
 GType                 gst_va_dmabuf_allocator_get_type    (void);
@@ -70,11 +67,8 @@ guint64               gst_va_dmabuf_get_modifier_for_format (GstVaDisplay * disp
                                                              guint usage_hint);
 
 #define GST_TYPE_VA_ALLOCATOR (gst_va_allocator_get_type())
-#define GST_VA_ALLOCATOR(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_VA_ALLOCATOR, GstVaAllocator))
-#define GST_VA_ALLOCATOR_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_VA_ALLOCATOR, GstVaAllocatorClass))
 #define GST_IS_VA_ALLOCATOR(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_VA_ALLOCATOR))
 #define GST_IS_VA_ALLOCATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VA_ALLOCATOR))
-#define GST_VA_ALLOCATOR_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_VA_ALLOCATOR, GstVaAllocatorClass))
 
 /**
  * GST_ALLOCATOR_VASURFACE:

@@ -27,11 +27,8 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_VA_POOL (gst_va_pool_get_type())
-#define GST_VA_POOL(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_VA_POOL, GstVaPool))
-#define GST_VA_POOL_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_VA_POOL, GstVaPoolClass))
 #define GST_IS_VA_POOL(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_VA_POOL))
 #define GST_IS_VA_POOL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VA_POOL))
-#define GST_VA_POOL_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_VA_POOL, GstVaPoolClass))
 
 GST_VA_API
 GType                gst_va_pool_get_type                 (void);
