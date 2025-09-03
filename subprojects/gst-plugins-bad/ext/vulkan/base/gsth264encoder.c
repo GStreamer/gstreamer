@@ -235,14 +235,6 @@ struct _GstH264EncoderPrivate
   gboolean need_configure;
 };
 
-/**
- * GstH264Encoder:
- *
- * Opaque #GstH264Encoder data structure.
- *
- * Since: 1.28
- */
-
 #define parent_class gst_h264_encoder_parent_class
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstH264Encoder, gst_h264_encoder,
     GST_TYPE_VIDEO_ENCODER,
@@ -2832,7 +2824,7 @@ gst_h264_encoder_class_init (GstH264EncoderClass * klass)
    *
    * Set 0 for auto-calculate it.
    *
-   * Since: 1.28
+   * Since: 1.30
    */
   properties[PROP_IDR_PERIOD] = g_param_spec_uint ("idr-period",
       "Maximum GOP size", "Maximum number of frames between two IDR frames",
@@ -2847,7 +2839,7 @@ gst_h264_encoder_class_init (GstH264EncoderClass * klass)
    *
    * The availability of B-frames depends on the driver.
    *
-   * Since: 1.28
+   * Since: 1.30
    */
   properties[PROP_BFRAMES] = g_param_spec_uint ("b-frames", "B Frames",
       "Maximum number of consecutive B frames between I and P reference frames",
@@ -2860,7 +2852,7 @@ gst_h264_encoder_class_init (GstH264EncoderClass * klass)
    * increase the size of the video, but it will be more resilient to data
    * lose.
    *
-   * Since: 1.28
+   * Since: 1.30
    */
   properties[PROP_IFRAMES] = g_param_spec_uint ("i-frames", "I Frames",
       "Force the number of I frames insertion within one GOP, not including the "
@@ -2874,7 +2866,7 @@ gst_h264_encoder_class_init (GstH264EncoderClass * klass)
    * better visual quality at the same file size, but it may require encoding
    * time.
    *
-   * Since: 1.28
+   * Since: 1.30
    */
   properties[PROP_NUM_REF_FRAMES] = g_param_spec_int ("num-ref-frames",
       "Number of reference frames", "Number of frames referenced by P and B "
@@ -2889,24 +2881,24 @@ gst_h264_encoder_class_init (GstH264EncoderClass * klass)
    *
    * It only works with "high" profile.
    *
-   * Since: 1.28
+   * Since: 1.30
    */
   properties[PROP_B_PYRAMID] = g_param_spec_boolean ("b-pyramid", "b pyramid",
       "Enable the b-pyramid reference structure in the GOP",
       H264ENC_B_PYRAMID_DEFAULT, param_flags);
 
   g_object_class_install_properties (object_class, N_PROPERTIES, properties);
-
-  gst_type_mark_as_plugin_api (GST_TYPE_H264_ENCODER, 0);
 }
 
 /**
- * gst_h264_self_set_max_num_references:
+ * gst_h264_encoder_set_max_num_references:
  * @self: A #GstH264Encoder
  * @list0: the maximum number of reference pictures for list L0
  * @list1: the maximum number of reference pictures for list L1
  *
  * Set the maximum number of reference pictures allowed by the accelerator.
+ *
+ * Since: 1.30
  */
 void
 gst_h264_encoder_set_max_num_references (GstH264Encoder * self, guint list0,
@@ -2927,6 +2919,8 @@ gst_h264_encoder_set_max_num_references (GstH264Encoder * self, guint list0,
  * @self: a #GstH264Encoder
  *
  * Returns: whether the current stream is live
+ *
+ * Since: 1.30
  */
 gboolean
 gst_h264_encoder_is_live (GstH264Encoder * self)
@@ -2946,6 +2940,8 @@ gst_h264_encoder_is_live (GstH264Encoder * self)
  *
  * Some accelerators such as Intel VA-API has better performance if it holds a
  * group of frames to process.
+ *
+ * Since: 1.30
  */
 void
 gst_h264_encoder_set_preferred_output_delay (GstH264Encoder * self, guint delay)
@@ -2965,6 +2961,8 @@ gst_h264_encoder_set_preferred_output_delay (GstH264Encoder * self, guint delay)
  *
  * Through this method the subclass can request the encoder reconfiguration
  * and downstream renegotiation.
+ *
+ * Since: 1.30
  */
 gboolean
 gst_h264_encoder_reconfigure (GstH264Encoder * self, gboolean force)
@@ -2994,6 +2992,8 @@ gst_h264_encoder_reconfigure (GstH264Encoder * self, gboolean force)
  * properties.
  *
  * Returns: the IDR period
+ *
+ * Since: 1.30
  */
 guint32
 gst_h264_encoder_get_idr_period (GstH264Encoder * self)
@@ -3020,6 +3020,8 @@ gst_h264_encoder_get_idr_period (GstH264Encoder * self)
  * GObject properties.
  *
  * Returns: the number of consecutive B-Frames
+ *
+ * Since: 1.30
  */
 guint32
 gst_h264_encoder_get_num_b_frames (GstH264Encoder * self)
@@ -3045,6 +3047,8 @@ gst_h264_encoder_get_num_b_frames (GstH264Encoder * self)
  * Returns whether the GOP has a b-pyramid structure.
  *
  * Returns: %TRUE if GOP has a b-pyramid structure
+ *
+ * Since: 1.30
  */
 gboolean
 gst_h264_encoder_gop_is_b_pyramid (GstH264Encoder * self)
@@ -3065,13 +3069,13 @@ gst_h264_encoder_gop_is_b_pyramid (GstH264Encoder * self)
 
 /**
  * gst_h264_get_cpb_nal_factor:
- * @profile: a #GstH264Profile
+ * @profile: (type gint): a #GstH264Profile
  *
  * The values comes from Table A-2 + H.10.2.1
  *
  * Returns: the bitrate NAL factor of the coded picture buffer.
  *
- * Since: 1.28
+ * Since: 1.30
  */
 guint
 gst_h264_get_cpb_nal_factor (GstH264Profile profile)
@@ -3087,7 +3091,7 @@ gst_h264_get_cpb_nal_factor (GstH264Profile profile)
 
 /**
  * gst_h264_get_level_descriptor:
- * @profile: a #GstH264Profile
+ * @profile: (type gint): a #GstH264Profile
  * @bitrate: bit rate in bytes per second
  * @in_info: raw stream's #GstVideoInfo
  * @max_dec_frame_buffering: the max size of DPB
@@ -3096,7 +3100,7 @@ gst_h264_get_cpb_nal_factor (GstH264Profile profile)
  *   @bitrate, framesize and framerate in @in_info, and
  *   @max_dec_frame_buffering. If no descriptor found, it returns %NULL.
  *
- * Since: 1.28
+ * Since: 1.30
  */
 const GstH264LevelDescriptor *
 gst_h264_get_level_descriptor (GstH264Profile profile, guint64 bitrate,
@@ -3144,23 +3148,23 @@ gst_h264_get_level_descriptor (GstH264Profile profile, guint64 bitrate,
 }
 
 /* Maximum sizes for common headers (in bits) */
-#define MAX_SPS_HDR_SIZE    16473
-#define MAX_VUI_PARAMS_SIZE 210
-#define MAX_HRD_PARAMS_SIZE 4103
-#define MAX_PPS_HDR_SIZE    101
-#define MAX_SLICE_HDR_SIZE  397 + 2572 + 6670 + 2402
+#define GST_H264_MAX_SPS_HDR_SIZE    16473
+#define GST_H264_MAX_VUI_PARAMS_SIZE 210
+#define GST_H264_MAX_HRD_PARAMS_SIZE 4103
+#define GST_H264_MAX_PPS_HDR_SIZE    101
+#define GST_H264_MAX_SLICE_HDR_SIZE  397 + 2572 + 6670 + 2402
 
 /**
  * gst_h264_calculate_coded_size:
- * @sps: the #GstH264SPS
+ * @sps: (skip): the #GstH264SPS
  * @num_slices: number of slices to encode per frame
  *
  * Returns the calculated size of the encoded buffer.
  *
- * Since: 1.28
+ * Since: 1.30
  */
 gsize
-gst_h264_calculate_coded_size (GstH264SPS * sps, guint num_slices)
+gst_h264_calculate_coded_size (const GstH264SPS * sps, guint num_slices)
 {
   gsize codedbuf_size = 0;
   GstH264Profile profile;
@@ -3214,15 +3218,17 @@ gst_h264_calculate_coded_size (GstH264SPS * sps, guint num_slices)
 
   /* Account for SPS header */
   /* XXX: exclude scaling lists, MVC/SVC extensions */
-  codedbuf_size += 4 /* start code */  + GST_ROUND_UP_8 (MAX_SPS_HDR_SIZE +
-      MAX_VUI_PARAMS_SIZE + 2 * MAX_HRD_PARAMS_SIZE) / 8;
+  codedbuf_size += 4             /* start code */
+      + GST_ROUND_UP_8 (GST_H264_MAX_SPS_HDR_SIZE + GST_H264_MAX_VUI_PARAMS_SIZE
+      + 2 * GST_H264_MAX_HRD_PARAMS_SIZE) / 8;
 
   /* Account for PPS header */
   /* XXX: exclude slice groups, scaling lists, MVC/SVC extensions */
-  codedbuf_size += 4 + GST_ROUND_UP_8 (MAX_PPS_HDR_SIZE) / 8;
+  codedbuf_size += 4 + GST_ROUND_UP_8 (GST_H264_MAX_PPS_HDR_SIZE) / 8;
 
   /* Account for slice header */
-  codedbuf_size += num_slices * (4 + GST_ROUND_UP_8 (MAX_SLICE_HDR_SIZE) / 8);
+  codedbuf_size += num_slices
+      * (4 + GST_ROUND_UP_8 (GST_H264_MAX_SLICE_HDR_SIZE) / 8);
 
   /* Add ceil 5% for safety */
   codedbuf_size = ((guint) (((gfloat) codedbuf_size * 1.05) + 1)) >> 0;
