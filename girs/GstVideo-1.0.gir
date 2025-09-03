@@ -13935,7 +13935,12 @@ mapped with flag GST_MAP_READWRITE.</doc>
 to modify the composition and contained rectangles (e.g. add additional
 rectangles or change the render co-ordinates or render dimension). The
 actual overlay pixel data buffers contained in the rectangles are not
-copied.</doc>
+copied.
+
+This should be avoided unless rectangles need to be modified because it
+invalidates caching in sinks and compositor elements. To add extra rectangles
+it is rather recommended to add an extra composition meta using
+gst_buffer_add_video_overlay_composition_meta().</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-overlay-composition.h"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-overlay-composition.c">a new #GstVideoOverlayComposition equivalent
@@ -13992,7 +13997,12 @@ a composition).</doc>
 (i.e. can be modified). Will either return @comp right away, or create a
 new writable copy of @comp and unref @comp itself. All the contained
 rectangles will also be copied, but the actual overlay pixel data buffers
-contained in the rectangles are not copied.</doc>
+contained in the rectangles are not copied.
+
+This should be avoided unless rectangles need to be modified because it
+invalidates caching in sinks and compositor elements. To add extra rectangles
+it is rather recommended to add an extra composition meta using
+gst_buffer_add_video_overlay_composition_meta().</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-overlay-composition.h"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-overlay-composition.c">a writable #GstVideoOverlayComposition
@@ -16955,10 +16965,14 @@ on @buffer.</doc>
         </parameter>
       </parameters>
     </function-macro>
-    <function-macro name="buffer_get_video_overlay_composition_meta" c:identifier="gst_buffer_get_video_overlay_composition_meta" introspectable="0">
+    <function-macro name="buffer_get_video_overlay_composition_meta" c:identifier="gst_buffer_get_video_overlay_composition_meta" introspectable="0" deprecated="1">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-overlay-composition.h">Gets the first video composition meta.</doc>
+      <doc-deprecated xml:space="preserve">It is common to have multiple video composition metas, it is thus
+ recommended to use use gst_buffer_iterate_meta() instead.</doc-deprecated>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-overlay-composition.h"/>
       <parameters>
         <parameter name="b">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-overlay-composition.h">a #GstBuffer</doc>
         </parameter>
       </parameters>
     </function-macro>

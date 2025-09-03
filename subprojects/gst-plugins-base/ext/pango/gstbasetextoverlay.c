@@ -816,7 +816,6 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
   overlay->text_linked = FALSE;
 
   overlay->composition = NULL;
-  overlay->upstream_composition = NULL;
 
   overlay->width = 1;
   overlay->height = 1;
@@ -1745,15 +1744,7 @@ gst_base_text_overlay_set_composition (GstBaseTextOverlay * overlay)
 
     if (overlay->composition)
       gst_video_overlay_composition_unref (overlay->composition);
-
-    if (overlay->upstream_composition) {
-      overlay->composition =
-          gst_video_overlay_composition_copy (overlay->upstream_composition);
-      gst_video_overlay_composition_add_rectangle (overlay->composition,
-          rectangle);
-    } else {
-      overlay->composition = gst_video_overlay_composition_new (rectangle);
-    }
+    overlay->composition = gst_video_overlay_composition_new (rectangle);
 
     if (alt_rect) {
       gst_video_overlay_composition_add_rectangle (overlay->composition,
@@ -2787,7 +2778,7 @@ gst_base_text_overlay_text_chain (GstPad * pad, GstObject * parent,
       }
     }
 
-    /* Calculate and store the running time for this text buffer in 
+    /* Calculate and store the running time for this text buffer in
      * the current segment. We might receive a new text pad segment
      * event while this buffer is still active, and that would
      * lead to incorrect running time calculations if we did it later.
@@ -2840,21 +2831,8 @@ gst_base_text_overlay_video_chain (GstPad * pad, GstObject * parent,
   gboolean in_seg = FALSE;
   guint64 start, stop, clip_start = 0, clip_stop = 0;
   gchar *text = NULL;
-  GstVideoOverlayCompositionMeta *composition_meta;
 
   overlay = GST_BASE_TEXT_OVERLAY (parent);
-
-  composition_meta = gst_buffer_get_video_overlay_composition_meta (buffer);
-  if (composition_meta) {
-    if (overlay->upstream_composition != composition_meta->overlay) {
-      GST_DEBUG_OBJECT (overlay, "GstVideoOverlayCompositionMeta found.");
-      overlay->upstream_composition = composition_meta->overlay;
-      overlay->need_render = TRUE;
-    }
-  } else if (overlay->upstream_composition != NULL) {
-    overlay->upstream_composition = NULL;
-    overlay->need_render = TRUE;
-  }
 
   klass = GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay);
 

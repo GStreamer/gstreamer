@@ -402,24 +402,10 @@ gst_dwrite_overlay_object_mode_attach (GstDWriteOverlayObject * self,
     GstBuffer * buffer)
 {
   auto priv = self->priv;
-  GstVideoOverlayCompositionMeta *meta;
-
-  meta = gst_buffer_get_video_overlay_composition_meta (buffer);
-  if (meta) {
-    if (meta->overlay) {
-      meta->overlay =
-          gst_video_overlay_composition_make_writable (meta->overlay);
-      gst_video_overlay_composition_add_rectangle (meta->overlay,
-          priv->overlay_rect);
-    } else {
-      meta->overlay = gst_video_overlay_composition_new (priv->overlay_rect);
-    }
-  } else {
-    GstVideoOverlayComposition *comp =
-        gst_video_overlay_composition_new (priv->overlay_rect);
-    meta = gst_buffer_add_video_overlay_composition_meta (buffer, comp);
-    gst_video_overlay_composition_unref (comp);
-  }
+  GstVideoOverlayComposition *comp =
+      gst_video_overlay_composition_new (priv->overlay_rect);
+  gst_buffer_add_video_overlay_composition_meta (buffer, comp);
+  gst_video_overlay_composition_unref (comp);
 
   return TRUE;
 }

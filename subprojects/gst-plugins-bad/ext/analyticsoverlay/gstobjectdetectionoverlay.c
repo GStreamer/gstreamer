@@ -83,7 +83,6 @@ struct _GstObjectDetectionOverlay
   GstBuffer *canvas;
   gint canvas_length;
   GstVideoOverlayComposition *composition;
-  GstVideoOverlayComposition *upstream_composition;
   GstClockTime last_composition_update;
 
   /* Graphic Outline */
@@ -331,7 +330,6 @@ gst_object_detection_overlay_init (GstObjectDetectionOverlay * overlay)
   overlay->labels_stroke_width = 1.0;
   overlay->od_outline_stroke_width = 2;
   overlay->composition = NULL;
-  overlay->upstream_composition = NULL;
   overlay->flushing = FALSE;
   overlay->expire_overlay = GST_SECOND;
   GST_DEBUG_CATEGORY_INIT (objectdetectionoverlay_debug,
@@ -727,7 +725,6 @@ gst_object_detection_overlay_transform_frame_ip (GstVideoFilter * filter,
 {
   GstBaseTransform *baset = GST_BASE_TRANSFORM (filter);
   GstObjectDetectionOverlay *overlay = GST_OBJECT_DETECTION_OVERLAY (filter);
-  GstVideoOverlayCompositionMeta *composition_meta;
   gpointer state = NULL;
   GstVideoOverlayRectangle *rectangle = NULL;
   gchar str_buf[5];
@@ -747,17 +744,6 @@ gst_object_detection_overlay_transform_frame_ip (GstVideoFilter * filter,
     return GST_FLOW_EOS;
   }
   g_mutex_unlock (&overlay->stream_event_mutex);
-
-  composition_meta =
-      gst_buffer_get_video_overlay_composition_meta (frame->buffer);
-  if (composition_meta) {
-    if (overlay->upstream_composition != composition_meta->overlay) {
-      GST_DEBUG_OBJECT (overlay, "GstVideoOverlayCompositionMeta found.");
-      overlay->upstream_composition = composition_meta->overlay;
-    }
-  } else if (overlay->upstream_composition != NULL) {
-    overlay->upstream_composition = NULL;
-  }
 
   if (baset->have_segment)
     rt = gst_segment_to_running_time (&baset->segment, GST_FORMAT_TIME,
@@ -792,12 +778,7 @@ gst_object_detection_overlay_transform_frame_ip (GstVideoFilter * filter,
     if (overlay->composition)
       gst_video_overlay_composition_unref (overlay->composition);
 
-    if (overlay->upstream_composition) {
-      overlay->composition =
-          gst_video_overlay_composition_copy (overlay->upstream_composition);
-    } else {
-      overlay->composition = gst_video_overlay_composition_new (NULL);
-    }
+    overlay->composition = gst_video_overlay_composition_new (NULL);
 
     overlay->last_composition_update = rt;
 

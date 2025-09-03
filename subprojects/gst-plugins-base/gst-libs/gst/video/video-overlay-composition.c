@@ -587,6 +587,11 @@ gst_video_overlay_composition_blend (GstVideoOverlayComposition * comp,
  * actual overlay pixel data buffers contained in the rectangles are not
  * copied.
  *
+ * This should be avoided unless rectangles need to be modified because it
+ * invalidates caching in sinks and compositor elements. To add extra rectangles
+ * it is rather recommended to add an extra composition meta using
+ * gst_buffer_add_video_overlay_composition_meta().
+ *
  * Returns: (transfer full): a new #GstVideoOverlayComposition equivalent
  *     to @comp.
  */
@@ -624,6 +629,11 @@ gst_video_overlay_composition_copy (GstVideoOverlayComposition * comp)
  * new writable copy of @comp and unref @comp itself. All the contained
  * rectangles will also be copied, but the actual overlay pixel data buffers
  * contained in the rectangles are not copied.
+ *
+ * This should be avoided unless rectangles need to be modified because it
+ * invalidates caching in sinks and compositor elements. To add extra rectangles
+ * it is rather recommended to add an extra composition meta using
+ * gst_buffer_add_video_overlay_composition_meta().
  *
  * Returns: (transfer full): a writable #GstVideoOverlayComposition
  *     equivalent to @comp.

@@ -296,8 +296,20 @@ GST_VIDEO_API
 GstVideoOverlayCompositionMeta * gst_buffer_add_video_overlay_composition_meta (GstBuffer                  * buf,
                                                                                 GstVideoOverlayComposition * comp);
 
+#ifndef GST_DISABLE_DEPRECATED
+/**
+ * gst_buffer_get_video_overlay_composition_meta:
+ * @b: a #GstBuffer
+ *
+ * Gets the first video composition meta.
+ *
+ * Deprecated: It is common to have multiple video composition metas, it is thus
+ *  recommended to use use gst_buffer_iterate_meta() instead.
+ */
 #define gst_buffer_get_video_overlay_composition_meta(b) \
   ((GstVideoOverlayCompositionMeta*)gst_buffer_get_meta((b),GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE))
+#endif
+
 #define gst_buffer_remove_video_overlay_composition_meta(b,m) \
   gst_buffer_remove_meta((b),((GstMeta *) m))
 

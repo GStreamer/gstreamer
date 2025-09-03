@@ -69,12 +69,6 @@ typedef struct _textured_vertex
 /* Transformed vertex with 1 set of texture coordinates */
 static DWORD tri_fvf = D3DFVF_XYZRHW | D3DFVF_TEX1;
 
-static gboolean
-_is_rectangle_in_overlays (GList * overlays,
-    GstVideoOverlayRectangle * rectangle);
-static gboolean
-_is_overlay_in_composition (GstVideoOverlayComposition * composition,
-    GstD3DVideoSinkOverlay * overlay);
 static HRESULT
 gst_d3d9_overlay_init_vb (GstD3DVideoSink * sink,
     GstD3DVideoSinkOverlay * overlay);
@@ -149,82 +143,47 @@ gst_d3d9_overlay_free_overlay (GstD3DVideoSink * sink,
   }
 }
 
-static gboolean
-_is_rectangle_in_overlays (GList * overlays,
-    GstVideoOverlayRectangle * rectangle)
+static gint
+_find_overlay_cmp (gconstpointer item, gconstpointer user_data)
 {
-  GList *l;
-
-  for (l = overlays; l != NULL; l = l->next) {
-    GstD3DVideoSinkOverlay *overlay = (GstD3DVideoSinkOverlay *) l->data;
-    if (overlay->rectangle == rectangle)
-      return TRUE;
-  }
-  return FALSE;
-}
-
-static gboolean
-_is_overlay_in_composition (GstVideoOverlayComposition * composition,
-    GstD3DVideoSinkOverlay * overlay)
-{
-  guint i;
-
-  for (i = 0; i < gst_video_overlay_composition_n_rectangles (composition); i++) {
-    GstVideoOverlayRectangle *rectangle =
-        gst_video_overlay_composition_get_rectangle (composition, i);
-    if (overlay->rectangle == rectangle)
-      return TRUE;
-  }
-  return FALSE;
+  GstD3DVideoSinkOverlay *overlay = (GstD3DVideoSinkOverlay *) item;
+  GstVideoOverlayRectangle *rectangle = (GstVideoOverlayRectangle *) user_data;
+  return overlay->rectangle == rectangle ? 0 : 1;
 }
 
 GstFlowReturn
 gst_d3d9_overlay_prepare (GstD3DVideoSink * sink, GstBuffer * buf)
 {
   GstD3DVideoSinkClass *klass = GST_D3DVIDEOSINK_GET_CLASS (sink);
-  GList *l = NULL;
-  GstVideoOverlayComposition *composition = NULL;
-  guint num_overlays, i;
-  GstVideoOverlayCompositionMeta *composition_meta =
-      gst_buffer_get_video_overlay_composition_meta (buf);
-  gboolean found_new_overlay_rectangle = FALSE;
 
-  if (!composition_meta) {
-    gst_d3d9_overlay_free (sink);
-    return GST_FLOW_OK;
-  }
-  l = sink->d3d.overlay;
-  composition = composition_meta->overlay;
-  num_overlays = gst_video_overlay_composition_n_rectangles (composition);
+  /* Steal previous list of overlays */
+  GList *overlays = sink->d3d.overlays.head;
+  g_queue_init (&sink->d3d.overlays);
 
-  GST_DEBUG_OBJECT (sink, "GstVideoOverlayCompositionMeta found.");
+  LOCK_CLASS (sink, klass);
 
-  /* check for new overlays */
-  for (i = 0; i < num_overlays; i++) {
-    GstVideoOverlayRectangle *rectangle =
-        gst_video_overlay_composition_get_rectangle (composition, i);
+  gpointer state = NULL;
+  GstMeta *meta;
+  while ((meta =
+          gst_buffer_iterate_meta_filtered (buf, &state,
+              GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE)) != NULL) {
+    GstVideoOverlayCompositionMeta *ometa =
+        (GstVideoOverlayCompositionMeta *) meta;
+    guint n = gst_video_overlay_composition_n_rectangles (ometa->overlay);
 
-    if (!_is_rectangle_in_overlays (sink->d3d.overlay, rectangle)) {
-      found_new_overlay_rectangle = TRUE;
-      break;
-    }
-  }
-
-  /* add new overlays to list */
-  if (found_new_overlay_rectangle) {
-    GST_DEBUG_OBJECT (sink, "New overlay composition rectangles found.");
-    LOCK_CLASS (sink, klass);
-    if (!klass->d3d.refs) {
-      GST_ERROR_OBJECT (sink, "Direct3D object ref count = 0");
-      gst_d3d9_overlay_free (sink);
-      UNLOCK_CLASS (sink, klass);
-      return GST_FLOW_ERROR;
-    }
-    for (i = 0; i < num_overlays; i++) {
+    for (int i = 0; i < n; i++) {
       GstVideoOverlayRectangle *rectangle =
-          gst_video_overlay_composition_get_rectangle (composition, i);
+          gst_video_overlay_composition_get_rectangle (ometa->overlay, i);
 
-      if (!_is_rectangle_in_overlays (sink->d3d.overlay, rectangle)) {
+      if (!klass->d3d.refs) {
+        GST_ERROR_OBJECT (sink, "Direct3D object ref count = 0");
+        gst_d3d9_overlay_free (sink);
+        UNLOCK_CLASS (sink, klass);
+        return GST_FLOW_ERROR;
+      }
+
+      GList *l = g_list_find_custom (overlays, rectangle, _find_overlay_cmp);
+      if (l == NULL) {
         GstVideoOverlayFormatFlags flags;
         gint x, y;
         guint width, height;
@@ -283,21 +242,21 @@ gst_d3d9_overlay_prepare (GstD3DVideoSink * sink, GstBuffer * buf)
             continue;
           }
         }
-        sink->d3d.overlay = g_list_append (sink->d3d.overlay, overlay);
+        g_queue_push_tail (&sink->d3d.overlays, overlay);
+      } else {
+        overlays = g_list_remove_link (overlays, l);
+        g_queue_push_tail_link (&sink->d3d.overlays, l);
       }
     }
-    UNLOCK_CLASS (sink, klass);
   }
-  /* remove old overlays from list */
-  while (l != NULL) {
-    GList *next = l->next;
-    GstD3DVideoSinkOverlay *overlay = (GstD3DVideoSinkOverlay *) l->data;
 
-    if (!_is_overlay_in_composition (composition, overlay)) {
-      gst_d3d9_overlay_free_overlay (sink, overlay);
-      sink->d3d.overlay = g_list_delete_link (sink->d3d.overlay, l);
-    }
-    l = next;
+  UNLOCK_CLASS (sink, klass);
+
+  /* Free any previous overlays that are not in use anymore */
+  while (overlays != NULL) {
+    GstD3DVideoSinkOverlay *overlay = (GstD3DVideoSinkOverlay *) overlays->data;
+    gst_d3d9_overlay_free_overlay (sink, overlay);
+    overlays = g_list_delete_link (overlays, overlays);
   }
 
   return GST_FLOW_OK;
@@ -306,7 +265,7 @@ gst_d3d9_overlay_prepare (GstD3DVideoSink * sink, GstBuffer * buf)
 gboolean
 gst_d3d9_overlay_resize (GstD3DVideoSink * sink)
 {
-  GList *l = sink->d3d.overlay;
+  GList *l = sink->d3d.overlays.head;
 
   while (l != NULL) {
     GList *next = l->next;
@@ -325,18 +284,15 @@ gst_d3d9_overlay_resize (GstD3DVideoSink * sink)
 void
 gst_d3d9_overlay_free (GstD3DVideoSink * sink)
 {
-  GList *l = sink->d3d.overlay;
+  GList *overlays = sink->d3d.overlays.head;
+  g_queue_init (&sink->d3d.overlays);
 
-  while (l != NULL) {
-    GList *next = l->next;
-    GstD3DVideoSinkOverlay *overlay = (GstD3DVideoSinkOverlay *) l->data;
+  while (overlays != NULL) {
+    GstD3DVideoSinkOverlay *overlay = (GstD3DVideoSinkOverlay *) overlays->data;
 
     gst_d3d9_overlay_free_overlay (sink, overlay);
-    sink->d3d.overlay = g_list_delete_link (sink->d3d.overlay, l);
-    l = next;
+    overlays = g_list_delete_link (overlays, overlays);
   }
-  g_list_free (sink->d3d.overlay);
-  sink->d3d.overlay = NULL;
 }
 
 static HRESULT
@@ -464,13 +420,13 @@ gst_d3d9_overlay_render (GstD3DVideoSink * sink)
   gboolean ret = FALSE;
   GstD3DVideoSinkClass *klass = GST_D3DVIDEOSINK_GET_CLASS (sink);
 
-  if (!sink->d3d.overlay)
+  if (g_queue_is_empty (&sink->d3d.overlays))
     return TRUE;
 
   if (sink->d3d.overlay_needs_resize && !gst_d3d9_overlay_resize (sink))
     return FALSE;
   sink->d3d.overlay_needs_resize = FALSE;
-  iter = sink->d3d.overlay;
+  iter = sink->d3d.overlays.head;
   while (iter != NULL) {
     GList *next = iter->next;
     GstD3DVideoSinkOverlay *overlay = (GstD3DVideoSinkOverlay *) iter->data;

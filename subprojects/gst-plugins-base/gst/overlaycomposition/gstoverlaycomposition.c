@@ -676,7 +676,6 @@ gst_overlay_composition_sink_chain (GstPad * pad, GstObject * parent,
 {
   GstOverlayComposition *self = GST_OVERLAY_COMPOSITION (parent);
   GstVideoOverlayComposition *compo = NULL;
-  GstVideoOverlayCompositionMeta *upstream_compo_meta;
 
   if (gst_pad_check_reconfigure (self->srcpad)) {
     if (!gst_overlay_composition_negotiate (self, NULL)) {
@@ -721,37 +720,16 @@ gst_overlay_composition_sink_chain (GstPad * pad, GstObject * parent,
     return gst_pad_push (self->srcpad, buffer);
   }
 
-  /* If upstream attached a meta, we can safely add our own things
-   * in it. Upstream must've checked that downstream supports it */
-  upstream_compo_meta = gst_buffer_get_video_overlay_composition_meta (buffer);
-  if (upstream_compo_meta) {
-    GstVideoOverlayComposition *merged_compo =
-        gst_video_overlay_composition_copy (upstream_compo_meta->overlay);
-    guint i, n;
+  buffer = gst_buffer_make_writable (buffer);
 
-    GST_DEBUG_OBJECT (self->sinkpad,
-        "Appending to upstream overlay composition");
-
-    n = gst_video_overlay_composition_n_rectangles (compo);
-    for (i = 0; i < n; i++) {
-      GstVideoOverlayRectangle *rect =
-          gst_video_overlay_composition_get_rectangle (compo, i);
-      gst_video_overlay_composition_add_rectangle (merged_compo, rect);
-    }
-
-    gst_video_overlay_composition_unref (compo);
-    gst_video_overlay_composition_unref (upstream_compo_meta->overlay);
-    upstream_compo_meta->overlay = merged_compo;
-  } else if (self->attach_compo_to_buffer) {
+  if (self->attach_compo_to_buffer) {
     GST_DEBUG_OBJECT (self->sinkpad, "Attaching as meta");
 
-    buffer = gst_buffer_make_writable (buffer);
     gst_buffer_add_video_overlay_composition_meta (buffer, compo);
     gst_video_overlay_composition_unref (compo);
   } else {
     GstVideoFrame frame;
 
-    buffer = gst_buffer_make_writable (buffer);
     if (!gst_video_frame_map (&frame, &self->info, buffer, GST_MAP_READWRITE)) {
       gst_video_overlay_composition_unref (compo);
       goto map_failed;

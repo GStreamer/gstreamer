@@ -325,6 +325,120 @@ GST_START_TEST (test_passthrough)
 
 GST_END_TEST;
 
+static guint
+_overlay_composition_count (GstBuffer * buffer)
+{
+  gpointer state = NULL;
+  GstMeta *meta;
+  guint n = 0;
+  while ((meta =
+          gst_buffer_iterate_meta_filtered (buffer, &state,
+              GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE)) != NULL) {
+    n++;
+  }
+  return n;
+}
+
+static GstPadProbeReturn
+convert_sink_pad_probe (GstPad * pad, GstPadProbeInfo * info,
+    gpointer user_data)
+{
+  GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER (info);
+  fail_unless (buffer != NULL);
+
+  /* Check that we have 2 overlays, one for each textoverlay */
+  fail_unless (_overlay_composition_count (buffer) == 2);
+
+  /* Add a custom meta to ensure glcolorconvert does copies all metas. */
+  fail_unless (gst_buffer_is_writable (buffer));
+  gst_buffer_add_custom_meta (buffer, "test-glcolorconvert");
+
+  return GST_PAD_PROBE_OK;
+}
+
+static GstPadProbeReturn
+convert_src_pad_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER (info);
+  fail_unless (buffer != NULL);
+
+  /* Check that glcolorconvert kept overlay composition metas untouched (it used to add an extra copy). */
+  fail_unless (_overlay_composition_count (buffer) == 2);
+
+  /* Ensure our custom meta is still there. */
+  fail_unless (gst_buffer_get_custom_meta (buffer,
+          "test-glcolorconvert") != NULL);
+
+  return GST_PAD_PROBE_OK;
+}
+
+static GstPadProbeReturn
+comp_src_pad_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER (info);
+  fail_unless (buffer != NULL);
+
+  /* Check that gloverlaycompositor droped overlay composition metas. */
+  fail_unless (_overlay_composition_count (buffer) == 0);
+
+  /* Ensure our custom meta is still there. */
+  fail_unless (gst_buffer_get_custom_meta (buffer,
+          "test-glcolorconvert") != NULL);
+
+  return GST_PAD_PROBE_OK;
+}
+
+GST_START_TEST (test_meta)
+{
+  gst_meta_register_custom_simple ("test-glcolorconvert");
+
+  GstElement *pipeline = gst_parse_launch ("videotestsrc "
+      "! video/x-raw,format=YUY2 "
+      "! glupload "
+      "! textoverlay text=Hello ! textoverlay text=World "
+      "! glcolorconvert name=convert "
+      "! video/x-raw(ANY),format=RGBA "
+      "! gloverlaycompositor name=comp ! gldownload ! fakesink",
+      NULL);
+  fail_unless (pipeline != NULL);
+
+  /* Check buffer before and after glcolorconvert */
+  GstElement *conv = gst_bin_get_by_name (GST_BIN (pipeline), "convert");
+  fail_unless (conv != NULL);
+  gst_object_unref (conv);
+
+  GstPad *pad = gst_element_get_static_pad (conv, "sink");
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) convert_sink_pad_probe, NULL, NULL);
+  gst_object_unref (pad);
+
+  pad = gst_element_get_static_pad (conv, "src");
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) convert_src_pad_probe, NULL, NULL);
+  gst_object_unref (pad);
+
+  /* Check that gloverlaycomposition drop overlay composition meta */
+  GstElement *comp = gst_bin_get_by_name (GST_BIN (pipeline), "comp");
+  fail_unless (comp != NULL);
+  gst_object_unref (comp);
+
+  pad = gst_element_get_static_pad (comp, "src");
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) comp_src_pad_probe, NULL, NULL);
+  gst_object_unref (pad);
+
+  /* Wait for preroll */
+  GstState state;
+  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  gst_element_get_state (pipeline, &state, NULL, GST_CLOCK_TIME_NONE);
+  fail_unless (state == GST_STATE_PAUSED);
+
+  /* Teardown */
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
 static Suite *
 gst_gl_color_convert_suite (void)
 {
@@ -334,6 +448,7 @@ gst_gl_color_convert_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_checked_fixture (tc_chain, setup, teardown);
   tcase_add_test (tc_chain, test_reorder_buffer);
+  tcase_add_test (tc_chain, test_meta);
   tcase_add_test (tc_chain, test_passthrough);
   /* FIXME add YUV <--> RGB conversion tests */
 

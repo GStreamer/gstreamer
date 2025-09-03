@@ -5087,9 +5087,7 @@ manually.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="overlays" readable="0" private="1">
-        <type name="GLib.List" c:type="GList*">
-          <type name="gpointer" c:type="gpointer"/>
-        </type>
+        <type name="GLib.Queue" c:type="GQueue*"/>
       </field>
       <field name="shader" readable="0" private="1">
         <type name="GLShader" c:type="GstGLShader*"/>

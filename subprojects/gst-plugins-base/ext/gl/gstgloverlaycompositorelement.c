@@ -277,7 +277,6 @@ _oce_prepare_output_buffer (GstBaseTransform * bt,
     GstBuffer * buffer, GstBuffer ** outbuf)
 {
   GstGLOverlayCompositorElement *self = GST_GL_OVERLAY_COMPOSITOR_ELEMENT (bt);
-  GstVideoOverlayCompositionMeta *comp_meta;
 
   if (gst_base_transform_is_passthrough (bt))
     goto passthrough;
@@ -285,11 +284,21 @@ _oce_prepare_output_buffer (GstBaseTransform * bt,
   if (!self->overlay_compositor)
     return GST_FLOW_NOT_NEGOTIATED;
 
-  comp_meta = gst_buffer_get_video_overlay_composition_meta (buffer);
-  if (!comp_meta)
-    goto passthrough;
+  gboolean has_overlay = FALSE;
+  gpointer state = NULL;
+  GstMeta *meta;
+  while ((meta =
+          gst_buffer_iterate_meta_filtered (buffer, &state,
+              GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE)) != NULL) {
+    GstVideoOverlayCompositionMeta *ometa =
+        (GstVideoOverlayCompositionMeta *) meta;
+    if (gst_video_overlay_composition_n_rectangles (ometa->overlay) > 0) {
+      has_overlay = TRUE;
+      break;
+    }
+  }
 
-  if (gst_video_overlay_composition_n_rectangles (comp_meta->overlay) == 0)
+  if (!has_overlay)
     goto passthrough;
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->prepare_output_buffer (bt,

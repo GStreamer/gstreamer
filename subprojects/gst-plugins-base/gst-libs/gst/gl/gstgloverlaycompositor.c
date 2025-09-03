@@ -220,6 +220,8 @@ gst_gl_composition_overlay_finalize (GObject * object)
     gst_object_unref (overlay->context);
   }
 
+  gst_video_overlay_rectangle_unref (overlay->rectangle);
+
   G_OBJECT_CLASS (gst_gl_composition_overlay_parent_class)->finalize (object);
 }
 
@@ -316,7 +318,7 @@ gst_gl_composition_overlay_new (GstGLContext * context,
 
   overlay->gl_memory = NULL;
   overlay->texture_id = -1;
-  overlay->rectangle = rectangle;
+  overlay->rectangle = gst_video_overlay_rectangle_ref (rectangle);
   overlay->context = gst_object_ref (context);
   overlay->vao = 0;
   overlay->position_attrib = position_attrib;
@@ -470,11 +472,6 @@ static void gst_gl_overlay_compositor_set_property (GObject * object,
 static void gst_gl_overlay_compositor_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static gboolean _is_rectangle_in_overlays (GList * overlays,
-    GstVideoOverlayRectangle * rectangle);
-static gboolean _is_overlay_in_rectangles (GstVideoOverlayComposition *
-    composition, GstGLCompositionOverlay * overlay);
-
 static void
 gst_gl_overlay_compositor_class_init (GstGLOverlayCompositorClass * klass)
 {
@@ -498,6 +495,7 @@ gst_gl_overlay_compositor_init (GstGLOverlayCompositor * compositor)
       gst_gl_overlay_compositor_get_instance_private (compositor);
 
   priv->yinvert = DEFAULT_YINVERT;
+  compositor->overlays = g_queue_new ();
 }
 
 static void
@@ -595,7 +593,7 @@ gst_gl_overlay_compositor_finalize (GObject * object)
 
   compositor = GST_GL_OVERLAY_COMPOSITOR (object);
 
-  gst_gl_overlay_compositor_free_overlays (compositor);
+  g_queue_free_full (compositor->overlays, (GDestroyNotify) gst_object_unref);
 
   if (compositor->context)
     gst_object_unref (compositor->context);
@@ -608,113 +606,74 @@ gst_gl_overlay_compositor_finalize (GObject * object)
   G_OBJECT_CLASS (gst_gl_overlay_compositor_parent_class)->finalize (object);
 }
 
-static gboolean
-_is_rectangle_in_overlays (GList * overlays,
-    GstVideoOverlayRectangle * rectangle)
-{
-  GList *l;
-
-  for (l = overlays; l != NULL; l = l->next) {
-    GstGLCompositionOverlay *overlay = (GstGLCompositionOverlay *) l->data;
-    if (overlay->rectangle == rectangle)
-      return TRUE;
-  }
-  return FALSE;
-}
-
-static gboolean
-_is_overlay_in_rectangles (GstVideoOverlayComposition * composition,
-    GstGLCompositionOverlay * overlay)
-{
-  guint i;
-
-  for (i = 0; i < gst_video_overlay_composition_n_rectangles (composition); i++) {
-    GstVideoOverlayRectangle *rectangle =
-        gst_video_overlay_composition_get_rectangle (composition, i);
-    if (overlay->rectangle == rectangle)
-      return TRUE;
-  }
-  return FALSE;
-}
-
 void
 gst_gl_overlay_compositor_free_overlays (GstGLOverlayCompositor * compositor)
 {
-  GList *l = compositor->overlays;
-  while (l != NULL) {
-    GList *next = l->next;
-    GstGLCompositionOverlay *overlay = (GstGLCompositionOverlay *) l->data;
-    compositor->overlays = g_list_delete_link (compositor->overlays, l);
-    gst_object_unref (overlay);
-    l = next;
-  }
-  g_list_free (compositor->overlays);
-  compositor->overlays = NULL;
+  g_queue_clear_full (compositor->overlays, (GDestroyNotify) gst_object_unref);
+}
+
+static gint
+_find_overlay_cmp (gconstpointer a, gconstpointer b)
+{
+  GstGLCompositionOverlay *overlay = (GstGLCompositionOverlay *) a;
+  GstVideoOverlayRectangle *rectangle = (GstVideoOverlayRectangle *) b;
+  return overlay->rectangle == rectangle ? 0 : 1;
 }
 
 void
 gst_gl_overlay_compositor_upload_overlays (GstGLOverlayCompositor * compositor,
     GstBuffer * buf)
 {
-  GstVideoOverlayCompositionMeta *composition_meta;
   GstGLOverlayCompositorPrivate *priv =
       gst_gl_overlay_compositor_get_instance_private (compositor);
 
-  composition_meta = gst_buffer_get_video_overlay_composition_meta (buf);
-  if (composition_meta) {
-    GstVideoOverlayComposition *composition = NULL;
-    guint num_overlays, i;
-    GList *l = compositor->overlays;
-    GstGLSyncMeta *sync_meta;
+  GList *overlays = compositor->overlays->head;
+  g_queue_init (compositor->overlays);
 
-    GST_DEBUG ("GstVideoOverlayCompositionMeta found.");
+  gpointer state = NULL;
+  GstMeta *meta;
+  while ((meta =
+          gst_buffer_iterate_meta_filtered (buf, &state,
+              GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE)) != NULL) {
+    GstVideoOverlayCompositionMeta *ometa =
+        (GstVideoOverlayCompositionMeta *) meta;
+    guint n = gst_video_overlay_composition_n_rectangles (ometa->overlay);
 
-    composition = composition_meta->overlay;
-    num_overlays = gst_video_overlay_composition_n_rectangles (composition);
-
-    /* add new overlays to list */
-    for (i = 0; i < num_overlays; i++) {
+    for (int i = 0; i < n; i++) {
       GstVideoOverlayRectangle *rectangle =
-          gst_video_overlay_composition_get_rectangle (composition, i);
+          gst_video_overlay_composition_get_rectangle (ometa->overlay, i);
+      GstGLSyncMeta *sync_meta;
 
-      if (!_is_rectangle_in_overlays (compositor->overlays, rectangle)) {
+      GList *l = g_list_find_custom (overlays, rectangle, _find_overlay_cmp);
+      if (l == NULL) {
         GstGLCompositionOverlay *overlay =
             gst_gl_composition_overlay_new (compositor->context, rectangle,
             compositor->position_attrib, compositor->texcoord_attrib);
         gst_object_ref_sink (overlay);
         overlay->yinvert = priv->yinvert;
-
         gst_gl_composition_overlay_upload (overlay, buf);
+        g_queue_push_tail (compositor->overlays, overlay);
+      } else {
+        overlays = g_list_remove_link (overlays, l);
+        g_queue_push_tail_link (compositor->overlays, l);
+      }
 
-        compositor->overlays = g_list_append (compositor->overlays, overlay);
+      sync_meta = gst_buffer_get_gl_sync_meta (buf);
+      if (sync_meta) {
+        gst_gl_sync_meta_set_sync_point (sync_meta, compositor->context);
       }
     }
-
-    sync_meta = gst_buffer_get_gl_sync_meta (buf);
-    if (sync_meta) {
-      gst_gl_sync_meta_set_sync_point (sync_meta, compositor->context);
-    }
-
-    /* remove old overlays from list */
-    while (l != NULL) {
-      GList *next = l->next;
-      GstGLCompositionOverlay *overlay = (GstGLCompositionOverlay *) l->data;
-      if (!_is_overlay_in_rectangles (composition, overlay)) {
-        compositor->overlays = g_list_delete_link (compositor->overlays, l);
-        gst_object_unref (overlay);
-      }
-      l = next;
-    }
-  } else {
-    gst_gl_overlay_compositor_free_overlays (compositor);
   }
+
+  /* Free any previous overlays that are not in use anymore */
+  g_list_free_full (overlays, (GDestroyNotify) gst_object_unref);
 }
 
 void
 gst_gl_overlay_compositor_draw_overlays (GstGLOverlayCompositor * compositor)
 {
   const GstGLFuncs *gl = compositor->context->gl_vtable;
-  if (compositor->overlays != NULL) {
+  if (!g_queue_is_empty (compositor->overlays)) {
     GList *l;
 
     gl->Enable (GL_BLEND);
@@ -723,7 +682,7 @@ gst_gl_overlay_compositor_draw_overlays (GstGLOverlayCompositor * compositor)
     gl->ActiveTexture (GL_TEXTURE0);
     gst_gl_shader_set_uniform_1i (compositor->shader, "tex", 0);
 
-    for (l = compositor->overlays; l != NULL; l = l->next) {
+    for (l = compositor->overlays->head; l != NULL; l = l->next) {
       GstGLCompositionOverlay *overlay = (GstGLCompositionOverlay *) l->data;
       GstVideoOverlayFormatFlags flags;
 

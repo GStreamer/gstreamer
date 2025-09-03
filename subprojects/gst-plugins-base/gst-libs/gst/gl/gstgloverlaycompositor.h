@@ -51,8 +51,8 @@ struct _GstGLOverlayCompositor
   guint last_window_width;
   guint last_window_height;
 
-  GList * overlays;
- 
+  GQueue *overlays;
+
   GstGLShader *shader;
   gint  position_attrib;
   gint  texcoord_attrib;

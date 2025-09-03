@@ -95,7 +95,7 @@ typedef struct _GstD3DData {
   gboolean               device_lost;
 
   /* list of GstD3DVideoSinkOverlay structs */
-  GList * overlay;
+  GQueue overlays;
   gboolean overlay_needs_resize;
 } GstD3DData;
 

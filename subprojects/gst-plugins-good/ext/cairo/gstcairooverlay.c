@@ -473,29 +473,14 @@ gst_cairo_overlay_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
         GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
     gst_buffer_unref (surface_buffer);
 
+    composition = gst_video_overlay_composition_new (rect);
+    gst_video_overlay_rectangle_unref (rect);
     if (overlay->attach_compo_to_buffer) {
-      GstVideoOverlayCompositionMeta *composition_meta;
-
-      composition_meta = gst_buffer_get_video_overlay_composition_meta (buf);
-      if (composition_meta) {
-        GstVideoOverlayComposition *merged_composition =
-            gst_video_overlay_composition_copy (composition_meta->overlay);
-        gst_video_overlay_composition_add_rectangle (merged_composition, rect);
-        gst_video_overlay_composition_unref (composition_meta->overlay);
-        composition_meta->overlay = merged_composition;
-        gst_video_overlay_rectangle_unref (rect);
-      } else {
-        composition = gst_video_overlay_composition_new (rect);
-        gst_video_overlay_rectangle_unref (rect);
-        gst_buffer_add_video_overlay_composition_meta (buf, composition);
-        gst_video_overlay_composition_unref (composition);
-      }
+      gst_buffer_add_video_overlay_composition_meta (buf, composition);
     } else {
-      composition = gst_video_overlay_composition_new (rect);
-      gst_video_overlay_rectangle_unref (rect);
       gst_video_overlay_composition_blend (composition, &frame);
-      gst_video_overlay_composition_unref (composition);
     }
+    gst_video_overlay_composition_unref (composition);
   } else {
     cairo_surface_destroy (surface);
     if (format == CAIRO_FORMAT_ARGB32)

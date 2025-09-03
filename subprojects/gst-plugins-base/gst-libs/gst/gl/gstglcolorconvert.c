@@ -3769,7 +3769,6 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
   }
 
   if (convert->outbuf) {
-    GstVideoOverlayCompositionMeta *composition_meta;
     GstGLSyncMeta *sync_meta;
 
     if (G_UNLIKELY (!gst_buffer_is_writable (convert->outbuf))) {
@@ -3785,14 +3784,6 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
           convert->outbuf);
     }
     gst_gl_sync_meta_set_sync_point (sync_meta, convert->context);
-
-    composition_meta =
-        gst_buffer_get_video_overlay_composition_meta (convert->inbuf);
-    if (composition_meta) {
-      GST_DEBUG ("found video overlay composition meta, applying on output.");
-      gst_buffer_add_video_overlay_composition_meta
-          (convert->outbuf, composition_meta->overlay);
-    }
   }
 
   convert->priv->result = res;

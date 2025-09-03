@@ -45,39 +45,31 @@ GST_DEBUG_CATEGORY (gst_debug_vulkan_overlay_compositor);
 
 struct vk_overlay
 {
-  GstBuffer *buffer;
-  GstVideoOverlayComposition *composition;
   GstVideoOverlayRectangle *rectangle;
   GstVulkanFullScreenQuad *quad;
 };
 
 static void
-vk_overlay_clear (struct vk_overlay *overlay)
+vk_overlay_free (struct vk_overlay *overlay)
 {
-  gst_clear_buffer (&overlay->buffer);
-  overlay->rectangle = NULL;
-  if (overlay->composition)
-    gst_video_overlay_composition_unref (overlay->composition);
-  overlay->composition = NULL;
-
+  gst_video_overlay_rectangle_unref (overlay->rectangle);
   gst_clear_object (&overlay->quad);
+  g_free (overlay);
 }
 
-static void
-vk_overlay_init (struct vk_overlay *overlay, GstVulkanQueue * queue,
-    GstBuffer * buffer, GstVideoOverlayComposition * comp,
+static struct vk_overlay *
+vk_overlay_new (GstVulkanQueue * queue, GstBuffer * buffer,
     GstVideoOverlayRectangle * rectangle, GstVulkanHandle * vert,
     GstVulkanHandle * frag)
 {
+  struct vk_overlay *overlay = g_new0 (struct vk_overlay, 1);
   GstVideoOverlayFormatFlags flags;
 
   memset (overlay, 0, sizeof (*overlay));
 
   flags = gst_video_overlay_rectangle_get_flags (rectangle);
 
-  overlay->buffer = gst_buffer_ref (buffer);
-  overlay->composition = gst_video_overlay_composition_ref (comp);
-  overlay->rectangle = rectangle;
+  overlay->rectangle = gst_video_overlay_rectangle_ref (rectangle);
   overlay->quad = gst_vulkan_full_screen_quad_new (queue);
   gst_vulkan_full_screen_quad_enable_clear (overlay->quad, FALSE);
   gst_vulkan_full_screen_quad_set_shaders (overlay->quad, vert, frag);
@@ -93,6 +85,8 @@ vk_overlay_init (struct vk_overlay *overlay, GstVulkanQueue * queue,
         VK_BLEND_FACTOR_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
         VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
   }
+
+  return overlay;
 }
 
 struct Vertex
@@ -485,7 +479,7 @@ struct _GstVulkanOverlayCompositor
 
   GstVulkanHandle *vert;
   GstVulkanHandle *frag;
-  GArray *overlays;
+  GQueue overlays;
 
   gboolean render_overlays;
 };
@@ -557,9 +551,7 @@ gst_vulkan_overlay_compositor_start (GstBaseTransform * bt)
     goto error;
   }
 
-  vk_overlay->overlays = g_array_new (FALSE, TRUE, sizeof (struct vk_overlay));
-  g_array_set_clear_func (vk_overlay->overlays,
-      (GDestroyNotify) vk_overlay_clear);
+  g_queue_init (&vk_overlay->overlays);
 
   return TRUE;
 
@@ -573,52 +565,12 @@ gst_vulkan_overlay_compositor_stop (GstBaseTransform * bt)
 {
   GstVulkanOverlayCompositor *vk_overlay = GST_VULKAN_OVERLAY_COMPOSITOR (bt);
 
-  if (vk_overlay->overlays) {
-    g_array_set_size (vk_overlay->overlays, 0);
-    g_array_unref (vk_overlay->overlays);
-  }
-  vk_overlay->overlays = NULL;
+  g_queue_clear_full (&vk_overlay->overlays, (GDestroyNotify) vk_overlay_free);
 
   gst_clear_vulkan_handle (&vk_overlay->vert);
   gst_clear_vulkan_handle (&vk_overlay->frag);
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->stop (bt);
-}
-
-static struct vk_overlay *
-find_by_rectangle (GstVulkanOverlayCompositor * vk_overlay,
-    GstVideoOverlayRectangle * rectangle)
-{
-  int i;
-
-  for (i = 0; i < vk_overlay->overlays->len; i++) {
-    struct vk_overlay *over =
-        &g_array_index (vk_overlay->overlays, struct vk_overlay, i);
-
-    if (over->rectangle == rectangle)
-      return over;
-  }
-
-  return NULL;
-}
-
-static gboolean
-overlay_in_rectangles (struct vk_overlay *over,
-    GstVideoOverlayComposition * composition)
-{
-  int i, n;
-
-  n = gst_video_overlay_composition_n_rectangles (composition);
-  for (i = 0; i < n; i++) {
-    GstVideoOverlayRectangle *rect;
-
-    rect = gst_video_overlay_composition_get_rectangle (composition, i);
-
-    if (over->rectangle == rect)
-      return TRUE;
-  }
-
-  return FALSE;
 }
 
 static GstCaps *
@@ -705,15 +657,30 @@ gst_vulkan_overlay_compositor_set_caps (GstBaseTransform * bt, GstCaps * incaps,
   return TRUE;
 }
 
+static gint
+_find_overlay_cmp (gconstpointer item, gconstpointer user_data)
+{
+  struct vk_overlay *overlay = (struct vk_overlay *) item;
+  GstVideoOverlayRectangle *rectangle = (GstVideoOverlayRectangle *) user_data;
+  return overlay->rectangle == rectangle ? 0 : 1;
+}
+
+static gboolean
+remove_overlay_meta_foreach (GstBuffer * buffer, GstMeta ** meta,
+    gpointer user_data)
+{
+  if ((*meta)->info->api == GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE)
+    *meta = NULL;
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_vulkan_overlay_compositor_transform_ip (GstBaseTransform * bt,
     GstBuffer * buffer)
 {
   GstVulkanOverlayCompositor *vk_overlay = GST_VULKAN_OVERLAY_COMPOSITOR (bt);
-  GstVideoOverlayCompositionMeta *ometa;
-  GstVideoOverlayComposition *comp = NULL;
   GError *error = NULL;
-  int i, n;
 
   if (!vk_overlay->render_overlays) {
     GST_LOG_OBJECT (bt,
@@ -721,76 +688,58 @@ gst_vulkan_overlay_compositor_transform_ip (GstBaseTransform * bt,
     return GST_FLOW_OK;
   }
 
-  ometa = gst_buffer_get_video_overlay_composition_meta (buffer);
-  if (!ometa) {
-    GST_LOG_OBJECT (bt,
-        "no GstVideoOverlayCompositionMeta on buffer, passthrough");
-    return GST_FLOW_OK;
-  }
+  /* Steal previous list of overlays */
+  GList *overlays = vk_overlay->overlays.head;
+  g_queue_init (&vk_overlay->overlays);
 
-  comp = gst_video_overlay_composition_ref (ometa->overlay);
-  gst_buffer_remove_meta (buffer, (GstMeta *) ometa);
-  ometa = NULL;
+  gpointer state = NULL;
+  GstMeta *meta;
+  while ((meta =
+          gst_buffer_iterate_meta_filtered (buffer, &state,
+              GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE)) != NULL) {
+    GstVideoOverlayCompositionMeta *ometa =
+        (GstVideoOverlayCompositionMeta *) meta;
+    guint n = gst_video_overlay_composition_n_rectangles (ometa->overlay);
 
-  n = gst_video_overlay_composition_n_rectangles (comp);
-  if (n == 0) {
-    GST_LOG_OBJECT (bt,
-        "GstVideoOverlayCompositionMeta has 0 rectangles, passthrough");
-    return GST_FLOW_OK;
-  }
+    for (int i = 0; i < n; i++) {
+      GstVideoOverlayRectangle *rectangle =
+          gst_video_overlay_composition_get_rectangle (ometa->overlay, i);
+      struct vk_overlay *over;
 
-  GST_LOG_OBJECT (bt,
-      "rendering GstVideoOverlayCompositionMeta with %u rectangles", n);
-  for (i = 0; i < n; i++) {
-    GstVideoOverlayRectangle *rectangle;
-    struct vk_overlay *over;
+      GList *l = g_list_find_custom (overlays, rectangle, _find_overlay_cmp);
+      if (l == NULL) {
+        over = vk_overlay_new (vk_overlay->parent.queue, buffer,
+            rectangle, vk_overlay->vert, vk_overlay->frag);
+        if (!vk_overlay_upload (over, &vk_overlay->parent.out_info, &error)) {
+          vk_overlay_free (over);
+          goto error;
+        }
+        g_queue_push_tail (&vk_overlay->overlays, over);
+      } else {
+        over = l->data;
+        overlays = g_list_remove_link (overlays, l);
+        g_queue_push_tail_link (&vk_overlay->overlays, l);
+      }
 
-    rectangle = gst_video_overlay_composition_get_rectangle (comp, i);
-
-    over = find_by_rectangle (vk_overlay, rectangle);
-    if (!over) {
-      struct vk_overlay new_overlay = { 0, };
-
-      vk_overlay_init (&new_overlay, vk_overlay->parent.queue, buffer, comp,
-          rectangle, vk_overlay->vert, vk_overlay->frag);
-
-      if (!vk_overlay_upload (&new_overlay, &vk_overlay->parent.out_info,
+      if (!gst_vulkan_full_screen_quad_set_output_buffer (over->quad, buffer,
               &error))
         goto error;
 
-      g_array_append_val (vk_overlay->overlays, new_overlay);
+      if (!gst_vulkan_full_screen_quad_draw (over->quad, &error))
+        goto error;
     }
   }
 
-  n = vk_overlay->overlays->len;
-  for (i = 0; i < n;) {
-    struct vk_overlay *over =
-        &g_array_index (vk_overlay->overlays, struct vk_overlay, i);
+  /* Remove all composition metas, otherwise downstream might render them twice. */
+  gst_buffer_foreach_meta (buffer, remove_overlay_meta_foreach, NULL);
 
-    if (!overlay_in_rectangles (over, comp)) {
-      g_array_remove_index (vk_overlay->overlays, i);
-      continue;
-    }
-
-    if (!gst_vulkan_full_screen_quad_set_output_buffer (over->quad, buffer,
-            &error))
-      goto error;
-
-    if (!gst_vulkan_full_screen_quad_draw (over->quad, &error))
-      goto error;
-
-    i++;
-  }
-
-  if (comp)
-    gst_video_overlay_composition_unref (comp);
+  /* Free any previous overlays that are not in use anymore */
+  g_list_free_full (overlays, (GDestroyNotify) vk_overlay_free);
 
   return GST_FLOW_OK;
 
 error:
   GST_ELEMENT_ERROR (bt, LIBRARY, FAILED, ("%s", error->message), (NULL));
   g_clear_error (&error);
-  if (comp)
-    gst_video_overlay_composition_unref (comp);
   return GST_FLOW_ERROR;
 }
