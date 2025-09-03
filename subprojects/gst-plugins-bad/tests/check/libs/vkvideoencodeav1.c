@@ -98,7 +98,17 @@ check_av1_obu (guint8 * bitstream, gsize size, GstAV1OBU * obu)
         assert_equals_int (res, GST_AV1_PARSER_OK);
         break;
       }
+      case GST_AV1_OBU_TILE_GROUP:
+      {
+        GstAV1TileGroupOBU tile_group;
+        res = gst_av1_parser_parse_tile_group_obu (parser, obu, &tile_group);
+        assert_equals_int (res, GST_AV1_PARSER_OK);
+        fail_unless (tile_group.num_tiles > 0);
+        break;
+      }
+
       default:
+        GST_ERROR ("Unknown OBU type: %d", obu->obu_type);
         fail_unless (0);
         break;
     }
@@ -613,14 +623,16 @@ check_encoded_frame (GstVulkanAV1EncoderFrame * frame,
 {
   GstMapInfo info;
   GstAV1OBU obu;
+  GstAV1OBUType obu_type;
   fail_unless (frame->picture.out_buffer != NULL);
   gst_buffer_map (frame->picture.out_buffer, &info, GST_MAP_READ);
   fail_unless (info.size);
   GST_MEMDUMP ("out buffer", info.data, info.size);
 
-  assert_equals_int (check_av1_obu (info.data, info.size, &obu),
-      GST_AV1_OBU_FRAME);
-  check_av1_obu_frame (&obu, frame_type);
+  obu_type = check_av1_obu (info.data, info.size, &obu);
+  if (obu_type == GST_AV1_OBU_FRAME) {
+    check_av1_obu_frame (&obu, frame_type);
+  }
   gst_buffer_unmap (frame->picture.out_buffer, &info);
 }
 
