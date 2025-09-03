@@ -1216,12 +1216,6 @@ gst_va_encode_picture_new (GstVaEncoder * self, GstBuffer * raw_buffer)
     return NULL;
   }
 
-  if (self->codedbuf_size <= 0) {
-    GST_ERROR_OBJECT (self, "codedbuf_size: %d, is invalid",
-        self->codedbuf_size);
-    GST_OBJECT_UNLOCK (self);
-    return NULL;
-  }
   codedbuf_size = self->codedbuf_size;
 
   recon_pool = gst_object_ref (self->recon_pool);
