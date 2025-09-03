@@ -243,7 +243,7 @@ gst_va_encoder_close (GstVaEncoder * self)
   GST_OBJECT_UNLOCK (self);
 
   gst_buffer_pool_set_active (recon_pool, FALSE);
-  g_clear_pointer (&recon_pool, gst_object_unref);
+  gst_clear_object (&recon_pool);
 
   dpy = gst_va_display_get_va_dpy (self->display);
 
@@ -469,14 +469,14 @@ gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
 
   GST_OBJECT_UNLOCK (self);
 
-  g_clear_pointer (&recon_pool, gst_object_unref);
+  g_clear_object (&recon_pool);
   /* now we should return now only this profile's caps */
   gst_caps_replace (&self->srcpad_caps, NULL);
 
   return TRUE;
 
 error:
-  g_clear_pointer (&recon_pool, gst_object_unref);
+  g_clear_object (&recon_pool);
 
   if (config != VA_INVALID_ID)
     vaDestroyConfig (dpy, config);
