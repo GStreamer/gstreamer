@@ -107,6 +107,7 @@ gst_v4l2_device_provider_probe_device (GstV4l2DeviceProvider * provider,
   GstV4l2Device *device = NULL;
   struct stat st;
   GstV4l2DeviceType type = GST_V4L2_DEVICE_TYPE_INVALID;
+  GstV4l2Error error = GST_V4L2_ERROR_INIT;
 
   g_return_val_if_fail (props != NULL, NULL);
 
@@ -119,7 +120,7 @@ gst_v4l2_device_provider_probe_device (GstV4l2DeviceProvider * provider,
   v4l2obj = gst_v4l2_object_new (NULL, GST_OBJECT (provider),
       V4L2_BUF_TYPE_VIDEO_CAPTURE, device_path, NULL, NULL, NULL);
 
-  if (!gst_v4l2_open (v4l2obj, NULL))
+  if (!gst_v4l2_open (v4l2obj, &error))
     goto destroy;
 
   gst_structure_set (props, "device.api", G_TYPE_STRING, "v4l2", NULL);
@@ -187,6 +188,8 @@ close:
   gst_v4l2_close (v4l2obj);
 
 destroy:
+
+  gst_v4l2_error (v4l2obj->dbg_obj, &error);
 
   if (v4l2obj)
     gst_v4l2_object_destroy (v4l2obj);

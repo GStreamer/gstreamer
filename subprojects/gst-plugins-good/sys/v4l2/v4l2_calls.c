@@ -57,7 +57,7 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
  * return value: TRUE on success, FALSE on error
  ******************************************************/
 static gboolean
-gst_v4l2_get_capabilities (GstV4l2Object * v4l2object)
+gst_v4l2_get_capabilities (GstV4l2Object * v4l2object, GstV4l2Error * error)
 {
   GstElement *e;
 
@@ -88,7 +88,7 @@ gst_v4l2_get_capabilities (GstV4l2Object * v4l2object)
   /* ERRORS */
 cap_failed:
   {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+    GST_V4L2_ERROR (error, RESOURCE, SETTINGS,
         (_("Error getting capabilities for device '%s': "
                 "It isn't a v4l2 driver. Check if it is a v4l1 driver."),
             v4l2object->videodev), GST_ERROR_SYSTEM);
@@ -566,7 +566,7 @@ gst_v4l2_open (GstV4l2Object * v4l2object, GstV4l2Error * error)
     v4l2object->video_fd = libv4l2_fd;
 
   /* get capabilities, error will be posted */
-  if (!gst_v4l2_get_capabilities (v4l2object))
+  if (!gst_v4l2_get_capabilities (v4l2object, error))
     goto error;
 
   /* do we need to be a capture device? */
