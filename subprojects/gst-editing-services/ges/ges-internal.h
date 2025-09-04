@@ -422,7 +422,7 @@ G_GNUC_INTERNAL GstElementFactory *
 ges_get_compositor_factory                                (void);
 
 G_GNUC_INTERNAL void
-ges_idle_add (GSourceFunc func, gpointer udata, GDestroyNotify notify);
+ges_callback_add (GSourceFunc func, gpointer udata, GDestroyNotify notify);
 G_GNUC_INTERNAL void
 ges_timeout_add (guint interval, GSourceFunc func, gpointer udata, GDestroyNotify notify);
 

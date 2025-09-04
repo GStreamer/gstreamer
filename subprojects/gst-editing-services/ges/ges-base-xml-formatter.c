@@ -287,7 +287,8 @@ _load_from_uri (GESFormatter * self, GESTimeline * timeline, const gchar * uri,
     return FALSE;
 
   if (priv->pending_assets == NULL)
-    ges_idle_add ((GSourceFunc) _loading_done_cb, g_object_ref (self), NULL);
+    ges_callback_add ((GSourceFunc) _loading_done_cb, g_object_ref (self),
+        NULL);
 
   return TRUE;
 }
