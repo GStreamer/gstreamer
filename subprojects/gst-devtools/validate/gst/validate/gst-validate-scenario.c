@@ -6755,6 +6755,7 @@ _execute_check_last_sample (GstValidateScenario * scenario,
   gboolean done = FALSE;
   GstCaps *caps = NULL;
   GstElement *sink = NULL, *tmpelement;
+  GstValidateExecuteActionReturn ret;
   const gchar *name = gst_structure_get_string (action->structure, "sink-name"),
       *factory_name =
       gst_structure_get_string (action->structure, "sink-factory-name"),
@@ -6820,7 +6821,9 @@ _execute_check_last_sample (GstValidateScenario * scenario,
   }
 
   g_clear_object (&pipeline);
-  return _check_last_sample_value (scenario, action, sink);
+  ret = _check_last_sample_value (scenario, action, sink);
+  g_clear_object (&sink);
+  return ret;
 
 error:
   g_clear_object (&sink);
