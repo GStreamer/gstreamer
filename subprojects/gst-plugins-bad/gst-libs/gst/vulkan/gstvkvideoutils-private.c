@@ -110,8 +110,8 @@ static const struct {
 } vp9_profile_map[] = {
   { STD_VIDEO_VP9_PROFILE_0, "0" },
   { STD_VIDEO_VP9_PROFILE_1, "1" },
-  { STD_VIDEO_VP9_PROFILE_0, "2" },
-  { STD_VIDEO_VP9_PROFILE_0, "3" },
+  { STD_VIDEO_VP9_PROFILE_2, "2" },
+  { STD_VIDEO_VP9_PROFILE_3, "3" },
 };
 /* *INDENT-ON* */
 
