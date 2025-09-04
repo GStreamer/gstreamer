@@ -782,7 +782,8 @@ _load (GESFormatter * self, GESTimeline * timeline, const gchar * string,
 
   gst_object_unref (parser);
 
-  ges_idle_add ((GSourceFunc) _set_project_loaded, g_object_ref (self), NULL);
+  ges_callback_add ((GSourceFunc) _set_project_loaded, g_object_ref (self),
+      NULL);
 
   return TRUE;
 

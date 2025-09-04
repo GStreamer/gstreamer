@@ -808,7 +808,7 @@ child_prop_changed_cb (GObject * child, GParamSpec * arg,
   data->arg = g_param_spec_ref (arg);
   data->self = gst_object_ref (self);
 
-  ges_idle_add ((GSourceFunc) emit_deep_notify_in_idle, data, NULL);
+  ges_callback_add ((GSourceFunc) emit_deep_notify_in_idle, data, NULL);
 }
 
 static gboolean
