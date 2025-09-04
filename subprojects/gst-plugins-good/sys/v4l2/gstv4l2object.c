@@ -1582,9 +1582,12 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc,
           G_TYPE_STRING, "au", NULL);
       break;
     case V4L2_PIX_FMT_VC1_ANNEX_G:
-    case V4L2_PIX_FMT_VC1_ANNEX_L:
       structure = gst_structure_new ("video/x-wmv",
           "wmvversion", G_TYPE_INT, 3, "format", G_TYPE_STRING, "WVC1", NULL);
+      break;
+    case V4L2_PIX_FMT_VC1_ANNEX_L:
+      structure = gst_structure_new ("video/x-wmv",
+          "wmvversion", G_TYPE_INT, 3, "format", G_TYPE_STRING, "WMV3", NULL);
       break;
     case V4L2_PIX_FMT_VP8:
       structure = gst_structure_new_empty ("video/x-vp8");
@@ -2023,6 +2026,14 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
         default:
           break;
       }
+    }
+  } else if (g_str_equal (mimetype, "video/x-wmv")) {
+    const gchar *format = gst_structure_get_string (structure, "format");
+    if (format) {
+      if (!g_ascii_strcasecmp (format, "WVC1"))
+        fourcc = V4L2_PIX_FMT_VC1_ANNEX_G;
+      else if (!g_ascii_strcasecmp (format, "WMV3"))
+        fourcc = V4L2_PIX_FMT_VC1_ANNEX_L;
     }
   } else if (g_str_equal (mimetype, "video/x-fwht")) {
     fourcc = V4L2_PIX_FMT_FWHT;
