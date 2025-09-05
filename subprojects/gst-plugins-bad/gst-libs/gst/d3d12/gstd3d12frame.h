@@ -108,10 +108,25 @@ gboolean  gst_d3d12_frame_copy        (GstD3D12Frame * dest,
                                        guint64 * fence_value);
 
 GST_D3D12_API
+gboolean  gst_d3d12_frame_copy_full   (GstD3D12Frame * dest,
+                                       const GstD3D12Frame * src,
+                                       D3D12_COMMAND_LIST_TYPE queue_type,
+                                       ID3D12Fence ** fence,
+                                       guint64 * fence_value);
+
+GST_D3D12_API
 gboolean  gst_d3d12_frame_copy_plane  (GstD3D12Frame * dest,
                                        const GstD3D12Frame * src,
                                        guint plane,
                                        guint64 * fence_value);
+
+GST_D3D12_API
+gboolean  gst_d3d12_frame_copy_plane_full  (GstD3D12Frame * dest,
+                                            const GstD3D12Frame * src,
+                                            guint plane,
+                                            D3D12_COMMAND_LIST_TYPE queue_type,
+                                            ID3D12Fence ** fence,
+                                            guint64 * fence_value);
 
 GST_D3D12_API
 gboolean  gst_d3d12_frame_fence_gpu_wait (const GstD3D12Frame * frame,

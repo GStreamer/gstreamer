@@ -26,8 +26,10 @@
 #include <mutex>
 #include <atomic>
 #include <directx/d3dx12.h>
+#include <wrl.h>
 
 /* *INDENT-OFF* */
+using namespace Microsoft::WRL;
 static std::recursive_mutex context_lock_;
 /* *INDENT-ON* */
 
@@ -582,6 +584,198 @@ get_device_from_buffer (GstBuffer * buffer)
   return device;
 }
 
+static gboolean
+is_staging_buffer (GstBuffer * buffer)
+{
+  if (gst_buffer_n_memory (buffer) != 1)
+    return FALSE;
+
+  auto mem = gst_buffer_peek_memory (buffer, 0);
+  return gst_is_d3d12_staging_memory (mem);
+}
+
+static gboolean
+is_d3d12_buffer (GstBuffer * buffer)
+{
+  auto mem = gst_buffer_peek_memory (buffer, 0);
+  return gst_is_d3d12_memory (mem);
+}
+
+static gboolean
+try_d3d12_to_staging_copy (GstBuffer * dst, GstBuffer * src,
+    const GstVideoInfo * info, D3D12_COMMAND_LIST_TYPE queue_type)
+{
+  if (!is_staging_buffer (dst))
+    return FALSE;
+
+  if (!is_d3d12_buffer (src))
+    return FALSE;
+
+  auto device = get_device_from_buffer (src);
+  if (!device)
+    return FALSE;
+
+  auto dmem = (GstD3D12StagingMemory *) gst_buffer_peek_memory (dst, 0);
+  if (!gst_d3d12_device_is_equal (dmem->device, device))
+    return FALSE;
+
+  GstD3D12Frame frame;
+  if (!gst_d3d12_frame_map (&frame, info, src, GST_MAP_READ_D3D12,
+          GST_D3D12_FRAME_MAP_FLAG_NONE)) {
+    return FALSE;
+  }
+
+  GstMapInfo map;
+  if (!gst_memory_map (GST_MEMORY_CAST (dmem), &map, GST_MAP_WRITE_D3D12)) {
+    gst_d3d12_frame_unmap (&frame);
+    return FALSE;
+  }
+
+  GstD3D12CopyTextureRegionArgs args[GST_VIDEO_MAX_PLANES] = { };
+  D3D12_BOX src_box[GST_VIDEO_MAX_PLANES] = { };
+  D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout[GST_VIDEO_MAX_PLANES] = { };
+  auto resource = (ID3D12Resource *) map.data;
+
+  for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+    auto sbox = &src_box[i];
+    gst_d3d12_staging_memory_get_layout (dmem, i, &layout[i]);
+
+    sbox->left = 0;
+    sbox->top = 0;
+    sbox->right = MIN (layout[i].Footprint.Width,
+        (UINT) frame.plane_rect[i].right);
+    sbox->bottom = MIN (layout[i].Footprint.Height,
+        (UINT) frame.plane_rect[i].bottom);
+    sbox->front = 0;
+    sbox->back = 1;
+
+    args[i].src = CD3DX12_TEXTURE_COPY_LOCATION (frame.data[i],
+        frame.subresource_index[i]);
+    args[i].dst = CD3DX12_TEXTURE_COPY_LOCATION (resource, layout[i]);
+    args[i].src_box = &src_box[i];
+  }
+
+  GstD3D12FenceData *fence_data;
+  gst_d3d12_device_acquire_fence_data (device, &fence_data);
+  gst_d3d12_fence_data_push (fence_data,
+      FENCE_NOTIFY_MINI_OBJECT (gst_buffer_ref (src)));
+
+  std::vector < ID3D12Fence * >fences_to_wait;
+  std::vector < guint64 > fence_values_to_wait;
+
+  for (guint i = 0; i < G_N_ELEMENTS (frame.fence); i++) {
+    if (frame.fence[i].fence) {
+      fences_to_wait.push_back (frame.fence[i].fence);
+      fence_values_to_wait.push_back (frame.fence[i].fence_value);
+    }
+  }
+
+  guint64 fence_val = 0;
+  auto ret = gst_d3d12_device_copy_texture_region (device,
+      GST_VIDEO_INFO_N_PLANES (info), args, fence_data,
+      (guint) fences_to_wait.size (), fences_to_wait.data (),
+      fence_values_to_wait.data (), queue_type,
+      &fence_val);
+
+  gst_memory_unmap (GST_MEMORY_CAST (dmem), &map);
+  gst_d3d12_frame_unmap (&frame);
+
+  auto fence = gst_d3d12_device_get_fence_handle (device, queue_type);
+  gst_d3d12_staging_memory_set_fence (dmem, fence, fence_val, FALSE);
+
+  GST_TRACE ("Copy d3d12 to staging result %d", ret);
+
+  return ret;
+}
+
+static gboolean
+try_staging_to_d3d12_copy (GstBuffer * dst, GstBuffer * src,
+    const GstVideoInfo * info, D3D12_COMMAND_LIST_TYPE queue_type)
+{
+  if (!is_staging_buffer (src))
+    return FALSE;
+
+  if (!is_d3d12_buffer (dst))
+    return FALSE;
+
+  auto device = get_device_from_buffer (dst);
+  if (!device)
+    return FALSE;
+
+  auto dmem = (GstD3D12StagingMemory *) gst_buffer_peek_memory (src, 0);
+  if (!gst_d3d12_device_is_equal (dmem->device, device))
+    return FALSE;
+
+  GstD3D12Frame frame;
+  if (!gst_d3d12_frame_map (&frame, info, dst, GST_MAP_WRITE_D3D12,
+          GST_D3D12_FRAME_MAP_FLAG_NONE)) {
+    return FALSE;
+  }
+
+  GstMapInfo map;
+  if (!gst_memory_map (GST_MEMORY_CAST (dmem), &map, GST_MAP_READ_D3D12)) {
+    gst_d3d12_frame_unmap (&frame);
+    return FALSE;
+  }
+
+  GstD3D12CopyTextureRegionArgs args[GST_VIDEO_MAX_PLANES] = { };
+  D3D12_BOX src_box[GST_VIDEO_MAX_PLANES] = { };
+  D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout[GST_VIDEO_MAX_PLANES] = { };
+
+  auto resource = (ID3D12Resource *) map.data;
+
+  for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+    auto sbox = &src_box[i];
+    gst_d3d12_staging_memory_get_layout (dmem, i, &layout[i]);
+
+    sbox->left = 0;
+    sbox->top = 0;
+    sbox->right = MIN (layout[i].Footprint.Width,
+        (UINT) frame.plane_rect[i].right);
+    sbox->bottom = MIN (layout[i].Footprint.Height,
+        (UINT) frame.plane_rect[i].bottom);
+    sbox->front = 0;
+    sbox->back = 1;
+
+    args[i].src = CD3DX12_TEXTURE_COPY_LOCATION (resource, layout[i]);
+    args[i].dst = CD3DX12_TEXTURE_COPY_LOCATION (frame.data[i],
+        frame.subresource_index[i]);
+    args[i].src_box = &src_box[i];
+  }
+
+  GstD3D12FenceData *fence_data;
+  gst_d3d12_device_acquire_fence_data (device, &fence_data);
+  gst_d3d12_fence_data_push (fence_data,
+      FENCE_NOTIFY_MINI_OBJECT (gst_buffer_ref (src)));
+
+  std::vector < ID3D12Fence * >fences_to_wait;
+  std::vector < guint64 > fence_values_to_wait;
+
+  for (guint i = 0; i < G_N_ELEMENTS (frame.fence); i++) {
+    if (frame.fence[i].fence) {
+      fences_to_wait.push_back (frame.fence[i].fence);
+      fence_values_to_wait.push_back (frame.fence[i].fence_value);
+    }
+  }
+
+  guint64 fence_val = 0;
+  auto ret = gst_d3d12_device_copy_texture_region (device,
+      GST_VIDEO_INFO_N_PLANES (info), args, fence_data,
+      (guint) fences_to_wait.size (), fences_to_wait.data (),
+      fence_values_to_wait.data (), queue_type,
+      &fence_val);
+
+  gst_memory_unmap (GST_MEMORY_CAST (dmem), &map);
+  gst_d3d12_frame_unmap (&frame);
+
+  auto fence = gst_d3d12_device_get_fence_handle (device, queue_type);
+  gst_d3d12_buffer_set_fence (dst, fence, fence_val, FALSE);
+
+  GST_TRACE ("Copy staging to d3d12 result %d", ret);
+
+  return ret;
+}
+
 /**
  * gst_d3d12_buffer_copy_into:
  * @dest: a #GstBuffer
@@ -597,9 +791,46 @@ gboolean
 gst_d3d12_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
     const GstVideoInfo * info)
 {
+  return gst_d3d12_buffer_copy_into_full (dest,
+      src, info, D3D12_COMMAND_LIST_TYPE_DIRECT);
+}
+
+/**
+ * gst_d3d12_buffer_copy_into_full:
+ * @dest: a #GstBuffer
+ * @src: a #GstBuffer
+ * @info: a #GstVideoInfo
+ * @queue_type: command queue type to use
+ *
+ * Copy @src data into @dest using command queue specified by @queue_type.
+ * This method executes only memory copy.
+ * Use gst_buffer_copy_into() method for metadata copy
+ *
+ * Since: 1.28
+ */
+gboolean
+gst_d3d12_buffer_copy_into_full (GstBuffer * dest, GstBuffer * src,
+    const GstVideoInfo * info, D3D12_COMMAND_LIST_TYPE queue_type)
+{
   g_return_val_if_fail (GST_IS_BUFFER (dest), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (src), FALSE);
   g_return_val_if_fail (info, FALSE);
+
+  switch (queue_type) {
+    case D3D12_COMMAND_LIST_TYPE_DIRECT:
+    case D3D12_COMMAND_LIST_TYPE_COMPUTE:
+    case D3D12_COMMAND_LIST_TYPE_COPY:
+      break;
+    default:
+      GST_ERROR ("Invalid queue type %d", queue_type);
+      return FALSE;
+  }
+
+  if (try_d3d12_to_staging_copy (dest, src, info, queue_type))
+    return TRUE;
+
+  if (try_staging_to_d3d12_copy (dest, src, info, queue_type))
+    return TRUE;
 
   auto num_mem = gst_buffer_n_memory (dest);
   if (gst_buffer_n_memory (src) != num_mem)
@@ -628,15 +859,14 @@ gst_d3d12_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
   }
 
   guint64 fence_val = 0;
-  auto ret = gst_d3d12_frame_copy (&dest_frame, &src_frame, &fence_val);
+  ComPtr < ID3D12Fence > fence;
+  auto ret = gst_d3d12_frame_copy_full (&dest_frame, &src_frame, queue_type,
+      &fence, &fence_val);
   gst_d3d12_frame_unmap (&dest_frame);
   gst_d3d12_frame_unmap (&src_frame);
 
-  if (ret) {
-    auto fence = gst_d3d12_device_get_fence_handle (dest_device,
-        D3D12_COMMAND_LIST_TYPE_DIRECT);
-    gst_d3d12_buffer_set_fence (dest, fence, fence_val, FALSE);
-  }
+  if (ret)
+    gst_d3d12_buffer_set_fence (dest, fence.Get (), fence_val, FALSE);
 
   return ret;
 }

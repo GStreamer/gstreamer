@@ -67,6 +67,12 @@ gboolean  gst_d3d12_buffer_copy_into (GstBuffer * dest,
                                       const GstVideoInfo * info);
 
 GST_D3D12_API
+gboolean  gst_d3d12_buffer_copy_into_full (GstBuffer * dest,
+                                           GstBuffer * src,
+                                           const GstVideoInfo * info,
+                                           D3D12_COMMAND_LIST_TYPE queue_type);
+
+GST_D3D12_API
 void      gst_d3d12_buffer_set_fence (GstBuffer * buffer,
                                       ID3D12Fence * fence,
                                       guint64 fence_value,

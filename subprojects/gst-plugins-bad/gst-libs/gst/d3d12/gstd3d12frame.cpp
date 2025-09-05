@@ -354,12 +354,45 @@ gboolean
 gst_d3d12_frame_copy (GstD3D12Frame * dest, const GstD3D12Frame * src,
     guint64 * fence_value)
 {
+  return gst_d3d12_frame_copy_full (dest, src, D3D12_COMMAND_LIST_TYPE_DIRECT,
+      nullptr, fence_value);
+}
+
+/**
+ * gst_d3d12_frame_copy_full:
+ * @dest: a #GstD3D12Frame
+ * @src: a #GstD3D12Frame
+ * @queue_type: queue type on which the copy command will be performed
+ * @fence: (out) (transfer full) (allow-none): a ID3D12Fence
+ * @fence_value: (out): a fence value for the copy operation
+ *
+ * Copy the contents from @src to @dest.
+ *
+ * Returns: %TRUE on success.
+ *
+ * Since: 1.28
+ */
+gboolean
+gst_d3d12_frame_copy_full (GstD3D12Frame * dest, const GstD3D12Frame * src,
+    D3D12_COMMAND_LIST_TYPE queue_type, ID3D12Fence ** fence,
+    guint64 * fence_value)
+{
   g_return_val_if_fail (dest, FALSE);
   g_return_val_if_fail (src, FALSE);
   g_return_val_if_fail (dest->device, FALSE);
   g_return_val_if_fail (src->device, FALSE);
   g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (&dest->info) ==
       GST_VIDEO_INFO_FORMAT (&src->info), FALSE);
+
+  switch (queue_type) {
+    case D3D12_COMMAND_LIST_TYPE_DIRECT:
+    case D3D12_COMMAND_LIST_TYPE_COMPUTE:
+    case D3D12_COMMAND_LIST_TYPE_COPY:
+      break;
+    default:
+      GST_ERROR ("Invalid queue type %d", queue_type);
+      return FALSE;
+  }
 
   if (!gst_d3d12_device_is_equal (dest->device, src->device)) {
     GST_ERROR ("Cross device copy is not supported");
@@ -394,11 +427,21 @@ gst_d3d12_frame_copy (GstD3D12Frame * dest, const GstD3D12Frame * src,
     }
   }
 
-  return gst_d3d12_device_copy_texture_region (dest->device,
+  auto ret = gst_d3d12_device_copy_texture_region (dest->device,
       GST_VIDEO_INFO_N_PLANES (&dest->info), args, fence_data,
       (guint) fences_to_wait.size (), fences_to_wait.data (),
-      fence_values_to_wait.data (), D3D12_COMMAND_LIST_TYPE_DIRECT,
+      fence_values_to_wait.data (), queue_type,
       fence_value);
+
+  if (!ret)
+    return FALSE;
+
+  if (fence) {
+    *fence = gst_d3d12_device_get_fence_handle (dest->device, queue_type);
+    (*fence)->AddRef ();
+  }
+
+  return TRUE;
 }
 
 /**
@@ -418,6 +461,30 @@ gboolean
 gst_d3d12_frame_copy_plane (GstD3D12Frame * dest, const GstD3D12Frame * src,
     guint plane, guint64 * fence_value)
 {
+  return gst_d3d12_frame_copy_plane_full (dest, src, plane,
+      D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr, fence_value);
+}
+
+/**
+ * gst_d3d12_frame_copy_plane_full:
+ * @dest: a #GstD3D12Frame
+ * @src: a #GstD3D12Frame
+ * @plane: a plane
+ * @queue_type: queue type on which the copy command will be performed
+ * @fence: (out) (transfer full) (allow-none): a ID3D12Fence
+ * @fence_value: (out): a fence value for the copy operation
+ *
+ * Copy the plane with index @plane from @src to @dest.
+ *
+ * Returns: %TRUE on success.
+ *
+ * Since: 1.28
+ */
+gboolean
+gst_d3d12_frame_copy_plane_full (GstD3D12Frame * dest,
+    const GstD3D12Frame * src, guint plane, D3D12_COMMAND_LIST_TYPE queue_type,
+    ID3D12Fence ** fence, guint64 * fence_value)
+{
   g_return_val_if_fail (dest, FALSE);
   g_return_val_if_fail (src, FALSE);
   g_return_val_if_fail (dest->device, FALSE);
@@ -425,6 +492,16 @@ gst_d3d12_frame_copy_plane (GstD3D12Frame * dest, const GstD3D12Frame * src,
   g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (&dest->info) ==
       GST_VIDEO_INFO_FORMAT (&src->info), FALSE);
   g_return_val_if_fail (plane < GST_VIDEO_INFO_N_PLANES (&dest->info), FALSE);
+
+  switch (queue_type) {
+    case D3D12_COMMAND_LIST_TYPE_DIRECT:
+    case D3D12_COMMAND_LIST_TYPE_COMPUTE:
+    case D3D12_COMMAND_LIST_TYPE_COPY:
+      break;
+    default:
+      GST_ERROR ("Invalid queue type %d", queue_type);
+      return FALSE;
+  }
 
   if (!gst_d3d12_device_is_equal (dest->device, src->device)) {
     GST_ERROR ("Cross device copy is not supported");
@@ -443,7 +520,7 @@ gst_d3d12_frame_copy_plane (GstD3D12Frame * dest, const GstD3D12Frame * src,
       FENCE_NOTIFY_MINI_OBJECT (gst_buffer_ref (src->buffer)));
 
   auto cq = gst_d3d12_device_get_cmd_queue (src->device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT);
+      queue_type);
   auto cq_handle = gst_d3d12_cmd_queue_get_handle (cq);
 
   if (src->fence[plane].fence)
@@ -452,9 +529,18 @@ gst_d3d12_frame_copy_plane (GstD3D12Frame * dest, const GstD3D12Frame * src,
   if (dest->fence[plane].fence)
     cq_handle->Wait (dest->fence[plane].fence, dest->fence[plane].fence_value);
 
-  return gst_d3d12_device_copy_texture_region (dest->device, 1, &args,
-      fence_data, 0, nullptr, nullptr, D3D12_COMMAND_LIST_TYPE_DIRECT,
+  auto ret = gst_d3d12_device_copy_texture_region (dest->device, 1, &args,
+      fence_data, 0, nullptr, nullptr, queue_type,
       fence_value);
+  if (!ret)
+    return ret;
+
+  if (fence) {
+    *fence = gst_d3d12_device_get_fence_handle (dest->device, queue_type);
+    (*fence)->AddRef ();
+  }
+
+  return TRUE;
 }
 
 /**
