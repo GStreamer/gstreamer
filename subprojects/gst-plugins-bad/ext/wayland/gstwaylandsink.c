@@ -625,6 +625,9 @@ gst_wayland_sink_event (GstBaseSink * bsink, GstEvent * event)
       }
 
       break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_wl_window_flush (self->window);
+      break;
     default:
       break;
   }

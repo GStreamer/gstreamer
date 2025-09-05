@@ -808,6 +808,34 @@ gst_wl_window_render_hdr (GstWlWindow * self, GstWlBuffer * buffer,
   return ret;
 }
 
+/**
+ * gst_wl_window_flush:
+ * @self: a #GstWlWindow
+ *
+ * Releases and drops the currently staged buffer associated with the window,
+ * if one exists. This function is thread-safe and will set the staged buffer
+ * pointer to NULL after unreferencing it.
+ *
+ * Returns: %TRUE if flush successful, %FALSE otherwise.
+ *
+ * Since: 1.28
+ */
+gboolean
+gst_wl_window_flush (GstWlWindow * self)
+{
+  GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
+
+  g_mutex_lock (&priv->window_lock);
+  if (priv->staged_buffer) {
+    GST_LOG_OBJECT (self, "drop buffer %p", priv->staged_buffer);
+    gst_wl_buffer_unref_buffer (priv->staged_buffer);
+    priv->staged_buffer = NULL;
+  }
+  g_mutex_unlock (&priv->window_lock);
+
+  return TRUE;
+}
+
 /* Update the buffer used to draw black borders. When we have viewporter
  * support, this is a scaled up 1x1 image, and without we need an black image
  * the size of the rendering areay. */
