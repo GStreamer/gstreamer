@@ -694,7 +694,7 @@ make_channel_mask (WORD nChannels)
 
 static WAVEFORMATEXTENSIBLE
 make_wfx_ext (DWORD nSamplesPerSec, WORD nChannels, WORD wBitsPerSample,
-    WORD wValidBitsPerSample, bool is_float)
+    WORD wValidBitsPerSample, bool is_float, DWORD dwChannelMask)
 {
   WAVEFORMATEXTENSIBLE w = { };
   w.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
@@ -704,7 +704,8 @@ make_wfx_ext (DWORD nSamplesPerSec, WORD nChannels, WORD wBitsPerSample,
   w.Format.wBitsPerSample = wBitsPerSample;
   w.Samples.wValidBitsPerSample = wValidBitsPerSample;
 
-  w.dwChannelMask = make_channel_mask (nChannels);
+  w.dwChannelMask = dwChannelMask ? dwChannelMask :
+      make_channel_mask (nChannels);
   w.SubFormat = is_float ? GST_KSDATAFORMAT_SUBTYPE_IEEE_FLOAT
       : GST_KSDATAFORMAT_SUBTYPE_PCM;
 
@@ -713,6 +714,22 @@ make_wfx_ext (DWORD nSamplesPerSec, WORD nChannels, WORD wBitsPerSample,
   w.Format.cbSize = sizeof (WAVEFORMATEXTENSIBLE) - sizeof (WAVEFORMATEX);
 
   return w;
+}
+
+static inline gboolean
+is_extensible_format (const WAVEFORMATEX * wfx)
+{
+  return wfx->wFormatTag == WAVE_FORMAT_EXTENSIBLE &&
+      wfx->cbSize >= (sizeof (WAVEFORMATEXTENSIBLE) - sizeof (WAVEFORMATEX));
+}
+
+static inline DWORD
+get_wfx_channel_mask (const WAVEFORMATEX * wfx)
+{
+  if (is_extensible_format (wfx))
+    return ((const WAVEFORMATEXTENSIBLE *) wfx)->dwChannelMask;
+
+  return 0;
 }
 
 /* *INDENT-OFF* */
@@ -725,6 +742,8 @@ gst_wasapi2_get_exclusive_mode_formats (IAudioClient * client,
   WAVEFORMATEX *device_format = nullptr;
   WAVEFORMATEX *closest = nullptr;
   WAVEFORMATEX *basis = nullptr;
+  DWORD basis_ch_mask = 0;
+  WORD  basis_channels = 0;
 
   /* Prefer device format if supported */
   auto hr = props->GetValue (PKEY_AudioEngine_DeviceFormat, &var);
@@ -774,11 +793,20 @@ gst_wasapi2_get_exclusive_mode_formats (IAudioClient * client,
   const DWORD rates[] = { 192000, 176400, 96000, 88200, 48000, 44100 };
   const WORD chs[] = { 8, 6, 2, 1 };
 
+  if (basis) {
+    basis_ch_mask = get_wfx_channel_mask (basis);
+    basis_channels = basis->nChannels;
+  }
+
   for (auto r : rates) {
     for (auto c : chs) {
       for (auto d : depth_pairs) {
+        DWORD dwChannelMask = 0;
+        if (basis_ch_mask && c == basis_channels)
+          dwChannelMask = basis_ch_mask;
+
         auto wfx = make_wfx_ext (r, c, d.wBitsPerSample, d.wValidBitsPerSample,
-            d.is_float);
+            d.is_float, dwChannelMask);
         hr = client->IsFormatSupported (AUDCLNT_SHAREMODE_EXCLUSIVE,
             (WAVEFORMATEX *) &wfx, &closest);
         if (hr == S_OK) {
@@ -836,11 +864,15 @@ gst_wasapi2_get_shared_mode_formats (IAudioClient * client, GPtrArray * list)
   };
 
   const DWORD rates[] = { 192000, 176400, 96000, 88200, 48000, 44100 };
+  DWORD dwChannelMask = get_wfx_channel_mask (mix_format);
+
+  if (dwChannelMask == 0)
+    dwChannelMask = make_channel_mask (mix_format->nChannels);
 
   for (auto r : rates) {
     for (auto d : depth_pairs) {
       auto wfx = make_wfx_ext (r, mix_format->nChannels, d.wBitsPerSample,
-          d.wValidBitsPerSample, d.is_float);
+          d.wValidBitsPerSample, d.is_float, dwChannelMask);
       hr = client->IsFormatSupported (AUDCLNT_SHAREMODE_SHARED,
           (WAVEFORMATEX *) &wfx, &closest);
       if (hr == S_OK) {
@@ -908,13 +940,6 @@ struct FormatView
   DWORD channel_mask;
   WORD format_tag;
 };
-
-static inline gboolean
-is_extensible_format (const WAVEFORMATEX * wfx)
-{
-  return wfx->wFormatTag == WAVE_FORMAT_EXTENSIBLE &&
-      wfx->cbSize >= (sizeof (WAVEFORMATEXTENSIBLE) - sizeof (WAVEFORMATEX));
-}
 
 static inline gboolean
 is_float_subformat (const FormatView * v)
