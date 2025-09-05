@@ -503,7 +503,7 @@ gst_caps_new_static_str_simple (const char *media_type, const char *fieldname,
 
 /**
  * gst_caps_new_full:
- * @struct1: the first structure to add
+ * @struct1: (transfer full): the first structure to add
  * @...: additional structures to add
  *
  * Creates a new #GstCaps and adds all the structures listed as
@@ -527,7 +527,7 @@ gst_caps_new_full (GstStructure * struct1, ...)
 
 /**
  * gst_caps_new_full_valist:
- * @structure: the first structure to add
+ * @structure: (transfer full): the first structure to add
  * @var_args: additional structures to add
  *
  * Creates a new #GstCaps and adds all the structures listed as
