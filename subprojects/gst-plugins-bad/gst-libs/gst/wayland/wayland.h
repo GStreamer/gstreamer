@@ -31,6 +31,7 @@
 #include <gst/wayland/gstwl_fwd.h>
 #include <gst/wayland/gstwlbuffer.h>
 #include <gst/wayland/gstwlcontext.h>
+#include <gst/wayland/gstwloutput.h>
 #include <gst/wayland/gstwldisplay.h>
 #include <gst/wayland/gstwllinuxdmabuf.h>
 #include <gst/wayland/gstwlshmallocator.h>
