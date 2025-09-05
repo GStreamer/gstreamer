@@ -86,6 +86,8 @@ enum class TransferType
   SYSTEM,
   D3D11_TO_12,
   D3D12_TO_11,
+  D3D12_TO_SYSTEM,
+  SYSTEM_TO_D3D12,
 };
 
 enum class MemoryType
@@ -102,13 +104,43 @@ enum class DeviceSearchType
   LUID,
 };
 
+enum GstD3D12MemcpyCmdQueueType
+{
+  GST_D3D12_MEMCPY_CMD_QUEUE_AUTO,
+  GST_D3D12_MEMCPY_CMD_QUEUE_3D,
+  GST_D3D12_MEMCPY_CMD_QUEUE_COMPUTE,
+  GST_D3D12_MEMCPY_CMD_QUEUE_COPY,
+};
+
+#define GST_TYPE_D3D12_MEMCPY_CMD_QUEUE_TYPE (gst_d3d12_memcpy_cmd_queue_type_get_type())
+static GType
+gst_d3d12_memcpy_cmd_queue_type_get_type (void)
+{
+  static GType type = 0;
+  static const GEnumValue queue_type[] = {
+    {GST_D3D12_MEMCPY_CMD_QUEUE_AUTO, "Auto", "auto"},
+    {GST_D3D12_MEMCPY_CMD_QUEUE_3D, "3D", "3d"},
+    {GST_D3D12_MEMCPY_CMD_QUEUE_COMPUTE, "Compute", "compute"},
+    {GST_D3D12_MEMCPY_CMD_QUEUE_COPY, "Copy", "copy"},
+    {0, nullptr, nullptr},
+  };
+
+  GST_D3D12_CALL_ONCE_BEGIN {
+    type = g_enum_register_static ("GstD3D12MemcpyCmdQueueType", queue_type);
+  } GST_D3D12_CALL_ONCE_END;
+
+  return type;
+}
+
 enum
 {
   PROP_0,
   PROP_ADAPTER,
+  PROP_QUEUE_TYPE,
 };
 
 #define DEFAULT_ADAPTER -1
+#define DEFAULT_QUEUE_TYPE GST_D3D12_MEMCPY_CMD_QUEUE_AUTO
 
 #define ASYNC_FENCE_WAIT_DEPTH 16
 
@@ -287,6 +319,8 @@ struct _GstD3D12MemoryCopyPrivate
   std::shared_ptr < FenceAsyncWaiter > fence_waiter;
 
   gint adapter = DEFAULT_ADAPTER;
+  GstD3D12MemcpyCmdQueueType queue_type = DEFAULT_QUEUE_TYPE;
+  D3D12_COMMAND_LIST_TYPE selected_queue_type = D3D12_COMMAND_LIST_TYPE_COPY;
 
   std::recursive_mutex lock;
 };
@@ -346,6 +380,20 @@ gst_d3d12_memory_copy_class_init (GstD3D12MemoryCopyClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
               G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstD3D12MemoryCopy:queue-type:
+   *
+   * Command queue type to use for copy operation
+   *
+   * Since: 1.28
+   */
+  g_object_class_install_property (object_class, PROP_QUEUE_TYPE,
+      g_param_spec_enum ("queue-type", "Queue Type",
+          "Command queue type to use for copy operation",
+          GST_TYPE_D3D12_MEMCPY_CMD_QUEUE_TYPE, DEFAULT_QUEUE_TYPE,
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+              G_PARAM_STATIC_STRINGS)));
+
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d12_memory_copy_set_context);
 
@@ -373,6 +421,8 @@ gst_d3d12_memory_copy_class_init (GstD3D12MemoryCopyClass * klass)
   meta_tag_video_quark = g_quark_from_static_string (GST_META_TAG_VIDEO_STR);
 
   gst_type_mark_as_plugin_api (GST_TYPE_D3D12_MEMORY_COPY,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D12_MEMCPY_CMD_QUEUE_TYPE,
       (GstPluginAPIFlags) 0);
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_memory_copy_debug,
       "d3d12memorycopy", 0, "d3d12memorycopy");
@@ -406,6 +456,9 @@ gst_d3d12_memory_copy_set_property (GObject * object, guint prop_id,
     case PROP_ADAPTER:
       priv->adapter = g_value_get_int (value);
       break;
+    case PROP_QUEUE_TYPE:
+      priv->queue_type = (GstD3D12MemcpyCmdQueueType) g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -423,6 +476,9 @@ gst_d3d12_memory_copy_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_ADAPTER:
       g_value_set_int (value, priv->adapter);
+      break;
+    case PROP_QUEUE_TYPE:
+      g_value_set_enum (value, priv->queue_type);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -511,11 +567,9 @@ gst_d3d12_memory_copy_query (GstBaseTransform * trans,
 }
 
 static gboolean
-gst_d3d12_memory_copy_setup_resource (GstD3D12MemoryCopy * self)
+gst_d3d12_memory_copy_setup_interop_resource (GstD3D12MemoryCopy * self)
 {
   auto priv = self->priv;
-
-  priv->transfer_type = TransferType::SYSTEM;
 
   if (priv->in_type == priv->out_type)
     return TRUE;
@@ -729,6 +783,38 @@ gst_d3d12_memory_copy_set_caps (GstBaseTransform * trans, GstCaps * incaps,
 
   priv->Reset (false);
 
+  std::lock_guard < std::recursive_mutex > lk (priv->lock);
+  priv->transfer_type = TransferType::SYSTEM;
+
+  switch (priv->queue_type) {
+    case GST_D3D12_MEMCPY_CMD_QUEUE_3D:
+      priv->selected_queue_type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+      break;
+    case GST_D3D12_MEMCPY_CMD_QUEUE_COMPUTE:
+      priv->selected_queue_type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
+      break;
+    case GST_D3D12_MEMCPY_CMD_QUEUE_COPY:
+      priv->selected_queue_type = D3D12_COMMAND_LIST_TYPE_COPY;
+      break;
+    default:
+      if (!gst_d3d12_device_is_uma (priv->device12)) {
+        /* dGPU, prefer COPY queue */
+        priv->selected_queue_type = D3D12_COMMAND_LIST_TYPE_COPY;
+      } else {
+        /* iGPU may have weak COPY engine. Prefer direct queue
+         * in case of upload, otherwise use COPY queue so that
+         * copy task can overlap with 3D task */
+        if (priv->is_uploader)
+          priv->selected_queue_type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+        else
+          priv->selected_queue_type = D3D12_COMMAND_LIST_TYPE_COPY;
+      }
+      break;
+  }
+
+  GST_DEBUG_OBJECT (self,
+      "Selected command queue type %d", priv->selected_queue_type);
+
   auto features = gst_caps_get_features (incaps, 0);
   if (features && gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY)) {
@@ -747,7 +833,18 @@ gst_d3d12_memory_copy_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     priv->out_type = MemoryType::D3D11;
   }
 
-  return gst_d3d12_memory_copy_setup_resource (self);
+  if (priv->in_type == MemoryType::D3D11 || priv->out_type == MemoryType::D3D11)
+    return gst_d3d12_memory_copy_setup_interop_resource (self);
+
+  if (priv->in_type == MemoryType::D3D12 &&
+      priv->out_type == MemoryType::SYSTEM) {
+    priv->transfer_type = TransferType::D3D12_TO_SYSTEM;
+  } else if (priv->in_type == MemoryType::SYSTEM &&
+      priv->out_type == MemoryType::D3D12) {
+    priv->transfer_type = TransferType::SYSTEM_TO_D3D12;
+  }
+
+  return TRUE;
 }
 
 static GstCaps *
@@ -866,6 +963,9 @@ gst_d3d12_memory_copy_propose_allocation (GstBaseTransform * trans,
       }
       pool = gst_d3d11_buffer_pool_new (priv->device11);
       is_d3d11 = true;
+    } else if (priv->transfer_type == TransferType::SYSTEM_TO_D3D12) {
+      pool = gst_d3d12_staging_buffer_pool_new (priv->device12);
+      GST_DEBUG_OBJECT (self, "Proposing staging pool");
     } else {
       pool = gst_video_buffer_pool_new ();
     }
@@ -932,7 +1032,7 @@ gst_d3d12_memory_copy_propose_allocation (GstBaseTransform * trans,
       }
       gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
       gst_d3d11_allocation_params_free (params);
-    } else {
+    } else if (GST_IS_VIDEO_BUFFER_POOL (pool)) {
       gst_buffer_pool_config_add_option (config,
           GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
     }
@@ -1035,13 +1135,14 @@ gst_d3d12_memory_copy_decide_allocation (GstBaseTransform * trans,
       pool = gst_d3d11_buffer_pool_new (priv->device11);
 
     is_d3d11 = true;
-  } else if (!pool) {
-    pool = gst_video_buffer_pool_new ();
+  } else if (priv->transfer_type == TransferType::D3D12_TO_SYSTEM) {
+    gst_clear_object (&pool);
+    pool = gst_d3d12_staging_buffer_pool_new (priv->device12);
+    GST_DEBUG_OBJECT (self, "Creating staging buffer pool");
   }
 
-  if (!pool) {
+  if (!pool)
     pool = gst_video_buffer_pool_new ();
-  }
 
   auto config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
@@ -1231,36 +1332,6 @@ gst_d3d12_memory_copy_before_transform (GstBaseTransform * trans,
     gst_d3d12_memory_copy_set_caps (trans, priv->incaps, priv->outcaps);
     gst_base_transform_reconfigure_src (trans);
   }
-}
-
-static GstFlowReturn
-gst_d3d12_memory_copy_system_copy (GstD3D12MemoryCopy * self,
-    GstBuffer * inbuf, GstBuffer * outbuf)
-{
-  auto priv = self->priv;
-  GstVideoFrame in_frame, out_frame;
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  if (!gst_video_frame_map (&in_frame, &priv->info, inbuf, GST_MAP_READ)) {
-    GST_ERROR_OBJECT (self, "Couldn't map input frame");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!gst_video_frame_map (&out_frame, &priv->info, outbuf, GST_MAP_WRITE)) {
-    GST_ERROR_OBJECT (self, "Couldn't map output frame");
-    gst_video_frame_unmap (&in_frame);
-    return GST_FLOW_ERROR;
-  }
-
-  if (!gst_video_frame_copy (&out_frame, &in_frame)) {
-    GST_ERROR_OBJECT (self, "Copy failed");
-    ret = GST_FLOW_ERROR;
-  }
-
-  gst_video_frame_unmap (&out_frame);
-  gst_video_frame_unmap (&in_frame);
-
-  return ret;
 }
 
 static gboolean
@@ -1527,14 +1598,15 @@ gst_d3d12_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   auto self = GST_D3D12_MEMORY_COPY (trans);
   auto priv = self->priv;
 
-  if (priv->transfer_type != TransferType::SYSTEM) {
+  if (priv->transfer_type == TransferType::D3D11_TO_12 ||
+      priv->transfer_type == TransferType::D3D12_TO_11) {
     if (gst_buffer_n_memory (inbuf) != gst_buffer_n_memory (outbuf)) {
       GST_WARNING_OBJECT (self, "Different memory layout");
       priv->transfer_type = TransferType::SYSTEM;
     }
   }
 
-  GstBuffer *upload_buf = gst_d3d12_memory_copy_upload (self, inbuf);
+  auto upload_buf = gst_d3d12_memory_copy_upload (self, inbuf);
   if (!upload_buf) {
     GST_ERROR_OBJECT (self, "Null upload buffer");
     return GST_FLOW_ERROR;
@@ -1558,10 +1630,14 @@ gst_d3d12_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     priv->transfer_type = TransferType::SYSTEM;
   }
 
-  auto ret = gst_d3d12_memory_copy_system_copy (self, upload_buf, outbuf);
+  auto ret = gst_d3d12_buffer_copy_into_full (outbuf, upload_buf, &priv->info,
+      priv->selected_queue_type);
   gst_buffer_unref (upload_buf);
 
-  return ret;
+  if (ret)
+    return GST_FLOW_OK;
+
+  return GST_FLOW_ERROR;
 }
 
 struct _GstD3D12Upload
