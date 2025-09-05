@@ -3594,7 +3594,7 @@ gst_rtsp_connection_set_content_length_limit (GstRTSPConnection * conn,
  *
  * Retrieve the URL of the other end of @conn.
  *
- * Returns: The URL. This value remains valid until the
+ * Returns: (transfer none): The URL. This value remains valid until the
  * connection is freed.
  */
 GstRTSPUrl *
@@ -3611,8 +3611,8 @@ gst_rtsp_connection_get_url (const GstRTSPConnection * conn)
  *
  * Retrieve the IP address of the other end of @conn.
  *
- * Returns: The IP address as a string. this value remains valid until the
- * connection is closed.
+ * Returns: (nullable): The IP address as a string.
+ * This value remains valid until the connection is closed.
  */
 const gchar *
 gst_rtsp_connection_get_ip (const GstRTSPConnection * conn)
