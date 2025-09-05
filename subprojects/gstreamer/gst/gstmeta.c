@@ -61,6 +61,13 @@ GQuark _gst_meta_tag_memory_reference;
 static GQuark _gst_meta_tags_quark;
 static GQuark _gst_allocation_meta_params_aggregator_quark;
 
+GST_LOG_CONTEXT_STATIC_DEFINE (_gst_meta_ctx_once,
+    GST_LOG_CONTEXT_FLAG_THROTTLE,
+    GST_LOG_CONTEXT_BUILDER_SET_CATEGORY (GST_CAT_META);
+    GST_LOG_CONTEXT_BUILDER_SET_HASH_FLAGS (GST_LOG_CONTEXT_USE_STRING_ARGS);
+    );
+#define GST_META_CTX_ONCE GST_LOG_CONTEXT_LAZY_INIT(_gst_meta_ctx_once)
+
 typedef struct
 {
   GstMetaInfo info;
@@ -874,7 +881,7 @@ gst_meta_deserialize (GstBuffer * buffer, const guint8 * data, gsize size,
   if (info == NULL) {
     info = gst_meta_factory_load (name);
     if (info == NULL) {
-      GST_CAT_WARNING (GST_CAT_META,
+      GST_CTX_WARNING (GST_META_CTX_ONCE,
           "%s does not correspond to a registered meta", name);
       return NULL;
     }
