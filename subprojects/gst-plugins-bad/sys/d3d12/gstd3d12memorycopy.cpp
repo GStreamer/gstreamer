@@ -21,12 +21,16 @@
 #include <config.h>
 #endif
 
+#include "gstd3d12plugin-config.h"
+
 #include "gstd3d12memorycopy.h"
 #include <gst/d3d12/gstd3d12.h>
 #include <gst/d3d12/gstd3d12-private.h>
+#ifdef HAVE_GST_D3D11
 #include <gst/d3d11/gstd3d11.h>
 #include <gst/d3d11/gstd3d11-private.h>
 #include <gst/d3d11/gstd3d11device-private.h>
+#endif
 #include <directx/d3dx12.h>
 #include <mutex>
 #include <condition_variable>
@@ -43,43 +47,77 @@ GST_DEBUG_CATEGORY_STATIC (gst_d3d12_memory_copy_debug);
 #define META_TAG_VIDEO meta_tag_video_quark
 static GQuark meta_tag_video_quark;
 
+#ifdef HAVE_GST_D3D11
+#define SINK_STATIC_CAPS \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES \
+    (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY, GST_D3D12_ALL_FORMATS) "; " \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES \
+    (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY "," \
+      GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, \
+      GST_D3D12_ALL_FORMATS) "; " \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, \
+      GST_D3D11_ALL_FORMATS) ";" \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY \
+      "," GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, \
+      GST_D3D11_ALL_FORMATS) ";" \
+  GST_VIDEO_CAPS_MAKE (GST_D3D12_ALL_FORMATS) "; " \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES \
+    (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY "," \
+      GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, \
+      GST_D3D12_ALL_FORMATS)
+
+#define SRC_STATIC_CAPS \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES \
+    (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY, GST_D3D12_ALL_FORMATS) "; " \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES \
+    (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY "," \
+      GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, \
+      GST_D3D12_ALL_FORMATS) "; " \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, \
+      GST_D3D11_ALL_FORMATS) ";" \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY \
+      "," GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, \
+      GST_D3D11_ALL_FORMATS) ";" \
+  GST_VIDEO_CAPS_MAKE (GST_D3D12_ALL_FORMATS) "; " \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES \
+    (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY "," \
+      GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, \
+      GST_D3D12_ALL_FORMATS)
+#else
+#define SINK_STATIC_CAPS \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES \
+    (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY, GST_D3D12_ALL_FORMATS) "; " \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES \
+    (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY "," \
+      GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, \
+      GST_D3D12_ALL_FORMATS) "; " \
+  GST_VIDEO_CAPS_MAKE (GST_D3D12_ALL_FORMATS) "; " \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES \
+    (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY "," \
+      GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, \
+      GST_D3D12_ALL_FORMATS)
+
+#define SRC_STATIC_CAPS \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES \
+    (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY, GST_D3D12_ALL_FORMATS) "; " \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES \
+    (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY "," \
+      GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, \
+      GST_D3D12_ALL_FORMATS) "; " \
+  GST_VIDEO_CAPS_MAKE (GST_D3D12_ALL_FORMATS) "; " \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES \
+    (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY "," \
+      GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, \
+      GST_D3D12_ALL_FORMATS)
+#endif
+
 static GstStaticPadTemplate sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY, GST_D3D12_ALL_FORMATS) "; "
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY ","
-            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
-            GST_D3D12_ALL_FORMATS) "; "
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
-            GST_D3D11_ALL_FORMATS) ";"
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY
-            "," GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
-            GST_D3D11_ALL_FORMATS) ";"
-        GST_VIDEO_CAPS_MAKE (GST_D3D12_ALL_FORMATS) "; "
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY ","
-            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
-            GST_D3D12_ALL_FORMATS)));
+GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (SINK_STATIC_CAPS));
 
 static GstStaticPadTemplate src_template =
-    GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY, GST_D3D12_ALL_FORMATS) "; "
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY ","
-            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
-            GST_D3D12_ALL_FORMATS) "; "
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
-            GST_D3D11_ALL_FORMATS) ";"
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY
-            "," GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
-            GST_D3D11_ALL_FORMATS) ";"
-        GST_VIDEO_CAPS_MAKE (GST_D3D12_ALL_FORMATS) "; "
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY ","
-            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
-            GST_D3D12_ALL_FORMATS)));
+GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (SRC_STATIC_CAPS));
 
 enum class TransferType
 {
@@ -142,6 +180,7 @@ enum
 #define DEFAULT_ADAPTER -1
 #define DEFAULT_QUEUE_TYPE GST_D3D12_MEMCPY_CMD_QUEUE_AUTO
 
+#ifdef HAVE_GST_D3D11
 #define ASYNC_FENCE_WAIT_DEPTH 16
 
 struct FenceWaitData
@@ -246,6 +285,7 @@ gst_d3d12_memory_copy_fence_wait_thread (gpointer data)
 
   return nullptr;
 }
+#endif
 
 struct _GstD3D12MemoryCopyPrivate
 {
@@ -260,16 +300,18 @@ struct _GstD3D12MemoryCopyPrivate
       gst_buffer_pool_set_active (fallback_pool12, FALSE);
     gst_clear_object (&fallback_pool12);
 
-    fence_waiter = nullptr;
-
     fence12 = nullptr;
-    fence11 = nullptr;
     fence12_external = nullptr;
-    fence11_external = nullptr;
     fence12_on_11 = nullptr;
+
+#ifdef HAVE_GST_D3D11
+    fence_waiter = nullptr;
+    fence11 = nullptr;
+    fence11_external = nullptr;
     fence11_on_11 = nullptr;
     context11_4 = nullptr;
     device11_5 = nullptr;
+#endif
 
     in_type = MemoryType::SYSTEM;
     out_type = MemoryType::SYSTEM;
@@ -280,26 +322,30 @@ struct _GstD3D12MemoryCopyPrivate
     if (full) {
       luid = 0;
       gst_clear_object (&device12);
+#ifdef HAVE_GST_D3D11
       gst_clear_object (&device11);
+#endif
       gst_clear_caps (&incaps);
       gst_clear_caps (&outcaps);
     }
   }
 
   GstD3D12Device *device12 = nullptr;
-  GstD3D11Device *device11 = nullptr;
 
   ComPtr < ID3D12Fence > fence12;
-  ComPtr < ID3D11Fence > fence11;
-
   ComPtr < ID3D12Fence > fence12_external;
-  ComPtr < ID3D11Fence > fence11_external;
-
   ComPtr < ID3D12Fence > fence12_on_11;
-  ComPtr < ID3D11Fence > fence11_on_11;
 
+#ifdef HAVE_GST_D3D11
+  std::shared_ptr < FenceAsyncWaiter > fence_waiter;
+
+  GstD3D11Device *device11 = nullptr;
+  ComPtr < ID3D11Fence > fence11;
+  ComPtr < ID3D11Fence > fence11_external;
+  ComPtr < ID3D11Fence > fence11_on_11;
   ComPtr < ID3D11Device5 > device11_5;
   ComPtr < ID3D11DeviceContext4 > context11_4;
+#endif
 
   GstBufferPool *fallback_pool12 = nullptr;
 
@@ -315,8 +361,6 @@ struct _GstD3D12MemoryCopyPrivate
   MemoryType in_type = MemoryType::SYSTEM;
   MemoryType out_type = MemoryType::SYSTEM;
   UINT64 fence_val = 0;
-
-  std::shared_ptr < FenceAsyncWaiter > fence_waiter;
 
   gint adapter = DEFAULT_ADAPTER;
   GstD3D12MemcpyCmdQueueType queue_type = DEFAULT_QUEUE_TYPE;
@@ -497,19 +541,25 @@ gst_d3d12_memory_copy_set_context (GstElement * element, GstContext * context)
     switch (priv->search_type) {
       case DeviceSearchType::ANY:
         gst_d3d12_handle_set_context (element, context, -1, &priv->device12);
+#ifdef HAVE_GST_D3D11
         gst_d3d11_handle_set_context (element, context, -1, &priv->device11);
+#endif
         break;
       case DeviceSearchType::PROPERTY:
         gst_d3d12_handle_set_context (element,
             context, priv->adapter, &priv->device12);
+#ifdef HAVE_GST_D3D11
         gst_d3d11_handle_set_context (element,
             context, priv->adapter, &priv->device11);
+#endif
         break;
       case DeviceSearchType::LUID:
         gst_d3d12_handle_set_context_for_adapter_luid (element,
             context, priv->luid, &priv->device12);
+#ifdef HAVE_GST_D3D11
         gst_d3d11_handle_set_context_for_adapter_luid (element,
             context, priv->luid, &priv->device11);
+#endif
         break;
     }
   }
@@ -558,14 +608,17 @@ gst_d3d12_memory_copy_query (GstBaseTransform * trans,
     if (gst_d3d12_handle_context_query (elem, query, priv->device12))
       return TRUE;
 
+#ifdef HAVE_GST_D3D11
     if (gst_d3d11_handle_context_query (elem, query, priv->device11))
       return TRUE;
+#endif
   }
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
       query);
 }
 
+#ifdef HAVE_GST_D3D11
 static gboolean
 gst_d3d12_memory_copy_setup_interop_resource (GstD3D12MemoryCopy * self)
 {
@@ -760,6 +813,7 @@ gst_d3d12_memory_copy_setup_interop_resource (GstD3D12MemoryCopy * self)
 
   return TRUE;
 }
+#endif
 
 static gboolean
 gst_d3d12_memory_copy_set_caps (GstBaseTransform * trans, GstCaps * incaps,
@@ -819,22 +873,28 @@ gst_d3d12_memory_copy_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   if (features && gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY)) {
     priv->in_type = MemoryType::D3D12;
-  } else if (features && gst_caps_features_contains (features,
+  }
+#ifdef HAVE_GST_D3D11
+  else if (features && gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
     priv->in_type = MemoryType::D3D11;
   }
+#endif
 
   features = gst_caps_get_features (outcaps, 0);
   if (features && gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY)) {
     priv->out_type = MemoryType::D3D12;
-  } else if (features && gst_caps_features_contains (features,
+  }
+#ifdef HAVE_GST_D3D11
+  else if (features && gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
     priv->out_type = MemoryType::D3D11;
   }
 
   if (priv->in_type == MemoryType::D3D11 || priv->out_type == MemoryType::D3D11)
     return gst_d3d12_memory_copy_setup_interop_resource (self);
+#endif
 
   if (priv->in_type == MemoryType::D3D12 &&
       priv->out_type == MemoryType::SYSTEM) {
@@ -880,22 +940,29 @@ gst_d3d12_memory_copy_transform_caps (GstBaseTransform * trans,
           _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY);
       tmp = gst_caps_merge (caps_12, gst_caps_ref (caps));
     } else {
-      auto caps_11 =
-          _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
       auto caps_sys =
           _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+#ifdef HAVE_GST_D3D11
+      auto caps_11 =
+          _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
       tmp = gst_caps_merge (caps_11, caps_sys);
       tmp = gst_caps_merge (gst_caps_ref (caps), tmp);
+#else
+      tmp = gst_caps_merge (gst_caps_ref (caps), caps_sys);
+#endif
     }
   } else {
     if (priv->is_uploader) {
-      auto caps_11 =
-          _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
       auto caps_sys =
           _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
-
+#ifdef HAVE_GST_D3D11
+      auto caps_11 =
+          _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
       tmp = gst_caps_merge (caps_11, caps_sys);
       tmp = gst_caps_merge (tmp, gst_caps_ref (caps));
+#else
+      tmp = gst_caps_merge (caps_sys, gst_caps_ref (caps));
+#endif
     } else {
       auto caps_12 =
           _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY);
@@ -926,7 +993,9 @@ gst_d3d12_memory_copy_propose_allocation (GstBaseTransform * trans,
   GstCaps *caps;
   guint size;
   bool is_d3d12 = false;
+#ifdef HAVE_GST_D3D11
   bool is_d3d11 = false;
+#endif
 
   if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
           decide_query, query))
@@ -955,7 +1024,9 @@ gst_d3d12_memory_copy_propose_allocation (GstBaseTransform * trans,
       GST_DEBUG_OBJECT (self, "upstream support d3d12 memory");
       pool = gst_d3d12_buffer_pool_new (priv->device12);
       is_d3d12 = true;
-    } else if (features && gst_caps_features_contains (features,
+    }
+#ifdef HAVE_GST_D3D11
+    else if (features && gst_caps_features_contains (features,
             GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
       if (!priv->device11) {
         GST_ERROR_OBJECT (self, "D3D11 device is not configured");
@@ -963,7 +1034,9 @@ gst_d3d12_memory_copy_propose_allocation (GstBaseTransform * trans,
       }
       pool = gst_d3d11_buffer_pool_new (priv->device11);
       is_d3d11 = true;
-    } else if (priv->transfer_type == TransferType::SYSTEM_TO_D3D12) {
+    }
+#endif
+    else if (priv->transfer_type == TransferType::SYSTEM_TO_D3D12) {
       pool = gst_d3d12_staging_buffer_pool_new (priv->device12);
       GST_DEBUG_OBJECT (self, "Proposing staging pool");
     } else {
@@ -994,16 +1067,14 @@ gst_d3d12_memory_copy_propose_allocation (GstBaseTransform * trans,
         resource_flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
       }
 
-      D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
-      if (priv->transfer_type == TransferType::D3D12_TO_11)
-        heap_flags = D3D12_HEAP_FLAG_SHARED;
-
       auto params = gst_d3d12_allocation_params_new (priv->device12,
           &info, GST_D3D12_ALLOCATION_FLAG_DEFAULT, resource_flags,
           D3D12_HEAP_FLAG_SHARED);
       gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
       gst_d3d12_allocation_params_free (params);
-    } else if (is_d3d11) {
+    }
+#ifdef HAVE_GST_D3D11
+    else if (is_d3d11) {
       GstD3D11Format format11;
       gst_d3d11_device_get_format (priv->device11,
           GST_VIDEO_INFO_FORMAT (&info), &format11);
@@ -1032,7 +1103,9 @@ gst_d3d12_memory_copy_propose_allocation (GstBaseTransform * trans,
       }
       gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
       gst_d3d11_allocation_params_free (params);
-    } else if (GST_IS_VIDEO_BUFFER_POOL (pool)) {
+    }
+#endif
+    else if (GST_IS_VIDEO_BUFFER_POOL (pool)) {
       gst_buffer_pool_config_add_option (config,
           GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
     }
@@ -1074,7 +1147,9 @@ gst_d3d12_memory_copy_decide_allocation (GstBaseTransform * trans,
   GstCaps *caps = nullptr;
   bool update_pool = false;
   bool is_d3d12 = false;
+#ifdef HAVE_GST_D3D11
   bool is_d3d11 = false;
+#endif
 
   gst_query_parse_allocation (query, &caps, nullptr);
 
@@ -1114,7 +1189,9 @@ gst_d3d12_memory_copy_decide_allocation (GstBaseTransform * trans,
       pool = gst_d3d12_buffer_pool_new (priv->device12);
 
     is_d3d12 = true;
-  } else if (features && gst_caps_features_contains (features,
+  }
+#ifdef HAVE_GST_D3D11
+  else if (features && gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
     if (!priv->device11) {
       GST_ERROR_OBJECT (self, "D3D11 device is not configured");
@@ -1135,7 +1212,9 @@ gst_d3d12_memory_copy_decide_allocation (GstBaseTransform * trans,
       pool = gst_d3d11_buffer_pool_new (priv->device11);
 
     is_d3d11 = true;
-  } else if (priv->transfer_type == TransferType::D3D12_TO_SYSTEM) {
+  }
+#endif
+  else if (priv->transfer_type == TransferType::D3D12_TO_SYSTEM) {
     gst_clear_object (&pool);
     pool = gst_d3d12_staging_buffer_pool_new (priv->device12);
     GST_DEBUG_OBJECT (self, "Creating staging buffer pool");
@@ -1175,7 +1254,9 @@ gst_d3d12_memory_copy_decide_allocation (GstBaseTransform * trans,
 
     gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
     gst_d3d12_allocation_params_free (params);
-  } else if (is_d3d11) {
+  }
+#ifdef HAVE_GST_D3D11
+  else if (is_d3d11) {
     GstD3D11Format format11;
     gst_d3d11_device_get_format (priv->device11, GST_VIDEO_INFO_FORMAT (&info),
         &format11);
@@ -1205,6 +1286,7 @@ gst_d3d12_memory_copy_decide_allocation (GstBaseTransform * trans,
     gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
     gst_d3d11_allocation_params_free (params);
   }
+#endif
 
   gst_buffer_pool_set_config (pool, config);
 
@@ -1255,6 +1337,7 @@ gst_d3d12_memory_copy_before_transform (GstBaseTransform * trans,
     return;
 
   auto mem = gst_buffer_peek_memory (buffer, 0);
+#ifdef HAVE_GST_D3D11
   if (priv->in_type == MemoryType::D3D11) {
     if (!gst_is_d3d11_memory (mem)) {
       GST_WARNING_OBJECT (self, "Input memory is not d3d11");
@@ -1293,7 +1376,9 @@ gst_d3d12_memory_copy_before_transform (GstBaseTransform * trans,
         need_reconfigure = true;
       }
     }
-  } else if (priv->in_type == MemoryType::D3D12) {
+  } else
+#endif
+  if (priv->in_type == MemoryType::D3D12) {
     if (!gst_is_d3d12_memory (mem)) {
       GST_WARNING_OBJECT (self, "Input memory is not d3d12");
       priv->transfer_type = TransferType::SYSTEM;
@@ -1309,6 +1394,8 @@ gst_d3d12_memory_copy_before_transform (GstBaseTransform * trans,
 
       g_object_get (priv->device12, "adapter-luid", &priv->luid, nullptr);
 
+      need_reconfigure = true;
+#ifdef HAVE_GST_D3D11
       auto prev_device11 = priv->device11;
       priv->device11 = nullptr;
       priv->search_type = DeviceSearchType::LUID;
@@ -1323,7 +1410,7 @@ gst_d3d12_memory_copy_before_transform (GstBaseTransform * trans,
       priv->search_type = DeviceSearchType::PROPERTY;
 
       gst_clear_object (&prev_device11);
-      need_reconfigure = true;
+#endif
     }
   }
 
@@ -1334,6 +1421,7 @@ gst_d3d12_memory_copy_before_transform (GstBaseTransform * trans,
   }
 }
 
+#ifdef HAVE_GST_D3D11
 static gboolean
 gst_d3d12_memory_copy_11_to_12 (GstD3D12MemoryCopy * self,
     GstBuffer * inbuf, GstBuffer * outbuf)
@@ -1548,10 +1636,12 @@ gst_d3d12_memory_copy_12_to_11 (GstD3D12MemoryCopy * self,
 
   return TRUE;
 }
+#endif
 
 static GstBuffer *
 gst_d3d12_memory_copy_upload (GstD3D12MemoryCopy * self, GstBuffer * buffer)
 {
+#ifdef HAVE_GST_D3D11
   auto priv = self->priv;
 
   if (priv->transfer_type == TransferType::D3D12_TO_11) {
@@ -1587,6 +1677,7 @@ gst_d3d12_memory_copy_upload (GstD3D12MemoryCopy * self, GstBuffer * buffer)
       return upload_buf;
     }
   }
+#endif
 
   return gst_buffer_ref (buffer);
 }
@@ -1611,7 +1702,7 @@ gst_d3d12_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GST_ERROR_OBJECT (self, "Null upload buffer");
     return GST_FLOW_ERROR;
   }
-
+#ifdef HAVE_GST_D3D11
   if (priv->transfer_type == TransferType::D3D11_TO_12) {
     if (gst_d3d12_memory_copy_11_to_12 (self, upload_buf, outbuf)) {
       GST_LOG_OBJECT (self, "Copy 11-to-12 done");
@@ -1629,6 +1720,7 @@ gst_d3d12_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
     priv->transfer_type = TransferType::SYSTEM;
   }
+#endif
 
   auto ret = gst_d3d12_buffer_copy_into_full (outbuf, upload_buf, &priv->info,
       priv->selected_queue_type);

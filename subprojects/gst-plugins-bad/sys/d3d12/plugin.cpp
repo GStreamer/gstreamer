@@ -53,19 +53,16 @@
 #include "gstd3d12deinterlace.h"
 #include "gstd3d12remap.h"
 #include "gstd3d12fisheyedewarp.h"
+#include "gstd3d12memorycopy.h"
 #include <windows.h>
 #include <versionhelpers.h>
 #include <wrl.h>
 #include <glib/gi18n-lib.h>
 
 #ifdef HAVE_GST_D3D11
-#include "gstd3d12memorycopy.h"
 #include <gst/d3d11/gstd3d11.h>
 #include <gst/d3d11/gstd3d11device-private.h>
 #include <d3d11_4.h>
-#else
-#include "gstd3d12download.h"
-#include "gstd3d12upload.h"
 #endif
 
 #ifdef HAVE_WGC
