@@ -265,6 +265,8 @@ video_meta_deserialize (const GstMetaInfo * info, GstBuffer * buffer,
   if (version != 0)
     return NULL;
 
+  gst_video_alignment_reset (&align);
+
   GstByteReader br;
   gboolean success = TRUE;
   gst_byte_reader_init (&br, data, size);
