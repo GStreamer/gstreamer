@@ -697,7 +697,7 @@ return to upstream/caller (indicating either GST_FLOW_ERROR or GST_FLOW_OK).</do
         </parameter>
       </parameters>
     </function-macro>
-    <constant name="AUDIO_FORMATS_ALL" value="{ F64BE, F64LE, F32BE, F32LE, S32BE, S32LE, U32BE, U32LE, S24_32BE, S24_32LE, U24_32BE, U24_32LE, S24BE, S24LE, U24BE, U24LE, S20BE, S20LE, U20BE, U20LE, S18BE, S18LE, U18BE, U18LE, S16BE, S16LE, U16BE, U16LE, S8, U8 }" c:type="GST_AUDIO_FORMATS_ALL">
+    <constant name="AUDIO_FORMATS_ALL" value="{ F64BE, F64LE, F32BE, F32LE, S32BE, S32LE, U32BE, U32LE, S24_32BE, S24_32LE, U24_32BE, U24_32LE, S24BE, S24LE, U24BE, U24LE, S20BE, S20LE, U20BE, U20LE, S20_32BE, S20_32LE, U20_32BE, U20_32LE, S18BE, S18LE, U18BE, U18LE, S16BE, S16LE, U16BE, U16LE, S8, U8 }" c:type="GST_AUDIO_FORMATS_ALL">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.h">List of all audio formats, for use in template caps strings.
 
 Formats are sorted by decreasing "quality", using these criteria by priority:
@@ -794,7 +794,7 @@ format.</doc>
         </parameter>
       </parameters>
     </function-macro>
-    <constant name="AUDIO_FORMAT_LAST" value="32" c:type="GST_AUDIO_FORMAT_LAST" version="1.26">
+    <constant name="AUDIO_FORMAT_LAST" value="36" c:type="GST_AUDIO_FORMAT_LAST" version="1.26">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.h">Number of audio formats in #GstAudioFormat.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.h"/>
       <type name="gint" c:type="gint"/>
@@ -6619,6 +6619,18 @@ This function is usually used from within a GObject class_init function.</doc>
       <member name="f64be" value="31" c:identifier="GST_AUDIO_FORMAT_F64BE" glib:nick="f64be" glib:name="GST_AUDIO_FORMAT_F64BE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.h">64-bit floating point samples, big endian</doc>
       </member>
+      <member name="s20_32le" value="32" c:identifier="GST_AUDIO_FORMAT_S20_32LE" version="1.28" glib:nick="s20-32le" glib:name="GST_AUDIO_FORMAT_S20_32LE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.h">20 bits in 32 bits, signed, little endian.</doc>
+      </member>
+      <member name="s20_32be" value="33" c:identifier="GST_AUDIO_FORMAT_S20_32BE" version="1.28" glib:nick="s20-32be" glib:name="GST_AUDIO_FORMAT_S20_32BE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.h">20 bits in 32 bits, signed, big endian.</doc>
+      </member>
+      <member name="u20_32le" value="34" c:identifier="GST_AUDIO_FORMAT_U20_32LE" version="1.28" glib:nick="u20-32le" glib:name="GST_AUDIO_FORMAT_U20_32LE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.h">20 bits in 32 bits, unsigned, little endian.</doc>
+      </member>
+      <member name="u20_32be" value="35" c:identifier="GST_AUDIO_FORMAT_U20_32BE" version="1.28" glib:nick="u20-32be" glib:name="GST_AUDIO_FORMAT_U20_32BE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.h">20 bits in 32 bits, unsigned, big endian.</doc>
+      </member>
       <member name="s16" value="4" c:identifier="GST_AUDIO_FORMAT_S16" glib:nick="s16" glib:name="GST_AUDIO_FORMAT_S16">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.h">16 bits in 16 bits, signed, native endianness</doc>
       </member>
@@ -6648,6 +6660,12 @@ This function is usually used from within a GObject class_init function.</doc>
       </member>
       <member name="u20" value="22" c:identifier="GST_AUDIO_FORMAT_U20" glib:nick="u20" glib:name="GST_AUDIO_FORMAT_U20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.h">20 bits in 24 bits, unsigned, native endianness</doc>
+      </member>
+      <member name="s20_32" value="32" c:identifier="GST_AUDIO_FORMAT_S20_32" version="1.28" glib:nick="s20-32" glib:name="GST_AUDIO_FORMAT_S20_32">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.h">20 bits in 32 bits, signed, native endian.</doc>
+      </member>
+      <member name="u20_32" value="34" c:identifier="GST_AUDIO_FORMAT_U20_32" version="1.28" glib:nick="u20-32" glib:name="GST_AUDIO_FORMAT_U20_32">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.h">20 bits in 32 bits, unsigned, native endian.</doc>
       </member>
       <member name="s18" value="24" c:identifier="GST_AUDIO_FORMAT_S18" glib:nick="s18" glib:name="GST_AUDIO_FORMAT_S18">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.h">18 bits in 24 bits, signed, native endianness</doc>

@@ -8353,12 +8353,12 @@
                 "long-name": "Audio deinterleaver",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src_%%u": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: 1\n         layout: { (string)non-interleaved, (string)interleaved }\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: 1\n         layout: { (string)non-interleaved, (string)interleaved }\n",
                         "direction": "src",
                         "presence": "sometimes"
                     }
@@ -8394,12 +8394,12 @@
                 "long-name": "Audio interleaver",
                 "pad-templates": {
                     "sink_%%u": {
-                        "caps": "audio/x-raw:\n           rate: [ 1, 2147483647 ]\n       channels: 1\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: { (string)non-interleaved, (string)interleaved }\n",
+                        "caps": "audio/x-raw:\n           rate: [ 1, 2147483647 ]\n       channels: 1\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: { (string)non-interleaved, (string)interleaved }\n",
                         "direction": "sink",
                         "presence": "request"
                     },
                     "src": {
-                        "caps": "audio/x-raw:\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: interleaved\n",
+                        "caps": "audio/x-raw:\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: interleaved\n",
                         "direction": "src",
                         "presence": "always"
                     }

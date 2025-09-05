@@ -1570,7 +1570,7 @@ GST_START_TEST (test_audio_make_raw_caps)
   caps = gst_audio_make_raw_caps (NULL, 0, GST_AUDIO_LAYOUT_INTERLEAVED);
   expected =
       gst_caps_from_string
-      ("audio/x-raw, format = (string) { S8, U8, S16LE, S16BE, U16LE, U16BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S32LE, S32BE, U32LE, U32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, F32LE, F32BE, F64LE, F64BE }, rate = (int) [ 1, max ], channels = (int) [ 1, max ], layout = (string) interleaved");
+      ("audio/x-raw, format = (string) { S8, U8, S16LE, S16BE, U16LE, U16BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S32LE, S32BE, U32LE, U32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, F32LE, F32BE, F64LE, F64BE }, rate = (int) [ 1, max ], channels = (int) [ 1, max ], layout = (string) interleaved");
   fail_unless (gst_caps_is_equal (caps, expected));
   gst_caps_unref (caps);
   gst_caps_unref (expected);
