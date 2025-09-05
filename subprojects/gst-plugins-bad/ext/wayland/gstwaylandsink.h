@@ -60,6 +60,7 @@ struct _GstWaylandSink
   gboolean have_mastering_info;
   gboolean have_light_info;
   gboolean fullscreen;
+  gchar *fullscreen_output;
   GstCaps *caps;
 
   gchar *display_name;

@@ -61,6 +61,7 @@ enum
   PROP_0,
   PROP_DISPLAY,
   PROP_FULLSCREEN,
+  PROP_FULLSCREEN_OUTPUT,
   PROP_ROTATE_METHOD,
   PROP_DRM_DEVICE,
   PROP_FORCE_ASPECT_RATIO,
@@ -164,6 +165,16 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
           G_PARAM_STATIC_STRINGS));
 
   /**
+   * waylandsink:fullscreen-output:
+   *
+   * Since: 1.28
+   */
+  g_object_class_install_property (gobject_class, PROP_FULLSCREEN_OUTPUT,
+      g_param_spec_string ("fullscreen-output", "Wayland Output name",
+          "The name of the wayland output to fullscreen to.", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * waylandsink:rotate-method:
    *
    * Since: 1.22
@@ -224,15 +235,20 @@ gst_wayland_sink_init (GstWaylandSink * self)
 
 /* must be called with the OBJECT_LOCK */
 static void
-gst_wayland_sink_set_fullscreen (GstWaylandSink * self, gboolean fullscreen)
+gst_wayland_sink_set_fullscreen (GstWaylandSink * self, gboolean fullscreen,
+    const gchar * fullscreen_output)
 {
-  if (fullscreen == self->fullscreen)
-    return;
-
   self->fullscreen = fullscreen;
+
+  if (self->fullscreen_output != fullscreen_output) {
+    g_free (self->fullscreen_output);
+    self->fullscreen_output = g_strdup (fullscreen_output);
+  }
+
   if (self->window) {
     g_mutex_lock (&self->render_lock);
-    gst_wl_window_ensure_fullscreen (self->window, fullscreen);
+    gst_wl_window_ensure_fullscreen_for_output (self->window, fullscreen,
+        fullscreen_output);
     g_mutex_unlock (&self->render_lock);
   }
 }
@@ -308,6 +324,11 @@ gst_wayland_sink_get_property (GObject * object,
       g_value_set_boolean (value, self->fullscreen);
       GST_OBJECT_UNLOCK (self);
       break;
+    case PROP_FULLSCREEN_OUTPUT:
+      GST_OBJECT_LOCK (self);
+      g_value_set_string (value, self->fullscreen_output);
+      GST_OBJECT_UNLOCK (self);
+      break;
     case PROP_ROTATE_METHOD:
       GST_OBJECT_LOCK (self);
       g_value_set_enum (value, self->current_rotate_method);
@@ -344,7 +365,14 @@ gst_wayland_sink_set_property (GObject * object,
       break;
     case PROP_FULLSCREEN:
       GST_OBJECT_LOCK (self);
-      gst_wayland_sink_set_fullscreen (self, g_value_get_boolean (value));
+      gst_wayland_sink_set_fullscreen (self, g_value_get_boolean (value),
+          self->fullscreen_output);
+      GST_OBJECT_UNLOCK (self);
+      break;
+    case PROP_FULLSCREEN_OUTPUT:
+      GST_OBJECT_LOCK (self);
+      gst_wayland_sink_set_fullscreen (self, self->fullscreen,
+          g_value_get_string (value));
       GST_OBJECT_UNLOCK (self);
       break;
     case PROP_ROTATE_METHOD:
@@ -390,6 +418,7 @@ gst_wayland_sink_finalize (GObject * object)
 
   g_free (self->display_name);
   g_free (self->drm_device);
+  g_free (self->fullscreen_output);
 
   g_mutex_clear (&self->display_lock);
   g_mutex_clear (&self->render_lock);
@@ -926,6 +955,8 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
       /* if we were not provided a window, create one ourselves */
       self->window = gst_wl_window_new_toplevel (self->display,
           &self->video_info, self->fullscreen, &self->render_lock);
+      gst_wl_window_ensure_fullscreen_for_output (self->window,
+          self->fullscreen, self->fullscreen_output);
       g_signal_connect_object (self->window, "closed",
           G_CALLBACK (on_window_closed), self, 0);
       gst_wl_window_set_rotate_method (self->window,
