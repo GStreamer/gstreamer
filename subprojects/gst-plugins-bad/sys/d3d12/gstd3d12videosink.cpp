@@ -1323,25 +1323,8 @@ gst_d3d12_video_sink_set_buffer (GstD3D12VideoSink * self,
       return GST_FLOW_ERROR;
     }
 
-    GstVideoFrame in_frame, out_frame;
-    if (!gst_video_frame_map (&in_frame, &priv->info, buffer, GST_MAP_READ)) {
-      GST_ERROR_OBJECT (self, "Couldn't map input frame");
-      gst_buffer_unref (upload);
-      return GST_FLOW_ERROR;
-    }
-
-    if (!gst_video_frame_map (&out_frame, &priv->info, upload, GST_MAP_WRITE)) {
-      GST_ERROR_OBJECT (self, "Couldn't map upload frame");
-      gst_video_frame_unmap (&in_frame);
-      gst_buffer_unref (upload);
-      return GST_FLOW_ERROR;
-    }
-
-    auto copy_ret = gst_video_frame_copy (&out_frame, &in_frame);
-    gst_video_frame_unmap (&out_frame);
-    gst_video_frame_unmap (&in_frame);
-    if (!copy_ret) {
-      GST_ERROR_OBJECT (self, "Couldn't copy frame");
+    if (!gst_d3d12_buffer_copy_into (upload, buffer, &priv->info)) {
+      GST_ERROR_OBJECT (self, "Couldn't upload buffer");
       gst_buffer_unref (upload);
       return GST_FLOW_ERROR;
     }
