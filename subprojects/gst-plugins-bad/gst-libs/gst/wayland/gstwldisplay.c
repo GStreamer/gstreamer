@@ -23,6 +23,7 @@
 #endif
 
 #include "gstwldisplay.h"
+#include "gstwloutput-private.h"
 
 #include "color-management-v1-client-protocol.h"
 #include "color-representation-v1-client-protocol.h"
@@ -69,6 +70,9 @@ typedef struct _GstWlDisplayPrivate
   GArray *color_alpha_modes;
   GArray *color_coefficients;
   GArray *color_coefficients_range;
+
+  GMutex outputs_mutex;
+  GHashTable *outputs;
 
   /* private */
   gboolean own_display;
@@ -117,6 +121,10 @@ gst_wl_display_init (GstWlDisplay * self)
   g_mutex_init (&priv->buffers_mutex);
   g_rec_mutex_init (&priv->sync_mutex);
 
+  g_mutex_init (&priv->outputs_mutex);
+  priv->outputs = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
+      (GDestroyNotify) g_object_unref);
+
   gst_wl_linux_dmabuf_init_once ();
   gst_wl_shm_init_once ();
   gst_shm_allocator_init_once ();
@@ -164,6 +172,9 @@ gst_wl_display_finalize (GObject * gobject)
   g_hash_table_unref (priv->buffers);
   g_mutex_clear (&priv->buffers_mutex);
   g_rec_mutex_clear (&priv->sync_mutex);
+
+  g_mutex_clear (&priv->outputs_mutex);
+  g_hash_table_unref (priv->outputs);
 
   if (priv->color)
     wp_color_manager_v1_destroy (priv->color);
@@ -375,6 +386,88 @@ static const struct wp_color_representation_manager_v1_listener
   .done = color_representation_done,
 };
 
+static void
+output_geometry (void *data, struct wl_output *wl_output,
+    int32_t x, int32_t y, int32_t physical_width, int32_t physical_height,
+    int32_t subpixel, const char *make, const char *model, int32_t transform)
+{
+  GstWlOutput *output = GST_WL_OUTPUT (data);
+  gst_wl_output_set_geometry (output, x, y, physical_width, physical_height,
+      subpixel, make, model, transform);
+}
+
+static void
+output_mode (void *data, struct wl_output *wl_output,
+    uint32_t flags, int32_t width, int32_t height, int32_t refresh)
+{
+  GstWlOutput *output = GST_WL_OUTPUT (data);
+  gst_wl_output_set_mode (output, flags, width, height, refresh);
+}
+
+static void
+output_scale (void *data, struct wl_output *wl_output, int32_t factor)
+{
+  GstWlOutput *output = GST_WL_OUTPUT (data);
+  gst_wl_output_set_scale (output, factor);
+}
+
+static void
+output_name (void *data, struct wl_output *wl_output, const char *name)
+{
+  GstWlOutput *output = GST_WL_OUTPUT (data);
+  gst_wl_output_set_name (output, name);
+}
+
+static void
+output_description (void *data, struct wl_output *wl_output,
+    const char *description)
+{
+  GstWlOutput *output = GST_WL_OUTPUT (data);
+  gst_wl_output_set_description (output, description);
+}
+
+static void
+output_done (void *data, struct wl_output *wl_output)
+{
+  GstWlOutput *output = GST_WL_OUTPUT (data);
+  GstWlDisplay *self = g_object_steal_data (G_OBJECT (output), "display");
+  GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
+  const gchar *name = gst_wl_output_get_name (output);
+
+  GST_INFO ("Adding output %s (%p):", name, wl_output);
+  GST_INFO ("  Make:       %s", gst_wl_output_get_make (output));
+  GST_INFO ("  Model:      %s", gst_wl_output_get_model (output));
+
+#define ARGS(r) (r) /1000 , (r) % 1000
+  GST_INFO ("  Mode:       %ix%i px %i.%ifps flags %x",
+      gst_wl_output_get_width (output), gst_wl_output_get_height (output),
+      ARGS (gst_wl_output_get_refresh (output)),
+      gst_wl_output_get_mode_flags (output));
+#undef ARGS
+
+  GST_INFO ("  Geometry:   %i,%i %ix%i mm scale %i",
+      gst_wl_output_get_x (output), gst_wl_output_get_y (output),
+      gst_wl_output_get_physical_width (output),
+      gst_wl_output_get_physical_height (output),
+      gst_wl_output_get_scale (output));
+  GST_INFO ("  Subpixel    %i", gst_wl_output_get_subpixel (output));
+  GST_INFO ("  Transform:  %i", gst_wl_output_get_transform (output));
+  GST_INFO ("---");
+
+  g_mutex_lock (&priv->outputs_mutex);
+  g_hash_table_replace (priv->outputs, g_strdup (name), output);
+  g_mutex_unlock (&priv->outputs_mutex);
+}
+
+static const struct wl_output_listener output_listener = {
+  output_geometry,
+  output_mode,
+  output_done,
+  output_scale,
+  output_name,
+  output_description,
+};
+
 gboolean
 gst_wl_display_check_format_for_shm (GstWlDisplay * self,
     const GstVideoInfo * video_info)
@@ -480,6 +573,12 @@ registry_handle_global (void *data, struct wl_registry *registry,
         &wp_color_representation_manager_v1_interface, 1);
     wp_color_representation_manager_v1_add_listener (priv->color_representation,
         &color_representation_listener, self);
+  } else if (g_strcmp0 (interface, "wl_output") == 0) {
+    struct wl_output *wl_output =
+        wl_registry_bind (registry, id, &wl_output_interface, MIN (version, 4));
+    GstWlOutput *output = gst_wl_output_new (wl_output, id);
+    g_object_set_data (G_OBJECT (output), "display", self);
+    wl_output_add_listener (wl_output, &output_listener, output);
   }
 }
 
@@ -487,7 +586,24 @@ static void
 registry_handle_global_remove (void *data, struct wl_registry *registry,
     uint32_t name)
 {
-  /* temporarily do nothing */
+  GstWlDisplay *self = data;
+  GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
+
+  g_mutex_lock (&priv->outputs_mutex);
+
+  GHashTableIter iter;
+  gpointer key, value;
+  g_hash_table_iter_init (&iter, priv->outputs);
+  while (g_hash_table_iter_next (&iter, &key, &value)) {
+    GstWlOutput *output = value;
+
+    if (gst_wl_output_get_id (output) == name) {
+      g_hash_table_iter_remove (&iter);
+      break;
+    }
+  }
+
+  g_mutex_unlock (&priv->outputs_mutex);
 }
 
 static const struct wl_registry_listener registry_listener = {
@@ -1092,4 +1208,31 @@ gst_wl_display_are_color_coefficients_supported (GstWlDisplay * self,
   }
 
   return FALSE;
+}
+
+/**
+* gst_wl_display_get_output_by_name:
+* @self: A #GstWlDisplay
+* @output_name: Name of the output
+*
+* Lookup for a wl_output with the specified name.
+*
+* Returns: (transfer full): A #GstWlOutput or %NULL if not found.
+*
+* Since: 1.28
+*/
+GstWlOutput *
+gst_wl_display_get_output_by_name (GstWlDisplay * self,
+    const gchar * output_name)
+{
+  GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
+  GstWlOutput *output;
+
+  g_mutex_lock (&priv->outputs_mutex);
+  output = GST_WL_OUTPUT (g_hash_table_lookup (priv->outputs, output_name));
+  if (output)
+    g_object_ref (output);
+  g_mutex_unlock (&priv->outputs_mutex);
+
+  return output;
 }

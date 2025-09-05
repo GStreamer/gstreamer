@@ -145,4 +145,7 @@ gboolean gst_wl_display_is_color_alpha_mode_supported (GstWlDisplay * self, uint
 GST_WL_API
 gboolean gst_wl_display_are_color_coefficients_supported (GstWlDisplay * self, uint32_t coefficients, uint32_t range);
 
+GST_WL_API
+GstWlOutput * gst_wl_display_get_output_by_name (GstWlDisplay * self, const gchar * output_name);
+
 G_END_DECLS
