@@ -36,8 +36,11 @@ struct _GstWlWindow
 };
 
 GST_WL_API
-void gst_wl_window_ensure_fullscreen (GstWlWindow * self,
-        gboolean fullscreen);
+void gst_wl_window_ensure_fullscreen (GstWlWindow * self, gboolean fullscreen);
+
+GST_WL_API
+void gst_wl_window_ensure_fullscreen_for_output (GstWlWindow * self,
+        gboolean fullscreen, const gchar * output_name);
 
 GST_WL_API
 GstWlWindow *gst_wl_window_new_toplevel (GstWlDisplay * display,

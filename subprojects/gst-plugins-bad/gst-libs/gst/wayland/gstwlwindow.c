@@ -300,18 +300,61 @@ gst_wl_window_new_internal (GstWlDisplay * display, GMutex * render_lock)
   return self;
 }
 
+/**
+ * gst_wl_window_ensure_fullscreen_for_output:
+ * @self: A #GstWlWindow
+ * @fullscreen: %TRUE to set fullscreen, %FALSE to unset it
+ * @output_nane: (nullable): The name of the wl_output to fullscreen to
+ *
+ * Ensure the window fullscreen state matches the desired state. If a
+ * output_name is provided, and this output exists, the window will be set to
+ * fullscreen on that screen. Otherwise the compisitor will decide.
+ *
+ * Since: 1.28
+ */
+void
+gst_wl_window_ensure_fullscreen_for_output (GstWlWindow * self,
+    gboolean fullscreen, const gchar * output_name)
+{
+  GstWlWindowPrivate *priv;
+  GstWlOutput *output = NULL;
+  struct wl_output *wl_output = NULL;
+
+  g_return_if_fail (self);
+  priv = gst_wl_window_get_instance_private (self);
+
+  if (!fullscreen) {
+    xdg_toplevel_unset_fullscreen (priv->xdg_toplevel);
+    return;
+  }
+
+  if (output_name) {
+    output = gst_wl_display_get_output_by_name (priv->display, output_name);
+    if (output)
+      wl_output = gst_wl_output_get_wl_output (output);
+    else
+      GST_WARNING ("Could not find any output named '%s'", output_name);
+  }
+
+  xdg_toplevel_set_fullscreen (priv->xdg_toplevel, wl_output);
+
+  // Unref last for thread safety
+  if (output)
+    g_object_unref (output);
+}
+
+/**
+ * gst_wl_window_ensure_fullscreen:
+ * @self: A #GstWlWindow
+ * @fullscreen: %TRUE to set fullscreen, %FALSE to unset it
+ *
+ * Same as gst_wl_window_ensure_fullscreen_for_output() without specifying an
+ * output.
+ */
 void
 gst_wl_window_ensure_fullscreen (GstWlWindow * self, gboolean fullscreen)
 {
-  GstWlWindowPrivate *priv;
-
-  g_return_if_fail (self);
-
-  priv = gst_wl_window_get_instance_private (self);
-  if (fullscreen)
-    xdg_toplevel_set_fullscreen (priv->xdg_toplevel, NULL);
-  else
-    xdg_toplevel_unset_fullscreen (priv->xdg_toplevel);
+  gst_wl_window_ensure_fullscreen_for_output (self, fullscreen, NULL);
 }
 
 GstWlWindow *
