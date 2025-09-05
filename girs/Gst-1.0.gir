@@ -44988,7 +44988,7 @@ for making sure the field exists and has the correct type.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the name of the field</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
-          <parameter name="caps" direction="out" caller-allocates="0" transfer-ownership="full">
+          <parameter name="caps" direction="out" caller-allocates="0" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a pointer to a pointer on caps</doc>
             <type name="Caps" c:type="const GstCaps**"/>
           </parameter>

@@ -4714,7 +4714,7 @@ gst_structure_is_writable (const GstStructure * structure)
  * gst_structure_get_caps:
  * @structure: a #GstStructure
  * @fieldname: the name of the field
- * @caps: (out): a pointer to a pointer on caps
+ * @caps: (out) (transfer none): a pointer to a pointer on caps
  *
  * Set pointer pointed by @caps to the address of the value of type caps
  * correspondind to field with fieldname @fieldname. Caller is responsible
