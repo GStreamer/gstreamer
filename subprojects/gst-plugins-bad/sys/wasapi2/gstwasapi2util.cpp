@@ -681,10 +681,16 @@ make_channel_mask (WORD nChannels)
       return KSAUDIO_SPEAKER_MONO;
     case 2:
       return KSAUDIO_SPEAKER_STEREO;
+    case 3:
+      return KSAUDIO_SPEAKER_3POINT0;
     case 4:
-      return KSAUDIO_SPEAKER_3POINT1;
+      return KSAUDIO_SPEAKER_QUAD;
+    case 5:
+      return KSAUDIO_SPEAKER_5POINT0;
     case 6:
       return KSAUDIO_SPEAKER_5POINT1;
+    case 7:
+      return KSAUDIO_SPEAKER_7POINT0;
     case 8:
       return KSAUDIO_SPEAKER_7POINT1;
     default:
