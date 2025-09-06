@@ -138,8 +138,7 @@ handle_message (CustomData * data, GstMessage * msg)
           &pending_state);
       if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->playbin)) {
         g_print ("Pipeline state changed from %s to %s:\n",
-            gst_element_state_get_name (old_state),
-            gst_element_state_get_name (new_state));
+            gst_state_get_name (old_state), gst_state_get_name (new_state));
 
         /* Remember whether we are in the PLAYING state or not */
         data->playing = (new_state == GST_STATE_PLAYING);

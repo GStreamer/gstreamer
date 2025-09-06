@@ -1963,7 +1963,7 @@ _setup_locked (GstDiscoverer * dc)
 
 
   GST_DEBUG_OBJECT (dc, "Pipeline going to PAUSED : %s",
-      gst_element_state_change_return_get_name (ret));
+      gst_state_change_return_get_name (ret));
 
   return FALSE;
 }

@@ -152,7 +152,7 @@ bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
         gst_message_parse_state_changed (msg, &old, &new, &pending);
 
         state_transition_name = g_strdup_printf ("%s_%s",
-            gst_element_state_get_name (old), gst_element_state_get_name (new));
+            gst_state_get_name (old), gst_state_get_name (new));
 
         /* dump graph for (some) pipeline state changes */
         {

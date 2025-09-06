@@ -1475,7 +1475,7 @@ switch_state_with_async_wait (GstElement * pipeline, GstState state)
 
   if (state_ret == GST_STATE_CHANGE_ASYNC) {
     GST_LOG ("waiting for pipeline to reach %s state",
-        gst_element_state_get_name (state));
+        gst_state_get_name (state));
     state_ret = gst_element_get_state (pipeline, NULL, NULL, -1);
     fail_unless_equals_int (state_ret, GST_STATE_CHANGE_SUCCESS);
   }

@@ -552,9 +552,8 @@ bus_callback (GstBus * bus, GstMessage * message,
             &pending);
 
         GST_DEBUG ("State changed (old: %s, new: %s, pending: %s)",
-            gst_element_state_get_name (oldstate),
-            gst_element_state_get_name (newstate),
-            gst_element_state_get_name (pending));
+            gst_state_get_name (oldstate),
+            gst_state_get_name (newstate), gst_state_get_name (pending));
 
         if (newstate == GST_STATE_PLAYING) {
           GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (writer->priv->pipeline),

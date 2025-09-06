@@ -207,7 +207,7 @@ state_changed_cb (GstBus * bus, GstMessage * msg, CustomData * data)
   gst_message_parse_state_changed (msg, &old_state, &new_state, &pending_state);
   if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->playbin)) {
     data->state = new_state;
-    g_print ("State set to %s\n", gst_element_state_get_name (new_state));
+    g_print ("State set to %s\n", gst_state_get_name (new_state));
     if (old_state == GST_STATE_READY && new_state == GST_STATE_PAUSED) {
       /* For extra responsiveness, we refresh the GUI as soon as we reach the PAUSED state */
       refresh_ui (data);

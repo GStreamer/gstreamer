@@ -376,7 +376,7 @@ do_element_change_state_post (GstTracer * self, guint64 ts, GstElement * elem,
   do_log (GST_CAT_STATES, GST_FUNCTION, (GObject *) elem,
       "%" GST_TIME_FORMAT ", element=%" GST_PTR_FORMAT ", change=%s, res=%s",
       GST_TIME_ARGS (ts), elem, gst_state_change_get_name (change),
-      gst_element_state_change_return_get_name (res));
+      gst_state_change_return_get_name (res));
 }
 
 static void

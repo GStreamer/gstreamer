@@ -436,7 +436,7 @@ out:
 wrong_state:
   {
     GST_WARNING_OBJECT (src, "Can't set URI in %s state",
-        gst_element_state_get_name (GST_STATE (src)));
+        gst_state_get_name (GST_STATE (src)));
     GST_OBJECT_UNLOCK (src);
     g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_STATE,
         "Changing the 'uri' property on dataurisrc while it is running "

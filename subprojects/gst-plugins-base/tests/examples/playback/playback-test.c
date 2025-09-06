@@ -1912,7 +1912,7 @@ msg_state_changed (GstBus * bus, GstMessage * message, PlaybackApp * app)
       gchar *dump_name;
 
       dump_name = g_strdup_printf ("seek.%s_%s",
-          gst_element_state_get_name (old), gst_element_state_get_name (new));
+          gst_state_get_name (old), gst_state_get_name (new));
 
       GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (app->pipeline),
           GST_DEBUG_GRAPH_SHOW_ALL, dump_name);

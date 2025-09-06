@@ -664,13 +664,11 @@ state_changed_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
     gchar *transition_name;
 
     GST_DEBUG_OBJECT (self, "Changed state old: %s new: %s pending: %s",
-        gst_element_state_get_name (old_state),
-        gst_element_state_get_name (new_state),
-        gst_element_state_get_name (pending_state));
+        gst_state_get_name (old_state),
+        gst_state_get_name (new_state), gst_state_get_name (pending_state));
 
     transition_name = g_strdup_printf ("%s_%s",
-        gst_element_state_get_name (old_state),
-        gst_element_state_get_name (new_state));
+        gst_state_get_name (old_state), gst_state_get_name (new_state));
     dump_dot_file (self, transition_name);
     g_free (transition_name);
 
@@ -726,8 +724,7 @@ request_state_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
 
   gst_message_parse_request_state (msg, &state);
 
-  GST_DEBUG_OBJECT (self, "State %s requested",
-      gst_element_state_get_name (state));
+  GST_DEBUG_OBJECT (self, "State %s requested", gst_state_get_name (state));
 
   self->target_state = state;
   state_ret = gst_element_set_state (self->transcodebin, state);
@@ -735,7 +732,7 @@ request_state_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
     GError *err = g_error_new (GST_TRANSCODER_ERROR,
         GST_TRANSCODER_ERROR_FAILED,
         "Failed to change to requested state %s",
-        gst_element_state_get_name (state));
+        gst_state_get_name (state));
 
     api_bus_post_message (self, GST_TRANSCODER_MESSAGE_ERROR,
         GST_TRANSCODER_MESSAGE_DATA_ERROR, G_TYPE_ERROR, err, NULL);

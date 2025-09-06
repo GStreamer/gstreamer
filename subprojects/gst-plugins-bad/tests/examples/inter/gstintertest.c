@@ -412,8 +412,7 @@ gst_inter_test_handle_message (GstBus * bus, GstMessage * message,
       if (GST_ELEMENT (message->src) == intertest->pipeline) {
         if (verbose)
           gst_println ("state change from %s to %s",
-              gst_element_state_get_name (oldstate),
-              gst_element_state_get_name (newstate));
+              gst_state_get_name (oldstate), gst_state_get_name (newstate));
         switch (GST_STATE_TRANSITION (oldstate, newstate)) {
           case GST_STATE_CHANGE_NULL_TO_READY:
             gst_inter_test_handle_null_to_ready (intertest);
@@ -436,8 +435,7 @@ gst_inter_test_handle_message (GstBus * bus, GstMessage * message,
           default:
             if (verbose)
               gst_println ("unknown state change from %s to %s",
-                  gst_element_state_get_name (oldstate),
-                  gst_element_state_get_name (newstate));
+                  gst_state_get_name (oldstate), gst_state_get_name (newstate));
         }
       }
     }

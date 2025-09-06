@@ -242,7 +242,7 @@ keyboard_cb (gchar input, gboolean is_ascii, AppData * app_data)
           state = GST_STATE_PLAYING;
         else
           state = GST_STATE_PAUSED;
-        gst_println ("Change state to %s", gst_element_state_get_name (state));
+        gst_println ("Change state to %s", gst_state_get_name (state));
 
         gst_element_set_state (app_data->pipeline, state);
         break;

@@ -98,7 +98,7 @@ cb_state (GstBus * bus, GstMessage * message, gpointer data)
   if (message->src == pipe) {
     g_print ("Pipeline %s changed state from %s to %s\n",
         GST_OBJECT_NAME (message->src),
-        gst_element_state_get_name (old), gst_element_state_get_name (new));
+        gst_state_get_name (old), gst_state_get_name (new));
   }
 }
 

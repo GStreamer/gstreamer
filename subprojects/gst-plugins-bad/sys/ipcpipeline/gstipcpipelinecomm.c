@@ -146,7 +146,7 @@ comm_request_ret_get_name (CommRequestType type, guint32 ret)
     case COMM_REQUEST_TYPE_MESSAGE:
       return ret ? "TRUE" : "FALSE";
     case COMM_REQUEST_TYPE_STATE_CHANGE:
-      return gst_element_state_change_return_get_name (ret);
+      return gst_state_change_return_get_name (ret);
     default:
       g_assert_not_reached ();
   }
@@ -1211,8 +1211,8 @@ gst_ipc_pipeline_comm_write_state_change_to_fd (GstIpcPipelineComm * comm,
 
   GST_TRACE_OBJECT (comm->element, "Writing state change %u: %s -> %s",
       comm->send_id,
-      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
-      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+      gst_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
 
   gst_byte_writer_init (&bw);
   if (!gst_byte_writer_put_uint8 (&bw, payload_type))
@@ -2034,10 +2034,9 @@ read_many (GstIpcPipelineComm * comm)
 
         GST_TRACE_OBJECT (comm->element,
             "deserialized state change request: %s -> %s",
-            gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT
+            gst_state_get_name (GST_STATE_TRANSITION_CURRENT
                 (transition)),
-            gst_element_state_get_name (GST_STATE_TRANSITION_NEXT
-                (transition)));
+            gst_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
 
         if (comm->on_state_change)
           (*comm->on_state_change) (comm->id, transition, comm->user_data);

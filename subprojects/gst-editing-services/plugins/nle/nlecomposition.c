@@ -2793,8 +2793,8 @@ nle_composition_change_state (GstElement * element, GstStateChange transition)
   NleComposition *comp = (NleComposition *) element;
 
   GST_DEBUG_OBJECT (comp, "%s => %s",
-      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
-      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+      gst_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -2825,8 +2825,8 @@ nle_composition_change_state (GstElement * element, GstStateChange transition)
 
   if (res == GST_STATE_CHANGE_FAILURE) {
     GST_ERROR_OBJECT (comp, "state change failure %s => %s",
-        gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
-        gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+        gst_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+        gst_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
 
     comp->priv->tearing_down_stack = TRUE;
     _stop_task (comp);
@@ -3460,7 +3460,7 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
 
   GST_DEBUG_OBJECT (comp,
       "now really updating the pipeline, current-state:%s",
-      gst_element_state_get_name (state));
+      gst_state_get_name (state));
 
   /* Get new stack and compare it to current one */
   stack = get_clean_toplevel_stack (comp, &currenttime, &new_start, &new_stop);

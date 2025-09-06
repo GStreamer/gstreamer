@@ -595,8 +595,8 @@ gst_ipc_pipeline_sink_change_state (GstElement * element,
   gboolean down = FALSE;
 
   GST_DEBUG_OBJECT (sink, "Got state change request: %s -> %s",
-      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
-      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+      gst_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -636,7 +636,7 @@ gst_ipc_pipeline_sink_change_state (GstElement * element,
   if (async) {
     GST_DEBUG_OBJECT (sink,
         "Posting async-start for %s, will need state-change-done",
-        gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+        gst_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
 
     gst_element_post_message (GST_ELEMENT (sink),
         gst_message_new_async_start (GST_OBJECT (sink)));
@@ -684,15 +684,15 @@ gst_ipc_pipeline_sink_change_state (GstElement * element,
   }
 
   GST_DEBUG_OBJECT (sink, "For %s -> %s: Peer ret: %s, parent ret: %s",
-      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
-      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)),
-      gst_element_state_change_return_get_name (peer_ret),
-      gst_element_state_change_return_get_name (ret));
+      gst_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_state_get_name (GST_STATE_TRANSITION_NEXT (transition)),
+      gst_state_change_return_get_name (peer_ret),
+      gst_state_change_return_get_name (ret));
 
   /* now interpret the return codes */
   if (async && peer_ret != GST_STATE_CHANGE_ASYNC) {
     GST_DEBUG_OBJECT (sink, "Posting async-done for %s; peer wasn't ASYNC",
-        gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+        gst_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
 
     GST_OBJECT_LOCK (sink);
     sink->pass_next_async_done = FALSE;

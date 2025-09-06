@@ -110,13 +110,11 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
             &pending);
 
         GST_DEBUG ("State changed (old: %s, new: %s, pending: %s)",
-            gst_element_state_get_name (oldstate),
-            gst_element_state_get_name (newstate),
-            gst_element_state_get_name (pending));
+            gst_state_get_name (oldstate),
+            gst_state_get_name (newstate), gst_state_get_name (pending));
 
         state_transition_name = g_strdup_printf ("%s_%s",
-            gst_element_state_get_name (oldstate),
-            gst_element_state_get_name (newstate));
+            gst_state_get_name (oldstate), gst_state_get_name (newstate));
         dump_name = g_strconcat ("gst-validate.", state_transition_name, NULL);
 
 

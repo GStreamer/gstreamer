@@ -437,7 +437,7 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
       gst_message_parse_request_state (msg, &state);
 
       gst_print ("Setting state to %s as requested by %s...\n",
-          gst_element_state_get_name (state), name);
+          gst_state_get_name (state), name);
 
       gst_element_set_state (play->playbin, state);
       g_free (name);

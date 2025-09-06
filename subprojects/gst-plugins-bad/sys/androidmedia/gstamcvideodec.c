@@ -578,8 +578,8 @@ gst_amc_video_dec_change_state (GstElement * element, GstStateChange transition)
   self = GST_AMC_VIDEO_DEC (element);
 
   GST_DEBUG_OBJECT (element, "changing state: %s => %s",
-      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
-      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+      gst_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:

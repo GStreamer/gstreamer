@@ -3033,7 +3033,7 @@ static void
 gst_rtsp_client_sink_set_state (GstRTSPClientSink * sink, GstState state)
 {
   GST_DEBUG_OBJECT (sink, "Setting internal state to %s",
-      gst_element_state_get_name (state));
+      gst_state_get_name (state));
   gst_element_set_state (GST_ELEMENT (sink->internal_bin), state);
 }
 
@@ -4938,8 +4938,8 @@ gst_rtsp_client_sink_handle_message (GstBin * bin, GstMessage * message)
         g_mutex_unlock (&rtsp_client_sink->preroll_lock);
         GST_DEBUG_OBJECT (bin,
             "Internal bin changed state to %s (pending %s). Prerolled now %d",
-            gst_element_state_get_name (newstate),
-            gst_element_state_get_name (pending), rtsp_client_sink->prerolled);
+            gst_state_get_name (newstate),
+            gst_state_get_name (pending), rtsp_client_sink->prerolled);
       }
     }
       /* FALLTHROUGH */

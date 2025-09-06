@@ -66,7 +66,7 @@ run_pipeline (GstElement * pipe, const gchar * descr,
   } else if ((ret != GST_STATE_CHANGE_SUCCESS)
       && (ret != GST_STATE_CHANGE_NO_PREROLL)) {
     g_critical ("Pipeline '%s' failed to go into PAUSED state (%s)", descr,
-        gst_element_state_change_return_get_name (ret));
+        gst_state_change_return_get_name (ret));
     goto done;
   }
 

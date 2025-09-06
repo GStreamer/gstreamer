@@ -812,8 +812,8 @@ do_state_change (GstElement * element, gpointer data)
   gboolean down;
 
   GST_DEBUG_OBJECT (src, "Doing state change id %u, %s -> %s", id,
-      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
-      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+      gst_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
 
   if (!(pipeline = find_pipeline (element))) {
     GST_ERROR_OBJECT (src, "No pipeline found");
@@ -832,17 +832,16 @@ do_state_change (GstElement * element, gpointer data)
   effective = pending == GST_STATE_VOID_PENDING ? state : pending;
 
   GST_DEBUG_OBJECT (src, "Current element state: ret:%s state:%s pending:%s "
-      "effective:%s", gst_element_state_change_return_get_name (ret),
-      gst_element_state_get_name (state),
-      gst_element_state_get_name (pending),
-      gst_element_state_get_name (effective));
+      "effective:%s", gst_state_change_return_get_name (ret),
+      gst_state_get_name (state),
+      gst_state_get_name (pending), gst_state_get_name (effective));
 
   if ((GST_STATE_TRANSITION_NEXT (transition) <= effective && !down) ||
       (GST_STATE_TRANSITION_NEXT (transition) > effective && down)) {
     /* if the request was to transition to a state that we have already
      * transitioned to in the same direction, then we just silently return */
     GST_DEBUG_OBJECT (src, "State transition to %s is unnecessary",
-        gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+        gst_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
     /* make sure we return SUCCESS if the transition is to NULL or READY,
      * even if our current ret is ASYNC for example; also, make sure not
      * to return FAILURE, since our state is already committed */
@@ -861,14 +860,14 @@ do_state_change (GstElement * element, gpointer data)
     ret = gst_element_set_state (pipeline,
         GST_STATE_TRANSITION_NEXT (transition));
     GST_DEBUG_OBJECT (src, "gst_element_set_state returned %s",
-        gst_element_state_change_return_get_name (ret));
+        gst_state_change_return_get_name (ret));
   }
 
   GST_STATE_UNLOCK (pipeline);
 
 done_nolock:
   GST_DEBUG_OBJECT (src, "sending state change ack, ret = %s",
-      gst_element_state_change_return_get_name (ret));
+      gst_state_change_return_get_name (ret));
   gst_ipc_pipeline_comm_write_state_change_ack_to_fd (&src->comm, id, ret);
 }
 
@@ -879,8 +878,8 @@ on_state_change (guint32 id, GstStateChange transition, gpointer user_data)
   GstElement *ipcpipelinesrc = GST_ELEMENT (user_data);
 
   GST_DEBUG_OBJECT (ipcpipelinesrc, "Got state change id %u, %s -> %s", id,
-      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
-      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+      gst_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
 
   d = g_new (struct StateChangeData, 1);
   d->id = id;

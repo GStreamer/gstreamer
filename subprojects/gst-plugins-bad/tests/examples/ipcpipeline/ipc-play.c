@@ -411,7 +411,7 @@ master_bus_msg (GstBus * bus, GstMessage * msg, gpointer data)
           if (buffering) {
             buffering = FALSE;
             gst_element_set_state (GST_ELEMENT (pipeline), desired_state);
-            g_print ("\n%s\n", gst_element_state_get_name (desired_state));
+            g_print ("\n%s\n", gst_state_get_name (desired_state));
           }
         } else {
           /* buffering... */
@@ -446,7 +446,7 @@ master_bus_msg (GstBus * bus, GstMessage * msg, gpointer data)
           GST_DEBUG_GRAPH_SHOW_VERBOSE, "ipc.slave.reqstate");
 
       g_print ("Setting state to %s as requested by %s...\n",
-          gst_element_state_get_name (state), name);
+          gst_state_get_name (state), name);
 
       gst_element_set_state (GST_ELEMENT (pipeline), state);
       g_free (name);

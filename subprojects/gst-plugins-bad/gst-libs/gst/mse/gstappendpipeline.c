@@ -792,7 +792,7 @@ gst_append_pipeline_new (GstAppendPipelineCallbacks * callbacks,
       gst_element_set_state (GST_ELEMENT (self->pipeline), GST_STATE_PLAYING);
   if (started != GST_STATE_CHANGE_SUCCESS) {
     GST_ERROR_OBJECT (self, "failed to start: %s",
-        gst_element_state_change_return_get_name (started));
+        gst_state_change_return_get_name (started));
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_INVALID_STATE,
         "failed to start append pipeline");
@@ -849,7 +849,7 @@ gst_append_pipeline_stop (GstAppendPipeline * self)
       gst_element_set_state (pipeline, GST_STATE_NULL);
   if (stopped != GST_STATE_CHANGE_SUCCESS) {
     GST_ERROR_OBJECT (self, "failed to stop: %s",
-        gst_element_state_change_return_get_name (stopped));
+        gst_state_change_return_get_name (stopped));
     return FALSE;
   }
   self->received_init_segment = FALSE;
@@ -869,7 +869,7 @@ gst_append_pipeline_reset (GstAppendPipeline * self)
       gst_element_set_state (pipeline, GST_STATE_READY);
   if (stopped != GST_STATE_CHANGE_SUCCESS) {
     GST_ERROR_OBJECT (self, "failed to stop: %s",
-        gst_element_state_change_return_get_name (stopped));
+        gst_state_change_return_get_name (stopped));
     return FALSE;
   }
 
@@ -896,7 +896,7 @@ gst_append_pipeline_reset (GstAppendPipeline * self)
     return TRUE;
   } else {
     GST_ERROR_OBJECT (self, "failed to start: %s",
-        gst_element_state_change_return_get_name (started));
+        gst_state_change_return_get_name (started));
     return FALSE;
   }
 }

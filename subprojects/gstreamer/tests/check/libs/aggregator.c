@@ -1220,7 +1220,7 @@ GST_START_TEST (test_add_remove)
               gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
                   (GstPadProbeCallback) pad_probe_cb, &data, NULL);
               GST_INFO ("Waiting for %" GST_PTR_FORMAT " %s", pad,
-                  gst_element_state_get_name (GST_STATE (data.src)));
+                  gst_state_get_name (GST_STATE (data.src)));
               g_cond_wait (&cond, &lock);
               g_mutex_unlock (&lock);
               gst_object_unref (pad);
@@ -1315,7 +1315,7 @@ GST_START_TEST (test_change_state_intensive)
       wanted_state = wanted_states[state_i++];
       fail_unless (gst_element_set_state (pipeline, wanted_state),
           GST_STATE_CHANGE_SUCCESS);
-      GST_INFO ("Wanted state: %s", gst_element_state_get_name (wanted_state));
+      GST_INFO ("Wanted state: %s", gst_state_get_name (wanted_state));
     }
 
     message = gst_bus_poll (bus, GST_MESSAGE_ANY, GST_SECOND / 10);
@@ -1340,11 +1340,9 @@ GST_START_TEST (test_change_state_intensive)
               break;
             }
 
-            GST_DEBUG ("State %s reached",
-                gst_element_state_get_name (wanted_state));
+            GST_DEBUG ("State %s reached", gst_state_get_name (wanted_state));
             wanted_state = wanted_states[state_i++];
-            GST_DEBUG ("Wanted state: %s",
-                gst_element_state_get_name (wanted_state));
+            GST_DEBUG ("Wanted state: %s", gst_state_get_name (wanted_state));
             state_return = gst_element_set_state (pipeline, wanted_state);
             fail_unless (state_return == GST_STATE_CHANGE_SUCCESS ||
                 state_return == GST_STATE_CHANGE_ASYNC);

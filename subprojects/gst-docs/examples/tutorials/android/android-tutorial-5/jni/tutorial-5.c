@@ -338,7 +338,7 @@ state_changed_cb (GstBus * bus, GstMessage * msg, CustomData * data)
   if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->pipeline)) {
     data->state = new_state;
     gchar *message = g_strdup_printf ("State changed to %s",
-        gst_element_state_get_name (new_state));
+        gst_state_get_name (new_state));
     set_ui_message (message, data);
     g_free (message);
 

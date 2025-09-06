@@ -128,7 +128,7 @@ jack_handle_transport_change (GstJackAudioClient * client, GstState state)
   g_object_get (obj, "transport", &mode, NULL);
   if ((mode & GST_JACK_TRANSPORT_SLAVE) && (GST_STATE (obj) != state)) {
     GST_INFO_OBJECT (obj, "requesting state change: %s",
-        gst_element_state_get_name (state));
+        gst_state_get_name (state));
     gst_element_post_message (GST_ELEMENT (obj),
         gst_message_new_request_state (obj, state));
     return TRUE;

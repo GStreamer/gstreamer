@@ -444,8 +444,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 
         gst_message_parse_state_changed (message, &oldstate, &newstate, NULL);
         GST_DEBUG_OBJECT (GST_MESSAGE_SRC (message), "state-changed: %s -> %s",
-            gst_element_state_get_name (oldstate),
-            gst_element_state_get_name (newstate));
+            gst_state_get_name (oldstate), gst_state_get_name (newstate));
       }
       break;
     case GST_MESSAGE_EOS:

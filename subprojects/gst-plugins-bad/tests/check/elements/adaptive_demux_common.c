@@ -423,8 +423,7 @@ testSeekOnStateChanged (GstBus * bus, GstMessage * msg, gpointer user_data)
   gst_message_parse_state_changed (msg, &old_state, &new_state, NULL);
   GST_DEBUG ("Element %s changed state from %s to %s",
       GST_OBJECT_NAME (msg->src),
-      gst_element_state_get_name (old_state),
-      gst_element_state_get_name (new_state));
+      gst_state_get_name (old_state), gst_state_get_name (new_state));
 
   if (strstr (srcName, "srcbin") == srcName &&
       old_state == GST_STATE_PLAYING && new_state == GST_STATE_PAUSED) {

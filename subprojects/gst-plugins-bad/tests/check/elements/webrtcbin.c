@@ -375,8 +375,8 @@ _bus_watch (GstBus * bus, GstMessage * msg, struct test_webrtc *t)
         {
           gchar *dump_name =
               g_strconcat (GST_OBJECT_NAME (msg->src), "-state_changed-",
-              gst_element_state_get_name (old), "_",
-              gst_element_state_get_name (new), NULL);
+              gst_state_get_name (old), "_",
+              gst_state_get_name (new), NULL);
           GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (msg->src),
               GST_DEBUG_GRAPH_SHOW_ALL, dump_name);
           g_free (dump_name);

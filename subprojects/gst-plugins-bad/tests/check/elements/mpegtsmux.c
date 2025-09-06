@@ -507,7 +507,7 @@ GST_START_TEST (test_multiple_state_change)
     GstState next_state = states[i % G_N_ELEMENTS (states)];
     fail_unless (gst_element_set_state (mux,
             next_state) == GST_STATE_CHANGE_SUCCESS,
-        "could not set to %s", gst_element_state_get_name (next_state));
+        "could not set to %s", gst_state_get_name (next_state));
 
     /* push some buffers when playing - this triggers a lot of activity */
     if (GST_STATE_PLAYING == next_state) {
