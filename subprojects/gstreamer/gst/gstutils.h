@@ -989,11 +989,17 @@ GstPad*                 gst_element_get_compatible_pad  (GstElement *element, Gs
 GST_API
 GstPadTemplate*         gst_element_get_compatible_pad_template (GstElement *element, GstPadTemplate *compattempl);
 
-GST_API
+GST_DEPRECATED_FOR(gst_state_get_name)
 const gchar*            gst_element_state_get_name      (GstState state);
 
-GST_API
+GST_DEPRECATED_FOR(gst_state_change_return_get_name)
 const gchar *           gst_element_state_change_return_get_name (GstStateChangeReturn state_ret);
+
+GST_API
+const gchar*            gst_state_get_name               (GstState state);
+
+GST_API
+const gchar *           gst_state_change_return_get_name (GstStateChangeReturn state_ret);
 
 GST_API
 const gchar *           gst_state_change_get_name       (GstStateChange transition);

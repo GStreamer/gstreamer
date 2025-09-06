@@ -1280,9 +1280,44 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
  * Gets a string representing the given state.
  *
  * Returns: (transfer none): a string with the name of the state.
+ *
+ * Deprecated: 1.28: Use gst_state_get_name() instead.
  */
 const gchar *
 gst_element_state_get_name (GstState state)
+{
+  return gst_state_get_name (state);
+}
+
+/**
+ * gst_element_state_change_return_get_name:
+ * @state_ret: a #GstStateChangeReturn to get the name of.
+ *
+ * Gets a string representing the given state change result.
+ *
+ * Returns: (transfer none): a string with the name of the state
+ *    result.
+ *
+ * Deprecated: 1.28: Use gst_state_change_return_get_name() instead.
+ */
+const gchar *
+gst_element_state_change_return_get_name (GstStateChangeReturn state_ret)
+{
+  return gst_state_change_return_get_name (state_ret);
+}
+
+/**
+ * gst_state_get_name:
+ * @state: a #GstState to get the name of.
+ *
+ * Gets a string representing the given state.
+ *
+ * Returns: (transfer none): a string with the name of the state.
+ *
+ * Since: 1.28
+ */
+const gchar *
+gst_state_get_name (GstState state)
 {
   switch (state) {
     case GST_STATE_VOID_PENDING:
@@ -1302,16 +1337,18 @@ gst_element_state_get_name (GstState state)
 }
 
 /**
- * gst_element_state_change_return_get_name:
+ * gst_state_change_return_get_name:
  * @state_ret: a #GstStateChangeReturn to get the name of.
  *
  * Gets a string representing the given state change result.
  *
  * Returns: (transfer none): a string with the name of the state
  *    result.
+ *
+ * Since: 1.28
  */
 const gchar *
-gst_element_state_change_return_get_name (GstStateChangeReturn state_ret)
+gst_state_change_return_get_name (GstStateChangeReturn state_ret)
 {
   switch (state_ret) {
     case GST_STATE_CHANGE_FAILURE:
