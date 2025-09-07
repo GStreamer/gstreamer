@@ -15849,7 +15849,7 @@ each element by name.
 Each element has a state (see #GstState).  You can get and set the state
 of an element with gst_element_get_state() and gst_element_set_state().
 Setting a state triggers a #GstStateChange. To get a string representation
-of a #GstState, use gst_element_state_get_name().
+of a #GstState, use gst_state_get_name().
 
 You can get and set a #GstClock on an element using gst_element_get_clock()
 and gst_element_set_clock().
@@ -15916,8 +15916,9 @@ could be created</doc>
           </parameter>
         </parameters>
       </function>
-      <function name="state_change_return_get_name" c:identifier="gst_element_state_change_return_get_name">
+      <function name="state_change_return_get_name" c:identifier="gst_element_state_change_return_get_name" deprecated="1" deprecated-version="1.28">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Gets a string representing the given state change result.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_state_change_return_get_name() instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gstutils.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a string with the name of the state
@@ -15931,8 +15932,9 @@ could be created</doc>
           </parameter>
         </parameters>
       </function>
-      <function name="state_get_name" c:identifier="gst_element_state_get_name">
+      <function name="state_get_name" c:identifier="gst_element_state_get_name" deprecated="1" deprecated-version="1.28">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Gets a string representing the given state.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_state_get_name() instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gstutils.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a string with the name of the state.</doc>
@@ -27614,8 +27616,8 @@ Typical usage of this function might be:
       gst_message_parse_state_changed (msg, &amp;old_state, &amp;new_state, NULL);
       g_print ("Element %s changed state from %s to %s.\n",
           GST_OBJECT_NAME (msg-&gt;src),
-          gst_element_state_get_name (old_state),
-          gst_element_state_get_name (new_state));
+          gst_state_get_name (old_state),
+          gst_state_get_name (new_state));
       break;
     }
     ...
@@ -43423,6 +43425,20 @@ gst_element_set_state() and checked using gst_element_get_state().</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the element is PLAYING, the #GstClock is running and
                          the data is flowing.</doc>
       </member>
+      <function name="get_name" c:identifier="gst_state_get_name" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Gets a string representing the given state.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstutils.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a string with the name of the state.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="state" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a #GstState to get the name of.</doc>
+            <type name="State" c:type="GstState"/>
+          </parameter>
+        </parameters>
+      </function>
     </enumeration>
     <enumeration name="StateChange" glib:type-name="GstStateChange" glib:get-type="gst_state_change_get_type" c:type="GstStateChange">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">These are the different state changes an element goes through.
@@ -43543,6 +43559,21 @@ gst_element_set_state(). Only @GST_STATE_CHANGE_FAILURE is a real failure.</doc>
                               cannot produce data in %GST_STATE_PAUSED.
                               This typically happens with live sources.</doc>
       </member>
+      <function name="get_name" c:identifier="gst_state_change_return_get_name" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Gets a string representing the given state change result.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstutils.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a string with the name of the state
+   result.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="state_ret" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a #GstStateChangeReturn to get the name of.</doc>
+            <type name="StateChangeReturn" c:type="GstStateChangeReturn"/>
+          </parameter>
+        </parameters>
+      </function>
     </enumeration>
     <record name="StaticCaps" c:type="GstStaticCaps">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.h">Data structure to initialize #GstCaps from a string description usually
@@ -58492,6 +58523,35 @@ the GStreamer core. See gst_segtrap_is_enabled() for more information.</doc>
         <parameter name="transition" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a #GstStateChange to get the name of.</doc>
           <type name="StateChange" c:type="GstStateChange"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="state_change_return_get_name" c:identifier="gst_state_change_return_get_name" moved-to="StateChangeReturn.get_name" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Gets a string representing the given state change result.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstutils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a string with the name of the state
+   result.</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="state_ret" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a #GstStateChangeReturn to get the name of.</doc>
+          <type name="StateChangeReturn" c:type="GstStateChangeReturn"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="state_get_name" c:identifier="gst_state_get_name" moved-to="State.get_name" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Gets a string representing the given state.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstutils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a string with the name of the state.</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="state" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a #GstState to get the name of.</doc>
+          <type name="State" c:type="GstState"/>
         </parameter>
       </parameters>
     </function>
