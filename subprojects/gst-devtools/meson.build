@@ -1,5 +1,5 @@
 project('gst-devtools', 'c',
-  version : '1.27.1.1',
+  version : '1.27.2',
   meson_version : '>= 1.4',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
@@ -193,7 +193,7 @@ if not get_option('debug_viewer').disabled()
 endif
 subdir('docs')
 
-meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.24.0', meson.project_version())
+meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.26.0', meson.project_version())
 
 plugin_names = []
 gst_plugins = []

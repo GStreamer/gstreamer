@@ -14395,9 +14395,9 @@
       <constant value="-1" ctype="gint" gtype="gint" name="VALUE_LESS_THAN"/>
       <constant value="2" ctype="gint" gtype="gint" name="VALUE_UNORDERED"/>
       <constant value="1" ctype="gint" gtype="gint" name="VERSION_MAJOR"/>
-      <constant value="1" ctype="gint" gtype="gint" name="VERSION_MICRO"/>
+      <constant value="2" ctype="gint" gtype="gint" name="VERSION_MICRO"/>
       <constant value="27" ctype="gint" gtype="gint" name="VERSION_MINOR"/>
-      <constant value="1" ctype="gint" gtype="gint" name="VERSION_NANO"/>
+      <constant value="0" ctype="gint" gtype="gint" name="VERSION_NANO"/>
     </object>
   </namespace>
   <namespace name="GstApp" library="gstapp-1.0">
@@ -23511,9 +23511,9 @@
       <constant value="online-service" ctype="gchar*" gtype="gchar*" name="ENCODING_CATEGORY_ONLINE_SERVICE"/>
       <constant value="storage-editing" ctype="gchar*" gtype="gchar*" name="ENCODING_CATEGORY_STORAGE_EDITING"/>
       <constant value="1" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MAJOR"/>
-      <constant value="1" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MICRO"/>
+      <constant value="2" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MICRO"/>
       <constant value="27" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MINOR"/>
-      <constant value="1" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_NANO"/>
+      <constant value="0" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_NANO"/>
     </object>
   </namespace>
   <namespace name="GstRtp" library="gstrtp-1.0">
