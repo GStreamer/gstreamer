@@ -332,6 +332,7 @@ gst_wl_window_ensure_fullscreen_for_output (GstWlWindow * self,
 
   if (!fullscreen) {
     xdg_toplevel_unset_fullscreen (priv->xdg_toplevel);
+    wl_display_flush (gst_wl_display_get_display (priv->display));
     return;
   }
 
@@ -344,6 +345,7 @@ gst_wl_window_ensure_fullscreen_for_output (GstWlWindow * self,
   }
 
   xdg_toplevel_set_fullscreen (priv->xdg_toplevel, wl_output);
+  wl_display_flush (gst_wl_display_get_display (priv->display));
 
   // Unref last for thread safety
   if (output)
