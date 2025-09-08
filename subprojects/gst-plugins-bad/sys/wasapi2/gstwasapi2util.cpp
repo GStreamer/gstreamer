@@ -326,7 +326,7 @@ gst_wasapi2_util_waveformatex_to_channel_mask (WAVEFORMATEX * format,
     GST_WARNING ("Unknown channel mask value for %d channel stream", nChannels);
 
     if (nChannels >= G_N_ELEMENTS (default_ch_masks)) {
-      GST_ERROR ("To may channels %d", nChannels);
+      GST_ERROR ("Too many channels %d", nChannels);
       return 0;
     }
 
@@ -338,7 +338,7 @@ gst_wasapi2_util_waveformatex_to_channel_mask (WAVEFORMATEX * format,
 
   /* Too many channels, have to assume that they are all non-positional */
   if (nChannels > G_N_ELEMENTS (wasapi_to_gst_pos)) {
-    GST_LOG ("Got too many (%i) channels, assuming non-positional", nChannels);
+    GST_INFO ("Got too many (%i) channels, assuming non-positional", nChannels);
     goto out;
   }
 
