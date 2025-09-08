@@ -244,6 +244,9 @@ _find_master_report_for_src_pad (GstValidatePadMonitor * pad_monitor,
           (pad_monitor)));
 
   iter = gst_pad_iterate_internal_links (target);
+  if (!iter)
+    goto done;
+
   done = FALSE;
   while (!done) {
     GValue value = { 0, };
@@ -272,8 +275,10 @@ _find_master_report_for_src_pad (GstValidatePadMonitor * pad_monitor,
         break;
     }
   }
-  gst_object_unref (target);
   gst_iterator_free (iter);
+
+done:
+  gst_object_unref (target);
 
   return result;
 }
@@ -510,6 +515,9 @@ gst_validate_pad_monitor_get_othercaps (GstValidatePadMonitor * monitor,
           (monitor)));
 
   iter = gst_pad_iterate_internal_links (pad);
+  if (!iter)
+    goto done;
+
   done = FALSE;
   while (!done) {
     GValue value = { 0, };
@@ -542,6 +550,7 @@ gst_validate_pad_monitor_get_othercaps (GstValidatePadMonitor * monitor,
   GST_DEBUG_OBJECT (pad, "Otherpad caps: %" GST_PTR_FORMAT, caps);
 
   gst_iterator_free (iter);
+done:
   gst_object_unref (pad);
 
   return caps;
@@ -728,6 +737,9 @@ gst_validate_pad_monitor_transform_caps (GstValidatePadMonitor * monitor,
       GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
           (monitor)));
   iter = gst_pad_iterate_internal_links (pad);
+  if (!iter)
+    goto done;
+
   done = FALSE;
   while (!done) {
     GValue value = { 0, };
@@ -764,6 +776,7 @@ gst_validate_pad_monitor_transform_caps (GstValidatePadMonitor * monitor,
   gst_iterator_free (iter);
 
   GST_DEBUG_OBJECT (pad, "Transformed caps: %" GST_PTR_FORMAT, othercaps);
+done:
   gst_object_unref (pad);
 
   return othercaps;
@@ -1390,6 +1403,9 @@ gst_validate_pad_monitor_check_aggregated_return (GstValidatePadMonitor *
           (monitor)));
 
   iter = gst_pad_iterate_internal_links (pad);
+  if (!iter)
+    goto done;
+
   done = FALSE;
   while (!done) {
     GValue value = { 0, };
@@ -1558,6 +1574,9 @@ gst_validate_pad_monitor_otherpad_add_pending_field (GstValidatePadMonitor *
   }
 
   iter = gst_pad_iterate_internal_links (pad);
+  if (!iter)
+    goto done;
+
   done = FALSE;
   while (!done) {
     GValue value = { 0, };
@@ -1587,6 +1606,7 @@ gst_validate_pad_monitor_otherpad_add_pending_field (GstValidatePadMonitor *
     }
   }
   gst_iterator_free (iter);
+done:
   gst_object_unref (pad);
 }
 
