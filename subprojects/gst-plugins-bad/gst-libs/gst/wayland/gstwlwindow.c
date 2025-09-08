@@ -139,9 +139,16 @@ handle_xdg_toplevel_configure (void *data, struct xdg_toplevel *xdg_toplevel,
   wl_array_for_each (state, states) {
     switch (*state) {
       case XDG_TOPLEVEL_STATE_FULLSCREEN:
+        GST_DEBUG_OBJECT (self, "XDG top-level now FULLSCREEN");
+        break;
       case XDG_TOPLEVEL_STATE_MAXIMIZED:
+        GST_DEBUG_OBJECT (self, "XDG top-level now MAXIMIXED");
+        break;
       case XDG_TOPLEVEL_STATE_RESIZING:
+        GST_DEBUG_OBJECT (self, "XDG top-level being RESIZED");
+        break;
       case XDG_TOPLEVEL_STATE_ACTIVATED:
+        GST_DEBUG_OBJECT (self, "XDG top-level being ACTIVATED");
         break;
     }
   }
