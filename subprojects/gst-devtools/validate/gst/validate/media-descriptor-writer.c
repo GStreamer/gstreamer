@@ -989,7 +989,11 @@ gst_validate_media_descriptor_writer_add_frame (GstValidateMediaDescriptorWriter
   id = g_list_length (streamnode->frames);
   fnode = g_new0 (GstValidateMediaFrameNode, 1);
 
-  g_assert (gst_buffer_map (buf, &map, GST_MAP_READ));
+  if (!gst_buffer_map (buf, &map, GST_MAP_READ)) {
+    GST_ERROR ("Buffer could not be mapped.");
+    GST_VALIDATE_MEDIA_DESCRIPTOR_UNLOCK (writer);
+    return FALSE;
+  }
   checksum = g_compute_checksum_for_data (G_CHECKSUM_MD5,
       (const guchar *) map.data, map.size);
   gst_buffer_unmap (buf, &map);

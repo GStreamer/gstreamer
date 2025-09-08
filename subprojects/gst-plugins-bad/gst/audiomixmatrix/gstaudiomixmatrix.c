@@ -666,9 +666,11 @@ gst_audio_mix_matrix_fixate_caps (GstBaseTransform * trans,
   if (!gst_structure_has_field (s, "channel-mask")) {
     if (self->mode == GST_AUDIO_MIX_MATRIX_MODE_FIRST_CHANNELS ||
         self->channel_mask == -1) {
+      gboolean success G_GNUC_UNUSED;   /* G_DISABLE_ASSERT */
       gint channels;
 
-      g_assert (gst_structure_get_int (s, "channels", &channels));
+      success = gst_structure_get_int (s, "channels", &channels);
+      g_assert (success);
       gst_structure_set (s, "channel-mask", GST_TYPE_BITMASK,
           gst_audio_channel_get_fallback_mask (channels), NULL);
     } else {

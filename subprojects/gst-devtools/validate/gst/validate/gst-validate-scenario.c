@@ -5998,10 +5998,12 @@ gst_validate_scenario_finalize (GObject * object)
 {
   GstValidateScenario *self = GST_VALIDATE_SCENARIO (object);
   GstValidateScenarioPrivate *priv = self->priv;
+  gboolean acquired G_GNUC_UNUSED;      /* G_DISABLE_ASSERT */
 
   /* Because g_object_add_weak_pointer() is used, this MUST be on the
    * main thread. */
-  g_assert (g_main_context_acquire (priv->context));
+  acquired = g_main_context_acquire (priv->context);
+  g_assert (acquired);
   g_main_context_release (priv->context);
 
   g_main_context_unref (priv->context);

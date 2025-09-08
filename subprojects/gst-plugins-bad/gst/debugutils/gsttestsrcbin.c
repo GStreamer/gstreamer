@@ -619,9 +619,11 @@ gst_test_src_bin_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_STREAM_TYPES:
     {
+      gboolean set G_GNUC_UNUSED;       /* G_DISABLE_ASSERT */
       gchar *uri = g_strdup_printf ("testbin://%s", g_value_get_string (value));
 
-      g_assert (gst_uri_handler_set_uri (GST_URI_HANDLER (self), uri, NULL));
+      set = gst_uri_handler_set_uri (GST_URI_HANDLER (self), uri, NULL);
+      g_assert (set);
       g_free (uri);
       break;
     }

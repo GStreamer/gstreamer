@@ -3091,6 +3091,7 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
   GstClockTime reserved_max_duration;
   guint reserved_bytes_per_sec_per_trak;
   GList *l;
+  GstCaps *trunc_caps G_GNUC_UNUSED;    /* G_DISABLE_ASSERT */
 
   GST_DEBUG_OBJECT (qtmux, "starting file");
 
@@ -3103,7 +3104,8 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
       gst_caps_copy (gst_pad_get_pad_template_caps (GST_AGGREGATOR_SRC_PAD
           (qtmux)));
   /* qtmux has structure with and without variant, remove all but the first */
-  g_assert (gst_caps_truncate (caps));
+  trunc_caps = gst_caps_truncate (caps);
+  g_assert (trunc_caps);
   gst_aggregator_set_src_caps (GST_AGGREGATOR (qtmux), caps);
   gst_caps_unref (caps);
 
