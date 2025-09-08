@@ -264,7 +264,7 @@ typedef gboolean		(*GstPadActivateModeFunction)	(GstPad *pad, GstObject *parent,
 /**
  * GstPadChainFunction:
  * @pad: the sink #GstPad that performed the chain.
- * @parent: (allow-none): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
+ * @parent: (nullable): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
  *          flag is set, @parent is guaranteed to be not-%NULL and remain valid
  *          during the execution of this function.
  * @buffer: (transfer full): the #GstBuffer that is chained, not %NULL.
@@ -287,7 +287,7 @@ typedef GstFlowReturn		(*GstPadChainFunction)		(GstPad *pad, GstObject *parent,
 /**
  * GstPadChainListFunction:
  * @pad: the sink #GstPad that performed the chain.
- * @parent: (allow-none): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
+ * @parent: (nullable): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
  *          flag is set, @parent is guaranteed to be not-%NULL and remain valid
  *          during the execution of this function.
  * @list: (transfer full): the #GstBufferList that is chained, not %NULL.
@@ -310,7 +310,7 @@ typedef GstFlowReturn		(*GstPadChainListFunction)	(GstPad *pad, GstObject *paren
 /**
  * GstPadGetRangeFunction:
  * @pad: the src #GstPad to perform the getrange on.
- * @parent: (allow-none): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
+ * @parent: (nullable): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
  *          flag is set, @parent is guaranteed to be not-%NULL and remain valid
  *          during the execution of this function.
  * @offset: the offset of the range
@@ -361,7 +361,7 @@ typedef GstFlowReturn		(*GstPadGetRangeFunction)	(GstPad *pad, GstObject *parent
 /**
  * GstPadEventFunction:
  * @pad: the #GstPad to handle the event.
- * @parent: (allow-none): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
+ * @parent: (nullable): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
  *          flag is set, @parent is guaranteed to be not-%NULL and remain valid
  *          during the execution of this function.
  * @event: (transfer full): the #GstEvent to handle.
@@ -376,7 +376,7 @@ typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstObject *parent,
 /**
  * GstPadEventFullFunction:
  * @pad: the #GstPad to handle the event.
- * @parent: (allow-none): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
+ * @parent: (nullable): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
  *          flag is set, @parent is guaranteed to be not-%NULL and remain valid
  *          during the execution of this function.
  * @event: (transfer full): the #GstEvent to handle.
@@ -400,7 +400,7 @@ typedef GstFlowReturn		(*GstPadEventFullFunction)	(GstPad *pad, GstObject *paren
 /**
  * GstPadIterIntLinkFunction:
  * @pad: The #GstPad to query.
- * @parent: (allow-none): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
+ * @parent: (nullable): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
  *          flag is set, @parent is guaranteed to be not-%NULL and remain valid
  *          during the execution of this function.
  *
@@ -417,7 +417,7 @@ typedef GstIterator*           (*GstPadIterIntLinkFunction)    (GstPad *pad, Gst
 /**
  * GstPadQueryFunction:
  * @pad: the #GstPad to query.
- * @parent: (allow-none): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
+ * @parent: (nullable): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
  *          flag is set, @parent is guaranteed to be not-%NULL and remain valid
  *          during the execution of this function.
  * @query: the #GstQuery object to execute
@@ -434,7 +434,7 @@ typedef gboolean		(*GstPadQueryFunction)		(GstPad *pad, GstObject *parent,
 /**
  * GstPadLinkFunction:
  * @pad: the #GstPad that is linked.
- * @parent: (allow-none): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
+ * @parent: (nullable): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
  *          flag is set, @parent is guaranteed to be not-%NULL and remain valid
  *          during the execution of this function.
  * @peer: the peer #GstPad of the link
@@ -447,7 +447,7 @@ typedef GstPadLinkReturn	(*GstPadLinkFunction)		(GstPad *pad, GstObject *parent,
 /**
  * GstPadUnlinkFunction:
  * @pad: the #GstPad that is linked.
- * @parent: (allow-none): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
+ * @parent: (nullable): the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT
  *          flag is set, @parent is guaranteed to be not-%NULL and remain valid
  *          during the execution of this function.
  *
@@ -579,7 +579,7 @@ typedef enum
  * GstPadProbeInfo:
  * @type: the current probe type
  * @id: the id of the probe
- * @data: (allow-none): type specific data, check the @type field to know the
+ * @data: (nullable): type specific data, check the @type field to know the
  *    datatype.  This field can be %NULL.
  * @offset: offset of pull probe, this field is valid when @type contains
  *    #GST_PAD_PROBE_TYPE_PULL
@@ -649,7 +649,7 @@ typedef GstPadProbeReturn   (*GstPadProbeCallback)   (GstPad *pad, GstPadProbeIn
 /**
  * GstPadStickyEventsForeachFunction:
  * @pad: the #GstPad.
- * @event: (allow-none): a sticky #GstEvent.
+ * @event: (nullable): a sticky #GstEvent.
  * @user_data: the #gpointer to optional user data.
  *
  * Callback used by gst_pad_sticky_events_foreach().

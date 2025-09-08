@@ -840,7 +840,7 @@ gst_pad_get_property (GObject * object, guint prop_id,
 
 /**
  * gst_pad_new:
- * @name: (allow-none): the name of the new pad.
+ * @name: (nullable): the name of the new pad.
  * @direction: the #GstPadDirection of the pad.
  *
  * Creates a new pad with the given name in the given direction.
@@ -862,7 +862,7 @@ gst_pad_new (const gchar * name, GstPadDirection direction)
 /**
  * gst_pad_new_from_template:
  * @templ: the pad template to use
- * @name: (allow-none): the name of the pad
+ * @name: (nullable): the name of the pad
  *
  * Creates a new pad with the given name from the given template.
  * If name is %NULL, a guaranteed unique name (across all pads)
@@ -2964,7 +2964,7 @@ gst_pad_get_single_internal_link (GstPad * pad)
 /**
  * gst_pad_iterate_internal_links_default:
  * @pad: the #GstPad to get the internal links of.
- * @parent: (allow-none): the parent of @pad or %NULL
+ * @parent: (nullable): the parent of @pad or %NULL
  *
  * Iterate the list of pads to which the given pad is linked to inside of
  * the parent element.
@@ -3173,7 +3173,7 @@ event_forward_func (GstPad * pad, EventData * data)
 /**
  * gst_pad_event_default:
  * @pad: a #GstPad to call the default event handler on.
- * @parent: (allow-none): the parent of @pad or %NULL
+ * @parent: (nullable): the parent of @pad or %NULL
  * @event: (transfer full): the #GstEvent to handle.
  *
  * Invokes the default event handler for the given pad.
@@ -3502,7 +3502,7 @@ query_forward_func (GstPad * pad, QueryData * data)
 /**
  * gst_pad_query_default:
  * @pad: a #GstPad to call the default query handler on.
- * @parent: (allow-none): the parent of @pad or %NULL
+ * @parent: (nullable): the parent of @pad or %NULL
  * @query: (transfer none): the #GstQuery to handle.
  *
  * Invokes the default query handler for the given pad.
