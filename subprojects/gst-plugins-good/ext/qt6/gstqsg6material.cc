@@ -635,9 +635,11 @@ out:
      * are a safe pick. (64 pixel sidelength must be supported according
      * to the GLES2 spec, table 6.18.) */
     const int tex_sidelength = 64;
+    bool created G_GNUC_UNUSED;         /* G_DISABLE_ASSERT */
 
     rhi_tex = rhi->newTexture (video_format_to_rhi_format (v_format, plane), QSize(tex_sidelength, tex_sidelength), 1, {});
-    g_assert (rhi_tex->create());
+    created = rhi_tex->create();
+    g_assert(created);
 
     int ts = video_format_to_texel_size (v_format, plane);
     QByteArray dummy_data (tex_sidelength * tex_sidelength * ts, 0);

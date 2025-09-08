@@ -2286,22 +2286,33 @@ gst_validate_pad_monitor_check_right_buffer (GstValidatePadMonitor *
     ret = FALSE;
   }
 
-  g_assert (gst_buffer_map (wanted_buf, &wanted_map, GST_MAP_READ));
-  g_assert (gst_buffer_map (buffer, &map, GST_MAP_READ));
-
-  checksum = g_compute_checksum_for_data (G_CHECKSUM_MD5,
-      (const guchar *) map.data, map.size);
-
-  if (g_strcmp0 ((gchar *) wanted_map.data, checksum)) {
+  if (!gst_buffer_map (wanted_buf, &wanted_map, GST_MAP_READ)) {
     GST_VALIDATE_REPORT (pad_monitor, WRONG_BUFFER,
-        "buffer %" GST_PTR_FORMAT " checksum %s different from expected: %s",
-        buffer, checksum, wanted_map.data);
+        "Could not map wanted buffer");
     ret = FALSE;
-  }
+  } else {
+    if (!gst_buffer_map (buffer, &map, GST_MAP_READ)) {
+      GST_VALIDATE_REPORT (pad_monitor, WRONG_BUFFER,
+          "Could not map pad buffer");
+      ret = FALSE;
+    } else {
 
-  gst_buffer_unmap (wanted_buf, &wanted_map);
-  gst_buffer_unmap (buffer, &map);
-  g_free (checksum);
+      checksum = g_compute_checksum_for_data (G_CHECKSUM_MD5,
+          (const guchar *) map.data, map.size);
+
+      if (g_strcmp0 ((gchar *) wanted_map.data, checksum)) {
+        GST_VALIDATE_REPORT (pad_monitor, WRONG_BUFFER,
+            "buffer %" GST_PTR_FORMAT
+            " checksum %s different from expected: %s", buffer, checksum,
+            wanted_map.data);
+        ret = FALSE;
+      }
+
+      g_free (checksum);
+      gst_buffer_unmap (wanted_buf, &wanted_map);
+    }
+    gst_buffer_unmap (buffer, &map);
+  }
   gst_object_unref (pad);
 
   pad_monitor->current_buf = pad_monitor->current_buf->next;

@@ -3332,6 +3332,7 @@ create_and_plug_queue_to_linked_stream_probe_cb (GstPad * inpad,
   GstPad *tee_pad;
   GstPad *queue_pad;
   guint index;
+  gboolean unlinked G_GNUC_UNUSED;      /* G_DISABLE_ASSERT */
 
   stream = data->stream;
   priv = stream->priv;
@@ -3347,7 +3348,8 @@ create_and_plug_queue_to_linked_stream_probe_cb (GstPad * inpad,
    * sink   src->sink       |
    *   '-----'    '---------'
    */
-  g_assert (gst_pad_unlink (tee_pad, sink_pad));
+  unlinked = gst_pad_unlink (tee_pad, sink_pad);
+  g_assert (unlinked);
 
   /* add queue to the already existing stream */
   *queue1 = gst_element_factory_make ("queue", NULL);
