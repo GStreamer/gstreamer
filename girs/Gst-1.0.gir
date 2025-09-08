@@ -34916,6 +34916,45 @@ The callback is allowed to modify the data pointer in @info.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="get_flow_return" c:identifier="gst_pad_probe_info_get_flow_return" version="1.28">
+        <source-position filename="../subprojects/gstreamer/gst/gstpad.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">The #GstFlowReturn from the probe</doc>
+          <type name="FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">a #GstPadProbeInfo</doc>
+            <type name="PadProbeInfo" c:type="GstPadProbeInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_id" c:identifier="gst_pad_probe_info_get_id" version="1.28">
+        <source-position filename="../subprojects/gstreamer/gst/gstpad.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">The probe ID from the probe</doc>
+          <type name="gulong" c:type="gulong"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">a #GstPadProbeInfo</doc>
+            <type name="PadProbeInfo" c:type="GstPadProbeInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_offset" c:identifier="gst_pad_probe_info_get_offset" version="1.28">
+        <source-position filename="../subprojects/gstreamer/gst/gstpad.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">The offset from the probe</doc>
+          <type name="guint64" c:type="guint64"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">a #GstPadProbeInfo</doc>
+            <type name="PadProbeInfo" c:type="GstPadProbeInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="get_query" c:identifier="gst_pad_probe_info_get_query">
         <source-position filename="../subprojects/gstreamer/gst/gstpad.h"/>
         <return-value transfer-ownership="none" nullable="1">
@@ -34927,6 +34966,100 @@ The callback is allowed to modify the data pointer in @info.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">a #GstPadProbeInfo</doc>
             <type name="PadProbeInfo" c:type="GstPadProbeInfo*"/>
           </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_size" c:identifier="gst_pad_probe_info_get_size" version="1.28">
+        <source-position filename="../subprojects/gstreamer/gst/gstpad.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">The size from the probe</doc>
+          <type name="gsize" c:type="gsize"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">a #GstPadProbeInfo</doc>
+            <type name="PadProbeInfo" c:type="GstPadProbeInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_type" c:identifier="gst_pad_probe_info_get_type" version="1.28">
+        <source-position filename="../subprojects/gstreamer/gst/gstpad.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">The #GstPadProbeType from the probe</doc>
+          <type name="PadProbeType" c:type="GstPadProbeType"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">a #GstPadProbeInfo</doc>
+            <type name="PadProbeInfo" c:type="GstPadProbeInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="set_buffer" c:identifier="gst_pad_probe_info_set_buffer" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">Updates @info with @buffer or %NULL.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstpad.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">a #GstPadProbeInfo</doc>
+            <type name="PadProbeInfo" c:type="GstPadProbeInfo*"/>
+          </instance-parameter>
+          <parameter name="buffer" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">a #GstBuffer</doc>
+            <type name="Buffer" c:type="GstBuffer*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_buffer_list" c:identifier="gst_pad_probe_info_set_buffer_list" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">Updates @info with @list or %NULL.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstpad.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">a #GstPadProbeInfo</doc>
+            <type name="PadProbeInfo" c:type="GstPadProbeInfo*"/>
+          </instance-parameter>
+          <parameter name="list" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">a #GstBufferList</doc>
+            <type name="BufferList" c:type="GstBufferList*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_event" c:identifier="gst_pad_probe_info_set_event" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">Updates @info with @event or %NULL.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstpad.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">a #GstPadProbeInfo</doc>
+            <type name="PadProbeInfo" c:type="GstPadProbeInfo*"/>
+          </instance-parameter>
+          <parameter name="event" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">a #GstEvent</doc>
+            <type name="Event" c:type="GstEvent*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_flow_return" c:identifier="gst_pad_probe_info_set_flow_return" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">Updates @info with @flow_ret.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstpad.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">a #GstPadProbeInfo</doc>
+            <type name="PadProbeInfo" c:type="GstPadProbeInfo*"/>
+          </instance-parameter>
+          <parameter name="flow_ret" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">A #GstFlowReturn</doc>
+            <type name="FlowReturn" c:type="GstFlowReturn"/>
+          </parameter>
         </parameters>
       </method>
     </record>

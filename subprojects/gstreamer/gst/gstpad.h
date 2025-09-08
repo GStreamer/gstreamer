@@ -619,6 +619,21 @@ struct _GstPadProbeInfo
 #define GST_PAD_PROBE_INFO_SIZE(d)         ((d)->size)
 
 GST_API
+GstPadProbeType gst_pad_probe_info_get_type       (GstPadProbeInfo * info);
+
+GST_API
+gulong         gst_pad_probe_info_get_id          (GstPadProbeInfo * info);
+
+GST_API
+guint64        gst_pad_probe_info_get_offset      (GstPadProbeInfo * info);
+
+GST_API
+gsize          gst_pad_probe_info_get_size        (GstPadProbeInfo * info);
+
+GST_API
+GstFlowReturn  gst_pad_probe_info_get_flow_return  (GstPadProbeInfo * info);
+
+GST_API
 GstEvent*      gst_pad_probe_info_get_event       (GstPadProbeInfo * info);
 
 GST_API
@@ -629,6 +644,22 @@ GstBuffer*     gst_pad_probe_info_get_buffer      (GstPadProbeInfo * info);
 
 GST_API
 GstBufferList* gst_pad_probe_info_get_buffer_list (GstPadProbeInfo * info);
+
+GST_API
+void           gst_pad_probe_info_set_event       (GstPadProbeInfo * info,
+                                                   GstEvent        * event);
+
+GST_API
+void           gst_pad_probe_info_set_buffer      (GstPadProbeInfo * info,
+                                                   GstBuffer       * buffer);
+
+GST_API
+void           gst_pad_probe_info_set_buffer_list (GstPadProbeInfo * info,
+                                                   GstBufferList   * list);
+
+GST_API
+void           gst_pad_probe_info_set_flow_return  (GstPadProbeInfo * info,
+                                                    GstFlowReturn     flow_ret);
 
 /**
  * GstPadProbeCallback:
