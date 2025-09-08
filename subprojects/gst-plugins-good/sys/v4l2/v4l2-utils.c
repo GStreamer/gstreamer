@@ -131,7 +131,7 @@ gst_v4l2_iterator_next (GstV4l2Iterator * _it)
   while (device == NULL) {
     it->video_idx++;
 
-    if (it->video_idx >= 64) {
+    if (it->video_idx >= 256) {
       it->video_idx = 0;
       it->base_idx++;
     }
