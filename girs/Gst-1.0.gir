@@ -24859,6 +24859,25 @@ needs to be unmapped using gst_buffer_unmap() or gst_memory_unmap(). Instead,
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>
+      <method name="get_data" c:identifier="gst_map_info_get_data" version="1.28">
+        <source-position filename="../subprojects/gstreamer/gst/gstmemory.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">Data of @info.</doc>
+          <array length="0" zero-terminated="0" c:type="guint8*">
+            <type name="guint8" c:type="guint8"/>
+          </array>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">a #GstMapInfo</doc>
+            <type name="MapInfo" c:type="GstMapInfo*"/>
+          </instance-parameter>
+          <parameter name="size" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">Return location of the size of the data.</doc>
+            <type name="gsize" c:type="gsize*"/>
+          </parameter>
+        </parameters>
+      </method>
     </record>
     <record name="Memory" c:type="GstMemory" glib:type-name="GstMemory" glib:get-type="gst_memory_get_type" c:symbol-prefix="memory">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">GstMemory is a lightweight refcounted object that wraps a region of memory.

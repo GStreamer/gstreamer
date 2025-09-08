@@ -598,3 +598,23 @@ gst_memory_take (GstMemory ** old_memory, GstMemory * new_memory)
   return gst_mini_object_take ((GstMiniObject **) old_memory,
       (GstMiniObject *) new_memory);
 }
+
+/**
+ * gst_map_info_get_data:
+ * @info: a #GstMapInfo
+ * @size: (out): Return location of the size of the data.
+ *
+ * Returns: (transfer none) (array length=size) (nullable): Data of @info.
+ *
+ * Since: 1.28
+ */
+guint8 *
+gst_map_info_get_data (GstMapInfo * info, gsize * size)
+{
+  g_return_val_if_fail (info != NULL, NULL);
+  g_return_val_if_fail (size != NULL, NULL);
+
+  *size = info->size;
+
+  return info->data;
+}
