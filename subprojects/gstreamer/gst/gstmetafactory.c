@@ -97,7 +97,7 @@ gst_meta_factory_find (const gchar * name)
 
 /**
  * gst_meta_factory_load:
- * @name: The name of the #GstMetaInfo to load
+ * @factoryname: The name of the #GstMetaInfo to load
  *
  * Loads a previously registered #GstMetaInfo from the registry.
 
@@ -105,9 +105,9 @@ gst_meta_factory_find (const gchar * name)
  * Since: 1.28
  */
 const GstMetaInfo *
-gst_meta_factory_load (const gchar * name)
+gst_meta_factory_load (const gchar * factoryname)
 {
-  GstMetaFactory *factory = gst_meta_factory_find (name);
+  GstMetaFactory *factory = gst_meta_factory_find (factoryname);
 
   /* Called with a non-dynamic or unregistered type? */
   if (factory == NULL)
@@ -118,7 +118,7 @@ gst_meta_factory_load (const gchar * name)
   if (factory == NULL)
     return NULL;
 
-  GST_DEBUG_OBJECT (factory, "Loaded type %s", name);
+  GST_DEBUG_OBJECT (factory, "Loaded type %s", factoryname);
 
   return factory->meta_info;
 }

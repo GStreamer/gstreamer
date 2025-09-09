@@ -28994,6 +28994,7 @@ plugin_init (GstPlugin * plugin)
         </return-value>
         <parameters>
           <parameter name="factoryname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmetafactory.c">The name of the #GstMetaInfo to load</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
         </parameters>
