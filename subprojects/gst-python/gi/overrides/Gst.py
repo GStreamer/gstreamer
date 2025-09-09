@@ -899,6 +899,9 @@ class MapInfo:
         if not self.__parent__.unmap(self):
             raise MapError('MappingError', 'Unmapping was not successful')
 
+    def get_data(self):
+        return self.data
+
 
 __all__.append("MapInfo")
 
