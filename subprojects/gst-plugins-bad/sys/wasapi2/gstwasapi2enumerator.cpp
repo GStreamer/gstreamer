@@ -826,8 +826,7 @@ gst_wasapi2_enumerator_execute (GstWasapi2Enumerator * self,
     gst_wasapi2_enumerator_probe_props (prop.Get (), &props);
 
     g_ptr_array_set_size (priv->endpoint_formats, 0);
-    gst_wasapi2_get_shared_mode_formats (default_render_client.Get (),
-        priv->endpoint_formats);
+    gst_wasapi2_get_shared_mode_formats (client.Get (), priv->endpoint_formats);
     auto caps = gst_wasapi2_wfx_list_to_caps (priv->endpoint_formats);
     g_ptr_array_set_size (priv->endpoint_formats, 0);
 
