@@ -457,49 +457,6 @@ is_equal_device_id (const gchar * a, const gchar * b)
 }
 
 static HRESULT
-initialize_audio_client3 (IAudioClient * client_handle,
-    WAVEFORMATEX * mix_format, guint * period, DWORD extra_flags)
-{
-  HRESULT hr = S_OK;
-  UINT32 default_period, fundamental_period, min_period, max_period;
-  /* AUDCLNT_STREAMFLAGS_NOPERSIST is not allowed for
-   * InitializeSharedAudioStream */
-  DWORD stream_flags = AUDCLNT_STREAMFLAGS_EVENTCALLBACK;
-  ComPtr < IAudioClient3 > audio_client;
-
-  stream_flags |= extra_flags;
-
-  hr = client_handle->QueryInterface (IID_PPV_ARGS (&audio_client));
-  if (!gst_wasapi2_result (hr)) {
-    GST_INFO ("IAudioClient3 interface is unavailable");
-    return hr;
-  }
-
-  hr = audio_client->GetSharedModeEnginePeriod (mix_format,
-      &default_period, &fundamental_period, &min_period, &max_period);
-  if (!gst_wasapi2_result (hr)) {
-    GST_INFO ("Couldn't get period");
-    return hr;
-  }
-
-  GST_INFO ("Using IAudioClient3, default period %d frames, "
-      "fundamental period %d frames, minimum period %d frames, maximum period "
-      "%d frames", default_period, fundamental_period, min_period, max_period);
-
-  *period = min_period;
-
-  hr = audio_client->InitializeSharedAudioStream (stream_flags, min_period,
-      mix_format, nullptr);
-
-  if (!gst_wasapi2_result (hr)) {
-    GST_WARNING ("IAudioClient3::InitializeSharedAudioStream failed 0x%x",
-        (guint) hr);
-  }
-
-  return hr;
-}
-
-static HRESULT
 initialize_audio_client_exclusive (IMMDevice * device,
     ComPtr<IAudioClient> & client, WAVEFORMATEX * wfx, guint * period,
     bool low_latency, gint64 latency_time)
@@ -845,16 +802,67 @@ gst_wasapi2_rbuf_ctx_init (RbufCtxPtr & ctx, WAVEFORMATEX * selected_format)
 
     gst_wasapi2_util_parse_waveformatex (ctx->mix_format, &ctx->caps, nullptr);
 
-    hr = E_FAIL;
-    /* Try IAudioClient3 if low-latency is requested */
-    if (ctx->low_latency &&
-        !gst_wasapi2_is_loopback_class (ctx->endpoint_class) &&
+    bool client3_init_done = false;
+    if (!gst_wasapi2_is_loopback_class (ctx->endpoint_class) &&
         !gst_wasapi2_is_process_loopback_class (ctx->endpoint_class)) {
-      hr = initialize_audio_client3 (ctx->client.Get (), ctx->mix_format,
-          &ctx->period, stream_flags);
+      /* Use IAudioClient3::InitializeSharedAudioStream if
+       * - low-latency is requested
+       * - device actually supports shared-mode low-latency streaming
+       *   (i.e., min-period < default-period) and user requested latency-time
+       *   is smaller than default-period */
+      ComPtr<IAudioClient3> client3;
+      hr = ctx->client.As (&client3);
+      if (SUCCEEDED (hr)) {
+        UINT32 default_period, fundamental_period, min_period, max_period;
+        hr = client3->GetSharedModeEnginePeriod (ctx->mix_format,
+            &default_period, &fundamental_period, &min_period, &max_period);
+
+        if (SUCCEEDED (hr)) {
+          UINT32 target_period_frames = 0;
+          UINT32 latency_time_frames =
+            static_cast<UINT32>(ctx->latency_time *
+              ctx->mix_format->nSamplesPerSec / 1000000.0);
+          if (ctx->low_latency) {
+            target_period_frames = min_period;
+          } else if (min_period < default_period &&
+              latency_time_frames < default_period) {
+            UINT32 cand = MAX (min_period, latency_time_frames);
+            if (fundamental_period > 0) {
+              /* period should be multiple of fundamental period */
+              cand = ((cand + fundamental_period - 1) / fundamental_period)
+                * fundamental_period;
+            }
+
+            cand = MAX (cand, min_period);
+            cand = MIN (cand, max_period);
+
+            /* Use audioclient3 only if calculated target period is
+             * smaller than default period */
+            if (cand < default_period)
+              target_period_frames = cand;
+          }
+
+          if (target_period_frames > 0) {
+            DWORD flags = stream_flags |
+                AUDCLNT_STREAMFLAGS_EVENTCALLBACK;
+            hr = client3->InitializeSharedAudioStream (flags,
+                target_period_frames, ctx->mix_format, nullptr);
+            if (SUCCEEDED (hr)) {
+              GST_INFO ("Using IAudioClient3, default period %d frames, "
+                "fundamental period %d frames, minimum period %d frames, "
+                "maximum period %d frames, requested latency time %d frames, "
+                "target period %d frames", default_period,
+                fundamental_period, min_period, max_period, latency_time_frames,
+                target_period_frames);
+              client3_init_done = true;
+              ctx->period = target_period_frames;
+            }
+          }
+        }
+      }
     }
 
-    if (FAILED (hr)) {
+    if (!client3_init_done) {
       DWORD extra_flags = stream_flags;
       if (gst_wasapi2_is_loopback_class (ctx->endpoint_class))
         extra_flags = AUDCLNT_STREAMFLAGS_LOOPBACK;
