@@ -21,6 +21,12 @@
 #include "config.h"
 #endif
 
+#define _WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <cfgmgr32.h>
+#include <initguid.h>
+#include <usbiodef.h>
+
 #include "gstasiodeviceprovider.h"
 #include "gstasioutils.h"
 #include "gstasioobject.h"
@@ -132,18 +138,31 @@ gst_asio_device_set_property (GObject * object, guint prop_id,
 struct _GstAsioDeviceProvider
 {
   GstDeviceProvider parent;
+
+  GThread *thread;
+  GMainLoop *loop;
+  GMainContext *context;
+  guint device_update_id;
 };
 
 G_DEFINE_TYPE (GstAsioDeviceProvider, gst_asio_device_provider,
     GST_TYPE_DEVICE_PROVIDER);
 
+static void gst_asio_device_provider_finalize (GObject * obj);
+static gboolean gst_asio_device_provider_start (GstDeviceProvider * provider);
+static void gst_asio_device_provider_stop (GstDeviceProvider * provider);
 static GList *gst_asio_device_provider_probe (GstDeviceProvider * provider);
 
 static void
 gst_asio_device_provider_class_init (GstAsioDeviceProviderClass * klass)
 {
   GstDeviceProviderClass *provider_class = GST_DEVICE_PROVIDER_CLASS (klass);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
+  gobject_class->finalize = gst_asio_device_provider_finalize;
+
+  provider_class->start = GST_DEBUG_FUNCPTR (gst_asio_device_provider_start);
+  provider_class->stop = GST_DEBUG_FUNCPTR (gst_asio_device_provider_stop);
   provider_class->probe = GST_DEBUG_FUNCPTR (gst_asio_device_provider_probe);
 
   gst_device_provider_class_set_static_metadata (provider_class,
@@ -153,8 +172,185 @@ gst_asio_device_provider_class_init (GstAsioDeviceProviderClass * klass)
 }
 
 static void
-gst_asio_device_provider_init (GstAsioDeviceProvider * provider)
+gst_asio_device_provider_finalize (GObject * obj)
 {
+  GstAsioDeviceProvider *self = GST_ASIO_DEVICE_PROVIDER (obj);
+
+  g_main_loop_quit (self->loop);
+  g_clear_pointer (&self->thread, g_thread_join);
+  g_main_loop_unref (self->loop);
+  g_main_context_unref (self->context);
+
+  G_OBJECT_CLASS (gst_asio_device_provider_parent_class)->finalize (obj);
+}
+
+static void
+gst_asio_device_provider_init (GstAsioDeviceProvider * self)
+{
+  self->context = g_main_context_new ();
+  self->loop = g_main_loop_new (self->context, FALSE);
+  self->device_update_id = 0;
+}
+
+static gboolean
+gst_asio_device_provider_update_devices (GstDeviceProvider * provider)
+{
+  GstAsioDeviceProvider *self = GST_ASIO_DEVICE_PROVIDER (provider);
+
+  GST_LOG_OBJECT (self, "Updating devices");
+
+  GList *prev_devices = g_list_copy_deep (provider->devices,
+      (GCopyFunc) gst_object_ref, NULL);
+  GList *new_devices = gst_asio_device_provider_probe (provider);
+
+  // Emit device removal messages
+  for (GList *p = prev_devices; p; p = p->next) {
+    GstAsioDevice *pdev = GST_ASIO_DEVICE (p->data);
+    bool found = false;
+    for (GList *n = new_devices; n; n = n->next) {
+      GstAsioDevice *ndev = GST_ASIO_DEVICE (n->data);
+      if (g_strcmp0 (ndev->device_clsid, pdev->device_clsid) == 0 &&
+          g_strcmp0 (ndev->factory_name, pdev->factory_name) == 0) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      gst_device_provider_device_remove (provider, GST_DEVICE (gst_object_ref(pdev)));
+    }
+  }
+
+  // Emit device added messages
+  for (GList *n = new_devices; n; n = n->next) {
+    GstAsioDevice *ndev = GST_ASIO_DEVICE (n->data);
+    bool found = false;
+    for (GList *p = prev_devices; p; p = p->next) {
+      GstAsioDevice *pdev = GST_ASIO_DEVICE (p->data);
+      if (g_strcmp0 (ndev->device_clsid, pdev->device_clsid) == 0 &&
+          g_strcmp0 (ndev->factory_name, pdev->factory_name) == 0) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      gst_device_provider_device_add (provider, GST_DEVICE (gst_object_ref (ndev)));
+    }
+  }
+
+  g_list_free_full (new_devices, (GDestroyNotify) gst_object_unref);
+  g_list_free_full (prev_devices, (GDestroyNotify) gst_object_unref);
+  self->device_update_id = 0;
+
+  return G_SOURCE_REMOVE;
+}
+
+static DWORD
+device_event_cb (HCMNOTIFICATION, PVOID data, CM_NOTIFY_ACTION action,
+    PCM_NOTIFY_EVENT_DATA, DWORD)
+{
+  GstAsioDeviceProvider *self = GST_ASIO_DEVICE_PROVIDER (data);
+
+  GST_LOG_OBJECT (self, "USB device event: %d", action);
+
+  if (action == CM_NOTIFY_ACTION_DEVICEINTERFACEARRIVAL ||
+      action == CM_NOTIFY_ACTION_DEVICEINTERFACEREMOVAL ||
+      action == CM_NOTIFY_ACTION_DEVICEINSTANCEREMOVED) {
+    GSource *source;
+    // We need to wait a bit before probing for ASIO devices, because device
+    // initialization can take some time. However, we must also not probe too
+    // frequently, so if there's already a device update scheduled when we get
+    // a WM_DEVICECHANGE event, then cancel the existing update and schedule
+    // a new one in the near future.
+    if (self->device_update_id > 0) {
+      source = g_main_context_find_source_by_id (self->context, self->device_update_id);
+      self->device_update_id = 0;
+      g_source_destroy (source);
+    }
+    source = g_timeout_source_new (500);
+    g_source_set_callback (source,
+        (GSourceFunc) gst_asio_device_provider_update_devices, self, NULL);
+    self->device_update_id = g_source_attach (source, self->context);
+  }
+
+  return ERROR_SUCCESS;
+}
+
+static gpointer
+gst_asio_device_provider_thread_func (GstDeviceProvider * provider)
+{
+  GstAsioDeviceProvider *self = GST_ASIO_DEVICE_PROVIDER (provider);
+
+  g_main_context_push_thread_default (self->context);
+
+  CONFIGRET cr;
+  CM_NOTIFY_FILTER filter = { 0 };
+
+  // Filter for USB device interface events
+  filter.cbSize = sizeof (CM_NOTIFY_FILTER);
+  filter.FilterType = CM_NOTIFY_FILTER_TYPE_DEVICEINTERFACE;
+  filter.u.DeviceInterface.ClassGuid = GUID_DEVINTERFACE_USB_DEVICE;
+
+  HCMNOTIFICATION notify = NULL;
+  // Register for USB device interface events
+  cr = CM_Register_Notification (&filter, (gpointer) self,
+      (PCM_NOTIFY_CALLBACK) device_event_cb, &notify);
+  if (cr != CR_SUCCESS) {
+    GST_ERROR_OBJECT (self, "Failed to register for USB notifications:"
+        " 0x%lX\n", cr);
+    return NULL;
+  }
+
+  GST_LOG_OBJECT (self, "Started device provider loop");
+  g_main_loop_run (self->loop);
+  GST_LOG_OBJECT (self, "Stopped device provider loop");
+
+  // Cleanup
+  if (notify) {
+    CM_Unregister_Notification (notify);
+  }
+
+  g_main_context_pop_thread_default (self->context);
+
+  return NULL;
+}
+
+static gboolean
+gst_asio_device_provider_start (GstDeviceProvider * provider)
+{
+  GstAsioDeviceProvider *self = GST_ASIO_DEVICE_PROVIDER (provider);
+
+  GList *devices = gst_asio_device_provider_probe (provider);
+  if (devices) {
+    for (GList *iter = devices; iter; iter = g_list_next (iter)) {
+      gst_device_provider_device_add (provider, GST_DEVICE (iter->data));
+    }
+
+    g_list_free (devices);
+  }
+
+  self->thread = g_thread_new ("GstAsioDeviceProvider",
+      (GThreadFunc) gst_asio_device_provider_thread_func, self);
+
+  GST_LOG_OBJECT (self, "Started ASIO device provider");
+
+  return TRUE;
+}
+
+static void
+gst_asio_device_provider_stop (GstDeviceProvider * provider)
+{
+  GstAsioDeviceProvider *self = GST_ASIO_DEVICE_PROVIDER (provider);
+
+  if (self->thread) {
+    g_main_loop_quit (self->loop);
+    g_clear_pointer (&self->thread, g_thread_join);
+  }
+
+  if (self->device_update_id > 0) {
+    GSource *source = g_main_context_find_source_by_id (self->context, self->device_update_id);
+    self->device_update_id = 0;
+    g_source_destroy (source);
+  }
 }
 
 static void

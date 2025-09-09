@@ -42,19 +42,24 @@ if not winapi_desktop
   if asio_option.enabled()
     error('asio plugin requires WINAPI_PARTITION_DESKTOP')
   else
-    subdir_done ()
+    subdir_done()
   endif
 endif
 
 avrt_lib = cc.find_library('avrt', required: asio_option)
 if not avrt_lib.found()
-  subdir_done ()
+  subdir_done()
+endif
+
+cfgmgr32 = cc.find_library('cfgmgr32', required: asio_option)
+if not cfgmgr32.found()
+  subdir_done()
 endif
 
 gstasio = library('gstasio',
     asio_sources,
     include_directories : [configinc],
-    dependencies : [gstaudio_dep, avrt_lib],
+    dependencies : [gstaudio_dep, avrt_lib, cfgmgr32],
     c_args : gst_plugins_bad_args,
     cpp_args : gst_plugins_bad_args,
     install : true,
