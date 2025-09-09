@@ -251,6 +251,20 @@ gst_wasapi2_device_provider_probe (GstDeviceProvider * provider)
         gst_structure_set (props, "device.actual-name", G_TYPE_STRING,
             entry->actual_device_name.c_str (), nullptr);
       }
+    } else {
+      gst_structure_set (props,
+          "device.shared-mode-engine-default-period-us", G_TYPE_INT64,
+          entry->shared_mode_engine_default_period_us,
+          "device.shared-mode-engine-fundamental-period-us", G_TYPE_INT64,
+          entry->shared_mode_engine_fundamental_period_us,
+          "device.shared-mode-engine-min-period-us", G_TYPE_INT64,
+          entry->shared_mode_engine_min_period_us,
+          "device.shared-mode-engine-max-period-us", G_TYPE_INT64,
+          entry->shared_mode_engine_max_period_us,
+          "device.default-device-period-us", G_TYPE_INT64,
+          entry->default_device_period_us,
+          "device.min-device-period-us", G_TYPE_INT64,
+          entry->min_device_period_us, nullptr);
     }
 
     if (entry->flow == eCapture) {

@@ -54,6 +54,14 @@ struct GstWasapi2EnumeratorEntry
   GstCaps *exclusive_caps = nullptr;
   EDataFlow flow;
   GstWasapi2DeviceProps device_props = { };
+
+  gint64 shared_mode_engine_default_period_us = 0;
+  gint64 shared_mode_engine_fundamental_period_us = 0;
+  gint64 shared_mode_engine_min_period_us = 0;
+  gint64 shared_mode_engine_max_period_us = 0;
+
+  gint64 default_device_period_us = 0;
+  gint64 min_device_period_us = 0;
 };
 
 GstWasapi2Enumerator * gst_wasapi2_enumerator_new (void);

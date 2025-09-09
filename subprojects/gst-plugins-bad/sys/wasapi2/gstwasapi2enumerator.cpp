@@ -840,8 +840,48 @@ gst_wasapi2_enumerator_execute (GstWasapi2Enumerator * self,
         auto exclusive_caps =
             gst_wasapi2_wfx_list_to_caps (priv->endpoint_formats);
         g_ptr_array_set_size (priv->endpoint_formats, 0);
-
         entry->exclusive_caps = exclusive_caps;
+
+        REFERENCE_TIME default_period = 0;
+        REFERENCE_TIME min_period = 0;
+        WAVEFORMATEX *mix_format = nullptr;
+
+        hr = client->GetDevicePeriod (&default_period, &min_period);
+        if (SUCCEEDED (hr)) {
+          entry->default_device_period_us = default_period / 10;
+          entry->min_device_period_us = min_period / 10;
+        }
+
+        client->GetMixFormat (&mix_format);
+        if (mix_format) {
+          ComPtr < IAudioClient3 > client3;
+          hr = client.As (&client3);
+          if (SUCCEEDED (hr)) {
+            UINT32 default_period_frame = 0;
+            UINT32 fundamental_period_frame = 0;
+            UINT32 min_period_frame = 0;
+            UINT32 max_period_frame = 0;
+
+            hr = client3->GetSharedModeEnginePeriod (mix_format,
+                &default_period_frame, &fundamental_period_frame,
+                &min_period_frame, &max_period_frame);
+            if (SUCCEEDED (hr)) {
+              entry->shared_mode_engine_default_period_us =
+                  (default_period_frame * 1000000ULL) /
+                  mix_format->nSamplesPerSec;
+              entry->shared_mode_engine_fundamental_period_us =
+                  (fundamental_period_frame * 1000000ULL) /
+                  mix_format->nSamplesPerSec;
+              entry->shared_mode_engine_min_period_us =
+                  (min_period_frame * 1000000ULL) / mix_format->nSamplesPerSec;
+              entry->shared_mode_engine_max_period_us =
+                  (max_period_frame * 1000000ULL) / mix_format->nSamplesPerSec;
+            }
+          }
+
+          CoTaskMemFree (mix_format);
+        }
+
         g_ptr_array_add (priv->device_list, entry);
       }
     }
