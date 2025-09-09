@@ -145,6 +145,9 @@ struct _GstAsioDeviceProvider
   guint device_update_id;
 };
 
+GST_DEBUG_CATEGORY_STATIC (gst_asio_dp_debug);
+#define GST_CAT_DEFAULT gst_asio_dp_debug
+
 G_DEFINE_TYPE (GstAsioDeviceProvider, gst_asio_device_provider,
     GST_TYPE_DEVICE_PROVIDER);
 
@@ -169,6 +172,9 @@ gst_asio_device_provider_class_init (GstAsioDeviceProviderClass * klass)
       "ASIO Device Provider",
       "Source/Sink/Audio", "List ASIO source and sink devices",
       "Seungha Yang <seungha@centricular.com>");
+
+  GST_DEBUG_CATEGORY_INIT (gst_asio_dp_debug, "asio-deviceprovider",
+      0, "ASIO device provider");
 }
 
 static void
