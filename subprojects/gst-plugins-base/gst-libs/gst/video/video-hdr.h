@@ -25,9 +25,83 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstVideoHDRFormat:
+ * @GST_VIDEO_HDR_FORMAT_NONE: No HDR format detected.
+ * @GST_VIDEO_HDR_FORMAT_HDR10: HDR10 format
+ * @GST_VIDEO_HDR_FORMAT_HDR10_PLUS: HDR10+ format
+ *
+ * Enum value describing the most common video for High Dynamic Range (HDR) formats.
+ *
+ * Since: 1.30
+ */
+typedef enum {
+  GST_VIDEO_HDR_FORMAT_NONE,
+  GST_VIDEO_HDR_FORMAT_HDR10,
+  GST_VIDEO_HDR_FORMAT_HDR10_PLUS,
+} GstVideoHDRFormat;
+
 typedef struct _GstVideoMasteringDisplayInfoCoordinates GstVideoMasteringDisplayInfoCoordinates;
 typedef struct _GstVideoMasteringDisplayInfo GstVideoMasteringDisplayInfo;
 typedef struct _GstVideoContentLightLevel GstVideoContentLightLevel;
+
+/**
+ * GstVideoHDRMeta:
+ * @meta: parent #GstMeta
+ * @format: The type of dynamic HDR contained in the meta.
+ * @data: contains the dynamic HDR data
+ * @size: The size in bytes of @data
+ *
+ * Dynamic HDR data should be included in video user data
+ *
+ * Since: 1.30
+ */
+typedef struct {
+  GstMeta meta;
+  GstVideoHDRFormat format;
+  guint8 *data;
+  gsize size;
+} GstVideoHDRMeta;
+
+/**
+ * gst_video_hdr_meta_api_get_type: (attributes doc.skip=true)
+ */
+GST_VIDEO_API
+GType gst_video_hdr_meta_api_get_type (void);
+
+/**
+ * GST_VIDEO_HDR_META_API_TYPE: (attributes doc.skip=true)
+ */
+#define GST_VIDEO_HDR_META_API_TYPE (gst_video_hdr_meta_api_get_type())
+
+/**
+ * gst_video_hdr_meta_get_info: (attributes doc.skip=true)
+ */
+GST_VIDEO_API
+const GstMetaInfo *gst_video_hdr_meta_get_info (void);
+
+/**
+ * GST_VIDEO_HDR_META_INFO: (attributes doc.skip=true)
+ */
+#define GST_VIDEO_HDR_META_INFO (gst_video_hdr_meta_get_info())
+
+/**
+ * gst_buffer_get_video_hdr_meta:
+ * @b: A #GstBuffer
+ *
+ * Gets the #GstVideoHDRMeta that might be present on @b.
+ *
+ * Since: 1.30
+ *
+ * Returns: The first #GstVideoHDRMeta present on @b, or %NULL if
+ * no #GstVideoHDRMeta are present
+ */
+#define gst_buffer_get_video_hdr_meta(b) \
+        ((GstVideoHDRMeta*)gst_buffer_get_meta((b), GST_VIDEO_HDR_META_API_TYPE))
+
+GST_VIDEO_API
+GstVideoHDRMeta *gst_buffer_add_video_hdr_meta (GstBuffer * buffer, GstVideoHDRFormat format,
+                                                const guint8 * data, gsize size);
 
 /**
  * GstVideoMasteringDisplayInfoCoordinates:
