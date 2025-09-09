@@ -182,8 +182,8 @@ gst_tflite_vsi_update_options (GstTFliteInference * inf,
   TfLiteInterpreterOptionsAddDelegate (interpreter_options,
       self->tflite_delegate);
 
-  TfLiteInterpreterOptionsAddRegistrationExternal (interpreter_options,
-      (TfLiteRegistrationExternal *) Register_VSI_NPU_PRECOMPILED ());
+  TfLiteInterpreterOptionsAddCustomOp (interpreter_options,
+      kNbgCustomOp, Register_VSI_NPU_PRECOMPILED (), 1, 1);
 
   return TRUE;
 }
