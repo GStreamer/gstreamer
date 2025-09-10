@@ -58,15 +58,10 @@ struct _GstFlvDemux
 
   GstPad *sinkpad;
 
-  GstPad *audio_pad;
-  GstPad *video_pad;
-
   gboolean have_group_id;
   guint group_id;
 
   gchar *upstream_stream_id;
-  GstStream *audio_stream;
-  GstStream *video_stream;
   gboolean streams_aware;
 
   /* <private> */
@@ -87,8 +82,6 @@ struct _GstFlvDemux
   GstEvent *new_seg_event;
 
   GstTagList *taglist;
-  GstTagList *audio_tags;
-  GstTagList *video_tags;
 
   GstFlvDemuxState state;
 
@@ -97,37 +90,6 @@ struct _GstFlvDemux
   GstClockTime duration;
   guint64 tag_size;
   guint64 tag_data_size;
-
-  /* Audio infos */
-  guint16 rate;
-  guint16 channels;
-  guint16 width;
-  guint16 audio_codec_tag;
-  guint64 audio_offset;
-  gboolean audio_need_discont;
-  gboolean audio_need_segment;
-  GstBuffer * audio_codec_data;
-  GstClockTime audio_start;
-  guint32 last_audio_pts;
-  GstClockTime audio_time_offset;
-  guint32 audio_bitrate;
-
-  /* Video infos */
-  guint32 w;
-  guint32 h;
-  guint32 par_x;
-  guint32 par_y;
-  guint16 video_codec_tag;
-  guint64 video_offset;
-  gboolean video_need_discont;
-  gboolean video_need_segment;
-  gboolean got_par;
-  GstBuffer * video_codec_data;
-  GstClockTime video_start;
-  guint32 last_video_dts;
-  GstClockTime video_time_offset;
-  gdouble framerate;
-  guint32 video_bitrate;
 
   gboolean random_access;
   gboolean need_header;
@@ -162,12 +124,56 @@ struct _GstFlvDemux
   gboolean audio_done;
   gint64 from_offset;
   gint64 to_offset;
+
+  GPtrArray *audio_tracks;
+  GPtrArray *video_tracks;
+  gint16 default_audio_track_id;
+  gint16 default_video_track_id;
 };
 
 struct _GstFlvDemuxClass
 {
   GstElementClass parent_class;
 };
+
+typedef struct _GstFlvDemuxAudioTrackInfo
+{
+  guint16 rate;
+  guint16 channels;
+  guint16 width;
+} GstFlvDemuxAudioTrackInfo;
+
+typedef struct _GstFlvDemuxVideoTrackInfo
+{
+  guint32 w;
+  guint32 h;
+  guint32 par_x;
+  guint32 par_y;
+  gdouble framerate;
+  gboolean got_par;
+} GstFlvDemuxVideoTrackInfo;
+
+typedef struct _GstFlvDemuxTrack
+{
+  gboolean is_audio;
+  union {
+    GstFlvDemuxAudioTrackInfo audio;
+    GstFlvDemuxVideoTrackInfo video;
+  } info;
+  GstPad *pad;
+  guint16 codec_tag;
+  guint64 offset;
+  GstBuffer * codec_data;
+  GstClockTime start;
+  guint32 last_pts;
+  GstClockTime time_offset;
+  guint32 bitrate;
+  gint16 id;
+  gboolean need_segment;
+  gboolean need_discont;
+  GstStream *stream;
+  GstTagList *tags;
+} GstFlvDemuxTrack;
 
 GType gst_flv_demux_get_type (void);
 

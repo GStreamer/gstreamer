@@ -7349,6 +7349,11 @@
                         "direction": "src",
                         "presence": "sometimes"
                     },
+                    "audio_%%u": {
+                        "caps": "audio/x-adpcm:\n         layout: swf\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)11025, (int)22050, (int)44100 }\naudio/mpeg:\n    mpegversion: 1\n          layer: 3\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)8000, (int)11025, (int)22050, (int)44100 }\n         parsed: true\naudio/mpeg:\n    mpegversion: 4\n  stream-format: raw\n         framed: true\naudio/x-nellymoser:\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)8000, (int)11025, (int)16000, (int)22050, (int)44100 }\naudio/x-raw:\n         format: { U8, S16LE }\n         layout: interleaved\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)11025, (int)22050, (int)44100 }\naudio/x-alaw:\n       channels: { (int)1, (int)2 }\n           rate: 8000\naudio/x-mulaw:\n       channels: { (int)1, (int)2 }\n           rate: 8000\naudio/x-speex:\n       channels: 1\n           rate: 16000\n",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    },
                     "sink": {
                         "caps": "video/x-flv:\n",
                         "direction": "sink",
