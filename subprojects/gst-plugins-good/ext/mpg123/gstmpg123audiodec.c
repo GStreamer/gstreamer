@@ -480,8 +480,13 @@ gst_mpg123_audio_dec_handle_frame (GstAudioDecoder * dec,
          * with mp3s containing several format headers (for example, first half
          * using 44.1kHz, second half 32 kHz) */
 
-        gst_mpg123_audio_dec_push_decoded_bytes (mpg123_decoder, decoded_bytes,
-            num_decoded_bytes, clip_start, clip_end);
+        retval =
+            gst_mpg123_audio_dec_push_decoded_bytes (mpg123_decoder,
+            decoded_bytes, num_decoded_bytes, clip_start, clip_end);
+        if (retval != GST_FLOW_OK) {
+          loop = FALSE;
+          break;
+        }
 
         GST_LOG_OBJECT (dec,
             "mpg123 reported a new format -> setting next srccaps");
@@ -506,20 +511,26 @@ gst_mpg123_audio_dec_handle_frame (GstAudioDecoder * dec,
         GST_LOG_OBJECT (dec, "mpg123 needs more data to continue decoding");
         retval = gst_mpg123_audio_dec_push_decoded_bytes (mpg123_decoder,
             decoded_bytes, num_decoded_bytes, clip_start, clip_end);
+        if (retval != GST_FLOW_OK)
+          loop = FALSE;
         break;
 
       case MPG123_OK:
         retval = gst_mpg123_audio_dec_push_decoded_bytes (mpg123_decoder,
             decoded_bytes, num_decoded_bytes, clip_start, clip_end);
+        if (retval != GST_FLOW_OK)
+          loop = FALSE;
         break;
 
       case MPG123_DONE:
         /* If this happens, then the upstream parser somehow missed the ending
          * of the bitstream */
-        gst_mpg123_audio_dec_push_decoded_bytes (mpg123_decoder, decoded_bytes,
-            num_decoded_bytes, clip_start, clip_end);
+        retval =
+            gst_mpg123_audio_dec_push_decoded_bytes (mpg123_decoder,
+            decoded_bytes, num_decoded_bytes, clip_start, clip_end);
         GST_LOG_OBJECT (dec, "mpg123 is done decoding");
-        retval = GST_FLOW_EOS;
+        if (retval == GST_FLOW_OK)
+          retval = GST_FLOW_EOS;
         loop = FALSE;
         break;
 
