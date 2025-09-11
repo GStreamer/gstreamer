@@ -99,6 +99,9 @@ static const ShaderItem g_cs_map[] = {
   {GST_D3D_PLUGIN_CS_FISHEYE_EQUIRECT, BUILD_SOURCE (CSMain_fisheye_equirect)},
   {GST_D3D_PLUGIN_CS_FISHEYE_PANORAMA, BUILD_SOURCE (CSMain_fisheye_panorama)},
   {GST_D3D_PLUGIN_CS_FISHEYE_PERSPECTIVE, BUILD_SOURCE (CSMain_fisheye_perspective)},
+  {GST_D3D_PLUGIN_CS_WEAVE_INTERLACE_1, BUILD_SOURCE (CSMain_weave_interlace_1)},
+  {GST_D3D_PLUGIN_CS_WEAVE_INTERLACE_2, BUILD_SOURCE (CSMain_weave_interlace_2)},
+  {GST_D3D_PLUGIN_CS_WEAVE_INTERLACE_4, BUILD_SOURCE (CSMain_weave_interlace_4)},
 };
 
 #undef BUILD_SOURCE

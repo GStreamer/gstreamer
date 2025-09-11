@@ -44,3 +44,6 @@
 #include "CSMain_fisheye_equirect.hlsl"
 #include "CSMain_fisheye_panorama.hlsl"
 #include "CSMain_fisheye_perspective.hlsl"
+#include "CSMain_weave_interlace_1.hlsl"
+#include "CSMain_weave_interlace_2.hlsl"
+#include "CSMain_weave_interlace_4.hlsl"

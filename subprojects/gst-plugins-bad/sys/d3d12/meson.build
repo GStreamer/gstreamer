@@ -37,6 +37,8 @@ d3d12_sources = [
   'gstd3d12window.cpp',
   'gstd3d12fisheyedewarp.cpp',
   'gstd3d12memorycopy.cpp',
+  'gstd3d12weaveinterlace.cpp',
+  'gstd3d12interlace.cpp',
   'plugin.cpp',
 ]
 

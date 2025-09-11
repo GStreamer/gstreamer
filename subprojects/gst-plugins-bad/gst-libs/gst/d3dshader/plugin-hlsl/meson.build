@@ -24,6 +24,9 @@ hlsl_sources = [
   ['CSMain_fisheye_equirect', 'cs'],
   ['CSMain_fisheye_panorama', 'cs'],
   ['CSMain_fisheye_perspective', 'cs'],
+  ['CSMain_weave_interlace_1', 'cs'],
+  ['CSMain_weave_interlace_2', 'cs'],
+  ['CSMain_weave_interlace_4', 'cs'],
 ]
 
 shader_model = '5_0'
