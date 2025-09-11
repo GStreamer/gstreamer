@@ -154,6 +154,7 @@ GST_START_TEST (test_target_naming)
 
   gst_debug_set_threshold_for_name ("default", GST_LEVEL_NONE);
 
+#ifndef G_DISABLE_CHECKS
   /* NULL values */
   ASSERT_CRITICAL (target = gst_encoding_target_new (NULL, NULL, NULL, NULL));
   fail_if (target != NULL);
@@ -166,6 +167,7 @@ GST_START_TEST (test_target_naming)
   ASSERT_CRITICAL (target =
       gst_encoding_target_new (NULL, NULL, "donkey", NULL));
   fail_if (target != NULL);
+#endif
 
   /* Name and Category validation */
 

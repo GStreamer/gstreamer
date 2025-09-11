@@ -74,7 +74,7 @@ GST_END_TEST;
 static void
 _test_query_init_invalid_query_gl (GstGLContext * context, gpointer data)
 {
-  GstGLQuery q1;
+  GstGLQuery q1 GST_UNUSED_CHECKS;
 
   /* no usage */
   ASSERT_CRITICAL (gst_gl_query_init (&q1, context, GST_GL_QUERY_NONE));

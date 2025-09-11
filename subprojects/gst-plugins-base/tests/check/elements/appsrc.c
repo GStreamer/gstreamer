@@ -1484,7 +1484,7 @@ GST_START_TEST (test_appsrc_send_custom_event)
     g_cond_wait (&check_cond, &check_mutex);
   g_mutex_unlock (&check_mutex);
 
-  g_assert (got_event);
+  g_assert_true (got_event);
 
   ASSERT_SET_STATE (src, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
   cleanup_appsrc (src);

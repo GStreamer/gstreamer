@@ -911,7 +911,7 @@ GST_START_TEST (videodecoder_backwards_buffer_after_segment)
     gint target = i;
     gint j;
 
-    g_assert (i > 0);
+    g_assert_cmpuint (i, >, 0);
 
     /* push groups of 10 buffers
      * every number that is divisible by 10 is set as a discont,

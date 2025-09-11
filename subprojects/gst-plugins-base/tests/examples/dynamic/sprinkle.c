@@ -207,7 +207,7 @@ main (int argc, char *argv[])
   GstBus *bus;
   GstElement *filter, *convert, *sink;
   GstCaps *caps;
-  gboolean linked;
+  gboolean linked GST_UNUSED_ASSERT;
   SprinkleState *state;
 
   gst_init (&argc, &argv);

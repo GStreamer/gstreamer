@@ -165,11 +165,11 @@ gst_audio_decoder_tester_handle_frame (GstAudioDecoder * dec,
 
       /* the output is SE32LE stereo 44100 Hz */
       size = 2 * 4;
-      g_assert (size == sizeof (guint64));
+      fail_unless_equals_int (size, sizeof (guint64));
       data = g_malloc0 (size);
 
       if (map.size) {
-        g_assert_cmpint (map.size, >=, sizeof (guint64));
+        g_assert_cmpuint (map.size, >=, sizeof (guint64));
         memcpy (data, map.data, sizeof (guint64));
       }
 

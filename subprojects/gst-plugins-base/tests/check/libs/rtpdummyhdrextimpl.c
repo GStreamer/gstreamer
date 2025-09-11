@@ -177,7 +177,7 @@ gst_rtp_dummy_hdr_ext_write (GstRTPHeaderExtension * ext,
 {
   GstRTPDummyHdrExt *dummy = GST_RTP_DUMMY_HDR_EXT (ext);
 
-  g_assert (size >= gst_rtp_dummy_hdr_ext_get_max_size (ext, NULL));
+  g_assert_cmpuint (size, >=, gst_rtp_dummy_hdr_ext_get_max_size (ext, NULL));
 
   data[0] = TEST_DATA_BYTE;
 

@@ -53,9 +53,9 @@ run_pipeline (GstElement * pipe, const gchar * descr,
   GstMessageType revent;
   GstStateChangeReturn ret;
 
-  g_assert (pipe);
+  g_assert_nonnull (pipe);
   bus = gst_element_get_bus (pipe);
-  g_assert (bus);
+  g_assert_nonnull (bus);
 
   fail_if (gst_element_set_state (pipe, target_state) ==
       GST_STATE_CHANGE_FAILURE, "Could not set pipeline %s to playing", descr);

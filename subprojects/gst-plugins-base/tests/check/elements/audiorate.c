@@ -210,8 +210,8 @@ do_perfect_stream_test (guint rate, const gchar * format,
   GST_INFO ("-------- drop=%.0f%% caps = %" GST_PTR_FORMAT " ---------- ",
       drop_probability * 100.0, caps);
 
-  g_assert (drop_probability >= 0.0 && drop_probability <= 1.0);
-  g_assert (inject_probability >= 0.0 && inject_probability <= 1.0);
+  g_assert_true (drop_probability >= 0.0 && drop_probability <= 1.0);
+  g_assert_true (inject_probability >= 0.0 && inject_probability <= 1.0);
 
   pipe = gst_pipeline_new ("pipeline");
   fail_unless (pipe != NULL);

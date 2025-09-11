@@ -464,7 +464,7 @@ gst_new_buffer (int i)
   GstBuffer *buffer = gst_buffer_new_and_alloc (16);
 
   /* copy some id */
-  g_assert (gst_buffer_map (buffer, &info, GST_MAP_WRITE));
+  g_assert_true (gst_buffer_map (buffer, &info, GST_MAP_WRITE));
   data = (gchar *) info.data;
   g_snprintf (data, 16, "deadbee%08x", i);
   gst_buffer_unmap (buffer, &info);
@@ -808,7 +808,7 @@ gst_new_buffer_big (int i)
   GstBuffer *buffer = gst_buffer_new_and_alloc (16 * BIG_BUFFER_MULT);
 
   /* copy some id */
-  g_assert (gst_buffer_map (buffer, &info, GST_MAP_WRITE));
+  g_assert_true (gst_buffer_map (buffer, &info, GST_MAP_WRITE));
   data = (gchar *) info.data;
   for (j = 0; j < BIG_BUFFER_MULT; j++) {
     g_snprintf (data + 16 * j, 16, "deadbee%08x", i);

@@ -218,7 +218,7 @@ gst_cd_foo_src_open (GstAudioCdSrc * audiocdsrc, const gchar * device)
   src = GST_CD_FOO_SRC (audiocdsrc);
 
   /* if this fails, the test is wrong */
-  g_assert (src->cur_disc < NUM_TEST_DISCS);
+  g_assert_cmpuint (src->cur_disc, <, NUM_TEST_DISCS);
 
   src->cur_test = &test_discs[src->cur_disc];
 

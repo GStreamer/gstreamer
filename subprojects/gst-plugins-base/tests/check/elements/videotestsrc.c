@@ -143,7 +143,7 @@ fix_expected_colour (guint32 col_mask, guint8 col_expected)
   mask = 1 << (last - first + 1);
   mask -= 1;
 
-  g_assert (col_expected == 0x00 || col_expected == 0xff);
+  g_assert_true (col_expected == 0x00 || col_expected == 0xff);
 
   /* this only works because we only check for all-bits-set or no-bits-set */
   return col_expected & mask;

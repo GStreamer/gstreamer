@@ -91,7 +91,7 @@ static GstBuffer *
 create_overlay_buffer (void)
 {
   GZlibDecompressor *decompress;
-  GConverterResult decomp_res;
+  GConverterResult decomp_res GST_UNUSED_ASSERT;
   guchar *gzipped_pixdata, *pixdata;
   gsize gzipped_size, bytes_read, pixdata_size;
   GstBuffer *logo_pixels;

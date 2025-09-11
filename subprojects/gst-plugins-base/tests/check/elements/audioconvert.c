@@ -179,7 +179,7 @@ get_int_caps (guint channels, gint endianness, guint width,
   GstAudioFormat fmt;
   GstAudioInfo info;
 
-  g_assert (channels <= 2);
+  g_assert_cmpuint (channels, <=, 2);
 
   GST_DEBUG ("channels:%d, endianness:%d, width:%d, depth:%d, signedness:%d",
       channels, endianness, width, depth, signedness);
@@ -221,7 +221,7 @@ get_float_caps (guint channels, gint endianness, guint width,
   GstCaps *caps;
   GstAudioInfo info;
 
-  g_assert (channels <= 2);
+  g_assert_cmpuint (channels, <=, 2);
 
   gst_audio_info_init (&info);
   gst_audio_info_set_format (&info, get_float_format (endianness, width),
