@@ -62,6 +62,13 @@ typedef enum
   NATIVE = 15,                                             /* 15 = Device-specific sound*/
 } GstFlvSoundFormat;
 
+typedef enum
+{
+  UNSPECIFIED = 0,
+  NATIVE_CH_ORDER = 1,
+  CUSTOM_CH_ORDER = 2,
+} GstFlvAudioChannelOrder;
+
 #define MESSAGE_HEADER_LEN 11
 #define EXHEADER_PLUS_PACKETYPE_LEN 1
 #define MUTLITRACKTYPE_PLUS_PACKETYPE_LEN 1
@@ -69,7 +76,6 @@ typedef enum
 #define TRACK_ID_LEN 1
 #define TAG_SIZE_LEN 4
 #define MAX_TRACKS  G_MAXUINT8 + 1
-
-#define EFLV_STR_FOURCC(f)               ((guint32)(((f)[3])|((f)[2]<<8)|((f)[1]<<16)|((f)[0]<<24)))
+#define FOURCC_INVALID 0xFFFFFFFF
 
 #endif /* __FLV_DEFS_H__ */
