@@ -198,14 +198,14 @@ create_rtp_vp9_buffer_full (guint seqnum, guint picid, guint buffer_type,
     /* Prerequisites for this to be correct:
        ((packet[12] & 0x80) == 0x80); I bit set
      */
-    g_assert ((packet[12] & 0x80) == 0x80);
+    fail_unless_equals_uint64 ((packet[12] & 0x80), 0x80);
     packet[13] = picid & 0x7f;
 
   } else if (template->picid_bits == 15) {
     /* Prerequisites for this to be correct:
        ((packet[12] & 0x80) == 0x80); I bit set
      */
-    g_assert ((packet[12] & 0x80) == 0x80);
+    fail_unless_equals_uint64 ((packet[12] & 0x80), 0x80);
     packet[13] = ((picid >> 8) & 0xff) | 0x80;
     packet[14] = (picid >> 0) & 0xff;
   }

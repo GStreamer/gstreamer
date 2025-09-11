@@ -97,10 +97,11 @@ load_file (const gchar * fn, guint8 ** p_data, guint expected_len)
 static void
 load_files (void)
 {
-  g_assert (load_file (INIT_FILE, &init_mp4, init_mp4_len));
-  g_assert (load_file (SEG1_FILE, &seg_1_m4f, seg_1_m4f_len));
-  g_assert (load_file (BBB_FILE_I, &BBB_32k_init_mp4, BBB_32k_init_mp4_len));
-  g_assert (load_file (BBB_FILE_1, &BBB_32k_1_mp4, BBB_32k_1_mp4_len));
+  g_assert_true (load_file (INIT_FILE, &init_mp4, init_mp4_len));
+  g_assert_true (load_file (SEG1_FILE, &seg_1_m4f, seg_1_m4f_len));
+  g_assert_true (load_file (BBB_FILE_I, &BBB_32k_init_mp4,
+          BBB_32k_init_mp4_len));
+  g_assert_true (load_file (BBB_FILE_1, &BBB_32k_1_mp4, BBB_32k_1_mp4_len));
 }
 
 static void
@@ -1053,12 +1054,13 @@ GST_START_TEST (test_qtdemux_compensate_data_offset)
 
   data.expected_sample_cnt = 87;
 
-  g_assert (load_file (MSS_FRAGMENT, &mss_fragment, mss_fragment_len));
+  g_assert_true (load_file (MSS_FRAGMENT, &mss_fragment, mss_fragment_len));
 
   /* Change trun box data offset field from 871 to 791 to mimic an MSS fragment
    * with data offset smaller than the moof size. */
   mss_fragment_wrong_data_offset = g_memdup2 (mss_fragment, mss_fragment_len);
-  g_assert (GST_READ_UINT32_BE (&mss_fragment_wrong_data_offset[64]) == 871);
+  fail_unless_equals_uint64 (GST_READ_UINT32_BE (&mss_fragment_wrong_data_offset
+          [64]), 871);
   GST_WRITE_UINT32_BE (&mss_fragment_wrong_data_offset[64], 791);
 
   /* The goal of this test is to check that qtdemux can compensate
@@ -1141,7 +1143,7 @@ GST_START_TEST (test_qtdemux_mss_fragment)
 
   data.expected_sample_cnt = 87;
 
-  g_assert (load_file (MSS_FRAGMENT, &mss_fragment, mss_fragment_len));
+  g_assert_true (load_file (MSS_FRAGMENT, &mss_fragment, mss_fragment_len));
 
   /* The goal of this test is to check that qtdemux can handle a normal
    * mss fragment.
@@ -1634,7 +1636,8 @@ GST_START_TEST (test_qtdemux_editlist)
     guint8 gz[8705];
 
     /* read .mp4.gz.gz */
-    g_assert (load_file (TEST_FILE_PREFIX "editlists.mp4.gz.gz", &gz_gz, 3597));
+    g_assert_true (load_file (TEST_FILE_PREFIX "editlists.mp4.gz.gz", &gz_gz,
+            3597));
 
     /* mp4.gz.gz -> mp4.gz */
     decompress = g_zlib_decompressor_new (G_ZLIB_COMPRESSOR_FORMAT_GZIP);

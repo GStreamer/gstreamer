@@ -102,7 +102,7 @@ create_video_buffer (GstCaps * caps)
       gst_parse_launch
       ("videotestsrc num-buffers=1 ! capsfilter name=cf ! appsink name=sink",
       NULL);
-  g_assert (pipeline != NULL);
+  g_assert_nonnull (pipeline);
 
   cf = gst_bin_get_by_name (GST_BIN (pipeline), "cf");
   sink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");

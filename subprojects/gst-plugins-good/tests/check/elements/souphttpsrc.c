@@ -621,7 +621,7 @@ get_port_from_server (SoupServer * server)
   guint port;
 
   uris = soup_server_get_uris (server);
-  g_assert (g_slist_length (uris) == 1);
+  fail_unless_equals_uint64 (g_slist_length (uris), 1);
   port = gst_soup_uri_get_port (uris->data);
   g_slist_free_full (uris, (GDestroyNotify) gst_soup_uri_free);
 

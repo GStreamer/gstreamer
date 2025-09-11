@@ -327,12 +327,12 @@ run_segment_looping_test (gint64 start, gint64 stop, gdouble rate)
   GstBus *bus;
   gchar *path;
 
-  g_assert (start >= 0);
-  g_assert (stop >= -1);
-  g_assert (rate > 0.0);
+  g_assert_cmpint (start, >=, 0);
+  g_assert_cmpint (stop, >=, -1);
+  g_assert_cmpfloat (rate, >, 0.0);
 
   // only handle a rate for the middle segment case for now
-  g_assert (rate == 1.0 || stop != -1);
+  g_assert_true (rate == 1.0 || stop != -1);
 
   pipeline = gst_pipeline_new ("pipeline");
   fail_unless (pipeline != NULL, "Failed to create pipeline!");

@@ -110,7 +110,7 @@ generate_test_sound (const gchar * fn, const gchar * launch_string,
     guint num_samples)
 {
   GstElement *pipeline, *src, *parse, *enc_bin, *sink;
-  GstFlowReturn flow;
+  GstFlowReturn flow GST_UNUSED_ASSERT;
   GstMessage *msg;
   GstBuffer *buf;
   GstCaps *caps;
@@ -218,7 +218,7 @@ test_seek_FORMAT_TIME_by_sample (const gchar * fn, GList * seek_positions)
     gconstpointer found;
     GstMapInfo map;
     GstBuffer *buf;
-    gboolean ret;
+    gboolean ret GST_UNUSED_ASSERT;
     guint actual_position, buffer_timestamp_position;
     guint seek_sample;
 

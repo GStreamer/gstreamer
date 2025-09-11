@@ -105,10 +105,10 @@ rtpssrcdemux_pad_added (G_GNUC_UNUSED GstElement * demux, GstPad * src_pad,
    * break rtpbin assumption. */
 
   if (g_str_has_prefix (GST_PAD_NAME (src_pad), "src_")) {
-    g_assert (ctx->rtp_src == NULL);
+    g_assert_null (ctx->rtp_src);
     ctx->rtp_src = h;
   } else if (g_str_has_prefix (GST_PAD_NAME (src_pad), "rtcp_src_")) {
-    g_assert (ctx->rtcp_src == NULL);
+    g_assert_null (ctx->rtcp_src);
     ctx->rtcp_src = h;
   } else {
     g_assert_not_reached ();
@@ -134,8 +134,8 @@ GST_START_TEST (test_event_forwarding)
   gst_harness_set_src_caps (h, generate_caps ());
   gst_harness_push (h, create_buffer (0, TEST_BUF_SSRC));
 
-  g_assert (ctx.rtp_src);
-  g_assert (ctx.rtcp_src);
+  g_assert_nonnull (ctx.rtp_src);
+  g_assert_nonnull (ctx.rtcp_src);
 
   gst_harness_push_event (h, gst_event_new_eos ());
 
@@ -150,8 +150,8 @@ GST_START_TEST (test_event_forwarding)
   g_assert_cmpint (event->type, ==, GST_EVENT_CAPS);
   gst_event_parse_caps (event, &caps);
   s = gst_caps_get_structure (caps, 0);
-  g_assert (gst_structure_has_field (s, "ssrc"));
-  g_assert (gst_structure_get_uint (s, "ssrc", &ssrc));
+  g_assert_true (gst_structure_has_field (s, "ssrc"));
+  g_assert_true (gst_structure_get_uint (s, "ssrc", &ssrc));
   g_assert_cmpuint (ssrc, ==, TEST_BUF_SSRC);
   gst_event_unref (event);
 

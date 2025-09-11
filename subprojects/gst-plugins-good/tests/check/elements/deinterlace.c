@@ -441,7 +441,7 @@ catch_caps_event (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   GstCaps **outcaps = user_data;
 
   if (GST_EVENT_TYPE (info->data) == GST_EVENT_CAPS) {
-    g_assert (*outcaps == NULL);
+    g_assert_null (*outcaps);
 
     gst_event_parse_caps (GST_EVENT (info->data), outcaps);
     gst_caps_ref (*outcaps);

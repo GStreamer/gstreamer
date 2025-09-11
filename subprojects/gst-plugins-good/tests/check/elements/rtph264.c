@@ -227,7 +227,7 @@ create_codec_data (guint8 * sps, gsize sps_size, guint8 * pps, gsize pps_size)
   /* SPS */
   codec_data[offset++] = 0xe1;  /* numOfSequenceParameterSets | b11100000 -> numSPS == 1 */
 
-  g_assert (sps_size <= 0xffff);
+  g_assert_cmpuint (sps_size, <=, 0xffff);
   codec_data[offset++] = (sps_size >> 8) & 0xff;        /* numOfSequenceParameterSets high 8bit */
   codec_data[offset++] = sps_size & 0xff;       /* numOfSequenceParameterSets low 8bit */
   memcpy (codec_data + offset, sps, sps_size);
@@ -236,7 +236,7 @@ create_codec_data (guint8 * sps, gsize sps_size, guint8 * pps, gsize pps_size)
   /* PPS */
   codec_data[offset++] = 0x1;   /* numOfPictureParameterSets == 1 */
 
-  g_assert (pps_size <= 0xffff);
+  g_assert_cmpuint (pps_size, <=, 0xffff);
   codec_data[offset++] = (pps_size >> 8) & 0xff;
   codec_data[offset++] = pps_size & 0xff;
   memcpy (codec_data + offset, pps, pps_size);
@@ -244,7 +244,7 @@ create_codec_data (guint8 * sps, gsize sps_size, guint8 * pps, gsize pps_size)
 
   gst_memory_unmap (mem, &map_info);
 
-  g_assert (offset == gst_buffer_get_size (codec_data_buffer));
+  fail_unless_equals_uint64 (offset, gst_buffer_get_size (codec_data_buffer));
 
   return codec_data_buffer;
 }

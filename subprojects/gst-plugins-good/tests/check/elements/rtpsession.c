@@ -389,10 +389,10 @@ GST_START_TEST (test_multiple_ssrc_rr)
   out_buf = session_harness_pull_rtcp (h);
 
   /* verify we have report blocks for both ssrcs */
-  g_assert (out_buf != NULL);
+  g_assert_nonnull (out_buf);
   fail_unless (gst_rtcp_buffer_validate (out_buf));
   gst_rtcp_buffer_map (out_buf, GST_MAP_READ, &rtcp);
-  g_assert (gst_rtcp_buffer_get_first_packet (&rtcp, &rtcp_packet));
+  g_assert_true (gst_rtcp_buffer_get_first_packet (&rtcp, &rtcp_packet));
   fail_unless_equals_int (GST_RTCP_TYPE_RR,
       gst_rtcp_packet_get_type (&rtcp_packet));
 
@@ -460,7 +460,7 @@ GST_START_TEST (test_multiple_senders_roundrobin_rbs)
 
     session_harness_produce_rtcp (h, 1);
     buf = session_harness_pull_rtcp (h);
-    g_assert (buf != NULL);
+    g_assert_nonnull (buf);
     fail_unless (gst_rtcp_buffer_validate (buf));
 
     gst_rtcp_buffer_map (buf, GST_MAP_READ, &rtcp);
@@ -480,7 +480,7 @@ GST_START_TEST (test_multiple_senders_roundrobin_rbs)
       g_hash_table_insert (rb_ssrcs, GUINT_TO_POINTER (ssrc), tmp_set);
     } else {
       tmp_set = g_hash_table_lookup (rb_ssrcs, GUINT_TO_POINTER (ssrc));
-      g_assert (tmp_set);
+      g_assert_nonnull (tmp_set);
     }
 
     for (j = 0; j < expected_rb_count; j++) {
@@ -498,7 +498,7 @@ GST_START_TEST (test_multiple_senders_roundrobin_rbs)
   /* now verify all received ssrcs have been reported */
   fail_unless_equals_int (1, g_hash_table_size (rb_ssrcs));
   tmp_set = g_hash_table_lookup (rb_ssrcs, GUINT_TO_POINTER (0xDEADBEEF));
-  g_assert (tmp_set);
+  g_assert_nonnull (tmp_set);
   fail_unless_equals_int (35, g_hash_table_size (tmp_set));
 
   g_hash_table_unref (rb_ssrcs);
@@ -539,11 +539,11 @@ GST_START_TEST (test_no_rbs_for_internal_senders)
   /* verify the rtcp packets */
   for (i = 0; i < 2; i++) {
     buf = session_harness_pull_rtcp (h);
-    g_assert (buf != NULL);
-    g_assert (gst_rtcp_buffer_validate (buf));
+    g_assert_nonnull (buf);
+    g_assert_true (gst_rtcp_buffer_validate (buf));
 
     gst_rtcp_buffer_map (buf, GST_MAP_READ, &rtcp);
-    g_assert (gst_rtcp_buffer_get_first_packet (&rtcp, &rtcp_packet));
+    g_assert_true (gst_rtcp_buffer_get_first_packet (&rtcp, &rtcp_packet));
     fail_unless_equals_int (GST_RTCP_TYPE_SR,
         gst_rtcp_packet_get_type (&rtcp_packet));
 
@@ -581,11 +581,11 @@ GST_START_TEST (test_no_rbs_for_internal_senders)
   for (i = 0; i < 2; i++) {
     session_harness_produce_rtcp (h, 1);
     buf = session_harness_pull_rtcp (h);
-    g_assert (buf != NULL);
-    g_assert (gst_rtcp_buffer_validate (buf));
+    g_assert_nonnull (buf);
+    g_assert_true (gst_rtcp_buffer_validate (buf));
 
     gst_rtcp_buffer_map (buf, GST_MAP_READ, &rtcp);
-    g_assert (gst_rtcp_buffer_get_first_packet (&rtcp, &rtcp_packet));
+    g_assert_true (gst_rtcp_buffer_get_first_packet (&rtcp, &rtcp_packet));
     fail_unless_equals_int (GST_RTCP_TYPE_SR,
         gst_rtcp_packet_get_type (&rtcp_packet));
 
@@ -618,7 +618,7 @@ GST_START_TEST (test_no_rbs_for_internal_senders)
   fail_unless_equals_int (2, g_hash_table_size (rb_ssrcs));
   for (i = 10000; i < 10002; i++) {
     tmp_set = g_hash_table_lookup (rb_ssrcs, GUINT_TO_POINTER (i));
-    g_assert (tmp_set);
+    g_assert_nonnull (tmp_set);
     fail_unless_equals_int (2, g_hash_table_size (tmp_set));
   }
 
@@ -705,7 +705,7 @@ GST_START_TEST (test_internal_sources_timeout)
   for (i = 0; i < 5; i++) {
     session_harness_produce_rtcp (h, 1);
     buf = session_harness_pull_rtcp (h);
-    g_assert (buf != NULL);
+    g_assert_nonnull (buf);
     fail_unless (gst_rtcp_buffer_validate (buf));
     gst_rtcp_buffer_map (buf, GST_MAP_READ, &rtcp);
     fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &rtcp_packet));
@@ -865,7 +865,7 @@ stats_test_cb (GObject * object, GParamSpec * spec, gpointer data)
 {
   guint num_sources = 0;
   gboolean *cb_called = data;
-  g_assert (*cb_called == FALSE);
+  g_assert_false (*cb_called);
 
   /* We should be able to get a rtpsession property
      without introducing the deadlock */
@@ -910,18 +910,18 @@ suspicious_bye_cb (GObject * object, GParamSpec * spec, gpointer data)
   guint ssrc = 0;
   guint i;
 
-  g_assert (*cb_called == FALSE);
+  g_assert_false (*cb_called);
   *cb_called = TRUE;
 
   g_object_get (object, "stats", &stats, NULL);
   stats_arr =
       g_value_get_boxed (gst_structure_get_value (stats, "source-stats"));
-  g_assert (stats_arr != NULL);
+  g_assert_nonnull (stats_arr);
   fail_unless (stats_arr->n_values >= 1);
 
   for (i = 0; i < stats_arr->n_values; i++) {
     internal_stats = g_value_get_boxed (g_value_array_get_nth (stats_arr, i));
-    g_assert (internal_stats != NULL);
+    g_assert_nonnull (internal_stats);
 
     gst_structure_get (internal_stats,
         "ssrc", G_TYPE_UINT, &ssrc,
@@ -1014,7 +1014,7 @@ GST_START_TEST (test_rr_stats_assignment)
   session_harness_crank_clock (h);
   rtcp_buf = session_harness_pull_rtcp (h);
 
-  g_assert (rtcp_buf != NULL);
+  g_assert_nonnull (rtcp_buf);
   fail_unless (gst_rtcp_buffer_validate (rtcp_buf));
 
   /* Now take this RTCP buffer to a second 'sender' session and check

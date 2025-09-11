@@ -114,7 +114,7 @@ GST_START_TEST (test_pay_to_depay_multichannel)
   fail_unless_equals_int (val, 2);
 
   channel_mapping = gst_structure_get_value (s, "channel-mapping");
-  g_assert (GST_VALUE_HOLDS_ARRAY (channel_mapping));
+  g_assert_true (GST_VALUE_HOLDS_ARRAY (channel_mapping));
 
   for (i = 0; i != gst_value_array_get_size (channel_mapping); ++i) {
     fail_unless_equals_int (expected_channel_mapping[i],

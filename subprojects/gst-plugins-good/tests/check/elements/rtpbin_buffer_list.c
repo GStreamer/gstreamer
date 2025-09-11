@@ -984,7 +984,7 @@ get_source_stats (GstElement * rtpsession,
   g_object_get (rtpsession, "stats", &stats, NULL);
   stats_arr =
       g_value_get_boxed (gst_structure_get_value (stats, "source-stats"));
-  g_assert (stats_arr != NULL);
+  g_assert_nonnull (stats_arr);
   fail_unless (stats_arr->n_values >= 1);
 
   *source_stats = NULL;

@@ -656,7 +656,7 @@ construct_deterministic_initial_state (GstHarness * h, gint latency_ms)
   guint seqnum;
   gint i;
 
-  g_assert (latency_ms % TEST_BUF_MS == 0);
+  fail_unless_equals_int (latency_ms % TEST_BUF_MS, 0);
 
   gst_harness_set_src_caps (h, generate_caps ());
   g_object_set (h->element, "latency", latency_ms, NULL);
@@ -1547,7 +1547,7 @@ gst_test_clock_set_time_and_process (GstTestClock * testclock,
   gst_test_clock_wait_for_next_pending_id (testclock, &id);
   gst_test_clock_set_time (testclock, time);
   tid = gst_test_clock_process_next_clock_id (testclock);
-  g_assert (tid == id);
+  g_assert_true (tid == id);
   gst_clock_id_unref (tid);
   gst_clock_id_unref (id);
 }

@@ -94,7 +94,7 @@ setup_amrnb (void)
   ctx_sink_template = &sinktemplate_nb;
   ctx_src_template = &srctemplate_nb;
   input_caps = gst_caps_from_string (SRC_CAPS_NB);
-  g_assert (input_caps);
+  g_assert_nonnull (input_caps);
   ctx_input_caps = input_caps;
 }
 
@@ -105,7 +105,7 @@ setup_amrwb (void)
   ctx_sink_template = &sinktemplate_wb;
   ctx_src_template = &srctemplate_wb;
   input_caps = gst_caps_from_string (SRC_CAPS_WB);
-  g_assert (input_caps);
+  g_assert_nonnull (input_caps);
   ctx_input_caps = input_caps;
 }
 

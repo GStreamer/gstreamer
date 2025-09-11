@@ -50,7 +50,7 @@ gst_harness_create_video_buffer_from_info (GstHarness * h, gint value,
 
   buf = gst_harness_create_buffer (h, size);
   gst_buffer_memset (buf, 0, value, size);
-  g_assert (buf != NULL);
+  g_assert_nonnull (buf);
 
   gst_buffer_add_video_meta_full (buf,
       GST_VIDEO_FRAME_FLAG_NONE,

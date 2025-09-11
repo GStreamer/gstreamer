@@ -108,7 +108,7 @@ static void
 pad_added_cb (GstElement * rtpbin, GstPad * new_pad, GstElement * depay)
 {
   GstPad *sinkpad;
-  GstPadLinkReturn lres;
+  GstPadLinkReturn lres GST_UNUSED_ASSERT;
 
   g_print ("new payload on pad: %s\n", GST_PAD_NAME (new_pad));
 
@@ -136,8 +136,8 @@ main (int argc, char *argv[])
   GstElement *pipeline;
   GMainLoop *loop;
   GstCaps *caps;
-  gboolean res;
-  GstPadLinkReturn lres;
+  gboolean res GST_UNUSED_ASSERT;
+  GstPadLinkReturn lres GST_UNUSED_ASSERT;
   GstPad *srcpad, *sinkpad;
 
   /* always init first */

@@ -90,7 +90,7 @@ static GdkPixbuf *
 create_overlay_pixbuf (void)
 {
   GZlibDecompressor *decompress;
-  GConverterResult decomp_res;
+  GConverterResult decomp_res GST_UNUSED_ASSERT;
   guchar *gzipped_pixdata, *pixdata, *pixels_copy;
   gsize gzipped_size, bytes_read, pixdata_size;
   guint stride, width, height;

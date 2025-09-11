@@ -346,7 +346,7 @@ _rtp_buffer_get_ssrc (GstBuffer * buf)
 {
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   guint32 ret;
-  g_assert (gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp));
+  g_assert_true (gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp));
   ret = gst_rtp_buffer_get_ssrc (&rtp);
   gst_rtp_buffer_unmap (&rtp);
   return ret;
@@ -357,7 +357,7 @@ _rtp_buffer_get_ts (GstBuffer * buf)
 {
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   guint32 ret;
-  g_assert (gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp));
+  g_assert_true (gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp));
   ret = gst_rtp_buffer_get_timestamp (&rtp);
   gst_rtp_buffer_unmap (&rtp);
   return ret;

@@ -58,7 +58,7 @@ create_rtp_vp8_buffer_full (guint seqnum, guint picid, gint picid_bits,
   guint8 *packet;
   gsize size;
 
-  g_assert (picid_bits == 0 || picid_bits == 7 || picid_bits == 15);
+  g_assert_true (picid_bits == 0 || picid_bits == 7 || picid_bits == 15);
 
   if (picid_bits == 0) {
     size = sizeof (intra_nopicid_seqnum0);

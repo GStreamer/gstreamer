@@ -242,7 +242,7 @@ test_taglib_apev2mux_check_output_buffer (GstBuffer * buf)
   guint off;
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
-  g_assert (map.size % MP3_FRAME_SIZE == 0);
+  fail_unless_equals_uint64 (map.size % MP3_FRAME_SIZE, 0);
 
   for (off = 0; off < map.size; off += MP3_FRAME_SIZE) {
     fail_unless (memcmp (map.data + off, mp3_dummyhdr,
@@ -262,19 +262,19 @@ test_taglib_apev2mux_with_tags (GstTagList * tags, guint32 mask)
   GstBuffer *outbuf = NULL;
 
   pipeline = gst_pipeline_new ("pipeline");
-  g_assert (pipeline != NULL);
+  g_assert_nonnull (pipeline);
 
   fakesrc = gst_element_factory_make ("fakesrc", "fakesrc");
-  g_assert (fakesrc != NULL);
+  g_assert_nonnull (fakesrc);
 
   apev2mux = gst_element_factory_make ("apev2mux", "apev2mux");
-  g_assert (apev2mux != NULL);
+  g_assert_nonnull (apev2mux);
 
   apedemux = gst_element_factory_make ("apedemux", "apedemux");
-  g_assert (apedemux != NULL);
+  g_assert_nonnull (apedemux);
 
   fakesink = gst_element_factory_make ("fakesink", "fakesink");
-  g_assert (fakesink != NULL);
+  g_assert_nonnull (fakesink);
 
   /* set up sink */
   outbuf = NULL;

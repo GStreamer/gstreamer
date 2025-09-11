@@ -242,7 +242,7 @@ GST_START_TEST (test_gap)
   gst_buffer_map (out_buf, &m1, GST_MAP_READ);
   gst_buffer_map (buf, &m2, GST_MAP_READ);
 
-  g_assert (m1.size == m2.size);
+  fail_unless_equals_uint64 (m1.size, m2.size);
   /* We cheated by passing an input buffer with non-silence that has the GAP
    * flag set.  The element cannot know that however and must have skipped
    * adjusting the buffer because of the flag, which we can easily verify: */

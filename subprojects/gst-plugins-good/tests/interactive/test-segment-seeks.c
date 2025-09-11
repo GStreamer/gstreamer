@@ -87,7 +87,7 @@ main (int argc, char **argv)
   start = 0;
   do {
     GstSeekFlags seek_flags;
-    gboolean ret;
+    gboolean ret GST_UNUSED_ASSERT;
     gboolean segment_done = FALSE;
 
     seek_flags = GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_SEGMENT;
