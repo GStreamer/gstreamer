@@ -439,13 +439,15 @@ _free_swh_cb (GstSetWindowHandleCb * data)
 void
 gst_gl_window_set_window_handle (GstGLWindow * window, guintptr handle)
 {
-  GstGLWindowClass *window_class;
+  GstGLWindowClass *window_class GST_UNUSED_CHECKS;
   GstSetWindowHandleCb *data;
 
   g_return_if_fail (GST_IS_GL_WINDOW (window));
   g_return_if_fail (handle != 0);
+#ifndef G_DISABLE_CHECKS
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_if_fail (window_class->set_window_handle != NULL);
+#endif
 
   data = g_new (GstSetWindowHandleCb, 1);
   data->window = gst_object_ref (window);

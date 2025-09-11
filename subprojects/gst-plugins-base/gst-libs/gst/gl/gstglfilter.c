@@ -1021,7 +1021,9 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstGLFilter *filter = GST_GL_FILTER (bt);
+#ifndef G_DISABLE_ASSERT
   GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (bt);
+#endif
   GstGLDisplay *display = GST_GL_BASE_FILTER (bt)->display;
   GstGLContext *context = GST_GL_BASE_FILTER (bt)->context;
   GstGLSyncMeta *out_sync_meta, *in_sync_meta;

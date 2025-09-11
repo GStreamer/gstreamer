@@ -92,6 +92,7 @@ _gst_gl_query_type_to_gl (GstGLQueryType query_type)
   return 0;
 }
 
+#ifndef G_DISABLE_CHECKS
 static gboolean
 _query_type_supports_counter (guint gl_query_type)
 {
@@ -103,6 +104,7 @@ _query_type_supports_begin_end (guint gl_query_type)
 {
   return gl_query_type == GL_TIME_ELAPSED;
 }
+#endif
 
 static gboolean
 _context_supports_query_type (GstGLContext * context, guint gl_query_type)

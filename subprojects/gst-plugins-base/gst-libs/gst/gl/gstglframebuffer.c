@@ -396,6 +396,7 @@ _update_effective_dimensions (GstGLFramebuffer * fb)
   fb->priv->effective_height = min_height;
 }
 
+#ifndef G_DISABLE_CHECKS
 static gboolean
 _is_valid_attachment_point (guint attachment_point)
 {
@@ -417,6 +418,7 @@ _is_valid_attachment_point (guint attachment_point)
 
   return FALSE;
 }
+#endif
 
 static void
 _attach_gl_memory (GstGLFramebuffer * fb, guint attachment_point,

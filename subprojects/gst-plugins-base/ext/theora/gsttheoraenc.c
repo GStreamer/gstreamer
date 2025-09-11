@@ -971,7 +971,7 @@ theora_enc_handle_frame (GstVideoEncoder * benc, GstVideoCodecFrame * frame)
 
   {
     th_ycbcr_buffer ycbcr;
-    gint res, keyframe_interval;
+    gint keyframe_interval, res GST_UNUSED_ASSERT;
     GstVideoFrame vframe;
 
     if (force_keyframe) {

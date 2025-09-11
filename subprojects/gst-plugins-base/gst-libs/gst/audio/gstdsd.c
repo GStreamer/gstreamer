@@ -447,7 +447,7 @@ gboolean
 gst_dsd_info_from_caps (GstDsdInfo * info, const GstCaps * caps)
 {
   GstStructure *fmt_structure;
-  const gchar *media_type;
+  const gchar *media_type GST_UNUSED_CHECKS;
   const gchar *format_str = NULL;
   const gchar *layout_str = NULL;
   gboolean reversed_bytes = FALSE;
@@ -460,9 +460,10 @@ gst_dsd_info_from_caps (GstDsdInfo * info, const GstCaps * caps)
   g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
 
   fmt_structure = gst_caps_get_structure (caps, 0);
+#ifndef G_DISABLE_CHECKS
   media_type = gst_structure_get_name (fmt_structure);
-
   g_return_val_if_fail (g_strcmp0 (media_type, GST_DSD_MEDIA_TYPE) == 0, FALSE);
+#endif
 
   /* Parse the format */
 

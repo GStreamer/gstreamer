@@ -145,6 +145,7 @@ gst_glsl_stage_init (GstGLSLStage * stage)
   stage->priv = gst_glsl_stage_get_instance_private (stage);
 }
 
+#ifndef G_DISABLE_CHECKS
 static gboolean
 _is_valid_shader_type (GLenum type)
 {
@@ -160,6 +161,7 @@ _is_valid_shader_type (GLenum type)
       return FALSE;
   }
 }
+#endif
 
 static const gchar *
 _shader_type_to_string (GLenum type)

@@ -1867,10 +1867,12 @@ gst_decodebin_input_free (DecodebinInput * input)
 static gboolean
 sink_query_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstQuery * query)
 {
+#ifndef G_DISABLE_CHECKS
   DecodebinInput *input =
       g_object_get_data (G_OBJECT (sinkpad), "decodebin.input");
 
   g_return_val_if_fail (input, FALSE);
+#endif
 
   GST_DEBUG_OBJECT (sinkpad, "query %" GST_PTR_FORMAT, query);
 

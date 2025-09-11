@@ -414,7 +414,7 @@ gboolean
 gst_video_frame_copy (GstVideoFrame * dest, const GstVideoFrame * src)
 {
   guint i, n_planes;
-  const GstVideoInfo *sinfo;
+  const GstVideoInfo *sinfo GST_UNUSED_CHECKS;
   GstVideoInfo *dinfo;
 
   g_return_val_if_fail (dest != NULL, FALSE);

@@ -935,15 +935,16 @@ gst_gl_context_glx_get_config (GstGLContext * context)
 {
   GstGLContextGLX *glx = GST_GL_CONTEXT_GLX (context);
   GstGLWindow *window;
-  GstGLWindowX11 *window_x11;
+  GstGLWindowX11 *window_x11 GST_UNUSED_CHECKS;
   Display *device;
   GstStructure *ret;
 
   window = gst_gl_context_get_window (context);
   device = (Display *) gst_gl_display_get_handle (window->display);
+#ifndef G_DISABLE_CHECKS
   window_x11 = GST_GL_WINDOW_X11 (window);
-
   g_return_val_if_fail (glx->priv->fbconfigs || window_x11->visual_info, NULL);
+#endif
 
   if (glx->priv->fbconfigs) {
     ret = fb_config_to_structure (context, device, glx->priv->fbconfigs[0]);

@@ -413,7 +413,7 @@ gst_gl_context_new_wrapped (GstGLDisplay * display, guintptr handle,
   GstGLContext *context;
   GstGLWrappedContext *context_wrap = NULL;
   GstGLContextClass *context_class;
-  GstGLAPI display_api;
+  GstGLAPI display_api GST_UNUSED_CHECKS;
 
   _init_debug ();
 
@@ -424,9 +424,11 @@ gst_gl_context_new_wrapped (GstGLDisplay * display, guintptr handle,
   g_return_val_if_fail (context_type != GST_GL_PLATFORM_NONE, NULL);
   g_return_val_if_fail (context_type != GST_GL_PLATFORM_ANY, NULL);
 
+#ifndef G_DISABLE_CHECKS
   display_api = gst_gl_display_get_gl_api (display);
   g_return_val_if_fail ((display_api & available_apis) != GST_GL_API_NONE,
       NULL);
+#endif
 
   context_wrap = g_object_new (GST_TYPE_GL_WRAPPED_CONTEXT, NULL);
   gst_object_ref_sink (context_wrap);

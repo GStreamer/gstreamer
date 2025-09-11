@@ -1460,7 +1460,7 @@ _direct_dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
     for (i = 0; i < n; i++) {
       GstStructure *s = gst_caps_get_structure (ret, i);
 
-#ifndef G_DISABLE_ASSERTS
+#ifndef G_DISABLE_ASSERT
       const gchar *format = gst_structure_get_string (s, "format");
       g_assert (format == NULL || g_strcmp0 (format, "RGBA") == 0);
 #endif

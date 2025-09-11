@@ -296,8 +296,10 @@ gst_rtp_header_extension_write (GstRTPHeaderExtension * ext,
     const GstBuffer * input_meta, GstRTPHeaderExtensionFlags write_flags,
     GstBuffer * output, guint8 * data, gsize size)
 {
+#ifndef G_DISABLE_CHECKS
   GstRTPHeaderExtensionPrivate *priv =
       gst_rtp_header_extension_get_instance_private (ext);
+#endif
   GstRTPHeaderExtensionClass *klass;
 
   g_return_val_if_fail (GST_IS_BUFFER (input_meta), -1);
@@ -332,8 +334,10 @@ gst_rtp_header_extension_read (GstRTPHeaderExtension * ext,
     GstRTPHeaderExtensionFlags read_flags, const guint8 * data, gsize size,
     GstBuffer * buffer)
 {
+#ifndef G_DISABLE_CHECKS
   GstRTPHeaderExtensionPrivate *priv =
       gst_rtp_header_extension_get_instance_private (ext);
+#endif
   GstRTPHeaderExtensionClass *klass;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
@@ -597,8 +601,10 @@ gboolean
 gst_rtp_header_extension_set_non_rtp_sink_caps (GstRTPHeaderExtension * ext,
     const GstCaps * caps)
 {
+#ifndef G_DISABLE_CHECKS
   GstRTPHeaderExtensionPrivate *priv =
       gst_rtp_header_extension_get_instance_private (ext);
+#endif
   GstRTPHeaderExtensionClass *klass;
 
   g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
@@ -668,8 +674,10 @@ gboolean
 gst_rtp_header_extension_set_caps_from_attributes (GstRTPHeaderExtension * ext,
     GstCaps * caps)
 {
+#ifndef G_DISABLE_CHECKS
   GstRTPHeaderExtensionPrivate *priv =
       gst_rtp_header_extension_get_instance_private (ext);
+#endif
   GstRTPHeaderExtensionClass *klass;
 
   g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);

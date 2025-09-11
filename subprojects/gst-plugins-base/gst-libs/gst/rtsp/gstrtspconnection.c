@@ -3833,7 +3833,7 @@ gst_rtsp_connection_do_tunnel (GstRTSPConnection * conn,
 
   if (conn2 != NULL) {
     GstRTSPTunnelState ts1 = conn->tstate;
-    GstRTSPTunnelState ts2 = conn2->tstate;
+    GstRTSPTunnelState ts2 GST_UNUSED_CHECKS = conn2->tstate;
 
     g_return_val_if_fail ((ts1 == TUNNEL_STATE_GET && ts2 == TUNNEL_STATE_POST)
         || (ts1 == TUNNEL_STATE_POST && ts2 == TUNNEL_STATE_GET),

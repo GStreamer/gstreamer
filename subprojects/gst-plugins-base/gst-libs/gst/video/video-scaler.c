@@ -1622,8 +1622,7 @@ gst_video_scaler_2d (GstVideoScaler * hscale, GstVideoScaler * vscale,
             guint l = in + j * src_inc;
 
             g_assert (l < vscale->resampler.in_size);
-            lines[j * src_inc] =
-                LINE (src, src_stride, in + j * src_inc) + vx * n_elems;
+            lines[j * src_inc] = LINE (src, src_stride, l) + vx * n_elems;
           }
 
           vfunc (vscale, lines, TMP_LINE (vscale, 0) + vx * n_elems, i,

@@ -494,12 +494,14 @@ static GstGLBuffer *
 _gl_buffer_alloc_mem (GstGLBufferAllocator * allocator,
     GstGLBufferAllocationParams * params)
 {
+#ifndef G_DISABLE_CHECKS
   guint alloc_flags = params->parent.alloc_flags;
 
   g_return_val_if_fail (alloc_flags &
       GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_BUFFER, NULL);
   g_return_val_if_fail (alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_ALLOC,
       NULL);
+#endif
 
   return _gl_buffer_new (GST_ALLOCATOR (allocator), NULL,
       params->parent.context, params->gl_target, params->gl_usage,

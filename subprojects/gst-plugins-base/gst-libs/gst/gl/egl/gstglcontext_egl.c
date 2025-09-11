@@ -654,7 +654,7 @@ gst_gl_context_egl_choose_config (GstGLContextEGL * egl, GstGLAPI gl_api,
 {
   gboolean create_context;
   EGLint numConfigs;
-  gint i, n;
+  gint i, n GST_UNUSED_ASSERT;
   EGLint config_attrib[20];
   EGLint egl_api = 0;
   EGLBoolean ret = EGL_FALSE;

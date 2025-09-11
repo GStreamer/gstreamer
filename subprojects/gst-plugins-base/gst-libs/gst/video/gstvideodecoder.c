@@ -2421,10 +2421,12 @@ gst_video_decoder_chain_forward (GstVideoDecoder * decoder,
     GstBuffer * buf, gboolean at_eos)
 {
   GstVideoDecoderPrivate *priv;
-  GstVideoDecoderClass *klass;
+  GstVideoDecoderClass *klass GST_UNUSED_CHECKS;
   GstFlowReturn ret = GST_FLOW_OK;
 
+#ifndef G_DISABLE_CHECKS
   klass = GST_VIDEO_DECODER_GET_CLASS (decoder);
+#endif
   priv = decoder->priv;
 
   g_return_val_if_fail (priv->packetized || klass->parse, GST_FLOW_ERROR);
