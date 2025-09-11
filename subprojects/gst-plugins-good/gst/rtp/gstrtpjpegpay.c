@@ -930,7 +930,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
       for (i = 0; i < 2; i++) {
         guint qsize;
         guint qt;
-        gsize rc;
+        gsize rc GST_UNUSED_ASSERT;
 
         qt = info[i].qt;
         qsize = tables[qt].size;

@@ -3291,7 +3291,7 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
     switch (splitmux->input_state) {
       case SPLITMUX_INPUT_STATE_COLLECTING_GOP_START:
         if (ctx->is_reference) {
-          const InputGop *gop, *next_gop;
+          const InputGop *gop GST_UNUSED_ASSERT, *next_gop;
 
           /* This is the reference context. If it's a keyframe,
            * it marks the start of a new GOP and we should wait in
@@ -3300,8 +3300,10 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
            * so set loop_again to FALSE */
           loop_again = FALSE;
 
+#ifndef G_DISABLE_ASSERT
           gop = g_queue_peek_head (&splitmux->pending_input_gops);
           g_assert (gop != NULL);
+#endif
           next_gop = g_queue_peek_nth (&splitmux->pending_input_gops, 1);
 
           if (ctx->in_running_time > splitmux->max_in_running_time)

@@ -3091,7 +3091,7 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
   GstClockTime reserved_max_duration;
   guint reserved_bytes_per_sec_per_trak;
   GList *l;
-  GstCaps *trunc_caps G_GNUC_UNUSED;    /* G_DISABLE_ASSERT */
+  GstCaps *trunc_caps GST_UNUSED_ASSERT;
 
   GST_DEBUG_OBJECT (qtmux, "starting file");
 
@@ -4963,7 +4963,7 @@ gst_qt_mux_check_and_update_timecode (GstQTMux * qtmux, GstQTMuxPad * pad,
   GstVideoTimeCodeMeta *tc_meta;
   GstVideoTimeCode *tc;
   GstBuffer *tc_buf;
-  gsize szret;
+  gsize szret GST_UNUSED_ASSERT;
   guint32 frames_since_daily_jam;
   GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
 

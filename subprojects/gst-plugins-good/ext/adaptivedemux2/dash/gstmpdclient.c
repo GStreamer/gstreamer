@@ -718,7 +718,7 @@ gst_mpd_client2_parse_baseURL (GstMPDClient2 * client, GstActiveStream * stream,
     gchar ** query)
 {
   GstStreamPeriod *stream_period;
-  static const gchar empty[] = "";
+  static const gchar empty[] GST_UNUSED_CHECKS = "";
   gchar *ret = NULL;
   GstUri *abs_url;
 
@@ -2311,14 +2311,16 @@ gst_mpd_client2_get_next_header (GstMPDClient2 * client, gchar ** uri,
     guint stream_idx, gint64 * range_start, gint64 * range_end)
 {
   GstActiveStream *stream;
-  GstStreamPeriod *stream_period;
+  GstStreamPeriod *stream_period GST_UNUSED_CHECKS;
 
   stream = gst_mpd_client2_get_active_stream_by_index (client, stream_idx);
   g_return_val_if_fail (stream != NULL, FALSE);
   g_return_val_if_fail (stream->cur_representation != NULL, FALSE);
+#ifndef G_DISABLE_CHECKS
   stream_period = gst_mpd_client2_get_stream_period (client);
   g_return_val_if_fail (stream_period != NULL, FALSE);
   g_return_val_if_fail (stream_period->period != NULL, FALSE);
+#endif
 
   *range_start = 0;
   *range_end = -1;
@@ -2357,14 +2359,16 @@ gst_mpd_client2_get_next_header_index (GstMPDClient2 * client, gchar ** uri,
     guint stream_idx, gint64 * range_start, gint64 * range_end)
 {
   GstActiveStream *stream;
-  GstStreamPeriod *stream_period;
+  GstStreamPeriod *stream_period GST_UNUSED_CHECKS;
 
   stream = gst_mpd_client2_get_active_stream_by_index (client, stream_idx);
   g_return_val_if_fail (stream != NULL, FALSE);
   g_return_val_if_fail (stream->cur_representation != NULL, FALSE);
+#ifndef G_DISABLE_CHECKS
   stream_period = gst_mpd_client2_get_stream_period (client);
   g_return_val_if_fail (stream_period != NULL, FALSE);
   g_return_val_if_fail (stream_period->period != NULL, FALSE);
+#endif
 
   *range_start = 0;
   *range_end = -1;

@@ -1035,7 +1035,8 @@ add_to_active_readers (GstSplitMuxSrc * splitmux,
     if (gst_splitmux_part_reader_is_loaded (reader)) {
       /* Already in the queue, and reffed, move it to the end without
        * adding another ref */
-      gboolean in_queue = g_queue_remove (splitmux->active_parts, reader);
+      gboolean in_queue GST_UNUSED_ASSERT =
+          g_queue_remove (splitmux->active_parts, reader);
       g_assert (in_queue == TRUE);
     } else {
       /* Putting it in the queue. Add a ref */
@@ -1131,8 +1132,7 @@ gst_splitmux_src_measure_next_part (GstSplitMuxSrc * splitmux)
     end_offset = gst_splitmux_part_reader_get_end_offset (reader);
   }
 
-  for (guint idx = splitmux->num_measured_parts; idx < splitmux->num_parts;
-      idx++) {
+  for (; idx < splitmux->num_parts; idx++) {
     /* Walk forward until we find a part that needs measuring */
     GstSplitMuxPartReader *reader = splitmux->parts[idx];
 
