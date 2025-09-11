@@ -63,9 +63,9 @@ GST_START_TEST (basesrc_eos_events_push_live_op)
   sink = gst_element_factory_make ("fakesink", "sink");
   src = gst_element_factory_make ("fakesrc", "src");
 
-  g_assert (pipe != NULL);
-  g_assert (sink != NULL);
-  g_assert (src != NULL);
+  g_assert_nonnull (pipe);
+  g_assert_nonnull (sink);
+  g_assert_nonnull (src);
 
   fail_unless (gst_bin_add (GST_BIN (pipe), src) == TRUE);
   fail_unless (gst_bin_add (GST_BIN (pipe), sink) == TRUE);
@@ -148,9 +148,9 @@ GST_START_TEST (basesrc_eos_events_push)
   sink = gst_element_factory_make ("fakesink", "sink");
   src = gst_element_factory_make ("fakesrc", "src");
 
-  g_assert (pipe != NULL);
-  g_assert (sink != NULL);
-  g_assert (src != NULL);
+  g_assert_nonnull (pipe);
+  g_assert_nonnull (sink);
+  g_assert_nonnull (src);
 
   fail_unless (gst_bin_add (GST_BIN (pipe), src) == TRUE);
   fail_unless (gst_bin_add (GST_BIN (pipe), sink) == TRUE);
@@ -220,9 +220,9 @@ GST_START_TEST (basesrc_eos_events_pull_live_op)
   sink = gst_element_factory_make ("fakesink", "sink");
   src = gst_element_factory_make ("fakesrc", "src");
 
-  g_assert (pipe != NULL);
-  g_assert (sink != NULL);
-  g_assert (src != NULL);
+  g_assert_nonnull (pipe);
+  g_assert_nonnull (sink);
+  g_assert_nonnull (src);
 
   fail_unless (gst_bin_add (GST_BIN (pipe), src) == TRUE);
   fail_unless (gst_bin_add (GST_BIN (pipe), sink) == TRUE);
@@ -291,9 +291,9 @@ GST_START_TEST (basesrc_eos_events_pull)
   sink = gst_element_factory_make ("fakesink", "sink");
   src = gst_element_factory_make ("fakesrc", "src");
 
-  g_assert (pipe != NULL);
-  g_assert (sink != NULL);
-  g_assert (src != NULL);
+  g_assert_nonnull (pipe);
+  g_assert_nonnull (sink);
+  g_assert_nonnull (src);
 
   fail_unless (gst_bin_add (GST_BIN (pipe), src) == TRUE);
   fail_unless (gst_bin_add (GST_BIN (pipe), sink) == TRUE);
@@ -362,9 +362,9 @@ GST_START_TEST (basesrc_eos_events_push_live_eos)
   sink = gst_element_factory_make ("fakesink", "sink");
   src = gst_element_factory_make ("fakesrc", "src");
 
-  g_assert (pipe != NULL);
-  g_assert (sink != NULL);
-  g_assert (src != NULL);
+  g_assert_nonnull (pipe);
+  g_assert_nonnull (sink);
+  g_assert_nonnull (src);
 
   fail_unless (gst_bin_add (GST_BIN (pipe), src) == TRUE);
   fail_unless (gst_bin_add (GST_BIN (pipe), sink) == TRUE);
@@ -439,9 +439,9 @@ GST_START_TEST (basesrc_eos_events_pull_live_eos)
   sink = gst_element_factory_make ("fakesink", "sink");
   src = gst_element_factory_make ("fakesrc", "src");
 
-  g_assert (pipe != NULL);
-  g_assert (sink != NULL);
-  g_assert (src != NULL);
+  g_assert_nonnull (pipe);
+  g_assert_nonnull (sink);
+  g_assert_nonnull (src);
 
   fail_unless (gst_bin_add (GST_BIN (pipe), src) == TRUE);
   fail_unless (gst_bin_add (GST_BIN (pipe), sink) == TRUE);
@@ -540,9 +540,9 @@ GST_START_TEST (basesrc_seek_events_rate_update)
   sink = gst_element_factory_make ("fakesink", "sink");
   src = gst_element_factory_make ("fakesrc", "src");
 
-  g_assert (pipe != NULL);
-  g_assert (sink != NULL);
-  g_assert (src != NULL);
+  g_assert_nonnull (pipe);
+  g_assert_nonnull (sink);
+  g_assert_nonnull (src);
 
   fail_unless (gst_bin_add (GST_BIN (pipe), src) == TRUE);
   fail_unless (gst_bin_add (GST_BIN (pipe), sink) == TRUE);
@@ -677,9 +677,9 @@ GST_START_TEST (basesrc_seek_on_last_buffer)
   sink = gst_element_factory_make ("fakesink", "sink");
   src = gst_element_factory_make ("fakesrc", "src");
 
-  g_assert (pipe != NULL);
-  g_assert (sink != NULL);
-  g_assert (src != NULL);
+  g_assert_nonnull (pipe);
+  g_assert_nonnull (sink);
+  g_assert_nonnull (src);
 
   /* use 'sizemax' buffers to avoid receiving empty buffers */
   g_object_set (src, "sizetype", 2, NULL);

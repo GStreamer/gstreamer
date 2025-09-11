@@ -1162,7 +1162,7 @@ GST_START_TEST (test_ghost_pads_remove_while_playing)
   gst_pad_add_probe (ghostsrc, GST_PAD_PROBE_TYPE_BUFFER,
       remove_ghostpad_probe_cb, NULL, NULL);
 
-  g_assert (gst_pad_push (srcpad, gst_buffer_new ()) == GST_FLOW_OK);
+  g_assert_true (gst_pad_push (srcpad, gst_buffer_new ()) == GST_FLOW_OK);
 
   gst_pad_set_active (srcpad, FALSE);
   gst_element_set_state (bin, GST_STATE_NULL);

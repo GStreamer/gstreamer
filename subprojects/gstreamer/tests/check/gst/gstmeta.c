@@ -280,7 +280,7 @@ GST_START_TEST (test_meta_test)
 
 GST_END_TEST;
 
-static gboolean
+GST_UNUSED_CHECKS static gboolean
 foreach_meta (GstBuffer * buffer, GstMeta ** meta, gpointer user_data)
 {
   /* try to remove */

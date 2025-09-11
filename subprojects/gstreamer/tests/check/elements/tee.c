@@ -269,7 +269,7 @@ final_sinkpad_bufferalloc (GstPad * pad, guint64 offset, guint size,
 
   h = g_object_get_qdata (G_OBJECT (pad),
       g_quark_from_static_string ("buffer-alloc-harness"));
-  g_assert (h != NULL);
+  g_assert_nonnull (h);
 
   if (--(h->countdown) == 0) {
     /* Time to make the app release the pad. */

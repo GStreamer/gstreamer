@@ -221,7 +221,7 @@ GST_START_TEST (test_state_changes_up_failure)
   int n;
 
   /* we want at least one before and one after */
-  g_assert (G_N_ELEMENTS (mid) >= 3);
+  g_assert_cmpuint (G_N_ELEMENTS (mid), >=, 3);
 
   /* make a bin */
   bin = gst_element_factory_make ("bin", NULL);

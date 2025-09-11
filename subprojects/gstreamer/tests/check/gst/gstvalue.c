@@ -449,6 +449,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_serialize_flags_invalid)
 {
+#ifndef G_DISABLE_CHECKS
   GValue value = { 0 };
   gchar *string;
 
@@ -469,6 +470,7 @@ GST_START_TEST (test_serialize_flags_invalid)
   fail_unless (strcmp (string, "0") == 0,
       "resulting value is %s, not 0, for invalid flags", string);
   g_free (string);
+#endif
 }
 
 GST_END_TEST;

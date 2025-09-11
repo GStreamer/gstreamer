@@ -45,7 +45,7 @@ main (gint argc, gchar * argv[])
   start = gst_util_get_timestamp ();
 
   pipeline = gst_element_factory_make ("pipeline", NULL);
-  g_assert (pipeline);
+  g_assert_nonnull (pipeline);
 
   e = gst_element_factory_make ("fakesrc", NULL);
   g_object_set (e, "num-buffers", BUFFER_COUNT, NULL);

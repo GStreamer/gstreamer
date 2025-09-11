@@ -51,7 +51,7 @@ main (gint argc, gchar * argv[])
       src_name, buffers, identities, sink_name);
   start = gst_util_get_timestamp ();
   pipeline = gst_element_factory_make ("pipeline", NULL);
-  g_assert (pipeline);
+  g_assert_nonnull (pipeline);
   src = gst_element_factory_make (src_name, NULL);
   if (!src) {
     g_print ("no element named \"%s\" found, aborting...\n", src_name);
@@ -67,7 +67,7 @@ main (gint argc, gchar * argv[])
   gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
   for (i = 0; i < identities; i++) {
     current = gst_element_factory_make ("identity", NULL);
-    g_assert (current);
+    g_assert_nonnull (current);
     /* shut this element up (no g_strdup_printf please) */
     g_object_set (current, "silent", TRUE, NULL);
     gst_bin_add (GST_BIN (pipeline), current);

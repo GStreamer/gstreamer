@@ -377,7 +377,7 @@ my_foo_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstBuffer *new_buf;
 
-  g_assert (prop_id == PROP_BUFFER);
+  fail_unless_equals_uint64 (prop_id, PROP_BUFFER);
 
   new_buf = gst_buffer_new_and_alloc (1024);
   g_value_set_boxed (value, GST_MINI_OBJECT (new_buf));
@@ -390,10 +390,10 @@ my_foo_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstMiniObject *mini_obj;
 
-  g_assert (prop_id == PROP_BUFFER);
+  fail_unless_equals_uint64 (prop_id, PROP_BUFFER);
 
   mini_obj = g_value_get_boxed (value);
-  g_assert (GST_IS_BUFFER (mini_obj));
+  g_assert_true (GST_IS_BUFFER (mini_obj));
 
 #if 0
   /* gst_value_dup_mini_object() does not exist yet */
@@ -427,14 +427,16 @@ GST_START_TEST (test_value_collection)
 
   /* test g_object_get() refcounting */
   g_object_get (foo, "buffer", &buf, NULL);
-  g_assert (GST_IS_BUFFER (buf));
-  g_assert (GST_MINI_OBJECT_REFCOUNT_VALUE (GST_MINI_OBJECT_CAST (buf)) == 1);
+  g_assert_true (GST_IS_BUFFER (buf));
+  g_assert_cmpuint (GST_MINI_OBJECT_REFCOUNT_VALUE (GST_MINI_OBJECT_CAST (buf)),
+      ==, 1);
   gst_buffer_unref (buf);
 
   /* test g_object_set() refcounting */
   buf = gst_buffer_new_and_alloc (1024);
   g_object_set (foo, "buffer", buf, NULL);
-  g_assert (GST_MINI_OBJECT_REFCOUNT_VALUE (GST_MINI_OBJECT_CAST (buf)) == 1);
+  g_assert_cmpuint (GST_MINI_OBJECT_REFCOUNT_VALUE (GST_MINI_OBJECT_CAST (buf)),
+      ==, 1);
   gst_buffer_unref (buf);
 
   g_object_unref (foo);
@@ -453,7 +455,7 @@ GST_START_TEST (test_dup_null_mini_object)
   g_value_set_boxed (&value, NULL);
 
   mo = GST_MINI_OBJECT_CAST (g_value_dup_boxed (&value));
-  g_assert (mo == NULL);
+  g_assert_null (mo);
 
   g_value_unset (&value);
 }

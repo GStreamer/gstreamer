@@ -46,8 +46,8 @@ data_probe (GstPad * pad, GstPadProbeInfo * info, gpointer data)
   GstMiniObject *obj = GST_PAD_PROBE_INFO_DATA (info);
   n_data_probes++;
   GST_DEBUG_OBJECT (pad, "data probe %d", n_data_probes);
-  g_assert (GST_IS_BUFFER (obj) || GST_IS_EVENT (obj));
-  g_assert (data == SPECIAL_POINTER (0));
+  g_assert_true (GST_IS_BUFFER (obj) || GST_IS_EVENT (obj));
+  g_assert_true (data == SPECIAL_POINTER (0));
   return GST_PAD_PROBE_OK;
 }
 
@@ -57,8 +57,8 @@ buffer_probe (GstPad * pad, GstPadProbeInfo * info, gpointer data)
   GstBuffer *obj = GST_PAD_PROBE_INFO_BUFFER (info);
   n_buffer_probes++;
   GST_DEBUG_OBJECT (pad, "buffer probe %d", n_buffer_probes);
-  g_assert (GST_IS_BUFFER (obj));
-  g_assert (data == SPECIAL_POINTER (1));
+  g_assert_true (GST_IS_BUFFER (obj));
+  g_assert_true (data == SPECIAL_POINTER (1));
   return GST_PAD_PROBE_OK;
 }
 
@@ -69,8 +69,8 @@ event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer data)
   n_event_probes++;
   GST_DEBUG_OBJECT (pad, "event probe %d [%s]",
       n_event_probes, GST_EVENT_TYPE_NAME (obj));
-  g_assert (GST_IS_EVENT (obj));
-  g_assert (data == SPECIAL_POINTER (2));
+  g_assert_true (GST_IS_EVENT (obj));
+  g_assert_true (data == SPECIAL_POINTER (2));
   return GST_PAD_PROBE_OK;
 }
 
@@ -118,17 +118,17 @@ GST_START_TEST (test_buffer_probe_n_times)
   gst_message_unref (message);
   gst_object_unref (bus);
 
-  g_assert (n_buffer_probes == 10);     /* one for every buffer */
-  g_assert (n_event_probes == 4);       /* stream-start, new segment, latency and eos */
-  g_assert (n_data_probes == 14);       /* duh */
+  fail_unless_equals_int (n_buffer_probes, 10); /* one for every buffer */
+  fail_unless_equals_int (n_event_probes, 4);   /* stream-start, new segment, latency and eos */
+  fail_unless_equals_int (n_data_probes, 14);   /* duh */
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
 
   /* make sure nothing was sent in addition to the above when shutting down */
-  g_assert (n_buffer_probes == 10);     /* one for every buffer */
-  g_assert (n_event_probes == 4);       /* stream-start, new segment, latency and eos */
-  g_assert (n_data_probes == 14);       /* duh */
+  fail_unless_equals_int (n_buffer_probes, 10); /* one for every buffer */
+  fail_unless_equals_int (n_event_probes, 4);   /* stream-start, new segment, latency and eos */
+  fail_unless_equals_int (n_data_probes, 14);   /* duh */
 } GST_END_TEST;
 
 static int n_data_probes_once = 0;
@@ -141,7 +141,7 @@ data_probe_once (GstPad * pad, GstPadProbeInfo * info, guint * data)
   GstMiniObject *obj = GST_PAD_PROBE_INFO_DATA (info);
 
   n_data_probes_once++;
-  g_assert (GST_IS_BUFFER (obj) || GST_IS_EVENT (obj));
+  g_assert_true (GST_IS_BUFFER (obj) || GST_IS_EVENT (obj));
 
   gst_pad_remove_probe (pad, *data);
 
@@ -154,7 +154,7 @@ buffer_probe_once (GstPad * pad, GstPadProbeInfo * info, guint * data)
   GstBuffer *obj = GST_PAD_PROBE_INFO_BUFFER (info);
 
   n_buffer_probes_once++;
-  g_assert (GST_IS_BUFFER (obj));
+  g_assert_true (GST_IS_BUFFER (obj));
 
   gst_pad_remove_probe (pad, *data);
 
@@ -167,7 +167,7 @@ event_probe_once (GstPad * pad, GstPadProbeInfo * info, guint * data)
   GstEvent *obj = GST_PAD_PROBE_INFO_EVENT (info);
 
   n_event_probes_once++;
-  g_assert (GST_IS_EVENT (obj));
+  g_assert_true (GST_IS_EVENT (obj));
 
   gst_pad_remove_probe (pad, *data);
 
@@ -213,9 +213,9 @@ GST_START_TEST (test_buffer_probe_once)
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
 
-  g_assert (n_buffer_probes_once == 1); /* can we hit it and quit? */
-  g_assert (n_event_probes_once == 1);  /* i said, can we hit it and quit? */
-  g_assert (n_data_probes_once == 1);   /* let's hit it and quit!!! */
+  fail_unless_equals_int (n_buffer_probes_once, 1);     /* can we hit it and quit? */
+  fail_unless_equals_int (n_event_probes_once, 1);      /* i said, can we hit it and quit? */
+  fail_unless_equals_int (n_data_probes_once, 1);       /* let's hit it and quit!!! */
 } GST_END_TEST;
 
 GST_START_TEST (test_math_scale)
@@ -429,18 +429,18 @@ GST_START_TEST (test_parse_bin_from_description)
       g_error ("ERROR in gst_parse_bin_from_description (%s): %s",
           bin_tests[i].bin_desc, err->message);
     }
-    g_assert (bin != NULL);
+    g_assert_nonnull (bin);
 
     s = g_string_new ("");
     if ((ghost_pad = gst_element_get_static_pad (bin, "sink"))) {
-      g_assert (GST_IS_GHOST_PAD (ghost_pad));
+      g_assert_true (GST_IS_GHOST_PAD (ghost_pad));
 
       target_pad = gst_ghost_pad_get_target (GST_GHOST_PAD (ghost_pad));
-      g_assert (target_pad != NULL);
-      g_assert (GST_IS_PAD (target_pad));
+      g_assert_nonnull (target_pad);
+      g_assert_true (GST_IS_PAD (target_pad));
 
       parent = gst_pad_get_parent_element (target_pad);
-      g_assert (parent != NULL);
+      g_assert_nonnull (parent);
 
       g_string_append_printf (s, "%s/sink", GST_ELEMENT_NAME (parent));
 
@@ -450,14 +450,14 @@ GST_START_TEST (test_parse_bin_from_description)
     }
 
     if ((ghost_pad = gst_element_get_static_pad (bin, "src"))) {
-      g_assert (GST_IS_GHOST_PAD (ghost_pad));
+      g_assert_true (GST_IS_GHOST_PAD (ghost_pad));
 
       target_pad = gst_ghost_pad_get_target (GST_GHOST_PAD (ghost_pad));
-      g_assert (target_pad != NULL);
-      g_assert (GST_IS_PAD (target_pad));
+      g_assert_nonnull (target_pad);
+      g_assert_true (GST_IS_PAD (target_pad));
 
       parent = gst_pad_get_parent_element (target_pad);
-      g_assert (parent != NULL);
+      g_assert_nonnull (parent);
 
       if (s->len > 0) {
         g_string_append (s, ",");

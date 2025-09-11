@@ -312,7 +312,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_typefind_force_sink_caps)
 {
-  const gchar *s;
+  const gchar *s GST_UNUSED_CHECKS;
 
   s = "fakesrc can-activate-push=true num-buffers=5 ! "
       "typefind force-caps=foo/x-bar ! fakesink can-activate-push=true";

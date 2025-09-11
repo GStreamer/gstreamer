@@ -54,11 +54,13 @@ pull_messages (void)
 {
   GstMessage *m;
   const GstStructure *s;
-  guint message_ids[NUM_THREADS];
+  guint message_ids[NUM_THREADS] GST_UNUSED_CHECKS;
   gint i;
 
+#ifndef G_DISABLE_CHECKS
   for (i = 0; i < NUM_THREADS; i++)
     message_ids[i] = 0;
+#endif
 
   while (1) {
     gint _t, _i;

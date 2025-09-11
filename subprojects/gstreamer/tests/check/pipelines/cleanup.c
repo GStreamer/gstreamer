@@ -44,7 +44,7 @@ run_pipeline (GstElement * pipeline, const gchar * descr,
   GstMessageType revent;
 
   bus = gst_element_get_bus (pipeline);
-  g_assert (bus);
+  g_assert_nonnull (bus);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   while (1) {

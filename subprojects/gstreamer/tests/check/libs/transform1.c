@@ -931,8 +931,10 @@ GST_START_TEST (basetransform_invalid_fixatecaps_impl)
   ASSERT_CRITICAL (gst_test_trans_push_segment (trans));
 
   ASSERT_CRITICAL (res = gst_test_trans_push (trans, buffer));
+#ifndef G_DISABLE_CHECKS
   fail_unless (transform_fixate_caps_invalid_called == TRUE);
   fail_unless (res == GST_FLOW_NOT_NEGOTIATED);
+#endif
 
   gst_test_trans_free (trans);
 }

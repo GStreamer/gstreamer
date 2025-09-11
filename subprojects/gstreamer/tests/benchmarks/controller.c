@@ -41,7 +41,7 @@ event_loop (GstElement * pipe)
   while (running) {
     message = gst_bus_poll (bus, GST_MESSAGE_ANY, -1);
 
-    g_assert (message != NULL);
+    g_assert_nonnull (message);
 
     switch (message->type) {
       case GST_MESSAGE_EOS:

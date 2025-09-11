@@ -41,7 +41,7 @@ run_test (void *user_data)
 
   start = gst_util_get_timestamp ();
 
-  g_assert (nbbuffers > 0);
+  g_assert_cmpuint (nbbuffers, >, 0);
 
   for (nb = nbbuffers; nb; nb--) {
     buf = gst_buffer_new ();
