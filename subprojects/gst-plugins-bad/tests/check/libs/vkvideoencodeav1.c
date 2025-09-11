@@ -136,7 +136,7 @@ _av1_helper_msb (guint n)
   guint value = n;
   int i;
 
-  g_assert (n != 0);
+  g_assert_cmpuint (n, !=, 0);
 
   for (i = 4; i >= 0; --i) {
     const gint shift = (1 << i);

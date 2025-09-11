@@ -397,7 +397,7 @@ static void
 annexb_to_length_prefixed (const guint8 * in_data, gsize size,
     guint8 nal_length_size, guint8 ** out_data, gsize * out_size)
 {
-  g_assert (size > 4);
+  g_assert_cmpuint (size, >, 4);
   *out_size = size - 4 + nal_length_size;
   *out_data = g_malloc (*out_size);
   guint32 length = GUINT32_TO_BE ((size - 4) << (32 - 8 * nal_length_size));

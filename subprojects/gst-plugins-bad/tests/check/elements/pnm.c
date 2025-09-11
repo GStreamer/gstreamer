@@ -52,7 +52,7 @@ GST_START_TEST (test_pnm_enc_dec)
       gst_parse_launch
       ("videotestsrc num-buffers=1 ! capsfilter name=incf ! pnmenc name=enc ! pnmdec ! capsfilter name=outcf ! appsink name=sink",
       NULL);
-  g_assert (pipeline != NULL);
+  g_assert_nonnull (pipeline);
 
   incf = gst_bin_get_by_name (GST_BIN (pipeline), "incf");
   enc = gst_bin_get_by_name (GST_BIN (pipeline), "enc");

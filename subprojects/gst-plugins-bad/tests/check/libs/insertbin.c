@@ -163,7 +163,8 @@ GST_START_TEST (test_insertbin_simple)
   srcpad = gst_check_setup_src_pad (insertbin, &srcpad_template);
   sinkpad = gst_check_setup_sink_pad (insertbin, &sinkpad_template);
 
-  g_assert (srcpad && sinkpad);
+  g_assert_nonnull (srcpad);
+  g_assert_nonnull (sinkpad);
 
   ASSERT_CRITICAL (gst_insert_bin_append (GST_INSERT_BIN (insertbin), NULL,
           NULL, NULL));

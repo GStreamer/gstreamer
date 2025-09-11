@@ -117,7 +117,7 @@ set_buffer_tstamps (GstBuffer * buf, GstClockTime avtp_tstamp,
   pdu = (struct avtp_stream_pdu *) info.data;
 
   r = avtp_pdu_get ((struct avtp_common_pdu *) pdu, AVTP_FIELD_SUBTYPE, &type);
-  g_assert (r == 0);
+  fail_unless_equals_int (r, 0);
   if (type == AVTP_SUBTYPE_AAF)
     avtp_aaf_pdu_set (pdu, AVTP_AAF_FIELD_TIMESTAMP, avtp_tstamp);
   else if (type == AVTP_SUBTYPE_CVF) {

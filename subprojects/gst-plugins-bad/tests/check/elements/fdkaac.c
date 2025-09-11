@@ -76,7 +76,7 @@ encode_with_caps (const gchar * caps_str)
     if (val != NULL) {
       buf = gst_value_get_buffer (val);
       gst_buffer_map (buf, &map, GST_MAP_READ);
-      g_assert (map.size <= 16);
+      g_assert_cmpuint (map.size, <=, 16);
       memcpy (aac_sample.codec_data, map.data, map.size);
       aac_sample.codec_data_len = map.size;
       gst_buffer_unmap (buf, &map);
@@ -86,7 +86,7 @@ encode_with_caps (const gchar * caps_str)
 
     buf = gst_sample_get_buffer (sample);
     gst_buffer_map (buf, &map, GST_MAP_READ);
-    g_assert (map.size >= sizeof (aac_sample.buf_hdr));
+    g_assert_cmpuint (map.size, >=, sizeof (aac_sample.buf_hdr));
     memcpy (aac_sample.buf_hdr, map.data, sizeof (aac_sample.buf_hdr));
     gst_buffer_unmap (buf, &map);
   }

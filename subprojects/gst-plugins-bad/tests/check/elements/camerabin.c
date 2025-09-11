@@ -866,23 +866,23 @@ check_file_validity (const gchar * filename, gint num, GstTagList * taglist,
 
   if (width != 0 && height != 0) {
     g_signal_emit_by_name (playbin, "get-video-pad", 0, &pad, NULL);
-    g_assert (pad != NULL);
+    g_assert_nonnull (pad);
     caps = gst_pad_get_current_caps (pad);
 
-    g_assert (gst_structure_get_int (gst_caps_get_structure (caps, 0),
+    g_assert_true (gst_structure_get_int (gst_caps_get_structure (caps, 0),
             "width", &caps_width));
-    g_assert (gst_structure_get_int (gst_caps_get_structure (caps, 0),
+    g_assert_true (gst_structure_get_int (gst_caps_get_structure (caps, 0),
             "height", &caps_height));
 
-    g_assert (width == caps_width);
-    g_assert (height == caps_height);
+    fail_unless_equals_int (width, caps_width);
+    fail_unless_equals_int (height, caps_height);
 
     gst_caps_unref (caps);
     gst_object_unref (pad);
   }
   if (has_audio) {
     g_signal_emit_by_name (playbin, "get-audio-pad", 0, &pad, NULL);
-    g_assert (pad != NULL);
+    g_assert_nonnull (pad);
     gst_object_unref (pad);
   }
 
@@ -1536,23 +1536,23 @@ GST_START_TEST (test_supported_caps)
     gst_object_unref (camera);
     camera = NULL;
   }
-  g_assert (camera != NULL);
+  g_assert_nonnull (camera);
 
   expectedcaps = gst_caps_from_string (VIDEO_PAD_SUPPORTED_CAPS);
   g_object_get (G_OBJECT (camera), "video-capture-supported-caps", &padcaps,
       NULL);
-  g_assert (expectedcaps != NULL);
-  g_assert (padcaps != NULL);
-  g_assert (gst_caps_is_equal (padcaps, expectedcaps));
+  g_assert_nonnull (expectedcaps);
+  g_assert_nonnull (padcaps);
+  g_assert_true (gst_caps_is_equal (padcaps, expectedcaps));
   gst_caps_unref (expectedcaps);
   gst_caps_unref (padcaps);
 
   expectedcaps = gst_caps_from_string (IMAGE_PAD_SUPPORTED_CAPS);
   g_object_get (G_OBJECT (camera), "image-capture-supported-caps", &padcaps,
       NULL);
-  g_assert (expectedcaps != NULL);
-  g_assert (padcaps != NULL);
-  g_assert (gst_caps_is_equal (padcaps, expectedcaps));
+  g_assert_nonnull (expectedcaps);
+  g_assert_nonnull (padcaps);
+  g_assert_true (gst_caps_is_equal (padcaps, expectedcaps));
   gst_caps_unref (expectedcaps);
   gst_caps_unref (padcaps);
 

@@ -176,14 +176,14 @@ test_parse (gboolean clean_point, gboolean discont)
   buf = buffers->data;
 
   if (clean_point)
-    g_assert (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT));
+    g_assert_false (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT));
   else
-    g_assert (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT));
+    g_assert_true (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT));
 
   if (discont)
-    g_assert (GST_BUFFER_IS_DISCONT (buf));
+    g_assert_true (GST_BUFFER_IS_DISCONT (buf));
   else
-    g_assert (!GST_BUFFER_IS_DISCONT (buf));
+    g_assert_false (GST_BUFFER_IS_DISCONT (buf));
 
   g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (buffers);

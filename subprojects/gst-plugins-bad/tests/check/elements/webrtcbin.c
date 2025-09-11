@@ -233,7 +233,7 @@ _on_answer_received (GstPromise * promise, gpointer user_data)
 
   g_mutex_lock (&t->lock);
 
-  g_assert (t->answer_desc == NULL);
+  g_assert_null (t->answer_desc);
   t->answer_desc = answer;
 
   if (t->on_answer_created) {
@@ -316,7 +316,7 @@ _on_offer_received (GstPromise * promise, gpointer user_data)
 
   g_mutex_lock (&t->lock);
 
-  g_assert (t->offer_desc == NULL);
+  g_assert_null (t->offer_desc);
   t->offer_desc = offer;
 
   if (t->on_offer_created) {
@@ -6148,7 +6148,7 @@ on_sdp_media_rid (struct test_webrtc *t, GstElement * element,
         /* take up to either space or nul-terminator */
         while (p && *p && *p != ' ')
           p++;
-        g_assert (v != p);
+        g_assert_true (v != p);
         v = g_strndup (v, p - v);
         GST_INFO ("rid = %s", v);
 

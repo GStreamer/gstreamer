@@ -373,7 +373,7 @@ test_taglib_id3mux_check_output_buffer (GstBuffer * buf)
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  g_assert (map.size % MP3_FRAME_SIZE == 0);
+  fail_unless_equals_uint64 (map.size % MP3_FRAME_SIZE, 0);
 
   for (off = 0; off < map.size; off += MP3_FRAME_SIZE) {
     fail_unless (memcmp (map.data + off, mp3_dummyhdr,
@@ -403,23 +403,23 @@ test_taglib_id3mux_with_tags (GstTagList * tags, guint32 mask, int v2version)
   GstStateChangeReturn state_result;
 
   pipeline = gst_pipeline_new ("pipeline");
-  g_assert (pipeline != NULL);
+  g_assert_nonnull (pipeline);
 
   fakesrc = gst_element_factory_make ("fakesrc", "fakesrc");
-  g_assert (fakesrc != NULL);
+  g_assert_nonnull (fakesrc);
 
   id3mux = gst_element_factory_make ("id3mux", "id3mux");
-  g_assert (id3mux != NULL);
+  g_assert_nonnull (id3mux);
   g_object_set (id3mux, "v2-version", v2version, NULL);
 
   identity = gst_element_factory_make ("identity", "identity");
-  g_assert (identity != NULL);
+  g_assert_nonnull (identity);
 
   id3demux = gst_element_factory_make ("id3demux", "id3demux");
-  g_assert (id3demux != NULL);
+  g_assert_nonnull (id3demux);
 
   fakesink = gst_element_factory_make ("fakesink", "fakesink");
-  g_assert (fakesink != NULL);
+  g_assert_nonnull (fakesink);
 
   /* set up sink */
   outbuf = NULL;

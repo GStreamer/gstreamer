@@ -126,7 +126,7 @@ set_buffer_tstamps (GstBuffer * buf, struct buffer_tstamps *orig)
   GST_BUFFER_DTS (buf) = orig->buf_dts;
 
   r = avtp_pdu_get ((struct avtp_common_pdu *) pdu, AVTP_FIELD_SUBTYPE, &type);
-  g_assert (r == 0);
+  fail_unless_equals_int (r, 0);
   if (type == AVTP_SUBTYPE_AAF)
     avtp_aaf_pdu_set (pdu, AVTP_AAF_FIELD_TIMESTAMP, orig->avtp_ts);
   else if (type == AVTP_SUBTYPE_CVF) {

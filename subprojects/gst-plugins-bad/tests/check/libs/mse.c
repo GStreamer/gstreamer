@@ -37,7 +37,7 @@
 #include <gst/mse/gstmediasourcetrackbuffer-private.h>
 #include <gst/mse/gstmediasourcesamplemap-private.h>
 
-static GstCheckLogFilter *
+GST_UNUSED_CHECKS static GstCheckLogFilter *
 add_log_filter (GLogLevelFlags level, const gchar * regex)
 {
   GRegex *gregex = g_regex_new (regex, 0, 0, NULL);
@@ -149,6 +149,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_add_source_buffer_with_content_type_null)
 {
+#ifndef G_DISABLE_CHECKS
   add_log_filter (G_LOG_LEVEL_CRITICAL,
       "^.*_add_source_buffer: assertion 'type != NULL' failed");
 
@@ -157,6 +158,7 @@ GST_START_TEST (test_add_source_buffer_with_content_type_null)
   g_assert_null (gst_media_source_add_source_buffer (media_source, NULL, NULL));
 
   gst_object_unref (media_source);
+#endif
 }
 
 GST_END_TEST;
@@ -590,12 +592,14 @@ GST_END_TEST;
 
 GST_START_TEST (test_track_create_with_invalid_type)
 {
+#ifndef G_DISABLE_CHECKS
   add_log_filter (G_LOG_LEVEL_CRITICAL,
       "^.*track_new_full: assertion .*type .* failed");
 
   g_assert_null (gst_media_source_track_new (-1, ""));
   g_assert_null (gst_media_source_track_new (GST_MEDIA_SOURCE_TRACK_TYPE_OTHER +
           1, ""));
+#endif
 }
 
 GST_END_TEST;
@@ -889,6 +893,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_sample_map_add_invalid_sample)
 {
+#ifndef G_DISABLE_CHECKS
   add_log_filter (G_LOG_LEVEL_CRITICAL,
       "^.*_sample_map_add: assertion .* failed");
 
@@ -903,6 +908,7 @@ GST_START_TEST (test_sample_map_add_invalid_sample)
 
   gst_object_unref (map);
   gst_sample_unref (sample);
+#endif
 }
 
 GST_END_TEST;

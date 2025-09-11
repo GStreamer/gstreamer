@@ -57,7 +57,7 @@ create_keyframe_with_sps_pps (void)
   GstMapInfo map_info;
   gsize offset = 0;
 
-  g_assert (gst_buffer_map (buffer, &map_info, GST_MAP_WRITE));
+  g_assert_true (gst_buffer_map (buffer, &map_info, GST_MAP_WRITE));
   memcpy (&map_info.data[offset], h264_sps, G_N_ELEMENTS (h264_sps));
   offset += G_N_ELEMENTS (h264_sps);
   memcpy (&map_info.data[offset], h264_pps, G_N_ELEMENTS (h264_pps));

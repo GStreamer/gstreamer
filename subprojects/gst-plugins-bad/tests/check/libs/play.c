@@ -351,7 +351,7 @@ test_play_audio_video_eos_cb (GstPlay * player, TestPlayerStateChange change,
       break;
     case 7:
       fail_unless_equals_int (change, STATE_CHANGE_POSITION_UPDATED);
-      g_assert (new_state->position <= old_state->duration);
+      g_assert_cmpuint (new_state->position, <=, old_state->duration);
       if (new_state->position == old_state->duration)
         new_state->test_data =
             GINT_TO_POINTER ((video ? 0x10 : 0x00) | (step + 1));
@@ -1635,7 +1635,7 @@ get_port_from_server (SoupServer * server)
   guint port;
 
   uris = soup_server_get_uris (server);
-  g_assert (g_slist_length (uris) == 1);
+  fail_unless_equals_int (g_slist_length (uris), 1);
   port = g_uri_get_port (uris->data);
   g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
 

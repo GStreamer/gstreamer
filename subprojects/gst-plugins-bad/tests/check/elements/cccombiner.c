@@ -155,7 +155,7 @@ GST_START_TEST (captions_and_eos)
   const guint8 cc_data[3] = { 0xfc, 0x20, 0x20 };
 
   GstElement *element = gst_element_factory_make ("cccombiner", NULL);
-  g_assert (element != NULL);
+  g_assert_nonnull (element);
   /* these must be set before it changes the state */
   g_object_set (element, "schedule", FALSE, "output-padding", FALSE, NULL);
 
