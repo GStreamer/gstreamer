@@ -115,7 +115,7 @@ gst_avtp_base_depayload_init (GstAvtpBaseDepayload * avtpbasedepayload,
   GstPadTemplate *templ;
   GstElement *element = GST_ELEMENT (avtpbasedepayload);
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstAvtpBaseDepayloadClass *avtpbasedepayload_class =
+  GstAvtpBaseDepayloadClass *avtpbasedepayload_class GST_UNUSED_ASSERT =
       GST_AVTP_BASE_DEPAYLOAD_CLASS (g_class);
 
   g_assert (avtpbasedepayload_class->process != NULL);

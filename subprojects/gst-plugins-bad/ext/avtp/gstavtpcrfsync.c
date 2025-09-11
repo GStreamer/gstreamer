@@ -87,7 +87,7 @@ static void
 set_avtp_tstamp (GstAvtpCrfSync * avtpcrfsync, struct avtp_stream_pdu *pdu,
     GstClockTime tstamp)
 {
-  int res;
+  int res GST_UNUSED_ASSERT;
   guint32 type;
 
   res =
@@ -113,7 +113,7 @@ static void
 set_avtp_mr_bit (GstAvtpCrfSync * avtpcrfsync, struct avtp_stream_pdu *pdu,
     guint64 mr)
 {
-  int res;
+  int res GST_UNUSED_ASSERT;
   guint32 type;
 
   res =

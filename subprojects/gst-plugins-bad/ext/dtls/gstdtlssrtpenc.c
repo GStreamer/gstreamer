@@ -187,7 +187,7 @@ gst_dtls_srtp_enc_init (GstDtlsSrtpEnc * self)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (GST_ELEMENT (self));
   static GEnumClass *cipher_enum_class, *auth_enum_class;
-  gboolean ret;
+  gboolean ret GST_UNUSED_CHECKS;
 
 /*
                  +--------------------+    +--------------+     +-----------------+
@@ -504,7 +504,7 @@ gst_dtls_srtp_enc_remove_dtls_element (GstDtlsSrtpBin * bin)
 {
   GstDtlsSrtpEnc *self = GST_DTLS_SRTP_ENC (bin);
   GstPad *dtls_sink_pad, *peer_pad;
-  gulong id;
+  gulong id GST_UNUSED_CHECKS;
   guint rtp_cipher = 1, rtcp_cipher = 1, rtp_auth = 1, rtcp_auth = 1;
 
   if (!bin->dtls_element) {

@@ -32,7 +32,7 @@ buffer_size_valid (GstMapInfo * info)
   struct avtp_stream_pdu *pdu;
   guint64 subtype;
   guint32 type;
-  int res;
+  int res GST_UNUSED_ASSERT;
 
   if (info->size < sizeof (struct avtp_stream_pdu))
     return FALSE;
@@ -57,7 +57,7 @@ get_avtp_tstamp (GstAvtpCrfBase * avtpcrfbase, struct avtp_stream_pdu *pdu)
 {
   guint64 tstamp = GST_CLOCK_TIME_NONE, tstamp_valid;
   guint32 type;
-  int res;
+  int res GST_UNUSED_ASSERT;
 
   res =
       avtp_pdu_get ((struct avtp_common_pdu *) pdu, AVTP_FIELD_SUBTYPE, &type);
@@ -95,7 +95,7 @@ h264_tstamp_valid (struct avtp_stream_pdu *pdu)
 {
   guint64 subtype, h264_time_valid;
   guint32 type;
-  int res;
+  int res GST_UNUSED_ASSERT;
 
   /*
    * Validate H264 timestamp for H264 format. For more details about the

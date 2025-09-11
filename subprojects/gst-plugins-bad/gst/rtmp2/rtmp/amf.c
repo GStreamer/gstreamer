@@ -338,9 +338,12 @@ gst_amf_node_get_string (const GstAmfNode * node, gsize * out_size)
 const gchar *
 gst_amf_node_peek_string (const GstAmfNode * node, gsize * size)
 {
+#ifndef G_DISABLE_CHECKS
   GstAmfType type = gst_amf_node_get_type (node);
   g_return_val_if_fail (type == GST_AMF_TYPE_STRING ||
       type == GST_AMF_TYPE_LONG_STRING, FALSE);
+#endif
+
   return g_bytes_get_data (node->value.v_bytes, size);
 }
 
@@ -364,32 +367,40 @@ gst_amf_node_get_field (const GstAmfNode * node, const gchar * name)
 const GstAmfNode *
 gst_amf_node_get_field_by_index (const GstAmfNode * node, guint index)
 {
+#ifndef G_DISABLE_CHECKS
   guint len = gst_amf_node_get_num_fields (node);
   g_return_val_if_fail (index < len, NULL);
+#endif
   return get_field (node, index)->value;
 }
 
 guint
 gst_amf_node_get_num_fields (const GstAmfNode * node)
 {
+#ifndef G_DISABLE_CHECKS
   GstAmfType type = gst_amf_node_get_type (node);
   g_return_val_if_fail (type == GST_AMF_TYPE_OBJECT ||
       type == GST_AMF_TYPE_ECMA_ARRAY, 0);
+#endif
   return node->value.v_fields->len;
 }
 
 const GstAmfNode *
 gst_amf_node_get_element (const GstAmfNode * node, guint index)
 {
+#ifndef G_DISABLE_CHECKS
   guint len = gst_amf_node_get_num_elements (node);
   g_return_val_if_fail (index < len, NULL);
+#endif
   return get_element (node, index);
 }
 
 guint
 gst_amf_node_get_num_elements (const GstAmfNode * node)
 {
+#ifndef G_DISABLE_CHECKS
   GstAmfType type = gst_amf_node_get_type (node);
+#endif
   g_return_val_if_fail (type == GST_AMF_TYPE_STRICT_ARRAY, 0);
   return node->value.v_elements->len;
 }

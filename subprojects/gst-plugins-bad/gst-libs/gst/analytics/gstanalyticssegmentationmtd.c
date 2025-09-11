@@ -390,12 +390,15 @@ gst_analytics_relation_meta_add_segmentation_mtd (GstAnalyticsRelationMeta *
 {
   const gsize region_ids_size = sizeof (guint) * region_count;
   const gsize size = sizeof (GstAnalyticsSegMtdData) + region_ids_size;
+
+  g_return_val_if_fail (instance != NULL, FALSE);
+#ifndef G_DISABLE_CHECKS
   GstVideoMeta *vmeta = gst_buffer_get_video_meta (buffer);
   g_return_val_if_fail (vmeta != NULL, FALSE);
-  g_return_val_if_fail (instance != NULL, FALSE);
   g_return_val_if_fail (vmeta->format == GST_VIDEO_FORMAT_GRAY8 ||
       vmeta->format == GST_VIDEO_FORMAT_GRAY16_BE ||
       vmeta->format == GST_VIDEO_FORMAT_GRAY16_LE, FALSE);
+#endif
 
   GstAnalyticsSegMtdData *mtddata = NULL;
   mtddata =

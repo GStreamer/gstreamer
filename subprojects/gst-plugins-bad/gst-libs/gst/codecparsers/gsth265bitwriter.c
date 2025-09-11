@@ -659,7 +659,7 @@ _h265_bit_writer_scaling_lists (const GstH265ScalingList * src_scaling_list,
       /* If some previous matrix is the same, just ref it. */
       scaling_list_pred_matrix_id_delta = 0;
       for (j = 0; j < matrixId; j++) {
-        gboolean ret;
+        gboolean ret GST_UNUSED_ASSERT;
         guint8 size2;
         const guint8 *sl2;
         gint16 scaling_list_dc_coef_minus8_2 = 8;

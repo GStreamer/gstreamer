@@ -496,7 +496,7 @@ gst_face_detector_tensor_decoder_decode_boxes_f32 (GstFaceDetectorTensorDecoder
 {
   GstMapInfo map_info_boxes, map_info_scores;
   gfloat *candidate, *score;
-  gboolean rv;
+  gboolean rv GST_UNUSED_ASSERT;
   GPtrArray *sel_candidates = self->sel_candidates, *selected = self->selected;
 
   rv = gst_buffer_map (boxes_tensor->data, &map_info_boxes, GST_MAP_READ);

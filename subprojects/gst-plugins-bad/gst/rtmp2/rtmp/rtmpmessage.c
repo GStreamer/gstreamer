@@ -430,7 +430,9 @@ gboolean
 gst_rtmp_message_parse_user_control (GstBuffer * buffer,
     GstRtmpUserControl * out)
 {
+#ifndef G_DISABLE_CHECKS
   GstRtmpMeta *meta = gst_buffer_get_rtmp_meta (buffer);
+#endif
   GstMapInfo map;
   GstRtmpUserControl uc;
   gsize uc_size;

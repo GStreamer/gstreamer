@@ -211,7 +211,7 @@ gst_avtp_aaf_pay_change_state (GstElement * element, GstStateChange transition)
       break;
     }
     case GST_STATE_CHANGE_READY_TO_PAUSED:{
-      int res;
+      int res GST_UNUSED_ASSERT;
       GstMapInfo info;
       struct avtp_stream_pdu *pdu;
       GstMemory *mem = avtpaafpay->header;
@@ -263,7 +263,7 @@ gst_avtp_aaf_pay_change_state (GstElement * element, GstStateChange transition)
 static GstFlowReturn
 gst_avtp_aaf_pay_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  int res;
+  int res GST_UNUSED_ASSERT;
   GstMemory *mem;
   GstMapInfo info;
   gsize data_len;

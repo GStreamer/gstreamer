@@ -633,9 +633,10 @@ gst_net_sim_finalize (GObject * object)
 static void
 gst_net_sim_dispose (GObject * object)
 {
+#ifndef G_DISABLE_ASSERT
   GstNetSim *netsim = GST_NET_SIM (object);
-
   g_assert (netsim->main_loop == NULL);
+#endif
 
   G_OBJECT_CLASS (gst_net_sim_parent_class)->dispose (object);
 }

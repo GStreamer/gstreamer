@@ -133,7 +133,7 @@ gst_avtp_cvf_change_state (GstElement * element, GstStateChange transition)
   if (transition == GST_STATE_CHANGE_NULL_TO_READY) {
     GstMapInfo map;
     struct avtp_stream_pdu *pdu;
-    int res;
+    int res GST_UNUSED_ASSERT;
 
     avtpcvfpay->header = gst_buffer_new_allocate (NULL,
         AVTP_CVF_H264_HEADER_SIZE, NULL);
@@ -376,7 +376,7 @@ gst_avtp_cvf_pay_prepare_avtp_packets (GstAvtpVfPayBase * avtpvfpaybase,
                 &last_fragment))) {
       GstBuffer *packet;
       struct avtp_stream_pdu *pdu;
-      gint res;
+      gint res GST_UNUSED_ASSERT;
 
       /* Copy header to reuse common fields and change what is needed */
       header = gst_buffer_copy (avtpcvfpay->header);

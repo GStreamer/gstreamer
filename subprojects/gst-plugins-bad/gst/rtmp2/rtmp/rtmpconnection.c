@@ -752,13 +752,14 @@ static void
 gst_rtmp_connection_handle_aggregate (GstRtmpConnection * connection,
     GstBuffer * buffer)
 {
-  GstRtmpMeta *meta;
   GstMapInfo map;
   gsize pos = 0;
   guint32 first_ts = 0;
 
-  meta = gst_buffer_get_rtmp_meta (buffer);
+#ifndef G_DISABLE_CHECKS
+  GstRtmpMeta *meta = gst_buffer_get_rtmp_meta (buffer);
   g_return_if_fail (meta);
+#endif
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   GST_TRACE_OBJECT (connection, "got aggregate message");

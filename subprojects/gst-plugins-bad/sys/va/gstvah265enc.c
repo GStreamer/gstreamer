@@ -2235,7 +2235,7 @@ again:
   count.poc = b_vaframe->poc;
   g_queue_foreach (&base->ref_list, (GFunc) _count_backward_ref_num, &count);
   if (count.num >= 1) {
-    GstVideoCodecFrame *f;
+    GstVideoCodecFrame *f GST_UNUSED_ASSERT;
 
     /* it will unref at pop_frame */
     f = g_queue_pop_nth (&base->reorder_list, index);

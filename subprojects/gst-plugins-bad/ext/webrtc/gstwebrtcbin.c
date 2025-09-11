@@ -4182,7 +4182,7 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
 
         /* Verify that we didn't ignore any locked m-line transceivers */
         for (i = 0; i < webrtc->priv->transceivers->len; i++) {
-          WebRTCTransceiver *wtrans;
+          WebRTCTransceiver *wtrans GST_UNUSED_ASSERT;
 
           trans = g_ptr_array_index (webrtc->priv->transceivers, i);
           wtrans = WEBRTC_TRANSCEIVER (trans);
@@ -7602,7 +7602,7 @@ on_rtpbin_pad_added (GstElement * rtpbin, GstPad * new_pad,
     guint32 session_id = 0, ssrc = 0, pt = 0;
     SsrcMapItem *mid_entry;
     GstWebRTCRTPTransceiver *rtp_trans = NULL;
-    WebRTCTransceiver *trans;
+    WebRTCTransceiver *trans GST_UNUSED_ASSERT;
     TransportStream *stream;
     GstWebRTCBinPad *pad;
     guint media_idx;

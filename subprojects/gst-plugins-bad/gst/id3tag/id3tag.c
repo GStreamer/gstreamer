@@ -386,7 +386,7 @@ id3v2_tag_add_text_frame (GstId3v2Tag * tag, const gchar * frame_id,
     const gchar ** strings_utf8, int num_strings)
 {
   GstId3v2Frame frame;
-  guint len, i;
+  guint i;
   int encoding;
 
   if (num_strings < 1 || strings_utf8 == NULL || strings_utf8[0] == NULL) {
@@ -402,8 +402,10 @@ id3v2_tag_add_text_frame (GstId3v2Tag * tag, const gchar * frame_id,
   GST_LOG ("Adding text frame %s with %d strings", frame_id, num_strings);
 
   for (i = 0; i < num_strings; ++i) {
-    len = strlen (strings_utf8[i]);
+#ifndef G_DISABLE_CHECKS
+    guint len = strlen (strings_utf8[i]);
     g_return_if_fail (g_utf8_validate (strings_utf8[i], len, NULL));
+#endif
 
     id3v2_frame_write_string (&frame, encoding, strings_utf8[i],
         i != num_strings - 1);
@@ -696,7 +698,7 @@ add_comment_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
 
     if (gst_tag_list_peek_string_index (list, tag, n, &s) && s != NULL) {
       gchar *desc = NULL, *val = NULL, *lang = NULL;
-      int desclen, vallen, encoding1, encoding2, encoding;
+      int encoding1, encoding2, encoding;
       GstId3v2Frame frame;
 
       id3v2_frame_init (&frame, "COMM", 0);
@@ -713,10 +715,10 @@ add_comment_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
       if (!lang || strlen (lang) < 3)
         lang = g_strdup ("XXX");
 
-      desclen = strlen (desc);
-      g_return_if_fail (g_utf8_validate (desc, desclen, NULL));
-      vallen = strlen (val);
-      g_return_if_fail (g_utf8_validate (val, vallen, NULL));
+#ifndef G_DISABLE_CHECKS
+      g_return_if_fail (g_utf8_validate (desc, strlen (desc), NULL));
+      g_return_if_fail (g_utf8_validate (val, strlen (val), NULL));
+#endif
 
       GST_LOG ("%s[%u] = '%s' (%s|%s|%s)", tag, n, s, GST_STR_NULL (desc),
           GST_STR_NULL (lang), GST_STR_NULL (val));

@@ -182,7 +182,7 @@ gst_dtls_srtp_dec_init (GstDtlsSrtpDec * self)
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (GST_ELEMENT (self));
   GstPadTemplate *templ;
   GstPad *target_pad, *ghost_pad;
-  gboolean ret;
+  gboolean ret GST_UNUSED_CHECKS;
 
 /*
                                  +-----------+
@@ -322,7 +322,7 @@ gst_dtls_srtp_dec_request_new_pad (GstElement * element,
   GstDtlsSrtpDec *self = GST_DTLS_SRTP_DEC (element);
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
   GstPad *ghost_pad = NULL;
-  gboolean ret;
+  gboolean ret GST_UNUSED_CHECKS;
 
   GST_DEBUG_OBJECT (element, "pad requested");
 
@@ -470,7 +470,7 @@ gst_dtls_srtp_dec_remove_dtls_element (GstDtlsSrtpBin * bin)
 {
   GstDtlsSrtpDec *self = GST_DTLS_SRTP_DEC (bin);
   GstPad *demux_pad;
-  gulong id;
+  gulong id GST_UNUSED_CHECKS;
 
   if (!bin->dtls_element) {
     return;

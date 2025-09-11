@@ -815,9 +815,11 @@ on_new_sample (GstAppendPipeline * pipeline, GstMediaSourceTrack * track,
 {
   GstSourceBuffer *self = GST_SOURCE_BUFFER (user_data);
 
+#ifndef G_DISABLE_CHECKS
   gboolean processed_init_segment =
       g_atomic_int_get (&self->processed_init_segment);
   g_return_if_fail (processed_init_segment);
+#endif
 
   GST_OBJECT_LOCK (self);
   gboolean is_within_window = is_within_append_window_unlocked (self, sample);

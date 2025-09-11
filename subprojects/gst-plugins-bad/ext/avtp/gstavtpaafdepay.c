@@ -210,7 +210,7 @@ static GstFlowReturn
 gst_avtp_aaf_depay_process (GstAvtpBaseDepayload * avtpbasedepayload,
     GstBuffer * buffer)
 {
-  int res;
+  int res GST_UNUSED_ASSERT;
   GstMapInfo info;
   guint32 subtype, version;
   GstClockTime ptime;

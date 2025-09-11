@@ -363,7 +363,7 @@ gst_cea608_mux_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
   gint fps_n, fps_d;
   GstCea608Mux *self = GST_CEA608MUX (agg);
   GstClockTime latency;
-  gboolean success G_GNUC_UNUSED;       /* G_DISABLE_ASSERT */
+  gboolean success GST_UNUSED_ASSERT;
 
   GST_INFO_OBJECT (agg->srcpad, "set src caps: %" GST_PTR_FORMAT, caps);
 

@@ -172,9 +172,10 @@ static const struct wl_buffer_listener buffer_listener = {
 static void
 gstmemory_disposed (GstWlBuffer * self)
 {
+#ifndef G_DISABLE_ASSERT
   GstWlBufferPrivate *priv = gst_wl_buffer_get_instance_private (self);
-
   g_assert (!priv->used_by_compositor);
+#endif
 
   GST_TRACE_OBJECT (self, "owning GstMemory was finalized");
 

@@ -745,11 +745,13 @@ _vp9_gf_group_push_frame (GstVaVp9GFGroup * gf_group,
     GstVideoCodecFrame * gst_frame)
 {
   GstVaVp9EncFrame *frame = _enc_frame (gst_frame);
+#ifndef G_DISABLE_CHECKS
   gint pushed_frame_num = gf_group->last_pushed_num < 0 ? 0 :
       gf_group->last_pushed_num - gf_group->start_frame_offset + 1;
-
   /* No room for a new one. */
   g_return_val_if_fail (pushed_frame_num < gf_group->group_frame_num, FALSE);
+#endif
+
   /* The frame num should just increase. */
   g_return_val_if_fail (frame->frame_num == gf_group->last_pushed_num + 1,
       FALSE);

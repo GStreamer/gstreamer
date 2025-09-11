@@ -367,7 +367,7 @@ gst_avtp_rvf_change_state (GstElement * element, GstStateChange transition)
   if (transition == GST_STATE_CHANGE_NULL_TO_READY) {
     GstMapInfo map;
     struct avtp_stream_pdu *pdu;
-    int res;
+    int res GST_UNUSED_ASSERT;
 
     avtprvfpay->header = gst_buffer_new_allocate (NULL,
         AVTP_RVF_HEADER_SIZE, NULL);
@@ -439,7 +439,7 @@ gst_avtp_rvf_pay_prepare_avtp_packets (GstAvtpVfPayBase * avtpvfpaybase,
   while (offset != buffer_size) {
     GstBuffer *packet;
     struct avtp_stream_pdu *pdu;
-    gint res;
+    gint res GST_UNUSED_ASSERT;
     GstBuffer *fragment;
     gsize fragment_size;
 
