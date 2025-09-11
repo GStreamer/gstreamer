@@ -3359,8 +3359,8 @@ gst_message_get_num_redirect_entries (GstMessage * message)
 {
   GstStructure *structure;
   const GValue *entry_locations_gvalue;
-  const GValue *entry_taglists_gvalue;
-  const GValue *entry_structures_gvalue;
+  const GValue *entry_taglists_gvalue GST_UNUSED_CHECKS;
+  const GValue *entry_structures_gvalue GST_UNUSED_CHECKS;
   gsize size;
 
   g_return_val_if_fail (GST_IS_MESSAGE (message), 0);
@@ -3371,12 +3371,14 @@ gst_message_get_num_redirect_entries (GstMessage * message)
   entry_locations_gvalue =
       gst_structure_get_value (structure, "redirect-entry-locations");
   g_return_val_if_fail (GST_VALUE_HOLDS_LIST (entry_locations_gvalue), 0);
+#ifndef G_DISABLE_CHECKS
   entry_taglists_gvalue =
       gst_structure_get_value (structure, "redirect-entry-taglists");
   g_return_val_if_fail (GST_VALUE_HOLDS_LIST (entry_taglists_gvalue), 0);
   entry_structures_gvalue =
       gst_structure_get_value (structure, "redirect-entry-structures");
   g_return_val_if_fail (GST_VALUE_HOLDS_LIST (entry_structures_gvalue), 0);
+#endif
 
   size = gst_value_list_get_size (entry_locations_gvalue);
 

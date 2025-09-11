@@ -641,6 +641,7 @@ gst_value_list_or_array_get_basic_type (const GValue * value, GType * type)
 #define IS_RANGE_COMPAT(type1,type2,t1,t2) \
   (((t1) == (type1) && (t2) == (type2)) || ((t2) == (type1) && (t1) == (type2)))
 
+#if !defined(G_DISABLE_ASSERTS) && !defined(G_DISABLE_CHECKS)
 static gboolean
 gst_value_list_or_array_are_compatible (const GValue * value1,
     const GValue * value2)
@@ -669,6 +670,7 @@ gst_value_list_or_array_are_compatible (const GValue * value1,
 
   return FALSE;
 }
+#endif
 
 static inline void
 _gst_value_list_append_and_take_value (GValue * value, GValue * append_value)
@@ -1592,7 +1594,7 @@ gst_value_lcopy_int64_range (const GValue * value, guint n_collect_values,
   guint64 *int_range_start = collect_values[0].v_pointer;
   guint64 *int_range_end = collect_values[1].v_pointer;
   guint64 *int_range_step = collect_values[2].v_pointer;
-  gint64 *vals = (gint64 *) value->data[0].v_pointer;
+  gint64 *vals GST_UNUSED_CHECKS = (gint64 *) value->data[0].v_pointer;
 
   g_return_val_if_fail (int_range_start != NULL,
       g_strdup_printf ("start value location for `%s' passed as NULL",
