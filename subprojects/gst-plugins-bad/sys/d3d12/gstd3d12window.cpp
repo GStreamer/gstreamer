@@ -543,14 +543,14 @@ gst_d3d12_window_render (GstD3D12Window * self, SwapChainResource * resource,
             "video-direction", priv->orientation, nullptr);
       }
 
-      gst_d3d12_overlay_compositor_update_viewport (resource->comp,
+      gst_d3d12_overlay_blender_update_viewport (resource->comp,
           &priv->output_rect);
     }
 
     priv->output_updated = FALSE;
   }
 
-  gst_d3d12_overlay_compositor_upload (resource->comp, buffer);
+  gst_d3d12_overlay_blender_upload (resource->comp, buffer);
 
   GstD3D12CmdAlloc *gst_ca;
   if (!gst_d3d12_cmd_alloc_pool_acquire (resource->ca_pool, &gst_ca)) {
@@ -628,7 +628,7 @@ gst_d3d12_window_render (GstD3D12Window * self, SwapChainResource * resource,
     return GST_FLOW_ERROR;
   }
 
-  if (!gst_d3d12_overlay_compositor_draw (resource->comp,
+  if (!gst_d3d12_overlay_blender_draw (resource->comp,
           conv_outbuf, fence_data, cl.Get ())) {
     GST_ERROR_OBJECT (self, "Couldn't build overlay command");
     gst_d3d12_fence_data_unref (fence_data);

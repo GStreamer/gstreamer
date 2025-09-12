@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include "gstd3d12overlaycompositor.h"
+#include "gstd3d12overlayblender.h"
 #include "gstd3d12pluginutils.h"
 #include <directx/d3dx12.h>
 #include <wrl.h>
@@ -30,8 +30,8 @@
 #include <algorithm>
 #include <gst/d3dshader/gstd3dshader.h>
 
-GST_DEBUG_CATEGORY_STATIC (gst_d3d12_overlay_compositor_debug);
-#define GST_CAT_DEFAULT gst_d3d12_overlay_compositor_debug
+GST_DEBUG_CATEGORY_STATIC (gst_d3d12_overlay_blender_debug);
+#define GST_CAT_DEFAULT gst_d3d12_overlay_blender_debug
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -72,15 +72,15 @@ struct GstD3D12OverlayRect : public GstMiniObject
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstD3D12OverlayRect, gst_d3d12_overlay_rect);
 
-struct GstD3D12OverlayCompositorPrivate
+struct GstD3D12OverlayBlenderPrivate
 {
-  GstD3D12OverlayCompositorPrivate ()
+  GstD3D12OverlayBlenderPrivate ()
   {
     sample_desc.Count = 1;
     sample_desc.Quality = 0;
   }
 
-  ~GstD3D12OverlayCompositorPrivate ()
+  ~GstD3D12OverlayBlenderPrivate ()
   {
     if (overlays)
       g_list_free_full (overlays, (GDestroyNotify) gst_mini_object_unref);
@@ -114,42 +114,42 @@ struct GstD3D12OverlayCompositorPrivate
 };
 /* *INDENT-ON* */
 
-struct _GstD3D12OverlayCompositor
+struct _GstD3D12OverlayBlender
 {
   GstObject parent;
 
   GstD3D12Device *device;
 
-  GstD3D12OverlayCompositorPrivate *priv;
+  GstD3D12OverlayBlenderPrivate *priv;
 };
 
-static void gst_d3d12_overlay_compositor_finalize (GObject * object);
+static void gst_d3d12_overlay_blender_finalize (GObject * object);
 
-#define gst_d3d12_overlay_compositor_parent_class parent_class
-G_DEFINE_TYPE (GstD3D12OverlayCompositor,
-    gst_d3d12_overlay_compositor, GST_TYPE_OBJECT);
+#define gst_d3d12_overlay_blender_parent_class parent_class
+G_DEFINE_TYPE (GstD3D12OverlayBlender,
+    gst_d3d12_overlay_blender, GST_TYPE_OBJECT);
 
 static void
-gst_d3d12_overlay_compositor_class_init (GstD3D12OverlayCompositorClass * klass)
+gst_d3d12_overlay_blender_class_init (GstD3D12OverlayBlenderClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  object_class->finalize = gst_d3d12_overlay_compositor_finalize;
+  object_class->finalize = gst_d3d12_overlay_blender_finalize;
 
-  GST_DEBUG_CATEGORY_INIT (gst_d3d12_overlay_compositor_debug,
-      "d3d12overlaycompositor", 0, "d3d12overlaycompositor");
+  GST_DEBUG_CATEGORY_INIT (gst_d3d12_overlay_blender_debug,
+      "d3d12overlayblender", 0, "d3d12overlayblender");
 }
 
 static void
-gst_d3d12_overlay_compositor_init (GstD3D12OverlayCompositor * self)
+gst_d3d12_overlay_blender_init (GstD3D12OverlayBlender * self)
 {
-  self->priv = new GstD3D12OverlayCompositorPrivate ();
+  self->priv = new GstD3D12OverlayBlenderPrivate ();
 }
 
 static void
-gst_d3d12_overlay_compositor_finalize (GObject * object)
+gst_d3d12_overlay_blender_finalize (GObject * object)
 {
-  GstD3D12OverlayCompositor *self = GST_D3D12_OVERLAY_COMPOSITOR (object);
+  GstD3D12OverlayBlender *self = GST_D3D12_OVERLAY_BLENDER (object);
 
   delete self->priv;
 
@@ -166,7 +166,7 @@ gst_d3d12_overlay_rect_free (GstD3D12OverlayRect * rect)
 }
 
 static GstD3D12OverlayRect *
-gst_d3d12_overlay_rect_new (GstD3D12OverlayCompositor * self,
+gst_d3d12_overlay_rect_new (GstD3D12OverlayBlender * self,
     GstVideoOverlayRectangle * overlay_rect)
 {
   auto priv = self->priv;
@@ -391,7 +391,7 @@ gst_d3d12_overlay_rect_new (GstD3D12OverlayCompositor * self,
 }
 
 static gboolean
-gst_d3d12_overlay_compositor_setup_shader (GstD3D12OverlayCompositor * self)
+gst_d3d12_overlay_blender_setup_shader (GstD3D12OverlayBlender * self)
 {
   auto priv = self->priv;
   GstVideoInfo *info = &priv->info;
@@ -600,25 +600,25 @@ gst_d3d12_overlay_compositor_setup_shader (GstD3D12OverlayCompositor * self)
   return TRUE;
 }
 
-GstD3D12OverlayCompositor *
-gst_d3d12_overlay_compositor_new (GstD3D12Device * device,
+GstD3D12OverlayBlender *
+gst_d3d12_overlay_blender_new (GstD3D12Device * device,
     const GstVideoInfo * info)
 {
-  GstD3D12OverlayCompositor *self = nullptr;
-  GstD3D12OverlayCompositorPrivate *priv;
+  GstD3D12OverlayBlender *self = nullptr;
+  GstD3D12OverlayBlenderPrivate *priv;
 
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
   g_return_val_if_fail (info != nullptr, nullptr);
 
-  self = (GstD3D12OverlayCompositor *)
-      g_object_new (GST_TYPE_D3D12_OVERLAY_COMPOSITOR, nullptr);
+  self = (GstD3D12OverlayBlender *)
+      g_object_new (GST_TYPE_D3D12_OVERLAY_BLENDER, nullptr);
   gst_object_ref_sink (self);
   priv = self->priv;
 
   self->device = (GstD3D12Device *) gst_object_ref (device);
   priv->info = *info;
 
-  if (!gst_d3d12_overlay_compositor_setup_shader (self)) {
+  if (!gst_d3d12_overlay_blender_setup_shader (self)) {
     gst_object_unref (self);
     return nullptr;
   }
@@ -627,8 +627,8 @@ gst_d3d12_overlay_compositor_new (GstD3D12Device * device,
 }
 
 static gboolean
-gst_d3d12_overlay_compositor_foreach_meta (GstBuffer * buffer, GstMeta ** meta,
-    GstD3D12OverlayCompositor * self)
+gst_d3d12_overlay_blender_foreach_meta (GstBuffer * buffer, GstMeta ** meta,
+    GstD3D12OverlayBlender * self)
 {
   auto priv = self->priv;
 
@@ -649,7 +649,7 @@ gst_d3d12_overlay_compositor_foreach_meta (GstBuffer * buffer, GstMeta ** meta,
 }
 
 gboolean
-gst_d3d12_overlay_compositor_upload (GstD3D12OverlayCompositor * compositor,
+gst_d3d12_overlay_blender_upload (GstD3D12OverlayBlender * compositor,
     GstBuffer * buf)
 {
   g_return_val_if_fail (compositor != nullptr, FALSE);
@@ -659,7 +659,7 @@ gst_d3d12_overlay_compositor_upload (GstD3D12OverlayCompositor * compositor,
   priv->rects_to_upload.clear ();
 
   gst_buffer_foreach_meta (buf,
-      (GstBufferForeachMetaFunc) gst_d3d12_overlay_compositor_foreach_meta,
+      (GstBufferForeachMetaFunc) gst_d3d12_overlay_blender_foreach_meta,
       compositor);
 
   if (priv->rects_to_upload.empty ()) {
@@ -712,10 +712,10 @@ gst_d3d12_overlay_compositor_upload (GstD3D12OverlayCompositor * compositor,
 }
 
 gboolean
-gst_d3d12_overlay_compositor_update_viewport (GstD3D12OverlayCompositor *
+gst_d3d12_overlay_blender_update_viewport (GstD3D12OverlayBlender *
     compositor, GstVideoRectangle * viewport)
 {
-  g_return_val_if_fail (GST_IS_D3D12_OVERLAY_COMPOSITOR (compositor), FALSE);
+  g_return_val_if_fail (GST_IS_D3D12_OVERLAY_BLENDER (compositor), FALSE);
   g_return_val_if_fail (viewport != nullptr, FALSE);
 
   auto priv = compositor->priv;
@@ -734,7 +734,7 @@ gst_d3d12_overlay_compositor_update_viewport (GstD3D12OverlayCompositor *
 }
 
 static gboolean
-gst_d3d12_overlay_compositor_execute (GstD3D12OverlayCompositor * self,
+gst_d3d12_overlay_blender_execute (GstD3D12OverlayBlender * self,
     GstBuffer * buf, GstD3D12FenceData * fence_data,
     ID3D12GraphicsCommandList * cl)
 {
@@ -815,7 +815,7 @@ gst_d3d12_overlay_compositor_execute (GstD3D12OverlayCompositor * self,
 }
 
 gboolean
-gst_d3d12_overlay_compositor_draw (GstD3D12OverlayCompositor * compositor,
+gst_d3d12_overlay_blender_draw (GstD3D12OverlayBlender * compositor,
     GstBuffer * buf, GstD3D12FenceData * fence_data,
     ID3D12GraphicsCommandList * command_list)
 {
@@ -864,6 +864,6 @@ gst_d3d12_overlay_compositor_draw (GstD3D12OverlayCompositor * compositor,
     priv->sample_desc = desc.SampleDesc;
   }
 
-  return gst_d3d12_overlay_compositor_execute (compositor,
+  return gst_d3d12_overlay_blender_execute (compositor,
       buf, fence_data, command_list);
 }

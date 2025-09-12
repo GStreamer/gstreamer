@@ -21,7 +21,7 @@
 
 #include <gst/d3d12/gstd3d12.h>
 #include "gstd3d12pluginutils.h"
-#include "gstd3d12overlaycompositor.h"
+#include "gstd3d12overlayblender.h"
 #include <mutex>
 #include <vector>
 #include <queue>
@@ -66,7 +66,7 @@ struct SwapChainResource
   GstBuffer *msaa_buf = nullptr;
   GstBuffer *cached_buf = nullptr;
   GstD3D12Converter *conv = nullptr;
-  GstD3D12OverlayCompositor *comp = nullptr;
+  GstD3D12OverlayBlender *comp = nullptr;
   GstD3D12Device *device = nullptr;
   GstD3D12CmdAllocPool *ca_pool = nullptr;
   UINT64 fence_val = 0;

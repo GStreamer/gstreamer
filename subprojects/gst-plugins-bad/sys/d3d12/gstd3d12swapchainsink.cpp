@@ -35,7 +35,7 @@
 
 #include "gstd3d12swapchainsink.h"
 #include "gstd3d12pluginutils.h"
-#include "gstd3d12overlaycompositor.h"
+#include "gstd3d12overlayblender.h"
 #include <directx/d3dx12.h>
 #include <mutex>
 #include <wrl.h>
@@ -219,7 +219,7 @@ struct GstD3D12SwapChainSinkPrivate
   GstBuffer *msaa_buf = nullptr;
   GstCaps *caps = nullptr;
   GstD3D12Converter *conv = nullptr;
-  GstD3D12OverlayCompositor *comp = nullptr;
+  GstD3D12OverlayBlender *comp = nullptr;
   guint64 fence_val = 0;
   bool caps_updated = false;
   bool first_present = true;
@@ -758,7 +758,7 @@ gst_d3d12_swapchain_sink_ensure_swapchain (GstD3D12SwapChainSink * self)
   GstVideoInfo info;
   gst_video_info_set_format (&info,
       GST_VIDEO_FORMAT_RGBA, priv->width, priv->height);
-  priv->comp = gst_d3d12_overlay_compositor_new (self->device, &info);
+  priv->comp = gst_d3d12_overlay_blender_new (self->device, &info);
 
   return gst_d3d12_swapchain_sink_resize_unlocked (self,
       priv->width, priv->height);
@@ -1053,13 +1053,13 @@ gst_d3d12_swapchain_sink_render (GstD3D12SwapChainSink * self)
         "saturation", priv->saturation, "brightness", priv->brightness,
         "contrast", priv->contrast, "max-mip-levels", priv->mip_levels,
         nullptr);
-    gst_d3d12_overlay_compositor_update_viewport (priv->comp, &priv->viewport);
+    gst_d3d12_overlay_blender_update_viewport (priv->comp, &priv->viewport);
 
     priv->first_present = false;
     priv->output_updated = false;
   }
 
-  gst_d3d12_overlay_compositor_upload (priv->comp, priv->cached_buf);
+  gst_d3d12_overlay_blender_upload (priv->comp, priv->cached_buf);
 
   GstD3D12CmdAlloc *gst_ca;
   if (!gst_d3d12_cmd_alloc_pool_acquire (priv->ca_pool, &gst_ca)) {
@@ -1160,7 +1160,7 @@ gst_d3d12_swapchain_sink_render (GstD3D12SwapChainSink * self)
     }
   }
 
-  if (!gst_d3d12_overlay_compositor_draw (priv->comp,
+  if (!gst_d3d12_overlay_blender_draw (priv->comp,
           conv_outbuf, fence_data, cl.Get ())) {
     GST_ERROR_OBJECT (self, "Couldn't build overlay command");
     gst_d3d12_fence_data_unref (fence_data);

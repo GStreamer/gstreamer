@@ -349,7 +349,7 @@ SwapChain::setup_swapchain (GstD3D12Window * window, GstD3D12Device * device,
   }
 
   if (!resource_->comp) {
-    resource_->comp = gst_d3d12_overlay_compositor_new (resource_->device,
+    resource_->comp = gst_d3d12_overlay_blender_new (resource_->device,
       out_info);
     if (!resource_->comp) {
       GST_ERROR ("Couldn't create overlay compositor");
