@@ -457,13 +457,26 @@ gst_d3d12_overlay_blender_setup_shader (GstD3D12OverlayBlender * self)
     return FALSE;
   }
 
-  if (!gst_d3d_plugin_shader_get_ps_blob (GST_D3D_PLUGIN_PS_SAMPLE,
+  GstD3DPluginPS ps_sample = GST_D3D_PLUGIN_PS_SAMPLE;
+  GstD3DPluginPS ps_sample_premul = GST_D3D_PLUGIN_PS_SAMPLE_PREMULT;
+
+  if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_VUYA) {
+    if (info->colorimetry.range == GST_VIDEO_COLOR_RANGE_0_255) {
+      ps_sample = GST_D3D_PLUGIN_PS_SAMPLE_BGRA_TO_VUYA_FULL;
+      ps_sample_premul = GST_D3D_PLUGIN_PS_SAMPLE_BGRA_TO_VUYA_FULL_PREMUL;
+    } else {
+      ps_sample = GST_D3D_PLUGIN_PS_SAMPLE_BGRA_TO_VUYA_LIMITED;
+      ps_sample_premul = GST_D3D_PLUGIN_PS_SAMPLE_BGRA_TO_VUYA_LIMITED_PREMUL;
+    }
+  }
+
+  if (!gst_d3d_plugin_shader_get_ps_blob (ps_sample,
           GST_D3D_SM_5_0, &ps_sample_code)) {
     GST_ERROR_OBJECT (self, "Couldn't get ps bytecode");
     return FALSE;
   }
 
-  if (!gst_d3d_plugin_shader_get_ps_blob (GST_D3D_PLUGIN_PS_SAMPLE_PREMULT,
+  if (!gst_d3d_plugin_shader_get_ps_blob (ps_sample_premul,
           GST_D3D_SM_5_0, &ps_sample_premul_code)) {
     GST_ERROR_OBJECT (self, "Couldn't get ps bytecode");
     return FALSE;

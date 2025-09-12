@@ -78,6 +78,10 @@ static const ShaderItem g_ps_map[] = {
   {GST_D3D_PLUGIN_PS_SAMPLE_SCRGB_TONEMAP, BUILD_SOURCE (PSMain_sample_scrgb_tonemap)},
   {GST_D3D_PLUGIN_PS_SAMPLE_SCRGB, BUILD_SOURCE (PSMain_sample_scrgb)},
   {GST_D3D_PLUGIN_PS_SNOW, BUILD_SOURCE (PSMain_snow)},
+  {GST_D3D_PLUGIN_PS_SAMPLE_BGRA_TO_VUYA_FULL_PREMUL, BUILD_SOURCE (PSMain_sample_bgra_to_vuya_full_premul)},
+  {GST_D3D_PLUGIN_PS_SAMPLE_BGRA_TO_VUYA_FULL, BUILD_SOURCE (PSMain_sample_bgra_to_vuya_full)},
+  {GST_D3D_PLUGIN_PS_SAMPLE_BGRA_TO_VUYA_LIMITED_PREMUL, BUILD_SOURCE (PSMain_sample_bgra_to_vuya_limited_premul)},
+  {GST_D3D_PLUGIN_PS_SAMPLE_BGRA_TO_VUYA_LIMITED, BUILD_SOURCE (PSMain_sample_bgra_to_vuya_limited)},
 };
 
 static const ShaderItem g_vs_map[] = {

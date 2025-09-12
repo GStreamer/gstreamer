@@ -55,6 +55,7 @@
 #include "gstd3d12fisheyedewarp.h"
 #include "gstd3d12memorycopy.h"
 #include "gstd3d12interlace.h"
+#include "gstd3d12overlaycompositor.h"
 #include <windows.h>
 #include <versionhelpers.h>
 #include <wrl.h>
@@ -205,6 +206,8 @@ plugin_init (GstPlugin * plugin)
       "d3d12fisheyedewarp", GST_RANK_NONE, GST_TYPE_D3D12_FISHEYE_DEWARP);
   gst_element_register (plugin,
       "d3d12interlace", GST_RANK_NONE, GST_TYPE_D3D12_INTERLACE);
+  gst_element_register (plugin, "d3d12overlaycompositor",
+      GST_RANK_NONE, GST_TYPE_D3D12_OVERLAY_COMPOSITOR);
 
   g_object_set_data_full (G_OBJECT (plugin),
       "plugin-d3d12-shutdown", (gpointer) "shutdown-data",
