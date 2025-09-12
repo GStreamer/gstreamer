@@ -1053,6 +1053,18 @@ gst_d3d12_memory_get_token_data (GstD3D12Memory * mem, gint64 token)
   return ret;
 }
 
+void
+gst_d3d12_memory_set_fence_unchecked (GstD3D12Memory * mem, ID3D12Fence * fence,
+    guint64 fence_value, gboolean wait)
+{
+  g_return_if_fail (gst_is_d3d12_memory (GST_MEMORY_CAST (mem)));
+
+  auto priv = mem->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  gst_d3d12_memory_set_fence_unlocked (mem, fence, fence_value, wait);
+}
+
 /**
  * gst_d3d12_memory_set_fence:
  * @mem: a #GstD3D12Memory
@@ -1070,13 +1082,9 @@ void
 gst_d3d12_memory_set_fence (GstD3D12Memory * mem, ID3D12Fence * fence,
     guint64 fence_value, gboolean wait)
 {
-  g_return_if_fail (gst_is_d3d12_memory (GST_MEMORY_CAST (mem)));
   g_return_if_fail (gst_mini_object_is_writable ((GstMiniObject *) mem));
 
-  auto priv = mem->priv;
-
-  std::lock_guard < std::mutex > lk (priv->lock);
-  gst_d3d12_memory_set_fence_unlocked (mem, fence, fence_value, wait);
+  gst_d3d12_memory_set_fence_unchecked (mem, fence, fence_value, wait);
 }
 
 /**
