@@ -24,6 +24,7 @@
 #include "gstdwriterender_d3d12.h"
 #include "gstdwrite-renderer.h"
 #include <gst/d3d12/gstd3d12-private.h>
+#include <gst/d3d12/gstd3d12memory-private.h>
 #include <d3d11on12.h>
 #include <wrl.h>
 #include <vector>
@@ -526,7 +527,8 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
 
     for (guint i = 0; i < gst_buffer_n_memory (output); i++) {
       auto dmem = (GstD3D12Memory *) gst_buffer_peek_memory (output, i);
-      gst_d3d12_memory_set_fence (dmem, fence, priv->fence_val, FALSE);
+      gst_d3d12_memory_set_fence_unchecked (dmem,
+          fence, priv->fence_val, FALSE);
       GST_MINI_OBJECT_FLAG_SET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
       GST_MINI_OBJECT_FLAG_UNSET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
     }

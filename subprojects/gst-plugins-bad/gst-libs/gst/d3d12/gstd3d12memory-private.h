@@ -21,9 +21,9 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include "gstd3d12_fwd.h"
-#include "gstd3d12format.h"
-#include "gstd3d12memory.h"
+#include <gst/d3d12/gstd3d12_fwd.h>
+#include <gst/d3d12/gstd3d12format.h>
+#include <gst/d3d12/gstd3d12memory.h>
 
 G_BEGIN_DECLS
 
@@ -38,6 +38,12 @@ struct _GstD3D12AllocationParams
   guint array_size;
   guint mip_levels;
 };
+
+GST_D3D12_API
+void  gst_d3d12_memory_set_fence_unchecked (GstD3D12Memory * mem,
+                                            ID3D12Fence * fence,
+                                            guint64 fence_value,
+                                            gboolean wait);
 
 G_END_DECLS
 
