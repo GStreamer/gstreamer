@@ -261,10 +261,10 @@ set(GStreamer_VERSION "${PC_GST_VERSION}")
 set(GSTREAMER_PLUGINS ${GStreamer_FIND_COMPONENTS})
 # These are the API packages
 set(GSTREAMER_APIS ${GSTREAMER_PLUGINS})
-list(FILTER GSTREAMER_APIS INCLUDE REGEX "^api_")
+list(FILTER GSTREAMER_APIS INCLUDE REGEX "^gstreamer-")
 # Filter them out, although they're handled the same
 # they cannot be considered for the purposes of initialization
-list(FILTER GSTREAMER_PLUGINS EXCLUDE REGEX "^api_")
+list(FILTER GSTREAMER_PLUGINS EXCLUDE REGEX "^gstreamer-")
 
 # Test validity of the paths
 # NOTE: only paths that must be considered are those provided by pkg-config
@@ -441,10 +441,7 @@ foreach(_gst_PLUGIN IN LISTS GSTREAMER_APIS)
         set(_gst_PLUGIN_REQUIRED)
     endif()
 
-    string(REGEX REPLACE "^api_(.+)" "\\1" _gst_PLUGIN_PC "${_gst_PLUGIN}")
-    string(REPLACE "_" "-" _gst_PLUGIN_PC "${_gst_PLUGIN_PC}")
-
-    pkg_check_modules(PC_GStreamer_${_gst_PLUGIN} "gstreamer-${_gst_PLUGIN_PC}-1.0" IMPORTED_TARGET)
+    pkg_check_modules(PC_GStreamer_${_gst_PLUGIN} ${_gst_PLUGIN} IMPORTED_TARGET)
 
     set(GStreamer_${_gst_PLUGIN}_FOUND "${PC_GStreamer_${_gst_PLUGIN}_FOUND}")
     if (NOT GStreamer_${_gst_PLUGIN}_FOUND)
