@@ -36,6 +36,7 @@
 #include <condition_variable>
 #include <memory>
 #include <wrl.h>
+#include <atomic>
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -175,10 +176,12 @@ enum
   PROP_0,
   PROP_ADAPTER,
   PROP_QUEUE_TYPE,
+  PROP_USE_STAGING_MEMORY,
 };
 
 #define DEFAULT_ADAPTER -1
 #define DEFAULT_QUEUE_TYPE GST_D3D12_MEMCPY_CMD_QUEUE_AUTO
+#define DEFAULT_USE_STAGING_MEMORY TRUE
 
 #ifdef HAVE_GST_D3D11
 #define ASYNC_FENCE_WAIT_DEPTH 16
@@ -365,6 +368,7 @@ struct _GstD3D12MemoryCopyPrivate
   gint adapter = DEFAULT_ADAPTER;
   GstD3D12MemcpyCmdQueueType queue_type = DEFAULT_QUEUE_TYPE;
   D3D12_COMMAND_LIST_TYPE selected_queue_type = D3D12_COMMAND_LIST_TYPE_COPY;
+  std::atomic < gboolean > use_staging = { DEFAULT_USE_STAGING_MEMORY };
 
   std::recursive_mutex lock;
 };
@@ -438,6 +442,20 @@ gst_d3d12_memory_copy_class_init (GstD3D12MemoryCopyClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
               G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstD3D12MemoryCopy:use-staging-memory:
+   *
+   * Use GPU-visible staging memory for upload/download operations
+   * instead of system memory
+   *
+   * Since: 1.28
+   */
+  g_object_class_install_property (object_class, PROP_USE_STAGING_MEMORY,
+      g_param_spec_boolean ("use-staging-memory", "Use Staging Memory",
+          "If FALSE, system memory pool will be used instead of GPU-visible "
+          "staging memory", DEFAULT_USE_STAGING_MEMORY,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d12_memory_copy_set_context);
 
@@ -503,6 +521,9 @@ gst_d3d12_memory_copy_set_property (GObject * object, guint prop_id,
     case PROP_QUEUE_TYPE:
       priv->queue_type = (GstD3D12MemcpyCmdQueueType) g_value_get_enum (value);
       break;
+    case PROP_USE_STAGING_MEMORY:
+      priv->use_staging = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -523,6 +544,9 @@ gst_d3d12_memory_copy_get_property (GObject * object, guint prop_id,
       break;
     case PROP_QUEUE_TYPE:
       g_value_set_enum (value, priv->queue_type);
+      break;
+    case PROP_USE_STAGING_MEMORY:
+      g_value_set_boolean (value, priv->use_staging);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1036,7 +1060,8 @@ gst_d3d12_memory_copy_propose_allocation (GstBaseTransform * trans,
       is_d3d11 = true;
     }
 #endif
-    else if (priv->transfer_type == TransferType::SYSTEM_TO_D3D12) {
+    else if (priv->transfer_type == TransferType::SYSTEM_TO_D3D12 &&
+        priv->use_staging) {
       pool = gst_d3d12_staging_buffer_pool_new (priv->device12);
       GST_DEBUG_OBJECT (self, "Proposing staging pool");
     } else {
@@ -1214,7 +1239,8 @@ gst_d3d12_memory_copy_decide_allocation (GstBaseTransform * trans,
     is_d3d11 = true;
   }
 #endif
-  else if (priv->transfer_type == TransferType::D3D12_TO_SYSTEM) {
+  else if (priv->transfer_type == TransferType::D3D12_TO_SYSTEM &&
+      priv->use_staging) {
     gst_clear_object (&pool);
     pool = gst_d3d12_staging_buffer_pool_new (priv->device12);
     GST_DEBUG_OBJECT (self, "Creating staging buffer pool");
