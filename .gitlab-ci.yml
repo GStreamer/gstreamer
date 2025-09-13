@@ -416,9 +416,6 @@ build fedora gcc:
         # https://github.com/mesonbuild/meson/issues/5214
         # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/4281?commit_id=d1a687b61d8fbc5ae35b4bb62aa7fd1d091818f2#note_1875699
         #
-        # Disabling gstreamer-sharp tests because they download things as part of configure with
-        # nuget which frequently fails on the CI (possibly because we're hammering the site)
-        #
         # Disabling building both qt5 and qt6 when doing static builds since we can only link against one
         MESON_ARGS: >-
           ${DEFAULT_MESON_ARGS}
@@ -427,7 +424,6 @@ build fedora gcc:
           -Dgst-editing-services:python=disabled
           -Dintrospection=disabled
           -Ddoc=disabled
-          -Dgstreamer-sharp:tests=disabled
           -Dqt5=disabled -Dqt6=enabled
 
 build fedora clang:
@@ -444,16 +440,12 @@ build fedora clang:
 
       - BUILD_TYPE: ["--default-library=static"]
         BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true", "-Dgstreamer:gst_debug=false"]
-        # Disabling gstreamer-sharp tests because they download things as part of configure with
-        # nuget which frequently fails on the CI (possibly because we're hammering the site)
-        #
         # Disabling building both qt5 and qt6 when doing static builds since we can only link against one
         MESON_ARGS: >-
           ${DEFAULT_MESON_ARGS}
           -Dintrospection=disabled
           -Dpython=disabled
           -Ddoc=disabled
-          -Dgstreamer-sharp:tests=disabled
           -Dqt5=disabled -Dqt6=enabled
 
 build debian x86_64:
