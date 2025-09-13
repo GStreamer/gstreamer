@@ -303,6 +303,10 @@ struct _GstD3D12MemoryCopyPrivate
       gst_buffer_pool_set_active (fallback_pool12, FALSE);
     gst_clear_object (&fallback_pool12);
 
+    if (staging_pool)
+      gst_buffer_pool_set_active (staging_pool, FALSE);
+    gst_clear_object (&staging_pool);
+
     fence12 = nullptr;
     fence12_external = nullptr;
     fence12_on_11 = nullptr;
@@ -351,6 +355,7 @@ struct _GstD3D12MemoryCopyPrivate
 #endif
 
   GstBufferPool *fallback_pool12 = nullptr;
+  GstBufferPool *staging_pool = nullptr;
 
   GstCaps *incaps = nullptr;
   GstCaps *outcaps = nullptr;
@@ -926,6 +931,20 @@ gst_d3d12_memory_copy_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   } else if (priv->in_type == MemoryType::SYSTEM &&
       priv->out_type == MemoryType::D3D12) {
     priv->transfer_type = TransferType::SYSTEM_TO_D3D12;
+  }
+
+  if (priv->transfer_type == TransferType::SYSTEM_TO_D3D12 ||
+      priv->transfer_type == TransferType::D3D12_TO_SYSTEM) {
+    priv->staging_pool = gst_d3d12_staging_buffer_pool_new (priv->device12);
+    auto config = gst_buffer_pool_get_config (priv->staging_pool);
+    gst_buffer_pool_config_set_params (config, incaps, priv->info.size, 0, 0);
+    if (!gst_buffer_pool_set_config (priv->staging_pool, config)) {
+      GST_ERROR_OBJECT (self, "Bufferpool config failed");
+      gst_clear_object (&priv->staging_pool);
+    } else if (!gst_buffer_pool_set_active (priv->staging_pool, TRUE)) {
+      GST_ERROR_OBJECT (self, "Bufferpool set active failed");
+      gst_clear_object (&priv->staging_pool);
+    }
   }
 
   return TRUE;
@@ -1747,6 +1766,59 @@ gst_d3d12_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     priv->transfer_type = TransferType::SYSTEM;
   }
 #endif
+
+  if (priv->transfer_type == TransferType::SYSTEM_TO_D3D12 &&
+      priv->staging_pool) {
+    auto mem = gst_buffer_peek_memory (upload_buf, 0);
+    if (!gst_is_d3d12_staging_memory (mem) && !gst_is_d3d12_memory (mem)) {
+      GstBuffer *staging = nullptr;
+      gst_buffer_pool_acquire_buffer (priv->staging_pool, &staging, nullptr);
+      if (staging) {
+        GstVideoFrame in_frame, out_frame;
+        gboolean copy_ret = FALSE;
+        if (gst_video_frame_map (&in_frame, &priv->info, upload_buf,
+                GST_MAP_READ)) {
+          if (gst_video_frame_map (&out_frame, &priv->info, staging,
+                  GST_MAP_WRITE)) {
+            copy_ret = gst_video_frame_copy (&out_frame, &in_frame);
+            gst_video_frame_unmap (&out_frame);
+          }
+
+          gst_video_frame_unmap (&in_frame);
+        }
+
+        if (copy_ret) {
+          gst_buffer_unref (upload_buf);
+          upload_buf = staging;
+          GST_TRACE_OBJECT (self,
+              "Intermediate upload using staging buffer done");
+        } else {
+          gst_buffer_unref (staging);
+        }
+      }
+    }
+  } else if (priv->transfer_type == TransferType::D3D12_TO_SYSTEM &&
+      priv->staging_pool) {
+    auto in_mem = gst_buffer_peek_memory (upload_buf, 0);
+    auto out_mem = gst_buffer_peek_memory (outbuf, 0);
+
+    if (gst_is_d3d12_memory (in_mem) && !gst_is_d3d12_memory (out_mem) &&
+        !gst_is_d3d12_staging_memory (out_mem)) {
+      GstBuffer *staging = nullptr;
+      gst_buffer_pool_acquire_buffer (priv->staging_pool, &staging, nullptr);
+      if (staging) {
+        if (gst_d3d12_buffer_copy_into_full (staging, upload_buf,
+                &priv->info, priv->selected_queue_type)) {
+          gst_buffer_unref (upload_buf);
+          upload_buf = staging;
+          GST_TRACE_OBJECT (self,
+              "Intermediate download using staging buffer done");
+        } else {
+          gst_buffer_unref (staging);
+        }
+      }
+    }
+  }
 
   auto ret = gst_d3d12_buffer_copy_into_full (outbuf, upload_buf, &priv->info,
       priv->selected_queue_type);
