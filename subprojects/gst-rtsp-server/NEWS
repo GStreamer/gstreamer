@@ -2,11 +2,11 @@ GStreamer 1.26 Release Notes
 
 GStreamer 1.26.0 was originally released on 11 March 2025.
 
-The latest bug-fix release in the stable 1.26 series is 1.26.5 and was released on 07 August 2025.
+The latest bug-fix release in the stable 1.26 series is 1.26.6 and was released on 14 September 2025.
 
 See https://gstreamer.freedesktop.org/releases/1.26/ for the latest version of this document.
 
-Last updated: Thursday 07 August 2025, 18:00 UTC (log)
+Last updated: Sunday 14 September 2025, 12:00 UTC (log)
 
 ## Introduction
 
@@ -2198,23 +2198,40 @@ This release only contains bugfixes including some important playback fixes, and
 Highlighted bugfixes in 1.26.5
 
 -   audioconvert: Fix caps negotiation regression when using a mix matrix
+
 -   aws: Add support for brevity in awstranslate and add option to partition speakers in the transcription output of
     awstranscriber2
+
 -   speechmatics speech-to-text: Expose mask-profanities property
+
 -   cea708mux: Add support for discarding select services on each input
+
 -   cea608overlay, cea708overlay: Accept GPU memory buffers if downstream supports the overlay composition meta
+
 -   d3d12screencapture source element and device provider fixes
+
 -   decodebin3: Don’t error on an incoming ONVIF metadata stream
+
 -   uridecodebin3: Fix potential crash when adding URIs to messages, e.g. if no decoder is available
+
 -   v4l2: Fix memory leak for dynamic resolution change
+
 -   VA encoder fixes
+
 -   videorate, imagefreeze: Add support for JPEG XS
+
 -   Vulkan integration fixes
+
 -   wasapi2 audio device monitor improvements
+
 -   webrtc: Add WHEP client signaller and add whepclientsrc element on top of webrtcsrc using that
+
 -   threadshare: Many improvements and fixes to the generic threadshare and RTP threadshare elements
+
 -   rtpbin2 improvements and fixes
+
 -   gst-device-monitor-1.0 command line tool improvements
+
 -   Various bug fixes, build fixes, memory leak fixes, and other stability and reliability improvements
 
 gstreamer
@@ -2260,33 +2277,63 @@ gst-plugins-ugly
 
 GStreamer Rust plugins
 
--   awstranscriber2,awstranslate: Handle multiple stream-start event
--   awstranslate: expose property for turning brevity on
--   awstranscriber2: add property for setting show_speaker_labels
--   cea708mux: expose “discarded-services” property on sink pads
+-   Note: This list has been updated, since it originally accidentally included some Merge Requests that only landed in the main
+    branch, not in the 0.14 branch that ships with our GStreamer 1.26.5 packages.
+
+-   awstranscriber2, awstranslate: Handle multiple stream-start event
+
+-   awstranslate: expose property for turning brevity on)
+
+-   awstranscriber2: add property for setting show_speaker_labels)
+
+-   cea708mux: expose “discarded-services” property on sink pads)
+
 -   ceaX08overlay: support ANY caps features, allowing e.g. memory:GLMemory if downstream supports the overlay composition meta
+
 -   hlsmultivariantsink: Fix master playlist version
+
 -   rtprecv: Drop state lock before chaining RTCP packets from the RTP chain function
--   rtpbin2: Add examples
+
+-   Add rtpbin2 examples
+
 -   rtpmp4apay2: fix payload size prefix
+
 -   rtp: threadshare: fix some property ranges
+
 -   mpegtslivesrc: Remove leftover debug message
--   speechmatics: expose mask-profanities property
+
+-   speechmatics: expose mask-profanities property)
+
 -   ts-audiotestsrc fixes
+
 -   threadshare: fix flush for ts-queue ts-proxy & ts-intersrc
+
 -   threadshare: fix regression in ts-proxysrc
+
 -   threadshare: improvements to some elements
--   threadshare: udp: avoid getifaddrs in android
+
+-   threadshare: udp: avoid getifaddrs in android)
+
 -   threadshare: Enable windows Win32_Networking feature
+
 -   threadshare: queue & proxy: fix race condition stopping
+
 -   threadshare: Also enable windows Win32_Networking_WinSock feature
+
 -   tracers: pipeline-snapshot: reduce WebSocket connection log level
+
 -   tracers: queue-levels: add support for threadshare DataQueue related elements
+
 -   tracers: Update to etherparse 0.19
+
 -   transcriberbin: Fix handling of upstream latency query
--   webrtc: android example: fix media handling initialization sequence
+
+-   webrtc: android example: fix media handling initialization sequence)
+
 -   webrtcsink: Move videorate before videoconvert and videoscale to avoid processing frames that would be dropped
+
 -   whep: add WHEP client signaller
+
 -   Fix various new clippy 1.89 warnings
 
 gst-libav
@@ -2351,6 +2398,206 @@ List of merge requests and issues fixed in 1.26.5
 
 -   List of Merge Requests applied in 1.26.5
 -   List of Issues fixed in 1.26.5
+
+1.26.6
+
+The sixth 1.26 bug-fix release (1.26.6) was released on 14 September 2025.
+
+This release only contains bugfixes including some important playback fixes, and it should be safe to update from 1.26.x.
+
+Highlighted bugfixes in 1.26.6
+
+-   analytics GstTensorMeta handling changes (see note below)
+-   closed caption combiner and transcriberbin stability fixes
+-   decklinkvideosrc: fix unrecoverable state after failing to start streaming because device is busy
+-   decodebin3 tag handling improvements
+-   fallbacksrc: Fix sources only being restarted once, as well as some deadlocks and race conditions on shutdown
+-   gtk4paintablesink: Try importing dmabufs withouth DMA_DRM caps
+-   hlsdemux2: Fix parsing of byterange and init map directives
+-   rtpmp4gdepay2: allow only constantduration with neither constantsize nor sizelength set
+-   spotifysrc: update to librespot 0.7 to make work after recent Spotify changes
+-   threadshare: new blocking adapter element for use in front of block elements such as sinks that sync to the clock
+-   threadshare: various other threadshare element fixes and improvements
+-   v4l2: Add support for WVC1 and WMV3
+-   videorate: possible performance improvements when operating in drop-only mode
+-   GstBaseParse fixes
+-   Vulkan video decoder fixes
+-   Fix gst-device-monitor-1.0 tool device-path regression on Windows
+-   Monorepo development environment builds fewer plugins using subprojects by default, those require explicit enablement now
+-   Python bindings: Handle buffer PTS, DTS, duration, offset, and offset-end as unsigned long long (regression fix)
+-   Cerbero: Reduce recipe parallelism in various cases and dump cerbero and recipe versions into datadir during packaging
+-   Various bug fixes, build fixes, memory leak fixes, and other stability and reliability improvements
+
+Possibly breaking behavioural changes
+
+-   Previously it was guaranteed that there is only ever up to one GstTensorMeta per buffer. This is no longer true and code
+    working with GstTensorMeta must be able to handle multiple GstTensorMeta now (after this Merge Request).
+
+gstreamer
+
+-   baseparse: Try harder to fixate caps based on upstream in default negotiation
+-   gst-discoverer reports 1x1 dimensions for “valid” MP4 files
+-   baseparse: don’t clear most sticky events after a FLUSH_STOP event
+-   gstreamer: Disable miniobject inline functions for gobject-introspection for non-subprojects too
+-   gstreamer: Make sure to zero-initialize the GValue before G_VALUE_COLLECT_INIT
+-   ptp: Fix a new Rust 1.89 compiler warning on Windows
+-   ptp: Fix new compiler warning with Rust 1.89
+-   Segmentation fault when compiled with “-ftrivial-auto-var-init=pattern”. Use of unitialized GValue.
+
+gst-plugins-base
+
+-   decodebin3: Update stream tags
+-   rtpbasedepayload: Avoid potential use-after free
+-   rtspconnection: Add get_url and get_ip return value annotation
+-   gst_rtsp_connection_get_url return value transfer annotation missing
+-   videometa: Fix valgrind warning when deserializing video meta
+-   videorate: don’t hold the reference to the buffer in drop-only mode
+-   gst-device-monitor-1.0: Fix device-path regression on Windows
+-   gst-device-monitor-1.0: Add quoting for powershell and cmd
+-   Monorepo: opengl, vorbis, plugins require explicit enablement now for a build using the Meson subproject fallback
+
+gst-plugins-good
+
+-   adaptivedemux2: fix crash due to log
+-   adaptivedemux2: Crash in logging when “Dropping EOS before next period”
+-   hlsdemux2: Fix parsing of byterange and init map directives
+-   mpg123audiodec: Always break the decoding loop and relay downstream flow errors upstream
+-   v4l2: Add support for WVC1 and WMV3
+-   Monorepo: dv plugin requires explicit enablement now for a build using the Meson subproject fallback
+
+gst-plugins-bad
+
+-   analytics: always add GstTensorMeta
+-   cccombiner: Crash fixes
+-   curlsmtpsink: adapt to date formatting issue
+-   decklinkvideosrc: fix decklinkvideosrc becomes unrecoverable if it fails to start streaming
+-   decklinkvideosrc gets into unrecoverable state if device is busy
+-   dwrite: Fix D3D12 critical warning
+-   hlsdemux: Fix parsing of byterange and init map directives
+-   mpegtsmux: Caps event fails with stream type change error
+-   vulkanh24xdec: couple of fixes
+-   vulkanh26xdec: fix discont state handling
+-   waylandsink: add some error handler for event dispatch
+-   zbar: tests: Handle symbol-bytes as not null-terminated
+-   Monorepo: avtp, codec2json, iqa, microdns, openjpeg, qroverlay, soundtouch, tinyalsa plugins require explicit enablement now
+    for a build using the Meson subproject fallback
+
+gst-plugins-ugly
+
+-   No changes
+
+GStreamer Rust plugins
+
+-   analyticscombiner: Use NULL caps instead of EMPTY caps in the array for streams with no caps
+-   aws: Ensure task stopping on paused-to-ready state change
+-   fallbacksrc: Don’t panic during retries if the element was shut down in parallel
+-   fallbacksrc: Don’t restart source if the element is just being shut down
+-   fallbacksrc: Fix some custom source deadlocks
+-   fallbacksrc: Fix sources only being restarted once
+-   gtk4: Try importing dmabufs withouth DMA_DRM caps
+-   inter: Give the appsrc/appsink a name that has the parent element as prefix
+-   mp4: Skip tests using x264enc if it does not exist
+-   rtpgccbwe: avoid clamp() panic when min_bitrate > max_bitrate
+-   rtpmp4gdepay2: allow only constantduration with neither constantsize nor sizelength set
+-   rtprecv: fix race condition on first buffer
+-   speechmatics: Specify rustls as an explicit dependency
+-   spotify: update to librespot 0.7
+-   threadshare: add a blocking adapter element
+-   threadshare: always use block_on_or_add_subtask
+-   threadshare: audiotestsrc: fix setting samples-per-buffer…
+-   threadshare: blocking_adapter: fix Since marker in docs
+-   threadshare: fix resources not available when preparing asynchronously
+-   threadshare: fix ts-inter test one_to_one_up_first
+-   threadshare: have Task log its obj
+-   threadshare: intersink: return from blocking tasks when stopping
+-   threadshare: inter: update doc example
+-   threadshare: runtime/pad: lower log level pushing Buffer to flushing pad
+-   threadshare: separate blocking & throttling schedulers
+-   threadshare: update examples
+-   threadshare: Update to getifaddrs 0.5
+-   threadshare: Fix macOS build post getifaddrs 0.5 update
+-   threadshare: Bump up getiffaddrs to 0.1.5 and revert “udp: avoid getifaddrs in android”
+-   threadshare: Reapply “udp: avoid getifaddrs in android”
+-   transcriberbin: Fix some deadlocks
+-   Update dependencies
+-   webrtc: Migrate to warp 0.4 and switch to tokio-rustls
+-   webrtc/signalling: Fix setting of host address
+-   ci: add script to check readme against plugins list
+-   Fix various new clippy 1.89 warnings
+-   Don’t suggest running cargo cinstall after cargo cbuild
+-   meson: Isolate built plugins from cargo target directory
+
+gst-libav
+
+-   No changes
+
+gst-rtsp-server
+
+-   rtsp-server: tests: Switch to fixtures to ensure pool shutdown
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-python
+
+-   python: Handle buffer PTS/DTS/duration/offset/offset-end as unsigned long long
+
+gst-editing-services
+
+-   gstreamer: Make sure to zero-initialize the GValue before G_VALUE_COLLECT_INIT
+-   Fix various memory leaks
+
+gst-devtools, gst-validate + gst-integration-testsuites
+
+-   validate: http-actions: Replace GUri with GstURI for GLib 2.64 compatibility
+-   Fix memory leak and use of incorrect context
+
+gst-examples
+
+-   No changes
+
+gstreamer-docs
+
+-   No changes
+
+Development build environment
+
+-   gobject-introspection: Fix introspection failing on Linux with subproject GLib
+-   glib: update to 2.82.5 and backport shebangs patch
+-   ci: Work around PowerShell broken argument parsing
+-   Disable more plugins on Windows by default by not pulling in fallback subprojects automatically, only if plugins are enabled
+    explicitly
+-   Fix build on windows due to proxy-libintl not being invoked
+-   python: Reapply fixes to enable running Python bindings on Windows
+
+Cerbero build tool and packaging changes in 1.26.6
+
+-   ffmpeg: enable filters needed by avvideocompare
+-   cache: Fix detection of build tools prefix when using a cache
+-   cerbero/package: fix –tarball –compress-method=none
+-   cerbero: Reduce recipe parallelism in various cases
+-   ci: remove unpacked apk dir on completion
+-   package: Dump cerbero and recipe versions into datadir
+
+Contributors to 1.26.6
+
+Andrey Khamukhin, Daniel Morin, Doug Nazar, François Laignel, Guillaume Desmottes, Hou Qi, Ian Napier, Jan Alexander Steffens
+(heftig), Jan Schmidt, Jordan Petridis, L. E. Segovia, Marko Kohtala, Matthew Waters, Monty C, Nirbheek Chauhan, Ola Fornander,
+Olivier Crête, Piotr Brzeziński, Qian Hu (胡骞), r4v3n6101, Robert Mader, Ruben Gonzalez, Sanchayan Maity, Sebastian Dröge,
+Seungha Yang, Taruntej Kanakamalla, Thibault Saunier, Tim-Philipp Müller, Víctor Manuel Jáquez Leal, Vivian LEE, Vivienne
+Watermeier, Xavier Claessens,
+
+… and many others who have contributed bug reports, translations, sent suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.26.6
+
+-   List of Merge Requests applied in 1.26.6
+-   List of Issues fixed in 1.26.6
 
 Schedule for 1.28
 
