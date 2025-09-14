@@ -3824,7 +3824,7 @@ Example: "videobalance saturation=1.5 hue=+0.5"</doc>
     <record name="EffectPrivate" c:type="GESEffectPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-editing-services/ges/ges-effect.h"/>
     </record>
-    <enumeration name="Error" c:type="GESError">
+    <enumeration name="Error" c:type="GESError" glib:error-domain="GES_ERROR">
       <source-position filename="../subprojects/gst-editing-services/ges/ges-gerror.h"/>
       <member name="asset_wrong_id" value="0" c:identifier="GES_ERROR_ASSET_WRONG_ID">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-gerror.h">The ID passed is malformed</doc>
@@ -16479,6 +16479,14 @@ After this call GES should not be used until another ges_init() call.</doc>
           <type name="EditMode" c:type="GESEditMode"/>
         </parameter>
       </parameters>
+    </function>
+    <function name="error_quark" c:identifier="ges_error_quark" version="1.28">
+      <attribute name="doc.skip" value="true"/>
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-gerror.c">Get the error quark for GES errors.</doc>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-gerror.c">The error quark for GES errors</doc>
+        <type name="GLib.Quark" c:type="GQuark"/>
+      </return-value>
     </function>
     <function name="find_formatter_for_uri" c:identifier="ges_find_formatter_for_uri" version="1.18">
       <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-formatter.c">Get the best formatter for @uri. It tries to find a formatter

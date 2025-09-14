@@ -18,6 +18,8 @@
  */
 #pragma once
 
+#include <glib.h>
+
 /**
  * SECTION: ges-gerror
  * @title: GESErrors
@@ -31,7 +33,10 @@ G_BEGIN_DECLS
  *
  * An error happened in GES
  */
-#define GES_ERROR g_quark_from_static_string("GES_ERROR")
+#define GES_ERROR ges_error_quark ()
+
+GES_API
+GQuark ges_error_quark (void);
 
 /**
  * GESError:

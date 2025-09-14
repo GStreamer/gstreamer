@@ -1,6 +1,7 @@
 ges_sources = files([
     'ges.c',
     'ges-enums.c',
+    'ges-gerror.c',
     'ges-frame-composition-meta.c',
     'ges-meta-container.c',
     'ges-timeline.c',
