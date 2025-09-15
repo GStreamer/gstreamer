@@ -888,12 +888,14 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
     return FALSE;
   }
 
-  if ((self->priv->force_live && self->priv->first_buffer
-          && self->priv->start_time_selection ==
-          GST_AGGREGATOR_START_TIME_SELECTION_FIRST) ||
-      (self->priv->start_time_selection ==
-          GST_AGGREGATOR_START_TIME_SELECTION_NOW
-          && self->priv->first_buffer)) {
+  /* Try to select start time if we're PLAYING */
+  if (!self->priv->blocked && (
+          (self->priv->force_live && self->priv->first_buffer
+              && self->priv->start_time_selection ==
+              GST_AGGREGATOR_START_TIME_SELECTION_FIRST) ||
+          (self->priv->start_time_selection ==
+              GST_AGGREGATOR_START_TIME_SELECTION_NOW
+              && self->priv->first_buffer))) {
     GstClockTime start_time;
     GstAggregatorPad *srcpad = GST_AGGREGATOR_PAD (self->srcpad);
     start_time = gst_element_get_current_running_time (GST_ELEMENT (self));
