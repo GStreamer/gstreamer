@@ -224,6 +224,98 @@ GST_START_TEST (test_unixfd_segment)
 
 GST_END_TEST;
 
+GST_START_TEST (test_unixfd_big_payload)
+{
+  GError *error = NULL;
+
+  /* Ensure we don't have socket from previous failed test */
+  gchar *tempdir = g_dir_make_tmp ("unixfd-test-XXXXXX", &error);
+  g_assert_no_error (error);
+  gchar *socket_path = g_strdup_printf ("%s/socket", tempdir);
+
+  GstCaps *caps = gst_caps_new_empty_simple ("video/x-raw");
+
+  /* Setup service */
+  gchar *pipeline_str =
+      g_strdup_printf
+      ("appsrc name=src format=time ! unixfdsink socket-path=%s sync=false async=false wait-for-connection=true",
+      socket_path);
+  GstElement *pipeline_service = gst_parse_launch (pipeline_str, &error);
+  g_assert_no_error (error);
+  fail_unless (gst_element_set_state (pipeline_service,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
+  GstElement *appsrc = gst_bin_get_by_name (GST_BIN (pipeline_service), "src");
+  gst_object_unref (appsrc);
+  g_free (pipeline_str);
+
+  /* Setup client */
+  pipeline_str =
+      g_strdup_printf
+      ("unixfdsrc socket-path=%s ! appsink name=sink sync=false async=false",
+      socket_path);
+  GstElement *pipeline_client = gst_parse_launch (pipeline_str, &error);
+  g_assert_no_error (error);
+  fail_unless (gst_element_set_state (pipeline_client,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
+  GstElement *appsink = gst_bin_get_by_name (GST_BIN (pipeline_client), "sink");
+  gst_object_unref (appsink);
+  g_free (pipeline_str);
+
+  /* Send a buffer with 1MB meta payload */
+  gsize data_size = 1000000;
+  GstBuffer *indata = gst_buffer_new_allocate (NULL, data_size, NULL);
+  gst_buffer_memset (indata, 0, 0x42, data_size);
+
+  GstSegment segment;
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  gst_meta_register_custom_simple ("test_unixfd_big_payload");
+  GstBuffer *buf = gst_buffer_new ();
+  GstCustomMeta *meta =
+      gst_buffer_add_custom_meta (buf, "test_unixfd_big_payload");
+  gst_structure_set (meta->structure, "data", GST_TYPE_BUFFER, indata, NULL);
+  GstSample *sample = gst_sample_new (buf, caps, &segment, NULL);
+  gst_app_src_push_sample (GST_APP_SRC (appsrc), sample);
+  gst_sample_unref (sample);
+  gst_buffer_unref (buf);
+
+  /* Wait for it */
+  sample = gst_app_sink_pull_sample (GST_APP_SINK (appsink));
+  buf = gst_sample_get_buffer (sample);
+  meta = gst_buffer_get_custom_meta (buf, "test_unixfd_big_payload");
+  fail_unless (meta != NULL);
+  GstBuffer *outdata = NULL;
+  gst_structure_get (meta->structure, "data", GST_TYPE_BUFFER, &outdata, NULL);
+  gst_sample_unref (sample);
+
+  /* Check the buffer we received is identical */
+  GstMapInfo inmap;
+  GstMapInfo outmap;
+  gst_buffer_map (indata, &inmap, GST_MAP_READ);
+  gst_buffer_map (outdata, &outmap, GST_MAP_READ);
+  fail_unless (inmap.size == outmap.size);
+  fail_unless (memcmp (inmap.data, outmap.data, inmap.size) == 0);
+  gst_buffer_unmap (indata, &inmap);
+  gst_buffer_unmap (outdata, &outmap);
+  gst_buffer_unref (indata);
+  gst_buffer_unref (outdata);
+
+  /* Teardown */
+  fail_unless (gst_element_set_state (pipeline_client,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+  fail_unless (gst_element_set_state (pipeline_service,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+
+  g_rmdir (tempdir);
+  g_free (tempdir);
+
+  gst_object_unref (pipeline_service);
+  gst_object_unref (pipeline_client);
+  g_free (socket_path);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 static Suite *
 unixfd_suite (void)
 {
@@ -233,6 +325,7 @@ unixfd_suite (void)
   suite_add_tcase (s, tc);
   tcase_add_test (tc, test_unixfd_videotestsrc);
   tcase_add_test (tc, test_unixfd_segment);
+  tcase_add_test (tc, test_unixfd_big_payload);
 
   return s;
 }
