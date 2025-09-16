@@ -597,6 +597,24 @@ foreach_meta (GstBuffer * buffer, GstMeta ** meta, gpointer user_data)
   return TRUE;
 }
 
+static gboolean
+buffer_has_overlay_rect (GstBuffer * buf)
+{
+  gboolean has_rect = FALSE;
+  gpointer state = nullptr;
+  GstMeta *meta;
+  while ((meta = gst_buffer_iterate_meta_filtered (buf, &state,
+              GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE)) != nullptr) {
+    auto ometa = (GstVideoOverlayCompositionMeta *) meta;
+    if (gst_video_overlay_composition_n_rectangles (ometa->overlay) > 0) {
+      has_rect = TRUE;
+      break;
+    }
+  }
+
+  return has_rect;
+}
+
 static GstFlowReturn
 gst_d3d12_overlay_compositor_generate_output (GstBaseTransform * trans,
     GstBuffer ** buffer)
@@ -610,8 +628,8 @@ gst_d3d12_overlay_compositor_generate_output (GstBaseTransform * trans,
   auto buf = trans->queued_buf;
   trans->queued_buf = nullptr;
 
-  auto meta = gst_buffer_get_video_overlay_composition_meta (buf);
-  if (priv->blend_mode == BLEND_MODE_PASSTHROUGH || !meta) {
+  auto has_rect = buffer_has_overlay_rect (buf);
+  if (priv->blend_mode == BLEND_MODE_PASSTHROUGH || !has_rect) {
     *buffer = buf;
     return GST_FLOW_OK;
   }
@@ -764,6 +782,9 @@ gst_d3d12_overlay_compositor_generate_output (GstBaseTransform * trans,
   auto fence = gst_d3d12_device_get_fence_handle (ctx->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
   gst_d3d12_buffer_set_fence (buf, fence, priv->ctx->fence_val, FALSE);
+  gst_d3d12_device_set_fence_notify (ctx->device,
+      D3D12_COMMAND_LIST_TYPE_DIRECT, priv->ctx->fence_val,
+      FENCE_NOTIFY_MINI_OBJECT (fence_data));
 
   gst_buffer_foreach_meta (buf, foreach_meta, nullptr);
 
