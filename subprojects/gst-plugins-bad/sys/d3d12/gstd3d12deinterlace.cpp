@@ -1104,6 +1104,9 @@ gst_d3d12_deinterlace_submit_input_buffer (GstBaseTransform * trans,
   if (ret != GST_FLOW_OK)
     return ret;
 
+  if (gst_base_transform_is_passthrough (trans))
+    return GST_FLOW_OK;
+
   /* at this moment, baseclass must hold queued_buf */
   g_assert (trans->queued_buf != NULL);
   auto buf = trans->queued_buf;
