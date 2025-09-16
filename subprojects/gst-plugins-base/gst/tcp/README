@@ -6,7 +6,7 @@ This part of the documentation is for the new tcp elements:
                                                                                 
 TESTS
 -----
-Use these tests to test functionality of the various tcp plugins
+Use these commands to test functionality of the various tcp plugins
 
 * server: nc -l -p 3000
   client: nc localhost 3000
@@ -14,19 +14,20 @@ Use these tests to test functionality of the various tcp plugins
   everything you type in the client is shown on the server
 
 * server: nc -l -p 3000
-  client: gst-launch tcpclientsrc protocol=none port=3000 ! fdsink fd=2
+  client: gst-launch-1.0 tcpclientsrc port=3000 ! fdsink fd=2
   everything you type in the server is shown on the client
 
 * server: nc -l -p 3000
-  client: gst-launch fdsrc fd=1 ! tcpclientsink protocol=none port=3000
+  client: gst-launch-1.0 fdsrc fd=1 ! tcpclientsink port=3000
   everything you type in the client is shown on the server
 
-* server: gst-launch tcpserversrc protocol=none port=3000 ! fdsink fd=2
-  client: gst-launch fdsrc fd=1 ! tcpclientsink protocol=none port=3000
+* server: gst-launch-1.0 tcpserversrc port=3000 ! fdsink fd=2
+  client: gst-launch-1.0 fdsrc fd=1 ! tcpclientsink port=3000
+  everything you type in the client is shown on the server
 
-* server: gst-launch fdsrc fd=1 ! tcpserversink protocol=none port=3000
-  client: gst-launch tcpclientsrc protocol=none port=3000 ! fdsink fd=2
-  -> Received first buffer without caps set
+* server: gst-launch-1.0 fdsrc fd=1 ! tcpserversink port=3000
+  client: gst-launch-1.0 tcpclientsrc port=3000 ! fdsink fd=2
+  everything you type in the server is shown on the client
 
 TODO
 ----
