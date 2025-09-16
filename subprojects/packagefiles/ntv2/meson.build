@@ -23,7 +23,7 @@ endforeach
 
 if get_option('warning_level') == '0'
   add_project_arguments(
-    cxx.get_supported_arguments(['-Wno-deprecated-declarations']),
+    cxx.get_supported_arguments(['-Wno-deprecated-declarations', '-Wno-return-local-addr']),
     language: 'cpp',
   )
 endif
