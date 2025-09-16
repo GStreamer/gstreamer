@@ -26,9 +26,13 @@ plugin_sources += {
   'isac': pathsep.join(doc_sources)
 }
 
+# Fedora's pkgconfig file adds -Wno-virtual-dtor and GCC complains about that
+# being a C++-only argument
+gstisac_c_args = cc.get_supported_arguments(['-Wno-complain-wrong-lang'])
+
 if webrtc_audio_coding_dep.found()
   gstisac = library('gstisac', isac_sources,
-    c_args : gst_plugins_bad_args,
+    c_args : gst_plugins_bad_args + gstisac_c_args,
     include_directories : [configinc],
     dependencies : [gstaudio_dep, webrtc_audio_coding_dep],
     install : true,
