@@ -18,7 +18,8 @@ gst_version_is_stable = gst_version_minor.is_even()
 gst_version_is_dev = gst_version_minor.is_odd() and gst_version_micro < 90
 
 api_version = '1.0'
-libavcodec_dep = dependency('libavcodec', version: '>= 58.18.100', allow_fallback: true)
+libavcodec_dep = dependency('libavcodec', version: '>= 58.18.100', allow_fallback: true,
+    default_options: ['suppress_warnings=true'])
 libavfilter_dep = dependency('libavfilter', version: '>= 7.16.100')
 libavformat_dep = dependency('libavformat', version: '>= 58.12.100')
 libavutil_dep = dependency('libavutil', version: '>= 56.14.100')
