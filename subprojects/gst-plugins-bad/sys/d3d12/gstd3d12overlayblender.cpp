@@ -27,6 +27,7 @@
 #include <wrl.h>
 #include <memory>
 #include <vector>
+#include <unordered_map>
 #include <algorithm>
 #include <gst/d3dshader/gstd3dshader.h>
 
@@ -82,11 +83,19 @@ struct GstD3D12OverlayBlenderPrivate
 
   ~GstD3D12OverlayBlenderPrivate ()
   {
-    if (overlays)
-      g_list_free_full (overlays, (GDestroyNotify) gst_mini_object_unref);
+    ClearOverlays ();
 
     gst_clear_object (&ca_pool);
     gst_clear_object (&srv_heap_pool);
+  }
+
+  void ClearOverlays ()
+  {
+    overlays.clear ();
+
+    for (auto &it : cache)
+      gst_mini_object_unref (it.second);
+    cache.clear ();
   }
 
   GstVideoInfo info;
@@ -108,8 +117,10 @@ struct GstD3D12OverlayBlenderPrivate
   GstD3D12CmdAllocPool *ca_pool = nullptr;
   GstD3D12DescHeapPool *srv_heap_pool = nullptr;
 
-  GList *overlays = nullptr;
-
+  /* Only cache will hold strong reference to GstD3D12OverlayRect */
+  std::unordered_map<GstVideoOverlayRectangle*, GstD3D12OverlayRect*> cache;
+  std::vector<GstD3D12OverlayRect*> overlays;
+  std::vector<GstD3D12OverlayRect *> new_overlays;
   std::vector<GstVideoOverlayRectangle *> rects_to_upload;
 };
 /* *INDENT-ON* */
@@ -655,12 +666,17 @@ gst_d3d12_overlay_blender_foreach_meta (GstBuffer * buffer, GstMeta ** meta,
   auto num_rect = gst_video_overlay_composition_n_rectangles (cmeta->overlay);
   for (guint i = 0; i < num_rect; i++) {
     auto rect = gst_video_overlay_composition_get_rectangle (cmeta->overlay, i);
-    priv->rects_to_upload.push_back (rect);
+    if (std::find (priv->rects_to_upload.begin (),
+            priv->rects_to_upload.end (),
+            rect) == priv->rects_to_upload.end ()) {
+      priv->rects_to_upload.push_back (rect);
+    }
   }
 
   return TRUE;
 }
 
+/* *INDENT-OFF* */
 gboolean
 gst_d3d12_overlay_blender_upload (GstD3D12OverlayBlender * compositor,
     GstBuffer * buf)
@@ -676,53 +692,49 @@ gst_d3d12_overlay_blender_upload (GstD3D12OverlayBlender * compositor,
       compositor);
 
   if (priv->rects_to_upload.empty ()) {
-    if (priv->overlays)
-      g_list_free_full (priv->overlays, (GDestroyNotify) gst_mini_object_unref);
-    priv->overlays = nullptr;
+    priv->ClearOverlays ();
     return TRUE;
   }
 
   GST_LOG_OBJECT (compositor, "Found %" G_GSIZE_FORMAT
       " overlay rectangles", priv->rects_to_upload.size ());
 
-  for (size_t i = 0; i < priv->rects_to_upload.size (); i++) {
-    GList *iter;
-    bool found = false;
-    for (iter = priv->overlays; iter; iter = g_list_next (iter)) {
-      auto rect = (GstD3D12OverlayRect *) iter->data;
-      if (rect->overlay_rect == priv->rects_to_upload[i]) {
-        found = true;
-        break;
-      }
+  priv->new_overlays.clear ();
+
+  for (auto it : priv->rects_to_upload) {
+    auto found = priv->cache.find (it);
+    GstD3D12OverlayRect *rect = nullptr;
+
+    if (found != priv->cache.end ()) {
+      rect = found->second;
+    } else {
+      rect = gst_d3d12_overlay_rect_new (compositor, it);
+      if (!rect)
+        continue;
+
+      priv->cache.emplace (it, rect);
     }
 
-    if (!found) {
-      auto new_rect = gst_d3d12_overlay_rect_new (compositor,
-          priv->rects_to_upload[i]);
-      if (new_rect)
-        priv->overlays = g_list_append (priv->overlays, new_rect);
+    priv->new_overlays.push_back (rect);
+  }
+
+  auto it = priv->cache.begin ();
+  while (it != priv->cache.end ()) {
+    if (std::find (priv->rects_to_upload.begin (),
+          priv->rects_to_upload.end (), it->first) ==
+          priv->rects_to_upload.end ()) {
+      gst_mini_object_unref (it->second);
+      it = priv->cache.erase (it);
+    } else {
+      it++;
     }
   }
 
-  /* Remove old overlay */
-  GList *iter;
-  GList *next;
-  for (iter = priv->overlays; iter; iter = next) {
-    auto rect = (GstD3D12OverlayRect *) iter->data;
-    next = g_list_next (iter);
-
-    if (std::find_if (priv->rects_to_upload.begin (),
-            priv->rects_to_upload.end (),[&](const auto & overlay)->bool
-            {
-            return overlay == rect->overlay_rect;}
-        ) == priv->rects_to_upload.end ()) {
-      gst_mini_object_unref (rect);
-      priv->overlays = g_list_delete_link (priv->overlays, iter);
-    }
-  }
+  priv->overlays.swap (priv->new_overlays);
 
   return TRUE;
 }
+/* *INDENT-ON* */
 
 gboolean
 gst_d3d12_overlay_blender_update_viewport (GstD3D12OverlayBlender *
@@ -746,6 +758,7 @@ gst_d3d12_overlay_blender_update_viewport (GstD3D12OverlayBlender *
   return TRUE;
 }
 
+/* *INDENT-OFF* */
 static gboolean
 gst_d3d12_overlay_blender_execute (GstD3D12OverlayBlender * self,
     GstBuffer * buf, GstD3D12FenceData * fence_data,
@@ -760,10 +773,8 @@ gst_d3d12_overlay_blender_execute (GstD3D12OverlayBlender * self,
     return FALSE;
   }
 
-  GList *iter;
   ComPtr < ID3D12PipelineState > prev_pso;
-  for (iter = priv->overlays; iter; iter = g_list_next (iter)) {
-    auto rect = (GstD3D12OverlayRect *) iter->data;
+  for (auto rect : priv->overlays) {
     if (rect->need_upload) {
       D3D12_TEXTURE_COPY_LOCATION src =
           CD3DX12_TEXTURE_COPY_LOCATION (rect->staging.Get (), rect->layout);
@@ -826,6 +837,7 @@ gst_d3d12_overlay_blender_execute (GstD3D12OverlayBlender * self,
 
   return TRUE;
 }
+/* *INDENT-ON* */
 
 gboolean
 gst_d3d12_overlay_blender_draw (GstD3D12OverlayBlender * compositor,
@@ -839,7 +851,7 @@ gst_d3d12_overlay_blender_draw (GstD3D12OverlayBlender * compositor,
 
   auto priv = compositor->priv;
 
-  if (!priv->overlays)
+  if (priv->overlays.empty ())
     return TRUE;
 
   auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (buf, 0);
