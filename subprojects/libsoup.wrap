@@ -4,6 +4,7 @@ source_url = https://download.gnome.org/sources/libsoup/3.6/libsoup-3.6.5.tar.xz
 source_fallback_url = https://deb.debian.org/debian/pool/main/libs/libsoup3/libsoup3_3.6.5.orig.tar.xz
 source_filename = libsoup-3.6.5.tar.xz
 source_hash = 6891765aac3e949017945c3eaebd8cc8216df772456dc9f460976fbdb7ada234
+diff_files = libsoup-3.6.5/0001-soup-init-Use-libdl-instead-of-gmodule-in-soup2_is_l.patch
 
 [provide]
 libsoup-3.0 = libsoup_dep
