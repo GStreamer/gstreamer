@@ -8,6 +8,7 @@ patch_url = https://wrapdb.mesonbuild.com/v2/lame_3.100-9/get_patch
 patch_hash = bedda639a621b2046fb04110a51870d6c9640f2f4282b5d877bc452e9943c22e
 source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/lame_3.100-9/lame-3.100.tar.gz
 wrapdb_version = 3.100-9
+diff_files = lame-3.100/lame-fix-stringop-overflow-warning.diff
 
 [provide]
 mp3lame = lame_dep
