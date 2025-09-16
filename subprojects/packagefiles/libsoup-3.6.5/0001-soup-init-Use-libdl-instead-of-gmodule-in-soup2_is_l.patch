@@ -1,0 +1,65 @@
+From 2316e56a5502ac4c41ef4ff56a3266e680aca129 Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek.chauhan@gmail.com>
+Date: Fri, 18 Jul 2025 15:42:39 +0000
+Subject: [PATCH] soup-init: Use libdl instead of gmodule in `soup2_is_loaded`
+ check
+
+https://gitlab.gnome.org/GNOME/libsoup/-/merge_requests/475
+---
+ libsoup/soup-init.c | 28 +++++++++++++++++-----------
+ 1 file changed, 17 insertions(+), 11 deletions(-)
+
+diff --git a/libsoup/soup-init.c b/libsoup/soup-init.c
+index 8a33c77d..3392e8ec 100644
+--- a/libsoup/soup-init.c
++++ b/libsoup/soup-init.c
+@@ -10,7 +10,6 @@
+ #endif
+ 
+ #include <glib/gi18n-lib.h>
+-#include <gmodule.h>
+ #include "gconstructor.h"
+ 
+ #ifdef G_OS_WIN32
+@@ -18,21 +17,28 @@
+ #include <windows.h>
+ 
+ HMODULE soup_dll;
++#else
++#include <dlfcn.h>
+ #endif
+ 
+ static gboolean
+ soup2_is_loaded (void)
+ {
+-    GModule *module = g_module_open (NULL, 0);
+-    gpointer func;
+-    gboolean result = FALSE;
+-
+-    if (g_module_symbol (module, "soup_uri_new", &func))
+-        result = TRUE;
+-
+-    g_module_close (module);
+-
+-    return result;
++	gboolean result = FALSE;
++
++	/* Skip on PE/COFF, as it doesn't have a flat symbol namespace */
++#ifndef G_OS_WIN32
++	gpointer handle;
++	gpointer func;
++
++	handle = dlopen (NULL, RTLD_LAZY | RTLD_GLOBAL);
++	if (handle != NULL) {
++		func = dlsym (handle, "soup_uri_new");
++		result = (func != NULL);
++		dlclose (handle);
++	}
++#endif
++	return result;
+ }
+ 
+ static void
+-- 
+2.50.1
+
