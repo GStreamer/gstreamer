@@ -54,7 +54,6 @@ gst_unix_fd_send_command (GSocket * socket, CommandType type, GUnixFDList * fds,
   Command command = { type, payload_size };
   GOutputVector vect[] = {
     {&command, sizeof (Command)},
-    {payload, payload_size},
   };
   GSocketControlMessage *msg = NULL;
   gint num_msg = 0;
@@ -70,7 +69,22 @@ gst_unix_fd_send_command (GSocket * socket, CommandType type, GUnixFDList * fds,
     ret = FALSE;
   }
 
+  if (ret && payload_size > 0) {
+    gsize remaining = payload_size;
+    const gchar *ptr = (const char *) payload;
+    while (remaining > 0) {
+      gssize sent = g_socket_send (socket, ptr, remaining, NULL, error);
+      if (sent < 0) {
+        ret = FALSE;
+        break;
+      }
+      remaining -= sent;
+      ptr += sent;
+    }
+  }
+
   g_clear_object (&msg);
+
   return ret;
 }
 
@@ -98,11 +112,18 @@ gst_unix_fd_receive_command (GSocket * socket, GCancellable * cancellable,
   if (command.payload_size > 0) {
     *payload = g_malloc (command.payload_size);
     *payload_size = command.payload_size;
-    if (g_socket_receive (socket, (gchar *) * payload, command.payload_size,
-            cancellable, error) < (gssize) command.payload_size) {
-      g_clear_pointer (payload, g_free);
-      ret = FALSE;
-      goto out;
+    gchar *ptr = (char *) *payload;
+    gsize remaining = command.payload_size;
+    while (remaining > 0) {
+      gssize received =
+          g_socket_receive (socket, ptr, remaining, cancellable, error);
+      if (received < 0) {
+        g_clear_pointer (payload, g_free);
+        ret = FALSE;
+        goto out;
+      }
+      remaining -= received;
+      ptr += received;
     }
   }
 
