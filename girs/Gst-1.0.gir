@@ -14341,9 +14341,18 @@ providers. Setting @show_all to true might show some devices multiple times.</do
         </parameters>
       </method>
       <method name="start" c:identifier="gst_device_monitor_start" version="1.4">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstdevicemonitor.c">Starts monitoring the devices, one this has succeeded, the
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstdevicemonitor.c">Starts monitoring the devices, once this has succeeded, the
 %GST_MESSAGE_DEVICE_ADDED and %GST_MESSAGE_DEVICE_REMOVED messages
-will be emitted on the bus when the list of devices changes.</doc>
+will be emitted on the bus when the list of devices changes.
+
+Since 1.28, device providers are started asynchronously and
+%GST_MESSAGE_DEVICE_MONITOR_STARTED will be emitted once the initial list
+of devices has been populated, signalling that monitor startup has
+completed.
+
+The monitor will hold a strong reference to itself while it is populating
+devices asynchronously, so you must call gst_device_monitor_stop() before
+unreffing if you want monitoring to stop immediately.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstdevicemonitor.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstdevicemonitor.c">%TRUE if the device monitoring could be started, i.e. at least a

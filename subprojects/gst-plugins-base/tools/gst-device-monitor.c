@@ -44,6 +44,8 @@ typedef struct
   GMainLoop *loop;
   GstDeviceMonitor *monitor;
   guint bus_watch_id;
+  gboolean follow;
+  GTimer *timer;
 } DevMonApp;
 
 static gboolean bus_msg_handler (GstBus * bus, GstMessage * msg, gpointer data);
@@ -389,6 +391,7 @@ device_removed (GstDevice * device)
 static gboolean
 bus_msg_handler (GstBus * bus, GstMessage * msg, gpointer user_data)
 {
+  DevMonApp *app = user_data;
   GstDevice *device;
 
   switch (GST_MESSAGE_TYPE (msg)) {
@@ -407,6 +410,19 @@ bus_msg_handler (GstBus * bus, GstMessage * msg, gpointer user_data)
       print_device (device, TRUE);
       gst_object_unref (device);
       break;
+    case GST_MESSAGE_DEVICE_MONITOR_STARTED:{
+      gboolean success;
+      gst_message_parse_device_monitor_started (msg, &success);
+      if (!success) {
+        gst_printerr ("Failed to start device monitor!\n");
+        g_main_loop_quit (app->loop);
+      } else {
+        GST_INFO ("Took %.2f seconds", g_timer_elapsed (app->timer, NULL));
+        if (!app->follow)
+          g_main_loop_quit (app->loop);
+      }
+      break;
+    }
     default:
       gst_print ("%s message\n", GST_MESSAGE_TYPE_NAME (msg));
       break;
@@ -415,26 +431,19 @@ bus_msg_handler (GstBus * bus, GstMessage * msg, gpointer user_data)
   return TRUE;
 }
 
-static gboolean
-quit_loop (GMainLoop * loop)
-{
-  g_main_loop_quit (loop);
-  return G_SOURCE_REMOVE;
-}
-
 static int
 real_main (int argc, char **argv)
 {
+  DevMonApp app = { 0 };
   gboolean print_version = FALSE;
   GError *err = NULL;
   gchar **arg, **args = NULL;
-  gboolean follow = FALSE;
   gboolean include_hidden = FALSE;
   GOptionContext *ctx;
   GOptionEntry options[] = {
     {"version", 0, 0, G_OPTION_ARG_NONE, &print_version,
         N_("Print version information and exit"), NULL},
-    {"follow", 'f', 0, G_OPTION_ARG_NONE, &follow,
+    {"follow", 'f', 0, G_OPTION_ARG_NONE, &app.follow,
         N_("Don't exit after showing the initial device list, but wait "
               "for devices to added/removed."), NULL},
     {"include-hidden", 'i', 0, G_OPTION_ARG_NONE, &include_hidden,
@@ -442,8 +451,6 @@ real_main (int argc, char **argv)
     {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY, &args, NULL},
     {NULL}
   };
-  GTimer *timer;
-  DevMonApp app;
   GstBus *bus;
 
   setlocale (LC_ALL, "");
@@ -522,19 +529,14 @@ real_main (int argc, char **argv)
 
   gst_print ("Probing devices...\n\n");
 
-  timer = g_timer_new ();
+  app.timer = g_timer_new ();
 
   if (!gst_device_monitor_start (app.monitor)) {
     gst_printerr ("Failed to start device monitor!\n");
     return -1;
   }
 
-  GST_INFO ("Took %.2f seconds", g_timer_elapsed (timer, NULL));
-
-  if (!follow) {
-    /* Consume all the messages pending on the bus and exit */
-    g_idle_add ((GSourceFunc) quit_loop, app.loop);
-  } else {
+  if (app.follow) {
     gst_print ("Monitoring devices, waiting for devices to be removed or "
         "new devices to be added...\n");
   }
@@ -546,7 +548,7 @@ real_main (int argc, char **argv)
 
   g_source_remove (app.bus_watch_id);
   g_main_loop_unref (app.loop);
-  g_timer_destroy (timer);
+  g_timer_destroy (app.timer);
 
   gst_deinit ();
   return 0;
