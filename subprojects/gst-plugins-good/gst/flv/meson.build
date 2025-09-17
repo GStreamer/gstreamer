@@ -1,6 +1,7 @@
 flv_sources = [
   'gstflvdemux.c',
   'gstflvmux.c',
+  'gsteflvmux.c',
   'gstflvplugin.c',
   'gstflvelement.c',
 ]
@@ -9,6 +10,7 @@ flv_headers = [
   'gstflvelements.h',
   'gstindex.h',
   'gstflvmux.h',
+  'gsteflvmux.h',
   'amfdefs.h',
   'gstflvdemux.h',
 ]

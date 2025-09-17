@@ -30,6 +30,7 @@ plugin_init (GstPlugin * plugin)
 
   ret |= GST_ELEMENT_REGISTER (flvdemux, plugin);
   ret |= GST_ELEMENT_REGISTER (flvmux, plugin);
+  ret |= GST_ELEMENT_REGISTER (eflvmux, plugin);
 
   return ret;
 }

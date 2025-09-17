@@ -37,6 +37,7 @@ void flv_element_init (GstPlugin * plugin);
 
 GST_ELEMENT_REGISTER_DECLARE (flvdemux);
 GST_ELEMENT_REGISTER_DECLARE (flvmux);
+GST_ELEMENT_REGISTER_DECLARE (eflvmux);
 
 G_END_DECLS
 

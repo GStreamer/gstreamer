@@ -7287,6 +7287,50 @@
     "flv": {
         "description": "FLV muxing and demuxing plugin",
         "elements": {
+            "eflvmux": {
+                "author": "Taruntej Kanakamalla <tarun@centricular.com>",
+                "description": "Muxes multiple video/audio streams into an FLV stream in the extended format as per Enhnaced RTMP (V2) specification",
+                "hierarchy": [
+                    "GstEFlvMux",
+                    "GstFlvMux",
+                    "GstAggregator",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstTagSetter"
+                ],
+                "klass": "Codec/Muxer",
+                "pad-templates": {
+                    "audio": {
+                        "caps": "audio/x-adpcm:\n         layout: swf\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)11025, (int)22050, (int)44100 }\naudio/mpeg:\n    mpegversion: 1\n          layer: 3\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)8000, (int)11025, (int)22050, (int)44100 }\n         parsed: true\naudio/mpeg:\n    mpegversion: { (int)4, (int)2 }\n  stream-format: raw\naudio/x-nellymoser:\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)8000, (int)11025, (int)16000, (int)22050, (int)44100 }\naudio/x-raw:\n         format: { U8, S16LE }\n         layout: interleaved\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)11025, (int)22050, (int)44100 }\naudio/x-alaw:\n       channels: { (int)1, (int)2 }\n           rate: 8000\naudio/x-mulaw:\n       channels: { (int)1, (int)2 }\n           rate: 8000\naudio/x-speex:\n       channels: 1\n           rate: 16000\n",
+                        "direction": "sink",
+                        "presence": "request",
+                        "type": "GstFlvMuxPad"
+                    },
+                    "audio_%%u": {
+                        "caps": "audio/mpeg:\n    mpegversion: 1\n          layer: 3\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)8000, (int)11025, (int)22050, (int)44100 }\n         parsed: true\naudio/mpeg:\n    mpegversion: { (int)4, (int)2 }\n  stream-format: raw\n",
+                        "direction": "sink",
+                        "presence": "request",
+                        "type": "GstFlvMuxPad"
+                    },
+                    "src": {
+                        "caps": "video/x-flv:\n",
+                        "direction": "src",
+                        "presence": "always",
+                        "type": "GstAggregatorPad"
+                    },
+                    "video": {
+                        "caps": "video/x-flash-video:\nvideo/x-flash-screen:\nvideo/x-vp6-flash:\nvideo/x-vp6-alpha:\nvideo/x-h264:\n  stream-format: avc\n",
+                        "direction": "sink",
+                        "presence": "request",
+                        "type": "GstFlvMuxPad"
+                    }
+                },
+                "rank": "primary"
+            },
             "flvdemux": {
                 "author": "Julien Moutte <julien@moutte.net>",
                 "description": "Demux FLV feeds into digital streams",
@@ -7423,6 +7467,82 @@
         "filename": "gstflv",
         "license": "LGPL",
         "other-types": {
+            "GstFlvMux": {
+                "hierarchy": [
+                    "GstFlvMux",
+                    "GstAggregator",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstTagSetter"
+                ],
+                "kind": "object",
+                "properties": {
+                    "encoder": {
+                        "blurb": "The value of encoder in the meta packet.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "GStreamer {VERSION} FLV muxer",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "enforce-increasing-timestamps": {
+                        "blurb": "If set to true, flvmux will modify buffers timestamps to ensure they are always strictly increasing, inside one stream and also between the audio and video streams",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "metadatacreator": {
+                        "blurb": "The value of metadatacreator in the meta packet.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "GStreamer {VERSION} FLV muxer",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "skip-backwards-streams": {
+                        "blurb": "If set to true, streams that go backwards related to the other stream will have buffers dropped until they reach the correct timestamp",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "streamable": {
+                        "blurb": "If set to true, the output should be as if it is to be streamed and hence no indexes written or duration written.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    }
+                }
+            },
             "GstFlvMuxPad": {
                 "hierarchy": [
                     "GstFlvMuxPad",

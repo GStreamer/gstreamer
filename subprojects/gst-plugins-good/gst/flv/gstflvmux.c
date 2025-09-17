@@ -338,6 +338,7 @@ gst_flv_mux_class_init (GstFlvMuxClass * klass)
   GST_DEBUG_CATEGORY_INIT (flvmux_debug, "flvmux", 0, "FLV muxer");
 
   gst_type_mark_as_plugin_api (GST_TYPE_FLV_MUX_PAD, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_FLV_MUX, 0);
 }
 
 static void
