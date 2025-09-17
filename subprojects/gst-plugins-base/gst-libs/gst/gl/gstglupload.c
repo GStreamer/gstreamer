@@ -980,6 +980,9 @@ _dma_buf_upload_transform_caps_common (GstCaps * caps,
         gst_structure_free (s);
         continue;
       }
+
+      if (flags & GST_GL_DRM_FORMAT_DIRECT_IMPORT)
+        gst_structure_set (s, "format", G_TYPE_STRING, "RGBA", NULL);
     }
 
     gst_caps_append_structure_full (tmp_caps, s,
@@ -1452,6 +1455,11 @@ _direct_dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
     n = gst_caps_get_size (ret);
     for (i = 0; i < n; i++) {
       GstStructure *s = gst_caps_get_structure (ret, i);
+
+#ifndef G_DISABLE_ASSERTS
+      const gchar *format = gst_structure_get_string (s, "format");
+      g_assert (format == NULL || g_strcmp0 (format, "RGBA") == 0);
+#endif
 
       gst_structure_remove_fields (s, "chroma-site", NULL);
       gst_structure_remove_fields (s, "colorimetry", NULL);
