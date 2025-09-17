@@ -600,6 +600,11 @@ gst_wl_window_resize_video_surface (GstWlWindow * self)
     wp_viewport_set_source (priv->video_viewport, wl_fixed_from_int (0),
         wl_fixed_from_int (0), wl_fixed_from_int (wp_src_width),
         wl_fixed_from_int (wp_src_height));
+
+    /* The protocol does not allow for a size set to 0 */
+    res.w = MAX (res.w, 1);
+    res.h = MAX (res.h, 1);
+
     wp_viewport_set_destination (priv->video_viewport, res.w, res.h);
   } else {
     gst_video_center_rect (&src, &dst, &res, FALSE);
