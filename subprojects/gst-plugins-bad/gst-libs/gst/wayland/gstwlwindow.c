@@ -556,7 +556,7 @@ gst_wl_window_is_toplevel (GstWlWindow * self)
 }
 
 static void
-gst_wl_window_resize_video_surface (GstWlWindow * self, gboolean commit)
+gst_wl_window_resize_video_surface (GstWlWindow * self)
 {
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
   GstVideoRectangle src = { 0, };
@@ -608,9 +608,6 @@ gst_wl_window_resize_video_surface (GstWlWindow * self, gboolean commit)
   wl_subsurface_set_position (priv->video_subsurface, res.x, res.y);
   wl_surface_set_buffer_transform (priv->video_surface_wrapper,
       priv->buffer_transform);
-
-  if (commit)
-    wl_surface_commit (priv->video_surface_wrapper);
 
   priv->video_rectangle = res;
 }
@@ -682,7 +679,7 @@ gst_wl_window_commit_buffer (GstWlWindow * self, GstWlBuffer * buffer)
     priv->video_height = info->height;
 
     wl_subsurface_set_sync (priv->video_subsurface);
-    gst_wl_window_resize_video_surface (self, FALSE);
+    gst_wl_window_resize_video_surface (self);
     gst_wl_window_set_opaque (self, info);
 
     gst_wl_window_set_colorimetry (self, &info->colorimetry, minfo, linfo);
@@ -894,7 +891,8 @@ gst_wl_window_update_geometry (GstWlWindow * self)
 
   if (priv->scaled_width != 0) {
     wl_subsurface_set_sync (priv->video_subsurface);
-    gst_wl_window_resize_video_surface (self, TRUE);
+    gst_wl_window_resize_video_surface (self);
+    wl_surface_commit (priv->video_surface_wrapper);
   }
 
   wl_surface_commit (priv->area_surface_wrapper);
