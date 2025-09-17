@@ -460,6 +460,21 @@ build debian x86_64:
     BUILD_TYPE: "--default-library=shared"
     BUILD_GST_DEBUG: "-Dgstreamer:gst_debug=true"
 
+build debian x86_64 debug:
+  extends:
+    - '.debian image'
+    - '.fdo.suffixed-image@debian'
+    - '.build simple'
+  needs:
+    - "trigger"
+    - "debian amd64 docker"
+  variables:
+    BUILD_TYPE: "--default-library=shared"
+    BUILD_GST_DEBUG: "-Dgstreamer:gst_debug=true"
+    MESON_ARGS: >-
+      ${DEFAULT_MESON_ARGS}
+      -Dbuildtype=debug
+
 .build windows:
   image: $WINDOWS_IMAGE
   stage: 'build'
