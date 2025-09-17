@@ -379,8 +379,9 @@ gst_wl_window_ensure_fullscreen (GstWlWindow * self, gboolean fullscreen)
 }
 
 GstWlWindow *
-gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
-    gboolean fullscreen, GMutex * render_lock)
+gst_wl_window_new_toplevel_full (GstWlDisplay * display,
+    const GstVideoInfo * info, gboolean fullscreen, const gchar * output_name,
+    GMutex * render_lock)
 {
   GstWlWindow *self;
   GstWlWindowPrivate *priv;
@@ -420,7 +421,7 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
       xdg_toplevel_set_app_id (priv->xdg_toplevel, "org.gstreamer.wayland");
     }
 
-    gst_wl_window_ensure_fullscreen (self, fullscreen);
+    gst_wl_window_ensure_fullscreen_for_output (self, fullscreen, output_name);
 
     /* Finally, commit the xdg_surface state as toplevel */
     priv->configured = FALSE;
@@ -447,8 +448,19 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
     }
     g_mutex_unlock (&priv->configure_mutex);
   } else if (fullscreen_shell) {
+    GstWlOutput *output = NULL;
+    struct wl_output *wl_output = NULL;
+    if (output_name) {
+      output = gst_wl_display_get_output_by_name (priv->display, output_name);
+      wl_output = gst_wl_output_get_wl_output (output);
+    }
+
     zwp_fullscreen_shell_v1_present_surface (fullscreen_shell,
-        priv->area_surface, ZWP_FULLSCREEN_SHELL_V1_PRESENT_METHOD_ZOOM, NULL);
+        priv->area_surface, ZWP_FULLSCREEN_SHELL_V1_PRESENT_METHOD_ZOOM,
+        wl_output);
+
+    if (output)
+      gst_object_unref (output);
   } else {
     GST_ERROR_OBJECT (self,
         "Unable to use either xdg_wm_base or zwp_fullscreen_shell.");
@@ -461,6 +473,14 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
 error:
   g_object_unref (self);
   return NULL;
+}
+
+GstWlWindow *
+gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
+    gboolean fullscreen, GMutex * render_lock)
+{
+  return gst_wl_window_new_toplevel_full (display, info, fullscreen, NULL,
+      render_lock);
 }
 
 GstWlWindow *

@@ -953,10 +953,9 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
 
     if (!self->window) {
       /* if we were not provided a window, create one ourselves */
-      self->window = gst_wl_window_new_toplevel (self->display,
-          &self->video_info, self->fullscreen, &self->render_lock);
-      gst_wl_window_ensure_fullscreen_for_output (self->window,
-          self->fullscreen, self->fullscreen_output);
+      self->window = gst_wl_window_new_toplevel_full (self->display,
+          &self->video_info, self->fullscreen, self->fullscreen_output,
+          &self->render_lock);
       g_signal_connect_object (self->window, "closed",
           G_CALLBACK (on_window_closed), self, 0);
       gst_wl_window_set_rotate_method (self->window,
