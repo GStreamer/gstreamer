@@ -885,7 +885,7 @@ gst_isoff_sidx_parser_parse (GstSidxParser * parser,
       parser->sidx.entry_index = 0;
 
       parser->status = GST_ISOFF_SIDX_PARSER_DATA;
-
+      G_GNUC_FALLTHROUGH;
     case GST_ISOFF_SIDX_PARSER_DATA:
       while (parser->sidx.entry_index < parser->sidx.entries_count) {
         GstSidxBoxEntry *entry =
@@ -912,10 +912,12 @@ gst_isoff_sidx_parser_parse (GstSidxParser * parser,
         parser->sidx.entry_index++;
       }
 
-      if (parser->sidx.entry_index == parser->sidx.entries_count)
+      if (parser->sidx.entry_index == parser->sidx.entries_count) {
         parser->status = GST_ISOFF_SIDX_PARSER_FINISHED;
-      else
+      } else {
         break;
+      }
+      G_GNUC_FALLTHROUGH;
     case GST_ISOFF_SIDX_PARSER_FINISHED:
       parser->sidx.entry_index = 0;
       res = GST_ISOFF_PARSER_DONE;
