@@ -30,6 +30,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <gst/glib-compat-private.h>
+
 #ifdef __APPLE__
 #include <TargetConditionals.h>
 #endif
