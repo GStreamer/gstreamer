@@ -2751,7 +2751,7 @@ constitute an appropriate epsilon.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="samples" c:identifier="gst_audio_channel_mixer_samples">
+      <method name="samples" c:identifier="gst_audio_channel_mixer_samples" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">In case the samples are interleaved, @in and @out must point to an
 array with a single element pointing to a block of interleaved samples.
 
@@ -2769,13 +2769,17 @@ Perform channel mixing on @in_data and write the result to @out_data.
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">a #GstAudioChannelMixer</doc>
             <type name="AudioChannelMixer" c:type="GstAudioChannelMixer*"/>
           </instance-parameter>
-          <parameter name="in" transfer-ownership="none" nullable="1" allow-none="1">
+          <parameter name="in" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">input samples</doc>
-            <type name="gpointer" c:type="const gpointer*"/>
+            <array zero-terminated="0" c:type="const gpointer*">
+              <type name="gpointer"/>
+            </array>
           </parameter>
-          <parameter name="out" transfer-ownership="none" nullable="1" allow-none="1">
+          <parameter name="out" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">output samples</doc>
-            <type name="gpointer" c:type="gpointer*"/>
+            <array zero-terminated="0" c:type="gpointer*">
+              <type name="gpointer"/>
+            </array>
           </parameter>
           <parameter name="samples" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">number of samples</doc>
@@ -2786,7 +2790,7 @@ Perform channel mixing on @in_data and write the result to @out_data.
       <function name="new" c:identifier="gst_audio_channel_mixer_new" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">Create a new channel mixer object for the given parameters.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.h"/>
-        <return-value>
+        <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">a new #GstAudioChannelMixer object.
   Free with gst_audio_channel_mixer_free() after usage.</doc>
           <type name="AudioChannelMixer" c:type="GstAudioChannelMixer*"/>
@@ -2805,7 +2809,9 @@ Perform channel mixing on @in_data and write the result to @out_data.
           </parameter>
           <parameter name="in_position" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">positions of input channels</doc>
-            <type name="AudioChannelPosition" c:type="GstAudioChannelPosition*"/>
+            <array length="2" zero-terminated="0" c:type="GstAudioChannelPosition*">
+              <type name="AudioChannelPosition" c:type="GstAudioChannelPosition"/>
+            </array>
           </parameter>
           <parameter name="out_channels" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">number of output channels</doc>
@@ -2813,14 +2819,16 @@ Perform channel mixing on @in_data and write the result to @out_data.
           </parameter>
           <parameter name="out_position" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">positions of output channels</doc>
-            <type name="AudioChannelPosition" c:type="GstAudioChannelPosition*"/>
+            <array length="4" zero-terminated="0" c:type="GstAudioChannelPosition*">
+              <type name="AudioChannelPosition" c:type="GstAudioChannelPosition"/>
+            </array>
           </parameter>
         </parameters>
       </function>
       <function name="new_with_matrix" c:identifier="gst_audio_channel_mixer_new_with_matrix" version="1.14" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">Create a new channel mixer object for the given parameters.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.h"/>
-        <return-value>
+        <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">a new #GstAudioChannelMixer object.
   Free with gst_audio_channel_mixer_free() after usage.</doc>
           <type name="AudioChannelMixer" c:type="GstAudioChannelMixer*"/>
@@ -2845,7 +2853,9 @@ Perform channel mixing on @in_data and write the result to @out_data.
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">channel conversion matrix, m[@in_channels][@out_channels].
   If identity matrix, passthrough applies. If %NULL, a (potentially truncated)
   identity matrix is generated.</doc>
-            <type name="gfloat" c:type="gfloat**"/>
+            <array zero-terminated="0" c:type="gfloat**">
+              <type name="gfloat"/>
+            </array>
           </parameter>
         </parameters>
       </function>
@@ -3393,7 +3403,7 @@ any history it might currently have.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="samples" c:identifier="gst_audio_converter_samples">
+      <method name="samples" c:identifier="gst_audio_converter_samples" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-converter.c">Perform the conversion with @in_frames in @in to @out_frames in @out
 using @convert.
 
@@ -3424,17 +3434,21 @@ are matching and @in and @out point to enough memory.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-converter.c">extra #GstAudioConverterFlags</doc>
             <type name="AudioConverterFlags" c:type="GstAudioConverterFlags"/>
           </parameter>
-          <parameter name="in" transfer-ownership="none" nullable="1" allow-none="1">
+          <parameter name="in" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-converter.c">input frames</doc>
-            <type name="gpointer" c:type="gpointer*"/>
+            <array zero-terminated="0" c:type="gpointer*">
+              <type name="gpointer"/>
+            </array>
           </parameter>
           <parameter name="in_frames" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-converter.c">number of input frames</doc>
             <type name="gsize" c:type="gsize"/>
           </parameter>
-          <parameter name="out" transfer-ownership="none" nullable="1" allow-none="1">
+          <parameter name="out" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-converter.c">output frames</doc>
-            <type name="gpointer" c:type="gpointer*"/>
+            <array zero-terminated="0" c:type="gpointer*">
+              <type name="gpointer"/>
+            </array>
           </parameter>
           <parameter name="out_frames" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-converter.c">number of output frames</doc>
@@ -4990,11 +5004,15 @@ of the results.</doc>
       </field>
       <field name="from_position" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudiometa.h">the channel positions of the source</doc>
-        <type name="AudioChannelPosition" c:type="GstAudioChannelPosition*"/>
+        <array length="3" zero-terminated="0" c:type="GstAudioChannelPosition*">
+          <type name="AudioChannelPosition" c:type="GstAudioChannelPosition"/>
+        </array>
       </field>
       <field name="to_position" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudiometa.h">the channel positions of the destination</doc>
-        <type name="AudioChannelPosition" c:type="GstAudioChannelPosition*"/>
+        <array length="4" zero-terminated="0" c:type="GstAudioChannelPosition*">
+          <type name="AudioChannelPosition" c:type="GstAudioChannelPosition"/>
+        </array>
       </field>
       <field name="from_channels" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudiometa.h">the number of channels of the source</doc>
@@ -5006,7 +5024,9 @@ of the results.</doc>
       </field>
       <field name="matrix" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudiometa.h">the matrix coefficients.</doc>
-        <type name="gfloat" c:type="gfloat**"/>
+        <array zero-terminated="0" c:type="gfloat**">
+          <type name="gfloat"/>
+        </array>
       </field>
       <function name="get_info" c:identifier="gst_audio_downmix_meta_get_info">
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudiometa.h"/>
@@ -7188,7 +7208,9 @@ meta as well as extracting it.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudiometa.h">the offsets (in bytes) where each channel plane starts in the
   buffer or %NULL if the buffer has interleaved layout; if not %NULL, this
   is guaranteed to be an array of @info.channels elements</doc>
-        <type name="gsize" c:type="gsize*"/>
+        <array zero-terminated="0" c:type="gsize*">
+          <type name="gsize" c:type="gsize"/>
+        </array>
       </field>
       <field name="priv_offsets_arr" readable="0" private="1">
         <array zero-terminated="0" fixed-size="8">
@@ -7267,7 +7289,7 @@ history it might have.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="samples" c:identifier="gst_audio_quantize_samples">
+      <method name="samples" c:identifier="gst_audio_quantize_samples" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-quantize.c">Perform quantization on @samples in @in and write the result to @out.
 
 In case the samples are interleaved, @in and @out must point to an
@@ -7287,13 +7309,17 @@ modified in-place.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-quantize.c">a #GstAudioQuantize</doc>
             <type name="AudioQuantize" c:type="GstAudioQuantize*"/>
           </instance-parameter>
-          <parameter name="in" transfer-ownership="none" nullable="1" allow-none="1">
+          <parameter name="in" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-quantize.c">input samples</doc>
-            <type name="gpointer" c:type="const gpointer*"/>
+            <array zero-terminated="0" c:type="const gpointer*">
+              <type name="gpointer"/>
+            </array>
           </parameter>
-          <parameter name="out" transfer-ownership="none" nullable="1" allow-none="1">
+          <parameter name="out" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-quantize.c">output samples</doc>
-            <type name="gpointer" c:type="gpointer*"/>
+            <array zero-terminated="0" c:type="gpointer*">
+              <type name="gpointer"/>
+            </array>
           </parameter>
           <parameter name="samples" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-quantize.c">number of samples</doc>
@@ -11053,7 +11079,7 @@ mask and mono.</doc>
     <function name="audio_channel_mixer_new" c:identifier="gst_audio_channel_mixer_new" moved-to="AudioChannelMixer.new" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">Create a new channel mixer object for the given parameters.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.h"/>
-      <return-value>
+      <return-value transfer-ownership="full">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">a new #GstAudioChannelMixer object.
   Free with gst_audio_channel_mixer_free() after usage.</doc>
         <type name="AudioChannelMixer" c:type="GstAudioChannelMixer*"/>
@@ -11072,7 +11098,9 @@ mask and mono.</doc>
         </parameter>
         <parameter name="in_position" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">positions of input channels</doc>
-          <type name="AudioChannelPosition" c:type="GstAudioChannelPosition*"/>
+          <array length="2" zero-terminated="0" c:type="GstAudioChannelPosition*">
+            <type name="AudioChannelPosition" c:type="GstAudioChannelPosition"/>
+          </array>
         </parameter>
         <parameter name="out_channels" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">number of output channels</doc>
@@ -11080,14 +11108,16 @@ mask and mono.</doc>
         </parameter>
         <parameter name="out_position" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">positions of output channels</doc>
-          <type name="AudioChannelPosition" c:type="GstAudioChannelPosition*"/>
+          <array length="4" zero-terminated="0" c:type="GstAudioChannelPosition*">
+            <type name="AudioChannelPosition" c:type="GstAudioChannelPosition"/>
+          </array>
         </parameter>
       </parameters>
     </function>
     <function name="audio_channel_mixer_new_with_matrix" c:identifier="gst_audio_channel_mixer_new_with_matrix" moved-to="AudioChannelMixer.new_with_matrix" version="1.14" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">Create a new channel mixer object for the given parameters.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.h"/>
-      <return-value>
+      <return-value transfer-ownership="full">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">a new #GstAudioChannelMixer object.
   Free with gst_audio_channel_mixer_free() after usage.</doc>
         <type name="AudioChannelMixer" c:type="GstAudioChannelMixer*"/>
@@ -11112,7 +11142,9 @@ mask and mono.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channel-mixer.c">channel conversion matrix, m[@in_channels][@out_channels].
   If identity matrix, passthrough applies. If %NULL, a (potentially truncated)
   identity matrix is generated.</doc>
-          <type name="gfloat" c:type="gfloat**"/>
+          <array zero-terminated="0" c:type="gfloat**">
+            <type name="gfloat"/>
+          </array>
         </parameter>
       </parameters>
     </function>
@@ -11842,7 +11874,9 @@ of the results.</doc>
         </parameter>
         <parameter name="matrix" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudiometa.c">The matrix coefficients.</doc>
-          <type name="gfloat" c:type="const gfloat**"/>
+          <array zero-terminated="0" c:type="const gfloat**">
+            <type name="gfloat"/>
+          </array>
         </parameter>
       </parameters>
     </function>
@@ -11909,7 +11943,9 @@ that you must add enough memory on the @buffer before adding this meta.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudiometa.c">the offsets (in bytes) where each channel plane starts
   in the buffer or %NULL to calculate it (see below); must be %NULL also
   when @info-&gt;layout is %GST_AUDIO_LAYOUT_INTERLEAVED</doc>
-          <type name="gsize" c:type="gsize*"/>
+          <array zero-terminated="0" c:type="gsize*">
+            <type name="gsize" c:type="gsize"/>
+          </array>
         </parameter>
       </parameters>
     </function>
@@ -11957,7 +11993,9 @@ This meta is only needed for non-interleaved (= planar) DSD data.</doc>
         <parameter name="offsets" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">the offsets (in bytes) where each channel plane starts
   in the buffer</doc>
-          <type name="gsize" c:type="gsize*"/>
+          <array length="1" zero-terminated="0" c:type="gsize*">
+            <type name="gsize" c:type="gsize"/>
+          </array>
         </parameter>
       </parameters>
     </function>
@@ -12055,11 +12093,15 @@ are ignored.</doc>
       <parameters>
         <parameter name="input_data" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">the DSD format conversion's input source</doc>
-          <type name="guint8" c:type="const guint8*"/>
+          <array zero-terminated="0" c:type="const guint8*">
+            <type name="guint8" c:type="guint8"/>
+          </array>
         </parameter>
         <parameter name="output_data" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">the DSD format conversion's output destination</doc>
-          <type name="guint8" c:type="guint8*"/>
+          <array zero-terminated="0" c:type="guint8*">
+            <type name="guint8" c:type="guint8"/>
+          </array>
         </parameter>
         <parameter name="input_format" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">DSD format of the input data to convert from</doc>
@@ -12077,13 +12119,17 @@ are ignored.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Output data layout</doc>
           <type name="AudioLayout" c:type="GstAudioLayout"/>
         </parameter>
-        <parameter name="input_plane_offsets" transfer-ownership="none">
+        <parameter name="input_plane_offsets" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Plane offsets for non-interleaved input data</doc>
-          <type name="gsize" c:type="const gsize*"/>
+          <array length="9" zero-terminated="0" c:type="const gsize*">
+            <type name="gsize" c:type="gsize"/>
+          </array>
         </parameter>
-        <parameter name="output_plane_offsets" transfer-ownership="none">
+        <parameter name="output_plane_offsets" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Plane offsets for non-interleaved output data</doc>
-          <type name="gsize" c:type="const gsize*"/>
+          <array length="9" zero-terminated="0" c:type="const gsize*">
+            <type name="gsize" c:type="gsize"/>
+          </array>
         </parameter>
         <parameter name="num_dsd_bytes" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">How many bytes with DSD data to convert</doc>

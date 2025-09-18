@@ -55,7 +55,9 @@ and/or use gtk-doc annotations.  -->
       </field>
       <field name="data" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">The User data</doc>
-        <type name="guint16" c:type="guint16*"/>
+        <array length="7" zero-terminated="0" c:type="guint16*">
+          <type name="guint16" c:type="guint16"/>
+        </array>
       </field>
       <field name="checksum" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">The checksum of the ADF</doc>
@@ -1269,7 +1271,7 @@ modifiers state, otherwise FALSE.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/navigation.c">The #GstEvent to modify.</doc>
             <type name="Gst.Event" c:type="GstEvent*"/>
           </parameter>
-          <parameter name="state" transfer-ownership="none">
+          <parameter name="state" direction="out" caller-allocates="0" transfer-ownership="full">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/navigation.c">a bit-mask representing the state of the modifier keys (e.g. Control,
 Shift and Alt).</doc>
             <type name="NavigationModifierType" c:type="GstNavigationModifierType*"/>
@@ -5226,7 +5228,7 @@ the parity check bits).</doc>
       <field name="data" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">The user data content of the Ancillary packet.
    Does not contain the ADF, DID, SDID nor CS.</doc>
-        <array length="2" zero-terminated="0">
+        <array zero-terminated="0" fixed-size="256">
           <type name="guint8" c:type="guint8"/>
         </array>
       </field>
@@ -8728,7 +8730,9 @@ performance is achieved when @quantizer is a power of 2.
           </parameter>
           <parameter name="quantizer" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-dither.c">quantizer</doc>
-            <type name="guint" c:type="guint*"/>
+            <array zero-terminated="0" c:type="guint*" fixed-size="4">
+              <type name="guint" c:type="guint"/>
+            </array>
           </parameter>
           <parameter name="width" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-dither.c">the width of the lines</doc>
@@ -12547,7 +12551,28 @@ first byte of the plane and the stride of the plane.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_alignment" c:identifier="gst_video_meta_set_alignment" version="1.18">
+      <method name="set_alignment" c:identifier="gst_video_meta_set_alignment" version="1.18" deprecated="1" deprecated-version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">Set the alignment of @meta to @alignment. This function checks that
+the paddings defined in @alignment are compatible with the strides
+defined in @meta and will fail to update if they are not.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_video_meta_set_alignment_full() instead</doc-deprecated>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">%TRUE if @alignment's meta has been updated, %FALSE if not</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">a #GstVideoMeta</doc>
+            <type name="VideoMeta" c:type="GstVideoMeta*"/>
+          </instance-parameter>
+          <parameter name="alignment" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">a #GstVideoAlignment</doc>
+            <type name="VideoAlignment" c:type="GstVideoAlignment"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_alignment_full" c:identifier="gst_video_meta_set_alignment_full" version="1.28">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">Set the alignment of @meta to @alignment. This function checks that
 the paddings defined in @alignment are compatible with the strides
 defined in @meta and will fail to update if they are not.</doc>
@@ -12563,7 +12588,7 @@ defined in @meta and will fail to update if they are not.</doc>
           </instance-parameter>
           <parameter name="alignment" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">a #GstVideoAlignment</doc>
-            <type name="VideoAlignment" c:type="GstVideoAlignment"/>
+            <type name="VideoAlignment" c:type="const GstVideoAlignment*"/>
           </parameter>
         </parameters>
       </method>
@@ -14933,8 +14958,10 @@ Note that for interlaced content, @in_offset needs to be incremented with
 2 to get the next input line.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-scaler.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-scaler.c">an array of @n_tap gdouble values with filter coefficients.</doc>
-          <type name="gdouble" c:type="const gdouble*"/>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-scaler.c">an array of @n_taps gdouble values with filter coefficients.</doc>
+          <array length="2" zero-terminated="0" c:type="const gdouble*">
+            <type name="gdouble" c:type="gdouble"/>
+          </array>
         </return-value>
         <parameters>
           <instance-parameter name="scale" transfer-ownership="none">
@@ -16256,16 +16283,22 @@ the parity check bits).</doc>
         </parameters>
       </method>
       <method name="write_line" c:identifier="gst_video_vbi_encoder_write_line">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.c">@data needs to have the correct size and alignment for the configured video
+format of @encoder.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
         <parameters>
           <instance-parameter name="encoder" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.c">a #GstVideoVBIEncoder</doc>
             <type name="VideoVBIEncoder" c:type="GstVideoVBIEncoder*"/>
           </instance-parameter>
           <parameter name="data" transfer-ownership="none">
-            <type name="guint8" c:type="guint8*"/>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.c">The line to write to</doc>
+            <array zero-terminated="0" c:type="guint8*">
+              <type name="guint8" c:type="guint8"/>
+            </array>
           </parameter>
         </parameters>
       </method>
@@ -16763,11 +16796,15 @@ parameters.</doc>
         </parameter>
         <parameter name="uuid" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-sei.c">User Data Unregistered UUID</doc>
-          <type name="guint8" c:type="guint8*"/>
+          <array zero-terminated="0" c:type="guint8*" fixed-size="16">
+            <type name="guint8" c:type="guint8"/>
+          </array>
         </parameter>
         <parameter name="data" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-sei.c">SEI User Data Unregistered buffer</doc>
-          <type name="guint8" c:type="guint8*"/>
+          <array length="3" zero-terminated="0" c:type="guint8*">
+            <type name="guint8" c:type="guint8"/>
+          </array>
         </parameter>
         <parameter name="size" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-sei.c">size of the data buffer</doc>
@@ -17534,7 +17571,7 @@ modifiers state, otherwise FALSE.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/navigation.c">The #GstEvent to modify.</doc>
           <type name="Gst.Event" c:type="GstEvent*"/>
         </parameter>
-        <parameter name="state" transfer-ownership="none">
+        <parameter name="state" direction="out" caller-allocates="0" transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/navigation.c">a bit-mask representing the state of the modifier keys (e.g. Control,
 Shift and Alt).</doc>
           <type name="NavigationModifierType" c:type="GstNavigationModifierType*"/>
@@ -18769,7 +18806,9 @@ performance is achieved when @quantizer is a power of 2.
         </parameter>
         <parameter name="quantizer" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-dither.c">quantizer</doc>
-          <type name="guint" c:type="guint*"/>
+          <array zero-terminated="0" c:type="guint*" fixed-size="4">
+            <type name="guint" c:type="guint"/>
+          </array>
         </parameter>
         <parameter name="width" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-dither.c">the width of the lines</doc>
@@ -18791,7 +18830,7 @@ and @modifier will be set to DRM_FORMAT_MOD_INVALID.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">a #GstVideoFormat</doc>
           <type name="VideoFormat" c:type="GstVideoFormat"/>
         </parameter>
-        <parameter name="modifier" transfer-ownership="none" nullable="1" allow-none="1">
+        <parameter name="modifier" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">return location for the modifier</doc>
           <type name="guint64" c:type="guint64*"/>
         </parameter>

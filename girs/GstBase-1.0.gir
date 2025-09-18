@@ -10914,7 +10914,9 @@ Free-function: g_free</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbytewriter.h"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbytewriter.c">the current data. g_free() after usage.</doc>
-          <type name="guint8" c:type="guint8*"/>
+          <array zero-terminated="0" c:type="guint8*">
+            <type name="guint8" c:type="guint8"/>
+          </array>
         </return-value>
         <parameters>
           <instance-parameter name="writer" transfer-ownership="full">
@@ -11579,7 +11581,9 @@ Free-function: gst_byte_writer_free</doc>
         <parameters>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbytewriter.c">Memory area for writing</doc>
-            <type name="guint8" c:type="guint8*"/>
+            <array length="1" zero-terminated="0" c:type="guint8*">
+              <type name="guint8" c:type="guint8"/>
+            </array>
           </parameter>
           <parameter name="size" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbytewriter.c">Size of @data in bytes</doc>
@@ -14460,7 +14464,9 @@ Free-function: gst_byte_writer_free</doc>
       <parameters>
         <parameter name="data" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbytewriter.c">Memory area for writing</doc>
-          <type name="guint8" c:type="guint8*"/>
+          <array length="1" zero-terminated="0" c:type="guint8*">
+            <type name="guint8" c:type="guint8"/>
+          </array>
         </parameter>
         <parameter name="size" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbytewriter.c">Size of @data in bytes</doc>
