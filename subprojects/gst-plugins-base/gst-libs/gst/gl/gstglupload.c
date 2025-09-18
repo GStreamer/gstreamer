@@ -824,8 +824,12 @@ _dma_buf_convert_format_field_in_structure (GstGLContext * context,
   return TRUE;
 }
 
+/*
+ * Filter formats supported by EGL DMAbuf import and update the provided
+ * structure. If no formats are support, this function returns %FALSE.
+ */
 static gboolean
-_dma_buf_check_formats_in_structure (GstGLContext * context,
+_dma_buf_filter_egl_supported_formats (GstGLContext * context,
     GstStructure * structure, gboolean include_external)
 {
   const GValue *all_formats;
@@ -975,7 +979,7 @@ _dma_buf_upload_transform_caps_common (GstCaps * caps,
         continue;
       }
     } else {
-      if (!_dma_buf_check_formats_in_structure (context, s,
+      if (!_dma_buf_filter_egl_supported_formats (context, s,
               flags & GST_GL_DRM_FORMAT_INCLUDE_EXTERNAL)) {
         gst_structure_free (s);
         continue;
