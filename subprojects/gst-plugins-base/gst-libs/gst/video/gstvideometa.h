@@ -133,8 +133,11 @@ gboolean       gst_video_meta_map        (GstVideoMeta *meta, guint plane, GstMa
 GST_VIDEO_API
 gboolean       gst_video_meta_unmap      (GstVideoMeta *meta, guint plane, GstMapInfo *info);
 
-GST_VIDEO_API
+GST_VIDEO_DEPRECATED_FOR(gst_video_meta_set_alignment_full)
 gboolean       gst_video_meta_set_alignment (GstVideoMeta * meta, GstVideoAlignment alignment);
+
+GST_VIDEO_API
+gboolean       gst_video_meta_set_alignment_full (GstVideoMeta * meta, const GstVideoAlignment *alignment);
 
 GST_VIDEO_API
 gboolean       gst_video_meta_get_plane_size (GstVideoMeta * meta, gsize plane_size[GST_VIDEO_MAX_PLANES]);
@@ -360,7 +363,7 @@ GstVideoRegionOfInterestMeta *gst_buffer_add_video_region_of_interest_meta    (G
                                                                                guint         h);
 
 GST_VIDEO_API
-GstVideoRegionOfInterestMeta *gst_buffer_add_video_region_of_interest_meta_id (GstBuffer   * buffer, 
+GstVideoRegionOfInterestMeta *gst_buffer_add_video_region_of_interest_meta_id (GstBuffer   * buffer,
 									       GQuark        roi_type,
                                                                                guint         x,
                                                                                guint         y,

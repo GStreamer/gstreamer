@@ -885,21 +885,21 @@ typedef void (*GstVideoFormatPack)           (const GstVideoFormatInfo *info,
  *    should be read according to the endianness flag before applying the shift
  *    and mask.
  * @n_components: the number of components in the video format.
- * @shift: the number of bits to shift away to get the component data
- * @depth: the depth in bits for each component
- * @pixel_stride: the pixel stride of each component. This is the amount of
+ * @shift: (array fixed-size=4): the number of bits to shift away to get the component data
+ * @depth: (array fixed-size=4): the depth in bits for each component
+ * @pixel_stride: (array fixed-size=4): the pixel stride of each component. This is the amount of
  *    bytes to the pixel immediately to the right. When bits < 8, the stride is
  *    expressed in bits. For 24-bit RGB, this would be 3 bytes, for example,
  *    while it would be 4 bytes for RGBx or ARGB.
  * @n_planes: the number of planes for this format. The number of planes can be
  *    less than the amount of components when multiple components are packed into
  *    one plane.
- * @plane: the plane number where a component can be found
- * @poffset: the offset in the plane where the first pixel of the components
+ * @plane: (array fixed-size=4): the plane number where a component can be found
+ * @poffset: (array fixed-size=4): the offset in the plane where the first pixel of the components
  *    can be found.
- * @w_sub: subsampling factor of the width for the component. Use
+ * @w_sub: (array fixed-size=4): subsampling factor of the width for the component. Use
  *     GST_VIDEO_SUB_SCALE to scale a width.
- * @h_sub: subsampling factor of the height for the component. Use
+ * @h_sub: (array fixed-size=4): subsampling factor of the height for the component. Use
  *     GST_VIDEO_SUB_SCALE to scale a height.
  * @unpack_format: the format of the unpacked pixels. This format must have the
  *     #GST_VIDEO_FORMAT_FLAG_UNPACK flag set.
@@ -911,7 +911,7 @@ typedef void (*GstVideoFormatPack)           (const GstVideoFormatInfo *info,
  * use tile_info[] array instead.
  * @tile_hs: The height of a tile, in bytes, represented as a shift. DEPREACTED,
  * use tile_info[] array instead.
- * @tile_info: Per-plane tile information
+ * @tile_info: (array fixed-size=4): Per-plane tile information
  *
  * Information for a video format.
  */

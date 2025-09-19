@@ -47,7 +47,7 @@ struct _GstVideoMasteringDisplayInfoCoordinates
 
 /**
  * GstVideoMasteringDisplayInfo:
- * @display_primaries: the xy coordinates of primaries in the CIE 1931 color space.
+ * @display_primaries: (array fixed-size=3): the xy coordinates of primaries in the CIE 1931 color space.
  *   the index 0 contains red, 1 is for green and 2 is for blue.
  *   each value is normalized to 50000 (meaning that in unit of 0.00002)
  * @white_point: the xy coordinates of white point in the CIE 1931 color space.

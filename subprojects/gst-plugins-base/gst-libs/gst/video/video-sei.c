@@ -155,8 +155,8 @@ gst_video_sei_user_data_unregistered_meta_get_info (void)
 /**
  * gst_buffer_add_video_sei_user_data_unregistered_meta:
  * @buffer: a #GstBuffer
- * @uuid: User Data Unregistered UUID
- * @data: (transfer none) (allow-none): SEI User Data Unregistered buffer
+ * @uuid: (array fixed-size=16): User Data Unregistered UUID
+ * @data: (array length=size) (transfer none) (nullable): SEI User Data Unregistered buffer
  * @size: size of the data buffer
  *
  * Attaches #GstVideoSEIUserDataUnregisteredMeta metadata to @buffer with the given

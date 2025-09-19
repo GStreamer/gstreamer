@@ -643,16 +643,37 @@ gst_video_meta_validate_alignment (GstVideoMeta * meta,
  * Returns: %TRUE if @alignment's meta has been updated, %FALSE if not
  *
  * Since: 1.18
+ * Deprecated: 1.28: Use gst_video_meta_set_alignment_full() instead
  */
 gboolean
 gst_video_meta_set_alignment (GstVideoMeta * meta, GstVideoAlignment alignment)
+{
+  return gst_video_meta_set_alignment_full (meta, &alignment);
+}
+
+/**
+ * gst_video_meta_set_alignment_full:
+ * @meta: a #GstVideoMeta
+ * @alignment: a #GstVideoAlignment
+ *
+ * Set the alignment of @meta to @alignment. This function checks that
+ * the paddings defined in @alignment are compatible with the strides
+ * defined in @meta and will fail to update if they are not.
+ *
+ * Returns: %TRUE if @alignment's meta has been updated, %FALSE if not
+ *
+ * Since: 1.28
+ */
+gboolean
+gst_video_meta_set_alignment_full (GstVideoMeta * meta,
+    const GstVideoAlignment * alignment)
 {
   GstVideoAlignment old;
 
   g_return_val_if_fail (meta, FALSE);
 
   old = meta->alignment;
-  meta->alignment = alignment;
+  meta->alignment = *alignment;
 
   if (!gst_video_meta_validate_alignment (meta, NULL)) {
     /* Invalid alignment, restore the previous one */
@@ -660,9 +681,9 @@ gst_video_meta_set_alignment (GstVideoMeta * meta, GstVideoAlignment alignment)
     return FALSE;
   }
 
-  GST_LOG ("Set alignment on meta: padding %u-%ux%u-%u", alignment.padding_top,
-      alignment.padding_left, alignment.padding_right,
-      alignment.padding_bottom);
+  GST_LOG ("Set alignment on meta: padding %u-%ux%u-%u", alignment->padding_top,
+      alignment->padding_left, alignment->padding_right,
+      alignment->padding_bottom);
 
   return TRUE;
 }

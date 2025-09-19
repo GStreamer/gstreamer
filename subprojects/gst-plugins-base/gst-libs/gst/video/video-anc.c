@@ -893,6 +893,14 @@ convert_line_to_uyvy (GstVideoVBIEncoder * encoder, guint8 * data)
   }
 }
 
+/**
+ * gst_video_vbi_encoder_write_line:
+ * @encoder: a #GstVideoVBIEncoder
+ * @data: (array): The line to write to
+ *
+ * @data needs to have the correct size and alignment for the configured video
+ * format of @encoder.
+ */
 void
 gst_video_vbi_encoder_write_line (GstVideoVBIEncoder * encoder, guint8 * data)
 {

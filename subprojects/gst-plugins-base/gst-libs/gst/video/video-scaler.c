@@ -193,7 +193,7 @@ scaler_dump (GstVideoScaler * scale)
 #define INTERLACE_SHIFT 0.5
 
 /**
- * gst_video_scaler_new: (skip)
+ * gst_video_scaler_new: (constructor) (skip)
  * @method: a #GstVideoResamplerMethod
  * @flags: #GstVideoScalerFlags
  * @n_taps: number of taps to use
@@ -311,7 +311,7 @@ gst_video_scaler_get_max_taps (GstVideoScaler * scale)
  * Note that for interlaced content, @in_offset needs to be incremented with
  * 2 to get the next input line.
  *
- * Returns: an array of @n_tap gdouble values with filter coefficients.
+ * Returns: (array length=n_taps): an array of @n_taps gdouble values with filter coefficients.
  */
 const gdouble *
 gst_video_scaler_get_coeff (GstVideoScaler * scale,

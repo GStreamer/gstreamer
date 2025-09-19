@@ -630,7 +630,7 @@ gst_video_dma_drm_fourcc_from_format (GstVideoFormat format)
 /**
  * gst_video_dma_drm_format_from_gst_format:
  * @format: a #GstVideoFormat
- * @modifier: (nullable): return location for the modifier
+ * @modifier: (out) (optional): return location for the modifier
  *
  * Converting the video format into dma drm fourcc/modifier pair.
  * If no matching fourcc found, then DRM_FORMAT_INVALID is returned

@@ -2397,7 +2397,7 @@ gst_video_converter_init_from_config (GstVideoConverter * convert)
 }
 
 /**
- * gst_video_converter_new_with_pool: (skip)
+ * gst_video_converter_new_with_pool: (constructor) (skip)
  * @in_info: a #GstVideoInfo
  * @out_info: a #GstVideoInfo
  * @config: (transfer full): a #GstStructure with configuration options
@@ -2548,7 +2548,7 @@ no_pack_func:
 }
 
 /**
- * gst_video_converter_new: (skip)
+ * gst_video_converter_new: (constructor) (skip)
  * @in_info: a #GstVideoInfo
  * @out_info: a #GstVideoInfo
  * @config: (transfer full): a #GstStructure with configuration options

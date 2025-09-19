@@ -1033,7 +1033,7 @@ static const VertResampler v_resamplers[] = {
 };
 
 /**
- * gst_video_chroma_resample_new: (skip)
+ * gst_video_chroma_resample_new: (constructor) (skip)
  * @method: a #GstVideoChromaMethod
  * @site: a #GstVideoChromaSite
  * @flags: #GstVideoChromaFlags

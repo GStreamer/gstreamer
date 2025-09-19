@@ -34,7 +34,7 @@ typedef struct _GstVideoAncillary GstVideoAncillary;
  * @SDID_block_number: The Secondary Data Identifier (if type 2) or the Data
  *                     Block Number (if type 1)
  * @data_count: The amount of data (in bytes) in @data (max 255 bytes)
- * @data: (array length=data_count): The user data content of the Ancillary packet.
+ * @data: (array fixed-size=256): The user data content of the Ancillary packet.
  *    Does not contain the ADF, DID, SDID nor CS.
  *
  * Video Ancillary data, according to SMPTE-291M specification.
@@ -140,7 +140,7 @@ typedef enum {
  * @SDID_block_number: Secondary Data identification (if type 2) or Data block
  *    number (if type 1)
  * @data_count: The amount of user data
- * @data: The User data
+ * @data: (array length=data_count): The User data
  * @checksum: The checksum of the ADF
  *
  * #GstMeta for carrying SMPTE-291M Ancillary data. Note that all the ADF fields
@@ -199,7 +199,7 @@ typedef struct {
   guint16 data_count;		/* The amount of User Data. Only the low 8 bits are to be used */
   guint16 *data;		/* The User Data (10bit) */
   guint16 checksum;		/* The checksum (10bit) */
-  
+
 } GstAncillaryMeta;
 
 GST_VIDEO_API GType gst_ancillary_meta_api_get_type(void);
