@@ -932,17 +932,17 @@ DEFINE_FLOAT_MIX_FUNC (double, planar, interleaved);
 DEFINE_FLOAT_MIX_FUNC (double, planar, planar);
 
 /**
- * gst_audio_channel_mixer_new_with_matrix: (skip):
+ * gst_audio_channel_mixer_new_with_matrix: (constructor) (skip):
  * @flags: #GstAudioChannelMixerFlags
  * @in_channels: number of input channels
  * @out_channels: number of output channels
- * @matrix: (transfer full) (nullable): channel conversion matrix, m[@in_channels][@out_channels].
+ * @matrix: (array) (element-type float*) (transfer full) (nullable): channel conversion matrix, m[@in_channels][@out_channels].
  *   If identity matrix, passthrough applies. If %NULL, a (potentially truncated)
  *   identity matrix is generated.
  *
  * Create a new channel mixer object for the given parameters.
  *
- * Returns: a new #GstAudioChannelMixer object.
+ * Returns: (transfer full): a new #GstAudioChannelMixer object.
  *   Free with gst_audio_channel_mixer_free() after usage.
  *
  * Since: 1.14
@@ -1093,16 +1093,16 @@ gst_audio_channel_mixer_new_with_matrix (GstAudioChannelMixerFlags flags,
 }
 
 /**
- * gst_audio_channel_mixer_new: (skip):
+ * gst_audio_channel_mixer_new: (constructor) (skip):
  * @flags: #GstAudioChannelMixerFlags
  * @in_channels: number of input channels
- * @in_position: positions of input channels
+ * @in_position: (array length=in_channels): positions of input channels
  * @out_channels: number of output channels
- * @out_position: positions of output channels
+ * @out_position: (array length=out_channels): positions of output channels
  *
  * Create a new channel mixer object for the given parameters.
  *
- * Returns: a new #GstAudioChannelMixer object.
+ * Returns: (transfer full): a new #GstAudioChannelMixer object.
  *   Free with gst_audio_channel_mixer_free() after usage.
  */
 GstAudioChannelMixer *
@@ -1172,8 +1172,8 @@ gst_audio_channel_mixer_is_passthrough (GstAudioChannelMixer * mix)
 /**
  * gst_audio_channel_mixer_samples:
  * @mix: a #GstAudioChannelMixer
- * @in: input samples
- * @out: output samples
+ * @in: (array) (element-type gpointer): input samples
+ * @out: (array) (element-type gpointer): output samples
  * @samples: number of samples
  *
  * In case the samples are interleaved, @in and @out must point to an

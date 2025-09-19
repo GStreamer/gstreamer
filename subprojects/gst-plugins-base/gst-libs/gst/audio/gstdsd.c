@@ -180,7 +180,7 @@ gst_dsd_plane_offset_meta_get_info (void)
  * @buffer: a #GstBuffer
  * @num_channels: Number of channels in the DSD data
  * @num_bytes_per_channel: Number of bytes per channel
- * @offsets: (nullable): the offsets (in bytes) where each channel plane starts
+ * @offsets: (array length=num_channels) (nullable): the offsets (in bytes) where each channel plane starts
  *   in the buffer
  *
  * Allocates and attaches a #GstDsdPlaneOffsetMeta on @buffer, which must be
@@ -962,14 +962,14 @@ gst_dsd_convert_non_interleaved_to_non_interleaved (const guint8 * input_data,
 
 /**
  * gst_dsd_convert:
- * @input_data: the DSD format conversion's input source
- * @output_data: the DSD format conversion's output destination
+ * @input_data: (array): the DSD format conversion's input source
+ * @output_data: (array): the DSD format conversion's output destination
  * @input_format: DSD format of the input data to convert from
  * @output_format: DSD format of the output data to convert to
  * @input_layout: Input data layout
  * @output_layout: Output data layout
- * @input_plane_offsets: Plane offsets for non-interleaved input data
- * @output_plane_offsets: Plane offsets for non-interleaved output data
+ * @input_plane_offsets: (array length=num_channels) (nullable): Plane offsets for non-interleaved input data
+ * @output_plane_offsets: (array length=num_channels) (nullable): Plane offsets for non-interleaved output data
  * @num_dsd_bytes: How many bytes with DSD data to convert
  * @num_channels: Number of channels (must be at least 1)
  * @reverse_byte_bits: If TRUE, reverse the bits in each DSD byte
