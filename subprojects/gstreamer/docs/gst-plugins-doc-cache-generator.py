@@ -63,6 +63,30 @@ def get_c_flags(deps, buildroot, uninstalled=True):
     return ''
 
 
+def create_hotdoc_templates(builddir):
+    """Create hotdoc templates dynamically in the build directory"""
+    templates = {
+        'C.md': '<div class="gi-lang-c">\n',
+        'PY.md': '\n<div class="gi-lang-python">',
+        'JS.md': '\n<div class="gi-lang-javascript">\n\n',
+        'END_LANG.md': '\n</div> <!-- LANGUAGE -->\n\n',
+        'C+PY_FALLBACK.md': '<div class="gi-symbol-c gi-symbol-python">\n\n',
+        'C+JS_FALLBACK.md': '\n<div class="gi-lang-javascript gi-lang-c">\n',
+        'ALERT_PY.md': '\n{{ PY.md }}\n\n> ![Warning](images/icons/emoticons/warning.svg) **Please port this code to python!**\n\n{{ END_LANG.md }}\n',
+        'ALERT_JS.md': '\n{{ JS.md }}\n\n> ![Warning](images/icons/emoticons/warning.svg) **Please port this code to javascript!**\n\n{{ END_LANG.md }}\n',
+    }
+
+    templates_dest = P(builddir) / 'templates'
+    templates_dest.mkdir(exist_ok=True)
+
+    try:
+        for filename, content in templates.items():
+            (templates_dest / filename).write_text(content)
+        return str(templates_dest)
+    except Exception as e:
+        print(f"Warning: Failed to create templates: {e}", file=sys.stderr)
+        return None
+
 
 class GstLibsHotdocConfGen:
     def __init__(self):
@@ -84,6 +108,9 @@ class GstLibsHotdocConfGen:
 
     def generate_libs_configs(self):
         conf_files = []
+
+        # Generate hotdoc templates
+        templates_path = create_hotdoc_templates(self.builddir)
 
         with self.gi_c_source_file.open() as fd:
             gi_c_source_map = json.load(fd)
@@ -146,7 +173,7 @@ class GstLibsHotdocConfGen:
                 'include_paths': [
                     os.path.join(self.builddir),
                     os.path.join(self.srcdir),
-                ],
+                ] + ([templates_path] if templates_path else []),
                 'gi_sources': gi_sources,
                 'gi_c_source_filters': [str(s) for s in self.gi_c_source_filters],
                 'extra_assets': os.path.join(self.srcdir, 'images'),
@@ -211,7 +238,7 @@ class GstLibsHotdocConfGen:
                 'include_paths': [
                     os.path.join(self.builddir),
                     os.path.join(self.srcdir),
-                ],
+                ] + ([templates_path] if templates_path else []),
                 'c_source_filters': [str(s) for s in self.c_source_filters],
                 'extra_assets': os.path.join(self.srcdir, 'images'),
                 'extra_c_flags': c_flags
@@ -221,7 +248,6 @@ class GstLibsHotdocConfGen:
                 json.dump(conf, f, indent=4)
 
             conf_files.append(str(conf_path))
-
 
         if self.output is not None:
             with self.output.open('w') as f:
@@ -253,6 +279,11 @@ class GstPluginsHotdocConfGen:
 
     def generate_plugins_configs(self):
         plugin_files = []
+
+        # Generate hotdoc templates and add to include paths
+        templates_path = create_hotdoc_templates(self.builddir)
+        if templates_path and templates_path not in self.include_paths:
+            self.include_paths.append(templates_path)
 
         if self.gst_c_source_file is not None:
             with self.gst_c_source_file.open() as fd:
