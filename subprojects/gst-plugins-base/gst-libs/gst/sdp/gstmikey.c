@@ -2766,8 +2766,7 @@ gst_mikey_message_to_caps (const GstMIKEYMessage * msg, GstCaps * caps)
     buf = gst_buffer_new_memdup (pkd->key_data, pkd->key_len);
     if (pkd->salt_len) {
       saltbuf = gst_buffer_new_memdup (pkd->salt_data, pkd->salt_len);
-      gst_buffer_append (buf, saltbuf);
-      gst_buffer_unref (saltbuf);
+      buf = gst_buffer_append (buf, saltbuf);
     }
     gst_caps_set_simple (caps, "srtp-key", GST_TYPE_BUFFER, buf, NULL);
     gst_buffer_unref (buf);
