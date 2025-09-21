@@ -48,6 +48,11 @@ if __name__ == "__main__":
         for n in et.iter("{http://www.gtk.org/introspection/core/1.0}doc"):
             del n.attrib["line"]
             make_rel(n, gir_relpath)
+        # Remove nodes with source-position pointing to gstmacos.h
+        for elem in et.xpath("//g:*[g:source-position[@filename='../subprojects/gstreamer/gst/gstmacos.h']]",
+                           namespaces={"g": "http://www.gtk.org/introspection/core/1.0"}):
+            elem.getparent().remove(elem)
+
         # Normalize shared library names
         for namespace in et.iter("{http://www.gtk.org/introspection/core/1.0}namespace"):
             normalize_shared_library(namespace)
