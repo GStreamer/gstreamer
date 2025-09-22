@@ -277,8 +277,73 @@ typedef enum {
  * @offset_end: the last offset contained in this buffer. It has the same
  *     format as @offset.
  *
+ * {{ C+JS_FALLBACK.md }}
+ *
  * The structure of a #GstBuffer. Use the associated macros to access the public
  * variables.
+ *
+ * {{ END_LANG.md }}
+ *
+ * {{ PY.md }}
+ *
+ * ### Properties
+ *
+ * #### Gst.Buffer.pts
+ *
+ * ``` python
+ * @property
+ * def pts(self) -> int:
+ * ```
+ *
+ * Presentation timestamp as a property.
+ *
+ * **Since**: 1.28
+ *
+ * #### Gst.Buffer.dts
+ *
+ * ``` python
+ * @property
+ * def dts(self) -> int:
+ * ```
+ *
+ * Decoding timestamp as a property.
+ *
+ * **Since**: 1.28
+ *
+ * #### Gst.Buffer.duration
+ *
+ * ``` python
+ * @property
+ * def duration(self) -> int:
+ * ```
+ *
+ * Buffer duration as a property.
+ *
+ * **Since**: 1.28
+ *
+ * #### Gst.Buffer.offset
+ *
+ * ``` python
+ * @property
+ * def offset(self) -> int:
+ * ```
+ *
+ * Buffer offset as a property.
+ *
+ * **Since**: 1.28
+ *
+ * #### Gst.Buffer.offset_end
+ *
+ * ``` python
+ * @property
+ * def offset_end(self) -> int:
+ * ```
+ *
+ * Buffer offset_end as a property.
+ *
+ * **Since**: 1.28
+ *
+ * {{ END_LANG.md }}
  */
 struct _GstBuffer {
   GstMiniObject          mini_object;

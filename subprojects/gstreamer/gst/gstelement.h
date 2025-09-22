@@ -970,6 +970,34 @@ G_STMT_START {                                                          \
  * @contexts: (element-type Gst.Context): list of contexts
  *
  * GStreamer element abstract base class.
+ *
+ * {{ PY.md }}
+ *
+ * ### Extra methods:
+ *
+ * #### Gst.Element.link_many
+ *
+ * ``` python
+ * @staticmethod
+ * def link_many(*args) -> None:
+ * ```
+ *
+ * Links a list of elements together in order.
+ *
+ * ##### Parameters:
+ *
+ * - `*args` : A variable number of #GstElement objects to link in sequence.
+ *
+ * **Raises**: `Gst.LinkError` if any of the links fail.
+ *
+ * ##### Example:
+ *
+ * ``` python
+ * # Link multiple elements together
+ * Gst.Element.link_many(source, filter1, filter2, sink)
+ * ```
+ *
+ * {{ END_LANG.md }}
  */
 struct _GstElement
 {

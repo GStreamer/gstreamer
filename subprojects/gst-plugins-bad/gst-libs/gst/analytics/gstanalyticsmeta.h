@@ -76,6 +76,45 @@ typedef guintptr GstAnalyticsMtdType;
  *
  * The content should be accessed through the API.
  *
+ * {{ PY.md }}
+ *
+ * #### GstAnalytics.RelationMeta.\__iter__
+ *
+ * ``` python
+ * def __iter__(self) -> Iterator:
+ * ```
+ *
+ * Iterate over all #GstAnalyticsMtd
+ *
+ * #### Example:
+ *
+ * ``` python
+ * for mtd in relation_meta:
+ *     # Process each GstAnalyticsMtd in the relation meta
+ *     print(f"Found metadata with id: {mtd.id}")
+ * ```
+ *
+ * #### GstAnalytics.RelationMeta.iter_on_type
+ *
+ * ``` python
+ * def iter_on_type(self, filter: Type[GstAnalyticsMtd]) -> Iterator:
+ * ```
+ *
+ * Iterate over #GstAnalyticsMtd of a specific type
+ *
+ * #### Example:
+ *
+ * ``` python
+ * # Iterate only over ObjectDetectionMtd metadata
+ * for mtd in relation_meta.iter_on_type(GstAnalytics.ODMtd):
+ *     # Process only object detection metadata
+ *     bbox = mtd.get_location()
+ *     print(f"Object at x={bbox.x}, y={bbox.y}")
+ * ```
+ *
+ * {{ END_LANG.md }}
+ *
+ *
  * Since: 1.24
  */
 
@@ -89,6 +128,45 @@ typedef struct _GstAnalyticsRelationMeta GstAnalyticsRelationMeta;
  *
  * Handle containing data required to use gst_analytics_mtd API. This type
  * is generally expected to be allocated on the stack.
+ *
+ * {{ PY.md }}
+ *
+ * ### Python specific methods:
+ *
+ * #### GstAnalytics.Mtd.iter_direct_related
+ *
+ * ``` python
+ * def GstAnalytics.Mtd.iter_direct_related(self, relation_type) -> Iterator[GstAnalytics.Mtd]:
+ * ```
+ *
+ * ##### Parameters:
+ *
+ * - `relation_type` : A `Gst.Analytics.RelTypes` value specifying the type of
+ *   relation to follow.
+ *
+ * **Returns**: (Iterator over #GstAnalyticsMtd): An iterator object that can be over
+ * metadata items.
+ *
+ * **Since**: 1.28
+ *
+ * #### GstAnalytics.Mtd.relation_path
+ *
+ * ``` python
+ * def GstAnalytics.Mtd.relation_path(self, mtd, max_span = 0, reltype = GstAnalytics.RelTypes.ANY) -> List[int]:
+ * ```
+ *
+ * ##### Parameters:
+ *
+ * - `mtd` : A #GstAnalyticsMtd instance to find a relation path to.
+ * - `max_span` : (optional) Maximum relation span to search. Default 0.
+ * - `reltype` : (optional) A `Gst.Analytics.RelTypes` value specifying the type
+ *   of relation to follow. Default `Gst.Analytics.RelTypes.ANY`.
+ *
+ * **Returns**: ( #gint ): A list of #GstAnalyticsMtd.id-s representing the path
+ *
+ * **Since**: 1.28
+ *
+ * {{ END_LANG.md }}
  *
  * Since: 1.24
  */

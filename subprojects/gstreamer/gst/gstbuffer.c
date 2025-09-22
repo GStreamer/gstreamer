@@ -1477,8 +1477,19 @@ gst_buffer_find_memory (GstBuffer * buffer, gsize offset, gsize size,
  *
  * @length can be -1 to check all the memory blocks after @idx.
  *
+ * {{ C+JS_FALLBACK.md }}
+ *
  * Note that this function does not check if @buffer is writable, use
  * gst_buffer_is_writable() to check that if needed.
+ *
+ * {{ END_LANG.md }}
+ *
+ * {{ PY.md }}
+ *
+ * Note that this function does not check if @buffer is writable, use
+ * [Gst.MiniObject.is_writable](gstminiobject.html#gst-miniobject-is-writable) to check that if needed.
+ *
+ * {{ END_LANG.md }}
  *
  * Returns: %TRUE if the memory range is writable
  *
@@ -1516,8 +1527,19 @@ gst_buffer_is_memory_range_writable (GstBuffer * buffer, guint idx, gint length)
  *
  * Checks if all memory blocks in @buffer are writable.
  *
+ * {{ C+JS_FALLBACK.md }}
+ *
  * Note that this function does not check if @buffer is writable, use
  * gst_buffer_is_writable() to check that if needed.
+ *
+ * {{ END_LANG.md }}
+ *
+ * {{ PY.md }}
+ *
+ * Note that this function does not check if @buffer is writable, use
+ * [Gst.MiniObject.is_writable](gstminiobject.html#gst-miniobject-is-writable) to check that if needed.
+ *
+ * {{ END_LANG.md }}
  *
  * Returns: %TRUE if all memory blocks in @buffer are writable
  *
@@ -1799,9 +1821,21 @@ gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
  *
  * Fills @info with the #GstMapInfo of all merged memory blocks in @buffer.
  *
+ * {{ C+JS_FALLBACK.md }}
+ *
  * @flags describe the desired access of the memory. When @flags is
  * #GST_MAP_WRITE, @buffer should be writable (as returned from
  * gst_buffer_is_writable()).
+ *
+ * {{ END_LANG.md }}
+ *
+ * {{ PY.md }}
+ *
+ * @flags describe the desired access of the memory. When @flags is
+ * #GST_MAP_WRITE, @buffer should be writable (as returned from
+ * [Gst.MiniObject.is_writable](gstminiobject.html#gst-miniobject-is-writable)).
+ *
+ * {{ END_LANG.md }}
  *
  * When @buffer is writable but the memory isn't, a writable copy will
  * automatically be created and returned. The readonly copy of the
@@ -1809,6 +1843,22 @@ gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
  *
  * The memory in @info should be unmapped with gst_buffer_unmap() after
  * usage.
+ *
+ * {{ PY.md }}
+ *
+ * **Context manager support**: Returns a `Gst.MapInfo` object that can be used
+ * as a context manager for automatic unmapping.
+ *
+ * ##### Example:
+ *
+ * ``` python
+ * # Context manager automatically handles unmapping
+ * with buffer.map(Gst.MapFlags.READ) as mapinfo:
+ *     data = mapinfo.data
+ *     # mapinfo is automatically unmapped when exiting the with block
+ * ```
+ *
+ * {{ END_LANG.md }}
  *
  * Returns: %TRUE if the map succeeded and @info contains valid data.
  */
@@ -1830,15 +1880,43 @@ gst_buffer_map (GstBuffer * buffer, GstMapInfo * info, GstMapFlags flags)
  * starting at @idx in @buffer. When @length is -1, all memory blocks starting
  * from @idx are merged and mapped.
  *
+ * {{ C+JS_FALLBACK.md }}
+ *
  * @flags describe the desired access of the memory. When @flags is
  * #GST_MAP_WRITE, @buffer should be writable (as returned from
  * gst_buffer_is_writable()).
+ *
+ * {{ END_LANG.md }}
+ *
+ * {{ PY.md }}
+ *
+ * @flags describe the desired access of the memory. When @flags is
+ * #GST_MAP_WRITE, @buffer should be writable (as returned from
+ * [Gst.MiniObject.is_writable](gstminiobject.html#gst-miniobject-is-writable)).
+ *
+ * {{ END_LANG.md }}
  *
  * When @buffer is writable but the memory isn't, a writable copy will
  * automatically be created and returned. The readonly copy of the buffer memory
  * will then also be replaced with this writable copy.
  *
  * The memory in @info should be unmapped with gst_buffer_unmap() after usage.
+ *
+ * {{ PY.md }}
+ *
+ *
+ * **Context manager support**: Returns a `Gst.MapInfo` object that can be used
+ * as a context manager for automatic unmapping.
+ *
+ * ##### Example:
+ *
+ * ``` python
+ * with buffer.map(Gst.MapFlags.READ) as mapinfo:
+ *     data = mapinfo.data
+ *     # mapinfo is automatically unmapped when exiting the with block
+ * ```
+ *
+ * {{ END_LANG.md }}
  *
  * Returns: %TRUE if the map succeeded and @info contains valid
  * data.
@@ -3078,8 +3156,19 @@ gst_buffer_get_custom_meta (GstBuffer * buffer, const gchar * name)
  *
  * Increases the refcount of the given buffer by one.
  *
+ * {{ C+JS_FALLBACK.md }}
+ *
  * Note that the refcount affects the writability
  * of @buf and its metadata, see gst_buffer_is_writable().
+ *
+ * {{ END_LANG.md }}
+ *
+ * {{ PY.md }}
+ *
+ * Note that the refcount affects the writability
+ * of @buf and its metadata, see [Gst.MiniObject.is_writable](gstminiobject.html#gst-miniobject-is-writable).
+ *
+ * {{ END_LANG.md }}
  * It is important to note that keeping additional references to
  * GstBuffer instances can potentially increase the number
  * of `memcpy` operations in a pipeline.

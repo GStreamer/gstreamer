@@ -330,6 +330,36 @@ GST_API GType _gst_value_array_type;
  * each channel needs to be mapped to a position in the room.
  *
  * Returns: the #GType of GstArrayList (which is not explicitly typed)
+ *
+ * {{ PY.md }}
+ *
+ * #### Gst.Float
+ *
+ * ``` python
+ * class Float(float):
+ * ```
+ *
+ * A wrapper to force conversion to G_TYPE_FLOAT instead of G_TYPE_DOUBLE when
+ * used in e.g. Gst.ValueArray.
+ *
+ * ##### Example:
+ *
+ * ``` python
+ * import Gst
+ *
+ * # Regular float becomes G_TYPE_DOUBLE
+ * regular_float = 3.14
+ *
+ * # Gst.Float becomes G_TYPE_FLOAT
+ * gst_float = Gst.Float(3.14)
+ *
+ * # Use in value arrays to ensure correct type
+ * value_array = Gst.ValueArray([Gst.Float(1.0), Gst.Float(2.0)])
+ * ```
+ *
+ * Since: 1.26
+ *
+ * {{ END_LANG.md }}
  */
 #define GST_TYPE_ARRAY                   (_gst_value_array_type)
 

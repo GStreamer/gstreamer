@@ -36,6 +36,8 @@
  *
  * A #GstCaps can be constructed with the following code fragment:
  *
+ * {{ C+JS_FALLBACK.md }}
+ *
  * ``` C
  *   GstCaps *caps = gst_caps_new_simple ("video/x-raw",
  *      "format", G_TYPE_STRING, "I420",
@@ -45,6 +47,17 @@
  *      "height", G_TYPE_INT, 240,
  *      NULL);
  * ```
+ *
+ * {{ END_LANG.md }}
+ *
+ * {{ PY.md }}
+ *
+ * ``` python
+ *  caps = Gst.Caps(Gst.Structure("video/x-raw", format="I420", framerate=Gst.Fraction(25, 1),
+ *      pixel_aspect_ratio=Gst.Fraction(1, 1), width=320, height=240))
+ * ```
+ *
+ * {{ END_LANG.md }}
  *
  * A #GstCaps is fixed when it has no fields with ranges or lists. Use
  * gst_caps_is_fixed() to test for fixed caps. Fixed caps can be used in a

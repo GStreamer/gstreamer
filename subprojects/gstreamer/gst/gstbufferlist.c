@@ -35,6 +35,17 @@
  * Buffer lists can be pushed on a srcpad with gst_pad_push_list(). This is
  * interesting when multiple buffers need to be pushed in one go because it
  * can reduce the amount of overhead for pushing each buffer individually.
+ *
+ * {{ PY.md }}
+ *
+ * The BufferList objects automatically inherit from #GstMiniObject.
+ *
+ * Following GStreamer's copy-on-write semantics: if you need
+ * to modify a bufferlist that might be shared, call
+ * [Gst.MiniObject.make_writable](gstminiobject.html#gst-miniobject-make-writable)
+ * first to ensure you have a writable copy.
+ *
+ * {{ END_LANG.md }}
  */
 #define GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 #include "gst_private.h"

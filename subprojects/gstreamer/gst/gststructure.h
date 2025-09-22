@@ -176,6 +176,77 @@ typedef gboolean (*GstStructureFilterMapIdStrFunc) (const GstIdStr * fieldname,
  * @type: the GType of a structure
  *
  * The GstStructure object. Most fields are private.
+ *
+ * {{ PY.md }}
+ *
+ * ### Extra features:
+ *
+ * #### Gst.Structure constructor
+ *
+ * ``` python
+ * Gst.Structure(name: str, **kwargs) -> Gst.Structure
+ * Gst.Structure(string: str) -> Gst.Structure
+ * Gst.Structure(structure: Gst.Structure) -> Gst.Structure
+ * ```
+ *
+ * You can create a structure from:
+ * - A name and keyword arguments
+ * - A string representation
+ * - Another structure (copy)
+ *
+ * ##### Example:
+ *
+ * ``` python
+ * # Create from name and keyword arguments
+ * struct = Gst.Structure("my-struct",
+ *                       width=640,
+ *                       height=480,
+ *                       framerate=Gst.Fraction(30, 1))
+ *
+ * # Create from string
+ * struct = Gst.Structure("my-struct, width=640, height=480")
+ *
+ * # Copy existing structure
+ * struct2 = Gst.Structure(struct)
+ * ```
+ *
+ * #### Gst.Structure.\__getitem__
+ *
+ * ``` python
+ * def __getitem__(self, key: str) -> Any:
+ * ```
+ *
+ * Get field value by key.
+ *
+ * #### Gst.Structure.\__setitem__
+ *
+ * ``` python
+ * def __setitem__(self, key: str, value: Any) -> None:
+ * ```
+ *
+ * Set field value by key.
+ *
+ * Raises `Gst.NotWritableStructure`
+ *
+ * #### Gst.Structure.keys
+ *
+ * ``` python
+ * def keys(self) -> set:
+ * ```
+ *
+ * Get set of field names:
+ *
+ * ``` python
+ * struct = Gst.Structure("test")
+ * struct["width"] = 640
+ * struct["height"] = 480
+ *
+ * width = struct["width"]
+ * for key in struct.keys():
+ *     print(f"{key}: {struct[key]}")
+ * ```
+ *
+ * {{ END_LANG.md }}
  */
 struct _GstStructure {
   GType type;

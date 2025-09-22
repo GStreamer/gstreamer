@@ -1492,6 +1492,8 @@ gst_bin_deep_element_removed_func (GstBin * bin, GstBin * sub_bin,
  * @bin: a #GstBin
  * @element: (transfer floating): the #GstElement to add
  *
+ * {{ C+JS_FALLBACK.md }}
+ *
  * Adds the given element to the bin.  Sets the element's parent, and thus
  * takes ownership of the element. An element can only be added to one bin.
  *
@@ -1503,6 +1505,27 @@ gst_bin_deep_element_removed_func (GstBin * bin, GstBin * sub_bin,
  * > state (usually PLAYING or PAUSED, same you set the pipeline to originally)
  * > with gst_element_set_state(), or use gst_element_sync_state_with_parent().
  * > The bin or pipeline will not take care of this for you.
+ *
+ * {{ END_LANG.md }}
+ *
+ * {{ PY.md }}
+ *
+ * **Accepts multiple elements**: You can pass any number of elements as arguments to add them all at once.
+ *
+ * **Raises**: `Gst.AddError` if any of the elements could not be added.
+ *
+ * ##### Example:
+ *
+ * ``` python
+ * bin = Gst.Bin()
+ * # Add multiple elements at once
+ * bin.add(source, filter, sink)
+ *
+ * # Also works with single elements
+ * bin.add(another_element)
+ * ```
+ *
+ * {{ END_LANG.md }}
  *
  * Returns: %TRUE if the element could be added, %FALSE if
  * the bin does not want to accept the element.

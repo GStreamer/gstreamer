@@ -24,10 +24,50 @@
  * @title: GstTagList
  * @short_description: List of tags and values used to describe media metadata
  *
+ * {{ C+JS_FALLBACK.md }}
  * List of tags and values used to describe media metadata.
  *
  * Strings in structures must be ASCII or UTF-8 encoded. Other encodings are
  * not allowed. Strings must not be empty or %NULL.
+ *
+ * {{ END_LANG.md }}
+ *
+ *
+ * {{ PY.md }}
+ *
+ * List of tags and values used to describe media metadata.
+ *
+ * **Dictionary-like access**: TagList supports Python's container protocols, allowing dictionary-style access
+ * to tags using `[]` notation, `len()`, and iteration with `.keys()`.
+ *
+ * ##### Example:
+ *
+ * ``` python
+ * taglist = Gst.TagList()
+ *
+ * # Dictionary-style assignment and access
+ * taglist["title"] = "My Song"
+ * taglist["artist"] = "Artist Name"
+ *
+ * # Use standard Python functions
+ * print(len(taglist))  # Get number of tags
+ * print(taglist["title"])  # Access by key
+ *
+ * # Iterate over tag names
+ * for tag_name in taglist.keys():
+ *     print(f"{tag_name}: {taglist[tag_name]}")
+ * ```
+ *
+ * The TagList objects automatically inherit from #GstMiniObject.
+ *
+ * Following GStreamer's copy-on-write semantics: if you need
+ * to modify a taglist that might be shared, call
+ * [Gst.MiniObject.make_writable](gstminiobject.html#gst-miniobject-make-writable)
+ * first to ensure you have a writable copy.
+ *
+ * {{ END_LANG.md }}
+ *
+ * Since: 1.24
  */
 
 #ifdef HAVE_CONFIG_H
