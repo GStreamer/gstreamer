@@ -1664,7 +1664,7 @@ gst_va_compositor_class_init (gpointer g_class, gpointer class_data)
    */
   if (GST_VA_DISPLAY_IS_IMPLEMENTATION (display, INTEL_IHD)) {
     g_object_class_install_property (object_class,
-        GST_VA_FILTER_PROP_SCALE_METHOD,
+        PROP_SCALE_METHOD,
         g_param_spec_enum ("scale-method", "Scale Method",
             "Scale method to use", GST_TYPE_VA_SCALE_METHOD,
             VA_FILTER_SCALING_DEFAULT,
