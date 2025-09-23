@@ -77,6 +77,9 @@ struct _GstVulkanVideoFunctions
 #undef DEFINE_FUNCTION
 };
 
+#define GST_VULKAN_VIDEO_CODEC_OPERATION_IS_DECODE(codec) ((codec & 0x0000ffff) == codec)
+#define GST_VULKAN_VIDEO_CODEC_OPERATION_IS_ENCODE(codec) ((codec & 0xffff0000) == codec)
+
 extern const VkExtensionProperties _vk_codec_extensions[GST_VK_VIDEO_EXTENSION_MAX];
 extern const VkComponentMapping _vk_identity_component_map;
 
@@ -100,5 +103,13 @@ GstVulkanImageView *    gst_vulkan_video_image_create_view     (GstBuffer * buf,
                                                                 gboolean layered_dpb,
                                                                 gboolean is_out,
                                                                 GstVulkanHandle * sampler);
+
+GST_VULKAN_API
+gboolean                gst_vulkan_video_try_configuration     (GstVulkanPhysicalDevice * device,
+                                                                GstVulkanVideoProfile * profile,
+                                                                GstVulkanVideoCapabilities * out_vkcaps,
+                                                                GstCaps ** out_caps,
+                                                                GArray ** out_formats,
+                                                                GError ** error);
 
 G_END_DECLS

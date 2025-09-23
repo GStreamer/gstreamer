@@ -173,12 +173,12 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
   guint i, maxlevel, codec_idx;
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
   VkFormat vk_format = VK_FORMAT_UNDEFINED;
-  VkImageUsageFlags image_usage;
   GstVulkanCommandPool *cmd_pool;
   GstVulkanPhysicalDevice *phy_dev;
   GError *query_err = NULL;
 
   g_return_val_if_fail (GST_IS_VULKAN_DECODER (self), FALSE);
+  g_return_val_if_fail (profile != NULL, FALSE);
 
   priv = gst_vulkan_decoder_get_instance_private (self);
 
@@ -214,78 +214,32 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
   self->profile.profile.pNext = &self->profile.usage.decode;
   self->profile.usage.decode.pNext = &self->profile.codec;
 
+  phy_dev = self->queue->device->physical_device;
+  if (!gst_vulkan_video_try_configuration (phy_dev, &self->profile, &priv->caps,
+          &priv->profile_caps, &fmts, error))
+    return FALSE;
+
   switch (self->codec) {
     case VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR:
-      /* *INDENT-OFF* */
-      priv->caps.decoder.codec.h264 = (VkVideoDecodeH264CapabilitiesKHR) {
-          .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_CAPABILITIES_KHR,
-      };
-      /* *INDENT-ON* */
       codec_idx = GST_VK_VIDEO_EXTENSION_DECODE_H264;
+      maxlevel = priv->caps.decoder.codec.h264.maxLevelIdc;
       break;
     case VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR:
-      /* *INDENT-OFF* */
-      priv->caps.decoder.codec.h265 = (VkVideoDecodeH265CapabilitiesKHR) {
-          .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_CAPABILITIES_KHR,
-      };
-      /* *INDENT-ON* */
       codec_idx = GST_VK_VIDEO_EXTENSION_DECODE_H265;
+      maxlevel = priv->caps.decoder.codec.h265.maxLevelIdc;
       break;
     case VK_VIDEO_CODEC_OPERATION_DECODE_VP9_BIT_KHR:
-      /* *INDENT-OFF* */
-      priv->caps.decoder.codec.vp9 = (VkVideoDecodeVP9CapabilitiesKHR) {
-          .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_VP9_CAPABILITIES_KHR,
-      };
-      /* *INDENT-ON* */
       codec_idx = GST_VK_VIDEO_EXTENSION_DECODE_VP9;
+      maxlevel = priv->caps.decoder.codec.vp9.maxLevel;
       break;
     case VK_VIDEO_CODEC_OPERATION_DECODE_AV1_BIT_KHR:
-      /* *INDENT-OFF* */
-      priv->caps.decoder.codec.av1 = (VkVideoDecodeAV1CapabilitiesKHR) {
-          .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_AV1_CAPABILITIES_KHR,
-      };
-      /* *INDENT-ON* */
       codec_idx = GST_VK_VIDEO_EXTENSION_DECODE_AV1;
+      maxlevel = priv->caps.decoder.codec.av1.maxLevel;
       break;
     default:
       g_assert_not_reached ();
   }
 
-  /* *INDENT-OFF* */
-  priv->caps.decoder.caps = (VkVideoDecodeCapabilitiesKHR) {
-    .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_CAPABILITIES_KHR,
-    .pNext = &priv->caps.decoder.codec,
-  };
-  priv->caps.caps =  (VkVideoCapabilitiesKHR) {
-    .sType = VK_STRUCTURE_TYPE_VIDEO_CAPABILITIES_KHR,
-    .pNext = &priv->caps.decoder.caps,
-  };
-  /* *INDENT-ON* */
-
-  phy_dev = self->queue->device->physical_device;
-
-  if (!gst_vulkan_physical_device_get_video_capabilities (phy_dev,
-          &self->profile.profile, &priv->caps.caps, error))
-    return FALSE;
-
-  switch (self->codec) {
-    case VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR:
-      maxlevel = priv->caps.decoder.codec.h264.maxLevelIdc;
-      break;
-    case VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR:
-      maxlevel = priv->caps.decoder.codec.h265.maxLevelIdc;
-      break;
-    case VK_VIDEO_CODEC_OPERATION_DECODE_VP9_BIT_KHR:
-      maxlevel = priv->caps.decoder.codec.vp9.maxLevel;
-      break;
-    case VK_VIDEO_CODEC_OPERATION_DECODE_AV1_BIT_KHR:
-      maxlevel = priv->caps.decoder.codec.av1.maxLevel;
-      break;
-    default:
-      maxlevel = 0;
-  }
-
-  priv->profile_caps = gst_vulkan_video_profile_to_caps (&self->profile);
   GST_LOG_OBJECT (self, "Capabilities for %" GST_PTR_FORMAT ":\n"
       "     Maximum level: %d\n"
       "     Width from %i to %i\n"
@@ -344,19 +298,6 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
    * represents one of the DPB Video Picture Resources. */
   self->layered_dpb = ((priv->caps.caps.flags &
           VK_VIDEO_CAPABILITY_SEPARATE_REFERENCE_IMAGES_BIT_KHR) == 0);
-
-  priv->caps.caps.pNext = NULL;
-
-  image_usage = VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
-      | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-  if (!self->dedicated_dpb)
-    image_usage |= VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR;
-
-  fmts =
-      gst_vulkan_physical_device_get_video_formats (phy_dev, image_usage,
-      &profile->profile, error);
-  if (*error)
-    return FALSE;
 
   /* find the best output format */
   for (i = 0; i < fmts->len; i++) {
