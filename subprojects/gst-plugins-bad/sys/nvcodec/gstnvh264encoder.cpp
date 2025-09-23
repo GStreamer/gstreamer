@@ -2138,17 +2138,28 @@ gst_nv_h264_encoder_get_pic_struct (GstNvEncoder * encoder,
     const GstVideoInfo * info, GstBuffer * buffer)
 {
   auto klass = GST_NV_H264_ENCODER_GET_CLASS (encoder);
-  if (klass->device_caps.field_encoding == 0)
+
+  /* Only use interlaced picture structures if field encoding is supported
+   * and the input is actually interlaced */
+  if (klass->device_caps.field_encoding == 0
+      || !GST_VIDEO_INFO_IS_INTERLACED (info)) {
+    GST_TRACE_OBJECT (encoder,
+        "Using progressive frame structure (field_encoding=%d, interlaced=%d)",
+        klass->device_caps.field_encoding, GST_VIDEO_INFO_IS_INTERLACED (info));
     return NV_ENC_PIC_STRUCT_FRAME;
+  }
 
   if (GST_VIDEO_INFO_INTERLACE_MODE (info) == GST_VIDEO_INTERLACE_MODE_MIXED) {
     if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_FLAG_INTERLACED)) {
       return NV_ENC_PIC_STRUCT_FRAME;
     }
 
-    if (GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_FLAG_TFF))
+    if (GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_FLAG_TFF)) {
+      GST_TRACE_OBJECT (encoder, "Using interlaced TFF structure");
       return NV_ENC_PIC_STRUCT_FIELD_TOP_BOTTOM;
+    }
 
+    GST_TRACE_OBJECT (encoder, "Using interlaced BFF structure");
     return NV_ENC_PIC_STRUCT_FIELD_BOTTOM_TOP;
   }
 
