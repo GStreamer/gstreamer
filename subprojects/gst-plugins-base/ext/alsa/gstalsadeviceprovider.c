@@ -56,7 +56,7 @@ add_device (GstDeviceProvider * provider, snd_ctl_t * info,
   if (snd_pcm_open (&handle, device_name, stream, SND_PCM_NONBLOCK) < 0) {
     GST_ERROR_OBJECT (provider, "Could not open device %s for inspection!",
         device_name);
-    free (device_name);
+    g_free (device_name);
 
     return NULL;
   }
@@ -89,6 +89,7 @@ add_device (GstDeviceProvider * provider, snd_ctl_t * info,
 
   snd_card_get_longname (card, &longname);
   device = gst_alsa_device_new (longname, caps, device_name, stream, props);
+  g_free (device_name);
   free (longname);
 
   snd_pcm_close (handle);
