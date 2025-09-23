@@ -912,6 +912,12 @@ gst_va_vpp_transform_meta (GstBaseTransform * trans, GstBuffer * inbuf,
   const GstMetaInfo *info = meta->info;
   const gchar *const *tags;
 
+  if (info->api == GST_VIDEO_HDR_META_API_TYPE && self->hdr_mapping) {
+    /* When the element is performing HDR -> SDR conversion, drop the attached
+     * HDR meta. */
+    return FALSE;
+  }
+
   tags = gst_meta_api_type_get_tags (info->api);
 
   if (!tags)
