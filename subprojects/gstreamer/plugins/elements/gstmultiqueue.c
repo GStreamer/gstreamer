@@ -3298,13 +3298,14 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
 
 done:
   GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
-  gst_object_unref (mq);
 
   /* Overrun is always forwarded, since this is blocking the upstream element */
   if (filled) {
     GST_DEBUG_ID (sq->debug_id, "Queue is filled, signalling overrun");
     g_signal_emit (mq, gst_multi_queue_signals[SIGNAL_OVERRUN], 0);
   }
+
+  gst_object_unref (mq);
 }
 
 static void
@@ -3349,12 +3350,13 @@ single_queue_underrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
       empty = FALSE;
   }
   GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
-  gst_object_unref (mq);
 
   if (empty) {
     GST_DEBUG_OBJECT (mq, "All queues are empty, signalling it");
     g_signal_emit (mq, gst_multi_queue_signals[SIGNAL_UNDERRUN], 0);
   }
+
+  gst_object_unref (mq);
 }
 
 static gboolean
