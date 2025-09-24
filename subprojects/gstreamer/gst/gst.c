@@ -857,12 +857,13 @@ gst_debug_help (void)
   /* FIXME this is gross.  why don't debug have categories PluginFeatures? */
   for (g = list2; g; g = g_list_next (g)) {
     GstPlugin *plugin = GST_PLUGIN_CAST (g->data);
+    GstPlugin *loaded_plugin;
     GList *features, *orig_features;
 
     if (GST_OBJECT_FLAG_IS_SET (plugin, GST_PLUGIN_FLAG_BLACKLISTED))
       continue;
 
-    gst_plugin_load (plugin);
+    loaded_plugin = gst_plugin_load (plugin);
     /* Now create one of each feature so the class_init functions
      * are called, as that's where most debug categories are
      * registered. FIXME: If debug categories were a plugin feature,
@@ -892,6 +893,7 @@ gst_debug_help (void)
     }
 
     gst_plugin_feature_list_free (orig_features);
+    gst_clear_object (&loaded_plugin);
   }
   g_list_free (list2);
 

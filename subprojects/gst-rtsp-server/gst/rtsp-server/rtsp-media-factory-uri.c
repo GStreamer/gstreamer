@@ -188,6 +188,7 @@ gst_rtsp_media_factory_uri_init (GstRTSPMediaFactoryURI * factory)
   GstRTSPMediaFactoryURIPrivate *priv =
       gst_rtsp_media_factory_uri_get_instance_private (factory);
   FilterData data = { NULL, NULL, NULL };
+  GList *unused;
 
   GST_DEBUG_OBJECT (factory, "new");
 
@@ -198,7 +199,8 @@ gst_rtsp_media_factory_uri_init (GstRTSPMediaFactoryURI * factory)
   g_mutex_init (&priv->lock);
 
   /* get the feature list using the filter */
-  gst_registry_feature_filter (gst_registry_get (), (GstPluginFeatureFilter)
+  unused =
+      gst_registry_feature_filter (gst_registry_get (), (GstPluginFeatureFilter)
       payloader_filter, FALSE, &data);
   /* sort */
   priv->demuxers =
@@ -210,6 +212,8 @@ gst_rtsp_media_factory_uri_init (GstRTSPMediaFactoryURI * factory)
 
   priv->raw_vcaps = gst_static_caps_get (&raw_video_caps);
   priv->raw_acaps = gst_static_caps_get (&raw_audio_caps);
+
+  gst_plugin_feature_list_free (unused);
 }
 
 static void

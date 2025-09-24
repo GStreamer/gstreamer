@@ -472,7 +472,7 @@ GST_START_TEST (test_parsing)
   {
     GstMessage *message;
     GstStreamCollection *collection, *res = NULL;
-    GstStream *stream1, *stream2, *stream3;
+    GstStream *stream1, *stream2, *stream3, *ignored G_GNUC_UNUSED;
     GstCaps *caps1, *caps2;
 
     /* Create a collection of two streams */
@@ -513,7 +513,8 @@ GST_START_TEST (test_parsing)
     gst_object_unref (stream3);
 
     /* Should fail */
-    ASSERT_CRITICAL (gst_message_streams_selected_get_stream (message, 1));
+    ASSERT_CRITICAL (ignored =
+        gst_message_streams_selected_get_stream (message, 1));
 
     gst_object_unref (res);
     gst_message_unref (message);

@@ -128,7 +128,7 @@ gst_rtp_dummy_pay_handle_buffer (GstRTPBasePayload * pay, GstBuffer * buffer)
   GST_BUFFER_PTS (paybuffer) = GST_BUFFER_PTS (buffer);
   GST_BUFFER_OFFSET (paybuffer) = GST_BUFFER_OFFSET (buffer);
 
-  gst_buffer_append (paybuffer, buffer);
+  paybuffer = gst_buffer_append (paybuffer, buffer);
 
   GST_LOG ("payloaded %" GST_PTR_FORMAT, paybuffer);
 

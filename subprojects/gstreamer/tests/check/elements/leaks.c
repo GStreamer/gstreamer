@@ -221,7 +221,7 @@ GST_END_TEST;
 GST_START_TEST (test_get_live_objects_filtered_detailed)
 {
   GstElement *pipe, *src, *sink;
-  GstPad *srcpad;
+  GstPad *srcpad, *sinkpad G_GNUC_UNUSED;
   GstMessage *m;
   struct RetBufferCtx *ctx = g_new0 (struct RetBufferCtx, 1);
   gboolean check_trace = FALSE;
@@ -247,7 +247,7 @@ GST_START_TEST (test_get_live_objects_filtered_detailed)
   srcpad = gst_element_get_static_pad (src, "src");
   gst_pad_add_probe (srcpad, PROBE_TYPE, ref_buffer, ctx, NULL);
   /* leak srcpad on purpose */
-  gst_element_get_static_pad (sink, "sink");
+  sinkpad = gst_element_get_static_pad (sink, "sink");
   /* leak sinkpad on purpose */
 
   GST_DEBUG ("Setting pipeline to PLAYING");

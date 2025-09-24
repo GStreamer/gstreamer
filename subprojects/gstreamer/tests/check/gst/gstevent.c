@@ -109,8 +109,10 @@ GST_START_TEST (create_events)
   /* GAP */
   {
     GstClockTime ts = 0, dur = 0;
+    GstEvent *ignored G_GNUC_UNUSED;
 
-    ASSERT_CRITICAL (gst_event_new_gap (GST_CLOCK_TIME_NONE, GST_SECOND));
+    ASSERT_CRITICAL (ignored =
+        gst_event_new_gap (GST_CLOCK_TIME_NONE, GST_SECOND));
 
     event = gst_event_new_gap (90 * GST_SECOND, GST_SECOND);
     fail_if (event == NULL);

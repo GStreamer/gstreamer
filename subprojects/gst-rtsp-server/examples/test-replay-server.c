@@ -708,10 +708,13 @@ static void
 gst_rtsp_media_factory_replay_init (GstRTSPMediaFactoryReplay * self)
 {
   FilterData data = { NULL, };
+  GList *unused;
 
   /* get the feature list using the filter */
-  gst_registry_feature_filter (gst_registry_get (), (GstPluginFeatureFilter)
-      payloader_filter, FALSE, &data);
+  unused = gst_registry_feature_filter (gst_registry_get (),
+      (GstPluginFeatureFilter) payloader_filter, FALSE, &data);
+
+  gst_plugin_feature_list_free (unused);
 
   /* sort */
   self->demuxers =

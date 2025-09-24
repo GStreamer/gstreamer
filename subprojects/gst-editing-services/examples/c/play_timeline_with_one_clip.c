@@ -45,15 +45,17 @@ main (int argc, char **argv)
     /* Play the timeline */
     GESPipeline *pipeline = ges_pipeline_new ();
     GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+    GstMessage *message;
 
     ges_pipeline_set_timeline (pipeline, timeline);
     gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
     /* Simple way to just play the pipeline until EOS or an error pops on the bus */
-    gst_bus_timed_pop_filtered (bus, 10 * GST_SECOND,
+    message = gst_bus_timed_pop_filtered (bus, 10 * GST_SECOND,
         GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
 
     gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+    g_clear_pointer (&message, gst_message_unref);
     gst_object_unref (bus);
     gst_object_unref (pipeline);
   }

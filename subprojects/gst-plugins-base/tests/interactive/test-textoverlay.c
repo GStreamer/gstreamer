@@ -53,6 +53,7 @@ show_text (GstElement * textoverlay, const gchar * txt, const gchar * valign,
     const gchar * halign, const gchar * line_align)
 {
   GstElement *pipe;
+  GstMessage *message;
 
   g_object_set (textoverlay, "text", txt, NULL);
 
@@ -65,7 +66,9 @@ show_text (GstElement * textoverlay, const gchar * txt, const gchar * valign,
     pipe = GST_ELEMENT_PARENT (pipe);
 
   gst_element_set_state (pipe, GST_STATE_PLAYING);
-  gst_bus_poll (GST_ELEMENT_BUS (pipe), GST_MESSAGE_ERROR, GST_SECOND);
+  message =
+      gst_bus_poll (GST_ELEMENT_BUS (pipe), GST_MESSAGE_ERROR, GST_SECOND);
+  g_clear_pointer (&message, gst_message_unref);
   gst_element_set_state (pipe, GST_STATE_NULL);
 }
 

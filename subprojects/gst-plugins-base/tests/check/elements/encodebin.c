@@ -600,7 +600,7 @@ GST_START_TEST (test_encodebin_render_audio_only_static)
   GstElement *ebin, *pipeline, *audiotestsrc, *fakesink;
   GstBus *bus;
   gboolean done = FALSE;
-  GstPad *sinkpad;
+  GstPad *sinkpad, *ignored G_GNUC_UNUSED;
   GstCaps *sinkcaps;
 
   /* Create an encodebin and render 5s of vorbis only */
@@ -619,7 +619,7 @@ GST_START_TEST (test_encodebin_render_audio_only_static)
   fail_unless (gst_element_link_many (audiotestsrc, ebin, fakesink, NULL));
 
   /* Requesting a new pad should fail */
-  ASSERT_CRITICAL (gst_element_request_pad_simple (ebin, "audio_0"));
+  ASSERT_CRITICAL (ignored = gst_element_request_pad_simple (ebin, "audio_0"));
 
   sinkcaps = gst_caps_new_empty_simple ("audio/x-raw");
   g_signal_emit_by_name (ebin, "request-pad", sinkcaps, &sinkpad);

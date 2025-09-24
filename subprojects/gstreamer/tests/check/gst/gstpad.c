@@ -29,7 +29,7 @@ static GstSegment dummy_segment;
 GST_START_TEST (test_link)
 {
   GstPad *src, *sink;
-  GstPadTemplate *srct;
+  GstPadTemplate *srct, *ignored G_GNUC_UNUSED;
 
   GstPadLinkReturn ret;
   gchar *name;
@@ -52,7 +52,7 @@ GST_START_TEST (test_link)
   ASSERT_OBJECT_REFCOUNT (sink, "sink pad", 1);
   fail_unless (ret == GST_PAD_LINK_OK);
 
-  ASSERT_CRITICAL (gst_pad_get_pad_template (NULL));
+  ASSERT_CRITICAL (ignored = gst_pad_get_pad_template (NULL));
 
   srct = gst_pad_get_pad_template (src);
   fail_unless (srct == NULL);
@@ -168,10 +168,10 @@ GST_END_TEST;
 GST_START_TEST (test_get_allowed_caps)
 {
   GstPad *src, *sink;
-  GstCaps *caps, *gotcaps;
+  GstCaps *caps, *gotcaps, *ignored G_GNUC_UNUSED;
   GstPadLinkReturn plr;
 
-  ASSERT_CRITICAL (gst_pad_get_allowed_caps (NULL));
+  ASSERT_CRITICAL (ignored = gst_pad_get_allowed_caps (NULL));
 
   src = gst_pad_new ("src", GST_PAD_SRC);
   fail_if (src == NULL);

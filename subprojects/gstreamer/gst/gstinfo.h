@@ -1817,7 +1817,7 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
  * Since: 1.28
  */
 #define GST_LOG_CONTEXT_BUILDER_SET_HASH_FLAGS(flags) \
-  gst_log_context_builder_set_hash_flags(builder, (flags))
+  builder = gst_log_context_builder_set_hash_flags(builder, (flags))
 
 /**
  * GST_LOG_CONTEXT_BUILDER_SET_CATEGORY:
@@ -1830,7 +1830,7 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
  * Since: 1.28
  */
 #define GST_LOG_CONTEXT_BUILDER_SET_CATEGORY(category) \
-  gst_log_context_builder_set_category(builder, (category))
+  builder = gst_log_context_builder_set_category(builder, (category))
 
 /**
  * GST_LOG_CONTEXT_BUILDER_SET_INTERVAL:
@@ -1856,7 +1856,7 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
  */
 
 #define GST_LOG_CONTEXT_BUILDER_SET_INTERVAL(interval) \
-  gst_log_context_builder_set_interval(builder, (interval))
+  builder = gst_log_context_builder_set_interval(builder, (interval))
 
 
 /**

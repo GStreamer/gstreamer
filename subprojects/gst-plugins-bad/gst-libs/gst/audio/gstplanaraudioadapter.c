@@ -416,7 +416,7 @@ gst_planar_audio_adapter_get_buffer (GstPlanarAudioAdapter * adapter,
         if (!buffer)
           buffer = cur;
         else
-          gst_buffer_append (buffer, cur);
+          buffer = gst_buffer_append (buffer, cur);
 
         need -= take_from_cur;
         cur_skip = 0;

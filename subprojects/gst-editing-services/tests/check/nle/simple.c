@@ -522,7 +522,8 @@ test_one_under_another_full (void)
   fail_if (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_NULL) == GST_STATE_CHANGE_FAILURE);
 
-  gst_bus_poll (bus, GST_MESSAGE_ANY, GST_SECOND / 10);
+  message = gst_bus_poll (bus, GST_MESSAGE_ANY, GST_SECOND / 10);
+  g_clear_pointer (&message, gst_message_unref);
   gst_object_unref (GST_OBJECT (sinkpad));
   ASSERT_OBJECT_REFCOUNT_BETWEEN (pipeline, "main pipeline", 1, 2);
   gst_object_unref (pipeline);
