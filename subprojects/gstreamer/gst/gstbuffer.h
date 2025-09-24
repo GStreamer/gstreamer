@@ -305,23 +305,23 @@ guint       gst_buffer_get_max_memory      (void);
 /* allocation */
 
 GST_API
-GstBuffer * gst_buffer_new                 (void);
+GstBuffer * gst_buffer_new                 (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 GstBuffer * gst_buffer_new_allocate        (GstAllocator * allocator, gsize size,
-                                            GstAllocationParams * params);
+                                            GstAllocationParams * params) G_GNUC_WARN_UNUSED_RESULT;
 GST_API
 GstBuffer * gst_buffer_new_wrapped_full    (GstMemoryFlags flags, gpointer data, gsize maxsize,
                                             gsize offset, gsize size, gpointer user_data,
-                                            GDestroyNotify notify);
+                                            GDestroyNotify notify) G_GNUC_WARN_UNUSED_RESULT;
 GST_API
-GstBuffer * gst_buffer_new_wrapped         (gpointer data, gsize size);
+GstBuffer * gst_buffer_new_wrapped         (gpointer data, gsize size) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-GstBuffer * gst_buffer_new_wrapped_bytes   (GBytes * bytes);
+GstBuffer * gst_buffer_new_wrapped_bytes   (GBytes * bytes) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-GstBuffer * gst_buffer_new_memdup           (gconstpointer data, gsize size);
+GstBuffer * gst_buffer_new_memdup           (gconstpointer data, gsize size) G_GNUC_WARN_UNUSED_RESULT;
 
 /* memory blocks */
 
@@ -338,7 +338,7 @@ GST_API
 GstMemory * gst_buffer_peek_memory          (GstBuffer *buffer, guint idx);
 
 GST_API
-GstMemory * gst_buffer_get_memory_range     (GstBuffer *buffer, guint idx, gint length);
+GstMemory * gst_buffer_get_memory_range     (GstBuffer *buffer, guint idx, gint length) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void        gst_buffer_remove_memory_range  (GstBuffer *buffer, guint idx, gint length);
@@ -356,10 +356,10 @@ GST_API
 void        gst_buffer_replace_all_memory   (GstBuffer *buffer, GstMemory *mem);
 
 GST_API
-GstMemory * gst_buffer_get_memory           (GstBuffer *buffer, guint idx);
+GstMemory * gst_buffer_get_memory           (GstBuffer *buffer, guint idx) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-GstMemory * gst_buffer_get_all_memory       (GstBuffer *buffer);
+GstMemory * gst_buffer_get_all_memory       (GstBuffer *buffer) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void        gst_buffer_remove_memory        (GstBuffer *buffer, guint idx);
@@ -589,15 +589,15 @@ gboolean gst_buffer_is_writable                 (const GstBuffer * buf);
 
 GST_API
 GstBuffer*      gst_buffer_copy_region          (GstBuffer *parent, GstBufferCopyFlags flags,
-                                                 gsize offset, gsize size);
+                                                 gsize offset, gsize size) G_GNUC_WARN_UNUSED_RESULT;
 
 /* append two buffers */
 
 GST_API
 GstBuffer*      gst_buffer_append_region        (GstBuffer *buf1, GstBuffer *buf2,
-                                                 gssize offset, gssize size);
+                                                 gssize offset, gssize size) G_GNUC_WARN_UNUSED_RESULT;
 GST_API
-GstBuffer*      gst_buffer_append               (GstBuffer *buf1, GstBuffer *buf2);
+GstBuffer*      gst_buffer_append               (GstBuffer *buf1, GstBuffer *buf2) G_GNUC_WARN_UNUSED_RESULT;
 
 /* metadata */
 #include <gst/gstmeta.h>

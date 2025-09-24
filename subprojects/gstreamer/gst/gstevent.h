@@ -468,7 +468,7 @@ GType           gst_event_get_type              (void);
 /* custom event */
 
 GST_API
-GstEvent*       gst_event_new_custom            (GstEventType type, GstStructure *structure) G_GNUC_MALLOC;
+GstEvent*       gst_event_new_custom            (GstEventType type, GstStructure *structure) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 const GstStructure *
@@ -502,7 +502,7 @@ void            gst_event_set_running_time_offset (GstEvent *event, gint64 offse
 /* Stream start event */
 
 GST_API
-GstEvent *      gst_event_new_stream_start      (const gchar *stream_id) G_GNUC_MALLOC;
+GstEvent *      gst_event_new_stream_start      (const gchar *stream_id) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void            gst_event_parse_stream_start    (GstEvent *event, const gchar **stream_id);
@@ -528,10 +528,10 @@ gboolean        gst_event_parse_group_id        (GstEvent *event, guint *group_i
 /* flush events */
 
 GST_API
-GstEvent *      gst_event_new_flush_start       (void) G_GNUC_MALLOC;
+GstEvent *      gst_event_new_flush_start       (void) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-GstEvent *      gst_event_new_flush_stop        (gboolean reset_time) G_GNUC_MALLOC;
+GstEvent *      gst_event_new_flush_stop        (gboolean reset_time) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void            gst_event_parse_flush_stop      (GstEvent *event, gboolean *reset_time);
@@ -539,7 +539,7 @@ void            gst_event_parse_flush_stop      (GstEvent *event, gboolean *rese
 /* Stream collection event */
 
 GST_API
-GstEvent *      gst_event_new_stream_collection   (GstStreamCollection *collection) G_GNUC_MALLOC;
+GstEvent *      gst_event_new_stream_collection   (GstStreamCollection *collection) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void            gst_event_parse_stream_collection (GstEvent *event, GstStreamCollection **collection);
@@ -547,7 +547,7 @@ void            gst_event_parse_stream_collection (GstEvent *event, GstStreamCol
 /* select streams event */
 
 GST_API
-GstEvent *      gst_event_new_select_streams    (GList *streams);
+GstEvent *      gst_event_new_select_streams    (GList *streams) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void            gst_event_parse_select_streams  (GstEvent *event, GList **streams);
@@ -555,7 +555,7 @@ void            gst_event_parse_select_streams  (GstEvent *event, GList **stream
 /* stream-group-done event */
 
 GST_API
-GstEvent *      gst_event_new_stream_group_done (guint group_id) G_GNUC_MALLOC;
+GstEvent *      gst_event_new_stream_group_done (guint group_id) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void            gst_event_parse_stream_group_done (GstEvent *event, guint *group_id);
@@ -563,13 +563,13 @@ void            gst_event_parse_stream_group_done (GstEvent *event, guint *group
 /* EOS event */
 
 GST_API
-GstEvent *      gst_event_new_eos               (void) G_GNUC_MALLOC;
+GstEvent *      gst_event_new_eos               (void) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /* GAP event */
 
 GST_API
 GstEvent *      gst_event_new_gap               (GstClockTime   timestamp,
-                                                 GstClockTime   duration) G_GNUC_MALLOC;
+                                                 GstClockTime   duration) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 GST_API
 void            gst_event_parse_gap             (GstEvent     * event,
                                                  GstClockTime * timestamp,
@@ -586,7 +586,7 @@ void            gst_event_parse_gap_flags         (GstEvent    * event,
 /* Caps events */
 
 GST_API
-GstEvent *      gst_event_new_caps              (GstCaps *caps) G_GNUC_MALLOC;
+GstEvent *      gst_event_new_caps              (GstCaps *caps) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void            gst_event_parse_caps            (GstEvent *event, GstCaps **caps);
@@ -594,7 +594,7 @@ void            gst_event_parse_caps            (GstEvent *event, GstCaps **caps
 /* segment event */
 
 GST_API
-GstEvent*       gst_event_new_segment           (const GstSegment *segment) G_GNUC_MALLOC;
+GstEvent*       gst_event_new_segment           (const GstSegment *segment) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void            gst_event_parse_segment         (GstEvent *event, const GstSegment **segment);
@@ -605,7 +605,7 @@ void            gst_event_copy_segment          (GstEvent *event, GstSegment *se
 /* tag event */
 
 GST_API
-GstEvent*       gst_event_new_tag               (GstTagList *taglist) G_GNUC_MALLOC;
+GstEvent*       gst_event_new_tag               (GstTagList *taglist) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void            gst_event_parse_tag             (GstEvent *event, GstTagList **taglist);
@@ -613,7 +613,7 @@ void            gst_event_parse_tag             (GstEvent *event, GstTagList **t
 /* TOC event */
 
 GST_API
-GstEvent*      gst_event_new_toc                (GstToc *toc, gboolean updated);
+GstEvent*      gst_event_new_toc                (GstToc *toc, gboolean updated) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void           gst_event_parse_toc              (GstEvent *event, GstToc **toc, gboolean *updated);
@@ -621,7 +621,7 @@ void           gst_event_parse_toc              (GstEvent *event, GstToc **toc, 
 /* Protection event */
 
 GST_API
-GstEvent *     gst_event_new_protection         (const gchar * system_id, GstBuffer * data, const gchar * origin);
+GstEvent *     gst_event_new_protection         (const gchar * system_id, GstBuffer * data, const gchar * origin) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void           gst_event_parse_protection       (GstEvent * event, const gchar ** system_id,
@@ -631,7 +631,7 @@ void           gst_event_parse_protection       (GstEvent * event, const gchar *
 
 GST_API
 GstEvent *      gst_event_new_buffer_size       (GstFormat format, gint64 minsize, gint64 maxsize,
-                                                 gboolean async) G_GNUC_MALLOC;
+                                                 gboolean async) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 GST_API
 void            gst_event_parse_buffer_size     (GstEvent *event, GstFormat *format, gint64 *minsize,
                                                  gint64 *maxsize, gboolean *async);
@@ -639,7 +639,7 @@ void            gst_event_parse_buffer_size     (GstEvent *event, GstFormat *for
 /* sink message */
 
 GST_API
-GstEvent*       gst_event_new_sink_message      (const gchar *name, GstMessage *msg) G_GNUC_MALLOC;
+GstEvent*       gst_event_new_sink_message      (const gchar *name, GstMessage *msg) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void            gst_event_parse_sink_message    (GstEvent *event, GstMessage **msg);
@@ -648,7 +648,7 @@ void            gst_event_parse_sink_message    (GstEvent *event, GstMessage **m
 
 GST_API
 GstEvent*       gst_event_new_qos               (GstQOSType type, gdouble proportion,
-                                                 GstClockTimeDiff diff, GstClockTime timestamp) G_GNUC_MALLOC;
+                                                 GstClockTimeDiff diff, GstClockTime timestamp) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 GST_API
 void            gst_event_parse_qos             (GstEvent *event, GstQOSType *type,
                                                  gdouble *proportion, GstClockTimeDiff *diff,
@@ -658,7 +658,7 @@ void            gst_event_parse_qos             (GstEvent *event, GstQOSType *ty
 GST_API
 GstEvent*       gst_event_new_seek              (gdouble rate, GstFormat format, GstSeekFlags flags,
                                                  GstSeekType start_type, gint64 start,
-                                                 GstSeekType stop_type, gint64 stop) G_GNUC_MALLOC;
+                                                 GstSeekType stop_type, gint64 stop) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 GST_API
 void            gst_event_parse_seek            (GstEvent *event, gdouble *rate, GstFormat *format,
                                                  GstSeekFlags *flags,
@@ -674,12 +674,12 @@ void            gst_event_parse_seek_trickmode_interval (GstEvent *event, GstClo
 /* navigation event */
 
 GST_API
-GstEvent*       gst_event_new_navigation        (GstStructure *structure) G_GNUC_MALLOC;
+GstEvent*       gst_event_new_navigation        (GstStructure *structure) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /* latency event */
 
 GST_API
-GstEvent*       gst_event_new_latency           (GstClockTime latency) G_GNUC_MALLOC;
+GstEvent*       gst_event_new_latency           (GstClockTime latency) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void            gst_event_parse_latency         (GstEvent *event, GstClockTime *latency);
@@ -688,7 +688,7 @@ void            gst_event_parse_latency         (GstEvent *event, GstClockTime *
 
 GST_API
 GstEvent*       gst_event_new_step              (GstFormat format, guint64 amount, gdouble rate,
-                                                 gboolean flush, gboolean intermediate) G_GNUC_MALLOC;
+                                                 gboolean flush, gboolean intermediate) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 GST_API
 void            gst_event_parse_step            (GstEvent *event, GstFormat *format, guint64 *amount,
                                                  gdouble *rate, gboolean *flush, gboolean *intermediate);
@@ -696,12 +696,12 @@ void            gst_event_parse_step            (GstEvent *event, GstFormat *for
 /* renegotiate event */
 
 GST_API
-GstEvent*       gst_event_new_reconfigure       (void) G_GNUC_MALLOC;
+GstEvent*       gst_event_new_reconfigure       (void) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /* TOC select event */
 
 GST_API
-GstEvent*       gst_event_new_toc_select        (const gchar *uid) G_GNUC_MALLOC;
+GstEvent*       gst_event_new_toc_select        (const gchar *uid) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void            gst_event_parse_toc_select      (GstEvent *event, gchar **uid);
@@ -709,7 +709,7 @@ void            gst_event_parse_toc_select      (GstEvent *event, gchar **uid);
 /* segment-done event */
 
 GST_API
-GstEvent*       gst_event_new_segment_done      (GstFormat format, gint64 position) G_GNUC_MALLOC;
+GstEvent*       gst_event_new_segment_done      (GstFormat format, gint64 position) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void            gst_event_parse_segment_done    (GstEvent *event, GstFormat *format, gint64 *position);
@@ -717,7 +717,7 @@ void            gst_event_parse_segment_done    (GstEvent *event, GstFormat *for
 /* instant-rate-change event */
 
 GST_API
-GstEvent *      gst_event_new_instant_rate_change   (gdouble rate_multiplier, GstSegmentFlags new_flags) G_GNUC_MALLOC;
+GstEvent *      gst_event_new_instant_rate_change   (gdouble rate_multiplier, GstSegmentFlags new_flags) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void            gst_event_parse_instant_rate_change (GstEvent *event,
@@ -728,7 +728,7 @@ void            gst_event_parse_instant_rate_change (GstEvent *event,
 GST_API
 GstEvent *      gst_event_new_instant_rate_sync_time   (gdouble      rate_multiplier,
                                                         GstClockTime running_time,
-                                                        GstClockTime upstream_running_time) G_GNUC_MALLOC;
+                                                        GstClockTime upstream_running_time) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void            gst_event_parse_instant_rate_sync_time (GstEvent     *event,

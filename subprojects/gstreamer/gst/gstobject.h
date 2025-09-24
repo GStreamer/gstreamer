@@ -268,7 +268,7 @@ GST_API
 gboolean	gst_object_set_name		(GstObject *object, const gchar *name);
 
 GST_API
-gchar*		gst_object_get_name		(GstObject *object);
+gchar*		gst_object_get_name		(GstObject *object) G_GNUC_WARN_UNUSED_RESULT;
 
 /* parentage routines */
 
@@ -276,7 +276,7 @@ GST_API
 gboolean	gst_object_set_parent		(GstObject *object, GstObject *parent);
 
 GST_API
-GstObject*	gst_object_get_parent		(GstObject *object);
+GstObject*	gst_object_get_parent		(GstObject *object) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void		gst_object_unparent		(GstObject *object);
@@ -317,7 +317,7 @@ gboolean        gst_object_replace		(GstObject **oldobj, GstObject *newobj);
 /* printing out the 'path' of the object */
 
 GST_API
-gchar *		gst_object_get_path_string	(GstObject *object);
+gchar *		gst_object_get_path_string	(GstObject *object) G_GNUC_WARN_UNUSED_RESULT;
 
 /* misc utils */
 
@@ -350,14 +350,14 @@ gboolean        gst_object_add_control_binding    (GstObject * object, GstContro
 
 GST_API
 GstControlBinding *
-                gst_object_get_control_binding    (GstObject *object, const gchar * property_name);
+                gst_object_get_control_binding    (GstObject *object, const gchar * property_name) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 gboolean        gst_object_remove_control_binding (GstObject * object, GstControlBinding * binding);
 
 GST_API
 GValue *        gst_object_get_value              (GstObject * object, const gchar * property_name,
-                                                   GstClockTime timestamp);
+                                                   GstClockTime timestamp) G_GNUC_WARN_UNUSED_RESULT;
 GST_API
 gboolean        gst_object_get_value_array        (GstObject * object, const gchar * property_name,
                                                    GstClockTime timestamp, GstClockTime interval,

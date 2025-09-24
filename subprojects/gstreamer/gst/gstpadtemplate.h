@@ -224,16 +224,16 @@ GstPadTemplate * gst_pad_template_new_from_static_pad_template_with_gtype (
     GType pad_type);
 
 GST_API
-GstCaps*		gst_static_pad_template_get_caps	(GstStaticPadTemplate *templ);
+GstCaps*		gst_static_pad_template_get_caps	(GstStaticPadTemplate *templ) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-GstCaps*		gst_pad_template_get_caps		(GstPadTemplate *templ);
+GstCaps*		gst_pad_template_get_caps		(GstPadTemplate *templ) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void        gst_pad_template_set_documentation_caps (GstPadTemplate *templ, GstCaps *caps);
 
 GST_API
-GstCaps*    gst_pad_template_get_documentation_caps (GstPadTemplate *templ);
+GstCaps*    gst_pad_template_get_documentation_caps (GstPadTemplate *templ) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void                    gst_pad_template_pad_created            (GstPadTemplate * templ, GstPad * pad);

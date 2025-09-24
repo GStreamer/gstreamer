@@ -56,7 +56,7 @@ GST_API
 GstSample *          gst_sample_new           (GstBuffer          *buffer,
                                                GstCaps            *caps,
                                                const GstSegment   *segment,
-                                               GstStructure       *info);
+                                               GstStructure       *info) G_GNUC_WARN_UNUSED_RESULT;
 GST_API
 GstBuffer *          gst_sample_get_buffer    (GstSample *sample);
 

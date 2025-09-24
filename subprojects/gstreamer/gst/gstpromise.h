@@ -75,11 +75,11 @@ struct _GstPromise
 };
 
 GST_API
-GstPromise *            gst_promise_new                     (void);
+GstPromise *            gst_promise_new                     (void) G_GNUC_WARN_UNUSED_RESULT;
 GST_API
 GstPromise *            gst_promise_new_with_change_func    (GstPromiseChangeFunc func,
                                                              gpointer user_data,
-                                                             GDestroyNotify notify);
+                                                             GDestroyNotify notify) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 GstPromiseResult        gst_promise_wait                    (GstPromise * promise);

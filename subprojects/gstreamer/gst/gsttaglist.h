@@ -198,13 +198,13 @@ typedef enum {
 } GstTagScope;
 
 GST_API
-GstTagList * gst_tag_list_new_empty         (void) G_GNUC_MALLOC;
+GstTagList * gst_tag_list_new_empty         (void) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-GstTagList * gst_tag_list_new               (const gchar * tag, ...) G_GNUC_NULL_TERMINATED G_GNUC_MALLOC;
+GstTagList * gst_tag_list_new               (const gchar * tag, ...) G_GNUC_NULL_TERMINATED G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-GstTagList * gst_tag_list_new_valist        (va_list var_args) G_GNUC_MALLOC;
+GstTagList * gst_tag_list_new_valist        (va_list var_args) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void         gst_tag_list_set_scope         (GstTagList * list, GstTagScope scope);
@@ -213,10 +213,10 @@ GST_API
 GstTagScope  gst_tag_list_get_scope         (const GstTagList * list);
 
 GST_API
-gchar      * gst_tag_list_to_string         (const GstTagList * list) G_GNUC_MALLOC;
+gchar      * gst_tag_list_to_string         (const GstTagList * list) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-GstTagList * gst_tag_list_new_from_string   (const gchar      * str) G_GNUC_MALLOC;
+GstTagList * gst_tag_list_new_from_string   (const gchar      * str) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 gint         gst_tag_list_n_tags            (const GstTagList * list);
@@ -237,7 +237,7 @@ void         gst_tag_list_insert            (GstTagList       * into,
 GST_API
 GstTagList * gst_tag_list_merge             (const GstTagList * list1,
                                              const GstTagList * list2,
-                                             GstTagMergeMode    mode) G_GNUC_MALLOC;
+                                             GstTagMergeMode    mode) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 GST_API
 guint        gst_tag_list_get_tag_size      (const GstTagList * list,
                                              const gchar      * tag);

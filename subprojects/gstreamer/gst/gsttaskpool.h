@@ -100,14 +100,14 @@ GST_API
 GType           gst_task_pool_get_type    (void);
 
 GST_API
-GstTaskPool *   gst_task_pool_new         (void);
+GstTaskPool *   gst_task_pool_new         (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void            gst_task_pool_prepare     (GstTaskPool *pool, GError **error);
 
 GST_API
 gpointer        gst_task_pool_push        (GstTaskPool *pool, GstTaskPoolFunction func,
-                                           gpointer user_data, GError **error);
+                                           gpointer user_data, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 GST_API
 void            gst_task_pool_join        (GstTaskPool *pool, gpointer id);
 
@@ -170,7 +170,7 @@ GST_API
 guint           gst_shared_task_pool_get_max_threads (GstSharedTaskPool *pool);
 
 GST_API
-GstTaskPool *   gst_shared_task_pool_new             (void);
+GstTaskPool *   gst_shared_task_pool_new             (void) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 

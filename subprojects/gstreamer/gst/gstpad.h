@@ -1419,14 +1419,14 @@ GST_API
 gpointer		gst_pad_get_element_private		(GstPad *pad);
 
 GST_API
-GstPadTemplate*		gst_pad_get_pad_template		(GstPad *pad);
+GstPadTemplate*		gst_pad_get_pad_template		(GstPad *pad) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 GstFlowReturn           gst_pad_store_sticky_event              (GstPad *pad, GstEvent *event);
 
 GST_API
 GstEvent*               gst_pad_get_sticky_event                (GstPad *pad, GstEventType event_type,
-                                                                 guint idx);
+                                                                 guint idx) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void                    gst_pad_sticky_events_foreach           (GstPad *pad, GstPadStickyEventsForeachFunction foreach_func, gpointer user_data);
@@ -1511,15 +1511,15 @@ GST_API
 gboolean		gst_pad_is_linked			(GstPad *pad);
 
 GST_API
-GstPad*			gst_pad_get_peer			(GstPad *pad);
+GstPad*			gst_pad_get_peer			(GstPad *pad) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-GstCaps*                gst_pad_get_pad_template_caps		(GstPad *pad);
+GstCaps*                gst_pad_get_pad_template_caps		(GstPad *pad) G_GNUC_WARN_UNUSED_RESULT;
 
 /* capsnego function for linked/unlinked pads */
 
 GST_API
-GstCaps *		gst_pad_get_current_caps                (GstPad * pad);
+GstCaps *		gst_pad_get_current_caps                (GstPad * pad) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 gboolean		gst_pad_has_current_caps                (GstPad * pad);
@@ -1527,7 +1527,7 @@ gboolean		gst_pad_has_current_caps                (GstPad * pad);
 /* capsnego for linked pads */
 
 GST_API
-GstCaps *		gst_pad_get_allowed_caps		(GstPad * pad);
+GstCaps *		gst_pad_get_allowed_caps		(GstPad * pad) G_GNUC_WARN_UNUSED_RESULT;
 
 /* pad offsets */
 
@@ -1594,15 +1594,15 @@ void                    gst_pad_set_iterate_internal_links_function_full (GstPad
                                                                  GDestroyNotify notify);
 
 GST_API
-GstIterator *           gst_pad_iterate_internal_links          (GstPad * pad);
+GstIterator *           gst_pad_iterate_internal_links          (GstPad * pad) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-GstIterator *           gst_pad_iterate_internal_links_default  (GstPad * pad, GstObject *parent);
+GstIterator *           gst_pad_iterate_internal_links_default  (GstPad * pad, GstObject *parent) G_GNUC_WARN_UNUSED_RESULT;
 
 #define gst_pad_set_iterate_internal_links_function(p,f) gst_pad_set_iterate_internal_links_function_full((p),(f),NULL,NULL)
 
 GST_API
-GstPad *                gst_pad_get_single_internal_link        (GstPad * pad);
+GstPad *                gst_pad_get_single_internal_link        (GstPad * pad) G_GNUC_WARN_UNUSED_RESULT;
 
 /* generic query function */
 

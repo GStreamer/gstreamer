@@ -1776,22 +1776,22 @@ void gst_debug_log_id_literal_with_context      (GstLogContext *ctx,
 /* Builder pattern API */
 GST_API
 GstLogContextBuilder* gst_log_context_builder_new           (GstDebugCategory *category,
-                                                             GstLogContextFlags flags);
+                                                             GstLogContextFlags flags) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 GstLogContextBuilder* gst_log_context_builder_set_hash_flags (GstLogContextBuilder* builder,
-                                                             GstLogContextHashFlags flags);
+                                                             GstLogContextHashFlags flags) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 GstLogContextBuilder* gst_log_context_builder_set_category  (GstLogContextBuilder* builder,
-                                                             GstDebugCategory* category);
+                                                             GstDebugCategory* category) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 GstLogContextBuilder* gst_log_context_builder_set_interval  (GstLogContextBuilder* builder,
-                                                             GstClockTime interval);
+                                                             GstClockTime interval) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilder* builder);
+GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilder* builder) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * GST_LOG_CONTEXT_BUILDER_NEW:

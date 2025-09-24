@@ -114,7 +114,7 @@ gboolean     gst_context_replace                  (GstContext ** old_context,
 
 GST_API
 GstContext *          gst_context_new                      (const gchar * context_type,
-                                                            gboolean persistent) G_GNUC_MALLOC;
+                                                            gboolean persistent) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 GST_API
 const gchar *         gst_context_get_context_type         (const GstContext * context);
 

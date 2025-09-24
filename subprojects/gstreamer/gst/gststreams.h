@@ -121,7 +121,7 @@ GST_API
 GstStream *gst_stream_new            (const gchar *stream_id,
 				      GstCaps *caps,
 				      GstStreamType type,
-				      GstStreamFlags flags);
+				      GstStreamFlags flags) G_GNUC_WARN_UNUSED_RESULT;
 GST_API
 const gchar *  gst_stream_get_stream_id (GstStream *stream);
 
@@ -141,13 +141,13 @@ GST_API
 void           gst_stream_set_tags (GstStream *stream, GstTagList *tags);
 
 GST_API
-GstTagList *   gst_stream_get_tags (GstStream *stream);
+GstTagList *   gst_stream_get_tags (GstStream *stream) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void           gst_stream_set_caps (GstStream *stream, GstCaps *caps);
 
 GST_API
-GstCaps *      gst_stream_get_caps (GstStream *stream);
+GstCaps *      gst_stream_get_caps (GstStream *stream) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 const gchar *  gst_stream_type_get_name (GstStreamType stype);

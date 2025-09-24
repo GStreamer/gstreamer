@@ -175,7 +175,7 @@ GST_API
 const gchar * const * gst_uri_handler_get_protocols (GstURIHandler * handler);
 
 GST_API
-gchar *               gst_uri_handler_get_uri       (GstURIHandler * handler) G_GNUC_MALLOC;
+gchar *               gst_uri_handler_get_uri       (GstURIHandler * handler) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 gboolean              gst_uri_handler_set_uri       (GstURIHandler * handler,
@@ -222,7 +222,7 @@ GstUri * gst_uri_new                   (const gchar * scheme,
                                         guint port,
                                         const gchar * path,
                                         const gchar * query,
-                                        const gchar * fragment) G_GNUC_MALLOC;
+                                        const gchar * fragment) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 GST_API
 GstUri * gst_uri_new_with_base         (GstUri * base,
                                         const gchar * scheme,
@@ -231,7 +231,7 @@ GstUri * gst_uri_new_with_base         (GstUri * base,
                                         guint port,
                                         const gchar * path,
                                         const gchar * query,
-                                        const gchar * fragment) G_GNUC_MALLOC;
+                                        const gchar * fragment) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 GST_API
 GstUri * gst_uri_from_string           (const gchar * uri) G_GNUC_MALLOC;
 
@@ -240,7 +240,7 @@ GstUri * gst_uri_from_string_escaped   (const gchar * uri) G_GNUC_MALLOC;
 
 GST_API
 GstUri * gst_uri_from_string_with_base (GstUri * base,
-                                        const gchar * uri) G_GNUC_MALLOC;
+                                        const gchar * uri) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 GST_API
 gboolean gst_uri_equal                 (const GstUri * first,
                                         const GstUri * second);
@@ -257,10 +257,10 @@ GST_API
 GstUri * gst_uri_make_writable         (GstUri * uri) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-gchar *  gst_uri_to_string             (const GstUri * uri) G_GNUC_MALLOC;
+gchar *  gst_uri_to_string             (const GstUri * uri) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-gchar * gst_uri_to_string_with_keys    (const GstUri * uri, const GList *keys);
+gchar * gst_uri_to_string_with_keys    (const GstUri * uri, const GList *keys) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 gboolean gst_uri_is_normalized         (const GstUri * uri);
@@ -293,19 +293,19 @@ GST_API
 gboolean gst_uri_set_port              (GstUri * uri, guint port);
 
 GST_API
-gchar * gst_uri_get_path               (const GstUri * uri);
+gchar * gst_uri_get_path               (const GstUri * uri) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 gboolean gst_uri_set_path              (GstUri * uri, const gchar * path);
 
 GST_API
-gchar * gst_uri_get_path_string        (const GstUri * uri);
+gchar * gst_uri_get_path_string        (const GstUri * uri) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 gboolean gst_uri_set_path_string       (GstUri * uri, const gchar * path);
 
 GST_API
-GList * gst_uri_get_path_segments      (const GstUri * uri);
+GList * gst_uri_get_path_segments      (const GstUri * uri) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 gboolean gst_uri_set_path_segments     (GstUri * uri, GList * path_segments);
@@ -317,16 +317,16 @@ GST_API
 gboolean gst_uri_append_path_segment   (GstUri * uri,
                                         const gchar * path_segment);
 GST_API
-gchar * gst_uri_get_query_string       (const GstUri * uri);
+gchar * gst_uri_get_query_string       (const GstUri * uri) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-gchar * gst_uri_get_query_string_ordered (const GstUri * uri, const GList *keys);
+gchar * gst_uri_get_query_string_ordered (const GstUri * uri, const GList *keys) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 gboolean gst_uri_set_query_string      (GstUri * uri, const gchar * query);
 
 GST_API
-GHashTable * gst_uri_get_query_table   (const GstUri * uri);
+GHashTable * gst_uri_get_query_table   (const GstUri * uri) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 gboolean gst_uri_set_query_table       (GstUri * uri,
@@ -355,7 +355,7 @@ GST_API
 gboolean gst_uri_set_fragment          (GstUri * uri, const gchar * fragment);
 
 GST_API
-GHashTable * gst_uri_get_media_fragment_table  (const GstUri * uri);
+GHashTable * gst_uri_get_media_fragment_table  (const GstUri * uri) G_GNUC_WARN_UNUSED_RESULT;
 
 #ifndef GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 G_GNUC_WARN_UNUSED_RESULT static inline GstUri *

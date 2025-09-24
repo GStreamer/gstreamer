@@ -73,10 +73,10 @@ GST_API
 const gchar *           gst_device_provider_factory_get_metadata       (GstDeviceProviderFactory *factory, const gchar *key);
 
 GST_API
-gchar **                gst_device_provider_factory_get_metadata_keys  (GstDeviceProviderFactory *factory);
+gchar **                gst_device_provider_factory_get_metadata_keys  (GstDeviceProviderFactory *factory) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-GstDeviceProvider*       gst_device_provider_factory_get                (GstDeviceProviderFactory *factory) G_GNUC_MALLOC;
+GstDeviceProvider*       gst_device_provider_factory_get                (GstDeviceProviderFactory *factory) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 GstDeviceProvider*       gst_device_provider_factory_get_by_name        (const gchar *factoryname) G_GNUC_MALLOC;

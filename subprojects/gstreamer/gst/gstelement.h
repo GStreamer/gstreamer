@@ -1194,10 +1194,10 @@ GType                   gst_element_get_type            (void);
 /* clocking */
 
 GST_API
-GstClock*               gst_element_provide_clock       (GstElement *element);
+GstClock*               gst_element_provide_clock       (GstElement *element) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-GstClock*               gst_element_get_clock           (GstElement *element);
+GstClock*               gst_element_get_clock           (GstElement *element) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 gboolean                gst_element_set_clock           (GstElement *element, GstClock *clock);
@@ -1226,7 +1226,7 @@ GST_API
 void                    gst_element_set_bus             (GstElement * element, GstBus * bus);
 
 GST_API
-GstBus *                gst_element_get_bus             (GstElement * element);
+GstBus *                gst_element_get_bus             (GstElement * element) G_GNUC_WARN_UNUSED_RESULT;
 
 /* context */
 
@@ -1234,13 +1234,13 @@ GST_API
 void                    gst_element_set_context         (GstElement * element, GstContext * context);
 
 GST_API
-GList *                 gst_element_get_contexts        (GstElement * element);
+GList *                 gst_element_get_contexts        (GstElement * element) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-GstContext *            gst_element_get_context         (GstElement * element, const gchar * context_type);
+GstContext *            gst_element_get_context         (GstElement * element, const gchar * context_type) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-GstContext *            gst_element_get_context_unlocked (GstElement * element, const gchar * context_type);
+GstContext *            gst_element_get_context_unlocked (GstElement * element, const gchar * context_type) G_GNUC_WARN_UNUSED_RESULT;
 
 /* pad management */
 
@@ -1254,28 +1254,28 @@ GST_API
 void                    gst_element_no_more_pads        (GstElement *element);
 
 GST_API
-GstPad*                 gst_element_get_static_pad      (GstElement *element, const gchar *name);
+GstPad*                 gst_element_get_static_pad      (GstElement *element, const gchar *name) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API G_DEPRECATED_FOR(gst_element_request_pad_simple)
-GstPad*                 gst_element_get_request_pad     (GstElement *element, const gchar *name);
+GstPad*                 gst_element_get_request_pad     (GstElement *element, const gchar *name) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-GstPad*                 gst_element_request_pad_simple  (GstElement *element, const gchar *name);
+GstPad*                 gst_element_request_pad_simple  (GstElement *element, const gchar *name) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 GstPad*                 gst_element_request_pad         (GstElement *element, GstPadTemplate *templ,
-							 const gchar * name, const GstCaps *caps);
+							 const gchar * name, const GstCaps *caps) G_GNUC_WARN_UNUSED_RESULT;
 GST_API
 void                    gst_element_release_request_pad (GstElement *element, GstPad *pad);
 
 GST_API
-GstIterator *           gst_element_iterate_pads        (GstElement * element);
+GstIterator *           gst_element_iterate_pads        (GstElement * element) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-GstIterator *           gst_element_iterate_src_pads    (GstElement * element);
+GstIterator *           gst_element_iterate_src_pads    (GstElement * element) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-GstIterator *           gst_element_iterate_sink_pads   (GstElement * element);
+GstIterator *           gst_element_iterate_sink_pads   (GstElement * element) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * GstElementForeachPadFunc:

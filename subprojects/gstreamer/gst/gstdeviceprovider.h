@@ -188,7 +188,7 @@ GType       gst_device_provider_get_type (void);
 
 
 GST_API
-GList *     gst_device_provider_get_devices    (GstDeviceProvider * provider);
+GList *     gst_device_provider_get_devices    (GstDeviceProvider * provider) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 gboolean    gst_device_provider_start          (GstDeviceProvider * provider);
@@ -200,7 +200,7 @@ GST_API
 gboolean    gst_device_provider_can_monitor    (GstDeviceProvider * provider);
 
 GST_API
-GstBus *    gst_device_provider_get_bus        (GstDeviceProvider * provider);
+GstBus *    gst_device_provider_get_bus        (GstDeviceProvider * provider) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void        gst_device_provider_device_add     (GstDeviceProvider * provider,
@@ -209,7 +209,7 @@ GST_API
 void        gst_device_provider_device_remove  (GstDeviceProvider * provider,
                                                 GstDevice * device);
 GST_API
-gchar **    gst_device_provider_get_hidden_providers (GstDeviceProvider * provider);
+gchar **    gst_device_provider_get_hidden_providers (GstDeviceProvider * provider) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void        gst_device_provider_hide_provider        (GstDeviceProvider * provider,

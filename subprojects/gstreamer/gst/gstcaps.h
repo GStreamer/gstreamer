@@ -358,10 +358,10 @@ GST_API
 GType             gst_caps_get_type                (void);
 
 GST_API
-GstCaps *         gst_caps_new_empty               (void);
+GstCaps *         gst_caps_new_empty               (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-GstCaps *         gst_caps_new_any                 (void);
+GstCaps *         gst_caps_new_any                 (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 GstCaps *         gst_caps_new_id_str_empty_simple (const GstIdStr *media_type) G_GNUC_WARN_UNUSED_RESULT;
@@ -397,7 +397,7 @@ GST_API
 GType             gst_static_caps_get_type         (void);
 
 GST_API
-GstCaps *         gst_static_caps_get              (GstStaticCaps *static_caps);
+GstCaps *         gst_static_caps_get              (GstStaticCaps *static_caps) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 void              gst_static_caps_cleanup          (GstStaticCaps *static_caps);
@@ -562,9 +562,9 @@ GstCaps *         gst_caps_fixate                  (GstCaps *caps) G_GNUC_WARN_U
 /* utility */
 
 GST_API
-gchar *           gst_caps_to_string               (const GstCaps *caps) G_GNUC_MALLOC;
+gchar *           gst_caps_to_string               (const GstCaps *caps) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 GST_API
-gchar *           gst_caps_serialize               (const GstCaps *caps, GstSerializeFlags flags) G_GNUC_MALLOC;
+gchar *           gst_caps_serialize               (const GstCaps *caps, GstSerializeFlags flags) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 GstCaps *         gst_caps_from_string             (const gchar   *string) G_GNUC_WARN_UNUSED_RESULT;
