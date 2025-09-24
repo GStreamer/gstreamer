@@ -1180,10 +1180,7 @@ gst_cuda_base_convert_propose_allocation (GstBaseTransform * trans,
           decide_query, query))
     return FALSE;
 
-  if (self->same_caps) {
-    if (!gst_pad_peer_query (trans->srcpad, query))
-      return FALSE;
-
+  if (self->same_caps && gst_pad_peer_query (trans->srcpad, query)) {
     gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
     gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
     return TRUE;
