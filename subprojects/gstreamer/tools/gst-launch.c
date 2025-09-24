@@ -343,18 +343,23 @@ static void
 print_error_message (GstMessage * msg)
 {
   GError *err = NULL;
-  gchar *name, *debug = NULL;
+  gchar *debug = NULL;
 
-  name = gst_object_get_path_string (msg->src);
   gst_message_parse_error (msg, &err, &debug);
 
-  gst_printerr (_("ERROR: from element %s: %s\n"), name, err->message);
+  if (msg->src) {
+    gchar *name = gst_object_get_path_string (msg->src);
+    gst_printerr (_("ERROR: from element %s: %s\n"), name, err->message);
+    g_free (name);
+  } else {
+    gst_printerr (_("ERROR: %s\n"), err->message);
+  }
+
   if (debug != NULL)
     gst_printerr (_("Additional debug info:\n%s\n"), debug);
 
   g_clear_error (&err);
   g_free (debug);
-  g_free (name);
 }
 
 static void
