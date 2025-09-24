@@ -1543,10 +1543,7 @@ gst_d3d12_base_convert_propose_allocation (GstBaseTransform * trans,
     return FALSE;
   }
 
-  if (priv->same_caps) {
-    if (!gst_pad_peer_query (trans->srcpad, query))
-      return FALSE;
-
+  if (priv->same_caps && gst_pad_peer_query (trans->srcpad, query)) {
     gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, nullptr);
     gst_query_add_allocation_meta (query,
         GST_VIDEO_CROP_META_API_TYPE, nullptr);
