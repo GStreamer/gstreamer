@@ -7876,7 +7876,8 @@ gst_value_serialize_bitmask (const GValue * value)
 static gboolean
 gst_value_deserialize_bitmask (GValue * dest, const gchar * s)
 {
-  gchar *endptr = NULL;
+  char *endptr = NULL;
+  guint base = 16;
   guint64 val;
 
   if (G_UNLIKELY (s == NULL))
@@ -7885,8 +7886,16 @@ gst_value_deserialize_bitmask (GValue * dest, const gchar * s)
   if (G_UNLIKELY (dest == NULL || !GST_VALUE_HOLDS_BITMASK (dest)))
     return FALSE;
 
+  /*
+   * GST 2.0: serialize bitmasks to 0b instead of hex
+   */
+  if (g_str_has_prefix (s, "0b") || g_str_has_prefix (s, "0B")) {
+    s += 2;
+    base = 2;
+  }
+
   errno = 0;
-  val = g_ascii_strtoull (s, &endptr, 16);
+  val = g_ascii_strtoull (s, &endptr, base);
   if (val == G_MAXUINT64 && (errno == ERANGE || errno == EINVAL))
     return FALSE;
   if (val == 0 && endptr == s)
