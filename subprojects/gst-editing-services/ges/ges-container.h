@@ -138,13 +138,13 @@ struct _GESContainerClass
 
 /* Children handling */
 GES_API
-GList* ges_container_get_children (GESContainer *container, gboolean recursive);
+GList* ges_container_get_children (GESContainer *container, gboolean recursive) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
 gboolean ges_container_add        (GESContainer *container, GESTimelineElement *child);
 GES_API
 gboolean ges_container_remove     (GESContainer *container, GESTimelineElement *child);
 GES_API
-GList * ges_container_ungroup     (GESContainer * container, gboolean recursive);
+GList * ges_container_ungroup     (GESContainer * container, gboolean recursive) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
 GESContainer *ges_container_group (GList *containers);
 

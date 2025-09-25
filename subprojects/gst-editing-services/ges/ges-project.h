@@ -82,7 +82,7 @@ gboolean  ges_project_remove_asset (GESProject *project,
                                     GESAsset * asset);
 GES_API
 GList   * ges_project_list_assets  (GESProject * project,
-                                    GType filter);
+                                    GType filter) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
 gboolean  ges_project_save         (GESProject * project,
                                     GESTimeline * timeline,
@@ -95,13 +95,13 @@ gboolean  ges_project_load         (GESProject * project,
                                     GESTimeline * timeline,
                                     GError **error);
 GES_API
-GESProject * ges_project_new       (const gchar *uri);
+GESProject * ges_project_new       (const gchar *uri) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
-gchar      * ges_project_get_uri   (GESProject *project);
+gchar      * ges_project_get_uri   (GESProject *project) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
 GESAsset   * ges_project_get_asset (GESProject * project,
                                     const gchar *id,
-                                    GType extractable_type);
+                                    GType extractable_type) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
 gboolean ges_project_create_asset  (GESProject * project,
                                     const gchar *id,
@@ -111,9 +111,9 @@ GES_API
 GESAsset * ges_project_create_asset_sync        (GESProject * project,
                                                  const gchar * id,
                                                  GType extractable_type,
-                                                 GError **error);
+                                                 GError **error) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
-GList * ges_project_get_loading_assets          (GESProject * project);
+GList * ges_project_get_loading_assets          (GESProject * project) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API
 gboolean ges_project_add_encoding_profile       (GESProject *project,

@@ -77,11 +77,11 @@ GES_API
 GESPipelineFlags ges_pipeline_get_mode (GESPipeline *pipeline);
 
 GES_API GstSample *
-ges_pipeline_get_thumbnail(GESPipeline *self, GstCaps *caps);
+ges_pipeline_get_thumbnail(GESPipeline *self, GstCaps *caps) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API GstSample *
 ges_pipeline_get_thumbnail_rgb24(GESPipeline *self,
-    gint width, gint height);
+    gint width, gint height) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API gboolean
 ges_pipeline_save_thumbnail(GESPipeline *self,
@@ -89,14 +89,14 @@ ges_pipeline_save_thumbnail(GESPipeline *self,
     GError **error);
 
 GES_API GstElement *
-ges_pipeline_preview_get_video_sink (GESPipeline * self);
+ges_pipeline_preview_get_video_sink (GESPipeline * self) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API void
 ges_pipeline_preview_set_video_sink (GESPipeline * self,
     GstElement * sink);
 
 GES_API GstElement *
-ges_pipeline_preview_get_audio_sink (GESPipeline * self);
+ges_pipeline_preview_get_audio_sink (GESPipeline * self) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API void
 ges_pipeline_preview_set_audio_sink (GESPipeline * self,

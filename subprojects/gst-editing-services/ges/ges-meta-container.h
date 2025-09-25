@@ -299,7 +299,7 @@ ges_meta_container_get_string      (GESMetaContainer * container,
 
 GES_API GESMarkerList *
 ges_meta_container_get_marker_list (GESMetaContainer * container,
-                                    const gchar * key);
+                                    const gchar * key) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API const GValue *
 ges_meta_container_get_meta            (GESMetaContainer * container,
@@ -325,7 +325,7 @@ ges_meta_container_foreach             (GESMetaContainer *container,
                                         gpointer user_data);
 
 GES_API gchar *
-ges_meta_container_metas_to_string     (GESMetaContainer *container);
+ges_meta_container_metas_to_string     (GESMetaContainer *container) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API gboolean
 ges_meta_container_add_metas_from_string (GESMetaContainer *container,

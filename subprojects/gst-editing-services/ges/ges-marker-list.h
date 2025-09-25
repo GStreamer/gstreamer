@@ -49,7 +49,7 @@ GES_API
 G_DECLARE_FINAL_TYPE (GESMarkerList, ges_marker_list, GES, MARKER_LIST, GObject)
 
 GES_API
-GESMarkerList * ges_marker_list_new (void);
+GESMarkerList * ges_marker_list_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API
 GESMarker * ges_marker_list_add (GESMarkerList * list, GstClockTime position);
@@ -62,7 +62,7 @@ guint ges_marker_list_size (GESMarkerList * list);
 
 
 GES_API
-GList * ges_marker_list_get_markers (GESMarkerList *list);
+GList * ges_marker_list_get_markers (GESMarkerList *list) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API
 gboolean ges_marker_list_move (GESMarkerList *list, GESMarker *marker, GstClockTime position);

@@ -118,7 +118,7 @@ gboolean      ges_layer_is_empty              (GESLayer * layer);
 GES_API
 GList*        ges_layer_get_clips_in_interval (GESLayer * layer,
                                                GstClockTime start,
-                                               GstClockTime end);
+                                               GstClockTime end) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API
 guint         ges_layer_get_priority          (GESLayer * layer);
@@ -131,7 +131,7 @@ void          ges_layer_set_auto_transition   (GESLayer * layer,
                                                gboolean auto_transition);
 
 GES_API
-GList*        ges_layer_get_clips             (GESLayer * layer);
+GList*        ges_layer_get_clips             (GESLayer * layer) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
 GstClockTime  ges_layer_get_duration          (GESLayer *layer);
 GES_API

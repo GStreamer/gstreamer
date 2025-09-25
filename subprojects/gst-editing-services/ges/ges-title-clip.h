@@ -79,7 +79,7 @@ GES_DEPRECATED_FOR(ges_timeline_element_set_children_properties) void
 ges_title_clip_set_ypos (GESTitleClip * self, gdouble position);
 
 GES_DEPRECATED_FOR(ges_timeline_element_get_children_properties) const gchar*
-ges_title_clip_get_font_desc (GESTitleClip * self);
+ges_title_clip_get_font_desc (GESTitleClip * self) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_DEPRECATED_FOR(ges_timeline_element_get_children_properties) GESTextVAlign
 ges_title_clip_get_valignment (GESTitleClip * self);
@@ -100,7 +100,7 @@ GES_DEPRECATED_FOR(ges_timeline_element_get_children_properties) const gdouble
 ges_title_clip_get_ypos (GESTitleClip * self);
 
 GES_DEPRECATED_FOR(ges_timeline_element_get_children_properties)
-const gchar* ges_title_clip_get_text (GESTitleClip * self);
+const gchar* ges_title_clip_get_text (GESTitleClip * self) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API
 GESTitleClip* ges_title_clip_new (void);

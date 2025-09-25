@@ -89,9 +89,9 @@ void ges_title_source_set_ypos (GESTitleSource *self,
 					   gdouble position);
 
 GES_API
-const gchar *ges_title_source_get_text (GESTitleSource *source);
+const gchar *ges_title_source_get_text (GESTitleSource *source) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
-const gchar *ges_title_source_get_font_desc (GESTitleSource *source);
+const gchar *ges_title_source_get_font_desc (GESTitleSource *source) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
 GESTextHAlign ges_title_source_get_halignment (GESTitleSource *source);
 GES_API

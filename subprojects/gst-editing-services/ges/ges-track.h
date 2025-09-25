@@ -77,7 +77,7 @@ struct _GESTrackClass
 GES_API
 const GstCaps*     ges_track_get_caps                        (GESTrack *track);
 GES_API
-GList*             ges_track_get_elements                    (GESTrack *track);
+GList*             ges_track_get_elements                    (GESTrack *track) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
 const GESTimeline* ges_track_get_timeline                    (GESTrack *track);
 GES_API
@@ -114,7 +114,7 @@ GES_API
 void               ges_track_update_restriction_caps         (GESTrack *track,
                                                               const GstCaps *caps);
 GES_API
-GstCaps *          ges_track_get_restriction_caps            (GESTrack * track);
+GstCaps *          ges_track_get_restriction_caps            (GESTrack * track) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API
 GESTrack*          ges_track_new                             (GESTrackType type,

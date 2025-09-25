@@ -154,12 +154,12 @@ GESTrackElement*  ges_clip_add_asset              (GESClip *clip,
 GES_API
 GESTrackElement*  ges_clip_find_track_element     (GESClip *clip,
                                                    GESTrack *track,
-                                                   GType type);
+                                                   GType type) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
 GList *           ges_clip_find_track_elements    (GESClip * clip,
                                                    GESTrack * track,
                                                    GESTrackType track_type,
-                                                   GType type);
+                                                   GType type) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API
 GESTrackElement * ges_clip_add_child_to_track     (GESClip * clip,
@@ -171,7 +171,7 @@ GESTrackElement * ges_clip_add_child_to_track     (GESClip * clip,
  *                     Layer                        *
  ****************************************************/
 GES_API
-GESLayer* ges_clip_get_layer              (GESClip * clip);
+GESLayer* ges_clip_get_layer              (GESClip * clip) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
 gboolean  ges_clip_move_to_layer          (GESClip * clip,
                                            GESLayer * layer);
@@ -193,7 +193,7 @@ gboolean ges_clip_remove_top_effect         (GESClip * clip,
                                              GESBaseEffect * effect,
                                              GError ** error);
 GES_API
-GList*   ges_clip_get_top_effects           (GESClip * clip);
+GList*   ges_clip_get_top_effects           (GESClip * clip) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
 gint     ges_clip_get_top_effect_position   (GESClip * clip,
                                              GESBaseEffect * effect);

@@ -145,6 +145,6 @@ gboolean ges_extractable_set_asset              (GESExtractable *self,
                                                 GESAsset *asset);
 
 GES_API
-gchar * ges_extractable_get_id                 (GESExtractable *self);
+gchar * ges_extractable_get_id                 (GESExtractable *self) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS

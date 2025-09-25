@@ -7,7 +7,7 @@ GstElement * ges_track_element_get_gnlobject   (GESTrackElement * object);
 GES_DEPRECATED_FOR(ges_timeline_element_list_children_properties)
 GParamSpec **
 ges_track_element_list_children_properties     (GESTrackElement *object,
-                                               guint *n_properties);
+                                               guint *n_properties) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_DEPRECATED_FOR(ges_timeline_element_lookup_child)
 gboolean ges_track_element_lookup_child        (GESTrackElement *object,

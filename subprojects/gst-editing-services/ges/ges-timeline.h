@@ -103,9 +103,9 @@ GESLayer * ges_timeline_append_layer (GESTimeline * timeline);
 GES_API
 gboolean ges_timeline_remove_layer (GESTimeline *timeline, GESLayer *layer);
 GES_API
-GList* ges_timeline_get_layers (GESTimeline *timeline);
+GList* ges_timeline_get_layers (GESTimeline *timeline) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
-GESLayer* ges_timeline_get_layer (GESTimeline *timeline, guint priority);
+GESLayer* ges_timeline_get_layer (GESTimeline *timeline, guint priority) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API
 gboolean ges_timeline_add_track (GESTimeline *timeline, GESTrack *track);
@@ -117,7 +117,7 @@ GESTrack * ges_timeline_get_track_for_pad (GESTimeline *timeline, GstPad *pad);
 GES_API
 GstPad * ges_timeline_get_pad_for_track (GESTimeline * timeline, GESTrack *track);
 GES_API
-GList *ges_timeline_get_tracks (GESTimeline *timeline);
+GList *ges_timeline_get_tracks (GESTimeline *timeline) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API
 GList* ges_timeline_get_groups (GESTimeline * timeline);
@@ -143,12 +143,12 @@ GstClockTime ges_timeline_get_snapping_distance (GESTimeline * timeline);
 GES_API
 void ges_timeline_set_snapping_distance (GESTimeline * timeline, GstClockTime snapping_distance);
 GES_API
-GESTimelineElement * ges_timeline_get_element (GESTimeline * timeline, const gchar *name);
+GESTimelineElement * ges_timeline_get_element (GESTimeline * timeline, const gchar *name) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
 gboolean ges_timeline_is_empty (GESTimeline * timeline);
 GES_API
 GESTimelineElement * ges_timeline_paste_element (GESTimeline * timeline,
-  GESTimelineElement * element, GstClockTime position, gint layer_priority);
+  GESTimelineElement * element, GstClockTime position, gint layer_priority) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
 gboolean ges_timeline_move_layer (GESTimeline *timeline, GESLayer *layer, guint new_layer_priority);
 
