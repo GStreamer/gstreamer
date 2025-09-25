@@ -69,7 +69,7 @@ static const struct {
   StdVideoH264ProfileIdc vk_profile;
   const char *profile_str;
 } h264_profile_map[] = {
-  { STD_VIDEO_H264_PROFILE_IDC_BASELINE, "baseline" },
+  { STD_VIDEO_H264_PROFILE_IDC_BASELINE, "constrained-baseline" },
   { STD_VIDEO_H264_PROFILE_IDC_MAIN, "main" },
   { STD_VIDEO_H264_PROFILE_IDC_HIGH, "high" },
   { STD_VIDEO_H264_PROFILE_IDC_HIGH_444_PREDICTIVE, "high-4:4:4" },
