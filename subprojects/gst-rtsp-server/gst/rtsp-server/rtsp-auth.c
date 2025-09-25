@@ -409,7 +409,7 @@ gst_rtsp_auth_set_tls_authentication_mode (GstRTSPAuth * auth,
  *
  * Get the #GTlsAuthenticationMode.
  *
- * Returns: (transfer full): the #GTlsAuthenticationMode.
+ * Returns: the #GTlsAuthenticationMode.
  */
 GTlsAuthenticationMode
 gst_rtsp_auth_get_tls_authentication_mode (GstRTSPAuth * auth)
