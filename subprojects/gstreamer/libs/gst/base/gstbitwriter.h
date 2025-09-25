@@ -71,10 +71,10 @@ GST_BASE_API
 void            gst_bit_writer_free             (GstBitWriter *bitwriter);
 
 GST_BASE_API
-guint8 *        gst_bit_writer_free_and_get_data (GstBitWriter *bitwriter);
+guint8 *        gst_bit_writer_free_and_get_data (GstBitWriter *bitwriter) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_BASE_API
-GstBuffer *     gst_bit_writer_free_and_get_buffer (GstBitWriter *bitwriter);
+GstBuffer *     gst_bit_writer_free_and_get_buffer (GstBitWriter *bitwriter) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_BASE_API
 void            gst_bit_writer_init             (GstBitWriter *bitwriter);
@@ -91,10 +91,10 @@ GST_BASE_API
 void            gst_bit_writer_reset            (GstBitWriter *bitwriter);
 
 GST_BASE_API
-guint8 *        gst_bit_writer_reset_and_get_data (GstBitWriter *bitwriter);
+guint8 *        gst_bit_writer_reset_and_get_data (GstBitWriter *bitwriter) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_BASE_API
-GstBuffer *     gst_bit_writer_reset_and_get_buffer (GstBitWriter *bitwriter);
+GstBuffer *     gst_bit_writer_reset_and_get_buffer (GstBitWriter *bitwriter) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_BASE_API
 guint           gst_bit_writer_get_size         (const GstBitWriter *bitwriter);

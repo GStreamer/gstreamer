@@ -69,7 +69,7 @@ GType                   gst_net_time_provider_get_type  (void);
 GST_NET_API
 GstNetTimeProvider*     gst_net_time_provider_new       (GstClock *clock,
                                                          const gchar *address,
-                                                         gint port);
+                                                         gint port) G_GNUC_WARN_UNUSED_RESULT;
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstNetTimeProvider, gst_object_unref)
 

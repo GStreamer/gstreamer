@@ -52,16 +52,16 @@ GST_NET_API
 GType                   gst_net_time_packet_get_type    (void);
 
 GST_NET_API
-GstNetTimePacket*       gst_net_time_packet_new         (const guint8 *buffer);
+GstNetTimePacket*       gst_net_time_packet_new         (const guint8 *buffer) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_NET_API
-GstNetTimePacket*       gst_net_time_packet_copy        (const GstNetTimePacket *packet);
+GstNetTimePacket*       gst_net_time_packet_copy        (const GstNetTimePacket *packet) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_NET_API
 void                    gst_net_time_packet_free        (GstNetTimePacket *packet);
 
 GST_NET_API
-guint8*                 gst_net_time_packet_serialize   (const GstNetTimePacket *packet);
+guint8*                 gst_net_time_packet_serialize   (const GstNetTimePacket *packet) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_NET_API
 GstNetTimePacket*	gst_net_time_packet_receive     (GSocket         * socket,

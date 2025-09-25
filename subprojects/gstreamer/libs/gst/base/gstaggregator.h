@@ -107,10 +107,10 @@ GType gst_aggregator_pad_get_type           (void);
  ***************************/
 
 GST_BASE_API
-GstBuffer * gst_aggregator_pad_pop_buffer   (GstAggregatorPad *  pad);
+GstBuffer * gst_aggregator_pad_pop_buffer   (GstAggregatorPad *  pad) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_BASE_API
-GstBuffer * gst_aggregator_pad_peek_buffer  (GstAggregatorPad *  pad);
+GstBuffer * gst_aggregator_pad_peek_buffer  (GstAggregatorPad *  pad) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_BASE_API
 gboolean    gst_aggregator_pad_drop_buffer  (GstAggregatorPad *  pad);
@@ -406,7 +406,7 @@ GST_BASE_API
 GstClockTime  gst_aggregator_get_latency           (GstAggregator                 *  self);
 
 GST_BASE_API
-GstBufferPool * gst_aggregator_get_buffer_pool     (GstAggregator                 * self);
+GstBufferPool * gst_aggregator_get_buffer_pool     (GstAggregator                 * self) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_BASE_API
 void            gst_aggregator_get_allocator       (GstAggregator                 * self,
@@ -422,7 +422,7 @@ void            gst_aggregator_update_segment       (GstAggregator              
 
 GST_BASE_API
 GstSample     * gst_aggregator_peek_next_sample     (GstAggregator *self,
-                                                     GstAggregatorPad * pad);
+                                                     GstAggregatorPad * pad) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_BASE_API
 void            gst_aggregator_selected_samples     (GstAggregator                * self,

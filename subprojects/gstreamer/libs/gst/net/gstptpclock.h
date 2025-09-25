@@ -155,7 +155,7 @@ void            gst_ptp_statistics_callback_remove (gulong id);
 
 GST_NET_API
 GstClock*       gst_ptp_clock_new                  (const gchar *name,
-                                                    guint domain);
+                                                    guint domain) G_GNUC_WARN_UNUSED_RESULT;
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstPtpClock, gst_object_unref)
 
