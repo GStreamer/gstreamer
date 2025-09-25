@@ -212,7 +212,7 @@ guint32         gst_vulkan_image_memory_get_height      (GstVulkanImageMemory * 
 GST_VULKAN_API
 GstVulkanImageView *gst_vulkan_image_memory_find_view   (GstVulkanImageMemory * image,
                                                          GstVulkanImageMemoryFindViewFunc find_func,
-                                                         gpointer user_data);
+                                                         gpointer user_data) G_GNUC_WARN_UNUSED_RESULT;
 GST_VULKAN_API
 void            gst_vulkan_image_memory_add_view        (GstVulkanImageMemory * image,
                                                          GstVulkanImageView * view);

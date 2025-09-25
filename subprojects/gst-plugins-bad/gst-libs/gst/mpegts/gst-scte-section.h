@@ -245,7 +245,7 @@ GST_MPEGTS_API
 GType gst_mpegts_scte_sit_get_type (void);
 
 GST_MPEGTS_API
-GstMpegtsSCTESIT *gst_mpegts_scte_sit_new (void);
+GstMpegtsSCTESIT *gst_mpegts_scte_sit_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_MPEGTS_API
 GstMpegtsSCTESIT *gst_mpegts_scte_null_new (void);
@@ -267,7 +267,7 @@ GST_MPEGTS_API
 GType gst_mpegts_scte_splice_event_get_type (void);
 
 GST_MPEGTS_API
-GstMpegtsSCTESpliceEvent *gst_mpegts_scte_splice_event_new (void);
+GstMpegtsSCTESpliceEvent *gst_mpegts_scte_splice_event_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_MPEGTS_API
 const GstMpegtsSCTESIT *gst_mpegts_section_get_scte_sit (GstMpegtsSection *section);
@@ -279,7 +279,7 @@ GST_MPEGTS_API
 GType gst_mpegts_scte_splice_component_get_type (void);
 
 GST_MPEGTS_API
-GstMpegtsSCTESpliceComponent *gst_mpegts_scte_splice_component_new (guint8 tag);
+GstMpegtsSCTESpliceComponent *gst_mpegts_scte_splice_component_new (guint8 tag) G_GNUC_WARN_UNUSED_RESULT;
 
 
 G_END_DECLS

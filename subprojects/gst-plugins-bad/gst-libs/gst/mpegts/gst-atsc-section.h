@@ -264,7 +264,7 @@ GST_MPEGTS_API
 GstMpegtsSection * gst_mpegts_section_from_atsc_mgt (GstMpegtsAtscMGT * mgt);
 
 GST_MPEGTS_API
-GstMpegtsAtscMGT * gst_mpegts_atsc_mgt_new (void);
+GstMpegtsAtscMGT * gst_mpegts_atsc_mgt_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 /* Multiple string structure (used in ETT and EIT) */
 
@@ -446,13 +446,13 @@ const GstMpegtsAtscSTT * gst_mpegts_section_get_atsc_stt (GstMpegtsSection * sec
 /* FIXME receive a non-const parameter but we only provide a const getter */
 
 GST_MPEGTS_API
-GstDateTime * gst_mpegts_atsc_stt_get_datetime_utc (GstMpegtsAtscSTT * stt);
+GstDateTime * gst_mpegts_atsc_stt_get_datetime_utc (GstMpegtsAtscSTT * stt) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_MPEGTS_API
 GstMpegtsSection * gst_mpegts_section_from_atsc_stt (GstMpegtsAtscSTT * stt);
 
 GST_MPEGTS_API
-GstMpegtsAtscSTT * gst_mpegts_atsc_stt_new (void);
+GstMpegtsAtscSTT * gst_mpegts_atsc_stt_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 /* RRT */
 #define GST_TYPE_MPEGTS_ATSC_RRT (gst_mpegts_atsc_rrt_get_type ())
@@ -530,13 +530,13 @@ GST_MPEGTS_API
 GstMpegtsSection * gst_mpegts_section_from_atsc_rrt (GstMpegtsAtscRRT * rrt);
 
 GST_MPEGTS_API
-GstMpegtsAtscRRT * gst_mpegts_atsc_rrt_new (void);
+GstMpegtsAtscRRT * gst_mpegts_atsc_rrt_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_MPEGTS_API
-GstMpegtsAtscRRTDimension * gst_mpegts_atsc_rrt_dimension_new (void);
+GstMpegtsAtscRRTDimension * gst_mpegts_atsc_rrt_dimension_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_MPEGTS_API
-GstMpegtsAtscRRTDimensionValue * gst_mpegts_atsc_rrt_dimension_value_new (void);
+GstMpegtsAtscRRTDimensionValue * gst_mpegts_atsc_rrt_dimension_value_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 

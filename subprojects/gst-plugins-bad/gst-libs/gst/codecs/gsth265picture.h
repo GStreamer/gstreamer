@@ -93,7 +93,7 @@ GST_CODECS_API
 GType gst_h265_picture_get_type (void);
 
 GST_CODECS_API
-GstH265Picture * gst_h265_picture_new (void);
+GstH265Picture * gst_h265_picture_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 static inline GstH265Picture *
 gst_h265_picture_ref (GstH265Picture * picture)
@@ -182,26 +182,26 @@ void  gst_h265_dpb_mark_all_non_ref (GstH265Dpb * dpb);
 
 GST_CODECS_API
 GstH265Picture * gst_h265_dpb_get_ref_by_poc       (GstH265Dpb * dpb,
-                                                    gint poc);
+                                                    gint poc) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_CODECS_API
 GstH265Picture * gst_h265_dpb_get_ref_by_poc_lsb   (GstH265Dpb * dpb,
-                                                    gint poc_lsb);
+                                                    gint poc_lsb) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_CODECS_API
 GstH265Picture * gst_h265_dpb_get_short_ref_by_poc (GstH265Dpb * dpb,
-                                                    gint poc);
+                                                    gint poc) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_CODECS_API
 GstH265Picture * gst_h265_dpb_get_long_ref_by_poc  (GstH265Dpb * dpb,
-                                                    gint poc);
+                                                    gint poc) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_CODECS_API
-GArray * gst_h265_dpb_get_pictures_all         (GstH265Dpb * dpb);
+GArray * gst_h265_dpb_get_pictures_all         (GstH265Dpb * dpb) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_CODECS_API
 GstH265Picture * gst_h265_dpb_get_picture      (GstH265Dpb * dpb,
-                                                guint32 system_frame_number);
+                                                guint32 system_frame_number) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_CODECS_API
 gint  gst_h265_dpb_get_size   (GstH265Dpb * dpb);
@@ -214,7 +214,7 @@ gboolean gst_h265_dpb_needs_bump (GstH265Dpb * dpb,
 
 GST_CODECS_API
 GstH265Picture * gst_h265_dpb_bump (GstH265Dpb * dpb,
-                                    gboolean drain);
+                                    gboolean drain) G_GNUC_WARN_UNUSED_RESULT;
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstH265Picture, gst_h265_picture_unref)
 

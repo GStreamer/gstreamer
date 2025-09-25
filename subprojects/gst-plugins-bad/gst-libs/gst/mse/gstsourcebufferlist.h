@@ -37,7 +37,7 @@ G_DECLARE_FINAL_TYPE (GstSourceBufferList, gst_source_buffer_list, GST,
 
 GST_MSE_API
 GstSourceBuffer *gst_source_buffer_list_index (GstSourceBufferList * self,
-                                               guint index);
+                                               guint index) G_GNUC_WARN_UNUSED_RESULT;
 GST_MSE_API
 guint gst_source_buffer_list_get_length (GstSourceBufferList * self);
 

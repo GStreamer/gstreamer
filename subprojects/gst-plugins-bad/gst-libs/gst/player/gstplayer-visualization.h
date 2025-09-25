@@ -44,7 +44,7 @@ GST_PLAYER_API
 GType                     gst_player_visualization_get_type (void);
 
 GST_PLAYER_API
-GstPlayerVisualization *  gst_player_visualization_copy  (const GstPlayerVisualization *vis);
+GstPlayerVisualization *  gst_player_visualization_copy  (const GstPlayerVisualization *vis) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PLAYER_API
 void                      gst_player_visualization_free  (GstPlayerVisualization *vis);

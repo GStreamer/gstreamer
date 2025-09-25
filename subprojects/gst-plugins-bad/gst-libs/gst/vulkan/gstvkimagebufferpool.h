@@ -78,7 +78,7 @@ struct _GstVulkanImageBufferPoolClass
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVulkanImageBufferPool, gst_object_unref);
 
 GST_VULKAN_API
-GstBufferPool * gst_vulkan_image_buffer_pool_new        (GstVulkanDevice * device);
+GstBufferPool * gst_vulkan_image_buffer_pool_new        (GstVulkanDevice * device) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VULKAN_API
 void            gst_vulkan_image_buffer_pool_config_set_allocation_params

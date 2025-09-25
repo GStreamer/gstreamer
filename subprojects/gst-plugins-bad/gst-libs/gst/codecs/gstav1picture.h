@@ -88,7 +88,7 @@ GST_CODECS_API
 GType gst_av1_picture_get_type (void);
 
 GST_CODECS_API
-GstAV1Picture * gst_av1_picture_new (void);
+GstAV1Picture * gst_av1_picture_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 static inline GstAV1Picture *
 gst_av1_picture_ref (GstAV1Picture * picture)

@@ -110,7 +110,7 @@ GST_CODECS_API
 GType gst_mpeg2_picture_get_type (void);
 
 GST_CODECS_API
-GstMpeg2Picture * gst_mpeg2_picture_new (void);
+GstMpeg2Picture * gst_mpeg2_picture_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 static inline GstMpeg2Picture *
 gst_mpeg2_picture_ref (GstMpeg2Picture * picture)
@@ -183,7 +183,7 @@ GST_CODECS_API
 void gst_mpeg2_dpb_add                (GstMpeg2Dpb * dpb,
                                        GstMpeg2Picture * picture);
 GST_CODECS_API
-GstMpeg2Picture * gst_mpeg2_dpb_bump  (GstMpeg2Dpb * dpb);
+GstMpeg2Picture * gst_mpeg2_dpb_bump  (GstMpeg2Dpb * dpb) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_CODECS_API
 gboolean gst_mpeg2_dpb_need_bump      (GstMpeg2Dpb * dpb);

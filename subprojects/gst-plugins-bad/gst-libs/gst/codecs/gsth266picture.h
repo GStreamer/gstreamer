@@ -108,7 +108,7 @@ GST_CODECS_API
 GType gst_h266_picture_get_type (void);
 
 GST_CODECS_API
-GstH266Picture *gst_h266_picture_new (void);
+GstH266Picture *gst_h266_picture_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 static inline GstH266Picture *
 gst_h266_picture_ref (GstH266Picture * picture)
@@ -195,7 +195,7 @@ gboolean gst_h266_dpb_needs_bump (GstH266Dpb * dpb, guint max_num_reorder_pics,
     guint max_latency_increase, guint max_dec_pic_buffering);
 
 GST_CODECS_API
-GstH266Picture *gst_h266_dpb_bump (GstH266Dpb * dpb, gboolean drain);
+GstH266Picture *gst_h266_dpb_bump (GstH266Dpb * dpb, gboolean drain) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_CODECS_API
 void gst_h266_dpb_mark_all_non_ref (GstH266Dpb * dpb);
@@ -205,13 +205,13 @@ void gst_h266_dpb_mark_all_non_output (GstH266Dpb * dpb);
 
 GST_CODECS_API
 GstH266Picture *gst_h266_dpb_get_picture_by_poc_lsb (GstH266Dpb * dpb,
-    gint poc_lsb);
+    gint poc_lsb) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_CODECS_API
-GstH266Picture *gst_h266_dpb_get_picture_by_poc (GstH266Dpb * dpb, gint poc);
+GstH266Picture *gst_h266_dpb_get_picture_by_poc (GstH266Dpb * dpb, gint poc) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_CODECS_API
-GArray *gst_h266_dpb_get_pictures_all (GstH266Dpb * dpb);
+GArray *gst_h266_dpb_get_pictures_all (GstH266Dpb * dpb) G_GNUC_WARN_UNUSED_RESULT;
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstH266Picture, gst_h266_picture_unref)
 

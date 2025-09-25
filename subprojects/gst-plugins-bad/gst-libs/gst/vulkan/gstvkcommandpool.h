@@ -69,11 +69,11 @@ struct _GstVulkanCommandPoolClass
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVulkanCommandPool, gst_object_unref)
 
 GST_VULKAN_API
-GstVulkanQueue *        gst_vulkan_command_pool_get_queue           (GstVulkanCommandPool * pool);
+GstVulkanQueue *        gst_vulkan_command_pool_get_queue           (GstVulkanCommandPool * pool) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VULKAN_API
 GstVulkanCommandBuffer * gst_vulkan_command_pool_create             (GstVulkanCommandPool * pool,
-                                                                     GError ** error);
+                                                                     GError ** error) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VULKAN_API
 void                    gst_vulkan_command_pool_lock                (GstVulkanCommandPool * pool);

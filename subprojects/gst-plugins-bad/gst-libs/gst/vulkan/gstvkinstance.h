@@ -79,7 +79,7 @@ struct _GstVulkanInstanceClass
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVulkanInstance, gst_object_unref)
 
 GST_VULKAN_API
-GstVulkanInstance * gst_vulkan_instance_new                     (void);
+GstVulkanInstance * gst_vulkan_instance_new                     (void) G_GNUC_WARN_UNUSED_RESULT;
 GST_VULKAN_API
 gboolean            gst_vulkan_instance_fill_info               (GstVulkanInstance * instance,
                                                                  GError ** error);
@@ -93,11 +93,11 @@ gpointer            gst_vulkan_instance_get_proc_address        (GstVulkanInstan
 
 GST_VULKAN_API
 GstVulkanDevice *   gst_vulkan_instance_create_device           (GstVulkanInstance * instance,
-                                                                 GError ** error);
+                                                                 GError ** error) G_GNUC_WARN_UNUSED_RESULT;
 GST_VULKAN_API
 GstVulkanDevice *   gst_vulkan_instance_create_device_with_index(GstVulkanInstance * instance,
                                                                  guint device_index,
-                                                                 GError ** error);
+                                                                 GError ** error) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VULKAN_API
 void                gst_context_set_vulkan_instance             (GstContext * context,

@@ -102,7 +102,7 @@ struct _GstVulkanFullScreenQuadClass
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVulkanFullScreenQuad, gst_object_unref)
 
 GST_VULKAN_API
-GstVulkanFullScreenQuad *   gst_vulkan_full_screen_quad_new         (GstVulkanQueue * queue);
+GstVulkanFullScreenQuad *   gst_vulkan_full_screen_quad_new         (GstVulkanQueue * queue) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VULKAN_API
 gboolean            gst_vulkan_full_screen_quad_set_info            (GstVulkanFullScreenQuad * self, const GstVideoInfo *in_info, const GstVideoInfo * out_info);
@@ -146,10 +146,10 @@ GST_VULKAN_API
 gboolean            gst_vulkan_full_screen_quad_draw                (GstVulkanFullScreenQuad * self, GError ** error);
 
 GST_VULKAN_API
-GstVulkanFence *    gst_vulkan_full_screen_quad_get_last_fence      (GstVulkanFullScreenQuad * self);
+GstVulkanFence *    gst_vulkan_full_screen_quad_get_last_fence      (GstVulkanFullScreenQuad * self) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VULKAN_API
-GstVulkanQueue *    gst_vulkan_full_screen_quad_get_queue           (GstVulkanFullScreenQuad * self);
+GstVulkanQueue *    gst_vulkan_full_screen_quad_get_queue           (GstVulkanFullScreenQuad * self) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 #endif /* __GST_VULKAN_FULL_SCREEN_QUAD_H__ */

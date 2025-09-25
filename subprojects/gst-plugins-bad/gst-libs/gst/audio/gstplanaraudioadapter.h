@@ -57,7 +57,7 @@ GST_AUDIO_BAD_API
 GType gst_planar_audio_adapter_get_type (void);
 
 GST_AUDIO_BAD_API
-GstPlanarAudioAdapter * gst_planar_audio_adapter_new (void) G_GNUC_MALLOC;
+GstPlanarAudioAdapter * gst_planar_audio_adapter_new (void) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_AUDIO_BAD_API
 void gst_planar_audio_adapter_configure (GstPlanarAudioAdapter * adapter,
@@ -76,11 +76,11 @@ void gst_planar_audio_adapter_flush (GstPlanarAudioAdapter * adapter,
 
 GST_AUDIO_BAD_API
 GstBuffer * gst_planar_audio_adapter_get_buffer (GstPlanarAudioAdapter * adapter,
-    gsize nsamples, GstMapFlags flags);
+    gsize nsamples, GstMapFlags flags) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_AUDIO_BAD_API
 GstBuffer * gst_planar_audio_adapter_take_buffer (GstPlanarAudioAdapter * adapter,
-    gsize nsamples, GstMapFlags flags);
+    gsize nsamples, GstMapFlags flags) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_AUDIO_BAD_API
 gsize gst_planar_audio_adapter_available (GstPlanarAudioAdapter * adapter);

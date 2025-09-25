@@ -116,9 +116,9 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVulkanPhysicalDevice, gst_object_unref)
 
 GST_VULKAN_API
 GstVulkanPhysicalDevice *   gst_vulkan_physical_device_new                  (GstVulkanInstance * instance,
-                                                                             guint device_index);
+                                                                             guint device_index) G_GNUC_WARN_UNUSED_RESULT;
 GST_VULKAN_API
-GstVulkanInstance *         gst_vulkan_physical_device_get_instance         (GstVulkanPhysicalDevice * device);
+GstVulkanInstance *         gst_vulkan_physical_device_get_instance         (GstVulkanPhysicalDevice * device) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VULKAN_API
 VkPhysicalDevice            gst_vulkan_physical_device_get_handle           (GstVulkanPhysicalDevice * device);

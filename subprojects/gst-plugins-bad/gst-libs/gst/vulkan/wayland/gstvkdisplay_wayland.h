@@ -88,9 +88,9 @@ struct _GstVulkanDisplayWaylandClass
 #define GST_VULKAN_DISPLAY_WAYLAND_DISPLAY(display_) (GST_VULKAN_DISPLAY_WAYLAND (display_)->display)
 
 GST_VULKAN_API
-GstVulkanDisplayWayland *gst_vulkan_display_wayland_new (const gchar * name);
+GstVulkanDisplayWayland *gst_vulkan_display_wayland_new (const gchar * name) G_GNUC_WARN_UNUSED_RESULT;
 GST_VULKAN_API
-GstVulkanDisplayWayland *gst_vulkan_display_wayland_new_with_display (struct wl_display *display);
+GstVulkanDisplayWayland *gst_vulkan_display_wayland_new_with_display (struct wl_display *display) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 

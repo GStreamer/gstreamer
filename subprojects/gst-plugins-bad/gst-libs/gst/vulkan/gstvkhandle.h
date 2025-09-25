@@ -214,7 +214,7 @@ GstVulkanHandle *       gst_vulkan_handle_new_wrapped       (GstVulkanDevice *de
                                                              GstVulkanHandleType type,
                                                              GstVulkanHandleTypedef handle,
                                                              GstVulkanHandleDestroyNotify notify,
-                                                             gpointer user_data);
+                                                             gpointer user_data) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VULKAN_API
 void                    gst_vulkan_handle_free_descriptor_set_layout (GstVulkanHandle * handle,

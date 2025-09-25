@@ -53,7 +53,7 @@ GType               gst_cuda_memory_pool_get_type (void);
 
 GST_CUDA_API
 GstCudaMemoryPool * gst_cuda_memory_pool_new (GstCudaContext * context,
-                                              const CUmemPoolProps * props);
+                                              const CUmemPoolProps * props) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_CUDA_API
 CUmemoryPool        gst_cuda_memory_pool_get_handle (GstCudaMemoryPool * pool);

@@ -249,7 +249,7 @@ void gst_h264_decoder_set_process_ref_pic_lists (GstH264Decoder * decoder,
 
 GST_CODECS_API
 GstH264Picture * gst_h264_decoder_get_picture   (GstH264Decoder * decoder,
-                                                 guint32 system_frame_number);
+                                                 guint32 system_frame_number) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 

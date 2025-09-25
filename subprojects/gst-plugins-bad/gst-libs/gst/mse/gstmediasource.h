@@ -140,7 +140,7 @@ G_DECLARE_FINAL_TYPE (GstMediaSource, gst_media_source, GST, MEDIA_SOURCE,
     GstObject);
 
 GST_MSE_API
-GstMediaSource *gst_media_source_new (void);
+GstMediaSource *gst_media_source_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_MSE_API
 void gst_media_source_attach (GstMediaSource * self, GstMseSrc * element);
@@ -150,11 +150,11 @@ void gst_media_source_detach (GstMediaSource * self);
 
 GST_MSE_API
 GstSourceBufferList * gst_media_source_get_source_buffers (
-    GstMediaSource * self);
+    GstMediaSource * self) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_MSE_API
 GstSourceBufferList * gst_media_source_get_active_source_buffers (
-    GstMediaSource * self);
+    GstMediaSource * self) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_MSE_API
 GstMediaSourceReadyState gst_media_source_get_ready_state (
@@ -174,7 +174,7 @@ gboolean gst_media_source_set_duration (GstMediaSource * self,
 GST_MSE_API
 GstSourceBuffer * gst_media_source_add_source_buffer (GstMediaSource * self,
                                                       const gchar * type,
-                                                      GError ** error);
+                                                      GError ** error) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_MSE_API
 gboolean gst_media_source_remove_source_buffer (GstMediaSource * self,

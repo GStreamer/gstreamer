@@ -216,10 +216,10 @@ GST_PLAY_API
 GType        gst_play_get_type                      (void);
 
 GST_PLAY_API
-GstPlay *    gst_play_new                           (GstPlayVideoRenderer * video_renderer);
+GstPlay *    gst_play_new                           (GstPlayVideoRenderer * video_renderer) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PLAY_API
-GstBus *     gst_play_get_message_bus               (GstPlay    * play);
+GstBus *     gst_play_get_message_bus               (GstPlay    * play) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PLAY_API
 void         gst_play_play                          (GstPlay    * play);
@@ -242,14 +242,14 @@ GST_PLAY_API
 gdouble      gst_play_get_rate                      (GstPlay    * play);
 
 GST_PLAY_API
-gchar *      gst_play_get_uri                       (GstPlay    * play);
+gchar *      gst_play_get_uri                       (GstPlay    * play) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PLAY_API
 void         gst_play_set_uri                       (GstPlay    * play,
                                                      const gchar  * uri);
 
 GST_PLAY_API
-gchar *      gst_play_get_subtitle_uri              (GstPlay    * play);
+gchar *      gst_play_get_subtitle_uri              (GstPlay    * play) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PLAY_API
 void         gst_play_set_subtitle_uri              (GstPlay    * play,
@@ -276,7 +276,7 @@ void         gst_play_set_mute                      (GstPlay    * play,
                                                      gboolean       val);
 
 GST_PLAY_API
-GstElement * gst_play_get_pipeline                  (GstPlay    * play);
+GstElement * gst_play_get_pipeline                  (GstPlay    * play) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PLAY_API
 void         gst_play_set_video_track_enabled       (GstPlay    * play,
@@ -320,16 +320,16 @@ gboolean     gst_play_set_track_ids                 (GstPlay     *play,
                                                      const gchar *subtitle_stream_id);
 
 GST_PLAY_API
-GstPlayMediaInfo *    gst_play_get_media_info     (GstPlay * play);
+GstPlayMediaInfo *    gst_play_get_media_info     (GstPlay * play) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PLAY_API
-GstPlayAudioInfo *    gst_play_get_current_audio_track (GstPlay * play);
+GstPlayAudioInfo *    gst_play_get_current_audio_track (GstPlay * play) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PLAY_API
-GstPlayVideoInfo *    gst_play_get_current_video_track (GstPlay * play);
+GstPlayVideoInfo *    gst_play_get_current_video_track (GstPlay * play) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PLAY_API
-GstPlaySubtitleInfo * gst_play_get_current_subtitle_track (GstPlay * play);
+GstPlaySubtitleInfo * gst_play_get_current_subtitle_track (GstPlay * play) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PLAY_API
 gboolean     gst_play_set_visualization             (GstPlay    * play,
@@ -340,7 +340,7 @@ void         gst_play_set_visualization_enabled     (GstPlay    * play,
                                                      gboolean enabled);
 
 GST_PLAY_API
-gchar *      gst_play_get_current_visualization     (GstPlay    * play);
+gchar *      gst_play_get_current_visualization     (GstPlay    * play) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PLAY_API
 gboolean     gst_play_has_color_balance             (GstPlay    * play);
@@ -388,7 +388,7 @@ gboolean       gst_play_set_config                  (GstPlay * play,
                                                      GstStructure * config);
 
 GST_PLAY_API
-GstStructure * gst_play_get_config                  (GstPlay * play);
+GstStructure * gst_play_get_config                  (GstPlay * play) G_GNUC_WARN_UNUSED_RESULT;
 
 /* helpers for configuring the config structure */
 
@@ -440,7 +440,7 @@ typedef enum
 
 GST_PLAY_API
 GstSample * gst_play_get_video_snapshot (GstPlay * play,
-    GstPlaySnapshotFormat format, const GstStructure * config);
+    GstPlaySnapshotFormat format, const GstStructure * config) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PLAY_API
 gboolean       gst_play_is_play_message                          (GstMessage *msg);

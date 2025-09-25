@@ -49,7 +49,7 @@ GST_TRANSCODER_API
 G_DECLARE_FINAL_TYPE(GstTranscoderSignalAdapter, gst_transcoder_signal_adapter, GST, TRANSCODER_SIGNAL_ADAPTER, GObject)
 
 GST_TRANSCODER_API
-GstTranscoder * gst_transcoder_signal_adapter_get_transcoder             (GstTranscoderSignalAdapter * self);
+GstTranscoder * gst_transcoder_signal_adapter_get_transcoder             (GstTranscoderSignalAdapter * self) G_GNUC_WARN_UNUSED_RESULT;
 
 
 G_END_DECLS

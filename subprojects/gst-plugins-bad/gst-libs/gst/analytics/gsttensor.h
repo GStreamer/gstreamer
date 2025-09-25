@@ -195,7 +195,7 @@ G_BEGIN_DECLS
 #define GST_TYPE_TENSOR (gst_tensor_get_type())
 
 GST_ANALYTICS_META_API
-GstTensor * gst_tensor_alloc (gsize num_dims);
+GstTensor * gst_tensor_alloc (gsize num_dims) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_ANALYTICS_META_API
 GstTensor * gst_tensor_new_simple (GQuark id,
@@ -203,13 +203,13 @@ GstTensor * gst_tensor_new_simple (GQuark id,
     GstBuffer * data,
     GstTensorDimOrder dims_order,
     gsize num_dims,
-    gsize * dims);
+    gsize * dims) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_ANALYTICS_META_API
 void gst_tensor_free (GstTensor * tensor);
 
 GST_ANALYTICS_META_API
-GstTensor * gst_tensor_copy (const GstTensor * tensor);
+GstTensor * gst_tensor_copy (const GstTensor * tensor) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_ANALYTICS_META_API
 gsize * gst_tensor_get_dims (GstTensor * tensor, gsize * num_dims);

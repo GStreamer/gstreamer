@@ -403,7 +403,7 @@ void gst_nonstream_audio_decoder_get_downstream_info (GstNonstreamAudioDecoder *
 
 GST_AUDIO_BAD_API
 GstBuffer *gst_nonstream_audio_decoder_allocate_output_buffer (GstNonstreamAudioDecoder * dec,
-                                                               gsize size);
+                                                               gsize size) G_GNUC_WARN_UNUSED_RESULT;
 
 
 G_END_DECLS

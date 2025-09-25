@@ -96,7 +96,7 @@ gboolean            gst_vulkan_swapper_choose_queue             (GstVulkanSwappe
                                                                  GError ** error);
 GST_VULKAN_API
 GstCaps *           gst_vulkan_swapper_get_supported_caps       (GstVulkanSwapper * swapper,
-                                                                 GError ** error);
+                                                                 GError ** error) G_GNUC_WARN_UNUSED_RESULT;
 GST_VULKAN_API
 gboolean            gst_vulkan_swapper_set_caps                 (GstVulkanSwapper * swapper,
                                                                  GstCaps * caps,

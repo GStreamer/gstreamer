@@ -52,7 +52,7 @@ GST_CUDA_API
 GType           gst_cuda_stream_get_type (void);
 
 GST_CUDA_API
-GstCudaStream * gst_cuda_stream_new (GstCudaContext * context);
+GstCudaStream * gst_cuda_stream_new (GstCudaContext * context) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_CUDA_API
 CUstream        gst_cuda_stream_get_handle (GstCudaStream * stream);

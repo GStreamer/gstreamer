@@ -68,7 +68,7 @@ GST_ANALYTICS_META_API
 GstBuffer *
 gst_analytics_segmentation_mtd_get_mask (const GstAnalyticsSegmentationMtd *
     handle, gint * masks_loc_x, gint * masks_loc_y, guint * masks_loc_w, guint *
-    masks_loc_h);
+    masks_loc_h) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_ANALYTICS_META_API
 gboolean

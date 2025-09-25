@@ -145,7 +145,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVulkanCommandBuffer, gst_vulkan_command_buffer_
 
 GST_VULKAN_API
 GstVulkanCommandBuffer *    gst_vulkan_command_buffer_new_wrapped       (VkCommandBuffer cmd,
-                                                                         VkCommandBufferLevel level);
+                                                                         VkCommandBufferLevel level) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 

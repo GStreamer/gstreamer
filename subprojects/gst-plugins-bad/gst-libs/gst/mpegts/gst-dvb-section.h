@@ -237,10 +237,10 @@ GST_MPEGTS_API
 GstMpegtsSection *gst_mpegts_section_from_nit (GstMpegtsNIT *nit);
 
 GST_MPEGTS_API
-GstMpegtsNIT *gst_mpegts_nit_new (void);
+GstMpegtsNIT *gst_mpegts_nit_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_MPEGTS_API
-GstMpegtsNITStream *gst_mpegts_nit_stream_new (void);
+GstMpegtsNITStream *gst_mpegts_nit_stream_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 
 /* BAT */
@@ -343,10 +343,10 @@ GST_MPEGTS_API
 GstMpegtsSection *gst_mpegts_section_from_sdt (GstMpegtsSDT * sdt);
 
 GST_MPEGTS_API
-GstMpegtsSDT *gst_mpegts_sdt_new (void);
+GstMpegtsSDT *gst_mpegts_sdt_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_MPEGTS_API
-GstMpegtsSDTService *gst_mpegts_sdt_service_new (void);
+GstMpegtsSDTService *gst_mpegts_sdt_service_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 /* EIT */
 
@@ -407,7 +407,7 @@ const GstMpegtsEIT *gst_mpegts_section_get_eit (GstMpegtsSection *section);
 /* TDT */
 
 GST_MPEGTS_API
-GstDateTime *gst_mpegts_section_get_tdt (GstMpegtsSection *section);
+GstDateTime *gst_mpegts_section_get_tdt (GstMpegtsSection *section) G_GNUC_WARN_UNUSED_RESULT;
 
 /* TOT */
 

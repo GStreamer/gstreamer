@@ -86,11 +86,11 @@ struct _GstVulkanVideoFilterClass
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVulkanVideoFilter, gst_object_unref);
 
 GST_VULKAN_API
-GstVulkanInstance *    gst_vulkan_video_filter_get_instance    (GstVulkanVideoFilter * filter);
+GstVulkanInstance *    gst_vulkan_video_filter_get_instance    (GstVulkanVideoFilter * filter) G_GNUC_WARN_UNUSED_RESULT;
 GST_VULKAN_API
-GstVulkanDevice *      gst_vulkan_video_filter_get_device      (GstVulkanVideoFilter * filter);
+GstVulkanDevice *      gst_vulkan_video_filter_get_device      (GstVulkanVideoFilter * filter) G_GNUC_WARN_UNUSED_RESULT;
 GST_VULKAN_API
-GstVulkanQueue *       gst_vulkan_video_filter_get_queue       (GstVulkanVideoFilter * filter);
+GstVulkanQueue *       gst_vulkan_video_filter_get_queue       (GstVulkanVideoFilter * filter) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 

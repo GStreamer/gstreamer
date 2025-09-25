@@ -50,7 +50,7 @@ GST_CODECS_API
 GType gst_vp9_picture_get_type (void);
 
 GST_CODECS_API
-GstVp9Picture * gst_vp9_picture_new (void);
+GstVp9Picture * gst_vp9_picture_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 static inline GstVp9Picture *
 gst_vp9_picture_ref (GstVp9Picture * picture)

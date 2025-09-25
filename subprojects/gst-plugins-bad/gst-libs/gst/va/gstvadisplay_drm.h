@@ -37,6 +37,6 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaDisplayDrm, gst_object_unref)
 GST_VA_API
 GType                 gst_va_display_drm_get_type         (void);
 GST_VA_API
-GstVaDisplay *        gst_va_display_drm_new_from_path    (const gchar * path);
+GstVaDisplay *        gst_va_display_drm_new_from_path    (const gchar * path) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS

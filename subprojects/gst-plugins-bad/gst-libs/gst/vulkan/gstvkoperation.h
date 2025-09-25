@@ -83,7 +83,7 @@ struct _GstVulkanEncodeQueryResult
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVulkanOperation, gst_object_unref)
 
 GST_VULKAN_API
-GstVulkanOperation *    gst_vulkan_operation_new                (GstVulkanCommandPool * cmd_pool);
+GstVulkanOperation *    gst_vulkan_operation_new                (GstVulkanCommandPool * cmd_pool) G_GNUC_WARN_UNUSED_RESULT;
 GST_VULKAN_API
 gboolean                gst_vulkan_operation_begin              (GstVulkanOperation * self,
                                                                  GError ** error);
@@ -96,10 +96,10 @@ GST_VULKAN_API
 void                    gst_vulkan_operation_reset              (GstVulkanOperation * self);
 GST_VULKAN_API
 GArray *                gst_vulkan_operation_retrieve_image_barriers
-                                                                (GstVulkanOperation * self);
+                                                                (GstVulkanOperation * self) G_GNUC_WARN_UNUSED_RESULT;
 GST_VULKAN_API
 GArray *                gst_vulkan_operation_new_extra_image_barriers
-                                                                (GstVulkanOperation * self);
+                                                                (GstVulkanOperation * self) G_GNUC_WARN_UNUSED_RESULT;
 GST_VULKAN_API
 gboolean                gst_vulkan_operation_add_frame_barrier  (GstVulkanOperation * self,
                                                                  GstBuffer * frame,

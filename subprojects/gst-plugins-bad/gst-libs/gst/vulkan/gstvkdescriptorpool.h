@@ -71,16 +71,16 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVulkanDescriptorPool, gst_object_unref);
 GST_VULKAN_API
 GstVulkanDescriptorPool *   gst_vulkan_descriptor_pool_new_wrapped      (GstVulkanDevice * device,
                                                                          VkDescriptorPool pool,
-                                                                         gsize max_sets);
+                                                                         gsize max_sets) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VULKAN_API
-GstVulkanDevice *           gst_vulkan_descriptor_pool_get_device       (GstVulkanDescriptorPool * pool);
+GstVulkanDevice *           gst_vulkan_descriptor_pool_get_device       (GstVulkanDescriptorPool * pool) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VULKAN_API
 GstVulkanDescriptorSet *    gst_vulkan_descriptor_pool_create           (GstVulkanDescriptorPool * pool,
                                                                          guint n_layouts,
                                                                          GstVulkanHandle **layouts,
-                                                                         GError ** error);
+                                                                         GError ** error) G_GNUC_WARN_UNUSED_RESULT;
 GST_VULKAN_API
 gsize                       gst_vulkan_descriptor_pool_get_max_sets     (GstVulkanDescriptorPool * pool);
 

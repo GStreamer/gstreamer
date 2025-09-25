@@ -129,7 +129,7 @@ GST_VULKAN_API
 GstVulkanDescriptorSet *    gst_vulkan_descriptor_set_new_wrapped       (GstVulkanDescriptorPool * pool,
                                                                          VkDescriptorSet set,
                                                                          guint n_layouts,
-                                                                         GstVulkanHandle ** layouts);
+                                                                         GstVulkanHandle ** layouts) G_GNUC_WARN_UNUSED_RESULT;
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVulkanDescriptorSet, gst_vulkan_descriptor_set_unref);
 

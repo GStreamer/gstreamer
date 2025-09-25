@@ -143,10 +143,10 @@ struct _GstVulkanWindowClass {
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVulkanWindow, gst_object_unref)
 
 GST_VULKAN_API
-GstVulkanWindow *  gst_vulkan_window_new                            (GstVulkanDisplay *display);
+GstVulkanWindow *  gst_vulkan_window_new                            (GstVulkanDisplay *display) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VULKAN_API
-GstVulkanDisplay * gst_vulkan_window_get_display                    (GstVulkanWindow *window);
+GstVulkanDisplay * gst_vulkan_window_get_display                    (GstVulkanWindow *window) G_GNUC_WARN_UNUSED_RESULT;
 GST_VULKAN_API
 VkSurfaceKHR       gst_vulkan_window_get_surface                    (GstVulkanWindow *window,
                                                                      GError **error);

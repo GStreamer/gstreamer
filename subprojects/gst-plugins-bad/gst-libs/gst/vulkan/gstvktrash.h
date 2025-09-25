@@ -101,7 +101,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVulkanTrash, gst_vulkan_trash_unref)
 GST_VULKAN_API
 GstVulkanTrash *    gst_vulkan_trash_new                            (GstVulkanFence * fence,
                                                                      GstVulkanTrashNotify notify,
-                                                                     gpointer user_data);
+                                                                     gpointer user_data) G_GNUC_WARN_UNUSED_RESULT;
 GST_VULKAN_API
 void                gst_vulkan_trash_mini_object_unref              (GstVulkanDevice * device,
                                                                      gpointer user_data);
@@ -110,7 +110,7 @@ void                gst_vulkan_trash_object_unref                   (GstVulkanDe
                                                                      gpointer user_data);
 GST_VULKAN_API
 GstVulkanTrash *    gst_vulkan_trash_new_free_semaphore             (GstVulkanFence * fence,
-                                                                     VkSemaphore semaphore);
+                                                                     VkSemaphore semaphore) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * gst_vulkan_trash_new_object_unref:
@@ -247,7 +247,7 @@ GST_VULKAN_API
 GstVulkanTrash *    gst_vulkan_trash_list_acquire                   (GstVulkanTrashList * trash_list,
                                                                      GstVulkanFence * fence,
                                                                      GstVulkanTrashNotify notify,
-                                                                     gpointer user_data);
+                                                                     gpointer user_data) G_GNUC_WARN_UNUSED_RESULT;
 /**
  * GstVulkanTrashFenceList:
  *
@@ -261,7 +261,7 @@ GstVulkanTrash *    gst_vulkan_trash_list_acquire                   (GstVulkanTr
 GST_VULKAN_API
 G_DECLARE_FINAL_TYPE (GstVulkanTrashFenceList, gst_vulkan_trash_fence_list, GST, VULKAN_TRASH_FENCE_LIST, GstVulkanTrashList);
 GST_VULKAN_API
-GstVulkanTrashList * gst_vulkan_trash_fence_list_new                (void);
+GstVulkanTrashList * gst_vulkan_trash_fence_list_new                (void) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 

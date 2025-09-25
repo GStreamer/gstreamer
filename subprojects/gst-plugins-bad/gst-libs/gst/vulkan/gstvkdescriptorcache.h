@@ -69,10 +69,10 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVulkanDescriptorCache, gst_object_unref)
 GST_VULKAN_API
 GstVulkanDescriptorCache *   gst_vulkan_descriptor_cache_new            (GstVulkanDescriptorPool * pool,
                                                                          guint n_layouts,
-                                                                         GstVulkanHandle ** layouts);
+                                                                         GstVulkanHandle ** layouts) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VULKAN_API
 GstVulkanDescriptorSet *    gst_vulkan_descriptor_cache_acquire         (GstVulkanDescriptorCache * cache,
-                                                                         GError ** error);
+                                                                         GError ** error) G_GNUC_WARN_UNUSED_RESULT;
 
 #endif /* __GST_VULKAN_DESCRIPTOR_CACHE_H__ */

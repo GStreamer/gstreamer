@@ -47,9 +47,9 @@ struct _GstWebRTCSessionDescription
 };
 
 GST_WEBRTC_API
-GstWebRTCSessionDescription *       gst_webrtc_session_description_new      (GstWebRTCSDPType type, GstSDPMessage *sdp);
+GstWebRTCSessionDescription *       gst_webrtc_session_description_new      (GstWebRTCSDPType type, GstSDPMessage *sdp) G_GNUC_WARN_UNUSED_RESULT;
 GST_WEBRTC_API
-GstWebRTCSessionDescription *       gst_webrtc_session_description_copy     (const GstWebRTCSessionDescription * src);
+GstWebRTCSessionDescription *       gst_webrtc_session_description_copy     (const GstWebRTCSessionDescription * src) G_GNUC_WARN_UNUSED_RESULT;
 GST_WEBRTC_API
 void                                gst_webrtc_session_description_free     (GstWebRTCSessionDescription * desc);
 

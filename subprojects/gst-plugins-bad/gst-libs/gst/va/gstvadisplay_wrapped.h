@@ -37,6 +37,6 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaDisplayWrapped, gst_object_unref)
 GST_VA_API
 GType                 gst_va_display_wrapped_get_type     (void);
 GST_VA_API
-GstVaDisplay *        gst_va_display_wrapped_new          (gpointer handle);
+GstVaDisplay *        gst_va_display_wrapped_new          (gpointer handle) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS

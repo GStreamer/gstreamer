@@ -47,13 +47,13 @@ GST_PLAY_API
 GType                  gst_play_signal_adapter_get_type               (void);
 
 GST_PLAY_API
-GstPlaySignalAdapter * gst_play_signal_adapter_new                    (GstPlay * play);
+GstPlaySignalAdapter * gst_play_signal_adapter_new                    (GstPlay * play) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PLAY_API
-GstPlaySignalAdapter * gst_play_signal_adapter_new_with_main_context  (GstPlay * play, GMainContext * context);
+GstPlaySignalAdapter * gst_play_signal_adapter_new_with_main_context  (GstPlay * play, GMainContext * context) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PLAY_API
-GstPlaySignalAdapter * gst_play_signal_adapter_new_sync_emit          (GstPlay * play);
+GstPlaySignalAdapter * gst_play_signal_adapter_new_sync_emit          (GstPlay * play) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PLAY_API
 GstPlay              * gst_play_signal_adapter_get_play               (GstPlaySignalAdapter * adapter);

@@ -182,7 +182,7 @@ GST_CODECS_API
 GType gst_h264_picture_get_type (void);
 
 GST_CODECS_API
-GstH264Picture * gst_h264_picture_new (void);
+GstH264Picture * gst_h264_picture_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 static inline GstH264Picture *
 gst_h264_picture_ref (GstH264Picture * picture)
@@ -306,11 +306,11 @@ void  gst_h264_dpb_get_pictures_long_term_ref  (GstH264Dpb * dpb,
                                                 GArray * out);
 
 GST_CODECS_API
-GArray * gst_h264_dpb_get_pictures_all         (GstH264Dpb * dpb);
+GArray * gst_h264_dpb_get_pictures_all         (GstH264Dpb * dpb) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_CODECS_API
 GstH264Picture * gst_h264_dpb_get_picture      (GstH264Dpb * dpb,
-                                                guint32 system_frame_number);
+                                                guint32 system_frame_number) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_CODECS_API
 gint  gst_h264_dpb_get_size   (GstH264Dpb * dpb);
@@ -325,7 +325,7 @@ gboolean gst_h264_dpb_needs_bump (GstH264Dpb * dpb,
 
 GST_CODECS_API
 GstH264Picture * gst_h264_dpb_bump (GstH264Dpb * dpb,
-                                    gboolean drain);
+                                    gboolean drain) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_CODECS_API
 void gst_h264_dpb_set_last_output (GstH264Dpb * dpb,

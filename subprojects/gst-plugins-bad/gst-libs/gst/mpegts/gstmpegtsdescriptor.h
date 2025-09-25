@@ -227,7 +227,7 @@ GST_MPEGTS_API
 void       gst_mpegts_descriptor_free (GstMpegtsDescriptor *desc);
 
 GST_MPEGTS_API
-GstMpegtsDescriptor       * gst_mpegts_descriptor_copy (GstMpegtsDescriptor *desc);
+GstMpegtsDescriptor       * gst_mpegts_descriptor_copy (GstMpegtsDescriptor *desc) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_MPEGTS_API
 GPtrArray *gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len);

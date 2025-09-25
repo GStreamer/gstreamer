@@ -71,12 +71,12 @@ struct _GstVulkanFence
 
 GST_VULKAN_API
 GstVulkanFence *    gst_vulkan_fence_new            (GstVulkanDevice * device,
-                                                     GError ** error);
+                                                     GError ** error) G_GNUC_WARN_UNUSED_RESULT;
 GST_VULKAN_API
 void                gst_vulkan_fence_reset          (GstVulkanFence * fence);
 
 GST_VULKAN_API
-GstVulkanFence *    gst_vulkan_fence_new_always_signalled (GstVulkanDevice *device);
+GstVulkanFence *    gst_vulkan_fence_new_always_signalled (GstVulkanDevice *device) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VULKAN_API
 gboolean            gst_vulkan_fence_is_signaled    (GstVulkanFence * fence);

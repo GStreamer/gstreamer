@@ -50,7 +50,7 @@ struct _GstWebRTCICEStreamClass
 
 GST_WEBRTC_API
 GstWebRTCICETransport *     gst_webrtc_ice_stream_find_transport        (GstWebRTCICEStream * stream,
-                                                                         GstWebRTCICEComponent component);
+                                                                         GstWebRTCICEComponent component) G_GNUC_WARN_UNUSED_RESULT;
 GST_WEBRTC_API
 gboolean                    gst_webrtc_ice_stream_gather_candidates     (GstWebRTCICEStream * ice);
 
