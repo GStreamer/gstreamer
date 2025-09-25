@@ -24,7 +24,8 @@
 
 G_BEGIN_DECLS
 
-gboolean
-gst_vulkan_h264_encoder_register (GstPlugin * plugin, GstVulkanDevice * device, guint rank);
+gboolean                gst_vulkan_h264_encoder_register        (GstPlugin * plugin,
+                                                                 GstVulkanDevice * device,
+                                                                 guint rank);
 
 G_END_DECLS

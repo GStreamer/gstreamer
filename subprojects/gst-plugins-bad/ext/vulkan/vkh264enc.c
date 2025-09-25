@@ -58,10 +58,11 @@
 
 #include <gst/codecparsers/gsth264bitwriter.h>
 #include <gst/codecparsers/gsth264parser.h>
-#include <gst/vulkan/gstvkencoder-private.h>
 
-#include "gstvulkanelements.h"
 #include "base/gsth264encoder.h"
+#include "gst/vulkan/gstvkencoder-private.h"
+#include "gstvkvideocaps.h"
+#include "gstvulkanelements.h"
 
 typedef struct _GstVulkanH264Encoder GstVulkanH264Encoder;
 typedef struct _GstVulkanH264EncoderClass GstVulkanH264EncoderClass;
@@ -179,6 +180,8 @@ struct CData
 {
   gchar *description;
   gint device_index;
+  GstCaps *codec;
+  GstCaps *raw;
 };
 
 #define GST_VULKAN_H264_ENCODER(obj) ((GstVulkanH264Encoder *)obj)
@@ -187,17 +190,6 @@ struct CData
                                GstVulkanH264EncoderClass))
 #define GST_VULKAN_H264_ENCODER_CLASS(klass)    \
     ((GstVulkanH264EncoderClass *)klass)
-
-static GstStaticPadTemplate gst_vulkan_h264_encoder_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, "NV12")));
-
-static GstStaticPadTemplate gst_vulkan_h264_encoder_src_template =
-GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h264, "
-        "profile = { (string) main, (string) high, (string) constrained-baseline }, "
-        "stream-format = (string) byte-stream, alignment = (string) au"));
 
 static GstElementClass *parent_class = NULL;
 
@@ -2070,6 +2062,8 @@ gst_vulkan_h264_encoder_class_init (gpointer g_klass, gpointer class_data)
       | GST_PARAM_MUTABLE_PLAYING;
   gchar *long_name;
   const gchar *name;
+  GstPadTemplate *sink_pad_template, *src_pad_template;
+  GstCaps *sink_doc_caps, *src_doc_caps;
 
   name = "Vulkan H.264 encoder";
   if (cdata->description)
@@ -2086,11 +2080,25 @@ gst_vulkan_h264_encoder_class_init (gpointer g_klass, gpointer class_data)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_vulkan_h264_encoder_sink_template);
+  src_doc_caps = gst_caps_from_string ("video/x-h264, "
+      "profile = { (string) high, (string) main, (string) constrained-baseline }, "
+      "stream-format = (string) byte-stream, alignment = (string) au");
+  sink_doc_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+      (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, "NV12"));
 
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_vulkan_h264_encoder_src_template);
+  sink_pad_template =
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, cdata->raw);
+  gst_element_class_add_pad_template (element_class, sink_pad_template);
+
+  src_pad_template =
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, cdata->codec);
+  gst_element_class_add_pad_template (element_class, src_pad_template);
+
+  gst_pad_template_set_documentation_caps (sink_pad_template, sink_doc_caps);
+  gst_caps_unref (sink_doc_caps);
+
+  gst_pad_template_set_documentation_caps (src_pad_template, src_doc_caps);
+  gst_caps_unref (src_doc_caps);
 
   gobject_class->set_property =
       GST_DEBUG_FUNCPTR (gst_vulkan_h264_encoder_set_property);
@@ -2266,6 +2274,8 @@ gst_vulkan_h264_encoder_class_init (gpointer g_klass, gpointer class_data)
 
   g_free (long_name);
   g_free (cdata->description);
+  gst_clear_caps (&cdata->codec);
+  gst_clear_caps (&cdata->raw);
   g_free (cdata);
 }
 
@@ -2284,12 +2294,27 @@ gst_vulkan_h264_encoder_register (GstPlugin * plugin, GstVulkanDevice * device,
   struct CData *cdata;
   gboolean ret;
   gchar *type_name, *feature_name;
+  GstCaps *codec = NULL, *raw = NULL;
+
+  g_return_val_if_fail (GST_IS_PLUGIN (plugin), FALSE);
+  g_return_val_if_fail (GST_IS_VULKAN_DEVICE (device), FALSE);
+
+  if (!gst_vulkan_physical_device_codec_caps (device->physical_device,
+          VK_VIDEO_CODEC_OPERATION_ENCODE_H264_BIT_KHR, &codec, &raw)) {
+    gst_plugin_add_status_warning (plugin,
+        "Unable to query H.264 encoder properties");
+    return FALSE;
+  }
 
   cdata = g_new (struct CData, 1);
   cdata->description = NULL;
   cdata->device_index = device->physical_device->device_index;
+  cdata->codec = codec;
+  cdata->raw = raw;
 
-  g_return_val_if_fail (GST_IS_PLUGIN (plugin), FALSE);
+  /* class data will be leaked if the element never gets instantiated */
+  GST_MINI_OBJECT_FLAG_SET (cdata->codec, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_MINI_OBJECT_FLAG_SET (cdata->raw, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
 
   gst_vulkan_create_feature_name (device, "GstVulkanH264Encoder",
       "GstVulkanH264Device%dEncoder", &type_name, "vulkanh264enc",
