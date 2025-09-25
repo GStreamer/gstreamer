@@ -51,6 +51,9 @@
 #include "vkh264enc.h"
 #endif
 
+GST_DEBUG_CATEGORY_EXTERN (gst_vulkan_debug);
+#define GST_CAT_DEFAULT gst_vulkan_debug
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -72,6 +75,8 @@ plugin_init (GstPlugin * plugin)
 #endif
   gst_plugin_add_dependency (plugin, env_vars, NULL, NULL,
       GST_PLUGIN_DEPENDENCY_FLAG_NONE);
+
+  vulkan_element_init (plugin);
 
   if (!have_instance) {
     GST_WARNING_OBJECT (plugin, "Failed to create vulkan instance: %s",

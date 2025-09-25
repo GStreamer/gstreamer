@@ -34,7 +34,7 @@
 #include <gst/vulkan/vulkan.h>
 
 #define GST_CAT_DEFAULT gst_vulkan_debug
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
 void
 vulkan_element_init (GstPlugin * plugin)
