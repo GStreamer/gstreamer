@@ -149,8 +149,10 @@ gst_rtsp_session_pool_finalize (GObject * object)
 {
   GstRTSPSessionPool *pool = GST_RTSP_SESSION_POOL (object);
   GstRTSPSessionPoolPrivate *priv = pool->priv;
+  GList *sessions G_GNUC_UNUSED;
 
-  gst_rtsp_session_pool_filter (pool, remove_sessions_func, NULL);
+  sessions = gst_rtsp_session_pool_filter (pool, remove_sessions_func, NULL);
+  g_assert (sessions == NULL);
   g_hash_table_unref (priv->sessions);
   g_mutex_clear (&priv->lock);
 

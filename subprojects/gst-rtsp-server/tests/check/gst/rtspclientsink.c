@@ -150,9 +150,11 @@ new_state_cb (GstRTSPMedia * media, gint state, gpointer user_data)
 {
   if (state == GST_STATE_PLAYING) {
     GstRTSPStream *stream = gst_rtsp_media_get_stream (media, 0);
+    GList *transports G_GNUC_UNUSED;
 
-    gst_rtsp_stream_transport_filter (stream,
+    transports = gst_rtsp_stream_transport_filter (stream,
         (GstRTSPStreamTransportFilterFunc) check_transport, user_data);
+    g_assert (transports == NULL);
   }
 }
 

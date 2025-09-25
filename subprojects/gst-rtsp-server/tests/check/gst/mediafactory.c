@@ -25,6 +25,7 @@ GST_START_TEST (test_parse_error)
 {
   GstRTSPMediaFactory *factory;
   GstRTSPUrl *url;
+  GstRTSPMedia *ignored G_GNUC_UNUSED;
 
   factory = gst_rtsp_media_factory_new ();
 
@@ -32,7 +33,7 @@ GST_START_TEST (test_parse_error)
   fail_unless (gst_rtsp_url_parse ("rtsp://localhost:8554/test",
           &url) == GST_RTSP_OK);
   ASSERT_CRITICAL (gst_rtsp_media_factory_create_element (factory, url));
-  ASSERT_CRITICAL (gst_rtsp_media_factory_construct (factory, url));
+  ASSERT_CRITICAL (ignored = gst_rtsp_media_factory_construct (factory, url));
 
   gst_rtsp_url_free (url);
   g_object_unref (factory);

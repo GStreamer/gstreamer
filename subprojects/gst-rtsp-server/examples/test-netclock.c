@@ -73,6 +73,7 @@ main (int argc, char *argv[])
   GstRTSPServer *server;
   GstRTSPMountPoints *mounts;
   GstRTSPMediaFactory *factory;
+  GstNetTimeProvider *provider;
 
   gst_init (&argc, &argv);
 
@@ -87,7 +88,7 @@ main (int argc, char *argv[])
   loop = g_main_loop_new (NULL, FALSE);
 
   global_clock = gst_system_clock_obtain ();
-  gst_net_time_provider_new (global_clock, "0.0.0.0", 8554);
+  provider = gst_net_time_provider_new (global_clock, "0.0.0.0", 8554);
 
   /* create a server instance */
   server = gst_rtsp_server_new ();
@@ -118,6 +119,8 @@ main (int argc, char *argv[])
   /* start serving */
   g_print ("stream ready at rtsp://127.0.0.1:8554/test\n");
   g_main_loop_run (loop);
+
+  gst_clear_object (&provider);
 
   return 0;
 }

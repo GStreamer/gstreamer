@@ -32,10 +32,11 @@ static gboolean
 remove_sessions (GstRTSPServer * server)
 {
   GstRTSPSessionPool *pool;
+  GList *sessions G_GNUC_UNUSED;
 
   g_print ("removing all sessions\n");
   pool = gst_rtsp_server_get_session_pool (server);
-  gst_rtsp_session_pool_filter (pool,
+  sessions = gst_rtsp_session_pool_filter (pool,
       (GstRTSPSessionPoolFilterFunc) remove_func, server);
   g_object_unref (pool);
 

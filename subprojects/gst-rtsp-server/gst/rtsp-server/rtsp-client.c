@@ -709,8 +709,10 @@ client_unwatch_session (GstRTSPClient * client, GstRTSPSession * session,
   }
 
   if (!priv->drop_backlog) {
+    GList *sessions G_GNUC_UNUSED;
     /* unlink all media managed in this session */
-    gst_rtsp_session_filter (session, filter_session_media, client);
+    sessions = gst_rtsp_session_filter (session, filter_session_media, client);
+    g_assert (sessions == NULL);
   }
 
   /* remove the session */
@@ -725,9 +727,11 @@ cleanup_session (GstRTSPClient * client, GstRTSPSession * sess,
   GstRTSPClientPrivate *priv = client->priv;
 
   if (priv->drop_backlog) {
+    GList *sessions G_GNUC_UNUSED;
     /* unlink all media managed in this session. This needs to happen
      * without the client lock, so we really want to do it here. */
-    gst_rtsp_session_filter (sess, filter_session_media, user_data);
+    sessions = gst_rtsp_session_filter (sess, filter_session_media, user_data);
+    g_assert (sessions == NULL);
   }
 
   if (*closed)
@@ -5287,6 +5291,7 @@ client_watch_notify (GstRTSPClient * client)
 {
   GstRTSPClientPrivate *priv = client->priv;
   gboolean closed = TRUE;
+  GList *sessions G_GNUC_UNUSED;
 
   GST_INFO ("client %p: watch destroyed", client);
   priv->watch = NULL;
@@ -5294,7 +5299,8 @@ client_watch_notify (GstRTSPClient * client)
   gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
   gst_rtsp_client_set_send_messages_func (client, NULL, NULL, NULL);
   rtsp_ctrl_timeout_remove (client);
-  gst_rtsp_client_session_filter (client, cleanup_session, &closed);
+  sessions = gst_rtsp_client_session_filter (client, cleanup_session, &closed);
+  g_assert (sessions == NULL);
 
   if (closed)
     g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_CLOSED], 0, NULL);
