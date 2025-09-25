@@ -93,21 +93,21 @@ GST_RTSP_API
 GstRTSPResult      gst_rtsp_url_parse           (const gchar *urlstr, GstRTSPUrl **url);
 
 GST_RTSP_API
-GstRTSPUrl*        gst_rtsp_url_copy            (const GstRTSPUrl *url);
+GstRTSPUrl*        gst_rtsp_url_copy            (const GstRTSPUrl *url) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_API
 void               gst_rtsp_url_free            (GstRTSPUrl *url);
 
 GST_RTSP_API
-gchar*             gst_rtsp_url_get_request_uri (const GstRTSPUrl *url);
+gchar*             gst_rtsp_url_get_request_uri (const GstRTSPUrl *url) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_API
 gchar *            gst_rtsp_url_get_request_uri_with_control (const GstRTSPUrl * url,
-                                                              const gchar * control_path);
+                                                              const gchar * control_path) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_API
 gchar**            gst_rtsp_url_decode_path_components
-                                                (const GstRTSPUrl *url);
+                                                (const GstRTSPUrl *url) G_GNUC_WARN_UNUSED_RESULT;
 GST_RTSP_API
 GstRTSPResult      gst_rtsp_url_set_port        (GstRTSPUrl *url, guint16 port);
 

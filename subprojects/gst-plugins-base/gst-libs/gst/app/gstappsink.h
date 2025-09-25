@@ -135,7 +135,7 @@ GST_APP_API
 void            gst_app_sink_set_caps         (GstAppSink *appsink, const GstCaps *caps);
 
 GST_APP_API
-GstCaps *       gst_app_sink_get_caps         (GstAppSink *appsink);
+GstCaps *       gst_app_sink_get_caps         (GstAppSink *appsink) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_APP_API
 gboolean        gst_app_sink_is_eos           (GstAppSink *appsink);
@@ -198,22 +198,22 @@ GST_APP_API
 gboolean        gst_app_sink_get_wait_on_eos  (GstAppSink *appsink);
 
 GST_APP_API
-GstSample *     gst_app_sink_pull_preroll     (GstAppSink *appsink);
+GstSample *     gst_app_sink_pull_preroll     (GstAppSink *appsink) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_APP_API
-GstSample *     gst_app_sink_pull_sample      (GstAppSink *appsink);
+GstSample *     gst_app_sink_pull_sample      (GstAppSink *appsink) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_APP_API
-GstMiniObject * gst_app_sink_pull_object      (GstAppSink *appsink);
+GstMiniObject * gst_app_sink_pull_object      (GstAppSink *appsink) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_APP_API
-GstSample *     gst_app_sink_try_pull_preroll (GstAppSink *appsink, GstClockTime timeout);
+GstSample *     gst_app_sink_try_pull_preroll (GstAppSink *appsink, GstClockTime timeout) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_APP_API
-GstSample *     gst_app_sink_try_pull_sample  (GstAppSink *appsink, GstClockTime timeout);
+GstSample *     gst_app_sink_try_pull_sample  (GstAppSink *appsink, GstClockTime timeout) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_APP_API
-GstMiniObject * gst_app_sink_try_pull_object    (GstAppSink *appsink, GstClockTime timeout);
+GstMiniObject * gst_app_sink_try_pull_object    (GstAppSink *appsink, GstClockTime timeout) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_APP_API
 void            gst_app_sink_set_callbacks    (GstAppSink * appsink,

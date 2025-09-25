@@ -489,7 +489,7 @@ GST_RTP_API
 guint8          gst_rtcp_packet_bye_get_reason_len    (GstRTCPPacket *packet);
 
 GST_RTP_API
-gchar*          gst_rtcp_packet_bye_get_reason        (GstRTCPPacket *packet);
+gchar*          gst_rtcp_packet_bye_get_reason        (GstRTCPPacket *packet) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTP_API
 gboolean        gst_rtcp_packet_bye_set_reason        (GstRTCPPacket *packet, const gchar *reason);

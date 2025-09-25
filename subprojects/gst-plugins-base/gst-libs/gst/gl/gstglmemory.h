@@ -166,7 +166,7 @@ GstGLVideoAllocationParams * gst_gl_video_allocation_params_new (GstGLContext * 
                                                                  guint plane,
                                                                  const GstVideoAlignment * valign,
                                                                  GstGLTextureTarget target,
-                                                                 GstGLFormat tex_format);
+                                                                 GstGLFormat tex_format) G_GNUC_WARN_UNUSED_RESULT;
 GST_GL_API
 GstGLVideoAllocationParams * gst_gl_video_allocation_params_new_wrapped_data    (GstGLContext * context,
                                                                                  const GstAllocationParams * alloc_params,
@@ -177,7 +177,7 @@ GstGLVideoAllocationParams * gst_gl_video_allocation_params_new_wrapped_data    
                                                                                  GstGLFormat tex_format,
                                                                                  gpointer wrapped_data,
                                                                                  gpointer user_data,
-                                                                                 GDestroyNotify notify);
+                                                                                 GDestroyNotify notify) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_GL_API
 GstGLVideoAllocationParams * gst_gl_video_allocation_params_new_wrapped_texture (GstGLContext * context,
@@ -189,7 +189,7 @@ GstGLVideoAllocationParams * gst_gl_video_allocation_params_new_wrapped_texture 
                                                                                  GstGLFormat tex_format,
                                                                                  guint tex_id,
                                                                                  gpointer user_data,
-                                                                                 GDestroyNotify notify);
+                                                                                 GDestroyNotify notify) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_GL_API
 GstGLVideoAllocationParams * gst_gl_video_allocation_params_new_wrapped_gl_handle (GstGLContext * context,
@@ -201,7 +201,7 @@ GstGLVideoAllocationParams * gst_gl_video_allocation_params_new_wrapped_gl_handl
                                                                                  GstGLFormat tex_format,
                                                                                  gpointer gl_handle,
                                                                                  gpointer user_data,
-                                                                                 GDestroyNotify notify);
+                                                                                 GDestroyNotify notify) G_GNUC_WARN_UNUSED_RESULT;
 
 /* subclass usage */
 GST_GL_API

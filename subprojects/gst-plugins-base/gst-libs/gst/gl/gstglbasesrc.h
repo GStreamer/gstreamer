@@ -96,7 +96,7 @@ struct _GstGLBaseSrcClass {
 };
 
 GST_GL_API
-GstGLContext * gst_gl_base_src_get_gl_context (GstGLBaseSrc *base_src);
+GstGLContext * gst_gl_base_src_get_gl_context (GstGLBaseSrc *base_src) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 

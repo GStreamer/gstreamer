@@ -166,7 +166,7 @@ struct _GstMIKEYPayload {
 };
 
 GST_SDP_API
-GstMIKEYPayload *   gst_mikey_payload_new      (GstMIKEYPayloadType type);
+GstMIKEYPayload *   gst_mikey_payload_new      (GstMIKEYPayloadType type) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * gst_mikey_payload_ref:
@@ -576,28 +576,28 @@ struct _GstMIKEYMessage
 
 
 GST_SDP_API
-GstMIKEYMessage *           gst_mikey_message_new               (void);
+GstMIKEYMessage *           gst_mikey_message_new               (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_SDP_API
 GstMIKEYMessage *           gst_mikey_message_new_from_data     (gconstpointer data, gsize size,
-                                                                 GstMIKEYDecryptInfo *info, GError **error);
+                                                                 GstMIKEYDecryptInfo *info, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_SDP_API
 GstMIKEYMessage *           gst_mikey_message_new_from_bytes    (GBytes *bytes, GstMIKEYDecryptInfo *info,
-                                                                 GError **error);
+                                                                 GError **error) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_SDP_API
 GBytes *                    gst_mikey_message_to_bytes          (GstMIKEYMessage *msg, GstMIKEYEncryptInfo *info,
-                                                                 GError **error);
+                                                                 GError **error) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_SDP_API
-GstMIKEYMessage *           gst_mikey_message_new_from_caps     (GstCaps *caps);
+GstMIKEYMessage *           gst_mikey_message_new_from_caps     (GstCaps *caps) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_SDP_API
 gboolean                    gst_mikey_message_to_caps           (const GstMIKEYMessage *msg, GstCaps *caps);
 
 GST_SDP_API
-gchar *                     gst_mikey_message_base64_encode     (GstMIKEYMessage* msg);
+gchar *                     gst_mikey_message_base64_encode     (GstMIKEYMessage* msg) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * gst_mikey_message_ref:

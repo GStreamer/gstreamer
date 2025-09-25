@@ -191,7 +191,7 @@ GST_GL_API
 gboolean gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf);
 
 GST_GL_API
-GstGLFramebuffer * gst_gl_mixer_get_framebuffer (GstGLMixer * mix);
+GstGLFramebuffer * gst_gl_mixer_get_framebuffer (GstGLMixer * mix) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 #endif /* __GST_GL_MIXER_H__ */

@@ -327,7 +327,7 @@ GST_VIDEO_API
 GType gst_video_aggregator_get_type       (void);
 
 GST_VIDEO_API
-GstTaskPool * gst_video_aggregator_get_execution_task_pool (GstVideoAggregator * vagg);
+GstTaskPool * gst_video_aggregator_get_execution_task_pool (GstVideoAggregator * vagg) G_GNUC_WARN_UNUSED_RESULT;
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVideoAggregator, gst_object_unref)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVideoAggregatorPad, gst_object_unref)

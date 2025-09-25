@@ -71,10 +71,10 @@ struct _GstGLDisplayEGLDeviceClass
 };
 
 GST_GL_API
-GstGLDisplayEGLDevice *gst_gl_display_egl_device_new (guint device_index);
+GstGLDisplayEGLDevice *gst_gl_display_egl_device_new (guint device_index) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_GL_API
-GstGLDisplayEGLDevice *gst_gl_display_egl_device_new_with_egl_device (gpointer device);
+GstGLDisplayEGLDevice *gst_gl_display_egl_device_new_with_egl_device (gpointer device) G_GNUC_WARN_UNUSED_RESULT;
 
 
 G_END_DECLS

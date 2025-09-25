@@ -77,10 +77,10 @@ GST_VIDEO_API
 void                 gst_video_info_dma_drm_init          (GstVideoInfoDmaDrm * drm_info);
 
 GST_VIDEO_API
-GstVideoInfoDmaDrm * gst_video_info_dma_drm_new           (void);
+GstVideoInfoDmaDrm * gst_video_info_dma_drm_new           (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
-GstCaps *            gst_video_info_dma_drm_to_caps       (const GstVideoInfoDmaDrm * drm_info);
+GstCaps *            gst_video_info_dma_drm_to_caps       (const GstVideoInfoDmaDrm * drm_info) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
 gboolean             gst_video_info_dma_drm_from_caps     (GstVideoInfoDmaDrm * drm_info,
@@ -97,7 +97,7 @@ gboolean             gst_video_info_dma_drm_to_video_info (const GstVideoInfoDma
                                                            GstVideoInfo * info);
 
 GST_VIDEO_API
-GstVideoInfoDmaDrm * gst_video_info_dma_drm_new_from_caps (const GstCaps * caps);
+GstVideoInfoDmaDrm * gst_video_info_dma_drm_new_from_caps (const GstCaps * caps) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
 gboolean             gst_video_is_dma_drm_caps            (const GstCaps * caps);

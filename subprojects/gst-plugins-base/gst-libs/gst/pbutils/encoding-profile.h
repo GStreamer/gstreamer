@@ -139,7 +139,7 @@ void            gst_encoding_profile_set_description    (GstEncodingProfile *pro
                                                          const gchar *description);
 
 GST_PBUTILS_API
-GstCaps *       gst_encoding_profile_get_format         (GstEncodingProfile *profile);
+GstCaps *       gst_encoding_profile_get_format         (GstEncodingProfile *profile) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
 void            gst_encoding_profile_set_format         (GstEncodingProfile *profile,
@@ -181,7 +181,7 @@ void            gst_encoding_profile_set_preset_name    (GstEncodingProfile * pr
                                                          const gchar * preset_name);
 
 GST_PBUTILS_API
-GstCaps *       gst_encoding_profile_get_restriction    (GstEncodingProfile *profile);
+GstCaps *       gst_encoding_profile_get_restriction    (GstEncodingProfile *profile) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
 void            gst_encoding_profile_set_restriction    (GstEncodingProfile *profile,
@@ -192,7 +192,7 @@ gboolean        gst_encoding_profile_is_equal           (GstEncodingProfile *a,
                                                          GstEncodingProfile *b);
 
 GST_PBUTILS_API
-GstCaps *       gst_encoding_profile_get_input_caps     (GstEncodingProfile *profile);
+GstCaps *       gst_encoding_profile_get_input_caps     (GstEncodingProfile *profile) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
 const gchar *   gst_encoding_profile_get_type_nick      (GstEncodingProfile *profile);
@@ -229,7 +229,7 @@ GST_PBUTILS_API
 GstEncodingContainerProfile *  gst_encoding_container_profile_new (const gchar *name,
                                                                    const gchar *description,
                                                                    GstCaps *format,
-                                                                   const gchar *preset);
+                                                                   const gchar *preset) G_GNUC_WARN_UNUSED_RESULT;
 
 
 /* Individual stream encodingprofile API */
@@ -238,13 +238,13 @@ GST_PBUTILS_API
 GstEncodingVideoProfile * gst_encoding_video_profile_new (GstCaps *format,
                                                           const gchar *preset,
                                                           GstCaps *restriction,
-                                                          guint presence);
+                                                          guint presence) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
 GstEncodingAudioProfile * gst_encoding_audio_profile_new (GstCaps *format,
                                                           const gchar *preset,
                                                           GstCaps *restriction,
-                                                          guint presence);
+                                                          guint presence) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
 guint    gst_encoding_video_profile_get_pass              (GstEncodingVideoProfile *prof);
@@ -264,20 +264,20 @@ GST_PBUTILS_API
 GstEncodingProfile * gst_encoding_profile_from_discoverer (GstDiscovererInfo *info);
 
 GST_PBUTILS_API
-GstEncodingProfile * gst_encoding_profile_copy            (GstEncodingProfile *self);
+GstEncodingProfile * gst_encoding_profile_copy            (GstEncodingProfile *self) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
 GstEncodingProfile * gst_encoding_profile_from_string     (const gchar *string);
 
 GST_PBUTILS_API
-gchar * gst_encoding_profile_to_string     (GstEncodingProfile *profile);
+gchar * gst_encoding_profile_to_string     (GstEncodingProfile *profile) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
 void gst_encoding_profile_set_element_properties          (GstEncodingProfile *self,
                                                            GstStructure *element_properties);
 
 GST_PBUTILS_API
-GstStructure *gst_encoding_profile_get_element_properties (GstEncodingProfile *self);
+GstStructure *gst_encoding_profile_get_element_properties (GstEncodingProfile *self) G_GNUC_WARN_UNUSED_RESULT;
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstEncodingAudioProfile, gst_object_unref)
 

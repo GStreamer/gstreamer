@@ -73,7 +73,7 @@ GstEGLImage *             gst_egl_image_new_wrapped             (GstGLContext * 
                                                                  gpointer image,
                                                                  GstGLFormat format,
                                                                  gpointer user_data,
-                                                                 GstEGLImageDestroyNotify user_data_destroy);
+                                                                 GstEGLImageDestroyNotify user_data_destroy) G_GNUC_WARN_UNUSED_RESULT;
 GST_GL_API
 gpointer                gst_egl_image_get_image                 (GstEGLImage * image);
 

@@ -69,10 +69,10 @@ struct _GstGLDisplayX11Class
 };
 
 GST_GL_API
-GstGLDisplayX11 *gst_gl_display_x11_new (const gchar * name);
+GstGLDisplayX11 *gst_gl_display_x11_new (const gchar * name) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_GL_API
-GstGLDisplayX11 *gst_gl_display_x11_new_with_display (Display *display);
+GstGLDisplayX11 *gst_gl_display_x11_new_with_display (Display *display) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 

@@ -89,7 +89,7 @@ GST_GL_API
 GstCaps *     gst_gl_upload_get_input_template_caps (void);
 
 GST_GL_API
-GstGLUpload * gst_gl_upload_new                    (GstGLContext * context);
+GstGLUpload * gst_gl_upload_new                    (GstGLContext * context) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_GL_API
 void          gst_gl_upload_set_context            (GstGLUpload * upload,
@@ -100,7 +100,7 @@ GstCaps *     gst_gl_upload_transform_caps         (GstGLUpload * upload,
                                                     GstGLContext * context,
                                                     GstPadDirection direction,
                                                     GstCaps * caps,
-                                                    GstCaps * filter);
+                                                    GstCaps * filter) G_GNUC_WARN_UNUSED_RESULT;
 GST_GL_API
 gboolean      gst_gl_upload_set_caps               (GstGLUpload * upload,
                                                     GstCaps * in_caps,
@@ -123,7 +123,7 @@ GST_GL_API
 GstCaps *     gst_gl_upload_fixate_caps            (GstGLUpload * upload,
                                                     GstPadDirection direction,
                                                     GstCaps * caps,
-                                                    GstCaps * othercaps);
+                                                    GstCaps * othercaps) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 

@@ -448,19 +448,19 @@ void     gst_video_decoder_get_allocator (GstVideoDecoder *decoder,
                                           GstAllocationParams *params);
 
 GST_VIDEO_API
-GstBufferPool *gst_video_decoder_get_buffer_pool (GstVideoDecoder *decoder);
+GstBufferPool *gst_video_decoder_get_buffer_pool (GstVideoDecoder *decoder) G_GNUC_WARN_UNUSED_RESULT;
 
 /* Object methods */
 
 GST_VIDEO_API
 GstVideoCodecFrame *gst_video_decoder_get_frame        (GstVideoDecoder *decoder,
-						        int frame_number);
+						        int frame_number) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
-GstVideoCodecFrame *gst_video_decoder_get_oldest_frame (GstVideoDecoder *decoder);
+GstVideoCodecFrame *gst_video_decoder_get_oldest_frame (GstVideoDecoder *decoder) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
-GList *             gst_video_decoder_get_frames       (GstVideoDecoder *decoder);
+GList *             gst_video_decoder_get_frames       (GstVideoDecoder *decoder) G_GNUC_WARN_UNUSED_RESULT;
 
 /* Parsing related methods */
 
@@ -479,7 +479,7 @@ GST_VIDEO_API
 gsize          gst_video_decoder_get_pending_frame_size (GstVideoDecoder *decoder);
 
 GST_VIDEO_API
-GstBuffer     *gst_video_decoder_allocate_output_buffer (GstVideoDecoder * decoder);
+GstBuffer     *gst_video_decoder_allocate_output_buffer (GstVideoDecoder * decoder) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
 GstFlowReturn  gst_video_decoder_allocate_output_frame_with_params (GstVideoDecoder *decoder,
@@ -493,15 +493,15 @@ GstFlowReturn  gst_video_decoder_allocate_output_frame  (GstVideoDecoder *decode
 GST_VIDEO_API
 GstVideoCodecState *gst_video_decoder_set_output_state (GstVideoDecoder *decoder,
 							GstVideoFormat fmt, guint width, guint height,
-							GstVideoCodecState *reference);
+							GstVideoCodecState *reference) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
 GstVideoCodecState *gst_video_decoder_set_interlaced_output_state (GstVideoDecoder *decoder,
                                                                    GstVideoFormat fmt, GstVideoInterlaceMode interlace_mode,
-                                                                   guint width, guint height, GstVideoCodecState *reference);
+                                                                   guint width, guint height, GstVideoCodecState *reference) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
-GstVideoCodecState *gst_video_decoder_get_output_state (GstVideoDecoder *decoder);
+GstVideoCodecState *gst_video_decoder_get_output_state (GstVideoDecoder *decoder) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
 gboolean         gst_video_decoder_negotiate           (GstVideoDecoder * decoder);
@@ -544,7 +544,7 @@ void             gst_video_decoder_merge_tags (GstVideoDecoder *decoder,
 GST_VIDEO_API
 GstCaps *        gst_video_decoder_proxy_getcaps (GstVideoDecoder * decoder,
 						  GstCaps         * caps,
-                                                  GstCaps         * filter);
+                                                  GstCaps         * filter) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
 void             gst_video_decoder_set_use_default_pad_acceptcaps (GstVideoDecoder * decoder,

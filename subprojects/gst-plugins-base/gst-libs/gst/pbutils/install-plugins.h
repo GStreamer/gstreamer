@@ -99,10 +99,10 @@ typedef enum {
 typedef struct _GstInstallPluginsContext GstInstallPluginsContext;
 
 GST_PBUTILS_API
-GstInstallPluginsContext * gst_install_plugins_context_new (void);
+GstInstallPluginsContext * gst_install_plugins_context_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
-GstInstallPluginsContext * gst_install_plugins_context_copy (GstInstallPluginsContext * ctx);
+GstInstallPluginsContext * gst_install_plugins_context_copy (GstInstallPluginsContext * ctx) G_GNUC_WARN_UNUSED_RESULT;
 GST_PBUTILS_API
 void   gst_install_plugins_context_free    (GstInstallPluginsContext * ctx);
 

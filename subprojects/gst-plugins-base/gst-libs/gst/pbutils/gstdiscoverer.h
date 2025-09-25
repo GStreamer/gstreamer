@@ -61,13 +61,13 @@ GType gst_discoverer_stream_info_get_type (void);
 #define gst_discoverer_stream_info_unref(info) (g_object_unref((GObject*) info))
 
 GST_PBUTILS_API
-GstDiscovererStreamInfo* gst_discoverer_stream_info_get_previous(GstDiscovererStreamInfo* info);
+GstDiscovererStreamInfo* gst_discoverer_stream_info_get_previous(GstDiscovererStreamInfo* info) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
-GstDiscovererStreamInfo* gst_discoverer_stream_info_get_next(GstDiscovererStreamInfo* info);
+GstDiscovererStreamInfo* gst_discoverer_stream_info_get_next(GstDiscovererStreamInfo* info) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
-GstCaps*                 gst_discoverer_stream_info_get_caps(GstDiscovererStreamInfo* info);
+GstCaps*                 gst_discoverer_stream_info_get_caps(GstDiscovererStreamInfo* info) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
 const GstTagList*        gst_discoverer_stream_info_get_tags(GstDiscovererStreamInfo* info);
@@ -105,7 +105,7 @@ GST_PBUTILS_API
 GType gst_discoverer_container_info_get_type (void);
 
 GST_PBUTILS_API
-GList *gst_discoverer_container_info_get_streams(GstDiscovererContainerInfo *info);
+GList *gst_discoverer_container_info_get_streams(GstDiscovererContainerInfo *info) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
 const GstTagList* gst_discoverer_container_info_get_tags(const GstDiscovererContainerInfo *info);
@@ -286,7 +286,7 @@ GType gst_discoverer_info_get_type (void);
 #define gst_discoverer_info_ref(info) (g_object_ref((GObject*)info))
 
 GST_PBUTILS_API
-GstDiscovererInfo*        gst_discoverer_info_copy (GstDiscovererInfo * ptr);
+GstDiscovererInfo*        gst_discoverer_info_copy (GstDiscovererInfo * ptr) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
 const gchar*              gst_discoverer_info_get_uri(const GstDiscovererInfo* info);
@@ -295,10 +295,10 @@ GST_PBUTILS_API
 GstDiscovererResult       gst_discoverer_info_get_result(const GstDiscovererInfo* info);
 
 GST_PBUTILS_API
-GstDiscovererStreamInfo*  gst_discoverer_info_get_stream_info(GstDiscovererInfo* info);
+GstDiscovererStreamInfo*  gst_discoverer_info_get_stream_info(GstDiscovererInfo* info) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
-GList*                    gst_discoverer_info_get_stream_list(GstDiscovererInfo* info);
+GList*                    gst_discoverer_info_get_stream_list(GstDiscovererInfo* info) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
 GstClockTime              gst_discoverer_info_get_duration(const GstDiscovererInfo* info);
@@ -322,23 +322,23 @@ const gchar**             gst_discoverer_info_get_missing_elements_installer_det
 
 GST_PBUTILS_API
 GList *                   gst_discoverer_info_get_streams (GstDiscovererInfo *info,
-							   GType streamtype);
+							   GType streamtype) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
-GList *                   gst_discoverer_info_get_audio_streams (GstDiscovererInfo *info);
+GList *                   gst_discoverer_info_get_audio_streams (GstDiscovererInfo *info) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
-GList *                   gst_discoverer_info_get_video_streams (GstDiscovererInfo *info);
+GList *                   gst_discoverer_info_get_video_streams (GstDiscovererInfo *info) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
-GList *                   gst_discoverer_info_get_subtitle_streams (GstDiscovererInfo *info);
+GList *                   gst_discoverer_info_get_subtitle_streams (GstDiscovererInfo *info) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
-GList *                   gst_discoverer_info_get_container_streams (GstDiscovererInfo *info);
+GList *                   gst_discoverer_info_get_container_streams (GstDiscovererInfo *info) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
 GVariant *                gst_discoverer_info_to_variant (GstDiscovererInfo *info,
-                                                          GstDiscovererSerializeFlags flags);
+                                                          GstDiscovererSerializeFlags flags) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
 GstDiscovererInfo *       gst_discoverer_info_from_variant (GVariant *variant);
@@ -408,7 +408,7 @@ GST_PBUTILS_API
 GType          gst_discoverer_get_type (void);
 
 GST_PBUTILS_API
-GstDiscoverer *gst_discoverer_new (GstClockTime timeout, GError **err);
+GstDiscoverer *gst_discoverer_new (GstClockTime timeout, GError **err) G_GNUC_WARN_UNUSED_RESULT;
 
 /* Asynchronous API */
 
@@ -428,7 +428,7 @@ GST_PBUTILS_API
 GstDiscovererInfo *
 gst_discoverer_discover_uri (GstDiscoverer * discoverer,
 			     const gchar * uri,
-			     GError ** err);
+			     GError ** err) G_GNUC_WARN_UNUSED_RESULT;
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstDiscoverer, gst_object_unref)
 

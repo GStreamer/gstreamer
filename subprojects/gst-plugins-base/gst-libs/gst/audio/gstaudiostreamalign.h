@@ -44,9 +44,9 @@ GType                   gst_audio_stream_align_get_type                  (void);
 GST_AUDIO_API
 GstAudioStreamAlign *   gst_audio_stream_align_new                       (gint rate,
                                                                           GstClockTime alignment_threshold,
-                                                                          GstClockTime discont_wait);
+                                                                          GstClockTime discont_wait) G_GNUC_WARN_UNUSED_RESULT;
 GST_AUDIO_API
-GstAudioStreamAlign *   gst_audio_stream_align_copy                      (const GstAudioStreamAlign * align);
+GstAudioStreamAlign *   gst_audio_stream_align_copy                      (const GstAudioStreamAlign * align) G_GNUC_WARN_UNUSED_RESULT;
 GST_AUDIO_API
 void                    gst_audio_stream_align_free                      (GstAudioStreamAlign * align);
 

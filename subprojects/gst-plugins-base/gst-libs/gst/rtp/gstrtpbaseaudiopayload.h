@@ -104,7 +104,7 @@ void            gst_rtp_base_audio_payload_set_samplebits_options (GstRTPBaseAud
 /* get the internal adapter */
 
 GST_RTP_API
-GstAdapter*     gst_rtp_base_audio_payload_get_adapter            (GstRTPBaseAudioPayload *rtpbaseaudiopayload);
+GstAdapter*     gst_rtp_base_audio_payload_get_adapter            (GstRTPBaseAudioPayload *rtpbaseaudiopayload) G_GNUC_WARN_UNUSED_RESULT;
 
 /* push and flushing data */
 

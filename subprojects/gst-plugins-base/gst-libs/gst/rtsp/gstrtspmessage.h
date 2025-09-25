@@ -317,12 +317,12 @@ struct _GstRTSPAuthParam {
 };
 
 GST_RTSP_API
-GstRTSPAuthParam *       gst_rtsp_auth_param_copy (GstRTSPAuthParam * param);
+GstRTSPAuthParam *       gst_rtsp_auth_param_copy (GstRTSPAuthParam * param) G_GNUC_WARN_UNUSED_RESULT;
 GST_RTSP_API
 void                     gst_rtsp_auth_param_free (GstRTSPAuthParam * param);
 
 GST_RTSP_API
-GstRTSPAuthCredential ** gst_rtsp_message_parse_auth_credentials (GstRTSPMessage * msg, GstRTSPHeaderField field);
+GstRTSPAuthCredential ** gst_rtsp_message_parse_auth_credentials (GstRTSPMessage * msg, GstRTSPHeaderField field) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_API
 void                     gst_rtsp_auth_credentials_free (GstRTSPAuthCredential ** credentials);

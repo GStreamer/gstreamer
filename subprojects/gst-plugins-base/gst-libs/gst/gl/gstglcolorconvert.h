@@ -134,7 +134,7 @@ struct _GstGLColorConvertClass
     GST_VIDEO_DMA_DRM_CAPS_MAKE
 
 GST_GL_API
-GstGLColorConvert * gst_gl_color_convert_new (GstGLContext * context);
+GstGLColorConvert * gst_gl_color_convert_new (GstGLContext * context) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_GL_API
 GstCaps *   gst_gl_color_convert_transform_caps (GstGLContext * context,
@@ -155,7 +155,7 @@ gboolean    gst_gl_color_convert_decide_allocation (GstGLColorConvert   * conver
                                                     GstQuery            * query);
 
 GST_GL_API
-GstBuffer * gst_gl_color_convert_perform    (GstGLColorConvert * convert, GstBuffer * inbuf);
+GstBuffer * gst_gl_color_convert_perform    (GstGLColorConvert * convert, GstBuffer * inbuf) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_GL_API
 gchar *     gst_gl_color_convert_swizzle_shader_string (GstGLContext * context);

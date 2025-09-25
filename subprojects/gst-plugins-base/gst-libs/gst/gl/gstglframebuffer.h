@@ -79,7 +79,7 @@ struct _GstGLFramebufferClass
 };
 
 GST_GL_API
-GstGLFramebuffer *      gst_gl_framebuffer_new                      (GstGLContext *context);
+GstGLFramebuffer *      gst_gl_framebuffer_new                      (GstGLContext *context) G_GNUC_WARN_UNUSED_RESULT;
 GST_GL_API
 GstGLFramebuffer *      gst_gl_framebuffer_new_with_default_depth   (GstGLContext *context,
                                                                      guint width,

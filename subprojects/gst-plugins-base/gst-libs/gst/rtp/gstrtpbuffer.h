@@ -130,7 +130,7 @@ gboolean        gst_rtp_buffer_get_extension_data    (GstRTPBuffer *rtp, guint16
                                                       gpointer *data, guint *wordlen);
 
 GST_RTP_API
-GBytes*         gst_rtp_buffer_get_extension_bytes   (GstRTPBuffer *rtp, guint16 *bits);
+GBytes*         gst_rtp_buffer_get_extension_bytes   (GstRTPBuffer *rtp, guint16 *bits) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTP_API
 gboolean        gst_rtp_buffer_set_extension_data    (GstRTPBuffer *rtp, guint16 bits, guint16 length);
@@ -178,10 +178,10 @@ GST_RTP_API
 void            gst_rtp_buffer_set_timestamp         (GstRTPBuffer *rtp, guint32 timestamp);
 
 GST_RTP_API
-GstBuffer*      gst_rtp_buffer_get_payload_buffer    (GstRTPBuffer *rtp);
+GstBuffer*      gst_rtp_buffer_get_payload_buffer    (GstRTPBuffer *rtp) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTP_API
-GstBuffer*      gst_rtp_buffer_get_payload_subbuffer (GstRTPBuffer *rtp, guint offset, guint len);
+GstBuffer*      gst_rtp_buffer_get_payload_subbuffer (GstRTPBuffer *rtp, guint offset, guint len) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTP_API
 guint           gst_rtp_buffer_get_payload_len       (GstRTPBuffer *rtp);
@@ -190,7 +190,7 @@ GST_RTP_API
 gpointer        gst_rtp_buffer_get_payload           (GstRTPBuffer *rtp);
 
 GST_RTP_API
-GBytes*         gst_rtp_buffer_get_payload_bytes     (GstRTPBuffer *rtp);
+GBytes*         gst_rtp_buffer_get_payload_bytes     (GstRTPBuffer *rtp) G_GNUC_WARN_UNUSED_RESULT;
 
 /* some helpers */
 

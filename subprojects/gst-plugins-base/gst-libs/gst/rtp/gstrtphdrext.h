@@ -275,7 +275,7 @@ GST_RTP_API
 GstRTPHeaderExtension * gst_rtp_header_extension_create_from_uri (const gchar * uri);
 
 GST_RTP_API
-gchar *	            gst_rtp_header_extension_get_sdp_caps_field_name (GstRTPHeaderExtension * ext);
+gchar *	            gst_rtp_header_extension_get_sdp_caps_field_name (GstRTPHeaderExtension * ext) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTP_API
 void	            gst_rtp_header_extension_set_direction (GstRTPHeaderExtension * ext,

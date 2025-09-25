@@ -111,16 +111,16 @@ struct _GstGLViewConvertClass
 GST_GL_API
 GType gst_gl_view_convert_get_type (void);
 GST_GL_API
-GstGLViewConvert * gst_gl_view_convert_new (void);
+GstGLViewConvert * gst_gl_view_convert_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_GL_API
 gboolean  gst_gl_view_convert_set_caps (GstGLViewConvert * viewconvert, GstCaps * in_caps, GstCaps * out_caps);
 GST_GL_API
 GstCaps * gst_gl_view_convert_transform_caps (GstGLViewConvert * viewconvert,
-    GstPadDirection direction, GstCaps * caps, GstCaps * filter);
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter) G_GNUC_WARN_UNUSED_RESULT;
 GST_GL_API
 GstCaps * gst_gl_view_convert_fixate_caps (GstGLViewConvert *viewconvert,
-    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps) G_GNUC_WARN_UNUSED_RESULT;
 GST_GL_API
 GstFlowReturn gst_gl_view_convert_submit_input_buffer (GstGLViewConvert *viewconvert,
     gboolean is_discont, GstBuffer * input);
@@ -129,7 +129,7 @@ GstFlowReturn gst_gl_view_convert_get_output (GstGLViewConvert *viewconvert,
     GstBuffer ** outbuf_ptr);
 
 GST_GL_API
-GstBuffer * gst_gl_view_convert_perform (GstGLViewConvert * viewconvert, GstBuffer *inbuf);
+GstBuffer * gst_gl_view_convert_perform (GstGLViewConvert * viewconvert, GstBuffer *inbuf) G_GNUC_WARN_UNUSED_RESULT;
 GST_GL_API
 void gst_gl_view_convert_reset (GstGLViewConvert * viewconvert);
 GST_GL_API

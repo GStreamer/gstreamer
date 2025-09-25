@@ -196,7 +196,7 @@ GST_GL_API
 GType gst_gl_base_mixer_get_type(void);
 
 GST_GL_API
-GstGLContext *      gst_gl_base_mixer_get_gl_context        (GstGLBaseMixer * mix);
+GstGLContext *      gst_gl_base_mixer_get_gl_context        (GstGLBaseMixer * mix) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 #endif /* __GST_GL_BASE_MIXER_H__ */

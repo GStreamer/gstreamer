@@ -179,7 +179,7 @@ GstFlowReturn   gst_rtp_base_payload_push_list          (GstRTPBasePayload *payl
 GST_RTP_API
 GstBuffer *     gst_rtp_base_payload_allocate_output_buffer (GstRTPBasePayload * payload,
                                                              guint payload_len, guint8 pad_len,
-                                                             guint8 csrc_count);
+                                                             guint8 csrc_count) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTP_API
 void            gst_rtp_base_payload_set_source_info_enabled (GstRTPBasePayload * payload,

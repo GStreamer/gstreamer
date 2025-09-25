@@ -268,10 +268,10 @@ GstDsdPlaneOffsetMeta * gst_buffer_add_dsd_plane_offset_meta (GstBuffer *buffer,
                                                               gsize offsets[]);
 
 GST_AUDIO_API
-GstDsdInfo *  gst_dsd_info_new           (void);
+GstDsdInfo *  gst_dsd_info_new           (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_AUDIO_API
-GstDsdInfo *  gst_dsd_info_new_from_caps (const GstCaps * caps);
+GstDsdInfo *  gst_dsd_info_new_from_caps (const GstCaps * caps) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_AUDIO_API
 void          gst_dsd_info_init          (GstDsdInfo * info);
@@ -284,7 +284,7 @@ void          gst_dsd_info_set_format    (GstDsdInfo * info,
                                           const GstAudioChannelPosition * positions);
 
 GST_AUDIO_API
-GstDsdInfo *  gst_dsd_info_copy          (const GstDsdInfo * info);
+GstDsdInfo *  gst_dsd_info_copy          (const GstDsdInfo * info) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_AUDIO_API
 void          gst_dsd_info_free          (GstDsdInfo * info);
@@ -294,7 +294,7 @@ gboolean      gst_dsd_info_from_caps     (GstDsdInfo *info,
                                           const GstCaps *caps);
 
 GST_AUDIO_API
-GstCaps *     gst_dsd_info_to_caps       (const GstDsdInfo *info);
+GstCaps *     gst_dsd_info_to_caps       (const GstDsdInfo *info) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_AUDIO_API
 gboolean      gst_dsd_info_is_equal      (const GstDsdInfo *info,

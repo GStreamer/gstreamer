@@ -102,13 +102,13 @@ GST_RTSP_API
 void                 gst_rtsp_connection_set_tls_database (GstRTSPConnection * conn, GTlsDatabase * database);
 
 GST_RTSP_API
-GTlsDatabase *       gst_rtsp_connection_get_tls_database (GstRTSPConnection * conn);
+GTlsDatabase *       gst_rtsp_connection_get_tls_database (GstRTSPConnection * conn) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_API
 void                 gst_rtsp_connection_set_tls_interaction (GstRTSPConnection * conn, GTlsInteraction * interaction);
 
 GST_RTSP_API
-GTlsInteraction *    gst_rtsp_connection_get_tls_interaction (GstRTSPConnection * conn);
+GTlsInteraction *    gst_rtsp_connection_get_tls_interaction (GstRTSPConnection * conn) G_GNUC_WARN_UNUSED_RESULT;
 
 typedef gboolean (*GstRTSPConnectionAcceptCertificateFunc) (GTlsConnection *conn,
                                                             GTlsCertificate *peer_cert,

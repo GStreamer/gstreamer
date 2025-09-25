@@ -179,7 +179,7 @@ struct _GstGLWindowClass {
 };
 
 GST_GL_API
-GstGLWindow * gst_gl_window_new  (GstGLDisplay *display);
+GstGLWindow * gst_gl_window_new  (GstGLDisplay *display) G_GNUC_WARN_UNUSED_RESULT;
 
 /* callbacks */
 GST_GL_API
@@ -270,7 +270,7 @@ GST_GL_API
 void     gst_gl_window_resize               (GstGLWindow *window, guint width, guint height);
 
 GST_GL_API
-GstGLContext * gst_gl_window_get_context    (GstGLWindow *window);
+GstGLContext * gst_gl_window_get_context    (GstGLWindow *window) G_GNUC_WARN_UNUSED_RESULT;
 GST_GL_API
 guintptr       gst_gl_window_get_display    (GstGLWindow *window);
 

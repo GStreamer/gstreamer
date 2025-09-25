@@ -74,10 +74,10 @@ struct _GstGLDisplayWaylandClass
 };
 
 GST_GL_API
-GstGLDisplayWayland *gst_gl_display_wayland_new (const gchar * name);
+GstGLDisplayWayland *gst_gl_display_wayland_new (const gchar * name) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_GL_API
-GstGLDisplayWayland *gst_gl_display_wayland_new_with_display (struct wl_display *display);
+GstGLDisplayWayland *gst_gl_display_wayland_new_with_display (struct wl_display *display) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 

@@ -128,10 +128,10 @@ GST_VIDEO_API
 GstVideoOverlayRectangle *   gst_video_overlay_rectangle_new_raw  (GstBuffer * pixels,
                                                                    gint render_x, gint render_y,
                                                                    guint render_width, guint render_height,
-                                                                   GstVideoOverlayFormatFlags flags);
+                                                                   GstVideoOverlayFormatFlags flags) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
-GstVideoOverlayRectangle *   gst_video_overlay_rectangle_copy     (GstVideoOverlayRectangle * rectangle);
+GstVideoOverlayRectangle *   gst_video_overlay_rectangle_copy     (GstVideoOverlayRectangle * rectangle) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
 guint                        gst_video_overlay_rectangle_get_seqnum (GstVideoOverlayRectangle  * rectangle);
@@ -236,13 +236,13 @@ GST_VIDEO_API
 GType                        gst_video_overlay_composition_get_type (void);
 
 GST_VIDEO_API
-GstVideoOverlayComposition * gst_video_overlay_composition_copy          (GstVideoOverlayComposition * comp);
+GstVideoOverlayComposition * gst_video_overlay_composition_copy          (GstVideoOverlayComposition * comp) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
-GstVideoOverlayComposition * gst_video_overlay_composition_make_writable (GstVideoOverlayComposition * comp);
+GstVideoOverlayComposition * gst_video_overlay_composition_make_writable (GstVideoOverlayComposition * comp) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
-GstVideoOverlayComposition * gst_video_overlay_composition_new           (GstVideoOverlayRectangle * rectangle);
+GstVideoOverlayComposition * gst_video_overlay_composition_new           (GstVideoOverlayRectangle * rectangle) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
 void                         gst_video_overlay_composition_add_rectangle (GstVideoOverlayComposition * comp,

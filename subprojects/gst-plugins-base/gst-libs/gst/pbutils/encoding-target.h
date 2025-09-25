@@ -125,7 +125,7 @@ GST_PBUTILS_API
 GstEncodingTarget *     gst_encoding_target_new                 (const gchar *name,
                                                                  const gchar *category,
                                                                  const gchar *description,
-                                                                 const GList *profiles);
+                                                                 const GList *profiles) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
 const gchar *           gst_encoding_target_get_name            (GstEncodingTarget *target);
@@ -144,7 +144,7 @@ const GList *           gst_encoding_target_get_profiles        (GstEncodingTarg
 
 GST_PBUTILS_API
 GstEncodingProfile *    gst_encoding_target_get_profile         (GstEncodingTarget *target,
-                                                                 const gchar *name);
+                                                                 const gchar *name) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_PBUTILS_API
 gboolean                gst_encoding_target_add_profile         (GstEncodingTarget *target,

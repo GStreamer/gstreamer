@@ -99,7 +99,7 @@ GST_ALLOCATORS_API
 GType          gst_dmabuf_allocator_get_type (void);
 
 GST_ALLOCATORS_API
-GstAllocator * gst_dmabuf_allocator_new (void);
+GstAllocator * gst_dmabuf_allocator_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_ALLOCATORS_API
 GstMemory    * gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size);

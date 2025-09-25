@@ -131,7 +131,7 @@ GstGLRenderbufferAllocationParams *     gst_gl_renderbuffer_allocation_params_ne
                                                                                              const GstAllocationParams * alloc_params,
                                                                                              GstGLFormat renderbuffer_format,
                                                                                              guint width,
-                                                                                             guint height);
+                                                                                             guint height) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_GL_API
 GstGLRenderbufferAllocationParams *     gst_gl_renderbuffer_allocation_params_new_wrapped   (GstGLContext * context,
@@ -141,7 +141,7 @@ GstGLRenderbufferAllocationParams *     gst_gl_renderbuffer_allocation_params_ne
                                                                                              guint height,
                                                                                              gpointer gl_handle,
                                                                                              gpointer user_data,
-                                                                                             GDestroyNotify notify);
+                                                                                             GDestroyNotify notify) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * GST_TYPE_GL_RENDERBUFFER:

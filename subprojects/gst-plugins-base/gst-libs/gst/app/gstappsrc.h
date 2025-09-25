@@ -142,7 +142,7 @@ GST_APP_API
 void             gst_app_src_set_caps                (GstAppSrc *appsrc, const GstCaps *caps);
 
 GST_APP_API
-GstCaps*         gst_app_src_get_caps                (GstAppSrc *appsrc);
+GstCaps*         gst_app_src_get_caps                (GstAppSrc *appsrc) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_APP_API
 void             gst_app_src_set_size                (GstAppSrc *appsrc, gint64 size);

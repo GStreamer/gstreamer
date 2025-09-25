@@ -54,13 +54,13 @@ struct _GstGLShaderClass {
 };
 
 GST_GL_API
-GstGLShader * gst_gl_shader_new                     (GstGLContext *context);
+GstGLShader * gst_gl_shader_new                     (GstGLContext *context) G_GNUC_WARN_UNUSED_RESULT;
 GST_GL_API
-GstGLShader * gst_gl_shader_new_with_stages         (GstGLContext * context, GError ** error, ...);
+GstGLShader * gst_gl_shader_new_with_stages         (GstGLContext * context, GError ** error, ...) G_GNUC_WARN_UNUSED_RESULT;
 GST_GL_API
-GstGLShader * gst_gl_shader_new_link_with_stages    (GstGLContext * context, GError ** error, ...);
+GstGLShader * gst_gl_shader_new_link_with_stages    (GstGLContext * context, GError ** error, ...) G_GNUC_WARN_UNUSED_RESULT;
 GST_GL_API
-GstGLShader * gst_gl_shader_new_default             (GstGLContext * context, GError ** error);
+GstGLShader * gst_gl_shader_new_default             (GstGLContext * context, GError ** error) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_GL_API
 gboolean gst_gl_shader_attach                       (GstGLShader * shader, GstGLSLStage * stage);

@@ -89,7 +89,7 @@ GstGLBufferAllocationParams *   gst_gl_buffer_allocation_params_new     (GstGLCo
                                                                          gsize alloc_size,
                                                                          const GstAllocationParams * alloc_params,
                                                                          guint gl_target,
-                                                                         guint gl_usage);
+                                                                         guint gl_usage) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * GstGLBufferAllocator:

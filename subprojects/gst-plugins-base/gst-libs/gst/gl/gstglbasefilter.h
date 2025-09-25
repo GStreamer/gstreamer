@@ -93,7 +93,7 @@ struct _GstGLBaseFilterClass
 GST_GL_API
 gboolean        gst_gl_base_filter_find_gl_context          (GstGLBaseFilter * filter);
 GST_GL_API
-GstGLContext *  gst_gl_base_filter_get_gl_context           (GstGLBaseFilter * filter);
+GstGLContext *  gst_gl_base_filter_get_gl_context           (GstGLBaseFilter * filter) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 

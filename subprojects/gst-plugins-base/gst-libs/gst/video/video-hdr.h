@@ -81,7 +81,7 @@ gboolean  gst_video_mastering_display_info_from_string  (GstVideoMasteringDispla
                                                          const gchar * mastering);
 
 GST_VIDEO_API
-gchar *   gst_video_mastering_display_info_to_string    (const GstVideoMasteringDisplayInfo * minfo);
+gchar *   gst_video_mastering_display_info_to_string    (const GstVideoMasteringDisplayInfo * minfo) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
 gboolean  gst_video_mastering_display_info_is_equal     (const GstVideoMasteringDisplayInfo * minfo,
@@ -123,7 +123,7 @@ gboolean  gst_video_content_light_level_from_string  (GstVideoContentLightLevel 
                                                       const gchar * level);
 
 GST_VIDEO_API
-gchar *   gst_video_content_light_level_to_string    (const GstVideoContentLightLevel * linfo);
+gchar *   gst_video_content_light_level_to_string    (const GstVideoContentLightLevel * linfo) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
 gboolean  gst_video_content_light_level_is_equal     (const GstVideoContentLightLevel * linfo,

@@ -240,7 +240,7 @@ gboolean                gst_gl_allocation_params_init       (GstGLAllocationPara
 
 /* free with gst_gl_allocation_params_free */
 GST_GL_API
-GstGLAllocationParams * gst_gl_allocation_params_copy       (GstGLAllocationParams * src);
+GstGLAllocationParams * gst_gl_allocation_params_copy       (GstGLAllocationParams * src) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_GL_API
 void                    gst_gl_allocation_params_free       (GstGLAllocationParams * params);

@@ -181,7 +181,7 @@ GST_RTSP_API
 GstRTSPResult      gst_rtsp_transport_parse        (const gchar *str, GstRTSPTransport *transport);
 
 GST_RTSP_API
-gchar*             gst_rtsp_transport_as_text      (GstRTSPTransport *transport);
+gchar*             gst_rtsp_transport_as_text      (GstRTSPTransport *transport) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_DEPRECATED_FOR(gst_rtsp_transport_get_media_type)
 GstRTSPResult      gst_rtsp_transport_get_mime     (GstRTSPTransMode trans, const gchar **mime);

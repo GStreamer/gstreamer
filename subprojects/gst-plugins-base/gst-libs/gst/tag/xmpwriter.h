@@ -65,7 +65,7 @@ void		gst_tag_xmp_writer_remove_all_schemas (GstTagXmpWriter * config);
 GST_TAG_API
 GstBuffer*	gst_tag_xmp_writer_tag_list_to_xmp_buffer 	(GstTagXmpWriter * config,
 							 const GstTagList * taglist,
-							 gboolean read_only);
+							 gboolean read_only) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 

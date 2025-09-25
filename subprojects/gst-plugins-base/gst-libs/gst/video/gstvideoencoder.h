@@ -303,29 +303,29 @@ GST_VIDEO_API
 GType                gst_video_encoder_get_type (void);
 
 GST_VIDEO_API
-GstVideoCodecState*  gst_video_encoder_get_output_state (GstVideoEncoder *encoder);
+GstVideoCodecState*  gst_video_encoder_get_output_state (GstVideoEncoder *encoder) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
 GstVideoCodecState*  gst_video_encoder_set_output_state (GstVideoEncoder * encoder,
 							 GstCaps * caps,
-							 GstVideoCodecState * reference);
+							 GstVideoCodecState * reference) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
 gboolean             gst_video_encoder_negotiate        (GstVideoEncoder * encoder);
 
 GST_VIDEO_API
 GstVideoCodecFrame*  gst_video_encoder_get_frame        (GstVideoEncoder *encoder,
-						         int frame_number);
+						         int frame_number) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
-GstVideoCodecFrame*  gst_video_encoder_get_oldest_frame (GstVideoEncoder *encoder);
+GstVideoCodecFrame*  gst_video_encoder_get_oldest_frame (GstVideoEncoder *encoder) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
-GList *              gst_video_encoder_get_frames       (GstVideoEncoder *encoder);
+GList *              gst_video_encoder_get_frames       (GstVideoEncoder *encoder) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
 GstBuffer *          gst_video_encoder_allocate_output_buffer (GstVideoEncoder * encoder,
-                                                               gsize size);
+                                                               gsize size) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
 GstFlowReturn        gst_video_encoder_allocate_output_frame  (GstVideoEncoder *encoder,
@@ -343,7 +343,7 @@ GstFlowReturn        gst_video_encoder_finish_subframe (GstVideoEncoder * encode
 GST_VIDEO_API
 GstCaps *            gst_video_encoder_proxy_getcaps (GstVideoEncoder * enc,
 						      GstCaps         * caps,
-                                                      GstCaps         * filter);
+                                                      GstCaps         * filter) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VIDEO_API
 void                 gst_video_encoder_set_latency (GstVideoEncoder *encoder,

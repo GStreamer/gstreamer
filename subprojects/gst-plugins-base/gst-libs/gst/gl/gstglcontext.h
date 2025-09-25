@@ -176,22 +176,22 @@ GST_GL_API
 GstGLContext * gst_gl_context_new_wrapped (GstGLDisplay *display,
                                            guintptr handle,
                                            GstGLPlatform context_type,
-                                           GstGLAPI available_apis);
+                                           GstGLAPI available_apis) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_GL_API
-GstStructure * gst_gl_context_get_config      (GstGLContext * context);
+GstStructure * gst_gl_context_get_config      (GstGLContext * context) G_GNUC_WARN_UNUSED_RESULT;
 GST_GL_API
 gboolean      gst_gl_context_request_config   (GstGLContext * context, GstStructure * gl_config);
 
 GST_GL_API
 gboolean      gst_gl_context_activate         (GstGLContext *context, gboolean activate);
 GST_GL_API
-GThread *     gst_gl_context_get_thread       (GstGLContext *context);
+GThread *     gst_gl_context_get_thread       (GstGLContext *context) G_GNUC_WARN_UNUSED_RESULT;
 GST_GL_API
 GstGLContext * gst_gl_context_get_current     (void);
 
 GST_GL_API
-GstGLDisplay * gst_gl_context_get_display (GstGLContext *context);
+GstGLDisplay * gst_gl_context_get_display (GstGLContext *context) G_GNUC_WARN_UNUSED_RESULT;
 GST_GL_API
 gpointer      gst_gl_context_get_proc_address (GstGLContext *context, const gchar *name);
 GST_GL_API
@@ -218,7 +218,7 @@ gpointer      gst_gl_context_get_proc_address_with_platform (GstGLPlatform conte
 GST_GL_API
 gboolean      gst_gl_context_set_window (GstGLContext *context, GstGLWindow *window);
 GST_GL_API
-GstGLWindow * gst_gl_context_get_window (GstGLContext *context);
+GstGLWindow * gst_gl_context_get_window (GstGLContext *context) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_GL_API
 void          gst_gl_context_get_gl_version (GstGLContext *context, gint *maj, gint *min);
