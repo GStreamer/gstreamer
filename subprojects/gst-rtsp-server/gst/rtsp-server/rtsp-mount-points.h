@@ -74,17 +74,17 @@ GType                 gst_rtsp_mount_points_get_type       (void);
 /* creating a mount points */
 
 GST_RTSP_SERVER_API
-GstRTSPMountPoints *  gst_rtsp_mount_points_new            (void);
+GstRTSPMountPoints *  gst_rtsp_mount_points_new            (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 gchar *               gst_rtsp_mount_points_make_path      (GstRTSPMountPoints *mounts,
-                                                            const GstRTSPUrl * url);
+                                                            const GstRTSPUrl * url) G_GNUC_WARN_UNUSED_RESULT;
 /* finding a media factory */
 
 GST_RTSP_SERVER_API
 GstRTSPMediaFactory * gst_rtsp_mount_points_match          (GstRTSPMountPoints *mounts,
                                                             const gchar *path,
-                                                            gint * matched);
+                                                            gint * matched) G_GNUC_WARN_UNUSED_RESULT;
 /* managing media to a mount point */
 
 GST_RTSP_SERVER_API

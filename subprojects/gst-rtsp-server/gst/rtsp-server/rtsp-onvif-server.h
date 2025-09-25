@@ -59,7 +59,7 @@ struct GstRTSPOnvifServer
 GST_RTSP_SERVER_API
 GType gst_rtsp_onvif_server_get_type (void);
 GST_RTSP_SERVER_API
-GstRTSPServer *gst_rtsp_onvif_server_new (void);
+GstRTSPServer *gst_rtsp_onvif_server_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 #define GST_RTSP_ONVIF_BACKCHANNEL_REQUIREMENT "www.onvif.org/ver20/backchannel"
 #define GST_RTSP_ONVIF_REPLAY_REQUIREMENT "onvif-replay"

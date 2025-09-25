@@ -121,7 +121,7 @@ GType                 gst_rtsp_session_pool_get_type          (void);
 /* creating a session pool */
 
 GST_RTSP_SERVER_API
-GstRTSPSessionPool *  gst_rtsp_session_pool_new               (void);
+GstRTSPSessionPool *  gst_rtsp_session_pool_new               (void) G_GNUC_WARN_UNUSED_RESULT;
 
 /* counting sessions */
 
@@ -137,11 +137,11 @@ guint                 gst_rtsp_session_pool_get_n_sessions    (GstRTSPSessionPoo
 /* managing sessions */
 
 GST_RTSP_SERVER_API
-GstRTSPSession *      gst_rtsp_session_pool_create            (GstRTSPSessionPool *pool);
+GstRTSPSession *      gst_rtsp_session_pool_create            (GstRTSPSessionPool *pool) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 GstRTSPSession *      gst_rtsp_session_pool_find              (GstRTSPSessionPool *pool,
-                                                               const gchar *sessionid);
+                                                               const gchar *sessionid) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 gboolean              gst_rtsp_session_pool_remove            (GstRTSPSessionPool *pool,
@@ -152,13 +152,13 @@ gboolean              gst_rtsp_session_pool_remove            (GstRTSPSessionPoo
 GST_RTSP_SERVER_API
 GList *               gst_rtsp_session_pool_filter            (GstRTSPSessionPool *pool,
                                                                GstRTSPSessionPoolFilterFunc func,
-                                                               gpointer user_data);
+                                                               gpointer user_data) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 guint                 gst_rtsp_session_pool_cleanup           (GstRTSPSessionPool *pool);
 
 GST_RTSP_SERVER_API
-GSource *             gst_rtsp_session_pool_create_watch      (GstRTSPSessionPool *pool);
+GSource *             gst_rtsp_session_pool_create_watch      (GstRTSPSessionPool *pool) G_GNUC_WARN_UNUSED_RESULT;
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPSessionPool, gst_object_unref)

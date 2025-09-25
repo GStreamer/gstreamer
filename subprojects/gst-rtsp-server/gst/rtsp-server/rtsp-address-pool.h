@@ -87,7 +87,7 @@ GST_RTSP_SERVER_API
 GType gst_rtsp_address_get_type        (void);
 
 GST_RTSP_SERVER_API
-GstRTSPAddress * gst_rtsp_address_copy (GstRTSPAddress *addr);
+GstRTSPAddress * gst_rtsp_address_copy (GstRTSPAddress *addr) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void             gst_rtsp_address_free (GstRTSPAddress *addr);
@@ -160,7 +160,7 @@ GType                  gst_rtsp_address_pool_get_type        (void);
 /* create a new address pool */
 
 GST_RTSP_SERVER_API
-GstRTSPAddressPool *   gst_rtsp_address_pool_new             (void);
+GstRTSPAddressPool *   gst_rtsp_address_pool_new             (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                   gst_rtsp_address_pool_clear           (GstRTSPAddressPool * pool);
@@ -179,7 +179,7 @@ gboolean               gst_rtsp_address_pool_add_range       (GstRTSPAddressPool
 GST_RTSP_SERVER_API
 GstRTSPAddress *       gst_rtsp_address_pool_acquire_address (GstRTSPAddressPool * pool,
                                                               GstRTSPAddressFlags flags,
-                                                              gint n_ports);
+                                                              gint n_ports) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 GstRTSPAddressPoolResult  gst_rtsp_address_pool_reserve_address (GstRTSPAddressPool * pool,

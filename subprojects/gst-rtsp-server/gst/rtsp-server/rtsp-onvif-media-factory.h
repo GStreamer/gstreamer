@@ -83,13 +83,13 @@ GST_RTSP_SERVER_API
 GType gst_rtsp_onvif_media_factory_get_type (void);
 
 GST_RTSP_SERVER_API
-GstRTSPMediaFactory *gst_rtsp_onvif_media_factory_new (void);
+GstRTSPMediaFactory *gst_rtsp_onvif_media_factory_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void gst_rtsp_onvif_media_factory_set_backchannel_launch (GstRTSPOnvifMediaFactory *
     factory, const gchar * launch);
 GST_RTSP_SERVER_API
-gchar * gst_rtsp_onvif_media_factory_get_backchannel_launch (GstRTSPOnvifMediaFactory * factory);
+gchar * gst_rtsp_onvif_media_factory_get_backchannel_launch (GstRTSPOnvifMediaFactory * factory) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 gboolean gst_rtsp_onvif_media_factory_has_backchannel_support (GstRTSPOnvifMediaFactory * factory);

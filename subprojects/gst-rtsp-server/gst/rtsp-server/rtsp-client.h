@@ -199,21 +199,21 @@ GST_RTSP_SERVER_API
 GType                 gst_rtsp_client_get_type          (void);
 
 GST_RTSP_SERVER_API
-GstRTSPClient *       gst_rtsp_client_new               (void);
+GstRTSPClient *       gst_rtsp_client_new               (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                  gst_rtsp_client_set_session_pool  (GstRTSPClient *client,
                                                          GstRTSPSessionPool *pool);
 
 GST_RTSP_SERVER_API
-GstRTSPSessionPool *  gst_rtsp_client_get_session_pool  (GstRTSPClient *client);
+GstRTSPSessionPool *  gst_rtsp_client_get_session_pool  (GstRTSPClient *client) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                  gst_rtsp_client_set_mount_points  (GstRTSPClient *client,
                                                          GstRTSPMountPoints *mounts);
 
 GST_RTSP_SERVER_API
-GstRTSPMountPoints *  gst_rtsp_client_get_mount_points  (GstRTSPClient *client);
+GstRTSPMountPoints *  gst_rtsp_client_get_mount_points  (GstRTSPClient *client) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                  gst_rtsp_client_set_content_length_limit (GstRTSPClient *client, guint limit);
@@ -225,13 +225,13 @@ GST_RTSP_SERVER_API
 void                  gst_rtsp_client_set_auth          (GstRTSPClient *client, GstRTSPAuth *auth);
 
 GST_RTSP_SERVER_API
-GstRTSPAuth *         gst_rtsp_client_get_auth          (GstRTSPClient *client);
+GstRTSPAuth *         gst_rtsp_client_get_auth          (GstRTSPClient *client) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                  gst_rtsp_client_set_thread_pool   (GstRTSPClient *client, GstRTSPThreadPool *pool);
 
 GST_RTSP_SERVER_API
-GstRTSPThreadPool *   gst_rtsp_client_get_thread_pool   (GstRTSPClient *client);
+GstRTSPThreadPool *   gst_rtsp_client_get_thread_pool   (GstRTSPClient *client) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 gboolean              gst_rtsp_client_set_connection    (GstRTSPClient *client, GstRTSPConnection *conn);
@@ -293,7 +293,7 @@ typedef GstRTSPFilterResult (*GstRTSPClientSessionFilterFunc)  (GstRTSPClient *c
 GST_RTSP_SERVER_API
 GList *                gst_rtsp_client_session_filter    (GstRTSPClient *client,
                                                           GstRTSPClientSessionFilterFunc func,
-                                                          gpointer user_data);
+                                                          gpointer user_data) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 GstRTSPStreamTransport * gst_rtsp_client_get_stream_transport (GstRTSPClient *client,

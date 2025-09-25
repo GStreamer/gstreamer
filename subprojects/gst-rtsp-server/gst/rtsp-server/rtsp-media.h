@@ -197,10 +197,10 @@ GType                 gst_rtsp_media_get_type         (void);
 /* creating the media */
 
 GST_RTSP_SERVER_API
-GstRTSPMedia *        gst_rtsp_media_new              (GstElement *element);
+GstRTSPMedia *        gst_rtsp_media_new              (GstElement *element) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
-GstElement *          gst_rtsp_media_get_element      (GstRTSPMedia *media);
+GstElement *          gst_rtsp_media_get_element      (GstRTSPMedia *media) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                  gst_rtsp_media_take_pipeline    (GstRTSPMedia *media, GstPipeline *pipeline);
@@ -213,7 +213,7 @@ void                  gst_rtsp_media_set_permissions  (GstRTSPMedia *media,
                                                        GstRTSPPermissions *permissions);
 
 GST_RTSP_SERVER_API
-GstRTSPPermissions *  gst_rtsp_media_get_permissions  (GstRTSPMedia *media);
+GstRTSPPermissions *  gst_rtsp_media_get_permissions  (GstRTSPMedia *media) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                  gst_rtsp_media_set_shared       (GstRTSPMedia *media, gboolean shared);
@@ -264,13 +264,13 @@ GST_RTSP_SERVER_API
 void                  gst_rtsp_media_set_address_pool (GstRTSPMedia *media, GstRTSPAddressPool *pool);
 
 GST_RTSP_SERVER_API
-GstRTSPAddressPool *  gst_rtsp_media_get_address_pool (GstRTSPMedia *media);
+GstRTSPAddressPool *  gst_rtsp_media_get_address_pool (GstRTSPMedia *media) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                  gst_rtsp_media_set_multicast_iface (GstRTSPMedia *media, const gchar *multicast_iface);
 
 GST_RTSP_SERVER_API
-gchar *               gst_rtsp_media_get_multicast_iface (GstRTSPMedia *media);
+gchar *               gst_rtsp_media_get_multicast_iface (GstRTSPMedia *media) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                  gst_rtsp_media_set_buffer_size  (GstRTSPMedia *media, guint size);
@@ -319,7 +319,7 @@ gboolean              gst_rtsp_media_is_time_provider  (GstRTSPMedia *media);
 
 GST_RTSP_SERVER_API
 GstNetTimeProvider *  gst_rtsp_media_get_time_provider (GstRTSPMedia *media,
-                                                        const gchar *address, guint16 port);
+                                                        const gchar *address, guint16 port) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                  gst_rtsp_media_set_clock         (GstRTSPMedia *media, GstClock * clock);
@@ -392,7 +392,7 @@ GST_RTSP_SERVER_API
 void                  gst_rtsp_media_unlock           (GstRTSPMedia *media);
 
 GST_RTSP_SERVER_API
-GstClock *            gst_rtsp_media_get_clock        (GstRTSPMedia *media);
+GstClock *            gst_rtsp_media_get_clock        (GstRTSPMedia *media) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 GstClockTime          gst_rtsp_media_get_base_time    (GstRTSPMedia *media);
@@ -427,7 +427,7 @@ GstClockTimeDiff      gst_rtsp_media_seekable         (GstRTSPMedia *media);
 GST_RTSP_SERVER_API
 gchar *               gst_rtsp_media_get_range_string (GstRTSPMedia *media,
                                                        gboolean play,
-                                                       GstRTSPRangeUnit unit);
+                                                       GstRTSPRangeUnit unit) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 gboolean              gst_rtsp_media_get_rates        (GstRTSPMedia * media,

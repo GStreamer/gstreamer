@@ -103,7 +103,7 @@ GType                 gst_rtsp_media_factory_get_type     (void);
 /* creating the factory */
 
 GST_RTSP_SERVER_API
-GstRTSPMediaFactory * gst_rtsp_media_factory_new          (void);
+GstRTSPMediaFactory * gst_rtsp_media_factory_new          (void) G_GNUC_WARN_UNUSED_RESULT;
 
 /* configuring the factory */
 
@@ -112,14 +112,14 @@ void                  gst_rtsp_media_factory_set_launch       (GstRTSPMediaFacto
                                                                const gchar *launch);
 
 GST_RTSP_SERVER_API
-gchar *               gst_rtsp_media_factory_get_launch       (GstRTSPMediaFactory *factory);
+gchar *               gst_rtsp_media_factory_get_launch       (GstRTSPMediaFactory *factory) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                  gst_rtsp_media_factory_set_permissions  (GstRTSPMediaFactory *factory,
                                                                GstRTSPPermissions *permissions);
 
 GST_RTSP_SERVER_API
-GstRTSPPermissions *  gst_rtsp_media_factory_get_permissions  (GstRTSPMediaFactory *factory);
+GstRTSPPermissions *  gst_rtsp_media_factory_get_permissions  (GstRTSPMediaFactory *factory) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                  gst_rtsp_media_factory_add_role         (GstRTSPMediaFactory *factory,
@@ -176,13 +176,13 @@ void                  gst_rtsp_media_factory_set_address_pool (GstRTSPMediaFacto
                                                                GstRTSPAddressPool * pool);
 
 GST_RTSP_SERVER_API
-GstRTSPAddressPool *  gst_rtsp_media_factory_get_address_pool (GstRTSPMediaFactory * factory);
+GstRTSPAddressPool *  gst_rtsp_media_factory_get_address_pool (GstRTSPMediaFactory * factory) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                  gst_rtsp_media_factory_set_multicast_iface (GstRTSPMediaFactory *factory, const gchar *multicast_iface);
 
 GST_RTSP_SERVER_API
-gchar *               gst_rtsp_media_factory_get_multicast_iface (GstRTSPMediaFactory *factory);
+gchar *               gst_rtsp_media_factory_get_multicast_iface (GstRTSPMediaFactory *factory) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                  gst_rtsp_media_factory_set_buffer_size  (GstRTSPMediaFactory * factory,
@@ -246,7 +246,7 @@ void                  gst_rtsp_media_factory_set_clock        (GstRTSPMediaFacto
                                                                GstClock * clock);
 
 GST_RTSP_SERVER_API
-GstClock *            gst_rtsp_media_factory_get_clock        (GstRTSPMediaFactory *factory);
+GstClock *            gst_rtsp_media_factory_get_clock        (GstRTSPMediaFactory *factory) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                    gst_rtsp_media_factory_set_publish_clock_mode (GstRTSPMediaFactory * factory, GstRTSPPublishClockMode mode);
@@ -284,7 +284,7 @@ gboolean              gst_rtsp_media_factory_is_enable_rtcp (GstRTSPMediaFactory
 
 GST_RTSP_SERVER_API
 GstRTSPMedia *        gst_rtsp_media_factory_construct        (GstRTSPMediaFactory *factory,
-                                                               const GstRTSPUrl *url);
+                                                               const GstRTSPUrl *url) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 GstElement *          gst_rtsp_media_factory_create_element   (GstRTSPMediaFactory *factory,

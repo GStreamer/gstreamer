@@ -68,7 +68,7 @@ GType                    gst_rtsp_session_media_get_type       (void);
 
 GST_RTSP_SERVER_API
 GstRTSPSessionMedia *    gst_rtsp_session_media_new            (const gchar *path,
-                                                                GstRTSPMedia *media);
+                                                                GstRTSPMedia *media) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 gboolean                 gst_rtsp_session_media_matches        (GstRTSPSessionMedia *media,
@@ -105,14 +105,14 @@ GstRTSPStreamTransport * gst_rtsp_session_media_get_transport  (GstRTSPSessionMe
                                                                 guint idx);
 
 GST_RTSP_SERVER_API
-GPtrArray *              gst_rtsp_session_media_get_transports (GstRTSPSessionMedia *media);
+GPtrArray *              gst_rtsp_session_media_get_transports (GstRTSPSessionMedia *media) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 gboolean                 gst_rtsp_session_media_alloc_channels (GstRTSPSessionMedia *media,
                                                                 GstRTSPRange *range);
 
 GST_RTSP_SERVER_API
-gchar *                  gst_rtsp_session_media_get_rtpinfo    (GstRTSPSessionMedia * media);
+gchar *                  gst_rtsp_session_media_get_rtpinfo    (GstRTSPSessionMedia * media) G_GNUC_WARN_UNUSED_RESULT;
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPSessionMedia, gst_object_unref)

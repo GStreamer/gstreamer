@@ -79,7 +79,7 @@ struct _GstRTSPThread {
 };
 
 GST_RTSP_SERVER_API
-GstRTSPThread *   gst_rtsp_thread_new      (GstRTSPThreadType type);
+GstRTSPThread *   gst_rtsp_thread_new      (GstRTSPThreadType type) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 gboolean          gst_rtsp_thread_reuse    (GstRTSPThread * thread);
@@ -163,7 +163,7 @@ GST_RTSP_SERVER_API
 GType               gst_rtsp_thread_pool_get_type        (void);
 
 GST_RTSP_SERVER_API
-GstRTSPThreadPool * gst_rtsp_thread_pool_new             (void);
+GstRTSPThreadPool * gst_rtsp_thread_pool_new             (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                gst_rtsp_thread_pool_set_max_threads (GstRTSPThreadPool * pool, gint max_threads);
@@ -174,7 +174,7 @@ gint                gst_rtsp_thread_pool_get_max_threads (GstRTSPThreadPool * po
 GST_RTSP_SERVER_API
 GstRTSPThread *     gst_rtsp_thread_pool_get_thread      (GstRTSPThreadPool *pool,
                                                           GstRTSPThreadType type,
-                                                          GstRTSPContext *ctx);
+                                                          GstRTSPContext *ctx) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                gst_rtsp_thread_pool_cleanup         (void);

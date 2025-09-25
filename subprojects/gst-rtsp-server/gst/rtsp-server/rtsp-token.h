@@ -75,13 +75,13 @@ gst_rtsp_token_unref (GstRTSPToken * token)
 
 
 GST_RTSP_SERVER_API
-GstRTSPToken *       gst_rtsp_token_new_empty          (void);
+GstRTSPToken *       gst_rtsp_token_new_empty          (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
-GstRTSPToken *       gst_rtsp_token_new                (const gchar * firstfield, ...);
+GstRTSPToken *       gst_rtsp_token_new                (const gchar * firstfield, ...) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
-GstRTSPToken *       gst_rtsp_token_new_valist         (const gchar * firstfield, va_list var_args);
+GstRTSPToken *       gst_rtsp_token_new_valist         (const gchar * firstfield, va_list var_args) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 const GstStructure * gst_rtsp_token_get_structure      (GstRTSPToken *token);

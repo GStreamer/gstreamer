@@ -72,7 +72,7 @@ GType             gst_rtsp_stream_get_type         (void);
 
 GST_RTSP_SERVER_API
 GstRTSPStream *   gst_rtsp_stream_new              (guint idx, GstElement *payloader,
-                                                    GstPad *pad);
+                                                    GstPad *pad) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 guint             gst_rtsp_stream_get_index        (GstRTSPStream *stream);
@@ -81,16 +81,16 @@ GST_RTSP_SERVER_API
 guint             gst_rtsp_stream_get_pt           (GstRTSPStream *stream);
 
 GST_RTSP_SERVER_API
-GstPad *          gst_rtsp_stream_get_srcpad       (GstRTSPStream *stream);
+GstPad *          gst_rtsp_stream_get_srcpad       (GstRTSPStream *stream) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
-GstPad *          gst_rtsp_stream_get_sinkpad      (GstRTSPStream *stream);
+GstPad *          gst_rtsp_stream_get_sinkpad      (GstRTSPStream *stream) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void              gst_rtsp_stream_set_control      (GstRTSPStream *stream, const gchar *control);
 
 GST_RTSP_SERVER_API
-gchar *           gst_rtsp_stream_get_control      (GstRTSPStream *stream);
+gchar *           gst_rtsp_stream_get_control      (GstRTSPStream *stream) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 gboolean          gst_rtsp_stream_has_control      (GstRTSPStream *stream, const gchar *control);
@@ -128,20 +128,20 @@ void              gst_rtsp_stream_set_address_pool (GstRTSPStream *stream, GstRT
 
 GST_RTSP_SERVER_API
 GstRTSPAddressPool *
-                  gst_rtsp_stream_get_address_pool (GstRTSPStream *stream);
+                  gst_rtsp_stream_get_address_pool (GstRTSPStream *stream) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void              gst_rtsp_stream_set_multicast_iface (GstRTSPStream *stream, const gchar * multicast_iface);
 
 GST_RTSP_SERVER_API
-gchar *           gst_rtsp_stream_get_multicast_iface (GstRTSPStream *stream);
+gchar *           gst_rtsp_stream_get_multicast_iface (GstRTSPStream *stream) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 GstRTSPAddress *  gst_rtsp_stream_reserve_address  (GstRTSPStream *stream,
                                                     const gchar * address,
                                                     guint port,
                                                     guint n_ports,
-                                                    guint ttl);
+                                                    guint ttl) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 gboolean          gst_rtsp_stream_join_bin         (GstRTSPStream *stream,
@@ -153,7 +153,7 @@ gboolean          gst_rtsp_stream_leave_bin        (GstRTSPStream *stream,
                                                     GstBin *bin, GstElement *rtpbin);
 
 GST_RTSP_SERVER_API
-GstBin *          gst_rtsp_stream_get_joined_bin   (GstRTSPStream *stream);
+GstBin *          gst_rtsp_stream_get_joined_bin   (GstRTSPStream *stream) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 gboolean          gst_rtsp_stream_set_blocked      (GstRTSPStream * stream,
@@ -179,14 +179,14 @@ void              gst_rtsp_stream_get_server_port  (GstRTSPStream *stream,
 
 GST_RTSP_SERVER_API
 GstRTSPAddress *  gst_rtsp_stream_get_multicast_address (GstRTSPStream *stream,
-                                                         GSocketFamily family);
+                                                         GSocketFamily family) G_GNUC_WARN_UNUSED_RESULT;
 
 
 GST_RTSP_SERVER_API
-GObject *         gst_rtsp_stream_get_rtpsession   (GstRTSPStream *stream);
+GObject *         gst_rtsp_stream_get_rtpsession   (GstRTSPStream *stream) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
-GstElement *      gst_rtsp_stream_get_srtp_encoder (GstRTSPStream *stream);
+GstElement *      gst_rtsp_stream_get_srtp_encoder (GstRTSPStream *stream) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void              gst_rtsp_stream_get_ssrc         (GstRTSPStream *stream,
@@ -204,7 +204,7 @@ gboolean          gst_rtsp_stream_get_rates        (GstRTSPStream * stream,
                                                     gdouble * applied_rate);
 
 GST_RTSP_SERVER_API
-GstCaps *         gst_rtsp_stream_get_caps         (GstRTSPStream *stream);
+GstCaps *         gst_rtsp_stream_get_caps         (GstRTSPStream *stream) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 GstFlowReturn     gst_rtsp_stream_recv_rtp         (GstRTSPStream *stream,
@@ -224,19 +224,19 @@ gboolean          gst_rtsp_stream_remove_transport (GstRTSPStream *stream,
 
 GST_RTSP_SERVER_API
 GSocket *         gst_rtsp_stream_get_rtp_socket   (GstRTSPStream *stream,
-                                                    GSocketFamily family);
+                                                    GSocketFamily family) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 GSocket *         gst_rtsp_stream_get_rtcp_socket  (GstRTSPStream *stream,
-                                                    GSocketFamily family);
+                                                    GSocketFamily family) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 GSocket *         gst_rtsp_stream_get_rtp_multicast_socket (GstRTSPStream *stream,
-                                                            GSocketFamily family);
+                                                            GSocketFamily family) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 GSocket *         gst_rtsp_stream_get_rtcp_multicast_socket (GstRTSPStream *stream,
-                                                             GSocketFamily family);
+                                                             GSocketFamily family) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 gboolean          gst_rtsp_stream_add_multicast_client_address (GstRTSPStream * stream,
@@ -246,7 +246,7 @@ gboolean          gst_rtsp_stream_add_multicast_client_address (GstRTSPStream * 
                                                                 GSocketFamily family);
 
 GST_RTSP_SERVER_API
-gchar *           gst_rtsp_stream_get_multicast_client_addresses (GstRTSPStream * stream);
+gchar *           gst_rtsp_stream_get_multicast_client_addresses (GstRTSPStream * stream) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 gboolean          gst_rtsp_stream_update_crypto    (GstRTSPStream * stream,
@@ -292,10 +292,10 @@ GST_RTSP_SERVER_API
 void              gst_rtsp_stream_set_pt_map                 (GstRTSPStream * stream, guint pt, GstCaps * caps);
 
 GST_RTSP_SERVER_API
-GstElement *      gst_rtsp_stream_request_aux_sender         (GstRTSPStream * stream, guint sessid);
+GstElement *      gst_rtsp_stream_request_aux_sender         (GstRTSPStream * stream, guint sessid) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
-GstElement *      gst_rtsp_stream_request_aux_receiver       (GstRTSPStream * stream, guint sessid);
+GstElement *      gst_rtsp_stream_request_aux_receiver       (GstRTSPStream * stream, guint sessid) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 gboolean          gst_rtsp_stream_allocate_udp_sockets       (GstRTSPStream * stream, GSocketFamily family,
@@ -348,10 +348,10 @@ GST_RTSP_SERVER_API
 guint              gst_rtsp_stream_get_ulpfec_pt (GstRTSPStream *stream);
 
 GST_RTSP_SERVER_API
-GstElement *       gst_rtsp_stream_request_ulpfec_decoder (GstRTSPStream *stream, GstElement *rtpbin, guint sessid);
+GstElement *       gst_rtsp_stream_request_ulpfec_decoder (GstRTSPStream *stream, GstElement *rtpbin, guint sessid) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
-GstElement *       gst_rtsp_stream_request_ulpfec_encoder (GstRTSPStream *stream, guint sessid);
+GstElement *       gst_rtsp_stream_request_ulpfec_encoder (GstRTSPStream *stream, guint sessid) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void               gst_rtsp_stream_set_ulpfec_percentage (GstRTSPStream *stream, guint percentage);
@@ -395,7 +395,7 @@ typedef GstRTSPFilterResult (*GstRTSPStreamTransportFilterFunc) (GstRTSPStream *
 GST_RTSP_SERVER_API
 GList *                gst_rtsp_stream_transport_filter  (GstRTSPStream *stream,
                                                           GstRTSPStreamTransportFilterFunc func,
-                                                          gpointer user_data);
+                                                          gpointer user_data) G_GNUC_WARN_UNUSED_RESULT;
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPStream, gst_object_unref)

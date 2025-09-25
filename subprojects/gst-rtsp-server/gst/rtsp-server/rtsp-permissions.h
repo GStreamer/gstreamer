@@ -75,7 +75,7 @@ gst_rtsp_permissions_unref (GstRTSPPermissions * permissions)
 
 
 GST_RTSP_SERVER_API
-GstRTSPPermissions *  gst_rtsp_permissions_new             (void);
+GstRTSPPermissions *  gst_rtsp_permissions_new             (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                  gst_rtsp_permissions_add_role        (GstRTSPPermissions *permissions,

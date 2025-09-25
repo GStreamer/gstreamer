@@ -97,19 +97,19 @@ GST_RTSP_SERVER_API
 GType                 gst_rtsp_server_get_type             (void);
 
 GST_RTSP_SERVER_API
-GstRTSPServer *       gst_rtsp_server_new                  (void);
+GstRTSPServer *       gst_rtsp_server_new                  (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                  gst_rtsp_server_set_address          (GstRTSPServer *server, const gchar *address);
 
 GST_RTSP_SERVER_API
-gchar *               gst_rtsp_server_get_address          (GstRTSPServer *server);
+gchar *               gst_rtsp_server_get_address          (GstRTSPServer *server) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                  gst_rtsp_server_set_service          (GstRTSPServer *server, const gchar *service);
 
 GST_RTSP_SERVER_API
-gchar *               gst_rtsp_server_get_service          (GstRTSPServer *server);
+gchar *               gst_rtsp_server_get_service          (GstRTSPServer *server) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                  gst_rtsp_server_set_backlog          (GstRTSPServer *server, gint backlog);
@@ -124,13 +124,13 @@ GST_RTSP_SERVER_API
 void                  gst_rtsp_server_set_session_pool     (GstRTSPServer *server, GstRTSPSessionPool *pool);
 
 GST_RTSP_SERVER_API
-GstRTSPSessionPool *  gst_rtsp_server_get_session_pool     (GstRTSPServer *server);
+GstRTSPSessionPool *  gst_rtsp_server_get_session_pool     (GstRTSPServer *server) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                  gst_rtsp_server_set_mount_points     (GstRTSPServer *server, GstRTSPMountPoints *mounts);
 
 GST_RTSP_SERVER_API
-GstRTSPMountPoints *  gst_rtsp_server_get_mount_points     (GstRTSPServer *server);
+GstRTSPMountPoints *  gst_rtsp_server_get_mount_points     (GstRTSPServer *server) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                  gst_rtsp_server_set_content_length_limit (GstRTSPServer * server, guint limit);
@@ -142,13 +142,13 @@ GST_RTSP_SERVER_API
 void                  gst_rtsp_server_set_auth             (GstRTSPServer *server, GstRTSPAuth *auth);
 
 GST_RTSP_SERVER_API
-GstRTSPAuth *         gst_rtsp_server_get_auth             (GstRTSPServer *server);
+GstRTSPAuth *         gst_rtsp_server_get_auth             (GstRTSPServer *server) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 void                  gst_rtsp_server_set_thread_pool      (GstRTSPServer *server, GstRTSPThreadPool *pool);
 
 GST_RTSP_SERVER_API
-GstRTSPThreadPool *   gst_rtsp_server_get_thread_pool      (GstRTSPServer *server);
+GstRTSPThreadPool *   gst_rtsp_server_get_thread_pool      (GstRTSPServer *server) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 gboolean              gst_rtsp_server_transfer_connection  (GstRTSPServer * server, GSocket *socket,
@@ -162,12 +162,12 @@ gboolean              gst_rtsp_server_io_func              (GSocket *socket, GIO
 GST_RTSP_SERVER_API
 GSocket *             gst_rtsp_server_create_socket        (GstRTSPServer *server,
                                                             GCancellable  *cancellable,
-                                                            GError **error);
+                                                            GError **error) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 GSource *             gst_rtsp_server_create_source        (GstRTSPServer *server,
                                                             GCancellable * cancellable,
-                                                            GError **error);
+                                                            GError **error) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_RTSP_SERVER_API
 guint                 gst_rtsp_server_attach               (GstRTSPServer *server,
@@ -200,7 +200,7 @@ typedef GstRTSPFilterResult (*GstRTSPServerClientFilterFunc)  (GstRTSPServer *se
 GST_RTSP_SERVER_API
 GList *                gst_rtsp_server_client_filter    (GstRTSPServer *server,
                                                          GstRTSPServerClientFilterFunc func,
-                                                         gpointer user_data);
+                                                         gpointer user_data) G_GNUC_WARN_UNUSED_RESULT;
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPServer, gst_object_unref)
