@@ -73,7 +73,7 @@ GST_VALIDATE_API
 void gst_validate_media_info_free (GstValidateMediaInfo * mi);
 
 GST_VALIDATE_API
-gchar * gst_validate_media_info_to_string (GstValidateMediaInfo * mi, gsize * length);
+gchar * gst_validate_media_info_to_string (GstValidateMediaInfo * mi, gsize * length) G_GNUC_WARN_UNUSED_RESULT;
 GST_VALIDATE_API
 gboolean gst_validate_media_info_save (GstValidateMediaInfo * mi, const gchar * path, GError ** err);
 GST_VALIDATE_API

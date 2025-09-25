@@ -72,7 +72,7 @@ gst_validate_media_descriptor_parser_new_from_xml                   (GstValidate
                                                             const gchar * xml,
                                                             GError ** error);
 GST_VALIDATE_API
-gchar * gst_validate_media_descriptor_parser_get_xml_path        (GstValidateMediaDescriptorParser *parser);
+gchar * gst_validate_media_descriptor_parser_get_xml_path        (GstValidateMediaDescriptorParser *parser) G_GNUC_WARN_UNUSED_RESULT;
 GST_VALIDATE_API
 gboolean gst_validate_media_descriptor_parser_add_stream         (GstValidateMediaDescriptorParser *parser,
                                                                   GstPad *pad);

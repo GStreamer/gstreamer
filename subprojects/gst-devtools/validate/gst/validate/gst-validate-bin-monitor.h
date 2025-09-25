@@ -86,10 +86,10 @@ GType		gst_validate_bin_monitor_get_type		(void);
 GST_VALIDATE_API GstValidateBinMonitor *
 gst_validate_bin_monitor_new                (GstBin * bin,
                                              GstValidateRunner * runner,
-                                             GstValidateMonitor * parent);
+                                             GstValidateMonitor * parent) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VALIDATE_API GstValidateScenario *
-gst_validate_bin_monitor_get_scenario       (GstValidateBinMonitor * monitor);
+gst_validate_bin_monitor_get_scenario       (GstValidateBinMonitor * monitor) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 

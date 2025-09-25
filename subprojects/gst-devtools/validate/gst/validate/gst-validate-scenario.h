@@ -162,12 +162,12 @@ struct _GstValidateAction
 GST_VALIDATE_API
 void                  gst_validate_action_set_done     (GstValidateAction *action);
 GST_VALIDATE_API
-GstValidateScenario * gst_validate_action_get_scenario (GstValidateAction *action);
+GstValidateScenario * gst_validate_action_get_scenario (GstValidateAction *action) G_GNUC_WARN_UNUSED_RESULT;
 GST_VALIDATE_API
 GstValidateAction   * gst_validate_action_new          (GstValidateScenario * scenario,
                                                         GstValidateActionType * action_type,
                                                         GstStructure *structure,
-                                                        gboolean add_to_lists);
+                                                        gboolean add_to_lists) G_GNUC_WARN_UNUSED_RESULT;
 GST_VALIDATE_API
 GstValidateAction* gst_validate_action_ref             (GstValidateAction * action);
 GST_VALIDATE_API
@@ -420,7 +420,7 @@ gst_validate_scenario_execute_seek         (GstValidateScenario *scenario,
                                              GstClockTime stop);
 
 GST_VALIDATE_API GList *
-gst_validate_scenario_get_actions          (GstValidateScenario *scenario);
+gst_validate_scenario_get_actions          (GstValidateScenario *scenario) G_GNUC_WARN_UNUSED_RESULT;
 GST_VALIDATE_API GstValidateExecuteActionReturn
 gst_validate_execute_action                 (GstValidateActionType * action_type,
                                              GstValidateAction * action);
@@ -429,7 +429,7 @@ GST_VALIDATE_API GstState
 gst_validate_scenario_get_target_state     (GstValidateScenario *scenario);
 
 GST_VALIDATE_API GstElement *
-gst_validate_scenario_get_pipeline         (GstValidateScenario * scenario);
+gst_validate_scenario_get_pipeline         (GstValidateScenario * scenario) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VALIDATE_API
 void gst_validate_scenario_deinit          (void);

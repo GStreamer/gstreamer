@@ -90,7 +90,7 @@ GST_VALIDATE_API
 GType		gst_validate_element_monitor_get_type		(void);
 
 GST_VALIDATE_API
-GstValidateElementMonitor *   gst_validate_element_monitor_new      (GstElement * element, GstValidateRunner * runner, GstValidateMonitor * parent);
+GstValidateElementMonitor *   gst_validate_element_monitor_new      (GstElement * element, GstValidateRunner * runner, GstValidateMonitor * parent) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 

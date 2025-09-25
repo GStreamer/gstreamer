@@ -134,14 +134,14 @@ void            gst_validate_monitor_attach_override  (GstValidateMonitor * moni
 GST_VALIDATE_API
 GstElement *    gst_validate_monitor_get_element (GstValidateMonitor * monitor);
 GST_VALIDATE_API
-gchar *   gst_validate_monitor_get_element_name (GstValidateMonitor * monitor);
+gchar *   gst_validate_monitor_get_element_name (GstValidateMonitor * monitor) G_GNUC_WARN_UNUSED_RESULT;
 GST_VALIDATE_API
 void gst_validate_monitor_set_media_descriptor (GstValidateMonitor * monitor,
                                                 GstValidateMediaDescriptor *media_descriptor);
 GST_VALIDATE_API
-GstPipeline * gst_validate_monitor_get_pipeline (GstValidateMonitor * monitor);
+GstPipeline * gst_validate_monitor_get_pipeline (GstValidateMonitor * monitor) G_GNUC_WARN_UNUSED_RESULT;
 GST_VALIDATE_API
-GstObject * gst_validate_monitor_get_target (GstValidateMonitor * monitor);
+GstObject * gst_validate_monitor_get_target (GstValidateMonitor * monitor) G_GNUC_WARN_UNUSED_RESULT;
 G_END_DECLS
 
 #endif /* __GST_VALIDATE_MONITOR_H__ */

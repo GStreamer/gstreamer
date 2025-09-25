@@ -245,31 +245,31 @@ struct _GstValidateReport {
 };
 
 GST_VALIDATE_API
-GstValidateIssue * gst_validate_report_get_issue (GstValidateReport * report);
+GstValidateIssue * gst_validate_report_get_issue (GstValidateReport * report) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VALIDATE_API
 GstValidateReportLevel gst_validate_report_get_level (GstValidateReport * report);
 
 GST_VALIDATE_API
-GstValidateReporter * gst_validate_report_get_reporter (GstValidateReport * report);
+GstValidateReporter * gst_validate_report_get_reporter (GstValidateReport * report) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VALIDATE_API
 GstClockTime gst_validate_report_get_timestamp (GstValidateReport * report);
 
 GST_VALIDATE_API
-gchar * gst_validate_report_get_message (GstValidateReport * report);
+gchar * gst_validate_report_get_message (GstValidateReport * report) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VALIDATE_API
 GstValidateReportingDetails gst_validate_report_get_reporting_level (GstValidateReport * report);
 
 GST_VALIDATE_API
-gchar * gst_validate_report_get_reporter_name (GstValidateReport * report);
+gchar * gst_validate_report_get_reporter_name (GstValidateReport * report) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VALIDATE_API
-gchar * gst_validate_report_get_trace (GstValidateReport * report);
+gchar * gst_validate_report_get_trace (GstValidateReport * report) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VALIDATE_API
-gchar * gst_validate_report_get_dotfile_name (GstValidateReport * report);
+gchar * gst_validate_report_get_dotfile_name (GstValidateReport * report) G_GNUC_WARN_UNUSED_RESULT;
 
 void gst_validate_report_add_message (GstValidateReport *report,
     const gchar *message);
@@ -296,11 +296,11 @@ void               gst_validate_issue_register (GstValidateIssue * issue);
 GST_VALIDATE_API
 GstValidateIssue  *gst_validate_issue_new (GstValidateIssueId issue_id, const gchar * summary,
 					   const gchar * description,
-					   GstValidateReportLevel default_level);
+					   GstValidateReportLevel default_level) G_GNUC_WARN_UNUSED_RESULT;
 GST_VALIDATE_API
 GstValidateIssue* gst_validate_issue_new_full(GstValidateIssueId issue_id, const gchar* summary,
     const gchar* description, GstValidateReportLevel default_level,
-    GstValidateIssueFlags flags);
+    GstValidateIssueFlags flags) G_GNUC_WARN_UNUSED_RESULT;
 GST_VALIDATE_API
 void gst_validate_issue_set_default_level (GstValidateIssue *issue,
                                            GstValidateReportLevel default_level);
@@ -308,7 +308,7 @@ void gst_validate_issue_set_default_level (GstValidateIssue *issue,
 GST_VALIDATE_API
 GstValidateReport *gst_validate_report_new (GstValidateIssue * issue,
               GstValidateReporter * reporter,
-              const gchar * message);
+              const gchar * message) G_GNUC_WARN_UNUSED_RESULT;
 GST_VALIDATE_API
 void               gst_validate_report_unref (GstValidateReport * report);
 GST_VALIDATE_API

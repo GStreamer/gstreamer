@@ -95,7 +95,7 @@ GType		gst_validate_pipeline_monitor_get_type		(void);
 
 GST_VALIDATE_API
 GstValidatePipelineMonitor *   gst_validate_pipeline_monitor_new      (GstPipeline * pipeline,
-    GstValidateRunner * runner, GstValidateMonitor * parent);
+    GstValidateRunner * runner, GstValidateMonitor * parent) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
 
