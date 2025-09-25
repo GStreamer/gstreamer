@@ -940,6 +940,7 @@ no_socket:
   {
     GST_ERROR_OBJECT (self, "socket_new() failed: %s", error->message);
     g_error_free (error);
+    g_object_unref (servaddr);
     return FALSE;
   }
 bind_error:
@@ -947,6 +948,7 @@ bind_error:
     GST_ERROR_OBJECT (self, "bind failed: %s", error->message);
     g_error_free (error);
     g_object_unref (socket);
+    g_object_unref (servaddr);
     return FALSE;
   }
 getsockname_error:
@@ -954,6 +956,7 @@ getsockname_error:
     GST_ERROR_OBJECT (self, "get_local_address() failed: %s", error->message);
     g_error_free (error);
     g_object_unref (socket);
+    g_object_unref (servaddr);
     return FALSE;
   }
 failed_to_resolve:
