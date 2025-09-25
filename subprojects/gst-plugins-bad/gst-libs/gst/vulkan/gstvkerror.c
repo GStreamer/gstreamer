@@ -55,7 +55,10 @@ static const struct
   {VK_ERROR_INCOMPATIBLE_DISPLAY_KHR, "Incompatible display"},
   {VK_ERROR_NATIVE_WINDOW_IN_USE_KHR, "Native window in use"},
 #if defined(VK_KHR_video_queue)
+  {VK_ERROR_VIDEO_PICTURE_LAYOUT_NOT_SUPPORTED_KHR, "Video picture layout not supported"},
+  {VK_ERROR_VIDEO_PROFILE_CODEC_NOT_SUPPORTED_KHR, "Video codec not supported"},
   {VK_ERROR_VIDEO_PROFILE_FORMAT_NOT_SUPPORTED_KHR, "Video profile format not supported"},
+  {VK_ERROR_VIDEO_PROFILE_OPERATION_NOT_SUPPORTED_KHR, "Video profile operation not supported"},
 #endif
 #if defined(VK_KHR_video_encode_queue)
   {VK_ERROR_INVALID_VIDEO_STD_PARAMETERS_KHR, "Invalid video std parameters"},
