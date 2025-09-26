@@ -1322,7 +1322,8 @@ gst_rist_sink_finalize (GObject * object)
   }
   g_ptr_array_free (sink->bonds, TRUE);
 
-  g_clear_object (&sink->rtxbin);
+  gst_clear_object (&sink->rtxbin);
+  gst_clear_object (&sink->rtpext);
 
   g_mutex_unlock (&sink->bonds_lock);
   g_mutex_clear (&sink->bonds_lock);

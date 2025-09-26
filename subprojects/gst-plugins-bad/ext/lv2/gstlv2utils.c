@@ -599,8 +599,14 @@ static gchar *
 gst_lv2_class_get_param_nick (GstLV2Class * klass, const LilvPort * port)
 {
   const LilvPlugin *lv2plugin = klass->plugin;
+  LilvNode *node;
+  gchar *name;
 
-  return g_strdup (lilv_node_as_string (lilv_port_get_name (lv2plugin, port)));
+  node = lilv_port_get_name (lv2plugin, port);
+  name = g_strdup (lilv_node_as_string (node));
+  lilv_node_free (node);
+
+  return name;
 }
 
 static int

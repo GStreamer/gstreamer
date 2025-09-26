@@ -1106,7 +1106,7 @@ gst_decklink_video_sink_finalize (GObject * object)
 {
   GstDecklinkVideoSink *self = GST_DECKLINK_VIDEO_SINK_CAST (object);
 
-  g_queue_clear_full (self->pending_frames, (GDestroyNotify) unref_frame);
+  g_queue_free_full (self->pending_frames, (GDestroyNotify) unref_frame);
   self->pending_frames = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);

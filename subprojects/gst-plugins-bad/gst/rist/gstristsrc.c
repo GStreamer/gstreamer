@@ -453,6 +453,7 @@ static void
 gst_rist_src_init (GstRistSrc * src)
 {
   GstPad *pad, *gpad;
+  GstPadTemplate *template;
   GstStructure *sdes = NULL;
   RistReceiverBond *bond;
 
@@ -471,9 +472,10 @@ gst_rist_src_init (GstRistSrc * src)
    * This pipeline is fixed for now, note that optionally an FEC stream could
    * be added later.
    */
-  src->srcpad = gst_ghost_pad_new_no_target_from_template ("src",
-      gst_static_pad_template_get (&src_templ));
+  template = gst_static_pad_template_get (&src_templ);
+  src->srcpad = gst_ghost_pad_new_no_target_from_template ("src", template);
   gst_element_add_pad (GST_ELEMENT (src), src->srcpad);
+  gst_object_unref (template);
 
   src->rtpbin = gst_element_factory_make ("rtpbin", "rist_recv_rtpbin");
   if (!src->rtpbin) {
