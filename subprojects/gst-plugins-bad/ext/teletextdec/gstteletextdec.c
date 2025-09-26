@@ -284,6 +284,8 @@ gst_teletextdec_finalize (GObject * object)
 {
   GstTeletextDec *teletext = GST_TELETEXTDEC (object);
 
+  gst_teletextdec_zvbi_clear (teletext);
+
   g_mutex_clear (&teletext->queue_lock);
 
   g_free (teletext->font_description);

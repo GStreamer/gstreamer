@@ -83,7 +83,6 @@ enum
   PROP_LAST
 };
 
-static GParamSpec *properties[PROP_LAST];
 
 static GstCaps *
 ges_demux_get_sinkpad_caps (void)
@@ -202,6 +201,7 @@ ges_demux_finalize (GObject * object)
 {
   GESDemux *demux = (GESDemux *) object;
   g_free (demux->upstream_uri);
+  gst_object_unref (demux->input_adapter);
   G_OBJECT_CLASS (ges_demux_parent_class)->finalize (object);
 }
 
@@ -226,9 +226,6 @@ ges_demux_class_init (GESDemuxClass * self_class)
    *
    * Timeline to use in this source.
    */
-  properties[PROP_TIMELINE] = g_param_spec_object ("timeline", "Timeline",
-      "Timeline to use in this source.",
-      GES_TYPE_TIMELINE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   g_object_class_override_property (gclass, PROP_TIMELINE, "timeline");
 
   gst_element_class_set_static_metadata (gstelement_klass,

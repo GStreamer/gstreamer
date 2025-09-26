@@ -658,6 +658,10 @@ gst_uvc_sink_dispose (GObject * object)
     self->sinkpad = NULL;
   }
 
+  gst_clear_object (&self->fakesinkpad);
+  gst_clear_object (&self->v4l2sinkpad);
+  gst_clear_caps (&self->cur_caps);
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
