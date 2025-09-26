@@ -296,7 +296,6 @@ gst_cuda_nvrtc_compile_with_option (const gchar * source,
   CUresult curet;
   gsize ptx_size;
   gchar *ptx = nullptr;
-  int driverVersion;
   std::vector < const gchar *>opts;
 
   g_return_val_if_fail (source != nullptr, nullptr);
@@ -307,14 +306,20 @@ gst_cuda_nvrtc_compile_with_option (const gchar * source,
 
   GST_TRACE ("CUDA kernel source \n%s", source);
 
-  curet = CuDriverGetVersion (&driverVersion);
+  gint major, minor;
+  curet = CuDeviceGetAttribute (&major,
+      CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, 0);
   if (curet != CUDA_SUCCESS) {
-    GST_ERROR ("Failed to query CUDA Driver version, ret %d", curet);
+    GST_WARNING ("Unknown major compute caps");
     return nullptr;
   }
 
-  GST_DEBUG ("CUDA Driver Version %d.%d", driverVersion / 1000,
-      (driverVersion % 1000) / 10);
+  curet = CuDeviceGetAttribute (&minor,
+      CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, 0);
+  if (curet != CUDA_SUCCESS) {
+    GST_WARNING ("Unknown minor compute caps");
+    return nullptr;
+  }
 
   ret = NvrtcCreateProgram (&prog, source, nullptr, 0, nullptr, nullptr);
   if (ret != NVRTC_SUCCESS) {
@@ -322,16 +327,20 @@ gst_cuda_nvrtc_compile_with_option (const gchar * source,
     return nullptr;
   }
 
-  /* Starting from CUDA 11, the lowest supported architecture is 5.2 */
-  if (driverVersion >= 11000)
-    opts.push_back ("--gpu-architecture=compute_52");
-  else
-    opts.push_back ("--gpu-architecture=compute_30");
+  std::string opt_str = "--gpu-architecture=compute_" +
+      std::to_string (major) + std::to_string (minor);
 
   for (guint i = 0; i < num_options; i++)
     opts.push_back (options[i]);
 
+  opts.push_back (opt_str.c_str ());
   ret = NvrtcCompileProgram (prog, opts.size (), opts.data ());
+
+  if (ret != NVRTC_SUCCESS) {
+    /* Try with default architecture value */
+    ret = NvrtcCompileProgram (prog, num_options, options);
+  }
+
   if (ret != NVRTC_SUCCESS) {
     gsize log_size;
 
