@@ -14461,10 +14461,12 @@ qtdemux_parse_chan (GstQTDemux * qtdemux, GstByteReader * br,
     }
   }
 
+  /* If the channel counts don't match, ignore the chan atom layout */
   if (n_channels == 0) {
     GST_WARNING_OBJECT (qtdemux, "Unsupported channel layout tag 0x%08x",
         layout_tag);
-    return;
+    n_channels = entry->n_channels;
+    goto error;
   }
 
 #ifndef GST_DISABLE_GST_DEBUG
