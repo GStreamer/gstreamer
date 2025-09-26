@@ -19,10 +19,16 @@
 
 #pragma once
 
+#include <gmodule.h>
 #include <gst/gst.h>
 #include "gsthipdevice.h"
 
 G_BEGIN_DECLS
+
+GModule * load_hiplib_from_root (const char * hip_root,
+                                 const char * subdir,
+                                 const char * prefix,
+                                 const char * suffix);
 
 gboolean _gst_hip_result (hipError_t result,
                           GstHipVendor vendor,

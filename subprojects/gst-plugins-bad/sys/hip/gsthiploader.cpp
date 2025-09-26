@@ -207,35 +207,35 @@ static void
 load_amd_func_table (void)
 {
   GModule *module = nullptr;
+
 #ifndef G_OS_WIN32
-  module = g_module_open ("libamdhip64.so", G_MODULE_BIND_LAZY);
+  module = g_module_open ("libamdhip64.so.7", G_MODULE_BIND_LAZY);
+  if (module) {
+    GST_INFO ("Loaded libamdhip64.so.7");
+  } else {
+    module = g_module_open ("libamdhip64.so.6", G_MODULE_BIND_LAZY);
+    if (module)
+      GST_INFO ("Loaded libamdhip64.so.6");
+  }
+
   if (!module)
-    module = g_module_open ("/opt/rocm/lib/libamdhip64.so", G_MODULE_BIND_LAZY);
+    module = load_hiplib_from_root ("/opt/rocm", "lib", "libamdhip64.so.", "");
 #else
   /* Prefer hip dll in SDK */
   auto hip_root = g_getenv ("HIP_PATH");
   if (hip_root) {
-    auto path = g_build_path (G_DIR_SEPARATOR_S, hip_root, "bin", nullptr);
-    auto dir = g_dir_open (path, 0, nullptr);
-    if (dir) {
-      const gchar *name;
-      while ((name = g_dir_read_name (dir))) {
-        if (g_str_has_prefix (name, "amdhip64_") && g_str_has_suffix (name,
-                ".dll")) {
-          auto lib_path = g_build_filename (path, name, nullptr);
-          module = g_module_open (lib_path, G_MODULE_BIND_LAZY);
-          break;
-        }
-      }
-
-      g_dir_close (dir);
-    }
-    g_free (path);
+    module = load_hiplib_from_root (hip_root, "bin", "amdhip64_", ".dll");
   }
 
   /* Try dll in System32 */
-  if (!module)
+  module = g_module_open ("amdhip64_7.dll", G_MODULE_BIND_LAZY);
+  if (module) {
+    GST_INFO ("Loaded amdhip64_7.dll");
+  } else {
     module = g_module_open ("amdhip64_6.dll", G_MODULE_BIND_LAZY);
+    if (module)
+      GST_INFO ("Loaded amdhip64_6.dll");
+  }
 #endif
 
   if (!module) {

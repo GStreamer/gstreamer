@@ -112,9 +112,19 @@ load_rtc_amd_func_table (void)
 
   if (!module) {
 #ifndef G_OS_WIN32
-    module = g_module_open ("libhiprtc.so", G_MODULE_BIND_LAZY);
+    // Keep this logic in sync with gsthiploader.cpp to ensure that the order
+    // of searching is the same, and both libs are loaded from the same place
+    module = g_module_open ("libhiprtc.so.7", G_MODULE_BIND_LAZY);
+    if (module) {
+      GST_INFO ("Loaded libhiprtc.so.7");
+    } else {
+      module = g_module_open ("libhiprtc.so.6", G_MODULE_BIND_LAZY);
+      if (module)
+        GST_INFO ("Loaded libhiprtc.so.6");
+    }
+
     if (!module)
-      module = g_module_open ("/opt/rocm/lib/libhiprtc.so", G_MODULE_BIND_LAZY);
+      module = load_hiplib_from_root ("/opt/rocm", "lib", "libhiprtc.so.", "");
 #else
     int version = 0;
     auto hip_ret = HipRuntimeGetVersion (GST_HIP_VENDOR_AMD, &version);

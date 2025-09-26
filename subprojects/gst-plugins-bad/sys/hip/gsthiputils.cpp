@@ -23,6 +23,7 @@
 
 #include "gsthip.h"
 #include <mutex>
+#include <gmodule.h>
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category()
@@ -39,6 +40,36 @@ ensure_debug_category (void)
   return cat;
 }
 #endif
+
+/*
+ * Note: this function's usage of g_dir_read_name() on Win32 is inefficient
+ * because of UTF16-UTF8 conversions, so it cannot be used in directories with
+ * lots of files like C:\Windows\System32. Should be changed to
+ * `FindFirstFileEx()` etc if that becomes needed.
+ */
+GModule *
+load_hiplib_from_root (const char *hip_root, const char *subdir,
+    const char *prefix, const char *suffix)
+{
+  GModule *module = nullptr;
+  char *path = g_build_path (G_DIR_SEPARATOR_S, hip_root, subdir, nullptr);
+  GDir *dir = g_dir_open (path, 0, nullptr);
+  if (dir) {
+    const gchar *name;
+    while ((name = g_dir_read_name (dir))) {
+      if (g_str_has_prefix (name, prefix) && g_str_has_suffix (name, suffix)) {
+        char *lib_path = g_build_filename (path, name, nullptr);
+        module = g_module_open (lib_path, G_MODULE_BIND_LAZY);
+        GST_INFO ("Loaded %s", lib_path);
+        g_free (lib_path);
+        break;
+      }
+    }
+    g_dir_close (dir);
+  }
+  g_free (path);
+  return module;
+}
 
 gboolean
 _gst_hip_result (hipError_t result, GstHipVendor vendor, GstDebugCategory * cat,
