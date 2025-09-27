@@ -14459,6 +14459,16 @@ qtdemux_parse_chan (GstQTDemux * qtdemux, GstByteReader * br,
         break;
       }
     }
+  } else if (layout_tag == AUDIO_CHANNEL_LAYOUT_TAG_UNKNOWN) {
+    GST_INFO_OBJECT (qtdemux,
+        "Channel layout tag is \"unknown\", marking as unpositioned");
+
+    if (entry->n_channels > 1) {
+      gst_caps_set_simple (entry->caps, "channel-mask", GST_TYPE_BITMASK,
+          0, NULL);
+    }
+
+    return;
   }
 
   /* If the channel counts don't match, ignore the chan atom layout */
