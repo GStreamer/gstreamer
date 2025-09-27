@@ -1358,7 +1358,7 @@ not been tested and explicitly activated if you set use --wanted-tests ALL""")
 
             # ogg known issues
             ("http.playback.seek.*vorbis_theora_1_ogg",
-             "https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/281"),
+             "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4663"),
             # RTSP known issues
             ('rtsp.*playback.reverse.*',
              'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4657'),

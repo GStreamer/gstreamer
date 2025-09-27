@@ -124,7 +124,7 @@ KNOWN_ISSUES = {
             },
         ],
     },
-    "https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/578": {
+    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4672": {
         "tests": [
             "validate.http.playback.change_state_intensive.*ogv",
             "validate.http.playback.change_state_intensive.*ogg",
@@ -154,7 +154,7 @@ KNOWN_ISSUES = {
             },
         ],
     },
-    "https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/578": {
+    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4672": {
         "tests": [
             "validate.http.playback.change_state_intensive.*ogv",
             "validate.http.playback.change_state_intensive.*ogg",
@@ -166,7 +166,7 @@ KNOWN_ISSUES = {
             },
         ],
     },
-    "https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/579": {
+    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4666": {
         "tests": [
             "validate.http.*ogv",
             "validate.http.*ogg",

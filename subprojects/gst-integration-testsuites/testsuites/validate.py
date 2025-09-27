@@ -46,11 +46,11 @@ BLACKLIST = [('validate.file.transcode.to_vorbis_and_vp8_in_webm.GH1_00094_1920x
              ('validate.testbin.transcode.*',
               "Encoding testsrc is not so interesting and the source is now unlimited"),
              ('validate.file.*.simple.fast_forward.synchronized',
-              'https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/541'),
+              'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4665'),
              ('validate.hls.playback.change_state_intensive.*',
               'https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/482'),
             ('validate.rtsp.*playback.switch.*',
-             'https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/357'),
+             'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4664'),
             ('validate.rtsp.*playback.*seek.*mxf$|validate.rtsp.*playback.*change_state_intensive.*mxf$',
              'Actions on MXF streams with rtsp-server fail in racy ways.'
              ' (Deactivating as it is not very important.)'),
