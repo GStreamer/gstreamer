@@ -30,9 +30,9 @@ TEST_MANAGER = "validate"
 
 BLACKLIST = [
     ('validate.dash.playback.trick_mode_seeks.DASHIF_TestCases_2a_qualcomm_1_MultiResMPEG2',
-     'https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/545'),
+     'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4670'),
     ('validate.dash.playback.trick_mode_seeks.DASHIF_TestCases_1a_netflix_exMPD_BIP_TC1',
-     'https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/545'),
+     'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4670'),
 ]
 
 

@@ -48,7 +48,7 @@ BLACKLIST = [('validate.file.transcode.to_vorbis_and_vp8_in_webm.GH1_00094_1920x
              ('validate.file.*.simple.fast_forward.synchronized',
               'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4665'),
              ('validate.hls.playback.change_state_intensive.*',
-              'https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/482'),
+              'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4668'),
             ('validate.rtsp.*playback.switch.*',
              'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4664'),
             ('validate.rtsp.*playback.*seek.*mxf$|validate.rtsp.*playback.*change_state_intensive.*mxf$',

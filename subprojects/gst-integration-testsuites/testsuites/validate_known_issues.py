@@ -12,7 +12,7 @@ KNOWN_ISSUES = {
         ],
         "max_retries": 2,
     },
-    "https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/486": {
+    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4669": {
         "tests": [
             "validate.dash.playback.fast_forward.dash_exMPD_BIP_TC1",
             "validate.dash.playback.reverse_playback.dash_exMPD_BIP_TC1",

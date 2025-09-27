@@ -861,7 +861,7 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
                         self.set_result(Result.PASSED,
                                         """Got no EOS 30 seconds after sending EOS,
                                         in HLS known and tolerated issue:
-                                        https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/132""")
+                                        https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4667""")
                         return Result.KNOWN_ERROR
 
                     self.set_result(
@@ -1330,7 +1330,7 @@ not been tested and explicitly activated if you set use --wanted-tests ALL""")
 
             # MPEG TS known issues:
             ('*.playback.reverse_playback.*(?:_|.)(?:|m)ts$',
-             "https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/97", '(?i)'),
+             "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4671", '(?i)'),
 
             # Fragmented MP4 disabled tests:
             ('*.playback..*seek.*.fragmented_nonseekable_sink_mp4',
