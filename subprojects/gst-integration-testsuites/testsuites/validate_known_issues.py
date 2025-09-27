@@ -49,7 +49,7 @@ KNOWN_ISSUES = {
             },
         ]
     },
-    "https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/563": {
+    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4660": {
         "tests": [
             "validate.rtsp.playback.seek_backward.bowlerhatdancer_sleepytom_SGP_mjpeg_avi",
         ],
@@ -61,7 +61,7 @@ KNOWN_ISSUES = {
             }
         ]
     },
-    "https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/377": {
+    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4658": {
         "tests": [
             "validate.rtsp.*",
         ],
@@ -84,7 +84,7 @@ KNOWN_ISSUES = {
             },
         ],
     },
-    "https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/582": {
+    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4661": {
         "tests": [
             "validate.http.playback.reverse_playback.*",
             "validate.http.playback.*seek.*",
@@ -136,7 +136,7 @@ KNOWN_ISSUES = {
             },
         ],
     },
-    "https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/585": {
+    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4662": {
         "tests": [
             "validate.rtsp.*playback.*seek.*.",
         ],

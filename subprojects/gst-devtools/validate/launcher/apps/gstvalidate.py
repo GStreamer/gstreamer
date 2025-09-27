@@ -1320,9 +1320,9 @@ not been tested and explicitly activated if you set use --wanted-tests ALL""")
 
             # Matroska/WEBM known issues:
             ("*.reverse_playback.*webm$",
-             "https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/65"),
+             "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4566"),
             ("*.reverse_playback.*mkv$",
-             "https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/65"),
+             "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4566"),
             ("http.playback.seek_with_stop.*webm",
              "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
             ("http.playback.seek_with_stop.*mkv",
@@ -1361,9 +1361,9 @@ not been tested and explicitly activated if you set use --wanted-tests ALL""")
              "https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/281"),
             # RTSP known issues
             ('rtsp.*playback.reverse.*',
-             'https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/32'),
+             'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4657'),
             ('rtsp.*playback.seek_with_stop.*',
-             'https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/386'),
+             'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4659'),
             ('rtsp.*playback.fast_*',
              'rtpbasedepayload does not handle rate != 1.0 correctly'),
         ])
