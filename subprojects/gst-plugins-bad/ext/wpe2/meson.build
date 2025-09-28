@@ -28,15 +28,8 @@ if not wpe_feat.allowed()
   subdir_done()
 endif
 
-wpewebkit_dep = dependency('wpe-webkit-2.0', version: '>=2.46.0', required: wpe_feat)
+wpewebkit_dep = dependency('wpe-webkit-2.0', version: '>=2.50.0', required: wpe_feat)
 if not wpewebkit_dep.found()
-  subdir_done()
-endif
-
-# GstWPE2 makes use of the new WPEPlatform API, as it is optional though we need
-# to explicitely check for it.
-wpe_platform_dep = dependency('wpe-platform-2.0', required: wpe_feat)
-if not wpe_platform_dep.found()
   subdir_done()
 endif
 

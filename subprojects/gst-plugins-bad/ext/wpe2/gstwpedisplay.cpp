@@ -46,8 +46,7 @@ struct _WPEDisplayGStreamer
   GstGLDisplayEGL *gstEGLDisplay;
 
   EGLDisplay eglDisplay;
-  gchar *drm_device;
-  gchar *drm_render_node;
+  WPEDRMDevice *drmDevice;
 };
 
 #define wpe_display_gstreamer_parent_class parent_class
@@ -107,37 +106,28 @@ wpe_display_gstreamer_connect (WPEDisplay * display, GError ** error)
       gst_gl_context_get_proc_address (self->gstContext,
       "eglQueryDeviceStringEXT");
 
+  const char *drmDevice = NULL;
   const char *extensions =
       vt.eglQueryDeviceStringEXT (eglDevice, EGL_EXTENSIONS);
-  if (gst_gl_check_extension ("EGL_EXT_device_drm", extensions))
-    self->drm_device =
-        g_strdup (vt.eglQueryDeviceStringEXT (eglDevice,
-            EGL_DRM_DEVICE_FILE_EXT));
-  else {
-    // FIXME: This kind of hack is needed when using gtkglsink. glimagesink somehow works as expected.
-    const gchar *render_node_path = g_getenv ("GST_WPE_DRM_RENDER_NODE_PATH");
-    if (render_node_path) {
-      GST_DEBUG ("Setting render node path from GST_WPE_DRM_RENDER_NODE_PATH "
-          "environment variable");
-      self->drm_render_node = g_strdup (render_node_path);
-    } else {
-      GST_WARNING ("'EGL_EXT_device_drm' not available, hardcoding render node "
-          "to /dev/dri/renderD128");
-      self->drm_render_node = g_strdup ("/dev/dri/renderD128");
-    }
-    return TRUE;
+  if (gst_gl_check_extension ("EGL_EXT_device_drm", extensions)) {
+    drmDevice = vt.eglQueryDeviceStringEXT (eglDevice, EGL_DRM_DEVICE_FILE_EXT);
+  } else {
+    // For some unknown reason this path is triggered when using gtkglsink.
+    GST_DEBUG_OBJECT (self,
+        "'EGL_EXT_device_drm' extension missing, using empty DRM device and hoping for the best");
+    drmDevice = "";
   }
 
-  if (gst_gl_check_extension ("EGL_EXT_device_drm_render_node", extensions))
-    self->drm_render_node =
-        g_strdup (vt.eglQueryDeviceStringEXT (eglDevice,
-            EGL_DRM_RENDER_NODE_FILE_EXT));
-  else {
-    g_set_error_literal (error, WPE_VIEW_ERROR, WPE_VIEW_ERROR_RENDER_FAILED,
-        "Failed to initialize rendering: 'EGL_EXT_device_drm_render_node' not available");
-    return FALSE;
+  const char *drmRenderNode = NULL;
+  if (gst_gl_check_extension ("EGL_EXT_device_drm_render_node", extensions)) {
+    drmRenderNode =
+        vt.eglQueryDeviceStringEXT (eglDevice, EGL_DRM_RENDER_NODE_FILE_EXT);
+  } else {
+    GST_DEBUG_OBJECT (self,
+        "EGL_EXT_device_drm_render_node extension is missing, not setting drm_render_node path");
   }
 
+  self->drmDevice = wpe_drm_device_new (drmDevice, drmRenderNode);
   return TRUE;
 }
 
@@ -173,26 +163,16 @@ wpe_display_gstreamer_get_egl_display (WPEDisplay * display, GError **)
   return WPE_DISPLAY_GSTREAMER (display)->eglDisplay;
 }
 
-static const char *
+static WPEDRMDevice *
 wpe_display_gstreamer_get_drm_device (WPEDisplay * display)
 {
-  return WPE_DISPLAY_GSTREAMER (display)->drm_device;
-}
-
-static const char *
-wpe_display_gstreamer_get_drm_render_node (WPEDisplay * display)
-{
-  auto self = WPE_DISPLAY_GSTREAMER (display);
-  if (self->drm_render_node)
-    return self->drm_render_node;
-  return self->drm_device;
+  return WPE_DISPLAY_GSTREAMER (display)->drmDevice;
 }
 
 static void
 wpe_display_gstreamer_init (WPEDisplayGStreamer * display)
 {
-  display->drm_render_node = nullptr;
-  display->drm_device = nullptr;
+  display->drmDevice = nullptr;
 }
 
 static void
@@ -200,8 +180,8 @@ wpe_display_gstreamer_finalize (GObject * object)
 {
   auto self = WPE_DISPLAY_GSTREAMER (object);
 
-  g_clear_pointer (&self->drm_device, g_free);
-  g_clear_pointer (&self->drm_render_node, g_free);
+  if (self->drmDevice)
+    wpe_drm_device_unref (self->drmDevice);
 
   gst_clear_object (&self->gstEGLDisplay);
 
@@ -219,7 +199,6 @@ wpe_display_gstreamer_class_init (WPEDisplayGStreamerClass * klass)
   displayClass->create_view = wpe_display_gstreamer_create_view;
   displayClass->get_egl_display = wpe_display_gstreamer_get_egl_display;
   displayClass->get_drm_device = wpe_display_gstreamer_get_drm_device;
-  displayClass->get_drm_render_node = wpe_display_gstreamer_get_drm_render_node;
 
   gst_wpe_display_signals[SIGNAL_WPE_VIEW_CREATED] =
       g_signal_new ("wpe-view-created", G_TYPE_FROM_CLASS (klass),

@@ -313,7 +313,6 @@ GstWPEThreadedView::GstWPEThreadedView(
       WEBKIT_TYPE_WEB_VIEW, "web-context", web_context, "display", wpe_display,
       "website-policies", defaultWebsitePolicies, nullptr));
 
-  g_object_unref (wpe_display);
   g_object_unref(defaultWebsitePolicies);
 
   wpe.view = webkit_web_view_get_wpe_view (webkit.view);
@@ -650,8 +649,10 @@ GstWPEThreadedView::s_releaseBuffer (gpointer data)
   /* *INDENT-OFF* */
   s_view->dispatch([&]() {
     WPEBufferContext *context = static_cast<WPEBufferContext *>(data);
-    wpe_view_buffer_released(WPE_VIEW(context->view->wpe.view),
-                             context->buffer);
+    if (WPE_IS_VIEW(context->view->wpe.view)) {
+      wpe_view_buffer_released(WPE_VIEW(context->view->wpe.view),
+                               context->buffer);
+    }
     g_object_unref(context->buffer);
     g_free(context);
   });
