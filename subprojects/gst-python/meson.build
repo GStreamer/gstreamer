@@ -128,7 +128,8 @@ configinc = include_directories('.')
 meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.26.0', meson.project_version())
 
 pkgconfig = import('pkgconfig')
-plugins_install_dir = join_paths(libdir, 'gstreamer-1.0')
+plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
+python_plugin_install_dir = join_paths(plugins_install_dir, 'python')
 plugins_pkgconfig_install_dir = join_paths(plugins_install_dir, 'pkgconfig')
 if get_option('default_library') == 'shared'
   # If we don't build static plugins there is no need to generate pc files
@@ -139,6 +140,7 @@ subdir('gi')
 if not get_option('plugin').disabled()
   if get_option('default_library') != 'static'
     subdir('plugin')
+    subdir('plugins')
   else
     warning('Python plugin not supported with `static` builds yet.')
   endif

@@ -168,16 +168,7 @@ parser = custom_target('gesparselex',
   command : [flex, '-Ppriv_ges_parse_yy', '--header-file=@OUTPUT1@', '-o', '@OUTPUT0@', '@INPUT@']
 )
 
-ges_resources = []
-if has_python
-  ges_resources = gnome.compile_resources(
-      'ges-resources', 'ges.resource',
-      source_dir: '.',
-      c_name: 'ges'
-  )
-endif
-
-libges = library('ges-1.0', ges_sources, parser, ges_resources,
+libges = library('ges-1.0', ges_sources, parser,
     version : libversion,
     soversion : soversion,
     darwin_versions : osxversion,

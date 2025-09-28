@@ -323,6 +323,9 @@ def get_subprocess_env(options, gst_version):
     prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(SCRIPTDIR, 'subprojects',
                                                          'gst-python', 'plugin'),
                     options)
+    prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(SCRIPTDIR, 'subprojects',
+                                                         'gst-python', 'plugins', 'ges'),
+                    options)
     prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(PREFIX_DIR, 'lib',
                                                          'gstreamer-1.0'),
                     options)

@@ -3,7 +3,7 @@ gstpython = library('gstpython',
     include_directories : [configinc],
     dependencies : [gst_dep, pygobject_dep, gstbase_dep, python_embed_dep, gmodule_dep, libdl],
     install : true,
-    install_dir : '@0@/gstreamer-1.0'.format(get_option('libdir')),
+    install_dir : plugins_install_dir,
 )
 plugins = [gstpython]
 # XXX: Generate a pc file for this plugin? Can gstpython be statically linked?

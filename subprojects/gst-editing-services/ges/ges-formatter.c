@@ -40,38 +40,6 @@
 #include "ges-pitivi-formatter.h"
 #endif
 
-#ifdef HAS_PYTHON
-#include <Python.h>
-#include "ges-resources.h"
-
-/*
- * We need to call dlopen() directly on macOS to workaround a macOS runtime
- * linker bug. When there are nested dlopen() calls and the second dlopen() is
- * called from another library (such as gmodule), @loader_path is resolved as
- * @executable_path and RPATHs are read from the executable (gst-plugin-scanner)
- * instead of the library itself (libgstges.dylib). This doesn't happen if the
- * second dlopen() call is directly in the source code of the library.
- * Previously seen at:
- * https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1171#note_2290789
- */
-#ifdef G_OS_WIN32
-#include <gmodule.h>
-#define ges_module_open(fname) g_module_open(fname,0)
-#define ges_module_error g_module_error
-#define ges_module_symbol(module,name,symbol) g_module_symbol(module,name,symbol)
-#else
-#include <dlfcn.h>
-#define ges_module_open(fname) dlopen(fname,RTLD_NOW | RTLD_GLOBAL)
-#define ges_module_error dlerror
-static inline gboolean
-ges_module_symbol (gpointer handle, const char *name, gpointer * symbol)
-{
-  *symbol = dlsym (handle, name);
-  return *symbol != NULL;
-}
-#endif
-#endif /* HAS_PYTHON */
-
 GST_DEBUG_CATEGORY_STATIC (ges_formatter_debug);
 #undef GST_CAT_DEFAULT
 #define GST_CAT_DEFAULT ges_formatter_debug
@@ -578,103 +546,19 @@ _list_formatters (GType * formatters, guint n_formatters)
 static void
 load_python_formatters (void)
 {
-#ifdef HAS_PYTHON
-  PyGILState_STATE state = 0;
-  PyObject *main_module, *main_locals;
-  GError *err = NULL;
-  GResource *resource = ges_get_resource ();
-  GBytes *bytes =
-      g_resource_lookup_data (resource, "/ges/python/gesotioformatter.py",
-      G_RESOURCE_LOOKUP_FLAGS_NONE, &err);
-  PyObject *code = NULL, *res = NULL;
-  gboolean we_initialized = FALSE;
-  gpointer has_python = NULL;
+  GstPlugin *python_plugin = gst_registry_find_plugin (gst_registry_get (),
+      "python");
 
-  GST_LOG ("Checking to see if libpython is already loaded");
-  if (ges_module_symbol (ges_module_open (NULL),
-          "_Py_NoneStruct", &has_python) && has_python) {
-    GST_LOG ("libpython is already loaded");
-  } else {
-    GST_LOG ("loading libpython by name: %s", PY_LIB_FNAME);
-    if (!ges_module_open (PY_LIB_FNAME)) {
-      GST_ERROR ("Couldn't load libpython. Reason: %s", ges_module_error ());
-      return;
+  if (python_plugin && !gst_plugin_is_loaded (python_plugin)) {
+    GST_DEBUG ("Loading python plugin to load python formatters");
+
+    GstPlugin *loaded_plugin = gst_plugin_load (python_plugin);
+    if (!loaded_plugin) {
+      GST_INFO ("Failed to load python plugin, not loading python formatters");
+    } else {
+      gst_object_unref (loaded_plugin);
     }
   }
-
-  if (!Py_IsInitialized ()) {
-    GST_LOG ("python wasn't already initialized");
-    /* set the correct plugin for registering stuff */
-    Py_Initialize ();
-    we_initialized = TRUE;
-  } else {
-    GST_LOG ("python was already initialized");
-    state = PyGILState_Ensure ();
-  }
-
-  if (!bytes) {
-    GST_DEBUG ("Could not load gesotioformatter: %s\n", err->message);
-
-    g_clear_error (&err);
-
-    goto done;
-  }
-
-  main_module = PyImport_AddModule ("__main__");
-  if (main_module == NULL) {
-    GST_WARNING ("Could not add main module");
-    PyErr_Print ();
-    PyErr_Clear ();
-    goto done;
-  }
-
-  main_locals = PyModule_GetDict (main_module);
-  /* Compiling the code ourself so it has a proper filename */
-  code =
-      Py_CompileString (g_bytes_get_data (bytes, NULL), "gesotioformatter.py",
-      Py_file_input);
-  if (PyErr_Occurred ()) {
-    PyErr_Print ();
-    PyErr_Clear ();
-    goto done;
-  }
-  res = PyEval_EvalCode ((gpointer) code, main_locals, main_locals);
-  Py_XDECREF (code);
-  Py_XDECREF (res);
-  if (PyErr_Occurred ()) {
-    PyObject *exception_backtrace;
-    PyObject *exception_type;
-    PyObject *exception_value, *exception_value_repr, *exception_value_str;
-
-    PyErr_Fetch (&exception_type, &exception_value, &exception_backtrace);
-    PyErr_NormalizeException (&exception_type, &exception_value,
-        &exception_backtrace);
-
-    exception_value_repr = PyObject_Repr (exception_value);
-    exception_value_str =
-        PyUnicode_AsEncodedString (exception_value_repr, "utf-8", "Error ~");
-    GST_INFO ("Could not load OpenTimelineIO formatter: %s",
-        PyBytes_AS_STRING (exception_value_str));
-
-    Py_XDECREF (exception_type);
-    Py_XDECREF (exception_value);
-    Py_XDECREF (exception_backtrace);
-
-    Py_XDECREF (exception_value_repr);
-    Py_XDECREF (exception_value_str);
-    PyErr_Clear ();
-  }
-
-done:
-  if (bytes)
-    g_bytes_unref (bytes);
-
-  if (we_initialized) {
-    PyEval_SaveThread ();
-  } else {
-    PyGILState_Release (state);
-  }
-#endif /* HAS_PYTHON */
 }
 
 void
