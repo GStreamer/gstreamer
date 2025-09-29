@@ -3259,6 +3259,7 @@ gst_bin_continue_func (GstBin * bin, BinContinueData * data)
 
   GST_STATE_UNLOCK (bin);
   GST_DEBUG_OBJECT (bin, "state continue done");
+  g_free (data);
 
   return;
 
@@ -3267,6 +3268,8 @@ interrupted:
     GST_OBJECT_UNLOCK (bin);
     GST_STATE_UNLOCK (bin);
     GST_DEBUG_OBJECT (bin, "state continue aborted due to intervening change");
+    g_free (data);
+
     return;
   }
 }
@@ -3286,18 +3289,11 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
 }
 
 static void
-free_bin_continue_data (BinContinueData * data)
-{
-  g_free (data);
-}
-
-static void
 bin_push_state_continue (GstBin * bin, BinContinueData * data)
 {
   GST_DEBUG_OBJECT (bin, "pushing continue on thread pool");
-  gst_element_call_async (GST_ELEMENT_CAST (bin),
-      (GstElementCallAsyncFunc) gst_bin_continue_func, data,
-      (GDestroyNotify) free_bin_continue_data);
+  gst_object_call_async (GST_OBJECT_CAST (bin),
+      (GstObjectCallAsyncFunc) gst_bin_continue_func, data);
 }
 
 /* an element started an async state change, if we were not busy with a state
