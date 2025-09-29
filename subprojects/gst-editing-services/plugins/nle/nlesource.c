@@ -545,7 +545,7 @@ nle_source_send_event (GstElement * element, GstEvent * event)
 }
 
 static void
-ghost_seek_pad (GstElement * source, gpointer user_data)
+ghost_seek_pad (GstObject * source, gpointer user_data)
 {
   NleSourcePrivate *priv = NLE_SOURCE (source)->priv;
 
@@ -576,7 +576,7 @@ pad_brobe_cb (GstPad * pad, GstPadProbeInfo * info, NleSource * source)
   if (!priv->areblocked && priv->seek_event) {
     GST_INFO_OBJECT (pad, "Blocked now, launching seek");
     priv->areblocked = TRUE;
-    gst_element_call_async (GST_ELEMENT (source), ghost_seek_pad, NULL, NULL);
+    gst_object_call_async (GST_OBJECT (source), ghost_seek_pad, NULL);
     GST_OBJECT_UNLOCK (source);
 
     return GST_PAD_PROBE_OK;
