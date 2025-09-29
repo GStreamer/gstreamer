@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2012 Collabora Ltd.
  *     Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
  * Copyright (C) 2013 Sebastian Dröge <slomo@circular-chaos.org>
@@ -1560,8 +1560,8 @@ gst_openjpeg_dec_decode_frame_multiple (GstVideoDecoder * decoder,
     self->available_threads--;
   g_mutex_unlock (&self->messages_lock);
 
-  gst_element_call_async (GST_ELEMENT (self),
-      (GstElementCallAsyncFunc) gst_openjpeg_dec_decode_stripe, message, NULL);
+  gst_object_call_async (GST_OBJECT (self),
+      (GstObjectCallAsyncFunc) gst_openjpeg_dec_decode_stripe, message);
   if (gst_video_decoder_get_subframe_mode (decoder)
       && gst_openjpeg_dec_is_last_input_subframe (decoder, message))
     gst_video_decoder_have_last_subframe (decoder, frame);
