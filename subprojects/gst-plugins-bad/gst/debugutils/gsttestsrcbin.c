@@ -572,9 +572,8 @@ gst_test_src_bin_uri_handler_set_uri (GstURIHandler * handler,
     if (self->expose_sources_async) {
       GST_OBJECT_UNLOCK (self);
 
-      gst_element_call_async (GST_ELEMENT (self),
-          (GstElementCallAsyncFunc) gst_test_src_bin_create_sources,
-          NULL, NULL);
+      gst_object_call_async (GST_OBJECT (self),
+          (GstObjectCallAsyncFunc) gst_test_src_bin_create_sources, NULL);
     } else {
       GST_OBJECT_UNLOCK (self);
 
@@ -680,9 +679,8 @@ gst_test_src_bin_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:{
       if (self->expose_sources_async) {
-        gst_element_call_async (element,
-            (GstElementCallAsyncFunc) gst_test_src_bin_create_sources,
-            NULL, NULL);
+        gst_object_call_async (GST_OBJECT_CAST (element),
+            (GstObjectCallAsyncFunc) gst_test_src_bin_create_sources, NULL);
       } else {
         gst_test_src_bin_create_sources (self);
       }
