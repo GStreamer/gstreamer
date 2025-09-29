@@ -39,7 +39,7 @@
 #include "qglrenderer.h"
 #include "pipeline.h"
 
-#if defined(Q_WS_MAC)
+#if GST_GL_HAVE_PLATFORM_CGL
 extern void *qt_current_nsopengl_context ();
 #endif
 
