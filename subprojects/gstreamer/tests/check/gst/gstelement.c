@@ -22,6 +22,10 @@
 #  include "config.h"
 #endif
 
+#ifdef GST_DISABLE_DEPRECATED
+#undef GST_DISABLE_DEPRECATED
+#endif
+
 #include <gst/check/gstcheck.h>
 #include <gst/gstelement.h>
 

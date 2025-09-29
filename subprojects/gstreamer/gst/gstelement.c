@@ -3810,6 +3810,8 @@ gst_element_remove_property_notify_watch (GstElement * element, gulong watch_id)
  *
  * MT safe.
  *
+ * Deprecated: 1.28: Use gst_object_call_async() or gst_call_async() instead.
+ *
  * Since: 1.10
  */
 void

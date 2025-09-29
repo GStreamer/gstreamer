@@ -1413,10 +1413,13 @@ void                    gst_element_lost_state          (GstElement * element);
  * @user_data: Data passed in the function where that callback has been passed
  *
  * Callback prototype used in #gst_element_call_async
+ *
+ * Deprecated: 1.28: Use #GstObjectCallAsyncFunc with gst_object_call_async()
+ * or #GstCallAsyncFunc with gst_call_async() instead.
  */
 typedef void          (*GstElementCallAsyncFunc)        (GstElement * element,
                                                          gpointer     user_data);
-GST_API
+GST_DEPRECATED_FOR(gst_object_call_async)
 void                    gst_element_call_async          (GstElement * element,
                                                          GstElementCallAsyncFunc func, gpointer user_data,
                                                          GDestroyNotify destroy_notify);
