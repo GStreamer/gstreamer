@@ -122,7 +122,6 @@ if not found_ajantv2
   libajantv2_dep = dependency('libajantv2',
                               include_type: 'system',
                               required: aja_option,
-                              allow_fallback: true,
                               default_options: ['warning_level=0'])
   if not libajantv2_dep.found()
     subdir_done()
