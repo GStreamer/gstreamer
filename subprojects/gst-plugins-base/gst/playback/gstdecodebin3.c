@@ -1356,8 +1356,8 @@ remove_slot_from_streaming_thread (GstDecodebin3 * dbin, MultiQueueSlot * slot)
   /* The minimum interleave might have changed, recalculate it */
   gst_decodebin3_update_min_interleave (dbin);
 
-  gst_element_call_async (GST_ELEMENT_CAST (dbin),
-      (GstElementCallAsyncFunc) mq_slot_free, slot, NULL);
+  gst_object_call_async (GST_OBJECT_CAST (dbin),
+      (GstObjectCallAsyncFunc) mq_slot_free, slot);
 }
 
 static void
@@ -3933,7 +3933,7 @@ cleanup:
  * @msg: A pointer to a #GstMessage
  *
  * (Re)Configure the @output for the associated slot active stream.
- * 
+ *
  * Returns: #TRUE if the output was properly (re)configured. #FALSE if it
  * failed, in which case the stream shouldn't be used and the @msg might contain
  * a message to be posted on the bus.
