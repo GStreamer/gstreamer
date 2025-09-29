@@ -5,6 +5,10 @@ sources = [
   'qglrenderer.cpp',
 ]
 
+if host_system == 'darwin'
+  sources += ['cocoa_utils.mm']
+endif
+
 moc_headers = [
   'gstthread.h',
   'pipeline.h',
