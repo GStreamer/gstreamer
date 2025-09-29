@@ -57,8 +57,7 @@ static void d3d_class_notify_device_lost (GstD3DVideoSink * sink);
 static void d3d_class_display_device_destroy (GstD3DVideoSinkClass * klass);
 static gboolean d3d_class_display_device_create (GstD3DVideoSinkClass * klass,
     UINT adapter);
-static void d3d_class_hidden_window_message_queue (gpointer data,
-    gpointer user_data);
+static void d3d_class_hidden_window_message_queue (gpointer data);
 
 static LRESULT APIENTRY d3d_wnd_proc_internal (HWND hWnd, UINT message,
     WPARAM wParam, LPARAM lParam);
@@ -76,6 +75,7 @@ static gint WM_D3DVIDEO_NOTIFY_DEVICE_LOST = 0;
 
 typedef struct
 {
+  GstD3DVideoSinkClass *klass;
   gint window_message_id;
   guint create_count;
 } GstD3DVideoSinkEvent;
@@ -2675,11 +2675,10 @@ d3d_class_notify_device_lost (GstD3DVideoSink * sink)
   GstD3DVideoSinkClass *klass = GST_D3DVIDEOSINK_GET_CLASS (sink);
   GstD3DVideoSinkEvent *evt = g_new0 (GstD3DVideoSinkEvent, 1);
 
+  evt->klass = klass;
   evt->window_message_id = IDT_DEVICE_RESET_TIMER;
   evt->create_count = klass->create_count;
-  gst_element_call_async (GST_ELEMENT (klass),
-      (GstElementCallAsyncFunc) d3d_class_hidden_window_message_queue, evt,
-      g_free);
+  gst_call_async (d3d_class_hidden_window_message_queue, evt);
 }
 
 static void
@@ -2746,14 +2745,16 @@ end:
 /* Hidden Window Loop Thread */
 
 static void
-d3d_class_hidden_window_message_queue (gpointer data, gpointer user_data)
+d3d_class_hidden_window_message_queue (gpointer data)
 {
   guint id = 0;
-  GstD3DVideoSinkClass *klass = (GstD3DVideoSinkClass *) data;
-  GstD3DVideoSinkEvent *evt = (GstD3DVideoSinkEvent *) user_data;
+  GstD3DVideoSinkEvent *evt = (GstD3DVideoSinkEvent *) data;
+  GstD3DVideoSinkClass *klass = evt->klass;
 
-  if (!klass || !evt)
+  if (!klass) {
+    g_free (data);
     return;
+  }
 
   switch (evt->window_message_id) {
     case IDT_DEVICE_RESET_TIMER:
@@ -2773,6 +2774,8 @@ d3d_class_hidden_window_message_queue (gpointer data, gpointer user_data)
       }
       break;
   }
+
+  g_free (data);
 }
 
 static LRESULT APIENTRY
@@ -2787,11 +2790,10 @@ D3DHiddenWndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       switch (wParam) {
         case IDT_DEVICE_RESET_TIMER:
           evt = g_new0 (GstD3DVideoSinkEvent, 1);
+          evt->klass = klass;
           evt->window_message_id = IDT_DEVICE_RESET_TIMER;
           evt->create_count = klass->create_count;
-          gst_element_call_async (GST_ELEMENT (klass),
-              (GstElementCallAsyncFunc) d3d_class_hidden_window_message_queue,
-              evt, g_free);
+          gst_call_async (d3d_class_hidden_window_message_queue, evt);
           break;
       }
       return 0;
