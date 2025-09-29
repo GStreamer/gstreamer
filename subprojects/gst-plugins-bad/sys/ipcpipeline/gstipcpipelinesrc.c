@@ -680,6 +680,8 @@ do_oob_event (GstElement * element, gpointer user_data)
     GST_DEBUG_OBJECT (src, "Event pushed, return %d", ret);
     gst_ipc_pipeline_comm_write_boolean_ack_to_fd (&src->comm, id, ret);
   }
+
+  gst_event_unref (event);
 }
 
 static void
@@ -732,8 +734,8 @@ on_event (guint32 id, GstEvent * event, gboolean upstream, gpointer user_data)
     } else {
       GST_DEBUG_OBJECT (src,
           "This is not a serialized event, pushing in a thread");
-      gst_element_call_async (GST_ELEMENT (src), do_oob_event, event,
-          (GDestroyNotify) gst_event_unref);
+      gst_object_call_async (GST_OBJECT (src),
+          (GstObjectCallAsyncFunc) do_oob_event, event);
     }
   }
 }
@@ -769,6 +771,8 @@ do_oob_query (GstElement * element, gpointer user_data)
     GST_DEBUG_OBJECT (src, "Query pushed, return %d", ret);
   }
   gst_ipc_pipeline_comm_write_query_result_to_fd (&src->comm, id, ret, query);
+
+  gst_query_unref (query);
 }
 
 static void
@@ -788,8 +792,8 @@ on_query (guint32 id, GstQuery * query, gboolean upstream, gpointer user_data)
   } else {
     gst_mini_object_set_qdata (GST_MINI_OBJECT (query), QUARK_UPSTREAM,
         GINT_TO_POINTER (upstream), NULL);
-    gst_element_call_async (GST_ELEMENT (src), do_oob_query, query,
-        (GDestroyNotify) gst_query_unref);
+    gst_object_call_async (GST_OBJECT (src),
+        (GstObjectCallAsyncFunc) do_oob_query, query);
   }
 }
 
@@ -869,6 +873,8 @@ done_nolock:
   GST_DEBUG_OBJECT (src, "sending state change ack, ret = %s",
       gst_state_change_return_get_name (ret));
   gst_ipc_pipeline_comm_write_state_change_ack_to_fd (&src->comm, id, ret);
+
+  g_free (data);
 }
 
 static void
@@ -885,7 +891,8 @@ on_state_change (guint32 id, GstStateChange transition, gpointer user_data)
   d->id = id;
   d->transition = transition;
 
-  gst_element_call_async (ipcpipelinesrc, do_state_change, d, g_free);
+  gst_object_call_async (GST_OBJECT (ipcpipelinesrc),
+      (GstObjectCallAsyncFunc) do_state_change, d);
 }
 
 static void

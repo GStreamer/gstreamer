@@ -526,6 +526,8 @@ do_async_done (GstElement * element, gpointer user_data)
     GST_OBJECT_UNLOCK (sink);
     GST_STATE_UNLOCK (sink);
   }
+
+  gst_message_unref (message);
 }
 
 static void
@@ -540,8 +542,8 @@ on_message (guint32 id, GstMessage * message, gpointer user_data)
       GST_OBJECT_LOCK (sink);
       if (sink->pass_next_async_done) {
         GST_OBJECT_UNLOCK (sink);
-        gst_element_call_async (GST_ELEMENT (sink), do_async_done,
-            message, (GDestroyNotify) gst_message_unref);
+        gst_object_call_async (GST_OBJECT (sink),
+            (GstObjectCallAsyncFunc) do_async_done, message);
       } else {
         GST_OBJECT_UNLOCK (sink);
         gst_message_unref (message);
