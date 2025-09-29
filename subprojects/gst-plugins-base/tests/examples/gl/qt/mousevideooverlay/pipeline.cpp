@@ -20,7 +20,6 @@
 
 #include <gst/video/videooverlay.h>
 #include <gst/video/video.h>
-#include <GL/gl.h>
 #include "../gl-compat-defines.h"
 #include "pipeline.h"
 

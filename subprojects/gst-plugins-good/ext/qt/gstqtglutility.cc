@@ -333,12 +333,12 @@ qt_opengl_native_context_from_gst_gl_context (GstGLContext * context)
                 egl_display = (EGLDisplay) gst_gl_display_get_handle ((GstGLDisplay *) display_egl);
 #endif
         }
-#endif
+#endif // GST_GL_HAVE_WINDOW_WAYLAND
         gst_object_unref (display_egl);
         gst_object_unref (display);
         return QVariant::fromValue(QEGLNativeContext((EGLContext) handle, egl_display));
     }
-#endif
+#endif // GST_GL_HAVE_PLATFORM_EGL
 #if GST_GL_HAVE_WINDOW_WIN32 && GST_GL_HAVE_PLATFORM_WGL && defined (HAVE_QT_WIN32)
     if (platform == GST_GL_PLATFORM_WGL) {
         GstGLWindow *window = gst_gl_context_get_window (context);
