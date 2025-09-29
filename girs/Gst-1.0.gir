@@ -7198,6 +7198,19 @@ for (i = 0; i &lt; 1000; i++) {
         </parameter>
       </parameters>
     </function-macro>
+    <callback name="CallAsyncFunc" c:type="GstCallAsyncFunc" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.h">Callback prototype used in #gst_call_async</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstutils.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="0">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.h">Data passed in the function where that callback has been passed</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
+      </parameters>
+    </callback>
     <record name="Caps" c:type="GstCaps" glib:type-name="GstCaps" glib:get-type="gst_caps_get_type" c:symbol-prefix="caps">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Caps (capabilities) are lightweight refcounted objects describing media types.
 They are composed of an array of #GstStructure.
@@ -16614,7 +16627,7 @@ MT safe.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="call_async" c:identifier="gst_element_call_async" version="1.10">
+      <method name="call_async" c:identifier="gst_element_call_async" version="1.10" deprecated="1" deprecated-version="1.28">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.c">Calls @func from another thread and passes @user_data to it. This is to be
 used for cases when a state change has to be performed from a streaming
 thread, directly via gst_element_set_state() or indirectly e.g. via SEEK
@@ -16625,6 +16638,7 @@ deadlocks in many situations, as they might involve waiting for the
 streaming thread to shut down from this very streaming thread.
 
 MT safe.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_object_call_async() or gst_call_async() instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gstelement.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -18516,8 +18530,10 @@ gst_element_set_state() or gst_element_sync_state_with_parent().</doc>
         </parameters>
       </glib:signal>
     </class>
-    <callback name="ElementCallAsyncFunc" c:type="GstElementCallAsyncFunc">
+    <callback name="ElementCallAsyncFunc" c:type="GstElementCallAsyncFunc" deprecated="1" deprecated-version="1.28">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">Callback prototype used in #gst_element_call_async</doc>
+      <doc-deprecated xml:space="preserve">Use #GstObjectCallAsyncFunc with gst_object_call_async()
+or #GstCallAsyncFunc with gst_call_async() instead.</doc-deprecated>
       <source-position filename="../subprojects/gstreamer/gst/gstelement.h"/>
       <return-value transfer-ownership="none">
         <type name="none" c:type="void"/>
@@ -30444,6 +30460,28 @@ has been setup for a non suitable property, %TRUE otherwise.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="call_async" c:identifier="gst_object_call_async" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstobject.c">Equivalent to gst_element_call_async() but this API allows @func to be called
+with #GstObject. See also gst_element_call_async()</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstobject.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="object" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstobject.c">a #GstObject</doc>
+            <type name="Object" c:type="GstObject*"/>
+          </instance-parameter>
+          <parameter name="func" transfer-ownership="none" scope="async" closure="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstobject.c">function to call asynchronously from another thread</doc>
+            <type name="ObjectCallAsyncFunc" c:type="GstObjectCallAsyncFunc"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstobject.c">data to pass to @func</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="default_error" c:identifier="gst_object_default_error">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">A default error function that uses g_printerr() to display the error message
 and the optional debug string..
@@ -31048,6 +31086,23 @@ the elements contained in that bin.</doc>
         </parameters>
       </glib:signal>
     </class>
+    <callback name="ObjectCallAsyncFunc" c:type="GstObjectCallAsyncFunc" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstobject.h">Callback prototype used in #gst_object_call_async</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstobject.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="object" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstobject.h">A #GstObject this function has been called against</doc>
+          <type name="Object" c:type="GstObject*"/>
+        </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstobject.h">Data passed in the function where that callback has been passed</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
+      </parameters>
+    </callback>
     <record name="ObjectClass" c:type="GstObjectClass" glib:is-gtype-struct-for="Object">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstobject.h">GStreamer base object class.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstobject.h"/>
@@ -55096,6 +55151,23 @@ amount of memory allocated as @xy, i.e. 2*n*sizeof(GstClockTime).
         <parameter name="r_squared" direction="out" caller-allocates="0" transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">R-squared</doc>
           <type name="gdouble" c:type="gdouble*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="call_async" c:identifier="gst_call_async" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Calls @func from another thread and passes @user_data to it.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstutils.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="func" transfer-ownership="none" scope="async" closure="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">function to call asynchronously from another thread</doc>
+          <type name="CallAsyncFunc" c:type="GstCallAsyncFunc"/>
+        </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">data to pass to @func</doc>
+          <type name="gpointer" c:type="gpointer"/>
         </parameter>
       </parameters>
     </function>
