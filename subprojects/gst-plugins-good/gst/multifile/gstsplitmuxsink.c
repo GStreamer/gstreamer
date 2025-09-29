@@ -1250,8 +1250,8 @@ eos_context_async (MqStreamCtx * ctx, GstSplitMuxSink * splitmux)
       sinkpad, ctx);
 
   g_assert_nonnull (helper->pad);
-  gst_element_call_async (GST_ELEMENT (splitmux),
-      (GstElementCallAsyncFunc) send_eos_async, helper, NULL);
+  gst_object_call_async (GST_OBJECT (splitmux),
+      (GstObjectCallAsyncFunc) send_eos_async, helper);
 }
 
 /* Called with lock held. TRUE iff all contexts have a
@@ -2146,6 +2146,12 @@ _lock_and_set_to_null (GstElement * element, GstSplitMuxSink * splitmux)
   gst_bin_remove (GST_BIN (splitmux), element);
 }
 
+static void
+_lock_and_set_to_null_async (GstElement * element, GstSplitMuxSink * splitmux)
+{
+  _lock_and_set_to_null (element, splitmux);
+  gst_object_unref (splitmux);
+}
 
 static void
 _send_event (const GValue * value, gpointer user_data)
@@ -2400,12 +2406,12 @@ bus_handler (GstBin * bin, GstMessage * message)
             gst_object_unref (sinksink);
             gst_object_unref (muxersrc);
 
-            gst_element_call_async (muxer,
-                (GstElementCallAsyncFunc) _lock_and_set_to_null,
-                gst_object_ref (splitmux), gst_object_unref);
-            gst_element_call_async (sink,
-                (GstElementCallAsyncFunc) _lock_and_set_to_null,
-                gst_object_ref (splitmux), gst_object_unref);
+            gst_object_call_async (GST_OBJECT_CAST (muxer),
+                (GstObjectCallAsyncFunc) _lock_and_set_to_null_async,
+                gst_object_ref (splitmux));
+            gst_object_call_async (GST_OBJECT_CAST (sink),
+                (GstObjectCallAsyncFunc) _lock_and_set_to_null_async,
+                gst_object_ref (splitmux));
             gst_object_unref (muxer);
           } else {
             g_object_set_qdata ((GObject *) sink, EOS_FROM_US,

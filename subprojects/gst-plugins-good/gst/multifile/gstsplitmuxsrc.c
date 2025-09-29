@@ -619,9 +619,8 @@ gst_splitmux_part_measured_cb (GstSplitMuxPartReader * part,
       GST_INFO_OBJECT (splitmux,
           "All parts measured. Total duration %" GST_TIME_FORMAT
           " Activating first part", GST_TIME_ARGS (splitmux->total_duration));
-      gst_element_call_async (GST_ELEMENT_CAST (splitmux),
-          (GstElementCallAsyncFunc) gst_splitmux_src_activate_first_part,
-          NULL, NULL);
+      gst_object_call_async (GST_OBJECT_CAST (splitmux),
+          (GstObjectCallAsyncFunc) gst_splitmux_src_activate_first_part, NULL);
     }
     splitmux->did_initial_measuring = TRUE;
   }
@@ -684,9 +683,9 @@ gst_splitmux_part_bus_handler (GstBus * bus, GstMessage * msg,
               "All parts prepared. Total duration %" GST_TIME_FORMAT
               " Activating first part",
               GST_TIME_ARGS (splitmux->total_duration));
-          gst_element_call_async (GST_ELEMENT_CAST (splitmux),
-              (GstElementCallAsyncFunc) gst_splitmux_src_activate_first_part,
-              NULL, NULL);
+          gst_object_call_async (GST_OBJECT_CAST (splitmux),
+              (GstObjectCallAsyncFunc) gst_splitmux_src_activate_first_part,
+              NULL);
         }
         splitmux->did_initial_measuring = TRUE;
         SPLITMUX_SRC_UNLOCK (splitmux);
@@ -1274,9 +1273,8 @@ gst_splitmux_src_start (GstSplitMuxSrc * splitmux)
     GST_INFO_OBJECT (splitmux,
         "All parts measured. Total duration %" GST_TIME_FORMAT
         " Activating first part", GST_TIME_ARGS (splitmux->total_duration));
-    gst_element_call_async (GST_ELEMENT_CAST (splitmux),
-        (GstElementCallAsyncFunc) gst_splitmux_src_activate_first_part,
-        NULL, NULL);
+    gst_object_call_async (GST_OBJECT_CAST (splitmux),
+        (GstObjectCallAsyncFunc) gst_splitmux_src_activate_first_part, NULL);
     splitmux->did_initial_measuring = TRUE;
   }
   SPLITMUX_SRC_UNLOCK (splitmux);
@@ -2050,6 +2048,6 @@ schedule_lookahead_check (GstSplitMuxSrc * splitmux)
   }
   splitmux->lookahead_check_pending = TRUE;
 
-  gst_element_call_async (GST_ELEMENT_CAST (splitmux),
-      (GstElementCallAsyncFunc) do_lookahead_check, NULL, NULL);
+  gst_object_call_async (GST_OBJECT_CAST (splitmux),
+      (GstObjectCallAsyncFunc) do_lookahead_check, NULL);
 }

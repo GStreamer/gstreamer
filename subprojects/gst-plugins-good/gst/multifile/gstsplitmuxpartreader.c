@@ -503,9 +503,9 @@ splitmux_part_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
               "EOS while measuring streams. Resetting for ready");
           reader->prep_state = PART_STATE_PREPARING_RESET_FOR_READY;
 
-          gst_element_call_async (GST_ELEMENT_CAST (reader),
-              (GstElementCallAsyncFunc)
-              gst_splitmux_part_reader_finish_measuring_streams, NULL, NULL);
+          gst_object_call_async (GST_OBJECT_CAST (reader),
+              (GstObjectCallAsyncFunc)
+              gst_splitmux_part_reader_finish_measuring_streams, NULL);
         }
         goto drop_event;
       }
@@ -1114,15 +1114,15 @@ check_if_pads_collected (GstSplitMuxPartReader * reader)
         GST_DEBUG_OBJECT (reader,
             "no more pads - file %s. Measuring stream length", reader->path);
         reader->prep_state = PART_STATE_PREPARING_MEASURE_STREAMS;
-        gst_element_call_async (GST_ELEMENT_CAST (reader),
-            (GstElementCallAsyncFunc) gst_splitmux_part_reader_measure_streams,
-            NULL, NULL);
+        gst_object_call_async (GST_OBJECT_CAST (reader),
+            (GstObjectCallAsyncFunc) gst_splitmux_part_reader_measure_streams,
+            NULL);
       } else {
         reader->prep_state = PART_STATE_PREPARING_RESET_FOR_READY;
 
-        gst_element_call_async (GST_ELEMENT_CAST (reader),
-            (GstElementCallAsyncFunc)
-            gst_splitmux_part_reader_finish_measuring_streams, NULL, NULL);
+        gst_object_call_async (GST_OBJECT_CAST (reader),
+            (GstObjectCallAsyncFunc)
+            gst_splitmux_part_reader_finish_measuring_streams, NULL);
       }
     }
   }
