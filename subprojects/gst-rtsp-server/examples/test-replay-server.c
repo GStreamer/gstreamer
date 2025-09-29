@@ -219,8 +219,8 @@ gst_replay_bin_handle_message (GstBin * bin, GstMessage * message)
 
     if (next_loop) {
       /* Send seek event from non-streaming thread */
-      gst_element_call_async (GST_ELEMENT_CAST (self->uridecodebin),
-          (GstElementCallAsyncFunc) gst_replay_bin_do_segment_seek, self, NULL);
+      gst_object_call_async (GST_OBJECT_CAST (self->uridecodebin),
+          (GstObjectCallAsyncFunc) gst_replay_bin_do_segment_seek, self);
     } else {
       gst_element_foreach_src_pad (GST_ELEMENT_CAST (self->uridecodebin),
           (GstElementForeachPadFunc) send_eos_foreach_srcpad, NULL);
@@ -601,9 +601,8 @@ no_more_pads_cb (GstElement * uribin, GstReplayBin * self)
 
   /* Flush seeking from streaming thread might not be good idea.
    * Do this from another (non-streaming) thread */
-  gst_element_call_async (GST_ELEMENT_CAST (self->uridecodebin),
-      (GstElementCallAsyncFunc) gst_replay_bin_do_initial_segment_seek,
-      self, NULL);
+  gst_object_call_async (GST_OBJECT_CAST (self->uridecodebin),
+      (GstObjectCallAsyncFunc) gst_replay_bin_do_initial_segment_seek, self);
 }
 
 static GstElement *
