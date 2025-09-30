@@ -272,12 +272,12 @@ create_saveload_target (const gchar * targetname)
 GST_START_TEST (test_target_profile)
 {
   GstEncodingTarget *target;
-  GstEncodingProfile *prof;
+  GstEncodingProfile *prof, *ignored G_GNUC_UNUSED;
 
   target = create_saveload_target ("myponytarget");
 
   /* NULL isn't a valid profile name */
-  ASSERT_CRITICAL (gst_encoding_target_get_profile (target, NULL));
+  ASSERT_CRITICAL (ignored = gst_encoding_target_get_profile (target, NULL));
 
   /* try finding a profile that doesn't exist */
   fail_if (gst_encoding_target_get_profile (target,
