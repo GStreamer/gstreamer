@@ -777,7 +777,7 @@ usage.</doc>
       <method name="get_tls_authentication_mode" c:identifier="gst_rtsp_auth_get_tls_authentication_mode">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-auth.c">Get the #GTlsAuthenticationMode.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-auth.h"/>
-        <return-value transfer-ownership="full">
+        <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-auth.c">the #GTlsAuthenticationMode.</doc>
           <type name="Gio.TlsAuthenticationMode" c:type="GTlsAuthenticationMode"/>
         </return-value>
