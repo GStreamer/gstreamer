@@ -225,7 +225,6 @@ static gint
 find_syncframe (GstMultiHandleSink * sink, gint idx, gint direction);
 #define find_next_syncframe(s,i) 	find_syncframe(s,i,1)
 #define find_prev_syncframe(s,i) 	find_syncframe(s,i,-1)
-static gboolean is_sync_frame (GstMultiHandleSink * sink, GstBuffer * buffer);
 static gboolean gst_multi_handle_sink_stop (GstBaseSink * bsink);
 static gboolean gst_multi_handle_sink_start (GstBaseSink * bsink);
 static gint get_buffers_max (GstMultiHandleSink * sink, gint64 max);
@@ -1071,14 +1070,6 @@ gst_multi_handle_sink_client_queue_buffer (GstMultiHandleSink * mhsink,
   return TRUE;
 }
 
-static gboolean
-is_sync_frame (GstMultiHandleSink * sink, GstBuffer * buffer)
-{
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT))
-    return FALSE;
-  return TRUE;
-}
-
 /* find the keyframe in the list of buffers starting the
  * search from @idx. @direction as -1 will search backwards,
  * 1 will search forwards.
@@ -1100,7 +1091,7 @@ find_syncframe (GstMultiHandleSink * sink, gint idx, gint direction)
     GstBuffer *buf;
 
     buf = g_array_index (sink->bufqueue, GstBuffer *, i);
-    if (is_sync_frame (sink, buf)) {
+    if (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT)) {
       GST_LOG_OBJECT (sink, "found keyframe at %d from %d, direction %d",
           i, idx, direction);
       result = i;
@@ -1569,7 +1560,7 @@ gst_multi_handle_sink_recover_client (GstMultiHandleSink * sink,
         GstBuffer *buf;
 
         buf = g_array_index (sink->bufqueue, GstBuffer *, newbufpos);
-        if (is_sync_frame (sink, buf)) {
+        if (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT)) {
           /* found a buffer that is not a delta unit */
           break;
         }
@@ -1745,7 +1736,7 @@ restart:
         max_buffer_usage, limit);
     for (i = 0; i < limit; i++) {
       buf = g_array_index (mhsink->bufqueue, GstBuffer *, i);
-      if (is_sync_frame (mhsink, buf)) {
+      if (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT)) {
         /* found a sync frame, now extend the buffer usage to
          * include at least this frame. */
         max_buffer_usage = MAX (max_buffer_usage, i);
