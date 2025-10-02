@@ -40,3 +40,8 @@
     user-select: text;
     cursor: text;
 }
+
+/* show that nodes and clusters are (double) clickable */
+.node, .cluster {
+  cursor: pointer;
+}
