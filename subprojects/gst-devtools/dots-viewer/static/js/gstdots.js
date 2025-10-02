@@ -34,6 +34,9 @@ async function createOverlayElement(img, fname) {
     iframe.loading = 'lazy';
     iframe.src = '/overlay.html?svg=' + img.src + '&title=' + fname;
     iframe.className = 'internalframe';
+    iframe.onload = () => {
+        iframe.contentWindow.focus();
+    };
     contentDiv.appendChild(iframe);
 
     overlayDiv.appendChild(contentDiv);

@@ -43,6 +43,11 @@
         this.options = null
         this.enabled = null
         this.$element = null
+        // Initial mouse position when mouse has not moved yet.
+        this.mousePosition = {
+            x: window.innerWidth / 2,
+            y: window.innerHeight / 2
+        };
 
         this.init('graphviz.svg', element, options)
     }

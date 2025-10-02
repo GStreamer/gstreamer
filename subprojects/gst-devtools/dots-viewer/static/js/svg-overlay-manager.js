@@ -118,7 +118,8 @@ class SvgOverlayManager {
             } else if (evt.key == "w") {
                 this.gv.scaleInView((this.gv.zoom.percentage + 100));
             } else if (evt.key == "s") {
-                this.gv.scaleInView((this.gv.zoom.percentage - 100) || 100);
+                const newPercentage = Math.max(100, this.gv.zoom.percentage - 100);
+                this.gv.scaleInView(newPercentage);
             }
         });
     }
