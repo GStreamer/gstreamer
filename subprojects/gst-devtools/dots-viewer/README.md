@@ -18,6 +18,11 @@ You can run it with:
 cargo run
 ```
 
+Or in development mode with:
+```sh
+cargo watch -x run
+```
+
 Then you can open your browser at `http://localhost:3000` and wait for the
 graphs to appear as you use your GStreamer application. The web page is updated
 every time a new `.dot` file is placed in the path pointed by the folder watched
