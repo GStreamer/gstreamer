@@ -500,7 +500,7 @@ gst_v4l2_video_dec_negotiate (GstVideoDecoder * decoder)
    * process */
   if (acquired_drm_caps) {
     if (gst_caps_is_subset (acquired_drm_caps, caps)) {
-      gst_caps_replace (&acquired_caps, acquired_drm_caps);
+      gst_caps_take (&acquired_caps, acquired_drm_caps);
       acquired_drm_caps = NULL;
       goto use_acquired_caps;
     }
