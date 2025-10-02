@@ -77,13 +77,21 @@ furnished to do so, subject to the following conditions:
         font-style: italic;
       }
 
+      #title {
+        margin: 0 auto;
+        max-width: calc(100% - 500px); /* Twice the overlay instructions */
+        text-wrap: balance;
+      }
+
     </style>
   <body>
     <h1 style="text-align: center" id="title"> {{ TITLE }}</h1>
 
     <div id="graph" class="dragscroll" style="width: 100%; height: 100%; overflow: scroll;"></div>
     <div class="floating-rectangle" id="instructions">
-      Click node to highlight<br/>Shift-Ctrl-scroll or w/s to zoom<br/>Esc to unhighlight<br/>Double-click ellipsized text to copy
+      Click node to highlight<br/>Shift-Ctrl-scroll or w/s to zoom<br/>Esc
+      to unhighlight<br/>Double-click ellipsized text to
+      copy<br/>Double-click element to focus zoom
     </div>
 
     <div class="floating-rectangle" id="actions" style="top: auto; bottom: 100px; left: 10px;">

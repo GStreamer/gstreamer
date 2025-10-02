@@ -167,6 +167,7 @@
         this.$background = $graph.children('polygon:first') // might not exist
         this.$nodes = $graph.children('.node')
         this.$edges = $graph.children('.edge')
+        this.$clusters = $graph.children('.cluster')
         this._nodesByName = {}
         this._edgesByName = {}
 
@@ -353,6 +354,52 @@
         $element.scrollTop((ry * $svg.height()) + 0.5 - py)
     }
 
+    GraphvizSvg.prototype.scaleToNode = function ($node) {
+        var $svg = this.$svg
+        var $element = this.$element
+
+        // Get the bounding box of the node
+        var shape = $node.first()[0]
+        if (!shape) return
+
+        var bbox = shape.getBoundingClientRect()
+
+        // Calculate percentage to fit the node with some padding
+        var padding = 300 // pixels of padding around the node
+        var widthScale = ($element.width() - 2 * padding) / bbox.width * 100
+        var heightScale = ($element.height() - 2 * padding) / bbox.height * 100
+        var targetPercentage = Math.min(widthScale, heightScale)
+
+        // If already at target zoom, zoom out to 100%
+        if (this.zoom.percentage == targetPercentage) {
+            $svg.attr('width', '100%')
+            $svg.attr('height', '100%')
+            this.zoom.percentage = 100
+            return
+        }
+
+        if (targetPercentage < 100) {
+            targetPercentage = 100
+        }
+
+        // Set the new zoom level
+        $svg.attr('width', targetPercentage + '%')
+        $svg.attr('height', targetPercentage + '%')
+        this.zoom.percentage = targetPercentage
+
+        // Get updated bounding box after zoom
+        var newBbox = shape.getBoundingClientRect()
+        var newCenterX = newBbox.left + newBbox.width / 2
+        var newCenterY = newBbox.top + newBbox.height / 2
+
+        // Center the node in the viewport
+        var viewportCenterX = $element.offset().left + $element.width() / 2
+        var viewportCenterY = $element.offset().top + $element.height() / 2
+
+        $element.scrollLeft($element.scrollLeft() + (newCenterX - viewportCenterX))
+        $element.scrollTop($element.scrollTop() + (newCenterY - viewportCenterY))
+    }
+
     GraphvizSvg.prototype.scaleNode = function ($node) {
         var dx = this.options.shrink.x
         var dy = this.options.shrink.y
@@ -462,6 +509,10 @@
 
     GraphvizSvg.prototype.edges = function () {
         return this.$edges
+    }
+
+    GraphvizSvg.prototype.clusters = function () {
+        return this.$clusters
     }
 
     GraphvizSvg.prototype.nodesByName = function () {

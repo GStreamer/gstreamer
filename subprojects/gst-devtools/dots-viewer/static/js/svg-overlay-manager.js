@@ -48,6 +48,9 @@ class SvgOverlayManager {
         // Set up node click functionality for highlighting
         this.setupNodeHighlighting();
 
+        // Setup cluster zooms
+        this.setupClusterZoom();
+
         // Set up smart drag-to-pan behavior that doesn't interfere with text selection
         this.setupSmartDragBehavior();
 
@@ -85,6 +88,13 @@ class SvgOverlayManager {
             $set = $set.add(gv.linkedTo(this, true));
             gv.highlight($set, true);
             gv.bringToFront($set);
+        });
+    }
+
+    setupClusterZoom() {
+        this.gv.clusters().on('dblclick', function () {
+            const gv = $("#graph").data('graphviz.svg');
+            gv.scaleToNode($(this));
         });
     }
 
