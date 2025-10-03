@@ -11856,6 +11856,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
   guint value_size, stsd_len, len;
   guint32 track_id;
   guint32 dummy;
+  guint32 fourcc;
 
   GST_DEBUG_OBJECT (qtdemux, "parse_trak");
 
@@ -12052,7 +12053,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
   stsd_entry_data = stsd_data + 16;
   remaining_stsd_len = stsd_len - 16;
   for (stsd_index = 0; stsd_index < stsd_entry_count; stsd_index++) {
-    guint32 fourcc;
     gchar *codec = NULL;
     QtDemuxStreamStsdEntry *entry = &stream->stsd_entries[stsd_index];
 
@@ -14139,6 +14139,12 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
           "type %" GST_FOURCC_FORMAT " caps %" GST_PTR_FORMAT,
           GST_FOURCC_ARGS (fourcc), entry->caps);
     } else if (stream->subtype == FOURCC_meta) {
+      if (fourcc == FOURCC_fdsc) {
+        // GoPro SOS track with file recovery data, ignore this stream
+        // See: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4679
+        goto ignored_stream;
+      }
+
       entry->sampled = TRUE;
       entry->sparse = TRUE;
 
@@ -14321,6 +14327,13 @@ unknown_stream:
   {
     GST_INFO_OBJECT (qtdemux, "unknown subtype %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (stream->subtype));
+    gst_qtdemux_stream_unref (stream);
+    return TRUE;
+  }
+ignored_stream:
+  {
+    GST_INFO_OBJECT (qtdemux, "ignored stream type %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (fourcc));
     gst_qtdemux_stream_unref (stream);
     return TRUE;
   }
