@@ -142,7 +142,7 @@ const CFStringRef
 CFSTR ("RequireHardwareAcceleratedVideoDecoder");
 #endif
 
-#define VIDEO_SRC_CAPS_FORMATS "{ NV12, AYUV64, ARGB64_BE }"
+#define VIDEO_SRC_CAPS_FORMATS "{ NV12, AYUV64, ARGB64_BE, P010_10LE }"
 
 #define VIDEO_SRC_CAPS_NATIVE                                           \
     GST_VIDEO_CAPS_MAKE(VIDEO_SRC_CAPS_FORMATS) ";"                     \
@@ -441,6 +441,7 @@ get_preferred_video_format (GstStructure * s, gboolean prores)
     GstVideoFormat vfmt = gst_video_format_from_string (fmt);
     switch (vfmt) {
       case GST_VIDEO_FORMAT_NV12:
+      case GST_VIDEO_FORMAT_P010_10LE:
         if (!prores)
           return vfmt;
         break;

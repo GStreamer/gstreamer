@@ -290,7 +290,8 @@ gst_vtenc_rate_control_get_type (void)
 }
 
 static GstStaticCaps sink_caps =
-GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV64, UYVY, NV12, I420 }"));
+GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
+    ("{ AYUV64, UYVY, NV12, I420, P010_10LE }"));
 
 static void
 gst_vtenc_base_init (GstVTEncClass * klass)

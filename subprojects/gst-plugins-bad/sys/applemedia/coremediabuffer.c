@@ -127,6 +127,8 @@ gst_core_media_buffer_get_video_format (OSType format)
       return GST_VIDEO_FORMAT_I420;
     case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
       return GST_VIDEO_FORMAT_NV12;
+    case kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange:
+      return GST_VIDEO_FORMAT_P010_10LE;
     case kCVPixelFormatType_422YpCbCr8_yuvs:
       return GST_VIDEO_FORMAT_YUY2;
     case kCVPixelFormatType_422YpCbCr8:
