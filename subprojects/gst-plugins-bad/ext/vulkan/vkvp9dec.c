@@ -660,10 +660,15 @@ static GstFlowReturn
 _check_resolution_change (GstVulkanVp9Decoder * self, GstVp9Picture * picture)
 {
   const GstVp9FrameHeader *frame_hdr = &picture->frame_hdr;
-  GstVideoInfo *info = &self->output_state->info;
+  if (!self->output_state) {
+    GST_DEBUG_OBJECT (self, "output_state not yet initialized");
+    return GST_FLOW_OK;
+  }
 
-  if (self->resolution_changed || self->coded_width != frame_hdr->width
+  if (self->resolution_changed
+      || self->coded_width != frame_hdr->width
       || self->coded_height != frame_hdr->height) {
+    GstVideoInfo *info = &self->output_state->info;
     GST_VIDEO_INFO_WIDTH (info) = self->coded_width = frame_hdr->width;
     GST_VIDEO_INFO_HEIGHT (info) = self->coded_height = frame_hdr->height;
 
