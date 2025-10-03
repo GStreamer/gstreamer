@@ -1296,11 +1296,13 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
            * |         NALU Size             |
            * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
            */
-          nalu_size = (payload[0] << 8) | payload[1];
+          nalu_size = GST_READ_UINT16_BE (payload);
+          payload += 2;
+          payload_len -= 2;
 
-          /* don't include nalu_size */
-          if (nalu_size > (payload_len - 2))
-            nalu_size = payload_len - 2;
+          /* Only include as much data as is available */
+          if (nalu_size > payload_len)
+            nalu_size = payload_len;
 
           outsize = nalu_size + sizeof (sync_bytes);
           outbuf = gst_buffer_new_and_alloc (outsize);
@@ -1310,27 +1312,22 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
             memcpy (map.data, sync_bytes, sizeof (sync_bytes));
           } else {
             map.data[0] = map.data[1] = 0;
-            map.data[2] = payload[0];
-            map.data[3] = payload[1];
+            GST_WRITE_UINT16_BE (&map.data[2], nalu_size);
           }
-
-          /* strip NALU size */
-          payload += 2;
-          payload_len -= 2;
 
           memcpy (map.data + sizeof (sync_bytes), payload, nalu_size);
           gst_buffer_unmap (outbuf, &map);
 
+          payload += nalu_size;
+          payload_len -= nalu_size;
+
           gst_rtp_copy_video_meta (rtph264depay, outbuf, rtp->buffer);
 
-          if (payload_len - nalu_size <= 2)
+          if (payload_len <= 2)
             last = TRUE;
 
           gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf, timestamp,
               marker && last);
-
-          payload += nalu_size;
-          payload_len -= nalu_size;
         }
         break;
       }
