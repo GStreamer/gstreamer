@@ -1335,14 +1335,96 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
         break;
       }
       case 26:
-        /* MTAP16    Multi-time aggregation packet      5.7.2 */
-        // header_len = 5;
-        /* fallthrough, not implemented */
       case 27:
+      {
+        const gsize aggregation_unit_size = nal_unit_type == 26 ? 5 : 6;
+
+        /* strip headers */
+        payload += header_len;
+        payload_len -= header_len;
+
+        rtph264depay->wait_start = FALSE;
+
+        /* MTAP16    Multi-time aggregation packet      5.7.2 */
         /* MTAP24    Multi-time aggregation packet      5.7.2 */
-        // header_len = 6;
-        goto not_implemented;
+
+        // guint16 decoding_order_base_number = GST_READ_UINT16_BE (payload);
+        payload += 2;
+        payload_len -= 2;
+
+        while (payload_len > aggregation_unit_size) {
+          gboolean last = FALSE;
+
+          nalu_size = GST_READ_UINT16_BE (payload);
+          payload += 2;
+          payload_len -= 2;
+
+          // guint8 dond = GST_READ_UINT8 (payload);
+          payload += 1;
+          payload_len -= 1;
+
+          guint32 ts_offset;
+          if (nal_unit_type == 26) {
+            ts_offset = GST_READ_UINT16_BE (payload);
+            payload += 2;
+            payload_len -= 2;
+            /* Sign-extend */
+            if (ts_offset & 0x00008000)
+              ts_offset |= 0xffff0000;
+          } else {
+            ts_offset = GST_READ_UINT24_BE (payload);
+            payload += 3;
+            payload_len -= 3;
+            /* Sign-extend */
+            if (ts_offset & 0x00800000)
+              ts_offset |= 0xff000000;
+          }
+
+          /* Only include as much data as is available */
+          if (nalu_size > payload_len)
+            nalu_size = payload_len;
+
+          outsize = nalu_size + sizeof (sync_bytes);
+          outbuf = gst_buffer_new_and_alloc (outsize);
+
+          gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+          if (rtph264depay->byte_stream) {
+            memcpy (map.data, sync_bytes, sizeof (sync_bytes));
+          } else {
+            map.data[0] = map.data[1] = 0;
+            GST_WRITE_UINT16_BE (&map.data[2], nalu_size);
+          }
+
+          memcpy (map.data + sizeof (sync_bytes), payload, nalu_size);
+          gst_buffer_unmap (outbuf, &map);
+
+          payload += nalu_size;
+          payload_len -= nalu_size;
+
+          gst_rtp_copy_video_meta (rtph264depay, outbuf, rtp->buffer);
+
+          if (payload_len <= aggregation_unit_size)
+            last = TRUE;
+
+          if (ts_offset != 0) {
+            gint32 signed_ts_offset = (gint32) ts_offset;       /* was sign-extended above */
+            if (signed_ts_offset >= 0) {
+              timestamp += gst_util_uint64_scale (ts_offset, GST_SECOND, 90000);
+            } else {
+              GstClockTime diff =
+                  gst_util_uint64_scale (-ts_offset, GST_SECOND, 90000);
+              if (diff >= timestamp)
+                timestamp = 0;
+              else
+                timestamp -= diff;
+            }
+          }
+
+          gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf, timestamp,
+              marker && last);
+        }
         break;
+      }
       case 28:
       case 29:
       {
@@ -1523,13 +1605,6 @@ undefined_type:
 waiting_start:
   {
     GST_DEBUG_OBJECT (rtph264depay, "waiting for start");
-    gst_rtp_base_depayload_dropped (depayload);
-    return NULL;
-  }
-not_implemented:
-  {
-    GST_ELEMENT_ERROR (rtph264depay, STREAM, FORMAT,
-        (NULL), ("NAL unit type %d not supported yet", nal_unit_type));
     gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
