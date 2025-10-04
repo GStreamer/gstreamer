@@ -88,7 +88,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVulkanSwapper, gst_object_unref)
 
 GST_VULKAN_API
 GstVulkanSwapper *  gst_vulkan_swapper_new                      (GstVulkanDevice * device,
-                                                                 GstVulkanWindow * window);
+                                                                 GstVulkanWindow * window) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_VULKAN_API
 gboolean            gst_vulkan_swapper_choose_queue             (GstVulkanSwapper * swapper,

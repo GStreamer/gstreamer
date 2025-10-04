@@ -73,7 +73,7 @@ struct _GstGLOverlayCompositorClass
 };
 
 GST_GL_API
-GstGLOverlayCompositor *gst_gl_overlay_compositor_new (GstGLContext * context);
+GstGLOverlayCompositor *gst_gl_overlay_compositor_new (GstGLContext * context) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_GL_API
 void gst_gl_overlay_compositor_free_overlays (GstGLOverlayCompositor * compositor);

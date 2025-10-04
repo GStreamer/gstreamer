@@ -70,7 +70,7 @@ GST_GL_API
 GstGLDisplayEGL *gst_gl_display_egl_new_surfaceless (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_GL_API
-GstGLDisplayEGL *gst_gl_display_egl_new_with_egl_display (gpointer display);
+GstGLDisplayEGL *gst_gl_display_egl_new_with_egl_display (gpointer display) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_GL_API
 GstGLDisplayEGL *gst_gl_display_egl_from_gl_display (GstGLDisplay * display);

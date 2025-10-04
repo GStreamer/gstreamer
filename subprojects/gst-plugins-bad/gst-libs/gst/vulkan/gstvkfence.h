@@ -134,7 +134,7 @@ struct _GstVulkanFenceCacheClass
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVulkanFenceCache, gst_object_unref);
 
-GstVulkanFenceCache *       gst_vulkan_fence_cache_new         (GstVulkanDevice * device);
+GstVulkanFenceCache *       gst_vulkan_fence_cache_new         (GstVulkanDevice * device) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * gst_vulkan_fence_cache_acquire:

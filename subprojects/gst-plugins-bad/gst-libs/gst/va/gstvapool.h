@@ -33,7 +33,7 @@ G_BEGIN_DECLS
 GST_VA_API
 GType                gst_va_pool_get_type                 (void);
 GST_VA_API
-GstBufferPool *      gst_va_pool_new                      (void);
+GstBufferPool *      gst_va_pool_new                      (void) G_GNUC_WARN_UNUSED_RESULT;
 GST_VA_API
 gboolean             gst_va_pool_requires_video_meta      (GstBufferPool * pool);
 GST_VA_API
@@ -50,7 +50,7 @@ GstBufferPool *      gst_va_pool_new_with_config          (GstCaps * caps,
                                                            guint usage_hint,
                                                            GstVaFeature use_derived,
                                                            GstAllocator * allocator,
-                                                           GstAllocationParams * alloc_params);
+                                                           GstAllocationParams * alloc_params) G_GNUC_WARN_UNUSED_RESULT;
 GST_VA_API
 gboolean             gst_va_pool_get_buffer_size         (GstBufferPool * pool,
                                                           guint * size);

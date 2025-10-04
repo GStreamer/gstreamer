@@ -102,7 +102,7 @@ GST_INSERT_BIN_API
 GType gst_insert_bin_get_type (void);
 
 GST_INSERT_BIN_API
-GstElement *gst_insert_bin_new (const gchar * name);
+GstElement *gst_insert_bin_new (const gchar * name) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_INSERT_BIN_API
 void gst_insert_bin_prepend (GstInsertBin * self, GstElement * element,

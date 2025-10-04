@@ -819,6 +819,7 @@ GST_START_TEST (test_forbidden_pad_template_names)
 {
   const gchar *pad_name;
   GSList *padname_blacklists = NULL, *item;
+  GstPadTemplate *ignored G_GNUC_UNUSED;
 
   padname_blacklists =
       g_slist_append (padname_blacklists, (gpointer) "src_%u%u");
@@ -839,7 +840,7 @@ GST_START_TEST (test_forbidden_pad_template_names)
   while (item) {
     pad_name = (const gchar *) (item->data);
     item = g_slist_next (item);
-    ASSERT_WARNING (gst_pad_template_new (pad_name, GST_PAD_SRC,
+    ASSERT_WARNING (ignored = gst_pad_template_new (pad_name, GST_PAD_SRC,
             GST_PAD_REQUEST, GST_CAPS_ANY));
   }
 

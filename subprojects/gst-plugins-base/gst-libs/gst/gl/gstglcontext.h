@@ -171,7 +171,7 @@ struct _GstGLContextClass {
 /* methods */
 
 GST_GL_API
-GstGLContext * gst_gl_context_new  (GstGLDisplay *display);
+GstGLContext * gst_gl_context_new  (GstGLDisplay *display) G_GNUC_WARN_UNUSED_RESULT;
 GST_GL_API
 GstGLContext * gst_gl_context_new_wrapped (GstGLDisplay *display,
                                            guintptr handle,

@@ -92,7 +92,7 @@ GST_API
 GType           gst_pipeline_get_type           (void);
 
 GST_API
-GstElement*     gst_pipeline_new                (const gchar *name) G_GNUC_MALLOC;
+GstElement*     gst_pipeline_new                (const gchar *name) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 GstBus*         gst_pipeline_get_bus            (GstPipeline *pipeline) G_GNUC_WARN_UNUSED_RESULT;

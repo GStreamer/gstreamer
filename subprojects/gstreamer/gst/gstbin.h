@@ -299,7 +299,7 @@ GST_API
 GType		gst_bin_get_type		(void);
 
 GST_API
-GstElement*	gst_bin_new			(const gchar *name);
+GstElement*	gst_bin_new			(const gchar *name) G_GNUC_WARN_UNUSED_RESULT;
 
 /* add and remove elements from the bin */
 

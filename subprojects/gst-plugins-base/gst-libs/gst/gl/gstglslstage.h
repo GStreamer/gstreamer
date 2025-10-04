@@ -65,25 +65,25 @@ struct _GstGLSLStageClass
 GST_GL_API
 GType          gst_glsl_stage_get_type          (void);
 GST_GL_API
-GstGLSLStage * gst_glsl_stage_new               (GstGLContext * context, guint type);
+GstGLSLStage * gst_glsl_stage_new               (GstGLContext * context, guint type) G_GNUC_WARN_UNUSED_RESULT;
 GST_GL_API
 GstGLSLStage * gst_glsl_stage_new_with_string   (GstGLContext * context,
                                                  guint type,
                                                  GstGLSLVersion version,
                                                  GstGLSLProfile profile,
-                                                 const gchar * str);
+                                                 const gchar * str) G_GNUC_WARN_UNUSED_RESULT;
 GST_GL_API
 GstGLSLStage * gst_glsl_stage_new_with_strings  (GstGLContext * context,
                                                  guint type,
                                                  GstGLSLVersion version,
                                                  GstGLSLProfile profile,
                                                  gint n_strings,
-                                                 const gchar ** str);
+                                                 const gchar ** str) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_GL_API
-GstGLSLStage * gst_glsl_stage_new_default_fragment (GstGLContext * context);
+GstGLSLStage * gst_glsl_stage_new_default_fragment (GstGLContext * context) G_GNUC_WARN_UNUSED_RESULT;
 GST_GL_API
-GstGLSLStage * gst_glsl_stage_new_default_vertex   (GstGLContext * context);
+GstGLSLStage * gst_glsl_stage_new_default_vertex   (GstGLContext * context) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_GL_API
 guint          gst_glsl_stage_get_handle        (GstGLSLStage * stage);

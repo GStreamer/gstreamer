@@ -35,7 +35,7 @@ G_BEGIN_DECLS
 GST_VA_API
 GType                 gst_va_dmabuf_allocator_get_type    (void);
 GST_VA_API
-GstAllocator *        gst_va_dmabuf_allocator_new         (GstVaDisplay * display);
+GstAllocator *        gst_va_dmabuf_allocator_new         (GstVaDisplay * display) G_GNUC_WARN_UNUSED_RESULT;
 GST_VA_API
 gboolean              gst_va_dmabuf_allocator_setup_buffer (GstAllocator * allocator,
                                                             GstBuffer * buffer);
@@ -92,7 +92,7 @@ GST_VA_API
 GType                 gst_va_allocator_get_type           (void);
 GST_VA_API
 GstAllocator *        gst_va_allocator_new                (GstVaDisplay * display,
-                                                           GArray * surface_formats);
+                                                           GArray * surface_formats) G_GNUC_WARN_UNUSED_RESULT;
 GST_VA_API
 GstMemory *           gst_va_allocator_alloc              (GstAllocator * allocator);
 GST_VA_API

@@ -70,7 +70,7 @@ GST_CUDA_API
 GType gst_cuda_buffer_pool_get_type (void);
 
 GST_CUDA_API
-GstBufferPool * gst_cuda_buffer_pool_new (GstCudaContext * context);
+GstBufferPool * gst_cuda_buffer_pool_new (GstCudaContext * context) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_CUDA_API
 GstCudaStream * gst_buffer_pool_config_get_cuda_stream (GstStructure * config);

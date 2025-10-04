@@ -114,12 +114,12 @@ G_DECLARE_FINAL_TYPE (GstTranscoder, gst_transcoder, GST, TRANSCODER, GstObject)
 GST_TRANSCODER_API
 GstTranscoder * gst_transcoder_new                        (const gchar * source_uri,
                                                            const gchar * dest_uri,
-                                                           const gchar * encoding_profile);
+                                                           const gchar * encoding_profile) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_TRANSCODER_API
 GstTranscoder * gst_transcoder_new_full                   (const gchar * source_uri,
                                                            const gchar * dest_uri,
-                                                           GstEncodingProfile * profile);
+                                                           GstEncodingProfile * profile) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_TRANSCODER_API
 gboolean gst_transcoder_run                               (GstTranscoder * self,
