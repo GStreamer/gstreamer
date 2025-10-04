@@ -103,6 +103,6 @@ GES_DEPRECATED_FOR(ges_timeline_element_get_children_properties)
 const gchar* ges_title_clip_get_text (GESTitleClip * self) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API
-GESTitleClip* ges_title_clip_new (void);
+GESTitleClip* ges_title_clip_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS

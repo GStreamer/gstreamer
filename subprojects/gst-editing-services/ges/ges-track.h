@@ -118,6 +118,6 @@ GstCaps *          ges_track_get_restriction_caps            (GESTrack * track) 
 
 GES_API
 GESTrack*          ges_track_new                             (GESTrackType type,
-                                                              GstCaps * caps);
+                                                              GstCaps * caps) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS

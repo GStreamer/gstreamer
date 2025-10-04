@@ -53,6 +53,6 @@ struct _GESPitiviFormatterClass
 };
 
 GES_API
-GESPitiviFormatter *ges_pitivi_formatter_new (void);
+GESPitiviFormatter *ges_pitivi_formatter_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS

@@ -52,7 +52,7 @@ struct _GESMultiFileSourceClass
 };
 
 GES_API
-GESMultiFileSource *ges_multi_file_source_new (gchar * uri);
+GESMultiFileSource *ges_multi_file_source_new (gchar * uri) G_GNUC_WARN_UNUSED_RESULT;
 
 #define GES_MULTI_FILE_URI_PREFIX "multifile://"
 

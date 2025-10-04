@@ -26,7 +26,7 @@
 G_BEGIN_DECLS
 
 GES_API
-GESTimeline * ges_timeline_new_audio_video (void);
+GESTimeline * ges_timeline_new_audio_video (void) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
 gboolean ges_pspec_equal (gconstpointer key_spec_1, gconstpointer key_spec_2);
 GES_API

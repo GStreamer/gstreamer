@@ -73,7 +73,7 @@ struct _GESLayerClass {
 };
 
 GES_API
-GESLayer*     ges_layer_new                   (void);
+GESLayer*     ges_layer_new                   (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API
 void          ges_layer_set_timeline          (GESLayer * layer,

@@ -87,9 +87,9 @@ struct _GESTimelineClass {
 };
 
 GES_API
-GESTimeline* ges_timeline_new (void);
+GESTimeline* ges_timeline_new (void) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
-GESTimeline* ges_timeline_new_from_uri (const gchar *uri, GError **error);
+GESTimeline* ges_timeline_new_from_uri (const gchar *uri, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API
 gboolean ges_timeline_load_from_uri (GESTimeline *timeline, const gchar *uri, GError **error);

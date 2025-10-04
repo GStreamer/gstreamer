@@ -109,6 +109,6 @@ GES_API GESTextHAlign
 ges_text_overlay_clip_get_halignment (GESTextOverlayClip * self);
 
 GES_API
-GESTextOverlayClip *ges_text_overlay_clip_new (void);
+GESTextOverlayClip *ges_text_overlay_clip_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS

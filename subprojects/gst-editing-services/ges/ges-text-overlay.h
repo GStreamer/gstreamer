@@ -78,7 +78,7 @@ void ges_text_overlay_set_ypos (GESTextOverlay * self,
     gdouble position);
 
 GES_DEPRECATED
-GESTextOverlay *ges_text_overlay_new (void);
+GESTextOverlay *ges_text_overlay_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API
 const gchar *ges_text_overlay_get_text (GESTextOverlay * self);

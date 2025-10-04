@@ -66,8 +66,8 @@ struct _GESTransitionClipClass {
 };
 
 GES_API
-GESTransitionClip *ges_transition_clip_new (GESVideoStandardTransitionType vtype);
+GESTransitionClip *ges_transition_clip_new (GESVideoStandardTransitionType vtype) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
-GESTransitionClip *ges_transition_clip_new_for_nick (char *nick);
+GESTransitionClip *ges_transition_clip_new_for_nick (char *nick) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS

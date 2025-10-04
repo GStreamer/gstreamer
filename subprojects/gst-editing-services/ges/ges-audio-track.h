@@ -49,6 +49,6 @@ struct _GESAudioTrack
 };
 
 GES_API
-GESAudioTrack* ges_audio_track_new (void);
+GESAudioTrack* ges_audio_track_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS

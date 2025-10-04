@@ -45,6 +45,6 @@ struct _GESGroupClass {
 };
 
 GES_API
-GESGroup *ges_group_new           (void);
+GESGroup *ges_group_new           (void) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS

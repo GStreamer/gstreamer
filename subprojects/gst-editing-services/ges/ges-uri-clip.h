@@ -67,6 +67,6 @@ GES_API
 const gchar *ges_uri_clip_get_uri (GESUriClip * self);
 
 GES_API
-GESUriClip* ges_uri_clip_new (const gchar *uri);
+GESUriClip* ges_uri_clip_new (const gchar *uri) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS

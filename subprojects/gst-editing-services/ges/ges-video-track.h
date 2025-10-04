@@ -48,6 +48,6 @@ struct _GESVideoTrack
 };
 
 GES_API
-GESVideoTrack * ges_video_track_new (void);
+GESVideoTrack * ges_video_track_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS

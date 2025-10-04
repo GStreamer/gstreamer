@@ -59,7 +59,7 @@ struct _GESEffectClass
 };
 
 GES_API GESEffect*
-ges_effect_new (const gchar * bin_description);
+ges_effect_new (const gchar * bin_description) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API gboolean
 ges_effect_class_register_rate_property (GESEffectClass *klass, const gchar *element_name, const gchar *property_name);

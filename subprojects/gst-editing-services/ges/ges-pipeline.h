@@ -59,7 +59,7 @@ struct _GESPipelineClass {
 };
 
 GES_API
-GESPipeline* ges_pipeline_new (void);
+GESPipeline* ges_pipeline_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API
 gboolean ges_pipeline_set_timeline (GESPipeline * pipeline,

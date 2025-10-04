@@ -52,6 +52,6 @@ struct _GESAudioTransitionClass {
 };
 
 GES_DEPRECATED
-GESAudioTransition* ges_audio_transition_new (void);
+GESAudioTransition* ges_audio_transition_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS

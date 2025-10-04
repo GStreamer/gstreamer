@@ -25,6 +25,6 @@
 G_BEGIN_DECLS
 
 GES_API
-GESSourceClip* ges_source_clip_new_time_overlay (void);
+GESSourceClip* ges_source_clip_new_time_overlay (void) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS

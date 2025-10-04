@@ -59,7 +59,7 @@ struct _GESVideoTransitionClass {
 };
 
 GES_DEPRECATED
-GESVideoTransition* ges_video_transition_new (void);
+GESVideoTransition* ges_video_transition_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API
 gboolean ges_video_transition_set_transition_type (GESVideoTransition * self,

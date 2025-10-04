@@ -87,8 +87,8 @@ GES_API
 gdouble ges_test_clip_get_volume (GESTestClip * self);
 
 GES_API
-GESTestClip* ges_test_clip_new (void);
+GESTestClip* ges_test_clip_new (void) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
-GESTestClip* ges_test_clip_new_for_nick(gchar * nick);
+GESTestClip* ges_test_clip_new_for_nick(gchar * nick) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
