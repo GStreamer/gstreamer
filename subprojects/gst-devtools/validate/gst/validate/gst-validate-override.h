@@ -93,7 +93,7 @@ GType gst_validate_override_get_type (void) G_GNUC_CONST;
 #endif
 
 GST_VALIDATE_API
-GstValidateOverride *    gst_validate_override_new (void);
+GstValidateOverride *    gst_validate_override_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
 void               gst_validate_override_free (GstValidateOverride * override);
 

@@ -66,11 +66,11 @@ typedef struct {
 GST_VALIDATE_API
 GstValidateMediaDescriptorParser * gst_validate_media_descriptor_parser_new (GstValidateRunner *runner,
                                                             const gchar * xmlpath,
-                                                            GError **error);
+                                                            GError **error) G_GNUC_WARN_UNUSED_RESULT;
 GST_VALIDATE_API GstValidateMediaDescriptorParser *
 gst_validate_media_descriptor_parser_new_from_xml                   (GstValidateRunner * runner,
                                                             const gchar * xml,
-                                                            GError ** error);
+                                                            GError ** error) G_GNUC_WARN_UNUSED_RESULT;
 GST_VALIDATE_API
 gchar * gst_validate_media_descriptor_parser_get_xml_path        (GstValidateMediaDescriptorParser *parser) G_GNUC_WARN_UNUSED_RESULT;
 GST_VALIDATE_API
