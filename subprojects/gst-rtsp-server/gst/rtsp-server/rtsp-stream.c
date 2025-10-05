@@ -2652,7 +2652,7 @@ check_transport_backlog (GstRTSPStream * stream, GstRTSPStreamTransport * trans)
     GstBuffer *buffer;
     GstBufferList *buffer_list;
     gboolean is_rtp;
-    gboolean popped;
+    gboolean popped GST_UNUSED_ASSERT;
 
     is_rtp = gst_rtsp_stream_transport_backlog_peek_is_rtp (trans);
 
@@ -3332,7 +3332,7 @@ create_and_plug_queue_to_linked_stream_probe_cb (GstPad * inpad,
   GstPad *tee_pad;
   GstPad *queue_pad;
   guint index;
-  gboolean unlinked G_GNUC_UNUSED;      /* G_DISABLE_ASSERT */
+  gboolean unlinked GST_UNUSED_ASSERT;
 
   stream = data->stream;
   priv = stream->priv;

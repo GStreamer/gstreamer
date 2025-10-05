@@ -141,14 +141,16 @@ gst_rtsp_session_media_new (const gchar * path, GstRTSPMedia * media)
   GstRTSPSessionMediaPrivate *priv;
   GstRTSPSessionMedia *result;
   guint n_streams;
-  GstRTSPMediaStatus status;
+  GstRTSPMediaStatus status GST_UNUSED_CHECKS;
 
   g_return_val_if_fail (path != NULL, NULL);
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
 
+#ifndef G_DISABLE_CHECKS
   status = gst_rtsp_media_get_status (media);
   g_return_val_if_fail (status == GST_RTSP_MEDIA_STATUS_PREPARED || status ==
       GST_RTSP_MEDIA_STATUS_SUSPENDED, NULL);
+#endif
 
   result = g_object_new (GST_TYPE_RTSP_SESSION_MEDIA, NULL);
   priv = result->priv;

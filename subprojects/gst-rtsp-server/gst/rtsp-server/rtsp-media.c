@@ -2633,7 +2633,7 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
 
       gst_bin_add (GST_BIN (priv->element), appsrc);
 
-      GstPadLinkReturn pad_link = gst_pad_link (srcpad, pad);
+      GstPadLinkReturn pad_link GST_UNUSED_ASSERT = gst_pad_link (srcpad, pad);
       g_assert (pad_link == GST_PAD_LINK_OK);
 
       gst_object_unref (srcpad);
@@ -2651,7 +2651,7 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
 
       gst_bin_add (GST_BIN (priv->element), appsink);
 
-      GstPadLinkReturn pad_link = gst_pad_link (pad, sinkpad);
+      GstPadLinkReturn pad_link GST_UNUSED_ASSERT = gst_pad_link (pad, sinkpad);
       g_assert (pad_link == GST_PAD_LINK_OK);
 
       gst_object_unref (sinkpad);
