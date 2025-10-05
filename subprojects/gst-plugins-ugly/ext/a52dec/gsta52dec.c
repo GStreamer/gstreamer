@@ -481,7 +481,7 @@ gst_a52dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
   gint channels, i;
   gboolean need_reneg = FALSE;
   gint chans;
-  gint length = 0, flags, sample_rate, bit_rate;
+  gint length GST_UNUSED_ASSERT = 0, flags, sample_rate, bit_rate;
   GstMapInfo map;
   GstFlowReturn result = GST_FLOW_OK;
   GstBuffer *outbuf;
