@@ -329,7 +329,7 @@ GST_START_TEST (test_priorities_clip)
         GES_TRACK_TYPE_VIDEO)
       video_effect = tmp->data;
     else
-      g_assert (0);
+      g_assert_true (0);
   }
   fail_unless (GES_IS_EFFECT (audio_effect));
   fail_unless (GES_IS_EFFECT (video_effect));

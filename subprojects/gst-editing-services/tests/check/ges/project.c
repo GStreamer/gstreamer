@@ -272,7 +272,7 @@ _test_project (GESProject * project, GESTimeline * timeline)
         assert_equals_int (g_list_length (trackelements), 2);
         break;
       default:
-        g_assert (1);
+        g_assert_true (1);
     }
 
     g_list_free_full (trackelements, gst_object_unref);

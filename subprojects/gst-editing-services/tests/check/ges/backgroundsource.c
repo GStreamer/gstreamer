@@ -161,7 +161,7 @@ GST_START_TEST (test_test_source_in_layer)
       ges_clip_find_track_element (GES_CLIP (source), v,
       GES_TYPE_VIDEO_TEST_SOURCE);
 
-  g_assert (GES_IS_VIDEO_TEST_SOURCE (track_element));
+  g_assert_true (GES_IS_VIDEO_TEST_SOURCE (track_element));
 
   ptrn = (ges_video_test_source_get_pattern ((GESVideoTestSource *)
           track_element));
@@ -172,7 +172,7 @@ GST_START_TEST (test_test_source_in_layer)
 
   track_element = ges_clip_find_track_element (GES_CLIP (source),
       a, GES_TYPE_AUDIO_TEST_SOURCE);
-  g_assert (GES_IS_AUDIO_TEST_SOURCE (track_element));
+  g_assert_true (GES_IS_AUDIO_TEST_SOURCE (track_element));
   assert_equals_float (ges_test_clip_get_frequency (source), 440);
   assert_equals_float (ges_test_clip_get_volume (source), DEFAULT_VOLUME);
 
@@ -184,8 +184,8 @@ GST_START_TEST (test_test_source_in_layer)
   freq = ges_audio_test_source_get_freq (GES_AUDIO_TEST_SOURCE (track_element));
   volume =
       ges_audio_test_source_get_volume (GES_AUDIO_TEST_SOURCE (track_element));
-  g_assert (freq == 440);
-  g_assert (volume == DEFAULT_VOLUME);
+  fail_unless_equals_float (freq, 440);
+  fail_unless_equals_float (volume, DEFAULT_VOLUME);
 
   g_object_set (source, "freq", (gdouble) 2000, "volume", (gdouble) 0.5, NULL);
   g_object_get (source, "freq", &freq, "volume", &volume, NULL);
@@ -195,8 +195,8 @@ GST_START_TEST (test_test_source_in_layer)
   freq = ges_audio_test_source_get_freq (GES_AUDIO_TEST_SOURCE (track_element));
   volume =
       ges_audio_test_source_get_volume (GES_AUDIO_TEST_SOURCE (track_element));
-  g_assert (freq == 2000);
-  g_assert (volume == 0.5);
+  fail_unless_equals_float (freq, 2000);
+  fail_unless_equals_float (volume, 0.5);
 
   gst_object_unref (track_element);
 

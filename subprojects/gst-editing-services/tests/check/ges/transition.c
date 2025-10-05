@@ -199,7 +199,7 @@ GST_START_TEST (test_transition_notify_vtype)
   assert_equals_int (vtype, GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
 
   asset = ges_asset_request (GES_TYPE_TRANSITION_CLIP, "fade-in", NULL);
-  g_assert (ges_extractable_set_asset (GES_EXTRACTABLE (tclip), asset));
+  g_assert_true (ges_extractable_set_asset (GES_EXTRACTABLE (tclip), asset));
   assert_equals_int (vtype, GES_VIDEO_STANDARD_TRANSITION_TYPE_FADE_IN);
 
   gst_object_unref (asset);
