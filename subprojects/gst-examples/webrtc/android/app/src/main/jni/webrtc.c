@@ -293,10 +293,12 @@ on_offer_created (GstPromise * promise, gpointer user_data)
   GstWebRTCSessionDescription *offer = NULL;
   WebRTC *webrtc = (WebRTC *) user_data;
   const GstStructure *reply;
+  GstPromiseResult result GST_UNUSED_ASSERT;
 
   g_assert (webrtc->app_state == PEER_CALL_NEGOTIATING);
 
-  g_assert (gst_promise_wait (promise) == GST_PROMISE_RESULT_REPLIED);
+  result = gst_promise_wait (promise);
+  g_assert (result == GST_PROMISE_RESULT_REPLIED);
   reply = gst_promise_get_reply (promise);
   gst_structure_get (reply, "offer",
       GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &offer, NULL);

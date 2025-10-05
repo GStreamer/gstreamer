@@ -54,9 +54,9 @@ run_pipeline (GstElement * pipe, const gchar * descr,
   GstMessageType revent;
   GstStateChangeReturn ret;
 
-  g_assert (pipe);
+  g_assert_nonnull (pipe);
   bus = gst_element_get_bus (pipe);
-  g_assert (bus);
+  g_assert_nonnull (bus);
 
   ret = gst_element_set_state (pipe, GST_STATE_PLAYING);
   ret = gst_element_get_state (pipe, NULL, NULL, GST_CLOCK_TIME_NONE);
