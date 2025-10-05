@@ -51,7 +51,7 @@ install_data(['gst_gdb.py', 'glib_gobject_helper.py'],
 
 # This is needed to make gdb find gst_gdb.py
 env = environment()
-env.prepend('PYTHONPATH', meson.current_source_dir())
+env.prepend('PYTHONPATH', [meson.current_source_dir(), meson.current_build_dir()])
 meson.add_devenv(env)
 
 gdbconf = configuration_data()

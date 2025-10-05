@@ -27,3 +27,5 @@ install_data(sources: _sources,
 
 subdir('apps')
 subdir('testsuites')
+
+meson.add_devenv({'GST_VALIDATE_LAUNCHER_HTTP_SERVER_PATH': meson.current_source_dir() / 'RangeHTTPServer.py'})

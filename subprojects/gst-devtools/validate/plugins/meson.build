@@ -10,3 +10,5 @@ subdir('ssim')
 if gtk_dep.found()
     subdir('gtk')
 endif
+
+meson.add_devenv({'GST_VALIDATE_PLUGIN_PATH' : meson.current_build_dir()}, method: 'prepend')

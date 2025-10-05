@@ -360,6 +360,22 @@ pathsep = host_machine.system() == 'windows' ? ';' : ':'
 all_plugins_paths = pathsep.join(all_plugins_paths)
 
 devenv = environment()
+
+# Allow installing 3rd party plugins in gstreamer/prefix/
+devenv_prefixdir = meson.current_source_dir() / 'prefix'
+devenv.prepend('GST_PLUGIN_PATH', devenv_prefixdir / 'lib' / 'gstreamer-1.0')
+devenv.prepend('GST_VALIDATE_SCENARIOS_PATH', devenv_prefixdir / 'share' / 'gstreamer-1.0' / 'validate' / 'scenarios')
+devenv.prepend('GI_TYPELIB_PATH', devenv_prefixdir / 'lib' / 'girepository-1.0')
+devenv.prepend('PKG_CONFIG_PATH', devenv_prefixdir / 'lib' / 'pkgconfig')
+devenv.prepend('PATH', devenv_prefixdir / 'bin')
+library_path = 'LD_LIBRARY_PATH'
+if host_machine.system() == 'darwin'
+  library_path = 'DYLD_LIBRARY_PATH'
+elif host_machine.system() == 'windows'
+  library_path = 'PATH'
+endif
+devenv.prepend(library_path, [devenv_prefixdir / 'lib', devenv_prefixdir / 'lib64'])
+
 if not building_full
   devenv.prepend('GST_PLUGIN_PATH', all_plugins_dirs)
 else
