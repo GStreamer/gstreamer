@@ -4363,7 +4363,7 @@ gst_matroska_mux_find_best_pad (GstMatroskaMux * mux, GstClockTime * best_time,
 
     buffer = gst_aggregator_pad_peek_buffer (GST_AGGREGATOR_PAD (mux_pad));
     if (!buffer) {
-      if (!timeout && !GST_PAD_IS_EOS (mux_pad)) {
+      if (!timeout && !gst_aggregator_pad_is_eos (GST_AGGREGATOR_PAD (mux_pad))) {
         best = NULL;
         best_ts = GST_CLOCK_TIME_NONE;
         break;
