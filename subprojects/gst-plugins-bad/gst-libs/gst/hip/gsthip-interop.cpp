@@ -108,11 +108,11 @@ GST_DEFINE_MINI_OBJECT_TYPE (GstHipGraphicsResource, gst_hip_graphics_resource);
 /**
  * gst_hip_graphics_resource_map:
  * @resource: a #GstHipGraphicsResource
- * @stream: (nullable): a hipStream_t handle
+ * @stream: (type gpointer) (nullable): a hipStream_t handle
  *
  * Map registered @resource for I/O operation
  *
- * Returns: hipError_t error code
+ * Returns: (type gint): hipError_t error code
  *
  * Since: 1.28
  */
@@ -147,11 +147,11 @@ gst_hip_graphics_resource_map (GstHipGraphicsResource * resource,
 /**
  * gst_hip_graphics_resource_unmap:
  * @resource: a #GstHipGraphicsResource
- * @stream: (nullable): a hipStream_t handle
+ * @stream: (type gpointer) (nullable): a hipStream_t handle
  *
  * Unmap mapped @resource via gst_hip_graphics_resource_map()
  *
- * Returns: hipError_t error code
+ * Returns: (type gint): hipError_t error code
  *
  * Since: 1.28
  */
@@ -195,7 +195,7 @@ gst_hip_graphics_resource_unmap (GstHipGraphicsResource * resource,
  * Caller must map @resource via gst_hip_graphics_resource_map()
  * before getting mapped device memory
  *
- * Returns: hipError_t error code
+ * Returns: (type gint): hipError_t error code
  *
  * Since: 1.28
  */
@@ -349,7 +349,7 @@ get_resource_on_gl_thread (GstGLContext * gl_context, GetResourceData * data)
  * Creates a new #GstHipGraphicsResource from gl memory.
  * @mem must be a valid #GstGLMemoryPBO
  *
- * Returns: hipError_t error code
+ * Returns: (type gint): hipError_t error code
  *
  * Since: 1.28
  */

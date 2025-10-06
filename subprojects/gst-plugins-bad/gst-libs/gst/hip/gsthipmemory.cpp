@@ -614,9 +614,9 @@ static const TextureFormat format_map[] = {
  * gst_hip_memory_get_texture:
  * @mem: a #GstHipMemory
  * @plane: the plane index
- * @filter_mode: filter mode
- * @address_mode: address mode
- * @texture: (out) (transfer none): a pointer to hipTextureObject_t object
+ * @filter_mode: (type gint): filter mode
+ * @address_mode: (type gint): address mode
+ * @texture: (type gpointer) (out) (transfer none): a pointer to hipTextureObject_t object
  *
  * Creates hipTextureObject_t with given parameters
  *

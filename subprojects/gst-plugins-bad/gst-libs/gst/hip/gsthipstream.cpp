@@ -153,7 +153,7 @@ gst_hip_stream_get_device_id (GstHipStream * stream)
  *
  * Gets hipStream_t handle owned by @stream
  *
- * Returns: hipStream_t handle
+ * Returns: (type gpointer) (transfer none): hipStream_t handle
  *
  * Since: 1.28
  */

@@ -273,11 +273,11 @@ gst_hip_event_get_device_id (GstHipEvent * event)
 /**
  * gst_hip_event_record:
  * @event: a #GstHipEvent
- * @stream: a hipStream_t handle
+ * @stream: (type gpointer): a hipStream_t handle
  *
  * Records operations currently scheduled by @stream to @event
  *
- * Returns: hipError_t error code
+ * Returns: (type gint): hipError_t error code
  *
  * Since: 1.28
  */
@@ -299,7 +299,7 @@ gst_hip_event_record (GstHipEvent * event, hipStream_t stream)
  *
  * Queries event status via hipEventQuery()
  *
- * Returns: hipError_t error code
+ * Returns: (type gint): hipError_t error code
  *
  * Since: 1.28
  */
@@ -321,7 +321,7 @@ gst_hip_event_query (GstHipEvent * event)
  *
  * Waits for recorded operations via hipEventSynchronize()
  *
- * Returns: hipError_t error code
+ * Returns: (type gint): hipError_t error code
  *
  * Since: 1.28
  */

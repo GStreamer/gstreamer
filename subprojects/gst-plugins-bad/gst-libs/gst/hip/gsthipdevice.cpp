@@ -232,12 +232,12 @@ gst_hip_device_set_current (GstHipDevice * device)
 /**
  * gst_hip_device_get_attribute:
  * @device: a #GstHipDevice
- * @attr: a hipDeviceAttribute_t value
+ * @attr: (type gint): a hipDeviceAttribute_t value
  * @value: (out): an attribute value
  *
  * Gets a device attribute via hipDeviceGetAttribute
  *
- * Returns: hipError_t error code
+ * Returns: (type gint): hipError_t error code
  *
  * Since: 1.28
  */

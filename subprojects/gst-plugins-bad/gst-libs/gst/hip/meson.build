@@ -24,13 +24,19 @@ hip_headers = [
   'gsthiprtc.h',
   'gsthipstream.h',
   'gsthiputils.h',
-  'hip-gst.h',
   'hip-prelude.h',
+]
+
+hipgst_headers = [
+  'hip-gst.h',
 ]
 
 hip_gl_headers = [
   'gsthip-gl.h',
   'gsthip-interop-gl.h',
+]
+
+hipgst_gl_headers = [
   'hip-gst-gl.h',
 ]
 
@@ -79,6 +85,38 @@ gsthip = library('gsthip', hip_sources,
   override_options : ['cpp_std=c++14'],
 )
 
+gen_sources = []
+library_def = {'lib': gsthip}
+
+stub_path = meson.current_source_dir() / 'stub'
+
+if build_gir
+  gir_includes = ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0']
+
+  gir = {
+    'sources' : hip_sources + hip_headers,
+    'namespace' : 'GstHip',
+    'nsversion' : api_version,
+    'identifier_prefix' : 'Gst',
+    'symbol_prefix' : 'gst',
+    'export_packages' : pkg_name,
+    'includes' : gir_includes,
+    'install' : true,
+    'extra_args' : gir_init_section + ['-DGST_USE_UNSTABLE_API', '-I' + stub_path],
+    'dependencies' : [gst_dep, gstbase_dep, gstvideo_dep],
+  }
+
+  library_def += {'gir': [gir]}
+  hip_gir = ['GstHip-1.0']
+  if not static_build
+    hip_gir = gnome.generate_gir(gsthip, kwargs: gir)
+    library_def += {'gir_targets': [hip_gir]}
+    gen_sources += hip_gir
+  endif
+
+endif
+gst_libraries += [[pkg_name, library_def]]
+
 pkgconfig.generate(
   libraries : [gst_dep, gstbase_dep, gstvideo_dep, gsthip],
   variables : pkgconfig_variables,
@@ -87,17 +125,41 @@ pkgconfig.generate(
   description : 'GStreamer HIP library',
 )
 
+install_headers(hip_headers + hipgst_headers, subdir : 'gstreamer-1.0/gst/hip')
 gsthip_dep = declare_dependency(link_with : gsthip,
   include_directories : [libsinc],
-  dependencies : [gst_dep, gstbase_dep, gstvideo_dep])
+  dependencies : [gst_dep, gstbase_dep, gstvideo_dep],
+  sources: gen_sources)
 meson.override_dependency(pkg_name, gsthip_dep)
-install_headers(hip_headers, subdir : 'gstreamer-1.0/gst/hip')
-
-library_def = {'lib': gsthip}
-gst_libraries += [[pkg_name, library_def]]
 
 if gstgl_dep.found()
   pkg_name = 'gstreamer-hip-gl-' + api_version
+
+  hip_gl_gir = []
+  if build_gir
+    gir_includes += ['GstGL-1.0', hip_gir[0]]
+
+    gir = {
+      'sources' : hip_gl_headers + ['gsthip-interop.cpp'],
+      'namespace' : 'GstHipGL',
+      'nsversion' : api_version,
+      'identifier_prefix' : 'Gst',
+      'symbol_prefix' : 'gst',
+      'export_packages' : pkg_name,
+      'includes' : gir_includes,
+      'install' : true,
+      'extra_args' : gir_init_section + ['-DGST_USE_UNSTABLE_API', '-I' + stub_path],
+      'dependencies' : [gst_dep, gstbase_dep, gstvideo_dep, gstgl_dep],
+    }
+
+    library_def += {'gir': [gir]}
+    if not static_build
+      hip_gl_gir = gnome.generate_gir(gsthip, kwargs: gir)
+      library_def += {'gir_targets':  [hip_gl_gir]}
+    endif
+  endif
+
+  gst_libraries += [[pkg_name, library_def]]
 
   pkgconfig.generate(
     libraries : [gst_dep, gstbase_dep, gstvideo_dep, gsthip, gstgl_dep],
@@ -107,11 +169,10 @@ if gstgl_dep.found()
     description : 'GStreamer HIP library (OpenGL specifics)',
   )
 
+  install_headers(hip_gl_headers + hipgst_gl_headers, subdir : 'gstreamer-1.0/gst/hip')
   gsthip_gl_dep = declare_dependency(link_with : gsthip,
     include_directories : [libsinc],
-    dependencies : [gst_dep, gstbase_dep, gstvideo_dep, gstgl_dep])
+    dependencies : [gst_dep, gstbase_dep, gstvideo_dep, gstgl_dep],
+    sources: hip_gl_gir)
   meson.override_dependency(pkg_name, gsthip_gl_dep)
-  install_headers(hip_gl_headers, subdir : 'gstreamer-1.0/gst/hip')
-
-  gst_libraries += [[pkg_name, library_def]]
 endif
