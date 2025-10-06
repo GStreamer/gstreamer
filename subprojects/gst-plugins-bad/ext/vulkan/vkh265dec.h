@@ -19,13 +19,12 @@
 
 #pragma once
 
-#include <gst/codecs/gsth265decoder.h>
-
 #include <gst/vulkan/vulkan.h>
 
 G_BEGIN_DECLS
 
-gboolean
-gst_vulkan_h265_decoder_register (GstPlugin * plugin, GstVulkanDevice *device, guint rank);
+gboolean                gst_vulkan_h265_decoder_register        (GstPlugin * plugin,
+                                                                 GstVulkanDevice * device,
+                                                                 guint rank);
 
 G_END_DECLS
