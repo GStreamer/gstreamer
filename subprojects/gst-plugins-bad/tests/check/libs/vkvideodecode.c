@@ -99,7 +99,7 @@ setup_queue (guint expected_flags, guint codec)
 
 static void
 get_output_buffer (GstVulkanDecoder * dec, VkFormat vk_format,
-    GstVulkanDecoderPicture * pic)
+    GstVulkanDecoderPicture * pic, int width, int height)
 {
   GstBuffer *outbuf;
   VkImageUsageFlags usage =
@@ -108,7 +108,7 @@ get_output_buffer (GstVulkanDecoder * dec, VkFormat vk_format,
   GstVideoFormat format = gst_vulkan_format_to_video_format (vk_format);
   GstCaps *profile_caps, *caps = gst_caps_new_simple ("video/x-raw", "format",
       G_TYPE_STRING, gst_video_format_to_string (format), "width", G_TYPE_INT,
-      320, "height", G_TYPE_INT, 240, NULL);
+      width, "height", G_TYPE_INT, height, NULL);
   GstBufferPool *pool;
   GstStructure *config;
 
@@ -153,7 +153,7 @@ get_output_buffer (GstVulkanDecoder * dec, VkFormat vk_format,
 
 static void
 download_and_check_output_buffer (GstVulkanDecoder * dec, VkFormat vk_format,
-    GstVulkanDecoderPicture * pic)
+    GstVulkanDecoderPicture * pic, int width, int height)
 {
   GstVulkanOperation *exec;
   GstVulkanCommandPool *cmd_pool;
@@ -162,7 +162,7 @@ download_and_check_output_buffer (GstVulkanDecoder * dec, VkFormat vk_format,
   GstVideoFormat format = gst_vulkan_format_to_video_format (vk_format);
   GstCaps *caps = gst_caps_new_simple ("video/x-raw", "format",
       G_TYPE_STRING, gst_video_format_to_string (format), "width", G_TYPE_INT,
-      320, "height", G_TYPE_INT, 240, NULL);
+      width, "height", G_TYPE_INT, height, NULL);
   GstBuffer *rawbuf;
   GError *error = NULL;
   GArray *barriers;
@@ -262,12 +262,14 @@ download_and_check_output_buffer (GstVulkanDecoder * dec, VkFormat vk_format,
 
   fail_unless (gst_buffer_map (rawbuf, &mapinfo, GST_MAP_READ));
 
-  /* Check for a blue square */
+  /* Check for a blue square (NV12: Y plane then interleaved UV plane) */
+  guint y_size = width * height;
+  guint uv_size = width * height / 2;
   /* Y */
-  for (i = 0; i < 0x12c00; i++)
+  for (i = 0; i < y_size; i++)
     fail_unless (mapinfo.data[i] == 0x29);
   /* UV */
-  for (i = 0x12c00; i < 0x1c1f0; i++)
+  for (i = y_size; i < y_size + uv_size; i++)
     fail_unless (mapinfo.data[i] == 0xf0 && mapinfo.data[++i] == 0x6e);
   gst_buffer_unmap (rawbuf, &mapinfo);
 
@@ -349,7 +351,7 @@ GST_START_TEST (test_h264_decoder)
   fail_unless (gst_vulkan_decoder_out_format (dec, &format_prop));
   fail_unless (gst_vulkan_decoder_caps (dec, &video_caps));
 
-  get_output_buffer (dec, format_prop.format, &pic);
+  get_output_buffer (dec, format_prop.format, &pic, 320, 240);
 
   /* get input buffer */
   fail_unless (gst_vulkan_decoder_append_slice (dec, &pic, h264_slice,
@@ -442,7 +444,7 @@ GST_START_TEST (test_h264_decoder)
     fail_unless (gst_vulkan_decoder_decode (dec, &pic, &err));
   }
 
-  download_and_check_output_buffer (dec, format_prop.format, &pic);
+  download_and_check_output_buffer (dec, format_prop.format, &pic, 320, 240);
 
   fail_unless (gst_vulkan_decoder_stop (dec));
 
@@ -530,7 +532,7 @@ GST_START_TEST (test_h265_decoder)
   fail_unless (gst_vulkan_decoder_out_format (dec, &format_prop));
   fail_unless (gst_vulkan_decoder_caps (dec, &video_caps));
 
-  get_output_buffer (dec, format_prop.format, &pic);
+  get_output_buffer (dec, format_prop.format, &pic, 320, 240);
 
   /* get input buffer */
   fail_unless (gst_vulkan_decoder_append_slice (dec, &pic, h265_slice,
@@ -621,7 +623,7 @@ GST_START_TEST (test_h265_decoder)
     fail_unless (gst_vulkan_decoder_decode (dec, &pic, &err));
   }
 
-  download_and_check_output_buffer (dec, format_prop.format, &pic);
+  download_and_check_output_buffer (dec, format_prop.format, &pic, 320, 240);
 
   fail_unless (gst_vulkan_decoder_stop (dec));
 
@@ -756,7 +758,7 @@ GST_START_TEST (test_vp9_decoder)
     };
     /* *INDENT-ON* */
 
-    get_output_buffer (dec, format_prop.format, &pic1);
+    get_output_buffer (dec, format_prop.format, &pic1, 320, 240);
     /* get input buffer */
     fail_unless (gst_vulkan_decoder_append_slice (dec, &pic1, vp9_obu,
             sizeof (vp9_obu), FALSE));
@@ -793,7 +795,7 @@ GST_START_TEST (test_vp9_decoder)
     };
     /* *INDENT-ON* */
     fail_unless (gst_vulkan_decoder_decode (dec, &pic1, &err));
-    download_and_check_output_buffer (dec, format_prop.format, &pic1);
+    download_and_check_output_buffer (dec, format_prop.format, &pic1, 320, 240);
   }
 
 
@@ -841,7 +843,7 @@ GST_START_TEST (test_vp9_decoder)
     };
     /* *INDENT-ON* */
 
-    get_output_buffer (dec, format_prop.format, &pic2);
+    get_output_buffer (dec, format_prop.format, &pic2, 320, 240);
     /* get input buffer */
     fail_unless (gst_vulkan_decoder_append_slice (dec, &pic2, vp9_obu_2,
             sizeof (vp9_obu_2), FALSE));
@@ -887,7 +889,431 @@ GST_START_TEST (test_vp9_decoder)
     /* *INDENT-ON* */
 
     fail_unless (gst_vulkan_decoder_decode (dec, &pic2, &err));
-    download_and_check_output_buffer (dec, format_prop.format, &pic2);
+    download_and_check_output_buffer (dec, format_prop.format, &pic2, 320, 240);
+  }
+
+  fail_unless (gst_vulkan_decoder_stop (dec));
+
+  gst_vulkan_decoder_picture_release (&pic1);
+  gst_vulkan_decoder_picture_release (&pic2);
+
+  gst_object_unref (dec);
+}
+
+GST_END_TEST;
+
+#include "vkcodecparams_av1.c"
+
+GST_START_TEST (test_av1_decoder)
+{
+  GstVulkanDecoder *dec;
+  GError *err = NULL;
+  VkVideoFormatPropertiesKHR format_prop;
+  /* *INDENT-OFF* */
+  GstVulkanVideoProfile profile = {
+    .profile = {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR,
+      .pNext = &profile.usage,
+      .videoCodecOperation = VK_VIDEO_CODEC_OPERATION_DECODE_AV1_BIT_KHR,
+      .chromaSubsampling = VK_VIDEO_CHROMA_SUBSAMPLING_420_BIT_KHR,
+      .chromaBitDepth = VK_VIDEO_COMPONENT_BIT_DEPTH_8_BIT_KHR,
+      .lumaBitDepth = VK_VIDEO_COMPONENT_BIT_DEPTH_8_BIT_KHR,
+    },
+    .usage.decode = {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_USAGE_INFO_KHR,
+      .videoUsageHints = VK_VIDEO_DECODE_USAGE_DEFAULT_KHR,
+      .pNext = &profile.codec,
+    },
+    .codec.av1dec = {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_AV1_PROFILE_INFO_KHR,
+      .stdProfile = STD_VIDEO_AV1_PROFILE_MAIN,
+      .filmGrainSupport = VK_FALSE,
+    }
+  };
+
+  GstVulkanDecoderParameters create_params = {
+    .av1 = {
+          .sType =
+          VK_STRUCTURE_TYPE_VIDEO_DECODE_AV1_SESSION_PARAMETERS_CREATE_INFO_KHR,
+          .pStdSequenceHeader = &av1_std_sequence,
+        }
+  };
+
+  /* *INDENT-ON* */
+  GstVulkanVideoCapabilities video_caps;
+  GstVulkanDecoderPicture pic1 = { NULL, }, pic2 = { NULL, };
+
+  setup_queue (VK_QUEUE_VIDEO_DECODE_BIT_KHR,
+      VK_VIDEO_CODEC_OPERATION_DECODE_AV1_BIT_KHR);
+  if (!video_queue) {
+    GST_WARNING ("Unable to find decoding queue");
+    return;
+  }
+
+  dec = gst_vulkan_decoder_new_from_queue (video_queue,
+      VK_VIDEO_CODEC_OPERATION_DECODE_AV1_BIT_KHR);
+  if (!dec) {
+    GST_WARNING ("Unable to create a vulkan decoder");
+    return;
+  }
+
+  fail_unless (gst_vulkan_decoder_start (dec, &profile, &err));
+
+  fail_unless (gst_vulkan_decoder_update_ycbcr_sampler (dec,
+          VK_SAMPLER_YCBCR_RANGE_ITU_FULL, VK_CHROMA_LOCATION_COSITED_EVEN,
+          VK_CHROMA_LOCATION_MIDPOINT, &err));
+
+  fail_unless (gst_vulkan_decoder_update_video_session_parameters (dec,
+          &create_params, &err));
+
+  fail_unless (gst_vulkan_decoder_out_format (dec, &format_prop));
+  fail_unless (gst_vulkan_decoder_caps (dec, &video_caps));
+  VkVideoDecodeAV1InlineSessionParametersInfoKHR inline_params = {
+    .sType =
+        VK_STRUCTURE_TYPE_VIDEO_DECODE_AV1_INLINE_SESSION_PARAMETERS_INFO_KHR,
+    .pStdSequenceHeader = &av1_std_sequence,
+  };
+
+  /* AV1 auxiliary structures for pic1 */
+  /* *INDENT-OFF* */
+  StdVideoAV1TileInfo tile_info = {
+    .flags = {
+      .uniform_tile_spacing_flag = 1,
+      .reserved = 0
+    },
+    .TileCols = 1,
+    .TileRows = 1,
+    .context_update_tile_id = 0,
+    .tile_size_bytes_minus_1 = 0,
+    .reserved1 = { 0, 0, 0, 0, 0, 0, 0 },
+    .pMiColStarts = (uint16_t[]) { 0 },
+    .pMiRowStarts = (uint16_t[]) { 0 },
+    .pWidthInSbsMinus1 = (uint16_t[]) { 2 },
+    .pHeightInSbsMinus1 = (uint16_t[]) { 1 },
+  };
+
+  StdVideoAV1Quantization quantization;
+  memset (&quantization, 0, sizeof (quantization));
+
+  StdVideoAV1Segmentation segmentation;
+  memset (&segmentation, 0, sizeof (segmentation));
+
+  StdVideoAV1LoopFilter loop_filter = {
+    .flags = {
+      .loop_filter_delta_enabled = 1,
+      .loop_filter_delta_update = 0,
+      .reserved = 0
+    },
+    .loop_filter_level = { 0, 0, 0, 0 },
+    .loop_filter_sharpness = 0,
+    .update_ref_delta = 0,
+    .loop_filter_ref_deltas = { 1, 0, 0, 0, -1, 0, -1, -1 },
+    .update_mode_delta = 0,
+    .loop_filter_mode_deltas = { 0, 0 },
+  };
+
+  StdVideoAV1CDEF cdef;
+  memset (&cdef, 0, sizeof (cdef));
+
+  StdVideoAV1LoopRestoration loop_restoration = {
+    .FrameRestorationType = {
+      STD_VIDEO_AV1_FRAME_RESTORATION_TYPE_NONE,
+      STD_VIDEO_AV1_FRAME_RESTORATION_TYPE_NONE,
+      STD_VIDEO_AV1_FRAME_RESTORATION_TYPE_NONE
+    },
+    .LoopRestorationSize = { 3, 3, 3 },
+  };
+
+  StdVideoAV1GlobalMotion global_motion;
+  memset (&global_motion, 0, sizeof (global_motion));
+
+  for (int i = 1; i < 8; i++) {
+    global_motion.gm_params[i][2] = 65536;
+    global_motion.gm_params[i][5] = 65536;
+  }
+
+  StdVideoAV1FilmGrain film_grain;
+  memset (&film_grain, 0, sizeof (film_grain));
+
+  /* Reference info for pic1 - declared at function scope so it remains valid
+   * when pic1.slot is used as a reference for pic2 */
+  StdVideoDecodeAV1ReferenceInfo stdav1_ref_pic1 = {
+    .flags = {
+      .disable_frame_end_update_cdf = 0,
+      .segmentation_enabled = 0,
+    },
+    .frame_type = STD_VIDEO_AV1_FRAME_TYPE_KEY,
+    .RefFrameSignBias = 255,
+    .OrderHint = 0,
+  };
+  VkVideoDecodeAV1DpbSlotInfoKHR av1_dpb_slot_pic1 = {
+    .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_AV1_DPB_SLOT_INFO_KHR,
+    .pStdReferenceInfo = &stdav1_ref_pic1,
+  };
+  /* *INDENT-ON* */
+
+  /* decode pic1 */
+  {
+    get_output_buffer (dec, format_prop.format, &pic1, AV1_FRAME_WIDTH,
+        AV1_FRAME_HEIGHT);
+
+    /* get input buffer */
+    fail_unless (gst_vulkan_decoder_append_slice (dec, &pic1, av1_obu,
+            sizeof (av1_obu), FALSE));
+
+    /* setup the vulkan picture */
+    /* *INDENT-OFF* */
+    StdVideoDecodeAV1PictureInfo std_pic = {
+      .flags = {
+        .error_resilient_mode = 1,
+        .disable_cdf_update = 0,
+        .use_superres = 0,
+        .render_and_frame_size_different = 0,
+        .allow_screen_content_tools = 0,
+        .is_filter_switchable = 0,
+        .force_integer_mv = 1,
+        .frame_size_override_flag = 0,
+        .buffer_removal_time_present_flag = 0,
+        .allow_intrabc = 0,
+        .frame_refs_short_signaling = 0,
+        .allow_high_precision_mv = 0,
+        .is_motion_mode_switchable = 0,
+        .use_ref_frame_mvs = 0,
+        .disable_frame_end_update_cdf = 0,
+        .allow_warped_motion = 0,
+        .reduced_tx_set = 0,
+        .reference_select = 0,
+        .skip_mode_present = 0,
+        .delta_q_present = 0,
+        .delta_lf_present = 0,
+        .delta_lf_multi = 0,
+        .segmentation_enabled = 0,
+        .segmentation_update_map = 0,
+        .segmentation_temporal_update = 0,
+        .segmentation_update_data = 0,
+        .UsesLr = 0,
+        .usesChromaLr = 0,
+        .apply_grain = 0,
+        .reserved = 0
+      },
+      .frame_type = STD_VIDEO_AV1_FRAME_TYPE_KEY,
+      .current_frame_id = 10537,
+      .OrderHint = 0,
+      .primary_ref_frame = 7,
+      .refresh_frame_flags = 255,
+      .reserved1 = 0,
+      .interpolation_filter = STD_VIDEO_AV1_INTERPOLATION_FILTER_EIGHTTAP,
+      .TxMode = STD_VIDEO_AV1_TX_MODE_ONLY_4X4,
+      .delta_q_res = 0,
+      .delta_lf_res = 0,
+      .SkipModeFrame = { 0, 0 },
+      .coded_denom = 0,
+      .reserved2 = { 0, 0, 0 },
+      .OrderHints = { 0, 0, 0, 0, 0, 0, 0, 0 },
+      .expectedFrameId = { 0, 0, 0, 0, 0, 0, 0, 0 },
+      .pTileInfo = &tile_info,
+      .pQuantization = &quantization,
+      .pSegmentation = &segmentation,
+      .pLoopFilter = &loop_filter,
+      .pCDEF = &cdef,
+      .pLoopRestoration = &loop_restoration,
+      .pGlobalMotion = &global_motion,
+      .pFilmGrain = &film_grain,
+    };
+
+    /* av1_obu layout: [0-17] sequence header, [18-23] frame header, [24-50] tile data */
+    VkVideoDecodeAV1PictureInfoKHR vk_pic = {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_AV1_PICTURE_INFO_KHR,
+      .pStdPictureInfo = &std_pic,
+      .referenceNameSlotIndices = {-1, -1, -1, -1, -1, -1, -1},
+      .frameHeaderOffset = 18,
+      .tileCount = 1,
+      .pTileOffsets = (guint32[]) { 24 },
+      .pTileSizes = (guint32[]) { 27 },
+    };
+
+    pic1.pic_res = (VkVideoPictureResourceInfoKHR) {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_INFO_KHR,
+      .codedOffset = (VkOffset2D) {0, 0},
+      .codedExtent = (VkExtent2D) {AV1_FRAME_WIDTH, AV1_FRAME_HEIGHT},
+      .baseArrayLayer = 0,
+      .imageViewBinding = pic1.img_view_ref->view,
+    };
+
+    pic1.slot = (VkVideoReferenceSlotInfoKHR) {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_REFERENCE_SLOT_INFO_KHR,
+      .pNext = &av1_dpb_slot_pic1,
+      .slotIndex = 0,
+      .pPictureResource = &pic1.pic_res,
+    };
+    pic1.decode_info = (VkVideoDecodeInfoKHR) {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_INFO_KHR,
+      .pNext = &vk_pic,
+      .flags = 0,
+      .srcBufferOffset = 0,
+      .dstPictureResource = {
+        .sType = VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_INFO_KHR,
+        .codedOffset = (VkOffset2D) {0, 0},
+        .codedExtent = (VkExtent2D) {AV1_FRAME_WIDTH, AV1_FRAME_HEIGHT},
+        .baseArrayLayer = 0,
+        .imageViewBinding = pic1.img_view_out->view,
+      },
+      .pSetupReferenceSlot = &pic1.slot,
+      .referenceSlotCount = 0,
+      .pReferenceSlots = pic1.slots,
+    };
+    /* *INDENT-ON* */
+
+    if (gst_vulkan_decoder_has_feature (dec,
+            GST_VULKAN_DECODER_FEATURE_INLINE_PARAMS))
+      vk_pic.pNext = &inline_params;
+
+    fail_unless (gst_vulkan_decoder_decode (dec, &pic1, &err));
+    download_and_check_output_buffer (dec, format_prop.format, &pic1,
+        AV1_FRAME_WIDTH, AV1_FRAME_HEIGHT);
+  }
+
+  /* decode pic2 */
+  {
+    get_output_buffer (dec, format_prop.format, &pic2, AV1_FRAME_WIDTH,
+        AV1_FRAME_HEIGHT);
+
+    /* get input buffer */
+    fail_unless (gst_vulkan_decoder_append_slice (dec, &pic2, av1_obu_2,
+            sizeof (av1_obu_2), FALSE));
+
+    /* setup the vulkan picture */
+    /* *INDENT-OFF* */
+    StdVideoDecodeAV1PictureInfo std_pic = {
+      .flags = {
+        .error_resilient_mode = 0,
+        .disable_cdf_update = 0,
+        .use_superres = 0,
+        .render_and_frame_size_different = 0,
+        .allow_screen_content_tools = 0,
+        .is_filter_switchable = 0,
+        .force_integer_mv = 0,
+        .frame_size_override_flag = 0,
+        .buffer_removal_time_present_flag = 0,
+        .allow_intrabc = 0,
+        .frame_refs_short_signaling = 0,
+        .allow_high_precision_mv = 1,
+        .is_motion_mode_switchable = 1,
+        .use_ref_frame_mvs = 0,
+        .disable_frame_end_update_cdf = 0,
+        .allow_warped_motion = 0,
+        .reduced_tx_set = 0,
+        .reference_select = 0,
+        .skip_mode_present = 0,
+        .delta_q_present = 0,
+        .delta_lf_present = 0,
+        .delta_lf_multi = 0,
+        .segmentation_enabled = 0,
+        .segmentation_update_map = 0,
+        .segmentation_temporal_update = 0,
+        .segmentation_update_data = 0,
+        .UsesLr = 0,
+        .usesChromaLr = 0,
+        .apply_grain = 0,
+        .reserved = 0
+      },
+      .frame_type = STD_VIDEO_AV1_FRAME_TYPE_INTER,
+      .current_frame_id = 10538,
+      .OrderHint = 1,
+      .primary_ref_frame = 7,
+      .refresh_frame_flags = 2,
+      .reserved1 = 0,
+      .interpolation_filter = STD_VIDEO_AV1_INTERPOLATION_FILTER_EIGHTTAP,
+      .TxMode = STD_VIDEO_AV1_TX_MODE_ONLY_4X4,
+      .delta_q_res = 0,
+      .delta_lf_res = 0,
+      .SkipModeFrame = { 0, 0 },
+      .coded_denom = 0,
+      .reserved2 = { 0, 0, 0 },
+      .OrderHints = { 0, 0, 0, 0, 0, 0, 0, 0 },
+      .expectedFrameId = { 0, 0, 0, 0, 0, 0, 0, 0 },
+      .pTileInfo = &tile_info,
+      .pQuantization = &quantization,
+      .pSegmentation = &segmentation,
+      .pLoopFilter = &loop_filter,
+      .pCDEF = &cdef,
+      .pLoopRestoration = &loop_restoration,
+      .pGlobalMotion = &global_motion,
+      .pFilmGrain = &film_grain,
+    };
+
+    /* av1_obu_2 layout: [0-3] temporal delimiter, [4-34] frame header, [35-40] tile data */
+    VkVideoDecodeAV1PictureInfoKHR vk_pic = {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_AV1_PICTURE_INFO_KHR,
+      .pStdPictureInfo = &std_pic,
+      .referenceNameSlotIndices = {0, 0, 0, 0, 0, 0, 0},
+      .frameHeaderOffset = 4,
+      .tileCount = 1,
+      .pTileOffsets = (guint32[]) { 35 },
+      .pTileSizes = (guint32[]) { 6 },
+    };
+    /* *INDENT-ON* */
+
+    /* *INDENT-OFF* */
+    pic2.pic_res = (VkVideoPictureResourceInfoKHR) {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_INFO_KHR,
+      .codedOffset = {0, 0},
+      .codedExtent = {AV1_FRAME_WIDTH, AV1_FRAME_HEIGHT},
+      .baseArrayLayer = 0,
+      .imageViewBinding = pic2.img_view_ref->view,
+    };
+    StdVideoDecodeAV1ReferenceInfo stdav1_ref = {
+      .flags = {
+        .disable_frame_end_update_cdf = 0,
+        .segmentation_enabled = 0,
+      },
+      .frame_type = STD_VIDEO_AV1_FRAME_TYPE_INTER,
+      .RefFrameSignBias = 255,
+      .OrderHint = 1,
+    };
+    VkVideoDecodeAV1DpbSlotInfoKHR av1_dpb_slot = {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_AV1_DPB_SLOT_INFO_KHR,
+      .pStdReferenceInfo = &stdav1_ref,
+    };
+
+    pic2.slot = (VkVideoReferenceSlotInfoKHR) {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_REFERENCE_SLOT_INFO_KHR,
+      .pNext = &av1_dpb_slot,
+      .slotIndex = 1,
+      .pPictureResource = &pic2.pic_res,
+    };
+    /* *INDENT-ON* */
+
+    /* setup the reference for pic2 */
+    pic2.slots[0] = pic1.slot;
+    pic2.refs[0] = &pic1;
+
+    /* *INDENT-OFF* */
+    pic2.decode_info = (VkVideoDecodeInfoKHR) {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_INFO_KHR,
+      .pNext = &vk_pic,
+      .flags = 0,
+      .srcBufferOffset = 0,
+      .dstPictureResource = {
+        .sType = VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_INFO_KHR,
+        .codedOffset = {0, 0},
+        .codedExtent = {AV1_FRAME_WIDTH, AV1_FRAME_HEIGHT},
+        .baseArrayLayer = 0,
+        .imageViewBinding = pic2.img_view_out->view,
+      },
+      .pSetupReferenceSlot = &pic2.slot,
+      .referenceSlotCount = 1,
+      .pReferenceSlots = pic2.slots,
+    };
+    /* *INDENT-ON* */
+
+    if (gst_vulkan_decoder_has_feature (dec,
+            GST_VULKAN_DECODER_FEATURE_INLINE_PARAMS))
+      vk_pic.pNext = &inline_params;
+
+    fail_unless (gst_vulkan_decoder_decode (dec, &pic2, &err));
+    download_and_check_output_buffer (dec, format_prop.format, &pic2,
+        AV1_FRAME_WIDTH, AV1_FRAME_HEIGHT);
   }
 
   fail_unless (gst_vulkan_decoder_stop (dec));
@@ -919,6 +1345,7 @@ vkvideo_suite (void)
     tcase_add_test (tc_basic, test_h264_decoder);
     tcase_add_test (tc_basic, test_h265_decoder);
     tcase_add_test (tc_basic, test_vp9_decoder);
+    tcase_add_test (tc_basic, test_av1_decoder);
   }
 
   return s;
