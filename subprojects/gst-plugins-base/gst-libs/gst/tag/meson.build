@@ -152,3 +152,4 @@ executable('mklicensestables', 'mklicensestables.c',
   install : false)
 
 gst_tag_dir = meson.current_source_dir()
+meson.add_devenv({'GST_TAG_LICENSE_TRANSLATIONS_DICT': gst_tag_dir / 'license-translations.dict'})
