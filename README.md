@@ -301,28 +301,19 @@ environment (see below).
 
 ## Development environment target
 
-GStreamer ships a script that drops you into a development environment where
-all the plugins, libraries, and tools you just built are available:
+GStreamer uses [Meson devenv](https://mesonbuild.com/Commands.html#devenv)
+to drop you into a development environment where all the plugins, libraries,
+and tools you just built are available:
 
 ```
-./gst-env.py
+meson devenv -C <BUILDDIR>
 ```
-
-Or with a custom builddir (i.e., not `build`, `_build` or `builddir`):
-
-```
-./gst-env.py --builddir <BUILDDIR>
-```
-
-You can also use `ninja devenv` inside your build directory to achieve the same
-effect. However, this may not work on Windows if meson has auto-detected the
-visual studio environment.
 
 Alternatively, if you'd rather not start a shell in your workflow, you
 can mutate the current environment into a suitable state like so:
 
 ```
-./gst-env.py --only-environment
+meson devenv -C <BUILDDIR> --dump
 ```
 
 This will print output suitable for an sh-compatible `eval` function,
@@ -331,7 +322,7 @@ just like `ssh-agent -s`.
 An external script can be run in development environment with:
 
 ```
-./gst-env.py external_script.sh
+meson devenv -C <BUILDDIR> external_script.sh
 ```
 
 NOTE: In the development environment, a fully usable prefix is also configured
@@ -602,14 +593,7 @@ the wrapper script can be buggy in some cases.
 
 #### cross-mingw development environment
 
-You can get into the development environment as usual with the gst-env.py
-script:
-
-```
-./gst-env.py
-```
-
-See [above](#development-environment) for more details.
+You can get into the development environment as described [above](#development-environment).
 
 After setting up [binfmt] to use wine for windows binaries,
 you can run GStreamer tools under wine by running:

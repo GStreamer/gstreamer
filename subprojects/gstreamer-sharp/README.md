@@ -52,9 +52,9 @@ or through the `$GI_TYPELIB_PATH` env var), those files are automatically copied
 
     ninja -C build update-all
 
-or if using gst-build, start gst-env and then run
+or using developper environment:
 
-    ninja -C build gstreamer-sharp@@update-all
+    meson devenv -C build ninja gstreamer-sharp@@update-all
 
 * Verify newly copied gir files in `girs/` and `git add` them
 * Verify newly generated code and `git add` files in `sources/generated/` and `ges/generated`

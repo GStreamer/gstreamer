@@ -225,14 +225,6 @@ GStreamer from source yourself instead of using pre-built packages),
 make sure the `PKG_CONFIG_PATH` environment variable is set to the
 correct location (`$libdir/pkgconfig`).
 
-In the unlikely case that you are using the GStreamer development environment
-(ie. gst-env), you will need to use libtool to build the hello
-world program, like this:
-
-```
-libtool --mode=link gcc -Wall helloworld.c -o helloworld $(pkg-config --cflags --libs gstreamer-1.0)
-```
-
 You can run this example application with `./helloworld
 file.ogg`. Substitute `file.ogg` with your favourite Ogg/Vorbis file.
 

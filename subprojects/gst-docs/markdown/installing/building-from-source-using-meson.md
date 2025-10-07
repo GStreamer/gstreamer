@@ -112,12 +112,12 @@ Once meson is done configuring, you can either:
    ``` shell
    cd <build_directory>
    ninja
-   ``` 
+   ```
 2. *or* instead of switching to the build directory every time you wish to
    execute `ninja` commands, you can just specify the build directory as an
    argument. The advantage of this option is that you can run it from anywhere
    (instead of changing to the ninja directory)
-   
+
    ``` shell
    ninja -C </path/to/build_directory>
    ```
@@ -134,21 +134,16 @@ automatically.
 ## Entering the development environment
 
 GStreamer is made of several tools, plugins and components. In order to make it
-easier for development and testing, there is a target (provided by `gst-build`
-or the mono repository, and in future directly by `meson` itself) which will
-setup environment variables accordingly so that you can use all the
-build results directly.
+easier for development and testing, [Meson devenv](https://mesonbuild.com/Commands.html#devenv)
+setups environment variables so that you can use all the build results directly.
+
+```
+meson devenv -C <BUILDDIR>
+```
 
 For anyone familiar with python and virtualenv, you will feel right at home.
 
-The script is called **`gst-env.py`**, it is located in the root of the
-GStreamer mono-repository.
-
-Another way to enter the virtual environment is to execute **`ninja -C
-<path/to/build_directory> devenv`**. This option has less options and is
-therefore not compatible with some workflows.
-
-*NOTE*: you cannot use `meson` or reconfigure with `ninja` within the virtual
+*NOTE*: you cannot reconfigure with `ninja` or `meson` within the virtual
 environment, therefore build before entering the environment or build from
 another terminal/terminal-tab.
 
@@ -160,72 +155,40 @@ tell GStreamer where to find plugins or libraries.
 The most important options are:
 
 + **Shell context related variables**
-  * *PATH* - System path used to search for executable files, `gst-env` will
+  * *PATH* - System path used to search for executable files, `devenv` will
     append folders containing executables from the build directory.
   * *GST_PLUGIN_PATH* - List of paths to search for plugins (`.so`/`.dll`
-    files), `gst-env` will add all plugins found within the
+    files), `devenv` will add all plugins found within the
     `GstPluginsPath.json` file and from a few other locations.
   * *GST_PLUGIN_SYSTEM_PATH*  - When set this will make GStreamer check for
-    plugins in system wide paths, this is kept blank on purpose by `gst-env` to
+    plugins in system wide paths, this is kept blank on purpose by `devenv` to
     avoid using plugins installed outside the environment.
-  * *GST_REGISTRY* - Use a custom file as plugin cache / registry. `gst-env`
+  * *GST_REGISTRY* - Use a custom file as plugin cache / registry. `devenv`
     utilizes the one found in the given build directory.
 + **Meson (build environment) related variables**
   * *GST_VERSION* - Sets the build version in meson.
   * *GST_ENV* - Makes sure that neither meson or ninja are run from within the
-    `gst-env`. Can be used to identify if the environment is active.
+    `devenv`. Can be used to identify if the environment is active.
 + **Validation (test runners) related variables**
   * *GST_VALIDATE_SCENARIOS_PATH* - List of paths to search for validation
     scenario files (list of actions to be executed by the pipeline). By default
-    `gst-env` will use all scenarious found in the
-    `prefix/share/gstreamer-1.0/validate/scenarios` directory within the parent
-    directory of `gst-env.py`.
+    `devenv` will use all scenarious found in the
+    `prefix/share/gstreamer-1.0/validate/scenarios` directory within the gstreamer
+    top source directory.
   * *GST_VALIDATE_PLUGIN_PATH* - List of paths to search for plugin files to
     add to the plugin registry. The default search path is in the given build
     directory under `subprojects/gst-devtools/validate/plugins`.
 
 The general idea is to set up the meson build directory, build the project and
-the switch to the development environment with `gst-env`. This creates a
+the switch to Meson's development environment. This creates a
 development environment in your shell, that provides a separate set of plugins
 and tools.
 To check if you are in the development environment run: `echo
-$GST_ENV`, which will be set by `gst_env` to `gst-$GST_VERSION`.
+$GST_ENV`, which will be set by `devenv` to `gst-$GST_VERSION`.
 
 You will notice the prompt changed accordingly. You can then run any GStreamer
 tool you just built directly (like `gst-inspect-1.0`, `gst-launch-1.0`, ...).
 
-### Options `gst-env`
-
-+ **builddir**
-  - By default, the script will try to find the build directory within the
-    `build` or `builddir` directory within the same folder where
-    `gst-env.py` are located. This option allows to specify
-    a different location. This might be useful when you have multiple different
-    builds but you don't want to jump between folders.
-+ **srcdir**
-  - The parent folder of `gst-env.py` is used by default.
-    This option is used to get the current branch of the repository, to fetch
-    GstValidate plugins and for gdb.
-+ **sysroot**
-  - Useful if the project was cross-compiled on another machine and mounted via
-    a network file system/ssh file system/etc. Adjusts the paths (e.g. the
-    paths found in *GST_PLUGIN_PATH*) by removing the front part of the path
-    which matches *sysroot*.
-
-  <sub>For example if your rootfs is at /srv/rootfs, then the v4l2codecs plugin
-  might be built at
-  `/srv/rootfs/home/user/gstreamer/build/subprojects/gst-plugins-bad/sys/v4l2codecs`.
-  By executing `gst-env.py --sysroot /srv/rootfs` the path will be stored
-  within *GST_PLUGIN_PATH* as:
-  `/home/user/gstreamer/build/subprojects/gst-plugins-bad/sys/v4l2codecs`.</sub>
-
-+ **wine**
-  - Extend the GST_VERSION environment variable with a specific wine command
-+ **winepath**
-  - Add additional elements to the WINEPATH variable for wine environments.
-+ **only-environment**
-  - Instead of opening a new shell environment, print the environment variables
-    that would be used.
 
 ### Windows Development Environment
 
@@ -260,45 +223,19 @@ Activating VS 17.x.x
 ...
 ```
 
-#### Using the Development Environment
-
-Enter the development environment using one of these methods:
-
-```powershell
-# Using gst-env.py (recommended)
-python.exe gst-env.py
-
-# With a custom build directory
-python.exe gst-env.py --builddir builddir
-
-# Using ninja directly
-ninja -C builddir devenv
-```
-
-The development environment will configure all necessary paths (PATH, GST_PLUGIN_PATH, etc.) so you can immediately use GStreamer tools and test your changes:
-
-```powershell
-gst-inspect-1.0.exe coreelements
-gst-launch-1.0.exe videotestsrc ! autovideosink
-```
-
 ### Use cases
 
 #### Setting up a development environment while keeping the distribution package
 
 This case is very simple all you have to do is either:
 
-- `./gst-env.py` from the project root
-- `ninja -C build devenv` (build is the generated meson build directory)
-- `meson devenv` from the meson build directory (e.g. `build`) within the
-  project root
+- `meson devenv -C build` from the project root
 
 #### Using GStreamer as sub project to another project
 
-This case is very similar to the previous, the only important deviation is that
-the file system structure is important. **`gst-env`** will look for a
-`GstPluginPaths.json` file either within the meson build directory (e.g.
-`build`) or within `build/subprojects/gstreamer`.
+This case is very similar to the previous, entering the parent project's
+`devenv` will also setup GStreamer environment. It is also possible to build
+other projects from within GStreamer's `devenv`.
 
 #### Cross-compiling in combination with a network share
 
@@ -313,10 +250,11 @@ build the project and export it via a [NFS mount/NFS
 rootfs](https://wiki.archlinux.org/title/NFS)/[SSHFS](https://wiki.archlinux.org/title/SSHFS)/[Syncthing](https://wiki.archlinux.org/title/Syncthing)
 etc.
 
-On the target machine you then have to remove the path to the rootfs on the
-build machine from the GStreamer paths:
-
-- `./gst-env.py --sysroot /path/to/rootfs-on-cross-compile-host`
+You can then generate an environment file that can be sourced on the target
+machine. To use this the rootfs path needs to be fixed.
+```
+meson devenv -C build --dump | sed 's#/path/to/rootfs-on-cross-compile-host##g' > meson.env
+```
 
 ## Working with multiple branches or remotes
 

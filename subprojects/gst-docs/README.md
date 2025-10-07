@@ -50,8 +50,8 @@ hotdoc subproject feature.
 From `gstreamer`:
 
 ```
-meson build/
-./gst-env ninja -C build subprojects/gst-docs/GStreamer-doc
+meson setup build
+meson devenv -C build ninja subprojects/gst-docs/GStreamer-doc
 ```
 
 And browse the doc:
