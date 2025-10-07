@@ -272,7 +272,8 @@ static gboolean
 print_structure_field (const GstIdStr * fieldname, const GValue * value,
     gpointer user_data)
 {
-  gchar *val;
+  char *val;
+  char *type_name = NULL;
 
   if (G_VALUE_HOLDS_UINT (value)) {
     val = g_strdup_printf ("%u (0x%08x)", g_value_get_uint (value),
@@ -283,13 +284,19 @@ print_structure_field (const GstIdStr * fieldname, const GValue * value,
     val = gst_value_serialize (value);
   }
 
+  if (!G_VALUE_HOLDS_STRING (value)) {
+    type_name = g_strdup_printf (" (%s)", G_VALUE_TYPE_NAME (value));
+  }
+
   if (val != NULL)
-    gst_print ("\n\t\t%s = %s", gst_id_str_as_str (fieldname), val);
+    gst_print ("\n\t\t%s = %s%s", gst_id_str_as_str (fieldname), val,
+        type_name ? type_name : "");
   else
     gst_print ("\n\t\t%s - could not serialise field of type %s",
         gst_id_str_as_str (fieldname), G_VALUE_TYPE_NAME (value));
 
   g_free (val);
+  g_free (type_name);
 
   return TRUE;
 }
