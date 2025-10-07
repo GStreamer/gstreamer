@@ -215,7 +215,7 @@ def check_ges_children_props_docs(modified_files):
         print('WARNING: document-children-props.py script not found, skipping check')
         return
 
-    # Run the script in gst-env (needs build environment)
+    # Run the script in devenv (needs build environment)
     builddir = find_builddir()
     if builddir is None:
         print('WARNING: No build directory found, cannot run document-children-props.py')
@@ -226,7 +226,7 @@ def check_ges_children_props_docs(modified_files):
         with tempfile.NamedTemporaryFile(mode='w', suffix='.sh', delete=False) as env_file:
             env_temp_name = env_file.name
 
-        cmd = f'./gst-env.py --builddir {builddir} --only-environment > {env_temp_name} && source {env_temp_name} && cd {script_path.parent} && python3 document-children-props.py && rm {env_temp_name}'
+        cmd = f'meson devenv -C {builddir} --dump {env_temp_name} && source {env_temp_name} && cd {script_path.parent} && python3 document-children-props.py && rm {env_temp_name}'
         subprocess.run(cmd, shell=True, check=True)
 
         # Check if there are any diffs in the children-props markdown files

@@ -23,7 +23,7 @@ ninja -C "$builddir" update_girs
 git checkout $(git ls-files 'subprojects/*.wrap')
 ./ci/scripts/check-diff.py "gir files"
 
-./gst-env.py --builddir "$builddir" ninja -C "$builddir" plugins_doc_caches
+meson devenv -C "$builddir" ninja plugins_doc_caches
 
 # Ignore modifications to wrap files made by meson
 git checkout $(git ls-files 'subprojects/*.wrap')
@@ -40,7 +40,7 @@ mv "$builddir/subprojects/gst-docs/GStreamer-doc/html" documentation/
 echo "Checking GES children properties documentation..."
 # Force building python extension modules to ensure the _gi_gst python module is built
 ninja -C "$builddir" gst-python@@gst-python-extensions
-./gst-env.py --builddir "$builddir" python3 subprojects/gst-editing-services/docs/libs/document-children-props.py
+meson devenv -C "$builddir" python3 ../subprojects/gst-editing-services/docs/libs/document-children-props.py
 
 # Check if there are any changes in the markdown files
 if ! git diff --ignore-submodules --exit-code subprojects/gst-editing-services/docs/libs/*-children-props.md; then

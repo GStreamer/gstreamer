@@ -307,7 +307,6 @@ pre-commit checks:
 .base_modules_changes: &modules_changes
   - .gitlab-ci.yml
   - .gitlab-image-tags.yml
-  - gst-env.py
   - ci/gitlab/*.py
   - ci/scripts/**/*
   - meson.build
@@ -349,8 +348,8 @@ pre-commit checks:
     GI_SCANNER_DISABLE_CACHE: "1"
   script:
     - $CI_PROJECT_DIR/ci/scripts/build.sh build/
-    - ./gst-env.py gst-inspect-1.0 --version
-    - ./gst-env.py gst-inspect-1.0
+    - meson devenv -C build gst-inspect-1.0 --version
+    - meson devenv -C build gst-inspect-1.0
   after_script:
     - mv build/meson-logs/ meson-logs
   artifacts:
@@ -373,9 +372,9 @@ pre-commit checks:
     MESON_ARGS: "${SIMPLE_BUILD}"
   script:
     - $CI_PROJECT_DIR/ci/scripts/build.sh build/
-    - ./gst-env.py gst-inspect-1.0 --version
-    - ./gst-env.py gst-inspect-1.0
-    - G_DEBUG=fatal_criticals ./gst-env.py gst-inspect-1.0 --print-all --gst-disable-registry-fork > /dev/null
+    - meson devenv -C build gst-inspect-1.0 --version
+    - meson devenv -C build gst-inspect-1.0
+    - G_DEBUG=fatal_criticals meson devenv -C build gst-inspect-1.0 --print-all --gst-disable-registry-fork > /dev/null
     - meson install --destdir $CI_PROJECT_DIR/destdir -C build
     - rm -rf $CI_PROJECT_DIR/destdir
 
@@ -560,8 +559,8 @@ build vs2022 amd64:
     - echo "$env:MESON_ARGS $env:GTK_ARGS" | Out-File -File args.txt -Encoding ASCII
     - .\ci\run_retry.ps1 meson setup --vsenv build '@args.txt'
     - .\ci\run_retry.ps1 meson compile -C build --jobs $env:FDO_CI_CONCURRENT
-    - .\gst-env.py gst-inspect-1.0.exe --version
-    - .\gst-env.py gst-inspect-1.0.exe
+    - meson devenv -C build gst-inspect-1.0.exe --version
+    - meson devenv -C build gst-inspect-1.0.exe
     - mkdir destdir
     - meson install -C build --destdir installdir
     - Remove-Item -Recurse -Force build\installdir
@@ -578,8 +577,8 @@ build vs2022 amd64 full-static:
     - !reference [".build windows", "script"]
     - cmd.exe /C "meson setup --vsenv build --default-library=static $env:MESON_ARGS"
     - .\ci\run_retry.ps1 meson compile -C build --jobs $env:FDO_CI_CONCURRENT
-    - .\gst-env.py gst-inspect-1.0.exe --version
-    - .\gst-env.py gst-inspect-1.0.exe
+    - meson devenv -C build gst-inspect-1.0.exe --version
+    - meson devenv -C build gst-inspect-1.0.exe
   variables:
     MESON_ARGS: >-
       -Dintrospection=disabled
