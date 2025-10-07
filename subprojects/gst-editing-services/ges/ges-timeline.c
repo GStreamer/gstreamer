@@ -1492,7 +1492,8 @@ _get_selected_tracks (GESTimeline * timeline, GESClip * clip,
     tracks = g_ptr_array_new ();
 
     g_ptr_array_add (tracks, track);
-  } else {
+  } else if (!g_signal_has_handler_pending (G_OBJECT (timeline),
+          ges_timeline_signals[SELECT_ELEMENT_TRACK], 0, TRUE)) {
     g_signal_emit (G_OBJECT (timeline),
         ges_timeline_signals[SELECT_TRACKS_FOR_OBJECT], 0, clip, track_element,
         &tracks);
