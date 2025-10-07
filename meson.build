@@ -679,25 +679,8 @@ endif
 
 message('Building subprojects: ' + ', '.join(subprojects_names))
 
-setenv = find_program('gst-env.py')
-
-devenv_cmd = [setenv, '--builddir=@0@'.format(meson.global_build_root()),
-              '--srcdir=@0@'.format(meson.global_source_root())]
-
 subdir('tests')
 subdir('ci/fuzzing')
-
-if meson.can_run_host_binaries() and build_machine.system() == 'linux' and host_machine.system() == 'windows'
-  # FIXME: Ideally we could get the wrapper directly from meson
-  devenv_cmd += ['--wine', host_machine.cpu_family() == 'x86_64' ? 'wine64' : 'wine32']
-  sysroot = meson.get_cross_property('sys_root')
-  if sysroot != ''
-    # Logic from meson
-    devenv_cmd += ['--winepath', 'Z:' + join_paths(sysroot, 'bin')]
-  endif
-endif
-
-run_target('devenv', command : devenv_cmd)
 
 if orc_subproject.found() and orc_update_targets.length() > 0
   alias_target('update-orc-dist', orc_update_targets)

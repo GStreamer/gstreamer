@@ -13,8 +13,8 @@ if run_command(python, '-c', 'import gi', check: false).returncode() != 0
     subdir_done()
 endif
 
-test('python-overrides-devenv', setenv, args: ['--builddir=@0@'.format(meson.project_build_root()),
-              '--srcdir=@0@'.format(meson.project_source_root()),
+meson_cmd = find_program('meson')
+test('python-overrides-devenv', meson_cmd, args: ['devenv', '-C', meson.global_build_root(),
               meson.current_source_dir() / 'python-devenv-overrides.py'])
 
 env = environment()
