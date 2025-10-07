@@ -41,7 +41,7 @@ libav_deps_type_name = ''
 
 foreach dep: libav_deps
   if libav_deps_type_name != '' and dep.type_name() != libav_deps_type_name
-    error('Libav deps must be either all internal or all external')
+    error('Found mixed @0@ and @1@ dependencies. Ensure all FFmpeg libraries are either provided by the system or built as subprojects.'.format(libav_deps_type_name, dep.type_name()))
   endif
   libav_deps_type_name = dep.type_name()
 endforeach
