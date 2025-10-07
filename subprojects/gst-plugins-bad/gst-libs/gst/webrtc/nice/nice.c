@@ -762,7 +762,8 @@ on_candidate_resolved (GstWebRTCNice * nice, GList * addresses,
   cand =
       nice_agent_parse_remote_candidate_sdp (nice->priv->nice_agent,
       rc->nice_stream_id, new_candidate);
-  g_free (new_candidate);
+
+  g_free (new_addr);
   if (!cand) {
     if (rc->promise) {
       GError *error =
@@ -776,11 +777,11 @@ on_candidate_resolved (GstWebRTCNice * nice, GList * addresses,
       GST_WARNING_OBJECT (ice, "Could not parse candidate \'%s\'",
           new_candidate);
     }
+    g_free (new_candidate);
     return;
   }
 
-  g_free (new_addr);
-
+  g_free (new_candidate);
   add_ice_candidate_to_libnice (ice, rc->nice_stream_id, cand);
   nice_candidate_free (cand);
 }
