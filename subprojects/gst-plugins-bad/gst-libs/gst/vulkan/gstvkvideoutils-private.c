@@ -166,8 +166,10 @@ gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
             int j;
             for (j = 0; j < G_N_ELEMENTS (h265_profile_map); j++) {
               if (profile->codec.h265dec.stdProfileIdc
-                  == h265_profile_map[j].vk_profile)
+                  == h265_profile_map[j].vk_profile) {
                 profile_str = h265_profile_map[j].profile_str;
+                break;
+              }
             }
           }
           break;
@@ -176,8 +178,10 @@ gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
             int j;
             for (j = 0; j < G_N_ELEMENTS (vp9_profile_map); j++) {
               if (profile->codec.vp9dec.stdProfile
-                  == vp9_profile_map[j].vk_profile)
+                  == vp9_profile_map[j].vk_profile) {
                 profile_str = vp9_profile_map[j].profile_str;
+                break;
+              }
             }
           }
           break;
@@ -186,8 +190,10 @@ gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
             int j;
             for (j = 0; j < G_N_ELEMENTS (av1_profile_map); j++) {
               if (profile->codec.av1dec.stdProfile
-                  == av1_profile_map[j].vk_profile)
+                  == av1_profile_map[j].vk_profile) {
                 profile_str = av1_profile_map[j].profile_str;
+                break;
+              }
             }
           }
           break;
@@ -196,8 +202,10 @@ gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
             int j;
             for (j = 0; j < G_N_ELEMENTS (h264_profile_map); j++) {
               if (profile->codec.h264enc.stdProfileIdc
-                  == h264_profile_map[j].vk_profile)
+                  == h264_profile_map[j].vk_profile) {
                 profile_str = h264_profile_map[j].profile_str;
+                break;
+              }
             }
           }
           break;
@@ -206,8 +214,10 @@ gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
             int j;
             for (j = 0; j < G_N_ELEMENTS (h265_profile_map); j++) {
               if (profile->codec.h265enc.stdProfileIdc
-                  == h265_profile_map[j].vk_profile)
+                  == h265_profile_map[j].vk_profile) {
                 profile_str = h265_profile_map[j].profile_str;
+                break;
+              }
             }
           }
           break;
@@ -216,8 +226,10 @@ gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
             int j;
             for (j = 0; j < G_N_ELEMENTS (av1_profile_map); j++) {
               if (profile->codec.av1enc.stdProfile
-                  == av1_profile_map[j].vk_profile)
+                  == av1_profile_map[j].vk_profile) {
                 profile_str = av1_profile_map[j].profile_str;
+                break;
+              }
             }
           }
           break;
