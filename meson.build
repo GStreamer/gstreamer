@@ -14,6 +14,16 @@ host_system = host_machine.system()
 build_system = build_machine.system()
 cc = meson.get_compiler('c')
 
+# Check Xcode version on macOS and enforce meson >= 1.8.3 for Xcode 26+
+# Xcode 26+ ships with Apple Clang 17.0.0 based on LLVM 19
+# which deprecated _LIBCPP_ENABLE_ASSERTIONS. Older meson versions have issues with this.
+if build_system == 'darwin'
+  xcodebuild = find_program('xcodebuild', required: false, version_argument: '-version')
+  if xcodebuild.found() and xcodebuild.version().version_compare('>= 26.0') and not meson.version().version_compare('>= 1.8.3')
+    error('Xcode >= 26.0 requires meson >= 1.8.3, found meson @0@. Please upgrade meson.'.format(meson.version()))
+  endif
+endif
+
 fs = import('fs')
 gnome = import('gnome')
 pkgconfig = import('pkgconfig')
