@@ -621,7 +621,7 @@ gst_curl_base_sink_transfer_set_common_options_unlocked (GstCurlBaseSink * sink)
   CURLcode res;
 
 #ifndef GST_DISABLE_GST_DEBUG
-  res = curl_easy_setopt (sink->curl, CURLOPT_VERBOSE, 1);
+  res = curl_easy_setopt (sink->curl, CURLOPT_VERBOSE, 1L);
   if (res != CURLE_OK) {
     sink->error = g_strdup_printf ("failed to set verbose: %s",
         curl_easy_strerror (res));
@@ -649,7 +649,9 @@ gst_curl_base_sink_transfer_set_common_options_unlocked (GstCurlBaseSink * sink)
     return FALSE;
   }
 
-  res = curl_easy_setopt (sink->curl, CURLOPT_CONNECTTIMEOUT, sink->timeout);
+  res =
+      curl_easy_setopt (sink->curl, CURLOPT_CONNECTTIMEOUT,
+      (long) sink->timeout);
   if (res != CURLE_OK) {
     sink->error = g_strdup_printf ("failed to set connection timeout: %s",
         curl_easy_strerror (res));
@@ -657,7 +659,7 @@ gst_curl_base_sink_transfer_set_common_options_unlocked (GstCurlBaseSink * sink)
   }
 
   /* using signals in a multi-threaded application is dangerous */
-  res = curl_easy_setopt (sink->curl, CURLOPT_NOSIGNAL, 1);
+  res = curl_easy_setopt (sink->curl, CURLOPT_NOSIGNAL, 1L);
   if (res != CURLE_OK) {
     sink->error = g_strdup_printf ("failed to set no signalling: %s",
         curl_easy_strerror (res));

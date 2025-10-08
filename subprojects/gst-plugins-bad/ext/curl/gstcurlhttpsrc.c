@@ -820,10 +820,10 @@ gst_curl_http_src_ref_multi (GstCurlHttpSrc * src)
     klass->multi_task_context.multi_handle = curl_multi_init ();
 
     curl_multi_setopt (klass->multi_task_context.multi_handle,
-        CURLMOPT_PIPELINING, 1);
+        CURLMOPT_PIPELINING, 1L);
 #ifdef CURLMOPT_MAX_HOST_CONNECTIONS
     curl_multi_setopt (klass->multi_task_context.multi_handle,
-        CURLMOPT_MAX_HOST_CONNECTIONS, 1);
+        CURLMOPT_MAX_HOST_CONNECTIONS, 1L);
 #endif
 
     /* Start the thread */
@@ -1148,7 +1148,7 @@ gst_curl_http_src_create_easy_handle (GstCurlHttpSrc * s)
   GST_INFO_OBJECT (s, "Creating a new handle for URI %s", s->uri);
 
 #ifndef GST_DISABLE_GST_DEBUG
-  if (curl_easy_setopt (handle, CURLOPT_VERBOSE, 1) != CURLE_OK) {
+  if (curl_easy_setopt (handle, CURLOPT_VERBOSE, 1L) != CURLE_OK) {
     GST_WARNING_OBJECT (s, "Failed to set verbose!");
   }
   if (curl_easy_setopt (handle, CURLOPT_DEBUGDATA, s) != CURLE_OK) {
@@ -1200,7 +1200,7 @@ gst_curl_http_src_create_easy_handle (GstCurlHttpSrc * s)
   gst_curl_setopt_int_default (s, handle, CURLOPT_MAXREDIRS,
       s->max_3xx_redirects);
   gst_curl_setopt_bool (s, handle, CURLOPT_TCP_KEEPALIVE, s->keep_alive);
-  gst_curl_setopt_int (s, handle, CURLOPT_TIMEOUT, s->timeout_secs);
+  gst_curl_setopt_int (s, handle, CURLOPT_TIMEOUT, (long) s->timeout_secs);
   gst_curl_setopt_bool (s, handle, CURLOPT_SSL_VERIFYPEER, s->strict_ssl);
   gst_curl_setopt_str (s, handle, CURLOPT_CAINFO, s->custom_ca_file);
 
