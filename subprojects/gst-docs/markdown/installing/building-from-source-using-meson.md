@@ -227,6 +227,61 @@ tool you just built directly (like `gst-inspect-1.0`, `gst-launch-1.0`, ...).
   - Instead of opening a new shell environment, print the environment variables
     that would be used.
 
+### Windows Development Environment
+
+#### Prerequisites
+
+- **Visual Studio Community 2022** (or later) with:
+  - Desktop development with C++ workload
+  - Windows SDK
+- **Python 3.8+** (required for build system and gst-env.py)
+- **Meson 0.59.0+** (install via pip: `pip install meson`)
+
+It is recommended to use Visual Studio Community 2022 and PowerShell terminal.
+
+Meson 0.59.0+ automatically detects and activates the Visual Studio toolchain when no other compilers are found. GStreamer should be built in a PowerShell environment for a complete user experience.
+
+NOTE: If you have other toolchains (MinGW, Clang, etc.) in your PATH, Meson may detect those instead of Visual Studio. To ensure Visual Studio is used:
+- Remove conflicting toolchains from your Windows PATH, or
+- Use the `--vsenv` flag: `meson setup --vsenv builddir`, or
+- Run from a Developer PowerShell for VS 2022 which pre-configures the environment
+
+#### Building with Visual Studio
+
+```powershell
+meson setup builddir
+meson compile -C builddir
+```
+NOTE: You should verify that Visual Studio is being detected. Look for output similar to:
+
+```powershell
+...
+Activating VS 17.x.x
+...
+```
+
+#### Using the Development Environment
+
+Enter the development environment using one of these methods:
+
+```powershell
+# Using gst-env.py (recommended)
+python.exe gst-env.py
+
+# With a custom build directory
+python.exe gst-env.py --builddir builddir
+
+# Using ninja directly
+ninja -C builddir devenv
+```
+
+The development environment will configure all necessary paths (PATH, GST_PLUGIN_PATH, etc.) so you can immediately use GStreamer tools and test your changes:
+
+```powershell
+gst-inspect-1.0.exe coreelements
+gst-launch-1.0.exe videotestsrc ! autovideosink
+```
+
 ### Use cases
 
 #### Setting up a development environment while keeping the distribution package

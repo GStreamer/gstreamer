@@ -340,6 +340,65 @@ in `gstreamer/prefix` where you can install any extra dependency/project.
 For more extensive documentation about the development environment go to [the
 documentation](https://gstreamer.freedesktop.org/documentation/installing/building-from-source-using-meson.html).
 
+## Windows Development Environment
+
+### Prerequisites
+
+- **Visual Studio Community 2022** (or later) with:
+  - Desktop development with C++ workload
+  - Windows SDK
+- **Python 3.8+** (required for build system and gst-env.py)
+- **Meson 0.59.0+** (install via pip: `pip install meson`)
+
+It is recommended to use Visual Studio Community 2022 and PowerShell terminal.
+
+Meson 0.59.0+ automatically detects and activates the Visual Studio toolchain when no other compilers are found. GStreamer should be built in a PowerShell environment for a complete user experience.
+
+NOTE: If you have other toolchains (MinGW, Clang, etc.) in your PATH, Meson may detect those instead of Visual Studio. To ensure Visual Studio is used:
+- Remove conflicting toolchains from your Windows PATH, or
+- Use the `--vsenv` flag: `meson setup --vsenv builddir`, or
+- Run from a Developer PowerShell for VS 2022 which pre-configures the environment
+
+### Building with Visual Studio
+
+```powershell
+meson setup builddir
+meson compile -C builddir
+```
+
+NOTE: You should verify that Visual Studio is being detected. Look for output similar to:
+
+```powershell
+...
+Activating VS 17.x.x
+...
+```
+
+### Using the Development Environment in PowerShell
+
+```powershell
+python.exe gst-env.py
+```
+
+Or with a custom build directory:
+
+```powershell
+python.exe gst-env.py --builddir builddir
+```
+
+You can also use ninja directly:
+
+```powershell
+ninja -C builddir devenv
+```
+
+The development environment will configure all necessary paths (PATH, GST_PLUGIN_PATH, etc.) so you can immediately use GStreamer tools and test your changes:
+
+```powershell
+gst-inspect-1.0.exe coreelements
+gst-launch-1.0.exe videotestsrc ! autovideosink
+```
+
 ## Custom subprojects
 
 We also added a meson option, `custom_subprojects`, that allows the user
