@@ -581,7 +581,9 @@ custom_proxy_setup (GstCurlBaseSink * bcsink)
     return FALSE;
   }
 
-  res = curl_easy_setopt (bcsink->curl, CURLOPT_PROXYPORT, sink->proxy_port);
+  res =
+      curl_easy_setopt (bcsink->curl, CURLOPT_PROXYPORT,
+      (long) sink->proxy_port);
   if (res != CURLE_OK) {
     bcsink->error = g_strdup_printf ("failed to set proxy port: %s",
         curl_easy_strerror (res));
