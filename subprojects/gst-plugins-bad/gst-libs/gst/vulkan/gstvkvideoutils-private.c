@@ -243,6 +243,9 @@ gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
   if (i == G_N_ELEMENTS (video_codecs_map))
     return NULL;
 
+  if (!profile_str)
+    return NULL;
+
   for (i = 0; i < G_N_ELEMENTS (video_chroma_map); i++) {
     if (profile->profile.chromaSubsampling == video_chroma_map[i].chroma) {
       chroma_sub = video_chroma_map[i].chroma_str;
@@ -270,12 +273,10 @@ gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
   if (i == G_N_ELEMENTS (bit_depth_map))
     return NULL;
 
-  caps = gst_caps_new_simple (mime, "chroma-format", G_TYPE_STRING, chroma_sub,
-      "bit-depth-luma", G_TYPE_UINT, luma, "bit-depth-chroma", G_TYPE_UINT,
-      chroma, NULL);
+  caps = gst_caps_new_simple (mime, "profile", G_TYPE_STRING, profile_str,
+      "chroma-format", G_TYPE_STRING, chroma_sub, "bit-depth-luma", G_TYPE_UINT,
+      luma, "bit-depth-chroma", G_TYPE_UINT, chroma, NULL);
 
-  if (profile_str)
-    gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile_str, NULL);
   if (layout)
     gst_caps_set_simple (caps, "interlace-mode", G_TYPE_STRING, layout, NULL);
 
