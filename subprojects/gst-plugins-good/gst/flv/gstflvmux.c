@@ -654,51 +654,76 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
   if (ret) {
     gint rate, channels;
 
-    if (gst_structure_get_int (s, "rate", &rate)) {
-      if (pad->codec == AAC)
-        pad->rate = 3;
-      else if (rate == 5512)
-        pad->rate = 0;
-      else if (rate == 11025)
-        pad->rate = 1;
-      else if (rate == 22050)
-        pad->rate = 2;
-      else if (rate == 44100)
-        pad->rate = 3;
-      else if (rate == 8000 && (pad->codec == NELLYMOSER_8K
-              || pad->codec == MP3_8K || pad->codec == G711_ALAW
-              || pad->codec == G711_MULAW))
-        pad->rate = 0;
-      else if (rate == 16000 && (pad->codec == NELLYMOSER_16K
-              || pad->codec == SPEEX))
-        pad->rate = 0;
-      else
-        ret = FALSE;
-    } else if (pad->codec == AAC) {
+    if (pad->codec == AAC)
       pad->rate = 3;
+    else if (gst_structure_get_int (s, "rate", &rate)) {
+      switch (rate) {
+        case 5512:
+          pad->rate = 0;
+          break;
+        case 11025:
+          pad->rate = 1;
+          break;
+        case 22050:
+          pad->rate = 2;
+          break;
+        case 44100:
+          pad->rate = 3;
+          break;
+        case 8000:
+          switch (pad->codec) {
+            case NELLYMOSER_8K:
+            case MP3_8K:
+            case G711_ALAW:
+            case G711_MULAW:
+              pad->rate = 0;
+              break;
+            default:
+              ret = FALSE;
+              break;
+          }
+          break;
+        case 16000:
+          switch (pad->codec) {
+            case NELLYMOSER_16K:
+            case SPEEX:
+              pad->rate = 0;
+              break;
+            default:
+              ret = FALSE;
+              break;
+          }
+          break;
+        default:
+          ret = FALSE;
+          break;
+      }
     } else {
       ret = FALSE;
     }
 
-    if (gst_structure_get_int (s, "channels", &channels)) {
-      if (pad->codec == NELLYMOSER_16K || pad->codec == NELLYMOSER_8K
-          || pad->codec == NELLYMOSER || pad->codec == SPEEX)
+    switch (pad->codec) {
+      case NELLYMOSER_16K:
+      case NELLYMOSER_8K:
+      case NELLYMOSER:
         pad->channels = 0;
-      else if (pad->codec == AAC)
+        break;
+      case AAC:
         pad->channels = 1;
-      else if (channels == 1)
-        pad->channels = 0;
-      else if (channels == 2)
-        pad->channels = 1;
-      else
-        ret = FALSE;
-    } else if (pad->codec == NELLYMOSER_16K || pad->codec == NELLYMOSER_8K
-        || pad->codec == NELLYMOSER) {
-      pad->channels = 0;
-    } else if (pad->codec == AAC) {
-      pad->channels = 1;
-    } else {
-      ret = FALSE;
+        break;
+      default:
+        if (gst_structure_get_int (s, "channels", &channels)) {
+          if (channels == 1 || pad->codec == SPEEX)
+            pad->channels = 0;
+          else if (channels == 2)
+            pad->channels = 1;
+          else {
+            ret = FALSE;
+          }
+        } else {
+          ret = FALSE;
+        }
+        break;
     }
 
     if (pad->codec != LINEAR_PCM_LE)
