@@ -8994,6 +8994,14 @@ gst_webrtc_bin_dispose (GObject * object)
     g_array_free (webrtc->priv->ice_stream_map, TRUE);
   webrtc->priv->ice_stream_map = NULL;
 
+  if (webrtc->priv->sctp_transport) {
+    gst_element_set_locked_state (webrtc->priv->sctp_transport->sctpdec, FALSE);
+    gst_element_set_locked_state (webrtc->priv->sctp_transport->sctpenc, FALSE);
+    gst_element_set_state (webrtc->priv->sctp_transport->sctpdec,
+        GST_STATE_NULL);
+    gst_element_set_state (webrtc->priv->sctp_transport->sctpenc,
+        GST_STATE_NULL);
+  }
   g_clear_object (&webrtc->priv->sctp_transport);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
