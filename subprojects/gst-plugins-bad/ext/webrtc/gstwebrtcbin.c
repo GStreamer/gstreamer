@@ -1224,6 +1224,13 @@ _execute_op (GstWebRTCBinTask * op)
 
   PC_UNLOCK (op->webrtc);
 
+  if (op->deferred) {
+    GST_DEBUG_OBJECT (op->webrtc,
+        "Task successfully submitted, promise result is expected to be notified asynchronously");
+    gst_clear_structure (&s);
+    goto out;
+  }
+
   if (op->promise)
     gst_promise_reply (op->promise, s);
   else if (s)
@@ -1249,9 +1256,10 @@ _free_op (GstWebRTCBinTask * op)
  * be replied to in the case that @webrtc becomes closed between the idle
  * source addition and the the execution of the idle source.
  */
-gboolean
-gst_webrtc_bin_enqueue_task (GstWebRTCBin * webrtc, GstWebRTCBinFunc func,
-    gpointer data, GDestroyNotify notify, GstPromise * promise)
+static gboolean
+gst_webrtc_bin_enqueue_task_full (GstWebRTCBin * webrtc,
+    GstWebRTCBinFunc func, gpointer data,
+    GDestroyNotify notify, GstPromise * promise, gboolean deferred)
 {
   GstWebRTCBinTask *op;
   GMainContext *ctx;
@@ -1272,6 +1280,7 @@ gst_webrtc_bin_enqueue_task (GstWebRTCBin * webrtc, GstWebRTCBinFunc func,
 
   op = g_new0 (GstWebRTCBinTask, 1);
   op->webrtc = webrtc;
+  op->deferred = deferred;
   op->op = func;
   op->data = data;
   op->notify = notify;
@@ -1287,6 +1296,14 @@ gst_webrtc_bin_enqueue_task (GstWebRTCBin * webrtc, GstWebRTCBinFunc func,
   g_main_context_unref (ctx);
 
   return TRUE;
+}
+
+gboolean
+gst_webrtc_bin_enqueue_task (GstWebRTCBin * pc, GstWebRTCBinFunc func,
+    gpointer data, GDestroyNotify notify, GstPromise * promise)
+{
+  return gst_webrtc_bin_enqueue_task_full (pc, func, data, notify, promise,
+      FALSE);
 }
 
 void
@@ -5454,6 +5471,7 @@ _add_ice_candidate (GstWebRTCBin * webrtc, IceCandidateItem * item,
       ICE_LOCK (webrtc);
       g_array_append_val (webrtc->priv->pending_remote_ice_candidates, new);
       ICE_UNLOCK (webrtc);
+      gst_promise_reply (item->promise, NULL);
     }
     return;
   }
@@ -7140,6 +7158,9 @@ _add_ice_candidate_task (GstWebRTCBin * webrtc, IceCandidateItem * item)
     ICE_LOCK (webrtc);
     g_array_append_val (webrtc->priv->pending_remote_ice_candidates, new);
     ICE_UNLOCK (webrtc);
+    if (item->promise) {
+      gst_promise_reply (item->promise, NULL);
+    }
   } else {
     _add_ice_candidate (webrtc, item, FALSE);
   }
@@ -7159,6 +7180,7 @@ gst_webrtc_bin_add_ice_candidate (GstWebRTCBin * webrtc, guint mline,
     const gchar * attr, GstPromise * promise)
 {
   IceCandidateItem *item;
+  gboolean defer_result = promise != NULL;
 
   item = g_new0 (IceCandidateItem, 1);
   item->mlineindex = mline;
@@ -7169,9 +7191,10 @@ gst_webrtc_bin_add_ice_candidate (GstWebRTCBin * webrtc, guint mline,
     else if (!g_ascii_strncasecmp (attr, "candidate:", 10))
       item->candidate = g_strdup_printf ("a=%s", attr);
   }
-  if (!gst_webrtc_bin_enqueue_task (webrtc,
+
+  if (!gst_webrtc_bin_enqueue_task_full (webrtc,
           (GstWebRTCBinFunc) _add_ice_candidate_task, item,
-          (GDestroyNotify) _free_ice_candidate_item, promise)) {
+          (GDestroyNotify) _free_ice_candidate_item, promise, defer_result)) {
     GError *error =
         g_error_new (GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_INVALID_STATE,
         "Could not add ICE candidate. webrtcbin is closed");

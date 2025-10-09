@@ -801,6 +801,9 @@ gst_webrtc_nice_add_candidate (GstWebRTCICE * ice, GstWebRTCICEStream * stream,
   if (candidate == NULL) {
     nice_agent_peer_candidate_gathering_done (nice->priv->nice_agent,
         item->nice_stream_id);
+    if (promise) {
+      gst_promise_reply (promise, NULL);
+    }
     return;
   }
 
@@ -869,6 +872,9 @@ gst_webrtc_nice_add_candidate (GstWebRTCICE * ice, GstWebRTCICEStream * stream,
 
   add_ice_candidate_to_libnice (ice, item->nice_stream_id, cand);
   nice_candidate_free (cand);
+  if (promise) {
+    gst_promise_reply (promise, NULL);
+  }
 }
 
 static gboolean

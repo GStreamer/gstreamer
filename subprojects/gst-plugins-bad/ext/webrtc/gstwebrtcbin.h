@@ -169,6 +169,7 @@ typedef struct
   gpointer data;
   GDestroyNotify notify;
   GstPromise *promise;
+  gboolean deferred;
 } GstWebRTCBinTask;
 
 gboolean        gst_webrtc_bin_enqueue_task             (GstWebRTCBin * pc,
