@@ -116,7 +116,7 @@ new_sample (GstElement * sink, CustomData * data)
     return GST_FLOW_OK;
   }
 
-  return GST_FLOW_ERROR;
+  return GST_FLOW_FLUSHING;
 }
 
 /* This function is called when an error message is posted on the bus */
