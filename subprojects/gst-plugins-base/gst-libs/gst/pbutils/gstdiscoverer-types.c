@@ -473,7 +473,7 @@ gst_discoverer_info_class_init (GObjectClass * klass)
 
 /**
  * gst_discoverer_stream_info_list_free:
- * @infos: (element-type GstPbutils.DiscovererStreamInfo): a #GList of #GstDiscovererStreamInfo
+ * @infos: (transfer full) (element-type GstPbutils.DiscovererStreamInfo): a #GList of #GstDiscovererStreamInfo
  *
  * Decrements the reference count of all contained #GstDiscovererStreamInfo
  * and fress the #GList.

@@ -1184,7 +1184,7 @@ and fress the #GList.</doc>
           <type name="none" c:type="void"/>
         </return-value>
         <parameters>
-          <parameter name="infos" transfer-ownership="none">
+          <parameter name="infos" transfer-ownership="full">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer-types.c">a #GList of #GstDiscovererStreamInfo</doc>
             <type name="GLib.List" c:type="GList*">
               <type name="DiscovererStreamInfo"/>
