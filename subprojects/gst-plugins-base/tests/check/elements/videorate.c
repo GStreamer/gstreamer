@@ -1297,6 +1297,17 @@ GST_START_TEST (test_fixed_framerate)
       "video/x-raw,framerate=0/1");
   cleanup_videorate (videorate);
 
+  /* 4) if downstream force variable framerate and drop-only is TRUE */
+  videorate =
+      setup_videorate_full (&srctemplate, &force_variable_rate_template);
+  g_object_set (videorate, "drop-only", TRUE, NULL);
+  ASSERT_SET_STATE (videorate, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
+  caps = gst_caps_from_string ("video/x-raw,framerate=0/1");
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+  videorate_send_buffers (videorate, "video/x-raw,framerate=0/1",
+      "video/x-raw,framerate=0/1");
+  cleanup_videorate (videorate);
 }
 
 GST_END_TEST;

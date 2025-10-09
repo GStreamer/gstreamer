@@ -1826,7 +1826,8 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
       if ((videorate->segment.rate > 0.0 && in_ts >= videorate->next_ts) ||
           (videorate->segment.rate < 0.0 && in_ts <= videorate->next_ts)) {
         res = gst_video_rate_push_buffer (videorate,
-            gst_buffer_ref (buffer), FALSE, GST_CLOCK_TIME_NONE, FALSE);
+            gst_buffer_ref (buffer), FALSE, GST_CLOCK_TIME_NONE,
+            !GST_BUFFER_DURATION_IS_VALID (buffer));
       } else {
         videorate->drop++;
       }
