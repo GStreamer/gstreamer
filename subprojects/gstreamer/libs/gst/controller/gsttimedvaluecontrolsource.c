@@ -394,10 +394,10 @@ _append_control_point (GstControlPoint * cp, GQueue * res)
  * gst_timed_value_control_source_get_all:
  * @self: the #GstTimedValueControlSource to get the list from
  *
- * Returns a read-only copy of the list of #GstTimedValue for the given property.
+ * Returns a read-only copy of the list of #GstControlPoint for the given property.
  * Free the list after done with it.
  *
- * Returns: (transfer container) (element-type GstTimedValue): a copy
+ * Returns: (transfer container) (element-type GstControlPoint): a copy
  * of the list, or %NULL if the property isn't handled by the controller
  */
 GList *
