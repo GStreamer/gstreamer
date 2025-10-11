@@ -1491,7 +1491,8 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index,
           "absolute", &absolute, NULL);
 
       if (GST_IS_INTERPOLATION_CONTROL_SOURCE (source)) {
-        GList *timed_values, *tmp;
+        GstTimedValue *timed_values;
+        gsize n_values;
         GstInterpolationMode mode;
 
         append_escaped (str,
@@ -1506,18 +1507,25 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index,
             depth);
         append_escaped (str, g_markup_printf_escaped (" values ='"), depth);
         timed_values =
-            gst_timed_value_control_source_get_all
-            (GST_TIMED_VALUE_CONTROL_SOURCE (source));
-        for (tmp = timed_values; tmp; tmp = tmp->next) {
-          gchar strbuf[G_ASCII_DTOSTR_BUF_SIZE];
-          GstTimedValue *value;
+            gst_timed_value_control_source_list_control_points
+            (GST_TIMED_VALUE_CONTROL_SOURCE (source), &n_values);
 
-          value = (GstTimedValue *) tmp->data;
-          append_escaped (str, g_markup_printf_escaped (" %" G_GUINT64_FORMAT
-                  ":%s ", value->timestamp, g_ascii_dtostr (strbuf,
-                      G_ASCII_DTOSTR_BUF_SIZE, value->value)), depth);
+        if (timed_values) {
+          gsize i;
+
+          for (i = 0; i < n_values; i++) {
+            gchar strbuf[G_ASCII_DTOSTR_BUF_SIZE];
+            GstTimedValue *value;
+
+            value = &timed_values[i];
+            append_escaped (str, g_markup_printf_escaped (" %" G_GUINT64_FORMAT
+                    ":%s ", value->timestamp, g_ascii_dtostr (strbuf,
+                        G_ASCII_DTOSTR_BUF_SIZE, value->value)), depth);
+          }
+
+          g_free (timed_values);
         }
-        g_list_free (timed_values);
+
         append_escaped (str, g_markup_printf_escaped ("'/>\n"), depth);
       } else
         GST_DEBUG ("control source not in [interpolation]");

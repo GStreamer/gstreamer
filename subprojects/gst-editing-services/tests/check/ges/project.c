@@ -388,7 +388,8 @@ _check_properties (GESTimeline * timeline)
           if (GES_IS_EFFECT (element)) {
             GstControlBinding *binding;
             GstControlSource *source;
-            GList *timed_values, *tmpvalue;
+            GstTimedValue *timed_values;
+            gsize n_values;
             GstTimedValue *value;
 
             binding =
@@ -399,21 +400,19 @@ _check_properties (GESTimeline * timeline)
             fail_unless (source != NULL);
 
             /* Now check keyframe position */
-            tmpvalue = timed_values =
-                gst_timed_value_control_source_get_all
-                (GST_TIMED_VALUE_CONTROL_SOURCE (source));
-            value = tmpvalue->data;
+            timed_values =
+                gst_timed_value_control_source_list_control_points
+                (GST_TIMED_VALUE_CONTROL_SOURCE (source), &n_values);
+            value = &timed_values[0];
             fail_unless (value->value == 0.);
             fail_unless (value->timestamp == 0 * GST_SECOND);
-            tmpvalue = tmpvalue->next;
-            value = tmpvalue->data;
+            value = &timed_values[1];
             fail_unless (value->value == 0.);
             fail_unless (value->timestamp == 5 * GST_SECOND);
-            tmpvalue = tmpvalue->next;
-            value = tmpvalue->data;
+            value = &timed_values[2];
             fail_unless (value->value == 1.);
             fail_unless (value->timestamp == 10 * GST_SECOND);
-            g_list_free (timed_values);
+            g_free (timed_values);
             gst_object_unref (source);
           }
           /* Checking children properties */

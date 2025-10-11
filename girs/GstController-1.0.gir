@@ -122,6 +122,20 @@ color component off and a value of 1.0 will be the color level.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="CONTROLLER_DEPRECATED_FOR" c:identifier="GST_CONTROLLER_DEPRECATED_FOR" version="1.28" introspectable="0">
+      <source-position filename="../subprojects/gstreamer/libs/gst/controller/controller-prelude.h"/>
+      <parameters>
+        <parameter name="f">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CONTROLLER_DEPRECATED_TYPE_FOR" c:identifier="GST_CONTROLLER_DEPRECATED_TYPE_FOR" version="1.28" introspectable="0">
+      <source-position filename="../subprojects/gstreamer/libs/gst/controller/controller-prelude.h"/>
+      <parameters>
+        <parameter name="f">
+        </parameter>
+      </parameters>
+    </function-macro>
     <record name="ControlPoint" c:type="GstControlPoint" glib:type-name="GstControlPoint" glib:get-type="gst_control_point_get_type" c:symbol-prefix="control_point">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/controller/gsttimedvaluecontrolsource.h">An internal structure for value+time and various temporary
 values used for interpolation. This "inherits" from
@@ -829,9 +843,10 @@ For use in control source implementations.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="get_all" c:identifier="gst_timed_value_control_source_get_all">
+      <method name="get_all" c:identifier="gst_timed_value_control_source_get_all" deprecated="1" deprecated-version="1.28">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/controller/gsttimedvaluecontrolsource.c">Returns a read-only copy of the list of #GstControlPoint for the given property.
 Free the list after done with it.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_timed_value_control_source_list_control_points() instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/controller/gsttimedvaluecontrolsource.h"/>
         <return-value transfer-ownership="container">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/controller/gsttimedvaluecontrolsource.c">a copy
@@ -859,6 +874,29 @@ of the list, or %NULL if the property isn't handled by the controller</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/controller/gsttimedvaluecontrolsource.c">the #GstTimedValueControlSource to get the number of values from</doc>
             <type name="TimedValueControlSource" c:type="GstTimedValueControlSource*"/>
           </instance-parameter>
+        </parameters>
+      </method>
+      <method name="list_control_points" c:identifier="gst_timed_value_control_source_list_control_points" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/controller/gsttimedvaluecontrolsource.c">Returns an array of #GstTimedValue representing the control points
+that have been set on this control source. To modify the value of a
+control point, use #gst_timed_value_control_source_set.</doc>
+        <source-position filename="../subprojects/gstreamer/libs/gst/controller/gsttimedvaluecontrolsource.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/controller/gsttimedvaluecontrolsource.c">an array of
+control points, or %NULL if no control points are set.</doc>
+          <array length="0" zero-terminated="0" c:type="GstTimedValue*">
+            <type name="Gst.TimedValue" c:type="GstTimedValue"/>
+          </array>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/controller/gsttimedvaluecontrolsource.c">the #GstTimedValueControlSource to get the list from</doc>
+            <type name="TimedValueControlSource" c:type="GstTimedValueControlSource*"/>
+          </instance-parameter>
+          <parameter name="n_control_points" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/controller/gsttimedvaluecontrolsource.c">location to store the number of control points</doc>
+            <type name="gsize" c:type="gsize*"/>
+          </parameter>
         </parameters>
       </method>
       <method name="set" c:identifier="gst_timed_value_control_source_set">

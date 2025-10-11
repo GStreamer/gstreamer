@@ -60,7 +60,6 @@
 #include "ges-extractable.h"
 #include "ges-track-element.h"
 #include "ges-clip.h"
-#include "ges-meta-container.h"
 
 struct _GESTrackElementPrivate
 {
@@ -573,24 +572,27 @@ static void
 _update_control_source (GstTimedValueControlSource * source, gboolean absolute,
     GstClockTime inpoint, GstClockTime outpoint)
 {
-  GList *values, *tmp;
-  GstTimedValue *last, *first, *prev = NULL, *next = NULL;
+  GstTimedValue *values;
+  gsize n_values;
+  GstTimedValue *first = NULL, *prev = NULL, *next = NULL, *last = NULL;
   gfloat value_at_pos;
+  guint i;
 
   if (inpoint == outpoint) {
     gst_timed_value_control_source_unset_all (source);
     return;
   }
 
-  values = gst_timed_value_control_source_get_all (source);
+  values =
+      gst_timed_value_control_source_list_control_points (source, &n_values);
 
-  if (g_list_length (values) == 0)
+  if (!values || n_values == 0)
     return;
 
-  first = values->data;
+  first = &values[0];
 
-  for (tmp = values->next; tmp; tmp = tmp->next) {
-    next = tmp->data;
+  for (i = 1; i < n_values; i++) {
+    next = &values[i];
 
     if (next->timestamp == inpoint) {
       /* just leave this value in place */
@@ -600,7 +602,6 @@ _update_control_source (GstTimedValueControlSource * source, gboolean absolute,
     if (next->timestamp > inpoint)
       break;
   }
-  g_list_free (values);
 
   if (first) {
     value_at_pos =
@@ -608,24 +609,27 @@ _update_control_source (GstTimedValueControlSource * source, gboolean absolute,
     gst_timed_value_control_source_unset (source, first->timestamp);
     gst_timed_value_control_source_set (source, inpoint, value_at_pos);
   }
+  g_free (values);
 
   if (GST_CLOCK_TIME_IS_VALID (outpoint)) {
-    values = gst_timed_value_control_source_get_all (source);
+    values =
+        gst_timed_value_control_source_list_control_points (source, &n_values);
 
-    last = g_list_last (values)->data;
+    if (n_values > 1) {
+      last = &values[n_values - 1];
 
-    for (tmp = g_list_last (values)->prev; tmp; tmp = tmp->prev) {
-      prev = tmp->data;
+      for (i = n_values - 2; i < n_values; i--) {
+        prev = &values[i];
 
-      if (prev->timestamp == outpoint) {
-        /* leave this value in place */
-        last = NULL;
-        break;
+        if (prev->timestamp == outpoint) {
+          /* leave this value in place */
+          last = NULL;
+          break;
+        }
+        if (prev->timestamp < outpoint)
+          break;
       }
-      if (prev->timestamp < outpoint)
-        break;
     }
-    g_list_free (values);
 
     if (last) {
       value_at_pos =
@@ -634,18 +638,21 @@ _update_control_source (GstTimedValueControlSource * source, gboolean absolute,
       gst_timed_value_control_source_unset (source, last->timestamp);
       gst_timed_value_control_source_set (source, outpoint, value_at_pos);
     }
+
+    g_free (values);
   }
 
-  values = gst_timed_value_control_source_get_all (source);
+  values =
+      gst_timed_value_control_source_list_control_points (source, &n_values);
 
-  for (tmp = values; tmp; tmp = tmp->next) {
-    GstTimedValue *value = tmp->data;
+  for (i = 0; i < n_values; i++) {
+    GstTimedValue *value = &values[i];
     if (value->timestamp < inpoint)
       gst_timed_value_control_source_unset (source, value->timestamp);
     else if (GST_CLOCK_TIME_IS_VALID (outpoint) && value->timestamp > outpoint)
       gst_timed_value_control_source_unset (source, value->timestamp);
   }
-  g_list_free (values);
+  g_free (values);
 }
 
 static void
@@ -1665,14 +1672,16 @@ _split_binding (GESTrackElement * element, GESTrackElement * new_element,
 {
   GstTimedValue *last_value = NULL;
   gboolean past_position = FALSE;
-  GList *values, *tmp;
+  GstTimedValue *values;
+  gsize n_values;
+  guint i;
 
   values =
-      gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
-      (source));
+      gst_timed_value_control_source_list_control_points
+      (GST_TIMED_VALUE_CONTROL_SOURCE (source), &n_values);
 
-  for (tmp = values; tmp; tmp = tmp->next) {
-    GstTimedValue *value = tmp->data;
+  for (i = 0; i < n_values; i++) {
+    GstTimedValue *value = &values[i];
 
     if (value->timestamp > position && !past_position) {
       gfloat value_at_pos;
@@ -1701,7 +1710,7 @@ _split_binding (GESTrackElement * element, GESTrackElement * new_element,
     last_value = value;
 
   }
-  g_list_free (values);
+  g_free (values);
 }
 
 static void
@@ -1709,18 +1718,22 @@ _copy_binding (GESTrackElement * element, GESTrackElement * new_element,
     guint64 position, GstTimedValueControlSource * source,
     GstTimedValueControlSource * new_source, gboolean absolute)
 {
-  GList *values, *tmp;
+  GstTimedValue *values;
+  gsize n_values;
+  guint i;
 
   values =
-      gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
-      (source));
-  for (tmp = values; tmp; tmp = tmp->next) {
-    GstTimedValue *value = tmp->data;
+      gst_timed_value_control_source_list_control_points
+      (GST_TIMED_VALUE_CONTROL_SOURCE (source), &n_values);
+
+  for (i = 0; i < n_values; i++) {
+    GstTimedValue *value = &values[i];
 
     gst_timed_value_control_source_set (new_source, value->timestamp,
         value->value);
   }
-  g_list_free (values);
+
+  g_free (values);
 }
 
 /* position == GST_CLOCK_TIME_NONE means that we do a simple copy

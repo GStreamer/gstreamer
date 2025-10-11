@@ -138,8 +138,11 @@ gboolean        gst_timed_value_control_source_unset          (GstTimedValueCont
 GST_CONTROLLER_API
 void            gst_timed_value_control_source_unset_all      (GstTimedValueControlSource *self);
 
-GST_CONTROLLER_API
+GST_CONTROLLER_DEPRECATED_FOR(gst_timed_value_control_source_list_control_points)
 GList *         gst_timed_value_control_source_get_all        (GstTimedValueControlSource * self);
+
+GST_CONTROLLER_API
+GstTimedValue * gst_timed_value_control_source_list_control_points (GstTimedValueControlSource * self, gsize * n_control_points) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_CONTROLLER_API
 gint            gst_timed_value_control_source_get_count      (GstTimedValueControlSource * self);

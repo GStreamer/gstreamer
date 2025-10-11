@@ -114,7 +114,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_split_direct_bindings)
 {
-  GList *values;
+  GstTimedValue *values;
+  gsize n_values;
   GstControlSource *source;
   GESTimeline *timeline;
   GESClip *clip, *splitclip;
@@ -175,31 +176,28 @@ GST_START_TEST (test_split_direct_bindings)
       (splitclip)->data, "alpha");
   g_object_get (splitbinding, "control_source", &splitsource, NULL);
 
+  GST_ERROR_OBJECT (splitsource, "------------- HERE I AM --------");
   values =
-      gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
-      (splitsource));
-  assert_equals_int (g_list_length (values), 2);
-  assert_equals_uint64 (((GstTimedValue *) values->data)->timestamp,
-      15 * GST_SECOND);
-  assert_equals_float (((GstTimedValue *) values->data)->value, 0.5);
+      gst_timed_value_control_source_list_control_points
+      (GST_TIMED_VALUE_CONTROL_SOURCE (splitsource), &n_values);
+  assert_equals_int (n_values, 2);
+  assert_equals_uint64 (values[0].timestamp, 15 * GST_SECOND);
+  assert_equals_float (values[0].value, 0.5);
 
-  assert_equals_uint64 (((GstTimedValue *) values->next->data)->timestamp,
-      20 * GST_SECOND);
-  assert_equals_float (((GstTimedValue *) values->next->data)->value, 1.0);
-  g_list_free (values);
+  assert_equals_uint64 (values[1].timestamp, 20 * GST_SECOND);
+  assert_equals_float (values[1].value, 1.0);
+  g_free (values);
 
   values =
-      gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
-      (source));
-  assert_equals_int (g_list_length (values), 2);
-  assert_equals_uint64 (((GstTimedValue *) values->data)->timestamp,
-      10 * GST_SECOND);
-  assert_equals_float (((GstTimedValue *) values->data)->value, 0.0);
+      gst_timed_value_control_source_list_control_points
+      (GST_TIMED_VALUE_CONTROL_SOURCE (source), &n_values);
+  assert_equals_int (n_values, 2);
+  assert_equals_uint64 (values[0].timestamp, 10 * GST_SECOND);
+  assert_equals_float (values[0].value, 0.0);
 
-  assert_equals_uint64 (((GstTimedValue *) values->next->data)->timestamp,
-      15 * GST_SECOND);
-  assert_equals_float (((GstTimedValue *) values->next->data)->value, 0.50);
-  g_list_free (values);
+  assert_equals_uint64 (values[1].timestamp, 15 * GST_SECOND);
+  assert_equals_float (values[1].value, 0.50);
+  g_free (values);
 
   CHECK_OBJECT_PROPS (clip, 0 * GST_SECOND, 10 * GST_SECOND, 5 * GST_SECOND);
   check_layer (clip, 0);
@@ -215,7 +213,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_split_direct_absolute_bindings)
 {
-  GList *values;
+  GstTimedValue *values;
+  gsize n_values;
   GstControlSource *source;
   GESTimeline *timeline;
   GESClip *clip, *splitclip;
@@ -277,30 +276,26 @@ GST_START_TEST (test_split_direct_absolute_bindings)
   g_object_get (splitbinding, "control_source", &splitsource, NULL);
 
   values =
-      gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
-      (splitsource));
-  assert_equals_int (g_list_length (values), 2);
-  assert_equals_uint64 (((GstTimedValue *) values->data)->timestamp,
-      15 * GST_SECOND);
-  assert_equals_float (((GstTimedValue *) values->data)->value, 250.0);
+      gst_timed_value_control_source_list_control_points
+      (GST_TIMED_VALUE_CONTROL_SOURCE (splitsource), &n_values);
+  assert_equals_int (n_values, 2);
+  assert_equals_uint64 (values[0].timestamp, 15 * GST_SECOND);
+  assert_equals_float (values[0].value, 250.0);
 
-  assert_equals_uint64 (((GstTimedValue *) values->next->data)->timestamp,
-      20 * GST_SECOND);
-  assert_equals_float (((GstTimedValue *) values->next->data)->value, 500.0);
-  g_list_free (values);
+  assert_equals_uint64 (values[1].timestamp, 20 * GST_SECOND);
+  assert_equals_float (values[1].value, 500.0);
+  g_free (values);
 
   values =
-      gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
-      (source));
-  assert_equals_int (g_list_length (values), 2);
-  assert_equals_uint64 (((GstTimedValue *) values->data)->timestamp,
-      10 * GST_SECOND);
-  assert_equals_float (((GstTimedValue *) values->data)->value, 0.0);
+      gst_timed_value_control_source_list_control_points
+      (GST_TIMED_VALUE_CONTROL_SOURCE (source), &n_values);
+  assert_equals_int (n_values, 2);
+  assert_equals_uint64 (values[0].timestamp, 10 * GST_SECOND);
+  assert_equals_float (values[0].value, 0.0);
 
-  assert_equals_uint64 (((GstTimedValue *) values->next->data)->timestamp,
-      15 * GST_SECOND);
-  assert_equals_float (((GstTimedValue *) values->next->data)->value, 250.0);
-  g_list_free (values);
+  assert_equals_uint64 (values[1].timestamp, 15 * GST_SECOND);
+  assert_equals_float (values[1].value, 250.0);
+  g_free (values);
 
   CHECK_OBJECT_PROPS (clip, 0 * GST_SECOND, 10 * GST_SECOND, 5 * GST_SECOND);
   check_layer (clip, 0);
@@ -4584,9 +4579,9 @@ _new_timed_value (GstClockTime time, gdouble val)
 { \
   GstInterpolationMode found_mode; \
   GSList *tmp1; \
-  GList *tmp2; \
-  guint i; \
-  GList *found_timed_vals; \
+  gsize i; \
+  GstTimedValue *found_timed_vals; \
+  gsize found_n_timed_vals; \
   GObject *found_object = NULL; \
   GstControlSource *source = NULL; \
   GstControlBinding *binding = ges_track_element_get_control_binding ( \
@@ -4601,12 +4596,13 @@ _new_timed_value (GstClockTime time, gdouble val)
   g_object_unref (found_object); \
   \
   fail_unless (GST_IS_INTERPOLATION_CONTROL_SOURCE (source)); \
-  found_timed_vals = gst_timed_value_control_source_get_all ( \
-      GST_TIMED_VALUE_CONTROL_SOURCE (source)); \
+  found_timed_vals = gst_timed_value_control_source_list_control_points ( \
+      GST_TIMED_VALUE_CONTROL_SOURCE (source), &found_n_timed_vals); \
   \
-  for (i = 0, tmp1 = timed_vals, tmp2 = found_timed_vals; tmp1 && tmp2; \
-      tmp1 = tmp1->next, tmp2 = tmp2->next, i++) { \
-    GstTimedValue *val1 = tmp1->data, *val2 = tmp2->data; \
+  for (i = 0, tmp1 = timed_vals; tmp1 && i < found_n_timed_vals; \
+      tmp1 = tmp1->next, i++) { \
+    GstTimedValue *val1 = tmp1->data; \
+    GstTimedValue *val2 = &found_timed_vals[i]; \
     gdouble diff = (val1->value > val2->value) ? \
         val1->value - val2->value : val2->value - val1->value; \
     fail_unless (val1->timestamp == val2->timestamp && diff < 0.0001, \
@@ -4615,9 +4611,9 @@ _new_timed_value (GstClockTime time, gdouble val)
         val2->timestamp, val2->value); \
   } \
   fail_unless (tmp1 == NULL, "Found too few timed values"); \
-  fail_unless (tmp2 == NULL, "Found too many timed values"); \
+  fail_unless (i == found_n_timed_vals, "Found too many timed values"); \
   \
-  g_list_free (found_timed_vals); \
+  g_free (found_timed_vals); \
   g_object_get (G_OBJECT (source), "mode", &found_mode, NULL); \
   fail_unless (found_mode == mode); \
   g_object_unref (source); \

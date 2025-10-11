@@ -322,14 +322,14 @@ G_STMT_START {                                          \
   \
   for (i = 0; i < num1; i++) { \
     const gchar *prop = props1[i]->name; \
-    GList *tmp1, *tmp2; \
-    GList *timed_vals1, *timed_vals2; \
+    GstTimedValue *timed_vals1, *timed_vals2; \
+    gsize n_timed_vals1, n_timed_vals2; \
     GObject *object1, *object2; \
     gboolean abs1, abs2; \
     GstControlSource *source1, *source2; \
     GstInterpolationMode mode1, mode2; \
     GstControlBinding *binding1, *binding2; \
-    guint j; \
+    gsize j; \
     \
     binding1 = ges_track_element_get_control_binding ( \
         GES_TRACK_ELEMENT (el1), prop); \
@@ -381,27 +381,28 @@ G_STMT_START {                                          \
         "has different modes for %s and %s (%i vs %i)", prop, \
         name1, name2, mode1, mode2); \
     \
-    timed_vals1 = gst_timed_value_control_source_get_all ( \
-      GST_TIMED_VALUE_CONTROL_SOURCE (source1)); \
-    timed_vals2 = gst_timed_value_control_source_get_all ( \
-      GST_TIMED_VALUE_CONTROL_SOURCE (source2)); \
+    timed_vals1 = gst_timed_value_control_source_list_control_points ( \
+      GST_TIMED_VALUE_CONTROL_SOURCE (source1), &n_timed_vals1); \
+    timed_vals2 = gst_timed_value_control_source_list_control_points ( \
+      GST_TIMED_VALUE_CONTROL_SOURCE (source2), &n_timed_vals2); \
     \
-    for (j = 0, tmp1 = timed_vals1, tmp2 = timed_vals2; tmp1 && tmp2; \
-        j++, tmp1 = tmp1->next, tmp2 = tmp2->next) { \
-      GstTimedValue *val1 = tmp1->data, *val2 = tmp2->data; \
+    fail_unless (n_timed_vals1 == n_timed_vals2, \
+        "Different number of timed values for property '%s' for %s and " \
+        "%s (%lu vs %lu)", prop, name1, name2, n_timed_vals1, \
+        n_timed_vals2); \
+    \
+    for (j = 0; j < n_timed_vals1; j++) { \
+      GstTimedValue *val1 = &timed_vals1[j]; \
+      GstTimedValue *val2 = &timed_vals2[j]; \
       fail_unless (val1->timestamp == val2->timestamp && \
-          val1->value == val2->value, "The %uth timed value for property " \
+          val1->value == val2->value, "The %luth timed value for property " \
           "'%s' is different for %s and %s: (%" G_GUINT64_FORMAT ": %g) vs " \
           "(%" G_GUINT64_FORMAT ": %g)", j, prop, name1, name2, \
           val1->timestamp, val1->value, val2->timestamp, val2->value); \
     } \
-    fail_unless (tmp1 == NULL, "Found too many timed values for " \
-        "property '%s' for %s", prop, name1); \
-    fail_unless (tmp2 == NULL, "Found too many timed values for " \
-        "property '%s' for %s", prop, name2); \
     \
-    g_list_free (timed_vals1); \
-    g_list_free (timed_vals2); \
+    g_free (timed_vals1); \
+    g_free (timed_vals2); \
     gst_object_unref (source1); \
     gst_object_unref (source2); \
   } \

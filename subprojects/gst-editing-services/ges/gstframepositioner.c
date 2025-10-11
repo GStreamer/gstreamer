@@ -272,7 +272,8 @@ reposition_properties (GstFramePositioner * pos, gint old_track_width,
 
 
   for (i = 0; i < G_N_ELEMENTS (props_data); i++) {
-    GList *values, *tmp;
+    GstTimedValue *values;
+    gsize n_values;
     gboolean absolute;
     GstTimedValueControlSource *source = NULL;
 
@@ -304,21 +305,22 @@ reposition_properties (GstFramePositioner * pos, gint old_track_width,
     }
 
     values =
-        gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
-        (source));
+        gst_timed_value_control_source_list_control_points
+        (GST_TIMED_VALUE_CONTROL_SOURCE (source), &n_values);
 
     if (!values)
       goto next;
 
     g_object_get (binding, "absolute", &absolute, NULL);
-    for (tmp = values; tmp; tmp = tmp->next) {
-      GstTimedValue *value = tmp->data;
+
+    for (gsize j = 0; j < n_values; j++) {
+      GstTimedValue *value = &values[j];
 
       gst_timed_value_control_source_set (source, value->timestamp,
           value->value * d.track_value / d.old_track_value);
     }
 
-    g_list_free (values);
+    g_free (values);
 
   next:
     gst_clear_object (&source);
