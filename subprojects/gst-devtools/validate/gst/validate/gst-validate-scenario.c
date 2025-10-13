@@ -6032,7 +6032,8 @@ gst_validate_scenario_finalize (GObject * object)
 static void _element_added_cb (GstBin * bin, GstElement * element,
     GstValidateScenario * scenario);
 static void _element_removed_cb (GstBin * bin, GstElement * element,
-    GstValidateScenario * scenario);
+    GWeakRef * data);
+static void _element_removed_destroyer (gpointer data, GClosure * closure);
 
 static void
 iterate_children (GstValidateScenario * scenario, GstBin * bin)
@@ -6092,9 +6093,19 @@ _all_parents_are_sink (GstElement * element)
 }
 
 static void
-_element_removed_cb (GstBin * bin, GstElement * element,
-    GstValidateScenario * scenario)
+_element_removed_destroyer (gpointer data, GClosure * closure)
 {
+  g_weak_ref_clear ((GWeakRef *) data);
+  g_free (data);
+}
+
+static void
+_element_removed_cb (GstBin * bin, GstElement * element, GWeakRef * data)
+{
+  GstValidateScenario *scenario = g_weak_ref_get (data);
+  if (!scenario)
+    return;
+
   GstValidateScenarioPrivate *priv = scenario->priv;
 
   if (GST_IS_BASE_SINK (element)) {
@@ -6109,6 +6120,7 @@ _element_removed_cb (GstBin * bin, GstElement * element,
     }
     SCENARIO_UNLOCK (scenario);
   }
+  g_object_unref (scenario);
 }
 
 static void
@@ -6169,8 +6181,12 @@ _element_added_cb (GstBin * bin, GstElement * element,
   if (GST_IS_BIN (element)) {
     g_signal_connect (element, "element-added", (GCallback) _element_added_cb,
         scenario);
-    g_signal_connect (element, "element-removed",
-        (GCallback) _element_removed_cb, scenario);
+
+    GWeakRef *ref = g_new (GWeakRef, 1);
+    g_weak_ref_init (ref, scenario);
+    g_signal_connect_data (element, "element-removed",
+        (GCallback) _element_removed_cb, ref, _element_removed_destroyer, 0);
+
     iterate_children (scenario, GST_BIN (element));
   }
 }
@@ -6269,9 +6285,12 @@ gst_validate_scenario_new (GstValidateRunner *
 
   g_signal_connect (pipeline, "element-added", (GCallback) _element_added_cb,
       scenario);
-  g_signal_connect (pipeline, "element-removed",
-      (GCallback) _element_removed_cb, scenario);
-
+  {
+    GWeakRef *ref = g_new (GWeakRef, 1);
+    g_weak_ref_init (ref, scenario);
+    g_signal_connect_data (pipeline, "element-removed",
+        (GCallback) _element_removed_cb, ref, _element_removed_destroyer, 0);
+  }
   iterate_children (scenario, GST_BIN (pipeline));
 
   scenario->priv->bus = gst_element_get_bus (pipeline);
