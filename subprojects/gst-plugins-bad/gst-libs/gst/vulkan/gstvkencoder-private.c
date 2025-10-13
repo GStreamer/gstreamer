@@ -24,6 +24,7 @@
 
 #include "gstvkencoder-private.h"
 
+#include "gstvkphysicaldevice-private.h"
 #include "gstvkvideo-private.h"
 
 typedef struct _GstVulkanEncoderPrivate GstVulkanEncoderPrivate;
@@ -143,64 +144,33 @@ static VkFormat
 gst_vulkan_video_encoder_get_format (GstVulkanEncoder * self,
     VkImageUsageFlagBits imageUsage, GError ** error)
 {
-  VkResult res;
-  VkVideoFormatPropertiesKHR *fmts = NULL;
-  guint i, n_fmts;
-  VkPhysicalDevice gpu =
-      gst_vulkan_device_get_physical_device (self->queue->device);
+  GArray *fmts = NULL;
+  guint i;
+  GstVulkanPhysicalDevice *phy_dev;
   GstVulkanEncoderPrivate *priv =
       gst_vulkan_encoder_get_instance_private (self);
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
   VkFormat vk_format = VK_FORMAT_UNDEFINED;
-  VkVideoProfileListInfoKHR profile_list = {
-    .sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_LIST_INFO_KHR,
-    .profileCount = 1,
-    .pProfiles = &priv->profile.profile,
-  };
-  VkPhysicalDeviceVideoFormatInfoKHR fmt_info = {
-    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VIDEO_FORMAT_INFO_KHR,
-    .pNext = &profile_list,
-    .imageUsage = imageUsage,
-  };
 
-  res = priv->vk.GetPhysicalDeviceVideoFormatProperties (gpu, &fmt_info,
-      &n_fmts, NULL);
-  if (gst_vulkan_error_to_g_error (res, error,
-          "vkGetPhysicalDeviceVideoFormatPropertiesKHR") != VK_SUCCESS)
-    goto beach;
-
-  if (n_fmts == 0) {
-    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-        "Profile doesn't have an output format");
-    return vk_format;
-  }
-
-  fmts = g_new0 (VkVideoFormatPropertiesKHR, n_fmts);
-  for (i = 0; i < n_fmts; i++)
-    fmts[i].sType = VK_STRUCTURE_TYPE_VIDEO_FORMAT_PROPERTIES_KHR;
-
-  res = priv->vk.GetPhysicalDeviceVideoFormatProperties (gpu, &fmt_info,
-      &n_fmts, fmts);
-  if (gst_vulkan_error_to_g_error (res, error,
-          "vkGetPhysicalDeviceVideoFormatPropertiesKHR") != VK_SUCCESS) {
-    goto beach;
-  }
-
-  if (n_fmts == 0) {
-    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-        "Profile doesn't have an output format");
-    goto beach;
-  }
+  phy_dev = self->queue->device->physical_device;
+  fmts =
+      gst_vulkan_physical_device_get_video_formats (phy_dev, imageUsage,
+      &priv->profile.profile, error);
+  if (error)
+    return FALSE;
 
   /* find the best output format */
-  for (i = 0; i < n_fmts; i++) {
-    format = gst_vulkan_format_to_video_format (fmts[i].format);
+  for (i = 0; i < fmts->len; i++) {
+    VkVideoFormatPropertiesKHR *fmt =
+        &g_array_index (fmts, VkVideoFormatPropertiesKHR, i);
+
+    format = gst_vulkan_format_to_video_format (fmt->format);
     if (format == GST_VIDEO_FORMAT_UNKNOWN) {
-      GST_WARNING_OBJECT (self, "Unknown Vulkan format %i", fmts[i].format);
+      GST_WARNING_OBJECT (self, "Unknown Vulkan format %i", fmt->format);
       continue;
     } else {
-      vk_format = fmts[i].format;
-      priv->format = fmts[i];
+      vk_format = fmt->format;
+      priv->format = *fmt;
       break;
     }
   }
@@ -210,8 +180,7 @@ gst_vulkan_video_encoder_get_format (GstVulkanEncoder * self,
         "No valid output format found");
   }
 
-beach:
-  g_clear_pointer (&fmts, g_free);
+  g_array_unref (fmts);
   return vk_format;
 }
 
@@ -603,6 +572,7 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
   VkFormat pic_format = VK_FORMAT_UNDEFINED;
   int codec_idx;
   GstVulkanCommandPool *cmd_pool;
+  GstVulkanPhysicalDevice *phy_dev;
   VkQueryPoolVideoEncodeFeedbackCreateInfoKHR query_create;
   VkPhysicalDeviceVideoEncodeQualityLevelInfoKHR quality_info;
   VkVideoEncodeQualityLevelPropertiesKHR quality_props;
@@ -687,11 +657,10 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
   };
   /* *INDENT-ON* */
 
-  gpu = gst_vulkan_device_get_physical_device (self->queue->device);
-  res = priv->vk.GetPhysicalDeviceVideoCapabilities (gpu,
-      &priv->profile.profile, &priv->caps.caps);
-  if (gst_vulkan_error_to_g_error (res, error,
-          "vkGetPhysicalDeviceVideoCapabilitiesKHR") != VK_SUCCESS)
+  phy_dev = self->queue->device->physical_device;
+
+  if (!gst_vulkan_physical_device_get_video_capabilities (phy_dev,
+          &priv->profile.profile, &priv->caps.caps, error))
     return FALSE;
 
   if (_vk_codec_extensions[codec_idx].specVersion <
@@ -825,6 +794,7 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
   };
   /* *INDENT-ON* */
 
+  gpu = phy_dev->device;
   res = priv->vk.GetPhysicalDeviceVideoEncodeQualityLevelProperties (gpu,
       &quality_info, &quality_props);
   if (gst_vulkan_error_to_g_error (res, error,

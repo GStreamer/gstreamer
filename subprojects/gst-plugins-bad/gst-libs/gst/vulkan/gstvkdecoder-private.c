@@ -168,22 +168,14 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
     GstVulkanVideoProfile * profile, GError ** error)
 {
   GstVulkanDecoderPrivate *priv;
-  VkPhysicalDevice gpu;
-  VkResult res;
-  VkVideoFormatPropertiesKHR *fmts = NULL;
-  VkVideoProfileListInfoKHR profile_list = {
-    .sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_LIST_INFO_KHR,
-    .profileCount = 1,
-  };
-  VkPhysicalDeviceVideoFormatInfoKHR fmt_info = {
-    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VIDEO_FORMAT_INFO_KHR,
-    .pNext = &profile_list,
-  };
+  GArray *fmts = NULL;
   VkVideoSessionCreateInfoKHR session_create;
-  guint i, maxlevel, n_fmts, codec_idx;
+  guint i, maxlevel, codec_idx;
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
   VkFormat vk_format = VK_FORMAT_UNDEFINED;
+  VkImageUsageFlags image_usage;
   GstVulkanCommandPool *cmd_pool;
+  GstVulkanPhysicalDevice *phy_dev;
   GError *query_err = NULL;
 
   g_return_val_if_fail (GST_IS_VULKAN_DECODER (self), FALSE);
@@ -261,11 +253,10 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
   };
   /* *INDENT-ON* */
 
-  gpu = gst_vulkan_device_get_physical_device (self->queue->device);
-  res = priv->vk.GetPhysicalDeviceVideoCapabilities (gpu,
-      &self->profile.profile, &priv->caps.caps);
-  if (gst_vulkan_error_to_g_error (res, error,
-          "vkGetPhysicalDeviceVideoCapabilitiesKHR") != VK_SUCCESS)
+  phy_dev = self->queue->device->physical_device;
+
+  if (!gst_vulkan_physical_device_get_video_capabilities (phy_dev,
+          &self->profile.profile, &priv->caps.caps, error))
     return FALSE;
 
   switch (self->codec) {
@@ -344,58 +335,33 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
 
   priv->caps.caps.pNext = NULL;
 
-  /* Get output format */
-  profile_list.pProfiles = &self->profile.profile;
-
-  fmt_info.imageUsage = VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
+  image_usage = VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
       | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
   if (!self->dedicated_dpb)
-    fmt_info.imageUsage |= VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR;
+    image_usage |= VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR;
 
-  res = priv->vk.GetPhysicalDeviceVideoFormatProperties (gpu, &fmt_info,
-      &n_fmts, NULL);
-  if (gst_vulkan_error_to_g_error (res, error,
-          "vkGetPhysicalDeviceVideoFormatPropertiesKHR") != VK_SUCCESS)
-    goto failed;
-
-  if (n_fmts == 0) {
-    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-        "Profile doesn't have an output format");
-    goto failed;
-  }
-
-  fmts = g_new0 (VkVideoFormatPropertiesKHR, n_fmts);
-  for (i = 0; i < n_fmts; i++)
-    fmts[i].sType = VK_STRUCTURE_TYPE_VIDEO_FORMAT_PROPERTIES_KHR;
-
-  res = priv->vk.GetPhysicalDeviceVideoFormatProperties (gpu, &fmt_info,
-      &n_fmts, fmts);
-  if (gst_vulkan_error_to_g_error (res, error,
-          "vkGetPhysicalDeviceVideoFormatPropertiesKHR") != VK_SUCCESS) {
-    goto failed;
-  }
-
-  if (n_fmts == 0) {
-    g_free (fmts);
-    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-        "Profile doesn't have an output format");
-    goto failed;
-  }
+  fmts =
+      gst_vulkan_physical_device_get_video_formats (phy_dev, image_usage,
+      &profile->profile, error);
+  if (error)
+    return FALSE;
 
   /* find the best output format */
-  for (i = 0; i < n_fmts; i++) {
-    format = gst_vulkan_format_to_video_format (fmts[i].format);
+  for (i = 0; i < fmts->len; i++) {
+    VkVideoFormatPropertiesKHR *fmt =
+        &g_array_index (fmts, VkVideoFormatPropertiesKHR, i);
+
+    format = gst_vulkan_format_to_video_format (fmt->format);
     if (format == GST_VIDEO_FORMAT_UNKNOWN) {
-      GST_WARNING_OBJECT (self, "Unknown Vulkan format %i", fmts[i].format);
+      GST_WARNING_OBJECT (self, "Unknown Vulkan format %i", fmt->format);
       continue;
     } else {
-      vk_format = fmts[i].format;
-      priv->format = fmts[i];
-      priv->format.pNext = NULL;
+      vk_format = fmt->format;
+      priv->format = *fmt;
       break;
     }
   }
-  g_clear_pointer (&fmts, g_free);
+  g_array_unref (fmts);
 
   if (vk_format == VK_FORMAT_UNDEFINED) {
     g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
@@ -462,7 +428,6 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
 
 failed:
   {
-    g_free (fmts);
     gst_clear_caps (&priv->profile_caps);
 
     if (priv->session.session)
