@@ -76,6 +76,12 @@ GArray *                    gst_vulkan_physical_device_get_video_formats    (Gst
                                                                              gpointer pprofile,
                                                                              GError ** error);
 
+gboolean                    gst_vulkan_physical_device_get_video_capabilities
+                                                                            (GstVulkanPhysicalDevice * device,
+                                                                             gpointer pprofile,
+                                                                             gpointer pcaps_out,
+                                                                             GError ** error);
+
 
 static inline void
 vk_link_struct (gpointer chain, gconstpointer in)

@@ -98,6 +98,7 @@ struct _GstVulkanPhysicalDevicePrivate
 #endif
 #if defined (VK_KHR_video_queue)
   PFN_vkGetPhysicalDeviceVideoFormatPropertiesKHR get_video_format_props_fn;
+  PFN_vkGetPhysicalDeviceVideoCapabilitiesKHR get_video_capabilties_fn;
 #endif
 };
 
@@ -1799,4 +1800,63 @@ bail:
   gst_vulkan_error_to_g_error (VK_ERROR_EXTENSION_NOT_PRESENT, error,
       "VK_KHR_video_queue");
   return NULL;
+}
+
+/**
+ * gst_vulkan_physical_device_get_video_capabilities: (skip):
+ * @device: a #GstVulkanPhysicalDevice
+ * @pprofile: a pointer to Vulkan video profile (VkVideoProfileInfoKHR)
+ * @pcaps_out: (out caller-allocates): Where the Vulkan video capabilities will
+ *     be stored (VkVideoCapabilitiesKHR)
+ * @error: a #GError pointer
+ *
+ * It will query @device for its video capabilities, stored in @pcaps_out given
+ * the @pprofile.
+ *
+ * Returns: %TRUE if no @error; otherwise %FALSE
+ */
+gboolean
+gst_vulkan_physical_device_get_video_capabilities (GstVulkanPhysicalDevice *
+    device, gpointer pprofile, gpointer pcaps_out, GError ** error)
+{
+#if defined(VK_KHR_video_queue)
+  GstVulkanPhysicalDevicePrivate *priv;
+  VkResult res;
+  VkVideoProfileInfoKHR *profile = pprofile;
+  VkVideoCapabilitiesKHR *caps = pcaps_out;
+
+  g_return_val_if_fail (GST_IS_VULKAN_PHYSICAL_DEVICE (device), FALSE);
+  g_return_val_if_fail (profile && profile->sType ==
+      VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR, FALSE);
+  g_return_val_if_fail (caps && caps->sType ==
+      VK_STRUCTURE_TYPE_VIDEO_CAPABILITIES_KHR, FALSE);
+  g_return_val_if_fail (caps && caps->pNext != NULL, FALSE);
+
+  priv = GET_PRIV (device);
+
+  if (!priv->get_video_capabilties_fn) {
+    if (!gst_vulkan_physical_device_get_extension_info (device,
+            VK_KHR_VIDEO_QUEUE_EXTENSION_NAME, NULL))
+      goto bail;
+
+    priv->get_video_capabilties_fn =
+        gst_vulkan_instance_get_proc_address (device->instance,
+        "vkGetPhysicalDeviceVideoCapabilitiesKHR");
+
+    g_assert (priv->get_video_capabilties_fn);
+  }
+
+  res = priv->get_video_capabilties_fn (device->device, profile, caps);
+  if (gst_vulkan_error_to_g_error (res, error,
+          "vkGetPhysicalDeviceVideoCapabilitiesKHR") != VK_SUCCESS)
+    return FALSE;
+
+  return TRUE;
+
+bail:
+#endif
+
+  gst_vulkan_error_to_g_error (VK_ERROR_EXTENSION_NOT_PRESENT, error,
+      "VK_KHR_video_queue");
+  return FALSE;
 }
