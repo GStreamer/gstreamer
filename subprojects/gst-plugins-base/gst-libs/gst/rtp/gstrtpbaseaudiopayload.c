@@ -853,7 +853,8 @@ gst_rtp_base_audio_payload_handle_buffer (GstRTPBasePayload *
   priv = payload->priv;
 
   timestamp = GST_BUFFER_PTS (buffer);
-  discont = GST_BUFFER_IS_DISCONT (buffer);
+  discont = GST_BUFFER_IS_DISCONT (buffer)
+      || GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_RESYNC);
   if (discont) {
 
     GST_DEBUG_OBJECT (payload, "Got DISCONT");
