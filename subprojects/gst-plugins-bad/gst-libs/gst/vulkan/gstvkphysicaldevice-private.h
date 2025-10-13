@@ -71,6 +71,11 @@ void                        gst_vulkan_physical_device_get_format_properties
                                                                              guint vk_format,
                                                                              GstVulkanFormatProperties * props);
 
+GArray *                    gst_vulkan_physical_device_get_video_formats    (GstVulkanPhysicalDevice * device,
+                                                                             guint64 image_usage,
+                                                                             gpointer pprofile,
+                                                                             GError ** error);
+
 
 static inline void
 vk_link_struct (gpointer chain, gconstpointer in)
