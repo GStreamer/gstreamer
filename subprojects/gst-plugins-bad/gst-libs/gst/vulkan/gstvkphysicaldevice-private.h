@@ -25,6 +25,23 @@
 
 G_BEGIN_DECLS
 
+typedef struct _GstVulkanFormatProperties GstVulkanFormatProperties;
+
+/**
+ * GstVulkanFormatProperties: (skip):
+ * @linear_tiling_feat: linear tiling features
+ * @optimal_tiling_feat: optimal tiling features
+ * @buffer_feat: buffer features
+ *
+ * Common structure for Vulkan color format properties.
+ */
+struct _GstVulkanFormatProperties
+{
+  guint64 linear_tiling_feat;
+  guint64 optimal_tiling_feat;
+  guint64 buffer_feat;
+};
+
 const VkPhysicalDeviceFeatures2 *
                             gst_vulkan_physical_device_get_features         (GstVulkanPhysicalDevice * device);
 
@@ -48,6 +65,12 @@ gboolean                    gst_vulkan_physical_device_has_feature_video_decode_
 
 gboolean                    gst_vulkan_physical_device_has_feature_video_encode_av1
                                                                             (GstVulkanPhysicalDevice * device);
+
+void                        gst_vulkan_physical_device_get_format_properties
+                                                                            (GstVulkanPhysicalDevice * device,
+                                                                             guint vk_format,
+                                                                             GstVulkanFormatProperties * props);
+
 
 static inline void
 vk_link_struct (gpointer chain, gconstpointer in)

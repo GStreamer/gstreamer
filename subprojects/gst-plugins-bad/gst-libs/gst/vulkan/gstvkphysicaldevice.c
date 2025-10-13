@@ -93,6 +93,9 @@ struct _GstVulkanPhysicalDevicePrivate
 #if defined (VK_KHR_video_decode_vp9)
   VkPhysicalDeviceVideoDecodeVP9FeaturesKHR video_decoder_vp9;
 #endif
+#if defined (VK_KHR_get_physical_device_properties2)
+  PFN_vkGetPhysicalDeviceFormatProperties2KHR get_format_props_fn;
+#endif
 };
 
 static void
@@ -1608,4 +1611,96 @@ gst_vulkan_physical_device_check_api_version (GstVulkanPhysicalDevice * device,
   return VK_MAKE_VERSION (major, minor, patch) <= device->properties.apiVersion
       && gst_vulkan_instance_check_api_version (device->instance, major, minor,
       patch);
+}
+
+static inline void
+_copy_format_properties (GstVulkanFormatProperties * props,
+    VkFormatProperties * props1)
+{
+  props->optimal_tiling_feat = props1->optimalTilingFeatures;
+  props->linear_tiling_feat = props1->linearTilingFeatures;
+  props->buffer_feat = props1->bufferFeatures;
+}
+
+/**
+ * gst_vulkan_physical_device_get_format_properties: (skip):
+ * @device: a #GstVulkanPhysicalDevice
+ * @vk_format: Vulkan color format to get it's properties
+ * @props: (out) (caller-allocates): a #GstVulkanFormatProperties
+ *
+ * This method will query for @vk_format's properties depending on the supported
+ * extensions by the driver.
+ */
+void
+gst_vulkan_physical_device_get_format_properties (GstVulkanPhysicalDevice *
+    device, guint vk_format, GstVulkanFormatProperties * props)
+{
+#if defined (VK_KHR_get_physical_device_properties2)
+  GstVulkanPhysicalDevicePrivate *priv;
+  VkFormatProperties2KHR prop2 = {
+    .sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2_KHR,
+    .pNext = NULL,
+  };
+# if defined (VK_KHR_format_feature_flags2)
+  VkFormatProperties3KHR prop3 = {
+    .sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_3_KHR,
+  };
+# endif
+  gboolean has_flags2 = FALSE;
+
+  g_return_if_fail (GST_IS_VULKAN_PHYSICAL_DEVICE (device));
+
+  priv = GET_PRIV (device);
+
+  if (!priv->get_format_props_fn) {
+    if (gst_vulkan_physical_device_check_api_version (device, 1, 3, 0)) {
+      priv->get_format_props_fn =
+          gst_vulkan_instance_get_proc_address (device->instance,
+          "vkGetPhysicalDeviceFormatProperties2");
+    } else {
+      priv->get_format_props_fn =
+          gst_vulkan_instance_get_proc_address (device->instance,
+          "vkGetPhysicalDeviceFormatProperties2KHR");
+    }
+
+    if (!priv->get_format_props_fn)
+      goto fallback;
+  }
+
+# if defined (VK_KHR_format_feature_flags2)
+  if (gst_vulkan_physical_device_check_api_version (device, 1, 3, 0)
+      || gst_vulkan_physical_device_get_extension_info (device,
+          VK_KHR_FORMAT_FEATURE_FLAGS_2_EXTENSION_NAME, NULL)) {
+    prop2.pNext = &prop3;
+    has_flags2 = TRUE;
+  }
+# endif
+
+  priv->get_format_props_fn (device->device, vk_format, &prop2);
+
+  if (!props)
+    return;
+
+# if defined (VK_KHR_format_feature_flags2)
+  if (has_flags2) {
+    props->optimal_tiling_feat = prop3.optimalTilingFeatures;
+    props->linear_tiling_feat = prop3.linearTilingFeatures;
+    props->buffer_feat = prop3.bufferFeatures;
+  } else
+# endif
+  {
+    _copy_format_properties (props, &prop2.formatProperties);
+  }
+
+  return;
+#endif
+
+fallback:
+  {
+    VkFormatProperties prop1 = { 0, };
+
+    vkGetPhysicalDeviceFormatProperties (device->device, vk_format, &prop1);
+    if (props)
+      _copy_format_properties (props, &prop1);
+  }
 }

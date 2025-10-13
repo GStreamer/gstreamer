@@ -23,6 +23,7 @@
 #endif
 
 #include "gstvkformat.h"
+#include "gstvkphysicaldevice-private.h"
 
 /**
  * SECTION:vkformat
@@ -563,81 +564,6 @@ _get_usage (guint64 feature)
   return usage;
 }
 
-static gboolean
-supports_KHR_get_physical_device_properties2 (GstVulkanDevice * device)
-{
-#if defined (VK_KHR_get_physical_device_properties2)
-  return gst_vulkan_physical_device_check_api_version (device->physical_device,
-      1, 1, 0)
-      || gst_vulkan_instance_is_extension_enabled (device->instance,
-      "VK_KHR_get_physical_device_properties2");
-#else
-  return FALSE;
-#endif
-}
-
-static gboolean
-supports_KHR_format_feature_flags2 (GstVulkanDevice * device)
-{
-#if defined (VK_KHR_format_feature_flags2)
-  if (gst_vulkan_physical_device_check_api_version (device->physical_device, 1,
-          3, 0))
-    return TRUE;
-
-  if (supports_KHR_get_physical_device_properties2 (device)
-      && gst_vulkan_device_is_extension_enabled (device,
-          "VK_KHR_format_feature_flags2"))
-    return TRUE;
-#endif
-  return FALSE;
-}
-
-static guint64
-_get_feature_flags (GstVulkanDevice * device, gpointer func,
-    VkFormat format, VkImageTiling tiling)
-{
-  VkFormatProperties prop = { 0 };
-  VkPhysicalDevice gpu = gst_vulkan_device_get_physical_device (device);
-#if defined (VK_KHR_get_physical_device_properties2)
-#if defined (VK_KHR_format_feature_flags2)
-  VkFormatProperties3KHR prop3 = {
-    .sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_3_KHR,
-  };
-#endif
-  VkFormatProperties2KHR prop2 = {
-    .sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2_KHR,
-    .pNext = NULL,
-  };
-
-  if (func && supports_KHR_get_physical_device_properties2 (device)) {
-    PFN_vkGetPhysicalDeviceFormatProperties2KHR
-        gst_vkGetPhysicalDeviceFormatProperties2 = func;
-#if defined (VK_KHR_format_feature_flags2)
-    prop2.pNext = &prop3;
-#endif
-
-    gst_vkGetPhysicalDeviceFormatProperties2 (gpu, format, &prop2);
-    if (supports_KHR_format_feature_flags2 (device)) {
-#if defined (VK_KHR_format_feature_flags2)
-      return tiling == VK_IMAGE_TILING_LINEAR ?
-          prop3.linearTilingFeatures : prop3.optimalTilingFeatures;
-#else
-      g_assert_not_reached ();
-#endif
-    } else {
-      return tiling == VK_IMAGE_TILING_LINEAR ?
-          prop2.formatProperties.linearTilingFeatures :
-          prop2.formatProperties.optimalTilingFeatures;
-    }
-  }
-#endif /* defined (VK_KHR_get_physical_device_properties2) */
-
-  /* fallback */
-  vkGetPhysicalDeviceFormatProperties (gpu, format, &prop);
-  return tiling == VK_IMAGE_TILING_LINEAR ?
-      prop.linearTilingFeatures : prop.optimalTilingFeatures;
-}
-
 /**
  * gst_vulkan_format_from_video_info_2: (skip)
  * @device: a #GstVulkanDevice
@@ -660,20 +586,7 @@ gst_vulkan_format_from_video_info_2 (GstVulkanDevice * device,
     int *n_imgs, VkImageUsageFlags * usage_ret)
 {
   int i;
-#if defined (VK_KHR_get_physical_device_properties2)
-  PFN_vkGetPhysicalDeviceFormatProperties2KHR
-      gst_vkGetPhysicalDeviceFormatProperties2 = NULL;
-
-  gst_vkGetPhysicalDeviceFormatProperties2 =
-      gst_vulkan_instance_get_proc_address (device->instance,
-      "vkGetPhysicalDeviceFormatProperties2");
-  if (!gst_vkGetPhysicalDeviceFormatProperties2)
-    gst_vkGetPhysicalDeviceFormatProperties2 =
-        gst_vulkan_instance_get_proc_address (device->instance,
-        "vkGetPhysicalDeviceFormatProperties2KHR");
-#else
-  gpointer gst_vkGetPhysicalDeviceFormatProperties2 = NULL;
-#endif
+  GstVulkanFormatProperties props = { 0, };
 
   for (i = 0; i < G_N_ELEMENTS (vk_formats_map); i++) {
     guint64 feats_primary, feats_secondary = 0;
@@ -682,14 +595,16 @@ gst_vulkan_format_from_video_info_2 (GstVulkanDevice * device,
     if (vk_formats_map[i].format != GST_VIDEO_INFO_FORMAT (info))
       continue;
 
-    feats_primary = _get_feature_flags (device,
-        gst_vkGetPhysicalDeviceFormatProperties2, vk_formats_map[i].vkfrmt,
-        tiling);
+    gst_vulkan_physical_device_get_format_properties (device->physical_device,
+        vk_formats_map[i].vkfrmt, &props);
+    feats_primary = (tiling == VK_IMAGE_TILING_LINEAR) ?
+        props.linear_tiling_feat : props.optimal_tiling_feat;
 
     if (vk_formats_map[i].vkfrmt != vk_formats_map[i].vkfrmts[0]) {
-      feats_secondary = _get_feature_flags (device,
-          gst_vkGetPhysicalDeviceFormatProperties2,
-          vk_formats_map[i].vkfrmts[0], tiling);
+      gst_vulkan_physical_device_get_format_properties (device->physical_device,
+          vk_formats_map[i].vkfrmts[0], &props);
+      feats_secondary = (tiling == VK_IMAGE_TILING_LINEAR) ?
+          props.linear_tiling_feat : props.optimal_tiling_feat;
     }
 
     if (GST_VIDEO_INFO_IS_RGB (info)) {
