@@ -221,7 +221,7 @@ can_enable_api_version (const struct extension *extension,
           VK_VERSION_MAJOR (extension->min_api_version),
           VK_VERSION_MINOR (extension->min_api_version),
           VK_VERSION_PATCH (extension->min_api_version))) {
-    if (!extension->is_enabled)
+    if (extension->is_enabled && !extension->is_enabled (phy_dev))
       return FALSE;
     if (extension->dependency) {
       return gst_vulkan_physical_device_get_extension_info (phy_dev,
