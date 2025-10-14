@@ -110,17 +110,21 @@ ges_src_uri_set_uri (GstURIHandler * handler, const gchar * uristr,
 
   path = gst_uri_get_path (uri);
   if (!path) {
-    GST_INFO_OBJECT (handler, "User need to specify the timeline");
+    GST_INFO_OBJECT (handler, "User need to specify the timeline for %s",
+        uristr);
     res = TRUE;
     goto done;
   }
   g_free (path);
-
   project = ges_project_new (uristr);
   timeline = (GESTimeline *) ges_asset_extract (GES_ASSET (project), NULL);
-
-  if (timeline)
-    res = ges_base_bin_set_timeline (GES_BASE_BIN (handler), timeline);
+  if (timeline) {
+    res = ges_base_bin_set_timeline (GES_BASE_BIN (handler), timeline, error);
+  } else {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Could not extract timeline from uri: %s", uristr);
+    res = FALSE;
+  }
 
 done:
   gst_uri_unref (uri);

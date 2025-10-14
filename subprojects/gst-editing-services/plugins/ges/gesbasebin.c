@@ -126,7 +126,7 @@ ges_base_bin_set_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_TIMELINE:
-      ges_base_bin_set_timeline (self, g_value_get_object (value));
+      ges_base_bin_set_timeline (self, g_value_get_object (value), NULL);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -267,7 +267,8 @@ ges_base_bin_track_removed_cb (GESTimeline * timeline, GESTrack * track,
 
 
 gboolean
-ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline)
+ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline,
+    GError ** error)
 {
   GList *tmp;
   guint naudiopad = 0, nvideopad = 0;
@@ -278,6 +279,9 @@ ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline)
 
   if (priv->timeline) {
     GST_ERROR_OBJECT (sbin, "Implement changing timeline support");
+
+    g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_NOT_IMPLEMENTED,
+        "Changing timeline not implemented yet");
 
     return FALSE;
   }
@@ -290,6 +294,9 @@ ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline)
   gst_element_set_locked_state (GST_ELEMENT (timeline), TRUE);
   if (!gst_bin_add (sbin, GST_ELEMENT (timeline))) {
     GST_ERROR_OBJECT (sbin, "Could not add timeline to myself!");
+
+    g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
+        "Could not add timeline to bin");
 
     return FALSE;
   }

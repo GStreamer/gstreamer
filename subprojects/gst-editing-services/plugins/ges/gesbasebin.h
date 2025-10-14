@@ -37,7 +37,7 @@ struct _GESBaseBinClass
   GstBinClass parent_class;
 };
 
-gboolean ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline);
+gboolean ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline, GError ** error);
 GESTimeline * ges_base_bin_get_timeline (GESBaseBin * self);
 
 G_END_DECLS
