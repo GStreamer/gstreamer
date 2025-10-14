@@ -58,7 +58,6 @@ typedef enum {
   V(UpdateVideoSessionParameters)                                              \
   V(CreateVideoSessionParameters)                                              \
   V(BindVideoSessionMemory)                                                    \
-  V(CmdPipelineBarrier2)                                                       \
   V(CmdBeginVideoCoding)                                                       \
   V(CmdControlVideoCoding)                                                     \
   V(CmdEndVideoCoding)                                                         \
