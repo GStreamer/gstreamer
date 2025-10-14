@@ -300,7 +300,6 @@ gst_osx_audio_device_provider_probe_internal (GstOsxAudioDeviceProvider * self,
         GST_DEBUG ("Input Device ID: %u, Name: %s, Transport Type: %"
             GST_FOURCC_FORMAT, (unsigned) osx_devices[i], device_name,
             GST_FOURCC_ARGS (GUINT32_FROM_BE (transport_type)));
-        gst_object_ref_sink (device);
         *devices = g_list_prepend (*devices, device);
       }
     }
@@ -313,7 +312,6 @@ gst_osx_audio_device_provider_probe_internal (GstOsxAudioDeviceProvider * self,
         GST_DEBUG ("Output Device ID: %u, Name: %s, Transport Type: %"
             GST_FOURCC_FORMAT, (unsigned) osx_devices[i], device_name,
             GST_FOURCC_ARGS (GUINT32_FROM_BE (transport_type)));
-        gst_object_ref_sink (device);
         *devices = g_list_prepend (*devices, device);
       }
     }
@@ -582,6 +580,8 @@ gst_osx_audio_device_new (AudioDeviceID device_id, const gchar * device_name,
   gstdev = g_object_new (GST_TYPE_OSX_AUDIO_DEVICE, "device-id", device_id,
       "unique-id", core_audio->unique_id, "display-name", device_name, "caps",
       caps, "properties", props, "device-class", klass, NULL);
+  gst_structure_free (props);
+  gst_caps_unref (caps);
 
   gstdev->element = element_name;
 

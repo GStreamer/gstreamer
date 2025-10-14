@@ -114,7 +114,7 @@ _audio_system_get_devices (gint * ndevices)
 
   *ndevices = propertySize / sizeof (AudioDeviceID);
 
-  devices = (AudioDeviceID *) g_malloc0 (propertySize);
+  devices = (AudioDeviceID *) g_malloc (propertySize);
 
   status = AudioObjectGetPropertyData (kAudioObjectSystemObject,
       &audioDevicesAddress, 0, NULL, &propertySize, devices);
@@ -133,6 +133,8 @@ _audio_system_get_devices (gint * ndevices)
     g_ptr_array_add (ret, d);
     GST_DEBUG ("Found device '%s' id %i", d->unique_id, d->id);
   }
+
+  g_free (devices);
 
   return ret;
 }
