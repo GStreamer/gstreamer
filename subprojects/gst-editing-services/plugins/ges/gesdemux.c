@@ -498,7 +498,7 @@ done:
       data.timeline);
 
   if (!data.error) {
-    ges_base_bin_set_timeline (GES_BASE_BIN (self), data.timeline);
+    ges_base_bin_set_timeline (GES_BASE_BIN (self), data.timeline, error);
     gst_element_foreach_src_pad (GST_ELEMENT (self), ges_demux_set_srcpad_probe,
         NULL);
   } else {
