@@ -1173,7 +1173,10 @@ gst_core_audio_select_device_impl (GstCoreAudio * core_audio)
   /* Here we decide if selected device_id is valid or autoselect
    * the default one when required */
   if (device_id == kAudioDeviceUnknown) {
-    if (default_device->id != kAudioDeviceUnknown) {
+    if (default_device == NULL) {
+      GST_ERROR ("Cannot auto-select %s device, no default", audio_type);
+      res = FALSE;
+    } else if (default_device->id != kAudioDeviceUnknown) {
       device_id = default_device->id;
       unique_id = default_device->unique_id;
       default_device->unique_id = NULL;
@@ -1223,7 +1226,8 @@ done:
     g_assert_cmpint (device_id, !=, kAudioDeviceUnknown);
     g_assert (unique_id != NULL);
     core_audio->device_id = device_id;
-    core_audio->is_default = (device_id == default_device->id);
+    core_audio->is_default = (default_device && (device_id ==
+            default_device->id));
     if (unique_id != core_audio->unique_id) {
       g_free (core_audio->unique_id);
       core_audio->unique_id = unique_id;
@@ -1231,7 +1235,8 @@ done:
   }
 
   g_ptr_array_unref (devices);
-  g_free (default_device->unique_id);
+  if (default_device)
+    g_free (default_device->unique_id);
   g_free (default_device);
 
   return res;
