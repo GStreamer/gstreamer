@@ -2,11 +2,11 @@ GStreamer 1.26 Release Notes
 
 GStreamer 1.26.0 was originally released on 11 March 2025.
 
-The latest bug-fix release in the stable 1.26 series is 1.26.6 and was released on 14 September 2025.
+The latest bug-fix release in the stable 1.26 series is 1.26.7 and was released on 14 October 2025.
 
 See https://gstreamer.freedesktop.org/releases/1.26/ for the latest version of this document.
 
-Last updated: Sunday 14 September 2025, 12:00 UTC (log)
+Last updated: Tuesday 14 October 2025, 16:30 UTC (log)
 
 ## Introduction
 
@@ -2598,6 +2598,173 @@ List of merge requests and issues fixed in 1.26.6
 
 -   List of Merge Requests applied in 1.26.6
 -   List of Issues fixed in 1.26.6
+
+1.26.7
+
+The seventh 1.26 bug-fix release (1.26.7) was released on 14 October 2025.
+
+This release only contains bugfixes including some important playback fixes, and it should be safe to update from 1.26.x.
+
+Highlighted bugfixes in 1.26.7
+
+-   cea608overlay: improve handling of non-system memory
+-   cuda: Fix runtime kernel compile with CUDA 13.0
+-   d3d12: Fix crop meta support in converter and passthrough handling in deinterlacer
+-   fallbacksrc: source handling improvements; no-more-pads signal for streams-unaware parents
+-   inter: add properties to fine tune the inner elements
+-   qtdemux: surround sound channel layout handling fixes and performance improvements for GoPro videos
+-   rtp: Add linear audio (L8, L16, L24) RTP payloaders / depayloaders
+-   rtspsrc: Send RTSP keepalives in TCP/interleaved modes
+-   rtpamrpay2: frame quality indicator flag related fixes
+-   rtpbasepay2: reuse last PTS when possible, to work around problems with NVIDIA Jetson AV1 encoder
+-   mpegtsmux, tsdemux: Opus audio handling fixes
+-   threadshare: latency related improvements and many other fixes
+-   matroskamux, tsmux, flvmux, cea608mux: Best pad determination fixes at EOS
+-   unixfd: support buffers with a big payload
+-   videorate unknown buffer duration assertion failure with variable framerates
+-   editing services: Make GESTimeline respect SELECT_ELEMENT_TRACK signal discard decision; memory leak fixes
+-   gobject-introspection annotation fixes
+-   cerbero: Update meson to 1.9.0 to enable Xcode 26 compatibility
+-   Various bug fixes, build fixes, memory leak fixes, and other stability and reliability improvements
+
+gstreamer
+
+-   controller: Fix get_all() return type annotation
+-   gst-launch: Do not assume error messages have a src element
+-   multiqueue: Fix object reference handling in signal callbacks
+-   netclientclock: Fix memory leak in error paths
+
+gst-plugins-base
+
+-   discoverer: Mark gst_discoverer_stream_info_list_free() as transfer full
+-   qt: Fix building examples on macOS
+-   riff: Add channel reorder maps for 3 and 7 channel audio
+-   sdp: proper usage of gst_buffer_append
+-   videorate: fix assert fail due to invalid buffer duration
+-   Fix build error with glib < 2.68
+
+gst-plugins-good
+
+-   matroskamux: Properly check if pads are EOS in find_best_pad
+-   qt: Fix building examples on macOS
+-   qtdemux: bad performance with GoPro videos containing FDSC metadata tracks
+-   qtdemux: fix open/seek perf for GoPro files with SOS track
+-   qtdemux: handle unsupported channel layout tags gracefully
+-   qtdemux: set channel-mask to 0 for unknown layout tags
+-   rtspsrc: Send RTSP keepalives in TCP/interleaved modes
+-   v4l2: Add GstV4l2Error handling in gst_v4l2_get_capabilities
+-   v4l2: Fix memory leak for DRM caps negotiation
+-   v4l2transform: reconfigure v4l2object only if respective caps changed
+-   Fix issues with G_DISABLE_CHECKS & G_DISABLE_ASSERT
+
+gst-plugins-bad
+
+-   cuda: Fix runtime kernel compile with CUDA 13.0
+-   d3d12convert: Fix crop meta support
+-   d3d12deinterlace: Fix passthrough handling
+-   gst: Fix a few small leaks
+-   matroskamux: Properly check if pads are EOS in find_best_pad
+-   tsdemux: Directly forward Opus AUs without opus_control_header
+-   tsmux: Write a full Opus channel configuration if no matching Vorbis one is found
+-   unixfd: Fix case of buffer with big payload
+-   vacompositor: Correct scale-method properties
+-   webrtc: nice: Fix a use-after-free and a mem leak
+-   Fix all compiler warnings on Fedora
+-   Fix issues with G_DISABLE_CHECKS & G_DISABLE_ASSERT
+
+gst-plugins-ugly
+
+-   No changes
+
+GStreamer Rust plugins
+
+-   cea608overlay: Support non-system memory correctly
+-   fallbacksrc: Fix custom source reuse case
+-   fallbacksrc: Fix sources only being restarted once
+-   fallbacksrc: Post no-more-pads signal for streams-unaware parent
+-   inter: add properties to fine tune the inner elements
+-   onvifmetadatapay: copy metadata from source buffer
+-   rtp: Add linear audio (L8, L16, L24) RTP payloaders / depayloaders
+-   rtpamrpay2: Actually forward the frame quality indicator
+-   rtpamrpay2: Set frame quality indicator flag
+-   rtp: basedepay: reuse last PTS, when possible to work around problems with NVIDIA Jetson AV1 encoder
+-   rtpsend/recv: fix property type for stats
+-   threadshare: audiotestsrc: support more Audio formats
+-   threadshare: backpressure: abort pending items on flush start
+-   threadshare: fixes & improvements
+-   threadshare: latency related improvements and fixes
+-   threadshare: runtime task: execute action in downward transition
+-   threadshare: udpsink: fix panic recalculating latency from certain executors
+-   uriplaylistbin: Ignore all tests for now
+-   webrtc: livekit: Drop connection lock after take()
+-   Update dependencies
+-   Update dependencies
+-   ci: use image and GST_RS_MSRV / GST_RS_STABLE variables from gstreamer-rs 0.24 in gst-plugins-rs 0.14 branch
+-   Add rust-tls-native-roots feature to the reqwest dep
+-   Fix some new clippy 1.90 warnings
+-   meson: Fix .pc files installation and simplify build output handling
+
+gst-libav
+
+-   Fix all compiler warnings on Fedora
+
+gst-rtsp-server
+
+-   Fix issues with G_DISABLE_CHECKS & G_DISABLE_ASSERT
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-python
+
+-   No changes
+
+gst-editing-services
+
+-   ges: timeline: Respect SELECT_ELEMENT_TRACK signal discard decision
+-   gst: Fix a few small leaks
+
+gst-devtools, gst-validate + gst-integration-testsuites
+
+-   Fix issues with G_DISABLE_CHECKS & G_DISABLE_ASSERT
+
+gst-examples
+
+-   No changes
+
+gstreamer-docs
+
+-   No changes
+
+Development build environment
+
+-   libsoup.wrap: Apply upstream fix for GModule deadlock
+
+Cerbero build tool and packaging changes in 1.26.7
+
+-   meson: Update to 1.9.0 to enable Xcode 26 compatibility
+-   osxrelocator: Add .so to the allowed dylib extensions
+-   ci: update macos image to 26-tahoe
+-   EndeavourOS support
+
+Contributors to 1.26.7
+
+Andoni Morales Alastruey, Branko Subasic, Vincent Beng Keat Cheah, Doug Nazar, Ekwang Lee, François Laignel, Inbok Kim, Jakub
+Adam, Jan Schmidt, Jochen Henneberg, L. E. Segovia, Mark Nauwelaerts, Markus Hofstaetter, Matthew Waters, Nirbheek Chauhan,
+Norbert Hańderek, Philippe Normand, Razvan Grigore, Sebastian Dröge, Seungha Yang, Taruntej Kanakamalla, Thibault Saunier,
+Tim-Philipp Müller, Xavier Claessens,
+
+… and many others who have contributed bug reports, translations, sent suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.26.7
+
+-   List of Merge Requests applied in 1.26.7
+-   List of Issues fixed in 1.26.7
 
 Schedule for 1.28
 
