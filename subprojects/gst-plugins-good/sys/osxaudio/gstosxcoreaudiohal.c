@@ -296,7 +296,7 @@ _audio_device_set_mixing (AudioDeviceID device_id, gboolean enable_mix)
       GST_ERROR ("failed to set mixmode: %d", (int) status);
     }
   } else {
-    GST_DEBUG ("property not found, mixing coudln't be changed");
+    GST_DEBUG ("property not found, mixing couldn't be changed");
   }
 
   return res;
@@ -1147,10 +1147,10 @@ gst_core_audio_select_device_impl (GstCoreAudio * core_audio)
   gboolean res = FALSE;
 
   if (ndevices < 1) {
-    GST_ERROR ("No audio %s devices found", audio_type);
+    GST_ERROR ("No audio devices found");
     goto done;
   }
-  GST_DEBUG ("Found %d audio %s device(s)", ndevices, audio_type);
+  GST_DEBUG ("Found %d audio device(s)", ndevices);
 
   /* Prefer unique-id since that is more likely to be correct */
   if (unique_id) {

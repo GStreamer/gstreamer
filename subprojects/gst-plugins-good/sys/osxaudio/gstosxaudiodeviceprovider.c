@@ -333,11 +333,11 @@ gst_osx_audio_device_provider_probe (GstDeviceProvider * provider)
   osx_devices = _audio_system_get_devices (&ndevices);
 
   if (ndevices < 1) {
-    GST_WARNING ("no audio output devices found");
+    GST_WARNING ("No audio devices found");
     goto done;
   }
 
-  GST_INFO ("found %d audio device(s)", ndevices);
+  GST_INFO ("Found %d audio device(s)", ndevices);
 
   gst_osx_audio_device_provider_probe_internal (self, osx_devices, ndevices,
       &devices);
