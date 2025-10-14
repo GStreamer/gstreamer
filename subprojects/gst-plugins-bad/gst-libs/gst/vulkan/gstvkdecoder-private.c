@@ -79,19 +79,12 @@ _populate_function_table (GstVulkanDecoder * self)
 {
   GstVulkanDecoderPrivate *priv =
       gst_vulkan_decoder_get_instance_private (self);
-  GstVulkanInstance *instance;
 
   if (priv->vk_populated)
     return TRUE;
 
-  instance = gst_vulkan_device_get_instance (self->queue->device);
-  if (!instance) {
-    GST_ERROR_OBJECT (self, "Failed to get instance from the device");
-    return FALSE;
-  }
-
-  priv->vk_populated = gst_vulkan_video_get_vk_functions (instance, &priv->vk);
-  gst_object_unref (instance);
+  priv->vk_populated =
+      gst_vulkan_video_get_vk_functions (self->queue->device, &priv->vk);
   return priv->vk_populated;
 }
 
@@ -343,7 +336,7 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
   fmts =
       gst_vulkan_physical_device_get_video_formats (phy_dev, image_usage,
       &profile->profile, error);
-  if (error)
+  if (*error)
     return FALSE;
 
   /* find the best output format */

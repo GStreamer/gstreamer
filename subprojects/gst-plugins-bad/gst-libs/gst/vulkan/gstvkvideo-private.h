@@ -50,33 +50,36 @@ typedef enum {
   GST_VK_VIDEO_EXTENSION_MAX,
 } GST_VK_VIDEO_EXTENSIONS;
 
-#define GST_VULKAN_VIDEO_FN_LIST(V)                                            \
-  V(CreateVideoSession)                                                        \
-  V(DestroyVideoSession)                                                       \
-  V(GetVideoSessionMemoryRequirements)                                         \
-  V(DestroyVideoSessionParameters)                                             \
-  V(UpdateVideoSessionParameters)                                              \
-  V(CreateVideoSessionParameters)                                              \
-  V(BindVideoSessionMemory)                                                    \
-  V(CmdBeginVideoCoding)                                                       \
-  V(CmdControlVideoCoding)                                                     \
-  V(CmdEndVideoCoding)                                                         \
-  V(CmdDecodeVideo)                                                            \
-  V(CmdEncodeVideo)                                                            \
-  V(GetEncodedVideoSessionParameters)                                          \
+#define GST_VULKAN_DEVICE_VIDEO_FN_LIST(V)              \
+  V(CreateVideoSession)                                 \
+  V(DestroyVideoSession)                                \
+  V(GetVideoSessionMemoryRequirements)                  \
+  V(DestroyVideoSessionParameters)                      \
+  V(UpdateVideoSessionParameters)                       \
+  V(CreateVideoSessionParameters)                       \
+  V(BindVideoSessionMemory)                             \
+  V(CmdBeginVideoCoding)                                \
+  V(CmdControlVideoCoding)                              \
+  V(CmdEndVideoCoding)                                  \
+  V(CmdDecodeVideo)                                     \
+  V(CmdEncodeVideo)                                     \
+  V(GetEncodedVideoSessionParameters)
+
+#define GST_VULKAN_INSTANCE_VIDEO_FN_LIST(V)            \
   V(GetPhysicalDeviceVideoEncodeQualityLevelProperties)
 
 struct _GstVulkanVideoFunctions
 {
 #define DEFINE_FUNCTION(name) G_PASTE(G_PASTE(PFN_vk, name), KHR) name;
-    GST_VULKAN_VIDEO_FN_LIST (DEFINE_FUNCTION)
+    GST_VULKAN_DEVICE_VIDEO_FN_LIST (DEFINE_FUNCTION)
+    GST_VULKAN_INSTANCE_VIDEO_FN_LIST (DEFINE_FUNCTION)
 #undef DEFINE_FUNCTION
 };
 
 extern const VkExtensionProperties _vk_codec_extensions[GST_VK_VIDEO_EXTENSION_MAX];
 extern const VkComponentMapping _vk_identity_component_map;
 
-gboolean                gst_vulkan_video_get_vk_functions       (GstVulkanInstance * instance,
+gboolean                gst_vulkan_video_get_vk_functions       (GstVulkanDevice * device,
                                                                  GstVulkanVideoFunctions * vk_funcs);
 
 gboolean                gst_vulkan_video_session_create         (GstVulkanVideoSession * session,

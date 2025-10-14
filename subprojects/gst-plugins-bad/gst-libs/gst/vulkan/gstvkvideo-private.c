@@ -65,28 +65,37 @@ const VkComponentMapping _vk_identity_component_map = {
 /* *INDENT-ON* */
 
 gboolean
-gst_vulkan_video_get_vk_functions (GstVulkanInstance * instance,
+gst_vulkan_video_get_vk_functions (GstVulkanDevice * device,
     GstVulkanVideoFunctions * vk_funcs)
 {
   gboolean ret = FALSE;
+  GstVulkanInstance *instance;
 
-  g_return_val_if_fail (GST_IS_VULKAN_INSTANCE (instance), FALSE);
+  g_return_val_if_fail (GST_IS_VULKAN_DEVICE (device), FALSE);
   g_return_val_if_fail (vk_funcs, FALSE);
 
-#define GET_PROC_ADDRESS_REQUIRED(name)                                 \
+  instance = gst_vulkan_device_get_instance (device);
+
+#define GET_PROC_ADDRESS_REQUIRED(name, type)                           \
   G_STMT_START {                                                        \
     const char *fname = "vk" G_STRINGIFY (name) "KHR";                  \
-    vk_funcs->G_PASTE (, name) = gst_vulkan_instance_get_proc_address (instance, fname); \
+    vk_funcs->G_PASTE (, name) = G_PASTE(G_PASTE(gst_vulkan_, type), _get_proc_address) (type, fname); \
     if (!vk_funcs->G_PASTE(, name)) {                                   \
-      GST_ERROR_OBJECT (instance, "Failed to find required function %s", fname); \
+      GST_ERROR_OBJECT (device, "Failed to find required function %s", fname); \
       goto bail;                                                        \
     }                                                                   \
   } G_STMT_END;
-  GST_VULKAN_VIDEO_FN_LIST (GET_PROC_ADDRESS_REQUIRED)
+#define GET_DEVICE_PROC_ADDRESS_REQUIRED(name) GET_PROC_ADDRESS_REQUIRED(name, device)
+#define GET_INSTANCE_PROC_ADDRESS_REQUIRED(name) GET_PROC_ADDRESS_REQUIRED(name, instance)
+  GST_VULKAN_DEVICE_VIDEO_FN_LIST (GET_DEVICE_PROC_ADDRESS_REQUIRED);
+  GST_VULKAN_INSTANCE_VIDEO_FN_LIST (GET_INSTANCE_PROC_ADDRESS_REQUIRED);
+#undef GET_DEVICE_PROC_ADDRESS_REQUIRED
+#undef GET_INSTANCE_PROC_ADDRESS_REQUIRED
 #undef GET_PROC_ADDRESS_REQUIRED
-      ret = TRUE;
+  ret = TRUE;
 
 bail:
+  gst_object_unref (instance);
   return ret;
 }
 
