@@ -332,22 +332,7 @@ typedef enum {
  * @src: the src of the message
  * @seqnum: the sequence number of the message
  *
- * {{ C+JS_FALLBACK.md }}
- *
  * A #GstMessage.
- *
- * {{ END_LANG.md }}
- *
- * {{ PY.md }}
- *
- * The Message objects automatically inherit from #GstMiniObject.
- *
- * Following GStreamer's copy-on-write semantics: if you need
- * to modify a message that might be shared, call
- * [Gst.MiniObject.make_writable](gstminiobject.html#gst-miniobject-make-writable)
- * first to ensure you have a writable copy.
- *
- * {{ END_LANG.md }}
  */
 struct _GstMessage
 {

@@ -289,46 +289,7 @@ infinite.</doc>
     </constant>
     <record name="Mtd" c:type="GstAnalyticsMtd" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Handle containing data required to use gst_analytics_mtd API. This type
-is generally expected to be allocated on the stack.
-
-{{ PY.md }}
-
-### Python specific methods:
-
-#### GstAnalytics.Mtd.iter_direct_related
-
-``` python
-def GstAnalytics.Mtd.iter_direct_related(self, relation_type) -&gt; Iterator[GstAnalytics.Mtd]:
-```
-
-##### Parameters:
-
-- `relation_type` : A `Gst.Analytics.RelTypes` value specifying the type of
-  relation to follow.
-
-**Returns**: (Iterator over #GstAnalyticsMtd): An iterator object that can be over
-metadata items.
-
-**Since**: 1.28
-
-#### GstAnalytics.Mtd.relation_path
-
-``` python
-def GstAnalytics.Mtd.relation_path(self, mtd, max_span = 0, reltype = GstAnalytics.RelTypes.ANY) -&gt; List[int]:
-```
-
-##### Parameters:
-
-- `mtd` : A #GstAnalyticsMtd instance to find a relation path to.
-- `max_span` : (optional) Maximum relation span to search. Default 0.
-- `reltype` : (optional) A `Gst.Analytics.RelTypes` value specifying the type
-  of relation to follow. Default `Gst.Analytics.RelTypes.ANY`.
-
-**Returns**: ( #gint ): A list of #GstAnalyticsMtd.id-s representing the path
-
-**Since**: 1.28
-
-{{ END_LANG.md }}</doc>
+is generally expected to be allocated on the stack.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
       <field name="id" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance identifier</doc>
@@ -611,45 +572,7 @@ correspond to the respective component in the other group.</doc>
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">An opaque #GstMeta that can be used to hold various types of results
 from analysis processes.
 
-The content should be accessed through the API.
-
-{{ PY.md }}
-
-#### GstAnalytics.RelationMeta.\__iter__
-
-``` python
-def __iter__(self) -&gt; Iterator:
-```
-
-Iterate over all #GstAnalyticsMtd
-
-#### Example:
-
-``` python
-for mtd in relation_meta:
-    # Process each GstAnalyticsMtd in the relation meta
-    print(f"Found metadata with id: {mtd.id}")
-```
-
-#### GstAnalytics.RelationMeta.iter_on_type
-
-``` python
-def iter_on_type(self, filter: Type[GstAnalyticsMtd]) -&gt; Iterator:
-```
-
-Iterate over #GstAnalyticsMtd of a specific type
-
-#### Example:
-
-``` python
-# Iterate only over ObjectDetectionMtd metadata
-for mtd in relation_meta.iter_on_type(GstAnalytics.ODMtd):
-    # Process only object detection metadata
-    bbox = mtd.get_location()
-    print(f"Object at x={bbox.x}, y={bbox.y}")
-```
-
-{{ END_LANG.md }}</doc>
+The content should be accessed through the API.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
       <method name="add_cls_mtd" c:identifier="gst_analytics_relation_meta_add_cls_mtd" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Add analytic classification metadata to @instance.</doc>

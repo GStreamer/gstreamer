@@ -99,32 +99,6 @@
  * clock and run the calibration functions. #GstClock:window-size defines the
  * number of samples to use when calibrating and #GstClock:window-threshold
  * defines the minimum number of samples before the calibration is performed.
- *
- * {{ PY.md }}
- *
- * ## Utilities
- *
- * ### TIME_ARGS
- *
- * **Time formatting function**: Formats a #GstClockTime into a human-readable string.
- *
- * Returns a formatted string in "h:mm:ss.nnnnnnnnn" format, or "CLOCK_TIME_NONE" for invalid times.
- *
- * ##### Example:
- *
- * ``` python
- * import Gst
- *
- * # Format a time value
- * time_str = Gst.TIME_ARGS(5 * Gst.SECOND + 123456789)
- * print(time_str)  # Output: "0:00:05.123456789"
- *
- * # Handle invalid time
- * none_str = Gst.TIME_ARGS(Gst.CLOCK_TIME_NONE)
- * print(none_str)  # Output: "CLOCK_TIME_NONE"
- * ```
- *
- * {{ END_LANG.md }}
  */
 
 #include "gst_private.h"

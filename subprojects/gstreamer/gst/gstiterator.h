@@ -203,36 +203,6 @@ typedef gboolean          (*GstIteratorFoldFunction)    (const GValue * item, GV
  *
  * #GstIterator base structure. The values of this structure are
  * protected for subclasses, use the methods to use the #GstIterator.
- *
- * {{ PY.md }}
- *
- * ### Python specific features:
- *
- * #### Gst.Iterator.\__iter__
- *
- * ``` python
- * def __iter__(self) -> Iterator:
- * ```
- *
- * GstIterator supports Python iteration protocol:
- *
- * ``` python
- * bin = Gst.Bin()
- * # Add some elements...
- *
- * # Iterate over all elements in the bin
- * for element in bin.iterate_elements():
- *     print(f"Element: {element.get_name()}")
- *
- * # Convert iterator to list
- * elements = list(bin.iterate_elements())
- * ```
- *
- * The iterator automatically handles resync when the underlying data
- * structure is modified during iteration, and raises `Gst.IteratorError`
- * if iteration fails.
- *
- * {{ END_LANG.md }}
  */
 struct _GstIterator {
   /*< protected >*/

@@ -1119,7 +1119,6 @@ build documentation:
           - ".gitlab-ci.yml"
           - ".gitlab-image-tags.yml"
           - "ci/gitlab/*.py"
-          - "girs/*"
           - "subprojects/*.wrap"
           - "subprojects/gst-docs/**/*"
           - "subprojects/gst-devtools/**/*"

@@ -61,17 +61,6 @@
  * size.
  *
  * Memory can be efficiently merged when gst_memory_is_span() returns %TRUE.
- *
- * {{ PY.md }}
- *
- * The Memory objects automatically inherit from #GstMiniObject.
- *
- * Following GStreamer's copy-on-write semantics: if you need
- * to modify a memory that might be shared, call
- * [Gst.MiniObject.make_writable](gstminiobject.html#gst-miniobject-make-writable)
- * first to ensure you have a writable copy.
- *
- * {{ END_LANG.md }}
  */
 
 #ifdef HAVE_CONFIG_H
@@ -299,23 +288,6 @@ cannot_map:
  *
  * For each gst_memory_map() call, a corresponding gst_memory_unmap() call
  * should be done.
- *
- * {{ PY.md }}
- *
- * ##### Example:
- *
- * **Context manager support**: Returns a `Gst.MapInfo` object that can be used
- * as a context manager for automatic unmapping.
- *
- * ``` python
- * # Context manager automatically handles unmapping
- * with memory.map(Gst.MapFlags.READWRITE) as mapinfo:
- *     # Access and modify the memory data
- *     mapinfo.data[0:4] = b'\x00\x01\x02\x03'
- *     # mapinfo is automatically unmapped when exiting the with block
- * ```
- *
- * {{ END_LANG.md }}
  *
  * Returns: %TRUE if the map operation was successful.
  */

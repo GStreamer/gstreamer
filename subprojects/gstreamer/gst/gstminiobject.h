@@ -206,45 +206,6 @@ typedef enum {
  * @free: the free function
  *
  * Base class for refcounted lightweight objects.
- *
- * {{ PY.md }}
- *
- * ### Extra methods:
- *
- * #### Gst.MiniObject.make_writable
- *
- * ``` python
- * def make_writable(self) -> Gst.MiniObject:
- * ```
- *
- * Ensure the mini object is writable, creating a copy if necessary.
- *
- * **Returns**: A writable version of the mini object
- *
- * #### Gst.MiniObject.flags
- *
- * ``` python
- * @property
- * def flags(self) -> int:
- * @flags.setter
- * def flags(self, flags: int) -> None:
- * ```
- *
- * Property to get and set the flags of the mini object.
- *
- * ##### Example:
- *
- * ``` python
- * # Make a writable copy if needed
- * writable_buffer = buffer.make_writable()
- *
- * # Access flags property
- * current_flags = buffer.flags
- * buffer.flags = new_flags
- * ```
- *
- * {{ END_LANG.md }}
- *
  */
 struct _GstMiniObject {
   GType   type;

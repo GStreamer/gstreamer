@@ -1200,9 +1200,7 @@ handler will return %TRUE.</doc>
         </parameters>
       </virtual-method>
       <method name="add" c:identifier="gst_bin_add">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.c">{{ C+JS_FALLBACK.md }}
-
-Adds the given element to the bin.  Sets the element's parent, and thus
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.c">Adds the given element to the bin.  Sets the element's parent, and thus
 takes ownership of the element. An element can only be added to one bin.
 
 If the element's pads are linked to other pads, the pads will be unlinked
@@ -1212,28 +1210,7 @@ before the element is added to the bin.
 &gt; take care to set the state of the newly-added element to the desired
 &gt; state (usually PLAYING or PAUSED, same you set the pipeline to originally)
 &gt; with gst_element_set_state(), or use gst_element_sync_state_with_parent().
-&gt; The bin or pipeline will not take care of this for you.
-
-{{ END_LANG.md }}
-
-{{ PY.md }}
-
-**Accepts multiple elements**: You can pass any number of elements as arguments to add them all at once.
-
-**Raises**: `Gst.AddError` if any of the elements could not be added.
-
-##### Example:
-
-``` python
-bin = Gst.Bin()
-# Add multiple elements at once
-bin.add(source, filter, sink)
-
-# Also works with single elements
-bin.add(another_element)
-```
-
-{{ END_LANG.md }}</doc>
+&gt; The bin or pipeline will not take care of this for you.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstbin.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.c">%TRUE if the element could be added, %FALSE if
@@ -2935,19 +2912,8 @@ the new memory.</doc>
       <method name="is_all_memory_writable" c:identifier="gst_buffer_is_all_memory_writable" version="1.4">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">Checks if all memory blocks in @buffer are writable.
 
-{{ C+JS_FALLBACK.md }}
-
 Note that this function does not check if @buffer is writable, use
-gst_buffer_is_writable() to check that if needed.
-
-{{ END_LANG.md }}
-
-{{ PY.md }}
-
-Note that this function does not check if @buffer is writable, use
-[Gst.MiniObject.is_writable](gstminiobject.html#gst-miniobject-is-writable) to check that if needed.
-
-{{ END_LANG.md }}</doc>
+gst_buffer_is_writable() to check that if needed.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstbuffer.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">%TRUE if all memory blocks in @buffer are writable</doc>
@@ -2965,19 +2931,8 @@ Note that this function does not check if @buffer is writable, use
 
 @length can be -1 to check all the memory blocks after @idx.
 
-{{ C+JS_FALLBACK.md }}
-
 Note that this function does not check if @buffer is writable, use
-gst_buffer_is_writable() to check that if needed.
-
-{{ END_LANG.md }}
-
-{{ PY.md }}
-
-Note that this function does not check if @buffer is writable, use
-[Gst.MiniObject.is_writable](gstminiobject.html#gst-miniobject-is-writable) to check that if needed.
-
-{{ END_LANG.md }}</doc>
+gst_buffer_is_writable() to check that if needed.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstbuffer.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">%TRUE if the memory range is writable</doc>
@@ -3097,44 +3052,16 @@ you have an additional reference to it.</doc>
       <method name="map" c:identifier="gst_buffer_map">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">Fills @info with the #GstMapInfo of all merged memory blocks in @buffer.
 
-{{ C+JS_FALLBACK.md }}
-
 @flags describe the desired access of the memory. When @flags is
 #GST_MAP_WRITE, @buffer should be writable (as returned from
 gst_buffer_is_writable()).
-
-{{ END_LANG.md }}
-
-{{ PY.md }}
-
-@flags describe the desired access of the memory. When @flags is
-#GST_MAP_WRITE, @buffer should be writable (as returned from
-[Gst.MiniObject.is_writable](gstminiobject.html#gst-miniobject-is-writable)).
-
-{{ END_LANG.md }}
 
 When @buffer is writable but the memory isn't, a writable copy will
 automatically be created and returned. The readonly copy of the
 buffer memory will then also be replaced with this writable copy.
 
 The memory in @info should be unmapped with gst_buffer_unmap() after
-usage.
-
-{{ PY.md }}
-
-**Context manager support**: Returns a `Gst.MapInfo` object that can be used
-as a context manager for automatic unmapping.
-
-##### Example:
-
-``` python
-# Context manager automatically handles unmapping
-with buffer.map(Gst.MapFlags.READ) as mapinfo:
-    data = mapinfo.data
-    # mapinfo is automatically unmapped when exiting the with block
-```
-
-{{ END_LANG.md }}</doc>
+usage.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstbuffer.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">%TRUE if the map succeeded and @info contains valid data.</doc>
@@ -3160,43 +3087,15 @@ with buffer.map(Gst.MapFlags.READ) as mapinfo:
 starting at @idx in @buffer. When @length is -1, all memory blocks starting
 from @idx are merged and mapped.
 
-{{ C+JS_FALLBACK.md }}
-
 @flags describe the desired access of the memory. When @flags is
 #GST_MAP_WRITE, @buffer should be writable (as returned from
 gst_buffer_is_writable()).
-
-{{ END_LANG.md }}
-
-{{ PY.md }}
-
-@flags describe the desired access of the memory. When @flags is
-#GST_MAP_WRITE, @buffer should be writable (as returned from
-[Gst.MiniObject.is_writable](gstminiobject.html#gst-miniobject-is-writable)).
-
-{{ END_LANG.md }}
 
 When @buffer is writable but the memory isn't, a writable copy will
 automatically be created and returned. The readonly copy of the buffer memory
 will then also be replaced with this writable copy.
 
-The memory in @info should be unmapped with gst_buffer_unmap() after usage.
-
-{{ PY.md }}
-
-
-**Context manager support**: Returns a `Gst.MapInfo` object that can be used
-as a context manager for automatic unmapping.
-
-##### Example:
-
-``` python
-with buffer.map(Gst.MapFlags.READ) as mapinfo:
-    data = mapinfo.data
-    # mapinfo is automatically unmapped when exiting the with block
-```
-
-{{ END_LANG.md }}</doc>
+The memory in @info should be unmapped with gst_buffer_unmap() after usage.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstbuffer.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">%TRUE if the map succeeded and @info contains valid
@@ -3340,19 +3239,8 @@ See gst_buffer_insert_memory() for more details.</doc>
       <method name="ref" c:identifier="gst_buffer_ref" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">Increases the refcount of the given buffer by one.
 
-{{ C+JS_FALLBACK.md }}
-
 Note that the refcount affects the writability
 of @buf and its metadata, see gst_buffer_is_writable().
-
-{{ END_LANG.md }}
-
-{{ PY.md }}
-
-Note that the refcount affects the writability
-of @buf and its metadata, see [Gst.MiniObject.is_writable](gstminiobject.html#gst-miniobject-is-writable).
-
-{{ END_LANG.md }}
 It is important to note that keeping additional references to
 GstBuffer instances can potentially increase the number
 of `memcpy` operations in a pipeline.</doc>
@@ -3859,18 +3747,7 @@ using gst_buffer_list_insert().
 
 Buffer lists can be pushed on a srcpad with gst_pad_push_list(). This is
 interesting when multiple buffers need to be pushed in one go because it
-can reduce the amount of overhead for pushing each buffer individually.
-
-{{ PY.md }}
-
-The BufferList objects automatically inherit from #GstMiniObject.
-
-Following GStreamer's copy-on-write semantics: if you need
-to modify a bufferlist that might be shared, call
-[Gst.MiniObject.make_writable](gstminiobject.html#gst-miniobject-make-writable)
-first to ensure you have a writable copy.
-
-{{ END_LANG.md }}</doc>
+can reduce the amount of overhead for pushing each buffer individually.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstbufferlist.h"/>
       <constructor name="new" c:identifier="gst_buffer_list_new">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.c">Creates a new, empty #GstBufferList.</doc>
@@ -7225,8 +7102,6 @@ handle or produce at runtime.
 
 A #GstCaps can be constructed with the following code fragment:
 
-{{ C+JS_FALLBACK.md }}
-
 ``` C
   GstCaps *caps = gst_caps_new_simple ("video/x-raw",
      "format", G_TYPE_STRING, "I420",
@@ -7236,17 +7111,6 @@ A #GstCaps can be constructed with the following code fragment:
      "height", G_TYPE_INT, 240,
      NULL);
 ```
-
-{{ END_LANG.md }}
-
-{{ PY.md }}
-
-``` python
- caps = Gst.Caps(Gst.Structure("video/x-raw", format="I420", framerate=Gst.Fraction(25, 1),
-     pixel_aspect_ratio=Gst.Fraction(1, 1), width=320, height=240))
-```
-
-{{ END_LANG.md }}
 
 A #GstCaps is fixed when it has no fields with ranges or lists. Use
 gst_caps_is_fixed() to test for fixed caps. Fixed caps can be used in a
@@ -9912,33 +9776,7 @@ The master/slave synchronisation can be tuned with the #GstClock:timeout,
 The #GstClock:timeout property defines the interval to sample the master
 clock and run the calibration functions. #GstClock:window-size defines the
 number of samples to use when calibrating and #GstClock:window-threshold
-defines the minimum number of samples before the calibration is performed.
-
-{{ PY.md }}
-
-## Utilities
-
-### TIME_ARGS
-
-**Time formatting function**: Formats a #GstClockTime into a human-readable string.
-
-Returns a formatted string in "h:mm:ss.nnnnnnnnn" format, or "CLOCK_TIME_NONE" for invalid times.
-
-##### Example:
-
-``` python
-import Gst
-
-# Format a time value
-time_str = Gst.TIME_ARGS(5 * Gst.SECOND + 123456789)
-print(time_str)  # Output: "0:00:05.123456789"
-
-# Handle invalid time
-none_str = Gst.TIME_ARGS(Gst.CLOCK_TIME_NONE)
-print(none_str)  # Output: "CLOCK_TIME_NONE"
-```
-
-{{ END_LANG.md }}</doc>
+defines the minimum number of samples before the calibration is performed.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstclock.h"/>
       <function name="id_compare_func" c:identifier="gst_clock_id_compare_func">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstclock.c">Compares the two #GstClockID instances. This function can be used
@@ -19202,46 +19040,7 @@ The following code example shows you how to create a GstFileSrc element.
   src = gst_element_factory_create (srcfactory, "src");
   g_return_if_fail (src != NULL);
   ...
-]|
-
-{{ PY.md }}
-
-## Helper methods:
-
-### Gst.ElementFactory.get_longname
-
-``` python
-def get_longname(self) -&gt; str:
-```
-
-**Convenience method**: Gets the long name metadata for the factory.
-This is equivalent to calling `get_metadata("long-name")`.
-
-**Returns**: The long name of the element factory.
-
-### Gst.ElementFactory.get_description
-
-``` python
-def get_description(self) -&gt; str:
-```
-
-**Convenience method**: Gets the description metadata for the factory.
-This is equivalent to calling `get_metadata("description")`.
-
-**Returns**: The description of the element factory.
-
-### Gst.ElementFactory.get_klass
-
-``` python
-def get_klass(self) -&gt; str:
-```
-
-**Convenience method**: Gets the klass metadata for the factory.
-This is equivalent to calling `get_metadata("klass")`.
-
-**Returns**: The klass of the element factory.
-
-{{ END_LANG.md }}</doc>
+]|</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstelementfactory.h"/>
       <function name="find" c:identifier="gst_element_factory_find">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelementfactory.c">Search for an element factory of the given name. Refs the returned
@@ -25132,18 +24931,7 @@ copy. gst_memory_share() will create a new memory block that shares the
 memory with an existing memory block at a custom offset and with a custom
 size.
 
-Memory can be efficiently merged when gst_memory_is_span() returns %TRUE.
-
-{{ PY.md }}
-
-The Memory objects automatically inherit from #GstMiniObject.
-
-Following GStreamer's copy-on-write semantics: if you need
-to modify a memory that might be shared, call
-[Gst.MiniObject.make_writable](gstminiobject.html#gst-miniobject-make-writable)
-first to ensure you have a writable copy.
-
-{{ END_LANG.md }}</doc>
+Memory can be efficiently merged when gst_memory_is_span() returns %TRUE.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstmemory.h"/>
       <field name="mini_object" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.h">parent structure</doc>
@@ -25429,24 +25217,7 @@ This function can return %FALSE for various reasons:
 until gst_memory_unmap() is called.
 
 For each gst_memory_map() call, a corresponding gst_memory_unmap() call
-should be done.
-
-{{ PY.md }}
-
-##### Example:
-
-**Context manager support**: Returns a `Gst.MapInfo` object that can be used
-as a context manager for automatic unmapping.
-
-``` python
-# Context manager automatically handles unmapping
-with memory.map(Gst.MapFlags.READWRITE) as mapinfo:
-    # Access and modify the memory data
-    mapinfo.data[0:4] = b'\x00\x01\x02\x03'
-    # mapinfo is automatically unmapped when exiting the with block
-```
-
-{{ END_LANG.md }}</doc>
+should be done.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstmemory.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">%TRUE if the map operation was successful.</doc>
@@ -42558,18 +42329,7 @@ strings.</doc>
     </function-macro>
     <record name="Sample" c:type="GstSample" opaque="1" glib:type-name="GstSample" glib:get-type="gst_sample_get_type" c:symbol-prefix="sample">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsample.c">A #GstSample is a small object containing data, a type, timing and
-extra arbitrary information.
-
-{{ PY.md }}
-
-The Sample objects automatically inherit from #GstMiniObject.
-
-Following GStreamer's copy-on-write semantics: if you need
-to modify a sample that might be shared, call
-[Gst.MiniObject.make_writable](gstminiobject.html#gst-miniobject-make-writable)
-first to ensure you have a writable copy.
-
-{{ END_LANG.md }}</doc>
+extra arbitrary information.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstsample.h"/>
       <constructor name="new" c:identifier="gst_sample_new">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsample.c">Create a new #GstSample with the provided details.
@@ -44714,21 +44474,11 @@ gst_structure_set().
 Field values can be retrieved with gst_structure_get_value() or the more
 convenient gst_structure_get_*() functions.
 
-{{ C+JS_FALLBACK.md }}
-
 Fields can be removed with gst_structure_remove_field() or
 gst_structure_remove_fields().
 
 Strings in structures must be ASCII or UTF-8 encoded. Other encodings are not
 allowed. Strings may be %NULL however.
-
-{{ END_LANG.md }}
-
-{{ PY.md }}
-
-Fields can be removed with `del struct[key]` or `struct.remove_field(key)`.
-
-{{ END_LANG.md }}
 
 ## The serialization format
 
@@ -44765,15 +44515,15 @@ values are explicitly typed.
 
 Some types have special delimiters:
 
-- #GstValueArray are inside "less and greater than" (`&lt;` and
+- [GstValueArray](GST_TYPE_ARRAY) are inside "less and greater than" (`&lt;` and
   `&gt;`). For example `a-structure, array=&lt;1, 2, 3&gt;
 - Ranges are inside brackets (`[` and `]`). For example `a-structure,
   range=[1, 6, 2]` 1 being the min value, 6 the maximum and 2 the step. To
-  specify a #GstInt64Range you need to explicitly specify it like:
+  specify a #GST_TYPE_INT64_RANGE you need to explicitly specify it like:
   `a-structure, a-int64-range=(gint64) [1, 5]`
-- #GstValueList are inside curly brackets (`{` and `}`).
+- [GstValueList](GST_TYPE_LIST) are inside curly brackets (`{` and `}`).
   For example `a-structure, list={1, 2, 3}`
-- #GStrv are inside "less and greater than" (`&lt;` and
+- [GStrv](G_TYPE_STRV) are inside "less and greater than" (`&lt;` and
   `&gt;`) and each string is double-quoted.
   For example `a-structure, strv=(GStrv)&lt;"foo", "bar"&gt;`. Since 1.26.0.
 
@@ -45474,7 +45224,7 @@ release with either g_free() or the suitable function for the boxed type.</doc>
       </method>
       <method name="get_array" c:identifier="gst_structure_get_array" version="1.12">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">This is useful in language bindings where unknown #GValue types are not
-supported. This function will convert the #GstValueArray into a newly
+supported. This function will convert the %GST_TYPE_ARRAY into a newly
 allocated #GValueArray and return it through @array. Be aware that this is
 slower then getting the #GValue directly.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
@@ -46936,9 +46686,9 @@ Variable arguments should be in the form field name, field type
       </method>
       <method name="set_array" c:identifier="gst_structure_set_array" version="1.12">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">This is useful in language bindings where unknown GValue types are not
-supported. This function will convert a @array to #GstValueArray and set
+supported. This function will convert a @array to %GST_TYPE_ARRAY and set
 the field specified by @fieldname.  Be aware that this is slower then using
-#GstValueArray in a #GValue directly.</doc>
+%GST_TYPE_ARRAY in a #GValue directly.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -46960,7 +46710,7 @@ the field specified by @fieldname.  Be aware that this is slower then using
       </method>
       <method name="set_list" c:identifier="gst_structure_set_list" version="1.12">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">This is useful in language bindings where unknown GValue types are not
-supported. This function will convert a @array to #GstValueList and set
+supported. This function will convert a @array to %GST_TYPE_LIST and set
 the field specified by @fieldname. Be aware that this is slower then using
 %GST_TYPE_LIST in a #GValue directly.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
@@ -47138,13 +46888,7 @@ lifetime of the process, e.g. has to be a static string.</doc>
       <method name="set_value" c:identifier="gst_structure_set_value">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Sets the field with the given name @field to @value.  If the field
 does not exist, it is created.  If the field exists, the previous
-value is replaced and freed.
-
-{{ PY.md }}
-
-Raises `Gst.NotWritableStructure`
-
-{{ END_LANG.md }}</doc>
+value is replaced and freed.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -48617,49 +48361,11 @@ not modify the tag list.</doc>
         </parameter>
       </parameters>
     </callback>
-    <record name="TagList" c:type="GstTagList" version="1.24" glib:type-name="GstTagList" glib:get-type="gst_tag_list_get_type" c:symbol-prefix="tag_list">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.c">{{ C+JS_FALLBACK.md }}
-List of tags and values used to describe media metadata.
+    <record name="TagList" c:type="GstTagList" glib:type-name="GstTagList" glib:get-type="gst_tag_list_get_type" c:symbol-prefix="tag_list">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.c">List of tags and values used to describe media metadata.
 
 Strings in structures must be ASCII or UTF-8 encoded. Other encodings are
-not allowed. Strings must not be empty or %NULL.
-
-{{ END_LANG.md }}
-
-
-{{ PY.md }}
-
-List of tags and values used to describe media metadata.
-
-**Dictionary-like access**: TagList supports Python's container protocols, allowing dictionary-style access
-to tags using `[]` notation, `len()`, and iteration with `.keys()`.
-
-##### Example:
-
-``` python
-taglist = Gst.TagList()
-
-# Dictionary-style assignment and access
-taglist["title"] = "My Song"
-taglist["artist"] = "Artist Name"
-
-# Use standard Python functions
-print(len(taglist))  # Get number of tags
-print(taglist["title"])  # Access by key
-
-# Iterate over tag names
-for tag_name in taglist.keys():
-    print(f"{tag_name}: {taglist[tag_name]}")
-```
-
-The TagList objects automatically inherit from #GstMiniObject.
-
-Following GStreamer's copy-on-write semantics: if you need
-to modify a taglist that might be shared, call
-[Gst.MiniObject.make_writable](gstminiobject.html#gst-miniobject-make-writable)
-first to ensure you have a writable copy.
-
-{{ END_LANG.md }}</doc>
+not allowed. Strings must not be empty or %NULL.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gsttaglist.h"/>
       <field name="mini_object" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.h">the parent type</doc>

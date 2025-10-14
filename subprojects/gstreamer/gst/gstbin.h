@@ -130,37 +130,6 @@ typedef struct _GstBinPrivate GstBinPrivate;
  *
  * The GstBin base class. Subclasses can access these fields provided
  * the LOCK is taken.
- *
- * {{ PY.md }}
- *
- * ### Helper methods:
- *
- * #### Gst.Bin.make_and_add
- *
- * ``` python
- * def make_and_add(self, factoryname, name=None) -> Gst.Element:
- * ```
- *
- * Creates a new element using the factory name and adds it to the bin.
- *
- * ##### Parameters:
- *
- * - `factoryname` : The name of the factory to use to create the element.
- * - `name` : (optional) The name to give the created element.
- *
- * **Returns**: The newly created #GstElement.
- *
- * **Raises**: `Gst.AddError` if the element could not be created or added.
- *
- * ##### Example:
- *
- * ``` python
- * bin = Gst.Bin()
- * # Create and add an element in one step
- * videosink = bin.make_and_add("autovideosink", "video-output")
- * ```
- *
- * {{ END_LANG.md }}
  */
 struct _GstBin {
   GstElement	 element;

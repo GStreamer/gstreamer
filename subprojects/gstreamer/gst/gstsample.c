@@ -27,17 +27,6 @@
  *
  * A #GstSample is a small object containing data, a type, timing and
  * extra arbitrary information.
- *
- * {{ PY.md }}
- *
- * The Sample objects automatically inherit from #GstMiniObject.
- *
- * Following GStreamer's copy-on-write semantics: if you need
- * to modify a sample that might be shared, call
- * [Gst.MiniObject.make_writable](gstminiobject.html#gst-miniobject-make-writable)
- * first to ensure you have a writable copy.
- *
- * {{ END_LANG.md }}
  */
 #define GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 #include "gst_private.h"
