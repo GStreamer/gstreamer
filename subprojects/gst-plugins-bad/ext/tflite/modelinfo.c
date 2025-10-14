@@ -104,12 +104,34 @@ modelinfo_get_id (ModelInfo * modelinfo, const gchar * tensor_name)
   return g_key_file_get_string (kf, tensor_name, "id", NULL);
 }
 
+gchar *
+modelinfo_get_group_id (ModelInfo * modelinfo, const gchar * tensor_name)
+{
+  GKeyFile *kf = (GKeyFile *) modelinfo;
+
+  return g_key_file_get_string (kf, tensor_name, "group-id", NULL);
+}
+
 GQuark
 modelinfo_get_quark_id (ModelInfo * modelinfo, const gchar * tensor_name)
 {
   GKeyFile *kf = (GKeyFile *) modelinfo;
   GQuark q = 0;
   gchar *id = g_key_file_get_string (kf, tensor_name, "id", NULL);
+
+  if (id)
+    q = g_quark_from_string (id);
+  g_free (id);
+
+  return q;
+}
+
+GQuark
+modelinfo_get_quark_group_id (ModelInfo * modelinfo, const gchar * tensor_name)
+{
+  GKeyFile *kf = (GKeyFile *) modelinfo;
+  GQuark q = 0;
+  gchar *id = g_key_file_get_string (kf, tensor_name, "group-id", NULL);
 
   if (id)
     q = g_quark_from_string (id);

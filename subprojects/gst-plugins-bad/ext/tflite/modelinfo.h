@@ -49,8 +49,14 @@ modelinfo_find_tensor_name (ModelInfo * modelinfo,
 gchar *
 modelinfo_get_id (ModelInfo *modelinfo, const gchar * tensor_name);
 
+gchar *
+modelinfo_get_group_id (ModelInfo * modelinfo, const gchar * tensor_name);
+
 GQuark
 modelinfo_get_quark_id (ModelInfo *modelinfo, const gchar * tensor_name);
+
+GQuark
+modelinfo_get_quark_group_id (ModelInfo * modelinfo, const gchar * tensor_name);
 
 gsize
 modelinfo_get_normalization_means (ModelInfo * modelinfo,
