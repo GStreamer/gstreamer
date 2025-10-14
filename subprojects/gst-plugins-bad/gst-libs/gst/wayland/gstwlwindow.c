@@ -437,7 +437,7 @@ gst_wl_window_new_toplevel_full (GstWlDisplay * display,
     wl_display_flush (gst_wl_display_get_display (display));
 
     g_mutex_lock (&priv->configure_mutex);
-    timeout = g_get_monotonic_time () + 100 * G_TIME_SPAN_MILLISECOND;
+    timeout = g_get_monotonic_time () + 5 * G_TIME_SPAN_SECOND;
     while (!priv->configured) {
       if (!g_cond_wait_until (&priv->configure_cond, &priv->configure_mutex,
               timeout)) {
