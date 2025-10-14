@@ -229,17 +229,15 @@ class MesonTestsManager(TestsManager):
                 self.rebuilt = True
                 return True
 
-            ninja = shutil.which('ninja')
-            if not ninja:
-                ninja = shutil.which('ninja-build')
-            if not ninja:
-                printc("Can't find ninja, can't rebuild test.\n", Colors.FAIL)
+            meson = shutil.which('meson')
+            if not meson:
+                printc("Can't find meson, can't rebuild test.\n", Colors.FAIL)
                 self.rebuilt = False
                 return False
 
             print("-> Rebuilding %s.\n" % bdir)
             try:
-                subprocess.check_call([ninja, '-C', bdir])
+                subprocess.check_call([meson, 'compile', '-C', bdir])
             except subprocess.CalledProcessError:
                 self.rebuilt = False
                 return False
