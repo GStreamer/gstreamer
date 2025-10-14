@@ -275,7 +275,7 @@ _audio_device_set_mixing (AudioDeviceID device_id, gboolean enable_mix)
       GST_ERROR ("failed to set mixmode: %d", (int) status);
     }
   } else {
-    GST_DEBUG ("property not found, mixing coudln't be changed");
+    GST_DEBUG ("property not found, mixing couldn't be changed");
   }
 
   return res;
