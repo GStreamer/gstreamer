@@ -3729,7 +3729,7 @@ When @meta is set to %NULL, the item will be removed from the buffer.</doc>
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.h">a #GstBuffer</doc>
           <type name="Buffer" c:type="GstBuffer*"/>
         </parameter>
-        <parameter name="meta" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1">
+        <parameter name="meta" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.h">a pointer to a #GstMeta</doc>
           <type name="Meta" c:type="GstMeta**"/>
         </parameter>
@@ -4103,7 +4103,7 @@ removing or modifying.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </return-value>
       <parameters>
-        <parameter name="buffer" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1">
+        <parameter name="buffer" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.h">pointer to the buffer</doc>
           <type name="Buffer" c:type="GstBuffer**"/>
         </parameter>
@@ -35293,7 +35293,7 @@ removing or modifying.</doc>
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.h">the #GstPad.</doc>
           <type name="Pad" c:type="GstPad*"/>
         </parameter>
-        <parameter name="event" transfer-ownership="none" nullable="1" allow-none="1">
+        <parameter name="event" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.h">a sticky #GstEvent.</doc>
           <type name="Event" c:type="GstEvent**"/>
         </parameter>
