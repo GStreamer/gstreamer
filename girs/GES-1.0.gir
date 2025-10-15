@@ -2050,6 +2050,25 @@ ges_clip_get_top_effect_index().</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="is_moving_between_layers" c:identifier="ges_clip_is_moving_between_layers" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">Tells you if the clip is currently in the process of being moved from
+one layer to another. This is useful from the layer::clip-added and
+layer::clip-removed callbacks to know if the clip is being moved between
+layers, or is being added/removed for other reasons (like being added
+for the first time, or being actually removed).</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-clip.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">%TRUE if @clip is currently being moved between layers,
+%FALSE otherwise.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="clip" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">A #GESClip</doc>
+            <type name="Clip" c:type="GESClip*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="move_to_layer" c:identifier="ges_clip_move_to_layer">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">See ges_clip_move_to_layer_full(), which also gives an error.</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-clip.h"/>

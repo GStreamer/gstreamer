@@ -2170,10 +2170,10 @@ _ungroup (GESContainer * container, gboolean recursive)
         tmpclip = GES_CLIP (ges_timeline_element_copy (element, FALSE));
         if (layer) {
           /* Add new container to the same layer as @container */
-          ges_clip_set_moving_from_layer (tmpclip, TRUE);
+          ELEMENT_SET_FLAG (tmpclip, GES_CLIP_FREEZE_TRACK_ELEMENTS);
           /* adding to the same layer should not fail when moving */
           ges_layer_add_clip (layer, tmpclip);
-          ges_clip_set_moving_from_layer (tmpclip, FALSE);
+          ELEMENT_UNSET_FLAG (tmpclip, GES_CLIP_FREEZE_TRACK_ELEMENTS);
         }
       }
 
@@ -2822,48 +2822,31 @@ ges_clip_set_layer (GESClip * clip, GESLayer * layer)
    * it is actually the result of a move between layer (as we know
    * that it will be added to another layer right after, and this
    * is what imports here.) */
-  if (!ELEMENT_FLAG_IS_SET (clip, GES_CLIP_IS_MOVING))
+  if (!ELEMENT_FLAG_IS_SET (clip, GES_CLIP_IS_MOVING_BETWEEN_LAYERS))
     g_object_notify_by_pspec (G_OBJECT (clip), properties[PROP_LAYER]);
 }
 
 /**
- * ges_clip_set_moving_from_layer:
- * @clip: A #GESClip
- * @is_moving: %TRUE if you want to start moving @clip to another layer
- * %FALSE when you finished moving it
- *
- * Sets the clip in a moving to layer state. You might rather use the
- * ges_clip_move_to_layer function to move #GESClip-s
- * from a layer to another.
- **/
-void
-ges_clip_set_moving_from_layer (GESClip * clip, gboolean is_moving)
-{
-  g_return_if_fail (GES_IS_CLIP (clip));
-
-  if (is_moving)
-    ELEMENT_SET_FLAG (clip, GES_CLIP_IS_MOVING);
-  else
-    ELEMENT_UNSET_FLAG (clip, GES_CLIP_IS_MOVING);
-}
-
-/**
- * ges_clip_is_moving_from_layer:
+ * ges_clip_is_moving_between_layers:
  * @clip: A #GESClip
  *
- * Tells you if the clip is currently moving from a layer to another.
- * You might rather use the ges_clip_move_to_layer function to
- * move #GESClip-s from a layer to another.
+ * Tells you if the clip is currently in the process of being moved from
+ * one layer to another. This is useful from the layer::clip-added and
+ * layer::clip-removed callbacks to know if the clip is being moved between
+ * layers, or is being added/removed for other reasons (like being added
+ * for the first time, or being actually removed).
  *
- * Returns: %TRUE if @clip is currently moving from its current layer
- * %FALSE otherwize.
+ * Returns: %TRUE if @clip is currently being moved between layers,
+ * %FALSE otherwise.
+ *
+ * Since: 1.28
  **/
 gboolean
-ges_clip_is_moving_from_layer (GESClip * clip)
+ges_clip_is_moving_between_layers (GESClip * clip)
 {
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
 
-  return ELEMENT_FLAG_IS_SET (clip, GES_CLIP_IS_MOVING);
+  return ELEMENT_FLAG_IS_SET (clip, GES_CLIP_IS_MOVING_BETWEEN_LAYERS);
 }
 
 /**
@@ -2923,7 +2906,8 @@ ges_clip_move_to_layer_full (GESClip * clip, GESLayer * layer, GError ** error)
   }
 
   gst_object_ref (clip);
-  ELEMENT_SET_FLAG (clip, GES_CLIP_IS_MOVING);
+  ELEMENT_SET_FLAG (clip, GES_CLIP_FREEZE_TRACK_ELEMENTS);
+  ELEMENT_SET_FLAG (clip, GES_CLIP_IS_MOVING_BETWEEN_LAYERS);
 
   GST_DEBUG_OBJECT (clip, "moving to layer %p, priority: %d", layer,
       ges_layer_get_priority (layer));
@@ -2944,7 +2928,8 @@ ges_clip_move_to_layer_full (GESClip * clip, GESLayer * layer, GError ** error)
   }
 
 done:
-  ELEMENT_UNSET_FLAG (clip, GES_CLIP_IS_MOVING);
+  ELEMENT_UNSET_FLAG (clip, GES_CLIP_FREEZE_TRACK_ELEMENTS);
+  ELEMENT_UNSET_FLAG (clip, GES_CLIP_IS_MOVING_BETWEEN_LAYERS);
   gst_object_unref (clip);
 
   return ret && (clip->priv->layer == layer);
@@ -3580,10 +3565,10 @@ ges_clip_split_full (GESClip * clip, guint64 position, GError ** error)
   GES_TIMELINE_ELEMENT_UNSET_BEING_EDITED (clip);
 
   /* We do not want the timeline to create again TrackElement-s */
-  ges_clip_set_moving_from_layer (new_object, TRUE);
+  ELEMENT_SET_FLAG (new_object, GES_CLIP_FREEZE_TRACK_ELEMENTS);
   /* adding to the same layer should not fail when moving */
   ges_layer_add_clip (clip->priv->layer, new_object);
-  ges_clip_set_moving_from_layer (new_object, FALSE);
+  ELEMENT_UNSET_FLAG (new_object, GES_CLIP_FREEZE_TRACK_ELEMENTS);
 
   /* add to the track after the duration change so we don't overlap! */
   for (tmp = GES_CONTAINER_CHILDREN (new_object); tmp; tmp = tmp->next) {

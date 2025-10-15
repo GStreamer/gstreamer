@@ -179,6 +179,8 @@ GES_API
 gboolean  ges_clip_move_to_layer_full     (GESClip * clip,
                                            GESLayer * layer,
                                            GError ** error);
+GES_API
+gboolean  ges_clip_is_moving_between_layers (GESClip * clip);
 
 /****************************************************
  *                   Effects                        *
