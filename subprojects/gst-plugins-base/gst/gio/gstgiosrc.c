@@ -153,6 +153,7 @@ gst_gio_src_wait_for_data (GstGioBaseSrc * bsrc)
 {
   GMainContext *ctx;
   GstGioSrc *src = GST_GIO_SRC (bsrc);
+  gboolean is_growing;
 
   g_return_val_if_fail (!src->monitor, FALSE);
 
@@ -190,9 +191,12 @@ gst_gio_src_wait_for_data (GstGioBaseSrc * bsrc)
   GST_OBJECT_LOCK (src);
   src->changed = FALSE;
   src->monitoring_mainloop = g_main_loop_new (ctx, FALSE);
+  /* it's possible we've switched since the above check, verify before starting the loop */
+  is_growing = src->is_growing;
   GST_OBJECT_UNLOCK (src);
 
-  g_main_loop_run (src->monitoring_mainloop);
+  if (is_growing)
+    g_main_loop_run (src->monitoring_mainloop);
 
   g_signal_handlers_disconnect_by_func (src->monitor,
       gst_gio_src_file_changed_cb, src);
