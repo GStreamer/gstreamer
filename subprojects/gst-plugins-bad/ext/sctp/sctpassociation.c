@@ -270,6 +270,8 @@ gst_sctp_association_finalize (GObject * object)
   }
   G_UNLOCK (associations_lock);
 
+  g_mutex_clear (&self->association_mutex);
+
   G_OBJECT_CLASS (gst_sctp_association_parent_class)->finalize (object);
 }
 
