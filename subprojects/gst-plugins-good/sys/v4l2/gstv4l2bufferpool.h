@@ -122,6 +122,8 @@ gboolean            gst_v4l2_buffer_pool_orphan  (GstV4l2Object * v4l2object);
 
 void                gst_v4l2_buffer_pool_enable_resolution_change (GstV4l2BufferPool *self);
 
+void                gst_v4l2_buffer_pool_release_buffers (GstV4l2BufferPool * pool);
+
 G_END_DECLS
 
 #endif /*__GST_V4L2_BUFFER_POOL_H__ */
