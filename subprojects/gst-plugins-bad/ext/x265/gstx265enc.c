@@ -1002,6 +1002,9 @@ gst_x265_enc_init_encoder_locked (GstX265Enc * encoder)
     return FALSE;
   }
 
+  /* Get actual params x265 is using (they may be adjusted from what we set) */
+  encoder->api->encoder_parameters (encoder->x265enc, &encoder->x265param);
+
   encoder->push_header = TRUE;
   encoder->header_buffer = gst_x265_enc_get_header_buffer (encoder);
 
@@ -1272,12 +1275,11 @@ gst_x265_enc_set_latency (GstX265Enc * encoder)
   gint max_delayed_frames;
   GstClockTime latency;
 
-  /* FIXME get a real value from the encoder, this is currently not exposed */
-  if (encoder->tune > 0 && encoder->tune <= G_N_ELEMENTS (x265_tune_names) &&
-      strcmp (x265_tune_names[encoder->tune - 1], "zerolatency") == 0)
-    max_delayed_frames = 0;
-  else
-    max_delayed_frames = 5;
+  /* Get actual delay from encoder parameters (bframes + lookahead + (thread
+   * queue depth -1 )) */
+  max_delayed_frames =
+      encoder->x265param.bframes + encoder->x265param.lookaheadDepth +
+      encoder->x265param.frameNumThreads - 1;
 
   if (info->fps_n) {
     latency = gst_util_uint64_scale_ceil (GST_SECOND * info->fps_d,
@@ -1291,8 +1293,10 @@ gst_x265_enc_set_latency (GstX265Enc * encoder)
   }
 
   GST_INFO_OBJECT (encoder,
-      "Updating latency to %" GST_TIME_FORMAT " (%d frames)",
-      GST_TIME_ARGS (latency), max_delayed_frames);
+      "Updating latency to %" GST_TIME_FORMAT
+      " (%d frames) [bframes=%d, lookahead=%d, threads=%d]",
+      GST_TIME_ARGS (latency), max_delayed_frames, encoder->x265param.bframes,
+      encoder->x265param.lookaheadDepth, encoder->x265param.frameNumThreads);
 
   gst_video_encoder_set_latency (GST_VIDEO_ENCODER (encoder), latency, latency);
 }
