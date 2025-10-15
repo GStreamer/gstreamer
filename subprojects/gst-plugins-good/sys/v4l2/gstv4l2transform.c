@@ -986,6 +986,13 @@ gst_v4l2_transform_prepare_output_buffer (GstBaseTransform * trans,
 
   } while (ret == GST_V4L2_FLOW_CORRUPTED_BUFFER);
 
+  if (pool)
+    g_object_unref (pool);
+
+  pool = gst_v4l2_object_get_buffer_pool (self->v4l2output);
+  /* release the output buffer that is no longer needed */
+  gst_v4l2_buffer_pool_release_buffers (GST_V4L2_BUFFER_POOL (pool));
+
   if (ret != GST_FLOW_OK) {
     gst_buffer_unref (*outbuf);
     *outbuf = NULL;
