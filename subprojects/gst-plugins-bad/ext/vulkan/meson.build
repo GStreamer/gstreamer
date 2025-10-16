@@ -1,6 +1,7 @@
 vulkan_sources = [
   'gstvulkan.c',
   'gstvulkanelement.c',
+  'gstvkutils.c',
   'vkdownload.c',
   'vkdeviceprovider.c',
   'vksink.c',

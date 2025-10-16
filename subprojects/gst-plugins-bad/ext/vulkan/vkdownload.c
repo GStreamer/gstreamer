@@ -32,6 +32,7 @@
 #include <string.h>
 
 #include "gstvulkanelements.h"
+#include "gstvkutils.h"
 #include "vkdownload.h"
 
 GST_DEBUG_CATEGORY (gst_debug_vulkan_download);
@@ -281,25 +282,32 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
 
   for (i = 0; i < n_planes; i++) {
     VkBufferImageCopy region;
-    GstMemory *out_mem;
+    GstMemory *mem;
     GstVulkanBufferMemory *buf_mem;
     GstVulkanImageMemory *img_mem;
-    gint idx;
     const VkImageAspectFlags aspects[] = { VK_IMAGE_ASPECT_PLANE_0_BIT,
       VK_IMAGE_ASPECT_PLANE_1_BIT, VK_IMAGE_ASPECT_PLANE_2_BIT,
     };
     VkImageAspectFlags plane_aspect;
 
-    idx = MIN (i, n_mems - 1);
-    img_mem = (GstVulkanImageMemory *) gst_buffer_peek_memory (inbuf, idx);
-
-    out_mem = gst_buffer_peek_memory (*outbuf, i);
-    if (!gst_is_vulkan_buffer_memory (out_mem)) {
-      GST_WARNING_OBJECT (raw->download,
-          "Output is not a GstVulkanBufferMemory");
+    mem = gst_vulkan_buffer_peek_plane_memory (inbuf, &raw->in_info, i);
+    if (!mem)
+      goto unlock_error;
+    if (!gst_is_vulkan_image_memory (mem)) {
+      GST_WARNING_OBJECT (raw->download, "Input buffer is not a Vulkan image");
       goto unlock_error;
     }
-    buf_mem = (GstVulkanBufferMemory *) out_mem;
+    img_mem = (GstVulkanImageMemory *) mem;
+
+    mem = gst_vulkan_buffer_peek_plane_memory (*outbuf, &raw->out_info, i);
+    if (!mem)
+      goto unlock_error;
+    if (!gst_is_vulkan_buffer_memory (mem)) {
+      GST_WARNING_OBJECT (raw->download,
+          "Output buffer is not a Vulkan buffer");
+      goto unlock_error;
+    }
+    buf_mem = (GstVulkanBufferMemory *) mem;
 
     if (n_planes == n_mems)
       plane_aspect = VK_IMAGE_ASPECT_COLOR_BIT;
