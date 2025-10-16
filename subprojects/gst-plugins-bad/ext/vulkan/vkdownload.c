@@ -308,22 +308,22 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
 
     /* *INDENT-OFF* */
     region = (VkBufferImageCopy) {
-        .bufferOffset = 0,
-        .bufferRowLength = GST_VIDEO_INFO_COMP_WIDTH (&raw->in_info, i),
-        .bufferImageHeight = GST_VIDEO_INFO_COMP_HEIGHT (&raw->in_info, i),
-        .imageSubresource = {
-             /* XXX: each plane is a buffer */
-          .aspectMask = plane_aspect,
-            .mipLevel = 0,
-            .baseArrayLayer = 0,
-            .layerCount = 1,
-        },
-        .imageOffset = { .x = 0, .y = 0, .z = 0, },
-        .imageExtent = {
-            .width = GST_VIDEO_INFO_COMP_WIDTH (&raw->out_info, i),
-            .height = GST_VIDEO_INFO_COMP_HEIGHT (&raw->out_info, i),
-            .depth = 1,
-        }
+      .bufferOffset = 0,
+      .bufferRowLength = GST_VIDEO_INFO_COMP_WIDTH (&raw->in_info, i),
+      .bufferImageHeight = GST_VIDEO_INFO_COMP_HEIGHT (&raw->in_info, i),
+      .imageSubresource = {
+        /* XXX: each plane is a buffer */
+        .aspectMask = plane_aspect,
+        .mipLevel = 0,
+        .baseArrayLayer = 0,
+        .layerCount = 1,
+      },
+      .imageOffset = { .x = 0, .y = 0, .z = 0, },
+      .imageExtent = {
+        .width = GST_VIDEO_INFO_COMP_WIDTH (&raw->out_info, i),
+        .height = GST_VIDEO_INFO_COMP_HEIGHT (&raw->out_info, i),
+        .depth = 1,
+      }
     };
     /* *INDENT-ON* */
 
