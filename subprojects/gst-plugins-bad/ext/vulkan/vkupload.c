@@ -278,10 +278,10 @@ _raw_to_buffer_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
       != GST_FLOW_OK)
     goto out;
 
-  ret = _copy_frames (&raw->in_info, inbuf, *outbuf);
-  if (!ret) {
+  if (!_copy_frames (&raw->in_info, inbuf, *outbuf)) {
     GST_ELEMENT_ERROR (raw->upload, RESOURCE, NOT_FOUND,
         ("%s", "Failed to map input buffer"), NULL);
+    ret = GST_FLOW_ERROR;
   }
 
 out:
