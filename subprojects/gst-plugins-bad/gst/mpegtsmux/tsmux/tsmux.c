@@ -1685,6 +1685,7 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
 
   /* Reset all dynamic flags */
   stream->pi.flags &= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
+  pi->packet_start_unit_indicator = FALSE;
 
   return res;
 
