@@ -490,22 +490,23 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
 
     /* *INDENT-OFF* */
     region = (VkBufferImageCopy) {
-        .bufferOffset = 0,
-        .bufferRowLength = GST_VIDEO_INFO_COMP_WIDTH (&raw->in_info, i),
-        .bufferImageHeight = GST_VIDEO_INFO_COMP_HEIGHT (&raw->in_info, i),
-        .imageSubresource = {
-            .aspectMask = plane_aspect,
-            .mipLevel = 0,
-            .baseArrayLayer = 0,
-            .layerCount = 1,
-        },
-        .imageOffset = { .x = 0, .y = 0, .z = 0, },
-        .imageExtent = {
-            .width = GST_VIDEO_INFO_COMP_WIDTH (&raw->out_info, i),
-            .height = GST_VIDEO_INFO_COMP_HEIGHT (&raw->out_info, i),
-            .depth = 1,
-        }
+      .bufferOffset = 0,
+      .bufferRowLength = GST_VIDEO_INFO_COMP_WIDTH (&raw->in_info, i),
+      .bufferImageHeight = GST_VIDEO_INFO_COMP_HEIGHT (&raw->in_info, i),
+      .imageSubresource = {
+        .aspectMask = plane_aspect,
+        .mipLevel = 0,
+        .baseArrayLayer = 0,
+        .layerCount = 1,
+      },
+      .imageOffset = { .x = 0, .y = 0, .z = 0, },
+      .imageExtent = {
+        .width = GST_VIDEO_INFO_COMP_WIDTH (&raw->out_info, i),
+        .height = GST_VIDEO_INFO_COMP_HEIGHT (&raw->out_info, i),
+        .depth = 1,
+      }
     };
+    /* *INDENT-ON* */
 
     offset = out_vmeta ? out_vmeta->offset[i]
         : GST_VIDEO_INFO_PLANE_OFFSET (&raw->out_info, i);
@@ -804,7 +805,8 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
       buf_mem = (GstVulkanBufferMemory *) in_mem;
     }
 
-    offset = out_vmeta ? out_vmeta->offset[i] : GST_VIDEO_INFO_PLANE_OFFSET (&raw->out_info, i);
+    offset = out_vmeta ?
+        out_vmeta->offset[i] : GST_VIDEO_INFO_PLANE_OFFSET (&raw->out_info, i);
     if (!gst_buffer_find_memory (*outbuf, offset, 1, &idx, &len, &skip)) {
       GST_WARNING_OBJECT (raw->upload,
           "Output buffer plane %u, no memory at offset %" G_GSIZE_FORMAT, i,
@@ -826,21 +828,21 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
 
     /* *INDENT-OFF* */
     region = (VkBufferImageCopy) {
-        .bufferOffset = 0,
-        .bufferRowLength = GST_VIDEO_INFO_COMP_WIDTH (&raw->in_info, i),
-        .bufferImageHeight = GST_VIDEO_INFO_COMP_HEIGHT (&raw->in_info, i),
-        .imageSubresource = {
-            .aspectMask = plane_aspect,
-            .mipLevel = 0,
-            .baseArrayLayer = 0,
-            .layerCount = 1,
-        },
-        .imageOffset = { .x = 0, .y = 0, .z = 0, },
-        .imageExtent = {
-            .width = GST_VIDEO_INFO_COMP_WIDTH (&raw->out_info, i),
-            .height = GST_VIDEO_INFO_COMP_HEIGHT (&raw->out_info, i),
-            .depth = 1,
-        }
+      .bufferOffset = 0,
+      .bufferRowLength = GST_VIDEO_INFO_COMP_WIDTH (&raw->in_info, i),
+      .bufferImageHeight = GST_VIDEO_INFO_COMP_HEIGHT (&raw->in_info, i),
+      .imageSubresource = {
+        .aspectMask = plane_aspect,
+        .mipLevel = 0,
+        .baseArrayLayer = 0,
+        .layerCount = 1,
+      },
+      .imageOffset = { .x = 0, .y = 0, .z = 0, },
+      .imageExtent = {
+        .width = GST_VIDEO_INFO_COMP_WIDTH (&raw->out_info, i),
+        .height = GST_VIDEO_INFO_COMP_HEIGHT (&raw->out_info, i),
+        .depth = 1,
+      }
     };
     /* *INDENT-ON* */
 
