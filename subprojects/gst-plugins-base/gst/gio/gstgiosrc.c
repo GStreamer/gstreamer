@@ -452,7 +452,9 @@ gst_gio_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_GROWING_FILE:
     {
+      GST_OBJECT_LOCK (GST_OBJECT (src));
       g_value_set_boolean (value, src->is_growing);
+      GST_OBJECT_UNLOCK (GST_OBJECT (src));
       break;
     }
     default:
