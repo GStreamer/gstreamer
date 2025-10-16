@@ -1176,39 +1176,54 @@ static gboolean
 picture_changed (GstFFMpegVidDec * ffmpegdec, AVFrame * picture,
     gboolean one_field)
 {
-  gint pic_field_order = 0;
+  gboolean interlace_field_same = TRUE;
 
-  if (one_field) {
-    pic_field_order = ffmpegdec->pic_field_order;
+  if (ffmpegdec->input_state
+      && GST_VIDEO_INFO_INTERLACE_MODE (&ffmpegdec->input_state->info) ==
+      GST_VIDEO_INTERLACE_MODE_MIXED) {
+    GST_DEBUG_OBJECT (ffmpegdec,
+        "Upstream states mixed interlace mode, ignore interlace changes");
+  } else {
+    gint pic_field_order = 0;
+    if (one_field) {
+      pic_field_order = ffmpegdec->pic_field_order;
 #if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
-  } else if (picture->flags & AV_FRAME_FLAG_INTERLACED) {
+    } else if (picture->flags & AV_FRAME_FLAG_INTERLACED) {
 #else
-  } else if (picture->interlaced_frame) {
+    } else if (picture->interlaced_frame) {
 #endif
-    if (picture->repeat_pict)
-      pic_field_order |= GST_VIDEO_BUFFER_FLAG_RFF;
+      if (picture->repeat_pict)
+        pic_field_order |= GST_VIDEO_BUFFER_FLAG_RFF;
 #if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
-    if (picture->flags & AV_FRAME_FLAG_TOP_FIELD_FIRST)
+      if (picture->flags & AV_FRAME_FLAG_TOP_FIELD_FIRST)
 #else
-    if (picture->top_field_first)
+      if (picture->top_field_first)
 #endif
-      pic_field_order |= GST_VIDEO_BUFFER_FLAG_TFF;
+        pic_field_order |= GST_VIDEO_BUFFER_FLAG_TFF;
+    }
+    interlace_field_same =
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
+        ffmpegdec->pic_interlaced == (picture->flags & AV_FRAME_FLAG_INTERLACED)
+#else
+        ffmpegdec->pic_interlaced == picture->interlaced_frame
+#endif
+        && ffmpegdec->pic_field_order == pic_field_order;
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
+    GST_DEBUG_OBJECT (ffmpegdec, "NEW pic_interlaced:%d frame_interlaced:%d",
+        ffmpegdec->pic_interlaced, (picture->flags & AV_FRAME_FLAG_INTERLACED));
+#else
+    GST_DEBUG_OBJECT (ffmpegdec, "OLD pic_interlaced:%d frame_interlaced:%d"
+        ffmpegdec->pic_interlaced, picture->interlaced_frame);
+#endif
   }
-
   return !(ffmpegdec->pic_width == picture->width
       && ffmpegdec->pic_height == picture->height
       && ffmpegdec->pic_pix_fmt == picture->format
       && ffmpegdec->pic_par_n == picture->sample_aspect_ratio.num
       && ffmpegdec->pic_par_d == picture->sample_aspect_ratio.den
-#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
-      && ffmpegdec->pic_interlaced ==
-      (picture->flags & AV_FRAME_FLAG_INTERLACED)
-#else
-      && ffmpegdec->pic_interlaced == picture->interlaced_frame
-#endif
-      && ffmpegdec->pic_field_order == pic_field_order
       && ffmpegdec->cur_multiview_mode == ffmpegdec->picture_multiview_mode
-      && ffmpegdec->cur_multiview_flags == ffmpegdec->picture_multiview_flags);
+      && ffmpegdec->cur_multiview_flags == ffmpegdec->picture_multiview_flags
+      && interlace_field_same);
 }
 
 static gboolean
