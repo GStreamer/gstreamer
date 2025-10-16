@@ -3257,7 +3257,12 @@ gst_deinterlace_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       break;
     }
     case GST_QUERY_ALLOCATION:
-      if (self->passthrough)
+      /* If the input is mixed interlacing, there is no guaranteed whether we
+       * will need to actually deinterlace the content or not. To be on the safe
+       * side, forward the allocation query. */
+      if (self->passthrough
+          || (GST_VIDEO_INFO_INTERLACE_MODE (&self->vinfo) ==
+              GST_VIDEO_INTERLACE_MODE_MIXED))
         res = gst_pad_peer_query (self->srcpad, query);
       else
         res = gst_deinterlace_propose_allocation (self, query);
