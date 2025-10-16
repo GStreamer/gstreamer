@@ -561,6 +561,7 @@ gst_rist_sink_init (GstRistSink * sink)
   GstPadTemplate *pad_template;
 
   sink->rtpext = gst_element_factory_make ("ristrtpext", "ristrtpext");
+  gst_object_ref_sink (sink->rtpext);
 
   g_mutex_init (&sink->bonds_lock);
   sink->bonds = g_ptr_array_new ();
