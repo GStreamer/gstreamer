@@ -54,6 +54,7 @@ BASH_COMPLETION_PATHS += [SCRIPTDIR + '/subprojects/gst-devtools/validate/data/b
 
 UPDATED_ENV = dict()
 
+
 def str_to_bool(value: Any) -> bool:
     """Return whether the provided string (or any value really) represents true. Otherwise false.
     Just like plugin server stringToBoolean.
@@ -83,7 +84,7 @@ def stringify(o):
 
 def set_env_var(env, var, value, options):
     if options.only_environment:
-       UPDATED_ENV[var] = value
+        UPDATED_ENV[var] = value
 
     env[var] = value
 
@@ -274,6 +275,9 @@ def get_subprocess_env(options, gst_version):
         options)
     set_env_var(env, "GST_VALIDATE_PLUGIN_PATH", os.path.normpath(
         "%s/subprojects/gst-devtools/validate/plugins" % options.builddir),
+        options)
+    prepend_env_var(env, "GST_VALIDATE_PLUGIN_PATH", os.path.normpath(
+        "%s/subprojects/gst-plugins-rs/validate-plugins" % options.builddir),
         options)
     prepend_env_var(env, "GST_VALIDATE_APPS_DIR", os.path.normpath(
         "%s/subprojects/gst-editing-services/tests/validate" % SCRIPTDIR),
