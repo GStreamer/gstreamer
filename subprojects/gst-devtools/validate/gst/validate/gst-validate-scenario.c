@@ -6689,7 +6689,6 @@ check_last_sample_internal (GstValidateScenario * scenario,
   GstSample *sample;
   gchar *sum;
   GstBuffer *buffer;
-  const gchar *target_sum;
   guint64 frame_number;
   GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
   GstVideoTimeCodeMeta *tc_meta;
@@ -6707,9 +6706,13 @@ check_last_sample_internal (GstValidateScenario * scenario,
   }
 
   buffer = gst_sample_get_buffer (sample);
-  target_sum = gst_structure_get_string (action->structure, "checksum");
-  if (target_sum) {
+
+  /* Check for checksum field (can be string or GstValueList) */
+  gchar **checksums_values =
+      gst_validate_utils_get_strv (action->structure, "checksum");
+  if (checksums_values) {
     GstMapInfo map;
+    gboolean checksum_match = FALSE;
 
     if (!gst_buffer_map (buffer, &map, GST_MAP_READ)) {
       GST_VALIDATE_REPORT_ACTION (scenario, action,
@@ -6721,11 +6724,23 @@ check_last_sample_internal (GstValidateScenario * scenario,
     sum = g_compute_checksum_for_data (G_CHECKSUM_SHA1, map.data, map.size);
     gst_buffer_unmap (buffer, &map);
 
-    if (g_strcmp0 (sum, target_sum)) {
+    /* Handle both single string and GstValueList */
+    for (gint i = 0; checksums_values[i]; i++) {
+      if (g_strcmp0 (sum, checksums_values[i]) == 0) {
+        checksum_match = TRUE;
+        break;
+      }
+    }
+
+    if (!checksum_match) {
+      gchar *checksums_str =
+          gst_value_serialize (gst_structure_get_value (action->structure,
+              "checksum"));
       GST_VALIDATE_REPORT_ACTION (scenario, action,
           SCENARIO_ACTION_EXECUTION_ERROR,
-          "Last buffer checksum '%s' is different than the expected one: '%s'",
-          sum, target_sum);
+          "Last buffer checksum '%s' does not match expected checksum(s): %s",
+          sum, checksums_str);
+      g_free (checksums_str);
 
       res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
     }

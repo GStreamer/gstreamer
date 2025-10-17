@@ -1503,16 +1503,23 @@ gst_validate_utils_get_strv (GstStructure * str, const gchar * fieldname)
   const GValue *value;
   gchar **parsed_list;
   guint i, size;
+  GValue parsed_array_value = { 0, };
 
   value = gst_structure_get_value (str, fieldname);
   if (!value)
     return NULL;
 
   if (G_VALUE_HOLDS_STRING (value)) {
-    parsed_list = g_new0 (gchar *, 2);
-    parsed_list[0] = g_value_dup_string (value);
+    g_value_init (&parsed_array_value, GST_TYPE_LIST);
+    if (!gst_value_deserialize (&parsed_array_value,
+            g_value_get_string (value))) {
+      parsed_list = g_new0 (gchar *, 2);
+      parsed_list[0] = g_value_dup_string (value);
 
-    return parsed_list;
+      return parsed_list;
+    } else {
+      value = &parsed_array_value;
+    }
   }
 
   if (!GST_VALUE_HOLDS_LIST (value)) {
@@ -1528,6 +1535,9 @@ gst_validate_utils_get_strv (GstStructure * str, const gchar * fieldname)
   for (i = 0; i < size; i++)
     parsed_list[i] = g_value_dup_string (gst_value_list_get_value (value, i));
   parsed_list[i] = NULL;
+  if (value == &parsed_array_value) {
+    g_value_reset (&parsed_array_value);
+  }
   return parsed_list;
 }
 
