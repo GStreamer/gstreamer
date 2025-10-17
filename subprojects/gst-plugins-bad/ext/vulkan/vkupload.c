@@ -461,6 +461,7 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
       VK_IMAGE_ASPECT_PLANE_1_BIT, VK_IMAGE_ASPECT_PLANE_2_BIT,
     };
     VkImageAspectFlags plane_aspect;
+    guint32 width, height, row, img_h;
 
     mem = gst_vulkan_buffer_peek_plane_memory (inbuf, &raw->in_info, i);
     if (!mem)
@@ -476,11 +477,14 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     else
       plane_aspect = aspects[i];
 
+    gst_vulkan_buffer_get_plane_dimensions (inbuf, &raw->in_info, i, &width,
+        &height, &row, &img_h);
+
     /* *INDENT-OFF* */
     region = (VkBufferImageCopy) {
       .bufferOffset = 0,
-      .bufferRowLength = GST_VIDEO_INFO_COMP_WIDTH (&raw->in_info, i),
-      .bufferImageHeight = GST_VIDEO_INFO_COMP_HEIGHT (&raw->in_info, i),
+      .bufferRowLength = row,
+      .bufferImageHeight = img_h,
       .imageSubresource = {
         .aspectMask = plane_aspect,
         .mipLevel = 0,
@@ -489,8 +493,8 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
       },
       .imageOffset = { .x = 0, .y = 0, .z = 0, },
       .imageExtent = {
-        .width = GST_VIDEO_INFO_COMP_WIDTH (&raw->out_info, i),
-        .height = GST_VIDEO_INFO_COMP_HEIGHT (&raw->out_info, i),
+        .width = width,
+        .height = height,
         .depth = 1,
       }
     };
@@ -727,6 +731,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
       VK_IMAGE_ASPECT_PLANE_1_BIT, VK_IMAGE_ASPECT_PLANE_2_BIT,
     };
     VkImageAspectFlags plane_aspect;
+    guint32 width, height, row, img_h;
 
     mem = gst_vulkan_buffer_peek_plane_memory (inbuf, &raw->in_info, i);
     if (!mem)
@@ -788,11 +793,14 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     else
       plane_aspect = aspects[i];
 
+    gst_vulkan_buffer_get_plane_dimensions (inbuf, &raw->in_info, i, &width,
+        &height, &row, &img_h);
+
     /* *INDENT-OFF* */
     region = (VkBufferImageCopy) {
       .bufferOffset = 0,
-      .bufferRowLength = GST_VIDEO_INFO_COMP_WIDTH (&raw->in_info, i),
-      .bufferImageHeight = GST_VIDEO_INFO_COMP_HEIGHT (&raw->in_info, i),
+      .bufferRowLength = row,
+      .bufferImageHeight = img_h,
       .imageSubresource = {
         .aspectMask = plane_aspect,
         .mipLevel = 0,
@@ -801,8 +809,8 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
       },
       .imageOffset = { .x = 0, .y = 0, .z = 0, },
       .imageExtent = {
-        .width = GST_VIDEO_INFO_COMP_WIDTH (&raw->out_info, i),
-        .height = GST_VIDEO_INFO_COMP_HEIGHT (&raw->out_info, i),
+        .width = width,
+        .height = height,
         .depth = 1,
       }
     };

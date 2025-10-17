@@ -37,4 +37,13 @@ GstMemory *             _gst_vulkan_buffer_peek_plane_memory    (GstBuffer * buf
                                                                  const GstVideoInfo * vinfo,
                                                                  gint plane,
                                                                  GstDebugCategory * cat);
+
+void                    gst_vulkan_buffer_get_plane_dimensions  (GstBuffer * buffer,
+                                                                 const GstVideoInfo * info,
+                                                                 gint plane,
+                                                                 guint32 * width,
+                                                                 guint32 * height,
+                                                                 guint32 * row_length,
+                                                                 guint32 * img_height);
+
 G_END_DECLS
