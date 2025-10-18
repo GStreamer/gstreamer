@@ -271,6 +271,7 @@ gchar * gst_validate_report_get_trace (GstValidateReport * report);
 GST_VALIDATE_API
 gchar * gst_validate_report_get_dotfile_name (GstValidateReport * report);
 
+GST_VALIDATE_API
 void gst_validate_report_add_message (GstValidateReport *report,
     const gchar *message);
 
