@@ -271,6 +271,7 @@ gchar * gst_validate_report_get_trace (GstValidateReport * report) G_GNUC_WARN_U
 GST_VALIDATE_API
 gchar * gst_validate_report_get_dotfile_name (GstValidateReport * report) G_GNUC_WARN_UNUSED_RESULT;
 
+GST_VALIDATE_API
 void gst_validate_report_add_message (GstValidateReport *report,
     const gchar *message);
 
