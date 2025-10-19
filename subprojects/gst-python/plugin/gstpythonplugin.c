@@ -153,6 +153,7 @@ gst_python_load_directory (GstPlugin * plugin, const gchar * path)
       g_free (name);
     }
   }
+  g_dir_close (dir);
   return TRUE;
 }
 
