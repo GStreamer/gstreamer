@@ -11061,7 +11061,7 @@ use tile_info[] array instead.</doc>
         </array>
       </field>
       <method name="component" c:identifier="gst_video_format_info_component" version="1.18">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.c">Fill @components with the number of all the components packed in plane @p
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.c">Fill @components with the number of all the components packed in @plane
 for the format @info. A value of -1 in @components indicates that no more
 components are packed in the plane.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h"/>
