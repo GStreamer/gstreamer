@@ -1,0 +1,30 @@
+From d5f6db4100fedb01f62909ee342a8ccaa1274431 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lo=C3=AFc=20Le=20Page?= <llepage@igalia.com>
+Date: Mon, 20 Oct 2025 13:31:54 +0200
+Subject: [PATCH] agent: fix parsing an incomplete TCP ICE candidate
+
+If a TCP ICE candidate mline in a SDP doesn't specify the `tcptype`
+field, it was crashing the agent because of the non-null assert in
+`g_ascii_strcasecmp`. The patch is just ignoring an incomplete TCP
+candidate just like the other malformed candidates.
+---
+ agent/agent.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/agent/agent.c b/agent/agent.c
+index 0d1f1814..7d22e22b 100644
+--- a/agent/agent.c
++++ b/agent/agent.c
+@@ -7613,6 +7613,9 @@ nice_agent_parse_remote_candidate_sdp (NiceAgent *agent, guint stream_id,
+   else if (g_ascii_strcasecmp (transport, "TCP-PASS") == 0)
+     ctransport = NICE_CANDIDATE_TRANSPORT_TCP_PASSIVE;
+   else if (g_ascii_strcasecmp (transport, "TCP") == 0) {
++    if (tcptype == NULL)
++      goto done;
++
+     if (g_ascii_strcasecmp (tcptype, "so") == 0)
+       ctransport = NICE_CANDIDATE_TRANSPORT_TCP_SO;
+     else if (g_ascii_strcasecmp (tcptype, "active") == 0)
+-- 
+2.43.0
+
