@@ -615,6 +615,8 @@ gst_rtp_vp9_depay_packet_lost (GstRTPBaseDepayload * depay, GstEvent * event)
   GstRtpVP9Depay *self = GST_RTP_VP9_DEPAY (depay);
   const GstStructure *s;
   gboolean might_have_been_fec;
+  gboolean unref_event = FALSE;
+  gboolean ret;
 
   s = gst_event_get_structure (event);
 
@@ -627,14 +629,26 @@ gst_rtp_vp9_depay_packet_lost (GstRTPBaseDepayload * depay, GstEvent * event)
       return TRUE;
     }
   } else if (self->last_picture_id != PICTURE_ID_NONE) {
-    GstStructure *s = gst_event_writable_structure (self->last_lost_event);
+    GstStructure *s;
+
+    if (!gst_event_is_writable (event)) {
+      event = gst_event_copy (event);
+      unref_event = TRUE;
+    }
+
+    s = gst_event_writable_structure (event);
 
     /* We are currently processing a picture, let's make sure the
      * base depayloader doesn't drop this lost event */
     gst_structure_remove_field (s, "might-have-been-fec");
   }
 
-  return
+  ret =
       GST_RTP_BASE_DEPAYLOAD_CLASS
       (gst_rtp_vp9_depay_parent_class)->packet_lost (depay, event);
+
+  if (unref_event)
+    gst_event_unref (event);
+
+  return ret;
 }
