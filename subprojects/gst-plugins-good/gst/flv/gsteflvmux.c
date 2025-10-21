@@ -70,6 +70,14 @@ static GstStaticPadTemplate audiosink_templ =
         "audio/mpeg, mpegversion = (int) { 4, 2 }, stream-format = (string) raw; ")
     );
 
+static GstStaticPadTemplate videosink_templ =
+    GST_STATIC_PAD_TEMPLATE ("video_%u",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS ("video/x-h264, stream-format=avc;"
+        "video/x-h265, stream-format=hvc1;")
+    );
+
 static void
 gst_eflv_mux_class_init (GstEFlvMuxClass * klass)
 {
@@ -78,6 +86,8 @@ gst_eflv_mux_class_init (GstEFlvMuxClass * klass)
 
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
       &audiosink_templ, GST_TYPE_FLV_MUX_PAD);
+  gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
+      &videosink_templ, GST_TYPE_FLV_MUX_PAD);
 
   gst_element_class_set_static_metadata (gstelement_class, "Enhanced FLV muxer",
       "Codec/Muxer",

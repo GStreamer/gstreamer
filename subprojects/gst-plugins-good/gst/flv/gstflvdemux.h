@@ -151,6 +151,7 @@ typedef struct _GstFlvDemuxVideoTrackInfo
   guint32 par_y;
   gdouble framerate;
   gboolean got_par;
+  gboolean needs_renegotiation;
 } GstFlvDemuxVideoTrackInfo;
 
 typedef struct _GstFlvDemuxTrack
@@ -161,7 +162,7 @@ typedef struct _GstFlvDemuxTrack
     GstFlvDemuxVideoTrackInfo video;
   } info;
   GstPad *pad;
-  guint16 codec_tag;
+  guint32 codec_tag;
   guint64 offset;
   GstBuffer * codec_data;
   GstClockTime start;

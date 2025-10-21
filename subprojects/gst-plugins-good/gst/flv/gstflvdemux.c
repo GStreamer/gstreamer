@@ -38,6 +38,7 @@
 #include "gstflvdemux.h"
 #include "gstflvmux.h"
 
+#include <math.h>
 #include <string.h>
 #include <stdio.h>
 #include <gst/base/gstbytereader.h>
@@ -68,6 +69,22 @@ GST_DEBUG_CATEGORY_EXTERN (flvdemux_debug);
         audio/x-mulaw, channels = (int) { 1, 2 }, rate = (int) 8000; \
         audio/x-speex, channels = (int) 1, rate = (int) 16000;"
 
+#define LEGACY_FLV_VIDEO_CAPS "video/x-flash-video, flvversion=(int) 1; \
+        video/x-flash-screen; \
+        video/x-vp6-flash; " "video/x-vp6-alpha; \
+        video/x-h264, stream-format=avc;"
+
+#define FLV_ENHANCED_VIDEO_CAPS "video/x-h265, stream-format=(string)hvc1, alignment=(string)au;"
+
+// The following three are non-standard but apparently used, see in ffmpeg
+
+// see https://git.videolan.org/?p=ffmpeg.git;a=blob;f=libavformat/flvdec.c;h=2bf1e059e1cbeeb79e4af9542da23f4560e1cf59;hb=b18d6c58000beed872d6bb1fe7d0fbe75ae26aef#l254
+#define FFMPEG_H263 8
+// see https://git.videolan.org/?p=ffmpeg.git;a=blob;f=libavformat/flvdec.c;h=2bf1e059e1cbeeb79e4af9542da23f4560e1cf59;hb=b18d6c58000beed872d6bb1fe7d0fbe75ae26aef#l282
+#define FFMPEG_MPEG4 9
+// introduced in https://git.videolan.org/?p=ffmpeg.git;a=commitdiff;h=b76053d8bf322b197a9d07bd27bbdad14fd5bc15
+#define FFMPEG_H265_HVC1 12
+
 static GstStaticPadTemplate flv_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -94,13 +111,22 @@ GST_STATIC_PAD_TEMPLATE ("audio_%u",
     );
 
 static GstStaticPadTemplate video_src_template =
-    GST_STATIC_PAD_TEMPLATE ("video",
+GST_STATIC_PAD_TEMPLATE ("video",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS ("video/x-flash-video, flvversion=(int) 1; "
-        "video/x-flash-screen; "
-        "video/x-vp6-flash; " "video/x-vp6-alpha; "
-        "video/x-h264, stream-format=avc;")
+    GST_STATIC_CAPS (LEGACY_FLV_VIDEO_CAPS FLV_ENHANCED_VIDEO_CAPS)
+    );
+
+/**
+ * GstFlvDemux!video_%u:
+ *
+ * Since: 1.28
+ */
+static GstStaticPadTemplate multi_video_src_template =
+GST_STATIC_PAD_TEMPLATE ("video_%u",
+    GST_PAD_SRC,
+    GST_PAD_SOMETIMES,
+    GST_STATIC_CAPS (LEGACY_FLV_VIDEO_CAPS FLV_ENHANCED_VIDEO_CAPS)
     );
 
 #define gst_flv_demux_parent_class parent_class
@@ -469,23 +495,38 @@ gst_flv_demux_parse_metadata_item (GstFlvDemux * demux, GstByteReader * reader,
         GstFlvDemuxTrack *track =
             gst_flv_demux_get_track (demux, track_id, FALSE);
         track->info.video.got_par = TRUE;
+        track->info.video.needs_renegotiation =
+            track->info.video.needs_renegotiation
+            || (guint32) d != track->info.video.par_x;
         track->info.video.par_x = d;
       } else if (!strcmp (tag_name, "AspectRatioY")) {
         GstFlvDemuxTrack *track =
             gst_flv_demux_get_track (demux, track_id, FALSE);
         track->info.video.got_par = TRUE;
+        track->info.video.needs_renegotiation =
+            track->info.video.needs_renegotiation
+            || (guint32) d != track->info.video.par_y;
         track->info.video.par_y = d;
       } else if (!strcmp (tag_name, "width")) {
         GstFlvDemuxTrack *track =
             gst_flv_demux_get_track (demux, track_id, FALSE);
+        track->info.video.needs_renegotiation =
+            track->info.video.needs_renegotiation
+            || (guint32) d != track->info.video.w;
         track->info.video.w = d;
       } else if (!strcmp (tag_name, "height")) {
         GstFlvDemuxTrack *track =
             gst_flv_demux_get_track (demux, track_id, FALSE);
+        track->info.video.needs_renegotiation =
+            track->info.video.needs_renegotiation
+            || (guint32) d != track->info.video.h;
         track->info.video.h = d;
       } else if (!strcmp (tag_name, "framerate")) {
         GstFlvDemuxTrack *track =
             gst_flv_demux_get_track (demux, track_id, FALSE);
+        track->info.video.needs_renegotiation =
+            track->info.video.needs_renegotiation
+            || fabs (track->info.video.framerate - d) < 1e-5;
         track->info.video.framerate = d;
       } else if (!strcmp (tag_name, "channels")) {
         GstFlvDemuxTrack *track =
@@ -513,6 +554,13 @@ gst_flv_demux_parse_metadata_item (GstFlvDemux * demux, GstByteReader * reader,
           track->tags = gst_tag_list_new_empty ();
         gst_tag_list_add (track->tags, GST_TAG_MERGE_REPLACE,
             GST_TAG_NOMINAL_BITRATE, track->bitrate, NULL);
+      } else if (!strcmp (tag_name, "videocodecid")) {
+        GstFlvDemuxTrack *track =
+            gst_flv_demux_get_track (demux, track_id, FALSE);
+        track->info.video.needs_renegotiation =
+            track->info.video.needs_renegotiation
+            || (guint32) d != track->codec_tag;
+        track->codec_tag = d;
       } else {
         GST_INFO_OBJECT (demux, "Tag \'%s\' not handled", tag_name);
       }
@@ -1437,6 +1485,12 @@ _get_codec_tag (GstByteReader * reader, guint32 * codec_tag)
       case GST_MAKE_FOURCC ('.', 'm', 'p', '3'):
         *codec_tag = MP3;
         break;
+      case GST_MAKE_FOURCC ('a', 'v', 'c', '1'):
+        *codec_tag = ENHANCED_H264_AVC1;
+        break;
+      case GST_MAKE_FOURCC ('h', 'v', 'c', '1'):
+        *codec_tag = ENHANCED_H265_HVC1;
+        break;
       default:
         *codec_tag = FOURCC_INVALID;
         break;
@@ -1555,7 +1609,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
       GST_INFO_OBJECT (demux,
           "got a ModEx packet; not handling it at the moment");
 
-      if (!gst_byte_reader_skip (&reader, mod_ex_data_size + 1)) {
+      if (!gst_byte_reader_skip (&reader, mod_ex_data_size)) {
         GST_ERROR_OBJECT (demux, "failed to skip modex data size");
         goto beach;
       }
@@ -1975,21 +2029,22 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag,
 
   /* Generate caps for that pad */
   switch (codec_tag) {
-    case 2:
+    case FLASH_VIDEO:
       caps =
           gst_caps_new_simple ("video/x-flash-video", "flvversion", G_TYPE_INT,
           1, NULL);
       break;
-    case 3:
+    case FLASH_SCREEN:
       caps = gst_caps_new_empty_simple ("video/x-flash-screen");
       break;
-    case 4:
+    case VP6_FLASH:
       caps = gst_caps_new_empty_simple ("video/x-vp6-flash");
       break;
-    case 5:
+    case VP6_ALPHA:
       caps = gst_caps_new_empty_simple ("video/x-vp6-alpha");
       break;
-    case 7:
+    case ENHANCED_H264_AVC1:
+    case H264_AVC1:
       if (!track->codec_data) {
         GST_DEBUG_OBJECT (demux, "don't have h264 codec data yet");
         ret = TRUE;
@@ -2003,13 +2058,24 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag,
        * https://git.videolan.org/?p=ffmpeg.git;a=blob;f=libavformat/flvdec.c;h=2bf1e059e1cbeeb79e4af9542da23f4560e1cf59;hb=b18d6c58000beed872d6bb1fe7d0fbe75ae26aef#l254
        * https://git.videolan.org/?p=ffmpeg.git;a=blob;f=libavformat/flvdec.c;h=2bf1e059e1cbeeb79e4af9542da23f4560e1cf59;hb=b18d6c58000beed872d6bb1fe7d0fbe75ae26aef#l282
        */
-    case 8:
+    case FFMPEG_H263:
       caps = gst_caps_new_empty_simple ("video/x-h263");
       break;
-    case 9:
+    case FFMPEG_MPEG4:
       caps =
           gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 4,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+      break;
+    case FFMPEG_H265_HVC1:
+    case ENHANCED_H265_HVC1:
+      if (!track->codec_data) {
+        GST_DEBUG_OBJECT (demux, "don't have h265 codec data yet");
+        ret = TRUE;
+        goto done;
+      }
+      caps = gst_caps_new_simple ("video/x-h265",
+          "stream-format", G_TYPE_STRING, "hvc1",
+          "alignment", G_TYPE_STRING, "au", NULL);
       break;
     default:
       GST_WARNING_OBJECT (demux, "unsupported video codec tag %u", codec_tag);
@@ -2119,6 +2185,7 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag,
   if (old_caps)
     gst_caps_unref (old_caps);
 
+  track->info.video.needs_renegotiation = FALSE;
 done:
   if (G_LIKELY (ret)) {
     /* Store the caps we have set */
@@ -2148,16 +2215,20 @@ static GstFlowReturn
 gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  guint32 dts = 0, codec_data = 1, dts_ext = 0;
+  guint32 dts = 0, codec_data = 1;
   gint32 cts = 0;
-  gboolean keyframe = FALSE;
-  guint8 flags = 0, codec_tag = 0;
+  guint8 dts_ext = 0;
+  gboolean keyframe = FALSE, ext_header = FALSE;
+  guint8 flags = 0;
+  guint32 codec_tag = 0;
+  GstEFlvVideoPacketType packet_type = 0;
+  GstFlvVideoFrameType frame_type;
   GstBuffer *outbuf;
   GstMapInfo map;
   guint8 *data;
-  /* TODO: track id is always -1 at the moment, will be useful when the multitrack video capability is added */
   gint16 track_id = -1;
   GstFlvDemuxTrack *track = NULL;
+  GstByteReader reader;
 
   g_return_val_if_fail (gst_buffer_get_size (buffer) == demux->tag_size,
       GST_FLOW_ERROR);
@@ -2185,66 +2256,240 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   data = map.data;
 
+  gst_byte_reader_init (&reader, data, map.size);
+
   /* Grab information about video tag */
-  dts = GST_READ_UINT24_BE (data);
+  if (!gst_byte_reader_get_uint24_be (&reader, &dts)) {
+    GST_ERROR_OBJECT (demux, "failed to parse dts");
+    goto beach;
+  }
   /* read the dts extension to 32 bits integer */
-  dts_ext = GST_READ_UINT8 (data + 3);
+  if (!gst_byte_reader_get_uint8 (&reader, &dts_ext)) {
+    GST_ERROR_OBJECT (demux, "failed to parse dts ex");
+    goto beach;
+  }
   /* Combine them */
   dts |= dts_ext << 24;
 
-  GST_LOG_OBJECT (demux, "dts bytes %02X %02X %02X %02X (%d)", data[0], data[1],
-      data[2], data[3], dts);
+  GST_LOG_OBJECT (demux, "dts bytes %08X (%d)", dts, dts);
 
-  /* Skip the stream id and go directly to the flags */
-  flags = GST_READ_UINT8 (data + 7);
-
-  /* Keyframe */
-  if ((flags >> 4) == 1) {
-    keyframe = TRUE;
+  /* Skip the stream id (3 bytes) and go directly to the flags */
+  if (!gst_byte_reader_skip (&reader, 3)) {
+    GST_ERROR_OBJECT (demux, "failed to skip to flags");
+    goto beach;
   }
-  /* Codec tag */
-  codec_tag = flags & 0x0F;
-  if (codec_tag == 4 || codec_tag == 5) {
-    codec_data = 2;
-  } else if (codec_tag == 7) {
-    codec_data = 5;
 
-    cts = GST_READ_UINT24_BE (data + 9);
-    cts = (cts + 0xff800000) ^ 0xff800000;
+  if (!gst_byte_reader_get_uint8 (&reader, &flags)) {
+    GST_ERROR_OBJECT (demux, "failed to parse flags");
+    goto beach;
+  }
 
-    if (cts < 0 && ABS (cts) > dts) {
-      GST_ERROR_OBJECT (demux, "Detected a negative composition time offset "
-          "'%d' that would lead to negative PTS, fixing", cts);
-      cts += ABS (cts) - dts;
+  /* Silently skip buffers with no data */
+  if (gst_byte_reader_get_remaining (&reader) == 0)
+    goto beach;
+
+  /* Check for extended header (Enhanced RTMP v2) */
+  ext_header = (flags >> 4) & 0x08;
+  frame_type = (flags >> 4) & 0x07;
+
+  if (!ext_header) {
+    /* Keyframe */
+    if (frame_type == FLV_VIDEO_FRAME_TYPE_KEYFRAME) {
+      keyframe = TRUE;
+    }
+    /* Codec tag */
+    codec_tag = flags & 0x0F;
+    switch (codec_tag) {
+      case VP6_FLASH:
+      case VP6_ALPHA:
+        if (!gst_byte_reader_skip (&reader, 1)) {
+          GST_ERROR_OBJECT (demux, "failed to skip vp6 ignored byte");
+          goto beach;
+        }
+        break;
+      case H264_AVC1:{
+        guint8 read_type = 0;
+        if (!gst_byte_reader_get_uint8 (&reader, &read_type)) {
+          GST_ERROR_OBJECT (demux, "failed to parse packet type");
+          goto beach;
+        }
+        /* Using the `GstEFlvVideoPacketType` because the values 0 (AVCDecoderConfigurationRecord)
+         * and 1 (One or more NALUs) for AVC in legacy FLV are equivalent to SequenceStart and CodedFrames
+         *  in enhanced FLV */
+        packet_type = read_type;
+
+        guint32 read_cts = 0;
+        if (!gst_byte_reader_get_uint24_be (&reader, &read_cts)) {
+          GST_ERROR_OBJECT (demux, "failed to parse cts");
+          goto beach;
+        }
+
+        cts = (read_cts + 0xff800000) ^ 0xff800000;
+
+        if (cts < 0 && ABS (cts) > dts) {
+          GST_ERROR_OBJECT (demux,
+              "Detected a negative composition time offset "
+              "'%d' that would lead to negative PTS, fixing", cts);
+          cts += ABS (cts) - dts;
+        }
+
+        GST_LOG_OBJECT (demux, "got cts %d", cts);
+      }
+      default:
+        break;
+    }
+  } else {
+    /* Parse extended header */
+    packet_type = flags & 0x0F;
+    GstEFlvAvMultiTrackType multitrack_type;
+
+    while (packet_type == FLV_VIDEO_PACKET_TYPE_MODEX) {
+      guint32 mod_ex_data_size = 0;
+      guint8 size = 0;
+      guint8 types;
+
+      if (!gst_byte_reader_get_uint8 (&reader, &size)) {
+        GST_ERROR_OBJECT (demux, "failed to parse modex data size");
+        goto beach;
+      }
+      mod_ex_data_size = size + 1;
+
+      if (mod_ex_data_size == 256) {
+        guint16 size = 0;
+        if (!gst_byte_reader_get_uint16_be (&reader, &size)) {
+          GST_ERROR_OBJECT (demux, "failed to parse modex data size");
+          goto beach;
+        }
+        mod_ex_data_size = size + 1;
+      }
+
+      /* FIXME: allocate an (guint8*) of `mod_ex_data_size`
+         and read the modExData into it */
+      GST_INFO_OBJECT (demux,
+          "got a ModEx packet; not handling it at the moment");
+
+      if (!gst_byte_reader_skip (&reader, mod_ex_data_size)) {
+        GST_ERROR_OBJECT (demux, "failed to skip modex data size");
+        goto beach;
+      }
+
+      if (!gst_byte_reader_get_uint8 (&reader, &types)) {
+        GST_ERROR_OBJECT (demux, "failed to parse types");
+        goto beach;
+      }
+
+      /* FIXME: check the ModExType and use the modeExData
+         to fill appropriate data */
+      GST_INFO_OBJECT (demux, "Not supporting the checking of ModExType");
+
+      packet_type = types & 0x0f;
     }
 
-    GST_LOG_OBJECT (demux, "got cts %d", cts);
+    if (frame_type == FLV_VIDEO_FRAME_TYPE_KEYFRAME) {
+      keyframe = TRUE;
+    } else if (packet_type != FLV_VIDEO_PACKET_TYPE_METADATA && frame_type ==
+        FLV_VIDEO_FRAME_TYPE_INFO_COMMAND) {
+      guint8 command;
+      if (!gst_byte_reader_get_uint8 (&reader, &command)) {
+        GST_ERROR_OBJECT (demux, "failed to parse command");
+        goto beach;
+      }
+      // TODO: implement command support
+      GST_WARNING_OBJECT (demux, "Not supporting the rtmp command %d", command);
+      goto beach;
+    }
+
+    if (packet_type == FLV_VIDEO_PACKET_TYPE_MULTITRACK) {
+      guint8 types;
+
+      if (!gst_byte_reader_get_uint8 (&reader, &types)) {
+        GST_ERROR_OBJECT (demux, "failed to parse types");
+        goto beach;
+      }
+
+      multitrack_type = types & 0xf0;
+      packet_type = types & 0x0f;
+
+      if (multitrack_type != MANYTRACKS_MANYCODECS) {
+        if (!_get_codec_tag (&reader, &codec_tag)) {
+          GST_ERROR_OBJECT (demux, "failed to parse codec fourcc");
+          goto beach;
+        }
+      }
+
+      guint8 id = 0;
+      if (!gst_byte_reader_get_uint8 (&reader, &id)) {
+        GST_ERROR_OBJECT (demux, "failed to parse track id");
+        goto beach;
+      }
+
+      track_id = id;
+
+      GST_DEBUG_OBJECT (demux, "track id %d", track_id);
+
+      if (multitrack_type != ONETRACK) {
+        // TODO: implement other multitrack types
+        GST_WARNING_OBJECT (demux,
+            "handling only AvMultitrackType.OneTrack currently");
+        goto beach;
+      }
+    } else {
+      if (!_get_codec_tag (&reader, &codec_tag)) {
+        GST_ERROR_OBJECT (demux, "failed to parse codec fourcc");
+        goto beach;
+      }
+    }
+
+    /* Handle composition time for CODED_FRAMES */
+    if (packet_type == FLV_VIDEO_PACKET_TYPE_CODED_FRAMES
+        && (codec_tag == ENHANCED_H265_HVC1
+            || codec_tag == ENHANCED_H264_AVC1)) {
+      guint32 read_cts = 0;
+      if (!gst_byte_reader_get_uint24_be (&reader, &read_cts)) {
+        GST_ERROR_OBJECT (demux, "failed to parse cts");
+        goto beach;
+      }
+      cts = (read_cts + 0xff800000) ^ 0xff800000;
+      if (cts < 0 && ABS (cts) > dts) {
+        GST_ERROR_OBJECT (demux, "Detected a negative composition time offset "
+            "'%d' that would lead to negative PTS, fixing", cts);
+        cts += ABS (cts) - dts;
+      }
+      GST_LOG_OBJECT (demux, "got cts %d", cts);
+    }
   }
+
+  /* header starts after 4 bytes of timestamp and 3 bytes of stream id
+   * these 7 bytes are present in the buffer before the actual payload (i.e., VideoTagHeader)
+   */
+  codec_data = gst_byte_reader_get_pos (&reader) - 7;
 
   GST_LOG_OBJECT (demux, "video tag with codec tag %u, keyframe (%d) "
       "(flags %02X)", codec_tag, keyframe, flags);
 
   track = gst_flv_demux_get_track (demux, track_id, FALSE);
 
-  if (codec_tag == 7) {
-    guint8 avc_packet_type = GST_READ_UINT8 (data + 8);
-
-    switch (avc_packet_type) {
-      case 0:
+  if (codec_tag == H264_AVC1 || ext_header) {
+    switch (packet_type) {
+      case FLV_VIDEO_PACKET_TYPE_SEQUENCE_START:
       {
         if (demux->tag_data_size < codec_data) {
-          GST_ERROR_OBJECT (demux, "Got invalid H.264 codec, ignoring.");
+          GST_ERROR_OBJECT (demux,
+              "Got invalid sequence start tag size, ignoring.");
           break;
         }
 
-        /* AVCDecoderConfigurationRecord data */
-        GST_LOG_OBJECT (demux, "got an H.264 codec data packet");
+        GST_LOG_OBJECT (demux, "got a sequence start packet");
         if (track->codec_data) {
           gst_buffer_unref (track->codec_data);
         }
 
+        /* make sure there are enough bytes remaining */
+        g_assert (gst_byte_reader_get_remaining (&reader) >=
+            (demux->tag_data_size - codec_data));
+
         track->codec_data = gst_buffer_copy_region (buffer,
-            GST_BUFFER_COPY_MEMORY, 7 + codec_data,
+            GST_BUFFER_COPY_MEMORY, gst_byte_reader_get_pos (&reader),
             demux->tag_data_size - codec_data);
 
         /* Use that buffer data in the caps */
@@ -2252,18 +2497,39 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
           gst_flv_demux_video_negotiate (demux, codec_tag, track_id);
         goto beach;
       }
-      case 1:
-        /* H.264 NALU packet */
+      case FLV_VIDEO_PACKET_TYPE_CODED_FRAMES:
         if (!track->codec_data) {
-          GST_ERROR_OBJECT (demux, "got H.264 video packet before codec data");
+          GST_ERROR_OBJECT (demux,
+              "got coded frames packet before codec data (no sequence start)");
           ret = GST_FLOW_OK;
           goto beach;
         }
-        GST_LOG_OBJECT (demux, "got a H.264 NALU video packet");
+        GST_LOG_OBJECT (demux, "got a coded frames packet");
+        break;
+      case FLV_VIDEO_PACKET_TYPE_SEQUENCE_END:
+        GST_LOG_OBJECT (demux, "got end of sequence packet");
+        ret = GST_FLOW_EOS;
+        goto beach;
+      case FLV_VIDEO_PACKET_TYPE_METADATA:
+        // TODO: implement metadata packet parsing
+        GST_WARNING_OBJECT (demux,
+            "got metadata packet, skipping as metadata parsing not yet implemented");
+        ret = GST_FLOW_OK;
+        goto beach;
+      case FLV_VIDEO_PACKET_TYPE_CODED_FRAMES_X:
+        if (!track->codec_data) {
+          GST_ERROR_OBJECT (demux,
+              "got coded frames X packet before codec data (no sequence start)");
+          ret = GST_FLOW_OK;
+          goto beach;
+        }
+        GST_LOG_OBJECT (demux, "got coded frames X packet");
+        // explicitly reset that cts
+        cts = 0;
         break;
       default:
-        GST_WARNING_OBJECT (demux, "invalid video packet type %u",
-            avc_packet_type);
+        GST_WARNING_OBJECT (demux, "got invalid video packet type %u",
+            packet_type);
     }
   }
 
@@ -2273,9 +2539,8 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
     gchar pad_name[10];
     const gchar *templ_name;
     if (track_id >= 0) {
-      // placeholder for multitrack
-      GST_WARNING_OBJECT (demux, "unhandled track id %d(>=0) ", track_id);
-      goto beach;
+      g_snprintf (pad_name, sizeof (pad_name), "video_%u", track_id);
+      templ_name = "video_%u";
     } else {
       g_snprintf (pad_name, sizeof (pad_name), "video");
       templ_name = "video";
@@ -2330,8 +2595,8 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   }
 
   /* Check if caps have changed */
-  // TODO: should check for width/height etc when we add support for `videoTrackIdInfoMap`
   if (G_UNLIKELY (codec_tag != track->codec_tag || track->info.video.got_par
+          || track->info.video.needs_renegotiation
           || track->codec_data == NULL)) {
     GST_DEBUG_OBJECT (demux, "video settings have changed, changing caps");
     if (codec_tag != track->codec_tag)
@@ -2348,14 +2613,18 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   }
 
   /* Check if we have anything to push */
-  if (demux->tag_data_size <= codec_data) {
+  if (gst_byte_reader_get_remaining (&reader) == 0) {
     GST_LOG_OBJECT (demux, "Nothing left in this tag, returning");
     goto beach;
   }
 
+  /* make sure there are enough bytes remaining */
+  g_assert (gst_byte_reader_get_remaining (&reader) >=
+      (demux->tag_data_size - codec_data));
+
   /* Create buffer from pad */
   outbuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_MEMORY,
-      7 + codec_data, demux->tag_data_size - codec_data);
+      gst_byte_reader_get_pos (&reader), demux->tag_data_size - codec_data);
 
   /* detect (and deem to be resyncs)  large dts gaps */
   if (gst_flv_demux_update_resync (demux, dts, track->need_discont,
@@ -4408,18 +4677,10 @@ _reset_track (GstFlvDemuxTrack * track)
   track->need_discont = TRUE;
   track->bitrate = 0;
 
-  if (track->is_audio) {
-    track->info.audio.channels = 0;
-    track->info.audio.rate = 0;
-    track->info.audio.width = 0;
-  } else {
-    track->info.video.framerate = 0;
-    track->info.video.got_par = 0;
-    track->info.video.h = 0;
-    track->info.video.w = 0;
+  memset (&track->info, 0, sizeof (track->info));
+  if (!track->is_audio) {
     track->info.video.par_x = 1;
     track->info.video.par_y = 1;
-    track->info.video.got_par = FALSE;
   }
 
   gst_clear_object (&track->stream);
@@ -4485,6 +4746,8 @@ gst_flv_demux_class_init (GstFlvDemuxClass * klass)
       &multi_audio_src_template);
   gst_element_class_add_static_pad_template (gstelement_class,
       &video_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &multi_video_src_template);
   gst_element_class_set_static_metadata (gstelement_class, "FLV Demuxer",
       "Codec/Demuxer", "Demux FLV feeds into digital streams",
       "Julien Moutte <julien@moutte.net>");

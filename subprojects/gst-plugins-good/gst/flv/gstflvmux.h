@@ -62,7 +62,7 @@ struct _GstFlvMuxPad
 {
   GstAggregatorPad aggregator_pad;
 
-  guint codec;
+  guint32 codec;
   guint rate;
   guint width;
   guint channels;
@@ -99,7 +99,7 @@ struct _GstFlvMux {
   /* <private> */
   GstFlvMuxState state;
   GList *audio_pads;
-  GstFlvMuxPad *video_pad;
+  GList *video_pads;
   gboolean streamable;
   gchar *metadatacreator;
   gchar *encoder;

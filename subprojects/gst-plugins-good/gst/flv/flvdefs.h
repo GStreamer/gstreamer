@@ -36,6 +36,18 @@ typedef enum
 
 typedef enum
 {
+  FLV_VIDEO_PACKET_TYPE_SEQUENCE_START = 0,
+  FLV_VIDEO_PACKET_TYPE_CODED_FRAMES = 1,
+  FLV_VIDEO_PACKET_TYPE_SEQUENCE_END = 2,
+  FLV_VIDEO_PACKET_TYPE_CODED_FRAMES_X = 3,
+  FLV_VIDEO_PACKET_TYPE_METADATA = 4,
+  FLV_VIDEO_PACKET_TYPE_MPEG2TS_SEQUENCE_START = 5,
+  FLV_VIDEO_PACKET_TYPE_MULTITRACK = 6,
+  FLV_VIDEO_PACKET_TYPE_MODEX = 7,
+} GstEFlvVideoPacketType;
+
+typedef enum
+{
   ONETRACK = 0,
   MANYTRACKS = 1,
   MANYTRACKS_MANYCODECS = 2,
@@ -44,23 +56,44 @@ typedef enum
 
 typedef enum
 {
-  LINEAR_PCM = 0,                                         /* 0 = Linear PCM, platform-endian */
-  ADPCM = 1,                                              /* 1 = ADPCM */
-  MP3 = 2,                                                /* 2 = MP3 */
-  LINEAR_PCM_LE = 3,                                      /* 3 = Linear PCM, little-endian */
-  NELLYMOSER_16K = 4,                                     /* 4 = Nellymoser 16 kHz mono  */
-  NELLYMOSER_8K = 5,                                      /* 5 = Nellymoser 8 kHz mono  */
-  NELLYMOSER = 6,                                         /* 6 = Nellymoser */
-  G711_ALAW = 7,                                          /* 7 = G.711 A-law logarithmic PCM  */
-  G711_MULAW = 8,                                         /* 8 = G.711 mu-law logarithmic PCM */
-  EXTENDED_AUDIO_HEADER = 9,                              /* 9 = ExHeader (eFLV)  */
-  AAC = 10,                                                /* 10 = AAC */
-  SPEEX = 11,                                              /* 11 = Speex  */
-  RESERVED_12 = 12,                                        /* 12 = Reserved */
-  RESERVED_13 = 13,                                        /* 13 = Reserved  */
-  MP3_8K = 14,                                             /* 14 = MP3 8 kHz */
-  NATIVE = 15,                                             /* 15 = Device-specific sound*/
+  FLV_VIDEO_FRAME_TYPE_KEYFRAME = 1,
+  FLV_VIDEO_FRAME_TYPE_INTERFRAME = 2,
+  FLV_VIDEO_FRAME_TYPE_DISPOSABLE_INTERFAME = 3,
+  FLV_VIDEO_FRAME_TYPE_GENERATED_KEYFRAME = 4,
+  FLV_VIDEO_FRAME_TYPE_INFO_COMMAND = 5,
+} GstFlvVideoFrameType;
+
+typedef enum
+{
+  LINEAR_PCM = 0,               /* 0 = Linear PCM, platform-endian */
+  ADPCM = 1,                    /* 1 = ADPCM */
+  MP3 = 2,                      /* 2 = MP3 */
+  LINEAR_PCM_LE = 3,            /* 3 = Linear PCM, little-endian */
+  NELLYMOSER_16K = 4,           /* 4 = Nellymoser 16 kHz mono  */
+  NELLYMOSER_8K = 5,            /* 5 = Nellymoser 8 kHz mono  */
+  NELLYMOSER = 6,               /* 6 = Nellymoser */
+  G711_ALAW = 7,                /* 7 = G.711 A-law logarithmic PCM  */
+  G711_MULAW = 8,               /* 8 = G.711 mu-law logarithmic PCM */
+  EXTENDED_AUDIO_HEADER = 9,    /* 9 = ExHeader (eFLV)  */
+  AAC = 10,                     /* 10 = AAC */
+  SPEEX = 11,                   /* 11 = Speex  */
+  RESERVED_12 = 12,             /* 12 = Reserved */
+  RESERVED_13 = 13,             /* 13 = Reserved  */
+  MP3_8K = 14,                  /* 14 = MP3 8 kHz */
+  NATIVE = 15,                  /* 15 = Device-specific sound */
 } GstFlvSoundFormat;
+
+typedef enum
+{
+  FLASH_VIDEO = 2,
+  FLASH_SCREEN = 3,
+  VP6_FLASH = 4,
+  VP6_ALPHA = 5,
+  H264_AVC1 = 7,
+  // rtmp enhanced spec - define by fourcc code
+  ENHANCED_H265_HVC1 = GST_MAKE_FOURCC ('h', 'v', 'c', '1'),
+  ENHANCED_H264_AVC1 = GST_MAKE_FOURCC ('a', 'v', 'c', '1'),
+} GstFlvVideoCodec;
 
 typedef enum
 {
