@@ -8,6 +8,7 @@ else
 endif
 
 if gtk_dep.found()
+  gmodule_dep = dependency('gmodule-2.0')
   gnome = import('gnome')
 
   gtk_play_resources = gnome.compile_resources('gtk-play-resources', 'resources/gresources.xml',
@@ -20,5 +21,5 @@ if gtk_dep.found()
        'gtk-video-renderer.h',
        'gtk-video-renderer.c'],
       c_args :  extra_c_args,
-      dependencies : [gst_dep, gsttag_dep, gstplay_dep, gtk_dep, x11_dep])
+      dependencies : [gst_dep, gsttag_dep, gstplay_dep, gtk_dep, x11_dep, gmodule_dep])
 endif
