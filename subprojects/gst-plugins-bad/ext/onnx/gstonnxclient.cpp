@@ -192,24 +192,18 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):
   bool GstOnnxClient::setTensorDescDatatype(ONNXTensorElementDataType dt,
                                             GstStructure *tensor_desc)
   {
-    GValue val = G_VALUE_INIT;
     GstTensorDataType gst_dt;
-
-    g_value_init(&val, G_TYPE_STRING);
 
     if (dt > ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED &&
         dt <= ONNX_TENSOR_ELEMENT_DATA_TYPE_INT4) {
       gst_dt = (GstTensorDataType)ONNX_TO_GST_TENSOR_DATATYPE [dt];
-      g_value_set_string (&val, gst_tensor_data_type_get_name(gst_dt));
+      gst_structure_set (tensor_desc, "type", G_TYPE_STRING,
+			 gst_tensor_data_type_get_name(gst_dt), NULL);
+      return true;
     } else {
       GST_ERROR_OBJECT (debug_parent, "Unexpected datatype: %d", dt);
-      g_value_unset (&val);
       return false;
     }
-
-    gst_structure_take_value(tensor_desc, "type", &val);
-    g_value_unset(&val);
-    return true;
   }
 
   bool GstOnnxClient::createSession (const char *model_file,
