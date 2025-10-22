@@ -212,7 +212,7 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):
     return true;
   }
 
-  bool GstOnnxClient::createSession (std::string modelFile,
+  bool GstOnnxClient::createSession (const char *model_file,
       GstOnnxOptimizationLevel optim, GstOnnxExecutionProvider provider,
                                      GstStructure * tensors)
   {
@@ -328,7 +328,7 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):
     }
 
     // Create session
-    status = api->CreateSession(env, modelFile.c_str(), session_options, &session);
+    status = api->CreateSession(env, model_file, session_options, &session);
     if (status) {
       GST_ERROR_OBJECT(debug_parent, "Failed to create session: %s",
 			 api->GetErrorMessage(status));

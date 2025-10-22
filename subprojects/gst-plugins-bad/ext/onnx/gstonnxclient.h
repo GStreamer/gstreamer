@@ -27,7 +27,6 @@
 #include <onnxruntime_c_api.h>
 #include <gst/video/video.h>
 #include "gstml.h"
-#include <string>
 
 GST_DEBUG_CATEGORY_EXTERN (onnx_inference_debug);
 
@@ -65,7 +64,7 @@ namespace GstOnnxNamespace {
   public:
     GstOnnxClient(GstElement *debug_parent);
     ~GstOnnxClient(void);
-    bool createSession(std::string modelFile, GstOnnxOptimizationLevel optim,
+    bool createSession(const char *model_file, GstOnnxOptimizationLevel optim,
                        GstOnnxExecutionProvider provider, GstStructure *
                        tensors);
     bool hasSession(void);
