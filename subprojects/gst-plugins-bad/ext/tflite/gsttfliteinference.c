@@ -370,33 +370,14 @@ done:
 }
 
 static gboolean
-_get_input_params (GstTFliteInference * self, GstTensorDataType * data_type,
-    gint * width, gint * height, const gchar ** gst_format,
+_guess_tensor_data_type (GstTFliteInference * self, gsize dims_count,
+    gsize * dims, const gchar ** gst_format, gint * width, gint * height,
     gint * channels, gboolean * planar)
 {
-  GstTFliteInferencePrivate *priv =
-      gst_tflite_inference_get_instance_private (self);
-  const TfLiteTensor *input_tensor;
-  gint i_size = TfLiteInterpreterGetInputTensorCount (priv->interpreter);
-  gsize dims_count;
-  gsize *dims = NULL;
-
-  if (i_size != 1) {
-    GST_ERROR_OBJECT (self, "Currently only support model with a single"
-        " input tensor, but model has %d", i_size);
-    goto reject;
-  }
-
-  input_tensor = TfLiteInterpreterGetInputTensor (priv->interpreter, 0);
-  if (!convert_tensor_info (input_tensor, NULL, data_type, &dims_count, &dims)) {
-    GST_ERROR_OBJECT (self, "Input tensor has no dimensions, rejecting");
-    goto reject;
-  }
-
   if (dims_count < 2 || dims_count > 4) {
     GST_ERROR_OBJECT (self,
         "Don't know how to interpret tensors with %zu dimensions", dims_count);
-    goto reject;
+    return FALSE;
   }
 
   *planar = FALSE;
@@ -428,7 +409,7 @@ _get_input_params (GstTFliteInference * self, GstTensorDataType * data_type,
         *width = dims[1];
       } else {
         GST_ERROR_OBJECT (self, "Don't know how to interpret dims");
-        goto reject;
+        return FALSE;
       }
       break;
     case 4:
@@ -444,7 +425,7 @@ _get_input_params (GstTFliteInference * self, GstTensorDataType * data_type,
         *width = dims[2];
       } else {
         GST_ERROR_OBJECT (self, "Don't know how to interpret dims");
-        goto reject;
+        return FALSE;
       }
 
       if (*channels == 1) {
@@ -458,17 +439,42 @@ _get_input_params (GstTFliteInference * self, GstTensorDataType * data_type,
       } else {
         g_assert_not_reached ();
       }
-
       break;
   }
 
-  g_free (dims);
-
   return TRUE;
+}
 
-reject:
+static gboolean
+_get_input_params (GstTFliteInference * self, GstTensorDataType * data_type,
+    gint * width, gint * height, const gchar ** gst_format,
+    gint * channels, gboolean * planar)
+{
+  GstTFliteInferencePrivate *priv =
+      gst_tflite_inference_get_instance_private (self);
+  const TfLiteTensor *input_tensor;
+  gint i_size = TfLiteInterpreterGetInputTensorCount (priv->interpreter);
+  gsize dims_count;
+  gsize *dims = NULL;
+  gboolean ret;
+
+  if (i_size != 1) {
+    GST_ERROR_OBJECT (self, "Currently only support model with a single"
+        " input tensor, but model has %d", i_size);
+    return FALSE;
+  }
+
+  input_tensor = TfLiteInterpreterGetInputTensor (priv->interpreter, 0);
+  if (convert_tensor_info (input_tensor, NULL, data_type, &dims_count, &dims)) {
+    ret = _guess_tensor_data_type (self, dims_count, dims, gst_format, width,
+        height, channels, planar);
+  } else {
+    GST_ERROR_OBJECT (self, "Input tensor has no dimensions, rejecting");
+    ret = FALSE;
+  }
   g_free (dims);
-  return FALSE;
+
+  return ret;
 }
 
 
