@@ -24,9 +24,11 @@
 
 #include <gst/gst.h>
 #include <gst/analytics/analytics.h>
-#include <onnxruntime_cxx_api.h>
+#include <onnxruntime_c_api.h>
 #include <gst/video/video.h>
 #include "gstml.h"
+#include <vector>
+#include <string>
 
 GST_DEBUG_CATEGORY_EXTERN (onnx_inference_debug);
 
@@ -76,15 +78,15 @@ namespace GstOnnxNamespace {
     float getInputImageOffset ();
     void setInputImageScale (float offset);
     float getInputImageScale ();
-    std::vector < Ort::Value > run (uint8_t * img_data, GstVideoInfo vinfo);
-    std::vector < const char *> genOutputNamesRaw(void);
+    OrtValue** run (uint8_t * img_data, GstVideoInfo vinfo, size_t *num_outputs);
     bool isFixedInputImageSize(void);
     int32_t getWidth(void);
     int32_t getHeight(void);
     int32_t getChannels (void);
-    GstTensorMeta *copy_tensors_to_meta (std::vector<Ort::Value> &outputs,
+    GstTensorMeta *copy_tensors_to_meta (OrtValue **outputs, size_t num_outputs,
                                          GstBuffer *buffer);
     void parseDimensions(GstVideoInfo vinfo);
+    const OrtApi* api;
   private:
 
     GstElement *debug_parent;
@@ -92,19 +94,18 @@ namespace GstOnnxNamespace {
     template < typename T>
     void convert_image_remove_alpha (T *dest, GstMlInputImageFormat hwc,
         uint8_t **srcPtr, uint32_t srcSamplesPerPixel, uint32_t stride, T offset, T div);
-    bool doRun(uint8_t * img_data, GstVideoInfo vinfo, std::vector < Ort::Value > &modelOutput);
     bool setTensorDescDatatype (ONNXTensorElementDataType dt, GstStructure * tensor_desc);
-    Ort::Env env;
-    Ort::Session * session;
+    OrtEnv* env;
+    OrtSession* session;
+    OrtMemoryInfo* memory_info;
+    OrtAllocator* allocator;
     int32_t width;
     int32_t height;
     int32_t channels;
     uint8_t *dest;
     GstOnnxExecutionProvider m_provider;
-    std::vector < Ort::Value > modelOutput;
     std::vector < std::string > labels;
-    std::vector < const char *> outputNamesRaw;
-    std::vector < Ort::AllocatedStringPtr > outputNames;
+    std::vector < char* > outputNames;
     std::vector < GQuark > outputIds;
     GstMlInputImageFormat inputImageFormat;
     GstTensorDataType inputDatatype;

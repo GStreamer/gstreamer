@@ -364,7 +364,7 @@ gst_onnx_inference_init (GstOnnxInference * self)
 {
   self->onnx_client = new GstOnnxNamespace::GstOnnxClient (GST_ELEMENT(self));
   /* TODO: at the moment onnx inference only support video output. We
-   * should revisit this once we generalize this aspect */
+   * should revisit this aspect once we generalize it */
   self->tensors = gst_structure_new_empty ("video/x-raw");
 }
 
@@ -634,20 +634,31 @@ gst_onnx_inference_process (GstBaseTransform * trans, GstBuffer * buf)
   GstMapInfo info;
   if (gst_buffer_map (buf, &info, GST_MAP_READ)) {
     GstOnnxInference *self = GST_ONNX_INFERENCE (trans);
-    try {
-      auto client = GST_ONNX_CLIENT_MEMBER (self);
-      auto outputs = client->run (info.data, self->video_info);
-      auto meta = client->copy_tensors_to_meta (outputs, buf);
-      if (!meta)
-        return FALSE;
-      GST_TRACE_OBJECT (trans, "Num tensors:%zu", meta->num_tensors);
-    }
-    catch (Ort::Exception & ortex) {
-      GST_ERROR_OBJECT (self, "%s", ortex.what ());
+    auto client = GST_ONNX_CLIENT_MEMBER (self);
+    size_t num_outputs = 0;
+    OrtValue** outputs = client->run (info.data, self->video_info, &num_outputs);
+
+    if (!outputs || num_outputs == 0) {
+      GST_ERROR_OBJECT (self, "ONNX inference failed to produce outputs");
       gst_buffer_unmap (buf, &info);
       return FALSE;
     }
 
+    auto meta = client->copy_tensors_to_meta (outputs, num_outputs, buf);
+
+    // Clean up output tensors
+    for (size_t i = 0; i < num_outputs; i++) {
+      if (outputs[i])
+        client->api->ReleaseValue(outputs[i]);
+    }
+    g_free(outputs);
+
+    if (!meta) {
+      gst_buffer_unmap (buf, &info);
+      return FALSE;
+    }
+
+    GST_TRACE_OBJECT (trans, "Num tensors:%zu", meta->num_tensors);
     gst_buffer_unmap (buf, &info);
   }
 
