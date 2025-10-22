@@ -1426,11 +1426,21 @@ gst_hls_media_playlist_seek (GstHLSMediaPlaylist * playlist, gboolean forward,
 
 out:
   if (res) {
+    /* For snap seeks, use the segment boundary. For regular seeks, preserve
+     * the target position to avoid jumping to segment start */
+    GstClockTimeDiff result_time = res->stream_time;
+    if (!snap_nearest && !snap_after) {
+      /* Clamp target position to segment boundaries */
+      result_time = MAX (ts, res->stream_time);
+      result_time = MIN (result_time,
+          (GstClockTimeDiff) (res->stream_time + res->duration));
+    }
+
     GST_DEBUG ("Returning segment sn:%" G_GINT64_FORMAT " stream_time:%"
         GST_STIME_FORMAT " duration:%" GST_TIME_FORMAT, res->sequence,
         GST_STIME_ARGS (res->stream_time), GST_TIME_ARGS (res->duration));
 
-    seek_result->stream_time = res->stream_time;
+    seek_result->stream_time = result_time;
     seek_result->segment = gst_m3u8_media_segment_ref (res);
     seek_result->found_partial_segment = res->partial_only;
     seek_result->part_idx = 0;
@@ -1446,12 +1456,21 @@ partial_seg_out:
     GstM3U8PartialSegment *part =
         g_ptr_array_index (res->partial_segments, res_part_idx);
 
+    /* For snap seeks, use the partial segment boundary. For regular seeks,
+     * preserve the target position */
+    GstClockTimeDiff result_time = part->stream_time;
+    if (!snap_nearest && !snap_after) {
+      result_time = MAX (ts, part->stream_time);
+      result_time = MIN (result_time,
+          (GstClockTimeDiff) (part->stream_time + part->duration));
+    }
+
     GST_DEBUG ("Returning partial segment sn:%" G_GINT64_FORMAT
         " part_idx %u stream_time:%" GST_STIME_FORMAT " duration:%"
         GST_TIME_FORMAT, res->sequence, res_part_idx,
         GST_STIME_ARGS (part->stream_time), GST_TIME_ARGS (part->duration));
 
-    seek_result->stream_time = part->stream_time;
+    seek_result->stream_time = result_time;
     seek_result->segment = gst_m3u8_media_segment_ref (res);
     seek_result->found_partial_segment = TRUE;
     seek_result->part_idx = res_part_idx;
