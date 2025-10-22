@@ -793,7 +793,7 @@ G_STMT_START {                                                                \
   size_t destIndex = 0;                                                       \
   Type tmp;                                                                   \
                                                                               \
-  if (!priv->planar) {                                                        \
+  if (!planar) {                                                              \
     for (int32_t j = 0; j < dstHeight; ++j) {                                 \
       for (int32_t i = 0; i < dstWidth; ++i) {                                \
         for (int32_t k = 0; k < dstChannels; ++k) {                           \
@@ -829,13 +829,11 @@ G_STMT_START {                                                                \
 G_STMT_END;
 
 static void
-gst_tflite_inference_convert_image_remove_alpha_u8 (GstTFliteInference * self,
-    guint8 * dst, gint dstWidth, gint dstHeight, gint dstChannels,
-    guint8 ** srcPtr, guint8 srcSamplesPerPixel,
-    guint32 stride, const gdouble * means, const gdouble * stddevs)
+convert_image_remove_alpha_u8 (guint8 * dst, gint dstWidth, gint dstHeight,
+    gint dstChannels, gboolean planar, guint8 ** srcPtr,
+    guint8 srcSamplesPerPixel, guint32 stride, const gdouble * means,
+    const gdouble * stddevs)
 {
-  GstTFliteInferencePrivate *priv =
-      gst_tflite_inference_get_instance_private (self);
   static const gdouble zeros[] = { 0, 0, 0, 0 };
   static const gdouble ones[] = { 1.0, 1.0, 1.0, 1.0 };
   if (means == NULL)
@@ -848,13 +846,11 @@ gst_tflite_inference_convert_image_remove_alpha_u8 (GstTFliteInference * self,
 }
 
 static void
-gst_tflite_inference_convert_image_remove_alpha_f32 (GstTFliteInference * self,
-    gfloat * dst, gint dstWidth, gint dstHeight, gint dstChannels,
-    guint8 ** srcPtr, guint8 srcSamplesPerPixel,
-    guint32 stride, const gdouble * means, const gdouble * stddevs)
+convert_image_remove_alpha_f32 (gfloat * dst, gint dstWidth, gint dstHeight,
+    gint dstChannels, gboolean planar, guint8 ** srcPtr,
+    guint8 srcSamplesPerPixel, guint32 stride, const gdouble * means,
+    const gdouble * stddevs)
 {
-  GstTFliteInferencePrivate *priv =
-      gst_tflite_inference_get_instance_private (self);
   static const gdouble zeros[] = { 0, 0, 0, 0 };
   static const gdouble two_five_fives[] = { 255.0, 255.0, 255.0, 255.0 };
   if (means == NULL)
@@ -938,9 +934,9 @@ gst_tflite_inference_process (GstBaseTransform * trans, GstBuffer * buf)
 
         if (dest == NULL)
           return false;
-        gst_tflite_inference_convert_image_remove_alpha_u8 (self,
-            dest, width, height, channels, srcPtr,
-            srcSamplesPerPixel, stride, priv->means, priv->stddevs);
+        convert_image_remove_alpha_u8 (dest, width, height, channels,
+            priv->planar, srcPtr, srcSamplesPerPixel, stride, priv->means,
+            priv->stddevs);
         break;
       }
       case GST_TENSOR_DATA_TYPE_FLOAT32:{
@@ -948,9 +944,9 @@ gst_tflite_inference_process (GstBaseTransform * trans, GstBuffer * buf)
 
         if (dest == NULL)
           return false;
-        gst_tflite_inference_convert_image_remove_alpha_f32 (self, dest,
-            width, height, channels, srcPtr,
-            srcSamplesPerPixel, stride, priv->means, priv->stddevs);
+        convert_image_remove_alpha_f32 (dest, width, height, channels,
+            priv->planar, srcPtr, srcSamplesPerPixel, stride, priv->means,
+            priv->stddevs);
         break;
       }
       default:{
