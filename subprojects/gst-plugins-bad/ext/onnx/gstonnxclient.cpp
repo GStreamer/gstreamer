@@ -46,22 +46,6 @@
 
 namespace GstOnnxNamespace
 {
-  template < typename T >
-      std::ostream & operator<< (std::ostream & os, const std::vector < T > &v)
-  {
-    os << "[";
-    for (size_t i = 0; i < v.size (); ++i)
-    {
-      os << v[i];
-      if (i != v.size () - 1)
-      {
-        os << ", ";
-      }
-    }
-    os << "]";
-
-    return os;
-  }
 
 const gint ONNX_TO_GST_TENSOR_DATATYPE[] = {
   -1,                                   /* ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED*/
@@ -101,6 +85,7 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):
       channels (0),
       dest (nullptr),
       m_provider (GST_ONNX_EXECUTION_PROVIDER_CPU),
+      output_count (0),
       inputImageFormat (GST_ML_INPUT_IMAGE_FORMAT_HWC),
       inputDatatype (GST_TENSOR_DATA_TYPE_UINT8),
       inputDatatypeSize (sizeof (uint8_t)),
@@ -240,8 +225,8 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):
     size_t num_input_dims;
     int64_t *input_dims;
     ONNXTensorElementDataType elementType;
-    size_t output_count;
     char* input_name = nullptr;
+    size_t i;
 
     if (session)
       return true;
@@ -271,7 +256,7 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):
     default:
       onnx_optim = GraphOptimizationLevel::ORT_ENABLE_EXTENDED;
       break;
-    };
+    }
 
     status = api->SetSessionGraphOptimizationLevel(session_options, onnx_optim);
     if (status) {
@@ -405,9 +390,9 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):
 
     status = api->SessionGetOutputCount(session, &output_count);
     if (status) {
-      api->ReleaseStatus(status);
-      status = nullptr;
-      output_count = 0;
+      GST_ERROR_OBJECT (debug_parent, "Could to retrieve output count: %s",
+			api->GetErrorMessage(status));
+      goto error;
     }
     GST_DEBUG_OBJECT (debug_parent, "Number of Output Nodes: %zu", output_count);
 
@@ -445,161 +430,158 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):
     allocator->Free(allocator, input_name);
 
     // Get output names
-    for (size_t i = 0; i < output_count; ++i) {
-      char* output_name;
-      status = api->SessionGetOutputName(session, i, allocator, &output_name);
+    output_names = g_new0 (char *, output_count);
+    for (i = 0; i < output_count; ++i) {
+      status = api->SessionGetOutputName(session, i, allocator, &output_names[i]);
       if (status) {
-        GST_ERROR_OBJECT(debug_parent, "Failed to get output name %zu", i);
-        api->ReleaseStatus(status);
-        status = nullptr;
-        continue;
+        GST_ERROR_OBJECT(debug_parent, "Failed to get output name %zu: %s", i,
+			 api->GetErrorMessage(status));
+	goto error;
       }
-      GST_DEBUG_OBJECT (debug_parent, "Output name %lu:%s", i, output_name);
-      outputNames.push_back(output_name);
+      GST_DEBUG_OBJECT (debug_parent, "Output name %lu:%s", i, output_names[i]);
     }
 
     // Look up tensor ids
     status = api->SessionGetModelMetadata(session, &metadata);
     if (status) {
-      GST_ERROR_OBJECT(debug_parent, "Failed to get model metadata: %s",
+      GST_INFO_OBJECT(debug_parent, "Could not get model metadata: %s",
 			 api->GetErrorMessage(status));
       api->ReleaseStatus(status);
-      status = nullptr;
+      status = nullptr;	  
     }
 
-    if (metadata) {
-      size_t i = 0;
-      for (auto & name:outputNames) {
-        OrtTypeInfo* output_type_info = nullptr;
-        status = api->SessionGetOutputTypeInfo(session, i++, &output_type_info);
-        if (status) {
-          api->ReleaseStatus(status);
-          status = nullptr;
-          continue;
-        }
+    output_ids = g_new0 (GQuark, output_count);
 
-        const OrtTensorTypeAndShapeInfo* output_tensor_info;
-        status = api->CastTypeInfoToTensorInfo(output_type_info, &output_tensor_info);
-        if (status) {
-          api->ReleaseStatus(status);
-          status = nullptr;
-          api->ReleaseTypeInfo(output_type_info);
-          continue;
-        }
+    for (i = 0; i < output_count; i++) {
+      OrtTypeInfo* output_type_info = nullptr;
+      const OrtTensorTypeAndShapeInfo* output_tensor_info = NULL;
+      size_t card;
+      ONNXTensorElementDataType type;
+      char* res = nullptr;
+      size_t j;
 
-        size_t card;
-        status = api->GetDimensionsCount(output_tensor_info, &card);
-        if (status) {
-          api->ReleaseStatus(status);
-          status = nullptr;
-          api->ReleaseTypeInfo(output_type_info);
-          continue;
-        }
-
-        ONNXTensorElementDataType type;
-        status = api->GetTensorElementType(output_tensor_info, &type);
-        if (status) {
-          api->ReleaseStatus(status);
-          status = nullptr;
-          api->ReleaseTypeInfo(output_type_info);
-          continue;
-        }
-
-        char* res = nullptr;
-        status = api->ModelMetadataLookupCustomMetadataMap(metadata, allocator, name, &res);
-
-        if (!status && res) {
-          GQuark quark = g_quark_from_string(res);
-          outputIds.push_back(quark);
-          allocator->Free(allocator, res);
-        } else {
-          if (status) {
-            api->ReleaseStatus(status);
-            status = nullptr;
-          }
-
-          if (g_str_has_prefix(name, "scores")) {
-            GQuark quark = g_quark_from_static_string(GST_MODEL_OBJECT_DETECTOR_SCORES);
-            GST_INFO_OBJECT(debug_parent,
-                "No custom metadata for key '%s', assuming %s",
-                name, GST_MODEL_OBJECT_DETECTOR_SCORES);
-            outputIds.push_back(quark);
-          } else if (g_str_has_prefix(name, "boxes")) {
-            GQuark quark = g_quark_from_static_string(GST_MODEL_OBJECT_DETECTOR_BOXES);
-            GST_INFO_OBJECT(debug_parent,
-                "No custom metadata for key '%s', assuming %s",
-                name, GST_MODEL_OBJECT_DETECTOR_BOXES);
-            outputIds.push_back(quark);
-          } else if (g_str_has_prefix(name, "detection_classes")) {
-            GQuark quark = g_quark_from_static_string(GST_MODEL_OBJECT_DETECTOR_CLASSES);
-            GST_INFO_OBJECT(debug_parent,
-                "No custom metadata for key '%s', assuming %s",
-                name, GST_MODEL_OBJECT_DETECTOR_CLASSES);
-            outputIds.push_back(quark);
-          } else if (g_str_has_prefix(name, "num_detections")) {
-            GQuark quark = g_quark_from_static_string(GST_MODEL_OBJECT_DETECTOR_NUM_DETECTIONS);
-            GST_INFO_OBJECT(debug_parent,
-                "No custom metadata for key '%s', assuming %s",
-                name, GST_MODEL_OBJECT_DETECTOR_NUM_DETECTIONS);
-            outputIds.push_back(quark);
-          } else {
-            GST_ERROR_OBJECT(debug_parent, "Failed to look up id for key %s", name);
-            api->ReleaseTypeInfo(output_type_info);
-            goto error;
-          }
-        }
-
-        GST_DEBUG_OBJECT(debug_parent, "Tensor %zu (%s) has id \"%s\"", i, name,
-            g_quark_to_string(outputIds.back()));
-
-        /* tensor description */
-        GstStructure *tensor_desc = gst_structure_new_empty("tensor/strided");
-
-        /* Setting dims */
-        GValue val_dims = G_VALUE_INIT, val = G_VALUE_INIT;
-        gst_value_array_init(&val_dims, card);
-        g_value_init(&val, G_TYPE_INT);
-
-        std::vector<int64_t> shape(card);
-        status = api->GetDimensions(output_tensor_info, shape.data(), card);
-        if (!status) {
-          for (auto &dim : shape) {
-            g_value_set_int(&val, dim > 0 ? dim : 0);
-            gst_value_array_append_value(&val_dims, &val);
-          }
-        } else {
-          api->ReleaseStatus(status);
-          status = nullptr;
-        }
-
-        gst_structure_take_value(tensor_desc, "dims", &val_dims);
-        g_value_unset(&val_dims);
-        g_value_unset(&val);
-
-        /* Setting datatype */
-        if (!setTensorDescDatatype(type, tensor_desc)) {
-          api->ReleaseTypeInfo(output_type_info);
-          goto error;
-        }
-
-        /* Setting tensors caps */
-        char* meta_key = nullptr;
-        OrtStatus* lookup_status = api->ModelMetadataLookupCustomMetadataMap(metadata, allocator, name, &meta_key);
-        if (!lookup_status && meta_key) {
-          gst_structure_set(tensors, meta_key, GST_TYPE_CAPS,
-                            gst_caps_new_full(tensor_desc, NULL), NULL);
-          allocator->Free(allocator, meta_key);
-        } else {
-          if (lookup_status)
-            api->ReleaseStatus(lookup_status);
-          gst_structure_free(tensor_desc);
-        }
-
-        api->ReleaseTypeInfo(output_type_info);
+      status = api->SessionGetOutputTypeInfo(session, i, &output_type_info);
+      if (status) {
+	GST_ERROR_OBJECT(debug_parent, "Failed to get info for output tensor %zu: %s",
+			 i, api->GetErrorMessage(status));
+	goto error;
       }
-      api->ReleaseModelMetadata(metadata);
-      metadata = nullptr;
+
+      status = api->CastTypeInfoToTensorInfo(output_type_info, &output_tensor_info);
+      if (status) {
+	GST_ERROR_OBJECT(debug_parent, "Failed to get cast type for output tensor"
+			 " %zu: %s", i, api->GetErrorMessage(status));
+	goto error;
+      }
+
+      status = api->GetDimensionsCount(output_tensor_info, &card);
+      if (status) {
+	GST_ERROR_OBJECT(debug_parent, "Failed to get cardinality for output tensor"
+			 " %zu: %s", i, api->GetErrorMessage(status));
+	goto error;
+      }
+
+      status = api->GetTensorElementType(output_tensor_info, &type);
+      if (status) {
+	GST_ERROR_OBJECT(debug_parent, "Failed to get element type for output tensor"
+			 " %zu: %s", i, api->GetErrorMessage(status));
+	goto error;
+      }
+
+
+      if (metadata)
+	status = api->ModelMetadataLookupCustomMetadataMap(metadata, allocator,
+							   output_names[i], &res);
+
+      if (!status && res) {
+	GST_INFO_OBJECT (debug_parent, "Tensor %zu name is %s from metadata", i, res);
+	output_ids[i] = g_quark_from_string(res);
+	allocator->Free(allocator, res);
+      } else {
+	if (status) {
+	  GST_WARNING_OBJECT(debug_parent, "Could not find key %s in model metadata: %s",
+			     output_names[i], api->GetErrorMessage(status));
+	  api->ReleaseStatus(status);
+	  status = nullptr;
+	}
+
+	if (g_str_has_prefix(output_names[i], "scores")) {
+	  output_ids[i] = g_quark_from_static_string(GST_MODEL_OBJECT_DETECTOR_SCORES);
+	  GST_INFO_OBJECT(debug_parent,
+			  "No custom metadata for key '%s', assuming %s",
+			  output_names[i], GST_MODEL_OBJECT_DETECTOR_SCORES);
+	} else if (g_str_has_prefix(output_names[i], "boxes")) {
+	  output_ids[i] = g_quark_from_static_string(GST_MODEL_OBJECT_DETECTOR_BOXES);
+	  GST_INFO_OBJECT(debug_parent,
+			  "No custom metadata for key '%s', assuming %s",
+			  output_names[i], GST_MODEL_OBJECT_DETECTOR_BOXES);
+	} else if (g_str_has_prefix(output_names[i], "detection_classes")) {
+	  output_ids[i] = g_quark_from_static_string(GST_MODEL_OBJECT_DETECTOR_CLASSES);
+	  GST_INFO_OBJECT(debug_parent,
+			  "No custom metadata for key '%s', assuming %s",
+			  output_names[i], GST_MODEL_OBJECT_DETECTOR_CLASSES);
+	} else if (g_str_has_prefix(output_names[i], "num_detections")) {
+	  output_ids[i] = g_quark_from_static_string(GST_MODEL_OBJECT_DETECTOR_NUM_DETECTIONS);
+	  GST_INFO_OBJECT(debug_parent,
+			  "No custom metadata for key '%s', assuming %s",
+			  output_names[i], GST_MODEL_OBJECT_DETECTOR_NUM_DETECTIONS);
+	} else {
+	  GST_ERROR_OBJECT(debug_parent, "Failed to look up id for key %s", output_names[i]);
+	  api->ReleaseTypeInfo(output_type_info);
+	  goto error;
+	}
+
+	/* tensor description */
+	GstStructure *tensor_desc = gst_structure_new_empty("tensor/strided");
+
+	/* Setting dims */
+	GValue val_dims = G_VALUE_INIT, val = G_VALUE_INIT;
+	gst_value_array_init(&val_dims, card);
+	g_value_init(&val, G_TYPE_INT);
+
+	int64_t *shape = (int64_t *) g_alloca (card * sizeof (int64_t));
+	status = api->GetDimensions(output_tensor_info, shape, card);
+	if (!status) {
+	  for (j = 0; j < card; j++) {
+	    g_value_set_int(&val, shape[j] > 0 ? shape[j] : 0);
+	    gst_value_array_append_value(&val_dims, &val);
+	  }
+	} else {
+	  api->ReleaseStatus(status);
+	  status = nullptr;
+	}
+
+	gst_structure_take_value(tensor_desc, "dims", &val_dims);
+	g_value_unset(&val_dims);
+	g_value_unset(&val);
+
+	/* Setting datatype */
+	if (!setTensorDescDatatype(type, tensor_desc)) {
+	  api->ReleaseTypeInfo(output_type_info);
+	  goto error;
+	}
+
+	/* Setting tensors caps */
+	char* meta_key = nullptr;
+	OrtStatus* lookup_status = api->ModelMetadataLookupCustomMetadataMap(metadata, allocator, output_names[i], &meta_key);
+	if (!lookup_status && meta_key) {
+	  gst_structure_set(tensors, meta_key, GST_TYPE_CAPS,
+			    gst_caps_new_full(tensor_desc, NULL), NULL);
+	  allocator->Free(allocator, meta_key);
+	} else {
+	  if (lookup_status)
+	    api->ReleaseStatus(lookup_status);
+	  gst_structure_free(tensor_desc);
+	}
+
+	api->ReleaseTypeInfo(output_type_info);
+      }
     }
+
+    if (metadata)
+      api->ReleaseModelMetadata(metadata);
+    metadata = nullptr;
+
 
     // Create memory info for CPU
     status = api->CreateCpuMemoryInfo(OrtArenaAllocator, OrtMemTypeDefault, &memory_info);
@@ -627,16 +609,24 @@ error:
 
   void GstOnnxClient::destroySession (void)
   {
+    size_t i;
+
     if (session == NULL)
       return;
 
     // Clean up output names
-    for (auto name : outputNames) {
-      if (name)
-        allocator->Free(allocator, name);
+
+    for (i = 0; i < output_count; i++) {
+      if (output_names[i])
+        allocator->Free(allocator, output_names[i]);
     }
-    outputNames.clear();
-    outputIds.clear();
+    g_free (output_names);
+    output_names = NULL;
+
+    g_free (output_ids);
+    output_ids = NULL;
+
+    output_count = 0;
 
     if (memory_info)
       api->ReleaseMemoryInfo(memory_info);
@@ -677,10 +667,10 @@ error:
     GstTensorMeta *tmeta = gst_buffer_add_tensor_meta (buffer);
     tmeta->num_tensors = num_tensors;
     tmeta->tensors = g_new (GstTensor *, num_tensors);
-    bool hasIds = outputIds.size () == num_tensors;
 
     for (size_t i = 0; i < num_tensors; i++) {
       OrtValue* outputTensor = outputs[i];
+      size_t j;
 
       OrtTensorTypeAndShapeInfo* tensor_info;
       status = api->GetTensorTypeAndShape(outputTensor, &tensor_info);
@@ -712,8 +702,8 @@ error:
         return NULL;
       }
 
-      std::vector<int64_t> tensorShape(num_dims);
-      status = api->GetDimensions(tensor_info, tensorShape.data(), num_dims);
+      int64_t *shape = (int64_t *) g_alloca (num_dims * sizeof(int64_t));
+      status = api->GetDimensions(tensor_info, shape, num_dims);
       if (status) {
         api->ReleaseStatus(status);
         api->ReleaseTensorTypeAndShapeInfo(tensor_info);
@@ -721,24 +711,22 @@ error:
         return NULL;
       }
 
-      GstTensor *tensor = gst_tensor_alloc(tensorShape.size());
+      GstTensor *tensor = gst_tensor_alloc(num_dims);
       tmeta->tensors[i] = tensor;
+      tensor->id = output_ids[i];
 
-      if (hasIds)
-        tensor->id = outputIds[i];
-      else
-        tensor->id = 0;
-
-      for (size_t j = 0; j < tensorShape.size(); ++j)
-        tensor->dims[j] = tensorShape[j];
+      for (j = 0; j < num_dims; ++j)
+        tensor->dims[j] = shape[j];
 
       size_t numElements;
       status = api->GetTensorShapeElementCount(tensor_info, &numElements);
       if (status) {
+	GST_ERROR_OBJECT(debug_parent,
+			 "Could not get the number of elements in the tensor: %s",
+			 api->GetErrorMessage(status));
         api->ReleaseStatus(status);
-        numElements = 1;
-        for (auto dim : tensorShape)
-          numElements *= dim;
+	gst_buffer_remove_meta(buffer, (GstMeta *) tmeta);
+        return NULL;
       }
 
       api->ReleaseTensorTypeAndShapeInfo(tensor_info);
@@ -781,7 +769,6 @@ error:
     OrtTypeInfo* input_type_info = nullptr;
     OrtValue* input_tensor = nullptr;
     OrtValue** output_tensors = nullptr;
-    size_t output_count = outputNames.size();
     const OrtTensorTypeAndShapeInfo* input_tensor_info;
     size_t num_dims;
     int64_t *input_dims;
@@ -924,7 +911,7 @@ error:
     output_tensors = g_new0(OrtValue*, output_count);
 
     status = api->Run(session, nullptr, input_names, &input_tensor, 1,
-                      outputNames.data(), output_count, output_tensors);
+                      output_names, output_count, output_tensors);
 
     if (status) {
       GST_WARNING_OBJECT(debug_parent, "Failed to run inference");

@@ -27,7 +27,6 @@
 #include <onnxruntime_c_api.h>
 #include <gst/video/video.h>
 #include "gstml.h"
-#include <vector>
 #include <string>
 
 GST_DEBUG_CATEGORY_EXTERN (onnx_inference_debug);
@@ -104,9 +103,9 @@ namespace GstOnnxNamespace {
     int32_t channels;
     uint8_t *dest;
     GstOnnxExecutionProvider m_provider;
-    std::vector < std::string > labels;
-    std::vector < char* > outputNames;
-    std::vector < GQuark > outputIds;
+    size_t output_count;
+    gchar ** output_names;
+    GQuark* output_ids;
     GstMlInputImageFormat inputImageFormat;
     GstTensorDataType inputDatatype;
     size_t inputDatatypeSize;
