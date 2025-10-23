@@ -685,6 +685,8 @@ gst_h265_parse_process_sei (GstH265Parse * h265parse, GstH265NalUnit * nalu)
         break;
       }
       default:
+        GST_DEBUG_OBJECT (h265parse, "Unknown SEI payload type %d",
+            sei.payloadType);
         break;
     }
   }
@@ -2385,6 +2387,8 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
           chroma_format = "4:4:4";
           break;
         default:
+          GST_DEBUG_OBJECT (h265parse, "Unknown Chroma Format IDC %d",
+              sps->chroma_format_idc);
           break;
       }
 
@@ -3152,6 +3156,10 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
         case GST_H265_SEI_PIC_STRUCT_FRAME_DOUBLING:
         case GST_H265_SEI_PIC_STRUCT_FRAME_TRIPLING:
           field_count = 0;
+          break;
+        default:
+          GST_DEBUG_OBJECT (h265parse, "h265 sei_pic_struct %d",
+              h265parse->sei_pic_struct);
           break;
       }
 
