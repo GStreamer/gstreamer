@@ -3629,6 +3629,14 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
       name = NULL;
     }
     if (mux_template == NULL) {
+      GST_DEBUG_OBJECT (element,
+          "searching for pad-template with name 'sink_%%u'");
+      mux_template =
+          gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS
+          (splitmux->muxer), "sink_%u");
+      name = NULL;
+    }
+    if (mux_template == NULL) {
       GST_DEBUG_OBJECT (element, "searching for pad-template with name 'sink'");
       mux_template =
           gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS
