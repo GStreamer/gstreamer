@@ -978,6 +978,10 @@ vasnprintf (char *resultbuf, size_t *lengthp, const char *format, va_list args)
               if (!(result == resultbuf || result == NULL))
                 free (result);
               freea (buf);
+#ifndef HAVE_SNPRINTF
+              if (tmp != tmpbuf)
+                free (tmp);
+#endif
               CLEANUP ();
               errno = EINVAL;
               return NULL;
