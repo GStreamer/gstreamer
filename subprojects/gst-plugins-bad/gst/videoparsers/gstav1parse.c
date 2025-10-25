@@ -1704,6 +1704,7 @@ gst_av1_parse_handle_one_obu (GstAV1Parse * self, GstAV1OBU * obu,
           && gst_av1_parse_frame_start_new_temporal_unit (self, obu)) {
         if (check_new_tu) {
           *check_new_tu = TRUE;
+          *frame_complete = TRUE;
           res = GST_AV1_PARSER_OK;
           goto out;
         }
