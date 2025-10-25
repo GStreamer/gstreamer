@@ -1363,6 +1363,8 @@ gst_d3d12_swapchain_sink_resize_internal (GstD3D12SwapChainSink * self,
 
     gst_d3d12_cmd_queue_execute_command_lists (priv->cq,
         0, nullptr, &priv->fence_val);
+
+    priv->did_redraw = TRUE;
   }
 }
 
