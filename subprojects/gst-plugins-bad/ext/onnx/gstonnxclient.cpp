@@ -44,6 +44,83 @@
 #define GST_MODEL_OBJECT_DETECTOR_NUM_DETECTIONS "generic-variant-1-out-count"
 #define GST_MODEL_OBJECT_DETECTOR_CLASSES "ssd-mobilenet-v1-variant-1-out-classes"
 
+
+#define _convert_image_remove_alpha(Type, dst, srcPtr,                        \
+    srcSamplesPerPixel, stride, means, stddevs)                                  \
+G_STMT_START {                                                                \
+  size_t destIndex = 0;                                                       \
+  Type tmp;                                                                   \
+                                                                              \
+  if (!planar) {                                                              \
+    for (int32_t j = 0; j < dstHeight; ++j) {                                 \
+      for (int32_t i = 0; i < dstWidth; ++i) {                                \
+        for (int32_t k = 0; k < dstChannels; ++k) {                           \
+          tmp = *srcPtr[k];                                                   \
+          tmp += means[k];                                                    \
+          dst[destIndex++] = (Type)(tmp / stddevs[k]);                        \
+          srcPtr[k] += srcSamplesPerPixel;                                    \
+        }                                                                     \
+      }                                                                       \
+      /* correct for stride */                                                \
+      for (uint32_t k = 0; k < 3; ++k)                                        \
+        srcPtr[k] += stride - srcSamplesPerPixel * dstWidth;                  \
+    }                                                                         \
+  } else {                                                                    \
+    size_t frameSize = dstWidth * dstHeight;                                  \
+    Type *destPtr[3] = { dst, dst + frameSize, dst + 2 * frameSize };         \
+    for (int32_t j = 0; j < dstHeight; ++j) {                                 \
+      for (int32_t i = 0; i < dstWidth; ++i) {                                \
+        for (int32_t k = 0; k < dstChannels; ++k) {                           \
+          tmp = *srcPtr[k];                                                   \
+          tmp += means[k];                                                    \
+          destPtr[k][destIndex] = (Type)(tmp / stddevs[k]);                   \
+          srcPtr[k] += srcSamplesPerPixel;                                    \
+        }                                                                     \
+        destIndex++;                                                          \
+      }                                                                       \
+      /* correct for stride */                                                \
+      for (uint32_t k = 0; k < 3; ++k)                                        \
+        srcPtr[k] += stride - srcSamplesPerPixel * dstWidth;                  \
+    }                                                                         \
+  }                                                                           \
+}                                                                             \
+G_STMT_END;
+
+static void
+convert_image_remove_alpha_u8 (guint8 * dst, gint dstWidth, gint dstHeight,
+    gint dstChannels, gboolean planar, guint8 ** srcPtr,
+    guint8 srcSamplesPerPixel, guint32 stride, const gdouble * means,
+    const gdouble * stddevs)
+{
+  static const gdouble zeros[] = { 0, 0, 0, 0 };
+  static const gdouble ones[] = { 1.0, 1.0, 1.0, 1.0 };
+  if (means == NULL)
+    means = zeros;
+  if (stddevs == NULL)
+    stddevs = ones;
+
+  _convert_image_remove_alpha (guint8, dst, srcPtr, srcSamplesPerPixel,
+      stride, means, stddevs);
+}
+
+static void
+convert_image_remove_alpha_f32 (gfloat * dst, gint dstWidth, gint dstHeight,
+    gint dstChannels, gboolean planar, guint8 ** srcPtr,
+    guint8 srcSamplesPerPixel, guint32 stride, const gdouble * means,
+    const gdouble * stddevs)
+{
+  static const gdouble zeros[] = { 0, 0, 0, 0 };
+  static const gdouble two_five_fives[] = { 255.0, 255.0, 255.0, 255.0 };
+  if (means == NULL)
+    means = zeros;
+  if (stddevs == NULL)
+    stddevs = two_five_fives;
+
+  _convert_image_remove_alpha (gfloat, dst, srcPtr, srcSamplesPerPixel,
+      stride, means, stddevs);
+}
+
+
 namespace GstOnnxNamespace
 {
 
@@ -89,16 +166,19 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):
       inputImageFormat (GST_ML_INPUT_IMAGE_FORMAT_HWC),
       inputDatatype (GST_TENSOR_DATA_TYPE_UINT8),
       inputDatatypeSize (sizeof (uint8_t)),
-      fixedInputImageSize (false),
-      inputTensorOffset (0.0),
-      inputTensorScale (1.0)
-       {
+      fixedInputImageSize (false)
+  {
     api = OrtGetApiBase()->GetApi(ORT_API_VERSION);
+    means = g_new0 (double, 1); 
+    stddevs = g_new (double, 1);
+    stddevs[0] = 1.0;
   }
 
   GstOnnxClient::~GstOnnxClient () {
     destroySession();
     delete[]dest;
+    g_free (means);
+    g_free (stddevs);
   }
 
   int32_t GstOnnxClient::getWidth (void)
@@ -159,24 +239,30 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):
     };
   }
 
-  void GstOnnxClient::setInputImageOffset (float offset)
+  void GstOnnxClient::setInputImageOffset (double offset)
   {
-    inputTensorOffset = offset;
+    int c = channels ? channels : 1;
+    int i;
+    for (i = 0; i < c; i++)
+      means[i] = offset;
   }
 
   float GstOnnxClient::getInputImageOffset ()
   {
-    return inputTensorOffset;
+    return means[0];
   }
 
-  void GstOnnxClient::setInputImageScale (float scale)
+  void GstOnnxClient::setInputImageScale (double scale)
   {
-    inputTensorScale = scale;
+    int c = channels ? channels : 1;
+    int i;
+    for (i = 0; i < c; i++)
+      stddevs[i] = scale;
   }
 
   float GstOnnxClient::getInputImageScale ()
   {
-    return inputTensorScale;
+    return stddevs[0];
   }
 
   GstTensorDataType GstOnnxClient::getInputImageDatatype(void)
@@ -378,6 +464,14 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):
       channels = input_dims[1];
       height = input_dims[2];
       width = input_dims[3];
+    }
+
+    means = g_renew(double, means, channels);
+    stddevs = g_renew(double, stddevs, channels);
+
+    for (int i = 1; i < channels; i++) {
+      means[i] = means[0];
+      stddevs[i] = stddevs[0];
     }
 
     fixedInputImageSize = width > 0 && height > 0;
@@ -865,12 +959,13 @@ error:
     switch (inputDatatype) {
       case GST_TENSOR_DATA_TYPE_UINT8: {
         uint8_t *src_data;
-        if (inputTensorOffset == 0.0 && inputTensorScale == 1.0) {
+        if (means[0] == 0.0 && stddevs[0] == 1.0) {
           src_data = img_data;
         } else {
-          convert_image_remove_alpha(
-            dest, inputImageFormat, srcPtr, srcSamplesPerPixel, stride,
-            (uint8_t)inputTensorOffset, (uint8_t)inputTensorScale);
+
+	  convert_image_remove_alpha_u8 (dest, width, height,
+					 channels, TRUE, srcPtr, srcSamplesPerPixel,
+					 stride, means, stddevs);
           src_data = dest;
         }
 
@@ -881,10 +976,10 @@ error:
         }
         break;
       case GST_TENSOR_DATA_TYPE_FLOAT32: {
-        convert_image_remove_alpha((float*)dest, inputImageFormat, srcPtr,
-            srcSamplesPerPixel, stride, (float)inputTensorOffset,
-            (float)inputTensorScale);
-        
+	convert_image_remove_alpha_f32 ((float*) dest, width, height,
+					channels, TRUE, srcPtr, srcSamplesPerPixel,
+					stride, means, stddevs);
+
         status = api->CreateTensorWithDataAsOrtValue(
             memory_info, (float*)dest, inputTensorSize,
             input_dims, num_dims,
@@ -935,46 +1030,5 @@ error:
     }
     *num_outputs = 0;
     return nullptr;
-  }
-
-  template < typename T>
-  void GstOnnxClient::convert_image_remove_alpha (T *dst,
-      GstMlInputImageFormat hwc, uint8_t **srcPtr, uint32_t srcSamplesPerPixel,
-      uint32_t stride, T offset, T div) {
-    size_t destIndex = 0;
-    T tmp;
-
-    if (inputImageFormat == GST_ML_INPUT_IMAGE_FORMAT_HWC) {
-      for (int32_t j = 0; j < height; ++j) {
-        for (int32_t i = 0; i < width; ++i) {
-          for (int32_t k = 0; k < channels; ++k) {
-            tmp = *srcPtr[k];
-            tmp += offset;
-            dst[destIndex++] = (T)(tmp / div);
-            srcPtr[k] += srcSamplesPerPixel;
-          }
-        }
-        // correct for stride
-        for (uint32_t k = 0; k < 3; ++k)
-          srcPtr[k] += stride - srcSamplesPerPixel * width;
-      }
-    } else {
-      size_t frameSize = width * height;
-      T *destPtr[3] = { dst, dst + frameSize, dst + 2 * frameSize };
-      for (int32_t j = 0; j < height; ++j) {
-        for (int32_t i = 0; i < width; ++i) {
-          for (int32_t k = 0; k < channels; ++k) {
-            tmp = *srcPtr[k];
-            tmp += offset;
-            destPtr[k][destIndex] = (T)(tmp / div);
-            srcPtr[k] += srcSamplesPerPixel;
-          }
-          destIndex++;
-        }
-        // correct for stride
-        for (uint32_t k = 0; k < 3; ++k)
-          srcPtr[k] += stride - srcSamplesPerPixel * width;
-      }
-    }
   }
 }

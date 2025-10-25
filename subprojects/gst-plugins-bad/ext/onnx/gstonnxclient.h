@@ -72,9 +72,9 @@ namespace GstOnnxNamespace {
     void setInputImageFormat(GstMlInputImageFormat format);
     GstMlInputImageFormat getInputImageFormat(void);
     GstTensorDataType getInputImageDatatype(void);
-    void setInputImageOffset (float offset);
+    void setInputImageOffset (double offset);
     float getInputImageOffset ();
-    void setInputImageScale (float offset);
+    void setInputImageScale (double offset);
     float getInputImageScale ();
     OrtValue** run (uint8_t * img_data, GstVideoInfo vinfo, size_t *num_outputs);
     bool isFixedInputImageSize(void);
@@ -109,8 +109,8 @@ namespace GstOnnxNamespace {
     GstTensorDataType inputDatatype;
     size_t inputDatatypeSize;
     bool fixedInputImageSize;
-    float inputTensorOffset;
-    float inputTensorScale;
+    double *means;
+    double *stddevs;
   };
 }
 
