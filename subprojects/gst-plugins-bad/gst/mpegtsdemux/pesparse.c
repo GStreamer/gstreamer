@@ -106,10 +106,11 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res)
 
   GST_LOG ("scrambling_control 0x%0x", res->scrambling_control);
   GST_LOG ("flags_1: %s%s%s%s%s",
-      val8 & 0x08 ? "priority " : "",
-      val8 & 0x04 ? "data_alignment " : "",
-      val8 & 0x02 ? "copyright " : "",
-      val8 & 0x01 ? "original_or_copy " : "", val8 & 0x0f ? "" : "<none>");
+      val8 & PES_FLAG_PRIORITY ? "priority " : "",
+      val8 & PES_FLAG_DATA_ALIGNMENT ? "data_alignment " : "",
+      val8 & PES_FLAG_COPYRIGHT ? "copyright " : "",
+      val8 & PES_FLAG_ORIGINAL_OR_COPY ? "original_or_copy " : "",
+      val8 & 0x0f ? "" : "<none>");
 
   /* PTS_DTS_flags                    2
    * ESCR_flag                        1
