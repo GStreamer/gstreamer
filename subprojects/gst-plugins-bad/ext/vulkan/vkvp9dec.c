@@ -591,7 +591,7 @@ gst_vulkan_vp9_decoder_new_sequence (GstVp9Decoder * decoder,
     /* *INDENT-ON* */
   };
 
-  self->dpb_size = MAX (self->dpb_size, max_dpb_size);
+  self->dpb_size = CLAMP (max_dpb_size, 0, GST_VULKAN_VP9_MAX_DPB_SLOTS);
 
   g_clear_pointer (&self->input_state, gst_video_codec_state_unref);
   self->input_state = gst_video_codec_state_ref (decoder->input_state);
@@ -770,10 +770,6 @@ static gint32
 _find_next_slot_idx (GstVulkanVp9Decoder * self)
 {
   gint32 i;
-
-  g_return_val_if_fail (self != NULL, -1);
-  g_return_val_if_fail (self->dpb_size > 0, -1);
-  g_return_val_if_fail (self->dpb_size <= GST_VULKAN_VP9_MAX_DPB_SLOTS, -1);
 
   for (i = 0; i < self->dpb_size; i++) {
     if (!(self->free_slot_mask & (1 << i))) {
