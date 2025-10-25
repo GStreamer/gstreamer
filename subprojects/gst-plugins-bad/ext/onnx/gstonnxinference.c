@@ -785,8 +785,31 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       break;
   }
 
+  OrtLoggingLevel ort_logging;
+
+  switch (gst_debug_category_get_threshold (GST_CAT_DEFAULT)) {
+    case GST_LEVEL_NONE:
+    case GST_LEVEL_ERROR:
+      ort_logging = ORT_LOGGING_LEVEL_ERROR;
+      break;
+    case GST_LEVEL_WARNING:
+    case GST_LEVEL_FIXME:
+      ort_logging = ORT_LOGGING_LEVEL_WARNING;
+      break;
+    case GST_LEVEL_INFO:
+      ort_logging = ORT_LOGGING_LEVEL_INFO;
+      break;
+    case GST_LEVEL_DEBUG:
+    case GST_LEVEL_LOG:
+    case GST_LEVEL_TRACE:
+    case GST_LEVEL_MEMDUMP:
+    default:
+      ort_logging = ORT_LOGGING_LEVEL_VERBOSE;
+      break;
+  }
+
   // Create environment
-  status = api->CreateEnv (ORT_LOGGING_LEVEL_WARNING, "GstOnnx", &self->env);
+  status = api->CreateEnv (ort_logging, "GstOnnx", &self->env);
   if (status) {
     GST_ERROR_OBJECT (self, "Failed to create environment: %s",
         api->GetErrorMessage (status));
