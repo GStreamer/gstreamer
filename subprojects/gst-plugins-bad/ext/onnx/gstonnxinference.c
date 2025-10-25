@@ -696,7 +696,6 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     goto done;
   }
 
-
   if (self->session) {
     ret = TRUE;
     goto done;
@@ -729,8 +728,9 @@ gst_onnx_inference_start (GstBaseTransform * trans)
 
   status = api->SetSessionGraphOptimizationLevel (session_options, onnx_optim);
   if (status) {
-    GST_ERROR_OBJECT (self, "Failed to set optimization level: %s",
-        api->GetErrorMessage (status));
+    GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+        ("Failed to set optimization level: %s",
+            api->GetErrorMessage (status)));
     goto error;
   }
   // Set execution provider
@@ -1279,32 +1279,37 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   status =
       api->SessionGetInputName (self->session, 0, self->allocator, input_names);
   if (status) {
-    GST_WARNING_OBJECT (self, "Failed to get input name");
+    GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+        ("Failed to get input name"));
     goto error;
   }
 
   status = api->SessionGetInputTypeInfo (self->session, 0, &input_type_info);
   if (status) {
-    GST_WARNING_OBJECT (self, "Failed to get input type info");
+    GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+        ("Failed to get input type info: %s", api->GetErrorMessage (status)));
     goto error;
   }
 
   status = api->CastTypeInfoToTensorInfo (input_type_info, &input_tensor_info);
   if (status) {
-    GST_WARNING_OBJECT (self, "Failed to cast type info");
+    GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+        ("Failed to cast type info: %s", api->GetErrorMessage (status)));
     goto error;
   }
 
   status = api->GetDimensionsCount (input_tensor_info, &num_dims);
   if (status) {
-    GST_WARNING_OBJECT (self, "Failed to get dimensions count");
+    GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+        ("Failed to get dimensions count: %s", api->GetErrorMessage (status)));
     goto error;
   }
 
   input_dims = (int64_t *) g_alloca (num_dims * sizeof (int64_t));
   status = api->GetDimensions (input_tensor_info, input_dims, num_dims);
   if (status) {
-    GST_WARNING_OBJECT (self, "Failed to get dimensions");
+    GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+        ("Failed to get dimensions: %s", api->GetErrorMessage (status)));
     goto error;
   }
 
@@ -1394,7 +1399,8 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       break;
     }
     default:
-      GST_WARNING_OBJECT (self, "Unsupported input datatype");
+      GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+          ("Unsupported input datatype"));
       goto error;
   }
 
@@ -1418,11 +1424,10 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   self->allocator->Free (self->allocator, input_names[0]);
   api->ReleaseValue (input_tensor);
 
-
   if (!output_tensors || self->output_count == 0) {
-    GST_ERROR_OBJECT (self, "ONNX inference failed to produce outputs");
-    gst_buffer_unmap (buf, &info);
-    return FALSE;
+    GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+        ("ONNX inference failed to produce outputs"));
+    goto error;
   }
 
 
@@ -1440,23 +1445,24 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     status =
         api->GetTensorTypeAndShape (output_tensors[i], &output_tensor_info);
     if (status) {
-      GST_ERROR_OBJECT (self, "Failed to get tensor info: %s",
-          api->GetErrorMessage (status));
-      api->ReleaseStatus (status);
+      GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+          ("Failed to get tensor info: %s", api->GetErrorMessage (status)));
       goto error;
     }
 
     status = api->GetTensorElementType (output_tensor_info, &tensor_type);
     if (status) {
-      GST_ERROR_OBJECT (self, "Failed to get tensor type: %s",
-          api->GetErrorMessage (status));
-      api->ReleaseStatus (status);
+      GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+          ("Failed to get tensor type: %s", api->GetErrorMessage (status)));
       goto error;
     }
 
     status = api->GetDimensionsCount (output_tensor_info, &num_dims);
     if (status) {
-      api->ReleaseStatus (status);
+      GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+          ("Failed to get dimensions count: %s",
+              api->GetErrorMessage (status)));
+
       api->ReleaseTensorTypeAndShapeInfo (output_tensor_info);
       goto error;
     }
@@ -1464,7 +1470,8 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     int64_t *shape = (int64_t *) g_alloca (num_dims * sizeof (int64_t));
     status = api->GetDimensions (output_tensor_info, shape, num_dims);
     if (status) {
-      api->ReleaseStatus (status);
+      GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+          ("Failed to get dimensions: %s", api->GetErrorMessage (status)));
       goto error;
     }
 
@@ -1478,10 +1485,9 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     status =
         api->GetTensorShapeElementCount (output_tensor_info, &num_elements);
     if (status) {
-      GST_ERROR_OBJECT (self,
-          "Could not get the number of elements in the tensor: %s",
-          api->GetErrorMessage (status));
-      api->ReleaseStatus (status);
+      GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+          ("Could not get the number of elements in the tensor: %s",
+              api->GetErrorMessage (status)));
       goto error;
     }
 
@@ -1490,9 +1496,8 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
     status = api->GetTensorMutableData (output_tensors[i], &tensor_data);
     if (status) {
-      GST_ERROR_OBJECT (self, "Failed to get tensor data: %s",
-          api->GetErrorMessage (status));
-      api->ReleaseStatus (status);
+      GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+          ("Failed to get tensor data: %s", api->GetErrorMessage (status)));
       goto error;
     }
 
@@ -1507,8 +1512,8 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       gst_buffer_fill (tensor->data, 0, tensor_data, buffer_size);
       tensor->data_type = GST_TENSOR_DATA_TYPE_INT32;
     } else {
-      GST_ERROR_OBJECT (self,
-          "Output tensor is not FLOAT32 or INT32, not supported");
+      GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+          ("Output tensor is not FLOAT32 or INT32, not supported"));
       goto error;
     }
   }
