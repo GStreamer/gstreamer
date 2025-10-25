@@ -1486,6 +1486,9 @@ gst_wasapi2_rbuf_class_init (GstWasapi2RbufClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_wasapi2_rbuf_debug,
       "wasapi2ringbuffer", 0, "wasapi2ringbuffer");
+
+  /* Initialize background thread on class init */
+  Wasapi2DeviceManager::GetInstance ();
 }
 
 static void
