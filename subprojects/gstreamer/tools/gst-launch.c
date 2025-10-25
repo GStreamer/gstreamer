@@ -358,6 +358,13 @@ print_error_message (GstMessage * msg)
   if (debug != NULL)
     gst_printerr (_("Additional debug info:\n%s\n"), debug);
 
+  const GstStructure *s = gst_message_get_details (msg);
+  if (s != NULL) {
+    gchar *str = gst_structure_to_string (s);
+    gst_printerr (_("Details:\n%s\n"), str);
+    g_free (str);
+  }
+
   g_clear_error (&err);
   g_free (debug);
 }
