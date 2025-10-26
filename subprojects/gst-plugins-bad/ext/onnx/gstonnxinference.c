@@ -1238,12 +1238,12 @@ G_STMT_START {                                                                \
           tmp = *srcPtr[k];                                                   \
           tmp += means[k];                                                    \
           dst[destIndex++] = (Type)(tmp / stddevs[k]);                        \
-          srcPtr[k] += srcSamplesPerPixel;                                    \
+          srcPtr[k] += pixel_stride;                                    \
         }                                                                     \
       }                                                                       \
       /* correct for stride */                                                \
       for (uint32_t k = 0; k < 3; ++k)                                        \
-        srcPtr[k] += stride - srcSamplesPerPixel * dstWidth;                  \
+        srcPtr[k] += stride - pixel_stride * dstWidth;                  \
     }                                                                         \
   } else {                                                                    \
     size_t frameSize = dstWidth * dstHeight;                                  \
@@ -1254,13 +1254,13 @@ G_STMT_START {                                                                \
           tmp = *srcPtr[k];                                                   \
           tmp += means[k];                                                    \
           destPtr[k][destIndex] = (Type)(tmp / stddevs[k]);                   \
-          srcPtr[k] += srcSamplesPerPixel;                                    \
+          srcPtr[k] += pixel_stride;                                    \
         }                                                                     \
         destIndex++;                                                          \
       }                                                                       \
       /* correct for stride */                                                \
       for (uint32_t k = 0; k < 3; ++k)                                        \
-        srcPtr[k] += stride - srcSamplesPerPixel * dstWidth;                  \
+        srcPtr[k] += stride - pixel_stride * dstWidth;                  \
     }                                                                         \
   }                                                                           \
 }                                                                             \
@@ -1269,7 +1269,7 @@ G_STMT_END;
 static void
 convert_image_remove_alpha_u8 (guint8 * dst, gint dstWidth, gint dstHeight,
     gint dstChannels, gboolean planar, guint8 ** srcPtr,
-    guint8 srcSamplesPerPixel, guint32 stride, const gdouble * means,
+    guint8 pixel_stride, guint32 stride, const gdouble * means,
     const gdouble * stddevs)
 {
   static const gdouble zeros[] = { 0, 0, 0, 0 };
@@ -1279,14 +1279,14 @@ convert_image_remove_alpha_u8 (guint8 * dst, gint dstWidth, gint dstHeight,
   if (stddevs == NULL)
     stddevs = ones;
 
-  _convert_image_remove_alpha (guint8, dst, srcPtr, srcSamplesPerPixel,
+  _convert_image_remove_alpha (guint8, dst, srcPtr, pixel_stride,
       stride, means, stddevs);
 }
 
 static void
 convert_image_remove_alpha_f32 (gfloat * dst, gint dstWidth, gint dstHeight,
     gint dstChannels, gboolean planar, guint8 ** srcPtr,
-    guint8 srcSamplesPerPixel, guint32 stride, const gdouble * means,
+    guint8 pixel_stride, guint32 stride, const gdouble * means,
     const gdouble * stddevs)
 {
   static const gdouble zeros[] = { 0, 0, 0, 0 };
@@ -1296,7 +1296,7 @@ convert_image_remove_alpha_f32 (gfloat * dst, gint dstWidth, gint dstHeight,
   if (stddevs == NULL)
     stddevs = two_five_fives;
 
-  _convert_image_remove_alpha (gfloat, dst, srcPtr, srcSamplesPerPixel,
+  _convert_image_remove_alpha (gfloat, dst, srcPtr, pixel_stride,
       stride, means, stddevs);
 }
 
@@ -1313,7 +1313,6 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   size_t num_dims;
   int64_t *input_dims;
   uint8_t *srcPtr[3];
-  uint32_t srcSamplesPerPixel;
   size_t inputTensorSize;
   char *input_names[1];
   GstTensorMeta *tmeta = NULL;
@@ -1382,31 +1381,31 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       input_dims[0], input_dims[1], input_dims[2], input_dims[3]);
 
   // copy video frame
-  srcPtr[0] = info.data;
-  srcPtr[1] = info.data + 1;
-  srcPtr[2] = info.data + 2;
-  srcSamplesPerPixel = 3;
   switch (self->video_info.finfo->format) {
     case GST_VIDEO_FORMAT_RGBA:
-      srcSamplesPerPixel = 4;
+      srcPtr[0] = info.data;
+      srcPtr[1] = info.data + 1;
+      srcPtr[2] = info.data + 2;
       break;
     case GST_VIDEO_FORMAT_BGRA:
-      srcSamplesPerPixel = 4;
       srcPtr[0] = info.data + 2;
       srcPtr[1] = info.data + 1;
       srcPtr[2] = info.data + 0;
       break;
     case GST_VIDEO_FORMAT_ARGB:
-      srcSamplesPerPixel = 4;
       srcPtr[0] = info.data + 1;
       srcPtr[1] = info.data + 2;
       srcPtr[2] = info.data + 3;
       break;
     case GST_VIDEO_FORMAT_ABGR:
-      srcSamplesPerPixel = 4;
       srcPtr[0] = info.data + 3;
       srcPtr[1] = info.data + 2;
       srcPtr[2] = info.data + 1;
+      break;
+    case GST_VIDEO_FORMAT_RGB:
+      srcPtr[0] = info.data;
+      srcPtr[1] = info.data + 1;
+      srcPtr[2] = info.data + 2;
       break;
     case GST_VIDEO_FORMAT_BGR:
       srcPtr[0] = info.data + 2;
@@ -1414,6 +1413,7 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       srcPtr[2] = info.data + 0;
       break;
     default:
+      g_assert_not_reached ();
       break;
   }
 
@@ -1428,8 +1428,10 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
         src_data = info.data;
       } else {
         convert_image_remove_alpha_u8 (self->dest, self->width, self->height,
-            self->channels, TRUE, srcPtr, srcSamplesPerPixel,
-            self->video_info.stride[0], self->means, self->stddevs);
+            self->channels, TRUE, srcPtr,
+            GST_VIDEO_INFO_COMP_PSTRIDE (&self->video_info, 0),
+            GST_VIDEO_INFO_PLANE_STRIDE (&self->video_info, 0),
+            self->means, self->stddevs);
         src_data = self->dest;
       }
 
@@ -1441,8 +1443,10 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     case GST_TENSOR_DATA_TYPE_FLOAT32:{
       convert_image_remove_alpha_f32 ((float *) self->dest, self->width,
           self->height,
-          self->channels, TRUE, srcPtr, srcSamplesPerPixel,
-          self->video_info.stride[0], self->means, self->stddevs);
+          self->channels, TRUE, srcPtr,
+          GST_VIDEO_INFO_COMP_PSTRIDE (&self->video_info, 0),
+          GST_VIDEO_INFO_PLANE_STRIDE (&self->video_info, 0),
+          self->means, self->stddevs);
 
       status = api->CreateTensorWithDataAsOrtValue (self->memory_info,
           (float *) self->dest,
