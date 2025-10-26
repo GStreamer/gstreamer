@@ -1661,6 +1661,16 @@ _gst_debug_log_preamble (GstDebugMessage * message, const gchar ** file,
   *elapsed = GST_CLOCK_DIFF (_priv_gst_start_time, gst_util_get_timestamp ());
 }
 
+static inline gpointer
+_get_thread_id (void)
+{
+#ifdef G_OS_WIN32
+  return GUINT_TO_POINTER (GetCurrentThreadId ());
+#else
+  return g_thread_self ();
+#endif
+}
+
 /**
  * gst_debug_log_get_line:
  * @category: category to log
@@ -1688,17 +1698,18 @@ gst_debug_log_get_line (GstDebugCategory * category, GstDebugLevel level,
   GstClockTime elapsed;
   gchar *ret;
   const gchar *message_str, *object_id;
+  gpointer thread = _get_thread_id ();
 
   _gst_debug_log_preamble (message, &file, &message_str, &object_id, &elapsed);
 
   if (object_id)
     ret = g_strdup_printf ("%" GST_TIME_FORMAT NOCOLOR_PRINT_FMT_ID,
-        GST_TIME_ARGS (elapsed), _gst_getpid (), g_thread_self (),
+        GST_TIME_ARGS (elapsed), _gst_getpid (), thread,
         gst_debug_level_get_name (level), gst_debug_category_get_name
         (category), file, line, function, object_id, message_str);
   else
     ret = g_strdup_printf ("%" GST_TIME_FORMAT NOCOLOR_PRINT_FMT,
-        GST_TIME_ARGS (elapsed), _gst_getpid (), g_thread_self (),
+        GST_TIME_ARGS (elapsed), _gst_getpid (), thread,
         gst_debug_level_get_name (level), gst_debug_category_get_name
         (category), file, line, function, "", message_str);
 
@@ -1775,6 +1786,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   GstDebugColorMode color_mode;
   const gchar *message_str;
   FILE *log_file = user_data ? user_data : stderr;
+  gpointer thread;
 #ifdef G_OS_WIN32
 #define FPRINTF_DEBUG _gst_debug_fprintf
 /* _gst_debug_fprintf will do fflush if it's required */
@@ -1794,6 +1806,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
 
   pid = _gst_getpid ();
   color_mode = gst_debug_get_color_mode ();
+  thread = _get_thread_id ();
 
   if (color_mode != GST_DEBUG_COLOR_MODE_OFF) {
 #ifdef G_OS_WIN32
@@ -1814,14 +1827,14 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
       if (object_id) {
 #define PRINT_FMT_ID " %s"PID_FMT"%s "PTR_FMT" %s%s%s %s"CAT_FMT_ID"%s %s\n"
         FPRINTF_DEBUG (log_file, "%" GST_TIME_FORMAT PRINT_FMT_ID,
-            GST_TIME_ARGS (elapsed), pidcolor, pid, clear, g_thread_self (),
+            GST_TIME_ARGS (elapsed), pidcolor, pid, clear, thread,
             levelcolor, gst_debug_level_get_name (level), clear, color,
             gst_debug_category_get_name (category), file, line, function,
             object_id, clear, message_str);
       } else {
 #define PRINT_FMT " %s"PID_FMT"%s "PTR_FMT" %s%s%s %s"CAT_FMT"%s %s\n"
         FPRINTF_DEBUG (log_file, "%" GST_TIME_FORMAT PRINT_FMT,
-            GST_TIME_ARGS (elapsed), pidcolor, pid, clear, g_thread_self (),
+            GST_TIME_ARGS (elapsed), pidcolor, pid, clear, thread,
             levelcolor, gst_debug_level_get_name (level), clear, color,
             gst_debug_category_get_name (category), file, line, function, "",
             clear, message_str);
@@ -1845,7 +1858,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
       FPRINTF_DEBUG (log_file, PID_FMT, pid);
       /* thread */
       SET_COLOR (clear);
-      FPRINTF_DEBUG (log_file, " " PTR_FMT " ", g_thread_self ());
+      FPRINTF_DEBUG (log_file, " " PTR_FMT " ", thread);
       /* level */
       SET_COLOR (levelcolormap_w32[level]);
       FPRINTF_DEBUG (log_file, "%s ", gst_debug_level_get_name (level));
@@ -1870,13 +1883,13 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     /* no color, all platforms */
     if (object_id) {
       FPRINTF_DEBUG (log_file, "%" GST_TIME_FORMAT NOCOLOR_PRINT_FMT_ID,
-          GST_TIME_ARGS (elapsed), pid, g_thread_self (),
+          GST_TIME_ARGS (elapsed), pid, thread,
           gst_debug_level_get_name (level),
           gst_debug_category_get_name (category), file, line, function,
           object_id, message_str);
     } else {
       FPRINTF_DEBUG (log_file, "%" GST_TIME_FORMAT NOCOLOR_PRINT_FMT,
-          GST_TIME_ARGS (elapsed), pid, g_thread_self (),
+          GST_TIME_ARGS (elapsed), pid, thread,
           gst_debug_level_get_name (level),
           gst_debug_category_get_name (category), file, line, function, "",
           message_str);
@@ -4203,7 +4216,7 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
     gint line, GObject * object, GstDebugMessage * message, gpointer user_data)
 {
   GstRingBufferLogger *logger = user_data;
-  GThread *thread;
+  gpointer thread;
   GstClockTime elapsed;
   gchar c;
   gchar *output;
@@ -4223,7 +4236,7 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
   }
 
   elapsed = GST_CLOCK_DIFF (_priv_gst_start_time, gst_util_get_timestamp ());
-  thread = g_thread_self ();
+  thread = _get_thread_id ();
 
   if (object_id) {
     /* no color, all platforms */
