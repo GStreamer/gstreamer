@@ -76,6 +76,9 @@
 
 #define GST_CAT_DEFAULT gst_base_ts_mux_debug
 
+/* start_code prefix + stream_id + pes_packet_length = 6 bytes */
+#define PES_PACKET_PREFIX_LEN 6
+
 static guint8 tsmux_stream_pes_header_length (TsMuxStream * stream);
 static void tsmux_stream_write_pes_header (TsMuxStream * stream, guint8 * data);
 static void tsmux_stream_find_pts_dts_within (TsMuxStream * stream, guint bound,
@@ -636,7 +639,7 @@ tsmux_stream_pes_header_length (TsMuxStream * stream)
   /* Calculate the length of the header for this stream */
 
   /* start_code prefix + stream_id + pes_packet_length = 6 bytes */
-  packet_len = 6;
+  packet_len = PES_PACKET_PREFIX_LEN;
 
   if (stream->pi.flags & TSMUX_PACKET_FLAG_PES_FULL_HEADER) {
     /* For a PES 'full header' we have at least 3 more bytes,
@@ -654,8 +657,9 @@ tsmux_stream_pes_header_length (TsMuxStream * stream)
     }
     if (stream->pi.pes_header_length) {
       /* check for consistency, then we can add stuffing */
-      g_assert (packet_len <= stream->pi.pes_header_length + 6 + 3);
-      packet_len = stream->pi.pes_header_length + 6 + 3;
+      g_assert (packet_len <=
+          stream->pi.pes_header_length + PES_PACKET_PREFIX_LEN + 3);
+      packet_len = stream->pi.pes_header_length + PES_PACKET_PREFIX_LEN + 3;
     }
   }
 
@@ -714,7 +718,8 @@ tsmux_stream_write_pes_header (TsMuxStream * stream, guint8 * data)
   /* Write 2 byte PES packet length here. 0 (unbounded) is only
    * valid for video packets */
   if (stream->cur_pes_payload_size != 0) {
-    length_to_write = hdr_len + stream->cur_pes_payload_size - 6;
+    length_to_write =
+        hdr_len + stream->cur_pes_payload_size - PES_PACKET_PREFIX_LEN;
   } else {
     length_to_write = 0;
   }
@@ -971,7 +976,6 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
       /* FIXME */
       break;
     case TSMUX_ST_PES_METADATA:
-
       if (stream->internal_stream_type == TSMUX_ST_PS_ID3) {
         // metadata_descriptor
         GstMpegtsMetadataDescriptor metadata_descriptor;
