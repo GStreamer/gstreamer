@@ -146,6 +146,13 @@ static const struct {
 };
 /* *INDENT-ON* */
 
+typedef enum _GstVulkanVideoProfileFeature
+{
+  NO = 0,
+  YES = 1,
+  UNDEFINED = -1,
+} GstVulkanVideoProfileFeature;
+
 static inline gboolean
 h265_subsampling_match (const VkVideoProfileInfoKHR * profile, int i)
 {
@@ -171,6 +178,7 @@ gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
   const char *mime = NULL, *chroma_sub = NULL;
   const char *profile_str = NULL, *layout = NULL;
   int i, luma = 0, chroma = 0;
+  GstVulkanVideoProfileFeature film_grain = UNDEFINED;
   GstCaps *caps;
 
   g_return_val_if_fail (profile
@@ -233,6 +241,8 @@ gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
               if (profile->codec.av1dec.stdProfile
                   == av1_profile_map[j].vk_profile) {
                 profile_str = av1_profile_map[j].profile_str;
+                film_grain = profile->codec.av1dec.filmGrainSupport == VK_TRUE ?
+                    YES : NO;
                 break;
               }
             }
@@ -321,6 +331,11 @@ gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
 
   if (layout)
     gst_caps_set_simple (caps, "interlace-mode", G_TYPE_STRING, layout, NULL);
+
+  if (film_grain != UNDEFINED) {
+    gst_caps_set_simple (caps, "film-grain", G_TYPE_BOOLEAN,
+        film_grain == YES ? TRUE : FALSE, NULL);
+  }
 
   return caps;
 }
@@ -468,6 +483,7 @@ gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
         }
         case VK_VIDEO_CODEC_OPERATION_DECODE_AV1_BIT_KHR:{
           int j;
+          gboolean film_grain;
 
           profile->codec.av1dec.sType = video_codecs_map[i].stype;
           profile->codec.av1dec.stdProfile = STD_VIDEO_AV1_PROFILE_INVALID;
@@ -480,6 +496,12 @@ gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
               break;
             }
           }
+
+          if (gst_structure_get_boolean (structure, "film-grain", &film_grain)) {
+            profile->codec.av1dec.filmGrainSupport =
+                film_grain ? VK_TRUE : VK_FALSE;
+          }
+
           break;
         }
         case VK_VIDEO_CODEC_OPERATION_ENCODE_H264_BIT_KHR:{
