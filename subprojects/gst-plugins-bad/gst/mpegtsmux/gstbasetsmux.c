@@ -1709,15 +1709,6 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
     header = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_HEADER);
   }
 
-  if (best->stream->internal_stream_type == TSMUX_ST_PS_KLV &&
-      gst_buffer_get_size (buf) > (G_MAXUINT16 - 3)) {
-    GST_WARNING_OBJECT (mux, "KLV meta unit too big, splitting not supported");
-
-    gst_buffer_unref (buf);
-    g_mutex_unlock (&mux->lock);
-    return GST_FLOW_OK;
-  }
-
   GST_DEBUG_OBJECT (mux, "delta: %d", delta);
 
   if (gst_buffer_get_size (buf) > 0) {

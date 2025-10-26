@@ -93,6 +93,8 @@ struct TsMuxStreamBuffer
   gint64 pts;
   gint64 dts;
 
+  gboolean pts_dts_consumed;
+
   /* data represents random access point */
   gboolean random_access;
 
@@ -213,7 +215,7 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
           TSMUX_PACKET_FLAG_PES_EXT_STREAMID;
       break;
     case TSMUX_ST_PS_TELETEXT:
-      /* needs fixes PES header length */
+      /* needs fixed PES header length */
       stream->pi.pes_header_length = 36;
       stream->id = 0xBD;
       stream->stream_type = TSMUX_ST_PRIVATE_DATA;
@@ -440,7 +442,9 @@ tsmux_stream_at_pes_start (TsMuxStream * stream)
  * tsmux_stream_bytes_avail:
  * @stream: a #TsMuxStream
  *
- * Calculate how much bytes are available.
+ * Calculate how many bytes are currently available for
+ * writing from this stream, including a PES header
+ * if one needs writing.
  *
  * Returns: The number of bytes available.
  */
@@ -495,7 +499,7 @@ tsmux_stream_bytes_in_buffer (TsMuxStream * stream)
  *
  * Initializes the PES packet.
  *
- * Returns: TRUE if we the packet was initialized.
+ * Returns: TRUE if the packet was initialized.
  */
 gboolean
 tsmux_stream_initialize_pes_packet (TsMuxStream * stream)
@@ -535,18 +539,21 @@ tsmux_stream_initialize_pes_packet (TsMuxStream * stream)
     }
   }
 
-  if (stream->gst_stream_type == GST_STREAM_TYPE_VIDEO) {
-    guint8 hdr_len;
+  guint8 hdr_len = tsmux_stream_pes_header_length (stream);
+  guint max_payload_len = G_MAXUINT16 - (hdr_len - PES_PACKET_PREFIX_LEN);
 
-    hdr_len = tsmux_stream_pes_header_length (stream);
-
-    /* Unbounded for video streams if pes packet length is over 16 bit */
-    if ((stream->cur_pes_payload_size + hdr_len - 6) > G_MAXUINT16)
+  if (stream->cur_pes_payload_size > max_payload_len) {
+    if (stream->gst_stream_type == GST_STREAM_TYPE_VIDEO) {
+      /* Unbounded for video streams if pes packet length is over 16 bit */
       stream->cur_pes_payload_size = 0;
-  }
-  // stream_type specific flags
-  if (stream->stream_type == TSMUX_ST_PES_METADATA) {
-    stream->pi.flags |= TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT;
+    } else {
+      /* Else, clamp this PES packet to maximum size and put the rest
+       * in another PES */
+      TS_DEBUG
+          ("Splitting input packet to multiple PES. Writing %u bytes of incoming payload",
+          max_payload_len);
+      stream->cur_pes_payload_size = max_payload_len;
+    }
   }
 
   return TRUE;
@@ -680,12 +687,18 @@ tsmux_stream_find_pts_dts_within (TsMuxStream * stream, guint bound,
   for (cur = stream->buffers; cur; cur = cur->next) {
     TsMuxStreamBuffer *curbuf = cur->data;
 
+    if (curbuf->pts_dts_consumed) {
+      /* Don't repeat PTS/DTS when partially consuming buffers */
+      continue;
+    }
+
     /* FIXME: This isn't quite correct - if the 'bound' is within this
      * buffer, we don't know if the timestamp is before or after the split
      * so we shouldn't return it */
     if (bound <= curbuf->size) {
       *pts = curbuf->pts;
       *dts = curbuf->dts;
+      curbuf->pts_dts_consumed = TRUE;
       return;
     }
 
@@ -694,6 +707,7 @@ tsmux_stream_find_pts_dts_within (TsMuxStream * stream, guint bound,
         || GST_CLOCK_STIME_IS_VALID (curbuf->dts)) {
       *pts = curbuf->pts;
       *dts = curbuf->dts;
+      curbuf->pts_dts_consumed = TRUE;
       return;
     }
 
@@ -731,8 +745,14 @@ tsmux_stream_write_pes_header (TsMuxStream * stream, guint8 * data)
 
     /* Not scrambled, original, not-copyrighted, data_alignment not specified */
     flags = 0x81;
-    if (stream->pi.flags & TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT)
+
+    /* If this stream has PES data alignment *and* this PES is the start of
+     * an input buffer, set the data aligment mark */
+    if (stream->pi.flags & TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT &&
+        stream->cur_buffer_consumed == 0) {
+      TS_DEBUG ("Marking data_alignment flag for this PES");
       flags |= 0x4;
+    }
     *data++ = flags;
     flags = 0;
 
@@ -880,6 +900,7 @@ tsmux_stream_add_data (TsMuxStream * stream, guint8 * data, guint len,
 
   packet->pts = pts;
   packet->dts = dts;
+  packet->pts_dts_consumed = FALSE;
 
   if (stream->bytes_avail == 0) {
     stream->last_pts = pts;
