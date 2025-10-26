@@ -77,20 +77,6 @@
 #include <cpu_provider_factory.h>
 #endif
 
-/**
- * GstMlInputImageFormat:
- *
- * @GST_ML_INPUT_IMAGE_FORMAT_HWC Height Width Channel (a.k.a. interleaved) format
- * @GST_ML_INPUT_IMAGE_FORMAT_CHW Channel Height Width  (a.k.a. planar) format
- *
- * Since: 1.20
- */
-typedef enum
-{
-  GST_ML_INPUT_IMAGE_FORMAT_HWC,
-  GST_ML_INPUT_IMAGE_FORMAT_CHW,
-} GstMlInputImageFormat;
-
 typedef enum
 {
   GST_ONNX_OPTIMIZATION_LEVEL_DISABLE_ALL,
@@ -113,7 +99,7 @@ struct _GstOnnxInference
   GstOnnxOptimizationLevel optimization_level;
   GstOnnxExecutionProvider execution_provider;
   GstVideoInfo video_info;
-  GstCaps *tensors_caps;
+  GstCaps *model_caps;
 
   OrtEnv *env;
   OrtSession *session;
@@ -122,11 +108,11 @@ struct _GstOnnxInference
   int32_t width;
   int32_t height;
   int32_t channels;
+  gboolean planar;
   uint8_t *dest;
   size_t output_count;
   gchar **output_names;
   GQuark *output_ids;
-  GstMlInputImageFormat inputImageFormat;
   GstTensorDataType input_data_type;
   bool fixedInputImageSize;
   double *means;
@@ -147,7 +133,6 @@ enum
 {
   PROP_0,
   PROP_MODEL_FILE,
-  PROP_INPUT_IMAGE_FORMAT,
   PROP_OPTIMIZATION_LEVEL,
   PROP_EXECUTION_PROVIDER,
   PROP_INPUT_OFFSET,
@@ -194,9 +179,6 @@ GType gst_onnx_optimization_level_get_type (void);
 
 GType gst_onnx_execution_provider_get_type (void);
 #define GST_TYPE_ONNX_EXECUTION_PROVIDER (gst_onnx_execution_provider_get_type ())
-
-GType gst_ml_model_input_image_format_get_type (void);
-#define GST_TYPE_ML_MODEL_INPUT_IMAGE_FORMAT (gst_ml_model_input_image_format_get_type ())
 
 GType
 gst_onnx_optimization_level_get_type (void)
@@ -266,31 +248,6 @@ gst_onnx_execution_provider_get_type (void)
   return onnx_execution_type;
 }
 
-GType
-gst_ml_model_input_image_format_get_type (void)
-{
-  static GType ml_model_input_image_format = 0;
-
-  if (g_once_init_enter (&ml_model_input_image_format)) {
-    static GEnumValue ml_model_input_image_format_types[] = {
-      {GST_ML_INPUT_IMAGE_FORMAT_HWC,
-            "Height Width Channel (HWC) a.k.a. interleaved image data format",
-          "hwc"},
-      {GST_ML_INPUT_IMAGE_FORMAT_CHW,
-            "Channel Height Width (CHW) a.k.a. planar image data format",
-          "chw"},
-      {0, NULL, NULL},
-    };
-
-    GType temp = g_enum_register_static ("GstMlInputImageFormat",
-        ml_model_input_image_format_types);
-
-    g_once_init_leave (&ml_model_input_image_format, temp);
-  }
-
-  return ml_model_input_image_format;
-}
-
 static void
 gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
 {
@@ -314,22 +271,6 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MODEL_FILE,
       g_param_spec_string ("model-file",
           "ONNX model file", "ONNX model file", NULL, (GParamFlags)
-          (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-
-  /**
-   * GstOnnxInference:input-image-format
-   *
-   * Model input image format
-   *
-   * Since: 1.24
-   */
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_INPUT_IMAGE_FORMAT,
-      g_param_spec_enum ("input-image-format",
-          "Input image format",
-          "Input image format",
-          GST_TYPE_ML_MODEL_INPUT_IMAGE_FORMAT,
-          GST_ML_INPUT_IMAGE_FORMAT_HWC, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
    /**
@@ -402,8 +343,6 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
       (GstPluginAPIFlags) 0);
   gst_type_mark_as_plugin_api (GST_TYPE_ONNX_EXECUTION_PROVIDER,
       (GstPluginAPIFlags) 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_ML_MODEL_INPUT_IMAGE_FORMAT,
-      (GstPluginAPIFlags) 0);
 
   api = OrtGetApiBase ()->GetApi (ORT_API_VERSION);
 }
@@ -413,10 +352,9 @@ gst_onnx_inference_init (GstOnnxInference * self)
 {
   /* TODO: at the moment onnx inference only support video output. We
    * should revisit this aspect once we generalize it */
-  self->tensors_caps = gst_caps_new_empty_simple ("video/x-raw");
+  self->model_caps = gst_caps_new_empty_simple ("video/x-raw");
 
   self->execution_provider = GST_ONNX_EXECUTION_PROVIDER_CPU;
-  self->inputImageFormat = GST_ML_INPUT_IMAGE_FORMAT_HWC;
 
   self->means = g_new0 (double, 1);
   self->stddevs = g_new (double, 1);
@@ -432,7 +370,7 @@ gst_onnx_inference_finalize (GObject * object)
   g_free (self->stddevs);
 
   g_free (self->model_file);
-  gst_caps_unref (self->tensors_caps);
+  gst_caps_unref (self->model_caps);
   G_OBJECT_CLASS (gst_onnx_inference_parent_class)->finalize (object);
 }
 
@@ -463,9 +401,6 @@ gst_onnx_inference_set_property (GObject * object, guint prop_id,
     case PROP_EXECUTION_PROVIDER:
       self->execution_provider =
           (GstOnnxExecutionProvider) g_value_get_enum (value);
-      break;
-    case PROP_INPUT_IMAGE_FORMAT:
-      self->inputImageFormat = g_value_get_enum (value);
       break;
     case PROP_INPUT_OFFSET:{
       int c = self->channels ? self->channels : 1;
@@ -502,9 +437,6 @@ gst_onnx_inference_get_property (GObject * object, guint prop_id,
       break;
     case PROP_EXECUTION_PROVIDER:
       g_value_set_enum (value, self->execution_provider);
-      break;
-    case PROP_INPUT_IMAGE_FORMAT:
-      g_value_set_enum (value, self->inputImageFormat);
       break;
     case PROP_INPUT_OFFSET:
       g_value_set_float (value, self->means[0]);
@@ -546,7 +478,6 @@ gst_onnx_inference_transform_caps (GstBaseTransform *
 {
   GstOnnxInference *self = GST_ONNX_INFERENCE (trans);
   GstCaps *other_caps;
-  GstCaps *restrictions;
   bool has_session;
 
   GST_OBJECT_LOCK (self);
@@ -560,64 +491,11 @@ gst_onnx_inference_transform_caps (GstBaseTransform *
 
   GST_LOG_OBJECT (self, "transforming caps %" GST_PTR_FORMAT, caps);
 
-  if (gst_base_transform_is_passthrough (trans))
-    return gst_caps_ref (caps);
+  GST_DEBUG_OBJECT (self, "Applying model caps restrictions: %" GST_PTR_FORMAT,
+      self->model_caps);
 
-  restrictions = gst_caps_new_empty_simple ("video/x-raw");
-  if (self->fixedInputImageSize)
-    gst_caps_set_simple (restrictions, "width", G_TYPE_INT,
-        self->width, "height", G_TYPE_INT, self->height, NULL);
-
-  if (self->input_data_type == GST_TENSOR_DATA_TYPE_UINT8 &&
-      self->means[0] == 0.0 && self->stddevs[0] == 1.0) {
-    switch (self->channels) {
-      case 1:
-        gst_caps_set_simple (restrictions, "format", G_TYPE_STRING, "GRAY8",
-            NULL);
-        break;
-      case 3:
-        switch (self->inputImageFormat) {
-          case GST_ML_INPUT_IMAGE_FORMAT_HWC:
-            gst_caps_set_simple (restrictions, "format", G_TYPE_STRING, "RGB",
-                NULL);
-            break;
-          case GST_ML_INPUT_IMAGE_FORMAT_CHW:
-            gst_caps_set_simple (restrictions, "format", G_TYPE_STRING, "RGBP",
-                NULL);
-            break;
-        }
-        break;
-      case 4:
-        switch (self->inputImageFormat) {
-          case GST_ML_INPUT_IMAGE_FORMAT_HWC:
-            gst_caps_set_simple (restrictions, "format", G_TYPE_STRING, "RGBA",
-                NULL);
-            break;
-          case GST_ML_INPUT_IMAGE_FORMAT_CHW:
-            gst_caps_set_simple (restrictions, "format", G_TYPE_STRING, "RGBAP",
-                NULL);
-            break;
-        }
-        break;
-      default:
-        GST_ERROR_OBJECT (self, "Invalid number of channels %d",
-            self->channels);
-        return NULL;
-    }
-  }
-
-  GST_DEBUG_OBJECT (self, "Applying caps restrictions: %" GST_PTR_FORMAT,
-      restrictions);
-
-  if (direction == GST_PAD_SINK) {
-    GstCaps *intersect = gst_caps_intersect (restrictions, self->tensors_caps);
-    gst_caps_replace (&restrictions, intersect);
-    gst_caps_unref (intersect);
-  }
-
-  other_caps = gst_caps_intersect_full (caps, restrictions,
+  other_caps = gst_caps_intersect_full (caps, self->model_caps,
       GST_CAPS_INTERSECT_FIRST);
-  gst_caps_unref (restrictions);
 
 done:
   if (filter_caps) {
@@ -695,6 +573,87 @@ gst_onnx_log_function (void *param, OrtLoggingLevel severity,
       0, obj, "%s", message);
 }
 
+/* FIXME: This is copied from Gsttfliteinference and we should create something
+ * more generic
+ */
+
+static gboolean
+_guess_tensor_data_type (GstOnnxInference * self, gsize dims_count,
+    gsize * dims, const gchar ** gst_format, gint * width, gint * height,
+    gint * channels, gboolean * planar)
+{
+  if (dims_count < 2 || dims_count > 4) {
+    GST_ERROR_OBJECT (self,
+        "Don't know how to interpret tensors with %zu dimensions", dims_count);
+    return FALSE;
+  }
+
+  *planar = FALSE;
+
+  switch (dims_count) {
+    case 2:
+      *gst_format = "GRAY8";
+      *height = dims[0];
+      *width = dims[1];
+      break;
+    case 3:
+      if (dims[0] == 1 || dims[0] == 3) {
+        *channels = dims[0];
+        if (dims[0] == 1) {
+          *gst_format = "GRAY8";
+        } else {
+          *gst_format = "RGBP";
+          *planar = TRUE;
+        }
+        *height = dims[1];
+        *width = dims[2];
+      } else if (dims[2] == 1 || dims[2] == 3) {
+        *channels = dims[2];
+        if (dims[2] == 1)
+          *gst_format = "GRAY";
+        else
+          *gst_format = "RGB";
+        *height = dims[0];
+        *width = dims[1];
+      } else {
+        GST_ERROR_OBJECT (self, "Don't know how to interpret dims");
+        return FALSE;
+      }
+      break;
+    case 4:
+      /* Assuming dims[0] is a batch */
+      if (dims[1] == 1 || dims[1] == 3) {
+        *channels = dims[1];
+        *planar = TRUE;
+        *height = dims[2];
+        *width = dims[3];
+      } else if (dims[3] == 1 || dims[3] == 3) {
+        *channels = dims[3];
+        *height = dims[1];
+        *width = dims[2];
+      } else {
+        GST_ERROR_OBJECT (self, "Don't know how to interpret dims");
+        return FALSE;
+      }
+
+      if (*channels == 1) {
+        *gst_format = "GRAY8";
+        *planar = FALSE;
+      } else if (*channels == 3) {
+        if (*planar)
+          *gst_format = "RGBP";
+        else
+          *gst_format = "RGB";
+      } else {
+        g_assert_not_reached ();
+      }
+      break;
+  }
+
+  return TRUE;
+}
+
+
 static gboolean
 gst_onnx_inference_start (GstBaseTransform * trans)
 {
@@ -708,9 +667,11 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   GraphOptimizationLevel onnx_optim;
   size_t num_input_dims;
   int64_t *input_dims;
+  gsize *gst_input_dims;
   ONNXTensorElementDataType element_type;
   char *input_name = NULL;
   size_t i;
+  const gchar *gst_format;
 
   GST_OBJECT_LOCK (self);
   if (self->session) {
@@ -887,6 +848,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   }
 
   input_dims = (int64_t *) g_alloca (num_input_dims * sizeof (int64_t));
+  gst_input_dims = (gsize *) g_alloca (num_input_dims * sizeof (gsize));
   status = api->GetDimensions (input_tensor_info, input_dims, num_input_dims);
   if (status) {
     GST_ERROR_OBJECT (self, "Failed to get dimensions: %s",
@@ -894,15 +856,17 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     goto error;
   }
 
-  if (self->inputImageFormat == GST_ML_INPUT_IMAGE_FORMAT_HWC) {
-    self->height = input_dims[1];
-    self->width = input_dims[2];
-    self->channels = input_dims[3];
-  } else {
-    self->channels = input_dims[1];
-    self->height = input_dims[2];
-    self->width = input_dims[3];
+  for (i = 0; i < num_input_dims; i++) {
+    if (input_dims[i] < 0)
+      gst_input_dims[i] = G_MAXSIZE;
+    else
+      gst_input_dims[i] = input_dims[i];
   }
+
+  if (!_guess_tensor_data_type (self, num_input_dims, gst_input_dims,
+          &gst_format, &self->width, &self->height, &self->channels,
+          &self->planar))
+    goto error;
 
   self->means = g_renew (double, self->means, self->channels);
   self->stddevs = g_renew (double, self->stddevs, self->channels);
@@ -942,6 +906,16 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       goto error;
   }
   self->input_data_type = onnx_data_type_to_gst (element_type);
+
+  /* Setting datatype */
+  self->model_caps = gst_caps_make_writable (self->model_caps);
+  if (self->input_data_type == GST_TENSOR_DATA_TYPE_UINT8 && gst_format &&
+      self->means[0] == 0.0 && self->stddevs[0] == 1.0)
+    gst_caps_set_simple (self->model_caps, "format", G_TYPE_STRING, gst_format,
+        NULL);
+  if (self->fixedInputImageSize)
+    gst_caps_set_simple (self->model_caps, "width", G_TYPE_INT,
+        self->width, "height", G_TYPE_INT, self->height, NULL);
 
   // Get input name
   status =
@@ -1096,18 +1070,13 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       g_value_unset (&val_dims);
       g_value_unset (&val);
 
-      /* Setting datatype */
-      self->tensors_caps = gst_caps_make_writable (self->tensors_caps);
-      gst_caps_set_simple (self->tensors_caps, "type", G_TYPE_STRING,
-          gst_tensor_data_type_get_name (self->input_data_type), NULL);
-
       /* Setting tensors caps */
       char *meta_key = NULL;
       OrtStatus *lookup_status =
           api->ModelMetadataLookupCustomMetadataMap (metadata, self->allocator,
           self->output_names[i], &meta_key);
       if (!lookup_status && meta_key) {
-        gst_caps_set_simple (self->tensors_caps, meta_key, GST_TYPE_CAPS,
+        gst_caps_set_simple (self->model_caps, meta_key, GST_TYPE_CAPS,
             gst_caps_new_full (tensor_desc, NULL), NULL);
         self->allocator->Free (self->allocator, meta_key);
       } else {
@@ -1318,9 +1287,6 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   GstTensorMeta *tmeta = NULL;
   OrtTensorTypeAndShapeInfo *output_tensor_info = NULL;
 
-  if (gst_base_transform_is_passthrough (trans))
-    return GST_FLOW_OK;
-
   if (!gst_buffer_map (buf, &info, GST_MAP_READ)) {
     GST_ELEMENT_ERROR (trans, STREAM, FAILED, (NULL),
         ("Could not map input buffer"));
@@ -1368,7 +1334,7 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   input_type_info = NULL;
 
   input_dims[0] = 1;
-  if (self->inputImageFormat == GST_ML_INPUT_IMAGE_FORMAT_HWC) {
+  if (!self->planar) {
     input_dims[1] = self->height;
     input_dims[2] = self->width;
   } else {
