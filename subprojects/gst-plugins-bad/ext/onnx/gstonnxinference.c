@@ -667,6 +667,34 @@ onnx_data_type_to_gst (ONNXTensorElementDataType dt)
   g_error ("Unexpected datatype: %d", dt);
 }
 
+static void
+gst_onnx_log_function (void *param, OrtLoggingLevel severity,
+    const char *category, const char *logid, const char *code_location,
+    const char *message)
+{
+  GObject *obj = param;
+  GstDebugLevel level = GST_LEVEL_ERROR;
+
+  switch (severity) {
+    case ORT_LOGGING_LEVEL_VERBOSE:
+      level = GST_LEVEL_LOG;
+      break;
+    case ORT_LOGGING_LEVEL_INFO:
+      level = GST_LEVEL_INFO;
+      break;
+    case ORT_LOGGING_LEVEL_WARNING:
+      level = GST_LEVEL_WARNING;
+      break;
+    case ORT_LOGGING_LEVEL_ERROR:
+    case ORT_LOGGING_LEVEL_FATAL:
+      level = GST_LEVEL_ERROR;
+      break;
+  }
+
+  gst_debug_log (GST_CAT_DEFAULT, level, code_location, "gst_onnx_log_function",
+      0, obj, "%s", message);
+}
+
 static gboolean
 gst_onnx_inference_start (GstBaseTransform * trans)
 {
@@ -809,7 +837,8 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   }
 
   // Create environment
-  status = api->CreateEnv (ort_logging, "GstOnnx", &self->env);
+  status = api->CreateEnvWithCustomLogger (gst_onnx_log_function, self,
+      ort_logging, "GstOnnx", &self->env);
   if (status) {
     GST_ERROR_OBJECT (self, "Failed to create environment: %s",
         api->GetErrorMessage (status));
