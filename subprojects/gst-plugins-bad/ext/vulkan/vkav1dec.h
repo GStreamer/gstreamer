@@ -20,13 +20,12 @@
 
 #pragma once
 
-#include <gst/codecs/gstav1decoder.h>
-
 #include <gst/vulkan/vulkan.h>
 
 G_BEGIN_DECLS
 
-gboolean
-gst_vulkan_av1_decoder_register (GstPlugin * plugin, GstVulkanDevice *device, guint rank);
+gboolean                gst_vulkan_av1_decoder_register         (GstPlugin * plugin,
+                                                                 GstVulkanDevice *device,
+                                                                 guint rank);
 
 G_END_DECLS

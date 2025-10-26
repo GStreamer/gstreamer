@@ -21,10 +21,11 @@
 #include "vkav1dec.h"
 
 #include <gst/video/video.h>
-#include <gst/vulkan/vulkan.h>
-#include <gst/codecparsers/gstav1parser.h>
-#include "gst/vulkan/gstvkphysicaldevice-private.h"
+#include <gst/codecs/gstav1decoder.h>
+
 #include "gst/vulkan/gstvkdecoder-private.h"
+#include "gst/vulkan/gstvkphysicaldevice-private.h"
+
 #include "gstvulkanelements.h"
 
 #define GST_VULKAN_AV1_DECODER(obj)            ((GstVulkanAV1Decoder *) obj)
@@ -947,7 +948,6 @@ gst_vulkan_av1_decoder_start_picture (GstAV1Decoder * decoder,
     .qm_v = qp->qm_v,
   };
 
-
   pic->loop_filter = (StdVideoAV1LoopFilter) {
     .flags = (StdVideoAV1LoopFilterFlags) {
       .loop_filter_delta_enabled = lf->loop_filter_delta_enabled,
@@ -960,11 +960,9 @@ gst_vulkan_av1_decoder_start_picture (GstAV1Decoder * decoder,
   for (i = 0; i < STD_VIDEO_AV1_TOTAL_REFS_PER_FRAME; i++)
     pic->loop_filter.loop_filter_ref_deltas[i] = lf->loop_filter_ref_deltas[i];
 
-
   for (i = 0; i < STD_VIDEO_AV1_LOOP_FILTER_ADJUSTMENTS; i++)
     pic->loop_filter.loop_filter_mode_deltas[i] =
         lf->loop_filter_mode_deltas[i];
-
 
   for (i = 0; i < STD_VIDEO_AV1_MAX_LOOP_FILTER_STRENGTHS; i++)
     pic->loop_filter.loop_filter_level[i] = lf->loop_filter_level[i];
@@ -1056,46 +1054,46 @@ gst_vulkan_av1_decoder_start_picture (GstAV1Decoder * decoder,
   }
   /* *INDENT-OFF* */
   pic->std_av1pic = (StdVideoDecodeAV1PictureInfo) {
-    .flags = (StdVideoDecodeAV1PictureInfoFlags) {
-            .error_resilient_mode = fh->error_resilient_mode,
-            .disable_cdf_update = fh->disable_cdf_update,
-            .use_superres = fh->use_superres,
-            .render_and_frame_size_different = fh->render_and_frame_size_different,
-            .allow_screen_content_tools = fh->allow_screen_content_tools,
-            .is_filter_switchable = fh->is_filter_switchable,
-            .force_integer_mv = fh->force_integer_mv,
-            .frame_size_override_flag = fh->frame_size_override_flag,
-            .buffer_removal_time_present_flag = fh->buffer_removal_time_present_flag,
-            .allow_intrabc = fh->allow_intrabc,
-            .frame_refs_short_signaling = fh->frame_refs_short_signaling,
-            .allow_high_precision_mv = fh->allow_high_precision_mv,
-            .is_motion_mode_switchable = fh->is_motion_mode_switchable,
-            .use_ref_frame_mvs = fh->use_ref_frame_mvs,
-            .disable_frame_end_update_cdf = fh->disable_frame_end_update_cdf,
-            .allow_warped_motion = fh->allow_warped_motion,
-            .reduced_tx_set = fh->reduced_tx_set,
-            .reference_select = fh->reference_select,
-            .skip_mode_present = fh->skip_mode_present,
-            .delta_q_present = qp->delta_q_present,
-            .delta_lf_present = lf->delta_lf_present,
-            .delta_lf_multi = lf->delta_lf_multi,
-            .segmentation_enabled = seg->segmentation_enabled,
-            .segmentation_update_map = seg->segmentation_update_map,
-            .segmentation_temporal_update = seg->segmentation_temporal_update,
-            .segmentation_update_data = seg->segmentation_update_data,
-            .UsesLr = lr->uses_lr,
+    .flags = (StdVideoDecodeAV1PictureInfoFlags){
+      .error_resilient_mode = fh->error_resilient_mode,
+      .disable_cdf_update = fh->disable_cdf_update,
+      .use_superres = fh->use_superres,
+      .render_and_frame_size_different = fh->render_and_frame_size_different,
+      .allow_screen_content_tools = fh->allow_screen_content_tools,
+      .is_filter_switchable = fh->is_filter_switchable,
+      .force_integer_mv = fh->force_integer_mv,
+      .frame_size_override_flag = fh->frame_size_override_flag,
+      .buffer_removal_time_present_flag = fh->buffer_removal_time_present_flag,
+      .allow_intrabc = fh->allow_intrabc,
+      .frame_refs_short_signaling = fh->frame_refs_short_signaling,
+      .allow_high_precision_mv = fh->allow_high_precision_mv,
+      .is_motion_mode_switchable = fh->is_motion_mode_switchable,
+      .use_ref_frame_mvs = fh->use_ref_frame_mvs,
+      .disable_frame_end_update_cdf = fh->disable_frame_end_update_cdf,
+      .allow_warped_motion = fh->allow_warped_motion,
+      .reduced_tx_set = fh->reduced_tx_set,
+      .reference_select = fh->reference_select,
+      .skip_mode_present = fh->skip_mode_present,
+      .delta_q_present = qp->delta_q_present,
+      .delta_lf_present = lf->delta_lf_present,
+      .delta_lf_multi = lf->delta_lf_multi,
+      .segmentation_enabled = seg->segmentation_enabled,
+      .segmentation_update_map = seg->segmentation_update_map,
+      .segmentation_temporal_update = seg->segmentation_temporal_update,
+      .segmentation_update_data = seg->segmentation_update_data,
+      .UsesLr = lr->uses_lr,
     },
-    .frame_type = (StdVideoAV1FrameType) fh->frame_type,
+    .frame_type = (StdVideoAV1FrameType)fh->frame_type,
     .current_frame_id = fh->current_frame_id,
     .OrderHint = fh->order_hint,
     .primary_ref_frame = fh->primary_ref_frame,
     .refresh_frame_flags = fh->refresh_frame_flags,
-    .interpolation_filter = (StdVideoAV1InterpolationFilter) fh->interpolation_filter,
+    .interpolation_filter =
+        (StdVideoAV1InterpolationFilter) fh->interpolation_filter,
     .TxMode = (StdVideoAV1TxMode) fh->tx_mode,
     .delta_q_res = qp->delta_q_res,
     .delta_lf_res = lf->delta_lf_res,
-    .SkipModeFrame[0] = fh->skip_mode_frame[0],
-    .SkipModeFrame[1] = fh->skip_mode_frame[1],
+    .SkipModeFrame = { fh->skip_mode_frame[0], fh->skip_mode_frame[1], },
     .coded_denom = fh->use_superres ? fh->superres_denom - 9 : 0,
     /* .OrderHints (filled below) */
     .pTileInfo = &pic->tile_info,
@@ -1107,10 +1105,12 @@ gst_vulkan_av1_decoder_start_picture (GstAV1Decoder * decoder,
     .pGlobalMotion = &pic->global_motion,
     .pFilmGrain = &pic->film_grain,
   };
+  /* *INDENT-ON* */
 
   for (i = 0; i < VK_MAX_VIDEO_AV1_REFERENCES_PER_FRAME_KHR; i++)
     pic->std_av1pic.OrderHints[i] = fh->order_hints[i];
 
+  /* *INDENT-OFF* */
   pic->vk_av1pic = (VkVideoDecodeAV1PictureInfoKHR) {
     .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_AV1_PICTURE_INFO_KHR,
     .pStdPictureInfo = &pic->std_av1pic,
@@ -1122,7 +1122,6 @@ gst_vulkan_av1_decoder_start_picture (GstAV1Decoder * decoder,
      * const uint32_t*                        pTileOffsets;
      * const uint32_t*                        pTileSizes;
      */
-
   };
   /* *INDENT-ON* */
 
@@ -1189,7 +1188,7 @@ gst_vulkan_av1_decoder_start_picture (GstAV1Decoder * decoder,
     .pReferenceSlots = (const VkVideoReferenceSlotInfoKHR *) &pic->base.slots,
     .dstPictureResource = {
       .sType = VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_INFO_KHR,
-    // .codedOffset = {0, 0} /* is there any cropping rectangle in AV1? */
+      // .codedOffset = {0, 0} /* is there any cropping rectangle in AV1? */
       .codedExtent = { self->coded_width, self->coded_height },
       .baseArrayLayer = 0,
       .imageViewBinding = pic->base.img_view_out->view,
@@ -1359,7 +1358,6 @@ gst_vulkan_av1_decoder_class_init (gpointer klass, gpointer class_data)
   struct CData *cdata = class_data;
   gchar *long_name;
   const gchar *name;
-
 
   name = "Vulkan AV1 decoder";
   if (cdata->description)
