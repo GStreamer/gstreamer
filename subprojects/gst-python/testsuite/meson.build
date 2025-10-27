@@ -86,7 +86,8 @@ foreach i: tests
         l += 1
     endforeach
 
-    foreach j: i.get(2, [])
+    gir_dirs = ['gstreamer/libs/gst/base/', 'gstreamer/gst/'] + i.get(2, [])
+    foreach j: gir_dirs
       path = meson.project_build_root() / '..' / j
       env.append('GI_TYPELIB_PATH', path)
       testsenv_ld_library_path += path
