@@ -3795,11 +3795,13 @@ gst_codec_utils_caps_from_mime_codec (const gchar * codecs_field)
 
   for (i = 0; codecs[i]; i++) {
     const gchar *codec = codecs[i];
+    GstCaps *codec_caps = gst_codec_utils_caps_from_mime_codec_single (codec);
+
     if (caps == NULL)
-      caps = gst_codec_utils_caps_from_mime_codec_single (codec);
-    else
-      gst_caps_append (caps,
-          gst_codec_utils_caps_from_mime_codec_single (codec));
+      caps = codec_caps;
+    else if (codec_caps != NULL) {
+      gst_caps_append (caps, codec_caps);
+    }
   }
 
 beach:
