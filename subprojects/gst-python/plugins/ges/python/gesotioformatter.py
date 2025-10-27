@@ -101,5 +101,11 @@ try:
                                       "GES Formatter using OpenTimelineIO",
                                       ','.join(extensions_mimetype_map[0]),
                                       ';'.join(extensions_mimetype_map[1]), 0.1, Gst.Rank.SECONDARY)
-except (ImportError, TypeError) as e:
-    Gst.warning(f"opentimelineio module not found, GES OTIO formatter will not be available: {e}")
+except (ImportError, TypeError, ValueError, NameError) as e:
+    try:
+        Gst.warning(f"opentimelineio module not found, GES OTIO formatter will not be available: {e}")
+    except Exception as e:
+        // Gst is not available
+        pass
+except otio.exceptions.NotSupportedError as e:
+    Gst.warning(f"otio error: {e}")
