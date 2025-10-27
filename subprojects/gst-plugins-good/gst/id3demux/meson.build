@@ -1,9 +1,11 @@
 id3demux_sources = [
   'gstid3demux.c',
+  'gstid3metaparse.c',
 ]
 
 id3demux_headers = [
   'gstid3demux.h',
+  'gstid3metaparse.h',
 ]
 
 doc_sources = []

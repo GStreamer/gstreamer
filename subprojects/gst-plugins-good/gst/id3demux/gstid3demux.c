@@ -55,6 +55,7 @@
 #include <string.h>
 
 #include "gstid3demux.h"
+#include "gstid3metaparse.h"
 
 enum
 {
@@ -279,10 +280,11 @@ gst_id3demux_get_property (GObject * object, guint prop_id,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gboolean res = GST_ELEMENT_REGISTER (id3metaparse, plugin);
 
-  return GST_ELEMENT_REGISTER (id3demux, plugin);
+  res |= GST_ELEMENT_REGISTER (id3demux, plugin);
 
-
+  return res;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

@@ -8222,6 +8222,32 @@
                     }
                 },
                 "rank": "primary"
+            },
+            "id3metaparse": {
+                "author": "Jan Schmidt <jan@centricular.com>",
+                "description": "Collects timed ID3 metadata streams into complete packets",
+                "hierarchy": [
+                    "GstId3MetaParse",
+                    "GstBaseParse",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Parser/Meta",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "meta/x-id3:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "meta/x-id3:\n         parsed: true\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "primary"
             }
         },
         "filename": "gstid3demux",
