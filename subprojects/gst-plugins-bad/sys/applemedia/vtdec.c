@@ -50,8 +50,12 @@
 #include "config.h"
 #endif
 
+#ifdef HAVE_IOS
+#include <dlfcn.h>
+#endif
 #include <string.h>
 #include <gst/gst.h>
+#include <gst/base/gstbytewriter.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideodecoder.h>
 #include <gst/gl/gstglcontext.h>
@@ -75,6 +79,10 @@ enum
   VTDEC_FRAME_FLAG_DROP = (1 << 11),
   VTDEC_FRAME_FLAG_ERROR = (1 << 12),
 };
+
+#if (defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED < 140000) || (defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED < 110000)
+#define kCMVideoCodecType_VP9 'vp09'
+#endif
 
 static void gst_vtdec_finalize (GObject * object);
 
@@ -115,6 +123,9 @@ static gboolean compute_hevc_decode_picture_buffer_size (GstVtdec * vtdec,
     GstBuffer * codec_data, int *length);
 static gboolean gst_vtdec_compute_dpb_size (GstVtdec * vtdec,
     CMVideoCodecType cm_format, GstBuffer * codec_data);
+static gboolean gst_vtdec_check_vp9_support (GstVtdec * vtdec);
+static gboolean gst_vtdec_build_vp9_vpcc_from_caps (GstVtdec * vtdec,
+    GstStructure * caps_struct);
 static void gst_vtdec_set_latency (GstVtdec * vtdec);
 static void gst_vtdec_set_context (GstElement * element, GstContext * context);
 
@@ -129,7 +140,9 @@ static GstStaticPadTemplate gst_vtdec_sink_template =
         "video/mpeg, mpegversion=2, systemstream=false, parsed=true;"
         "image/jpeg;"
         "video/x-prores, variant = { (string)standard, (string)hq, (string)lt,"
-        " (string)proxy, (string)4444, (string)4444xq };")
+        " (string)proxy, (string)4444, (string)4444xq };"
+        "video/x-vp9, profile=(string){ 0, 2 }, "
+        " width=(int)[64, MAX], height=(int)[64, MAX];")
     );
 
 /* define EnableHardwareAcceleratedVideoDecoder in < 10.9 */
@@ -288,6 +301,9 @@ gst_vtdec_stop (GstVideoDecoder * decoder)
   if (vtdec->format_description)
     CFRelease (vtdec->format_description);
   vtdec->format_description = NULL;
+
+  g_clear_pointer (&vtdec->vp9_vpcc, g_free);
+  vtdec->vp9_vpcc_size = 0;
 
 #if defined(APPLEMEDIA_MOLTENVK)
   gst_clear_object (&vtdec->device);
@@ -711,6 +727,14 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
       GST_ERROR_OBJECT (vtdec, "Invalid ProRes variant %s", variant);
       return FALSE;
     }
+  } else if (!strcmp (caps_name, "video/x-vp9")) {
+    if (!gst_vtdec_check_vp9_support (vtdec)) {
+      GST_ERROR_OBJECT (vtdec, "VP9 decoding not supported on this system");
+      return FALSE;
+    }
+
+    GST_INFO_OBJECT (vtdec, "cm_format is VP9");
+    cm_format = kCMVideoCodecType_VP9;
   }
 
   if ((cm_format == kCMVideoCodecType_H264
@@ -718,6 +742,8 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
       && state->codec_data == NULL) {
     GST_INFO_OBJECT (vtdec, "waiting for codec_data before negotiation");
     negotiate_now = FALSE;
+  } else if (cm_format == kCMVideoCodecType_VP9) {
+    negotiate_now = gst_vtdec_build_vp9_vpcc_from_caps (vtdec, structure);
   }
 
   gst_video_info_from_caps (&vtdec->video_info, state->caps);
@@ -988,15 +1014,144 @@ gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format,
   return status;
 }
 
+/* https://www.webmproject.org/vp9/mp4/#vp-codec-configuration-box */
+static gboolean
+gst_vtdec_build_vp9_vpcc_from_caps (GstVtdec * vtdec,
+    GstStructure * caps_struct)
+{
+  GST_INFO_OBJECT (vtdec, "gst_vtdec_build_vp9_vpcc_from_caps");
+
+  gint profile = 0;             /* Undefined profile 0 is generally acceptable. */
+  guint bit_depth = 8;
+  guint bit_depth_chroma = 8;
+  /* Default to 4:2:0 */
+  guint8 chroma_subsampling = 1;
+  const gchar *chroma_format = NULL;
+  /* Default to BT.709 limited range */
+  gboolean video_full_range = FALSE;
+  guint8 colour_primaries = 1;
+  guint8 transfer_characteristics = 1;
+  guint8 matrix_coefficients = 1;
+  const gchar *colorimetry_str = NULL;
+  guint8 color_info_field = 0;
+  gboolean hdl = TRUE;
+  GstByteWriter writer;
+
+  if (!gst_structure_has_name (caps_struct, "video/x-vp9")) {
+    return FALSE;
+  }
+
+  gst_byte_writer_init (&writer);
+
+  /* version is always 1 */
+  hdl &= gst_byte_writer_put_uint8 (&writer, 1);
+
+  hdl &= gst_byte_writer_put_uint8 (&writer, 0);
+  hdl &= gst_byte_writer_put_uint8 (&writer, 0);
+  hdl &= gst_byte_writer_put_uint8 (&writer, 0);
+
+  gst_structure_get_int (caps_struct, "profile", &profile);
+  hdl &= gst_byte_writer_put_uint8 (&writer, profile);
+
+  /* level is not in caps for VP9; 0 is acceptable */
+  hdl &= gst_byte_writer_put_uint8 (&writer, 0);
+
+  gst_structure_get_uint (caps_struct, "bit-depth-luma", &bit_depth);
+
+  /* ensure chroma bit depth matches luma if present */
+  if (gst_structure_get_uint (caps_struct, "bit-depth-chroma",
+          &bit_depth_chroma)
+      && (bit_depth != bit_depth_chroma)) {
+    GST_WARNING_OBJECT (vtdec,
+        "bit-depth-luma and bit-depth-chroma in caps disagree");
+  }
+
+  chroma_format = gst_structure_get_string (caps_struct, "chroma-format");
+  if (chroma_format) {
+    if (g_strcmp0 (chroma_format, "4:2:0") == 0) {
+      const gchar *chroma_site =
+          gst_structure_get_string (caps_struct, "chroma-site");
+      if (chroma_site) {
+        const GstVideoChromaSite site =
+            gst_video_chroma_site_from_string (chroma_site);
+        if (site == GST_VIDEO_CHROMA_SITE_V_COSITED) {
+          chroma_subsampling = 0;
+        }
+      }
+    } else if (g_strcmp0 (chroma_format, "4:2:2") == 0) {
+      chroma_subsampling = 2;
+    } else if (g_strcmp0 (chroma_format, "4:4:4") == 0) {
+      chroma_subsampling = 3;
+    }
+  }
+
+  colorimetry_str = gst_structure_get_string (caps_struct, "colorimetry");
+  if (colorimetry_str) {
+    GstVideoColorimetry vid_col;
+    if (gst_video_colorimetry_from_string (&vid_col, colorimetry_str)) {
+      video_full_range =
+          (vid_col.range == GST_VIDEO_COLOR_RANGE_0_255) ? TRUE : FALSE;
+      colour_primaries = gst_video_color_primaries_to_iso (vid_col.primaries);
+      transfer_characteristics =
+          gst_video_transfer_function_to_iso (vid_col.transfer);
+      matrix_coefficients = gst_video_color_matrix_to_iso (vid_col.matrix);
+    }
+  }
+
+  color_info_field |= (bit_depth & 0xF) << 4;
+  color_info_field |= (chroma_subsampling & 0x3) << 1;
+  color_info_field |= !(!video_full_range);
+  hdl &= gst_byte_writer_put_uint8 (&writer, color_info_field);
+  hdl &= gst_byte_writer_put_uint8 (&writer, colour_primaries);
+  hdl &= gst_byte_writer_put_uint8 (&writer, transfer_characteristics);
+  hdl &= gst_byte_writer_put_uint8 (&writer, matrix_coefficients);
+
+  /* codec initialization data, unused for VP9 */
+  hdl &= gst_byte_writer_put_uint16_le (&writer, 0);
+
+  if (!hdl) {
+    GST_ERROR_OBJECT (vtdec, "error creating vpcC header");
+    return FALSE;
+  }
+
+  guint vpcc_size = gst_byte_writer_get_size (&writer);
+  vtdec->vp9_vpcc = gst_byte_writer_reset_and_get_data (&writer);
+  if (vtdec->vp9_vpcc == NULL) {
+    GST_ERROR_OBJECT (vtdec, "error acquiring vpcC header");
+    return FALSE;
+  }
+  vtdec->vp9_vpcc_size = vpcc_size;
+
+  return TRUE;
+}
+
 static CMFormatDescriptionRef
 create_format_description (GstVtdec * vtdec, CMVideoCodecType cm_format)
 {
   OSStatus status;
-  CMFormatDescriptionRef format_description;
+  CMFormatDescriptionRef format_description = NULL;
+  CFMutableDictionaryRef extensions = NULL;
+
+  if (vtdec->vp9_vpcc) {
+    CFMutableDictionaryRef atoms = CFDictionaryCreateMutable (NULL, 0,
+        &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    gst_vtutil_dict_set_data (atoms, CFSTR ("vpcC"), vtdec->vp9_vpcc,
+        vtdec->vp9_vpcc_size);
+
+    extensions =
+        CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
+        &kCFTypeDictionaryValueCallBacks);
+    gst_vtutil_dict_set_object (extensions,
+        CFSTR ("SampleDescriptionExtensionAtoms"), (CFTypeRef *) atoms);
+  }
 
   status = CMVideoFormatDescriptionCreate (NULL,
       cm_format, vtdec->video_info.width, vtdec->video_info.height,
-      NULL, &format_description);
+      extensions, &format_description);
+
+  if (extensions)
+    CFRelease (extensions);
+
   if (status != noErr)
     return NULL;
 
@@ -1589,6 +1744,46 @@ gst_vtdec_set_latency (GstVtdec * vtdec)
   GST_INFO_OBJECT (vtdec, "setting latency frames:%d time:%" GST_TIME_FORMAT,
       vtdec->dbp_size, GST_TIME_ARGS (latency));
   gst_video_decoder_set_latency (GST_VIDEO_DECODER (vtdec), latency, latency);
+}
+
+typedef void (*VTRegisterSupplementalVideoDecoderIfAvailableFunc)
+  (CMVideoCodecType codecType);
+
+static gboolean
+gst_vtdec_check_vp9_support (GstVtdec * vtdec)
+{
+  gboolean vp9_supported = FALSE;
+
+  GST_DEBUG_OBJECT (vtdec, "Checking VP9 VideoToolbox support");
+
+#if !defined(HAVE_IOS) || (defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 260200)
+  if (__builtin_available (macos 11.0, ios 26.2, *)) {
+    VTRegisterSupplementalVideoDecoderIfAvailable (kCMVideoCodecType_VP9);
+  }
+#else
+  /* FIXME: Temporary measure until Xcode on CI has a SDK version that has the
+   * variant that introduces VTRegisterSupplementalVideoDecoderIfAvailable on
+   * iOS 26.2.
+   */
+  VTRegisterSupplementalVideoDecoderIfAvailableFunc func =
+      (VTRegisterSupplementalVideoDecoderIfAvailableFunc)
+      dlsym (RTLD_DEFAULT, "VTRegisterSupplementalVideoDecoderIfAvailable");
+
+  if (func != NULL) {
+    func (kCMVideoCodecType_VP9);
+  }
+#endif
+
+  vp9_supported = VTIsHardwareDecodeSupported (kCMVideoCodecType_VP9);
+
+  if (vp9_supported) {
+    GST_INFO_OBJECT (vtdec, "VP9 hardware decoding is supported");
+  } else {
+    GST_WARNING_OBJECT (vtdec,
+        "VP9 hardware decoding is not supported on this system");
+  }
+
+  return vp9_supported;
 }
 
 static void

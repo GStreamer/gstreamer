@@ -72,6 +72,9 @@ struct _GstVtdec
 #endif
 
   gboolean require_hardware;
+
+  guint8* vp9_vpcc;
+  gsize   vp9_vpcc_size;
 };
 
 struct _GstVtdecClass
