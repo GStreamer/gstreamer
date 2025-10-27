@@ -1036,14 +1036,48 @@ def fake_method(*args):
     raise NotInitialized("Please call Gst.init(argv) before using GStreamer")
 
 
+def find_gi_repository_parent(klass):
+    """Find the gi.repository parent class in the MRO for introspection methods"""
+    for parent in klass.__mro__:
+        if parent.__module__.startswith('gi.repository.'):
+            return parent
+    return None
+
+
+def _collect_methods_from_dict(source_dict, klass, seen):
+    """Helper to collect methods from a class dictionary, avoiding dunder methods."""
+    methods = []
+    for attr_name in source_dict:
+        if attr_name in seen:
+            continue
+        attr = source_dict[attr_name]
+        if isinstance(attr, (type(Gst.init), staticmethod, classmethod)):
+            # Skip dunder methods as they're Python special methods used for
+            # object instantiation and other internals, replacing them breaks
+            # class behavior
+            if not attr_name.startswith('__'):
+                methods.append((attr_name, getattr(klass, attr_name)))
+            seen.add(attr_name)
+    return methods
+
+
 real_functions = [o for o in inspect.getmembers(Gst) if isinstance(o[1], type(Gst.init))]
 
 class_methods = []
 for cname_klass in [o for o in inspect.getmembers(Gst) if isinstance(o[1], type(Gst.Element)) or isinstance(o[1], type(Gst.Caps))]:
-    class_methods.append((cname_klass,
-                         [(o, cname_klass[1].__dict__[o])
-                          for o in cname_klass[1].__dict__
-                          if isinstance(cname_klass[1].__dict__[o], type(Gst.init))]))
+    klass = cname_klass[1]
+    methods = []
+    seen = set()
+
+    # Collect methods from the override class itself
+    methods.extend(_collect_methods_from_dict(klass.__dict__, klass, seen))
+
+    # Collect methods from the gi.repository introspection parent class
+    gi_parent = find_gi_repository_parent(klass)
+    if gi_parent:
+        methods.extend(_collect_methods_from_dict(gi_parent.__dict__, klass, seen))
+
+    class_methods.append((cname_klass, methods))
 
 pre_init_functions = set([
     "init",
