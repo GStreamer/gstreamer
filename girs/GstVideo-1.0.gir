@@ -3663,6 +3663,34 @@ Return the width of one tile in pixels, zero if its not an integer.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <constant name="VIDEO_HDR10_PLUS_MAX_BYTES" value="1024" c:type="GST_VIDEO_HDR10_PLUS_MAX_BYTES" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">Specify the max size for a HDR10+ content</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
+    <constant name="VIDEO_HDR10_PLUS_MAX_COLS_MD_APL" value="25" c:type="GST_VIDEO_HDR10_PLUS_MAX_COLS_MD_APL" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">Specifies the number of columns in the
+targeted_system_display_actual_peak_luminance
+array.
+Defined in CTA-861-G.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
+    <constant name="VIDEO_HDR10_PLUS_MAX_ROWS_TSD_APL" value="25" c:type="GST_VIDEO_HDR10_PLUS_MAX_ROWS_TSD_APL" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">Specifies the number of columns in the
+targeted_system_display_actual_peak_luminance
+array.
+Defined in CTA-861-G.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
+    <constant name="VIDEO_HDR10_PLUS_NUM_WINDOWS" value="1" c:type="GST_VIDEO_HDR10_PLUS_NUM_WINDOWS" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">Number of windows in HDR10+ dynamic metadata.
+Defined in CTA-861-G.
+Shall be 1.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
     <function-macro name="VIDEO_INFO_CHROMA_SITE" c:identifier="GST_VIDEO_INFO_CHROMA_SITE" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info.h"/>
       <parameters>
@@ -6300,6 +6328,140 @@ the component values in range [0.0 .. 1.0] back to their representation in
         </parameters>
       </function>
     </enumeration>
+    <record name="VideoColorVolumeTransformation" c:type="GstVideoColorVolumeTransformation" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">Processing window in dynamic metadata defined in SMPTE ST 2094-40:2016
+and CTA-861-G Annex S HDR Dynamic Metadata Syntax Type 4.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h"/>
+      <field name="window_upper_left_corner_x" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the x coordinate of the top left pixel of the w-th processing</doc>
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="window_upper_left_corner_y" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the y coordinate of the top left pixel of the w-th processing</doc>
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="window_lower_right_corner_x" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the x coordinate of the lower right pixel of the w-th processing</doc>
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="window_lower_right_corner_y" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the y coordinate of the lower right pixel of the w-th processing</doc>
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="center_of_ellipse_x" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the x coordinate of the center position of the concentric internal
+and external ellipses of the elliptical pixel selector in the w-th processing window</doc>
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="center_of_ellipse_y" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the y coordinate of the center position of the concentric internal
+and external ellipses of the elliptical pixel selector in the w-th processing window</doc>
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="rotation_angle" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the clockwise rotation angle in degree of arc with respect to the
+positive direction of the x-axis of the concentric internal and external ellipses of the elliptical
+pixel selector in the w-th processing window</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="semimajor_axis_internal_ellipse" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the semi-major axis value of the internal ellipse of the
+elliptical pixel selector in amount of pixels in the w-th processing window</doc>
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="semimajor_axis_external_ellipse" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the semi-major axis value of the external ellipse of
+the elliptical pixel selector in amount of pixels in the w-th processing window</doc>
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="semiminor_axis_external_ellipse" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the semi-minor axis value of the external ellipse of
+the elliptical pixel selector in amount of pixels in the w-th processing window</doc>
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="overlap_process_option" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">one of the two methods of combining
+rendered pixels in the w-th processing window in an image with at least one elliptical pixel
+selector</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="maxscl" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the maximum of the i-th color component of linearized RGB values in the
+w-th processing window in the scene</doc>
+        <array zero-terminated="0" fixed-size="3">
+          <type name="guint32" c:type="guint32"/>
+        </array>
+      </field>
+      <field name="average_maxrgb" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the average of linearized maxRGB values in the w-th processing
+window in the scene</doc>
+        <type name="guint32" c:type="guint32"/>
+      </field>
+      <field name="num_distributions" writable="1">
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="distribution_index" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the interpretation of the corresponding
+distribution_values[w][i] value. Values of 0 through 98 indicate that
+distribution_values[w][i] contains the value below which distribution_index[w][i]
+percent of the linearized maxRGB values in the scene for the w-th processing
+window fall. A value of 99 indicates that distribution_values[w][i] contains
+the value below which 99.98% of the linearized maxRGB values in the scene for
+the w-th processing window fall.The value shall be in the range of 0 to 99, inclusive</doc>
+        <array zero-terminated="0" fixed-size="16">
+          <type name="guint8" c:type="guint8"/>
+        </array>
+      </field>
+      <field name="distribution_values" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the linearized maxRGB value at the percentile specified by
+distribution_index[w][i] in the w-th processing window in the scene. The value
+shall be in the range of 0 to 100,000, inclusive, representing 0 to 10,000 cd/m2.</doc>
+        <array zero-terminated="0" fixed-size="16">
+          <type name="guint32" c:type="guint32"/>
+        </array>
+      </field>
+      <field name="fraction_bright_pixels" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the fraction of selected pixels in the image that contains the
+brightest pixel in the scene</doc>
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="tone_mapping_flag" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">true if the tone mapping function in the w-th
+processing window is present</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="knee_point_x" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the x coordinate of the separation point between the linear part and the
+curved part of the tone mapping function</doc>
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="knee_point_y" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the y coordinate of the separation point between the linear part and the
+curved part of the tone mapping function</doc>
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="num_bezier_curve_anchors" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the number of the intermediate anchor parameters of the
+tone mapping function in the w-th processing window. Maximum value should be 9.</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="bezier_curve_anchors" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the i-th intermediate anchor parameter of the tone
+mapping function in the w-th processing window in the scene</doc>
+        <array zero-terminated="0" fixed-size="16">
+          <type name="guint16" c:type="guint16"/>
+        </array>
+      </field>
+      <field name="color_saturation_mapping_flag" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">shall be equal to zero in this version of the standard.</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="color_saturation_weight" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">a number that shall adjust the color saturation gain
+in the w-th processing window in the scene</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+    </record>
     <record name="VideoColorimetry" c:type="GstVideoColorimetry">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.h">Structure describing the color info.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.h"/>
@@ -11655,6 +11817,118 @@ to upload something to an OpenGL texture.</doc>
 Different gamma conversion modes</doc>
       </member>
     </enumeration>
+    <record name="VideoHDR10Plus" c:type="GstVideoHDR10Plus" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">Dynamic HDR 10+ metadata defined in SMPTE2094-40
+and CTA-861-G Annex S HDR Dynamic Metadata Syntax Type 4.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h"/>
+      <field name="application_identifier" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the application identifier</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="application_version" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the application version</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="num_windows" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the number of processing windows. The first processing window shall be
+for the entire picture</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="processing_window" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the color volume transformation for the processing window.</doc>
+        <array zero-terminated="0" fixed-size="1">
+          <type name="VideoColorVolumeTransformation" c:type="GstVideoColorVolumeTransformation"/>
+        </array>
+      </field>
+      <field name="targeted_system_display_maximum_luminance" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the nominal maximum display luminance
+of the targeted system display in units of 0.0001 candelas per square meter</doc>
+        <type name="guint32" c:type="guint32"/>
+      </field>
+      <field name="targeted_system_display_actual_peak_luminance_flag" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">shall be equal to zero in this
+version of the standard</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="num_rows_targeted_system_display_actual_peak_luminance" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the number of rows
+in the targeted_system_display_actual_peak_luminance array</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="num_cols_targeted_system_display_actual_peak_luminance" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the number of columns in the
+targeted_system_display_actual_peak_luminance array</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="targeted_system_display_actual_peak_luminance" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the normalized actual peak luminance of
+the targeted system display</doc>
+        <array zero-terminated="0" fixed-size="625">
+          <type name="guint8" c:type="guint8"/>
+        </array>
+      </field>
+      <field name="mastering_display_actual_peak_luminance_flag" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">shall be equal to 0 for this version of this Standard</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="num_rows_mastering_display_actual_peak_luminance" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the number of rows in the
+mastering_display_actual_peak_luminance array</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="num_cols_mastering_display_actual_peak_luminance" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the number of columns in the
+mastering_display_actual_peak_luminance array.</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="mastering_display_actual_peak_luminance" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">the normalized actual peak luminance of
+the mastering display used for mastering the image essence</doc>
+        <array zero-terminated="0" fixed-size="625">
+          <type name="guint8" c:type="guint8"/>
+        </array>
+      </field>
+    </record>
+    <enumeration name="VideoHDRFormat" version="1.30" c:type="GstVideoHDRFormat">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">Enum value describing the most common video for High Dynamic Range (HDR) formats.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h"/>
+      <member name="none" value="0" c:identifier="GST_VIDEO_HDR_FORMAT_NONE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">No HDR format detected.</doc>
+      </member>
+      <member name="hdr10" value="1" c:identifier="GST_VIDEO_HDR_FORMAT_HDR10">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">HDR10 format</doc>
+      </member>
+      <member name="hdr10_plus" value="2" c:identifier="GST_VIDEO_HDR_FORMAT_HDR10_PLUS">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">HDR10+ format</doc>
+      </member>
+    </enumeration>
+    <record name="VideoHDRMeta" c:type="GstVideoHDRMeta" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">Dynamic HDR data should be included in video user data</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h"/>
+      <field name="meta" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">parent #GstMeta</doc>
+        <type name="Gst.Meta" c:type="GstMeta"/>
+      </field>
+      <field name="format" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">The type of dynamic HDR contained in the meta.</doc>
+        <type name="VideoHDRFormat" c:type="GstVideoHDRFormat"/>
+      </field>
+      <field name="data" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">contains the dynamic HDR data</doc>
+        <type name="guint8" c:type="guint8*"/>
+      </field>
+      <field name="size" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">The size in bytes of @data</doc>
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <function name="get_info" c:identifier="gst_video_hdr_meta_get_info">
+        <attribute name="doc.skip" value="true"/>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
+        </return-value>
+      </function>
+    </record>
     <record name="VideoInfo" c:type="GstVideoInfo" glib:type-name="GstVideoInfo" glib:get-type="gst_video_info_get_type" c:symbol-prefix="video_info">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info.h">Information describing image properties. This information can be filled
 in from GstCaps with gst_video_info_from_caps(). The information is also used
@@ -16850,6 +17124,33 @@ parameters.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="buffer_add_video_hdr_meta" c:identifier="gst_buffer_add_video_hdr_meta" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.c">Attaches #GstVideoHDRMeta metadata to @buffer with the given
+parameters.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.c">the #GstVideoHDRMeta on @buffer.</doc>
+        <type name="VideoHDRMeta" c:type="GstVideoHDRMeta*"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.c">a #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+        <parameter name="format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.c">The type of dynamic HDR contained in the meta.</doc>
+          <type name="VideoHDRFormat" c:type="GstVideoHDRFormat"/>
+        </parameter>
+        <parameter name="data" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.c">contains the dynamic HDR data</doc>
+          <type name="guint8" c:type="const guint8*"/>
+        </parameter>
+        <parameter name="size" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.c">The size in bytes of @data</doc>
+          <type name="gsize" c:type="gsize"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="buffer_add_video_meta" c:identifier="gst_buffer_add_video_meta">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">Attaches GstVideoMeta metadata to @buffer with the given parameters and the
 default offsets and strides for @format and @width x @height.
@@ -17191,6 +17492,15 @@ Note: there may be two #GstVideoAFDMeta structs for interlaced video.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h"/>
       <parameters>
         <parameter name="b">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="buffer_get_video_hdr_meta" c:identifier="gst_buffer_get_video_hdr_meta" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">Gets the #GstVideoHDRMeta that might be present on @b.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h"/>
+      <parameters>
+        <parameter name="b">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h">A #GstBuffer</doc>
         </parameter>
       </parameters>
     </function-macro>
@@ -19714,6 +20024,73 @@ recognised, and %FALSE otherwise.</doc>
         <parameter name="dest_d" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video.c">Denominator of the calculated framerate</doc>
           <type name="gint" c:type="gint*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="video_hdr_format_from_string" c:identifier="gst_video_hdr_format_from_string" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.c">the #GstVideoHDRFormat for @format or GST_VIDEO_HDR_FORMAT_NONE when the
+string is not a known format.</doc>
+        <type name="VideoHDRFormat" c:type="GstVideoHDRFormat"/>
+      </return-value>
+      <parameters>
+        <parameter name="format" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.c">a #GstVideoHDRFormat</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="video_hdr_format_to_string" c:identifier="gst_video_hdr_format_to_string" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h"/>
+      <return-value transfer-ownership="none" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.c">a string containing a descriptive name for
+the #GstVideoHDRFormat if there is one, or %NULL otherwise.</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.c">a #GstVideoHDRFormat</doc>
+          <type name="VideoHDRFormat" c:type="GstVideoHDRFormat"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="video_hdr_meta_api_get_type" c:identifier="gst_video_hdr_meta_api_get_type">
+      <attribute name="doc.skip" value="true"/>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h"/>
+      <return-value transfer-ownership="none">
+        <type name="GType" c:type="GType"/>
+      </return-value>
+    </function>
+    <function name="video_hdr_meta_get_info" c:identifier="gst_video_hdr_meta_get_info" moved-to="VideoHDRMeta.get_info">
+      <attribute name="doc.skip" value="true"/>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h"/>
+      <return-value transfer-ownership="none">
+        <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
+      </return-value>
+    </function>
+    <function name="video_hdr_parse_hdr10_plus" c:identifier="gst_video_hdr_parse_hdr10_plus" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.c">Parse HDR10+ (SMPTE2094-40) user data and store in @hdr10_plus
+For more details, see:
+https://www.atsc.org/wp-content/uploads/2018/02/S34-301r2-A341-Amendment-2094-40-1.pdf
+and SMPTE ST2094-40</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.c">%TRUE if @data was successfully parsed to @hdr10_plus</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="data" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.c">HDR10+ data</doc>
+          <type name="guint8" c:type="const guint8*"/>
+        </parameter>
+        <parameter name="size" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.c">size of data</doc>
+          <type name="gsize" c:type="gsize"/>
+        </parameter>
+        <parameter name="hdr10_plus" direction="out" caller-allocates="1" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.c">#GstVideoHDR10Plus structure to fill in.</doc>
+          <type name="VideoHDR10Plus" c:type="GstVideoHDR10Plus*"/>
         </parameter>
       </parameters>
     </function>
