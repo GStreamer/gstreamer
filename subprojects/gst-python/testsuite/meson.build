@@ -2,6 +2,7 @@ runtests = files('runtests.py')
 
 tests = [
     ['gst', 'test_gst.py'],
+    ['gstinit', 'test_gst_init.py'],
     ['fundamentals', 'test_types.py'],
     ['plugins', 'test_plugin.py'],
     ['analytics', 'test_analytics.py', ['gst-plugins-bad/gst-libs/gst/analytics', 'gst-plugins-base/gst-libs/gst/video']],
