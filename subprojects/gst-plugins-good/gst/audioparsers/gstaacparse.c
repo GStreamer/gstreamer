@@ -269,9 +269,6 @@ gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
   if (peercaps)
     gst_caps_unref (peercaps);
 
-  aacparse->last_parsed_channels = 0;
-  aacparse->last_parsed_sample_rate = 0;
-
   GST_DEBUG_OBJECT (aacparse, "setting src caps: %" GST_PTR_FORMAT, src_caps);
 
   res = gst_pad_set_caps (GST_BASE_PARSE (aacparse)->srcpad, src_caps);
