@@ -802,6 +802,7 @@ scan_keyframe_h264 (TSDemuxStream * stream, const guint8 * data,
         break;
       }
       default:
+        GST_TRACE_OBJECT (stream->pad, "unit type %d", unit.type);
         break;
     }
 
@@ -1403,6 +1404,9 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         caps = gst_caps_new_empty_simple ("audio/x-dts");
         stream->target_pes_substream = 0x71;
         break;
+      default:
+        GST_DEBUG_OBJECT (demux, "Stream type %d", bstream->stream_type);
+        break;
     }
   }
 
@@ -1859,6 +1863,8 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
             colorimetry_mode = GST_VIDEO_COLORIMETRY_BT709;
             break;
           default:
+            GST_DEBUG_OBJECT (demux, "color specification %d",
+                color_specification);
             break;
         }
         caps = gst_caps_new_simple ("image/x-jpc",
