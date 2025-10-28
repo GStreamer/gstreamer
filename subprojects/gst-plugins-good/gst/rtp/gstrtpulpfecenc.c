@@ -372,7 +372,7 @@ gst_rtp_ulpfec_enc_stream_ctx_push_fec_packets (GstRtpUlpFecEncStreamCtx * ctx,
        * is addressed */
       if (twcc_ext_id != 0) {
         GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
-        guint16 data;
+        guint16 data = 0;
 
         if (!gst_rtp_buffer_map (fec, GST_MAP_READWRITE, &rtp))
           g_assert_not_reached ();

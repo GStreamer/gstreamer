@@ -194,7 +194,7 @@ _alloc_red_packet_and_fill_headers (GstRtpRedEnc * self,
     guint8 appbits;
     gpointer inp_data;
     guint inp_size;
-    guint16 data;
+    guint16 data = 0;
 
     /* If the input buffer was meant to hold a TWCC seqnum, we also do that
      * for our wrapper */
