@@ -670,7 +670,7 @@ GST_START_TEST (rtpredenc_transport_cc)
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   GstBuffer *bufin;
   GstBuffer *bufout;
-  guint16 data;
+  guint16 data = 0;
   gpointer out_data;
   guint out_size;
 
