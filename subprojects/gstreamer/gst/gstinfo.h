@@ -1325,7 +1325,6 @@ GST_API GstDebugLevel            _gst_debug_min;
 #define GST_CTX_LOG_OBJECT(ctx,object,...)              GST_CTX_LEVEL_LOG(ctx,GST_LEVEL_LOG,object,__VA_ARGS__)
 #define GST_CTX_FIXME_OBJECT(ctx,object,...)            GST_CTX_LEVEL_LOG(ctx,GST_LEVEL_FIXME,object,__VA_ARGS__)
 #define GST_CTX_TRACE_OBJECT(ctx,object,...)            GST_CTX_LEVEL_LOG(ctx,GST_LEVEL_TRACE,object,__VA_ARGS__)
-#define GST_CTX_MEMDUMP_OBJECT(ctx,object,...)          GST_CTX_LEVEL_LOG(ctx,GST_LEVEL_MEMDUMP,object,__VA_ARGS__)
 
 /* Context-based debug macros for IDs */
 #define GST_CTX_LEVEL_LOG_ID(ctx,level,id,...) \
@@ -1344,7 +1343,6 @@ GST_API GstDebugLevel            _gst_debug_min;
 #define GST_CTX_LOG_ID(ctx,id,...)              GST_CTX_LEVEL_LOG_ID(ctx,GST_LEVEL_LOG,id,__VA_ARGS__)
 #define GST_CTX_FIXME_ID(ctx,id,...)            GST_CTX_LEVEL_LOG_ID(ctx,GST_LEVEL_FIXME,id,__VA_ARGS__)
 #define GST_CTX_TRACE_ID(ctx,id,...)            GST_CTX_LEVEL_LOG_ID(ctx,GST_LEVEL_TRACE,id,__VA_ARGS__)
-#define GST_CTX_MEMDUMP_ID(ctx,id,...)          GST_CTX_LEVEL_LOG_ID(ctx,GST_LEVEL_MEMDUMP,id,__VA_ARGS__)
 
 /* No object, no id */
 #define GST_CTX_ERROR(ctx,...)                          GST_CTX_ERROR_OBJECT(ctx,NULL,__VA_ARGS__)
@@ -1354,7 +1352,6 @@ GST_API GstDebugLevel            _gst_debug_min;
 #define GST_CTX_LOG(ctx,...)                            GST_CTX_LOG_OBJECT(ctx,NULL,__VA_ARGS__)
 #define GST_CTX_FIXME(ctx,...)                          GST_CTX_FIXME_OBJECT(ctx,NULL,__VA_ARGS__)
 #define GST_CTX_TRACE(ctx,...)                          GST_CTX_TRACE_OBJECT(ctx,NULL,__VA_ARGS__)
-#define GST_CTX_MEMDUMP(ctx,...)                        GST_CTX_MEMDUMP_OBJECT(ctx,NULL,__VA_ARGS__)
 
 #define GST_LOG_CONTEXT_STATIC_DEFINE(name, flags, ...) \
   static GstLogContext *name = NULL; \
@@ -1381,18 +1378,6 @@ GST_API GstDebugLevel            _gst_debug_min;
       __VA_ARGS__ \
       var = gst_log_context_builder_build(builder); \
     } G_STMT_END;
-
-
-
-
-
-
-
-
-
-
-
-
 
 /********** function pointer stuff **********/
 
@@ -1560,7 +1545,6 @@ GST_API GstDebugLevel            _gst_debug_min;
 #define GST_CTX_LOG_OBJECT(ctx,object,...)              G_STMT_START{ }G_STMT_END
 #define GST_CTX_FIXME_OBJECT(ctx,object,...)            G_STMT_START{ }G_STMT_END
 #define GST_CTX_TRACE_OBJECT(ctx,object,...)            G_STMT_START{ }G_STMT_END
-#define GST_CTX_MEMDUMP_OBJECT(ctx,object,...)          G_STMT_START{ }G_STMT_END
 
 /* With IDs */
 #define GST_CTX_ERROR_ID(ctx,id,...)            G_STMT_START{ }G_STMT_END
@@ -1570,7 +1554,6 @@ GST_API GstDebugLevel            _gst_debug_min;
 #define GST_CTX_LOG_ID(ctx,id,...)              G_STMT_START{ }G_STMT_END
 #define GST_CTX_FIXME_ID(ctx,id,...)            G_STMT_START{ }G_STMT_END
 #define GST_CTX_TRACE_ID(ctx,id,...)            G_STMT_START{ }G_STMT_END
-#define GST_CTX_MEMDUMP_ID(ctx,id,...)          G_STMT_START{ }G_STMT_END
 
 /* Without objects */
 #define GST_CTX_ERROR(ctx,...)                          G_STMT_START{ }G_STMT_END
@@ -1580,7 +1563,6 @@ GST_API GstDebugLevel            _gst_debug_min;
 #define GST_CTX_LOG(ctx,...)                            G_STMT_START{ }G_STMT_END
 #define GST_CTX_FIXME(ctx,...)                          G_STMT_START{ }G_STMT_END
 #define GST_CTX_TRACE(ctx,...)                          G_STMT_START{ }G_STMT_END
-#define GST_CTX_MEMDUMP(ctx,...)                        G_STMT_START{ }G_STMT_END
 
 /* Log context macros are no-ops when debugging is disabled */
 
@@ -2047,17 +2029,6 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
  * Since: 1.28
  */
 
-/**
- * GST_CTX_MEMDUMP_OBJECT:
- * @ctx: #GstLogContext to use
- * @object: (nullable): a #GObject or %NULL
- * @...: format string and optional arguments, followed by optional context
- *
- * Logs a memory dump message in the specified context.
- *
- * Since: 1.28
- */
-
 /* Similar macros for non-object logging */
 
 /**
@@ -2144,16 +2115,6 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
  * Since: 1.28
  */
 
-/**
- * GST_CTX_MEMDUMP:
- * @ctx: #GstLogContext to use
- * @...: format string and optional arguments, followed by optional context
- *
- * Logs a memory dump message in the specified context.
- *
- * Since: 1.28
- */
-
 /* Similar macros for object ID logging */
 
 /**
@@ -2229,17 +2190,6 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
  * @id: (nullable): an object ID or %NULL
  *
  * Logs a trace message in the specified context.
- *
- * Since: 1.28
- */
-
-/**
- * GST_CTX_MEMDUMP_ID:
- * @ctx: #GstLogContext to use
- * @...: format string and optional arguments, followed by optional context
- * @id: (nullable): an object ID or %NULL
- *
- * Logs a memory dump message in the specified context.
  *
  * Since: 1.28
  */
