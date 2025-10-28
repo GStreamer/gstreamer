@@ -42,7 +42,7 @@ plugin_init (GstPlugin * plugin)
   gboolean ret = FALSE;
   ret |= GST_ELEMENT_REGISTER (openaptxdec, plugin);
   ret |= GST_ELEMENT_REGISTER (openaptxenc, plugin);
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

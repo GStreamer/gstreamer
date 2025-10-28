@@ -192,11 +192,13 @@ _quant_matrix_ext_is_valid (GstMpegVideoQuantMatrixExt * ext)
 
 #define QUANT_MATRIX_EXT_INIT (GstMpegVideoQuantMatrixExt) { 0xff, { 0, } }
 
+#ifndef G_DISABLE_ASSERT
 static inline gboolean
 _pic_hdr_is_valid (GstMpegVideoPictureHdr * hdr)
 {
   return hdr->tsn != 0xffff;
 }
+#endif
 
 #define PIC_HDR_INIT (GstMpegVideoPictureHdr) { 0xffff, 0, }
 

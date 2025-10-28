@@ -675,7 +675,7 @@ gst_h266_ref_pic_lists (GstH266RefPicLists * rpls, NalReader * nr,
     const GstH266SPS * sps, const GstH266PPS * pps)
 {
   const GstH266RefPicListStruct *ref_list;
-  gint i, j, num_ltrp_entries;
+  gint i, j, num_ltrp_entries GST_UNUSED_ASSERT;
 
   GST_LOG ("parsing \"ref_pic_lists\"");
 
