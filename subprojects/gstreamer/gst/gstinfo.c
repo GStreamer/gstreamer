@@ -366,6 +366,10 @@ struct _GstLogContextBuilder
 static GHashTable *_log_contexts_registry = NULL;
 static GMutex _log_contexts_registry_lock;
 
+/* Global registry for automatically created "once" contexts */
+static GHashTable *_once_log_contexts_registry = NULL;
+static GMutex _once_log_contexts_registry_lock;
+
 /* list of all name/level pairs from --gst-debug and GST_DEBUG */
 static GMutex __level_name_mutex;
 static GSList *__level_name = NULL;
@@ -2791,6 +2795,32 @@ _register_log_context (GstLogContext * ctx)
   g_mutex_unlock (&_log_contexts_registry_lock);
 }
 
+static GstLogContext *
+_fetch_or_register_once_log_context (GstDebugCategory * category)
+{
+  GstLogContext *ctx;
+
+  g_mutex_lock (&_once_log_contexts_registry_lock);
+
+  if (!_once_log_contexts_registry) {
+    _once_log_contexts_registry =
+        g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, NULL);
+  }
+
+  if (!(ctx = g_hash_table_lookup (_once_log_contexts_registry, category))) {
+    GstLogContextBuilder *builder =
+        gst_log_context_builder_new (category, GST_LOG_CONTEXT_FLAG_THROTTLE);
+    builder = gst_log_context_builder_set_hash_flags (builder,
+        GST_LOG_CONTEXT_USE_LINE_NUMBER);
+    ctx = gst_log_context_builder_build (builder);
+    g_hash_table_insert (_once_log_contexts_registry, ctx->category, ctx);
+  }
+
+  g_mutex_unlock (&_once_log_contexts_registry_lock);
+
+  return ctx;
+}
+
 /**
  * gst_log_context_builder_new: (skip):
  * @category: the debug category to use
@@ -3167,16 +3197,58 @@ gst_debug_log_id_literal_with_context (GstLogContext * ctx,
       NULL, id, message);
 }
 
+void
+_gst_debug_log_once (GstDebugCategory * category,
+    GstDebugLevel level,
+    const gchar * file,
+    const gchar * function,
+    gint line, GObject * object, const gchar * format, ...)
+{
+  va_list args;
+  GstLogContext *ctx = _fetch_or_register_once_log_context (category);
+
+  va_start (args, format);
+  gst_debug_log_full_valist (ctx->category, ctx, level, file, function, line,
+      object, NULL, format, args);
+  va_end (args);
+}
+
+void
+_gst_debug_log_once_id (GstDebugCategory * category,
+    GstDebugLevel level,
+    const gchar * file,
+    const gchar * function,
+    gint line, const gchar * id, const gchar * format, ...)
+{
+  va_list args;
+  GstLogContext *ctx = _fetch_or_register_once_log_context (category);
+  va_start (args, format);
+  gst_debug_log_full_valist (ctx->category, ctx, level, file, function, line,
+      NULL, id, format, args);
+  va_end (args);
+}
+
 static void
 _gst_log_context_cleanup (void)
 {
+  /*
+   * We need to lock both context registries for cleanup because they share
+   * values and unreffing the first will unref values from the second.
+   */
   g_mutex_lock (&_log_contexts_registry_lock);
+  g_mutex_lock (&_once_log_contexts_registry_lock);
 
   if (_log_contexts_registry) {
     g_hash_table_unref (_log_contexts_registry);
     _log_contexts_registry = NULL;
   }
 
+  if (_once_log_contexts_registry) {
+    g_hash_table_unref (_once_log_contexts_registry);
+    _once_log_contexts_registry = NULL;
+  }
+
+  g_mutex_unlock (&_once_log_contexts_registry_lock);
   g_mutex_unlock (&_log_contexts_registry_lock);
 }
 

@@ -6142,6 +6142,40 @@ character, a newline character will be added automatically.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="CAT_DEBUG_ONCE" c:identifier="GST_CAT_DEBUG_ONCE" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a debugging message in the given category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="cat">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">category to use</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">printf-style message to output</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CAT_DEBUG_ONCE_OBJECT" c:identifier="GST_CAT_DEBUG_ONCE_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a debugging message belonging to the given object in the given
+category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="cat">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">category to use</doc>
+        </parameter>
+        <parameter name="obj">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">the #GObject the message belongs to</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">printf-style message to output</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="CAT_ERROR" c:identifier="GST_CAT_ERROR" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an error message in the given category.
 
@@ -6159,6 +6193,40 @@ character, a newline character will be added automatically.</doc>
     </function-macro>
     <function-macro name="CAT_ERROR_OBJECT" c:identifier="GST_CAT_ERROR_OBJECT" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an error message belonging to the given object in the given category.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="cat">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">category to use</doc>
+        </parameter>
+        <parameter name="obj">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">the #GObject the message belongs to</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">printf-style message to output</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CAT_ERROR_ONCE" c:identifier="GST_CAT_ERROR_ONCE" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an error message in the given category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="cat">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">category to use</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">printf-style message to output</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CAT_ERROR_ONCE_OBJECT" c:identifier="GST_CAT_ERROR_ONCE_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an error message belonging to the given object in the given category
+exactly once per statement.
 
 There is no need to finish the end of the message string with a newline
 character, a newline character will be added automatically.</doc>
@@ -6208,6 +6276,40 @@ character, a newline character will be added automatically.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="CAT_FIXME_ONCE" c:identifier="GST_CAT_FIXME_ONCE" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a fixme message in the given category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="cat">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">category to use</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">printf-style message to output</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CAT_FIXME_ONCE_OBJECT" c:identifier="GST_CAT_FIXME_ONCE_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a fixme message belonging to the given object in the given category
+exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="cat">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">category to use</doc>
+        </parameter>
+        <parameter name="obj">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">the #GObject the message belongs to</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">printf-style message to output</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="CAT_INFO" c:identifier="GST_CAT_INFO" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an informational message in the given category.
 
@@ -6226,6 +6328,40 @@ character, a newline character will be added automatically.</doc>
     <function-macro name="CAT_INFO_OBJECT" c:identifier="GST_CAT_INFO_OBJECT" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an informational message belonging to the given object in the given
 category.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="cat">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">category to use</doc>
+        </parameter>
+        <parameter name="obj">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">the #GObject the message belongs to</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">printf-style message to output</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CAT_INFO_ONCE" c:identifier="GST_CAT_INFO_ONCE" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an informational message in the given category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="cat">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">category to use</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">printf-style message to output</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CAT_INFO_ONCE_OBJECT" c:identifier="GST_CAT_INFO_ONCE_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an informational message belonging to the given object in the given
+category exactly once per statement.
 
 There is no need to finish the end of the message string with a newline
 character, a newline character will be added automatically.</doc>
@@ -6289,6 +6425,57 @@ character, a newline character will be added automatically.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="CAT_LEVEL_LOG_ONCE" c:identifier="GST_CAT_LEVEL_LOG_ONCE" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Outputs a debugging message with a specific category and level exactly once
+per statement.
+
+This is the most general macro for this purpose. You will probably
+want to use one of the simpler ones described below.
+
+There is no need to finish the end of the debug message with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="cat">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">category to use</doc>
+        </parameter>
+        <parameter name="level">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">the severity of the message</doc>
+        </parameter>
+        <parameter name="object">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">the #GObject the message belongs to or %NULL if none</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">A printf-style message to output</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CAT_LEVEL_LOG_ONCE_ID" c:identifier="GST_CAT_LEVEL_LOG_ONCE_ID" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Outputs a debugging message with a specific category, level, and identifier
+exactly once per statement.
+
+This is the most general macro for this purpose. You will probably want to
+use one of the simpler ones described below.
+
+There is no need to finish the end of the debug message with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="cat">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">category to use</doc>
+        </parameter>
+        <parameter name="level">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">the severity of the message</doc>
+        </parameter>
+        <parameter name="id">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">the identifier of the object this message
+    relates to, or %NULL if none</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">A printf-style message to output</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="CAT_LOG" c:identifier="GST_CAT_LOG" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a logging message in the given category.
 
@@ -6307,6 +6494,40 @@ character, a newline character will be added automatically.</doc>
     <function-macro name="CAT_LOG_OBJECT" c:identifier="GST_CAT_LOG_OBJECT" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a logging message belonging to the given object in the given
 category.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="cat">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">category to use</doc>
+        </parameter>
+        <parameter name="obj">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">the #GObject the message belongs to</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">printf-style message to output</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CAT_LOG_ONCE" c:identifier="GST_CAT_LOG_ONCE" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a logging message in the given category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="cat">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">category to use</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">printf-style message to output</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CAT_LOG_ONCE_OBJECT" c:identifier="GST_CAT_LOG_ONCE_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a logging message belonging to the given object in the given
+category exactly once per statement.
 
 There is no need to finish the end of the message string with a newline
 character, a newline character will be added automatically.</doc>
@@ -6427,6 +6648,40 @@ character, a newline character will be added automatically.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="CAT_TRACE_ONCE" c:identifier="GST_CAT_TRACE_ONCE" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a tracing message in the given category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="cat">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">category to use</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">printf-style message to output</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CAT_TRACE_ONCE_OBJECT" c:identifier="GST_CAT_TRACE_ONCE_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a tracing message belonging to the given object in the given
+category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="cat">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">category to use</doc>
+        </parameter>
+        <parameter name="obj">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">the #GObject the message belongs to</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">printf-style message to output</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="CAT_WARNING" c:identifier="GST_CAT_WARNING" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an warning message in the given category.
 
@@ -6444,6 +6699,40 @@ character, a newline character will be added automatically.</doc>
     </function-macro>
     <function-macro name="CAT_WARNING_OBJECT" c:identifier="GST_CAT_WARNING_OBJECT" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a warning message belonging to the given object in the given category.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="cat">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">category to use</doc>
+        </parameter>
+        <parameter name="obj">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">the #GObject the message belongs to</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">printf-style message to output</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CAT_WARNING_ONCE" c:identifier="GST_CAT_WARNING_ONCE" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a warning message in the given category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="cat">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">category to use</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">printf-style message to output</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CAT_WARNING_ONCE_OBJECT" c:identifier="GST_CAT_WARNING_ONCE_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a warning message belonging to the given object in the given
+category exactly once per statement.
 
 There is no need to finish the end of the message string with a newline
 character, a newline character will be added automatically.</doc>
@@ -12323,6 +12612,58 @@ character, a newline character will be added automatically.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="DEBUG_ONCE" c:identifier="GST_DEBUG_ONCE" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a debugging message in the default category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.
+
+Example:
+``` c
+// Use in code - this message will only be logged once
+for (i = 0; i &lt; 1000; i++) {
+  GST_DEBUG_ONCE ("Processing iteration %d", i);
+}
+```</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DEBUG_ONCE_ID" c:identifier="GST_DEBUG_ONCE_ID" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a debugging message for the given identifier in the default category
+exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="id">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DEBUG_ONCE_OBJECT" c:identifier="GST_DEBUG_ONCE_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a debugging message belonging to the given object in the default
+category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="object">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="DEBUG_PAD_NAME" c:identifier="GST_DEBUG_PAD_NAME" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Evaluates to 2 strings, that describe the pad. Often used in debugging
 statements.</doc>
@@ -15794,6 +16135,50 @@ character, a newline character will be added automatically.</doc>
         </parameter>
         <parameter name="...">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">printf-style message to output</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="ERROR_ONCE" c:identifier="GST_ERROR_ONCE" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an error message in the default category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="ERROR_ONCE_ID" c:identifier="GST_ERROR_ONCE_ID" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an error message for the given identifier in the default category
+exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="id">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="ERROR_ONCE_OBJECT" c:identifier="GST_ERROR_ONCE_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an error message belonging to the given object in the default
+category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="object">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
@@ -21751,6 +22136,50 @@ character, a newline character will be added automatically.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="FIXME_ONCE" c:identifier="GST_FIXME_ONCE" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a fixme message in the default category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="FIXME_ONCE_ID" c:identifier="GST_FIXME_ONCE_ID" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a fixme message for the given identifier in the default category
+exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="id">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="FIXME_ONCE_OBJECT" c:identifier="GST_FIXME_ONCE_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a fixme message belonging to the given object in the default
+category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="object">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
     <constant name="FLAG_SET_MASK_EXACT" value="4294967295" c:type="GST_FLAG_SET_MASK_EXACT" version="1.6">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.h">A mask value with all bits set, for use as a
 GstFlagSet mask where all flag bits must match
@@ -22324,6 +22753,46 @@ character, a newline character will be added automatically.</doc>
         </parameter>
         <parameter name="...">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">printf-style message to output</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="INFO_ONCE" c:identifier="GST_INFO_ONCE" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an informational message in the default category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="INFO_ONCE_ID" c:identifier="GST_INFO_ONCE_ID" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an informational message for the given identifier the default
+category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="id">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="INFO_ONCE_OBJECT" c:identifier="GST_INFO_ONCE_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs an info message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="object">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
@@ -24099,6 +24568,46 @@ character, a newline character will be added automatically.</doc>
         </parameter>
         <parameter name="...">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">printf-style message to output</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="LOG_ONCE" c:identifier="GST_LOG_ONCE" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a logging message in the default category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="LOG_ONCE_ID" c:identifier="GST_LOG_ONCE_ID" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a logging message for the given identifier in the default category
+exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="id">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="LOG_ONCE_OBJECT" c:identifier="GST_LOG_ONCE_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a log message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="object">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
@@ -48373,6 +48882,50 @@ character, a newline character will be added automatically.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="TRACE_ONCE" c:identifier="GST_TRACE_ONCE" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a tracing message in the default category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="TRACE_ONCE_ID" c:identifier="GST_TRACE_ONCE_ID" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a tracing message for the given identifier in the default category
+exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="id">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="TRACE_ONCE_OBJECT" c:identifier="GST_TRACE_ONCE_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a tracing message belonging to the given object in the default
+category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="object">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="TYPE_FIND_FACTORY" c:identifier="GST_TYPE_FIND_FACTORY" introspectable="0">
       <source-position filename="../subprojects/gstreamer/gst/gsttypefindfactory.h"/>
       <parameters>
@@ -54672,6 +55225,50 @@ character, a newline character will be added automatically.</doc>
         </parameter>
         <parameter name="...">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">printf-style message to output</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WARNING_ONCE" c:identifier="GST_WARNING_ONCE" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a warning message in the default category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WARNING_ONCE_ID" c:identifier="GST_WARNING_ONCE_ID" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a warning message for the given identifier in the default category
+exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="id">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WARNING_ONCE_OBJECT" c:identifier="GST_WARNING_ONCE_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a warning message belonging to the given object in the default
+category exactly once per statement.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="object">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
