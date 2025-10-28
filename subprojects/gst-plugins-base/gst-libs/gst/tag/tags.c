@@ -241,6 +241,7 @@ gst_tag_register_musicbrainz_tags (void)
   g_once (&mb_once, gst_tag_register_tags_internal, NULL);
 }
 
+#ifndef G_DISABLE_CHECKS
 static inline gboolean
 gst_tag_image_type_is_valid (GstTagImageType type)
 {
@@ -254,6 +255,7 @@ gst_tag_image_type_is_valid (GstTagImageType type)
 
   return res;
 }
+#endif
 
 /**
  * gst_tag_parse_extended_comment:

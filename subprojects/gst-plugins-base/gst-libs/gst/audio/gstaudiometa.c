@@ -367,7 +367,7 @@ gst_audio_meta_serialize (const GstMeta * meta, GstByteArrayInterface * data,
     return FALSE;
 
   GstByteWriter bw;
-  gboolean success = TRUE;
+  gboolean success GST_UNUSED_ASSERT = TRUE;
   gst_byte_writer_init_with_data (&bw, ptr, size, FALSE);
   success &= gst_byte_writer_put_int32_le (&bw, ameta->info.finfo->format);
   success &= gst_byte_writer_put_int32_le (&bw, ameta->info.flags);

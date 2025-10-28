@@ -712,6 +712,7 @@ gst_video_overlay_rectangle_free (GstMiniObject * mini_obj)
   g_free (rect);
 }
 
+#ifndef G_DISABLE_CHECKS
 static inline gboolean
 gst_video_overlay_rectangle_check_flags (GstVideoOverlayFormatFlags flags)
 {
@@ -719,6 +720,7 @@ gst_video_overlay_rectangle_check_flags (GstVideoOverlayFormatFlags flags)
   return (flags & ~(GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA |
           GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA)) == 0;
 }
+#endif
 
 static gboolean
 gst_video_overlay_rectangle_is_same_alpha_type (GstVideoOverlayFormatFlags

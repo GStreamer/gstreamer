@@ -1275,7 +1275,7 @@ gst_ogg_mux_make_fishead (GstOggMux * mux, ogg_stream_state * os)
 {
   GstByteWriter bw;
   GstBuffer *fishead;
-  gboolean handled = TRUE;
+  gboolean handled GST_UNUSED_ASSERT = TRUE;
 
   GST_DEBUG_OBJECT (mux, "Creating fishead");
 
