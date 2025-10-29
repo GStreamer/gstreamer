@@ -737,6 +737,8 @@ typedef struct _AtomTRAK
   /* some helper info for structural conformity checks */
   gboolean is_video;
   gboolean is_h264;
+  gboolean is_ac3;
+  gboolean is_eac3;
 
   AtomsContext *context;
 } AtomTRAK;
@@ -930,6 +932,21 @@ struct _AtomInfo
   AtomFreeFunc free_func;
 };
 
+typedef struct _EAC3BitstreamInfo
+{
+  guint8 strmtyp;
+  guint8 substreamid;
+  guint16 frmsiz;
+  guint8 fscod;
+  guint8 numblkscod;
+  guint8 acmod;
+  guint8 lfeon;
+  guint8 bsid;
+  guint8 bsmod;
+  guint16 chanmap;
+
+} EAC3BitstreamInfo;
+
 guint64    atoms_get_current_qt_time   (void);
 
 guint64    atom_copy_data              (Atom *atom, guint8 **buffer,
@@ -1107,6 +1124,7 @@ AtomInfo *   build_tapt_extension        (gint clef_width, gint clef_height, gin
 AtomInfo *   build_ac3_extension         (guint8 fscod, guint8 bsid,
                                           guint8 bsmod, guint8 acmod,
                                           guint8 lfe_on, guint8 bitrate_code);
+AtomInfo *   build_eac3_extension        (GArray *bitstreamInfo);
 AtomInfo *   build_opus_extension        (guint32 rate, guint8 channels, guint8 mapping_family,
                                           guint8 stream_count, guint8 coupled_count,
                                           guint8 channel_mapping[256], guint16 pre_skip,

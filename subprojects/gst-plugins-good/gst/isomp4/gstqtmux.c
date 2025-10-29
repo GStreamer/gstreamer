@@ -96,6 +96,27 @@ GST_DEBUG_CATEGORY_STATIC (gst_qt_mux_debug);
 #define ABSDIFF(a, b) ((a) > (b) ? (a) - (b) : (b) - (a))
 #endif
 
+#define READ_BITSTREAM_UINT8(bits, val, nbits) G_STMT_START { \
+    if (!gst_bit_reader_get_bits_uint8 (&bits, &val, nbits)) { \
+      GST_WARNING_OBJECT (qtpad, "Failed to read " G_STRINGIFY (val)); \
+      goto error; \
+    } \
+  } G_STMT_END
+
+#define READ_BITSTREAM_UINT16(bits, val, nbits) G_STMT_START { \
+  if (!gst_bit_reader_get_bits_uint16 (&bits, &val, nbits)) { \
+    GST_WARNING_OBJECT (qtpad, "Failed to read " G_STRINGIFY (val)); \
+    goto error; \
+  } \
+} G_STMT_END
+
+#define SKIP_BITSTREAM_BITS(bits, nbits) G_STMT_START { \
+    if (!gst_bit_reader_skip (&bits, nbits)) { \
+      GST_WARNING_OBJECT (qtpad, "Failed to skip %d bits", nbits); \
+      goto error; \
+    } \
+  } G_STMT_END
+
 /* Hacker notes.
  *
  * The basic building blocks of MP4 files are:
@@ -1194,6 +1215,395 @@ gst_qt_mux_prepare_parse_ac3_frame (GstQTMuxPad * qtpad, GstBuffer * buf,
 
 done:
   gst_buffer_unmap (buf, &map);
+  return buf;
+}
+
+static void
+gst_qt_mux_pad_add_eac3_extension (GstQTMuxPad * qtpad, GstBuffer * buf,
+    GstQTMux * qtmux, GArray * bitstreamInfo)
+{
+  AtomInfo *ext;
+
+  g_return_if_fail (qtpad->trak_ste);
+
+  ext = build_eac3_extension (bitstreamInfo);
+
+  if (!ext) {
+    GST_WARNING_OBJECT (qtpad, "Failed to build EAC3 extension atom");
+    return;
+  }
+
+  sample_table_entry_add_ext_atom (qtpad->trak_ste, ext);
+}
+
+static gboolean
+gst_qtmux_parse_eac3_bsi_bitstream (GstQTMuxPad * qtpad,
+    EAC3BitstreamInfo * info, GstBitReader * bitReader)
+{
+
+  /* EAC3 bsi - Bit stream information (ETSI TS 102 366 V1.4.1 E.1.2.2: */
+  GstBitReader bits = *bitReader;
+
+  READ_BITSTREAM_UINT8 (bits, info->strmtyp, 2);
+  READ_BITSTREAM_UINT8 (bits, info->substreamid, 3);
+  READ_BITSTREAM_UINT16 (bits, info->frmsiz, 11);
+  READ_BITSTREAM_UINT8 (bits, info->fscod, 2);
+  READ_BITSTREAM_UINT8 (bits, info->numblkscod, 2);
+  READ_BITSTREAM_UINT8 (bits, info->acmod, 3);
+  READ_BITSTREAM_UINT8 (bits, info->lfeon, 1);
+  READ_BITSTREAM_UINT8 (bits, info->bsid, 5);
+
+  SKIP_BITSTREAM_BITS (bits, 5);        /* skip dialnorm */
+  guint8 compre = 0;
+  READ_BITSTREAM_UINT8 (bits, compre, 1);
+  if (compre) {
+    SKIP_BITSTREAM_BITS (bits, 8);      /* skip compr */
+  }
+  if (info->acmod == 0x0) {
+    SKIP_BITSTREAM_BITS (bits, 5);      /* skip dialnorm2 */
+    guint8 compr2e = 0;
+    READ_BITSTREAM_UINT8 (bits, compr2e, 1);
+    if (compr2e) {
+      SKIP_BITSTREAM_BITS (bits, 8);    /* skip compr2 */
+    }
+  }
+
+  if (info->strmtyp == 0x1) {
+    guint8 chanmape = 0;
+    READ_BITSTREAM_UINT8 (bits, chanmape, 1);
+    if (chanmape)
+      READ_BITSTREAM_UINT16 (bits, info->chanmap, 16);
+  }
+
+  guint8 mixmdate = 0;
+  READ_BITSTREAM_UINT8 (bits, mixmdate, 1);
+  if (mixmdate) {
+    if (info->acmod > 0x2) {
+      SKIP_BITSTREAM_BITS (bits, 2);    /* skip dmixmod */
+    }
+    if ((info->acmod & 0x1) && (info->acmod > 0x2)) {
+      SKIP_BITSTREAM_BITS (bits, 3);    /* skip ltrtcmixlev */
+      SKIP_BITSTREAM_BITS (bits, 3);    /* skip lorocmixlev */
+    }
+    if (info->acmod & 0x4) {
+      SKIP_BITSTREAM_BITS (bits, 3);    /* skip ltrtsurmixlev */
+      SKIP_BITSTREAM_BITS (bits, 3);    /* skip lorosurmixlev */
+    }
+    if (info->lfeon) {
+      guint8 lfemixlevcode = 0;
+      READ_BITSTREAM_UINT8 (bits, lfemixlevcode, 1);
+      if (lfemixlevcode) {
+        SKIP_BITSTREAM_BITS (bits, 5);  /* skip lfemixlevcod */
+      }
+    }
+    if (info->strmtyp == 0x0) {
+      guint8 pgmscle = 0;
+      READ_BITSTREAM_UINT8 (bits, pgmscle, 1);
+      if (pgmscle) {
+        SKIP_BITSTREAM_BITS (bits, 6);  /* skip pgmscl */
+      }
+      if (info->acmod == 0x0) {
+        guint8 pgmscl2e = 0;
+        READ_BITSTREAM_UINT8 (bits, pgmscl2e, 1);
+        if (pgmscl2e) {
+          SKIP_BITSTREAM_BITS (bits, 6);        /* skip pgmscl2 */
+        }
+      }
+      guint8 extpgmscle = 0;
+      READ_BITSTREAM_UINT8 (bits, extpgmscle, 1);
+      if (extpgmscle) {
+        SKIP_BITSTREAM_BITS (bits, 6);  /* skip extpgmscl */
+      }
+      guint8 mixdef = 0;
+      READ_BITSTREAM_UINT8 (bits, mixdef, 2);
+      if (mixdef == 0x1) {
+        SKIP_BITSTREAM_BITS (bits, 1);  /* skip premixcmpsel */
+        SKIP_BITSTREAM_BITS (bits, 1);  /* skip drcsrc */
+        SKIP_BITSTREAM_BITS (bits, 3);  /* skip premixcmpscl */
+      } else if (mixdef == 0x2) {
+        SKIP_BITSTREAM_BITS (bits, 12); /* skip mixdata */
+      } else if (mixdef == 0x3) {
+        guint8 mixdeflen;
+        READ_BITSTREAM_UINT8 (bits, mixdeflen, 5);
+        guint8 mixdata2e;
+        READ_BITSTREAM_UINT8 (bits, mixdata2e, 1);
+        if (mixdata2e) {
+          SKIP_BITSTREAM_BITS (bits, 1);        /* skip premixcmpsel */
+          SKIP_BITSTREAM_BITS (bits, 1);        /* skip drcsrc */
+          SKIP_BITSTREAM_BITS (bits, 3);        /* skip premixcmpscl */
+          guint8 extpgmlscle;
+          READ_BITSTREAM_UINT8 (bits, extpgmlscle, 1);
+          if (extpgmlscle) {
+            SKIP_BITSTREAM_BITS (bits, 4);      /* skip extpgmlscl */
+          }
+          guint8 extpgmcscle;
+          READ_BITSTREAM_UINT8 (bits, extpgmcscle, 1);
+          if (extpgmcscle) {
+            SKIP_BITSTREAM_BITS (bits, 4);      /* skip extpgmcscl */
+          }
+          guint8 extpgmrscle;
+          READ_BITSTREAM_UINT8 (bits, extpgmrscle, 1);
+          if (extpgmrscle) {
+            SKIP_BITSTREAM_BITS (bits, 4);      /* skip extpgmrscl */
+          }
+          guint8 extpgmlsscle;
+          READ_BITSTREAM_UINT8 (bits, extpgmlsscle, 1);
+          if (extpgmlsscle) {
+            SKIP_BITSTREAM_BITS (bits, 4);      /* skip extpgmlsscl */
+          }
+          guint8 extpgmrsscle;
+          READ_BITSTREAM_UINT8 (bits, extpgmrsscle, 1);
+          if (extpgmrsscle) {
+            SKIP_BITSTREAM_BITS (bits, 4);      /* skip extpgmrsscl */
+          }
+          guint8 extpgmlfescle;
+          READ_BITSTREAM_UINT8 (bits, extpgmlfescle, 1);
+          if (extpgmlfescle) {
+            SKIP_BITSTREAM_BITS (bits, 4);      /* skip extpgmlfescl */
+          }
+          guint8 dmixscle;
+          READ_BITSTREAM_UINT8 (bits, dmixscle, 1);
+          if (dmixscle) {
+            SKIP_BITSTREAM_BITS (bits, 4);      /* skip dmixscl */
+          }
+          guint8 addche;
+          READ_BITSTREAM_UINT8 (bits, addche, 1);
+          if (addche) {
+            guint8 extpgmaux1scle;
+            READ_BITSTREAM_UINT8 (bits, extpgmaux1scle, 1);
+            if (extpgmaux1scle) {
+              SKIP_BITSTREAM_BITS (bits, 4);    /* skip extpgmaux1scl */
+            }
+            guint8 extpgmaux2scle;
+            READ_BITSTREAM_UINT8 (bits, extpgmaux2scle, 1);
+            if (extpgmaux2scle) {
+              SKIP_BITSTREAM_BITS (bits, 4);    /* skip extpgmaux2scl */
+            }
+          }
+        }
+        guint8 mixdata3e;
+        READ_BITSTREAM_UINT8 (bits, mixdata3e, 1);
+        if (mixdata3e) {
+          SKIP_BITSTREAM_BITS (bits, 5);        /* skip spchdat */
+          guint8 addspchdate;
+          READ_BITSTREAM_UINT8 (bits, addspchdate, 1);
+          if (addspchdate) {
+            SKIP_BITSTREAM_BITS (bits, 5);      /* skip spchdat1 */
+            SKIP_BITSTREAM_BITS (bits, 2);      /* skip spchan1att */
+            guint8 addspchdat1e;
+            READ_BITSTREAM_UINT8 (bits, addspchdat1e, 1);
+            if (addspchdat1e) {
+              SKIP_BITSTREAM_BITS (bits, 5);    /* skip spchdat2 */
+              SKIP_BITSTREAM_BITS (bits, 3);    /* skip spchan2att */
+            }
+          }
+        }
+        guint32 mixdata_bits = 8 * (mixdeflen + 2);
+        SKIP_BITSTREAM_BITS (bits, mixdata_bits);       /* skip mixdata */
+        guint32 mixdatafill_bits = (8 - (mixdata_bits % 8)) % 8;
+        if (mixdatafill_bits > 0)
+          SKIP_BITSTREAM_BITS (bits, mixdatafill_bits); /* skip mixdatafill */
+      }
+      if (info->acmod < 0x2) {
+        guint8 paninfoe;
+        READ_BITSTREAM_UINT8 (bits, paninfoe, 1);
+        if (paninfoe) {
+          SKIP_BITSTREAM_BITS (bits, 8);        /* skip panmean */
+          SKIP_BITSTREAM_BITS (bits, 6);        /* skip paninfo */
+        }
+        if (info->acmod == 0x0) {
+          guint8 paninfo2e;
+          READ_BITSTREAM_UINT8 (bits, paninfo2e, 1);
+          if (paninfo2e) {
+            SKIP_BITSTREAM_BITS (bits, 8);      /* skip panmean2 */
+            SKIP_BITSTREAM_BITS (bits, 6);      /* skip paninfo2 */
+          }
+        }
+      }
+      guint8 frmmixcfginfoe = 0;
+      READ_BITSTREAM_UINT8 (bits, frmmixcfginfoe, 1);
+      if (frmmixcfginfoe) {
+        if (info->numblkscod == 0x0) {
+          SKIP_BITSTREAM_BITS (bits, 5);        /* skip blkmixcfginfo[0] */
+        } else {
+          static const guint32 numblks_table[] = { 1, 2, 3, 6 };
+          guint32 number_of_blocks = numblks_table[info->numblkscod];
+          for (guint32 blk = 0; blk < number_of_blocks; blk++) {
+            guint8 blkmixcfginfoe = 0;
+            READ_BITSTREAM_UINT8 (bits, blkmixcfginfoe, 1);
+            if (blkmixcfginfoe) {
+              SKIP_BITSTREAM_BITS (bits, 5);    /* skip blkmixcfginfo[blk] */
+            }
+          }
+        }
+      }
+    }
+  }
+
+  guint8 infomdate = 0;
+  READ_BITSTREAM_UINT8 (bits, infomdate, 1);
+  if (infomdate) {
+    READ_BITSTREAM_UINT8 (bits, info->bsmod, 3);
+
+    /* The fields parsed after bsmod are not used for filling the EC3SpecificBox (dec3 atom) */
+    SKIP_BITSTREAM_BITS (bits, 1);      /* skip copyrightb */
+    SKIP_BITSTREAM_BITS (bits, 1);      /* skip origbs */
+    if (info->acmod == 0x2) {
+      SKIP_BITSTREAM_BITS (bits, 2);    /* skip dsurmod */
+      SKIP_BITSTREAM_BITS (bits, 2);    /* skip dheadphonmod */
+    }
+    if (info->acmod >= 0x6) {
+      SKIP_BITSTREAM_BITS (bits, 2);    /* skip dsurexmod */
+    }
+    guint8 audprodie = 0;
+    READ_BITSTREAM_UINT8 (bits, audprodie, 1);
+    if (audprodie) {
+      SKIP_BITSTREAM_BITS (bits, 5);    /* skip mixlevel */
+      SKIP_BITSTREAM_BITS (bits, 2);    /* skip roomtyp */
+      SKIP_BITSTREAM_BITS (bits, 1);    /* skip adconvtyp */
+    }
+    if (info->acmod == 0x0) {
+      guint8 audprodi2e = 0;
+      READ_BITSTREAM_UINT8 (bits, audprodi2e, 1);
+      if (audprodi2e) {
+        SKIP_BITSTREAM_BITS (bits, 5);  /* skip mixlevel2 */
+        SKIP_BITSTREAM_BITS (bits, 2);  /* skip roomtyp2 */
+        SKIP_BITSTREAM_BITS (bits, 1);  /* skip adconvtyp2 */
+      }
+    }
+    if (info->fscod < 0x3) {
+      SKIP_BITSTREAM_BITS (bits, 1);    /* skip sourcefscod */
+    }
+  }
+
+  if ((info->strmtyp == 0x0) && (info->numblkscod != 0x3)) {
+    SKIP_BITSTREAM_BITS (bits, 1);      /* skip convsync */
+  }
+
+  if (info->strmtyp == 0x2) {
+    if (info->numblkscod == 0x3) {
+      /* blkid = 1 (implicitly, we just skip it) */
+    } else {
+      guint8 blkid = 0;
+      READ_BITSTREAM_UINT8 (bits, blkid, 1);
+      if (blkid) {
+        SKIP_BITSTREAM_BITS (bits, 6);  /* skip frmsizecod */
+      }
+    }
+  }
+
+  guint8 addbsie = 0;
+  READ_BITSTREAM_UINT8 (bits, addbsie, 1);
+  if (addbsie) {
+    guint8 addbsil = 0;
+    READ_BITSTREAM_UINT8 (bits, addbsil, 6);
+    guint32 addbsi_bits = (addbsil + 1) * 8;
+    SKIP_BITSTREAM_BITS (bits, addbsi_bits);    /* skip addbsi */
+  }
+
+  return TRUE;
+error:
+  return FALSE;
+}
+
+static void
+gst_qt_mux_parse_eac3_bsi (GstQTMuxPad * qtpad, GstBitReader * bits,
+    EAC3BitstreamInfo * info)
+{
+  guint16 framesize = 0;
+  guint read_bits = 0;
+  guint initial_read_position = 0;
+  guint final_read_position = 0;
+  guint framesize_bits = 0;
+  guint bits_to_skip = 0;
+
+  initial_read_position = gst_bit_reader_get_pos (bits);
+
+  if (!gst_qtmux_parse_eac3_bsi_bitstream (qtpad, info, bits))
+    GST_WARNING_OBJECT (qtpad,
+        "There's been some error parsing EAC3 Bitstream Info!");
+
+  GST_DEBUG_OBJECT (qtpad,
+      "EAC3 BSI parsed: strmtyp=%u substreamid=%u frmsiz=%u fscod=%u "
+      "numblkscod=%u acmod=%u lfeon=%u bsid=%u chanmap=0x%04x",
+      info->strmtyp, info->substreamid, info->frmsiz, info->fscod,
+      info->numblkscod, info->acmod, info->lfeon, info->bsid, info->chanmap);
+
+  if (info->frmsiz == 0)
+    GST_WARNING_OBJECT (qtpad,
+        "No error detected when parsing EAC3 Bitstream, however, "
+        "the read frame size is 0. There might be an error parsing or in the input stream.");
+
+  framesize = (info->frmsiz + 1) * 2;
+  final_read_position = gst_bit_reader_get_pos (bits);
+  read_bits = final_read_position - initial_read_position;
+  framesize_bits = framesize * 8;
+  /* framesize includes syncword (16 bits), but syncword was already consumed */
+  bits_to_skip = framesize_bits - 16 - read_bits;
+
+  /* Move bit reader to the start of next frame (skip audio blocks and CRC) */
+  if (gst_bit_reader_get_remaining (bits) > bits_to_skip)
+    gst_bit_reader_skip_unchecked (bits, bits_to_skip);
+
+}
+
+static gboolean
+gst_qt_mux_parse_eac3_syncword (GstBitReader * bits)
+{
+  guint16 syncword;
+
+  if (gst_bit_reader_get_remaining (bits) < 16) {
+    return FALSE;
+  }
+
+  syncword = gst_bit_reader_get_bits_uint16_unchecked (bits, 16);
+  return syncword == 0x0B77;
+}
+
+/* This actually parses an EAC3 SAMPLE. Keeping the function name because of resemblance with AC3 */
+static GstBuffer *
+gst_qt_mux_prepare_parse_eac3_frame (GstQTMuxPad * qtpad, GstBuffer * buf,
+    GstQTMux * qtmux)
+{
+  GArray *bitstreamInfo;
+  GstMapInfo map;
+  GstBitReader bits;
+
+  if (!gst_buffer_map (buf, &map, GST_MAP_READ)) {
+    GST_WARNING_OBJECT (qtpad, "Failed to map buffer");
+    return buf;
+  }
+
+  if (G_UNLIKELY (map.size < 8)) {
+    GST_WARNING_OBJECT (qtpad, "EAC3 buffer too small, can't parse stream");
+    goto done;
+  }
+
+  gst_bit_reader_init (&bits, map.data, map.size);
+
+  bitstreamInfo = g_array_new (FALSE, FALSE, sizeof (EAC3BitstreamInfo));
+
+  while (gst_qt_mux_parse_eac3_syncword (&bits)) {
+    EAC3BitstreamInfo info = { 0 };
+    gst_qt_mux_parse_eac3_bsi (qtpad, &bits, &info);
+    g_array_append_val (bitstreamInfo, info);
+  }
+
+  if (bitstreamInfo->len == 0) {
+    GST_WARNING_OBJECT (qtpad,
+        "No EAC3 syncword found in buffer, can't parse EAC3 stream");
+    g_array_free (bitstreamInfo, TRUE);
+    goto done;
+  }
+
+  /* Write EC3SpecificBox */
+  gst_qt_mux_pad_add_eac3_extension (qtpad, buf, qtmux, bitstreamInfo);
+
+  g_array_free (bitstreamInfo, TRUE);
+
+done:
+  gst_buffer_unmap (buf, &map);
+  qtpad->prepare_buf_func = NULL;
   return buf;
 }
 
@@ -6182,6 +6592,15 @@ gst_qt_mux_audio_sink_set_caps (GstQTMuxPad * qtpad, GstCaps * caps)
      * the stream itself. Abuse the prepare_buf_func so we parse a frame
      * and get the needed data */
     qtpad->prepare_buf_func = gst_qt_mux_prepare_parse_ac3_frame;
+  } else if (strcmp (mimetype, "audio/x-eac3") == 0) {
+    entry.fourcc = FOURCC_ec_3;
+
+    /* Fixed values according to TS 102 366 but it also mentions that
+     * they should be ignored */
+    entry.channels = channels;
+    entry.sample_size = 16;
+
+    qtpad->prepare_buf_func = gst_qt_mux_prepare_parse_eac3_frame;
   } else if (strcmp (mimetype, "audio/x-opus") == 0) {
     /* Based on the specification defined in:
      * https://www.opus-codec.org/docs/opus_in_isobmff.html */

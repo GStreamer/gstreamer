@@ -9058,9 +9058,9 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       case FOURCC_alaw:
       case FOURCC_agsm:
       case 0x20736d:
-      case GST_MAKE_FOURCC ('e', 'c', '-', '3'):
       case GST_MAKE_FOURCC ('s', 'a', 'c', '3'):       // Nero Recode
       case FOURCC_ac_3:
+      case FOURCC_ec_3:
       case 0x0200736d:
       case 0x6d730002:
       case 0x1100736d:

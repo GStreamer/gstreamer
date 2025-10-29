@@ -150,6 +150,12 @@
   "audio/x-ac3, " \
   COMMON_AUDIO_CAPS (6, MAX)
 
+#define EAC3_CAPS \
+  "audio/x-eac3, " \
+  "alignment = (string) iec61937, " \
+  "parsed = (boolean) true, " \
+  COMMON_AUDIO_CAPS (16, MAX)
+
 #define AMR_CAPS \
   "audio/AMR, " \
   "rate = (int) 8000, " \
@@ -220,8 +226,8 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
             "video/x-av1, " "stream-format = (string) \"obu-stream\", "
             "alignment = (string) \"tu\", " COMMON_VIDEO_CAPS ";"),
         GST_STATIC_CAPS (PCM_CAPS_FULL "; " PCM_CAPS_UNPOSITIONED " ; "
-            MP123_CAPS " ; " AAC_CAPS " ; " AC3_CAPS " ; " ADPCM_CAPS " ; "
-            "audio/x-alaw, " COMMON_AUDIO_CAPS (2,
+            MP123_CAPS " ; " AAC_CAPS " ; " AC3_CAPS " ; "
+            ADPCM_CAPS " ; " "audio/x-alaw, " COMMON_AUDIO_CAPS (2,
                 MAX) "; " "audio/x-mulaw, " COMMON_AUDIO_CAPS (2,
                 MAX) "; " AMR_CAPS " ; " ALAC_CAPS " ; " OPUS_CAPS),
         GST_STATIC_CAPS (TEXT_UTF8),
@@ -241,8 +247,8 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
             "stream-format = (string) \"obu-stream\", "
             "alignment = (string) \"tu\", " COMMON_VIDEO_CAPS "; " VP9_CAPS
             "; "),
-        GST_STATIC_CAPS (MP123_CAPS "; " AAC_CAPS " ; " AC3_CAPS " ; " ALAC_CAPS
-            " ; " OPUS_CAPS),
+        GST_STATIC_CAPS (MP123_CAPS "; " AAC_CAPS " ; " AC3_CAPS " ; " EAC3_CAPS
+            " ; " ALAC_CAPS " ; " OPUS_CAPS),
         GST_STATIC_CAPS (TEXT_UTF8),
       GST_STATIC_CAPS_NONE}
   ,
@@ -309,11 +315,12 @@ gst_qt_mux_map_format_to_flavor (GstQTMuxFormat format)
 
 static void
 gst_qt_mux_map_check_tracks (AtomMOOV * moov, gint * _video, gint * _audio,
-    gboolean * _has_h264)
+    gboolean * _has_h264, gboolean * _has_dolby)
 {
   GList *it;
   gint video = 0, audio = 0;
   gboolean has_h264 = FALSE;
+  gboolean has_dolby = FALSE;
 
   for (it = moov->traks; it != NULL; it = g_list_next (it)) {
     AtomTRAK *track = it->data;
@@ -322,8 +329,11 @@ gst_qt_mux_map_check_tracks (AtomMOOV * moov, gint * _video, gint * _audio,
       video++;
       if (track->is_h264)
         has_h264 = TRUE;
-    } else
+    } else {
       audio++;
+      if (track->is_ac3 || track->is_eac3)
+        has_dolby = TRUE;
+    }
   }
 
   if (_video)
@@ -332,6 +342,8 @@ gst_qt_mux_map_check_tracks (AtomMOOV * moov, gint * _video, gint * _audio,
     *_audio = audio;
   if (_has_h264)
     *_has_h264 = has_h264;
+  if (_has_dolby)
+    *_has_dolby = has_dolby;
 }
 
 /* pretty static, but possibly dynamic format info */
@@ -373,6 +385,13 @@ gst_qt_mux_map_format_to_header (GstQTMuxFormat format, GstBuffer ** _prefix,
     case GST_QT_MUX_FORMAT_MP4:
       major = FOURCC_mp42;
       comp = mp4_brands;
+
+      gboolean has_dolby = FALSE;
+      gst_qt_mux_map_check_tracks (moov, NULL, NULL, NULL, &has_dolby);
+      if (has_dolby) {          /* Add Dolby brand for AC-3/E-AC-3 content */
+        result = g_list_append (result, GUINT_TO_POINTER (FOURCC_dby1));
+      }
+
       break;
     case GST_QT_MUX_FORMAT_ISML:
       major = FOURCC_isml;
@@ -383,7 +402,7 @@ gst_qt_mux_map_format_to_header (GstQTMuxFormat format, GstBuffer ** _prefix,
       gint video, audio;
       gboolean has_h264;
 
-      gst_qt_mux_map_check_tracks (moov, &video, &audio, &has_h264);
+      gst_qt_mux_map_check_tracks (moov, &video, &audio, &has_h264, NULL);
       /* only track restriction really matters for Basic Profile */
       if (video <= 1 && audio <= 1) {
         /* it seems only newer spec knows about H264 */

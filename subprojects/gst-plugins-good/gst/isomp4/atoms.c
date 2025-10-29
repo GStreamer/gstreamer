@@ -47,6 +47,8 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbytewriter.h>
+#include <gst/base/gstbitwriter.h>
+#include <math.h>
 #include <gst/tag/tag.h>
 #include <gst/video/video.h>
 
@@ -4202,6 +4204,8 @@ atom_trak_set_audio_type (AtomTRAK * trak, AtomsContext * context,
 
   trak->is_video = FALSE;
   trak->is_h264 = FALSE;
+  trak->is_ac3 = (entry->fourcc == FOURCC_ac_3);
+  trak->is_eac3 = (entry->fourcc == FOURCC_ec_3);
 
   ste->version = entry->version;
   ste->compression_id = entry->compression_id;
@@ -4260,6 +4264,8 @@ atom_trak_set_timecode_type (AtomTRAK * trak, AtomsContext * context,
   ste = atom_trak_add_timecode_entry (trak, context, trak_timescale, tc);
   trak->is_video = FALSE;
   trak->is_h264 = FALSE;
+  trak->is_ac3 = FALSE;
+  trak->is_eac3 = FALSE;
 
   return ste;
 }
@@ -4298,6 +4304,8 @@ atom_trak_set_caption_type (AtomTRAK * trak, AtomsContext * context,
   trak->mdia.minf.gmhd = gmhd;
   trak->is_video = FALSE;
   trak->is_h264 = FALSE;
+  trak->is_ac3 = FALSE;
+  trak->is_eac3 = FALSE;
 
   return ste;
 }
@@ -4474,6 +4482,8 @@ atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
     trak->is_video = TRUE;
     trak->is_h264 = (entry->fourcc == FOURCC_avc1
         || entry->fourcc == FOURCC_avc3);
+    trak->is_ac3 = FALSE;
+    trak->is_eac3 = FALSE;
   }
   ste = atom_trak_add_video_entry (trak, context, entry->fourcc);
 
@@ -4524,6 +4534,8 @@ atom_trak_set_subtitle_type (AtomTRAK * trak, AtomsContext * context,
 
   trak->is_video = FALSE;
   trak->is_h264 = FALSE;
+  trak->is_ac3 = FALSE;
+  trak->is_eac3 = FALSE;
 
   return tx3g;
 }
@@ -5757,6 +5769,135 @@ build_ac3_extension (guint8 fscod, guint8 bsid, guint8 bsmod, guint8 acmod,
       ((bsmod & 0x3) << 6) | (acmod << 3) | ((lfe_on & 1) << 2) | ((bitrate_code
           >> 3) & 0x3);
   data[2] = ((bitrate_code & 0x7) << 5);
+
+  return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
+      atom_data_free);
+}
+
+AtomInfo *
+build_eac3_extension (GArray * bitstreamInfo)
+{
+  /* EC3SpecificBox structure (ETSI TS 102 366 V1.4.1 Annex F.5.1):
+   * 
+   * Bits from the spec:
+   * data_rate       13 bits
+   * num_ind_sub      3 bits
+   * 
+   * For each independent substream (num_ind_sub):
+   *   fscod          2 bits
+   *   bsid           5 bits
+   *   reserved       1 bit
+   *   asvc           1 bit
+   *   bsmod          3 bits
+   *   acmod          3 bits
+   *   lfeon          1 bit
+   *   reserved       3 bits
+   *   num_dep_sub    4 bits
+   *   if (num_dep_sub > 0)
+   *     chan_loc     9 bits
+   *   else
+   *     reserved     1 bit
+   * 
+   * See documentation: https://ott.dolby.com/OnDelKits/DDP/Dolby_Digital_Plus_Online_Delivery_Kit_v1.5/Documentation/Content_Creation/SDM/help_files/topics/ddp_iso_bmff_c_ov_ddp_isobmff.html
+   */
+
+  AtomData *atom_data = atom_data_new (FOURCC_dec3);
+  guint8 *data;
+  guint size;
+  guint size_bits = 0;
+  GstBitWriter bw;
+  guint8 num_ind_sub = 0;
+  guint8 num_dep_sub = 0;
+  guint16 data_rate = 0;
+  gboolean hdl = TRUE;
+
+  static const guint fscod_to_sample_rate[] = { 48000, 44100, 32000, 0 };
+  static const guint numblkscod_to_blocks[] = { 1, 2, 3, 6 };
+  static const guint chanmap_to_chanloc[] = {
+    0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0, 1, 2,
+    3, 4, 5, 6,
+    7, 0xFF, 8, 0xFF
+  };
+
+  /* num_ind_sub: substreamid of the last independent substream (strmtyp == 0)
+     num_dep_sub: substreamid field of the last dependent substream */
+  for (guint i = 0; i < bitstreamInfo->len; i++) {
+    EAC3BitstreamInfo *info =
+        &g_array_index (bitstreamInfo, EAC3BitstreamInfo, i);
+    if (info->strmtyp == 0)
+      num_ind_sub = info->substreamid;
+    if (info->strmtyp == 1)
+      num_dep_sub = info->substreamid;
+
+
+    guint16 frmsiz = info->frmsiz;
+    guint16 fs_hz = fscod_to_sample_rate[info->fscod];
+    guint8 numblkscod_indication = numblkscod_to_blocks[info->numblkscod];
+    guint16 data_rate_sub =
+        ((frmsiz + 1) * fs_hz) / (numblkscod_indication * 16 * 1000);
+    data_rate += data_rate_sub;
+    if (data_rate >= 0x1FFF) {
+      GST_WARNING ("EAC3 data_rate too high, clamping to max value.");
+      data_rate = 0x1FFF;
+    }
+  }
+
+  if (num_dep_sub > 0)
+    size_bits = 16 + (num_ind_sub + 1) * (23 + 9);
+  else
+    size_bits = 16 + (num_ind_sub + 1) * (23 + 1);
+  size = round ((size_bits + 7) / 8);
+  atom_data_alloc_mem (atom_data, size);
+  data = atom_data->data;
+
+  gst_bit_writer_init_with_data (&bw, data, size, FALSE);
+
+  hdl &= gst_bit_writer_put_bits_uint16 (&bw, data_rate, 13);
+  hdl &= gst_bit_writer_put_bits_uint8 (&bw, num_ind_sub, 3);
+
+  /* Write information for each independent substream */
+  for (guint i = 0; i <= num_ind_sub; i++) {
+    EAC3BitstreamInfo *ind_info =
+        &g_array_index (bitstreamInfo, EAC3BitstreamInfo, i);
+    guint16 chan_loc = 0;
+    guint8 asvc = 0;
+
+    /* We take asvc from bsmod (Section 4.4.2.2). Not sure if this is correct, as it is redundant to store info twice.
+       My guess is that asvc is a quick way of telling the decoder device to ignore the audio track, whereas bsmod provides a 
+       more detailed explanation of the service type */
+    if ((ind_info->bsmod >= 2 && ind_info->bsmod <= 6) ||
+        (ind_info->bsmod == 7 && ind_info->acmod < 2))
+      asvc = 1;
+
+    hdl &= gst_bit_writer_put_bits_uint8 (&bw, ind_info->fscod, 2);
+    hdl &= gst_bit_writer_put_bits_uint8 (&bw, ind_info->bsid, 5);
+    hdl &= gst_bit_writer_put_bits_uint8 (&bw, 0, 1);
+    hdl &= gst_bit_writer_put_bits_uint8 (&bw, asvc, 1);
+    hdl &= gst_bit_writer_put_bits_uint8 (&bw, ind_info->bsmod, 3);
+    hdl &= gst_bit_writer_put_bits_uint8 (&bw, ind_info->acmod, 3);
+    hdl &= gst_bit_writer_put_bits_uint8 (&bw, ind_info->lfeon ? 1 : 0, 1);
+    hdl &= gst_bit_writer_put_bits_uint8 (&bw, 0, 3);
+    hdl &= gst_bit_writer_put_bits_uint8 (&bw, num_dep_sub, 4);
+
+    /*chan_loc calculation */
+    if (num_dep_sub > 0) {
+      for (int bit = 0; bit < 16; bit++) {
+        if (ind_info->chanmap & (1 << bit)) {
+          guint8 loc_bit = chanmap_to_chanloc[bit];
+          if (loc_bit != 0xFF)
+            chan_loc |= (1 << loc_bit);
+        }
+      }
+
+      hdl &= gst_bit_writer_put_bits_uint16 (&bw, chan_loc, 9);
+    } else
+      hdl &= gst_bit_writer_put_bits_uint8 (&bw, 0, 1);
+  }
+
+  if (!hdl) {
+    GST_WARNING ("Failed to write EC3SpecificBox");
+  }
 
   return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
       atom_data_free);
