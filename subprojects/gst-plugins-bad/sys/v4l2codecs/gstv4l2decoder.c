@@ -1245,6 +1245,7 @@ gst_v4l2_decoder_alloc_request (GstV4l2Decoder * self, guint32 frame_num,
     if (ret < 0) {
       GST_ERROR_OBJECT (self, "MEDIA_IOC_REQUEST_ALLOC failed: %s",
           g_strerror (errno));
+      g_free (request);
       return NULL;
     }
 
@@ -1291,6 +1292,7 @@ gst_v4l2_decoder_alloc_sub_request (GstV4l2Decoder * self,
     if (ret < 0) {
       GST_ERROR_OBJECT (self, "MEDIA_IOC_REQUEST_ALLOC failed: %s",
           g_strerror (errno));
+      g_free (request);
       return NULL;
     }
 
