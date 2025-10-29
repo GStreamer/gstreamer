@@ -798,7 +798,8 @@ media_type_to_caps (AM_MEDIA_TYPE * type, gboolean * top_down_image)
     return nullptr;
 
   header = (VIDEOINFOHEADER *) type->pbFormat;
-  if (header->bmiHeader.biWidth <= 0 || header->bmiHeader.biHeight <= 0) {
+  // biHeight can be either positive or negative (top-down image), so check against zero
+  if (header->bmiHeader.biWidth <= 0 || header->bmiHeader.biHeight == 0) {
     return nullptr;
   }
 
@@ -809,11 +810,13 @@ media_type_to_caps (AM_MEDIA_TYPE * type, gboolean * top_down_image)
   }
 
   if (top_down_image) {
+    // The documentation for BITMAPINFOHEADER states that: For uncompressed
+    // RGB bitmaps, if biHeight is positive, the bitmap is a bottom-up DIB
+    // with the origin at the lower left corner. If biHeight is negative, the
+    // bitmap is a top-down DIB with the origin at the upper left corner.
     const GstVideoFormatInfo *finfo = gst_video_format_get_info (format);
-    if (GST_VIDEO_FORMAT_INFO_IS_RGB (finfo) && header->bmiHeader.biHeight < 0) {
-      *top_down_image = FALSE;
-    } else {
-      *top_down_image = TRUE;
+    if (GST_VIDEO_FORMAT_INFO_IS_RGB (finfo)) {
+      *top_down_image = header->bmiHeader.biHeight < 0;
     }
   }
 
@@ -821,7 +824,7 @@ media_type_to_caps (AM_MEDIA_TYPE * type, gboolean * top_down_image)
   gst_caps_set_simple (caps, "format", G_TYPE_STRING,
       gst_video_format_to_string (format),
       "width", G_TYPE_INT, (gint) header->bmiHeader.biWidth,
-      "height", G_TYPE_INT, (gint) header->bmiHeader.biHeight,
+      "height", G_TYPE_INT, (gint) ABS (header->bmiHeader.biHeight),
       "framerate", GST_TYPE_FRACTION, fps_n, fps_d, nullptr);
 
   return caps;
