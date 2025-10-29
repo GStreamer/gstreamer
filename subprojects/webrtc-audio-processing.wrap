@@ -2,8 +2,7 @@
 directory = webrtc-audio-processing
 url = https://gitlab.freedesktop.org/pulseaudio/webrtc-audio-processing.git
 push-url = git@gitlab.freedesktop.org:pulseaudio/webrtc-audio-processing.git
-revision = v2.1
-diff_files = webrtc-audio-processing-2.1/0001-Fix-compilation-with-gcc-15.patch, webrtc-audio-processing-2.1/0002-patches-Track-Fix-compilation-with-gcc-15.patch
+revision = bc838790eeb6066d30f019c2a3516bd2b824a5c8
 
 [provide]
 dependency_names = webrtc-audio-processing-2
