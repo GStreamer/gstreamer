@@ -1199,8 +1199,8 @@ gst_nv_jpeg_enc_handle_frame (GstVideoEncoder * encoder,
 }
 
 gboolean
-gst_nv_jpeg_enc_register (GstPlugin * plugin, GstCudaContext * context,
-    guint rank, gboolean have_nvrtc)
+gst_nv_jpeg_enc_register (GstPlugin * plugin, guint cuda_device_id,
+    guint rank, gboolean have_nvrtc, gboolean autogpu)
 {
   GST_DEBUG_CATEGORY_INIT (gst_nv_jpeg_enc_debug, "nvjpegenc", 0, "nvjpegenc");
 
@@ -1220,13 +1220,6 @@ gst_nv_jpeg_enc_register (GstPlugin * plugin, GstCudaContext * context,
     0,
     (GInstanceInitFunc) gst_nv_jpeg_enc_init,
   };
-
-  guint cuda_device_id = 0;
-  gboolean autogpu = FALSE;
-  if (!context)
-    autogpu = TRUE;
-  else
-    g_object_get (context, "cuda-device-id", &cuda_device_id, nullptr);
 
   std::string format_string;
 #ifdef NVCODEC_CUDA_PRECOMPILED

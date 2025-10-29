@@ -35,6 +35,7 @@ G_DECLARE_FINAL_TYPE (GstNvDecoder,
 
 typedef struct _GstNvDecoderClassData
 {
+  const gchar *codec_name;
   GstCaps *sink_caps;
   GstCaps *src_caps;
   guint cuda_device_id;
@@ -84,11 +85,13 @@ void           gst_nv_decoder_reset          (GstNvDecoder * decoder);
 
 /* utils for class registration */
 gboolean gst_nv_decoder_check_device_caps (GstCudaContext * context,
+                                           GList *cached_decoders,
                                            cudaVideoCodec codec,
                                            GstCaps **sink_template,
                                            GstCaps **src_template);
 
-const gchar * gst_cuda_video_codec_to_string (cudaVideoCodec codec);
+const gchar * gst_cuda_video_codec_to_string    (cudaVideoCodec codec);
+cudaVideoCodec gst_cuda_video_codec_from_string (const gchar * codec_name);
 
 /* helper methods */
 void     gst_nv_decoder_handle_set_context   (GstNvDecoder * decoder,

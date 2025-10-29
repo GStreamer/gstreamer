@@ -23,9 +23,11 @@
 
 G_BEGIN_DECLS
 
-GstNvEncoderClassData * gst_nv_h264_encoder_register_cuda (GstPlugin * plugin,
-                                                           GstCudaContext * context,
-                                                           guint rank);
+GstNvEncoderClassData * gst_nv_h264_encoder_inspect  (GstPlugin * plugin,
+                                                      GstCudaContext * context);
+GstNvEncoderClassData * gst_nv_h264_encoder_register (GstPlugin * plugin,
+                                                      GstNvEncoderClassData *cdata,
+                                                      guint rank);
 
 #ifdef G_OS_WIN32
 GstNvEncoderClassData * gst_nv_h264_encoder_register_d3d11 (GstPlugin * plugin,

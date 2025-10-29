@@ -130,6 +130,7 @@ typedef struct _GstNvCodecCudaVTable
   CUresult (CUDAAPI * CuDeviceGetName) (char *name, int len, CUdevice dev);
   CUresult (CUDAAPI * CuDeviceGetAttribute) (int *pi,
       CUdevice_attribute attrib, CUdevice dev);
+  CUresult (CUDAAPI * CuDeviceGetUuid) (CUuuid *uuid, CUdevice dev);
   CUresult (CUDAAPI * CuDeviceCanAccessPeer) (int *canAccessPeer,
       CUdevice dev, CUdevice peerDev);
   CUresult (CUDAAPI * CuDriverGetVersion) (int *driverVersion);
@@ -414,6 +415,7 @@ gst_cuda_load_library_once_func (void)
   LOAD_SYMBOL (cuDeviceGetCount, CuDeviceGetCount);
   LOAD_SYMBOL (cuDeviceGetName, CuDeviceGetName);
   LOAD_SYMBOL (cuDeviceGetAttribute, CuDeviceGetAttribute);
+  LOAD_SYMBOL (cuDeviceGetUuid, CuDeviceGetUuid);
   LOAD_SYMBOL (cuDeviceCanAccessPeer, CuDeviceCanAccessPeer);
 
   LOAD_SYMBOL (cuDriverGetVersion, CuDriverGetVersion);
@@ -827,6 +829,14 @@ CuDeviceGetAttribute (int *pi, CUdevice_attribute attrib, CUdevice dev)
   g_assert (gst_cuda_vtable.CuDeviceGetAttribute != nullptr);
 
   return gst_cuda_vtable.CuDeviceGetAttribute (pi, attrib, dev);
+}
+
+CUresult CUDAAPI
+CuDeviceGetUuid (CUuuid * uuid, CUdevice dev)
+{
+  g_assert (gst_cuda_vtable.CuDeviceGetUuid != nullptr);
+
+  return gst_cuda_vtable.CuDeviceGetUuid (uuid, dev);
 }
 
 CUresult CUDAAPI

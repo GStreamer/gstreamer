@@ -170,6 +170,10 @@ CUresult CUDAAPI CuDeviceGetAttribute (int *pi,
                                        CUdevice dev);
 
 GST_CUDA_API
+CUresult CUDAAPI CuDeviceGetUuid (CUuuid *uuid,
+                                  CUdevice dev);
+
+GST_CUDA_API
 CUresult CUDAAPI CuDeviceCanAccessPeer (int *canAccessPeer,
                                         CUdevice dev,
                                         CUdevice peerDev);

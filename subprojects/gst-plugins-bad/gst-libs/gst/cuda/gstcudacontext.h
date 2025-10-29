@@ -93,5 +93,8 @@ GST_CUDA_API
 gboolean         gst_cuda_context_can_access_peer (GstCudaContext * ctx,
                                                    GstCudaContext * peer);
 
+GST_CUDA_API
+gint64           gst_cuda_context_find_dxgi_adapter_luid (CUdevice cuda_device);
+
 G_END_DECLS
 
