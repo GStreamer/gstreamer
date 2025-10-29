@@ -296,8 +296,19 @@ gst_cuda_context_get_property (GObject * object, guint prop_id,
   }
 }
 
+/**
+ * gst_cuda_context_find_dxgi_adapter_luid:
+ * @cuda_device: a CUDA device index
+ *
+ * Finds the DXGI adapter LUID corresponding to the given CUDA device.
+ * This is useful for matching CUDA devices with Direct3D adapters on Windows.
+ *
+ * Returns: The DXGI adapter LUID or 0 if not found or on non-Windows platforms
+ *
+ * Since: 1.30
+ */
 #ifdef G_OS_WIN32
-static gint64
+gint64
 gst_cuda_context_find_dxgi_adapter_luid (CUdevice cuda_device)
 {
   gint64 ret = 0;
@@ -335,7 +346,14 @@ gst_cuda_context_find_dxgi_adapter_luid (CUdevice cuda_device)
 
   return ret;
 }
+#else
+gint64
+gst_cuda_context_find_dxgi_adapter_luid (CUdevice cuda_device)
+{
+  return 0;
+}
 #endif
+
 static gboolean
 init_cuda_ctx (void)
 {

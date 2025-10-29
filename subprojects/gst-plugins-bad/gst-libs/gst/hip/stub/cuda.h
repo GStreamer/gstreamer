@@ -38,6 +38,11 @@ typedef guint64  CUtexObject;
 typedef guintptr CUdeviceptr;
 typedef gint CUdevice;
 
+typedef struct CUuuid_st
+{
+  char bytes[16];
+} CUuuid;
+
 typedef enum
 {
   CUDA_SUCCESS                              = 0,

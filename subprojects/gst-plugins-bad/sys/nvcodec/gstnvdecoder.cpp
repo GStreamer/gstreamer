@@ -1257,7 +1257,8 @@ const GstNvdecoderCodecMap codec_map_list[] = {
 
 gboolean
 gst_nv_decoder_check_device_caps (GstCudaContext * context,
-    cudaVideoCodec codec, GstCaps ** sink_template, GstCaps ** src_template)
+    GList * cached_decoders, cudaVideoCodec codec, GstCaps ** sink_template,
+    GstCaps ** src_template)
 {
   CUresult cuda_ret;
   guint max_width = 0, min_width = G_MAXINT;
@@ -1285,6 +1286,21 @@ gst_nv_decoder_check_device_caps (GstCudaContext * context,
   std::set < std::string > formats;
   std::set < std::string > planar_formats;
   CUcontext cuda_ctx = gst_cuda_context_get_handle (context);
+
+  if (cached_decoders) {
+    for (GList * l = cached_decoders; l; l = l->next) {
+      GstNvDecoderClassData *info = (GstNvDecoderClassData *) l->data;
+
+      for (i = 0; i < G_N_ELEMENTS (codec_map_list); i++) {
+        if (codec_map_list[i].codec == codec &&
+            !g_strcmp0 (codec_map_list[i].codec_name, info->codec_name)) {
+          *sink_template = gst_caps_ref (info->sink_caps);
+          *src_template = gst_caps_ref (info->src_caps);
+          return TRUE;
+        }
+      }
+    }
+  }
 #ifdef G_OS_WIN32
   gboolean is_stateless = FALSE;
 
@@ -1613,6 +1629,20 @@ gst_cuda_video_codec_to_string (cudaVideoCodec codec)
   }
 
   return "unknown";
+}
+
+cudaVideoCodec
+gst_cuda_video_codec_from_string (const gchar * codec_name)
+{
+  if (!codec_name)
+    return cudaVideoCodec_NumCodecs;
+
+  for (guint i = 0; i < G_N_ELEMENTS (codec_map_list); i++) {
+    if (g_strcmp0 (codec_map_list[i].codec_name, codec_name) == 0)
+      return codec_map_list[i].codec;
+  }
+
+  return cudaVideoCodec_NumCodecs;
 }
 
 void

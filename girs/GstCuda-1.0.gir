@@ -455,6 +455,21 @@ to wrap</doc>
           </parameter>
         </parameters>
       </constructor>
+      <function name="find_dxgi_adapter_luid" c:identifier="gst_cuda_context_find_dxgi_adapter_luid" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.cpp">Finds the DXGI adapter LUID corresponding to the given CUDA device.
+This is useful for matching CUDA devices with Direct3D adapters on Windows.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.cpp">The DXGI adapter LUID or 0 if not found or on non-Windows platforms</doc>
+          <type name="gint64" c:type="gint64"/>
+        </return-value>
+        <parameters>
+          <parameter name="cuda_device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.cpp">a CUDA device index</doc>
+            <type name="CudaGst.device" c:type="CUdevice"/>
+          </parameter>
+        </parameters>
+      </function>
       <function name="pop" c:identifier="gst_cuda_context_pop" version="1.22">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.cpp">Pops the current CUDA context from CPU thread</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.h"/>

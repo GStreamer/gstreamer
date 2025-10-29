@@ -833,5 +833,13 @@ and/or use gtk-doc annotations.  -->
       <member name="non_blocking" value="1" c:identifier="CU_STREAM_NON_BLOCKING">
       </member>
     </enumeration>
+    <record name="uuid" c:type="CUuuid">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <field name="bytes" writable="1">
+        <array zero-terminated="0" fixed-size="16">
+          <type name="gchar" c:type="char"/>
+        </array>
+      </field>
+    </record>
   </namespace>
 </repository>
