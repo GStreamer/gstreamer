@@ -74,7 +74,9 @@ GST_DEBUG_CATEGORY_STATIC (glcolorbalance_debug);
 
 #define GST_GL_COLOR_BALANCE_VIDEO_CAPS_FULL \
     GST_GL_COLOR_BALANCE_VIDEO_CAPS " ; "                               \
-    GST_VIDEO_DMA_DRM_CAPS_MAKE
+    GST_VIDEO_DMA_DRM_CAPS_MAKE " ; "                                   \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:DMABuf,"                 \
+        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, "DMA_DRM")
 
 static GstStaticPadTemplate gst_gl_color_balance_element_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",

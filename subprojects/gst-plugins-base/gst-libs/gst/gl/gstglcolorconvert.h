@@ -131,7 +131,11 @@ struct _GstGLColorConvertClass
     "framerate = " GST_VIDEO_FPS_RANGE ", "                             \
     "texture-target = (string) { 2D, rectangle, external-oes }"         \
     " ; "                                                               \
-    GST_VIDEO_DMA_DRM_CAPS_MAKE
+    GST_VIDEO_DMA_DRM_CAPS_MAKE                                         \
+    " ; "                                                               \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:DMABuf,"                 \
+      GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,              \
+      "DMA_DRM")
 
 GST_GL_API
 GstGLColorConvert * gst_gl_color_convert_new (GstGLContext * context);
