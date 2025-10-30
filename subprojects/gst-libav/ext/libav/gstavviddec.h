@@ -64,7 +64,7 @@ struct _GstFFMpegVidDec
   gint pic_interlaced;
   /* GST_VIDEO_BUFFER_FLAG_RFF | GST_VIDEO_BUFFER_FLAG_TFF */
   gint pic_field_order;
-  gboolean pic_field_order_changed;
+  gboolean pic_interlaced_mixed;
   GstVideoMultiviewMode cur_multiview_mode;
   GstVideoMultiviewFlags cur_multiview_flags;
   /* current context */
