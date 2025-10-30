@@ -334,7 +334,9 @@ _passthrough_upload_new (GstGLUpload * upload)
 }
 
 static GstStaticCaps _passthrough_upload_caps =
-GST_STATIC_CAPS (GST_VIDEO_DMA_DRM_CAPS_MAKE);
+    GST_STATIC_CAPS (GST_VIDEO_DMA_DRM_CAPS_MAKE " ; "
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:DMABuf,"
+        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, "DMA_DRM"));
 
 static GstCaps *
 _passthrough_upload_transform_caps (gpointer impl, GstGLContext * context,
