@@ -795,6 +795,68 @@ typedef struct
   AVBufferRef *avbuffer;
 } GstFFMpegVidDecVideoFrame;
 
+typedef struct
+{
+  /* Keep track of how many decoded frames are referencing the codec frame,
+   * so we know when we can release the codec frame from the decoder.
+   *
+   * With certain content, FFmpeg can call `get_buffer2` multiple times for the
+   * same codec frame, so we end up with multiple VidDecVideoFrames referencing
+   * the same codec frame.
+   */
+  guint refcount;
+} GstFFMpegVidDecCodecFrameData;
+
+/* Replaces the 'frame' reference of a VidDecVideoFrame to its codec frame.
+ * Consumes the passed 'frame'. Can be passed NULL as the new 'frame' to clear
+ * the reference.
+ *
+ * Unrefs an old 'frame', if any. Instead of just unreffing, will release the
+ * codec frame from the decoder if this was the last VidDecVideoFrame
+ * referencing it.
+ */
+static void
+gst_ffmpegviddec_video_frame_take_frame (GstFFMpegVidDecVideoFrame * dframe,
+    GstVideoCodecFrame * frame)
+{
+  if (dframe->frame) {
+    GstFFMpegVidDecCodecFrameData *data =
+        gst_video_codec_frame_get_user_data (dframe->frame);
+
+    data->refcount--;
+
+    GST_DEBUG_OBJECT (dframe->ffmpegdec,
+        "unreffed codec frame %p sfn # %u ref ->%u", dframe->frame,
+        dframe->frame->system_frame_number, data->refcount);
+
+    if (data->refcount == 0) {
+      GST_VIDEO_CODEC_FRAME_FLAG_UNSET (dframe->frame,
+          GST_FFMPEG_VIDEO_CODEC_FRAME_FLAG_ALLOCATED);
+      gst_video_decoder_release_frame (GST_VIDEO_DECODER (dframe->ffmpegdec),
+          dframe->frame);
+    } else {
+      gst_video_codec_frame_unref (dframe->frame);
+    }
+  }
+
+  dframe->frame = frame;
+
+  if (frame) {
+    GstFFMpegVidDecCodecFrameData *data =
+        gst_video_codec_frame_get_user_data (frame);
+
+    if (data == NULL) {
+      data = g_new0 (GstFFMpegVidDecCodecFrameData, 1);
+      gst_video_codec_frame_set_user_data (frame, data, g_free);
+    }
+    data->refcount++;
+
+    GST_DEBUG_OBJECT (dframe->ffmpegdec,
+        "reffed codec frame %p sfn # %u ref ->%u", frame,
+        frame->system_frame_number, data->refcount);
+  }
+}
+
 static GstFFMpegVidDecVideoFrame *
 gst_ffmpegviddec_video_frame_new (GstFFMpegVidDec * ffmpegdec,
     GstVideoCodecFrame * frame)
@@ -803,7 +865,7 @@ gst_ffmpegviddec_video_frame_new (GstFFMpegVidDec * ffmpegdec,
 
   dframe = g_new0 (GstFFMpegVidDecVideoFrame, 1);
   dframe->ffmpegdec = ffmpegdec;
-  dframe->frame = frame;
+  gst_ffmpegviddec_video_frame_take_frame (dframe, frame);
 
   GST_DEBUG_OBJECT (ffmpegdec, "new video frame %p for sfn # %d", dframe,
       frame->system_frame_number);
@@ -816,13 +878,11 @@ gst_ffmpegviddec_video_frame_free (GstFFMpegVidDec * ffmpegdec,
     GstFFMpegVidDecVideoFrame * frame)
 {
   GST_DEBUG_OBJECT (ffmpegdec, "free video frame %p for sfn # %d", frame,
-      frame->frame->system_frame_number);
+      frame->frame ? frame->frame->system_frame_number : -1);
 
   if (frame->mapped)
     gst_video_frame_unmap (&frame->vframe);
-  GST_VIDEO_CODEC_FRAME_FLAG_UNSET (frame->frame,
-      GST_FFMPEG_VIDEO_CODEC_FRAME_FLAG_ALLOCATED);
-  gst_video_decoder_release_frame (GST_VIDEO_DECODER (ffmpegdec), frame->frame);
+  gst_ffmpegviddec_video_frame_take_frame (frame, NULL);
   gst_buffer_replace (&frame->buffer, NULL);
   if (frame->avbuffer) {
     av_buffer_unref (&frame->avbuffer);
@@ -1077,7 +1137,7 @@ gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
   if (picture->opaque) {
     GST_DEBUG_OBJECT (ffmpegdec, "Re-using opaque %p", picture->opaque);
     dframe = picture->opaque;
-    dframe->frame = frame;
+    gst_ffmpegviddec_video_frame_take_frame (dframe, frame);
   } else {
     picture->opaque = dframe =
         gst_ffmpegviddec_video_frame_new (ffmpegdec, frame);
@@ -1995,6 +2055,9 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   g_assert (out_dframe);
   output_frame = gst_video_codec_frame_ref (out_dframe->frame);
 #endif
+
+  GST_LOG_OBJECT (ffmpegdec, "Got frame from ffmpeg, sfn # %"
+      G_GUINT32_FORMAT, output_frame->system_frame_number);
 
   /* also give back a buffer allocated by the frame, if any */
   if (out_dframe) {
