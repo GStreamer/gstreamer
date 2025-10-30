@@ -1630,7 +1630,7 @@ _copy_format_properties (GstVulkanFormatProperties * props,
  * gst_vulkan_physical_device_get_format_properties: (skip):
  * @device: a #GstVulkanPhysicalDevice
  * @vk_format: Vulkan color format to get it's properties
- * @props: (out) (caller-allocates): a #GstVulkanFormatProperties
+ * @props: (out caller-allocates): a #GstVulkanFormatProperties
  *
  * This method will query for @vk_format's properties depending on the supported
  * extensions by the driver.
