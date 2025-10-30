@@ -322,7 +322,7 @@ resolution_change_common (gint from_width, gint from_height, gint to_width,
   /* change resolution */
   caps = gst_caps_from_string ("video/x-raw,format=NV12");
   gst_caps_set_simple (caps, "width", G_TYPE_INT, to_width,
-      "height", G_TYPE_INT, to_width, NULL);
+      "height", G_TYPE_INT, to_height, NULL);
 
   GST_DEBUG ("Set new resolution %dx%d", to_width, to_height);
   gst_harness_set_src_caps (h, caps);
