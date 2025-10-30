@@ -376,14 +376,14 @@ resolution_change_common (gint from_width, gint from_height, gint to_width,
 
 GST_START_TEST (test_resolution_change_to_larger)
 {
-  resolution_change_common (64, 64, 128, 128);
+  resolution_change_common (320, 320, 640, 640);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_resolution_change_to_smaller)
 {
-  resolution_change_common (128, 128, 64, 64);
+  resolution_change_common (640, 640, 320, 320);
 }
 
 GST_END_TEST;
