@@ -149,7 +149,20 @@ static const guint8 h265_128x128_pps[] = {
   0xb4, 0x22, 0x40
 };
 
+static const guint8 h265_aud[] = {
+  0x00, 0x00, 0x00, 0x01, 0x46, 0x01, 0x50
+};
+
 static const guint8 h265_128x128_slice_idr_n_lp[] = {
+  0x00, 0x00, 0x00, 0x01, 0x28, 0x01, 0xaf, 0x0e,
+  0xe0, 0x34, 0x82, 0x15, 0x84, 0xf4, 0x70, 0x4f,
+  0xff, 0xed, 0x41, 0x3f, 0xff, 0xe4, 0xcd, 0xc4,
+  0x7c, 0x03, 0x0c, 0xc2, 0xbb, 0xb0, 0x74, 0xe5,
+  0xef, 0x4f, 0xe1, 0xa3, 0xd4, 0x00, 0x02, 0xc2
+};
+
+static const guint8 h265_128x128_slice_idr_n_lp_with_aud[] = {
+  0x00, 0x00, 0x00, 0x01, 0x46, 0x01, 0x50,
   0x00, 0x00, 0x00, 0x01, 0x28, 0x01, 0xaf, 0x0e,
   0xe0, 0x34, 0x82, 0x15, 0x84, 0xf4, 0x70, 0x4f,
   0xff, 0xed, 0x41, 0x3f, 0xff, 0xe4, 0xcd, 0xc4,
@@ -219,9 +232,11 @@ verify_buffer_bs_au (buffer_verify_data_s * vdata, GstBuffer * buffer)
     guint8 *data = map.data;
 
     /* VPS, SPS, PPS */
-    fail_unless (map.size == vdata->data_to_verify_size +
+    fail_unless (map.size == vdata->data_to_verify_size + sizeof (h265_aud) +
         ctx_headers[0].size + ctx_headers[1].size + ctx_headers[2].size);
 
+    fail_unless (memcmp (data, h265_aud, sizeof (h265_aud)) == 0);
+    data += sizeof (h265_aud);
     fail_unless (memcmp (data, ctx_headers[0].data, ctx_headers[0].size) == 0);
     data += ctx_headers[0].size;
     fail_unless (memcmp (data, ctx_headers[1].data, ctx_headers[1].size) == 0);
@@ -234,9 +249,11 @@ verify_buffer_bs_au (buffer_verify_data_s * vdata, GstBuffer * buffer)
             vdata->data_to_verify_size) == 0);
   } else {
     /* IDR frame */
-    fail_unless (map.size == vdata->data_to_verify_size);
-
-    fail_unless (memcmp (map.data, vdata->data_to_verify, map.size) == 0);
+    guint aud_size = sizeof (h265_aud);
+    fail_unless (map.size == vdata->data_to_verify_size + aud_size);
+    fail_unless (memcmp (map.data, h265_aud, aud_size) == 0);
+    fail_unless (memcmp (map.data + aud_size, vdata->data_to_verify,
+            map.size - aud_size) == 0);
   }
 
   gst_buffer_unmap (buffer, &map);
@@ -534,13 +551,13 @@ test_flow_outalign_au (GstHarness * h)
       sizeof (h265_128x128_slice_idr_n_lp), 100, 0);
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
-  pull_and_check (h, h265_128x128_slice_idr_n_lp, 100, 0);
+  pull_and_check (h, h265_128x128_slice_idr_n_lp_with_aud, 100, 0);
 
   buf = wrap_buffer (h265_128x128_slice_idr_n_lp,
       sizeof (h265_128x128_slice_idr_n_lp), 200, 0);
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
-  pull_and_check (h, h265_128x128_slice_idr_n_lp, 200, 0);
+  pull_and_check (h, h265_128x128_slice_idr_n_lp_with_aud, 200, 0);
 }
 
 GST_START_TEST (test_flow_nal_nal)
@@ -594,7 +611,9 @@ GST_START_TEST (test_flow_nal_au)
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
 
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
-  pull_and_check (h, h265_128x128_slice_idr_n_lp, 100, 0);
+
+  /* h265parse will insert AUD for byte-stream + AU output */
+  pull_and_check (h, h265_128x128_slice_idr_n_lp_with_aud, 100, 0);
 
   gst_harness_teardown (h);
 }
@@ -638,7 +657,8 @@ static void
 test_headers_outalign_au (GstHarness * h)
 {
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
-  pull_and_check_composite (h, 10, 0, 4,
+  pull_and_check_composite (h, 10, 0, 5,
+      h265_aud, sizeof (h265_aud),
       h265_128x128_vps, sizeof (h265_128x128_vps),
       h265_128x128_sps, sizeof (h265_128x128_sps),
       h265_128x128_pps, sizeof (h265_128x128_pps),
@@ -783,7 +803,7 @@ test_discont_outalign_au (GstHarness * h)
       sizeof (h265_128x128_slice_idr_n_lp), 1000, GST_BUFFER_FLAG_DISCONT);
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
-  pull_and_check (h, h265_128x128_slice_idr_n_lp, 1000,
+  pull_and_check (h, h265_128x128_slice_idr_n_lp_with_aud, 1000,
       GST_BUFFER_FLAG_DISCONT);
 }
 
@@ -911,7 +931,8 @@ GST_START_TEST (test_sliced_nal_au)
 
   /* now we can see the initial AU on the output */
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
-  pull_and_check_composite (h, 10, 0, 5,
+  pull_and_check_composite (h, 10, 0, 6,
+      h265_aud, sizeof (h265_aud),
       h265_128x128_sliced_vps, sizeof (h265_128x128_sliced_vps),
       h265_128x128_sliced_sps, sizeof (h265_128x128_sliced_sps),
       h265_128x128_sliced_pps, sizeof (h265_128x128_sliced_pps),
@@ -928,7 +949,8 @@ GST_START_TEST (test_sliced_nal_au)
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
 
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
-  pull_and_check_composite (h, 100, 0, 2,
+  pull_and_check_composite (h, 100, 0, 3,
+      h265_aud, sizeof (h265_aud),
       h265_128x128_slice_1_idr_n_lp, sizeof (h265_128x128_slice_1_idr_n_lp),
       h265_128x128_slice_2_idr_n_lp, sizeof (h265_128x128_slice_2_idr_n_lp));
 
@@ -946,7 +968,8 @@ GST_START_TEST (test_sliced_au_au)
   bytestream_push_first_au_inalign_au (h, TRUE);
 
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
-  pull_and_check_composite (h, 10, 0, 5,
+  pull_and_check_composite (h, 10, 0, 6,
+      h265_aud, sizeof (h265_aud),
       h265_128x128_sliced_vps, sizeof (h265_128x128_sliced_vps),
       h265_128x128_sliced_sps, sizeof (h265_128x128_sliced_sps),
       h265_128x128_sliced_pps, sizeof (h265_128x128_sliced_pps),
@@ -959,7 +982,8 @@ GST_START_TEST (test_sliced_au_au)
       h265_128x128_slice_2_idr_n_lp, sizeof (h265_128x128_slice_2_idr_n_lp));
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
-  pull_and_check_composite (h, 100, 0, 2,
+  pull_and_check_composite (h, 100, 0, 3,
+      h265_aud, sizeof (h265_aud),
       h265_128x128_slice_1_idr_n_lp, sizeof (h265_128x128_slice_1_idr_n_lp),
       h265_128x128_slice_2_idr_n_lp, sizeof (h265_128x128_slice_2_idr_n_lp));
 
