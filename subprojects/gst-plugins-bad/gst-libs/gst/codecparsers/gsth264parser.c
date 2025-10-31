@@ -2941,8 +2941,8 @@ void
 gst_h264_video_calculate_framerate (const GstH264SPS * sps,
     guint field_pic_flag, guint pic_struct, gint * fps_num, gint * fps_den)
 {
-  gint num = 0;
-  gint den = 1;
+  gint64 num = 0;
+  gint64 den = 1;
 
   /* To calculate framerate, we use this formula:
    *          time_scale                1                         1
@@ -2991,6 +2991,11 @@ gst_h264_video_calculate_framerate (const GstH264SPS * sps,
         den *= (field_pic_flag ? 2 : 1);
       }
     }
+  }
+
+  while (num > G_MAXINT32 || den > G_MAXINT32) {
+    num >>= 1;
+    den >>= 1;
   }
 
   *fps_num = num;
