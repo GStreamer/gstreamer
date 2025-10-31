@@ -1539,9 +1539,6 @@ static void
 _print_all_dma_formats (GstGLContext * context, GArray * dma_formats)
 {
 #ifndef GST_DISABLE_GST_DEBUG
-  GstGLDmaFormat *dma_fmt;
-  GstGLDmaModifier *dma_modifier;
-  const gchar *fmt_str, *gst_fmt_str;
   GString *str;
   guint i, j;
 
@@ -1557,22 +1554,24 @@ _print_all_dma_formats (GstGLContext * context, GArray * dma_formats)
       "========================|");
 
   for (i = 0; i < dma_formats->len; i++) {
-    dma_fmt = &g_array_index (dma_formats, GstGLDmaFormat, i);
+    GstGLDmaFormat *dma_fmt = &g_array_index (dma_formats, GstGLDmaFormat, i);
 
-    gst_fmt_str = gst_video_format_to_string
+    const gchar *gst_fmt_str = gst_video_format_to_string
         (gst_video_dma_drm_format_to_gst_format (dma_fmt->fourcc, 0));
 
     g_string_append_printf (str, "\n");
 
     if (!dma_fmt->modifiers) {
-      fmt_str = gst_video_dma_drm_fourcc_to_string (dma_fmt->fourcc, 0);
+      gchar *fmt_str = gst_video_dma_drm_fourcc_to_string (dma_fmt->fourcc, 0);
       g_string_append_printf (str, "| %-12s |", gst_fmt_str);
       g_string_append_printf (str, " %-23s |", fmt_str);
       g_string_append_printf (str, " %-13s |\n", "external only");
+      g_free (fmt_str);
     } else {
       for (j = 0; j < dma_fmt->modifiers->len; j++) {
         GstVideoFormat gst_fmt;
-        dma_modifier = &g_array_index (dma_fmt->modifiers, GstGLDmaModifier, j);
+        GstGLDmaModifier *dma_modifier =
+            &g_array_index (dma_fmt->modifiers, GstGLDmaModifier, j);
 
         gst_fmt = gst_video_dma_drm_format_to_gst_format (dma_fmt->fourcc,
             dma_modifier->modifier);
@@ -1583,12 +1582,13 @@ _print_all_dma_formats (GstGLContext * context, GArray * dma_formats)
         else
           g_string_append_printf (str, "| %-12s |", gst_fmt_str);
 
-        fmt_str = gst_video_dma_drm_fourcc_to_string (dma_fmt->fourcc,
+        gchar *fmt_str = gst_video_dma_drm_fourcc_to_string (dma_fmt->fourcc,
             dma_modifier->modifier);
 
         g_string_append_printf (str, " %-23s |", fmt_str);
         g_string_append_printf (str, " %-13s |\n", dma_modifier->external_only ?
             "external only" : "");
+        g_free (fmt_str);
       }
     }
 
