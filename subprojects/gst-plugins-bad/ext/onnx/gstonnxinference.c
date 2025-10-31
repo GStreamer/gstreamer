@@ -1103,8 +1103,10 @@ error:
   if (session_options)
     api->ReleaseSessionOptions (session_options);
 
+  GST_OBJECT_UNLOCK (self);
+
   gst_onnx_inference_stop (trans);
-  goto done;
+  return ret;
 
 }
 
