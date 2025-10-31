@@ -125,6 +125,7 @@ error:
   {
     if (event)
       _gst_mpegts_scte_splice_event_free (event);
+    g_free (component);
     return NULL;
   }
 }
