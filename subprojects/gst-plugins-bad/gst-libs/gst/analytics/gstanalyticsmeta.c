@@ -706,6 +706,8 @@ gst_analytics_relation_meta_exist (GstAnalyticsRelationMeta * rmeta,
   adj_mat = rmeta->adj_mat;
   if (max_relation_span < 0) {
     span = G_MAXSIZE;
+  } else {
+    span = max_relation_span;
   }
   // If we're only considering the direct relation (@max_relation_span <= 1) we can directly read the
   // adjacency-matrix,
