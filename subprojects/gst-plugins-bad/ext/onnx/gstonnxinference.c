@@ -723,28 +723,24 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       OrtCUDAProviderOptionsV2 *cuda_options = NULL;
       status = api->CreateCUDAProviderOptions (&cuda_options);
       if (status) {
-        GST_WARNING_OBJECT (self,
-            "Failed to create CUDA provider - dropping back to CPU: %s",
-            api->GetErrorMessage (status));
-        api->ReleaseStatus (status);
-        status = NULL;
-      } else {
-        status =
-            api->SessionOptionsAppendExecutionProvider_CUDA_V2 (session_options,
-            cuda_options);
-        api->ReleaseCUDAProviderOptions (cuda_options);
-        if (status) {
-          GST_WARNING_OBJECT (self,
-              "Failed to append CUDA provider - dropping back to CPU: %s",
-              api->GetErrorMessage (status));
-          api->ReleaseStatus (status);;
-          status = NULL;
-        }
+        GST_ERROR_OBJECT (self,
+            "Failed to create CUDA provider %s", api->GetErrorMessage (status));
+        goto error;
       }
-    }
+
+      status =
+          api->SessionOptionsAppendExecutionProvider_CUDA_V2 (session_options,
+          cuda_options);
+      api->ReleaseCUDAProviderOptions (cuda_options);
+      if (status) {
+        GST_ERROR_OBJECT (self, "Failed to append CUDA provider: %s",
+            api->GetErrorMessage (status));
+        goto error;
+      }
       break;
-#ifdef HAVE_VSI_NPU
+    }
     case GST_ONNX_EXECUTION_PROVIDER_VSI:
+#ifdef HAVE_VSI_NPU
       status =
           OrtSessionOptionsAppendExecutionProvider_VSINPU (session_options);
       if (status) {
@@ -753,8 +749,11 @@ gst_onnx_inference_start (GstBaseTransform * trans)
         goto error;
       }
       api->DisableCpuMemArena (session_options);
-      break;
+#else
+      GST_ERROR_OBJECT (self, "Compiled without VSI support");
+      goto error;
 #endif
+      break;
     default:
       break;
   }
