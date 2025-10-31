@@ -1154,7 +1154,8 @@ gst_rtsp_connection_connect_with_response_usec (GstRTSPConnection * conn,
   GSocketConnection *connection;
   GSocket *socket;
   GError *error = NULL;
-  gchar *connection_uri, *request_uri, *remote_ip, *query = NULL, *path = NULL;
+  gchar *connection_uri, *request_uri = NULL, *remote_ip, *query = NULL, *path =
+      NULL;
   GstClockTime to;
   guint16 url_port;
   GstRTSPUrl *url;
@@ -1182,6 +1183,9 @@ gst_rtsp_connection_connect_with_response_usec (GstRTSPConnection * conn,
 
   while (res == GST_RTSP_OK) {
     cancellable = get_cancellable (conn);
+
+    g_free (request_uri);
+    request_uri = NULL;
 
     if (conn->proxy_host) {
       connection = g_socket_client_connect_to_host (conn->client,
@@ -1247,7 +1251,11 @@ gst_rtsp_connection_connect_with_response_usec (GstRTSPConnection * conn,
           GST_LOG ("redirect from %s to %s.", connection_uri, request_uri);
 
           stream0_reset (conn);
+
+          g_free (connection_uri);
           connection_uri = request_uri;
+          request_uri = NULL;
+
           gst_uri_unref (uri);
 
           uri = gst_uri_from_string (connection_uri);
