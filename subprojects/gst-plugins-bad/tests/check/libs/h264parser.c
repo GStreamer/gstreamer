@@ -1078,6 +1078,53 @@ GST_START_TEST (test_h264_split_avc)
 
 GST_END_TEST;
 
+// This SPS block with vui parameters defines:
+// - frame_mbs_only_flag: 1 (progressive)
+// - time_scale: 4294967294 (overflows int32 capacity)
+// - num_units_in_tick: 71834980
+// The expected framerate is 29,894678707 fps.
+static const guint8 nalu_sps_with_overflow_framerate[] = {
+  0x00, 0x00, 0x00, 0x01, 0x27, 0x64, 0x00, 0x1f,
+  0xac, 0x72, 0x14, 0x05, 0x00, 0x5b, 0xb0, 0x11,
+  0x04, 0x48, 0x1d, 0x64, 0xff, 0xff, 0xff, 0xfe,
+  0xe2, 0x20, 0x00, 0x74, 0xc1, 0x00, 0x00, 0x74,
+  0xc1, 0x3b, 0xde, 0xe0, 0x3e, 0x10, 0x08, 0x32,
+  0xc0
+};
+
+GST_START_TEST (test_h264_parse_overflow_framerate)
+{
+  GstH264ParserResult res;
+  GstH264NalUnit nalu;
+  GstH264SPS sps;
+  gint fps_num, fps_den;
+  GstH264NalParser *const parser = gst_h264_nal_parser_new ();
+
+  res = gst_h264_parser_identify_nalu (parser, nalu_sps_with_overflow_framerate,
+      0, sizeof (nalu_sps_with_overflow_framerate), &nalu);
+  assert_equals_int (res, GST_H264_PARSER_NO_NAL_END);
+  assert_equals_int (nalu.type, GST_H264_NAL_SPS);
+  assert_equals_int (nalu.size, 37);
+
+  res = gst_h264_parser_parse_sps (parser, &nalu, &sps);
+  assert_equals_int (res, GST_H264_PARSER_OK);
+  fail_unless (sps.valid);
+  fail_unless (sps.frame_mbs_only_flag);
+  fail_unless (sps.vui_parameters_present_flag);
+  fail_unless (sps.vui_parameters.timing_info_present_flag);
+  assert_equals_uint64 (sps.vui_parameters.time_scale, 4294967294);
+  assert_equals_uint64 (sps.vui_parameters.num_units_in_tick, 71834980);
+
+  gst_h264_video_calculate_framerate (&sps, 0, 0, &fps_num, &fps_den);
+  assert_equals_int (fps_num, 2147483647);
+  assert_equals_int (fps_den, 71834980);
+
+  gst_h264_sps_clear (&sps);
+  gst_h264_nal_parser_free (parser);
+}
+
+GST_END_TEST;
+
 static Suite *
 h264parser_suite (void)
 {
@@ -1095,6 +1142,7 @@ h264parser_suite (void)
   tcase_add_test (tc_chain, test_h264_decoder_config_record);
   tcase_add_test (tc_chain, test_h264_parse_partial_nal_header);
   tcase_add_test (tc_chain, test_h264_split_avc);
+  tcase_add_test (tc_chain, test_h264_parse_overflow_framerate);
 
   return s;
 }
