@@ -165,7 +165,7 @@ gst_tflite_inference_class_init (GstTFliteInferenceClass * klass)
 
 
   gst_element_class_set_static_metadata (element_class, "tfliteinference",
-      "Filter/Effect",
+      "Filter/Video",
       "Apply neural network to video frames and create tensor output",
       "Denis Shimizu <denis.shimizu@collabora.com>, "
       "Aaron Boxer <aaron.boxer@collabora.com>,"

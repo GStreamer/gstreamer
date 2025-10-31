@@ -323,7 +323,7 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
 
 
   gst_element_class_set_static_metadata (element_class, "onnxinference",
-      "Filter/Effect/Video",
+      "Filter/Video",
       "Apply neural network to video frames and create tensor output",
       "Aaron Boxer <aaron.boxer@collabora.com>");
   gst_element_class_add_pad_template (element_class,
