@@ -462,6 +462,8 @@ _src_smpte_init (gpointer impl, GstGLContext * context,
           frags), NULL);
   if (!src->color_shader) {
     GST_ERROR_OBJECT (src->base.base.src, "%s", error->message);
+    g_free (coord);
+    g_free (plane_indices);
     return FALSE;
   }
 
@@ -480,6 +482,8 @@ _src_smpte_init (gpointer impl, GstGLContext * context,
           frags), NULL);
   if (!src->snow_shader) {
     GST_ERROR_OBJECT (src->base.base.src, "%s", error->message);
+    g_free (coord);
+    g_free (plane_indices);
     return FALSE;
   }
 
