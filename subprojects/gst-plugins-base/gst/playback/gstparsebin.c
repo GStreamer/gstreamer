@@ -3587,6 +3587,7 @@ retry:
     GST_WARNING_OBJECT (parsebin,
         "Currently, shutting down, aborting exposing");
     DYN_UNLOCK (parsebin);
+    g_string_free (missing_plugin_details, TRUE);
     return FALSE;
   }
   DYN_UNLOCK (parsebin);
