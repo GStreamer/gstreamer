@@ -777,7 +777,7 @@ dependencies = [
  "serde",
  "serde_json",
  "single-instance",
- "static-files 0.2.5",
+ "static-files 0.3.1",
  "tokio",
  "tracing",
  "tracing-subscriber",
