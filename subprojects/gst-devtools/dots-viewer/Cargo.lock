@@ -777,7 +777,7 @@ dependencies = [
  "serde",
  "serde_json",
  "single-instance",
- "static-files 0.2.5",
+ "static-files 0.3.1",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -1600,9 +1600,9 @@ checksum = "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596"
 
 [[package]]
 name = "static-files"
-version = "0.2.4"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e8590e848e1c53be9258210bcd4a8f4118e08988f03a4e2d63b62e4ad9f7ced"
+checksum = "f9c425c07353535ef55b45420f5a8b0a397cd9bc3d7e5236497ca0d90604aa9b"
 dependencies = [
  "change-detection",
  "mime_guess",
