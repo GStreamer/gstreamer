@@ -105,7 +105,7 @@ except (ImportError, TypeError, ValueError, NameError) as e:
     try:
         Gst.warning(f"opentimelineio module not found, GES OTIO formatter will not be available: {e}")
     except Exception as e:
-        // Gst is not available
+        # Gst is not available
         pass
 except otio.exceptions.NotSupportedError as e:
     Gst.warning(f"otio error: {e}")
