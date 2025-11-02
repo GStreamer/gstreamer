@@ -4,7 +4,7 @@ set -eux
 
 # Install Rust
 RUSTUP_VERSION=1.28.1
-RUST_VERSION=1.90.0
+RUST_VERSION=1.91.0
 RUST_ARCH="x86_64-unknown-linux-gnu"
 
 RUSTUP_URL=https://static.rust-lang.org/rustup/archive/$RUSTUP_VERSION/$RUST_ARCH/rustup-init
@@ -23,7 +23,7 @@ rm /tmp/rustup-init;
 sudo mkdir -p $RUSTUP_HOME $CARGO_HOME
 sudo chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
-cargo install --locked cargo-c --version 0.10.15+cargo-0.90.0
+cargo install --locked cargo-c --version 0.10.17+cargo-0.92
 # We don't need them in the build image and they occupy
 # 600mb of html files (athough they compress extremely well)
 rustup component remove rust-docs
