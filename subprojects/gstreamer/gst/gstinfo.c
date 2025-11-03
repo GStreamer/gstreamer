@@ -1583,19 +1583,15 @@ gst_debug_construct_win_color (guint colorinfo)
   return color;
 }
 
-/* width of %p varies depending on actual value of pointer, which can make
- * output unevenly aligned if multiple threads are involved, hence the %14p
- * (should really be %18p, but %14p seems a good compromise between too many
- * white spaces and likely unalignment on my system) */
 #if defined (GLIB_SIZEOF_VOID_P) && GLIB_SIZEOF_VOID_P == 8
-#define PTR_FMT "%14p"
+#define PTR_FMT "%16p"
 #else
-#define PTR_FMT "%10p"
+#define PTR_FMT "%8p"
 #endif
 #ifdef G_OS_WIN32
-#define PID_FMT "%5lu"
+#define PID_FMT "%10lu"
 #else
-#define PID_FMT "%5d"
+#define PID_FMT "%10d"
 #endif
 #if defined(G_OS_WIN32) || defined(__linux__)
 #define TID_FMT PID_FMT
