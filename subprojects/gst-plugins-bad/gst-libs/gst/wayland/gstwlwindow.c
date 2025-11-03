@@ -65,14 +65,20 @@ typedef struct _GstWlWindowPrivate
   /* the size and position of the video_subsurface */
   GstVideoRectangle video_rectangle;
 
-  /* the size of the video in the buffers */
+  /* the size of the video in the buffers (unpadded) */
   gint video_width, video_height;
+
+  /* the size of the video in the buffers (padded) */
+  gint buffer_width, buffer_height;
 
   /* default window dimension used when the compositor does not chose a size */
   gint default_width, default_height;
 
   /* video width scaled according to par */
   gint scaled_width;
+
+  /* the crop rectangle */
+  GstVideoRectangle crop;
 
   enum wl_output_transform buffer_transform;
 
@@ -433,6 +439,9 @@ gst_wl_window_new_toplevel_full (GstWlDisplay * display,
     gst_wl_window_set_render_rectangle (self, 0, 0, priv->default_width,
         priv->default_height);
 
+    GST_INFO_OBJECT (self, "Configured default rectangle to %ix%i",
+        priv->default_width, priv->default_height);
+
     wl_surface_commit (priv->area_surface);
     wl_display_flush (gst_wl_display_get_display (display));
 
@@ -560,11 +569,15 @@ gst_wl_window_resize_video_surface (GstWlWindow * self)
 {
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
   GstVideoRectangle src = { 0, };
+  GstVideoRectangle wp_src = { 0, };
   GstVideoRectangle dst = { 0, };
   GstVideoRectangle res;
-  int wp_src_width;
-  int wp_src_height;
 
+  /* viewport coordinates will be based on the trasnformed surface */
+  wl_surface_set_buffer_transform (priv->video_surface_wrapper,
+      priv->buffer_transform);
+
+  /* adjust the width/height base on the rotation */
   switch (priv->buffer_transform) {
     case WL_OUTPUT_TRANSFORM_NORMAL:
     case WL_OUTPUT_TRANSFORM_180:
@@ -572,8 +585,8 @@ gst_wl_window_resize_video_surface (GstWlWindow * self)
     case WL_OUTPUT_TRANSFORM_FLIPPED_180:
       src.w = priv->scaled_width;
       src.h = priv->video_height;
-      wp_src_width = priv->video_width;
-      wp_src_height = priv->video_height;
+      wp_src.w = priv->crop.w;
+      wp_src.h = priv->crop.h;
       break;
     case WL_OUTPUT_TRANSFORM_90:
     case WL_OUTPUT_TRANSFORM_270:
@@ -581,9 +594,48 @@ gst_wl_window_resize_video_surface (GstWlWindow * self)
     case WL_OUTPUT_TRANSFORM_FLIPPED_270:
       src.w = priv->video_height;
       src.h = priv->scaled_width;
-      wp_src_width = priv->video_height;
-      wp_src_height = priv->video_width;
+      wp_src.w = priv->crop.h;
+      wp_src.h = priv->crop.w;
       break;
+    default:
+      g_assert_not_reached ();
+  }
+
+  /* apply the x/y crop based on the transformation */
+  switch (priv->buffer_transform) {
+    case WL_OUTPUT_TRANSFORM_NORMAL:
+      wp_src.x = priv->crop.x;
+      wp_src.y = priv->crop.y;
+      break;
+    case WL_OUTPUT_TRANSFORM_180:
+      wp_src.x = priv->buffer_width - (priv->crop.w + priv->crop.x);
+      wp_src.y = priv->buffer_height - (priv->crop.h + priv->crop.y);
+      break;
+    case WL_OUTPUT_TRANSFORM_FLIPPED:
+      wp_src.x = priv->buffer_width - (priv->crop.w + priv->crop.x);
+      wp_src.y = priv->crop.y;
+      break;
+    case WL_OUTPUT_TRANSFORM_FLIPPED_180:
+      wp_src.x = priv->crop.x;
+      wp_src.y = priv->buffer_height - (priv->crop.h + priv->crop.y);
+      break;
+    case WL_OUTPUT_TRANSFORM_90:
+      wp_src.x = priv->buffer_height - (priv->crop.h + priv->crop.y);
+      wp_src.y = priv->crop.x;
+      break;
+    case WL_OUTPUT_TRANSFORM_270:
+      wp_src.x = priv->crop.y;
+      wp_src.y = priv->buffer_width - (priv->crop.w + priv->crop.x);
+      break;
+    case WL_OUTPUT_TRANSFORM_FLIPPED_270:
+      wp_src.x = priv->buffer_height - (priv->crop.h + priv->crop.y);
+      wp_src.y = priv->buffer_width - (priv->crop.w + priv->crop.x);
+      break;
+    case WL_OUTPUT_TRANSFORM_FLIPPED_90:
+      wp_src.x = priv->crop.y;
+      wp_src.y = priv->crop.x;
+      break;
+
     default:
       g_assert_not_reached ();
   }
@@ -597,9 +649,9 @@ gst_wl_window_resize_video_surface (GstWlWindow * self)
       res = dst;
     else
       gst_video_center_rect (&src, &dst, &res, TRUE);
-    wp_viewport_set_source (priv->video_viewport, wl_fixed_from_int (0),
-        wl_fixed_from_int (0), wl_fixed_from_int (wp_src_width),
-        wl_fixed_from_int (wp_src_height));
+    wp_viewport_set_source (priv->video_viewport, wl_fixed_from_int (wp_src.x),
+        wl_fixed_from_int (wp_src.y), wl_fixed_from_int (wp_src.w),
+        wl_fixed_from_int (wp_src.h));
 
     /* The protocol does not allow for a size set to 0 */
     res.w = MAX (res.w, 1);
@@ -611,8 +663,6 @@ gst_wl_window_resize_video_surface (GstWlWindow * self)
   }
 
   wl_subsurface_set_position (priv->video_subsurface, res.x, res.y);
-  wl_surface_set_buffer_transform (priv->video_surface_wrapper,
-      priv->buffer_transform);
 
   priv->video_rectangle = res;
 }
@@ -668,6 +718,20 @@ static const struct wl_callback_listener frame_callback_listener = {
   frame_redraw_callback
 };
 
+static gboolean
+gst_wl_window_crop_rectangle_changed (GstWlWindow * self,
+    const GstVideoRectangle * pending_crop)
+{
+  GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
+
+  if (priv->crop.x == pending_crop->x
+      && priv->crop.y == pending_crop->y
+      && priv->crop.w == pending_crop->w && priv->crop.h == pending_crop->h)
+    return FALSE;
+
+  return TRUE;
+}
+
 static void
 gst_wl_window_commit_buffer (GstWlWindow * self, GstWlBuffer * buffer)
 {
@@ -676,13 +740,49 @@ gst_wl_window_commit_buffer (GstWlWindow * self, GstWlBuffer * buffer)
   GstVideoMasteringDisplayInfo *minfo = priv->next_minfo;
   GstVideoContentLightLevel *linfo = priv->next_linfo;
   struct wl_callback *callback;
+  gboolean needs_layout_update = FALSE;
+  GstVideoMeta *vmeta = gst_wl_buffer_get_video_meta (buffer);
+  GstVideoCropMeta *cmeta = gst_wl_buffer_get_video_crop_meta (buffer);
+  GstVideoRectangle crop = priv->crop;
 
   if (G_UNLIKELY (info)) {
     priv->scaled_width =
         gst_util_uint64_scale_int_round (info->width, info->par_n, info->par_d);
-    priv->video_width = info->width;
-    priv->video_height = info->height;
+    priv->video_width = priv->buffer_width = info->width;
+    priv->video_height = priv->buffer_height = info->height;
 
+    /* we don't have video_width/height saved initially, so if we didn't have a
+     * crop meta the width/height needs to be fixed from its reset value of 0 */
+    if (crop.w == 0)
+      crop.w = priv->video_width;
+    if (crop.h == 0)
+      crop.h = priv->video_height;
+
+    needs_layout_update = TRUE;
+  }
+
+  if (vmeta) {
+    if (priv->buffer_width != vmeta->width
+        || priv->buffer_height != vmeta->height) {
+      priv->buffer_width = vmeta->width;
+      priv->buffer_height = vmeta->height;
+      needs_layout_update = TRUE;
+    }
+  }
+
+  if (cmeta) {
+    crop.x = cmeta->x;
+    crop.y = cmeta->y;
+    crop.w = cmeta->width;
+    crop.h = cmeta->height;
+  }
+
+  if (gst_wl_window_crop_rectangle_changed (self, &crop)) {
+    priv->crop = crop;
+    needs_layout_update = TRUE;
+  }
+
+  if (G_UNLIKELY (needs_layout_update)) {
     wl_subsurface_set_sync (priv->video_subsurface);
     gst_wl_window_resize_video_surface (self);
     gst_wl_window_set_opaque (self, info);
@@ -715,7 +815,7 @@ gst_wl_window_commit_buffer (GstWlWindow * self, GstWlBuffer * buffer)
     priv->clear_window = FALSE;
   }
 
-  if (G_UNLIKELY (info)) {
+  if (G_UNLIKELY (needs_layout_update)) {
     /* commit also the parent (area_surface) in order to change
      * the position of the video_subsurface */
     wl_surface_commit (priv->area_surface_wrapper);
