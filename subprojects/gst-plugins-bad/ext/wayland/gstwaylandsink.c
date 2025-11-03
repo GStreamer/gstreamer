@@ -933,6 +933,41 @@ on_window_closed (GstWlWindow * window, gpointer user_data)
 }
 
 static GstFlowReturn
+gst_wayland_sink_copy_frame (GstWaylandSink * self, GstBuffer * src_buffer,
+    GstBuffer * dst_buffer)
+{
+  GstVideoFrame src, dst;
+
+  if (!gst_video_frame_map (&dst, &self->video_info, dst_buffer, GST_MAP_WRITE))
+    goto dst_map_failed;
+
+  if (!gst_video_frame_map (&src, &self->video_info, src_buffer, GST_MAP_READ)) {
+    gst_video_frame_unmap (&dst);
+    goto src_map_failed;
+  }
+
+  gst_video_frame_copy (&dst, &src);
+
+  gst_video_frame_unmap (&src);
+  gst_video_frame_unmap (&dst);
+
+  return GST_FLOW_OK;
+
+src_map_failed:
+  {
+    GST_ELEMENT_ERROR (self, RESOURCE, READ,
+        ("Video memory can not be read from userspace."), (NULL));
+    return GST_FLOW_ERROR;
+  }
+dst_map_failed:
+  {
+    GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
+        ("Video memory can not be written from userspace."), (NULL));
+    return GST_FLOW_ERROR;
+  }
+}
+
+static GstFlowReturn
 gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
 {
   GstWaylandSink *self = GST_WAYLAND_SINK (vsink);
@@ -1007,7 +1042,6 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
        * offloading the compositor from a copy helps maintaining a smoother
        * desktop.
        */
-      GstVideoFrame src, dst;
 
       if (!gst_wayland_activate_drm_dumb_pool (self)) {
         self->skip_dumb_buffer_copy = TRUE;
@@ -1035,19 +1069,9 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
         wlbuffer = gst_buffer_add_wl_buffer (to_render, wbuf, self->display);
       }
 
-      if (!gst_video_frame_map (&dst, &self->video_info, to_render,
-              GST_MAP_WRITE))
-        goto dst_map_failed;
-
-      if (!gst_video_frame_map (&src, &self->video_info, buffer, GST_MAP_READ)) {
-        gst_video_frame_unmap (&dst);
-        goto src_map_failed;
-      }
-
-      gst_video_frame_copy (&dst, &src);
-
-      gst_video_frame_unmap (&src);
-      gst_video_frame_unmap (&dst);
+      ret = gst_wayland_sink_copy_frame (self, buffer, to_render);
+      if (ret != GST_FLOW_OK)
+        goto done;
 
       goto render;
     }
@@ -1062,8 +1086,6 @@ handle_shm:
 
     /* If nothing worked, copy into our internal pool */
     if (!wbuf) {
-      GstVideoFrame src, dst;
-
       /* we don't know how to create a wl_buffer directly from the provided
        * memory, so we have to copy the data to shm memory that we know how
        * to handle... */
@@ -1094,19 +1116,9 @@ handle_shm:
         wlbuffer = gst_buffer_add_wl_buffer (to_render, wbuf, self->display);
       }
 
-      if (!gst_video_frame_map (&dst, &self->video_info, to_render,
-              GST_MAP_WRITE))
-        goto dst_map_failed;
-
-      if (!gst_video_frame_map (&src, &self->video_info, buffer, GST_MAP_READ)) {
-        gst_video_frame_unmap (&dst);
-        goto src_map_failed;
-      }
-
-      gst_video_frame_copy (&dst, &src);
-
-      gst_video_frame_unmap (&src);
-      gst_video_frame_unmap (&dst);
+      ret = gst_wayland_sink_copy_frame (self, buffer, to_render);
+      if (ret != GST_FLOW_OK)
+        goto done;
 
       goto render;
     }
@@ -1167,20 +1179,6 @@ activate_failed:
   {
     GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
         ("failed to activate bufferpool."), (NULL));
-    ret = GST_FLOW_ERROR;
-    goto done;
-  }
-src_map_failed:
-  {
-    GST_ELEMENT_ERROR (self, RESOURCE, READ,
-        ("Video memory can not be read from userspace."), (NULL));
-    ret = GST_FLOW_ERROR;
-    goto done;
-  }
-dst_map_failed:
-  {
-    GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
-        ("Video memory can not be written from userspace."), (NULL));
     ret = GST_FLOW_ERROR;
     goto done;
   }
