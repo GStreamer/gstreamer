@@ -1,0 +1,26 @@
+From 570dc21af69f76aebd6075002a7c339fd82c23d7 Mon Sep 17 00:00:00 2001
+From: Dan Yeaw <dan@yeaw.me>
+Date: Mon, 13 Oct 2025 21:45:22 -0400
+Subject: [PATCH 2/2] Fix syntax error for missing ;
+
+(cherry picked from commit d00ad09688e9dcc42020949e276741d3ae58c10d)
+---
+ gi/pygi-resulttuple.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gi/pygi-resulttuple.c b/gi/pygi-resulttuple.c
+index 93170eaa..27483fc5 100644
+--- a/gi/pygi-resulttuple.c
++++ b/gi/pygi-resulttuple.c
+@@ -331,7 +331,7 @@ static void resulttuple_dealloc(PyObject *self) {
+     Py_TYPE (self)->tp_free (self);
+ 
+ done:
+-    CPy_TRASHCAN_END (self)
++    CPy_TRASHCAN_END (self);
+ }
+ #endif
+ 
+-- 
+2.51.0
+

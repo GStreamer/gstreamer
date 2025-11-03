@@ -1,9 +1,9 @@
 [wrap-file]
-directory = pygobject-3.50.1
-source_url = https://download.gnome.org/sources/pygobject/3.50/pygobject-3.50.1.tar.gz
-source_filename = pygobject-3.50.1.tar.gz
-source_hash = a4df4e7adef7f4f01685a763d138eac9396585bfc68a7d31bbe4fbca2de0d7cb
-diff_files = pygobject-3.50.1/0001-gi-Call-os.add_dll_directory-on-Windows-when-possibl.patch
+directory = pygobject-3.50.2
+source_url = https://download.gnome.org/sources/pygobject/3.50/pygobject-3.50.2.tar.gz
+source_filename = pygobject-3.50.2.tar.gz
+source_hash = ece6b860aab77cb649fdfc6e88d8a83765e7a62f7ffd39a628d6e2a0d397a7ff
+diff_files = pygobject-3.50.2/0001-gi-Call-os.add_dll_directory-on-Windows-when-possibl.patch, pygobject-3.50.2/0002-Fix-syntax-error-for-missing.patch
 
 [provide]
 pygobject-3.0 = pygobject_dep

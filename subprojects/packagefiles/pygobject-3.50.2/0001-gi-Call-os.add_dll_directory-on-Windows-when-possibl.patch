@@ -1,7 +1,7 @@
-From 5c6bf2372d12467af7676568786b519b345e858f Mon Sep 17 00:00:00 2001
+From dbb87d9b43662c6056caf41d6b0a1d6dc6e62da3 Mon Sep 17 00:00:00 2001
 From: Nirbheek Chauhan <nirbheek@centricular.com>
 Date: Sun, 2 Mar 2025 20:26:11 +0530
-Subject: [PATCH] gi: Call os.add_dll_directory() on Windows when possible
+Subject: [PATCH 1/2] gi: Call os.add_dll_directory() on Windows when possible
 
 On macOS and Linux, the dynamic linker is used to find dependent
 shared libraries when loading a module. This usually means RPATH.
@@ -57,5 +57,5 @@ index 826489a1..04eeb71c 100644
  from . import _gi
  from ._gi import _API  # noqa: F401
 -- 
-2.50.1.windows.1
+2.51.0
 
