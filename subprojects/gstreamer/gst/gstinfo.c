@@ -121,11 +121,13 @@ static char *gst_info_printf_pointer_extension_func (const char *format,
 #  include <unistd.h>           /* getpid on UNIX */
 #endif
 
-#if defined(__linux__)
-#  include <sys/types.h>
-#  include <syscall.h>          /* SYS_gettid */
-#elif !defined(G_OS_WIN32)
-#  include <pthread.h>          /* pthread_self() */
+#if !defined(G_OS_WIN32) && !defined(HAVE_GETTID)
+#  ifdef __linux__
+#    include <sys/types.h>
+#    include <syscall.h>        /* SYS_gettid */
+#  else
+#    include <pthread.h>        /* pthread_self() on macOS/iOS and some other UNIXes */
+#  endif
 #endif
 
 #ifdef __clang__
@@ -1593,7 +1595,7 @@ gst_debug_construct_win_color (guint colorinfo)
 #else
 #define PID_FMT "%10d"
 #endif
-#if defined(G_OS_WIN32) || defined(__linux__)
+#if defined(G_OS_WIN32) || defined(__linux__) || defined(HAVE_GETTID)
 #define TID_FMT PID_FMT
 #else
 #define TID_FMT PTR_FMT
@@ -1677,7 +1679,7 @@ _gst_debug_log_preamble (GstDebugMessage * message, const gchar ** file,
 
 #ifdef G_OS_WIN32
 typedef DWORD GstTid;
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(HAVE_GETTID)
 typedef pid_t GstTid;
 #else
 typedef gpointer GstTid;
@@ -1688,6 +1690,8 @@ _get_thread_id (void)
 {
 #ifdef G_OS_WIN32
   return GetCurrentThreadId ();
+#elif defined(HAVE_GETTID)
+  return gettid ();
 #elif defined(__linux__)
   return syscall (SYS_gettid);
 #else

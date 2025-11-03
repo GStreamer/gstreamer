@@ -176,6 +176,15 @@ if host_system == 'darwin'
   extra_deps += dependency('appleframeworks', modules : ['Cocoa'])
 endif
 
+if host_system not in ['darwin', 'windows']
+  if host_system == 'android'
+    # Supported since the very beginning
+    cdata.set('HAVE_GETTID', true)
+  else
+    cdata.set('HAVE_GETTID', cc.has_function('gettid'))
+  endif
+endif
+
 gst_registry = get_option('registry')
 if gst_registry
   gst_registry_sources = files('gstregistrybinary.c')
