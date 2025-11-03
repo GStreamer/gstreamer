@@ -123,8 +123,6 @@ _parse_splice_component (GstMpegtsSCTESpliceEvent * event, guint8 ** orig_data,
 
 error:
   {
-    if (event)
-      _gst_mpegts_scte_splice_event_free (event);
     g_free (component);
     return NULL;
   }
