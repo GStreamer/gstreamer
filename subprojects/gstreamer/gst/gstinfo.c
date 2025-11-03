@@ -152,13 +152,17 @@ static char *gst_info_printf_pointer_extension_func (const char *format,
 /* use glib's abstraction once it's landed
  * https://gitlab.gnome.org/GNOME/glib/-/merge_requests/2475 */
 #ifdef G_OS_WIN32
-static inline DWORD
+typedef DWORD GstPid;
+
+static inline GstPid
 _gst_getpid (void)
 {
   return GetCurrentProcessId ();
 }
 #else
-static inline pid_t
+typedef pid_t GstPid;
+
+static inline GstPid
 _gst_getpid (void)
 {
   return getpid ();
@@ -401,7 +405,7 @@ static gint G_GNUC_MAY_ALIAS __use_color = GST_DEBUG_COLOR_MODE_ON;
 
 static gchar *
 _replace_pattern_in_gst_debug_file_name (gchar * name, const char *token,
-    guint val)
+    guint64 val)
 {
   gchar *token_start;
   if ((token_start = strstr (name, token))) {
@@ -409,7 +413,9 @@ _replace_pattern_in_gst_debug_file_name (gchar * name, const char *token,
     gchar *name_prefix = name;
     gchar *name_suffix = token_start + token_len;
     token_start[0] = '\0';
-    name = g_strdup_printf ("%s%u%s", name_prefix, val, name_suffix);
+    name =
+        g_strdup_printf ("%s%" G_GUINT64_FORMAT "%s", name_prefix, val,
+        name_suffix);
     g_free (name_prefix);
   }
   return name;
@@ -1802,7 +1808,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     const gchar * file, const gchar * function, gint line,
     GObject * object, GstDebugMessage * message, gpointer user_data)
 {
-  gint pid;
+  GstPid pid;
   GstClockTime elapsed;
   const gchar *object_id;
   GstDebugColorMode color_mode;
