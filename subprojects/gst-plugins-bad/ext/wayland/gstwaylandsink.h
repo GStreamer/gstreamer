@@ -52,7 +52,8 @@ struct _GstWaylandSink
   GstWlWindow *window;
   GstBufferPool *pool;
 
-  gboolean video_info_changed;
+  gboolean render_info_changed;
+  GstVideoInfo render_info;
   GstVideoInfo video_info;
   GstVideoInfoDmaDrm drm_info;
   GstVideoMasteringDisplayInfo minfo;
