@@ -1849,7 +1849,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
 
       _construct_term_color (gst_debug_category_get_color (category), color);
       clear = "\033[00m";
-      g_sprintf (pidcolor, "\033[%02dm", pid % 6 + 31);
+      g_sprintf (pidcolor, "\033[%02dm", (gint) (pid % 6 + 31));
       levelcolor = levelcolormap[level];
 
       if (object_id) {
@@ -1886,7 +1886,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
       FPRINTF_DEBUG (log_file, PID_FMT, pid);
       /* thread */
       SET_COLOR (clear);
-      FPRINTF_DEBUG (log_file, " " PTR_FMT " ", thread);
+      FPRINTF_DEBUG (log_file, " " TID_FMT " ", thread);
       /* level */
       SET_COLOR (levelcolormap_w32[level]);
       FPRINTF_DEBUG (log_file, "%s ", gst_debug_level_get_name (level));
