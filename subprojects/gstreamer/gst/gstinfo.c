@@ -121,6 +121,13 @@ static char *gst_info_printf_pointer_extension_func (const char *format,
 #  include <unistd.h>           /* getpid on UNIX */
 #endif
 
+#if defined(__linux__)
+#  include <sys/types.h>
+#  include <syscall.h>          /* SYS_gettid */
+#elif !defined(G_OS_WIN32)
+#  include <pthread.h>          /* pthread_self() */
+#endif
+
 #ifdef __clang__
 #define GST_DISABLE_FORMAT_NONLITERAL_WARNING \
     _Pragma("clang diagnostic push") \
@@ -1584,10 +1591,15 @@ gst_debug_construct_win_color (guint colorinfo)
 #else
 #define PID_FMT "%5d"
 #endif
+#if defined(G_OS_WIN32) || defined(__linux__)
+#define TID_FMT PID_FMT
+#else
+#define TID_FMT PTR_FMT
+#endif
 #define CAT_FMT "%20s %s:%d:%s:%s"
-#define NOCOLOR_PRINT_FMT " "PID_FMT" "PTR_FMT" %s "CAT_FMT" %s\n"
+#define NOCOLOR_PRINT_FMT " "PID_FMT" "TID_FMT" %s "CAT_FMT" %s\n"
 #define CAT_FMT_ID "%20s %s:%d:%s:<%s>"
-#define NOCOLOR_PRINT_FMT_ID " "PID_FMT" "PTR_FMT" %s "CAT_FMT_ID" %s\n"
+#define NOCOLOR_PRINT_FMT_ID " "PID_FMT" "TID_FMT" %s "CAT_FMT_ID" %s\n"
 
 #ifdef G_OS_WIN32
 static const guchar levelcolormap_w32[GST_LEVEL_COUNT] = {
@@ -1661,13 +1673,23 @@ _gst_debug_log_preamble (GstDebugMessage * message, const gchar ** file,
   *elapsed = GST_CLOCK_DIFF (_priv_gst_start_time, gst_util_get_timestamp ());
 }
 
-static inline gpointer
+#ifdef G_OS_WIN32
+typedef DWORD GstTid;
+#elif defined(__linux__)
+typedef pid_t GstTid;
+#else
+typedef gpointer GstTid;
+#endif
+
+static inline GstTid
 _get_thread_id (void)
 {
 #ifdef G_OS_WIN32
-  return GUINT_TO_POINTER (GetCurrentThreadId ());
+  return GetCurrentThreadId ();
+#elif defined(__linux__)
+  return syscall (SYS_gettid);
 #else
-  return g_thread_self ();
+  return pthread_self ();
 #endif
 }
 
@@ -1698,7 +1720,7 @@ gst_debug_log_get_line (GstDebugCategory * category, GstDebugLevel level,
   GstClockTime elapsed;
   gchar *ret;
   const gchar *message_str, *object_id;
-  gpointer thread = _get_thread_id ();
+  GstTid thread = _get_thread_id ();
 
   _gst_debug_log_preamble (message, &file, &message_str, &object_id, &elapsed);
 
@@ -1786,7 +1808,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   GstDebugColorMode color_mode;
   const gchar *message_str;
   FILE *log_file = user_data ? user_data : stderr;
-  gpointer thread;
+  GstTid thread;
 #ifdef G_OS_WIN32
 #define FPRINTF_DEBUG _gst_debug_fprintf
 /* _gst_debug_fprintf will do fflush if it's required */
@@ -1825,14 +1847,14 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
       levelcolor = levelcolormap[level];
 
       if (object_id) {
-#define PRINT_FMT_ID " %s"PID_FMT"%s "PTR_FMT" %s%s%s %s"CAT_FMT_ID"%s %s\n"
+#define PRINT_FMT_ID " %s"PID_FMT"%s "TID_FMT" %s%s%s %s"CAT_FMT_ID"%s %s\n"
         FPRINTF_DEBUG (log_file, "%" GST_TIME_FORMAT PRINT_FMT_ID,
             GST_TIME_ARGS (elapsed), pidcolor, pid, clear, thread,
             levelcolor, gst_debug_level_get_name (level), clear, color,
             gst_debug_category_get_name (category), file, line, function,
             object_id, clear, message_str);
       } else {
-#define PRINT_FMT " %s"PID_FMT"%s "PTR_FMT" %s%s%s %s"CAT_FMT"%s %s\n"
+#define PRINT_FMT " %s"PID_FMT"%s "TID_FMT" %s%s%s %s"CAT_FMT"%s %s\n"
         FPRINTF_DEBUG (log_file, "%" GST_TIME_FORMAT PRINT_FMT,
             GST_TIME_ARGS (elapsed), pidcolor, pid, clear, thread,
             levelcolor, gst_debug_level_get_name (level), clear, color,
@@ -4201,7 +4223,7 @@ typedef struct
 {
   GList *link;
   gint64 last_use;
-  GThread *thread;
+  GstTid thread;
 
   GstVecDeque *log;
   gsize log_size;
@@ -4216,7 +4238,7 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
     gint line, GObject * object, GstDebugMessage * message, gpointer user_data)
 {
   GstRingBufferLogger *logger = user_data;
-  gpointer thread;
+  GstTid thread;
   GstClockTime elapsed;
   gchar c;
   gchar *output;
@@ -4273,7 +4295,8 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
       if (log->last_use + logger->thread_timeout * G_USEC_PER_SEC >= now)
         break;
 
-      g_hash_table_remove (logger->thread_index, log->thread);
+      g_hash_table_remove (logger->thread_index,
+          (gconstpointer) (gsize) log->thread);
       while ((buf = gst_vec_deque_pop_head (log->log)))
         g_free (buf);
       gst_vec_deque_free (log->log);
@@ -4284,7 +4307,9 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
 
   /* Get logger for this thread, and put it back at the
    * head of the threads queue */
-  log = g_hash_table_lookup (logger->thread_index, thread);
+  log =
+      g_hash_table_lookup (logger->thread_index,
+      (gconstpointer) (gsize) thread);
   if (!log) {
     log = g_new0 (GstRingBufferLog, 1);
     log->log = gst_vec_deque_new (2048);
@@ -4292,7 +4317,7 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
     g_queue_push_head (&logger->threads, log);
     log->link = logger->threads.head;
     log->thread = thread;
-    g_hash_table_insert (logger->thread_index, thread, log);
+    g_hash_table_insert (logger->thread_index, (gpointer) (gsize) thread, log);
   } else {
     g_queue_unlink (&logger->threads, log->link);
     g_queue_push_head_link (&logger->threads, log->link);
