@@ -392,9 +392,11 @@ _create_pad (GstMssDemux * mssdemux, GstMssStream * manifeststream)
 
   if (tmpl != NULL) {
     srcpad = GST_PAD_CAST (gst_pad_new_from_template (tmpl, name));
-    g_free (name);
     gst_object_unref (tmpl);
   }
+
+  g_free (name);
+
   if (!srcpad) {
     GST_WARNING_OBJECT (mssdemux, "Ignoring unknown type stream");
     return NULL;
