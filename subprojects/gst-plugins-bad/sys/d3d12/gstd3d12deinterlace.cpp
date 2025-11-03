@@ -260,23 +260,21 @@ static GstCaps *gst_d3d12_deinterlace_transform_caps (GstBaseTransform *
     trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static GstCaps *gst_d3d12_deinterlace_fixate_caps (GstBaseTransform *
     base, GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
-static gboolean gst_d3d12_deinterlace_propose_allocation (GstBaseTransform *
-    trans, GstQuery * decide_query, GstQuery * query);
-static gboolean gst_d3d12_deinterlace_decide_allocation (GstBaseTransform *
-    trans, GstQuery * query);
 static gboolean gst_d3d12_deinterlace_sink_event (GstBaseTransform * trans,
     GstEvent * event);
 static gboolean gst_d3d12_deinterlace_query (GstBaseTransform * trans,
     GstPadDirection direction, GstQuery * query);
-static gboolean gst_d3d12_deinterlace_set_info (GstD3D12BaseFilter * filter,
-    GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
-    GstVideoInfo * out_info);
 static GstFlowReturn gst_d3d12_deinterlace_generate_output (GstBaseTransform *
     trans, GstBuffer ** buffer);
 static GstFlowReturn gst_d3d12_deinterlace_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
 static GstFlowReturn gst_d3d12_deinterlace_submit_input_buffer (GstBaseTransform
     * trans, gboolean is_discont, GstBuffer * input);
+static gboolean gst_d3d12_deinterlace_set_info (GstD3D12BaseFilter * filter,
+    GstD3D12Device * device, GstCaps * incaps, GstVideoInfo * in_info,
+    GstCaps * outcaps, GstVideoInfo * out_info);
+static gboolean gst_d3d12_deinterlace_propose_allocation (GstD3D12BaseFilter *
+    filter, GstD3D12Device * device, GstQuery * decide_query, GstQuery * query);
 
 #define gst_d3d12_deinterlace_parent_class parent_class
 G_DEFINE_TYPE (GstD3D12Deinterlace, gst_d3d12_deinterlace,
@@ -321,10 +319,6 @@ gst_d3d12_deinterlace_class_init (GstD3D12DeinterlaceClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d12_deinterlace_transform_caps);
   trans_class->fixate_caps =
       GST_DEBUG_FUNCPTR (gst_d3d12_deinterlace_fixate_caps);
-  trans_class->propose_allocation =
-      GST_DEBUG_FUNCPTR (gst_d3d12_deinterlace_propose_allocation);
-  trans_class->decide_allocation =
-      GST_DEBUG_FUNCPTR (gst_d3d12_deinterlace_decide_allocation);
   trans_class->sink_event =
       GST_DEBUG_FUNCPTR (gst_d3d12_deinterlace_sink_event);
   trans_class->query = GST_DEBUG_FUNCPTR (gst_d3d12_deinterlace_query);
@@ -335,6 +329,8 @@ gst_d3d12_deinterlace_class_init (GstD3D12DeinterlaceClass * klass)
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_d3d12_deinterlace_transform);
 
   filter_class->set_info = GST_DEBUG_FUNCPTR (gst_d3d12_deinterlace_set_info);
+  filter_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_d3d12_deinterlace_propose_allocation);
 
   gst_type_mark_as_plugin_api (GST_TYPE_D3D12_DEINTERLACE_FIELDS,
       (GstPluginAPIFlags) 0);
@@ -572,146 +568,18 @@ gst_d3d12_deinterlace_fixate_caps (GstBaseTransform * trans,
 }
 
 static gboolean
-gst_d3d12_deinterlace_propose_allocation (GstBaseTransform * trans,
-    GstQuery * decide_query, GstQuery * query)
+gst_d3d12_deinterlace_propose_allocation (GstD3D12BaseFilter * filter,
+    GstD3D12Device * device, GstQuery * decide_query, GstQuery * query)
 {
-  auto filter = GST_D3D12_BASE_FILTER (trans);
-  GstVideoInfo info;
-  GstBufferPool *pool;
-  GstCaps *caps;
-  guint size;
-  gboolean is_d3d12 = FALSE;
-
-  if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
-          decide_query, query))
-    return FALSE;
-
-  /* passthrough, we're done */
-  if (!decide_query)
-    return TRUE;
-
-  gst_query_parse_allocation (query, &caps, nullptr);
-
-  if (!caps) {
-    GST_WARNING_OBJECT (filter, "Allocation query without caps");
+  if (!GST_D3D12_BASE_FILTER_CLASS (parent_class)->propose_allocation (filter,
+          device, decide_query, query)) {
     return FALSE;
   }
 
-  if (!gst_video_info_from_caps (&info, caps))
-    return FALSE;
-
-  if (gst_query_get_n_allocation_pools (query) == 0) {
-    GstCapsFeatures *features;
-    GstStructure *config;
-
-    features = gst_caps_get_features (caps, 0);
-
-    if (features && gst_caps_features_contains (features,
-            GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY)) {
-      GST_DEBUG_OBJECT (filter, "upstream support d3d12 memory");
-      pool = gst_d3d12_buffer_pool_new (filter->device);
-      is_d3d12 = TRUE;
-    } else {
-      pool = gst_video_buffer_pool_new ();
-    }
-
-    config = gst_buffer_pool_get_config (pool);
-
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
-    if (!is_d3d12) {
-      gst_buffer_pool_config_add_option (config,
-          GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
-    }
-
-    size = GST_VIDEO_INFO_SIZE (&info);
-    gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
-
-    if (!gst_buffer_pool_set_config (pool, config)) {
-      GST_ERROR_OBJECT (filter, "Bufferpool config failed");
-      gst_object_unref (pool);
-      return FALSE;
-    }
-
-    /* d3d12 buffer pool will update buffer size based on allocated texture,
-     * get size from config again */
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get_params (config,
-        nullptr, &size, nullptr, nullptr);
-    gst_structure_free (config);
-
-    gst_query_add_allocation_pool (query, pool, size, 0, 0);
-    gst_object_unref (pool);
-  }
-
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, nullptr);
   gst_query_add_allocation_meta (query,
       GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, nullptr);
 
   return TRUE;
-}
-
-static gboolean
-gst_d3d12_deinterlace_decide_allocation (GstBaseTransform * trans,
-    GstQuery * query)
-{
-  auto filter = GST_D3D12_BASE_FILTER (trans);
-  GstCaps *outcaps = nullptr;
-  GstBufferPool *pool = nullptr;
-  guint size, min = 0, max = 0;
-  GstStructure *config;
-  gboolean update_pool = FALSE;
-  GstVideoInfo info;
-
-  gst_query_parse_allocation (query, &outcaps, nullptr);
-
-  if (!outcaps)
-    return FALSE;
-
-  if (!gst_video_info_from_caps (&info, outcaps)) {
-    GST_ERROR_OBJECT (filter, "Invalid caps %" GST_PTR_FORMAT, outcaps);
-    return FALSE;
-  }
-
-  size = GST_VIDEO_INFO_SIZE (&info);
-  if (gst_query_get_n_allocation_pools (query) > 0) {
-    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
-    if (pool) {
-      if (!GST_IS_D3D12_BUFFER_POOL (pool)) {
-        gst_clear_object (&pool);
-      } else {
-        auto dpool = GST_D3D12_BUFFER_POOL (pool);
-        if (!gst_d3d12_device_is_equal (dpool->device, filter->device))
-          gst_clear_object (&pool);
-      }
-    }
-
-    update_pool = TRUE;
-  }
-
-  if (!pool)
-    pool = gst_d3d12_buffer_pool_new (filter->device);
-
-  config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-  gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
-  gst_buffer_pool_set_config (pool, config);
-
-  /* d3d12 buffer pool will update buffer size based on allocated texture,
-   * get size from config again */
-  config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr, nullptr);
-  gst_structure_free (config);
-
-  if (update_pool)
-    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
-  else
-    gst_query_add_allocation_pool (query, pool, size, min, max);
-
-  gst_object_unref (pool);
-
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
-      query);
 }
 
 static void
@@ -744,9 +612,9 @@ gst_d3d12_deinterlace_drain (GstD3D12Deinterlace * self)
 
 static gboolean
 gst_d3d12_deinterlace_prepare_convert (GstD3D12Deinterlace * self,
-    GstCaps * in_caps, const GstVideoInfo * in_info, GstVideoInfo * yadif_info)
+    GstD3D12Device * device, GstCaps * in_caps, const GstVideoInfo * in_info,
+    GstVideoInfo * yadif_info)
 {
-  auto filter = GST_D3D12_BASE_FILTER (self);
   auto priv = self->priv;
 
   auto format = GST_VIDEO_INFO_FORMAT (in_info);
@@ -768,9 +636,9 @@ gst_d3d12_deinterlace_prepare_convert (GstD3D12Deinterlace * self,
 
   GstCaps *caps = gst_video_info_to_caps (yadif_info);
 
-  auto ctx = std::make_shared < DeinterlaceConvCtx > (filter->device);
-  ctx->pre_pool = gst_d3d12_buffer_pool_new (filter->device);
-  ctx->post_pool = gst_d3d12_buffer_pool_new (filter->device);
+  auto ctx = std::make_shared < DeinterlaceConvCtx > (device);
+  ctx->pre_pool = gst_d3d12_buffer_pool_new (device);
+  ctx->post_pool = gst_d3d12_buffer_pool_new (device);
 
   auto config = gst_buffer_pool_get_config (ctx->pre_pool);
   gst_buffer_pool_config_set_params (config, caps, yadif_info->size, 0, 0);
@@ -803,7 +671,7 @@ gst_d3d12_deinterlace_prepare_convert (GstD3D12Deinterlace * self,
       GST_TYPE_D3D12_CONVERTER_SAMPLER_FILTER,
       D3D12_FILTER_MIN_MAG_MIP_POINT, nullptr);
 
-  ctx->pre_conv = gst_d3d12_converter_new (filter->device,
+  ctx->pre_conv = gst_d3d12_converter_new (device,
       nullptr, in_info, yadif_info, nullptr, nullptr,
       gst_structure_copy (config));
   if (!ctx->pre_conv) {
@@ -812,7 +680,7 @@ gst_d3d12_deinterlace_prepare_convert (GstD3D12Deinterlace * self,
     return FALSE;
   }
 
-  ctx->post_conv = gst_d3d12_converter_new (filter->device,
+  ctx->post_conv = gst_d3d12_converter_new (device,
       nullptr, yadif_info, in_info, nullptr, nullptr, config);
   if (!ctx->post_conv) {
     GST_ERROR_OBJECT (self, "Couldn't create post converter");
@@ -826,8 +694,8 @@ gst_d3d12_deinterlace_prepare_convert (GstD3D12Deinterlace * self,
 
 static gboolean
 gst_d3d12_deinterlace_set_info (GstD3D12BaseFilter * filter,
-    GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
-    GstVideoInfo * out_info)
+    GstD3D12Device * device, GstCaps * incaps, GstVideoInfo * in_info,
+    GstCaps * outcaps, GstVideoInfo * out_info)
 {
   auto trans = GST_BASE_TRANSFORM (filter);
   auto self = GST_D3D12_DEINTERLACE (filter);
@@ -862,8 +730,8 @@ gst_d3d12_deinterlace_set_info (GstD3D12BaseFilter * filter,
       return TRUE;
 
     priv->in_info = *in_info;
-    if (!gst_d3d12_deinterlace_prepare_convert (self, incaps, &priv->in_info,
-            &priv->yadif_info)) {
+    if (!gst_d3d12_deinterlace_prepare_convert (self, device, incaps,
+            &priv->in_info, &priv->yadif_info)) {
       return FALSE;
     }
 
@@ -871,7 +739,7 @@ gst_d3d12_deinterlace_set_info (GstD3D12BaseFilter * filter,
     if (priv->engine == GST_D3D12_DEINTERLACE_ENGINE_COMPUTE) {
       priv->use_compute = TRUE;
     } else if (priv->engine == GST_D3D12_DEINTERLACE_ENGINE_AUTO &&
-        !gst_d3d12_device_is_uma (filter->device) && !priv->conv_ctx) {
+        !gst_d3d12_device_is_uma (device) && !priv->conv_ctx) {
       /* Since yadif shader is full compute shader, in case of dGPU,
        * prefer compute queue so that task can be overlapped with other 3D tasks
        */
@@ -880,7 +748,7 @@ gst_d3d12_deinterlace_set_info (GstD3D12BaseFilter * filter,
 
     GST_DEBUG_OBJECT (self, "Use compute engine: %d", priv->use_compute);
 
-    priv->yadif = gst_d3d12_yadif_new (filter->device, &priv->yadif_info,
+    priv->yadif = gst_d3d12_yadif_new (device, &priv->yadif_info,
         priv->use_compute);
     if (!priv->yadif) {
       GST_ERROR_OBJECT (self, "Couldn't create yadif object");

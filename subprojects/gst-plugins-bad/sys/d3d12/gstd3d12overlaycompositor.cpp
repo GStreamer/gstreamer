@@ -135,12 +135,6 @@ G_DEFINE_TYPE (GstD3D12OverlayCompositor,
 
 static void gst_d3d12_overlay_compositor_finalize (GObject * object);
 static gboolean gst_d3d12_overlay_compositor_stop (GstBaseTransform * trans);
-static gboolean
-gst_d3d12_overlay_compositor_propose_allocation (GstBaseTransform * trans,
-    GstQuery * decide_query, GstQuery * query);
-static gboolean
-gst_d3d12_overlay_compositor_decide_allocation (GstBaseTransform * trans,
-    GstQuery * query);
 static GstCaps *gst_d3d12_overlay_compositor_transform_caps (GstBaseTransform *
     trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static GstCaps *gst_d3d12_overlay_compositor_fixate_caps (GstBaseTransform *
@@ -151,8 +145,11 @@ static GstFlowReturn
 gst_d3d12_overlay_compositor_generate_output (GstBaseTransform * trans,
     GstBuffer ** buffer);
 static gboolean gst_d3d12_overlay_compositor_set_info (GstD3D12BaseFilter *
-    filter, GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
-    GstVideoInfo * out_info);
+    filter, GstD3D12Device * device, GstCaps * incaps, GstVideoInfo * in_info,
+    GstCaps * outcaps, GstVideoInfo * out_info);
+static gboolean
+gst_d3d12_overlay_compositor_propose_allocation (GstD3D12BaseFilter * filter,
+    GstD3D12Device * device, GstQuery * decide_query, GstQuery * query);
 
 static void
 gst_d3d12_overlay_compositor_class_init (GstD3D12OverlayCompositorClass * klass)
@@ -174,10 +171,6 @@ gst_d3d12_overlay_compositor_class_init (GstD3D12OverlayCompositorClass * klass)
   trans_class->passthrough_on_same_caps = FALSE;
 
   trans_class->stop = GST_DEBUG_FUNCPTR (gst_d3d12_overlay_compositor_stop);
-  trans_class->propose_allocation =
-      GST_DEBUG_FUNCPTR (gst_d3d12_overlay_compositor_propose_allocation);
-  trans_class->decide_allocation =
-      GST_DEBUG_FUNCPTR (gst_d3d12_overlay_compositor_decide_allocation);
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_d3d12_overlay_compositor_transform_caps);
   trans_class->fixate_caps =
@@ -189,6 +182,8 @@ gst_d3d12_overlay_compositor_class_init (GstD3D12OverlayCompositorClass * klass)
 
   filter_class->set_info =
       GST_DEBUG_FUNCPTR (gst_d3d12_overlay_compositor_set_info);
+  filter_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_d3d12_overlay_compositor_propose_allocation);
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_overlay_compositor_debug,
       "d3d12overlaycompositor", 0, "d3d12overlaycompositor");
@@ -222,168 +217,18 @@ gst_d3d12_overlay_compositor_stop (GstBaseTransform * trans)
 }
 
 static gboolean
-gst_d3d12_overlay_compositor_propose_allocation (GstBaseTransform * trans,
-    GstQuery * decide_query, GstQuery * query)
+gst_d3d12_overlay_compositor_propose_allocation (GstD3D12BaseFilter * filter,
+    GstD3D12Device * device, GstQuery * decide_query, GstQuery * query)
 {
-  auto filter = GST_D3D12_BASE_FILTER (trans);
-  GstVideoInfo info;
-  GstBufferPool *pool = nullptr;
-  GstCaps *caps;
-  guint size;
-
-  if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
-          decide_query, query)) {
+  if (!GST_D3D12_BASE_FILTER_CLASS (parent_class)->propose_allocation (filter,
+          device, decide_query, query)) {
     return FALSE;
   }
 
-  gst_query_parse_allocation (query, &caps, nullptr);
-  if (!caps)
-    return FALSE;
-
-  if (!gst_video_info_from_caps (&info, caps)) {
-    GST_ERROR_OBJECT (filter, "Invalid caps %" GST_PTR_FORMAT, caps);
-    return FALSE;
-  }
-
-  auto n_pools = gst_query_get_n_allocation_pools (query);
-  for (guint i = 0; i < n_pools; i++) {
-    gst_query_parse_nth_allocation_pool (query, i, &pool, nullptr, nullptr,
-        nullptr);
-    if (pool) {
-      if (!GST_IS_D3D12_BUFFER_POOL (pool)) {
-        gst_clear_object (&pool);
-      } else {
-        auto dpool = GST_D3D12_BUFFER_POOL (pool);
-        if (!gst_d3d12_device_is_equal (dpool->device, filter->device))
-          gst_clear_object (&pool);
-      }
-    }
-  }
-
-  if (!pool)
-    pool = gst_d3d12_buffer_pool_new (filter->device);
-
-  auto config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-
-  /* size will be updated by d3d12 buffer pool */
-  gst_buffer_pool_config_set_params (config, caps, 0, 0, 0);
-
-  if (!gst_buffer_pool_set_config (pool, config)) {
-    GST_ERROR_OBJECT (filter, "failed to set config");
-    gst_object_unref (pool);
-    return FALSE;
-  }
-
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, nullptr);
   gst_query_add_allocation_meta (query,
       GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, nullptr);
 
-  config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr, nullptr);
-  gst_structure_free (config);
-
-  gst_query_add_allocation_pool (query, pool, size, 0, 0);
-
-  gst_object_unref (pool);
-
   return TRUE;
-}
-
-static gboolean
-gst_d3d12_overlay_compositor_decide_allocation (GstBaseTransform * trans,
-    GstQuery * query)
-{
-  auto filter = GST_D3D12_BASE_FILTER (trans);
-  auto self = GST_D3D12_OVERLAY_COMPOSITOR (trans);
-  GstCaps *outcaps = nullptr;
-  GstBufferPool *pool = nullptr;
-  guint size, min = 0, max = 0;
-  GstStructure *config;
-  gboolean update_pool = FALSE;
-  GstVideoInfo info;
-
-  gst_query_parse_allocation (query, &outcaps, nullptr);
-
-  if (!outcaps)
-    return FALSE;
-
-  if (!gst_video_info_from_caps (&info, outcaps)) {
-    GST_ERROR_OBJECT (filter, "Invalid caps %" GST_PTR_FORMAT, outcaps);
-    return FALSE;
-  }
-
-  GstD3D12Format device_format;
-  if (!gst_d3d12_device_get_format (filter->device,
-          GST_VIDEO_INFO_FORMAT (&info), &device_format)) {
-    GST_ERROR_OBJECT (self, "Couldn't get device foramt");
-    return FALSE;
-  }
-
-  size = GST_VIDEO_INFO_SIZE (&info);
-  if (gst_query_get_n_allocation_pools (query) > 0) {
-    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
-    if (pool) {
-      if (!GST_IS_D3D12_BUFFER_POOL (pool)) {
-        gst_clear_object (&pool);
-      } else {
-        auto dpool = GST_D3D12_BUFFER_POOL (pool);
-        if (!gst_d3d12_device_is_equal (dpool->device, filter->device))
-          gst_clear_object (&pool);
-      }
-    }
-
-    update_pool = TRUE;
-  }
-
-  if (!pool)
-    pool = gst_d3d12_buffer_pool_new (filter->device);
-
-  config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-
-  D3D12_RESOURCE_FLAGS resource_flags =
-      D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS;
-  if ((device_format.format_flags & GST_D3D12_FORMAT_FLAG_OUTPUT_UAV)
-      == GST_D3D12_FORMAT_FLAG_OUTPUT_UAV) {
-    resource_flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-  }
-
-  if ((device_format.support1 & D3D12_FORMAT_SUPPORT1_RENDER_TARGET) ==
-      D3D12_FORMAT_SUPPORT1_RENDER_TARGET) {
-    resource_flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-  }
-
-  auto d3d12_params =
-      gst_buffer_pool_config_get_d3d12_allocation_params (config);
-  if (!d3d12_params) {
-    d3d12_params = gst_d3d12_allocation_params_new (filter->device, &info,
-        GST_D3D12_ALLOCATION_FLAG_DEFAULT, resource_flags,
-        D3D12_HEAP_FLAG_SHARED);
-  } else {
-    gst_d3d12_allocation_params_set_resource_flags (d3d12_params,
-        resource_flags);
-  }
-
-  gst_buffer_pool_config_set_d3d12_allocation_params (config, d3d12_params);
-  gst_d3d12_allocation_params_free (d3d12_params);
-
-  gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
-  gst_buffer_pool_set_config (pool, config);
-
-  config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr, nullptr);
-  gst_structure_free (config);
-
-  if (update_pool)
-    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
-  else
-    gst_query_add_allocation_pool (query, pool, size, min, max);
-
-  gst_object_unref (pool);
-
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
-      query);
 }
 
 static GstCaps *
@@ -501,8 +346,8 @@ gst_d3d12_overlay_compositor_fixate_caps (GstBaseTransform * trans,
 
 static gboolean
 gst_d3d12_overlay_compositor_set_info (GstD3D12BaseFilter * filter,
-    GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
-    GstVideoInfo * out_info)
+    GstD3D12Device * device, GstCaps * incaps, GstVideoInfo * in_info,
+    GstCaps * outcaps, GstVideoInfo * out_info)
 {
   auto self = GST_D3D12_OVERLAY_COMPOSITOR (filter);
   auto priv = self->priv;
@@ -545,27 +390,26 @@ gst_d3d12_overlay_compositor_set_info (GstD3D12BaseFilter * filter,
         break;
     }
 
-    auto ctx = std::make_shared < OverlayBlendCtx > (filter->device);
+    auto ctx = std::make_shared < OverlayBlendCtx > (device);
     ctx->origin_info = *in_info;
 
     gst_video_info_set_format (&ctx->blend_info, blend_format,
         in_info->width, in_info->height);
     ctx->blend_info.colorimetry.range = range;
 
-    ctx->blender = gst_d3d12_overlay_blender_new (filter->device,
-        &ctx->blend_info);
+    ctx->blender = gst_d3d12_overlay_blender_new (device, &ctx->blend_info);
     if (priv->blend_mode == BLEND_MODE_CONVERT_BLEND) {
-      ctx->pre_conv = gst_d3d12_converter_new (filter->device,
+      ctx->pre_conv = gst_d3d12_converter_new (device,
           nullptr, &ctx->origin_info, &ctx->blend_info, nullptr, nullptr,
           nullptr);
-      ctx->post_conv = gst_d3d12_converter_new (filter->device,
+      ctx->post_conv = gst_d3d12_converter_new (device,
           nullptr, &ctx->blend_info, &ctx->origin_info, nullptr, nullptr,
           nullptr);
     }
 
     auto blend_caps = gst_video_info_to_caps (&ctx->blend_info);
 
-    ctx->blend_pool = gst_d3d12_buffer_pool_new (filter->device);
+    ctx->blend_pool = gst_d3d12_buffer_pool_new (device);
     auto config = gst_buffer_pool_get_config (ctx->blend_pool);
     gst_buffer_pool_config_set_params (config, blend_caps, 0, 0, 0);
     gst_caps_unref (blend_caps);

@@ -153,17 +153,17 @@ static GstCaps *gst_d3d12_mip_mapping_transform_caps (GstBaseTransform *
     trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static GstCaps *gst_d3d12_mip_mapping_fixate_caps (GstBaseTransform *
     base, GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
-static gboolean gst_d3d12_mip_mapping_propose_allocation (GstBaseTransform *
-    trans, GstQuery * decide_query, GstQuery * query);
-static gboolean gst_d3d12_mip_mapping_decide_allocation (GstBaseTransform *
-    trans, GstQuery * query);
 static gboolean gst_d3d12_mip_mapping_transform_meta (GstBaseTransform * trans,
     GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
 static GstFlowReturn gst_d3d12_mip_mapping_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean gst_d3d12_mip_mapping_set_info (GstD3D12BaseFilter * filter,
-    GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
-    GstVideoInfo * out_info);
+    GstD3D12Device * device, GstCaps * incaps, GstVideoInfo * in_info,
+    GstCaps * outcaps, GstVideoInfo * out_info);
+static gboolean gst_d3d12_mip_mapping_propose_allocation (GstD3D12BaseFilter *
+    filter, GstD3D12Device * device, GstQuery * decide_query, GstQuery * query);
+static gboolean gst_d3d12_mip_mapping_decide_allocation (GstD3D12BaseFilter *
+    filter, GstD3D12Device * device, GstQuery * query);
 
 #define gst_d3d12_mip_mapping_parent_class parent_class
 G_DEFINE_TYPE (GstD3D12MipMapping, gst_d3d12_mip_mapping,
@@ -210,15 +210,15 @@ gst_d3d12_mip_mapping_class_init (GstD3D12MipMappingClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d12_mip_mapping_transform_caps);
   trans_class->fixate_caps =
       GST_DEBUG_FUNCPTR (gst_d3d12_mip_mapping_fixate_caps);
-  trans_class->propose_allocation =
-      GST_DEBUG_FUNCPTR (gst_d3d12_mip_mapping_propose_allocation);
-  trans_class->decide_allocation =
-      GST_DEBUG_FUNCPTR (gst_d3d12_mip_mapping_decide_allocation);
   trans_class->transform_meta =
       GST_DEBUG_FUNCPTR (gst_d3d12_mip_mapping_transform_meta);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_d3d12_mip_mapping_transform);
 
   filter_class->set_info = GST_DEBUG_FUNCPTR (gst_d3d12_mip_mapping_set_info);
+  filter_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_d3d12_mip_mapping_propose_allocation);
+  filter_class->decide_allocation =
+      GST_DEBUG_FUNCPTR (gst_d3d12_mip_mapping_decide_allocation);
 
   gst_type_mark_as_plugin_api (GST_TYPE_D3D12_SAMPLING_METHOD,
       (GstPluginAPIFlags) 0);
@@ -692,101 +692,26 @@ gst_d3d12_mip_mapping_fixate_caps (GstBaseTransform * trans,
 }
 
 static gboolean
-gst_d3d12_mip_mapping_propose_allocation (GstBaseTransform * trans,
-    GstQuery * decide_query, GstQuery * query)
+gst_d3d12_mip_mapping_propose_allocation (GstD3D12BaseFilter * filter,
+    GstD3D12Device * device, GstQuery * decide_query, GstQuery * query)
 {
-  auto filter = GST_D3D12_BASE_FILTER (trans);
-  GstVideoInfo info;
-  GstBufferPool *pool = nullptr;
-  GstCaps *caps;
-  guint n_pools, i;
-  guint size;
-
-  if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
-          decide_query, query)) {
+  if (!GST_D3D12_BASE_FILTER_CLASS (parent_class)->propose_allocation (filter,
+          device, decide_query, query)) {
     return FALSE;
   }
 
-  gst_query_parse_allocation (query, &caps, nullptr);
-
-  if (!caps)
-    return FALSE;
-
-  if (!gst_video_info_from_caps (&info, caps)) {
-    GST_ERROR_OBJECT (filter, "Invalid caps %" GST_PTR_FORMAT, caps);
-    return FALSE;
-  }
-
-  n_pools = gst_query_get_n_allocation_pools (query);
-  for (i = 0; i < n_pools; i++) {
-    gst_query_parse_nth_allocation_pool (query, i, &pool, nullptr, nullptr,
-        nullptr);
-    if (pool) {
-      if (!GST_IS_D3D12_BUFFER_POOL (pool)) {
-        gst_clear_object (&pool);
-      } else {
-        auto dpool = GST_D3D12_BUFFER_POOL (pool);
-        if (!gst_d3d12_device_is_equal (dpool->device, filter->device))
-          gst_clear_object (&pool);
-      }
-    }
-  }
-
-  if (!pool)
-    pool = gst_d3d12_buffer_pool_new (filter->device);
-
-  auto config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-
-  auto d3d12_params =
-      gst_buffer_pool_config_get_d3d12_allocation_params (config);
-  if (!d3d12_params) {
-    d3d12_params = gst_d3d12_allocation_params_new (filter->device, &info,
-        GST_D3D12_ALLOCATION_FLAG_DEFAULT,
-        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS, D3D12_HEAP_FLAG_NONE);
-  } else {
-    gst_d3d12_allocation_params_set_resource_flags (d3d12_params,
-        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
-    gst_d3d12_allocation_params_unset_resource_flags (d3d12_params,
-        D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE);
-  }
-
-  gst_buffer_pool_config_set_d3d12_allocation_params (config, d3d12_params);
-  gst_d3d12_allocation_params_free (d3d12_params);
-
-  /* size will be updated by d3d12 buffer pool */
-  gst_buffer_pool_config_set_params (config, caps, 0, 0, 0);
-
-  if (!gst_buffer_pool_set_config (pool, config)) {
-    GST_ERROR_OBJECT (filter, "failed to set config");
-    gst_object_unref (pool);
-    return FALSE;
-  }
-
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, nullptr);
   gst_query_add_allocation_meta (query,
       GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, nullptr);
   gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, nullptr);
-
-  /* d3d12 buffer pool will update buffer size based on allocated texture,
-   * get size from config again */
-  config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr, nullptr);
-  gst_structure_free (config);
-
-  gst_query_add_allocation_pool (query, pool, size, 0, 0);
-
-  gst_object_unref (pool);
 
   return TRUE;
 }
 
 static gboolean
-gst_d3d12_mip_mapping_decide_allocation (GstBaseTransform * trans,
-    GstQuery * query)
+gst_d3d12_mip_mapping_decide_allocation (GstD3D12BaseFilter * filter,
+    GstD3D12Device * device, GstQuery * query)
 {
-  auto filter = GST_D3D12_BASE_FILTER (trans);
-  auto self = GST_D3D12_MIP_MAPPING (trans);
+  auto self = GST_D3D12_MIP_MAPPING (filter);
   auto priv = self->priv;
   GstCaps *outcaps = nullptr;
   GstBufferPool *pool = nullptr;
@@ -813,7 +738,7 @@ gst_d3d12_mip_mapping_decide_allocation (GstBaseTransform * trans,
         gst_clear_object (&pool);
       } else {
         auto dpool = GST_D3D12_BUFFER_POOL (pool);
-        if (!gst_d3d12_device_is_equal (dpool->device, filter->device))
+        if (!gst_d3d12_device_is_equal (dpool->device, device))
           gst_clear_object (&pool);
       }
     }
@@ -822,7 +747,7 @@ gst_d3d12_mip_mapping_decide_allocation (GstBaseTransform * trans,
   }
 
   if (!pool)
-    pool = gst_d3d12_buffer_pool_new (filter->device);
+    pool = gst_d3d12_buffer_pool_new (device);
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
@@ -832,7 +757,7 @@ gst_d3d12_mip_mapping_decide_allocation (GstBaseTransform * trans,
       D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS |
       D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 
-  auto d3d12_params = gst_d3d12_allocation_params_new (filter->device, &info,
+  auto d3d12_params = gst_d3d12_allocation_params_new (device, &info,
       GST_D3D12_ALLOCATION_FLAG_DEFAULT, resource_flags,
       D3D12_HEAP_FLAG_SHARED);
 
@@ -868,14 +793,13 @@ gst_d3d12_mip_mapping_decide_allocation (GstBaseTransform * trans,
 
   gst_object_unref (pool);
 
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
-      query);
+  return TRUE;
 }
 
 static gboolean
 gst_d3d12_mip_mapping_set_info (GstD3D12BaseFilter * filter,
-    GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
-    GstVideoInfo * out_info)
+    GstD3D12Device * device, GstCaps * incaps, GstVideoInfo * in_info,
+    GstCaps * outcaps, GstVideoInfo * out_info)
 {
   auto self = GST_D3D12_MIP_MAPPING (filter);
   auto priv = self->priv;
@@ -892,9 +816,9 @@ gst_d3d12_mip_mapping_set_info (GstD3D12BaseFilter * filter,
     return FALSE;
   }
 
-  auto ctx = std::make_unique < MipMappingContext > (filter->device);
+  auto ctx = std::make_unique < MipMappingContext > (device);
 
-  ctx->conv = gst_d3d12_converter_new (filter->device, nullptr, in_info,
+  ctx->conv = gst_d3d12_converter_new (device, nullptr, in_info,
       out_info, nullptr, nullptr, nullptr);
   if (!ctx->conv) {
     GST_ERROR_OBJECT (self, "Couldn't create converter");
@@ -913,7 +837,7 @@ gst_d3d12_mip_mapping_set_info (GstD3D12BaseFilter * filter,
       cs_type = GST_D3D_PLUGIN_CS_MIP_GEN_VUYA;
   }
 
-  ctx->gen = gst_d3d12_mip_gen_new (filter->device, cs_type);
+  ctx->gen = gst_d3d12_mip_gen_new (device, cs_type);
   if (!ctx->gen) {
     GST_ERROR_OBJECT (self, "Couldn't create mip generator");
     return FALSE;

@@ -35,17 +35,16 @@ G_BEGIN_DECLS
 
 typedef struct _GstD3D12BaseFilter GstD3D12BaseFilter;
 typedef struct _GstD3D12BaseFilterClass GstD3D12BaseFilterClass;
+typedef struct _GstD3D12BaseFilterPrivate GstD3D12BaseFilterPrivate;
 
 struct _GstD3D12BaseFilter
 {
   GstBaseTransform parent;
 
-  GstD3D12Device *device;
-
-  gint adapter;
-
   GstVideoInfo in_info;
   GstVideoInfo out_info;
+
+  GstD3D12BaseFilterPrivate *priv;
 };
 
 struct _GstD3D12BaseFilterClass
@@ -53,13 +52,25 @@ struct _GstD3D12BaseFilterClass
   GstBaseTransformClass parent_class;
 
   gboolean  (*set_info) (GstD3D12BaseFilter * filter,
+                         GstD3D12Device * device,
                          GstCaps * in_caps,
                          GstVideoInfo * in_info,
                          GstCaps * out_caps,
                          GstVideoInfo * out_info);
+
+  gboolean (*propose_allocation) (GstD3D12BaseFilter * filter,
+                                  GstD3D12Device * device,
+                                  GstQuery * decide_query,
+                                  GstQuery * query);
+
+  gboolean (*decide_allocation) (GstD3D12BaseFilter * filter,
+                                  GstD3D12Device * device,
+                                  GstQuery * query);
 };
 
 GType gst_d3d12_base_filter_get_type (void);
+
+GstD3D12Device * gst_d3d12_base_filter_get_device (GstD3D12BaseFilter * filter);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstD3D12BaseFilter, gst_object_unref)
 
