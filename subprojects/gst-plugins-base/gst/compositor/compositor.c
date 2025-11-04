@@ -724,10 +724,7 @@ gst_compositor_pad_class_init (GstCompositorPadClass * klass)
 
   gst_type_mark_as_plugin_api (GST_TYPE_COMPOSITOR_SIZING_POLICY, 0);
 
-  GST_DEBUG_CATEGORY_INIT (gst_compositor_debug, "compositor", 0, "compositor");
-
   gst_compositor_init_blend ();
-
 }
 
 static void
@@ -2059,6 +2056,8 @@ gst_compositor_class_init (GstCompositorClass * klass)
   gst_type_mark_as_plugin_api (GST_TYPE_COMPOSITOR_PAD, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_COMPOSITOR_OPERATOR, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_COMPOSITOR_BACKGROUND, 0);
+
+  GST_DEBUG_CATEGORY_INIT (gst_compositor_debug, "compositor", 0, "compositor");
 }
 
 static void
