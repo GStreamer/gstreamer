@@ -33,6 +33,10 @@ if not wpewebkit_dep.found()
   subdir_done()
 endif
 
+if not cc.check_header('wpe/wpe-platform.h', dependencies: wpewebkit_dep, required: wpe_feat)
+  subdir_done()
+endif
+
 egl_dep = dependency('egl', required : wpe_feat)
 xkbcommon_dep = dependency('xkbcommon', version : '>= 0.8', required : wpe_feat)
 
