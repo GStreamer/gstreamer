@@ -408,13 +408,35 @@ atomic_dep = cc.find_library('atomic', required: false)
 base_platform_dep += [atomic_dep]
 
 # Used to build SSE* things in audio-resampler
-sse_args = '-msse'
-sse2_args = '-msse2'
-sse41_args = '-msse4.1'
+if cc.get_argument_syntax() == 'msvc'
+  if host_machine.cpu_family() == 'x86_64'
+    sse_args = '/arch:SSE2'
+    # x64 msvc supports /arch:SSE4.2 only since Nov 2024
+    # See https://developercommunity.visualstudio.com/t/Add-arch:SSE42-level-to-allow-optimiz/10664771
+    # See also https://learn.microsoft.com/en-us/cpp/intrinsics/check-isa-arch-support?view=msvc-170
+    sse41_args = '/arch:SSE2'
+  else
+    sse_args = '/arch:SSE'
+    sse41_args = '/arch:SSE2'
+  endif
+  sse2_args = '/arch:SSE2'
+  # By default, x86 targets /arch:SSE2. But we should
+  # override that in case someone supplied CFLAGS
+  have_sse = cc.has_argument(sse_args)
+  have_sse2 = cc.has_argument(sse2_args)
+  # audio-resampler-x86-sse41 uses _mm_cvtsi128_si64 which is only available on
+  # x86_64
+  have_sse41 = cc.has_argument(sse41_args) and host_machine.cpu_family() == 'x86_64'
+else
+  sse_args = '-msse'
+  sse2_args = '-msse2'
+  sse41_args = '-msse4.1'
 
-have_sse = cc.has_argument(sse_args)
-have_sse2 = cc.has_argument(sse2_args)
-have_sse41 = cc.has_argument(sse41_args)
+  have_sse = cc.has_argument(sse_args)
+  have_sse2 = cc.has_argument(sse2_args)
+  # _mm_cvtsi128_si64 is only available on x86-64 (see above)
+  have_sse41 = cc.has_argument(sse41_args) and host_machine.cpu_family() == 'x86_64'
+endif
 
 if host_machine.cpu_family() == 'arm'
   if cc.compiles('''

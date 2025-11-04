@@ -827,7 +827,7 @@ static ResampleFunc resample_funcs[] = {
 #  define CHECK_NEON
 #  include "audio-resampler-neon.h"
 # endif
-# if defined (__i386__) || defined (__x86_64__)
+# if defined (HAVE_SSE) || defined(HAVE_SSE2) || defined(HAVE_SSE41)
 #  define CHECK_X86
 #  include "audio-resampler-x86.h"
 # endif

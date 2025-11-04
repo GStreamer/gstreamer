@@ -23,15 +23,9 @@
 
 #include "audio-resampler-x86-sse41.h"
 
-#if 0
-#define __SSE4_1__
-#pragma GCC target("sse4.1")
+#ifdef _MSC_VER
+#include <intrin.h>             // _mm_cvtsi128_si64
 #endif
-
-#if defined (__x86_64__) && \
-    defined (HAVE_SMMINTRIN_H) && defined (HAVE_EMMINTRIN_H) && \
-    defined (__SSE4_1__)
-
 #include <emmintrin.h>
 #include <smmintrin.h>
 
@@ -184,5 +178,3 @@ inner_product_gint32_cubic_1_sse41 (gint32 * o, const gint32 * a,
 MAKE_RESAMPLE_FUNC (gint32, full, 1, sse41);
 MAKE_RESAMPLE_FUNC (gint32, linear, 1, sse41);
 MAKE_RESAMPLE_FUNC (gint32, cubic, 1, sse41);
-
-#endif

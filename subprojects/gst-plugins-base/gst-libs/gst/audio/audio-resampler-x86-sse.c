@@ -23,8 +23,7 @@
 
 #include "audio-resampler-x86-sse.h"
 
-#if defined (HAVE_XMMINTRIN_H) && defined(__SSE__)
-#include <xmmintrin.h>
+#include <immintrin.h>
 
 static inline void
 inner_product_gfloat_full_1_sse (gfloat * o, const gfloat * a,
@@ -164,5 +163,3 @@ interpolate_gfloat_cubic_sse (gpointer op, const gpointer ap,
     _mm_store_ps (o + i + 0, _mm_add_ps (t[0], t[2]));
   }
 }
-
-#endif

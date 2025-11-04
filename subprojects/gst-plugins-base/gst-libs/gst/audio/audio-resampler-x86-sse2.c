@@ -23,8 +23,7 @@
 
 #include "audio-resampler-x86-sse2.h"
 
-#if defined (HAVE_EMMINTRIN_H) && defined(__SSE2__)
-#include <emmintrin.h>
+#include <immintrin.h>
 
 static inline void
 inner_product_gint16_full_1_sse2 (gint16 * o, const gint16 * a,
@@ -395,5 +394,3 @@ interpolate_gdouble_cubic_sse2 (gpointer op, const gpointer ap,
     _mm_store_pd (o + i + 0, _mm_add_pd (t[0], t[2]));
   }
 }
-
-#endif
