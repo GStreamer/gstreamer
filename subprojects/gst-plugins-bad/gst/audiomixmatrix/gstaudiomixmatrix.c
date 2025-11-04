@@ -87,7 +87,8 @@ enum
   PROP_MODE
 };
 
-GType
+#define GST_TYPE_AUDIO_MIX_MATRIX_MODE (gst_audio_mix_matrix_mode_get_type())
+static GType
 gst_audio_mix_matrix_mode_get_type (void)
 {
   static GType gst_audio_mix_matrix_mode_type = 0;
@@ -130,11 +131,55 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         GST_AUDIO_NE (S32) "}")
     );
 
+typedef struct _MixOutEntry
+{
+  guint index;
+  guint offset;
+  guint count;
+} MixOutEntry;
+
+typedef struct _MixEntry
+{
+  guint index;
+  gdouble coeff;
+  gint64 coeff_s32;
+  gint32 coeff_s16;
+} MixEntry;
+
+typedef void (*MixerFunc) (GstAudioMixMatrix * self, GstMapInfo * in_map,
+    GstMapInfo * out_map);
+
+#define NONZERO_DENSITY_THRESHOLD 0.5
+
+struct _GstAudioMixMatrix
+{
+  GstBaseTransform audiofilter;
+
+  guint in_channels;
+  guint out_channels;
+  gdouble *matrix;
+  gint32 *s16_conv_matrix;
+  gint64 *s32_conv_matrix;
+  guint64 channel_mask;
+  GstAudioMixMatrixMode mode;
+  gint shift_bytes_s16;
+  gint shift_bytes_s32;
+
+  GstAudioInfo info;
+
+  MixerFunc func;
+
+  /* sparse-matrix optimization */
+  MixOutEntry *out_entry;
+  MixEntry *entry;
+  guint num_valid_out_ch;
+};
+
 static void gst_audio_mix_matrix_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_audio_mix_matrix_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_audio_mix_matrix_dispose (GObject * object);
+static void gst_audio_mix_matrix_finalize (GObject * object);
 static gboolean gst_audio_mix_matrix_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, gsize * size);
 static gboolean gst_audio_mix_matrix_set_caps (GstBaseTransform * trans,
@@ -169,7 +214,7 @@ gst_audio_mix_matrix_class_init (GstAudioMixMatrixClass * klass)
 
   gobject_class->set_property = gst_audio_mix_matrix_set_property;
   gobject_class->get_property = gst_audio_mix_matrix_get_property;
-  gobject_class->dispose = gst_audio_mix_matrix_dispose;
+  gobject_class->finalize = gst_audio_mix_matrix_finalize;
 
   g_object_class_install_property (gobject_class, PROP_IN_CHANNELS,
       g_param_spec_uint ("in-channels", "Input audio channels",
@@ -225,64 +270,118 @@ gst_audio_mix_matrix_class_init (GstAudioMixMatrixClass * klass)
 static void
 gst_audio_mix_matrix_init (GstAudioMixMatrix * self)
 {
-  self->in_channels = 0;
-  self->out_channels = 0;
-  self->matrix = NULL;
-  self->channel_mask = 0;
-  self->s16_conv_matrix = NULL;
-  self->s32_conv_matrix = NULL;
   self->mode = GST_AUDIO_MIX_MATRIX_MODE_MANUAL;
 }
 
 static void
-gst_audio_mix_matrix_dispose (GObject * object)
+gst_audio_mix_matrix_clear (GstAudioMixMatrix * self, gboolean full)
+{
+  g_clear_pointer (&self->s16_conv_matrix, g_free);
+  g_clear_pointer (&self->s32_conv_matrix, g_free);
+  g_clear_pointer (&self->out_entry, g_free);
+  g_clear_pointer (&self->entry, g_free);
+  self->num_valid_out_ch = 0;
+
+  if (full)
+    g_clear_pointer (&self->matrix, g_free);
+}
+
+static void
+gst_audio_mix_matrix_finalize (GObject * object)
 {
   GstAudioMixMatrix *self = GST_AUDIO_MIX_MATRIX (object);
 
-  if (self->matrix) {
-    g_free (self->matrix);
-    self->matrix = NULL;
-  }
+  gst_audio_mix_matrix_clear (self, TRUE);
 
-  G_OBJECT_CLASS (gst_audio_mix_matrix_parent_class)->dispose (object);
+  G_OBJECT_CLASS (gst_audio_mix_matrix_parent_class)->finalize (object);
 }
 
-static void
-gst_audio_mix_matrix_convert_s16_matrix (GstAudioMixMatrix * self)
+static gboolean
+gst_audio_mix_matrix_build_matrix (GstAudioMixMatrix * self)
 {
-  gint i;
+  const gdouble eps = 1e-12;
+  guint out, in;
+  guint offset = 0;
+  guint total_pairs = 0;
+  gdouble density;
+
+  if (!self->matrix || !self->in_channels || !self->out_channels)
+    return TRUE;
+
+  gst_audio_mix_matrix_clear (self, FALSE);
 
   /* converted bits - input bits - sign - bits needed for channel */
-  self->shift_bytes = 32 - 16 - 1 - ceil (log (self->in_channels) / log (2));
+  self->shift_bytes_s16 =
+      32 - 16 - 1 - ceil (log (self->in_channels) / log (2));
+  self->shift_bytes_s32 =
+      64 - 32 - 1 - (gint) (log (self->in_channels) / log (2));
 
-  if (self->s16_conv_matrix)
-    g_free (self->s16_conv_matrix);
-  self->s16_conv_matrix =
-      g_new (gint32, self->in_channels * self->out_channels);
-  for (i = 0; i < self->in_channels * self->out_channels; i++) {
-    self->s16_conv_matrix[i] =
-        (gint32) ((self->matrix[i]) * (1 << self->shift_bytes));
+  for (out = 0; out < self->out_channels; out++) {
+    for (in = 0; in < self->in_channels; in++) {
+      if (fabs (self->matrix[out * self->in_channels + in]) > eps)
+        total_pairs++;
+    }
   }
-}
 
-static void
-gst_audio_mix_matrix_convert_s32_matrix (GstAudioMixMatrix * self)
-{
-  gint i;
+  density = ((double) total_pairs) / (self->out_channels * self->in_channels);
 
-  /* converted bits - input bits - sign - bits needed for channel */
-  self->shift_bytes = 64 - 32 - 1 - (gint) (log (self->in_channels) / log (2));
+  GST_DEBUG_OBJECT (self, "nonzero coeff ratio: %.2lf (%d / %d)", density,
+      total_pairs, self->out_channels * self->in_channels);
 
-  if (self->s32_conv_matrix)
-    g_free (self->s32_conv_matrix);
-  self->s32_conv_matrix =
-      g_new (gint64, self->in_channels * self->out_channels);
-  for (i = 0; i < self->in_channels * self->out_channels; i++) {
-    self->s32_conv_matrix[i] =
-        (gint64) ((self->matrix[i]) * (1 << self->shift_bytes));
+  /* Sparse matrix mixing involves extra lookup and memset overhead.
+   * Use sparse optimization only when a sufficient number of zero coefficients
+   * is detected */
+  if (NONZERO_DENSITY_THRESHOLD <= density) {
+    guint i;
+    self->s16_conv_matrix =
+        g_new (gint32, self->in_channels * self->out_channels);
+    self->s32_conv_matrix =
+        g_new (gint64, self->in_channels * self->out_channels);
+
+    for (i = 0; i < self->in_channels * self->out_channels; i++) {
+      self->s16_conv_matrix[i] =
+          (gint32) ((self->matrix[i]) * (1 << self->shift_bytes_s16));
+      self->s32_conv_matrix[i] =
+          (gint64) ((self->matrix[i]) * (1LL << self->shift_bytes_s32));
+    }
+
+    return FALSE;
   }
-}
 
+  self->out_entry = g_new0 (MixOutEntry, self->out_channels);
+  self->entry = g_new0 (MixEntry, total_pairs);
+
+  for (out = 0; out < self->out_channels; out++) {
+    guint count = 0;
+    for (in = 0; in < self->in_channels; in++) {
+      gdouble coeff = self->matrix[out * self->in_channels + in];
+      if (fabs (coeff) > eps) {
+        self->entry[offset].index = in;
+        self->entry[offset].coeff = coeff;
+        self->entry[offset].coeff_s32 =
+            (gint64) (coeff * (1LL << self->shift_bytes_s32));
+        self->entry[offset].coeff_s16 =
+            (gint32) (coeff * (1 << self->shift_bytes_s16));
+        offset++;
+        count++;
+      }
+    }
+
+    if (count > 0) {
+      MixOutEntry *out_entry = &self->out_entry[self->num_valid_out_ch];
+      out_entry->index = out;
+      out_entry->offset = offset - count;
+      out_entry->count = count;
+      self->num_valid_out_ch++;
+    }
+  }
+
+  GST_DEBUG_OBJECT (self,
+      "in-channels: %d, out-channels: %d, matrix-size: %d",
+      self->in_channels, self->out_channels, self->num_valid_out_ch);
+
+  return TRUE;
+}
 
 static void
 gst_audio_mix_matrix_set_property (GObject * object, guint prop_id,
@@ -293,23 +392,16 @@ gst_audio_mix_matrix_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_IN_CHANNELS:
       self->in_channels = g_value_get_uint (value);
-      if (self->matrix) {
-        gst_audio_mix_matrix_convert_s16_matrix (self);
-        gst_audio_mix_matrix_convert_s32_matrix (self);
-      }
+      gst_audio_mix_matrix_build_matrix (self);
       break;
     case PROP_OUT_CHANNELS:
       self->out_channels = g_value_get_uint (value);
-      if (self->matrix) {
-        gst_audio_mix_matrix_convert_s16_matrix (self);
-        gst_audio_mix_matrix_convert_s32_matrix (self);
-      }
+      gst_audio_mix_matrix_build_matrix (self);
       break;
     case PROP_MATRIX:{
       gint in, out;
 
-      if (self->matrix)
-        g_free (self->matrix);
+      g_free (self->matrix);
       self->matrix = g_new (gdouble, self->in_channels * self->out_channels);
 
       g_return_if_fail (gst_value_array_get_size (value) == self->out_channels);
@@ -326,8 +418,7 @@ gst_audio_mix_matrix_set_property (GObject * object, guint prop_id,
           self->matrix[out * self->in_channels + in] = coefficient;
         }
       }
-      gst_audio_mix_matrix_convert_s16_matrix (self);
-      gst_audio_mix_matrix_convert_s32_matrix (self);
+      gst_audio_mix_matrix_build_matrix (self);
       break;
     }
     case PROP_CHANNEL_MASK:
@@ -398,21 +489,11 @@ gst_audio_mix_matrix_change_state (GstElement * element,
   s = GST_ELEMENT_CLASS (gst_audio_mix_matrix_parent_class)->change_state
       (element, transition);
 
-  if (transition == GST_STATE_CHANGE_PAUSED_TO_READY) {
-    if (self->s16_conv_matrix) {
-      g_free (self->s16_conv_matrix);
-      self->s16_conv_matrix = NULL;
-    }
-
-    if (self->s32_conv_matrix) {
-      g_free (self->s32_conv_matrix);
-      self->s32_conv_matrix = NULL;
-    }
-  }
+  if (transition == GST_STATE_CHANGE_PAUSED_TO_READY)
+    gst_audio_mix_matrix_clear (self, FALSE);
 
   return s;
 }
-
 
 static GstFlowReturn
 gst_audio_mix_matrix_transform (GstBaseTransform * vfilter,
@@ -420,10 +501,6 @@ gst_audio_mix_matrix_transform (GstBaseTransform * vfilter,
 {
   GstMapInfo inmap, outmap;
   GstAudioMixMatrix *self = GST_AUDIO_MIX_MATRIX (vfilter);
-  gint in, out, sample;
-  guint inchannels = self->in_channels;
-  guint outchannels = self->out_channels;
-  gdouble *matrix = self->matrix;
 
   if (!gst_buffer_map (inbuf, &inmap, GST_MAP_READ)) {
     return GST_FLOW_ERROR;
@@ -433,103 +510,7 @@ gst_audio_mix_matrix_transform (GstBaseTransform * vfilter,
     return GST_FLOW_ERROR;
   }
 
-  switch (self->format) {
-    case GST_AUDIO_FORMAT_F32LE:
-    case GST_AUDIO_FORMAT_F32BE:{
-      const gfloat *inarray;
-      gfloat *outarray;
-      guint n_samples = outmap.size / (sizeof (gfloat) * outchannels);
-
-      inarray = (gfloat *) inmap.data;
-      outarray = (gfloat *) outmap.data;
-
-      for (sample = 0; sample < n_samples; sample++) {
-        for (out = 0; out < outchannels; out++) {
-          gfloat outval = 0;
-          for (in = 0; in < inchannels; in++) {
-            outval +=
-                inarray[sample * inchannels +
-                in] * matrix[out * inchannels + in];
-          }
-          outarray[sample * outchannels + out] = outval;
-        }
-      }
-      break;
-    }
-    case GST_AUDIO_FORMAT_F64LE:
-    case GST_AUDIO_FORMAT_F64BE:{
-      const gdouble *inarray;
-      gdouble *outarray;
-      guint n_samples = outmap.size / (sizeof (gdouble) * outchannels);
-
-      inarray = (gdouble *) inmap.data;
-      outarray = (gdouble *) outmap.data;
-
-      for (sample = 0; sample < n_samples; sample++) {
-        for (out = 0; out < outchannels; out++) {
-          gdouble outval = 0;
-          for (in = 0; in < inchannels; in++) {
-            outval +=
-                inarray[sample * inchannels +
-                in] * matrix[out * inchannels + in];
-          }
-          outarray[sample * outchannels + out] = outval;
-        }
-      }
-      break;
-    }
-    case GST_AUDIO_FORMAT_S16LE:
-    case GST_AUDIO_FORMAT_S16BE:{
-      const gint16 *inarray;
-      gint16 *outarray;
-      guint n_samples = outmap.size / (sizeof (gint16) * outchannels);
-      guint n = self->shift_bytes;
-      gint32 *conv_matrix = self->s16_conv_matrix;
-
-      inarray = (gint16 *) inmap.data;
-      outarray = (gint16 *) outmap.data;
-
-      for (sample = 0; sample < n_samples; sample++) {
-        for (out = 0; out < outchannels; out++) {
-          gint32 outval = 0;
-          for (in = 0; in < inchannels; in++) {
-            outval += (gint32) (inarray[sample * inchannels + in] *
-                conv_matrix[out * inchannels + in]);
-          }
-          outarray[sample * outchannels + out] = (gint16) (outval >> n);
-        }
-      }
-      break;
-    }
-    case GST_AUDIO_FORMAT_S32LE:
-    case GST_AUDIO_FORMAT_S32BE:{
-      const gint32 *inarray;
-      gint32 *outarray;
-      guint n_samples = outmap.size / (sizeof (gint32) * outchannels);
-      guint n = self->shift_bytes;
-      gint64 *conv_matrix = self->s32_conv_matrix;
-
-      inarray = (gint32 *) inmap.data;
-      outarray = (gint32 *) outmap.data;
-
-      for (sample = 0; sample < n_samples; sample++) {
-        for (out = 0; out < outchannels; out++) {
-          gint64 outval = 0;
-          for (in = 0; in < inchannels; in++) {
-            outval += (gint64) (inarray[sample * inchannels + in] *
-                conv_matrix[out * inchannels + in]);
-          }
-          outarray[sample * outchannels + out] = (gint32) (outval >> n);
-        }
-      }
-      break;
-    }
-    default:
-      gst_buffer_unmap (inbuf, &inmap);
-      gst_buffer_unmap (outbuf, &outmap);
-      return GST_FLOW_NOT_SUPPORTED;
-
-  }
+  self->func (self, &inmap, &outmap);
 
   gst_buffer_unmap (inbuf, &inmap);
   gst_buffer_unmap (outbuf, &outmap);
@@ -550,27 +531,303 @@ gst_audio_mix_matrix_get_unit_size (GstBaseTransform * trans,
   return TRUE;
 }
 
+static void
+gst_audio_mix_matrix_mix_f32 (GstAudioMixMatrix * self, GstMapInfo * in_map,
+    GstMapInfo * out_map)
+{
+  guint inchannels = self->in_channels;
+  guint outchannels = self->out_channels;
+  const gdouble *matrix = self->matrix;
+  const gfloat *inarray;
+  gfloat *outarray;
+  guint n_samples = out_map->size / (sizeof (gfloat) * outchannels);
+  guint in, out, sample;
+
+  inarray = (gfloat *) in_map->data;
+  outarray = (gfloat *) out_map->data;
+
+  for (sample = 0; sample < n_samples; sample++) {
+    gfloat *out_arr = &outarray[sample * outchannels];
+    const gfloat *in_arr = &inarray[sample * inchannels];
+
+    for (out = 0; out < outchannels; out++) {
+      gfloat outval = 0;
+      const gdouble *coeff = &matrix[out * inchannels];
+      for (in = 0; in < inchannels; in++)
+        outval += (gfloat) (in_arr[in] * coeff[in]);
+      out_arr[out] = outval;
+    }
+  }
+}
+
+static void
+gst_audio_mix_matrix_sparse_mix_f32 (GstAudioMixMatrix * self,
+    GstMapInfo * in_map, GstMapInfo * out_map)
+{
+  guint inchannels = self->in_channels;
+  guint outchannels = self->out_channels;
+  const gfloat *inarray;
+  gfloat *outarray;
+  guint n_samples = out_map->size / (sizeof (gfloat) * outchannels);
+  guint in, out, sample;
+
+  gst_audio_format_info_fill_silence (self->info.finfo,
+      out_map->data, out_map->size);
+
+  inarray = (gfloat *) in_map->data;
+  outarray = (gfloat *) out_map->data;
+
+  for (sample = 0; sample < n_samples; sample++) {
+    gfloat *out_arr = &outarray[sample * outchannels];
+    const gfloat *in_arr = &inarray[sample * inchannels];
+
+    for (out = 0; out < self->num_valid_out_ch; out++) {
+      gfloat outval = 0;
+      const MixOutEntry *out_entry = &self->out_entry[out];
+      guint out_index = out_entry->index;
+      guint offset = out_entry->offset;
+      guint count = out_entry->count;
+
+      for (in = 0; in < count; in++) {
+        const MixEntry *entry = &self->entry[offset + in];
+        guint in_index = entry->index;
+        gfloat coeff = (gfloat) entry->coeff;
+        outval += in_arr[in_index] * coeff;
+      }
+      out_arr[out_index] = outval;
+    }
+  }
+}
+
+static void
+gst_audio_mix_matrix_mix_f64 (GstAudioMixMatrix * self, GstMapInfo * in_map,
+    GstMapInfo * out_map)
+{
+  guint inchannels = self->in_channels;
+  guint outchannels = self->out_channels;
+  const gdouble *matrix = self->matrix;
+  const gdouble *inarray;
+  gdouble *outarray;
+  guint n_samples = out_map->size / (sizeof (gdouble) * outchannels);
+  guint in, out, sample;
+
+  inarray = (gdouble *) in_map->data;
+  outarray = (gdouble *) out_map->data;
+
+  for (sample = 0; sample < n_samples; sample++) {
+    gdouble *out_arr = &outarray[sample * outchannels];
+    const gdouble *in_arr = &inarray[sample * inchannels];
+
+    for (out = 0; out < outchannels; out++) {
+      gdouble outval = 0;
+      const gdouble *coeff = &matrix[out * inchannels];
+      for (in = 0; in < inchannels; in++)
+        outval += in_arr[in] * coeff[in];
+      out_arr[out] = outval;
+    }
+  }
+}
+
+static void
+gst_audio_mix_matrix_sparse_mix_f64 (GstAudioMixMatrix * self,
+    GstMapInfo * in_map, GstMapInfo * out_map)
+{
+  guint inchannels = self->in_channels;
+  guint outchannels = self->out_channels;
+  const gdouble *inarray;
+  gdouble *outarray;
+  guint n_samples = out_map->size / (sizeof (gdouble) * outchannels);
+  guint in, out, sample;
+
+  gst_audio_format_info_fill_silence (self->info.finfo,
+      out_map->data, out_map->size);
+
+  inarray = (gdouble *) in_map->data;
+  outarray = (gdouble *) out_map->data;
+
+  for (sample = 0; sample < n_samples; sample++) {
+    gdouble *out_arr = &outarray[sample * outchannels];
+    const gdouble *in_arr = &inarray[sample * inchannels];
+
+    for (out = 0; out < self->num_valid_out_ch; out++) {
+      gdouble outval = 0;
+      const MixOutEntry *out_entry = &self->out_entry[out];
+      guint out_index = out_entry->index;
+      guint offset = out_entry->offset;
+      guint count = out_entry->count;
+
+      for (in = 0; in < count; in++) {
+        const MixEntry *entry = &self->entry[offset + in];
+        guint in_index = entry->index;
+        gdouble coeff = entry->coeff;
+        outval += in_arr[in_index] * coeff;
+      }
+      out_arr[out_index] = outval;
+    }
+  }
+}
+
+static void
+gst_audio_mix_matrix_mix_s16 (GstAudioMixMatrix * self, GstMapInfo * in_map,
+    GstMapInfo * out_map)
+{
+  guint inchannels = self->in_channels;
+  guint outchannels = self->out_channels;
+  const gint32 *matrix = self->s16_conv_matrix;
+  const gint16 *inarray;
+  gint16 *outarray;
+  guint n_samples = out_map->size / (sizeof (gint16) * outchannels);
+  guint n = self->shift_bytes_s16;
+  guint in, out, sample;
+
+  inarray = (gint16 *) in_map->data;
+  outarray = (gint16 *) out_map->data;
+
+  for (sample = 0; sample < n_samples; sample++) {
+    gint16 *out_arr = &outarray[sample * outchannels];
+    const gint16 *in_arr = &inarray[sample * inchannels];
+
+    for (out = 0; out < outchannels; out++) {
+      gint32 outval = 0;
+      const gint32 *coeff = &matrix[out * inchannels];
+      for (in = 0; in < inchannels; in++)
+        outval += in_arr[in] * coeff[in];
+      out_arr[out] = (gint16) (outval >> n);
+    }
+  }
+}
+
+static void
+gst_audio_mix_matrix_sparse_mix_s16 (GstAudioMixMatrix * self,
+    GstMapInfo * in_map, GstMapInfo * out_map)
+{
+  guint inchannels = self->in_channels;
+  guint outchannels = self->out_channels;
+  const gint16 *inarray;
+  gint16 *outarray;
+  guint n_samples = out_map->size / (sizeof (gint16) * outchannels);
+  guint n = self->shift_bytes_s16;
+  guint in, out, sample;
+
+  gst_audio_format_info_fill_silence (self->info.finfo,
+      out_map->data, out_map->size);
+
+  inarray = (gint16 *) in_map->data;
+  outarray = (gint16 *) out_map->data;
+
+  for (sample = 0; sample < n_samples; sample++) {
+    gint16 *out_arr = &outarray[sample * outchannels];
+    const gint16 *in_arr = &inarray[sample * inchannels];
+
+    for (out = 0; out < self->num_valid_out_ch; out++) {
+      gint32 outval = 0;
+      const MixOutEntry *out_entry = &self->out_entry[out];
+      guint out_index = out_entry->index;
+      guint offset = out_entry->offset;
+      guint count = out_entry->count;
+
+      for (in = 0; in < count; in++) {
+        const MixEntry *entry = &self->entry[offset + in];
+        guint in_index = entry->index;
+        gint32 coeff = entry->coeff_s16;
+        outval += in_arr[in_index] * coeff;
+      }
+      out_arr[out_index] = (gint16) (outval >> n);
+    }
+  }
+}
+
+static void
+gst_audio_mix_matrix_mix_s32 (GstAudioMixMatrix * self, GstMapInfo * in_map,
+    GstMapInfo * out_map)
+{
+  guint inchannels = self->in_channels;
+  guint outchannels = self->out_channels;
+  const gint64 *matrix = self->s32_conv_matrix;
+  const gint32 *inarray;
+  gint32 *outarray;
+  guint n_samples = out_map->size / (sizeof (gint32) * outchannels);
+  guint n = self->shift_bytes_s32;
+  guint in, out, sample;
+
+  inarray = (gint32 *) in_map->data;
+  outarray = (gint32 *) out_map->data;
+
+  for (sample = 0; sample < n_samples; sample++) {
+    gint32 *out_arr = &outarray[sample * outchannels];
+    const gint32 *in_arr = &inarray[sample * inchannels];
+
+    for (out = 0; out < outchannels; out++) {
+      gint64 outval = 0;
+      const gint64 *coeff = &matrix[out * inchannels];
+      for (in = 0; in < inchannels; in++)
+        outval += in_arr[in] * coeff[in];
+      out_arr[out] = (gint32) (outval >> n);
+    }
+  }
+}
+
+static void
+gst_audio_mix_matrix_sparse_mix_s32 (GstAudioMixMatrix * self,
+    GstMapInfo * in_map, GstMapInfo * out_map)
+{
+  guint inchannels = self->in_channels;
+  guint outchannels = self->out_channels;
+  const gint32 *inarray;
+  gint32 *outarray;
+  guint n_samples = out_map->size / (sizeof (gint32) * outchannels);
+  guint n = self->shift_bytes_s32;
+  guint in, out, sample;
+
+  gst_audio_format_info_fill_silence (self->info.finfo,
+      out_map->data, out_map->size);
+
+  inarray = (gint32 *) in_map->data;
+  outarray = (gint32 *) out_map->data;
+
+  for (sample = 0; sample < n_samples; sample++) {
+    gint32 *out_arr = &outarray[sample * outchannels];
+    const gint32 *in_arr = &inarray[sample * inchannels];
+
+    for (out = 0; out < self->num_valid_out_ch; out++) {
+      gint64 outval = 0;
+      const MixOutEntry *out_entry = &self->out_entry[out];
+      guint out_index = out_entry->index;
+      guint offset = out_entry->offset;
+      guint count = out_entry->count;
+
+      for (in = 0; in < count; in++) {
+        const MixEntry *entry = &self->entry[offset + in];
+        guint in_index = entry->index;
+        gint64 coeff = entry->coeff_s32;
+        outval += in_arr[in_index] * coeff;
+      }
+      out_arr[out_index] = (gint32) (outval >> n);
+    }
+  }
+}
+
 static gboolean
 gst_audio_mix_matrix_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstAudioMixMatrix *self = GST_AUDIO_MIX_MATRIX (trans);
-  GstAudioInfo info, out_info;
+  GstAudioInfo out_info;
+  gboolean use_sparse;
 
-  if (!gst_audio_info_from_caps (&info, incaps))
+  if (!gst_audio_info_from_caps (&self->info, incaps))
     return FALSE;
 
   if (!gst_audio_info_from_caps (&out_info, outcaps))
     return FALSE;
 
-  self->format = info.finfo->format;
-
   if (self->mode == GST_AUDIO_MIX_MATRIX_MODE_FIRST_CHANNELS) {
     gint in, out;
 
-    self->in_channels = info.channels;
+    self->in_channels = self->info.channels;
     self->out_channels = out_info.channels;
 
+    g_free (self->matrix);
     self->matrix = g_new (gdouble, self->in_channels * self->out_channels);
 
     for (out = 0; out < self->out_channels; out++) {
@@ -578,7 +835,7 @@ gst_audio_mix_matrix_set_caps (GstBaseTransform * trans, GstCaps * incaps,
         self->matrix[out * self->in_channels + in] = (out == in);
       }
     }
-  } else if (!self->matrix || info.channels != self->in_channels ||
+  } else if (!self->matrix || self->info.channels != self->in_channels ||
       out_info.channels != self->out_channels) {
     GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS,
         ("Erroneous matrix detected"),
@@ -586,20 +843,41 @@ gst_audio_mix_matrix_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     return FALSE;
   }
 
-  switch (self->format) {
+  use_sparse = gst_audio_mix_matrix_build_matrix (self);
+  switch (GST_AUDIO_INFO_FORMAT (&self->info)) {
+    case GST_AUDIO_FORMAT_F32LE:
+    case GST_AUDIO_FORMAT_F32BE:
+      if (use_sparse)
+        self->func = (MixerFunc) gst_audio_mix_matrix_sparse_mix_f32;
+      else
+        self->func = (MixerFunc) gst_audio_mix_matrix_mix_f32;
+      break;
+    case GST_AUDIO_FORMAT_F64LE:
+    case GST_AUDIO_FORMAT_F64BE:
+      if (use_sparse)
+        self->func = (MixerFunc) gst_audio_mix_matrix_sparse_mix_f64;
+      else
+        self->func = (MixerFunc) gst_audio_mix_matrix_mix_f64;
+      break;
     case GST_AUDIO_FORMAT_S16LE:
-    case GST_AUDIO_FORMAT_S16BE:{
-      gst_audio_mix_matrix_convert_s16_matrix (self);
+    case GST_AUDIO_FORMAT_S16BE:
+      if (use_sparse)
+        self->func = (MixerFunc) gst_audio_mix_matrix_sparse_mix_s16;
+      else
+        self->func = (MixerFunc) gst_audio_mix_matrix_mix_s16;
       break;
-    }
     case GST_AUDIO_FORMAT_S32LE:
-    case GST_AUDIO_FORMAT_S32BE:{
-      gst_audio_mix_matrix_convert_s32_matrix (self);
+    case GST_AUDIO_FORMAT_S32BE:
+      if (use_sparse)
+        self->func = (MixerFunc) gst_audio_mix_matrix_sparse_mix_s32;
+      else
+        self->func = (MixerFunc) gst_audio_mix_matrix_mix_s32;
       break;
-    }
     default:
-      break;
+      g_assert_not_reached ();
+      return FALSE;
   }
+
   return TRUE;
 }
 

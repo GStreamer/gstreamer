@@ -26,16 +26,9 @@
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 
-#define GST_TYPE_AUDIO_MIX_MATRIX            (gst_audio_mix_matrix_get_type())
-#define GST_AUDIO_MIX_MATRIX(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_MIX_MATRIX,GstAudioMixMatrix))
-#define GST_AUDIO_MIX_MATRIX_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_AUDIO_MIX_MATRIX,GstAudioMixMatrixClass))
-#define GST_AUDIO_MIX_MATRIX_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_AUDIO_MIX_MATRIX,GstAudioMixMatrixClass))
-#define GST_IS_AUDIO_MIX_MATRIX(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_MIX_MATRIX))
-#define GST_IS_AUDIO_MIX_MATRIX_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_AUDIO_MIX_MATRIX))
-#define GST_TYPE_AUDIO_MIX_MATRIX_MODE (gst_audio_mix_matrix_mode_get_type())
-
-typedef struct _GstAudioMixMatrix GstAudioMixMatrix;
-typedef struct _GstAudioMixMatrixClass GstAudioMixMatrixClass;
+#define GST_TYPE_AUDIO_MIX_MATRIX (gst_audio_mix_matrix_get_type())
+G_DECLARE_FINAL_TYPE (GstAudioMixMatrix, gst_audio_mix_matrix,
+    GST, AUDIO_MIX_MATRIX, GstBaseTransform)
 
 typedef enum _GstAudioMixMatrixMode
 {
@@ -43,38 +36,7 @@ typedef enum _GstAudioMixMatrixMode
   GST_AUDIO_MIX_MATRIX_MODE_FIRST_CHANNELS = 1
 } GstAudioMixMatrixMode;
 
-/**
- * GstAudioMixMatrix:
- *
- * Opaque data structure.
- */
-struct _GstAudioMixMatrix
-{
-  GstBaseTransform audiofilter;
-
-  /* < private > */
-  guint in_channels;
-  guint out_channels;
-  gdouble *matrix;
-  guint64 channel_mask;
-  GstAudioMixMatrixMode mode;
-  gint32 *s16_conv_matrix;
-  gint64 *s32_conv_matrix;
-  gint shift_bytes;
-
-  GstAudioFormat format;
-};
-
-struct _GstAudioMixMatrixClass
-{
-  GstBaseTransformClass parent_class;
-};
-
-GType gst_audio_mix_matrix_get_type (void);
-
 GST_ELEMENT_REGISTER_DECLARE (audiomixmatrix);
-
-GType gst_audio_mix_matrix_mode_get_type (void);
 
 G_END_DECLS
 #endif /* __GST_AUDIO_MIX_MATRIX_H__ */
