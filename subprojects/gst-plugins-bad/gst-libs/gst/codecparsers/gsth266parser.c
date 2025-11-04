@@ -1984,7 +1984,7 @@ gst_h266_parser_identify_nalu_vvc (GstH266Parser * parser,
  * @offset: the offset from which to parse @data
  * @size: the size of @data
  * @nal_length_size: the size in bytes of the VVC nal length prefix.
- * @nalus: a caller allocated GArray of #GstH266NalUnit where to store parsed nal headers
+ * @nalus: a caller allocated #GArray of #GstH266NalUnit where to store parsed nal headers
  * @consumed: the size of consumed bytes
  *
  * Parses @data for packetized (e.g., vvc1/vvi1) bitstream and
@@ -2007,6 +2007,7 @@ gst_h266_parser_identify_and_split_nalu_vvc (GstH266Parser * parser,
   guint off;
   guint sc_size;
 
+  g_return_val_if_fail (parser != NULL, GST_H266_PARSER_ERROR);
   g_return_val_if_fail (data != NULL, GST_H266_PARSER_ERROR);
   g_return_val_if_fail (nalus != NULL, GST_H266_PARSER_ERROR);
   g_return_val_if_fail (nal_length_size > 0 && nal_length_size < 5,
