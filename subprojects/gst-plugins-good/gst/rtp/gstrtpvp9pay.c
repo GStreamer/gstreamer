@@ -260,7 +260,7 @@ gst_rtp_vp9_pay_parse_frame (GstRtpVP9Pay * self, GstBuffer * buffer,
   gboolean keyframe;
   guint32 tmp, profile;
 
-  if (G_UNLIKELY (buffer_size < 3))
+  if (G_UNLIKELY (buffer_size < 1))
     goto error;
 
   if (!gst_buffer_map (buffer, &map, GST_MAP_READ) || !map.data)
