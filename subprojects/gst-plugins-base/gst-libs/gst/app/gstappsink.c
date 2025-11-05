@@ -110,6 +110,35 @@ callbacks_unref (Callbacks * callbacks)
   g_free (callbacks);
 }
 
+G_DEFINE_BOXED_TYPE (GstAppSinkSimpleCallbacks, gst_app_sink_simple_callbacks,
+    gst_app_sink_simple_callbacks_ref, gst_app_sink_simple_callbacks_unref);
+
+struct _GstAppSinkSimpleCallbacks
+{
+  int ref_count;
+  gboolean attached;
+
+  GstAppSinkEosCallback eos_cb;
+  gpointer eos_user_data;
+  GDestroyNotify eos_destroy_notify;
+
+  GstAppSinkNewPrerollCallback new_preroll_cb;
+  gpointer new_preroll_user_data;
+  GDestroyNotify new_preroll_destroy_notify;
+
+  GstAppSinkNewSampleCallback new_sample_cb;
+  gpointer new_sample_user_data;
+  GDestroyNotify new_sample_destroy_notify;
+
+  GstAppSinkNewEventCallback new_event_cb;
+  gpointer new_event_user_data;
+  GDestroyNotify new_event_destroy_notify;
+
+  GstAppSinkProposeAllocationCallback propose_allocation_cb;
+  gpointer propose_allocation_user_data;
+  GDestroyNotify propose_allocation_destroy_notify;
+};
+
 struct _GstAppSinkPrivate
 {
   GstCaps *caps;
@@ -139,6 +168,7 @@ struct _GstAppSinkPrivate
   gboolean buffer_lists_supported;
 
   Callbacks *callbacks;
+  GstAppSinkSimpleCallbacks *simple_callbacks;
 
   GstSample *sample;
 };
@@ -762,6 +792,7 @@ gst_app_sink_dispose (GObject * obj)
   GstAppSinkPrivate *priv = appsink->priv;
   GstMiniObject *queue_obj;
   Callbacks *callbacks = NULL;
+  GstAppSinkSimpleCallbacks *simple_callbacks = NULL;
 
   GST_OBJECT_LOCK (appsink);
   if (priv->caps) {
@@ -773,6 +804,8 @@ gst_app_sink_dispose (GObject * obj)
   g_mutex_lock (&priv->mutex);
   if (priv->callbacks)
     callbacks = g_steal_pointer (&priv->callbacks);
+  if (priv->simple_callbacks)
+    simple_callbacks = g_steal_pointer (&priv->simple_callbacks);
   while ((queue_obj = gst_vec_deque_pop_head (priv->queue)))
     gst_mini_object_unref (queue_obj);
   gst_buffer_replace (&priv->preroll_buffer, NULL);
@@ -785,6 +818,7 @@ gst_app_sink_dispose (GObject * obj)
   g_mutex_unlock (&priv->mutex);
 
   g_clear_pointer (&callbacks, callbacks_unref);
+  g_clear_pointer (&simple_callbacks, gst_app_sink_simple_callbacks_unref);
 
   G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
@@ -1066,6 +1100,7 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
     case GST_EVENT_EOS:{
       gboolean emit = TRUE;
       Callbacks *callbacks = NULL;
+      GstAppSinkSimpleCallbacks *simple_callbacks = NULL;
 
       g_mutex_lock (&priv->mutex);
       GST_DEBUG_OBJECT (appsink, "receiving EOS");
@@ -1102,18 +1137,27 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
       if (priv->flushing)
         emit = FALSE;
 
-      if (emit && priv->callbacks)
-        callbacks = callbacks_ref (priv->callbacks);
+      if (emit) {
+        if (priv->callbacks)
+          callbacks = callbacks_ref (priv->callbacks);
+        else if (priv->simple_callbacks)
+          simple_callbacks =
+              gst_app_sink_simple_callbacks_ref (priv->simple_callbacks);
+      }
       g_mutex_unlock (&priv->mutex);
 
       if (emit) {
         /* emit EOS now */
         if (callbacks && callbacks->callbacks.eos)
           callbacks->callbacks.eos (appsink, callbacks->user_data);
+        else if (simple_callbacks && simple_callbacks->eos_cb)
+          simple_callbacks->eos_cb (appsink, simple_callbacks->eos_user_data);
         else
           g_signal_emit (appsink, gst_app_sink_signals[SIGNAL_EOS], 0);
 
         g_clear_pointer (&callbacks, callbacks_unref);
+        g_clear_pointer (&simple_callbacks,
+            gst_app_sink_simple_callbacks_unref);
       }
 
       break;
@@ -1141,6 +1185,7 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
       && GST_EVENT_IS_SERIALIZED (event)) {
     gboolean emit;
     Callbacks *callbacks = NULL;
+    GstAppSinkSimpleCallbacks *simple_callbacks = NULL;
     gboolean ret;
 
     g_mutex_lock (&priv->mutex);
@@ -1148,6 +1193,9 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
     emit = priv->emit_signals;
     if (priv->callbacks)
       callbacks = callbacks_ref (priv->callbacks);
+    else if (priv->simple_callbacks)
+      simple_callbacks =
+          gst_app_sink_simple_callbacks_ref (priv->simple_callbacks);
 
     gst_vec_deque_push_tail (priv->queue, gst_event_ref (event));
     gst_queue_status_info_push_event (&priv->queue_status_info);
@@ -1159,6 +1207,10 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
 
     if (callbacks && callbacks->callbacks.new_event) {
       ret = callbacks->callbacks.new_event (appsink, callbacks->user_data);
+    } else if (simple_callbacks && simple_callbacks->new_event_cb) {
+      ret =
+          simple_callbacks->new_event_cb (appsink,
+          simple_callbacks->new_event_user_data);
     } else {
       ret = FALSE;
       if (emit)
@@ -1166,6 +1218,7 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
             gst_app_sink_signals[SIGNAL_NEW_SERIALIZED_EVENT], 0, &ret);
     }
     g_clear_pointer (&callbacks, callbacks_unref);
+    g_clear_pointer (&simple_callbacks, gst_app_sink_simple_callbacks_unref);
 
     if (ret) {
       gst_event_unref (event);
@@ -1184,6 +1237,7 @@ gst_app_sink_preroll (GstBaseSink * psink, GstBuffer * buffer)
   GstAppSinkPrivate *priv = appsink->priv;
   gboolean emit;
   Callbacks *callbacks = NULL;
+  GstAppSinkSimpleCallbacks *simple_callbacks = NULL;
 
   g_mutex_lock (&priv->mutex);
   if (priv->flushing)
@@ -1198,10 +1252,17 @@ gst_app_sink_preroll (GstBaseSink * psink, GstBuffer * buffer)
   emit = priv->emit_signals;
   if (priv->callbacks)
     callbacks = callbacks_ref (priv->callbacks);
+  else if (priv->simple_callbacks)
+    simple_callbacks =
+        gst_app_sink_simple_callbacks_ref (priv->simple_callbacks);
   g_mutex_unlock (&priv->mutex);
 
   if (callbacks && callbacks->callbacks.new_preroll) {
     res = callbacks->callbacks.new_preroll (appsink, callbacks->user_data);
+  } else if (simple_callbacks && simple_callbacks->new_preroll_cb) {
+    res =
+        simple_callbacks->new_preroll_cb (appsink,
+        simple_callbacks->new_preroll_user_data);
   } else {
     res = GST_FLOW_OK;
     if (emit)
@@ -1210,6 +1271,7 @@ gst_app_sink_preroll (GstBaseSink * psink, GstBuffer * buffer)
   }
 
   g_clear_pointer (&callbacks, callbacks_unref);
+  g_clear_pointer (&simple_callbacks, gst_app_sink_simple_callbacks_unref);
 
   return res;
 
@@ -1292,6 +1354,7 @@ gst_app_sink_render_common (GstBaseSink * psink, GstMiniObject * data,
   GstAppSinkPrivate *priv = appsink->priv;
   gboolean emit;
   Callbacks *callbacks = NULL;
+  GstAppSinkSimpleCallbacks *simple_callbacks = NULL;
 
 restart:
   g_mutex_lock (&priv->mutex);
@@ -1380,16 +1443,24 @@ restart:
   emit = priv->emit_signals;
   if (priv->callbacks)
     callbacks = callbacks_ref (priv->callbacks);
+  else if (priv->simple_callbacks)
+    simple_callbacks =
+        gst_app_sink_simple_callbacks_ref (priv->simple_callbacks);
   g_mutex_unlock (&priv->mutex);
 
   if (callbacks && callbacks->callbacks.new_sample) {
     ret = callbacks->callbacks.new_sample (appsink, callbacks->user_data);
+  } else if (simple_callbacks && simple_callbacks->new_sample_cb) {
+    ret =
+        simple_callbacks->new_sample_cb (appsink,
+        simple_callbacks->new_sample_user_data);
   } else {
     ret = GST_FLOW_OK;
     if (emit)
       g_signal_emit (appsink, gst_app_sink_signals[SIGNAL_NEW_SAMPLE], 0, &ret);
   }
   g_clear_pointer (&callbacks, callbacks_unref);
+  g_clear_pointer (&simple_callbacks, gst_app_sink_simple_callbacks_unref);
 
   return ret;
 
@@ -2503,12 +2574,17 @@ not_started:
  *
  * Before 1.16.3 it was not possible to change the callbacks in a thread-safe
  * way.
+ *
+ * Note that gst_app_sink_set_callbacks() and
+ * gst_app_sink_set_simple_callbacks() are mutually exclusive and setting one
+ * will unset the other.
  */
 void
 gst_app_sink_set_callbacks (GstAppSink * appsink,
     GstAppSinkCallbacks * callbacks, gpointer user_data, GDestroyNotify notify)
 {
   Callbacks *old_callbacks, *new_callbacks = NULL;
+  GstAppSinkSimpleCallbacks *simple_callbacks = NULL;
   GstAppSinkPrivate *priv;
 
   g_return_if_fail (GST_IS_APP_SINK (appsink));
@@ -2526,10 +2602,12 @@ gst_app_sink_set_callbacks (GstAppSink * appsink,
 
   g_mutex_lock (&priv->mutex);
   old_callbacks = g_steal_pointer (&priv->callbacks);
+  simple_callbacks = g_steal_pointer (&priv->simple_callbacks);
   priv->callbacks = g_steal_pointer (&new_callbacks);
   g_mutex_unlock (&priv->mutex);
 
   g_clear_pointer (&old_callbacks, callbacks_unref);
+  g_clear_pointer (&simple_callbacks, gst_app_sink_simple_callbacks_unref);
 }
 
 /*** GSTURIHANDLER INTERFACE *************************************************/
@@ -2581,24 +2659,300 @@ gst_app_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   GstAppSink *appsink = GST_APP_SINK_CAST (bsink);
   GstAppSinkPrivate *priv = appsink->priv;
   Callbacks *callbacks = NULL;
+  GstAppSinkSimpleCallbacks *simple_callbacks = NULL;
   gboolean emit;
 
   g_mutex_lock (&priv->mutex);
   emit = priv->emit_signals;
   if (priv->callbacks)
     callbacks = callbacks_ref (priv->callbacks);
+  else if (priv->simple_callbacks)
+    simple_callbacks =
+        gst_app_sink_simple_callbacks_ref (priv->simple_callbacks);
   g_mutex_unlock (&priv->mutex);
 
   if (callbacks && callbacks->callbacks.propose_allocation) {
     ret =
         callbacks->callbacks.propose_allocation (appsink, query,
         callbacks->user_data);
+  } else if (simple_callbacks && simple_callbacks->propose_allocation_cb) {
+    ret =
+        simple_callbacks->propose_allocation_cb (appsink, query,
+        simple_callbacks->propose_allocation_user_data);
   } else if (emit) {
     g_signal_emit (appsink, gst_app_sink_signals[SIGNAL_PROPOSE_ALLOCATION], 0,
         query, &ret);
   }
 
   g_clear_pointer (&callbacks, callbacks_unref);
+  g_clear_pointer (&simple_callbacks, gst_app_sink_simple_callbacks_unref);
 
   return ret;
+}
+
+/**
+ * gst_app_sink_set_simple_callbacks:
+ * @appsink: a #GstAppSink
+ * @cb: (transfer full) (nullable): the callbacks
+ *
+ * Set callbacks which will be executed for each new preroll, new sample and eos.
+ * This is an alternative to using the signals, it has lower overhead and is thus
+ * less expensive, but also less flexible.
+ *
+ * If callbacks are installed, no signals will be emitted for performance
+ * reasons.
+ *
+ * Once @cb is set on an #GstAppSink it is not possible anymore to change any of
+ * the callbacks inside it.
+ *
+ * Note that gst_app_sink_set_callbacks() and
+ * gst_app_sink_set_simple_callbacks() are mutually exclusive and setting one
+ * will unset the other.
+ *
+ * Since: 1.28
+ */
+void
+gst_app_sink_set_simple_callbacks (GstAppSink * appsink,
+    GstAppSinkSimpleCallbacks * cb)
+{
+  Callbacks *callbacks = NULL;
+  GstAppSinkSimpleCallbacks *old_callbacks = NULL;
+  GstAppSinkPrivate *priv;
+
+  g_return_if_fail (GST_IS_APP_SINK (appsink));
+
+  if (cb)
+    g_atomic_int_set (&cb->attached, TRUE);
+
+  priv = appsink->priv;
+
+  g_mutex_lock (&priv->mutex);
+  old_callbacks = g_steal_pointer (&priv->simple_callbacks);
+  callbacks = g_steal_pointer (&priv->callbacks);
+  priv->simple_callbacks = g_steal_pointer (&cb);
+  g_mutex_unlock (&priv->mutex);
+
+  g_clear_pointer (&callbacks, callbacks_unref);
+  g_clear_pointer (&old_callbacks, gst_app_sink_simple_callbacks_unref);
+}
+
+/**
+ * gst_app_sink_simple_callbacks_new:
+ *
+ * Creates a new instance of callbacks.
+ *
+ * Returns: (transfer full): New empty GstAppSinkSimpleCallbacks
+ *
+ * Since: 1.28
+ */
+GstAppSinkSimpleCallbacks *
+gst_app_sink_simple_callbacks_new (void)
+{
+  GstAppSinkSimpleCallbacks *cb = g_new0 (GstAppSinkSimpleCallbacks, 1);
+
+  cb->ref_count = 1;
+  cb->attached = FALSE;
+
+  return cb;
+}
+
+/**
+ * gst_app_sink_simple_callbacks_ref:
+ * @cb: the callbacks
+ *
+ * Increases the reference count of @cb.
+ *
+ * Returns: (transfer full): the callbacks
+ *
+ * Since: 1.28
+ */
+GstAppSinkSimpleCallbacks *
+gst_app_sink_simple_callbacks_ref (GstAppSinkSimpleCallbacks * cb)
+{
+  g_return_val_if_fail (cb != NULL, NULL);
+
+  g_atomic_int_inc (&cb->ref_count);
+
+  return cb;
+}
+
+/**
+ * gst_app_sink_simple_callbacks_unref:
+ * @cb: the callbacks
+ *
+ * Decreases the reference count of @cb and frees it after the
+ * last reference is dropped.
+ *
+ * Since: 1.28
+ */
+void
+gst_app_sink_simple_callbacks_unref (GstAppSinkSimpleCallbacks * cb)
+{
+  g_return_if_fail (cb != NULL);
+
+  if (!g_atomic_int_dec_and_test (&cb->ref_count))
+    return;
+
+  if (cb->eos_destroy_notify)
+    cb->eos_destroy_notify (cb->eos_user_data);
+  if (cb->new_preroll_destroy_notify)
+    cb->new_preroll_destroy_notify (cb->new_preroll_user_data);
+  if (cb->new_sample_destroy_notify)
+    cb->new_sample_destroy_notify (cb->new_sample_user_data);
+  if (cb->new_event_destroy_notify)
+    cb->new_event_destroy_notify (cb->new_event_user_data);
+  if (cb->propose_allocation_destroy_notify)
+    cb->propose_allocation_destroy_notify (cb->propose_allocation_user_data);
+
+  g_free (cb);
+}
+
+/**
+ * gst_app_sink_simple_callbacks_set_eos:
+ * @cb: the callbacks
+ * @eos_cb: (scope notified) (closure user_data): EOS callback
+ * @user_data: the user data
+ * @destroy_notify: #GDestroyNotify to free the user data
+ *
+ * Sets the EOS callback on @cb.
+ *
+ * Once @cb is set on an #GstAppSink it is not possible anymore to change any of
+ * the callbacks inside it.
+ *
+ * Since: 1.28
+ */
+void
+gst_app_sink_simple_callbacks_set_eos (GstAppSinkSimpleCallbacks * cb,
+    GstAppSinkEosCallback eos_cb, gpointer user_data,
+    GDestroyNotify destroy_notify)
+{
+  g_return_if_fail (cb != NULL);
+  g_return_if_fail (!g_atomic_int_get (&cb->attached));
+
+  if (cb->eos_destroy_notify)
+    cb->eos_destroy_notify (cb->eos_user_data);
+
+  cb->eos_cb = eos_cb;
+  cb->eos_user_data = user_data;
+  cb->eos_destroy_notify = destroy_notify;
+}
+
+/**
+ * gst_app_sink_simple_callbacks_set_new_preroll:
+ * @cb: the callbacks
+ * @new_preroll_cb: (scope notified) (closure user_data): new preroll callback
+ * @user_data: the user data
+ * @destroy_notify: #GDestroyNotify to free the user data
+ *
+ * Sets the new preroll callback on @cb.
+ *
+ * Once @cb is set on an #GstAppSink it is not possible anymore to change any of
+ * the callbacks inside it.
+ *
+ * Since: 1.28
+ */
+void
+gst_app_sink_simple_callbacks_set_new_preroll (GstAppSinkSimpleCallbacks * cb,
+    GstAppSinkNewPrerollCallback new_preroll_cb, gpointer user_data,
+    GDestroyNotify destroy_notify)
+{
+  g_return_if_fail (cb != NULL);
+  g_return_if_fail (!g_atomic_int_get (&cb->attached));
+
+  if (cb->new_preroll_destroy_notify)
+    cb->new_preroll_destroy_notify (cb->new_preroll_user_data);
+
+  cb->new_preroll_cb = new_preroll_cb;
+  cb->new_preroll_user_data = user_data;
+  cb->new_preroll_destroy_notify = destroy_notify;
+}
+
+/**
+ * gst_app_sink_simple_callbacks_set_new_sample:
+ * @cb: the callbacks
+ * @new_sample_cb: (scope notified) (closure user_data): new sample callback
+ * @user_data: the user data
+ * @destroy_notify: #GDestroyNotify to free the user data
+ *
+ * Sets the new sample callback on @cb.
+ *
+ * Once @cb is set on an #GstAppSink it is not possible anymore to change any of
+ * the callbacks inside it.
+ *
+ * Since: 1.28
+ */
+void
+gst_app_sink_simple_callbacks_set_new_sample (GstAppSinkSimpleCallbacks * cb,
+    GstAppSinkNewSampleCallback new_sample_cb, gpointer user_data,
+    GDestroyNotify destroy_notify)
+{
+  g_return_if_fail (cb != NULL);
+  g_return_if_fail (!g_atomic_int_get (&cb->attached));
+
+  if (cb->new_sample_destroy_notify)
+    cb->new_sample_destroy_notify (cb->new_sample_user_data);
+
+  cb->new_sample_cb = new_sample_cb;
+  cb->new_sample_user_data = user_data;
+  cb->new_sample_destroy_notify = destroy_notify;
+}
+
+/**
+ * gst_app_sink_simple_callbacks_set_new_event:
+ * @cb: the callbacks
+ * @new_event_cb: (scope notified) (closure user_data): new event callback
+ * @user_data: the user data
+ * @destroy_notify: #GDestroyNotify to free the user data
+ *
+ * Sets the new event callback on @cb.
+ *
+ * Once @cb is set on an #GstAppSink it is not possible anymore to change any of
+ * the callbacks inside it.
+ *
+ * Since: 1.28
+ */
+void
+gst_app_sink_simple_callbacks_set_new_event (GstAppSinkSimpleCallbacks * cb,
+    GstAppSinkNewEventCallback new_event_cb, gpointer user_data,
+    GDestroyNotify destroy_notify)
+{
+  g_return_if_fail (cb != NULL);
+  g_return_if_fail (!g_atomic_int_get (&cb->attached));
+
+  if (cb->new_event_destroy_notify)
+    cb->new_event_destroy_notify (cb->new_event_user_data);
+
+  cb->new_event_cb = new_event_cb;
+  cb->new_event_user_data = user_data;
+  cb->new_event_destroy_notify = destroy_notify;
+}
+
+/**
+ * gst_app_sink_simple_callbacks_set_propose_allocation:
+ * @cb: the callbacks
+ * @propose_allocation_cb: (scope notified) (closure user_data): propose allocation callback
+ * @user_data: the user data
+ * @destroy_notify: #GDestroyNotify to free the user data
+ *
+ * Sets the new event callback on @cb.
+ *
+ * Once @cb is set on an #GstAppSink it is not possible anymore to change any of
+ * the callbacks inside it.
+ *
+ * Since: 1.28
+ */
+void
+gst_app_sink_simple_callbacks_set_propose_allocation (GstAppSinkSimpleCallbacks
+    * cb, GstAppSinkProposeAllocationCallback propose_allocation_cb,
+    gpointer user_data, GDestroyNotify destroy_notify)
+{
+  g_return_if_fail (cb != NULL);
+  g_return_if_fail (!g_atomic_int_get (&cb->attached));
+
+  if (cb->propose_allocation_destroy_notify)
+    cb->propose_allocation_destroy_notify (cb->propose_allocation_user_data);
+
+  cb->propose_allocation_cb = propose_allocation_cb;
+  cb->propose_allocation_user_data = user_data;
+  cb->propose_allocation_destroy_notify = destroy_notify;
 }

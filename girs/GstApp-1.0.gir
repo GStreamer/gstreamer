@@ -621,7 +621,11 @@ If callbacks are installed, no signals will be emitted for performance
 reasons.
 
 Before 1.16.3 it was not possible to change the callbacks in a thread-safe
-way.</doc>
+way.
+
+Note that gst_app_sink_set_callbacks() and
+gst_app_sink_set_simple_callbacks() are mutually exclusive and setting one
+will unset the other.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -780,6 +784,35 @@ case new buffers will be discarded.</doc>
           <parameter name="max" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">the maximum total duration to queue</doc>
             <type name="Gst.ClockTime" c:type="GstClockTime"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_simple_callbacks" c:identifier="gst_app_sink_set_simple_callbacks" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Set callbacks which will be executed for each new preroll, new sample and eos.
+This is an alternative to using the signals, it has lower overhead and is thus
+less expensive, but also less flexible.
+
+If callbacks are installed, no signals will be emitted for performance
+reasons.
+
+Once @cb is set on an #GstAppSink it is not possible anymore to change any of
+the callbacks inside it.
+
+Note that gst_app_sink_set_callbacks() and
+gst_app_sink_set_simple_callbacks() are mutually exclusive and setting one
+will unset the other.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="appsink" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">a #GstAppSink</doc>
+            <type name="AppSink" c:type="GstAppSink*"/>
+          </instance-parameter>
+          <parameter name="cb" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">the callbacks</doc>
+            <type name="AppSinkSimpleCallbacks" c:type="GstAppSinkSimpleCallbacks*"/>
           </parameter>
         </parameters>
       </method>
@@ -1268,7 +1301,7 @@ gst_app_sink_set_callbacks().</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">Called when a new event is available.
       This callback is called from the streaming thread.
       The new event can be retrieved with
-      gst_app_sink_pull_event() either from this callback
+      gst_app_sink_pull_object() either from this callback
       or from any other thread.
       The callback should return %TRUE if the event has been handled,
       %FALSE otherwise.
@@ -1291,9 +1324,6 @@ gst_app_sink_set_callbacks().</doc>
       <field name="propose_allocation">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">Called when the propose_allocation query is available.
       This callback is called from the streaming thread.
-      The allocation query can be retrieved with
-      gst_app_sink_propose_allocation() either from this callback
-      or from any other thread.
       Since: 1.24</doc>
         <callback name="propose_allocation">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
@@ -1461,8 +1491,297 @@ Call gst_mini_object_unref() after usage.</doc>
         </array>
       </field>
     </record>
+    <callback name="AppSinkEosCallback" c:type="GstAppSinkEosCallback" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">Called when the end-of-stream has been reached. This callback
+is called from the streaming thread.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="appsink" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">a #GstAppSink</doc>
+          <type name="AppSink" c:type="GstAppSink*"/>
+        </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">callback user data</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
+      </parameters>
+    </callback>
+    <callback name="AppSinkNewEventCallback" c:type="GstAppSinkNewEventCallback" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">Called when a new event is available. This callback is called from the
+streaming thread. The new event can be retrieved with
+gst_app_sink_pull_object() either from this callback or from any other thread.
+
+The callback should return %TRUE if the event has been handled, %FALSE
+otherwise.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">%TRUE when the event has been handled.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="appsink" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">a #GstAppSink</doc>
+          <type name="AppSink" c:type="GstAppSink*"/>
+        </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">callback user data</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
+      </parameters>
+    </callback>
+    <callback name="AppSinkNewPrerollCallback" c:type="GstAppSinkNewPrerollCallback" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">Called when a new preroll sample is available. This callback is called from
+the streaming thread. The new preroll sample can be retrieved with
+gst_app_sink_pull_preroll() either from this callback or from any other
+thread.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">%GST_FLOW_OK on success.</doc>
+        <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+      </return-value>
+      <parameters>
+        <parameter name="appsink" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">a #GstAppSink</doc>
+          <type name="AppSink" c:type="GstAppSink*"/>
+        </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">callback user data</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
+      </parameters>
+    </callback>
+    <callback name="AppSinkNewSampleCallback" c:type="GstAppSinkNewSampleCallback" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">Called when a new sample is available. This callback is called from the
+streaming thread. The new sample can be retrieved with
+gst_app_sink_pull_sample() either from this callback or from any other
+thread.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">%GST_FLOW_OK on success.</doc>
+        <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+      </return-value>
+      <parameters>
+        <parameter name="appsink" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">a #GstAppSink</doc>
+          <type name="AppSink" c:type="GstAppSink*"/>
+        </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">callback user data</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
+      </parameters>
+    </callback>
     <record name="AppSinkPrivate" c:type="GstAppSinkPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+    </record>
+    <callback name="AppSinkProposeAllocationCallback" c:type="GstAppSinkProposeAllocationCallback" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">Called when the propose_allocation query is available. This callback is
+called from the streaming thread.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">%TRUE when the query has been handled.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="appsink" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">a #GstAppSink</doc>
+          <type name="AppSink" c:type="GstAppSink*"/>
+        </parameter>
+        <parameter name="query" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">An ALLOCATION query</doc>
+          <type name="Gst.Query" c:type="GstQuery*"/>
+        </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="2">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">callback user data</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
+      </parameters>
+    </callback>
+    <record name="AppSinkSimpleCallbacks" c:type="GstAppSinkSimpleCallbacks" opaque="1" version="1.28" glib:type-name="GstAppSinkSimpleCallbacks" glib:get-type="gst_app_sink_simple_callbacks_get_type" c:symbol-prefix="app_sink_simple_callbacks">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">A set of callbacks that can be installed on the appsink with
+gst_app_sink_set_simple_callbacks().
+
+Unlike GstAppSinkCallbacks this can also be used from bindings.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+      <constructor name="new" c:identifier="gst_app_sink_simple_callbacks_new" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Creates a new instance of callbacks.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">New empty GstAppSinkSimpleCallbacks</doc>
+          <type name="AppSinkSimpleCallbacks" c:type="GstAppSinkSimpleCallbacks*"/>
+        </return-value>
+      </constructor>
+      <method name="ref" c:identifier="gst_app_sink_simple_callbacks_ref" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Increases the reference count of @cb.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">the callbacks</doc>
+          <type name="AppSinkSimpleCallbacks" c:type="GstAppSinkSimpleCallbacks*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="cb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">the callbacks</doc>
+            <type name="AppSinkSimpleCallbacks" c:type="GstAppSinkSimpleCallbacks*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="set_eos" c:identifier="gst_app_sink_simple_callbacks_set_eos" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Sets the EOS callback on @cb.
+
+Once @cb is set on an #GstAppSink it is not possible anymore to change any of
+the callbacks inside it.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="cb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">the callbacks</doc>
+            <type name="AppSinkSimpleCallbacks" c:type="GstAppSinkSimpleCallbacks*"/>
+          </instance-parameter>
+          <parameter name="eos_cb" transfer-ownership="none" scope="notified" closure="1" destroy="2">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">EOS callback</doc>
+            <type name="AppSinkEosCallback" c:type="GstAppSinkEosCallback"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">the user data</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="destroy_notify" transfer-ownership="none" scope="async">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">#GDestroyNotify to free the user data</doc>
+            <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_new_event" c:identifier="gst_app_sink_simple_callbacks_set_new_event" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Sets the new event callback on @cb.
+
+Once @cb is set on an #GstAppSink it is not possible anymore to change any of
+the callbacks inside it.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="cb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">the callbacks</doc>
+            <type name="AppSinkSimpleCallbacks" c:type="GstAppSinkSimpleCallbacks*"/>
+          </instance-parameter>
+          <parameter name="new_event_cb" transfer-ownership="none" scope="notified" closure="1" destroy="2">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">new event callback</doc>
+            <type name="AppSinkNewEventCallback" c:type="GstAppSinkNewEventCallback"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">the user data</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="destroy_notify" transfer-ownership="none" scope="async">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">#GDestroyNotify to free the user data</doc>
+            <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_new_preroll" c:identifier="gst_app_sink_simple_callbacks_set_new_preroll" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Sets the new preroll callback on @cb.
+
+Once @cb is set on an #GstAppSink it is not possible anymore to change any of
+the callbacks inside it.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="cb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">the callbacks</doc>
+            <type name="AppSinkSimpleCallbacks" c:type="GstAppSinkSimpleCallbacks*"/>
+          </instance-parameter>
+          <parameter name="new_preroll_cb" transfer-ownership="none" scope="notified" closure="1" destroy="2">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">new preroll callback</doc>
+            <type name="AppSinkNewPrerollCallback" c:type="GstAppSinkNewPrerollCallback"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">the user data</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="destroy_notify" transfer-ownership="none" scope="async">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">#GDestroyNotify to free the user data</doc>
+            <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_new_sample" c:identifier="gst_app_sink_simple_callbacks_set_new_sample" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Sets the new sample callback on @cb.
+
+Once @cb is set on an #GstAppSink it is not possible anymore to change any of
+the callbacks inside it.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="cb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">the callbacks</doc>
+            <type name="AppSinkSimpleCallbacks" c:type="GstAppSinkSimpleCallbacks*"/>
+          </instance-parameter>
+          <parameter name="new_sample_cb" transfer-ownership="none" scope="notified" closure="1" destroy="2">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">new sample callback</doc>
+            <type name="AppSinkNewSampleCallback" c:type="GstAppSinkNewSampleCallback"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">the user data</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="destroy_notify" transfer-ownership="none" scope="async">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">#GDestroyNotify to free the user data</doc>
+            <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_propose_allocation" c:identifier="gst_app_sink_simple_callbacks_set_propose_allocation" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Sets the new event callback on @cb.
+
+Once @cb is set on an #GstAppSink it is not possible anymore to change any of
+the callbacks inside it.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="cb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">the callbacks</doc>
+            <type name="AppSinkSimpleCallbacks" c:type="GstAppSinkSimpleCallbacks*"/>
+          </instance-parameter>
+          <parameter name="propose_allocation_cb" transfer-ownership="none" scope="notified" closure="1" destroy="2">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">propose allocation callback</doc>
+            <type name="AppSinkProposeAllocationCallback" c:type="GstAppSinkProposeAllocationCallback"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">the user data</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="destroy_notify" transfer-ownership="none" scope="async">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">#GDestroyNotify to free the user data</doc>
+            <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="unref" c:identifier="gst_app_sink_simple_callbacks_unref" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Decreases the reference count of @cb and frees it after the
+last reference is dropped.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="cb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">the callbacks</doc>
+            <type name="AppSinkSimpleCallbacks" c:type="GstAppSinkSimpleCallbacks*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
     </record>
     <class name="AppSrc" c:symbol-prefix="app_src" c:type="GstAppSrc" parent="GstBase.BaseSrc" glib:type-name="GstAppSrc" glib:get-type="gst_app_src_get_type" glib:type-struct="AppSrcClass">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">The appsrc element can be used by applications to insert data into a
