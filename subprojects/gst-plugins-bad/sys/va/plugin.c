@@ -42,6 +42,7 @@
 #include "gstvajpegdec.h"
 #include "gstvajpegenc.h"
 #include "gstvampeg2dec.h"
+#include "gstvaoverlaycompositor.h"
 #include "gstvaprofile.h"
 #include "gstvavp8dec.h"
 #include "gstvavp8enc.h"
@@ -305,6 +306,10 @@ plugin_register_vpp (GstPlugin * plugin, GstVaDevice * device)
   if (has_compose) {
     if (!gst_va_compositor_register (plugin, device, GST_RANK_NONE)) {
       GST_WARNING ("Failed to register compositor: %s",
+          device->render_device_path);
+    }
+    if (!gst_va_overlay_compositor_register (plugin, device, GST_RANK_NONE)) {
+      GST_WARNING ("Failed to register overlay compositor: %s",
           device->render_device_path);
     }
   }
