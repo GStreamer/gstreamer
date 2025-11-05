@@ -64,6 +64,14 @@ typedef struct {
   gpointer     _gst_reserved[GST_PADDING];
 } GstAudioBuffer;
 
+/**
+ * GST_AUDIO_BUFFER_INIT:
+ *
+ * Initializer for #GstAudioBuffer
+ *
+ * Since: 1.28
+ */
+#define GST_AUDIO_BUFFER_INIT { { NULL, }, }
 
 GST_AUDIO_API
 gboolean gst_audio_buffer_map (GstAudioBuffer *buffer, const GstAudioInfo *info,
