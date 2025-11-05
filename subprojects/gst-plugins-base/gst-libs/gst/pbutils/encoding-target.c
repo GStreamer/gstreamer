@@ -1111,7 +1111,8 @@ gst_encoding_target_save (GstEncodingTarget * target, GError ** error)
   if (g_mkdir_with_parents (dirname, 0755)) {
     GST_ERROR_OBJECT (target, "Could not create directory to save %s into: %s",
         target->name, g_strerror (errno));
-
+    g_free (dirname);
+    g_free (lfilename);
     return FALSE;
   }
   filename = g_build_filename (dirname, lfilename, NULL);
