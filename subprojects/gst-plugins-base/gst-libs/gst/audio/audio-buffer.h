@@ -101,6 +101,8 @@ void gst_audio_buffer_unmap (GstAudioBuffer *buffer);
     (GST_AUDIO_BUFFER_N_SAMPLES(b) * GST_AUDIO_BUFFER_SAMPLE_STRIDE(b) * \
      GST_AUDIO_BUFFER_CHANNELS(b) / GST_AUDIO_BUFFER_N_PLANES(b))
 
+G_DEFINE_AUTO_CLEANUP_CLEAR_FUNC(GstAudioBuffer, gst_audio_buffer_unmap)
+
 G_END_DECLS
 
 #endif /* __GST_AUDIO_BUFFER_H__ */
