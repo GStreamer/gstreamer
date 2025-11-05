@@ -383,7 +383,7 @@ struct _GstD3D11ConverterPrivate
   GstVideoInfo piv_info;
   GstBuffer *piv_inbuf = nullptr;
 
-  GstVideoOrientationMethod video_direction;
+  GstVideoOrientationMethod video_direction = GST_VIDEO_ORIENTATION_IDENTITY;
 
   std::mutex prop_lock;
 
