@@ -1737,7 +1737,7 @@ GST_START_TEST (test_associate_segmentation_meta)
   /* Verify segmentation analytics-meta and associated classification
    * match truth vectors */
   gsize idx;
-  GstBufferMapInfo mmap_info;   /* mask map info */
+  GstMapInfo mmap_info;         /* mask map info */
   gst_buffer_map (mbuf, &mmap_info, GST_MAP_READ);
   for (gsize r = 0; r < 24; r++) {
     gsize mr = r / 2;

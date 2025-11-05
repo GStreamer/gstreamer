@@ -768,6 +768,29 @@ GST_START_TEST (test_no_error_and_no_warning_on_map_failure)
 GST_END_TEST;
 #endif /* !GST_DISABLE_GST_DEBUG */
 
+GST_START_TEST (test_auto_unmap)
+{
+#ifdef g_auto
+  g_autoptr (GstMemory) mem = NULL;
+
+  gpointer dup_memory = g_memdup2 (ro_memory, sizeof (ro_memory));
+  mem =
+      gst_memory_new_wrapped (0, dup_memory, sizeof (ro_memory), 0,
+      sizeof (ro_memory), dup_memory, g_free);
+
+  {
+    g_auto (GstMapInfo) map = GST_MAP_INFO_INIT;
+    fail_unless (gst_memory_map (mem, &map, GST_MAP_READ));
+    fail_unless_equals_int (GST_MINI_OBJECT_REFCOUNT (mem), 1);
+  }
+
+  /* mem should still only have a refcount of 1 */
+  fail_unless_equals_int (GST_MINI_OBJECT_REFCOUNT (mem), 1);
+#endif
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_memory_suite (void)
 {
@@ -791,6 +814,7 @@ gst_memory_suite (void)
 #ifndef GST_DISABLE_GST_DEBUG
   tcase_add_test (tc_chain, test_no_error_and_no_warning_on_map_failure);
 #endif
+  tcase_add_test (tc_chain, test_auto_unmap);
 
   return s;
 }

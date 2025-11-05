@@ -956,7 +956,7 @@ GST_START_TEST (test_auto_unmap)
   buf = gst_buffer_new_memdup (ro_memory, sizeof (ro_memory));
 
   {
-    g_auto (GstBufferMapInfo) map = GST_MAP_INFO_INIT;
+    g_auto (GstMapInfo) map = GST_MAP_INFO_INIT;
     fail_unless (gst_buffer_map (buf, &map, GST_MAP_READ));
     mem = gst_memory_ref (map.memory);
     /* mem should be reffed by buffer, map and us */

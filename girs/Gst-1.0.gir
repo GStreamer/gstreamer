@@ -8,7 +8,7 @@ and/or use gtk-doc annotations.  -->
   <package name="gstreamer-1.0"/>
   <c:include name="gst/gst.h"/>
   <namespace name="Gst" version="1.0" shared-library="libgstreamer-1.0.so.0" c:identifier-prefixes="Gst" c:symbol-prefixes="gst">
-    <alias name="BufferMapInfo" c:type="GstBufferMapInfo" introspectable="0">
+    <alias name="BufferMapInfo" c:type="GstBufferMapInfo" introspectable="0" deprecated="1" deprecated-version="1.28">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.h">Alias for #GstMapInfo to be used with g_auto():
 ```c
 void my_func(GstBuffer *buf)
@@ -21,10 +21,8 @@ void my_func(GstBuffer *buf)
 }
 ```
 
-#GstMapInfo cannot be used with g_auto() because it is ambiguous whether it
-needs to be unmapped using gst_buffer_unmap() or gst_memory_unmap().
-
 See also #GstMemoryMapInfo.</doc>
+      <doc-deprecated xml:space="preserve">Use #GstMapInfo instead.</doc-deprecated>
       <source-position filename="../subprojects/gstreamer/gst/gstbuffer.h"/>
       <type name="MapInfo" c:type="GstMapInfo"/>
     </alias>
@@ -48,7 +46,7 @@ See also #GstMemoryMapInfo.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstelementfactory.h"/>
       <type name="guint64" c:type="guint64"/>
     </alias>
-    <alias name="MemoryMapInfo" c:type="GstMemoryMapInfo" introspectable="0">
+    <alias name="MemoryMapInfo" c:type="GstMemoryMapInfo" introspectable="0" deprecated="1" deprecated-version="1.28">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.h">Alias for #GstMapInfo to be used with g_auto():
 ```c
 void my_func(GstMemory *mem)
@@ -61,10 +59,8 @@ void my_func(GstMemory *mem)
 }
 ```
 
-#GstMapInfo cannot be used with g_auto() because it is ambiguous whether it
-needs to be unmapped using gst_buffer_unmap() or gst_memory_unmap().
-
 See also #GstBufferMapInfo.</doc>
+      <doc-deprecated xml:space="preserve">Use #GstMapInfo instead.</doc-deprecated>
       <source-position filename="../subprojects/gstreamer/gst/gstmemory.h"/>
       <type name="MapInfo" c:type="GstMapInfo"/>
     </alias>
@@ -24880,6 +24876,19 @@ needs to be unmapped using gst_buffer_unmap() or gst_memory_unmap(). Instead,
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>
+      <method name="clear" c:identifier="gst_map_info_clear" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">Release the memory obtained with gst_memory_map()</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmemory.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">a #GstMapInfo</doc>
+            <type name="MapInfo" c:type="GstMapInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="get_data" c:identifier="gst_map_info_get_data" version="1.28">
         <source-position filename="../subprojects/gstreamer/gst/gstmemory.h"/>
         <return-value transfer-ownership="none" nullable="1">
@@ -24897,6 +24906,19 @@ needs to be unmapped using gst_buffer_unmap() or gst_memory_unmap(). Instead,
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">Return location of the size of the data.</doc>
             <type name="gsize" c:type="gsize*"/>
           </parameter>
+        </parameters>
+      </method>
+      <method name="init" c:identifier="gst_map_info_init" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">Initializes @info.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmemory.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.c">a #GstMapInfo</doc>
+            <type name="MapInfo" c:type="GstMapInfo*"/>
+          </instance-parameter>
         </parameters>
       </method>
     </record>

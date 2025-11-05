@@ -352,6 +352,45 @@ gst_memory_unmap (GstMemory * mem, GstMapInfo * info)
   g_return_if_fail (info != NULL);
   g_return_if_fail (info->memory == mem);
 
+  gst_map_info_clear (info);
+}
+
+/**
+ * gst_map_info_init:
+ * @info: a #GstMapInfo
+ *
+ * Initializes @info.
+ *
+ * Since: 1.28
+ */
+void
+gst_map_info_init (GstMapInfo * info)
+{
+  g_return_if_fail (info != NULL);
+
+  memset (info, 0, sizeof (*info));
+}
+
+/**
+ * gst_map_info_clear:
+ * @info: a #GstMapInfo
+ *
+ * Release the memory obtained with gst_memory_map()
+ *
+ * Since: 1.28
+ */
+void
+gst_map_info_clear (GstMapInfo * info)
+{
+  GstMemory *mem;
+
+  g_return_if_fail (info != NULL);
+
+  mem = info->memory;
+
+  if (!mem)
+    return;
+
   if (mem->allocator->mem_unmap_full)
     mem->allocator->mem_unmap_full (mem, info);
   else

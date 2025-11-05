@@ -1182,7 +1182,7 @@ gst_vulkan_decoder_append_slice (GstVulkanDecoder * self,
 
   /* append data */
   {
-    GstBufferMapInfo mapinfo;
+    GstMapInfo mapinfo;
     guint32 offset;
 
     if (!gst_buffer_map (self->input_buffer, &mapinfo, GST_MAP_WRITE))

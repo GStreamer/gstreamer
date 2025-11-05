@@ -651,7 +651,12 @@ gst_mini_object_unref (GstMiniObject * mini_object)
 {
   gint old_refcount, new_refcount;
 
-  g_return_if_fail (mini_object != NULL);
+  /* FIXME: The GstBufferMapInfo clear function before 1.28 could call
+   * gst_memory_unref() with NULL, and because we use macros/inline functions
+   * all along the way to here this needs to be checked here. */
+  if (!mini_object)
+    return;
+
   g_return_if_fail (GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object) > 0);
 
   old_refcount = g_atomic_int_add (&mini_object->refcount, -1);

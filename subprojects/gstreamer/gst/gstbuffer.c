@@ -1876,7 +1876,7 @@ gst_buffer_map_range (GstBuffer * buffer, guint idx, gint length,
     goto no_memory;
 
   /* now try to map */
-  nmem = gst_memory_make_mapped (mem, info, flags);
+  nmem = gst_memory_make_mapped (mem, info, flags & (~GST_MAP_REF_MEMORY));
   if (G_UNLIKELY (nmem == NULL))
     goto cannot_map;
 
@@ -1893,6 +1893,9 @@ gst_buffer_map_range (GstBuffer * buffer, guint idx, gint length,
       }
     }
   }
+
+  info->flags |= GST_MAP_REF_MEMORY;
+
   return TRUE;
 
   /* ERROR */
@@ -1931,7 +1934,7 @@ gst_buffer_unmap (GstBuffer * buffer, GstMapInfo * info)
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (info != NULL);
 
-  _gst_buffer_map_info_clear ((GstBufferMapInfo *) info);
+  gst_map_info_clear (info);
 }
 
 static gsize

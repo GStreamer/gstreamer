@@ -8463,7 +8463,7 @@ gst_value_hash_g_value_array (const GValue * v, guint * res)
 static gboolean
 gst_hash_buffer (GstBuffer * buf, guint * res)
 {
-  GstBufferMapInfo map;
+  GstMapInfo map;
   guint i;
 
   *res = 0;
