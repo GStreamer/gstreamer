@@ -294,7 +294,7 @@ gst_play_init (GstPlay * self)
 
   /* *INDENT-OFF* */
   self->config = gst_structure_new_static_str ("play-config",
-      "position-interval-update", G_TYPE_UINT, DEFAULT_POSITION_UPDATE_INTERVAL_MS,
+      "position-update-interval", G_TYPE_UINT, DEFAULT_POSITION_UPDATE_INTERVAL_MS,
       "accurate-seek", G_TYPE_BOOLEAN, FALSE,
       "pipeline-dump-error-in-details", G_TYPE_BOOLEAN, FALSE,
       NULL);
