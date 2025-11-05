@@ -27,7 +27,7 @@ audio_resampler_check_x86 (const gchar *option)
 {
   if (!strcmp (option, "sse")) {
 #if HAVE_SSE
-    GST_DEBUG ("enable SSE optimisations");
+    GST_INFO ("enable SSE optimisations");
     resample_gfloat_full_1 = resample_gfloat_full_1_sse;
     resample_gfloat_linear_1 = resample_gfloat_linear_1_sse;
     resample_gfloat_cubic_1 = resample_gfloat_cubic_1_sse;
@@ -35,11 +35,11 @@ audio_resampler_check_x86 (const gchar *option)
     interpolate_gfloat_linear = interpolate_gfloat_linear_sse;
     interpolate_gfloat_cubic = interpolate_gfloat_cubic_sse;
 #else
-    GST_DEBUG ("SSE optimisations not enabled");
+    GST_INFO ("SSE optimisations not enabled");
 #endif
   } else if (!strcmp (option, "sse2")) {
 #if HAVE_SSE2
-    GST_DEBUG ("enable SSE2 optimisations");
+    GST_INFO ("enable SSE2 optimisations");
     resample_gint16_full_1 = resample_gint16_full_1_sse2;
     resample_gint16_linear_1 = resample_gint16_linear_1_sse2;
     resample_gint16_cubic_1 = resample_gint16_cubic_1_sse2;
@@ -54,16 +54,16 @@ audio_resampler_check_x86 (const gchar *option)
     interpolate_gdouble_linear = interpolate_gdouble_linear_sse2;
     interpolate_gdouble_cubic = interpolate_gdouble_cubic_sse2;
 #else
-    GST_DEBUG ("SSE2 optimisations not enabled");
+    GST_INFO ("SSE2 optimisations not enabled");
 #endif
   } else if (!strcmp (option, "sse41")) {
 #if HAVE_SSE41
-    GST_DEBUG ("enable SSE41 optimisations");
+    GST_INFO ("enable SSE41 optimisations");
     resample_gint32_full_1 = resample_gint32_full_1_sse41;
     resample_gint32_linear_1 = resample_gint32_linear_1_sse41;
     resample_gint32_cubic_1 = resample_gint32_cubic_1_sse41;
 #else
-    GST_DEBUG ("SSE41 optimisations not enabled");
+    GST_INFO ("SSE41 optimisations not enabled");
 #endif
   }
 }

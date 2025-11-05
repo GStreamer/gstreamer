@@ -856,10 +856,10 @@ audio_resampler_init (void)
         for (i = -1; i < 32; ++i) {
           if (i == -1) {
             name = orc_target_get_name (target);
-            GST_DEBUG ("target %s, default flags %08x", name, flags);
+            GST_INFO ("target %s, default flags %08x", name, flags);
           } else if (flags & (1U << i)) {
             name = orc_target_get_flag_name (target, i);
-            GST_DEBUG ("target flag %s", name);
+            GST_INFO ("target flag %s", name);
           } else
             name = NULL;
 
