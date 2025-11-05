@@ -3060,6 +3060,7 @@ _create_shader (GstGLColorConvert * convert)
     g_free (version_str);
     g_free (tmp);
     gst_object_unref (ret);
+    g_string_free (str, TRUE);
     return NULL;
   }
   g_free (tmp);
@@ -3071,6 +3072,7 @@ _create_shader (GstGLColorConvert * convert)
     g_free (version_str);
     gst_object_unref (stage);
     gst_object_unref (ret);
+    g_string_free (str, TRUE);
     return NULL;
   }
 
