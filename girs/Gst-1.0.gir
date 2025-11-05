@@ -24829,6 +24829,11 @@ gst_mini_object_lock() and gst_mini_object_unlock().</doc>
       <member name="write" value="2" c:identifier="GST_MAP_WRITE" glib:nick="write" glib:name="GST_MAP_WRITE">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.h">map for write access</doc>
       </member>
+      <member name="ref_memory" value="256" c:identifier="GST_MAP_REF_MEMORY" version="1.28" glib:nick="ref-memory" glib:name="GST_MAP_REF_MEMORY">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.h">Take another reference of the memory and store it in the GstMapInfo. This
+makes sure that the memory stays valid  while it is mapped and
+automatically unrefs it on unmap.</doc>
+      </member>
       <member name="flag_last" value="65536" c:identifier="GST_MAP_FLAG_LAST" glib:nick="flag-last" glib:name="GST_MAP_FLAG_LAST">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmemory.h">first flag that can be used for custom purposes</doc>
       </member>

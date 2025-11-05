@@ -315,6 +315,9 @@ gst_memory_map (GstMemory * mem, GstMapInfo * info, GstMapFlags flags)
 
   info->data = info->data + mem->offset;
 
+  if ((flags & GST_MAP_REF_MEMORY) != 0)
+    gst_memory_ref (info->memory);
+
   return TRUE;
 
   /* ERRORS */
@@ -354,6 +357,9 @@ gst_memory_unmap (GstMemory * mem, GstMapInfo * info)
   else
     mem->allocator->mem_unmap (mem);
   gst_memory_unlock (mem, (GstLockFlags) info->flags);
+
+  if ((info->flags & GST_MAP_REF_MEMORY) != 0)
+    gst_memory_unref (info->memory);
 }
 
 /**

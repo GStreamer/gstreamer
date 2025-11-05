@@ -174,15 +174,29 @@ struct _GstMemory {
  * GstMapFlags:
  * @GST_MAP_READ: map for read access
  * @GST_MAP_WRITE: map for write access
+ * @GST_MAP_REF_MEMORY: Take another reference of the memory and store it in
+ *     the GstMapInfo. This makes sure that the memory stays valid  while it
+ *     is mapped and automatically unrefs it on unmap. (Since: 1.28)
  * @GST_MAP_FLAG_LAST: first flag that can be used for custom purposes
  *
  * Flags used when mapping memory
  */
 typedef enum {
-  GST_MAP_READ      = GST_LOCK_FLAG_READ,
-  GST_MAP_WRITE     = GST_LOCK_FLAG_WRITE,
+  GST_MAP_READ       = GST_LOCK_FLAG_READ,
+  GST_MAP_WRITE      = GST_LOCK_FLAG_WRITE,
 
-  GST_MAP_FLAG_LAST = (1 << 16)
+  /**
+   * GST_MAP_REF_MEMORY:
+   *
+   * Take another reference of the memory and store it in the GstMapInfo. This
+   * makes sure that the memory stays valid  while it is mapped and
+   * automatically unrefs it on unmap.
+   *
+   * Since: 1.28
+   */
+  GST_MAP_REF_MEMORY = GST_LOCK_FLAG_LAST,
+
+  GST_MAP_FLAG_LAST  = (1 << 16)
 } GstMapFlags;
 
 /**

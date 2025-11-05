@@ -387,8 +387,39 @@ GST_START_TEST (test_map)
   fail_unless (info.data != NULL);
   fail_unless (info.size == 100);
   fail_unless (info.maxsize == maxalloc);
+  fail_unless_equals_int (GST_MINI_OBJECT_REFCOUNT (mem), 1);
 
   gst_memory_unmap (mem, &info);
+  fail_unless_equals_int (GST_MINI_OBJECT_REFCOUNT (mem), 1);
+  gst_memory_unref (mem);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_map_ref)
+{
+  GstMemory *mem;
+  GstMapInfo info;
+  gsize maxalloc;
+  gsize size, offset;
+
+  /* one memory block */
+  mem = gst_allocator_alloc (NULL, 100, NULL);
+
+  size = gst_memory_get_sizes (mem, &offset, &maxalloc);
+  fail_unless (size == 100);
+  fail_unless (offset == 0);
+  fail_unless (maxalloc >= 100);
+
+  /* see if simply mapping works */
+  fail_unless (gst_memory_map (mem, &info, GST_MAP_READ | GST_MAP_REF_MEMORY));
+  fail_unless (info.data != NULL);
+  fail_unless (info.size == 100);
+  fail_unless (info.maxsize == maxalloc);
+  fail_unless_equals_int (GST_MINI_OBJECT_REFCOUNT (mem), 2);
+
+  gst_memory_unmap (mem, &info);
+  fail_unless_equals_int (GST_MINI_OBJECT_REFCOUNT (mem), 1);
   gst_memory_unref (mem);
 }
 
@@ -752,6 +783,7 @@ gst_memory_suite (void)
   tcase_add_test (tc_chain, test_try_new_and_alloc);
   tcase_add_test (tc_chain, test_resize);
   tcase_add_test (tc_chain, test_map);
+  tcase_add_test (tc_chain, test_map_ref);
   tcase_add_test (tc_chain, test_map_nested);
   tcase_add_test (tc_chain, test_map_resize);
   tcase_add_test (tc_chain, test_alloc_params);
