@@ -428,7 +428,7 @@ struct _GstD3D12ConverterPrivate
   FLOAT clear_color[4][4];
   GstD3D12ColorMatrix clear_color_matrix;
 
-  GstVideoOrientationMethod video_direction;
+  GstVideoOrientationMethod video_direction = GST_VIDEO_ORIENTATION_IDENTITY;
   gboolean color_balance_enabled = FALSE;
   gboolean mipgen_enabled = FALSE;
 
