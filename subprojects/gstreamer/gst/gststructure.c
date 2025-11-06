@@ -3099,8 +3099,14 @@ priv_gst_structure_append_to_gstring (const GstStructure * structure,
         g_string_append_printf (s, "%p", ptr);
     } else if (G_TYPE_CHECK_VALUE_TYPE (&field->value, G_TYPE_ARRAY)) {
       GArray *arr = g_value_get_boxed (&field->value);
-      g_string_append_printf (s, "[%d %s]", arr->len,
-          arr->len == 1 ? "entry" : "entries");
+
+      if (strict)
+        return FALSE;
+      if (arr == NULL)
+        g_string_append (s, "NULL");
+      else
+        g_string_append_printf (s, "[%d %s]", arr->len,
+            arr->len == 1 ? "entry" : "entries");
     } else {
       if (!G_TYPE_CHECK_VALUE_TYPE (&field->value, G_TYPE_STRING))
         GST_WARNING ("No value transform to serialize field '%s' of type '%s'",
