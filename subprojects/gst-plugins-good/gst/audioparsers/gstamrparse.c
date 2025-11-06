@@ -313,6 +313,7 @@ gst_amr_parse_handle_frame (GstBaseParse * parse,
       } else if (GST_BASE_PARSE_DRAINING (parse)) {
         /* not enough, but draining, so ok */
         found = TRUE;
+        fsize = map.size;
       }
     }
   }
