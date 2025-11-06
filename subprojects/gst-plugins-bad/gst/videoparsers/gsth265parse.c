@@ -1070,10 +1070,6 @@ gst_h265_parse_handle_frame_packetized (GstBaseParse * parse,
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
-  /* need to save buffer from invalidation upon _finish_frame */
-  if (h265parse->split_packetized)
-    buffer = gst_buffer_copy (frame->buffer);
-
   gst_buffer_map (buffer, &map, GST_MAP_READ);
 
   left = map.size;
@@ -1122,7 +1118,6 @@ gst_h265_parse_handle_frame_packetized (GstBaseParse * parse,
       /* Bail out if we get a flow error. */
       if (ret != GST_FLOW_OK) {
         gst_buffer_unmap (buffer, &map);
-        gst_buffer_unref (buffer);
         return ret;
       }
     }
@@ -1168,8 +1163,6 @@ gst_h265_parse_handle_frame_packetized (GstBaseParse * parse,
         ret = gst_base_parse_finish_frame (parse, frame, parsed);
       }
     }
-  } else {
-    gst_buffer_unref (buffer);
   }
 
   if (G_UNLIKELY (left)) {

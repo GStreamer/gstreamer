@@ -513,10 +513,6 @@ gst_vp9_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
   else
     self->discont = FALSE;
 
-  /* need to save buffer from invalidation upon _finish_frame */
-  if (self->align == GST_VP9_PARSE_ALIGN_FRAME)
-    buffer = gst_buffer_copy (frame->buffer);
-
   if (!gst_buffer_map (buffer, &map, GST_MAP_READ)) {
     GST_ELEMENT_ERROR (parse, CORE, NOT_IMPLEMENTED, (NULL),
         ("Couldn't map incoming buffer"));
@@ -599,7 +595,6 @@ done:
       gst_vp9_parse_parse_frame (self, frame, &frame_hdr);
     ret = gst_base_parse_finish_frame (parse, frame, size);
   } else {
-    gst_buffer_unref (buffer);
     if (offset != size) {
       gsize left = size - offset;
       if (left != superframe_info.superframe_index_size) {
