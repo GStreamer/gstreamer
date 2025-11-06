@@ -1059,6 +1059,7 @@ gst_h266_parse_handle_frame_packetized (GstBaseParse * parse,
        * a replacement output buffer is provided anyway. */
       gst_h266_parse_parse_frame (parse, &tmp_frame);
       ret = gst_base_parse_finish_frame (parse, &tmp_frame, nl + nalu.size);
+      gst_base_parse_frame_free (&tmp_frame);
 
       /* Bail out if we get a flow error. */
       if (ret != GST_FLOW_OK) {
@@ -1099,7 +1100,7 @@ gst_h266_parse_handle_frame_packetized (GstBaseParse * parse,
         h266parse->marker = TRUE;
         gst_h266_parse_parse_frame (parse, &tmp_frame);
         ret = gst_base_parse_finish_frame (parse, &tmp_frame, parsed);
-        gst_buffer_unref (buffer);
+        gst_base_parse_frame_free (&tmp_frame);
 
         /* Bail out if we get a flow error. */
         if (ret != GST_FLOW_OK) {
