@@ -1478,6 +1478,8 @@ gst_aac_parse_handle_frame (GstBaseParse * parse,
   if (G_UNLIKELY (!ret))
     goto exit;
 
+  ret = framesize <= map.size;
+
   if (aacparse->header_type == DSPAAC_HEADER_ADTS) {
     /* see above */
     frame->overhead = 7;
@@ -1558,7 +1560,7 @@ exit:
       *skipsize = 1;
   }
 
-  if (ret && framesize <= map.size) {
+  if (ret) {
     return gst_base_parse_finish_frame (parse, frame, framesize);
   }
 

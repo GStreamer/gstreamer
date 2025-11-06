@@ -330,7 +330,7 @@ gst_dca_parse_handle_frame (GstBaseParse * parse,
   gint endianness;
   gint off = -1;
   GstMapInfo map;
-  GstFlowReturn ret = GST_FLOW_EOS;
+  gboolean ret = FALSE;
   gsize extra_size = 0;
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
@@ -417,10 +417,6 @@ gst_dca_parse_handle_frame (GstBaseParse * parse,
     }
   }
 #endif
-
-  /* found frame */
-  ret = GST_FLOW_OK;
-
   /* metadata handling */
   block_size = num_blocks * samples_per_block;
 
@@ -449,10 +445,8 @@ gst_dca_parse_handle_frame (GstBaseParse * parse,
     gst_base_parse_set_frame_rate (parse, rate, block_size, 0, 0);
   }
 
-cleanup:
   /* it is possible that DTS HD substream after DTS core */
   if (parse->flags & GST_BASE_PARSE_FLAG_DRAINING || map.size >= size + 9) {
-    extra_size = 0;
     if (map.size >= size + 9) {
       const guint8 *next = map.data + size;
       /* Check for DTS_SYNCWORD_SUBSTREAM */
@@ -473,17 +467,19 @@ cleanup:
         }
       }
     }
-    gst_buffer_unmap (buf, &map);
-    if (ret == GST_FLOW_OK && size + extra_size <= map.size) {
-      ret = gst_base_parse_finish_frame (parse, frame, size + extra_size);
-    } else {
-      ret = GST_FLOW_OK;
-    }
-  } else {
-    gst_buffer_unmap (buf, &map);
   }
 
-  return ret;
+  /* found frame */
+  ret = size + extra_size <= map.size;
+
+cleanup:
+  gst_buffer_unmap (buf, &map);
+
+  if (ret) {
+    return gst_base_parse_finish_frame (parse, frame, size + extra_size);
+  }
+
+  return GST_FLOW_OK;
 }
 
 /*

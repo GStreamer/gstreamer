@@ -263,7 +263,6 @@ gst_amr_parse_handle_frame (GstBaseParse * parse,
   GstMapInfo map;
   gint fsize = 0, mode, dsize;
   GstAmrParse *amrparse;
-  GstFlowReturn ret = GST_FLOW_OK;
   gboolean found = FALSE;
 
   amrparse = GST_AMR_PARSE (parse);
@@ -318,14 +317,16 @@ gst_amr_parse_handle_frame (GstBaseParse * parse,
     }
   }
 
+  found = found && fsize <= map.size;
+
 done:
   gst_buffer_unmap (buffer, &map);
 
-  if (found && fsize <= map.size) {
-    ret = gst_base_parse_finish_frame (parse, frame, fsize);
+  if (found) {
+    return gst_base_parse_finish_frame (parse, frame, fsize);
   }
 
-  return ret;
+  return GST_FLOW_OK;
 }
 
 /**

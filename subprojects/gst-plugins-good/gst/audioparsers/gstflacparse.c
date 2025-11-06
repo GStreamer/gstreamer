@@ -844,8 +844,7 @@ gst_flac_parse_handle_frame (GstBaseParse * parse,
   GstFlacParse *flacparse = GST_FLAC_PARSE (parse);
   GstBuffer *buffer = frame->buffer;
   GstMapInfo map;
-  gboolean result = TRUE;
-  GstFlowReturn ret = GST_FLOW_OK;
+  gboolean ret = FALSE;
   guint framesize = 0;
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
@@ -853,7 +852,6 @@ gst_flac_parse_handle_frame (GstBaseParse * parse,
   *skipsize = 1;
 
   if (G_UNLIKELY (map.size < 4)) {
-    result = FALSE;
     goto cleanup;
   }
 
@@ -861,6 +859,7 @@ gst_flac_parse_handle_frame (GstBaseParse * parse,
     if (memcmp (map.data, "fLaC", 4) == 0) {
       GST_DEBUG_OBJECT (flacparse, "fLaC marker found");
       framesize = 4;
+      ret = TRUE;
       goto cleanup;
     }
     if (map.data[0] == 0xff && (map.data[1] >> 2) == 0x3e) {
@@ -869,11 +868,9 @@ gst_flac_parse_handle_frame (GstBaseParse * parse,
       gst_base_parse_set_min_frame_size (GST_BASE_PARSE (flacparse), 9);
       flacparse->state = GST_FLAC_PARSE_STATE_GENERATE_HEADERS;
       *skipsize = 0;
-      result = FALSE;
       goto cleanup;
     }
     GST_DEBUG_OBJECT (flacparse, "fLaC marker not found");
-    result = FALSE;
     goto cleanup;
   }
 
@@ -881,13 +878,13 @@ gst_flac_parse_handle_frame (GstBaseParse * parse,
     guint size = 4 + ((map.data[1] << 16) | (map.data[2] << 8) | (map.data[3]));
 
     GST_DEBUG_OBJECT (flacparse, "Found metadata block of size %u", size);
+    ret = TRUE;
     framesize = size;
     gst_base_parse_set_min_frame_size (GST_BASE_PARSE (flacparse), framesize);
     goto cleanup;
   }
 
   if ((GST_READ_UINT16_BE (map.data) & 0xfffe) == 0xfff8) {
-    gboolean ret;
     guint next = 0;
 
     flacparse->offset = GST_BUFFER_OFFSET (buffer);
@@ -904,21 +901,19 @@ gst_flac_parse_handle_frame (GstBaseParse * parse,
     /* If we're at EOS and the frame was not valid, drop it! */
     if (G_UNLIKELY (GST_BASE_PARSE_DRAINING (flacparse))) {
       GST_WARNING_OBJECT (flacparse, "EOS");
-      result = FALSE;
       goto cleanup;
     }
 
     if (next == 0) {
+      ret = TRUE;
     } else if (next > map.size) {
       GST_DEBUG_OBJECT (flacparse, "Requesting %u bytes", next);
       *skipsize = 0;
       gst_base_parse_set_min_frame_size (parse, next);
-      result = FALSE;
       goto cleanup;
     } else {
       GST_ERROR_OBJECT (flacparse,
           "Giving up on invalid frame (%" G_GSIZE_FORMAT " bytes)", map.size);
-      result = FALSE;
       goto cleanup;
     }
   } else {
@@ -933,35 +928,36 @@ gst_flac_parse_handle_frame (GstBaseParse * parse,
     if (off > 0) {
       GST_DEBUG_OBJECT (parse, "Possible sync at buffer offset %d", off);
       *skipsize = off;
-      result = FALSE;
       goto cleanup;
     }
 
     GST_DEBUG_OBJECT (flacparse, "Sync code not found");
     *skipsize = map.size - 3;
-    result = FALSE;
     goto cleanup;
   }
 
-  result = FALSE;
-
 cleanup:
-  gst_buffer_unmap (buffer, &map);
-
-  if (result)
+  if (ret) {
     *skipsize = 0;
-
-  if (result && framesize <= map.size) {
-    ret = gst_flac_parse_parse_frame (parse, frame, framesize);
-    if (ret == GST_BASE_PARSE_FLOW_DROPPED) {
-      frame->flags |= GST_BASE_PARSE_FRAME_FLAG_DROP;
-      ret = GST_FLOW_OK;
-    }
-    if (ret == GST_FLOW_OK)
-      ret = gst_base_parse_finish_frame (parse, frame, framesize);
+    /* found a whole frame */
+    ret = framesize <= map.size;
   }
 
-  return ret;
+  gst_buffer_unmap (buffer, &map);
+
+  if (ret) {
+    GstFlowReturn flow_ret =
+        gst_flac_parse_parse_frame (parse, frame, framesize);
+    if (flow_ret == GST_BASE_PARSE_FLOW_DROPPED) {
+      frame->flags |= GST_BASE_PARSE_FRAME_FLAG_DROP;
+    } else if (flow_ret != GST_FLOW_OK) {
+      return flow_ret;
+    }
+
+    return gst_base_parse_finish_frame (parse, frame, framesize);
+  }
+
+  return GST_FLOW_OK;
 }
 
 static gboolean

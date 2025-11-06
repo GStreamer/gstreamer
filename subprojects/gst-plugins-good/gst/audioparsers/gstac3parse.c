@@ -508,7 +508,6 @@ gst_ac3_parse_handle_frame (GstBaseParse * parse,
   gint have_blocks = 0;
   GstMapInfo map;
   gboolean ret = FALSE;
-  GstFlowReturn res = GST_FLOW_OK;
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
 
@@ -621,7 +620,7 @@ gst_ac3_parse_handle_frame (GstBaseParse * parse,
 
   /* expect to have found a frame here */
   g_assert (framesize);
-  ret = TRUE;
+  ret = framesize <= map.size;
 
   /* arrange for metadata setup */
   if (G_UNLIKELY (sid)) {
@@ -668,11 +667,11 @@ gst_ac3_parse_handle_frame (GstBaseParse * parse,
 cleanup:
   gst_buffer_unmap (buf, &map);
 
-  if (ret && framesize <= map.size) {
-    res = gst_base_parse_finish_frame (parse, frame, framesize);
+  if (ret) {
+    return gst_base_parse_finish_frame (parse, frame, framesize);
   }
 
-  return res;
+  return GST_FLOW_OK;
 }
 
 
