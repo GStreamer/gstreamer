@@ -622,6 +622,9 @@ gst_v4l2_video_enc_negotiate (GstVideoEncoder * encoder)
   if (codec->level_cid)
     gst_structure_set (s, "level", G_TYPE_STRING, ctx.level, NULL);
 
+  gst_video_codec_state_unref (state);
+  state = NULL;
+
 done:
   if (!GST_VIDEO_ENCODER_CLASS (parent_class)->negotiate (encoder))
     return FALSE;
