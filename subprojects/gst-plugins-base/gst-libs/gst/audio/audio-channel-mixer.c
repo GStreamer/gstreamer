@@ -1150,6 +1150,8 @@ gst_audio_channel_mixer_new_with_matrix (GstAudioChannelMixerFlags flags,
       || format == GST_AUDIO_FORMAT_S32
       || format == GST_AUDIO_FORMAT_F32
       || format == GST_AUDIO_FORMAT_F64, NULL);
+  g_return_val_if_fail (in_channels > 0, NULL);
+  g_return_val_if_fail (out_channels > 0, NULL);
 
   mix = g_new0 (GstAudioChannelMixer, 1);
   mix->in_channels = in_channels;
