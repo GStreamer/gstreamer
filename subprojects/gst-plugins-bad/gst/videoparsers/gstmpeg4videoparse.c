@@ -516,6 +516,7 @@ next:
 
   if (ret) {
     framesize = off - 3;
+    g_assert (framesize <= map.size);
   } else {
     goto next;
   }
@@ -526,7 +527,6 @@ out:
   if (ret) {
     GstFlowReturn res;
 
-    g_assert (framesize <= map.size);
     res = gst_mpeg4vparse_parse_frame (parse, frame);
     if (res == GST_BASE_PARSE_FLOW_DROPPED)
       frame->flags |= GST_BASE_PARSE_FRAME_FLAG_DROP;

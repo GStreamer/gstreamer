@@ -1003,7 +1003,7 @@ gst_h266_parse_handle_frame_packetized (GstBaseParse * parse,
   GstH266NalUnit nalu;
   const guint nl = h266parse->nal_length_size;
   GstMapInfo map;
-  gint left;
+  gsize parsed, left;
 
   GST_TRACE_OBJECT (h266parse, "Handling packetized frame");
 
@@ -1074,11 +1074,10 @@ gst_h266_parse_handle_frame_packetized (GstBaseParse * parse,
         map.data, nalu.offset + nalu.size, map.size, nl, &nalu);
   }
 
+  parsed = map.size - left;
   gst_buffer_unmap (buffer, &map);
 
   if (!h266parse->split_packetized) {
-    gint parsed = map.size - left;
-
     /* Nothing to do if no NAL unit was parsed, the whole AU will be dropped
      * below. */
     if (parsed > 0) {
@@ -1086,7 +1085,7 @@ gst_h266_parse_handle_frame_packetized (GstBaseParse * parse,
         /* Only part of the AU could be parsed, split out that part the rest
          * will be dropped below. Should not be happening for nice VVC. */
         GST_WARNING_OBJECT (parse, "Problem parsing part of AU, keep part that "
-            "has been correctly parsed (%d bytes).", parsed);
+            "has been correctly parsed (%" G_GSIZE_FORMAT " bytes).", parsed);
         GstBaseParseFrame tmp_frame;
 
         gst_base_parse_frame_init (&tmp_frame);
@@ -1108,7 +1107,7 @@ gst_h266_parse_handle_frame_packetized (GstBaseParse * parse,
         /* The whole AU succesfully parsed. */
         h266parse->marker = TRUE;
         gst_h266_parse_parse_frame (parse, frame);
-        ret = gst_base_parse_finish_frame (parse, frame, map.size);
+        ret = gst_base_parse_finish_frame (parse, frame, parsed);
       }
     }
   } else {
@@ -1117,7 +1116,8 @@ gst_h266_parse_handle_frame_packetized (GstBaseParse * parse,
 
   if (G_UNLIKELY (left)) {
     /* should not be happening for nice VVC */
-    GST_WARNING_OBJECT (parse, "skipping leftover VVC data %d", left);
+    GST_WARNING_OBJECT (parse, "skipping leftover VVC data %" G_GSIZE_FORMAT,
+        left);
     frame->flags |= GST_BASE_PARSE_FRAME_FLAG_DROP;
     ret = gst_base_parse_finish_frame (parse, frame, left);
   }

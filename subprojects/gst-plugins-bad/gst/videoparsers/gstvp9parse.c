@@ -503,7 +503,7 @@ gst_vp9_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
   GstFlowReturn ret = GST_FLOW_OK;
   GstVp9ParserResult parse_res = GST_VP9_PARSER_ERROR;
   GstMapInfo map;
-  gsize offset = 0;
+  gsize offset = 0, size;
   GstVp9SuperframeInfo superframe_info;
   guint i;
   GstVp9FrameHdr frame_hdr;
@@ -591,16 +591,17 @@ gst_vp9_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
   gst_vp9_parse_reset_super_frame (self);
 
 done:
+  size = map.size;
   gst_buffer_unmap (buffer, &map);
 
   if (self->align != GST_VP9_PARSE_ALIGN_FRAME) {
     if (parse_res == GST_VP9_PARSER_OK)
       gst_vp9_parse_parse_frame (self, frame, &frame_hdr);
-    ret = gst_base_parse_finish_frame (parse, frame, map.size);
+    ret = gst_base_parse_finish_frame (parse, frame, size);
   } else {
     gst_buffer_unref (buffer);
-    if (offset != map.size) {
-      gsize left = map.size - offset;
+    if (offset != size) {
+      gsize left = size - offset;
       if (left != superframe_info.superframe_index_size) {
         GST_WARNING_OBJECT (parse,
             "Skipping leftover frame data %" G_GSIZE_FORMAT, left);
