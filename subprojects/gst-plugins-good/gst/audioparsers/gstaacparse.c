@@ -1540,7 +1540,8 @@ gst_aac_parse_handle_frame (GstBaseParse * parse,
       && aacparse->output_header_type == DSPAAC_HEADER_ADTS) {
     if (!gst_aac_parse_prepend_adts_headers (aacparse, frame)) {
       GST_ERROR_OBJECT (aacparse, "Failed to prepend ADTS headers to frame");
-      ret = GST_FLOW_ERROR;
+      gst_buffer_unmap (buffer, &map);
+      return GST_FLOW_ERROR;
     }
   }
 
