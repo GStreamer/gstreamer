@@ -784,7 +784,7 @@ gst_rtp_buffer_map_payload (GstRTPBuffer * rtp)
   return TRUE;
 }
 
-/* ensure header, payload and padding are in separate buffers */
+/* ensure header, payload and padding are in separate memories */
 static void
 ensure_buffers (GstRTPBuffer * rtp)
 {
@@ -845,52 +845,53 @@ gst_rtp_buffer_set_extension_data (GstRTPBuffer * rtp, guint16 bits,
   guint8 *data;
   GstMemory *mem = NULL;
 
+  g_return_val_if_fail (gst_buffer_is_writable (rtp->buffer), FALSE);
+
   ensure_buffers (rtp);
 
   /* this is the size of the extension data we need */
   min_size = 4 + length * sizeof (guint32);
 
-  /* we should allocate and map the extension data */
-  if (rtp->data[1] == NULL || min_size > rtp->size[1]) {
-    GstMapInfo map;
+  if (rtp->data[1] == NULL || min_size != rtp->size[1]) {
+    /* we should allocate and map the extension data */
+    if (rtp->data[1] == NULL || min_size > rtp->size[1]) {
+      GstMapInfo map;
 
-    /* we don't have (enough) extension data, make some */
-    mem = gst_allocator_alloc (NULL, min_size, NULL);
+      /* we don't have (enough) extension data, make some */
+      mem = gst_allocator_alloc (NULL, min_size, NULL);
 
-    if (rtp->data[1]) {
-      /* copy old data & initialize the remainder of the new buffer */
-      gst_memory_map (mem, &map, GST_MAP_WRITE);
-      memcpy (map.data, rtp->data[1], rtp->size[1]);
-      if (min_size > rtp->size[1]) {
-        memset (map.data + rtp->size[1], 0, min_size - rtp->size[1]);
+      if (rtp->data[1]) {
+        /* copy old data & initialize the remainder of the new buffer */
+        gst_memory_map (mem, &map, GST_MAP_WRITE);
+        memcpy (map.data, rtp->data[1], rtp->size[1]);
+        if (min_size > rtp->size[1]) {
+          memset (map.data + rtp->size[1], 0, min_size - rtp->size[1]);
+        }
+        gst_memory_unmap (mem, &map);
+
+        /* unmap old */
+        gst_buffer_unmap (rtp->buffer, &rtp->map[1]);
+        gst_buffer_replace_memory (rtp->buffer, 1, mem);
+      } else {
+        /* don't leak data from uninitialized memory via the padding */
+        gst_memory_map (mem, &map, GST_MAP_WRITE);
+        memset (map.data, 0, map.size);
+        gst_memory_unmap (mem, &map);
+
+        /* we didn't have extension data, add */
+        gst_buffer_insert_memory (rtp->buffer, 1, mem);
       }
-      gst_memory_unmap (mem, &map);
+    } else if (min_size < rtp->size[1]) {
+      GstMemory *mem = rtp->map[1].memory;
 
-      /* unmap old */
       gst_buffer_unmap (rtp->buffer, &rtp->map[1]);
-      gst_buffer_replace_memory (rtp->buffer, 1, mem);
-    } else {
-      /* don't leak data from uninitialized memory via the padding */
-      gst_memory_map (mem, &map, GST_MAP_WRITE);
-      memset (map.data, 0, map.size);
-      gst_memory_unmap (mem, &map);
-
-      /* we didn't have extension data, add */
-      gst_buffer_insert_memory (rtp->buffer, 1, mem);
+      gst_memory_resize (mem, 0, min_size);
     }
 
-    /* map new */
-    gst_memory_map (mem, &rtp->map[1], GST_MAP_READWRITE);
-    gst_memory_ref (mem);
-    rtp->data[1] = rtp->map[1].data;
-    rtp->size[1] = rtp->map[1].size;
-  } else if (min_size < rtp->size[1]) {
-    GstMemory *mem = rtp->map[1].memory;
-
-    gst_memory_ref (mem);
-    gst_buffer_unmap (rtp->buffer, &rtp->map[1]);
-    gst_memory_resize (mem, 0, min_size);
-    gst_memory_map (mem, &rtp->map[1], GST_MAP_READWRITE);
+    /* map extension data again */
+    if (!gst_buffer_map_range (rtp->buffer, 1, 1, &rtp->map[1],
+            GST_MAP_READWRITE))
+      g_assert_not_reached ();  /* checked in gst_rtp_buffer_map() / ensure_buffers already */
     rtp->data[1] = rtp->map[1].data;
     rtp->size[1] = rtp->map[1].size;
   }
