@@ -1492,10 +1492,7 @@ gst_aac_parse_handle_frame (GstBaseParse * parse,
       aacparse->sample_rate = rate;
       aacparse->channels = channels;
 
-      if (!gst_aac_parse_set_src_caps (aacparse, NULL)) {
-        /* If linking fails, we need to return appropriate error */
-        ret = GST_FLOW_NOT_LINKED;
-      }
+      gst_aac_parse_set_src_caps (aacparse, NULL);
 
       gst_base_parse_set_frame_rate (GST_BASE_PARSE (aacparse),
           aacparse->sample_rate, aacparse->frame_samples, 2, 2);
@@ -1532,10 +1529,7 @@ gst_aac_parse_handle_frame (GstBaseParse * parse,
        before knowing about rate/channels. */
     if (setcaps
         || !gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (aacparse))) {
-      if (!gst_aac_parse_set_src_caps (aacparse, NULL)) {
-        /* If linking fails, we need to return appropriate error */
-        ret = GST_FLOW_NOT_LINKED;
-      }
+      gst_aac_parse_set_src_caps (aacparse, NULL);
 
       gst_base_parse_set_frame_rate (GST_BASE_PARSE (aacparse),
           aacparse->sample_rate, aacparse->frame_samples, 2, 2);
