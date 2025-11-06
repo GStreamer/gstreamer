@@ -177,8 +177,6 @@ BLACKLIST = [
 
 CI_BLACKLIST = [
     (r'check.gst-plugins-good.elements_souphttpsrc2.test_icy_stream', 'flaky in valgrind, leaks in CI but not locally'),
-    (r'check.gst-plugins-bad.elements_vkcolorconvert.test_vulkan_color_convert_rgba_reorder', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4612'),
-    (r'check.gst-plugins-bad.elements_vkdeviceprovider.vulkan_provider_creation', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4612'),
 ]
 
 

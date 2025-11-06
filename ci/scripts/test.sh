@@ -29,7 +29,7 @@ export OPENSSL_ia32cap=":0"
 # like they would do in the CI.
 export LIBGL_ALWAYS_SOFTWARE="true"
 # This the hardcoded value for llvmpipe
-export MESA_VK_DEVICE_SELECT="10005:0"
+export VK_ICD_FILENAMES="/usr/share/vulkan/icd.d/lvp_icd.json"
 
 ./gst-env.py \
     "--builddir=$builddir" \
