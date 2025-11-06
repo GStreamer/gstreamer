@@ -1087,7 +1087,6 @@ gst_h266_parse_handle_frame_packetized (GstBaseParse * parse,
          * will be dropped below. Should not be happening for nice VVC. */
         GST_WARNING_OBJECT (parse, "Problem parsing part of AU, keep part that "
             "has been correctly parsed (%d bytes).", parsed);
-        buffer = gst_buffer_copy (frame->buffer);
         GstBaseParseFrame tmp_frame;
 
         gst_base_parse_frame_init (&tmp_frame);
@@ -1103,11 +1102,8 @@ gst_h266_parse_handle_frame_packetized (GstBaseParse * parse,
         gst_base_parse_frame_free (&tmp_frame);
 
         /* Bail out if we get a flow error. */
-        if (ret != GST_FLOW_OK) {
-          gst_buffer_unmap (buffer, &map);
-          gst_buffer_unref (buffer);
+        if (ret != GST_FLOW_OK)
           return ret;
-        }
       } else {
         /* The whole AU succesfully parsed. */
         h266parse->marker = TRUE;
