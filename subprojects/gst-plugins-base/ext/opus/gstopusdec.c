@@ -317,6 +317,8 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
       if (!gst_caps_is_empty (tmp)) {
         gst_caps_unref (inter);
         inter = tmp;
+      } else {
+        gst_caps_unref (tmp);
       }
 
       gst_caps_unref (preferred);
@@ -334,6 +336,8 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
       if (!gst_caps_is_empty (tmp)) {
         gst_caps_unref (inter);
         inter = tmp;
+      } else {
+        gst_caps_unref (tmp);
       }
 
       gst_caps_unref (preferred);
