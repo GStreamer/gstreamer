@@ -1011,11 +1011,14 @@ gst_flv_mux_create_number_script_value (const gchar * name, gdouble value)
 {
   GstBuffer *tmp;
   guint8 *data;
-  gsize len = strlen (name);
+  const gsize len = strlen (name);
+
+  /* Ensure name length conforms to FLV spec limit (255 bytes) */
+  g_return_val_if_fail (len <= 255, NULL);
 
   _gst_buffer_new_and_alloc (2 + len + 1 + 8, &tmp, &data);
 
-  GST_WRITE_UINT16_BE (data, len);
+  GST_WRITE_UINT16_BE (data, (guint16) len);
   data += 2;                    /* name length */
   memcpy (data, name, len);
   data += len;
@@ -1030,11 +1033,14 @@ gst_flv_mux_create_object_script_start_marker (const gchar * name)
 {
   GstBuffer *tmp;
   guint8 *data;
-  gsize len = strlen (name);
+  const gsize len = strlen (name);
+
+  /* Ensure name length conforms to FLV spec limit (255 bytes) */
+  g_return_val_if_fail (len <= 255, NULL);
 
   _gst_buffer_new_and_alloc (2 + len + 1, &tmp, &data);
 
-  GST_WRITE_UINT16_BE (data, len);
+  GST_WRITE_UINT16_BE (data, (guint16) len);
   data += 2;                    /* name length */
   memcpy (data, name, len);
   data += len;
@@ -1241,15 +1247,32 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
       if (!gst_tag_list_get_string (tags, tag_name, &s))
         continue;
 
-      _gst_buffer_new_and_alloc (2 + strlen (t) + 1 + 2 + strlen (s),
-          &tmp, &data);
+      const gsize t_len = strlen (t);
+      const gsize s_len = strlen (s);
+
+      /* Handle oversized strings gracefully per FLV spec limits */
+      if (G_UNLIKELY (t_len > 255)) {
+        GST_WARNING_OBJECT (mux,
+            "Tag name '%s' too long (%" G_GSIZE_FORMAT " bytes), skipping", t,
+            t_len);
+        g_free (s);
+        continue;
+      }
+      if (G_UNLIKELY (s_len > 65535)) {
+        GST_WARNING_OBJECT (mux,
+            "Tag value for '%s' too long (%" G_GSIZE_FORMAT " bytes), skipping",
+            t, s_len);
+        g_free (s);
+        continue;
+      }
+
+      _gst_buffer_new_and_alloc (2 + t_len + 1 + 2 + s_len, &tmp, &data);
       data[0] = 0;              /* tag name length */
-      data[1] = strlen (t);
-      memcpy (&data[2], t, strlen (t));
-      data[2 + strlen (t)] = 2; /* string */
-      data[3 + strlen (t)] = (strlen (s) >> 8) & 0xff;
-      data[4 + strlen (t)] = (strlen (s)) & 0xff;
-      memcpy (&data[5 + strlen (t)], s, strlen (s));
+      data[1] = (guint8) t_len;
+      memcpy (&data[2], t, t_len);
+      data[2 + t_len] = 2;      /* string */
+      GST_WRITE_UINT16_BE (data + 3 + t_len, s_len);
+      memcpy (&data[5 + t_len], s, s_len);
       script_tag = gst_buffer_append (script_tag, tmp);
 
       g_free (s);
