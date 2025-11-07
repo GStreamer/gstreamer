@@ -2239,6 +2239,8 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
     GstH265VPS *vps = sps->vps;
     GstH265VUIParams *vui = &sps->vui_params;
     gchar *colorimetry = NULL;
+    gint upstream_fps_n = 0;
+    gint upstream_fps_d = 1;
 
     GST_DEBUG_OBJECT (h265parse, "vps: %p", vps);
 
@@ -2262,8 +2264,16 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
       modified = TRUE;
     }
 
+    if (s && gst_structure_get_fraction (s,
+            "framerate", &upstream_fps_n, &upstream_fps_d)) {
+      if (upstream_fps_n <= 0 || upstream_fps_d <= 0) {
+        upstream_fps_n = 0;
+        upstream_fps_d = 1;
+      }
+    }
+
     /* 0/1 is set as the default in the codec parser */
-    if (vui->timing_info_present_flag && !h265parse->framerate_from_caps) {
+    if (vui->timing_info_present_flag && !upstream_fps_n) {
       gint fps_num = 0, fps_den = 1;
 
       if (!(sps->fps_num == 0 && sps->fps_den == 1)) {
@@ -2362,10 +2372,11 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
       gst_caps_set_simple (caps, "width", G_TYPE_INT, width,
           "height", G_TYPE_INT, height, NULL);
 
-      h265parse->framerate_from_caps = FALSE;
       /* upstream overrides */
-      if (s && gst_structure_has_field (s, "framerate"))
-        gst_structure_get_fraction (s, "framerate", &fps_num, &fps_den);
+      if (upstream_fps_n > 0 && upstream_fps_d > 0) {
+        fps_num = upstream_fps_n;
+        fps_den = upstream_fps_d;
+      }
 
       /* but not necessarily or reliably this */
       if (fps_den > 0) {
@@ -2382,7 +2393,6 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
             fps_num, fps_den, 0, 0);
         val = gst_h265_parse_is_field_interlaced (h265parse) ? GST_SECOND / 2 :
             GST_SECOND;
-        h265parse->framerate_from_caps = TRUE;
 
         /* If we know the frame duration, and if we are not in one of the zero
          * latency pattern, add one frame of latency */
