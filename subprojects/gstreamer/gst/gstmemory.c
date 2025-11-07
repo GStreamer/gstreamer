@@ -388,6 +388,9 @@ gst_map_info_clear (GstMapInfo * info)
 
   mem = info->memory;
 
+  /* Allow to unmap even if not mapped, to work nicely with
+   * g_auto (GstMapInfo) map = GST_MAP_INFO_INIT;
+   */
   if (!mem)
     return;
 
@@ -399,6 +402,15 @@ gst_map_info_clear (GstMapInfo * info)
 
   if ((info->flags & GST_MAP_REF_MEMORY) != 0)
     gst_memory_unref (info->memory);
+
+  /* Reset various fields to avoid use-after-frees.
+   * This also makes it possible to call clear() twice.
+   * Keep size/maxsize set because various code is
+   * making use of it and it's less critical. */
+  info->memory = NULL;
+  info->flags = 0;
+  info->data = NULL;
+  memset (&info->user_data, 0, sizeof (info->user_data));
 }
 
 /**
