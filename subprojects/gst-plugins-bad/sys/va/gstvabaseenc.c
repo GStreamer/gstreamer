@@ -26,7 +26,6 @@
 
 #include "vacompat.h"
 #include "gstvabase.h"
-#include "gstvacaps.h"
 #include "gstvapluginutils.h"
 
 #define GST_CAT_DEFAULT gst_va_base_enc_debug
@@ -384,7 +383,7 @@ _allocator_from_caps (GstVaBaseEnc * base, GstCaps * caps)
 {
   GstAllocator *allocator = NULL;
 
-  if (gst_caps_is_dmabuf (caps)) {
+  if (gst_video_is_dma_drm_caps (caps)) {
     allocator = gst_va_dmabuf_allocator_new (base->display);
   } else {
     GArray *surface_formats =

@@ -826,12 +826,6 @@ _caps_is (GstCaps * caps, const gchar * feature)
 }
 
 gboolean
-gst_caps_is_dmabuf (GstCaps * caps)
-{
-  return _caps_is (caps, GST_CAPS_FEATURE_MEMORY_DMABUF);
-}
-
-gboolean
 gst_caps_is_vamemory (GstCaps * caps)
 {
   return _caps_is (caps, GST_CAPS_FEATURE_MEMORY_VA);

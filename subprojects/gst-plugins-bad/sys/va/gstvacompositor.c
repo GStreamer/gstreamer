@@ -570,7 +570,7 @@ gst_va_compositor_allocator_from_caps (GstVaCompositor * self, GstCaps * caps)
 {
   GstAllocator *allocator = NULL;
 
-  if (gst_caps_is_dmabuf (caps)) {
+  if (gst_video_is_dma_drm_caps (caps)) {
     allocator = gst_va_dmabuf_allocator_new (self->display);
   } else {
     GArray *surface_formats = gst_va_filter_get_surface_formats (self->filter);
@@ -747,7 +747,7 @@ gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
       goto bail;
     }
 
-    if (gst_caps_is_dmabuf (caps) && GST_VIDEO_INFO_IS_RGB (&info)) {
+    if (gst_video_is_dma_drm_caps (caps) && GST_VIDEO_INFO_IS_RGB (&info)) {
       usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;
     } else {
       usage_hint = va_get_surface_usage_hint (self->display,

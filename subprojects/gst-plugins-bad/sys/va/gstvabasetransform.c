@@ -680,7 +680,7 @@ gst_va_base_transform_allocator_from_caps (GstVaBaseTransform * self,
 {
   GstAllocator *allocator = NULL;
 
-  if (gst_caps_is_dmabuf (caps)) {
+  if (gst_video_is_dma_drm_caps (caps)) {
     allocator = gst_va_dmabuf_allocator_new (self->display);
   } else {
     GArray *surface_formats = gst_va_filter_get_surface_formats (self->filter);

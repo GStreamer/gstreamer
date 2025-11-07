@@ -227,7 +227,7 @@ _create_allocator (GstVaBaseDec * base, GstCaps * caps)
 {
   GstAllocator *allocator = NULL;
 
-  if (gst_caps_is_dmabuf (caps))
+  if (gst_video_is_dma_drm_caps (caps))
     allocator = gst_va_dmabuf_allocator_new (base->display);
   else {
     GArray *surface_formats =
