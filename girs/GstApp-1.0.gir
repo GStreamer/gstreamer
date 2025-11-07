@@ -2464,6 +2464,36 @@ After the maximum amount of time are queued, @appsrc will emit the
           </parameter>
         </parameters>
       </method>
+      <method name="set_simple_callbacks" c:identifier="gst_app_src_set_simple_callbacks" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Set callbacks which will be executed when data is needed, enough data has
+been collected or when a seek should be performed.
+This is an alternative to using the signals, it has lower overhead and is thus
+less expensive, but also less flexible.
+
+If callbacks are installed, no signals will be emitted for performance
+reasons.
+
+Once @cb is set on an #GstAppSrc it is not possible anymore to change any of
+the callbacks inside it.
+
+Note that gst_app_src_set_callbacks() and
+gst_app_src_set_simple_callbacks() are mutually exclusive and setting one
+will unset the other.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="appsrc" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">a #GstAppSrc</doc>
+            <type name="AppSrc" c:type="GstAppSrc*"/>
+          </instance-parameter>
+          <parameter name="cb" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">the callbacks</doc>
+            <type name="AppSrcSimpleCallbacks" c:type="GstAppSrcSimpleCallbacks*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="set_size" c:identifier="gst_app_src_set_size" glib:set-property="size">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Set the size of the stream in bytes. A value of -1 means that the size is
 not known.</doc>
@@ -2954,8 +2984,201 @@ extracted</doc>
         </array>
       </field>
     </record>
+    <callback name="AppSrcEnoughDataCallback" c:type="GstAppSrcEnoughDataCallback" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">Called when appsrc has enough data. It is recommended that the application
+stops calling push-buffer until the need_data callback is emitted again to
+avoid excessive buffer queueing.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="appsrc" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">a #GstAppSrc</doc>
+          <type name="AppSrc" c:type="GstAppSrc*"/>
+        </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">callback user data</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
+      </parameters>
+    </callback>
+    <callback name="AppSrcNeedDataCallback" c:type="GstAppSrcNeedDataCallback" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">Called when the appsrc needs more data. A buffer or EOS should be pushed to
+appsrc from this thread or another thread. @length is just a hint and when it
+is set to -1, any number of bytes can be pushed into @appsrc.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="appsrc" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">a #GstAppSrc</doc>
+          <type name="AppSrc" c:type="GstAppSrc*"/>
+        </parameter>
+        <parameter name="length" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">Length hint</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="2">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">callback user data</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
+      </parameters>
+    </callback>
     <record name="AppSrcPrivate" c:type="GstAppSrcPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
+    </record>
+    <callback name="AppSrcSeekDataCallback" c:type="GstAppSrcSeekDataCallback" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">Called when a seek should be performed to the offset. The next push-buffer
+should produce buffers from the new @offset. This callback is only called for
+seekable stream types.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">%TRUE if the seek was successful.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="appsrc" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">a #GstAppSrc</doc>
+          <type name="AppSrc" c:type="GstAppSrc*"/>
+        </parameter>
+        <parameter name="offset" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">Offset to seek to.</doc>
+          <type name="guint64" c:type="guint64"/>
+        </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="2">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">callback user data</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
+      </parameters>
+    </callback>
+    <record name="AppSrcSimpleCallbacks" c:type="GstAppSrcSimpleCallbacks" opaque="1" version="1.28" glib:type-name="GstAppSrcSimpleCallbacks" glib:get-type="gst_app_src_simple_callbacks_get_type" c:symbol-prefix="app_src_simple_callbacks">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">A set of callbacks that can be installed on the appsink with
+gst_app_sink_set_simple_callbacks().
+
+Unlike GstAppSrcCallbacks this can also be used from bindings.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
+      <constructor name="new" c:identifier="gst_app_src_simple_callbacks_new" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Creates a new instance of callbacks.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">New empty GstAppSrcSimpleCallbacks</doc>
+          <type name="AppSrcSimpleCallbacks" c:type="GstAppSrcSimpleCallbacks*"/>
+        </return-value>
+      </constructor>
+      <method name="ref" c:identifier="gst_app_src_simple_callbacks_ref" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Increases the reference count of @cb.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">the callbacks</doc>
+          <type name="AppSrcSimpleCallbacks" c:type="GstAppSrcSimpleCallbacks*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="cb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">the callbacks</doc>
+            <type name="AppSrcSimpleCallbacks" c:type="GstAppSrcSimpleCallbacks*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="set_enough_data" c:identifier="gst_app_src_simple_callbacks_set_enough_data" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Sets the enough data callback on @cb.
+
+Once @cb is set on an #GstAppSrc it is not possible anymore to change any of
+the callbacks inside it.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="cb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">the callbacks</doc>
+            <type name="AppSrcSimpleCallbacks" c:type="GstAppSrcSimpleCallbacks*"/>
+          </instance-parameter>
+          <parameter name="enough_data_cb" transfer-ownership="none" scope="notified" closure="1" destroy="2">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">EOS callback</doc>
+            <type name="AppSrcEnoughDataCallback" c:type="GstAppSrcEnoughDataCallback"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">the user data</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="destroy_notify" transfer-ownership="none" scope="async">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">#GDestroyNotify to free the user data</doc>
+            <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_need_data" c:identifier="gst_app_src_simple_callbacks_set_need_data" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Sets the need data callback on @cb.
+
+Once @cb is set on an #GstAppSrc it is not possible anymore to change any of
+the callbacks inside it.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="cb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">the callbacks</doc>
+            <type name="AppSrcSimpleCallbacks" c:type="GstAppSrcSimpleCallbacks*"/>
+          </instance-parameter>
+          <parameter name="need_data_cb" transfer-ownership="none" scope="notified" closure="1" destroy="2">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">EOS callback</doc>
+            <type name="AppSrcNeedDataCallback" c:type="GstAppSrcNeedDataCallback"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">the user data</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="destroy_notify" transfer-ownership="none" scope="async">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">#GDestroyNotify to free the user data</doc>
+            <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_seek_data" c:identifier="gst_app_src_simple_callbacks_set_seek_data" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Sets the seek data callback on @cb.
+
+Once @cb is set on an #GstAppSrc it is not possible anymore to change any of
+the callbacks inside it.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="cb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">the callbacks</doc>
+            <type name="AppSrcSimpleCallbacks" c:type="GstAppSrcSimpleCallbacks*"/>
+          </instance-parameter>
+          <parameter name="seek_data_cb" transfer-ownership="none" scope="notified" closure="1" destroy="2">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">EOS callback</doc>
+            <type name="AppSrcSeekDataCallback" c:type="GstAppSrcSeekDataCallback"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">the user data</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="destroy_notify" transfer-ownership="none" scope="async">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">#GDestroyNotify to free the user data</doc>
+            <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="unref" c:identifier="gst_app_src_simple_callbacks_unref" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Decreases the reference count of @cb and frees it after the
+last reference is dropped.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="cb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">the callbacks</doc>
+            <type name="AppSrcSimpleCallbacks" c:type="GstAppSrcSimpleCallbacks*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
     </record>
     <enumeration name="AppStreamType" glib:type-name="GstAppStreamType" glib:get-type="gst_app_stream_type_get_type" c:type="GstAppStreamType">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">The stream type.</doc>

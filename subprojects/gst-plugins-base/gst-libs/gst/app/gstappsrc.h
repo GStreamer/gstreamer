@@ -71,6 +71,18 @@ typedef struct {
 } GstAppSrcCallbacks;
 
 /**
+ * GstAppSrcSimpleCallbacks:
+ *
+ * A set of callbacks that can be installed on the appsink with
+ * gst_app_sink_set_simple_callbacks().
+ *
+ * Unlike GstAppSrcCallbacks this can also be used from bindings.
+ *
+ * Since: 1.28
+ */
+typedef struct _GstAppSrcSimpleCallbacks GstAppSrcSimpleCallbacks;
+
+/**
  * GstAppStreamType:
  * @GST_APP_STREAM_TYPE_STREAM: No seeking is supported in the stream, such as a
  * live stream.
@@ -225,7 +237,98 @@ void             gst_app_src_set_callbacks           (GstAppSrc * appsrc,
                                                       gpointer user_data,
                                                       GDestroyNotify notify);
 
+GST_APP_API
+void             gst_app_src_set_simple_callbacks (GstAppSrc * appsrc,
+                                                   GstAppSrcSimpleCallbacks *cb);
+
+/**
+ * gst_app_src_simple_callbacks_get_type:
+ *
+ * Since: 1.28
+ */
+GST_APP_API
+GType gst_app_src_simple_callbacks_get_type (void);
+
+/**
+ * GST_TYPE_APP_SRC_SIMPLE_CALLBACKS:
+ *
+ * Since: 1.28
+ */
+#define GST_TYPE_APP_SRC_SIMPLE_CALLBACKS (gst_app_src_simple_callbacks_get_type ())
+
+GST_APP_API
+GstAppSrcSimpleCallbacks * gst_app_src_simple_callbacks_new (void);
+GST_APP_API
+GstAppSrcSimpleCallbacks * gst_app_src_simple_callbacks_ref (GstAppSrcSimpleCallbacks *cb);
+GST_APP_API
+void                       gst_app_src_simple_callbacks_unref (GstAppSrcSimpleCallbacks *cb);
+
+/**
+ * GstAppSrcNeedDataCallback:
+ * @appsrc: a #GstAppSrc
+ * @length: Length hint
+ * @user_data: callback user data
+ *
+ * Called when the appsrc needs more data. A buffer or EOS should be pushed to
+ * appsrc from this thread or another thread. @length is just a hint and when it
+ * is set to -1, any number of bytes can be pushed into @appsrc.
+ *
+ * Since: 1.28
+ */
+typedef void (*GstAppSrcNeedDataCallback) (GstAppSrc * appsrc,
+                                           guint length,
+                                           gpointer user_data);
+GST_APP_API
+void gst_app_src_simple_callbacks_set_need_data (GstAppSrcSimpleCallbacks *cb,
+                                                 GstAppSrcNeedDataCallback need_data_cb,
+                                                 gpointer user_data,
+                                                 GDestroyNotify destroy_notify);
+
+/**
+ * GstAppSrcEnoughDataCallback:
+ * @appsrc: a #GstAppSrc
+ * @user_data: callback user data
+ *
+ * Called when appsrc has enough data. It is recommended that the application
+ * stops calling push-buffer until the need_data callback is emitted again to
+ * avoid excessive buffer queueing.
+ *
+ * Since: 1.28
+ */
+typedef void (*GstAppSrcEnoughDataCallback) (GstAppSrc * appsrc,
+                                             gpointer user_data);
+GST_APP_API
+void gst_app_src_simple_callbacks_set_enough_data (GstAppSrcSimpleCallbacks *cb,
+                                                   GstAppSrcEnoughDataCallback enough_data_cb,
+                                                   gpointer user_data,
+                                                   GDestroyNotify destroy_notify);
+
+/**
+ * GstAppSrcSeekDataCallback:
+ * @appsrc: a #GstAppSrc
+ * @offset: Offset to seek to.
+ * @user_data: callback user data
+ *
+ * Called when a seek should be performed to the offset. The next push-buffer
+ * should produce buffers from the new @offset. This callback is only called for
+ * seekable stream types.
+ *
+ * Returns: %TRUE if the seek was successful.
+ *
+ * Since: 1.28
+ */
+typedef gboolean (*GstAppSrcSeekDataCallback) (GstAppSrc * appsrc,
+                                               guint64 offset,
+                                               gpointer user_data);
+GST_APP_API
+void gst_app_src_simple_callbacks_set_seek_data (GstAppSrcSimpleCallbacks *cb,
+                                                 GstAppSrcSeekDataCallback seek_data_cb,
+                                                 gpointer user_data,
+                                                 GDestroyNotify destroy_notify);
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAppSrc, gst_object_unref)
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAppSrcSimpleCallbacks, gst_app_src_simple_callbacks_unref)
 
 G_END_DECLS
 
