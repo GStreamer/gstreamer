@@ -193,6 +193,7 @@ static GstBufferPool *
 _get_sinkpad_pool (GstElement * element, gpointer data)
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (element);
+  GstVaBaseEncClass *klass = GST_VA_BASE_ENC_GET_CLASS (element);
   GstAllocator *allocator;
   GstAllocationParams params = { 0, };
   guint usage_hint;
@@ -218,7 +219,7 @@ _get_sinkpad_pool (GstElement * element, gpointer data)
   allocator = gst_va_allocator_new (base->display, surface_formats);
 
   usage_hint = va_get_surface_usage_hint (base->display,
-      VAEntrypointEncSlice, GST_PAD_SINK, FALSE);
+      klass->entrypoint, GST_PAD_SINK, FALSE);
 
   base->priv->raw_pool = gst_va_pool_new_with_config (caps, 1, 0, usage_hint,
       GST_VA_FEATURE_AUTO, allocator, &params);
