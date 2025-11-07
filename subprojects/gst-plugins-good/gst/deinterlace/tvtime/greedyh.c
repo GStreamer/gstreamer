@@ -35,11 +35,9 @@
 #include <string.h>
 
 #include <gst/gst.h>
+
 #include "plugins.h"
 #include "gstdeinterlacemethod.h"
-#ifdef HAVE_ORC
-#include <orc/orc.h>
-#endif
 
 #define GST_TYPE_DEINTERLACE_METHOD_GREEDY_H	(gst_deinterlace_method_greedy_h_get_type ())
 #define GST_IS_DEINTERLACE_METHOD_GREEDY_H(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_METHOD_GREEDY_H))
@@ -927,8 +925,12 @@ gst_deinterlace_method_greedy_h_class_init (GstDeinterlaceMethodGreedyHClass *
   GstDeinterlaceMethodClass *dim_class = (GstDeinterlaceMethodClass *) klass;
   GObjectClass *gobject_class = (GObjectClass *) klass;
 #ifdef BUILD_X86_ASM
-  guint cpu_flags =
-      orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
+  const gboolean cpuid_mmx = gst_cpuid_supports_x86_mmx ();
+  const gboolean cpuid_mmxext = gst_cpuid_supports_x86_mmxext ();
+  const gboolean cpuid_3dnow = gst_cpuid_supports_x86_3dnow ();
+
+  GST_LOG ("cpuid: [mmx=%x, mmxext=%x, 3dnow=%x]",
+      cpuid_mmx, cpuid_mmxext, cpuid__3dnow);
 #endif
 
   gobject_class->set_property = gst_deinterlace_method_greedy_h_set_property;
@@ -970,13 +972,13 @@ gst_deinterlace_method_greedy_h_class_init (GstDeinterlaceMethodGreedyHClass *
   dim_class->deinterlace_frame_y41b = deinterlace_frame_di_greedyh_planar;
 
 #ifdef BUILD_X86_ASM
-  if (cpu_flags & ORC_TARGET_MMX_MMXEXT) {
+  if (cpuid_mmxext) {
     klass->scanline_yuy2 = greedyh_scanline_MMXEXT_yuy2;
     klass->scanline_uyvy = greedyh_scanline_MMXEXT_uyvy;
-  } else if (cpu_flags & ORC_TARGET_MMX_3DNOW) {
+  } else if (cpuid_3dnow) {
     klass->scanline_yuy2 = greedyh_scanline_3DNOW_yuy2;
     klass->scanline_uyvy = greedyh_scanline_3DNOW_uyvy;
-  } else if (cpu_flags & ORC_TARGET_MMX_MMX) {
+  } else if (cpuid_mmx) {
     klass->scanline_yuy2 = greedyh_scanline_MMX_yuy2;
     klass->scanline_uyvy = greedyh_scanline_MMX_uyvy;
   } else {

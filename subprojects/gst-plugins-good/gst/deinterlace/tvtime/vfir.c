@@ -35,9 +35,6 @@
 
 #include "gstdeinterlacemethod.h"
 #include <string.h>
-#ifdef HAVE_ORC
-#include <orc/orc.h>
-#endif
 #include "tvtime.h"
 
 #define GST_TYPE_DEINTERLACE_METHOD_VFIR	(gst_deinterlace_method_vfir_get_type ())
@@ -273,8 +270,8 @@ gst_deinterlace_method_vfir_class_init (GstDeinterlaceMethodVFIRClass * klass)
   GstDeinterlaceSimpleMethodClass *dism_class =
       (GstDeinterlaceSimpleMethodClass *) klass;
 #ifdef BUILD_X86_ASM
-  guint cpu_flags =
-      orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
+  const gboolean cpuid_mmx = gst_cpuid_supports_x86_mmx ();
+  GST_LOG ("cpuid: [mmx=%08x]", cpuid->mmx);
 #endif
 
   dim_class->fields_required = 2;
@@ -283,7 +280,7 @@ gst_deinterlace_method_vfir_class_init (GstDeinterlaceMethodVFIRClass * klass)
   dim_class->latency = 1;
 
 #ifdef BUILD_X86_ASM
-  if (cpu_flags & ORC_TARGET_MMX_MMX) {
+  if (cpuid_mmx) {
     dism_class->interpolate_scanline_ayuv = deinterlace_line_packed_mmx;
     dism_class->interpolate_scanline_yuy2 = deinterlace_line_packed_mmx;
     dism_class->interpolate_scanline_yvyu = deinterlace_line_packed_mmx;

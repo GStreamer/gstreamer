@@ -55307,6 +55307,90 @@ Either @new_context or the #GstContext pointed to by @old_context may be %NULL.<
         <type name="GLib.Quark" c:type="GQuark"/>
       </return-value>
     </function>
+    <function name="cpuid_supports_arm_neon" c:identifier="gst_cpuid_supports_arm_neon" version="1.28">
+      <source-position filename="../subprojects/gstreamer/gst/gstcpuid.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcpuid.c">%TRUE if NEON (32-bit) is supported by the CPU, %FALSE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+    </function>
+    <function name="cpuid_supports_arm_neon64" c:identifier="gst_cpuid_supports_arm_neon64" version="1.28">
+      <source-position filename="../subprojects/gstreamer/gst/gstcpuid.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcpuid.c">%TRUE if NEON (64-bit) is supported by the CPU, %FALSE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+    </function>
+    <function name="cpuid_supports_x86_3dnow" c:identifier="gst_cpuid_supports_x86_3dnow" version="1.28">
+      <source-position filename="../subprojects/gstreamer/gst/gstcpuid.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcpuid.c">%TRUE if 3DNow! is supported by the CPU, %FALSE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+    </function>
+    <function name="cpuid_supports_x86_avx" c:identifier="gst_cpuid_supports_x86_avx" version="1.28">
+      <source-position filename="../subprojects/gstreamer/gst/gstcpuid.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcpuid.c">%TRUE if AVX is supported by the CPU, %FALSE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+    </function>
+    <function name="cpuid_supports_x86_avx2" c:identifier="gst_cpuid_supports_x86_avx2" version="1.28">
+      <source-position filename="../subprojects/gstreamer/gst/gstcpuid.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcpuid.c">%TRUE if avx2 is supported by the CPU, %FALSE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+    </function>
+    <function name="cpuid_supports_x86_mmx" c:identifier="gst_cpuid_supports_x86_mmx" version="1.28">
+      <source-position filename="../subprojects/gstreamer/gst/gstcpuid.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcpuid.c">%TRUE if MMX is supported by the CPU, %FALSE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+    </function>
+    <function name="cpuid_supports_x86_mmxext" c:identifier="gst_cpuid_supports_x86_mmxext" version="1.28">
+      <source-position filename="../subprojects/gstreamer/gst/gstcpuid.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcpuid.c">%TRUE if extended MMX is supported by the CPU, %FALSE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+    </function>
+    <function name="cpuid_supports_x86_sse2" c:identifier="gst_cpuid_supports_x86_sse2" version="1.28">
+      <source-position filename="../subprojects/gstreamer/gst/gstcpuid.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcpuid.c">%TRUE if SSE2 is supported by the CPU, %FALSE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+    </function>
+    <function name="cpuid_supports_x86_sse3" c:identifier="gst_cpuid_supports_x86_sse3" version="1.28">
+      <source-position filename="../subprojects/gstreamer/gst/gstcpuid.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcpuid.c">%TRUE if SSE3 is supported by the CPU, %FALSE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+    </function>
+    <function name="cpuid_supports_x86_sse4_1" c:identifier="gst_cpuid_supports_x86_sse4_1" version="1.28">
+      <source-position filename="../subprojects/gstreamer/gst/gstcpuid.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcpuid.c">%TRUE if SSE4.1 is supported by the CPU, %FALSE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+    </function>
+    <function name="cpuid_supports_x86_sse4_2" c:identifier="gst_cpuid_supports_x86_sse4_2" version="1.28">
+      <source-position filename="../subprojects/gstreamer/gst/gstcpuid.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcpuid.c">%TRUE if SSSE3 is supported by the CPU, %FALSE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+    </function>
+    <function name="cpuid_supports_x86_ssse3" c:identifier="gst_cpuid_supports_x86_ssse3" version="1.28">
+      <source-position filename="../subprojects/gstreamer/gst/gstcpuid.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcpuid.c">%TRUE if SSSE3 is supported by the CPU, %FALSE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+    </function>
     <function name="debug_add_log_function" c:identifier="gst_debug_add_log_function">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Adds the logging function to the list of logging functions.
 Be sure to use #G_GNUC_NO_INSTRUMENT on that function, it is needed.</doc>

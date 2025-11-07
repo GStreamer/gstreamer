@@ -84,10 +84,6 @@ typedef struct dts_state_s dca_state_t;
 
 #include "gstdtsdec.h"
 
-#if HAVE_ORC
-#include <orc/orc.h>
-#endif
-
 #if defined(LIBDTS_FIXED) || defined(LIBDCA_FIXED)
 #define SAMPLE_WIDTH 16
 #define SAMPLE_FORMAT GST_AUDIO_NE(S16)
@@ -154,7 +150,10 @@ gst_dtsdec_class_init (GstDtsDecClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstAudioDecoderClass *gstbase_class;
-  guint cpuflags;
+
+  const gboolean cpuid_mmx = gst_cpuid_supports_x86_mmx ();
+  const gboolean cpuid_3dnow = gst_cpuid_supports_x86_3dnow ();
+  const gboolean cpuid_mmxext = gst_cpuid_supports_x86_mmxext ();
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -192,20 +191,15 @@ gst_dtsdec_class_init (GstDtsDecClass * klass)
 
   klass->dts_cpuflags = 0;
 
-#if HAVE_ORC
-  cpuflags = orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
-  if (cpuflags & ORC_TARGET_MMX_MMX)
+  if (cpuid_mmx)
     klass->dts_cpuflags |= MM_ACCEL_X86_MMX;
-  if (cpuflags & ORC_TARGET_MMX_3DNOW)
+  if (cpuid_3dnow)
     klass->dts_cpuflags |= MM_ACCEL_X86_3DNOW;
-  if (cpuflags & ORC_TARGET_MMX_MMXEXT)
+  if (cpuid_mmxext)
     klass->dts_cpuflags |= MM_ACCEL_X86_MMXEXT;
-#else
-  cpuflags = 0;
-  klass->dts_cpuflags = 0;
-#endif
 
-  GST_LOG ("CPU flags: dts=%08x, orc=%08x", klass->dts_cpuflags, cpuflags);
+  GST_LOG ("CPU flags: dts=%08x, cpuid: [mmx=%x, mmxext=%x, 3dnow=%x]",
+      klass->dts_cpuflags, cpuid_mmx, cpuid_mmxext, cpuid_3dnow);
 }
 
 static void
@@ -791,10 +785,6 @@ static gboolean
 dtsdec_element_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (dtsdec_debug, "dtsdec", 0, "DTS/DCA audio decoder");
-
-#if HAVE_ORC
-  orc_init ();
-#endif
 
   return gst_element_register (plugin, "dtsdec", GST_RANK_PRIMARY,
       GST_TYPE_DTSDEC);

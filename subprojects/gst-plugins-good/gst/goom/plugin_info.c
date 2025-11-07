@@ -29,9 +29,6 @@
 #include "drawmethods.h"
 #include <math.h>
 #include <stdio.h>
-#ifdef HAVE_ORC
-#include <orc/orc.h>
-#endif
 
 
 #if defined (HAVE_CPU_PPC64) || defined (HAVE_CPU_PPC)
@@ -52,11 +49,9 @@ GST_DEBUG_CATEGORY_EXTERN (goom_debug);
 static void
 setOptimizedMethods (PluginInfo * p)
 {
-#ifdef HAVE_ORC
-  unsigned int cpuFlavour =
-      orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
-#else
-  unsigned int cpuFlavour = 0;
+#ifdef BUILD_X86_ASM
+  const gboolean cpuid_mmx = gst_cpuid_supports_x86_mmx ();
+  const gboolean cpuid_mmxext = gst_cpuid_supports_x86_mmxext ();
 #endif
 
   /* set default methods */
@@ -64,26 +59,20 @@ setOptimizedMethods (PluginInfo * p)
   p->methods.zoom_filter = zoom_filter_c;
 /*    p->methods.create_output_with_brightness = create_output_with_brightness;*/
 
-  GST_INFO ("orc cpu flags: 0x%08x", cpuFlavour);
-
 /* FIXME: what about HAVE_CPU_X86_64 ? */
-#ifdef HAVE_CPU_I386
-#ifdef HAVE_MMX
-#ifdef HAVE_ORC
-  GST_INFO ("have an x86");
-  if (cpuFlavour & ORC_TARGET_MMX_MMXEXT) {
+#if defined(HAVE_CPU_I386) && defined(HAVE_MMX) && defined(BUILD_X86_ASM)
+  GST_LOG ("have an x86. cpuid: [mmx=%x, mmxext=%x]", cpuid_mmx, cpuid_mmxext);
+  if (cpuid_mmxext) {
     GST_INFO ("Extended MMX detected. Using the fastest methods!");
     p->methods.draw_line = draw_line_xmmx;
     p->methods.zoom_filter = zoom_filter_xmmx;
-  } else if (cpuFlavour & ORC_TARGET_MMX_MMX) {
+  } else if (cpuid_mmx) {
     GST_INFO ("MMX detected. Using fast methods!");
     p->methods.draw_line = draw_line_mmx;
     p->methods.zoom_filter = zoom_filter_mmx;
   } else {
     GST_INFO ("Too bad ! No SIMD optimization available for your CPU.");
   }
-#endif
-#endif
 #endif /* HAVE_CPU_I386 */
 
 /* disable all PPC stuff until someone finds out what to use here instead of

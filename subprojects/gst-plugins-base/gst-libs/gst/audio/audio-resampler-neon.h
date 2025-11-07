@@ -17,6 +17,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include <gst/gstcpuid.h>
+
 static inline void
 inner_product_gint16_full_1_neon (gint16 * o, const gint16 * a,
     const gint16 * b, gint len, const gint16 * icoeff, gint bstride)
@@ -662,10 +664,10 @@ MAKE_RESAMPLE_FUNC_STATIC (gfloat, full, 1, neon);
 MAKE_RESAMPLE_FUNC_STATIC (gfloat, linear, 1, neon);
 MAKE_RESAMPLE_FUNC_STATIC (gfloat, cubic, 1, neon);
 
-static void
-audio_resampler_check_neon (const gchar *option)
+static inline void
+audio_resampler_check_neon (void)
 {
-  if (!strcmp (option, "neon")) {
+  if (gst_cpuid_supports_arm_neon()) {
     GST_DEBUG ("enable NEON optimisations");
     resample_gint16_full_1 = resample_gint16_full_1_neon;
     resample_gint16_linear_1 = resample_gint16_linear_1_neon;

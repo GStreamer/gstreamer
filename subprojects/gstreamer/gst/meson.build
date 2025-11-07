@@ -72,6 +72,7 @@ gst_sources = files(
   'gstvalue.c',
   'gstvecdeque.c',
   'gstparse.c',
+  'gstcpuid.c',
 )
 
 gst_headers = files(
@@ -152,6 +153,7 @@ gst_headers = files(
   'gstregistry.h',
   'gstparse.h',
   'math-compat.h',
+  'gstcpuid.h',
 )
 if host_system == 'darwin'
   gst_headers += files('gstmacos.h')

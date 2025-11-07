@@ -29,7 +29,7 @@ if a52_dep.found()
       a52dec_sources,
       c_args : ugly_args,
       include_directories : [configinc],
-      dependencies : [gstaudio_dep, orc_dep, a52_dep],
+      dependencies : [gstaudio_dep, a52_dep],
       install : true,
       install_dir : plugins_install_dir,
     )

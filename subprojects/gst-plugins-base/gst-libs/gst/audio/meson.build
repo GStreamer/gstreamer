@@ -162,7 +162,7 @@ gstaudio = library('gstaudio-@0@'.format(api_version),
   soversion : soversion,
   darwin_versions : osxversion,
   install : true,
-  dependencies : [ gstaudio_deps, base_platform_dep ],
+  dependencies : [ gst_dep, gstaudio_deps, base_platform_dep ],
 )
 pkg_name = 'gstreamer-audio-1.0'
 pkgconfig.generate(gstaudio,

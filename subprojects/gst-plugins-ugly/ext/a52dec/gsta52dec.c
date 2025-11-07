@@ -51,10 +51,6 @@
 #endif
 #include "gsta52dec.h"
 
-#if HAVE_ORC
-#include <orc/orc.h>
-#endif
-
 #ifdef LIBA52_DOUBLE
 #define SAMPLE_WIDTH 64
 #define SAMPLE_FORMAT GST_AUDIO_NE(F64)
@@ -142,7 +138,12 @@ gst_a52dec_class_init (GstA52DecClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstAudioDecoderClass *gstbase_class;
-  guint cpuflags = 0;
+
+#if !defined(A52_ACCEL_DETECT)
+  const gboolean cpuid_mmx = gst_cpuid_supports_x86_mmx ();
+  const gboolean cpuid_3dnow = gst_cpuid_supports_x86_3dnow ();
+  const gboolean cpuid_mmxext = gst_cpuid_supports_x86_mmxext ();
+#endif
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -209,17 +210,17 @@ gst_a52dec_class_init (GstA52DecClass * klass)
   klass->a52_cpuflags = 0;
 #endif
 
-#if HAVE_ORC && !defined(A52_ACCEL_DETECT)
-  cpuflags = orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
-  if (cpuflags & ORC_TARGET_MMX_MMX)
+#if !defined(A52_ACCEL_DETECT)
+  if (cpuid_mmx)
     klass->a52_cpuflags |= MM_ACCEL_X86_MMX;
-  if (cpuflags & ORC_TARGET_MMX_3DNOW)
+  if (cpuid_3dnow)
     klass->a52_cpuflags |= MM_ACCEL_X86_3DNOW;
-  if (cpuflags & ORC_TARGET_MMX_MMXEXT)
+  if (cpuid_mmxext)
     klass->a52_cpuflags |= MM_ACCEL_X86_MMXEXT;
-#endif
 
-  GST_LOG ("CPU flags: a52=%08x, orc=%08x", klass->a52_cpuflags, cpuflags);
+  GST_LOG ("CPU flags: a52=%08x, cpuid: [mmx=%x, mmxext=%x, 3dnow=%x]",
+      klass->a52_cpuflags, cpuid_mmx, cpuid_mmxext, cpuid_3dnow);
+#endif
 
   gst_type_mark_as_plugin_api (GST_TYPE_A52DEC_MODE, 0);
 }
@@ -827,10 +828,6 @@ gst_a52dec_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 a52_element_init (GstPlugin * plugin)
 {
-#if HAVE_ORC
-  orc_init ();
-#endif
-
   return gst_element_register (plugin, "a52dec", GST_RANK_SECONDARY,
       GST_TYPE_A52DEC);
 }

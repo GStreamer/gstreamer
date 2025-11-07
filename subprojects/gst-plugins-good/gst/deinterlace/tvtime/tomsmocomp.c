@@ -30,10 +30,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <gst/gst.h>
-#ifdef HAVE_ORC
-#include <orc/orc.h>
-#endif
 #include "gstdeinterlacemethod.h"
 #include "plugins.h"
 
@@ -164,8 +160,11 @@ static void
   GstDeinterlaceMethodClass *dim_class = (GstDeinterlaceMethodClass *) klass;
   GObjectClass *gobject_class = (GObjectClass *) klass;
 #ifdef BUILD_X86_ASM
-  guint cpu_flags =
-      orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
+  const gboolean cpuid_mmx = gst_cpuid_supports_x86_mmx ();
+  const gboolean cpuid_3dnow = gst_cpuid_supports_x86_3dnow ();
+  const gboolean cpuid_mmxext = gst_cpuid_supports_x86_mmxext ();
+  GST_LOG ("cpuid: [mmx=%x, mmxext=%x, 3dnow=%x]",
+      cpuid_mmx, cpuid_mmxext, cpuid__3dnow);
 #endif
 
   gobject_class->set_property = gst_deinterlace_method_tomsmocomp_set_property;
@@ -189,13 +188,13 @@ static void
   dim_class->latency = 1;
 
 #ifdef BUILD_X86_ASM
-  if (cpu_flags & ORC_TARGET_MMX_MMXEXT) {
+  if (cpuid_mmxext) {
     dim_class->deinterlace_frame_yuy2 = tomsmocompDScaler_MMXEXT;
     dim_class->deinterlace_frame_yvyu = tomsmocompDScaler_MMXEXT;
-  } else if (cpu_flags & ORC_TARGET_MMX_3DNOW) {
+  } else if (cpuid__3dnow) {
     dim_class->deinterlace_frame_yuy2 = tomsmocompDScaler_3DNOW;
     dim_class->deinterlace_frame_yvyu = tomsmocompDScaler_3DNOW;
-  } else if (cpu_flags & ORC_TARGET_MMX_MMX) {
+  } else if (cpuid_mmx) {
     dim_class->deinterlace_frame_yuy2 = tomsmocompDScaler_MMX;
     dim_class->deinterlace_frame_yvyu = tomsmocompDScaler_MMX;
   } else {

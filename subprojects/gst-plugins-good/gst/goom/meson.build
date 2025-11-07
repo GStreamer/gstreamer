@@ -63,7 +63,7 @@ gstgoom = library('gstgoom',
   goom_sources,
   c_args : gst_plugins_good_args,
   include_directories : [configinc],
-  dependencies : [gst_dep, gstpbutils_dep, gstbase_dep, orc_dep, libm],
+  dependencies : [gst_dep, gstpbutils_dep, gstbase_dep, libm],
   install : true,
   install_dir : plugins_install_dir,
 )

@@ -28,6 +28,7 @@
 
 #include <gst/glib-compat.h>
 
+#include <gst/gstcpuid.h>
 #include <gst/gstenumtypes.h>
 #include <gst/gstversion.h>
 

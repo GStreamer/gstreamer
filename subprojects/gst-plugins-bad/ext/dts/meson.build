@@ -49,7 +49,7 @@ if dca_dep.found()
     c_args : gst_plugins_bad_args + no_warn_c_args,
     link_args : noseh_link_args,
     include_directories : [configinc, libsinc],
-    dependencies : [gstaudio_dep, orc_dep, dca_dep],
+    dependencies : [gstaudio_dep, dca_dep],
     install : true,
     install_dir : plugins_install_dir,
   )
