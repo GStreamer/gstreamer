@@ -149,17 +149,17 @@ def strip_escape(s):
 def default_log_line_regex_():
 
     # "DEBUG             "
-    LEVEL = "([A-Z]+)\s*"
+    LEVEL = r"([A-Z]+)\s*"
     # "0x8165430 "
-    THREAD = r"(0x[0-9a-f]+)\s+"  # r"\((0x[0-9a-f]+) - "
+    THREAD = r"(0?x?[0-9a-f]+)\s+"  # r"\((0x[0-9a-f]+) - "
     # "0:00:00.777913000  "
     TIME = r"(\d+:\d\d:\d\d\.\d+)\s+"
-    CATEGORY = "([A-Za-z0-9_-]+)\s+"  # "GST_REFCOUNTING ", "flacdec "
+    CATEGORY = r"([A-Za-z0-9_-]+)\s+"  # "GST_REFCOUNTING ", "flacdec "
     # "  3089 "
     PID = r"(\d+)\s*"
     FILENAME = r"([^:]*):"
     LINE = r"(\d+):"
-    FUNCTION = "(~?[A-Za-z0-9_\s\*,\(\)]*):"
+    FUNCTION = r"(~?[A-Za-z0-9_\s\*,\(\)]*):"
     # FIXME: When non-g(st)object stuff is logged with *_OBJECT (like
     # buffers!), the address is printed *without* <> brackets!
     OBJECT = "(?:<([^>]+)>)?"
@@ -316,7 +316,7 @@ class LineCache (Producer):
         ANSI = "(?:\x1b\\[[0-9;]*m)?"
         ANSI_PATTERN = r"\d:\d\d:\d\d\.\d+ " + ANSI + \
                        r" *\d+" + ANSI + \
-                       r" +0x[0-9a-f]+ +" + ANSI + \
+                       r" +0?x?[0-9a-f]+ +" + ANSI + \
                        r"([TFLDIEWM ])"
         BARE_PATTERN = ANSI_PATTERN.replace(ANSI, "")
         rexp_bare = re.compile(BARE_PATTERN)
