@@ -70,6 +70,7 @@
 #include <gst/video/video.h>
 #include <glib/gstdio.h>
 #include "gstmultifilesink.h"
+#include "location-utils.h"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -430,7 +431,19 @@ gst_multi_file_sink_start (GstBaseSink * bsink)
 
   g_queue_init (&sink->old_files);
 
+  // Check filename template for invalid or unexpected format identifiers
+  if (!multifile_utils_check_template_string (sink, sink->filename))
+    goto invalid_filename_template;
+
   return TRUE;
+
+/* ERRORS */
+invalid_filename_template:
+  {
+    GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS,
+        ("Invalid location"), ("%s", sink->filename));
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -598,8 +611,12 @@ gst_multi_file_sink_write_buffer (GstMultiFileSink * multifilesink,
     case GST_MULTI_FILE_SINK_NEXT_BUFFER:
       gst_multi_file_sink_ensure_max_files (multifilesink);
 
-      filename = g_strdup_printf (multifilesink->filename,
-          multifilesink->index);
+      filename = multifile_utils_printf_string_from_template (multifilesink,
+          multifilesink->filename, multifilesink->index);
+
+      if (filename == NULL)
+        goto no_filename;
+
       ret = g_file_set_contents (filename, (char *) map.data, map.size, &error);
       if (!ret)
         goto write_error;
@@ -756,6 +773,14 @@ gst_multi_file_sink_write_buffer (GstMultiFileSink * multifilesink,
   return GST_FLOW_OK;
 
   /* ERRORS */
+no_filename:
+  {
+    // This should have been caught in start already
+    GST_ELEMENT_ERROR (multifilesink, RESOURCE, SETTINGS,
+        ("Invalid location"), ("%s", multifilesink->filename));
+    gst_buffer_unmap (buffer, &map);
+    return GST_FLOW_ERROR;
+  }
 write_error:
   {
     switch (error->code) {

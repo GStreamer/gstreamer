@@ -46,6 +46,7 @@
 #endif
 
 #include "gstmultifilesrc.h"
+#include "location-utils.h"
 #include <glib/gi18n-lib.h>
 
 static GstFlowReturn gst_multi_file_src_create (GstPushSrc * src,
@@ -57,6 +58,7 @@ static void gst_multi_file_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_multi_file_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static gboolean gst_multi_file_src_start (GstBaseSrc * bsrc);
 static GstCaps *gst_multi_file_src_getcaps (GstBaseSrc * src, GstCaps * filter);
 static gboolean gst_multi_file_src_query (GstBaseSrc * src, GstQuery * query);
 static void gst_multi_file_src_uri_handler_init (gpointer g_iface,
@@ -183,6 +185,8 @@ gst_multi_file_src_class_init (GstMultiFileSrcClass * klass)
 
   gobject_class->dispose = gst_multi_file_src_dispose;
 
+  gstbasesrc_class->start = gst_multi_file_src_start;
+
   gstbasesrc_class->get_caps = gst_multi_file_src_getcaps;
   gstbasesrc_class->query = gst_multi_file_src_query;
   gstbasesrc_class->is_seekable = is_seekable;
@@ -223,6 +227,26 @@ gst_multi_file_src_dispose (GObject * object)
     gst_caps_unref (src->caps);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static gboolean
+gst_multi_file_src_start (GstBaseSrc * bsrc)
+{
+  GstMultiFileSrc *src = GST_MULTI_FILE_SRC (bsrc);
+
+  // Check filename template for invalid or unexpected format identifiers
+  if (!multifile_utils_check_template_string (src, src->filename))
+    goto invalid_filename_template;
+
+  return TRUE;
+
+/* ERRORS */
+invalid_filename_template:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS,
+        ("Invalid location"), ("%s", src->filename));
+    return FALSE;
+  }
 }
 
 static GstCaps *
@@ -393,7 +417,13 @@ gst_multi_file_src_get_filename (GstMultiFileSrc * multifilesrc)
 
   GST_DEBUG ("%d", multifilesrc->index);
   if (multifilesrc->filename != NULL) {
-    filename = g_strdup_printf (multifilesrc->filename, multifilesrc->index);
+    filename = multifile_utils_printf_string_from_template (multifilesrc,
+        multifilesrc->filename, multifilesrc->index);
+
+    if (filename == NULL) {
+      GST_WARNING_OBJECT (multifilesrc, "Failed to generate filename "
+          "from location template '%s'!", multifilesrc->filename);
+    }
   } else {
     GST_WARNING_OBJECT (multifilesrc, "No filename location set!");
     filename = NULL;

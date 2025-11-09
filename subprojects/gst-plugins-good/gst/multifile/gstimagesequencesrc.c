@@ -49,6 +49,7 @@
 #include <glib/gi18n-lib.h>
 
 #include "gstimagesequencesrc.h"
+#include "location-utils.h"
 
 #define LOCK(self) (g_rec_mutex_lock (&self->fields_lock))
 #define UNLOCK(self) (g_rec_mutex_unlock (&self->fields_lock))
@@ -61,6 +62,7 @@ static void gst_image_sequence_src_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_image_sequence_src_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
+static gboolean gst_image_sequence_src_start (GstBaseSrc * src);
 static GstCaps *gst_image_sequence_src_getcaps (GstBaseSrc * src,
     GstCaps * filter);
 static gboolean gst_image_sequence_src_query (GstBaseSrc * src,
@@ -326,6 +328,7 @@ gst_image_sequence_src_class_init (GstImageSequenceSrcClass * klass)
   gobject_class->finalize = gst_image_sequence_src_finalize;
   gobject_class->dispose = gst_image_sequence_src_dispose;
 
+  gstbasesrc_class->start = gst_image_sequence_src_start;
   gstbasesrc_class->get_caps = gst_image_sequence_src_getcaps;
   gstbasesrc_class->query = gst_image_sequence_src_query;
   gstbasesrc_class->is_seekable = is_seekable;
@@ -362,6 +365,26 @@ gst_image_sequence_src_init (GstImageSequenceSrc * self)
   self->n_frames = 0;
   self->fps_n = 30;
   self->fps_d = 1;
+}
+
+static gboolean
+gst_image_sequence_src_start (GstBaseSrc * src)
+{
+  GstImageSequenceSrc *self = GST_IMAGE_SEQUENCE_SRC (src);
+
+  // Check filename template for invalid or unexpected format identifiers
+  if (!multifile_utils_check_template_string (self, self->path))
+    goto invalid_filename_template;
+
+  return TRUE;
+
+/* ERRORS */
+invalid_filename_template:
+  {
+    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
+        ("Invalid location"), ("%s", self->path));
+    return FALSE;
+  }
 }
 
 static GstCaps *

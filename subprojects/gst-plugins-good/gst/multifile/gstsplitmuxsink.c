@@ -76,6 +76,7 @@
 #include <glib/gstdio.h>
 #include <gst/video/video.h>
 #include "gstsplitmuxsink.h"
+#include "location-utils.h"
 
 GST_DEBUG_CATEGORY_STATIC (splitmux_debug);
 #define GST_CAT_DEFAULT splitmux_debug
@@ -237,7 +238,8 @@ static GstStateChangeReturn gst_splitmux_sink_change_state (GstElement *
     element, GstStateChange transition);
 
 static void bus_handler (GstBin * bin, GstMessage * msg);
-static void set_next_filename (GstSplitMuxSink * splitmux, MqStreamCtx * ctx);
+static gboolean set_next_filename (GstSplitMuxSink * splitmux,
+    MqStreamCtx * ctx);
 static GstFlowReturn start_next_fragment (GstSplitMuxSink * splitmux,
     MqStreamCtx * ctx);
 static void mq_stream_ctx_free (MqStreamCtx * ctx);
@@ -2290,7 +2292,9 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
   }
 
   GST_SPLITMUX_LOCK (splitmux);
-  set_next_filename (splitmux, ctx);
+  if (!set_next_filename (splitmux, ctx))
+    goto fail_next_filename_with_lock_held;
+
   splitmux->next_fragment_id++;
   splitmux->muxed_out_bytes = 0;
   splitmux->out_fragment_start_runts = GST_CLOCK_STIME_NONE;
@@ -2348,6 +2352,14 @@ fail:
   GST_SPLITMUX_STATE_UNLOCK (splitmux);
   GST_ELEMENT_ERROR (splitmux, RESOURCE, SETTINGS,
       ("Could not create the new muxer/sink"), NULL);
+  return GST_FLOW_ERROR;
+
+fail_next_filename_with_lock_held:
+  gst_object_unref (sink);
+  gst_object_unref (muxer);
+
+  GST_SPLITMUX_STATE_UNLOCK (splitmux);
+  splitmux->switching_fragment = FALSE;
   return GST_FLOW_ERROR;
 
 fail_output:
@@ -4055,12 +4067,13 @@ fail:
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
-static void
+static gboolean
 set_next_filename (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
 {
   gchar *fname = NULL;
   GstSample *sample;
   GstCaps *caps;
+  gboolean res = TRUE;
 
   gst_splitmux_sink_ensure_max_files (splitmux);
 
@@ -4082,9 +4095,15 @@ set_next_filename (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
         splitmux->next_fragment_id, &fname);
   }
 
-  if (!fname) {
-    fname = splitmux->location ?
-        g_strdup_printf (splitmux->location, splitmux->next_fragment_id) : NULL;
+  if (fname == NULL && splitmux->location != NULL) {
+    fname = multifile_utils_printf_string_from_template (splitmux,
+        splitmux->location, splitmux->next_fragment_id);
+
+    if (fname == NULL) {
+      GST_ELEMENT_ERROR (splitmux, RESOURCE, SETTINGS,
+          ("Invalid location"), ("%s", splitmux->location));
+      res = FALSE;
+    }
   }
 
   if (fname) {
@@ -4096,6 +4115,8 @@ set_next_filename (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
     g_free (fname);
   }
   splitmux->cur_fragment_id = splitmux->next_fragment_id;
+
+  return res;
 }
 
 /* called with GST_SPLITMUX_LOCK */
