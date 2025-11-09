@@ -7,6 +7,7 @@ multifile_sources = [
   'gstsplitmuxsink.c',
   'gstsplitmuxsrc.c',
   'gstsplitutils.c',
+  'location-utils.c',
   'patternspec.c',
   'gstimagesequencesrc.c',
 ]
@@ -20,6 +21,7 @@ multifile_headers = [
   'gstsplitmuxsink.h',
   'gstsplitmuxsrc.h',
   'gstsplitutils.h',
+  'location-utils.h',
   'patternspec.h',
 ]
 
