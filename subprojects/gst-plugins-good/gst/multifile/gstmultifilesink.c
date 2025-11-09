@@ -38,7 +38,7 @@
  * It is not possible to use this element to create independently playable
  * mp4 files, use the splitmuxsink element for that instead.
  *
- * The filename property should contain a string with a \%d placeholder that will
+ * The location property should contain a string with a \%d placeholder that will
  * be substituted with the index for each filename.
  *
  * If the #GstMultiFileSink:post-messages property is %TRUE, it sends an application
