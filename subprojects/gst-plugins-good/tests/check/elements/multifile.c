@@ -376,6 +376,70 @@ GST_START_TEST (test_multifilesrc_stop_index)
 
 GST_END_TEST;
 
+#undef GST_CAT_DEFAULT
+#include "../../../gst/multifile/location-utils.c"      // I know
+
+#define check_template(str) multifile_utils_check_template_string(NULL,str)
+
+GST_START_TEST (test_multifile_location_utils)
+{
+  // Accept %d %u and %x
+  fail_unless (check_template ("frame-%d"));
+  fail_unless (check_template ("frame-%08d"));
+  fail_unless (check_template ("%d"));
+  fail_unless (check_template ("%4d"));
+  fail_unless (check_template ("%16x"));
+  fail_unless (check_template ("%u"));
+  fail_unless (check_template ("%X"));
+  fail_unless (check_template ("%i"));
+
+  fail_unless (check_template ("always-the-same"));
+  fail_unless (check_template ("%%"));  // empty but correct
+  fail_unless (check_template ("frame-%%"));
+  fail_unless (check_template ("frame-%%%d"));
+  fail_unless (check_template ("frame-%d%%"));
+  fail_unless (check_template ("%03d-foo-%%pc"));
+
+  fail_if (check_template ("foo-%"));
+  fail_if (check_template ("%"));
+  fail_if (check_template ("%%%"));
+  fail_if (check_template ("frame-%%%"));
+
+  // Only one identifier
+  fail_if (check_template ("%d%d"));
+  fail_if (check_template ("frame-%d%%%d"));
+
+  // no unexpected identifiers
+  fail_if (check_template ("frame-%s"));
+  fail_if (check_template ("%s"));
+  fail_if (check_template ("%f"));
+  fail_if (check_template ("%.45g"));
+
+  // no size modifiers
+  fail_if (check_template ("frame-%ld"));
+  fail_if (check_template ("frame-%zd"));
+  fail_if (check_template ("%lld"));
+  fail_if (check_template ("%4zd"));
+  fail_if (check_template ("%16zx"));
+  fail_if (check_template ("%zu"));
+
+  // We allow misc modifiers
+  fail_unless (check_template ("frame-%#d"));
+  fail_unless (check_template ("frame-%#08x"));
+  fail_unless (check_template ("frame-%-d"));
+  fail_unless (check_template ("%+d"));
+
+  // But not passing the width in a separate argument
+  fail_if (check_template ("frame-%*08d"));
+
+  // Allow precision
+  fail_unless (check_template ("frame-%.10d"));
+  fail_unless (check_template ("frame-%3.4d"));
+  fail_unless (check_template ("%99.181d"));
+  fail_unless (check_template ("frame-%+.10o"));
+}
+
+GST_END_TEST;
 
 static Suite *
 multifile_suite (void)
@@ -390,6 +454,7 @@ multifile_suite (void)
   tcase_add_test (tc_chain, test_multifilesink_key_unit);
   tcase_add_test (tc_chain, test_multifilesrc);
   tcase_add_test (tc_chain, test_multifilesrc_stop_index);
+  tcase_add_test (tc_chain, test_multifile_location_utils);
 
   return s;
 }
