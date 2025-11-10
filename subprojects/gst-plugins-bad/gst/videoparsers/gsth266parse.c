@@ -2233,6 +2233,8 @@ gst_h266_parse_update_src_caps (GstH266Parse * h266parse, GstCaps * caps)
     GstH266VUIParams *vui = &sps->vui_params;
     gchar *colorimetry = NULL;
     guint interlaced_mode;
+    gint upstream_fps_n = 0;
+    gint upstream_fps_d = 1;
 
     GST_DEBUG_OBJECT (h266parse, "vps: %p", vps);
 
@@ -2265,7 +2267,15 @@ gst_h266_parse_update_src_caps (GstH266Parse * h266parse, GstCaps * caps)
       modified = TRUE;
     }
 
-    if (!h266parse->framerate_from_caps) {
+    if (s && gst_structure_get_fraction (s,
+            "framerate", &upstream_fps_n, &upstream_fps_d)) {
+      if (upstream_fps_n <= 0 || upstream_fps_d <= 0) {
+        upstream_fps_n = 0;
+        upstream_fps_d = 1;
+      }
+    }
+
+    if (!upstream_fps_n) {
       gint fps_num, fps_den;
 
       /* 0/1 is set as the default in the codec parser */
@@ -2362,12 +2372,10 @@ gst_h266_parse_update_src_caps (GstH266Parse * h266parse, GstCaps * caps)
       gst_caps_set_simple (caps, "width", G_TYPE_INT, width,
           "height", G_TYPE_INT, height, NULL);
 
-      h266parse->framerate_from_caps = FALSE;
       /* upstream overrides */
-      if (s && gst_structure_has_field (s, "framerate")) {
-        gst_structure_get_fraction (s, "framerate", &fps_num, &fps_den);
-        if (fps_den > 0)
-          h266parse->framerate_from_caps = TRUE;
+      if (upstream_fps_n > 0 && upstream_fps_d > 0) {
+        fps_num = upstream_fps_n;
+        fps_den = upstream_fps_d;
       }
 
       /* but not necessarily or reliably this */

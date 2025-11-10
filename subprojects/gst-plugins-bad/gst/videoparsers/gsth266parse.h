@@ -120,7 +120,6 @@ struct _GstH266Parse
   gboolean predicted;
   gboolean bidirectional;
   gboolean header;
-  gboolean framerate_from_caps;
   /* AU state */
   gboolean picture_start;
   guint last_nuh_layer_id;
