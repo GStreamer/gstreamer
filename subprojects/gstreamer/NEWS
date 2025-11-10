@@ -2,11 +2,11 @@ GStreamer 1.26 Release Notes
 
 GStreamer 1.26.0 was originally released on 11 March 2025.
 
-The latest bug-fix release in the stable 1.26 series is 1.26.7 and was released on 14 October 2025.
+The latest bug-fix release in the stable 1.26 series is 1.26.8 and was released on 10 November 2025.
 
 See https://gstreamer.freedesktop.org/releases/1.26/ for the latest version of this document.
 
-Last updated: Tuesday 14 October 2025, 16:30 UTC (log)
+Last updated: Monday 10 November 2025, 17:00 UTC (log)
 
 ## Introduction
 
@@ -2765,6 +2765,180 @@ List of merge requests and issues fixed in 1.26.7
 
 -   List of Merge Requests applied in 1.26.7
 -   List of Issues fixed in 1.26.7
+
+1.26.8
+
+The eighth 1.26 bug-fix release (1.26.8) was released on 10 November 2025.
+
+This release only contains bugfixes including some important playback fixes, and it should be safe to update from 1.26.x.
+
+Highlighted bugfixes in 1.26.8
+
+-   Fix showtime video player showing washed-out colours for HDR videos when subtitles are active
+-   core: performance improvements for elements with many source pads
+-   aacparse: support streams which do not have frequent LOAS config
+-   av1parse: Fix duplicated frames issue in frame splitting
+-   fmp4mux: Fix EAC3 datarate calculation and substream writing
+-   gtk4painablesink: fixes glitches with padded buffers such as for sub-sampled video formats with odd sizes
+-   mpegtsmux: PUSI flag and ID3 tag handling fixes
+-   rtpbaseaudiopay2: Fix marker bit handling for DISCONT and RESYNC buffer flags
+-   rtpvp9pay: Fix parsing of show-existing-frame flag, fixes compatibility with vavp9lpenc
+-   splitmuxsink: accept pads named ‘sink_%u’ on the muxer for fmp4 muxer support
+-   webrtcsink: Correct lock ordering to prevent deadlock
+-   gst-plugins-rs meson build gained an auto_plugin_features option and no longer requires all gstreamer libraries to be
+    available
+-   v4l2 device monitor fixes
+-   x265enc: advertise latency based on encoder parameters instead of hard-coding it to 5 frames
+-   cerbero package builder: Add Rust support for 32-bit Linux x86
+-   Various bug fixes, build fixes, memory leak fixes, and other stability and reliability improvements
+
+gstreamer
+
+-   info : Added parentheses to ensure proper evaluation of conditions in logging level checks.
+-   info: Fix test pattern to check for an expected debug log line
+-   pad: make gst_pad_forward not O(n²)
+-   parse: Move g_strfreev() a bit later to avoid use-after-free
+-   structure: Don’t crash if GArray has NULL value
+-   utils: Fix leak in gst_util_filename_compare
+-   vasnprintf: free dynamic tmp buffer on error to prevent memory leak
+-   gst-launch-1.0: Print details of error message
+
+gst-plugins-base
+
+-   encoding-target: Fix memory leak in gst_encoding_target_save
+-   gl: Support DMABuf passthrough with meta:GstVideoOverlayComposition
+-   gl: egl: fix memory leak in _print_all_dma_formats()
+-   gltestsrc: Fix memory leaks on shader creation failure
+-   id3: fix csets memory leak in string_utf8_dup
+-   opusdec: Unref intersected caps when empty to avoid leaks
+-   parsebin: Free missing plugin details and return failure when plugin is not found
+-   pbutils: Don’t throw critical for unknown mime codec
+-   rtsp: fix memory leaks in gst_rtsp_connection_connect_with_response_usec
+
+gst-plugins-good
+
+-   aacparse: support streams which do not have frequent loas config
+-   multifile: verify format identifiers in filename template strings
+-   rtp: Fix usage of uninitialized variable
+-   rtph263pay: Fix Out-of-bounds access (OVERRUN)
+-   rtpvp9depay: fix wrong event referencing, use same packet lost logic from neighboring rtpvp8depay
+-   rtpvp9pay: Fix parsing of show-existing-frame
+-   rtpvp9pay: vavp9lpenc does not work with rtpvp9pay but does with rtpvp9pay2
+-   splitmuxsink: accept pads named ‘sink_%u’ on the muxer
+-   v4l2: Fix NULL pointer dereference in probe error path
+-   v4l2videoenc: fix memory leak about output state and caps
+
+gst-plugins-bad
+
+-   alphacombine: Only reset once both pads are done flushing
+-   av1parse: Fix duplicated frames issue in frame splitting
+-   avwait: Unify conditions between the different modes
+-   d3d11converter & d3d12converter: Initialize video_direction
+-   dtlsconnection: Increase DTLS MTU to 1200
+-   h264parser: fix uint32 to int32 truncation
+-   mpegtsmux: ID3 tag handling fixes and cleanup
+-   ristsink: Fix double free regression
+-   scte-section: fix resource leak in splice component parsing
+-   tsmux: Reset PUSI flag after writing stream packet
+-   uvcgadget: always ensure to switch to fakesink
+-   v4l2codecs: Free sub-request on allocation failure
+-   wasapi2: Handle GetActivateResult failure
+-   wayland: Fix using uninitialized value of data.wbuf
+-   gstwasapi2.dll error on machines with no audio devices
+-   x265enc: Calculate latency based on encoder parameters
+
+gst-plugins-ugly
+
+-   No changes
+
+GStreamer Rust plugins
+
+-   aws, webrtc, cargo: Remove all constraints on AWS SDK and tune optimizations
+-   closedcaption: Return FlowError from scan_duration
+-   fmp4mux: Fix EAC3 datarate calculation
+-   fmp4mux: Fix EAC3 substream writing in EC3SpecificBox
+-   fmp4mux: Update to dash-mpd 0.19
+-   gtk4: Implement cropped imports without viewport
+-   json: Return FlowError from scan_duration
+-   rtp: baseaudiopay: Fix marker bit handling
+-   threadshare: fix Pad mod diagram
+-   threadshare: Update to getifaddrs 0.6
+-   tracers: Fix inability to create new log files (regression)
+-   tracers: Fix inverted append logic when writing log files
+-   uriplaylistbin: Propagate error message source
+-   webrtc: document grant requirement for livekitwebrtcsink auth token
+-   webrtcsink: Correct lock ordering to prevent Lock (A), Lock (B) + Lock(B), Lock(A) deadlock between
+    on_remote_description_set() and handle_ice()
+-   webrtcsrc: Clean up EOS and session handling
+-   meson: Add auto_plugin_features option
+-   meson: Don’t require all gstreamer libraries
+-   Document the tags and branches in this repository
+-   Fix a couple of new 1.91 clippy warnings
+-   Update dependencies
+
+gst-libav
+
+-   No changes
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-python
+
+-   python: Fix GDir leak in gst_python_load_directory
+
+gst-editing-services
+
+-   ges: add error reporting to base bin timeline setup
+
+gst-devtools, gst-validate + gst-integration-testsuites
+
+-   validate: add missing GST_VALIDATE_API annotation
+-   validate: use meson compile instead of ninja directly
+-   dots-viewer: Update Rust dependencies
+
+gst-examples
+
+-   Fix signal lookup in GTK player example
+-   Update Rust dependencies
+
+gstreamer-docs
+
+-   No changes
+
+Development build environment
+
+-   libnice.wrap: add upstream patch from libnice to fix parsing of incomplete TCP ICE candidates
+
+Cerbero build tool and packaging changes in 1.26.8
+
+-   Add Rust support for Linux x86
+-   Open log files as utf-8 and with error resilience
+-   harfbuzz: disable documentation
+
+Contributors to 1.26.8
+
+Amy Ko, Artem Martus, Carlos Bentzen, Christo Joseph, David Maseda Neira, DongJoo Kim, Doug Nazar, François Laignel, Havard
+Graff, He Junyan, Inbok Kim, Jan Alexander Steffens (heftig), Jan Schmidt, Jeehyun Lee, Jeongmin Kwak, Jihoon Lee, Kevin Wolf,
+L. E. Segovia, Loïc Le Page, Manuel Torres, Marek Olejnik, Matthew Waters, Mazdak Farzone, Michael Grzeschik, Nicolas Dufresne,
+Nirbheek Chauhan, Oz Donner, Pablo García, Piotr Brzeziński, Qian Hu (胡骞), Rares Branici, Robert Mader, Ross Burton, Ruben
+Gonzalez, Sebastian Dröge, Seungha Yang, Thibault Saunier, Tim-Philipp Müller, Xavier Claessens,
+
+… and many others who have contributed bug reports, translations, sent suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.26.8
+
+-   List of Merge Requests applied in 1.26.8
+-   List of Issues fixed in 1.26.8
 
 Schedule for 1.28
 

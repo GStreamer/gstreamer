@@ -1,5 +1,5 @@
 project('gst-devtools', 'c',
-  version : '1.26.7.1',
+  version : '1.26.8',
   meson_version : '>= 1.4',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
