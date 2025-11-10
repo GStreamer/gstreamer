@@ -2409,6 +2409,9 @@ gst_video_converter_init_from_config (GstVideoConverter * convert)
  * The optional @pool can be used to spawn threads, this is useful when
  * creating new converters rapidly, for example when updating cropping.
  *
+ * If @config is not provided, and a @pool is provided, the number of threads for
+ * the converter will be set to the maximum number of threads in the pool.
+ *
  * Returns (nullable): a #GstVideoConverter or %NULL if conversion is not possible.
  *
  * Since: 1.20
@@ -2442,12 +2445,23 @@ gst_video_converter_new_with_pool (const GstVideoInfo * in_info,
   convert->out_maxheight = GST_VIDEO_INFO_FIELD_HEIGHT (out_info);
 
   convert->config = gst_structure_new_static_str_empty ("GstVideoConverter");
-  if (config)
+  if (config) {
     gst_video_converter_set_config (convert, config);
-  else
+    n_threads = get_opt_uint (convert, GST_VIDEO_CONVERTER_OPT_THREADS, 1);
+  } else {
+    /* No config provided. If a pool is available, use its thread count */
     gst_video_converter_init_from_config (convert);
+    if (pool && GST_IS_SHARED_TASK_POOL (pool)) {
+      n_threads =
+          gst_shared_task_pool_get_max_threads (GST_SHARED_TASK_POOL (pool));
+      GST_LOG ("setting n-threads from max threads %d from provided pool",
+          n_threads);
+      gst_structure_set (convert->config,
+          GST_VIDEO_CONVERTER_OPT_THREADS, G_TYPE_UINT, n_threads, NULL);
+    } else
+      n_threads = get_opt_uint (convert, GST_VIDEO_CONVERTER_OPT_THREADS, 1);
+  }
 
-  n_threads = get_opt_uint (convert, GST_VIDEO_CONVERTER_OPT_THREADS, 1);
   if (n_threads == 0 || n_threads > g_get_num_processors ())
     n_threads = g_get_num_processors ();
   /* Magic number of 200 lines */

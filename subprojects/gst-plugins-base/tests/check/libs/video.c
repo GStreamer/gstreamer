@@ -2917,6 +2917,32 @@ GST_START_TEST (test_video_convert_multithreading)
   fail_unless (gst_buffer_memcmp (refbuffer, 0, info.data, info.size) == 0);
   gst_buffer_unmap (outbuffer, &info);
 
+  gst_video_frame_map (&outframe, &outinfo, outbuffer, GST_MAP_WRITE);
+  gst_video_frame_map (&refframe, &outinfo, refbuffer, GST_MAP_WRITE);
+
+  /* Multi-threaded conversion, user-provided pool, no converter config */
+  pool = gst_shared_task_pool_new ();
+  gst_shared_task_pool_set_max_threads (GST_SHARED_TASK_POOL (pool), 4);
+  gst_task_pool_prepare (pool, NULL);
+  convert = gst_video_converter_new_with_pool (&ininfo, &outinfo, NULL, pool);
+  const GstStructure *config = gst_video_converter_get_config (convert);
+  fail_unless (gst_structure_has_field (config,
+          GST_VIDEO_CONVERTER_OPT_THREADS));
+  guint threads;
+  gst_structure_get_uint (config, GST_VIDEO_CONVERTER_OPT_THREADS, &threads);
+  fail_unless (threads == 4);
+  gst_video_converter_frame (convert, &inframe, &outframe);
+  gst_video_converter_free (convert);
+  gst_task_pool_cleanup (pool);
+  gst_object_unref (pool);
+
+  gst_video_frame_unmap (&outframe);
+  gst_video_frame_unmap (&refframe);
+
+  gst_buffer_map (outbuffer, &info, GST_MAP_READ);
+  fail_unless (gst_buffer_memcmp (refbuffer, 0, info.data, info.size) == 0);
+  gst_buffer_unmap (outbuffer, &info);
+
 
   gst_buffer_unref (refbuffer);
   gst_buffer_unref (outbuffer);
