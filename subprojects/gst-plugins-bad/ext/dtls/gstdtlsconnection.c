@@ -1285,8 +1285,8 @@ bio_method_ctrl (BIO * bio, int cmd, long arg1, void *arg2)
       GST_LOG_OBJECT (self, "BIO: flushing");
       return 1;
     case BIO_CTRL_DGRAM_QUERY_MTU:
-      GST_DEBUG_OBJECT (self, "BIO: MTU query, returning 0...");
-      return 0;
+      GST_DEBUG_OBJECT (self, "BIO: MTU query, returning 1200...");
+      return 1200;
     case BIO_CTRL_DGRAM_MTU_EXCEEDED:
       GST_WARNING_OBJECT (self, "BIO: MTU exceeded");
       return 0;
