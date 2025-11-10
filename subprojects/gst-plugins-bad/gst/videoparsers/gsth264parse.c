@@ -2239,6 +2239,8 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     gint par_n, par_d;
     GstH264VUIParams *vui = &sps->vui_parameters;
     gchar *colorimetry = NULL;
+    gint upstream_fps_n = 0;
+    gint upstream_fps_d = 1;
 
     if (sps->frame_cropping_flag) {
       crop_width = sps->crop_rect_width;
@@ -2255,6 +2257,14 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       h264parse->width = crop_width;
       h264parse->height = crop_height;
       modified = TRUE;
+    }
+
+    if (s && gst_structure_get_fraction (s,
+            "framerate", &upstream_fps_n, &upstream_fps_d)) {
+      if (upstream_fps_n <= 0 || upstream_fps_d <= 0) {
+        upstream_fps_n = 0;
+        upstream_fps_d = 1;
+      }
     }
 
     /* 0/1 is set as the default in the codec parser, we will set
@@ -2403,8 +2413,9 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
           "height", G_TYPE_INT, height, NULL);
 
       /* upstream overrides */
-      if (s && gst_structure_has_field (s, "framerate")) {
-        gst_structure_get_fraction (s, "framerate", &fps_num, &fps_den);
+      if (upstream_fps_n > 0 && upstream_fps_d > 0) {
+        fps_num = upstream_fps_n;
+        fps_den = upstream_fps_d;
       }
 
       /* but not necessarily or reliably this */
