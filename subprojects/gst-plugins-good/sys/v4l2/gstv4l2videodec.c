@@ -923,6 +923,7 @@ beach:
   if (ret == GST_V4L2_FLOW_RESOLUTION_CHANGE) {
     GST_VIDEO_DECODER_STREAM_LOCK (decoder);
     self->draining = TRUE;
+    self->wait_for_source_change = FALSE;
     GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
     GST_INFO_OBJECT (decoder, "Received resolution change");
     return;
