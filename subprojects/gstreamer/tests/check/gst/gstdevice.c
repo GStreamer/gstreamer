@@ -97,25 +97,25 @@ GST_START_TEST (test_device)
   display_name = gst_device_get_display_name (device);
   device_class = gst_device_get_device_class (device);
 
-  fail_unless_equals_string (DISPLAY_NAME, display_name);
-  fail_unless_equals_string (DEVICE_CLASS, device_class);
+  ck_assert_str_eq (DISPLAY_NAME, display_name);
+  ck_assert_str_eq (DEVICE_CLASS, device_class);
   gst_check_caps_equal (caps, compare_caps);
 
   g_free (display_name);
   g_free (device_class);
   gst_caps_unref (caps);
 
-  fail_unless (gst_device_has_classes (device, "Test1"));
-  fail_unless (gst_device_has_classes (device, "Test2/Test1"));
+  ck_assert (gst_device_has_classes (device, "Test1"));
+  ck_assert (gst_device_has_classes (device, "Test2/Test1"));
 
   element = gst_device_create_element (device, "reconfigurable");
-  fail_unless (GST_IS_BIN (element));
+  ck_assert (GST_IS_BIN (element));
 
-  fail_unless (gst_device_reconfigure_element (device, element));
+  ck_assert (gst_device_reconfigure_element (device, element));
 
   gst_element_set_name (element, "no-no");
 
-  fail_unless (!gst_device_reconfigure_element (device, element));
+  ck_assert (!gst_device_reconfigure_element (device, element));
 
   gst_object_unref (element);
 
@@ -194,19 +194,18 @@ GST_START_TEST (test_device_provider_factory)
 
   factories = gst_device_provider_factory_list_get_device_providers (1);
 
-  fail_unless (factories != NULL);
+  ck_assert_ptr_ne (factories, NULL);
 
   f = gst_device_provider_factory_find ("testdeviceprovider");
-  fail_unless (f != NULL);
+  ck_assert_ptr_ne (f, NULL);
 
   gst_plugin_feature_list_free (factories);
 
-  fail_unless (gst_device_provider_factory_has_classes (f, "Test2"));
-  fail_unless (gst_device_provider_factory_has_classes (f, "Test2/Test0"));
-  fail_unless (!gst_device_provider_factory_has_classes (f,
-          "Test2/TestN/Test0"));
-  fail_unless (!gst_device_provider_factory_has_classes (f, "TestN"));
-  fail_unless (!gst_device_provider_factory_has_classes (f, "Test"));
+  ck_assert (gst_device_provider_factory_has_classes (f, "Test2"));
+  ck_assert (gst_device_provider_factory_has_classes (f, "Test2/Test0"));
+  ck_assert (!gst_device_provider_factory_has_classes (f, "Test2/TestN/Test0"));
+  ck_assert (!gst_device_provider_factory_has_classes (f, "TestN"));
+  ck_assert (!gst_device_provider_factory_has_classes (f, "Test"));
 
   dp = gst_device_provider_factory_get (f);
 
@@ -214,13 +213,13 @@ GST_START_TEST (test_device_provider_factory)
 
   dp2 = gst_device_provider_factory_get_by_name ("testdeviceprovider");
 
-  fail_unless_equals_pointer (dp, dp2);
+  ck_assert_ptr_eq (dp, dp2);
 
   gst_object_unref (dp);
   gst_object_unref (dp2);
 
   dp2 = gst_device_provider_factory_get_by_name ("testdeviceprovider");
-  fail_unless_equals_pointer (dp, dp2);
+  ck_assert_ptr_eq (dp, dp2);
   gst_object_unref (dp2);
 }
 
@@ -236,25 +235,25 @@ GST_START_TEST (test_device_provider)
 
   dp = gst_device_provider_factory_get_by_name ("testdeviceprovider");
   num_devices = 0;
-  fail_unless (dp != NULL);
-  fail_unless (gst_device_provider_get_devices (dp) == NULL);
+  ck_assert_ptr_ne (dp, NULL);
+  ck_assert_ptr_eq (gst_device_provider_get_devices (dp), NULL);
 
   num_devices = 1;
 
   devs = gst_device_provider_get_devices (dp);
-  fail_unless (g_list_length (devs) == 1);
-  fail_unless (GST_IS_DEVICE (devs->data));
+  ck_assert (g_list_length (devs) == 1);
+  ck_assert (GST_IS_DEVICE (devs->data));
   g_list_free_full (devs, (GDestroyNotify) gst_object_unref);
 
   fail_if (gst_device_provider_can_monitor (dp));
   fail_if (gst_device_provider_is_started (dp));
-  fail_unless (gst_device_provider_start (dp));
+  ck_assert (gst_device_provider_start (dp));
 
   bus = gst_device_provider_get_bus (dp);
-  fail_unless (GST_IS_BUS (bus));
+  ck_assert (GST_IS_BUS (bus));
   gst_object_unref (bus);
 
-  fail_unless (gst_device_provider_is_started (dp));
+  ck_assert (gst_device_provider_is_started (dp));
   gst_device_provider_stop (dp);
 
   gst_object_unref (dp);
@@ -329,65 +328,65 @@ GST_START_TEST (test_device_provider_monitor)
   bus = gst_device_provider_get_bus (dp);
 
   msg = gst_bus_pop (bus);
-  fail_unless (msg == NULL);
+  ck_assert_ptr_eq (msg, NULL);
 
-  fail_unless (gst_device_provider_can_monitor (dp));
-  fail_unless (gst_device_provider_start (dp));
+  ck_assert (gst_device_provider_can_monitor (dp));
+  ck_assert (gst_device_provider_start (dp));
 
-  fail_unless (gst_device_provider_get_devices (dp) == NULL);
+  ck_assert_ptr_eq (gst_device_provider_get_devices (dp), NULL);
 
   devs = gst_device_provider_get_devices (dp);
-  fail_unless (devs == NULL);
+  ck_assert_ptr_eq (devs, NULL);
 
   mydev = test_device_new ();
-  fail_unless (g_object_is_floating (mydev));
+  ck_assert (g_object_is_floating (mydev));
   ASSERT_OBJECT_REFCOUNT (mydev, "dev", 1);
 
   gst_device_provider_device_add (dp, mydev);
-  fail_unless (!g_object_is_floating (mydev));
+  ck_assert (!g_object_is_floating (mydev));
   ASSERT_OBJECT_REFCOUNT (mydev, "dev", 2);
 
   devs = gst_device_provider_get_devices (dp);
   ASSERT_OBJECT_REFCOUNT (mydev, "dev", 3);
 
   fail_unless_equals_int (g_list_length (devs), 1);
-  fail_unless_equals_pointer (devs->data, mydev);
+  ck_assert_ptr_eq (devs->data, mydev);
   g_list_free_full (devs, (GDestroyNotify) gst_object_unref);
 
   ASSERT_OBJECT_REFCOUNT (mydev, "dev", 2);
 
   msg = gst_bus_pop (bus);
-  fail_unless (msg != NULL);
+  ck_assert_ptr_ne (msg, NULL);
 
-  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_DEVICE_ADDED);
+  ck_assert (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_DEVICE_ADDED);
 
   gst_message_parse_device_added (msg, &dev);
-  fail_unless_equals_pointer (dev, mydev);
+  ck_assert_ptr_eq (dev, mydev);
   gst_object_unref (dev);
   gst_message_unref (msg);
 
   ASSERT_OBJECT_REFCOUNT (mydev, "dev", 1);
 
   msg = gst_bus_pop (bus);
-  fail_unless (msg == NULL);
+  ck_assert_ptr_eq (msg, NULL);
 
   gst_device_provider_device_remove (dp, mydev);
   devs = gst_device_provider_get_devices (dp);
-  fail_unless (devs == NULL);
+  ck_assert_ptr_eq (devs, NULL);
 
   msg = gst_bus_pop (bus);
-  fail_unless (msg != NULL);
+  ck_assert_ptr_ne (msg, NULL);
 
-  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_DEVICE_REMOVED);
+  ck_assert (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_DEVICE_REMOVED);
 
   gst_message_parse_device_removed (msg, &dev);
-  fail_unless_equals_pointer (dev, mydev);
+  ck_assert_ptr_eq (dev, mydev);
   ASSERT_OBJECT_REFCOUNT (mydev, "dev", 2);
   gst_object_unref (dev);
   gst_message_unref (msg);
 
   msg = gst_bus_pop (bus);
-  fail_unless (msg == NULL);
+  ck_assert_ptr_eq (msg, NULL);
 
   gst_device_provider_stop (dp);
   gst_object_unref (bus);
@@ -421,104 +420,104 @@ GST_START_TEST (test_device_monitor)
   mon = gst_device_monitor_new ();
 
   devs = gst_device_monitor_get_devices (mon);
-  fail_unless (devs == NULL);
+  ck_assert_ptr_eq (devs, NULL);
 
   id = gst_device_monitor_add_filter (mon, "TestProvider", NULL);
-  fail_unless (id > 0);
+  ck_assert_int_gt (id, 0);
 
   devs = gst_device_monitor_get_devices (mon);
-  fail_unless (devs == NULL);
+  ck_assert_ptr_eq (devs, NULL);
 
-  fail_unless (gst_device_monitor_add_filter (mon, "TestDevice", NULL) == 0);
+  ck_assert (gst_device_monitor_add_filter (mon, "TestDevice", NULL) == 0);
   ASSERT_CRITICAL (gst_device_monitor_remove_filter (mon, 0));
 
-  fail_unless (gst_device_monitor_remove_filter (mon, id));
+  ck_assert (gst_device_monitor_remove_filter (mon, id));
 
   id = gst_device_monitor_add_filter (mon, "Test3", NULL);
-  fail_unless (id > 0);
+  ck_assert_int_gt (id, 0);
   devs = gst_device_monitor_get_devices (mon);
-  fail_unless (g_list_length (devs) == 1);
-  fail_unless (GST_IS_DEVICE (devs->data));
+  ck_assert_int_eq (g_list_length (devs), 1);
+  ck_assert (GST_IS_DEVICE (devs->data));
   g_list_free_full (devs, (GDestroyNotify) gst_object_unref);
 
   id2 = gst_device_monitor_add_filter (mon, "Test1", NULL);
-  fail_unless (id2 > 0);
+  ck_assert (id2 > 0);
   devs = gst_device_monitor_get_devices (mon);
-  fail_unless (g_list_length (devs) == 2);
-  fail_unless (GST_IS_DEVICE (devs->data));
-  fail_unless (GST_IS_DEVICE (devs->next->data));
+  ck_assert_int_eq (g_list_length (devs), 2);
+  ck_assert (GST_IS_DEVICE (devs->data));
+  ck_assert (GST_IS_DEVICE (devs->next->data));
   g_list_free_full (devs, (GDestroyNotify) gst_object_unref);
 
-  fail_unless (gst_device_monitor_remove_filter (mon, id));
+  ck_assert (gst_device_monitor_remove_filter (mon, id));
 
   devs = gst_device_monitor_get_devices (mon);
-  fail_unless (g_list_length (devs) == 2);
-  fail_unless (GST_IS_DEVICE (devs->data));
-  fail_unless (GST_IS_DEVICE (devs->next->data));
+  ck_assert_int_eq (g_list_length (devs), 2);
+  ck_assert (GST_IS_DEVICE (devs->data));
+  ck_assert (GST_IS_DEVICE (devs->next->data));
   g_list_free_full (devs, (GDestroyNotify) gst_object_unref);
 
 
-  fail_unless (gst_device_monitor_start (mon));
+  ck_assert (gst_device_monitor_start (mon));
 
   devs = gst_device_monitor_get_devices (mon);
-  fail_unless (g_list_length (devs) == 1);
-  fail_unless (GST_IS_DEVICE (devs->data));
+  ck_assert_int_eq (g_list_length (devs), 1);
+  ck_assert (GST_IS_DEVICE (devs->data));
   g_list_free_full (devs, (GDestroyNotify) gst_object_unref);
 
   gst_device_monitor_stop (mon);
 
-  fail_unless (gst_device_monitor_remove_filter (mon, id2));
+  ck_assert (gst_device_monitor_remove_filter (mon, id2));
 
   id = gst_device_monitor_add_filter (mon, "Test4", NULL);
-  fail_unless (id > 0);
+  ck_assert (id > 0);
 
   devs = gst_device_monitor_get_devices (mon);
-  fail_unless (g_list_length (devs) == 1);
-  fail_unless (GST_IS_DEVICE (devs->data));
+  ck_assert_int_eq (g_list_length (devs), 1);
+  ck_assert (GST_IS_DEVICE (devs->data));
   g_list_free_full (devs, (GDestroyNotify) gst_object_unref);
 
-  fail_unless (gst_device_monitor_start (mon));
+  ck_assert (gst_device_monitor_start (mon));
 
   devs = gst_device_monitor_get_devices (mon);
-  fail_unless (devs == NULL);
+  ck_assert_ptr_eq (devs, NULL);
 
   bus = gst_device_monitor_get_bus (mon);
 
   msg = gst_bus_pop (bus);
-  fail_unless (msg == NULL);
+  ck_assert_ptr_eq (msg, NULL);
 
   mydev = test_device_new ();
   gst_device_provider_device_add (dp2, mydev);
 
   msg = gst_bus_pop (bus);
-  fail_unless (msg != NULL);
+  ck_assert_ptr_ne (msg, NULL);
 
-  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_DEVICE_ADDED);
+  ck_assert_int_eq (GST_MESSAGE_TYPE (msg), GST_MESSAGE_DEVICE_ADDED);
 
   gst_message_parse_device_added (msg, &dev);
-  fail_unless_equals_pointer (dev, mydev);
+  ck_assert_ptr_eq (dev, mydev);
   gst_object_unref (dev);
   gst_message_unref (msg);
 
   msg = gst_bus_pop (bus);
-  fail_unless (msg == NULL);
+  ck_assert_ptr_eq (msg, NULL);
 
   gst_device_provider_device_remove (dp2, mydev);
   devs = gst_device_monitor_get_devices (mon);
-  fail_unless (devs == NULL);
+  ck_assert_ptr_eq (devs, NULL);
 
   msg = gst_bus_pop (bus);
-  fail_unless (msg != NULL);
+  ck_assert_ptr_ne (msg, NULL);
 
-  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_DEVICE_REMOVED);
+  ck_assert (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_DEVICE_REMOVED);
 
   gst_message_parse_device_removed (msg, &dev);
-  fail_unless_equals_pointer (dev, mydev);
+  ck_assert_ptr_eq (dev, mydev);
   gst_object_unref (dev);
   gst_message_unref (msg);
 
   msg = gst_bus_pop (bus);
-  fail_unless (msg == NULL);
+  ck_assert_ptr_eq (msg, NULL);
 
 
   gst_device_monitor_stop (mon);
@@ -531,7 +530,7 @@ GST_START_TEST (test_device_monitor)
 
   /* should work fine without any filters */
   mon = gst_device_monitor_new ();
-  fail_unless (gst_device_monitor_start (mon));
+  ck_assert (gst_device_monitor_start (mon));
   gst_device_monitor_stop (mon);
   gst_object_unref (mon);
 }
