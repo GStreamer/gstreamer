@@ -162,7 +162,7 @@ static GstV4L2FormatDesc gst_v4l2_formats[] = {
   {MAP_FMT (YYUV, UNKNOWN),   MAP_DRM (YVYU, LINEAR),     GST_V4L2_RAW},
   {MAP_FMT (YVYU, YVYU),      KNOWN_DRM_MAP,              GST_V4L2_RAW},
   {MAP_FMT (UYVY, UYVY),      KNOWN_DRM_MAP,              GST_V4L2_RAW},
-  {MAP_FMT (VYUY, UNKNOWN),   MAP_DRM (VYUY, LINEAR),     GST_V4L2_RAW},
+  {MAP_FMT (VYUY, VYUY),      KNOWN_DRM_MAP,              GST_V4L2_RAW},
   {MAP_FMT (YUV422M, Y42B),   KNOWN_DRM_MAP,              GST_V4L2_RAW},
   {MAP_FMT (YUV422P, Y42B),   KNOWN_DRM_MAP,              GST_V4L2_RAW},
   {MAP_FMT (YUV411P, Y41B),   KNOWN_DRM_MAP,              GST_V4L2_RAW},
