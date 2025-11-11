@@ -1179,29 +1179,33 @@ gst_qt_mux_prepare_parse_ac3_frame (GstQTMuxPad * qtpad, GstBuffer * buf,
 
   if (off != -1) {
     GstBitReader bits;
-    guint8 fscod, frmsizcod, bsid, bsmod, acmod, lfe_on;
+    guint8 fscod = 0;
+    guint8 frmsizcod = 0;
+    guint8 bsid = 0;
+    guint8 bsmod = 0;
+    guint8 acmod = 0;
+    guint8 lfe_on = 0;
 
     GST_DEBUG_OBJECT (qtpad, "Found ac3 sync point at offset: %u", off);
 
     gst_bit_reader_init (&bits, map.data, map.size);
 
     /* off + sync + crc */
-    gst_bit_reader_skip_unchecked (&bits, off * 8 + 16 + 16);
+    SKIP_BITSTREAM_BITS (bits, off * 8 + 16 + 16);
 
-    fscod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 2);
-    frmsizcod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 6);
-    bsid = gst_bit_reader_get_bits_uint8_unchecked (&bits, 5);
-    bsmod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 3);
-    acmod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 3);
-
+    READ_BITSTREAM_UINT8 (bits, fscod, 2);
+    READ_BITSTREAM_UINT8 (bits, frmsizcod, 6);
+    READ_BITSTREAM_UINT8 (bits, bsid, 5);
+    READ_BITSTREAM_UINT8 (bits, bsmod, 3);
+    READ_BITSTREAM_UINT8 (bits, acmod, 3);
     if ((acmod & 0x1) && (acmod != 0x1))        /* 3 front channels */
-      gst_bit_reader_skip_unchecked (&bits, 2);
+      SKIP_BITSTREAM_BITS (bits, 2);
     if ((acmod & 0x4))          /* if a surround channel exists */
-      gst_bit_reader_skip_unchecked (&bits, 2);
+      SKIP_BITSTREAM_BITS (bits, 2);
     if (acmod == 0x2)           /* if in 2/0 mode */
-      gst_bit_reader_skip_unchecked (&bits, 2);
+      SKIP_BITSTREAM_BITS (bits, 2);
 
-    lfe_on = gst_bit_reader_get_bits_uint8_unchecked (&bits, 1);
+    READ_BITSTREAM_UINT8 (bits, lfe_on, 1);
 
     gst_qt_mux_pad_add_ac3_extension (qtmux, qtpad, fscod, frmsizcod, bsid,
         bsmod, acmod, lfe_on);
@@ -1216,6 +1220,10 @@ gst_qt_mux_prepare_parse_ac3_frame (GstQTMuxPad * qtpad, GstBuffer * buf,
 done:
   gst_buffer_unmap (buf, &map);
   return buf;
+
+error:
+  GST_WARNING_OBJECT (qtpad, "Failed to parse AC3 bitstream");
+  goto done;
 }
 
 static void
