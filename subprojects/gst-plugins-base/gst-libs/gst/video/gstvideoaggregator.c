@@ -802,6 +802,16 @@ static void
       } else {
         conv_config =
             gst_structure_new_static_str_empty ("GstVideoConverterConfig");
+
+        /* Providing a config to gst_video_converter_new_with_pool means we have to
+           specify the number of threads in the config. Sync this to the task pool's
+           max threads. */
+        g_assert (vagg->priv->task_pool);
+        guint n_threads =
+            gst_shared_task_pool_get_max_threads (GST_SHARED_TASK_POOL
+            (vagg->priv->task_pool));
+        gst_structure_set (conv_config, GST_VIDEO_CONVERTER_OPT_THREADS,
+            G_TYPE_UINT, n_threads, NULL);
       }
       gst_structure_set_static_str (conv_config,
           GST_VIDEO_CONVERTER_OPT_ASYNC_TASKS, G_TYPE_BOOLEAN, TRUE, NULL);
