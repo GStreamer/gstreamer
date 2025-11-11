@@ -71,7 +71,14 @@ enum
   PROP_LAST
 };
 
+enum
+{
+  SIGNAL_RESYNC,
+  SIGNAL_LAST
+};
+
 static GParamSpec *properties[PROP_LAST];
+static gint clocksync_signals[SIGNAL_LAST] = { 0, };
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -124,6 +131,7 @@ static gboolean gst_clock_sync_src_event (GstPad * pad, GstObject * parent,
 static GstStateChangeReturn gst_clocksync_change_state (GstElement * element,
     GstStateChange transition);
 static GstClock *gst_clocksync_provide_clock (GstElement * element);
+static void gst_clock_sync_resync (GstClockSync * self);
 
 static void
 gst_clock_sync_class_init (GstClockSyncClass * klass)
@@ -200,6 +208,26 @@ gst_clock_sync_class_init (GstClockSyncClass * klass)
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_READY);
 
   g_object_class_install_properties (gobject_class, PROP_LAST, properties);
+
+  /**
+   * GstClockSync::resync:
+   * @clocksync: the #GstClockSync
+   *
+   * Request recalculation of the "ts-offset" for the next incoming buffer
+   * without changing the state of clocksync.
+   *
+   * This is useful when "sync-to-first=true" has already established
+   * an initial `ts-offset` but running-time of buffer flow is no longer linear
+   * (e.g., data flow was temporarily blocked by pad probe). In such cases,
+   * a new "ts-offset" may be required so that buffer flow can be throttled
+   * correctly again.
+   *
+   * Since: 1.28
+   */
+  clocksync_signals[SIGNAL_RESYNC] =
+      g_signal_new_class_handler ("resync", G_TYPE_FROM_CLASS (klass),
+      (GSignalFlags) (G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION),
+      G_CALLBACK (gst_clock_sync_resync), NULL, NULL, NULL, G_TYPE_NONE, 0);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_clocksync_change_state);
@@ -643,7 +671,7 @@ gst_clock_sync_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_segment_init (&clocksync->segment, GST_FORMAT_UNDEFINED);
       GST_OBJECT_UNLOCK (clocksync);
       gst_clock_sync_reset_qos (clocksync);
-      clocksync->is_first = TRUE;
+      g_atomic_int_set (&clocksync->is_first, TRUE);
       break;
     default:
       break;
@@ -686,8 +714,11 @@ gst_clock_sync_update_ts_offset (GstClockSync * clocksync,
   GstClock *clock;
   GstClockTimeDiff ts_offset = 0;
   GstClockTime running_time;
+  gboolean is_first;
 
-  if (!clocksync->sync_to_first || !clocksync->is_first || !clocksync->sync)
+  is_first = g_atomic_int_get (&clocksync->is_first);
+
+  if (!clocksync->sync_to_first || !is_first || !clocksync->sync)
     return;
 
   GST_OBJECT_LOCK (clocksync);
@@ -708,7 +739,7 @@ gst_clock_sync_update_ts_offset (GstClockSync * clocksync,
       GST_STIME_FORMAT, GST_TIME_ARGS (running_time),
       GST_TIME_ARGS (runtimestamp), GST_STIME_ARGS (ts_offset));
 
-  clocksync->is_first = FALSE;
+  g_atomic_int_set (&clocksync->is_first, FALSE);
   if (ts_offset != clocksync->ts_offset) {
     clocksync->ts_offset = ts_offset;
     g_object_notify_by_pspec (G_OBJECT (clocksync), properties[PROP_TS_OFFSET]);
@@ -895,7 +926,7 @@ gst_clocksync_change_state (GstElement * element, GstStateChange transition)
       GST_OBJECT_UNLOCK (clocksync);
       if (clocksync->sync)
         no_preroll = TRUE;
-      clocksync->is_first = TRUE;
+      g_atomic_int_set (&clocksync->is_first, TRUE);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_OBJECT_LOCK (clocksync);
@@ -954,4 +985,12 @@ gst_clocksync_provide_clock (GstElement * element)
     return NULL;
 
   return gst_system_clock_obtain ();
+}
+
+static void
+gst_clock_sync_resync (GstClockSync * self)
+{
+  GST_DEBUG_OBJECT (self, "Enable resync");
+
+  g_atomic_int_set (&self->is_first, TRUE);
 }
