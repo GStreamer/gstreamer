@@ -641,7 +641,7 @@ gst_value_list_or_array_get_basic_type (const GValue * value, GType * type)
 #define IS_RANGE_COMPAT(type1,type2,t1,t2) \
   (((t1) == (type1) && (t2) == (type2)) || ((t2) == (type1) && (t1) == (type2)))
 
-#if !defined(G_DISABLE_ASSERT) && !defined(G_DISABLE_CHECKS)
+#if !defined(G_DISABLE_ASSERT) || !defined(G_DISABLE_CHECKS)
 static gboolean
 gst_value_list_or_array_are_compatible (const GValue * value1,
     const GValue * value2)
