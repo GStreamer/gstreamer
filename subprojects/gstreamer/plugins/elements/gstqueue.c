@@ -925,7 +925,7 @@ gst_queue_locked_dequeue (GstQueue * queue)
     GstBuffer *buffer = GST_BUFFER_CAST (item);
 
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-        "retrieved buffer %p from queue", buffer);
+        "retrieved %" GST_PTR_FORMAT " from queue", buffer);
 
     queue->cur_level.buffers--;
     queue->cur_level.bytes -= bufsize;
@@ -938,7 +938,7 @@ gst_queue_locked_dequeue (GstQueue * queue)
     GstBufferList *buffer_list = GST_BUFFER_LIST_CAST (item);
 
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-        "retrieved buffer list %p from queue", buffer_list);
+        "retrieved %" GST_PTR_FORMAT " from queue", buffer_list);
 
     queue->cur_level.buffers -= gst_buffer_list_length (buffer_list);
     queue->cur_level.bytes -= bufsize;
@@ -951,7 +951,7 @@ gst_queue_locked_dequeue (GstQueue * queue)
     GstEvent *event = GST_EVENT_CAST (item);
 
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-        "retrieved event %p from queue", event);
+        "retrieved %" GST_PTR_FORMAT " from queue", event);
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
@@ -976,7 +976,7 @@ gst_queue_locked_dequeue (GstQueue * queue)
     GstQuery *query = GST_QUERY_CAST (item);
 
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-        "retrieved query %p from queue", query);
+        "retrieved %" GST_PTR_FORMAT " from queue", query);
   } else {
     g_warning
         ("Unexpected item %p dequeued from queue %s (refcounting problem?)",
@@ -1003,8 +1003,8 @@ gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   queue = GST_QUEUE (parent);
 
-  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "Received event '%s'",
-      GST_EVENT_TYPE_NAME (event));
+  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "Received %" GST_PTR_FORMAT,
+      event);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -1153,8 +1153,7 @@ gst_queue_handle_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
         GstQueueItem qitem;
 
         GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
-        GST_LOG_OBJECT (queue, "queuing query %p (%s)", query,
-            GST_QUERY_TYPE_NAME (query));
+        GST_LOG_OBJECT (queue, "queuing query %" GST_PTR_FORMAT, query);
         qitem.item = GST_MINI_OBJECT_CAST (query);
         qitem.is_query = TRUE;
         qitem.size = 0;
@@ -1236,10 +1235,11 @@ gst_queue_leak_downstream (GstQueue * queue)
     g_assert (leak != NULL);
 
     GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
-        "queue is full, leaking item %p on downstream end", leak);
+        "queue is full, leaking item %" GST_PTR_FORMAT " on downstream end",
+        leak);
     if (GST_IS_EVENT (leak) && GST_EVENT_IS_STICKY (leak)) {
       GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
-          "Storing sticky event %s on srcpad", GST_EVENT_TYPE_NAME (leak));
+          "Storing sticky event %" GST_PTR_FORMAT " on srcpad", leak);
       gst_pad_store_sticky_event (queue->srcpad, GST_EVENT_CAST (leak));
     }
 
@@ -1284,22 +1284,7 @@ gst_queue_chain_buffer_or_list (GstPad * pad, GstObject * parent,
   if (queue->unexpected)
     goto out_unexpected;
 
-  if (!is_list) {
-    GstClockTime duration, timestamp;
-    GstBuffer *buffer = GST_BUFFER_CAST (obj);
-
-    timestamp = GST_BUFFER_DTS_OR_PTS (buffer);
-    duration = GST_BUFFER_DURATION (buffer);
-
-    GST_CAT_LOG_OBJECT (queue_dataflow, queue, "received buffer %p of size %"
-        G_GSIZE_FORMAT ", time %" GST_TIME_FORMAT ", duration %"
-        GST_TIME_FORMAT, buffer, gst_buffer_get_size (buffer),
-        GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration));
-  } else {
-    GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-        "received buffer list %p with %u buffers", obj,
-        gst_buffer_list_length (GST_BUFFER_LIST_CAST (obj)));
-  }
+  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "received %" GST_PTR_FORMAT, obj);
 
   /* We make space available if we're "full" according to whatever
    * the user defined as "full". Note that this only applies to buffers.
@@ -1510,11 +1495,11 @@ next:
       while ((data = gst_queue_locked_dequeue (queue))) {
         if (GST_IS_BUFFER (data)) {
           GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-              "dropping EOS buffer %p", data);
+              "dropping EOS buffer %" GST_PTR_FORMAT, data);
           gst_buffer_unref (GST_BUFFER_CAST (data));
         } else if (GST_IS_BUFFER_LIST (data)) {
           GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-              "dropping EOS buffer list %p", data);
+              "dropping EOS buffer list %" GST_PTR_FORMAT, data);
           gst_buffer_list_unref (GST_BUFFER_LIST_CAST (data));
         } else if (GST_IS_EVENT (data)) {
           GstEvent *event = GST_EVENT_CAST (data);
@@ -1524,18 +1509,17 @@ next:
               || type == GST_EVENT_STREAM_START) {
             /* we found a pushable item in the queue, push it out */
             GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-                "pushing pushable event %s after EOS",
-                GST_EVENT_TYPE_NAME (event));
+                "pushing pushable event %" GST_PTR_FORMAT " after EOS", event);
             goto next;
           }
           GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-              "dropping EOS event %p", event);
+              "dropping EOS event %" GST_PTR_FORMAT, event);
           gst_event_unref (event);
         } else if (GST_IS_QUERY (data)) {
           GstQuery *query = GST_QUERY_CAST (data);
 
           GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-              "dropping query %p because of EOS", query);
+              "dropping query %" GST_PTR_FORMAT " because of EOS", query);
           queue->last_query = FALSE;
           g_cond_signal (&queue->query_handled);
         }
@@ -1559,7 +1543,7 @@ next:
     /* if we're EOS, return EOS so that the task pauses. */
     if (type == GST_EVENT_EOS) {
       GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-          "pushed EOS event %p, return EOS", event);
+          "pushed EOS event %" GST_PTR_FORMAT ", return EOS", event);
       result = GST_FLOW_EOS;
     }
   } else if (GST_IS_QUERY (data)) {
@@ -1573,7 +1557,7 @@ next:
     queue->last_handled_query = query;
     g_cond_signal (&queue->query_handled);
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-        "did query %p, return %d", query, queue->last_query);
+        "did query %" GST_PTR_FORMAT ", return %d", query, queue->last_query);
   }
   return result;
 
@@ -1685,8 +1669,7 @@ gst_queue_handle_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GstQueue *queue = GST_QUEUE (parent);
 
 #ifndef GST_DISABLE_GST_DEBUG
-  GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "got event %p (%d)",
-      event, GST_EVENT_TYPE (event));
+  GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "got %" GST_PTR_FORMAT, event);
 #endif
 
   switch (GST_EVENT_TYPE (event)) {
