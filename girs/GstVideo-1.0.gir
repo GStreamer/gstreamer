@@ -6701,6 +6701,9 @@ with @config.
 The optional @pool can be used to spawn threads, this is useful when
 creating new converters rapidly, for example when updating cropping.
 
+If @config is not provided, and a @pool is provided, the number of threads for
+the converter will be set to the maximum number of threads in the pool.
+
 Returns (nullable): a #GstVideoConverter or %NULL if conversion is not possible.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-converter.h"/>
         <return-value>
@@ -18741,6 +18744,9 @@ with @config.
 
 The optional @pool can be used to spawn threads, this is useful when
 creating new converters rapidly, for example when updating cropping.
+
+If @config is not provided, and a @pool is provided, the number of threads for
+the converter will be set to the maximum number of threads in the pool.
 
 Returns (nullable): a #GstVideoConverter or %NULL if conversion is not possible.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-converter.h"/>
