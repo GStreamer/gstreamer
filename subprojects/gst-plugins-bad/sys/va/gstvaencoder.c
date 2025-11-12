@@ -50,7 +50,12 @@ struct _GstVaEncoder
   gint coded_height;
   gint codedbuf_size;
 
-  GstBufferPool *recon_pool;
+  struct
+  {
+    GstBufferPool *pool;
+    GstVideoFormat format;
+    gint max_surfaces;
+  } recon;
 };
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_encoder_debug);
@@ -189,6 +194,9 @@ gst_va_encoder_reset (GstVaEncoder * self)
   self->coded_width = 0;
   self->coded_height = 0;
   self->codedbuf_size = 0;
+
+  self->recon.max_surfaces = 0;
+  self->recon.format = GST_VIDEO_FORMAT_UNKNOWN;
 }
 
 static void
@@ -236,14 +244,16 @@ gst_va_encoder_close (GstVaEncoder * self)
   config = self->config;
   context = self->context;
 
-  recon_pool = self->recon_pool;
-  self->recon_pool = NULL;
+  recon_pool = self->recon.pool;
+  self->recon.pool = NULL;
 
   gst_va_encoder_reset (self);
   GST_OBJECT_UNLOCK (self);
 
-  gst_buffer_pool_set_active (recon_pool, FALSE);
-  gst_clear_object (&recon_pool);
+  if (recon_pool) {
+    gst_buffer_pool_set_active (recon_pool, FALSE);
+    gst_object_unref (recon_pool);
+  }
 
   dpy = gst_va_display_get_va_dpy (self->display);
 
@@ -346,35 +356,108 @@ _get_surface_formats (GstVaDisplay * display, VAConfigID config)
   return formats;
 }
 
+static inline GstCaps *
+_get_reconstructed_caps (GstVaEncoder * self)
+{
+  GstVideoInfo info;
+  GstCaps *caps;
+  GstVideoFormat format;
+  gint width, height;
+
+  GST_OBJECT_LOCK (self);
+  format = self->recon.format;
+  width = self->coded_width;
+  height = self->coded_height;
+  GST_OBJECT_UNLOCK (self);
+
+  if (!gst_video_info_set_format (&info, format, width, height)) {
+    GST_WARNING_OBJECT (self, "Invalid video info");
+    return NULL;
+  }
+  caps = gst_video_info_to_caps (&info);
+  if (!caps)
+    return NULL;
+
+  gst_caps_set_features_simple (caps,
+      gst_caps_features_new_single_static_str (GST_CAPS_FEATURE_MEMORY_VA));
+  return caps;
+}
+
+static inline GstAllocator *
+_get_reconstructed_allocator (GstVaEncoder * self)
+{
+  GArray *surface_formats;
+  VAConfigID config;
+
+  GST_OBJECT_LOCK (self);
+  config = self->config;
+  GST_OBJECT_UNLOCK (self);
+
+  g_assert (config != VA_INVALID_ID);
+
+  surface_formats = _get_surface_formats (self->display, config);
+  if (!surface_formats) {
+    GST_ERROR_OBJECT (self, "Failed to get surface formats");
+    return NULL;
+  }
+
+  return gst_va_allocator_new (self->display, surface_formats);
+}
+
 static GstBufferPool *
-_create_reconstruct_pool (GstVaDisplay * display, GArray * surface_formats,
-    GstVideoFormat format, gint coded_width, gint coded_height,
-    guint max_buffers)
+_get_reconstructed_buffer_pool (GstVaEncoder * self)
 {
   GstAllocator *allocator = NULL;
   guint usage_hint;
-  GstVideoInfo info;
-  GstAllocationParams params = { 0, };
-  GstBufferPool *pool;
-  GstCaps *caps = NULL;
+  GstAllocationParams params;
+  GstBufferPool *pool = NULL;
+  GstCaps *caps;
+  gint max_surfaces;
 
-  gst_video_info_set_format (&info, format, coded_width, coded_height);
+  GST_OBJECT_LOCK (self);
+  pool = self->recon.pool ? gst_object_ref (self->recon.pool) : NULL;
+  max_surfaces = self->recon.max_surfaces;
+  GST_OBJECT_UNLOCK (self);
 
-  usage_hint = va_get_surface_usage_hint (display,
-      VAEntrypointEncSlice, GST_PAD_SINK, FALSE);
+  if (pool)
+    return pool;
 
-  caps = gst_video_info_to_caps (&info);
-  gst_caps_set_features_simple (caps,
-      gst_caps_features_new_single_static_str (GST_CAPS_FEATURE_MEMORY_VA));
+  allocator = _get_reconstructed_allocator (self);
+  if (!allocator) {
+    GST_ERROR_OBJECT (self, "Failed to create reconstruct allocator");
+    return NULL;
+  }
 
-  allocator = gst_va_allocator_new (display, surface_formats);
+  caps = _get_reconstructed_caps (self);
+  if (!caps) {
+    GST_ERROR_OBJECT (self, "Failed to configure reconstruct caps");
+    goto bail;
+  }
 
-  pool = gst_va_pool_new_with_config (caps, 0, max_buffers, usage_hint,
+  usage_hint = va_get_surface_usage_hint (self->display, self->entrypoint,
+      GST_PAD_SINK, FALSE);
+
+  gst_allocation_params_init (&params);
+
+  /* create one reconstruct surface at least */
+  pool = gst_va_pool_new_with_config (caps, 1, max_surfaces, usage_hint,
       GST_VA_FEATURE_AUTO, allocator, &params);
+  if (!pool) {
+    GST_ERROR_OBJECT (self, "Failed to create reconstruct pool");
+    goto bail;
+  }
 
+  if (!gst_buffer_pool_set_active (pool, TRUE)) {
+    GST_ERROR_OBJECT (self, "Failed to activate reconstruct pool");
+    gst_clear_object (&pool);
+  }
+
+bail:
   gst_clear_object (&allocator);
   gst_clear_caps (&caps);
 
+  gst_object_replace ((GstObject **) & self->recon.pool,
+      GST_OBJECT_CAST (pool));
   return pool;
 }
 
@@ -392,7 +475,6 @@ gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
   VAConfigID config = VA_INVALID_ID;
   VAContextID context = VA_INVALID_ID;
   VADisplay dpy;
-  GArray *surface_formats = NULL;
   VAStatus status;
   GstBufferPool *recon_pool = NULL;
   guint attrib_idx = 1;
@@ -435,24 +517,6 @@ gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
     goto error;
   }
 
-  surface_formats = _get_surface_formats (self->display, config);
-  if (!surface_formats) {
-    GST_ERROR_OBJECT (self, "Failed to get surface formats");
-    goto error;
-  }
-
-  recon_pool = _create_reconstruct_pool (self->display, surface_formats,
-      video_format, coded_width, coded_height, max_reconstruct_surfaces);
-  if (!recon_pool) {
-    GST_ERROR_OBJECT (self, "Failed to create reconstruct pool");
-    goto error;
-  }
-
-  if (!gst_buffer_pool_set_active (recon_pool, TRUE)) {
-    GST_ERROR_OBJECT (self, "Failed to activate reconstruct pool");
-    goto error;
-  }
-
   status = vaCreateContext (dpy, config, coded_width, coded_height,
       VA_PROGRESSIVE, NULL, 0, &context);
   if (status != VA_STATUS_SUCCESS) {
@@ -469,20 +533,23 @@ gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
   self->coded_width = coded_width;
   self->coded_height = coded_height;
   self->codedbuf_size = codedbuf_size;
-  gst_object_replace ((GstObject **) & self->recon_pool,
-      (GstObject *) recon_pool);
 
   GST_OBJECT_UNLOCK (self);
 
-  g_clear_object (&recon_pool);
+  /* do it at the end because it needs the previous assignments */
+  gst_va_encoder_set_reconstruct_pool_config (self, video_format,
+      max_reconstruct_surfaces);
+  recon_pool = _get_reconstructed_buffer_pool (self);
+  if (!recon_pool)
+    goto error;
+  gst_object_unref (recon_pool);
+
   /* now we should return now only this profile's caps */
   gst_caps_replace (&self->srcpad_caps, NULL);
 
   return TRUE;
 
 error:
-  g_clear_object (&recon_pool);
-
   if (config != VA_INVALID_ID)
     vaDestroyConfig (dpy, config);
 
@@ -591,24 +658,87 @@ gst_va_encoder_new (GstVaDisplay * display, guint32 codec,
 }
 
 gboolean
+gst_va_encoder_set_reconstruct_pool_config (GstVaEncoder * self,
+    GstVideoFormat format, guint max_surfaces)
+{
+  GstBufferPool *old_pool = NULL;
+  guint new_rt_format;
+
+  g_return_val_if_fail (GST_IS_VA_ENCODER (self), FALSE);
+
+  new_rt_format = gst_va_chroma_from_video_format (format);
+  g_return_val_if_fail (new_rt_format > 0, FALSE);
+
+  GST_OBJECT_LOCK (self);
+
+  if (!_is_open_unlocked (self))
+    goto no_open_error;
+
+  if (new_rt_format != self->rt_format)
+    goto bad_rt_format_error;
+
+  /* if it's the same configuration, carry on */
+  if (self->recon.format == format && self->recon.max_surfaces == max_surfaces)
+    goto bail;
+
+  /* if there's a previous reconstruct pool, destroy it */
+  old_pool = self->recon.pool;
+  self->recon.pool = NULL;
+
+  self->recon.max_surfaces = max_surfaces;
+  self->recon.format = format;
+
+bail:
+  GST_OBJECT_UNLOCK (self);
+
+  if (old_pool) {
+    GST_DEBUG_OBJECT (self, "De-allocating previous reconstruct pool");
+    gst_object_unref (old_pool);
+  }
+
+  return TRUE;
+
+  /* ERRORS */
+no_open_error:
+  {
+    GST_OBJECT_UNLOCK (self);
+    GST_WARNING_OBJECT (self, "Can't configure reconstruct pool without setting"
+        " up the encoder previously");
+    return FALSE;
+  }
+bad_rt_format_error:
+  {
+    GST_OBJECT_UNLOCK (self);
+    GST_WARNING_OBJECT (self, "Reconstruct pool format (%s) doesn't have same"
+        " chroma as encoder setup", gst_video_format_to_string (format));
+    return FALSE;
+  }
+}
+
+gboolean
 gst_va_encoder_get_reconstruct_pool_config (GstVaEncoder * self,
     GstCaps ** caps, guint * max_surfaces)
 {
+  GstBufferPool *pool;
   GstStructure *config;
   gboolean ret;
 
   g_return_val_if_fail (GST_IS_VA_ENCODER (self), FALSE);
 
-  if (!gst_va_encoder_is_open (self))
+  GST_OBJECT_LOCK (self);
+  pool = self->recon.pool ? gst_object_ref (self->recon.pool) : NULL;
+  GST_OBJECT_UNLOCK (self);
+
+  if (!pool)
     return FALSE;
 
-  if (!self->recon_pool)
-    return FALSE;
-
-  config = gst_buffer_pool_get_config (self->recon_pool);
+  config = gst_buffer_pool_get_config (pool);
   ret = gst_buffer_pool_config_get_params (config, caps, NULL, NULL,
       max_surfaces);
   gst_structure_free (config);
+
+  gst_object_unref (pool);
+
   return ret;
 }
 
@@ -919,9 +1049,11 @@ gst_va_encode_picture_new (GstVaEncoder * self, GstBuffer * raw_buffer)
 
   codedbuf_size = self->codedbuf_size;
 
-  recon_pool = gst_object_ref (self->recon_pool);
-
   GST_OBJECT_UNLOCK (self);
+
+  recon_pool = _get_reconstructed_buffer_pool (self);
+  if (!recon_pool)
+    return NULL;
 
   ret = gst_buffer_pool_acquire_buffer (recon_pool, &reconstruct_buffer,
       &buffer_pool_params);
