@@ -1,0 +1,1331 @@
+<!-- This file was automatically generated from C sources - DO NOT EDIT!
+To affect the contents of this file, edit the original C definitions,
+and/or use gtk-doc annotations.  -->
+<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
+  <include name="Gst" version="1.0"/>
+  <include name="GstBase" version="1.0"/>
+  <include name="GstVideo" version="1.0"/>
+  <package name="gstreamer-hip-1.0"/>
+  <namespace name="GstHip" version="1.0" shared-library="libgsthip.so.0" c:identifier-prefixes="Gst" c:symbol-prefixes="gst">
+    <constant name="CAPS_FEATURE_MEMORY_HIP_MEMORY" value="memory:HIPMemory" c:type="GST_CAPS_FEATURE_MEMORY_HIP_MEMORY">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <function-macro name="HIP_ALLOCATOR" c:identifier="GST_HIP_ALLOCATOR" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_ALLOCATOR_CAST" c:identifier="GST_HIP_ALLOCATOR_CAST" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_ALLOCATOR_CLASS" c:identifier="GST_HIP_ALLOCATOR_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_ALLOCATOR_GET_CLASS" c:identifier="GST_HIP_ALLOCATOR_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_BUFFER_POOL" c:identifier="GST_HIP_BUFFER_POOL" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_BUFFER_POOL_CAST" c:identifier="GST_HIP_BUFFER_POOL_CAST" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_BUFFER_POOL_CLASS" c:identifier="GST_HIP_BUFFER_POOL_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_BUFFER_POOL_GET_CLASS" c:identifier="GST_HIP_BUFFER_POOL_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_DEVICE" c:identifier="GST_HIP_DEVICE" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_DEVICE_CLASS" c:identifier="GST_HIP_DEVICE_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <constant name="HIP_DEVICE_CONTEXT_TYPE" value="gst.hip.device" c:type="GST_HIP_DEVICE_CONTEXT_TYPE">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <function-macro name="HIP_DEVICE_GET_CLASS" c:identifier="GST_HIP_DEVICE_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_EVENT_POOL" c:identifier="GST_HIP_EVENT_POOL" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_EVENT_POOL_CAST" c:identifier="GST_HIP_EVENT_POOL_CAST" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_EVENT_POOL_CLASS" c:identifier="GST_HIP_EVENT_POOL_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_EVENT_POOL_GET_CLASS" c:identifier="GST_HIP_EVENT_POOL_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_MEMORY_CAST" c:identifier="GST_HIP_MEMORY_CAST" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <constant name="HIP_MEMORY_NAME" value="HIPMemory" c:type="GST_HIP_MEMORY_NAME">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <function-macro name="HIP_POOL_ALLOCATOR" c:identifier="GST_HIP_POOL_ALLOCATOR" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_POOL_ALLOCATOR_CAST" c:identifier="GST_HIP_POOL_ALLOCATOR_CAST" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_POOL_ALLOCATOR_CLASS" c:identifier="GST_HIP_POOL_ALLOCATOR_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_POOL_ALLOCATOR_GET_CLASS" c:identifier="GST_HIP_POOL_ALLOCATOR_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <class name="HipAllocator" c:symbol-prefix="hip_allocator" c:type="GstHipAllocator" version="1.28" parent="Gst.Allocator" glib:type-name="GstHipAllocator" glib:get-type="gst_hip_allocator_get_type" glib:type-struct="HipAllocatorClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h">Opaque GstHipAllocator struct</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <virtual-method name="set_active" invoker="set_active" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">Controls the active state of @allocator.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">%TRUE if active state of @allocator was successfully updated.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstCudaAllocator</doc>
+            <type name="HipAllocator" c:type="GstHipAllocator*"/>
+          </instance-parameter>
+          <parameter name="active" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">the new active state</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <method name="alloc" c:identifier="gst_hip_allocator_alloc" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">Allocates a new GstHipMemory</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a newly allocated #GstHipMemory
+or %NULL if allocation failed</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="allocator" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstHipAllocator</doc>
+            <type name="HipAllocator" c:type="GstHipAllocator*"/>
+          </instance-parameter>
+          <parameter name="device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstHipDevice</doc>
+            <type name="HipDevice" c:type="GstHipDevice*"/>
+          </parameter>
+          <parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstVideoInfo</doc>
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_active" c:identifier="gst_hip_allocator_set_active" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">Controls the active state of @allocator.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">%TRUE if active state of @allocator was successfully updated.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstCudaAllocator</doc>
+            <type name="HipAllocator" c:type="GstHipAllocator*"/>
+          </instance-parameter>
+          <parameter name="active" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">the new active state</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
+      <field name="allocator">
+        <type name="Gst.Allocator" c:type="GstAllocator"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="HipAllocatorPrivate" c:type="GstHipAllocatorPrivate*"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="HipAllocatorClass" c:type="GstHipAllocatorClass" glib:is-gtype-struct-for="HipAllocator" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h">Opaque GstHipAllocatorClass struct</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <field name="allocator_class">
+        <type name="Gst.AllocatorClass" c:type="GstAllocatorClass"/>
+      </field>
+      <field name="set_active">
+        <callback name="set_active">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+          <return-value transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">%TRUE if active state of @allocator was successfully updated.</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="allocator" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstCudaAllocator</doc>
+              <type name="HipAllocator" c:type="GstHipAllocator*"/>
+            </parameter>
+            <parameter name="active" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">the new active state</doc>
+              <type name="gboolean" c:type="gboolean"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="20">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <record name="HipAllocatorPrivate" c:type="GstHipAllocatorPrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip_fwd.h"/>
+    </record>
+    <class name="HipBufferPool" c:symbol-prefix="hip_buffer_pool" c:type="GstHipBufferPool" version="1.28" parent="Gst.BufferPool" glib:type-name="GstHipBufferPool" glib:get-type="gst_hip_buffer_pool_get_type" glib:type-struct="HipBufferPoolClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool.h">Opaque GstHipBufferPool struct</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool.h"/>
+      <constructor name="new" c:identifier="gst_hip_buffer_pool_new" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool.cpp">Creates new #GstHipBufferPool instance</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool.cpp">a #GstBufferPool that allocates buffers with
+#GstHipMemory</doc>
+          <type name="Gst.BufferPool" c:type="GstBufferPool*"/>
+        </return-value>
+        <parameters>
+          <parameter name="device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool.cpp">a #GstHipDevice</doc>
+            <type name="HipDevice" c:type="GstHipDevice*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <field name="parent">
+        <type name="Gst.BufferPool" c:type="GstBufferPool"/>
+      </field>
+      <field name="device">
+        <type name="HipDevice" c:type="GstHipDevice*"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="HipBufferPoolPrivate" c:type="GstHipBufferPoolPrivate*"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="HipBufferPoolClass" c:type="GstHipBufferPoolClass" glib:is-gtype-struct-for="HipBufferPool" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool.h">Opaque GstHipBufferPoolClass struct</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool.h"/>
+      <field name="parent_class">
+        <type name="Gst.BufferPoolClass" c:type="GstBufferPoolClass"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <record name="HipBufferPoolPrivate" c:type="GstHipBufferPoolPrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip_fwd.h"/>
+    </record>
+    <class name="HipDevice" c:symbol-prefix="hip_device" c:type="GstHipDevice" version="1.28" parent="Gst.Object" glib:type-name="GstHipDevice" glib:get-type="gst_hip_device_get_type" glib:type-struct="HipDeviceClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.h">Opaque GstHipDevice struct</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.h"/>
+      <constructor name="new" c:identifier="gst_hip_device_new" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">Creates a new device instance with @vendor and @device_id.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">a #GstHipDevice if succeeded,
+otherwise %NULL</doc>
+          <type name="HipDevice" c:type="GstHipDevice*"/>
+        </return-value>
+        <parameters>
+          <parameter name="vendor" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">a #GstHipVendor</doc>
+            <type name="HipVendor" c:type="GstHipVendor"/>
+          </parameter>
+          <parameter name="device_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">device identifier</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <method name="get_attribute" c:identifier="gst_hip_device_get_attribute" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">Gets a device attribute via hipDeviceGetAttribute</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.h"/>
+        <return-value>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">hipError_t error code</doc>
+          <type name="gint" c:type="hipError_t"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">a #GstHipDevice</doc>
+            <type name="HipDevice" c:type="GstHipDevice*"/>
+          </instance-parameter>
+          <parameter name="attr" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">a hipDeviceAttribute_t value</doc>
+            <type name="gint" c:type="hipDeviceAttribute_t"/>
+          </parameter>
+          <parameter name="value" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">an attribute value</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_device_id" c:identifier="gst_hip_device_get_device_id" glib:get-property="device-id" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">Gets numeric device identifier of @device</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">the device identifier</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">a #GstHipDevice</doc>
+            <type name="HipDevice" c:type="GstHipDevice*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_stream" c:identifier="gst_hip_device_get_stream" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">Gets per #GstHipDevice default #GstHipStream owned by @device</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">a #GstHipStream</doc>
+          <type name="HipStream" c:type="GstHipStream*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">a #GstHipDevice</doc>
+            <type name="HipDevice" c:type="GstHipDevice*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_vendor" c:identifier="gst_hip_device_get_vendor" glib:get-property="vendor" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">Gets vendor of @device</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">#GstHipVendor</doc>
+          <type name="HipVendor" c:type="GstHipVendor"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">a #GstHipDevice</doc>
+            <type name="HipDevice" c:type="GstHipDevice*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="is_equal" c:identifier="gst_hip_device_is_equal" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">Checks equality of @device1 and @device2</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">%TRUE if both devices are associated with the same hardware device</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="device1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">a #GstHipDevice</doc>
+            <type name="HipDevice" c:type="GstHipDevice*"/>
+          </instance-parameter>
+          <parameter name="device2" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">a #GstHipDevice</doc>
+            <type name="HipDevice" c:type="GstHipDevice*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_current" c:identifier="gst_hip_device_set_current" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">Sets @device to current stack via hipSetDevice</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">%TRUE if hipSetDevice call succeeded</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">a #GstHipDevice</doc>
+            <type name="HipDevice" c:type="GstHipDevice*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <property name="device-id" transfer-ownership="none" getter="get_device_id" default-value="0">
+        <type name="guint" c:type="guint"/>
+      </property>
+      <property name="texture2d-support" transfer-ownership="none" default-value="FALSE">
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="vendor" transfer-ownership="none" getter="get_vendor" default-value="Unknown">
+        <type name="HipVendor"/>
+      </property>
+      <field name="object">
+        <type name="Gst.Object" c:type="GstObject"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="HipDevicePrivate" c:type="GstHipDevicePrivate*"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="HipDeviceClass" c:type="GstHipDeviceClass" glib:is-gtype-struct-for="HipDevice" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.h">Opaque GstHipDeviceClass struct</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.h"/>
+      <field name="parent_class">
+        <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <record name="HipDevicePrivate" c:type="GstHipDevicePrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip_fwd.h"/>
+    </record>
+    <record name="HipEvent" c:type="GstHipEvent" opaque="1" glib:type-name="GstHipEvent" glib:get-type="gst_hip_event_get_type" c:symbol-prefix="hip_event">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip_fwd.h"/>
+      <method name="get_device_id" c:identifier="gst_hip_event_get_device_id" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">Gets numeric device identifier of @event object</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">device identifier</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="event" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">a #GstHipEvent</doc>
+            <type name="HipEvent" c:type="GstHipEvent*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_vendor" c:identifier="gst_hip_event_get_vendor" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">Gets device vendor of @event object</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">#GstHipVendor</doc>
+          <type name="HipVendor" c:type="GstHipVendor"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="event" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">a #GstHipEvent</doc>
+            <type name="HipEvent" c:type="GstHipEvent*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="query" c:identifier="gst_hip_event_query" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">Queries event status via hipEventQuery()</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h"/>
+        <return-value>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">hipError_t error code</doc>
+          <type name="gint" c:type="hipError_t"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="event" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">a #GstHipEvent</doc>
+            <type name="HipEvent" c:type="GstHipEvent*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="record" c:identifier="gst_hip_event_record" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">Records operations currently scheduled by @stream to @event</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h"/>
+        <return-value>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">hipError_t error code</doc>
+          <type name="gint" c:type="hipError_t"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="event" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">a #GstHipEvent</doc>
+            <type name="HipEvent" c:type="GstHipEvent*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">a hipStream_t handle</doc>
+            <type name="gpointer" c:type="hipStream_t"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="ref" c:identifier="gst_hip_event_ref" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">Increments the reference count on @event</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">a pointer to @event</doc>
+          <type name="HipEvent" c:type="GstHipEvent*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="event" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">a #GstHipEvent</doc>
+            <type name="HipEvent" c:type="GstHipEvent*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="synchronize" c:identifier="gst_hip_event_synchronize" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">Waits for recorded operations via hipEventSynchronize()</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h"/>
+        <return-value>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">hipError_t error code</doc>
+          <type name="gint" c:type="hipError_t"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="event" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">a #GstHipEvent</doc>
+            <type name="HipEvent" c:type="GstHipEvent*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="unref" c:identifier="gst_hip_event_unref" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">Decrements the reference count on @event</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="event" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">a #GstHipEvent</doc>
+            <type name="HipEvent" c:type="GstHipEvent*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </record>
+    <class name="HipEventPool" c:symbol-prefix="hip_event_pool" c:type="GstHipEventPool" version="1.28" parent="Gst.Object" glib:type-name="GstHipEventPool" glib:get-type="gst_hip_event_pool_get_type" glib:type-struct="HipEventPoolClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h">Opaque GstHipEventPool struct</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h"/>
+      <constructor name="new" c:identifier="gst_hip_event_pool_new" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">Creates a new event pool instance with @vendor and @device_id.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">a #GstHipEventPool if succeeded,
+otherwise %NULL</doc>
+          <type name="HipEventPool" c:type="GstHipEventPool*"/>
+        </return-value>
+        <parameters>
+          <parameter name="vendor" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">a #GstHipVendor</doc>
+            <type name="HipVendor" c:type="GstHipVendor"/>
+          </parameter>
+          <parameter name="device_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">device identifier</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <method name="acquire" c:identifier="gst_hip_event_pool_acquire" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">Acquires #GstHipEvent from @pool</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">%TRUE if succeeded</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="pool" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">a #GstHipEventPool</doc>
+            <type name="HipEventPool" c:type="GstHipEventPool*"/>
+          </instance-parameter>
+          <parameter name="event" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">a location to store #GstHipEvent</doc>
+            <type name="HipEvent" c:type="GstHipEvent**"/>
+          </parameter>
+        </parameters>
+      </method>
+      <field name="parent">
+        <type name="Gst.Object" c:type="GstObject"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="HipEventPoolPrivate" c:type="GstHipEventPoolPrivate*"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="HipEventPoolClass" c:type="GstHipEventPoolClass" glib:is-gtype-struct-for="HipEventPool" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h">Opaque GstHipEventPoolClass struct</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h"/>
+      <field name="parent_class">
+        <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <record name="HipEventPoolPrivate" c:type="GstHipEventPoolPrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip_fwd.h"/>
+    </record>
+    <record name="HipGraphicsResource" c:type="GstHipGraphicsResource" opaque="1" glib:type-name="GstHipGraphicsResource" glib:get-type="gst_hip_graphics_resource_get_type" c:symbol-prefix="hip_graphics_resource">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip_fwd.h"/>
+      <method name="get_mapped_pointer" c:identifier="gst_hip_graphics_resource_get_mapped_pointer" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">Get mapped device pointer from @resource.
+Caller must map @resource via gst_hip_graphics_resource_map()
+before getting mapped device memory</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.h"/>
+        <return-value>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">hipError_t error code</doc>
+          <type name="gint" c:type="hipError_t"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="resource" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">a #GstHipGraphicsResource</doc>
+            <type name="HipGraphicsResource" c:type="GstHipGraphicsResource*"/>
+          </instance-parameter>
+          <parameter name="dev_ptr" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">a pointer to mapped device memory</doc>
+            <type name="gpointer" c:type="void**"/>
+          </parameter>
+          <parameter name="size" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">the size of mapped device memory</doc>
+            <type name="gsize" c:type="size_t*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="map" c:identifier="gst_hip_graphics_resource_map" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">Map registered @resource for I/O operation</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.h"/>
+        <return-value>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">hipError_t error code</doc>
+          <type name="gint" c:type="hipError_t"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="resource" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">a #GstHipGraphicsResource</doc>
+            <type name="HipGraphicsResource" c:type="GstHipGraphicsResource*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">a hipStream_t handle</doc>
+            <type name="gpointer" c:type="hipStream_t"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="ref" c:identifier="gst_hip_graphics_resource_ref" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">Increments the reference count on @resource</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">a pointer to @resource</doc>
+          <type name="HipGraphicsResource" c:type="GstHipGraphicsResource*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="resource" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">a #GstHipGraphicsResource</doc>
+            <type name="HipGraphicsResource" c:type="GstHipGraphicsResource*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="unmap" c:identifier="gst_hip_graphics_resource_unmap" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">Unmap mapped @resource via gst_hip_graphics_resource_map()</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.h"/>
+        <return-value>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">hipError_t error code</doc>
+          <type name="gint" c:type="hipError_t"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="resource" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">a #GstHipGraphicsResource</doc>
+            <type name="HipGraphicsResource" c:type="GstHipGraphicsResource*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">a hipStream_t handle</doc>
+            <type name="gpointer" c:type="hipStream_t"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="unref" c:identifier="gst_hip_graphics_resource_unref" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">Decrements the reference count on @resource</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="resource" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">a #GstHipGraphicsResource</doc>
+            <type name="HipGraphicsResource" c:type="GstHipGraphicsResource*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </record>
+    <record name="HipMemory" c:type="GstHipMemory" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h">Opaque GstHipMemory struct</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <field name="mem" writable="1">
+        <type name="Gst.Memory" c:type="GstMemory"/>
+      </field>
+      <field name="device" writable="1">
+        <type name="HipDevice" c:type="GstHipDevice*"/>
+      </field>
+      <field name="info" writable="1">
+        <type name="GstVideo.VideoInfo" c:type="GstVideoInfo"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="HipMemoryPrivate" c:type="GstHipMemoryPrivate*"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+      <method name="get_stream" c:identifier="gst_hip_memory_get_stream" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">Gets HIP stream object associated with @mem</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstHipStream or %NULL if default
+HIP stream is in use</doc>
+          <type name="HipStream" c:type="GstHipStream*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mem" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstHipMemory</doc>
+            <type name="HipMemory" c:type="GstHipMemory*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_texture" c:identifier="gst_hip_memory_get_texture" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">Creates hipTextureObject_t with given parameters</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">%TRUE if succeeded</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mem" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstHipMemory</doc>
+            <type name="HipMemory" c:type="GstHipMemory*"/>
+          </instance-parameter>
+          <parameter name="plane" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">the plane index</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="filter_mode" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">filter mode</doc>
+            <type name="gint" c:type="HIPfilter_mode"/>
+          </parameter>
+          <parameter name="address_mode" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">address mode</doc>
+            <type name="gint" c:type="HIPaddress_mode"/>
+          </parameter>
+          <parameter name="texture" direction="out" caller-allocates="0" transfer-ownership="none" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a pointer to hipTextureObject_t object</doc>
+            <type name="gpointer" c:type="hipTextureObject_t*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_event" c:identifier="gst_hip_memory_set_event" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">Sets @event to @mem for later synchronization operation</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mem" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstHipMemory</doc>
+            <type name="HipMemory" c:type="GstHipMemory*"/>
+          </instance-parameter>
+          <parameter name="event" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstHipEvent</doc>
+            <type name="HipEvent" c:type="GstHipEvent*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="sync" c:identifier="gst_hip_memory_sync" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">Waits for device synchronization by using previously configured #GstHipEvent
+via gst_hip_memory_set_event()</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mem" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstHipMemory</doc>
+            <type name="HipMemory" c:type="GstHipMemory*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </record>
+    <record name="HipMemoryPrivate" c:type="GstHipMemoryPrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip_fwd.h"/>
+    </record>
+    <bitfield name="HipMemoryTransfer" c:type="GstHipMemoryTransfer">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <member name="download" value="1048576" c:identifier="GST_HIP_MEMORY_TRANSFER_NEED_DOWNLOAD">
+      </member>
+      <member name="upload" value="2097152" c:identifier="GST_HIP_MEMORY_TRANSFER_NEED_UPLOAD">
+      </member>
+    </bitfield>
+    <class name="HipPoolAllocator" c:symbol-prefix="hip_pool_allocator" c:type="GstHipPoolAllocator" version="1.28" parent="HipAllocator" glib:type-name="GstHipPoolAllocator" glib:get-type="gst_hip_pool_allocator_get_type" glib:type-struct="HipPoolAllocatorClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h">Opaque GstHipPoolAllocator struct</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <constructor name="new" c:identifier="gst_hip_pool_allocator_new" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">Creates a new #GstHipPoolAllocator instance</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstHipPoolAllocator</doc>
+          <type name="HipPoolAllocator" c:type="GstHipPoolAllocator*"/>
+        </return-value>
+        <parameters>
+          <parameter name="device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstHipDevice</doc>
+            <type name="HipDevice" c:type="GstHipDevice*"/>
+          </parameter>
+          <parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstVideoInfo</doc>
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <method name="acquire_memory" c:identifier="gst_hip_pool_allocator_acquire_memory" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">Acquires a #GstMemory from @allocator. @memory should point to a memory
+location that can hold a pointer to the new #GstMemory.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstFlowReturn such as %GST_FLOW_FLUSHING when the allocator is
+inactive.</doc>
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstHipPoolAllocator</doc>
+            <type name="HipPoolAllocator" c:type="GstHipPoolAllocator*"/>
+          </instance-parameter>
+          <parameter name="memory" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstMemory</doc>
+            <type name="Gst.Memory" c:type="GstMemory**"/>
+          </parameter>
+        </parameters>
+      </method>
+      <field name="parent">
+        <type name="HipAllocator" c:type="GstHipAllocator"/>
+      </field>
+      <field name="device">
+        <type name="HipDevice" c:type="GstHipDevice*"/>
+      </field>
+      <field name="info">
+        <type name="GstVideo.VideoInfo" c:type="GstVideoInfo"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="HipPoolAllocatorPrivate" c:type="GstHipPoolAllocatorPrivate*"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="HipPoolAllocatorClass" c:type="GstHipPoolAllocatorClass" glib:is-gtype-struct-for="HipPoolAllocator" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h">Opaque GstHipPoolAllocatorClass struct</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <field name="parent_class">
+        <type name="HipAllocatorClass" c:type="GstHipAllocatorClass"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <record name="HipPoolAllocatorPrivate" c:type="GstHipPoolAllocatorPrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip_fwd.h"/>
+    </record>
+    <record name="HipStream" c:type="GstHipStream" opaque="1" glib:type-name="GstHipStream" glib:get-type="gst_hip_stream_get_type" c:symbol-prefix="hip_stream">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip_fwd.h"/>
+      <constructor name="new" c:identifier="gst_hip_stream_new" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">Creates a new #GstHipStream object</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">a #GstHipStream object or %NULL if failed</doc>
+          <type name="HipStream" c:type="GstHipStream*"/>
+        </return-value>
+        <parameters>
+          <parameter name="vendor" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">a #GstHipVendor</doc>
+            <type name="HipVendor" c:type="GstHipVendor"/>
+          </parameter>
+          <parameter name="device_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">device identifier</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <method name="get_device_id" c:identifier="gst_hip_stream_get_device_id" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">Gets numeric device identifier of @stream object</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">device identifier</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">a #GstHipStream</doc>
+            <type name="HipStream" c:type="GstHipStream*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_handle" c:identifier="gst_hip_stream_get_handle" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">Gets hipStream_t handle owned by @stream</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">hipStream_t handle</doc>
+          <type name="gpointer" c:type="hipStream_t"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="stream" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">a #GstHipStream</doc>
+            <type name="HipStream" c:type="GstHipStream*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_vendor" c:identifier="gst_hip_stream_get_vendor" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">Gets device vendor of @stream object</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">#GstHipVendor</doc>
+          <type name="HipVendor" c:type="GstHipVendor"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">a #GstHipStream</doc>
+            <type name="HipStream" c:type="GstHipStream*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="record_event" c:identifier="gst_hip_stream_record_event" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">Records currently scheduled operations in @stream to #GstHipEvent</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">%TRUE if succeeded</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">a #GstHipStream</doc>
+            <type name="HipStream" c:type="GstHipStream*"/>
+          </instance-parameter>
+          <parameter name="event" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">a location to store #GstHipEvent</doc>
+            <type name="HipEvent" c:type="GstHipEvent**"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="ref" c:identifier="gst_hip_stream_ref" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">Increments the reference count on @stream</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">a pointer to @stream</doc>
+          <type name="HipStream" c:type="GstHipStream*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">a #GstHipStream</doc>
+            <type name="HipStream" c:type="GstHipStream*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="unref" c:identifier="gst_hip_stream_unref" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">Decrements the reference count on @stream</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">a #GstHipStream</doc>
+            <type name="HipStream" c:type="GstHipStream*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </record>
+    <enumeration name="HipVendor" version="1.28" glib:type-name="GstHipVendor" glib:get-type="gst_hip_vendor_get_type" c:type="GstHipVendor">
+      <member name="unknown" value="0" c:identifier="GST_HIP_VENDOR_UNKNOWN" glib:nick="unknown" glib:name="Unknown">
+      </member>
+      <member name="amd" value="1" c:identifier="GST_HIP_VENDOR_AMD" glib:nick="amd" glib:name="AMD">
+      </member>
+      <member name="nvidia" value="2" c:identifier="GST_HIP_VENDOR_NVIDIA" glib:nick="nvidia" glib:name="NVIDIA">
+      </member>
+    </enumeration>
+    <function-macro name="IS_HIP_ALLOCATOR" c:identifier="GST_IS_HIP_ALLOCATOR" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_HIP_ALLOCATOR_CLASS" c:identifier="GST_IS_HIP_ALLOCATOR_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_HIP_BUFFER_POOL" c:identifier="GST_IS_HIP_BUFFER_POOL" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_HIP_BUFFER_POOL_CLASS" c:identifier="GST_IS_HIP_BUFFER_POOL_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_HIP_DEVICE" c:identifier="GST_IS_HIP_DEVICE" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_HIP_DEVICE_CLASS" c:identifier="GST_IS_HIP_DEVICE_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_HIP_EVENT_POOL" c:identifier="GST_IS_HIP_EVENT_POOL" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_HIP_EVENT_POOL_CLASS" c:identifier="GST_IS_HIP_EVENT_POOL_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_HIP_POOL_ALLOCATOR" c:identifier="GST_IS_HIP_POOL_ALLOCATOR" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_HIP_POOL_ALLOCATOR_CLASS" c:identifier="GST_IS_HIP_POOL_ALLOCATOR_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <constant name="MAP_HIP" value="131072" c:type="GST_MAP_HIP">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <type name="Gst.MapFlags" c:type="GstMapFlags"/>
+    </constant>
+    <constant name="MAP_READ_HIP" value="1" c:type="GST_MAP_READ_HIP">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <type name="Gst.MapFlags" c:type="GstMapFlags"/>
+    </constant>
+    <constant name="MAP_WRITE_HIP" value="2" c:type="GST_MAP_WRITE_HIP">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <type name="Gst.MapFlags" c:type="GstMapFlags"/>
+    </constant>
+    <function name="clear_hip_event" c:identifier="gst_clear_hip_event" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">Clears a reference to the @event</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="event" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">a pointer to a #GstHipEvent</doc>
+          <type name="HipEvent" c:type="GstHipEvent**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="clear_hip_graphics_resource" c:identifier="gst_clear_hip_graphics_resource" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">Clears a reference to the @resource</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="resource" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">a pointer to a #GstHipGraphicsResource</doc>
+          <type name="HipGraphicsResource" c:type="GstHipGraphicsResource**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="clear_hip_stream" c:identifier="gst_clear_hip_stream" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">Clears a reference to the @stream</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="stream" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipstream.cpp">a pointer to a #GstHipStream</doc>
+          <type name="HipStream" c:type="GstHipStream**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="context_new_hip_device" c:identifier="gst_context_new_hip_device" version="1.28">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.h"/>
+      <return-value transfer-ownership="full">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">a new #GstContext embedding the @device</doc>
+        <type name="Gst.Context" c:type="GstContext*"/>
+      </return-value>
+      <parameters>
+        <parameter name="device" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">a #GstHipDevice</doc>
+          <type name="HipDevice" c:type="GstHipDevice*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="hip_ensure_element_data" c:identifier="gst_hip_ensure_element_data" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">Perform the steps necessary for retrieving a #GstHipDevice from the
+surrounding elements or from the application using the #GstContext mechanism.
+
+If the content of @device is not %NULL, then no #GstContext query is
+necessary for #GstHipDevice.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">whether a #GstHipDevice exists in @device</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="element" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">the #GstElement running the query</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </parameter>
+        <parameter name="vendor" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">a #GstHipVendor</doc>
+          <type name="HipVendor" c:type="GstHipVendor"/>
+        </parameter>
+        <parameter name="device_id" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">preferred device-id, pass device_id &gt;=0 when
+            the device_id explicitly required. Otherwise, set -1.</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="device" direction="inout" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">the resulting #GstHipDevice</doc>
+          <type name="HipDevice" c:type="GstHipDevice**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="hip_handle_context_query" c:identifier="gst_hip_handle_context_query" version="1.28">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">Whether the @query was successfully responded to from the passed
+         @context.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="element" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">a #GstElement</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </parameter>
+        <parameter name="query" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">a #GstQuery of type %GST_QUERY_CONTEXT</doc>
+          <type name="Gst.Query" c:type="GstQuery*"/>
+        </parameter>
+        <parameter name="device" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">a #GstHipDevice</doc>
+          <type name="HipDevice" c:type="GstHipDevice*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="hip_handle_set_context" c:identifier="gst_hip_handle_set_context" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">Helper function for implementing #GstElementClass.set_context() in
+HIP capable elements.
+
+Retrieves the #GstHipDevice in @context and places the result in @device.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">whether the @device could be set successfully</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="element" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">a #GstElement</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </parameter>
+        <parameter name="context" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">a #GstContext</doc>
+          <type name="Gst.Context" c:type="GstContext*"/>
+        </parameter>
+        <parameter name="vendor" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">a #GstHipVendor</doc>
+          <type name="HipVendor" c:type="GstHipVendor"/>
+        </parameter>
+        <parameter name="device_id" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">preferred device-id, pass device_id &gt;=0 when
+            the device_id explicitly required. Otherwise, set -1.</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="device" direction="inout" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">location of a #GstHipDevice</doc>
+          <type name="HipDevice" c:type="GstHipDevice**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="hip_load_library" c:identifier="gst_hip_load_library" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiploader.cpp">Opens @vendor specific runtime libraries</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiploader.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiploader.cpp">%TRUE if succeeded</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="vendor" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiploader.cpp">a #GstHipVendor</doc>
+          <type name="HipVendor" c:type="GstHipVendor"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function-macro name="hip_result" c:identifier="gst_hip_result" version="1.28" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.h"/>
+      <parameters>
+        <parameter name="result">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.h">HIP device API return code `hipError_t`</doc>
+        </parameter>
+        <parameter name="vendor">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.h">a #GstHipVendor</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function name="hip_rtc_compile" c:identifier="gst_hip_rtc_compile" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiprtc.cpp">Compiles @source with given compile options</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiprtc.h"/>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiprtc.cpp">Compiled kernel blob or %NULL if failed.
+ *</doc>
+        <type name="utf8" c:type="gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="device" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiprtc.cpp">a #GstHipDevice</doc>
+          <type name="HipDevice" c:type="GstHipDevice*"/>
+        </parameter>
+        <parameter name="source" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiprtc.cpp">HIP kernel source</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="options" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiprtc.cpp">array of compile option string</doc>
+          <type name="utf8" c:type="const gchar**"/>
+        </parameter>
+        <parameter name="num_options" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiprtc.cpp">option array size</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="hip_rtc_load_library" c:identifier="gst_hip_rtc_load_library" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiprtc.cpp">Opens @vendor specific runtime compiler libraries</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiprtc.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiprtc.cpp">%TRUE if succeeded</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="vendor" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiprtc.cpp">a #GstHipVendor</doc>
+          <type name="HipVendor" c:type="GstHipVendor"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="is_hip_memory" c:identifier="gst_is_hip_memory" version="1.28">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">%TRUE if @mem is a #GstHipMemory</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="mem" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstMemory</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </parameter>
+      </parameters>
+    </function>
+  </namespace>
+</repository>

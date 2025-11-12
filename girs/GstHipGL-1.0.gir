@@ -1,0 +1,36 @@
+<!-- This file was automatically generated from C sources - DO NOT EDIT!
+To affect the contents of this file, edit the original C definitions,
+and/or use gtk-doc annotations.  -->
+<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
+  <include name="Gst" version="1.0"/>
+  <include name="GstBase" version="1.0"/>
+  <include name="GstGL" version="1.0"/>
+  <include name="GstHip" version="1.0"/>
+  <include name="GstVideo" version="1.0"/>
+  <package name="gstreamer-hip-gl-1.0"/>
+  <namespace name="GstHipGL" version="1.0" shared-library="libgsthip.so.0" c:identifier-prefixes="Gst" c:symbol-prefixes="gst">
+    <function name="hip_gl_get_graphics_resource_from_memory" c:identifier="gst_hip_gl_get_graphics_resource_from_memory" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">Creates a new #GstHipGraphicsResource from gl memory.
+@mem must be a valid #GstGLMemoryPBO</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop-gl.h"/>
+      <return-value>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">hipError_t error code</doc>
+        <type name="gint" c:type="hipError_t"/>
+      </return-value>
+      <parameters>
+        <parameter name="device" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">a #GstHipDevice</doc>
+          <type name="GstHip.HipDevice" c:type="GstHipDevice*"/>
+        </parameter>
+        <parameter name="mem" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">a #GstMemory</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </parameter>
+        <parameter name="resource" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">a location to store created #GstHipGraphicsResource</doc>
+          <type name="GstHip.HipGraphicsResource" c:type="GstHipGraphicsResource**"/>
+        </parameter>
+      </parameters>
+    </function>
+  </namespace>
+</repository>
