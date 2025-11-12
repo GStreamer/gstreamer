@@ -173,6 +173,7 @@ enum
   SIGNAL_PRE_RECORD_REQUEST,
   SIGNAL_RECORD_REQUEST,
   SIGNAL_CHECK_REQUIREMENTS,
+  SIGNAL_PRE_CLOSED,
   SIGNAL_LAST
 };
 
@@ -277,6 +278,18 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
           "An extra TCP connection timeout after session timeout", G_MININT,
           G_MAXINT, DEFAULT_POST_SESSION_TIMEOUT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRTSPClient::pre-closed:
+   *
+   * Provide a way for an application to be notified when a connection is closed,
+   * before the client's sessions are cleaned up.
+   *
+   * Since: 1.28
+   */
+  gst_rtsp_client_signals[SIGNAL_PRE_CLOSED] =
+      g_signal_new_class_handler ("pre-closed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, NULL, NULL, NULL, NULL, G_TYPE_NONE, 0);
 
   gst_rtsp_client_signals[SIGNAL_CLOSED] =
       g_signal_new ("closed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -5014,6 +5027,7 @@ closed (GstRTSPWatch * watch, gpointer user_data)
 
   GST_INFO ("client %p: connection closed", client);
 
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_PRE_CLOSED], 0, NULL);
   if ((tunnelid = gst_rtsp_connection_get_tunnelid (priv->connection))) {
     g_mutex_lock (&tunnels_lock);
     /* remove from tunnelids */

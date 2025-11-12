@@ -1707,7 +1707,7 @@ GST_START_TEST
 
 GST_END_TEST;
 
-/* test if two multicast clients get the different transport settings: the first client 
+/* test if two multicast clients get the different transport settings: the first client
  * requests the specific transport configuration while the second client lets
  * the server select the multicast address and the ports.
  * CASE: media is shared */
@@ -1729,7 +1729,7 @@ GST_START_TEST
 
 GST_END_TEST;
 /* test if two multicast clients get the different transport settings: the first client lets
- * the server select the multicast address and the ports while the second client requests 
+ * the server select the multicast address and the ports while the second client requests
  * the specific transport configuration.
  * CASE: media is shared */
 GST_START_TEST
@@ -2200,6 +2200,111 @@ GST_START_TEST (test_adjust_error_code)
 
 GST_END_TEST;
 
+static GstRTSPFilterResult
+filter_session_media (GstRTSPSession * sess, GstRTSPSessionMedia * sessmedia,
+    gpointer user_data)
+{
+  GstRTSPMedia *media;
+
+  media = gst_rtsp_session_media_get_media (sessmedia);
+  /* expect the media to remain valid after a pre-closed notification */
+  ck_assert_ptr_ne (media, NULL);
+
+  return GST_RTSP_FILTER_KEEP;
+}
+
+static GstRTSPFilterResult
+cleanup_session (GstRTSPClient * client, GstRTSPSession * sess,
+    gpointer user_data)
+{
+  GList *tmp G_GNUC_UNUSED;
+  GST_INFO ("session is about to be terminated");
+
+  tmp = gst_rtsp_session_filter (sess, filter_session_media, user_data);
+  g_assert (tmp == NULL);
+
+  return GST_RTSP_FILTER_KEEP;
+}
+
+static void
+client_pre_closed_cb (GstRTSPClient * client, gpointer user_data)
+{
+  GList *tmp G_GNUC_UNUSED;
+  gboolean *pre_closed_called = (gboolean *) user_data;
+
+  *pre_closed_called = TRUE;
+  tmp = gst_rtsp_client_session_filter (client, cleanup_session, NULL);
+  g_assert (tmp == NULL);
+}
+
+
+/* CASE: a client terminates its session by sending a TCP RST.
+ * The application stll has a possibility to retrieve information about
+ * the client's session before the client's data is cleaned up. */
+GST_START_TEST (test_pre_closed)
+{
+  GstRTSPClient *client;
+  GstRTSPConnection *conn;
+  GstRTSPMessage request = { 0, };
+  gchar *str;
+  GstRTSPContext ctx = { NULL };
+  gboolean pre_closed_called = FALSE;
+
+  client = setup_multicast_client (1, "/test");
+  ctx.client = client;
+  create_connection (&conn);
+  fail_unless (gst_rtsp_client_set_connection (client, conn));
+  ctx.conn = conn;
+  gst_rtsp_context_push_current (&ctx);
+
+  /* request a notification when the client's connection terminates */
+  g_signal_connect (G_OBJECT (client), "pre-closed",
+      G_CALLBACK (client_pre_closed_cb), &pre_closed_called);
+
+  /* send SETUP request */
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_SETUP,
+          "rtsp://localhost/test/stream=0") == GST_RTSP_OK);
+  str = g_strdup_printf ("%d", cseq);
+  gst_rtsp_message_take_header (&request, GST_RTSP_HDR_CSEQ, str);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_TRANSPORT,
+      "RTP/AVP;multicast");
+
+  expected_transport = "RTP/AVP;multicast;destination=233.252.0.1;"
+      "ttl=1;port=5000-5001;mode=\"PLAY\"";
+  gst_rtsp_client_set_send_func (client, test_setup_response_200, NULL, NULL);
+  fail_unless (gst_rtsp_client_handle_message (client,
+          &request) == GST_RTSP_OK);
+  gst_rtsp_message_unset (&request);
+  expected_transport = NULL;
+
+  /* send PLAY request */
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_PLAY,
+          "rtsp://localhost/test") == GST_RTSP_OK);
+  str = g_strdup_printf ("%d", cseq);
+  gst_rtsp_message_take_header (&request, GST_RTSP_HDR_CSEQ, str);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SESSION, session_id);
+  gst_rtsp_client_set_send_func (client, test_response_200, NULL, NULL);
+  fail_unless (gst_rtsp_client_handle_message (client,
+          &request) == GST_RTSP_OK);
+  gst_rtsp_message_unset (&request);
+  ck_assert (ctx.conn != NULL);
+
+  /* prepare for a "connection closed" notification */
+  gst_rtsp_client_attach (client, g_main_context_default ());
+
+  /* close the connection */
+  gst_rtsp_connection_close (ctx.conn);
+  while (!g_main_context_iteration (NULL, TRUE));
+
+  /* expect pre-closed signal being emitted */
+  ck_assert (pre_closed_called);
+
+  teardown_client (client);
+  gst_rtsp_context_pop_current (&ctx);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspclient_suite (void)
 {
@@ -2261,6 +2366,7 @@ rtspclient_suite (void)
   tcase_add_test (tc, test_client_play);
   tcase_add_test (tc, test_client_play_root_mount_point);
   tcase_add_test (tc, test_adjust_error_code);
+  tcase_add_test (tc, test_pre_closed);
 
   return s;
 }

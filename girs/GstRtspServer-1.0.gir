@@ -2244,6 +2244,13 @@ that created the client but can be overridden later.</doc>
           </parameter>
         </parameters>
       </glib:signal>
+      <glib:signal name="pre-closed" when="last" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.c">Provide a way for an application to be notified when a connection is closed,
+before the client's sessions are cleaned up.</doc>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+      </glib:signal>
       <glib:signal name="pre-describe-request" when="last" version="1.12">
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.c">a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
