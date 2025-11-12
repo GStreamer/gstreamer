@@ -1763,7 +1763,7 @@ void gst_debug_log_id_with_context_valist       (GstLogContext *ctx,
                                                  gint line,
                                                  const gchar *id,
                                                  const gchar *format,
-                                                 va_list args) G_GNUC_PRINTF(7, 0);;
+                                                 va_list args) G_GNUC_PRINTF(7, 0);
 
 GST_API
 void gst_debug_log_id_literal_with_context      (GstLogContext *ctx,
