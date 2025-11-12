@@ -110,7 +110,7 @@
                 "long-name": "Audio sink (ALSA)",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\naudio/x-dsd:\n         format: { DSDU32BE, DSDU16BE, DSDU8, DSDU32LE, DSDU16LE }\n         layout: interleaved\n reversed-bytes: false\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\naudio/x-ac3:\n         framed: true\naudio/x-eac3:\n         framed: true\naudio/x-dts:\n         framed: true\n     block-size: { (int)512, (int)1024, (int)2048 }\naudio/mpeg:\n    mpegversion: 1\nmpegaudioversion: [ 1, 3 ]\n         parsed: true\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\naudio/x-dsd:\n         format: { DSDU32BE, DSDU16BE, DSDU8, DSDU32LE, DSDU16LE }\n         layout: interleaved\n reversed-bytes: false\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\naudio/x-ac3:\n         framed: true\naudio/x-eac3:\n         framed: true\naudio/x-dts:\n         framed: true\n     block-size: { (int)512, (int)1024, (int)2048 }\naudio/mpeg:\n    mpegversion: 1\nmpegaudioversion: [ 1, 3 ]\n         parsed: true\n",
                         "direction": "sink",
                         "presence": "always"
                     }
@@ -173,7 +173,7 @@
                 "long-name": "Audio source (ALSA)",
                 "pad-templates": {
                     "src": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -990,12 +990,12 @@
                 "long-name": "Audio converter",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -1169,13 +1169,13 @@
                 "long-name": "AudioInterleave",
                 "pad-templates": {
                     "sink_%%u": {
-                        "caps": "audio/x-raw:\n           rate: [ 1, 2147483647 ]\n       channels: 1\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: { (string)non-interleaved, (string)interleaved }\n",
+                        "caps": "audio/x-raw:\n           rate: [ 1, 2147483647 ]\n       channels: 1\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: { (string)non-interleaved, (string)interleaved }\n",
                         "direction": "sink",
                         "presence": "request",
                         "type": "GstAudioInterleavePad"
                     },
                     "src": {
-                        "caps": "audio/x-raw:\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: interleaved\n",
+                        "caps": "audio/x-raw:\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: interleaved\n",
                         "direction": "src",
                         "presence": "always",
                         "type": "GstAudioAggregatorPad"
@@ -1227,7 +1227,7 @@
                 "long-name": "AudioMixer",
                 "pad-templates": {
                     "sink_%%u": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
                         "direction": "sink",
                         "presence": "request",
                         "type": "GstAudioMixerPad"
@@ -1262,7 +1262,7 @@
                 "long-name": "AudioMixer",
                 "pad-templates": {
                     "sink_%%u": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
                         "direction": "sink",
                         "presence": "request",
                         "type": "GstAudioMixerPad"
@@ -1390,12 +1390,12 @@
                 "long-name": "Audio rate adjuster",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -1525,12 +1525,12 @@
                 "long-name": "Audio resampler",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -12871,12 +12871,12 @@
                 "long-name": "rawaudioparse",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-unaligned-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\naudio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\naudio/x-alaw:\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\naudio/x-mulaw:\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
+                        "caps": "audio/x-unaligned-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\naudio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\naudio/x-alaw:\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\naudio/x-mulaw:\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\naudio/x-alaw:\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\naudio/x-mulaw:\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\naudio/x-alaw:\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\naudio/x-mulaw:\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -13148,12 +13148,12 @@
                 "long-name": "unalignedaudioparse",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-unaligned-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\n",
+                        "caps": "audio/x-unaligned-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\n",
                         "direction": "src",
                         "presence": "always"
                     }
