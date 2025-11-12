@@ -90,7 +90,6 @@ struct _GstVulkanH264Encoder
   GstH264Encoder parent;
 
   GstVideoCodecState *in_state;
-  GstVideoCodecState *out_state;
 
   gint coded_width;
   gint coded_height;
@@ -1080,6 +1079,7 @@ gst_vulkan_h264_encoder_new_parameters (GstH264Encoder * encoder,
     GstCaps *caps;
     GstVideoInfo *info = &self->in_state->info;
     const char *profile, *level;
+    GstVideoCodecState *out_state;
 
     profile = gst_vulkan_h264_profile_name (self->params.sps.profile_idc);
     level = gst_vulkan_h264_level_name (self->params.sps.level_idc);
@@ -1087,18 +1087,16 @@ gst_vulkan_h264_encoder_new_parameters (GstH264Encoder * encoder,
     if (!(profile && level))
       return GST_FLOW_ERROR;
 
-    if (self->out_state)
-      gst_video_codec_state_unref (self->out_state);
-
     caps = gst_caps_new_simple ("video/x-h264", "profile", G_TYPE_STRING,
         profile, "level", G_TYPE_STRING, level, "width", G_TYPE_INT,
         GST_VIDEO_INFO_WIDTH (info), "height", G_TYPE_INT,
         GST_VIDEO_INFO_HEIGHT (info), "alignment", G_TYPE_STRING, "au",
         "stream-format", G_TYPE_STRING, "byte-stream", NULL);
 
-    self->out_state =
+    out_state =
         gst_video_encoder_set_output_state (GST_VIDEO_ENCODER_CAST (self),
         caps, self->in_state);
+    gst_video_codec_state_unref (out_state);
   }
 
   return GST_FLOW_OK;
@@ -1770,9 +1768,7 @@ gst_vulkan_h264_encoder_stop (GstVideoEncoder * encoder)
 
   if (self->in_state)
     gst_video_codec_state_unref (self->in_state);
-  if (self->out_state)
-    gst_video_codec_state_unref (self->out_state);
-  self->in_state = self->out_state = NULL;
+  self->in_state = NULL;
 
   gst_vulkan_encoder_stop (self->encoder);
 
