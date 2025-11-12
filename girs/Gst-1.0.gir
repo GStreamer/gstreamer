@@ -11062,6 +11062,24 @@ free it and that the pointer becomes invalid when you free the context.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="get_task_pool" c:identifier="gst_context_get_task_pool" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaskpool.c">Gets the task pool from @context.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gsttaskpool.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaskpool.c">%TRUE if a task pool was set on @context</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaskpool.c">a #GstContext</doc>
+            <type name="Context" c:type="GstContext*"/>
+          </instance-parameter>
+          <parameter name="pool" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaskpool.c">a #GstTaskPool</doc>
+            <type name="TaskPool" c:type="GstTaskPool**"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="has_context_type" c:identifier="gst_context_has_context_type" version="1.2">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcontext.c">Checks if @context has @context_type.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstcontext.h"/>
@@ -11145,6 +11163,25 @@ also: gst_context_ref().</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcontext.c">the context to ref</doc>
             <type name="Context" c:type="GstContext*"/>
           </instance-parameter>
+        </parameters>
+      </method>
+      <method name="set_task_pool" c:identifier="gst_context_set_task_pool" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaskpool.c">Sets @pool on @context as the task pool to be shared between elements.
+If @pool is %NULL, any previously set task pool will be removed from
+the context.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gsttaskpool.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaskpool.c">a #GstContext</doc>
+            <type name="Context" c:type="GstContext*"/>
+          </instance-parameter>
+          <parameter name="pool" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaskpool.c">a #GstTaskPool or %NULL to unset</doc>
+            <type name="TaskPool" c:type="GstTaskPool*"/>
+          </parameter>
         </parameters>
       </method>
       <method name="unref" c:identifier="gst_context_unref" version="1.2">
@@ -47933,6 +47970,18 @@ The higher the value, the more the user likes this media
         </parameter>
       </parameters>
     </function-macro>
+    <constant name="TASK_POOL_CONTEXT_TYPE" value="gst.task.pool" c:type="GST_TASK_POOL_CONTEXT_TYPE" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaskpool.h">The well-known context type for sharing a #GstTaskPool between elements
+in a pipeline.
+
+Elements that support this context will post a %GST_MESSAGE_NEED_CONTEXT
+message on the bus when they need a task pool. Applications can respond
+by setting the context on the element or the pipeline. Elements will not
+query neighbors for this context type as the task pool is optional and
+elements will fall back to their default behavior if no pool is provided.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gsttaskpool.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
     <function-macro name="TASK_POOL_GET_CLASS" c:identifier="GST_TASK_POOL_GET_CLASS" introspectable="0">
       <source-position filename="../subprojects/gstreamer/gst/gsttaskpool.h"/>
       <parameters>

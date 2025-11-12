@@ -432,6 +432,47 @@ GST_START_TEST (test_add_element_to_bin_collision)
 
 GST_END_TEST;
 
+GST_START_TEST (test_task_pool_context)
+{
+  GstContext *context;
+  GstTaskPool *pool, *pool2;
+
+  /* Create a task pool context and set/get task pool */
+  context = gst_context_new (GST_TASK_POOL_CONTEXT_TYPE, FALSE);
+  fail_unless (context != NULL);
+  fail_unless (GST_IS_CONTEXT (context));
+
+  /* Create a shared task pool */
+  pool = GST_TASK_POOL (gst_shared_task_pool_new ());
+  fail_unless (GST_IS_TASK_POOL (pool));
+
+  /* Set the task pool on the context */
+  gst_context_set_task_pool (context, pool);
+
+  /* Get the task pool back from the context */
+  fail_unless (gst_context_get_task_pool (context, &pool2));
+  fail_unless (GST_IS_TASK_POOL (pool2));
+  fail_unless (pool == pool2);
+
+  gst_clear_object (&pool);
+  gst_clear_object (&pool2);
+  gst_context_unref (context);
+
+  /* Test getting task pool from context without pool set */
+  context = gst_context_new (GST_TASK_POOL_CONTEXT_TYPE, FALSE);
+  fail_if (gst_context_get_task_pool (context, &pool2));
+  fail_unless (pool2 == NULL);
+  gst_context_unref (context);
+
+  context = gst_context_new ("some.other.context", FALSE);
+  pool2 = NULL;
+  ASSERT_CRITICAL (fail_if (gst_context_get_task_pool (context, &pool2)));
+  fail_unless (pool2 == NULL);
+  gst_context_unref (context);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_context_suite (void)
 {
@@ -448,6 +489,7 @@ gst_context_suite (void)
   tcase_add_test (tc_chain, test_element_bin_caching);
   tcase_add_test (tc_chain, test_add_element_to_bin);
   tcase_add_test (tc_chain, test_add_element_to_bin_collision);
+  tcase_add_test (tc_chain, test_task_pool_context);
 
   return s;
 }

@@ -22,6 +22,7 @@
 #ifndef __GST_TASK_POOL_H__
 #define __GST_TASK_POOL_H__
 
+#include <gst/gstcontext.h>
 #include <gst/gstobject.h>
 
 G_BEGIN_DECLS
@@ -116,6 +117,28 @@ void            gst_task_pool_dispose_handle (GstTaskPool *pool, gpointer id);
 
 GST_API
 void		gst_task_pool_cleanup     (GstTaskPool *pool);
+
+/**
+ * GST_TASK_POOL_CONTEXT_TYPE:
+ *
+ * The well-known context type for sharing a #GstTaskPool between elements
+ * in a pipeline.
+ *
+ * Elements that support this context will post a %GST_MESSAGE_NEED_CONTEXT
+ * message on the bus when they need a task pool. Applications can respond
+ * by setting the context on the element or the pipeline. Elements will not
+ * query neighbors for this context type as the task pool is optional and
+ * elements will fall back to their default behavior if no pool is provided.
+ *
+ * Since: 1.28
+ */
+#define GST_TASK_POOL_CONTEXT_TYPE "gst.task.pool"
+
+GST_API
+void            gst_context_set_task_pool (GstContext * context, GstTaskPool * pool);
+
+GST_API
+gboolean        gst_context_get_task_pool (GstContext * context, GstTaskPool ** pool);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstTaskPool, gst_object_unref)
 
