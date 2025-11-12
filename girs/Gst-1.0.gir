@@ -30449,6 +30449,24 @@ MT safe. Grabs and releases the #GstObject's LOCK for all objects
           </instance-parameter>
         </parameters>
       </method>
+      <method name="get_toplevel" c:identifier="gst_object_get_toplevel" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstobject.c">Returns the toplevel parent of @object. This function increases the refcount
+of the toplevel object so you should gst_object_unref() it after usage.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstobject.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstobject.c">toplevel of @object, or @object itself if it has no
+  parent. unref after usage.
+
+MT safe. Grabs and releases @object's LOCK.</doc>
+          <type name="Object" c:type="GstObject*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="object" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstobject.c">a #GstObject</doc>
+            <type name="Object" c:type="GstObject*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="get_value" c:identifier="gst_object_get_value">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstobject.c">Gets the value for the given controlled property at the requested time.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstobject.h"/>

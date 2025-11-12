@@ -616,6 +616,68 @@ GST_START_TEST (test_fake_object_has_as_ancestor)
 
 GST_END_TEST;
 
+GST_START_TEST (test_fake_object_get_toplevel)
+{
+  GstObject *object1, *object2, *object3, *object4;
+  GstObject *toplevel;
+  gboolean result;
+
+  object1 = g_object_new (gst_fake_object_get_type (), NULL);
+  fail_if (object1 == NULL, "Failed to create instance of GstFakeObject");
+
+  object2 = g_object_new (gst_fake_object_get_type (), NULL);
+  fail_if (object2 == NULL, "Failed to create instance of GstFakeObject");
+
+  object3 = g_object_new (gst_fake_object_get_type (), NULL);
+  fail_if (object3 == NULL, "Failed to create instance of GstFakeObject");
+
+  object4 = g_object_new (gst_fake_object_get_type (), NULL);
+  fail_if (object4 == NULL, "Failed to create instance of GstFakeObject");
+
+  /* try to set other object as parent */
+  result = gst_object_set_parent (object1, object3);
+  fail_unless (result, "GstFakeObject could not accept other object as parent");
+  result = gst_object_set_parent (object2, object3);
+  fail_unless (result, "GstFakeObject could not accept other object as parent");
+  result = gst_object_set_parent (object3, object4);
+  fail_unless (result, "GstFakeObject could not accept other object as parent");
+
+  /* Hierarchy:
+   *  object4
+   *   `- object3
+   *       |- object2
+   *       `- object1
+   */
+
+  /* The toplevel object is its own toplevel object */
+  toplevel = gst_object_get_toplevel (object4);
+  fail_unless_equals_pointer (toplevel, object4);
+  gst_object_unref (toplevel);
+
+  toplevel = gst_object_get_toplevel (object3);
+  fail_unless_equals_pointer (toplevel, object4);
+  gst_object_unref (toplevel);
+
+  toplevel = gst_object_get_toplevel (object2);
+  fail_unless_equals_pointer (toplevel, object4);
+  gst_object_unref (toplevel);
+
+  toplevel = gst_object_get_toplevel (object1);
+  fail_unless_equals_pointer (toplevel, object4);
+  gst_object_unref (toplevel);
+
+  /* unparent everything */
+  gst_object_unparent (object3);
+  gst_object_unparent (object2);
+  gst_object_unparent (object1);
+
+  /* now dispose objects */
+  gst_object_unref (object4);
+
+}
+
+GST_END_TEST;
+
 typedef struct
 {
   GMutex lock;
@@ -700,6 +762,7 @@ gst_object_suite (void)
   tcase_add_test (tc_chain, test_fake_object_parentage_dispose);
 
   tcase_add_test (tc_chain, test_fake_object_has_as_ancestor);
+  tcase_add_test (tc_chain, test_fake_object_get_toplevel);
   //tcase_add_checked_fixture (tc_chain, setup, teardown);
 
   tcase_add_test (tc_chain, test_call_async);

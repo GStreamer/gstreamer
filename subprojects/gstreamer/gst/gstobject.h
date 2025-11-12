@@ -279,6 +279,9 @@ GST_API
 GstObject*	gst_object_get_parent		(GstObject *object) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
+GstObject*	gst_object_get_toplevel (GstObject *object) G_GNUC_WARN_UNUSED_RESULT;
+
+GST_API
 void		gst_object_unparent		(GstObject *object);
 
 GST_API

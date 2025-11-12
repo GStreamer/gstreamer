@@ -768,6 +768,36 @@ gst_object_get_parent (GstObject * object)
 }
 
 /**
+ * gst_object_get_toplevel:
+ * @object: a #GstObject
+ *
+ * Returns the toplevel parent of @object. This function increases the refcount
+ * of the toplevel object so you should gst_object_unref() it after usage.
+ *
+ * Returns: (transfer full): toplevel of @object, or @object itself if it has no
+ *   parent. unref after usage.
+ *
+ * MT safe. Grabs and releases @object's LOCK.
+ *
+ * Since: 1.28
+ */
+GstObject *
+gst_object_get_toplevel (GstObject * object)
+{
+  GstObject *result = NULL, *parent;
+
+  g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
+
+  result = gst_object_ref (object);
+  while ((parent = gst_object_get_parent (result))) {
+    gst_object_unref (result);
+    result = parent;
+  }
+
+  return result;
+}
+
+/**
  * gst_object_unparent:
  * @object: a #GstObject to unparent
  *
