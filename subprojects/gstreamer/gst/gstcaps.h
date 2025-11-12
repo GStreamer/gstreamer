@@ -212,7 +212,7 @@ gst_clear_caps (GstCaps ** caps_ptr)
 G_GNUC_WARN_UNUSED_RESULT static inline GstCaps *
 gst_caps_copy (const GstCaps * caps)
 {
-  return GST_CAPS_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CAST (caps)));
+  return GST_CAPS_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (caps)));
 }
 
 static inline gboolean
