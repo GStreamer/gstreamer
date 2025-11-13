@@ -833,7 +833,7 @@ gst_gl_transformation_prepare_output_buffer (GstBaseTransform * trans,
 
     *outbuf = gst_buffer_make_writable (inbuf);
 
-    af_meta = gst_buffer_get_video_affine_transformation_meta (inbuf);
+    af_meta = gst_buffer_get_video_affine_transformation_meta (*outbuf);
     if (!af_meta)
       af_meta = gst_buffer_add_video_affine_transformation_meta (*outbuf);
 
