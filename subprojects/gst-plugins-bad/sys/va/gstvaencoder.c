@@ -398,6 +398,9 @@ gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
 
   g_return_val_if_fail (GST_IS_VA_ENCODER (self), FALSE);
   g_return_val_if_fail (codedbuf_size > 0, FALSE);
+  g_return_val_if_fail (profile != VAProfileNone, FALSE);
+  g_return_val_if_fail (video_format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
+  g_return_val_if_fail (rc_ctrl > 0, FALSE);
 
   if (gst_va_encoder_is_open (self))
     return TRUE;
