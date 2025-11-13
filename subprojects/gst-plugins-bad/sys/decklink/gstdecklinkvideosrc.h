@@ -115,11 +115,8 @@ struct _GstDecklinkVideoSrc
   GstVideoFormat anc_vformat;
   gint anc_width;
   gboolean output_cc;
-  gint last_cc_vbi_line;
-  gint last_cc_vbi_line_field2;
   gboolean output_afd_bar;
-  gint last_afd_bar_vbi_line;
-  gint last_afd_bar_vbi_line_field2;
+  gboolean output_vanc;
 
   guint skipped_last;
   GstClockTime skip_from_timestamp;

@@ -150,6 +150,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_decklink_video_src_debug);
 #define DEFAULT_OUTPUT_CC (FALSE)
 #define DEFAULT_OUTPUT_AFD_BAR (FALSE)
 #define DEFAULT_PERSISTENT_ID (-1)
+#define DEFAULT_OUTPUT_VANC (FALSE)
 
 #ifndef ABSDIFF
 #define ABSDIFF(x, y) ( (x) > (y) ? ((x) - (y)) : ((y) - (x)) )
@@ -175,6 +176,7 @@ enum
   PROP_PERSISTENT_ID,
   PROP_OUTPUT_CC,
   PROP_OUTPUT_AFD_BAR,
+  PROP_OUTPUT_VANC,
 };
 
 typedef struct
@@ -400,6 +402,22 @@ gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)
           DEFAULT_OUTPUT_AFD_BAR,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstDecklinkVideoSrc:output-vanc
+   *
+   * Extract VANC data from input frames and output it as `GstAncillaryMeta` on
+   * the video frames.
+   *
+   * Note that currently the horizontal offset is not preserved.
+   *
+   * Since: 1.28
+   */
+  g_object_class_install_property (gobject_class, PROP_OUTPUT_VANC,
+      g_param_spec_boolean ("output-vanc", "Output VANC data",
+          "Extract and output VANC as GstMeta (if present)",
+          DEFAULT_OUTPUT_AFD_BAR,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   templ_caps = gst_decklink_mode_get_template_caps (TRUE);
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, templ_caps));
@@ -527,6 +545,9 @@ gst_decklink_video_src_set_property (GObject * object, guint property_id,
     case PROP_OUTPUT_AFD_BAR:
       self->output_afd_bar = g_value_get_boolean (value);
       break;
+    case PROP_OUTPUT_VANC:
+      self->output_vanc = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -588,6 +609,9 @@ gst_decklink_video_src_get_property (GObject * object, guint property_id,
       break;
     case PROP_OUTPUT_AFD_BAR:
       g_value_set_boolean (value, self->output_afd_bar);
+      break;
+    case PROP_OUTPUT_VANC:
+      g_value_set_boolean (value, self->output_vanc);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -1187,123 +1211,134 @@ gst_decklink_video_src_got_frame (GstElement * element,
   g_mutex_unlock (&self->lock);
 }
 
+static inline guint16
+with_parity(const guint8 word) {
+  guint8 bit8, parity;
+
+  parity = word ^ (word >> 4);
+  parity ^= (parity >> 2);
+  parity ^= (parity >> 1);
+  bit8 = parity & 1;
+
+  return (word | (bit8 << 8) | ((!bit8) << 9));
+}
+
 static void
 extract_vbi_line (GstDecklinkVideoSrc * self, GstBuffer ** buffer,
-    IDeckLinkVideoFrameAncillary * vanc_frame, guint field2_offset, guint line,
-    gboolean * found_cc_out, gboolean * found_afd_bar_out)
+    IDeckLinkVideoFrameAncillary * vanc_frame, bool hd, bool interlaced, bool f2, guint line)
 {
   GstVideoAncillary gstanc;
   const guint8 *vancdata;
-  gboolean found_cc = FALSE, found_afd_bar = FALSE;
+  int ret;
 
-  if (vanc_frame->GetBufferForVerticalBlankingLine (field2_offset + line,
-          (void **) &vancdata) != S_OK)
+  ret =
+      vanc_frame->GetBufferForVerticalBlankingLine (line, (void **) &vancdata);
+  if (ret != S_OK) {
+    GST_TRACE_OBJECT (self, "Failed getting VBI data line %u (field 2: %d): %d",
+        line, f2, ret);
     return;
+  }
 
-  GST_DEBUG_OBJECT (self, "Checking for VBI data on field line %u (field %u)",
-      field2_offset + line, field2_offset ? 2 : 1);
+  GST_TRACE_OBJECT (self, "Checking for VBI data on line %u (field 2: %d)",
+      line, f2);
   gst_video_vbi_parser_add_line (self->vbiparser, vancdata);
-
-  /* Check if CC or AFD/Bar is on this line if we didn't find any on a
-   * previous line. Remember the line where we found them */
 
   while (gst_video_vbi_parser_get_ancillary (self->vbiparser,
           &gstanc) == GST_VIDEO_VBI_PARSER_RESULT_OK) {
+    GST_DEBUG_OBJECT (self,
+        "Found DID %02x SDID/BN %02x DC %u on line %u (field 2: %d)",
+        gstanc.DID, gstanc.SDID_block_number, gstanc.data_count, line, f2);
+
+    if (self->output_vanc) {
+        GST_DEBUG_OBJECT (self, "Adding ancillary meta to buffer");
+      GstAncillaryMeta *meta = gst_buffer_add_ancillary_meta (*buffer);
+
+      meta->c_not_y_channel = hd ? 1 : 0;
+      meta->line = with_parity (line);
+      meta->offset = 0xfff;
+
+      meta->DID = with_parity (gstanc.DID);
+      meta->SDID_block_number = with_parity (gstanc.SDID_block_number);
+      meta->data_count = with_parity (gstanc.data_count);
+
+      meta->data = g_new (guint16, gstanc.data_count);
+      guint16 checksum = meta->DID + meta->SDID_block_number + meta->data_count;
+      for (guint i = 0; i < gstanc.data_count; i++) {
+        meta->data[i] = with_parity (gstanc.data[i]);
+        checksum += meta->data[i];
+      }
+
+      meta->checksum = with_parity(checksum & 0x1FF);
+    }
+
     switch (GST_VIDEO_ANCILLARY_DID16 (&gstanc)) {
       case GST_VIDEO_ANCILLARY_DID16_S334_EIA_708:
-        if (*found_cc_out || !self->output_cc)
-          continue;
-
-        GST_DEBUG_OBJECT (self,
-            "Adding CEA-708 CDP meta to buffer for line %u",
-            field2_offset + line);
-        GST_MEMDUMP_OBJECT (self, "CDP", gstanc.data, gstanc.data_count);
-        gst_buffer_add_video_caption_meta (*buffer,
-            GST_VIDEO_CAPTION_TYPE_CEA708_CDP, gstanc.data, gstanc.data_count);
-
-        found_cc = TRUE;
-        if (field2_offset)
-          self->last_cc_vbi_line_field2 = line;
-        else
-          self->last_cc_vbi_line = line;
+        if (self->output_cc) {
+          GST_DEBUG_OBJECT (self, "Adding CEA-708 CDP meta to buffer");
+          GST_MEMDUMP_OBJECT (self, "CDP", gstanc.data, gstanc.data_count);
+          gst_buffer_add_video_caption_meta (*buffer,
+              GST_VIDEO_CAPTION_TYPE_CEA708_CDP, gstanc.data,
+              gstanc.data_count);
+        }
         break;
       case GST_VIDEO_ANCILLARY_DID16_S334_EIA_608:
-        if (*found_cc_out || !self->output_cc)
-          continue;
-
-        GST_DEBUG_OBJECT (self,
-            "Adding CEA-608 meta to buffer for line %u", field2_offset + line);
-        GST_MEMDUMP_OBJECT (self, "CEA608", gstanc.data, gstanc.data_count);
-        gst_buffer_add_video_caption_meta (*buffer,
-            GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A, gstanc.data,
-            gstanc.data_count);
-
-        found_cc = TRUE;
-        if (field2_offset)
-          self->last_cc_vbi_line_field2 = line;
-        else
-          self->last_cc_vbi_line = line;
+        if (self->output_cc) {
+          GST_DEBUG_OBJECT (self, "Adding CEA-608 meta to buffer");
+          GST_MEMDUMP_OBJECT (self, "CEA608", gstanc.data, gstanc.data_count);
+          gst_buffer_add_video_caption_meta (*buffer,
+              GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A, gstanc.data,
+              gstanc.data_count);
+        }
         break;
       case GST_VIDEO_ANCILLARY_DID16_S2016_3_AFD_BAR:{
-        GstVideoAFDValue afd;
-        gboolean is_letterbox;
-        guint16 bar1, bar2;
+        if (self->output_afd_bar) {
+          GstVideoAFDValue afd;
+          gboolean is_letterbox;
+          guint16 bar1, bar2;
 
-        if (*found_afd_bar_out || !self->output_afd_bar)
-          continue;
+          GST_DEBUG_OBJECT (self, "Adding AFD/Bar meta to buffer");
+          GST_MEMDUMP_OBJECT (self, "AFD/Bar", gstanc.data, gstanc.data_count);
 
-        GST_DEBUG_OBJECT (self,
-            "Adding AFD/Bar meta to buffer for line %u", field2_offset + line);
-        GST_MEMDUMP_OBJECT (self, "AFD/Bar", gstanc.data, gstanc.data_count);
+          if (gstanc.data_count < 8) {
+            GST_WARNING_OBJECT (self, "AFD/Bar data too small");
+            break;
+          }
 
-        if (gstanc.data_count < 8) {
-          GST_WARNING_OBJECT (self, "AFD/Bar data too small");
-          continue;
+          self->aspect_ratio_flag = (gstanc.data[0] >> 2) & 0x1;
+
+          afd = (GstVideoAFDValue) ((gstanc.data[0] >> 3) & 0xf);
+          is_letterbox = ((gstanc.data[3] >> 4) & 0x3) == 0;
+          bar1 = GST_READ_UINT16_BE (&gstanc.data[4]);
+          bar2 = GST_READ_UINT16_BE (&gstanc.data[6]);
+
+          gst_buffer_add_video_afd_meta (*buffer, f2 ? 1 : 0,
+              GST_VIDEO_AFD_SPEC_SMPTE_ST2016_1, afd);
+          gst_buffer_add_video_bar_meta (*buffer, f2 ? 1 : 0,
+              is_letterbox, bar1, bar2);
         }
-
-        self->aspect_ratio_flag = (gstanc.data[0] >> 2) & 0x1;
-
-        afd = (GstVideoAFDValue) ((gstanc.data[0] >> 3) & 0xf);
-        is_letterbox = ((gstanc.data[3] >> 4) & 0x3) == 0;
-        bar1 = GST_READ_UINT16_BE (&gstanc.data[4]);
-        bar2 = GST_READ_UINT16_BE (&gstanc.data[6]);
-
-        gst_buffer_add_video_afd_meta (*buffer, field2_offset ? 1 : 0,
-            GST_VIDEO_AFD_SPEC_SMPTE_ST2016_1, afd);
-        gst_buffer_add_video_bar_meta (*buffer, field2_offset ? 1 : 0,
-            is_letterbox, bar1, bar2);
-
-        found_afd_bar = TRUE;
-        if (field2_offset)
-          self->last_afd_bar_vbi_line_field2 = line;
-        else
-          self->last_afd_bar_vbi_line = line;
         break;
       }
       default:
-        /* otherwise continue looking */
-        continue;
+        break;
     }
   }
-
-  if (found_cc)
-    *found_cc_out = TRUE;
-  if (found_afd_bar)
-    *found_afd_bar_out = TRUE;
 }
 
 static void
 extract_vbi (GstDecklinkVideoSrc * self, GstBuffer ** buffer, VideoFrame * vf)
 {
   IDeckLinkVideoFrameAncillary *vanc_frame = NULL;
-  gint line;
+  guint line_start = 0, line_end = 0, f2_line_start = 0, f2_line_end = 0;
+  int ret;
   GstVideoFormat videoformat;
   GstDecklinkModeEnum mode_enum;
   const GstDecklinkMode *mode;
-  gboolean found_cc = FALSE, found_afd_bar = FALSE;
 
-  if (vf->frame->GetAncillaryData (&vanc_frame) != S_OK)
+  ret = vf->frame->GetAncillaryData (&vanc_frame);
+  if (ret != S_OK) {
+    GST_TRACE_OBJECT (self, "Failed getting VBI data: %d", ret);
     return;
+  }
 
   videoformat =
       gst_decklink_video_format_from_type (vanc_frame->GetPixelFormat ());
@@ -1312,7 +1347,7 @@ extract_vbi (GstDecklinkVideoSrc * self, GstBuffer ** buffer, VideoFrame * vf)
   mode = gst_decklink_get_mode (mode_enum);
 
   if (videoformat == GST_VIDEO_FORMAT_UNKNOWN) {
-    GST_DEBUG_OBJECT (self, "Unknown video format for Ancillary data");
+    GST_DEBUG_OBJECT (self, "Unknown video format for ancillary data");
     vanc_frame->Release ();
     return;
   }
@@ -1329,100 +1364,164 @@ extract_vbi (GstDecklinkVideoSrc * self, GstBuffer ** buffer, VideoFrame * vf)
     self->anc_width = mode->width;
   }
 
-  GST_DEBUG_OBJECT (self, "Checking for ancillary data in VBI");
+  switch (mode_enum) {
+    case GST_DECKLINK_MODE_NTSC:
+    case GST_DECKLINK_MODE_NTSC2398:
+      line_start = 4;
+      line_end = 21;
+      f2_line_start = 264;
+      f2_line_end = 284;
+      break;
+    case GST_DECKLINK_MODE_NTSC_P:
+      line_start = 4;
+      line_end = 43;
+      break;
+    case GST_DECKLINK_MODE_PAL:
+      line_start = 1;
+      line_end = 22;
+      f2_line_start = 311;
+      f2_line_end = 335;
+      break;
+    case GST_DECKLINK_MODE_PAL_P:
+      line_start = 1;
+      line_end = 45;
+      break;
+    case GST_DECKLINK_MODE_1080p2398:
+    case GST_DECKLINK_MODE_1080p24:
+    case GST_DECKLINK_MODE_1080p25:
+    case GST_DECKLINK_MODE_1080p2997:
+    case GST_DECKLINK_MODE_1080p30:
+      line_start = 1;
+      line_end = 41;
+      break;
+    case GST_DECKLINK_MODE_1080p50:
+    case GST_DECKLINK_MODE_1080p5994:
+    case GST_DECKLINK_MODE_1080p60:
+      line_start = 1;
+      line_end = 19;
+      break;
+    case GST_DECKLINK_MODE_1080i50:
+    case GST_DECKLINK_MODE_1080i5994:
+    case GST_DECKLINK_MODE_1080i60:
+      line_start = 1;
+      line_end = 20;
+      f2_line_start = 561;
+      f2_line_end = 583;
+      break;
+    case GST_DECKLINK_MODE_720p50:
+    case GST_DECKLINK_MODE_720p5994:
+    case GST_DECKLINK_MODE_720p60:
+      line_start = 1;
+      line_end = 25;
+      break;
+    case GST_DECKLINK_MODE_2160p2398:
+    case GST_DECKLINK_MODE_2160p24:
+    case GST_DECKLINK_MODE_2160p25:
+    case GST_DECKLINK_MODE_2160p2997:
+    case GST_DECKLINK_MODE_2160p30:
+    case GST_DECKLINK_MODE_2160p50:
+    case GST_DECKLINK_MODE_2160p5994:
+    case GST_DECKLINK_MODE_2160p60:
+      line_start = 1;
+      line_end = 41;
+      break;
+    case GST_DECKLINK_MODE_2KDCI2398:
+    case GST_DECKLINK_MODE_2KDCI24:
+    case GST_DECKLINK_MODE_2KDCI25:
+    case GST_DECKLINK_MODE_2KDCI2997:
+    case GST_DECKLINK_MODE_2KDCI30:
+    case GST_DECKLINK_MODE_2KDCI50:
+    case GST_DECKLINK_MODE_2KDCI5994:
+    case GST_DECKLINK_MODE_2KDCI60:
+      line_start = 1;
+      // TODO: Correct end of 50+fps?
+      line_end = 41;
+      break;
+    case GST_DECKLINK_MODE_4Kp2398:
+    case GST_DECKLINK_MODE_4Kp24:
+    case GST_DECKLINK_MODE_4Kp25:
+    case GST_DECKLINK_MODE_4Kp2997:
+    case GST_DECKLINK_MODE_4Kp30:
+    case GST_DECKLINK_MODE_4Kp50:
+    case GST_DECKLINK_MODE_4Kp5994:
+    case GST_DECKLINK_MODE_4Kp60:
+      line_start = 1;
+      // TODO: Correct end of 50+fps?
+      line_end = 41;
+      break;
+    case GST_DECKLINK_MODE_4320p2398:
+    case GST_DECKLINK_MODE_4320p24:
+    case GST_DECKLINK_MODE_4320p25:
+    case GST_DECKLINK_MODE_4320p2997:
+    case GST_DECKLINK_MODE_4320p30:
+    case GST_DECKLINK_MODE_4320p50:
+    case GST_DECKLINK_MODE_4320p5994:
+    case GST_DECKLINK_MODE_4320p60:
+    case GST_DECKLINK_MODE_8Kp2398:
+    case GST_DECKLINK_MODE_8Kp24:
+    case GST_DECKLINK_MODE_8Kp25:
+    case GST_DECKLINK_MODE_8Kp2997:
+    case GST_DECKLINK_MODE_8Kp30:
+    case GST_DECKLINK_MODE_8Kp50:
+    case GST_DECKLINK_MODE_8Kp5994:
+    case GST_DECKLINK_MODE_8Kp60:
+      // FIXME: Untested
+      line_start = 1;
+      // TODO: Correct end of 50+fps?
+      line_end = 41;
+      break;
 
-  /* First check last known lines, if any */
-  if (self->last_cc_vbi_line > 0) {
-    extract_vbi_line (self, buffer, vanc_frame, 0, self->last_cc_vbi_line,
-        &found_cc, &found_afd_bar);
+    case GST_DECKLINK_MODE_1556p2398:
+    case GST_DECKLINK_MODE_1556p24:
+    case GST_DECKLINK_MODE_1556p25:
+    case GST_DECKLINK_MODE_640x480p60:
+    case GST_DECKLINK_MODE_800x600p60:
+    case GST_DECKLINK_MODE_1440x900p50:
+    case GST_DECKLINK_MODE_1440x900p60:
+    case GST_DECKLINK_MODE_1440x1080p50:
+    case GST_DECKLINK_MODE_1440x1080p60:
+    case GST_DECKLINK_MODE_1600x1200p50:
+    case GST_DECKLINK_MODE_1600x1200p60:
+    case GST_DECKLINK_MODE_1920x1200p50:
+    case GST_DECKLINK_MODE_1920x1200p60:
+    case GST_DECKLINK_MODE_1920x1440p50:
+    case GST_DECKLINK_MODE_1920x1440p60:
+    case GST_DECKLINK_MODE_2560x1440p50:
+    case GST_DECKLINK_MODE_2560x1440p60:
+    case GST_DECKLINK_MODE_2560x1600p50:
+    case GST_DECKLINK_MODE_2560x1600p60:
+    default:
+      // Unknown, unsupported
+      break;
+    case GST_DECKLINK_MODE_AUTO:
+    case GST_DECKLINK_MODE_NTSC_WIDESCREEN:
+    case GST_DECKLINK_MODE_NTSC2398_WIDESCREEN:
+    case GST_DECKLINK_MODE_PAL_WIDESCREEN:
+    case GST_DECKLINK_MODE_NTSC_P_WIDESCREEN:
+    case GST_DECKLINK_MODE_PAL_P_WIDESCREEN:
+      g_assert_not_reached ();
+      break;
   }
-  if (self->last_afd_bar_vbi_line > 0
-      && self->last_cc_vbi_line != self->last_afd_bar_vbi_line) {
-    extract_vbi_line (self, buffer, vanc_frame, 0, self->last_afd_bar_vbi_line,
-        &found_cc, &found_afd_bar);
+
+  if (line_start == 0) {
+    GST_DEBUG_OBJECT (self, "Unsupported mode for extracting VBI");
+    vanc_frame->Release ();
+    return;
   }
 
-  if (!found_cc)
-    self->last_cc_vbi_line = -1;
-  if (!found_afd_bar)
-    self->last_afd_bar_vbi_line = -1;
+  GST_DEBUG_OBJECT (self,
+      "Checking for ancillary data in VBI (lines %u-%u, %u-%u)", line_start,
+      line_end, f2_line_start, f2_line_end);
 
-  if ((self->output_cc && !found_cc) || (self->output_afd_bar
-          && !found_afd_bar)) {
-    /* Otherwise loop through the first 21 lines and hope to find the data */
-    /* FIXME: For the different formats the number of lines that can contain
-     * VANC are different */
-    for (line = 1; line < 22; line++) {
-      extract_vbi_line (self, buffer, vanc_frame, 0, line, &found_cc,
-          &found_afd_bar);
-
-      /* If we found everything we wanted to extract, stop here */
-      if ((!self->output_cc || found_cc) &&
-          (!self->output_afd_bar || found_afd_bar))
-        break;
-    }
+  /* Extract all progressive / field 1 VANC */
+  for (guint line = line_start; line <= line_end; line++) {
+    extract_vbi_line (self, buffer, vanc_frame, self->anc_width < 1280, GST_VIDEO_INFO_IS_INTERLACED (&self->info), false, line);
   }
 
   /* Do the same for field 2 in case of interlaced content */
-  if (GST_VIDEO_INFO_IS_INTERLACED (&self->info)) {
-    gboolean found_cc_field2 = FALSE, found_afd_bar_field2 = FALSE;
-    guint field2_offset = 0;
-
-    /* The VANC lines for the second field are at an offset, depending on
-     * the format in use
-     */
-    switch (self->info.height) {
-      case 486:
-        /* NTSC: 525 / 2 + 1 */
-        field2_offset = 263;
-        break;
-      case 576:
-        /* PAL: 625 / 2 + 1 */
-        field2_offset = 313;
-        break;
-      case 1080:
-        /* 1080i: 1125 / 2 + 1 */
-        field2_offset = 563;
-        break;
-      default:
-        g_assert_not_reached ();
-    }
-
-    /* First try the same lines as for field 1 if we don't know yet */
-    if (self->last_cc_vbi_line_field2 <= 0)
-      self->last_cc_vbi_line_field2 = self->last_cc_vbi_line;
-    if (self->last_afd_bar_vbi_line_field2 <= 0)
-      self->last_afd_bar_vbi_line_field2 = self->last_afd_bar_vbi_line;
-
-    if (self->last_cc_vbi_line_field2 > 0) {
-      extract_vbi_line (self, buffer, vanc_frame, field2_offset,
-          self->last_cc_vbi_line_field2, &found_cc_field2,
-          &found_afd_bar_field2);
-    }
-    if (self->last_afd_bar_vbi_line_field2 > 0
-        && self->last_cc_vbi_line_field2 !=
-        self->last_afd_bar_vbi_line_field2) {
-      extract_vbi_line (self, buffer, vanc_frame, field2_offset,
-          self->last_afd_bar_vbi_line_field2, &found_cc_field2,
-          &found_afd_bar_field2);
-    }
-
-    if (!found_cc_field2)
-      self->last_cc_vbi_line_field2 = -1;
-    if (!found_afd_bar_field2)
-      self->last_afd_bar_vbi_line_field2 = -1;
-
-    if (((self->output_cc && !found_cc_field2) || (self->output_afd_bar
-                && !found_afd_bar_field2))) {
-      for (line = 1; line < 22; line++) {
-        extract_vbi_line (self, buffer, vanc_frame, field2_offset, line,
-            &found_cc_field2, &found_afd_bar_field2);
-
-        /* If we found everything we wanted to extract, stop here */
-        if ((!self->output_cc || found_cc_field2) &&
-            (!self->output_afd_bar || found_afd_bar_field2))
-          break;
-      }
+  if (f2_line_start > 0 && GST_VIDEO_INFO_IS_INTERLACED (&self->info)) {
+    for (guint line = f2_line_start; line <= f2_line_end; line++) {
+      extract_vbi_line (self, buffer, vanc_frame, self->anc_width < 1280, true, true, line);
     }
   }
 
@@ -1516,9 +1615,9 @@ retry:
   if (self->caps_mode != f.mode) {
     self->aspect_ratio_flag = -1;
   }
-  // If we have a format that supports VANC and we are asked to extract CC,
+  // If we have a format that supports VANC and we are asked to output it,
   // then do it here.
-  if ((self->output_cc || self->output_afd_bar)
+  if ((self->output_cc || self->output_afd_bar || self->output_vanc)
       && self->signal_state != SIGNAL_STATE_LOST)
     extract_vbi (self, buffer, vf);
 
@@ -1657,10 +1756,6 @@ retry:
     char *colorimetry;
     const GstDecklinkMode *gst_mode = gst_decklink_get_mode (f.mode);
 
-    self->last_cc_vbi_line = -1;
-    self->last_afd_bar_vbi_line = -1;
-    self->last_cc_vbi_line_field2 = -1;
-    self->last_afd_bar_vbi_line_field2 = -1;
     GST_LOG_OBJECT (self, "mode flags 0x%x",
         display_mode_flags (self, gst_mode, TRUE));
     caps = gst_decklink_mode_get_caps (f.mode,
