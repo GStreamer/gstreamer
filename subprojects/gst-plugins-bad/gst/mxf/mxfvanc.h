@@ -26,6 +26,17 @@
 
 #include <gst/gst.h>
 
+typedef struct {
+  guint8 c_not_y_channel_flag;
+  guint8 did;
+  guint8 sdid;
+  guint16 line_number;
+  guint16 horizontal_offset;
+  guint8 data_count;
+  guint16 checksum;
+  guint len_bytes; /* Total length in bytes */
+} St2038AncHeader;
+
 void mxf_vanc_init (void);
 
 #endif /* __MXF_VANC_H__ */
