@@ -1566,6 +1566,11 @@ update_output_format (GstGLImageSink * glimage_sink)
   *out_info = glimage_sink->in_info;
   previous_target = glimage_sink->texture_target;
 
+  /* Reset the padded information, this will allow dectecting any difference
+   * between the texture allocated size and the display size. */
+  glimage_sink->padded_width = GST_VIDEO_INFO_WIDTH (out_info);
+  glimage_sink->padded_height = GST_VIDEO_INFO_HEIGHT (out_info);
+
   mv_mode = GST_VIDEO_INFO_MULTIVIEW_MODE (&glimage_sink->in_info);
 
   if (!_mview_modes_are_equal (glimage_sink->mview_output_mode, mv_mode)) {
@@ -2475,6 +2480,32 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
     gl->ActiveTexture (GL_TEXTURE0);
     gl->BindTexture (gl_target, gl_sink->redisplay_texture);
     gst_gl_shader_set_uniform_1i (gl_sink->redisplay_shader, "tex", 0);
+
+    GstVideoMeta *v_meta =
+        gst_buffer_get_video_meta (gl_sink->stored_buffer[0]);
+    if (v_meta->width != gl_sink->padded_width
+        || v_meta->height != gl_sink->padded_height) {
+      gdouble padded_width = v_meta->width;
+      gdouble padded_height = v_meta->height;
+      gdouble display_width = GST_VIDEO_INFO_WIDTH (&gl_sink->out_info);
+      gdouble display_height = GST_VIDEO_INFO_HEIGHT (&gl_sink->out_info);
+
+      float scale_x = display_width / padded_width;
+      float scale_y = display_height / padded_height;
+
+      GLfloat crop_vertices[] = {
+        1.0f, 1.0f, 0.0f, scale_x, 0.0f,
+        -1.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+        -1.0f, -1.0f, 0.0f, 0.0f, scale_y,
+        1.0f, -1.0f, 0.0f, scale_x, scale_y,
+      };
+      gl->BufferData (GL_ARRAY_BUFFER, 4 * 5 * sizeof (GLfloat),
+          crop_vertices, GL_STATIC_DRAW);
+
+      gl_sink->padded_width = v_meta->width;
+      gl_sink->padded_height = v_meta->height;
+    }
+
     {
       GstVideoAffineTransformationMeta *af_meta;
       gfloat matrix[16];

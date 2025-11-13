@@ -73,6 +73,10 @@ struct _GstGLImageSink
     GstCaps *out_caps;
     GstGLTextureTarget texture_target;
 
+    /* saved padded texture dimension, used to detect changes */
+    gint padded_width;
+    gint padded_height;
+
     GstGLDisplay *display;
     GstGLContext *context;
     GstGLContext *other_context;
