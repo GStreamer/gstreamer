@@ -117,6 +117,7 @@ static const OrtApi *api = NULL;
 
 
 GST_DEBUG_CATEGORY (onnx_inference_debug);
+GST_DEBUG_CATEGORY (onnx_runtime_debug);
 
 #define GST_CAT_DEFAULT onnx_inference_debug
 GST_ELEMENT_REGISTER_DEFINE (onnx_inference, "onnxinference",
@@ -250,7 +251,9 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
   GstBaseTransformClass *basetransform_class = (GstBaseTransformClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (onnx_inference_debug, "onnxinference",
-      0, "onnx_inference");
+      0, "ONNX Runtime Inference");
+  GST_DEBUG_CATEGORY_INIT (onnx_runtime_debug, "onnxruntime",
+      0, "ONNX Runtime");
   gobject_class->set_property = gst_onnx_inference_set_property;
   gobject_class->get_property = gst_onnx_inference_get_property;
   gobject_class->finalize = gst_onnx_inference_finalize;
@@ -563,8 +566,8 @@ gst_onnx_log_function (void *param, OrtLoggingLevel severity,
       break;
   }
 
-  gst_debug_log (GST_CAT_DEFAULT, level, code_location, "gst_onnx_log_function",
-      0, obj, "%s", message);
+  gst_debug_log (onnx_runtime_debug, level, code_location,
+      "gst_onnx_log_function", 0, obj, "%s", message);
 }
 
 /* FIXME: This is copied from Gsttfliteinference and we should create something
