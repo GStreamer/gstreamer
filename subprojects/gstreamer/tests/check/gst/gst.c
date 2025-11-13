@@ -88,6 +88,16 @@ GST_START_TEST (test_version)
   gst_version (&major, &minor, &micro, &nano);
   assert_equals_int (major, GST_VERSION_MAJOR);
 
+  fail_unless (gst_check_version (major, minor, micro));
+  fail_if (gst_check_version (major - 1, 0, 0));
+  if (minor)
+    fail_unless (gst_check_version (major, minor - 1, 0));
+  if (micro)
+    fail_unless (gst_check_version (major, minor, micro - 1));
+  fail_if (gst_check_version (major + 1, 0, 0));
+  fail_if (gst_check_version (major, minor + 1, 0));
+  fail_if (gst_check_version (major, minor, micro + 1));
+
   version = gst_version_string ();
   fail_if (version == NULL);
   g_free (version);

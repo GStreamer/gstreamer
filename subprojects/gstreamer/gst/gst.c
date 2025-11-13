@@ -1302,6 +1302,39 @@ gst_version_string (void)
 }
 
 /**
+ * gst_check_version:
+ * @major: Major version number
+ * @minor: Minor version number
+ * @micro: Micro version number
+ *
+ * Applications might want to check if the runtime GStreamer version is greater
+ * or equal to the version specified using @major, @minor and @micro.
+ *
+ * Returns: %TRUE if the GStreamer version is greater or equal to
+ * @major\.@minor\.@micro, %FALSE otherwise. Also this function returns %FALSE
+ * when checking for a different @major version to the current one, as major
+ * version bumps are ABI breaks anyway.
+ *
+ * Since: 1.28
+ */
+gboolean
+gst_check_version (guint major, guint minor, guint micro)
+{
+  if (GST_VERSION_MAJOR != major)
+    return FALSE;
+
+  if (GST_VERSION_MINOR < minor)
+    return FALSE;
+  if (GST_VERSION_MINOR > minor)
+    return TRUE;
+
+  if (GST_VERSION_MICRO < micro)
+    return FALSE;
+
+  return TRUE;
+}
+
+/**
  * gst_segtrap_is_enabled:
  *
  * Some functions in the GStreamer core might install a custom SIGSEGV handler

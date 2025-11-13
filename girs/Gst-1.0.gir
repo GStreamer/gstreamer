@@ -55008,6 +55008,32 @@ of @new_caps.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="check_version" c:identifier="gst_check_version" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gst.c">Applications might want to check if the runtime GStreamer version is greater
+or equal to the version specified using @major, @minor and @micro.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gst.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gst.c">%TRUE if the GStreamer version is greater or equal to
+@major\.@minor\.@micro, %FALSE otherwise. Also this function returns %FALSE
+when checking for a different @major version to the current one, as major
+version bumps are ABI breaks anyway.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="major" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gst.c">Major version number</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+        <parameter name="minor" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gst.c">Minor version number</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+        <parameter name="micro" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gst.c">Micro version number</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="clear_buffer" c:identifier="gst_clear_buffer" version="1.16" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">Clears a reference to a #GstBuffer.
 

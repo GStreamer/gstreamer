@@ -130,6 +130,9 @@ GST_API
 gchar *		gst_version_string		(void);
 
 GST_API
+gboolean        gst_check_version               (guint major, guint minor, guint micro);
+
+GST_API
 gboolean        gst_segtrap_is_enabled          (void);
 
 GST_API
