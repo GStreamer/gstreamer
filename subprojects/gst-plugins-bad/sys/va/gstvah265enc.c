@@ -4501,13 +4501,12 @@ gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
   GstVaBaseEncClass *klass = GST_VA_BASE_ENC_GET_CLASS (base);
   GstVideoEncoder *venc = GST_VIDEO_ENCODER (base);
   GstVaH265Enc *self = GST_VA_H265_ENC (base);
-  GstCaps *out_caps, *reconf_caps = NULL;;
+  GstCaps *out_caps;
   GstVideoCodecState *output_state = NULL;
-  GstVideoFormat format, reconf_format = GST_VIDEO_FORMAT_UNKNOWN;
+  GstVideoFormat format;
   VAProfile profile = VAProfileNone;
-  gboolean do_renegotiation = TRUE, do_reopen, need_negotiation, rc_same;
-  guint max_ref_frames, max_surfaces = 0, rt_format = 0,
-      codedbuf_size, latency_num;
+  gboolean do_renegotiation = TRUE;
+  guint max_ref_frames, rt_format = 0, latency_num;
   gint width, height;
   guint alignment;
   GstClockTime latency;
@@ -4515,33 +4514,10 @@ gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
   width = GST_VIDEO_INFO_WIDTH (&base->in_info);
   height = GST_VIDEO_INFO_HEIGHT (&base->in_info);
   format = GST_VIDEO_INFO_FORMAT (&base->in_info);
-  codedbuf_size = base->codedbuf_size;
   latency_num = base->preferred_output_delay + self->gop.ip_period - 1;
-
-  need_negotiation =
-      !gst_va_encoder_get_reconstruct_pool_config (base->encoder, &reconf_caps,
-      &max_surfaces);
-  if (!need_negotiation && reconf_caps) {
-    GstVideoInfo vi;
-    if (!gst_video_info_from_caps (&vi, reconf_caps))
-      return FALSE;
-    reconf_format = GST_VIDEO_INFO_FORMAT (&vi);
-  }
 
   if (!_h265_decide_profile (self, &profile, &rt_format))
     return FALSE;
-
-  GST_OBJECT_LOCK (self);
-  rc_same = (self->prop.rc_ctrl == self->rc.rc_ctrl_mode);
-  GST_OBJECT_UNLOCK (self);
-
-  /* first check */
-  do_reopen = !(base->profile == profile && base->rt_format == rt_format
-      && format == reconf_format && width == base->width
-      && height == base->height && rc_same);
-
-  if (do_reopen && gst_va_encoder_is_open (base->encoder))
-    gst_va_encoder_close (base->encoder);
 
   gst_va_base_enc_reset_state (base);
 
@@ -4557,8 +4533,14 @@ gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
   base->width = width;
   base->height = height;
 
-  alignment = gst_va_encoder_get_surface_alignment (base->display,
-      profile, klass->entrypoint);
+  if (!_h265_init_packed_headers (self))
+    return FALSE;
+
+  if (!gst_va_encoder_setup (base->encoder, base->profile, base->rt_format,
+          self->rc.rc_ctrl_mode, self->packed_headers))
+    return FALSE;
+
+  alignment = gst_va_encoder_get_surface_alignment (base->encoder);
   if (alignment) {
     self->luma_width = GST_ROUND_UP_N (base->width, 1 << (alignment & 0xf));
     self->luma_height =
@@ -4641,15 +4623,11 @@ gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
   if (!_h265_setup_slice_and_tile_partition (self))
     return FALSE;
 
-  if (!_h265_init_packed_headers (self))
-    return FALSE;
-
   self->aud = self->aud && self->packed_headers & VA_ENC_PACKED_HEADER_RAW_DATA;
   update_property_bool (base, &self->prop.aud, self->aud, PROP_AUD);
 
   /* Let the downstream know the new latency. */
   if (latency_num != base->preferred_output_delay + self->gop.ip_period - 1) {
-    need_negotiation = TRUE;
     latency_num = base->preferred_output_delay + self->gop.ip_period - 1;
   }
 
@@ -4659,26 +4637,24 @@ gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
       GST_VIDEO_INFO_FPS_N (&base->in_info));
   gst_video_encoder_set_latency (venc, latency, latency);
 
+  if (!gst_va_encoder_open_2 (base->encoder, self->luma_width,
+          self->luma_height)) {
+    GST_ERROR_OBJECT (self, "Failed to open the VA encoder.");
+    return FALSE;
+  }
+
   max_ref_frames = self->gop.b_pyramid ?
       self->gop.highest_pyramid_level + 2 : self->gop.num_ref_frames;
   max_ref_frames += base->preferred_output_delay;
   base->min_buffers = max_ref_frames;
   max_ref_frames += 3 /* scratch frames */ ;
 
-  /* second check after calculations */
-  do_reopen |=
-      !(max_ref_frames == max_surfaces && codedbuf_size == base->codedbuf_size);
-  if (do_reopen && gst_va_encoder_is_open (base->encoder))
-    gst_va_encoder_close (base->encoder);
-
-  if (!gst_va_encoder_is_open (base->encoder)
-      && !gst_va_encoder_open (base->encoder, base->profile,
-          format, base->rt_format, self->luma_width, self->luma_height,
-          base->codedbuf_size, max_ref_frames, self->rc.rc_ctrl_mode,
-          self->packed_headers)) {
-    GST_ERROR_OBJECT (self, "Failed to open the VA encoder.");
+  if (!gst_va_encoder_set_reconstruct_pool_config (base->encoder, format,
+          max_ref_frames)) {
+    GST_ERROR_OBJECT (self, "Reconstruct pool configuration is invalid");
     return FALSE;
   }
+  gst_va_encoder_set_coded_buffer_size (base->encoder, base->codedbuf_size);
 
   /* Add some tags */
   gst_va_base_enc_add_codec_tag (base, "H265");
@@ -4695,19 +4671,15 @@ gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
       "height", G_TYPE_INT, base->height, "alignment", G_TYPE_STRING, "au",
       "stream-format", G_TYPE_STRING, "byte-stream", NULL);
 
-  if (!need_negotiation) {
-    output_state = gst_video_encoder_get_output_state (venc);
-    do_renegotiation = TRUE;
+  output_state = gst_video_encoder_get_output_state (venc);
+  if (output_state) {
+    do_renegotiation = !gst_caps_is_subset (output_state->caps, out_caps);
+    gst_video_codec_state_unref (output_state);
+  }
 
-    if (output_state) {
-      do_renegotiation = !gst_caps_is_subset (output_state->caps, out_caps);
-      gst_video_codec_state_unref (output_state);
-    }
-
-    if (!do_renegotiation) {
-      gst_caps_unref (out_caps);
-      return TRUE;
-    }
+  if (!do_renegotiation) {
+    gst_caps_unref (out_caps);
+    return TRUE;
   }
 
   GST_DEBUG_OBJECT (self, "output caps is %" GST_PTR_FORMAT, out_caps);

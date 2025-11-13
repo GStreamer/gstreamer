@@ -73,6 +73,8 @@ gboolean              gst_va_encoder_get_reconstruct_pool_config
                                                           (GstVaEncoder * self,
                                                            GstCaps ** caps,
                                                            guint * max_surfaces);
+guint                 gst_va_encoder_get_surface_alignment
+                                                          (GstVaEncoder * self);
 gboolean              gst_va_encoder_has_profile          (GstVaEncoder * self,
                                                            VAProfile profile);
 gboolean              gst_va_encoder_get_rate_control_enum (GstVaEncoder * self,
@@ -102,7 +104,5 @@ GstVaEncodePicture *  gst_va_encode_picture_new           (GstVaEncoder * self,
 void                  gst_va_encode_picture_free          (GstVaEncodePicture * pic);
 VASurfaceID           gst_va_encode_picture_get_raw_surface (GstVaEncodePicture * pic);
 VASurfaceID           gst_va_encode_picture_get_reconstruct_surface (GstVaEncodePicture * pic);
-guint                 gst_va_encoder_get_surface_alignment (GstVaDisplay *display,
-                                                            VAProfile profile,
-                                                            VAEntrypoint entrypoint);
+
 G_END_DECLS

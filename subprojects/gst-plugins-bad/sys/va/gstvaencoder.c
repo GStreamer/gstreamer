@@ -308,45 +308,40 @@ gst_va_encoder_close (GstVaEncoder * self)
 
 /* for querying the customized surface alignment */
 guint
-gst_va_encoder_get_surface_alignment (GstVaDisplay * display,
-    VAProfile profile, VAEntrypoint entrypoint)
+gst_va_encoder_get_surface_alignment (GstVaEncoder * self)
 {
   guint alignment = 0;
 #if VA_CHECK_VERSION(1, 21, 0)
-  VAConfigAttrib *attrib = NULL;
   VASurfaceAttrib *attr_list;
   guint i, count;
   VAConfigID config;
-  VADisplay dpy;
-  VAStatus status;
 
-  dpy = gst_va_display_get_va_dpy (display);
-  status = vaCreateConfig (dpy, profile, entrypoint, attrib, 0, &config);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR_OBJECT (display, "vaCreateConfig: %s", vaErrorStr (status));
-    return alignment;
+  GST_OBJECT_LOCK (self);
+  config = self->config;
+  GST_OBJECT_UNLOCK (self);
+
+  if (config == VA_INVALID_ID) {
+    GST_ERROR_OBJECT (self,
+        "Encoder has to be setup before getting surface alignment");
+    return 0;
   }
-  attr_list = gst_va_get_surface_attribs (display, config, &count);
+
+  attr_list = gst_va_get_surface_attribs (self->display, config, &count);
   if (!attr_list)
     goto bail;
 
   for (i = 0; i < count; i++) {
-    if (attr_list[i].type == VASurfaceAttribAlignmentSize) {
-      alignment = attr_list[i].value.value.i;
-      GST_INFO_OBJECT (display,
-          "Using customized surface alignment [%dx%d]\n",
-          1 << (alignment & 0xf), 1 << ((alignment & 0xf0) >> 4));
-      break;
-    }
+    if (attr_list[i].type != VASurfaceAttribAlignmentSize)
+      continue;
+
+    alignment = attr_list[i].value.value.i;
+    GST_INFO_OBJECT (self, "Using customized surface alignment [%dx%d]",
+        1 << (alignment & 0xf), 1 << ((alignment & 0xf0) >> 4));
+    break;
   }
   g_free (attr_list);
 
 bail:
-  status = vaDestroyConfig (dpy, config);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR_OBJECT (display, "vaDestroyConfig: %s", vaErrorStr (status));
-    return alignment;
-  }
 #endif
   return alignment;
 }
