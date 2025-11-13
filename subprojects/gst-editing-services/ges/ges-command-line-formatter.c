@@ -467,6 +467,8 @@ _ges_command_line_formatter_add_clip (GESTimeline * timeline,
 {
   GESProject *proj;
   GESAsset *asset;
+  gboolean ret;
+
   if (!_cleanup_fields (options[CLIP].properties, structure, error))
     return FALSE;
 
@@ -478,9 +480,11 @@ _ges_command_line_formatter_add_clip (GESTimeline * timeline,
   proj = GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (timeline)));
   asset = _ges_get_asset_from_timeline (timeline, GES_TYPE_URI_CLIP,
       gst_structure_get_string (structure, "asset-id"), NULL);
-  ges_project_add_asset (proj, asset);
 
-  return TRUE;
+  ret = ges_project_add_asset (proj, asset);
+  gst_object_unref (asset);
+
+  return ret;
 }
 
 static gboolean
