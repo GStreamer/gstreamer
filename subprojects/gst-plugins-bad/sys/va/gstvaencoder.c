@@ -179,13 +179,6 @@ gst_va_encoder_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_va_encoder_init (GstVaEncoder * self)
-{
-  self->profile = VAProfileNone;
-  self->config = VA_INVALID_ID;
-}
-
-static void
 gst_va_encoder_reset (GstVaEncoder * self)
 {
   self->profile = VAProfileNone;
@@ -195,6 +188,12 @@ gst_va_encoder_reset (GstVaEncoder * self)
   self->coded_width = 0;
   self->coded_height = 0;
   self->codedbuf_size = 0;
+}
+
+static void
+gst_va_encoder_init (GstVaEncoder * self)
+{
+  gst_va_encoder_reset (self);
 }
 
 static inline gboolean
