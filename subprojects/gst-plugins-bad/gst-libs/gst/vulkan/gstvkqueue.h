@@ -27,6 +27,8 @@
 #include <gst/vulkan/gstvkdecoder.h>
 #endif
 
+G_BEGIN_DECLS
+
 #define GST_TYPE_VULKAN_QUEUE         (gst_vulkan_queue_get_type())
 #define GST_VULKAN_QUEUE(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_VULKAN_QUEUE, GstVulkanQueue))
 #define GST_VULKAN_QUEUE_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), GST_TYPE_VULKAN_QUEUE, GstVulkanQueueClass))
@@ -111,5 +113,7 @@ gboolean            gst_vulkan_queue_handle_context_query       (GstElement * el
 GST_VULKAN_API
 gboolean            gst_vulkan_queue_run_context_query          (GstElement * element,
                                                                  GstVulkanQueue ** queue);
+
+G_END_DECLS
 
 #endif /* __GST_VULKAN_QUEUE_H__ */
