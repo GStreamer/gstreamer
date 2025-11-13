@@ -657,6 +657,18 @@ gst_va_encoder_new (GstVaDisplay * display, guint32 codec,
   return self;
 }
 
+void
+gst_va_encoder_set_coded_buffer_size (GstVaEncoder * self,
+    guint coded_buffer_size)
+{
+  g_return_if_fail (GST_IS_VA_ENCODER (self));
+  g_return_if_fail (coded_buffer_size > 0);
+
+  GST_OBJECT_LOCK (self);
+  self->codedbuf_size = coded_buffer_size;
+  GST_OBJECT_UNLOCK (self);
+}
+
 gboolean
 gst_va_encoder_set_reconstruct_pool_config (GstVaEncoder * self,
     GstVideoFormat format, guint max_surfaces)
@@ -1064,6 +1076,9 @@ gst_va_encode_picture_new (GstVaEncoder * self, GstBuffer * raw_buffer)
     gst_clear_buffer (&reconstruct_buffer);
     return NULL;
   }
+
+  /* this has to be assigned before */
+  g_assert (codedbuf_size > 0);
 
   dpy = gst_va_display_get_va_dpy (self->display);
   status = vaCreateBuffer (dpy, self->context, VAEncCodedBufferType,
