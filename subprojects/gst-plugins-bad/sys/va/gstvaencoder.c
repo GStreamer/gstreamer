@@ -1204,8 +1204,8 @@ gst_va_encode_picture_new (GstVaEncoder * self, GstBuffer * raw_buffer)
     .flags = GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT,
   };
 
-  g_return_val_if_fail (self && GST_IS_VA_ENCODER (self), NULL);
-  g_return_val_if_fail (raw_buffer && GST_IS_BUFFER (raw_buffer), NULL);
+  g_return_val_if_fail (GST_IS_VA_ENCODER (self), NULL);
+  g_return_val_if_fail (GST_IS_BUFFER (raw_buffer), NULL);
 
   GST_OBJECT_LOCK (self);
 
