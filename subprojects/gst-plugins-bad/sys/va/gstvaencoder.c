@@ -185,30 +185,44 @@ gst_va_encoder_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_va_encoder_reset (GstVaEncoder * self)
+gst_va_encoder_init (GstVaEncoder * self)
 {
   self->profile = VAProfileNone;
   self->config = VA_INVALID_ID;
   self->context = VA_INVALID_ID;
   self->rt_format = 0;
-  self->coded_width = 0;
-  self->coded_height = 0;
+  self->coded_width = -1;
+  self->coded_height = -1;
   self->codedbuf_size = 0;
 
+  self->recon.pool = NULL;
   self->recon.max_surfaces = 0;
   self->recon.format = GST_VIDEO_FORMAT_UNKNOWN;
 }
 
-static void
-gst_va_encoder_init (GstVaEncoder * self)
+static inline gboolean
+_is_setup_unlocked (GstVaEncoder * self)
 {
-  gst_va_encoder_reset (self);
+  return (self->config != VA_INVALID_ID && self->profile != VAProfileNone);
+}
+
+static inline gboolean
+gst_va_encoder_is_setup (GstVaEncoder * self)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VA_ENCODER (self), FALSE);
+
+  GST_OBJECT_LOCK (self);
+  ret = _is_setup_unlocked (self);
+  GST_OBJECT_UNLOCK (self);
+  return ret;
 }
 
 static inline gboolean
 _is_open_unlocked (GstVaEncoder * self)
 {
-  return (self->config != VA_INVALID_ID && self->profile != VAProfileNone);
+  return (_is_setup_unlocked (self) && self->context != VA_INVALID_ID);
 }
 
 gboolean
@@ -224,51 +238,70 @@ gst_va_encoder_is_open (GstVaEncoder * self)
   return ret;
 }
 
+static inline void
+_destroy_context (GstVaEncoder * self)
+{
+  VADisplay dpy;
+  VAStatus status;
+  VAContextID context;
+  GstBufferPool *pool;
+
+  GST_OBJECT_LOCK (self);
+  context = self->context;
+  self->context = VA_INVALID_ID;
+  self->coded_width = -1;
+  self->coded_height = -1;
+
+  if ((pool = self->recon.pool)) {
+    self->recon.pool = NULL;
+    self->recon.format = GST_VIDEO_FORMAT_UNKNOWN;
+    self->recon.max_surfaces = 0;
+  }
+  GST_OBJECT_UNLOCK (self);
+
+  if (pool) {
+    gst_buffer_pool_set_active (pool, FALSE);
+    gst_object_unref (pool);
+  }
+
+  if (context == VA_INVALID_ID)
+    return;
+
+  dpy = gst_va_display_get_va_dpy (self->display);
+  status = vaDestroyContext (dpy, context);
+  if (status != VA_STATUS_SUCCESS)
+    GST_ERROR_OBJECT (self, "vaDestroyContext: %s", vaErrorStr (status));
+}
+
 gboolean
 gst_va_encoder_close (GstVaEncoder * self)
 {
   VADisplay dpy;
   VAStatus status;
-  VAConfigID config = VA_INVALID_ID;
-  VAContextID context = VA_INVALID_ID;
-  GstBufferPool *recon_pool = NULL;
+  VAConfigID config;
 
   g_return_val_if_fail (GST_IS_VA_ENCODER (self), FALSE);
 
-  GST_OBJECT_LOCK (self);
-  if (!_is_open_unlocked (self)) {
-    GST_OBJECT_UNLOCK (self);
-    return TRUE;
-  }
-
-  config = self->config;
-  context = self->context;
-
-  recon_pool = self->recon.pool;
-  self->recon.pool = NULL;
-
-  gst_va_encoder_reset (self);
-  GST_OBJECT_UNLOCK (self);
-
-  if (recon_pool) {
-    gst_buffer_pool_set_active (recon_pool, FALSE);
-    gst_object_unref (recon_pool);
-  }
-
-  dpy = gst_va_display_get_va_dpy (self->display);
-
-  if (context != VA_INVALID_ID) {
-    status = vaDestroyContext (dpy, context);
-    if (status != VA_STATUS_SUCCESS)
-      GST_ERROR_OBJECT (self, "vaDestroyContext: %s", vaErrorStr (status));
-  }
-
-  status = vaDestroyConfig (dpy, config);
-  if (status != VA_STATUS_SUCCESS)
-    GST_ERROR_OBJECT (self, "vaDestroyConfig: %s", vaErrorStr (status));
+  _destroy_context (self);
 
   gst_caps_replace (&self->srcpad_caps, NULL);
   gst_caps_replace (&self->sinkpad_caps, NULL);
+
+  GST_OBJECT_LOCK (self);
+  config = self->config;
+
+  self->config = VA_INVALID_ID;
+  self->profile = VAProfileNone;
+  self->rt_format = 0;
+  GST_OBJECT_UNLOCK (self);
+
+  if (config == VA_INVALID_ID)
+    return FALSE;
+
+  dpy = gst_va_display_get_va_dpy (self->display);
+  status = vaDestroyConfig (dpy, config);
+  if (status != VA_STATUS_SUCCESS)
+    GST_ERROR_OBJECT (self, "vaDestroyConfig: %s", vaErrorStr (status));
 
   return TRUE;
 }
@@ -461,10 +494,60 @@ bail:
   return pool;
 }
 
+static inline gboolean
+_skip_setup (GstVaEncoder * self, VAProfile profile, guint rt_format,
+    guint rc_ctrl, guint32 packed_headers)
+{
+  VADisplay dpy;
+  VAStatus status;
+  /* *INDENT-OFF* */
+  VAConfigAttrib attribs[] = {
+    { .type = VAConfigAttribRateControl, .value = 0, },
+    { .type = VAConfigAttribEncPackedHeaders, .value = 0, },
+  };
+  /* *INDENT-ON* */
+  gboolean same;
+
+  /* encoder is closed */
+  if (!gst_va_encoder_is_setup (self))
+    return FALSE;
+
+  GST_OBJECT_LOCK (self);
+  same = (profile == self->profile) && (rt_format == self->rt_format);
+  GST_OBJECT_UNLOCK (self);
+  if (!same)
+    goto close_and_bail;
+
+  dpy = gst_va_display_get_va_dpy (self->display);
+  status = vaGetConfigAttributes (dpy, profile, self->entrypoint, attribs,
+      G_N_ELEMENTS (attribs));
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR_OBJECT (self, "vaGetConfigAttributes: %s", vaErrorStr (status));
+    goto close_and_bail;
+  }
+
+  same = ((attribs[0].value == VA_ATTRIB_NOT_SUPPORTED)
+      && (rc_ctrl == VA_RC_NONE))
+      || ((attribs[0].value & rc_ctrl) == rc_ctrl);
+  if (!same)
+    goto close_and_bail;
+
+  same = ((attribs[1].value == VA_ATTRIB_NOT_SUPPORTED)
+      && (packed_headers == 0))
+      || ((attribs[1].value & packed_headers) == packed_headers);
+  if (!same)
+    goto close_and_bail;
+
+  /* the same setup can be reused */
+  return TRUE;
+
+close_and_bail:
+  gst_va_encoder_close (self);
+  return FALSE;
+}
+
 gboolean
-gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
-    GstVideoFormat video_format, guint rt_format, gint coded_width,
-    gint coded_height, gint codedbuf_size, guint max_reconstruct_surfaces,
+gst_va_encoder_setup (GstVaEncoder * self, VAProfile profile, guint rt_format,
     guint rc_ctrl, guint32 packed_headers)
 {
   /* *INDENT-OFF* */
@@ -473,21 +556,16 @@ gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
   };
   /* *INDENT-ON* */
   VAConfigID config = VA_INVALID_ID;
-  VAContextID context = VA_INVALID_ID;
   VADisplay dpy;
   VAStatus status;
-  GstBufferPool *recon_pool = NULL;
   guint attrib_idx = 1;
 
   g_return_val_if_fail (GST_IS_VA_ENCODER (self), FALSE);
-  g_return_val_if_fail (codedbuf_size > 0, FALSE);
   g_return_val_if_fail (profile != VAProfileNone, FALSE);
-  g_return_val_if_fail (video_format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
   g_return_val_if_fail (rc_ctrl > 0, FALSE);
-  g_return_val_if_fail (rt_format ==
-      gst_va_chroma_from_video_format (video_format), FALSE);
+  g_return_val_if_fail (rt_format > 0, FALSE);
 
-  if (gst_va_encoder_is_open (self))
+  if (_skip_setup (self, profile, rt_format, rc_ctrl, packed_headers))
     return TRUE;
 
   if (!gst_va_encoder_has_profile (self, profile)) {
@@ -509,54 +587,116 @@ gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
   }
 
   dpy = gst_va_display_get_va_dpy (self->display);
-
   status = vaCreateConfig (dpy, profile, self->entrypoint, attribs, attrib_idx,
       &config);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaCreateConfig: %s", vaErrorStr (status));
-    goto error;
+    return FALSE;
   }
 
+  GST_OBJECT_LOCK (self);
+  self->config = config;
+  self->profile = profile;
+  self->rt_format = rt_format;
+  GST_OBJECT_UNLOCK (self);
+
+  return TRUE;
+}
+
+static inline gboolean
+_skip_open (GstVaEncoder * self, gint coded_width, gint coded_height)
+{
+  gboolean same_size;
+
+  if (!gst_va_encoder_is_open (self))
+    return FALSE;
+
+  GST_OBJECT_LOCK (self);
+  same_size = (self->coded_width == coded_width)
+      && (self->coded_height == coded_height);
+  GST_OBJECT_UNLOCK (self);
+
+  if (same_size)
+    return TRUE;
+
+  /* partial close: context & pool */
+  _destroy_context (self);
+
+  return FALSE;
+}
+
+gboolean
+gst_va_encoder_open_2 (GstVaEncoder * self, gint coded_width, gint coded_height)
+{
+  VAConfigID config = VA_INVALID_ID;
+  VAContextID context = VA_INVALID_ID;
+  VADisplay dpy;
+  VAStatus status;
+
+  g_return_val_if_fail (GST_IS_VA_ENCODER (self), FALSE);
+
+  if (!gst_va_encoder_is_setup (self)) {
+    /* clean up any misleading previous state */
+    _destroy_context (self);
+    GST_ERROR_OBJECT (self, "call gst_va_encoder_setup() previous!");
+    return FALSE;
+  }
+
+  if (_skip_open (self, coded_width, coded_height))
+    return TRUE;
+
+  GST_OBJECT_LOCK (self);
+  config = self->config;
+  GST_OBJECT_UNLOCK (self);
+
+  dpy = gst_va_display_get_va_dpy (self->display);
   status = vaCreateContext (dpy, config, coded_width, coded_height,
       VA_PROGRESSIVE, NULL, 0, &context);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaCreateConfig: %s", vaErrorStr (status));
-    goto error;
+    return FALSE;
   }
 
   GST_OBJECT_LOCK (self);
-
-  self->config = config;
   self->context = context;
-  self->profile = profile;
-  self->rt_format = rt_format;
   self->coded_width = coded_width;
   self->coded_height = coded_height;
-  self->codedbuf_size = codedbuf_size;
-
   GST_OBJECT_UNLOCK (self);
 
-  /* do it at the end because it needs the previous assignments */
-  gst_va_encoder_set_reconstruct_pool_config (self, video_format,
-      max_reconstruct_surfaces);
+  return TRUE;
+}
+
+gboolean
+gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
+    GstVideoFormat video_format, guint rt_format, gint coded_width,
+    gint coded_height, gint codedbuf_size, guint max_reconstruct_surfaces,
+    guint rc_ctrl, guint32 packed_headers)
+{
+  GstBufferPool *recon_pool;
+
+  g_return_val_if_fail (GST_IS_VA_ENCODER (self), FALSE);
+  g_return_val_if_fail (codedbuf_size > 0, FALSE);
+
+  if (!gst_va_encoder_setup (self, profile, rt_format, rc_ctrl, packed_headers))
+    return FALSE;
+
+  if (!gst_va_encoder_open_2 (self, coded_width, coded_height))
+    return FALSE;
+
+  if (!gst_va_encoder_set_reconstruct_pool_config (self, video_format,
+          max_reconstruct_surfaces))
+    return FALSE;
   recon_pool = _get_reconstructed_buffer_pool (self);
   if (!recon_pool)
-    goto error;
+    return FALSE;
   gst_object_unref (recon_pool);
 
-  /* now we should return now only this profile's caps */
+  gst_va_encoder_set_coded_buffer_size (self, codedbuf_size);
+
+  /* XXX: now we should return now only this profile's caps */
   gst_caps_replace (&self->srcpad_caps, NULL);
 
   return TRUE;
-
-error:
-  if (config != VA_INVALID_ID)
-    vaDestroyConfig (dpy, config);
-
-  if (context != VA_INVALID_ID)
-    vaDestroyContext (dpy, context);
-
-  return FALSE;
 }
 
 static void
@@ -683,8 +823,8 @@ gst_va_encoder_set_reconstruct_pool_config (GstVaEncoder * self,
 
   GST_OBJECT_LOCK (self);
 
-  if (!_is_open_unlocked (self))
-    goto no_open_error;
+  if (!_is_setup_unlocked (self))
+    goto no_setup_error;
 
   if (new_rt_format != self->rt_format)
     goto bad_rt_format_error;
@@ -711,7 +851,7 @@ bail:
   return TRUE;
 
   /* ERRORS */
-no_open_error:
+no_setup_error:
   {
     GST_OBJECT_UNLOCK (self);
     GST_WARNING_OBJECT (self, "Can't configure reconstruct pool without setting"
@@ -819,7 +959,6 @@ gst_va_encoder_add_param (GstVaEncoder * self, GstVaEncodePicture * pic,
   VABufferID buffer;
 
   g_return_val_if_fail (GST_IS_VA_ENCODER (self), FALSE);
-  g_return_val_if_fail (self->context != VA_INVALID_ID, FALSE);
   g_return_val_if_fail (pic && data && size > 0, FALSE);
 
   if (!gst_va_encoder_is_open (self)) {
@@ -841,7 +980,7 @@ gst_va_encoder_get_surface_formats (GstVaEncoder * self)
 {
   g_return_val_if_fail (GST_IS_VA_ENCODER (self), NULL);
 
-  if (!gst_va_encoder_is_open (self))
+  if (!gst_va_encoder_is_setup (self))
     return NULL;
 
   return _get_surface_formats (self->display, self->config);
@@ -852,7 +991,7 @@ _get_codec_caps (GstVaEncoder * self)
 {
   GstCaps *sinkpad_caps = NULL, *srcpad_caps = NULL;
 
-  if (!gst_va_encoder_is_open (self)
+  if (!gst_va_encoder_is_setup (self)
       && GST_IS_VA_DISPLAY_WRAPPED (self->display)) {
     if (gst_va_caps_from_profiles (self->display, self->available_profiles,
             self->entrypoint, &srcpad_caps, &sinkpad_caps)) {
@@ -881,9 +1020,14 @@ gst_va_encoder_get_sinkpad_caps (GstVaEncoder * self)
   if (_get_codec_caps (self))
     return gst_caps_ref (self->sinkpad_caps);
 
-  if (gst_va_encoder_is_open (self)) {
-    sinkpad_caps = gst_va_create_raw_caps_from_config (self->display,
-        self->config);
+  if (gst_va_encoder_is_setup (self)) {
+    VAConfigID config;
+
+    GST_OBJECT_LOCK (self);
+    config = self->config;
+    GST_OBJECT_UNLOCK (self);
+
+    sinkpad_caps = gst_va_create_raw_caps_from_config (self->display, config);
     if (!sinkpad_caps) {
       GST_WARNING_OBJECT (self, "Invalid configuration caps");
       return NULL;
@@ -908,17 +1052,16 @@ gst_va_encoder_get_srcpad_caps (GstVaEncoder * self)
   if (_get_codec_caps (self))
     return gst_caps_ref (self->srcpad_caps);
 
-  if (gst_va_encoder_is_open (self)) {
+  if (gst_va_encoder_is_setup (self)) {
     VAProfile profile;
-    VAEntrypoint entrypoint;
     GstCaps *caps;
 
     GST_OBJECT_LOCK (self);
     profile = self->profile;
-    entrypoint = self->entrypoint;
     GST_OBJECT_UNLOCK (self);
 
-    caps = gst_va_create_coded_caps (self->display, profile, entrypoint, NULL);
+    caps = gst_va_create_coded_caps (self->display, profile, self->entrypoint,
+        NULL);
     if (caps) {
       gst_caps_replace (&self->srcpad_caps, caps);
       return gst_caps_ref (self->srcpad_caps);

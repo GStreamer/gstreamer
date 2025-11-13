@@ -43,6 +43,14 @@ struct _GstVaEncodePicture
 };
 
 gboolean              gst_va_encoder_is_open              (GstVaEncoder * self);
+gboolean              gst_va_encoder_setup                (GstVaEncoder * self,
+                                                           VAProfile profile,
+                                                           guint rt_format,
+                                                           guint rc_ctrl,
+                                                           guint32 packed_headers);
+gboolean              gst_va_encoder_open_2               (GstVaEncoder * self,
+                                                           gint width,
+                                                           gint height);
 gboolean              gst_va_encoder_open                 (GstVaEncoder * self,
                                                            VAProfile profile,
                                                            GstVideoFormat video_format,
