@@ -81,6 +81,7 @@
 
 #include "vacompat.h"
 #include "gstvabaseenc.h"
+#include "gstvadisplay_priv.h"
 #include "gstvaencoder.h"
 #include "gstvaprofile.h"
 #include "gstvapluginutils.h"
@@ -509,7 +510,7 @@ _ensure_rate_control (GstVaH264Enc * self)
   guint bitrate;
   guint32 rc_ctrl, rc_mode, quality_level;
 
-  quality_level = gst_va_encoder_get_quality_level (base->encoder,
+  quality_level = gst_va_display_get_quality_level (base->display,
       base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
   if (self->rc.target_usage > quality_level) {
     GST_INFO_OBJECT (self, "User setting target-usage: %d is not supported, "
@@ -525,7 +526,7 @@ _ensure_rate_control (GstVaH264Enc * self)
   GST_OBJECT_UNLOCK (self);
 
   if (rc_ctrl != VA_RC_NONE) {
-    rc_mode = gst_va_encoder_get_rate_control_mode (base->encoder,
+    rc_mode = gst_va_display_get_rate_control_mode (base->display,
         base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
     if (!(rc_mode & rc_ctrl)) {
       guint32 defval =
@@ -760,7 +761,7 @@ _validate_parameters (GstVaH264Enc * self)
    * of the number of slices permitted by the stream and by the
    * hardware. */
   g_assert (self->num_slices >= 1);
-  max_slices = gst_va_encoder_get_max_slice_num (base->encoder,
+  max_slices = gst_va_display_get_max_slice_num (base->display,
       base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
   if (self->num_slices > max_slices)
     self->num_slices = max_slices;
@@ -772,7 +773,7 @@ _validate_parameters (GstVaH264Enc * self)
       self->num_slices, PROP_NUM_SLICES);
 
   /* Ensure trellis. */
-  self->support_trellis = gst_va_encoder_has_trellis (base->encoder,
+  self->support_trellis = gst_va_display_has_trellis (base->display,
       base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
   if (self->use_trellis && !self->support_trellis) {
     GST_INFO_OBJECT (self, "The trellis is not supported");
@@ -1004,7 +1005,7 @@ _generate_gop_structure (GstVaH264Enc * self)
     }
   }
 
-  if (!gst_va_encoder_get_max_num_reference (base->encoder, base->profile,
+  if (!gst_va_display_get_max_num_reference (base->display, base->profile,
           GST_VA_BASE_ENC_ENTRYPOINT (base), &list0, &list1)) {
     GST_INFO_OBJECT (self, "Failed to get the max num reference");
     list0 = 1;
@@ -1320,7 +1321,7 @@ _init_packed_headers (GstVaH264Enc * self)
 
   self->packed_headers = 0;
 
-  if (!gst_va_encoder_get_packed_headers (base->encoder, base->profile,
+  if (!gst_va_display_get_packed_headers (base->display, base->profile,
           GST_VA_BASE_ENC_ENTRYPOINT (base), &packed_headers))
     return FALSE;
 
@@ -1430,7 +1431,7 @@ _decide_profile (GstVaH264Enc * self, VAProfile * _profile, guint * _rt_format)
     if (!gst_va_encoder_has_profile (base->encoder, profile))
       continue;
 
-    if ((rt_format & gst_va_encoder_get_rtformat (base->encoder,
+    if ((rt_format & gst_va_display_get_rtformat (base->display,
                 profile, GST_VA_BASE_ENC_ENTRYPOINT (base))) == 0)
       continue;
 
@@ -1452,7 +1453,7 @@ _decide_profile (GstVaH264Enc * self, VAProfile * _profile, guint * _rt_format)
     if (!gst_va_encoder_has_profile (base->encoder, profile))
       continue;
 
-    if ((rt_format & gst_va_encoder_get_rtformat (base->encoder,
+    if ((rt_format & gst_va_display_get_rtformat (base->display,
                 profile, GST_VA_BASE_ENC_ENTRYPOINT (base))) == 0)
       continue;
 

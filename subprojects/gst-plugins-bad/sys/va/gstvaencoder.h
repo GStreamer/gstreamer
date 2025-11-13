@@ -59,39 +59,6 @@ gboolean              gst_va_encoder_get_reconstruct_pool_config (GstVaEncoder *
                                                                   guint * max_surfaces);
 gboolean              gst_va_encoder_has_profile          (GstVaEncoder * self,
                                                            VAProfile profile);
-gint                  gst_va_encoder_get_max_slice_num    (GstVaEncoder * self,
-                                                           VAProfile profile,
-                                                           VAEntrypoint entrypoint);
-gint32                gst_va_encoder_get_slice_structure  (GstVaEncoder * self,
-                                                           VAProfile profile,
-                                                           VAEntrypoint entrypoint);
-gboolean              gst_va_encoder_get_max_num_reference (GstVaEncoder * self,
-                                                            VAProfile profile,
-                                                            VAEntrypoint entrypoint,
-                                                            guint32 * list0,
-                                                            guint32 * list1);
-guint                 gst_va_encoder_get_prediction_direction (GstVaEncoder * self,
-                                                               VAProfile profile,
-                                                               VAEntrypoint entrypoint);
-guint32               gst_va_encoder_get_rate_control_mode (GstVaEncoder * self,
-                                                            VAProfile profile,
-                                                            VAEntrypoint entrypoint);
-guint32               gst_va_encoder_get_quality_level    (GstVaEncoder * self,
-                                                           VAProfile profile,
-                                                           VAEntrypoint entrypoint);
-gboolean              gst_va_encoder_has_trellis          (GstVaEncoder * self,
-                                                           VAProfile profile,
-                                                           VAEntrypoint entrypoint);
-gboolean              gst_va_encoder_has_tile             (GstVaEncoder * self,
-                                                           VAProfile profile,
-                                                           VAEntrypoint entrypoint);
-guint32               gst_va_encoder_get_rtformat         (GstVaEncoder * self,
-                                                           VAProfile profile,
-                                                           VAEntrypoint entrypoint);
-gboolean               gst_va_encoder_get_packed_headers  (GstVaEncoder * self,
-                                                           VAProfile profile,
-                                                           VAEntrypoint entrypoint,
-                                                           guint32 * packed_headers);
 gboolean              gst_va_encoder_get_rate_control_enum (GstVaEncoder * self,
                                                             GEnumValue ratectl[16]);
 gboolean              gst_va_encoder_add_param            (GstVaEncoder * self,

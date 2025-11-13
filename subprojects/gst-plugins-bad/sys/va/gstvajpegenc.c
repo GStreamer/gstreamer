@@ -52,6 +52,7 @@
 
 #include "vacompat.h"
 #include "gstvabaseenc.h"
+#include "gstvadisplay_priv.h"
 #include "gstvaencoder.h"
 #include "gstvaprofile.h"
 #include "gstvapluginutils.h"
@@ -218,7 +219,7 @@ _jpeg_init_packed_headers (GstVaJpegEnc * self)
 
   self->packed_headers = 0;
 
-  if (!gst_va_encoder_get_packed_headers (base->encoder, base->profile,
+  if (!gst_va_display_get_packed_headers (base->display, base->profile,
           GST_VA_BASE_ENC_ENTRYPOINT (base), &packed_headers))
     return FALSE;
 

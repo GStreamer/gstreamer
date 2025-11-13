@@ -52,6 +52,7 @@
 
 #include "vacompat.h"
 #include "gstvabaseenc.h"
+#include "gstvadisplay_priv.h"
 #include "gstvaencoder.h"
 #include "gstvaprofile.h"
 #include "gstvapluginutils.h"
@@ -1986,7 +1987,7 @@ _av1_decide_profile (GstVaAV1Enc * self, guint rt_format,
     if (!gst_va_encoder_has_profile (base->encoder, p))
       continue;
 
-    if ((rt_format & gst_va_encoder_get_rtformat (base->encoder,
+    if ((rt_format & gst_va_display_get_rtformat (base->display,
                 p, GST_VA_BASE_ENC_ENTRYPOINT (base))) == 0)
       continue;
 
@@ -2015,7 +2016,7 @@ _av1_init_packed_headers (GstVaAV1Enc * self)
 
   self->packed_headers = 0;
 
-  if (!gst_va_encoder_get_packed_headers (base->encoder, base->profile,
+  if (!gst_va_display_get_packed_headers (base->display, base->profile,
           GST_VA_BASE_ENC_ENTRYPOINT (base), &packed_headers))
     return FALSE;
 
@@ -2048,7 +2049,7 @@ _av1_generate_gop_structure (GstVaAV1Enc * self)
   if (self->gop.gf_group_size >= self->gop.keyframe_interval)
     self->gop.gf_group_size = self->gop.keyframe_interval - 1;
 
-  if (!gst_va_encoder_get_max_num_reference (base->encoder, base->profile,
+  if (!gst_va_display_get_max_num_reference (base->display, base->profile,
           GST_VA_BASE_ENC_ENTRYPOINT (base), &list0, &list1)) {
     GST_INFO_OBJECT (self, "Failed to get the max num reference");
     list0 = 1;
@@ -2609,7 +2610,7 @@ _av1_ensure_rate_control (GstVaAV1Enc * self)
   guint bitrate;
   guint32 rc_ctrl, rc_mode, quality_level;
 
-  quality_level = gst_va_encoder_get_quality_level (base->encoder,
+  quality_level = gst_va_display_get_quality_level (base->display,
       base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
   if (self->rc.target_usage > quality_level) {
     GST_INFO_OBJECT (self, "User setting target-usage: %d is not supported, "
@@ -2625,7 +2626,7 @@ _av1_ensure_rate_control (GstVaAV1Enc * self)
   GST_OBJECT_UNLOCK (self);
 
   if (rc_ctrl != VA_RC_NONE) {
-    rc_mode = gst_va_encoder_get_rate_control_mode (base->encoder,
+    rc_mode = gst_va_display_get_rate_control_mode (base->display,
         base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
     if (!(rc_mode & rc_ctrl)) {
       guint32 defval =

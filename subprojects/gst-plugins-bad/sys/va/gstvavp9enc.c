@@ -53,6 +53,7 @@
 
 #include "vacompat.h"
 #include "gstvabaseenc.h"
+#include "gstvadisplay_priv.h"
 #include "gstvaencoder.h"
 #include "gstvaprofile.h"
 #include "gstvapluginutils.h"
@@ -1609,7 +1610,7 @@ _vp9_decide_profile (GstVaVp9Enc * self, guint rt_format,
     if (!gst_va_encoder_has_profile (base->encoder, p))
       continue;
 
-    if ((rt_format & gst_va_encoder_get_rtformat (base->encoder,
+    if ((rt_format & gst_va_display_get_rtformat (base->display,
                 p, GST_VA_BASE_ENC_ENTRYPOINT (base))) == 0)
       continue;
 
@@ -1647,7 +1648,7 @@ _vp9_generate_gop_structure (GstVaVp9Enc * self)
     self->gop.gf_group_size = self->gop.keyframe_interval - 1;
 
   /* VP9 does not define reference list1 in spec. */
-  if (!gst_va_encoder_get_max_num_reference (base->encoder, base->profile,
+  if (!gst_va_display_get_max_num_reference (base->display, base->profile,
           GST_VA_BASE_ENC_ENTRYPOINT (base), &list0, NULL)) {
     GST_INFO_OBJECT (self, "Failed to get the max num reference");
     list0 = 1;
@@ -1883,7 +1884,7 @@ _vp9_ensure_rate_control (GstVaVp9Enc * self)
   guint bitrate;
   guint32 rc_ctrl, rc_mode, quality_level;
 
-  quality_level = gst_va_encoder_get_quality_level (base->encoder,
+  quality_level = gst_va_display_get_quality_level (base->display,
       base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
   if (self->rc.target_usage > quality_level) {
     GST_INFO_OBJECT (self, "User setting target-usage: %d is not supported, "
@@ -1899,7 +1900,7 @@ _vp9_ensure_rate_control (GstVaVp9Enc * self)
   GST_OBJECT_UNLOCK (self);
 
   if (rc_ctrl != VA_RC_NONE) {
-    rc_mode = gst_va_encoder_get_rate_control_mode (base->encoder,
+    rc_mode = gst_va_display_get_rate_control_mode (base->display,
         base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
     if (!(rc_mode & rc_ctrl)) {
       guint32 defval =
@@ -2068,7 +2069,7 @@ _vp9_init_packed_headers (GstVaVp9Enc * self)
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   guint32 packed_headers;
 
-  if (!gst_va_encoder_get_packed_headers (base->encoder, base->profile,
+  if (!gst_va_display_get_packed_headers (base->display, base->profile,
           GST_VA_BASE_ENC_ENTRYPOINT (base), &packed_headers))
     return FALSE;
 

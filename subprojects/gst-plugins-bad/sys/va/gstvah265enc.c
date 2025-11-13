@@ -72,6 +72,7 @@
 
 #include "vacompat.h"
 #include "gstvabaseenc.h"
+#include "gstvadisplay_priv.h"
 #include "gstvaencoder.h"
 #include "gstvaprofile.h"
 #include "gstvapluginutils.h"
@@ -2790,7 +2791,7 @@ _h265_decide_profile (GstVaH265Enc * self, VAProfile * _profile,
     if (!gst_va_encoder_has_profile (base->encoder, profile))
       continue;
 
-    if ((rt_format & gst_va_encoder_get_rtformat (base->encoder,
+    if ((rt_format & gst_va_display_get_rtformat (base->display,
                 profile, GST_VA_BASE_ENC_ENTRYPOINT (base))) == 0)
       continue;
 
@@ -3101,7 +3102,7 @@ _h265_setup_slice_and_tile_partition (GstVaH265Enc * self)
    * of the number of slices permitted by the stream and by the
    * hardware. */
   g_assert (self->partition.num_slices >= 1);
-  max_slices = gst_va_encoder_get_max_slice_num (base->encoder,
+  max_slices = gst_va_display_get_max_slice_num (base->display,
       base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
   if (self->partition.num_slices > max_slices)
     self->partition.num_slices = max_slices;
@@ -3111,14 +3112,14 @@ _h265_setup_slice_and_tile_partition (GstVaH265Enc * self)
       ((self->ctu_width * self->ctu_height + 1) / 2))
     self->partition.num_slices = ((self->ctu_width * self->ctu_height + 1) / 2);
 
-  slice_structure = gst_va_encoder_get_slice_structure (base->encoder,
+  slice_structure = gst_va_display_get_slice_structure (base->display,
       base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
 
   if (_is_tile_enabled (self)) {
     const GstVaH265LevelLimits *level_limits;
     guint i;
 
-    if (!gst_va_encoder_has_tile (base->encoder,
+    if (!gst_va_display_has_tile (base->display,
             base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base))) {
       self->partition.num_tile_cols = 1;
       self->partition.num_tile_rows = 1;
@@ -3301,7 +3302,7 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
   guint bitrate;
   guint32 rc_mode, quality_level, rc_ctrl;
 
-  quality_level = gst_va_encoder_get_quality_level (base->encoder,
+  quality_level = gst_va_display_get_quality_level (base->display,
       base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
   if (self->rc.target_usage > quality_level) {
     GST_INFO_OBJECT (self, "User setting target-usage: %d is not supported, "
@@ -3316,7 +3317,7 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
   GST_OBJECT_UNLOCK (self);
 
   if (rc_ctrl != VA_RC_NONE) {
-    rc_mode = gst_va_encoder_get_rate_control_mode (base->encoder,
+    rc_mode = gst_va_display_get_rate_control_mode (base->display,
         base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
     if (!(rc_mode & rc_ctrl)) {
       guint32 defval =
@@ -3842,7 +3843,7 @@ _h265_generate_gop_structure (GstVaH265Enc * self)
     }
   }
 
-  if (!gst_va_encoder_get_max_num_reference (base->encoder, base->profile,
+  if (!gst_va_display_get_max_num_reference (base->display, base->profile,
           GST_VA_BASE_ENC_ENTRYPOINT (base), &list0, &list1)) {
     GST_INFO_OBJECT (self, "Failed to get the max num reference");
     list0 = 1;
@@ -3856,7 +3857,7 @@ _h265_generate_gop_structure (GstVaH265Enc * self)
   forward_num = list0;
   backward_num = list1;
 
-  prediction_direction = gst_va_encoder_get_prediction_direction (base->encoder,
+  prediction_direction = gst_va_display_get_prediction_direction (base->display,
       base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
   if (prediction_direction) {
     if (!(prediction_direction & VA_PREDICTION_DIRECTION_PREVIOUS)) {
@@ -4096,7 +4097,7 @@ _h265_init_packed_headers (GstVaH265Enc * self)
 
   self->packed_headers = 0;
 
-  if (!gst_va_encoder_get_packed_headers (base->encoder, base->profile,
+  if (!gst_va_display_get_packed_headers (base->display, base->profile,
           GST_VA_BASE_ENC_ENTRYPOINT (base), &packed_headers))
     return FALSE;
 
@@ -4344,7 +4345,7 @@ print_options:
       self->features.transquant_bypass_enabled_flag);
 
   /* Ensure trellis. */
-  self->support_trellis = gst_va_encoder_has_trellis (base->encoder,
+  self->support_trellis = gst_va_display_has_trellis (base->display,
       base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
   if (self->features.use_trellis && !self->support_trellis) {
     GST_INFO_OBJECT (self, "The trellis is not supported");

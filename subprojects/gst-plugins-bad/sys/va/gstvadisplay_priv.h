@@ -30,4 +30,42 @@ GArray *              gst_va_display_get_profiles         (GstVaDisplay * self,
 GArray *              gst_va_display_get_image_formats    (GstVaDisplay * self);
 gboolean              gst_va_display_has_vpp              (GstVaDisplay * self);
 
+gint32                gst_va_display_get_max_slice_num    (GstVaDisplay * self,
+                                                           VAProfile profile,
+                                                           VAEntrypoint entrypoint);
+guint32               gst_va_display_get_slice_structure  (GstVaDisplay * self,
+                                                           VAProfile profile,
+                                                           VAEntrypoint entrypoint);
+gboolean              gst_va_display_get_max_num_reference
+                                                          (GstVaDisplay * self,
+                                                           VAProfile profile,
+                                                           VAEntrypoint entrypoint,
+                                                           guint32 * list0,
+                                                           guint32 * list1);
+guint32               gst_va_display_get_prediction_direction
+                                                          (GstVaDisplay * self,
+                                                           VAProfile profile,
+                                                           VAEntrypoint entrypoint);
+guint32               gst_va_display_get_rate_control_mode
+                                                          (GstVaDisplay * self,
+                                                           VAProfile profile,
+                                                           VAEntrypoint entrypoint);
+guint32               gst_va_display_get_quality_level    (GstVaDisplay * self,
+                                                           VAProfile profile,
+                                                           VAEntrypoint entrypoint);
+gboolean              gst_va_display_has_trellis          (GstVaDisplay * self,
+                                                           VAProfile profile,
+                                                           VAEntrypoint entrypoint);
+gboolean              gst_va_display_has_tile             (GstVaDisplay * self,
+                                                           VAProfile profile,
+                                                           VAEntrypoint entrypoint);
+guint32               gst_va_display_get_rtformat         (GstVaDisplay * self,
+                                                           VAProfile profile,
+                                                           VAEntrypoint entrypoint);
+gboolean               gst_va_display_get_packed_headers  (GstVaDisplay * self,
+                                                           VAProfile profile,
+                                                           VAEntrypoint entrypoint,
+                                                           guint32 * packed_headers);
+
+
 G_END_DECLS

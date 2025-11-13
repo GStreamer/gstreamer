@@ -48,6 +48,7 @@
 
 #include "gstvabaseenc.h"
 #include "gstvapluginutils.h"
+#include "gstvadisplay_priv.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_vp8enc_debug);
 #define GST_CAT_DEFAULT gst_va_vp8enc_debug
@@ -426,7 +427,7 @@ _vp8_ensure_rate_control (GstVaVp8Enc * self)
   guint bitrate;
   guint32 rc_ctrl, rc_mode, quality_level;
 
-  quality_level = gst_va_encoder_get_quality_level (base->encoder,
+  quality_level = gst_va_display_get_quality_level (base->display,
       base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
   if (self->rc.target_usage > quality_level) {
     GST_INFO_OBJECT (self, "User setting target-usage: %d is not supported, "
@@ -442,7 +443,7 @@ _vp8_ensure_rate_control (GstVaVp8Enc * self)
   GST_OBJECT_UNLOCK (self);
 
   if (rc_ctrl != VA_RC_NONE) {
-    rc_mode = gst_va_encoder_get_rate_control_mode (base->encoder,
+    rc_mode = gst_va_display_get_rate_control_mode (base->display,
         base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
 
     if (!(rc_mode & rc_ctrl)) {
