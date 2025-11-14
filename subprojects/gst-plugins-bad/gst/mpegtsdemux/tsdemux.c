@@ -94,10 +94,8 @@ typedef enum
                                  * Push incoming buffers to the array */
   PENDING_PACKET_HEADER,        /* PES header needs to be parsed
                                  * Push incoming buffers to the array */
-  PENDING_PACKET_BUFFER,        /* Currently filling up output buffer
+  PENDING_PACKET_BUFFER         /* Currently filling up output buffer
                                  * Push incoming buffers to the bufferlist */
-  PENDING_PACKET_DISCONT        /* Discontinuity in incoming packets
-                                 * Drop all incoming buffers */
 } PendingPacketState;
 
 /* Pending buffer */
@@ -2881,7 +2879,13 @@ discont:
     stream->pending_header_data = NULL;
     stream->pending_header_size = 0;
   }
-  stream->state = PENDING_PACKET_DISCONT;
+  if (stream->data) {
+    g_free (stream->data);
+    stream->data = NULL;
+    stream->current_size = 0;
+  }
+  /* We need a new PUSI */
+  stream->state = PENDING_PACKET_EMPTY;
   return;
 }
 
@@ -2895,60 +2899,15 @@ gst_ts_demux_queue_data (GstTSDemux * demux, TSDemuxStream * stream,
 {
   guint8 *data;
   guint size;
-  guint8 cc = FLAGS_CONTINUITY_COUNTER (packet->scram_afc_cc);
 
   GST_LOG_OBJECT (demux, "pid: 0x%04x state:%d", stream->stream.pid,
       stream->state);
 
-  /* Handle expected discontinuity */
-  if (G_UNLIKELY (packet->afc_flags & MPEGTS_AFC_DISCONTINUITY_FLAG)) {
-    GST_LOG_OBJECT (demux, "pid: 0x%04x discontinuity flag, resetting counter",
-        stream->stream.pid);
-    stream->continuity_counter = CONTINUITY_UNSET;
-  }
-
   size = packet->data_end - packet->payload;
   data = packet->payload;
 
-  if (stream->continuity_counter == CONTINUITY_UNSET) {
-    GST_DEBUG_OBJECT (demux, "CONTINUITY: Initialize to %d", cc);
-  } else if ((cc == stream->continuity_counter + 1 ||
-          (stream->continuity_counter == MAX_CONTINUITY && cc == 0))) {
-    GST_LOG_OBJECT (demux, "CONTINUITY: Got expected %d", cc);
-  } else {
-    if (stream->state != PENDING_PACKET_EMPTY) {
-      if (packet->payload_unit_start_indicator) {
-        /* A mismatch is fatal, except if this is the beginning of a new
-         * frame (from which we can recover) */
-        if (G_UNLIKELY (stream->data)) {
-          g_free (stream->data);
-          stream->data = NULL;
-        }
-        if (G_UNLIKELY (stream->pending_header_data)) {
-          g_free (stream->pending_header_data);
-          stream->pending_header_data = NULL;
-        }
-        stream->state = PENDING_PACKET_HEADER;
-      } else {
-        gchar *pad_name = gst_pad_get_name (stream->pad);
-        GST_ELEMENT_WARNING_WITH_DETAILS (demux, STREAM, DEMUX,
-            ("CONTINUITY: Mismatch packet %d, stream %d (pid 0x%04x)", cc,
-                stream->continuity_counter, stream->stream.pid), (NULL),
-            ("warning-type", G_TYPE_STRING, "continuity-mismatch",
-                "packet", G_TYPE_INT, cc,
-                "stream", G_TYPE_INT, stream->continuity_counter,
-                "pid", G_TYPE_UINT, stream->stream.pid,
-                "pad-name", G_TYPE_STRING, pad_name, NULL));
-        g_free (pad_name);
-        stream->state = PENDING_PACKET_DISCONT;
-      }
-    }
-  }
-  stream->continuity_counter = cc;
-
   if (stream->state == PENDING_PACKET_EMPTY) {
     if (G_UNLIKELY (!packet->payload_unit_start_indicator)) {
-      stream->state = PENDING_PACKET_DISCONT;
       GST_DEBUG_OBJECT (demux, "Didn't get the first packet of this PES");
     } else {
       GST_LOG_OBJECT (demux, "EMPTY=>HEADER");
@@ -2977,20 +2936,6 @@ gst_ts_demux_queue_data (GstTSDemux * demux, TSDemuxStream * stream,
       }
       memcpy (stream->data + stream->current_size, data, size);
       stream->current_size += size;
-      break;
-    }
-    case PENDING_PACKET_DISCONT:
-    {
-      GST_LOG_OBJECT (demux, "DISCONT: not storing/pushing");
-      if (G_UNLIKELY (stream->data)) {
-        g_free (stream->data);
-        stream->data = NULL;
-      }
-      if (G_UNLIKELY (stream->pending_header_data)) {
-        g_free (stream->pending_header_data);
-        stream->pending_header_data = NULL;
-      }
-      stream->continuity_counter = CONTINUITY_UNSET;
       break;
     }
     default:
@@ -3961,11 +3906,46 @@ gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
     MpegTSPacketizerPacket * packet, GstMpegtsSection * section)
 {
   GstFlowReturn res = GST_FLOW_OK;
+  guint8 cc = FLAGS_CONTINUITY_COUNTER (packet->scram_afc_cc);
 
-  GST_LOG_OBJECT (demux, "pid 0x%04x pusi:%d, afc:%d, cont:%d, payload:%p",
+  GST_LOG_OBJECT (demux, "pid 0x%04x pusi:%d, afc:%d, cc:%d, payload:%p",
       packet->pid, packet->payload_unit_start_indicator,
-      packet->scram_afc_cc & 0x30,
-      FLAGS_CONTINUITY_COUNTER (packet->scram_afc_cc), packet->payload);
+      packet->scram_afc_cc & 0x30, cc, packet->payload);
+
+  /* Check continuity */
+  if (packet->payload && stream->continuity_counter != CONTINUITY_UNSET) {
+    if (((stream->continuity_counter + 1) % 16) != cc) {
+      if (stream->state != PENDING_PACKET_EMPTY) {
+#ifndef GST_DISABLE_GST_DEBUG
+        gchar *pad_name = gst_pad_get_name (stream->pad);
+        GST_ELEMENT_WARNING_WITH_DETAILS (demux, STREAM, DEMUX,
+            ("CONTINUITY: Mismatch packet %d, stream %d (pid 0x%04x)", cc,
+                stream->continuity_counter, stream->stream.pid),
+            (NULL),
+            ("warning-type", G_TYPE_STRING, "continuity-mismatch", "packet",
+                G_TYPE_INT, cc, "stream", G_TYPE_INT,
+                stream->continuity_counter, "pid", G_TYPE_UINT,
+                stream->stream.pid, "pad-name", G_TYPE_STRING, pad_name, NULL));
+        g_free (pad_name);
+#endif
+        /* Clear pending state and don't process packet */
+        stream->continuity_counter = cc;
+        if (G_UNLIKELY (stream->data)) {
+          g_free (stream->data);
+          stream->data = NULL;
+          stream->current_size = 0;
+        }
+        if (G_UNLIKELY (stream->pending_header_data)) {
+          g_free (stream->pending_header_data);
+          stream->pending_header_data = NULL;
+        }
+        stream->state = PENDING_PACKET_EMPTY;
+
+        return GST_FLOW_OK;
+      }
+    }
+  }
+  stream->continuity_counter = cc;
 
   if (G_UNLIKELY (packet->payload_unit_start_indicator) &&
       FLAGS_HAS_PAYLOAD (packet->scram_afc_cc)) {
