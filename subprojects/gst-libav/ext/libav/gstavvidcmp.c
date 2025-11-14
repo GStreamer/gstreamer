@@ -619,6 +619,25 @@ _fill_avpicture (GstFFMpegVidCmp * self, AVFrame * picture,
   picture->width = GST_VIDEO_FRAME_WIDTH (vframe);
   picture->height = GST_VIDEO_FRAME_HEIGHT (vframe);
   picture->format = self->pixfmt;
+
+  picture->color_primaries =
+      gst_video_color_primaries_to_iso (vframe->info.colorimetry.primaries);
+  picture->color_trc =
+      gst_video_transfer_function_to_iso (vframe->info.colorimetry.transfer);
+  picture->colorspace =
+      gst_video_color_matrix_to_iso (vframe->info.colorimetry.matrix);
+
+  switch (vframe->info.colorimetry.range) {
+    case GST_VIDEO_COLOR_RANGE_0_255:
+      picture->color_range = AVCOL_RANGE_JPEG;
+      break;
+    case GST_VIDEO_COLOR_RANGE_16_235:
+      picture->color_range = AVCOL_RANGE_MPEG;
+      break;
+    case GST_VIDEO_COLOR_RANGE_UNKNOWN:
+      picture->color_range = AVCOL_RANGE_UNSPECIFIED;
+      break;
+  }
 }
 
 static GstFlowReturn
