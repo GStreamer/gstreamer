@@ -1471,9 +1471,6 @@ calculate_skew (MpegTSPacketizer2 * packetizer,
   /* keep track of the last extended pcrtime */
   pcr->last_pcrtime = gstpcrtime;
 
-  if (!packetizer->skew_correction)
-    goto no_skew;
-
   /* we don't have an arrival timestamp so we can't do skew detection. we
    * should still apply a timestamp based on RTP timestamp and base_time */
   if (!GST_CLOCK_TIME_IS_VALID (time)
@@ -1513,6 +1510,9 @@ calculate_skew (MpegTSPacketizer2 * packetizer,
     send_diff = 0;
     delta = 0;
   }
+
+  if (!packetizer->skew_correction)
+    goto no_skew;
 
   pos = pcr->window_pos;
 
