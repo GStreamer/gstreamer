@@ -686,6 +686,37 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     ret = TRUE;
     goto done;
   }
+  // Create environment
+  OrtLoggingLevel ort_logging;
+
+  switch (gst_debug_category_get_threshold (GST_CAT_DEFAULT)) {
+    case GST_LEVEL_NONE:
+    case GST_LEVEL_ERROR:
+      ort_logging = ORT_LOGGING_LEVEL_ERROR;
+      break;
+    case GST_LEVEL_WARNING:
+    case GST_LEVEL_FIXME:
+      ort_logging = ORT_LOGGING_LEVEL_WARNING;
+      break;
+    case GST_LEVEL_INFO:
+      ort_logging = ORT_LOGGING_LEVEL_INFO;
+      break;
+    case GST_LEVEL_DEBUG:
+    case GST_LEVEL_LOG:
+    case GST_LEVEL_TRACE:
+    case GST_LEVEL_MEMDUMP:
+    default:
+      ort_logging = ORT_LOGGING_LEVEL_VERBOSE;
+      break;
+  }
+
+  status = api->CreateEnvWithCustomLogger (gst_onnx_log_function, self,
+      ort_logging, "GstOnnx", &self->env);
+  if (status) {
+    GST_ERROR_OBJECT (self, "Failed to create environment: %s",
+        api->GetErrorMessage (status));
+    goto error;
+  }
   // Create session options
   status = api->CreateSessionOptions (&session_options);
   if (status) {
@@ -761,37 +792,6 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       break;
   }
 
-  OrtLoggingLevel ort_logging;
-
-  switch (gst_debug_category_get_threshold (GST_CAT_DEFAULT)) {
-    case GST_LEVEL_NONE:
-    case GST_LEVEL_ERROR:
-      ort_logging = ORT_LOGGING_LEVEL_ERROR;
-      break;
-    case GST_LEVEL_WARNING:
-    case GST_LEVEL_FIXME:
-      ort_logging = ORT_LOGGING_LEVEL_WARNING;
-      break;
-    case GST_LEVEL_INFO:
-      ort_logging = ORT_LOGGING_LEVEL_INFO;
-      break;
-    case GST_LEVEL_DEBUG:
-    case GST_LEVEL_LOG:
-    case GST_LEVEL_TRACE:
-    case GST_LEVEL_MEMDUMP:
-    default:
-      ort_logging = ORT_LOGGING_LEVEL_VERBOSE;
-      break;
-  }
-
-  // Create environment
-  status = api->CreateEnvWithCustomLogger (gst_onnx_log_function, self,
-      ort_logging, "GstOnnx", &self->env);
-  if (status) {
-    GST_ERROR_OBJECT (self, "Failed to create environment: %s",
-        api->GetErrorMessage (status));
-    goto error;
-  }
   // Create session
   status = api->CreateSession (self->env, self->model_file, session_options,
       &self->session);
