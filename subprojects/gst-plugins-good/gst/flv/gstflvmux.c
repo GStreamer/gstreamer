@@ -42,6 +42,7 @@
 #include <string.h>
 
 #include <gst/audio/audio.h>
+#include <gst/base/gstbytewriter.h>
 
 #include "gstflvelements.h"
 #include "gstflvmux.h"
@@ -1541,10 +1542,20 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
 {
   GstBuffer *tag;
   GstMapInfo map;
-  guint size = MESSAGE_HEADER_LEN;
+  guint size = 0;
   guint64 pts, dts, cts;
-  guint8 *data, *bdata = NULL;
+  guint8 *bdata = NULL;
   gsize bsize = 0;
+  gboolean write_success = TRUE;
+  GstByteWriter payload_header_writer, tag_writer;
+  /* Small static buffer for the media header only without actual media data.
+   * Current worst case payload header size calculation:
+   * - Enhanced multitrack video: 1 (flags) + 1 (multitrack) + 4 (fourcc) + 1 (track_id) + 3 (cts) = 10 bytes
+   * - Enhanced multitrack audio: 1 (flags) + 1 (multitrack) + 4 (fourcc) + 1 (track_id) = 7 bytes
+   * - Legacy H264/AVC1: 1 (flags) + 1 (packet_type) + 3 (cts) = 5 bytes
+   * 32 bytes provides ample headroom for all current and a few possible future header formats like ModEx.
+   */
+  guint8 payload_header_buffer[32];
 
   if (GST_CLOCK_TIME_IS_VALID (pad->dts)) {
     pts = pad->pts / GST_MSECOND;
@@ -1618,107 +1629,45 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
     bsize = map.size;
   }
 
-  if (pad->type == GST_FLV_MUX_TRACK_TYPE_VIDEO) {
-    if (pad->track_id >= 0) {
-      // enhanced multitrack flv video
-      size +=
-          EXHEADER_PLUS_PACKETYPE_LEN + MUTLITRACKTYPE_PLUS_PACKETYPE_LEN +
-          FOURCC_LEN + TRACK_ID_LEN + bsize;
-      // TODO: remove that `pad->codec == H264_AVC1` check after eflvmux video pad
-      //        support for marking h264 with codec = ENHANCED_H264_AVC1
-      if ((pad->codec == ENHANCED_H265_HVC1 || pad->codec == ENHANCED_H264_AVC1
-              || pad->codec == H264_AVC1)
-          && !is_codec_data && bsize != 0 && cts != 0) {
-        // write h264/h265 3 byte CTS only for the coded frames
-        size += 3;
-      }
-    } else
-        if (pad->codec == ENHANCED_H264_AVC1
-        || pad->codec == ENHANCED_H265_HVC1) {
-      // enhanced flv video
-      size += EXHEADER_PLUS_PACKETYPE_LEN + FOURCC_LEN + bsize;
-      if (!is_codec_data && bsize != 0 && cts != 0) {
-        // write h264/h265 3 byte CTS only for the coded frames
-        size += 3;
-      }
-    } else {
-      // legacy flv video
-      size += 1;
-      if (pad->codec == H264_AVC1)
-        size += 4 + bsize;
-      else
-        size += bsize;
-    }
-  } else {
-    if (pad->track_id >= 0) {
-      size += EXHEADER_PLUS_PACKETYPE_LEN + MUTLITRACKTYPE_PLUS_PACKETYPE_LEN
-          + FOURCC_LEN + TRACK_ID_LEN + bsize;
-    } else {
-      size += 1;                //Sound format + rate + size + type
-      if (pad->codec == 10)
-        size += 1 + bsize;      // aac packettype
-      else
-        size += bsize;
-    }
-  }
-  size += TAG_SIZE_LEN;
+  /* Build payload header in temporary buffer (without actual media data) */
+  gst_byte_writer_init_with_data (&payload_header_writer, payload_header_buffer,
+      sizeof (payload_header_buffer), FALSE);
 
-
-  _gst_buffer_new_and_alloc (size, &tag, &data);
-  memset (data, 0, size);
-
-  GST_DEBUG_OBJECT (mux, "buffer %" GST_PTR_FORMAT " size %u", tag, size);
-
-  data[0] = (pad->type == GST_FLV_MUX_TRACK_TYPE_VIDEO) ? 9 : 8;        // message type
-
-  data[1] = ((size - 11 - 4) >> 16) & 0xff;     // payload len LSB
-  data[2] = ((size - 11 - 4) >> 8) & 0xff;      // payload len LSB2
-  data[3] = ((size - 11 - 4) >> 0) & 0xff;      // payload len MSB
-
-  GST_WRITE_UINT24_BE (data + 4, dts);  // timestamp
-  data[7] = (((guint) dts) >> 24) & 0xff;       // timestamp
-
-  data[8] = data[9] = data[10] = 0;     // stream ID always zero as per section E.4.1 FLV spec v10-1
-
+  /* Write payload header content */
   if (pad->type == GST_FLV_MUX_TRACK_TYPE_VIDEO) {
     GstFlvVideoFrameType frame_type = FLV_VIDEO_FRAME_TYPE_INTERFRAME;
     if (buffer && !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT))
       frame_type = FLV_VIDEO_FRAME_TYPE_KEYFRAME;
 
+    const guint8 enhanced_flv_flag = 1 << 7;
     if (pad->track_id >= 0) {
-      gsize offset = MESSAGE_HEADER_LEN;
+      /* Enhanced multitrack FLV video */
+      guint8 flags =
+          enhanced_flv_flag | (frame_type << 4) |
+          (FLV_VIDEO_PACKET_TYPE_MULTITRACK & 0x0f);
+      write_success &=
+          gst_byte_writer_put_uint8 (&payload_header_writer, flags);
 
-      // indicate that it is enhanced flv
-      data[offset] |= 0x80;
-      data[offset] |= frame_type << 4;
-
-      // TODO: add ModEx packetype
-
-      data[offset] |= (FLV_VIDEO_PACKET_TYPE_MULTITRACK & 0x0f);
-
-      offset++;
-
-      // writing ONETRACK as that is due to one pad at a time processing
-      data[offset] = ((ONETRACK << 4) & 0xf0);
+      // TODO: add ModEx packet type
 
       GstEFlvVideoPacketType type =
-          bsize ==
-          0 ? FLV_VIDEO_PACKET_TYPE_SEQUENCE_END : is_codec_data ?
+          bsize == 0 ? FLV_VIDEO_PACKET_TYPE_SEQUENCE_END : is_codec_data ?
           FLV_VIDEO_PACKET_TYPE_SEQUENCE_START :
-          cts ==
-          0 ? FLV_VIDEO_PACKET_TYPE_CODED_FRAMES_X :
+          cts == 0 ? FLV_VIDEO_PACKET_TYPE_CODED_FRAMES_X :
           FLV_VIDEO_PACKET_TYPE_CODED_FRAMES;
 
       // indicate video packet type
-      data[offset] |= (type & 0x0f);
-
-      offset++;
+      guint8 multitrack_flags = ((ONETRACK << 4) & 0xf0) | (type & 0x0f);
+      write_success &=
+          gst_byte_writer_put_uint8 (&payload_header_writer, multitrack_flags);
 
       // add the FOURCC in 4 bytes
-      GST_WRITE_UINT32_LE (data + offset, pad->codec_fourcc);
-      offset += 4;
+      write_success &=
+          gst_byte_writer_put_uint32_le (&payload_header_writer,
+          pad->codec_fourcc);
 
-      data[offset++] = pad->track_id;
+      write_success &=
+          gst_byte_writer_put_uint8 (&payload_header_writer, pad->track_id);
 
       GST_DEBUG_OBJECT (mux,
           "is codec data %d for track %d with codec_fourcc 0x%x", is_codec_data,
@@ -1729,70 +1678,67 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
       if ((pad->codec == H264_AVC1 || pad->codec == ENHANCED_H264_AVC1
               || pad->codec == ENHANCED_H265_HVC1)
           && type == FLV_VIDEO_PACKET_TYPE_CODED_FRAMES) {
-
-        GST_WRITE_UINT24_BE (data + offset, cts);
-        offset += 3;
+        write_success &=
+            gst_byte_writer_put_uint24_be (&payload_header_writer, cts);
       }
-      memcpy (data + offset, bdata, bsize);
-    } else
-        if (pad->codec == ENHANCED_H264_AVC1
+
+    } else if (pad->codec == ENHANCED_H264_AVC1
         || pad->codec == ENHANCED_H265_HVC1) {
       // enhanced single track case
-      gsize offset = MESSAGE_HEADER_LEN;
+      guint8 flags = enhanced_flv_flag | (frame_type << 4);
 
-      // indicate that it is enhanced flv
-      data[offset] |= 0x80;
-      data[offset] |= frame_type << 4;
-
-      // TODO: add ModEx packetype
+      // TODO: add ModEx packet type
 
       GstEFlvVideoPacketType type =
-          bsize ==
-          0 ? FLV_VIDEO_PACKET_TYPE_SEQUENCE_END : is_codec_data ?
+          bsize == 0 ? FLV_VIDEO_PACKET_TYPE_SEQUENCE_END : is_codec_data ?
           FLV_VIDEO_PACKET_TYPE_SEQUENCE_START :
-          cts ==
-          0 ? FLV_VIDEO_PACKET_TYPE_CODED_FRAMES_X :
+          cts == 0 ? FLV_VIDEO_PACKET_TYPE_CODED_FRAMES_X :
           FLV_VIDEO_PACKET_TYPE_CODED_FRAMES;
 
       // indicate video packet type
-      data[offset] |= (type & 0x0f);
-
-      offset++;
+      flags |= (type & 0x0f);
+      write_success &=
+          gst_byte_writer_put_uint8 (&payload_header_writer, flags);
 
       // add the FOURCC in 4 bytes
-      GST_WRITE_UINT32_LE (data + offset, pad->codec_fourcc);
-      offset += 4;
+      write_success &=
+          gst_byte_writer_put_uint32_le (&payload_header_writer,
+          pad->codec_fourcc);
 
       GST_DEBUG_OBJECT (mux,
           "is codec data %d with codec_fourcc 0x%x", is_codec_data,
           pad->codec_fourcc);
 
       if (type == FLV_VIDEO_PACKET_TYPE_CODED_FRAMES) {
-        GST_WRITE_UINT24_BE (data + offset, cts);
-        offset += 3;
+        write_success &=
+            gst_byte_writer_put_uint24_be (&payload_header_writer, cts);
       }
-      memcpy (data + offset, bdata, bsize);
+
     } else {
       // legacy flv video
-      data[11] |= frame_type << 4;
-      data[11] |= pad->codec & 0x0f;
+      guint8 flags = (frame_type << 4) | (pad->codec & 0x0f);
+      write_success &=
+          gst_byte_writer_put_uint8 (&payload_header_writer, flags);
 
       if (pad->codec == H264_AVC1) {
         if (is_codec_data) {
-          data[12] = 0;
-          GST_WRITE_UINT24_BE (data + 13, 0);
+          write_success &=
+              gst_byte_writer_put_uint8 (&payload_header_writer, 0);
+          write_success &=
+              gst_byte_writer_put_uint24_be (&payload_header_writer, 0);
         } else if (bsize == 0) {
           /* AVC end of sequence */
-          data[12] = 2;
-          GST_WRITE_UINT24_BE (data + 13, 0);
+          write_success &=
+              gst_byte_writer_put_uint8 (&payload_header_writer, 2);
+          write_success &=
+              gst_byte_writer_put_uint24_be (&payload_header_writer, 0);
         } else {
-          /* ACV NALU */
-          data[12] = 1;
-          GST_WRITE_UINT24_BE (data + 13, cts);
+          /* AVC NALU */
+          write_success &=
+              gst_byte_writer_put_uint8 (&payload_header_writer, 1);
+          write_success &=
+              gst_byte_writer_put_uint24_be (&payload_header_writer, cts);
         }
-        memcpy (data + 11 + 1 + 4, bdata, bsize);
-      } else {
-        memcpy (data + 11 + 1, bdata, bsize);
       }
     }
   } else {
@@ -1801,56 +1747,109 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
     GstEFlvAudioPacketType type = is_codec_data ? SEQUENCE_START : CODED_FRAMES;
     if (pad->track_id >= 0) {
       /* having valid track id so eFLV */
-
-      // start of Audio tag header
-      gsize offset = MESSAGE_HEADER_LEN;
-
       // set the AVMultitrackType to OneTrack
       // we do one track per pad so ONETRACK always
       GstEFlvAvMultiTrackType multitrack_type = ONETRACK;
 
       // indicate that SoundFormat is ExHeader in the MSbits
-      data[offset] = (EXTENDED_AUDIO_HEADER << 4) & 0xf0;
-      data[offset++] |= MULTITRACK & 0x0f;
+      guint8 flags =
+          ((EXTENDED_AUDIO_HEADER << 4) & 0xf0) | (MULTITRACK & 0x0f);
+      write_success &=
+          gst_byte_writer_put_uint8 (&payload_header_writer, flags);
 
-      // TODO: add ModEx packetype
+      // TODO: add ModEx packet type
 
-      data[offset] = ((multitrack_type << 4) & 0xf0);
-      // set the packet type in the MSBs
-      data[offset++] |= (type & 0x0f);
+      guint8 multitrack_flags = ((multitrack_type << 4) & 0xf0) | (type & 0x0f);
+      write_success &=
+          gst_byte_writer_put_uint8 (&payload_header_writer, multitrack_flags);
 
       // add the FOURCC in 4 bytes
-      GST_WRITE_UINT32_LE (data + offset, pad->codec_fourcc);
-      offset += 4;
+      write_success &=
+          gst_byte_writer_put_uint32_le (&payload_header_writer,
+          pad->codec_fourcc);
+      write_success &=
+          gst_byte_writer_put_uint8 (&payload_header_writer, pad->track_id);
 
-      data[offset++] = pad->track_id;
-
-      memcpy (data + offset, bdata, bsize);
     } else {
       // legacy flv using single track with old codecs
-      data[11] |= (pad->codec << 4) & 0xf0;
-      data[11] |= (pad->rate << 2) & 0x0c;
-      data[11] |= (pad->width << 1) & 0x02;
-      data[11] |= (pad->channels << 0) & 0x01;
+      guint8 flags = ((pad->codec << 4) & 0xf0) |
+          ((pad->rate << 2) & 0x0c) |
+          ((pad->width << 1) & 0x02) | (pad->channels & 0x01);
+      write_success &=
+          gst_byte_writer_put_uint8 (&payload_header_writer, flags);
 
       GST_LOG_OBJECT (mux, "Creating byte %02x with "
           "codec:%d, rate:%d, width:%d, channels:%d",
-          data[11], pad->codec, pad->rate, pad->width, pad->channels);
+          flags, pad->codec, pad->rate, pad->width, pad->channels);
 
       if (pad->codec == 10) {
-        data[12] = is_codec_data ? 0 : 1;
-
-        memcpy (data + 11 + 1 + 1, bdata, bsize);
-      } else {
-        memcpy (data + 11 + 1, bdata, bsize);
+        write_success &=
+            gst_byte_writer_put_uint8 (&payload_header_writer,
+            is_codec_data ? 0 : 1);
       }
     }
+  }
+
+  if (!write_success) {
+    GST_ERROR_OBJECT (mux, "Failed to write FLV payload header");
+    if (buffer)
+      gst_buffer_unmap (buffer, &map);
+    gst_byte_writer_reset (&payload_header_writer);
+    return NULL;
+  }
+
+  /* Get payload header size and calculate total payload size */
+  guint32 payload_header_size =
+      gst_byte_writer_get_size (&payload_header_writer);
+  size = payload_header_size + bsize;
+
+  /* Calculate total tag size: MESSAGE_HEADER_LEN + payload_size + TAG_SIZE_LEN */
+  guint32 total_size = MESSAGE_HEADER_LEN + size + TAG_SIZE_LEN;
+
+  /* Now write the complete FLV tag */
+  gst_byte_writer_init_with_size (&tag_writer, total_size, FALSE);
+
+  /* Write FLV tag header (11 bytes) */
+  write_success &= gst_byte_writer_put_uint8 (&tag_writer,
+      (pad->type == GST_FLV_MUX_TRACK_TYPE_VIDEO) ? 9 : 8);
+
+  /* Write payload size (3 bytes, big endian) */
+  write_success &= gst_byte_writer_put_uint24_be (&tag_writer, size);
+
+  /* Write timestamp (3 bytes dts + 1 byte extended dts) */
+  write_success &= gst_byte_writer_put_uint24_be (&tag_writer, dts & 0xffffff);
+  write_success &= gst_byte_writer_put_uint8 (&tag_writer, (dts >> 24) & 0xff);
+
+  /* Write stream ID (always 0) */
+  write_success &= gst_byte_writer_put_uint24_be (&tag_writer, 0);
+
+  /* Copy the payload header we built */
+  write_success &=
+      gst_byte_writer_put_data (&tag_writer, payload_header_buffer,
+      payload_header_size);
+
+  /* Copy the actual media data */
+  if (bsize > 0) {
+    write_success &= gst_byte_writer_put_data (&tag_writer, bdata, bsize);
   }
 
   if (buffer)
     gst_buffer_unmap (buffer, &map);
 
-  GST_WRITE_UINT32_BE (data + size - TAG_SIZE_LEN, size - TAG_SIZE_LEN);
+  /* Write previous tag size - 4 bytes of this variable */
+  write_success &=
+      gst_byte_writer_put_uint32_be (&tag_writer, total_size - TAG_SIZE_LEN);
+
+  gst_byte_writer_reset (&payload_header_writer);
+
+  if (!write_success) {
+    GST_ERROR_OBJECT (mux, "Failed to write FLV tag");
+    gst_byte_writer_reset (&tag_writer);
+    return NULL;
+  }
+
+  /* Create buffer from byte writer */
+  tag = gst_byte_writer_reset_and_get_buffer (&tag_writer);
 
   GST_BUFFER_PTS (tag) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DTS (tag) = GST_CLOCK_TIME_NONE;
@@ -1885,6 +1884,8 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
     GST_BUFFER_OFFSET (tag) = GST_BUFFER_OFFSET_END (tag) =
         GST_BUFFER_OFFSET_NONE;
   }
+
+  GST_DEBUG_OBJECT (mux, "buffer %" GST_PTR_FORMAT, tag);
 
   return tag;
 }
