@@ -385,7 +385,7 @@ gst_gl_handle_set_context (GstElement * element, GstContext * context,
     if (gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT,
             &context_replacement, NULL)) {
       context_display = gst_gl_context_get_display (context_replacement);
-      element_display = display_replacement ? display_replacement : *display;
+      element_display = *display;
       if (element_display
           && (gst_gl_display_get_handle_type (element_display) &
               gst_gl_display_get_handle_type (context_display)) == 0) {
