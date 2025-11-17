@@ -582,7 +582,7 @@ html_context_parse (HtmlContext * ctxt, gchar * text, gsize text_len)
     }
   }
 
-  ctxt->buf = g_string_assign (ctxt->buf, next);
+  g_assert_not_reached ();
 }
 
 static gchar *
