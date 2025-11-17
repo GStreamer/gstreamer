@@ -1485,6 +1485,16 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
 
   tc_meta = gst_buffer_get_video_time_code_meta (buffer);
 
+  if (tc_meta && GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_CORRUPTED)) {
+    gchar *tc_str = NULL;
+
+    GST_DEBUG_OBJECT (timecodestamper, "Frame corrupted, ignoring timecode %s",
+        (tc_str = gst_video_time_code_to_string (&tc_meta->tc)));
+    g_free (tc_str);
+
+    tc_meta = NULL;
+  }
+
   /* Update all our internal timecodes as needed */
   GST_OBJECT_LOCK (timecodestamper);
 
