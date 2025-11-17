@@ -304,3 +304,17 @@ gst_wl_buffer_get_display (GstWlBuffer * self)
 
   return priv->display;
 }
+
+GstVideoMeta *
+gst_wl_buffer_get_video_meta (GstWlBuffer * self)
+{
+  GstWlBufferPrivate *priv = gst_wl_buffer_get_instance_private (self);
+  return gst_buffer_get_video_meta (priv->current_gstbuffer);
+}
+
+GstVideoCropMeta *
+gst_wl_buffer_get_video_crop_meta (GstWlBuffer * self)
+{
+  GstWlBufferPrivate *priv = gst_wl_buffer_get_instance_private (self);
+  return gst_buffer_get_video_crop_meta (priv->current_gstbuffer);
+}
