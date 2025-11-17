@@ -146,7 +146,7 @@ mxf_ffv1_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
 
   for (i = 0; i < p->n_descriptor; i++) {
     MXFMetadataFileDescriptor *desc = p->descriptor[i];
-    if (!p)
+    if (!desc)
       continue;
 
     if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (desc) &&
