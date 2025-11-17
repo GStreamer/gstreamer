@@ -5380,6 +5380,7 @@ sbc_check_header (const guint8 * data, gsize len, guint * rate,
   else if (ch_mode == 3)
     return 4 + (n_subbands * 2) / 2 + (n_subbands + n_blocks * bitpool) / 8;
 
+  g_assert_not_reached ();
   return 0;
 }
 
