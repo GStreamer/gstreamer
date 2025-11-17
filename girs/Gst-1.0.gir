@@ -54843,9 +54843,11 @@ amount of memory allocated as @xy, i.e. 2*n*sizeof(GstClockTime).
             <type name="ClockTime" c:type="GstClockTime"/>
           </array>
         </parameter>
-        <parameter name="temp" transfer-ownership="none">
+        <parameter name="temp" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Temporary scratch space used by the function</doc>
-          <type name="ClockTime" c:type="GstClockTime*"/>
+          <array zero-terminated="0" c:type="GstClockTime*">
+            <type name="ClockTime" c:type="GstClockTime"/>
+          </array>
         </parameter>
         <parameter name="n" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">number of (x,y) pairs</doc>

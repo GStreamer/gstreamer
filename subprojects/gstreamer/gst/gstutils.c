@@ -4685,7 +4685,7 @@ gst_util_floor_log2 (guint32 v)
 /**
  * gst_calculate_linear_regression: (skip)
  * @xy: (array): Pairs of (x,y) values
- * @temp: Temporary scratch space used by the function
+ * @temp: (array) (nullable): Temporary scratch space used by the function
  * @n: number of (x,y) pairs
  * @m_num: (out): numerator of calculated slope
  * @m_denom: (out): denominator of calculated slope
