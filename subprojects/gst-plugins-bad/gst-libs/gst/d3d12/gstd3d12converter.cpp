@@ -3008,11 +3008,16 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
       auto prev_y = priv->dest_y;
       auto prev_w = priv->dest_width;
       auto prev_h = priv->dest_height;
+      FLOAT prev_color[4];
+      for (guint i = 0; i < 4; i++)
+        prev_color[i] = priv->main_ctx->comm->const_data_dyn.bgColor[i];
 
       for (guint i = 0; i < num_remap; i++) {
         gst_d3d12_converter_set_remap_unlocked (converter, lut[i]);
         gst_d3d12_converter_update_viewport_unlocked (converter,
             viewport[i].x, viewport[i].y, viewport[i].w, viewport[i].h);
+        gst_d3d12_converter_calculate_remap_border_color (converter,
+            border_color[i]);
 
         ret = gst_d3d12_converter_execute (converter, &in_frame, &out_frame,
             priv->main_ctx, FALSE, fence_data, command_list);
@@ -3025,6 +3030,8 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
       gst_d3d12_converter_set_remap_unlocked (converter, prev_remap.Get ());
       gst_d3d12_converter_update_viewport_unlocked (converter,
           prev_x, prev_y, prev_w, prev_h);
+      for (guint i = 0; i < 4; i++)
+        priv->main_ctx->comm->const_data_dyn.bgColor[i] = prev_color[i];
     }
   }
 
