@@ -97,7 +97,7 @@ struct _GstCoreAudio
   GstCaps *cached_caps;
   gint stream_idx;
   gboolean io_proc_active;
-  gboolean io_proc_needs_deactivation;
+  gboolean io_proc_dropping;
 
   /* For LPCM in/out */
   AudioUnit audiounit;

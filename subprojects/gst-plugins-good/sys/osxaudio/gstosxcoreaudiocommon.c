@@ -50,40 +50,9 @@ gst_core_audio_remove_render_callback (GstCoreAudio * core_audio)
         "Failed to remove render callback %d", (int) status);
   }
 
-  /* Remove the RenderNotify too */
-  status = AudioUnitRemoveRenderNotify (core_audio->audiounit,
-      (AURenderCallback) gst_core_audio_render_notify, core_audio);
-
-  if (status) {
-    GST_WARNING_OBJECT (core_audio->osxbuf,
-        "Failed to remove render notify callback %d", (int) status);
-  }
-
   /* We're deactivated.. */
-  core_audio->io_proc_needs_deactivation = FALSE;
+  g_atomic_int_set (&core_audio->io_proc_dropping, FALSE);
   core_audio->io_proc_active = FALSE;
-}
-
-OSStatus
-gst_core_audio_render_notify (GstCoreAudio * core_audio,
-    AudioUnitRenderActionFlags * ioActionFlags,
-    const AudioTimeStamp * inTimeStamp,
-    unsigned int inBusNumber,
-    unsigned int inNumberFrames, AudioBufferList * ioData)
-{
-  /* Before rendering a frame, we get the PreRender notification.
-   * Here, we detach the RenderCallback if we've been paused.
-   *
-   * This is necessary (rather than just directly detaching it) to
-   * work around some thread-safety issues in CoreAudio
-   */
-  if ((*ioActionFlags) & kAudioUnitRenderAction_PreRender) {
-    if (core_audio->io_proc_needs_deactivation) {
-      gst_core_audio_remove_render_callback (core_audio);
-    }
-  }
-
-  return noErr;
 }
 
 gboolean
@@ -112,19 +81,11 @@ gst_core_audio_io_proc_start (GstCoreAudio * core_audio)
           "AudioUnitSetProperty failed: %d", (int) status);
       return FALSE;
     }
-    // ### does it make sense to do this notify stuff for input mode?
-    status = AudioUnitAddRenderNotify (core_audio->audiounit,
-        (AURenderCallback) gst_core_audio_render_notify, core_audio);
 
-    if (status) {
-      GST_ERROR_OBJECT (core_audio->osxbuf,
-          "AudioUnitAddRenderNotify failed %d", (int) status);
-      return FALSE;
-    }
     core_audio->io_proc_active = TRUE;
   }
 
-  core_audio->io_proc_needs_deactivation = FALSE;
+  g_atomic_int_set (&core_audio->io_proc_dropping, FALSE);
 
   // AudioOutputUnitStart on iOS can wait for the render callback to finish,
   // where in our case we set the ringbuffer timestamp, which also needs the ringbuf lock.
@@ -153,7 +114,7 @@ gst_core_audio_io_proc_stop (GstCoreAudio * core_audio)
     GST_WARNING_OBJECT (core_audio->osxbuf,
         "AudioOutputUnitStop failed: %d", (int) status);
   }
-  // ###: why is it okay to directly remove from here but not from pause() ?
+  // Ok to remove directly here because we stopped the AudioUnit already
   if (core_audio->io_proc_active) {
     gst_core_audio_remove_render_callback (core_audio);
   }

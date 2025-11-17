@@ -466,6 +466,11 @@ gst_osx_audio_src_io_proc (GstOsxAudioRingBuffer * buf,
   sample_position -= buf->core_audio->first_sample_time;
 #endif
 
+  if (g_atomic_int_get (&buf->core_audio->io_proc_dropping)) {
+    GST_TRACE_OBJECT (buf, "Dropped %d samples", remaining);
+    return 0;
+  }
+
   while (remaining) {
     if (!gst_audio_ring_buffer_prepare_read (GST_AUDIO_RING_BUFFER (buf),
             &writeseg, &writeptr, &len))

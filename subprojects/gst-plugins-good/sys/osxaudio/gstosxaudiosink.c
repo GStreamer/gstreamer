@@ -598,10 +598,18 @@ gst_osx_audio_sink_io_proc (GstOsxAudioRingBuffer * buf,
   gint stream_idx = buf->core_audio->stream_idx;
   gint remaining = bufferList->mBuffers[stream_idx].mDataByteSize;
   gint offset = 0;
+  GstAudioRingBuffer *rbuf = GST_AUDIO_RING_BUFFER (buf);
+  const GstAudioFormatInfo *finfo = rbuf->spec.info.finfo;
 
   while (remaining) {
-    if (!gst_audio_ring_buffer_prepare_read (GST_AUDIO_RING_BUFFER (buf),
-            &readseg, &readptr, &len))
+    if (g_atomic_int_get (&buf->core_audio->io_proc_dropping)) {
+      gst_audio_format_info_fill_silence (finfo, (char *)
+          bufferList->mBuffers[stream_idx].mData + offset, remaining);
+      GST_TRACE_OBJECT (buf, "Wrote silence, %d samples", remaining);
+      return 0;
+    }
+
+    if (!gst_audio_ring_buffer_prepare_read (rbuf, &readseg, &readptr, &len))
       return 0;
 
     len -= buf->segoffset;
@@ -616,13 +624,13 @@ gst_osx_audio_sink_io_proc (GstOsxAudioRingBuffer * buf,
     offset += len;
     remaining -= len;
 
-    if ((gint) buf->segoffset == GST_AUDIO_RING_BUFFER (buf)->spec.segsize) {
+    if ((gint) buf->segoffset == rbuf->spec.segsize) {
       /* clear written samples */
-      gst_audio_ring_buffer_clear (GST_AUDIO_RING_BUFFER (buf), readseg);
+      gst_audio_ring_buffer_clear (rbuf, readseg);
 
       /* we wrote one segment */
       CORE_AUDIO_TIMING_LOCK (buf->core_audio);
-      gst_audio_ring_buffer_advance (GST_AUDIO_RING_BUFFER (buf), 1);
+      gst_audio_ring_buffer_advance (rbuf, 1);
       /* FIXME: Update the timestamp and reported frames in smaller increments
        * when the segment size is larger than the total inNumberFrames */
       gst_core_audio_update_timing (buf->core_audio, inTimeStamp,
