@@ -1416,7 +1416,8 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   }
 
   if (status) {
-    GST_WARNING_OBJECT (self, "Failed to create input tensor");
+    GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+        ("Failed to create input tensor: %s", api->GetErrorMessage (status)));
     goto error;
   }
 
@@ -1428,7 +1429,8 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       output_tensors);
 
   if (status) {
-    GST_WARNING_OBJECT (self, "Failed to run inference");
+    GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+        ("Failed to run inference: %s", api->GetErrorMessage (status)));
     goto error;
   }
 
