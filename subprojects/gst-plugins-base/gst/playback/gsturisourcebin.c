@@ -1040,8 +1040,9 @@ static GstStructure *
 get_queue_statistics (GstURISourceBin * urisrc)
 {
   GstStructure *ret = NULL;
-  guint min_byte_level = 0, max_byte_level = 0;
-  guint64 min_time_level = 0, max_time_level = 0;
+  gboolean has_queue_stats = FALSE;
+  guint min_byte_level = G_MAXUINT32, max_byte_level = 0;
+  guint64 min_time_level = G_MAXUINT64, max_time_level = 0;
   gdouble avg_byte_level = 0., avg_time_level = 0.;
   guint i = 0;
   GList *iter, *cur;
@@ -1061,6 +1062,8 @@ get_queue_statistics (GstURISourceBin * urisrc)
       g_object_get (slot->queue, "current-level-bytes", &byte_limit,
           "current-level-time", &time_limit, NULL);
 
+      has_queue_stats = TRUE;
+
       if (byte_limit < min_byte_level)
         min_byte_level = byte_limit;
       if (byte_limit > max_byte_level)
@@ -1077,6 +1080,11 @@ get_queue_statistics (GstURISourceBin * urisrc)
     }
   }
   GST_URI_SOURCE_BIN_UNLOCK (urisrc);
+
+  if (!has_queue_stats) {
+    min_byte_level = 0;
+    min_time_level = 0;
+  }
 
   ret = gst_structure_new ("application/x-urisourcebin-stats",
       "minimum-byte-level", G_TYPE_UINT, (guint) min_byte_level,
