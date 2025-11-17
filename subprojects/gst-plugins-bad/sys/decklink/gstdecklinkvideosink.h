@@ -75,7 +75,7 @@ struct _GstDecklinkVideoSink
   GstDecklinkMappingFormat mapping_format;
 
   gboolean initial_sync;
-  GQueue *pending_frames;
+  GstVecDeque *pending_frames;
 
   gboolean have_light_level;
   GstVideoContentLightLevel light_level;

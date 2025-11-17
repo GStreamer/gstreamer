@@ -970,7 +970,11 @@ gst_decklink_video_sink_init (GstDecklinkVideoSink * self)
   self->caption_line = 0;
   self->afd_bar_line = 0;
   self->mapping_format = GST_DECKLINK_MAPPING_FORMAT_DEFAULT;
-  self->pending_frames = g_queue_new();
+  self->pending_frames = gst_vec_deque_new (16);
+  gst_vec_deque_set_clear_func (self->pending_frames,
+      (GDestroyNotify) +[](GstDecklinkVideoFrame * frame) {
+        frame->Release ();
+      });
 
   gst_base_sink_set_max_lateness (GST_BASE_SINK_CAST (self), 20 * GST_MSECOND);
   gst_base_sink_set_qos_enabled (GST_BASE_SINK_CAST (self), TRUE);
@@ -1088,17 +1092,13 @@ gst_decklink_video_sink_get_property (GObject * object, guint property_id,
     case PROP_PERSISTENT_ID:
       g_value_set_int64 (value, self->persistent_id);
       break;
+    case PROP_OUTPUT_VANC:
+      g_value_set_boolean (value, self->output_vanc);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
   }
-}
-
-static void
-unref_frame (GstDecklinkVideoFrame * frame)
-{
-  if (frame)
-    frame->Release();
 }
 
 void
@@ -1106,7 +1106,7 @@ gst_decklink_video_sink_finalize (GObject * object)
 {
   GstDecklinkVideoSink *self = GST_DECKLINK_VIDEO_SINK_CAST (object);
 
-  g_queue_free_full (self->pending_frames, (GDestroyNotify) unref_frame);
+  gst_vec_deque_free (self->pending_frames);
   self->pending_frames = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -1966,9 +1966,8 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
   frame->running_time_duration = running_time_duration;
   frame->sync_buffer = gst_buffer_ref (buffer);
 
-  g_queue_push_tail (self->pending_frames, frame);
+  gst_vec_deque_push_tail (self->pending_frames, g_steal_pointer (&frame));
 
-  frame = nullptr;
   flow_ret = GST_FLOW_OK;
 
 out:
@@ -1992,7 +1991,7 @@ gst_decklink_video_sink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
     return flow_ret;
 
   frame =
-        (GstDecklinkVideoFrame *) g_queue_pop_head (self->pending_frames);
+      (GstDecklinkVideoFrame *) gst_vec_deque_pop_head (self->pending_frames);
   running_time = gst_clock_get_internal_time (self->output->clock);
 
   frame_duration =
@@ -2032,20 +2031,23 @@ gst_decklink_video_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   if ((flow_ret = gst_decklink_video_sink_prepare (bsink, buffer)) != GST_FLOW_OK)
     return flow_ret;
 
-  GST_TRACE_OBJECT (bsink, "render with %u pending frames", self->pending_frames->length);
+  GST_TRACE_OBJECT (bsink, "render with %" G_GSIZE_FORMAT " pending frames",
+      gst_vec_deque_get_length (self->pending_frames));
 
   GST_OBJECT_LOCK (self);
   if (self->initial_sync) {
     /* this is effectively the preroll logic. We wait for at least 2 buffers */
     GstDecklinkVideoFrame *frame;
 
-    if (self->pending_frames->length < 1) {
+    if (gst_vec_deque_is_empty (self->pending_frames)) {
       GST_OBJECT_UNLOCK (self);
       return GST_FLOW_OK;
     }
     GST_OBJECT_UNLOCK (self);
 
-    frame = (GstDecklinkVideoFrame *) g_queue_peek_head (self->pending_frames);
+    frame =
+        (GstDecklinkVideoFrame *)
+        gst_vec_deque_peek_head (self->pending_frames);
     GST_DEBUG_OBJECT (self, "attempting preroll");
     flow_ret =
         gst_base_sink_do_preroll (bsink,
@@ -2091,9 +2093,9 @@ gst_decklink_video_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   }
   GST_OBJECT_UNLOCK (self);
 
-  while (self->pending_frames->length > 0) {
+  while (!gst_vec_deque_is_empty (self->pending_frames)) {
     GstDecklinkVideoFrame *frame =
-        (GstDecklinkVideoFrame *) g_queue_pop_head (self->pending_frames);
+        (GstDecklinkVideoFrame *) gst_vec_deque_pop_head (self->pending_frames);
     GstClockTime sync_time = frame->running_time;
     GstClockTime running_time = frame->running_time;
     GstClockTime running_time_duration = frame->running_time_duration;
@@ -2243,6 +2245,8 @@ gst_decklink_video_sink_stop (GstDecklinkVideoSink * self)
     self->vbiencoder = NULL;
     self->anc_vformat = GST_VIDEO_FORMAT_UNKNOWN;
   }
+
+  gst_vec_deque_clear (self->pending_frames);
 
   return TRUE;
 }
