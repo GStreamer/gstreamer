@@ -285,39 +285,35 @@ gst_gl_display_type_from_environment (void)
   if (!env)
     return GST_GL_DISPLAY_TYPE_ANY;
 
-  if (env) {
-    if (g_strstr_len (env, 3, "x11")) {
-      return GST_GL_DISPLAY_TYPE_X11;
-    } else if (g_strstr_len (env, 7, "wayland")) {
-      return GST_GL_DISPLAY_TYPE_WAYLAND;
-    } else if (g_strstr_len (env, 5, "cocoa")) {
-      return GST_GL_DISPLAY_TYPE_COCOA;
-    } else if (g_strstr_len (env, 5, "win32")) {
-      return GST_GL_DISPLAY_TYPE_WIN32;
-    } else if (g_strstr_len (env, 8, "dispmanx")) {
-      return GST_GL_DISPLAY_TYPE_DISPMANX;
-    } else if (g_strstr_len (env, 10, "egl-device")) {
-      return GST_GL_DISPLAY_TYPE_EGL_DEVICE;
-    } else if (g_strstr_len (env, 3, "egl")) {
-      return GST_GL_DISPLAY_TYPE_EGL;
-    } else if (g_strstr_len (env, 6, "viv-fb")) {
-      return GST_GL_DISPLAY_TYPE_VIV_FB;
-    } else if (g_strstr_len (env, 3, "gbm")) {
-      return GST_GL_DISPLAY_TYPE_GBM;
-    } else if (g_strstr_len (env, 4, "eagl")) {
-      return GST_GL_DISPLAY_TYPE_EAGL;
-    } else if (g_strstr_len (env, 7, "android")) {
-      return GST_GL_DISPLAY_TYPE_EGL;
-    } else if (g_strstr_len (env, 5, "winrt")) {
-      return GST_GL_DISPLAY_TYPE_EGL;
-    } else if (g_strstr_len (env, 11, "surfaceless")) {
-      return GST_GL_DISPLAY_TYPE_EGL_SURFACELESS;
-    } else {
-      return GST_GL_DISPLAY_TYPE_NONE;
-    }
+  if (g_strstr_len (env, 3, "x11")) {
+    return GST_GL_DISPLAY_TYPE_X11;
+  } else if (g_strstr_len (env, 7, "wayland")) {
+    return GST_GL_DISPLAY_TYPE_WAYLAND;
+  } else if (g_strstr_len (env, 5, "cocoa")) {
+    return GST_GL_DISPLAY_TYPE_COCOA;
+  } else if (g_strstr_len (env, 5, "win32")) {
+    return GST_GL_DISPLAY_TYPE_WIN32;
+  } else if (g_strstr_len (env, 8, "dispmanx")) {
+    return GST_GL_DISPLAY_TYPE_DISPMANX;
+  } else if (g_strstr_len (env, 10, "egl-device")) {
+    return GST_GL_DISPLAY_TYPE_EGL_DEVICE;
+  } else if (g_strstr_len (env, 3, "egl")) {
+    return GST_GL_DISPLAY_TYPE_EGL;
+  } else if (g_strstr_len (env, 6, "viv-fb")) {
+    return GST_GL_DISPLAY_TYPE_VIV_FB;
+  } else if (g_strstr_len (env, 3, "gbm")) {
+    return GST_GL_DISPLAY_TYPE_GBM;
+  } else if (g_strstr_len (env, 4, "eagl")) {
+    return GST_GL_DISPLAY_TYPE_EAGL;
+  } else if (g_strstr_len (env, 7, "android")) {
+    return GST_GL_DISPLAY_TYPE_EGL;
+  } else if (g_strstr_len (env, 5, "winrt")) {
+    return GST_GL_DISPLAY_TYPE_EGL;
+  } else if (g_strstr_len (env, 11, "surfaceless")) {
+    return GST_GL_DISPLAY_TYPE_EGL_SURFACELESS;
+  } else {
+    return GST_GL_DISPLAY_TYPE_NONE;
   }
-
-  return GST_GL_DISPLAY_TYPE_ANY;
 }
 
 static GstGLDisplay *
