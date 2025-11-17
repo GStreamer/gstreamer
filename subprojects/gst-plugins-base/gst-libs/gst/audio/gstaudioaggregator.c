@@ -1445,8 +1445,6 @@ gst_audio_aggregator_sink_event (GstAggregator * agg,
   }
 
   if (!res) {
-    if (event)
-      gst_event_unref (event);
     return res;
   }
 
