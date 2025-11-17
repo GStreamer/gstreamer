@@ -717,6 +717,14 @@ private:
   gint m_refcount;
 };
 
+struct VAncPacket
+{
+  guint line_number;
+  guint8 DID, SDID;
+  guint8 data_count;
+  guint8 data[256];
+};
+
 /**
  * GstDecklinkMappingFormat:
  * @GST_DECKLINK_MAPPING_FORMAT_DEFAULT: Don't change the mapping format
@@ -739,7 +747,8 @@ enum
   PROP_CC_LINE,
   PROP_AFD_BAR_LINE,
   PROP_MAPPING_FORMAT,
-  PROP_PERSISTENT_ID
+  PROP_PERSISTENT_ID,
+  PROP_OUTPUT_VANC
 };
 
 static void gst_decklink_video_sink_set_property (GObject * object,
@@ -937,6 +946,23 @@ gst_decklink_video_sink_class_init (GstDecklinkVideoSinkClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
+  /**
+   * GstDecklinkVideoSink:output-vanc
+   *
+   * Output `GstAncillaryMeta` from input buffers as part of the ancillary data
+   * of the video frames.
+   *
+   * Note that currently the horizontal offset is not preserved.
+   *
+   * Since: 1.28
+   */
+  g_object_class_install_property (gobject_class, PROP_OUTPUT_VANC,
+      g_param_spec_boolean ("output-vanc", "Output VANC",
+          "Output ancillary data from input buffers",
+          FALSE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
   templ_caps = gst_decklink_mode_get_template_caps (FALSE);
   templ_caps = gst_caps_make_writable (templ_caps);
   /* For output we support any framerate and only really care about timestamps */
@@ -969,12 +995,14 @@ gst_decklink_video_sink_init (GstDecklinkVideoSink * self)
   self->timecode_format = bmdTimecodeRP188Any;
   self->caption_line = 0;
   self->afd_bar_line = 0;
+  self->output_vanc = FALSE;
   self->mapping_format = GST_DECKLINK_MAPPING_FORMAT_DEFAULT;
   self->pending_frames = gst_vec_deque_new (16);
   gst_vec_deque_set_clear_func (self->pending_frames,
       (GDestroyNotify) +[](GstDecklinkVideoFrame * frame) {
         frame->Release ();
       });
+  self->vanc_cache = g_array_new (FALSE, FALSE, sizeof (VAncPacket));
 
   gst_base_sink_set_max_lateness (GST_BASE_SINK_CAST (self), 20 * GST_MSECOND);
   gst_base_sink_set_qos_enabled (GST_BASE_SINK_CAST (self), TRUE);
@@ -1037,6 +1065,9 @@ gst_decklink_video_sink_set_property (GObject * object, guint property_id,
       break;
     case PROP_PERSISTENT_ID:
       self->persistent_id = g_value_get_int64 (value);
+      break;
+    case PROP_OUTPUT_VANC:
+      self->output_vanc = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -1108,6 +1139,8 @@ gst_decklink_video_sink_finalize (GObject * object)
 
   gst_vec_deque_free (self->pending_frames);
   self->pending_frames = NULL;
+  g_array_free (self->vanc_cache, TRUE);
+  self->vanc_cache = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1218,7 +1251,7 @@ gst_decklink_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   else
     flags = bmdVideoOutputRP188;
 
-  if (self->caption_line > 0 || self->afd_bar_line > 0)
+  if (self->caption_line > 0 || self->afd_bar_line > 0 || self->output_vanc)
     flags = (BMDVideoOutputFlags) (flags | bmdVideoOutputVANC);
 
   ret = self->output->output->EnableVideoOutput (mode->mode, flags);
@@ -1534,114 +1567,107 @@ write_vbi (GstDecklinkVideoSink * self, GstBuffer * buffer,
     GstVideoTimeCodeMeta * tc_meta)
 {
   IDeckLinkVideoFrameAncillary *vanc_frame = NULL;
-  gpointer iter = NULL;
-  GstVideoCaptionMeta *cc_meta;
-  guint8 *vancdata;
-  gboolean got_captions = FALSE;
 
-  if (self->caption_line == 0 && self->afd_bar_line == 0)
+  if (self->caption_line == 0 && self->afd_bar_line == 0 && !self->output_vanc)
     return;
 
-  if (self->vbiencoder == NULL) {
-    self->vbiencoder =
-        gst_video_vbi_encoder_new (GST_VIDEO_FORMAT_v210, self->info.width);
-    self->anc_vformat = GST_VIDEO_FORMAT_v210;
-  }
+  // First collect all metas and transform them to generic VAncPackets
+  if (self->caption_line != 0) {
+    GstVideoCaptionMeta *cc_meta;
+    gpointer meta_iter = NULL;
 
-  /* Put any closed captions into the configured line */
-  while ((cc_meta =
-          (GstVideoCaptionMeta *) gst_buffer_iterate_meta_filtered (buffer,
-              &iter, GST_VIDEO_CAPTION_META_API_TYPE))) {
-    switch (cc_meta->caption_type) {
-      case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:{
-        guint8 data[138];
-        guint i, n;
+    /* FIXME: Add captions to the correct field? Captions for the second
+     * field should probably be inserted into the second field */
 
-        n = cc_meta->size / 2;
-        if (cc_meta->size > 46) {
-          GST_WARNING_OBJECT (self, "Too big raw CEA608 buffer");
+    while ((cc_meta =
+            (GstVideoCaptionMeta *) gst_buffer_iterate_meta_filtered (buffer,
+                &meta_iter, GST_VIDEO_CAPTION_META_API_TYPE))) {
+      switch (cc_meta->caption_type) {
+        case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:{
+          VAncPacket packet;
+
+          guint n = cc_meta->size / 2;
+          if (cc_meta->size > 46) {
+            GST_WARNING_OBJECT (self, "Too big raw CEA608 buffer");
+            break;
+          }
+
+          packet.line_number = self->caption_line;
+          packet.DID = GST_VIDEO_ANCILLARY_DID16_S334_EIA_608 >> 8;
+          packet.SDID = GST_VIDEO_ANCILLARY_DID16_S334_EIA_608 & 0xff;
+          packet.data_count = 3 * n;
+          /* This is the offset from line 9 for 525-line fields and from line
+           * 5 for 625-line fields.
+           *
+           * The highest bit is set for field 1 but not for field 0, but we
+           * have no way of knowning the field here
+           */
+          for (guint i = 0; i < n; i++) {
+            packet.data[3 * i] = 0x80 | (self->info.height ==
+                525 ? self->caption_line - 9 : self->caption_line - 5);
+            packet.data[3 * i + 1] = cc_meta->data[2 * i];
+            packet.data[3 * i + 2] = cc_meta->data[2 * i + 1];
+          }
+
+          g_array_append_val (self->vanc_cache, packet);
           break;
         }
+        case GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A:{
+          VAncPacket packet;
 
-        /* This is the offset from line 9 for 525-line fields and from line
-         * 5 for 625-line fields.
-         *
-         * The highest bit is set for field 1 but not for field 0, but we
-         * have no way of knowning the field here
-         */
-        for (i = 0; i < n; i++) {
-          data[3 * i] = 0x80 | (self->info.height ==
-              525 ? self->caption_line - 9 : self->caption_line - 5);
-          data[3 * i + 1] = cc_meta->data[2 * i];
-          data[3 * i + 2] = cc_meta->data[2 * i + 1];
-        }
+          packet.line_number = self->caption_line;
+          packet.DID = GST_VIDEO_ANCILLARY_DID16_S334_EIA_608 >> 8;
+          packet.SDID = GST_VIDEO_ANCILLARY_DID16_S334_EIA_608 & 0xff;
+          packet.data_count = cc_meta->size;
+          memcpy (packet.data, cc_meta->data, cc_meta->size);
 
-        if (!gst_video_vbi_encoder_add_ancillary (self->vbiencoder,
-                FALSE,
-                GST_VIDEO_ANCILLARY_DID16_S334_EIA_608 >> 8,
-                GST_VIDEO_ANCILLARY_DID16_S334_EIA_608 & 0xff, data, 3))
-          GST_WARNING_OBJECT (self, "Couldn't add meta to ancillary data");
-
-        got_captions = TRUE;
-
-        break;
-      }
-      case GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A:{
-        if (!gst_video_vbi_encoder_add_ancillary (self->vbiencoder,
-                FALSE,
-                GST_VIDEO_ANCILLARY_DID16_S334_EIA_608 >> 8,
-                GST_VIDEO_ANCILLARY_DID16_S334_EIA_608 & 0xff, cc_meta->data,
-                cc_meta->size))
-          GST_WARNING_OBJECT (self, "Couldn't add meta to ancillary data");
-
-        got_captions = TRUE;
-
-        break;
-      }
-      case GST_VIDEO_CAPTION_TYPE_CEA708_RAW:{
-        guint8 data[256];
-        guint n;
-
-        n = cc_meta->size / 3;
-        if (cc_meta->size > 46) {
-          GST_WARNING_OBJECT (self, "Too big raw CEA708 buffer");
+          g_array_append_val (self->vanc_cache, packet);
           break;
         }
+        case GST_VIDEO_CAPTION_TYPE_CEA708_RAW:{
+          VAncPacket packet;
 
-        n = convert_cea708_cc_data_cea708_cdp_internal (self, cc_meta->data,
-            cc_meta->size, data, sizeof (data), tc_meta);
-        if (!gst_video_vbi_encoder_add_ancillary (self->vbiencoder, FALSE,
-                GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 >> 8,
-                GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 & 0xff, data, n))
-          GST_WARNING_OBJECT (self, "Couldn't add meta to ancillary data");
+          guint n = cc_meta->size / 3;
+          if (cc_meta->size > 46) {
+            GST_WARNING_OBJECT (self, "Too big raw CEA708 buffer");
+            break;
+          }
 
-        got_captions = TRUE;
+          packet.line_number = self->caption_line;
+          packet.DID = GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 >> 8;
+          packet.SDID = GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 & 0xff;
 
-        break;
-      }
-      case GST_VIDEO_CAPTION_TYPE_CEA708_CDP:{
-        if (!gst_video_vbi_encoder_add_ancillary (self->vbiencoder,
-                FALSE,
-                GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 >> 8,
-                GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 & 0xff, cc_meta->data,
-                cc_meta->size))
-          GST_WARNING_OBJECT (self, "Couldn't add meta to ancillary data");
+          n = convert_cea708_cc_data_cea708_cdp_internal (self, cc_meta->data,
+              cc_meta->size, packet.data, sizeof (packet.data), tc_meta);
 
-        got_captions = TRUE;
+          packet.data_count = n;
 
-        break;
-      }
-      default:{
-        GST_FIXME_OBJECT (self, "Caption type %d not supported",
-            cc_meta->caption_type);
-        break;
+          g_array_append_val (self->vanc_cache, packet);
+          break;
+        }
+        case GST_VIDEO_CAPTION_TYPE_CEA708_CDP:{
+          VAncPacket packet;
+
+          packet.line_number = self->caption_line;
+          packet.DID = GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 >> 8;
+          packet.SDID = GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 & 0xff;
+          packet.data_count = cc_meta->size;
+          memcpy (packet.data, cc_meta->data, cc_meta->size);
+
+          g_array_append_val (self->vanc_cache, packet);
+          break;
+        }
+        default:{
+          GST_FIXME_OBJECT (self, "Caption type %d not supported",
+              cc_meta->caption_type);
+          break;
+        }
       }
     }
   }
 
-  if ((got_captions || self->afd_bar_line != 0)
-      && self->output->output->CreateAncillaryData (bmdFormat10BitYUV,
-          &vanc_frame) == S_OK) {
+  if (self->afd_bar_line != 0) {
+    VAncPacket packet;
     GstVideoAFDMeta *afd_meta = NULL, *afd_meta2 = NULL;
     GstVideoBarMeta *bar_meta = NULL, *bar_meta2 = NULL;
     GstMeta *meta;
@@ -1715,48 +1741,13 @@ write_vbi (GstDecklinkVideoSink * self, GstBuffer * buffer,
       GST_WRITE_UINT16_BE (&afd_bar_data_ptr[6], bar2);
     }
 
-    /* AFD on the same line as the captions */
-    if (self->caption_line == self->afd_bar_line) {
-      if (!gst_video_vbi_encoder_add_ancillary (self->vbiencoder,
-              FALSE, GST_VIDEO_ANCILLARY_DID16_S2016_3_AFD_BAR >> 8,
-              GST_VIDEO_ANCILLARY_DID16_S2016_3_AFD_BAR & 0xff, afd_bar_data,
-              sizeof (afd_bar_data)))
-        GST_WARNING_OBJECT (self,
-            "Couldn't add AFD/Bar data to ancillary data");
-    }
+    packet.line_number = self->afd_bar_line;
+    packet.DID = GST_VIDEO_ANCILLARY_DID16_S2016_3_AFD_BAR >> 8;
+    packet.SDID = GST_VIDEO_ANCILLARY_DID16_S2016_3_AFD_BAR & 0xff;
+    packet.data_count = sizeof (afd_bar_data);
+    memcpy (packet.data, afd_bar_data, sizeof (afd_bar_data));
 
-    /* FIXME: Add captions to the correct field? Captions for the second
-     * field should probably be inserted into the second field */
-
-    if (got_captions || self->caption_line == self->afd_bar_line) {
-      if (vanc_frame->GetBufferForVerticalBlankingLine (self->caption_line,
-              (void **) &vancdata) == S_OK) {
-        gst_video_vbi_encoder_write_line (self->vbiencoder, vancdata);
-      } else {
-        GST_WARNING_OBJECT (self,
-            "Failed to get buffer for line %d ancillary data",
-            self->caption_line);
-      }
-    }
-
-    /* AFD on a different line than the captions */
-    if (self->afd_bar_line != 0 && self->caption_line != self->afd_bar_line) {
-      if (!gst_video_vbi_encoder_add_ancillary (self->vbiencoder,
-              FALSE, GST_VIDEO_ANCILLARY_DID16_S2016_3_AFD_BAR >> 8,
-              GST_VIDEO_ANCILLARY_DID16_S2016_3_AFD_BAR & 0xff, afd_bar_data,
-              sizeof (afd_bar_data)))
-        GST_WARNING_OBJECT (self,
-            "Couldn't add AFD/Bar data to ancillary data");
-
-      if (vanc_frame->GetBufferForVerticalBlankingLine (self->afd_bar_line,
-              (void **) &vancdata) == S_OK) {
-        gst_video_vbi_encoder_write_line (self->vbiencoder, vancdata);
-      } else {
-        GST_WARNING_OBJECT (self,
-            "Failed to get buffer for line %d ancillary data",
-            self->afd_bar_line);
-      }
-    }
+    g_array_append_val (self->vanc_cache, packet);
 
     /* For interlaced video we need to also add AFD to the second field */
     if (GST_VIDEO_INFO_IS_INTERLACED (&self->info) && self->afd_bar_line != 0) {
@@ -1782,31 +1773,120 @@ write_vbi (GstDecklinkVideoSink * self, GstBuffer * buffer,
           g_assert_not_reached ();
       }
 
-      if (!gst_video_vbi_encoder_add_ancillary (self->vbiencoder,
-              FALSE, GST_VIDEO_ANCILLARY_DID16_S2016_3_AFD_BAR >> 8,
-              GST_VIDEO_ANCILLARY_DID16_S2016_3_AFD_BAR & 0xff, afd_bar_data2,
-              sizeof (afd_bar_data)))
-        GST_WARNING_OBJECT (self,
-            "Couldn't add AFD/Bar data to ancillary data");
+      packet.line_number = self->afd_bar_line + field2_offset;
+      packet.DID = GST_VIDEO_ANCILLARY_DID16_S2016_3_AFD_BAR >> 8;
+      packet.SDID = GST_VIDEO_ANCILLARY_DID16_S2016_3_AFD_BAR & 0xff;
+      packet.data_count = sizeof (afd_bar_data2);
+      memcpy (packet.data, afd_bar_data2, sizeof (afd_bar_data2));
 
-      if (vanc_frame->GetBufferForVerticalBlankingLine (self->afd_bar_line +
-              field2_offset, (void **) &vancdata) == S_OK) {
-        gst_video_vbi_encoder_write_line (self->vbiencoder, vancdata);
-      } else {
+      g_array_append_val (self->vanc_cache, packet);
+    }
+  }
+
+  if (self->output_vanc) {
+    GstMeta *meta;
+    gpointer meta_iter = NULL;
+
+    while ((meta =
+            gst_buffer_iterate_meta_filtered (buffer, &meta_iter,
+                GST_ANCILLARY_META_API_TYPE))) {
+      VAncPacket packet;
+      GstAncillaryMeta *anc_meta = (GstAncillaryMeta *) meta;
+
+      // Skip unpositioned anc for now
+      if (anc_meta->line >= 0x7fe)
+        continue;
+
+      packet.line_number = anc_meta->line;
+      packet.DID = anc_meta->DID & 0xff;
+      packet.SDID = anc_meta->SDID_block_number & 0xff;
+      packet.data_count = anc_meta->data_count & 0xff;
+      for (guint i = 0; i < packet.data_count; i++)
+        packet.data[i] = anc_meta->data[i] & 0xff;
+
+      g_array_append_val (self->vanc_cache, packet);
+    }
+  }
+
+  if (self->vanc_cache->len == 0)
+    return;
+
+  // Sort by line number
+  g_array_sort (self->vanc_cache, (GCompareFunc) +[](const VAncPacket * a,
+          const VAncPacket * b)->gint {
+        return (gint) a->line_number - (gint) b->line_number;
+      }
+  );
+
+  int res;
+  res = self->output->output->CreateAncillaryData (bmdFormat10BitYUV,
+      &vanc_frame);
+  if (res != S_OK) {
+    GST_WARNING_OBJECT (self, "Failed to allocate ancillary data: %d", res);
+    return;
+  }
+
+  if (!self->vbiencoder) {
+    self->vbiencoder =
+        gst_video_vbi_encoder_new (GST_VIDEO_FORMAT_v210, self->info.width);
+    self->anc_vformat = GST_VIDEO_FORMAT_v210;
+  }
+
+  guint previous_line = G_MAXUINT;
+  for (guint i = 0; i < self->vanc_cache->len; i++) {
+    const VAncPacket *packet = &g_array_index (self->vanc_cache, VAncPacket, i);
+
+    if (packet->line_number != previous_line && previous_line != G_MAXUINT) {
+      guint8 *vancdata;
+
+      res = vanc_frame->GetBufferForVerticalBlankingLine (previous_line,
+          (void **) &vancdata);
+      if (res != S_OK) {
         GST_WARNING_OBJECT (self,
-            "Failed to get buffer for line %d ancillary data",
-            self->afd_bar_line);
+            "Failed to get buffer for line %u ancillary data: %d",
+            previous_line, res);
+        gst_video_vbi_encoder_free (self->vbiencoder);
+        self->vbiencoder =
+            gst_video_vbi_encoder_new (GST_VIDEO_FORMAT_v210, self->info.width);
+      } else {
+        gst_video_vbi_encoder_write_line (self->vbiencoder, vancdata);
       }
     }
 
-    if (frame->SetAncillaryData (vanc_frame) != S_OK) {
-      GST_WARNING_OBJECT (self, "Failed to set ancillary data");
-    }
+    previous_line = packet->line_number;
 
-    vanc_frame->Release ();
-  } else if (got_captions || self->afd_bar_line != 0) {
-    GST_WARNING_OBJECT (self, "Failed to allocate ancillary data frame");
+    if (!gst_video_vbi_encoder_add_ancillary (self->vbiencoder,
+            FALSE,
+            packet->DID, packet->SDID, packet->data, packet->data_count)) {
+      GST_WARNING_OBJECT (self, "Couldn't add ancillary data to line %u",
+          packet->line_number);
+    }
   }
+
+  // And write the last line
+  if (previous_line != G_MAXUINT) {
+    guint8 *vancdata;
+
+    res = vanc_frame->GetBufferForVerticalBlankingLine (previous_line,
+        (void **) &vancdata);
+    if (res != S_OK) {
+      GST_WARNING_OBJECT (self,
+          "Failed to get buffer for line %u ancillary data: %d",
+          previous_line, res);
+      gst_video_vbi_encoder_free (self->vbiencoder);
+      self->vbiencoder =
+          gst_video_vbi_encoder_new (GST_VIDEO_FORMAT_v210, self->info.width);
+    } else {
+      gst_video_vbi_encoder_write_line (self->vbiencoder, vancdata);
+    }
+  }
+
+  res = frame->SetAncillaryData (vanc_frame);
+  if (res != S_OK) {
+    GST_WARNING_OBJECT (self, "Failed to set ancillary data: %d", res);
+  }
+
+  vanc_frame->Release ();
 }
 
 static gboolean
@@ -1961,6 +2041,7 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
     frame->SetMastringInfo (&self->mastering_info);
 
   write_vbi (self, buffer, format, frame, tc_meta);
+  g_array_set_size (self->vanc_cache, 0);
 
   frame->running_time = running_time;
   frame->running_time_duration = running_time_duration;
@@ -2247,6 +2328,7 @@ gst_decklink_video_sink_stop (GstDecklinkVideoSink * self)
   }
 
   gst_vec_deque_clear (self->pending_frames);
+  g_array_set_size (self->vanc_cache, 0);
 
   return TRUE;
 }

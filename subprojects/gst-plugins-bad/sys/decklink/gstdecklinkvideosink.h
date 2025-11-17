@@ -81,6 +81,9 @@ struct _GstDecklinkVideoSink
   GstVideoContentLightLevel light_level;
   gboolean have_mastering_info;
   GstVideoMasteringDisplayInfo mastering_info;
+
+  gboolean output_vanc;
+  GArray *vanc_cache;
 };
 
 struct _GstDecklinkVideoSinkClass
