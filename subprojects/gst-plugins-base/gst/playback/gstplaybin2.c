@@ -4988,10 +4988,7 @@ autoplug_query_caps (GstElement * uridecodebin, GstPad * pad,
 
         sinkcaps = gst_pad_query_caps (sinkpad, filter);
         if (!gst_caps_is_any (sinkcaps)) {
-          if (!result)
-            result = sinkcaps;
-          else
-            result = gst_caps_merge (result, sinkcaps);
+          result = sinkcaps;
         } else {
           gst_caps_unref (sinkcaps);
         }
@@ -5018,10 +5015,7 @@ autoplug_query_caps (GstElement * uridecodebin, GstPad * pad,
 
         sinkcaps = gst_pad_query_caps (sinkpad, filter);
         if (!gst_caps_is_any (sinkcaps)) {
-          if (!result)
-            result = sinkcaps;
-          else
-            result = gst_caps_merge (result, sinkcaps);
+          result = sinkcaps;
         } else {
           gst_caps_unref (sinkcaps);
         }
@@ -5040,10 +5034,7 @@ autoplug_query_caps (GstElement * uridecodebin, GstPad * pad,
 
         sinkcaps = gst_pad_query_caps (sinkpad, filter);
         if (!gst_caps_is_any (sinkcaps)) {
-          if (!result)
-            result = sinkcaps;
-          else
-            result = gst_caps_merge (result, sinkcaps);
+          result = sinkcaps;
         } else {
           gst_caps_unref (sinkcaps);
         }
@@ -5053,10 +5044,7 @@ autoplug_query_caps (GstElement * uridecodebin, GstPad * pad,
     } else {
       GstCaps *subcaps = gst_subtitle_overlay_create_factory_caps ();
       GST_PLAY_BIN_FILTER_CAPS (filter, subcaps);
-      if (!result)
-        result = subcaps;
-      else
-        result = gst_caps_merge (result, subcaps);
+      result = subcaps;
     }
   } else {
     goto done;
