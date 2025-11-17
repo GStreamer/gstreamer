@@ -3075,8 +3075,8 @@ hevc_caps_get_mime_codec (GstCaps * caps, gchar ** mime_codec)
   }
 
   profile_tier_level = data + 1;
-  profile_space = (profile_tier_level[0] & 0x11) >> 6;
-  tier_flag = (profile_tier_level[0] & 0x001) >> 5;
+  profile_space = (profile_tier_level[0] >> 6) & 0x03;
+  tier_flag = (profile_tier_level[0] >> 5) & 0x01;
   profile_idc = (profile_tier_level[0] & 0x1f);
 
   compat_flags = GST_READ_UINT32_BE (data + 2);
