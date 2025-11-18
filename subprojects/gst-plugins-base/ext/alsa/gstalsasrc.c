@@ -811,7 +811,7 @@ gst_alsasrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   if (!alsasrc_parse_spec (alsa, spec))
     goto spec_parse;
 
-  CHECK (snd_pcm_nonblock (alsa->handle, 0), non_block);
+  CHECK (snd_pcm_nonblock (alsa->handle, 1), non_block);
 
   CHECK (set_hwparams (alsa), hw_params_failed);
   CHECK (set_swparams (alsa), sw_params_failed);
@@ -854,7 +854,7 @@ spec_parse:
 non_block:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
-        ("Could not set device to blocking: %s", snd_strerror (err)));
+        ("Could not set device to nonblocking: %s", snd_strerror (err)));
     return FALSE;
   }
 hw_params_failed:
@@ -1011,15 +1011,32 @@ gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length,
 
   GST_ALSA_SRC_LOCK (asrc);
   while (cptr > 0) {
-    if ((err = snd_pcm_readi (alsa->handle, ptr, cptr)) < 0) {
+    /* start by doing a blocking wait for available data. Set the timeout
+     * to 4 times the period time, similar to alsasink. */
+    err = snd_pcm_wait (alsa->handle, (4 * alsa->period_time / 1000));
+    if (err < 0) {
+      GST_DEBUG_OBJECT (asrc, "wait error, %d", err);
+    } else {
+      err = snd_pcm_readi (alsa->handle, ptr, cptr);
+      if (err < 0) {
+        GST_DEBUG_OBJECT (asrc, "Read error: %s (%d)", snd_strerror (err), err);
+      }
+    }
+
+    if (err < 0) {
       if (err == -EAGAIN) {
-        GST_DEBUG_OBJECT (asrc, "Read error: %s", snd_strerror (err));
-        continue;
-      } else if (err == -ENODEV) {
+        /* will continue out of the if/else group */
+      } else if (err == -ENODEV || err == -EIO) {
         goto device_disappeared;
       } else if (xrun_recovery (alsa, alsa->handle, err) < 0) {
         goto read_error;
       }
+
+      /* Unlock so that _reset() can run and break an otherwise infinite loop
+       * here */
+      GST_ALSA_SRC_UNLOCK (asrc);
+      g_thread_yield ();
+      GST_ALSA_SRC_LOCK (asrc);
       continue;
     }
 
