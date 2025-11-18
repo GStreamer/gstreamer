@@ -2031,7 +2031,8 @@ purge_play_items (GstURIDecodeBin3 * dec)
     free_play_item (dec, item);
   }
 
-  dec->output_item = dec->input_item = dec->play_items->data;
+  dec->output_item = dec->input_item =
+      (dec->play_items ? dec->play_items->data : NULL);
   dec->output_item->posted_about_to_finish = FALSE;
   PLAY_ITEMS_UNLOCK (dec);
 }
