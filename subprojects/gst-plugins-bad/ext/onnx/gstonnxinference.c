@@ -103,6 +103,10 @@ struct _GstOnnxInference
   int32_t height;
   int32_t channels;
   gboolean planar;
+  gint height_dim;
+  gint width_dim;
+  gint channels_dim;
+  gint batch_dim;
   uint8_t *dest;
   size_t output_count;
   gchar **output_names;
@@ -356,6 +360,12 @@ gst_onnx_inference_init (GstOnnxInference * self)
   self->means = g_new0 (double, 1);
   self->stddevs = g_new (double, 1);
   self->stddevs[0] = 1.0;
+
+  self->height_dim = -1;
+  self->width_dim = -1;
+  self->channels_dim = -1;
+  self->batch_dim = -1;
+
 }
 
 static void
@@ -576,42 +586,43 @@ gst_onnx_log_function (void *param, OrtLoggingLevel severity,
 
 static gboolean
 _guess_tensor_data_type (GstOnnxInference * self, gsize dims_count,
-    gsize * dims, const gchar ** gst_format, gint * width, gint * height,
-    gint * channels, gboolean * planar)
+    gsize * dims, const gchar ** gst_format)
 {
+  self->height_dim = -1;
+  self->width_dim = -1;
+  self->channels_dim = -1;
+  self->batch_dim = -1;
+
   if (dims_count < 2 || dims_count > 4) {
     GST_ERROR_OBJECT (self,
         "Don't know how to interpret tensors with %zu dimensions", dims_count);
     return FALSE;
   }
 
-  *planar = FALSE;
-
   switch (dims_count) {
     case 2:
       *gst_format = "GRAY8";
-      *height = dims[0];
-      *width = dims[1];
+      self->height_dim = 0;
+      self->width_dim = 1;
       break;
     case 3:
       if (dims[0] == 1 || dims[0] == 3) {
-        *channels = dims[0];
+        self->channels_dim = 0;
         if (dims[0] == 1) {
           *gst_format = "GRAY8";
         } else {
           *gst_format = "RGBP";
-          *planar = TRUE;
         }
-        *height = dims[1];
-        *width = dims[2];
+        self->height_dim = 1;
+        self->width_dim = 2;
       } else if (dims[2] == 1 || dims[2] == 3) {
-        *channels = dims[2];
+        self->channels_dim = 2;
         if (dims[2] == 1)
           *gst_format = "GRAY";
         else
           *gst_format = "RGB";
-        *height = dims[0];
-        *width = dims[1];
+        self->height_dim = 0;
+        self->width_dim = 1;
       } else {
         GST_ERROR_OBJECT (self, "Don't know how to interpret dims");
         return FALSE;
@@ -619,25 +630,24 @@ _guess_tensor_data_type (GstOnnxInference * self, gsize dims_count,
       break;
     case 4:
       /* Assuming dims[0] is a batch */
+      self->batch_dim = 0;
       if (dims[1] == 1 || dims[1] == 3) {
-        *channels = dims[1];
-        *planar = TRUE;
-        *height = dims[2];
-        *width = dims[3];
+        self->channels_dim = 1;
+        self->height_dim = 2;
+        self->width_dim = 3;
       } else if (dims[3] == 1 || dims[3] == 3) {
-        *channels = dims[3];
-        *height = dims[1];
-        *width = dims[2];
+        self->height_dim = 1;
+        self->width_dim = 2;
+        self->channels_dim = 3;
       } else {
         GST_ERROR_OBJECT (self, "Don't know how to interpret dims");
         return FALSE;
       }
 
-      if (*channels == 1) {
+      if (dims[self->channels_dim] == 1) {
         *gst_format = "GRAY8";
-        *planar = FALSE;
-      } else if (*channels == 3) {
-        if (*planar)
+      } else if (dims[self->channels_dim] == 3) {
+        if (self->planar)
           *gst_format = "RGBP";
         else
           *gst_format = "RGB";
@@ -650,6 +660,30 @@ _guess_tensor_data_type (GstOnnxInference * self, gsize dims_count,
   return TRUE;
 }
 
+static gchar *
+build_dims_str (gsize dims_count, gsize * dims)
+{
+  GString *dims_gstr = g_string_new ("");
+  gsize j;
+
+  if (dims_count == 0)
+    goto done;
+
+
+  if (dims[0] == G_MAXSIZE)
+    g_string_append (dims_gstr, "-1");
+  else
+    g_string_append_printf (dims_gstr, "%zu", dims[0]);
+
+  for (j = 1; j < dims_count; j++)
+    if (dims[j] == G_MAXSIZE)
+      g_string_append (dims_gstr, ",-1");
+    else
+      g_string_append_printf (dims_gstr, ",%zu", dims[j]);
+
+done:
+  return g_string_free (dims_gstr, FALSE);
+}
 
 static gboolean
 gst_onnx_inference_start (GstBaseTransform * trans)
@@ -850,10 +884,29 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       gst_input_dims[i] = input_dims[i];
   }
 
+  gchar *dims = build_dims_str (num_input_dims, gst_input_dims);
+  GST_DEBUG_OBJECT (self, "Input dimensions: %s", dims);
+  g_free (dims);
+
   if (!_guess_tensor_data_type (self, num_input_dims, gst_input_dims,
-          &gst_format, &self->width, &self->height, &self->channels,
-          &self->planar))
+          &gst_format))
     goto error;
+
+  self->height = gst_input_dims[self->height_dim];
+  self->width = gst_input_dims[self->width_dim];
+  if (self->channels_dim >= 0) {
+    self->channels = gst_input_dims[self->channels_dim];
+    self->planar = (self->channels_dim != num_input_dims - 1);
+  } else {
+    self->channels = 1;
+  }
+
+
+  GST_DEBUG_OBJECT (self, "height dim[%d]=%d, width dim[%d]=%d,"
+      " channels dim[%d]=%d, batch_dim[%d]=%zu planar=%d",
+      self->height_dim, self->height, self->width_dim, self->width,
+      self->channels_dim, self->channels, self->batch_dim,
+      self->batch_dim >= 0 ? gst_input_dims[self->batch_dim] : 0, self->planar);
 
   self->means = g_renew (double, self->means, self->channels);
   self->stddevs = g_renew (double, self->stddevs, self->channels);
@@ -1322,13 +1375,28 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   api->ReleaseTypeInfo (input_type_info);
   input_type_info = NULL;
 
-  input_dims[0] = 1;
-  if (!self->planar) {
-    input_dims[1] = self->height;
-    input_dims[2] = self->width;
+  if (self->batch_dim >= 0)
+    input_dims[self->batch_dim] = 1;
+
+  if (input_dims[self->height_dim] >= 0) {
+    if (input_dims[self->height_dim] != self->height) {
+      GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+          ("Buffer has height %d, but model expects %zu",
+              self->height, input_dims[self->height_dim]));
+      goto error;
+    }
   } else {
-    input_dims[2] = self->height;
-    input_dims[3] = self->width;
+    input_dims[self->height_dim] = self->height;
+  }
+  if (input_dims[self->width_dim] >= 0) {
+    if (input_dims[self->width_dim] != self->width) {
+      GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+          ("Buffer has width %d, but model expects %zu",
+              self->width, input_dims[self->width_dim]));
+      goto error;
+    }
+  } else {
+    input_dims[self->width_dim] = self->width;
   }
 
   GST_LOG_OBJECT (self, "Input dimensions: %" G_GINT64_FORMAT
