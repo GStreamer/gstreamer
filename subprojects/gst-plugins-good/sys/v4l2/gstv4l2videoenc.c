@@ -874,8 +874,8 @@ activate_failed:
     GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
         (_("Failed to allocate required memory.")),
         ("Buffer pool activation failed"));
-    return GST_FLOW_ERROR;
-
+    ret = GST_FLOW_ERROR;
+    goto drop;
   }
 flushing:
   {
