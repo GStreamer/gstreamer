@@ -1236,8 +1236,7 @@ gst_onnx_inference_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   return TRUE;
 }
 
-#define _convert_image_remove_alpha(Type, dst, srcPtr,                        \
-    pixel_stride, stride, means, stddevs)                               \
+#define _convert_image_remove_alpha(Type)                               \
 G_STMT_START {                                                                \
   size_t destIndex = 0;                                                       \
   Type tmp;                                                                   \
@@ -1290,8 +1289,7 @@ convert_image_remove_alpha_u8 (guint8 * dst, gint dstWidth, gint dstHeight,
   if (stddevs == NULL)
     stddevs = ones;
 
-  _convert_image_remove_alpha (guint8, dst, srcPtr, pixel_stride,
-      stride, means, stddevs);
+  _convert_image_remove_alpha (guint8);
 }
 
 static void
@@ -1307,8 +1305,7 @@ convert_image_remove_alpha_f32 (gfloat * dst, gint dstWidth, gint dstHeight,
   if (stddevs == NULL)
     stddevs = two_five_fives;
 
-  _convert_image_remove_alpha (gfloat, dst, srcPtr, pixel_stride,
-      stride, means, stddevs);
+  _convert_image_remove_alpha (gfloat);
 }
 
 static GstFlowReturn
