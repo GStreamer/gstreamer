@@ -1,0 +1,25 @@
+From b9daf0b6c81890bfbebdbb2969792ddee8fcb40b Mon Sep 17 00:00:00 2001
+From: Luca Bacci <luca.bacci982@gmail.com>
+Date: Fri, 6 Jun 2025 10:04:14 +0200
+Subject: [PATCH] Meson: Avoid fallback for gio-unix dependency on Windows
+
+---
+ meson.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/meson.build b/meson.build
+index b31a8791..290d69df 100644
+--- a/meson.build
++++ b/meson.build
+@@ -141,7 +141,7 @@ endif
+ 
+ unix_socket_dep = dependency('gio-unix-2.0',
+                              version : glib_required_version,
+-                             fallback: ['glib', 'libgiounix_dep'],
++                             fallback: (host_system != 'windows') ? ['glib', 'libgiounix_dep'] : [],
+                              required : false)
+ 
+ platform_deps = []
+-- 
+2.48.1
+
