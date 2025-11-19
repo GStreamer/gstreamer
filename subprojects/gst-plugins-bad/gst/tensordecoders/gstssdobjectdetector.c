@@ -543,8 +543,9 @@ extract_bounding_boxes (GstSsdObjectDetector * self, gsize w, gsize h,
     if (gst_analytics_relation_meta_add_od_mtd (rmeta, label,
             x_i, y_i, bwidth_i, bheight_i, score, &odmtd))
       GST_DEBUG_OBJECT (self,
-          "Object detected with label : %s, score: %f, bound box: %dx%d at (%d,%d)",
-          g_quark_to_string (label), score, bwidth_i, bheight_i, x_i, y_i);
+          "Object detected with label[%u] : %s, score: %f, bound box: %dx%d at (%d,%d)",
+          bclass, g_quark_to_string (label), score, bwidth_i, bheight_i, x_i,
+          y_i);
     else
       GST_WARNING_OBJECT (self, "Could not add detection to meta");
   }
