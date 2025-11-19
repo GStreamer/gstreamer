@@ -503,6 +503,7 @@ _maybe_recompile_shader (GstGLFilterShader * filtershader)
     return shader;
   }
 
+  GST_OBJECT_UNLOCK (filtershader);
   return NULL;
 
 print_error:
