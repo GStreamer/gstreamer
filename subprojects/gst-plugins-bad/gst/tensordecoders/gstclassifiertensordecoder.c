@@ -462,7 +462,9 @@ gst_classifier_tensor_decoder_decode (GstClassifierTensorDecoder * self,
     case GST_TENSOR_DATA_TYPE_FLOAT32:
       if (map_info.size != len * sizeof (gfloat)) {
         GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
-            ("Tensor size is not as expected for float"));
+            ("Tensor size is not as expected for float: map.size(%zu) !="
+                " label-file-length(%zu) * sizeof(float)(%zu)", map_info.size,
+                len, sizeof (float)));
         goto error_mapped;
       }
 
@@ -474,7 +476,8 @@ gst_classifier_tensor_decoder_decode (GstClassifierTensorDecoder * self,
     case GST_TENSOR_DATA_TYPE_UINT8:
       if (map_info.size != len) {
         GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
-            ("Tensor size is not as expected for uint8"));
+            ("Tensor size is not as expected for uint8: map.size(%zu) !="
+                " label-file-length(%zu))", map_info.size, len));
         goto error_mapped;
       }
 
