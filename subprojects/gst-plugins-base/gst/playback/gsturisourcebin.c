@@ -2133,6 +2133,7 @@ setup_parsebin_for_slot (ChildSrcPadInfo * info, GstPad * originating_pad)
 
   info->demuxer = gst_element_factory_make ("parsebin", NULL);
   if (!info->demuxer) {
+    GST_URI_SOURCE_BIN_UNLOCK (urisrc);
     post_missing_plugin_error (GST_ELEMENT_CAST (urisrc), "parsebin");
     return FALSE;
   }
