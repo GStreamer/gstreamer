@@ -804,7 +804,7 @@ G_STMT_START {                                                                \
       for (int32_t i = 0; i < dstWidth; ++i) {                                \
         for (int32_t k = 0; k < dstChannels; ++k) {                           \
           tmp = *srcPtr[k];                                                   \
-          tmp += means[k];                                                    \
+          tmp -= means[k];                                                    \
           dst[destIndex++] = (Type)(tmp / stddevs[k]);                        \
           srcPtr[k] += srcSamplesPerPixel;                                    \
         }                                                                     \
@@ -820,7 +820,7 @@ G_STMT_START {                                                                \
       for (int32_t i = 0; i < dstWidth; ++i) {                                \
         for (int32_t k = 0; k < dstChannels; ++k) {                           \
           tmp = *srcPtr[k];                                                   \
-          tmp += means[k];                                                    \
+          tmp -= means[k];                                                    \
           destPtr[k][destIndex] = (Type)(tmp / stddevs[k]);                   \
           srcPtr[k] += srcSamplesPerPixel;                                    \
         }                                                                     \
