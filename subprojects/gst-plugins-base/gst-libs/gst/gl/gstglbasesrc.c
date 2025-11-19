@@ -413,6 +413,7 @@ gst_gl_base_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 
   if (!gst_video_frame_map (&out_frame, &src->out_info, buffer,
           GST_MAP_WRITE | GST_MAP_GL)) {
+    g_rec_mutex_unlock (&src->priv->context_lock);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
