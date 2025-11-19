@@ -1289,6 +1289,7 @@ play_cycle_track_selection (GstPlay * play, GstPlayTrackType track_type,
       }
       break;
     default:
+      g_mutex_unlock (&play->selection_lock);
       return;
   }
 
