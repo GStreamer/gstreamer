@@ -92,10 +92,11 @@ _destroy_buffer (GstVaDisplay * display, VABufferID buffer)
 }
 
 static VABufferID
-_create_buffer (GstVaEncoder * self, gint type, gpointer data, gsize size)
+_create_buffer (GstVaEncoder * self, VABufferType type, gpointer data,
+    guint size)
 {
   VAStatus status;
-  VADisplay dpy = gst_va_display_get_va_dpy (self->display);
+  VADisplay dpy;
   VABufferID buffer;
   VAContextID context;
 
