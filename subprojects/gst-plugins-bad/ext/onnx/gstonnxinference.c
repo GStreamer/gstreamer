@@ -359,7 +359,8 @@ gst_onnx_inference_init (GstOnnxInference * self)
 
   self->means = g_new0 (double, 1);
   self->stddevs = g_new (double, 1);
-  self->stddevs[0] = 1.0;
+  self->means[0] = 127;
+  self->stddevs[0] = 128;
 
   self->height_dim = -1;
   self->width_dim = -1;
@@ -703,6 +704,8 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   char *input_name = NULL;
   size_t i;
   const gchar *gst_format;
+  double mean;
+  double stddev;
 
   GST_OBJECT_LOCK (self);
   if (self->session) {
@@ -908,14 +911,6 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       self->channels_dim, self->channels, self->batch_dim,
       self->batch_dim >= 0 ? gst_input_dims[self->batch_dim] : 0, self->planar);
 
-  self->means = g_renew (double, self->means, self->channels);
-  self->stddevs = g_renew (double, self->stddevs, self->channels);
-
-  for (int i = 1; i < self->channels; i++) {
-    self->means[i] = self->means[0];
-    self->stddevs[i] = self->stddevs[0];
-  }
-
   self->fixedInputImageSize = self->width > 0 && self->height > 0;
 
   status = api->SessionGetOutputCount (self->session, &self->output_count);
@@ -938,7 +933,12 @@ gst_onnx_inference_start (GstBaseTransform * trans)
 
   switch (element_type) {
     case ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT8:
+      mean = 0.0;
+      stddev = 1.0;
+      break;
     case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT:
+      mean = 0;
+      stddev = 255.0;
       break;
     default:
       GST_ERROR_OBJECT (self,
@@ -946,6 +946,57 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       goto error;
   }
   self->input_data_type = onnx_data_type_to_gst (element_type);
+
+  // Access metadata object
+  status = api->SessionGetModelMetadata (self->session, &metadata);
+  if (status) {
+    GST_INFO_OBJECT (self, "Could not get model metadata: %s",
+        api->GetErrorMessage (status));
+    api->ReleaseStatus (status);
+    status = NULL;
+  }
+
+  if (metadata) {
+    char *pixel_range_str;
+
+    status = api->ModelMetadataLookupCustomMetadataMap (metadata,
+        self->allocator, "Image.NominalPixelRange", &pixel_range_str);
+    if (status == NULL && pixel_range_str) {
+      if (!g_ascii_strcasecmp (pixel_range_str, "NominalRange_0_255") ||
+          !g_ascii_strcasecmp (pixel_range_str, "NominalRange_16_235")) {
+        mean = 0.0;
+        stddev = 1.0;
+      } else if (!g_ascii_strcasecmp (pixel_range_str, "Normalized_0_1")) {
+        mean = 0;
+        stddev = 255.0;
+      } else if (!g_ascii_strcasecmp (pixel_range_str, "Normalized_1_1")) {
+        mean = 127.0;
+        stddev = 128.0;
+      } else {
+        GST_WARNING_OBJECT (self, "Model has Image.NominalPixelRange with"
+            " unknown value (%s), ignoring", pixel_range_str);
+      }
+      self->allocator->Free (self->allocator, pixel_range_str);
+
+    } else {
+      GST_INFO_OBJECT (self, "Model doesn't include Nominal Pixel range, "
+          "assuming default: %s", api->GetErrorMessage (status));
+
+      api->ReleaseStatus (status);
+      status = NULL;
+    }
+  } else {
+    GST_INFO_OBJECT (self, "Model doesn't include metadata, "
+        "assuming default pixel range");
+  }
+
+  self->means = g_renew (double, self->means, self->channels);
+  self->stddevs = g_renew (double, self->stddevs, self->channels);
+
+  for (int i = 1; i < self->channels; i++) {
+    self->means[i] = mean;
+    self->stddevs[i] = stddev;
+  }
 
   /* Setting datatype */
   self->model_caps = gst_caps_make_writable (self->model_caps);
@@ -980,15 +1031,6 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       goto error;
     }
     GST_DEBUG_OBJECT (self, "Output name %lu:%s", i, self->output_names[i]);
-  }
-
-  // Look up tensor ids
-  status = api->SessionGetModelMetadata (self->session, &metadata);
-  if (status) {
-    GST_INFO_OBJECT (self, "Could not get model metadata: %s",
-        api->GetErrorMessage (status));
-    api->ReleaseStatus (status);
-    status = NULL;
   }
 
   self->output_ids = g_new0 (GQuark, self->output_count);
