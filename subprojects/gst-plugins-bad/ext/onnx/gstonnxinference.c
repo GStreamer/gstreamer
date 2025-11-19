@@ -1324,13 +1324,6 @@ convert_image_remove_alpha_u8 (guint8 * dst, gint dstWidth, gint dstHeight,
     guint8 pixel_stride, guint32 stride, const gdouble * means,
     const gdouble * stddevs)
 {
-  static const gdouble zeros[] = { 0, 0, 0, 0 };
-  static const gdouble ones[] = { 1.0, 1.0, 1.0, 1.0 };
-  if (means == NULL)
-    means = zeros;
-  if (stddevs == NULL)
-    stddevs = ones;
-
   _convert_image_remove_alpha (guint8);
 }
 
@@ -1340,13 +1333,6 @@ convert_image_remove_alpha_f32 (gfloat * dst, gint dstWidth, gint dstHeight,
     guint8 pixel_stride, guint32 stride, const gdouble * means,
     const gdouble * stddevs)
 {
-  static const gdouble zeros[] = { 0, 0, 0, 0 };
-  static const gdouble two_five_fives[] = { 255.0, 255.0, 255.0, 255.0 };
-  if (means == NULL)
-    means = zeros;
-  if (stddevs == NULL)
-    stddevs = two_five_fives;
-
   _convert_image_remove_alpha (gfloat);
 }
 
