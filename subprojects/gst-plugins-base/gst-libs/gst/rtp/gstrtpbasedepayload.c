@@ -1408,6 +1408,7 @@ read_rtp_header_extensions (GstRTPBaseDepayload * depayload,
           GST_WARNING_OBJECT (depayload, "RTP header extension (%s) could "
               "not read payloaded data", GST_OBJECT_NAME (ext));
           gst_object_unref (ext);
+          GST_OBJECT_UNLOCK (depayload);
           goto out;
         }
 
