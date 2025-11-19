@@ -215,8 +215,10 @@ stereosplit_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       g_rec_mutex_lock (&stereosplit->context_lock);
       if (!gst_gl_ensure_element_data (element, &stereosplit->display,
-              &stereosplit->other_context))
+              &stereosplit->other_context)) {
+        g_rec_mutex_unlock (&stereosplit->context_lock);
         return GST_STATE_CHANGE_FAILURE;
+      }
 
       gst_gl_display_filter_gl_api (stereosplit->display, SUPPORTED_GL_APIS);
       g_rec_mutex_unlock (&stereosplit->context_lock);
