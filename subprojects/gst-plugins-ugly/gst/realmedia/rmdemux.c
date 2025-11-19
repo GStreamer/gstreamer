@@ -2565,7 +2565,7 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, GstBuffer * in, guint16 version)
   data = map.data;
   size = map.size;
 
-  if (size < 4 + 6 + 1 + 2)
+  if (size < 2 + 4 + 2)
     goto not_enough_data;
 
   /* stream number */
@@ -2605,7 +2605,6 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, GstBuffer * in, guint16 version)
   if (version == 1) {
     if (size < 1)
       goto not_enough_data;
-
     data += 1;
     size -= 1;
   }
