@@ -1451,7 +1451,7 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
         src_data = info.data;
       } else {
         convert_image_remove_alpha_u8 (self->dest, self->width, self->height,
-            self->channels, TRUE, srcPtr,
+            self->channels, self->planar, srcPtr,
             GST_VIDEO_INFO_COMP_PSTRIDE (&self->video_info, 0),
             GST_VIDEO_INFO_PLANE_STRIDE (&self->video_info, 0),
             self->means, self->stddevs);
@@ -1466,7 +1466,7 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     case GST_TENSOR_DATA_TYPE_FLOAT32:{
       convert_image_remove_alpha_f32 ((float *) self->dest, self->width,
           self->height,
-          self->channels, TRUE, srcPtr,
+          self->channels, self->planar, srcPtr,
           GST_VIDEO_INFO_COMP_PSTRIDE (&self->video_info, 0),
           GST_VIDEO_INFO_PLANE_STRIDE (&self->video_info, 0),
           self->means, self->stddevs);
