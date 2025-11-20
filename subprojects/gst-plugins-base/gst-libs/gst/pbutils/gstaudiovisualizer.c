@@ -1085,16 +1085,17 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
     goto not_negotiated;
   }
 
-  gst_adapter_push (scope->priv->adapter, buffer);
-
   g_mutex_lock (&scope->priv->config_lock);
+
+  inbuf = scope->priv->inbuf;
+
+  /* FIXME: the timestamp in the adapter would be different */
+  gst_buffer_copy_into (inbuf, buffer, GST_BUFFER_COPY_METADATA, 0, -1);
+
+  gst_adapter_push (scope->priv->adapter, buffer);
 
   /* this is what we want */
   sbpf = scope->req_spf * bpf;
-
-  inbuf = scope->priv->inbuf;
-  /* FIXME: the timestamp in the adapter would be different */
-  gst_buffer_copy_into (inbuf, buffer, GST_BUFFER_COPY_METADATA, 0, -1);
 
   /* this is what we have */
   avail = gst_adapter_available (scope->priv->adapter);
