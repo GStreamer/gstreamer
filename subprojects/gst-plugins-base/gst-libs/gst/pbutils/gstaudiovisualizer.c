@@ -1077,8 +1077,7 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
   bpf = GST_AUDIO_INFO_BPF (&scope->ainfo);
 
   if (bpf == 0) {
-    ret = GST_FLOW_NOT_NEGOTIATED;
-    goto beach;
+    goto not_negotiated;
   }
 
   gst_adapter_push (scope->priv->adapter, buffer);
@@ -1229,13 +1228,13 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
 
   g_mutex_unlock (&scope->priv->config_lock);
 
-beach:
   return ret;
 
   /* ERRORS */
 not_negotiated:
   {
     GST_DEBUG_OBJECT (scope, "Failed to renegotiate");
+    gst_buffer_unref (buffer);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 }
