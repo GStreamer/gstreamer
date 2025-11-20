@@ -156,8 +156,8 @@ gst_drm_dumb_memory_export_dmabuf (GstMemory * mem)
   if (ret)
     goto export_fd_failed;
 
-  dmamem = gst_dmabuf_allocator_alloc (alloc->dmabuf_alloc, prime_fd,
-      gst_memory_get_sizes (mem, NULL, NULL));
+  dmamem = gst_dmabuf_allocator_alloc_with_flags (alloc->dmabuf_alloc, prime_fd,
+      gst_memory_get_sizes (mem, NULL, NULL), GST_FD_MEMORY_FLAG_KEEP_MAPPED);
 
   GST_DEBUG_OBJECT (alloc, "Exported bo handle %d as %d", drmmem->handle,
       prime_fd);
