@@ -965,7 +965,7 @@ _fill_sps (const GstH265SPS * sps, SPS * std_sps)
           _array_2_bitmask (sps->short_term_ref_pic_set[i].UsedByCurrPicS0,
           sps->short_term_ref_pic_set[i].NumDeltaPocs),
       .used_by_curr_pic_s1_flag =
-          _array_2_bitmask (sps->short_term_ref_pic_set[i].UsedByCurrPicS0,
+          _array_2_bitmask (sps->short_term_ref_pic_set[i].UsedByCurrPicS1,
           sps->short_term_ref_pic_set[i].NumDeltaPocs),
       /* Reserved */
       /* Reserved */
