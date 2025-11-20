@@ -719,7 +719,8 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
     /* prime descriptor reports the total size of the object, including regions
      * which aren't part surface's space. Let's just grab the surface's size: */
     gsize size = _get_fd_size (fd);
-    GstMemory *mem = gst_dmabuf_allocator_alloc (allocator, fd, size);
+    GstMemory *mem = gst_dmabuf_allocator_alloc_with_flags (allocator, fd,
+        size, GST_FD_MEMORY_FLAG_KEEP_MAPPED);
 
     if (desc.objects[i].size < size) {
       GST_WARNING_OBJECT (self, "driver bug: fd size (%" G_GSIZE_FORMAT
