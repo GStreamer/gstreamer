@@ -1209,7 +1209,8 @@ _create_cached_dmabuf_info (GstGLContext * context, gpointer data)
 
       info = g_new0 (struct DmabufInfo, 1);
       info->dmabuf =
-          gst_dmabuf_allocator_alloc (download->dmabuf_allocator, fd, size);
+          gst_dmabuf_allocator_alloc_with_flags (download->dmabuf_allocator,
+          fd, size, GST_FD_MEMORY_FLAG_KEEP_MAPPED);
       info->stride = stride;
       info->offset = offset;
 
