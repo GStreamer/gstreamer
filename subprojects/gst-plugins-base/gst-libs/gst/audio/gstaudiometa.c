@@ -123,7 +123,7 @@ gst_buffer_get_audio_downmix_meta_for_channels (GstBuffer * buffer,
  * @to_position: (array length=to_channels): the channel positions of
  *   the destination
  * @to_channels: The number of channels of the destination
- * @matrix: (array) (element-type float*): The matrix coefficients.
+ * @matrix: (array) (element-type gpointer): The matrix coefficients.
  *
  * Attaches #GstAudioDownmixMeta metadata to @buffer with the given parameters.
  *

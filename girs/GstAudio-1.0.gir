@@ -11851,7 +11851,7 @@ for @quality in @options.</doc>
         </parameter>
       </parameters>
     </function>
-    <function name="buffer_add_audio_downmix_meta" c:identifier="gst_buffer_add_audio_downmix_meta">
+    <function name="buffer_add_audio_downmix_meta" c:identifier="gst_buffer_add_audio_downmix_meta" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudiometa.c">Attaches #GstAudioDownmixMeta metadata to @buffer with the given parameters.
 
 @matrix is an two-dimensional array of @to_channels times @from_channels
@@ -11893,7 +11893,7 @@ of the results.</doc>
         <parameter name="matrix" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudiometa.c">The matrix coefficients.</doc>
           <array zero-terminated="0" c:type="const gfloat**">
-            <type name="gfloat"/>
+            <type name="gpointer"/>
           </array>
         </parameter>
       </parameters>
