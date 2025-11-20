@@ -407,7 +407,7 @@ again:
         for (int i = 0; i < new_buffer->n_memory; i++) {
           GstMemory *mem = gst_fd_allocator_alloc (allocator, fds_arr[i],
               new_buffer->memories[i].size + new_buffer->memories[i].offset,
-              GST_FD_MEMORY_FLAG_NONE);
+              GST_FD_MEMORY_FLAG_KEEP_MAPPED);
           gst_memory_resize (mem, new_buffer->memories[i].offset,
               new_buffer->memories[i].size);
           GST_MINI_OBJECT_FLAG_SET (mem, GST_MEMORY_FLAG_READONLY);
