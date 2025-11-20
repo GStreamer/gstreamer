@@ -107,7 +107,7 @@ gst_vulkan_video_session_create (GstVulkanVideoSession * session,
   VkVideoSessionMemoryRequirementsKHR *mem = NULL;
   VkBindVideoSessionMemoryInfoKHR *bind_mem = NULL;
   VkResult res;
-  guint32 i, n_mems, index;
+  guint32 i, n_mems;
   gboolean ret = FALSE;
 
   g_return_val_if_fail (session && !session->session, FALSE);
@@ -163,9 +163,8 @@ gst_vulkan_video_session_create (GstVulkanVideoSession * session,
     GstMemory *vk_mem;
     VkPhysicalDeviceMemoryProperties *props;
     VkMemoryPropertyFlags prop_flags;
+    guint index;
 
-    props = &device->physical_device->memory_properties;
-    prop_flags = props->memoryTypes[i].propertyFlags;
     if (!gst_vulkan_memory_find_memory_type_index_with_requirements (device,
             &mem[i].memoryRequirements, G_MAXUINT32, &index)) {
       g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
@@ -173,11 +172,14 @@ gst_vulkan_video_session_create (GstVulkanVideoSession * session,
       goto beach;
     }
 
+    props = &device->physical_device->memory_properties;
+    prop_flags = props->memoryTypes[index].propertyFlags;
+
     vk_mem = gst_vulkan_memory_alloc (device, index, NULL,
         mem[i].memoryRequirements.size, prop_flags);
     if (!vk_mem) {
       g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-          "Cannot allocate memory for video sesson");
+          "Cannot allocate memory for video session");
       goto beach;
     }
     gst_buffer_append_memory (session->buffer, vk_mem);
