@@ -408,7 +408,7 @@ again:
           GstMemory *mem = gst_fd_allocator_alloc_full (allocator, fds_arr[i],
               new_buffer->memories[i].offset + new_buffer->memories[i].size,
               new_buffer->memories[i].offset, new_buffer->memories[i].size,
-              GST_FD_MEMORY_FLAG_NONE);
+              GST_FD_MEMORY_FLAG_KEEP_MAPPED);
           GST_MINI_OBJECT_FLAG_SET (mem, GST_MEMORY_FLAG_READONLY);
 
           g_hash_table_insert (self->memories, mem, ctx);
