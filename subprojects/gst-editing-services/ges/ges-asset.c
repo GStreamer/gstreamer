@@ -789,7 +789,8 @@ ges_asset_cache_deinit (void)
   _deinit_formatter_assets ();
 
   LOCK_CACHE;
-  g_hash_table_destroy (type_entries_table);
+  if (type_entries_table)
+    g_hash_table_destroy (type_entries_table);
   type_entries_table = NULL;
   UNLOCK_CACHE;
 }
