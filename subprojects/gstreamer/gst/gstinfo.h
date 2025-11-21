@@ -593,18 +593,18 @@ void    gst_printerrln                  (const gchar * format, ...) G_GNUC_PRINT
 
 /* cast to void * avoids a warning with gcc 6
  * see https://bugzilla.gnome.org/show_bug.cgi?id=764526 */
-#define gst_debug_add_log_function(func,data,notify) \
-G_STMT_START{                                        \
-  if ((func) == (void *) gst_debug_log_default) {    \
-    gst_debug_add_log_function(NULL,data,notify);    \
-  } else {                                           \
-    gst_debug_add_log_function(func,data,notify);    \
-  }                                                  \
+#define gst_debug_add_log_function(func,data,notify)       \
+G_STMT_START{                                              \
+  if ((void *) (func) == (void *) gst_debug_log_default) { \
+    gst_debug_add_log_function(NULL,data,notify);          \
+  } else {                                                 \
+    gst_debug_add_log_function(func,data,notify);          \
+  }                                                        \
 }G_STMT_END
 
-#define gst_debug_remove_log_function(func)          \
-    ((func) == (void *) gst_debug_log_default) ?     \
-        gst_debug_remove_log_function(NULL) :        \
+#define gst_debug_remove_log_function(func)                \
+    ((void *) (func) == (void *) gst_debug_log_default) ?  \
+        gst_debug_remove_log_function(NULL) :              \
         gst_debug_remove_log_function(func)
 
 /**
