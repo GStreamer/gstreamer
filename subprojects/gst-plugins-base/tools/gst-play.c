@@ -129,6 +129,7 @@ typedef struct
 
 static gboolean quiet = FALSE;
 static gboolean instant_rate_changes = FALSE;
+static gboolean install_missing = TRUE;
 
 static gboolean play_bus_msg (GstBus * bus, GstMessage * msg, gpointer data);
 static gboolean play_next (GstPlay * play);
@@ -362,9 +363,87 @@ play_toggle_audio_mute (GstPlay * play)
 static gboolean
 play_install_missing_plugins (GstPlay * play)
 {
-  /* FIXME: implement: try to install any missing plugins we haven't
-   * tried to install before */
-  return FALSE;
+  if (play->missing == NULL)
+    return FALSE;
+
+  if (!install_missing) {
+    gst_print (_
+        ("Missing plugin installation was disabled via command line options."));
+    return FALSE;
+  }
+
+  guint n = g_list_length (play->missing);
+  guint i = 0;
+
+  gchar **details = g_new0 (gchar *, n + 1);
+
+  while (play->missing != NULL) {
+    GstMessage *msg = play->missing->data;
+    gchar *detail;
+
+    detail = gst_missing_plugin_message_get_installer_detail (msg);
+
+    if (!g_strv_contains ((const gchar * const *) details, detail)) {
+      GST_INFO ("Installing: %s", detail);
+      details[i++] = detail;
+    } else {
+      g_free (detail);
+    }
+
+    play->missing = g_list_delete_link (play->missing, play->missing);
+
+    gst_message_unref (msg);
+  }
+
+  GstInstallPluginsReturn iret;
+  gboolean installed_something = FALSE;
+
+  iret = gst_install_plugins_sync ((const gchar * const *) details, NULL);
+
+  switch (iret) {
+    case GST_INSTALL_PLUGINS_SUCCESS:
+      gst_println (_("All missing plugins could be installed."));
+      installed_something = TRUE;
+      break;
+    case GST_INSTALL_PLUGINS_PARTIAL_SUCCESS:
+      gst_println (_("Some missing plugins could be installed."));
+      installed_something = TRUE;
+      break;
+    case GST_INSTALL_PLUGINS_NOT_FOUND:
+      gst_println (_
+          ("The missing plugins could not be found in the available package repositories."));
+      break;
+    case GST_INSTALL_PLUGINS_ERROR:
+      gst_println (_("An error occurred during plugin installation."));
+      break;
+    case GST_INSTALL_PLUGINS_USER_ABORT:
+      gst_println (_("Plugin installation was cancelled by the user."));
+      break;
+    case GST_INSTALL_PLUGINS_CRASHED:
+    case GST_INSTALL_PLUGINS_INVALID:
+    case GST_INSTALL_PLUGINS_INTERNAL_FAILURE:
+      gst_println (_
+          ("Something went wrong when trying to invoke the missing plugin installer."));
+      break;
+    case GST_INSTALL_PLUGINS_HELPER_MISSING:
+      gst_println (_
+          ("This system does not have a missing plugin handler installed."));
+      break;
+    default:
+      break;
+  }
+
+  g_strfreev (details);
+
+  if (installed_something) {
+    gst_println (_("Updating plugin registry for newly installed plugins.."));
+    if (!gst_update_registry ()) {
+      gst_println (_("Error updating plugin registry."));
+      installed_something = FALSE;
+    }
+  }
+
+  return installed_something;
 }
 
 static gboolean
@@ -382,6 +461,7 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
       gst_print ("Prerolled.\r");
       if (play->missing != NULL && play_install_missing_plugins (play)) {
         gst_print ("New plugins installed, trying again...\n");
+        gst_element_set_state (play->playbin, GST_STATE_NULL);
         --play->cur_idx;
         play_next (play);
       }
@@ -490,6 +570,7 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
 
       if (play->missing != NULL && play_install_missing_plugins (play)) {
         gst_print ("New plugins installed, trying again...\n");
+        gst_element_set_state (play->playbin, GST_STATE_NULL);
         --play->cur_idx;
         play_next (play);
         break;
@@ -1667,6 +1748,10 @@ real_main (int argc, char **argv)
     {"no-position", 0, 0, G_OPTION_ARG_NONE, &no_position,
           N_("Do not print current position of pipeline"),
         NULL},
+    {"no-missing-plugin-installation", 0, G_OPTION_FLAG_REVERSE,
+          G_OPTION_ARG_NONE,
+          &install_missing,
+        N_("Disable missing plugin installation"), NULL},
     {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &filenames, NULL},
     {NULL}
   };
