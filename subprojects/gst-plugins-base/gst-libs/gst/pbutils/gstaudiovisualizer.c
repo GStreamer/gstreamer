@@ -1219,11 +1219,9 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
     /* we want to take less or more, depending on spf : req_spf */
     if (avail - sbpf >= sbpf) {
       gst_adapter_flush (scope->priv->adapter, sbpf);
-      gst_adapter_unmap (scope->priv->adapter);
     } else if (avail >= sbpf) {
       /* just flush a bit and stop */
       gst_adapter_flush (scope->priv->adapter, (avail - sbpf));
-      gst_adapter_unmap (scope->priv->adapter);
       break;
     }
     avail = gst_adapter_available (scope->priv->adapter);
