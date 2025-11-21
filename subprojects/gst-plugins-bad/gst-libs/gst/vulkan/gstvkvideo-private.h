@@ -37,7 +37,8 @@ typedef struct _GstVulkanVideoSession GstVulkanVideoSession;
 struct _GstVulkanVideoSession
 {
   GstVulkanHandle *session;
-  GstBuffer *buffer;
+  GstMemory **video_mems;
+  guint n_mems;
 };
 
 typedef enum {

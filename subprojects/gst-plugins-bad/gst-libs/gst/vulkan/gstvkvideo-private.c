@@ -157,7 +157,8 @@ gst_vulkan_video_session_create (GstVulkanVideoSession * session,
           "vkGetVideoSessionMemoryRequirementsKHR") != VK_SUCCESS)
     goto beach;
 
-  session->buffer = gst_buffer_new ();
+  session->video_mems = g_malloc0 (sizeof (GstMemory *) * n_mems);
+  session->n_mems = n_mems;
   mem_req = g_new (VkMemoryRequirements2, n_mems);
   mem = g_new (VkVideoSessionMemoryRequirementsKHR, n_mems);
   bind_mem = g_new (VkBindVideoSessionMemoryInfoKHR, n_mems);
@@ -202,7 +203,7 @@ gst_vulkan_video_session_create (GstVulkanVideoSession * session,
           "Cannot allocate memory for video session");
       goto beach;
     }
-    gst_buffer_append_memory (session->buffer, vk_mem);
+    session->video_mems[i] = vk_mem;
 
     /* *INDENT-OFF* */
     bind_mem[i] = (VkBindVideoSessionMemoryInfoKHR) {
@@ -236,7 +237,11 @@ gst_vulkan_video_session_destroy (GstVulkanVideoSession * session)
   g_return_if_fail (session);
 
   gst_clear_vulkan_handle (&session->session);
-  gst_clear_buffer (&session->buffer);
+
+  for (guint i = 0; i < session->n_mems; i++)
+    gst_memory_unref (session->video_mems[i]);
+
+  g_free (session->video_mems);
 }
 
 GstBuffer *
