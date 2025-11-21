@@ -1254,7 +1254,7 @@ extract_vbi_line (GstDecklinkVideoSrc * self, GstBuffer ** buffer,
       GstAncillaryMeta *meta = gst_buffer_add_ancillary_meta (*buffer);
 
       meta->c_not_y_channel = hd ? 1 : 0;
-      meta->line = with_parity (line);
+      meta->line = line;
       meta->offset = 0xfff;
 
       meta->DID = with_parity (gstanc.DID);
