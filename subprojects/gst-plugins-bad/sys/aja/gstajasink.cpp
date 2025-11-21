@@ -1749,8 +1749,8 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
       AJAAncillaryData pkt;
       guint8 data[256];
 
-      pkt.SetDID(anc_meta->DID);
-      pkt.SetSID(anc_meta->SDID_block_number);
+      pkt.SetDID(anc_meta->DID & 0xff);
+      pkt.SetSID(anc_meta->SDID_block_number & 0xff);
       pkt.SetDataLocation(loc);
       pkt.SetDataCoding(AJAAncillaryDataCoding_Digital);
 
