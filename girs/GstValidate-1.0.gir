@@ -2783,20 +2783,6 @@ as the source of that issue.</doc>
           </parameter>
         </parameters>
       </constructor>
-      <method name="add_message" c:identifier="gst_validate_report_add_message">
-        <source-position filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-report.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="report" transfer-ownership="none">
-            <type name="Report" c:type="GstValidateReport*"/>
-          </instance-parameter>
-          <parameter name="message" transfer-ownership="none">
-            <type name="utf8" c:type="const gchar*"/>
-          </parameter>
-        </parameters>
-      </method>
       <method name="add_repeated_report" c:identifier="gst_validate_report_add_repeated_report">
         <source-position filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-report.h"/>
         <return-value transfer-ownership="none">
