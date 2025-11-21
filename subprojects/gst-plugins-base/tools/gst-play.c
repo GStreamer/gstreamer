@@ -501,8 +501,17 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
       }
       break;
     }
-    case GST_MESSAGE_ELEMENT:
-    {
+    case GST_MESSAGE_ELEMENT:{
+      if (gst_is_missing_plugin_message (msg)) {
+        gchar *desc;
+
+        desc = gst_missing_plugin_message_get_description (msg);
+        gst_print ("Missing plugin: %s\n", desc);
+        g_free (desc);
+        play->missing = g_list_prepend (play->missing, gst_message_ref (msg));
+        break;
+      }
+      // Will return GST_NAVIGATION_MESSAGE_INVALID if it's not a navigation message
       GstNavigationMessageType mtype = gst_navigation_message_get_type (msg);
       if (mtype == GST_NAVIGATION_MESSAGE_EVENT) {
         GstEvent *ev = NULL;
@@ -684,14 +693,6 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
       break;
     }
     default:
-      if (gst_is_missing_plugin_message (msg)) {
-        gchar *desc;
-
-        desc = gst_missing_plugin_message_get_description (msg);
-        gst_print ("Missing plugin: %s\n", desc);
-        g_free (desc);
-        play->missing = g_list_append (play->missing, gst_message_ref (msg));
-      }
       break;
   }
 
