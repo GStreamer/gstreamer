@@ -771,7 +771,7 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   GstWaylandSink *self = GST_WAYLAND_SINK (bsink);;
   gboolean use_dmabuf;
 
-  GST_DEBUG_OBJECT (self, "set caps %" GST_PTR_FORMAT, caps);
+  GST_INFO_OBJECT (self, "set caps %" GST_PTR_FORMAT, caps);
 
   if (gst_video_is_dma_drm_caps (caps)) {
     if (!gst_video_info_dma_drm_from_caps (&self->drm_info, caps))
