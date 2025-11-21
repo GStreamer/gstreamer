@@ -1338,6 +1338,12 @@ gst_vtdec_drain_decoder (GstVideoDecoder * decoder, gboolean flush)
   }
 
   gst_vtdec_pause_output_loop (vtdec);
+
+  /* Ensure the output loop runs once more in case it got paused before
+   * handling frames pushed by gst_vtdec_session_output_callback. */
+  if (!flush)
+    gst_vtdec_output_loop (vtdec);
+
   GST_VIDEO_DECODER_STREAM_LOCK (vtdec);
 
   /* Only reset the draining flag here,
