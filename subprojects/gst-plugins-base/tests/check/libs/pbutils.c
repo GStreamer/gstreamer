@@ -1554,6 +1554,22 @@ GST_START_TEST (test_pb_utils_caps_mime_codec)
   gst_caps_unref (caps);
   gst_buffer_unref (buffer);
 
+  /* h265 with specific profile space and tier flag */
+  codec_data_len = sizeof (h265_sample_codec_data);
+  codec_data = g_memdup2 (h265_sample_codec_data, codec_data_len);
+  codec_data[1] = 0x61;
+  codec_data[12] = 0x96;
+
+  buffer = gst_buffer_new_wrapped (codec_data, codec_data_len);
+  caps =
+      gst_caps_new_simple ("video/x-h265", "stream-format", G_TYPE_STRING,
+      "hvc1", "codec_data", GST_TYPE_BUFFER, buffer, NULL);
+  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
+  fail_unless_equals_string (mime_codec, "hvc1.A1.6.H150.B0");
+  g_free (mime_codec);
+  gst_caps_unref (caps);
+  gst_buffer_unref (buffer);
+
   /* av1 */
   caps = gst_caps_new_empty_simple ("video/x-av1");
   mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
