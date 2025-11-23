@@ -40,7 +40,9 @@ G_DECLARE_FINAL_TYPE (GstClassifierTensorDecoder, gst_classifier_tensor_decoder,
  * @threshold: Class confidence threshold
  * @labels_file: Path where to read class labels
  * @class_quark: Class labels quark representation
- * @softmax_res: Soft-max of output vector
+ * @postproc_result: Buffer for post-processing (softmax, uint8->float conversion)
+ * @class_count: Class count
+ * @do_softmax: Whether softmax needs to be applied (determined by negotiated caps)
  *
  * Since: 1.24
  */
@@ -50,7 +52,9 @@ struct _GstClassifierTensorDecoder
   gfloat threshold;
   gchar *labels_file;
   GArray *class_quark;
-  GArray *softmax_res;
+  GArray *postproc_result;
+  gsize class_count;
+  gboolean do_softmax;
 };
 
 struct _GstClassifierTensorDecoderClass
