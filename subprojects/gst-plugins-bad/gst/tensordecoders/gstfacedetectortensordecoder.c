@@ -55,11 +55,11 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/analytics/analytics.h>
-#include <math.h>               /* for expf() */
 
 /* Face detection tensor id strings */
 #define BOXES_TENSOR_ID "ssd-mobilenet-v1-variant-1-out-boxes"
 #define SCORES_TENSOR_ID "ultra-lightweight-face-detection-rfb-320-v1-variant-1-out-scores"
+#define GROUP_ID "ultra-lightweight-face-detection-rfb-320-v1-variant-1-out"
 
 GST_DEBUG_CATEGORY_STATIC (face_detector_tensor_decoder_debug);
 #define GST_CAT_DEFAULT face_detector_tensor_decoder_debug
@@ -102,12 +102,32 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 /* GStreamer element sinkpad template. Template of a sinkpad that can receive
  * any raw video. */
+
+/* *INDENT-OFF* */
 static GstStaticPadTemplate gst_face_detector_tensor_decoder_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw")
-    );
+    GST_STATIC_CAPS ("video/x-raw,"
+      "tensors=(structure)["
+        "tensorgroups,"
+          GROUP_ID"=(/set){"
+            "(GstCaps)["
+              "tensor/strided,"
+                "tensor-id="BOXES_TENSOR_ID","
+                "dims=<(int)1,(int)[1,max],(int)4>,"
+                "dims-order=(string)row-major,"
+                "type=(string)float32;],"
+            "(GstCaps)["
+              "tensor/strided,"
+                "tensor-id="SCORES_TENSOR_ID","
+                "dims=<(int)1,(int)[1,max],(int)2>,"
+                "dims-order=(string)row-major,"
+                "type=(string)float32;]"
+        "}"
+      "];"
+    ));
+/* *INDENT-ON* */
 
 /* Prototypes */
 static void gst_face_detector_tensor_decoder_set_property (GObject * object,
@@ -183,9 +203,11 @@ gst_face_detector_tensor_decoder_class_init (GstFaceDetectorTensorDecoderClass
       "Raghavendra Rao <raghavendra.rao@collabora.com>");
 
   /* Add pads to element base on pad template defined earlier */
+
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get
       (&gst_face_detector_tensor_decoder_sink_template));
+
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get
       (&gst_face_detector_tensor_decoder_src_template));
@@ -217,6 +239,8 @@ gst_face_detector_tensor_decoder_init (GstFaceDetectorTensorDecoder * self)
   self->sel_candidates = NULL;
   self->selected = NULL;
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (self), FALSE);
+
+  GST_PAD_UNSET_ACCEPT_INTERSECT (self->basetransform.sinkpad);
 }
 
 static void
