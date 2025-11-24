@@ -1855,6 +1855,10 @@ write_vbi (GstDecklinkVideoSink * self, GstBuffer * buffer,
 
     previous_line = packet->line_number;
 
+    GST_TRACE_OBJECT (self,
+        "Writing ancillary data with DID %08x, SDID %08x, DC %u into line %u",
+        packet->DID, packet->SDID, packet->data_count, packet->line_number);
+
     if (!gst_video_vbi_encoder_add_ancillary (self->vbiencoder,
             FALSE,
             packet->DID, packet->SDID, packet->data, packet->data_count)) {
