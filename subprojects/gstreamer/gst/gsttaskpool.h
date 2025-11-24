@@ -195,6 +195,8 @@ guint           gst_shared_task_pool_get_max_threads (GstSharedTaskPool *pool);
 GST_API
 GstTaskPool *   gst_shared_task_pool_new             (void) G_GNUC_WARN_UNUSED_RESULT;
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstSharedTaskPool, gst_object_unref)
+
 G_END_DECLS
 
 #endif /* __GST_TASK_POOL_H__ */

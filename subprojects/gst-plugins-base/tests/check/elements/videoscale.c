@@ -1012,6 +1012,95 @@ GST_START_TEST (test_transform_meta)
 
 GST_END_TEST;
 
+/* Test shared task pool that tracks whether it was used */
+#define TEST_TYPE_TASK_POOL (test_task_pool_get_type())
+G_DECLARE_FINAL_TYPE (TestTaskPool, test_task_pool, TEST, TASK_POOL,
+    GstSharedTaskPool);
+
+struct _TestTaskPool
+{
+  GstSharedTaskPool parent;
+  gboolean was_used;
+};
+
+G_DEFINE_TYPE (TestTaskPool, test_task_pool, GST_TYPE_SHARED_TASK_POOL)
+     static gpointer
+         test_task_pool_push (GstTaskPool * pool, GstTaskPoolFunction func,
+    gpointer user_data, GError ** error)
+{
+  TestTaskPool *test_pool = TEST_TASK_POOL (pool);
+
+  test_pool->was_used = TRUE;
+
+  return GST_TASK_POOL_CLASS (test_task_pool_parent_class)->push (pool, func,
+      user_data, error);
+}
+
+static void
+test_task_pool_class_init (TestTaskPoolClass * klass)
+{
+  GstTaskPoolClass *task_pool_class = GST_TASK_POOL_CLASS (klass);
+
+  task_pool_class->push = test_task_pool_push;
+}
+
+static void
+test_task_pool_init (TestTaskPool * pool)
+{
+  pool->was_used = FALSE;
+}
+
+GST_START_TEST (test_task_pool_context)
+{
+  GstHarness *h;
+  GstContext *context;
+  TestTaskPool *test_pool;
+  GstBuffer *buffer;
+
+  h = gst_harness_new ("videoscale");
+
+  context = gst_context_new (GST_TASK_POOL_CONTEXT_TYPE, FALSE);
+  fail_unless (context != NULL);
+
+  test_pool = g_object_new (TEST_TYPE_TASK_POOL, NULL);
+  fail_unless (test_pool != NULL);
+  fail_unless_equals_int (test_pool->was_used, FALSE);
+
+  gst_shared_task_pool_set_max_threads (GST_SHARED_TASK_POOL (test_pool), 4);
+  gst_task_pool_prepare (GST_TASK_POOL (test_pool), NULL);
+
+  gst_context_set_task_pool (context, GST_TASK_POOL (test_pool));
+
+  gst_element_set_context (h->element, context);
+
+  /* Set caps to trigger converter creation - use different sizes to force scaling
+   * Note: needs to be at least 400 lines tall to trigger multi-threading in video-converter */
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw,format=ARGB,width=400,height=400,framerate=30/1");
+  gst_harness_set_sink_caps_str (h,
+      "video/x-raw,format=ARGB,width=20,height=20,framerate=30/1");
+
+  /* Push a buffer through to trigger the converter creation with task pool */
+  buffer = gst_harness_create_buffer (h, 400 * 400 * 4);
+  fail_unless_equals_int (gst_harness_push (h, buffer), GST_FLOW_OK);
+
+  /* Pull the output buffer */
+  buffer = gst_harness_pull (h);
+  fail_unless (buffer != NULL);
+  gst_buffer_unref (buffer);
+
+  /* Verify the task pool was actually used by the video converter */
+  fail_unless_equals_int (test_pool->was_used, TRUE);
+
+  /* Cleanup */
+  gst_task_pool_cleanup (GST_TASK_POOL (test_pool));
+  gst_context_unref (context);
+  gst_object_unref (test_pool);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 #endif /* !defined(VSCALE_TEST_GROUP) */
 
 static Suite *
@@ -1035,6 +1124,7 @@ videoscale_suite (void)
 #endif
   tcase_add_test (tc_chain, test_basetransform_negotiation);
   tcase_add_test (tc_chain, test_transform_meta);
+  tcase_add_test (tc_chain, test_task_pool_context);
 #else
 #if VSCALE_TEST_GROUP == 1
   tcase_add_test (tc_chain, test_downscale_640x480_320x240_method_0);

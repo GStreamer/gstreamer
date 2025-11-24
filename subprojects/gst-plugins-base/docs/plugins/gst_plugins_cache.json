@@ -14940,7 +14940,7 @@
                     "n-threads": {
                         "blurb": "Maximum number of threads to use",
                         "conditionally-available": false,
-                        "construct": true,
+                        "construct": false,
                         "construct-only": false,
                         "controllable": false,
                         "default": "1",
@@ -15205,7 +15205,7 @@
                     "n-threads": {
                         "blurb": "Maximum number of threads to use",
                         "conditionally-available": false,
-                        "construct": true,
+                        "construct": false,
                         "construct-only": false,
                         "controllable": false,
                         "default": "1",
