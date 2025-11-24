@@ -28,6 +28,9 @@
 
 #include "gstvaprofile.h"
 
+#define GST_CAT_DEFAULT gstva_debug
+GST_DEBUG_CATEGORY_EXTERN (gstva_debug);
+
 GArray *
 gst_va_display_get_profiles (GstVaDisplay * self, guint32 codec,
     VAEntrypoint entrypoint)
