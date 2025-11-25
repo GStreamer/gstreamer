@@ -73,6 +73,8 @@ struct _GstVideoAggregatorPrivate
   GPtrArray *supported_formats;
 
   GstTaskPool *task_pool;
+  gboolean task_pool_from_context;
+  gboolean task_pool_from_persistent_context;
 };
 
 /****************************************
@@ -981,6 +983,8 @@ enum
 static void gst_video_aggregator_init (GstVideoAggregator * self,
     GstVideoAggregatorClass * klass);
 static void gst_video_aggregator_class_init (GstVideoAggregatorClass * klass);
+static GstTaskPool *gst_video_aggregator_setup_task_pool (GstVideoAggregator *
+    vagg);
 static gpointer gst_video_aggregator_parent_class = NULL;
 static gint video_aggregator_private_offset = 0;
 
@@ -2665,6 +2669,10 @@ gst_video_aggregator_start (GstAggregator * agg)
 
   gst_caps_replace (&vagg->priv->current_caps, NULL);
 
+  GstTaskPool *pool;
+  if ((pool = gst_video_aggregator_setup_task_pool (vagg)))
+    gst_object_unref (pool);
+
   return TRUE;
 }
 
@@ -3009,7 +3017,7 @@ gst_video_aggregator_get_execution_task_pool (GstVideoAggregator * vagg)
 {
   g_return_val_if_fail (GST_IS_VIDEO_AGGREGATOR (vagg), NULL);
 
-  return gst_object_ref (vagg->priv->task_pool);
+  return gst_video_aggregator_setup_task_pool (vagg);
 }
 
 /* GObject vmethods */
@@ -3021,9 +3029,12 @@ gst_video_aggregator_finalize (GObject * o)
   g_mutex_clear (&vagg->priv->lock);
   g_ptr_array_unref (vagg->priv->supported_formats);
 
-  if (vagg->priv->task_pool)
-    gst_task_pool_cleanup (vagg->priv->task_pool);
-  gst_clear_object (&vagg->priv->task_pool);
+  if (vagg->priv->task_pool) {
+    /* Only cleanup the pool if we created it (not from context) */
+    if (!vagg->priv->task_pool_from_context)
+      gst_task_pool_cleanup (vagg->priv->task_pool);
+    gst_clear_object (&vagg->priv->task_pool);
+  }
 
   G_OBJECT_CLASS (gst_video_aggregator_parent_class)->finalize (o);
 }
@@ -3068,6 +3079,120 @@ gst_video_aggregator_set_property (GObject * object,
   }
 }
 
+static void
+gst_video_aggregator_post_task_pool_request (GstVideoAggregator * vagg)
+{
+  GstMessage *msg;
+
+  GST_OBJECT_LOCK (vagg);
+  if (vagg->priv->task_pool) {
+    GST_OBJECT_UNLOCK (vagg);
+    return;
+  }
+  GST_OBJECT_UNLOCK (vagg);
+
+  /* Post need-context message to give application a chance to provide one */
+  GST_DEBUG_OBJECT (vagg, "posting need-context message for task pool");
+  msg = gst_message_new_need_context (GST_OBJECT_CAST (vagg),
+      GST_TASK_POOL_CONTEXT_TYPE);
+  gst_element_post_message (GST_ELEMENT (vagg), msg);
+}
+
+static GstTaskPool *
+gst_video_aggregator_setup_task_pool (GstVideoAggregator * vagg)
+{
+  GstTaskPool *pool;
+  /* First try to get one from context */
+  gst_video_aggregator_post_task_pool_request (vagg);
+
+  GST_OBJECT_LOCK (vagg);
+  if (!vagg->priv->task_pool) {
+    GstContext *context;
+    GstMessage *msg;
+
+    /* Create default task pool if none provided */
+    vagg->priv->task_pool = gst_shared_task_pool_new ();
+    gst_shared_task_pool_set_max_threads (GST_SHARED_TASK_POOL (vagg->
+            priv->task_pool), g_get_num_processors ());
+    gst_task_pool_prepare (vagg->priv->task_pool, NULL);
+    vagg->priv->task_pool_from_context = FALSE;
+    GST_DEBUG_OBJECT (vagg, "Created default task pool with %d threads",
+        g_get_num_processors ());
+
+    /* Post have-context message to let the application know about the pool */
+    context = gst_context_new (GST_TASK_POOL_CONTEXT_TYPE, FALSE);
+    gst_context_set_task_pool (context, vagg->priv->task_pool);
+    pool = gst_object_ref (vagg->priv->task_pool);
+    GST_OBJECT_UNLOCK (vagg);
+
+    msg = gst_message_new_have_context (GST_OBJECT_CAST (vagg), context);
+    gst_element_post_message (GST_ELEMENT (vagg), msg);
+
+    goto done;
+  } else {
+    pool = gst_object_ref (vagg->priv->task_pool);
+  }
+  GST_OBJECT_UNLOCK (vagg);
+
+done:
+  return pool;
+}
+
+static void
+gst_video_aggregator_set_context (GstElement * element, GstContext * context)
+{
+  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (element);
+
+  if (gst_context_has_context_type (context, GST_TASK_POOL_CONTEXT_TYPE)) {
+    GstTaskPool *pool = NULL;
+
+    gst_context_get_task_pool (context, &pool);
+    GST_DEBUG_OBJECT (vagg, "Got task pool %" GST_PTR_FORMAT
+        " from %spersistent context", pool,
+        gst_context_is_persistent (context) ? "" : "non-");
+    GST_OBJECT_LOCK (vagg);
+    if (vagg->priv->task_pool && !vagg->priv->task_pool_from_context)
+      gst_task_pool_cleanup (vagg->priv->task_pool);
+    gst_clear_object (&vagg->priv->task_pool);
+    vagg->priv->task_pool = pool;
+    vagg->priv->task_pool_from_context = TRUE;
+    vagg->priv->task_pool_from_persistent_context =
+        gst_context_is_persistent (context);
+    GST_OBJECT_UNLOCK (vagg);
+  }
+
+  GST_ELEMENT_CLASS (gst_video_aggregator_parent_class)->set_context (element,
+      context);
+}
+
+static GstStateChangeReturn
+gst_video_aggregator_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (element);
+  GstStateChangeReturn ret;
+
+  ret =
+      GST_ELEMENT_CLASS (gst_video_aggregator_parent_class)->change_state
+      (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      GST_OBJECT_LOCK (vagg);
+      if (vagg->priv->task_pool_from_context
+          && !vagg->priv->task_pool_from_persistent_context) {
+        gst_clear_object (&vagg->priv->task_pool);
+        vagg->priv->task_pool_from_context = FALSE;
+      }
+      GST_OBJECT_UNLOCK (vagg);
+      break;
+    default:
+      break;
+  }
+
+  return ret;
+}
+
 /* GObject boilerplate */
 static void
 gst_video_aggregator_class_init (GstVideoAggregatorClass * klass)
@@ -3095,6 +3220,10 @@ gst_video_aggregator_class_init (GstVideoAggregatorClass * klass)
       GST_DEBUG_FUNCPTR (gst_video_aggregator_request_new_pad);
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_video_aggregator_release_pad);
+  gstelement_class->set_context =
+      GST_DEBUG_FUNCPTR (gst_video_aggregator_set_context);
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_video_aggregator_change_state);
 
   agg_class->start = gst_video_aggregator_start;
   agg_class->stop = gst_video_aggregator_stop;
@@ -3187,9 +3316,4 @@ gst_video_aggregator_init (GstVideoAggregator * vagg,
   }
 
   gst_caps_unref (src_template);
-
-  vagg->priv->task_pool = gst_shared_task_pool_new ();
-  gst_shared_task_pool_set_max_threads (GST_SHARED_TASK_POOL (vagg->
-          priv->task_pool), g_get_num_processors ());
-  gst_task_pool_prepare (vagg->priv->task_pool, NULL);
 }

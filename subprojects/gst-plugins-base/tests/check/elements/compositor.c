@@ -2745,6 +2745,81 @@ GST_START_TEST (test_new_pad_after_eos)
 
 GST_END_TEST;
 
+/* Test shared task pool that tracks whether it was used */
+#define TEST_TYPE_TASK_POOL (test_task_pool_get_type())
+G_DECLARE_FINAL_TYPE (TestTaskPool, test_task_pool, TEST, TASK_POOL,
+    GstSharedTaskPool);
+
+struct _TestTaskPool
+{
+  GstSharedTaskPool parent;
+  gboolean was_used;
+};
+
+G_DEFINE_TYPE (TestTaskPool, test_task_pool, GST_TYPE_SHARED_TASK_POOL);
+
+static gpointer
+test_task_pool_push (GstTaskPool * pool, GstTaskPoolFunction func,
+    gpointer user_data, GError ** error)
+{
+  TestTaskPool *test_pool = TEST_TASK_POOL (pool);
+
+  test_pool->was_used = TRUE;
+
+  return GST_TASK_POOL_CLASS (test_task_pool_parent_class)->push (pool, func,
+      user_data, error);
+}
+
+static void
+test_task_pool_class_init (TestTaskPoolClass * klass)
+{
+  GstTaskPoolClass *task_pool_class = GST_TASK_POOL_CLASS (klass);
+
+  task_pool_class->push = test_task_pool_push;
+}
+
+static void
+test_task_pool_init (TestTaskPool * pool)
+{
+  pool->was_used = FALSE;
+}
+
+GST_START_TEST (test_task_pool_context)
+{
+  GstHarness *h;
+  GstContext *context;
+  TestTaskPool *test_pool;
+  GstBuffer *buffer;
+
+  h = gst_harness_new_with_padnames ("compositor", "sink_%u", "src");
+  context = gst_context_new (GST_TASK_POOL_CONTEXT_TYPE, FALSE);
+  test_pool = g_object_new (TEST_TYPE_TASK_POOL, NULL);
+  gst_shared_task_pool_set_max_threads (GST_SHARED_TASK_POOL (test_pool), 4);
+  gst_task_pool_prepare (GST_TASK_POOL (test_pool), NULL);
+  fail_unless_equals_int (test_pool->was_used, FALSE);
+
+  gst_context_set_task_pool (context, GST_TASK_POOL (test_pool));
+  gst_element_set_context (h->element, context);
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw,format=RGB,width=320,height=240,framerate=25/1");
+
+  buffer = gst_harness_create_buffer (h, 320 * 240 * 3);
+  GST_BUFFER_PTS (buffer) = 0;
+  GST_BUFFER_DURATION (buffer) = GST_SECOND / 25;
+  gst_harness_push (h, buffer);
+  buffer = gst_harness_pull (h);
+  gst_buffer_unref (buffer);
+
+  fail_unless_equals_int (test_pool->was_used, TRUE);
+
+  gst_task_pool_cleanup (GST_TASK_POOL (test_pool));
+  gst_context_unref (context);
+  gst_object_unref (test_pool);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 compositor_suite (void)
 {
@@ -2789,6 +2864,7 @@ compositor_suite (void)
   tcase_add_test (tc_chain, test_reverse);
   tcase_add_test (tc_chain, test_stream_start_after_eos);
   tcase_add_test (tc_chain, test_new_pad_after_eos);
+  tcase_add_test (tc_chain, test_task_pool_context);
 
   return s;
 }
