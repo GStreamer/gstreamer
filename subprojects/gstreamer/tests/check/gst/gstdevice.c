@@ -280,6 +280,15 @@ G_DEFINE_TYPE (GstTestDeviceProviderMonitor, gst_test_device_provider_monitor,
 static gboolean
 gst_test_device_provider_monitor_start (GstDeviceProvider * monitor)
 {
+  GList *devices = gst_test_device_provider_probe (monitor);
+
+  for (GList * iter = devices; iter; iter = iter->next) {
+    gst_device_provider_device_add (monitor, GST_DEVICE (iter->data));
+  }
+
+  /* Device references were floating, so were transferred in
+   * gst_device_provider_device_add() */
+  g_list_free (devices);
   return TRUE;
 }
 
@@ -333,10 +342,9 @@ GST_START_TEST (test_device_provider_monitor)
   ck_assert (gst_device_provider_can_monitor (dp));
   ck_assert (gst_device_provider_start (dp));
 
-  ck_assert_ptr_eq (gst_device_provider_get_devices (dp), NULL);
-
   devs = gst_device_provider_get_devices (dp);
-  ck_assert_ptr_eq (devs, NULL);
+  ck_assert_int_eq (g_list_length (devs), 1);
+  g_list_free_full (devs, (GDestroyNotify) gst_object_unref);
 
   mydev = test_device_new ();
   ck_assert (g_object_is_floating (mydev));
@@ -376,7 +384,8 @@ GST_START_TEST (test_device_provider_monitor)
 
   gst_device_provider_device_remove (dp, mydev);
   devs = gst_device_provider_get_devices (dp);
-  ck_assert_ptr_eq (devs, NULL);
+  ck_assert_int_eq (g_list_length (devs), 1);
+  g_list_free_full (devs, (GDestroyNotify) gst_object_unref);
 
   msg = gst_bus_pop (bus);
   ck_assert_ptr_ne (msg, NULL);
@@ -460,11 +469,10 @@ GST_START_TEST (test_device_monitor)
   ck_assert (GST_IS_DEVICE (devs->next->data));
   g_list_free_full (devs, (GDestroyNotify) gst_object_unref);
 
-
   ck_assert (gst_device_monitor_start (mon));
 
   devs = gst_device_monitor_get_devices (mon);
-  ck_assert_int_eq (g_list_length (devs), 1);
+  ck_assert_int_eq (g_list_length (devs), 2);
   ck_assert (GST_IS_DEVICE (devs->data));
   g_list_free_full (devs, (GDestroyNotify) gst_object_unref);
 
@@ -486,10 +494,13 @@ GST_START_TEST (test_device_monitor)
 
   msg = gst_bus_timed_pop (bus, GST_CLOCK_TIME_NONE);
   ck_assert_ptr_ne (msg, NULL);
-  ck_assert_int_eq (GST_MESSAGE_TYPE (msg), GST_MESSAGE_DEVICE_MONITOR_STARTED);
+  ck_assert_int_eq (GST_MESSAGE_TYPE (msg), GST_MESSAGE_DEVICE_ADDED);
+  gst_message_unref (msg);
 
-  devs = gst_device_monitor_get_devices (mon);
-  ck_assert_ptr_eq (devs, NULL);
+  msg = gst_bus_timed_pop (bus, GST_CLOCK_TIME_NONE);
+  ck_assert_ptr_ne (msg, NULL);
+  ck_assert_int_eq (GST_MESSAGE_TYPE (msg), GST_MESSAGE_DEVICE_MONITOR_STARTED);
+  gst_message_unref (msg);
 
   mydev = test_device_new ();
   gst_device_provider_device_add (dp2, mydev);
@@ -509,7 +520,8 @@ GST_START_TEST (test_device_monitor)
 
   gst_device_provider_device_remove (dp2, mydev);
   devs = gst_device_monitor_get_devices (mon);
-  ck_assert_ptr_eq (devs, NULL);
+  ck_assert_ptr_eq (g_list_find (devs, mydev), NULL);
+  g_list_free_full (devs, (GDestroyNotify) gst_object_unref);
 
   msg = gst_bus_pop (bus);
   ck_assert_ptr_ne (msg, NULL);
