@@ -37,15 +37,14 @@
 #include "gstenumtypes.h"
 #include "gstevent.h"
 #include "gststreamcollection.h"
+#include "gstvecdeque.h"
 
 GST_DEBUG_CATEGORY_STATIC (stream_collection_debug);
 #define GST_CAT_DEFAULT stream_collection_debug
 
 struct _GstStreamCollectionPrivate
 {
-  /* Maybe switch this to a GArray if performance is
-   * ever an issue? */
-  GQueue streams;
+  GstVecDeque *streams;
 };
 
 /* stream signals and properties */
@@ -130,7 +129,7 @@ static void
 gst_stream_collection_init (GstStreamCollection * collection)
 {
   collection->priv = gst_stream_collection_get_instance_private (collection);
-  g_queue_init (&collection->priv->streams);
+  collection->priv->streams = gst_vec_deque_new (0);
 }
 
 static void
@@ -151,9 +150,11 @@ gst_stream_collection_dispose (GObject * object)
     collection->upstream_id = NULL;
   }
 
-  g_queue_foreach (&collection->priv->streams,
-      (GFunc) release_gst_stream, collection);
-  g_queue_clear (&collection->priv->streams);
+  GstStream *stream;
+  while ((stream = gst_vec_deque_pop_head (collection->priv->streams))) {
+    release_gst_stream (stream, collection);
+  }
+  g_clear_pointer (&collection->priv->streams, gst_vec_deque_free);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -296,7 +297,7 @@ gst_stream_collection_add_stream (GstStreamCollection * collection,
 
   GST_DEBUG_OBJECT (collection, "Adding stream %" GST_PTR_FORMAT, stream);
 
-  g_queue_push_tail (&collection->priv->streams, stream);
+  gst_vec_deque_push_tail (collection->priv->streams, stream);
   g_signal_connect (stream, "notify", (GCallback) proxy_stream_notify_cb,
       collection);
 
@@ -318,7 +319,7 @@ gst_stream_collection_get_size (GstStreamCollection * collection)
 {
   g_return_val_if_fail (GST_IS_STREAM_COLLECTION (collection), 0);
 
-  return g_queue_get_length (&collection->priv->streams);
+  return gst_vec_deque_get_length (collection->priv->streams);
 }
 
 /**
@@ -339,5 +340,5 @@ gst_stream_collection_get_stream (GstStreamCollection * collection, guint index)
 {
   g_return_val_if_fail (GST_IS_STREAM_COLLECTION (collection), NULL);
 
-  return g_queue_peek_nth (&collection->priv->streams, index);
+  return gst_vec_deque_peek_nth (collection->priv->streams, index);
 }
