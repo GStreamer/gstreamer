@@ -26465,6 +26465,28 @@ properties has changed and @device represent the new modified version of @change
           </parameter>
         </parameters>
       </constructor>
+      <constructor name="new_device_monitor_started" c:identifier="gst_message_new_device_monitor_started" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">Creates a new device-monitor-started message. The device-monitor-started
+message is produced by a #GstDeviceMonitor once it has started probing
+devices. It does not indicate whether any #GstDeviceProvider instances
+support monitoring at all, only whether at least one was able to start
+probing.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmessage.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">a newly allocated #GstMessage</doc>
+          <type name="Message" c:type="GstMessage*"/>
+        </return-value>
+        <parameters>
+          <parameter name="src" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">The #GstObject that created the message</doc>
+            <type name="Object" c:type="GstObject*"/>
+          </parameter>
+          <parameter name="success" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">Whether the monitor was started successfully</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </constructor>
       <constructor name="new_device_removed" c:identifier="gst_message_new_device_removed" version="1.4">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">Creates a new device-removed message. The device-removed message is produced
 by #GstDeviceProvider or a #GstDeviceMonitor. They announce the
@@ -27732,6 +27754,26 @@ changed and @device represents the new modified version of @changed_device.</doc
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">A location where to store a
  pointer to the old version of the #GstDevice, or %NULL</doc>
             <type name="Device" c:type="GstDevice**"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="parse_device_monitor_started" c:identifier="gst_message_parse_device_monitor_started" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">Parses a device-monitor-started message. The device-monitor-started message
+is produced by a #GstDeviceMonitor once at least one #GstDeviceProvider
+successfully starts probing.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmessage.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="message" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">a #GstMessage of type %GST_MESSAGE_DEVICE_MONITOR_STARTED</doc>
+            <type name="Message" c:type="GstMessage*"/>
+          </instance-parameter>
+          <parameter name="success" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">Result location for whether the #GstDeviceMonitor was
+ successfully started</doc>
+            <type name="gboolean" c:type="gboolean*"/>
           </parameter>
         </parameters>
       </method>
@@ -29139,6 +29181,9 @@ was updated.</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.h">Message sent by elements to request the
     running time from the pipeline when an instant rate change should
     be applied (which may be in the past when the answer arrives). (Since: 1.18)</doc>
+      </member>
+      <member name="device_monitor_started" value="2147483657" c:identifier="GST_MESSAGE_DEVICE_MONITOR_STARTED" version="1.28" glib:nick="device-monitor-started" glib:name="GST_MESSAGE_DEVICE_MONITOR_STARTED">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.h">Message indicating the #GstDeviceMonitor has completed async startup.</doc>
       </member>
       <member name="any" value="4294967295" c:identifier="GST_MESSAGE_ANY" glib:nick="any" glib:name="GST_MESSAGE_ANY">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.h">mask for all of the above messages.</doc>

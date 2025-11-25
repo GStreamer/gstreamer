@@ -126,6 +126,8 @@ typedef struct _GstMessage GstMessage;
  * @GST_MESSAGE_INSTANT_RATE_REQUEST: Message sent by elements to request the
  *     running time from the pipeline when an instant rate change should
  *     be applied (which may be in the past when the answer arrives). (Since: 1.18)
+ * @GST_MESSAGE_DEVICE_MONITOR_STARTED: Message indicating the
+ *     #GstDeviceMonitor has completed async startup (Since: 1.28)
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  *
  * The different message types that are available.
@@ -180,6 +182,14 @@ typedef enum
   GST_MESSAGE_REDIRECT          = GST_MESSAGE_EXTENDED + 6,
   GST_MESSAGE_DEVICE_CHANGED    = GST_MESSAGE_EXTENDED + 7,
   GST_MESSAGE_INSTANT_RATE_REQUEST = GST_MESSAGE_EXTENDED + 8,
+  /**
+   * GST_MESSAGE_DEVICE_MONITOR_STARTED:
+   *
+   * Message indicating the #GstDeviceMonitor has completed async startup.
+   *
+   * Since: 1.28
+   */
+  GST_MESSAGE_DEVICE_MONITOR_STARTED = GST_MESSAGE_EXTENDED + 9,
   GST_MESSAGE_ANY               = (gint) (0xffffffff)
 } GstMessageType;
 
@@ -799,6 +809,14 @@ GstMessage *    gst_message_new_device_changed    (GstObject * src, GstDevice * 
 
 GST_API
 void            gst_message_parse_device_changed  (GstMessage * message, GstDevice ** device, GstDevice ** changed_device);
+
+/* DEVICE_MONITOR_STARTED */
+
+GST_API
+GstMessage *    gst_message_new_device_monitor_started    (GstObject * src, gboolean success);
+
+GST_API
+void            gst_message_parse_device_monitor_started  (GstMessage * message, gboolean *success);
 
 
 /* PROPERTY_NOTIFY */
