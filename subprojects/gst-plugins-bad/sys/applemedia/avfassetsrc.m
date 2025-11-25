@@ -1050,14 +1050,19 @@ gst_avf_asset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
     return NULL;
   }
 
+  ts = CMSampleBufferGetPresentationTimeStamp (cmbuf);
+  if (!CMTIME_IS_VALID(ts)) {
+    *error = g_error_new (GST_AVF_ASSET_SRC_ERROR, GST_AVF_ASSET_ERROR_READ,
+        "Invalid timestamp");
+    return NULL;
+  }
+  dur = CMSampleBufferGetDuration (cmbuf);
   buf = gst_core_media_buffer_new (cmbuf, FALSE, NULL);
   CFRelease (cmbuf);
   if (buf == NULL)
     return NULL;
-  /* cmbuf is now retained by buf (in meta) */
-  dur = CMSampleBufferGetDuration (cmbuf);
-  ts = CMSampleBufferGetPresentationTimeStamp (cmbuf);
-  if (dur.value != 0) {
+
+  if (CMTIME_IS_VALID(dur) && dur.value != 0) {
     GST_BUFFER_DURATION (buf) = CMTIME_TO_GST_TIME (dur);
   }
   GST_BUFFER_TIMESTAMP (buf) = CMTIME_TO_GST_TIME (ts);
