@@ -305,30 +305,18 @@ gst_va_jpeg_enc_reconfig (GstVaBaseEnc * base)
   GstVaBaseEncClass *klass = GST_VA_BASE_ENC_GET_CLASS (base);
   GstVideoEncoder *venc = GST_VIDEO_ENCODER (base);
   GstVaJpegEnc *self = GST_VA_JPEG_ENC (base);
-  GstCaps *out_caps, *reconf_caps = NULL;
+  GstCaps *out_caps;
   GstVideoCodecState *output_state = NULL;
-  gboolean do_renegotiation = TRUE, do_reopen, need_negotiation;
+  gboolean do_renegotiation = TRUE;
   gint width, height;
-  GstVideoFormat format, reconf_format = GST_VIDEO_FORMAT_UNKNOWN;
-  guint rt_format = 0, codedbuf_size, latency_num,
-      max_surfaces = 0, max_cached_frames;
+  GstVideoFormat format;
+  guint rt_format = 0, latency_num, max_cached_frames;
   const char *colorspace, *sampling;
 
   width = GST_VIDEO_INFO_WIDTH (&base->in_info);
   height = GST_VIDEO_INFO_HEIGHT (&base->in_info);
   format = GST_VIDEO_INFO_FORMAT (&base->in_info);
-  codedbuf_size = base->codedbuf_size;
   latency_num = base->preferred_output_delay;
-
-  need_negotiation =
-      !gst_va_encoder_get_reconstruct_pool_config (base->encoder, &reconf_caps,
-      &max_surfaces);
-  if (!need_negotiation && reconf_caps) {
-    GstVideoInfo vi;
-    if (!gst_video_info_from_caps (&vi, reconf_caps))
-      return FALSE;
-    reconf_format = GST_VIDEO_INFO_FORMAT (&vi);
-  }
 
   rt_format = gst_va_chroma_from_video_format (format);
   if (!rt_format) {
@@ -338,15 +326,6 @@ gst_va_jpeg_enc_reconfig (GstVaBaseEnc * base)
 
   if (!_ensure_profile (self))
     return FALSE;
-
-  /* first check */
-  do_reopen = !(base->profile == VAProfileJPEGBaseline
-      && base->rt_format == rt_format
-      && format == reconf_format && width == base->width
-      && height == base->height);
-
-  if (do_reopen && gst_va_encoder_is_open (base->encoder))
-    gst_va_encoder_close (base->encoder);
 
   gst_va_base_enc_reset_state (base);
 
@@ -372,7 +351,6 @@ gst_va_jpeg_enc_reconfig (GstVaBaseEnc * base)
 
   /* Let the downstream know the new latency. */
   if (latency_num != base->preferred_output_delay) {
-    need_negotiation = TRUE;
     latency_num = base->preferred_output_delay;
   }
 
@@ -402,20 +380,13 @@ gst_va_jpeg_enc_reconfig (GstVaBaseEnc * base)
   base->min_buffers = max_cached_frames;
   max_cached_frames += 3 /* scratch frames */ ;
 
-  /* second check after calculations */
-  do_reopen |= !(max_cached_frames == max_surfaces &&
-      codedbuf_size == base->codedbuf_size);
-  if (do_reopen && gst_va_encoder_is_open (base->encoder))
-    gst_va_encoder_close (base->encoder);
-
   /* Just use driver's capability attribute, we do not change them. */
   if (!_jpeg_get_capability_attribute (self)) {
     GST_ERROR_OBJECT (self, "Failed to satisfy the jpeg capability.");
     return FALSE;
   }
 
-  if (!gst_va_encoder_is_open (base->encoder)
-      && !gst_va_encoder_open (base->encoder, base->profile, format,
+  if (!gst_va_encoder_open (base->encoder, base->profile, format,
           base->rt_format, base->width, base->height, base->codedbuf_size,
           1, VA_RC_NONE, self->packed_headers)) {
     GST_ERROR_OBJECT (self, "Failed to open the VA encoder.");
@@ -485,17 +456,15 @@ gst_va_jpeg_enc_reconfig (GstVaBaseEnc * base)
   if (sampling)
     gst_caps_set_simple (out_caps, "sampling", G_TYPE_STRING, sampling, NULL);
 
-  if (!need_negotiation) {
-    output_state = gst_video_encoder_get_output_state (venc);
-    do_renegotiation = TRUE;
-    if (output_state) {
-      do_renegotiation = !gst_caps_is_subset (output_state->caps, out_caps);
-      gst_video_codec_state_unref (output_state);
-    }
-    if (!do_renegotiation) {
-      gst_caps_unref (out_caps);
-      return TRUE;
-    }
+  output_state = gst_video_encoder_get_output_state (venc);
+  do_renegotiation = TRUE;
+  if (output_state) {
+    do_renegotiation = !gst_caps_is_subset (output_state->caps, out_caps);
+    gst_video_codec_state_unref (output_state);
+  }
+  if (!do_renegotiation) {
+    gst_caps_unref (out_caps);
+    return TRUE;
   }
 
   GST_DEBUG_OBJECT (self, "output caps is %" GST_PTR_FORMAT, out_caps);
