@@ -49,6 +49,7 @@
 #include <gst/base/base.h>
 #include <gst/allocators/allocators.h>
 
+#include <stdint.h>
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 #include <gio/gunixsocketaddress.h>
@@ -332,7 +333,9 @@ incoming_command_cb (GSocket * socket, GIOCondition cond, gpointer user_data)
       }
       /* id is actually the GstBuffer pointer casted to guint64.
        * We can now drop its reference kept for this client. */
-      if (!g_hash_table_remove (client->buffers, (gpointer) release_buffer->id)) {
+      if (release_buffer->id > UINTPTR_MAX
+          || !g_hash_table_remove (client->buffers,
+              (gpointer) (guintptr) release_buffer->id)) {
         GST_ERROR_OBJECT (self,
             "Received wrong id %" G_GUINT64_FORMAT
             " in release-buffer command from client %p", release_buffer->id,
@@ -597,7 +600,7 @@ gst_unix_fd_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   NewBufferPayload *new_buffer = (NewBufferPayload *) self->payload->data;
   /* Cast buffer pointer to guint64 identifier. Client will send us back that
    * id so we know which buffer to unref. */
-  new_buffer->id = (guint64) buffer;
+  new_buffer->id = (guint64) (guintptr) buffer;
   new_buffer->pts =
       to_monotonic (GST_BUFFER_PTS (buffer),
       &GST_BASE_SINK_CAST (self)->segment, base_time, latency, clock_diff);
@@ -670,7 +673,7 @@ gst_unix_fd_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
     new_buffer->type = MEMORY_TYPE_DMABUF;
 
   if (dst_buffer != NULL) {
-    new_buffer->id = (guint64) dst_buffer;
+    new_buffer->id = (guint64) (guintptr) dst_buffer;
     if (ref_original_buffer)
       gst_buffer_add_parent_buffer_meta (dst_buffer, buffer);
     buffer = dst_buffer;
