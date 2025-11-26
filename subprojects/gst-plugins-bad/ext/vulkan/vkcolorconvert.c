@@ -706,7 +706,7 @@ yuv_to_rgb_create_uniform_memory (GstVulkanColorConvert * conv,
   if (sinfo->user_data) {
     return gst_memory_ref (sinfo->user_data);
   } else {
-    struct YUVUpdateData data;
+    struct YUVUpdateData data = { 0 };
     ConvertInfo *conv_info;
     GstMapInfo map_info;
     GstMemory *uniforms;
