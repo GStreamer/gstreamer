@@ -6110,7 +6110,7 @@ evaluates to @def_return.</doc>
       </parameters>
     </function-macro>
     <function-macro name="CAT_DEBUG" c:identifier="GST_CAT_DEBUG" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an debugging message in the given category.
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a debugging message in the given category.
 
 There is no need to finish the end of the message string with a newline
 character, a newline character will be added automatically.</doc>
@@ -6125,7 +6125,7 @@ character, a newline character will be added automatically.</doc>
       </parameters>
     </function-macro>
     <function-macro name="CAT_DEBUG_OBJECT" c:identifier="GST_CAT_DEBUG_OBJECT" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an debugging message belonging to the given object in the given category.
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a debugging message belonging to the given object in the given category.
 
 There is no need to finish the end of the message string with a newline
 character, a newline character will be added automatically.</doc>
@@ -6243,9 +6243,9 @@ character, a newline character will be added automatically.</doc>
       </parameters>
     </function-macro>
     <function-macro name="CAT_LEVEL_LOG" c:identifier="GST_CAT_LEVEL_LOG" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Outputs a debugging message. This is the most general macro for outputting
-debugging messages. You will probably want to use one of the ones described
-below.
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Outputs a debugging message with a specific category and level. This is the
+most general macro for this purpose. You will probably want to use one of
+the simpler ones described below.
 
 There is no need to finish the end of the debug message with a newline
 character, a newline character will be added automatically.</doc>
@@ -6266,9 +6266,9 @@ character, a newline character will be added automatically.</doc>
       </parameters>
     </function-macro>
     <function-macro name="CAT_LEVEL_LOG_ID" c:identifier="GST_CAT_LEVEL_LOG_ID" version="1.22" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Outputs a debugging message. This is the most general macro for outputting
-debugging messages. You will probably want to use one of the ones described
-below.
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Outputs a debugging message with an identifier. This is the most general
+macro for this purpose. You will probably want to use one of the simpler
+ones described below.
 
 There is no need to finish the end of the debug message with a newline
 character, a newline character will be added automatically.</doc>
@@ -6290,7 +6290,7 @@ character, a newline character will be added automatically.</doc>
       </parameters>
     </function-macro>
     <function-macro name="CAT_LOG" c:identifier="GST_CAT_LOG" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an logging message in the given category.
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a logging message in the given category.
 
 There is no need to finish the end of the message string with a newline
 character, a newline character will be added automatically.</doc>
@@ -6305,7 +6305,8 @@ character, a newline character will be added automatically.</doc>
       </parameters>
     </function-macro>
     <function-macro name="CAT_LOG_OBJECT" c:identifier="GST_CAT_LOG_OBJECT" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an logging message belonging to the given object in the given category.
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a logging message belonging to the given object in the given
+category.
 
 There is no need to finish the end of the message string with a newline
 character, a newline character will be added automatically.</doc>
@@ -6686,9 +6687,12 @@ The difference is calculated as @e - @s.</doc>
       </parameters>
     </function-macro>
     <function-macro name="CTX_DEBUG" c:identifier="GST_CTX_DEBUG" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a debug message in the specified context.
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a debug message in the specified context.
 If this exact message was already logged from the same location with this
 context, it will not be logged again unless the context has been reset.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.
 
 Example:
 ``` c
@@ -6712,7 +6716,10 @@ for (i = 0; i &lt; 1000; i++) {
       </parameters>
     </function-macro>
     <function-macro name="CTX_DEBUG_ID" c:identifier="GST_CTX_DEBUG_ID" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a debug message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a debug message for the given identifier in the specified context.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
@@ -6722,12 +6729,16 @@ for (i = 0; i &lt; 1000; i++) {
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_DEBUG_OBJECT" c:identifier="GST_CTX_DEBUG_OBJECT" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs an info message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a debugging message belonging to the given object in the specified
+context.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
@@ -6737,24 +6748,30 @@ for (i = 0; i &lt; 1000; i++) {
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_ERROR" c:identifier="GST_CTX_ERROR" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs an error message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an error message in the specified context.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_ERROR_ID" c:identifier="GST_CTX_ERROR_ID" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs an error message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an error message for the given identifier in the specified context.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
@@ -6764,12 +6781,16 @@ for (i = 0; i &lt; 1000; i++) {
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_ERROR_OBJECT" c:identifier="GST_CTX_ERROR_OBJECT" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs an error message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an error message belonging to the given object in the specified
+context.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
@@ -6779,24 +6800,30 @@ for (i = 0; i &lt; 1000; i++) {
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_FIXME" c:identifier="GST_CTX_FIXME" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a fixme message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a fixme message in the specified context.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_FIXME_ID" c:identifier="GST_CTX_FIXME_ID" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a fixme message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a fixme message for the given identifier in the specified context.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
@@ -6806,12 +6833,16 @@ for (i = 0; i &lt; 1000; i++) {
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_FIXME_OBJECT" c:identifier="GST_CTX_FIXME_OBJECT" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a fixme message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a fixme message belonging to the given object in the specified
+context.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
@@ -6821,24 +6852,30 @@ for (i = 0; i &lt; 1000; i++) {
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_INFO" c:identifier="GST_CTX_INFO" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs an info message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an info message in the specified context.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_INFO_ID" c:identifier="GST_CTX_INFO_ID" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs an info message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an info message for the given identifier in the specified context.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
@@ -6848,12 +6885,16 @@ for (i = 0; i &lt; 1000; i++) {
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_INFO_OBJECT" c:identifier="GST_CTX_INFO_OBJECT" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs an info message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an informational message belonging to the given object in the
+specified context.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
@@ -6863,12 +6904,17 @@ for (i = 0; i &lt; 1000; i++) {
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_LEVEL_LOG" c:identifier="GST_CTX_LEVEL_LOG" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a memory dump message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Outputs a debugging message in the specified context with the specified
+level. This is the most general macro for this purpose. You will probably
+want to use one of the simpler ones described below.
+
+There is no need to finish the end of the debug message with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
@@ -6881,12 +6927,14 @@ for (i = 0; i &lt; 1000; i++) {
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object or %NULL</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_LEVEL_LOG_ID" c:identifier="GST_CTX_LEVEL_LOG_ID" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a memory dump message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Outputs a debugging message with an identifier in the specified context
+with the specified level. This is the most general macro for this purpose.
+You will probably want to use one of the simpler ones described below.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
@@ -6899,24 +6947,30 @@ for (i = 0; i &lt; 1000; i++) {
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object or %NULL</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_LOG" c:identifier="GST_CTX_LOG" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a log message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a log message in the specified context.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_LOG_ID" c:identifier="GST_CTX_LOG_ID" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a log message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a log message for the given identifier in the specified context.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
@@ -6926,12 +6980,16 @@ for (i = 0; i &lt; 1000; i++) {
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_LOG_OBJECT" c:identifier="GST_CTX_LOG_OBJECT" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a log message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a logging message belonging to the given object in the specified
+context.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
@@ -6941,24 +6999,30 @@ for (i = 0; i &lt; 1000; i++) {
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_TRACE" c:identifier="GST_CTX_TRACE" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a trace message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a trace message in the specified context.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_TRACE_ID" c:identifier="GST_CTX_TRACE_ID" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a trace message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a trace message for the given identifier in the specified context.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
@@ -6968,12 +7032,16 @@ for (i = 0; i &lt; 1000; i++) {
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_TRACE_OBJECT" c:identifier="GST_CTX_TRACE_OBJECT" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a trace message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a tracing message belonging to the given object in the specified
+context.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
@@ -6983,24 +7051,30 @@ for (i = 0; i &lt; 1000; i++) {
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_WARNING" c:identifier="GST_CTX_WARNING" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a warning message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a warning message in the specified context.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_WARNING_ID" c:identifier="GST_CTX_WARNING_ID" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a warning message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a warning message for the given identifier in the specified context.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
@@ -7010,12 +7084,15 @@ for (i = 0; i &lt; 1000; i++) {
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
     <function-macro name="CTX_WARNING_OBJECT" c:identifier="GST_CTX_WARNING_OBJECT" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a warning message in the specified context.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a warning message belonging to the given object in the specified context.
+
+There is no need to finish the end of the message string with a newline
+character, a newline character will be added automatically.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
       <parameters>
         <parameter name="ctx">
@@ -7025,7 +7102,7 @@ for (i = 0; i &lt; 1000; i++) {
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
         </parameter>
         <parameter name="...">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
         </parameter>
       </parameters>
     </function-macro>
@@ -15705,7 +15782,8 @@ character, a newline character will be added automatically.</doc>
       </parameters>
     </function-macro>
     <function-macro name="ERROR_OBJECT" c:identifier="GST_ERROR_OBJECT" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an error message belonging to the given object in the default category.
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output an error message belonging to the given object in the default
+category.
 
 There is no need to finish the end of the message string with a newline
 character, a newline character will be added automatically.</doc>
@@ -48266,7 +48344,7 @@ character, a newline character will be added automatically.</doc>
       </parameters>
     </function-macro>
     <function-macro name="TRACE_ID" c:identifier="GST_TRACE_ID" version="1.22" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a tracing message for the given identifier  in the default category.
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a tracing message for the given identifier in the default category.
 
 There is no need to finish the end of the message string with a newline
 character, a newline character will be added automatically.</doc>

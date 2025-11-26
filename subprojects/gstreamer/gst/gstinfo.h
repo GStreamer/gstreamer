@@ -730,9 +730,9 @@ GST_API GstDebugLevel            _gst_debug_min;
  * @object: (allow-none): the #GObject the message belongs to or %NULL if none
  * @...: A printf-style message to output
  *
- * Outputs a debugging message. This is the most general macro for outputting
- * debugging messages. You will probably want to use one of the ones described
- * below.
+ * Outputs a debugging message with a specific category and level. This is the
+ * most general macro for this purpose. You will probably want to use one of
+ * the simpler ones described below.
  *
  * There is no need to finish the end of the debug message with a newline
  * character, a newline character will be added automatically.
@@ -752,9 +752,9 @@ GST_API GstDebugLevel            _gst_debug_min;
  *     relates to, or %NULL if none
  * @...: A printf-style message to output
  *
- * Outputs a debugging message. This is the most general macro for outputting
- * debugging messages. You will probably want to use one of the ones described
- * below.
+ * Outputs a debugging message with an identifier. This is the most general
+ * macro for this purpose. You will probably want to use one of the simpler
+ * ones described below.
  *
  * There is no need to finish the end of the debug message with a newline
  * character, a newline character will be added automatically.
@@ -851,7 +851,7 @@ GST_API GstDebugLevel            _gst_debug_min;
  * @obj: the #GObject the message belongs to
  * @...: printf-style message to output
  *
- * Output an debugging message belonging to the given object in the given category.
+ * Output a debugging message belonging to the given object in the given category.
  *
  * There is no need to finish the end of the message string with a newline
  * character, a newline character will be added automatically.
@@ -862,7 +862,8 @@ GST_API GstDebugLevel            _gst_debug_min;
  * @obj: the #GObject the message belongs to
  * @...: printf-style message to output
  *
- * Output an logging message belonging to the given object in the given category.
+ * Output a logging message belonging to the given object in the given
+ * category.
  *
  * There is no need to finish the end of the message string with a newline
  * character, a newline character will be added automatically.
@@ -957,7 +958,7 @@ GST_API GstDebugLevel            _gst_debug_min;
  * @cat: category to use
  * @...: printf-style message to output
  *
- * Output an debugging message in the given category.
+ * Output a debugging message in the given category.
  *
  * There is no need to finish the end of the message string with a newline
  * character, a newline character will be added automatically.
@@ -967,7 +968,7 @@ GST_API GstDebugLevel            _gst_debug_min;
  * @cat: category to use
  * @...: printf-style message to output
  *
- * Output an logging message in the given category.
+ * Output a logging message in the given category.
  *
  * There is no need to finish the end of the message string with a newline
  * character, a newline character will be added automatically.
@@ -1011,7 +1012,8 @@ GST_API GstDebugLevel            _gst_debug_min;
  * @obj: the #GObject the message belongs to
  * @...: printf-style message to output
  *
- * Output an error message belonging to the given object in the default category.
+ * Output an error message belonging to the given object in the default
+ * category.
  *
  * There is no need to finish the end of the message string with a newline
  * character, a newline character will be added automatically.
@@ -1169,7 +1171,7 @@ GST_API GstDebugLevel            _gst_debug_min;
  * @id: An identifier of the message provider
  * @...: printf-style message to output
  *
- * Output a tracing message for the given identifier  in the default category.
+ * Output a tracing message for the given identifier in the default category.
  *
  * There is no need to finish the end of the message string with a newline
  * character, a newline character will be added automatically.
@@ -1933,9 +1935,14 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
  * @ctx: #GstLogContext to use
  * @level: level of the message
  * @object: (nullable): an object or %NULL
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  *
- * Logs a memory dump message in the specified context.
+ * Outputs a debugging message in the specified context with the specified
+ * level. This is the most general macro for this purpose. You will probably
+ * want to use one of the simpler ones described below.
+ *
+ * There is no need to finish the end of the debug message with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
@@ -1945,9 +1952,11 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
  * @ctx: #GstLogContext to use
  * @level: level of the message
  * @id: (nullable): an object or %NULL
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  *
- * Logs a memory dump message in the specified context.
+ * Outputs a debugging message with an identifier in the specified context
+ * with the specified level. This is the most general macro for this purpose.
+ * You will probably want to use one of the simpler ones described below.
  *
  * Since: 1.28
  */
@@ -1956,9 +1965,13 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
  * GST_CTX_ERROR_OBJECT:
  * @ctx: #GstLogContext to use
  * @object: (nullable): a #GObject or %NULL
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  *
- * Logs an error message in the specified context.
+ * Output an error message belonging to the given object in the specified
+ * context.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
@@ -1967,9 +1980,12 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
  * GST_CTX_WARNING_OBJECT:
  * @ctx: #GstLogContext to use
  * @object: (nullable): a #GObject or %NULL
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  *
- * Logs a warning message in the specified context.
+ * Output a warning message belonging to the given object in the specified context.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
@@ -1978,9 +1994,13 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
  * GST_CTX_DEBUG_OBJECT:
  * @ctx: #GstLogContext to use
  * @object: (nullable): a #GObject or %NULL
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  *
- * Logs an info message in the specified context.
+ * Output a debugging message belonging to the given object in the specified
+ * context.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
@@ -1989,9 +2009,13 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
  * GST_CTX_INFO_OBJECT:
  * @ctx: #GstLogContext to use
  * @object: (nullable): a #GObject or %NULL
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  *
- * Logs an info message in the specified context.
+ * Output an informational message belonging to the given object in the
+ * specified context.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
@@ -2000,9 +2024,13 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
  * GST_CTX_LOG_OBJECT:
  * @ctx: #GstLogContext to use
  * @object: (nullable): a #GObject or %NULL
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  *
- * Logs a log message in the specified context.
+ * Output a logging message belonging to the given object in the specified
+ * context.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
@@ -2011,9 +2039,13 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
  * GST_CTX_FIXME_OBJECT:
  * @ctx: #GstLogContext to use
  * @object: (nullable): a #GObject or %NULL
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  *
- * Logs a fixme message in the specified context.
+ * Output a fixme message belonging to the given object in the specified
+ * context.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
@@ -2022,9 +2054,13 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
  * GST_CTX_TRACE_OBJECT:
  * @ctx: #GstLogContext to use
  * @object: (nullable): a #GObject or %NULL
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  *
- * Logs a trace message in the specified context.
+ * Output a tracing message belonging to the given object in the specified
+ * context.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
@@ -2034,9 +2070,12 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
 /**
  * GST_CTX_ERROR:
  * @ctx: #GstLogContext to use
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  *
- * Logs an error message in the specified context.
+ * Output an error message in the specified context.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
@@ -2044,9 +2083,12 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
 /**
  * GST_CTX_WARNING:
  * @ctx: #GstLogContext to use
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  *
- * Logs a warning message in the specified context.
+ * Output a warning message in the specified context.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
@@ -2054,9 +2096,12 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
 /**
  * GST_CTX_INFO:
  * @ctx: #GstLogContext to use
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  *
- * Logs an info message in the specified context.
+ * Output an info message in the specified context.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
@@ -2066,9 +2111,12 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
  * @ctx: #GstLogContext to use for determining if message should be logged
  * @...: format string and optional arguments
  *
- * Logs a debug message in the specified context.
+ * Output a debug message in the specified context.
  * If this exact message was already logged from the same location with this
  * context, it will not be logged again unless the context has been reset.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Example:
  * ``` c
@@ -2088,9 +2136,12 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
 /**
  * GST_CTX_LOG:
  * @ctx: #GstLogContext to use
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  *
- * Logs a log message in the specified context.
+ * Output a log message in the specified context.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
@@ -2098,9 +2149,12 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
 /**
  * GST_CTX_FIXME:
  * @ctx: #GstLogContext to use
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  *
- * Logs a fixme message in the specified context.
+ * Output a fixme message in the specified context.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
@@ -2108,9 +2162,12 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
 /**
  * GST_CTX_TRACE:
  * @ctx: #GstLogContext to use
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  *
- * Logs a trace message in the specified context.
+ * Output a trace message in the specified context.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
@@ -2120,10 +2177,13 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
 /**
  * GST_CTX_ERROR_ID:
  * @ctx: #GstLogContext to use
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  * @id: (nullable): an object ID or %NULL
  *
- * Logs an error message in the specified context.
+ * Output an error message for the given identifier in the specified context.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
@@ -2131,10 +2191,13 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
 /**
  * GST_CTX_WARNING_ID:
  * @ctx: #GstLogContext to use
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  * @id: (nullable): an object ID or %NULL
  *
- * Logs a warning message in the specified context.
+ * Output a warning message for the given identifier in the specified context.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
@@ -2142,10 +2205,13 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
 /**
  * GST_CTX_INFO_ID:
  * @ctx: #GstLogContext to use
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  * @id: (nullable): an object ID or %NULL
  *
- * Logs an info message in the specified context.
+ * Output an info message for the given identifier in the specified context.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
@@ -2153,10 +2219,13 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
 /**
  * GST_CTX_DEBUG_ID:
  * @ctx: #GstLogContext to use
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  * @id: (nullable): an object ID or %NULL
  *
- * Logs a debug message in the specified context.
+ * Output a debug message for the given identifier in the specified context.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
@@ -2164,10 +2233,13 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
 /**
  * GST_CTX_LOG_ID:
  * @ctx: #GstLogContext to use
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  * @id: (nullable): an object ID or %NULL
  *
- * Logs a log message in the specified context.
+ * Output a log message for the given identifier in the specified context.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
@@ -2175,10 +2247,13 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
 /**
  * GST_CTX_FIXME_ID:
  * @ctx: #GstLogContext to use
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  * @id: (nullable): an object ID or %NULL
  *
- * Logs a fixme message in the specified context.
+ * Output a fixme message for the given identifier in the specified context.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
@@ -2186,10 +2261,13 @@ GstLogContext*        gst_log_context_builder_build         (GstLogContextBuilde
 /**
  * GST_CTX_TRACE_ID:
  * @ctx: #GstLogContext to use
- * @...: format string and optional arguments, followed by optional context
+ * @...: format string and optional arguments
  * @id: (nullable): an object ID or %NULL
  *
- * Logs a trace message in the specified context.
+ * Output a trace message for the given identifier in the specified context.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  *
  * Since: 1.28
  */
