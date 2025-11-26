@@ -44,7 +44,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_avf_asset_src_debug);
 #define GST_CAT_DEFAULT gst_avf_asset_src_debug
 
 #define CMTIME_TO_GST_TIME(x) \
-    (x.value == 0 ? 0 : (guint64)(x.value * GST_SECOND / x.timescale));
+    (CMTIME_IS_INVALID(x) ? GST_CLOCK_TIME_NONE : (guint64)(x.value * GST_SECOND / x.timescale));
 #define GST_AVF_ASSET_SRC_LOCK(x) (g_mutex_lock (&x->lock));
 #define GST_AVF_ASSET_SRC_UNLOCK(x) (g_mutex_unlock (&x->lock));
 #define MEDIA_TYPE_TO_STR(x) \
@@ -1051,10 +1051,8 @@ gst_avf_asset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   }
 
   ts = CMSampleBufferGetPresentationTimeStamp (cmbuf);
-  if (!CMTIME_IS_VALID(ts)) {
-    *error = g_error_new (GST_AVF_ASSET_SRC_ERROR, GST_AVF_ASSET_ERROR_READ,
-        "Invalid timestamp");
-    return NULL;
+  if (!CMTIME_IS_VALID (ts)) {
+    GST_WARNING ("Buffer %p has invalid timestamp", cmbuf);
   }
   dur = CMSampleBufferGetDuration (cmbuf);
   buf = gst_core_media_buffer_new (cmbuf, FALSE, NULL);
@@ -1062,7 +1060,7 @@ gst_avf_asset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   if (buf == NULL)
     return NULL;
 
-  if (CMTIME_IS_VALID(dur) && dur.value != 0) {
+  if (CMTIME_IS_VALID (dur) && dur.value != 0) {
     GST_BUFFER_DURATION (buf) = CMTIME_TO_GST_TIME (dur);
   }
   GST_BUFFER_TIMESTAMP (buf) = CMTIME_TO_GST_TIME (ts);
@@ -1070,7 +1068,7 @@ gst_avf_asset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
       GST_TIME_FORMAT, MEDIA_TYPE_TO_STR (type),
       GST_TIME_ARGS(GST_BUFFER_TIMESTAMP (buf)),
       GST_TIME_ARGS(GST_BUFFER_DURATION (buf)));
-  if (GST_BUFFER_TIMESTAMP (buf) > position) {
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf) && GST_BUFFER_TIMESTAMP (buf) > position) {
     position = GST_BUFFER_TIMESTAMP (buf);
   }
   return buf;
