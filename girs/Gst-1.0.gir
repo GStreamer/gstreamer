@@ -14605,8 +14605,8 @@ This is for use by subclasses.</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstdeviceprovider.c">Gets a list of devices that this provider understands. This may actually
 probe the hardware if the provider is not currently started.
 
-If the provider has been started, this will returned the same #GstDevice
-objedcts that have been returned by the #GST_MESSAGE_DEVICE_ADDED messages.</doc>
+If the provider has been started, this will return the same #GstDevice
+objects that have been returned by the #GST_MESSAGE_DEVICE_ADDED messages.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstdeviceprovider.h"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstdeviceprovider.c">a #GList of
