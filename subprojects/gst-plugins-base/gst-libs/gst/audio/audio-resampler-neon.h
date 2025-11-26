@@ -18,6 +18,7 @@
  */
 
 #include <gst/gstcpuid.h>
+#include <stdint.h>
 
 static inline void
 inner_product_gint16_full_1_neon (gint16 * o, const gint16 * a,
