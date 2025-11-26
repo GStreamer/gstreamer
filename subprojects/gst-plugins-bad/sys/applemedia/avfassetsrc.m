@@ -1068,6 +1068,13 @@ gst_avf_asset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
       GST_TIME_FORMAT, MEDIA_TYPE_TO_STR (type),
       GST_TIME_ARGS(GST_BUFFER_TIMESTAMP (buf)),
       GST_TIME_ARGS(GST_BUFFER_DURATION (buf)));
+
+  /* FIXME: Buffers with invalid timestamp don't contribute to advancing the
+   * position. We have options: 1) try to use the previous buffer duration if
+   * available, 2) advance by one nominal frame duration (though this won't work
+   * with VFR content), or 3) advance by some epsilon value. Not sure yet what's
+   * best.
+   */
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buf) && GST_BUFFER_TIMESTAMP (buf) > position) {
     position = GST_BUFFER_TIMESTAMP (buf);
   }
