@@ -368,7 +368,7 @@ update_uniform (GstVulkanViewConvert * conv, GstVulkanImageView ** in_views,
   GstVulkanVideoFilter *vfilter = GST_VULKAN_VIDEO_FILTER (conv);
   GstVideoMultiviewMode in_mode, out_mode;
   GstVideoMultiviewFlags in_flags, out_flags;
-  struct ViewUpdate data;
+  struct ViewUpdate data = { 0 };
   GstMapInfo map_info;
   guint l_index, r_index;
   gboolean mono_input = FALSE;
