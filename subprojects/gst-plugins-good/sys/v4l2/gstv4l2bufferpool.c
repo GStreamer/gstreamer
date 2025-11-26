@@ -89,6 +89,22 @@ enum
 
 static guint gst_v4l2_buffer_pool_signals[LAST_SIGNAL] = { 0 };
 
+static GstCaps *
+gst_v4l2_buffer_pool_get_ts_mono_caps (void)
+{
+  static GstStaticCaps static_caps =
+      GST_STATIC_CAPS ("timestamp/x-system-monotonic");
+  static GstCaps *caps = NULL;
+
+  static gsize initialized = 0;
+  if (g_once_init_enter (&initialized)) {
+    caps = gst_static_caps_get (&static_caps);
+    g_once_init_leave (&initialized, 1);
+  }
+
+  return caps;
+}
+
 static void gst_v4l2_buffer_pool_complete_release_buffer (GstBufferPool * bpool,
     GstBuffer * buffer, gboolean queued);
 
@@ -510,6 +526,9 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
     if (videometa)
       gst_video_meta_set_alignment (videometa, obj->align);
   }
+
+  gst_buffer_add_reference_timestamp_meta (newbuf,
+      gst_v4l2_buffer_pool_get_ts_mono_caps (), 0, GST_CLOCK_TIME_NONE);
 
   *buffer = newbuf;
 
@@ -1455,6 +1474,19 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer,
 
   if (group->buffer.flags & V4L2_BUF_FLAG_ERROR)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_CORRUPTED);
+
+  GstReferenceTimestampMeta *meta = (GstReferenceTimestampMeta *)
+      gst_buffer_get_meta (outbuf, GST_REFERENCE_TIMESTAMP_META_API_TYPE);
+  meta->reference = gst_caps_make_writable (meta->reference);
+  meta->timestamp = timestamp;
+
+  const gchar *meta_ts_type = obj->driver_ts_type;
+  if (group->buffer.flags & V4L2_BUF_FLAG_TIMESTAMP_MONOTONIC)
+    meta_ts_type = obj->mono_ts_type;
+
+  GstStructure *meta_struct = gst_caps_get_structure (meta->reference, 0);
+  if (!gst_structure_has_name (meta_struct, meta_ts_type))
+    gst_structure_set_name (meta_struct, meta_ts_type);
 
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
   GST_BUFFER_OFFSET (outbuf) = group->buffer.sequence;

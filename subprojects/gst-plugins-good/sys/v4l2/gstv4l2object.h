@@ -190,6 +190,10 @@ struct _GstV4l2Object {
   /* opened device specific capabilities */
   guint32 device_caps;
 
+  /* reference timestamp meta type */
+  const gchar *mono_ts_type;
+  gchar *driver_ts_type;
+
   /* lists... */
   GSList *formats;              /* list of available capture formats */
   GstCaps *probed_caps;
