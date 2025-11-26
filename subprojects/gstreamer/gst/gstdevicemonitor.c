@@ -111,7 +111,7 @@ struct _GstDeviceMonitorPrivate
   GPtrArray *providers;
   GPtrArray *filters;
 
-  GList *started_providers;
+  GSList *started_providers;
 
   guint last_id;
   GList *hidden;
@@ -493,7 +493,7 @@ gst_device_monitor_get_devices (GstDeviceMonitor * monitor)
 static gpointer
 monitor_thread_func (gpointer data)
 {
-  GList *started = NULL;
+  GSList *started = NULL;
   GQueue pending = G_QUEUE_INIT;
   GstDeviceMonitor *monitor = data;
   GstDeviceProvider *provider;
@@ -514,7 +514,7 @@ monitor_thread_func (gpointer data)
     GST_OBJECT_UNLOCK (monitor);
 
     if (gst_device_provider_start (provider)) {
-      started = g_list_prepend (started, provider);
+      started = g_slist_prepend (started, provider);
     } else {
       gst_clear_object (&provider);
     }
@@ -537,7 +537,11 @@ monitor_thread_func (gpointer data)
 
       g_queue_clear_full (&pending, gst_object_unref);
 
-      g_list_free (started);
+      /* Free the list we prepended above by detaching it from the rest of the
+       * list, which is monitor->priv->started_providers. This is safe because
+       * this is a singly-linked list. */
+      started->next = NULL;
+      g_slist_free (started);
       started = NULL;
 
       goto done;
@@ -644,7 +648,7 @@ gst_device_monitor_start (GstDeviceMonitor * monitor)
 void
 gst_device_monitor_stop (GstDeviceMonitor * monitor)
 {
-  GList *started = NULL;
+  GSList *started = NULL;
   GThread *thread = NULL;
 
   g_return_if_fail (GST_IS_DEVICE_MONITOR (monitor));
@@ -677,7 +681,7 @@ gst_device_monitor_stop (GstDeviceMonitor * monitor)
 
     gst_device_provider_stop (provider);
 
-    started = g_list_delete_link (started, started);
+    started = g_slist_delete_link (started, started);
     gst_object_unref (provider);
   }
 }
