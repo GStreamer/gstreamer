@@ -21,11 +21,13 @@
 #include "config.h"
 #endif
 
+#ifdef HAVE_CM_NOTIFY
 #define _WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <cfgmgr32.h>
 #include <initguid.h>
 #include <usbiodef.h>
+#endif
 
 #include "gstasiodeviceprovider.h"
 #include "gstasioutils.h"
@@ -139,10 +141,12 @@ struct _GstAsioDeviceProvider
 {
   GstDeviceProvider parent;
 
+#ifdef HAVE_CM_NOTIFY
   GThread *thread;
   GMainLoop *loop;
   GMainContext *context;
   guint device_update_id;
+#endif /* HAVE_CM_NOTIFY */
 };
 
 GST_DEBUG_CATEGORY_STATIC (gst_asio_dp_debug);
@@ -151,21 +155,25 @@ GST_DEBUG_CATEGORY_STATIC (gst_asio_dp_debug);
 G_DEFINE_TYPE (GstAsioDeviceProvider, gst_asio_device_provider,
     GST_TYPE_DEVICE_PROVIDER);
 
+#ifdef HAVE_CM_NOTIFY
 static void gst_asio_device_provider_finalize (GObject * obj);
 static gboolean gst_asio_device_provider_start (GstDeviceProvider * provider);
 static void gst_asio_device_provider_stop (GstDeviceProvider * provider);
+#endif /* HAVE_CM_NOTIFY */
 static GList *gst_asio_device_provider_probe (GstDeviceProvider * provider);
 
 static void
 gst_asio_device_provider_class_init (GstAsioDeviceProviderClass * klass)
 {
   GstDeviceProviderClass *provider_class = GST_DEVICE_PROVIDER_CLASS (klass);
+#ifdef HAVE_CM_NOTIFY
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->finalize = gst_asio_device_provider_finalize;
 
   provider_class->start = GST_DEBUG_FUNCPTR (gst_asio_device_provider_start);
   provider_class->stop = GST_DEBUG_FUNCPTR (gst_asio_device_provider_stop);
+#endif /* HAVE_CM_NOTIFY */
   provider_class->probe = GST_DEBUG_FUNCPTR (gst_asio_device_provider_probe);
 
   gst_device_provider_class_set_static_metadata (provider_class,
@@ -178,6 +186,17 @@ gst_asio_device_provider_class_init (GstAsioDeviceProviderClass * klass)
 }
 
 static void
+gst_asio_device_provider_init (GstAsioDeviceProvider * self)
+{
+#ifdef HAVE_CM_NOTIFY
+  self->context = g_main_context_new ();
+  self->loop = g_main_loop_new (self->context, FALSE);
+  self->device_update_id = 0;
+#endif
+}
+
+#ifdef HAVE_CM_NOTIFY
+static void
 gst_asio_device_provider_finalize (GObject * obj)
 {
   GstAsioDeviceProvider *self = GST_ASIO_DEVICE_PROVIDER (obj);
@@ -188,14 +207,6 @@ gst_asio_device_provider_finalize (GObject * obj)
   g_main_context_unref (self->context);
 
   G_OBJECT_CLASS (gst_asio_device_provider_parent_class)->finalize (obj);
-}
-
-static void
-gst_asio_device_provider_init (GstAsioDeviceProvider * self)
-{
-  self->context = g_main_context_new ();
-  self->loop = g_main_loop_new (self->context, FALSE);
-  self->device_update_id = 0;
 }
 
 static gboolean
@@ -358,6 +369,7 @@ gst_asio_device_provider_stop (GstDeviceProvider * provider)
     g_source_destroy (source);
   }
 }
+#endif /* HAVE_CM_NOTIFY */
 
 static void
 gst_asio_device_provider_probe_internal (GstAsioDeviceProvider * self,

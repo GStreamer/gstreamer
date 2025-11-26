@@ -51,17 +51,35 @@ if not avrt_lib.found()
   subdir_done()
 endif
 
-cfgmgr32 = cc.find_library('cfgmgr32', required: asio_option)
-if not cfgmgr32.found()
-  subdir_done()
+have_cm_notify = false
+cfgmgr32 = cc.find_library('cfgmgr32', required: false)
+if cfgmgr32.found()
+  if cxx.links('''#define _WIN32_LEAN_AND_MEAN
+      #include <windows.h>
+      #include <cfgmgr32.h>
+      int main() {
+        CM_Unregister_Notification(nullptr);
+        return 0;
+      }''', name: 'CM_NOTIFY', dependencies: cfgmgr32)
+    have_cm_notify = true
+  endif
+endif
+
+asio_args = []
+asio_deps = [avrt_lib]
+if have_cm_notify
+  asio_deps += cfgmgr32
+  asio_args += ['-DHAVE_CM_NOTIFY']
+else
+  message('CM_NOTIFY not found, your SDK is too old. ASIO will not support device monitoring.')
 endif
 
 gstasio = library('gstasio',
     asio_sources,
     include_directories : [configinc],
-    dependencies : [gstaudio_dep, avrt_lib, cfgmgr32],
-    c_args : gst_plugins_bad_args,
-    cpp_args : gst_plugins_bad_args,
+    dependencies : [gstaudio_dep] + asio_deps,
+    c_args : gst_plugins_bad_args + asio_args,
+    cpp_args : gst_plugins_bad_args + asio_args,
     install : true,
     install_dir : plugins_install_dir)
 plugins += [gstasio]
