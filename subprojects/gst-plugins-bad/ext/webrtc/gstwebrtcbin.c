@@ -1668,7 +1668,15 @@ _update_ice_gathering_state_task (GstWebRTCBin * webrtc, gpointer data)
   if (new_state == GST_WEBRTC_ICE_GATHERING_STATE_COMPLETE) {
     ICE_LOCK (webrtc);
     if (webrtc->priv->pending_local_ice_candidates->len != 0) {
-      /* ICE candidates queued for emissiong -> we're gathering, not complete */
+      /* ICE candidates queued for emission -> we're gathering, not complete */
+
+      const gchar *new_s =
+          _enum_value_to_string (GST_TYPE_WEBRTC_ICE_GATHERING_STATE,
+          GST_WEBRTC_ICE_GATHERING_STATE_GATHERING);
+      GST_INFO_OBJECT (webrtc,
+          "Deferring ICE gathering state change to %s(%u) due to pending candidates",
+          new_s, GST_WEBRTC_ICE_GATHERING_STATE_GATHERING);
+
       new_state = GST_WEBRTC_ICE_GATHERING_STATE_GATHERING;
     }
     ICE_UNLOCK (webrtc);
@@ -7208,7 +7216,7 @@ gst_webrtc_bin_add_ice_candidate (GstWebRTCBin * webrtc, guint mline,
 }
 
 static GstStructure *
-_on_local_ice_candidate_task (GstWebRTCBin * webrtc)
+_on_local_ice_candidate_task (GstWebRTCBin * webrtc, gpointer data)
 {
   gsize i;
   GArray *items;
@@ -7277,7 +7285,9 @@ _on_local_ice_candidate_task (GstWebRTCBin * webrtc)
   }
   g_array_free (items, TRUE);
 
-  return NULL;
+  /* Clearing all pending ice candidates may have allowed the gathering
+   * state to transition to complete - so check it before exiting */
+  return _update_ice_gathering_state_task (webrtc, data);
 }
 
 static void
