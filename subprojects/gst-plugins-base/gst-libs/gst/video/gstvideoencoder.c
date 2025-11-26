@@ -2726,12 +2726,14 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
   if (encoder_class->pre_push)
     ret = encoder_class->pre_push (encoder, frame);
 
+  if (ret != GST_FLOW_OK)
+    goto done;
+
   gst_video_encoder_transform_meta_unlocked (encoder, frame);
 
   /* Get an additional ref to the buffer, which is going to be pushed
    * downstream, the original ref is owned by the frame */
-  if (ret == GST_FLOW_OK)
-    buffer = gst_buffer_ref (frame->output_buffer);
+  buffer = gst_buffer_ref (frame->output_buffer);
 
   /* Release frame so the buffer is writable when we push it downstream
    * if possible, i.e. if the subclass does not hold additional references
@@ -2740,11 +2742,9 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
   gst_video_encoder_release_frame_unlocked (encoder, frame);
   frame = NULL;
 
-  if (ret == GST_FLOW_OK) {
-    GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
-    ret = gst_pad_push (encoder->srcpad, buffer);
-    GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
-  }
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
+  ret = gst_pad_push (encoder->srcpad, buffer);
+  GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
 
 done:
   /* handed out */

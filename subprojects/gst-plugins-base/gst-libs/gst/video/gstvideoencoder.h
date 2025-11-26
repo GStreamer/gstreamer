@@ -181,7 +181,7 @@ struct _GstVideoEncoder
  * @finish:         Optional.
  *                  Called to request subclass to dispatch any pending remaining
  *                  data (e.g. at EOS).
- * @pre_push:   Optional.
+ * @pre_push:       Optional.
  *                  Allows subclass to push frame downstream in whatever
  *                  shape or form it deems appropriate.  If not provided,
  *                  provided encoded frame data is simply pushed downstream.
