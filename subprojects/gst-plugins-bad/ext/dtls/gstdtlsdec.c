@@ -683,6 +683,8 @@ get_agent_by_pem (const gchar * pem)
           certificate, NULL);
       g_object_unref (certificate);
 
+      GST_OBJECT_FLAG_SET (new_agent, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+
       GST_DEBUG_OBJECT (generated_cert_agent,
           "no agent with generated cert found, creating new");
       g_once_init_leave (&generated_cert_agent, new_agent);
