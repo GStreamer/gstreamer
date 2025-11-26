@@ -2325,7 +2325,7 @@ static void capture_thread_func(AJAThread *thread, void *data) {
   // if the *next* output frame should have the discont flag set
   bool discont = true;
   // if the pipeline clock is the monotonic system clock
-  bool clock_is_monotonic_system_clock = false;
+  bool clock_is_system_monotonic = false;
   // if the next frame is the first one after autocirculate was started
   bool first_frame_after_start = true;
   // acFrameTime of the last captured frame. Used to detect
@@ -2360,7 +2360,7 @@ restart:
   gst_clear_object(&clock);
   clock = gst_element_get_clock(GST_ELEMENT_CAST(self));
 
-  clock_is_monotonic_system_clock = gst_clock_is_system_monotonic(clock);
+  clock_is_system_monotonic = gst_clock_is_system_monotonic(clock);
 
   // Reset all local state after restart
   have_signal = true;
@@ -2880,7 +2880,7 @@ restart:
             gst_clock_unadjust_with_calibration(NULL, frame_src_time, internal,
                                                 external, num, denom);
 
-        if (clock_is_monotonic_system_clock) {
+        if (clock_is_system_monotonic) {
           // If the pipeline is using the monotonic system clock then we can
           // just use this.
           GST_OBJECT_LOCK(clock);
