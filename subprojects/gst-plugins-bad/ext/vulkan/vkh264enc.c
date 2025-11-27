@@ -684,6 +684,7 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
   GstVulkanVideoCapabilities vk_caps;
   VkVideoEncodeH264CapabilitiesKHR *vk_h264_caps;
   GstVulkanEncoderQualityProperties quality_props;
+  StdVideoH264LevelIdc vk_max_level;
 
   if (!self->encoder) {
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
@@ -883,6 +884,12 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
     GST_ERROR_OBJECT (self, "Frame size is out of driver limits");
     gst_vulkan_encoder_stop (self->encoder);
     return GST_FLOW_NOT_NEGOTIATED;
+  }
+
+  /* gallium drivers always reply 10 level idc  */
+  vk_max_level = vk_caps.encoder.codec.h264.maxLevelIdc;
+  if (vk_max_level > STD_VIDEO_H264_LEVEL_IDC_1_0 && *level > 0) {
+    *level = MIN (gst_h264_level_idc_from_vk (vk_max_level), *level);
   }
 
   gst_h264_encoder_set_max_num_references (encoder,
