@@ -1843,12 +1843,25 @@ gst_adaptive_demux2_stream_wait_prepared (GstAdaptiveDemux2Stream * stream)
 {
   GstAdaptiveDemux *demux = stream->demux;
 
-  g_mutex_lock (&stream->prepare_lock);
+  /* Take a ref on the stream before dropping the scheduler lock, or it might
+   * get unreffed beneath us during a state change */
+  gst_object_ref (stream);
   GST_ADAPTIVE_SCHEDULER_UNLOCK (demux);
+
+  GST_DEBUG_OBJECT (stream, "Waiting for subclass to finish preparing stream");
+
+  g_mutex_lock (&stream->prepare_lock);
   g_cond_wait (&stream->prepare_cond, &stream->prepare_lock);
   g_mutex_unlock (&stream->prepare_lock);
 
-  return GST_ADAPTIVE_SCHEDULER_LOCK (demux);
+  GST_DEBUG_OBJECT (stream,
+      "Done waiting for subclass to finish preparing stream. State now %d",
+      stream->state);
+
+  gboolean ret = GST_ADAPTIVE_SCHEDULER_LOCK (demux);
+  gst_object_unref (stream);
+
+  return ret;
 }
 
 static void
