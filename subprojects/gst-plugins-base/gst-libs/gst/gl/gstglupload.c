@@ -1143,6 +1143,14 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     return FALSE;
   }
 
+  GstStructure *s = gst_caps_get_structure (out_caps, 0);
+  const gchar *target_str = gst_structure_get_string (s, "texture-target");
+  if (dmabuf->target != gst_gl_texture_target_from_string (target_str)) {
+    GST_DEBUG_OBJECT (dmabuf->upload, "cannot produce texture-target %s",
+        target_str);
+    return FALSE;
+  }
+
   if (!gst_gl_context_egl_supports_modifier (dmabuf->upload->context)) {
     GST_DEBUG_OBJECT (dmabuf->upload, "no modifier support");
     return FALSE;
