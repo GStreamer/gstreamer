@@ -308,6 +308,54 @@ ges_pipeline_handle_message (GstBin * bin, GstMessage * msg)
     GList *iter;
 
     gst_message_parse_context_type (msg, &context_type);
+    /* Special handling for task pool context */
+    if (g_strcmp0 (context_type, GST_TASK_POOL_CONTEXT_TYPE) == 0) {
+      GstElement *child = GST_ELEMENT (GST_MESSAGE_SRC (msg));
+      GstContext *pool_context = NULL;
+
+      /* First check if we already have a task pool context */
+      pool_context =
+          gst_element_get_context (GST_ELEMENT_CAST (self),
+          GST_TASK_POOL_CONTEXT_TYPE);
+
+      if (!pool_context) {
+        GstMessage *new_msg;
+
+        new_msg = gst_message_new_need_context (GST_OBJECT_CAST (self),
+            GST_TASK_POOL_CONTEXT_TYPE);
+        gst_element_post_message (GST_ELEMENT_CAST (self), new_msg);
+
+        pool_context =
+            gst_element_get_context (GST_ELEMENT_CAST (self),
+            GST_TASK_POOL_CONTEXT_TYPE);
+      }
+
+      if (!pool_context) {
+        GstTaskPool *pool;
+        GstMessage *have_msg;
+
+        pool = gst_shared_task_pool_new ();
+        gst_shared_task_pool_set_max_threads (GST_SHARED_TASK_POOL (pool),
+            g_get_num_processors ());
+        gst_task_pool_prepare (pool, NULL);
+
+        pool_context = gst_context_new (GST_TASK_POOL_CONTEXT_TYPE, FALSE);
+        gst_context_set_task_pool (pool_context, pool);
+        gst_object_unref (pool);
+
+        ges_pipeline_update_context (self, pool_context);
+
+        have_msg =
+            gst_message_new_have_context (GST_OBJECT_CAST (self), pool_context);
+        gst_element_post_message (GST_ELEMENT_CAST (self), have_msg);
+      }
+
+      gst_element_set_context (child, pool_context);
+
+      gst_message_unref (msg);
+      return;
+    }
+
     GST_OBJECT_LOCK (self);
     for (iter = self->priv->contexts; iter; iter = g_list_next (iter)) {
       GstContext *tmp = iter->data;
@@ -1597,6 +1645,7 @@ activate_sink_bus_handler (GstBus * bus, GstMessage * msg, GESPipeline * self)
     GList *l;
 
     gst_message_parse_context_type (msg, &context_type);
+
     GST_OBJECT_LOCK (self);
     for (l = self->priv->contexts; l; l = l->next) {
       GstContext *tmp = l->data;
