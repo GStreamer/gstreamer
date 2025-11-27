@@ -1,10 +1,9 @@
 [wrap-file]
-directory = libnice-0.1.22
-source_url = https://nice.freedesktop.org/releases/libnice-0.1.22.tar.gz
-source_fallback_url = https://deb.debian.org/debian/pool/main/libn/libnice/libnice_0.1.22.orig.tar.gz
-source_filename = libnice-0.1.22.tar.gz
-source_hash = a5f724cf09eae50c41a7517141d89da4a61ec9eaca32da4a0073faed5417ad7e
-diff_files = libnice-0.1.22/0001-agent-fix-parsing-an-incomplete-TCP-ICE-candidate.patch
+directory = libnice-0.1.23
+source_url = https://nice.freedesktop.org/releases/libnice-0.1.23.tar.gz
+source_fallback_url = https://deb.debian.org/debian/pool/main/libn/libnice/libnice_0.1.23.orig.tar.gz
+source_filename = libnice-0.1.23.tar.gz
+source_hash = 618fc4e8de393b719b1641c1d8eec01826d4d39d15ade92679d221c7f5e4e70d
 
 [provide]
 nice = libnice_dep
