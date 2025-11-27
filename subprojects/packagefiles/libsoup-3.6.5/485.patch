@@ -1,0 +1,64 @@
+From aa4f8e3fb4311a6e101c5f369722604a94d12a82 Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Fri, 28 Nov 2025 04:18:14 +0530
+Subject: [PATCH 1/2] meson: Append to platform_deps instead of assigning
+
+This is less error-prone in case we add something to the platform_deps
+declaration.
+---
+ meson.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/meson.build b/meson.build
+index a95d6839..a4c56f31 100644
+--- a/meson.build
++++ b/meson.build
+@@ -148,7 +148,7 @@ platform_deps = []
+ is_static_library = get_option('default_library') == 'static'
+ if not is_static_library
+   if host_machine.system() == 'windows'
+-    platform_deps = [cc.find_library('ws2_32')]
++    platform_deps += [cc.find_library('ws2_32')]
+     cdata.set('DLL_EXPORT', true)
+     cdata.set('_SOUP_EXTERN', '__declspec(dllexport) extern')
+   else
+-- 
+GitLab
+
+
+From 54f94536b7edafb8a2d0640516838b11987b5b6c Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Fri, 28 Nov 2025 04:18:52 +0530
+Subject: [PATCH 2/2] meson: Explicitly link to libdl on non-Windows
+
+Ever since commit 1296cbf9, building on older Linux such as Ubuntu
+18.04 fails with:
+
+```
+subprojects/libsoup-3.6.5/libsoup/libsoup-3.0.so.0.7.4.p/soup-init.c.o: In function `soup_init_ctor':
+soup-init.c:(.text.startup+0x24): undefined reference to `dlopen'
+soup-init.c:(.text.startup+0x3c): undefined reference to `dlsym'
+soup-init.c:(.text.startup+0x48): undefined reference to `dlclose'
+collect2: error: ld returned 1 exit status
+```
+
+Responsible MR: https://gitlab.gnome.org/GNOME/libsoup/-/merge_requests/475
+---
+ meson.build | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/meson.build b/meson.build
+index a4c56f31..fd138aae 100644
+--- a/meson.build
++++ b/meson.build
+@@ -152,6 +152,7 @@ if not is_static_library
+     cdata.set('DLL_EXPORT', true)
+     cdata.set('_SOUP_EXTERN', '__declspec(dllexport) extern')
+   else
++    platform_deps += [cc.find_library('dl', required: false)]
+     cdata.set('_SOUP_EXTERN', '__attribute__((visibility("default"))) extern')
+   endif
+ endif
+-- 
+GitLab
+
