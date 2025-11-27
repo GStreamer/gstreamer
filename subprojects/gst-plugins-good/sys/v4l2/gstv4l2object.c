@@ -6156,7 +6156,8 @@ gst_v4l2_object_propose_allocation (GstV4l2Object * obj, GstQuery * query)
    * between aligned size and actual size as extra padding to the upstream
    * element */
   if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
-    /* FIXME */
+    for (guint i = 0; i < obj->format.fmt.pix_mp.num_planes; i++)
+      aligned_size += obj->format.fmt.pix_mp.plane_fmt[i].sizeimage;
   } else {
     aligned_size = obj->format.fmt.pix.sizeimage;
   }
