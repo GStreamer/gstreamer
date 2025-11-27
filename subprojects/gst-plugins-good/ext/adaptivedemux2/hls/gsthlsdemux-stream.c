@@ -1573,7 +1573,8 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
   gboolean discont;
 
   /* Return BUSY if no playlist is loaded yet. Even if
-   * we switched an another playlist is loading, we'll keep*/
+   * we switched and another playlist is loading,
+   * we'll keep trying to load one */
   if (!hlsdemux_stream->playlist_fetched) {
     gst_hls_demux_stream_start_playlist_loading (hlsdemux_stream);
     return GST_ADAPTIVE_DEMUX_FLOW_BUSY;

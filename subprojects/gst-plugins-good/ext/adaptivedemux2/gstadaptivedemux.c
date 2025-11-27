@@ -1687,7 +1687,7 @@ gst_adaptive_demux_get_period_start_time (GstAdaptiveDemux * demux)
   return klass->get_period_start_time (demux);
 }
 
-/* must be called with manifest_lock taken */
+/* must be called with manifest_lock and scheduler lock taken */
 static gboolean
 gst_adaptive_demux_prepare_streams (GstAdaptiveDemux * demux,
     gboolean first_and_live)
