@@ -1822,13 +1822,18 @@ gst_adaptive_demux2_stream_mark_prepared (GstAdaptiveDemux2Stream * stream)
     gst_adaptive_demux2_stream_on_manifest_update (stream);
   }
 
-  g_cond_broadcast (&stream->prepare_cond);
-  if (stream->state != GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_PREPARE)
+  if (stream->state != GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_PREPARE) {
     return;
+  }
+
+  GST_LOG_OBJECT (stream,
+      "Subclass finished prepare. Scheduling load_a_fragment() call");
+  g_mutex_lock (&stream->prepare_lock);
+  stream->state = GST_ADAPTIVE_DEMUX2_STREAM_STATE_START_FRAGMENT;
+  g_cond_broadcast (&stream->prepare_cond);
+  g_mutex_unlock (&stream->prepare_lock);
 
   g_assert (stream->pending_cb_id == 0);
-
-  GST_LOG_OBJECT (stream, "Scheduling load_a_fragment() call");
   stream->pending_cb_id =
       gst_adaptive_demux_loop_call (demux->priv->scheduler_task,
       (GSourceFunc) gst_adaptive_demux2_stream_load_a_fragment,
@@ -1851,7 +1856,9 @@ gst_adaptive_demux2_stream_wait_prepared (GstAdaptiveDemux2Stream * stream)
   GST_DEBUG_OBJECT (stream, "Waiting for subclass to finish preparing stream");
 
   g_mutex_lock (&stream->prepare_lock);
-  g_cond_wait (&stream->prepare_cond, &stream->prepare_lock);
+  while (stream->state == GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_PREPARE) {
+    g_cond_wait (&stream->prepare_cond, &stream->prepare_lock);
+  }
   g_mutex_unlock (&stream->prepare_lock);
 
   GST_DEBUG_OBJECT (stream,
@@ -1917,9 +1924,6 @@ gst_adaptive_demux2_stream_load_a_fragment (GstAdaptiveDemux2Stream * stream)
           "Fragment info update result: %d %s", ret, gst_flow_get_name (ret));
 
       if (ret == GST_FLOW_OK) {
-        /* Wake anyone that's waiting for this stream to get prepared */
-        if (stream->state == GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_PREPARE)
-          g_cond_broadcast (&stream->prepare_cond);
         stream->starting_fragment = TRUE;
       }
       break;

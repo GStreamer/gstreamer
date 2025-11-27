@@ -296,11 +296,17 @@ gst_hls_demux_wait_for_variant_playlist (GstHLSDemux * hlsdemux)
 
   while ((flow_ret = gst_hls_demux_check_variant_playlist_loaded (hlsdemux)
           == GST_ADAPTIVE_DEMUX_FLOW_BUSY)) {
-    if (!gst_adaptive_demux2_stream_wait_prepared (GST_ADAPTIVE_DEMUX2_STREAM
-            (hlsdemux->main_stream))) {
-      GST_DEBUG_OBJECT (hlsdemux,
-          "Interrupted waiting for stream to be prepared");
-      return GST_FLOW_FLUSHING;
+    GstAdaptiveDemux2Stream *stream =
+        GST_ADAPTIVE_DEMUX2_STREAM (hlsdemux->main_stream);
+
+    if (stream->state != GST_ADAPTIVE_DEMUX2_STREAM_STATE_STOPPED) {
+      stream->state = GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_PREPARE;
+
+      if (!gst_adaptive_demux2_stream_wait_prepared (stream)) {
+        GST_DEBUG_OBJECT (hlsdemux,
+            "Interrupted waiting for stream to be prepared");
+        return GST_FLOW_FLUSHING;
+      }
     }
   }
 
@@ -451,7 +457,9 @@ create_main_variant_stream (GstHLSDemux * demux)
 
   gst_hls_demux_stream_set_playlist_uri (hlsdemux_stream,
       demux->current_variant->uri);
-  gst_hls_demux_stream_start_playlist_loading (hlsdemux_stream);
+
+  /* Start this stream, which will trigger a playlist load */
+  gst_adaptive_demux2_stream_start (stream);
 }
 
 GstAdaptiveDemuxTrack *
