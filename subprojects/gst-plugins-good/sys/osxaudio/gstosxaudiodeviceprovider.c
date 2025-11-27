@@ -354,13 +354,14 @@ gst_osx_audio_device_provider_start (GstDeviceProvider * provider)
   GList *iter;
 
   devices = gst_osx_audio_device_provider_probe (provider);
-  if (devices) {
-    for (iter = devices; iter; iter = g_list_next (iter)) {
-      gst_device_provider_device_add (provider, GST_DEVICE (iter->data));
-    }
 
-    g_list_free (devices);
+  for (iter = devices; iter; iter = iter->next) {
+    gst_device_provider_device_add (provider, GST_DEVICE (iter->data));
   }
+
+  /* Device references were floating, so were transferred in
+   * gst_device_provider_device_add() */
+  g_list_free (devices);
 
   return _start_audio_device_watcher (self);
 }
