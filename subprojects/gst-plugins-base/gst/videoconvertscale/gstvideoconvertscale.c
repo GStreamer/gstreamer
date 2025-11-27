@@ -872,6 +872,17 @@ gst_video_convert_scale_create_converter (GstVideoConvertScale * self,
   GST_OBJECT_LOCK (self);
   if (priv->task_pool) {
     pool = gst_object_ref (priv->task_pool);
+
+    if (GST_IS_SHARED_TASK_POOL (pool)
+        && (!priv->n_threads_set || priv->n_threads == 0)) {
+      gint n_threads =
+          gst_shared_task_pool_get_max_threads (GST_SHARED_TASK_POOL (pool));
+      gst_structure_set (config, GST_VIDEO_CONVERTER_OPT_THREADS, G_TYPE_UINT,
+          n_threads, NULL);
+
+      GST_DEBUG_OBJECT (self,
+          "Using shared task pool max threads %d as n-threads", n_threads);
+    }
   }
   GST_OBJECT_UNLOCK (self);
 
@@ -1050,12 +1061,6 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
         break;
     }
 
-    gint n_threads = priv->n_threads;
-    if (GST_IS_SHARED_TASK_POOL (priv->task_pool)
-        && (!priv->n_threads_set || priv->n_threads == 0)) {
-      n_threads = gst_shared_task_pool_get_max_threads (GST_SHARED_TASK_POOL
-          (priv->task_pool));
-    }
     gst_structure_set_static_str (options,
         GST_VIDEO_RESAMPLER_OPT_ENVELOPE, G_TYPE_DOUBLE, priv->envelope,
         GST_VIDEO_RESAMPLER_OPT_SHARPNESS, G_TYPE_DOUBLE, priv->sharpness,
@@ -1079,7 +1084,7 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
         GST_TYPE_VIDEO_GAMMA_MODE, priv->gamma_mode,
         GST_VIDEO_CONVERTER_OPT_PRIMARIES_MODE, GST_TYPE_VIDEO_PRIMARIES_MODE,
         priv->primaries_mode, GST_VIDEO_CONVERTER_OPT_THREADS, G_TYPE_UINT,
-        n_threads, NULL);
+        priv->n_threads, NULL);
 
   build_converter:
     priv->convert =
