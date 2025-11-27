@@ -8096,9 +8096,9 @@ gst_value_transform_allocation_params_string (const GValue * value1,
 
     s = gst_structure_new_static_str ("GstAllocationParams",
         "flags", GST_TYPE_MEMORY_FLAGS, params->flags,
-        "align", G_TYPE_UINT64, params->align,
-        "prefix", G_TYPE_UINT64, params->prefix,
-        "padding", G_TYPE_UINT64, params->padding, NULL);
+        "align", G_TYPE_UINT64, (guint64) params->align,
+        "prefix", G_TYPE_UINT64, (guint64) params->prefix,
+        "padding", G_TYPE_UINT64, (guint64) params->padding, NULL);
 
     res = gst_structure_to_string (s);
     gst_structure_free (s);
