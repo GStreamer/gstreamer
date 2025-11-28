@@ -835,10 +835,7 @@ ges_project_set_loaded (GESProject * project, GESFormatter * formatter,
         error);
   }
 
-  if (!ges_timeline_in_current_thread (formatter->timeline)) {
-    GST_INFO_OBJECT (project, "Loaded in a different thread, "
-        "not committing timeline");
-  } else if (GST_STATE (formatter->timeline) < GST_STATE_PAUSED) {
+  if (GST_STATE (formatter->timeline) < GST_STATE_PAUSED) {
     timeline_fill_gaps (formatter->timeline);
   } else {
     ges_timeline_commit (formatter->timeline);

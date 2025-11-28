@@ -67,7 +67,30 @@ struct _GESLayerPrivate
   gboolean auto_transition;
 
   GHashTable *tracks_activness;
+
+  GMutex timeline_lock;         /* Protects access to timeline pointer */
+  GRecMutex api_lock;           /* Used when layer is not in a timeline */
 };
+
+/* Lock macros for GESLayer - similar pattern to GESTimelineElement */
+#define _LOCK(self) \
+  GESTimeline *_locked_timeline; \
+  g_mutex_lock (&self->priv->timeline_lock); \
+  _locked_timeline = self->timeline; \
+  if (_locked_timeline) \
+    gst_object_ref (_locked_timeline); \
+  g_mutex_unlock (&self->priv->timeline_lock); \
+  if (_locked_timeline) \
+    _ges_timeline_lock (_locked_timeline); \
+  else \
+    g_rec_mutex_lock (&self->priv->api_lock)
+
+#define _UNLOCK(self) \
+  if (_locked_timeline) \
+    _ges_timeline_unlock (_locked_timeline); \
+  else \
+    g_rec_mutex_unlock (&self->priv->api_lock); \
+  g_clear_object (&_locked_timeline)
 
 typedef struct
 {
@@ -145,10 +168,10 @@ ges_layer_get_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_PRIORITY:
-      g_value_set_uint (value, layer->priv->priority);
+      g_value_set_uint (value, ges_layer_get_priority (layer));
       break;
     case PROP_AUTO_TRANSITION:
-      g_value_set_boolean (value, layer->priv->auto_transition);
+      g_value_set_boolean (value, ges_layer_get_auto_transition (layer));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -190,6 +213,17 @@ ges_layer_dispose (GObject * object)
   G_OBJECT_CLASS (ges_layer_parent_class)->dispose (object);
 }
 
+static void
+ges_layer_finalize (GObject * object)
+{
+  GESLayer *layer = GES_LAYER (object);
+
+  g_mutex_clear (&layer->priv->timeline_lock);
+  g_rec_mutex_clear (&layer->priv->api_lock);
+
+  G_OBJECT_CLASS (ges_layer_parent_class)->finalize (object);
+}
+
 static gboolean
 _register_metas (GESLayer * layer)
 {
@@ -213,6 +247,7 @@ ges_layer_class_init (GESLayerClass * klass)
   object_class->get_property = ges_layer_get_property;
   object_class->set_property = ges_layer_set_property;
   object_class->dispose = ges_layer_dispose;
+  object_class->finalize = ges_layer_finalize;
 
   /**
    * GESLayer:priority:
@@ -296,6 +331,9 @@ static void
 ges_layer_init (GESLayer * self)
 {
   self->priv = ges_layer_get_instance_private (self);
+
+  g_mutex_init (&self->priv->timeline_lock);
+  g_rec_mutex_init (&self->priv->api_lock);
 
   self->priv->priority = 0;
   self->priv->auto_transition = FALSE;
@@ -457,9 +495,11 @@ ges_layer_get_duration (GESLayer * layer)
 
   g_return_val_if_fail (GES_IS_LAYER (layer), 0);
 
+  _LOCK (layer);
   for (tmp = layer->priv->clips_start; tmp; tmp = tmp->next) {
     duration = MAX (duration, _END (tmp->data));
   }
+  _UNLOCK (layer);
 
   return duration;
 }
@@ -522,10 +562,16 @@ ges_layer_remove_clip_internal (GESLayer * layer, GESClip * clip,
 gboolean
 ges_layer_remove_clip (GESLayer * layer, GESClip * clip)
 {
+  gboolean res;
+
   g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
 
-  return ges_layer_remove_clip_internal (layer, clip, TRUE);
+  _LOCK (layer);
+  res = ges_layer_remove_clip_internal (layer, clip, TRUE);
+  _UNLOCK (layer);
+
+  return res;
 }
 
 /**
@@ -560,9 +606,15 @@ ges_layer_set_priority (GESLayer * layer, guint priority)
 gboolean
 ges_layer_get_auto_transition (GESLayer * layer)
 {
+  gboolean res;
+
   g_return_val_if_fail (GES_IS_LAYER (layer), 0);
 
-  return layer->priv->auto_transition;
+  _LOCK (layer);
+  res = layer->priv->auto_transition;
+  _UNLOCK (layer);
+
+  return res;
 }
 
 /**
@@ -584,11 +636,17 @@ ges_layer_set_auto_transition (GESLayer * layer, gboolean auto_transition)
 
   g_return_if_fail (GES_IS_LAYER (layer));
 
-  if (layer->priv->auto_transition == auto_transition)
+  _LOCK (layer);
+
+  if (layer->priv->auto_transition == auto_transition) {
+    _UNLOCK (layer);
     return;
+  }
 
   layer->priv->auto_transition = auto_transition;
   g_object_notify (G_OBJECT (layer), "auto-transition");
+
+  _UNLOCK (layer);
 }
 
 /**
@@ -603,9 +661,15 @@ ges_layer_set_auto_transition (GESLayer * layer, gboolean auto_transition)
 guint
 ges_layer_get_priority (GESLayer * layer)
 {
+  guint res;
+
   g_return_val_if_fail (GES_IS_LAYER (layer), 0);
 
-  return layer->priv->priority;
+  _LOCK (layer);
+  res = layer->priv->priority;
+  _UNLOCK (layer);
+
+  return res;
 }
 
 /**
@@ -622,18 +686,26 @@ GList *
 ges_layer_get_clips (GESLayer * layer)
 {
   GESLayerClass *klass;
+  GList *res;
 
   g_return_val_if_fail (GES_IS_LAYER (layer), NULL);
+
+  _LOCK (layer);
 
   klass = GES_LAYER_GET_CLASS (layer);
 
   if (klass->get_objects) {
-    return klass->get_objects (layer);
+    res = klass->get_objects (layer);
+    _UNLOCK (layer);
+    return res;
   }
 
-  return g_list_sort (g_list_copy_deep (layer->priv->clips_start,
+  res = g_list_sort (g_list_copy_deep (layer->priv->clips_start,
           (GCopyFunc) gst_object_ref, NULL),
       (GCompareFunc) element_start_compare);
+  _UNLOCK (layer);
+
+  return res;
 }
 
 /**
@@ -649,9 +721,15 @@ ges_layer_get_clips (GESLayer * layer)
 gboolean
 ges_layer_is_empty (GESLayer * layer)
 {
+  gboolean res;
+
   g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
 
-  return (layer->priv->clips_start == NULL);
+  _LOCK (layer);
+  res = (layer->priv->clips_start == NULL);
+  _UNLOCK (layer);
+
+  return res;
 }
 
 /**
@@ -681,6 +759,7 @@ ges_layer_add_clip_full (GESLayer * layer, GESClip * clip, GError ** error)
   GESTimeline *timeline;
   GESContainer *container;
   GError *timeline_error = NULL;
+  gboolean res = FALSE;
 
   g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
@@ -692,6 +771,8 @@ ges_layer_add_clip_full (GESLayer * layer, GESClip * clip, GError ** error)
   GST_DEBUG_OBJECT (layer, "adding clip:%p", clip);
   gst_object_ref_sink (clip);
 
+  _LOCK (layer);
+
   priv = layer->priv;
   current_layer = ges_clip_get_layer (clip);
   if (G_UNLIKELY (current_layer)) {
@@ -699,7 +780,7 @@ ges_layer_add_clip_full (GESLayer * layer, GESClip * clip, GError ** error)
         "another layer", GES_ARGS (clip));
     gst_object_unref (clip);
     gst_object_unref (current_layer);
-    return FALSE;
+    goto done;
   }
 
   if (timeline && timeline != layer->timeline) {
@@ -708,7 +789,7 @@ ges_layer_add_clip_full (GESLayer * layer, GESClip * clip, GError ** error)
         GST_PTR_FORMAT " does not match that of the layer %"
         GST_PTR_FORMAT, GES_ARGS (clip), timeline, layer->timeline);
     gst_object_unref (clip);
-    return FALSE;
+    goto done;
   }
 
   timeline = layer->timeline;
@@ -739,7 +820,8 @@ ges_layer_add_clip_full (GESLayer * layer, GESClip * clip, GError ** error)
       g_free (id);
 
       GST_LOG_OBJECT (layer, "Object added async");
-      return TRUE;
+      res = TRUE;
+      goto done;
     }
     g_free (id);
 
@@ -805,7 +887,7 @@ ges_layer_add_clip_full (GESLayer * layer, GESClip * clip, GError ** error)
     /* FIXME: change emit signal to FALSE once we are able to delay the
      * "clip-added" signal until after ges_timeline_add_clip */
     ges_layer_remove_clip_internal (layer, clip, TRUE);
-    return FALSE;
+    goto done;
   }
 
   g_list_free_full (prev_children, gst_object_unref);
@@ -818,7 +900,11 @@ ges_layer_add_clip_full (GESLayer * layer, GESClip * clip, GError ** error)
           ges_layer_get_active_for_track (layer, track));
   }
 
-  return TRUE;
+  res = TRUE;
+
+done:
+  _UNLOCK (layer);
+  return res;
 }
 
 /**
@@ -863,7 +949,7 @@ ges_layer_add_asset_full (GESLayer * layer,
     GESAsset * asset, GstClockTime start, GstClockTime inpoint,
     GstClockTime duration, GESTrackType track_types, GError ** error)
 {
-  GESClip *clip;
+  GESClip *clip = NULL;
 
   g_return_val_if_fail (GES_IS_LAYER (layer), NULL);
   g_return_val_if_fail (GES_IS_ASSET (asset), NULL);
@@ -876,6 +962,8 @@ ges_layer_add_asset_full (GESLayer * layer,
       " track types: %d (%s)", ges_asset_get_id (asset), GST_TIME_ARGS (start),
       GST_TIME_ARGS (inpoint), GST_TIME_ARGS (duration), track_types,
       ges_track_type_name (track_types));
+
+  _LOCK (layer);
 
   clip = GES_CLIP (ges_asset_extract (asset, NULL));
 
@@ -897,9 +985,12 @@ ges_layer_add_asset_full (GESLayer * layer,
   }
 
   if (!ges_layer_add_clip_full (layer, clip, error)) {
-    return NULL;
+    clip = NULL;
+    goto done;
   }
 
+done:
+  _UNLOCK (layer);
   return clip;
 }
 
@@ -956,9 +1047,15 @@ ges_layer_new (void)
 GESTimeline *
 ges_layer_get_timeline (GESLayer * layer)
 {
+  GESTimeline *res;
+
   g_return_val_if_fail (GES_IS_LAYER (layer), NULL);
 
-  return layer->timeline;
+  g_mutex_lock (&layer->priv->timeline_lock);
+  res = layer->timeline;
+  g_mutex_unlock (&layer->priv->timeline_lock);
+
+  return res;
 }
 
 void
@@ -974,7 +1071,9 @@ ges_layer_set_timeline (GESLayer * layer, GESTimeline * timeline)
     ges_timeline_element_set_timeline (tmp->data, timeline);
   }
 
+  g_mutex_lock (&layer->priv->timeline_lock);
   layer->timeline = timeline;
+  g_mutex_unlock (&layer->priv->timeline_lock);
 }
 
 /**
@@ -999,6 +1098,8 @@ ges_layer_get_clips_in_interval (GESLayer * layer, GstClockTime start,
 
   g_return_val_if_fail (GES_IS_LAYER (layer), NULL);
 
+  _LOCK (layer);
+
   layer->priv->clips_start =
       g_list_sort (layer->priv->clips_start,
       (GCompareFunc) element_start_compare);
@@ -1018,6 +1119,9 @@ ges_layer_get_clips_in_interval (GESLayer * layer, GstClockTime start,
           g_list_insert_sorted (intersecting_clips,
           gst_object_ref (tmp->data), (GCompareFunc) element_start_compare);
   }
+
+  _UNLOCK (layer);
+
   return intersecting_clips;
 }
 
@@ -1037,15 +1141,19 @@ gboolean
 ges_layer_get_active_for_track (GESLayer * layer, GESTrack * track)
 {
   LayerActivnessData *d;
+  gboolean res;
 
   g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
   g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
   g_return_val_if_fail (layer->timeline == ges_track_get_timeline (track),
       FALSE);
 
+  _LOCK (layer);
   d = g_hash_table_lookup (layer->priv->tracks_activness, track);
+  res = d ? d->active : TRUE;
+  _UNLOCK (layer);
 
-  return d ? d->active : TRUE;
+  return res;
 }
 
 /**
@@ -1077,8 +1185,11 @@ ges_layer_set_active_for_tracks (GESLayer * layer, gboolean active,
 {
   GList *tmp, *owned_tracks = NULL;
   GPtrArray *changed_tracks = NULL;
+  gboolean res = FALSE;
 
   g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
+
+  _LOCK (layer);
 
   if (!tracks && layer->timeline)
     owned_tracks = tracks = ges_timeline_get_tracks (layer->timeline);
@@ -1087,8 +1198,11 @@ ges_layer_set_active_for_tracks (GESLayer * layer, gboolean active,
     GESTrack *track = tmp->data;
 
     /* Handle setting timeline later */
-    g_return_val_if_fail (layer->timeline == ges_track_get_timeline (track),
-        FALSE);
+    if (layer->timeline != ges_track_get_timeline (track)) {
+      g_warning ("layer->timeline != ges_track_get_timeline (track)");
+      g_clear_pointer (&changed_tracks, g_ptr_array_unref);
+      goto done;
+    }
 
     if (ges_layer_get_active_for_track (layer, track) != active) {
       if (changed_tracks == NULL)
@@ -1104,7 +1218,12 @@ ges_layer_set_active_for_tracks (GESLayer * layer, gboolean active,
         changed_tracks);
     g_ptr_array_unref (changed_tracks);
   }
-  g_list_free_full (owned_tracks, gst_object_unref);
 
-  return TRUE;
+  res = TRUE;
+
+done:
+  g_list_free_full (owned_tracks, gst_object_unref);
+  _UNLOCK (layer);
+
+  return res;
 }

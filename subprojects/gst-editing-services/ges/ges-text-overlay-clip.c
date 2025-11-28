@@ -271,6 +271,11 @@ void
 ges_text_overlay_clip_set_text (GESTextOverlayClip * self, const gchar * text)
 {
   GList *tmp;
+  GESTimeline *_locked_timeline;
+
+  g_return_if_fail (GES_IS_OVERLAY_TEXT_CLIP (self));
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
 
   GST_DEBUG ("self:%p, text:%s", self, text);
 
@@ -287,6 +292,8 @@ ges_text_overlay_clip_set_text (GESTextOverlayClip * self, const gchar * text)
       ges_text_overlay_set_text (GES_TEXT_OVERLAY (trackelement),
           self->priv->text);
   }
+
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
 }
 
 /**
@@ -302,6 +309,11 @@ ges_text_overlay_clip_set_font_desc (GESTextOverlayClip * self,
     const gchar * font_desc)
 {
   GList *tmp;
+  GESTimeline *_locked_timeline;
+
+  g_return_if_fail (GES_IS_OVERLAY_TEXT_CLIP (self));
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
 
   GST_DEBUG ("self:%p, font_desc:%s", self, font_desc);
 
@@ -319,6 +331,7 @@ ges_text_overlay_clip_set_font_desc (GESTextOverlayClip * self,
           (trackelement), self->priv->font_desc);
   }
 
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
 }
 
 /**
@@ -334,6 +347,11 @@ ges_text_overlay_clip_set_halign (GESTextOverlayClip * self,
     GESTextHAlign halign)
 {
   GList *tmp;
+  GESTimeline *_locked_timeline;
+
+  g_return_if_fail (GES_IS_OVERLAY_TEXT_CLIP (self));
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
 
   GST_DEBUG ("self:%p, halign:%d", self, halign);
 
@@ -348,6 +366,7 @@ ges_text_overlay_clip_set_halign (GESTextOverlayClip * self,
           (trackelement), self->priv->halign);
   }
 
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
 }
 
 /**
@@ -363,6 +382,11 @@ ges_text_overlay_clip_set_valign (GESTextOverlayClip * self,
     GESTextVAlign valign)
 {
   GList *tmp;
+  GESTimeline *_locked_timeline;
+
+  g_return_if_fail (GES_IS_OVERLAY_TEXT_CLIP (self));
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
 
   GST_DEBUG ("self:%p, valign:%d", self, valign);
 
@@ -377,6 +401,7 @@ ges_text_overlay_clip_set_valign (GESTextOverlayClip * self,
           (trackelement), self->priv->valign);
   }
 
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
 }
 
 /**
@@ -390,6 +415,11 @@ void
 ges_text_overlay_clip_set_color (GESTextOverlayClip * self, guint32 color)
 {
   GList *tmp;
+  GESTimeline *_locked_timeline;
+
+  g_return_if_fail (GES_IS_OVERLAY_TEXT_CLIP (self));
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
 
   GST_DEBUG ("self:%p, color:%d", self, color);
 
@@ -403,6 +433,8 @@ ges_text_overlay_clip_set_color (GESTextOverlayClip * self, guint32 color)
       ges_text_overlay_set_color (GES_TEXT_OVERLAY (trackelement),
           self->priv->color);
   }
+
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
 }
 
 /**
@@ -416,6 +448,11 @@ void
 ges_text_overlay_clip_set_xpos (GESTextOverlayClip * self, gdouble position)
 {
   GList *tmp;
+  GESTimeline *_locked_timeline;
+
+  g_return_if_fail (GES_IS_OVERLAY_TEXT_CLIP (self));
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
 
   GST_DEBUG ("self:%p, xpos:%f", self, position);
 
@@ -429,6 +466,8 @@ ges_text_overlay_clip_set_xpos (GESTextOverlayClip * self, gdouble position)
       ges_text_overlay_set_xpos (GES_TEXT_OVERLAY (trackelement),
           self->priv->xpos);
   }
+
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
 }
 
 /**
@@ -442,6 +481,11 @@ void
 ges_text_overlay_clip_set_ypos (GESTextOverlayClip * self, gdouble position)
 {
   GList *tmp;
+  GESTimeline *_locked_timeline;
+
+  g_return_if_fail (GES_IS_OVERLAY_TEXT_CLIP (self));
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
 
   GST_DEBUG ("self:%p, ypos:%f", self, position);
 
@@ -455,6 +499,8 @@ ges_text_overlay_clip_set_ypos (GESTextOverlayClip * self, gdouble position)
       ges_text_overlay_set_ypos (GES_TEXT_OVERLAY (trackelement),
           self->priv->ypos);
   }
+
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
 }
 
 /**
@@ -469,7 +515,16 @@ ges_text_overlay_clip_set_ypos (GESTextOverlayClip * self, gdouble position)
 const gchar *
 ges_text_overlay_clip_get_text (GESTextOverlayClip * self)
 {
-  return self->priv->text;
+  const gchar *ret;
+  GESTimeline *_locked_timeline;
+
+  g_return_val_if_fail (GES_IS_OVERLAY_TEXT_CLIP (self), NULL);
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
+  ret = self->priv->text;
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
+
+  return ret;
 }
 
 /**
@@ -483,7 +538,16 @@ ges_text_overlay_clip_get_text (GESTextOverlayClip * self)
 const char *
 ges_text_overlay_clip_get_font_desc (GESTextOverlayClip * self)
 {
-  return self->priv->font_desc;
+  const char *ret;
+  GESTimeline *_locked_timeline;
+
+  g_return_val_if_fail (GES_IS_OVERLAY_TEXT_CLIP (self), NULL);
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
+  ret = self->priv->font_desc;
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
+
+  return ret;
 }
 
 /**
@@ -497,7 +561,16 @@ ges_text_overlay_clip_get_font_desc (GESTextOverlayClip * self)
 GESTextHAlign
 ges_text_overlay_clip_get_halignment (GESTextOverlayClip * self)
 {
-  return self->priv->halign;
+  GESTextHAlign ret;
+  GESTimeline *_locked_timeline;
+
+  g_return_val_if_fail (GES_IS_OVERLAY_TEXT_CLIP (self), 0);
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
+  ret = self->priv->halign;
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
+
+  return ret;
 }
 
 /**
@@ -511,7 +584,16 @@ ges_text_overlay_clip_get_halignment (GESTextOverlayClip * self)
 GESTextVAlign
 ges_text_overlay_clip_get_valignment (GESTextOverlayClip * self)
 {
-  return self->priv->valign;
+  GESTextVAlign ret;
+  GESTimeline *_locked_timeline;
+
+  g_return_val_if_fail (GES_IS_OVERLAY_TEXT_CLIP (self), 0);
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
+  ret = self->priv->valign;
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
+
+  return ret;
 }
 
 /**
@@ -526,7 +608,16 @@ ges_text_overlay_clip_get_valignment (GESTextOverlayClip * self)
 const guint32
 ges_text_overlay_clip_get_color (GESTextOverlayClip * self)
 {
-  return self->priv->color;
+  guint32 ret;
+  GESTimeline *_locked_timeline;
+
+  g_return_val_if_fail (GES_IS_OVERLAY_TEXT_CLIP (self), 0);
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
+  ret = self->priv->color;
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
+
+  return ret;
 }
 
 /**
@@ -541,7 +632,16 @@ ges_text_overlay_clip_get_color (GESTextOverlayClip * self)
 const gdouble
 ges_text_overlay_clip_get_xpos (GESTextOverlayClip * self)
 {
-  return self->priv->xpos;
+  gdouble ret;
+  GESTimeline *_locked_timeline;
+
+  g_return_val_if_fail (GES_IS_OVERLAY_TEXT_CLIP (self), 0);
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
+  ret = self->priv->xpos;
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
+
+  return ret;
 }
 
 /**
@@ -556,7 +656,16 @@ ges_text_overlay_clip_get_xpos (GESTextOverlayClip * self)
 const gdouble
 ges_text_overlay_clip_get_ypos (GESTextOverlayClip * self)
 {
-  return self->priv->ypos;
+  gdouble ret;
+  GESTimeline *_locked_timeline;
+
+  g_return_val_if_fail (GES_IS_OVERLAY_TEXT_CLIP (self), 0);
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
+  ret = self->priv->ypos;
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
+
+  return ret;
 }
 
 static GESTrackElement *

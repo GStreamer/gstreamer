@@ -177,7 +177,6 @@ GST_DEBUG_CATEGORY_STATIC (ges_timeline_debug);
         g_thread_self());         \
   } G_STMT_END
 
-#define CHECK_THREAD(timeline) g_assert(timeline->priv->valid_thread == g_thread_self())
 
 struct _GESTimelinePrivate
 {
@@ -232,7 +231,6 @@ struct _GESTimelinePrivate
   gboolean commit_frozen;
   gboolean commit_delayed;
 
-  GThread *valid_thread;
   gboolean disposed;
 
   GstStreamCollection *stream_collection;
@@ -347,13 +345,13 @@ ges_timeline_get_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_DURATION:
-      g_value_set_uint64 (value, timeline->priv->duration);
+      g_value_set_uint64 (value, ges_timeline_get_duration (timeline));
       break;
     case PROP_AUTO_TRANSITION:
-      g_value_set_boolean (value, timeline->priv->auto_transition);
+      g_value_set_boolean (value, ges_timeline_get_auto_transition (timeline));
       break;
     case PROP_SNAPPING_DISTANCE:
-      g_value_set_uint64 (value, timeline->priv->snapping_distance);
+      g_value_set_uint64 (value, ges_timeline_get_snapping_distance (timeline));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -371,7 +369,7 @@ ges_timeline_set_property (GObject * object, guint property_id,
       ges_timeline_set_auto_transition (timeline, g_value_get_boolean (value));
       break;
     case PROP_SNAPPING_DISTANCE:
-      timeline->priv->snapping_distance = g_value_get_uint64 (value);
+      ges_timeline_set_snapping_distance (timeline, g_value_get_uint64 (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -932,7 +930,6 @@ ges_timeline_init (GESTimeline * self)
 
   g_rec_mutex_init (&priv->dyn_mutex);
   g_mutex_init (&priv->commited_lock);
-  priv->valid_thread = g_thread_self ();
 }
 
 /* Private methods */
@@ -2180,12 +2177,6 @@ ges_timeline_get_stream_collection (GESTimeline * timeline)
   return gst_object_ref (timeline->priv->stream_collection);
 }
 
-gboolean
-ges_timeline_in_current_thread (GESTimeline * timeline)
-{
-  return timeline->priv->valid_thread == g_thread_self ();
-}
-
 /**** API *****/
 /**
  * ges_timeline_new:
@@ -2252,9 +2243,11 @@ ges_timeline_load_from_uri (GESTimeline * timeline, const gchar * uri,
   g_return_val_if_fail ((ges_extractable_get_asset (GES_EXTRACTABLE
               (timeline)) == NULL), FALSE);
 
+  LOCK_DYN (timeline);
   project = ges_project_new (uri);
   ret = ges_project_load (project, timeline, error);
   gst_object_unref (project);
+  UNLOCK_DYN (timeline);
 
   return ret;
 }
@@ -2283,6 +2276,9 @@ ges_timeline_save_to_uri (GESTimeline * timeline, const gchar * uri,
   gboolean ret, created_proj = FALSE;
 
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
+
+  LOCK_DYN (timeline);
+
   project =
       GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (timeline)));
 
@@ -2296,6 +2292,8 @@ ges_timeline_save_to_uri (GESTimeline * timeline, const gchar * uri,
 
   if (created_proj)
     gst_object_unref (project);
+
+  UNLOCK_DYN (timeline);
 
   return ret;
 }
@@ -2313,10 +2311,15 @@ ges_timeline_save_to_uri (GESTimeline * timeline, const gchar * uri,
 GList *
 ges_timeline_get_groups (GESTimeline * timeline)
 {
-  g_return_val_if_fail (GES_IS_TIMELINE (timeline), NULL);
-  CHECK_THREAD (timeline);
+  GList *res;
 
-  return timeline->priv->groups;
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), NULL);
+
+  LOCK_DYN (timeline);
+  res = timeline->priv->groups;
+  UNLOCK_DYN (timeline);
+
+  return res;
 }
 
 /**
@@ -2336,7 +2339,8 @@ ges_timeline_append_layer (GESTimeline * timeline)
   GESLayer *layer;
 
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), NULL);
-  CHECK_THREAD (timeline);
+
+  LOCK_DYN (timeline);
 
   layer = ges_layer_new ();
 
@@ -2346,8 +2350,10 @@ ges_timeline_append_layer (GESTimeline * timeline)
 
   ges_layer_set_priority (layer, priority);
 
+  /* add_layer also locks, but dyn_mutex is recursive so this is safe */
   ges_timeline_add_layer (timeline, layer);
 
+  UNLOCK_DYN (timeline);
   return layer;
 }
 
@@ -2380,10 +2386,12 @@ ges_timeline_add_layer (GESTimeline * timeline, GESLayer * layer)
 {
   gboolean auto_transition;
   GList *objects, *tmp;
+  gboolean res = FALSE;
 
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
   g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
-  CHECK_THREAD (timeline);
+
+  LOCK_DYN (timeline);
 
   GST_DEBUG ("timeline:%p, layer:%p", timeline, layer);
 
@@ -2392,7 +2400,7 @@ ges_timeline_add_layer (GESTimeline * timeline, GESLayer * layer)
     GST_WARNING ("Layer belongs to another timeline, can't add it");
     gst_object_ref_sink (layer);
     gst_object_unref (layer);
-    return FALSE;
+    goto done;
   }
 
   /* Add to the list of layers, make sure we don't already control it */
@@ -2400,7 +2408,7 @@ ges_timeline_add_layer (GESTimeline * timeline, GESLayer * layer)
     GST_WARNING ("Layer is already controlled by this timeline");
     gst_object_ref_sink (layer);
     gst_object_unref (layer);
-    return FALSE;
+    goto done;
   }
 
   /* FIXME: ensure the layer->priority does not conflict with an existing
@@ -2439,7 +2447,11 @@ ges_timeline_add_layer (GESTimeline * timeline, GESLayer * layer)
     ges_timeline_add_clip (timeline, tmp->data, NULL);
   g_list_free_full (objects, gst_object_unref);
 
-  return TRUE;
+  res = TRUE;
+
+done:
+  UNLOCK_DYN (timeline);
+  return res;
 }
 
 /**
@@ -2456,18 +2468,18 @@ gboolean
 ges_timeline_remove_layer (GESTimeline * timeline, GESLayer * layer)
 {
   GList *layer_objects, *tmp;
+  gboolean res = FALSE;
 
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
   g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
 
-  if (!timeline->priv->disposed)
-    CHECK_THREAD (timeline);
+  LOCK_DYN (timeline);
 
   GST_DEBUG ("timeline:%p, layer:%p", timeline, layer);
 
   if (G_UNLIKELY (!g_list_find (timeline->layers, layer))) {
     GST_WARNING ("Layer doesn't belong to this timeline");
-    return FALSE;
+    goto done;
   }
 
   /* remove objects from any private data structures */
@@ -2493,8 +2505,23 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESLayer * layer)
   g_signal_emit (timeline, ges_timeline_signals[LAYER_REMOVED], 0, layer);
 
   gst_object_unref (layer);
+  res = TRUE;
 
-  return TRUE;
+done:
+  UNLOCK_DYN (timeline);
+  return res;
+}
+
+void
+_ges_timeline_lock (GESTimeline * timeline)
+{
+  g_rec_mutex_lock (&timeline->priv->dyn_mutex);
+}
+
+void
+_ges_timeline_unlock (GESTimeline * timeline)
+{
+  g_rec_mutex_unlock (&timeline->priv->dyn_mutex);
 }
 
 /**
@@ -2528,7 +2555,6 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
 
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
   g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
-  CHECK_THREAD (timeline);
 
   GST_DEBUG_OBJECT (timeline, "Adding %" GST_PTR_FORMAT, track);
 
@@ -2788,12 +2814,13 @@ ges_timeline_get_layers (GESTimeline * timeline)
   GList *tmp, *res = NULL;
 
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), NULL);
-  CHECK_THREAD (timeline);
 
+  LOCK_DYN (timeline);
   for (tmp = timeline->layers; tmp; tmp = g_list_next (tmp)) {
     res = g_list_insert_sorted (res, gst_object_ref (tmp->data),
         (GCompareFunc) sort_layers);
   }
+  UNLOCK_DYN (timeline);
 
   return res;
 }
@@ -3029,10 +3056,15 @@ ges_timeline_thaw_commit (GESTimeline * timeline)
 GstClockTime
 ges_timeline_get_duration (GESTimeline * timeline)
 {
-  g_return_val_if_fail (GES_IS_TIMELINE (timeline), GST_CLOCK_TIME_NONE);
-  CHECK_THREAD (timeline);
+  GstClockTime res;
 
-  return timeline->priv->duration;
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), GST_CLOCK_TIME_NONE);
+
+  LOCK_DYN (timeline);
+  res = timeline->priv->duration;
+  UNLOCK_DYN (timeline);
+
+  return res;
 }
 
 /**
@@ -3046,10 +3078,15 @@ ges_timeline_get_duration (GESTimeline * timeline)
 gboolean
 ges_timeline_get_auto_transition (GESTimeline * timeline)
 {
-  g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
-  CHECK_THREAD (timeline);
+  gboolean res;
 
-  return timeline->priv->auto_transition;
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
+
+  LOCK_DYN (timeline);
+  res = timeline->priv->auto_transition;
+  UNLOCK_DYN (timeline);
+
+  return res;
 }
 
 /**
@@ -3072,7 +3109,8 @@ ges_timeline_set_auto_transition (GESTimeline * timeline,
 
   g_return_if_fail (GES_IS_TIMELINE (timeline));
   g_return_if_fail (!timeline->priv->disable_edit_apis);
-  CHECK_THREAD (timeline);
+
+  LOCK_DYN (timeline);
 
   timeline->priv->auto_transition = auto_transition;
   g_object_notify (G_OBJECT (timeline), "auto-transition");
@@ -3082,6 +3120,8 @@ ges_timeline_set_auto_transition (GESTimeline * timeline,
     layer = layers->data;
     ges_layer_set_auto_transition (layer, auto_transition);
   }
+
+  UNLOCK_DYN (timeline);
 }
 
 /**
@@ -3095,11 +3135,15 @@ ges_timeline_set_auto_transition (GESTimeline * timeline,
 GstClockTime
 ges_timeline_get_snapping_distance (GESTimeline * timeline)
 {
+  GstClockTime res;
+
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), GST_CLOCK_TIME_NONE);
-  CHECK_THREAD (timeline);
 
-  return timeline->priv->snapping_distance;
+  LOCK_DYN (timeline);
+  res = timeline->priv->snapping_distance;
+  UNLOCK_DYN (timeline);
 
+  return res;
 }
 
 /**
@@ -3117,9 +3161,10 @@ ges_timeline_set_snapping_distance (GESTimeline * timeline,
 {
   g_return_if_fail (GES_IS_TIMELINE (timeline));
   g_return_if_fail (GST_CLOCK_TIME_IS_VALID (snapping_distance));
-  CHECK_THREAD (timeline);
 
+  LOCK_DYN (timeline);
   timeline->priv->snapping_distance = snapping_distance;
+  UNLOCK_DYN (timeline);
 }
 
 /**
@@ -3135,17 +3180,19 @@ ges_timeline_set_snapping_distance (GESTimeline * timeline,
 GESTimelineElement *
 ges_timeline_get_element (GESTimeline * timeline, const gchar * name)
 {
-  GESTimelineElement *ret;
+  GESTimelineElement *ret = NULL;
 
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), NULL);
-  CHECK_THREAD (timeline);
+
+  LOCK_DYN (timeline);
 
   /* FIXME: handle NULL name */
   ret = g_hash_table_lookup (timeline->priv->all_elements, name);
 
-  if (ret)
-    return gst_object_ref (ret);
-
+  if (ret) {
+    gst_object_ref (ret);
+    goto done;
+  }
 #ifndef GST_DISABLE_GST_DEBUG
   {
     GList *element_names, *tmp;
@@ -3160,7 +3207,9 @@ ges_timeline_get_element (GESTimeline * timeline, const gchar * name)
   }
 #endif
 
-  return NULL;
+done:
+  UNLOCK_DYN (timeline);
+  return ret;
 }
 
 /**
@@ -3176,21 +3225,27 @@ ges_timeline_is_empty (GESTimeline * timeline)
 {
   GHashTableIter iter;
   gpointer key, value;
+  gboolean res = TRUE;
 
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
-  CHECK_THREAD (timeline);
+
+  LOCK_DYN (timeline);
 
   if (g_hash_table_size (timeline->priv->all_elements) == 0)
-    return TRUE;
+    goto done;
 
   g_hash_table_iter_init (&iter, timeline->priv->all_elements);
   while (g_hash_table_iter_next (&iter, &key, &value)) {
     if (GES_IS_SOURCE (value) &&
-        ges_track_element_is_active (GES_TRACK_ELEMENT (value)))
-      return FALSE;
+        ges_track_element_is_active (GES_TRACK_ELEMENT (value))) {
+      res = FALSE;
+      goto done;
+    }
   }
 
-  return TRUE;
+done:
+  UNLOCK_DYN (timeline);
+  return res;
 }
 
 /**
@@ -3213,8 +3268,8 @@ ges_timeline_get_layer (GESTimeline * timeline, guint priority)
   GESLayer *layer = NULL;
 
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), NULL);
-  CHECK_THREAD (timeline);
 
+  LOCK_DYN (timeline);
   for (tmp = timeline->layers; tmp; tmp = tmp->next) {
     GESLayer *tmp_layer = GES_LAYER (tmp->data);
     guint tmp_priority;
@@ -3225,6 +3280,7 @@ ges_timeline_get_layer (GESTimeline * timeline, guint priority)
       break;
     }
   }
+  UNLOCK_DYN (timeline);
 
   return layer;
 }
@@ -3233,8 +3289,6 @@ gboolean
 ges_timeline_layer_priority_in_gap (GESTimeline * timeline, guint priority)
 {
   GList *tmp;
-
-  CHECK_THREAD (timeline);
 
   for (tmp = timeline->layers; tmp; tmp = tmp->next) {
     GESLayer *layer = GES_LAYER (tmp->data);
@@ -3282,13 +3336,14 @@ GESTimelineElement *
 ges_timeline_paste_element (GESTimeline * timeline,
     GESTimelineElement * element, GstClockTime position, gint layer_priority)
 {
-  GESTimelineElement *res, *copied_from;
+  GESTimelineElement *res = NULL, *copied_from;
   GESTimelineElementClass *element_class;
 
-  g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
-  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (element), FALSE);
-  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (position), FALSE);
-  CHECK_THREAD (timeline);
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), NULL);
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (element), NULL);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (position), NULL);
+
+  LOCK_DYN (timeline);
 
   element_class = GES_TIMELINE_ELEMENT_GET_CLASS (element);
   /* steal ownership of the copied element */
@@ -3296,14 +3351,13 @@ ges_timeline_paste_element (GESTimeline * timeline,
 
   if (!copied_from) {
     GST_ERROR_OBJECT (element, "Is not being 'deeply' copied!");
-
-    return NULL;
+    goto done;
   }
 
   if (!element_class->paste) {
     GST_ERROR_OBJECT (element, "No paste vmethod implemented");
     gst_object_unref (copied_from);
-    return NULL;
+    goto done;
   }
 
   /*
@@ -3314,14 +3368,19 @@ ges_timeline_paste_element (GESTimeline * timeline,
     GST_WARNING_OBJECT (timeline,
         "Only -1 value for layer priority is supported");
     gst_object_unref (copied_from);
-    return NULL;
+    goto done;
   }
 
   res = element_class->paste (element, copied_from, position);
 
   gst_object_unref (copied_from);
 
-  return res ? g_object_ref_sink (res) : res;
+  if (res)
+    res = g_object_ref_sink (res);
+
+done:
+  UNLOCK_DYN (timeline);
+  return res;
 }
 
 /**
@@ -3347,14 +3406,15 @@ ges_timeline_move_layer (GESTimeline * timeline, GESLayer * layer,
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
   g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
   g_return_val_if_fail (ges_layer_get_timeline (layer) == timeline, FALSE);
-  CHECK_THREAD (timeline);
+
+  LOCK_DYN (timeline);
 
   current_priority = ges_layer_get_priority (layer);
 
   if (new_layer_priority == current_priority) {
     GST_DEBUG_OBJECT (timeline,
         "Nothing to do for %" GST_PTR_FORMAT ", same priorities", layer);
-
+    UNLOCK_DYN (timeline);
     return TRUE;
   }
 
@@ -3364,6 +3424,7 @@ ges_timeline_move_layer (GESTimeline * timeline, GESLayer * layer,
 
   _resync_layers (timeline);
 
+  UNLOCK_DYN (timeline);
   return TRUE;
 }
 
@@ -3386,14 +3447,18 @@ GstClockTime
 ges_timeline_get_frame_time (GESTimeline * self, GESFrameNumber frame_number)
 {
   gint fps_n, fps_d;
+  GstClockTime res;
 
   g_return_val_if_fail (GES_IS_TIMELINE (self), GST_CLOCK_TIME_NONE);
   g_return_val_if_fail (GES_FRAME_NUMBER_IS_VALID (frame_number),
       GST_CLOCK_TIME_NONE);
 
+  LOCK_DYN (self);
   timeline_get_framerate (self, &fps_n, &fps_d);
+  res = gst_util_uint64_scale_ceil (frame_number, fps_d * GST_SECOND, fps_n);
+  UNLOCK_DYN (self);
 
-  return gst_util_uint64_scale_ceil (frame_number, fps_d * GST_SECOND, fps_n);
+  return res;
 }
 
 /**
@@ -3412,14 +3477,18 @@ GESFrameNumber
 ges_timeline_get_frame_at (GESTimeline * self, GstClockTime timestamp)
 {
   gint fps_n, fps_d;
+  GESFrameNumber res;
 
   g_return_val_if_fail (GES_IS_TIMELINE (self), GES_FRAME_NUMBER_NONE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp),
       GES_FRAME_NUMBER_NONE);
 
+  LOCK_DYN (self);
   timeline_get_framerate (self, &fps_n, &fps_d);
+  res = gst_util_uint64_scale (timestamp, fps_n, fps_d * GST_SECOND);
+  UNLOCK_DYN (self);
 
-  return gst_util_uint64_scale (timestamp, fps_n, fps_d * GST_SECOND);
+  return res;
 }
 
 /**
@@ -3445,8 +3514,9 @@ ges_timeline_get_frame_at (GESTimeline * self, GstClockTime timestamp)
 void
 ges_timeline_disable_edit_apis (GESTimeline * self, gboolean disable_edit_apis)
 {
-  CHECK_THREAD (self);
   g_return_if_fail (GES_IS_TIMELINE (self));
+
+  LOCK_DYN (self);
 
   if (disable_edit_apis) {
     if (self->priv->snapping_distance > 0) {
@@ -3464,6 +3534,8 @@ ges_timeline_disable_edit_apis (GESTimeline * self, gboolean disable_edit_apis)
   }
 
   self->priv->disable_edit_apis = disable_edit_apis;
+
+  UNLOCK_DYN (self);
 }
 
 /**
@@ -3477,8 +3549,13 @@ ges_timeline_disable_edit_apis (GESTimeline * self, gboolean disable_edit_apis)
 gboolean
 ges_timeline_get_edit_apis_disabled (GESTimeline * self)
 {
-  CHECK_THREAD (self);
+  gboolean res;
+
   g_return_val_if_fail (GES_IS_TIMELINE (self), FALSE);
 
-  return self->priv->disable_edit_apis;
+  LOCK_DYN (self);
+  res = self->priv->disable_edit_apis;
+  UNLOCK_DYN (self);
+
+  return res;
 }

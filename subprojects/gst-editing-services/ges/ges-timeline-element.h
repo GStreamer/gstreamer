@@ -436,7 +436,6 @@ GES_API
 gboolean             ges_timeline_element_get_natural_framerate       (GESTimelineElement *self,
                                                                        gint *framerate_n,
                                                                        gint *framerate_d);
-
 GES_API
 guint32 ges_timeline_element_get_layer_priority                       (GESTimelineElement * self);
 
@@ -455,4 +454,5 @@ gboolean ges_timeline_element_edit_full                                (GESTimel
                                                                        GESEdge edge,
                                                                        guint64 position,
                                                                        GError ** error);
+
 G_END_DECLS

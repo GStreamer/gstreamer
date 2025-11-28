@@ -475,6 +475,11 @@ void
 ges_uri_clip_set_mute (GESUriClip * self, gboolean mute)
 {
   GList *tmp;
+  GESTimeline *_locked_timeline;
+
+  g_return_if_fail (GES_IS_URI_CLIP (self));
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
 
   GST_DEBUG ("self:%p, mute:%d", self, mute);
 
@@ -488,6 +493,8 @@ ges_uri_clip_set_mute (GESUriClip * self, gboolean mute)
     if (track && track->type == GES_TRACK_TYPE_AUDIO)
       ges_track_element_set_active (trackelement, !mute);
   }
+
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
 }
 
 gboolean
@@ -517,7 +524,13 @@ uri_clip_set_max_duration (GESTimelineElement * element,
 void
 ges_uri_clip_set_is_image (GESUriClip * self, gboolean is_image)
 {
+  GESTimeline *_locked_timeline;
+
+  g_return_if_fail (GES_IS_URI_CLIP (self));
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
   self->priv->is_image = is_image;
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
 }
 
 /**
@@ -531,7 +544,16 @@ ges_uri_clip_set_is_image (GESUriClip * self, gboolean is_image)
 gboolean
 ges_uri_clip_is_muted (GESUriClip * self)
 {
-  return self->priv->mute;
+  gboolean ret;
+  GESTimeline *_locked_timeline;
+
+  g_return_val_if_fail (GES_IS_URI_CLIP (self), FALSE);
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
+  ret = self->priv->mute;
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
+
+  return ret;
 }
 
 /**
@@ -545,7 +567,16 @@ ges_uri_clip_is_muted (GESUriClip * self)
 gboolean
 ges_uri_clip_is_image (GESUriClip * self)
 {
-  return self->priv->is_image;
+  gboolean ret;
+  GESTimeline *_locked_timeline;
+
+  g_return_val_if_fail (GES_IS_URI_CLIP (self), FALSE);
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
+  ret = self->priv->is_image;
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
+
+  return ret;
 }
 
 /**
@@ -559,7 +590,16 @@ ges_uri_clip_is_image (GESUriClip * self)
 const gchar *
 ges_uri_clip_get_uri (GESUriClip * self)
 {
-  return self->priv->uri;
+  const gchar *ret;
+  GESTimeline *_locked_timeline;
+
+  g_return_val_if_fail (GES_IS_URI_CLIP (self), NULL);
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
+  ret = self->priv->uri;
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
+
+  return ret;
 }
 
 static GList *

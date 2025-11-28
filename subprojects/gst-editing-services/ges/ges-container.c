@@ -710,10 +710,14 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
   GESContainerClass *class;
   GList *current_children, *tmp;
   GESContainerPrivate *priv;
+  GESTimeline *_locked_timeline;
 
   g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (child), FALSE);
   g_return_val_if_fail (GES_TIMELINE_ELEMENT_PARENT (child) == NULL, FALSE);
+
+  _locked_timeline =
+      _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (container));
 
   class = GES_CONTAINER_GET_CLASS (container);
   priv = container->priv;
@@ -793,6 +797,8 @@ done:
   g_list_free_full (current_children, gst_object_unref);
   gst_object_unref (child);
   container->children_control_mode = GES_CHILDREN_UPDATE;
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (container),
+      _locked_timeline);
   return ret;
 }
 
@@ -813,9 +819,13 @@ ges_container_remove (GESContainer * container, GESTimelineElement * child)
   GESContainerPrivate *priv;
   GList *current_children, *tmp;
   gboolean ret = FALSE;
+  GESTimeline *_locked_timeline;
 
   g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (child), FALSE);
+
+  _locked_timeline =
+      _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (container));
 
   GST_DEBUG_OBJECT (container, "removing child: %" GST_PTR_FORMAT, child);
 
@@ -825,6 +835,8 @@ ges_container_remove (GESContainer * container, GESTimelineElement * child)
   if (!(g_hash_table_lookup (priv->mappings, child))) {
     GST_WARNING_OBJECT (container, "Element isn't controlled by this "
         "container");
+    _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (container),
+        _locked_timeline);
     return FALSE;
   }
 
@@ -876,6 +888,8 @@ done:
     g_object_thaw_notify (G_OBJECT (tmp->data));
   g_list_free_full (current_children, gst_object_unref);
 
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (container),
+      _locked_timeline);
   gst_object_unref (container);
 
   return ret;
@@ -915,14 +929,21 @@ GList *
 ges_container_get_children (GESContainer * container, gboolean recursive)
 {
   GList *children = NULL;
+  GESTimeline *_locked_timeline;
 
   g_return_val_if_fail (GES_IS_CONTAINER (container), NULL);
 
-  if (!recursive)
-    return g_list_copy_deep (container->children, (GCopyFunc) gst_object_ref,
-        NULL);
+  _locked_timeline =
+      _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (container));
 
-  _get_children_recursively (container, &children);
+  if (!recursive)
+    children = g_list_copy_deep (container->children,
+        (GCopyFunc) gst_object_ref, NULL);
+  else
+    _get_children_recursively (container, &children);
+
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (container),
+      _locked_timeline);
   return children;
 }
 
@@ -950,8 +971,13 @@ GList *
 ges_container_ungroup (GESContainer * container, gboolean recursive)
 {
   GESContainerClass *klass;
+  GList *ret = NULL;
+  GESTimeline *_locked_timeline;
 
   g_return_val_if_fail (GES_IS_CONTAINER (container), NULL);
+
+  _locked_timeline =
+      _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (container));
 
   GST_DEBUG_OBJECT (container, "Ungrouping container %s recursively",
       recursive ? "" : "not");
@@ -959,10 +985,15 @@ ges_container_ungroup (GESContainer * container, gboolean recursive)
   klass = GES_CONTAINER_GET_CLASS (container);
   if (klass->ungroup == NULL) {
     GST_INFO_OBJECT (container, "No ungoup virtual method, doint nothing");
-    return NULL;
+    goto done;
   }
 
-  return klass->ungroup (container, recursive);
+  ret = klass->ungroup (container, recursive);
+
+done:
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (container),
+      _locked_timeline);
+  return ret;
 }
 
 /**
@@ -997,6 +1028,7 @@ ges_container_group (GList * containers)
   guint i = 0;
   GESContainer *ret = NULL;
   GESTimeline *timeline = NULL;
+  GESTimeline *_locked_timeline = NULL;
 
   if (containers) {
     element = GES_TIMELINE_ELEMENT (containers->data);
@@ -1013,6 +1045,7 @@ ges_container_group (GList * containers)
     return containers->data;
   }
 
+  /* Validate all containers before locking */
   for (tmp = containers; tmp; tmp = tmp->next) {
     g_return_val_if_fail (GES_IS_CONTAINER (tmp->data), NULL);
     g_return_val_if_fail (GES_TIMELINE_ELEMENT_PARENT (tmp->data) == NULL,
@@ -1020,6 +1053,11 @@ ges_container_group (GList * containers)
     g_return_val_if_fail (GES_TIMELINE_ELEMENT_TIMELINE (tmp->data) == timeline,
         NULL);
   }
+
+  /* Lock via the first container - all must be on the same timeline */
+  if (containers)
+    _locked_timeline =
+        _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (containers->data));
 
   /* FIXME: how can user sub-classes interact with this if
    * ->grouping_priority is private? */
@@ -1037,6 +1075,10 @@ ges_container_group (GList * containers)
   }
 
   g_free (children_types);
+
+  if (containers)
+    _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (containers->data),
+        _locked_timeline);
   return ret;
 }
 

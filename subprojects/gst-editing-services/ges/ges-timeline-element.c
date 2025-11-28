@@ -122,6 +122,18 @@
 
 #include "glib-compat-private.h"
 
+/* Forward declarations for locking functions - implemented after struct */
+static GESTimeline *_timeline_element_lock (GESTimelineElement * self);
+static void _timeline_element_unlock (GESTimelineElement * self,
+    GESTimeline * timeline);
+
+/* Locking macros - convenience wrappers around the functions */
+#define _LOCK(self) \
+  GESTimeline *_locked_timeline = _timeline_element_lock (self)
+
+#define _UNLOCK(self) \
+  _timeline_element_unlock (self, _locked_timeline)
+
 /* maps type name quark => count */
 static GData *object_name_counts = NULL;
 
@@ -184,7 +196,8 @@ struct _GESTimelineElementPrivate
 
   GESTimelineElementFlags flags;
 
-  GMutex timeline_lock;         /* Protects timeline access */
+  GMutex timeline_lock;         /* Protects timeline pointer access */
+  GRecMutex api_lock;           /* Used when element is not in a timeline */
 };
 
 typedef struct
@@ -198,6 +211,71 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESTimelineElement, ges_timeline_element,
     G_TYPE_INITIALLY_UNOWNED, G_ADD_PRIVATE (GESTimelineElement)
     G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE, ges_extractable_interface_init)
     G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER, NULL));
+
+/*********************************************
+ *         Internal locking functions        *
+ *********************************************/
+
+/*
+ * _timeline_element_lock:
+ * @self: a #GESTimelineElement
+ *
+ * Acquires the lock for thread-safe API access. If the element is in a
+ * timeline, locks the timeline's dyn_mutex. If the element is orphan
+ * (no timeline), locks its own api_lock.
+ *
+ * Returns: The timeline the element is in (with an added reference),
+ *   or %NULL if orphan. Pass this to _timeline_element_unlock().
+ */
+static GESTimeline *
+_timeline_element_lock (GESTimelineElement * self)
+{
+  GESTimeline *timeline;
+
+  g_mutex_lock (&self->priv->timeline_lock);
+  timeline = self->timeline;
+  if (timeline)
+    gst_object_ref (timeline);
+  g_mutex_unlock (&self->priv->timeline_lock);
+
+  if (timeline)
+    _ges_timeline_lock (timeline);
+  else
+    g_rec_mutex_lock (&self->priv->api_lock);
+
+  return timeline;
+}
+
+/*
+ * _timeline_element_unlock:
+ * @self: a #GESTimelineElement
+ * @timeline: The timeline returned by _timeline_element_lock()
+ *
+ * Releases the lock acquired by _timeline_element_lock().
+ */
+static void
+_timeline_element_unlock (GESTimelineElement * self, GESTimeline * timeline)
+{
+  if (timeline) {
+    _ges_timeline_unlock (timeline);
+    gst_object_unref (timeline);
+  } else {
+    g_rec_mutex_unlock (&self->priv->api_lock);
+  }
+}
+
+/* Public internal API wrappers (for use by subclasses) */
+GESTimeline *
+_ges_timeline_element_lock (GESTimelineElement * self)
+{
+  return _timeline_element_lock (self);
+}
+
+void
+_ges_timeline_element_unlock (GESTimelineElement * self, GESTimeline * timeline)
+{
+  _timeline_element_unlock (self, timeline);
+}
 
 /*********************************************
  *      Virtual methods implementation       *
@@ -296,7 +374,6 @@ ges_timeline_element_get_children_properties (GESTimelineElement * self,
     guint * n_properties)
 {
   GParamSpec **pspec;
-
   guint i = 0;
 
   *n_properties = self->priv->children_props->len;
@@ -319,32 +396,36 @@ _get_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_PARENT:
-      g_value_set_object (value, self->parent);
+      g_value_take_object (value, ges_timeline_element_get_parent (self));
       break;
     case PROP_TIMELINE:
-      g_value_set_object (value, self->timeline);
+      g_value_take_object (value, ges_timeline_element_get_timeline (self));
       break;
     case PROP_START:
-      g_value_set_uint64 (value, self->start);
+      g_value_set_uint64 (value, ges_timeline_element_get_start (self));
       break;
     case PROP_INPOINT:
-      g_value_set_uint64 (value, self->inpoint);
+      g_value_set_uint64 (value, ges_timeline_element_get_inpoint (self));
       break;
     case PROP_DURATION:
-      g_value_set_uint64 (value, self->duration);
+      g_value_set_uint64 (value, ges_timeline_element_get_duration (self));
       break;
     case PROP_MAX_DURATION:
-      g_value_set_uint64 (value, self->maxduration);
+      g_value_set_uint64 (value, ges_timeline_element_get_max_duration (self));
       break;
     case PROP_PRIORITY:
-      g_value_set_uint (value, self->priority);
+      g_value_set_uint (value, ges_timeline_element_get_priority (self));
       break;
     case PROP_NAME:
       g_value_take_string (value, ges_timeline_element_get_name (self));
       break;
     case PROP_SERIALIZE:
+    {
+      _LOCK (self);
       g_value_set_boolean (value, self->priv->serialize);
+      _UNLOCK (self);
       break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, property_id, pspec);
   }
@@ -382,8 +463,12 @@ _set_property (GObject * object, guint property_id,
       ges_timeline_element_set_name (self, g_value_get_string (value));
       break;
     case PROP_SERIALIZE:
+    {
+      _LOCK (self);
       self->priv->serialize = g_value_get_boolean (value);
+      _UNLOCK (self);
       break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, property_id, pspec);
   }
@@ -409,6 +494,7 @@ ges_timeline_element_finalize (GObject * self)
   g_free (tle->name);
 
   g_mutex_clear (&tle->priv->timeline_lock);
+  g_rec_mutex_clear (&tle->priv->api_lock);
 
   G_OBJECT_CLASS (ges_timeline_element_parent_class)->finalize (self);
 }
@@ -447,6 +533,7 @@ ges_timeline_element_init (GESTimelineElement * self)
       (GDestroyNotify) _child_prop_spec_free);
 
   g_mutex_init (&self->priv->timeline_lock);
+  g_rec_mutex_init (&self->priv->api_lock);
 }
 
 static void
@@ -880,11 +967,15 @@ ges_timeline_element_add_child_property_full (GESTimelineElement * self,
 {
   gchar *signame;
   ChildPropSpec childprop, *prev;
+  gboolean res = FALSE;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+
+  _LOCK (self);
 
   if (_find_child_prop (self, pspec, child, NULL)) {
     GST_INFO_OBJECT (self, "Child property already exists: %s", pspec->name);
-
-    return FALSE;
+    goto done;
   }
 
   prev = _find_child_prop (self, pspec, NULL, NULL);
@@ -894,7 +985,10 @@ ges_timeline_element_add_child_property_full (GESTimelineElement * self,
     } else {
       ChildPropSpec *owner_prop = _find_child_prop (owner, pspec, NULL, NULL);
 
-      g_return_val_if_fail (owner_prop, FALSE);
+      if (!owner_prop) {
+        GST_WARNING_OBJECT (self, "Owner does not have the child property");
+        goto done;
+      }
       flags |= owner_prop->flags;
     }
   }
@@ -903,8 +997,7 @@ ges_timeline_element_add_child_property_full (GESTimelineElement * self,
     GST_ERROR_OBJECT (self,
         "Trying to add child property with flags %d but the same"
         " property had flags %d - this is not supported", flags, prev->flags);
-
-    return FALSE;
+    goto done;
   }
 
   GST_DEBUG_OBJECT (self, "Adding child property: %" GST_PTR_FORMAT "::%s",
@@ -928,7 +1021,11 @@ ges_timeline_element_add_child_property_full (GESTimelineElement * self,
       child, pspec);
 
   g_free (signame);
-  return TRUE;
+  res = TRUE;
+
+done:
+  _UNLOCK (self);
+  return res;
 }
 
 GList *
@@ -979,9 +1076,13 @@ gboolean
 ges_timeline_element_set_parent (GESTimelineElement * self,
     GESTimelineElement * parent)
 {
+  gboolean res = FALSE;
+
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
   g_return_val_if_fail (parent == NULL
       || GES_IS_TIMELINE_ELEMENT (parent), FALSE);
+
+  _LOCK (self);
 
   if (self == parent) {
     GST_INFO_OBJECT (self, "Trying to add %p in itself, not a good idea!",
@@ -990,34 +1091,33 @@ ges_timeline_element_set_parent (GESTimelineElement * self,
      * own it? */
     gst_object_ref_sink (self);
     gst_object_unref (self);
-    return FALSE;
+    goto done;
   }
 
   GST_DEBUG_OBJECT (self, "set parent to %" GST_PTR_FORMAT, parent);
 
-  if (self->parent != NULL && parent != NULL)
-    goto had_parent;
-
-  if (GES_TIMELINE_ELEMENT_GET_CLASS (self)->set_parent) {
-    if (!GES_TIMELINE_ELEMENT_GET_CLASS (self)->set_parent (self, parent))
-      return FALSE;
-  }
-
-  self->parent = parent;
-
-  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_PARENT]);
-  return TRUE;
-
-  /* ERROR handling */
-had_parent:
-  {
+  if (self->parent != NULL && parent != NULL) {
     GST_WARNING_OBJECT (self, "set parent failed, object already had a parent");
     /* FIXME: why are we sinking and then unreffing self when we do not
      * own it? */
     gst_object_ref_sink (self);
     gst_object_unref (self);
-    return FALSE;
+    goto done;
   }
+
+  if (GES_TIMELINE_ELEMENT_GET_CLASS (self)->set_parent) {
+    if (!GES_TIMELINE_ELEMENT_GET_CLASS (self)->set_parent (self, parent))
+      goto done;
+  }
+
+  self->parent = parent;
+
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_PARENT]);
+  res = TRUE;
+
+done:
+  _UNLOCK (self);
+  return res;
 }
 
 /**
@@ -1036,9 +1136,11 @@ ges_timeline_element_get_parent (GESTimelineElement * self)
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), NULL);
 
+  _LOCK (self);
   result = self->parent;
   if (G_LIKELY (result))
     gst_object_ref (result);
+  _UNLOCK (self);
 
   return result;
 }
@@ -1166,20 +1268,27 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
 {
   GESTimelineElementClass *klass;
   GESTimelineElement *toplevel_container, *parent;
+  gboolean res = FALSE;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (start), FALSE);
 
-  if (self->start == start)
-    return TRUE;
+  _LOCK (self);
+
+  if (self->start == start) {
+    res = TRUE;
+    goto done;
+  }
 
   GST_DEBUG_OBJECT (self, "current start: %" GST_TIME_FORMAT
       " new start: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GES_TIMELINE_ELEMENT_START (self)), GST_TIME_ARGS (start));
 
-  if (self->timeline && !GES_TIMELINE_ELEMENT_BEING_EDITED (self))
-    return ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_NORMAL,
+  if (self->timeline && !GES_TIMELINE_ELEMENT_BEING_EDITED (self)) {
+    res = ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_NORMAL,
         GES_EDGE_NONE, start);
+    goto done;
+  }
 
   toplevel_container = ges_timeline_element_peak_toplevel (self);
   parent = self->parent;
@@ -1194,30 +1303,32 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
     GST_INFO_OBJECT (self,
         "Can not move the object as it would imply its "
         "container to have a negative start value");
-
-    return FALSE;
+    goto done;
   }
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
   if (klass->set_start) {
-    gint res = klass->set_start (self, start);
-    if (res == FALSE)
-      return FALSE;
-    if (res == TRUE) {
+    gint set_res = klass->set_start (self, start);
+    if (set_res == FALSE)
+      goto done;
+    if (set_res == TRUE) {
       self->start = start;
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_START]);
     }
 
     GST_DEBUG_OBJECT (self, "New start: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GES_TIMELINE_ELEMENT_START (self)));
-
-    return TRUE;
+    res = TRUE;
+    goto done;
   }
 
   GST_WARNING_OBJECT (self, "No set_start virtual method implementation"
       " on class %s. Can not set start %" GST_TIME_FORMAT,
       G_OBJECT_CLASS_NAME (klass), GST_TIME_ARGS (start));
-  return FALSE;
+
+done:
+  _UNLOCK (self);
+  return res;
 }
 
 /**
@@ -1236,21 +1347,26 @@ ges_timeline_element_set_inpoint (GESTimelineElement * self,
     GstClockTime inpoint)
 {
   GESTimelineElementClass *klass;
+  gboolean res = FALSE;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+
+  _LOCK (self);
 
   GST_DEBUG_OBJECT (self, "current inpoint: %" GST_TIME_FORMAT
       " new inpoint: %" GST_TIME_FORMAT, GST_TIME_ARGS (self->inpoint),
       GST_TIME_ARGS (inpoint));
 
-  if (G_UNLIKELY (inpoint == self->inpoint))
-    return TRUE;
+  if (G_UNLIKELY (inpoint == self->inpoint)) {
+    res = TRUE;
+    goto done;
+  }
 
   if (GES_CLOCK_TIME_IS_LESS (self->maxduration, inpoint)) {
     GST_WARNING_OBJECT (self, "Can not set an in-point of %" GST_TIME_FORMAT
         " because it exceeds the element's max-duration: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (inpoint), GST_TIME_ARGS (self->maxduration));
-    return FALSE;
+    goto done;
   }
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
@@ -1261,19 +1377,21 @@ ges_timeline_element_set_inpoint (GESTimelineElement * self,
      * being -1 for setting that succeeds but does not want a notify
      * signal because it will call this method on itself a second time. */
     if (!klass->set_inpoint (self, inpoint))
-      return FALSE;
+      goto done;
 
     self->inpoint = inpoint;
     g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_INPOINT]);
-
-    return TRUE;
+    res = TRUE;
+    goto done;
   }
 
   GST_DEBUG_OBJECT (self, "No set_inpoint virtual method implementation"
       " on class %s. Can not set inpoint %" GST_TIME_FORMAT,
       G_OBJECT_CLASS_NAME (klass), GST_TIME_ARGS (inpoint));
 
-  return FALSE;
+done:
+  _UNLOCK (self);
+  return res;
 }
 
 /**
@@ -1292,40 +1410,47 @@ ges_timeline_element_set_max_duration (GESTimelineElement * self,
     GstClockTime maxduration)
 {
   GESTimelineElementClass *klass;
+  gboolean res = FALSE;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+
+  _LOCK (self);
 
   GST_DEBUG_OBJECT (self, "current max-duration: %" GST_TIME_FORMAT
       " new max-duration: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (self->maxduration), GST_TIME_ARGS (maxduration));
 
-  if (G_UNLIKELY (maxduration == self->maxduration))
-    return TRUE;
+  if (G_UNLIKELY (maxduration == self->maxduration)) {
+    res = TRUE;
+    goto done;
+  }
 
   if (GES_CLOCK_TIME_IS_LESS (maxduration, self->inpoint)) {
     GST_WARNING_OBJECT (self, "Can not set a max-duration of %"
         GST_TIME_FORMAT " because it lies below the element's in-point: %"
         GST_TIME_FORMAT, GST_TIME_ARGS (maxduration),
         GST_TIME_ARGS (self->inpoint));
-    return FALSE;
+    goto done;
   }
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   if (klass->set_max_duration) {
     if (!klass->set_max_duration (self, maxduration))
-      return FALSE;
+      goto done;
     self->maxduration = maxduration;
     g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_MAX_DURATION]);
-
-    return TRUE;
+    res = TRUE;
+    goto done;
   }
 
   GST_DEBUG_OBJECT (self, "No set_max_duration virtual method implementation"
       " on class %s. Can not set max-duration  %" GST_TIME_FORMAT,
       G_OBJECT_CLASS_NAME (klass), GST_TIME_ARGS (maxduration));
 
-  return FALSE;
+done:
+  _UNLOCK (self);
+  return res;
 }
 
 /**
@@ -1351,15 +1476,22 @@ ges_timeline_element_set_duration (GESTimelineElement * self,
     GstClockTime duration)
 {
   GESTimelineElementClass *klass;
+  gboolean res = FALSE;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
-  if (duration == self->duration)
-    return TRUE;
+  _LOCK (self);
 
-  if (self->timeline && !GES_TIMELINE_ELEMENT_BEING_EDITED (self))
-    return ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_TRIM,
+  if (duration == self->duration) {
+    res = TRUE;
+    goto done;
+  }
+
+  if (self->timeline && !GES_TIMELINE_ELEMENT_BEING_EDITED (self)) {
+    res = ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_TRIM,
         GES_EDGE_END, self->start + duration);
+    goto done;
+  }
 
   GST_DEBUG_OBJECT (self, "current duration: %" GST_TIME_FORMAT
       " new duration: %" GST_TIME_FORMAT,
@@ -1368,21 +1500,24 @@ ges_timeline_element_set_duration (GESTimelineElement * self,
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
   if (klass->set_duration) {
-    gint res = klass->set_duration (self, duration);
-    if (res == FALSE)
-      return FALSE;
-    if (res == TRUE) {
+    gint set_res = klass->set_duration (self, duration);
+    if (set_res == FALSE)
+      goto done;
+    if (set_res == TRUE) {
       self->duration = duration;
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_DURATION]);
     }
-
-    return TRUE;
+    res = TRUE;
+    goto done;
   }
 
   GST_WARNING_OBJECT (self, "No set_duration virtual method implementation"
       " on class %s. Can not set duration %" GST_TIME_FORMAT,
       G_OBJECT_CLASS_NAME (klass), GST_TIME_ARGS (duration));
-  return FALSE;
+
+done:
+  _UNLOCK (self);
+  return res;
 }
 
 /**
@@ -1396,9 +1531,15 @@ ges_timeline_element_set_duration (GESTimelineElement * self,
 GstClockTime
 ges_timeline_element_get_start (GESTimelineElement * self)
 {
+  GstClockTime res;
+
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), GST_CLOCK_TIME_NONE);
 
-  return self->start;
+  _LOCK (self);
+  res = self->start;
+  _UNLOCK (self);
+
+  return res;
 }
 
 /**
@@ -1412,9 +1553,15 @@ ges_timeline_element_get_start (GESTimelineElement * self)
 GstClockTime
 ges_timeline_element_get_inpoint (GESTimelineElement * self)
 {
+  GstClockTime res;
+
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), GST_CLOCK_TIME_NONE);
 
-  return self->inpoint;
+  _LOCK (self);
+  res = self->inpoint;
+  _UNLOCK (self);
+
+  return res;
 }
 
 /**
@@ -1428,9 +1575,15 @@ ges_timeline_element_get_inpoint (GESTimelineElement * self)
 GstClockTime
 ges_timeline_element_get_duration (GESTimelineElement * self)
 {
+  GstClockTime res;
+
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), GST_CLOCK_TIME_NONE);
 
-  return self->duration;
+  _LOCK (self);
+  res = self->duration;
+  _UNLOCK (self);
+
+  return res;
 }
 
 /**
@@ -1444,9 +1597,15 @@ ges_timeline_element_get_duration (GESTimelineElement * self)
 GstClockTime
 ges_timeline_element_get_max_duration (GESTimelineElement * self)
 {
+  GstClockTime res;
+
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), GST_CLOCK_TIME_NONE);
 
-  return self->maxduration;
+  _LOCK (self);
+  res = self->maxduration;
+  _UNLOCK (self);
+
+  return res;
 }
 
 /**
@@ -1460,9 +1619,15 @@ ges_timeline_element_get_max_duration (GESTimelineElement * self)
 guint32
 ges_timeline_element_get_priority (GESTimelineElement * self)
 {
+  guint32 res;
+
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), 0);
 
-  return self->priority;
+  _LOCK (self);
+  res = self->priority;
+  _UNLOCK (self);
+
+  return res;
 }
 
 /**
@@ -1482,8 +1647,11 @@ gboolean
 ges_timeline_element_set_priority (GESTimelineElement * self, guint32 priority)
 {
   GESTimelineElementClass *klass;
+  gboolean res = FALSE;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+
+  _LOCK (self);
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
@@ -1491,19 +1659,21 @@ ges_timeline_element_set_priority (GESTimelineElement * self, guint32 priority)
       self->priority, priority);
 
   if (klass->set_priority) {
-    gboolean res = klass->set_priority (self, priority);
+    res = klass->set_priority (self, priority);
     if (res) {
       self->priority = priority;
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_PRIORITY]);
     }
-
-    return res;
+    goto done;
   }
 
   GST_WARNING_OBJECT (self, "No set_priority virtual method implementation"
       " on class %s. Can not set priority %d", G_OBJECT_CLASS_NAME (klass),
       priority);
-  return FALSE;
+
+done:
+  _UNLOCK (self);
+  return res;
 }
 
 /**
@@ -1522,19 +1692,23 @@ gboolean
 ges_timeline_element_ripple (GESTimelineElement * self, GstClockTime start)
 {
   GESTimelineElementClass *klass;
+  gboolean res;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (start), FALSE);
 
+  _LOCK (self);
+
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   if (klass->ripple)
-    return klass->ripple (self, start);
+    res = klass->ripple (self, start);
+  else
+    res = ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_RIPPLE,
+        GES_EDGE_NONE, start);
 
-  return ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_RIPPLE,
-      GES_EDGE_NONE, start);
-
-  return FALSE;
+  _UNLOCK (self);
+  return res;
 }
 
 /**
@@ -1553,17 +1727,23 @@ gboolean
 ges_timeline_element_ripple_end (GESTimelineElement * self, GstClockTime end)
 {
   GESTimelineElementClass *klass;
+  gboolean res;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (end), FALSE);
 
+  _LOCK (self);
+
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   if (klass->ripple_end)
-    return klass->ripple_end (self, end);
+    res = klass->ripple_end (self, end);
+  else
+    res = ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_RIPPLE,
+        GES_EDGE_END, end);
 
-  return ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_RIPPLE,
-      GES_EDGE_END, end);
+  _UNLOCK (self);
+  return res;
 }
 
 /**
@@ -1581,17 +1761,23 @@ gboolean
 ges_timeline_element_roll_start (GESTimelineElement * self, GstClockTime start)
 {
   GESTimelineElementClass *klass;
+  gboolean res;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (start), FALSE);
 
+  _LOCK (self);
+
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   if (klass->roll_start)
-    return klass->roll_start (self, start);
+    res = klass->roll_start (self, start);
+  else
+    res = ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_ROLL,
+        GES_EDGE_START, start);
 
-  return ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_ROLL,
-      GES_EDGE_START, start);
+  _UNLOCK (self);
+  return res;
 }
 
 /**
@@ -1609,17 +1795,23 @@ gboolean
 ges_timeline_element_roll_end (GESTimelineElement * self, GstClockTime end)
 {
   GESTimelineElementClass *klass;
+  gboolean res;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (end), FALSE);
 
+  _LOCK (self);
+
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   if (klass->roll_end)
-    return klass->roll_end (self, end);
+    res = klass->roll_end (self, end);
+  else
+    res = ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_ROLL,
+        GES_EDGE_END, end);
 
-  return ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_ROLL,
-      GES_EDGE_END, end);
+  _UNLOCK (self);
+  return res;
 }
 
 /**
@@ -1637,17 +1829,23 @@ gboolean
 ges_timeline_element_trim (GESTimelineElement * self, GstClockTime start)
 {
   GESTimelineElementClass *klass;
+  gboolean res;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (start), FALSE);
 
+  _LOCK (self);
+
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   if (klass->trim)
-    return klass->trim (self, start);
+    res = klass->trim (self, start);
+  else
+    res = ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_TRIM,
+        GES_EDGE_START, start);
 
-  return ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_TRIM,
-      GES_EDGE_START, start);
+  _UNLOCK (self);
+  return res;
 }
 
 /**
@@ -1683,6 +1881,8 @@ ges_timeline_element_copy (GESTimelineElement * self, gboolean deep)
   GESTimelineElement *ret = NULL;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), NULL);
+
+  _LOCK (self);
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
@@ -1720,6 +1920,7 @@ ges_timeline_element_copy (GESTimelineElement * self, gboolean deep)
     ret->priv->copied_from = gst_object_ref (self);
   }
 
+  _UNLOCK (self);
   return ret;
 }
 
@@ -1740,9 +1941,12 @@ ges_timeline_element_get_toplevel_parent (GESTimelineElement * self)
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), NULL);
 
+  _LOCK (self);
   toplevel = ges_timeline_element_peak_toplevel (self);
+  gst_object_ref (toplevel);
+  _UNLOCK (self);
 
-  return gst_object_ref (toplevel);
+  return toplevel;
 }
 
 /**
@@ -1756,9 +1960,15 @@ ges_timeline_element_get_toplevel_parent (GESTimelineElement * self)
 gchar *
 ges_timeline_element_get_name (GESTimelineElement * self)
 {
+  gchar *res;
+
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), NULL);
 
-  return g_strdup (self->name);
+  _LOCK (self);
+  res = g_strdup (self->name);
+  _UNLOCK (self);
+
+  return res;
 }
 
 /**
@@ -1793,9 +2003,11 @@ ges_timeline_element_set_name (GESTimelineElement * self, const gchar * name)
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
+  _LOCK (self);
+
   if (name != NULL && !g_strcmp0 (name, self->name)) {
     GST_DEBUG_OBJECT (self, "Same name!");
-    return TRUE;
+    goto done;
   }
 
   /* parented objects cannot be renamed */
@@ -1806,7 +2018,12 @@ ges_timeline_element_set_name (GESTimelineElement * self, const gchar * name)
      * self to its existing name. There is no need to throw an error */
     if (tmp) {
       gst_object_unref (tmp);
-      goto had_timeline;
+      /* FIXME: message is misleading. We are here if some other object in
+       * the timeline was added under @name (see above) */
+      GST_WARNING ("Object %s already in a timeline can't be renamed to %s",
+          self->name, name);
+      result = FALSE;
+      goto done;
     }
 
     timeline_remove_element (self->timeline, self);
@@ -1824,17 +2041,9 @@ ges_timeline_element_set_name (GESTimelineElement * self, const gchar * name)
   if (readd_to_timeline)
     timeline_add_element (self->timeline, self);
 
+done:
+  _UNLOCK (self);
   return result;
-
-  /* error */
-had_timeline:
-  {
-    /* FIXME: message is misleading. We are here if some other object in
-     * the timeline was added under @name (see above) */
-    GST_WARNING ("Object %s already in a timeline can't be renamed to %s",
-        self->name, name);
-    return FALSE;
-  }
 }
 
 /**
@@ -1884,17 +2093,21 @@ ges_timeline_element_get_child_property_by_pspec (GESTimelineElement * self,
   g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
   g_return_if_fail (G_IS_PARAM_SPEC (pspec));
 
+  _LOCK (self);
+
   childprop = _find_child_prop (self, pspec, NULL, NULL);
   if (!childprop)
     goto not_found;
 
   g_object_get_property (G_OBJECT (childprop->child), pspec->name, value);
 
+  _UNLOCK (self);
   return;
 
 not_found:
   {
     GST_ERROR_OBJECT (self, "The %s property doesn't exist", pspec->name);
+    _UNLOCK (self);
     return;
   }
 }
@@ -1916,7 +2129,9 @@ ges_timeline_element_set_child_property_by_pspec (GESTimelineElement * self,
   g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
   g_return_if_fail (G_IS_PARAM_SPEC (pspec));
 
+  _LOCK (self);
   set_child_property_by_pspec (self, pspec, value, NULL);
+  _UNLOCK (self);
 }
 
 /**
@@ -1949,10 +2164,12 @@ ges_timeline_element_set_child_property_full (GESTimelineElement * self,
     const gchar * property_name, const GValue * value, GError ** error)
 {
   GParamSpec *pspec;
-  gboolean res;
+  gboolean res = FALSE;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
   g_return_val_if_fail (!error || !*error, FALSE);
+
+  _LOCK (self);
 
   if (!ges_timeline_element_lookup_child (self, property_name, NULL, &pspec))
     goto not_found;
@@ -1960,14 +2177,16 @@ ges_timeline_element_set_child_property_full (GESTimelineElement * self,
   res = set_child_property_by_pspec (self, pspec, value, error);
 
   g_param_spec_unref (pspec);
-  return res;
+  goto done;
 
 not_found:
   {
     GST_WARNING_OBJECT (self, "The %s property doesn't exist", property_name);
-
-    return FALSE;
   }
+
+done:
+  _UNLOCK (self);
+  return res;
 }
 
 /**
@@ -2023,8 +2242,11 @@ ges_timeline_element_get_child_property (GESTimelineElement * self,
 {
   GParamSpec *pspec;
   GObject *child;
+  gboolean res = FALSE;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+
+  _LOCK (self);
 
   if (!ges_timeline_element_lookup_child (self, property_name, &child, &pspec))
     goto not_found;
@@ -2039,14 +2261,17 @@ ges_timeline_element_get_child_property (GESTimelineElement * self,
   gst_object_unref (child);
   g_param_spec_unref (pspec);
 
-  return TRUE;
+  res = TRUE;
+  goto done;
 
 not_found:
   {
     GST_WARNING_OBJECT (self, "The %s property doesn't exist", property_name);
-
-    return FALSE;
   }
+
+done:
+  _UNLOCK (self);
+  return res;
 }
 
 /**
@@ -2080,12 +2305,17 @@ ges_timeline_element_lookup_child (GESTimelineElement * self,
     const gchar * prop_name, GObject ** child, GParamSpec ** pspec)
 {
   GESTimelineElementClass *class;
+  gboolean res;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
   class = GES_TIMELINE_ELEMENT_GET_CLASS (self);
   g_return_val_if_fail (class->lookup_child, FALSE);
 
-  return class->lookup_child (self, prop_name, child, pspec);
+  _LOCK (self);
+  res = class->lookup_child (self, prop_name, child, pspec);
+  _UNLOCK (self);
+
+  return res;
 }
 
 /**
@@ -2109,6 +2339,8 @@ ges_timeline_element_set_child_property_valist (GESTimelineElement * self,
   GValue value = { 0, };
 
   g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
+
+  _LOCK (self);
 
   name = first_property_name;
 
@@ -2134,11 +2366,13 @@ ges_timeline_element_set_child_property_valist (GESTimelineElement * self,
 
     name = va_arg (var_args, gchar *);
   }
+  _UNLOCK (self);
   return;
 
 not_found:
   {
     GST_WARNING_OBJECT (self, "No property %s in OBJECT\n", name);
+    _UNLOCK (self);
     return;
   }
 cant_copy:
@@ -2148,6 +2382,7 @@ cant_copy:
 
     g_param_spec_unref (pspec);
     g_value_unset (&value);
+    _UNLOCK (self);
     return;
   }
 }
@@ -2198,6 +2433,8 @@ ges_timeline_element_get_child_property_valist (GESTimelineElement * self,
 
   g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
 
+  _LOCK (self);
+
   name = first_property_name;
 
   /* This part is in big part copied from the gst_child_object_get_valist method */
@@ -2216,11 +2453,13 @@ ges_timeline_element_get_child_property_valist (GESTimelineElement * self,
     g_value_unset (&value);
     name = va_arg (var_args, gchar *);
   }
+  _UNLOCK (self);
   return;
 
 not_found:
   {
     GST_WARNING_OBJECT (self, "no child property %s", name);
+    _UNLOCK (self);
     return;
   }
 cant_copy:
@@ -2229,6 +2468,7 @@ cant_copy:
         error);
 
     g_value_unset (&value);
+    _UNLOCK (self);
     return;
   }
 }
@@ -2258,10 +2498,12 @@ GParamSpec **
 ges_timeline_element_list_children_properties (GESTimelineElement * self,
     guint * n_properties)
 {
-  GParamSpec **ret;
+  GParamSpec **ret = NULL;
   GESTimelineElementClass *class;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), NULL);
+
+  _LOCK (self);
 
   class = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
@@ -2270,13 +2512,15 @@ ges_timeline_element_list_children_properties (GESTimelineElement * self,
         G_OBJECT_TYPE_NAME (self));
 
     *n_properties = 0;
-    return NULL;
+    goto done;
   }
 
   ret = class->list_children_properties (self, n_properties);
   g_sort_array (ret, *n_properties, sizeof (GParamSpec *),
       (GCompareDataFunc) compare_gparamspec, NULL);
 
+done:
+  _UNLOCK (self);
   return ret;
 }
 
@@ -2329,15 +2573,18 @@ ges_timeline_element_remove_child_property_full (GESTimelineElement * self,
 {
   gint index;
   ChildPropSpec *childprop, handler_copy;
+  gboolean res = FALSE;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
   g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), FALSE);
   g_return_val_if_fail ((!child || G_IS_OBJECT (child)), FALSE);
 
+  _LOCK (self);
+
   if (!(childprop = _find_child_prop (self, pspec, child, &index))) {
     GST_WARNING_OBJECT (self, "No child property with pspec %p (%s) found",
         pspec, pspec->name);
-    return FALSE;
+    goto done;
   }
 
   GST_DEBUG_OBJECT (child, "Removing %s", pspec->name);
@@ -2351,8 +2598,11 @@ ges_timeline_element_remove_child_property_full (GESTimelineElement * self,
       handler_copy.child, handler_copy.pspec);
 
   _child_prop_spec_free (&handler_copy);
+  res = TRUE;
 
-  return TRUE;
+done:
+  _UNLOCK (self);
+  return res;
 }
 
 /**
@@ -2369,11 +2619,17 @@ ges_timeline_element_remove_child_property_full (GESTimelineElement * self,
 GESTrackType
 ges_timeline_element_get_track_types (GESTimelineElement * self)
 {
+  GESTrackType res;
+
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), 0);
   g_return_val_if_fail (GES_TIMELINE_ELEMENT_GET_CLASS (self)->get_track_types,
       0);
 
-  return GES_TIMELINE_ELEMENT_GET_CLASS (self)->get_track_types (self);
+  _LOCK (self);
+  res = GES_TIMELINE_ELEMENT_GET_CLASS (self)->get_track_types (self);
+  _UNLOCK (self);
+
+  return res;
 }
 
 /**
@@ -2409,20 +2665,21 @@ GESTimelineElement *
 ges_timeline_element_paste (GESTimelineElement * self,
     GstClockTime paste_position)
 {
-  GESTimelineElement *res;
-  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
-  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (paste_position), FALSE);
+  GESTimelineElement *res = NULL;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), NULL);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (paste_position), NULL);
+
+  _LOCK (self);
 
   if (!self->priv->copied_from) {
     GST_ERROR_OBJECT (self, "Is not being 'deeply' copied!");
-
-    return NULL;
+    goto done;
   }
 
   if (!GES_TIMELINE_ELEMENT_GET_CLASS (self)->paste) {
     GST_ERROR_OBJECT (self, "No paste vmethod implemented");
-
-    return NULL;
+    goto done;
   }
 
   res = GES_TIMELINE_ELEMENT_GET_CLASS (self)->paste (self,
@@ -2430,7 +2687,12 @@ ges_timeline_element_paste (GESTimelineElement * self,
 
   g_clear_object (&self->priv->copied_from);
 
-  return res ? g_object_ref_sink (res) : res;
+  if (res)
+    res = g_object_ref_sink (res);
+
+done:
+  _UNLOCK (self);
+  return res;
 }
 
 /**
@@ -2450,13 +2712,19 @@ ges_timeline_element_paste (GESTimelineElement * self,
 guint32
 ges_timeline_element_get_layer_priority (GESTimelineElement * self)
 {
+  guint32 res;
+
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self),
       GES_TIMELINE_ELEMENT_NO_LAYER_PRIORITY);
 
+  _LOCK (self);
   if (!GES_TIMELINE_ELEMENT_GET_CLASS (self)->get_layer_priority)
-    return self->priority;
+    res = self->priority;
+  else
+    res = GES_TIMELINE_ELEMENT_GET_CLASS (self)->get_layer_priority (self);
+  _UNLOCK (self);
 
-  return GES_TIMELINE_ELEMENT_GET_CLASS (self)->get_layer_priority (self);
+  return res;
 }
 
 /**
@@ -2504,13 +2772,20 @@ ges_timeline_element_edit_full (GESTimelineElement * self,
 {
   GESTimeline *timeline;
   guint32 layer_prio;
+  gboolean res;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (position), FALSE);
   g_return_val_if_fail (!error || !*error, FALSE);
 
+  _LOCK (self);
+
   timeline = GES_TIMELINE_ELEMENT_TIMELINE (self);
-  g_return_val_if_fail (timeline, FALSE);
+  if (!timeline) {
+    GST_WARNING_OBJECT (self, "Cannot edit element without a timeline");
+    _UNLOCK (self);
+    return FALSE;
+  }
 
   layer_prio = GES_TIMELINE_ELEMENT_LAYER_PRIORITY (self);
 
@@ -2522,8 +2797,11 @@ ges_timeline_element_edit_full (GESTimelineElement * self,
       self->name, ges_edge_name (edge), GST_TIME_ARGS (position),
       ges_edit_mode_name (mode), new_layer_priority);
 
-  return ges_timeline_edit (timeline, self, new_layer_priority, mode,
+  res = ges_timeline_edit (timeline, self, new_layer_priority, mode,
       edge, position, error);
+
+  _UNLOCK (self);
+  return res;
 }
 
 /**
@@ -2586,13 +2864,18 @@ ges_timeline_element_get_natural_framerate (GESTimelineElement * self,
     gint * framerate_n, gint * framerate_d)
 {
   GESTimelineElementClass *klass;
+  gboolean res;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
   g_return_val_if_fail (framerate_n && framerate_d, FALSE);
 
+  _LOCK (self);
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   *framerate_n = 0;
   *framerate_d = -1;
-  return klass->get_natural_framerate (self, framerate_n, framerate_d);
+  res = klass->get_natural_framerate (self, framerate_n, framerate_d);
+  _UNLOCK (self);
+
+  return res;
 }

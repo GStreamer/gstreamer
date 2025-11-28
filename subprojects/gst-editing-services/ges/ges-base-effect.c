@@ -207,12 +207,14 @@ gboolean
 ges_base_effect_register_time_property (GESBaseEffect * effect,
     const gchar * child_property_name)
 {
+  gboolean ret = FALSE;
   GESTimelineElement *element;
   GESTrackElement *el;
   GParamSpec *pspec;
   GObject *child;
   GList *tmp;
   TimePropertyData *data;
+  GESTimeline *_locked_timeline;
 
   g_return_val_if_fail (GES_IS_BASE_EFFECT (effect), FALSE);
   el = GES_TRACK_ELEMENT (effect);
@@ -226,6 +228,8 @@ ges_base_effect_register_time_property (GESBaseEffect * effect,
           &child, &pspec))
     return FALSE;
 
+  _locked_timeline = _ges_timeline_element_lock (element);
+
   for (tmp = effect->priv->time_properties; tmp; tmp = tmp->next) {
     data = tmp->data;
     if (data->child == child && data->pspec == pspec) {
@@ -233,7 +237,7 @@ ges_base_effect_register_time_property (GESBaseEffect * effect,
           child_property_name);
       g_object_unref (child);
       g_param_spec_unref (pspec);
-      return FALSE;
+      goto done;
     }
   }
 
@@ -251,7 +255,12 @@ ges_base_effect_register_time_property (GESBaseEffect * effect,
   g_signal_connect (effect, "child-property-removed",
       G_CALLBACK (_child_property_removed), NULL);
 
-  return TRUE;
+  ret = TRUE;
+
+done:
+  _ges_timeline_element_unlock (element, _locked_timeline);
+
+  return ret;
 }
 
 /**
@@ -300,6 +309,7 @@ ges_base_effect_set_time_translation_funcs (GESBaseEffect * effect,
   GESTimelineElement *element;
   GESTrackElement *el;
   GESBaseEffectPrivate *priv;
+  GESTimeline *_locked_timeline;
 
   g_return_val_if_fail (GES_IS_BASE_EFFECT (effect), FALSE);
 
@@ -309,6 +319,8 @@ ges_base_effect_set_time_translation_funcs (GESBaseEffect * effect,
   g_return_val_if_fail (element->parent == NULL, FALSE);
   g_return_val_if_fail (ges_track_element_has_internal_source (el) == FALSE,
       FALSE);
+
+  _locked_timeline = _ges_timeline_element_lock (element);
 
   ges_track_element_set_has_internal_source_is_forbidden (el);
 
@@ -320,6 +332,8 @@ ges_base_effect_set_time_translation_funcs (GESBaseEffect * effect,
   priv->destroy_translation_data = destroy;
   priv->source_to_sink = source_to_sink_func;
   priv->sink_to_source = sink_to_source_func;
+
+  _ges_timeline_element_unlock (element, _locked_timeline);
 
   return TRUE;
 }
@@ -338,13 +352,22 @@ ges_base_effect_set_time_translation_funcs (GESBaseEffect * effect,
 gboolean
 ges_base_effect_is_time_effect (GESBaseEffect * effect)
 {
+  gboolean ret = FALSE;
   GESBaseEffectPrivate *priv;
+  GESTimeline *_locked_timeline;
+
   g_return_val_if_fail (GES_IS_BASE_EFFECT (effect), FALSE);
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (effect));
 
   priv = effect->priv;
   if (priv->time_properties || priv->source_to_sink || priv->sink_to_source)
-    return TRUE;
-  return FALSE;
+    ret = TRUE;
+
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (effect),
+      _locked_timeline);
+
+  return ret;
 }
 
 gchar *

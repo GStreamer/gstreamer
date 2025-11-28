@@ -297,10 +297,20 @@ gboolean
 ges_video_source_get_natural_size (GESVideoSource * self, gint * width,
     gint * height)
 {
-  GESVideoSourceClass *klass = GES_VIDEO_SOURCE_GET_CLASS (self);
+  gboolean ret;
+  GESVideoSourceClass *klass;
+  GESTimeline *_locked_timeline;
+
+  g_return_val_if_fail (GES_IS_VIDEO_SOURCE (self), FALSE);
+
+  klass = GES_VIDEO_SOURCE_GET_CLASS (self);
 
   if (!klass->ABI.abi.get_natural_size)
     return FALSE;
 
-  return klass->ABI.abi.get_natural_size (self, width, height);
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
+  ret = klass->ABI.abi.get_natural_size (self, width, height);
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
+
+  return ret;
 }
