@@ -519,7 +519,8 @@ gst_aes_enc_prepare_output_buffer (GstBaseTransform * base,
 {
   GstAesEnc *filter = GST_AES_ENC (base);
   GstBaseTransformClass *bclass = GST_BASE_TRANSFORM_GET_CLASS (base);
-  guint out_size = (guint) gst_buffer_get_size (inbuf);
+  gsize in_size = gst_buffer_get_size (inbuf);
+  gsize out_size = in_size;
 
   g_mutex_lock (&filter->encoder_lock);
   filter->locked_properties = TRUE;
@@ -540,8 +541,9 @@ gst_aes_enc_prepare_output_buffer (GstBaseTransform * base,
   g_mutex_unlock (&filter->encoder_lock);
 
   GST_LOG_OBJECT (filter,
-      "Input buffer size %d, output buffer size: %d. padding : %d",
-      (guint) gst_buffer_get_size (inbuf), out_size, filter->padding);
+      "Input buffer size %" G_GSIZE_FORMAT
+      ", output buffer size: %" G_GSIZE_FORMAT ", padding: %u",
+      in_size, out_size, filter->padding);
   *outbuf = gst_buffer_new_allocate (NULL, out_size, NULL);
   bclass->copy_metadata (base, inbuf, *outbuf);
 
