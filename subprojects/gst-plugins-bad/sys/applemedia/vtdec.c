@@ -137,11 +137,11 @@ static GstStaticPadTemplate gst_vtdec_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h264, stream-format=avc, alignment=au,"
-        " width=(int)[1, MAX], height=(int)[1, MAX];"
+        " width=(int)[8, MAX], height=(int)[8, MAX];"
         "video/x-h265, stream-format=(string){ hev1, hvc1 }, alignment=au,"
-        " width=(int)[1, MAX], height=(int)[1, MAX];"
+        " width=(int)[16, MAX], height=(int)[16, MAX];"
         "video/x-av1, stream-format=obu-stream, alignment=(string){ tu, frame }, "
-        "width=(int)[1, MAX], height=(int)[1, MAX];"
+        "width=(int)[64, MAX], height=(int)[64, MAX];"
         "video/mpeg, mpegversion=2, systemstream=false, parsed=true;"
         "image/jpeg;"
         "video/x-prores, variant = { (string)standard, (string)hq, (string)lt,"
