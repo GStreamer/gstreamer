@@ -6663,8 +6663,13 @@ gst_value_compare (const GValue * value1, const GValue * value2)
   /* Special cases: lists and scalar values ("{ 1 }" and "1" are equal),
      as well as lists and ranges ("{ 1, 2 }" and "[ 1, 2 ]" are equal).
      Make sure to update gst_value_hash() when adding new special cases. */
-  if (value1_is_list && !value2_is_list) {
+  if (value1_is_list ^ value2_is_list) {
     gint i, n, ret;
+    if (value2_is_list) {
+      const GValue *t = value1;
+      value1 = value2;
+      value2 = t;
+    }
 
     if (gst_value_list_equals_range (value1, value2)) {
       return GST_VALUE_EQUAL;
@@ -6679,29 +6684,6 @@ gst_value_compare (const GValue * value1, const GValue * value2)
 
       elt = gst_value_list_get_value (value1, i);
       ret = gst_value_compare (elt, value2);
-      if (ret != GST_VALUE_EQUAL && n == 1)
-        return ret;
-      else if (ret != GST_VALUE_EQUAL)
-        return GST_VALUE_UNORDERED;
-    }
-
-    return GST_VALUE_EQUAL;
-  } else if (value2_is_list && !value1_is_list) {
-    gint i, n, ret;
-
-    if (gst_value_list_equals_range (value2, value1)) {
-      return GST_VALUE_EQUAL;
-    }
-
-    n = gst_value_list_get_size (value2);
-    if (n == 0)
-      return GST_VALUE_UNORDERED;
-
-    for (i = 0; i < n; i++) {
-      const GValue *elt;
-
-      elt = gst_value_list_get_value (value2, i);
-      ret = gst_value_compare (elt, value1);
       if (ret != GST_VALUE_EQUAL && n == 1)
         return ret;
       else if (ret != GST_VALUE_EQUAL)
