@@ -36,15 +36,12 @@
  * Test image file, model file and labels file can be found here :
  * https://gitlab.collabora.com/gstreamer/onnx-models
  *
- *  GST_DEBUG=yolotensordec:6 \
- *  gst-launch-1.0 multifilesrc location=bus.jpg  ! decodebin \
- *  ! videoconvertscale add-borders=1 qos=false ! 'video/x-raw,pixel-aspect-ratio=1/1' ! \
- *  onnxinference execution-provider=cpu model-file=./yolov8s.onnx input-image-format=chw \
- *  input-tensor-offset=0 input-tensor-scale=255.0 qos=false ! \
- *  yolotensordec class-confidence-threshold=0.1  max-detections=10  qos=false \
- *  label-file=COCO_classes.txt ! \
- *  objectdetectionoverlay object-detection-outline-color=0xFF0000FF draw-labels=true  ! \
- *  videoconvert ! xvimagesink
+ *  gst-launch-1.0 -v v4l2src \
+ *    ! videoconvertscale qos=false ! video/x-raw, pixel-aspect-ratio=1/1 \
+ *    ! onnxinference model-file=yolov8s.onnx \
+ *    ! yolov8tensordec class-confidence-threshold=0.8 iou-threshold=0.3 \
+ *      max-detections=100 label-file=labels/COCO_classes.txt \
+ *    ! objectdetectionoverlay ! glimagesink sink=gtkglsink
  *
  *  The original repository of the Yolo is located at
  *  https://github.com/ultralytics/ultralytics.
@@ -85,7 +82,7 @@ GQuark YOLO_DETECTION_MASK_ID;
 GST_DEBUG_CATEGORY_STATIC (yolo_tensor_decoder_debug);
 #define GST_CAT_DEFAULT yolo_tensor_decoder_debug
 
-GST_ELEMENT_REGISTER_DEFINE (yolo_tensor_decoder, "yolotensordec",
+GST_ELEMENT_REGISTER_DEFINE (yolo_tensor_decoder, "yolov8tensordec",
     GST_RANK_PRIMARY, GST_TYPE_YOLO_TENSOR_DECODER);
 
 /* GstYoloTensorDecoder properties, see properties description in
@@ -126,13 +123,27 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw"));
 
-/* GStreamer element sinkpad template. Template of a sinkpad that can receive
- * any raw video. */
+/* *INDENT-OFF* */
 static GstStaticPadTemplate gst_yolo_tensor_decoder_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw"));
+    GST_STATIC_CAPS (
+      "video/x-raw,"
+        "tensors=(structure)["
+          "tensorgroups,"
+            "yolo-v8-out=(/set){"
+            "(GstCaps)["
+              "tensor/strided,"
+                "tensor-id=(string)yolo-v8-out,"
+                "dims=<(int)1,(int)[1,max],(int)[1,max]>,"
+                "dims-order=(string)row-major,"
+                "type=(string)float32"
+             "]"
+           "}"
+        "]"
+      ));
+/* *INDENT-ON* */
 
 /* GstYoloTensorDecoder Prototypes */
 static gboolean gst_yolo_tensor_decoder_set_caps (GstBaseTransform * trans,
@@ -299,7 +310,7 @@ gst_yolo_tensor_decoder_class_init (GstYoloTensorDecoderClass * klass)
 
   /* Define GstYoloTensorDecoder debug category. */
   GST_DEBUG_CATEGORY_INIT (yolo_tensor_decoder_debug,
-      "yolotensordec", 0, "Tensor decoder for Yolo detection models");
+      "yolov8tensordec", 0, "Tensor decoder for Yolo detection models");
 
   YOLO_DETECTION_MASK_ID = g_quark_from_static_string (YOLO_DETECTION_MASK);
 

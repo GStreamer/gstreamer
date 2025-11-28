@@ -34,14 +34,15 @@
  * Test image file, model file and labels file can be found here :
  * https://gitlab.collabora.com/gstreamer/onnx-models
  *
- * GST_DEBUG=yolosegv8tensordec \
- *  gst-launch-1.0 multifilesrc location=bus.jpg ! decodebin ! videoconvertscale \
- *  add-borders=1 qos=false ! 'video/x-raw,pixel-aspect-ratio=1/1' ! \
- *  onnxinference execution-provider=cpu model-file=./yolov8s-seg.onnx input-image-format=chw \
- *  input-tensor-offset=0 input-tensor-scale=255.0 qos=false ! \
- *  yolosegv8tensordec class-confidence-threshold=0.7 iou-threshold=0.8 max-detections=100 qos=false \
- *  ! objectdetectionoverlay object-detection-outline-color=0xFF0000FF draw-labels=true ! \
- *  segmentationoverlay ! videoconvert ! xvimagesink
+ * gst-launch-1.0 v4l2src device=/dev/video4 ! videorate max-rate=3 \
+ *  ! videoconvertscale ! video/x-raw, pixel-aspect-ratio=1/1 \
+ *  ! onnxinference \
+ *    model-file=/home/dmorin/repos/onnx-models/models/yolov8s-seg.onnx \
+ *  ! yolosegv8tensordec class-confidence-threshold=0.8 iou-threshold=0.3 \
+ *    max-detections=100 \
+ *    label-file=/home/dmorin/repos/onnx-models/labels/COCO_classes.txt \
+ *  ! segmentationoverlay \
+ *  ! glimagesink sink="gtkglsink processing-deadline=300000000
  *
  * The original repository of the Yolo is located at
  * https://github.com/ultralytics/ultralytics.
@@ -71,6 +72,35 @@ GQuark YOLO_SEGMENTATION_LOGITS_TENSOR_ID;
 
 #define YOLO_SEGMENTATION_DETECTION_MASK "yolo-v8-segmentation-out-detections"
 GQuark YOLO_SEGMENTATION_DETECTION_MASK_ID;
+
+/* *INDENT-OFF* */
+static GstStaticPadTemplate gst_yolo_seg_tensor_decoder_sink_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-raw,"
+        "tensors=(structure)["
+          "tensorgroups,"
+            "yolo-v8-segmentation-out=(/set){"
+            "(GstCaps)["
+              "tensor/strided,"
+                "tensor-id=yolo-v8-segmentation-out-detections,"
+                "dims=(int)<1, [1,max], [1,max]>,"
+                "dims-order=(string)row-major,"
+                "type=(string)float32"
+              "],"
+            "(GstCaps)["
+              "tensor/strided,"
+                "tensor-id=yolo-v8-segmentation-out-protos,"
+                "dims=(int)<1, [1,max], [1,max], [1,max]>,"
+                "dims-order=(string)row-major,"
+                "type=(string)float32"
+              "]"
+            "}"
+        "]"
+      ));
+/* *INDENT-ON* */
+
 
 GST_DEBUG_CATEGORY_STATIC (yolo_seg_tensor_decoder_debug);
 #define GST_CAT_DEFAULT yolo_seg_tensor_decoder_debug
@@ -136,6 +166,10 @@ gst_yolo_seg_tensor_decoder_class_init (GstYoloSegTensorDecoderClass * klass)
       "Decode tensors output from the inference of Yolo or FastSAM model (segmentation)"
       " on video frames. It works with YOLO version > 8 and FastSAM models.",
       "Daniel Morin <daniel.morin@collabora.com>, Santosh Mahto <santosh.mahto@collabora.com>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_yolo_seg_tensor_decoder_sink_template));
+
 
   basetransform_class->transform_ip = gst_yolo_seg_tensor_decoder_transform_ip;
   basetransform_class->stop = gst_yolo_seg_tensor_decoder_stop;
