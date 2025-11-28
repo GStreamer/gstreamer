@@ -17,24 +17,32 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
+import typing
 from gi.overrides import _gi_gst
-from ..overrides import override
-from ..module import get_introspection_module
+from gi.overrides import override
+from gi.repository import Gst
 
 
-GstApp = get_introspection_module('GstApp')
+if typing.TYPE_CHECKING:
+    # Import from pygobject-stubs
+    from gi.repository import GstApp
+else:
+    from gi.module import get_introspection_module
+    GstApp = get_introspection_module('GstApp')
+
+
 __all__ = []
 
 
 class AppSink(GstApp.AppSink):
-    def pull_object(self):
+    def pull_object(self) -> Gst.MiniObject:
         obj = super().pull_object()
-        return _gi_gst.mini_object_to_subclass(obj) if obj else None
+        return _gi_gst.mini_object_to_subclass(obj)
 
-    def try_pull_object(self, timeout):
+    def try_pull_object(self, timeout: int) -> typing.Optional[Gst.MiniObject]:
         obj = super().try_pull_object(timeout)
         return _gi_gst.mini_object_to_subclass(obj) if obj else None
 
 
-AppSink = override(AppSink)
+override(AppSink)
 __all__.append('AppSink')
