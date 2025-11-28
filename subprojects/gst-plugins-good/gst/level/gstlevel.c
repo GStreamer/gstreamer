@@ -626,6 +626,9 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
   filter = GST_LEVEL (trans);
 
+  if (!GST_AUDIO_INFO_IS_VALID (&filter->info))
+    return GST_FLOW_NOT_NEGOTIATED;
+
   channels = GST_AUDIO_INFO_CHANNELS (&filter->info);
   bps = GST_AUDIO_INFO_BPS (&filter->info);
   rate = GST_AUDIO_INFO_RATE (&filter->info);
