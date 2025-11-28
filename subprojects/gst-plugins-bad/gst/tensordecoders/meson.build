@@ -6,6 +6,7 @@ tensordecoders_sources = [
   'gstioutracker.c',
   'gstyolotensordecoder.c',
   'gstyolosegtensordecoder.c',
+  'gsttensordecodebin.c',
 ]
 
 tensordecoders_headers = [
@@ -15,6 +16,7 @@ tensordecoders_headers = [
   'gstioutracker.h',
   'gstyolotensordecoder.h',
   'gstyolosegtensordecoder.h',
+  'gsttensordecodebin.h'
 ]
 
 doc_sources = []
