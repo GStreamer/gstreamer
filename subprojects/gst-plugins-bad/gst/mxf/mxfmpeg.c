@@ -566,6 +566,12 @@ static const MXFUL video_mpeg_compression = { {
     0x01,}
 };
 
+/* SMPTE RDD-9, Annex C, Table C.1 */
+static const MXFUL sony_mpeg_compression = { {
+        0x06, 0x0E, 0x2B, 0x34, 0x04, 0x01, 0x01, 0x03, 0x0E, 0x06, 0x41, 0x02,
+    0x01,}
+};
+
 static const MXFUL sound_essence_compression_ac3 = { {
         0x06, 0x0E, 0x2B, 0x34, 0x04, 0x01, 0x01, 0x01, 0x04, 0x02, 0x02, 0x02,
     0x03, 0x02, 0x01, 0x00}
@@ -629,6 +635,8 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
       memcpy (mdata, &t, sizeof (MXFMPEGEssenceType));
       *intra_only = FALSE;
     } else if (!mxf_ul_is_subclass (&video_mpeg_compression,
+            &p->picture_essence_coding) &&
+        !mxf_ul_is_subclass (&sony_mpeg_compression,
             &p->picture_essence_coding)) {
       GST_ERROR ("Not MPEG picture essence coding %s",
           mxf_ul_to_string (&p->picture_essence_coding, str));
