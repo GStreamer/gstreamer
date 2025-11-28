@@ -349,10 +349,10 @@ gst_yolo_tensor_decoder_class_init (GstYoloTensorDecoderClass * klass)
 
 
   /* Element description. */
-  gst_element_class_set_static_metadata (element_class, "yoloodtensordec",
-      "Tensordecoder/Video",
+  gst_element_class_set_static_metadata (element_class,
+      "YOLO v8-11 object detection tensor decoder", "Tensordecoder/Video",
       "Decode tensors output from the inference of YOLO Object Detection or FastSAM model (Detection)"
-      "on video frames. This works on YOLO version 5 and later(v11), and FastSAM models.",
+      "on video frames. This works on YOLO version 8 and later(v11), and FastSAM models.",
       "Daniel Morin <daniel.morin@collabora.com>, Santosh Mahto <santosh.mahto@collabora.com>");
 
   /* Add pads to element base on pad template defined earlier */

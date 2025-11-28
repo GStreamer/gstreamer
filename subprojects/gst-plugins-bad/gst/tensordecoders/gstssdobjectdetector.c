@@ -194,7 +194,8 @@ gst_ssd_object_detector_class_init (GstSsdObjectDetectorClass * klass)
           (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-  gst_element_class_set_static_metadata (element_class, "ssdobjectdetector",
+  gst_element_class_set_static_metadata (element_class,
+      "SSD MobileNet Object Detector tensor decoder",
       "Tensordecoder/Video",
       "Apply tensor output from inference to detect objects in video frames",
       "Aaron Boxer <aaron.boxer@collabora.com>, Marcus Edel <marcus.edel@collabora.com>");

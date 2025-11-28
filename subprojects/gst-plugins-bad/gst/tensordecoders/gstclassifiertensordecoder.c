@@ -237,7 +237,7 @@ gst_classifier_tensor_decoder_class_init (GstClassifierTensorDecoderClass *
   element_class->change_state = gst_classifier_tensor_decoder_change_state;
 
   gst_element_class_set_static_metadata (element_class,
-      "classifiertensordecoder", "Tensordecoder",
+      "Classification tensor decoder", "Tensordecoder",
       "Decode tensors output from classification model using common format.\n"
       "\tTensor format must be: \n" "\t\tDims: [batch-size, class_count]\n"
       "\t\tDatatype: float32 \n" "\n" "\t\tTensor [M,N]\n"

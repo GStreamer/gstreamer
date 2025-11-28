@@ -157,8 +157,8 @@ gst_iou_tracker_class_init (GstIouTrackerClass * klass)
           0, G_MAXUINT, DEFAULT_MIN_FRAME_COUNT_FOR_LOST_TRACK,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_static_metadata (element_class, "ioutracker",
-      "Analyzer/Video",
+  gst_element_class_set_static_metadata (element_class,
+      "Intersection-over-Union (IoU) object tracker", "Analyzer/Video",
       "Track the objects across frames based on Intersection-over-Union (IoU)",
       "Santosh Mahto <santosh.mahto@collabora.com>");
   gst_element_class_add_pad_template (element_class,

@@ -132,7 +132,7 @@ gst_yolo_seg_tensor_decoder_class_init (GstYoloSegTensorDecoderClass * klass)
       g_quark_from_static_string (YOLO_SEGMENTATION_LOGITS);
 
   gst_element_class_set_static_metadata (element_class,
-      "yolosegv8tensordec", "Tensordecoder/Video",
+      "YOLO v8-11 segmentastion tensor decoder", "Tensordecoder/Video",
       "Decode tensors output from the inference of Yolo or FastSAM model (segmentation)"
       " on video frames. It works with YOLO version > 8 and FastSAM models.",
       "Daniel Morin <daniel.morin@collabora.com>, Santosh Mahto <santosh.mahto@collabora.com>");
