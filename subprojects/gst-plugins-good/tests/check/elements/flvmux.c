@@ -1143,6 +1143,584 @@ GST_START_TEST (test_rollover_timestamps)
 
 GST_END_TEST;
 
+#define H264_FILE GST_TEST_FILES_PATH G_DIR_SEPARATOR_S "flv_test/h264/%d.h264"
+#define H265_FILE GST_TEST_FILES_PATH G_DIR_SEPARATOR_S "flv_test/h265/%d.h265"
+#define AAC_FILE GST_TEST_FILES_PATH G_DIR_SEPARATOR_S "flv_test/aac/%d.aac"
+#define MP3_8K_FILE GST_TEST_FILES_PATH G_DIR_SEPARATOR_S "flv_test/mp3_8k/%d.mp3"
+#define H264_CAPS "video/x-h264,stream-format=avc,codec_data=(buffer)01f4000dffe1001b67f4000d91968141fb016a0c0c0c80000003008000001e478a155001000468ce3192fff8f800,framerate=30/1"
+#define AAC_CAPS "audio/mpeg,mpegversion=(int)4,channels=(int)1,framed=(boolean)true,rate=(int)44100,codec_data=(buffer)1208,stream-format=(string)raw"
+#define MP3_8K_CAPS "audio/mpeg, mpegversion=(int)1, layer=(int)3, rate=(int)8000, channels=(int)2, parsed=(boolean)true"
+#define H265_CAPS "video/x-h265, stream-format=(string)hvc1, alignment=(string)au, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)30/1, \
+                codec_data=(buffer)0104080000009e08000000003ff000fcfff8f800000f03200001001740010c01ffff0408000003009e0800000300003f959809210001\
+002f4201010408000003009e0800000300003f90014101e2cb2b3492657ff80008000b506060604000000300400000078222000100074401c172b46240"
+
+typedef struct
+{
+  GstClockTime current_ts;
+  GAsyncQueue *in_buffer_queue;
+  GstCaps *caps;
+  GstPad *input_src_pad;
+  GstPad *demuxer_src_pad;
+  gulong input_src_pad_probe_id;
+  gulong demuxer_src_pad_probe_id;
+} TrackDetails;
+
+typedef struct
+{
+  guint num_audio_tracks;
+  guint num_video_tracks;
+  GstElement *pipeline;
+  TrackDetails *audio_tracks;
+  TrackDetails *video_tracks;
+} TracksInfo;
+
+static GstPadProbeReturn
+input_src_pad_probe_callback (GstPad * pad, GstPadProbeInfo * info,
+    TrackDetails * track)
+{
+  if (info->type & GST_PAD_PROBE_TYPE_BUFFER) {
+    GstBuffer *buffer = info->data;
+    fail_unless (track != NULL);
+
+    GstClockTime ts = track->current_ts;
+    guint duration = 33 * GST_MSECOND;
+    GST_BUFFER_DURATION (buffer) = duration;
+    GST_BUFFER_DTS (buffer) = GST_BUFFER_PTS (buffer) = ts;
+    GST_TRACE ("probe type GST_PAD_PROBE_TYPE_BUFFER %" GST_PTR_FORMAT, buffer);
+
+    // store buffers for comparing with demuxer output
+    gst_buffer_ref (buffer);
+    g_async_queue_push (track->in_buffer_queue, buffer);
+
+    track->current_ts = ts + duration;
+  }
+
+  if (info->type & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM) {
+    GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_SEGMENT:{
+        GstSegment segment_new;
+        GST_TRACE ("gst segment event %" GST_PTR_FORMAT, event);
+        gst_segment_init (&segment_new, GST_FORMAT_TIME);
+        guint32 seqnum = gst_event_get_seqnum (event);
+        GstEvent *event_new = gst_event_new_segment (&segment_new);
+        gst_event_unref (info->data);
+        info->data = event_new;
+
+        gst_event_set_seqnum (event_new, seqnum);
+        GST_TRACE ("gst segment event new %" GST_PTR_FORMAT, event_new);
+      }
+        break;
+      default:
+        break;
+    }
+  }
+  return GST_PAD_PROBE_OK;
+}
+
+static GstPadProbeReturn
+demux_src_pad_probe_callback (GstPad * pad, GstPadProbeInfo * info,
+    GAsyncQueue * buffer_queue)
+{
+  if (info->type & GST_PAD_PROBE_TYPE_BUFFER) {
+    GstBuffer *buffer = info->data;
+    GstMapInfo map = GST_MAP_INFO_INIT;
+    GstBuffer *in_buffer = NULL;
+    GstMapInfo in_buf_map = GST_MAP_INFO_INIT;
+
+    GST_TRACE ("demuxer src pad: %" GST_PTR_FORMAT, buffer);
+
+    in_buffer = g_async_queue_try_pop (buffer_queue);
+
+    fail_unless (in_buffer != NULL);
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer),
+        GST_BUFFER_PTS (in_buffer));
+
+    gst_buffer_map (buffer, &map, GST_MAP_READ);
+    gst_buffer_map (in_buffer, &in_buf_map, GST_MAP_READ);
+
+    fail_unless_equals_int (map.size, in_buf_map.size);
+    fail_unless_equals_int (0, memcmp (map.data, in_buf_map.data, map.size));
+
+    gst_buffer_unmap (buffer, &map);
+    gst_buffer_unmap (in_buffer, &in_buf_map);
+    gst_buffer_unref (in_buffer);
+  }
+
+  return GST_PAD_PROBE_OK;
+}
+
+static void
+demux_multitrack_pad_added_handler (GstElement * flvdemux, GstPad * srcpad,
+    TracksInfo * tracks_info)
+{
+  GstCaps *caps = gst_pad_get_current_caps (srcpad);
+  gint id = 0;
+  gchar *endptr;
+  GstElement *fakesink = NULL;
+  GstPad *fake_sink_pad = NULL;
+  gchar *src_pad_name = GST_PAD_NAME (srcpad);
+  // pad index is track id, so postition is after audio_ or video_
+  guint8 track_id_pos = 6;
+  TrackDetails *this_track = NULL;
+
+  GST_TRACE ("pad %s added", src_pad_name);
+
+  if (g_str_has_prefix (src_pad_name, "audio_")) {
+    id = g_ascii_strtoll (src_pad_name + track_id_pos, &endptr, 10);
+    if (endptr != src_pad_name + track_id_pos && id > 0 && id < G_MAXUINT8
+        && id <= tracks_info->num_audio_tracks) {
+      this_track = &tracks_info->audio_tracks[id];
+      fail_unless (gst_caps_is_equal (caps, this_track->caps));
+    } else {
+      fail ("Invalid audio track id %s", src_pad_name + track_id_pos);
+    }
+  } else if (g_str_has_prefix (src_pad_name, "video_")) {
+    id = g_ascii_strtoll (src_pad_name + track_id_pos, &endptr, 10);
+    if (endptr != src_pad_name + track_id_pos && id > 0 && id < G_MAXUINT8
+        && id <= tracks_info->num_video_tracks) {
+      this_track = &tracks_info->video_tracks[id];
+      fail_unless (gst_caps_is_equal (caps, this_track->caps));
+    } else {
+      fail ("Invalid video track id %s", src_pad_name + track_id_pos);
+    }
+  } else if (g_str_equal ("audio", src_pad_name)) {
+    this_track = &tracks_info->audio_tracks[id];
+    fail_unless (gst_caps_is_equal (caps, this_track->caps));
+    GST_TRACE ("audio pad caps matched");
+  } else if (g_str_equal ("video", src_pad_name)) {
+    this_track = &tracks_info->video_tracks[id];
+    fail_unless (gst_caps_is_equal (caps, this_track->caps));
+  } else {
+    ck_abort_msg ("Unexpected demux pad: %s", GST_STR_NULL (src_pad_name));
+  }
+
+  fail_unless (this_track->demuxer_src_pad == NULL);
+  this_track->demuxer_src_pad = srcpad;
+
+  this_track->demuxer_src_pad_probe_id =
+      gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) demux_src_pad_probe_callback,
+      this_track->in_buffer_queue, NULL);
+
+  fakesink = gst_element_factory_make ("fakesink", NULL);
+  fail_unless (fakesink != NULL);
+  g_object_set (fakesink, "async", FALSE, "sync", FALSE, NULL);
+
+  fail_unless (gst_bin_add (GST_BIN (tracks_info->pipeline), fakesink));
+
+  gst_element_sync_state_with_parent (fakesink);
+  fake_sink_pad = gst_element_get_static_pad (fakesink, "sink");
+  fail_unless_equals_int (gst_pad_link (srcpad, fake_sink_pad),
+      GST_PAD_LINK_OK);
+
+  gst_object_unref (fake_sink_pad);
+  gst_caps_unref (caps);
+}
+
+static void
+run_pipeline (const gchar * pipeline_str, TracksInfo * tracks_info)
+{
+  GstElement *pipeline;
+  GstElement *muxer;
+  fail_if (pipeline_str == NULL);
+  fail_if (tracks_info == NULL);
+
+  pipeline = gst_parse_launch (pipeline_str, NULL);
+  fail_unless (pipeline != NULL);
+  tracks_info->pipeline = pipeline;
+
+  muxer = gst_bin_get_by_name (GST_BIN (pipeline), "mux");
+  fail_unless (muxer != NULL);
+
+  GST_OBJECT_LOCK (muxer);
+  for (GList * p = muxer->sinkpads; p; p = p->next) {
+    GstPad *mux_pad = p->data;
+    GstPad *peer_src_pad = gst_pad_get_peer (mux_pad);
+    fail_unless (peer_src_pad != NULL);
+
+    gchar *mux_pad_name = GST_PAD_NAME (mux_pad);
+    // pad index is track id, so postition is after audio_ or video_
+    guint8 track_id_pos = 6;
+    gchar *endptr = NULL;
+    guint8 id = 0;              // track id
+    TrackDetails *this_track = NULL;
+
+    GST_TRACE ("mux pad %s peer_pad %s", mux_pad_name,
+        GST_PAD_NAME (peer_src_pad));
+
+    if (g_str_has_prefix (mux_pad_name, "audio_")) {
+      fail_if (tracks_info->audio_tracks == NULL);
+      id = g_ascii_strtoll (mux_pad_name + track_id_pos, &endptr, 10);
+
+      // audio_0 not allowed, the element should error out
+      fail_if (id == 0);
+      this_track = &tracks_info->audio_tracks[id];
+
+      fail_unless (endptr != mux_pad_name + track_id_pos
+          && id <= tracks_info->num_audio_tracks);
+    } else if (g_str_has_prefix (mux_pad_name, "video_")) {
+      fail_if (tracks_info->video_tracks == NULL);
+      id = g_ascii_strtoll (mux_pad_name + track_id_pos, &endptr, 10);
+
+      // video_0 not allowed, the element should error out
+      fail_if (id == 0);
+      this_track = &tracks_info->video_tracks[id];
+
+      fail_unless (endptr != mux_pad_name + track_id_pos
+          && id <= tracks_info->num_video_tracks);
+    } else if (g_str_equal ("audio", mux_pad_name)) {
+
+      this_track = &tracks_info->audio_tracks[0];
+    } else if (g_str_equal ("video", mux_pad_name)) {
+      this_track = &tracks_info->video_tracks[0];
+    }
+
+    this_track->input_src_pad = peer_src_pad;
+    this_track->input_src_pad_probe_id =
+        gst_pad_add_probe (peer_src_pad,
+        GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+        (GstPadProbeCallback) input_src_pad_probe_callback, this_track, NULL);
+  }
+  GST_OBJECT_UNLOCK (muxer);
+  gst_object_unref (muxer);
+
+  GstElement *demux = gst_bin_get_by_name (GST_BIN (pipeline), "demux");
+  fail_unless (demux != NULL);
+
+  g_signal_connect (demux, "pad-added",
+      G_CALLBACK (demux_multitrack_pad_added_handler), tracks_info);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_SUCCESS);
+
+  GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  gboolean running = TRUE;
+  GstMessage *message;
+
+  while (running) {
+    message = gst_bus_timed_pop_filtered (bus, -1, GST_MESSAGE_ANY);
+
+    g_assert (message != NULL);
+
+    switch (message->type) {
+      case GST_MESSAGE_EOS:
+        GST_TRACE ("got EOS");
+        running = FALSE;
+        fail_unless_equals_int (demux->numsrcpads,
+            tracks_info->num_audio_tracks + tracks_info->num_video_tracks);
+        break;
+      case GST_MESSAGE_WARNING:{
+        GError *gerror;
+        gchar *debug;
+
+        gst_message_parse_warning (message, &gerror, &debug);
+        gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
+        fail (debug);
+      }
+      case GST_MESSAGE_ERROR:
+      {
+        GError *gerror;
+        gchar *debug;
+
+        gst_message_parse_error (message, &gerror, &debug);
+        gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
+        g_error_free (gerror);
+        g_free (debug);
+        running = FALSE;
+        break;
+      }
+      default:
+        break;
+    }
+    gst_message_unref (message);
+  }
+  gst_object_unref (bus);
+
+  for (guint8 t = 0; t < tracks_info->num_audio_tracks; t++) {
+    TrackDetails *this_track = &tracks_info->audio_tracks[t];
+    gst_caps_unref (this_track->caps);
+
+    gst_pad_remove_probe (this_track->input_src_pad,
+        this_track->input_src_pad_probe_id);
+    gst_pad_remove_probe (this_track->demuxer_src_pad,
+        this_track->demuxer_src_pad_probe_id);
+
+    fail_unless_equals_int (g_async_queue_length (this_track->in_buffer_queue)
+        , 0);
+    g_async_queue_unref (this_track->in_buffer_queue);
+    gst_object_unref (this_track->input_src_pad);
+  }
+
+  for (guint8 t = 0; t < tracks_info->num_video_tracks; t++) {
+    TrackDetails *this_track = &tracks_info->video_tracks[t];
+    gst_caps_unref (this_track->caps);
+
+    gst_pad_remove_probe (this_track->input_src_pad,
+        this_track->input_src_pad_probe_id);
+    gst_pad_remove_probe (this_track->demuxer_src_pad,
+        this_track->demuxer_src_pad_probe_id);
+
+    fail_unless_equals_int (g_async_queue_length (this_track->in_buffer_queue)
+        , 0);
+    g_async_queue_unref (this_track->in_buffer_queue);
+    gst_object_unref (this_track->input_src_pad);
+  }
+
+  gst_object_unref (demux);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  gst_object_unref (pipeline);
+}
+
+GST_START_TEST (test_multiple_audio_and_video_tracks)
+{
+  enum
+  {
+    AAC_TRACK_ID = 0,
+    MP3_TRACK_ID = 1,
+    MAX_AUDIO_TRACKS,
+  };
+
+  enum
+  {
+    H264_TRACK_ID = 0,
+    H265_TRACK_ID = 1,
+    MAX_VIDEO_TRACKS,
+  };
+
+  TrackDetails video_tracks[MAX_VIDEO_TRACKS] = { 0, };
+  TrackDetails audio_tracks[MAX_AUDIO_TRACKS] = { 0, };
+  TracksInfo tracks_info = { 0, };
+
+  const gchar *pipeline_str =
+      "multifilesrc location=\"" AAC_FILE "\" caps=\"" AAC_CAPS "\" ! mux.audio \
+     multifilesrc location=\"" MP3_8K_FILE "\" caps=\"" MP3_8K_CAPS
+      "\" ! mux.audio_1 \
+     multifilesrc location=\"" H264_FILE "\" caps=\"" H264_CAPS "\" ! mux.video \
+     multifilesrc location=\"" H265_FILE "\" caps=\"" H265_CAPS "\" ! mux.video_1 \
+     eflvmux name=mux ! flvdemux name=demux  \
+    ";
+
+  audio_tracks[AAC_TRACK_ID].caps = gst_caps_from_string (AAC_CAPS);
+  audio_tracks[AAC_TRACK_ID].current_ts = 0;
+  audio_tracks[AAC_TRACK_ID].in_buffer_queue = g_async_queue_new ();
+
+  audio_tracks[MP3_TRACK_ID].caps = gst_caps_from_string (MP3_8K_CAPS);
+  audio_tracks[MP3_TRACK_ID].current_ts = 0;
+  audio_tracks[MP3_TRACK_ID].in_buffer_queue = g_async_queue_new ();
+
+  tracks_info.audio_tracks = audio_tracks;
+  tracks_info.num_audio_tracks = MAX_AUDIO_TRACKS;
+  tracks_info.pipeline = NULL;
+
+  video_tracks[H264_TRACK_ID].caps = gst_caps_from_string (H264_CAPS);
+  video_tracks[H264_TRACK_ID].current_ts = 0;
+  video_tracks[H264_TRACK_ID].in_buffer_queue = g_async_queue_new ();
+
+  video_tracks[H265_TRACK_ID].caps = gst_caps_from_string (H265_CAPS);
+  video_tracks[H265_TRACK_ID].current_ts = 0;
+  video_tracks[H265_TRACK_ID].in_buffer_queue = g_async_queue_new ();
+
+  tracks_info.video_tracks = video_tracks;
+  tracks_info.num_video_tracks = MAX_VIDEO_TRACKS;
+  tracks_info.pipeline = NULL;
+
+  run_pipeline (pipeline_str, &tracks_info);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_multiple_audio_tracks)
+{
+  enum
+  {
+    AAC_TRACK_ID = 0,
+    MP3_TRACK_ID = 1,
+    MAX_TRACKS,
+  };
+
+  TrackDetails audio_tracks[MAX_TRACKS] = { 0, };
+  TracksInfo audio_tracks_info = { 0, };
+
+  const gchar *pipeline_str =
+      "multifilesrc location=\"" AAC_FILE "\" caps=\"" AAC_CAPS "\" ! mux.audio \
+     multifilesrc location=\"" MP3_8K_FILE "\" caps=\"" MP3_8K_CAPS
+      "\" ! mux.audio_1 \
+     eflvmux name=mux ! flvdemux name=demux  \
+    ";
+
+  audio_tracks[AAC_TRACK_ID].caps = gst_caps_from_string (AAC_CAPS);
+  audio_tracks[AAC_TRACK_ID].current_ts = 0;
+  audio_tracks[AAC_TRACK_ID].in_buffer_queue = g_async_queue_new ();
+
+  audio_tracks[MP3_TRACK_ID].caps = gst_caps_from_string (MP3_8K_CAPS);
+  audio_tracks[MP3_TRACK_ID].current_ts = 0;
+  audio_tracks[MP3_TRACK_ID].in_buffer_queue = g_async_queue_new ();
+
+  audio_tracks_info.audio_tracks = audio_tracks;
+  audio_tracks_info.num_audio_tracks = MAX_TRACKS;
+  audio_tracks_info.pipeline = NULL;
+
+  run_pipeline (pipeline_str, &audio_tracks_info);
+}
+
+GST_END_TEST
+GST_START_TEST (test_multiple_video_tracks)
+{
+  enum
+  {
+    H264_TRACK_ID = 0,
+    H265_TRACK_ID = 1,
+    MAX_TRACKS,
+  };
+
+  TrackDetails video_tracks[MAX_TRACKS] = { 0, };
+  TracksInfo video_tracks_info = { 0, };
+
+  const gchar *pipeline_str =
+      "multifilesrc location=\"" H264_FILE "\" caps=\"" H264_CAPS "\" ! mux.video \
+     multifilesrc location=\"" H265_FILE "\" caps=\"" H265_CAPS
+      "\" ! mux.video_1 \
+     eflvmux name=mux ! flvdemux name=demux \
+    ";
+
+  video_tracks[H264_TRACK_ID].caps = gst_caps_from_string (H264_CAPS);
+  video_tracks[H264_TRACK_ID].current_ts = 0;
+  video_tracks[H264_TRACK_ID].in_buffer_queue = g_async_queue_new ();
+
+  video_tracks[H265_TRACK_ID].caps = gst_caps_from_string (H265_CAPS);
+  video_tracks[H265_TRACK_ID].current_ts = 0;
+  video_tracks[H265_TRACK_ID].in_buffer_queue = g_async_queue_new ();
+
+  video_tracks_info.video_tracks = video_tracks;
+  video_tracks_info.num_video_tracks = MAX_TRACKS;
+  video_tracks_info.pipeline = NULL;
+
+  run_pipeline (pipeline_str, &video_tracks_info);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_default_track_eflv_non_multitrack)
+{
+  enum
+  {
+    H264_TRACK_ID = 0,
+    MAX_TRACKS,
+  };
+
+  TrackDetails video_tracks[MAX_TRACKS] = { 0, };
+  TracksInfo video_tracks_info = { 0, };
+
+  const gchar *pipeline_str =
+      "multifilesrc location=\"" H264_FILE "\" caps=\"" H264_CAPS
+      "\" ! mux.video \
+     eflvmux name=mux video::flv-track-mode=non-multitrack ! flvdemux name=demux \
+    ";
+
+  video_tracks[H264_TRACK_ID].caps = gst_caps_from_string (H264_CAPS);
+  video_tracks[H264_TRACK_ID].current_ts = 0;
+  video_tracks[H264_TRACK_ID].in_buffer_queue = g_async_queue_new ();
+
+  video_tracks_info.video_tracks = video_tracks;
+  video_tracks_info.num_video_tracks = MAX_TRACKS;
+  video_tracks_info.pipeline = NULL;
+
+  run_pipeline (pipeline_str, &video_tracks_info);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_default_track_eflv_multitrack_single_audio_single_video)
+{
+  enum
+  {
+    AAC_TRACK_ID = 0,
+    MAX_AUDIO_TRACKS,
+  };
+  enum
+  {
+    H264_TRACK_ID = 0,
+    MAX_VIDEO_TRACKS,
+  };
+
+
+  TrackDetails audio_tracks[MAX_AUDIO_TRACKS] = { 0, };
+  TrackDetails video_tracks[MAX_VIDEO_TRACKS] = { 0, };
+  TracksInfo tracks_info = { 0, };
+
+  const gchar *pipeline_str =
+      "multifilesrc location=\"" AAC_FILE "\" caps=\"" AAC_CAPS
+      "\" ! mux.audio \
+      multifilesrc location=\"" H264_FILE "\" caps=\"" H264_CAPS "\" ! mux.video \
+     eflvmux name=mux audio::flv-track-mode=multitrack ! flvdemux name=demux  \
+    ";
+
+  audio_tracks[AAC_TRACK_ID].caps = gst_caps_from_string (AAC_CAPS);
+  audio_tracks[AAC_TRACK_ID].current_ts = 0;
+  audio_tracks[AAC_TRACK_ID].in_buffer_queue = g_async_queue_new ();
+
+  tracks_info.audio_tracks = audio_tracks;
+  tracks_info.num_audio_tracks = MAX_AUDIO_TRACKS;
+  tracks_info.pipeline = NULL;
+
+  video_tracks[H264_TRACK_ID].caps = gst_caps_from_string (H264_CAPS);
+  video_tracks[H264_TRACK_ID].current_ts = 0;
+  video_tracks[H264_TRACK_ID].in_buffer_queue = g_async_queue_new ();
+
+  tracks_info.video_tracks = video_tracks;
+  tracks_info.num_video_tracks = MAX_VIDEO_TRACKS;
+  tracks_info.pipeline = NULL;
+
+  run_pipeline (pipeline_str, &tracks_info);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_default_track_eflv_multitrack)
+{
+  enum
+  {
+    AAC_TRACK_ID = 0,
+    MAX_TRACKS,
+  };
+
+  TrackDetails audio_tracks[MAX_TRACKS] = { 0, };
+  TracksInfo audio_tracks_info = { 0, };
+
+  const gchar *pipeline_str =
+      "multifilesrc location=\"" AAC_FILE "\" caps=\"" AAC_CAPS
+      "\" ! mux.audio \
+     eflvmux name=mux audio::flv-track-mode=multitrack ! flvdemux name=demux  \
+    ";
+
+  audio_tracks[AAC_TRACK_ID].caps = gst_caps_from_string (AAC_CAPS);
+  audio_tracks[AAC_TRACK_ID].current_ts = 0;
+  audio_tracks[AAC_TRACK_ID].in_buffer_queue = g_async_queue_new ();
+
+  audio_tracks_info.audio_tracks = audio_tracks;
+  audio_tracks_info.num_audio_tracks = MAX_TRACKS;
+  audio_tracks_info.pipeline = NULL;
+
+  run_pipeline (pipeline_str, &audio_tracks_info);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_eflv_reject_pad_0)
+{
+  GstElement *eflvmux = gst_element_factory_make ("eflvmux", NULL);
+  GstPad *audio_0_pad = gst_element_request_pad_simple (eflvmux, "audio_0");
+
+  fail_unless (audio_0_pad == NULL);
+  gst_object_unref (eflvmux);
+}
+
+GST_END_TEST;
+
 static Suite *
 flvmux_suite (void)
 {
@@ -1169,6 +1747,14 @@ flvmux_suite (void)
   tcase_add_test (tc_chain, test_video_caps_change_streamable_single);
   tcase_add_test (tc_chain, test_incrementing_timestamps);
   tcase_add_test (tc_chain, test_rollover_timestamps);
+  tcase_add_test (tc_chain, test_multiple_audio_tracks);
+  tcase_add_test (tc_chain, test_multiple_video_tracks);
+  tcase_add_test (tc_chain, test_default_track_eflv_multitrack);
+  tcase_add_test (tc_chain, test_default_track_eflv_non_multitrack);
+  tcase_add_test (tc_chain, test_multiple_audio_and_video_tracks);
+  tcase_add_test (tc_chain,
+      test_default_track_eflv_multitrack_single_audio_single_video);
+  tcase_add_test (tc_chain, test_eflv_reject_pad_0);
 
   return s;
 }
