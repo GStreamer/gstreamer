@@ -103,6 +103,8 @@ static const GEnumValue video_flip_methods[] = {
   {0, NULL, NULL},
 };
 
+static GQuark _orientation_quark;
+
 static GType
 gst_video_flip_method_get_type (void)
 {
@@ -1863,6 +1865,117 @@ gst_video_flip_sink_event (GstBaseTransform * trans, GstEvent * event)
   return ret;
 }
 
+static gboolean
+gst_video_flip_transform_meta (GstBaseTransform * trans,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
+{
+  GstVideoFlip *videoflip = GST_VIDEO_FLIP (trans);
+  GstVideoFilter *vfilter = GST_VIDEO_FILTER (trans);
+  const GstMetaInfo *info = meta->info;
+  const gchar *const *tags;
+  const gchar *const *curr = NULL;
+  gboolean should_copy = TRUE;
+  const gchar *const valid_tags[] = {
+    GST_META_TAG_VIDEO_STR,
+    GST_META_TAG_VIDEO_ORIENTATION_STR,
+    GST_META_TAG_VIDEO_SIZE_STR,
+    NULL
+  };
+
+  tags = gst_meta_api_type_get_tags (info->api);
+
+  /* No specific tags, we are good to copy */
+  if (!tags) {
+    return TRUE;
+  }
+
+  /* We are only changing size, we can preserve other metas tagged as
+     orientation and colorspace */
+  for (curr = tags; *curr; ++curr) {
+    /* We dont handle any other tag */
+    if (!g_strv_contains (valid_tags, *curr)) {
+      should_copy = FALSE;
+      break;
+    }
+  }
+  /* Cant handle the tags in this meta, let the parent class handle it */
+  if (!should_copy) {
+    return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (trans,
+        outbuf, meta, inbuf);
+  }
+
+  /* This meta is size sensitive, try to transform it accordingly */
+  if (gst_meta_api_type_has_tag (info->api, _orientation_quark)) {
+    if (info->transform_func) {
+      GstVideoMetaTransformMatrix trans_matrix = {
+        &vfilter->in_info,
+        {0, 0, GST_VIDEO_INFO_WIDTH (&vfilter->in_info),
+            GST_VIDEO_INFO_HEIGHT (&vfilter->in_info)},
+        &vfilter->out_info,
+        {0, 0, GST_VIDEO_INFO_WIDTH (&vfilter->out_info),
+            GST_VIDEO_INFO_HEIGHT (&vfilter->out_info)},
+      };
+
+      memset (trans_matrix.matrix, 0, sizeof (gfloat) * 9);
+      trans_matrix.matrix[2][2] = 1;
+
+      switch (videoflip->active_method) {
+        case GST_VIDEO_ORIENTATION_IDENTITY:
+          trans_matrix.matrix[0][0] = 1;
+          trans_matrix.matrix[1][1] = 1;
+          break;
+        case GST_VIDEO_ORIENTATION_90R:
+          trans_matrix.matrix[0][1] = -1;
+          trans_matrix.matrix[1][0] = 1;
+          trans_matrix.matrix[0][2] = trans_matrix.in_rectangle.h - 1;
+          break;
+        case GST_VIDEO_ORIENTATION_180:
+          trans_matrix.matrix[0][0] = -1;
+          trans_matrix.matrix[1][1] = -1;
+          trans_matrix.matrix[0][2] = trans_matrix.in_rectangle.w - 1;
+          trans_matrix.matrix[1][2] = trans_matrix.in_rectangle.h - 1;
+          break;
+        case GST_VIDEO_ORIENTATION_90L:
+          trans_matrix.matrix[0][1] = 1;
+          trans_matrix.matrix[1][0] = -1;
+          trans_matrix.matrix[1][2] = trans_matrix.in_rectangle.w - 1;
+          break;
+        case GST_VIDEO_ORIENTATION_HORIZ:
+          trans_matrix.matrix[0][0] = -1;
+          trans_matrix.matrix[1][1] = 1;
+          trans_matrix.matrix[0][2] = trans_matrix.in_rectangle.w - 1;
+          break;
+        case GST_VIDEO_ORIENTATION_VERT:
+          trans_matrix.matrix[0][0] = 1;
+          trans_matrix.matrix[1][1] = -1;
+          trans_matrix.matrix[1][2] = trans_matrix.in_rectangle.h - 1;
+          break;
+        case GST_VIDEO_ORIENTATION_UL_LR:
+          trans_matrix.matrix[0][1] = 1;
+          trans_matrix.matrix[1][0] = 1;
+          break;
+        case GST_VIDEO_ORIENTATION_UR_LL:
+          trans_matrix.matrix[0][1] = -1;
+          trans_matrix.matrix[1][0] = -1;
+          trans_matrix.matrix[0][2] = trans_matrix.in_rectangle.h - 1;
+          trans_matrix.matrix[1][2] = trans_matrix.in_rectangle.w - 1;
+          break;
+        default:
+          return FALSE;
+      }
+
+
+      info->transform_func (outbuf, meta, inbuf,
+          gst_video_meta_transform_matrix_get_quark (), &trans_matrix);
+    }
+    return FALSE;
+  }
+
+  /* No need to transform, we can safely copy this meta */
+  return TRUE;
+}
+
+
 static void
 gst_video_flip_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -1985,12 +2098,16 @@ gst_video_flip_class_init (GstVideoFlipClass * klass)
       GST_DEBUG_FUNCPTR (gst_video_flip_before_transform);
   trans_class->src_event = GST_DEBUG_FUNCPTR (gst_video_flip_src_event);
   trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_video_flip_sink_event);
+  trans_class->transform_meta = gst_video_flip_transform_meta;
 
   vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_video_flip_set_info);
   vfilter_class->transform_frame =
       GST_DEBUG_FUNCPTR (gst_video_flip_transform_frame);
 
   gst_type_mark_as_plugin_api (GST_TYPE_VIDEO_FLIP_METHOD, 0);
+
+  _orientation_quark =
+      g_quark_from_static_string (GST_META_TAG_VIDEO_ORIENTATION_STR);
 }
 
 static void
