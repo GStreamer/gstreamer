@@ -41,7 +41,10 @@ def override(cls):
 
     return cls
 
+
 real_init = GstPbutils.pb_utils_init
+
+
 def init():
     if not Gst.is_initialized():
         raise RuntimeError("Gst.init() needs to be called before importing GstPbutils")
@@ -83,6 +86,7 @@ def init():
                 self.set_description(description)
             if preset is not None:
                 self.set_preset(preset)
+
 
 GstPbutils.pb_utils_init = init
 GstPbutils.init = init
