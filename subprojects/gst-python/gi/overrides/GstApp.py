@@ -18,13 +18,15 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
 import typing
-from gi.overrides import _gi_gst
-from gi.overrides import override
-from gi.repository import Gst
+import gi
 
+gi.require_version('Gst', '1.0')
+from gi.repository import Gst
+from gi.overrides import _gi_gst  # type: ignore[attr-defined]
+from gi.overrides import override
 
 if typing.TYPE_CHECKING:
-    # Import from pygobject-stubs
+    # Import stubs for type checking this file.
     from gi.repository import GstApp
 else:
     from gi.module import get_introspection_module

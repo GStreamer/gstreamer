@@ -28,9 +28,12 @@ import inspect
 import itertools
 import weakref
 import typing
+import gi
 
-from gi.overrides import override
+gi.require_version('GLib', '2.0')
+gi.require_version('GObject', '2.0')
 from gi.repository import GLib, GObject
+from gi.overrides import override
 
 # Typing relies on https://github.com/pygobject/pygobject-stubs.
 if typing.TYPE_CHECKING:

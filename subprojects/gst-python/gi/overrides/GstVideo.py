@@ -1,16 +1,17 @@
-from ..module import get_introspection_module
+import typing
 
-import gi
-gi.require_version('Gst', '1.0')
+if typing.TYPE_CHECKING:
+    # Import stubs for type checking this file.
+    from gi.repository import GstVideo
+else:
+    from gi.module import get_introspection_module
+    GstVideo = get_introspection_module('GstVideo')
 
-from gi.repository import Gst  # noqa
-
-GstVideo = get_introspection_module('GstVideo')
-__all__ = []
+__all__: list[str] = []
 
 
 def __video_info_from_caps(*args):
     raise NotImplementedError('VideoInfo.from_caps was removed, use VideoInfo.new_from_caps instead')
 
 
-GstVideo.VideoInfo.from_caps = __video_info_from_caps
+GstVideo.VideoInfo.from_caps = __video_info_from_caps  # type: ignore[method-assign]

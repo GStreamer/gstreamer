@@ -22,15 +22,20 @@
 #
 # SPDX-License-Identifier: LGPL-2.0-or-later
 
-from ..overrides import override as override_
-from ..module import get_introspection_module
-
+import typing
 import gi
+
 gi.require_version('Gst', '1.0')
+from gi.repository import Gst
+from gi.overrides import override as override_
 
-from gi.repository import Gst  # noqa
+if typing.TYPE_CHECKING:
+    # Import stubs for type checking this file.
+    from gi.repository import GstPbutils
+else:
+    from gi.module import get_introspection_module
+    GstPbutils = get_introspection_module('GstPbutils')
 
-GstPbutils = get_introspection_module('GstPbutils')
 __all__ = []
 
 

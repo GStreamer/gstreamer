@@ -22,16 +22,22 @@
 #
 # SPDX-License-Identifier: LGPL-2.0-or-later
 
-from ..overrides import override
-from ..module import get_introspection_module
 import sys
+import typing
 
-GstAnalytics = get_introspection_module('GstAnalytics')
-__all__ = []
-
-from gi.overrides import _gi_gst_analytics
+from gi.overrides import override
+from gi.overrides import _gi_gst_analytics  # type: ignore[attr-defined]
 _gi_gst_analytics
 
+if typing.TYPE_CHECKING:
+    # Import stubs for type checking this file.
+    from gi.repository import GstAnalytics
+else:
+    from gi.module import get_introspection_module
+    GstAnalytics = get_introspection_module('GstAnalytics')
+
+
+__all__ = []
 __mtd_types__ = {}
 
 
