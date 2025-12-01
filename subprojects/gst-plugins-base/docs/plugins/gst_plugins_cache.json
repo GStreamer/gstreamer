@@ -10334,6 +10334,11 @@
                         "direction": "src",
                         "presence": "sometimes"
                     },
+                    "metadata_%%u": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    },
                     "sink": {
                         "caps": "ANY",
                         "direction": "sink",

@@ -307,7 +307,7 @@ struct _GstDecodebin3
   GList *decodable_factories;
 
   /* counters for pads */
-  guint32 apadcount, vpadcount, tpadcount, opadcount;
+  guint32 apadcount, vpadcount, tpadcount, mpadcount, opadcount;
 
   /* Properties */
   GstCaps *caps;
@@ -531,6 +531,19 @@ GST_STATIC_PAD_TEMPLATE ("text_%u",
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
 
+/**
+ * GstDecodebin3!metadata_%u:
+ *
+ * Pad template for metadata source pads.
+ *
+ * Since: 1.28
+ */
+static GstStaticPadTemplate metadata_src_template =
+GST_STATIC_PAD_TEMPLATE ("metadata_%u",
+    GST_PAD_SRC,
+    GST_PAD_SOMETIMES,
+    GST_STATIC_CAPS_ANY);
+
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
@@ -691,6 +704,8 @@ gst_decodebin3_class_init (GstDecodebin3Class * klass)
       gst_static_pad_template_get (&audio_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&text_src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&metadata_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
@@ -4505,6 +4520,10 @@ db_output_stream_new (GstDecodebin3 * dbin, GstStreamType type)
     templ = &text_src_template;
     counter = &dbin->tpadcount;
     prefix = "text";
+  } else if (type & GST_STREAM_TYPE_METADATA) {
+    templ = &metadata_src_template;
+    counter = &dbin->mpadcount;
+    prefix = "metadata";
   } else {
     templ = &src_template;
     counter = &dbin->opadcount;
