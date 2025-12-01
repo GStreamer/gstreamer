@@ -1,1 +1,1 @@
-project('gst-integration-testsuites', [], version: '1.26.9', meson_version : '>= 1.4', license: 'LGPL')
+project('gst-integration-testsuites', [], version: '1.26.9.1', meson_version : '>= 1.4', license: 'LGPL')
