@@ -44,6 +44,7 @@ G_BEGIN_DECLS
  * @GST_STREAM_TYPE_VIDEO: The stream carries video data
  * @GST_STREAM_TYPE_CONTAINER: The stream is a muxed container type
  * @GST_STREAM_TYPE_TEXT: The stream contains subtitle / subpicture data.
+ * @GST_STREAM_TYPE_METADATA: The stream contains metadata.
  *
  * #GstStreamType describes a high level classification set for
  * flows of data in #GstStream objects.
@@ -59,7 +60,16 @@ typedef enum {
   GST_STREAM_TYPE_AUDIO     = 1 << 1,
   GST_STREAM_TYPE_VIDEO     = 1 << 2,
   GST_STREAM_TYPE_CONTAINER = 1 << 3,
-  GST_STREAM_TYPE_TEXT      = 1 << 4
+  GST_STREAM_TYPE_TEXT      = 1 << 4,
+
+  /**
+   * GST_STREAM_TYPE_METADATA:
+   *
+   * The stream contains metadata.
+   *
+   * Since: 1.28
+   */
+  GST_STREAM_TYPE_METADATA  = 1 << 5
 } GstStreamType;
 
 

@@ -4052,6 +4052,8 @@ guess_stream_type_from_caps (GstCaps * caps)
       g_str_has_prefix (name, "subtitle/") ||
       g_str_has_prefix (name, "closedcaption/"))
     return GST_STREAM_TYPE_TEXT;
+  if (g_str_has_prefix (name, "meta/"))
+    return GST_STREAM_TYPE_METADATA;
 
   /* Use information from pbutils. Note that we only care about elementary
    * streams which is why we check flag equality */
@@ -4063,6 +4065,8 @@ guess_stream_type_from_caps (GstCaps * caps)
       return GST_STREAM_TYPE_VIDEO;
     case GST_PBUTILS_CAPS_DESCRIPTION_FLAG_SUBTITLE:
       return GST_STREAM_TYPE_TEXT;
+    case GST_PBUTILS_CAPS_DESCRIPTION_FLAG_METADATA:
+      return GST_STREAM_TYPE_METADATA;
     default:
       return GST_STREAM_TYPE_UNKNOWN;
   }

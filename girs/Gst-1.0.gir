@@ -45131,6 +45131,9 @@ whether a stream is of a certain type.</doc>
       <member name="text" value="16" c:identifier="GST_STREAM_TYPE_TEXT" glib:nick="text" glib:name="GST_STREAM_TYPE_TEXT">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststreams.h">The stream contains subtitle / subpicture data.</doc>
       </member>
+      <member name="metadata" value="32" c:identifier="GST_STREAM_TYPE_METADATA" version="1.28" glib:nick="metadata" glib:name="GST_STREAM_TYPE_METADATA">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststreams.h">The stream contains metadata.</doc>
+      </member>
       <function name="get_name" c:identifier="gst_stream_type_get_name" version="1.10">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststreams.c">Get a descriptive string for a given #GstStreamType</doc>
         <source-position filename="../subprojects/gstreamer/gst/gststreams.h"/>

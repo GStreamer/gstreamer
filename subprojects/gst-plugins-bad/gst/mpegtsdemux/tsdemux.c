@@ -1351,7 +1351,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
   GstPad *pad = NULL;
   gboolean sparse = FALSE;
   gboolean is_audio = FALSE, is_video = FALSE, is_subpicture = FALSE,
-      is_private = FALSE;
+      is_private = FALSE, is_metadata = FALSE;
 
   gst_ts_demux_create_tags (stream);
 
@@ -1698,12 +1698,14 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         case DRF_ID_KLVA:
           sparse = TRUE;
           is_private = TRUE;
+          is_metadata = TRUE;
           caps = gst_caps_new_simple ("meta/x-klv",
               "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
           break;
         case DRF_ID_ID3:
           sparse = TRUE;
           is_private = TRUE;
+          is_metadata = TRUE;
           caps = gst_caps_new_simple ("meta/x-id3",
               "parsed", G_TYPE_BOOLEAN, FALSE, NULL);
           break;
@@ -1717,6 +1719,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
           break;
         case DRF_ID_VANC:
           is_private = TRUE;
+          is_metadata = TRUE;
           caps =
               gst_caps_new_simple ("meta/x-st-2038", "alignment", G_TYPE_STRING,
               "line", NULL);
@@ -1779,6 +1782,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
               case DRF_ID_KLVA:
                 sparse = TRUE;
                 is_private = TRUE;
+                is_metadata = TRUE;
                 /* registration_id is not correctly set or parsed for some streams */
                 bstream->registration_id = DRF_ID_KLVA;
 
@@ -1789,6 +1793,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
               case DRF_ID_ID3:
                 sparse = TRUE;
                 is_private = TRUE;
+                is_metadata = TRUE;
                 bstream->registration_id = DRF_ID_ID3;
 
                 caps = gst_caps_new_simple ("meta/x-id3",
@@ -2121,6 +2126,9 @@ done:
       name =
           g_strdup_printf ("private_%01x_%04x", demux->program_generation,
           bstream->pid);
+      if (is_metadata)
+        gst_stream_set_stream_type (bstream->stream_object,
+            GST_STREAM_TYPE_METADATA);
     } else if (is_subpicture) {
       template = gst_static_pad_template_get (&subpicture_template);
       name =
