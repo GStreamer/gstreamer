@@ -1,5 +1,6 @@
 import os
 import sys
+import typing
 from importlib.machinery import PathFinder
 from pathlib import Path
 
@@ -10,9 +11,10 @@ del sys.modules["gi"]
 import gi
 
 
-# Stubs for type checking our overrides
-def require_version(namespace: str, version: str) -> None:
-    pass
+if typing.TYPE_CHECKING:
+    # Stubs for type checking our overrides
+    def require_version(namespace: str, version: str) -> None:
+        pass
 
 
 class GstOverrideImport:
