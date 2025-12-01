@@ -669,7 +669,7 @@ mxf_st2038_to_vanc_write_func (GstBuffer * buffer,
   if (num_anc_structures == 0) {
     gst_buffer_unmap (buffer, &map);
     gst_buffer_unref (buffer);
-    *outbuf = NULL;
+    *outbuf = gst_buffer_new ();
     return GST_FLOW_OK;
   }
 
