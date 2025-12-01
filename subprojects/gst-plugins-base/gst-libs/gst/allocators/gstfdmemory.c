@@ -211,6 +211,21 @@ gst_fd_mem_share (GstMemory * gmem, gssize offset, gssize size)
 #endif
 }
 
+static gboolean
+gst_fd_mem_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
+{
+  if (gst_fd_memory_get_fd (mem1) != gst_fd_memory_get_fd (mem2))
+    return FALSE;
+
+  if (mem1->offset + mem1->size != mem2->offset)
+    return FALSE;
+
+  if (offset)
+    *offset = mem1->offset - mem1->parent->offset;
+
+  return TRUE;
+}
+
 G_DEFINE_TYPE (GstFdAllocator, gst_fd_allocator, GST_TYPE_ALLOCATOR);
 
 static void
@@ -237,6 +252,7 @@ gst_fd_allocator_init (GstFdAllocator * allocator)
   alloc->mem_map = gst_fd_mem_map;
   alloc->mem_unmap = gst_fd_mem_unmap;
   alloc->mem_share = gst_fd_mem_share;
+  alloc->mem_is_span = gst_fd_mem_is_span;
 
   GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
