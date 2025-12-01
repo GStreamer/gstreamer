@@ -215,7 +215,7 @@ def launch_command(command, color=None, fails=False):
 
 
 def path2url(path):
-    return urllib.parse.urljoin('file:', urllib.request.pathname2url(path))
+    return urllib.parse.urljoin('file://', urllib.request.pathname2url(path))
 
 
 def is_windows():
