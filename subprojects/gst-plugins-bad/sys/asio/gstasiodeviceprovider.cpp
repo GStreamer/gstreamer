@@ -146,6 +146,8 @@ struct _GstAsioDeviceProvider
   GMainLoop *loop;
   GMainContext *context;
   guint device_update_id;
+  GMutex lock;
+  GCond cond;
 #endif /* HAVE_CM_NOTIFY */
 };
 
@@ -192,6 +194,8 @@ gst_asio_device_provider_init (GstAsioDeviceProvider * self)
   self->context = g_main_context_new ();
   self->loop = g_main_loop_new (self->context, FALSE);
   self->device_update_id = 0;
+  g_mutex_init (&self->lock);
+  g_cond_init (&self->cond);
 #endif
 }
 
@@ -205,6 +209,8 @@ gst_asio_device_provider_finalize (GObject * obj)
   g_clear_pointer (&self->thread, g_thread_join);
   g_main_loop_unref (self->loop);
   g_main_context_unref (self->context);
+  g_mutex_clear (&self->lock);
+  g_cond_clear (&self->cond);
 
   G_OBJECT_CLASS (gst_asio_device_provider_parent_class)->finalize (obj);
 }
@@ -317,6 +323,19 @@ gst_asio_device_provider_thread_func (GstDeviceProvider * provider)
     return NULL;
   }
 
+  auto source = g_idle_source_new ();
+  g_source_set_callback (source, [] (gpointer user_data) -> gboolean {
+      auto self = GST_ASIO_DEVICE_PROVIDER (user_data);
+      g_mutex_lock (&self->lock);
+      g_cond_broadcast (&self->cond);
+      g_mutex_unlock (&self->lock);
+      return G_SOURCE_REMOVE;
+    },
+    self, nullptr);
+
+  g_source_attach (source, self->context);
+  g_source_unref (source);
+
   GST_LOG_OBJECT (self, "Started device provider loop");
   g_main_loop_run (self->loop);
   GST_LOG_OBJECT (self, "Stopped device provider loop");
@@ -347,6 +366,11 @@ gst_asio_device_provider_start (GstDeviceProvider * provider)
 
   self->thread = g_thread_new ("GstAsioDeviceProvider",
       (GThreadFunc) gst_asio_device_provider_thread_func, self);
+
+  g_mutex_lock (&self->lock);
+  while (!g_main_loop_is_running (self->loop))
+    g_cond_wait (&self->cond, &self->lock);
+  g_mutex_unlock (&self->lock);
 
   GST_LOG_OBJECT (self, "Started ASIO device provider");
 
