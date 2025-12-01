@@ -23,6 +23,7 @@
 # SPDX-License-Identifier: LGPL-2.0-or-later
 
 from __future__ import annotations
+from typing_extensions import Self
 
 import sys
 import inspect
@@ -125,8 +126,15 @@ class NotWritableMiniObject(Exception):
 __all__.append('NotWritableMiniObject')
 
 
-class MiniObject:
-    def make_writable(self) -> MiniObject:
+if typing.TYPE_CHECKING:
+    # When type checking we don't want MiniObjectMixin and Gst.MiniObjectMixin
+    # to be different types.
+    class MiniObjectMixin(Gst.MiniObjectMixin):
+        pass
+
+
+class MiniObjectMixin:  # type: ignore[no-redef]
+    def make_writable(self) -> bool:
         return _gi_gst.mini_object_make_writable(self)
 
     def is_writable(self) -> bool:
@@ -144,6 +152,9 @@ class MiniObject:
         return _gi_gst._get_object_ptr(self)
 
 
+__all__.append('MiniObjectMixin')
+
+
 class NotWritableQuery(Exception):
     pass
 
@@ -151,7 +162,7 @@ class NotWritableQuery(Exception):
 __all__.append('NotWritableQuery')
 
 
-class Query(MiniObject, Gst.Query):
+class Query(MiniObjectMixin, Gst.Query):
     def get_structure(self) -> typing.Optional[Structure]:
         s = _gi_gst.query_get_structure(self)
         return s._set_parent(self) if s is not None else None
@@ -171,7 +182,7 @@ class NotWritableEvent(Exception):
 __all__.append('NotWritableEvent')
 
 
-class Event(MiniObject, Gst.Event):
+class Event(MiniObjectMixin, Gst.Event):
     def get_structure(self) -> typing.Optional[Structure]:
         s = _gi_gst.event_get_structure(self)
         return s._set_parent(self) if s is not None else None
@@ -191,7 +202,7 @@ class NotWritableContext(Exception):
 __all__.append('NotWritableContext')
 
 
-class Context(MiniObject, Gst.Context):
+class Context(MiniObjectMixin, Gst.Context):
     def get_structure(self) -> typing.Optional[Structure]:
         s = _gi_gst.context_get_structure(self)
         return s._set_parent(self) if s is not None else None
@@ -218,7 +229,7 @@ class NotWritableStructure(Exception):
 __all__.append('NotWritableStructure')
 
 
-class Caps(MiniObject, Gst.Caps):
+class Caps(MiniObjectMixin, Gst.Caps):
 
     def __nonzero__(self):
         return not self.is_empty()
@@ -252,11 +263,10 @@ class Caps(MiniObject, Gst.Caps):
     def __str__(self):
         return self.to_string()
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> typing.Optional[Structure]:
         if index >= self.get_size():
             raise IndexError('structure index out of range')
-
-        return Gst.Caps.get_structure(self, index)
+        return self.get_structure(index)
 
     def __len__(self):
         return self.get_size()
@@ -421,7 +431,7 @@ __all__.append('MapError')
 
 
 class Iterator(Gst.Iterator):
-    def __iter__(self):
+    def __iter__(self) -> typing.Iterator[typing.Any]:
         while True:
             result, value = self.next()
             if result == Gst.IteratorResult.DONE:
@@ -496,10 +506,10 @@ class Structure(Gst.Structure):
     def __ptr__(self):
         return _gi_gst._get_object_ptr(self)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> typing.Any:
         return self.get_value(key)
 
-    def keys(self) -> set[str]:
+    def keys(self) -> typing.Iterable[str]:
         keys = set()
 
         def foreach(fid, value, unused1, udata):
@@ -509,8 +519,8 @@ class Structure(Gst.Structure):
         self.foreach(foreach, None, None)
         return keys
 
-    def __setitem__(self, key, value):
-        return self.set_value(key, value)
+    def __setitem__(self, key: str, value: typing.Any) -> None:
+        self.set_value(key, value)
 
     def set_value(self, key: str, value: typing.Any) -> bool:
         if not _gi_gst.structure_is_writable(self):
@@ -527,7 +537,7 @@ class Structure(Gst.Structure):
         self.__parent__ = parent
         return self
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, _type, _value, _tb):
@@ -775,10 +785,10 @@ class ValueArray(Gst.ValueArray):
     def __getitem__(self, index):
         return self.array[index]
 
-    def __setitem__(self, index, value):
+    def __setitem__(self, index: int, value: typing.Any) -> None:
         self.array[index] = value
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.array)
 
     def __str__(self):
@@ -799,10 +809,10 @@ class ValueList(Gst.ValueList):
     def __getitem__(self, index):
         return self.array[index]
 
-    def __setitem__(self, index, value):
+    def __setitem__(self, index: int, value: typing.Any) -> None:
         self.array[index] = value
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.array)
 
     def __str__(self):
@@ -820,7 +830,7 @@ class TagList(Gst.TagList):
     def __init__(self):
         Gst.TagList.__init__(self)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> typing.Any:
         if index >= self.n_tags():
             raise IndexError('taglist index out of range')
 
@@ -830,29 +840,29 @@ class TagList(Gst.TagList):
             raise KeyError(f"tag {key} not found")
         return val
 
-    def __setitem__(self, key, value):
-        self.add(Gst.TagMergeMode.REPLACE, key, value)
+    def __setitem__(self, key: str, value: typing.Any) -> None:
+        self.add_value(Gst.TagMergeMode.REPLACE, key, value)
 
-    def keys(self):
+    def keys(self) -> typing.Iterable[str]:
         keys = set()
 
-        def foreach(list, fid, value, udata):
+        def foreach(list, fid: str, udata):
             keys.add(fid)
             return True
 
         self.foreach(foreach, None, None)
         return keys
 
-    def enumerate(self):
+    def enumerate(self) -> map[tuple[str, typing.Any]]:
         return map(lambda k: (k, Gst.TagList.copy_value(self, k)[1]), self.keys())
 
     def __len__(self):
         return self.n_tags()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.to_string()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<Gst.TagList %s>' % (str(self))
 
 
@@ -868,7 +878,15 @@ def pairwise(iterable: typing.Iterable[Element]) -> typing.Iterator[tuple[Elemen
     return zip(a, b)
 
 
-class StructureWrapper:
+if typing.TYPE_CHECKING:
+    # When type checking we don't want StructureWrapper and Gst.StructureWrapper
+    # to be different types.
+    class StructureWrapper(Gst.StructureWrapper):
+        def __init__(self, structure: Structure):
+            pass
+
+
+class StructureWrapper:  # type: ignore[no-redef]
     """A Gst.Structure wrapper to force usage of a context manager.
     """
     def __init__(self, structure: Structure):
@@ -879,6 +897,9 @@ class StructureWrapper:
 
     def __exit__(self, _type, _value, _tb):
         self.__structure._set_parent(None)
+
+
+__all__.append('StructureWrapper')
 
 
 class MapInfo:
@@ -897,7 +918,7 @@ class MapInfo:
         for i in (self.__parent__ is not None, self):
             yield i
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         if not self.__parent__:
             raise MapError('MappingError', 'Mapping was not successful')
 
@@ -911,7 +932,7 @@ class MapInfo:
 __all__.append("MapInfo")
 
 
-class Buffer(MiniObject, Gst.Buffer):
+class Buffer(MiniObjectMixin, Gst.Buffer):
     @property  # type: ignore[override]
     def flags(self) -> Gst.BufferFlags:
         return _gi_gst.mini_object_flags(self)
