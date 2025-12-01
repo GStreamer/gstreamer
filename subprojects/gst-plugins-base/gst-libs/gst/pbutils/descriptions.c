@@ -340,6 +340,7 @@ static const FormatInfo formats[] = {
   /* metadata */
   {"application/x-onvif-metadata", "ONVIF Timed Metadata", FLAG_METADATA, ""},
   {"meta/x-klv", "KLV Metadata", FLAG_METADATA, ""},
+  {"meta/x-st-2038", "ST-2038 Ancillary Data", FLAG_METADATA, ""},
   {"meta/x-id3", N_("Timed ID3 tag Metadata"), FLAG_METADATA, ""},
 };
 
