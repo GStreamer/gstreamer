@@ -2,11 +2,11 @@ GStreamer 1.26 Release Notes
 
 GStreamer 1.26.0 was originally released on 11 March 2025.
 
-The latest bug-fix release in the stable 1.26 series is 1.26.8 and was released on 10 November 2025.
+The latest bug-fix release in the stable 1.26 series is 1.26.9 and was released on 01 December 2025.
 
 See https://gstreamer.freedesktop.org/releases/1.26/ for the latest version of this document.
 
-Last updated: Monday 10 November 2025, 17:00 UTC (log)
+Last updated: Monday 01 December 2025, 17:00 UTC (log)
 
 ## Introduction
 
@@ -2940,12 +2940,192 @@ List of merge requests and issues fixed in 1.26.8
 -   List of Merge Requests applied in 1.26.8
 -   List of Issues fixed in 1.26.8
 
+1.26.9
+
+The ninth 1.26 bug-fix release (1.26.9) was released on 01 December 2025.
+
+This release only contains bugfixes and it should be safe to update from 1.26.x.
+
+Highlighted bugfixes in 1.26.9
+
+-   playback: playbin3 and decodebin3 stability fixes
+-   Ancillary metadata handling fixes for AJA playout and Blackmagic Decklink capture cards
+-   HLS and DASH adaptive streaming clients stability improvements
+-   gst-play-1.0 will now print details of any missing plugins again
+-   gtk4paintablesink: Add property to fine-tune reconfiguration behaviour on window-resize
+-   macOS device monitoring: fix potential crash when probing for audio devices
+-   macOS video decoder stability improvements
+-   NDI source: fix audio corruption for non-interleaved audio with stride padding
+-   Add SMPTE ST291-1 ancillary metadata RTP payloader and depayloader
+-   Add ST-2038 metadata combiner and extractor
+-   webrtcsink: support hardware-accelerated encoders from the va VA-API plugin
+-   spotifysrc: fix the Spotify integration by using Spotify’s extended metadata endpoint
+-   Python bindings cross compilation fixes
+-   cerbero: add Visual Studio 2026 support, fix building on drives other than C:, and ship svtjpegxs plugin on Windows
+-   Various bug fixes, build fixes, memory leak fixes, and other stability and reliability improvements
+
+gstreamer
+
+-   info: Force comparison to same types
+-   queue: Use GST_PTR_FORMAT everywhere
+-   streamcollection: Fix race condition between disconnecting notify proxy and notifications
+-   value: Fix GstAllocationParams string serialisation on 32-bit architectures
+
+gst-plugins-base
+
+-   allocators: drmdumb: Keep dmabuf mapped
+-   alsadeviceprovider: Fix device name leak
+-   audiovisualizer: Use break instead of goto for escape logic
+-   decodebin3: Clear previous collection on input
+-   decodebin3: Consider certain meta caps in decodebin3 as raw format to avoid warnings
+-   decodebin3: Protect again NULL dereference if input slot can’t be mapped
+-   glbasesrc: Add unlock handling for non-negotiated cases
+-   glcolorconvert: Fix memory leak in _create_shader
+-   gldownload: Keep dmabuf mapped
+-   glfiltershader: Add missing unlock
+-   glstereosplit: Add missing unlock for exceptional case
+-   pbutils: Fix bit shifting when generate hevc mime codec string
+-   rtpbaseaudiopay: Consider RESYNC flag as discontinuity too
+-   rtpbasedepayload: Add missing unlock in error code path
+-   uridecodebin3: Add null check of play items in purge
+-   urisourcebin: Add missing unlock
+-   urisourcebin: Fix initial values of min_byte_level and min_time_level variables
+-   videoencoder: fix warning of uninitialized buffer
+
+Tools:
+
+-   gst-play-1.0: fix printing of missing plugin details
+-   gst-play-1.0: Add missing unlock for invalid track type
+
+gst-plugins-good
+
+-   adaptivedemux2: Fix a crash on rapid state changes, and startup busy waiting
+-   hlsdemux2: Keep streams with different names
+-   hlsdemux2: error out instead of asserting on negative stream time
+-   hlsdemux2: Not all subtitles are present in track/collection. Usage of FORCE EXT-X-MEDIA field
+-   osxaudio: Remove unnecessary if, add comment about GstDevice lifetime
+-   osxaudio: Various fixes, incl a potential crash when probing
+-   v4l2allocator: Add KEEP_MAPPED flag to the allocated buffers
+-   v4l2videoenc: Fix codec frame leak on error
+
+gst-plugins-bad
+
+-   Add missing G_DECLS symbols to gstvkqueue and gstvkcommandqueue
+-   ajasink, decklinkvideosrc: Fix some GstAncillaryMeta handling bugs
+-   analyticsmeta: Initialize span to avoid undefined behavior
+-   GstPlay: Fixed wrong initial position update interval configuration
+-   id3tag: Fix resource leak
+-   mpegtsmux: Avoid infinite recursion writing PCR packets
+-   mxfdemux: Fix typo on mxf_ffv1_create_caps
+-   mxfmux: Fix memset usage
+-   mpegtsmux: segfaults when bitrate is configured lower than bitrate that’s coming in
+-   osxaudio: Various fixes, incl a potential crash when probing
+-   scte-section: fix missing cleanup on splice component parse failure
+-   tsdemux: expose audio GstStream for DTS
+-   va, unixfdsrc: keep dmabufs mapped
+-   vkh265dec: Fix a typo
+-   vkvideo-private: Replace GstBuffer with GstMemory array for video sessions
+-   vtdec: Fix race condition in decoder draining. Fluster runs were unstable
+
+gst-plugins-ugly
+
+-   rmdemux: Remove unnecessary condition
+
+GStreamer Rust plugins
+
+-   analytics splitter/combiner: Remove the separate fields to events and buffer
+-   audiornnoise: copy input metadatas to ouput buffer
+-   closedcaption: cctost2038anc: Support alignment
+-   closedcaption: st2038ancdemux: Support alignment
+-   closedcaption: st2038ancmux: Support frame alignment
+-   closedcaption: st2038: Forward frame rate in caps where available
+-   closedcaption: Add ST-2038 combiner and extractor element
+-   closedcaption: st2038extractor: Some fixes
+-   closedcaption: st2038combiner: Some fixes
+-   gif: Update to gif 0.14
+-   gtk4: Add property to control reconfigure on window-resize behavior
+-   gtk4: Fix compile warning
+-   fmp4, mp4: Implement GstChildProxy for MP4Mux and FMP4Mux
+-   fmp4: Update to dash-mpd 0.19
+-   ndisrcdemux: fix audio corruption with non-interleaved stride padding
+-   net/quinn: Update web-transport-quinn and fix flaky QUIC test
+-   rtp: Add SMPTE ST291-1 (ANC) RTP payloader and depayloader
+-   spotify: bump librespot 0.8.0
+-   webrtcsink: Don’t let recalculate_latency block tokio worker thread
+-   webrtcsink: support va encoders
+-   Update dependencies
+-   meson: fix build when GTK is not present
+
+gst-libav
+
+-   No changes
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-python
+
+-   gst-python: fix cross-compiling
+-   python: Add some typing annotation to overrides
+
+gst-editing-services
+
+-   No changes
+
+gst-devtools, gst-validate + gst-integration-testsuites
+
+-   debug-viewer: Make 0x prefix optional thread ID regexes
+
+gst-examples
+
+-   No changes
+
+gstreamer-docs
+
+-   No changes
+
+Development build environment
+
+-   libsoup wrap: remove fallback gio-unix on windows build
+-   webrtc-audio-processing wrap: Fix build with abseil-cpp 202508
+
+Cerbero build tool and packaging changes in 1.26.9
+
+-   Add support for Visual Studio 2026 (Insiders)
+-   Fix extraction on Windows when building on a different drive than C:, bump pixman and pygobject
+-   cookbook: List all the dependencies when listed in reverse
+-   gst-plugins-bad: actually build svtjpegxs plugin on 64-bit Windows
+
+Contributors to 1.26.9
+
+Artem Martus, Chengfa Wang, Dominique Leroux, Dongjoo Kim, Doug Nazar, Edward Hervey, Gang Zhao, Hyunjun Ko, Jaehoon Lee, Jakub
+Adam, Jan Schmidt, Jeongmin Kwak, Jerome Colle, Jihoon Lee, Jordan Yelloz, L. E. Segovia, Matthew Semeniuk, Max Goltzsche,
+Michael Olbrich, Monty C, Nicolas Dufresne, Nirbheek Chauhan, Olivier Crête, Philippe Normand, Pratik Pachange, Qian Hu (胡骞),
+Robert Mader, Ruben Gonzalez, Sanchayan Maity, Santiago Carot-Nemesio, Sebastian Dröge, Seungha Yang, Stéphane Cerveau,
+Tim-Philipp Müller, Xavier Claessens,
+
+… and many others who have contributed bug reports, translations, sent suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.26.9
+
+-   List of Merge Requests applied in 1.26.9
+-   List of Issues fixed in 1.26.9
+
 Schedule for 1.28
 
 Our next major feature release will be 1.28, and 1.27 will be the unstable development version leading up to the stable 1.28
 release. The development of 1.27/1.28 will happen in the git main branch of the GStreamer mono repository.
 
-The schedule for 1.28 is yet to be decided, but we’re aiming for a release towards the end of 2025.
+For 1.28 we’re aiming for feature freeze in December 2025 and then the new stable 1.28.0 release in January 2026.
 
 1.28 will be backwards-compatible to the stable 1.26, 1.24, 1.22, 1.20, 1.18, 1.16, 1.14, 1.12, 1.10, 1.8, 1.6, 1.4, 1.2 and 1.0
 release series.
