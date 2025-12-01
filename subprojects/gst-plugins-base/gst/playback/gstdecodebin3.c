@@ -3660,6 +3660,14 @@ gst_decodebin_input_link_to_slot (DecodebinInputStream * input_stream)
   MultiQueueSlot *slot =
       gst_decodebin_get_slot_for_input_stream_locked (dbin, input_stream);
 
+  if (!slot) {
+    GST_ERROR_OBJECT (dbin,
+        "Fatal, could not get a multiqueue slot for input stream");
+    GST_ELEMENT_ERROR (dbin, STREAM, FAILED, (NULL),
+        ("Fatal, could not get a multiqueue slot for input stream"));
+    return;
+  }
+
   if (slot->input != NULL && slot->input != input_stream) {
     GST_ERROR_OBJECT (slot->dbin, "Input stream is already linked to a slot");
     return;
