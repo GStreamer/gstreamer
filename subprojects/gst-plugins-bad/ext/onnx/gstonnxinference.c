@@ -114,8 +114,9 @@ struct _GstOnnxInference
   GQuark *output_ids;
   GstTensorDataType input_data_type;
   bool fixedInputImageSize;
-  double *means;
-  double *stddevs;
+  double *scales;
+  double *offsets;
+  gsize num_channels;
 };
 
 static const OrtApi *api = NULL;
@@ -359,10 +360,9 @@ gst_onnx_inference_init (GstOnnxInference * self)
 
   self->execution_provider = GST_ONNX_EXECUTION_PROVIDER_CPU;
 
-  self->means = g_new0 (double, 1);
-  self->stddevs = g_new (double, 1);
-  self->means[0] = 127;
-  self->stddevs[0] = 128;
+  self->scales = NULL;
+  self->offsets = NULL;
+  self->num_channels = 0;
 
   self->height_dim = -1;
   self->width_dim = -1;
@@ -378,10 +378,9 @@ gst_onnx_inference_finalize (GObject * object)
 {
   GstOnnxInference *self = GST_ONNX_INFERENCE (object);
 
-  g_free (self->means);
-  g_free (self->stddevs);
-
   g_free (self->model_file);
+  g_free (self->scales);
+  g_free (self->offsets);
   gst_caps_unref (self->input_tensors_caps);
   gst_caps_unref (self->output_tensors_caps);
   G_OBJECT_CLASS (gst_onnx_inference_parent_class)->finalize (object);
@@ -415,20 +414,6 @@ gst_onnx_inference_set_property (GObject * object, guint prop_id,
       self->execution_provider =
           (GstOnnxExecutionProvider) g_value_get_enum (value);
       break;
-    case PROP_INPUT_OFFSET:{
-      int c = self->channels ? self->channels : 1;
-      int i;
-      for (i = 0; i < c; i++)
-        self->means[i] = g_value_get_float (value);
-      break;
-    }
-    case PROP_INPUT_SCALE:{
-      int c = self->channels ? self->channels : 1;
-      int i;
-      for (i = 0; i < c; i++)
-        self->stddevs[i] = g_value_get_float (value);
-      break;
-    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -450,12 +435,6 @@ gst_onnx_inference_get_property (GObject * object, guint prop_id,
       break;
     case PROP_EXECUTION_PROVIDER:
       g_value_set_enum (value, self->execution_provider);
-      break;
-    case PROP_INPUT_OFFSET:
-      g_value_set_float (value, self->means[0]);
-      break;
-    case PROP_INPUT_SCALE:
-      g_value_set_float (value, self->stddevs[0]);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -755,20 +734,17 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   OrtSessionOptions *session_options = NULL;
   OrtTypeInfo *input_type_info = NULL;
   const OrtTensorTypeAndShapeInfo *input_tensor_info = NULL;
-  OrtModelMetadata *metadata = NULL;
   GraphOptimizationLevel onnx_optim;
   size_t num_input_dims;
   int64_t *input_dims;
   gsize *gst_input_dims;
   ONNXTensorElementDataType element_type;
-  char *input_name = NULL;
   size_t i;
   const gchar *gst_format;
-  double mean;
-  double stddev;
+  GstAnalyticsModelInfo *modelinfo = NULL;
+  const gchar *onnx_input_tensor_name = NULL;
+  gchar *tensor_name = NULL;
 
-  /* FIXME: to be replaced by ModelInfo files */
-#define DEFAULT_TENSOR_GROUP_ID "ssd-mobilenet-v1-variant-1-out"
 
   GST_OBJECT_LOCK (self);
   if (self->session) {
@@ -780,6 +756,14 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
         ("model-file property not set"));
     goto done;
+  }
+
+  modelinfo = gst_analytics_modelinfo_load (self->model_file);
+  if (!modelinfo) {
+    GST_ERROR_OBJECT (self, "Failed to load modelinfo for %s. "
+        "This could be due to: file not found, unsupported version, "
+        "or invalid file format.", self->model_file);
+    goto error;
   }
 
   if (self->session) {
@@ -999,114 +983,122 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   api->ReleaseTypeInfo (input_type_info);
   input_type_info = NULL;
 
-  switch (element_type) {
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT8:
-      mean = 0.0;
-      stddev = 1.0;
-      break;
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT:
-      mean = 0;
-      stddev = 255.0;
-      break;
-
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED:
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT8:
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16:
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT16:
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32:
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64:
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING:
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL:
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16:
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_DOUBLE:
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT32:
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT64:
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_COMPLEX64:
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_COMPLEX128:
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_BFLOAT16:
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT8E4M3FN:
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT8E4M3FNUZ:
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT8E5M2:
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT8E5M2FNUZ:
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT4:
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT4:
-      GST_ERROR_OBJECT (self,
-          "Only input tensors of type uint8 and float are supported");
-      goto error;
-  }
   self->input_data_type = onnx_data_type_to_gst (element_type);
 
-  // Access metadata object
-  status = api->SessionGetModelMetadata (self->session, &metadata);
-  if (status) {
-    GST_INFO_OBJECT (self, "Could not get model metadata: %s",
-        api->GetErrorMessage (status));
-    api->ReleaseStatus (status);
-    status = NULL;
-  }
-
-  if (metadata) {
-    char *pixel_range_str;
-
-    status = api->ModelMetadataLookupCustomMetadataMap (metadata,
-        self->allocator, "Image.NominalPixelRange", &pixel_range_str);
-    if (status == NULL && pixel_range_str) {
-      if (!g_ascii_strcasecmp (pixel_range_str, "NominalRange_0_255") ||
-          !g_ascii_strcasecmp (pixel_range_str, "NominalRange_16_235")) {
-        mean = 0.0;
-        stddev = 1.0;
-      } else if (!g_ascii_strcasecmp (pixel_range_str, "Normalized_0_1")) {
-        mean = 0;
-        stddev = 255.0;
-      } else if (!g_ascii_strcasecmp (pixel_range_str, "Normalized_1_1")) {
-        mean = 127.0;
-        stddev = 128.0;
-      } else {
-        GST_WARNING_OBJECT (self, "Model has Image.NominalPixelRange with"
-            " unknown value (%s), ignoring", pixel_range_str);
-      }
-      self->allocator->Free (self->allocator, pixel_range_str);
-
-    } else {
-      GST_INFO_OBJECT (self, "Model doesn't include Nominal Pixel range, "
-          "assuming default: %s", api->GetErrorMessage (status));
-
-      api->ReleaseStatus (status);
-      status = NULL;
-    }
-  } else {
-    GST_INFO_OBJECT (self, "Model doesn't include metadata, "
-        "assuming default pixel range");
-  }
-
-  self->means = g_renew (double, self->means, self->channels);
-  self->stddevs = g_renew (double, self->stddevs, self->channels);
-
-  for (int i = 1; i < self->channels; i++) {
-    self->means[i] = mean;
-    self->stddevs[i] = stddev;
-  }
-
-  /* Setting input tensor caps */
-  self->input_tensors_caps = gst_caps_make_writable (self->input_tensors_caps);
-  if (self->input_data_type == GST_TENSOR_DATA_TYPE_UINT8 && gst_format &&
-      self->means[0] == 0.0 && self->stddevs[0] == 1.0)
-    gst_caps_set_simple (self->input_tensors_caps, "format", G_TYPE_STRING,
-        gst_format, NULL);
-  if (self->fixedInputImageSize)
-    gst_caps_set_simple (self->input_tensors_caps, "width", G_TYPE_INT,
-        self->width, "height", G_TYPE_INT, self->height, NULL);
-
-  // Get input name
-  status =
-      api->SessionGetInputName (self->session, 0, self->allocator, &input_name);
+  /* Get input tensor name from ONNX file */
+  status = api->SessionGetInputName (self->session, 0, self->allocator,
+      (char **) &onnx_input_tensor_name);
   if (status) {
     GST_ERROR_OBJECT (self, "Failed to get input name: %s",
         api->GetErrorMessage (status));
     goto error;
   }
-  GST_DEBUG_OBJECT (self, "Input name: %s", input_name);
-  self->allocator->Free (self->allocator, input_name);
+
+  tensor_name = gst_analytics_modelinfo_find_tensor_name (modelinfo,
+      MODELINFO_DIRECTION_INPUT, 0, onnx_input_tensor_name,
+      self->input_data_type, num_input_dims, gst_input_dims);
+
+  if (!tensor_name) {
+    gchar *dims_str = build_dims_str (num_input_dims, gst_input_dims);
+    GST_ERROR_OBJECT (self,
+        "Model info file doesn't contain info for input_tensor[0]:%s matching the"
+        " type %s and dims %s", onnx_input_tensor_name,
+        gst_tensor_data_type_get_name (self->input_data_type), dims_str);
+    g_free (dims_str);
+    if (onnx_input_tensor_name)
+      self->allocator->Free (self->allocator, (char *) onnx_input_tensor_name);
+    goto error;
+  }
+
+  /* Validation: modelinfo successfully matched dims and datatype from ONNX */
+  GST_INFO_OBJECT (self,
+      "Input tensor[0]:%s validated - modelinfo matches ONNX model (type: %s)",
+      onnx_input_tensor_name,
+      gst_tensor_data_type_get_name (self->input_data_type));
+
+  /* Get per-channel scales and offsets from modelinfo */
+  /* For video input, we assume uint8 pixel values in range [0, 255] */
+  {
+    gdouble *input_mins = NULL;
+    gdouble *input_maxs = NULL;
+    gsize num_target_ranges;
+    gsize j;
+
+    /* First, get the number of target ranges from modelinfo to allocate input ranges */
+    if (!gst_analytics_modelinfo_get_target_ranges (modelinfo, tensor_name,
+            &num_target_ranges, &input_mins, &input_maxs)) {
+      GST_ERROR_OBJECT (self,
+          "Failed to get target ranges from modelinfo for tensor %s",
+          tensor_name);
+      g_free (tensor_name);
+      if (onnx_input_tensor_name)
+        self->allocator->Free (self->allocator,
+            (char *) onnx_input_tensor_name);
+      goto error;
+    }
+
+    /* Free the target ranges - we only needed them to know the count */
+    g_free (input_mins);
+    g_free (input_maxs);
+
+    /* Prepare input ranges - for video uint8 input, range is [0, 255] for all channels */
+    input_mins = g_new (gdouble, num_target_ranges);
+    input_maxs = g_new (gdouble, num_target_ranges);
+    for (j = 0; j < num_target_ranges; j++) {
+      input_mins[j] = 0.0;
+      input_maxs[j] = 255.0;
+    }
+
+    if (!gst_analytics_modelinfo_get_input_scales_offsets (modelinfo,
+            tensor_name, num_target_ranges, input_mins, input_maxs,
+            &self->num_channels, &self->scales, &self->offsets)) {
+      GST_ERROR_OBJECT (self, "Failed to get scales/offsets for tensor %s",
+          tensor_name);
+      g_free (input_mins);
+      g_free (input_maxs);
+      g_free (tensor_name);
+      if (onnx_input_tensor_name)
+        self->allocator->Free (self->allocator,
+            (char *) onnx_input_tensor_name);
+      goto error;
+    }
+
+    g_free (input_mins);
+    g_free (input_maxs);
+  }
+
+  GST_INFO_OBJECT (self, "Input tensor normalization: %zu channel(s)",
+      self->num_channels);
+  for (i = 0; i < self->num_channels; i++) {
+    GST_DEBUG_OBJECT (self, "  Channel[%zu]: scale=%f, offset=%f", i,
+        self->scales[i], self->offsets[i]);
+  }
+
+  g_free (tensor_name);
+  if (onnx_input_tensor_name)
+    self->allocator->Free (self->allocator, (char *) onnx_input_tensor_name);
+
+  /* Setting input tensor caps */
+  self->input_tensors_caps = gst_caps_make_writable (self->input_tensors_caps);
+
+  /* Check if all channels are passthrough (scale=1.0, offset=0.0) */
+  gboolean is_passthrough = TRUE;
+  if (self->scales && self->offsets) {
+    for (i = 0; i < self->num_channels; i++) {
+      if (self->scales[i] != 1.0 || self->offsets[i] != 0.0) {
+        is_passthrough = FALSE;
+        break;
+      }
+    }
+  }
+
+  if (self->input_data_type == GST_TENSOR_DATA_TYPE_UINT8 && gst_format &&
+      is_passthrough)
+    gst_caps_set_simple (self->input_tensors_caps, "format", G_TYPE_STRING,
+        gst_format, NULL);
+  if (self->fixedInputImageSize)
+    gst_caps_set_simple (self->input_tensors_caps, "width", G_TYPE_INT,
+        self->width, "height", G_TYPE_INT, self->height, NULL);
 
   // Get output names
   self->output_names = g_new0 (char *, self->output_count);
@@ -1122,30 +1114,9 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     GST_DEBUG_OBJECT (self, "Output name %lu:%s", i, self->output_names[i]);
   }
 
-  char *group_id = NULL;
   GValue v_tensors_set = G_VALUE_INIT;
-
-  if (metadata) {
-    status =
-        api->ModelMetadataLookupCustomMetadataMap (metadata, self->allocator,
-        "group-id", &group_id);
-    if (status) {
-      GST_WARNING_OBJECT (self,
-          "Could not find group-id in model metadata: %s",
-          api->GetErrorMessage (status));
-      api->ReleaseStatus (status);
-      status = NULL;
-    }
-  }
-
-  if (!group_id) {
-    GST_INFO_OBJECT (self,
-        "group-id not found in model metadata, using default: %s",
-        DEFAULT_TENSOR_GROUP_ID);
-    size_t len = strlen (DEFAULT_TENSOR_GROUP_ID) + 1;
-    group_id = (char *) self->allocator->Alloc (self->allocator, len);
-    strcpy (group_id, DEFAULT_TENSOR_GROUP_ID);
-  }
+  GstStructure *tensors_s = NULL;
+  gchar *group_id = NULL;
 
   g_value_init (&v_tensors_set, GST_TYPE_SET);
 
@@ -1156,8 +1127,11 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     const OrtTensorTypeAndShapeInfo *output_tensor_info = NULL;
     size_t card;
     ONNXTensorElementDataType type;
-    char *res = NULL;
+    GstTensorDataType gst_data_type;
     size_t j;
+    gchar *tensor_name = NULL;
+    gchar *tensor_id = NULL;
+    gsize *output_dims = NULL;
 
 
     status =
@@ -1193,58 +1167,65 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       goto error;
     }
 
-    if (metadata)
-      status =
-          api->ModelMetadataLookupCustomMetadataMap (metadata, self->allocator,
-          self->output_names[i], &res);
+    gst_data_type = onnx_data_type_to_gst (type);
 
-    if (!status && res) {
-      GST_INFO_OBJECT (self, "Tensor %zu name is %s from metadata", i, res);
-      self->output_ids[i] = g_quark_from_string (res);
-      self->allocator->Free (self->allocator, res);
-    } else {
-      if (status) {
-        GST_WARNING_OBJECT (self, "Could not find key %s in model metadata: %s",
-            self->output_names[i], api->GetErrorMessage (status));
-        api->ReleaseStatus (status);
-        status = NULL;
-      }
-
-      /* FIXME: to be replaced by ModelInfo files */
-#define GST_MODEL_OBJECT_DETECTOR_BOXES "ssd-mobilenet-v1-variant-1-out-boxes"
-#define GST_MODEL_OBJECT_DETECTOR_SCORES "ssd-mobilenet-v1-variant-1-out-scores"
-#define GST_MODEL_OBJECT_DETECTOR_NUM_DETECTIONS "generic-variant-1-out-count"
-#define GST_MODEL_OBJECT_DETECTOR_CLASSES "ssd-mobilenet-v1-variant-1-out-classes"
-
-      if (g_str_has_prefix (self->output_names[i], "scores")) {
-        self->output_ids[i] =
-            g_quark_from_static_string (GST_MODEL_OBJECT_DETECTOR_SCORES);
-        GST_INFO_OBJECT (self, "No custom metadata for key '%s', assuming %s",
-            self->output_names[i], GST_MODEL_OBJECT_DETECTOR_SCORES);
-      } else if (g_str_has_prefix (self->output_names[i], "boxes")) {
-        self->output_ids[i] =
-            g_quark_from_static_string (GST_MODEL_OBJECT_DETECTOR_BOXES);
-        GST_INFO_OBJECT (self, "No custom metadata for key '%s', assuming %s",
-            self->output_names[i], GST_MODEL_OBJECT_DETECTOR_BOXES);
-      } else if (g_str_has_prefix (self->output_names[i], "detection_classes")) {
-        self->output_ids[i] =
-            g_quark_from_static_string (GST_MODEL_OBJECT_DETECTOR_CLASSES);
-        GST_INFO_OBJECT (self, "No custom metadata for key '%s', assuming %s",
-            self->output_names[i], GST_MODEL_OBJECT_DETECTOR_CLASSES);
-      } else if (g_str_has_prefix (self->output_names[i], "num_detections")) {
-        self->output_ids[i] =
-            g_quark_from_static_string
-            (GST_MODEL_OBJECT_DETECTOR_NUM_DETECTIONS);
-        GST_INFO_OBJECT (self, "No custom metadata for key '%s', assuming %s",
-            self->output_names[i], GST_MODEL_OBJECT_DETECTOR_NUM_DETECTIONS);
-      } else {
-        g_value_unset (&v_tensors_set);
-        GST_ERROR_OBJECT (self, "Failed to look up id for key %s",
-            self->output_names[i]);
-        api->ReleaseTypeInfo (output_type_info);
-        goto error;
-      }
+    /* Get dimensions from ONNX */
+    int64_t *shape = (int64_t *) g_alloca (card * sizeof (int64_t));
+    output_dims = (gsize *) g_malloc0 (card * sizeof (gsize));
+    status = api->GetDimensions (output_tensor_info, shape, card);
+    if (status) {
+      GST_ERROR_OBJECT (self, "Failed to get output tensor (%s) dimensions",
+          self->output_names[i]);
+      api->ReleaseStatus (status);
+      status = NULL;
+      g_free (output_dims);
+      api->ReleaseTypeInfo (output_type_info);
+      goto error;
     }
+
+    for (j = 0; j < card; j++) {
+      output_dims[j] = shape[j] > 0 ? shape[j] : G_MAXSIZE;
+    }
+
+    /* Look up tensor name in modelinfo */
+    tensor_name = gst_analytics_modelinfo_find_tensor_name (modelinfo,
+        MODELINFO_DIRECTION_OUTPUT, i, self->output_names[i],
+        gst_data_type, card, output_dims);
+
+    if (!tensor_name) {
+      gchar *dims_str = build_dims_str (card, output_dims);
+      GST_ERROR_OBJECT (self,
+          "Model info file doesn't contain info for output_tensor[%zu]:%s matching the"
+          " type %s and dims %s", i, self->output_names[i],
+          gst_tensor_data_type_get_name (gst_data_type), dims_str);
+      g_free (dims_str);
+      g_free (output_dims);
+      api->ReleaseTypeInfo (output_type_info);
+      goto error;
+    }
+
+    /* Validation: modelinfo successfully matched dims and datatype from ONNX */
+    GST_INFO_OBJECT (self,
+        "Output tensor[%zu]:%s validated - modelinfo matches ONNX model "
+        "(type: %s)", i, self->output_names[i],
+        gst_tensor_data_type_get_name (gst_data_type));
+
+    /* Get tensor ID from modelinfo */
+    tensor_id = gst_analytics_modelinfo_get_id (modelinfo, tensor_name);
+    if (!tensor_id) {
+      GST_ERROR_OBJECT (self, "Model info doesn't have 'id' for tensor %s",
+          tensor_name);
+      g_free (tensor_name);
+      g_free (output_dims);
+      api->ReleaseTypeInfo (output_type_info);
+      goto error;
+    }
+
+    GST_DEBUG_OBJECT (self, "Mapping output_tensor[%zu]:%s of type %s to id %s",
+        i, self->output_names[i], gst_tensor_data_type_get_name (gst_data_type),
+        tensor_id);
+
+    self->output_ids[i] = g_quark_from_string (tensor_id);
 
     /* tensor description */
     GstStructure *tensor_desc = gst_structure_new_empty ("tensor/strided");
@@ -1256,32 +1237,22 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     g_value_init (&val, G_TYPE_INT);
     g_value_init (&val_caps, GST_TYPE_CAPS);
 
-
-    int64_t *shape = (int64_t *) g_alloca (card * sizeof (int64_t));
-    status = api->GetDimensions (output_tensor_info, shape, card);
-    if (!status) {
-      for (j = 0; j < card; j++) {
-        g_value_set_int (&val, shape[j] > 0 ? shape[j] : 0);
-        gst_value_array_append_value (&val_dims, &val);
-      }
-    } else {
-      GST_ERROR_OBJECT (self, "Failed to get output tensor (%s) dimensions",
-          self->output_names[i]);
-
-      api->ReleaseStatus (status);
-      status = NULL;
-      goto error;
+    for (j = 0; j < card; j++) {
+      g_value_set_int (&val, output_dims[j] != G_MAXSIZE ? output_dims[j] : 0);
+      gst_value_array_append_value (&val_dims, &val);
     }
 
-    /* TODO: replace hard-coded dims_order value (row-major vs
-     * col-major) retrieved from ModelInfo when we're integrated ModelInfo.
-     * I haven't found a way to retrieve if the model stores data in
-     * row-major or col-major way. Hard coding it for now to row-major as
-     * it is the most common.
-     */
-    gst_structure_set (tensor_desc, "dims-order", G_TYPE_STRING,
-        "row-major", "tensor-id", G_TYPE_STRING,
-        g_quark_to_string (self->output_ids[i]), NULL);
+    /* Get dims-order from modelinfo (defaults to row-major if not specified) */
+    GstTensorDimOrder dims_order =
+        gst_analytics_modelinfo_get_dims_order (modelinfo, tensor_name);
+    const gchar *dims_order_str =
+        dims_order ==
+        GST_TENSOR_DIM_ORDER_COL_MAJOR ? "col-major" : "row-major";
+    gst_structure_set (tensor_desc, "dims-order", G_TYPE_STRING, dims_order_str,
+        "tensor-id", G_TYPE_STRING, g_quark_to_string (self->output_ids[i]),
+        NULL);
+    GST_INFO_OBJECT (self, "%s[dims-order]=%s",
+        g_quark_to_string (self->output_ids[i]), dims_order_str);
 
     gst_structure_take_value (tensor_desc, "dims", &val_dims);
     g_value_unset (&val);
@@ -1306,10 +1277,28 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     gst_caps_unref (tensor_caps);
     gst_value_set_append_and_take_value (&v_tensors_set, &val_caps);
 
+    /* Get group-id from modelinfo on last tensor */
+    if (i == (self->output_count - 1)) {
+      group_id = gst_analytics_modelinfo_get_group_id (modelinfo);
+      if (!group_id) {
+        GST_ERROR_OBJECT (self, "Model info doesn't have 'group-id'");
+        g_free (tensor_name);
+        g_free (tensor_id);
+        g_free (output_dims);
+        api->ReleaseTypeInfo (output_type_info);
+        goto error;
+      }
+    }
+
+    /* Cleanup */
+    g_free (tensor_name);
+    g_free (tensor_id);
+    g_free (output_dims);
     api->ReleaseTypeInfo (output_type_info);
   }
 
-  GstStructure *tensors_s = gst_structure_new_empty ("tensorgroups");
+  if (!tensors_s)
+    tensors_s = gst_structure_new_empty ("tensorgroups");
   GstStructure *output_caps_struct;
 
   gst_structure_set_value (tensors_s, group_id, &v_tensors_set);
@@ -1320,11 +1309,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   g_value_unset (&v_tensors_set);
 
   if (group_id)
-    self->allocator->Free (self->allocator, group_id);
-
-  if (metadata)
-    api->ReleaseModelMetadata (metadata);
-  metadata = NULL;
+    g_free (group_id);
 
   // Create memory info for CPU
   status =
@@ -1338,6 +1323,8 @@ gst_onnx_inference_start (GstBaseTransform * trans)
 
   ret = TRUE;
 done:
+  if (modelinfo)
+    gst_analytics_modelinfo_free (modelinfo);
   GST_OBJECT_UNLOCK (self);
 
   return ret;
@@ -1347,11 +1334,11 @@ error:
     api->ReleaseStatus (status);
   if (input_type_info)
     api->ReleaseTypeInfo (input_type_info);
-  if (metadata)
-    api->ReleaseModelMetadata (metadata);
   if (session_options)
     api->ReleaseSessionOptions (session_options);
 
+  if (modelinfo)
+    gst_analytics_modelinfo_free (modelinfo);
   GST_OBJECT_UNLOCK (self);
 
   gst_onnx_inference_stop (trans);
@@ -1429,7 +1416,7 @@ gst_onnx_inference_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   return TRUE;
 }
 
-#define _convert_image_remove_alpha(Type)                               \
+#define _convert_image_scale_offset(Type)                               \
 G_STMT_START {                                                                \
   size_t destIndex = 0;                                                       \
   Type tmp;                                                                   \
@@ -1439,8 +1426,7 @@ G_STMT_START {                                                                \
       for (int32_t i = 0; i < dstWidth; ++i) {                                \
         for (int32_t k = 0; k < dstChannels; ++k) {                           \
           tmp = *srcPtr[k];                                                   \
-          tmp -= means[k];                                                    \
-          dst[destIndex++] = (Type)(tmp / stddevs[k]);                        \
+          dst[destIndex++] = (Type)(tmp * scales[k] + offsets[k]);            \
           srcPtr[k] += pixel_stride;                                    \
         }                                                                     \
       }                                                                       \
@@ -1455,8 +1441,7 @@ G_STMT_START {                                                                \
       for (int32_t i = 0; i < dstWidth; ++i) {                                \
         for (int32_t k = 0; k < dstChannels; ++k) {                           \
           tmp = *srcPtr[k];                                                   \
-          tmp -= means[k];                                                    \
-          destPtr[k][destIndex] = (Type)(tmp / stddevs[k]);                   \
+          destPtr[k][destIndex] = (Type)(tmp * scales[k] + offsets[k]);       \
           srcPtr[k] += pixel_stride;                                    \
         }                                                                     \
         destIndex++;                                                          \
@@ -1470,21 +1455,21 @@ G_STMT_START {                                                                \
 G_STMT_END;
 
 static void
-convert_image_remove_alpha_u8 (guint8 * dst, gint dstWidth, gint dstHeight,
+convert_image_scale_offset_u8 (guint8 * dst, gint dstWidth, gint dstHeight,
     gint dstChannels, gboolean planar, guint8 ** srcPtr,
-    guint8 pixel_stride, guint32 stride, const gdouble * means,
-    const gdouble * stddevs)
+    guint8 pixel_stride, guint32 stride, const gdouble * scales,
+    const gdouble * offsets)
 {
-  _convert_image_remove_alpha (guint8);
+  _convert_image_scale_offset (guint8);
 }
 
 static void
-convert_image_remove_alpha_f32 (gfloat * dst, gint dstWidth, gint dstHeight,
+convert_image_scale_offset_f32 (gfloat * dst, gint dstWidth, gint dstHeight,
     gint dstChannels, gboolean planar, guint8 ** srcPtr,
-    guint8 pixel_stride, guint32 stride, const gdouble * means,
-    const gdouble * stddevs)
+    guint8 pixel_stride, guint32 stride, const gdouble * scales,
+    const gdouble * offsets)
 {
-  _convert_image_remove_alpha (gfloat);
+  _convert_image_scale_offset (gfloat);
 }
 
 static GstFlowReturn
@@ -1619,18 +1604,29 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   inputTensorSize = self->width * self->height * self->channels *
       get_tensor_type_size (self->input_data_type);
 
+  /* Check if all channels are passthrough (scale=1.0, offset=0.0) */
+  gboolean is_passthrough_transform = TRUE;
+  if (self->scales && self->offsets) {
+    for (gsize c = 0; c < self->num_channels; c++) {
+      if (self->scales[c] != 1.0 || self->offsets[c] != 0.0) {
+        is_passthrough_transform = FALSE;
+        break;
+      }
+    }
+  }
+
   switch (self->input_data_type) {
     case GST_TENSOR_DATA_TYPE_UINT8:{
       uint8_t *src_data;
 
-      if (self->means[0] == 0.0 && self->stddevs[0] == 1.0) {
+      if (is_passthrough_transform) {
         src_data = info.data;
       } else {
-        convert_image_remove_alpha_u8 (self->dest, self->width, self->height,
+        convert_image_scale_offset_u8 (self->dest, self->width, self->height,
             self->channels, self->planar, srcPtr,
             GST_VIDEO_INFO_COMP_PSTRIDE (&self->video_info, 0),
             GST_VIDEO_INFO_PLANE_STRIDE (&self->video_info, 0),
-            self->means, self->stddevs);
+            self->scales, self->offsets);
         src_data = self->dest;
       }
 
@@ -1640,12 +1636,12 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       break;
     }
     case GST_TENSOR_DATA_TYPE_FLOAT32:{
-      convert_image_remove_alpha_f32 ((float *) self->dest, self->width,
+      convert_image_scale_offset_f32 ((float *) self->dest, self->width,
           self->height,
           self->channels, self->planar, srcPtr,
           GST_VIDEO_INFO_COMP_PSTRIDE (&self->video_info, 0),
           GST_VIDEO_INFO_PLANE_STRIDE (&self->video_info, 0),
-          self->means, self->stddevs);
+          self->scales, self->offsets);
 
       status = api->CreateTensorWithDataAsOrtValue (self->memory_info,
           (float *) self->dest,
