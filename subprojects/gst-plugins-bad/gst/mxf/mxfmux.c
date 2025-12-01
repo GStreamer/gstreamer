@@ -1286,7 +1286,7 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * pad)
       if (mux->index_table->len <= mux->current_index_pos) {
         MXFIndexTableSegment s;
 
-        memset (&segment, 0, sizeof (segment));
+        memset (&s, 0, sizeof (s));
 
         mxf_uuid_init (&s.instance_id, mux->metadata);
         memcpy (&s.index_edit_rate, &pad->source_track->edit_rate,
@@ -1341,7 +1341,7 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * pad)
           if (pts_index_pos >= mux->index_table->len) {
             MXFIndexTableSegment s;
 
-            memset (&segment, 0, sizeof (segment));
+            memset (&s, 0, sizeof (s));
 
             mxf_uuid_init (&s.instance_id, mux->metadata);
             memcpy (&s.index_edit_rate, &pad->source_track->edit_rate,
