@@ -1497,7 +1497,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         case DRF_ID_DTS2:
         case DRF_ID_DTS3:
           /* SMPTE registered DTS */
-          is_private = TRUE;
+          is_audio = TRUE;
           caps = gst_caps_new_empty_simple ("audio/x-dts");
           break;
         case DRF_ID_S302M:
