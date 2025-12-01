@@ -31,10 +31,8 @@ gstanalyticspython = python.extension_module ('_gi_gst_analytics',
 )
 
 env = environment()
-env.prepend('_GI_OVERRIDES_PATH', [
-    meson.current_source_dir(),
-    meson.current_build_dir()
-])
+env.prepend('_GI_OVERRIDES_PATH', [meson.current_source_dir(), meson.current_build_dir()])
+env.prepend('PYGI_OVERRIDES_PATH', [meson.current_source_dir(), meson.current_build_dir()])
 meson.add_devenv(env)
 
 # Convenience target to build the Python extension modules
