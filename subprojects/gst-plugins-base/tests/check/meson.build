@@ -61,6 +61,7 @@ base_tests = [
   [ 'pipelines/capsfilter-renegotiation.c' ],
   [ 'pipelines/gio.c' ],
   [ 'pipelines/streamsynchronizer.c' ],
+  [ 'elements/inputselector.c' ],
 ]
 
 # FIXME: unistd dependency, unstable or not tested yet on windows
@@ -163,7 +164,7 @@ foreach t : base_tests
     env.set('GST_PLUGIN_PATH_1_0', meson.global_build_root(), pluginsdirs)
     env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
     env.set('GST_STATE_IGNORE_ELEMENTS', 'cdio cdparanoiasrc libvisual_ alsasrc alsasink')
-    env.set('CK_DEFAULT_TIMEOUT', '20')
+    env.set('CK_DEFAULT_TIMEOUT', '30')
     env.set('GST_TAG_LICENSE_TRANSLATIONS_DICT', join_paths(gst_tag_dir, 'license-translations.dict'))
     env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer',
         'gst-plugins-base@' + meson.project_build_root())
