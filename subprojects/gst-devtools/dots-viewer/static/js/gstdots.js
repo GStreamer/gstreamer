@@ -1,6 +1,23 @@
 import "/dist/bundle.js";
 
 let ws = null;
+let pendingObservers = [];
+let observerDebounceTimer = null;
+const OBSERVER_DEBOUNCE_MS = 300;
+
+function activatePendingObservers() {
+    for (const {observer, img} of pendingObservers) {
+        observer.observe(img);
+    }
+    pendingObservers = [];
+}
+
+function scheduleObserverActivation() {
+    if (observerDebounceTimer) {
+        clearTimeout(observerDebounceTimer);
+    }
+    observerDebounceTimer = setTimeout(activatePendingObservers, OBSERVER_DEBOUNCE_MS);
+}
 
 async function createOverlayElement(img, fname) {
     let overlay = document.getElementById("overlay");
@@ -121,7 +138,8 @@ async function createNewDotDiv(pipelines_div, dot_info) {
     }, {
         rootMargin: '100px'
     });
-    observer.observe(img);
+    pendingObservers.push({observer, img});
+    scheduleObserverActivation();
 
     div.appendChild(title);
     div.appendChild(img);
