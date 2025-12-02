@@ -52,6 +52,11 @@
 #include <sys/types.h>
 #include <fcntl.h>
 
+#include <sys/stat.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 #ifdef G_OS_WIN32
 #include <io.h>                 /* lseek, open, close, read */
 #undef lseek
@@ -65,11 +70,6 @@
 #ifdef _MSC_VER                 /* Check if we are using MSVC, fileno is deprecated in favour */
 #define fileno _fileno          /* of _fileno */
 #endif
-#endif
-
-#include <sys/stat.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
 #endif
 
 #include "gstelements_private.h"
