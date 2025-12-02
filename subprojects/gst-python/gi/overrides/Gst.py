@@ -521,20 +521,39 @@ class Structure(Gst.Structure):
         return _gi_gst._get_object_ptr(self)
 
     def __getitem__(self, key: str) -> typing.Any:
-        return self.get_value(key)
-
-    def keys(self) -> typing.Iterable[str]:
-        keys = set()
-
-        def foreach(fid, value, unused1, udata):
-            keys.add(GLib.quark_to_string(fid))
-            return True
-
-        self.foreach(foreach, None, None)
-        return keys
+        val = self.get_value(key)
+        if val is None:
+            raise KeyError(f"key {key} not found")
+        return val
 
     def __setitem__(self, key: str, value: typing.Any) -> None:
         self.set_value(key, value)
+
+    def __len__(self) -> int:
+        return self.n_fields()
+
+    def __iter__(self) -> typing.Iterator[str]:
+        return self.keys()
+
+    def items(self) -> typing.Iterator[typing.Tuple[str, typing.Any]]:
+        pairs: typing.List[typing.Tuple[str, typing.Any]] = []
+
+        def foreach(fid, value):
+            pairs.append((GLib.quark_to_string(fid), value))
+            return True
+
+        self.foreach(foreach)
+        return iter(pairs)
+
+    def keys(self) -> typing.Iterator[str]:
+        keys: list[str] = []
+
+        def foreach(fid, value):
+            keys.append(GLib.quark_to_string(fid))
+            return True
+
+        self.foreach(foreach)
+        return iter(keys)
 
     def set_value(self, key: str, value: typing.Any) -> bool:
         if not _gi_gst.structure_is_writable(self):

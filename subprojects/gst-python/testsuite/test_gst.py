@@ -173,6 +173,20 @@ class TestStructure(TestCase):
         test = Gst.Structure('test,test=1')
         self.assertEqual(test['test'], 1)
 
+    def test_iterate_items(self):
+        Gst.init(None)
+        test = Gst.Structure('test', one=1, two=2, three=3)
+        self.assertEqual(len(test), 3)
+        self.assertEqual(test["one"], 1)
+        self.assertEqual(test["two"], 2)
+        self.assertEqual(test["three"], 3)
+        items = {k: v for k, v in test.items()}
+        self.assertEqual(items, {'one': 1, 'two': 2, 'three': 3})
+        keys = [k for k in test]
+        self.assertEqual(keys, ['one', 'two', 'three'])
+        with self.assertRaises(KeyError):
+            test["four"]
+
 
 class TestEvent(TestCase):
     def test_writable(self):
