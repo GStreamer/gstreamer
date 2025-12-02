@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2022 Seungha Yang <seungha@centricular.com>
+ * Copyright (C) 2025 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,33 +17,28 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "gstwin32ipcutils.h"
+#pragma once
+
+#include <gst/gst.h>
 #include <windows.h>
-#include <string>
-#include <mutex>
 
-static ULONG global_index = 0;
+G_BEGIN_DECLS
 
-static DWORD
-gst_win32_ipc_get_pid (void)
-{
-  static std::once_flag once_flag;
-  static DWORD pid = 0;
+struct GstWin32IpcMmf;
 
-  std::call_once (once_flag,[&]() {
-        pid = GetCurrentProcessId ();
-      });
+GstWin32IpcMmf * gst_win32_ipc_mmf_alloc (UINT32 size);
 
-  return pid;
-}
+GstWin32IpcMmf * gst_win32_ipc_mmf_open  (UINT32 size,
+                                          HANDLE file);
 
-/* Create unique prefix for named shared memory */
-gchar *
-gst_win32_ipc_get_mmf_prefix (void)
-{
-  std::string prefix = "Local\\gst.win32.ipc." +
-      std::to_string (gst_win32_ipc_get_pid ()) + std::string (".") +
-      std::to_string (InterlockedIncrement (&global_index)) + std::string (".");
+UINT32        gst_win32_ipc_mmf_get_size (GstWin32IpcMmf * mmf);
 
-  return g_strdup (prefix.c_str ());
-}
+void *        gst_win32_ipc_mmf_get_raw  (GstWin32IpcMmf * mmf);
+
+HANDLE        gst_win32_ipc_mmf_get_handle (GstWin32IpcMmf * mmf);
+
+GstWin32IpcMmf * gst_win32_ipc_mmf_ref      (GstWin32IpcMmf * mmf);
+
+void          gst_win32_ipc_mmf_unref    (GstWin32IpcMmf * mmf);
+
+G_END_DECLS

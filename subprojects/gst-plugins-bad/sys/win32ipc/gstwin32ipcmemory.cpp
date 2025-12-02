@@ -22,7 +22,6 @@
 #endif
 
 #include "gstwin32ipcmemory.h"
-#include "gstwin32ipcutils.h"
 #include <string>
 #include <mutex>
 #include <string.h>
@@ -46,7 +45,6 @@ struct _GstWin32IpcAllocator
 
   GstAtomicQueue *queue;
   GstPoll *poll;
-  gchar *prefix;
   LONG64 seq_num;
 
   CRITICAL_SECTION lock;
@@ -132,7 +130,6 @@ gst_win32_ipc_allocator_finalize (GObject * object)
   gst_atomic_queue_unref (self->queue);
   gst_poll_free (self->poll);
   DeleteCriticalSection (&self->lock);
-  g_free (self->prefix);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -149,7 +146,7 @@ gst_win32_ipc_allocator_free (GstAllocator * alloc, GstMemory * mem)
 {
   GstWin32IpcMemory *imem = (GstWin32IpcMemory *) mem;
 
-  win32_ipc_mmf_unref (imem->mmf);
+  gst_win32_ipc_mmf_unref (imem->mmf);
   g_free (imem);
 }
 
@@ -158,7 +155,7 @@ gst_win32_ipc_allocator_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
 {
   GstWin32IpcMemory *imem = (GstWin32IpcMemory *) mem;
 
-  return win32_ipc_mmf_get_raw (imem->mmf);
+  return gst_win32_ipc_mmf_get_raw (imem->mmf);
 }
 
 static void
@@ -377,19 +374,14 @@ static GstFlowReturn
 gst_win32_ipc_allocator_alloc (GstWin32IpcAllocator * self, GstMemory ** mem)
 {
   GstWin32IpcMemory *new_mem;
-  Win32IpcMmf *mmf;
-  std::string mmf_name;
 
-  mmf_name = std::string (self->prefix) +
-      std::to_string (InterlockedIncrement64 (&self->seq_num));
-
-  mmf = win32_ipc_mmf_alloc (self->size, mmf_name.c_str ());
+  auto mmf = gst_win32_ipc_mmf_alloc (self->size);
   if (!mmf) {
     GST_ERROR_OBJECT (self, "Couldn't allocate memory");
     return GST_FLOW_ERROR;
   }
 
-  memset (win32_ipc_mmf_get_raw (mmf), 0, win32_ipc_mmf_get_size (mmf));
+  memset (gst_win32_ipc_mmf_get_raw (mmf), 0, gst_win32_ipc_mmf_get_size (mmf));
 
   g_atomic_int_add (&self->cur_mems, 1);
   new_mem = g_new0 (GstWin32IpcMemory, 1);
@@ -510,7 +502,6 @@ gst_win32_ipc_allocator_new (guint size)
   self = (GstWin32IpcAllocator *)
       g_object_new (GST_TYPE_WIN32_IPC_ALLOCATOR, nullptr);
   self->size = size;
-  self->prefix = gst_win32_ipc_get_mmf_prefix ();
 
   gst_object_ref_sink (self);
 

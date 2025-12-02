@@ -20,7 +20,7 @@
 #pragma once
 
 #include <gst/gst.h>
-#include "protocol/win32ipcmmf.h"
+#include "gstwin32ipcmmf.h"
 
 G_BEGIN_DECLS
 
@@ -34,7 +34,7 @@ struct _GstWin32IpcMemory
 {
   GstMemory mem;
 
-  Win32IpcMmf *mmf;
+  GstWin32IpcMmf *mmf;
 };
 
 gboolean gst_is_win32_ipc_memory (GstMemory * mem);

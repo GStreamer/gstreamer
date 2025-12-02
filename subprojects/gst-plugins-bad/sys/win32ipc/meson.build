@@ -1,12 +1,10 @@
 win32ipc_sources = [
-  'protocol/win32ipcmmf.cpp',
-  'protocol/win32ipcpipeclient.cpp',
-  'protocol/win32ipcpipeserver.cpp',
-  'protocol/win32ipcprotocol.cpp',
-  'protocol/win32ipcutils.cpp',
+  'gstwin32ipcmmf.cpp',
+  'gstwin32ipcclient.cpp',
+  'gstwin32ipcserver.cpp',
+  'gstwin32ipcprotocol.cpp',
   'gstwin32ipcbufferpool.cpp',
   'gstwin32ipcmemory.cpp',
-  'gstwin32ipcutils.cpp',
   'gstwin32ipcvideosink.cpp',
   'gstwin32ipcvideosrc.cpp',
   'plugin.cpp',
@@ -17,7 +15,6 @@ win32ipc_headers = [
   'gstwin32ipcmemory.h',
   'gstwin32ipcvideosrc.h',
   'gstwin32ipcbufferpool.h',
-  'gstwin32ipcutils.h',
 ]
 
 doc_sources = []

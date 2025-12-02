@@ -1,0 +1,45 @@
+/* GStreamer
+ * Copyright (C) 2025 Seungha Yang <seungha@centricular.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ */
+
+#pragma once
+
+#include <gst/gst.h>
+#include "gstwin32ipcmmf.h"
+#include <string>
+#include <vector>
+
+G_BEGIN_DECLS
+
+#define GST_TYPE_WIN32_IPC_SERVER (gst_win32_ipc_server_get_type())
+G_DECLARE_FINAL_TYPE (GstWin32IpcServer, gst_win32_ipc_server,
+    GST, WIN32_IPC_SERVER, GstObject);
+
+GstWin32IpcServer * gst_win32_ipc_server_new (const std::string & address);
+
+GstFlowReturn       gst_win32_ipc_server_send_data (GstWin32IpcServer * server,
+                                                    GstWin32IpcMmf * mmf,
+                                                    GstClockTime pts,
+                                                    GstCaps * caps,
+                                                    GByteArray * meta,
+                                                    gpointer user_data,
+                                                    GDestroyNotify notify);
+
+void                gst_win32_ipc_server_stop      (GstWin32IpcServer * server);
+
+G_END_DECLS
