@@ -472,6 +472,9 @@ parse_MThd (GstMidiParse * midiparse, guint8 * data, guint size)
   guint16 format, ntracks, division;
   gboolean multitrack;
 
+  if (size < 6)
+    goto short_file;
+
   format = GST_READ_UINT16_BE (data);
   switch (format) {
     case 0:
@@ -516,18 +519,23 @@ invalid_division:
     GST_ERROR_OBJECT (midiparse, "unsupported division");
     return FALSE;
   }
+short_file:
+  {
+    GST_DEBUG_OBJECT (midiparse, "not enough data");
+    return FALSE;
+  }
 }
 
 static guint
 parse_varlen (GstMidiParse * midiparse, guint8 * data, guint size,
-    gint32 * result)
+    guint32 * result)
 {
-  gint32 res;
+  guint32 res;
   gint i;
 
   res = 0;
   for (i = 0; i < 4; i++) {
-    if (size == 0)
+    if (size <= i)
       return 0;
 
     res = (res << 7) | ((data[i]) & 0x7f);
@@ -700,9 +708,12 @@ handle_meta_event (GstMidiParse * midiparse, GstMidiTrack * track, guint8 event)
   guint8 *data;
   gchar *bytes;
   guint size, consumed;
-  gint32 length;
+  guint32 length;
 
   track->offset += 1;
+
+  if (track->offset >= track->size)
+    goto short_file;
 
   data = track->data + track->offset;
   size = track->size - track->offset;
@@ -760,6 +771,11 @@ handle_meta_event (GstMidiParse * midiparse, GstMidiTrack * track, guint8 event)
       break;
     case 0x51:
     {
+      if (length < 3) {
+        g_free (bytes);
+        goto short_file;
+      }
+
       guint32 tempo = (data[0] << 16) | (data[1] << 8) | data[2];
       save_tempo (midiparse, track, tempo);
       break;
@@ -802,9 +818,12 @@ handle_sysex_event (GstMidiParse * midiparse, GstMidiTrack * track,
   GstFlowReturn ret;
   guint8 *data;
   guint size, consumed;
-  gint32 length;
+  guint32 length;
 
   track->offset += 1;
+
+  if (track->offset >= track->size)
+    goto short_file;
 
   data = track->data + track->offset;
   size = track->size - track->offset;
@@ -857,7 +876,7 @@ event_from_status (GstMidiParse * midiparse, GstMidiTrack * track,
 static gboolean
 update_track_position (GstMidiParse * midiparse, GstMidiTrack * track)
 {
-  gint32 delta_time;
+  guint32 delta_time;
   guint8 *data;
   guint size, consumed;
 
@@ -871,7 +890,7 @@ update_track_position (GstMidiParse * midiparse, GstMidiTrack * track)
   if (consumed == 0)
     goto eot;
 
-  track->pulse += delta_time;
+  track->pulse += (gint32) delta_time;
   track->offset += consumed;
 
   GST_LOG_OBJECT (midiparse, "updated track to pulse %" G_GUINT64_FORMAT,
@@ -896,8 +915,16 @@ handle_next_event (GstMidiParse * midiparse, GstMidiTrack * track,
   guint8 status, event;
   guint length;
   guint8 *data;
+  guint size;
 
-  data = &track->data[track->offset];
+  if (track->offset >= track->size)
+    goto short_file;
+
+  data = track->data + track->offset;
+  size = track->size - track->offset;
+
+  if (size < 1)
+    goto short_file;
 
   status = data[0];
   event = event_from_status (midiparse, track, status);
@@ -936,6 +963,9 @@ handle_next_event (GstMidiParse * midiparse, GstMidiTrack * track,
       goto undefined_status;
   }
   if (length > 0) {
+    if (length > size - 1)
+      goto short_file;
+
     if (status & 0x80) {
       if (pushfunc)
         ret = pushfunc (midiparse, track, event, data + 1, length, user_data);
@@ -965,6 +995,11 @@ unhandled_event:
   {
     /* we don't know the size so we can't continue parsing */
     GST_ERROR_OBJECT (midiparse, "unhandled event 0x%08x", event);
+    return GST_FLOW_ERROR;
+  }
+short_file:
+  {
+    GST_ERROR_OBJECT (midiparse, "not enough data");
     return GST_FLOW_ERROR;
   }
 }
