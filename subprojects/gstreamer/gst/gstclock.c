@@ -108,6 +108,7 @@
 #include "gstinfo.h"
 #include "gstutils.h"
 #include "glib-compat-private.h"
+#include "gstsystemclock-private.h"
 
 /* #define DEBUGGING_ENABLED */
 
@@ -1177,6 +1178,11 @@ gst_clock_set_calibration (GstClock * clock, GstClockTime internal, GstClockTime
 
   priv = clock->priv;
 
+  if (_gst_system_clock_is_default (clock)) {
+    GST_CAT_WARNING_OBJECT (GST_CAT_CLOCK, clock,
+        "Cannot set calibration on the default system clock");
+  }
+
   write_seqlock (clock);
   GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
       "internal %" GST_TIME_FORMAT " external %" GST_TIME_FORMAT " %"
@@ -1291,6 +1297,8 @@ gst_clock_set_master (GstClock * clock, GstClock * master)
   GST_OBJECT_LOCK (clock);
   /* we always allow setting the master to NULL */
   if (master && !GST_OBJECT_FLAG_IS_SET (clock, GST_CLOCK_FLAG_CAN_SET_MASTER))
+    goto not_supported;
+  if (master && _gst_system_clock_is_default (clock))
     goto not_supported;
   if (master && !gst_clock_is_synced (master))
     goto master_not_synced;
