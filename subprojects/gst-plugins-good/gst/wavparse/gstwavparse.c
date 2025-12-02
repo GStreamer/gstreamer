@@ -1047,7 +1047,7 @@ gst_wavparse_create_toc (GstWavParse * wav)
     id = g_strdup_printf ("%08x", labl->cue_point_id);
     tags = gst_wavparse_get_tags_toc_entry (toc, id);
     g_free (id);
-    if (tags != NULL) {
+    if (tags != NULL && strlen (labl->text) > 0) {
       gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, labl->text,
           NULL);
     }
@@ -1059,7 +1059,7 @@ gst_wavparse_create_toc (GstWavParse * wav)
     id = g_strdup_printf ("%08x", note->cue_point_id);
     tags = gst_wavparse_get_tags_toc_entry (toc, id);
     g_free (id);
-    if (tags != NULL) {
+    if (tags != NULL && strlen (note->text) > 0) {
       gst_tag_list_add (tags, GST_TAG_MERGE_PREPEND, GST_TAG_COMMENT,
           note->text, NULL);
     }
