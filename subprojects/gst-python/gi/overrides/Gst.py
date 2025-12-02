@@ -277,12 +277,20 @@ class Caps(MiniObjectMixin, Gst.Caps):
     def __str__(self):
         return self.to_string()
 
-    def __getitem__(self, index: int) -> typing.Optional[Structure]:
+    def __getitem__(self, index: int) -> Structure:
         if index >= self.get_size():
             raise IndexError('structure index out of range')
-        return self.get_structure(index)
+        struct = self.get_structure(index)
+        assert struct is not None
+        return struct
 
-    def __len__(self):
+    def __iter__(self) -> typing.Iterator[Structure]:
+        for i in range(self.get_size()):
+            struct = self.get_structure(i)
+            assert struct is not None
+            yield struct
+
+    def __len__(self) -> int:
         return self.get_size()
 
     def get_structure(self, index: int) -> typing.Optional[Structure]:

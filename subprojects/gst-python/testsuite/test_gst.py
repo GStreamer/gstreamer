@@ -162,6 +162,20 @@ class TestCaps(TestCase):
         s = caps.get_structure(0)
         self.assertNotEqual(ptr, s.__ptr__())
 
+    def test_iterate(self):
+        Gst.init(None)
+        caps = Gst.Caps()
+        caps.append_structure(Gst.Structure('test1', one=1))
+        caps.append_structure(Gst.Structure('test2', two=2))
+        caps.append_structure(Gst.Structure('test3', three=3))
+        self.assertEqual(len(caps), 3)
+        items = [s for s in caps]
+        self.assertEqual(items[0]['one'], 1)
+        self.assertEqual(items[1]['two'], 2)
+        self.assertEqual(items[2]['three'], 3)
+        with self.assertRaises(IndexError):
+            caps[3]
+
 
 class TestStructure(TestCase):
 
