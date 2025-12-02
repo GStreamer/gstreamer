@@ -4363,6 +4363,468 @@ GST_START_TEST (test_dma_drm_big_engian)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_meta_transform_matrix_identity)
+{
+  GstVideoMetaTransformMatrix trans;
+  GstVideoInfo in_info, out_info;
+  const GstVideoRectangle in_rect = { 0, 0, 100, 100 };
+  const GstVideoRectangle out_rect = { 0, 0, 100, 100 };
+  gint x, y;
+  GstVideoRectangle rect = { 10, 10, 20, 20 };
+
+  gst_video_info_init (&in_info);
+  gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_I420, 100, 100);
+  gst_video_info_init (&out_info);
+  gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_I420, 200, 200);
+
+  /* 1. Identity Matrix */
+  gst_video_meta_transform_matrix_init (&trans, &in_info, &in_rect, &out_info,
+      &out_rect);
+
+  x = 50;
+  y = 50;
+  fail_unless (gst_video_meta_transform_matrix_point (&trans, &x, &y));
+  fail_unless_equals_int (x, 50);
+  fail_unless_equals_int (y, 50);
+
+  fail_unless (gst_video_meta_transform_matrix_rectangle (&trans, &rect));
+  fail_unless_equals_int (rect.x, 10);
+  fail_unless_equals_int (rect.y, 10);
+  fail_unless_equals_int (rect.w, 20);
+  fail_unless_equals_int (rect.h, 20);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_video_meta_transform_matrix_translation)
+{
+  GstVideoMetaTransformMatrix trans;
+  GstVideoInfo in_info, out_info;
+  const GstVideoRectangle in_rect = { 0, 0, 100, 100 };
+  const GstVideoRectangle out_rect = { 50, 50, 100, 100 };
+  gint x, y;
+  GstVideoRectangle rect = { 10, 10, 20, 20 };
+
+  gst_video_info_init (&in_info);
+  gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_I420, 100, 100);
+  gst_video_info_init (&out_info);
+  gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_I420, 200, 200);
+
+  /* 2. Translation */
+  gst_video_meta_transform_matrix_init (&trans, &in_info, &in_rect, &out_info,
+      &out_rect);
+
+  x = 10;
+  y = 10;
+  fail_unless (gst_video_meta_transform_matrix_point (&trans, &x, &y));
+  fail_unless_equals_int (x, 60);
+  fail_unless_equals_int (y, 60);
+
+  fail_unless (gst_video_meta_transform_matrix_rectangle (&trans, &rect));
+  fail_unless_equals_int (rect.x, 60);
+  fail_unless_equals_int (rect.y, 60);
+  fail_unless_equals_int (rect.w, 20);
+  fail_unless_equals_int (rect.h, 20);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_video_meta_transform_matrix_scaling)
+{
+  GstVideoMetaTransformMatrix trans;
+  GstVideoInfo in_info, out_info;
+  const GstVideoRectangle in_rect = { 0, 0, 100, 100 };
+  const GstVideoRectangle out_rect = { 0, 0, 200, 200 };
+  gint x, y;
+  GstVideoRectangle rect = { 10, 10, 20, 20 };
+
+  gst_video_info_init (&in_info);
+  gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_I420, 100, 100);
+  gst_video_info_init (&out_info);
+  gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_I420, 200, 200);
+
+  /* 3. Scaling (Upscale 2x) */
+  gst_video_meta_transform_matrix_init (&trans, &in_info, &in_rect, &out_info,
+      &out_rect);
+
+  x = 10;
+  y = 10;
+  fail_unless (gst_video_meta_transform_matrix_point (&trans, &x, &y));
+  fail_unless_equals_int (x, 20);
+  fail_unless_equals_int (y, 20);
+
+  fail_unless (gst_video_meta_transform_matrix_rectangle (&trans, &rect));
+  fail_unless_equals_int (rect.x, 20);
+  fail_unless_equals_int (rect.y, 20);
+  fail_unless_equals_int (rect.w, 40);
+  fail_unless_equals_int (rect.h, 40);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_video_meta_transform_matrix_clamping)
+{
+  GstVideoMetaTransformMatrix trans;
+  GstVideoInfo in_info, out_info;
+  const GstVideoRectangle in_rect = { 0, 0, 100, 100 };
+  const GstVideoRectangle out_rect = { 0, 0, 100, 100 };
+  gint x, y;
+  GstVideoRectangle rect = { -10, -10, 20, 20 };
+
+  gst_video_info_init (&in_info);
+  gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_I420, 100, 100);
+  gst_video_info_init (&out_info);
+  gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_I420, 200, 200);
+
+  /* 4. Clamping */
+  gst_video_meta_transform_matrix_init (&trans, &in_info, &in_rect, &out_info,
+      &out_rect);
+
+  x = -10;
+  y = -10;
+  fail_unless (gst_video_meta_transform_matrix_point_clipped (&trans, &x, &y)
+      == FALSE);
+  fail_unless_equals_int (x, 0);
+  fail_unless_equals_int (y, 0);
+
+  x = 110;
+  y = 110;
+  fail_unless (gst_video_meta_transform_matrix_point_clipped (&trans, &x, &y)
+      == FALSE);
+  fail_unless_equals_int (x, 99);
+  fail_unless_equals_int (y, 99);
+
+  fail_unless (gst_video_meta_transform_matrix_rectangle_clipped (&trans,
+          &rect) == FALSE);
+  fail_unless_equals_int (rect.x, 0);
+  fail_unless_equals_int (rect.y, 0);
+  /* The width/height might be adjusted differently depending on implementation
+     detail, but let's check if it's clamped to inside. Actually, the
+     implementation clamps the points. x1=-10 -> 0, y1=-10 -> 0 x2=10 -> 10,
+     y2=10 -> 10 So rect should be 0,0,10,10 */
+  fail_unless_equals_int (rect.w, 10);
+  fail_unless_equals_int (rect.h, 10);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_video_meta_transform_matrix_shearing)
+{
+  GstVideoMetaTransformMatrix trans;
+  GstVideoInfo in_info, out_info;
+  const GstVideoRectangle in_rect = { 0, 0, 100, 100 };
+  const GstVideoRectangle out_rect = { 0, 0, 100, 100 };
+  GstVideoRectangle rect = { 10, 10, 20, 20 };
+
+  gst_video_info_init (&in_info);
+  gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_I420, 100, 100);
+  gst_video_info_init (&out_info);
+  gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_I420, 200, 200);
+
+  /* 6. Non-Affine / Shearing */
+  gst_video_meta_transform_matrix_init (&trans, &in_info, &in_rect, &out_info,
+      &out_rect);
+  /* Add shearing */
+  trans.matrix[0][1] = 0.5f;
+  fail_unless (gst_video_meta_transform_matrix_rectangle (&trans,
+          &rect) == FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_video_meta_transform_matrix_out_of_bounds)
+{
+  GstVideoMetaTransformMatrix trans;
+  GstVideoInfo in_info, out_info;
+  const GstVideoRectangle in_rect = { 0, 0, 100, 100 };
+  const GstVideoRectangle out_rect = { 0, 0, 100, 100 };
+  gint x, y;
+  GstVideoRectangle rect = { 150, 150, 20, 20 };
+
+  gst_video_info_init (&in_info);
+  gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_I420, 100, 100);
+  gst_video_info_init (&out_info);
+  gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_I420, 200, 200);
+
+  /* 7. Out of Bounds (No Clamp) */
+  gst_video_meta_transform_matrix_init (&trans, &in_info, &in_rect, &out_info,
+      &out_rect);
+  x = 150;
+  y = 150;
+  fail_unless (gst_video_meta_transform_matrix_point (&trans, &x, &y));
+  /* Coordinates should be transformed even if out of bounds */
+  fail_unless_equals_int (x, 150);
+  fail_unless_equals_int (y, 150);
+
+  /* Entirely outside, clamp=TRUE */
+  fail_unless (gst_video_meta_transform_matrix_rectangle_clipped (&trans,
+          &rect) == FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_video_meta_transform_matrix_rotation_90)
+{
+  GstVideoMetaTransformMatrix trans;
+  GstVideoInfo in_info, out_info;
+  const GstVideoRectangle in_rect = { 0, 0, 100, 100 };
+  const GstVideoRectangle out_rect = { 0, 0, 100, 100 };
+  gint x, y;
+  GstVideoRectangle rect = { 10, 10, 20, 20 };
+
+  gst_video_info_init (&in_info);
+  gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_I420, 100, 100);
+  gst_video_info_init (&out_info);
+  gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_I420, 100, 100);
+
+  /* 90-degree counterclockwise rotation */
+  gst_video_meta_transform_matrix_init (&trans, &in_info, &in_rect, &out_info,
+      &out_rect);
+  /* Manually set the rotation matrix:
+   * | 0  -1  100 |
+   * | 1   0   0  |
+   * | 0   0   1  |
+   */
+  trans.matrix[0][0] = 0.0f;
+  trans.matrix[0][1] = -1.0f;
+  trans.matrix[0][2] = 100.0f;
+  trans.matrix[1][0] = 1.0f;
+  trans.matrix[1][1] = 0.0f;
+  trans.matrix[1][2] = 0.0f;
+
+  x = 50;
+  y = 50;
+  fail_unless (gst_video_meta_transform_matrix_point (&trans, &x, &y));
+  fail_unless_equals_int (x, 50);
+  fail_unless_equals_int (y, 50);
+
+  fail_unless (gst_video_meta_transform_matrix_rectangle (&trans, &rect));
+  fail_unless_equals_int (rect.x, 70);
+  fail_unless_equals_int (rect.y, 10);
+  fail_unless_equals_int (rect.w, 20);
+  fail_unless_equals_int (rect.h, 20);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_video_meta_transform_matrix_rotation_180)
+{
+  GstVideoMetaTransformMatrix trans;
+  GstVideoInfo in_info, out_info;
+  const GstVideoRectangle in_rect = { 0, 0, 100, 100 };
+  const GstVideoRectangle out_rect = { 0, 0, 100, 100 };
+  gint x, y;
+  GstVideoRectangle rect = { 10, 10, 20, 20 };
+
+  gst_video_info_init (&in_info);
+  gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_I420, 100, 100);
+  gst_video_info_init (&out_info);
+  gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_I420, 100, 100);
+
+  /* 180-degree rotation */
+  gst_video_meta_transform_matrix_init (&trans, &in_info, &in_rect, &out_info,
+      &out_rect);
+  /* Manually set the rotation matrix:
+   * | -1   0  100 |
+   * |  0  -1  100 |
+   * |  0   0   1  |
+   */
+  trans.matrix[0][0] = -1.0f;
+  trans.matrix[0][1] = 0.0f;
+  trans.matrix[0][2] = 100.0f;
+  trans.matrix[1][0] = 0.0f;
+  trans.matrix[1][1] = -1.0f;
+  trans.matrix[1][2] = 100.0f;
+
+  x = 50;
+  y = 50;
+  fail_unless (gst_video_meta_transform_matrix_point (&trans, &x, &y));
+  fail_unless_equals_int (x, 50);
+  fail_unless_equals_int (y, 50);
+
+  fail_unless (gst_video_meta_transform_matrix_rectangle (&trans, &rect));
+  fail_unless_equals_int (rect.x, 70);
+  fail_unless_equals_int (rect.y, 70);
+  fail_unless_equals_int (rect.w, 20);
+  fail_unless_equals_int (rect.h, 20);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_video_meta_transform_matrix_rotation_270)
+{
+  GstVideoMetaTransformMatrix trans;
+  GstVideoInfo in_info, out_info;
+  const GstVideoRectangle in_rect = { 0, 0, 100, 100 };
+  const GstVideoRectangle out_rect = { 0, 0, 100, 100 };
+  gint x, y;
+  GstVideoRectangle rect = { 10, 10, 20, 20 };
+
+  gst_video_info_init (&in_info);
+  gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_I420, 100, 100);
+  gst_video_info_init (&out_info);
+  gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_I420, 100, 100);
+
+  /* 270-degree counterclockwise rotation (90-degree clockwise) */
+  gst_video_meta_transform_matrix_init (&trans, &in_info, &in_rect, &out_info,
+      &out_rect);
+  /* Manually set the rotation matrix:
+   * |  0   1   0  |
+   * | -1   0  100 |
+   * |  0   0   1  |
+   */
+  trans.matrix[0][0] = 0.0f;
+  trans.matrix[0][1] = 1.0f;
+  trans.matrix[0][2] = 0.0f;
+  trans.matrix[1][0] = -1.0f;
+  trans.matrix[1][1] = 0.0f;
+  trans.matrix[1][2] = 100.0f;
+
+  x = 50;
+  y = 50;
+  fail_unless (gst_video_meta_transform_matrix_point (&trans, &x, &y));
+  fail_unless_equals_int (x, 50);
+  fail_unless_equals_int (y, 50);
+
+  fail_unless (gst_video_meta_transform_matrix_rectangle (&trans, &rect));
+  fail_unless_equals_int (rect.x, 10);
+  fail_unless_equals_int (rect.y, 70);
+  fail_unless_equals_int (rect.w, 20);
+  fail_unless_equals_int (rect.h, 20);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_video_meta_transform_matrix_flip_horizontal)
+{
+  GstVideoMetaTransformMatrix trans;
+  GstVideoInfo in_info, out_info;
+  const GstVideoRectangle in_rect = { 0, 0, 100, 100 };
+  const GstVideoRectangle out_rect = { 0, 0, 100, 100 };
+  gint x, y;
+  GstVideoRectangle rect = { 10, 10, 20, 20 };
+
+  gst_video_info_init (&in_info);
+  gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_I420, 100, 100);
+  gst_video_info_init (&out_info);
+  gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_I420, 100, 100);
+
+  /* Horizontal flip */
+  gst_video_meta_transform_matrix_init (&trans, &in_info, &in_rect, &out_info,
+      &out_rect);
+  /* Manually set the flip matrix:
+   * | -1   0  100 |
+   * |  0   1   0  |
+   * |  0   0   1  |
+   */
+  trans.matrix[0][0] = -1.0f;
+  trans.matrix[0][1] = 0.0f;
+  trans.matrix[0][2] = 100.0f;
+  trans.matrix[1][0] = 0.0f;
+  trans.matrix[1][1] = 1.0f;
+  trans.matrix[1][2] = 0.0f;
+
+  x = 50;
+  y = 50;
+  fail_unless (gst_video_meta_transform_matrix_point (&trans, &x, &y));
+  fail_unless_equals_int (x, 50);
+  fail_unless_equals_int (y, 50);
+
+  fail_unless (gst_video_meta_transform_matrix_rectangle (&trans, &rect));
+  fail_unless_equals_int (rect.x, 70);
+  fail_unless_equals_int (rect.y, 10);
+  fail_unless_equals_int (rect.w, 20);
+  fail_unless_equals_int (rect.h, 20);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_video_meta_transform_matrix_flip_vertical)
+{
+  GstVideoMetaTransformMatrix trans;
+  GstVideoInfo in_info, out_info;
+  const GstVideoRectangle in_rect = { 0, 0, 100, 100 };
+  const GstVideoRectangle out_rect = { 0, 0, 100, 100 };
+  gint x, y;
+  GstVideoRectangle rect = { 10, 10, 20, 20 };
+
+  gst_video_info_init (&in_info);
+  gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_I420, 100, 100);
+  gst_video_info_init (&out_info);
+  gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_I420, 100, 100);
+
+  /* Vertical flip */
+  gst_video_meta_transform_matrix_init (&trans, &in_info, &in_rect, &out_info,
+      &out_rect);
+  /* Manually set the flip matrix:
+   * |  1   0   0  |
+   * |  0  -1  100 |
+   * |  0   0   1  |
+   */
+  trans.matrix[0][0] = 1.0f;
+  trans.matrix[0][1] = 0.0f;
+  trans.matrix[0][2] = 0.0f;
+  trans.matrix[1][0] = 0.0f;
+  trans.matrix[1][1] = -1.0f;
+  trans.matrix[1][2] = 100.0f;
+
+  x = 50;
+  y = 50;
+  fail_unless (gst_video_meta_transform_matrix_point (&trans, &x, &y));
+  fail_unless_equals_int (x, 50);
+  fail_unless_equals_int (y, 50);
+
+  fail_unless (gst_video_meta_transform_matrix_rectangle (&trans, &rect));
+  fail_unless_equals_int (rect.x, 10);
+  fail_unless_equals_int (rect.y, 70);
+  fail_unless_equals_int (rect.w, 20);
+  fail_unless_equals_int (rect.h, 20);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_video_meta_transform_matrix_rotation_45)
+{
+  GstVideoMetaTransformMatrix trans;
+  GstVideoInfo in_info, out_info;
+  const GstVideoRectangle in_rect = { 0, 0, 100, 100 };
+  const GstVideoRectangle out_rect = { 0, 0, 100, 100 };
+  gint x, y;
+  GstVideoRectangle rect = { 10, 10, 20, 20 };
+
+  gst_video_info_init (&in_info);
+  gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_I420, 100, 100);
+  gst_video_info_init (&out_info);
+  gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_I420, 100, 100);
+
+  /* 45-degree rotation */
+  gst_video_meta_transform_matrix_init (&trans, &in_info, &in_rect, &out_info,
+      &out_rect);
+  /* Manually set a 45-degree rotation matrix (non-axis-aligned):
+   * cos(45) = sin(45) = 0.707107
+   * |  cos(45)  -sin(45)  ... |
+   * |  sin(45)   cos(45)  ... |
+   * |  0         0         1  |
+   */
+  trans.matrix[0][0] = 0.707107f;
+  trans.matrix[0][1] = -0.707107f;
+  trans.matrix[0][2] = 50.0f;
+  trans.matrix[1][0] = 0.707107f;
+  trans.matrix[1][1] = 0.707107f;
+  trans.matrix[1][2] = 0.0f;
+
+  /* Point transformation should work */
+  x = 50;
+  y = 50;
+  fail_unless (gst_video_meta_transform_matrix_point (&trans, &x, &y));
+
+  /* Rectangle transformation should fail for non-90-degree rotation */
+  fail_unless (gst_video_meta_transform_matrix_rectangle (&trans,
+          &rect) == FALSE);
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -4424,6 +4886,18 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_meta_serialize);
   tcase_add_test (tc_chain, test_video_convert_with_config_update);
   tcase_add_test (tc_chain, test_dma_drm_big_engian);
+  tcase_add_test (tc_chain, test_video_meta_transform_matrix_identity);
+  tcase_add_test (tc_chain, test_video_meta_transform_matrix_translation);
+  tcase_add_test (tc_chain, test_video_meta_transform_matrix_scaling);
+  tcase_add_test (tc_chain, test_video_meta_transform_matrix_clamping);
+  tcase_add_test (tc_chain, test_video_meta_transform_matrix_shearing);
+  tcase_add_test (tc_chain, test_video_meta_transform_matrix_out_of_bounds);
+  tcase_add_test (tc_chain, test_video_meta_transform_matrix_rotation_90);
+  tcase_add_test (tc_chain, test_video_meta_transform_matrix_rotation_180);
+  tcase_add_test (tc_chain, test_video_meta_transform_matrix_rotation_270);
+  tcase_add_test (tc_chain, test_video_meta_transform_matrix_flip_horizontal);
+  tcase_add_test (tc_chain, test_video_meta_transform_matrix_flip_vertical);
+  tcase_add_test (tc_chain, test_video_meta_transform_matrix_rotation_45);
 
   return s;
 }
