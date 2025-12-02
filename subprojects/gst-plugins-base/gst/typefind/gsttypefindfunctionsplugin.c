@@ -116,6 +116,7 @@ plugin_init (GstPlugin * plugin)
   GST_TYPE_FIND_REGISTER (mod, plugin);
   GST_TYPE_FIND_REGISTER (mp3, plugin);
   GST_TYPE_FIND_REGISTER (ac3, plugin);
+  GST_TYPE_FIND_REGISTER (ac4, plugin);
   GST_TYPE_FIND_REGISTER (dts, plugin);
   GST_TYPE_FIND_REGISTER (gsm, plugin);
   GST_TYPE_FIND_REGISTER (mpeg_sys, plugin);

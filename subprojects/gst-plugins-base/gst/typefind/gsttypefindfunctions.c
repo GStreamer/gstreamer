@@ -1900,6 +1900,80 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** audio/x-ac4 ***/
+static GstStaticCaps ac4_caps = GST_STATIC_CAPS ("audio/x-ac4");
+
+#define AC4_CAPS (gst_static_caps_get(&ac4_caps))
+#define AC4_MAX_PROBE_LENGTH 1024       /* 1KB should be enough for AC4 audio streams */
+
+static void
+ac4_type_find (GstTypeFind * tf, gpointer unused)
+{
+  DataScanCtx c = { 0, NULL, 0 };
+
+  while (c.offset < AC4_MAX_PROBE_LENGTH) {
+    if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 4)))
+      break;
+
+    if (c.data[0] == 0xAC && (c.data[1] == 0x40 || c.data[1] == 0x41)) {
+      GST_LOG ("Possible AC4 frame sync at offset %"
+          G_GUINT64_FORMAT, c.offset);
+
+      guint16 framesize_parser = (c.data[2] << 8) | c.data[3];
+      guint32 frame_size = 0;
+      guint32 total_frame_size = 0;
+      guint8 has_crc = (c.data[1] == 0x41) ? 1 : 0;
+      DataScanCtx c_next = c;
+      guint header_size = 0;
+
+      if (framesize_parser != 0xFFFF) { /* frame_size is 16 bits */
+
+        frame_size = framesize_parser;
+        header_size = 4;        /* sync_word (2) + frame_size (2) */
+      } else {                  /* frame_size is 24 bits (additional 3 bytes) */
+        if (!data_scan_ctx_ensure_data (tf, &c_next, 7))        /* sync_word(2) + frame_size_marker(2) + frame_size(3) */
+          break;
+
+        frame_size =
+            (c_next.data[4] << 16) | (c_next.data[5] << 8) | c_next.data[6];
+        header_size = 7;        /* sync_word (2) + frame_size marker (2) + frame_size (3) */
+      }
+
+      /* Total frame size = header + raw_ac4_frame + optional crc_word. frame_size includes
+         raw_ac4_frame only, not the header or CRC */
+      total_frame_size = header_size + frame_size + (has_crc ? 2 : 0);
+
+      if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c_next,
+                  total_frame_size)))
+        break;
+
+      data_scan_ctx_advance (tf, &c_next, total_frame_size);
+
+      if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c_next, 2)))
+        break;
+
+      if (c_next.data[0] == 0xAC && (c_next.data[1] == 0x40
+              || c_next.data[1] == 0x41)) {
+        GstTypeFindProbability prob;
+        GST_LOG ("Second AC4 frame sync at offset %"
+            G_GUINT64_FORMAT, c_next.offset);
+
+        if (c.offset == 0)
+          prob = GST_TYPE_FIND_MAXIMUM;
+        else
+          prob = GST_TYPE_FIND_POSSIBLE;
+
+        gst_type_find_suggest (tf, prob, AC4_CAPS);
+        return;
+
+      } else {
+        GST_LOG ("No second AC4 frame found, false sync");
+      }
+    }
+    data_scan_ctx_advance (tf, &c, 1);
+  }
+}
+
 /*** audio/x-dts ***/
 static GstStaticCaps dts_caps = GST_STATIC_CAPS ("audio/x-dts");
 #define DTS_CAPS (gst_static_caps_get (&dts_caps))
@@ -6963,6 +7037,8 @@ GST_TYPE_FIND_REGISTER_DEFINE (mp3, "audio/mpeg", GST_RANK_PRIMARY,
     mp3_type_find, "mp3,mp2,mp1,mpga", MP3_CAPS, NULL, NULL);
 GST_TYPE_FIND_REGISTER_DEFINE (ac3, "audio/x-ac3", GST_RANK_PRIMARY,
     ac3_type_find, "ac3,eac3", AC3_CAPS, NULL, NULL);
+GST_TYPE_FIND_REGISTER_DEFINE (ac4, "audio/x-ac4", GST_RANK_PRIMARY,
+    ac4_type_find, "ac4", AC4_CAPS, NULL, NULL);
 GST_TYPE_FIND_REGISTER_DEFINE (dts, "audio/x-dts", GST_RANK_SECONDARY,
     dts_type_find, "dts", DTS_CAPS, NULL, NULL);
 GST_TYPE_FIND_REGISTER_DEFINE (gsm, "audio/x-gsm", GST_RANK_PRIMARY, NULL,
