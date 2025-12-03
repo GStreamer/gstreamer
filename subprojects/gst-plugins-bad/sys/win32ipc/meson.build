@@ -1,4 +1,5 @@
 win32ipc_sources = [
+  'gstwin32ipc.cpp',
   'gstwin32ipcmmf.cpp',
   'gstwin32ipcclient.cpp',
   'gstwin32ipcserver.cpp',
@@ -11,6 +12,7 @@ win32ipc_sources = [
 ]
 
 win32ipc_headers = [
+  'gstwin32ipc.h',
   'gstwin32ipcvideosink.h',
   'gstwin32ipcmemory.h',
   'gstwin32ipcvideosrc.h',
