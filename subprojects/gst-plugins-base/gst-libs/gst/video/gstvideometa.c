@@ -1318,7 +1318,8 @@ gst_video_region_of_interest_meta_transform (GstBuffer * dest, GstMeta * meta,
   GstVideoRegionOfInterestMeta *dmeta;
 
   if (GST_META_TRANSFORM_IS_COPY (type)) {
-    GST_DEBUG ("copy region of interest metadata");
+    GST_DEBUG ("copy region of interest metadata (seqnum: %" G_GUINT64_FORMAT
+        ")", gst_meta_get_seqnum (meta));
     dmeta =
         gst_buffer_add_video_region_of_interest_meta_id (dest,
         smeta->roi_type, smeta->x, smeta->y, smeta->w, smeta->h);
@@ -1334,13 +1335,14 @@ gst_video_region_of_interest_meta_transform (GstBuffer * dest, GstMeta * meta,
     GstVideoRectangle rect = { smeta->x, smeta->y, smeta->w, smeta->h };
 
     GST_LOG ("Scaling and cropping region of interest metadata %dx%d+%d+%d"
-        " in (%dx%d) -> %dx%d+%d+%d in %dx%d", trans->in_rectangle.w,
+        " in (%dx%d) -> %dx%d+%d+%d in %dx%d (seqnum: %" G_GUINT64_FORMAT ")",
+        trans->in_rectangle.w,
         trans->in_rectangle.h, trans->in_rectangle.x, trans->in_rectangle.y,
         GST_VIDEO_INFO_WIDTH (trans->in_info),
         GST_VIDEO_INFO_HEIGHT (trans->in_info), trans->out_rectangle.w,
         trans->out_rectangle.h, trans->out_rectangle.x,
         trans->out_rectangle.y, GST_VIDEO_INFO_WIDTH (trans->out_info),
-        GST_VIDEO_INFO_HEIGHT (trans->out_info));
+        GST_VIDEO_INFO_HEIGHT (trans->out_info), gst_meta_get_seqnum (meta));
 
     if (!gst_video_meta_transform_matrix_rectangle_clipped (trans, &rect))
       return FALSE;
@@ -1353,10 +1355,15 @@ gst_video_region_of_interest_meta_transform (GstBuffer * dest, GstMeta * meta,
     dmeta->id = smeta->id;
     dmeta->parent_id = smeta->parent_id;
 
-    GST_LOG ("region of interest (id:%d, parent id:%d) offset %dx%d -> %dx%d",
-        smeta->id, smeta->parent_id, smeta->x, smeta->y, dmeta->x, dmeta->y);
-    GST_LOG ("region of interest size   %dx%d -> %dx%d", smeta->w, smeta->h,
-        dmeta->w, dmeta->h);
+    GST_LOG ("region of interest (id:%d, parent id:%d) offset %dx%d -> %dx%d "
+        "(seqnum: %" G_GUINT64_FORMAT " -> %" G_GUINT64_FORMAT ")",
+        smeta->id, smeta->parent_id, smeta->x, smeta->y, dmeta->x, dmeta->y,
+        gst_meta_get_seqnum (meta),
+        gst_meta_get_seqnum (GST_META_CAST (dmeta)));
+    GST_LOG ("region of interest size   %dx%d -> %dx%d (seqnum: %"
+        G_GUINT64_FORMAT " -> %" G_GUINT64_FORMAT " ))", smeta->w, smeta->h,
+        dmeta->w, dmeta->h, gst_meta_get_seqnum (meta),
+        gst_meta_get_seqnum (GST_META_CAST (dmeta)));
   } else if (GST_VIDEO_META_TRANSFORM_IS_SCALE (type)) {
     GstVideoMetaTransform *trans = data;
     gint ow, oh, nw, nh;
@@ -1364,8 +1371,10 @@ gst_video_region_of_interest_meta_transform (GstBuffer * dest, GstMeta * meta,
     nw = GST_VIDEO_INFO_WIDTH (trans->out_info);
     oh = GST_VIDEO_INFO_HEIGHT (trans->in_info);
     nh = GST_VIDEO_INFO_HEIGHT (trans->out_info);
-    GST_LOG ("scaling region of interest metadata %dx%d -> %dx%d", ow, oh, nw,
-        nh);
+
+    GST_LOG ("scaling region of interest metadata %dx%d -> %dx%d "
+        "(seqnum: %" G_GUINT64_FORMAT ")", ow, oh, nw, nh,
+        gst_meta_get_seqnum (meta));
 
     dmeta =
         gst_buffer_add_video_region_of_interest_meta_id (dest,
@@ -1377,10 +1386,15 @@ gst_video_region_of_interest_meta_transform (GstBuffer * dest, GstMeta * meta,
     dmeta->id = smeta->id;
     dmeta->parent_id = smeta->parent_id;
 
-    GST_LOG ("region of interest (id:%d, parent id:%d) offset %dx%d -> %dx%d",
-        smeta->id, smeta->parent_id, smeta->x, smeta->y, dmeta->x, dmeta->y);
-    GST_LOG ("region of interest size   %dx%d -> %dx%d", smeta->w, smeta->h,
-        dmeta->w, dmeta->h);
+    GST_LOG ("region of interest (id:%d, parent id:%d) offset %dx%d -> %dx%d"
+        " (seqnum: %" G_GUINT64_FORMAT " -> %" G_GUINT64_FORMAT ")",
+        smeta->id, smeta->parent_id, smeta->x, smeta->y, dmeta->x, dmeta->y,
+        gst_meta_get_seqnum (meta),
+        gst_meta_get_seqnum (GST_META_CAST (dmeta)));
+    GST_LOG ("region of interest size   %dx%d -> %dx%d (seqnum: %"
+        G_GUINT64_FORMAT " -> %" G_GUINT64_FORMAT ")", smeta->w, smeta->h,
+        dmeta->w, dmeta->h, gst_meta_get_seqnum (meta),
+        gst_meta_get_seqnum (GST_META_CAST (dmeta)));
   } else {
     /* return FALSE, if transform type is not supported */
     return FALSE;
