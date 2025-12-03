@@ -118,13 +118,9 @@ class Bin(Gst.Bin):
 
     def make_and_add(self, factoryname: str, name: typing.Optional[str] = None) -> Element:
         '''
-        @raises: Gst.AddError
+        @raises: Gst.AddError, Gst.MissingPluginError
         '''
-        elem = Gst.ElementFactory.make(factoryname, name)
-        if not elem:
-            raise AddError(
-                'No such element: {}'.format(factoryname))
-        assert isinstance(elem, Element)  # Tell mypy we actually have our override subclass
+        elem = ElementFactory.make(factoryname, name)
         self.add(elem)
         return elem
 
@@ -431,6 +427,13 @@ class IteratorError(Exception):
 __all__.append('IteratorError')
 
 
+class MissingPluginError(Exception):
+    pass
+
+
+__all__.append('MissingPluginError')
+
+
 class AddError(Exception):
     pass
 
@@ -482,9 +485,13 @@ class ElementFactory(Gst.ElementFactory):
         return self.get_metadata("klass")
 
     @staticmethod
-    def make(factoryname: str, name: typing.Optional[str] = None) -> typing.Optional[Element]:  # type: ignore[override]
+    def make(factoryname: str, name: typing.Optional[str] = None) -> Element:  # type: ignore[override]
+        '''
+        @raises: Gst.PluginMissingError
+        '''
         elem = Gst.ElementFactory.make(factoryname, name)
-        assert elem is None or isinstance(elem, Element)  # Tell mypy we actually have our override subclass
+        if not elem:
+            raise MissingPluginError(f'No such element: {factoryname}')
         return elem
 
 
