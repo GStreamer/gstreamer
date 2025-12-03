@@ -1676,6 +1676,52 @@ _gst_buffer_override_unmap (PyObject * self, PyObject * args)
   return success;
 }
 
+static PyObject *
+_gst_pad_probe_info_writable_object (PyObject * self, PyObject * args)
+{
+  PyObject *py_info = PyTuple_GetItem (args, 0);
+  if (py_info == NULL) {
+    PyErr_SetString (PyExc_TypeError, "Expected a PyGObject");
+    return NULL;
+  }
+
+  GstPadProbeInfo *info = pyg_boxed_get (py_info, GstPadProbeInfo);
+  if (info->data == NULL)
+    return NULL;
+
+  /* Make object writable and transfer ownership to python */
+  GstMiniObject *mini_object = GST_MINI_OBJECT (info->data);
+  mini_object = gst_mini_object_make_writable (mini_object);
+  info->data = NULL;
+  return pyg_boxed_new (GST_MINI_OBJECT_TYPE (mini_object), mini_object, FALSE,
+      TRUE);
+}
+
+static PyObject *
+_gst_pad_probe_info_set_object (PyObject * self, PyObject * args)
+{
+  PyObject *py_info = PyTuple_GetItem (args, 0);
+  if (py_info == NULL) {
+    PyErr_SetString (PyExc_TypeError, "Expected a PyGObject");
+    return NULL;
+  }
+  PyObject *py_obj = PyTuple_GetItem (args, 1);
+  if (py_obj == NULL) {
+    PyErr_SetString (PyExc_TypeError, "Expected a PyGObject");
+    return NULL;
+  }
+
+  GstPadProbeInfo *info = pyg_boxed_get (py_info, GstPadProbeInfo);
+  gst_clear_mini_object (&info->data);
+  if (py_obj != Py_None) {
+    GstMiniObject *obj = pyg_boxed_get (py_obj, GstMiniObject);
+    info->data = gst_mini_object_ref (obj);
+  }
+
+  Py_INCREF (Py_None);
+  return Py_None;
+}
+
 /* *INDENT-OFF* */
 static PyMethodDef _gi_gst_functions[] = {
   {"trace", (PyCFunction) _wrap_gst_trace, METH_VARARGS, NULL},
@@ -1723,6 +1769,9 @@ static PyMethodDef _gi_gst_functions[] = {
   {"buffer_set_offset", (PyCFunction) _gst_buffer_set_offset, METH_VARARGS, NULL},
   {"buffer_get_offset_end", (PyCFunction) _gst_buffer_get_offset_end, METH_VARARGS, NULL},
   {"buffer_set_offset_end", (PyCFunction) _gst_buffer_set_offset_end, METH_VARARGS, NULL},
+
+  {"pad_probe_info_writable_object", (PyCFunction)_gst_pad_probe_info_writable_object, METH_VARARGS, NULL},
+  {"pad_probe_info_set_object", (PyCFunction)_gst_pad_probe_info_set_object, METH_VARARGS, NULL},
 
   {"_get_object_ptr", (PyCFunction) _gst_get_object_ptr, METH_VARARGS, NULL},
   {NULL, NULL, 0, NULL}
