@@ -24,6 +24,7 @@
 
 from __future__ import annotations
 
+import sys
 import inspect
 import itertools
 import weakref
@@ -138,6 +139,9 @@ class MiniObject:
     @flags.setter
     def flags(self, flags: Gst.MiniObjectFlags) -> None:
         _gi_gst.mini_object_set_flags(self, flags)
+
+    def __ptr__(self):
+        return _gi_gst._get_object_ptr(self)
 
 
 class NotWritableQuery(Exception):
@@ -267,6 +271,39 @@ class Caps(MiniObject, Gst.Caps):
 
 override(Caps)
 __all__.append('Caps')
+
+
+class PadProbeInfoObjectContextManager:
+    def __init__(self, object: MiniObject, info: PadProbeInfo):
+        self.__object = object
+        self.__info = info
+
+    def __enter__(self) -> MiniObject:
+        return self.__object
+
+    def __exit__(self, _type, _value, _tb):
+        self.__info.set_object(self.__object)
+        self.__object = None
+        self.__info = None
+
+
+__all__.append('PadProbeInfoObjectContextManager')
+
+
+class PadProbeInfo(Gst.PadProbeInfo):
+    def writable_object(self) -> PadProbeInfoObjectContextManager:
+        '''Return writable object contained in this PadProbeInfo.
+        It uses a context manager to steal the object from the PadProbeInfo,
+        and set it back when exiting the context.
+        '''
+        return PadProbeInfoObjectContextManager(_gi_gst.pad_probe_info_writable_object(self), self)
+
+    def set_object(self, obj: typing.Optional[Gst.MiniObject]) -> None:
+        _gi_gst.pad_probe_info_set_object(self, obj)
+
+
+setattr(sys.modules["gi.repository.Gst"], 'PadProbeInfo', PadProbeInfo)
+__all__.append('PadProbeInfo')
 
 
 class PadFunc:

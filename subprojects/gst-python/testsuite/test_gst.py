@@ -272,5 +272,62 @@ class TestBuffer(TestCase):
             info.data[0]
 
 
+class TestPadProbe(TestCase):
+
+    def test_pad_probe(self):
+        Gst.init(None)
+        pipeline = Gst.Pipeline("pipeline")
+        src = pipeline.make_and_add("fakesrc", "src")
+        sink = pipeline.make_and_add("fakesink", "sink")
+        src.link(sink)
+
+        src.props.num_buffers = 5
+
+        buffer_count = 0
+
+        def probe_cb(pad, info):
+            nonlocal buffer_count
+
+            buffer_count += 1
+
+            # Get a writable buffer from the probe info
+            with info.writable_object() as buffer:
+                self.assertIsInstance(buffer, Gst.Buffer)
+                self.assertTrue(buffer.is_writable())
+                buffer.pts = buffer_count * Gst.SECOND * 2
+                ptr = buffer.__ptr__()
+                # Info does not hold a buffer any more
+                self.assertIsNone(info.get_buffer())
+
+            # info.get_buffer() never returns a writable buffer because both
+            # python and GstPadProbeInfo hold references to it.
+            buffer = info.get_buffer()
+            self.assertIsNotNone(buffer)
+            self.assertFalse(buffer.is_writable())
+            self.assertEqual(buffer.pts, buffer_count * Gst.SECOND * 2)
+            self.assertEqual(buffer.__ptr__(), ptr)
+
+            return Gst.PadProbeReturn.OK
+
+        sink_pad = sink.get_static_pad("sink")
+        probe_id = sink_pad.add_probe(Gst.PadProbeType.BUFFER, probe_cb)
+
+        pipeline.set_state(Gst.State.PLAYING)
+        bus = pipeline.get_bus()
+        msg = bus.timed_pop_filtered(Gst.SECOND * 5, Gst.MessageType.EOS)
+        self.assertIsNotNone(msg)
+
+        # We should have seen exactly 5 buffers
+        self.assertEqual(buffer_count, 5)
+
+        # Check that last buffer has the expected PTS
+        sample = sink.props.last_sample
+        buffer = sample.get_buffer()
+        self.assertEqual(buffer.pts, buffer_count * Gst.SECOND * 2)
+
+        sink_pad.remove_probe(probe_id)
+        pipeline.set_state(Gst.State.NULL)
+
+
 if __name__ == "__main__":
     unittest.main()
