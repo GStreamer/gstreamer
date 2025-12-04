@@ -110,6 +110,10 @@ G_DEFINE_TYPE (GstJpegParse, gst_jpeg_parse, GST_TYPE_BASE_PARSE);
 GST_ELEMENT_REGISTER_DEFINE (jpegparse, "jpegparse", GST_RANK_PRIMARY,
     GST_TYPE_JPEG_PARSE);
 
+/* CIPA DC-x 007-2009 MPF spec states as TIFF */
+#define MPF_LE  0x4949
+#define MPF_BE  0x4D4D
+
 enum GstJPEGColorspace
 {
   GST_JPEG_COLORSPACE_NONE,
@@ -645,6 +649,226 @@ bail:
   return TRUE;
 }
 
+struct MPF
+{
+  guint32 num_images;
+  guint32 individual_image_no;
+  struct
+  {
+    gboolean parent;
+    gboolean child;
+    gboolean representative;
+    enum
+    {
+      UNDEFINED = 0x0,
+      BASELINE_PRIMARY = 0x30000,
+      LARGE_THUMB_VGA = 0x10001,
+      LARGE_THUMB_HD = 0x10002,
+      MULTI_FRAME_PANO = 0x20001,
+      MULTI_FRAME_DISPARITY = 0x20002,
+      MULTI_FRAME_MULTI_ANGLE = 0x20003,
+    } type;
+    guint32 size;
+    guint32 offset;
+  } entries[32];
+};
+
+static gboolean
+gst_jpeg_parse_mpf (GstJpegParse * parse, GstByteReader * reader,
+    struct MPF *mpf)
+{
+  guint16 endianness;
+  guint16 fortytwo;
+  guint32 offset;
+  guint16 num_entries;
+  gsize offset_ref, offset_cur;
+
+  offset_ref = gst_byte_reader_get_pos (reader);
+
+  /* MP Header */
+  if (!gst_byte_reader_get_uint16_be (reader, &endianness))
+    return FALSE;
+
+  if (endianness == MPF_LE) {
+    if (!gst_byte_reader_get_uint16_le (reader, &fortytwo)
+        || !gst_byte_reader_get_uint32_le (reader, &offset))
+      return FALSE;
+  } else if (endianness == MPF_BE) {
+    if (!gst_byte_reader_get_uint16_be (reader, &fortytwo)
+        || !gst_byte_reader_get_uint32_be (reader, &offset))
+      return FALSE;
+  } else {
+    return FALSE;
+  }
+
+  /* endianness check */
+  if (fortytwo != 42)
+    return FALSE;
+
+  /* Skip to MP Index IFD */
+  offset_cur = gst_byte_reader_get_pos (reader);
+  /* number of bytes to skip = (reference offset + new offset) - current offset */
+  if (!gst_byte_reader_skip (reader, offset_ref + offset - offset_cur))
+    return FALSE;
+
+  while (TRUE) {
+    /* MP Index IFD - number of entries */
+    if (endianness == MPF_LE) {
+      if (!gst_byte_reader_get_uint16_le (reader, &num_entries))
+        return FALSE;
+    } else {
+      if (!gst_byte_reader_get_uint16_be (reader, &num_entries))
+        return FALSE;
+    }
+
+    GST_DEBUG_OBJECT (parse, "MPF: %d IFD entries", num_entries);
+
+    for (int i = 0; i < num_entries; i++) {
+      guint16 tag, type;
+      guint32 count, value;
+
+      if (endianness == MPF_LE) {
+        if (!gst_byte_reader_get_uint16_le (reader, &tag)
+            || !gst_byte_reader_get_uint16_le (reader, &type)
+            || !gst_byte_reader_get_uint32_le (reader, &count)
+            || !gst_byte_reader_get_uint32_le (reader, &value))
+          return FALSE;
+      } else {
+        if (!gst_byte_reader_get_uint16_be (reader, &tag)
+            || !gst_byte_reader_get_uint16_be (reader, &type)
+            || !gst_byte_reader_get_uint32_be (reader, &count)
+            || !gst_byte_reader_get_uint32_be (reader, &value))
+          return FALSE;
+      }
+
+      switch (tag) {
+        case 0XB000:           /* MPF version # */
+          GST_DEBUG_OBJECT (parse, "MPF version %" GST_FOURCC_FORMAT,
+              GST_FOURCC_ARGS (value));
+          break;
+        case 0xB001:           /* number of images */
+          mpf->num_images = value;
+          GST_DEBUG_OBJECT (parse, "MPF number of images %d", mpf->num_images);
+          break;
+        case 0xB002:{          /* MP entries */
+          if (count / 16 != mpf->num_images)
+            return FALSE;
+
+          offset_cur = gst_byte_reader_get_pos (reader);
+          if (!gst_byte_reader_skip (reader, offset_ref + value - offset_cur))
+            return FALSE;
+
+          if (mpf->num_images > 32) {
+            GST_WARNING_OBJECT (parse,
+                "MPF has more than 32 pictures. Forced to 32");
+            mpf->num_images = 32;
+          }
+
+          for (int j = 0; j < mpf->num_images; j++) {
+            guint32 attr, size, offset, dependencies;
+
+            if (endianness == MPF_LE) {
+              if (!gst_byte_reader_get_uint32_le (reader, &attr)
+                  || !gst_byte_reader_get_uint32_le (reader, &size)
+                  || !gst_byte_reader_get_uint32_le (reader, &offset)
+                  || !gst_byte_reader_get_uint32_le (reader, &dependencies))
+                return FALSE;
+            } else {
+              if (!gst_byte_reader_get_uint32_be (reader, &attr)
+                  || !gst_byte_reader_get_uint32_be (reader, &size)
+                  || !gst_byte_reader_get_uint32_be (reader, &offset)
+                  || !gst_byte_reader_get_uint32_be (reader, &dependencies))
+                return FALSE;
+            }
+
+            mpf->entries[j].parent = attr & 0x8000000000u;
+            mpf->entries[j].child = attr & 0x4000000000u;
+            mpf->entries[j].representative = attr & 0x2000000000u;
+            mpf->entries[j].type = attr & 0xffffffu;
+            mpf->entries[j].size = size;
+            mpf->entries[j].offset = offset;
+
+            GST_DEBUG_OBJECT (parse, "MPF entry image type 0x%x",
+                mpf->entries[j].type);
+          }
+
+          break;
+        }
+        case 0xB101:           /* individual image number */
+          mpf->individual_image_no = value;
+          GST_DEBUG_OBJECT (parse, "MPF individual image %d",
+              mpf->individual_image_no);
+          break;
+        case 0xB003:           /* image uid list */
+        case 0xB004:           /* total frames */
+        case 0xB201:           /* panorama scanning orientation */
+        case 0xB202:           /* panorama horiz overlap */
+        case 0xB203:           /* panorama vert overlap */
+        case 0xB204:           /* base viewpoint # */
+        case 0xB205:           /* convergence angle */
+        case 0xB206:           /* baseline length */
+        case 0xB207:           /* divergence angle  */
+        case 0xB208:           /* horiz axis distance */
+        case 0xB209:           /* vert axis distance */
+        case 0xB20A:           /* collimation axis distance */
+        case 0xB20B:           /* yaw angle */
+        case 0xB20C:           /* pitch angle */
+        case 0xB20D:           /* roll angle */
+          GST_DEBUG_OBJECT (parse, "unhandled MPF entry 0x%x", tag);
+          break;
+        default:
+          return FALSE;
+      };
+    }
+
+    if (gst_byte_reader_get_remaining (reader) == 0)
+      break;
+
+    /* Next IFD offset */
+    if (endianness == MPF_LE) {
+      if (!gst_byte_reader_get_uint32_le (reader, &offset))
+        return FALSE;
+    } else {
+      if (!gst_byte_reader_get_uint32_be (reader, &offset))
+        return FALSE;
+    }
+
+    if (offset == 0)
+      break;
+
+    offset_cur = gst_byte_reader_get_pos (reader);
+    if (!gst_byte_reader_skip (reader, offset_ref + offset - offset_cur))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_jpeg_parse_app2 (GstJpegParse * parse, GstJpegSegment * seg)
+{
+  GstByteReader reader;
+  const gchar *id_str;
+
+  if (seg->size < 4)            /* less than 6 means no id string */
+    return FALSE;
+
+  gst_byte_reader_init (&reader, seg->data + seg->offset, seg->size);
+  gst_byte_reader_skip_unchecked (&reader, 2);
+
+  if (!gst_byte_reader_get_string_utf8 (&reader, &id_str))
+    return FALSE;
+
+  if (g_str_has_suffix (id_str, "MPF")) {
+    struct MPF mpf = { 0, };
+
+    if (!gst_jpeg_parse_mpf (parse, &reader, &mpf))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
 static gboolean
 gst_jpeg_parse_app14 (GstJpegParse * parse, GstJpegSegment * seg)
 {
@@ -986,6 +1210,10 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
       case GST_JPEG_MARKER_APP1:
         if (!gst_jpeg_parse_app1 (parse, &seg))
           GST_WARNING_OBJECT (parse, "Failed to parse app1 segment");
+        break;
+      case GST_JPEG_MARKER_APP2:
+        if (!gst_jpeg_parse_app2 (parse, &seg))
+          GST_WARNING_OBJECT (parse, "Failed to parse app2 segment");
         break;
       case GST_JPEG_MARKER_APP14:
         if (!gst_jpeg_parse_app14 (parse, &seg))
