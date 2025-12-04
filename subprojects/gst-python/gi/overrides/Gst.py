@@ -57,6 +57,7 @@ else:
     from gi.module import get_introspection_module
     Gst = get_introspection_module('Gst')
 
+
 __all__ = []
 
 
@@ -131,7 +132,7 @@ class NotWritableMiniObject(Exception):
 __all__.append('NotWritableMiniObject')
 
 
-class MiniObjectMixin:  # type: ignore[no-redef]
+class MiniObjectMixin:
     def make_writable(self) -> bool:
         return _gi_gst.mini_object_make_writable(self)
 
@@ -160,13 +161,13 @@ class NotWritableQuery(Exception):
 __all__.append('NotWritableQuery')
 
 
-class Query(MiniObjectMixin, Gst.Query):
+class Query(MiniObjectMixin, Gst.Query):  # type: ignore[misc]
     def get_structure(self) -> typing.Optional[Structure]:
         s = _gi_gst.query_get_structure(self)
         return s._set_parent(self) if s is not None else None
 
-    def writable_structure(self) -> StructureContextManager:
-        return StructureContextManager(_gi_gst.query_writable_structure(self), self)
+    def writable_structure(self) -> StructureContextManager:  # type: ignore[override]
+        return StructureContextManager(_gi_gst.query_writable_structure(self), self)  # type: ignore[arg-type]
 
 
 override(Query)
@@ -180,13 +181,13 @@ class NotWritableEvent(Exception):
 __all__.append('NotWritableEvent')
 
 
-class Event(MiniObjectMixin, Gst.Event):
+class Event(MiniObjectMixin, Gst.Event):  # type: ignore[misc]
     def get_structure(self) -> typing.Optional[Structure]:
         s = _gi_gst.event_get_structure(self)
         return s._set_parent(self) if s is not None else None
 
-    def writable_structure(self) -> StructureContextManager:
-        return StructureContextManager(_gi_gst.event_writable_structure(self), self)
+    def writable_structure(self) -> StructureContextManager:  # type: ignore[override]
+        return StructureContextManager(_gi_gst.event_writable_structure(self), self)  # type: ignore[arg-type]
 
 
 override(Event)
@@ -200,13 +201,13 @@ class NotWritableContext(Exception):
 __all__.append('NotWritableContext')
 
 
-class Context(MiniObjectMixin, Gst.Context):
+class Context(MiniObjectMixin, Gst.Context):  # type: ignore[misc]
     def get_structure(self) -> typing.Optional[Structure]:
         s = _gi_gst.context_get_structure(self)
         return s._set_parent(self) if s is not None else None
 
-    def writable_structure(self) -> StructureContextManager:
-        return StructureContextManager(_gi_gst.context_writable_structure(self), self)
+    def writable_structure(self) -> StructureContextManager:  # type: ignore[override]
+        return StructureContextManager(_gi_gst.context_writable_structure(self), self)  # type: ignore[arg-type]
 
 
 override(Context)
@@ -227,7 +228,7 @@ class NotWritableStructure(Exception):
 __all__.append('NotWritableStructure')
 
 
-class Caps(MiniObjectMixin, Gst.Caps):
+class Caps(MiniObjectMixin, Gst.Caps):  # type: ignore[misc]
 
     def __nonzero__(self):
         return not self.is_empty()
@@ -273,8 +274,8 @@ class Caps(MiniObjectMixin, Gst.Caps):
         s = _gi_gst.caps_get_structure(self, index)
         return s._set_parent(self) if s is not None else None
 
-    def writable_structure(self, index: int) -> StructureContextManager:
-        return StructureContextManager(_gi_gst.caps_writable_structure(self, index), self)
+    def writable_structure(self, index: int) -> StructureContextManager:  # type: ignore[override]
+        return StructureContextManager(_gi_gst.caps_writable_structure(self, index), self)  # type: ignore[arg-type]
 
 
 override(Caps)
@@ -298,8 +299,8 @@ class PadProbeInfoObjectContextManager:
 __all__.append('PadProbeInfoObjectContextManager')
 
 
-class PadProbeInfo(Gst.PadProbeInfo):
-    def writable_object(self) -> PadProbeInfoObjectContextManager:
+class PadProbeInfo(Gst.PadProbeInfo):  # type: ignore[misc]
+    def writable_object(self) -> PadProbeInfoObjectContextManager:  # type: ignore[override]
         '''Return writable object contained in this PadProbeInfo.
         It uses a context manager to steal the object from the PadProbeInfo,
         and set it back when exiting the context.
@@ -352,7 +353,7 @@ class Pad(Gst.Pad):
     def query_caps(self, filter=None):
         return Gst.Pad.query_caps(self, filter)
 
-    def set_caps(self, caps: Caps) -> bool:
+    def set_caps(self, caps: Caps) -> bool:  # type: ignore[override]
         if not isinstance(caps, Gst.Caps):
             raise TypeError("%s is not a Gst.Caps." % (type(caps)))
 
@@ -463,8 +464,7 @@ class ElementFactory(Gst.ElementFactory):
         :raises Gst.PluginMissingError:
         '''
         elem = Gst.ElementFactory.make(factoryname, name)
-        assert elem is None or isinstance(elem, Element)  # Tell mypy we actually have our override subclass
-        return elem
+        return elem  # type: ignore[return-value]
 
 
 class Pipeline(Gst.Pipeline):
@@ -476,7 +476,7 @@ override(Pipeline)
 __all__.append('Pipeline')
 
 
-class StructureContextManager:  # type: ignore[no-redef]
+class StructureContextManager:
     """A Gst.Structure wrapper to force usage of a context manager.
     """
     def __init__(self, structure: Structure, parent: MiniObject):
