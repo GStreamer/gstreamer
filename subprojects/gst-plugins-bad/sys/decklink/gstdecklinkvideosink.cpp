@@ -405,6 +405,13 @@ public:
       *ret = (LPVOID *) static_cast<IDeckLinkVideoFrameMetadataExtensions *>(this);
       return S_OK;
     }
+    else if (memcmp (&iid, &IID_IDeckLinkVideoFrame, sizeof (iid))
+        == 0) {
+      AddRef ();
+      *ret = (LPVOID *) static_cast<IDeckLinkVideoFrame *>(this);
+      return S_OK;
+    }
+
     return E_NOINTERFACE;
   }
 
