@@ -1,0 +1,24 @@
+From 0ba260768effabdac641c80cc373e3d1ce53190a Mon Sep 17 00:00:00 2001
+From: Andoni Morales Alastruey <ylatuya@gmail.com>
+Date: Mon, 1 Dec 2025 22:43:08 +0100
+Subject: [PATCH] Declare dependency to use it as subproject
+
+---
+ libvmaf/src/meson.build | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/libvmaf/src/meson.build b/libvmaf/src/meson.build
+index 623639d4..cdf19a1b 100644
+--- a/libvmaf/src/meson.build
++++ b/libvmaf/src/meson.build
+@@ -506,3 +506,8 @@ pkg_mod.generate(libraries: libvmaf,
+     description: 'VMAF, Video Multimethod Assessment Fusion',
+     subdirs: [ '.', 'libvmaf']
+ )
++
++libvmaf_dep = declare_dependency(
++    link_with: libvmaf,
++    include_directories: [libvmaf_inc, include_directories('../include/libvmaf')]
++)
+--
+2.39.2
