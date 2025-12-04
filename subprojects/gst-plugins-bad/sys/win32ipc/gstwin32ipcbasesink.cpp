@@ -450,12 +450,17 @@ gst_win32_ipc_base_sink_render (GstBaseSink * sink, GstBuffer * buf)
   }
 
   auto now_qpc = gst_util_get_timestamp ();
-  auto clock = gst_element_get_clock (GST_ELEMENT_CAST (sink));
-  GstClockTime now_gst = gst_clock_get_time (clock);
-  auto is_qpc = gst_clock_is_system_monotonic (clock);
   auto base_time = GST_ELEMENT_CAST (sink)->base_time;
   auto latency = gst_base_sink_get_latency (sink);
-  gst_object_unref (clock);
+  GstClockTime now_gst = GST_CLOCK_TIME_NONE;
+  gboolean is_qpc = TRUE;
+
+  auto clock = gst_element_get_clock (GST_ELEMENT_CAST (sink));
+  if (clock) {
+    now_gst = gst_clock_get_time (clock);
+    is_qpc = gst_clock_is_system_monotonic (clock);
+    gst_object_unref (clock);
+  }
 
   auto pts = gst_win32_ipc_base_sink_get_buffer_time (sink,
       base_time, latency, is_qpc, now_qpc, now_gst, GST_BUFFER_PTS (buf));
@@ -463,8 +468,9 @@ gst_win32_ipc_base_sink_render (GstBaseSink * sink, GstBuffer * buf)
       base_time, latency, is_qpc, now_qpc, now_gst, GST_BUFFER_DTS (buf));
 
   GstBuffer *prepared;
+  gsize size;
   auto klass = GST_WIN32_IPC_BASE_SINK_GET_CLASS (self);
-  auto ret = klass->upload (self, buf, &prepared);
+  auto ret = klass->upload (self, buf, &prepared, &size);
   if (ret != GST_FLOW_OK)
     return ret;
 
@@ -492,7 +498,7 @@ gst_win32_ipc_base_sink_render (GstBaseSink * sink, GstBuffer * buf)
   }
 
   ret = gst_win32_ipc_server_send_data (priv->server,
-      prepared, priv->caps, priv->meta, pts, dts);
+      prepared, priv->caps, priv->meta, pts, dts, size);
   gst_buffer_unref (prepared);
 
   return ret;
@@ -512,7 +518,7 @@ gst_win32_ipc_base_sink_event (GstBaseSink * sink, GstEvent * event)
         GST_DEBUG_OBJECT (self, "Sending null data on EOS");
         gst_win32_ipc_server_send_data (priv->server,
             nullptr, nullptr, nullptr, GST_CLOCK_TIME_NONE,
-            GST_CLOCK_TIME_NONE);
+            GST_CLOCK_TIME_NONE, 0);
       }
       break;
     }

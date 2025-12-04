@@ -55,7 +55,6 @@ struct GstWin32IpcServerData
       auto mem = (GstWin32IpcMemory *) gst_buffer_peek_memory (buf, 0);
       mmf = mem->mmf;
       gst_win32_ipc_mmf_ref (mmf);
-      size = gst_win32_ipc_mmf_get_size (mmf);
       handle = gst_win32_ipc_mmf_get_handle (mmf);
       buffer = gst_buffer_ref (buf);
     }
@@ -83,11 +82,12 @@ struct GstWin32IpcServerData
   HANDLE handle = nullptr;
   GstCaps *caps = nullptr;
   std::vector<UINT8> meta;
-  SIZE_T size;
+  SIZE_T size = 0;
   UINT64 seq_num;
   GstClockTime pts = GST_CLOCK_TIME_NONE;
   GstClockTime dts = GST_CLOCK_TIME_NONE;
   GstClockTime dur = GST_CLOCK_TIME_NONE;
+  UINT buf_flags = 0;
   GstBuffer *buffer = nullptr;
 };
 
@@ -376,7 +376,8 @@ gst_win32_ipc_server_have_data (GstWin32IpcServer * self,
       conn->data->handle, conn->id);
 
   auto ret = gst_win32_ipc_pkt_build_have_data (conn->server_msg, data->size,
-      data->pts, data->dts, data->dur, data->handle, caps_str, data->meta);
+      data->pts, data->dts, data->dur, data->buf_flags, data->handle, caps_str,
+      data->meta);
   g_free (caps_str);
 
   if (!ret) {
@@ -850,7 +851,7 @@ out:
 GstFlowReturn
 gst_win32_ipc_server_send_data (GstWin32IpcServer * server,
     GstBuffer * buffer, GstCaps * caps, GByteArray * meta, GstClockTime pts,
-    GstClockTime dts)
+    GstClockTime dts, gsize size)
 {
   GstWin32IpcServerPrivate *priv;
 
@@ -910,6 +911,8 @@ gst_win32_ipc_server_send_data (GstWin32IpcServer * server,
       data->pts = pts;
       data->dts = dts;
       data->dur = GST_BUFFER_DURATION (buffer);
+      data->size = size;
+      data->buf_flags = GST_BUFFER_FLAGS (buffer);
     }
 
     priv->seq_num++;

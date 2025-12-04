@@ -40,7 +40,8 @@ GstFlowReturn       gst_win32_ipc_server_send_data (GstWin32IpcServer * server,
                                                     GstCaps * caps,
                                                     GByteArray * meta,
                                                     GstClockTime pts,
-                                                    GstClockTime dts);
+                                                    GstClockTime dts,
+                                                    gsize size);
 
 void                gst_win32_ipc_server_set_flushing (GstWin32IpcServer * server,
                                                        gboolean flushing);

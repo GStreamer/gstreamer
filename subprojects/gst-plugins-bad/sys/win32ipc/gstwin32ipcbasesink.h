@@ -48,7 +48,8 @@ struct _GstWin32IpcBaseSinkClass
 
   GstFlowReturn (*upload) (GstWin32IpcBaseSink * sink,
                            GstBuffer * buffer,
-                           GstBuffer ** uploaded);
+                           GstBuffer ** uploaded,
+                           gsize * size);
 };
 
 GType gst_win32_ipc_base_sink_get_type (void);

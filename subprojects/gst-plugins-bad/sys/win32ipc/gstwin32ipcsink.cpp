@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2022 Seungha Yang <seungha@centricular.com>
+ * Copyright (C) 2025 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,117 +17,103 @@
  * Boston, MA 02110-1301, USA.
  */
 
-/**
- * SECTION:element-win32ipcvideosink
- * @title: win32ipcvideosink
- * @short_description: Windows shared memory video sink
- *
- * win32ipcvideosink provides raw video memory to connected win32ipcvideossrc
- * elements
- *
- * ## Example launch line
- * ```
- * gst-launch-1.0 videotestsrc ! queue ! win32ipcvideosink
- * ```
- *
- * Since: 1.22
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#include "gstwin32ipcvideosink.h"
+#include "gstwin32ipcsink.h"
 #include "gstwin32ipcbufferpool.h"
 #include "gstwin32ipcmemory.h"
 #include "gstwin32ipc.h"
 #include <string.h>
 
-GST_DEBUG_CATEGORY_STATIC (gst_win32_ipc_video_sink_debug);
-#define GST_CAT_DEFAULT gst_win32_ipc_video_sink_debug
+GST_DEBUG_CATEGORY_STATIC (gst_win32_ipc_sink_debug);
+#define GST_CAT_DEFAULT gst_win32_ipc_sink_debug
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL)));
+    GST_STATIC_CAPS_ANY);
 
-#define DEFAULT_PIPE_NAME "\\\\.\\pipe\\gst.win32.ipc.video"
-#define DEFAULT_LEAKY_TYPE GST_WIN32_IPC_LEAKY_DOWNSTREAM
-
-struct _GstWin32IpcVideoSink
+struct _GstWin32IpcSink
 {
   GstWin32IpcBaseSink parent;
 
   GstVideoInfo info;
+  GstCaps *caps;
   GstBufferPool *fallback_pool;
+  gboolean is_raw_video;
+  gsize pool_size;
 };
 
-static gboolean gst_win32_ipc_video_sink_set_caps (GstBaseSink * sink,
+static gboolean gst_win32_ipc_sink_set_caps (GstBaseSink * sink,
     GstCaps * caps);
-static gboolean gst_win32_ipc_video_sink_stop (GstBaseSink * sink);
-static void gst_win32_ipc_video_sink_get_times (GstBaseSink * sink,
+static gboolean gst_win32_ipc_sink_stop (GstBaseSink * sink);
+static void gst_win32_ipc_sink_get_times (GstBaseSink * sink,
     GstBuffer * buf, GstClockTime * start, GstClockTime * end);
-static gboolean gst_win32_ipc_video_sink_propose_allocation (GstBaseSink * sink,
+static gboolean gst_win32_ipc_sink_propose_allocation (GstBaseSink * sink,
     GstQuery * query);
 static GstFlowReturn
-gst_win32_ipc_video_sink_upload (GstWin32IpcBaseSink * sink, GstBuffer * buffer,
+gst_win32_ipc_sink_upload (GstWin32IpcBaseSink * sink, GstBuffer * buffer,
     GstBuffer ** uploaded, gsize * size);
 
-#define gst_win32_ipc_video_sink_parent_class parent_class
-G_DEFINE_TYPE (GstWin32IpcVideoSink, gst_win32_ipc_video_sink,
+#define gst_win32_ipc_sink_parent_class parent_class
+G_DEFINE_TYPE (GstWin32IpcSink, gst_win32_ipc_sink,
     GST_TYPE_WIN32_IPC_BASE_SINK);
 
 static void
-gst_win32_ipc_video_sink_class_init (GstWin32IpcVideoSinkClass * klass)
+gst_win32_ipc_sink_class_init (GstWin32IpcSinkClass * klass)
 {
   auto element_class = GST_ELEMENT_CLASS (klass);
   auto sink_class = GST_BASE_SINK_CLASS (klass);
   auto win32_class = GST_WIN32_IPC_BASE_SINK_CLASS (klass);
 
   gst_element_class_set_static_metadata (element_class,
-      "Win32 IPC Video Sink", "Sink/Video",
-      "Send video frames to win32ipcvideosrc elements",
+      "Win32 IPC Sink", "Sink/Generic", "Windows shared memory sink",
       "Seungha Yang <seungha@centricular.com>");
   gst_element_class_add_static_pad_template (element_class, &sink_template);
 
-  sink_class->stop = GST_DEBUG_FUNCPTR (gst_win32_ipc_video_sink_stop);
-  sink_class->get_times =
-      GST_DEBUG_FUNCPTR (gst_win32_ipc_video_sink_get_times);
-  sink_class->set_caps = GST_DEBUG_FUNCPTR (gst_win32_ipc_video_sink_set_caps);
+  sink_class->stop = GST_DEBUG_FUNCPTR (gst_win32_ipc_sink_stop);
+  sink_class->get_times = GST_DEBUG_FUNCPTR (gst_win32_ipc_sink_get_times);
+  sink_class->set_caps = GST_DEBUG_FUNCPTR (gst_win32_ipc_sink_set_caps);
   sink_class->propose_allocation =
-      GST_DEBUG_FUNCPTR (gst_win32_ipc_video_sink_propose_allocation);
-  win32_class->upload = GST_DEBUG_FUNCPTR (gst_win32_ipc_video_sink_upload);
+      GST_DEBUG_FUNCPTR (gst_win32_ipc_sink_propose_allocation);
+  win32_class->upload = GST_DEBUG_FUNCPTR (gst_win32_ipc_sink_upload);
 
-  GST_DEBUG_CATEGORY_INIT (gst_win32_ipc_video_sink_debug, "win32ipcvideosink",
-      0, "win32ipcvideosink");
+  GST_DEBUG_CATEGORY_INIT (gst_win32_ipc_sink_debug, "win32ipcsink",
+      0, "win32ipcsink");
 }
 
 static void
-gst_win32_ipc_video_sink_init (GstWin32IpcVideoSink * self)
+gst_win32_ipc_sink_init (GstWin32IpcSink * self)
 {
-  g_object_set (self, "pipe-name", DEFAULT_PIPE_NAME, "leaky-type",
-      DEFAULT_LEAKY_TYPE, nullptr);
 }
 
 static gboolean
-gst_win32_ipc_video_sink_stop (GstBaseSink * sink)
+gst_win32_ipc_sink_stop (GstBaseSink * sink)
 {
-  auto self = GST_WIN32_IPC_VIDEO_SINK (sink);
+  auto self = GST_WIN32_IPC_SINK (sink);
 
   GST_DEBUG_OBJECT (self, "Stop");
   if (self->fallback_pool) {
+    gst_clear_caps (&self->caps);
     gst_buffer_pool_set_active (self->fallback_pool, FALSE);
     gst_clear_object (&self->fallback_pool);
+    self->pool_size = 0;
   }
 
   return GST_BASE_SINK_CLASS (parent_class)->stop (sink);
 }
 
 static void
-gst_win32_ipc_video_sink_get_times (GstBaseSink * sink, GstBuffer * buf,
+gst_win32_ipc_sink_get_times (GstBaseSink * sink, GstBuffer * buf,
     GstClockTime * start, GstClockTime * end)
 {
-  auto self = GST_WIN32_IPC_VIDEO_SINK (sink);
+  auto self = GST_WIN32_IPC_SINK (sink);
+  if (!self->is_raw_video) {
+    GST_BASE_SINK_CLASS (parent_class)->get_times (sink, buf, start, end);
+    return;
+  }
 
   auto timestamp = GST_BUFFER_PTS (buf);
   if (!GST_CLOCK_TIME_IS_VALID (timestamp))
@@ -148,9 +134,17 @@ gst_win32_ipc_video_sink_get_times (GstBaseSink * sink, GstBuffer * buf,
 }
 
 static gboolean
-gst_win32_ipc_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
+gst_win32_ipc_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
 {
-  auto self = GST_WIN32_IPC_VIDEO_SINK (sink);
+  auto self = GST_WIN32_IPC_SINK (sink);
+
+  gst_caps_replace (&self->caps, caps);
+
+  auto s = gst_caps_get_structure (caps, 0);
+  self->is_raw_video = gst_structure_has_name (s, "video/x-raw");
+
+  if (!self->is_raw_video)
+    return GST_BASE_SINK_CLASS (parent_class)->set_caps (sink, caps);
 
   if (!gst_video_info_from_caps (&self->info, caps)) {
     GST_WARNING_OBJECT (self, "Invalid caps %" GST_PTR_FORMAT, caps);
@@ -169,13 +163,13 @@ gst_win32_ipc_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
       0, 0);
   gst_buffer_pool_set_config (self->fallback_pool, config);
   gst_buffer_pool_set_active (self->fallback_pool, TRUE);
+  self->pool_size = self->info.size;
 
   return GST_BASE_SINK_CLASS (parent_class)->set_caps (sink, caps);
 }
 
 static gboolean
-gst_win32_ipc_video_sink_propose_allocation (GstBaseSink * sink,
-    GstQuery * query)
+gst_win32_ipc_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
 {
   GstCaps *caps;
   GstBufferPool *pool = nullptr;
@@ -188,6 +182,10 @@ gst_win32_ipc_video_sink_propose_allocation (GstBaseSink * sink,
     GST_WARNING_OBJECT (sink, "No caps specified");
     return FALSE;
   }
+
+  auto s = gst_caps_get_structure (caps, 0);
+  if (!gst_structure_has_name (s, "video/x-raw"))
+    return FALSE;
 
   if (!gst_video_info_from_caps (&info, caps)) {
     GST_WARNING_OBJECT (sink, "Invalid caps %" GST_PTR_FORMAT, caps);
@@ -225,19 +223,9 @@ gst_win32_ipc_video_sink_propose_allocation (GstBaseSink * sink,
 }
 
 static GstFlowReturn
-gst_win32_ipc_video_sink_upload (GstWin32IpcBaseSink * sink, GstBuffer * buf,
-    GstBuffer ** uploaded, gsize * size)
+gst_win32_ipc_sink_upload_raw_video (GstWin32IpcSink * self,
+    GstBuffer * buf, GstBuffer ** uploaded, gsize * size)
 {
-  auto self = GST_WIN32_IPC_VIDEO_SINK (sink);
-
-  auto mem = gst_buffer_peek_memory (buf, 0);
-  if (gst_is_win32_ipc_memory (mem) && gst_buffer_n_memory (buf) == 1) {
-    GST_TRACE_OBJECT (self, "Upstream win32 memory");
-    *uploaded = gst_buffer_ref (buf);
-    *size = gst_buffer_get_size (buf);
-    return GST_FLOW_OK;
-  }
-
   GstBuffer *prepared = nullptr;
   gst_buffer_pool_acquire_buffer (self->fallback_pool, &prepared, nullptr);
   if (!prepared) {
@@ -269,9 +257,75 @@ gst_win32_ipc_video_sink_upload (GstWin32IpcBaseSink * sink, GstBuffer * buf,
     return GST_FLOW_ERROR;
   }
 
-  gst_buffer_copy_into (prepared, buf, GST_BUFFER_COPY_METADATA, 0, -1);
+  gst_buffer_copy_into (prepared, buf, GST_BUFFER_COPY_META, 0, -1);
   *uploaded = prepared;
   *size = gst_buffer_get_size (prepared);
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_win32_ipc_sink_upload (GstWin32IpcBaseSink * sink, GstBuffer * buf,
+    GstBuffer ** uploaded, gsize * size)
+{
+  auto self = GST_WIN32_IPC_SINK (sink);
+
+  auto mem = gst_buffer_peek_memory (buf, 0);
+  if (gst_is_win32_ipc_memory (mem) && gst_buffer_n_memory (buf) == 1) {
+    GST_TRACE_OBJECT (self, "Upstream win32 memory");
+    *uploaded = gst_buffer_ref (buf);
+    *size = gst_buffer_get_size (buf);
+    return GST_FLOW_OK;
+  }
+
+  if (self->is_raw_video)
+    return gst_win32_ipc_sink_upload_raw_video (self, buf, uploaded, size);
+
+  auto buf_size = gst_buffer_get_size (buf);
+  if (self->fallback_pool) {
+    if (self->pool_size < buf_size) {
+      gst_buffer_pool_set_active (self->fallback_pool, FALSE);
+      gst_clear_object (&self->fallback_pool);
+    }
+  }
+
+  if (!self->fallback_pool) {
+    self->fallback_pool = gst_win32_ipc_buffer_pool_new ();
+    self->pool_size = buf_size + 1024;
+    auto config = gst_buffer_pool_get_config (self->fallback_pool);
+    gst_buffer_pool_config_set_params (config, self->caps, self->pool_size,
+        0, 0);
+    gst_buffer_pool_set_config (self->fallback_pool, config);
+    gst_buffer_pool_set_active (self->fallback_pool, TRUE);
+  }
+
+  GstBuffer *prepared = nullptr;
+  gst_buffer_pool_acquire_buffer (self->fallback_pool, &prepared, nullptr);
+  if (!prepared) {
+    GST_ERROR_OBJECT (self, "Couldn't acquire fallback buffer");
+    return GST_FLOW_ERROR;
+  }
+
+  GstMapInfo src_info, dst_info;
+  if (!gst_buffer_map (buf, &src_info, GST_MAP_READ)) {
+    GST_ERROR_OBJECT (self, "Couldn't map input buffer");
+    gst_buffer_unref (prepared);
+    return GST_FLOW_ERROR;
+  }
+
+  if (!gst_buffer_map (prepared, &dst_info, GST_MAP_WRITE)) {
+    GST_ERROR_OBJECT (self, "Couldn't map output buffer");
+    gst_buffer_unmap (buf, &src_info);
+    gst_buffer_unref (prepared);
+    return GST_FLOW_ERROR;
+  }
+
+  memcpy (dst_info.data, src_info.data, src_info.size);
+  gst_buffer_unmap (buf, &src_info);
+  gst_buffer_unmap (prepared, &dst_info);
+
+  gst_buffer_copy_into (prepared, buf, GST_BUFFER_COPY_METADATA, 0, -1);
+  *uploaded = prepared;
+  *size = buf_size;
 
   return GST_FLOW_OK;
 }

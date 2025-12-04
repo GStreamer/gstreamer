@@ -35,6 +35,7 @@ struct _GstWin32IpcBufferPool
   GstWin32IpcAllocator *alloc;
   GstVideoInfo info;
   gboolean add_videometa;
+  gboolean is_raw_video;
 };
 
 #define gst_win32_ipc_buffer_pool_parent_class parent_class
@@ -118,22 +119,28 @@ gst_win32_ipc_buffer_pool_set_config (GstBufferPool * pool,
     return FALSE;
   }
 
+  auto s = gst_caps_get_structure (caps, 0);
+  self->is_raw_video = gst_structure_has_name (s, "video/x-raw");
+  if (self->is_raw_video) {
+    if (!gst_video_info_from_caps (&info, caps)) {
+      GST_WARNING_OBJECT (self, "Couldn't get video info from caps");
+      return FALSE;
+    }
+
+    if (size < info.size) {
+      GST_WARNING_OBJECT (self, "Size is smaller for the caps");
+      return FALSE;
+    }
+
+    info.size = MAX (size, info.size);
+    size = info.size;
+    self->info = info;
+
+    GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT,
+        info.width, info.height, caps);
+  }
+
   /* now parse the caps from the config */
-  if (!gst_video_info_from_caps (&info, caps)) {
-    GST_WARNING_OBJECT (self, "Couldn't get video info from caps");
-    return FALSE;
-  }
-
-  if (size < info.size) {
-    GST_WARNING_OBJECT (self, "Size is smaller for the caps");
-    return FALSE;
-  }
-
-  info.size = MAX (size, info.size);
-  self->info = info;
-
-  GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT, info.width, info.height,
-      caps);
 
   if (self->alloc) {
     gst_win32_ipc_allocator_set_active (self->alloc, FALSE);
@@ -150,7 +157,7 @@ gst_win32_ipc_buffer_pool_set_config (GstBufferPool * pool,
       GST_BUFFER_POOL_OPTION_VIDEO_META);
 
   gst_buffer_pool_config_set_params (config,
-      caps, info.size, min_buffers, max_buffers);
+      caps, size, min_buffers, max_buffers);
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config) && ret;
 }
@@ -174,7 +181,7 @@ gst_win32_ipc_buffer_pool_alloc_buffer (GstBufferPool * pool,
   buf = gst_buffer_new ();
   gst_buffer_append_memory (buf, mem);
 
-  if (self->add_videometa) {
+  if (self->is_raw_video && self->add_videometa) {
     gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
         GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
         GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),

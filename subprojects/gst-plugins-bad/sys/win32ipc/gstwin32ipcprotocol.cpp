@@ -274,8 +274,8 @@ gst_win32_ipc_pkt_build_need_data (std::vector < UINT8 > &buf)
 
 bool
 gst_win32_ipc_pkt_build_have_data (std::vector < UINT8 > &buf, SIZE_T mmf_size,
-    UINT64 pts, UINT64 dts, UINT64 dur, const HANDLE handle, const char *caps,
-    const std::vector < UINT8 > &meta)
+    UINT64 pts, UINT64 dts, UINT64 dur, UINT buf_flags, const HANDLE handle,
+    const char *caps, const std::vector < UINT8 > &meta)
 {
   GstWin32IpcPktHdr hdr = { };
   SIZE_T caps_len = 0;
@@ -288,6 +288,9 @@ gst_win32_ipc_pkt_build_have_data (std::vector < UINT8 > &buf, SIZE_T mmf_size,
 
   /* pts/dts/dur */
   hdr.payload_size += (sizeof (UINT64) * 3);
+
+  /* buffer flags */
+  hdr.payload_size += sizeof (UINT);
 
   /* Server handle value */
   hdr.payload_size += sizeof (HANDLE);
@@ -316,6 +319,7 @@ gst_win32_ipc_pkt_build_have_data (std::vector < UINT8 > &buf, SIZE_T mmf_size,
   WRITE_TO_T (ptr, &pts, UINT64);
   WRITE_TO_T (ptr, &dts, UINT64);
   WRITE_TO_T (ptr, &dur, UINT64);
+  WRITE_TO_T (ptr, &buf_flags, UINT);
   WRITE_TO_T (ptr, &handle, HANDLE);
 
   WRITE_TO_T (ptr, &caps_len, SIZE_T);
@@ -332,10 +336,11 @@ gst_win32_ipc_pkt_build_have_data (std::vector < UINT8 > &buf, SIZE_T mmf_size,
 bool
 gst_win32_ipc_pkt_parse_have_data (const std::vector < UINT8 > &buf,
     SIZE_T & mmf_size, UINT64 & pts, UINT64 & dts, UINT64 & dur,
-    HANDLE & handle, std::string & caps, std::vector < UINT8 > &meta)
+    UINT & buf_flags, HANDLE & handle, std::string & caps,
+    std::vector < UINT8 > &meta)
 {
   const SIZE_T min_payload_size = sizeof (SIZE_T) + (sizeof (UINT64) * 3) +
-      sizeof (HANDLE) + sizeof (SIZE_T) + sizeof (SIZE_T);
+      sizeof (UINT) + sizeof (HANDLE) + sizeof (SIZE_T) + sizeof (SIZE_T);
 
   return_val_if_fail (buf.size () >=
       sizeof (GstWin32IpcPktHdr) + min_payload_size, false);
@@ -354,6 +359,7 @@ gst_win32_ipc_pkt_parse_have_data (const std::vector < UINT8 > &buf,
   READ_FROM_T (ptr, &pts, UINT64);
   READ_FROM_T (ptr, &dts, UINT64);
   READ_FROM_T (ptr, &dur, UINT64);
+  READ_FROM_T (ptr, &buf_flags, UINT);
   READ_FROM_T (ptr, &handle, HANDLE);
 
   SIZE_T size;

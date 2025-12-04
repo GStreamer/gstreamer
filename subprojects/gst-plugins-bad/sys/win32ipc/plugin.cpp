@@ -32,6 +32,8 @@
 #include <gst/gst.h>
 #include "gstwin32ipcvideosink.h"
 #include "gstwin32ipcvideosrc.h"
+#include "gstwin32ipcsink.h"
+#include "gstwin32ipcsrc.h"
 
 GST_DEBUG_CATEGORY (gst_win32_ipc_debug);
 #define GST_CAT_DEFAULT gst_win32_ipc_debug
@@ -45,6 +47,10 @@ plugin_init (GstPlugin * plugin)
       "win32ipcvideosink", GST_RANK_NONE, GST_TYPE_WIN32_IPC_VIDEO_SINK);
   gst_element_register (plugin,
       "win32ipcvideosrc", GST_RANK_NONE, GST_TYPE_WIN32_IPC_VIDEO_SRC);
+  gst_element_register (plugin,
+      "win32ipcsink", GST_RANK_NONE, GST_TYPE_WIN32_IPC_SINK);
+  gst_element_register (plugin,
+      "win32ipcsrc", GST_RANK_NONE, GST_TYPE_WIN32_IPC_SRC);
 
   return TRUE;
 }

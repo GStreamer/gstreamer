@@ -68,6 +68,7 @@ bool             gst_win32_ipc_pkt_build_have_data (std::vector<UINT8> & buf,
                                                     UINT64 pts,
                                                     UINT64 dts,
                                                     UINT64 dur,
+                                                    UINT buf_flags,
                                                     const HANDLE handle,
                                                     const char * caps,
                                                     const std::vector<UINT8> & meta);
@@ -77,6 +78,7 @@ bool             gst_win32_ipc_pkt_parse_have_data (const std::vector<UINT8> & b
                                                     UINT64 & pts,
                                                     UINT64 & dts,
                                                     UINT64 & dur,
+                                                    UINT & buf_flags,
                                                     HANDLE & handle,
                                                     std::string & caps,
                                                     std::vector<UINT8> & meta);
