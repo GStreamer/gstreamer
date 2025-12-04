@@ -58,7 +58,7 @@ else:
 __all__ = []
 
 
-if Gst._version == '0.10':
+if Gst.VERSION_MAJOR < 1:
     import warnings
     warn_msg = "You have imported the Gst 0.10 module.  Because Gst 0.10 \
 was not designed for use with introspection some of the \
