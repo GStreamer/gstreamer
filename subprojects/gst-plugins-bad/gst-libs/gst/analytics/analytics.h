@@ -35,5 +35,6 @@
 #include <gst/analytics/gsttensormeta.h>
 #include <gst/analytics/gstanalyticsbatchmeta.h>
 #include <gst/analytics/gstanalytics_image_util.h>
+#include <gst/analytics/modelinfo.h>
 
 #endif /* __ANALYTICS_H__ */
