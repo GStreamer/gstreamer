@@ -138,6 +138,8 @@ static gboolean gst_win32_ipc_video_sink_propose_allocation (GstBaseSink * sink,
     GstQuery * query);
 static GstFlowReturn gst_win32_ipc_video_sink_render (GstBaseSink * sink,
     GstBuffer * buf);
+static gboolean gst_win32_ipc_video_sink_event (GstBaseSink * sink,
+    GstEvent * event);
 
 #define gst_win32_ipc_video_sink_parent_class parent_class
 G_DEFINE_TYPE (GstWin32IpcVideoSink, gst_win32_ipc_video_sink,
@@ -198,6 +200,7 @@ gst_win32_ipc_video_sink_class_init (GstWin32IpcVideoSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_win32_ipc_video_sink_propose_allocation);
   sink_class->get_times = GST_DEBUG_FUNCPTR (gst_win32_ipc_video_sink_get_time);
   sink_class->render = GST_DEBUG_FUNCPTR (gst_win32_ipc_video_sink_render);
+  sink_class->event = GST_DEBUG_FUNCPTR (gst_win32_ipc_video_sink_event);
 
   GST_DEBUG_CATEGORY_INIT (gst_win32_ipc_video_sink_debug, "win32ipcvideosink",
       0, "win32ipcvideosink");
@@ -568,8 +571,36 @@ gst_win32_ipc_video_sink_render (GstBaseSink * sink, GstBuffer * buf)
       }
       , self);
 
-  auto mmem = (GstWin32IpcMemory *) gst_buffer_peek_memory (prepared, 0);
-  return gst_win32_ipc_server_send_data (priv->server,
-      mmem->mmf, pts, priv->caps, priv->meta, prepared,
-      (GDestroyNotify) gst_buffer_unref);
+  prepared = gst_buffer_make_writable (prepared);
+  GST_BUFFER_PTS (prepared) = pts;
+
+  auto ret = gst_win32_ipc_server_send_data (priv->server,
+      prepared, priv->caps, priv->meta);
+  gst_buffer_unref (prepared);
+
+  return ret;
+}
+
+static gboolean
+gst_win32_ipc_video_sink_event (GstBaseSink * sink, GstEvent * event)
+{
+  auto self = GST_WIN32_IPC_VIDEO_SINK (sink);
+  auto priv = self->priv;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+    {
+      std::lock_guard < std::mutex > lk (priv->lock);
+      if (priv->server) {
+        GST_DEBUG_OBJECT (self, "Sending null data on EOS");
+        gst_win32_ipc_server_send_data (priv->server,
+            nullptr, nullptr, nullptr);
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  return GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
 }

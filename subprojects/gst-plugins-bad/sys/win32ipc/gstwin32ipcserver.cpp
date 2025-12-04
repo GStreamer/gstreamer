@@ -23,6 +23,7 @@
 
 #include "gstwin32ipcserver.h"
 #include "gstwin32ipcprotocol.h"
+#include "gstwin32ipcmemory.h"
 #include <unordered_map>
 #include <mutex>
 #include <condition_variable>
@@ -38,22 +39,27 @@ GST_DEBUG_CATEGORY_STATIC (gst_win32_ipc_server_debug);
 /* *INDENT-OFF* */
 struct GstWin32IpcServerData
 {
-  explicit GstWin32IpcServerData (GstWin32IpcMmf * m, UINT64 pts,
-      GstCaps * c, GByteArray * mtd, UINT64 s,
-      void * u, GDestroyNotify n)
+  explicit GstWin32IpcServerData (GstBuffer * buf, GstCaps * c,
+      GByteArray * mtd, UINT64 seq)
   {
-    mmf = gst_win32_ipc_mmf_ref (m);
-    size = gst_win32_ipc_mmf_get_size (m);
-    handle = gst_win32_ipc_mmf_get_handle (m);
-    timestamp = pts;
-    caps = gst_caps_ref (c);
+    if (buf) {
+      auto mem = (GstWin32IpcMemory *) gst_buffer_peek_memory (buf, 0);
+      mmf = mem->mmf;
+      gst_win32_ipc_mmf_ref (mmf);
+      size = gst_win32_ipc_mmf_get_size (mmf);
+      handle = gst_win32_ipc_mmf_get_handle (mmf);
+      buffer = gst_buffer_ref (buf);
+      timestamp = GST_BUFFER_PTS (buf);
+    }
+
+    if (c)
+      caps = gst_caps_ref (c);
+
     if (mtd && mtd->len) {
       meta.resize (mtd->len);
       memcpy (meta.data (), mtd->data, mtd->len);
     }
-    seq_num = s;
-    user_data = u;
-    notify = n;
+    seq_num = seq;
   }
 
   ~GstWin32IpcServerData()
@@ -62,20 +68,17 @@ struct GstWin32IpcServerData
       gst_win32_ipc_mmf_unref (mmf);
 
     gst_clear_caps (&caps);
-
-    if (notify)
-      notify (user_data);
+    gst_clear_buffer (&buffer);
   }
 
-  GstWin32IpcMmf *mmf;
-  HANDLE handle;
-  GstCaps *caps;
+  GstWin32IpcMmf *mmf = nullptr;
+  HANDLE handle = nullptr;
+  GstCaps *caps = nullptr;
   std::vector<UINT8> meta;
   UINT32 size;
   UINT64 seq_num;
-  UINT64 timestamp;
-  void *user_data;
-  GDestroyNotify notify;
+  GstClockTime timestamp = GST_CLOCK_TIME_NONE;
+  GstBuffer *buffer = nullptr;
 };
 
 struct GstWin32IpcServerConn : public OVERLAPPED
@@ -115,7 +118,6 @@ struct GstWin32IpcServerConn : public OVERLAPPED
 
   guint64 seq_num = 0;
   guint id;
-  bool eos = false;
   bool pending_have_data = false;
   bool configured = false;
 };
@@ -140,14 +142,13 @@ struct GstWin32IpcServerPrivate
   guint next_conn_id = 0;
   std::unordered_map<guint, std::shared_ptr<GstWin32IpcServerConn>> conn_map;
   GThread *loop_thread = nullptr;
-  std::atomic<bool> shutdown = { false };
   std::atomic<bool> aborted = { false };
   std::deque<std::shared_ptr<GstWin32IpcServerData>> data_queue;
   std::string address;
   HANDLE cancellable;
   HANDLE wakeup_event;
   DWORD pid;
-  bool flushing = false;
+  std::atomic<bool> flushing = { false };
   std::atomic<guint64> max_buffers = { 0 };
   std::atomic<GstWin32IpcLeakyType> leaky = { GST_WIN32_IPC_LEAKY_DOWNSTREAM };
 };
@@ -282,13 +283,19 @@ gst_win32_ipc_server_close_connection (GstWin32IpcServer * self,
 
   if (priv->conn_map.empty ()) {
     GST_DEBUG_OBJECT (self, "All connection were closed");
-    if (priv->shutdown) {
-      SetEvent (priv->cancellable);
-    } else {
-      /* Run idle func to flush buffer queue if needed */
-      SetEvent (priv->wakeup_event);
-    }
+    /* Run idle func to flush buffer queue if needed */
+    SetEvent (priv->wakeup_event);
   }
+}
+
+static void
+gst_win32_ipc_server_eos (GstWin32IpcServer * self,
+    GstWin32IpcServerConn * conn)
+{
+  gst_win32_ipc_pkt_build_eos (conn->server_msg);
+  conn->type = GstWin32IpcPktType::EOS;
+
+  gst_win32_ipc_server_send_msg (self, conn);
 }
 
 static void
@@ -305,6 +312,12 @@ gst_win32_ipc_server_have_data (GstWin32IpcServer * self,
 
   conn->pending_have_data = false;
   conn->seq_num = data->seq_num + 1;
+
+  if (!data->buffer) {
+    GST_DEBUG_OBJECT (self, "Empty data, sending EOS, conn-id: %u", conn->id);
+    gst_win32_ipc_server_eos (self, conn);
+    return;
+  }
 
   gchar *caps_str = nullptr;
   if (!conn->caps || !gst_caps_is_equal (conn->caps, data->caps)) {
@@ -504,17 +517,6 @@ gst_win32_ipc_server_wait_msg (GstWin32IpcServer * self,
 }
 
 static void
-gst_win32_ipc_server_eos (GstWin32IpcServer * self,
-    GstWin32IpcServerConn * conn)
-{
-  gst_win32_ipc_pkt_build_eos (conn->server_msg);
-  conn->eos = true;
-  conn->type = GstWin32IpcPktType::EOS;
-
-  gst_win32_ipc_server_send_msg (self, conn);
-}
-
-static void
 gst_win32_ipc_server_config_data (GstWin32IpcServer * self,
     GstWin32IpcServerConn * conn)
 {
@@ -545,77 +547,6 @@ gst_win32_ipc_server_on_idle (GstWin32IpcServer * self)
   auto priv = self->priv;
 
   GST_LOG_OBJECT (self, "idle");
-
-  if (priv->shutdown) {
-    GST_DEBUG_OBJECT (self, "We are stopping");
-
-    if (priv->conn_map.empty ()) {
-      GST_DEBUG_OBJECT (self, "All connections were closed");
-      SetEvent (priv->cancellable);
-      return;
-    }
-
-    std::vector < std::shared_ptr < GstWin32IpcServerConn >> to_send_eos;
-    for (auto it : priv->conn_map) {
-      auto conn = it.second;
-      if (conn->eos || !conn->pending_have_data)
-        continue;
-
-      to_send_eos.push_back (conn);
-    }
-
-    for (auto it : to_send_eos) {
-      GST_DEBUG_OBJECT (self, "Sending EOS to conn-id: %u", it->id);
-      gst_win32_ipc_server_eos (self, it.get ());
-    }
-
-    GST_DEBUG_OBJECT (self, "Have %" G_GSIZE_FORMAT " alive connections",
-        priv->conn_map.size());
-
-    size_t num_closed = 0;
-    for (auto it : priv->conn_map) {
-      auto conn = it.second;
-      GST_DEBUG_OBJECT (self, "conn-id %u"
-          " peer handle size %" G_GSIZE_FORMAT, conn->id,
-          conn->peer_handles.size ());
-
-      /* Cannot erase conn since it's still referenced.
-       * Manually close connection */
-      if (conn->peer_handles.empty ()) {
-        if (conn->pipe != INVALID_HANDLE_VALUE) {
-          CancelIo (conn->pipe);
-          DisconnectNamedPipe (conn->pipe);
-          CloseHandle (conn->pipe);
-          conn->pipe = INVALID_HANDLE_VALUE;
-        }
-
-        num_closed++;
-      }
-    }
-
-    if (priv->conn_map.size () == num_closed) {
-      GST_DEBUG_OBJECT (self, "All connections were closed");
-      SetEvent (priv->cancellable);
-    }
-
-    return;
-  }
-
-  if (priv->conn_map.empty ()) {
-    GST_LOG_OBJECT (self, "Have no connection");
-    if (priv->max_buffers > 0) {
-      std::lock_guard < std::mutex > lk (priv->lock);
-      if (!priv->data_queue.empty ()) {
-        GST_LOG_OBJECT (self, "Dropping %u queued buffers",
-            (guint) priv->data_queue.size ());
-        priv->data_queue.clear ();
-      }
-
-      priv->cond.notify_all ();
-    }
-
-    return;
-  }
 
   std::vector < std::shared_ptr < GstWin32IpcServerConn >> to_config_data;
   std::vector < std::shared_ptr < GstWin32IpcServerConn >> to_send_have_data;
@@ -867,8 +798,7 @@ out:
 
 GstFlowReturn
 gst_win32_ipc_server_send_data (GstWin32IpcServer * server,
-    GstWin32IpcMmf * mmf, GstClockTime pts, GstCaps * caps,
-    GByteArray * meta, gpointer user_data, GDestroyNotify notify)
+    GstBuffer * buffer, GstCaps * caps, GByteArray * meta)
 {
   GstWin32IpcServerPrivate *priv;
 
@@ -882,13 +812,10 @@ gst_win32_ipc_server_send_data (GstWin32IpcServer * server,
     std::unique_lock < std::mutex > lk (priv->lock);
     if (priv->aborted) {
       GST_DEBUG_OBJECT (server, "Was aborted");
-      if (notify)
-        notify (user_data);
-
       return GST_FLOW_ERROR;
     }
 
-    if (priv->max_buffers > 0) {
+    if (priv->max_buffers > 0 && buffer) {
       if (priv->leaky == GST_WIN32_IPC_LEAKY_NONE) {
         if (priv->data_queue.size () >= priv->max_buffers) {
           GST_DEBUG_OBJECT (server, "Waiting for free space");
@@ -902,15 +829,9 @@ gst_win32_ipc_server_send_data (GstWin32IpcServer * server,
 
         if (priv->aborted) {
           GST_DEBUG_OBJECT (server, "Aborted while waiting for free slot");
-          if (notify)
-            notify (user_data);
-
           return GST_FLOW_ERROR;
         } else if (priv->flushing) {
           GST_DEBUG_OBJECT (server, "We are flushing");
-          if (notify)
-            notify (user_data);
-
           return GST_FLOW_FLUSHING;
         }
       } else {
@@ -923,17 +844,14 @@ gst_win32_ipc_server_send_data (GstWin32IpcServer * server,
                 dropped->seq_num);
           } else {
             GST_DEBUG_OBJECT (server, "Queue full, dropping current buffer");
-            if (notify)
-              notify (user_data);
-
             return GST_FLOW_OK;
           }
         }
       }
     }
 
-    auto data = std::make_shared < GstWin32IpcServerData > (mmf, pts, caps,
-        meta, priv->seq_num, user_data, notify);
+    auto data = std::make_shared < GstWin32IpcServerData > (buffer, caps,
+        meta, priv->seq_num);
     GST_DEBUG_OBJECT (server, "Enqueue data, seq-num %" G_GUINT64_FORMAT,
         priv->seq_num);
 
@@ -943,25 +861,17 @@ gst_win32_ipc_server_send_data (GstWin32IpcServer * server,
 
   SetEvent (priv->wakeup_event);
 
+  if (!buffer) {
+    GST_DEBUG_OBJECT (server, "Waiting for draining");
+    std::unique_lock < std::mutex > lk (priv->lock);
+    while (!priv->aborted && !priv->flushing && !priv->data_queue.empty ())
+      priv->cond.wait (lk);
+
+    /* Always clear queue even if we are unblocked by abort/flush */
+    priv->data_queue.clear ();
+  }
+
   return GST_FLOW_OK;
-}
-
-void
-gst_win32_ipc_server_stop (GstWin32IpcServer * server)
-{
-  GstWin32IpcServerPrivate *priv;
-
-  g_return_if_fail (GST_IS_WIN32_IPC_SERVER (server));
-
-  priv = server->priv;
-
-  GST_DEBUG_OBJECT (server, "Stopping");
-  priv->shutdown = true;
-  SetEvent (priv->wakeup_event);
-
-  g_clear_pointer (&priv->loop_thread, g_thread_join);
-
-  GST_DEBUG_OBJECT (server, "Stopped");
 }
 
 void
@@ -970,9 +880,13 @@ gst_win32_ipc_server_set_flushing (GstWin32IpcServer * server,
 {
   auto priv = server->priv;
 
-  std::lock_guard < std::mutex > lk (priv->lock);
-  priv->flushing = flushing;
-  priv->cond.notify_all ();
+  {
+    std::lock_guard < std::mutex > lk (priv->lock);
+    priv->flushing = flushing;
+    priv->cond.notify_all ();
+  }
+
+  SetEvent (priv->wakeup_event);
 }
 
 void

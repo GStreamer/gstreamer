@@ -36,14 +36,9 @@ GstWin32IpcServer * gst_win32_ipc_server_new (const std::string & address,
                                               GstWin32IpcLeakyType leaky);
 
 GstFlowReturn       gst_win32_ipc_server_send_data (GstWin32IpcServer * server,
-                                                    GstWin32IpcMmf * mmf,
-                                                    GstClockTime pts,
+                                                    GstBuffer * buffer,
                                                     GstCaps * caps,
-                                                    GByteArray * meta,
-                                                    gpointer user_data,
-                                                    GDestroyNotify notify);
-
-void                gst_win32_ipc_server_stop      (GstWin32IpcServer * server);
+                                                    GByteArray * meta);
 
 void                gst_win32_ipc_server_set_flushing (GstWin32IpcServer * server,
                                                        gboolean flushing);
