@@ -1,7 +1,6 @@
 tflite_sources = [
   'gsttflite.c',
   'gsttfliteinference.c',
-  'modelinfo.c',
 ]
 
 tflite_headers = [
