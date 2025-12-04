@@ -5168,11 +5168,23 @@ gst_qt_mux_robust_recording_rewrite_moov (GstQTMux * qtmux)
   if (qtmux->last_moov_size > qtmux->base_moov_size && qtmux->last_dts > 0) {
     GstClockTime remain;
     GstClockTime time_muxed = qtmux->last_dts;
+    guint32 remain_bytes = qtmux->reserved_moov_size - qtmux->last_moov_size;
+    guint32 bytes_used_for_samples =
+        qtmux->last_moov_size - qtmux->base_moov_size;
+
+    /* Might need to account for an initial timestamp offset on this mux */
+    if (GST_CLOCK_TIME_IS_VALID (qtmux->first_ts)) {
+      if (time_muxed > qtmux->first_ts) {
+        time_muxed -= qtmux->first_ts;
+      } else {
+        time_muxed = 0;
+      }
+    }
 
     remain =
-        gst_util_uint64_scale (qtmux->reserved_moov_size -
-        qtmux->last_moov_size, time_muxed,
-        qtmux->last_moov_size - qtmux->base_moov_size);
+        gst_util_uint64_scale (time_muxed, remain_bytes,
+        bytes_used_for_samples);
+
     /* Always under-estimate slightly, so users
      * have time to stop muxing before we run out */
     if (remain < GST_SECOND / 2)
@@ -5182,10 +5194,11 @@ gst_qt_mux_robust_recording_rewrite_moov (GstQTMux * qtmux)
 
     GST_INFO_OBJECT (qtmux,
         "Reserved %u header bytes. Used %u in %" GST_TIME_FORMAT
-        ". Remaining now %u or approx %" G_GUINT64_FORMAT " ns\n",
-        qtmux->reserved_moov_size, qtmux->last_moov_size,
+        " = %f bytes/sec. Remaining now %u or approx %" G_GUINT64_FORMAT
+        " ns\n", qtmux->reserved_moov_size, qtmux->last_moov_size,
         GST_TIME_ARGS (qtmux->last_dts),
-        qtmux->reserved_moov_size - qtmux->last_moov_size, remain);
+        (double) (bytes_used_for_samples) / ((double) time_muxed / GST_SECOND),
+        remain_bytes, remain);
 
     GST_OBJECT_LOCK (qtmux);
     qtmux->reserved_duration_remaining = remain;
@@ -7826,7 +7839,7 @@ gst_qt_mux_get_property (GObject * object,
         else
           remaining = 0;
         GST_LOG_OBJECT (qtmux, "reserved duration remaining - reporting %"
-            G_GUINT64_FORMAT "(%" G_GUINT64_FORMAT " - %" G_GUINT64_FORMAT,
+            G_GUINT64_FORMAT " (%" G_GUINT64_FORMAT " - %" G_GUINT64_FORMAT ")",
             remaining, qtmux->reserved_duration_remaining,
             qtmux->muxed_since_last_update);
         g_value_set_uint64 (value, remaining);
