@@ -86,7 +86,7 @@ class Element(Gst.Element):
     @staticmethod
     def link_many(*args: Element) -> None:  # type: ignore[override]
         '''
-        @raises: Gst.LinkError
+        :raises Gst.LinkError
         '''
         for pair in pairwise(args):
             if not pair[0].link(pair[1]):
@@ -109,7 +109,7 @@ class Bin(Gst.Bin):
 
     def make_and_add(self, factoryname: str, name: typing.Optional[str] = None) -> Element:
         '''
-        @raises: Gst.AddError
+        :raises Gst.AddError:
         '''
         elem = Gst.ElementFactory.make(factoryname, name)
         if not elem:
@@ -459,6 +459,9 @@ class ElementFactory(Gst.ElementFactory):
 
     @staticmethod
     def make(factoryname: str, name: typing.Optional[str] = None) -> typing.Optional[Element]:  # type: ignore[override]
+        '''
+        :raises Gst.PluginMissingError:
+        '''
         elem = Gst.ElementFactory.make(factoryname, name)
         assert elem is None or isinstance(elem, Element)  # Tell mypy we actually have our override subclass
         return elem
