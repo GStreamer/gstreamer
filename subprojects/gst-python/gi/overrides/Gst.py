@@ -43,11 +43,16 @@ if typing.TYPE_CHECKING:
     # g-i generated API which does not have the same signature as our override
     # Bin.add(). The type checker will use signature from stubs which is our
     # override signature.
-    #
-    # For similar reason, make sure the type of arguments and return values
-    # are e.g. `Element` and not `Gst.Element`. Once copied into stubs,
-    # `Gst.Element` would not be defined, Gst module cannot refer to itself.
     from gi.repository import Gst
+
+    # Type annotations cannot have `Gst.` prefix because they are copied into
+    # Gst stubs module which cannot refer to itself. Use type aliases.
+    MiniObject = Gst.MiniObject
+    MiniObjectFlags = Gst.MiniObjectFlags
+    FlowReturn = Gst.FlowReturn
+    PadDirection = Gst.PadDirection
+    MapFlags = Gst.MapFlags
+    BufferFlags = Gst.BufferFlags
 else:
     from gi.module import get_introspection_module
     Gst = get_introspection_module('Gst')
@@ -126,13 +131,6 @@ class NotWritableMiniObject(Exception):
 __all__.append('NotWritableMiniObject')
 
 
-if typing.TYPE_CHECKING:
-    # When type checking we don't want MiniObjectMixin and Gst.MiniObjectMixin
-    # to be different types.
-    class MiniObjectMixin(Gst.MiniObjectMixin):
-        pass
-
-
 class MiniObjectMixin:  # type: ignore[no-redef]
     def make_writable(self) -> bool:
         return _gi_gst.mini_object_make_writable(self)
@@ -141,11 +139,11 @@ class MiniObjectMixin:  # type: ignore[no-redef]
         return _gi_gst.mini_object_is_writable(self)
 
     @property
-    def flags(self) -> Gst.MiniObjectFlags:
+    def flags(self) -> MiniObjectFlags:
         return _gi_gst.mini_object_flags(self)
 
     @flags.setter
-    def flags(self, flags: Gst.MiniObjectFlags) -> None:
+    def flags(self, flags: MiniObjectFlags) -> None:
         _gi_gst.mini_object_set_flags(self, flags)
 
     def __ptr__(self):
@@ -317,7 +315,7 @@ __all__.append('PadProbeInfo')
 
 
 class PadFunc:
-    def __init__(self, func: typing.Callable[..., Gst.FlowReturn]):
+    def __init__(self, func: typing.Callable[..., FlowReturn]):
         self.func = func
 
     def __call__(self, pad, parent, obj):
@@ -342,19 +340,19 @@ class Pad(Gst.Pad):
     def __init__(self, *args, **kwargs):
         super(Gst.Pad, self).__init__(*args, **kwargs)
 
-    def set_chain_function(self, func: typing.Callable[..., Gst.FlowReturn]) -> None:
+    def set_chain_function(self, func: typing.Callable[..., FlowReturn]) -> None:
         self.set_chain_function_full(PadFunc(func), None)
 
-    def set_event_function(self, func: typing.Callable[..., Gst.FlowReturn]) -> None:
+    def set_event_function(self, func: typing.Callable[..., FlowReturn]) -> None:
         self.set_event_function_full(PadFunc(func), None)
 
-    def set_query_function(self, func: typing.Callable[..., Gst.FlowReturn]) -> None:
+    def set_query_function(self, func: typing.Callable[..., FlowReturn]) -> None:
         self.set_query_function_full(PadFunc(func), None)
 
     def query_caps(self, filter=None):
         return Gst.Pad.query_caps(self, filter)
 
-    def set_caps(self, caps: Gst.Caps) -> bool:
+    def set_caps(self, caps: Caps) -> bool:
         if not isinstance(caps, Gst.Caps):
             raise TypeError("%s is not a Gst.Caps." % (type(caps)))
 
@@ -382,7 +380,7 @@ __all__.append('Pad')
 
 
 class GhostPad(Gst.GhostPad):
-    def __init__(self, name: str, target: typing.Optional[Gst.Pad] = None, direction: typing.Optional[Gst.PadDirection] = None):
+    def __init__(self, name: str, target: typing.Optional[Pad] = None, direction: typing.Optional[PadDirection] = None):
         if direction is None:
             if target is None:
                 raise TypeError('you must pass at least one of target '
@@ -394,7 +392,7 @@ class GhostPad(Gst.GhostPad):
         if target is not None:
             self.set_target(target)
 
-    def query_caps(self, filter: typing.Optional[Gst.Caps] = None) -> Gst.Caps:
+    def query_caps(self, filter: typing.Optional[Caps] = None) -> Caps:
         return Gst.GhostPad.query_caps(self, filter)
 
 
@@ -896,14 +894,6 @@ def pairwise(iterable: typing.Iterable[Element]) -> typing.Iterator[tuple[Elemen
     return zip(a, b)
 
 
-if typing.TYPE_CHECKING:
-    # When type checking we don't want StructureWrapper and Gst.StructureWrapper
-    # to be different types.
-    class StructureWrapper(Gst.StructureWrapper):
-        def __init__(self, structure: Structure):
-            pass
-
-
 class MapInfo:
     def __init__(self):
         self.memory = None
@@ -936,11 +926,11 @@ __all__.append("MapInfo")
 
 class Buffer(MiniObjectMixin, Gst.Buffer):
     @property  # type: ignore[override]
-    def flags(self) -> Gst.BufferFlags:
+    def flags(self) -> BufferFlags:
         return _gi_gst.mini_object_flags(self)
 
     @flags.setter
-    def flags(self, flags: Gst.BufferFlags) -> None:
+    def flags(self, flags: BufferFlags) -> None:
         _gi_gst.mini_object_set_flags(self, flags)
 
     @property
@@ -983,14 +973,14 @@ class Buffer(MiniObjectMixin, Gst.Buffer):
     def offset_end(self, offset_end: int) -> None:
         _gi_gst.buffer_set_offset_end(self, offset_end)
 
-    def map_range(self, idx: int, length: int, flags: Gst.MapFlags) -> MapInfo:  # type: ignore[override]
+    def map_range(self, idx: int, length: int, flags: MapFlags) -> MapInfo:  # type: ignore[override]
         mapinfo = MapInfo()
         if (_gi_gst.buffer_override_map_range(self, mapinfo, idx, length, int(flags))):
             mapinfo.__parent__ = self
 
         return mapinfo
 
-    def map(self, flags: Gst.MapFlags) -> MapInfo:  # type: ignore[override]
+    def map(self, flags: MapFlags) -> MapInfo:  # type: ignore[override]
         mapinfo = MapInfo()
         if _gi_gst.buffer_override_map(self, mapinfo, int(flags)):
             mapinfo.__parent__ = self
@@ -1008,7 +998,7 @@ __all__.append('Buffer')
 
 class Memory(Gst.Memory):
 
-    def map(self, flags: Gst.MapFlags) -> MapInfo:  # type: ignore[override]
+    def map(self, flags: MapFlags) -> MapInfo:  # type: ignore[override]
         mapinfo = MapInfo()
         if (_gi_gst.memory_override_map(self, mapinfo, int(flags))):
             mapinfo.__parent__ = self
