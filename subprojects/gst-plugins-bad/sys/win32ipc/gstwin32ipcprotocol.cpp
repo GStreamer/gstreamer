@@ -274,7 +274,7 @@ gst_win32_ipc_pkt_build_need_data (std::vector < UINT8 > &buf)
 
 bool
 gst_win32_ipc_pkt_build_have_data (std::vector < UINT8 > &buf, SIZE_T mmf_size,
-    UINT64 timestamp, const HANDLE handle, const char *caps,
+    UINT64 pts, UINT64 dts, UINT64 dur, const HANDLE handle, const char *caps,
     const std::vector < UINT8 > &meta)
 {
   GstWin32IpcPktHdr hdr = { };
@@ -286,8 +286,8 @@ gst_win32_ipc_pkt_build_have_data (std::vector < UINT8 > &buf, SIZE_T mmf_size,
   /* mmf size */
   hdr.payload_size += sizeof (SIZE_T);
 
-  /* timestamp */
-  hdr.payload_size += sizeof (UINT64);
+  /* pts/dts/dur */
+  hdr.payload_size += (sizeof (UINT64) * 3);
 
   /* Server handle value */
   hdr.payload_size += sizeof (HANDLE);
@@ -313,7 +313,9 @@ gst_win32_ipc_pkt_build_have_data (std::vector < UINT8 > &buf, SIZE_T mmf_size,
 
   WRITE_TO_T (ptr, &hdr, GstWin32IpcPktHdr);
   WRITE_TO_T (ptr, &mmf_size, SIZE_T);
-  WRITE_TO_T (ptr, &timestamp, UINT64);
+  WRITE_TO_T (ptr, &pts, UINT64);
+  WRITE_TO_T (ptr, &dts, UINT64);
+  WRITE_TO_T (ptr, &dur, UINT64);
   WRITE_TO_T (ptr, &handle, HANDLE);
 
   WRITE_TO_T (ptr, &caps_len, SIZE_T);
@@ -329,10 +331,10 @@ gst_win32_ipc_pkt_build_have_data (std::vector < UINT8 > &buf, SIZE_T mmf_size,
 
 bool
 gst_win32_ipc_pkt_parse_have_data (const std::vector < UINT8 > &buf,
-    SIZE_T & mmf_size, UINT64 & timestamp, HANDLE & handle, std::string & caps,
-    std::vector < UINT8 > &meta)
+    SIZE_T & mmf_size, UINT64 & pts, UINT64 & dts, UINT64 & dur,
+    HANDLE & handle, std::string & caps, std::vector < UINT8 > &meta)
 {
-  const SIZE_T min_payload_size = sizeof (SIZE_T) + sizeof (UINT64) +
+  const SIZE_T min_payload_size = sizeof (SIZE_T) + (sizeof (UINT64) * 3) +
       sizeof (HANDLE) + sizeof (SIZE_T) + sizeof (SIZE_T);
 
   return_val_if_fail (buf.size () >=
@@ -349,7 +351,9 @@ gst_win32_ipc_pkt_parse_have_data (const std::vector < UINT8 > &buf,
   }
 
   READ_FROM_T (ptr, &mmf_size, SIZE_T);
-  READ_FROM_T (ptr, &timestamp, UINT64);
+  READ_FROM_T (ptr, &pts, UINT64);
+  READ_FROM_T (ptr, &dts, UINT64);
+  READ_FROM_T (ptr, &dur, UINT64);
   READ_FROM_T (ptr, &handle, HANDLE);
 
   SIZE_T size;

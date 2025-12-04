@@ -38,7 +38,9 @@ GstWin32IpcServer * gst_win32_ipc_server_new (const std::string & address,
 GstFlowReturn       gst_win32_ipc_server_send_data (GstWin32IpcServer * server,
                                                     GstBuffer * buffer,
                                                     GstCaps * caps,
-                                                    GByteArray * meta);
+                                                    GByteArray * meta,
+                                                    GstClockTime pts,
+                                                    GstClockTime dts);
 
 void                gst_win32_ipc_server_set_flushing (GstWin32IpcServer * server,
                                                        gboolean flushing);

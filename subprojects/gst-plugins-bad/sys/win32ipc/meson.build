@@ -8,6 +8,8 @@ win32ipc_sources = [
   'gstwin32ipcmemory.cpp',
   'gstwin32ipcvideosink.cpp',
   'gstwin32ipcvideosrc.cpp',
+  'gstwin32ipcbasesink.cpp',
+  'gstwin32ipcbasesrc.cpp',
   'plugin.cpp',
 ]
 
@@ -17,6 +19,7 @@ win32ipc_headers = [
   'gstwin32ipcmemory.h',
   'gstwin32ipcvideosrc.h',
   'gstwin32ipcbufferpool.h',
+  'gstwin32ipcbasesrc.h',
 ]
 
 doc_sources = []

@@ -20,13 +20,13 @@
 #pragma once
 
 #include <gst/gst.h>
-#include <gst/base/gstbasesink.h>
 #include <gst/video/video.h>
+#include "gstwin32ipcbasesink.h"
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_WIN32_IPC_VIDEO_SINK (gst_win32_ipc_video_sink_get_type())
 G_DECLARE_FINAL_TYPE (GstWin32IpcVideoSink, gst_win32_ipc_video_sink,
-    GST, WIN32_IPC_VIDEO_SINK, GstBaseSink);
+    GST, WIN32_IPC_VIDEO_SINK, GstWin32IpcBaseSink);
 
 G_END_DECLS

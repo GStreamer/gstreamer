@@ -283,6 +283,8 @@ gst_win32_ipc_client_have_data (GstWin32IpcClient * self)
   SIZE_T size;
   std::string caps_string;
   GstClockTime pts;
+  GstClockTime dts;
+  GstClockTime dur;
   std::shared_ptr < GstWin32IpcImportData > import_data;
   HANDLE server_handle = nullptr;
   HANDLE client_handle = nullptr;
@@ -292,7 +294,7 @@ gst_win32_ipc_client_have_data (GstWin32IpcClient * self)
   std::unique_lock < std::mutex > lk (priv->lock);
 
   if (!gst_win32_ipc_pkt_parse_have_data (conn->server_msg, size,
-          pts, server_handle, caps_string, meta)) {
+          pts, dts, dur, server_handle, caps_string, meta)) {
     GST_ERROR_OBJECT (self, "Couldn't parse HAVE-DATA packet");
     return false;
   }
@@ -359,8 +361,8 @@ gst_win32_ipc_client_have_data (GstWin32IpcClient * self)
   }
 
   GST_BUFFER_PTS (buffer) = pts;
-  GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_DTS (buffer) = dts;
+  GST_BUFFER_DURATION (buffer) = dur;
 
   auto sample = gst_sample_new (buffer, priv->caps, nullptr, nullptr);
   gst_buffer_unref (buffer);

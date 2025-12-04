@@ -65,14 +65,18 @@ bool             gst_win32_ipc_pkt_build_need_data (std::vector<UINT8> & buf);
 
 bool             gst_win32_ipc_pkt_build_have_data (std::vector<UINT8> & buf,
                                                     SIZE_T mmf_size,
-                                                    UINT64 timestamp,
+                                                    UINT64 pts,
+                                                    UINT64 dts,
+                                                    UINT64 dur,
                                                     const HANDLE handle,
                                                     const char * caps,
                                                     const std::vector<UINT8> & meta);
 
 bool             gst_win32_ipc_pkt_parse_have_data (const std::vector<UINT8> & buf,
                                                     SIZE_T & mmf_size,
-                                                    UINT64 & timestamp,
+                                                    UINT64 & pts,
+                                                    UINT64 & dts,
+                                                    UINT64 & dur,
                                                     HANDLE & handle,
                                                     std::string & caps,
                                                     std::vector<UINT8> & meta);
