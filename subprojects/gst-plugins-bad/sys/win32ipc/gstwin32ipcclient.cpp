@@ -128,6 +128,9 @@ struct GstWin32IpcClientPrivate
   std::shared_ptr<GstWin32IpcClientConn> conn;
   std::queue<HANDLE> unused_data;
   std::vector<std::weak_ptr<GstWin32IpcImportData>> imported;
+
+  std::atomic<guint64> max_buffers = { 0 };
+  std::atomic<GstWin32IpcLeakyType> leaky { GST_WIN32_IPC_LEAKY_DOWNSTREAM };
 };
 /* *INDENT-ON* */
 
@@ -281,11 +284,12 @@ gst_win32_ipc_client_have_data (GstWin32IpcClient * self)
   std::string caps_string;
   GstClockTime pts;
   std::shared_ptr < GstWin32IpcImportData > import_data;
-  std::unique_lock < std::mutex > lk (priv->lock);
   HANDLE server_handle = nullptr;
   HANDLE client_handle = nullptr;
   std::vector < UINT8 > meta;
   auto conn = priv->conn;
+
+  std::unique_lock < std::mutex > lk (priv->lock);
 
   if (!gst_win32_ipc_pkt_parse_have_data (conn->server_msg, size,
           pts, server_handle, caps_string, meta)) {
@@ -361,15 +365,53 @@ gst_win32_ipc_client_have_data (GstWin32IpcClient * self)
   auto sample = gst_sample_new (buffer, priv->caps, nullptr, nullptr);
   gst_buffer_unref (buffer);
 
-  /* Drops too old samples */
   std::queue < GstSample * >drop_queue;
-  while (priv->samples.size () > 2) {
-    drop_queue.push (priv->samples.front ());
-    priv->samples.pop ();
+  bool drop_current = false;
+
+  if (priv->max_buffers > 0) {
+    if (priv->leaky == GST_WIN32_IPC_LEAKY_NONE) {
+      if (priv->samples.size () >= priv->max_buffers) {
+        GST_DEBUG_OBJECT (self, "Waiting for free space");
+        priv->cond.wait (lk,[&] {
+              auto max = priv->max_buffers.load ();
+              return priv->aborted || priv->flushing || priv->shutdown ||
+              priv->leaky != GST_WIN32_IPC_LEAKY_NONE || max == 0 ||
+              priv->samples.size () < max;
+            }
+        );
+      }
+
+      if (priv->aborted) {
+        GST_DEBUG_OBJECT (self, "Aborted while waiting for free slot");
+        lk.unlock ();
+
+        gst_sample_unref (sample);
+        return false;
+      } else if (priv->flushing || priv->shutdown) {
+        GST_DEBUG_OBJECT (self, "Flushing while waiting for free slot");
+        lk.unlock ();
+
+        gst_sample_unref (sample);
+        return true;
+      }
+    } else if (priv->leaky == GST_WIN32_IPC_LEAKY_DOWNSTREAM) {
+      while (priv->samples.size () >= priv->max_buffers) {
+        drop_queue.push (priv->samples.front ());
+        priv->samples.pop ();
+      }
+    } else {
+      if (priv->samples.size () >= priv->max_buffers) {
+        GST_DEBUG_OBJECT (self, "Queue full, dropping current sample");
+        drop_current = true;
+      }
+    }
   }
 
-  priv->samples.push (sample);
-  priv->cond.notify_all ();
+  if (!drop_current) {
+    priv->samples.push (sample);
+    priv->cond.notify_all ();
+  }
+
   lk.unlock ();
 
   import_data = nullptr;
@@ -378,6 +420,9 @@ gst_win32_ipc_client_have_data (GstWin32IpcClient * self)
     gst_sample_unref (old);
     drop_queue.pop ();
   }
+
+  if (drop_current)
+    gst_sample_unref (sample);
 
   return true;
 }
@@ -840,10 +885,6 @@ gst_win32_ipc_client_stop_async (GstWin32IpcClient * client, gpointer user_data)
   auto priv = client->priv;
 
   GST_DEBUG_OBJECT (client, "Stopping");
-  std::unique_lock < std::mutex > lk (priv->lock);
-  while (!priv->aborted)
-    priv->cond.wait (lk);
-  lk.unlock ();
 
   SetEvent (priv->cancellable);
   g_clear_pointer (&priv->loop_thread, g_thread_join);
@@ -859,7 +900,13 @@ gst_win32_ipc_client_stop (GstWin32IpcClient * client)
   auto priv = client->priv;
 
   GST_DEBUG_OBJECT (client, "Stopping");
-  priv->shutdown = true;
+
+  {
+    std::lock_guard < std::mutex > lk (priv->lock);
+    priv->shutdown = true;
+    priv->cond.notify_all ();
+  }
+
   SetEvent (priv->wakeup_event);
 
   /* We don't know when imported memory gets released */
@@ -899,6 +946,8 @@ gst_win32_ipc_client_get_sample (GstWin32IpcClient * client,
     *sample = priv->samples.front ();
     priv->samples.pop ();
 
+    priv->cond.notify_all ();
+
     GST_LOG_OBJECT (client, "Have sample");
     return GST_FLOW_OK;
   }
@@ -913,8 +962,44 @@ gst_win32_ipc_client_get_sample (GstWin32IpcClient * client,
   return GST_FLOW_EOS;
 }
 
+void
+gst_win32_ipc_client_set_leaky (GstWin32IpcClient * client,
+    GstWin32IpcLeakyType leaky)
+{
+  auto priv = client->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (priv->leaky != leaky) {
+    priv->leaky = leaky;
+    priv->cond.notify_all ();
+  }
+}
+
+void
+gst_win32_ipc_client_set_max_buffers (GstWin32IpcClient * client,
+    guint64 max_buffers)
+{
+  auto priv = client->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (priv->max_buffers != max_buffers) {
+    priv->max_buffers = max_buffers;
+    priv->cond.notify_all ();
+  }
+}
+
+guint64
+gst_win32_ipc_client_get_current_level_buffers (GstWin32IpcClient * client)
+{
+  auto priv = client->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  return priv->samples.size ();
+}
+
 GstWin32IpcClient *
-gst_win32_ipc_client_new (const std::string & address, guint timeout)
+gst_win32_ipc_client_new (const std::string & address, guint timeout,
+    guint64 max_buffers, GstWin32IpcLeakyType leaky)
 {
   auto self = (GstWin32IpcClient *)
       g_object_new (GST_TYPE_WIN32_IPC_CLIENT, nullptr);
@@ -923,6 +1008,8 @@ gst_win32_ipc_client_new (const std::string & address, guint timeout)
   auto priv = self->priv;
   priv->address = address;
   priv->timeout = timeout * GST_SECOND;
+  priv->max_buffers = max_buffers;
+  priv->leaky = leaky;
 
   return self;
 }

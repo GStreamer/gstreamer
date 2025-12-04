@@ -21,6 +21,7 @@
 
 #include <gst/gst.h>
 #include "gstwin32ipcmmf.h"
+#include "gstwin32ipc.h"
 #include <string>
 #include <vector>
 
@@ -31,7 +32,9 @@ G_DECLARE_FINAL_TYPE (GstWin32IpcClient, gst_win32_ipc_client,
     GST, WIN32_IPC_CLIENT, GstObject);
 
 GstWin32IpcClient * gst_win32_ipc_client_new (const std::string & address,
-                                              guint timeout);
+                                              guint timeout,
+                                              guint64 max_buffers,
+                                              GstWin32IpcLeakyType leaky);
 
 GstFlowReturn       gst_win32_ipc_client_get_sample (GstWin32IpcClient * client,
                                                      GstSample ** sample);
@@ -44,5 +47,13 @@ GstCaps *           gst_win32_ipc_client_get_caps     (GstWin32IpcClient * clien
 GstFlowReturn       gst_win32_ipc_client_run          (GstWin32IpcClient * client);
 
 void                gst_win32_ipc_client_stop         (GstWin32IpcClient * client);
+
+void                gst_win32_ipc_client_set_leaky (GstWin32IpcClient * client,
+                                                    GstWin32IpcLeakyType leaky);
+
+void                gst_win32_ipc_client_set_max_buffers (GstWin32IpcClient * client,
+                                                          guint64 max_buffers);
+
+guint64             gst_win32_ipc_client_get_current_level_buffers (GstWin32IpcClient * client);
 
 G_END_DECLS

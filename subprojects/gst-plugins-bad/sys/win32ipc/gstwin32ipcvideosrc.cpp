@@ -39,6 +39,7 @@
 
 #include "gstwin32ipcvideosrc.h"
 #include "gstwin32ipcclient.h"
+#include "gstwin32ipc.h"
 #include <string>
 #include <mutex>
 
@@ -55,10 +56,15 @@ enum
   PROP_0,
   PROP_PIPE_NAME,
   PROP_PROCESSING_DEADLINE,
+  PROP_LEAKY_TYPE,
+  PROP_MAX_BUFFERS,
+  PROP_CURRENT_LEVEL_BUFFERS,
 };
 
 #define DEFAULT_PIPE_NAME "\\\\.\\pipe\\gst.win32.ipc.video"
 #define DEFAULT_PROCESSING_DEADLINE (20 * GST_MSECOND)
+#define DEFAULT_MAX_BUFFERS 2
+#define DEFAULT_LEAKY_TYPE GST_WIN32_IPC_LEAKY_DOWNSTREAM
 
 /* *INDENT-OFF* */
 struct GstWin32IpcVideoSrcPrivate
@@ -82,6 +88,8 @@ struct GstWin32IpcVideoSrcPrivate
   /* properties */
   gchar *pipe_name;
   GstClockTime processing_deadline = DEFAULT_PROCESSING_DEADLINE;
+  guint64 max_buffers = DEFAULT_MAX_BUFFERS;
+  GstWin32IpcLeakyType leaky = DEFAULT_LEAKY_TYPE;
 };
 /* *INDENT-ON* */
 
@@ -138,6 +146,24 @@ gst_win32_ipc_video_src_class_init (GstWin32IpcVideoSrcClass * klass)
           "Maximum processing time for a buffer in nanoseconds", 0, G_MAXUINT64,
           DEFAULT_PROCESSING_DEADLINE, (GParamFlags) (G_PARAM_READWRITE |
               G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_PLAYING)));
+
+  g_object_class_install_property (object_class, PROP_LEAKY_TYPE,
+      g_param_spec_enum ("leaky-type", "Leaky Type",
+          "Whether to drop buffers once the internal queue is full",
+          GST_TYPE_WIN32_IPC_LEAKY_TYPE, DEFAULT_LEAKY_TYPE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_MAX_BUFFERS,
+      g_param_spec_uint64 ("max-buffers", "Max Buffers",
+          "Maximum number of buffers in queue (0=unlimited)",
+          0, G_MAXUINT64, DEFAULT_MAX_BUFFERS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_CURRENT_LEVEL_BUFFERS,
+      g_param_spec_uint64 ("current-level-buffers", "Current Level Buffers",
+          "The number of currently queued buffers",
+          0, G_MAXUINT64, 0,
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
       "Win32 IPC Video Source", "Source/Video",
@@ -214,6 +240,16 @@ gst_win32_ipc_video_src_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case PROP_LEAKY_TYPE:
+      priv->leaky = (GstWin32IpcLeakyType) g_value_get_enum (value);
+      if (priv->client)
+        gst_win32_ipc_client_set_leaky (priv->client, priv->leaky);
+      break;
+    case PROP_MAX_BUFFERS:
+      priv->max_buffers = g_value_get_uint64 (value);
+      if (priv->client)
+        gst_win32_ipc_client_set_max_buffers (priv->client, priv->max_buffers);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -235,6 +271,21 @@ gst_win32_video_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PROCESSING_DEADLINE:
       g_value_set_uint64 (value, priv->processing_deadline);
+      break;
+    case PROP_LEAKY_TYPE:
+      g_value_set_enum (value, priv->leaky);
+      break;
+    case PROP_MAX_BUFFERS:
+      g_value_set_uint64 (value, priv->max_buffers);
+      break;
+    case PROP_CURRENT_LEVEL_BUFFERS:
+      if (priv->client) {
+        auto level =
+            gst_win32_ipc_client_get_current_level_buffers (priv->client);
+        g_value_set_uint64 (value, level);
+      } else {
+        g_value_set_uint64 (value, 0);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -258,7 +309,8 @@ gst_win32_ipc_video_src_start (GstBaseSrc * src)
 
   std::lock_guard < std::mutex > lk (priv->lock);
   gst_video_info_init (&priv->info);
-  priv->client = gst_win32_ipc_client_new (priv->pipe_name, 5);
+  priv->client = gst_win32_ipc_client_new (priv->pipe_name,
+      5, priv->max_buffers, priv->leaky);
 
   return TRUE;
 }
@@ -323,8 +375,7 @@ gst_win32_ipc_video_src_query (GstBaseSrc * src, GstQuery * query)
       GST_OBJECT_LOCK (self);
       if (GST_CLOCK_TIME_IS_VALID (priv->processing_deadline)) {
         gst_query_set_latency (query, TRUE, priv->processing_deadline,
-            /* client server can hold up to 5 memory objects */
-            5 * priv->processing_deadline);
+            GST_CLOCK_TIME_NONE);
       } else {
         gst_query_set_latency (query, TRUE, 0, 0);
       }
