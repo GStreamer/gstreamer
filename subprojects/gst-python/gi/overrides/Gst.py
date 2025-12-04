@@ -167,8 +167,8 @@ class Query(MiniObjectMixin, Gst.Query):
         s = _gi_gst.query_get_structure(self)
         return s._set_parent(self) if s is not None else None
 
-    def writable_structure(self) -> StructureWrapper:
-        return StructureWrapper(_gi_gst.query_writable_structure(self)._set_parent(self))
+    def writable_structure(self) -> StructureContextManager:
+        return StructureContextManager(_gi_gst.query_writable_structure(self), self)
 
 
 override(Query)
@@ -187,8 +187,8 @@ class Event(MiniObjectMixin, Gst.Event):
         s = _gi_gst.event_get_structure(self)
         return s._set_parent(self) if s is not None else None
 
-    def writable_structure(self) -> StructureWrapper:
-        return StructureWrapper(_gi_gst.event_writable_structure(self)._set_parent(self))
+    def writable_structure(self) -> StructureContextManager:
+        return StructureContextManager(_gi_gst.event_writable_structure(self), self)
 
 
 override(Event)
@@ -207,8 +207,8 @@ class Context(MiniObjectMixin, Gst.Context):
         s = _gi_gst.context_get_structure(self)
         return s._set_parent(self) if s is not None else None
 
-    def writable_structure(self) -> StructureWrapper:
-        return StructureWrapper(_gi_gst.context_writable_structure(self)._set_parent(self))
+    def writable_structure(self) -> StructureContextManager:
+        return StructureContextManager(_gi_gst.context_writable_structure(self), self)
 
 
 override(Context)
@@ -275,8 +275,8 @@ class Caps(MiniObjectMixin, Gst.Caps):
         s = _gi_gst.caps_get_structure(self, index)
         return s._set_parent(self) if s is not None else None
 
-    def writable_structure(self, index: int) -> StructureWrapper:
-        return StructureWrapper(_gi_gst.caps_writable_structure(self, index)._set_parent(self))
+    def writable_structure(self, index: int) -> StructureContextManager:
+        return StructureContextManager(_gi_gst.caps_writable_structure(self, index), self)
 
 
 override(Caps)
@@ -473,6 +473,24 @@ class Pipeline(Gst.Pipeline):
 
 override(Pipeline)
 __all__.append('Pipeline')
+
+
+class StructureContextManager:  # type: ignore[no-redef]
+    """A Gst.Structure wrapper to force usage of a context manager.
+    """
+    def __init__(self, structure: Structure, parent: MiniObject):
+        self.__structure = structure
+        self.__parent = parent
+
+    def __enter__(self) -> Structure:
+        return self.__structure
+
+    def __exit__(self, _type, _value, _tb):
+        self.__structure = None
+        self.__parent = None
+
+
+__all__.append('StructureContextManager')
 
 
 class Structure(Gst.Structure):
@@ -884,22 +902,6 @@ if typing.TYPE_CHECKING:
     class StructureWrapper(Gst.StructureWrapper):
         def __init__(self, structure: Structure):
             pass
-
-
-class StructureWrapper:  # type: ignore[no-redef]
-    """A Gst.Structure wrapper to force usage of a context manager.
-    """
-    def __init__(self, structure: Structure):
-        self.__structure = structure
-
-    def __enter__(self) -> Structure:
-        return self.__structure
-
-    def __exit__(self, _type, _value, _tb):
-        self.__structure._set_parent(None)
-
-
-__all__.append('StructureWrapper')
 
 
 class MapInfo:
