@@ -100,7 +100,7 @@ class Element(Gst.Element):
     @staticmethod
     def link_many(*args: Element) -> None:  # type: ignore[override]
         '''
-        @raises: Gst.LinkError
+        :raises Gst.LinkError
         '''
         for pair in pairwise(args):
             if not pair[0].link(pair[1]):
@@ -123,7 +123,8 @@ class Bin(Gst.Bin):
 
     def make_and_add(self, factoryname: str, name: typing.Optional[str] = None) -> Element:
         '''
-        @raises: Gst.AddError, Gst.MissingPluginError
+        :raises Gst.AddError:
+        :raises Gst.MissingPluginError:
         '''
         elem = ElementFactory.make(factoryname, name)
         self.add(elem)
@@ -485,7 +486,7 @@ class ElementFactory(Gst.ElementFactory):
     @staticmethod
     def make(factoryname: str, name: typing.Optional[str] = None) -> Element:  # type: ignore[override]
         '''
-        @raises: Gst.PluginMissingError
+        :raises Gst.PluginMissingError:
         '''
         elem = Gst.ElementFactory.make(factoryname, name)
         if not elem:
