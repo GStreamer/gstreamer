@@ -45,6 +45,7 @@
 #include <string>
 #include <string.h>
 #include <mutex>
+#include <condition_variable>
 
 GST_DEBUG_CATEGORY_STATIC (gst_win32_ipc_video_sink_debug);
 #define GST_CAT_DEFAULT gst_win32_ipc_video_sink_debug
@@ -61,11 +62,17 @@ enum
   PROP_LEAKY_TYPE,
   PROP_MAX_BUFFERS,
   PROP_CURRENT_LEVEL_BUFFERS,
+  PROP_NUM_CLIENTS,
+  PROP_WAIT_FOR_CONNECTION,
+  PROP_LAST,
 };
+
+static GParamSpec *props[PROP_LAST];
 
 #define DEFAULT_PIPE_NAME "\\\\.\\pipe\\gst.win32.ipc.video"
 #define DEFAULT_MAX_BUFFERS 2
 #define DEFAULT_LEAKY_TYPE GST_WIN32_IPC_LEAKY_DOWNSTREAM
+#define DEFAULT_WAIT_FOR_CONNECTION FALSE
 
 /* *INDENT-OFF* */
 struct GstWin32IpcVideoSinkPrivate
@@ -82,6 +89,7 @@ struct GstWin32IpcVideoSinkPrivate
   {
     reset ();
 
+    gst_clear_object (&server);
     g_byte_array_unref (meta);
     g_free (pipe_name);
   }
@@ -89,25 +97,29 @@ struct GstWin32IpcVideoSinkPrivate
   void reset ()
   {
     gst_clear_caps (&caps);
-    gst_clear_object (&server);
 
     if (fallback_pool)
       gst_buffer_pool_set_active (fallback_pool, FALSE);
     gst_clear_object (&fallback_pool);
+    num_clients = 0;
   }
 
   std::mutex lock;
+  std::condition_variable cond;
 
   GstWin32IpcServer *server = nullptr;
   GstCaps *caps = nullptr;
   GstVideoInfo info;
   GByteArray *meta = nullptr;
   GstBufferPool *fallback_pool = nullptr;
+  guint num_clients = 0;
+  bool flushing = false;
 
   /* properties */
   gchar *pipe_name;
   guint64 max_buffers = DEFAULT_MAX_BUFFERS;
   GstWin32IpcLeakyType leaky = DEFAULT_LEAKY_TYPE;
+  gboolean wait_for_connection = DEFAULT_WAIT_FOR_CONNECTION;
 };
 /* *INDENT-ON* */
 
@@ -156,30 +168,44 @@ gst_win32_ipc_video_sink_class_init (GstWin32IpcVideoSinkClass * klass)
   object_class->set_property = gst_win32_ipc_video_sink_set_property;
   object_class->get_property = gst_win32_video_sink_get_property;
 
-  g_object_class_install_property (object_class, PROP_PIPE_NAME,
+  props[PROP_PIPE_NAME] =
       g_param_spec_string ("pipe-name", "Pipe Name",
-          "The name of Win32 named pipe to communicate with clients. "
-          "Validation of the pipe name is caller's responsibility",
-          DEFAULT_PIPE_NAME, (GParamFlags) (G_PARAM_READWRITE |
-              G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_READY)));
+      "The name of Win32 named pipe to communicate with clients. "
+      "Validation of the pipe name is caller's responsibility",
+      DEFAULT_PIPE_NAME, (GParamFlags) (G_PARAM_READWRITE |
+          G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_READY));
 
-  g_object_class_install_property (object_class, PROP_LEAKY_TYPE,
+  props[PROP_LEAKY_TYPE] =
       g_param_spec_enum ("leaky-type", "Leaky Type",
-          "Whether to drop buffers once the internal queue is full",
-          GST_TYPE_WIN32_IPC_LEAKY_TYPE, DEFAULT_LEAKY_TYPE,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+      "Whether to drop buffers once the internal queue is full",
+      GST_TYPE_WIN32_IPC_LEAKY_TYPE, DEFAULT_LEAKY_TYPE,
+      (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (object_class, PROP_MAX_BUFFERS,
+  props[PROP_MAX_BUFFERS] =
       g_param_spec_uint64 ("max-buffers", "Max Buffers",
-          "Maximum number of buffers in queue (0=unlimited)",
-          0, G_MAXUINT64, DEFAULT_MAX_BUFFERS,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+      "Maximum number of buffers in queue (0=unlimited)",
+      0, G_MAXUINT64, DEFAULT_MAX_BUFFERS,
+      (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (object_class, PROP_CURRENT_LEVEL_BUFFERS,
+  props[PROP_CURRENT_LEVEL_BUFFERS] =
       g_param_spec_uint64 ("current-level-buffers", "Current Level Buffers",
-          "The number of currently queued buffers",
-          0, G_MAXUINT64, 0,
-          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+      "The number of currently queued buffers",
+      0, G_MAXUINT64, 0,
+      (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  props[PROP_WAIT_FOR_CONNECTION] =
+      g_param_spec_boolean ("wait-for-connection", "Wait for Connection",
+      "Blocks the stream until at least one client is connected",
+      DEFAULT_WAIT_FOR_CONNECTION,
+      (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  props[PROP_NUM_CLIENTS] =
+      g_param_spec_uint ("num-clients", "Number of Clients",
+      "The number of connected clients",
+      0, G_MAXUINT, 0,
+      (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_properties (object_class, PROP_LAST, props);
 
   gst_element_class_set_static_metadata (element_class,
       "Win32 IPC Video Sink", "Sink/Video",
@@ -252,6 +278,15 @@ gst_win32_ipc_video_sink_set_property (GObject * object, guint prop_id,
         gst_win32_ipc_server_set_max_buffers (priv->server, priv->max_buffers);
       }
       break;
+    case PROP_WAIT_FOR_CONNECTION:
+    {
+      auto wait = g_value_get_boolean (value);
+      if (priv->wait_for_connection != wait) {
+        priv->wait_for_connection = wait;
+        priv->cond.notify_all ();
+      }
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -286,6 +321,12 @@ gst_win32_video_sink_get_property (GObject * object, guint prop_id,
         g_value_set_uint64 (value, 0);
       }
       break;
+    case PROP_WAIT_FOR_CONNECTION:
+      g_value_set_boolean (value, priv->wait_for_connection);
+      break;
+    case PROP_NUM_CLIENTS:
+      g_value_set_uint (value, priv->num_clients);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -298,6 +339,31 @@ gst_win32_ipc_video_sink_provide_clock (GstElement * elem)
   return gst_system_clock_obtain ();
 }
 
+static void
+gst_win32_ipc_video_sink_on_num_clients (GObject * server,
+    GParamSpec * pspec, GstWin32IpcVideoSink * self)
+{
+  auto priv = self->priv;
+
+  guint num_clients = 0;
+  g_object_get (server, "num-clients", &num_clients, nullptr);
+
+  GST_DEBUG_OBJECT (self, "num-clients %u", num_clients);
+
+  {
+    std::lock_guard < std::mutex > lk (priv->lock);
+    priv->num_clients = num_clients;
+    priv->cond.notify_all ();
+  }
+
+  /* This is server's event loop thread. Use other thread to notify */
+  gst_object_call_async (GST_OBJECT (self),
+      [](GstObject * object, gpointer user_data)->void
+      {
+        g_object_notify_by_pspec (G_OBJECT (object), props[PROP_NUM_CLIENTS]);
+      }, nullptr);
+}
+
 static gboolean
 gst_win32_ipc_video_sink_start (GstBaseSink * sink)
 {
@@ -306,13 +372,18 @@ gst_win32_ipc_video_sink_start (GstBaseSink * sink)
 
   GST_DEBUG_OBJECT (self, "Start");
 
-  std::lock_guard < std::mutex > lk (priv->lock);
-  priv->server = gst_win32_ipc_server_new (priv->pipe_name,
-      priv->max_buffers, priv->leaky);
-  if (!priv->server) {
-    GST_ERROR_OBJECT (self, "Couldn't create pipe server");
-    return FALSE;
+  {
+    std::lock_guard < std::mutex > lk (priv->lock);
+    priv->server = gst_win32_ipc_server_new (priv->pipe_name,
+        priv->max_buffers, priv->leaky);
+    if (!priv->server) {
+      GST_ERROR_OBJECT (self, "Couldn't create pipe server");
+      return FALSE;
+    }
   }
+
+  g_signal_connect (priv->server, "notify::num-clients",
+      G_CALLBACK (gst_win32_ipc_video_sink_on_num_clients), self);
 
   return TRUE;
 }
@@ -326,6 +397,11 @@ gst_win32_ipc_video_sink_stop (GstBaseSink * sink)
   GST_DEBUG_OBJECT (self, "Stop");
 
   std::lock_guard < std::mutex > lk (priv->lock);
+  if (priv->server) {
+    g_signal_handlers_disconnect_by_data (priv->server, self);
+    gst_clear_object (&priv->server);
+  }
+
   priv->reset ();
 
   return TRUE;
@@ -342,6 +418,8 @@ gst_win32_ipc_video_sink_unlock (GstBaseSink * sink)
   std::lock_guard < std::mutex > lk (priv->lock);
   if (priv->server)
     gst_win32_ipc_server_set_flushing (priv->server, TRUE);
+  priv->flushing = true;
+  priv->cond.notify_all ();
 
   return TRUE;
 }
@@ -357,6 +435,8 @@ gst_win32_ipc_video_sink_unlock_stop (GstBaseSink * sink)
   std::lock_guard < std::mutex > lk (priv->lock);
   if (priv->server)
     gst_win32_ipc_server_set_flushing (priv->server, FALSE);
+  priv->flushing = false;
+  priv->cond.notify_all ();
 
   return TRUE;
 }
@@ -573,6 +653,20 @@ gst_win32_ipc_video_sink_render (GstBaseSink * sink, GstBuffer * buf)
 
   prepared = gst_buffer_make_writable (prepared);
   GST_BUFFER_PTS (prepared) = pts;
+
+  {
+    std::unique_lock < std::mutex > lk (priv->lock);
+    while (priv->wait_for_connection && priv->num_clients == 0 &&
+        !priv->flushing) {
+      priv->cond.wait (lk);
+    }
+
+    if (priv->flushing) {
+      GST_DEBUG_OBJECT (self, "We are flushing");
+      gst_buffer_unref (prepared);
+      return GST_FLOW_FLUSHING;
+    }
+  }
 
   auto ret = gst_win32_ipc_server_send_data (priv->server,
       prepared, priv->caps, priv->meta);

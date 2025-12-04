@@ -280,7 +280,7 @@ gst_win32_ipc_client_have_data (GstWin32IpcClient * self)
 {
   auto priv = self->priv;
   GstBuffer *buffer = nullptr;
-  UINT32 size;
+  SIZE_T size;
   std::string caps_string;
   GstClockTime pts;
   std::shared_ptr < GstWin32IpcImportData > import_data;

@@ -25,7 +25,7 @@ GST_DEBUG_CATEGORY_EXTERN (gst_win32_ipc_debug);
 
 struct GstWin32IpcMmf
 {
-  explicit GstWin32IpcMmf (HANDLE f, void *b, UINT32 s)
+  explicit GstWin32IpcMmf (HANDLE f, void *b, SIZE_T s)
   : file (f), buffer (b), size (s), ref_count (1)
   {
   }
@@ -42,12 +42,12 @@ struct GstWin32IpcMmf
 
   HANDLE file;
   void *buffer;
-  UINT32 size;
+  SIZE_T size;
   ULONG ref_count;
 };
 
 static GstWin32IpcMmf *
-gst_win32_ipc_mmf_new (HANDLE file, UINT32 size)
+gst_win32_ipc_mmf_new (HANDLE file, SIZE_T size)
 {
   auto buffer = MapViewOfFile (file, FILE_MAP_ALL_ACCESS, 0, 0, size);
   if (!buffer) {
@@ -71,15 +71,20 @@ gst_win32_ipc_mmf_new (HANDLE file, UINT32 size)
  * Returns: a new GstWin32IpcMmf object
  */
 GstWin32IpcMmf *
-gst_win32_ipc_mmf_alloc (UINT32 size)
+gst_win32_ipc_mmf_alloc (SIZE_T size)
 {
   if (!size) {
     GST_ERROR ("Zero size is not allowed");
     return nullptr;
   }
 
+  ULARGE_INTEGER alloc_size;
+  alloc_size.QuadPart = size;
+
   auto file = CreateFileMappingW (INVALID_HANDLE_VALUE, nullptr,
-      PAGE_READWRITE | SEC_COMMIT, 0, size, nullptr);
+      PAGE_READWRITE | SEC_COMMIT, alloc_size.HighPart, alloc_size.LowPart,
+
+      nullptr);
   if (!file) {
     auto err_code = GetLastError ();
     auto msg = g_win32_error_message (err_code);
@@ -102,7 +107,7 @@ gst_win32_ipc_mmf_alloc (UINT32 size)
  * Returns: a new GstWin32IpcMmf object
  */
 GstWin32IpcMmf *
-gst_win32_ipc_mmf_open (UINT32 size, HANDLE file)
+gst_win32_ipc_mmf_open (SIZE_T size, HANDLE file)
 {
   if (!size) {
     GST_ERROR ("Zero size is not allowed");
@@ -122,7 +127,7 @@ gst_win32_ipc_mmf_open (UINT32 size, HANDLE file)
  *
  * Returns: the size of allocated memory
  */
-UINT32
+SIZE_T
 gst_win32_ipc_mmf_get_size (GstWin32IpcMmf * mmf)
 {
   if (!mmf)

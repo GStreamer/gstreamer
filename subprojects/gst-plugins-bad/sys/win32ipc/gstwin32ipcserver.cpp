@@ -34,6 +34,15 @@
 GST_DEBUG_CATEGORY_STATIC (gst_win32_ipc_server_debug);
 #define GST_CAT_DEFAULT gst_win32_ipc_server_debug
 
+enum
+{
+  PROP_0,
+  PROP_NUM_CLIENTS,
+  PROP_LAST,
+};
+
+static GParamSpec *props[PROP_LAST];
+
 #define CONN_BUFFER_SIZE 1024
 
 /* *INDENT-OFF* */
@@ -75,7 +84,7 @@ struct GstWin32IpcServerData
   HANDLE handle = nullptr;
   GstCaps *caps = nullptr;
   std::vector<UINT8> meta;
-  UINT32 size;
+  SIZE_T size;
   UINT64 seq_num;
   GstClockTime timestamp = GST_CLOCK_TIME_NONE;
   GstBuffer *buffer = nullptr;
@@ -163,6 +172,8 @@ struct _GstWin32IpcServer
 
 static void gst_win32_ipc_server_dispose (GObject * object);
 static void gst_win32_ipc_server_finalize (GObject * object);
+static void gst_win32_ipc_server_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 static void gst_win32_ipc_server_on_idle (GstWin32IpcServer * self);
 static void gst_win32_ipc_server_send_msg (GstWin32IpcServer * self,
     GstWin32IpcServerConn * conn);
@@ -177,8 +188,16 @@ gst_win32_ipc_server_class_init (GstWin32IpcServerClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  object_class->finalize = gst_win32_ipc_server_finalize;
   object_class->dispose = gst_win32_ipc_server_dispose;
+  object_class->finalize = gst_win32_ipc_server_finalize;
+  object_class->get_property = gst_win32_ipc_server_get_property;
+
+  props[PROP_NUM_CLIENTS] =
+      g_param_spec_uint ("num-clients", "Number of clients",
+      "The number of connected clients", 0, G_MAXUINT, 0,
+      (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_properties (object_class, PROP_LAST, props);
 
   GST_DEBUG_CATEGORY_INIT (gst_win32_ipc_server_debug, "win32ipcserver",
       0, "win32ipcserver");
@@ -216,6 +235,24 @@ gst_win32_ipc_server_finalize (GObject * object)
   delete self->priv;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+gst_win32_ipc_server_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  auto self = GST_WIN32_IPC_SERVER (object);
+  auto priv = self->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  switch (prop_id) {
+    case PROP_NUM_CLIENTS:
+      g_value_set_uint (value, (guint) priv->conn_map.size ());
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static HANDLE
@@ -276,16 +313,24 @@ gst_win32_ipc_server_close_connection (GstWin32IpcServer * self,
     GstWin32IpcServerConn * conn)
 {
   auto priv = self->priv;
+  bool wakeup = false;
 
   GST_DEBUG_OBJECT (self, "Closing conn-id %u", conn->id);
 
-  priv->conn_map.erase (conn->id);
+  {
+    std::lock_guard < std::mutex > lk (priv->lock);
+    priv->conn_map.erase (conn->id);
+    if (priv->conn_map.empty ())
+      wakeup = true;
+  }
 
-  if (priv->conn_map.empty ()) {
+  if (wakeup) {
     GST_DEBUG_OBJECT (self, "All connection were closed");
     /* Run idle func to flush buffer queue if needed */
     SetEvent (priv->wakeup_event);
   }
+
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_NUM_CLIENTS]);
 }
 
 static void
@@ -685,13 +730,13 @@ gst_win32_ipc_server_on_incoming_connection (GstWin32IpcServer * self,
     conn->data = nullptr;
     if (!priv->data_queue.empty ())
       conn->data = priv->data_queue.front ();
+
+    GST_DEBUG_OBJECT (self, "New connection, conn-id: %u", conn->id);
+
+    /* *INDENT-OFF* */
+    priv->conn_map.insert ({conn->id, conn});
+    /* *INDENT-ON* */
   }
-
-  GST_DEBUG_OBJECT (self, "New connection, conn-id: %u", conn->id);
-
-  /* *INDENT-OFF* */
-  priv->conn_map.insert ({conn->id, conn});
-  /* *INDENT-ON* */
 
   if (conn->data) {
     conn->configured = true;
@@ -699,6 +744,8 @@ gst_win32_ipc_server_on_incoming_connection (GstWin32IpcServer * self,
   } else {
     GST_DEBUG_OBJECT (self, "Have no config data yet, waiting for data");
   }
+
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_NUM_CLIENTS]);
 }
 
 static gpointer
@@ -789,7 +836,10 @@ out:
 
   CloseHandle (overlap.hEvent);
 
-  priv->conn_map.clear ();
+  {
+    std::lock_guard < std::mutex > lk (priv->lock);
+    priv->conn_map.clear ();
+  }
 
   GST_DEBUG_OBJECT (self, "Exit loop thread");
 

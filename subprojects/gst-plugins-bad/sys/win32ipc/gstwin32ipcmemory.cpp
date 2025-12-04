@@ -41,7 +41,7 @@ static GstWin32IpcAllocator *gc_allocator = nullptr;
 /* *INDENT-OFF* */
 struct GstWin32IpcAllocatorPrivate
 {
-  guint size;
+  gsize size;
 
   bool is_gc = false;
 
@@ -369,7 +369,7 @@ gst_win32_ipc_allocator_init_once (void)
 }
 
 GstWin32IpcAllocator *
-gst_win32_ipc_allocator_new (guint size)
+gst_win32_ipc_allocator_new (gsize size)
 {
   g_return_val_if_fail (size != 0, nullptr);
 

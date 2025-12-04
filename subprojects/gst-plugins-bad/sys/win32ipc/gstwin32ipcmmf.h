@@ -26,12 +26,12 @@ G_BEGIN_DECLS
 
 struct GstWin32IpcMmf;
 
-GstWin32IpcMmf * gst_win32_ipc_mmf_alloc (UINT32 size);
+GstWin32IpcMmf * gst_win32_ipc_mmf_alloc (SIZE_T size);
 
-GstWin32IpcMmf * gst_win32_ipc_mmf_open  (UINT32 size,
+GstWin32IpcMmf * gst_win32_ipc_mmf_open  (SIZE_T size,
                                           HANDLE file);
 
-UINT32        gst_win32_ipc_mmf_get_size (GstWin32IpcMmf * mmf);
+SIZE_T        gst_win32_ipc_mmf_get_size (GstWin32IpcMmf * mmf);
 
 void *        gst_win32_ipc_mmf_get_raw  (GstWin32IpcMmf * mmf);
 
