@@ -14705,20 +14705,23 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
     /* don't overflow */
     tdur1 = stream->timescale * (guint64) qtdemux->duration;
     tdur2 = qtdemux->timescale * (guint64) stream->duration;
+    if (tdur1 != 0) {
+      guint64 divresult = gst_util_uint64_scale (tdur2, 10, tdur1);
 
-    /* HACK:
-     * some of those trailers, nowadays, have prologue images that are
-     * themselves video tracks as well. I haven't really found a way to
-     * identify those yet, except for just looking at their duration. */
-    if (tdur1 != 0 && (tdur2 * 10 / tdur1) < 2) {
-      GST_WARNING_OBJECT (qtdemux,
-          "Track shorter than 20%% (%" G_GUINT64_FORMAT "/%" G_GUINT32_FORMAT
-          " vs. %" G_GUINT64_FORMAT "/%" G_GUINT32_FORMAT ") of the stream "
-          "found, assuming preview image or something; skipping track",
-          stream->duration, stream->timescale, qtdemux->duration,
-          qtdemux->timescale);
-      gst_qtdemux_stream_unref (stream);
-      return TRUE;
+      /* HACK:
+       * some of those trailers, nowadays, have prologue images that are
+       * themselves video tracks as well. I haven't really found a way to
+       * identify those yet, except for just looking at their duration. */
+      if (divresult < 2) {
+        GST_WARNING_OBJECT (qtdemux,
+            "Track shorter than 20%% (%" G_GUINT64_FORMAT "/%" G_GUINT32_FORMAT
+            " vs. %" G_GUINT64_FORMAT "/%" G_GUINT32_FORMAT ") of the stream "
+            "found, assuming preview image or something; skipping track",
+            stream->duration, stream->timescale, qtdemux->duration,
+            qtdemux->timescale);
+        gst_qtdemux_stream_unref (stream);
+        return TRUE;
+      }
     }
   }
 
