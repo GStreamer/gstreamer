@@ -220,6 +220,7 @@ static void
 gst_hls_demux2_init (GstHLSDemux * demux)
 {
   demux->keys = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+  demux->start_bitrate = DEFAULT_START_BITRATE;
   g_mutex_init (&demux->keys_lock);
 }
 

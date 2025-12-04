@@ -689,6 +689,7 @@ gst_dash_demux2_init (GstDashDemux2 * demux)
   demux->max_video_framerate_n = DEFAULT_MAX_VIDEO_FRAMERATE_N;
   demux->max_video_framerate_d = DEFAULT_MAX_VIDEO_FRAMERATE_D;
   demux->default_presentation_delay = g_strdup (DEFAULT_PRESENTATION_DELAY);
+  demux->start_bitrate = DEFAULT_START_BITRATE;
 
   g_mutex_init (&demux->client_lock);
 }
