@@ -1,7 +1,7 @@
 foreach plugin : ['accurip', 'adpcmdec', 'adpcmenc', 'aiff', 'asfmux',
                   'audiobuffersplit', 'audiofxbad', 'audiomixmatrix',
                   'audiolatency', 'audiovisualizers', 'autoconvert', 'bayer',
-                  'camerabin2', 'codecalpha', 'codectimestamper', 'coloreffects',
+                  'camerabin2', 'closedcaption', 'codecalpha', 'codectimestamper', 'coloreffects',
                   'debugutils', 'dvbsubenc',
                   'dvbsuboverlay', 'dvdspu', 'faceoverlay', 'festival',
                   'fieldanalysis', 'freeverb', 'frei0r', 'gaudieffects', 'gdp',

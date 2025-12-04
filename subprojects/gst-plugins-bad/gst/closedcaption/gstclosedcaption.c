@@ -30,7 +30,6 @@
 #include "gstccextractor.h"
 #include "gstcea608mux.h"
 #include "gstline21dec.h"
-#include "gstceaccoverlay.h"
 #include "gstline21enc.h"
 #include "ccutils.h"
 #include "gsth264ccextractor.h"
@@ -51,7 +50,6 @@ closedcaption_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (ccconverter, plugin);
   ret |= GST_ELEMENT_REGISTER (ccextractor, plugin);
   ret |= GST_ELEMENT_REGISTER (line21decoder, plugin);
-  ret |= GST_ELEMENT_REGISTER (cc708overlay, plugin);
   ret |= GST_ELEMENT_REGISTER (line21encoder, plugin);
   ret |= GST_ELEMENT_REGISTER (h264ccextractor, plugin);
   ret |= GST_ELEMENT_REGISTER (h265ccextractor, plugin);
