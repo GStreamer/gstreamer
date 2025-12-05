@@ -378,9 +378,6 @@ gst_flv_demux_get_track (GstFlvDemux * demux, gint16 track_id,
 {
   guint array_idx;
   GPtrArray *array = is_audio ? demux->audio_tracks : demux->video_tracks;
-  gint16 *default_track_id =
-      is_audio ? &demux->
-      default_audio_track_id : &demux->default_video_track_id;
 
   GstFlvDemuxTrack *track = NULL;
   if (g_ptr_array_find_with_equal_func (array, &track_id,
@@ -398,10 +395,6 @@ gst_flv_demux_get_track (GstFlvDemux * demux, gint16 track_id,
         "added new track in the %s tracks array for track id %d",
         is_audio ? "audio" : "video", track_id);
 
-    if (track->id != -1 && (*default_track_id == -1
-            || track->id < *default_track_id)) {
-      *default_track_id = track->id;
-    }
   } else {
     GST_DEBUG_OBJECT (demux,
         "track exists at index %u in the %s tracks array for track id %d",
@@ -443,7 +436,7 @@ gst_flv_demux_parse_metadata_item (GstFlvDemux * demux, GstByteReader * reader,
 {
   gchar *tag_name = NULL;
   guint8 tag_type = 0;
-  gint16 track_id = -1;
+  gint16 track_id = 0;
 
   if (object_name) {
     if (!strcmp (object_name, "audioTrackIdInfoMap")
@@ -451,8 +444,8 @@ gst_flv_demux_parse_metadata_item (GstFlvDemux * demux, GstByteReader * reader,
       track_id = _get_track_id_from_str (demux, key);
 
       // track id invalid
-      if (track_id < 0) {
-        GST_WARNING_OBJECT (demux, "Got an invalid track id");
+      if (track_id <= 0) {
+        GST_WARNING_OBJECT (demux, "Got an invalid track id: %d", track_id);
         return FALSE;
       }
     }
@@ -552,6 +545,11 @@ gst_flv_demux_parse_metadata_item (GstFlvDemux * demux, GstByteReader * reader,
           track->tags = gst_tag_list_new_empty ();
         gst_tag_list_add (track->tags, GST_TAG_MERGE_REPLACE,
             GST_TAG_NOMINAL_BITRATE, track->bitrate, NULL);
+      } else if (!strcmp (tag_name, "audiocodecid")) {
+        GstFlvDemuxTrack *track =
+            gst_flv_demux_get_track (demux, track_id, TRUE);
+
+        track->codec_tag = d;
       } else if (!strcmp (tag_name, "videodatarate")) {
         GstFlvDemuxTrack *track =
             gst_flv_demux_get_track (demux, track_id, FALSE);
@@ -1151,10 +1149,12 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
       GstMessage *msg;
       GstStreamFlags stream_flags = GST_STREAM_FLAG_NONE;
 
-      if (track->id == demux->default_audio_track_id)
+      if (track->id == 0) {
+        // only track ID 0 is the default track
         stream_flags = GST_STREAM_FLAG_SELECT;
+      }
 
-      // In case of caps change, the stream might be existing, do not create then
+      /* In case of caps change, the stream might be existing, do not create then */
       if (!track->stream) {
         track->stream =
             gst_stream_new (stream_id, caps, GST_STREAM_TYPE_AUDIO,
@@ -1496,7 +1496,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
   GstMapInfo map;
   GstBuffer *outbuf;
   guint8 *data;
-  gint16 track_id = -1;
+  gint16 track_id = 0;
   GstFlvDemuxTrack *track = NULL;
   gboolean is_header = FALSE;
   gboolean enhanced = FALSE;
@@ -1569,7 +1569,9 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
   if (codec_tag == FLV_EXTENDED_AUDIO_HEADER) {
     GstEFlvAudioPacketType audio_packet_type = flags & 0x0f;    // byte boundary
     GstEFlvAvMultiTrackType multitrack_type;
+    gboolean is_multitrack = FALSE;
 
+    enhanced = TRUE;
     while (audio_packet_type == FLV_AUDIO_PACKET_TYPE_MODEX) {
       guint32 mod_ex_data_size = 0;
       guint8 size = 0;
@@ -1614,7 +1616,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 
     if (audio_packet_type == FLV_AUDIO_PACKET_TYPE_MULTITRACK) {
       guint8 types;
-      enhanced = TRUE;
+      is_multitrack = TRUE;
 
       if (!gst_byte_reader_get_uint8 (&reader, &types)) {
         GST_ERROR_OBJECT (demux, "failed to parse types");
@@ -1623,7 +1625,14 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 
       multitrack_type = types & 0xf0;
       audio_packet_type = types & 0x0f;
+    } else {
+      if (!gst_byte_reader_get_uint32_le (&reader, &codec_tag)) {
+        GST_ERROR_OBJECT (demux, "failed to parse codec fourcc");
+        goto beach;
+      }
+    }
 
+    if (is_multitrack) {
       if (multitrack_type != FLV_AV_MULTITRACK_TYPE_MANYTRACKS_MANYCODECS) {
         if (!gst_byte_reader_get_uint32_le (&reader, &codec_tag)) {
           GST_ERROR_OBJECT (demux, "failed to parse codec fourcc");
@@ -1646,52 +1655,45 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
             "handling only AvMultitrackType.OneTrack currently");
         goto beach;
       }
+    }
 
-      if (audio_packet_type == FLV_AUDIO_PACKET_TYPE_MULTICHANNELCONFIG) {
-        guint8 channel_order = 0;
-        guint8 channel_cnt = 0;
+    if (audio_packet_type == FLV_AUDIO_PACKET_TYPE_MULTICHANNELCONFIG) {
+      guint8 channel_order = 0;
+      guint8 channel_cnt = 0;
 
-        if (!gst_byte_reader_get_uint8 (&reader, &channel_order)) {
-          GST_ERROR_OBJECT (demux, "failed to parse channel order");
-          goto beach;
-        }
-
-        if (!gst_byte_reader_get_uint8 (&reader, &channel_cnt)) {
-          GST_ERROR_OBJECT (demux, "failed to parse channel count");
-          goto beach;
-        }
-
-        if (channel_order == FLV_AUDIO_CHANNEL_ORDER_CUSTOM) {
-          /* FIXME: save the channel order */
-          if (!gst_byte_reader_skip (&reader, 1)) {
-            GST_ERROR_OBJECT (demux,
-                "Failed to skip custom channel order byte");
-            goto beach;
-          }
-        } else if (channel_order == FLV_AUDIO_CHANNEL_ORDER_NATIVE) {
-          /* FIXME: get channels from the index */
-          if (!gst_byte_reader_skip (&reader, 3)) {
-            GST_ERROR_OBJECT (demux,
-                "Failed to skip native channel order bytes");
-            goto beach;
-          }
-        }
-      }
-
-      if (audio_packet_type == FLV_AUDIO_PACKET_TYPE_SEQUENCE_START) {
-        is_header = TRUE;
-      }
-
-      if (audio_packet_type == FLV_AUDIO_PACKET_TYPE_SEQUENCE_END) {
-        GST_INFO_OBJECT (demux, "received sequence end");
-        ret = GST_FLOW_EOS;
+      if (!gst_byte_reader_get_uint8 (&reader, &channel_order)) {
+        GST_ERROR_OBJECT (demux, "failed to parse channel order");
         goto beach;
       }
-    } else {
-      if (!gst_byte_reader_get_uint32_le (&reader, &codec_tag)) {
-        GST_ERROR_OBJECT (demux, "failed to parse codec fourcc");
+
+      if (!gst_byte_reader_get_uint8 (&reader, &channel_cnt)) {
+        GST_ERROR_OBJECT (demux, "failed to parse channel count");
         goto beach;
       }
+
+      if (channel_order == FLV_AUDIO_CHANNEL_ORDER_CUSTOM) {
+        /* FIXME: save the channel order */
+        if (!gst_byte_reader_skip (&reader, 1)) {
+          GST_ERROR_OBJECT (demux, "Failed to skip custom channel order byte");
+          goto beach;
+        }
+      } else if (channel_order == FLV_AUDIO_CHANNEL_ORDER_NATIVE) {
+        /* FIXME: get channels from the index */
+        if (!gst_byte_reader_skip (&reader, 3)) {
+          GST_ERROR_OBJECT (demux, "Failed to skip native channel order bytes");
+          goto beach;
+        }
+      }
+    }
+
+    if (audio_packet_type == FLV_AUDIO_PACKET_TYPE_SEQUENCE_START) {
+      is_header = TRUE;
+    }
+
+    if (audio_packet_type == FLV_AUDIO_PACKET_TYPE_SEQUENCE_END) {
+      GST_INFO_OBJECT (demux, "received sequence end");
+      ret = GST_FLOW_EOS;
+      goto beach;
     }
 
     /* header starts after 4 bytes of timestamp and 3 bytes of stream id
@@ -1808,7 +1810,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
   if (G_LIKELY (!track->pad)) {
     gchar pad_name[10];
     const gchar *templ_name;
-    if (track_id >= 0) {
+    if (track_id > 0) {
       g_snprintf (pad_name, sizeof (pad_name), "audio_%u", track_id);
       templ_name = "audio_%u";
     } else {
@@ -1820,7 +1822,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
         gst_pad_new_from_template (gst_element_class_get_pad_template
         (GST_ELEMENT_GET_CLASS (demux), templ_name), pad_name);
     if (G_UNLIKELY (!track->pad)) {
-      GST_WARNING_OBJECT (demux, "failed creating audio pad");
+      GST_WARNING_OBJECT (demux, "failed creating audio pad %s", pad_name);
       ret = GST_FLOW_ERROR;
       goto beach;
     }
@@ -1865,7 +1867,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
   if (G_UNLIKELY (rate != track->info.audio.rate
           || channels != track->info.audio.channels
           || codec_tag != track->codec_tag
-          || width != track->info.audio.width || track->codec_data == NULL)) {
+          || width != track->info.audio.width)) {
     GST_DEBUG_OBJECT (demux,
         "audio settings have changed, changing caps for codec_tag %d",
         codec_tag);
@@ -2120,10 +2122,12 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag,
       GstMessage *msg;
       GstStreamFlags stream_flags = GST_STREAM_FLAG_NONE;
 
-      if (track->id == demux->default_video_track_id) {
+      if (track->id == 0) {
+        // only track ID 0 is the default track
         stream_flags = GST_STREAM_FLAG_SELECT;
       }
-      // In case of caps change, the stream might be existing, do not create then
+
+      /* In case of caps change, the stream might be existing, do not create then */
       if (!track->stream) {
         track->stream =
             gst_stream_new (stream_id, caps, GST_STREAM_TYPE_VIDEO,
@@ -2213,7 +2217,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   GstBuffer *outbuf;
   GstMapInfo map;
   guint8 *data;
-  gint16 track_id = -1;
+  gint16 track_id = 0;
   GstFlvDemuxTrack *track = NULL;
   GstByteReader reader;
 
@@ -2525,7 +2529,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
     /* Create new pad for the new track */
     gchar pad_name[10];
     const gchar *templ_name;
-    if (track_id >= 0) {
+    if (track_id > 0) {
       g_snprintf (pad_name, sizeof (pad_name), "video_%u", track_id);
       templ_name = "video_%u";
     } else {
@@ -4763,9 +4767,6 @@ gst_flv_demux_init (GstFlvDemux * demux)
   demux->flowcombiner = gst_flow_combiner_new ();
 
   demux->own_index = FALSE;
-
-  demux->default_audio_track_id = -1;
-  demux->default_video_track_id = -1;
 
   demux->audio_tracks = g_ptr_array_new_with_free_func ((GDestroyNotify)
       gst_flv_demux_free_track);

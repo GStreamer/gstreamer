@@ -65,11 +65,11 @@ struct _GstFlvDemux
   gboolean streams_aware;
 
   /* <private> */
-  
+
   GstIndex *index;
   gint index_id;
   gboolean own_index;
-  
+
   GArray * times;
   GArray * filepositions;
 
@@ -127,8 +127,6 @@ struct _GstFlvDemux
 
   GPtrArray *audio_tracks;
   GPtrArray *video_tracks;
-  gint16 default_audio_track_id;
-  gint16 default_video_track_id;
 };
 
 struct _GstFlvDemuxClass
