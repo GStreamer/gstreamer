@@ -74,6 +74,21 @@ typedef enum {
   GST_FLV_MUX_TRACK_TYPE_VIDEO = 2,
 } GstFlvMuxTrackType;
 
+/**
+ * GstFlvTrackMode:
+ * @GST_FLV_TRACK_MODE_ENHANCED_MULTITRACK: Stream the track with each FLV packet containing a Multitrack.OneTrack type. The track ID is always 0.
+ * @GST_FLV_TRACK_MODE_ENHANCED_NON_MULTITRACK: Stream the track in enhanced FLV, but it is not Multitrack type packet, so there won't be a track ID.
+ * @GST_FLV_TRACK_MODE_LEGACY: Stream the track in the legacy FLV format without any extended header.
+ *
+ * Since: 1.28
+ */
+typedef enum
+{
+  GST_FLV_TRACK_MODE_ENHANCED_MULTITRACK = 0,
+  GST_FLV_TRACK_MODE_ENHANCED_NON_MULTITRACK = 1,
+  GST_FLV_TRACK_MODE_LEGACY = 2,
+} GstFlvTrackMode;
+
 struct _GstFlvMuxPad
 {
   GstAggregatorPad aggregator_pad;
@@ -92,9 +107,9 @@ struct _GstFlvMuxPad
 
   gboolean info_changed;
   gboolean drop_deltas;
-  guint32 codec_fourcc;
   gint16 track_id;
   GstFlvMuxTrackType type;
+  guint8 flv_track_mode;
 };
 
 struct _GstFlvMuxPadClass {
@@ -131,6 +146,8 @@ struct _GstFlvMux {
   guint64 last_dts;
 
   gboolean sent_header;
+  guint max_audio_pad_serial;
+  guint max_video_pad_serial;
 };
 
 struct _GstFlvMuxClass {

@@ -7300,6 +7300,7 @@
                     "GObject"
                 ],
                 "interfaces": [
+                    "GstChildProxy",
                     "GstTagSetter"
                 ],
                 "klass": "Codec/Muxer",
@@ -7308,7 +7309,7 @@
                         "caps": "audio/x-adpcm:\n         layout: swf\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)11025, (int)22050, (int)44100 }\naudio/mpeg:\n    mpegversion: 1\n          layer: 3\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)8000, (int)11025, (int)22050, (int)44100 }\n         parsed: true\naudio/mpeg:\n    mpegversion: { (int)4, (int)2 }\n  stream-format: raw\naudio/x-nellymoser:\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)8000, (int)11025, (int)16000, (int)22050, (int)44100 }\naudio/x-raw:\n         format: { U8, S16LE }\n         layout: interleaved\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)11025, (int)22050, (int)44100 }\naudio/x-alaw:\n       channels: { (int)1, (int)2 }\n           rate: 8000\naudio/x-mulaw:\n       channels: { (int)1, (int)2 }\n           rate: 8000\naudio/x-speex:\n       channels: 1\n           rate: 16000\n",
                         "direction": "sink",
                         "presence": "request",
-                        "type": "GstFlvMuxPad"
+                        "type": "GstEFlvMuxPad"
                     },
                     "audio_%%u": {
                         "caps": "audio/mpeg:\n    mpegversion: 1\n          layer: 3\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)8000, (int)11025, (int)22050, (int)44100 }\n         parsed: true\naudio/mpeg:\n    mpegversion: { (int)4, (int)2 }\n  stream-format: raw\n",
@@ -7323,10 +7324,10 @@
                         "type": "GstAggregatorPad"
                     },
                     "video": {
-                        "caps": "video/x-flash-video:\nvideo/x-flash-screen:\nvideo/x-vp6-flash:\nvideo/x-vp6-alpha:\nvideo/x-h264:\n  stream-format: avc\n",
+                        "caps": "video/x-flash-video:\nvideo/x-flash-screen:\nvideo/x-vp6-flash:\nvideo/x-vp6-alpha:\nvideo/x-h264:\n  stream-format: avc\nvideo/x-h265:\n  stream-format: hvc1\n      alignment: au\n",
                         "direction": "sink",
                         "presence": "request",
-                        "type": "GstFlvMuxPad"
+                        "type": "GstEFlvMuxPad"
                     },
                     "video_%%u": {
                         "caps": "video/x-h264:\n  stream-format: avc\nvideo/x-h265:\n  stream-format: hvc1\n",
@@ -7391,6 +7392,7 @@
                     "GObject"
                 ],
                 "interfaces": [
+                    "GstChildProxy",
                     "GstTagSetter"
                 ],
                 "klass": "Codec/Muxer",
@@ -7483,6 +7485,32 @@
         "filename": "gstflv",
         "license": "LGPL",
         "other-types": {
+            "GstEFlvMuxPad": {
+                "hierarchy": [
+                    "GstEFlvMuxPad",
+                    "GstFlvMuxPad",
+                    "GstAggregatorPad",
+                    "GstPad",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "kind": "object",
+                "properties": {
+                    "flv-track-mode": {
+                        "blurb": "Determines whether to stream FLV in Enhanced multitrack or non-multitrack or legacy format",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "legacy (2)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstFlvTrackMode",
+                        "writable": true
+                    }
+                }
+            },
             "GstFlvMux": {
                 "hierarchy": [
                     "GstFlvMux",
@@ -7493,6 +7521,7 @@
                     "GObject"
                 ],
                 "interfaces": [
+                    "GstChildProxy",
                     "GstTagSetter"
                 ],
                 "kind": "object",
@@ -7571,6 +7600,26 @@
                 "kind": "object",
                 "properties": {},
                 "signals": {}
+            },
+            "GstFlvTrackMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Enhanced FLV multitrack type with track ID 0",
+                        "name": "multitrack",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Enhanced FLV but not multitrack type, i.e., no track ID",
+                        "name": "non-multitrack",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Legacy FLV",
+                        "name": "legacy",
+                        "value": "2"
+                    }
+                ]
             }
         },
         "package": "GStreamer Good Plug-ins",
