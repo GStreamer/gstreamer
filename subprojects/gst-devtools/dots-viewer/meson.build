@@ -56,3 +56,7 @@ foreach binname: ['gst-dots-viewer']
       '--exe-suffix', exe_suffix,
     ])
 endforeach
+
+devenv = environment()
+devenv.append('PATH', meson.current_build_dir())
+meson.add_devenv(devenv)
