@@ -30,6 +30,7 @@
 #include <atomic>
 #include <memory>
 #include <deque>
+#include <vector>
 
 GST_DEBUG_CATEGORY_STATIC (gst_win32_ipc_server_debug);
 #define GST_CAT_DEFAULT gst_win32_ipc_server_debug
@@ -107,11 +108,18 @@ struct GstWin32IpcServerConn : public OVERLAPPED
 
   ~GstWin32IpcServerConn()
   {
+    close ();
+  }
+
+  void close()
+  {
     if (pipe != INVALID_HANDLE_VALUE) {
-      CancelIo (pipe);
+      CancelIoEx (pipe, nullptr);
       DisconnectNamedPipe (pipe);
       CloseHandle (pipe);
     }
+
+    pipe = INVALID_HANDLE_VALUE;
   }
 
   GstWin32IpcServer *server;
@@ -130,6 +138,8 @@ struct GstWin32IpcServerConn : public OVERLAPPED
   guint id;
   bool pending_have_data = false;
   bool configured = false;
+
+  std::atomic<bool> io_pending = { false };
 };
 
 struct GstWin32IpcServerPrivate
@@ -151,6 +161,8 @@ struct GstWin32IpcServerPrivate
   guint64 seq_num = 0;
   guint next_conn_id = 0;
   std::unordered_map<guint, std::shared_ptr<GstWin32IpcServerConn>> conn_map;
+  std::vector<std::shared_ptr<GstWin32IpcServerConn>> conn_gc;
+  std::vector<std::shared_ptr<GstWin32IpcServerConn>> conn_tmp;
   GThread *loop_thread = nullptr;
   std::atomic<bool> aborted = { false };
   std::deque<std::shared_ptr<GstWin32IpcServerData>> data_queue;
@@ -309,6 +321,7 @@ gst_win32_ipc_server_create_pipe (GstWin32IpcServer * self,
   return pipe;
 }
 
+/* *INDENT-OFF* */
 static void
 gst_win32_ipc_server_close_connection (GstWin32IpcServer * self,
     GstWin32IpcServerConn * conn)
@@ -318,9 +331,22 @@ gst_win32_ipc_server_close_connection (GstWin32IpcServer * self,
 
   GST_DEBUG_OBJECT (self, "Closing conn-id %u", conn->id);
 
+  conn->close ();
+
   {
     std::lock_guard < std::mutex > lk (priv->lock);
-    priv->conn_map.erase (conn->id);
+    auto it = priv->conn_map.find (conn->id);
+    if (it != priv->conn_map.end ()) {
+      auto keep = it->second;
+      priv->conn_map.erase (it);
+
+      if (conn->io_pending) {
+        GST_DEBUG_OBJECT (self, "conn-id %u has pending I/O, moving to GC",
+            conn->id);
+        priv->conn_gc.push_back (keep);
+      }
+    }
+
     if (priv->conn_map.empty ())
       wakeup = true;
   }
@@ -333,6 +359,7 @@ gst_win32_ipc_server_close_connection (GstWin32IpcServer * self,
 
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_NUM_CLIENTS]);
 }
+/* *INDENT-ON* */
 
 static void
 gst_win32_ipc_server_eos (GstWin32IpcServer * self,
@@ -491,6 +518,12 @@ gst_win32_ipc_server_payload_finish (DWORD error_code, DWORD size,
   GstWin32IpcServerConn *conn =
       static_cast < GstWin32IpcServerConn * >(overlap);
   auto self = conn->server;
+  auto priv = self->priv;
+
+  conn->io_pending = false;
+
+  if (priv->aborted)
+    return;
 
   if (error_code != ERROR_SUCCESS) {
     auto err = g_win32_error_message (error_code);
@@ -510,8 +543,14 @@ gst_win32_ipc_server_wait_msg_header_finish (DWORD error_code, DWORD size,
 {
   GstWin32IpcServerConn *conn =
       static_cast < GstWin32IpcServerConn * >(overlap);
-  auto self = conn->server;
   GstWin32IpcPktHdr hdr;
+  auto self = conn->server;
+  auto priv = self->priv;
+
+  conn->io_pending = false;
+
+  if (priv->aborted)
+    return;
 
   if (error_code != ERROR_SUCCESS) {
     auto err = g_win32_error_message (error_code);
@@ -535,6 +574,7 @@ gst_win32_ipc_server_wait_msg_header_finish (DWORD error_code, DWORD size,
 
   GST_LOG_OBJECT (self, "Reading payload");
 
+  conn->io_pending = true;
   if (!ReadFileEx (conn->pipe, conn->client_msg.data () +
           sizeof (GstWin32IpcPktHdr), hdr.payload_size, conn,
           gst_win32_ipc_server_payload_finish)) {
@@ -543,6 +583,7 @@ gst_win32_ipc_server_wait_msg_header_finish (DWORD error_code, DWORD size,
     GST_WARNING_OBJECT (self, "ReadFileEx failed with 0x%x (%s)",
         last_err, err);
     g_free (err);
+    conn->io_pending = false;
     gst_win32_ipc_server_close_connection (self, conn);
   }
 }
@@ -551,6 +592,12 @@ static void
 gst_win32_ipc_server_wait_msg (GstWin32IpcServer * self,
     GstWin32IpcServerConn * conn)
 {
+  auto priv = self->priv;
+
+  if (priv->aborted)
+    return;
+
+  conn->io_pending = true;
   if (!ReadFileEx (conn->pipe, conn->client_msg.data (),
           sizeof (GstWin32IpcPktHdr), conn,
           gst_win32_ipc_server_wait_msg_header_finish)) {
@@ -559,6 +606,7 @@ gst_win32_ipc_server_wait_msg (GstWin32IpcServer * self,
     GST_WARNING_OBJECT (self, "ReadFileEx failed with 0x%x (%s)",
         last_err, err);
     g_free (err);
+    conn->io_pending = false;
     gst_win32_ipc_server_close_connection (self, conn);
   }
 }
@@ -667,6 +715,12 @@ gst_win32_ipc_server_send_msg_finish (DWORD error_code, DWORD size,
   GstWin32IpcServerConn *conn =
       static_cast < GstWin32IpcServerConn * >(overlap);
   auto self = conn->server;
+  auto priv = self->priv;
+
+  conn->io_pending = false;
+
+  if (priv->aborted)
+    return;
 
   if (error_code != ERROR_SUCCESS) {
     auto err = g_win32_error_message (error_code);
@@ -703,7 +757,14 @@ static void
 gst_win32_ipc_server_send_msg (GstWin32IpcServer * self,
     GstWin32IpcServerConn * conn)
 {
+  auto priv = self->priv;
+
   GST_LOG_OBJECT (self, "Sending message");
+
+  if (priv->aborted)
+    return;
+
+  conn->io_pending = true;
 
   if (!WriteFileEx (conn->pipe, conn->server_msg.data (),
           conn->server_msg.size (), conn,
@@ -713,6 +774,7 @@ gst_win32_ipc_server_send_msg (GstWin32IpcServer * self,
     GST_WARNING_OBJECT (self, "WriteFileEx failed with 0x%x (%s)",
         last_err, err);
     g_free (err);
+    conn->io_pending = false;
     gst_win32_ipc_server_close_connection (self, conn);
   }
 }
@@ -748,6 +810,31 @@ gst_win32_ipc_server_on_incoming_connection (GstWin32IpcServer * self,
   }
 
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_NUM_CLIENTS]);
+}
+
+/* *INDENT-OFF* */
+static bool
+gst_win32_ipc_server_run_gc (GstWin32IpcServer * self)
+{
+  auto priv = self->priv;
+  bool any_pending = false;
+
+  if (priv->conn_gc.empty ())
+    return false;
+
+  std::vector<std::shared_ptr<GstWin32IpcServerConn>> keep;
+  for (auto &conn : priv->conn_gc) {
+    if (conn->io_pending.load ()) {
+      keep.push_back (conn);
+      any_pending = true;
+    } else {
+      GST_DEBUG_OBJECT (self, "GC connection conn-id %u", conn->id);
+    }
+  }
+
+  priv->conn_gc.swap (keep);
+
+  return any_pending;
 }
 
 static gpointer
@@ -827,6 +914,8 @@ gst_win32_ipc_server_loop_thread_func (GstWin32IpcServer * self)
         goto out;
       }
     }
+
+    gst_win32_ipc_server_run_gc (self);
   } while (true);
 
 out:
@@ -840,13 +929,25 @@ out:
 
   {
     std::lock_guard < std::mutex > lk (priv->lock);
+    for (auto & it : priv->conn_map)
+      priv->conn_gc.push_back (it.second);
+
     priv->conn_map.clear ();
+  }
+
+  /* Wait for pending APC if any */
+  for (guint i = 0; i < 100; i++) {
+    if (!gst_win32_ipc_server_run_gc (self))
+      break;
+
+    SleepEx (10, TRUE);
   }
 
   GST_DEBUG_OBJECT (self, "Exit loop thread");
 
   return nullptr;
 }
+/* *INDENT-ON* */
 
 GstFlowReturn
 gst_win32_ipc_server_send_data (GstWin32IpcServer * server,
