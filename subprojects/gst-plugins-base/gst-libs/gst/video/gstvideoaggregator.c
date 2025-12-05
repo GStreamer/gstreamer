@@ -2822,9 +2822,15 @@ gst_video_aggregator_decide_allocation (GstAggregator * agg, GstQuery * query)
 
     /* If change are not acceptable, fallback to generic pool */
     if (!gst_buffer_pool_config_validate_params (config, caps, size, min, max)) {
+      gst_structure_free (config);
+      gst_clear_object (&pool);
+    } else if (!gst_buffer_pool_set_config (pool, config)) {
+      gst_clear_object (&pool);
+    }
+
+    if (!pool) {
       GST_DEBUG_OBJECT (agg, "unsupported pool, making new pool");
 
-      gst_object_unref (pool);
       pool = gst_video_buffer_pool_new ();
       {
         gchar *name =
@@ -2832,6 +2838,7 @@ gst_video_aggregator_decide_allocation (GstAggregator * agg, GstQuery * query)
         g_object_set (pool, "name", name, NULL);
         g_free (name);
       }
+      config = gst_buffer_pool_get_config (pool);
       gst_buffer_pool_config_set_params (config, caps, size, min, max);
       gst_buffer_pool_config_set_allocator (config, allocator, &params);
 
@@ -2839,10 +2846,10 @@ gst_video_aggregator_decide_allocation (GstAggregator * agg, GstQuery * query)
         gst_buffer_pool_config_add_option (config,
             GST_BUFFER_POOL_OPTION_VIDEO_META);
       }
-    }
 
-    if (!gst_buffer_pool_set_config (pool, config))
-      goto config_failed;
+      if (!gst_buffer_pool_set_config (pool, config))
+        goto config_failed;
+    }
   }
 
   if (update)
