@@ -626,17 +626,6 @@ gst_gl_get_plane_data_size (const GstVideoInfo * info,
   const GstVideoFormatInfo *finfo = info->finfo;
   gint comp[GST_VIDEO_MAX_COMPONENTS];
   gint padded_height;
-  gsize plane_size;
-
-  gst_video_format_info_component (info->finfo, plane, comp);
-
-  padded_height = info->height;
-
-  if (align)
-    padded_height += align->padding_top + align->padding_bottom;
-
-  padded_height =
-      GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info->finfo, comp[0], padded_height);
 
   if (GST_VIDEO_FORMAT_INFO_IS_TILED (finfo)) {
     gsize stride;
@@ -648,12 +637,19 @@ gst_gl_get_plane_data_size (const GstVideoInfo * info,
     y_tiles = GST_VIDEO_TILE_Y_TILES (stride);
     tile_size = GST_VIDEO_FORMAT_INFO_TILE_SIZE (info->finfo, plane);
 
-    plane_size = x_tiles * y_tiles * tile_size;
-  } else {
-    plane_size = GST_VIDEO_INFO_PLANE_STRIDE (info, plane) * padded_height;
+    return x_tiles * y_tiles * tile_size;
   }
 
-  return plane_size;
+  gst_video_format_info_component (info->finfo, plane, comp);
+
+  padded_height = info->height;
+  if (align)
+    padded_height += align->padding_top + align->padding_bottom;
+
+  padded_height =
+      GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info->finfo, comp[0], padded_height);
+
+  return GST_VIDEO_INFO_PLANE_STRIDE (info, plane) * padded_height;
 }
 
 /**
