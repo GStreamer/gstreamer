@@ -1837,8 +1837,6 @@ gst_gl_context_egl_get_format_modifiers (GstGLContext * context, gint fourcc,
     goto beach;
 
   format = &g_array_index (egl->dma_formats, GstGLDmaFormat, index);
-  if (!format)
-    goto beach;
 
   *modifiers = format->modifiers;
   ret = TRUE;
