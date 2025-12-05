@@ -646,6 +646,10 @@ gst_gl_get_plane_data_size (const GstVideoInfo * info,
   if (align)
     padded_height += align->padding_top + align->padding_bottom;
 
+  /* Round according to the UV vertical subsampling */
+  padded_height =
+      GST_ROUND_UP_N (padded_height, 1 << info->finfo->h_sub[GST_VIDEO_COMP_U]);
+
   padded_height =
       GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info->finfo, comp[0], padded_height);
 
