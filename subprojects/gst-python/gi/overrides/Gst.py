@@ -638,8 +638,8 @@ class Fraction(Gst.Fraction):
             # Compute greatest common divisor
             gcd = __gcd(num, denom)
             if gcd != 0:
-                num /= gcd
-                denom /= gcd
+                num //= gcd
+                denom //= gcd
 
             self.num = num
             self.denom = denom
