@@ -194,7 +194,7 @@ gst_fd_mem_share (GstMemory * gmem, gssize offset, gssize size)
     parent = (GstMemory *) mem;
 
   if (size == -1)
-    size = gmem->maxsize - offset;
+    size = gmem->size - offset;
 
   sub = g_new0 (GstFdMemory, 1);
   /* the shared memory is always readonly */
