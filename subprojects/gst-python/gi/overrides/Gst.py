@@ -860,6 +860,9 @@ class ValueArray(Gst.ValueArray):
     def get_size(this: ValueArray) -> int:
         return len(this.array)
 
+    def __iter__(self) -> typing.Iterator[typing.Any]:
+        return iter(self.array)
+
     def __getitem__(self, index: int) -> typing.Any:
         return self.array[index]
 
@@ -901,6 +904,9 @@ class ValueList(Gst.ValueList):
     @staticmethod
     def get_size(this: ValueList) -> int:
         return len(this.array)
+
+    def __iter__(self) -> typing.Iterator[typing.Any]:
+        return iter(self.array)
 
     def __getitem__(self, index: int) -> typing.Any:
         return self.array[index]

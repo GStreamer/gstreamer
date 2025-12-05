@@ -335,6 +335,11 @@ class TestValueArray(TestCase):
         self.assertEqual(Gst.ValueArray.get_value(array, 2), 2)
         self.assertEqual(Gst.ValueArray.get_value(array, 3), 3)
 
+    def testIterator(self):
+        array = Gst.ValueArray([1, 2, 3, 4, 5])
+        result = [i for i in array]
+        self.assertEqual(result, [1, 2, 3, 4, 5])
+
 
 class TestValueList(TestCase):
     def testConstructor(self):
