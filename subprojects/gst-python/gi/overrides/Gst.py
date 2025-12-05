@@ -91,8 +91,7 @@ class Element(Gst.Element):
         '''
         for pair in pairwise(args):
             if not pair[0].link(pair[1]):
-                raise LinkError(
-                    'Failed to link {} and {}'.format(pair[0], pair[1]))
+                raise LinkError(f'Failed to link {pair[0]} and {pair[1]}')
 
 
 override(Element)
@@ -259,7 +258,7 @@ class Caps(MiniObjectMixin, Gst.Caps):  # type: ignore[misc]
     def __init__(self, *args, **kwargs):
         return super(Caps, self).__init__()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.to_string()
 
     def __getitem__(self, index: int) -> typing.Optional[Structure]:
@@ -331,8 +330,7 @@ class PadFunc:
             try:
                 res = func(pad, parent, obj)
             except TypeError:
-                raise TypeError("Invalid method %s, 2 or 3 arguments required"
-                                % func)
+                raise TypeError(f"Invalid method {func}, 2 or 3 arguments required")
 
         return res
 
@@ -355,7 +353,7 @@ class Pad(Gst.Pad):
 
     def set_caps(self, caps: Caps) -> bool:  # type: ignore[override]
         if not isinstance(caps, Gst.Caps):
-            raise TypeError("%s is not a Gst.Caps." % (type(caps)))
+            raise TypeError(f"{type(caps)} is not a Gst.Caps.")
 
         if not caps.is_fixed():
             return False
@@ -571,6 +569,9 @@ __all__.append('ElementFactory')
 
 
 class Fraction(Gst.Fraction):
+    num: int
+    denom: int
+
     def __init__(self, num: int, denom: int = 1):
         def __gcd(a, b):
             while b != 0:
@@ -602,54 +603,52 @@ class Fraction(Gst.Fraction):
         __simplify()
         self.type = "fraction"
 
-    def __repr__(self):
-        return '<Gst.Fraction %s>' % (str(self))
+    def __repr__(self) -> str:
+        return f'<Gst.Fraction {self}>'
 
     def __value__(self):
         return self.num / self.denom
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, Fraction):
             return self.num * other.denom == other.num * self.denom
         return False
 
-    def __ne__(self, other):
+    def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
-    def __mul__(self, other):
+    def __mul__(self, other: object) -> Fraction:
         if isinstance(other, Fraction):
             return Fraction(self.num * other.num,
                             self.denom * other.denom)
         elif isinstance(other, int):
             return Fraction(self.num * other, self.denom)
-        raise TypeError("%s is not supported, use Gst.Fraction or int." %
-                        (type(other)))
+        raise TypeError(f"{type(other)} is not supported, use Gst.Fraction or int.")
 
     __rmul__ = __mul__
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: object) -> Fraction:
         if isinstance(other, Fraction):
             return Fraction(self.num * other.denom,
                             self.denom * other.num)
         elif isinstance(other, int):
             return Fraction(self.num, self.denom * other)
-        return TypeError("%s is not supported, use Gst.Fraction or int." %
-                         (type(other)))
+        raise TypeError(f"{type(other)} is not supported, use Gst.Fraction or int.")
 
     __div__ = __truediv__
 
-    def __rtruediv__(self, other):
+    def __rtruediv__(self, other: object) -> Fraction:
         if isinstance(other, int):
             return Fraction(self.denom * other, self.num)
-        return TypeError("%s is not an int." % (type(other)))
+        raise TypeError(f"{type(other)} is not an int.")
 
     __rdiv__ = __rtruediv__
 
-    def __float__(self):
+    def __float__(self) -> float:
         return float(self.num) / float(self.denom)
 
-    def __str__(self):
-        return '%d/%d' % (self.num, self.denom)
+    def __str__(self) -> str:
+        return f'{self.num}/{self.denom}'
 
 
 override(Fraction)
@@ -657,9 +656,9 @@ __all__.append('Fraction')
 
 
 class IntRange(Gst.IntRange):
-    def __init__(self, r):
+    def __init__(self, r: range):
         if not isinstance(r, range):
-            raise TypeError("%s is not a range." % (type(r)))
+            raise TypeError(f"{type(r)} is not a range.")
 
         if (r.start >= r.stop):
             raise TypeError("Range start must be smaller then stop")
@@ -672,18 +671,16 @@ class IntRange(Gst.IntRange):
 
         self.range = r
 
-    def __repr__(self):
-        return '<Gst.IntRange [%d,%d,%d]>' % (self.range.start,
-                                              self.range.stop, self.range.step)
+    def __repr__(self) -> str:
+        return f'<Gst.IntRange [{self.range.start},{self.range.stop},{self.range.step}]>'
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.range.step == 1:
-            return '[%d,%d]' % (self.range.start, self.range.stop)
+            return f'[{self.range.start},{self.range.stop}]'
         else:
-            return '[%d,%d,%d]' % (self.range.start, self.range.stop,
-                                   self.range.step)
+            return f'[{self.range.start},{self.range.stop},{self.range.step}]'
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, range):
             return self.range == other
         elif isinstance(other, IntRange):
@@ -696,9 +693,9 @@ __all__.append('IntRange')
 
 
 class Int64Range(Gst.Int64Range):
-    def __init__(self, r):
+    def __init__(self, r: range):
         if not isinstance(r, range):
-            raise TypeError("%s is not a range." % (type(r)))
+            raise TypeError(f"{type(r)} is not a range.")
 
         if (r.start >= r.stop):
             raise TypeError("Range start must be smaller then stop")
@@ -711,18 +708,16 @@ class Int64Range(Gst.Int64Range):
 
         self.range = r
 
-    def __repr__(self):
-        return '<Gst.Int64Range [%d,%d,%d]>' % (self.range.start,
-                                                self.range.stop, self.range.step)
+    def __repr__(self) -> str:
+        return f'<Gst.Int64Range [{self.range.start},{self.range.stop},{self.range.step}]>'
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.range.step == 1:
-            return '(int64)[%d,%d]' % (self.range.start, self.range.stop)
+            return f'(int64)[{self.range.start},{self.range.stop}]'
         else:
-            return '(int64)[%d,%d,%d]' % (self.range.start, self.range.stop,
-                                          self.range.step)
+            return f'(int64)[{self.range.start},{self.range.stop},{self.range.step}]'
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, range):
             return self.range == other
         elif isinstance(other, IntRange):
@@ -733,14 +728,14 @@ class Int64Range(Gst.Int64Range):
 class Bitmask(Gst.Bitmask):
     def __init__(self, v: int) -> None:
         if not isinstance(v, int):
-            raise TypeError("%s is not an int." % (type(v)))
+            raise TypeError(f"{type(v)} is not an int.")
 
         self.v = int(v)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return hex(self.v)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object):
         return self.v == other
 
 
@@ -760,11 +755,11 @@ class DoubleRange(Gst.DoubleRange):
         if (start >= stop):
             raise TypeError("Range start must be smaller then stop")
 
-    def __repr__(self):
-        return '<Gst.DoubleRange [%s,%s]>' % (str(self.start), str(self.stop))
+    def __repr__(self) -> str:
+        return f'<Gst.DoubleRange [{self.start},{self.stop}]>'
 
-    def __str__(self):
-        return '(double)[%s,%s]' % (str(self.range.start), str(self.range.stop))
+    def __str__(self) -> str:
+        return f'(double)[{self.start},{self.stop}]'
 
 
 override(DoubleRange)
@@ -774,10 +769,10 @@ __all__.append('DoubleRange')
 class FractionRange(Gst.FractionRange):
     def __init__(self, start: Fraction, stop: Fraction):
         if not isinstance(start, Fraction):
-            raise TypeError("%s is not a Gst.Fraction." % (type(start)))
+            raise TypeError(f"{type(start)} is not a Gst.Fraction.")
 
         if not isinstance(stop, Fraction):
-            raise TypeError("%s is not a Gst.Fraction." % (type(stop)))
+            raise TypeError(f"{type(stop)} is not a Gst.Fraction.")
 
         if (float(start) >= float(stop)):
             raise TypeError("Range start must be smaller then stop")
@@ -785,12 +780,11 @@ class FractionRange(Gst.FractionRange):
         self.start = start
         self.stop = stop
 
-    def __repr__(self):
-        return '<Gst.FractionRange [%s,%s]>' % (str(self.start),
-                                                str(self.stop))
+    def __repr__(self) -> str:
+        return f'<Gst.FractionRange [{self.start},{self.stop}]>'
 
-    def __str__(self):
-        return '(fraction)[%s,%s]' % (str(self.start), str(self.stop))
+    def __str__(self) -> str:
+        return f'(fraction)[{self.start},{self.stop}]'
 
 
 override(FractionRange)
@@ -798,10 +792,10 @@ __all__.append('FractionRange')
 
 
 class ValueArray(Gst.ValueArray):
-    def __init__(self, array):
+    def __init__(self, array: typing.List[typing.Any]):
         self.array = list(array)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> typing.Any:
         return self.array[index]
 
     def __setitem__(self, index: int, value: typing.Any) -> None:
@@ -810,11 +804,11 @@ class ValueArray(Gst.ValueArray):
     def __len__(self) -> int:
         return len(self.array)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '<' + ','.join(map(str, self.array)) + '>'
 
-    def __repr__(self):
-        return '<Gst.ValueArray %s>' % (str(self))
+    def __repr__(self) -> str:
+        return f'<Gst.ValueArray {self}>'
 
 
 override(ValueArray)
@@ -822,10 +816,10 @@ __all__.append('ValueArray')
 
 
 class ValueList(Gst.ValueList):
-    def __init__(self, array):
+    def __init__(self, array: typing.List[typing.Any]):
         self.array = list(array)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> typing.Any:
         return self.array[index]
 
     def __setitem__(self, index: int, value: typing.Any) -> None:
@@ -834,11 +828,11 @@ class ValueList(Gst.ValueList):
     def __len__(self) -> int:
         return len(self.array)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '{' + ','.join(map(str, self.array)) + '}'
 
-    def __repr__(self):
-        return '<Gst.ValueList %s>' % (str(self))
+    def __repr__(self) -> str:
+        return f'<Gst.ValueList {self}>'
 
 
 override(ValueList)
@@ -875,14 +869,14 @@ class TagList(Gst.TagList):
     def enumerate(self) -> map[tuple[str, typing.Any]]:
         return map(lambda k: (k, Gst.TagList.copy_value(self, k)[1]), self.keys())
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.n_tags()
 
     def __str__(self) -> str:
         return self.to_string()
 
     def __repr__(self) -> str:
-        return '<Gst.TagList %s>' % (str(self))
+        return f'<Gst.TagList {self}>'
 
 
 override(TagList)
