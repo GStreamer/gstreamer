@@ -840,11 +840,9 @@ dummy_free_buffer (void *opaque, uint8_t * data)
  * support video meta and video alignment */
 static void
 gst_ffmpegvideodec_prepare_dr_pool (GstFFMpegVidDec * ffmpegdec,
-    GstBufferPool * pool, GstVideoInfo * info, GstStructure * config)
+    GstVideoInfo * info, GstAllocationParams * params,
+    GstVideoAlignment * align)
 {
-  GstAllocationParams params;
-  GstVideoAlignment align;
-  GstAllocator *allocator = NULL;
   gint width, height;
   gint linesize_align[AV_NUM_DATA_POINTERS];
   gint i;
@@ -857,18 +855,14 @@ gst_ffmpegvideodec_prepare_dr_pool (GstFFMpegVidDec * ffmpegdec,
   avcodec_align_dimensions2 (ffmpegdec->context, &width, &height,
       linesize_align);
 
-  align.padding_top = 0;
-  align.padding_left = 0;
-  align.padding_right = width - GST_VIDEO_INFO_WIDTH (info);
-  align.padding_bottom = height - GST_VIDEO_INFO_HEIGHT (info);
-
+  align->padding_right =
+      MAX (align->padding_right, width - GST_VIDEO_INFO_WIDTH (info));
   /* add extra padding to match libav buffer allocation sizes */
-  align.padding_bottom++;
-
-  gst_buffer_pool_config_get_allocator (config, &allocator, &params);
+  align->padding_bottom =
+      MAX (align->padding_bottom, height - GST_VIDEO_INFO_HEIGHT (info) + 1);
 
   max_align = DEFAULT_STRIDE_ALIGN;
-  max_align |= params.align;
+  max_align |= params->align;
 
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
     if (linesize_align[i] > 0)
@@ -876,23 +870,19 @@ gst_ffmpegvideodec_prepare_dr_pool (GstFFMpegVidDec * ffmpegdec,
   }
 
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
-    align.stride_align[i] = max_align;
+    align->stride_align[i] |= max_align;
 
-  params.align = max_align;
-
-  gst_buffer_pool_config_set_allocator (config, allocator, &params);
+  params->align = max_align;
 
   GST_DEBUG_OBJECT (ffmpegdec, "aligned dimension %dx%d -> %dx%d "
       "padding t:%u l:%u r:%u b:%u, stride_align %d:%d:%d:%d",
       GST_VIDEO_INFO_WIDTH (info),
-      GST_VIDEO_INFO_HEIGHT (info), width, height, align.padding_top,
-      align.padding_left, align.padding_right, align.padding_bottom,
-      align.stride_align[0], align.stride_align[1], align.stride_align[2],
-      align.stride_align[3]);
+      GST_VIDEO_INFO_HEIGHT (info), width, height, align->padding_top,
+      align->padding_left, align->padding_right, align->padding_bottom,
+      align->stride_align[0], align->stride_align[1], align->stride_align[2],
+      align->stride_align[3]);
 
-  gst_buffer_pool_config_add_option (config,
-      GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
-  gst_buffer_pool_config_set_video_alignment (config, &align);
+  gst_video_info_align (info, align);
 }
 
 static void
@@ -900,6 +890,7 @@ gst_ffmpegviddec_ensure_internal_pool (GstFFMpegVidDec * ffmpegdec,
     AVFrame * picture, GstVideoInterlaceMode interlace_mode)
 {
   GstAllocationParams params = DEFAULT_ALLOC_PARAM;
+  GstVideoAlignment align;
   GstVideoInfo info;
   GstVideoFormat format;
   GstCaps *caps;
@@ -955,12 +946,15 @@ gst_ffmpegviddec_ensure_internal_pool (GstFFMpegVidDec * ffmpegdec,
   config = gst_buffer_pool_get_config (ffmpegdec->internal_pool);
 
   caps = gst_video_info_to_caps (&info);
+
+  gst_video_alignment_reset (&align);
+  gst_ffmpegvideodec_prepare_dr_pool (ffmpegdec, &info, &params, &align);
   gst_buffer_pool_config_set_params (config, caps, info.size, 2, 0);
   gst_buffer_pool_config_set_allocator (config, NULL, &params);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_buffer_pool_config_add_option (config,
+      GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
 
-  gst_ffmpegvideodec_prepare_dr_pool (ffmpegdec,
-      ffmpegdec->internal_pool, &info, config);
   /* generic video pool never fails */
   gst_buffer_pool_set_config (ffmpegdec->internal_pool, config);
   gst_caps_unref (caps);
@@ -2489,74 +2483,116 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   GstBufferPool *pool;
   guint size, min, max;
   GstStructure *config;
-  gboolean have_pool, have_videometa, have_alignment, update_pool = FALSE;
+  gboolean have_videometa, have_alignment;
+  gboolean update_pool, update_allocator;
+  guint videometa_idx;
   GstAllocator *allocator = NULL;
   GstAllocationParams params = DEFAULT_ALLOC_PARAM;
+  GstVideoAlignment align;
+  GstVideoInfo info;
 
-  have_pool = (gst_query_get_n_allocation_pools (query) != 0);
-
-  if (!GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (decoder,
-          query))
-    return FALSE;
+  gst_video_alignment_reset (&align);
 
   state = gst_video_decoder_get_output_state (decoder);
+  info = state->info;
 
   if (gst_query_get_n_allocation_params (query) > 0) {
     gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
     params.align = MAX (params.align, DEFAULT_STRIDE_ALIGN);
+    update_allocator = TRUE;
   } else {
-    gst_query_add_allocation_param (query, allocator, &params);
+    allocator = NULL;
+    update_allocator = FALSE;
   }
 
-  gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+    size = MAX (size, info.size);
+    update_pool = TRUE;
+  } else {
+    pool = NULL;
+    size = state->info.size;
+    min = max = 0;
+    update_pool = FALSE;
+  }
 
   /* Don't use pool that can't grow, as we don't know how many buffer we'll
    * need, otherwise we may stall */
   if (max != 0 && max < REQUIRED_POOL_MAX_BUFFERS) {
-    gst_object_unref (pool);
-    pool = gst_video_buffer_pool_new ();
-    {
-      gchar *name =
-          g_strdup_printf ("%s-decide-pool", GST_OBJECT_NAME (ffmpegdec));
-      g_object_set (pool, "name", name, NULL);
-      g_free (name);
-    }
     max = 0;
-    update_pool = TRUE;
-    have_pool = FALSE;
-
+    gst_clear_object (&pool);
     /* if there is an allocator, also drop it, as it might be the reason we
      * have this limit. Default will be used */
-    if (allocator) {
-      gst_object_unref (allocator);
-      allocator = NULL;
+    gst_clear_object (&allocator);
+  }
+
+  if (!pool) {
+    pool = gst_video_buffer_pool_new ();
+    {
+      gchar *name = g_strdup_printf ("%s-pool", GST_OBJECT_NAME (ffmpegdec));
+      g_object_set (pool, "name", name, NULL);
+      g_free (name);
     }
   }
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set_params (config, state->caps, size, min, max);
-  gst_buffer_pool_config_set_allocator (config, allocator, &params);
 
   have_videometa =
-      gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+      gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE,
+      &videometa_idx);
+  if (have_videometa) {
+    const GstStructure *params;
 
-  if (have_videometa)
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+    gst_query_parse_nth_allocation_meta (query, videometa_idx, &params);
+
+    if (params && gst_structure_has_name (params, "video-meta")) {
+      gst_buffer_pool_config_get_video_alignment (params, &align);
+    }
+  }
+
+  gst_buffer_pool_config_set_allocator (config, allocator, &params);
+  gst_buffer_pool_config_set_params (config, state->caps, size, min, max);
 
   have_alignment =
       gst_buffer_pool_has_option (pool, GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
 
-  /* If we have videometa, we never have to copy */
-  if (have_videometa && have_pool && have_alignment &&
-      gst_ffmpegviddec_can_direct_render (ffmpegdec)) {
+  /* Check if we can directly render to pool allocated buffers */
+  if (have_videometa && have_alignment
+      && gst_ffmpegviddec_can_direct_render (ffmpegdec)) {
+    gboolean working_pool;
     GstStructure *config_copy = gst_structure_copy (config);
+    GstVideoInfo aligned_info = info;
+    GstVideoAlignment aligned_align = align;
+    GstAllocationParams aligned_params = params;
+    guint aligned_size = size;
 
-    gst_ffmpegvideodec_prepare_dr_pool (ffmpegdec, pool, &state->info,
-        config_copy);
+    gst_ffmpegvideodec_prepare_dr_pool (ffmpegdec, &aligned_info,
+        &aligned_params, &aligned_align);
+    aligned_size = MAX (size, aligned_info.size);
 
-    /* FIXME validate and retry */
-    if (gst_buffer_pool_set_config (pool, config_copy)) {
+    gst_buffer_pool_config_set_allocator (config_copy, allocator, &params);
+    gst_buffer_pool_config_set_params (config_copy, state->caps, aligned_size,
+        min, max);
+    gst_buffer_pool_config_add_option (config_copy,
+        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+    gst_buffer_pool_config_set_video_alignment (config_copy, &aligned_align);
+
+    working_pool = gst_buffer_pool_set_config (pool, config_copy);
+    if (!working_pool) {
+      config_copy = gst_buffer_pool_get_config (pool);
+
+      if (!gst_buffer_pool_config_validate_params (config_copy, state->caps,
+              aligned_size, min, max)) {
+        gst_structure_free (config_copy);
+      } else if (gst_buffer_pool_set_config (pool, config_copy)) {
+        working_pool = TRUE;
+      }
+    }
+
+    if (working_pool) {
       GstFlowReturn ret;
       GstBuffer *tmp;
 
@@ -2577,18 +2613,18 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
         gst_buffer_unref (tmp);
 
         if (same_stride) {
+          gst_structure_free (config);
           if (ffmpegdec->internal_pool)
             gst_object_unref (ffmpegdec->internal_pool);
           ffmpegdec->internal_pool = gst_object_ref (pool);
-          ffmpegdec->pool_width = GST_VIDEO_INFO_WIDTH (&state->info);
-          ffmpegdec->pool_height =
-              MAX (GST_VIDEO_INFO_HEIGHT (&state->info),
+          ffmpegdec->pool_width = GST_VIDEO_INFO_WIDTH (&aligned_info);
+          ffmpegdec->pool_height = MAX (GST_VIDEO_INFO_HEIGHT (&aligned_info),
               ffmpegdec->context->coded_height);
-          ffmpegdec->pool_info = state->info;
-          gst_structure_free (config);
+          ffmpegdec->pool_info = aligned_info;
           goto done;
         }
       }
+      gst_buffer_pool_set_active (pool, FALSE);
     }
   }
 
@@ -2597,7 +2633,6 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
       GST_VIDEO_INFO_FORMAT (&state->info)
       && ffmpegdec->pool_width == state->info.width
       && ffmpegdec->pool_height == state->info.height) {
-    update_pool = TRUE;
     gst_object_unref (pool);
     pool = gst_object_ref (ffmpegdec->internal_pool);
     gst_structure_free (config);
@@ -2629,7 +2664,6 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
       gst_buffer_pool_config_set_params (config, state->caps, size, min, max);
       gst_buffer_pool_config_set_allocator (config, NULL, &params);
       gst_buffer_pool_set_config (pool, config);
-      update_pool = TRUE;
     }
   }
 
@@ -2637,6 +2671,13 @@ done:
   /* and store */
   if (update_pool)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  if (update_allocator)
+    gst_query_set_nth_allocation_param (query, 0, allocator, &params);
+  else
+    gst_query_add_allocation_param (query, allocator, &params);
 
   gst_object_unref (pool);
   if (allocator)
