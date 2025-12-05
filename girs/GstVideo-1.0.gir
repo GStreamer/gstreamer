@@ -12726,7 +12726,7 @@ scaling from @in_rectangle to @out_rectangle</doc>
           </instance-parameter>
           <parameter name="in_info" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">The #GstVideoInfo of the input image</doc>
-            <type name="VideoInfo" c:type="GstVideoInfo*"/>
+            <type name="VideoInfo" c:type="const GstVideoInfo*"/>
           </parameter>
           <parameter name="in_rectangle" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">the input #GstVideoRectangle</doc>
@@ -12734,7 +12734,7 @@ scaling from @in_rectangle to @out_rectangle</doc>
           </parameter>
           <parameter name="out_info" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">the output #GstVideoInfo</doc>
-            <type name="VideoInfo" c:type="GstVideoInfo*"/>
+            <type name="VideoInfo" c:type="const GstVideoInfo*"/>
           </parameter>
           <parameter name="out_rectangle" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">the output #GstVideoRectangle</doc>
@@ -12750,7 +12750,7 @@ applying the @transform.matrix to it using the top left (x, y) of
 the top-left of @transform.out_rectangle as new origin.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">FALSE if the point is outside of @transform.out_rectangle
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">%FALSE if the point is outside of @transform.out_rectangle
 after the transformation has been applied</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
@@ -12767,10 +12767,22 @@ after the transformation has been applied</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">a non-NULL pointer to the Y value of the coordinate</doc>
             <type name="gint" c:type="gint*"/>
           </parameter>
-          <parameter name="clamp" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">If TRUE, (@x, @y) will be clamped inside
-  the @transform.out_rectangle</doc>
-            <type name="gboolean" c:type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="point_clipped" c:identifier="gst_video_meta_transform_matrix_point_clipped">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="transform" transfer-ownership="none">
+            <type name="VideoMetaTransformMatrix" c:type="const GstVideoMetaTransformMatrix*"/>
+          </instance-parameter>
+          <parameter name="x" transfer-ownership="none">
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="y" transfer-ownership="none">
+            <type name="gint" c:type="gint*"/>
           </parameter>
         </parameters>
       </method>
@@ -12784,14 +12796,11 @@ the top-left of @transform.out_rectangle as new origin.
 @rect is always axis aligned at input and this function only returns
 axis aligned rectangles as output, otherwise it returns FALSE.
 
-If the @clamp is %FALSE, the output rectangle could be in partially
-or totally outside of @transform.out_rectangle. If @clamp is true,
-rectangle will be clamped to fit inside @transform.out_rectangle.</doc>
+Output rectangle could be in partially or totally outside of
+@transform.out_rectangle.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">FALSE is the output rectangle is not axis aligned or if
- the rectangle is entirely outside of the out_rectangle and @clamp
- is %TRUE</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">%FALSE is the output rectangle is not axis aligned</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
@@ -12803,9 +12812,33 @@ rectangle will be clamped to fit inside @transform.out_rectangle.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">a rectangle in the coordinate of the original image</doc>
             <type name="VideoRectangle" c:type="GstVideoRectangle*"/>
           </parameter>
-          <parameter name="clamp" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">TRUE if the output rectangle is cropped to the output image</doc>
-            <type name="gboolean" c:type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="rectangle_clipped" c:identifier="gst_video_meta_transform_matrix_rectangle_clipped" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">Transforms @rect from the input coordinates to the
+output ones.  The point's coordinates are transformed by first
+applying the @transform.matrix to it using the top left (x, y) of
+@transform.in_rectangle as the origin, then translate it to use
+the top-left of @transform.out_rectangle as new origin.
+
+@rect is always axis aligned at input and this function only returns
+axis aligned rectangles as output, otherwise it returns FALSE.
+
+Output rectangle will be clipped to fit inside @transform.out_rectangle.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">%FALSE if the output rectangle is not axis aligned or if
+ the rectangle is entirely outside of the out_rectangle.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="transform" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">A #GstVideoMetaTransformMatrix</doc>
+            <type name="VideoMetaTransformMatrix" c:type="const GstVideoMetaTransformMatrix*"/>
+          </instance-parameter>
+          <parameter name="rect" direction="inout" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">a rectangle in the coordinate of the original image</doc>
+            <type name="VideoRectangle" c:type="GstVideoRectangle*"/>
           </parameter>
         </parameters>
       </method>
