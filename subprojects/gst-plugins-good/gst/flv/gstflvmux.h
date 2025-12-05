@@ -29,6 +29,22 @@
 
 G_BEGIN_DECLS
 
+#define LEGACY_FLV_VIDEO_CAPS "video/x-flash-video; \
+        video/x-flash-screen; \
+        video/x-vp6-flash; video/x-vp6-alpha; \
+        video/x-h264, stream-format=avc;"
+
+#define LEGACY_FLV_AUDIO_CAPS "audio/x-adpcm, layout = (string) swf, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; \
+        audio/mpeg, mpegversion = (int) 1, layer = (int) 3, channels = (int) { 1, 2 }, rate = (int) { 5512, 8000, 11025, 22050, 44100 }, parsed = (boolean) TRUE; \
+        audio/mpeg, mpegversion = (int) { 4, 2 }, stream-format = (string) raw; \
+        audio/x-nellymoser, channels = (int) { 1, 2 }, rate = (int) { 5512, 8000, 11025, 16000, 22050, 44100 }; \
+        audio/x-raw, format = (string) { U8, S16LE}, layout = (string) interleaved, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; \
+        audio/x-alaw, channels = (int) { 1, 2 }, rate = (int) 8000; \
+        audio/x-mulaw, channels = (int) { 1, 2 }, rate = (int) 8000; \
+        audio/x-speex, channels = (int) 1, rate = (int) 16000;"
+
+#define FLV_ENHANCED_VIDEO_CAPS "video/x-h265, stream-format=(string)hvc1, alignment=(string)au;"
+
 #define GST_TYPE_FLV_MUX_PAD (gst_flv_mux_pad_get_type())
 #define GST_FLV_MUX_PAD(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FLV_MUX_PAD, GstFlvMuxPad))
 #define GST_FLV_MUX_PAD_CAST(obj) ((GstFlvMuxPad *)(obj))

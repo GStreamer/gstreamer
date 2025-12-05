@@ -36,7 +36,6 @@
 
 #include "gstflvelements.h"
 #include "gstflvdemux.h"
-#include "gstflvmux.h"
 
 #include <math.h>
 #include <string.h>
@@ -961,18 +960,19 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
 
 
   switch (codec_tag) {
-    case ADPCM:
+    case FLV_AUDIO_CODEC_ADPCM:
       caps = gst_caps_new_simple ("audio/x-adpcm", "layout", G_TYPE_STRING,
           "swf", NULL);
       break;
-    case MP3:
-    case MP3_8K:
+    case FLV_AUDIO_CODEC_MP3:
+    case FLV_AUDIO_CODEC_MP3_8K:
+    case FLV_AUDIO_CODEC_MP3_FOURCC:
       caps = gst_caps_new_simple ("audio/mpeg",
           "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 3,
           "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
       break;
-    case LINEAR_PCM:
-    case LINEAR_PCM_LE:
+    case FLV_AUDIO_CODEC_LINEAR_PCM:
+    case FLV_AUDIO_CODEC_LINEAR_PCM_LE:
     {
       GstAudioFormat format;
 
@@ -987,12 +987,13 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
           "layout", G_TYPE_STRING, "interleaved", NULL);
       break;
     }
-    case NELLYMOSER_16K:
-    case NELLYMOSER_8K:
-    case NELLYMOSER:
+    case FLV_AUDIO_CODEC_NELLYMOSER_16K:
+    case FLV_AUDIO_CODEC_NELLYMOSER_8K:
+    case FLV_AUDIO_CODEC_NELLYMOSER:
       caps = gst_caps_new_empty_simple ("audio/x-nellymoser");
       break;
-    case AAC:
+    case FLV_AUDIO_CODEC_AAC:
+    case FLV_AUDIO_CODEC_AAC_FOURCC:
     {
       GstMapInfo map;
       if (!track->codec_data) {
@@ -1037,13 +1038,13 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
           "stream-format", G_TYPE_STRING, "raw", NULL);
       break;
     }
-    case G711_ALAW:
+    case FLV_AUDIO_CODEC_G711_ALAW:
       caps = gst_caps_new_empty_simple ("audio/x-alaw");
       break;
-    case G711_MULAW:
+    case FLV_AUDIO_CODEC_G711_MULAW:
       caps = gst_caps_new_empty_simple ("audio/x-mulaw");
       break;
-    case SPEEX:
+    case FLV_AUDIO_CODEC_SPEEX:
     {
       GValue streamheader = G_VALUE_INIT;
       GValue value = G_VALUE_INIT;
@@ -1470,36 +1471,6 @@ _send_new_segment (GstFlvDemux * demux)
   }
 }
 
-static gboolean
-_get_codec_tag (GstByteReader * reader, guint32 * codec_tag)
-{
-  guint32 codec_fourcc = FOURCC_INVALID;
-  gboolean ret = FALSE;
-
-  if (gst_byte_reader_get_uint32_le (reader, &codec_fourcc)) {
-    ret = TRUE;
-    switch (codec_fourcc) {
-      case GST_MAKE_FOURCC ('m', 'p', '4', 'a'):
-        *codec_tag = AAC;
-        break;
-      case GST_MAKE_FOURCC ('.', 'm', 'p', '3'):
-        *codec_tag = MP3;
-        break;
-      case GST_MAKE_FOURCC ('a', 'v', 'c', '1'):
-        *codec_tag = ENHANCED_H264_AVC1;
-        break;
-      case GST_MAKE_FOURCC ('h', 'v', 'c', '1'):
-        *codec_tag = ENHANCED_H265_HVC1;
-        break;
-      default:
-        *codec_tag = FOURCC_INVALID;
-        break;
-    }
-  }
-
-  return ret;
-}
-
 static GstFlowReturn
 gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 {
@@ -1580,11 +1551,11 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
   /* Codec tag */
   codec_tag = flags >> 4;
 
-  if (codec_tag == EXTENDED_AUDIO_HEADER) {
+  if (codec_tag == FLV_EXTENDED_AUDIO_HEADER) {
     GstEFlvAudioPacketType audio_packet_type = flags & 0x0f;    // byte boundary
     GstEFlvAvMultiTrackType multitrack_type;
 
-    while (audio_packet_type == MODEX) {
+    while (audio_packet_type == FLV_AUDIO_PACKET_TYPE_MODEX) {
       guint32 mod_ex_data_size = 0;
       guint8 size = 0;
       guint8 types;
@@ -1626,7 +1597,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
       audio_packet_type = types & 0x0f;
     }
 
-    if (audio_packet_type == MULTITRACK) {
+    if (audio_packet_type == FLV_AUDIO_PACKET_TYPE_MULTITRACK) {
       guint8 types;
       enhanced = TRUE;
 
@@ -1638,8 +1609,8 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
       multitrack_type = types & 0xf0;
       audio_packet_type = types & 0x0f;
 
-      if (multitrack_type != MANYTRACKS_MANYCODECS) {
-        if (!_get_codec_tag (&reader, &codec_tag)) {
+      if (multitrack_type != FLV_AV_MULTITRACK_TYPE_MANYTRACKS_MANYCODECS) {
+        if (!gst_byte_reader_get_uint32_le (&reader, &codec_tag)) {
           GST_ERROR_OBJECT (demux, "failed to parse codec fourcc");
           goto beach;
         }
@@ -1655,13 +1626,13 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 
       GST_DEBUG_OBJECT (demux, "track id %d", track_id);
 
-      if (multitrack_type != ONETRACK) {
+      if (multitrack_type != FLV_AV_MULTITRACK_TYPE_ONETRACK) {
         GST_WARNING_OBJECT (demux,
             "handling only AvMultitrackType.OneTrack currently");
         goto beach;
       }
 
-      if (audio_packet_type == MULTICHANNELCONFIG) {
+      if (audio_packet_type == FLV_AUDIO_PACKET_TYPE_MULTICHANNELCONFIG) {
         guint8 channel_order = 0;
         guint8 channel_cnt = 0;
 
@@ -1675,14 +1646,14 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
           goto beach;
         }
 
-        if (channel_order == CUSTOM_CH_ORDER) {
+        if (channel_order == FLV_AUDIO_CHANNEL_ORDER_CUSTOM) {
           /* FIXME: save the channel order */
           if (!gst_byte_reader_skip (&reader, 1)) {
             GST_ERROR_OBJECT (demux,
                 "Failed to skip custom channel order byte");
             goto beach;
           }
-        } else if (channel_order == NATIVE_CH_ORDER) {
+        } else if (channel_order == FLV_AUDIO_CHANNEL_ORDER_NATIVE) {
           /* FIXME: get channels from the index */
           if (!gst_byte_reader_skip (&reader, 3)) {
             GST_ERROR_OBJECT (demux,
@@ -1692,17 +1663,17 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
         }
       }
 
-      if (audio_packet_type == SEQUENCE_START) {
+      if (audio_packet_type == FLV_AUDIO_PACKET_TYPE_SEQUENCE_START) {
         is_header = TRUE;
       }
 
-      if (audio_packet_type == SEQUENCE_END) {
+      if (audio_packet_type == FLV_AUDIO_PACKET_TYPE_SEQUENCE_END) {
         GST_INFO_OBJECT (demux, "received sequence end");
         ret = GST_FLOW_EOS;
         goto beach;
       }
     } else {
-      if (!_get_codec_tag (&reader, &codec_tag)) {
+      if (!gst_byte_reader_get_uint32_le (&reader, &codec_tag)) {
         GST_ERROR_OBJECT (demux, "failed to parse codec fourcc");
         goto beach;
       }
@@ -1731,7 +1702,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
       rate = 11025;
     }
 
-    if (codec_tag == AAC) {     /* AAC has an extra byte for packet type */
+    if (codec_tag == FLV_AUDIO_CODEC_AAC) {     /* AAC has an extra byte for packet type */
       tag_header_len = 2;
     } else {
       tag_header_len = 1;
@@ -1739,14 +1710,14 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 
     /* codec tags with special rates */
     switch (codec_tag) {
-      case NELLYMOSER_8K:
-      case MP3_8K:
-      case G711_ALAW:
-      case G711_MULAW:
+      case FLV_AUDIO_CODEC_NELLYMOSER_8K:
+      case FLV_AUDIO_CODEC_MP3_8K:
+      case FLV_AUDIO_CODEC_G711_ALAW:
+      case FLV_AUDIO_CODEC_G711_MULAW:
         rate = 8000;
         break;
-      case NELLYMOSER_16K:
-      case SPEEX:
+      case FLV_AUDIO_CODEC_NELLYMOSER_16K:
+      case FLV_AUDIO_CODEC_SPEEX:
         rate = 16000;
         break;
     }
@@ -1764,7 +1735,8 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
     width = track->info.audio.width;
   }
 
-  if (codec_tag == AAC) {
+  if (codec_tag == FLV_AUDIO_CODEC_AAC
+      || codec_tag == FLV_AUDIO_CODEC_AAC_FOURCC) {
     guint8 aac_packet_type = 2;
     if (enhanced)
       aac_packet_type = is_header ? 0 : 1;
@@ -2029,22 +2001,22 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag,
 
   /* Generate caps for that pad */
   switch (codec_tag) {
-    case FLASH_VIDEO:
+    case FLV_VIDEO_CODEC_FLASH_VIDEO:
       caps =
           gst_caps_new_simple ("video/x-flash-video", "flvversion", G_TYPE_INT,
           1, NULL);
       break;
-    case FLASH_SCREEN:
+    case FLV_VIDEO_CODEC_FLASH_SCREEN:
       caps = gst_caps_new_empty_simple ("video/x-flash-screen");
       break;
-    case VP6_FLASH:
+    case FLV_VIDEO_CODEC_VP6_FLASH:
       caps = gst_caps_new_empty_simple ("video/x-vp6-flash");
       break;
-    case VP6_ALPHA:
+    case FLV_VIDEO_CODEC_VP6_ALPHA:
       caps = gst_caps_new_empty_simple ("video/x-vp6-alpha");
       break;
-    case ENHANCED_H264_AVC1:
-    case H264_AVC1:
+    case FLV_VIDEO_CODEC_H264_AVC1_FOURCC:
+    case FLV_VIDEO_CODEC_H264_AVC1:
       if (!track->codec_data) {
         GST_DEBUG_OBJECT (demux, "don't have h264 codec data yet");
         ret = TRUE;
@@ -2067,7 +2039,7 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       break;
     case FFMPEG_H265_HVC1:
-    case ENHANCED_H265_HVC1:
+    case FLV_VIDEO_CODEC_H265_HVC1_FOURCC:
       if (!track->codec_data) {
         GST_DEBUG_OBJECT (demux, "don't have h265 codec data yet");
         ret = TRUE;
@@ -2300,14 +2272,14 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
     /* Codec tag */
     codec_tag = flags & 0x0F;
     switch (codec_tag) {
-      case VP6_FLASH:
-      case VP6_ALPHA:
+      case FLV_VIDEO_CODEC_VP6_FLASH:
+      case FLV_VIDEO_CODEC_VP6_ALPHA:
         if (!gst_byte_reader_skip (&reader, 1)) {
           GST_ERROR_OBJECT (demux, "failed to skip vp6 ignored byte");
           goto beach;
         }
         break;
-      case H264_AVC1:{
+      case FLV_VIDEO_CODEC_H264_AVC1:{
         guint8 read_type = 0;
         if (!gst_byte_reader_get_uint8 (&reader, &read_type)) {
           GST_ERROR_OBJECT (demux, "failed to parse packet type");
@@ -2410,8 +2382,8 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
       multitrack_type = types & 0xf0;
       packet_type = types & 0x0f;
 
-      if (multitrack_type != MANYTRACKS_MANYCODECS) {
-        if (!_get_codec_tag (&reader, &codec_tag)) {
+      if (multitrack_type != FLV_AV_MULTITRACK_TYPE_MANYTRACKS_MANYCODECS) {
+        if (!gst_byte_reader_get_uint32_le (&reader, &codec_tag)) {
           GST_ERROR_OBJECT (demux, "failed to parse codec fourcc");
           goto beach;
         }
@@ -2427,14 +2399,14 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
 
       GST_DEBUG_OBJECT (demux, "track id %d", track_id);
 
-      if (multitrack_type != ONETRACK) {
+      if (multitrack_type != FLV_AV_MULTITRACK_TYPE_ONETRACK) {
         // TODO: implement other multitrack types
         GST_WARNING_OBJECT (demux,
             "handling only AvMultitrackType.OneTrack currently");
         goto beach;
       }
     } else {
-      if (!_get_codec_tag (&reader, &codec_tag)) {
+      if (!gst_byte_reader_get_uint32_le (&reader, &codec_tag)) {
         GST_ERROR_OBJECT (demux, "failed to parse codec fourcc");
         goto beach;
       }
@@ -2442,8 +2414,8 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
 
     /* Handle composition time for CODED_FRAMES */
     if (packet_type == FLV_VIDEO_PACKET_TYPE_CODED_FRAMES
-        && (codec_tag == ENHANCED_H265_HVC1
-            || codec_tag == ENHANCED_H264_AVC1)) {
+        && (codec_tag == FLV_VIDEO_CODEC_H265_HVC1_FOURCC
+            || codec_tag == FLV_VIDEO_CODEC_H264_AVC1_FOURCC)) {
       guint32 read_cts = 0;
       if (!gst_byte_reader_get_uint24_be (&reader, &read_cts)) {
         GST_ERROR_OBJECT (demux, "failed to parse cts");
@@ -2469,7 +2441,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
 
   track = gst_flv_demux_get_track (demux, track_id, FALSE);
 
-  if (codec_tag == H264_AVC1 || ext_header) {
+  if (codec_tag == FLV_VIDEO_CODEC_H264_AVC1 || ext_header) {
     switch (packet_type) {
       case FLV_VIDEO_PACKET_TYPE_SEQUENCE_START:
       {

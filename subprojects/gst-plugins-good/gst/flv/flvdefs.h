@@ -24,14 +24,13 @@
 
 typedef enum
 {
-  SEQUENCE_START = 0,
-  CODED_FRAMES = 1,
-  SEQUENCE_END = 2,
-  RESERVED = 3,
-  MULTICHANNELCONFIG = 4,
-  MULTITRACK = 5,
-  MODEX = 6,
-  RESERVED_AUDIOPACKETTYPE = 15,
+  FLV_AUDIO_PACKET_TYPE_SEQUENCE_START = 0,
+  FLV_AUDIO_PACKET_TYPE_CODED_FRAMES = 1,
+  FLV_AUDIO_PACKET_TYPE_SEQUENCE_END = 2,
+  FLV_AUDIO_PACKET_TYPE_RESERVED = 3,
+  FLV_AUDIO_PACKET_TYPE_MULTICHANNELCONFIG = 4,
+  FLV_AUDIO_PACKET_TYPE_MULTITRACK = 5,
+  FLV_AUDIO_PACKET_TYPE_MODEX = 6,
 } GstEFlvAudioPacketType;
 
 typedef enum
@@ -48,10 +47,9 @@ typedef enum
 
 typedef enum
 {
-  ONETRACK = 0,
-  MANYTRACKS = 1,
-  MANYTRACKS_MANYCODECS = 2,
-  RESERVED_AVMULTI_TRACKTYPE = 15,
+  FLV_AV_MULTITRACK_TYPE_ONETRACK = 0,
+  FLV_AV_MULTITRACK_TYPE_MANYTRACKS = 1,
+  FLV_AV_MULTITRACK_TYPE_MANYTRACKS_MANYCODECS = 2,
 } GstEFlvAvMultiTrackType;
 
 typedef enum
@@ -65,41 +63,44 @@ typedef enum
 
 typedef enum
 {
-  LINEAR_PCM = 0,               /* 0 = Linear PCM, platform-endian */
-  ADPCM = 1,                    /* 1 = ADPCM */
-  MP3 = 2,                      /* 2 = MP3 */
-  LINEAR_PCM_LE = 3,            /* 3 = Linear PCM, little-endian */
-  NELLYMOSER_16K = 4,           /* 4 = Nellymoser 16 kHz mono  */
-  NELLYMOSER_8K = 5,            /* 5 = Nellymoser 8 kHz mono  */
-  NELLYMOSER = 6,               /* 6 = Nellymoser */
-  G711_ALAW = 7,                /* 7 = G.711 A-law logarithmic PCM  */
-  G711_MULAW = 8,               /* 8 = G.711 mu-law logarithmic PCM */
-  EXTENDED_AUDIO_HEADER = 9,    /* 9 = ExHeader (eFLV)  */
-  AAC = 10,                     /* 10 = AAC */
-  SPEEX = 11,                   /* 11 = Speex  */
-  RESERVED_12 = 12,             /* 12 = Reserved */
-  RESERVED_13 = 13,             /* 13 = Reserved  */
-  MP3_8K = 14,                  /* 14 = MP3 8 kHz */
-  NATIVE = 15,                  /* 15 = Device-specific sound */
+  FLV_AUDIO_CODEC_LINEAR_PCM = 0,               /* 0 = Linear PCM, platform-endian */
+  FLV_AUDIO_CODEC_ADPCM = 1,                    /* 1 = ADPCM */
+  FLV_AUDIO_CODEC_MP3 = 2,                      /* 2 = MP3 */
+  FLV_AUDIO_CODEC_LINEAR_PCM_LE = 3,            /* 3 = Linear PCM, little-endian */
+  FLV_AUDIO_CODEC_NELLYMOSER_16K = 4,           /* 4 = Nellymoser 16 kHz mono  */
+  FLV_AUDIO_CODEC_NELLYMOSER_8K = 5,            /* 5 = Nellymoser 8 kHz mono  */
+  FLV_AUDIO_CODEC_NELLYMOSER = 6,               /* 6 = Nellymoser */
+  FLV_AUDIO_CODEC_G711_ALAW = 7,                /* 7 = G.711 A-law logarithmic PCM  */
+  FLV_AUDIO_CODEC_G711_MULAW = 8,               /* 8 = G.711 mu-law logarithmic PCM */
+  FLV_EXTENDED_AUDIO_HEADER = 9,                /* 9 = ExHeader (eFLV)  */
+  FLV_AUDIO_CODEC_AAC = 10,                     /* 10 = AAC */
+  FLV_AUDIO_CODEC_SPEEX = 11,                   /* 11 = Speex  */
+  FLV_AUDIO_CODEC_RESERVED_12 = 12,             /* 12 = Reserved */
+  FLV_AUDIO_CODEC_RESERVED_13 = 13,             /* 13 = Reserved  */
+  FLV_AUDIO_CODEC_MP3_8K = 14,                  /* 14 = MP3 8 kHz */
+  FLV_AUDIO_CODEC_ATIVE = 15,                  /* 15 = Device-specific sound */
+  // FOURCC codec ID as per Enhanced RTMP (V2)
+  FLV_AUDIO_CODEC_MP3_FOURCC = GST_MAKE_FOURCC('.','m','p','3'),
+  FLV_AUDIO_CODEC_AAC_FOURCC = GST_MAKE_FOURCC('m','p','4','a'),
 } GstFlvSoundFormat;
 
 typedef enum
 {
-  FLASH_VIDEO = 2,
-  FLASH_SCREEN = 3,
-  VP6_FLASH = 4,
-  VP6_ALPHA = 5,
-  H264_AVC1 = 7,
+  FLV_VIDEO_CODEC_FLASH_VIDEO = 2,
+  FLV_VIDEO_CODEC_FLASH_SCREEN = 3,
+  FLV_VIDEO_CODEC_VP6_FLASH = 4,
+  FLV_VIDEO_CODEC_VP6_ALPHA = 5,
+  FLV_VIDEO_CODEC_H264_AVC1 = 7,
   // rtmp enhanced spec - define by fourcc code
-  ENHANCED_H265_HVC1 = GST_MAKE_FOURCC ('h', 'v', 'c', '1'),
-  ENHANCED_H264_AVC1 = GST_MAKE_FOURCC ('a', 'v', 'c', '1'),
+  FLV_VIDEO_CODEC_H265_HVC1_FOURCC = GST_MAKE_FOURCC('h','v','c','1'),
+  FLV_VIDEO_CODEC_H264_AVC1_FOURCC = GST_MAKE_FOURCC('a','v','c','1'),
 } GstFlvVideoCodec;
 
 typedef enum
 {
   UNSPECIFIED = 0,
-  NATIVE_CH_ORDER = 1,
-  CUSTOM_CH_ORDER = 2,
+  FLV_AUDIO_CHANNEL_ORDER_NATIVE = 1,
+  FLV_AUDIO_CHANNEL_ORDER_CUSTOM = 2,
 } GstFlvAudioChannelOrder;
 
 #define MESSAGE_HEADER_LEN 11

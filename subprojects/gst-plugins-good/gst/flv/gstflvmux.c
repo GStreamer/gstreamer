@@ -79,24 +79,13 @@ static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
 static GstStaticPadTemplate videosink_templ = GST_STATIC_PAD_TEMPLATE ("video",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
-    GST_STATIC_CAPS ("video/x-flash-video; "
-        "video/x-flash-screen; "
-        "video/x-vp6-flash; " "video/x-vp6-alpha; "
-        "video/x-h264, stream-format=avc;")
+    GST_STATIC_CAPS (LEGACY_FLV_VIDEO_CAPS)
     );
 
 static GstStaticPadTemplate audiosink_templ = GST_STATIC_PAD_TEMPLATE ("audio",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
-    GST_STATIC_CAPS
-    ("audio/x-adpcm, layout = (string) swf, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
-        "audio/mpeg, mpegversion = (int) 1, layer = (int) 3, channels = (int) { 1, 2 }, rate = (int) { 5512, 8000, 11025, 22050, 44100 }, parsed = (boolean) TRUE; "
-        "audio/mpeg, mpegversion = (int) { 4, 2 }, stream-format = (string) raw; "
-        "audio/x-nellymoser, channels = (int) { 1, 2 }, rate = (int) { 5512, 8000, 11025, 16000, 22050, 44100 }; "
-        "audio/x-raw, format = (string) { U8, S16LE}, layout = (string) interleaved, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
-        "audio/x-alaw, channels = (int) { 1, 2 }, rate = (int) 8000; "
-        "audio/x-mulaw, channels = (int) { 1, 2 }, rate = (int) 8000; "
-        "audio/x-speex, channels = (int) 1, rate = (int) 16000;")
+    GST_STATIC_CAPS (LEGACY_FLV_AUDIO_CAPS)
     );
 
 G_DEFINE_TYPE (GstFlvMuxPad, gst_flv_mux_pad, GST_TYPE_AGGREGATOR_PAD);
@@ -502,19 +491,19 @@ gst_flv_mux_video_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
   s = gst_caps_get_structure (caps, 0);
 
   if (strcmp (gst_structure_get_name (s), "video/x-flash-video") == 0) {
-    pad->codec = FLASH_VIDEO;
+    pad->codec = FLV_VIDEO_CODEC_FLASH_VIDEO;
   } else if (strcmp (gst_structure_get_name (s), "video/x-flash-screen") == 0) {
-    pad->codec = FLASH_SCREEN;
+    pad->codec = FLV_VIDEO_CODEC_FLASH_SCREEN;
   } else if (strcmp (gst_structure_get_name (s), "video/x-vp6-flash") == 0) {
-    pad->codec = VP6_FLASH;
+    pad->codec = FLV_VIDEO_CODEC_VP6_FLASH;
   } else if (strcmp (gst_structure_get_name (s), "video/x-vp6-alpha") == 0) {
-    pad->codec = VP6_ALPHA;
+    pad->codec = FLV_VIDEO_CODEC_VP6_ALPHA;
   } else if (strcmp (gst_structure_get_name (s), "video/x-h264") == 0) {
     // TODO: needs some isAvcEnhanced? detection
-    pad->codec = H264_AVC1;
-    pad->codec_fourcc = ENHANCED_H264_AVC1;
+    pad->codec = FLV_VIDEO_CODEC_H264_AVC1;
+    pad->codec_fourcc = FLV_VIDEO_CODEC_H264_AVC1_FOURCC;
   } else if (strcmp (gst_structure_get_name (s), "video/x-h265") == 0) {
-    pad->codec = pad->codec_fourcc = ENHANCED_H265_HVC1;
+    pad->codec = pad->codec_fourcc = FLV_VIDEO_CODEC_H265_HVC1_FOURCC;
   } else {
     ret = FALSE;
   }
@@ -587,7 +576,7 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
   if (strcmp (gst_structure_get_name (s), "audio/x-adpcm") == 0) {
     const gchar *layout = gst_structure_get_string (s, "layout");
     if (layout && strcmp (layout, "swf") == 0) {
-      pad->codec = ADPCM;
+      pad->codec = FLV_AUDIO_CODEC_ADPCM;
     } else {
       ret = FALSE;
     }
@@ -598,20 +587,20 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
       if (mpegversion == 1) {
         gint layer;
 
-        pad->codec_fourcc = GST_STR_FOURCC (".mp3");
+        pad->codec_fourcc = FLV_AUDIO_CODEC_MP3_FOURCC;
         if (gst_structure_get_int (s, "layer", &layer) && layer == 3) {
           gint rate;
 
           if (gst_structure_get_int (s, "rate", &rate) && rate == 8000)
-            pad->codec = MP3_8K;
+            pad->codec = FLV_AUDIO_CODEC_MP3_8K;
           else
-            pad->codec = MP3;
+            pad->codec = FLV_AUDIO_CODEC_MP3;
         } else {
           ret = FALSE;
         }
       } else if (mpegversion == 4 || mpegversion == 2) {
-        pad->codec_fourcc = GST_STR_FOURCC ("mp4a");
-        pad->codec = AAC;
+        pad->codec = FLV_AUDIO_CODEC_AAC_FOURCC;
+        pad->codec_fourcc = FLV_AUDIO_CODEC_AAC;
       } else {
         ret = FALSE;
       }
@@ -624,19 +613,19 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
     if (gst_structure_get_int (s, "rate", &rate)
         && gst_structure_get_int (s, "channels", &channels)) {
       if (channels == 1 && rate == 16000)
-        pad->codec = NELLYMOSER_16K;
+        pad->codec = FLV_AUDIO_CODEC_NELLYMOSER_16K;
       else if (channels == 1 && rate == 8000)
-        pad->codec = NELLYMOSER_8K;
+        pad->codec = FLV_AUDIO_CODEC_NELLYMOSER_8K;
       else
-        pad->codec = NELLYMOSER;
+        pad->codec = FLV_AUDIO_CODEC_NELLYMOSER;
     } else {
-      pad->codec = NELLYMOSER;
+      pad->codec = FLV_AUDIO_CODEC_NELLYMOSER;
     }
   } else if (strcmp (gst_structure_get_name (s), "audio/x-raw") == 0) {
     GstAudioInfo info;
 
     if (gst_audio_info_from_caps (&info, caps)) {
-      pad->codec = LINEAR_PCM_LE;
+      pad->codec = FLV_AUDIO_CODEC_LINEAR_PCM_LE;
 
       if (GST_AUDIO_INFO_WIDTH (&info) == 8)
         pad->width = 0;
@@ -647,11 +636,11 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
     } else
       ret = FALSE;
   } else if (strcmp (gst_structure_get_name (s), "audio/x-alaw") == 0) {
-    pad->codec = G711_ALAW;
+    pad->codec = FLV_AUDIO_CODEC_G711_ALAW;
   } else if (strcmp (gst_structure_get_name (s), "audio/x-mulaw") == 0) {
-    pad->codec = G711_MULAW;
+    pad->codec = FLV_AUDIO_CODEC_G711_MULAW;
   } else if (strcmp (gst_structure_get_name (s), "audio/x-speex") == 0) {
-    pad->codec = SPEEX;
+    pad->codec = FLV_AUDIO_CODEC_SPEEX;
   } else {
     ret = FALSE;
   }
@@ -659,7 +648,7 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
   if (ret) {
     gint rate, channels;
 
-    if (pad->codec == AAC)
+    if (pad->codec == FLV_AUDIO_CODEC_AAC)
       pad->rate = 3;
     else if (gst_structure_get_int (s, "rate", &rate)) {
       switch (rate) {
@@ -677,10 +666,11 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
           break;
         case 8000:
           switch (pad->codec) {
-            case NELLYMOSER_8K:
-            case MP3_8K:
-            case G711_ALAW:
-            case G711_MULAW:
+            case FLV_AUDIO_CODEC_NELLYMOSER_8K:
+            case FLV_AUDIO_CODEC_MP3_8K:
+            case FLV_AUDIO_CODEC_MP3_FOURCC:
+            case FLV_AUDIO_CODEC_G711_ALAW:
+            case FLV_AUDIO_CODEC_G711_MULAW:
               pad->rate = 0;
               break;
             default:
@@ -690,8 +680,8 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
           break;
         case 16000:
           switch (pad->codec) {
-            case NELLYMOSER_16K:
-            case SPEEX:
+            case FLV_AUDIO_CODEC_NELLYMOSER_16K:
+            case FLV_AUDIO_CODEC_SPEEX:
               pad->rate = 0;
               break;
             default:
@@ -708,17 +698,18 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
     }
 
     switch (pad->codec) {
-      case NELLYMOSER_16K:
-      case NELLYMOSER_8K:
-      case NELLYMOSER:
+      case FLV_AUDIO_CODEC_NELLYMOSER_16K:
+      case FLV_AUDIO_CODEC_NELLYMOSER_8K:
+      case FLV_AUDIO_CODEC_NELLYMOSER:
         pad->channels = 0;
         break;
-      case AAC:
+      case FLV_AUDIO_CODEC_AAC:
+      case FLV_AUDIO_CODEC_AAC_FOURCC:
         pad->channels = 1;
         break;
       default:
         if (gst_structure_get_int (s, "channels", &channels)) {
-          if (channels == 1 || pad->codec == SPEEX)
+          if (channels == 1 || pad->codec == FLV_AUDIO_CODEC_SPEEX)
             pad->channels = 0;
           else if (channels == 2)
             pad->channels = 1;
@@ -731,7 +722,7 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
         break;
     }
 
-    if (pad->codec != LINEAR_PCM_LE)
+    if (pad->codec != FLV_AUDIO_CODEC_LINEAR_PCM_LE)
       pad->width = 1;
   }
 
@@ -966,7 +957,8 @@ gst_flv_mux_create_header (GstFlvMux * mux)
   data[2] = 'V';
   data[3] = 0x01;               /* Version */
 
-  have_audio = mux->audio_pads != NULL;
+  have_audio = mux->audio_pads != NULL
+      && gst_flv_mux_pads_codec_valid (mux->video_pads);
   have_video = mux->video_pads != NULL
       && gst_flv_mux_pads_codec_valid (mux->video_pads);
 
@@ -1680,7 +1672,8 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
           FLV_VIDEO_PACKET_TYPE_CODED_FRAMES;
 
       // indicate video packet type
-      guint8 multitrack_flags = ((ONETRACK << 4) & 0xf0) | (type & 0x0f);
+      guint8 multitrack_flags =
+          ((FLV_AV_MULTITRACK_TYPE_ONETRACK << 4) & 0xf0) | (type & 0x0f);
       write_success &=
           gst_byte_writer_put_uint8 (&payload_header_writer, multitrack_flags);
 
@@ -1696,17 +1689,18 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
           "is codec data %d for track %d with codec_fourcc 0x%x", is_codec_data,
           pad->track_id, pad->codec_fourcc);
 
-      // TODO: remove that `pad->codec == H264_AVC1` check after eflvmux video pad
-      //        support for marking h264 with codec = ENHANCED_H264_AVC1
-      if ((pad->codec == H264_AVC1 || pad->codec == ENHANCED_H264_AVC1
-              || pad->codec == ENHANCED_H265_HVC1)
+      // TODO: remove that `pad->codec == FLV_VIDEO_CODEC_H264_AVC1` check after eflvmux video pad
+      //        support for marking h264 with codec = FLV_VIDEO_CODEC_H264_AVC1_FOURCC
+      if ((pad->codec == FLV_VIDEO_CODEC_H264_AVC1
+              || pad->codec == FLV_VIDEO_CODEC_H264_AVC1_FOURCC
+              || pad->codec == FLV_VIDEO_CODEC_H265_HVC1_FOURCC)
           && type == FLV_VIDEO_PACKET_TYPE_CODED_FRAMES) {
         write_success &=
             gst_byte_writer_put_uint24_be (&payload_header_writer, cts);
       }
 
-    } else if (pad->codec == ENHANCED_H264_AVC1
-        || pad->codec == ENHANCED_H265_HVC1) {
+    } else if (pad->codec == FLV_VIDEO_CODEC_H264_AVC1_FOURCC
+        || pad->codec == FLV_VIDEO_CODEC_H265_HVC1_FOURCC) {
       // enhanced single track case
       guint8 flags = enhanced_flv_flag | (frame_type << 4);
 
@@ -1743,7 +1737,7 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
       write_success &=
           gst_byte_writer_put_uint8 (&payload_header_writer, flags);
 
-      if (pad->codec == H264_AVC1) {
+      if (pad->codec == FLV_VIDEO_CODEC_H264_AVC1) {
         if (is_codec_data) {
           write_success &=
               gst_byte_writer_put_uint8 (&payload_header_writer, 0);
@@ -1767,16 +1761,19 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
   } else {
     GST_DEBUG_OBJECT (mux, "is codec data %d for track %d", is_codec_data,
         pad->track_id);
-    GstEFlvAudioPacketType type = is_codec_data ? SEQUENCE_START : CODED_FRAMES;
+    GstEFlvAudioPacketType type =
+        is_codec_data ? FLV_AUDIO_PACKET_TYPE_SEQUENCE_START :
+        FLV_AUDIO_PACKET_TYPE_CODED_FRAMES;
     if (pad->track_id >= 0) {
       /* having valid track id so eFLV */
       // set the AVMultitrackType to OneTrack
       // we do one track per pad so ONETRACK always
-      GstEFlvAvMultiTrackType multitrack_type = ONETRACK;
+      GstEFlvAvMultiTrackType multitrack_type = FLV_AV_MULTITRACK_TYPE_ONETRACK;
 
       // indicate that SoundFormat is ExHeader in the MSbits
       guint8 flags =
-          ((EXTENDED_AUDIO_HEADER << 4) & 0xf0) | (MULTITRACK & 0x0f);
+          ((FLV_EXTENDED_AUDIO_HEADER << 4) & 0xf0) |
+          (FLV_AUDIO_PACKET_TYPE_MULTITRACK & 0x0f);
       write_success &=
           gst_byte_writer_put_uint8 (&payload_header_writer, flags);
 
@@ -1805,7 +1802,7 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
           "codec:%d, rate:%d, width:%d, channels:%d",
           flags, pad->codec, pad->rate, pad->width, pad->channels);
 
-      if (pad->codec == 10) {
+      if (pad->codec == FLV_AUDIO_CODEC_AAC) {
         write_success &=
             gst_byte_writer_put_uint8 (&payload_header_writer,
             is_codec_data ? 0 : 1);
@@ -1969,13 +1966,15 @@ gst_flv_mux_prepare_src_caps (GstFlvMux * mux, GstBuffer ** header_buf,
   for (l = GST_ELEMENT_CAST (mux)->sinkpads; l != NULL; l = l->next) {
     GstFlvMuxPad *pad = l->data;
 
-    /* Get H.264 and AAC codec data, if present */
+    /* Get H.264 or H.265 and AAC codec data, if present */
     if (pad && (
             (pad->type == GST_FLV_MUX_TRACK_TYPE_VIDEO
-                && (pad->codec == H264_AVC1 || pad->codec == ENHANCED_H264_AVC1
-                    || pad->codec == ENHANCED_H265_HVC1))
+                && (pad->codec == FLV_VIDEO_CODEC_H264_AVC1
+                    || pad->codec == FLV_VIDEO_CODEC_H264_AVC1_FOURCC
+                    || pad->codec == FLV_VIDEO_CODEC_H265_HVC1_FOURCC))
             || ((pad->type == GST_FLV_MUX_TRACK_TYPE_AUDIO
-                    && pad->codec == AAC))
+                    && (pad->codec == FLV_AUDIO_CODEC_AAC
+                        || pad->codec == FLV_AUDIO_CODEC_AAC_FOURCC)))
         )) {
       if (pad->codec_data == NULL) {
         GST_WARNING_OBJECT (mux, "Codec data for audio stream not found, "
@@ -2716,7 +2715,8 @@ gst_flv_mux_get_next_time (GstAggregator * aggregator)
 
   GST_OBJECT_LOCK (aggregator);
   if (mux->state == GST_FLV_MUX_STATE_HEADER &&
-      (!gst_flv_mux_pads_codec_valid (mux->audio_pads) || (mux->video_pads
+      ((mux->audio_pads && !gst_flv_mux_pads_codec_valid (mux->audio_pads))
+          || (mux->video_pads
               && !gst_flv_mux_pads_codec_valid (mux->video_pads))))
     goto wait_for_data;
   GST_OBJECT_UNLOCK (aggregator);
