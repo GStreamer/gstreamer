@@ -484,7 +484,13 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   gboolean has_videometa, has_video_crop_meta;
   gboolean dont_use_other_pool = FALSE, ret = FALSE;
 
-  g_assert (base->min_buffers > 0);
+  if (base->min_buffers == 0) {
+    GST_DEBUG_OBJECT (base,
+        "Don't know minimum number of required buffers yet");
+    return
+        GST_VIDEO_DECODER_CLASS (GST_VA_BASE_DEC_GET_PARENT_CLASS
+        (decoder))->decide_allocation (decoder, query);
+  }
 
   gst_query_parse_allocation (query, &caps, NULL);
 
