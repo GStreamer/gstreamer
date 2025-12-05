@@ -1153,6 +1153,8 @@ gst_egl_image_can_emulate (GstGLContext * context, GstVideoFormat format)
     } else if (GST_VIDEO_FORMAT_INFO_IS_RGB (info)) {
       /* For RGB formats any DMA format that is not external-only will do. */
       const GArray *dma_modifiers;
+      GstGLDmaModifier *mods, linear_modifier = { 0, FALSE };
+      guint len;
       guint j;
 
       if (!gst_gl_context_egl_get_format_modifiers (context, fourcc,
@@ -1160,16 +1162,23 @@ gst_egl_image_can_emulate (GstGLContext * context, GstVideoFormat format)
         return FALSE;
       }
 
-      for (j = 0; j < dma_modifiers->len; ++j) {
-        GstGLDmaModifier *mod =
-            &g_array_index (dma_modifiers, GstGLDmaModifier, j);
+      if (dma_modifiers) {
+        mods = (GstGLDmaModifier *) dma_modifiers->data;
+        len = dma_modifiers->len;
+      } else {
+        mods = &linear_modifier;
+        len = 1;
+      }
+
+      for (j = 0; j < len; ++j) {
+        GstGLDmaModifier *mod = &mods[j];
 
         if (!mod->external_only) {
           break;
         }
       }
 
-      if (j == dma_modifiers->len) {
+      if (j == len) {
         return FALSE;
       }
     } else {
