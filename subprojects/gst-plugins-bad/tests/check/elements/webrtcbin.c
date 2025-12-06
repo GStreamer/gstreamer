@@ -1803,8 +1803,29 @@ validate_candidate_stats (const GstStructure * s, const GstStructure * stats)
 }
 
 static void
-validate_transport_stats (const GstStructure * s, const GstStructure * stats,
-    const gchar * expected_tls_version)
+validate_certificate_stats (const GstStructure * s, const GstStructure * stats)
+{
+  gchar *pem;
+  gchar *fingerprint;
+  gchar *fingerprint_algo;
+
+  fail_unless (gst_structure_get (s, "fingerprint", G_TYPE_STRING, &fingerprint,
+          NULL));
+  fail_unless (gst_structure_get (s, "fingerprint-algorithm", G_TYPE_STRING,
+          &fingerprint_algo, NULL));
+  fail_unless (gst_structure_get (s, "base64-certificate", G_TYPE_STRING, &pem,
+          NULL));
+
+  fail_unless_equals_string (fingerprint_algo, "sha-256");
+
+  g_free (pem);
+  g_free (fingerprint);
+  g_free (fingerprint_algo);
+}
+
+static void
+validate_transport_stats (const GstStructure * s,
+    const GstStructure * stats, const gchar * expected_tls_version)
 {
   gchar *selected_candidate_pair_id;
   GstWebRTCDTLSTransportState state;
@@ -1911,6 +1932,7 @@ validate_stats_foreach (const GstIdStr * fieldname, const GValue * value,
   } else if (type == GST_WEBRTC_STATS_REMOTE_CANDIDATE) {
     validate_candidate_stats (s, stats);
   } else if (type == GST_WEBRTC_STATS_CERTIFICATE) {
+    validate_certificate_stats (s, stats);
   } else {
     g_assert_not_reached ();
   }
