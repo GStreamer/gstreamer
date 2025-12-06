@@ -51,6 +51,7 @@ if typing.TYPE_CHECKING:
     MiniObjectFlags = Gst.MiniObjectFlags
     FlowReturn = Gst.FlowReturn
     PadDirection = Gst.PadDirection
+    PadLinkReturn = Gst.PadLinkReturn
     MapFlags = Gst.MapFlags
     BufferFlags = Gst.BufferFlags
 else:
@@ -306,7 +307,7 @@ class PadProbeInfo(Gst.PadProbeInfo):  # type: ignore[misc]
         '''
         return PadProbeInfoObjectContextManager(_gi_gst.pad_probe_info_writable_object(self), self)
 
-    def set_object(self, obj: typing.Optional[Gst.MiniObject]) -> None:
+    def set_object(self, obj: typing.Optional[MiniObject]) -> None:
         _gi_gst.pad_probe_info_set_object(self, obj)
 
 
@@ -367,7 +368,7 @@ class Pad(Gst.Pad):
 
         return res
 
-    def link(self, pad: Gst.Pad) -> Gst.PadLinkReturn:
+    def link(self, pad: Pad) -> PadLinkReturn:
         ret = Gst.Pad.link(self, pad)
         if ret != Gst.PadLinkReturn.OK:
             raise LinkError(ret)
