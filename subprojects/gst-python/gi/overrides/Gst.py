@@ -54,6 +54,7 @@ if typing.TYPE_CHECKING:
     MiniObjectFlags = Gst.MiniObjectFlags
     FlowReturn = Gst.FlowReturn
     PadDirection = Gst.PadDirection
+    PadLinkReturn = Gst.PadLinkReturn
     MapFlags = Gst.MapFlags
     BufferFlags = Gst.BufferFlags
 else:
@@ -386,7 +387,7 @@ class Pad(Gst.Pad):
 
         return res
 
-    def link(self, pad: Gst.Pad) -> Gst.PadLinkReturn:
+    def link(self, pad: Gst.Pad) -> PadLinkReturn:
         ret = Gst.Pad.link(self, pad)
         if ret != Gst.PadLinkReturn.OK:
             raise LinkError(ret)
