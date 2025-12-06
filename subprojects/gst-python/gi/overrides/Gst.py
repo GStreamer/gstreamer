@@ -201,9 +201,9 @@ __all__.append('NotWritableContext')
 
 
 class Context(MiniObjectMixin, Gst.Context):  # type: ignore[misc]
-    def get_structure(self) -> typing.Optional[Structure]:
+    def get_structure(self) -> Structure:
         s = _gi_gst.context_get_structure(self)
-        return s._set_parent(self) if s is not None else None
+        return s._set_parent(self)
 
     def writable_structure(self) -> StructureContextManager:  # type: ignore[override]
         return StructureContextManager(_gi_gst.context_writable_structure(self), self)  # type: ignore[arg-type]
@@ -261,17 +261,17 @@ class Caps(MiniObjectMixin, Gst.Caps):  # type: ignore[misc]
     def __str__(self) -> str:
         return self.to_string()
 
-    def __getitem__(self, index: int) -> typing.Optional[Structure]:
-        if index >= self.get_size():
-            raise IndexError('structure index out of range')
+    def __getitem__(self, index: int) -> Structure:
         return self.get_structure(index)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.get_size()
 
-    def get_structure(self, index: int) -> typing.Optional[Structure]:
+    def get_structure(self, index: int) -> Structure:
+        if index >= self.get_size():
+            raise IndexError('structure index out of range')
         s = _gi_gst.caps_get_structure(self, index)
-        return s._set_parent(self) if s is not None else None
+        return s._set_parent(self)
 
     def writable_structure(self, index: int) -> StructureContextManager:  # type: ignore[override]
         return StructureContextManager(_gi_gst.caps_writable_structure(self, index), self)  # type: ignore[arg-type]
