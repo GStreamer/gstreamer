@@ -197,6 +197,7 @@ transport_stream_dispose (GObject * object)
   gst_clear_object (&stream->rtxsend);
   gst_clear_object (&stream->rtxreceive);
   gst_clear_object (&stream->reddec);
+  gst_clear_object (&stream->stream);
   g_list_free_full (stream->fecdecs, (GDestroyNotify) gst_object_unref);
   stream->fecdecs = NULL;
 
@@ -243,9 +244,10 @@ transport_stream_constructed (GObject * object)
     stream->stream = gst_webrtc_ice_add_stream (webrtc->priv->ice,
         stream->session_id);
     _add_ice_stream_item (webrtc, stream->session_id, stream->stream);
+  } else {
+    stream->stream = gst_object_ref (stream->stream);
   }
-  ice_trans =
-      gst_webrtc_ice_find_transport (webrtc->priv->ice, stream->stream,
+  ice_trans = gst_webrtc_ice_find_transport (webrtc->priv->ice, stream->stream,
       GST_WEBRTC_ICE_COMPONENT_RTP);
   gst_webrtc_dtls_transport_set_transport (stream->transport, ice_trans);
   gst_object_unref (ice_trans);
