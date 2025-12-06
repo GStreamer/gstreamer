@@ -64,6 +64,8 @@ G_DEFINE_TYPE_WITH_CODE (GstVideoDmabufPool, gst_video_dmabuf_pool,
         0, "video dmabuf pool");
     );
 
+#ifdef HAVE_LINUX_DMA_BUF_H
+#ifdef DMA_BUF_IOCTL_EXPORT_SYNC_FILE
 typedef struct _DmaBufSource
 {
   GSource base;
@@ -75,7 +77,6 @@ typedef struct _DmaBufSource
   gpointer fd_tags[GST_VIDEO_MAX_PLANES];
 } DmaBufSource;
 
-#ifdef HAVE_LINUX_DMA_BUF_H
 static gboolean
 dma_buf_fd_readable (gint fd)
 {
@@ -329,6 +330,7 @@ gst_video_dmabuf_pool_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
   GST_BUFFER_POOL_CLASS (gst_video_dmabuf_pool_parent_class)->release_buffer
       (pool, buffer);
 }
+#endif /* DMA_BUF_IOCTL_EXPORT_SYNC_FILE */
 
 static gboolean
 gst_video_dmabuf_pool_set_config (GstBufferPool * pool, GstStructure * config)
@@ -410,9 +412,11 @@ gst_video_dmabuf_pool_class_init (GstVideoDmabufPoolClass * klass)
 #ifdef HAVE_LINUX_DMA_BUF_H
   GstBufferPoolClass *pool_class = GST_BUFFER_POOL_CLASS (klass);
 
+#ifdef DMA_BUF_IOCTL_EXPORT_SYNC_FILE
   pool_class->start = gst_video_dmabuf_pool_start;
   pool_class->stop = gst_video_dmabuf_pool_stop;
   pool_class->release_buffer = gst_video_dmabuf_pool_release_buffer;
+#endif /* DMA_BUF_IOCTL_EXPORT_SYNC_FILE */
   pool_class->set_config = gst_video_dmabuf_pool_set_config;
 #endif
 }
