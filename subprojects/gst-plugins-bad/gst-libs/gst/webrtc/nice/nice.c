@@ -551,6 +551,7 @@ gst_webrtc_nice_add_stream (GstWebRTCICE * ice, guint session_id)
   g_hash_table_foreach (nice->priv->turn_servers,
       (GHFunc) _add_turn_server_func, &add_data);
 
+  gst_object_ref (item->stream);
   return item->stream;
 }
 
