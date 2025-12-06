@@ -1,8 +1,10 @@
 [wrap-file]
-directory = pixman-0.43.4
-source_url = https://www.x.org/releases/individual/lib/pixman-0.43.4.tar.xz
-source_filename = pixman-0.43.4.tar.xz
-source_hash = 48d8539f35488d694a2fef3ce17394d1153ed4e71c05d1e621904d574be5df19
+directory = pixman-0.46.4
+source_url = https://www.cairographics.org/releases/pixman-0.46.4.tar.gz
+source_filename = pixman-0.46.4.tar.gz
+source_hash = d09c44ebc3bd5bee7021c79f922fe8fb2fb57f7320f55e97ff9914d2346a591c
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/pixman_0.46.4-1/pixman-0.46.4.tar.gz
+wrapdb_version = 0.46.4-1
 
 [provide]
 pixman-1 = idep_pixman
