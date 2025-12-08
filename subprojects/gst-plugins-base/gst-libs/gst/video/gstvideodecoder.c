@@ -4407,9 +4407,11 @@ gst_video_decoder_negotiate_pool (GstVideoDecoder * decoder, GstCaps * caps)
   }
   decoder->priv->pool = pool;
 
-  /* and activate */
-  GST_DEBUG_OBJECT (decoder, "activate pool %" GST_PTR_FORMAT, pool);
-  gst_buffer_pool_set_active (pool, TRUE);
+  if (pool) {
+    /* and activate */
+    GST_DEBUG_OBJECT (decoder, "activate pool %" GST_PTR_FORMAT, pool);
+    gst_buffer_pool_set_active (pool, TRUE);
+  }
 
 done:
   if (query)
@@ -4623,6 +4625,9 @@ gst_video_decoder_allocate_output_buffer (GstVideoDecoder * decoder)
       }
     }
   }
+
+  if (!decoder->priv->pool)
+    goto fallback;
 
   flow = gst_buffer_pool_acquire_buffer (decoder->priv->pool, &buffer, NULL);
 
