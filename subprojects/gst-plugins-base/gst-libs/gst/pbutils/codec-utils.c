@@ -3549,6 +3549,8 @@ gst_codec_utils_caps_get_mime_codec (GstCaps * caps)
     mime_codec = g_strdup ("ac-4");
   } else if (g_strcmp0 (media_type, "audio/x-opus") == 0) {
     mime_codec = g_strdup ("opus");
+  } else if (g_strcmp0 (media_type, "audio/x-flac") == 0) {
+    mime_codec = g_strdup ("flac");
   } else if (g_strcmp0 (media_type, "audio/x-mulaw") == 0) {
     mime_codec = g_strdup ("ulaw");
   } else if (g_strcmp0 (media_type, "audio/x-adpcm") == 0) {
@@ -3751,6 +3753,9 @@ gst_codec_utils_caps_from_mime_codec_single (const gchar * codec)
     case GST_MAKE_FOURCC ('o', 'p', 'u', 's'):
       /* Opus */
       caps = gst_caps_new_empty_simple ("audio/x-opus");
+      break;
+    case GST_MAKE_FOURCC ('f', 'l', 'a', 'c'):
+      caps = gst_caps_new_empty_simple ("audio/x-flac");
       break;
     case GST_MAKE_FOURCC ('u', 'l', 'a', 'w'):
       /* ulaw */
