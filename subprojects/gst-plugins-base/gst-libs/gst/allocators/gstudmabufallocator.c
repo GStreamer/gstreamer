@@ -38,7 +38,7 @@
 
 #include "gstudmabufallocator.h"
 
-#ifdef HAVE_MEMFD_CREATE
+#if defined(HAVE_MEMFD_CREATE) && defined(HAVE_LINUX_UDMABUF_H)
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -71,7 +71,7 @@ static GstMemory *
 gst_udmabuf_allocator_alloc (GstAllocator * allocator, gsize size,
     GstAllocationParams * params)
 {
-#ifdef HAVE_MEMFD_CREATE
+#if defined(HAVE_MEMFD_CREATE) && defined(HAVE_LINUX_UDMABUF_H)
   GstUdmabufAllocator *self = GST_UDMABUF_ALLOCATOR (allocator);
   struct udmabuf_create create;
   GstMemory *mem;
@@ -175,7 +175,7 @@ gst_udmabuf_allocator_alloc (GstAllocator * allocator, gsize size,
 static void
 gst_udmabuf_allocator_finalize (GObject * obj)
 {
-#ifdef HAVE_MEMFD_CREATE
+#if defined(HAVE_MEMFD_CREATE) && defined(HAVE_LINUX_UDMABUF_H)
   GstUdmabufAllocator *self = GST_UDMABUF_ALLOCATOR (obj);
 
   if (self->udmabuf_dev_fd != -1) {
@@ -204,7 +204,7 @@ gst_udmabuf_allocator_init (GstUdmabufAllocator * self)
 
   alloc->mem_type = GST_ALLOCATOR_UDMABUF;
 
-#ifdef HAVE_MEMFD_CREATE
+#if defined(HAVE_MEMFD_CREATE) && defined(HAVE_LINUX_UDMABUF_H)
   self->udmabuf_dev_fd = open ("/dev/udmabuf", O_RDWR | O_CLOEXEC, 0);
   if (self->udmabuf_dev_fd == -1)
     GST_WARNING_OBJECT (self,
@@ -227,7 +227,7 @@ gst_udmabuf_allocator_init (GstUdmabufAllocator * self)
 void
 gst_udmabuf_allocator_init_once (void)
 {
-#if defined(HAVE_MEMFD_CREATE)
+#if defined(HAVE_MEMFD_CREATE) && defined(HAVE_LINUX_UDMABUF_H)
   static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
