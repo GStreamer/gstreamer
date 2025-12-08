@@ -172,27 +172,48 @@ _h264_bit_writer_scaling_list (GstBitWriter * bw, gboolean * space,
         size = 64;
       }
 
-      if (memcmp (scaling_list, default_lists[i], size))
-        scaling_list_present_flag = TRUE;
+      switch (i) {
+        case 0:
+        case 3:
+        case 6:
+        case 7:
+          if (memcmp (scaling_list, default_lists[i], size))
+            scaling_list_present_flag = TRUE;
+          break;
+        case 1:
+        case 2:
+        case 4:
+        case 5:
+          if (memcmp (scaling_list, scaling_lists_4x4[i - 1], size))
+            scaling_list_present_flag = TRUE;
+          break;
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+          if (memcmp (scaling_list, scaling_lists_8x8[i - 6 - 2], size))
+            scaling_list_present_flag = TRUE;
+          break;
+        default:
+          break;
+      }
 
       WRITE_BITS (bw, scaling_list_present_flag, 1);
       if (scaling_list_present_flag) {
         guint8 last_scale, next_scale;
         gint8 delta_scale;
 
+        last_scale = next_scale = 8;
+
         for (j = 0; j < size; j++) {
-          last_scale = next_scale = 8;
+          if (next_scale != 0) {
+            delta_scale = (gint8) (scaling_list[j] - last_scale);
 
-          for (j = 0; j < size; j++) {
-            if (next_scale != 0) {
-              delta_scale = (gint8) (scaling_list[j] - last_scale);
+            WRITE_SE (bw, delta_scale);
 
-              WRITE_SE (bw, delta_scale);
-
-              next_scale = scaling_list[j];
-            }
-            last_scale = (next_scale == 0) ? last_scale : next_scale;
+            next_scale = scaling_list[j];
           }
+          last_scale = (next_scale == 0) ? last_scale : next_scale;
         }
       }
     }
