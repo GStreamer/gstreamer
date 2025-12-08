@@ -225,11 +225,91 @@ Get quark of the class at @index</doc>
         </return-value>
       </function>
     </record>
+    <docsection name="GstAnalyticsModelInfo">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The #GstAnalyticsModelInfo is an object storing artifical neural network
+model metadata describing the input and output tensors. These information's
+are required by inference elements.
+
+The ".modelinfo" files describe the additional metadata for
+a given serialized model file such as a `.tflite`, `.onnx` or `.pte` files.
+
+The ModelInfo files are ini-style. Each section is matched to a
+particular input or output tensor.
+
+The title of the section must match the name of the tensor in the model file.
+
+The fields used to match the modelinfo to the model are:
+ `\[title\]`: The name of the tensor, must be unique
+ `dims`: The dimensions as a comma-separated list of ints. -1 matches a dynamic dimension and is a wildcard
+ `dir`: Either "input" or "output"
+ `type`: The data type match #GstTensorDataType, one of:
+   `int4`
+   `int8`
+   `int16`
+   `int32`
+   `int64`
+   `uint4`
+   `uint8`
+   `uint16`
+   `uint32`
+   `uint64`
+   `float16`
+   `float32`
+   `float64`
+   `bfloat16`
+
+Based on these fields, the following metadata is applied to output tensors:
+ `id`: The tensor ID so other elements can identity it, ideally registered in the [Tensor ID Registry](https://github.com/collabora/tensor-id-registry/blob/main/tensor-id-register.md).
+ `group-id`: The group ID that groups related tensors together (e.g., all outputs from the same model)
+ `dims-order`: The dimension ordering, either "row-major" or "col-major". Defaults to "row-major" if not specified.
+
+Those fields are applied to input tensors for normalization:
+ `ranges`: semicolon-separated list of comma-separated pairs of floats,
+  each representing (min, max) for a single channel or dimension.
+  For per-channel normalization: `ranges=0.0,255.0;-1.0,1.0;0.0,1.0` (R,G,B)
+  For single range (applies to all channels): `ranges=0.0,255.0`
+  The inference elements will convert 8-bit input [0-255] to target ranges using:
+    output[i] = input[i] * scale[i] + offset[i]
+  where for each channel i:
+    scale[i] = (max[i] - min[i]) / 255.0
+    offset[i] = min[i]
+
+  Common ranges:
+   `0.0,255.0` - No normalization (passthrough, scale=1.0, offset=0.0)
+   `0.0,1.0` - Normalized to [0,1] range (scale&#8776;0.00392, offset=0.0)
+   `-1.0,1.0` - Normalized to [-1,1] range (scale&#8776;0.00784, offset=-1.0)
+   `16.0,235.0` - TV/limited range (scale&#8776;0.859, offset=16.0)
+
+Other fields are ignored for now.
+
+The API is meant to be used by inference elements</doc>
+    </docsection>
     <constant name="INF_RELATION_SPAN" value="-1" c:type="GST_INF_RELATION_SPAN" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Passes to functions asking for a relation span when the span is
 infinite.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
       <type name="gint" c:type="gint"/>
+    </constant>
+    <constant name="MODELINFO_SECTION_NAME" value="modelinfo" c:type="GST_MODELINFO_SECTION_NAME" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h">The name of the modelinfo header section</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="MODELINFO_VERSION_MAJOR" value="1" c:type="GST_MODELINFO_VERSION_MAJOR" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h">The current major version of the modelinfo format</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
+    <constant name="MODELINFO_VERSION_MINOR" value="0" c:type="GST_MODELINFO_VERSION_MINOR" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h">The current minor version of the modelinfo format</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
+    <constant name="MODELINFO_VERSION_STR" value="1.0" c:type="GST_MODELINFO_VERSION_STR" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h">The current version string for the modelinfo format.
+This MUST be updated whenever the format changes.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+      <type name="utf8" c:type="gchar*"/>
     </constant>
     <function-macro name="MTD_CAST" c:identifier="GST_ANALYTICS_MTD_CAST" version="1.24" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
@@ -243,6 +323,346 @@ infinite.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
+    <record name="ModelInfo" c:type="GstAnalyticsModelInfo" opaque="1" glib:type-name="GstAnalyticsModelInfo" glib:get-type="gst_analytics_modelinfo_get_type" c:symbol-prefix="modelinfo">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+      <method name="find_tensor_name" c:identifier="gst_analytics_modelinfo_find_tensor_name" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Find the name of a tensor in the modelinfo that matches the given criteria.
+
+The function performs the following checks in order:
+1. If @in_tensor_name is provided and exists in modelinfo, validate it matches
+2. Search by index for the specified direction and validate
+3. Search by dimensions and data type</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The tensor name if found, or %NULL otherwise.
+   The caller must free this with g_free() when done.</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="modelinfo" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Instance of #GstAnalyticsModelInfo</doc>
+            <type name="ModelInfo" c:type="GstAnalyticsModelInfo*"/>
+          </instance-parameter>
+          <parameter name="dir" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The tensor direction (input or output)</doc>
+            <type name="ModelInfoTensorDirection" c:type="GstAnalyticsModelInfoTensorDirection"/>
+          </parameter>
+          <parameter name="index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The tensor index within the specified direction</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="in_tensor_name" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">An optional tensor name hint to check first</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="data_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The tensor data type to match</doc>
+            <type name="TensorDataType" c:type="GstTensorDataType"/>
+          </parameter>
+          <parameter name="num_dims" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The number of dimensions</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="dims" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The dimension sizes. Use -1 for dynamic dimensions.</doc>
+            <array length="4" zero-terminated="0" c:type="const gsize*">
+              <type name="gsize" c:type="gsize"/>
+            </array>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="free" c:identifier="gst_analytics_modelinfo_free" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Free a modelinfo object allocated by gst_analytics_modelinfo_load().
+
+This function should be called when the modelinfo is no longer needed
+to release the associated resources.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="model_info" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Instance of #GstAnalyticsModelInfo</doc>
+            <type name="ModelInfo" c:type="GstAnalyticsModelInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_dims_order" c:identifier="gst_analytics_modelinfo_get_dims_order" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Retrieve the dimension ordering for a given tensor.
+
+The dimension ordering specifies how multi-dimensional tensor data is
+laid out in memory:
+- Row-major (C/NumPy style): Last dimension changes fastest in memory
+- Column-major (Fortran style): First dimension changes fastest in memory
+
+If not specified in the modelinfo, defaults to row-major.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The dimension order as #GstTensorDimOrder</doc>
+          <type name="TensorDimOrder" c:type="GstTensorDimOrder"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="modelinfo" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Instance of #GstAnalyticsModelInfo</doc>
+            <type name="ModelInfo" c:type="GstAnalyticsModelInfo*"/>
+          </instance-parameter>
+          <parameter name="tensor_name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The name of the tensor</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_group_id" c:identifier="gst_analytics_modelinfo_get_group_id" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Get the group ID that groups related tensors together (e.g., all outputs
+from the same model).
+
+The group ID is stored in the modelinfo section and is global for all
+tensors in the model.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The group ID string, or %NULL if not found.
+   The caller must free this with g_free() when done.</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="modelinfo" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Instance of #GstAnalyticsModelInfo</doc>
+            <type name="ModelInfo" c:type="GstAnalyticsModelInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_id" c:identifier="gst_analytics_modelinfo_get_id" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Get the tensor ID from the modelinfo for the specified tensor name.
+
+The tensor ID is ideally registered in the [Tensor ID Registry](https://github.com/collabora/tensor-id-registry/blob/main/tensor-id-register.md).</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The tensor ID string, or %NULL if not found.
+   The caller must free this with g_free() when done.</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="modelinfo" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Instance of #GstAnalyticsModelInfo</doc>
+            <type name="ModelInfo" c:type="GstAnalyticsModelInfo*"/>
+          </instance-parameter>
+          <parameter name="tensor_name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The name of the tensor</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_input_scales_offsets" c:identifier="gst_analytics_modelinfo_get_input_scales_offsets" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Calculate normalization scales and offsets to transform input data to the target range.
+
+This function calculates transformation parameters to convert from the actual input data range
+[input_min, input_max] to the target range expected by the model [target_min, target_max]:
+  `normalized_value[i] = input[i] * output_scale[i] + output_offset[i]`
+
+The target ranges are read from the modelinfo `ranges` field: Semicolon-separated list of
+comma-separated pairs (min,max) for per-channel target ranges
+(e.g., "0.0,255.0;-1.0,1.0;0.0,1.0" for RGB channels with different target ranges).
+
+Common input ranges:
+- [0.0, 255.0]: 8-bit unsigned (uint8)
+- [-128.0, 127.0]: 8-bit signed (int8)
+- [0.0, 65535.0]: 16-bit unsigned (uint16)
+- [-32768.0, 32767.0]: 16-bit signed (int16)
+- [0.0, 1.0]: Normalized float
+- [-1.0, 1.0]: Normalized signed float
+
+The number of input ranges (@num_input_ranges) must equal the number of target ranges
+in the modelinfo. The function will return FALSE if they don't match.
+
+The caller must free @output_scales and @output_offsets with g_free() when done.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">%TRUE on success, %FALSE on error, if ranges field is not found, or if @num_input_ranges
+         doesn't match the number of target ranges in the modelinfo</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="modelinfo" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Instance of #GstAnalyticsModelInfo</doc>
+            <type name="ModelInfo" c:type="GstAnalyticsModelInfo*"/>
+          </instance-parameter>
+          <parameter name="tensor_name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The name of the tensor</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="num_input_ranges" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The number of input ranges (channels/dimensions)</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="input_mins" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The minimum values of the actual input data for each channel</doc>
+            <array length="1" zero-terminated="0" c:type="const gdouble*">
+              <type name="gdouble" c:type="gdouble"/>
+            </array>
+          </parameter>
+          <parameter name="input_maxs" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The maximum values of the actual input data for each channel</doc>
+            <array length="1" zero-terminated="0" c:type="const gdouble*">
+              <type name="gdouble" c:type="gdouble"/>
+            </array>
+          </parameter>
+          <parameter name="num_output_ranges" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The number of output ranges/scale-offset pairs</doc>
+            <type name="gsize" c:type="gsize*"/>
+          </parameter>
+          <parameter name="output_scales" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The scale values for normalization</doc>
+            <array length="4" zero-terminated="0" c:type="gdouble**">
+              <type name="gdouble" c:type="gdouble*"/>
+            </array>
+          </parameter>
+          <parameter name="output_offsets" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The offset values for normalization</doc>
+            <array length="4" zero-terminated="0" c:type="gdouble**">
+              <type name="gdouble" c:type="gdouble*"/>
+            </array>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_quark_group_id" c:identifier="gst_analytics_modelinfo_get_quark_group_id" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Get the group ID as a GQuark for efficient string comparison and storage.
+
+Using GQuark is more efficient than string comparison when you need to
+compare multiple group IDs.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The GQuark of the group ID, or 0 if not found</doc>
+          <type name="GLib.Quark" c:type="GQuark"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="modelinfo" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Instance of #GstAnalyticsModelInfo</doc>
+            <type name="ModelInfo" c:type="GstAnalyticsModelInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_quark_id" c:identifier="gst_analytics_modelinfo_get_quark_id" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Get the tensor ID as a GQuark for efficient string comparison and storage.
+
+Using GQuark is more efficient than string comparison when you need to
+compare multiple IDs.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The GQuark of the tensor ID, or 0 if not found</doc>
+          <type name="GLib.Quark" c:type="GQuark"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="modelinfo" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Instance of #GstAnalyticsModelInfo</doc>
+            <type name="ModelInfo" c:type="GstAnalyticsModelInfo*"/>
+          </instance-parameter>
+          <parameter name="tensor_name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The name of the tensor</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_target_ranges" c:identifier="gst_analytics_modelinfo_get_target_ranges" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Retrieve all target ranges (min/max pairs) expected by the model for a given tensor.
+
+This function retrieves all target ranges from the `ranges` field in the modelinfo.
+Each range represents the expected input range for a channel or dimension that the
+model requires.
+
+The function reads from the `ranges` field: Semicolon-separated list of
+comma-separated pairs (min,max) for per-channel target ranges
+(e.g., "0.0,1.0;-1.0,1.0;0.0,1.0" for RGB channels with different normalization targets).
+
+The caller must free @mins and @maxs with g_free() when done.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">%TRUE if range information was found and valid, %FALSE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="modelinfo" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Instance of #GstAnalyticsModelInfo</doc>
+            <type name="ModelInfo" c:type="GstAnalyticsModelInfo*"/>
+          </instance-parameter>
+          <parameter name="tensor_name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The name of the tensor</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="num_ranges" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The number of ranges</doc>
+            <type name="gsize" c:type="gsize*"/>
+          </parameter>
+          <parameter name="mins" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The minimum values for each target range</doc>
+            <array length="1" zero-terminated="0" c:type="gdouble**">
+              <type name="gdouble" c:type="gdouble*"/>
+            </array>
+          </parameter>
+          <parameter name="maxs" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The maximum values for each target range</doc>
+            <array length="1" zero-terminated="0" c:type="gdouble**">
+              <type name="gdouble" c:type="gdouble*"/>
+            </array>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_version" c:identifier="gst_analytics_modelinfo_get_version" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Retrieve the version string of the modelinfo file format.
+
+The version is in the format "Major.Minor" and is stored in the
+[modelinfo] section of the modelinfo file.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The version string (e.g., "1.0").
+   The caller must free this with g_free() when done.
+   Defaults to "1.0" if not specified.</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="modelinfo" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Instance of #GstAnalyticsModelInfo</doc>
+            <type name="ModelInfo" c:type="GstAnalyticsModelInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <function name="load" c:identifier="gst_analytics_modelinfo_load" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Load a modelinfo file associated with the given model file.
+
+This function attempts to load a `.modelinfo` file in the following order:
+1. `{model_filename}.modelinfo`
+2. `{model_filename_without_extension}.modelinfo`
+
+The modelinfo file contains metadata for the model's input and output tensors,
+including normalization ranges, dimension ordering, tensor IDs, etc.
+
+The loaded modelinfo must be freed with gst_analytics_modelinfo_free()
+when no longer needed.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">A new #GstAnalyticsModelInfo instance,
+   or %NULL if the modelinfo file could not be found or loaded.</doc>
+          <type name="ModelInfo" c:type="GstAnalyticsModelInfo*"/>
+        </return-value>
+        <parameters>
+          <parameter name="model_filename" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Path to the model file (e.g., "model.onnx", "model.tflite")</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </function>
+    </record>
+    <enumeration name="ModelInfoTensorDirection" version="1.28" c:type="GstAnalyticsModelInfoTensorDirection">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+      <member name="unknown" value="0" c:identifier="MODELINFO_DIRECTION_UNKNOWN">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h">Tensor location is unknown</doc>
+      </member>
+      <member name="input" value="1" c:identifier="MODELINFO_DIRECTION_INPUT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h">Input tensor</doc>
+      </member>
+      <member name="output" value="2" c:identifier="MODELINFO_DIRECTION_OUTPUT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h">Output tensor</doc>
+      </member>
+    </enumeration>
     <record name="Mtd" c:type="GstAnalyticsMtd" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Handle containing data required to use gst_analytics_mtd API. This type
 is generally expected to be allocated on the stack.</doc>
@@ -2295,6 +2715,31 @@ regions overlap.</doc>
         <parameter name="bb2_h" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalytics_image_util.c">Bounding box 2, height</doc>
           <type name="gint" c:type="gint"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="modelinfo_load" c:identifier="gst_analytics_modelinfo_load" moved-to="ModelInfo.load" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Load a modelinfo file associated with the given model file.
+
+This function attempts to load a `.modelinfo` file in the following order:
+1. `{model_filename}.modelinfo`
+2. `{model_filename_without_extension}.modelinfo`
+
+The modelinfo file contains metadata for the model's input and output tensors,
+including normalization ranges, dimension ordering, tensor IDs, etc.
+
+The loaded modelinfo must be freed with gst_analytics_modelinfo_free()
+when no longer needed.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">A new #GstAnalyticsModelInfo instance,
+   or %NULL if the modelinfo file could not be found or loaded.</doc>
+        <type name="ModelInfo" c:type="GstAnalyticsModelInfo*"/>
+      </return-value>
+      <parameters>
+        <parameter name="model_filename" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Path to the model file (e.g., "model.onnx", "model.tflite")</doc>
+          <type name="utf8" c:type="const gchar*"/>
         </parameter>
       </parameters>
     </function>
