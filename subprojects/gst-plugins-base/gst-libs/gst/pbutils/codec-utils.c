@@ -3545,6 +3545,8 @@ gst_codec_utils_caps_get_mime_codec (GstCaps * caps)
     mime_codec = g_strdup ("ac-3");
   } else if (g_strcmp0 (media_type, "audio/x-eac3") == 0) {
     mime_codec = g_strdup ("ec-3");
+  } else if (g_strcmp0 (media_type, "audio/x-ac4") == 0) {
+    mime_codec = g_strdup ("ac-4");
   } else if (g_strcmp0 (media_type, "audio/x-opus") == 0) {
     mime_codec = g_strdup ("opus");
   } else if (g_strcmp0 (media_type, "audio/x-mulaw") == 0) {
@@ -3720,6 +3722,9 @@ gst_codec_utils_caps_from_mime_codec_single (const gchar * codec)
     case GST_MAKE_FOURCC ('e', 'c', '-', '3'):
       /* ETSI TS 102 366 v1.4.1 - Digital Audio Compression (AC-3, Enhanced AC-3) Standard, Annex F */
       caps = gst_caps_new_empty_simple ("audio/x-eac3");
+      break;
+    case GST_MAKE_FOURCC ('a', 'c', '-', '4'):
+      caps = gst_caps_new_empty_simple ("audio/x-ac4");
       break;
     case GST_MAKE_FOURCC ('s', 't', 'p', 'p'):
       /* IMSC1-conformant TTM XML */
