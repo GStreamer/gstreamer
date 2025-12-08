@@ -137,7 +137,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
               "tensor/strided,"
                 "tensor-id=(string)yolo-v8-out,"
                 "dims=<(int)1,(int)[1,max],(int)[1,max]>,"
-                "dims-order=(string)row-major,"
+                "dims-order=(string)col-major,"
                 "type=(string)float32"
              "]"
            "}"
