@@ -3541,6 +3541,10 @@ gst_codec_utils_caps_get_mime_codec (GstCaps * caps)
     } else {
       mime_codec = g_strdup ("mp4a.40");
     }
+  } else if (g_strcmp0 (media_type, "audio/x-ac3") == 0) {
+    mime_codec = g_strdup ("ac-3");
+  } else if (g_strcmp0 (media_type, "audio/x-eac3") == 0) {
+    mime_codec = g_strdup ("ec-3");
   } else if (g_strcmp0 (media_type, "audio/x-opus") == 0) {
     mime_codec = g_strdup ("opus");
   } else if (g_strcmp0 (media_type, "audio/x-mulaw") == 0) {
@@ -3549,6 +3553,10 @@ gst_codec_utils_caps_get_mime_codec (GstCaps * caps)
     if (g_strcmp0 (gst_structure_get_string (caps_st, "layout"), "g726") == 0) {
       mime_codec = g_strdup ("g726");
     }
+  } else if (g_strcmp0 (media_type, "application/ttml+xml") == 0) {
+    mime_codec = g_strdup ("stpp");
+  } else if (g_strcmp0 (media_type, "application/x-subtitle-vtt") == 0) {
+    mime_codec = g_strdup ("wvtt");
   }
 
 done:
