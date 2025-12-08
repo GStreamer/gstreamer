@@ -3120,9 +3120,6 @@ gst_video_aggregator_setup_task_pool (GstVideoAggregator * vagg)
 
   GST_OBJECT_LOCK (vagg);
   if (!vagg->priv->task_pool) {
-    GstContext *context;
-    GstMessage *msg;
-
     /* Create default task pool if none provided */
     vagg->priv->task_pool = gst_shared_task_pool_new ();
     gst_shared_task_pool_set_max_threads (GST_SHARED_TASK_POOL (vagg->
@@ -3131,23 +3128,11 @@ gst_video_aggregator_setup_task_pool (GstVideoAggregator * vagg)
     vagg->priv->task_pool_from_context = FALSE;
     GST_DEBUG_OBJECT (vagg, "Created default task pool with %d threads",
         g_get_num_processors ());
-
-    /* Post have-context message to let the application know about the pool */
-    context = gst_context_new (GST_TASK_POOL_CONTEXT_TYPE, FALSE);
-    gst_context_set_task_pool (context, vagg->priv->task_pool);
-    pool = gst_object_ref (vagg->priv->task_pool);
-    GST_OBJECT_UNLOCK (vagg);
-
-    msg = gst_message_new_have_context (GST_OBJECT_CAST (vagg), context);
-    gst_element_post_message (GST_ELEMENT (vagg), msg);
-
-    goto done;
-  } else {
-    pool = gst_object_ref (vagg->priv->task_pool);
   }
+
+  pool = gst_object_ref (vagg->priv->task_pool);
   GST_OBJECT_UNLOCK (vagg);
 
-done:
   return pool;
 }
 
