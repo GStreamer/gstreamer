@@ -2529,7 +2529,9 @@ gst_matroska_mux_request_new_pad (GstElement * element,
     if (req_name != NULL && sscanf (req_name, "audio_%u", &pad_id) == 1) {
       pad_name = req_name;
     } else {
-      name = g_strdup_printf ("audio_%u", mux->num_a_streams++);
+      name =
+          g_strdup_printf ("audio_%u", g_atomic_int_add (&mux->num_a_streams,
+              1));
       pad_name = name;
     }
     capsfunc = GST_DEBUG_FUNCPTR (gst_matroska_mux_audio_pad_setcaps);
@@ -2543,7 +2545,9 @@ gst_matroska_mux_request_new_pad (GstElement * element,
     if (req_name != NULL && sscanf (req_name, "video_%u", &pad_id) == 1) {
       pad_name = req_name;
     } else {
-      name = g_strdup_printf ("video_%u", mux->num_v_streams++);
+      name =
+          g_strdup_printf ("video_%u", g_atomic_int_add (&mux->num_v_streams,
+              1));
       pad_name = name;
     }
     capsfunc = GST_DEBUG_FUNCPTR (gst_matroska_mux_video_pad_setcaps);
@@ -2557,7 +2561,9 @@ gst_matroska_mux_request_new_pad (GstElement * element,
     if (req_name != NULL && sscanf (req_name, "subtitle_%u", &pad_id) == 1) {
       pad_name = req_name;
     } else {
-      name = g_strdup_printf ("subtitle_%u", mux->num_t_streams++);
+      name =
+          g_strdup_printf ("subtitle_%u", g_atomic_int_add (&mux->num_t_streams,
+              1));
       pad_name = name;
     }
     capsfunc = GST_DEBUG_FUNCPTR (gst_matroska_mux_subtitle_pad_setcaps);
@@ -2576,6 +2582,7 @@ gst_matroska_mux_request_new_pad (GstElement * element,
       GST_ELEMENT_CLASS (parent_class)->request_new_pad (element,
       templ, pad_name, caps);
 
+  GST_OBJECT_LOCK (mux);
   pad->track = context;
   gst_matroska_pad_reset (pad, FALSE);
   if (id)
@@ -2583,6 +2590,7 @@ gst_matroska_mux_request_new_pad (GstElement * element,
   pad->track->dts_only = FALSE;
 
   pad->capsfunc = capsfunc;
+  GST_OBJECT_UNLOCK (mux);
 
   g_free (name);
 
