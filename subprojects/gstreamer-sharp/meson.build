@@ -1,4 +1,4 @@
-project('gstreamer-sharp', ['cs', 'c'], version: '1.27.50',
+project('gstreamer-sharp', ['cs', 'c'], version: '1.27.50.1',
     meson_version : '>= 1.4', license: 'LGPL')
 
 fs = import ('fs')
