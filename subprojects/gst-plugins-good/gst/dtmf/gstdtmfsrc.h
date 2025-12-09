@@ -70,7 +70,7 @@ typedef struct _GstDTMFSrcEvent GstDTMFSrcEvent;
  */
 struct _GstDTMFSrc
 {
-  /*< private >*/
+  /*< private > */
   GstBaseSrc parent;
   GAsyncQueue *event_queue;
   GstDTMFSrcEvent *last_event;
@@ -85,6 +85,9 @@ struct _GstDTMFSrc
   GstClockTime last_stop;
 
   gint sample_rate;
+
+  guint32 min_inter_digit_interval;
+  guint32 min_pulse_duration;
 };
 
 

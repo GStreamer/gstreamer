@@ -99,6 +99,9 @@ struct _GstRTPDTMFSrc
 
   gboolean dirty;
   guint16 redundancy_count;
+
+  guint32 min_inter_digit_interval;
+  guint32 min_pulse_duration;
 };
 
 struct _GstRTPDTMFSrcClass

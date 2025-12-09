@@ -95,13 +95,13 @@
 
 #define GST_TONE_DTMF_TYPE_EVENT 1
 #define DEFAULT_PACKET_INTERVAL  50     /* ms */
+#define DEFAULT_MIN_PULSE_DURATION MIN_PULSE_DURATION   /* ms */
+#define DEFAULT_MIN_INTER_DIGIT_INTERVAL MIN_INTER_DIGIT_INTERVAL       /* ms */
 #define MIN_PACKET_INTERVAL      10     /* ms */
 #define MAX_PACKET_INTERVAL      50     /* ms */
 #define DEFAULT_SAMPLE_RATE      8000
 #define SAMPLE_SIZE              16
 #define CHANNELS                 1
-#define MIN_DUTY_CYCLE           (MIN_INTER_DIGIT_INTERVAL + MIN_PULSE_DURATION)
-
 
 typedef struct st_dtmf_key
 {
@@ -159,6 +159,8 @@ enum
 {
   PROP_0,
   PROP_INTERVAL,
+  PROP_MIN_INTER_DIGIT_INTERVAL,
+  PROP_MIN_PULSE_DURATION,
 };
 
 static GstStaticPadTemplate gst_dtmf_src_template =
@@ -230,6 +232,33 @@ gst_dtmf_src_class_init (GstDTMFSrcClass * klass)
           "Interval in ms between two tone packets", MIN_PACKET_INTERVAL,
           MAX_PACKET_INTERVAL, DEFAULT_PACKET_INTERVAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * dtmfsrc:min-inter-digit-interval:
+   *
+   * The minimum inter digit arrival, in milliseconds
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_MIN_INTER_DIGIT_INTERVAL,
+      g_param_spec_uint ("min-inter-digit-interval",
+          "Minimum Inter Digit Arrival",
+          "The minimum inter digit arrival, in milliseconds", 1, G_MAXUINT,
+          DEFAULT_MIN_INTER_DIGIT_INTERVAL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * dtmfsrc:min-pulse-duration:
+   *
+   * The minimum pulse duration, in milliseconds
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_MIN_PULSE_DURATION, g_param_spec_uint ("min-pulse-duration",
+          "Minimum Pulse Duration",
+          "The minimum pulse duration, in milliseconds", 1, G_MAXUINT,
+          DEFAULT_MIN_PULSE_DURATION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_dtmf_src_change_state);
@@ -258,6 +287,8 @@ gst_dtmf_src_init (GstDTMFSrc * dtmfsrc)
   gst_base_src_set_live (GST_BASE_SRC (dtmfsrc), TRUE);
 
   dtmfsrc->interval = DEFAULT_PACKET_INTERVAL;
+  dtmfsrc->min_inter_digit_interval = DEFAULT_MIN_INTER_DIGIT_INTERVAL;
+  dtmfsrc->min_pulse_duration = DEFAULT_MIN_PULSE_DURATION;
 
   dtmfsrc->event_queue = g_async_queue_new_full ((GDestroyNotify) event_free);
   dtmfsrc->last_event = NULL;
@@ -416,6 +447,12 @@ gst_dtmf_src_set_property (GObject * object, guint prop_id,
     case PROP_INTERVAL:
       dtmfsrc->interval = g_value_get_uint (value);
       break;
+    case PROP_MIN_INTER_DIGIT_INTERVAL:
+      dtmfsrc->min_inter_digit_interval = g_value_get_uint (value);
+      break;
+    case PROP_MIN_PULSE_DURATION:
+      dtmfsrc->min_pulse_duration = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -433,6 +470,12 @@ gst_dtmf_src_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case PROP_INTERVAL:
       g_value_set_uint (value, dtmfsrc->interval);
+      break;
+    case PROP_MIN_INTER_DIGIT_INTERVAL:
+      g_value_set_uint (value, dtmfsrc->min_inter_digit_interval);
+      break;
+    case PROP_MIN_PULSE_DURATION:
+      g_value_set_uint (value, dtmfsrc->min_pulse_duration);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -579,7 +622,8 @@ gst_dtmf_src_create_next_tone_packet (GstDTMFSrc * dtmfsrc,
   GST_LOG_OBJECT (dtmfsrc, "Creating buffer for tone %s",
       DTMF_KEYS[event->event_number].event_name);
 
-  if (event->packet_count * dtmfsrc->interval < MIN_INTER_DIGIT_INTERVAL) {
+  if (event->packet_count * dtmfsrc->interval <
+      dtmfsrc->min_inter_digit_interval) {
     send_silence = TRUE;
   }
 
@@ -691,7 +735,7 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
       if (event)
         g_free (event);
     } else if (dtmfsrc->last_event->packet_count * dtmfsrc->interval >=
-        MIN_DUTY_CYCLE) {
+        dtmfsrc->min_inter_digit_interval + dtmfsrc->min_pulse_duration) {
       event = g_async_queue_try_pop (dtmfsrc->event_queue);
 
       if (event != NULL) {

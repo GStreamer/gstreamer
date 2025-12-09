@@ -94,6 +94,8 @@
 #define DEFAULT_TIMESTAMP_OFFSET -1
 #define DEFAULT_SEQNUM_OFFSET    -1
 #define DEFAULT_CLOCK_RATE       8000
+#define DEFAULT_MIN_PULSE_DURATION MIN_PULSE_DURATION   /* ms */
+#define DEFAULT_MIN_INTER_DIGIT_INTERVAL MIN_INTER_DIGIT_INTERVAL       /* ms */
 
 #define DEFAULT_PACKET_REDUNDANCY 1
 #define MIN_PACKET_REDUNDANCY 1
@@ -119,7 +121,9 @@ enum
   PROP_CLOCK_RATE,
   PROP_TIMESTAMP,
   PROP_SEQNUM,
-  PROP_REDUNDANCY
+  PROP_REDUNDANCY,
+  PROP_MIN_INTER_DIGIT_INTERVAL,
+  PROP_MIN_PULSE_DURATION
 };
 
 static GstStaticPadTemplate gst_rtp_dtmf_src_template =
@@ -227,6 +231,34 @@ gst_rtp_dtmf_src_class_init (GstRTPDTMFSrcClass * klass)
           DEFAULT_PACKET_REDUNDANCY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * rtpdtmfsrc:min-inter-digit-interval:
+   *
+   * The minimum inter digit arrival, in milliseconds
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_MIN_INTER_DIGIT_INTERVAL,
+      g_param_spec_uint ("min-inter-digit-interval",
+          "Minimum Inter Digit Arrival",
+          "The minimum inter digit arrival, in milliseconds", 1, G_MAXUINT,
+          DEFAULT_MIN_INTER_DIGIT_INTERVAL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * rtpdtmfsrc:min-pulse-duration:
+   *
+   * The minimum pulse duration, in milliseconds
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_MIN_PULSE_DURATION, g_param_spec_uint ("min-pulse-duration",
+          "Minimum Pulse Duration",
+          "The minimum pulse duration, in milliseconds", 1, G_MAXUINT,
+          DEFAULT_MIN_PULSE_DURATION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_change_state);
 
@@ -263,6 +295,8 @@ gst_rtp_dtmf_src_init (GstRTPDTMFSrc * object)
   object->clock_rate = DEFAULT_CLOCK_RATE;
   object->ptime = DEFAULT_PTIME;
   object->packet_redundancy = DEFAULT_PACKET_REDUNDANCY;
+  object->min_inter_digit_interval = DEFAULT_MIN_INTER_DIGIT_INTERVAL;
+  object->min_pulse_duration = DEFAULT_MIN_PULSE_DURATION;
 
   object->event_queue =
       g_async_queue_new_full ((GDestroyNotify) gst_rtp_dtmf_src_event_free);
@@ -420,6 +454,12 @@ gst_rtp_dtmf_src_set_property (GObject * object, guint prop_id,
     case PROP_REDUNDANCY:
       dtmfsrc->packet_redundancy = g_value_get_uint (value);
       break;
+    case PROP_MIN_INTER_DIGIT_INTERVAL:
+      dtmfsrc->min_inter_digit_interval = g_value_get_uint (value);
+      break;
+    case PROP_MIN_PULSE_DURATION:
+      dtmfsrc->min_pulse_duration = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -458,6 +498,12 @@ gst_rtp_dtmf_src_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_REDUNDANCY:
       g_value_set_uint (value, dtmfsrc->packet_redundancy);
+      break;
+    case PROP_MIN_INTER_DIGIT_INTERVAL:
+      g_value_set_uint (value, dtmfsrc->min_inter_digit_interval);
+      break;
+    case PROP_MIN_PULSE_DURATION:
+      g_value_set_uint (value, dtmfsrc->min_pulse_duration);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -579,11 +625,11 @@ gst_rtp_dtmf_src_create_next_rtp_packet (GstRTPDTMFSrc * dtmfsrc)
   gst_bit_writer_put_bits_uint16 (&bitwriter, dtmfsrc->payload->duration, 16);
 
   if (dtmfsrc->redundancy_count <= 1 && dtmfsrc->last_packet) {
-    GstClockTime inter_digit_interval = MIN_INTER_DIGIT_INTERVAL;
+    GstClockTime inter_digit_interval = dtmfsrc->min_inter_digit_interval;
 
     if (inter_digit_interval % dtmfsrc->ptime != 0)
       inter_digit_interval += dtmfsrc->ptime -
-          (MIN_INTER_DIGIT_INTERVAL % dtmfsrc->ptime);
+          (dtmfsrc->min_inter_digit_interval % dtmfsrc->ptime);
 
     GST_BUFFER_DURATION (buf) += inter_digit_interval * GST_MSECOND;
   }
@@ -711,7 +757,7 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
       gst_rtp_dtmf_src_event_free (event);
     } else if (!dtmfsrc->first_packet && !dtmfsrc->last_packet &&
         (dtmfsrc->timestamp - dtmfsrc->start_timestamp) / GST_MSECOND >=
-        MIN_PULSE_DURATION) {
+        dtmfsrc->min_pulse_duration) {
       GST_DEBUG_OBJECT (dtmfsrc, "try popping");
       event = g_async_queue_try_pop (dtmfsrc->event_queue);
 
