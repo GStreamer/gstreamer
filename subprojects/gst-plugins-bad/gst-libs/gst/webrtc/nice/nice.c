@@ -1117,7 +1117,7 @@ gst_webrtc_nice_get_candidate_server_url (GstWebRTCNice * ice,
 static void
 _populate_candidate_stats (GstWebRTCNice * ice, NiceCandidate * cand,
     GstWebRTCICEStream * stream, GstWebRTCICECandidateStats * stats,
-    gboolean is_local)
+    GstWebRTCNiceCandidateOrigin origin)
 {
   gchar ipaddr[INET6_ADDRSTRLEN];
 
@@ -1133,7 +1133,7 @@ _populate_candidate_stats (GstWebRTCNice * ice, NiceCandidate * cand,
   GST_WEBRTC_ICE_CANDIDATE_STATS_PRIORITY (stats) = cand->priority;
   GST_WEBRTC_ICE_CANDIDATE_STATS_PROTOCOL (stats) =
       cand->transport == NICE_CANDIDATE_TRANSPORT_UDP ? "udp" : "tcp";
-  if (is_local) {
+  if (origin == GST_WEBRTC_NICE_CANDIDATE_ORIGIN_LOCAL) {
     if (cand->type == NICE_CANDIDATE_TYPE_RELAYED) {
       NiceAddress relay_address;
       nice_candidate_relay_address (cand, &relay_address);
@@ -1178,7 +1178,8 @@ _populate_candidate_stats (GstWebRTCNice * ice, NiceCandidate * cand,
 
 static void
 _populate_candidate_list_stats (GstWebRTCNice * ice, GSList * cands,
-    GstWebRTCICEStream * stream, GPtrArray * result, gboolean is_local)
+    GstWebRTCICEStream * stream, GPtrArray * result,
+    GstWebRTCNiceCandidateOrigin origin)
 {
   GSList *item;
 
@@ -1186,7 +1187,7 @@ _populate_candidate_list_stats (GstWebRTCNice * ice, GSList * cands,
     GstWebRTCICECandidateStats *stats =
         g_malloc0 (sizeof (GstWebRTCICECandidateStats));
     NiceCandidate *c = item->data;
-    _populate_candidate_stats (ice, c, stream, stats, is_local);
+    _populate_candidate_stats (ice, c, stream, stats, origin);
     g_ptr_array_add (result, stats);
   }
 
@@ -1206,7 +1207,8 @@ gst_webrtc_nice_get_local_candidates (GstWebRTCICE * ice,
   cands = nice_agent_get_local_candidates (nice->priv->nice_agent,
       stream->stream_id, NICE_COMPONENT_TYPE_RTP);
 
-  _populate_candidate_list_stats (nice, cands, stream, result, TRUE);
+  _populate_candidate_list_stats (nice, cands, stream, result,
+      GST_WEBRTC_NICE_CANDIDATE_ORIGIN_LOCAL);
   g_slist_free_full (cands, (GDestroyNotify) nice_candidate_free);
 
   return (GstWebRTCICECandidateStats **) g_ptr_array_free (result, FALSE);
@@ -1225,7 +1227,8 @@ gst_webrtc_nice_get_remote_candidates (GstWebRTCICE * ice,
   cands = nice_agent_get_remote_candidates (nice->priv->nice_agent,
       stream->stream_id, NICE_COMPONENT_TYPE_RTP);
 
-  _populate_candidate_list_stats (nice, cands, stream, result, FALSE);
+  _populate_candidate_list_stats (nice, cands, stream, result,
+      GST_WEBRTC_NICE_CANDIDATE_ORIGIN_REMOTE);
   g_slist_free_full (cands, (GDestroyNotify) nice_candidate_free);
 
   return (GstWebRTCICECandidateStats **) g_ptr_array_free (result, FALSE);

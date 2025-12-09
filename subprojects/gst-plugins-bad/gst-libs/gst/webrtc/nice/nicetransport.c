@@ -318,14 +318,19 @@ weak_free (GWeakRef * weak)
 
 static GstWebRTCICECandidate *
 nice_candidate_to_gst (GstWebRTCNice * webrtc_ice,
-    NiceAgent * agent, NiceCandidate * cand)
+    NiceAgent * agent, NiceCandidate * cand,
+    GstWebRTCNiceCandidateOrigin origin)
 {
   GstWebRTCICECandidate *gst_candidate = g_new0 (GstWebRTCICECandidate, 1);
   gchar *attr = nice_agent_generate_local_candidate_sdp (agent, cand);
   GstWebRTCICEComponent comp = _nice_component_to_gst (cand->component_id);
   gchar *addr = nice_address_dup_string (&cand->addr);
   guint port = nice_address_get_port (&cand->addr);
-  gchar *url = gst_webrtc_nice_get_candidate_server_url (webrtc_ice, cand);
+  gchar *url =
+      origin ==
+      GST_WEBRTC_NICE_CANDIDATE_ORIGIN_LOCAL ?
+      gst_webrtc_nice_get_candidate_server_url (webrtc_ice,
+      cand) : NULL;
 
   gst_candidate->stats = g_new0 (GstWebRTCICECandidateStats, 1);
   GST_WEBRTC_ICE_CANDIDATE_STATS_TYPE (gst_candidate->stats) =
@@ -376,7 +381,8 @@ nice_candidate_to_gst (GstWebRTCNice * webrtc_ice,
   GST_WEBRTC_ICE_CANDIDATE_STATS_RELATED_ADDRESS (gst_candidate->stats) = NULL;
   GST_WEBRTC_ICE_CANDIDATE_STATS_RELATED_PORT (gst_candidate->stats) = -1;
 
-  if (cand->type == NICE_CANDIDATE_TYPE_RELAYED) {
+  if (cand->type == NICE_CANDIDATE_TYPE_RELAYED
+      && origin == GST_WEBRTC_NICE_CANDIDATE_ORIGIN_LOCAL) {
     NiceAddress relay_address;
 
     nice_candidate_relay_address (cand, &relay_address);
@@ -425,9 +431,11 @@ gst_webrtc_nice_get_selected_candidate_pair (GstWebRTCICETransport * ice)
 
     candidates_pair = g_new0 (GstWebRTCICECandidatePair, 1);
     candidates_pair->local =
-        nice_candidate_to_gst (webrtc_ice, agent, local_candidate);
+        nice_candidate_to_gst (webrtc_ice, agent, local_candidate,
+        GST_WEBRTC_NICE_CANDIDATE_ORIGIN_LOCAL);
     candidates_pair->remote =
-        nice_candidate_to_gst (webrtc_ice, agent, remote_candidate);
+        nice_candidate_to_gst (webrtc_ice, agent, remote_candidate,
+        GST_WEBRTC_NICE_CANDIDATE_ORIGIN_REMOTE);
   }
 
   g_object_unref (agent);
