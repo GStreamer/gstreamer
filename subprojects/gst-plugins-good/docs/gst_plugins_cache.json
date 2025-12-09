@@ -12637,6 +12637,80 @@
                     }
                 }
             },
+            "qml6glrendersrc": {
+                "author": "Matthew Waters <matthew@centricular.com>",
+                "description": "A video src that renders a QML scene",
+                "hierarchy": [
+                    "GstQml6GLRenderSrc",
+                    "GstGLBaseSrc",
+                    "GstPushSrc",
+                    "GstBaseSrc",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Source/Video",
+                "pad-templates": {
+                    "src": {
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "max-framerate": {
+                        "blurb": "The maximum framerate to render when running with a variable framerate",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "25/1",
+                        "max": "2147483647/1",
+                        "min": "0/2147483647",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstFraction",
+                        "writable": true
+                    },
+                    "qml-scene": {
+                        "blurb": "The contents of the QML scene",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "root-item": {
+                        "blurb": "Provides the 'QQuickItem *' to render.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gpointer",
+                        "writable": true
+                    }
+                },
+                "rank": "none",
+                "signals": {
+                    "qml-scene-destroyed": {
+                        "args": [],
+                        "return-type": "void",
+                        "when": "last"
+                    },
+                    "qml-scene-initialized": {
+                        "args": [],
+                        "return-type": "void",
+                        "when": "last"
+                    }
+                }
+            },
             "qml6glsink": {
                 "author": "Matthew Waters <matthew@centricular.com>",
                 "description": "A video sink that renders to a QQuickItem for Qt6",
