@@ -63,7 +63,6 @@
 #define SAMPLE_RATE              8000
 #define SAMPLE_SIZE              16
 #define CHANNELS                 1
-#define MIN_DUTY_CYCLE           (MIN_INTER_DIGIT_INTERVAL + MIN_PULSE_DURATION)
 
 #define MIN_UNIT_TIME            0
 #define MAX_UNIT_TIME            1000
