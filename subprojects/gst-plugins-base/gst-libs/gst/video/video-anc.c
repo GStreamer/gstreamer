@@ -23,7 +23,7 @@
 #endif
 
 #include <string.h>
-#include <gst/base/gstbytereader.h>
+#include <gst/base/base.h>
 #include "video-anc.h"
 
 /**
@@ -1261,18 +1261,133 @@ gst_ancillary_meta_transform (GstBuffer * dest, GstMeta * meta,
   return TRUE;
 }
 
+#define ANCILLARY_META_SERIALIZE_MIN_SIZE \
+    4 + /* field */ \
+    1 + /* c_not_y_channel */ \
+    2 + /* line */ \
+    2 + /* offset */ \
+    2 + /* DID */ \
+    2 + /* SDID_block_number */ \
+    2 + /* data_count */ \
+    2                           /* checksum */
+
+static gboolean
+gst_ancillary_meta_serialize (const GstMeta * meta,
+    GstByteArrayInterface * data, guint8 * version)
+{
+  GstAncillaryMeta *ameta = (GstAncillaryMeta *) meta;
+  GstByteWriter bw;
+  guint data_size = (ameta->data_count & 0xff) * 2;
+  gsize size = ANCILLARY_META_SERIALIZE_MIN_SIZE + data_size;
+
+  guint8 *ptr = gst_byte_array_interface_append (data, size);
+  if (!ptr)
+    return FALSE;
+
+  gst_byte_writer_init_with_data (&bw, ptr, size, FALSE);
+  gst_byte_writer_put_uint32_le_unchecked (&bw, ameta->field);
+  gst_byte_writer_put_uint8_unchecked (&bw, ameta->c_not_y_channel ? 1 : 0);
+  gst_byte_writer_put_uint16_le_unchecked (&bw, ameta->line);
+  gst_byte_writer_put_uint16_le_unchecked (&bw, ameta->offset);
+  gst_byte_writer_put_uint16_le_unchecked (&bw, ameta->DID);
+  gst_byte_writer_put_uint16_le_unchecked (&bw, ameta->SDID_block_number);
+  gst_byte_writer_put_uint16_le_unchecked (&bw, ameta->data_count);
+  gst_byte_writer_put_uint16_le_unchecked (&bw, ameta->checksum);
+  gst_byte_writer_put_data_unchecked (&bw, (guint8 *) ameta->data, data_size);
+
+  return TRUE;
+}
+
+static GstMeta *
+gst_ancillary_meta_deserialize (const GstMetaInfo * info, GstBuffer * buffer,
+    const guint8 * data, gsize size, guint8 version)
+{
+  GstByteReader br;
+  guint field;
+  guint8 c_not_y_channel;
+  guint16 line;
+  guint16 offset;
+  guint16 DID;
+  guint16 SDID_block_number;
+  guint16 data_count;
+  guint16 checksum;
+  const guint8 *anc_data = NULL;
+  guint data_size;
+  GstAncillaryMeta *ameta;
+
+  if (version != 0)
+    return NULL;
+
+  if (size < ANCILLARY_META_SERIALIZE_MIN_SIZE)
+    return NULL;
+
+  gst_byte_reader_init (&br, data, size);
+
+  field = gst_byte_reader_get_uint32_le_unchecked (&br);
+  switch (field) {
+    case GST_ANCILLARY_META_FIELD_PROGRESSIVE:
+    case GST_ANCILLARY_META_FIELD_INTERLACED_FIRST:
+    case GST_ANCILLARY_META_FIELD_INTERLACED_SECOND:
+      break;
+    default:
+      GST_WARNING ("Invalid field value %u", field);
+      return NULL;
+  }
+
+  c_not_y_channel = gst_byte_reader_get_uint8_unchecked (&br);
+  if (c_not_y_channel > 1) {
+    GST_WARNING ("Invalid c_not_y_channel value %u", c_not_y_channel);
+    return NULL;
+  }
+
+  line = gst_byte_reader_get_uint16_le_unchecked (&br);
+  offset = gst_byte_reader_get_uint16_le_unchecked (&br);
+  DID = gst_byte_reader_get_uint16_le_unchecked (&br);
+  SDID_block_number = gst_byte_reader_get_uint16_le_unchecked (&br);
+  data_count = gst_byte_reader_get_uint16_le_unchecked (&br);
+  checksum = gst_byte_reader_get_uint16_le_unchecked (&br);
+
+  data_size = (data_count & 0xff) * 2;
+  if (data_size != gst_byte_reader_get_remaining (&br)) {
+    GST_WARNING ("Invalid ancillary data size");
+    return NULL;
+  }
+
+  if (data_size > 0 && !gst_byte_reader_get_data (&br, data_size, &anc_data))
+    return NULL;
+
+  ameta = gst_buffer_add_ancillary_meta (buffer);
+  ameta->field = field;
+  ameta->c_not_y_channel = c_not_y_channel;
+  ameta->line = line;
+  ameta->offset = offset;
+  ameta->DID = DID;
+  ameta->SDID_block_number = SDID_block_number;
+  ameta->data_count = data_count;
+  ameta->data = g_memdup2 (anc_data, data_size);
+  ameta->checksum = checksum;
+
+  return (GstMeta *) ameta;
+}
+
 const GstMetaInfo *
 gst_ancillary_meta_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
 
   if (g_once_init_enter ((GstMetaInfo **) & meta_info)) {
-    const GstMetaInfo *mi = gst_meta_register (GST_ANCILLARY_META_API_TYPE,
-        "GstAncillaryMeta",
-        sizeof (GstAncillaryMeta),
-        gst_ancillary_meta_init,
-        gst_ancillary_meta_free,
-        gst_ancillary_meta_transform);
+    GstMetaInfo *info;
+    const GstMetaInfo *mi;
+
+    info = gst_meta_info_new (GST_ANCILLARY_META_API_TYPE,
+        "GstAncillaryMeta", sizeof (GstAncillaryMeta));
+    info->init_func = gst_ancillary_meta_init;
+    info->free_func = gst_ancillary_meta_free;
+    info->transform_func = gst_ancillary_meta_transform;
+    info->serialize_func = gst_ancillary_meta_serialize;
+    info->deserialize_func = gst_ancillary_meta_deserialize;
+
+    mi = gst_meta_info_register (info);
     g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) mi);
   }
   return meta_info;
@@ -1380,7 +1495,86 @@ gst_video_afd_meta_transform (GstBuffer * dest, GstMeta * meta,
     /* return FALSE, if transform type is not supported */
     return FALSE;
   }
+}
 
+#define AFD_META_SERIALIZE_SIZE \
+    1 + /* field */ \
+    4 + /* spec */ \
+    4                           /* afd */
+
+static gboolean
+gst_video_afd_meta_serialize (const GstMeta * meta,
+    GstByteArrayInterface * data, guint8 * version)
+{
+  GstVideoAFDMeta *ameta = (GstVideoAFDMeta *) meta;
+  GstByteWriter bw;
+
+  guint8 *ptr = gst_byte_array_interface_append (data, AFD_META_SERIALIZE_SIZE);
+  if (!ptr)
+    return FALSE;
+
+  gst_byte_writer_init_with_data (&bw, ptr, AFD_META_SERIALIZE_SIZE, FALSE);
+  gst_byte_writer_put_uint8_unchecked (&bw, ameta->field);
+  gst_byte_writer_put_uint32_le_unchecked (&bw, ameta->spec);
+  gst_byte_writer_put_uint32_le_unchecked (&bw, ameta->afd);
+
+  return TRUE;
+}
+
+static GstMeta *
+gst_video_afd_meta_deserialize (const GstMetaInfo * info, GstBuffer * buffer,
+    const guint8 * data, gsize size, guint8 version)
+{
+  GstByteReader br;
+  guint8 field;
+  guint spec;
+  guint afd;
+
+  if (version != 0)
+    return NULL;
+
+  if (size != AFD_META_SERIALIZE_SIZE)
+    return NULL;
+
+  gst_byte_reader_init (&br, data, size);
+
+  field = gst_byte_reader_get_uint8_unchecked (&br);
+  if (field > 1) {
+    GST_WARNING ("Invalid field value %u", field);
+    return NULL;
+  }
+
+  spec = gst_byte_reader_get_uint32_le_unchecked (&br);
+  if (spec > 2) {
+    GST_WARNING ("Invalid spec value %u", spec);
+    return NULL;
+  }
+
+  afd = gst_byte_reader_get_uint32_le_unchecked (&br);
+  switch (afd) {
+    case GST_VIDEO_AFD_UNAVAILABLE:
+      if (spec == GST_VIDEO_AFD_SPEC_DVB_ETSI) {
+        GST_WARNING ("Invalid afd/spec combination");
+        return NULL;
+      }
+      break;
+    case GST_VIDEO_AFD_16_9_TOP_ALIGNED:
+    case GST_VIDEO_AFD_14_9_TOP_ALIGNED:
+    case GST_VIDEO_AFD_GREATER_THAN_16_9:
+    case GST_VIDEO_AFD_4_3_FULL_16_9_FULL:
+    case GST_VIDEO_AFD_4_3_FULL_4_3_PILLAR:
+    case GST_VIDEO_AFD_16_9_LETTER_16_9_FULL:
+    case GST_VIDEO_AFD_14_9_LETTER_14_9_PILLAR:
+    case GST_VIDEO_AFD_4_3_FULL_14_9_CENTER:
+    case GST_VIDEO_AFD_16_9_LETTER_14_9_CENTER:
+    case GST_VIDEO_AFD_16_9_LETTER_4_3_CENTER:
+      break;
+    default:
+      GST_WARNING ("Unknown afd value %u", afd);
+      return NULL;
+  }
+
+  return (GstMeta *) gst_buffer_add_video_afd_meta (buffer, field, spec, afd);
 }
 
 const GstMetaInfo *
@@ -1389,12 +1583,17 @@ gst_video_afd_meta_get_info (void)
   static const GstMetaInfo *meta_info = NULL;
 
   if (g_once_init_enter ((GstMetaInfo **) & meta_info)) {
-    const GstMetaInfo *mi = gst_meta_register (GST_VIDEO_AFD_META_API_TYPE,
-        "GstVideoAFDMeta",
-        sizeof (GstVideoAFDMeta),
-        gst_video_afd_meta_init,
-        NULL,
-        gst_video_afd_meta_transform);
+    GstMetaInfo *info;
+    const GstMetaInfo *mi;
+
+    info = gst_meta_info_new (GST_VIDEO_AFD_META_API_TYPE,
+        "GstVideoAFDMeta", sizeof (GstVideoAFDMeta));
+    info->init_func = gst_video_afd_meta_init;
+    info->transform_func = gst_video_afd_meta_transform;
+    info->serialize_func = gst_video_afd_meta_serialize;
+    info->deserialize_func = gst_video_afd_meta_deserialize;
+
+    mi = gst_meta_info_register (info);
     g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) mi);
   }
   return meta_info;
@@ -1493,18 +1692,88 @@ gst_video_bar_meta_transform (GstBuffer * dest, GstMeta * meta,
   }
 }
 
+#define VIDEO_BAR_META_SERIALIZE_SIZE \
+    1 + /* field */ \
+    1 + /* is_letterbox */ \
+    4 + /* bar_data1 */ \
+    4                           /* bar_data2 */
+
+static gboolean
+gst_video_bar_meta_serialize (const GstMeta * meta,
+    GstByteArrayInterface * data, guint8 * version)
+{
+  GstVideoBarMeta *bmeta = (GstVideoBarMeta *) meta;
+  GstByteWriter bw;
+
+  guint8 *ptr = gst_byte_array_interface_append (data,
+      VIDEO_BAR_META_SERIALIZE_SIZE);
+  if (!ptr)
+    return FALSE;
+
+  gst_byte_writer_init_with_data (&bw,
+      ptr, VIDEO_BAR_META_SERIALIZE_SIZE, FALSE);
+  gst_byte_writer_put_uint8_unchecked (&bw, bmeta->field);
+  gst_byte_writer_put_uint8_unchecked (&bw, bmeta->is_letterbox ? 1 : 0);
+  gst_byte_writer_put_uint32_le_unchecked (&bw, bmeta->bar_data1);
+  gst_byte_writer_put_uint32_le_unchecked (&bw, bmeta->bar_data2);
+
+  return TRUE;
+}
+
+static GstMeta *
+gst_video_bar_meta_deserialize (const GstMetaInfo * info, GstBuffer * buffer,
+    const guint8 * data, gsize size, guint8 version)
+{
+  GstByteReader br;
+  guint8 field;
+  guint8 is_letterbox;
+  guint bar_data1;
+  guint bar_data2;
+
+  if (version != 0)
+    return NULL;
+
+  if (size != VIDEO_BAR_META_SERIALIZE_SIZE)
+    return NULL;
+
+  gst_byte_reader_init (&br, data, size);
+
+  field = gst_byte_reader_get_uint8_unchecked (&br);
+  if (field > 1) {
+    GST_WARNING ("Invalid field value %d", field);
+    return NULL;
+  }
+
+  is_letterbox = gst_byte_reader_get_uint8_unchecked (&br);
+  if (is_letterbox > 1) {
+    GST_WARNING ("Invalid is_letterbox value %u", is_letterbox);
+    return NULL;
+  }
+
+  bar_data1 = gst_byte_reader_get_uint32_le_unchecked (&br);
+  bar_data2 = gst_byte_reader_get_uint32_le_unchecked (&br);
+
+  return (GstMeta *) gst_buffer_add_video_bar_meta (buffer, field,
+      is_letterbox, bar_data1, bar_data2);
+}
+
 const GstMetaInfo *
 gst_video_bar_meta_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
 
   if (g_once_init_enter ((GstMetaInfo **) & meta_info)) {
-    const GstMetaInfo *mi = gst_meta_register (GST_VIDEO_BAR_META_API_TYPE,
-        "GstVideoBarMeta",
-        sizeof (GstVideoBarMeta),
-        gst_video_bar_meta_init,
-        NULL,
-        gst_video_bar_meta_transform);
+    GstMetaInfo *info;
+    const GstMetaInfo *mi;
+
+    info = gst_meta_info_new (GST_VIDEO_BAR_META_API_TYPE,
+        "GstVideoBarMeta", sizeof (GstVideoBarMeta));
+    info->init_func = gst_video_bar_meta_init;
+    info->transform_func = gst_video_bar_meta_transform;
+    info->serialize_func = gst_video_bar_meta_serialize;
+    info->deserialize_func = gst_video_bar_meta_deserialize;
+
+    mi = gst_meta_info_register (info);
     g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) mi);
   }
   return meta_info;

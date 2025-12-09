@@ -38,6 +38,9 @@ plugin_init (GstPlugin * plugin)
   return GST_DYNAMIC_TYPE_REGISTER (video_multiview_flagset, plugin) &&
       gst_meta_factory_register (plugin, gst_video_meta_get_info ()) &&
       gst_meta_factory_register (plugin, gst_audio_meta_get_info ()) &&
+      gst_meta_factory_register (plugin, gst_ancillary_meta_get_info ()) &&
+      gst_meta_factory_register (plugin, gst_video_afd_meta_get_info ()) &&
+      gst_meta_factory_register (plugin, gst_video_bar_meta_get_info ()) &&
       gst_meta_factory_register (plugin, gst_video_caption_meta_get_info ());
 }
 
