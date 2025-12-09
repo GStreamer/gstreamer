@@ -580,8 +580,9 @@ gst_matroska_pad_reset (GstMatroskaMuxPad * pad, gboolean full)
   /* free track information */
   if (pad->track != NULL) {
     /* retrieve for optional later use */
-    name = pad->track->name;
+    name = g_steal_pointer (&pad->track->name);
     type = pad->track->type;
+
     /* extra for video */
     if (type == GST_MATROSKA_TRACK_TYPE_VIDEO) {
       GstMatroskaTrackVideoContext *ctx =
@@ -594,8 +595,7 @@ gst_matroska_pad_reset (GstMatroskaMuxPad * pad, gboolean full)
     }
     g_free (pad->track->codec_id);
     g_free (pad->track->codec_name);
-    if (full)
-      g_free (pad->track->name);
+    g_free (pad->track->name);
     g_free (pad->track->language);
     g_free (pad->track->codec_priv);
     g_free (pad->track);
@@ -629,7 +629,7 @@ gst_matroska_pad_reset (GstMatroskaMuxPad * pad, gboolean full)
     }
 
     context->type = type;
-    context->name = name;
+    context->name = g_steal_pointer (&name);
     context->uid = gst_matroska_mux_create_uid ();
     /* TODO: check default values for the context */
     context->flags = GST_MATROSKA_TRACK_ENABLED | GST_MATROSKA_TRACK_DEFAULT;
@@ -639,6 +639,8 @@ gst_matroska_pad_reset (GstMatroskaMuxPad * pad, gboolean full)
     pad->tags = gst_tag_list_new_empty ();
     gst_tag_list_set_scope (pad->tags, GST_TAG_SCOPE_STREAM);
   }
+
+  g_free (name);
 }
 
 static gboolean
