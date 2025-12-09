@@ -533,7 +533,6 @@ gst_matroska_mux_init (GstMatroskaMux * mux, gpointer g_class)
 
   /* initialize internal variables */
   mux->index = NULL;
-  mux->num_streams = 0;
   mux->num_a_streams = 0;
   mux->num_t_streams = 0;
   mux->num_v_streams = 0;
@@ -2587,8 +2586,6 @@ gst_matroska_mux_request_new_pad (GstElement * element,
 
   g_free (name);
 
-  mux->num_streams++;
-
   GST_DEBUG_OBJECT (pad, "Added new request pad");
 
   return GST_PAD (pad);
@@ -2627,8 +2624,6 @@ gst_matroska_mux_release_pad (GstElement * element, GstPad * pad)
   GST_OBJECT_UNLOCK (mux);
 
   GST_ELEMENT_CLASS (parent_class)->release_pad (element, pad);
-
-  mux->num_streams--;
 }
 
 static void

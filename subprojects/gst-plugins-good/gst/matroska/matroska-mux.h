@@ -91,8 +91,7 @@ struct _GstMatroskaMux {
 
   GstEbmlWrite  *ebml_write;
 
-  guint          num_streams,
-                 num_v_streams, num_a_streams, num_t_streams;
+  guint          num_v_streams, num_a_streams, num_t_streams;
 
   /* Application name (for the writing application header element) */
   gchar          *writing_app;
