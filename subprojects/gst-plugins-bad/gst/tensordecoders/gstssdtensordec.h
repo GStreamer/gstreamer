@@ -1,9 +1,9 @@
 /*
- * GStreamer gstreamer-ssdobjectdetector
- * Copyright (C) 2021 Collabora Ltd
+ * GStreamer gstreamer-ssdtensordec
+ * Copyright (C) 2021,2025 Collabora Ltd
  *
- * gstssdobjectdetector.h
- * 
+ * gstssdtensordec.h
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -20,8 +20,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_SSD_OBJECT_DETECTOR_H__
-#define __GST_SSD_OBJECT_DETECTOR_H__
+#ifndef __GST_SSD_TENSOR_DEC_H__
+#define __GST_SSD_TENSOR_DEC_H__
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
@@ -29,23 +29,23 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_SSD_OBJECT_DETECTOR            (gst_ssd_object_detector_get_type())
-G_DECLARE_FINAL_TYPE (GstSsdObjectDetector, gst_ssd_object_detector, GST, SSD_OBJECT_DETECTOR, GstBaseTransform)
+#define GST_TYPE_SSD_TENSOR_DEC            (gst_ssd_tensor_dec_get_type())
+G_DECLARE_FINAL_TYPE (GstSsdTensorDec, gst_ssd_tensor_dec, GST, SSD_TENSOR_DEC, GstBaseTransform)
 
-#define GST_SSD_OBJECT_DETECTOR_META_NAME "ssd-object-detector"
-#define GST_SSD_OBJECT_DETECTOR_META_PARAM_NAME "extra-data"
-#define GST_SSD_OBJECT_DETECTOR_META_FIELD_LABEL "label"
-#define GST_SSD_OBJECT_DETECTOR_META_FIELD_SCORE "score"
+#define GST_SSD_TENSOR_DEC_META_NAME "ssd-tensor-dec"
+#define GST_SSD_TENSOR_DEC_META_PARAM_NAME "extra-data"
+#define GST_SSD_TENSOR_DEC_META_FIELD_LABEL "label"
+#define GST_SSD_TENSOR_DEC_META_FIELD_SCORE "score"
 
 /*
- * GstSsdObjectDetector:
+ * GstSsdTensorDec:
  *
  * @label_file label file
  * @score_threshold score threshold
  *
  * Since: 1.20
  */
-struct _GstSsdObjectDetector
+struct _GstSsdTensorDec
 {
   GstBaseTransform basetransform;
   gchar *label_file;
@@ -56,19 +56,19 @@ struct _GstSsdObjectDetector
 };
 
 /**
- * GstSsdObjectDetectorClass:
+ * GstSsdTensorDecClass:
  *
  * @parent_class base transform base class
  *
  * Since: 1.20
  */
-struct _GstSsdObjectDetectorClass
+struct _GstSsdTensorDecClass
 {
   GstBaseTransformClass parent_class;
 };
 
-GST_ELEMENT_REGISTER_DECLARE (ssd_object_detector)
+GST_ELEMENT_REGISTER_DECLARE (ssd_tensor_dec)
 
 G_END_DECLS
 
-#endif /* __GST_SSD_OBJECT_DETECTOR_H__ */
+#endif /* __GST_SSD_TENSOR_DEC_H__ */

@@ -1,6 +1,6 @@
 tensordecoders_sources = [
   'gsttensordecoders.c',
-  'gstssdobjectdetector.c',
+  'gstssdtensordec.c',
   'gstclassifiertensordecoder.c',
   'gstfacedetectortensordecoder.c',
   'gstioutracker.c',
@@ -10,7 +10,7 @@ tensordecoders_sources = [
 ]
 
 tensordecoders_headers = [
-  'gstssdobjectdetector.h',
+  'gstssdtensordec.h',
   'gstclassifiertensordecoder.h',
   'gstfacedetectortensordecoder.h',
   'gstioutracker.h',
