@@ -243,7 +243,7 @@ static GstBuffer *gst_matroska_mux_clip (GstAggregator * agg,
     GstAggregatorPad * agg_pad, GstBuffer * buffer);
 static GstClockTime gst_matroska_mux_get_next_time (GstAggregator * agg);
 
-static GstPad *gst_matroska_mux_request_new_pad (GstElement * element,
+static GstAggregatorPad *gst_matroska_mux_create_new_pad (GstAggregator * agg,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void gst_matroska_mux_release_pad (GstElement * element, GstPad * pad);
 
@@ -408,11 +408,11 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
           G_MAXUINT64, DEFAULT_CLUSTER_TIMESTAMP_OFFSET,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gstelement_class->request_new_pad =
-      GST_DEBUG_FUNCPTR (gst_matroska_mux_request_new_pad);
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_matroska_mux_release_pad);
 
+  gstaggregator_class->create_new_pad =
+      GST_DEBUG_FUNCPTR (gst_matroska_mux_create_new_pad);
   gstaggregator_class->aggregate =
       GST_DEBUG_FUNCPTR (gst_matroska_mux_aggregate);
   gstaggregator_class->clip = GST_DEBUG_FUNCPTR (gst_matroska_mux_clip);
@@ -2509,12 +2509,12 @@ refuse_caps:
 }
 
 
-static GstPad *
-gst_matroska_mux_request_new_pad (GstElement * element,
+static GstAggregatorPad *
+gst_matroska_mux_create_new_pad (GstAggregator * agg,
     GstPadTemplate * templ, const gchar * req_name, const GstCaps * caps)
 {
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
-  GstMatroskaMux *mux = GST_MATROSKA_MUX (element);
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (agg);
+  GstMatroskaMux *mux = GST_MATROSKA_MUX (agg);
   GstMatroskaMuxPad *pad;
   gchar *name = NULL;
   const gchar *pad_name = NULL;
@@ -2579,7 +2579,7 @@ gst_matroska_mux_request_new_pad (GstElement * element,
   }
 
   pad = (GstMatroskaMuxPad *)
-      GST_ELEMENT_CLASS (parent_class)->request_new_pad (element,
+      GST_AGGREGATOR_CLASS (parent_class)->create_new_pad (agg,
       templ, pad_name, caps);
 
   GST_OBJECT_LOCK (mux);
@@ -2596,7 +2596,7 @@ gst_matroska_mux_request_new_pad (GstElement * element,
 
   GST_DEBUG_OBJECT (pad, "Added new request pad");
 
-  return GST_PAD (pad);
+  return GST_AGGREGATOR_PAD (pad);
 }
 
 static void
