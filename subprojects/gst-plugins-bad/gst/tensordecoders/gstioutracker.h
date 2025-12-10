@@ -1,5 +1,5 @@
 /*
- * GStreamer gstreamer-ssdobjectdetector
+ * GStreamer gstreamer-ioutracker
  * Copyright (C) 2025 Collabora Ltd
  *
  * gstioutracker.h
