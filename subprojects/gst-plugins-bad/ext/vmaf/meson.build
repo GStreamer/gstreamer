@@ -18,6 +18,7 @@ plugin_sources += {
 }
 
 if get_option('vmaf').disabled()
+  libvmaf_dep = dependency('', required: false)
   subdir_done()
 endif
 
