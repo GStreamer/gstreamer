@@ -2399,7 +2399,6 @@ gst_matroska_mux_subtitle_pad_setcaps (GstMatroskaMux * mux,
      through GStreamer and VLC */
 
   GstMatroskaTrackContext *context = NULL;
-  GstMatroskaTrackSubtitleContext *scontext;
   const gchar *mimetype;
   GstStructure *structure;
   const GValue *value = NULL;
@@ -2427,14 +2426,11 @@ gst_matroska_mux_subtitle_pad_setcaps (GstMatroskaMux * mux,
   context = mux_pad->track;
   g_assert (context);
   g_assert (context->type == GST_MATROSKA_TRACK_TYPE_SUBTITLE);
-  scontext = (GstMatroskaTrackSubtitleContext *) context;
 
   structure = gst_caps_get_structure (caps, 0);
   mimetype = gst_structure_get_name (structure);
 
   /* general setup */
-  scontext->check_utf8 = 1;
-  scontext->invalid_utf8 = 0;
   context->default_duration = 0;
 
   if (!strcmp (mimetype, "subtitle/x-kate")) {

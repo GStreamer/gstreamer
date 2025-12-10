@@ -127,7 +127,6 @@ gst_matroska_track_init_subtitle_context (GstMatroskaTrackContext ** p_context)
   *p_context = (GstMatroskaTrackContext *) subtitle_context;
 
   (*p_context)->type = GST_MATROSKA_TRACK_TYPE_SUBTITLE;
-  subtitle_context->check_utf8 = TRUE;
   subtitle_context->invalid_utf8 = FALSE;
   subtitle_context->check_markup = TRUE;
   subtitle_context->seen_markup_tag = FALSE;
