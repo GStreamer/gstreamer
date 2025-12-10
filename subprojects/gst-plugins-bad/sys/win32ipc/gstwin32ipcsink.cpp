@@ -257,7 +257,7 @@ gst_win32_ipc_sink_upload_raw_video (GstWin32IpcSink * self,
     return GST_FLOW_ERROR;
   }
 
-  gst_buffer_copy_into (prepared, buf, GST_BUFFER_COPY_META, 0, -1);
+  gst_buffer_copy_into (prepared, buf, GST_BUFFER_COPY_METADATA, 0, -1);
   *uploaded = prepared;
   *size = gst_buffer_get_size (prepared);
   return GST_FLOW_OK;
