@@ -1041,7 +1041,17 @@ static gboolean
 gst_base_text_overlay_setcaps (GstBaseTextOverlay * overlay, GstCaps * caps)
 {
   GstVideoInfo info;
+  GstCaps *prev_caps;
   gboolean ret = FALSE;
+
+  prev_caps = gst_pad_get_current_caps (overlay->video_sinkpad);
+  if (prev_caps && gst_caps_is_equal (prev_caps, caps)) {
+    GST_DEBUG_OBJECT (overlay, "Caps didn't change, ignoring");
+    gst_clear_caps (&prev_caps);
+    return TRUE;
+  }
+
+  gst_clear_caps (&prev_caps);
 
   if (!gst_video_info_from_caps (&info, caps))
     goto invalid_caps;
