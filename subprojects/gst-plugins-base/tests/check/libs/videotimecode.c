@@ -859,6 +859,79 @@ GST_START_TEST (videotimecode_half_fps)
 
 GST_END_TEST;
 
+static void
+test_timecode_meta_serialize (GByteArray * array, GstVideoTimeCode * tc)
+{
+  gboolean ret;
+  guint32 consumed;
+  gint compare;
+  GstBuffer *src_buf;
+  GstBuffer *dst_buf;
+  GstVideoTimeCodeMeta *src_meta;
+  GstVideoTimeCodeMeta *dst_meta;
+
+  g_byte_array_set_size (array, 0);
+
+  src_buf = gst_buffer_new ();
+  src_meta = gst_buffer_add_video_time_code_meta (src_buf, tc);
+  fail_unless (src_meta);
+
+  ret = gst_meta_serialize_simple ((GstMeta *) src_meta, array);
+  fail_unless (ret);
+
+  dst_buf = gst_buffer_new ();
+  dst_meta = (GstVideoTimeCodeMeta *) gst_meta_deserialize (dst_buf,
+      array->data, array->len, &consumed);
+  fail_unless (dst_meta);
+  fail_unless_equals_int (consumed, array->len);
+
+  compare = gst_video_time_code_compare (&src_meta->tc, &dst_meta->tc);
+  fail_unless (compare == 0);
+  if (tc->config.latest_daily_jam) {
+    fail_unless (src_meta->tc.config.latest_daily_jam);
+    fail_unless (dst_meta->tc.config.latest_daily_jam);
+  } else {
+    fail_if (src_meta->tc.config.latest_daily_jam);
+    fail_if (dst_meta->tc.config.latest_daily_jam);
+  }
+
+  gst_buffer_unref (src_buf);
+  gst_buffer_unref (dst_buf);
+}
+
+GST_START_TEST (videotimecode_meta_serialize)
+{
+  GByteArray *array = g_byte_array_new ();
+
+  /* Serialize with latest daily jam */
+  {
+    GstVideoTimeCode *tc;
+    GDateTime *dt;
+
+    dt = g_date_time_new_local (2017, 2, 17, 14, 13, 0);
+    tc = gst_video_time_code_new_from_date_time_full (30000, 1001, dt,
+        GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME, 0);
+    g_date_time_unref (dt);
+
+    test_timecode_meta_serialize (array, tc);
+    gst_video_time_code_free (tc);
+  }
+
+  /* Serialize without latest daily jam */
+  {
+    GstVideoTimeCode *tc;
+
+    tc = gst_video_time_code_new (25, 1, NULL, 0, 1, 2, 3, 4, 0);
+
+    test_timecode_meta_serialize (array, tc);
+    gst_video_time_code_free (tc);
+  }
+
+  g_byte_array_unref (array);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_videotimecode_suite (void)
 {
@@ -901,6 +974,7 @@ gst_videotimecode_suite (void)
   tcase_add_test (tc, videotimecode_from_to_string);
 
   tcase_add_test (tc, videotimecode_half_fps);
+  tcase_add_test (tc, videotimecode_meta_serialize);
 
   return s;
 }

@@ -1640,19 +1640,170 @@ gst_video_time_code_meta_free (GstMeta * meta, GstBuffer * buffer)
   gst_video_time_code_clear (&emeta->tc);
 }
 
+#define VIDEO_TIME_CODE_META_SERIALIZE_STATIC_SIZE \
+    4 + /* hours */ \
+    4 + /* minutes */ \
+    4 + /* seconds */ \
+    4 + /* frames */ \
+    4 + /* field_count */ \
+    /* GstVideoTimeCodeConfig */ \
+    4 + /* fps_n */ \
+    4 + /* fps_d */ \
+    4 + /* GstVideoTimeCodeFlags */ \
+    4                           /* serialized GDateTime size */
+
+static gboolean
+gst_video_time_code_meta_serialize (const GstMeta * meta,
+    GstByteArrayInterface * data, guint8 * version)
+{
+  GstVideoTimeCodeMeta *tmeta = (GstVideoTimeCodeMeta *) meta;
+  GstByteWriter bw;
+  gchar *daily_jam = NULL;
+  gsize daily_jam_len = 0;
+  gsize size;
+  guint8 *ptr;
+  const GstVideoTimeCode *tc = &tmeta->tc;
+
+  if (tmeta->tc.config.latest_daily_jam) {
+    daily_jam = g_date_time_format_iso8601 (tc->config.latest_daily_jam);
+    if (!daily_jam) {
+      GST_WARNING ("Couldn't serialize datetime");
+      return FALSE;
+    }
+
+    daily_jam_len = strlen (daily_jam);
+    if (daily_jam_len + 1 >= G_MAXUINT32) {
+      GST_WARNING ("Too large datetime string");
+      g_free (daily_jam);
+      return FALSE;
+    }
+
+    /* +1 for null-terminated string */
+    daily_jam_len++;
+  }
+
+  size = VIDEO_TIME_CODE_META_SERIALIZE_STATIC_SIZE + daily_jam_len;
+  ptr = gst_byte_array_interface_append (data, size);
+  if (!ptr) {
+    g_free (daily_jam);
+    return FALSE;
+  }
+
+  gst_byte_writer_init_with_data (&bw, ptr, size, FALSE);
+  gst_byte_writer_put_uint32_le_unchecked (&bw, tc->hours);
+  gst_byte_writer_put_uint32_le_unchecked (&bw, tc->minutes);
+  gst_byte_writer_put_uint32_le_unchecked (&bw, tc->seconds);
+  gst_byte_writer_put_uint32_le_unchecked (&bw, tc->frames);
+  gst_byte_writer_put_uint32_le_unchecked (&bw, tc->field_count);
+
+  gst_byte_writer_put_uint32_le_unchecked (&bw, tc->config.fps_n);
+  gst_byte_writer_put_uint32_le_unchecked (&bw, tc->config.fps_d);
+  gst_byte_writer_put_uint32_le_unchecked (&bw, tc->config.flags);
+  gst_byte_writer_put_uint32_le_unchecked (&bw, (guint) daily_jam_len);
+
+  /* Write null-terminated datetime string if any */
+  if (daily_jam_len) {
+    gst_byte_writer_put_data_unchecked (&bw,
+        (guint8 *) daily_jam, daily_jam_len);
+  }
+
+  g_free (daily_jam);
+
+  return TRUE;
+}
+
+static GstMeta *
+gst_video_time_code_meta_deserialize (const GstMetaInfo * info,
+    GstBuffer * buffer, const guint8 * data, gsize size, guint8 version)
+{
+  GstByteReader br;
+  guint hours;
+  guint minutes;
+  guint seconds;
+  guint frames;
+  guint field_count;
+  guint fps_n;
+  guint fps_d;
+  guint flags;
+  guint daily_jam_len;
+  GDateTime *latest_daily_jam = NULL;
+  GstMeta *ret;
+
+  if (version != 0)
+    return NULL;
+
+  if (size < VIDEO_TIME_CODE_META_SERIALIZE_STATIC_SIZE) {
+    GST_WARNING ("Too small data size %" G_GSIZE_FORMAT, size);
+    return NULL;
+  }
+
+  gst_byte_reader_init (&br, data, size);
+  hours = gst_byte_reader_get_uint32_le_unchecked (&br);
+  minutes = gst_byte_reader_get_uint32_le_unchecked (&br);
+  seconds = gst_byte_reader_get_uint32_le_unchecked (&br);
+  frames = gst_byte_reader_get_uint32_le_unchecked (&br);
+  field_count = gst_byte_reader_get_uint32_le_unchecked (&br);
+
+  fps_n = gst_byte_reader_get_uint32_le_unchecked (&br);
+  fps_d = gst_byte_reader_get_uint32_le_unchecked (&br);
+  flags = gst_byte_reader_get_uint32_le_unchecked (&br);
+  daily_jam_len = gst_byte_reader_get_uint32_le_unchecked (&br);
+
+  if (daily_jam_len != gst_byte_reader_get_remaining (&br)) {
+    GST_WARNING ("Invalid datetime data size %u", daily_jam_len);
+    return NULL;
+  }
+
+  if (daily_jam_len) {
+    const gchar *daily_jam = NULL;
+    gsize len;
+
+    if (!gst_byte_reader_get_data (&br,
+            daily_jam_len, (const guint8 **) &daily_jam)) {
+      return NULL;
+    }
+
+    len = strnlen (daily_jam, daily_jam_len);
+    if (len + 1 != daily_jam_len) {
+      GST_WARNING ("Invalid datetime string");
+      return NULL;
+    }
+
+    latest_daily_jam = g_date_time_new_from_iso8601 (daily_jam, NULL);
+    if (!latest_daily_jam) {
+      GST_WARNING ("Couldn't deserialize datetime");
+      return NULL;
+    }
+  }
+
+  ret = (GstMeta *) gst_buffer_add_video_time_code_meta_full (buffer,
+      fps_n, fps_d, latest_daily_jam, flags, hours, minutes, seconds, frames,
+      field_count);
+
+  if (latest_daily_jam)
+    g_date_time_unref (latest_daily_jam);
+
+  return ret;
+}
+
 const GstMetaInfo *
 gst_video_time_code_meta_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
 
   if (g_once_init_enter ((GstMetaInfo **) & meta_info)) {
-    const GstMetaInfo *mi =
-        gst_meta_register (GST_VIDEO_TIME_CODE_META_API_TYPE,
-        "GstVideoTimeCodeMeta",
-        sizeof (GstVideoTimeCodeMeta),
-        gst_video_time_code_meta_init,
-        gst_video_time_code_meta_free,
-        gst_video_time_code_meta_transform);
+    GstMetaInfo *info;
+    const GstMetaInfo *mi;
+
+    info = gst_meta_info_new (GST_VIDEO_TIME_CODE_META_API_TYPE,
+        "GstVideoTimeCodeMeta", sizeof (GstVideoTimeCodeMeta));
+    info->init_func = gst_video_time_code_meta_init;
+    info->free_func = gst_video_time_code_meta_free;
+    info->transform_func = gst_video_time_code_meta_transform;
+    info->serialize_func = gst_video_time_code_meta_serialize;
+    info->deserialize_func = gst_video_time_code_meta_deserialize;
+
+    mi = gst_meta_info_register (info);
     g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) mi);
   }
   return meta_info;
