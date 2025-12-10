@@ -323,7 +323,10 @@ This MUST be updated whenever the format changes.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
-    <record name="ModelInfo" c:type="GstAnalyticsModelInfo" opaque="1" glib:type-name="GstAnalyticsModelInfo" glib:get-type="gst_analytics_modelinfo_get_type" c:symbol-prefix="modelinfo">
+    <record name="ModelInfo" c:type="GstAnalyticsModelInfo" opaque="1" version="1.28" glib:type-name="GstAnalyticsModelInfo" glib:get-type="gst_analytics_modelinfo_get_type" c:symbol-prefix="modelinfo">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h">The #GstAnalyticsModelInfo is an object storing artifical neural network
+model metadata describing the input and output tensors. These information's
+are required by inference elements.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
       <method name="find_tensor_name" c:identifier="gst_analytics_modelinfo_find_tensor_name" version="1.28">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Find the name of a tensor in the modelinfo that matches the given criteria.
