@@ -1442,17 +1442,56 @@ gst_vulkan_physical_device_get_extension_info (GstVulkanPhysicalDevice * device,
   return ret;
 }
 
+/**
+ * gst_vulkan_physical_device_get_features:
+ * @device: a #GstVulkanPhysicalDevice
+ *
+ * Retrieves features from a physical device, with entries relevant to the
+ * Vulkan version.
+ *
+ * Returns: (nullable): @device's set of features, NULL if it wasn't properly
+ * initialized or the minimum version required by GStreamer is not supported.
+ *
+ * Since: 1.30
+ */
 const VkPhysicalDeviceFeatures2 *
 gst_vulkan_physical_device_get_features (GstVulkanPhysicalDevice * device)
 {
 #if defined (VK_API_VERSION_1_2)
   GstVulkanPhysicalDevicePrivate *priv;
 
-  g_return_val_if_fail (GST_IS_VULKAN_PHYSICAL_DEVICE (device), FALSE);
+  g_return_val_if_fail (GST_IS_VULKAN_PHYSICAL_DEVICE (device), NULL);
 
   priv = GET_PRIV (device);
   if (gst_vulkan_physical_device_check_api_version (device, 1, 2, 0))
     return &priv->features10;
+#endif
+  return NULL;
+}
+
+/**
+ * gst_vulkan_physical_device_get_properties:
+ * @device: a #GstVulkanPhysicalDevice
+ *
+ * Retrieves properties from a physical device, with entries relevant to the
+ * Vulkan version.
+ *
+ * Returns: (nullable): @device's set of properties, NULL if it wasn't properly
+ * initialized or the minimum version required by GStreamer is not supported.
+ *
+ * Since: 1.30
+ */
+const VkPhysicalDeviceProperties2 *
+gst_vulkan_physical_device_get_properties (GstVulkanPhysicalDevice * device)
+{
+#if defined (VK_API_VERSION_1_2)
+  GstVulkanPhysicalDevicePrivate *priv;
+
+  g_return_val_if_fail (GST_IS_VULKAN_PHYSICAL_DEVICE (device), NULL);
+
+  priv = GET_PRIV (device);
+  if (gst_vulkan_physical_device_check_api_version (device, 1, 2, 0))
+    return &priv->properties10;
 #endif
   return NULL;
 }

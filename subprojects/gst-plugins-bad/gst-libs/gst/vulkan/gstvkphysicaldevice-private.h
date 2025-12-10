@@ -42,9 +42,6 @@ struct _GstVulkanFormatProperties
   guint64 buffer_feat;
 };
 
-const VkPhysicalDeviceFeatures2 *
-                            gst_vulkan_physical_device_get_features         (GstVulkanPhysicalDevice * device);
-
 gboolean                    gst_vulkan_physical_device_has_feature_sampler_ycbrc_conversion
                                                                             (GstVulkanPhysicalDevice * device);
 

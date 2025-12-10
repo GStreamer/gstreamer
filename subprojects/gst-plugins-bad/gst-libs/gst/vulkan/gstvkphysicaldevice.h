@@ -124,6 +124,14 @@ GST_VULKAN_API
 VkPhysicalDevice            gst_vulkan_physical_device_get_handle           (GstVulkanPhysicalDevice * device);
 
 GST_VULKAN_API
+const VkPhysicalDeviceFeatures2 *
+                            gst_vulkan_physical_device_get_features         (GstVulkanPhysicalDevice * device);
+
+GST_VULKAN_API
+const VkPhysicalDeviceProperties2 *
+                            gst_vulkan_physical_device_get_properties       (GstVulkanPhysicalDevice * device);
+
+GST_VULKAN_API
 gboolean                    gst_vulkan_physical_device_get_extension_info   (GstVulkanPhysicalDevice * device,
                                                                              const gchar * name,
                                                                              guint32 * spec_version);
