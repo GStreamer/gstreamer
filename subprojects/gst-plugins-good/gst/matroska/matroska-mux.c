@@ -484,7 +484,6 @@ gst_matroska_mux_pad_finalize (GObject * object)
   GstMatroskaMuxPad *pad = GST_MATROSKA_MUX_PAD (object);
 
   gst_matroska_pad_reset (pad, TRUE);
-  gst_clear_tag_list (&pad->tags);
 
   G_OBJECT_CLASS (gst_matroska_mux_pad_parent_class)->finalize (object);
 }
@@ -509,6 +508,10 @@ gst_matroska_mux_pad_init (GstMatroskaMuxPad * pad)
 {
   pad->frame_duration = DEFAULT_PAD_FRAME_DURATION;
   pad->frame_duration_user = FALSE;
+  pad->start_ts = GST_CLOCK_TIME_NONE;
+  pad->end_ts = GST_CLOCK_TIME_NONE;
+  pad->tags = gst_tag_list_new_empty ();
+  gst_tag_list_set_scope (pad->tags, GST_TAG_SCOPE_STREAM);
 }
 
 /*
@@ -2582,9 +2585,12 @@ gst_matroska_mux_create_new_pad (GstAggregator * agg,
       GST_AGGREGATOR_CLASS (parent_class)->create_new_pad (agg,
       templ, pad_name, caps);
 
+  context->uid = gst_matroska_mux_create_uid ();
+  /* TODO: check default values for the context */
+  context->flags = GST_MATROSKA_TRACK_ENABLED | GST_MATROSKA_TRACK_DEFAULT;
+
   GST_OBJECT_LOCK (mux);
   pad->track = context;
-  gst_matroska_pad_reset (pad, FALSE);
   if (id)
     gst_matroska_mux_set_codec_id (pad->track, id);
   pad->track->dts_only = FALSE;
