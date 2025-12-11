@@ -764,6 +764,8 @@ typedef struct _GstReferenceTimestampMeta GstReferenceTimestampMeta;
  *    on a given PTP clock.
  *  * `timestamp/x-unix`: for timestamps based on the UNIX epoch according to
  *    the local clock.
+ *  * `timestamp/x-system-monotonic`: for timestamps based on the system
+ *    monotonic clock.
  *
  * Since 1.24 it can be serialized using gst_meta_serialize() and
  * gst_meta_deserialize().
