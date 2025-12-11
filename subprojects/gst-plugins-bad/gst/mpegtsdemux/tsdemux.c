@@ -3901,9 +3901,10 @@ beach:
   return res;
 }
 
+/* packet is guaranteed to have a payload */
 static GstFlowReturn
 gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
-    MpegTSPacketizerPacket * packet, GstMpegtsSection * section)
+    MpegTSPacketizerPacket * packet, GstMpegtsSection * section G_GNUC_UNUSED)
 {
   GstFlowReturn res = GST_FLOW_OK;
   guint8 cc = FLAGS_CONTINUITY_COUNTER (packet->scram_afc_cc);
@@ -3913,7 +3914,7 @@ gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
       packet->scram_afc_cc & 0x30, cc, packet->payload);
 
   /* Check continuity */
-  if (packet->payload && stream->continuity_counter != CONTINUITY_UNSET) {
+  if (stream->continuity_counter != CONTINUITY_UNSET) {
     if (((stream->continuity_counter + 1) % 16) != cc) {
       if (stream->state != PENDING_PACKET_EMPTY) {
 #ifndef GST_DISABLE_GST_DEBUG
@@ -3947,8 +3948,7 @@ gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
   }
   stream->continuity_counter = cc;
 
-  if (G_UNLIKELY (packet->payload_unit_start_indicator) &&
-      FLAGS_HAS_PAYLOAD (packet->scram_afc_cc)) {
+  if (G_UNLIKELY (packet->payload_unit_start_indicator)) {
     /* Flush previous data */
     res = gst_ts_demux_push_pending_data (demux, stream, NULL);
     if (res != GST_FLOW_REWINDING) {
@@ -3956,9 +3956,13 @@ gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
        * rewinding since the states will have been resetted accordingly */
       stream->state = PENDING_PACKET_HEADER;
     }
+  } else if (stream->state == PENDING_PACKET_EMPTY) {
+    GST_LOG_OBJECT (demux, "pid: 0x%04x waiting for packet start",
+        stream->stream.pid);
+    return GST_FLOW_OK;
   }
 
-  if (packet->payload && (res == GST_FLOW_OK || res == GST_FLOW_NOT_LINKED)
+  if ((res == GST_FLOW_OK || res == GST_FLOW_NOT_LINKED)
       && stream->pad) {
     gst_ts_demux_queue_data (demux, stream, packet);
     GST_LOG_OBJECT (demux, "current_size:%d, expected_size:%d",
@@ -4032,7 +4036,7 @@ gst_ts_demux_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
   TSDemuxStream *stream = NULL;
   GstFlowReturn res = GST_FLOW_OK;
 
-  if (G_LIKELY (demux->program)) {
+  if (G_LIKELY (packet->payload && demux->program)) {
     stream = (TSDemuxStream *) demux->program->streams[packet->pid];
 
     if (stream) {
