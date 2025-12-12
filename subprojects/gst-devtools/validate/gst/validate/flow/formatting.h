@@ -35,7 +35,7 @@ gchar* validate_flow_format_segment(const GstSegment* segment, gchar** logged_fi
 
 gchar* validate_flow_format_caps (const GstCaps* caps, gchar **wanted_fields, gchar **ignored_fields);
 
-gchar* validate_flow_format_buffer(GstBuffer* buffer, gboolean add_checksum, GstStructure* logged_fields_struct, GstStructure* ignored_fields_struct);
+gchar* validate_flow_format_buffer(GstBuffer* buffer, gboolean add_checksum, GstStructure* logged_fields_struct, GstStructure* ignored_fields_struct, gchar** logged_sei_uuids);
 
 gchar* validate_flow_format_event(GstEvent* event, const gchar* const* caps_properties, GstStructure* logged_event_fields, GstStructure* ignored_event_fields, const gchar* const* ignored_event_types, const gchar* const* logged_event_types, const gchar* const* logged_upstream_event_types);
 

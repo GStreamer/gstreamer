@@ -89,6 +89,7 @@ struct _ValidateFlowOverride
   gchar **logged_event_types;
   gchar **logged_upstream_event_types;
   gchar **ignored_event_types;
+  gchar **logged_unregistered_sei_uuids;
 
   gchar *expectations_file_path;
   gchar *actual_results_file_path;
@@ -213,7 +214,8 @@ validate_flow_override_buffer_handler (GstValidateOverride * override,
     return;
 
   buffer_str = validate_flow_format_buffer (buffer, flow->checksum_type,
-      flow->logged_fields, flow->ignored_fields);
+      flow->logged_fields, flow->ignored_fields,
+      flow->logged_unregistered_sei_uuids);
   validate_flow_override_printf (flow, "buffer: %s\n", buffer_str);
   g_free (buffer_str);
 }
@@ -300,6 +302,8 @@ validate_flow_override_new (GstStructure * config)
       gst_validate_utils_get_strv (config, "logged-upstream-event-types");
   flow->ignored_event_types =
       gst_validate_utils_get_strv (config, "ignored-event-types");
+  flow->logged_unregistered_sei_uuids =
+      gst_validate_utils_get_strv (config, "logged-unregistered-sei-uuids");
 
   tmpval = gst_structure_get_value (config, "ignored-fields");
   if (tmpval) {
@@ -631,6 +635,7 @@ validate_flow_override_finalize (GObject * object)
   g_strfreev (flow->logged_event_types);
   g_strfreev (flow->logged_upstream_event_types);
   g_strfreev (flow->ignored_event_types);
+  g_strfreev (flow->logged_unregistered_sei_uuids);
   if (flow->ignored_fields)
     gst_structure_free (flow->ignored_fields);
 

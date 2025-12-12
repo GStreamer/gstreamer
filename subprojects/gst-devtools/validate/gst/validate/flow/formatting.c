@@ -31,6 +31,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/video/video-sei.h>
 #include <gst/audio/gstaudiometa.h>
 #include <string.h>
 #include <stdio.h>
@@ -269,9 +270,21 @@ validate_flow_get_flags_nicknames (GType flags_type, guint flags_value)
   return nicknames ? g_string_free (nicknames, FALSE) : NULL;
 }
 
+/* Formats a 16-byte UUID as xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx into dest_str (must be at least 37 bytes) */
+static void
+format_sei_uuid (gchar * dest_str, const guint8 * uuid)
+{
+  g_snprintf (dest_str, 37,
+      "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+      uuid[0], uuid[1], uuid[2], uuid[3],
+      uuid[4], uuid[5], uuid[6], uuid[7],
+      uuid[8], uuid[9], uuid[10], uuid[11],
+      uuid[12], uuid[13], uuid[14], uuid[15]);
+}
+
 /* Returns a newly-allocated string describing the metas on this buffer, or NULL */
 static gchar *
-buffer_get_meta_string (GstBuffer * buffer)
+buffer_get_meta_string (GstBuffer * buffer, gchar ** logged_sei_uuids)
 {
   gpointer state = NULL;
   GstMeta *meta;
@@ -284,6 +297,21 @@ buffer_get_meta_string (GstBuffer * buffer)
       /* The parent buffer meta is added automatically every time a buffer gets
        * copied, it is not useful to track them. */
       continue;
+    }
+
+    /* Filter SEI metas by UUID when logged-unregistered-sei-uuids is set.
+     * When not set, SEI metas are still shown with their plain type name
+     * (preserving backward compatibility). */
+    if (meta->info->api == GST_VIDEO_SEI_USER_DATA_UNREGISTERED_META_API_TYPE
+        && logged_sei_uuids) {
+      GstVideoSEIUserDataUnregisteredMeta *sei =
+          (GstVideoSEIUserDataUnregisteredMeta *) meta;
+      gchar uuid_str[37];
+
+      format_sei_uuid (uuid_str, sei->uuid);
+
+      if (!g_strv_contains (CONSTIFY (logged_sei_uuids), uuid_str))
+        continue;
     }
 
     if (s == NULL)
@@ -331,6 +359,38 @@ buffer_get_meta_string (GstBuffer * buffer)
       g_free (layout);
       g_free (flags);
 
+    } else if (logged_sei_uuids && meta->info->api ==
+        GST_VIDEO_SEI_USER_DATA_UNREGISTERED_META_API_TYPE) {
+      GstVideoSEIUserDataUnregisteredMeta *sei =
+          (GstVideoSEIUserDataUnregisteredMeta *) meta;
+      gchar uuid_str[37];
+      gsize i;
+
+      format_sei_uuid (uuid_str, sei->uuid);
+
+      g_string_append_printf (s,
+          "GstVideoSEIUserDataUnregisteredMeta[uuid=%s, size=%" G_GSIZE_FORMAT,
+          uuid_str, sei->size);
+
+      /* Show data as string if it looks like text, otherwise as hex */
+      if (sei->size > 0 && sei->data) {
+        gboolean is_printable = TRUE;
+
+        for (i = 0; i < sei->size && is_printable; i++) {
+          if (!g_ascii_isprint (sei->data[i]) && sei->data[i] != '\0')
+            is_printable = FALSE;
+        }
+
+        if (is_printable) {
+          g_string_append_printf (s, ", data=\"%.*s\"", (int) sei->size,
+              sei->data);
+        } else {
+          g_string_append (s, ", data=<binary>");
+        }
+      }
+
+      g_string_append (s, "]");
+
     } else {
       g_string_append (s, desc);
     }
@@ -341,7 +401,8 @@ buffer_get_meta_string (GstBuffer * buffer)
 
 gchar *
 validate_flow_format_buffer (GstBuffer * buffer, gint checksum_type,
-    GstStructure * logged_fields_struct, GstStructure * ignored_fields_struct)
+    GstStructure * logged_fields_struct, GstStructure * ignored_fields_struct,
+    gchar ** logged_sei_uuids)
 {
   gchar *flags_str, *meta_str, *buffer_str;
   gchar *buffer_parts[7];
@@ -428,7 +489,7 @@ validate_flow_format_buffer (GstBuffer * buffer, gint checksum_type,
         g_strdup_printf ("flags=%s", flags_str);
   }
 
-  meta_str = buffer_get_meta_string (buffer);
+  meta_str = buffer_get_meta_string (buffer, logged_sei_uuids);
   if (meta_str && use_field ("meta", logged_fields, ignored_fields))
     buffer_parts[buffer_parts_index++] = g_strdup_printf ("meta=%s", meta_str);
 
