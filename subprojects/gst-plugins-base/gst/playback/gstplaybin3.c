@@ -1859,9 +1859,11 @@ gst_play_bin3_send_event (GstElement * element, GstEvent * event)
 
     GST_PLAY_BIN3_UNLOCK (playbin);
 
-    /* Send this event directly to uridecodebin, so it works even
-     * if uridecodebin didn't add any pads yet */
-    res = gst_element_send_event (playbin->uridecodebin, event);
+    /* Send this event directly to collection_source, so it works even
+     * if collection_source didn't add any pads yet */
+    res =
+        gst_element_send_event ((GstElement *) playbin->collection_source,
+        event);
 
     return res;
   }
