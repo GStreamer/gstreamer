@@ -535,6 +535,14 @@ gst_flv_demux_parse_metadata_item (GstFlvDemux * demux, GstByteReader * reader,
         GstFlvDemuxTrack *track =
             gst_flv_demux_get_track (demux, track_id, TRUE);
         track->info.audio.rate = d;
+      } else if (!strcmp (tag_name, "audiosamplerate")) {
+        GstFlvDemuxTrack *track =
+            gst_flv_demux_get_track (demux, track_id, TRUE);
+        track->info.audio.rate = d;
+      } else if (!strcmp (tag_name, "audiosamplesize")) {
+        GstFlvDemuxTrack *track =
+            gst_flv_demux_get_track (demux, track_id, TRUE);
+        track->info.audio.width = d;
       } else if (!strcmp (tag_name, "audiodatarate")) {
         GstFlvDemuxTrack *track =
             gst_flv_demux_get_track (demux, track_id, TRUE);
@@ -575,7 +583,14 @@ gst_flv_demux_parse_metadata_item (GstFlvDemux * demux, GstByteReader * reader,
 
       GST_DEBUG_OBJECT (demux, "%s => (boolean) %d", tag_name, b);
 
-      GST_INFO_OBJECT (demux, "Tag \'%s\' not handled", tag_name);
+      if (!strcmp (tag_name, "stereo")) {
+        // we should only get this for the default audio track
+        guint8 id = 0;
+        GstFlvDemuxTrack *track = gst_flv_demux_get_track (demux, id, TRUE);
+        track->info.audio.channels = b == 0 ? 1 : 2;
+      } else {
+        GST_INFO_OBJECT (demux, "Tag \'%s\' not handled", tag_name);
+      }
 
       break;
     }

@@ -1256,6 +1256,25 @@ gst_flv_mux_create_number_script_value (const gchar * name, gdouble value)
 }
 
 static GstBuffer *
+gst_flv_mux_create_boolean_script_value (const gchar * name, gboolean value)
+{
+  GstBuffer *tmp;
+  guint8 *data;
+  gsize len = strlen (name);
+
+  _gst_buffer_new_and_alloc (2 + len + 1 + 1, &tmp, &data);
+
+  GST_WRITE_UINT16_BE (data, len);
+  data += 2;                    /* name length */
+  memcpy (data, name, len);
+  data += len;
+  *data++ = AMF0_BOOLEAN_MARKER;        /* boolean type */
+  GST_WRITE_UINT8 (data, value);
+
+  return tmp;
+}
+
+static GstBuffer *
 gst_flv_mux_create_object_script_start_marker (const gchar * name)
 {
   GstBuffer *tmp;
@@ -1659,6 +1678,10 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
 
   /* go with default flv audio track pad values as standard configuration */
   if (default_audio_track_pad && default_audio_track_pad->codec != G_MAXUINT) {
+    gint channels = default_audio_track_pad->audio_channels;
+    gint width = default_audio_track_pad->audio_samplesize;
+    gint samplerate = default_audio_track_pad->audio_samplerate;
+
     GST_DEBUG_OBJECT (mux, "putting audiocodecid %d in the metadata",
         default_audio_track_pad->codec);
 
@@ -1675,6 +1698,44 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
         default_audio_track_pad->bitrate / 1024);
     script_tag = gst_buffer_append (script_tag, tmp);
     tags_written++;
+
+    if (channels == 1 || channels == 2) {
+      GST_DEBUG_OBJECT (mux,
+          "putting `stereo` %d for track %d in the metadata", channels - 1,
+          default_audio_track_pad->track_id);
+      // only "stereo" property is defined for channels in top level metadata (default configuration) in the spec
+
+      // for channels > 2 we pass the channel count in the ExHeader as a part of `AudioPacketType.MultichannelConfig`
+      // so that should be sufficient for the receiver
+
+      tmp =
+          gst_flv_mux_create_boolean_script_value ("stereo",
+          channels - 1 ? TRUE : FALSE);
+      script_tag = gst_buffer_append (script_tag, tmp);
+      tags_written++;
+    }
+
+    if (samplerate) {
+      GST_DEBUG_OBJECT (mux,
+          "putting `audiosamplerate`  %d for track %d in the metadata",
+          samplerate, default_audio_track_pad->track_id);
+
+      tmp =
+          gst_flv_mux_create_number_script_value ("audiosamplerate",
+          samplerate);
+      script_tag = gst_buffer_append (script_tag, tmp);
+      tags_written++;
+    }
+
+    if (width) {
+      GST_DEBUG_OBJECT (mux,
+          "putting `audiosamplesize` for track %d in the metadata",
+          default_audio_track_pad->track_id);
+
+      tmp = gst_flv_mux_create_number_script_value ("audiosamplesize", width);
+      script_tag = gst_buffer_append (script_tag, tmp);
+      tags_written++;
+    }
   }
 
   GST_OBJECT_UNLOCK (mux);
