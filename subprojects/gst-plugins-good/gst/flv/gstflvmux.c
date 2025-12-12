@@ -576,6 +576,26 @@ gst_flv_mux_video_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
     ret = FALSE;
   }
 
+  if (ret) {
+    if (!gst_structure_get_int (s, "height", &pad->video_height)) {
+      pad->video_height = 0;
+    }
+
+    if (!gst_structure_get_int (s, "width", &pad->video_width)) {
+      pad->video_width = 0;
+    }
+
+    if (gst_structure_get_fraction (s, "framerate", &pad->video_framerate_n,
+            &pad->video_framerate_d)) {
+      pad->video_have_framerate = TRUE;
+    }
+
+    if (gst_structure_get_fraction (s, "pixel-aspect-ratio", &pad->video_par_n,
+            &pad->video_par_d)) {
+      pad->video_have_par = TRUE;
+    }
+  }
+
   if (ret && gst_structure_has_field (s, "codec_data")) {
     const GValue *val = gst_structure_get_value (s, "codec_data");
 
@@ -800,6 +820,18 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
 
     if (pad->codec != FLV_AUDIO_CODEC_LINEAR_PCM_LE)
       pad->width = 1;
+
+    if (!gst_structure_get_int (s, "rate", &pad->audio_samplerate)) {
+      pad->audio_samplerate = 0;
+    }
+
+    if (!gst_structure_get_int (s, "channels", &pad->audio_channels)) {
+      pad->audio_channels = 0;
+    }
+
+    if (!gst_structure_get_int (s, "width", &pad->audio_samplesize)) {
+      pad->audio_samplesize = 0;
+    }
   }
 
   if (ret && gst_structure_has_field (s, "codec_data")) {
@@ -864,6 +896,21 @@ gst_flv_mux_reset_pad (GstFlvMuxPad * pad)
   pad->drop_deltas = FALSE;
   pad->track_id = 0;
   pad->flv_track_mode = GST_FLV_TRACK_MODE_LEGACY;
+
+  pad->audio_channels = 0;
+  pad->audio_samplerate = 0;
+  pad->audio_samplesize = 0;
+
+  pad->video_par_d = 1;
+  pad->video_par_n = 0;
+  pad->video_have_par = FALSE;
+
+  pad->video_framerate_d = 1;
+  pad->video_framerate_n = 1;
+  pad->video_have_framerate = FALSE;
+
+  pad->video_width = 0;
+  pad->video_height = 0;
 
   gst_flv_mux_pad_flush (GST_AGGREGATOR_PAD_CAST (pad), NULL);
 }
@@ -1245,18 +1292,11 @@ gst_flv_mux_create_object_script_end_marker (void)
 }
 
 static guint
-_put_flv_header_video_meta (GstFlvMux * mux, GstCaps * caps,
+_put_flv_header_video_meta (GstFlvMux * mux,
     GstFlvMuxPad * video_pad, GstBuffer * script_tag)
 {
   GstBuffer *tmp = NULL;
-  GstStructure *s = NULL;
   guint tags_written = 0;
-  gint size = 0;
-  gint num = 0, den = 0;
-
-  g_assert (caps != NULL);
-
-  s = gst_caps_get_structure (caps, 0);
 
   GST_DEBUG_OBJECT (mux, "putting videocodecid %d in the metadata",
       video_pad->codec);
@@ -1266,51 +1306,60 @@ _put_flv_header_video_meta (GstFlvMux * mux, GstCaps * caps,
   script_tag = gst_buffer_append (script_tag, tmp);
   tags_written++;
 
-  if (gst_structure_get_int (s, "width", &size)) {
-    GST_DEBUG_OBJECT (mux, "putting width %d in the metadata", size);
 
-    tmp = gst_flv_mux_create_number_script_value ("width", size);
+  if (video_pad->video_width) {
+    GST_DEBUG_OBJECT (mux, "putting width %d in the metadata",
+        video_pad->video_width);
+
+    tmp =
+        gst_flv_mux_create_number_script_value ("width",
+        video_pad->video_width);
     script_tag = gst_buffer_append (script_tag, tmp);
     tags_written++;
   }
 
-  if (gst_structure_get_int (s, "height", &size)) {
-    GST_DEBUG_OBJECT (mux, "putting height %d in the metadata", size);
+  if (video_pad->video_height) {
+    GST_DEBUG_OBJECT (mux, "putting height %d in the metadata",
+        video_pad->video_height);
 
-    tmp = gst_flv_mux_create_number_script_value ("height", size);
+    tmp =
+        gst_flv_mux_create_number_script_value ("height",
+        video_pad->video_height);
     script_tag = gst_buffer_append (script_tag, tmp);
     tags_written++;
   }
 
-  if (gst_structure_get_fraction (s, "pixel-aspect-ratio", &num, &den)) {
+  if (video_pad->video_have_par) {
+    GST_DEBUG_OBJECT (mux, "putting AspectRatioX %d in the metadata",
+        video_pad->video_par_n);
+
+    tmp =
+        gst_flv_mux_create_number_script_value ("AspectRatioX",
+        video_pad->video_par_n);
+    script_tag = gst_buffer_append (script_tag, tmp);
+    tags_written++;
+
+    GST_DEBUG_OBJECT (mux, "putting AspectRatioY %d in the metadata",
+        video_pad->video_par_d);
+
+    tmp =
+        gst_flv_mux_create_number_script_value ("AspectRatioY",
+        video_pad->video_par_d);
+    script_tag = gst_buffer_append (script_tag, tmp);
+    tags_written++;
+  }
+
+  if (video_pad->video_have_framerate) {
     gdouble d;
 
-    d = num;
-    GST_DEBUG_OBJECT (mux, "putting AspectRatioX %f in the metadata", d);
-
-    tmp = gst_flv_mux_create_number_script_value ("AspectRatioX", d);
-    script_tag = gst_buffer_append (script_tag, tmp);
-    tags_written++;
-
-    d = den;
-    GST_DEBUG_OBJECT (mux, "putting AspectRatioY %f in the metadata", d);
-
-    tmp = gst_flv_mux_create_number_script_value ("AspectRatioY", d);
-    script_tag = gst_buffer_append (script_tag, tmp);
-    tags_written++;
-  }
-
-  if (gst_structure_get_fraction (s, "framerate", &num, &den)) {
-    gdouble d;
-
-    gst_util_fraction_to_double (num, den, &d);
+    gst_util_fraction_to_double (video_pad->video_framerate_n,
+        video_pad->video_framerate_d, &d);
     GST_DEBUG_OBJECT (mux, "putting framerate %f in the metadata", d);
 
     tmp = gst_flv_mux_create_number_script_value ("framerate", d);
     script_tag = gst_buffer_append (script_tag, tmp);
     tags_written++;
   }
-
   GST_DEBUG_OBJECT (mux, "putting videodatarate %u KB/s in the metadata",
       video_pad->bitrate / 1024);
   tmp = gst_flv_mux_create_number_script_value ("videodatarate",
@@ -1481,7 +1530,6 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
 
   // video track map from rtmp enhanced v2 spec to specify all available tracks
   for (GList * p = mux->video_pads; p; p = p->next) {
-    GstCaps *caps = NULL;
     GstFlvMuxPad *pad = p->data;
     gchar id[4];
 
@@ -1493,9 +1541,6 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
 
     if (pad->codec == G_MAXUINT || !gst_pad_has_current_caps (GST_PAD (pad)))
       continue;
-
-    caps = gst_pad_get_current_caps (GST_PAD (pad));
-    g_assert (caps != NULL);
 
     num_eflv_video_pads++;
     if (num_eflv_video_pads == 1) {
@@ -1511,8 +1556,7 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
     tmp = gst_flv_mux_create_object_script_start_marker (id);
     script_tag = gst_buffer_append (script_tag, tmp);
 
-    tags_written += _put_flv_header_video_meta (mux, caps, pad, script_tag);
-    gst_caps_unref (caps);
+    tags_written += _put_flv_header_video_meta (mux, pad, script_tag);
 
     tmp = gst_flv_mux_create_object_script_end_marker ();       // end track object
     script_tag = gst_buffer_append (script_tag, tmp);
@@ -1530,18 +1574,12 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
     GstCaps *caps = NULL;
     GstFlvMuxPad *pad = p->data;
     gchar id[4];
-    GstStructure *s;
-    gint samplerate, channels;
 
     if (pad->track_id == 0) {
       // the track with 0 will be sent only in default configuration
       default_audio_track_pad = pad;
       continue;
     }
-
-    caps = gst_pad_get_current_caps (GST_PAD (pad));
-    if (caps == NULL)
-      continue;
 
     num_eflv_audio_pads++;
     if (num_eflv_audio_pads == 1) {
@@ -1552,15 +1590,15 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
       GST_DEBUG_OBJECT (mux, "opening `audioTrackIdInfoMap` in the metadata");
     }
 
-    s = gst_caps_get_structure (caps, 0);
-
     g_snprintf (id, sizeof (id), "%d", pad->track_id);
 
     tmp = gst_flv_mux_create_object_script_start_marker (id);
     script_tag = gst_buffer_append (script_tag, tmp);
 
-    if (gst_structure_get_int (s, "channels", &channels)) {
-      tmp = gst_flv_mux_create_number_script_value ("channels", channels);
+    if (pad->audio_channels) {
+      tmp =
+          gst_flv_mux_create_number_script_value ("channels",
+          pad->audio_channels);
       script_tag = gst_buffer_append (script_tag, tmp);
       tags_written++;
       GST_DEBUG_OBJECT (mux, "putting `channels` for track %d in the metadata",
@@ -1574,21 +1612,21 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
     GST_DEBUG_OBJECT (mux,
         "putting `audiodatarate` for track %d in the metadata", pad->track_id);
 
-    if (gst_structure_get_int (s, "rate", &samplerate)) {
-      tmp = gst_flv_mux_create_number_script_value ("samplerate", samplerate);
+    if (pad->audio_samplerate) {
+      tmp =
+          gst_flv_mux_create_number_script_value ("samplerate",
+          pad->audio_samplerate);
       script_tag = gst_buffer_append (script_tag, tmp);
       tags_written++;
       GST_DEBUG_OBJECT (mux,
           "putting `samplerate` for track %d in the metadata", pad->track_id);
     }
 
-
     tmp = gst_flv_mux_create_number_script_value ("audiocodecid", pad->codec);
     script_tag = gst_buffer_append (script_tag, tmp);
     tags_written++;
     GST_DEBUG_OBJECT (mux,
         "putting `audiocodecid` for track %d in the metadata", pad->codec);
-
 
     gst_caps_unref (caps);
 
@@ -1614,8 +1652,7 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
         "found a video track/pad, adding default configuration in the metadata");
 
     tags_written +=
-        _put_flv_header_video_meta (mux, caps, default_video_track_pad,
-        script_tag);
+        _put_flv_header_video_meta (mux, default_video_track_pad, script_tag);
 
     gst_caps_unref (caps);
   }

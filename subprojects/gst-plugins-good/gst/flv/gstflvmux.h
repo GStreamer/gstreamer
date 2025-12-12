@@ -94,9 +94,25 @@ struct _GstFlvMuxPad
   GstAggregatorPad aggregator_pad;
 
   guint32 codec;
+  // used to send in the legacy FLV header
   guint rate;
   guint width;
   guint channels;
+
+  // used to send in the metadata
+  gint audio_samplerate;
+  gint audio_samplesize;
+  gint audio_channels;
+
+  gint video_width;
+  gint video_height;
+  gint video_framerate_n;
+  gint video_framerate_d;
+  gboolean video_have_framerate;
+  gint video_par_n;
+  gint video_par_d;
+  gboolean video_have_par;
+
   GstBuffer *codec_data;
 
   guint bitrate;
