@@ -475,7 +475,7 @@ gst_win32_ipc_base_sink_render (GstBaseSink * sink, GstBuffer * buf)
     return ret;
 
   g_byte_array_set_size (priv->meta, 0);
-  gst_buffer_foreach_meta (buf,[](GstBuffer * prepared, GstMeta ** meta,
+  gst_buffer_foreach_meta (prepared,[](GstBuffer * prepared, GstMeta ** meta,
           gpointer user_data)->gboolean {
         auto self = GST_WIN32_IPC_BASE_SINK (user_data);
         gst_meta_serialize_simple (*meta, self->priv->meta);
