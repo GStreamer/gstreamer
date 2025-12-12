@@ -2331,7 +2331,7 @@ stream_info_get_codec (GstPlayStreamInfo * s)
   if (!codec) {
     GstCaps *caps;
     caps = gst_play_stream_info_get_caps (s);
-    if (caps) {
+    if (caps && gst_caps_is_fixed (caps)) {
       codec = gst_pb_utils_get_codec_description (caps);
     }
   }
