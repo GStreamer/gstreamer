@@ -54,7 +54,9 @@ closedcaption_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (h264ccextractor, plugin);
   ret |= GST_ELEMENT_REGISTER (h265ccextractor, plugin);
   ret |= GST_ELEMENT_REGISTER (h264ccinserter, plugin);
+  ret |= GST_ELEMENT_REGISTER (h264seiinserter, plugin);
   ret |= GST_ELEMENT_REGISTER (h265ccinserter, plugin);
+  ret |= GST_ELEMENT_REGISTER (h265seiinserter, plugin);
 
   return ret;
 }

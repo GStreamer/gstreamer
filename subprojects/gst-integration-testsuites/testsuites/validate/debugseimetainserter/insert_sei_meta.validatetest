@@ -1,0 +1,7 @@
+meta,
+    args = {
+         "videotestsrc num-buffers=3 ! x264enc ! debugseimetainserter data=\"GStreamer SEI Test\" ! h264seiinserter remove-sei-unregistered-meta=true ! h264parse name=parse ! fakesink",
+    },
+    configs = {
+       "$(validateflow), pad=parse:src, record-buffers=true, logged-unregistered-sei-uuids={deb95e10-deb9-5e10-deb9-5e10deb95e10}",
+    }

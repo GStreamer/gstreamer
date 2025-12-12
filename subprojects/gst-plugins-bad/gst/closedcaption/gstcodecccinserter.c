@@ -22,6 +22,7 @@
 #endif
 
 #include "gstcodecccinserter.h"
+#include <gst/video/video-sei.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_codec_cc_inserter_debug);
@@ -52,15 +53,47 @@ gst_codec_cc_insert_meta_order_mode_get_type (void)
   return type;
 }
 
+/**
+ * GstCodecSEIInsertType:
+ *
+ * Since: 1.30
+ */
+#define GST_TYPE_CODEC_SEI_INSERT_TYPE (gst_codec_sei_insert_type_get_type())
+GType
+gst_codec_sei_insert_type_get_type (void)
+{
+  static GType type = 0;
+  static const GFlagsValue sei_types[] = {
+    {GST_CODEC_SEI_INSERT_CC, "Closed caption", "cc"},
+    {GST_CODEC_SEI_INSERT_UNREGISTERED, "Unregistered user data",
+        "unregistered"},
+    {0, NULL, NULL},
+  };
+
+  if (g_once_init_enter ((gsize *) & type)) {
+    GType tmp = g_flags_register_static ("GstCodecSEIInsertType",
+        sei_types);
+    g_once_init_leave ((gsize *) & type, tmp);
+  }
+
+  return type;
+}
+
 enum
 {
   PROP_0,
   PROP_CAPTION_META_ORDER,
   PROP_REMOVE_CAPTION_META,
+  PROP_SEI_TYPES,
+  PROP_REMOVE_SEI_UNREGISTERED_META,
 };
 
 #define DEFAULT_CAPTION_META_ORDER GST_CODEC_CC_INSERT_META_ORDER_DECODE
 #define DEFAULT_REMOVE_CAPTION_META FALSE
+/* Default to CC-only for base class (ccinserter behavior).
+ * SEIInserter subclasses override this to GST_CODEC_SEI_INSERT_ALL */
+#define DEFAULT_SEI_TYPES GST_CODEC_SEI_INSERT_CC
+#define DEFAULT_REMOVE_SEI_UNREGISTERED_META FALSE
 
 struct _GstCodecCCInserterPrivate
 {
@@ -68,10 +101,13 @@ struct _GstCodecCCInserterPrivate
 
   GList *current_frame_events;
   GPtrArray *caption_metas;
+  GPtrArray *sei_unregistered_metas;
   GstClockTime latency;
 
   GstCodecCCInsertMetaOrder meta_order;
   gboolean remove_meta;
+  GstCodecSEIInsertType sei_types;
+  gboolean remove_sei_unregistered_meta;
 };
 
 static void gst_codec_cc_inserter_class_init (GstCodecCCInserterClass * klass);
@@ -180,6 +216,7 @@ gst_codec_cc_inserter_class_init (GstCodecCCInserterClass * klass)
 
   gst_type_mark_as_plugin_api (GST_TYPE_CODEC_CC_INSERTER, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_CODEC_CC_INSERT_META_ORDER, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_CODEC_SEI_INSERT_TYPE, 0);
 }
 
 static void
@@ -220,7 +257,10 @@ gst_codec_cc_inserter_init (GstCodecCCInserter * self,
   g_mutex_init (&priv->lock);
   priv->meta_order = DEFAULT_CAPTION_META_ORDER;
   priv->remove_meta = DEFAULT_REMOVE_CAPTION_META;
+  priv->sei_types = DEFAULT_SEI_TYPES;
+  priv->remove_sei_unregistered_meta = DEFAULT_REMOVE_SEI_UNREGISTERED_META;
   priv->caption_metas = g_ptr_array_new ();
+  priv->sei_unregistered_metas = g_ptr_array_new ();
 }
 
 static void
@@ -238,6 +278,12 @@ gst_codec_cc_inserter_set_property (GObject * object, guint prop_id,
       break;
     case PROP_REMOVE_CAPTION_META:
       priv->remove_meta = g_value_get_boolean (value);
+      break;
+    case PROP_SEI_TYPES:
+      priv->sei_types = g_value_get_flags (value);
+      break;
+    case PROP_REMOVE_SEI_UNREGISTERED_META:
+      priv->remove_sei_unregistered_meta = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -263,6 +309,12 @@ gst_codec_cc_inserter_get_property (GObject * object, guint prop_id,
     case PROP_REMOVE_CAPTION_META:
       g_value_set_boolean (value, priv->remove_meta);
       break;
+    case PROP_SEI_TYPES:
+      g_value_set_flags (value, priv->sei_types);
+      break;
+    case PROP_REMOVE_SEI_UNREGISTERED_META:
+      g_value_set_boolean (value, priv->remove_sei_unregistered_meta);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -279,6 +331,7 @@ gst_codec_cc_inserter_finalize (GObject * object)
 
   g_mutex_clear (&priv->lock);
   g_ptr_array_unref (priv->caption_metas);
+  g_ptr_array_unref (priv->sei_unregistered_metas);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -463,6 +516,49 @@ extract_caption_meta (GstBuffer * buffer, GstMeta ** meta, gpointer user_data)
   return TRUE;
 }
 
+static gboolean
+remove_sei_unregistered_meta (GstBuffer * buffer, GstMeta ** meta,
+    gpointer user_data)
+{
+  if ((*meta)->info->api == GST_VIDEO_SEI_USER_DATA_UNREGISTERED_META_API_TYPE)
+    *meta = NULL;
+
+  return TRUE;
+}
+
+static gboolean
+copy_sei_unregistered_meta (GstBuffer * buffer, GstMeta ** meta,
+    gpointer user_data)
+{
+  GstVideoSEIUserDataUnregisteredMeta *sei_meta;
+  GstBuffer *outbuf = GST_BUFFER (user_data);
+
+  if ((*meta)->info->api != GST_VIDEO_SEI_USER_DATA_UNREGISTERED_META_API_TYPE)
+    return TRUE;
+
+  sei_meta = (GstVideoSEIUserDataUnregisteredMeta *) (*meta);
+  gst_buffer_add_video_sei_user_data_unregistered_meta (outbuf, sei_meta->uuid,
+      sei_meta->data, sei_meta->size);
+
+  return TRUE;
+}
+
+static gboolean
+extract_sei_unregistered_meta (GstBuffer * buffer, GstMeta ** meta,
+    gpointer user_data)
+{
+  GstVideoSEIUserDataUnregisteredMeta *sei_meta;
+  GPtrArray *array = user_data;
+
+  if ((*meta)->info->api != GST_VIDEO_SEI_USER_DATA_UNREGISTERED_META_API_TYPE)
+    return TRUE;
+
+  sei_meta = (GstVideoSEIUserDataUnregisteredMeta *) (*meta);
+  g_ptr_array_add (array, sei_meta);
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_codec_cc_inserter_output_frame (GstCodecCCInserter * self,
     GstVideoCodecFrame * frame)
@@ -492,7 +588,7 @@ gst_codec_cc_inserter_output_frame (GstCodecCCInserter * self,
       reordered = TRUE;
   }
 
-  /* Remove caption meta form outgoing buffer if requested or
+  /* Remove caption meta from outgoing buffer if requested or
    * caption is reordered */
   if (priv->remove_meta || reordered)
     gst_buffer_foreach_meta (output, remove_caption_meta, NULL);
@@ -501,12 +597,32 @@ gst_codec_cc_inserter_output_frame (GstCodecCCInserter * self,
   if (!priv->remove_meta && reordered)
     gst_buffer_foreach_meta (caption_source, copy_caption_meta, output);
 
-  g_ptr_array_set_size (priv->caption_metas, 0);
-  /* Collects metas */
-  gst_buffer_foreach_meta (caption_source,
-      extract_caption_meta, priv->caption_metas);
+  /* Remove unregistered SEI meta from outgoing buffer if requested or
+   * meta source is reordered */
+  if (priv->remove_sei_unregistered_meta || reordered)
+    gst_buffer_foreach_meta (output, remove_sei_unregistered_meta, NULL);
 
-  output = klass->insert_cc (self, output, priv->caption_metas);
+  /* Attach meta again if meta was removed because of reordering */
+  if (!priv->remove_sei_unregistered_meta && reordered)
+    gst_buffer_foreach_meta (caption_source, copy_sei_unregistered_meta,
+        output);
+
+  g_ptr_array_set_size (priv->caption_metas, 0);
+  g_ptr_array_set_size (priv->sei_unregistered_metas, 0);
+
+  /* Collect metas based on sei-types property */
+  if (priv->sei_types & GST_CODEC_SEI_INSERT_CC) {
+    gst_buffer_foreach_meta (caption_source,
+        extract_caption_meta, priv->caption_metas);
+  }
+
+  if (priv->sei_types & GST_CODEC_SEI_INSERT_UNREGISTERED) {
+    gst_buffer_foreach_meta (caption_source,
+        extract_sei_unregistered_meta, priv->sei_unregistered_metas);
+  }
+
+  output = klass->insert_sei (self, output, priv->caption_metas,
+      priv->sei_unregistered_metas);
   g_mutex_unlock (&priv->lock);
 
   gst_video_codec_frame_unref (frame);
@@ -742,6 +858,72 @@ gst_codec_cc_inserter_change_state (GstElement * element,
     default:
       break;
   }
+
+  return ret;
+}
+
+void
+gst_codec_cc_inserter_set_sei_types (GstCodecCCInserter * inserter,
+    GstCodecSEIInsertType sei_types)
+{
+  GstCodecCCInserterPrivate *priv;
+
+  g_return_if_fail (GST_IS_CODEC_CC_INSERTER (inserter));
+
+  priv = inserter->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->sei_types = sei_types;
+  g_mutex_unlock (&priv->lock);
+}
+
+GstCodecSEIInsertType
+gst_codec_cc_inserter_get_sei_types (GstCodecCCInserter * inserter)
+{
+  GstCodecCCInserterPrivate *priv;
+  GstCodecSEIInsertType ret;
+
+  g_return_val_if_fail (GST_IS_CODEC_CC_INSERTER (inserter),
+      GST_CODEC_SEI_INSERT_CC);
+
+  priv = inserter->priv;
+
+  g_mutex_lock (&priv->lock);
+  ret = priv->sei_types;
+  g_mutex_unlock (&priv->lock);
+
+  return ret;
+}
+
+void
+gst_codec_cc_inserter_set_remove_sei_unregistered_meta (GstCodecCCInserter *
+    inserter, gboolean remove)
+{
+  GstCodecCCInserterPrivate *priv;
+
+  g_return_if_fail (GST_IS_CODEC_CC_INSERTER (inserter));
+
+  priv = inserter->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->remove_sei_unregistered_meta = remove;
+  g_mutex_unlock (&priv->lock);
+}
+
+gboolean
+gst_codec_cc_inserter_get_remove_sei_unregistered_meta (GstCodecCCInserter *
+    inserter)
+{
+  GstCodecCCInserterPrivate *priv;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_CODEC_CC_INSERTER (inserter), FALSE);
+
+  priv = inserter->priv;
+
+  g_mutex_lock (&priv->lock);
+  ret = priv->remove_sei_unregistered_meta;
+  g_mutex_unlock (&priv->lock);
 
   return ret;
 }

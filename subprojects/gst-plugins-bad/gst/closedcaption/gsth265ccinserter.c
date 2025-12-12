@@ -21,7 +21,10 @@
  * SECTION:element-h265ccinserter
  * @title: h265ccinserter
  *
- * Extracts closed caption meta from buffer and inserts closed caption SEI message
+ * Extracts closed caption metas from buffer and inserts them as SEI messages.
+ *
+ * For a more generic element that also supports unregistered SEI messages,
+ * see #h265seiinserter.
  *
  * ## Example launch line
  * ```
@@ -40,13 +43,24 @@
  * Since: 1.26
  */
 
+/**
+ * SECTION:element-h265seiinserter
+ * @title: h265seiinserter
+ *
+ * Extracts SEI-related metas from buffer and inserts SEI messages.
+ * Supports closed caption (GstVideoCaptionMeta) and unregistered user data
+ * (GstVideoSEIUserDataUnregisteredMeta) SEI messages.
+ *
+ * Since: 1.30
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 #include "gsth265ccinserter.h"
-#include "gsth265reorder.h"
 #include <gst/codecparsers/gsth265parser.h>
+#include <gst/video/video-sei.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_h265_cc_inserter_debug);
@@ -62,14 +76,6 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h265, alignment=(string) au"));
 
-struct _GstH265CCInserter
-{
-  GstCodecCCInserter parent;
-
-  GstH265Reorder *reorder;
-  GArray *sei_array;
-};
-
 static void gst_h265_cc_inserter_finalize (GObject * object);
 
 static gboolean gst_h265_cc_inserter_start (GstCodecCCInserter * inserter,
@@ -84,8 +90,9 @@ static gboolean gst_h265_cc_inserter_push (GstCodecCCInserter * inserter,
 static GstVideoCodecFrame *gst_h265_cc_inserter_pop (GstCodecCCInserter *
     inserter);
 static void gst_h265_cc_inserter_drain (GstCodecCCInserter * inserter);
-static GstBuffer *gst_h265_cc_inserter_insert_cc (GstCodecCCInserter * inserter,
-    GstBuffer * buffer, GPtrArray * metas);
+static GstBuffer *gst_h265_cc_inserter_insert_sei (GstCodecCCInserter *
+    inserter, GstBuffer * buffer, GPtrArray * cc_metas,
+    GPtrArray * sei_unregistered_metas);
 
 #define gst_h265_cc_inserter_parent_class parent_class
 G_DEFINE_TYPE (GstH265CCInserter,
@@ -107,7 +114,8 @@ gst_h265_cc_inserter_class_init (GstH265CCInserterClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "H.265 Closed Caption Inserter",
-      "Codec/Video/Filter", "Insert closed caption data to H.265 streams",
+      "Codec/Video/Filter",
+      "Insert closed caption SEI messages into H.265 streams",
       "Seungha Yang <seungha@centricular.com>");
 
   inserter_class->start = GST_DEBUG_FUNCPTR (gst_h265_cc_inserter_start);
@@ -118,8 +126,8 @@ gst_h265_cc_inserter_class_init (GstH265CCInserterClass * klass)
   inserter_class->push = GST_DEBUG_FUNCPTR (gst_h265_cc_inserter_push);
   inserter_class->pop = GST_DEBUG_FUNCPTR (gst_h265_cc_inserter_pop);
   inserter_class->drain = GST_DEBUG_FUNCPTR (gst_h265_cc_inserter_drain);
-  inserter_class->insert_cc =
-      GST_DEBUG_FUNCPTR (gst_h265_cc_inserter_insert_cc);
+  inserter_class->insert_sei =
+      GST_DEBUG_FUNCPTR (gst_h265_cc_inserter_insert_sei);
 
   GST_DEBUG_CATEGORY_INIT (gst_h265_cc_inserter_debug, "h265ccinserter", 0,
       "h265ccinserter");
@@ -209,8 +217,9 @@ gst_h265_cc_inserter_get_num_buffered (GstCodecCCInserter * inserter)
 }
 
 static GstBuffer *
-gst_h265_cc_inserter_insert_cc (GstCodecCCInserter * inserter,
-    GstBuffer * buffer, GPtrArray * metas)
+gst_h265_cc_inserter_insert_sei (GstCodecCCInserter * inserter,
+    GstBuffer * buffer, GPtrArray * cc_metas,
+    GPtrArray * sei_unregistered_metas)
 {
   GstH265CCInserter *self = GST_H265_CC_INSERTER (inserter);
   guint i;
@@ -218,8 +227,9 @@ gst_h265_cc_inserter_insert_cc (GstCodecCCInserter * inserter,
 
   g_array_set_size (self->sei_array, 0);
 
-  for (i = 0; i < metas->len; i++) {
-    GstVideoCaptionMeta *meta = g_ptr_array_index (metas, i);
+  /* Process closed caption metas */
+  for (i = 0; i < cc_metas->len; i++) {
+    GstVideoCaptionMeta *meta = g_ptr_array_index (cc_metas, i);
     GstH265SEIMessage sei;
     GstH265RegisteredUserData *rud;
     guint8 *data;
@@ -259,11 +269,34 @@ gst_h265_cc_inserter_insert_cc (GstCodecCCInserter * inserter,
     g_array_append_val (self->sei_array, sei);
   }
 
+  /* Process unregistered SEI metas */
+  for (i = 0; i < sei_unregistered_metas->len; i++) {
+    GstVideoSEIUserDataUnregisteredMeta *meta =
+        g_ptr_array_index (sei_unregistered_metas, i);
+    GstH265SEIMessage sei;
+    GstH265UserDataUnregistered *udu;
+    guint8 *data;
+
+    memset (&sei, 0, sizeof (GstH265SEIMessage));
+    sei.payloadType = GST_H265_SEI_USER_DATA_UNREGISTERED;
+    udu = &sei.payload.user_data_unregistered;
+
+    memcpy (udu->uuid, meta->uuid, 16);
+    udu->size = meta->size;
+
+    data = g_malloc (meta->size);
+    memcpy (data, meta->data, meta->size);
+    udu->data = data;
+
+    g_array_append_val (self->sei_array, sei);
+  }
+
   if (self->sei_array->len == 0)
     return buffer;
 
   new_buf = gst_h265_reorder_insert_sei (self->reorder,
       buffer, self->sei_array);
+
   g_array_set_size (self->sei_array, 0);
 
   if (!new_buf) {
@@ -273,4 +306,116 @@ gst_h265_cc_inserter_insert_cc (GstCodecCCInserter * inserter,
 
   gst_buffer_unref (buffer);
   return new_buf;
+}
+
+/* H265 SEI Inserter - subclass that adds sei-types property */
+enum
+{
+  PROP_0,
+  PROP_SEI_TYPES,
+  PROP_REMOVE_SEI_UNREGISTERED_META,
+};
+
+static void gst_h265_sei_inserter_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_h265_sei_inserter_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+
+#define gst_h265_sei_inserter_parent_class sei_inserter_parent_class
+G_DEFINE_TYPE (GstH265SEIInserter,
+    gst_h265_sei_inserter, GST_TYPE_H265_CC_INSERTER);
+GST_ELEMENT_REGISTER_DEFINE (h265seiinserter, "h265seiinserter",
+    GST_RANK_NONE, GST_TYPE_H265_SEI_INSERTER);
+
+static void
+gst_h265_sei_inserter_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstCodecCCInserter *inserter = GST_CODEC_CC_INSERTER (object);
+
+  switch (prop_id) {
+    case PROP_SEI_TYPES:
+      gst_codec_cc_inserter_set_sei_types (inserter, g_value_get_flags (value));
+      break;
+    case PROP_REMOVE_SEI_UNREGISTERED_META:
+      gst_codec_cc_inserter_set_remove_sei_unregistered_meta (inserter,
+          g_value_get_boolean (value));
+      break;
+    default:
+      G_OBJECT_CLASS (sei_inserter_parent_class)->set_property (object, prop_id,
+          value, pspec);
+      break;
+  }
+}
+
+static void
+gst_h265_sei_inserter_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstCodecCCInserter *inserter = GST_CODEC_CC_INSERTER (object);
+
+  switch (prop_id) {
+    case PROP_SEI_TYPES:
+      g_value_set_flags (value, gst_codec_cc_inserter_get_sei_types (inserter));
+      break;
+    case PROP_REMOVE_SEI_UNREGISTERED_META:
+      g_value_set_boolean (value,
+          gst_codec_cc_inserter_get_remove_sei_unregistered_meta (inserter));
+      break;
+    default:
+      G_OBJECT_CLASS (sei_inserter_parent_class)->get_property (object, prop_id,
+          value, pspec);
+      break;
+  }
+}
+
+static void
+gst_h265_sei_inserter_class_init (GstH265SEIInserterClass * klass)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  object_class->set_property = gst_h265_sei_inserter_set_property;
+  object_class->get_property = gst_h265_sei_inserter_get_property;
+
+  gst_element_class_set_static_metadata (element_class,
+      "H.265 SEI Inserter",
+      "Codec/Video/Filter", "Insert SEI messages into H.265 streams",
+      "Seungha Yang <seungha@centricular.com>");
+
+  /**
+   * GstH265SEIInserter:sei-types:
+   *
+   * Which SEI message types to insert.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (object_class,
+      PROP_SEI_TYPES,
+      g_param_spec_flags ("sei-types", "SEI Types",
+          "Which SEI message types to insert",
+          GST_TYPE_CODEC_SEI_INSERT_TYPE, GST_CODEC_SEI_INSERT_ALL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstH265SEIInserter:remove-sei-unregistered-meta:
+   *
+   * Remove GstVideoSEIUserDataUnregisteredMeta from outgoing video buffers.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (object_class,
+      PROP_REMOVE_SEI_UNREGISTERED_META,
+      g_param_spec_boolean ("remove-sei-unregistered-meta",
+          "Remove SEI Unregistered Meta",
+          "Remove SEI unregistered user data meta from outgoing video buffers",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+}
+
+static void
+gst_h265_sei_inserter_init (GstH265SEIInserter * self)
+{
+  /* Set sei_types to ALL for SEI inserter (base class defaults to CC-only) */
+  gst_codec_cc_inserter_set_sei_types (GST_CODEC_CC_INSERTER (self),
+      GST_CODEC_SEI_INSERT_ALL);
 }
