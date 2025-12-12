@@ -11,9 +11,9 @@ closedcaption_sources = [
     'gsth265ccextractor.c',
     'gsth264reorder.c',
     'gsth265reorder.c',
-    'gstcodecccinserter.c',
-    'gsth264ccinserter.c',
-    'gsth265ccinserter.c',
+    'gstcodecseiinserter.c',
+    'gsth264seiinserter.c',
+    'gsth265seiinserter.c',
 ]
 
 closedcaption_headers = [

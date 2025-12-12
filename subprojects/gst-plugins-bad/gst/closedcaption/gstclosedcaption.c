@@ -34,8 +34,8 @@
 #include "ccutils.h"
 #include "gsth264ccextractor.h"
 #include "gsth265ccextractor.h"
-#include "gsth264ccinserter.h"
-#include "gsth265ccinserter.h"
+#include "gsth264seiinserter.h"
+#include "gsth265seiinserter.h"
 
 static gboolean
 closedcaption_init (GstPlugin * plugin)
