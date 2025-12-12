@@ -386,6 +386,9 @@ struct _GstVideoDecoderPrivate
   /* incoming pts - dts */
   GstClockTime pts_delta;
   gboolean reordered_output;
+  /* If reordered_output, counts the number of output frames which have ordered
+   * pts. This is to be able to recover from temporary glitches.  */
+  guint consecutive_orderered_output;
 
   /* FIXME: Consider using a GQueue or other better fitting data structure */
   /* reverse playback */
@@ -2371,6 +2374,7 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full,
     }
     priv->tags_changed = FALSE;
     priv->reordered_output = FALSE;
+    priv->consecutive_orderered_output = 0;
 
     priv->dropped = 0;
     priv->processed = 0;
@@ -3027,6 +3031,23 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
    * we have a problem :) */
   if (G_UNLIKELY ((frame->output_buffer == NULL) && !dropping))
     goto no_output_buffer;
+
+  /* If we were in reordered output, check if it was just temporary and we can
+   * resume normal output */
+  if (priv->reordered_output && GST_CLOCK_TIME_IS_VALID (frame->pts)) {
+    if (frame->pts > priv->last_timestamp_out) {
+      priv->consecutive_orderered_output += 1;
+      /* FIXME : Make this tolerance a configurable property. */
+      if (priv->consecutive_orderered_output >= 30) {
+        GST_DEBUG_OBJECT (decoder,
+            "Saw enough increasing timestamps from decoder, resuming normal timestamp handling");
+        priv->reordered_output = FALSE;
+        priv->consecutive_orderered_output = 0;
+      }
+    } else {
+      priv->consecutive_orderered_output = 0;
+    }
+  }
 
   if (frame->duration == GST_CLOCK_TIME_NONE) {
     frame->duration = gst_video_decoder_get_frame_duration (decoder, frame);
