@@ -29,15 +29,30 @@
 
 G_BEGIN_DECLS
 
+GType gst_ssd_tensor_dec_get_type (void);
+
 #define GST_TYPE_SSD_TENSOR_DEC            (gst_ssd_tensor_dec_get_type())
-G_DECLARE_FINAL_TYPE (GstSsdTensorDec, gst_ssd_tensor_dec, GST, SSD_TENSOR_DEC, GstBaseTransform)
+#define GST_SSD_TENSOR_DEC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SSD_TENSOR_DEC, GstSsdTensorDec))
+#define GST_SSD_TENSOR_DEC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_SSD_TENSOR_DEC, GstSsdTensorDecClass))
+#define GST_IS_SSD_TENSOR_DEC(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_SSD_TENSOR_DEC))
+#define GST_IS_SSD_TENSOR_DEC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_SSD_TENSOR_DEC))
+#define GST_SSD_TENSOR_DEC_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_SSD_TENSOR_DEC, GstSsdTensorDecClass))
+
+typedef struct _GstSsdTensorDec GstSsdTensorDec;
+typedef struct _GstSsdTensorDecClass GstSsdTensorDecClass;
+
 
 #define GST_SSD_TENSOR_DEC_META_NAME "ssd-tensor-dec"
 #define GST_SSD_TENSOR_DEC_META_PARAM_NAME "extra-data"
 #define GST_SSD_TENSOR_DEC_META_FIELD_LABEL "label"
 #define GST_SSD_TENSOR_DEC_META_FIELD_SCORE "score"
 
-/*
+/**
  * GstSsdTensorDec:
  *
  * @label_file label file
@@ -68,6 +83,37 @@ struct _GstSsdTensorDecClass
 };
 
 GST_ELEMENT_REGISTER_DECLARE (ssd_tensor_dec)
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstSsdTensorDec, g_object_unref)
+
+#define GST_TYPE_SSD_OBJECT_DETECTOR   (gst_ssd_object_detector_get_type())
+G_DECLARE_FINAL_TYPE (GstSsdObjectDetector, gst_ssd_object_detector, GST, SSD_OBJECT_DETECTOR, GstSsdTensorDec)
+
+/**
+ * GstSsdObjectDetector:
+ *
+ * Since: 1.20
+ * Deprecated: 1.28 : Use GstSsdTensorDec instead.
+ */
+struct _GstSsdObjectDetector
+{
+  GstSsdTensorDec parent;
+};
+
+/**
+ * GstSsdObjectDetectorClass:
+ *
+ * @parent_class base transform base class
+ *
+ * Since: 1.20
+ * Deprecated: 1.28 : Use GstSsdTensorDecClass instead.
+ */
+struct _GstSsdObjectDetectorClass
+{
+  GstSsdTensorDecClass parent_class;
+};
+
+GST_ELEMENT_REGISTER_DECLARE (ssd_object_detector)
 
 G_END_DECLS
 
