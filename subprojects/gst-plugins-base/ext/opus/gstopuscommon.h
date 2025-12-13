@@ -27,6 +27,12 @@
 G_BEGIN_DECLS
 
 extern const GstAudioChannelPosition gst_opus_channel_positions[][8];
+typedef struct {
+  gint n_streams;
+  gint n_coupled;
+  guint8 mapping[8];
+} GstOpusVorbisLayout;
+extern const GstOpusVorbisLayout gst_opus_vorbis_channel_map[8];
 extern const char *gst_opus_channel_names[];
 extern void gst_opus_common_log_channel_mapping_table (GstElement *element,
     GstDebugCategory * category, const char *msg,
