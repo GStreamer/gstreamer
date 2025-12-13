@@ -676,11 +676,33 @@ gst_opus_enc_setup (GstOpusEnc * enc)
       "Mapping table", enc->n_channels, enc->channel_mapping);
 #endif
 
-  enc->state = opus_multistream_encoder_create (enc->sample_rate,
-      enc->n_channels, enc->n_channels - enc->n_stereo_streams,
-      enc->n_stereo_streams, enc->channel_mapping, enc->audio_type, &error);
-  if (!enc->state || error != OPUS_OK)
-    goto encoder_creation_failed;
+#ifdef HAVE_LIBOPUS_1_1
+  if (enc->channel_mapping_family == 1) {
+    int streams, coupled_streams;
+    guint8 mapping[8];
+
+    enc->state = opus_multistream_surround_encoder_create (enc->sample_rate,
+        enc->n_channels, enc->channel_mapping_family,
+        &streams, &coupled_streams, mapping, enc->audio_type, &error);
+
+    if (!enc->state || error != OPUS_OK)
+      goto encoder_creation_failed;
+
+    /* We set all these values according to the Vorbis channel mapping family
+     * so this should really never fail */
+    if (streams != enc->n_channels - enc->n_stereo_streams ||
+        coupled_streams != enc->n_stereo_streams ||
+        memcmp (mapping, enc->channel_mapping, enc->n_channels) != 0)
+      goto encoder_creation_failed;
+  } else
+#endif
+  {
+    enc->state = opus_multistream_encoder_create (enc->sample_rate,
+        enc->n_channels, enc->n_channels - enc->n_stereo_streams,
+        enc->n_stereo_streams, enc->channel_mapping, enc->audio_type, &error);
+    if (!enc->state || error != OPUS_OK)
+      goto encoder_creation_failed;
+  }
 
   opus_multistream_encoder_ctl (enc->state, OPUS_SET_BITRATE (enc->bitrate), 0);
   opus_multistream_encoder_ctl (enc->state, OPUS_SET_BANDWIDTH (enc->bandwidth),
