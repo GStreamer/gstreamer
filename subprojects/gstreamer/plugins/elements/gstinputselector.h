@@ -18,7 +18,7 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
- 
+
 #ifndef __GST_INPUT_SELECTOR_H__
 #define __GST_INPUT_SELECTOR_H__
 
@@ -65,8 +65,39 @@ struct _GstInputSelector {
 
   GstPad *srcpad;
 
-  gboolean active_sinkpad_from_user;
+  /* Acquire this lock when reading / writing / locking active_sinkpad.
+   *
+   * Make sure to always use the following order:
+   *
+   * 1. `g_rw_lock_reader_lock (&sel->active_sinkpad_lock)`, exactly once.
+   *    Acquisition in writer mode is limited to `maybe_commit_active_pad ()`
+   *    see below.
+   * 2. `GST_INPUT_SELECTOR_LOCK (sel)`
+   *
+   * The `SELECTOR_LOCK` can be locked / unlocked while the
+   * `active_sinkpad_lock` is kept locked in reader mode.
+   *
+   * The RW lock allows preventing the active_pad from being changed while we
+   * are processing a buffer or event.
+   * Only `gst_input_selector_maybe_commit_active_pad ()` can get this lock in
+   * writer mode for a short period of time (committing the `pending_active_pad`
+   * to `active_pad`). Other concurrent code paths lock it in reader mode.
+   *
+   * When a `pending_active_pad` is available (and only in that case),
+   * code paths calling `gst_input_selector_maybe_commit_active_pad ()` would
+   * hang until the lock is available for writer mode, which is expected since
+   * their processing should be performed with respect to the expected
+   * `active_pad`.
+   *
+   * Note that a `GRecMutex` was also considered to prevent possible deadlocks
+   * in callbacks, but only a `GRWLock` can deal with the concurrency which
+   * occurs during preroll.
+   */
+  GRWLock active_sinkpad_lock;
   GstPad* active_sinkpad;
+
+  gboolean active_sinkpad_from_user;
+  GstPad* pending_active_sinkpad;
   guint n_pads;           /* number of pads */
   guint padcount;         /* sequence number for pads */
   gboolean sync_streams;
