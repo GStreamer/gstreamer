@@ -279,6 +279,7 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
 {
   GstCaps *caps = gst_pad_get_allowed_caps (GST_AUDIO_DECODER_SRC_PAD (dec));
   GstStructure *s;
+  GstAudioChannelPosition gst_pos[64];
   GstAudioInfo info;
 
   if (caps) {
@@ -375,22 +376,20 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
 
   /* pass valid order to audio info */
   if (pos) {
-    memcpy (dec->opus_pos, pos, sizeof (pos[0]) * dec->n_channels);
-    gst_audio_channel_positions_to_valid_order (dec->opus_pos, dec->n_channels);
+    memcpy (gst_pos, pos, sizeof (pos[0]) * dec->n_channels);
+    gst_audio_channel_positions_to_valid_order (gst_pos, dec->n_channels);
+    memcpy (dec->opus_pos, pos, dec->n_channels * sizeof (*dec->opus_pos));
+    dec->needs_reorder =
+        memcmp (pos, gst_pos, dec->n_channels * sizeof (*gst_pos)) != 0;
+  } else {
+    dec->needs_reorder = FALSE;
   }
 
   /* set up source format */
   gst_audio_info_init (&info);
   gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S16,
-      dec->sample_rate, dec->n_channels, pos ? dec->opus_pos : NULL);
+      dec->sample_rate, dec->n_channels, pos ? gst_pos : NULL);
   gst_audio_decoder_set_output_format (GST_AUDIO_DECODER (dec), &info);
-
-  /* but we still need the opus order for later reordering */
-  if (pos) {
-    memcpy (dec->opus_pos, pos, sizeof (pos[0]) * dec->n_channels);
-  } else {
-    dec->opus_pos[0] = GST_AUDIO_CHANNEL_POSITION_INVALID;
-  }
 
   dec->info = info;
 
@@ -817,7 +816,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
   if (gst_buffer_get_size (outbuf) == 0) {
     gst_buffer_unref (outbuf);
     outbuf = NULL;
-  } else if (dec->opus_pos[0] != GST_AUDIO_CHANNEL_POSITION_INVALID) {
+  } else if (dec->needs_reorder) {
     gst_audio_buffer_reorder_channels (outbuf, GST_AUDIO_FORMAT_S16,
         dec->n_channels, dec->opus_pos, dec->info.position);
   }

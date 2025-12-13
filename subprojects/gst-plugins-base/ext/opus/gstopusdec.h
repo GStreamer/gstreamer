@@ -58,6 +58,7 @@ struct _GstOpusDec {
   gint16 r128_gain;
 
   GstAudioChannelPosition opus_pos[64];
+  gboolean needs_reorder;
   GstAudioInfo info;
 
   guint8 n_streams;
