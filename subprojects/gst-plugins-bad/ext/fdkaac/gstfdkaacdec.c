@@ -520,6 +520,8 @@ gst_fdkaacdec_map_channel_config (GstFdkAacDec * self, const CStreamInfo * in,
 
   GST_INFO_OBJECT (self, "Known channelConfig %d (%d channels)",
       config, channels);
+  memset (self->channel_types, 0, sizeof (self->channel_types));
+  memset (self->channel_indices, 0, sizeof (self->channel_indices));
   memcpy (self->positions, layout->positions,
       channels * sizeof *self->positions);
 
