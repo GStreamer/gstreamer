@@ -845,6 +845,8 @@ gst_flac_enc_generate_sink_caps (void)
   gst_value_list_append_value (&v_list, &v);
   g_value_set_static_string (&v, GST_AUDIO_NE (S24_32));
   gst_value_list_append_value (&v_list, &v);
+  g_value_set_static_string (&v, GST_AUDIO_NE (S32));
+  gst_value_list_append_value (&v_list, &v);
   g_value_unset (&v);
 
   s = gst_structure_new_empty ("audio/x-raw");
