@@ -395,7 +395,7 @@ gst_flac_dec_scan_got_frame (GstFlacDec * flacdec, const guint8 * data,
       "got sync, vbs=%d,bs=%x,sr=%x,ca=%x,ss=%x,pb=%x", vbs, bs, sr, ca, ss,
       pb);
 
-  if (bs == 0 || sr == 0x0F || ca >= 0x0B || ss == 0x03 || ss == 0x07) {
+  if (bs == 0 || sr == 0x0F || ca >= 0x0B || ss == 0x03) {
     return FALSE;
   }
 
