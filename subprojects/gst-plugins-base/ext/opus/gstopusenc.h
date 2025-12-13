@@ -84,9 +84,10 @@ struct _GstOpusEnc {
   guint16               lookahead, pending_lookahead;
 
   guint8                channel_mapping_family;
-  guint8                encoding_channel_mapping[256];
-  guint8                decoding_channel_mapping[256];
+  guint8                channel_mapping[256];
   guint8                n_stereo_streams;
+  GstAudioChannelPosition opus_pos[64];
+  gboolean              needs_reorder;
 };
 
 struct _GstOpusEncClass {

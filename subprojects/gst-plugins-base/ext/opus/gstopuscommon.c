@@ -73,6 +73,20 @@ const GstAudioChannelPosition gst_opus_channel_positions[][8] = {
       GST_AUDIO_CHANNEL_POSITION_LFE1},
 };
 
+/* Taken from opus_multistream_encoder.c.
+ *
+ * These are also the values returned by opus_multistream_surround_encoder_init() */
+const GstOpusVorbisLayout gst_opus_vorbis_channel_map[8] = {
+  {1, 0, {0}},                  /* 1: mono */
+  {1, 1, {0, 1}},               /* 2: stereo */
+  {2, 1, {0, 2, 1}},            /* 3: 1-d surround */
+  {2, 2, {0, 1, 2, 3}},         /* 4: quadraphonic surround */
+  {3, 2, {0, 4, 1, 2, 3}},      /* 5: 5-channel surround */
+  {4, 2, {0, 4, 1, 2, 3, 5}},   /* 6: 5.1 surround */
+  {4, 3, {0, 4, 1, 2, 3, 5, 6}},        /* 7: 6.1 surround */
+  {5, 3, {0, 6, 1, 2, 3, 4, 5, 7}},     /* 8: 7.1 surround */
+};
+
 const char *gst_opus_channel_names[] = {
   "mono",
   "front left",
