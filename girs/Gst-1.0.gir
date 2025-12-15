@@ -54354,8 +54354,8 @@ start with a alphabetic character. See RFC 3986 Section 3.1.</doc>
         </parameter>
       </parameters>
     </function-macro>
-    <function-macro name="VALUE_HOLDS_SET" c:identifier="GST_VALUE_HOLDS_SET" version="1.28" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.h">Checks if the given #GValue contains a #GstValueList value.</doc>
+    <function-macro name="VALUE_HOLDS_STRUCTURE" c:identifier="GST_VALUE_HOLDS_STRUCTURE" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.h">Checks if the given #GValue contains a #GstStructure value.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
       <parameters>
         <parameter name="x">
@@ -54363,8 +54363,8 @@ start with a alphabetic character. See RFC 3986 Section 3.1.</doc>
         </parameter>
       </parameters>
     </function-macro>
-    <function-macro name="VALUE_HOLDS_STRUCTURE" c:identifier="GST_VALUE_HOLDS_STRUCTURE" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.h">Checks if the given #GValue contains a #GstStructure value.</doc>
+    <function-macro name="VALUE_HOLDS_UNIQUE_LIST" c:identifier="GST_VALUE_HOLDS_UNIQUE_LIST" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.h">Checks if the given #GValue contains a #GstValueUniqueList value.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
       <parameters>
         <parameter name="x">
@@ -54757,395 +54757,6 @@ Free-function: g_free</doc>
         </parameter>
       </parameters>
     </callback>
-    <class name="ValueSet" c:symbol-prefix="value_set" version="1.28" glib:type-name="GstValueSet" glib:get-type="gst_value_set_get_type" glib:fundamental="1">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.h">A fundamental type that describes a set of #GValue</doc>
-      <function name="append_and_take_value" c:identifier="gst_value_set_append_and_take_value" version="1.28">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Appends @append_value to the GstValueSet in @value.</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <parameter name="value" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a #GValue of type #GST_TYPE_SET</doc>
-            <type name="GObject.Value" c:type="GValue*"/>
-          </parameter>
-          <parameter name="append_value" transfer-ownership="full">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the value to append</doc>
-            <type name="GObject.Value" c:type="GValue*"/>
-          </parameter>
-        </parameters>
-      </function>
-      <function name="append_value" c:identifier="gst_value_set_append_value" version="1.28">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Appends @append_value to the GstValueSet in @value.</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <parameter name="value" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a #GValue of type #GST_TYPE_SET</doc>
-            <type name="GObject.Value" c:type="GValue*"/>
-          </parameter>
-          <parameter name="append_value" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the value to append</doc>
-            <type name="GObject.Value" c:type="const GValue*"/>
-          </parameter>
-        </parameters>
-      </function>
-      <function name="bitmask" c:identifier="gst_value_set_bitmask">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets @value to the bitmask specified by @bitmask.</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <parameter name="value" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to #GST_TYPE_BITMASK</doc>
-            <type name="GObject.Value" c:type="GValue*"/>
-          </parameter>
-          <parameter name="bitmask" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the bitmask</doc>
-            <type name="guint64" c:type="guint64"/>
-          </parameter>
-        </parameters>
-      </function>
-      <function name="caps" c:identifier="gst_value_set_caps">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets the contents of @value to @caps. A reference to the
-provided @caps will be taken by the @value.</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <parameter name="value" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_CAPS</doc>
-            <type name="GObject.Value" c:type="GValue*"/>
-          </parameter>
-          <parameter name="caps" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the caps to set the value to</doc>
-            <type name="Caps" c:type="const GstCaps*"/>
-          </parameter>
-        </parameters>
-      </function>
-      <function name="caps_features" c:identifier="gst_value_set_caps_features">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets the contents of @value to @features.</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <parameter name="value" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_CAPS_FEATURES</doc>
-            <type name="GObject.Value" c:type="GValue*"/>
-          </parameter>
-          <parameter name="features" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the features to set the value to</doc>
-            <type name="CapsFeatures" c:type="const GstCapsFeatures*"/>
-          </parameter>
-        </parameters>
-      </function>
-      <function name="concat" c:identifier="gst_value_set_concat" version="1.28">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Concatenates copies of @value1 and @value2 into a set.  Values that are not
-of type #GST_TYPE_SET are treated as if they were sets of length 1.
-@dest will be initialized to the type #GST_TYPE_SET.</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <parameter name="dest" direction="out" caller-allocates="1" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">an uninitialized #GValue to take the result</doc>
-            <type name="GObject.Value" c:type="GValue*"/>
-          </parameter>
-          <parameter name="value1" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a #GValue</doc>
-            <type name="GObject.Value" c:type="const GValue*"/>
-          </parameter>
-          <parameter name="value2" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a #GValue</doc>
-            <type name="GObject.Value" c:type="const GValue*"/>
-          </parameter>
-        </parameters>
-      </function>
-      <function name="double_range" c:identifier="gst_value_set_double_range">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets @value to the range specified by @start and @end.</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <parameter name="value" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_DOUBLE_RANGE</doc>
-            <type name="GObject.Value" c:type="GValue*"/>
-          </parameter>
-          <parameter name="start" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the start of the range</doc>
-            <type name="gdouble" c:type="gdouble"/>
-          </parameter>
-          <parameter name="end" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the end of the range</doc>
-            <type name="gdouble" c:type="gdouble"/>
-          </parameter>
-        </parameters>
-      </function>
-      <function name="flagset" c:identifier="gst_value_set_flagset" version="1.6">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets @value to the flags and mask values provided in @flags and @mask.
-The @flags value indicates the values of flags, the @mask represents
-which bits in the flag value have been set, and which are "don't care"</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <parameter name="value" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to %GST_TYPE_FLAG_SET</doc>
-            <type name="GObject.Value" c:type="GValue*"/>
-          </parameter>
-          <parameter name="flags" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">The value of the flags set or unset</doc>
-            <type name="guint" c:type="guint"/>
-          </parameter>
-          <parameter name="mask" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">The mask indicate which flags bits must match for comparisons</doc>
-            <type name="guint" c:type="guint"/>
-          </parameter>
-        </parameters>
-      </function>
-      <function name="fraction" c:identifier="gst_value_set_fraction">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets @value to the fraction specified by @numerator over @denominator.
-The fraction gets reduced to the smallest numerator and denominator,
-and if necessary the sign is moved to the numerator.</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <parameter name="value" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to #GST_TYPE_FRACTION</doc>
-            <type name="GObject.Value" c:type="GValue*"/>
-          </parameter>
-          <parameter name="numerator" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the numerator of the fraction</doc>
-            <type name="gint" c:type="gint"/>
-          </parameter>
-          <parameter name="denominator" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the denominator of the fraction</doc>
-            <type name="gint" c:type="gint"/>
-          </parameter>
-        </parameters>
-      </function>
-      <function name="fraction_range" c:identifier="gst_value_set_fraction_range">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets @value to the range specified by @start and @end.</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <parameter name="value" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_FRACTION_RANGE</doc>
-            <type name="GObject.Value" c:type="GValue*"/>
-          </parameter>
-          <parameter name="start" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the start of the range (a GST_TYPE_FRACTION GValue)</doc>
-            <type name="GObject.Value" c:type="const GValue*"/>
-          </parameter>
-          <parameter name="end" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the end of the range (a GST_TYPE_FRACTION GValue)</doc>
-            <type name="GObject.Value" c:type="const GValue*"/>
-          </parameter>
-        </parameters>
-      </function>
-      <function name="fraction_range_full" c:identifier="gst_value_set_fraction_range_full">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets @value to the range specified by @numerator_start/@denominator_start
-and @numerator_end/@denominator_end.</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <parameter name="value" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_FRACTION_RANGE</doc>
-            <type name="GObject.Value" c:type="GValue*"/>
-          </parameter>
-          <parameter name="numerator_start" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the numerator start of the range</doc>
-            <type name="gint" c:type="gint"/>
-          </parameter>
-          <parameter name="denominator_start" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the denominator start of the range</doc>
-            <type name="gint" c:type="gint"/>
-          </parameter>
-          <parameter name="numerator_end" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the numerator end of the range</doc>
-            <type name="gint" c:type="gint"/>
-          </parameter>
-          <parameter name="denominator_end" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the denominator end of the range</doc>
-            <type name="gint" c:type="gint"/>
-          </parameter>
-        </parameters>
-      </function>
-      <function name="get_size" c:identifier="gst_value_set_get_size" version="1.28">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Gets the number of values contained in @value.</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the number of values</doc>
-          <type name="guint" c:type="guint"/>
-        </return-value>
-        <parameters>
-          <parameter name="value" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a #GValue of type #GST_TYPE_SET</doc>
-            <type name="GObject.Value" c:type="const GValue*"/>
-          </parameter>
-        </parameters>
-      </function>
-      <function name="get_value" c:identifier="gst_value_set_get_value" version="1.28">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Gets the value that is a member of the set contained in @value and
-has the index @index.</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the value at the given index</doc>
-          <type name="GObject.Value" c:type="const GValue*"/>
-        </return-value>
-        <parameters>
-          <parameter name="value" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a #GValue of type #GST_TYPE_SET</doc>
-            <type name="GObject.Value" c:type="const GValue*"/>
-          </parameter>
-          <parameter name="index" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">index of value to get from the set</doc>
-            <type name="guint" c:type="guint"/>
-          </parameter>
-        </parameters>
-      </function>
-      <function name="int64_range" c:identifier="gst_value_set_int64_range">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets @value to the range specified by @start and @end.</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <parameter name="value" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_INT64_RANGE</doc>
-            <type name="GObject.Value" c:type="GValue*"/>
-          </parameter>
-          <parameter name="start" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the start of the range</doc>
-            <type name="gint64" c:type="gint64"/>
-          </parameter>
-          <parameter name="end" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the end of the range</doc>
-            <type name="gint64" c:type="gint64"/>
-          </parameter>
-        </parameters>
-      </function>
-      <function name="int64_range_step" c:identifier="gst_value_set_int64_range_step">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets @value to the range specified by @start, @end and @step.</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <parameter name="value" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_INT64_RANGE</doc>
-            <type name="GObject.Value" c:type="GValue*"/>
-          </parameter>
-          <parameter name="start" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the start of the range</doc>
-            <type name="gint64" c:type="gint64"/>
-          </parameter>
-          <parameter name="end" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the end of the range</doc>
-            <type name="gint64" c:type="gint64"/>
-          </parameter>
-          <parameter name="step" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the step of the range</doc>
-            <type name="gint64" c:type="gint64"/>
-          </parameter>
-        </parameters>
-      </function>
-      <function name="int_range" c:identifier="gst_value_set_int_range">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets @value to the range specified by @start and @end.</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <parameter name="value" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_INT_RANGE</doc>
-            <type name="GObject.Value" c:type="GValue*"/>
-          </parameter>
-          <parameter name="start" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the start of the range</doc>
-            <type name="gint" c:type="gint"/>
-          </parameter>
-          <parameter name="end" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the end of the range</doc>
-            <type name="gint" c:type="gint"/>
-          </parameter>
-        </parameters>
-      </function>
-      <function name="int_range_step" c:identifier="gst_value_set_int_range_step">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets @value to the range specified by @start, @end and @step.</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <parameter name="value" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_INT_RANGE</doc>
-            <type name="GObject.Value" c:type="GValue*"/>
-          </parameter>
-          <parameter name="start" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the start of the range</doc>
-            <type name="gint" c:type="gint"/>
-          </parameter>
-          <parameter name="end" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the end of the range</doc>
-            <type name="gint" c:type="gint"/>
-          </parameter>
-          <parameter name="step" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the step of the range</doc>
-            <type name="gint" c:type="gint"/>
-          </parameter>
-        </parameters>
-      </function>
-      <function name="prepend_value" c:identifier="gst_value_set_prepend_value" version="1.28">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Prepends @prepend_value to the GstValueSet in @value.</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <parameter name="value" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a #GValue of type #GST_TYPE_SET</doc>
-            <type name="GObject.Value" c:type="GValue*"/>
-          </parameter>
-          <parameter name="prepend_value" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the value to prepend</doc>
-            <type name="GObject.Value" c:type="const GValue*"/>
-          </parameter>
-        </parameters>
-      </function>
-      <function name="structure" c:identifier="gst_value_set_structure">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets the contents of @value to @structure.</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <parameter name="value" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_STRUCTURE</doc>
-            <type name="GObject.Value" c:type="GValue*"/>
-          </parameter>
-          <parameter name="structure" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the structure to set the value to</doc>
-            <type name="Structure" c:type="const GstStructure*"/>
-          </parameter>
-        </parameters>
-      </function>
-    </class>
     <record name="ValueTable" c:type="GstValueTable">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.h">VTable for the #GValue @type.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
@@ -55179,6 +54790,116 @@ has the index @index.</doc>
         </array>
       </field>
     </record>
+    <class name="ValueUniqueList" c:symbol-prefix="value_unique_list" version="1.28" glib:type-name="GstValueUniqueList" glib:get-type="gst_value_unique_list_get_type" glib:fundamental="1">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.h">A fundamental type that describes a set of #GValue</doc>
+      <function name="append_and_take_value" c:identifier="gst_value_unique_list_append_and_take_value" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Appends @append_value to the GstValueUniqueList in @value.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a #GValue of type #GST_TYPE_UNIQUE_LIST</doc>
+            <type name="GObject.Value" c:type="GValue*"/>
+          </parameter>
+          <parameter name="append_value" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the value to append</doc>
+            <type name="GObject.Value" c:type="GValue*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="append_value" c:identifier="gst_value_unique_list_append_value" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Appends @append_value to the GstValueUniqueList in @value.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a #GValue of type #GST_TYPE_UNIQUE_LIST</doc>
+            <type name="GObject.Value" c:type="GValue*"/>
+          </parameter>
+          <parameter name="append_value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the value to append</doc>
+            <type name="GObject.Value" c:type="const GValue*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="concat" c:identifier="gst_value_unique_list_concat" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Concatenates copies of @value1 and @value2 into a set.  Values that are not
+of type #GST_TYPE_UNIQUE_LIST are treated as if they were sets of length 1.
+@dest will be initialized to the type #GST_TYPE_UNIQUE_LIST.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="dest" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">an uninitialized #GValue to take the result</doc>
+            <type name="GObject.Value" c:type="GValue*"/>
+          </parameter>
+          <parameter name="value1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a #GValue</doc>
+            <type name="GObject.Value" c:type="const GValue*"/>
+          </parameter>
+          <parameter name="value2" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a #GValue</doc>
+            <type name="GObject.Value" c:type="const GValue*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="get_size" c:identifier="gst_value_unique_list_get_size" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Gets the number of values contained in @value.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the number of values</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <parameter name="value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a #GValue of type #GST_TYPE_UNIQUE_LIST</doc>
+            <type name="GObject.Value" c:type="const GValue*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="get_value" c:identifier="gst_value_unique_list_get_value" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Gets the value that is a member of the set contained in @value and
+has the index @index.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the value at the given index</doc>
+          <type name="GObject.Value" c:type="const GValue*"/>
+        </return-value>
+        <parameters>
+          <parameter name="value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a #GValue of type #GST_TYPE_UNIQUE_LIST</doc>
+            <type name="GObject.Value" c:type="const GValue*"/>
+          </parameter>
+          <parameter name="index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">index of value to get from the set</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="prepend_value" c:identifier="gst_value_unique_list_prepend_value" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Prepends @prepend_value to the GstValueUniqueList in @value.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a #GValue of type #GST_TYPE_UNIQUE_LIST</doc>
+            <type name="GObject.Value" c:type="GValue*"/>
+          </parameter>
+          <parameter name="prepend_value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the value to prepend</doc>
+            <type name="GObject.Value" c:type="const GValue*"/>
+          </parameter>
+        </parameters>
+      </function>
+    </class>
     <record name="VecDeque" c:type="GstVecDeque" disguised="1" opaque="1" version="1.26" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvecdeque.c">#GstVecDeque is an object that provides standard double-ended queue (deque)
 functionality based on an array instead of linked lists. This reduces the
@@ -62247,6 +61968,23 @@ or %NULL if none exists</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="value_set_bitmask" c:identifier="gst_value_set_bitmask">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets @value to the bitmask specified by @bitmask.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to #GST_TYPE_BITMASK</doc>
+          <type name="GObject.Value" c:type="GValue*"/>
+        </parameter>
+        <parameter name="bitmask" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the bitmask</doc>
+          <type name="guint64" c:type="guint64"/>
+        </parameter>
+      </parameters>
+    </function>
     <function-macro name="value_set_buffer" c:identifier="gst_value_set_buffer" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.h">Sets @b as the value of @v.  Caller retains reference to buffer.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstbuffer.h"/>
@@ -62259,6 +61997,251 @@ or %NULL if none exists</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function name="value_set_caps" c:identifier="gst_value_set_caps">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets the contents of @value to @caps. A reference to the
+provided @caps will be taken by the @value.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_CAPS</doc>
+          <type name="GObject.Value" c:type="GValue*"/>
+        </parameter>
+        <parameter name="caps" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the caps to set the value to</doc>
+          <type name="Caps" c:type="const GstCaps*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="value_set_caps_features" c:identifier="gst_value_set_caps_features">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets the contents of @value to @features.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_CAPS_FEATURES</doc>
+          <type name="GObject.Value" c:type="GValue*"/>
+        </parameter>
+        <parameter name="features" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the features to set the value to</doc>
+          <type name="CapsFeatures" c:type="const GstCapsFeatures*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="value_set_double_range" c:identifier="gst_value_set_double_range">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets @value to the range specified by @start and @end.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_DOUBLE_RANGE</doc>
+          <type name="GObject.Value" c:type="GValue*"/>
+        </parameter>
+        <parameter name="start" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the start of the range</doc>
+          <type name="gdouble" c:type="gdouble"/>
+        </parameter>
+        <parameter name="end" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the end of the range</doc>
+          <type name="gdouble" c:type="gdouble"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="value_set_flagset" c:identifier="gst_value_set_flagset" version="1.6">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets @value to the flags and mask values provided in @flags and @mask.
+The @flags value indicates the values of flags, the @mask represents
+which bits in the flag value have been set, and which are "don't care"</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to %GST_TYPE_FLAG_SET</doc>
+          <type name="GObject.Value" c:type="GValue*"/>
+        </parameter>
+        <parameter name="flags" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">The value of the flags set or unset</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+        <parameter name="mask" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">The mask indicate which flags bits must match for comparisons</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="value_set_fraction" c:identifier="gst_value_set_fraction">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets @value to the fraction specified by @numerator over @denominator.
+The fraction gets reduced to the smallest numerator and denominator,
+and if necessary the sign is moved to the numerator.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to #GST_TYPE_FRACTION</doc>
+          <type name="GObject.Value" c:type="GValue*"/>
+        </parameter>
+        <parameter name="numerator" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the numerator of the fraction</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="denominator" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the denominator of the fraction</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="value_set_fraction_range" c:identifier="gst_value_set_fraction_range">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets @value to the range specified by @start and @end.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_FRACTION_RANGE</doc>
+          <type name="GObject.Value" c:type="GValue*"/>
+        </parameter>
+        <parameter name="start" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the start of the range (a GST_TYPE_FRACTION GValue)</doc>
+          <type name="GObject.Value" c:type="const GValue*"/>
+        </parameter>
+        <parameter name="end" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the end of the range (a GST_TYPE_FRACTION GValue)</doc>
+          <type name="GObject.Value" c:type="const GValue*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="value_set_fraction_range_full" c:identifier="gst_value_set_fraction_range_full">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets @value to the range specified by @numerator_start/@denominator_start
+and @numerator_end/@denominator_end.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_FRACTION_RANGE</doc>
+          <type name="GObject.Value" c:type="GValue*"/>
+        </parameter>
+        <parameter name="numerator_start" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the numerator start of the range</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="denominator_start" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the denominator start of the range</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="numerator_end" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the numerator end of the range</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="denominator_end" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the denominator end of the range</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="value_set_int64_range" c:identifier="gst_value_set_int64_range">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets @value to the range specified by @start and @end.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_INT64_RANGE</doc>
+          <type name="GObject.Value" c:type="GValue*"/>
+        </parameter>
+        <parameter name="start" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the start of the range</doc>
+          <type name="gint64" c:type="gint64"/>
+        </parameter>
+        <parameter name="end" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the end of the range</doc>
+          <type name="gint64" c:type="gint64"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="value_set_int64_range_step" c:identifier="gst_value_set_int64_range_step">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets @value to the range specified by @start, @end and @step.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_INT64_RANGE</doc>
+          <type name="GObject.Value" c:type="GValue*"/>
+        </parameter>
+        <parameter name="start" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the start of the range</doc>
+          <type name="gint64" c:type="gint64"/>
+        </parameter>
+        <parameter name="end" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the end of the range</doc>
+          <type name="gint64" c:type="gint64"/>
+        </parameter>
+        <parameter name="step" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the step of the range</doc>
+          <type name="gint64" c:type="gint64"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="value_set_int_range" c:identifier="gst_value_set_int_range">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets @value to the range specified by @start and @end.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_INT_RANGE</doc>
+          <type name="GObject.Value" c:type="GValue*"/>
+        </parameter>
+        <parameter name="start" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the start of the range</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="end" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the end of the range</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="value_set_int_range_step" c:identifier="gst_value_set_int_range_step">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets @value to the range specified by @start, @end and @step.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_INT_RANGE</doc>
+          <type name="GObject.Value" c:type="GValue*"/>
+        </parameter>
+        <parameter name="start" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the start of the range</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="end" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the end of the range</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="step" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the step of the range</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+      </parameters>
+    </function>
     <function-macro name="value_set_sample" c:identifier="gst_value_set_sample" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsample.h">Sets @b as the value of @v.  Caller retains reference to sample.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstsample.h"/>
@@ -62271,6 +62254,23 @@ or %NULL if none exists</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function name="value_set_structure" c:identifier="gst_value_set_structure">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets the contents of @value to @structure.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_STRUCTURE</doc>
+          <type name="GObject.Value" c:type="GValue*"/>
+        </parameter>
+        <parameter name="structure" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the structure to set the value to</doc>
+          <type name="Structure" c:type="const GstStructure*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="value_subtract" c:identifier="gst_value_subtract">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Subtracts @subtrahend from @minuend and stores the result in @dest.
 Note that this means subtraction as in sets, not as in mathematics.</doc>
