@@ -93,7 +93,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/x-raw,"
       "tensors=(structure)["
         "tensorgroups,"
-          GROUP_ID"=(/set){"
+          GROUP_ID"=(/uniquelist){"
             "(GstCaps)["
               "tensor/strided,"
                 "tensor-id="GST_MODEL_OBJECT_DETECTOR_NUM_DETECTIONS","

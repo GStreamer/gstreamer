@@ -671,7 +671,7 @@ gst_tflite_inference_start (GstBaseTransform * trans)
 
   if (o_size != 0) {
     tensors_s = gst_structure_new_empty ("tensorgroups");
-    g_value_init (&v_tensors_set, GST_TYPE_SET);
+    g_value_init (&v_tensors_set, GST_TYPE_UNIQUE_LIST);
   }
 
   for (guint i = 0; i < o_size; i++) {
@@ -760,7 +760,7 @@ gst_tflite_inference_start (GstBaseTransform * trans)
     /* Append tensor caps to set */
     gst_value_set_caps (&val_caps, tensor_caps);
     gst_caps_unref (tensor_caps);
-    gst_value_set_append_and_take_value (&v_tensors_set, &val_caps);
+    gst_value_unique_list_append_and_take_value (&v_tensors_set, &val_caps);
 
 
     if (i == (o_size - 1)) {

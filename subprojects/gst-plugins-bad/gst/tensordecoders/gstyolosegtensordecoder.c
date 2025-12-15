@@ -81,7 +81,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/x-raw,"
         "tensors=(structure)["
           "tensorgroups,"
-            "yolo-v8-segmentation-out=(/set){"
+            "yolo-v8-segmentation-out=(/uniquelist){"
             "(GstCaps)["
               "tensor/strided,"
                 "tensor-id=yolo-v8-segmentation-out-detections,"

@@ -44,7 +44,7 @@ FIELD_NAME = SIMPLE_STRING
 ```
 TYPED_VALUE = SIMPLE_VALUE
             | LIST
-            | SET
+            | UNIQUE_LIST
             | ARRAY
             | RANGE
             | STRUCTURE
@@ -74,10 +74,13 @@ LIST = '{' TYPED_VALUE [ ',' TYPED_VALUE ]* '}'
 - No type constraints
 - *Not* a fixed type
 
-### SET
+### UNIQUE_LIST
+This container type is more commonly known as a 'set' but due limitation of the
+introspection it's named 'unique list'.
+
 ```
-SET = '(/set)' '{' TYPED_VALUE [ ',' TYPED_VALUE ]* '}'
-    | '(' TYPE '/set)' '{' TYPE TYPED_VALUE [ ',' TYPE TYPED_VALUE ]* '}'
+UNIQUE_LIST = '(/uniquelist)' '{' TYPED_VALUE [ ',' TYPED_VALUE ]* '}'
+    | '(' TYPE '/uniquelist)' '{' TYPE TYPED_VALUE [ ',' TYPE TYPED_VALUE ]* '}'
 ```
 
 - Mixed types allowed
@@ -137,7 +140,7 @@ QUALIFIED_VALUE = '(' TYPE ')' VALUE
                 | '(' DEFAULT_TYPE ')' ARRAY
                 | '(' DEFAULT_TYPE ')' RANGE
                 | '(' DEFAULT_TYPE ')' STRUCTURE
-                | '(' DEFAULT_TYPE / "set" ')' SET
+                | '(' DEFAULT_TYPE / "uniquelist" ')' UNIQUE_LIST
 ```
 QUALIFIED_VALUE is a value where the type is explicitly specified.
 
@@ -210,7 +213,7 @@ GTYPE = "int" | "i"
 | Element | Mixed Types | Ordered | Unique | Fixed Type |
 |---------|-------------|---------|--------|-----------|
 | **LIST** | Yes | No | No | No |
-| **SET** | Conditional | No | Yes | Yes* |
+| **UNIQUE_LIST** | Conditional | No | Yes | Yes* |
 | **ARRAY** | No | Yes | No | Yes* |
 | **RANGE** | No | N/A | N/A | No |
 | **STRUCTURE** | Yes | N/A | N/A | Yes* |
@@ -235,11 +238,11 @@ GTYPE = "int" | "i"
 "l-structure, l-field=(int){ 1, 2 }"
 ```
 
-# Sets
+# UniqueLists
 ```
-"s-structure, s-field=(/set){ (int)1, (float)2.1 }"
-"s-structure, s-field=(int/set){ 1, 2, 4 }"
-"s-structure, s-field=(/set){ 'a', 'b', 'c' }"
+"s-structure, s-field=(/uniquelist){ (int)1, (float)2.1 }"
+"s-structure, s-field=(int/uniquelist){ 1, 2, 4 }"
+"s-structure, s-field=(/uniquelist){ 'a', 'b', 'c' }"
 ```
 
 # Arrays
@@ -258,7 +261,7 @@ GTYPE = "int" | "i"
 ```
 "c-structure,
     l-field=(int){ 1, 2 },
-    s-field=(int/set){ 1, 2, 4 },
+    s-field=(int/uniquelist){ 1, 2, 4 },
     a-field=(float)< 1.0, 2.1>,
     r-field=[1, 5],
     inner-struc=(structure)[sub-struct, ss-field=1]"

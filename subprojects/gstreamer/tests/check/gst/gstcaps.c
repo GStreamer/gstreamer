@@ -1153,7 +1153,7 @@ GST_START_TEST (test_intersect_caps_set_in_caps)
   superset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -1167,7 +1167,7 @@ GST_START_TEST (test_intersect_caps_set_in_caps)
   subset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -1181,7 +1181,7 @@ GST_START_TEST (test_intersect_caps_set_in_caps)
   expected_intersect = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -1210,7 +1210,7 @@ GST_START_TEST (test_intersect_caps_set_in_caps)
   superset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -1229,7 +1229,7 @@ GST_START_TEST (test_intersect_caps_set_in_caps)
   subset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -1243,7 +1243,7 @@ GST_START_TEST (test_intersect_caps_set_in_caps)
   expected_intersect = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -1281,7 +1281,7 @@ GST_START_TEST (test_intersect_set)
   superset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -1301,7 +1301,7 @@ GST_START_TEST (test_intersect_set)
 subset = gst_caps_from_string (
   "video/x-raw,"
   " width = 10,"
-  " tensors = (caps/set) {"
+  " tensors = (caps/uniquelist) {"
   "   ["
   "     tensor/strided,"
   "       tensor-id = tensor-a,"
@@ -1315,7 +1315,7 @@ subset = gst_caps_from_string (
 expected_intersect = gst_caps_from_string (
   "video/x-raw,"
   " width = 10,"
-  " tensors = (caps/set) {"
+  " tensors = (caps/uniquelist) {"
   "   ["
   "     tensor/strided,"
   "       tensor-id = tensor-a,"
@@ -2092,7 +2092,7 @@ GST_START_TEST (test_fixed)
   caps = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -2111,7 +2111,7 @@ GST_START_TEST (test_fixed)
   caps = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -2278,7 +2278,7 @@ GST_START_TEST (test_caps_in_set_in_caps_subset)
   superset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -2292,7 +2292,7 @@ GST_START_TEST (test_caps_in_set_in_caps_subset)
   subset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -2314,7 +2314,7 @@ GST_START_TEST (test_caps_in_set_in_caps_subset)
   superset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -2328,7 +2328,7 @@ GST_START_TEST (test_caps_in_set_in_caps_subset)
   subset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -2350,7 +2350,7 @@ GST_START_TEST (test_caps_in_set_in_caps_subset)
   superset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -2369,7 +2369,7 @@ GST_START_TEST (test_caps_in_set_in_caps_subset)
   subset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -2391,7 +2391,7 @@ GST_START_TEST (test_caps_in_set_in_caps_subset)
   superset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-b,"
@@ -2405,7 +2405,7 @@ GST_START_TEST (test_caps_in_set_in_caps_subset)
   subset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -2427,7 +2427,7 @@ GST_START_TEST (test_caps_in_set_in_caps_subset)
   superset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -2441,7 +2441,7 @@ GST_START_TEST (test_caps_in_set_in_caps_subset)
   subset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       dims = <(int)10>,"
@@ -2463,7 +2463,7 @@ GST_START_TEST (test_caps_in_set_in_caps_subset)
   superset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -2483,7 +2483,7 @@ GST_START_TEST (test_caps_in_set_in_caps_subset)
   subset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -2505,7 +2505,7 @@ GST_START_TEST (test_caps_in_set_in_caps_subset)
   superset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -2525,7 +2525,7 @@ GST_START_TEST (test_caps_in_set_in_caps_subset)
   subset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -2553,7 +2553,7 @@ GST_START_TEST (test_caps_in_set_in_caps_subset)
   superset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"
@@ -2567,7 +2567,7 @@ GST_START_TEST (test_caps_in_set_in_caps_subset)
   subset = gst_caps_from_string (
     "video/x-raw,"
     " width = 10,"
-    " tensors = (caps/set) {"
+    " tensors = (caps/uniquelist) {"
     "   ["
     "     tensor/strided,"
     "       tensor-id = tensor-a,"

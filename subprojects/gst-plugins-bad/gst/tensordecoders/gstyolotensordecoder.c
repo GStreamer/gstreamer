@@ -132,7 +132,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
       "video/x-raw,"
         "tensors=(structure)["
           "tensorgroups,"
-            "yolo-v8-out=(/set){"
+            "yolo-v8-out=(/uniquelist){"
             "(GstCaps)["
               "tensor/strided,"
                 "tensor-id=(string)yolo-v8-out,"

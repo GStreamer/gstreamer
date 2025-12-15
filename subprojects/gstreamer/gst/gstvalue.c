@@ -642,7 +642,7 @@ gst_value_list_or_array_get_basic_type (const GValue * value, GType * type)
     return FALSE;
 
   if (GST_VALUE_HOLDS_LIST (value) || GST_VALUE_HOLDS_ARRAY (value) ||
-      GST_VALUE_HOLDS_SET (value)) {
+      GST_VALUE_HOLDS_UNIQUE_LIST (value)) {
     if (VALUE_LIST_SIZE (value) == 0)
       return FALSE;
     return gst_value_list_or_array_get_basic_type (VALUE_LIST_GET_VALUE (value,
@@ -1101,29 +1101,29 @@ gst_value_array_get_value (const GValue * value, guint index)
 }
 
 /**
- * gst_value_set_append_value:
- * @value: a #GValue of type #GST_TYPE_SET
+ * gst_value_unique_list_append_value:
+ * @value: a #GValue of type #GST_TYPE_UNIQUE_LIST
  * @append_value: (transfer none): the value to append
  *
- * Appends @append_value to the GstValueSet in @value.
+ * Appends @append_value to the GstValueUniqueList in @value.
  *
  * Since: 1.28
  */
 void
-gst_value_set_append_value (GValue * value, const GValue * append_value)
+gst_value_unique_list_append_value (GValue * value, const GValue * append_value)
 {
   gsize i;
   GValue val = { 0 };
   const GValue *p_val;
 
-  g_return_if_fail (GST_VALUE_HOLDS_SET (value));
+  g_return_if_fail (GST_VALUE_HOLDS_UNIQUE_LIST (value));
   g_return_if_fail (G_IS_VALUE (append_value));
   g_return_if_fail (gst_value_list_or_array_are_compatible (value,
           append_value));
 
   /* Set only contain one copy of a value */
-  for (i = 0; i < gst_value_set_get_size (value); i++) {
-    p_val = gst_value_set_get_value (value, i);
+  for (i = 0; i < gst_value_unique_list_get_size (value); i++) {
+    p_val = gst_value_unique_list_get_value (value, i);
 
     if (gst_value_compare (p_val, append_value) == GST_VALUE_EQUAL)
       return;                   /* value already exist in set */
@@ -1134,28 +1134,29 @@ gst_value_set_append_value (GValue * value, const GValue * append_value)
 }
 
 /**
- * gst_value_set_append_and_take_value:
- * @value: a #GValue of type #GST_TYPE_SET
+ * gst_value_unique_list_append_and_take_value:
+ * @value: a #GValue of type #GST_TYPE_UNIQUE_LIST
  * @append_value: (transfer full): the value to append
  *
- * Appends @append_value to the GstValueSet in @value.
+ * Appends @append_value to the GstValueUniqueList in @value.
  *
  * Since: 1.28
  */
 void
-gst_value_set_append_and_take_value (GValue * value, GValue * append_value)
+gst_value_unique_list_append_and_take_value (GValue * value,
+    GValue * append_value)
 {
   gsize i;
   const GValue *p_val;
 
-  g_return_if_fail (GST_VALUE_HOLDS_SET (value));
+  g_return_if_fail (GST_VALUE_HOLDS_UNIQUE_LIST (value));
   g_return_if_fail (G_IS_VALUE (append_value));
   g_return_if_fail (gst_value_list_or_array_are_compatible (value,
           append_value));
 
   /* Set only contain one copy of a value */
-  for (i = 0; i < gst_value_set_get_size (value); i++) {
-    p_val = gst_value_set_get_value (value, i);
+  for (i = 0; i < gst_value_unique_list_get_size (value); i++) {
+    p_val = gst_value_unique_list_get_value (value, i);
 
     if (gst_value_compare (p_val, append_value) == GST_VALUE_EQUAL)
       return;                   /* value already exist in set */
@@ -1165,34 +1166,35 @@ gst_value_set_append_and_take_value (GValue * value, GValue * append_value)
 }
 
 /**
- * gst_value_set_prepend_value:
- * @value: a #GValue of type #GST_TYPE_SET
+ * gst_value_unique_list_prepend_value:
+ * @value: a #GValue of type #GST_TYPE_UNIQUE_LIST
  * @prepend_value: the value to prepend
  *
- * Prepends @prepend_value to the GstValueSet in @value.
+ * Prepends @prepend_value to the GstValueUniqueList in @value.
  *
  * Since: 1.28
  */
 void
-gst_value_set_prepend_value (GValue * value, const GValue * prepend_value)
+gst_value_unique_list_prepend_value (GValue * value,
+    const GValue * prepend_value)
 {
   gst_value_list_prepend_value (value, prepend_value);
 }
 
 /**
- * gst_value_set_concat:
+ * gst_value_unique_list_concat:
  * @dest: (out caller-allocates): an uninitialized #GValue to take the result
  * @value1: a #GValue
  * @value2: a #GValue
  *
  * Concatenates copies of @value1 and @value2 into a set.  Values that are not
- * of type #GST_TYPE_SET are treated as if they were sets of length 1.
- * @dest will be initialized to the type #GST_TYPE_SET.
+ * of type #GST_TYPE_UNIQUE_LIST are treated as if they were sets of length 1.
+ * @dest will be initialized to the type #GST_TYPE_UNIQUE_LIST.
  *
  * Since: 1.28
  */
 void
-gst_value_set_concat (GValue * dest, const GValue * value1,
+gst_value_unique_list_concat (GValue * dest, const GValue * value1,
     const GValue * value2)
 {
   guint i, value2_length;
@@ -1205,34 +1207,35 @@ gst_value_set_concat (GValue * dest, const GValue * value1,
   g_return_if_fail (G_IS_VALUE (value2));
   g_return_if_fail (gst_value_list_or_array_are_compatible (value1, value2));
 
-  value2_length = (GST_VALUE_HOLDS_SET (value2) ? VALUE_LIST_SIZE (value2) : 1);
+  value2_length =
+      (GST_VALUE_HOLDS_UNIQUE_LIST (value2) ? VALUE_LIST_SIZE (value2) : 1);
 
-  g_value_init (dest, GST_TYPE_SET);
-  if (GST_VALUE_HOLDS_SET (value1)) {
+  g_value_init (dest, GST_TYPE_UNIQUE_LIST);
+  if (GST_VALUE_HOLDS_UNIQUE_LIST (value1)) {
     g_value_copy (value1, dest);
   } else {
-    gst_value_set_append_value (dest, value1);
+    gst_value_unique_list_append_value (dest, value1);
   }
 
   vlist = VALUE_LIST_ARRAY (dest);
-  if (GST_VALUE_HOLDS_SET (value2)) {
+  if (GST_VALUE_HOLDS_UNIQUE_LIST (value2)) {
     for (i = 0; i < value2_length; i++) {
-      p_val = gst_value_set_get_value (value2, i);
+      p_val = gst_value_unique_list_get_value (value2, i);
 
       if (!_gst_value_list_contain (vlist, p_val)) {
-        gst_value_set_append_value (dest, p_val);
+        gst_value_unique_list_append_value (dest, p_val);
       }
     }
   } else {
     if (!_gst_value_list_contain (vlist, value2)) {
-      gst_value_set_append_value (dest, value2);
+      gst_value_unique_list_append_value (dest, value2);
     }
   }
 }
 
 /**
- * gst_value_set_get_size:
- * @value: a #GValue of type #GST_TYPE_SET
+ * gst_value_unique_list_get_size:
+ * @value: a #GValue of type #GST_TYPE_UNIQUE_LIST
  *
  * Gets the number of values contained in @value.
  *
@@ -1241,16 +1244,16 @@ gst_value_set_concat (GValue * dest, const GValue * value1,
  * Since: 1.28
  */
 guint
-gst_value_set_get_size (const GValue * value)
+gst_value_unique_list_get_size (const GValue * value)
 {
-  g_return_val_if_fail (GST_VALUE_HOLDS_SET (value), 0);
+  g_return_val_if_fail (GST_VALUE_HOLDS_UNIQUE_LIST (value), 0);
 
   return VALUE_LIST_SIZE (value);
 }
 
 /**
- * gst_value_set_get_value:
- * @value: a #GValue of type #GST_TYPE_SET
+ * gst_value_unique_list_get_value:
+ * @value: a #GValue of type #GST_TYPE_UNIQUE_LIST
  * @index: index of value to get from the set
  *
  * Gets the value that is a member of the set contained in @value and
@@ -1261,9 +1264,9 @@ gst_value_set_get_size (const GValue * value)
  * Since: 1.28
  */
 const GValue *
-gst_value_set_get_value (const GValue * value, guint index)
+gst_value_unique_list_get_value (const GValue * value, guint index)
 {
-  g_return_val_if_fail (GST_VALUE_HOLDS_SET (value), NULL);
+  g_return_val_if_fail (GST_VALUE_HOLDS_UNIQUE_LIST (value), NULL);
   g_return_val_if_fail (index < VALUE_LIST_SIZE (value), NULL);
 
   return VALUE_LIST_GET_VALUE (value, index);
@@ -1284,7 +1287,8 @@ gst_value_transform_array_string (const GValue * src_value, GValue * dest_value)
 static void
 gst_value_transform_set_string (const GValue * src_value, GValue * dest_value)
 {
-  gst_value_transform_any_list_string (src_value, dest_value, "(/set){ ", " }");
+  gst_value_transform_any_list_string (src_value, dest_value, "(/uniquelist){ ",
+      " }");
 }
 
 static void
@@ -1426,7 +1430,8 @@ gst_value_compare_value_array (const GValue * value1, const GValue * value2)
 
 /* Do an unordered compare of the contents of a set */
 static gint
-gst_value_compare_value_set (const GValue * value1, const GValue * value2)
+gst_value_compare_value_unique_list (const GValue * value1,
+    const GValue * value2)
 {
   return gst_value_compare_value_list (value1, value2);
 }
@@ -1498,14 +1503,14 @@ gst_value_deserialize_g_value_array (GValue * dest, const gchar * s)
 }
 
 static gchar *
-gst_value_serialize_value_set (const GValue * value)
+gst_value_serialize_value_unique_list (const GValue * value)
 {
-  return _priv_gst_value_serialize_any_list (value, "(/set){ ", " }", TRUE,
-      GST_SERIALIZE_FLAG_BACKWARD_COMPAT);
+  return _priv_gst_value_serialize_any_list (value, "(/uniquelist){ ", " }",
+      TRUE, GST_SERIALIZE_FLAG_BACKWARD_COMPAT);
 }
 
 static gboolean
-gst_value_deserialize_value_set (GValue * dest, const gchar * s,
+gst_value_deserialize_value_unique_list (GValue * dest, const gchar * s,
     GParamSpec * pspec)
 {
   gchar *s2 = (gchar *) s;
@@ -2565,7 +2570,7 @@ _priv_gst_value_get_abbrs (gint * n_abbrs)
       ,
       {"list", GST_TYPE_LIST}
       ,
-      {"set", GST_TYPE_SET}
+      {"uniquelist", GST_TYPE_UNIQUE_LIST}
       ,
       {"caps", GST_TYPE_CAPS}
     };
@@ -4936,8 +4941,8 @@ gst_value_is_subset (const GValue * value1, const GValue * value2)
     if (type1 == GST_TYPE_LIST)
       return gst_value_is_subset_list_list (value1, value2);
     return gst_value_is_subset_list (value1, value2);
-  } else if (type2 == GST_TYPE_SET) {
-    if (type1 == GST_TYPE_SET)
+  } else if (type2 == GST_TYPE_UNIQUE_LIST) {
+    if (type1 == GST_TYPE_UNIQUE_LIST)
       return gst_value_is_subset_list_list (value1, value2);
     return gst_value_is_subset_list (value1, value2);
   } else if (type2 == GST_TYPE_CAPS) {
@@ -5336,7 +5341,7 @@ static gboolean
 gst_value_union_set_set (GValue * dest,
     const GValue * src1, const GValue * src2)
 {
-  gst_value_set_concat (dest, src1, src2);
+  gst_value_unique_list_concat (dest, src1, src2);
   return TRUE;
 }
 
@@ -5599,9 +5604,9 @@ gst_value_intersect_list_list (GValue * dest, const GValue * value1,
 
   if (res) {
     /* If we end up with a single value in the list, just use that
-     * value. Else use the list. For 'set' since it's already a fixed value we
-     * keep the 'set'. */
-    if (vlist->len == 1 && G_VALUE_TYPE (value1) != GST_TYPE_SET) {
+     * value. Else use the list. For 'unique list' since it's already a fixed value we
+     * keep the 'unique list'. */
+    if (vlist->len == 1 && G_VALUE_TYPE (value1) != GST_TYPE_UNIQUE_LIST) {
       gst_value_move (dest, &vlist->fields[0]);
       g_free (vlist);
     } else {
@@ -5631,11 +5636,12 @@ gst_value_intersect_list (GValue * dest, const GValue * value1,
   type2 = G_VALUE_TYPE (value2);
 
   /* Use optimized list-list intersection */
-  if (type1 == type2 && (type1 == GST_TYPE_LIST || type1 == GST_TYPE_SET)) {
+  if (type1 == type2 && (type1 == GST_TYPE_LIST
+          || type1 == GST_TYPE_UNIQUE_LIST)) {
     return gst_value_intersect_list_list (dest, value1, value2);
   }
 
-  if (type1 == GST_TYPE_SET && type2 == GST_TYPE_LIST) {
+  if (type1 == GST_TYPE_UNIQUE_LIST && type2 == GST_TYPE_LIST) {
     return gst_value_intersect_list (dest, value2, value1);
   }
 
@@ -6262,8 +6268,8 @@ gst_value_subtract_from_list (GValue * dest, const GValue * minuend,
       } else if (G_VALUE_TYPE (dest) == GST_TYPE_LIST
           && G_VALUE_TYPE (&subtraction) != GST_TYPE_LIST) {
         _gst_value_list_append_and_take_value (dest, &subtraction);
-      } else if (G_VALUE_TYPE (dest) == GST_TYPE_SET
-          && G_VALUE_TYPE (&subtraction) != GST_TYPE_SET) {
+      } else if (G_VALUE_TYPE (dest) == GST_TYPE_UNIQUE_LIST
+          && G_VALUE_TYPE (&subtraction) != GST_TYPE_UNIQUE_LIST) {
         _gst_value_list_append_and_take_value (dest, &subtraction);
       } else {
         GValue temp;
@@ -6693,8 +6699,8 @@ gst_value_compare (const GValue * value1, const GValue * value2)
     return GST_VALUE_EQUAL;
   }
 
-  value1_is_set = G_VALUE_TYPE (value1) == GST_TYPE_SET;
-  value2_is_set = G_VALUE_TYPE (value2) == GST_TYPE_SET;
+  value1_is_set = G_VALUE_TYPE (value1) == GST_TYPE_UNIQUE_LIST;
+  value2_is_set = G_VALUE_TYPE (value2) == GST_TYPE_UNIQUE_LIST;
 
   if (value1_is_set ^ value2_is_set) {
     gint i, n, ret;
@@ -6704,7 +6710,7 @@ gst_value_compare (const GValue * value1, const GValue * value2)
       value2 = t;
     }
 
-    n = gst_value_set_get_size (value1);
+    n = gst_value_unique_list_get_size (value1);
 
     if (n != 1)
       return GST_VALUE_UNORDERED;
@@ -6712,7 +6718,7 @@ gst_value_compare (const GValue * value1, const GValue * value2)
     for (i = 0; i < n; i++) {
       const GValue *elt;
 
-      elt = gst_value_set_get_value (value1, i);
+      elt = gst_value_unique_list_get_value (value1, i);
       ret = gst_value_compare (elt, value2);
       if (ret != GST_VALUE_EQUAL && n == 1)
         return ret;
@@ -6869,7 +6875,7 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
   if (type1 == GST_TYPE_LIST || type2 == GST_TYPE_LIST)
     return TRUE;
 
-  if (type1 == GST_TYPE_SET || type2 == GST_TYPE_SET)
+  if (type1 == GST_TYPE_UNIQUE_LIST || type2 == GST_TYPE_UNIQUE_LIST)
     return TRUE;
 
   if (G_UNLIKELY (GST_VALUE_HOLDS_FLAG_SET (value1) &&
@@ -6957,9 +6963,9 @@ gst_value_intersect (GValue * dest, const GValue * value1,
   type2 = G_VALUE_TYPE (value2);
 
   /* special cases first */
-  if (type1 == GST_TYPE_LIST || type1 == GST_TYPE_SET)
+  if (type1 == GST_TYPE_LIST || type1 == GST_TYPE_UNIQUE_LIST)
     return gst_value_intersect_list (dest, value1, value2);
-  if (type2 == GST_TYPE_LIST || type2 == GST_TYPE_SET)
+  if (type2 == GST_TYPE_LIST || type2 == GST_TYPE_UNIQUE_LIST)
     return gst_value_intersect_list (dest, value2, value1);
 
   if (_gst_value_compare_nolist (value1, value2) == GST_VALUE_EQUAL) {
@@ -7078,9 +7084,9 @@ gst_value_subtract (GValue * dest, const GValue * minuend,
   stype = G_VALUE_TYPE (subtrahend);
 
   /* special cases first */
-  if (mtype == GST_TYPE_LIST || mtype == GST_TYPE_SET)
+  if (mtype == GST_TYPE_LIST || mtype == GST_TYPE_UNIQUE_LIST)
     return gst_value_subtract_from_list (dest, minuend, subtrahend);
-  if (stype == GST_TYPE_LIST || stype == GST_TYPE_SET)
+  if (stype == GST_TYPE_LIST || stype == GST_TYPE_UNIQUE_LIST)
     return gst_value_subtract_list (dest, minuend, subtrahend);
 
   if (mtype == GST_TYPE_ARRAY && stype != GST_TYPE_ARRAY &&
@@ -7230,12 +7236,13 @@ gst_value_init_and_copy (GValue * dest, const GValue * src)
   g_return_if_fail (dest != NULL);
 
   type = G_VALUE_TYPE (src);
-  /* We need to shortcut GstValueList/GstValueArray/GstValueSet copying because:
+  /* We need to shortcut GstValueList/GstValueArray/GstValueUniqueList copying because:
    * * g_value_init would end up allocating something
    * * which g_value_copy would then free and re-alloc.
    *
    * Instead directly call the copy */
-  if (type == GST_TYPE_LIST || type == GST_TYPE_ARRAY || type == GST_TYPE_SET) {
+  if (type == GST_TYPE_LIST || type == GST_TYPE_ARRAY
+      || type == GST_TYPE_UNIQUE_LIST) {
     dest->g_type = type;
     gst_value_copy_list_or_array (src, dest);
     return;
@@ -7455,14 +7462,14 @@ gst_value_is_fixed (const GValue * value)
         return FALSE;
     }
     return TRUE;
-  } else if (type == GST_TYPE_SET) {
+  } else if (type == GST_TYPE_UNIQUE_LIST) {
     gint size, n;
     const GValue *kid;
 
     /* check recursively */
-    size = gst_value_set_get_size (value);
+    size = gst_value_unique_list_get_size (value);
     for (n = 0; n < size; n++) {
-      kid = gst_value_set_get_value (value, n);
+      kid = gst_value_unique_list_get_value (value, n);
       if (!gst_value_is_fixed (kid))
         return FALSE;
     }
@@ -7521,15 +7528,15 @@ gst_value_fixate (GValue * dest, const GValue * src)
     } else {
       g_value_unset (&temp);
     }
-  } else if (G_VALUE_TYPE (src) == GST_TYPE_SET) {
+  } else if (G_VALUE_TYPE (src) == GST_TYPE_UNIQUE_LIST) {
     gboolean res = FALSE;
     guint n, len;
 
-    len = gst_value_set_get_size (src);
-    g_value_init (dest, GST_TYPE_SET);
+    len = gst_value_unique_list_get_size (src);
+    g_value_init (dest, GST_TYPE_UNIQUE_LIST);
     for (n = 0; n < len; n++) {
       GValue kid = { 0 };
-      const GValue *orig_kid = gst_value_set_get_value (src, n);
+      const GValue *orig_kid = gst_value_unique_list_get_value (src, n);
 
       if (!gst_value_fixate (&kid, orig_kid))
         gst_value_init_and_copy (&kid, orig_kid);
@@ -9214,7 +9221,7 @@ gst_value_hash_value_array (const GValue * v, guint * res)
 }
 
 static gboolean
-gst_value_hash_value_set (const GValue * v, guint * res)
+gst_value_hash_value_unique_list (const GValue * v, guint * res)
 {
   return gst_value_hash_value_list (v, res);
 }
@@ -9548,7 +9555,7 @@ static const GTypeValueTable _gst_value_array_value_table = {
 
 FUNC_VALUE_GET_TYPE (value_array, "GstValueArray");
 
-static const GTypeValueTable _gst_value_set_value_table = {
+static const GTypeValueTable _gst_value_unique_list_value_table = {
   gst_value_init_list_or_array,
   gst_value_free_list_or_array,
   gst_value_copy_list_or_array,
@@ -9559,7 +9566,7 @@ static const GTypeValueTable _gst_value_set_value_table = {
   gst_value_lcopy_list_or_array
 };
 
-FUNC_VALUE_GET_TYPE (value_set, "GstValueSet");
+FUNC_VALUE_GET_TYPE (value_unique_list, "GstValueUniqueList");
 
 static const GTypeValueTable _gst_fraction_value_table = {
   gst_value_init_fraction,
@@ -9718,7 +9725,8 @@ _priv_gst_value_initialize (void)
 
   REGISTER_SERIALIZATION_WITH_PSPEC (gst_value_list_get_type (), value_list);
   REGISTER_SERIALIZATION_WITH_PSPEC (gst_value_array_get_type (), value_array);
-  REGISTER_SERIALIZATION_WITH_PSPEC (gst_value_set_get_type (), value_set);
+  REGISTER_SERIALIZATION_WITH_PSPEC (gst_value_unique_list_get_type (),
+      value_unique_list);
 
 
   g_value_register_transform_func (GST_TYPE_INT_RANGE, G_TYPE_STRING,
@@ -9743,7 +9751,7 @@ _priv_gst_value_initialize (void)
       gst_value_transform_g_value_array_any_list);
   g_value_register_transform_func (G_TYPE_VALUE_ARRAY, GST_TYPE_LIST,
       gst_value_transform_g_value_array_any_list);
-  g_value_register_transform_func (GST_TYPE_SET, G_TYPE_STRING,
+  g_value_register_transform_func (GST_TYPE_UNIQUE_LIST, G_TYPE_STRING,
       gst_value_transform_set_string);
   g_value_register_transform_func (GST_TYPE_FRACTION, G_TYPE_STRING,
       gst_value_transform_fraction_string);
@@ -9835,8 +9843,8 @@ _priv_gst_value_initialize (void)
       gst_value_union_fraction_fraction_range);
   gst_value_register_union_func (GST_TYPE_FRACTION_RANGE,
       GST_TYPE_FRACTION_RANGE, gst_value_union_fraction_range_fraction_range);
-  gst_value_register_union_func (GST_TYPE_SET,
-      GST_TYPE_SET, gst_value_union_set_set);
+  gst_value_register_union_func (GST_TYPE_UNIQUE_LIST,
+      GST_TYPE_UNIQUE_LIST, gst_value_union_set_set);
 
 #if GST_VERSION_NANO == 1
   /* If building from git master, check starting array sizes matched actual size

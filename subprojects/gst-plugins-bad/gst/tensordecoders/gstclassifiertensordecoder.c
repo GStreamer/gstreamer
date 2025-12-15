@@ -114,7 +114,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
       "video/x-raw,"
         "tensors=(structure)["
           "tensorgroups,"
-              GROUP_ID_CLASSIFICATION"=(/set){"
+              GROUP_ID_CLASSIFICATION"=(/uniquelist){"
                  "(GstCaps)["
                     "tensor/strided,"
                       "tensor-id="GST_MODEL_STD_IMAGE_CLASSIFICATION","
@@ -131,7 +131,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
       "video/x-raw,"
         "tensors=(structure)["
           "tensorgroups,"
-              GROUP_ID_CLASSIFICATION_SOFTMAXED"=(/set){"
+              GROUP_ID_CLASSIFICATION_SOFTMAXED"=(/uniquelist){"
                  "(GstCaps)["
                     "tensor/strided,"
                       "tensor-id="GST_MODEL_STD_IMAGE_CLASSIFICATION_SOFTMAXED","
@@ -637,7 +637,7 @@ gst_classifier_tensor_decoder_set_caps (GstBaseTransform * trans,
         gst_structure_get_value (ts, GROUP_ID_CLASSIFICATION_SOFTMAXED);
   g_return_val_if_fail (tensors_gv != NULL, FALSE);
 
-  tensor_caps_v = gst_value_set_get_value (tensors_gv, 0);
+  tensor_caps_v = gst_value_unique_list_get_value (tensors_gv, 0);
   g_return_val_if_fail (tensor_caps_v != NULL, FALSE);
 
   tcaps = gst_value_get_caps (tensor_caps_v);

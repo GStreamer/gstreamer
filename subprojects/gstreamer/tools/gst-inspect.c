@@ -196,15 +196,16 @@ print_field (const GstIdStr * fieldname, const GValue * value, gpointer pfx)
 {
   const gchar *type_name = g_type_name (G_VALUE_TYPE (value));
 
-  if (G_VALUE_HOLDS (value, GST_TYPE_SET) && gst_value_set_get_size (value) > 0) {
-    if (holds_long_type (gst_value_set_get_value (value, 0))) {
+  if (G_VALUE_HOLDS (value, GST_TYPE_UNIQUE_LIST)
+      && gst_value_unique_list_get_size (value) > 0) {
+    if (holds_long_type (gst_value_unique_list_get_value (value, 0))) {
       guint i;
       gchar *pfx2 = g_strdup_printf ("%s  ", (gchar *) pfx);
 
-      n_print ("%s%s%s:%s (GstSet)\n", (gchar *) pfx, FIELD_VALUE_COLOR,
+      n_print ("%s%s%s:%s (GstUniqueList)\n", (gchar *) pfx, FIELD_VALUE_COLOR,
           gst_id_str_as_str (fieldname), RESET_COLOR);
-      for (i = 0; i < gst_value_set_get_size (value); i++) {
-        const GValue *ivalue = gst_value_set_get_value (value, i);
+      for (i = 0; i < gst_value_unique_list_get_size (value); i++) {
+        const GValue *ivalue = gst_value_unique_list_get_value (value, i);
         print_caps (gst_value_get_caps (ivalue), pfx2, "");
       }
       g_free (pfx2);

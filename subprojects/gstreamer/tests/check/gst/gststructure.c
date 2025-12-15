@@ -1197,21 +1197,21 @@ GST_END_TEST;
 GST_START_TEST (test_container_type_marker)
 {
   GstStructure *s;
-  const gchar expected[] = "root, f-set=(/set){ (int)1, (int)2 };";
+  const gchar expected[] = "root, f-set=(/uniquelist){ (int)1, (int)2 };";
   gchar *res;
   GValue vset = { 0 };
   GValue v1 = { 0 }, v2 = { 0 };
   s = gst_structure_new_empty ("root");
   fail_unless (s);
 
-  g_value_init (&vset, GST_TYPE_SET);
+  g_value_init (&vset, GST_TYPE_UNIQUE_LIST);
   g_value_init (&v1, G_TYPE_INT);
   g_value_init (&v2, G_TYPE_INT);
   g_value_set_int (&v1, 1);
   g_value_set_int (&v2, 2);
 
-  gst_value_set_append_and_take_value (&vset, &v1);
-  gst_value_set_append_and_take_value (&vset, &v2);
+  gst_value_unique_list_append_and_take_value (&vset, &v1);
+  gst_value_unique_list_append_and_take_value (&vset, &v2);
   gst_structure_take_value (s, "f-set", &vset);
 
   res = gst_structure_serialize_full (s, GST_SERIALIZE_FLAG_NONE);

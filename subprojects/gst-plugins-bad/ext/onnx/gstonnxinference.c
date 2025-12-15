@@ -1118,7 +1118,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   GstStructure *tensors_s = NULL;
   gchar *group_id = NULL;
 
-  g_value_init (&v_tensors_set, GST_TYPE_SET);
+  g_value_init (&v_tensors_set, GST_TYPE_UNIQUE_LIST);
 
   self->output_ids = g_new0 (GQuark, self->output_count);
 
@@ -1275,7 +1275,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     /* Append tensor caps to set */
     gst_value_set_caps (&val_caps, tensor_caps);
     gst_caps_unref (tensor_caps);
-    gst_value_set_append_and_take_value (&v_tensors_set, &val_caps);
+    gst_value_unique_list_append_and_take_value (&v_tensors_set, &val_caps);
 
     /* Get group-id from modelinfo on last tensor */
     if (i == (self->output_count - 1)) {
