@@ -938,7 +938,7 @@ _gl_tex_copy (GstGLMemory * src, gssize offset, gssize size)
   alloc_class = GST_GL_MEMORY_ALLOCATOR_GET_CLASS (src->mem.mem.allocator);
 
   if (src->tex_target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES) {
-    GST_CAT_ERROR (GST_CAT_GL_MEMORY, "Cannot copy External OES textures");
+    GST_CAT_WARNING (GST_CAT_GL_MEMORY, "Cannot copy External OES textures");
     return NULL;
   }
 

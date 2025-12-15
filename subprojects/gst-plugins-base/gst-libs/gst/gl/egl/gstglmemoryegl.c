@@ -224,7 +224,7 @@ _gl_mem_create (GstGLMemoryEGL * gl_mem, GError ** error)
 static GstMemory *
 _gl_mem_copy (GstGLMemoryEGL * src, gssize offset, gssize size)
 {
-  GST_CAT_ERROR (GST_CAT_GL_MEMORY, "GstGLMemoryEGL does not support copy");
+  GST_CAT_WARNING (GST_CAT_GL_MEMORY, "GstGLMemoryEGL does not support copy");
   return NULL;
 }
 
