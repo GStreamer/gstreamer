@@ -38,6 +38,7 @@ video_sources = files([
   'videodirection.c',
   'videoorientation.c',
   'videooverlay.c',
+  'gsth274.c',
 ])
 
 video_headers = files([
@@ -79,6 +80,7 @@ video_headers = files([
   'video-overlay-composition.h',
   'video-multiview.h',
   'video-sei.h',
+  'gsth274.h',
 ])
 install_headers(video_headers, subdir : 'gstreamer-1.0/gst/video/')
 

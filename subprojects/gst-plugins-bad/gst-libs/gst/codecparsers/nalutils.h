@@ -31,6 +31,8 @@
  * Common code for NAL parsing from h264 and h265 parsers.
  */
 
+#pragma once
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -123,6 +125,16 @@ gboolean nal_reader_get_se (NalReader * nr, gint32 * val);
 }
 #define CHECK_ALLOWED_MAX(val, max) \
   CHECK_ALLOWED_MAX_WITH_DEBUG (G_STRINGIFY (val), val, max)
+
+#define CHECK_ALLOWED_MIN_WITH_DEBUG(dbg, val, min) { \
+  if (val < min) { \
+    GST_WARNING ("value for '" dbg "' lower than min. value: %d, min %d", \
+                     val, min); \
+    goto error; \
+  } \
+}
+#define CHECK_ALLOWED_MIN(val, min) \
+  CHECK_ALLOWED_MIN_WITH_DEBUG (G_STRINGIFY (val), val, min)
 
 #define CHECK_ALLOWED_WITH_DEBUG(dbg, val, min, max) { \
   if (val < min || val > max) { \
@@ -238,7 +250,13 @@ G_GNUC_INTERNAL
 gboolean nal_writer_put_ue (NalWriter * nw, guint32 value);
 
 G_GNUC_INTERNAL
+guint count_ue_bits (guint32 value);
+
+G_GNUC_INTERNAL
 gboolean count_exp_golomb_bits (guint32 value, guint * leading_zeros, guint * rest);
+
+G_GNUC_INTERNAL
+gboolean nal_writer_is_byte_aligned (NalWriter * nw);
 
 #define WRITE_UINT8(nw, val, nbits) { \
   if (!nal_writer_put_bits_uint8 (nw, val, nbits)) { \

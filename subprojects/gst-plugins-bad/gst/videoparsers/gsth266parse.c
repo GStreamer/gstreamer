@@ -165,6 +165,9 @@ static GstCaps *gst_h266_parse_get_caps (GstBaseParse * parse,
 static void
 gst_h266_parse_process_sei_user_data (GstH266Parse * h266parse,
     GstH266RegisteredUserData * rud);
+static void
+gst_h266_parse_process_sei_user_data_unregistered (GstH266Parse * h266parse,
+    GstH274UserDataUnregistered * urud);
 
 static void
 gst_h266_parse_class_init (GstH266ParseClass * klass)
@@ -257,6 +260,9 @@ gst_h266_parse_reset_frame (GstH266Parse * h266parse)
   h266parse->have_sps_in_frame = FALSE;
   h266parse->have_pps_in_frame = FALSE;
   gst_adapter_clear (h266parse->frame_out);
+  gst_video_clear_user_data (&h266parse->user_data, FALSE);
+  gst_video_clear_user_data_unregistered (&h266parse->user_data_unregistered,
+      FALSE);
 }
 
 static void
@@ -626,6 +632,10 @@ gst_h266_parse_process_sei (GstH266Parse * h266parse, GstH266NalUnit * nalu)
       case GST_H266_SEI_REGISTERED_USER_DATA:
         gst_h266_parse_process_sei_user_data (h266parse,
             &sei.payload.registered_user_data);
+        break;
+      case GST_H266_SEI_USER_DATA_UNREGISTERED:
+        gst_h266_parse_process_sei_user_data_unregistered (h266parse,
+            &sei.payload.user_data_unregistered);
         break;
       default:
         break;
@@ -3374,6 +3384,18 @@ gst_h266_parse_process_sei_user_data (GstH266Parse * h266parse,
 
   gst_video_parse_user_data ((GstElement *) h266parse, &h266parse->user_data,
       &br, field, provider_code);
+}
+
+static void
+gst_h266_parse_process_sei_user_data_unregistered (GstH266Parse * h266parse,
+    GstH274UserDataUnregistered * urud)
+{
+  GstByteReader br;
+
+  gst_byte_reader_init (&br, urud->data, urud->size);
+
+  gst_video_parse_user_data_unregistered ((GstElement *) h266parse,
+      &h266parse->user_data_unregistered, &br, urud->uuid);
 }
 
 static void

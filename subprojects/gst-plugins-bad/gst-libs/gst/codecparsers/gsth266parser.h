@@ -28,6 +28,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/video/gsth274.h>
 #include <gst/codecparsers/codecparsers-prelude.h>
 
 G_BEGIN_DECLS
@@ -359,6 +360,9 @@ typedef enum
  * @GST_H266_SEI_SCALABLE_NETING: Scalable Nesting SEI Message.
  * @GST_H266_SEI_FRAME_FIELD_INFO: Frame Field Info SEI Message.
  * @GST_H266_SEI_SUBPIC_LEVEL_INFO: Subpicture Level Information SEI.
+ * @GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION: Digitally Signed Content Initialization SEI.
+ * @GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION: Digitally Signed Content Selection SEI.
+ * @GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION: Digitally Signed Content Verification SEI.
  *
  * The type of SEI message.
  * More other SEIs are specified in Rec.ITU-T H.274 | ISO/IEC 23002-7.
@@ -375,6 +379,30 @@ typedef enum
   GST_H266_SEI_SCALABLE_NESTING = 133,
   GST_H266_SEI_FRAME_FIELD_INFO = 168,
   GST_H266_SEI_SUBPIC_LEVEL_INFO = 203,
+  /**
+   * GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION:
+   *
+   * Digitally Signed Content Initialization SEI Message
+   *
+   * Since: 1.30
+   */
+  GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION = 220,
+  /**
+   * GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION:
+   *
+   * Digitally Signed Content Selection SEI Message
+   *
+   * Since: 1.30
+   */
+  GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION      = 221,
+  /**
+   * GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION:
+   *
+   * Digitally Signed Content Verification SEI Message
+   *
+   * Since: 1.30
+   */
+  GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION   = 222,
   /* and more...  */
 } GstH266SEIPayloadType;
 
@@ -414,6 +442,24 @@ typedef enum
   /* end of the aps type */
   GST_H266_APS_TYPE_MAX = 3
 } GstH266APSType;
+
+/**
+ * GstH266SEINalUnitType:
+ * @GST_H266_SEI_NAL_UNIT_TYPE_AUTO: The parser will automatically determine the
+ * SEI NAL unit type based on the SEI message type.
+ * @GST_H266_SEI_NAL_UNIT_TYPE_PREFIX: The SEI NAL unit
+ * will be placed before the slice NAL units in the bitstream.
+ * @GST_H266_SEI_NAL_UNIT_TYPE_SUFFIX: The SEI NAL unit
+ * will be placed after the slice NAL units in the bitstream.
+ *
+ * Since: 1.30
+ */
+typedef enum
+{
+  GST_H266_SEI_NAL_UNIT_TYPE_AUTO = 0,
+  GST_H266_SEI_NAL_UNIT_TYPE_PREFIX = 23,
+  GST_H266_SEI_NAL_UNIT_TYPE_SUFFIX = 24,
+} GstH266SEINalUnitType;
 
 typedef struct _GstH266Parser                   GstH266Parser;
 typedef struct _GstH266NalUnit                  GstH266NalUnit;
@@ -3221,6 +3267,10 @@ struct _GstH266FrameFieldInfo {
  * @subpic_level_info: subpicture level info sei of #GstH266SubPicLevelInfo.
  * @frame_field_info: frame field info sei of #GstH266FrameFieldInfo.
  * @registered_user_data: registered user data sei of #GstH266RegisteredUserData. (Since: 1.28)
+ * @user_data_unregistered: user data unregistered sei of #GstH274UserDataUnregistered. (Since: 1.30)
+ * @dsc_initialization: digitally signed content initialization sei of #GstH274DigitallySignedContentInitialization. (Since: 1.30)
+ * @dsc_selection: digitally signed content selection sei of #GstH274DigitallySignedContentSelection. (Since: 1.30)
+ * @dsc_verification: digitally signed content verification sei of #GstH274DigitallySignedContentVerification. (Since: 1.30)
  *
  * Structure defining the H266 sei message.
  *
@@ -3241,12 +3291,47 @@ struct _GstH266SEIMessage
     /**
      * GstH266SEIMessage.registered_user_data:
      *
-     * Registered user data sei of #GstH266RegisteredUserData.
+     * Registered user data sei of #GstH274RegisteredUserData.
      *
      * Since: 1.28
      */
     GstH266RegisteredUserData registered_user_data;
 
+    /**
+     * GstH266SEIMessage.payload.user_data_unregistered:
+     *
+     * User Data Unregistered SEI of #GstH274UserDataUnregistered.
+     *
+     * Since: 1.30
+     */
+    GstH274UserDataUnregistered user_data_unregistered;
+
+    /**
+     * GstH266SEIMessage.payload.dsc_initialization:
+     *
+     * Digitally Signed Content Initialization SEI of #GstH274DigitallySignedContentInitialization.
+     *
+     * Since: 1.30
+     */
+    GstH274DigitallySignedContentInitialization dsc_initialization;
+    
+    /**
+     * GstH266SEIMessage.payload.dsc_selection:
+     *
+     * Digitally Signed Content Selection SEI of #GstH274DigitallySignedContentSelection.
+     *
+     * Since: 1.30
+     */
+    GstH274DigitallySignedContentSelection dsc_selection;
+
+    /**
+     * GstH266SEIMessage.payload.dsc_verification:
+     *
+     * Digitally Signed Content Verification SEI of #GstH274DigitallySignedContentVerification.
+     *
+     * Since: 1.30
+     */
+    GstH274DigitallySignedContentVerification dsc_verification;
     /* ... could implement more */
 
     /*< private >*/
@@ -3558,5 +3643,38 @@ GstH266ParserResult gst_h266_parser_parse_decoder_config_record (GstH266Parser *
                                                                  const guint8 * data,
                                                                  gsize size,
                                                                  GstH266DecoderConfigRecord ** config);
+
+GST_CODEC_PARSERS_API
+void gst_h266_sei_split_messages(const GArray *messages,
+                                GArray **prefix,
+                                GArray **suffix);
+
+GST_CODEC_PARSERS_API
+GstMemory * gst_h266_create_sei_memory (guint8 layer_id,
+                                        guint8 temporal_id_plus1,
+                                        guint8 start_code_prefix_length,
+                                        GArray * messages,
+                                        GstH266SEINalUnitType type);
+
+GST_CODEC_PARSERS_API
+GstMemory * gst_h266_create_sei_memory_vvc (guint8 layer_id,
+                                            guint8 temporal_id_plus1,
+                                            guint8 nal_length_size,
+                                            GArray * messages,
+                                            GstH266SEINalUnitType type);
+
+GST_CODEC_PARSERS_API
+GstBuffer * gst_h266_parser_insert_sei (GstH266Parser * parser,
+                                        GstBuffer * au,
+                                        GstMemory * sei);
+
+GST_CODEC_PARSERS_API
+GstBuffer * gst_h266_parser_insert_sei_vvc (GstH266Parser * parser,
+                                            guint8 nal_length_size,
+                                            GstBuffer * au,
+                                            GstMemory * sei);
+GST_CODEC_PARSERS_API
+gboolean            gst_h266_sei_copy       (GstH266SEIMessage       * dest_sei,
+                                             const GstH266SEIMessage * src_sei);
 
 G_END_DECLS

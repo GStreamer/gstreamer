@@ -516,6 +516,32 @@ nal_writer_put_ue (NalWriter * nw, guint32 value)
   return TRUE;
 }
 
+/**
+ * nal_writer_is_byte_aligned:
+ * @nw: a #NalWriter
+ *
+ * Checks if the current position is byte aligned.
+ *
+ * Returns: %TRUE if the current position is byte aligned, %FALSE otherwise.
+ */
+gboolean
+nal_writer_is_byte_aligned (NalWriter * nw)
+{
+  g_return_val_if_fail (nw != NULL, FALSE);
+
+  /* Check if the bit writer is byte aligned */
+  return (GST_BIT_WRITER_BIT_SIZE (&nw->bw) % 8) == 0;
+}
+
+guint
+count_ue_bits (guint32 value)
+{
+  guint leading_zeros;
+  guint rest;
+  count_exp_golomb_bits (value, &leading_zeros, &rest);
+  return leading_zeros + rest;
+}
+
 gboolean
 count_exp_golomb_bits (guint32 value, guint * leading_zeros, guint * rest)
 {

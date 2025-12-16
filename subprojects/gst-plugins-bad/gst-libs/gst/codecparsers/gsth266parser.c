@@ -61,11 +61,82 @@
 #include "config.h"
 #endif
 
+#include "gsth274parser.h"
 #include "gsth266parser.h"
 #include "nalutils.h"
 
 #include <gst/base/gstbytereader.h>
 #include <gst/base/gstbitreader.h>
+
+typedef enum
+{
+  GST_H266_SEI_PLACEMENT_UNKNOWN = 0,
+  GST_H266_SEI_PLACEMENT_PREFIX,
+  GST_H266_SEI_PLACEMENT_SUFFIX,
+  GST_H266_SEI_PLACEMENT_BOTH,
+} GstH266SEIPlacement;
+
+#define GST_H266_SEI_PAYLOAD_TYPE_MAX 256
+G_STATIC_ASSERT (GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION
+    < GST_H266_SEI_PAYLOAD_TYPE_MAX);
+
+/* Placement table: SEI payload type → allowed NAL unit position.
+ * Indexed by payloadType (0-255); unregistered/unknown types default to
+ * GST_H266_SEI_PLACEMENT_UNKNOWN (0). Source: ITU-T H.274 Table A-1 and
+ * ITU-T H.266 Table D-1. Entries with a GstH266SEIPayloadType define use
+ * that symbol; remaining entries use the raw numeric value with a comment. */
+static const GstH266SEIPlacement
+    gst_h266_sei_payload_placement[GST_H266_SEI_PAYLOAD_TYPE_MAX] = {
+  [GST_H266_SEI_BUF_PERIOD] = GST_H266_SEI_PLACEMENT_PREFIX,
+  [GST_H266_SEI_PIC_TIMING] = GST_H266_SEI_PLACEMENT_PREFIX,
+  [3] = GST_H266_SEI_PLACEMENT_BOTH,    /* pan_scan_rect */
+  [GST_H266_SEI_REGISTERED_USER_DATA] = GST_H266_SEI_PLACEMENT_BOTH,
+  [GST_H266_SEI_USER_DATA_UNREGISTERED] = GST_H266_SEI_PLACEMENT_BOTH,
+  [19] = GST_H266_SEI_PLACEMENT_PREFIX, /* film_grain_characteristics */
+  [45] = GST_H266_SEI_PLACEMENT_PREFIX, /* frame_packing_arrangement */
+  [47] = GST_H266_SEI_PLACEMENT_PREFIX, /* display_orientation */
+  [56] = GST_H266_SEI_PLACEMENT_PREFIX, /* green_metadata */
+  [129] = GST_H266_SEI_PLACEMENT_PREFIX,        /* decoded_picture_hash */
+  [GST_H266_SEI_DU_INFO] = GST_H266_SEI_PLACEMENT_PREFIX,
+  [132] = GST_H266_SEI_PLACEMENT_SUFFIX,        /* scalability_dimension_info */
+  [GST_H266_SEI_SCALABLE_NESTING] = GST_H266_SEI_PLACEMENT_BOTH,
+  [137] = GST_H266_SEI_PLACEMENT_PREFIX,        /* mastering_display_colour_volume */
+  [142] = GST_H266_SEI_PLACEMENT_PREFIX,        /* dependent_rap_indication */
+  [144] = GST_H266_SEI_PLACEMENT_PREFIX,        /* content_light_level_info */
+  [145] = GST_H266_SEI_PLACEMENT_PREFIX,        /* alternative_transfer_characteristics */
+  [147] = GST_H266_SEI_PLACEMENT_PREFIX,        /* ambient_viewing_environment */
+  [148] = GST_H266_SEI_PLACEMENT_PREFIX,        /* content_colour_volume */
+  [149] = GST_H266_SEI_PLACEMENT_PREFIX,        /* equirectangular_projection */
+  [150] = GST_H266_SEI_PLACEMENT_PREFIX,        /* generalized_cubemap_projection */
+  [153] = GST_H266_SEI_PLACEMENT_PREFIX,        /* sphere_rotation */
+  [154] = GST_H266_SEI_PLACEMENT_PREFIX,        /* regionwise_packing */
+  [155] = GST_H266_SEI_PLACEMENT_PREFIX,        /* omni_viewport */
+  [156] = GST_H266_SEI_PLACEMENT_PREFIX,        /* rect_region_indicator */
+  [165] = GST_H266_SEI_PLACEMENT_PREFIX,        /* sample_aspect_ratio_info */
+  [GST_H266_SEI_FRAME_FIELD_INFO] = GST_H266_SEI_PLACEMENT_PREFIX,
+  [177] = GST_H266_SEI_PLACEMENT_PREFIX,        /* three_dimensional_reference_displays_info */
+  [179] = GST_H266_SEI_PLACEMENT_PREFIX,        /* multiview_scene_info */
+  [180] = GST_H266_SEI_PLACEMENT_PREFIX,        /* multiview_acquisition_info */
+  [200] = GST_H266_SEI_PLACEMENT_PREFIX,        /* annotated_regions */
+  [201] = GST_H266_SEI_PLACEMENT_PREFIX,        /* shutter_interval_info */
+  [202] = GST_H266_SEI_PLACEMENT_PREFIX,        /* neural_network_post_filter_characteristics */
+  [GST_H266_SEI_SUBPIC_LEVEL_INFO] = GST_H266_SEI_PLACEMENT_PREFIX,
+  [204] = GST_H266_SEI_PLACEMENT_PREFIX,        /* nnpfc_activation */
+  [205] = GST_H266_SEI_PLACEMENT_PREFIX,        /* phase_indication */
+  [206] = GST_H266_SEI_PLACEMENT_PREFIX,        /* parameter_sets_inclusion_indication */
+  [207] = GST_H266_SEI_PLACEMENT_PREFIX,        /* aps_replacement */
+  [208] = GST_H266_SEI_PLACEMENT_PREFIX,        /* extended_drap_indication */
+  [209] = GST_H266_SEI_PLACEMENT_PREFIX,        /* sii_message */
+  [210] = GST_H266_SEI_PLACEMENT_BOTH,  /* frame_number */
+  [211] = GST_H266_SEI_PLACEMENT_BOTH,  /* processing_order */
+  [212] = GST_H266_SEI_PLACEMENT_PREFIX,        /* output_constraint_indication */
+  [GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION] =
+      GST_H266_SEI_PLACEMENT_PREFIX,
+  [GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION] =
+      GST_H266_SEI_PLACEMENT_PREFIX,
+  [GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION] =
+      GST_H266_SEI_PLACEMENT_SUFFIX,
+};
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT gst_h266_debug_category_get()
@@ -1511,55 +1582,6 @@ gst_h266_parser_parse_pic_timing (GstH266PicTiming * pt,
 error:
   GST_WARNING ("error parsing \"Picture timing\"");
   return GST_H266_PARSER_ERROR;
-}
-
-static GstH266ParserResult
-gst_h266_parser_parse_registered_user_data (GstH266Parser * parser,
-    GstH266RegisteredUserData * rud, NalReader * nr, guint payload_size)
-{
-  guint8 *data = NULL;
-  guint i;
-
-  rud->data = NULL;
-  rud->size = 0;
-
-  if (payload_size < 2) {
-    GST_WARNING ("Too small payload size %d", payload_size);
-    return GST_H266_PARSER_BROKEN_DATA;
-  }
-
-  READ_UINT8 (nr, rud->country_code, 8);
-  --payload_size;
-
-  if (rud->country_code == 0xFF) {
-    READ_UINT8 (nr, rud->country_code_extension, 8);
-    --payload_size;
-  } else {
-    rud->country_code_extension = 0;
-  }
-
-  if (payload_size < 1) {
-    GST_WARNING ("No more remaining payload data to store");
-    return GST_H266_PARSER_BROKEN_DATA;
-  }
-
-  data = g_malloc (payload_size);
-  for (i = 0; i < payload_size; ++i) {
-    READ_UINT8 (nr, data[i], 8);
-  }
-
-  GST_MEMDUMP ("SEI user data", data, payload_size);
-
-  rud->data = data;
-  rud->size = payload_size;
-  return GST_H266_PARSER_OK;
-
-error:
-  {
-    GST_WARNING ("error parsing \"Registered User Data\"");
-    g_free (data);
-    return GST_H266_PARSER_ERROR;
-  }
 }
 
 static GstH266ParserResult
@@ -6056,8 +6078,14 @@ gst_h266_parser_parse_sei_message (GstH266SEIMessage * sei, NalReader * nr,
             &parser->buffering_period.payload.buffering_period, nal_tid);
         break;
       case GST_H266_SEI_REGISTERED_USER_DATA:
-        res = gst_h266_parser_parse_registered_user_data (parser,
-            &sei->payload.registered_user_data, nr, payload_size >> 3);
+        res = (GstH266ParserResult)
+            gst_h274_parser_parse_registered_user_data (
+            (GstH274RegisteredUserData *) & sei->payload.registered_user_data,
+            nr, payload_size >> 3);
+        break;
+      case GST_H266_SEI_USER_DATA_UNREGISTERED:
+        res = (GstH266ParserResult) gst_h274_parser_parse_user_data_unregistered
+            (&sei->payload.user_data_unregistered, nr, payload_size >> 3);
         break;
       case GST_H266_SEI_DU_INFO:
         if (!parser->last_buffering_period) {
@@ -6076,6 +6104,15 @@ gst_h266_parser_parse_sei_message (GstH266SEIMessage * sei, NalReader * nr,
         res = gst_h266_parser_parse_subpic_level_info
             (&sei->payload.subpic_level_info, nr);
         break;
+      case GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION:
+        res = (GstH266ParserResult)
+            gst_h274_parser_parse_dsci
+            (&sei->payload.dsc_initialization, nr, payload_size >> 3);
+        break;
+      case GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION:
+        res = (GstH266ParserResult)
+            gst_h274_parser_parse_dscs (&sei->payload.dsc_selection, nr);
+        break;
       default:
         /* Just consume payloadSize bytes, which does not account for
            emulation prevention bytes */
@@ -6089,6 +6126,10 @@ gst_h266_parser_parse_sei_message (GstH266SEIMessage * sei, NalReader * nr,
       case GST_H266_SEI_SCALABLE_NESTING:
         res = gst_h266_parser_parse_scalable_nesting
             (&sei->payload.scalable_nesting, nr);
+        break;
+      case GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION:
+        res = (GstH266ParserResult)
+            gst_h274_parser_parse_dscv (&sei->payload.dsc_verification, nr);
         break;
       default:
         /* Just consume payloadSize bytes, which does not account for
@@ -6140,10 +6181,24 @@ error:
 void
 gst_h266_sei_clear (GstH266SEIMessage * sei)
 {
+  g_return_if_fail (sei != NULL);
+
   if (sei->payloadType == GST_H266_SEI_REGISTERED_USER_DATA) {
-    GstH266RegisteredUserData *rud = &sei->payload.registered_user_data;
-    g_free ((guint8 *) rud->data);
-    rud->data = NULL;
+    gst_h274_user_data_registered_free ((GstH274RegisteredUserData *) &
+        sei->payload.registered_user_data);
+  } else if (sei->payloadType == GST_H266_SEI_USER_DATA_UNREGISTERED) {
+    gst_h274_user_data_unregistered_free (&sei->payload.user_data_unregistered);
+  } else if (sei->payloadType ==
+      GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION) {
+    gst_h274_dsc_initialization_free (&sei->payload.dsc_initialization);
+  } else if (sei->payloadType ==
+      GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION) {
+    gst_h274_dsc_selection_free (&sei->payload.dsc_selection);
+  } else if (sei->payloadType ==
+      GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION) {
+    gst_h274_dsc_verification_free (&sei->payload.dsc_verification);
+  } else {
+    GST_FIXME ("Unsupported SEI type");
   }
   memset (sei, 0, sizeof (GstH266SEIMessage));
 }
@@ -6476,6 +6531,661 @@ error:
   result = GST_H266_PARSER_ERROR;
   gst_h266_decoder_config_record_free (ret);
   return result;
+}
+
+static GstH266SEIPlacement
+gst_h266_sei_get_placement (guint payload_type)
+{
+  if (payload_type < GST_H266_SEI_PAYLOAD_TYPE_MAX)
+    return gst_h266_sei_payload_placement[payload_type];
+  return GST_H266_SEI_PLACEMENT_UNKNOWN;
+}
+
+/**
+ * gst_h266_sei_split_messages:
+ * @messages: a GArray of #GstH266SEIMessage
+ * @prefix: (out): pointer to GArray* for prefix messages
+ * @suffix: (out): pointer to GArray* for suffix messages
+ *
+ * Splits a list of SEI messages into two lists: prefix-allowed and suffix-allowed,
+ * based on placement rules. Caller must free the returned arrays.
+ * If a message is allowed in both prefix and suffix, it will be included in the prefix list.
+ *
+ * Since: 1.30
+ */
+void
+gst_h266_sei_split_messages (const GArray * messages,
+    GArray ** prefix, GArray ** suffix)
+{
+  GArray *tmp_prefix = g_array_new (FALSE, FALSE, sizeof (GstH266SEIMessage));
+  GArray *tmp_suffix = g_array_new (FALSE, FALSE, sizeof (GstH266SEIMessage));
+
+  for (guint i = 0; i < messages->len; i++) {
+    const GstH266SEIMessage *msg =
+        &g_array_index (messages, GstH266SEIMessage, i);
+    GstH266SEIPlacement placement =
+        gst_h266_sei_get_placement (msg->payloadType);
+    if (placement == GST_H266_SEI_PLACEMENT_PREFIX)
+      g_array_append_val (tmp_prefix, *msg);
+    else if (placement == GST_H266_SEI_PLACEMENT_SUFFIX)
+      g_array_append_val (tmp_suffix, *msg);
+    else if (placement == GST_H266_SEI_PLACEMENT_BOTH) {
+      g_array_append_val (tmp_prefix, *msg);
+    }
+  }
+
+  *prefix = tmp_prefix;
+  *suffix = tmp_suffix;
+}
+
+static GstMemory *
+gst_h266_create_sei_memory_internal (guint8 layer_id,
+    guint8 temporal_id_plus1,
+    guint nal_prefix_size,
+    gboolean packetized, GArray * messages, GstH266SEINalUnitType type)
+{
+  NalWriter nw;
+  gboolean have_written_data = FALSE;
+  gboolean nal_header_written = FALSE;
+  guint nal_unit_type = GST_H266_NAL_PREFIX_SEI;
+
+  nal_writer_init (&nw, nal_prefix_size, packetized);
+
+  if (messages->len == 0)
+    goto error;
+
+  GST_DEBUG ("Create SEI nal from array, len: %d, placement: %s", messages->len,
+      type == GST_H266_SEI_NAL_UNIT_TYPE_PREFIX ? "prefix" :
+      type == GST_H266_SEI_NAL_UNIT_TYPE_SUFFIX ? "suffix" : "auto");
+
+  g_assert (type == GST_H266_SEI_NAL_UNIT_TYPE_PREFIX ||
+      type == GST_H266_SEI_NAL_UNIT_TYPE_SUFFIX ||
+      type == GST_H266_SEI_NAL_UNIT_TYPE_AUTO);
+
+  if (type == GST_H266_SEI_NAL_UNIT_TYPE_AUTO) {
+    gboolean has_prefix_only = FALSE;
+    gboolean has_suffix_only = FALSE;
+
+    for (guint i = 0; i < messages->len; i++) {
+      GstH266SEIMessage *msg = &g_array_index (messages, GstH266SEIMessage, i);
+      GstH266SEIPlacement placement =
+          gst_h266_sei_get_placement (msg->payloadType);
+
+      if (placement == GST_H266_SEI_PLACEMENT_PREFIX)
+        has_prefix_only = TRUE;
+      else if (placement == GST_H266_SEI_PLACEMENT_SUFFIX)
+        has_suffix_only = TRUE;
+    }
+
+    if (has_prefix_only && has_suffix_only) {
+      GST_ERROR ("AUTO placement failed: mix of prefix-only and suffix-only "
+          "SEI messages cannot be combined in a single NAL unit");
+      goto error;
+    }
+
+    nal_unit_type = has_suffix_only ? GST_H266_NAL_SUFFIX_SEI :
+        GST_H266_NAL_PREFIX_SEI;
+  } else {
+    nal_unit_type = (type == GST_H266_SEI_NAL_UNIT_TYPE_PREFIX) ?
+        GST_H266_NAL_PREFIX_SEI : GST_H266_NAL_SUFFIX_SEI;
+  }
+
+  for (guint i = 0; i < messages->len; i++) {
+    GstH266SEIMessage *msg = &g_array_index (messages, GstH266SEIMessage, i);
+    guint32 payload_size_data = 0;
+    guint32 payload_type_data = msg->payloadType;
+    gboolean need_align = FALSE;
+
+    GstH266SEIPlacement placement =
+        gst_h266_sei_get_placement (payload_type_data);
+
+    if (placement == GST_H266_SEI_PLACEMENT_UNKNOWN) {
+      GST_WARNING ("SEI payload type %u has invalid placement, skipping",
+          payload_type_data);
+      continue;
+    }
+
+    if (nal_unit_type == GST_H266_NAL_PREFIX_SEI &&
+        placement != GST_H266_SEI_PLACEMENT_PREFIX &&
+        placement != GST_H266_SEI_PLACEMENT_BOTH) {
+      GST_WARNING ("SEI payload type %u not allowed in prefix NAL, skipping",
+          payload_type_data);
+      continue;
+    }
+
+    if (nal_unit_type == GST_H266_NAL_SUFFIX_SEI &&
+        placement != GST_H266_SEI_PLACEMENT_SUFFIX &&
+        placement != GST_H266_SEI_PLACEMENT_BOTH) {
+      GST_WARNING ("SEI payload type %u not allowed in suffix NAL, skipping",
+          payload_type_data);
+      continue;
+    }
+
+    switch (payload_type_data) {
+      case GST_H266_SEI_REGISTERED_USER_DATA:{
+        GstH266RegisteredUserData *rud = &msg->payload.registered_user_data;
+
+        /* itu_t_t35_country_code: 8 bits */
+        payload_size_data = 1;
+        if (rud->country_code == 0xff) {
+          /* itu_t_t35_country_code_extension_byte */
+          payload_size_data++;
+        }
+
+        payload_size_data += rud->size;
+        break;
+      }
+      case GST_H266_SEI_USER_DATA_UNREGISTERED:{
+        GstH274UserDataUnregistered *udu = &msg->payload.user_data_unregistered;
+
+        payload_size_data = 16 + udu->size;
+        break;
+      }
+      case GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION:{
+        GstH274DigitallySignedContentInitialization *dsc_init =
+            &msg->payload.dsc_initialization;
+
+        guint32 payload_size_bits = 0;
+
+        // dsci_id: 8 bits
+        payload_size_bits += 8;
+
+        // dsci_hash_method_type: 8 bits
+        payload_size_bits += 8;
+
+        // dsci_key_retrieval_mode_idc: ue(v)
+        payload_size_bits += count_ue_bits (dsc_init->key_retrieval_mode_idc);
+
+        if (dsc_init->key_retrieval_mode_idc == 1) {
+          // dsci_use_key_register_idx_flag: 1 bit
+          payload_size_bits += 1;
+
+          if (dsc_init->use_key_register_idx_flag) {
+            // dsci_key_register_idx: ue(v)
+            payload_size_bits += count_ue_bits (dsc_init->key_register_idx);
+          }
+        }
+
+        // dsci_content_uuid_present_flag: 1 bit
+        payload_size_bits += 1;
+
+        if (dsc_init->content_uuid_present_flag) {
+          // dsci_content_uuid: 128 bits
+          payload_size_bits += 128;
+        }
+
+        // dsci_num_verification_substreams_minus1: ue(v)
+        payload_size_bits +=
+            count_ue_bits (dsc_init->num_verification_substreams - 1);
+
+        // dsci_ref_substream_flag[i][j]: nested loop
+        for (guint i = 1; i < dsc_init->num_verification_substreams; i++) {
+          for (guint j = 0; j < i; j++) {
+            payload_size_bits += 1;
+          }
+        }
+
+        // dsci_vss_implicit_association_mode_flag: 1 bit
+        // dsci_signed_content_start_flag: 1 bit
+        // dsci_sei_signing_flag: 1 bit
+        payload_size_bits += 3;
+
+        // Byte alignment
+        if (payload_size_bits % 8 != 0) {
+          payload_size_bits += (8 - (payload_size_bits % 8));
+        }
+
+        // dsci_key_source_uri: string with null terminator (byte-aligned)
+        if (dsc_init->key_source_uri != NULL) {
+          gsize str_len = strlen ((const char *) (dsc_init->key_source_uri));
+          payload_size_bits += (str_len + 1) * 8;       // +1 for null terminator
+        }
+
+        // Convert to bytes
+        payload_size_data = (payload_size_bits + 7) / 8;
+
+        break;
+      }
+      case GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION:{
+        // dscs_id (8 bits) + dscs_verification_substream_id (8 bits)
+        payload_size_data = 2;
+        break;
+      }
+      case GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION:{
+        GstH274DigitallySignedContentVerification *dsc_ver =
+            &msg->payload.dsc_verification;
+
+        // dscv_id (8 bits) + dscv_verification_substream_id (8 bits)
+        // + dscv_signature_length_in_octets_minus1 (24 bits) + dscv_signature
+        payload_size_data =
+            2 + 3 + dsc_ver->signature_length_in_octets_minus1 + 1;
+
+        // If verification_substream_id == 0, add 1 byte for the 1-bit flag + padding
+        if (dsc_ver->verification_substream_id == 0) {
+          payload_size_data += 1;
+          need_align = TRUE;
+        }
+
+        break;
+      }
+      default:
+        GST_FIXME ("Unsupported SEI type %d", msg->payloadType);
+        continue;
+    }
+
+    if (!nal_header_written) {
+      /* nal header */
+      /* forbidden_zero_bit */
+      WRITE_UINT8 (&nw, 0, 1);
+      /* nuh_reserved_zero_bit */
+      WRITE_UINT8 (&nw, 0, 1);
+      /* nuh_layer_id */
+      WRITE_UINT8 (&nw, layer_id, 6);
+      /* nal_unit_type */
+      WRITE_UINT8 (&nw, nal_unit_type, 5);
+      /* nuh_temporal_id_plus1 */
+      WRITE_UINT8 (&nw, temporal_id_plus1, 3);
+
+      nal_header_written = TRUE;
+    }
+
+    /* write payload type bytes */
+    while (payload_type_data >= 0xff) {
+      WRITE_UINT8 (&nw, 0xff, 8);
+      payload_type_data -= 0xff;
+    }
+    WRITE_UINT8 (&nw, payload_type_data, 8);
+
+    /* write payload size bytes */
+    while (payload_size_data >= 0xff) {
+      WRITE_UINT8 (&nw, 0xff, 8);
+      payload_size_data -= 0xff;
+    }
+    WRITE_UINT8 (&nw, payload_size_data, 8);
+
+    switch (msg->payloadType) {
+      case GST_H266_SEI_REGISTERED_USER_DATA:
+        GST_DEBUG ("Writing \"Registered user data\" done");
+        if (!gst_h274_write_sei_registered_user_data (&nw,
+                (GstH274RegisteredUserData *) & msg->
+                payload.registered_user_data)) {
+          GST_WARNING ("Failed to write \"Registered user data\"");
+          goto error;
+        }
+        have_written_data = TRUE;
+        break;
+      case GST_H266_SEI_USER_DATA_UNREGISTERED:
+        GST_DEBUG ("Writing \"Unregistered user data\" done");
+        if (!gst_h274_write_sei_user_data_unregistered (&nw,
+                &msg->payload.user_data_unregistered)) {
+          GST_WARNING ("Failed to write \"Unregistered user data\"");
+          goto error;
+        }
+        have_written_data = TRUE;
+        break;
+      case GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION:
+        GST_DEBUG ("Writing \"Digitally Signed Content Initialization\" done");
+        if (!gst_h274_write_sei_dsci (&nw, &msg->payload.dsc_initialization)) {
+          GST_WARNING
+              ("Failed to write \"Digitally Signed Content Initialization\"");
+          goto error;
+        }
+        have_written_data = TRUE;
+        break;
+      case GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION:
+        GST_DEBUG ("Writing \"Digitally Signed Content Selection\" done");
+        if (!gst_h274_write_sei_dscs (&nw, &msg->payload.dsc_selection)) {
+          GST_WARNING
+              ("Failed to write \"Digitally Signed Content Selection\"");
+          goto error;
+        }
+        have_written_data = TRUE;
+        break;
+      case GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION:
+        GST_DEBUG ("Writing \"Digitally Signed Content Verification\" done");
+        if (!gst_h274_write_sei_dscv (&nw, &msg->payload.dsc_verification)) {
+          GST_WARNING
+              ("Failed to write \"Digitally Signed Content Verification\"");
+          goto error;
+        }
+        have_written_data = TRUE;
+        break;
+      default:
+        break;
+    }
+
+    if (need_align && !nal_writer_do_rbsp_trailing_bits (&nw)) {
+      GST_WARNING ("Cannot insert trailing bits");
+      goto error;
+    }
+  }
+
+  if (!have_written_data) {
+    GST_WARNING ("No written sei data");
+    goto error;
+  }
+
+  if (!nal_writer_do_rbsp_trailing_bits (&nw)) {
+    GST_WARNING ("Failed to insert rbsp trailing bits");
+    goto error;
+  }
+
+  return nal_writer_reset_and_get_memory (&nw);
+
+error:
+  nal_writer_reset (&nw);
+
+  return NULL;
+}
+
+/**
+ * gst_h266_create_sei_memory:
+ * @layer_id: a nal unit layer id
+ * @temporal_id_plus1: a nal unit temporal identifier
+ * @start_code_prefix_length: a length of start code prefix, must be 3 or 4
+ * @messages: (transfer none): a GArray of #GstH266SEIMessage
+ * @placement: the desired SEI placement (prefix or suffix)
+ *
+ * Creates raw byte-stream format (a.k.a Annex B type) SEI nal unit data
+ * from @messages
+ *
+ * Returns: a #GstMemory containing a SEI nal unit
+ *
+ * Since: 1.30
+ */
+GstMemory *
+gst_h266_create_sei_memory (guint8 layer_id, guint8 temporal_id_plus1,
+    guint8 start_code_prefix_length, GArray * messages,
+    GstH266SEINalUnitType type)
+{
+  g_return_val_if_fail (start_code_prefix_length == 3
+      || start_code_prefix_length == 4, NULL);
+  g_return_val_if_fail (messages != NULL, NULL);
+  g_return_val_if_fail (messages->len > 0, NULL);
+
+  return gst_h266_create_sei_memory_internal (layer_id, temporal_id_plus1,
+      start_code_prefix_length, FALSE, messages, type);
+}
+
+/**
+ * gst_h266_create_sei_memory_vvc:
+ * @layer_id: a nal unit layer id
+ * @temporal_id_plus1: a nal unit temporal identifier
+ * @nal_length_size: a size of nal length field, allowed range is [1, 4]
+ * @messages: (transfer none): a GArray of #GstH266SEIMessage
+ * @placement: the desired SEI placement (prefix or suffix)
+ *
+ * Creates raw packetized format SEI nal unit data from @messages
+ *
+ * Returns: a #GstMemory containing a PREFIX SEI nal unit
+ *
+ * Since: 1.30
+ */
+GstMemory *
+gst_h266_create_sei_memory_vvc (guint8 layer_id, guint8 temporal_id_plus1,
+    guint8 nal_length_size, GArray * messages, GstH266SEINalUnitType type)
+{
+  return gst_h266_create_sei_memory_internal (layer_id, temporal_id_plus1,
+      nal_length_size, TRUE, messages, type);
+}
+
+static GstBuffer *
+gst_h266_parser_insert_sei_internal (GstH266Parser * parser,
+    guint8 nal_prefix_size, gboolean packetized, GstBuffer * au,
+    GstMemory * sei)
+{
+  GstH266NalUnit nalu;
+  GstH266NalUnit sei_nalu;
+  GstMapInfo info;
+  GstMapInfo sei_info;
+  GstH266ParserResult pres;
+  guint offset = 0;
+  GstBuffer *new_buffer = NULL;
+  GstMemory *new_mem = NULL;
+
+  /* all SEI payload types supported by us need to have the identical
+   * temporal id to that of slice. Parse SEI first and we will
+   * update it if it's required */
+  if (!gst_memory_map (sei, &sei_info, GST_MAP_READ)) {
+    GST_ERROR ("Cannot map sei memory");
+    return NULL;
+  }
+
+  if (packetized) {
+    pres = gst_h266_parser_identify_nalu_vvc (parser,
+        sei_info.data, 0, sei_info.size, nal_prefix_size, &sei_nalu);
+  } else {
+    pres = gst_h266_parser_identify_nalu (parser,
+        sei_info.data, 0, sei_info.size, &sei_nalu);
+  }
+  gst_memory_unmap (sei, &sei_info);
+  if (pres != GST_H266_PARSER_OK && pres != GST_H266_PARSER_NO_NAL_END) {
+    GST_DEBUG ("Failed to identify sei nal unit, ret: %d", pres);
+    return NULL;
+  }
+
+  if (!gst_buffer_map (au, &info, GST_MAP_READ)) {
+    GST_ERROR ("Cannot map au buffer");
+    return NULL;
+  }
+
+  /* Find the offset of the first slice */
+  do {
+    if (packetized) {
+      pres = gst_h266_parser_identify_nalu_vvc (parser,
+          info.data, offset, info.size, nal_prefix_size, &nalu);
+    } else {
+      pres = gst_h266_parser_identify_nalu (parser,
+          info.data, offset, info.size, &nalu);
+    }
+
+    if (pres != GST_H266_PARSER_OK && pres != GST_H266_PARSER_NO_NAL_END) {
+      GST_DEBUG ("Failed to identify nal unit, ret: %d", pres);
+      gst_buffer_unmap (au, &info);
+
+      return NULL;
+    }
+
+    if (nalu.type <= GST_H266_NAL_SLICE_RASL
+        || (nalu.type >= GST_H266_NAL_SLICE_IDR_W_RADL
+            && nalu.type <= GST_H266_NAL_SLICE_GDR)) {
+      GST_DEBUG ("Found slice nal type %d at offset %d", nalu.type,
+          nalu.sc_offset);
+      break;
+    }
+
+    offset = nalu.offset + nalu.size;
+  } while (pres == GST_H266_PARSER_OK);
+  gst_buffer_unmap (au, &info);
+
+  /* found the best position now, create new buffer */
+  new_buffer = gst_buffer_new ();
+
+  /* copy all metadata */
+  if (!gst_buffer_copy_into (new_buffer, au, GST_BUFFER_COPY_METADATA, 0, -1)) {
+    GST_ERROR ("Failed to copy metadata into new buffer");
+    gst_clear_buffer (&new_buffer);
+    goto out;
+  }
+
+  /* check whether we need to update temporal id and layer id.
+   * If it's not matched to slice nalu, update it.
+   */
+  if (sei_nalu.layer_id != nalu.layer_id || sei_nalu.temporal_id_plus1 !=
+      nalu.temporal_id_plus1) {
+    GST_DEBUG
+        ("SEI nal layer id/temporal id (%d/%d) mismatched to slice nal (%d/%d), updating it",
+        sei_nalu.layer_id, sei_nalu.temporal_id_plus1, nalu.layer_id,
+        nalu.temporal_id_plus1);
+    guint16 nalu_header;
+    guint16 layer_id_temporal_id = 0;
+    new_mem = gst_memory_copy (sei, 0, -1);
+
+    if (!gst_memory_map (new_mem, &sei_info, GST_MAP_READWRITE)) {
+      GST_ERROR ("Failed to map new sei memory");
+      gst_memory_unref (new_mem);
+      gst_clear_buffer (&new_buffer);
+      goto out;
+    }
+
+    nalu_header = GST_READ_UINT16_BE (sei_info.data + sei_nalu.offset);
+
+    /*
+     * Clear bits related to layer id and temporal id
+     * NOTE:
+     * bit 0: forbidden_zero_bit
+     * bit 1: nuh_reserved_zero_bit
+     * bits 2 ~ 7: nuh_layer_id
+     * bitts 8 ~ 12: nal_unit_type
+     * bits 13 ~ 15: nuh_temporal_id_plus1 
+     */
+    nalu_header &= 0xC0F8;
+
+    layer_id_temporal_id = ((nalu.layer_id << 8) & 0x3F00);
+    layer_id_temporal_id |= (nalu.temporal_id_plus1 & 0x7);
+
+    nalu_header |= layer_id_temporal_id;
+    GST_DEBUG ("Updated sei nal header from 0x%04x to 0x%04x",
+        GST_READ_UINT16_BE (sei_info.data + sei_nalu.offset), nalu_header);
+    GST_WRITE_UINT16_BE (sei_info.data + sei_nalu.offset, nalu_header);
+    gst_memory_unmap (new_mem, &sei_info);
+  } else {
+    new_mem = gst_memory_ref (sei);
+  }
+
+  g_assert ((sei_nalu.type == GST_H266_NAL_PREFIX_SEI) ||
+      (sei_nalu.type == GST_H266_NAL_SUFFIX_SEI));
+
+  if (sei_nalu.type == GST_H266_NAL_PREFIX_SEI) {
+    /* insert prefix sei */
+    gst_buffer_append_memory (new_buffer, new_mem);
+    /* copy the rest */
+    if (!gst_buffer_copy_into (new_buffer, au, GST_BUFFER_COPY_MEMORY, 0, -1)) {
+      GST_ERROR ("Failed to copy buffer");
+      gst_clear_buffer (&new_buffer);
+      goto out;
+    }
+  } else {
+    /* copy the rest before slice */
+    if (!gst_buffer_copy_into (new_buffer, au, GST_BUFFER_COPY_MEMORY, 0, -1)) {
+      GST_ERROR ("Failed to copy buffer");
+      gst_clear_buffer (&new_buffer);
+      goto out;
+    }
+    /* insert suffix sei */
+    gst_buffer_append_memory (new_buffer, new_mem);
+  }
+
+out:
+  return new_buffer;
+}
+
+/**
+ * gst_h266_parser_insert_sei:
+ * @parser: a #GstH266Parser
+ * @au: (transfer none): a #GstBuffer containing AU data
+ * @sei: (transfer none): a #GstMemory containing a SEI nal
+ *
+ * Copy @au into new #GstBuffer and insert @sei into the #GstBuffer.
+ * The validation for completeness of @au and @sei is caller's responsibility.
+ * Both @au and @sei must be byte-stream formatted
+ *
+ * Returns: (transfer full) (nullable): a SEI inserted #GstBuffer or %NULL
+ *   if cannot figure out proper position to insert a @sei
+ *
+ * Since: 1.30
+ */
+GstBuffer *
+gst_h266_parser_insert_sei (GstH266Parser * parser, GstBuffer * au,
+    GstMemory * sei)
+{
+  g_return_val_if_fail (parser != NULL, NULL);
+  g_return_val_if_fail (GST_IS_BUFFER (au), NULL);
+  g_return_val_if_fail (sei != NULL, NULL);
+
+  /* the size of start code prefix (3 or 4) is not matter since it will be
+   * scanned */
+  return gst_h266_parser_insert_sei_internal (parser, 4, FALSE, au, sei);
+}
+
+/**
+ * gst_h266_parser_insert_sei_vvc:
+ * @parser: a #GstH266Parser
+ * @nal_length_size: a size of nal length field, allowed range is [1, 4]
+ * @au: (transfer none): a #GstBuffer containing AU data
+ * @sei: (transfer none): a #GstMemory containing a SEI nal
+ *
+ * Copy @au into new #GstBuffer and insert @sei into the #GstBuffer.
+ * The validation for completeness of @au and @sei is caller's responsibility.
+ * Nal prefix type of both @au and @sei must be packetized, and
+ * also the size of nal length field must be identical to @nal_length_size
+ *
+ * Returns: (transfer full) (nullable): a SEI inserted #GstBuffer or %NULL
+ *   if cannot figure out proper position to insert a @sei
+ *
+ * Since: 1.30
+ */
+GstBuffer *
+gst_h266_parser_insert_sei_vvc (GstH266Parser * parser, guint8 nal_length_size,
+    GstBuffer * au, GstMemory * sei)
+{
+  g_return_val_if_fail (parser != NULL, NULL);
+  g_return_val_if_fail (nal_length_size > 0 && nal_length_size < 5, NULL);
+  g_return_val_if_fail (GST_IS_BUFFER (au), NULL);
+  g_return_val_if_fail (sei != NULL, NULL);
+
+  return gst_h266_parser_insert_sei_internal (parser, nal_length_size, TRUE,
+      au, sei);
+}
+
+/**
+ * gst_h266_sei_copy:
+ * @dst_sei: The destination #GstH266SEIMessage to copy into
+ * @src_sei: The source #GstH266SEIMessage to copy from
+ *
+ * Copies @src_sei into @dst_sei
+ *
+ * Returns: %TRUE if everything went fine, %FALSE otherwise
+ * 
+ * Since: 1.30
+ */
+gboolean
+gst_h266_sei_copy (GstH266SEIMessage * dst_sei,
+    const GstH266SEIMessage * src_sei)
+{
+  g_return_val_if_fail (dst_sei != NULL, FALSE);
+  g_return_val_if_fail (src_sei != NULL, FALSE);
+
+  gst_h266_sei_clear (dst_sei);
+
+  *dst_sei = *src_sei;
+
+  if (dst_sei->payloadType == GST_H266_SEI_REGISTERED_USER_DATA) {
+    gst_h274_user_data_registered_copy ((GstH274RegisteredUserData *) &
+        dst_sei->payload.registered_user_data,
+        (GstH274RegisteredUserData *) & src_sei->payload.registered_user_data);
+  } else if (dst_sei->payloadType == GST_H266_SEI_USER_DATA_UNREGISTERED) {
+    gst_h274_user_data_unregistered_copy (&dst_sei->
+        payload.user_data_unregistered,
+        &src_sei->payload.user_data_unregistered);
+  } else if (dst_sei->payloadType ==
+      GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION) {
+    gst_h274_dsc_initialization_copy (&dst_sei->payload.dsc_initialization,
+        &src_sei->payload.dsc_initialization);
+  } else if (dst_sei->payloadType ==
+      GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION) {
+    gst_h274_dsc_selection_copy (&dst_sei->payload.dsc_selection,
+        &src_sei->payload.dsc_selection);
+  } else if (dst_sei->payloadType ==
+      GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION) {
+    gst_h274_dsc_verification_copy (&dst_sei->payload.dsc_verification,
+        &src_sei->payload.dsc_verification);
+  } else {
+    GST_FIXME ("Unsupported SEI type");
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 #undef READ_CONFIG_UINT8

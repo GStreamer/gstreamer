@@ -81,6 +81,201 @@ static const guint8 h266_128x128_slice_idr_n_lp[] = {
   0xd2, 0xb9, 0xa5, 0x67, 0xe3, 0xe0, 0x29, 0x2f, 0xcd, 0x3f, 0xea, 0xdf, 0xe0
 };
 
+static guint8 h266_sei_user_data_registered[] = {
+  0x00, 0x00, 0x00, 0x01,       // Start code (4 bytes) [0-3]
+  0x00, 0xB9,                   // NAL header (2 bytes) [4-5]
+  0x04,                         // Payload type (1 byte) [6]
+  0x0C,                         // Payload size: 12 bytes [7]
+  0xB5,                         // Country code [8]
+  0x00, 0x31,                   // User identifier [9-10]
+  'G', 'S', 't', 'r', 'e', 'a', 'm', 'e', 'r',  // String [11-19] (9 bytes)
+  0x80                          // RBSP trailing [20]
+};
+
+static guint8 h266_sei_user_data_unregistered[] = {
+  0x00, 0x00, 0x00, 0x01,       // Start code (4 bytes) [0-3]
+  0x00, 0xB9,                   // NAL header (2 bytes) [4-5]
+  0x05,                         // Payload type: Unregistered User Data (1 byte) [6]
+  0x18,                         // Payload size: 24 bytes (1 byte) [7]
+
+  // UUID (16 bytes) [8-23]
+  0x4D, 0x49, 0x53, 0x50, 0x6D, 0x69, 0x63, 0x72,
+  0x6F, 0x73, 0x65, 0x63, 0x74, 0x69, 0x6D, 0x65,
+
+  // User data (8 bytes) [24-31]
+  'h', '2', '6', '6', ' ', 't', 'e', 's',
+
+  0x80                          // RBSP trailing bits (1 byte) [32]
+};
+
+typedef gboolean (*H266SEICheckFunc) (gconstpointer a, gconstpointer b);
+
+static gboolean
+check_h266_sei_user_data_registered (const GstH274RegisteredUserData * a,
+    const GstH274RegisteredUserData * b)
+{
+  if (a->country_code != b->country_code)
+    return FALSE;
+
+  if ((a->country_code == 0xff) &&
+      (a->country_code_extension != b->country_code_extension))
+    return FALSE;
+
+  if (a->size != b->size)
+    return FALSE;
+
+  return !memcmp (a->data, b->data, a->size);
+}
+
+static gboolean
+check_h266_sei_user_data_unregistered (const GstH274UserDataUnregistered * a,
+    const GstH274UserDataUnregistered * b)
+{
+  return a->size == b->size &&
+      !memcmp (a->uuid, b->uuid, sizeof (a->uuid)) &&
+      !memcmp (a->data, b->data, a->size);
+}
+
+static guint8 h266_sei_dsc_initialization[] = {
+  0x00, 0x00, 0x00, 0x01,       // Start code (4 bytes)
+  0x00, 0xB9,                   // NAL header (2 bytes): Prefix SEI
+  0xDC,                         // Payload type: DSC Initialization (220)
+  0x13,                         // Payload size: 19 bytes
+
+  0x01,                         // dsci_id = 1
+  0x00,                         // dsci_hash_method_type = 0
+  0xA8,                         // Bit-packed fields
+
+  // "https://key.com\0" (16 bytes)
+  0x68, 0x74, 0x74, 0x70, 0x73, 0x3a, 0x2f, 0x2f,
+  0x6b, 0x65, 0x79, 0x2e, 0x63, 0x6f, 0x6d, 0x00,
+
+  0x80                          // RBSP trailing bits
+};
+
+static guint8 h266_sei_dsc_selection[] = {
+  0x00, 0x00, 0x00, 0x01,       // Start code (4 bytes)
+  0x00, 0xB9,                   // NAL header (2 bytes)
+  0xDD,                         // Payload type: DSC Selection (221)
+  0x02,                         // Payload size: 2 bytes
+
+  0x01,                         // dscs_id = 1 (u(8) = 1 byte)
+  0x00,                         // dscs_verification_substream_id = 0 (u(8) = 1 byte)
+
+  0x80                          // RBSP trailing bits
+};
+
+static guint8 h266_sei_dsc_verification[] = {
+  0x00, 0x00, 0x00, 0x01,       // Start code (4 bytes)
+  0x00, 0xC1,                   // NAL header (2 bytes)
+  0xDE,                         // Payload type: DSC Verification (222)
+  0x26,                         // Payload size: 38 bytes (0x26)
+
+  // === PAYLOAD STARTS (37 bytes) ===
+  0x01,                         // dscv_id = 1 (1 byte)
+  0x00,                         // dscv_verification_substream_id = 0 (1 byte)
+  // 0x00 0x00 0x1F + emulation prevention bytes
+  0x00, 0x03, 0x00, 0x1F,       // dscv_signature_length_in_octets_minus1 = 31 (32 bytes signature)
+
+  // dscv_signature (32 bytes) - Example SHA-256 signature
+  0x6B, 0x86, 0xB2, 0x73, 0xFF, 0x34, 0xFC, 0xE1,
+  0x9D, 0x6B, 0x80, 0x4E, 0xFF, 0x5A, 0x3F, 0x57,
+  0x46, 0xAD, 0xA4, 0xEB, 0xE2, 0x4C, 0x8C, 0xE8,
+  0x81, 0x1A, 0xC7, 0xB7, 0x74, 0xFA, 0x73, 0xD9,
+  0xc0,
+
+  // === PAYLOAD ENDS (37 bytes) ===
+
+  0x80,                         // RBSP trailing bits
+};
+
+// Add check functions after check_h266_sei_user_data_unregistered:
+
+static gboolean
+check_h266_sei_dsc_initialization (const
+    GstH274DigitallySignedContentInitialization * a,
+    const GstH274DigitallySignedContentInitialization * b)
+{
+  if (a->id != b->id)
+    return FALSE;
+  if (a->hash_method_type != b->hash_method_type)
+    return FALSE;
+  if (a->key_retrieval_mode_idc != b->key_retrieval_mode_idc)
+    return FALSE;
+  if (a->use_key_register_idx_flag != b->use_key_register_idx_flag)
+    return FALSE;
+  if (a->content_uuid_present_flag != b->content_uuid_present_flag)
+    return FALSE;
+  if (a->num_verification_substreams != b->num_verification_substreams)
+    return FALSE;
+  if (a->vss_implicit_association_mode_flag !=
+      b->vss_implicit_association_mode_flag)
+    return FALSE;
+  if (a->signed_content_start_flag != b->signed_content_start_flag)
+    return FALSE;
+  if (a->sei_signing_flag != b->sei_signing_flag)
+    return FALSE;
+
+  if (a->content_uuid_present_flag) {
+    if (memcmp (a->content_uuid, b->content_uuid, 16) != 0)
+      return FALSE;
+  }
+
+  if (a->ref_substream_flag_len != b->ref_substream_flag_len)
+    return FALSE;
+
+  if (a->ref_substream_flag_len > 0) {
+    if (!a->ref_substream_flag || !b->ref_substream_flag)
+      return FALSE;
+    if (memcmp (a->ref_substream_flag, b->ref_substream_flag,
+            a->ref_substream_flag_len) != 0)
+      return FALSE;
+  }
+
+  if ((a->key_source_uri != NULL) != (b->key_source_uri != NULL))
+    return FALSE;
+  if (a->key_source_uri && strcmp ((const char *) a->key_source_uri,
+          (const char *) b->key_source_uri) != 0)
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+check_h266_sei_dsc_selection (const GstH274DigitallySignedContentSelection * a,
+    const GstH274DigitallySignedContentSelection * b)
+{
+  return a->id == b->id &&
+      a->verification_substream_id == b->verification_substream_id;
+}
+
+static gboolean
+check_h266_sei_dsc_verification (const GstH274DigitallySignedContentVerification
+    * a, const GstH274DigitallySignedContentVerification * b)
+{
+  if (a->id != b->id)
+    return FALSE;
+  if (a->verification_substream_id != b->verification_substream_id)
+    return FALSE;
+  if (a->signature_length_in_octets_minus1 !=
+      b->signature_length_in_octets_minus1)
+    return FALSE;
+
+  if (a->signature_length_in_octets_minus1 + 1 > 0) {
+    if (!a->signature || !b->signature)
+      return FALSE;
+    if (memcmp (a->signature, b->signature,
+            a->signature_length_in_octets_minus1 + 1) != 0)
+      return FALSE;
+  }
+
+  if (a->verification_substream_id == 0 &&
+      a->signed_content_end_flag != b->signed_content_end_flag)
+    return FALSE;
+
+  return TRUE;
+}
+
 GST_START_TEST (test_h266_parse_rasl_eos_rasl_eob)
 {
   GstH266ParserResult res;
@@ -524,6 +719,538 @@ GST_START_TEST (test_h266_parse_decoder_config_record_gci)
 
 GST_END_TEST;
 
+/* SEI tests */
+
+GST_START_TEST (test_h266_sei_registered_user_data)
+{
+  GstH266ParserResult res;
+  GstH266NalUnit nalu;
+  GArray *messages = NULL;
+  GstH266SEIMessage *sei;
+  GstH266SEIMessage other_sei;
+  GstH274RegisteredUserData *user_data;
+  GstH274RegisteredUserData *other_user_data;
+  GstH266Parser *parser = gst_h266_parser_new ();
+  guint payload_size;
+
+  res = gst_h266_parser_identify_nalu_unchecked (parser,
+      h266_sei_user_data_registered, 0,
+      G_N_ELEMENTS (h266_sei_user_data_registered), &nalu);
+  assert_equals_int (res, GST_H266_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H266_NAL_PREFIX_SEI);
+
+  res = gst_h266_parser_parse_sei (parser, &nalu, &messages);
+  assert_equals_int (res, GST_H266_PARSER_OK);
+  fail_unless (messages != NULL);
+  assert_equals_int (messages->len, 1);
+
+  sei = &g_array_index (messages, GstH266SEIMessage, 0);
+  assert_equals_int (sei->payloadType, GST_H266_SEI_REGISTERED_USER_DATA);
+
+  user_data = (GstH274RegisteredUserData *) & sei->payload.registered_user_data;
+  /* start code prefix 4 bytes
+   * nalu header 2 bytes
+   * payload type 1 byte
+   * payload size 1 byte
+   * country code 1 byte (0xb5)
+   */
+  payload_size = h266_sei_user_data_registered[4 + 2 + 1];
+
+  /* excluding country_code byte */
+  assert_equals_int (payload_size - 1, user_data->size);
+  fail_if (memcmp (user_data->data,
+          &h266_sei_user_data_registered[4 + 2 + 1 + 1 + 1], user_data->size));
+
+  memset (&other_sei, 0, sizeof (GstH266SEIMessage));
+  fail_unless (gst_h266_sei_copy (&other_sei, sei));
+  assert_equals_int (other_sei.payloadType, GST_H266_SEI_REGISTERED_USER_DATA);
+
+  other_user_data =
+      (GstH274RegisteredUserData *) & other_sei.payload.registered_user_data;
+  fail_if (memcmp (user_data->data, other_user_data->data, user_data->size));
+
+  /* Free SEI messages before unreffing array */
+  for (guint i = 0; i < messages->len; i++) {
+    GstH266SEIMessage *msg = &g_array_index (messages, GstH266SEIMessage, i);
+    gst_h266_sei_clear (msg);
+  }
+
+  g_array_unref (messages);
+  gst_h266_sei_clear (&other_sei);
+  gst_h266_parser_free (parser);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_h266_sei_user_data_unregistered)
+{
+  GstH266ParserResult res;
+  GstH266NalUnit nalu;
+  GArray *messages = NULL;
+  GstH266SEIMessage *sei;
+  GstH266SEIMessage other_sei;
+  GstH274UserDataUnregistered *user_data;
+  GstH274UserDataUnregistered *other_user_data;
+  GstH266Parser *parser = gst_h266_parser_new ();
+
+  res = gst_h266_parser_identify_nalu_unchecked (parser,
+      h266_sei_user_data_unregistered, 0,
+      G_N_ELEMENTS (h266_sei_user_data_unregistered), &nalu);
+  assert_equals_int (res, GST_H266_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H266_NAL_PREFIX_SEI);
+
+  res = gst_h266_parser_parse_sei (parser, &nalu, &messages);
+  assert_equals_int (res, GST_H266_PARSER_OK);
+  fail_unless (messages != NULL);
+  assert_equals_int (messages->len, 1);
+
+  sei = &g_array_index (messages, GstH266SEIMessage, 0);
+  assert_equals_int (sei->payloadType, GST_H266_SEI_USER_DATA_UNREGISTERED);
+
+  user_data = &sei->payload.user_data_unregistered;
+  assert_equals_int (user_data->size, 8);
+
+  /* Verify UUID */
+  fail_if (memcmp (user_data->uuid,
+          &h266_sei_user_data_unregistered[4 + 2 + 1 + 1], 16));
+
+  /* Verify payload data */
+  fail_if (memcmp (user_data->data,
+          &h266_sei_user_data_unregistered[4 + 2 + 1 + 1 + 16],
+          user_data->size));
+
+  memset (&other_sei, 0, sizeof (GstH266SEIMessage));
+  fail_unless (gst_h266_sei_copy (&other_sei, sei));
+  assert_equals_int (other_sei.payloadType,
+      GST_H266_SEI_USER_DATA_UNREGISTERED);
+
+  other_user_data = &other_sei.payload.user_data_unregistered;
+  fail_if (memcmp (user_data->uuid, other_user_data->uuid, 16));
+  fail_if (memcmp (user_data->data, other_user_data->data, user_data->size));
+
+  for (guint i = 0; i < messages->len; i++) {
+    GstH266SEIMessage *msg = &g_array_index (messages, GstH266SEIMessage, i);
+    gst_h266_sei_clear (msg);
+  }
+
+  g_array_unref (messages);
+  gst_h266_sei_clear (&other_sei);
+  gst_h266_parser_free (parser);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_h266_create_sei)
+{
+  GstH266Parser *parser;
+  GstH266ParserResult parse_ret;
+  GstH266NalUnit nalu;
+  GArray *msg_array = NULL;
+  GstMemory *mem;
+  gint i;
+  GstMapInfo info;
+  GstDebugCategory *cat = NULL;
+  GST_DEBUG_CATEGORY_INIT (cat, "dumpcat", 0, "data dump debug category");
+  struct
+  {
+    guint8 *raw_data;
+    guint len;
+    GstH266SEIPayloadType type;
+    GstH266SEIMessage parsed_message;
+    H266SEICheckFunc check_func;
+  } test_list[] = {
+    /* *INDENT-OFF* */
+    {h266_sei_user_data_registered, G_N_ELEMENTS (h266_sei_user_data_registered),
+        GST_H266_SEI_REGISTERED_USER_DATA, {0,},
+        (H266SEICheckFunc) check_h266_sei_user_data_registered},
+    {h266_sei_user_data_unregistered, G_N_ELEMENTS (h266_sei_user_data_unregistered),
+        GST_H266_SEI_USER_DATA_UNREGISTERED, {0,},
+        (H266SEICheckFunc) check_h266_sei_user_data_unregistered},
+    {h266_sei_dsc_initialization, G_N_ELEMENTS (h266_sei_dsc_initialization),
+        GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION, {0,},
+        (H266SEICheckFunc) check_h266_sei_dsc_initialization},
+    {h266_sei_dsc_selection, G_N_ELEMENTS (h266_sei_dsc_selection),
+        GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION, {0,},
+        (H266SEICheckFunc) check_h266_sei_dsc_selection},
+    /* *INDENT-ON* */
+  };
+
+  parser = gst_h266_parser_new ();
+
+  /* test single sei message per sei nal unit */
+  for (i = 0; i < G_N_ELEMENTS (test_list); i++) {
+    gsize nal_size;
+
+    parse_ret = gst_h266_parser_identify_nalu_unchecked (parser,
+        test_list[i].raw_data, 0, test_list[i].len, &nalu);
+    assert_equals_int (parse_ret, GST_H266_PARSER_OK);
+    assert_equals_int (nalu.type, GST_H266_NAL_PREFIX_SEI);
+
+    parse_ret = gst_h266_parser_parse_sei (parser, &nalu, &msg_array);
+    assert_equals_int (parse_ret, GST_H266_PARSER_OK);
+    assert_equals_int (msg_array->len, 1);
+
+    /* test bytestream */
+    mem = gst_h266_create_sei_memory (nalu.layer_id,
+        nalu.temporal_id_plus1, 4, msg_array, GST_H266_SEI_NAL_UNIT_TYPE_AUTO);
+    fail_unless (mem != NULL);
+    fail_unless (gst_memory_map (mem, &info, GST_MAP_READ));
+    GST_CAT_MEMDUMP (cat, "created sei nal", info.data, info.size);
+    GST_CAT_MEMDUMP (cat, "original sei nal", test_list[i].raw_data,
+        test_list[i].len);
+    assert_equals_int (info.size, test_list[i].len);
+    fail_if (memcmp (info.data, test_list[i].raw_data, test_list[i].len));
+    gst_memory_unmap (mem, &info);
+    gst_memory_unref (mem);
+
+    /* test packetized */
+    mem = gst_h266_create_sei_memory_vvc (nalu.layer_id,
+        nalu.temporal_id_plus1, 4, msg_array, GST_H266_SEI_NAL_UNIT_TYPE_AUTO);
+    fail_unless (mem != NULL);
+    fail_unless (gst_memory_map (mem, &info, GST_MAP_READ));
+    assert_equals_int (info.size, test_list[i].len);
+    fail_if (memcmp (info.data + 4, test_list[i].raw_data + 4,
+            test_list[i].len - 4));
+    nal_size = GST_READ_UINT32_BE (info.data);
+    assert_equals_int (nal_size, info.size - 4);
+    gst_memory_unmap (mem, &info);
+    gst_memory_unref (mem);
+
+    /* store parsed SEI for following tests */
+    fail_unless (gst_h266_sei_copy (&test_list[i].parsed_message,
+            &g_array_index (msg_array, GstH266SEIMessage, 0)));
+
+    for (guint j = 0; j < msg_array->len; j++) {
+      GstH266SEIMessage *msg = &g_array_index (msg_array, GstH266SEIMessage, j);
+      gst_h266_sei_clear (msg);
+    }
+
+    g_array_unref (msg_array);
+  }
+
+  /* test multiple SEI messages in a nal unit */
+  msg_array = g_array_new (FALSE, FALSE, sizeof (GstH266SEIMessage));
+  for (i = 0; i < G_N_ELEMENTS (test_list); i++)
+    g_array_append_val (msg_array, test_list[i].parsed_message);
+
+  mem = gst_h266_create_sei_memory (nalu.layer_id,
+      nalu.temporal_id_plus1, 4, msg_array, GST_H266_SEI_NAL_UNIT_TYPE_AUTO);
+  fail_unless (mem != NULL);
+  g_array_unref (msg_array);
+
+  /* parse sei message from buffer */
+  fail_unless (gst_memory_map (mem, &info, GST_MAP_READ));
+  parse_ret = gst_h266_parser_identify_nalu_unchecked (parser,
+      info.data, 0, info.size, &nalu);
+  assert_equals_int (parse_ret, GST_H266_PARSER_OK);
+  parse_ret = gst_h266_parser_parse_sei (parser, &nalu, &msg_array);
+  gst_memory_unmap (mem, &info);
+  gst_memory_unref (mem);
+
+  assert_equals_int (parse_ret, GST_H266_PARSER_OK);
+  assert_equals_int (msg_array->len, G_N_ELEMENTS (test_list));
+  for (i = 0; i < msg_array->len; i++) {
+    GstH266SEIMessage *msg = &g_array_index (msg_array, GstH266SEIMessage, i);
+
+    assert_equals_int (msg->payloadType, test_list[i].type);
+    fail_unless (test_list[i].check_func (&msg->payload,
+            &test_list[i].parsed_message.payload));
+  }
+
+  for (i = 0; i < msg_array->len; i++) {
+    GstH266SEIMessage *msg = &g_array_index (msg_array, GstH266SEIMessage, i);
+    gst_h266_sei_clear (msg);
+  }
+
+  /* clean up */
+  for (i = 0; i < G_N_ELEMENTS (test_list); i++)
+    gst_h266_sei_clear (&test_list[i].parsed_message);
+
+  g_array_unref (msg_array);
+  gst_h266_parser_free (parser);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_h266_create_sei_suffix)
+{
+  GstH266Parser *parser;
+  GstH266ParserResult parse_ret;
+  GstH266NalUnit nalu;
+  GArray *msg_array = NULL;
+  GstMemory *mem;
+  gint i;
+  GstMapInfo info;
+  struct
+  {
+    guint8 *raw_data;
+    guint len;
+    GstH266SEIPayloadType type;
+    GstH266SEIMessage parsed_message;
+    H266SEICheckFunc check_func;
+  } test_list[] = {
+    {h266_sei_dsc_verification, G_N_ELEMENTS (h266_sei_dsc_verification),
+          GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION, {0,},
+        (H266SEICheckFunc) check_h266_sei_dsc_verification},
+  };
+
+  parser = gst_h266_parser_new ();
+
+  /* Leave it prepared for more suffix SEIs
+   * test single sei message per sei nal unit */
+  for (i = 0; i < G_N_ELEMENTS (test_list); i++) {
+    gsize nal_size;
+
+    parse_ret = gst_h266_parser_identify_nalu_unchecked (parser,
+        test_list[i].raw_data, 0, test_list[i].len, &nalu);
+    assert_equals_int (parse_ret, GST_H266_PARSER_OK);
+    assert_equals_int (nalu.type, GST_H266_NAL_SUFFIX_SEI);
+
+    parse_ret = gst_h266_parser_parse_sei (parser, &nalu, &msg_array);
+    assert_equals_int (parse_ret, GST_H266_PARSER_OK);
+    assert_equals_int (msg_array->len, 1);
+
+    GstDebugCategory *cat = NULL;
+    GST_DEBUG_CATEGORY_INIT (cat, "dumpcat", 0, "data dump debug category");
+
+    /* test bytestream */
+    mem = gst_h266_create_sei_memory (nalu.layer_id,
+        nalu.temporal_id_plus1, 4, msg_array, GST_H266_SEI_NAL_UNIT_TYPE_AUTO);
+    fail_unless (mem != NULL);
+    fail_unless (gst_memory_map (mem, &info, GST_MAP_READ));
+    GST_CAT_MEMDUMP (cat, "created sei nal", info.data, info.size);
+    GST_CAT_MEMDUMP (cat, "original sei nal", test_list[i].raw_data,
+        test_list[i].len);
+    assert_equals_int (info.size, test_list[i].len);
+    fail_if (memcmp (info.data, test_list[i].raw_data, test_list[i].len));
+    gst_memory_unmap (mem, &info);
+    gst_memory_unref (mem);
+
+    /* test packetized */
+    mem = gst_h266_create_sei_memory_vvc (nalu.layer_id,
+        nalu.temporal_id_plus1, 4, msg_array, GST_H266_SEI_NAL_UNIT_TYPE_AUTO);
+    fail_unless (mem != NULL);
+    fail_unless (gst_memory_map (mem, &info, GST_MAP_READ));
+    assert_equals_int (info.size, test_list[i].len);
+    fail_if (memcmp (info.data + 4, test_list[i].raw_data + 4,
+            test_list[i].len - 4));
+    nal_size = GST_READ_UINT32_BE (info.data);
+    assert_equals_int (nal_size, info.size - 4);
+    gst_memory_unmap (mem, &info);
+    gst_memory_unref (mem);
+
+    /* store parsed SEI for following tests */
+    fail_unless (gst_h266_sei_copy (&test_list[i].parsed_message,
+            &g_array_index (msg_array, GstH266SEIMessage, 0)));
+
+    for (guint j = 0; j < msg_array->len; j++) {
+      GstH266SEIMessage *msg = &g_array_index (msg_array, GstH266SEIMessage, j);
+      gst_h266_sei_clear (msg);
+    }
+
+    g_array_unref (msg_array);
+  }
+
+  /* test multiple SEI messages in a nal unit */
+  msg_array = g_array_new (FALSE, FALSE, sizeof (GstH266SEIMessage));
+  for (i = 0; i < G_N_ELEMENTS (test_list); i++)
+    g_array_append_val (msg_array, test_list[i].parsed_message);
+
+  mem = gst_h266_create_sei_memory (nalu.layer_id,
+      nalu.temporal_id_plus1, 4, msg_array, GST_H266_SEI_NAL_UNIT_TYPE_AUTO);
+  fail_unless (mem != NULL);
+  g_array_unref (msg_array);
+
+  /* parse sei message from buffer */
+  fail_unless (gst_memory_map (mem, &info, GST_MAP_READ));
+  parse_ret = gst_h266_parser_identify_nalu_unchecked (parser,
+      info.data, 0, info.size, &nalu);
+  assert_equals_int (parse_ret, GST_H266_PARSER_OK);
+  parse_ret = gst_h266_parser_parse_sei (parser, &nalu, &msg_array);
+  gst_memory_unmap (mem, &info);
+  gst_memory_unref (mem);
+
+  assert_equals_int (parse_ret, GST_H266_PARSER_OK);
+  assert_equals_int (msg_array->len, G_N_ELEMENTS (test_list));
+  for (i = 0; i < msg_array->len; i++) {
+    GstH266SEIMessage *msg = &g_array_index (msg_array, GstH266SEIMessage, i);
+
+    assert_equals_int (msg->payloadType, test_list[i].type);
+    fail_unless (test_list[i].check_func (&msg->payload,
+            &test_list[i].parsed_message.payload));
+  }
+
+  for (i = 0; i < msg_array->len; i++) {
+    GstH266SEIMessage *msg = &g_array_index (msg_array, GstH266SEIMessage, i);
+    gst_h266_sei_clear (msg);
+  }
+
+  /* clean up */
+  for (i = 0; i < G_N_ELEMENTS (test_list); i++)
+    gst_h266_sei_clear (&test_list[i].parsed_message);
+
+  g_array_unref (msg_array);
+  gst_h266_parser_free (parser);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_h266_sei_dsc_initialization)
+{
+  GstH266ParserResult res;
+  GstH266NalUnit nalu;
+  GArray *messages = NULL;
+  GstH266SEIMessage *sei;
+  GstH266SEIMessage other_sei;
+  GstH274DigitallySignedContentInitialization *dsc_init;
+  GstH274DigitallySignedContentInitialization *other_dsc_init;
+  GstH266Parser *parser = gst_h266_parser_new ();
+
+  res = gst_h266_parser_identify_nalu_unchecked (parser,
+      h266_sei_dsc_initialization, 0,
+      G_N_ELEMENTS (h266_sei_dsc_initialization), &nalu);
+  assert_equals_int (res, GST_H266_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H266_NAL_PREFIX_SEI);
+
+  res = gst_h266_parser_parse_sei (parser, &nalu, &messages);
+  assert_equals_int (res, GST_H266_PARSER_OK);
+  fail_unless (messages != NULL);
+  assert_equals_int (messages->len, 1);
+
+  sei = &g_array_index (messages, GstH266SEIMessage, 0);
+  assert_equals_int (sei->payloadType,
+      GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION);
+
+  dsc_init = &sei->payload.dsc_initialization;
+  assert_equals_int (dsc_init->id, 1);
+  assert_equals_int (dsc_init->hash_method_type, 0);
+  assert_equals_int (dsc_init->num_verification_substreams, 1);
+  fail_unless (dsc_init->key_source_uri != NULL);
+  fail_unless (strcmp ((const char *) dsc_init->key_source_uri,
+          "https://key.com") == 0);
+
+  memset (&other_sei, 0, sizeof (GstH266SEIMessage));
+  fail_unless (gst_h266_sei_copy (&other_sei, sei));
+  assert_equals_int (other_sei.payloadType,
+      GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION);
+
+  other_dsc_init = &other_sei.payload.dsc_initialization;
+  fail_unless (check_h266_sei_dsc_initialization (dsc_init, other_dsc_init));
+
+  for (guint i = 0; i < messages->len; i++) {
+    GstH266SEIMessage *msg = &g_array_index (messages, GstH266SEIMessage, i);
+    gst_h266_sei_clear (msg);
+  }
+
+  g_array_unref (messages);
+  gst_h266_sei_clear (&other_sei);
+  gst_h266_parser_free (parser);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_h266_sei_dsc_selection)
+{
+  GstH266ParserResult res;
+  GstH266NalUnit nalu;
+  GArray *messages = NULL;
+  GstH266SEIMessage *sei;
+  GstH266SEIMessage other_sei;
+  GstH274DigitallySignedContentSelection *dsc_sel;
+  GstH274DigitallySignedContentSelection *other_dsc_sel;
+  GstH266Parser *parser = gst_h266_parser_new ();
+
+  res = gst_h266_parser_identify_nalu_unchecked (parser,
+      h266_sei_dsc_selection, 0, G_N_ELEMENTS (h266_sei_dsc_selection), &nalu);
+  assert_equals_int (res, GST_H266_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H266_NAL_PREFIX_SEI);
+
+  res = gst_h266_parser_parse_sei (parser, &nalu, &messages);
+  assert_equals_int (res, GST_H266_PARSER_OK);
+  fail_unless (messages != NULL);
+  assert_equals_int (messages->len, 1);
+
+  sei = &g_array_index (messages, GstH266SEIMessage, 0);
+  assert_equals_int (sei->payloadType,
+      GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION);
+
+  dsc_sel = &sei->payload.dsc_selection;
+  assert_equals_int (dsc_sel->id, 1);
+  assert_equals_int (dsc_sel->verification_substream_id, 0);
+
+  memset (&other_sei, 0, sizeof (GstH266SEIMessage));
+  fail_unless (gst_h266_sei_copy (&other_sei, sei));
+  assert_equals_int (other_sei.payloadType,
+      GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION);
+
+  other_dsc_sel = &other_sei.payload.dsc_selection;
+  fail_unless (check_h266_sei_dsc_selection (dsc_sel, other_dsc_sel));
+
+  for (guint i = 0; i < messages->len; i++) {
+    GstH266SEIMessage *msg = &g_array_index (messages, GstH266SEIMessage, i);
+    gst_h266_sei_clear (msg);
+  }
+
+  g_array_unref (messages);
+  gst_h266_sei_clear (&other_sei);
+  gst_h266_parser_free (parser);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_h266_sei_dsc_verification)
+{
+  GstH266ParserResult res;
+  GstH266NalUnit nalu;
+  GArray *messages = NULL;
+  GstH266SEIMessage *sei;
+  GstH266SEIMessage other_sei;
+  GstH274DigitallySignedContentVerification *dsc_ver;
+  GstH274DigitallySignedContentVerification *other_dsc_ver;
+  GstH266Parser *parser = gst_h266_parser_new ();
+
+  res = gst_h266_parser_identify_nalu_unchecked (parser,
+      h266_sei_dsc_verification, 0,
+      G_N_ELEMENTS (h266_sei_dsc_verification), &nalu);
+  assert_equals_int (res, GST_H266_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H266_NAL_SUFFIX_SEI);
+
+  res = gst_h266_parser_parse_sei (parser, &nalu, &messages);
+  assert_equals_int (res, GST_H266_PARSER_OK);
+  fail_unless (messages != NULL);
+  assert_equals_int (messages->len, 1);
+
+  sei = &g_array_index (messages, GstH266SEIMessage, 0);
+  assert_equals_int (sei->payloadType,
+      GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION);
+
+  dsc_ver = &sei->payload.dsc_verification;
+  assert_equals_int (dsc_ver->id, 1);
+  assert_equals_int (dsc_ver->verification_substream_id, 0);
+  assert_equals_int (dsc_ver->signature_length_in_octets_minus1, 31);
+  fail_unless (dsc_ver->signature != NULL);
+  assert_equals_int (dsc_ver->signed_content_end_flag, 1);
+
+  memset (&other_sei, 0, sizeof (GstH266SEIMessage));
+  fail_unless (gst_h266_sei_copy (&other_sei, sei));
+  assert_equals_int (other_sei.payloadType,
+      GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION);
+
+  other_dsc_ver = &other_sei.payload.dsc_verification;
+  fail_unless (check_h266_sei_dsc_verification (dsc_ver, other_dsc_ver));
+
+  for (guint i = 0; i < messages->len; i++) {
+    GstH266SEIMessage *msg = &g_array_index (messages, GstH266SEIMessage, i);
+    gst_h266_sei_clear (msg);
+  }
+
+  g_array_unref (messages);
+  gst_h266_sei_clear (&other_sei);
+  gst_h266_parser_free (parser);
+}
+
+GST_END_TEST;
 
 static Suite *
 h266parser_suite (void)
@@ -540,6 +1267,13 @@ h266parser_suite (void)
   tcase_add_test (tc_chain, test_h266_parse_slice_hdr);
   tcase_add_test (tc_chain, test_h266_parse_decoder_config_record);
   tcase_add_test (tc_chain, test_h266_parse_decoder_config_record_gci);
+  tcase_add_test (tc_chain, test_h266_sei_registered_user_data);
+  tcase_add_test (tc_chain, test_h266_sei_user_data_unregistered);
+  tcase_add_test (tc_chain, test_h266_sei_dsc_initialization);
+  tcase_add_test (tc_chain, test_h266_sei_dsc_selection);
+  tcase_add_test (tc_chain, test_h266_sei_dsc_verification);
+  tcase_add_test (tc_chain, test_h266_create_sei);
+  tcase_add_test (tc_chain, test_h266_create_sei_suffix);
 
   return s;
 }
