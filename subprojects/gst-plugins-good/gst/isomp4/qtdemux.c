@@ -210,8 +210,8 @@ typedef struct _QtDemuxAavdEncryptionInfo QtDemuxAavdEncryptionInfo;
 struct _QtDemuxSegment
 {
   /* global time and duration, all gst time */
-  GstClockTime time;
-  GstClockTime stop_time;
+  GstClockTime time;            /* global PTS at which the segment starts playing */
+  GstClockTime stop_time;       /* global PTS at which the segment finishes playing */
   GstClockTime duration;
   /* media time of trak, all gst time */
   GstClockTime media_start;
@@ -5419,7 +5419,7 @@ eos:
 }
 
 /*
- * Gets the current qt segment start, stop and position for the
+ * Gets the current (edit list) qt segment start, stop and position for the
  * given time offset. This is used in update_segment()
  */
 static void
@@ -5446,8 +5446,8 @@ gst_qtdemux_stream_segment_get_boundaries (GstQTDemux * qtdemux,
     seg_time = segment->duration;
   }
 
-  /* qtdemux->segment.stop is in outside-time-realm, whereas
-   * segment->media_stop is in track-time-realm.
+  /* qtdemux->segment.stop is in global time, whereas
+   * segment->media_stop is in track-specific media time.
    *
    * In order to compare the two, we need to bring segment.stop
    * into the track-time-realm
@@ -7136,7 +7136,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *buf = NULL;
   QtDemuxStream *stream, *target_stream = NULL;
-  guint64 min_time;
+  guint64 min_time;             /* PTS global time, nanoseconds */
   guint64 offset = 0;
   guint64 dts = -1;
   guint64 pts = -1;

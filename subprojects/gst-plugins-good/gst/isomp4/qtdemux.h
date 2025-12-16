@@ -172,7 +172,9 @@ struct _GstQTDemux {
 
   GstTagList *tag_list;
 
-  /* configured playback region */
+  /* configured playback region. Note that this is a seek segment, not to be
+   * confused with an edit list segment. Seeks are done for global time (i.e.
+   * with edit lists applied). */
   GstSegment segment;
 
   /* State for key_units trickmode */
@@ -363,10 +365,10 @@ struct _QtDemuxStreamStsdEntry
 struct _QtDemuxSample
 {
   guint32 size;
-  gint32 pts_offset;            /* Add this value to timestamp to get the pts */
-  guint64 offset;
-  guint64 timestamp;            /* DTS In mov time */
-  guint32 duration;             /* In mov time */
+  gint32 pts_offset;            /* PTS-DTS in track timescale, media time */
+  guint64 offset;               /* Position of frame payload in the byte stream */
+  guint64 timestamp;            /* DTS in track timescale, media time */
+  guint32 duration;             /* In track timescale, media time */
   gboolean keyframe;            /* TRUE when this packet is a keyframe */
 };
 
@@ -401,8 +403,8 @@ struct _QtDemuxStream
   guint track_id;
 
   /* duration/scale */
-  guint64 duration;             /* in timescale units */
-  guint32 timescale;
+  guint64 duration;             /* in track timescale units */
+  guint32 timescale;            /* track timescale */
 
   /* language */
   gchar lang_id[4];             /* ISO 639-2T language code */
@@ -461,7 +463,9 @@ struct _QtDemuxStream
   /* current position */
   guint32 segment_index;
   guint32 sample_index;
-  GstClockTime time_position;   /* in gst time */
+  /* PTS in global time of the last frame demuxed (i.e. after edit lists).
+   * Used for deciding what track to schedule in the pull-mode loop. */
+  GstClockTime time_position;
   guint64 accumulated_base;
 
   /* the Gst segment we are processing out, used for clipping */
@@ -543,6 +547,10 @@ struct _QtDemuxStream
    * DTS/PTS can be inferred directly without ending up with PTS>DTS.
    *
    * See 14496-12 6.4
+   *
+   * Buffer PTS has cslg_shift applied so that buffer PTS >= buffer DTS.
+   * The cslg_shift is accounted by the GstSegment so it can be reverted by
+   * calculating stream time PTS.
    */
   guint64 cslg_shift;
 
