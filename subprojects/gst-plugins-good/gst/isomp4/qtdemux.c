@@ -96,7 +96,7 @@
 
 #define QTDEMUX_TREE_NODE_FOURCC(n) (QT_FOURCC(((guint8 *) (n)->data) + 4))
 
-#define STREAM_IS_EOS(s) ((s)->time_position == GST_CLOCK_TIME_NONE)
+#define STREAM_IS_EOS(s) ((s)->cur_global_pts == GST_CLOCK_TIME_NONE)
 
 #define ABSDIFF(x, y) ( (x) > (y) ? ((x) - (y)) : ((y) - (x)) )
 
@@ -1066,21 +1066,21 @@ parse_failed:
   }
 }
 
-/* find the segment for @time_position for @stream
+/* find the segment for @target_global_pts for @stream
  *
- * Returns the index of the segment containing @time_position.
+ * Returns the index of the segment containing @global_pts.
  * Returns the last segment and sets the @eos variable to TRUE
  * if the time is beyond the end. @eos may be NULL
  */
 static guint32
 gst_qtdemux_find_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
-    GstClockTime time_position)
+    GstClockTime target_global_pts)
 {
   gint i;
   guint32 seg_idx;
 
   GST_LOG_OBJECT (stream->pad, "finding segment for %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (time_position));
+      GST_TIME_ARGS (target_global_pts));
 
   seg_idx = -1;
   for (i = 0; i < stream->n_segments; i++) {
@@ -1092,7 +1092,8 @@ gst_qtdemux_find_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
     /* For the last segment we include stop_time in the last segment */
     if (i < stream->n_segments - 1) {
-      if (segment->time <= time_position && time_position < segment->stop_time) {
+      if (segment->time <= target_global_pts
+          && target_global_pts < segment->stop_time) {
         GST_LOG_OBJECT (stream->pad, "segment %d matches", i);
         seg_idx = i;
         break;
@@ -1398,7 +1399,7 @@ no_format:
 /* perform the seek.
  *
  * We set all segment_indexes in the streams to unknown and
- * adjust the time_position to the desired position. this is enough
+ * adjust the cur_global_pts to the desired position. this is enough
  * to trigger a segment switch in the streaming thread to start
  * streaming from the desired position.
  *
@@ -1451,7 +1452,7 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment,
   for (i = 0; i < QTDEMUX_N_STREAMS (qtdemux); i++) {
     QtDemuxStream *stream = QTDEMUX_NTH_STREAM (qtdemux, i);
 
-    stream->time_position = desired_offset;
+    stream->cur_global_pts = desired_offset;
     stream->accumulated_base = 0;
     stream->sample_index = -1;
     stream->offset_in_sample = 0;
@@ -1883,7 +1884,7 @@ _create_stream (GstQTDemux * demux, guint32 track_id)
   stream->need_clip = FALSE;
   stream->process_func = NULL;
   stream->segment_index = -1;
-  stream->time_position = 0;
+  stream->cur_global_pts = 0;
   stream->sample_index = -1;
   stream->offset_in_sample = 0;
   stream->new_stream = TRUE;
@@ -2126,7 +2127,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     for (i = 0; i < QTDEMUX_N_STREAMS (qtdemux); i++) {
       QtDemuxStream *stream = QTDEMUX_NTH_STREAM (qtdemux, i);
       stream->sent_eos = FALSE;
-      stream->time_position = 0;
+      stream->cur_global_pts = 0;
       stream->accumulated_base = 0;
       stream->last_keyframe_pts = GST_CLOCK_TIME_NONE;
     }
@@ -2158,7 +2159,7 @@ gst_qtdemux_map_and_push_segments (GstQTDemux * qtdemux, GstSegment * segment)
   for (iter = 0; iter < QTDEMUX_N_STREAMS (qtdemux); iter++) {
     QtDemuxStream *stream = QTDEMUX_NTH_STREAM (qtdemux, iter);
 
-    stream->time_position = segment->start;
+    stream->cur_global_pts = segment->start;
 
     /* in push mode we should be guaranteed that we will have empty segments
      * at the beginning and then one segment after, other scenarios are not
@@ -2167,10 +2168,10 @@ gst_qtdemux_map_and_push_segments (GstQTDemux * qtdemux, GstSegment * segment)
       if (stream->segments[i].stop_time > segment->start) {
         /* push the empty segment and move to the next one */
         gst_qtdemux_activate_segment (qtdemux, stream, i,
-            stream->time_position);
+            stream->cur_global_pts);
         if (QTSEGMENT_IS_EMPTY (&stream->segments[i])) {
           gst_qtdemux_send_gap_for_segment (qtdemux, stream, i,
-              stream->time_position);
+              stream->cur_global_pts);
 
           /* accumulate previous segments */
           if (GST_CLOCK_TIME_IS_VALID (stream->segment.stop))
@@ -2561,7 +2562,7 @@ gst_qtdemux_stream_flush_samples_data (QtDemuxStream * stream)
   stream->sample_index = -1;
   stream->stbl_index = -1;
   stream->n_samples = 0;
-  stream->time_position = 0;
+  stream->cur_global_pts = 0;
 
   stream->n_samples_moof = 0;
   stream->duration_moof = 0;
@@ -4698,7 +4699,7 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
 
     for (i = 0; i < QTDEMUX_N_STREAMS (qtdemux); i++) {
       QtDemuxStream *stream = QTDEMUX_NTH_STREAM (qtdemux, i);
-      stream->time_position = min_dts;
+      stream->cur_global_pts = min_dts;
     }
 
     /* Before this code was run a segment was already sent when the moov was
@@ -5401,15 +5402,15 @@ gst_qtdemux_seek_to_previous_keyframe (GstQTDemux * qtdemux)
     /* Define our time position */
     target_ts =
         str->samples[k_index].timestamp + str->samples[k_index].pts_offset;
-    str->time_position = QTSTREAMTIME_TO_GSTTIME (str, target_ts) + seg->time;
+    str->cur_global_pts = QTSTREAMTIME_TO_GSTTIME (str, target_ts) + seg->time;
     if (seg->media_start != GST_CLOCK_TIME_NONE)
-      str->time_position -= seg->media_start;
+      str->cur_global_pts -= seg->media_start;
 
     /* Now seek back in time */
     gst_qtdemux_move_stream (qtdemux, str, k_index);
     GST_DEBUG_OBJECT (qtdemux, "track-id %u keyframe at %u, time position %"
         GST_TIME_FORMAT " playing from sample %u to %u", str->track_id, k_index,
-        GST_TIME_ARGS (str->time_position), str->from_sample, str->to_sample);
+        GST_TIME_ARGS (str->cur_global_pts), str->from_sample, str->to_sample);
   }
 
   return GST_FLOW_OK;
@@ -5738,25 +5739,25 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
     gboolean * round_up_duration, gboolean * keyframe)
 {
   QtDemuxSample *sample;
-  GstClockTime time_position;
+  GstClockTime cur_global_pts;
   guint32 seg_idx;
 
   g_return_val_if_fail (stream != NULL, FALSE);
 
-  time_position = stream->time_position;
-  if (G_UNLIKELY (time_position == GST_CLOCK_TIME_NONE))
+  cur_global_pts = stream->cur_global_pts;
+  if (G_UNLIKELY (cur_global_pts == GST_CLOCK_TIME_NONE))
     goto eos;
 
   seg_idx = stream->segment_index;
   if (G_UNLIKELY (seg_idx == -1)) {
-    /* find segment corresponding to time_position if we are looking
+    /* find segment corresponding to cur_global_pts if we are looking
      * for a segment. */
-    seg_idx = gst_qtdemux_find_segment (qtdemux, stream, time_position);
+    seg_idx = gst_qtdemux_find_segment (qtdemux, stream, cur_global_pts);
   }
 
   /* different segment, activate it, sample_index will be set. */
   if (G_UNLIKELY (stream->segment_index != seg_idx))
-    gst_qtdemux_activate_segment (qtdemux, stream, seg_idx, time_position);
+    gst_qtdemux_activate_segment (qtdemux, stream, seg_idx, cur_global_pts);
 
   if (G_UNLIKELY (QTSEGMENT_IS_EMPTY (&stream->
               segments[stream->segment_index]))) {
@@ -5766,10 +5767,10 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
         " prepare empty sample");
 
     *empty = TRUE;
-    *pts = *dts = GSTTIME_TO_QTSTREAMTIME (stream, time_position);
+    *pts = *dts = GSTTIME_TO_QTSTREAMTIME (stream, cur_global_pts);
     *duration =
         GSTTIME_TO_QTSTREAMTIME (stream,
-        seg->duration - (time_position - seg->time));
+        seg->duration - (cur_global_pts - seg->time));
 
     return TRUE;
   }
@@ -5822,7 +5823,7 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
   /* special cases */
 eos:
   {
-    stream->time_position = GST_CLOCK_TIME_NONE;
+    stream->cur_global_pts = GST_CLOCK_TIME_NONE;
     return FALSE;
   }
 }
@@ -5849,7 +5850,7 @@ gst_qtdemux_advance_sample (GstQTDemux * qtdemux, QtDemuxStream * stream)
     /* Mark the stream as EOS */
     GST_DEBUG_OBJECT (qtdemux,
         "reached max allowed sample %u, mark EOS", stream->to_sample);
-    stream->time_position = GST_CLOCK_TIME_NONE;
+    stream->cur_global_pts = GST_CLOCK_TIME_NONE;
     return;
   }
 
@@ -5886,28 +5887,28 @@ gst_qtdemux_advance_sample (GstQTDemux * qtdemux, QtDemuxStream * stream)
   if (G_UNLIKELY (QTSAMPLE_DTS (stream, sample) >= segment->media_stop))
     goto next_segment;
 
-  /* time_position is used for scheduling samples. It must be increasing and not
+  /* cur_global_pts is used for scheduling samples. It must be increasing and not
    * overrun the current edit list segment boundaries. */
-  GstClockTime new_position;
+  GstClockTime new_global_pts;
   if (QTSAMPLE_PTS (stream, sample) >= segment->media_start) {
-    /* inside the segment, update time_position, looks very familiar to
+    /* inside the segment, update cur_global_pts, looks very familiar to
      * GStreamer segments, doesn't it? */
-    new_position =
+    new_global_pts =
         QTSAMPLE_PTS (stream, sample) - segment->media_start + segment->time;
     /* clamp to segment boundaries */
-    if (new_position > segment->stop_time)
-      new_position = segment->stop_time;
+    if (new_global_pts > segment->stop_time)
+      new_global_pts = segment->stop_time;
   } else {
     /* not yet in segment, time does not yet increment. This means
      * that we are still prerolling keyframes to the decoder so it can
      * decode the first sample of the segment. */
-    new_position = segment->time;
+    new_global_pts = segment->time;
   }
-  if (new_position > stream->time_position)
-    stream->time_position = new_position;
+  if (new_global_pts > stream->cur_global_pts)
+    stream->cur_global_pts = new_global_pts;
   GST_TRACE_OBJECT (qtdemux,
-      "track_ID=%d has new time_position=%" GST_TIME_FORMAT, stream->track_id,
-      GST_TIME_ARGS (stream->time_position));
+      "track_ID=%d has new cur_global_pts=%" GST_TIME_FORMAT, stream->track_id,
+      GST_TIME_ARGS (stream->cur_global_pts));
   return;
 
   /* move to the next segment */
@@ -5917,10 +5918,10 @@ next_segment:
 
     if (stream->segment_index == stream->n_segments - 1) {
       /* are we at the end of the last segment, we're EOS */
-      stream->time_position = GST_CLOCK_TIME_NONE;
+      stream->cur_global_pts = GST_CLOCK_TIME_NONE;
     } else {
       /* else we're only at the end of the current segment */
-      stream->time_position = segment->stop_time;
+      stream->cur_global_pts = segment->stop_time;
     }
     /* make sure we select a new segment */
 
@@ -7070,7 +7071,7 @@ gst_qtdemux_do_fragmented_seek (GstQTDemux * qtdemux)
 
     entry =
         gst_qtdemux_stream_seek_fragment (qtdemux, stream,
-        stream->time_position, !is_audio_or_video);
+        stream->cur_global_pts, !is_audio_or_video);
 
     GST_INFO_OBJECT (stream->pad, "%" GST_TIME_FORMAT " at offset "
         "%" G_GUINT64_FORMAT, GST_TIME_ARGS (entry->ts), entry->moof_offset);
@@ -7119,7 +7120,7 @@ gst_qtdemux_do_fragmented_seek (GstQTDemux * qtdemux)
 
   GST_INFO_OBJECT (qtdemux, "seek to %" GST_TIME_FORMAT ", best fragment "
       "moof offset: %" G_GUINT64_FORMAT ", ts %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (QTDEMUX_NTH_STREAM (qtdemux, 0)->time_position),
+      GST_TIME_ARGS (QTDEMUX_NTH_STREAM (qtdemux, 0)->cur_global_pts),
       best_entry->moof_offset, GST_TIME_ARGS (best_entry->ts));
 
   qtdemux->moof_offset = best_entry->moof_offset;
@@ -7166,9 +7167,9 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
     GstClockTime position;
 
     stream = QTDEMUX_NTH_STREAM (qtdemux, i);
-    position = stream->time_position;
-    GST_TRACE_OBJECT (qtdemux, "track_ID=%d time_position=%" GST_TIME_FORMAT,
-        stream->track_id, GST_TIME_ARGS (stream->time_position));
+    position = stream->cur_global_pts;
+    GST_TRACE_OBJECT (qtdemux, "track_ID=%d cur_global_pts=%" GST_TIME_FORMAT,
+        stream->track_id, GST_TIME_ARGS (stream->cur_global_pts));
 
     /* position of -1 is EOS */
     if (position != GST_CLOCK_TIME_NONE && position < min_time) {
@@ -7189,7 +7190,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
           && qtdemux->segment.rate >= 0
           && qtdemux->segment.stop <= min_time && target_stream->on_keyframe)) {
     GST_DEBUG_OBJECT (qtdemux, "we reached the end of our segment.");
-    target_stream->time_position = GST_CLOCK_TIME_NONE;
+    target_stream->cur_global_pts = GST_CLOCK_TIME_NONE;
     goto eos_stream;
   }
 
@@ -7270,9 +7271,9 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
         GstClockTimeDiff interval;
 
         if (qtdemux->segment.rate > 0)
-          interval = stream->time_position - stream->last_keyframe_pts;
+          interval = stream->cur_global_pts - stream->last_keyframe_pts;
         else
-          interval = stream->last_keyframe_pts - stream->time_position;
+          interval = stream->last_keyframe_pts - stream->cur_global_pts;
 
         if (GST_CLOCK_TIME_IS_VALID (stream->last_keyframe_pts)
             && interval < qtdemux->trickmode_interval) {
@@ -7281,7 +7282,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
               stream->track_id);
           goto next;
         } else {
-          stream->last_keyframe_pts = stream->time_position;
+          stream->last_keyframe_pts = stream->cur_global_pts;
         }
       }
     }
@@ -7428,15 +7429,15 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
         sample->timestamp + sample->pts_offset +
         stream->offset_in_sample / CUR_STREAM (stream)->bytes_per_frame);
     if (media_time >= segment->media_start) {
-      /* inside the segment, update time_position, looks very familiar to
+      /* inside the segment, update cur_global_pts, looks very familiar to
        * GStreamer segments, doesn't it? */
-      stream->time_position = (media_time - segment->media_start) +
+      stream->cur_global_pts = (media_time - segment->media_start) +
           segment->time;
     } else {
       /* not yet in segment, time does not yet increment. This means
        * that we are still prerolling keyframes to the decoder so it can
        * decode the first sample of the segment. */
-      stream->time_position = segment->time;
+      stream->cur_global_pts = segment->time;
     }
   } else if (size > sample_size) {
     /* Increase to the last sample we already pulled so that advancing
@@ -7844,7 +7845,7 @@ gst_qtdemux_send_gap_for_segment (GstQTDemux * demux,
   dur =
       stream->segments[segment_index].duration - (pos -
       stream->segments[segment_index].time);
-  stream->time_position += dur;
+  stream->cur_global_pts += dur;
 
   /* Only gaps with a duration of at least one second are propagated.
    * Same workaround as in pull mode.
@@ -8654,7 +8655,7 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
                   && stream->segment.stop <= stream_pts && keyframe)
               && !(demux->upstream_format_is_time && stream->segment.rate < 0)) {
             GST_DEBUG_OBJECT (demux, "we reached the end of our segment.");
-            stream->time_position = GST_CLOCK_TIME_NONE;        /* this means EOS */
+            stream->cur_global_pts = GST_CLOCK_TIME_NONE;       /* this means EOS */
 
             /* skip this data, stream is EOS */
             gst_adapter_flush (demux->adapter, demux->neededbytes);

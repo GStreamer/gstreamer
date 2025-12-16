@@ -465,7 +465,7 @@ struct _QtDemuxStream
   guint32 sample_index;
   /* PTS in global time of the last frame demuxed (i.e. after edit lists).
    * Used for deciding what track to schedule in the pull-mode loop. */
-  GstClockTime time_position;
+  GstClockTime cur_global_pts;
   guint64 accumulated_base;
 
   /* the Gst segment we are processing out, used for clipping */
