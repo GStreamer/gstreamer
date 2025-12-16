@@ -1457,7 +1457,7 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment,
     stream->offset_in_sample = 0;
     stream->segment_index = -1;
     stream->sent_eos = FALSE;
-    stream->last_keyframe_dts = GST_CLOCK_TIME_NONE;
+    stream->last_keyframe_pts = GST_CLOCK_TIME_NONE;
 
     if (segment->flags & GST_SEEK_FLAG_FLUSH)
       gst_segment_init (&stream->segment, GST_FORMAT_TIME);
@@ -2128,7 +2128,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
       stream->sent_eos = FALSE;
       stream->time_position = 0;
       stream->accumulated_base = 0;
-      stream->last_keyframe_dts = GST_CLOCK_TIME_NONE;
+      stream->last_keyframe_pts = GST_CLOCK_TIME_NONE;
     }
   }
 }
@@ -5873,25 +5873,41 @@ gst_qtdemux_advance_sample (GstQTDemux * qtdemux, QtDemuxStream * stream)
   /* get next sample */
   sample = &stream->samples[stream->sample_index];
 
-  GST_TRACE_OBJECT (qtdemux, "sample dts %" GST_TIME_FORMAT " media_stop: %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (QTSAMPLE_DTS (stream, sample)),
-      GST_TIME_ARGS (segment->media_stop));
+  GST_TRACE_OBJECT (qtdemux, "track_ID=%d segment->time=%"
+      GST_TIME_FORMAT " segment->stop_time=%" GST_TIME_FORMAT
+      " segment->media_start=%" GST_TIME_FORMAT " media DTS=%" GST_TIME_FORMAT
+      " media PTS=%" GST_TIME_FORMAT,
+      stream->track_id, GST_TIME_ARGS (segment->time),
+      GST_TIME_ARGS (segment->stop_time), GST_TIME_ARGS (segment->media_start),
+      GST_TIME_ARGS (QTSAMPLE_DTS (stream, sample)),
+      GST_TIME_ARGS (QTSAMPLE_PTS (stream, sample)));
 
   /* see if we are past the segment */
   if (G_UNLIKELY (QTSAMPLE_DTS (stream, sample) >= segment->media_stop))
     goto next_segment;
 
-  if (QTSAMPLE_DTS (stream, sample) >= segment->media_start) {
+  /* time_position is used for scheduling samples. It must be increasing and not
+   * overrun the current edit list segment boundaries. */
+  GstClockTime new_position;
+  if (QTSAMPLE_PTS (stream, sample) >= segment->media_start) {
     /* inside the segment, update time_position, looks very familiar to
      * GStreamer segments, doesn't it? */
-    stream->time_position =
-        QTSAMPLE_DTS (stream, sample) - segment->media_start + segment->time;
+    new_position =
+        QTSAMPLE_PTS (stream, sample) - segment->media_start + segment->time;
+    /* clamp to segment boundaries */
+    if (new_position > segment->stop_time)
+      new_position = segment->stop_time;
   } else {
     /* not yet in segment, time does not yet increment. This means
      * that we are still prerolling keyframes to the decoder so it can
      * decode the first sample of the segment. */
-    stream->time_position = segment->time;
+    new_position = segment->time;
   }
+  if (new_position > stream->time_position)
+    stream->time_position = new_position;
+  GST_TRACE_OBJECT (qtdemux,
+      "track_ID=%d has new time_position=%" GST_TIME_FORMAT, stream->track_id,
+      GST_TIME_ARGS (stream->time_position));
   return;
 
   /* move to the next segment */
@@ -7151,6 +7167,8 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
 
     stream = QTDEMUX_NTH_STREAM (qtdemux, i);
     position = stream->time_position;
+    GST_TRACE_OBJECT (qtdemux, "track_ID=%d time_position=%" GST_TIME_FORMAT,
+        stream->track_id, GST_TIME_ARGS (stream->time_position));
 
     /* position of -1 is EOS */
     if (position != GST_CLOCK_TIME_NONE && position < min_time) {
@@ -7163,6 +7181,8 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
     GST_DEBUG_OBJECT (qtdemux, "all streams are EOS");
     goto eos;
   }
+  GST_TRACE_OBJECT (qtdemux, "Chose to advance track_ID=%d",
+      target_stream->track_id);
 
   /* check for segment end */
   if (G_UNLIKELY (qtdemux->segment.stop != -1
@@ -7250,18 +7270,18 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
         GstClockTimeDiff interval;
 
         if (qtdemux->segment.rate > 0)
-          interval = stream->time_position - stream->last_keyframe_dts;
+          interval = stream->time_position - stream->last_keyframe_pts;
         else
-          interval = stream->last_keyframe_dts - stream->time_position;
+          interval = stream->last_keyframe_pts - stream->time_position;
 
-        if (GST_CLOCK_TIME_IS_VALID (stream->last_keyframe_dts)
+        if (GST_CLOCK_TIME_IS_VALID (stream->last_keyframe_pts)
             && interval < qtdemux->trickmode_interval) {
           GST_LOG_OBJECT (qtdemux,
               "Skipping keyframe within interval on track-id %u",
               stream->track_id);
           goto next;
         } else {
-          stream->last_keyframe_dts = stream->time_position;
+          stream->last_keyframe_pts = stream->time_position;
         }
       }
     }
@@ -7404,13 +7424,13 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
     QtDemuxSample *sample = &stream->samples[stream->sample_index];
     QtDemuxSegment *segment = &stream->segments[stream->segment_index];
 
-    GstClockTime time_position = QTSTREAMTIME_TO_GSTTIME (stream,
-        sample->timestamp +
+    GstClockTime media_time = QTSTREAMTIME_TO_GSTTIME (stream,
+        sample->timestamp + sample->pts_offset +
         stream->offset_in_sample / CUR_STREAM (stream)->bytes_per_frame);
-    if (time_position >= segment->media_start) {
+    if (media_time >= segment->media_start) {
       /* inside the segment, update time_position, looks very familiar to
        * GStreamer segments, doesn't it? */
-      stream->time_position = (time_position - segment->media_start) +
+      stream->time_position = (media_time - segment->media_start) +
           segment->time;
     } else {
       /* not yet in segment, time does not yet increment. This means

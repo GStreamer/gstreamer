@@ -1742,6 +1742,95 @@ GST_START_TEST (test_qtdemux_editlist)
 
 GST_END_TEST;
 
+static GstFlowReturn
+check_delta_new_sample_cb (GstAppSink * appsink, void *user_data)
+{
+  gint64 *prev_global_pts = (gint64 *) user_data;
+  GstClockTime unsigned_global_pts;
+
+  GstSample *sample = gst_app_sink_pull_sample (appsink);
+  fail_unless (sample != NULL);
+  GstSegment *segment = gst_sample_get_segment (sample);
+  fail_unless (segment != NULL);
+  GstBuffer *buffer = gst_sample_get_buffer (sample);
+  fail_unless (buffer != NULL);
+  GST_TRACE ("Received on %" GST_PTR_FORMAT ": %" GST_PTR_FORMAT " with %"
+      GST_SEGMENT_FORMAT, appsink, buffer, segment);
+
+  gint sign =
+      gst_segment_to_stream_time_full (segment, GST_FORMAT_TIME, buffer->pts,
+      &unsigned_global_pts);
+  fail_unless (sign == 1 || sign == -1);
+  if (unsigned_global_pts != GST_CLOCK_TIME_NONE) {
+    gint64 global_pts = sign * unsigned_global_pts;
+    if (*prev_global_pts != GST_CLOCK_STIME_NONE) {
+      gint64 delta = ABS (global_pts - *prev_global_pts);
+      GST_TRACE ("global_pts=%" GST_STIME_FORMAT " prev_global_pts=%"
+          GST_STIME_FORMAT, GST_STIME_ARGS (global_pts),
+          GST_STIME_ARGS (*prev_global_pts));
+      ck_assert_int_le (delta, GST_SECOND);
+    }
+    *prev_global_pts = global_pts;
+  }
+
+  gst_sample_unref (sample);
+  return GST_FLOW_OK;
+}
+
+GST_START_TEST (test_qtdemux_sample_interleaving)
+{
+  GstElement *pipeline, *src, *video, *audio;
+  gint64 prev_global_pts = GST_CLOCK_STIME_NONE;
+  GstAppSinkCallbacks callbacks;
+
+  pipeline = gst_parse_launch ("filesrc name=src ! qtdemux name=demux"
+      " demux. ! video/x-h264 ! appsink name=video async=false sync=false"
+      " demux. ! audio/mpeg ! appsink name=audio async=false sync=false", NULL);
+  fail_unless (pipeline != NULL);
+
+  src = gst_bin_get_by_name (GST_BIN (pipeline), "src");
+  fail_unless (src != NULL);
+  g_object_set (src, "location",
+      TEST_FILE_PREFIX "explosion-large-composition-offset.mp4", NULL);
+
+  video = gst_bin_get_by_name (GST_BIN (pipeline), "video");
+  fail_unless (video != NULL);
+  audio = gst_bin_get_by_name (GST_BIN (pipeline), "audio");
+  fail_unless (audio != NULL);
+
+  /* qtdemux must reasonably interleave the two tracks. The calculated stream
+   * time PTS (i.e. global PTS) of the different tracks shouldn't drift apart
+   * by a large amount.
+   * Global PTS must be used instead of global DTS used so that both edit lists
+   * and files with very large composition offsets can be handled correctly. */
+  memset (&callbacks, 0, sizeof (GstAppSinkCallbacks));
+  callbacks.new_sample = check_delta_new_sample_cb;
+  gst_app_sink_set_callbacks (GST_APP_SINK (video), &callbacks,
+      &prev_global_pts, NULL);
+  gst_app_sink_set_callbacks (GST_APP_SINK (audio), &callbacks,
+      &prev_global_pts, NULL);
+
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+
+  /* Wait for EOS. */
+  {
+    GstMessage *msg;
+    msg =
+        gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (pipeline), -1,
+        GST_MESSAGE_EOS);
+    gst_message_unref (msg);
+  }
+  fail_unless (prev_global_pts != GST_CLOCK_STIME_NONE);
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+
+  gst_object_unref (src);
+  gst_object_unref (video);
+  gst_object_unref (audio);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 qtdemux_suite (void)
 {
@@ -1761,6 +1850,7 @@ qtdemux_suite (void)
   tcase_add_test (tc_chain, test_qtdemux_gapless_nero_data_with_itunsmpb);
   tcase_add_test (tc_chain, test_qtdemux_gapless_nero_data_without_itunsmpb);
   tcase_add_test (tc_chain, test_qtdemux_editlist);
+  tcase_add_test (tc_chain, test_qtdemux_sample_interleaving);
 
   return s;
 }

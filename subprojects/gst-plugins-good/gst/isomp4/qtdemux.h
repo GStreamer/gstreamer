@@ -567,7 +567,7 @@ struct _QtDemuxStream
   GQueue protection_scheme_event_queue;
 
   /* KEY_UNITS trickmode with an interval */
-  GstClockTime last_keyframe_dts;
+  GstClockTime last_keyframe_pts;
 
   gint ref_count;               /* atomic */
 };
