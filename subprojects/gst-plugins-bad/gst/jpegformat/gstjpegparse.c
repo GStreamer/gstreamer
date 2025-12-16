@@ -333,6 +333,13 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstJpegSegment * seg)
     return FALSE;
   }
 
+  if (parse->mpf.mode
+      && parse->mpf.primary_image_index != parse->mpf.cur_image_index) {
+    GST_DEBUG_OBJECT (parse, "Ignoring MPF SOF of picture %d",
+        parse->mpf.cur_image_index);
+    return TRUE;
+  }
+
   colorspace = GST_JPEG_COLORSPACE_NONE;
   sampling = GST_JPEG_SAMPLING_NONE;
 
@@ -849,6 +856,7 @@ gst_jpeg_parse_app2 (GstJpegParse * parse, GstJpegSegment * seg)
 {
   GstByteReader reader;
   const gchar *id_str;
+  guint i;
 
   if (seg->size < 4)            /* less than 6 means no id string */
     return FALSE;
@@ -864,6 +872,23 @@ gst_jpeg_parse_app2 (GstJpegParse * parse, GstJpegSegment * seg)
 
     if (!gst_jpeg_parse_mpf (parse, &reader, &mpf))
       return FALSE;
+
+    parse->mpf.mode = TRUE;
+    parse->mpf.num_images = mpf.num_images;
+    parse->mpf.cur_image_index = 0;
+
+    for (i = 0; i < mpf.num_images; i++) {
+      if (mpf.entries[i].type == BASELINE_PRIMARY) {
+        parse->mpf.primary_image_index = i;
+        break;
+      }
+    }
+
+    if (i == mpf.num_images) {
+      GST_WARNING_OBJECT (parse,
+          "No baseline primary image found. Forcing the first");
+      parse->mpf.primary_image_index = 0;
+    }
   }
 
   return TRUE;
@@ -1090,6 +1115,25 @@ gst_jpeg_parse_finish_frame (GstJpegParse * parse, GstBaseParseFrame * frame,
   return ret;
 }
 
+static inline gboolean
+gst_jpeg_parse_should_finish_buffer (GstJpegParse * parse, GstJpegMarker marker)
+{
+  guint field_to_check;
+
+  if (parse->mpf.mode)
+    return parse->mpf.cur_image_index + 1 == parse->mpf.num_images;
+
+  if (marker == GST_JPEG_MARKER_SOI)
+    field_to_check = 0;
+  else if (marker == GST_JPEG_MARKER_EOI)
+    field_to_check = 1;
+  else
+    g_assert_not_reached ();
+
+  return parse->interlace_mode == GST_VIDEO_INTERLACE_MODE_PROGRESSIVE
+      || parse->field == field_to_check;
+}
+
 static GstFlowReturn
 gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
     gint * skipsize)
@@ -1146,9 +1190,7 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
     switch (marker) {
       case GST_JPEG_MARKER_SOI:
         /* This means that new SOI comes without an previous EOI. */
-        if (offset > 2
-            && (parse->interlace_mode == GST_VIDEO_INTERLACE_MODE_PROGRESSIVE
-                || parse->field == 0)) {
+        if (offset > 2 && gst_jpeg_parse_should_finish_buffer (parse, marker)) {
           /* If already some data segment parsed, push it as a frame. */
           if (valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_SOS)) {
             gst_buffer_unmap (frame->buffer, &mapinfo);
@@ -1183,10 +1225,15 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
         parse->state |= GST_JPEG_PARSER_STATE_GOT_SOI;
         break;
       case GST_JPEG_MARKER_EOI:
-        if (parse->interlace_mode == GST_VIDEO_INTERLACE_MODE_PROGRESSIVE
-            || parse->field == 1) {
+        if (gst_jpeg_parse_should_finish_buffer (parse, marker)) {
           gst_buffer_unmap (frame->buffer, &mapinfo);
           return gst_jpeg_parse_finish_frame (parse, frame, seg.offset);
+        } else if (parse->mpf.mode) {
+          parse->mpf.cur_image_index++;
+          GST_DEBUG_OBJECT (parse, "finished image number %d of %d",
+              parse->mpf.cur_image_index, parse->mpf.num_images);
+          /* reset the state to continue parsing */
+          parse->state = GST_JPEG_PARSER_STATE_GOT_METADATA;
         } else if (parse->interlace_mode == GST_VIDEO_INTERLACE_MODE_INTERLEAVED
             && parse->field == 0) {
           parse->field = 1;

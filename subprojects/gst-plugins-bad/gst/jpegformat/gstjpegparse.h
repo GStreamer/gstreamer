@@ -69,6 +69,14 @@ struct _GstJpegParse {
   GstVideoFieldOrder field_order;
   guint field;
 
+  /* multi picture format */
+  struct {
+    gboolean mode;
+    guint num_images;
+    guint primary_image_index;
+    guint cur_image_index; /* current picture index */
+  } mpf;
+
   /* format color space */
   guint colorspace;
   guint sampling;
