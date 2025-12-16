@@ -1243,6 +1243,12 @@ parse_pad_set_target (GstParsePad * parsepad, GstPad * target)
   gst_pad_sticky_events_foreach (GST_PAD_CAST (parsepad),
       clear_sticky_events, NULL);
   gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (parsepad), target);
+  if (parsepad->active_stream != NULL) {
+    GST_LOG_OBJECT (parsepad->parsebin,
+        "Clearing existing stream %" GST_PTR_FORMAT " from pad %" GST_PTR_FORMAT
+        " before retargeting", parsepad->active_stream, parsepad);
+    gst_object_replace ((GstObject **) & parsepad->active_stream, NULL);
+  }
 
   if (target == NULL) {
     GST_LOG_OBJECT (parsepad->parsebin, "Setting pad %" GST_PTR_FORMAT
