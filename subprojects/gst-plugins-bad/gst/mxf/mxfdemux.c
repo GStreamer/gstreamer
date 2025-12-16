@@ -349,6 +349,28 @@ gst_mxf_demux_pull_range (GstMXFDemux * demux, guint64 offset,
 }
 
 static gboolean
+gst_mxf_demux_eos_single_stream (GstMXFDemux * demux, GstMXFDemuxPad * pad)
+{
+  gboolean ret;
+  GstEvent *e;
+
+  pad->eos = TRUE;
+
+  if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+    GST_DEBUG_OBJECT (pad, "Segment Done for track");
+    e = gst_event_new_segment_done (GST_FORMAT_TIME, pad->position);
+  } else {
+    GST_DEBUG_OBJECT (pad, "EOS for track");
+    e = gst_event_new_eos ();
+  }
+
+  gst_event_set_seqnum (e, demux->seqnum);
+  ret = gst_pad_push_event (GST_PAD_CAST (pad), e);
+
+  return ret;
+}
+
+static gboolean
 gst_mxf_demux_push_src_event (GstMXFDemux * demux, GstEvent * event)
 {
   gboolean ret = TRUE;
@@ -360,7 +382,8 @@ gst_mxf_demux_push_src_event (GstMXFDemux * demux, GstEvent * event)
   for (i = 0; i < demux->src->len; i++) {
     GstMXFDemuxPad *pad = GST_MXF_DEMUX_PAD (g_ptr_array_index (demux->src, i));
 
-    if (pad->eos && GST_EVENT_TYPE (event) == GST_EVENT_EOS)
+    if (pad->eos && (GST_EVENT_TYPE (event) == GST_EVENT_EOS
+            || GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT_DONE))
       continue;
 
     ret |= gst_pad_push_event (GST_PAD_CAST (pad), gst_event_ref (event));
@@ -3132,13 +3155,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     }
 
     if (ret == GST_FLOW_EOS) {
-      GstEvent *e;
-
-      GST_DEBUG_OBJECT (pad, "EOS for track");
-      pad->eos = TRUE;
-      e = gst_event_new_eos ();
-      gst_event_set_seqnum (e, demux->seqnum);
-      gst_pad_push_event (GST_PAD_CAST (pad), e);
+      gst_mxf_demux_eos_single_stream (demux, pad);
       ret = GST_FLOW_OK;
     }
 
@@ -3958,12 +3975,7 @@ from_track_offset:
         if (!p->eos
             && p->current_essence_track_position >=
             p->current_essence_track->duration) {
-          GstEvent *e;
-
-          p->eos = TRUE;
-          e = gst_event_new_eos ();
-          gst_event_set_seqnum (e, demux->seqnum);
-          gst_pad_push_event (GST_PAD_CAST (p), e);
+          gst_mxf_demux_eos_single_stream (demux, p);
         }
       }
     }
@@ -4072,12 +4084,7 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
         if (!p->eos
             && p->current_essence_track->position >=
             p->current_essence_track->duration) {
-          GstEvent *e;
-
-          p->eos = TRUE;
-          e = gst_event_new_eos ();
-          gst_event_set_seqnum (e, demux->seqnum);
-          gst_pad_push_event (GST_PAD_CAST (p), e);
+          gst_mxf_demux_eos_single_stream (demux, p);
         }
       }
 
@@ -4093,13 +4100,8 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
             gst_mxf_demux_find_essence_element (demux, p->current_essence_track,
             &position, FALSE);
         if (offset == -1) {
-          GstEvent *e;
-
           GST_ERROR_OBJECT (demux, "Failed to find offset for essence track");
-          p->eos = TRUE;
-          e = gst_event_new_eos ();
-          gst_event_set_seqnum (e, demux->seqnum);
-          gst_pad_push_event (GST_PAD_CAST (p), e);
+          gst_mxf_demux_eos_single_stream (demux, p);
           continue;
         }
 
@@ -4258,14 +4260,10 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
           gst_mxf_demux_find_essence_element (demux,
           earliest->current_essence_track, &position, FALSE);
       if (offset == -1) {
-        GstEvent *e;
-
         GST_WARNING_OBJECT (demux,
             "Failed to find offset for late essence track");
-        earliest->eos = TRUE;
-        e = gst_event_new_eos ();
-        gst_event_set_seqnum (e, demux->seqnum);
-        gst_pad_push_event (GST_PAD_CAST (earliest), e);
+        gst_mxf_demux_eos_single_stream (demux, earliest);
+
         continue;
       }
 
