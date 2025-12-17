@@ -196,8 +196,6 @@ struct _GstMXFDemuxPad
   guint32 track_id;
   gboolean need_segment;
 
-  GstClockTime position;
-  gdouble position_accumulated_error;
   /* Current position in the material track (in edit units) */
   guint64 current_material_track_position;
 
