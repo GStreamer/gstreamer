@@ -92,6 +92,9 @@ static gboolean find_entry_for_offset (GstMXFDemux * demux,
     GstMXFDemuxEssenceTrack * etrack, guint64 offset,
     GstMXFDemuxIndex * retentry);
 
+static GstClockTime gst_mxf_demux_pad_get_current_time (GstMXFDemux * demux,
+    GstMXFDemuxPad * p);
+
 GType gst_mxf_demux_pad_get_type (void);
 G_DEFINE_TYPE (GstMXFDemuxPad, gst_mxf_demux_pad, GST_TYPE_PAD);
 
@@ -119,7 +122,6 @@ gst_mxf_demux_pad_class_init (GstMXFDemuxPadClass * klass)
 static void
 gst_mxf_demux_pad_init (GstMXFDemuxPad * pad)
 {
-  pad->position = 0;
   pad->current_material_track_position = 0;
 }
 
@@ -352,8 +354,9 @@ gst_mxf_demux_eos_single_stream (GstMXFDemux * demux, GstMXFDemuxPad * pad)
   pad->eos = TRUE;
 
   if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+    GstClockTime time = gst_mxf_demux_pad_get_current_time (demux, pad);
     GST_DEBUG_OBJECT (pad, "Segment Done for track");
-    e = gst_event_new_segment_done (GST_FORMAT_TIME, pad->position);
+    e = gst_event_new_segment_done (GST_FORMAT_TIME, time);
   } else {
     GST_DEBUG_OBJECT (pad, "EOS for track");
     e = gst_event_new_eos ();
@@ -398,9 +401,10 @@ gst_mxf_demux_get_earliest_pad (GstMXFDemux * demux)
 
   for (i = 0; i < demux->src->len; i++) {
     GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
+    GstClockTime time = gst_mxf_demux_pad_get_current_time (demux, p);
 
-    if (!p->eos && p->position < earliest) {
-      earliest = p->position;
+    if (!p->eos && time < earliest) {
+      earliest = time;
       pad = p;
     }
   }
@@ -2679,7 +2683,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
   GstMXFDemuxEssenceTrack *etrack = NULL;
   /* As in GstMXFDemuxIndex */
   guint64 pts = G_MAXUINT64;
-  gint32 max_temporal_offset = 0;
+  guint32 max_temporal_offset = 0;
   GstMXFDemuxIndex index_entry = { 0, };
   guint64 offset;
 
@@ -2950,15 +2954,32 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
       continue;
     }
 
+    guint64 current_edit_unit =
+        pad->current_essence_track_position - pad->current_component_start;
+    GstClockTime component_start_time =
+        gst_util_uint64_scale (pad->current_component_start_position,
+        pad->material_track->edit_rate.d * GST_SECOND,
+        pad->material_track->edit_rate.n);
+    GstClockTime time =
+        component_start_time + gst_util_uint64_scale (current_edit_unit,
+        pad->current_essence_track->source_track->edit_rate.d * GST_SECOND,
+        pad->current_essence_track->source_track->edit_rate.n);
+    GstClockTime time_end = component_start_time +
+        gst_util_uint64_scale (current_edit_unit + index_entry.duration,
+        pad->current_essence_track->source_track->edit_rate.d * GST_SECOND,
+        pad->current_essence_track->source_track->edit_rate.n);
+
     {
       GstMXFDemuxPad *earliest = gst_mxf_demux_get_earliest_pad (demux);
+      GstClockTime earliest_time =
+          gst_mxf_demux_pad_get_current_time (demux, earliest);
 
-      if (earliest && earliest != pad && earliest->position < pad->position &&
-          pad->position - earliest->position > demux->max_drift) {
+      if (earliest && earliest != pad && earliest_time < time &&
+          time - earliest_time > demux->max_drift) {
         GST_DEBUG_OBJECT (earliest,
             "Pad is too far ahead of time (%" GST_TIME_FORMAT " vs earliest:%"
-            GST_TIME_FORMAT ")", GST_TIME_ARGS (earliest->position),
-            GST_TIME_ARGS (pad->position));
+            GST_TIME_FORMAT ")", GST_TIME_ARGS (earliest_time),
+            GST_TIME_ARGS (time));
         continue;
       }
     }
@@ -2970,34 +2991,25 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
 
     pts = index_entry.pts;
 
-    GST_BUFFER_DTS (outbuf) = pad->position;
+    GST_BUFFER_DTS (outbuf) = time;
     if (etrack->intra_only) {
-      GST_BUFFER_PTS (outbuf) = pad->position;
+      GST_BUFFER_PTS (outbuf) = time;
     } else if (pts != G_MAXUINT64) {
-      GST_BUFFER_PTS (outbuf) = gst_util_uint64_scale (pts * GST_SECOND,
-          pad->current_essence_track->source_track->edit_rate.d,
+      GST_BUFFER_PTS (outbuf) =
+          component_start_time + gst_util_uint64_scale (pts,
+          pad->current_essence_track->source_track->edit_rate.d * GST_SECOND,
           pad->current_essence_track->source_track->edit_rate.n);
-      GST_BUFFER_PTS (outbuf) +=
-          gst_util_uint64_scale (pad->current_component_start_position *
-          GST_SECOND, pad->material_track->edit_rate.d,
-          pad->material_track->edit_rate.n);
       /* We are dealing with reordered data, the PTS is shifted forward by the
        * maximum temporal reordering (the DTS remain as-is). */
-      if (max_temporal_offset > 0)
-        GST_BUFFER_PTS (outbuf) +=
-            gst_util_uint64_scale (max_temporal_offset * GST_SECOND,
-            pad->current_essence_track->source_track->edit_rate.d,
-            pad->current_essence_track->source_track->edit_rate.n);
-
+      GST_BUFFER_PTS (outbuf) +=
+          gst_util_uint64_scale_ceil (max_temporal_offset,
+          pad->current_essence_track->source_track->edit_rate.d * GST_SECOND,
+          pad->current_essence_track->source_track->edit_rate.n);
     } else {
       GST_BUFFER_PTS (outbuf) = GST_CLOCK_TIME_NONE;
     }
 
-    GST_BUFFER_DURATION (outbuf) =
-        gst_util_uint64_scale (GST_SECOND,
-        index_entry.duration *
-        pad->current_essence_track->source_track->edit_rate.d,
-        pad->current_essence_track->source_track->edit_rate.n);
+    GST_BUFFER_DURATION (outbuf) = time_end - time;
     GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET_NONE;
     GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET_NONE;
 
@@ -3026,43 +3038,26 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
 
     }
 
-    /* Update accumulated error and compensate */
-    {
-      guint64 abs_error =
-          (GST_SECOND * pad->current_essence_track->source_track->edit_rate.d) %
-          pad->current_essence_track->source_track->edit_rate.n;
-      pad->position_accumulated_error +=
-          ((gdouble) abs_error) /
-          ((gdouble) pad->current_essence_track->source_track->edit_rate.n);
-    }
-    if (pad->position_accumulated_error >= 1.0) {
-      GST_BUFFER_DURATION (outbuf) += 1;
-      pad->position_accumulated_error -= 1.0;
-    }
-
     if (pad->need_segment) {
       GstEvent *e;
+      GstSegment shifted_segment;
 
-      if (max_temporal_offset > 0) {
-        GstSegment shift_segment;
-        /* Handle maximum temporal offset. We are shifting all output PTS for
-         * this stream by the greatest temporal reordering that can occur. In
-         * order not to change the stream/running time we shift the segment
-         * start and stop values accordingly */
-        gst_segment_copy_into (&demux->segment, &shift_segment);
-        if (GST_CLOCK_TIME_IS_VALID (shift_segment.start))
-          shift_segment.start +=
-              gst_util_uint64_scale (max_temporal_offset * GST_SECOND,
-              pad->current_essence_track->source_track->edit_rate.d,
-              pad->current_essence_track->source_track->edit_rate.n);
-        if (GST_CLOCK_TIME_IS_VALID (shift_segment.stop))
-          shift_segment.stop +=
-              gst_util_uint64_scale (max_temporal_offset * GST_SECOND,
-              pad->current_essence_track->source_track->edit_rate.d,
-              pad->current_essence_track->source_track->edit_rate.n);
-        e = gst_event_new_segment (&shift_segment);
-      } else
-        e = gst_event_new_segment (&demux->segment);
+      /* Handle maximum temporal offset. We are shifting all output PTS for
+       * this stream by the greatest temporal reordering that can occur. In
+       * order not to change the stream/running time we shift the segment
+       * start and stop values accordingly */
+      gst_segment_copy_into (&demux->segment, &shifted_segment);
+      if (GST_CLOCK_TIME_IS_VALID (shifted_segment.start))
+        shifted_segment.start +=
+            gst_util_uint64_scale_ceil (max_temporal_offset,
+            pad->current_essence_track->source_track->edit_rate.d *
+            GST_SECOND, pad->current_essence_track->source_track->edit_rate.n);
+      if (GST_CLOCK_TIME_IS_VALID (shifted_segment.stop))
+        shifted_segment.stop +=
+            gst_util_uint64_scale_ceil (max_temporal_offset,
+            pad->current_essence_track->source_track->edit_rate.d *
+            GST_SECOND, pad->current_essence_track->source_track->edit_rate.n);
+      e = gst_event_new_segment (&shifted_segment);
       GST_DEBUG_OBJECT (pad, "Sending segment %" GST_PTR_FORMAT, e);
       gst_event_set_seqnum (e, demux->seqnum);
       gst_pad_push_event (GST_PAD_CAST (pad), e);
@@ -3074,7 +3069,6 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
       pad->tags = NULL;
     }
 
-    pad->position += GST_BUFFER_DURATION (outbuf);
     pad->current_material_track_position += index_entry.duration;
 
     if (pad->discont) {
@@ -3110,8 +3104,8 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
     GST_LOG_OBJECT (pad, "combined return %s", gst_flow_get_name (ret));
 
-    if (pad->position > demux->segment.position)
-      demux->segment.position = pad->position;
+    if (time_end > demux->segment.position)
+      demux->segment.position = time_end;
 
     if (ret != GST_FLOW_OK)
       goto out;
@@ -4231,8 +4225,9 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
     GstMXFDemuxPad *earliest = NULL;
     /* We allow time drifts of at most 500ms */
     while ((earliest = gst_mxf_demux_get_earliest_pad (demux)) && (force_switch
-            || demux->segment.position - earliest->position >
-            demux->max_drift)) {
+            || demux->segment.position -
+            gst_mxf_demux_pad_get_current_time (demux,
+                earliest) > demux->max_drift)) {
       guint64 offset;
       gint64 position;
 
@@ -4341,7 +4336,9 @@ gst_mxf_demux_loop (GstPad * pad)
     for (i = 0; i < demux->src->len; i++) {
       GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
 
-      if (!p->eos && p->position < demux->segment.stop) {
+      if (!p->eos
+          && gst_mxf_demux_pad_get_current_time (demux,
+              p) < demux->segment.stop) {
         eos = FALSE;
         break;
       }
@@ -4721,14 +4718,7 @@ gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
     if (p->current_essence_track_position >= p->current_essence_track->duration
         && p->current_essence_track->duration > 0) {
       p->current_essence_track_position = p->current_essence_track->duration;
-      p->position =
-          gst_util_uint64_scale (p->current_essence_track->duration,
-          p->material_track->edit_rate.d * GST_SECOND,
-          p->material_track->edit_rate.n);
-    } else {
-      p->position = start;
     }
-    p->position_accumulated_error = 0.0;
     p->current_material_track_position = p->current_essence_track_position;
 
     return;
@@ -4751,10 +4741,6 @@ gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
   }
 
   if (i == p->material_track->parent.sequence->n_structural_components) {
-    p->position =
-        gst_util_uint64_scale (sum, p->material_track->edit_rate.d * GST_SECOND,
-        p->material_track->edit_rate.n);
-    p->position_accumulated_error = 0.0;
     p->current_material_track_position = sum;
 
     gst_mxf_demux_pad_set_component (demux, p, i);
@@ -4776,27 +4762,35 @@ gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
         p->current_essence_track->source_track->edit_rate.d * GST_SECOND);
 
     p->current_essence_track_position += essence_offset;
-
-    p->position = gst_util_uint64_scale (sum,
-        GST_SECOND * p->material_track->edit_rate.d,
-        p->material_track->edit_rate.n) + gst_util_uint64_scale (essence_offset,
-        GST_SECOND * p->current_essence_track->source_track->edit_rate.d,
-        p->current_essence_track->source_track->edit_rate.n);
-    p->position_accumulated_error = 0.0;
     p->current_material_track_position = sum + essence_offset;
   }
 
-  if (p->current_essence_track_position >= p->current_essence_track->duration
-      && p->current_essence_track->duration > 0) {
+  if (p->current_essence_track->duration > 0 &&
+      p->current_essence_track_position >= p->current_essence_track->duration) {
     p->current_essence_track_position = p->current_essence_track->duration;
-    p->position =
-        gst_util_uint64_scale (sum + p->current_component->parent.duration,
-        p->material_track->edit_rate.d * GST_SECOND,
-        p->material_track->edit_rate.n);
-    p->position_accumulated_error = 0.0;
     p->current_material_track_position =
         sum + p->current_component->parent.duration;
   }
+}
+
+static GstClockTime
+gst_mxf_demux_pad_get_current_time (GstMXFDemux * demux, GstMXFDemuxPad * p)
+{
+  if (!p->current_essence_track || !p->material_track)
+    return GST_CLOCK_TIME_NONE;
+
+  guint64 current_edit_unit =
+      p->current_essence_track_position - p->current_component_start;
+  GstClockTime component_start_time =
+      gst_util_uint64_scale (p->current_component_start_position,
+      p->material_track->edit_rate.d * GST_SECOND,
+      p->material_track->edit_rate.n);
+  GstClockTime time =
+      component_start_time + gst_util_uint64_scale (current_edit_unit,
+      p->current_essence_track->source_track->edit_rate.d * GST_SECOND,
+      p->current_essence_track->source_track->edit_rate.n);
+
+  return time;
 }
 
 static gboolean
@@ -5252,12 +5246,6 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
       } else {
         new_offset = MIN (off, new_offset);
         if (position != p->current_essence_track_position) {
-          p->position -=
-              gst_util_uint64_scale (p->current_essence_track_position -
-              position,
-              GST_SECOND * p->current_essence_track->source_track->edit_rate.d,
-              p->current_essence_track->source_track->edit_rate.n);
-          p->position_accumulated_error = 0.0;
           p->current_material_track_position -=
               gst_util_uint64_scale (p->current_essence_track_position -
               position,
@@ -5415,7 +5403,7 @@ gst_mxf_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       pos =
           format ==
           GST_FORMAT_DEFAULT ? mxfpad->current_material_track_position :
-          mxfpad->position;
+          gst_mxf_demux_pad_get_current_time (demux, mxfpad);
 
       GST_DEBUG_OBJECT (pad,
           "Returning position %" G_GINT64_FORMAT " in format %s", pos,
