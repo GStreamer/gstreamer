@@ -2236,13 +2236,17 @@ gst_decklink_video_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
     running_time = gst_util_uint64_scale (running_time, 1, frame_duration);
     running_time = gst_util_uint64_scale_ceil (running_time, frame_duration, 1);
 
+    if (clock_time >= running_time) {
+      GST_DEBUG_OBJECT (self, "Video frame %p is being scheduled late and may be dropped", frame);
+    }
+
     GST_DEBUG_OBJECT (self, "Scheduling video frame %p at %" GST_TIME_FORMAT
         " with duration %" GST_TIME_FORMAT " sync time %" GST_TIME_FORMAT
         " clock time %" GST_TIME_FORMAT, frame, GST_TIME_ARGS (running_time),
-        GST_TIME_ARGS (running_time_duration), GST_TIME_ARGS (sync_time), GST_TIME_ARGS (clock_time));
+        GST_TIME_ARGS (frame_duration), GST_TIME_ARGS (sync_time), GST_TIME_ARGS (clock_time));
 
     ret = self->output->output->ScheduleVideoFrame (frame,
-        running_time, running_time_duration, GST_SECOND);
+        running_time, frame_duration, GST_SECOND);
     if (ret != S_OK) {
       GST_ELEMENT_ERROR (self, STREAM, FAILED,
           (NULL), ("Failed to schedule frame: 0x%08lx", (unsigned long) ret));
