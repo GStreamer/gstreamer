@@ -258,11 +258,6 @@ gst_matroska_parse_reset (GstElement * element)
   parse->seek_index = NULL;
   parse->seek_entry = 0;
 
-  if (parse->close_segment) {
-    gst_event_unref (parse->close_segment);
-    parse->close_segment = NULL;
-  }
-
   if (parse->new_segment) {
     gst_event_unref (parse->new_segment);
     parse->new_segment = NULL;
@@ -2863,12 +2858,8 @@ gst_matroska_parse_loop (GstPad * pad)
   guint64 length;
   guint needed;
 
-  /* If we have to close a segment, send a new segment to do this now */
+  /* If we have to send a new segment, do this now */
   if (G_LIKELY (parse->common.state == GST_MATROSKA_READ_STATE_DATA)) {
-    if (G_UNLIKELY (parse->close_segment)) {
-      gst_matroska_parse_send_event (parse, parse->close_segment);
-      parse->close_segment = NULL;
-    }
     if (G_UNLIKELY (parse->new_segment)) {
       gst_matroska_parse_send_event (parse, parse->new_segment);
       parse->new_segment = NULL;

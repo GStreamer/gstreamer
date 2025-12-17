@@ -73,7 +73,6 @@ typedef struct _GstMatroskaParse {
   gboolean                 segment_running;
   GstClockTime             last_stop_end;
 
-  GstEvent                *close_segment;
   GstEvent                *new_segment;
 
   /* some state saving */
