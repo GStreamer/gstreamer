@@ -289,7 +289,8 @@ gst_hls_sink_handle_message (GstBin * bin, GstMessage * message)
       const GstStructure *structure;
 
       structure = gst_message_get_structure (message);
-      if (strcmp (gst_structure_get_name (structure), "GstMultiFileSink"))
+      if (structure == NULL ||
+          !gst_structure_has_name (structure, "GstMultiFileSink"))
         break;
 
       filename = gst_structure_get_string (structure, "filename");
