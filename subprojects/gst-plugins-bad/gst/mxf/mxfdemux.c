@@ -272,11 +272,6 @@ gst_mxf_demux_reset (GstMXFDemux * demux)
 
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
 
-  if (demux->close_seg_event) {
-    gst_event_unref (demux->close_seg_event);
-    demux->close_seg_event = NULL;
-  }
-
   gst_adapter_clear (demux->adapter);
 
   gst_mxf_demux_remove_pads (demux);
@@ -3048,10 +3043,6 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     if (pad->need_segment) {
       GstEvent *e;
 
-      if (demux->close_seg_event)
-        gst_pad_push_event (GST_PAD_CAST (pad),
-            gst_event_ref (demux->close_seg_event));
-
       if (max_temporal_offset > 0) {
         GstSegment shift_segment;
         /* Handle maximum temporal offset. We are shifting all output PTS for
@@ -5297,11 +5288,6 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
       demux->state = GST_MXF_DEMUX_STATE_KLV;
   }
 
-  if (G_UNLIKELY (demux->close_seg_event)) {
-    gst_event_unref (demux->close_seg_event);
-    demux->close_seg_event = NULL;
-  }
-
   if (flush) {
     GstEvent *e;
 
@@ -5309,13 +5295,6 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
     e = gst_event_new_flush_stop (TRUE);
     gst_event_set_seqnum (e, seqnum);
     gst_mxf_demux_push_src_event (demux, e);
-  } else {
-    GST_DEBUG_OBJECT (demux, "closing running segment %" GST_SEGMENT_FORMAT,
-        &demux->segment);
-
-    /* Close the current segment for a linear playback */
-    demux->close_seg_event = gst_event_new_segment (&demux->segment);
-    gst_event_set_seqnum (demux->close_seg_event, demux->seqnum);
   }
 
   /* Ok seek succeeded, take the newly configured segment */
@@ -5961,11 +5940,6 @@ gst_mxf_demux_finalize (GObject * object)
   if (demux->flowcombiner) {
     gst_flow_combiner_free (demux->flowcombiner);
     demux->flowcombiner = NULL;
-  }
-
-  if (demux->close_seg_event) {
-    gst_event_unref (demux->close_seg_event);
-    demux->close_seg_event = NULL;
   }
 
   g_free (demux->current_package_string);

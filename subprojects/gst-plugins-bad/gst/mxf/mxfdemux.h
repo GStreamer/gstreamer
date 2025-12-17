@@ -250,8 +250,6 @@ struct _GstMXFDemux
   GstSegment segment;
   guint32 seqnum;
 
-  GstEvent *close_seg_event;
-
   guint64 offset;
 
   gboolean random_access;
