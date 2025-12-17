@@ -533,27 +533,27 @@ gst_aes_dec_prepare_output_buffer (GstBaseTransform * base,
 {
   GstAesDec *filter = GST_AES_DEC (base);
   GstBaseTransformClass *bclass = GST_BASE_TRANSFORM_GET_CLASS (base);
-  guint out_size;
+  gsize in_size = gst_buffer_get_size (inbuf);
+  gsize out_size = in_size;
 
   g_mutex_lock (&filter->decoder_lock);
   filter->locked_properties = TRUE;
   /* we need extra space at end of output buffer
    * when we let OpenSSL handle PKCS7 padding  */
-  out_size = (gint) gst_buffer_get_size (inbuf) +
-      (!filter->per_buffer_padding ? GST_AES_BLOCK_SIZE : 0);
+  out_size += (!filter->per_buffer_padding ? GST_AES_BLOCK_SIZE : 0);
 
   /* Since serialized IV is stripped from first buffer,
    * reduce output buffer size by GST_AES_BLOCK_SIZE in this case */
   if (filter->serialize_iv && filter->awaiting_first_buffer) {
-    g_assert (gst_buffer_get_size (inbuf) > GST_AES_BLOCK_SIZE);
+    g_assert (in_size > GST_AES_BLOCK_SIZE);
     out_size -= GST_AES_BLOCK_SIZE;
   }
   g_mutex_unlock (&filter->decoder_lock);
 
   *outbuf = gst_buffer_new_allocate (NULL, out_size, NULL);
   GST_LOG_OBJECT (filter,
-      "Input buffer size %d,\nAllocating output buffer size: %d",
-      (gint) gst_buffer_get_size (inbuf), out_size);
+      "Input buffer size %" G_GSIZE_FORMAT
+      ", allocating output buffer size: %" G_GSIZE_FORMAT, in_size, out_size);
   bclass->copy_metadata (base, inbuf, *outbuf);
 
   return GST_FLOW_OK;
