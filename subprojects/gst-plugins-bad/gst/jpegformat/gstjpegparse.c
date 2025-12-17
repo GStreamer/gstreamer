@@ -71,6 +71,7 @@ enum ParserState
   GST_JPEG_PARSER_STATE_GOT_SOS = 1 << 2,
   GST_JPEG_PARSER_STATE_GOT_JFIF = 1 << 3,
   GST_JPEG_PARSER_STATE_GOT_ADOBE = 1 << 4,
+  GST_JPEG_PARSER_STATE_GOT_METADATA = 1 << 5,
 
   GST_JPEG_PARSER_STATE_VALID_PICTURE = (GST_JPEG_PARSER_STATE_GOT_SOI |
       GST_JPEG_PARSER_STATE_GOT_SOF | GST_JPEG_PARSER_STATE_GOT_SOS),
@@ -515,7 +516,7 @@ gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
     if (xt > 0 && yt > 0)
       GST_FIXME_OBJECT (parse, "embedded thumbnail ignored");
 
-    return TRUE;
+    goto bail;
   }
 
   /* JFIF  Extension  */
@@ -523,7 +524,7 @@ gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
     if (!valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_JFIF))
       return FALSE;
 
-    return TRUE;
+    goto bail;
   }
 
   /* https://exiftool.org/TagNames/JPEG.html#AVI1 */
@@ -538,12 +539,14 @@ gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
     GST_DEBUG_OBJECT (parse, "MJPEG interleaved field: %s", unit == 0 ?
         "not interleaved" : unit % 2 ? "Odd" : "Even");
 
-    return TRUE;
+    goto bail;
   }
 
   GST_MEMDUMP_OBJECT (parse, "Unhandled app0", seg->data + seg->offset,
       seg->size);
 
+bail:
+  parse->state |= GST_JPEG_PARSER_STATE_GOT_METADATA;
   return TRUE;
 }
 
@@ -608,16 +611,17 @@ gst_jpeg_parse_app1 (GstJpegParse * parse, GstJpegSegment * seg)
         gst_tag_list_unref (tags);
       } else {
         GST_INFO_OBJECT (parse, "failed to parse %s: %s", id_str, data);
-        return FALSE;
       }
     }
 
-    return TRUE;
+    goto bail;
   }
 
   GST_MEMDUMP_OBJECT (parse, "Unhandled app1", seg->data + seg->offset,
       seg->size);
 
+bail:
+  parse->state |= GST_JPEG_PARSER_STATE_GOT_METADATA;
   return TRUE;
 }
 
@@ -644,8 +648,10 @@ gst_jpeg_parse_app14 (GstJpegParse * parse, GstJpegSegment * seg)
     if (!gst_byte_reader_skip (&reader, 5))
       return FALSE;
   } else {
-    GST_DEBUG_OBJECT (parse, "Unhandled app14");
-    return TRUE;
+    GST_MEMDUMP_OBJECT (parse, "Unhandled app14", seg->data + seg->offset,
+        seg->size);
+
+    goto bail;
   }
 
   /* skip version and flags */
@@ -656,9 +662,12 @@ gst_jpeg_parse_app14 (GstJpegParse * parse, GstJpegSegment * seg)
 
   /* transform bit might not exist  */
   if (!gst_byte_reader_get_uint8 (&reader, &transform))
-    return TRUE;
+    goto bail;
 
   parse->adobe_transform = transform;
+
+bail:
+  parse->state |= GST_JPEG_PARSER_STATE_GOT_METADATA;
   return TRUE;
 }
 
@@ -714,6 +723,8 @@ gst_jpeg_parse_com (GstJpegParse * parse, GstJpegSegment * seg)
         GST_TAG_COMMENT, comment, NULL);
     g_free (comment);
   }
+
+  parse->state |= GST_JPEG_PARSER_STATE_GOT_METADATA;
 
   return TRUE;
 }
@@ -844,6 +855,7 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
   GstJpegMarker marker;
   GstJpegSegment seg;
   guint offset;
+  gint prev_state;
 
   GST_TRACE_OBJECT (parse, "frame %" GST_PTR_FORMAT, frame->buffer);
 
@@ -907,15 +919,19 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
             return gst_jpeg_parse_finish_frame (parse, frame, seg.offset - 2);
           }
 
+          prev_state = parse->state;
           gst_jpeg_parse_reset (parse);
-          parse->state |= GST_JPEG_PARSER_STATE_GOT_SOI;
-          /* unset tags */
-          gst_base_parse_merge_tags (bparse, NULL, GST_TAG_MERGE_UNDEFINED);
+          parse->state |= prev_state | GST_JPEG_PARSER_STATE_GOT_SOI;
 
-          *skipsize = offset - 2;
-          GST_DEBUG_OBJECT (parse, "skipping %d bytes before SOI", *skipsize);
-          parse->last_offset = 2;
-          goto beach;
+          if (!valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_METADATA)) {
+            /* unset tags */
+            gst_base_parse_merge_tags (bparse, NULL, GST_TAG_MERGE_UNDEFINED);
+
+            *skipsize = offset - 2;
+            GST_DEBUG_OBJECT (parse, "skipping %d bytes before SOI", *skipsize);
+            parse->last_offset = 2;
+            goto beach;
+          }
         }
 
         /* unset tags */
@@ -930,7 +946,8 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
         } else if (parse->interlace_mode == GST_VIDEO_INTERLACE_MODE_INTERLEAVED
             && parse->field == 0) {
           parse->field = 1;
-          parse->state = 0;
+          /* reset the state to continue parsing */
+          parse->state = GST_JPEG_PARSER_STATE_GOT_METADATA;
         }
         break;
       case GST_JPEG_MARKER_SOS:
