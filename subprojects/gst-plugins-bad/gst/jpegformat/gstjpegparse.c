@@ -595,8 +595,28 @@ gst_jpeg_parse_app1 (GstJpegParse * parse, GstJpegSegment * seg)
     if (!gst_byte_reader_get_data (&reader, size, &data))
       return FALSE;
 
-    buf = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
-        (gpointer) data, size, 0, size, NULL, NULL);
+    /* add synthetic xpacket for xpm if it doesn't have it */
+    if (i == 1 && !g_strstr_len ((const char *) data, size, "<?xpacket begin")) {
+      gpointer str;
+      gsize len;
+      GString *xmp = g_string_new ("<?xpacket begin=\"r\"?>");
+
+      g_string_append_len (xmp, (const char *) data, size);
+      g_string_append (xmp, "<?xpacket end=\"r\"?>");
+
+      len = xmp->len;
+#if GLIB_CHECK_VERSION (2, 76, 0)
+      str = g_string_free_and_steal (xmp);
+#else
+      str = g_string_free (xmp, FALSE);
+#endif
+
+      buf = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, str, len, 0,
+          len, str, g_free);
+    } else {
+      buf = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+          (gpointer) data, size, 0, size, NULL, NULL);
+    }
 
     if (buf) {
       GstTagList *tags;
