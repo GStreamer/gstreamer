@@ -13,23 +13,16 @@ libgstwebrtcnice_headers = files([
 
 libgstwebrtcnice_dep = dependency('', required : false)
 
-libnice_dep = dependency('nice', version : '>=0.1.20', required : get_option('webrtc'),
+libnice_dep = dependency('nice', version : '>=0.1.23', required : get_option('webrtc'),
                          allow_fallback: true, default_options: ['tests=disabled'])
 
 deps = [gstwebrtc_dep, libnice_dep]
 
 if libnice_dep.found()
   libnice_version = libnice_dep.version()
-  libnice_c_args = []
-  if libnice_version.version_compare('> 0.1.21.1')
-    libnice_c_args += '-DHAVE_LIBNICE_CONSENT_FIX'
-  endif
-  if libnice_version.version_compare('>= 0.1.23')
-    libnice_c_args += '-DHAVE_LIBNICE_AGENT_CLOSE_FORCED'
-  endif
   libgstwebrtcnice = library('gstwebrtcnice-' + api_version,
     libgstwebrtcnice_sources, libgstwebrtcnice_headers,
-    c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_WEBRTCNICE', '-DG_LOG_DOMAIN="GStreamer-webrtcnice"'] + libnice_c_args,
+    c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_WEBRTCNICE', '-DG_LOG_DOMAIN="GStreamer-webrtcnice"'],
     include_directories: [configinc],
     version : libversion,
     soversion : soversion,

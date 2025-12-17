@@ -1761,7 +1761,6 @@ gst_webrtc_nice_get_property (GObject * object, guint prop_id,
   }
 }
 
-#if HAVE_LIBNICE_AGENT_CLOSE_FORCED
 static void
 _agent_closed_cb (GObject * source_object, GAsyncResult * res,
     gpointer user_data)
@@ -1806,7 +1805,6 @@ _close_agent (GstWebRTCNice * ice)
   g_main_context_pop_thread_default (main_context);
   g_main_context_unref (main_context);
 }
-#endif
 
 static void
 gst_webrtc_nice_finalize (GObject * object)
@@ -1816,9 +1814,7 @@ gst_webrtc_nice_finalize (GObject * object)
   g_signal_handlers_disconnect_by_data (ice->priv->nice_agent, ice);
 
   g_cancellable_cancel (ice->priv->resolve_cancellable);
-#if HAVE_LIBNICE_AGENT_CLOSE_FORCED
   _close_agent (ice);
-#endif
   outstanding_resolves_wait (ice->priv->outstanding_resolves);
 
   _stop_thread (ice);
@@ -1863,16 +1859,8 @@ gst_webrtc_nice_constructed (GObject * object)
 
   options |= NICE_AGENT_OPTION_ICE_TRICKLE;
   options |= NICE_AGENT_OPTION_REGULAR_NOMINATION;
-
-/* https://gitlab.freedesktop.org/libnice/libnice/-/merge_requests/283 */
-#ifdef HAVE_LIBNICE_AGENT_CLOSE_FORCED
   options |= NICE_AGENT_OPTION_CLOSE_FORCED;
-#endif
-
-/*  https://gitlab.freedesktop.org/libnice/libnice/-/merge_requests/257 */
-#ifdef HAVE_LIBNICE_CONSENT_FIX
   options |= NICE_AGENT_OPTION_CONSENT_FRESHNESS;
-#endif
 
   ice->priv->nice_agent = nice_agent_new_full (ice->priv->main_context,
       NICE_COMPATIBILITY_RFC5245, options);
