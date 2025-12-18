@@ -428,7 +428,9 @@ gst_hls_demux_stream_seek (GstAdaptiveDemuxStream * stream, gboolean forward,
   /* FIXME: Here we need proper discont handling */
   for (walk = hls_stream->playlist->files; walk; walk = walk->next) {
     file = walk->data;
-
+    if (file->discont) {
+      stream->discont = TRUE;
+    }
     current_sequence = file->sequence;
     if ((forward && snap_after) || snap_nearest) {
       if (current_pos >= ts)
