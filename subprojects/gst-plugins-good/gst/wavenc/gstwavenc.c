@@ -1034,13 +1034,21 @@ gst_wavenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     GstStructure *s;
     GstCaps *caps = gst_pad_get_allowed_caps (wavenc->srcpad);
 
+    wavenc->use_rf64 = FALSE;
     GST_DEBUG_OBJECT (wavenc, "allowed src caps: %" GST_PTR_FORMAT, caps);
-    if (!gst_caps_is_fixed (caps)) {
-      caps = gst_caps_truncate (caps);
+    if (caps) {
+      if (!gst_caps_is_empty (caps)) {
+        s = gst_caps_get_structure (caps, 0);
+        wavenc->use_rf64 = gst_structure_has_name (s, "audio/x-rf64");
+      }
+      gst_caps_unref (caps);
     }
-    s = gst_caps_get_structure (caps, 0);
-    wavenc->use_rf64 = gst_structure_has_name (s, "audio/x-rf64");
 
+    if (wavenc->use_rf64) {
+      caps = gst_caps_new_empty_simple ("audio/x-rf64");
+    } else {
+      caps = gst_caps_new_empty_simple ("audio/x-wav");
+    }
     gst_pad_set_caps (wavenc->srcpad, caps);
     gst_caps_unref (caps);
 
