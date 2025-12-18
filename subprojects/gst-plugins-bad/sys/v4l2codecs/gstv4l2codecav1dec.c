@@ -1410,6 +1410,10 @@ fail:
     gst_v4l2_request_unref (request);
 
   gst_v4l2_codec_av1_dec_reset_picture (self);
+
+  if (flow_ret != GST_FLOW_OK)
+    return flow_ret;
+
   return GST_FLOW_ERROR;
 }
 
