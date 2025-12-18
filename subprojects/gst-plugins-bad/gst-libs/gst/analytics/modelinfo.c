@@ -221,7 +221,7 @@ modelinfo_check_version (GKeyFile * kf)
  *
  * The tensor ID is ideally registered in the [Tensor ID Registry](https://github.com/collabora/tensor-id-registry/blob/main/tensor-id-register.md).
  *
- * Returns: (nullable): The tensor ID string, or %NULL if not found.
+ * Returns: (nullable) (transfer full): The tensor ID string, or %NULL if not found.
  *    The caller must free this with g_free() when done.
  *
  * Since: 1.28
@@ -254,7 +254,7 @@ gst_analytics_modelinfo_get_id (GstAnalyticsModelInfo * modelinfo,
  * The group ID is stored in the modelinfo section and is global for all
  * tensors in the model.
  *
- * Returns: (nullable): The group ID string, or %NULL if not found.
+ * Returns: (nullable) (transfer full): The group ID string, or %NULL if not found.
  *    The caller must free this with g_free() when done.
  *
  * Since: 1.28
@@ -486,7 +486,7 @@ modelinfo_find_tensor_name_by_dims (GstAnalyticsModelInfo * modelinfo,
 
 /**
  * gst_analytics_modelinfo_load:
- * @model_filename: Path to the model file (e.g., "model.onnx", "model.tflite")
+ * @model_filename: (type filename): Path to the model file (e.g., "model.onnx", "model.tflite")
  *
  * Load a modelinfo file associated with the given model file.
  *
@@ -590,7 +590,7 @@ gst_analytics_modelinfo_free (GstAnalyticsModelInfo * modelinfo)
  * 2. Search by index for the specified direction and validate
  * 3. Search by dimensions and data type
  *
- * Returns: (nullable): The tensor name if found, or %NULL otherwise.
+ * Returns: (nullable) (transfer full): The tensor name if found, or %NULL otherwise.
  *    The caller must free this with g_free() when done.
  *
  * Since: 1.28
