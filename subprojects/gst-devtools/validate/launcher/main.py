@@ -34,8 +34,20 @@ from .loggable import Loggable
 from .baseclasses import _TestsLauncher, ScenarioManager
 from .utils import printc, path2url, DEFAULT_MAIN_DIR, launch_command, Colors, Protocols, which
 
+PAGER = os.environ.get("PAGER", "").split(" ")
+if not PAGER[0]:
+    PAGER = ["less"]
 
-LESS = "less"
+
+def show_file_in_pager(file_path: str):
+    # Modelled after the equivalent code in gst-inspect.c:
+    # "R" : support color
+    # "X" : do not clear the screen when leaving the pager
+    # "F" : skip the pager if content fit into the screen
+    less_opts = os.environ.get("GST_LESS", "RXF")
+    subprocess.check_call(PAGER + [file_path], env=os.environ | {"LESS": less_opts})
+
+
 HELP = '''
 
 ===============================================================================
@@ -614,11 +626,12 @@ def setup_launcher_from_args(args, main_options=None):
     tests_launcher = _TestsLauncher()
     tests_launcher.add_options(parser)
 
-    if "--help" in sys.argv and which(LESS):
+    if "--help" in sys.argv and which(PAGER[0]):
         tmpf = tempfile.NamedTemporaryFile(mode='r+')
 
         parser.print_help(file=tmpf)
-        os.system("%s %s" % (LESS, tmpf.name))
+        tmpf.flush()
+        show_file_in_pager(tmpf.name)
         return False, None, None
 
     options = LauncherConfig()
