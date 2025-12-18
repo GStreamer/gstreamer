@@ -126,6 +126,12 @@ struct _GstH266Parse
 
   GstVideoParseUserData user_data;
   GstVideoParseUserDataUnregistered user_data_unregistered;
+  GstH274DigitallySignedContentInitialization dsc_initialization;
+  guint dsc_initialization_state;
+  GstH274DigitallySignedContentSelection dsc_selection;
+  guint dsc_selection_state;
+  GstH274DigitallySignedContentVerification dsc_verification;
+  guint dsc_verification_state;
 
   /* props */
   gint interval;

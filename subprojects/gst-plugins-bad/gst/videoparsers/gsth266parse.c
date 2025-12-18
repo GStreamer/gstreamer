@@ -47,6 +47,7 @@
 #include <gst/base/base.h>
 #include <gst/pbutils/pbutils.h>
 #include "gstvideoparserselements.h"
+#include <gst/video/gstvideodscmeta.h>
 #include "gsth266parse.h"
 
 #include <string.h>
@@ -263,6 +264,18 @@ gst_h266_parse_reset_frame (GstH266Parse * h266parse)
   gst_video_clear_user_data (&h266parse->user_data, FALSE);
   gst_video_clear_user_data_unregistered (&h266parse->user_data_unregistered,
       FALSE);
+  if (h266parse->dsc_initialization_state == GST_H266_PARSE_SEI_ACTIVE) {
+    gst_h274_dsc_initialization_free (&h266parse->dsc_initialization);
+    h266parse->dsc_initialization_state = GST_H266_PARSE_SEI_EXPIRED;
+  }
+  if (h266parse->dsc_selection_state == GST_H266_PARSE_SEI_ACTIVE) {
+    gst_h274_dsc_selection_free (&h266parse->dsc_selection);
+    h266parse->dsc_selection_state = GST_H266_PARSE_SEI_EXPIRED;
+  }
+  if (h266parse->dsc_verification_state == GST_H266_PARSE_SEI_ACTIVE) {
+    gst_h274_dsc_verification_free (&h266parse->dsc_verification);
+    h266parse->dsc_verification_state = GST_H266_PARSE_SEI_EXPIRED;
+  }
 }
 
 static void
@@ -314,6 +327,9 @@ gst_h266_parse_reset_stream_info (GstH266Parse * h266parse)
 
   gst_video_content_light_level_init (&h266parse->content_light_level);
   h266parse->content_light_level_state = GST_H266_PARSE_SEI_EXPIRED;
+  h266parse->dsc_initialization_state = GST_H266_PARSE_SEI_EXPIRED;
+  h266parse->dsc_selection_state = GST_H266_PARSE_SEI_EXPIRED;
+  h266parse->dsc_verification_state = GST_H266_PARSE_SEI_EXPIRED;
 }
 
 static void
@@ -637,6 +653,23 @@ gst_h266_parse_process_sei (GstH266Parse * h266parse, GstH266NalUnit * nalu)
         gst_h266_parse_process_sei_user_data_unregistered (h266parse,
             &sei.payload.user_data_unregistered);
         break;
+      case GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION:
+        gst_h274_dsc_initialization_free (&h266parse->dsc_initialization);
+        gst_h274_dsc_initialization_copy (&h266parse->dsc_initialization,
+            &sei.payload.dsc_initialization);
+        h266parse->dsc_initialization_state = GST_H266_PARSE_SEI_ACTIVE;
+        break;
+      case GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION:
+        gst_h274_dsc_selection_copy (&h266parse->dsc_selection,
+            &sei.payload.dsc_selection);
+        h266parse->dsc_selection_state = GST_H266_PARSE_SEI_ACTIVE;
+        break;
+      case GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION:
+        gst_h274_dsc_verification_free (&h266parse->dsc_verification);
+        gst_h274_dsc_verification_copy (&h266parse->dsc_verification,
+            &sei.payload.dsc_verification);
+        h266parse->dsc_verification_state = GST_H266_PARSE_SEI_ACTIVE;
+        break;
       default:
         break;
     }
@@ -808,7 +841,9 @@ gst_h266_parse_process_nal (GstH266Parse * h266parse, GstH266NalUnit * nalu)
     case GST_H266_NAL_PREFIX_SEI:
     case GST_H266_NAL_SUFFIX_SEI:
       /* expected state: got-sps */
-      if (!GST_H266_PARSE_STATE_VALID (h266parse, GST_H266_PARSE_STATE_GOT_SPS))
+      if (nal_type == GST_H266_NAL_SUFFIX_SEI
+          && !GST_H266_PARSE_STATE_VALID (h266parse,
+              GST_H266_PARSE_STATE_GOT_SPS))
         return FALSE;
 
       h266parse->header = TRUE;
@@ -3084,6 +3119,18 @@ gst_h266_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   gst_video_push_user_data_unregistered ((GstElement *) h266parse,
       &h266parse->user_data_unregistered, parse_buffer);
+
+  if (h266parse->dsc_initialization_state == GST_H266_PARSE_SEI_ACTIVE)
+    gst_buffer_add_video_dsc_initialization_meta
+        (parse_buffer, &h266parse->dsc_initialization);
+
+  if (h266parse->dsc_selection_state == GST_H266_PARSE_SEI_ACTIVE)
+    gst_buffer_add_video_dsc_selection_meta
+        (parse_buffer, &h266parse->dsc_selection);
+
+  if (h266parse->dsc_verification_state == GST_H266_PARSE_SEI_ACTIVE)
+    gst_buffer_add_video_dsc_verification_meta
+        (parse_buffer, &h266parse->dsc_verification);
 
   gst_h266_parse_reset_frame (h266parse);
 
