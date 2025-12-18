@@ -1548,10 +1548,14 @@ gst_h266_decoder_finish_current_picture (GstH266Decoder * self,
   if (klass->end_picture) {
     flow_ret = klass->end_picture (self, priv->current_picture);
     if (flow_ret != GST_FLOW_OK) {
-      GST_WARNING_OBJECT (self, "End picture failed");
+      if (flow_ret == GST_FLOW_FLUSHING)
+        GST_DEBUG_OBJECT (self, "Picture decode aborted.");
+      else
+        GST_WARNING_OBJECT (self, "End picture failed");
 
       /* continue to empty dpb */
       UPDATE_FLOW_RETURN (ret, flow_ret);
+      priv->current_picture->output_flag = FALSE;
     }
   }
 
