@@ -548,7 +548,7 @@ class LauncherConfig(Loggable):
                                help="Paths where to clone the testuite to run."
                                " default is MAIN_DIR/gst-integration-testsuites")
         dir_group.add_argument("-rl", "--redirect-logs", dest="redirect_logs",
-                               help="Redirect logs to 'stdout' or 'sdterr'.")
+                               help="Redirect logs to 'stdout' or 'stderr'.")
         dir_group.add_argument("-v", "--verbose", dest="verbose",
                                action='count',
                                help="Redirect logs to stdout.")
