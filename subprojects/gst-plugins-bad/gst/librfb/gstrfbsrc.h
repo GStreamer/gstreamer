@@ -24,7 +24,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
-#include <gst/video/gstvideopool.h>
+#include <gst/video/video.h>
 
 #include "rfbdecoder.h"
 
