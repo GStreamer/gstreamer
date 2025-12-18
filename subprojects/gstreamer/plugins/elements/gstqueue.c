@@ -79,8 +79,10 @@ GST_DEBUG_CATEGORY_STATIC (queue_debug);
 #define GST_CAT_DEFAULT (queue_debug)
 GST_DEBUG_CATEGORY_STATIC (queue_dataflow);
 
-#define STATUS(queue, pad, msg) \
-  GST_CAT_LOG_OBJECT (queue_dataflow, queue, \
+#define STATUS(queue, pad, msg) STATUS_FULL(GST_LEVEL_LOG, queue, pad, msg)
+
+#define STATUS_FULL(log_lvl, queue, pad, msg) \
+  GST_CAT_LEVEL_LOG (queue_dataflow, log_lvl, queue, \
                       "(%s:%s) " msg ": %u of %u-%u buffers, %u of %u-%u " \
                       "bytes, %" G_GUINT64_FORMAT " of %" G_GUINT64_FORMAT \
                       "-%" G_GUINT64_FORMAT " ns, %" G_GSIZE_FORMAT " items", \
@@ -1305,7 +1307,7 @@ gst_queue_chain_buffer_or_list (GstPad * pad, GstObject * parent,
         /* next buffer needs to get a DISCONT flag */
         queue->tail_needs_discont = TRUE;
         /* leak current buffer */
-        GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
+        STATUS_FULL (GST_LEVEL_DEBUG, queue, queue->sinkpad,
             "queue is full, leaking buffer on upstream end");
         /* now we can clean up and exit right away */
         goto out_unref;
@@ -1324,7 +1326,7 @@ gst_queue_chain_buffer_or_list (GstPad * pad, GstObject * parent,
         /* fall-through */
       case GST_QUEUE_NO_LEAK:
       {
-        GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
+        STATUS_FULL (GST_LEVEL_DEBUG, queue, queue->sinkpad,
             "queue is full, waiting for free space");
 
         /* don't leak. Instead, wait for space to be available */
@@ -1333,7 +1335,8 @@ gst_queue_chain_buffer_or_list (GstPad * pad, GstObject * parent,
           GST_QUEUE_WAIT_DEL_CHECK (queue, out_flushing);
         };
 
-        GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "queue is not full");
+        STATUS_FULL (GST_LEVEL_DEBUG, queue, queue->sinkpad,
+            "queue is not full");
 
         if (!queue->silent) {
           GST_QUEUE_MUTEX_UNLOCK (queue);
@@ -1598,7 +1601,7 @@ gst_queue_loop (GstPad * pad)
   GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
 
   while (gst_queue_is_empty (queue)) {
-    GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "queue is empty");
+    STATUS_FULL (GST_LEVEL_DEBUG, queue, pad, "queue is empty");
     if (!queue->silent) {
       GST_QUEUE_MUTEX_UNLOCK (queue);
       g_signal_emit (queue, gst_queue_signals[SIGNAL_UNDERRUN], 0);
@@ -1610,7 +1613,7 @@ gst_queue_loop (GstPad * pad)
       GST_QUEUE_WAIT_ADD_CHECK (queue, out_flushing);
     }
 
-    GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "queue is not empty");
+    STATUS_FULL (GST_LEVEL_DEBUG, queue, pad, "queue is not empty");
     if (!queue->silent) {
       GST_QUEUE_MUTEX_UNLOCK (queue);
       g_signal_emit (queue, gst_queue_signals[SIGNAL_RUNNING], 0);
