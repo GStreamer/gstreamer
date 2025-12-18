@@ -667,7 +667,7 @@ gst_v4l2_codec_vp8_dec_end_picture (GstVp8Decoder * decoder,
 {
   GstV4l2CodecVp8Dec *self = GST_V4L2_CODEC_VP8_DEC (decoder);
   GstVideoCodecFrame *frame;
-  GstV4l2Request *request;
+  GstV4l2Request *request = NULL;
   GstBuffer *buffer;
   GstFlowReturn flow_ret = GST_FLOW_OK;
   gsize bytesused;
@@ -734,6 +734,9 @@ gst_v4l2_codec_vp8_dec_end_picture (GstVp8Decoder * decoder,
   return GST_FLOW_OK;
 
 fail:
+  if (request)
+    gst_v4l2_request_unref (request);
+
   gst_v4l2_codec_vp8_dec_reset_picture (self);
 
   if (flow_ret != GST_FLOW_OK)
