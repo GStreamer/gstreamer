@@ -1116,6 +1116,8 @@ gst_v4l2_codec_h264_dec_output_picture (GstH264Decoder * decoder,
   GstCodecPicture *codec_picture = GST_CODEC_PICTURE (picture);
   gint ret;
 
+  g_return_val_if_fail (request, GST_FLOW_ERROR);
+
   if (codec_picture->discont_state) {
     if (!gst_video_decoder_negotiate (vdec)) {
       GST_ERROR_OBJECT (vdec, "Could not re-negotiate with updated state");
