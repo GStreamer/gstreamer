@@ -3801,9 +3801,8 @@ gst_parse_chain_expose (GstParseChain * chain, GList ** endpads,
     return TRUE;
   }
 
-  if (chain->endpad == NULL && chain->parsed && chain->pending_pads &&
-      chain->current_pad && chain->current_pad->active_stream) {
-    /* The chain has a pending pad from a parser, and it has stream info, let's just
+  if (chain->endpad == NULL && chain->parsed && chain->pending_pads) {
+    /* The chain has a pending pad from a parser, let's just
      * expose that now as the endpad */
     GList *cur = chain->pending_pads;
     GstPendingPad *ppad = (GstPendingPad *) (cur->data);
@@ -4164,18 +4163,6 @@ gst_parse_pad_stream_start_event (GstParsePad * parsepad, GstEvent * event)
   gst_object_unref (stream);
   GST_LOG_OBJECT (parsepad, "Saw stream %s (GstStream %p)",
       stream->stream_id, stream);
-
-  GstParseBin *parsebin = parsepad->parsebin;
-
-  EXPOSE_LOCK (parsebin);
-  if (parsebin->parse_chain != NULL
-      && gst_parse_chain_is_complete (parsebin->parse_chain)) {
-    GST_LOG_OBJECT (parsebin,
-        "Saw stream-start and no more dynamic objects, now attempting to expose the group");
-    if (!gst_parse_bin_expose (parsebin))
-      GST_WARNING_OBJECT (parsebin, "Couldn't expose group");
-  }
-  EXPOSE_UNLOCK (parsebin);
 
   return event;
 }
