@@ -1,5 +1,5 @@
 cairo_dep = dependency('cairo-gobject', version : '>=1.10.0', required : get_option('cairo'),
-                       default_options: ['glib=enabled'])
+                       default_options: {'glib': 'enabled', 'tests': 'disabled'})
 
 cairo_sources = [
   'gstcairo.c',

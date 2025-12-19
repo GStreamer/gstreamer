@@ -608,7 +608,8 @@ endif
 atomic_dep = cc.find_library('atomic', required: false)
 platform_deps += atomic_dep
 
-gir = find_program('g-ir-scanner', required : get_option('introspection'))
+gir = find_program('g-ir-scanner', required : get_option('introspection'),
+    default_options: {'cairo': 'disabled'})
 gnome = import('gnome')
 
 build_gir = gir.found() and (not meson.is_cross_build() or get_option('introspection').enabled())
