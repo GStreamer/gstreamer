@@ -248,6 +248,26 @@ $ ./cerbero-uninstalled package gstreamer-1.0 --offline
 
 For more inspiration, see [GStreamer's GitLab CI setup](https://gitlab.freedesktop.org/gstreamer/gst-ci).
 
+# Artifact Types
+
+Starting with the 1.28 release, Cerbero supports outputting various kinds of
+artifact types:
+
+* Tarballs
+  - Default for Android and Linux, available for all targets
+  - Prior to 1.28, this could be selected with the `-t/--tarball` option
+* Windows Installer Packages
+  - Default for, and only available for Windows and cross-Windows targets
+* macOS Installer Packages
+  - Default for, and only available for macOS and iOS targets
+* Python 3 Wheels
+  - Available for macOS and Windows
+  - The minimum supported Python version for the wheel will be whatever Python
+    version you build the wheel with. The oldest supported by Cerbero is 3.9.
+
+The artifact to output can be controlled with the `--artifact` option. Valid
+choices are: `tarball` `msi` `pkg` `wheel`.
+
 ## Enabling Optional Features with Variants
 
 Cerbero controls optional and platform-specific features with `variants`. You
