@@ -1,0 +1,76 @@
+From 17f4db5538651fb328a9d865bbf1e050396867a8 Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Mon, 22 Dec 2025 11:22:52 +0530
+Subject: [PATCH] meson: Fix static and debug builds on Windows
+
+This regressed in 3b02370b960b5eada6791d0daa1fce4aa6420269. Moving
+the extern symbol macro inside config.h means that consumers of the
+library do not know that they should link to it with -DJSON_STATIC_BUILD
+and look for the wrong symbols. The same bug also applies to
+JSON_ENABLE_DEBUG.
+
+The fix is to set it via cflags in three places: library()
+pkg.generate() and in declare_dependency().
+
+```
+conformance.c.obj : error LNK2019: unresolved external symbol __imp_json_parser_new referenced in function parse_file
+conformance.c.obj : error LNK2019: unresolved external symbol __imp_json_parser_set_strict referenced in function parse_file
+conformance.c.obj : error LNK2019: unresolved external symbol __imp_json_parser_load_from_file referenced in function parse_file
+```
+---
+ json-glib/meson.build | 4 +++-
+ meson.build           | 5 +++--
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/json-glib/meson.build b/json-glib/meson.build
+index 60eb632..f37e213 100644
+--- a/json-glib/meson.build
++++ b/json-glib/meson.build
+@@ -84,7 +84,7 @@ json_lib = library(
+   soversion: soversion,
+   include_directories: root_dir,
+   dependencies: [gio_dep],
+-  c_args: json_c_args + common_cflags,
++  c_args: json_c_args + common_cflags + json_compile_args,
+   link_args: common_ldflags,
+   gnu_symbol_visibility: 'hidden',
+   darwin_versions: darwin_versions,
+@@ -95,6 +95,7 @@ pkgg = import('pkgconfig')
+ pkgg.generate(
+   libraries: json_lib,
+   subdirs: json_api_name,
++  extra_cflags: json_compile_args,
+   version: json_version,
+   name: 'JSON-GLib',
+   filebase: json_api_name,
+@@ -129,6 +130,7 @@ endif
+ 
+ json_glib_dep = declare_dependency(
+   link_with: json_lib,
++  compile_args: json_compile_args,
+   include_directories: root_dir,
+   dependencies: [gio_dep],
+   sources: [ json_enum_types_h, json_glib_gir ],
+diff --git a/meson.build b/meson.build
+index 50a309f..4ec3e24 100644
+--- a/meson.build
++++ b/meson.build
+@@ -65,12 +65,13 @@ endforeach
+ 
+ cdata.set_quoted('GETTEXT_PACKAGE', json_gettext_domain)
+ 
++json_compile_args = []
+ if get_option('default_library') == 'static'
+-  cdata.set('JSON_STATIC_BUILD', true)
++  json_compile_args += ['-DJSON_STATIC_BUILD']
+ endif
+ 
+ if get_option('debug')
+-  cdata.set('JSON_ENABLE_DEBUG', true)
++  json_compile_args += ['-DJSON_ENABLE_DEBUG']
+ endif
+ 
+ if cc.get_id() == 'msvc'
+-- 
+2.50.0
+

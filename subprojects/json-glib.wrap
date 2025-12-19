@@ -4,6 +4,7 @@ source_url = https://download.gnome.org/sources/json-glib/1.10/json-glib-1.10.8.
 source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/json-glib_1.10.8-1/json-glib-1.10.8.tar.xz
 source_filename = json-glib-1.10.8.tar.xz
 source_hash = 55c5c141a564245b8f8fbe7698663c87a45a7333c2a2c56f06f811ab73b212dd
+diff_files = json-glib-1.10.8/0001-meson-Fix-static-and-debug-builds-on-Windows.patch
 wrapdb_version = 1.10.8-1
 
 [provide]

@@ -569,7 +569,9 @@ glib_req = '>= 2.64.0'
 
 # Find dependencies
 glib_dep = dependency('glib-2.0', version: glib_req,
-    default_options: {'sysprof': 'disabled'})
+    # glib's (new) introspection support is disabled till the cyclic dependency
+    # is fixed: https://gitlab.gnome.org/GNOME/glib/-/issues/3801
+    default_options: {'sysprof': 'disabled', 'introspection': 'disabled'})
 gobject_dep = dependency('gobject-2.0')
 gmodule_dep = dependency('gmodule-no-export-2.0')
 if host_system == 'windows'
