@@ -2576,6 +2576,30 @@ source_setup_cb (GstElement * playbin, GstElement * source, GstPlay * self)
   }
 }
 
+static void
+about_to_finish_cb (GstElement * playbin, GstPlay * self)
+{
+  GstPlayLoop loop;
+  gchar *uri = NULL;
+
+  g_mutex_lock (&self->lock);
+  loop = gst_play_config_get_loop (self->config);
+  uri = g_strdup (self->uri);
+  g_mutex_unlock (&self->lock);
+
+  switch (loop) {
+    case GST_PLAY_LOOP_NONE:
+      break;
+    case GST_PLAY_LOOP_TRACK:
+      GST_DEBUG_OBJECT (self, "Resetting URI to '%s'", GST_STR_NULL (uri));
+
+      g_object_set (self->playbin, "uri", uri, NULL);
+      break;
+  }
+
+  g_free (uri);
+}
+
 static gpointer
 gst_play_main (gpointer data)
 {
@@ -2649,6 +2673,8 @@ gst_play_main (gpointer data)
       G_CALLBACK (mute_notify_cb), self);
   g_signal_connect (self->playbin, "source-setup",
       G_CALLBACK (source_setup_cb), self);
+  g_signal_connect (self->playbin, "about-to-finish",
+      G_CALLBACK (about_to_finish_cb), self);
 
   self->target_state = GST_STATE_NULL;
   self->current_state = GST_STATE_NULL;
@@ -4482,6 +4508,24 @@ gst_play_message_get_type (void)
   return (GType) id;
 }
 
+GType
+gst_play_loop_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_PLAY_LOOP_NONE), "GST_PLAY_LOOP_NONE", "none"},
+    {C_ENUM (GST_PLAY_LOOP_TRACK), "GST_PLAY_LOOP_TRACK", "track"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstPlayLoop", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
 /**
  * gst_play_state_get_name:
  * @state: a #GstPlayState
@@ -4523,6 +4567,25 @@ gst_play_message_get_name (GstPlayMessage message_type)
   GEnumValue *enum_value;
   enum_class = g_type_class_ref (GST_TYPE_PLAY_MESSAGE);
   enum_value = g_enum_get_value (enum_class, message_type);
+  g_assert (enum_value != NULL);
+  g_type_class_unref (enum_class);
+  return enum_value->value_name;
+}
+
+/**
+ * gst_play_loop_get_name:
+ * @loop: a #GstPlayLoop
+ *
+ * Returns: (transfer none): a string with the name of the loop.
+ * Since: 1.28
+ */
+const gchar *
+gst_play_loop_get_name (GstPlayLoop loop)
+{
+  GEnumClass *enum_class;
+  GEnumValue *enum_value;
+  enum_class = g_type_class_ref (GST_TYPE_PLAY_LOOP);
+  enum_value = g_enum_get_value (enum_class, loop);
   g_assert (enum_value != NULL);
   g_type_class_unref (enum_class);
   return enum_value->value_name;
@@ -4762,6 +4825,45 @@ gst_play_config_get_seek_accurate (const GstStructure * config)
   gst_structure_get (config, "accurate-seek", G_TYPE_BOOLEAN, &accurate, NULL);
 
   return accurate;
+}
+
+/**
+ * gst_play_config_set_loop:
+ * @config: a #GstPlay configuration
+ * @loop: #GstPlayLoop
+ *
+ * Sets the looping mode.
+ *
+ * Looping is disabled by default.
+ *
+ * Since: 1.28
+ */
+void
+gst_play_config_set_loop (GstStructure * config, GstPlayLoop loop)
+{
+  g_return_if_fail (config != NULL);
+
+  gst_structure_set (config, "loop", GST_TYPE_PLAY_LOOP, loop, NULL);
+}
+
+/**
+ * gst_play_config_get_loop:
+ * @config: a #GstPlay configuration
+ *
+ * Returns: The looping mode.
+ *
+ * Since: 1.28
+ */
+GstPlayLoop
+gst_play_config_get_loop (const GstStructure * config)
+{
+  GstPlayLoop loop = GST_PLAY_LOOP_NONE;
+
+  g_return_val_if_fail (config != NULL, GST_PLAY_LOOP_NONE);
+
+  gst_structure_get (config, "loop", GST_TYPE_PLAY_LOOP, &loop, NULL);
+
+  return loop;
 }
 
 /**

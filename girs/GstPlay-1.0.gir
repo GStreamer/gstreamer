@@ -361,6 +361,19 @@ didn't happen before.</doc>
           </parameter>
         </parameters>
       </constructor>
+      <function name="config_get_loop" c:identifier="gst_play_config_get_loop" version="1.28">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">The looping mode.</doc>
+          <type name="PlayLoop" c:type="GstPlayLoop"/>
+        </return-value>
+        <parameters>
+          <parameter name="config" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlay configuration</doc>
+            <type name="Gst.Structure" c:type="const GstStructure*"/>
+          </parameter>
+        </parameters>
+      </function>
       <function name="config_get_pipeline_dump_in_error_details" c:identifier="gst_play_config_get_pipeline_dump_in_error_details" version="1.24">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
         <return-value transfer-ownership="none">
@@ -413,6 +426,25 @@ gst_play_config_set_user_agent() if any.</doc>
           <parameter name="config" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlay configuration</doc>
             <type name="Gst.Structure" c:type="const GstStructure*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="config_set_loop" c:identifier="gst_play_config_set_loop" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Sets the looping mode.
+
+Looping is disabled by default.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="config" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlay configuration</doc>
+            <type name="Gst.Structure" c:type="GstStructure*"/>
+          </parameter>
+          <parameter name="loop" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlayLoop</doc>
+            <type name="PlayLoop" c:type="GstPlayLoop"/>
           </parameter>
         </parameters>
       </function>
@@ -1611,6 +1643,27 @@ gain.</doc>
         <return-value transfer-ownership="none">
           <type name="GLib.Quark" c:type="GQuark"/>
         </return-value>
+      </function>
+    </enumeration>
+    <enumeration name="PlayLoop" version="1.28" glib:type-name="GstPlayLoop" glib:get-type="gst_play_loop_get_type" c:type="GstPlayLoop">
+      <member name="none" value="0" c:identifier="GST_PLAY_LOOP_NONE" glib:nick="none" glib:name="GST_PLAY_LOOP_NONE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">Don't loop.</doc>
+      </member>
+      <member name="track" value="1" c:identifier="GST_PLAY_LOOP_TRACK" glib:nick="track" glib:name="GST_PLAY_LOOP_TRACK">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">Loop over the current track.</doc>
+      </member>
+      <function name="get_name" c:identifier="gst_play_loop_get_name" version="1.28">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a string with the name of the loop.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="loop" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlayLoop</doc>
+            <type name="PlayLoop" c:type="GstPlayLoop"/>
+          </parameter>
+        </parameters>
       </function>
     </enumeration>
     <class name="PlayMediaInfo" c:symbol-prefix="play_media_info" c:type="GstPlayMediaInfo" version="1.20" parent="GObject.Object" glib:type-name="GstPlayMediaInfo" glib:get-type="gst_play_media_info_get_type" glib:type-struct="PlayMediaInfoClass">
@@ -3016,6 +3069,19 @@ freed using gst_play_visualization_free().</doc>
       <return-value transfer-ownership="none">
         <type name="GLib.Quark" c:type="GQuark"/>
       </return-value>
+    </function>
+    <function name="play_loop_get_name" c:identifier="gst_play_loop_get_name" moved-to="PlayLoop.get_name" version="1.28">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a string with the name of the loop.</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="loop" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlayLoop</doc>
+          <type name="PlayLoop" c:type="GstPlayLoop"/>
+        </parameter>
+      </parameters>
     </function>
     <function name="play_message_get_name" c:identifier="gst_play_message_get_name" moved-to="PlayMessage.get_name" version="1.20">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
