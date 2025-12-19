@@ -506,6 +506,8 @@ static gboolean gst_audio_aggregator_src_event (GstAggregator * agg,
     GstEvent * event);
 static gboolean gst_audio_aggregator_sink_event (GstAggregator * agg,
     GstAggregatorPad * aggpad, GstEvent * event);
+static GstFlowReturn gst_audio_aggregator_sink_event_pre_queue (GstAggregator *
+    agg, GstAggregatorPad * aggpad, GstEvent * event);
 static gboolean gst_audio_aggregator_src_query (GstAggregator * agg,
     GstQuery * query);
 static gboolean
@@ -665,6 +667,8 @@ gst_audio_aggregator_class_init (GstAudioAggregatorClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_aggregator_src_event);
   gstaggregator_class->sink_event =
       GST_DEBUG_FUNCPTR (gst_audio_aggregator_sink_event);
+  gstaggregator_class->sink_event_pre_queue =
+      gst_audio_aggregator_sink_event_pre_queue;
   gstaggregator_class->src_query =
       GST_DEBUG_FUNCPTR (gst_audio_aggregator_src_query);
   gstaggregator_class->sink_query = gst_audio_aggregator_sink_query;
@@ -1378,6 +1382,28 @@ done:
 }
 
 
+static GstFlowReturn
+gst_audio_aggregator_sink_event_pre_queue (GstAggregator * agg,
+    GstAggregatorPad * aggpad, GstEvent * event)
+{
+  if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
+    GstSegment seg;
+
+    gst_event_copy_segment (event, &seg);
+    if (seg.format != GST_FORMAT_TIME) {
+      GST_ERROR_OBJECT (aggpad, "Segment of type %s are not supported, "
+          "only TIME segments are supported", gst_format_get_name (seg.format));
+      gst_event_unref (event);
+      return GST_FLOW_ERROR;
+    }
+  }
+
+  return
+      GST_AGGREGATOR_CLASS
+      (gst_audio_aggregator_parent_class)->sink_event_pre_queue (agg, aggpad,
+      event);
+}
+
 static gboolean
 gst_audio_aggregator_sink_event (GstAggregator * agg,
     GstAggregatorPad * aggpad, GstEvent * event)
@@ -1393,16 +1419,6 @@ gst_audio_aggregator_sink_event (GstAggregator * agg,
     {
       const GstSegment *segment;
       gst_event_parse_segment (event, &segment);
-
-      if (segment->format != GST_FORMAT_TIME) {
-        GST_ERROR_OBJECT (aggpad, "Segment of type %s are not supported,"
-            " only TIME segments are supported",
-            gst_format_get_name (segment->format));
-        gst_event_unref (event);
-        event = NULL;
-        res = FALSE;
-        break;
-      }
 
       GST_OBJECT_LOCK (agg);
       if (segment->rate != GST_AGGREGATOR_PAD (agg->srcpad)->segment.rate) {

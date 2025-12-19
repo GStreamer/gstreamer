@@ -2625,6 +2625,30 @@ gst_video_aggregator_flush (GstAggregator * agg)
   return GST_FLOW_OK;
 }
 
+static GstFlowReturn
+gst_video_aggregator_sink_event_pre_queue (GstAggregator * agg,
+    GstAggregatorPad * bpad, GstEvent * event)
+{
+  GstVideoAggregatorPad *pad = GST_VIDEO_AGGREGATOR_PAD (bpad);
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
+    GstSegment seg;
+
+    gst_event_copy_segment (event, &seg);
+    if (seg.format != GST_FORMAT_TIME) {
+      GST_ERROR_OBJECT (pad, "Segment of type %s are not supported, "
+          "only TIME segments are supported", gst_format_get_name (seg.format));
+      gst_event_unref (event);
+      return GST_FLOW_ERROR;
+    }
+  }
+
+  return
+      GST_AGGREGATOR_CLASS
+      (gst_video_aggregator_parent_class)->sink_event_pre_queue (agg, bpad,
+      event);
+}
+
 static gboolean
 gst_video_aggregator_sink_event (GstAggregator * agg, GstAggregatorPad * bpad,
     GstEvent * event)
@@ -2649,14 +2673,9 @@ gst_video_aggregator_sink_event (GstAggregator * agg, GstAggregatorPad * bpad,
       event = NULL;
       break;
     }
-    case GST_EVENT_SEGMENT:{
-      GstSegment seg;
-      gst_event_copy_segment (event, &seg);
-
-      g_assert (seg.format == GST_FORMAT_TIME);
+    case GST_EVENT_SEGMENT:
       gst_video_aggregator_reset_qos (vagg);
       break;
-    }
     default:
       break;
   }
@@ -3227,6 +3246,7 @@ gst_video_aggregator_class_init (GstVideoAggregatorClass * klass)
   agg_class->stop = gst_video_aggregator_stop;
   agg_class->sink_query = gst_video_aggregator_sink_query;
   agg_class->sink_event = gst_video_aggregator_sink_event;
+  agg_class->sink_event_pre_queue = gst_video_aggregator_sink_event_pre_queue;
   agg_class->flush = gst_video_aggregator_flush;
   agg_class->aggregate = gst_video_aggregator_aggregate;
   agg_class->src_event = gst_video_aggregator_src_event;
