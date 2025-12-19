@@ -75,6 +75,8 @@ typedef struct
 
   GstClockTime fragment_offset;
   GstClockTime fragment_duration;
+
+  GstVideoTimeCode *start_tc, *end_tc;
 } OutputFragmentInfo;
 
 typedef struct _MqStreamBuf
@@ -83,6 +85,7 @@ typedef struct _MqStreamBuf
   GstClockTimeDiff run_ts;
   guint64 buf_size;
   GstClockTime duration;
+  GstVideoTimeCode *tc;
 } MqStreamBuf;
 
 typedef struct {
@@ -127,10 +130,12 @@ typedef struct _MqStreamCtx
   GstSegment in_segment;
   GstSegment out_segment;
   GstClockTimeDiff out_fragment_start_runts;
+  GstVideoTimeCode *out_fragment_start_tc;
 
   GstClockTimeDiff in_running_time;
 
   GstClockTimeDiff out_running_time;
+  GstVideoTimeCode *out_tc;
   GstClockTimeDiff out_running_time_end; /* max run ts + durations */
 
   GstElement *q;
