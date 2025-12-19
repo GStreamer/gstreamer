@@ -1,13 +1,13 @@
 [wrap-file]
-directory = libogg-1.3.5
-source_url = https://downloads.xiph.org/releases/ogg/libogg-1.3.5.tar.xz
-source_filename = libogg-1.3.5.tar.xz
-source_hash = c4d91be36fc8e54deae7575241e03f4211eb102afb3fc0775fbbc1b740016705
-patch_filename = ogg_1.3.5-6_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/ogg_1.3.5-6/get_patch
-patch_hash = 8be6dcd5f93bbf9c0b9c8ec1fa29810226a60f846383074ca05b313a248e78b2
-source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/ogg_1.3.5-6/libogg-1.3.5.tar.xz
-wrapdb_version = 1.3.5-6
+directory = libogg-1.3.6
+source_url = https://downloads.xiph.org/releases/ogg/libogg-1.3.6.tar.xz
+source_filename = libogg-1.3.6.tar.xz
+source_hash = 5c8253428e181840cd20d41f3ca16557a9cc04bad4a3d04cce84808677fa1061
+patch_filename = ogg_1.3.6-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/ogg_1.3.6-1/get_patch
+patch_hash = d20db3b8c8dfaa62af28b43d7e54bbe982a59714913d42bcf370fdc5780d42ca
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/ogg_1.3.6-1/libogg-1.3.6.tar.xz
+wrapdb_version = 1.3.6-1
 
 [provide]
 ogg = libogg_dep

@@ -1,13 +1,13 @@
 [wrap-file]
 directory = soundtouch
-source_url = https://codeberg.org/soundtouch/soundtouch/archive/2.3.2.tar.gz
-source_filename = soundtouch-2.3.2.tar.gz
-source_hash = ed714f84a3e748de87b24f385ec69d3bdc51ca47b7f4710d2048b84b2761e7ff
-patch_filename = soundtouch_2.3.2-4_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/soundtouch_2.3.2-4/get_patch
-patch_hash = 4cc83bed9a7b7b92d632e54274200ad06b41088c2c19d2a40cf7789e9518a68c
-source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/soundtouch_2.3.2-4/soundtouch-2.3.2.tar.gz
-wrapdb_version = 2.3.2-4
+source_url = https://codeberg.org/soundtouch/soundtouch/archive/2.4.0.tar.gz
+source_filename = soundtouch-2.4.0.tar.gz
+source_hash = 3dda3c9ab1e287f15028c010a66ab7145fa855dfa62763538f341e70b4d10abd
+patch_filename = soundtouch_2.4.0-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/soundtouch_2.4.0-1/get_patch
+patch_hash = 76f781fd4a257442c3b7846c98229b66e97d245f48575a660ac4f89bb45e2a13
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/soundtouch_2.4.0-1/soundtouch-2.4.0.tar.gz
+wrapdb_version = 2.4.0-1
 
 [provide]
 soundtouch = soundtouch_dep

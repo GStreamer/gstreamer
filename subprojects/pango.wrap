@@ -1,9 +1,10 @@
 [wrap-file]
-directory = pango-1.56.3
-source_url = https://download.gnome.org/sources/pango/1.56/pango-1.56.3.tar.xz
-source_fallback_url = https://deb.debian.org/debian/pool/main/p/pango1.0/pango1.0_1.56.3.orig.tar.xz
-source_filename = pango-1.56.3.tar.xz
-source_hash = 2606252bc25cd8d24e1b7f7e92c3a272b37acd6734347b73b47a482834ba2491
+directory = pango-1.56.4
+source_url = https://download.gnome.org/sources/pango/1.56/pango-1.56.4.tar.xz
+source_filename = pango-1.56.4.tar.xz
+source_hash = 17065e2fcc5f5a5bdbffc884c956bfc7c451a96e8c4fb2f8ad837c6413cb5a01
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/pango_1.56.4-1/pango-1.56.4.tar.xz
+wrapdb_version = 1.56.4-1
 
 [provide]
-dependency_names = pango, pangocairo, pangofc, pangoft2, pangoot, pangoxft
+dependency_names = pango, pangoft2, pangoxft, pangowin32, pangocairo

@@ -3,11 +3,11 @@ directory = fdk-aac-2.0.3
 source_url = https://sourceforge.net/projects/opencore-amr/files/fdk-aac/fdk-aac-2.0.3.tar.gz/download
 source_filename = fdk-aac-2.0.3.tar.gz
 source_hash = 829b6b89eef382409cda6857fd82af84fabb63417b08ede9ea7a553f811cb79e
-patch_filename = fdk-aac_2.0.3-1_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/fdk-aac_2.0.3-1/get_patch
-patch_hash = 4dbb28130d7ce736944882afb71c763fd305bce28c24fc7110056d95c1d8c0dd
-source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/fdk-aac_2.0.3-1/fdk-aac-2.0.3.tar.gz
-wrapdb_version = 2.0.3-1
+patch_filename = fdk-aac_2.0.3-2_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/fdk-aac_2.0.3-2/get_patch
+patch_hash = fd27b07b9a047760c010a1aab24b818ccd41764812189a961c445e3e08f158b4
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/fdk-aac_2.0.3-2/fdk-aac-2.0.3.tar.gz
+wrapdb_version = 2.0.3-2
 
 [provide]
 fdk-aac = fdk_aac_dep

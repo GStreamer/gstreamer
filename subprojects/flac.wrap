@@ -1,13 +1,13 @@
 [wrap-file]
-directory = flac-1.4.3
-source_url = https://github.com/xiph/flac/releases/download/1.4.3/flac-1.4.3.tar.xz
-source_filename = flac-1.4.3.tar.xz
-source_hash = 6c58e69cd22348f441b861092b825e591d0b822e106de6eb0ee4d05d27205b70
-patch_filename = flac_1.4.3-2_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/flac_1.4.3-2/get_patch
-patch_hash = 3eace1bd0769d3e0d4ff099960160766a5185d391c8f583293b087a1f96c2a9c
-source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/flac_1.4.3-2/flac-1.4.3.tar.xz
-wrapdb_version = 1.4.3-2
+directory = flac-1.5.0
+source_url = https://github.com/xiph/flac/releases/download/1.5.0/flac-1.5.0.tar.xz
+source_filename = flac-1.5.0.tar.xz
+source_hash = f2c1c76592a82ffff8413ba3c4a1299b6c7ab06c734dee03fd88630485c2b920
+patch_filename = flac_1.5.0-2_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/flac_1.5.0-2/get_patch
+patch_hash = ee4cd8175784b4032e3b19dda1fe4c1d6d4b285dfa87fe94361f1a6fde732ff0
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/flac_1.5.0-2/flac-1.5.0.tar.xz
+wrapdb_version = 1.5.0-2
 
 [provide]
 flac = flac_dep
