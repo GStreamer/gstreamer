@@ -37,8 +37,6 @@
 #define GPOINTER_TO_JLONG(value) (jlong)(jint)(value)
 #endif
 
-gint      gst_amc_jni_get_android_level(void);
-
 jclass    gst_amc_jni_get_class              (JNIEnv * env,
                                              GError ** err,
                                              const gchar * name);

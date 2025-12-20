@@ -1,6 +1,7 @@
 androidmedia_sources = [
   'gstamcaudiodec.c',
   'gstamc.c',
+  'gstamcutils.c',
   'gstamc-codec.c',
   'gstamc-format.c',
   'gstamcsurfacetexture.c',
@@ -33,6 +34,7 @@ androidmedia_headers = [
   'gstamc-codeclist.h',
   'gstamc-constants.h',
   'gstamc-format.h',
+  'gstamcutils.h',
   'gstamc.h',
   'gstamcsurfacetexture.h',
   'gstamcvideodec.h',

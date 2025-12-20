@@ -41,10 +41,7 @@
 #define orc_memcpy memcpy
 #endif
 
-#ifdef HAVE_JNI_H
-#include "gstjniutils.h"
-#endif
-
+#include "gstamcutils.h"
 #include "gstamcvideoenc.h"
 #include "gstamc-constants.h"
 
@@ -288,15 +285,12 @@ create_amc_format (GstAmcVideoEnc * encoder, GstVideoCodecState * input_state,
   }
 
   /* On Android N_MR1 and higher, i-frame-interval can be a float value */
-#ifdef HAVE_JNI_H
-  if (gst_amc_jni_get_android_level () >= 25) {
+  if (gst_amc_get_android_level () >= 25) {
     GST_LOG_OBJECT (encoder, "Setting i-frame-interval to %f",
         encoder->i_frame_int);
     gst_amc_format_set_float (format, "i-frame-interval", encoder->i_frame_int,
         &err);
-  } else
-#endif
-  {
+  } else {
     int i_frame_int = encoder->i_frame_int;
     /* Round a fractional interval to 1 per sec on older Android */
     if (encoder->i_frame_int > 0 && encoder->i_frame_int < 1.0)

@@ -36,6 +36,7 @@
 #endif
 
 #include "gstamc.h"
+#include "gstamcutils.h"
 #include "gstamc-constants.h"
 
 #include "gstamcvideodec.h"
@@ -256,15 +257,19 @@ scan_codecs (GstPlugin * plugin)
     gst_codec_info->is_encoder = is_encoder;
     gst_codec_info->gl_output_only = FALSE;
 
-    if (!gst_amc_codec_info_handle_is_hardware_accelerated (codec_info, &is_hw,
-            &error)) {
-      GST_WARNING ("Failed to detect if codec is hardware-accelerated: %s",
-          error ? error->message : "unknown error");
-      g_clear_error (&error);
-      gst_codec_info->accel = AMC_CODEC_ACCEL_IS_UNKNOWN;
+    if (gst_amc_get_android_level () >= 29) {
+      if (!gst_amc_codec_info_handle_is_hardware_accelerated (codec_info,
+              &is_hw, &error)) {
+        GST_WARNING ("Failed to detect if codec is hardware-accelerated: %s",
+            error ? error->message : "unknown error");
+        g_clear_error (&error);
+        gst_codec_info->accel = AMC_CODEC_ACCEL_IS_UNKNOWN;
+      } else {
+        gst_codec_info->accel =
+            is_hw ? AMC_CODEC_ACCEL_IS_HW : AMC_CODEC_ACCEL_IS_SW;
+      }
     } else {
-      gst_codec_info->accel =
-          is_hw ? AMC_CODEC_ACCEL_IS_HW : AMC_CODEC_ACCEL_IS_SW;
+      gst_codec_info->accel = AMC_CODEC_ACCEL_IS_UNKNOWN;
     }
 
     supported_types =

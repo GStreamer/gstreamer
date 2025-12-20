@@ -24,6 +24,7 @@
 #endif
 
 #include "../gstjniutils.h"
+#include "../gstamcutils.h"
 #include "../gstamc-codeclist.h"
 
 #include "gstamc-jni.h"
@@ -159,14 +160,16 @@ gst_amc_codeclist_jni_static_init (void)
     return FALSE;
   }
 
-  media_codecinfo.is_hardware_accelerated =
-      gst_amc_jni_get_method_id (env, &err, media_codecinfo.klass,
-      "isHardwareAccelerated", "()Z");
-  if (!media_codecinfo.is_hardware_accelerated) {
-    GST_ERROR ("Failed to get android.media.MediaCodecInfo "
-        "isHardwareAccelerated(): %s", err->message);
-    g_clear_error (&err);
-    return FALSE;
+  if (gst_amc_get_android_level () >= 29) {
+    media_codecinfo.is_hardware_accelerated =
+        gst_amc_jni_get_method_id (env, &err, media_codecinfo.klass,
+        "isHardwareAccelerated", "()Z");
+    if (!media_codecinfo.is_hardware_accelerated) {
+      GST_ERROR ("Failed to get android.media.MediaCodecInfo "
+          "isHardwareAccelerated(): %s", err->message);
+      g_clear_error (&err);
+      return FALSE;
+    }
   }
 
   media_codeccapabilities.klass =
