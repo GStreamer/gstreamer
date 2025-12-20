@@ -35,6 +35,9 @@ if opus_dep.found()
   if opus_dep.version().version_compare('>=1.1')
     opus_defines += ['-DHAVE_LIBOPUS_1_1']
   endif
+  if opus_dep.version().version_compare('>=1.6')
+    opus_defines += ['-DHAVE_LIBOPUS_1_6']
+  endif
 
   gstopus = library('gstopus',
     opus_sources,

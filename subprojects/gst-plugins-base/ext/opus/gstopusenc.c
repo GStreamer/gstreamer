@@ -166,7 +166,9 @@ gst_opus_enc_bitrate_type_get_type (void)
   return id;
 }
 
-#ifdef HAVE_LIBOPUS_0_9_7
+#if defined(HAVE_LIBOPUS_1_6)
+#define FORMAT_STR "{" GST_AUDIO_NE(F32) ", " GST_AUDIO_NE(S24_32) ", " GST_AUDIO_NE(S16) "}"
+#elif defined(HAVE_LIBOPUS_0_9_7)
 #define FORMAT_STR "{" GST_AUDIO_NE(F32) ", " GST_AUDIO_NE(S16) "}"
 #else
 #define FORMAT_STR GST_AUDIO_NE(S16)
@@ -828,6 +830,10 @@ gst_opus_enc_get_sink_template_caps (void)
     g_value_init (&v, G_TYPE_STRING);
     g_value_set_static_string (&v, GST_AUDIO_NE (F32));
     gst_value_list_append_value (&formats, &v);
+#ifdef HAVE_LIBOPUS_1_6
+    g_value_set_static_string (&v, GST_AUDIO_NE (S24_32));
+    gst_value_list_append_value (&formats, &v);
+#endif
     g_value_set_static_string (&v, GST_AUDIO_NE (S16));
     gst_value_list_append_value (&formats, &v);
     g_value_unset (&v);
@@ -1074,6 +1080,13 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
     case GST_AUDIO_FORMAT_F32:
       outsize =
           opus_multistream_encode_float (enc->state, (const gfloat *) data,
+          frame_samples, omap.data, max_payload_size * info->channels);
+      break;
+#endif
+#ifdef HAVE_LIBOPUS_1_6
+    case GST_AUDIO_FORMAT_S24_32:
+      outsize =
+          opus_multistream_encode24 (enc->state, (const gint32 *) data,
           frame_samples, omap.data, max_payload_size * info->channels);
       break;
 #endif
