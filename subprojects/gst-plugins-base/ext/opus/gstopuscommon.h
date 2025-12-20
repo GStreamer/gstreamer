@@ -38,6 +38,8 @@ extern void gst_opus_common_log_channel_mapping_table (GstElement *element,
     GstDebugCategory * category, const char *msg,
     int n_channels, const guint8 *table);
 
+extern gboolean gst_opus_supports_qext (void);
+
 G_END_DECLS
 
 #endif /* __GST_OPUS_COMMON_H__ */

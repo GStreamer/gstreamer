@@ -78,6 +78,7 @@ struct _GstOpusDec {
   GstClockTime last_known_buffer_duration;
 
   gboolean phase_inversion;
+  gboolean ignore_extensions;
 
   /* Used to generate the 'stats' property. Protected by object lock */
   guint64 num_pushed;

@@ -8674,6 +8674,18 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "ignore-extensions": {
+                        "blurb": "Ignore extensions found in the padding area",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "phase-inversion": {
                         "blurb": "Set to true to enable phase inversion, this will slightly improve stereo quality, but will have side effects when downmixed to mono.",
                         "conditionally-available": false,

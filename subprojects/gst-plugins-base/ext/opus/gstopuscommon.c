@@ -17,6 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include <opus.h>
 #include <stdio.h>
 #include <string.h>
 #include "gstopuscommon.h"
@@ -122,4 +123,29 @@ gst_opus_common_log_channel_mapping_table (GstElement * element,
 
   GST_CAT_LEVEL_LOG (category, GST_LEVEL_INFO, element, "%s: %s", msg, s->str);
   g_string_free (s, TRUE);
+}
+
+gboolean
+gst_opus_supports_qext (void)
+{
+#ifdef HAVE_LIBOPUS_1_6
+  static gboolean inited = FALSE;
+  static gboolean supported = FALSE;
+
+  if (!g_atomic_int_get (&inited)) {
+    // The library might be compiled without QEXT support and there doesn't
+    // seem to be another way to query that
+    int err = 0;
+    OpusDecoder *dec = opus_decoder_create (96000, 1, &err);
+    if (dec)
+      opus_decoder_destroy (dec);
+
+    supported = dec != 0;
+    g_atomic_int_set (&inited, TRUE);
+  }
+
+  return supported;
+#else
+  return FALSE;
+#endif
 }

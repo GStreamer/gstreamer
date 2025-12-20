@@ -63,6 +63,12 @@ GST_DEBUG_CATEGORY_STATIC (opusdec_debug);
 #define FORMAT_STR GST_AUDIO_NE(S16)
 #endif
 
+#if defined(HAVE_LIBOPUS_1_6)
+#define RATES_STR "{ 96000, 48000, 24000, 16000, 12000, 8000 }"
+#else
+#define RATES_STR "{ 48000, 24000, 16000, 12000, 8000 }"
+#endif
+
 static GstStaticPadTemplate opus_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -70,7 +76,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " FORMAT_STR ", "
         "layout = (string) interleaved, "
-        "rate = (int) { 48000, 24000, 16000, 12000, 8000 }, "
+        "rate = (int) " RATES_STR ", "
         "channels = (int) [ 1, 255 ] ")
     );
 
@@ -103,6 +109,7 @@ enum
   PROP_APPLY_GAIN,
   PROP_PHASE_INVERSION,
   PROP_STATS,
+  PROP_IGNORE_EXTENSIONS,
 };
 
 
@@ -190,6 +197,19 @@ gst_opus_dec_class_init (GstOpusDecClass * klass)
       g_param_spec_boxed ("stats", "Statistics",
           "Various statistics", GST_TYPE_STRUCTURE,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstOpusDec:ignore-extensions:
+   *
+   * If set, the decoder will ignore all extensions found in the padding area
+   * (does not affect DRED, which is decoded separately).
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_IGNORE_EXTENSIONS,
+      g_param_spec_boolean ("ignore-extensions", "Ignore Extensions",
+          "Ignore extensions found in the padding area", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (opusdec_debug, "opusdec", 0,
       "opus decoding element");
@@ -385,6 +405,17 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
     GST_DEBUG_OBJECT (dec, "Using a default of 48kHz sample rate");
     dec->sample_rate = 48000;
   }
+#ifdef HAVE_LIBOPUS_1_6
+  if (dec->sample_rate == 96000 && !gst_opus_supports_qext ()) {
+    GST_DEBUG_OBJECT (dec, "Using a 48kHz instead of 96kHz sample rate because libopus compiled without QEXT support");
+    dec->sample_rate = 48000;
+  }
+#else
+  if (dec->sample_rate == 96000) {
+    GST_DEBUG_OBJECT (dec, "Using a 48kHz instead of 96kHz sample rate with libopus < 1.6");
+    dec->sample_rate = 48000;
+  }
+#endif
 
   GST_INFO_OBJECT (dec, "Negotiated %d channels, %d Hz", dec->n_channels,
       dec->sample_rate);
@@ -601,6 +632,19 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     if (!dec->state || err != OPUS_OK)
       goto creation_failed;
 
+#ifdef OPUS_SET_IGNORE_EXTENSIONS
+    {
+      int err;
+      err = opus_multistream_decoder_ctl (dec->state,
+          OPUS_SET_IGNORE_EXTENSIONS (dec->ignore_extensions));
+      if (err != OPUS_OK)
+        GST_WARNING_OBJECT (dec, "Could not configure ignore-extensions: %s",
+            opus_strerror (err));
+    }
+#else
+    GST_WARNING_OBJECT (dec, "Ignoring extensions is not supported by this "
+        "version of the Opus Library");
+#endif
 #ifdef OPUS_SET_PHASE_INVERSION_DISABLED_REQUEST
     {
       int err;
@@ -1239,6 +1283,9 @@ gst_opus_dec_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_STATS:
       g_value_take_boxed (value, gst_opus_dec_create_stats (dec));
       break;
+    case PROP_IGNORE_EXTENSIONS:
+      g_value_set_boolean (value, dec->ignore_extensions);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1260,6 +1307,9 @@ gst_opus_dec_set_property (GObject * object, guint prop_id,
       break;
     case PROP_PHASE_INVERSION:
       dec->phase_inversion = g_value_get_boolean (value);
+      break;
+    case PROP_IGNORE_EXTENSIONS:
+      dec->ignore_extensions = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1306,6 +1356,8 @@ gst_opus_dec_caps_extend_rate_options (GstCaps * caps)
   GValue v = { 0 };
 
   g_value_init (&v, GST_TYPE_LIST);
+  if (gst_opus_supports_qext ())
+    gst_opus_dec_value_list_append_int (&v, 96000);
   gst_opus_dec_value_list_append_int (&v, 48000);
   gst_opus_dec_value_list_append_int (&v, 24000);
   gst_opus_dec_value_list_append_int (&v, 16000);
