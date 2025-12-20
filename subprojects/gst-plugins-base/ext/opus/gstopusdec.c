@@ -55,7 +55,9 @@
 GST_DEBUG_CATEGORY_STATIC (opusdec_debug);
 #define GST_CAT_DEFAULT opusdec_debug
 
-#ifdef HAVE_LIBOPUS_0_9_7
+#if defined(HAVE_LIBOPUS_1_6)
+#define FORMAT_STR "{" GST_AUDIO_NE(F32) ", " GST_AUDIO_NE(S24_32) ", " GST_AUDIO_NE(S16) "}"
+#elif defined(HAVE_LIBOPUS_0_9_7)
 #define FORMAT_STR "{" GST_AUDIO_NE(F32) ", " GST_AUDIO_NE(S16) "}"
 #else
 #define FORMAT_STR GST_AUDIO_NE(S16)
@@ -764,6 +766,12 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
             samples, decode_fec);
         break;
 #endif
+#ifdef HAVE_LIBOPUS_1_6
+      case GST_AUDIO_FORMAT_S24_32:
+        n = opus_multistream_decode24 (dec->state, data, size, out_data,
+            samples, decode_fec);
+        break;
+#endif
       default:
         g_assert_not_reached ();
         break;
@@ -882,6 +890,18 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
         gfloat *samples = (gfloat *) omap.data;
         for (i = 0; i < nsamples; ++i) {
           samples[i] = samples[i] * volume;
+        }
+        break;
+      }
+#endif
+#ifdef HAVE_LIBOPUS_1_6
+      case GST_AUDIO_FORMAT_S24_32:{
+        gint32 *samples = (gint32 *) omap.data;
+        for (i = 0; i < nsamples; ++i) {
+          int sample = (int) (samples[i] * volume + 0.5);
+          samples[i] =
+              sample < -16777216 ? -16777216 : sample >
+              16777215 ? 16777215 : sample;
         }
         break;
       }
