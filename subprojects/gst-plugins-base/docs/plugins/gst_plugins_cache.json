@@ -8744,7 +8744,7 @@
                 "long-name": "Opus audio encoder",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-raw:\n         format: { F32LE, S16LE }\n         layout: interleaved\n           rate: 48000\n       channels: [ 1, 255 ]\naudio/x-raw:\n         format: { F32LE, S16LE }\n         layout: interleaved\n           rate: { (int)8000, (int)12000, (int)16000, (int)24000 }\n       channels: [ 1, 255 ]\n",
+                        "caps": "audio/x-raw:\n         format: { F32LE, S16LE }\n         layout: interleaved\n           rate: 48000\n       channels: [ 1, 255 ]\naudio/x-raw:\n         format: { F32LE, S16LE }\n         layout: interleaved\n           rate: { (int)48000, (int)24000, (int)16000, (int)12000, (int)8000 }\n       channels: [ 1, 255 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
@@ -8786,7 +8786,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "64000",
-                        "max": "650000",
+                        "max": "16000000",
                         "min": "4000",
                         "mutable": "playing",
                         "readable": true,
@@ -8881,6 +8881,18 @@
                         "mutable": "playing",
                         "readable": true,
                         "type": "gint",
+                        "writable": true
+                    },
+                    "qext": {
+                        "blurb": "Enable quality extensions",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },

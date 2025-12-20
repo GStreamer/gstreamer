@@ -62,10 +62,12 @@ GST_DEBUG_CATEGORY_STATIC (opusenc_debug);
 #define GST_CAT_DEFAULT opusenc_debug
 
 /* Some arbitrary bounds beyond which it really doesn't make sense.
-   The spec mentions 6 kb/s to 510 kb/s, so 4000 and 650000 ought to be
-   safe as property bounds. */
+   The spec mentions 6 kb/s to 510 kb/s, so 4kb/s to 16.000kb/s ought to be
+   safe as property bounds.
+   1.500kb/s is used as maximum by libopus when setting OPUS_BITRATE_MAX but
+   the actual maximum is 750kb/s per channel. */
 #define LOWEST_BITRATE 4000
-#define HIGHEST_BITRATE 650000
+#define HIGHEST_BITRATE 16000000
 
 #define GST_OPUS_ENC_TYPE_BANDWIDTH (gst_opus_enc_bandwidth_get_type())
 static GType
@@ -174,6 +176,12 @@ gst_opus_enc_bitrate_type_get_type (void)
 #define FORMAT_STR GST_AUDIO_NE(S16)
 #endif
 
+#if defined(HAVE_LIBOPUS_1_6)
+#define RATES_STR "{ 96000, 48000, 24000, 16000, 12000, 8000 }"
+#else
+#define RATES_STR "{ 48000, 24000, 16000, 12000, 8000 }"
+#endif
+
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -185,8 +193,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
         "audio/x-raw, "
         "format = (string) " FORMAT_STR ", "
         "layout = (string) interleaved, "
-        "rate = (int) { 8000, 12000, 16000, 24000 }, "
-        "channels = (int) [ 1, 255 ] ")
+        "rate = (int) " RATES_STR ", " "channels = (int) [ 1, 255 ] ")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -206,6 +213,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 #define DEFAULT_COMPLEXITY      10
 #define DEFAULT_INBAND_FEC      FALSE
 #define DEFAULT_DTX             FALSE
+#define DEFAULT_QEXT            FALSE
 #define DEFAULT_PACKET_LOSS_PERCENT 0
 #define DEFAULT_MAX_PAYLOAD_SIZE 4000
 
@@ -221,7 +229,8 @@ enum
   PROP_INBAND_FEC,
   PROP_DTX,
   PROP_PACKET_LOSS_PERCENT,
-  PROP_MAX_PAYLOAD_SIZE
+  PROP_MAX_PAYLOAD_SIZE,
+  PROP_QEXT,
 };
 
 static void gst_opus_enc_finalize (GObject * object);
@@ -354,6 +363,21 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
           DEFAULT_MAX_PAYLOAD_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
+  /**
+   * GstOpusEnc:qext:
+   *
+   * Enable quality extensions.
+   *
+   * Warning: This will *hurt* audio quality unless operating at a very high
+   * bitrate.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_QEXT,
+      g_param_spec_boolean ("qext", "Quality Extensions",
+          "Enable quality extensions", DEFAULT_QEXT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_opus_enc_finalize);
 
@@ -737,6 +761,19 @@ gst_opus_enc_setup (GstOpusEnc * enc, const GstAudioInfo * info)
   opus_multistream_encoder_ctl (enc->state, OPUS_SET_DTX (enc->dtx), 0);
   opus_multistream_encoder_ctl (enc->state,
       OPUS_SET_PACKET_LOSS_PERC (enc->packet_loss_percentage), 0);
+#ifdef OPUS_SET_QEXT
+  if (gst_opus_supports_qext ()) {
+    opus_multistream_encoder_ctl (enc->state, OPUS_SET_QEXT (enc->qext), 0);
+  } else if (enc->qext) {
+    GST_WARNING_OBJECT (enc, "Quality extensions are not supported by this "
+        "version of the Opus Library");
+  }
+#else
+  if (enc->qext) {
+    GST_WARNING_OBJECT (enc, "Quality extensions are not supported by this "
+        "version of the Opus Library");
+  }
+#endif
 
   opus_multistream_encoder_ctl (enc->state, OPUS_GET_LOOKAHEAD (&lookahead), 0);
 
@@ -808,7 +845,7 @@ gst_opus_enc_sink_event (GstAudioEncoder * benc, GstEvent * event)
 }
 
 static GstCaps *
-gst_opus_enc_get_sink_template_caps (void)
+gst_opus_enc_get_sink_template_caps (gboolean include_qext)
 {
   static gsize init = 0;
   static GstCaps *caps = NULL;
@@ -853,6 +890,10 @@ gst_opus_enc_get_sink_template_caps (void)
     gst_value_list_append_value (&rate_array, &v);
     g_value_set_int (&v, 24000);
     gst_value_list_append_value (&rate_array, &v);
+    if (include_qext && gst_opus_supports_qext ()) {
+      g_value_set_int (&v, 96000);
+      gst_value_list_append_value (&rate_array, &v);
+    }
 
     s1 = gst_structure_new ("audio/x-raw",
         "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
@@ -925,7 +966,7 @@ gst_opus_enc_sink_getcaps (GstAudioEncoder * benc, GstCaps * filter)
 
   GST_DEBUG_OBJECT (enc, "sink getcaps");
 
-  caps = gst_opus_enc_get_sink_template_caps ();
+  caps = gst_opus_enc_get_sink_template_caps (enc->qext);
   caps = gst_audio_encoder_proxy_getcaps (benc, caps, filter);
 
   GST_DEBUG_OBJECT (enc, "Returning caps: %" GST_PTR_FORMAT, caps);
@@ -1188,6 +1229,9 @@ gst_opus_enc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_MAX_PAYLOAD_SIZE:
       g_value_set_uint (value, enc->max_payload_size);
       break;
+    case PROP_QEXT:
+      g_value_set_boolean (value, enc->qext);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1263,6 +1307,9 @@ gst_opus_enc_set_property (GObject * object, guint prop_id,
       g_mutex_lock (&enc->property_lock);
       enc->max_payload_size = g_value_get_uint (value);
       g_mutex_unlock (&enc->property_lock);
+      break;
+    case PROP_QEXT:
+      enc->qext = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

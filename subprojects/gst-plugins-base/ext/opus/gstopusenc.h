@@ -74,6 +74,7 @@ struct _GstOpusEnc {
   gboolean              dtx;
   gint                  packet_loss_percentage;
   guint                 max_payload_size;
+  gboolean              qext;
 
   gint                  frame_samples;
 
