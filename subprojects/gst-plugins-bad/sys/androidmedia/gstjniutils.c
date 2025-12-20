@@ -878,16 +878,16 @@ done:
   return class;
 }
 
-#define CALL_STATIC_TYPE_METHOD(_type, _name,  _jname)                                                     \
+#define CALL_STATIC_TYPE_METHOD(_type, _name,  _jname)                                                       \
 gboolean gst_amc_jni_call_static_##_name##_method (JNIEnv *env, GError ** err, jclass klass, jmethodID methodID, _type * value, ...)   \
   {                                                                                                          \
     gboolean ret = TRUE;                                                                                     \
     va_list args;                                                                                            \
-    va_start(args, value);                                                                                \
+    va_start(args, value);                                                                                   \
     *value = (*env)->CallStatic##_jname##MethodV(env, klass, methodID, args);                                \
     if ((*env)->ExceptionCheck (env)) {                                                                      \
-      gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,                               \
-          "Failed to call static Java method");                                                         \
+      gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,                          \
+          "Failed to call static Java method");                                                              \
       ret = FALSE;                                                                                           \
     }                                                                                                        \
     va_end(args);                                                                                            \
@@ -927,11 +927,11 @@ gboolean gst_amc_jni_call_##_name##_method (JNIEnv *env, GError ** err, jobject 
   {                                                                                                          \
     gboolean ret = TRUE;                                                                                     \
     va_list args;                                                                                            \
-    va_start(args, value);                                                                                \
+    va_start(args, value);                                                                                   \
     *value = (*env)->Call##_jname##MethodV(env, obj, methodID, args);                                        \
     if ((*env)->ExceptionCheck (env)) {                                                                      \
-      gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,                               \
-          "Failed to call Java method");                                                                \
+      gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,                          \
+          "Failed to call Java method");                                                                     \
       ret = FALSE;                                                                                           \
     }                                                                                                        \
     va_end(args);                                                                                            \
