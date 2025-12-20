@@ -76,8 +76,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " FORMAT_STR ", "
         "layout = (string) interleaved, "
-        "rate = (int) " RATES_STR ", "
-        "channels = (int) [ 1, 255 ] ")
+        "rate = (int) " RATES_STR ", " "channels = (int) [ 1, 255 ] ")
     );
 
 static GstStaticPadTemplate opus_dec_sink_factory =
@@ -165,15 +164,12 @@ gst_opus_dec_class_init (GstOpusDecClass * klass)
           "Apply gain if any is specified in the header", DEFAULT_APPLY_GAIN,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-#ifdef OPUS_SET_PHASE_INVERSION_DISABLED_REQUEST
   g_object_class_install_property (gobject_class, PROP_PHASE_INVERSION,
       g_param_spec_boolean ("phase-inversion",
           "Control Phase Inversion", "Set to true to enable phase inversion, "
           "this will slightly improve stereo quality, but will have side "
           "effects when downmixed to mono.", DEFAULT_PHASE_INVERSION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-#endif
 
   /**
    * GstOpusDec:stats:
@@ -407,12 +403,14 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
   }
 #ifdef HAVE_LIBOPUS_1_6
   if (dec->sample_rate == 96000 && !gst_opus_supports_qext ()) {
-    GST_DEBUG_OBJECT (dec, "Using a 48kHz instead of 96kHz sample rate because libopus compiled without QEXT support");
+    GST_DEBUG_OBJECT (dec,
+        "Using a 48kHz instead of 96kHz sample rate because libopus compiled without QEXT support");
     dec->sample_rate = 48000;
   }
 #else
   if (dec->sample_rate == 96000) {
-    GST_DEBUG_OBJECT (dec, "Using a 48kHz instead of 96kHz sample rate with libopus < 1.6");
+    GST_DEBUG_OBJECT (dec,
+        "Using a 48kHz instead of 96kHz sample rate with libopus < 1.6");
     dec->sample_rate = 48000;
   }
 #endif
@@ -655,7 +653,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
             opus_strerror (err));
     }
 #else
-    GST_WARNING_OBJECT (dec, "Phase inversion request is not support by this "
+    GST_WARNING_OBJECT (dec, "Phase inversion request is not supported by this "
         "version of the Opus Library");
 #endif
   }
