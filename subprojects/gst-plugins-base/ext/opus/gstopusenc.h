@@ -76,9 +76,6 @@ struct _GstOpusEnc {
   guint                 max_payload_size;
 
   gint                  frame_samples;
-  gint                  n_channels;
-  gint                  sample_rate;
-  gboolean              unpositioned;
 
   guint64               encoded_samples, consumed_samples;
   guint16               lookahead, pending_lookahead;
