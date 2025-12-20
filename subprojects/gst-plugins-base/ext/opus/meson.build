@@ -29,6 +29,9 @@ opus_dep = dependency('opus', version: '>= 0.9.4', required: get_option('opus'),
 
 if opus_dep.found()
   opus_defines = []
+  if opus_dep.version().version_compare('>=0.9.7')
+    opus_defines += ['-DHAVE_LIBOPUS_0_9_7']
+  endif
   if opus_dep.version().version_compare('>=1.1')
     opus_defines += ['-DHAVE_LIBOPUS_1_1']
   endif
