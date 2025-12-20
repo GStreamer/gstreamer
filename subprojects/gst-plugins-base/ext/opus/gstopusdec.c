@@ -55,12 +55,18 @@
 GST_DEBUG_CATEGORY_STATIC (opusdec_debug);
 #define GST_CAT_DEFAULT opusdec_debug
 
+#ifdef HAVE_LIBOPUS_0_9_7
+#define FORMAT_STR "{" GST_AUDIO_NE(F32) ", " GST_AUDIO_NE(S16) "}"
+#else
+#define FORMAT_STR GST_AUDIO_NE(S16)
+#endif
+
 static GstStaticPadTemplate opus_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "format = (string) " FORMAT_STR ", "
         "layout = (string) interleaved, "
         "rate = (int) { 48000, 24000, 16000, 12000, 8000 }, "
         "channels = (int) [ 1, 255 ] ")
@@ -281,9 +287,11 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
   GstStructure *s;
   GstAudioChannelPosition gst_pos[64];
   GstAudioInfo info;
+  GstAudioFormat format = GST_AUDIO_FORMAT_S16;
 
   if (caps) {
     gint rate = dec->sample_rate, channels = dec->n_channels;
+    const gchar *format_str;
     GstCaps *constraint, *inter;
 
     constraint = gst_caps_new_empty_simple ("audio/x-raw");
@@ -346,12 +354,17 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
 
     inter = gst_caps_truncate (inter);
     s = gst_caps_get_structure (inter, 0);
-    rate = dec->sample_rate > 0 ? dec->sample_rate : 48000;
     gst_structure_fixate_field_nearest_int (s, "rate", dec->sample_rate);
+    gst_structure_fixate_field_nearest_int (s, "channels", channels);
+    gst_structure_fixate (s);
+
+    rate = dec->sample_rate > 0 ? dec->sample_rate : 48000;
     gst_structure_get_int (s, "rate", &rate);
     channels = dec->n_channels > 0 ? dec->n_channels : 2;
-    gst_structure_fixate_field_nearest_int (s, "channels", channels);
     gst_structure_get_int (s, "channels", &channels);
+
+    format_str = gst_structure_get_string (s, "format");
+    format = gst_audio_format_from_string (format_str);
 
     gst_caps_unref (inter);
 
@@ -387,7 +400,7 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
 
   /* set up source format */
   gst_audio_info_init (&info);
-  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S16,
+  gst_audio_info_set_format (&info, format,
       dec->sample_rate, dec->n_channels, pos ? gst_pos : NULL);
   gst_audio_decoder_set_output_format (GST_AUDIO_DECODER (dec), &info);
 
@@ -539,7 +552,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
   gsize size;
   guint8 *data;
   GstBuffer *outbuf, *bufd;
-  gint16 *out_data;
+  gpointer out_data;
   int n, err;
   int samples;
   unsigned int packet_size;
@@ -706,7 +719,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
        not constant over the stream. */
     samples = 120 * dec->sample_rate / 1000;
   }
-  packet_size = samples * dec->n_channels * 2;
+  packet_size = samples * dec->info.bpf;
 
   outbuf =
       gst_audio_decoder_allocate_output_buffer (GST_AUDIO_DECODER (dec),
@@ -719,34 +732,50 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     dec->last_known_buffer_duration = packet_duration_opus (data, size);
 
   gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
-  out_data = (gint16 *) omap.data;
+  out_data = omap.data;
 
   do {
+    gint decode_fec;
+
     if (dec->use_inband_fec) {
       if (gst_buffer_get_size (dec->last_buffer) > 0) {
         /* normal delayed decode */
         GST_LOG_OBJECT (dec, "FEC enabled, decoding last delayed buffer");
-        n = opus_multistream_decode (dec->state, data, size, out_data, samples,
-            0);
+        decode_fec = 0;
       } else {
         /* FEC reconstruction decode */
         GST_LOG_OBJECT (dec, "FEC enabled, reconstructing last buffer");
-        n = opus_multistream_decode (dec->state, data, size, out_data, samples,
-            1);
+        decode_fec = 1;
       }
     } else {
       /* normal decode */
       GST_LOG_OBJECT (dec, "FEC disabled, decoding buffer");
-      n = opus_multistream_decode (dec->state, data, size, out_data, samples,
-          0);
+      decode_fec = 0;
     }
+
+    switch (GST_AUDIO_INFO_FORMAT (&dec->info)) {
+      case GST_AUDIO_FORMAT_S16:
+        n = opus_multistream_decode (dec->state, data, size, out_data, samples,
+            decode_fec);
+        break;
+#ifdef HAVE_LIBOPUS_0_9_7
+      case GST_AUDIO_FORMAT_F32:
+        n = opus_multistream_decode_float (dec->state, data, size, out_data,
+            samples, decode_fec);
+        break;
+#endif
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+
     if (n == OPUS_BUFFER_TOO_SMALL) {
       /* if too small, add 2.5 milliseconds and try again, up to the
        * Opus max size of 120 milliseconds */
       if (samples >= 120 * dec->sample_rate / 1000)
         break;
       samples += 25 * dec->sample_rate / 10000;
-      packet_size = samples * dec->n_channels * 2;
+      packet_size = samples * dec->info.bpf;
       gst_buffer_unmap (outbuf, &omap);
       gst_buffer_unref (outbuf);
       outbuf =
@@ -756,7 +785,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
         goto buffer_failed;
       }
       gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
-      out_data = (gint16 *) omap.data;
+      out_data = omap.data;
     }
   } while (n == OPUS_BUFFER_TOO_SMALL);
   gst_buffer_unmap (outbuf, &omap);
@@ -772,8 +801,8 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     return ret;
   }
   GST_DEBUG_OBJECT (dec, "decoded %d samples", n);
-  gst_buffer_set_size (outbuf, n * 2 * dec->n_channels);
-  GST_BUFFER_DURATION (outbuf) = samples * GST_SECOND / dec->sample_rate;
+  gst_buffer_set_size (outbuf, n * dec->info.bpf);
+  GST_BUFFER_DURATION (outbuf) = samples * GST_SECOND / dec->info.rate;
   samples = n;
 
   cmeta = gst_buffer_get_audio_clipping_meta (buf);
@@ -787,7 +816,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     guint skip = scaled_pre_skip > n ? n : scaled_pre_skip;
     guint scaled_skip = skip * 48000 / dec->sample_rate;
 
-    gst_buffer_resize (outbuf, skip * 2 * dec->n_channels, -1);
+    gst_buffer_resize (outbuf, skip * dec->info.bpf, -1);
 
     GST_INFO_OBJECT (dec,
         "Skipping %u samples at the beginning (%u at 48000 Hz)",
@@ -800,7 +829,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     guint skip = scaled_post_skip > n ? n : scaled_post_skip;
     guint scaled_skip = skip * 48000 / dec->sample_rate;
     guint outsize = gst_buffer_get_size (outbuf);
-    guint skip_bytes = skip * 2 * dec->n_channels;
+    guint skip_bytes = skip * dec->info.bpf;
 
     if (outsize > skip_bytes)
       outsize -= skip_bytes;
@@ -831,16 +860,35 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     gsize rsize;
     unsigned int i, nsamples;
     double volume = dec->r128_gain_volume;
-    gint16 *samples;
+
+    GST_DEBUG_OBJECT (dec, "Applying gain: volume %f", volume);
 
     gst_buffer_map (outbuf, &omap, GST_MAP_READWRITE);
-    samples = (gint16 *) omap.data;
     rsize = omap.size;
-    GST_DEBUG_OBJECT (dec, "Applying gain: volume %f", volume);
-    nsamples = rsize / 2;
-    for (i = 0; i < nsamples; ++i) {
-      int sample = (int) (samples[i] * volume + 0.5);
-      samples[i] = sample < -32768 ? -32768 : sample > 32767 ? 32767 : sample;
+    nsamples = rsize / dec->info.bpf;
+
+    switch (GST_AUDIO_INFO_FORMAT (&dec->info)) {
+      case GST_AUDIO_FORMAT_S16:{
+        gint16 *samples = (gint16 *) omap.data;
+        for (i = 0; i < nsamples; ++i) {
+          int sample = (int) (samples[i] * volume + 0.5);
+          samples[i] =
+              sample < -32768 ? -32768 : sample > 32767 ? 32767 : sample;
+        }
+        break;
+      }
+#ifdef HAVE_LIBOPUS_0_9_7
+      case GST_AUDIO_FORMAT_F32:{
+        gfloat *samples = (gfloat *) omap.data;
+        for (i = 0; i < nsamples; ++i) {
+          samples[i] = samples[i] * volume;
+        }
+        break;
+      }
+#endif
+      default:
+        g_assert_not_reached ();
+        break;
     }
     gst_buffer_unmap (outbuf, &omap);
   }
