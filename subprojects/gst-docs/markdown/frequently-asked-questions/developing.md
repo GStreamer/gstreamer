@@ -109,7 +109,7 @@ want it to do.
 The indentation style for GStreamer C code is similar to K\&R with 2-space
 indenting.
 
-Consistent indentaiton is enforced only for C source files, we generally do
+Consistent indentation is enforced only for C source files, we generally do
 not indent header files.
 
 In header files indentation is free-form, but please always use spaces and
@@ -139,7 +139,8 @@ See [How to submit patches][submit-patches] for more details.
 
 ## How do I get my translations included?
 
-I have translated one of the module .po files into a new language. How do I get it included?
+I have translated one of the module .po files into a new language. How do I get
+it included?
 
 GStreamer translations are uniformly managed through the
 [Translation Project](http://translationproject.org). There are some
