@@ -518,12 +518,15 @@ gst_yolo_tensor_decoder_convert_bbox (const gfloat * candidate,
  */
 static gfloat
 gst_yolo_tensor_decoder_iou (const gfloat * c1, const gfloat * c2,
-    const gsize * offset, BBox * bb1, BBox * bb2)
+    const gsize * offset, BBox * bb)
 {
-  gst_yolo_tensor_decoder_convert_bbox (c1, offset, bb1);
-  gst_yolo_tensor_decoder_convert_bbox (c2, offset, bb2);
-  return gst_analytics_image_util_iou_int (bb1->x, bb1->y, bb1->w, bb1->h,
-      bb2->x, bb2->y, bb2->w, bb2->h);
+  BBox bb2;
+
+  gst_yolo_tensor_decoder_convert_bbox (c1, offset, bb);
+  gst_yolo_tensor_decoder_convert_bbox (c2, offset, &bb2);
+
+  return gst_analytics_image_util_iou_int (bb->x,
+      bb->y, bb->w, bb->h,  bb2.x, bb2.y, bb2.w, bb2.h);
 }
 
 /* Utility function to find maxmum confidence value across classes
@@ -596,7 +599,7 @@ gst_yolo_tensor_decoder_decode_f32 (GstYoloTensorDecoder * self,
   gfloat iou;
   gboolean rv, keep;
   gsize offset, x_offset, y_offset, w_offset, h_offset, offsets[4];
-  BBox bb1, bb2;
+  BBox bb;
   ConfidenceRange c_range;
   gsize max_class_offset = 0, class_index;
   GQuark class_quark = OOI_CLASS_ID;
@@ -733,7 +736,7 @@ gst_yolo_tensor_decoder_decode_f32 (GstYoloTensorDecoder * self,
     for (gsize s = 0; s < self->selected->len && keep; s++) {
       const float *candidate2 = g_ptr_array_index (self->selected, s);
       iou = gst_yolo_tensor_decoder_iou (c->candidate, candidate2,
-          offsets, &bb1, &bb2);
+          offsets, &bb);
       keep = (iou <= self->iou_thresh);
     }
 
@@ -774,7 +777,7 @@ gst_yolo_tensor_decoder_decode_f32 (GstYoloTensorDecoder * self,
         }
       }
 
-      GST_YOLO_TENSOR_DECODER_GET_CLASS (self)->object_found (self, rmeta, &bb1,
+      GST_YOLO_TENSOR_DECODER_GET_CLASS (self)->object_found (self, rmeta, &bb,
           c->max_confidence, class_quark, candidate_masks, offset,
           self->selected->len);
 
