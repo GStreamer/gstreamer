@@ -62,9 +62,6 @@
  *
  */
 
-#include "glib.h"
-#include "glibconfig.h"
-#include "gst/gstpad.h"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

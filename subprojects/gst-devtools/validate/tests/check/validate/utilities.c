@@ -1,7 +1,6 @@
 #include <gst/check/gstcheck.h>
 #include <gst/validate/validate.h>
 #include <gst/validate/gst-validate-utils.h>
-#include "gst/gststructure.h"
 
 GST_START_TEST (test_resolve_variables)
 {

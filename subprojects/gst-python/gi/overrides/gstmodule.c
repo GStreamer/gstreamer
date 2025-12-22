@@ -21,8 +21,6 @@
  * Author: David I. Lehn <dlehn@users.sourceforge.net>
  */
 
-#include "gst/gstcaps.h"
-#include "gst/gstminiobject.h"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

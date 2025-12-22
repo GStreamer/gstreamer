@@ -24,7 +24,6 @@
 #ifndef __BASETSMUX_JPEGXS_H__
 #define __BASETSMUX_JPEGXS_H__
 
-#include "glib.h"
 #include "gstbasetsmux.h"
 
 typedef struct jpegxs_private_data

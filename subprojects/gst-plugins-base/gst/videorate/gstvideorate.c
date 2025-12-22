@@ -75,8 +75,6 @@
  *
  */
 
-#include "gst/gstcaps.h"
-#include "gst/gstclock.h"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
