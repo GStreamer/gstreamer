@@ -519,16 +519,10 @@ gst_yolo_tensor_decoder_convert_bbox (const gfloat * candidate,
 /* Calculate iou between boundingbox of candidate c1 and c2
  */
 static gfloat
-gst_yolo_tensor_decoder_iou (const gfloat * c1, const gfloat * c2,
-    const gsize * offset, BBox * bb)
+gst_yolo_tensor_decoder_iou (BBox * bb1, BBox * bb2)
 {
-  BBox bb2;
-
-  gst_yolo_tensor_decoder_convert_bbox (c1, offset, bb);
-  gst_yolo_tensor_decoder_convert_bbox (c2, offset, &bb2);
-
-  return gst_analytics_image_util_iou_int (bb->x,
-      bb->y, bb->w, bb->h,  bb2.x, bb2.y, bb2.w, bb2.h);
+  return gst_analytics_image_util_iou_int (bb1->x,
+      bb1->y, bb1->w, bb1->h,  bb2->x, bb2->y, bb2->w, bb2->h);
 }
 
 /* Utility function to find maxmum confidence value across classes
@@ -733,24 +727,23 @@ gst_yolo_tensor_decoder_decode_f32 (GstYoloTensorDecoder * self,
         struct Candidate, i);
     keep = TRUE;
 
+    gst_yolo_tensor_decoder_convert_bbox (c->candidate, offsets, &bb);
+
     /* We only want to a NMS using IoU between candidates we've decided to
      * keep and the new one we considering to keep. selected array contain
      * the candidates we decided to keep and candidates[c] is the candidate
      * we're considering to keep or reject */
     for (gsize s = 0; s < self->selected->len && keep; s++) {
       const float *candidate2 = g_ptr_array_index (self->selected, s);
-      iou = gst_yolo_tensor_decoder_iou (c->candidate, candidate2,
-          offsets, &bb);
+      BBox bb2;
+
+      gst_yolo_tensor_decoder_convert_bbox (candidate2, offsets, &bb2);
+
+      iou = gst_yolo_tensor_decoder_iou (&bb, &bb2);
       keep = (iou <= self->iou_thresh);
     }
 
     if (keep) {
-      if (self->selected->len == 0) {
-        /* The first bounding-box always get in as there's no others bbox
-         * to filter on based on IoU */
-        gst_yolo_tensor_decoder_convert_bbox (c->candidate, offsets, &bb);
-      }
-
       g_ptr_array_add (self->selected, (gpointer) c->candidate);
 
       if (self->labels) {
