@@ -156,6 +156,8 @@ static GstFlowReturn gst_yolo_tensor_decoder_transform_ip (GstBaseTransform *
     trans, GstBuffer * buf);
 static void gst_yolo_tensor_decoder_finalize (GObject * object);
 
+static gfloat gst_yolo_tensor_decoder_iou (GstYoloTensorDecoder * self,
+    BBox * bb1, BBox * bb2);
 static void gst_yolo_tensor_decoder_object_found (GstYoloTensorDecoder * self,
     GstAnalyticsRelationMeta * rmeta, BBox * bb, gfloat confidence,
     GQuark class_quark, const gfloat * candidate_masks, gsize offset,
@@ -389,6 +391,7 @@ gst_yolo_tensor_decoder_class_init (GstYoloTensorDecoderClass * klass)
   gobject_class->finalize = gst_yolo_tensor_decoder_finalize;
 
   klass->object_found = gst_yolo_tensor_decoder_object_found;
+  klass->iou = gst_yolo_tensor_decoder_iou;
 
   /* Calculate the class id placeholder (also a quark) that will be set
    * as label if object if labels are not provided via label-file. */
@@ -519,10 +522,11 @@ gst_yolo_tensor_decoder_convert_bbox (const gfloat * candidate,
 /* Calculate iou between boundingbox of candidate c1 and c2
  */
 static gfloat
-gst_yolo_tensor_decoder_iou (BBox * bb1, BBox * bb2)
+gst_yolo_tensor_decoder_iou (GstYoloTensorDecoder * self,
+    BBox * bb1, BBox * bb2)
 {
   return gst_analytics_image_util_iou_int (bb1->x,
-      bb1->y, bb1->w, bb1->h,  bb2->x, bb2->y, bb2->w, bb2->h);
+      bb1->y, bb1->w, bb1->h, bb2->x, bb2->y, bb2->w, bb2->h);
 }
 
 /* Utility function to find maxmum confidence value across classes
@@ -721,6 +725,10 @@ gst_yolo_tensor_decoder_decode_f32 (GstYoloTensorDecoder * self,
     }
   }
 
+  float (*iou_func) (GstYoloTensorDecoder * self, BBox * bb1, BBox * bb2);
+
+  iou_func = GST_YOLO_TENSOR_DECODER_GET_CLASS (self)->iou;
+
   /* Algorithm in part inspired by OpenCV NMSBoxes */
   for (i = 0; i < self->sel_candidates->len; i++) {
     const struct Candidate *c = &g_array_index (self->sel_candidates,
@@ -733,13 +741,14 @@ gst_yolo_tensor_decoder_decode_f32 (GstYoloTensorDecoder * self,
      * keep and the new one we considering to keep. selected array contain
      * the candidates we decided to keep and candidates[c] is the candidate
      * we're considering to keep or reject */
+
     for (gsize s = 0; s < self->selected->len && keep; s++) {
       const float *candidate2 = g_ptr_array_index (self->selected, s);
       BBox bb2;
 
       gst_yolo_tensor_decoder_convert_bbox (candidate2, offsets, &bb2);
 
-      iou = gst_yolo_tensor_decoder_iou (&bb, &bb2);
+      iou = iou_func (self, &bb, &bb2);
       keep = (iou <= self->iou_thresh);
     }
 

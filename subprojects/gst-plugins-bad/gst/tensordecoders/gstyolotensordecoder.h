@@ -89,6 +89,8 @@ struct _GstYoloTensorDecoderClass
       GstAnalyticsRelationMeta *rmeta, BBox *bb, gfloat confidence,
       GQuark class_quark, const gfloat *candidate_masks, gsize offset,
       guint count);
+
+  gfloat (*iou) (GstYoloTensorDecoder *self, BBox *bb1, BBox *bb2);
 };
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstYoloTensorDecoder, g_object_unref)
