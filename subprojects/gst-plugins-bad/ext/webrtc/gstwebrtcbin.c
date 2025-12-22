@@ -8813,7 +8813,9 @@ gst_webrtc_bin_close (GstWebRTCBin * webrtc, GstPromise * promise)
     GstWebRTCDTLSTransport *transport;
 
     transport = webrtc_transceiver_get_dtls_transport (rtp_trans);
-    transport->state = GST_WEBRTC_DTLS_TRANSPORT_STATE_CLOSED;
+    if (transport) {
+      transport->state = GST_WEBRTC_DTLS_TRANSPORT_STATE_CLOSED;
+    }
   }
 
   GST_OBJECT_UNLOCK (webrtc);
