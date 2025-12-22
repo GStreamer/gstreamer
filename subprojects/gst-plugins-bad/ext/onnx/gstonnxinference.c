@@ -308,23 +308,6 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
           GST_ONNX_EXECUTION_PROVIDER_CPU, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_INPUT_OFFSET,
-      g_param_spec_float ("input-tensor-offset",
-          "Input tensor offset",
-          "offset each tensor value by this value",
-          -G_MAXFLOAT, G_MAXFLOAT, 0.0,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_INPUT_SCALE,
-      g_param_spec_float ("input-tensor-scale",
-          "Input tensor scale",
-          "Divide each tensor value by this value",
-          G_MINFLOAT, G_MAXFLOAT, 1.0,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-
-
   gst_element_class_set_static_metadata (element_class, "onnxinference",
       "Filter/Video",
       "Apply neural network to video frames and create tensor output",
