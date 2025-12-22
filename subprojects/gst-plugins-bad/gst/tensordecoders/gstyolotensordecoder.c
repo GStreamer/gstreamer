@@ -504,14 +504,16 @@ gst_yolo_tensor_decoder_finalize (GObject * object)
 /* Extract bounding box from tensor data */
 static void
 gst_yolo_tensor_decoder_convert_bbox (const gfloat * candidate,
-    const gsize * offset, BBox * bbox)
+    const gsize * offsets, BBox * bbox)
 {
-  gfloat w = *(candidate + offset[2]);
-  gfloat h = *(candidate + offset[3]);
-  bbox->x = *(candidate + offset[0]) - (w / 2);
-  bbox->y = *(candidate + offset[1]) - (h / 2);
+  gfloat w = *(candidate + offsets[2]);
+  gfloat h = *(candidate + offsets[3]);
+  bbox->x = *(candidate + offsets[0]) - (w / 2);
+  bbox->y = *(candidate + offsets[1]) - (h / 2);
   bbox->w = w + 0.5;
   bbox->h = h + 0.5;
+  if (offsets[4])
+    bbox->r = *(candidate + offsets[4]);
 }
 
 /* Calculate iou between boundingbox of candidate c1 and c2
@@ -598,7 +600,7 @@ gst_yolo_tensor_decoder_decode_f32 (GstYoloTensorDecoder * self,
   GstMapInfo map_info_detections;
   gfloat iou;
   gboolean rv, keep;
-  gsize offset, x_offset, y_offset, w_offset, h_offset, offsets[4];
+  gsize offset, x_offset, y_offset, w_offset, h_offset, offsets[5];
   BBox bb;
   ConfidenceRange c_range;
   gsize max_class_offset = 0, class_index;
@@ -658,6 +660,8 @@ gst_yolo_tensor_decoder_decode_f32 (GstYoloTensorDecoder * self,
   offsets[1] = y_offset;
   offsets[2] = w_offset;
   offsets[3] = h_offset;
+  if (num_masks)
+    offsets[4] = (detections_tensor->dims[1] - num_masks) * offset;
 
 #define BB_X(candidate) candidate[x_offset]
 #define BB_Y(candidate) candidate[y_offset]
@@ -744,7 +748,7 @@ gst_yolo_tensor_decoder_decode_f32 (GstYoloTensorDecoder * self,
       if (self->selected->len == 0) {
         /* The first bounding-box always get in as there's no others bbox
          * to filter on based on IoU */
-        gst_yolo_tensor_decoder_convert_bbox (c->candidate, offsets, &bb1);
+        gst_yolo_tensor_decoder_convert_bbox (c->candidate, offsets, &bb);
       }
 
       g_ptr_array_add (self->selected, (gpointer) c->candidate);
@@ -763,8 +767,7 @@ gst_yolo_tensor_decoder_decode_f32 (GstYoloTensorDecoder * self,
          * will start at the end of the detections_tensor minus
          * `num_masks`
          */
-        candidate_masks = c->candidate +
-            ((detections_tensor->dims[1] - num_masks) * offset);
+        candidate_masks = c->candidate + offsets[4];
 
         if (candidate_masks + num_masks + offset >
             (gfloat *) (map_info_detections.data + map_info_detections.size)) {
