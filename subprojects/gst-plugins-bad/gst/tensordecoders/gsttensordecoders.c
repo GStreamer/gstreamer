@@ -31,6 +31,7 @@
 #include "gstyolotensordecoder.h"
 #include "gstyolo26tensordecoder.h"
 #include "gstyolosegtensordecoder.h"
+#include "gstyoloobbtensordecoder.h"
 #include "gsttensordecodebin.h"
 
 /**
@@ -52,6 +53,7 @@ plugin_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (yolo_tensor_decoder, plugin);
   ret |= GST_ELEMENT_REGISTER (yolo26_tensor_decoder, plugin);
   ret |= GST_ELEMENT_REGISTER (yolo_seg_tensor_decoder, plugin);
+  ret |= GST_ELEMENT_REGISTER (yolo_obb_tensor_decoder, plugin);
   ret |= GST_ELEMENT_REGISTER (tensordecodebin, plugin);
 
   return ret;

@@ -8,6 +8,7 @@ tensordecoders_sources = [
   'gstyolo26tensordecoder.c',
   'gstyolosegtensordecoder.c',
   'gsttensordecodebin.c',
+  'gstyoloobbtensordecoder.c',
 ]
 
 tensordecoders_headers = [
@@ -18,7 +19,8 @@ tensordecoders_headers = [
   'gstyolotensordecoder.h',
   'gstyolo26tensordecoder.h',
   'gstyolosegtensordecoder.h',
-  'gsttensordecodebin.h'
+  'gsttensordecodebin.h',
+  'gstyoloobbtensordecoder.h',
 ]
 
 doc_sources = []

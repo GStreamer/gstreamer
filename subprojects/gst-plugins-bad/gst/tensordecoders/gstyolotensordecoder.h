@@ -55,6 +55,7 @@ typedef struct _BBox
   gint y;
   guint w;
   guint h;
+  gfloat r;
 } BBox;
 
 struct _GstYoloTensorDecoder
