@@ -355,89 +355,101 @@ gst_analytics_relation_meta_free (GstMeta * meta, GstBuffer * buffer)
 
 static gboolean
 gst_analytics_relation_meta_transform (GstBuffer * transbuf,
-    GstMeta * meta, GstBuffer * buffer, GQuark type, gpointer data)
+    GstMeta * src_meta, GstBuffer * buffer, GQuark type, gpointer data)
 {
-  GST_CAT_TRACE (GST_CAT_AN_RELATION, "meta transform %s",
-      g_quark_to_string (type));
+  GstAnalyticsRelationMeta *src_rmeta = (GstAnalyticsRelationMeta *) src_meta;
+  GstAnalyticsRelationMeta *dst_rmeta = (GstAnalyticsRelationMeta *)
+      gst_buffer_get_meta (transbuf, GST_ANALYTICS_RELATION_META_API_TYPE);
+  guint i;
+  guint *free_match = NULL;
+  guint *match = NULL;
 
-  if (GST_META_TRANSFORM_IS_COPY (type) ||
-      GST_VIDEO_META_TRANSFORM_IS_SCALE (type) ||
-      GST_VIDEO_META_TRANSFORM_IS_MATRIX (type)) {
-    GstAnalyticsRelationMeta *rmeta = (GstAnalyticsRelationMeta *) meta;
-    GstAnalyticsRelationMeta *new = (GstAnalyticsRelationMeta *)
-        gst_buffer_get_meta (transbuf, GST_ANALYTICS_RELATION_META_API_TYPE);
+  if (!GST_META_TRANSFORM_IS_COPY (type) &&
+      !GST_VIDEO_META_TRANSFORM_IS_SCALE (type) &&
+      !GST_VIDEO_META_TRANSFORM_IS_MATRIX (type))
+    return FALSE;
 
-    if (new == NULL) {
-      GstAnalyticsRelationMetaInitParams init_params = {
-        rmeta->rel_order, rmeta->max_size
-      };
+  if (dst_rmeta == NULL) {
+    GstAnalyticsRelationMetaInitParams init_params = {
+      src_rmeta->rel_order, src_rmeta->max_size
+    };
 
-      GST_CAT_TRACE (GST_CAT_AN_RELATION,
-          "meta transform creating new meta rel_order:%" G_GSIZE_FORMAT
-          " max_size:%" G_GSIZE_FORMAT,
-          init_params.initial_relation_order, init_params.initial_buf_size);
+    GST_CAT_TRACE (GST_CAT_AN_RELATION,
+        "meta transform creating new meta rel_order:%" G_GSIZE_FORMAT
+        " max_size:%" G_GSIZE_FORMAT,
+        init_params.initial_relation_order, init_params.initial_buf_size);
 
-      new =
-          gst_buffer_add_analytics_relation_meta_full (transbuf, &init_params);
+    dst_rmeta =
+        gst_buffer_add_analytics_relation_meta_full (transbuf, &init_params);
+  }
+
+
+  /* If it's under 2K, do it on the stack, otherwise, use the heap */
+  /* Our default is 5 */
+  if (src_rmeta->length < 2048 / sizeof (guint))
+    match = g_alloca (src_rmeta->length * sizeof (guint));
+  else
+    free_match = match = g_malloc (src_rmeta->length * sizeof (guint));
+
+  for (i = 0; i < src_rmeta->length; i++) {
+    GstAnalyticsRelatableMtdData *src_mtd_data =
+        (GstAnalyticsRelatableMtdData *)
+        (src_rmeta->mtd_data_lookup[i] + src_rmeta->analysis_results);
+    GstAnalyticsMtd dst_mtd;
+
+    if (src_mtd_data->impl == NULL) {
+      match[i] = G_MAXUINT;
+      continue;
     }
 
-    if (new->offset == 0) {
-      guint i;
+    gpointer dst_data = gst_analytics_relation_meta_add_mtd (dst_rmeta,
+        src_mtd_data->impl, src_mtd_data->size, &dst_mtd);
 
-      if (new->rel_order < rmeta->rel_order) {
-        g_free (new->adj_mat);
-        g_free (new->mtd_data_lookup);
-        new->adj_mat = gst_analytics_relation_adj_mat_create (rmeta->rel_order);
-        new->mtd_data_lookup = g_malloc0 (sizeof (gpointer) * rmeta->rel_order);
-        new->rel_order = rmeta->rel_order;
-      }
+    memcpy (dst_data, src_mtd_data->data, src_mtd_data->size);
 
-      if (new->max_size < rmeta->max_size) {
-        g_free (new->analysis_results);
-        new->analysis_results = g_malloc (rmeta->max_size);
-        new->max_size = rmeta->max_size;
-      }
-
-      if (rmeta->rel_order == new->rel_order) {
-        memcpy (new->adj_mat + new->rel_order, rmeta->adj_mat +
-            rmeta->rel_order, rmeta->rel_order * rmeta->rel_order);
+    if (src_mtd_data->impl->mtd_meta_transform) {
+      if (src_mtd_data->impl->mtd_meta_transform (transbuf, &dst_mtd, buffer,
+              type, data)) {
+        match[i] = dst_mtd.id;
       } else {
-        /* When destination adj_mat has a higher order than source we need
-         * to copy by row to have the correct alignment */
-        for (gsize r = 0; r < rmeta->rel_order; r++) {
-          memcpy (new->adj_mat[r], rmeta->adj_mat[r], rmeta->rel_order);
-        }
-      }
-      memcpy (new->mtd_data_lookup, rmeta->mtd_data_lookup,
-          sizeof (gpointer) * rmeta->rel_order);
-      memcpy (new->analysis_results, rmeta->analysis_results, rmeta->offset);
+        GstAnalyticsRelatableMtdData *dst_mtd_data =
+            (GstAnalyticsRelatableMtdData *)
+            (dst_rmeta->mtd_data_lookup[dst_mtd.id] +
+            dst_rmeta->analysis_results);
 
-      new->length = rmeta->length;
-      new->next_id = rmeta->next_id;
-      new->offset = rmeta->offset;
-
-      for (i = 0; i < new->length; i++) {
-        GstAnalyticsRelatableMtdData *rlt_mtd_data =
-            (GstAnalyticsRelatableMtdData *) (new->mtd_data_lookup[i] +
-            new->analysis_results);
-        if (rlt_mtd_data->impl && rlt_mtd_data->impl->mtd_meta_transform) {
-          GstAnalyticsMtd transmtd;
-          transmtd.id = rlt_mtd_data->id;
-          transmtd.meta = new;
-          rlt_mtd_data->impl->mtd_meta_transform (transbuf, &transmtd, buffer,
-              type, data);
-        }
+        dst_mtd_data->impl = NULL;
+        match[i] = G_MAXUINT;
       }
-      return TRUE;
     } else {
-      g_warning ("Trying to copy GstAnalyticsRelationMeta into non-empty meta");
-      g_debug ("ofs:%" G_GSIZE_FORMAT, new->offset);
-
-      return FALSE;
+      match[i] = dst_mtd.id;
     }
   }
 
-  return FALSE;
+  for (i = 0; i < src_rmeta->length; i++) {
+    GstAnalyticsRelatableMtdData *src_mtd_data_i =
+        (GstAnalyticsRelatableMtdData *)
+        (src_rmeta->mtd_data_lookup[i] + src_rmeta->analysis_results);
+    guint j;
+
+    if (match[i] == G_MAXUINT)
+      continue;
+
+    for (j = 0; j < src_rmeta->length; j++) {
+      GstAnalyticsRelatableMtdData *src_mtd_data_j =
+          (GstAnalyticsRelatableMtdData *)
+          (src_rmeta->mtd_data_lookup[j] + src_rmeta->analysis_results);
+
+      if (match[j] == G_MAXUINT)
+        continue;
+
+      dst_rmeta->adj_mat[match[i]][match[j]] |=
+          src_rmeta->adj_mat[src_mtd_data_i->id][src_mtd_data_j->id];
+    }
+  }
+
+  g_free (free_match);
+
+  return TRUE;
 }
 
 static void
