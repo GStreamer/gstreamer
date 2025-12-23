@@ -951,6 +951,7 @@ gst_ffmpegviddec_ensure_internal_pool (GstFFMpegVidDec * ffmpegdec,
   gst_ffmpegvideodec_prepare_dr_pool (ffmpegdec, &info, &params, &align);
   gst_buffer_pool_config_set_params (config, caps, info.size, 2, 0);
   gst_buffer_pool_config_set_allocator (config, NULL, &params);
+  gst_buffer_pool_config_set_video_alignment (config, &align);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_config_add_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
