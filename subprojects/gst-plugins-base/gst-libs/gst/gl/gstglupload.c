@@ -785,7 +785,7 @@ _udmabuf_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
 
   allocator = gst_udmabuf_allocator_get ();
   if (!allocator) {
-    GST_DEBUG_OBJECT (upload, "No udmabuf support");
+    GST_DEBUG_OBJECT (upload->upload, "No udmabuf support");
     return;
   }
 
