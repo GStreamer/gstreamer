@@ -771,12 +771,13 @@ gst_yolo_tensor_decoder_decode_f32 (GstYoloTensorDecoder * self,
          */
         candidate_masks = c->candidate + offsets[4];
 
-        if (candidate_masks + num_masks + offset >
+        if (candidate_masks + (offset * (num_masks - 1)) >
             (gfloat *) (map_info_detections.data + map_info_detections.size)) {
           GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
               ("Mask tensor data size %zu is smaller than expected (%zu)",
+                  map_info_detections.size / sizeof (gfloat),
                   (candidate_masks - (gfloat *) map_info_detections.data) +
-                  offset + num_masks, map_info_detections.size));
+                  (((num_masks - 1) * offset))));
           ret = FALSE;
           break;
         }
