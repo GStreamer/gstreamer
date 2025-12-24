@@ -445,6 +445,14 @@ gst_analytics_segmentation_mtd_transform (GstBuffer * transbuf,
       segdata->masks_loc_w, segdata->masks_loc_h
     };
 
+    if (trans->matrix[0][1] != 0 || trans->matrix[1][0] != 0 ||
+        trans->matrix[0][0] < 0 || trans->matrix[1][1] < 0) {
+      GST_WARNING ("Segmentation meta doesn't support rotations or flips,"
+          " not copying from buffer %" GST_PTR_FORMAT " to buffer: %"
+          GST_PTR_FORMAT, buffer, transbuf);
+      return FALSE;
+    }
+
     if (!gst_video_meta_transform_matrix_rectangle (trans, &rect))
       return FALSE;
 
