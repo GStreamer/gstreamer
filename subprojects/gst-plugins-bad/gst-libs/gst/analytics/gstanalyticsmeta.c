@@ -44,8 +44,8 @@
  * Since: 1.24
  */
 
-GST_DEBUG_CATEGORY_STATIC (an_relation_meta_debug);
-#define GST_CAT_DEFAULT an_relation_meta_debug
+G_GNUC_INTERNAL GST_DEBUG_CATEGORY (gst_analytics_relation_meta_debug);
+#define GST_CAT_DEFAULT gst_analytics_relation_meta_debug
 
 /*
  * GstAnalyticsRelatableMtdData:
@@ -296,7 +296,7 @@ gst_analytics_relation_meta_api_get_type (void)
   if (g_once_init_enter (&type)) {
     GType newType =
         gst_meta_api_type_register ("GstAnalyticsRelationMetaAPI", tags);
-    GST_DEBUG_CATEGORY_INIT (an_relation_meta_debug, "anrelmeta",
+    GST_DEBUG_CATEGORY_INIT (gst_analytics_relation_meta_debug, "anrelmeta",
         GST_DEBUG_FG_BLACK, "Content analysis meta relations meta");
     g_once_init_leave (&type, newType);
   }

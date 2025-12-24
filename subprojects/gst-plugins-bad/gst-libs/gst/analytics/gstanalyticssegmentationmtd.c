@@ -26,6 +26,9 @@
 #include "gstanalyticssegmentationmtd.h"
 #include <gst/video/video-info.h>
 
+GST_DEBUG_CATEGORY_EXTERN (gst_analytics_relation_meta_debug);
+#define GST_CAT_DEFAULT gst_analytics_relation_meta_debug
+
 /**
  * SECTION: gstanalyticssegmentationmtd
  * @title: GstAnalyticsSegmentationMtd

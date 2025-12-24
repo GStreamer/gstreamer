@@ -28,6 +28,9 @@
 #include <gst/video/video.h>
 #include <math.h>
 
+GST_DEBUG_CATEGORY_EXTERN (gst_analytics_relation_meta_debug);
+#define GST_CAT_DEFAULT gst_analytics_relation_meta_debug
+
 /**
  * SECTION:gstanalyticsobjectdetectionmtd
  * @title: GstAnalyticsODMtd
