@@ -2,11 +2,11 @@ GStreamer 1.26 Release Notes
 
 GStreamer 1.26.0 was originally released on 11 March 2025.
 
-The latest bug-fix release in the stable 1.26 series is 1.26.9 and was released on 01 December 2025.
+The latest bug-fix release in the stable 1.26 series is 1.26.10 and was released on 25 December 2025
 
 See https://gstreamer.freedesktop.org/releases/1.26/ for the latest version of this document.
 
-Last updated: Monday 01 December 2025, 17:00 UTC (log)
+Last updated: Thursday 25 December 2025, 15:00 UTC (log)
 
 ## Introduction
 
@@ -3119,6 +3119,191 @@ List of merge requests and issues fixed in 1.26.9
 
 -   List of Merge Requests applied in 1.26.9
 -   List of Issues fixed in 1.26.9
+
+1.26.10
+
+The tenth 1.26 bug-fix release (1.26.10) was released on 25 December 2025.
+
+This release only contains bugfixes and it should be safe to update from 1.26.x.
+
+Highlighted bugfixes in 1.26.10
+
+-   curlhttpsrc fixes and improvements
+-   decklinkvideosink: Fix frame completion callbacks for firmware 14.3+
+-   flac: Fix 6.1 and 7.1 channel layouts and support encoding and decoding of 32-bit audio
+-   glimagesink: Fix handling of odd height buffers
+-   matroskademux: make maximum allowed block size large enough to support 4k uncompressed video
+-   mxf: Add support for custom Sony XDCAM video variant
+-   opusenc: multichannel and surround sound handling improvements
+-   playbin3: HLS/DASH stream selection handling improvements to fix disabling and re-enabling of audio/video streams with
+    adaptivedemux2
+-   qtmux: robust recording mode space left estimation fixes for streams that start with a timestamp offset
+-   splitmuxsrc seeking improvements
+-   Support FLAC audio in DASH manifests
+-   Python bindings: fix regression where buffers were no longer writable in pad probe callbacks
+-   cerbero: add python bindings for GstApp; Windows installer improvements
+-   Various bug fixes,build fixes,memory leak fixes,and other stability and reliability improvements
+
+gstreamer
+
+-   pipeline: Improve resource cleanup logic for clock objects
+-   filesink: fix the build with recent mingw-w64
+-   basetransform, basesrc: Fix handling of buffer pool configuration failures
+
+gst-plugins-base
+
+-   basetextoverlay: Don’t negotiate if caps haven’t changed
+-   codec-utils: Update mime codec strings
+-   fdmemory: Fix size calculation when sharing
+-   gl elements add a yellow bar on JPEGs with non-even heights
+-   glimagesink: Fix handling of odd height buffers
+-   glwindow_cocoa: fix window not closing (w/o user window handle)
+-   opusenc: Simplify Vorbis channel layout mapping code and fix 7.1 layout & use surround multistream encoder
+-   parsebin: Improve debug logging
+-   playbin3: ensure GST_EVENT_SELECT_STREAMS event is sent to collection source
+-   tagdemux: propagate seek event seqnum to upstream
+-   videodecoder: Don’t assume the ALLOCATION query contains a pool
+-   videodecoder, videoaggregator: Fix handling of buffer pool configuration failures
+
+gst-plugins-good
+
+-   adaptivedemux2: Initialize start bitrate for dashdemux2 and hlsdemux2
+-   dashdemux2: Unknown codec ‘flac’ when streaming a DASH MPD manifest with a mp4 FLAC file
+-   deinterlace: Improve pool configuration
+-   flac: Fix 6.1 / 7.1 channel layouts
+-   flacdec: Don’t forbid S32 sample size (0x07) unnecessarily
+-   flacenc: Support S32 samples
+-   flacdec: Decode 32-bit FLAC files
+-   level: fix crash if no caps have been sent
+-   level: Floating point exception (core dumped) when sending buffers without caps
+-   matroskademux: Bump maximum block size from 15MB to 32MB to allow 4k raw video
+-   matroskamux: Fix some more thread-safety issues
+-   matroskamux: Fix thread-safety issues when requesting new pads
+-   matroskamux: pad->track handling results in segmentation fault
+-   mxfdemux / aiffparse / matroskaparse: Remove segment closing on non-flushing seeks
+-   qtdemux: Use gst_util_uint64_scale to scale guint64
+-   qtmux: Fix robust recording estimates
+-   splitmuxsrc - fix for seeking / flushing deadlock
+-   v4l2object: Add support for colorimetry 1:4:16:3
+-   wavenc: Fix downstream negotiation
+-   wavparse: prevent setting empty strings as title tag
+
+gst-plugins-bad
+
+-   aesenc / aesdec: use correct format specifier for buffer size in debug log
+-   analytics: Fix build on MSVC by using libm dependency
+-   curlhttpsrc: Various fixes
+-   decklinkvideosink: Fix frame completion callbacks for firmware 14.3+
+-   dtlsdec: mark generated cert agent with GST_OBJECT_FLAG_MAY_BE_LEAKED
+-   fdkaacdec: Assertion on handling unsupported channel layouts
+-   fdkaacdec: Invalidate channel_types/indices when setting a known config
+-   hlssink: Guard NULL structure and use gst_structure_has_name()
+-   midiparse: Fix a couple of potential out-of-bounds reads
+-   mpegtsmux: Fix potential deadlock changing pmt-interval
+-   mxfdemux: reconsider “closing running segment” for non flushing seeks
+-   mxfdemux / aiffparse / matroskaparse: Remove segment closing on non-flushing seeks
+-   mxfdemux: Simplify timestamp tracking
+-   mxfdemux: send event SegmentDone for segment seeks
+-   mxfmpeg: Add custom Sony picture essence coding UL
+-   playbin3: ensure GST_EVENT_SELECT_STREAMS event is sent to collection source
+-   vabasedec: Don’t assert when negotiating based on a gap event before the first buffer
+-   vkformat: Add VK_FORMAT_G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16 format
+-   webrtc: Keep a ref of the ICEStream in the TransportStream
+-   GstPlay: set_audio_track_enabled / set_video_track_enabled not functioning for adaptivedemux2 sources
+-   video: decoders: Fix possible crash when flushing H265/H266 decoder
+
+gst-plugins-ugly
+
+-   No changes
+
+GStreamer Rust plugins
+
+-   cctost2038anc: Fix typo with c_not_y_channel property documentation
+-   dav1d: Stop iteration after finding first working pool
+-   dav1d: Various fixes to allocation query handling
+-   gtk4paintablesink: Propose a udmabuf pool / allocator if upstream asks for sysmem
+-   gtk4: Fix typo in odd-size subsample workaround
+-   rtp: Update to rtcp-types 0.3
+-   st2038combiner: Some fixes
+-   st2038extractor: Add always-add-st2038-pad property
+-   threadshare: allow disabling the IPv4 or IPv6 socket in ts-udpsink
+-   threadshare: Update to flume 0.12
+-   tracers: add function and signal for writing logs to PadPushTimings
+-   version-helper: Update to toml_edit 0.24
+-   webrtc: mark static caps with GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED
+-   webrtcsink: don’t upscale when mitigating low bitrate
+-   Fix new clippy 1.92 warnings
+-   Update dependencies
+
+gst-libav
+
+-   avviddec: Various fixes to allocation query handling
+-   avviddec: Aggregate GstVideoAlignment on top of the meta api params, instead of overriding them
+-   avviddec: Set video alignment to internal pool
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-python
+
+-   Override GstPadProbeInfo to get writable objects
+-   Misc improvements
+-   More typing fixes
+-   1.26.2 breaks Python bindings: No longer able to modify Gst.Buffer metadata in pad probe callbacks
+
+gst-editing-services
+
+-   python: More typing fixes
+
+gst-devtools,gst-validate + gst-integration-testsuites
+
+-   dotsviewer: Update Rust dependencies
+
+gst-examples
+
+-   webrtc: Update Rust dependencies
+
+gstreamer-docs
+
+-   No changes
+
+Development build environment
+
+-   No changes
+
+Cerbero build tool and packaging changes in 1.26.10
+
+-   pkg-config: Ship it in the devel package
+-   recipe: Update License enums to SPDX expressions
+-   recipes: Fix GPL categorization of some plugins
+-   recipes: Fix stray devel files making it into runtime
+-   recipes: add GstApp python binding
+-   Modernize MSI license.rtf formatting
+-   Use ninja for all cmake recipes by default instead of GNU make
+-   ci: Mark a racy xcode toolchain bug for retrying
+
+Contributors to 1.26.10
+
+Aaron Boxer, Brad Reitmeyer, Christoph Reiter, Doug Nazar, F. Duncanh, François Laignel, Haejung Hwang, Hou Qi, Hyunjun Ko,
+Jakub Adam, Jan Schmidt, Jeongmin Kwak, Jerome Colle, L. E. Segovia, Mathieu Duponchelle, Nicolas Dufresne, Nirbheek Chauhan,
+Philippe Normand, Piotr Brzeziński, Pratik Pachange, Robert Mader, Sanchayan Maity, Sebastian Dröge, Stéphane Cerveau, Thibault
+Saunier, Tim-Philipp Müller, Tobias Schlager, Vivia Nikolaidou, Wilhelm Bartel, Xavier Claessens, Yun Liu,
+
+… and many others who have contributed bug reports,translations,sent suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.26.10
+
+-   List of Merge Requests applied in 1.26.10
+-   List of Issues fixed in 1.26.10
 
 Schedule for 1.28
 
