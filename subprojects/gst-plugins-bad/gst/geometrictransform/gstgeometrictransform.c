@@ -100,7 +100,18 @@ gst_geometric_transform_generate_map (GstGeometricTransform * gt)
   /*
    * (x,y) pairs of the inverse mapping
    */
-  gt->map = g_malloc0 (sizeof (gdouble) * gt->width * gt->height * 2);
+  gsize map_size;
+
+  /* Use GLib's checked multiplication to prevent overflow */
+  if (!g_size_checked_mul (&map_size, gt->width, gt->height) ||
+      !g_size_checked_mul (&map_size, map_size, 2) ||
+      !g_size_checked_mul (&map_size, map_size, sizeof (gdouble))) {
+    GST_ERROR_OBJECT (gt,
+        "Image dimensions too large, map allocation would overflow");
+    return FALSE;
+  }
+
+  gt->map = g_malloc0 (map_size);
   ptr = gt->map;
 
   for (y = 0; y < gt->height; y++) {
