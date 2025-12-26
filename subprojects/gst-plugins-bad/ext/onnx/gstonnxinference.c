@@ -1389,9 +1389,23 @@ gst_onnx_inference_set_caps (GstBaseTransform * trans, GstCaps * incaps,
 
   if (self->dest == NULL || self->width * self->height !=
       self->video_info.width * self->video_info.height) {
+    gsize element_size = get_tensor_type_size (self->input_data_type);
+    gsize alloc_size;
+
+    /* Use GLib's checked multiplication to prevent overflow */
+    if (!g_size_checked_mul (&alloc_size, self->video_info.width,
+            self->video_info.height) ||
+        !g_size_checked_mul (&alloc_size, alloc_size, self->channels) ||
+        !g_size_checked_mul (&alloc_size, alloc_size, element_size)) {
+      GST_ERROR_OBJECT (self,
+          "Integer overflow in buffer allocation: %dx%d pixels, %u channels, %zu bytes per element",
+          self->video_info.width, self->video_info.height, self->channels,
+          element_size);
+      return FALSE;
+    }
+
     g_free (self->dest);
-    self->dest = g_malloc (self->video_info.width * self->video_info.height *
-        self->channels * get_tensor_type_size (self->input_data_type));
+    self->dest = g_malloc (alloc_size);
   }
   self->width = self->video_info.width;
   self->height = self->video_info.height;
