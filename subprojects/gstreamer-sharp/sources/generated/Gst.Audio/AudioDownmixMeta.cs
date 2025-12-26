@@ -13,11 +13,14 @@ namespace Gst.Audio {
 	public partial struct AudioDownmixMeta : IEquatable<AudioDownmixMeta> {
 
 		public Gst.Meta Meta;
-		private IntPtr _from_position;
-		private IntPtr _to_position;
+		[MarshalAs (UnmanagedType.ByValArray, SizeConst=0)]
+		public Gst.Audio.AudioChannelPosition[] FromPosition;
+		[MarshalAs (UnmanagedType.ByValArray, SizeConst=0)]
+		public Gst.Audio.AudioChannelPosition[] ToPosition;
 		public int FromChannels;
 		public int ToChannels;
-		public float Matrix;
+		[MarshalAs (UnmanagedType.ByValArray, SizeConst=0)]
+		public float[] Matrix;
 
 		public static Gst.Audio.AudioDownmixMeta Zero = new Gst.Audio.AudioDownmixMeta ();
 
@@ -40,7 +43,7 @@ namespace Gst.Audio {
 
 		public bool Equals (AudioDownmixMeta other)
 		{
-			return true && Meta.Equals (other.Meta) && _from_position.Equals (other._from_position) && _to_position.Equals (other._to_position) && FromChannels.Equals (other.FromChannels) && ToChannels.Equals (other.ToChannels) && Matrix.Equals (other.Matrix);
+			return true && Meta.Equals (other.Meta) && FromPosition.Equals (other.FromPosition) && ToPosition.Equals (other.ToPosition) && FromChannels.Equals (other.FromChannels) && ToChannels.Equals (other.ToChannels) && Matrix.Equals (other.Matrix);
 		}
 
 		public override bool Equals (object other)
@@ -50,7 +53,7 @@ namespace Gst.Audio {
 
 		public override int GetHashCode ()
 		{
-			return this.GetType ().FullName.GetHashCode () ^ Meta.GetHashCode () ^ _from_position.GetHashCode () ^ _to_position.GetHashCode () ^ FromChannels.GetHashCode () ^ ToChannels.GetHashCode () ^ Matrix.GetHashCode ();
+			return this.GetType ().FullName.GetHashCode () ^ Meta.GetHashCode () ^ FromPosition.GetHashCode () ^ ToPosition.GetHashCode () ^ FromChannels.GetHashCode () ^ ToChannels.GetHashCode () ^ Matrix.GetHashCode ();
 		}
 
 		private static GLib.GType GType {

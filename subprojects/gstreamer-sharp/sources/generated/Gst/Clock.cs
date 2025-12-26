@@ -743,6 +743,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_clock_is_system_monotonic(IntPtr raw);
+
+		public bool IsSystemMonotonic { 
+			get {
+				bool raw_ret = gst_clock_is_system_monotonic(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_clock_new_periodic_id(IntPtr raw, ulong start_time, ulong interval);
 
 		public IntPtr NewPeriodicId(ulong start_time, ulong interval) {

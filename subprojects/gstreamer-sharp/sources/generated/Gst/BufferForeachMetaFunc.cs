@@ -5,6 +5,6 @@ namespace Gst {
 
 	using System;
 
-	public delegate bool BufferForeachMetaFunc(Gst.Buffer buffer, out Gst.Meta meta);
+	public delegate bool BufferForeachMetaFunc(Gst.Buffer buffer, ref Gst.Meta meta);
 
 }

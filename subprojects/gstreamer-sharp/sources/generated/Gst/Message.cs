@@ -251,6 +251,15 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_message_parse_device_monitor_started(IntPtr raw, out bool success);
+
+		public bool ParseDeviceMonitorStarted() {
+			bool success;
+			gst_message_parse_device_monitor_started(Handle, out success);
+			return success;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_message_parse_device_removed(IntPtr raw, out IntPtr device);
 
 		public Gst.Device ParseDeviceRemoved() {
@@ -754,6 +763,15 @@ namespace Gst {
 		public static Message NewDeviceChanged(Gst.Object src, Gst.Device device, Gst.Device changed_device)
 		{
 			Message result = new Message (gst_message_new_device_changed(src == null ? IntPtr.Zero : src.Handle, device == null ? IntPtr.Zero : device.Handle, changed_device == null ? IntPtr.Zero : changed_device.Handle));
+			return result;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_message_new_device_monitor_started(IntPtr src, bool success);
+
+		public static Message NewDeviceMonitorStarted(Gst.Object src, bool success)
+		{
+			Message result = new Message (gst_message_new_device_monitor_started(src == null ? IntPtr.Zero : src.Handle, success));
 			return result;
 		}
 

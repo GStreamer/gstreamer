@@ -975,6 +975,17 @@ namespace Gst.App {
 			gst_app_src_set_latency(Handle, min, max);
 		}
 
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_app_src_set_simple_callbacks(IntPtr raw, IntPtr value);
+
+		public Gst.App.AppSrcSimpleCallbacks SimpleCallbacks { 
+			set {
+				IntPtr native_value = GLib.Marshaller.StructureToPtrAlloc (value);
+				gst_app_src_set_simple_callbacks(Handle, native_value);
+				Marshal.FreeHGlobal (native_value);
+			}
+		}
+
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_handler_get_uri(IntPtr raw);
 

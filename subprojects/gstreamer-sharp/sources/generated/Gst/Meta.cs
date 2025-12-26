@@ -136,10 +136,11 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_meta_deserialize(IntPtr buffer, byte data, UIntPtr size, out uint consumed);
+		static extern IntPtr gst_meta_deserialize(IntPtr buffer, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] data, UIntPtr size, out uint consumed);
 
-		public static Gst.Meta Deserialize(Gst.Buffer buffer, byte data, ulong size, out uint consumed) {
-			IntPtr raw_ret = gst_meta_deserialize(buffer == null ? IntPtr.Zero : buffer.Handle, data, new UIntPtr (size), out consumed);
+		public static Gst.Meta Deserialize(Gst.Buffer buffer, byte[] data, out uint consumed) {
+			ulong size = (ulong)(data == null ? 0 : data.Length);
+			IntPtr raw_ret = gst_meta_deserialize(buffer == null ? IntPtr.Zero : buffer.Handle, data, new UIntPtr ((uint)size), out consumed);
 			Gst.Meta ret = Gst.Meta.New (raw_ret);
 			return ret;
 		}

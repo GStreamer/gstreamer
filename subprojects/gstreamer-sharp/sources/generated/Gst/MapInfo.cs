@@ -54,6 +54,33 @@ namespace Gst {
 			return (Gst.MapInfo) Marshal.PtrToStructure (raw, typeof (Gst.MapInfo));
 		}
 
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_map_info_clear(IntPtr raw);
+
+		public void Clear() {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			gst_map_info_clear(this_as_native);
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_map_info_init(IntPtr raw);
+
+		public void Init() {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			gst_map_info_init(this_as_native);
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+		}
+
+		static void ReadNative (IntPtr native, ref Gst.MapInfo target)
+		{
+			target = New (native);
+		}
+
 		public bool Equals (MapInfo other)
 		{
 			return true && Memory.Equals (other.Memory) && Flags.Equals (other.Flags) && _data.Equals (other._data) && Size.Equals (other.Size) && Maxsize.Equals (other.Maxsize) && UserData.Equals (other.UserData);

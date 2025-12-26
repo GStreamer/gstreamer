@@ -56,9 +56,9 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_video_vbi_encoder_write_line(IntPtr raw, byte data);
+		static extern void gst_video_vbi_encoder_write_line(IntPtr raw, byte[] data);
 
-		public void WriteLine(byte data) {
+		public void WriteLine(byte[] data) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
 			gst_video_vbi_encoder_write_line(this_as_native, data);

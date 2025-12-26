@@ -74,6 +74,21 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_context_get_task_pool(IntPtr raw, out IntPtr pool);
+
+		public bool GetTaskPool(out Gst.TaskPool pool) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr native_pool;
+			bool raw_ret = gst_context_get_task_pool(this_as_native, out native_pool);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			pool = GLib.Object.GetObject(native_pool, true) as Gst.TaskPool;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_context_has_context_type(IntPtr raw, IntPtr context_type);
 
 		public bool HasContextType(string context_type) {
@@ -142,6 +157,21 @@ namespace Gst {
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_context_set_task_pool(IntPtr raw, IntPtr pool);
+
+		public void SetTaskPool(Gst.TaskPool pool) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			gst_context_set_task_pool(this_as_native, pool == null ? IntPtr.Zero : pool.Handle);
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+		}
+
+		public void SetTaskPool() {
+			SetTaskPool (null);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

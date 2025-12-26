@@ -81,6 +81,7 @@ namespace Gst {
 		public const string TAG_ALBUM_ARTIST = @"album-artist";
 		public const string TAG_ALBUM_ARTIST_SORTNAME = @"album-artist-sortname";
 		public const string TAG_ALBUM_GAIN = @"replaygain-album-gain";
+		public const string TAG_ALBUM_GAIN_R128 = @"r128-album-gain";
 		public const string TAG_ALBUM_PEAK = @"replaygain-album-peak";
 		public const string TAG_ALBUM_SORTNAME = @"album-sortname";
 		public const string TAG_ALBUM_VOLUME_COUNT = @"album-disc-count";
@@ -158,11 +159,13 @@ namespace Gst {
 		public const string TAG_TITLE_SORTNAME = @"title-sortname";
 		public const string TAG_TRACK_COUNT = @"track-count";
 		public const string TAG_TRACK_GAIN = @"replaygain-track-gain";
+		public const string TAG_TRACK_GAIN_R128 = @"r128-track-gain";
 		public const string TAG_TRACK_NUMBER = @"track-number";
 		public const string TAG_TRACK_PEAK = @"replaygain-track-peak";
 		public const string TAG_USER_RATING = @"user-rating";
 		public const string TAG_VERSION = @"version";
 		public const string TAG_VIDEO_CODEC = @"video-codec";
+		public const string TASK_POOL_CONTEXT_TYPE = @"gst.task.pool";
 		public const string TIMEP_FORMAT = @"paT";
 		public const string TIME_FORMAT = @"u:%02u:%02u.%09u";
 		public const int TOC_REPEAT_COUNT_INFINITE = -1;

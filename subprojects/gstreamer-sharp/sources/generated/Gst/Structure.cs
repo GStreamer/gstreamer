@@ -220,7 +220,7 @@ namespace Gst {
 			bool raw_ret = gst_structure_get_caps(Handle, native_fieldname, out native_caps);
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_fieldname);
-			caps = native_caps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (native_caps, typeof (Gst.Caps), true);
+			caps = native_caps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (native_caps, typeof (Gst.Caps), false);
 			return ret;
 		}
 
@@ -742,15 +742,6 @@ namespace Gst {
 				gst_structure_set_name_static_str(Handle, native_value);
 				GLib.Marshaller.Free (native_value);
 			}
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_structure_set_parent_refcount(IntPtr raw, int refcount);
-
-		public bool SetParentRefcount(int refcount) {
-			bool raw_ret = gst_structure_set_parent_refcount(Handle, refcount);
-			bool ret = raw_ret;
-			return ret;
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

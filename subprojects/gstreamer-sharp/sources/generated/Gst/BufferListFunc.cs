@@ -5,6 +5,6 @@ namespace Gst {
 
 	using System;
 
-	public delegate bool BufferListFunc(out Gst.Buffer buffer, uint idx);
+	public delegate bool BufferListFunc(ref Gst.Buffer buffer, uint idx);
 
 }

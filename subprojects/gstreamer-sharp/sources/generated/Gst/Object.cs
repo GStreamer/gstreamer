@@ -263,6 +263,15 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_object_call_async(IntPtr raw, GstSharp.ObjectCallAsyncFuncNative func, IntPtr user_data);
+
+		public void CallAsync(Gst.ObjectCallAsyncFunc func) {
+			GstSharp.ObjectCallAsyncFuncWrapper func_wrapper = new GstSharp.ObjectCallAsyncFuncWrapper (func);
+			func_wrapper.PersistUntilCalled ();
+			gst_object_call_async(Handle, func_wrapper.NativeDelegate, IntPtr.Zero);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_object_default_error(IntPtr raw, IntPtr error, IntPtr debug);
 
 		public void DefaultError(IntPtr error, string debug) {
@@ -311,6 +320,17 @@ namespace Gst {
 			get {
 				IntPtr raw_ret = gst_object_get_path_string(Handle);
 				string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_object_get_toplevel(IntPtr raw);
+
+		public Gst.Object Toplevel { 
+			get {
+				IntPtr raw_ret = gst_object_get_toplevel(Handle);
+				Gst.Object ret = GLib.Object.GetObject(raw_ret, true) as Gst.Object;
 				return ret;
 			}
 		}

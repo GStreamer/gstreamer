@@ -280,6 +280,64 @@ namespace Gst.WebRTC {
 			return __result;
 		}
 
+		static GetSelectedCandidatePairNativeDelegate GetSelectedCandidatePair_cb_delegate;
+		static GetSelectedCandidatePairNativeDelegate GetSelectedCandidatePairVMCallback {
+			get {
+				if (GetSelectedCandidatePair_cb_delegate == null)
+					GetSelectedCandidatePair_cb_delegate = new GetSelectedCandidatePairNativeDelegate (GetSelectedCandidatePair_cb);
+				return GetSelectedCandidatePair_cb_delegate;
+			}
+		}
+
+		static void OverrideGetSelectedCandidatePair (GLib.GType gtype)
+		{
+			OverrideGetSelectedCandidatePair (gtype, GetSelectedCandidatePairVMCallback);
+		}
+
+		static void OverrideGetSelectedCandidatePair (GLib.GType gtype, GetSelectedCandidatePairNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("get_selected_candidate_pair"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate IntPtr GetSelectedCandidatePairNativeDelegate (IntPtr inst);
+
+		static IntPtr GetSelectedCandidatePair_cb (IntPtr inst)
+		{
+			try {
+				WebRTCICETransport __obj = GLib.Object.GetObject (inst, false) as WebRTCICETransport;
+				Gst.WebRTC.WebRTCICECandidatePair __result;
+				__result = __obj.OnGetSelectedCandidatePair ();
+				return GLib.Marshaller.StructureToPtrAlloc (__result);
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.WebRTC.WebRTCICETransport), ConnectionMethod="OverrideGetSelectedCandidatePair")]
+		protected virtual Gst.WebRTC.WebRTCICECandidatePair OnGetSelectedCandidatePair ()
+		{
+			return InternalGetSelectedCandidatePair ();
+		}
+
+		private Gst.WebRTC.WebRTCICECandidatePair InternalGetSelectedCandidatePair ()
+		{
+			GetSelectedCandidatePairNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("get_selected_candidate_pair"));
+				unmanaged = (GetSelectedCandidatePairNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(GetSelectedCandidatePairNativeDelegate));
+			}
+			if (unmanaged == null) return Gst.WebRTC.WebRTCICECandidatePair.Zero;
+
+			IntPtr __result = unmanaged (this.Handle);
+			return Gst.WebRTC.WebRTCICECandidatePair.New (__result);
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -291,14 +349,22 @@ namespace Gst.WebRTC {
 							, Gst.Object.class_abi.Fields
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // gather_candidates
 							, null
+							, "get_selected_candidate_pair"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("get_selected_candidate_pair"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // get_selected_candidate_pair
+							, "gather_candidates"
 							, "_padding"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 						new GLib.AbiField("_padding"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _padding
-							, "gather_candidates"
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 3 // _padding
+							, "get_selected_candidate_pair"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
@@ -335,6 +401,17 @@ namespace Gst.WebRTC {
 
 		public void GatheringStateChange(Gst.WebRTC.WebRTCICEGatheringState new_state) {
 			gst_webrtc_ice_transport_gathering_state_change(Handle, (int) new_state);
+		}
+
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_webrtc_ice_transport_get_selected_candidate_pair(IntPtr raw);
+
+		public Gst.WebRTC.WebRTCICECandidatePair SelectedCandidatePair { 
+			get {
+				IntPtr raw_ret = gst_webrtc_ice_transport_get_selected_candidate_pair(Handle);
+				Gst.WebRTC.WebRTCICECandidatePair ret = Gst.WebRTC.WebRTCICECandidatePair.New (raw_ret);
+				return ret;
+			}
 		}
 
 		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

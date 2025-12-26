@@ -56,6 +56,12 @@ namespace Gst.Audio {
 		F64le = 30,
 		F64 = 30,
 		F64be = 31,
+		S2032le = 32,
+		S2032 = 32,
+		S2032be = 33,
+		U2032le = 34,
+		U2032 = 34,
+		U2032be = 35,
 	}
 
 	internal class AudioFormatGType {

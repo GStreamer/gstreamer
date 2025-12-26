@@ -31,15 +31,8 @@ namespace Gst.Audio {
 				samples = new UIntPtr (value);
 			}
 		}
-		private UIntPtr offsets;
-		public ulong Offsets {
-			get {
-				return (ulong) offsets;
-			}
-			set {
-				offsets = new UIntPtr (value);
-			}
-		}
+		[MarshalAs (UnmanagedType.ByValArray, SizeConst=0)]
+		public ulong[] Offsets;
 		[MarshalAs (UnmanagedType.ByValArray, SizeConst=4)]
 		private IntPtr[] _gstGstReserved;
 

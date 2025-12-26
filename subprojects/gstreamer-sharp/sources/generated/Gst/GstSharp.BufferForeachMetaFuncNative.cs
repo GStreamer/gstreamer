@@ -40,9 +40,9 @@ namespace GstSharp {
 			}
 		}
 
-		bool InvokeNative (Gst.Buffer buffer, out Gst.Meta meta)
+		bool InvokeNative (Gst.Buffer buffer, ref Gst.Meta meta)
 		{
-			IntPtr native_meta = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Meta)));
+			IntPtr native_meta = GLib.Marshaller.StructureToPtrAlloc (meta);
 			bool __result = native_cb (buffer == null ? IntPtr.Zero : buffer.Handle, native_meta, __data);
 			meta = Gst.Meta.New (native_meta);
 			Marshal.FreeHGlobal (native_meta);
@@ -55,18 +55,17 @@ namespace GstSharp {
 		public bool NativeCallback (IntPtr buffer, IntPtr meta, IntPtr user_data)
 		{
 			try {
-				Gst.Meta mymeta;
+				Gst.Meta mymeta = Gst.Meta.New (meta);
 
-				bool __ret = managed (buffer == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (buffer, typeof (Gst.Buffer), false), out mymeta);
+				bool __ret = managed (buffer == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (buffer, typeof (Gst.Buffer), false), ref mymeta);
 				if (meta != IntPtr.Zero) System.Runtime.InteropServices.Marshal.StructureToPtr (mymeta, meta, false);
 
 				if (release_on_call)
 					gch.Free ();
 				return __ret;
 			} catch (Exception e) {
-				GLib.ExceptionManager.RaiseUnhandledException (e, true);
-				// NOTREACHED: Above call does not return.
-				throw e;
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+				return false;
 			}
 		}
 

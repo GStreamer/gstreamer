@@ -22,17 +22,6 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_audio_channel_mixer_samples(IntPtr raw, IntPtr in_param, IntPtr out_param, int samples);
-
-		public void Samples(IntPtr in_param, IntPtr out_param, int samples) {
-			gst_audio_channel_mixer_samples(Handle, in_param, out_param, samples);
-		}
-
-		public void Samples(int samples) {
-			Samples (IntPtr.Zero, IntPtr.Zero, samples);
-		}
-
 		public AudioChannelMixer(IntPtr raw) : base(raw) {}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

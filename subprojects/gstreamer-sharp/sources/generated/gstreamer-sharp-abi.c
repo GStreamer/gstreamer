@@ -1022,6 +1022,7 @@ int main (int argc, char *argv[]) {
 	g_print("\"GstWebRTCICEClass.get_local_candidates\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCICEClass, get_local_candidates));
 	g_print("\"GstWebRTCICEClass.get_remote_candidates\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCICEClass, get_remote_candidates));
 	g_print("\"GstWebRTCICEClass.get_selected_pair\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCICEClass, get_selected_pair));
+	g_print("\"GstWebRTCICEClass.close\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCICEClass, close));
 	g_print("\"sizeof(GstWebRTCICE)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstWebRTCICE));
 	g_print("\"GstWebRTCICE.ice_gathering_state\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCICE, ice_gathering_state));
 	g_print("\"GstWebRTCICE.ice_connection_state\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCICE, ice_connection_state));
@@ -1034,6 +1035,7 @@ int main (int argc, char *argv[]) {
 	g_print("\"GstWebRTCICEStream.stream_id\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCICEStream, stream_id));
 	g_print("\"sizeof(GstWebRTCICETransportClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstWebRTCICETransportClass));
 	g_print("\"GstWebRTCICETransportClass.gather_candidates\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCICETransportClass, gather_candidates));
+	g_print("\"GstWebRTCICETransportClass.get_selected_candidate_pair\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCICETransportClass, get_selected_candidate_pair));
 	g_print("\"sizeof(GstWebRTCICETransport)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstWebRTCICETransport));
 	g_print("\"GstWebRTCICETransport.role\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCICETransport, role));
 	g_print("\"GstWebRTCICETransport.component\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCICETransport, component));

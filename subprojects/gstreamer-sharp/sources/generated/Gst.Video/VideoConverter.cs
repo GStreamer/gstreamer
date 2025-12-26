@@ -72,6 +72,15 @@ namespace Gst.Video {
 			return ret;
 		}
 
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_converter_transform_metas(IntPtr raw, IntPtr src, IntPtr dest);
+
+		public bool TransformMetas(Gst.Buffer src, Gst.Buffer dest) {
+			bool raw_ret = gst_video_converter_transform_metas(Handle, src == null ? IntPtr.Zero : src.Handle, dest == null ? IntPtr.Zero : dest.Handle);
+			bool ret = raw_ret;
+			return ret;
+		}
+
 		public VideoConverter(IntPtr raw) : base(raw) {}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

@@ -94,11 +94,27 @@ namespace Gst.Video {
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_meta_set_alignment(IntPtr raw, IntPtr alignment);
 
+		[Obsolete]
 		public bool SetAlignment(Gst.Video.VideoAlignment alignment) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
 			IntPtr native_alignment = GLib.Marshaller.StructureToPtrAlloc (alignment);
 			bool raw_ret = gst_video_meta_set_alignment(this_as_native, native_alignment);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			Marshal.FreeHGlobal (native_alignment);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_meta_set_alignment_full(IntPtr raw, IntPtr alignment);
+
+		public bool SetAlignmentFull(Gst.Video.VideoAlignment alignment) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr native_alignment = GLib.Marshaller.StructureToPtrAlloc (alignment);
+			bool raw_ret = gst_video_meta_set_alignment_full(this_as_native, native_alignment);
 			bool ret = raw_ret;
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);

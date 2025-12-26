@@ -52,6 +52,7 @@ namespace Gst {
 		Redirect = 2147483654,
 		DeviceChanged = 2147483655,
 		InstantRateRequest = 2147483656,
+		DeviceMonitorStarted = 2147483657,
 		Any = 4294967295,
 	}
 

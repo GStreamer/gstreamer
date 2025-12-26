@@ -24,7 +24,7 @@ namespace Gst {
 		}
 		private IntPtr _data;
 		public ulong Offset;
-		public uint Size;
+		public ulong Size;
 
 		public static Gst.PadProbeInfo Zero = new Gst.PadProbeInfo ();
 
@@ -37,6 +37,9 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_probe_info_get_buffer(IntPtr raw);
 
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_pad_probe_info_set_buffer(IntPtr raw, IntPtr buffer);
+
 		public Gst.Buffer Buffer { 
 			get {
 				IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
@@ -47,10 +50,21 @@ namespace Gst {
 				System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 				return ret;
 			}
+			set {
+				IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+				System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+				value.Owned = false;
+				gst_pad_probe_info_set_buffer(this_as_native, value == null ? IntPtr.Zero : value.Handle);
+				ReadNative (this_as_native, ref this);
+				System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			}
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_probe_info_get_buffer_list(IntPtr raw);
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_pad_probe_info_set_buffer_list(IntPtr raw, IntPtr list);
 
 		public Gst.BufferList BufferList { 
 			get {
@@ -62,10 +76,21 @@ namespace Gst {
 				System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 				return ret;
 			}
+			set {
+				IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+				System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+				value.Owned = false;
+				gst_pad_probe_info_set_buffer_list(this_as_native, value == null ? IntPtr.Zero : value.Handle);
+				ReadNative (this_as_native, ref this);
+				System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			}
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_probe_info_get_event(IntPtr raw);
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_pad_probe_info_set_event(IntPtr raw, IntPtr evnt);
 
 		public Gst.Event Event { 
 			get {
@@ -76,6 +101,39 @@ namespace Gst {
 				ReadNative (this_as_native, ref this);
 				System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 				return ret;
+			}
+			set {
+				IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+				System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+				value.Owned = false;
+				gst_pad_probe_info_set_event(this_as_native, value == null ? IntPtr.Zero : value.Handle);
+				ReadNative (this_as_native, ref this);
+				System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_pad_probe_info_get_flow_return(IntPtr raw);
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_pad_probe_info_set_flow_return(IntPtr raw, int flow_ret);
+
+		public Gst.FlowReturn FlowReturn { 
+			get {
+				IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+				System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+				int raw_ret = gst_pad_probe_info_get_flow_return(this_as_native);
+				Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
+				ReadNative (this_as_native, ref this);
+				System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+				return ret;
+			}
+			set {
+				IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+				System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+				gst_pad_probe_info_set_flow_return(this_as_native, (int) value);
+				ReadNative (this_as_native, ref this);
+				System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 			}
 		}
 
@@ -88,6 +146,21 @@ namespace Gst {
 				System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
 				IntPtr raw_ret = gst_pad_probe_info_get_query(this_as_native);
 				Gst.Query ret = raw_ret == IntPtr.Zero ? null : (Gst.Query) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Query), false);
+				ReadNative (this_as_native, ref this);
+				System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_pad_probe_info_get_type(IntPtr raw);
+
+		public Gst.PadProbeType GType { 
+			get {
+				IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+				System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+				int raw_ret = gst_pad_probe_info_get_type(this_as_native);
+				Gst.PadProbeType ret = (Gst.PadProbeType) raw_ret;
 				ReadNative (this_as_native, ref this);
 				System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 				return ret;
@@ -114,9 +187,6 @@ namespace Gst {
 			return this.GetType ().FullName.GetHashCode () ^ Type.GetHashCode () ^ Id.GetHashCode () ^ _data.GetHashCode () ^ Offset.GetHashCode () ^ Size.GetHashCode ();
 		}
 
-		private static GLib.GType GType {
-			get { return GLib.GType.Pointer; }
-		}
 #endregion
 	}
 }

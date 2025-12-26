@@ -299,11 +299,13 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_navigation_event_parse_modifier_state(IntPtr evnt, int state);
+		static extern bool gst_navigation_event_parse_modifier_state(IntPtr evnt, out int state);
 
-		public static bool EventParseModifierState(Gst.Event evnt, Gst.Video.NavigationModifierType state) {
-			bool raw_ret = gst_navigation_event_parse_modifier_state(evnt == null ? IntPtr.Zero : evnt.Handle, (int) state);
+		public static bool EventParseModifierState(Gst.Event evnt, out Gst.Video.NavigationModifierType state) {
+			int native_state;
+			bool raw_ret = gst_navigation_event_parse_modifier_state(evnt == null ? IntPtr.Zero : evnt.Handle, out native_state);
 			bool ret = raw_ret;
+			state = (Gst.Video.NavigationModifierType) native_state;
 			return ret;
 		}
 

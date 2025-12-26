@@ -392,23 +392,6 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_buffer_add_audio_downmix_meta(IntPtr buffer, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]int[] from_position, int from_channels, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=4)]int[] to_position, int to_channels, float matrix);
-
-		public static Gst.Audio.AudioDownmixMeta BufferAddAudioDownmixMeta(Gst.Buffer buffer, Gst.Audio.AudioChannelPosition[] from_position, Gst.Audio.AudioChannelPosition[] to_position, float matrix) {
-			int from_channels = (from_position == null ? 0 : from_position.Length);
-			int[] native_from_position = new int [from_channels];
-			for (int i = 0; i < from_channels; i++)
-				native_from_position [i] = (int) from_position[i];
-			int to_channels = (to_position == null ? 0 : to_position.Length);
-			int[] native_to_position = new int [to_channels];
-			for (int i = 0; i < to_channels; i++)
-				native_to_position [i] = (int) to_position[i];
-			IntPtr raw_ret = gst_buffer_add_audio_downmix_meta(buffer == null ? IntPtr.Zero : buffer.Handle, native_from_position, from_channels, native_to_position, to_channels, matrix);
-			Gst.Audio.AudioDownmixMeta ret = Gst.Audio.AudioDownmixMeta.New (raw_ret);
-			return ret;
-		}
-
-		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_add_audio_level_meta(IntPtr buffer, byte level, bool voice_activity);
 
 		public static Gst.Audio.AudioLevelMeta BufferAddAudioLevelMeta(Gst.Buffer buffer, byte level, bool voice_activity) {
@@ -418,29 +401,37 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_buffer_add_audio_meta(IntPtr buffer, IntPtr info, UIntPtr samples, UIntPtr offsets);
+		static extern IntPtr gst_buffer_add_audio_meta(IntPtr buffer, IntPtr info, UIntPtr samples, UIntPtr[] offsets);
 
-		public static Gst.Audio.AudioMeta BufferAddAudioMeta(Gst.Buffer buffer, Gst.Audio.AudioInfo info, ulong samples, ulong offsets) {
-			IntPtr raw_ret = gst_buffer_add_audio_meta(buffer == null ? IntPtr.Zero : buffer.Handle, info == null ? IntPtr.Zero : info.Handle, new UIntPtr (samples), new UIntPtr (offsets));
+		public static Gst.Audio.AudioMeta BufferAddAudioMeta(Gst.Buffer buffer, Gst.Audio.AudioInfo info, ulong samples, ulong[] offsets) {
+			int cnt_offsets = offsets == null ? 0 : offsets.Length;
+			UIntPtr[] native_offsets = new UIntPtr [cnt_offsets];
+			for (int i = 0; i < cnt_offsets; i++)
+				native_offsets [i] = new UIntPtr (offsets[i]);
+			IntPtr raw_ret = gst_buffer_add_audio_meta(buffer == null ? IntPtr.Zero : buffer.Handle, info == null ? IntPtr.Zero : info.Handle, new UIntPtr (samples), native_offsets);
 			Gst.Audio.AudioMeta ret = Gst.Audio.AudioMeta.New (raw_ret);
 			return ret;
 		}
 
 		public static Gst.Audio.AudioMeta BufferAddAudioMeta(Gst.Buffer buffer, Gst.Audio.AudioInfo info, ulong samples) {
-			return BufferAddAudioMeta (buffer, info, samples, 0);
+			return BufferAddAudioMeta (buffer, info, samples, null);
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_buffer_add_dsd_plane_offset_meta(IntPtr buffer, int num_channels, UIntPtr num_bytes_per_channel, UIntPtr offsets);
+		static extern IntPtr gst_buffer_add_dsd_plane_offset_meta(IntPtr buffer, UIntPtr num_bytes_per_channel, int num_channels, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]UIntPtr[] offsets);
 
-		public static Gst.Audio.DsdPlaneOffsetMeta BufferAddDsdPlaneOffsetMeta(Gst.Buffer buffer, int num_channels, ulong num_bytes_per_channel, ulong offsets) {
-			IntPtr raw_ret = gst_buffer_add_dsd_plane_offset_meta(buffer == null ? IntPtr.Zero : buffer.Handle, num_channels, new UIntPtr (num_bytes_per_channel), new UIntPtr (offsets));
+		public static Gst.Audio.DsdPlaneOffsetMeta BufferAddDsdPlaneOffsetMeta(Gst.Buffer buffer, ulong num_bytes_per_channel, ulong[] offsets) {
+			int num_channels = (offsets == null ? 0 : offsets.Length);
+			UIntPtr[] native_offsets = new UIntPtr [num_channels];
+			for (int i = 0; i < num_channels; i++)
+				native_offsets [i] = new UIntPtr (offsets[i]);
+			IntPtr raw_ret = gst_buffer_add_dsd_plane_offset_meta(buffer == null ? IntPtr.Zero : buffer.Handle, new UIntPtr (num_bytes_per_channel), num_channels, native_offsets);
 			Gst.Audio.DsdPlaneOffsetMeta ret = Gst.Audio.DsdPlaneOffsetMeta.New (raw_ret);
 			return ret;
 		}
 
-		public static Gst.Audio.DsdPlaneOffsetMeta BufferAddDsdPlaneOffsetMeta(Gst.Buffer buffer, int num_channels, ulong num_bytes_per_channel) {
-			return BufferAddDsdPlaneOffsetMeta (buffer, num_channels, num_bytes_per_channel, 0);
+		public static Gst.Audio.DsdPlaneOffsetMeta BufferAddDsdPlaneOffsetMeta(Gst.Buffer buffer, ulong num_bytes_per_channel) {
+			return BufferAddDsdPlaneOffsetMeta (buffer, num_bytes_per_channel, null);
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -466,10 +457,21 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_dsd_convert(byte input_data, byte output_data, int input_format, int output_format, int input_layout, int output_layout, UIntPtr input_plane_offsets, UIntPtr output_plane_offsets, UIntPtr num_dsd_bytes, int num_channels, bool reverse_byte_bits);
+		static extern void gst_dsd_convert(byte[] input_data, byte[] output_data, int input_format, int output_format, int input_layout, int output_layout, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=9)]UIntPtr[] input_plane_offsets, int num_channels, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=9)]UIntPtr[] output_plane_offsets, UIntPtr num_dsd_bytes, bool reverse_byte_bits);
 
-		public static void DsdConvert(byte input_data, byte output_data, Gst.Audio.DsdFormat input_format, Gst.Audio.DsdFormat output_format, Gst.Audio.AudioLayout input_layout, Gst.Audio.AudioLayout output_layout, ulong input_plane_offsets, ulong output_plane_offsets, ulong num_dsd_bytes, int num_channels, bool reverse_byte_bits) {
-			gst_dsd_convert(input_data, output_data, (int) input_format, (int) output_format, (int) input_layout, (int) output_layout, new UIntPtr (input_plane_offsets), new UIntPtr (output_plane_offsets), new UIntPtr (num_dsd_bytes), num_channels, reverse_byte_bits);
+		public static void DsdConvert(byte[] input_data, byte[] output_data, Gst.Audio.DsdFormat input_format, Gst.Audio.DsdFormat output_format, Gst.Audio.AudioLayout input_layout, Gst.Audio.AudioLayout output_layout, ulong[] input_plane_offsets, ulong[] output_plane_offsets, ulong num_dsd_bytes, bool reverse_byte_bits) {
+			int num_channels = (input_plane_offsets == null ? 0 : input_plane_offsets.Length);
+			UIntPtr[] native_input_plane_offsets = new UIntPtr [num_channels];
+			for (int i = 0; i < num_channels; i++)
+				native_input_plane_offsets [i] = new UIntPtr (input_plane_offsets[i]);
+			UIntPtr[] native_output_plane_offsets = new UIntPtr [num_channels];
+			for (int i = 0; i < num_channels; i++)
+				native_output_plane_offsets [i] = new UIntPtr (output_plane_offsets[i]);
+			gst_dsd_convert(input_data, output_data, (int) input_format, (int) output_format, (int) input_layout, (int) output_layout, native_input_plane_offsets, num_channels, native_output_plane_offsets, new UIntPtr (num_dsd_bytes), reverse_byte_bits);
+		}
+
+		public static void DsdConvert(byte[] input_data, byte[] output_data, Gst.Audio.DsdFormat input_format, Gst.Audio.DsdFormat output_format, Gst.Audio.AudioLayout input_layout, Gst.Audio.AudioLayout output_layout, ulong num_dsd_bytes, bool reverse_byte_bits) {
+			DsdConvert (input_data, output_data, input_format, output_format, input_layout, output_layout, null, null, num_dsd_bytes, reverse_byte_bits);
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

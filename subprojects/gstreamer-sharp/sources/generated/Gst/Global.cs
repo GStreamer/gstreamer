@@ -52,6 +52,15 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_call_async(GstSharp.CallAsyncFuncNative func, IntPtr user_data);
+
+		public static void CallAsync(Gst.CallAsyncFunc func) {
+			GstSharp.CallAsyncFuncWrapper func_wrapper = new GstSharp.CallAsyncFuncWrapper (func);
+			func_wrapper.PersistUntilCalled ();
+			gst_call_async(func_wrapper.NativeDelegate, IntPtr.Zero);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_caps_features_from_string(IntPtr features);
 
 		public static Gst.CapsFeatures CapsFeaturesFromString(string features) {
@@ -70,6 +79,15 @@ namespace Gst {
 			IntPtr raw_ret = gst_caps_from_string(native_str1ng);
 			Gst.Caps ret = raw_ret == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Caps), true);
 			GLib.Marshaller.Free (native_str1ng);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_check_version(uint major, uint minor, uint micro);
+
+		public static bool CheckVersion(uint major, uint minor, uint micro) {
+			bool raw_ret = gst_check_version(major, minor, micro);
+			bool ret = raw_ret;
 			return ret;
 		}
 
@@ -97,6 +115,114 @@ namespace Gst {
 		public static uint CoreErrorQuark() {
 			uint raw_ret = gst_core_error_quark();
 			uint ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_cpuid_supports_arm_neon();
+
+		public static bool CpuidSupportsArmNeon() {
+			bool raw_ret = gst_cpuid_supports_arm_neon();
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_cpuid_supports_arm_neon64();
+
+		public static bool CpuidSupportsArmNeon64() {
+			bool raw_ret = gst_cpuid_supports_arm_neon64();
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_cpuid_supports_x86_3dnow();
+
+		public static bool CpuidSupportsX863dnow() {
+			bool raw_ret = gst_cpuid_supports_x86_3dnow();
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_cpuid_supports_x86_avx();
+
+		public static bool CpuidSupportsX86Avx() {
+			bool raw_ret = gst_cpuid_supports_x86_avx();
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_cpuid_supports_x86_avx2();
+
+		public static bool CpuidSupportsX86Avx2() {
+			bool raw_ret = gst_cpuid_supports_x86_avx2();
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_cpuid_supports_x86_mmx();
+
+		public static bool CpuidSupportsX86Mmx() {
+			bool raw_ret = gst_cpuid_supports_x86_mmx();
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_cpuid_supports_x86_mmxext();
+
+		public static bool CpuidSupportsX86Mmxext() {
+			bool raw_ret = gst_cpuid_supports_x86_mmxext();
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_cpuid_supports_x86_sse2();
+
+		public static bool CpuidSupportsX86Sse2() {
+			bool raw_ret = gst_cpuid_supports_x86_sse2();
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_cpuid_supports_x86_sse3();
+
+		public static bool CpuidSupportsX86Sse3() {
+			bool raw_ret = gst_cpuid_supports_x86_sse3();
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_cpuid_supports_x86_sse4_1();
+
+		public static bool CpuidSupportsX86Sse41() {
+			bool raw_ret = gst_cpuid_supports_x86_sse4_1();
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_cpuid_supports_x86_sse4_2();
+
+		public static bool CpuidSupportsX86Sse42() {
+			bool raw_ret = gst_cpuid_supports_x86_sse4_2();
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_cpuid_supports_x86_ssse3();
+
+		public static bool CpuidSupportsX86Ssse3() {
+			bool raw_ret = gst_cpuid_supports_x86_ssse3();
+			bool ret = raw_ret;
 			return ret;
 		}
 
@@ -308,10 +434,11 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_meta_deserialize(IntPtr buffer, byte data, UIntPtr size, out uint consumed);
+		static extern IntPtr gst_meta_deserialize(IntPtr buffer, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] data, UIntPtr size, out uint consumed);
 
-		public static Gst.Meta MetaDeserialize(Gst.Buffer buffer, byte data, ulong size, out uint consumed) {
-			IntPtr raw_ret = gst_meta_deserialize(buffer == null ? IntPtr.Zero : buffer.Handle, data, new UIntPtr (size), out consumed);
+		public static Gst.Meta MetaDeserialize(Gst.Buffer buffer, byte[] data, out uint consumed) {
+			ulong size = (ulong)(data == null ? 0 : data.Length);
+			IntPtr raw_ret = gst_meta_deserialize(buffer == null ? IntPtr.Zero : buffer.Handle, data, new UIntPtr ((uint)size), out consumed);
 			Gst.Meta ret = Gst.Meta.New (raw_ret);
 			return ret;
 		}
@@ -543,6 +670,24 @@ namespace Gst {
 
 		public static string StateChangeGetName(Gst.StateChange transition) {
 			IntPtr raw_ret = gst_state_change_get_name((int) transition);
+			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_state_change_return_get_name(int state_ret);
+
+		public static string StateChangeReturnGetName(Gst.StateChangeReturn state_ret) {
+			IntPtr raw_ret = gst_state_change_return_get_name((int) state_ret);
+			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_state_get_name(int state);
+
+		public static string StateGetName(Gst.State state) {
+			IntPtr raw_ret = gst_state_get_name((int) state);
 			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
 			return ret;
 		}

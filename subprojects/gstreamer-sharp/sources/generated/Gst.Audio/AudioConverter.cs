@@ -123,23 +123,6 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_audio_converter_samples(IntPtr raw, int flags, IntPtr in_param, UIntPtr in_frames, IntPtr out_param, UIntPtr out_frames);
-
-		public bool Samples(Gst.Audio.AudioConverterFlags flags, IntPtr in_param, ulong in_frames, IntPtr out_param, ulong out_frames) {
-			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
-			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			bool raw_ret = gst_audio_converter_samples(this_as_native, (int) flags, in_param, new UIntPtr (in_frames), out_param, new UIntPtr (out_frames));
-			bool ret = raw_ret;
-			ReadNative (this_as_native, ref this);
-			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
-			return ret;
-		}
-
-		public bool Samples(Gst.Audio.AudioConverterFlags flags, ulong in_frames, ulong out_frames) {
-			return Samples (flags, IntPtr.Zero, in_frames, IntPtr.Zero, out_frames);
-		}
-
-		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_audio_converter_supports_inplace(IntPtr raw);
 
 		public bool SupportsInplace() {

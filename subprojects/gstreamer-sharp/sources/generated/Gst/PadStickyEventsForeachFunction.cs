@@ -5,6 +5,6 @@ namespace Gst {
 
 	using System;
 
-	public delegate bool PadStickyEventsForeachFunction(Gst.Pad pad, Gst.Event evnt);
+	public delegate bool PadStickyEventsForeachFunction(Gst.Pad pad, ref Gst.Event evnt);
 
 }

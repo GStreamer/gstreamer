@@ -86,19 +86,6 @@ namespace Gst.Base {
 		}
 
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern byte gst_byte_writer_free_and_get_data(IntPtr raw);
-
-		public byte FreeAndGetData() {
-			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
-			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			byte raw_ret = gst_byte_writer_free_and_get_data(this_as_native);
-			byte ret = raw_ret;
-			ReadNative (this_as_native, ref this);
-			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
-			return ret;
-		}
-
-		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_byte_writer_get_remaining(IntPtr raw);
 
 		public uint Remaining { 

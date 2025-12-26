@@ -291,19 +291,6 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_caps_features_set_parent_refcount(IntPtr raw, int refcount);
-
-		public bool SetParentRefcount(int refcount) {
-			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
-			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			bool raw_ret = gst_caps_features_set_parent_refcount(this_as_native, refcount);
-			bool ret = raw_ret;
-			ReadNative (this_as_native, ref this);
-			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
-			return ret;
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_caps_features_to_string(IntPtr raw);
 
 		public override string ToString() {

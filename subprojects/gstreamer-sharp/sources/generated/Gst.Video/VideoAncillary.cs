@@ -15,7 +15,7 @@ namespace Gst.Video {
 		public byte DID;
 		public byte SDIDBlockNumber;
 		public byte DataCount;
-		[MarshalAs (UnmanagedType.ByValArray, SizeConst=0)]
+		[MarshalAs (UnmanagedType.ByValArray, SizeConst=256)]
 		public byte[] Data;
 		[MarshalAs (UnmanagedType.ByValArray, SizeConst=4)]
 		private IntPtr[] _gstGstReserved;

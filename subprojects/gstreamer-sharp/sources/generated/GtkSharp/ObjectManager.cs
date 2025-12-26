@@ -71,6 +71,7 @@ namespace GtkSharp.GstreamerSharp {
 			GLib.GType.Register (Gst.Video.VideoAggregatorParallelConvertPad.GType, typeof (Gst.Video.VideoAggregatorParallelConvertPad));
 			GLib.GType.Register (Gst.Video.VideoBufferPool.GType, typeof (Gst.Video.VideoBufferPool));
 			GLib.GType.Register (Gst.Video.VideoDecoder.GType, typeof (Gst.Video.VideoDecoder));
+			GLib.GType.Register (Gst.Video.VideoDmabufPool.GType, typeof (Gst.Video.VideoDmabufPool));
 			GLib.GType.Register (Gst.Video.VideoEncoder.GType, typeof (Gst.Video.VideoEncoder));
 			GLib.GType.Register (Gst.Video.VideoFilter.GType, typeof (Gst.Video.VideoFilter));
 			GLib.GType.Register (Gst.Video.VideoSink.GType, typeof (Gst.Video.VideoSink));

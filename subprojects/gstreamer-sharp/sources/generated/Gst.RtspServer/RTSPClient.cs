@@ -231,13 +231,13 @@ namespace Gst.RtspServer {
 			}
 		}
 
-		[GLib.Signal("pre-pause-request")]
-		public event Gst.RtspServer.PrePauseRequestHandler PrePauseRequest {
+		[GLib.Signal("pre-closed")]
+		public event System.EventHandler PreClosed {
 			add {
-				this.AddSignalHandler ("pre-pause-request", value, typeof (Gst.RtspServer.PrePauseRequestArgs));
+				this.AddSignalHandler ("pre-closed", value);
 			}
 			remove {
-				this.RemoveSignalHandler ("pre-pause-request", value);
+				this.RemoveSignalHandler ("pre-closed", value);
 			}
 		}
 
@@ -268,6 +268,16 @@ namespace Gst.RtspServer {
 			}
 			remove {
 				this.RemoveSignalHandler ("pre-play-request", value);
+			}
+		}
+
+		[GLib.Signal("pre-pause-request")]
+		public event Gst.RtspServer.PrePauseRequestHandler PrePauseRequest {
+			add {
+				this.AddSignalHandler ("pre-pause-request", value, typeof (Gst.RtspServer.PrePauseRequestArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("pre-pause-request", value);
 			}
 		}
 
@@ -329,6 +339,55 @@ namespace Gst.RtspServer {
 			remove {
 				this.RemoveSignalHandler ("options-request", value);
 			}
+		}
+
+		static PreClosedNativeDelegate PreClosed_cb_delegate;
+		static PreClosedNativeDelegate PreClosedVMCallback {
+			get {
+				if (PreClosed_cb_delegate == null)
+					PreClosed_cb_delegate = new PreClosedNativeDelegate (PreClosed_cb);
+				return PreClosed_cb_delegate;
+			}
+		}
+
+		static void OverridePreClosed (GLib.GType gtype)
+		{
+			OverridePreClosed (gtype, PreClosedVMCallback);
+		}
+
+		static void OverridePreClosed (GLib.GType gtype, PreClosedNativeDelegate callback)
+		{
+			OverrideVirtualMethod (gtype, "pre-closed", callback);
+		}
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void PreClosedNativeDelegate (IntPtr inst);
+
+		static void PreClosed_cb (IntPtr inst)
+		{
+			try {
+				RTSPClient __obj = GLib.Object.GetObject (inst, false) as RTSPClient;
+				__obj.OnPreClosed ();
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.RtspServer.RTSPClient), ConnectionMethod="OverridePreClosed")]
+		protected virtual void OnPreClosed ()
+		{
+			InternalPreClosed ();
+		}
+
+		private void InternalPreClosed ()
+		{
+			GLib.Value ret = GLib.Value.Empty;
+			GLib.ValueArray inst_and_params = new GLib.ValueArray (1);
+			GLib.Value[] vals = new GLib.Value [1];
+			vals [0] = new GLib.Value (this);
+			inst_and_params.Append (vals [0]);
+			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
+			foreach (GLib.Value v in vals)
+				v.Dispose ();
 		}
 
 		static CreateSdpNativeDelegate CreateSdp_cb_delegate;

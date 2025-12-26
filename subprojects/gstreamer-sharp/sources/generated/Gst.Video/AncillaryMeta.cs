@@ -20,7 +20,8 @@ namespace Gst.Video {
 		public ushort DID;
 		public ushort SDIDBlockNumber;
 		public ushort DataCount;
-		public ushort Data;
+		[MarshalAs (UnmanagedType.ByValArray, SizeConst=0)]
+		public ushort[] Data;
 		public ushort Checksum;
 
 		public static Gst.Video.AncillaryMeta Zero = new Gst.Video.AncillaryMeta ();

@@ -1015,6 +1015,7 @@ namespace AbiTester {
 			Console.WriteLine("\"GstWebRTCICEClass.get_local_candidates\": \"" + Gst.WebRTC.WebRTCICE.class_abi.GetFieldOffset("get_local_candidates") + "\"");
 			Console.WriteLine("\"GstWebRTCICEClass.get_remote_candidates\": \"" + Gst.WebRTC.WebRTCICE.class_abi.GetFieldOffset("get_remote_candidates") + "\"");
 			Console.WriteLine("\"GstWebRTCICEClass.get_selected_pair\": \"" + Gst.WebRTC.WebRTCICE.class_abi.GetFieldOffset("get_selected_pair") + "\"");
+			Console.WriteLine("\"GstWebRTCICEClass.close\": \"" + Gst.WebRTC.WebRTCICE.class_abi.GetFieldOffset("close") + "\"");
 			Console.WriteLine("\"sizeof(GstWebRTCICE)\": \"" + Gst.WebRTC.WebRTCICE.abi_info.Size + "\"");
 			Console.WriteLine("\"GstWebRTCICE.ice_gathering_state\": \"" + Gst.WebRTC.WebRTCICE.abi_info.GetFieldOffset("ice_gathering_state") + "\"");
 			Console.WriteLine("\"GstWebRTCICE.ice_connection_state\": \"" + Gst.WebRTC.WebRTCICE.abi_info.GetFieldOffset("ice_connection_state") + "\"");
@@ -1027,6 +1028,7 @@ namespace AbiTester {
 			Console.WriteLine("\"GstWebRTCICEStream.stream_id\": \"" + Gst.WebRTC.WebRTCICEStream.abi_info.GetFieldOffset("stream_id") + "\"");
 			Console.WriteLine("\"sizeof(GstWebRTCICETransportClass)\": \"" + Gst.WebRTC.WebRTCICETransport.class_abi.Size + "\"");
 			Console.WriteLine("\"GstWebRTCICETransportClass.gather_candidates\": \"" + Gst.WebRTC.WebRTCICETransport.class_abi.GetFieldOffset("gather_candidates") + "\"");
+			Console.WriteLine("\"GstWebRTCICETransportClass.get_selected_candidate_pair\": \"" + Gst.WebRTC.WebRTCICETransport.class_abi.GetFieldOffset("get_selected_candidate_pair") + "\"");
 			Console.WriteLine("\"sizeof(GstWebRTCICETransport)\": \"" + Gst.WebRTC.WebRTCICETransport.abi_info.Size + "\"");
 			Console.WriteLine("\"GstWebRTCICETransport.role\": \"" + Gst.WebRTC.WebRTCICETransport.abi_info.GetFieldOffset("role") + "\"");
 			Console.WriteLine("\"GstWebRTCICETransport.component\": \"" + Gst.WebRTC.WebRTCICETransport.abi_info.GetFieldOffset("component") + "\"");

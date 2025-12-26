@@ -23,15 +23,6 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern double gst_video_scaler_get_coeff(IntPtr raw, uint out_offset, out uint in_offset, out uint n_taps);
-
-		public double GetCoeff(uint out_offset, out uint in_offset, out uint n_taps) {
-			double raw_ret = gst_video_scaler_get_coeff(Handle, out_offset, out in_offset, out n_taps);
-			double ret = raw_ret;
-			return ret;
-		}
-
-		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_video_scaler_get_max_taps(IntPtr raw);
 
 		public uint MaxTaps { 

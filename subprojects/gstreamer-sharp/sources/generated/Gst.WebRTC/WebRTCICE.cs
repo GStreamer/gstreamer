@@ -1369,6 +1369,59 @@ namespace Gst.WebRTC {
 			return __result;
 		}
 
+		static CloseNativeDelegate Close_cb_delegate;
+		static CloseNativeDelegate CloseVMCallback {
+			get {
+				if (Close_cb_delegate == null)
+					Close_cb_delegate = new CloseNativeDelegate (Close_cb);
+				return Close_cb_delegate;
+			}
+		}
+
+		static void OverrideClose (GLib.GType gtype)
+		{
+			OverrideClose (gtype, CloseVMCallback);
+		}
+
+		static void OverrideClose (GLib.GType gtype, CloseNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("close"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void CloseNativeDelegate (IntPtr inst, IntPtr promise);
+
+		static void Close_cb (IntPtr inst, IntPtr promise)
+		{
+			try {
+				WebRTCICE __obj = GLib.Object.GetObject (inst, false) as WebRTCICE;
+				__obj.OnClose (promise == IntPtr.Zero ? null : (Gst.Promise) GLib.Opaque.GetOpaque (promise, typeof (Gst.Promise), false));
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.WebRTC.WebRTCICE), ConnectionMethod="OverrideClose")]
+		protected virtual void OnClose (Gst.Promise promise)
+		{
+			InternalClose (promise);
+		}
+
+		private void InternalClose (Gst.Promise promise)
+		{
+			CloseNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("close"));
+				unmanaged = (CloseNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(CloseNativeDelegate));
+			}
+			if (unmanaged == null) return;
+
+			unmanaged (this.Handle, promise == null ? IntPtr.Zero : promise.Handle);
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -1540,14 +1593,22 @@ namespace Gst.WebRTC {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // get_selected_pair
 							, "get_remote_candidates"
+							, "close"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("close"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // close
+							, "get_selected_pair"
 							, "_gst_reserved"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 						new GLib.AbiField("_gst_reserved"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _gst_reserved
-							, "get_selected_pair"
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 3 // _gst_reserved
+							, "close"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
@@ -1603,6 +1664,17 @@ namespace Gst.WebRTC {
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_uri);
 			return ret;
+		}
+
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_webrtc_ice_close(IntPtr raw, IntPtr promise);
+
+		public void Close(Gst.Promise promise) {
+			gst_webrtc_ice_close(Handle, promise == null ? IntPtr.Zero : promise.Handle);
+		}
+
+		public void Close() {
+			Close (null);
 		}
 
 		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -1662,6 +1734,7 @@ namespace Gst.WebRTC {
 		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_webrtc_ice_get_selected_pair(IntPtr raw, IntPtr stream, IntPtr local_stats, IntPtr remote_stats);
 
+		[Obsolete]
 		public bool GetSelectedPair(Gst.WebRTC.WebRTCICEStream stream, out Gst.WebRTC.WebRTCICECandidateStats local_stats, out Gst.WebRTC.WebRTCICECandidateStats remote_stats) {
 			IntPtr native_local_stats = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.WebRTC.WebRTCICECandidateStats)));
 			IntPtr native_remote_stats = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.WebRTC.WebRTCICECandidateStats)));

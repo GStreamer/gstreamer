@@ -962,6 +962,17 @@ namespace Gst.App {
 		}
 
 		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_app_sink_set_simple_callbacks(IntPtr raw, IntPtr value);
+
+		public Gst.App.AppSinkSimpleCallbacks SimpleCallbacks { 
+			set {
+				IntPtr native_value = GLib.Marshaller.StructureToPtrAlloc (value);
+				gst_app_sink_set_simple_callbacks(Handle, native_value);
+				Marshal.FreeHGlobal (native_value);
+			}
+		}
+
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_app_sink_try_pull_object(IntPtr raw, ulong timeout);
 
 		public Gst.MiniObject TryPullObject(ulong timeout) {

@@ -16,6 +16,7 @@ namespace Gst {
 		Video = 4,
 		Container = 8,
 		Text = 16,
+		Metadata = 32,
 	}
 
 	internal class StreamTypeGType {

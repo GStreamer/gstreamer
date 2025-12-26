@@ -13,6 +13,7 @@ namespace Gst {
 
 		Read = 1,
 		Write = 2,
+		RefMemory = 256,
 		FlagLast = 65536,
 	}
 

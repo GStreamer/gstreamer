@@ -428,10 +428,10 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_util_simplify_fraction(int numerator, int denominator, uint n_terms, uint threshold);
+		static extern void gst_util_simplify_fraction(ref int numerator, ref int denominator, uint n_terms, uint threshold);
 
-		public static void SimplifyFraction(int numerator, int denominator, uint n_terms, uint threshold) {
-			gst_util_simplify_fraction(numerator, denominator, n_terms, threshold);
+		public static void SimplifyFraction(ref int numerator, ref int denominator, uint n_terms, uint threshold) {
+			gst_util_simplify_fraction(ref numerator, ref denominator, n_terms, threshold);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

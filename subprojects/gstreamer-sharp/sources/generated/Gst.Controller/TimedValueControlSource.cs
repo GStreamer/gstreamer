@@ -266,6 +266,7 @@ namespace Gst.Controller {
 		[DllImport("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_timed_value_control_source_get_all(IntPtr raw);
 
+		[Obsolete]
 		public GLib.List[] All { 
 			get {
 				IntPtr raw_ret = gst_timed_value_control_source_get_all(Handle);

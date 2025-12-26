@@ -18,17 +18,6 @@ namespace Gst.Audio {
 			gst_audio_quantize_reset(Handle);
 		}
 
-		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_audio_quantize_samples(IntPtr raw, IntPtr in_param, IntPtr out_param, uint samples);
-
-		public void Samples(IntPtr in_param, IntPtr out_param, uint samples) {
-			gst_audio_quantize_samples(Handle, in_param, out_param, samples);
-		}
-
-		public void Samples(uint samples) {
-			Samples (IntPtr.Zero, IntPtr.Zero, samples);
-		}
-
 		public AudioQuantize(IntPtr raw) : base(raw) {}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
