@@ -23,6 +23,10 @@
 #include "config.h"
 #endif
 
+#ifdef HAVE_VALGRIND
+# include <valgrind/valgrind.h>
+#endif
+
 #include <gst/check/gstcheck.h>
 
 #include <string.h>
@@ -654,14 +658,21 @@ GST_START_TEST (info_context_log_periodic)
 {
   GstDebugCategory *cat = NULL;
   GstLogContext *ctx = NULL;
+  GstClockTime interval = 10;
 
   gst_debug_remove_log_function (gst_debug_log_default);
   gst_debug_add_log_function (context_log_counter_func, NULL, NULL);
   gst_debug_set_default_threshold (GST_LEVEL_DEBUG);
   GST_DEBUG_CATEGORY_INIT (cat, "contextcat", 0, "Log context test category");
 
+#ifdef HAVE_VALGRIND
+  if (RUNNING_ON_VALGRIND) {
+    interval = 250;
+  }
+#endif
+
   GST_LOG_CONTEXT_INIT (ctx, GST_LOG_CONTEXT_FLAG_THROTTLE, {
-        GST_LOG_CONTEXT_BUILDER_SET_INTERVAL (10 * GST_MSECOND);
+        GST_LOG_CONTEXT_BUILDER_SET_INTERVAL (interval * GST_MSECOND);
       }
   );
 
@@ -676,7 +687,7 @@ GST_START_TEST (info_context_log_periodic)
   fail_unless_equals_int (context_log_count, 1);
 
   /* Sleep to ensure the reset interval passes */
-  g_usleep (20000);             /* 20ms */
+  g_usleep ((interval + 10) * 1000);
 
   /* Log the same message again - it should appear after the interval */
   GST_CTX_DEBUG (ctx, "This message should appear the first time");
