@@ -2483,8 +2483,8 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
     GstVideoMeta *v_meta =
         gst_buffer_get_video_meta (gl_sink->stored_buffer[0]);
-    if (v_meta->width != gl_sink->padded_width
-        || v_meta->height != gl_sink->padded_height) {
+    if (v_meta && (v_meta->width != gl_sink->padded_width
+            || v_meta->height != gl_sink->padded_height)) {
       gdouble padded_width = v_meta->width;
       gdouble padded_height = v_meta->height;
       gdouble display_width = GST_VIDEO_INFO_WIDTH (&gl_sink->out_info);
