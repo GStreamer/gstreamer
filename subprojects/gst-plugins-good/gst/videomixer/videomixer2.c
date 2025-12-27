@@ -1858,7 +1858,16 @@ gst_videomixer2_sink_event (GstCollectPads * pads, GstCollectData * cdata,
       GstSegment seg;
       gst_event_copy_segment (event, &seg);
 
-      g_assert (seg.format == GST_FORMAT_TIME);
+      if (seg.format != GST_FORMAT_TIME) {
+        GST_ERROR_OBJECT (pad, "Segment of type %s are not supported, "
+            "only TIME segments are supported",
+            gst_format_get_name (seg.format));
+        gst_event_unref (event);
+        event = NULL;
+        ret = FALSE;
+        break;
+      }
+
       gst_videomixer2_reset_qos (mix);
       break;
     }
