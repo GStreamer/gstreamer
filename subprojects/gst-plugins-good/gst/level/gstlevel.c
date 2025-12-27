@@ -59,8 +59,6 @@
 
 #include <string.h>
 #include <math.h>
-#include <gst/gst.h>
-#include <gst/audio/audio.h>
 
 #include "gstlevel.h"
 
@@ -69,27 +67,11 @@ GST_DEBUG_CATEGORY_STATIC (level_debug);
 
 #define EPSILON 1e-35f
 
-static GstStaticPadTemplate sink_template_factory =
-GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) { S8, " GST_AUDIO_NE (S16) ", " GST_AUDIO_NE (S32)
-        ", " GST_AUDIO_NE (F32) "," GST_AUDIO_NE (F64) " },"
-        "layout = (string) interleaved, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]")
-    );
-
-static GstStaticPadTemplate src_template_factory =
-GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) { S8, " GST_AUDIO_NE (S16) ", " GST_AUDIO_NE (S32)
-        ", " GST_AUDIO_NE (F32) "," GST_AUDIO_NE (F64) " },"
-        "layout = (string) interleaved, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]")
-    );
+#define ALLOWED_CAPS "audio/x-raw, " \
+        "format = (string) { S8, " GST_AUDIO_NE (S16) ", " GST_AUDIO_NE (S32) \
+        ", " GST_AUDIO_NE (F32) "," GST_AUDIO_NE (F64) " }," \
+        "layout = (string) interleaved, " \
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]"
 
 enum
 {
@@ -103,7 +85,7 @@ enum
 };
 
 #define gst_level_parent_class parent_class
-G_DEFINE_TYPE (GstLevel, gst_level, GST_TYPE_BASE_TRANSFORM);
+G_DEFINE_TYPE (GstLevel, gst_level, GST_TYPE_AUDIO_FILTER);
 GST_ELEMENT_REGISTER_DEFINE (level, "level", GST_RANK_NONE, GST_TYPE_LEVEL);
 
 static void gst_level_set_property (GObject * object, guint prop_id,
@@ -112,15 +94,16 @@ static void gst_level_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_level_finalize (GObject * obj);
 
-static gboolean gst_level_set_caps (GstBaseTransform * trans, GstCaps * in,
-    GstCaps * out);
+static gboolean gst_level_setup (GstAudioFilter * filter,
+    const GstAudioInfo * info);
 static gboolean gst_level_start (GstBaseTransform * trans);
 static GstFlowReturn gst_level_transform_ip (GstBaseTransform * trans,
     GstBuffer * in);
 static void gst_level_post_message (GstLevel * filter);
 static gboolean gst_level_sink_event (GstBaseTransform * trans,
     GstEvent * event);
-static void gst_level_recalc_interval_frames (GstLevel * level);
+static void gst_level_recalc_interval_frames (GstLevel * level,
+    const GstAudioInfo * info);
 
 static void
 gst_level_class_init (GstLevelClass * klass)
@@ -128,6 +111,8 @@ gst_level_class_init (GstLevelClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
+  GstAudioFilterClass *filter_class = GST_AUDIO_FILTER_CLASS (klass);
+  GstCaps *caps;
 
   gobject_class->set_property = gst_level_set_property;
   gobject_class->get_property = gst_level_get_property;
@@ -187,19 +172,19 @@ gst_level_class_init (GstLevelClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (level_debug, "level", 0, "Level calculation");
 
-  gst_element_class_add_static_pad_template (element_class,
-      &sink_template_factory);
-  gst_element_class_add_static_pad_template (element_class,
-      &src_template_factory);
   gst_element_class_set_static_metadata (element_class, "Level",
       "Filter/Analyzer/Audio",
       "RMS/Peak/Decaying Peak Level messager for audio/raw",
       "Thomas Vander Stichele <thomas at apestaart dot org>");
 
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_level_set_caps);
   trans_class->start = GST_DEBUG_FUNCPTR (gst_level_start);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_level_transform_ip);
   trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_level_sink_event);
+  filter_class->setup = GST_DEBUG_FUNCPTR (gst_level_setup);
+
+  caps = gst_caps_from_string (ALLOWED_CAPS);
+  gst_audio_filter_class_add_pad_templates (filter_class, caps);
+  gst_caps_unref (caps);
 }
 
 static void
@@ -221,8 +206,6 @@ gst_level_init (GstLevel * filter)
   filter->decay_peak = NULL;
   filter->decay_peak_base = NULL;
   filter->decay_peak_age = NULL;
-
-  gst_audio_info_init (&filter->info);
 
   filter->interval = GST_SECOND / 10;
   filter->decay_peak_ttl = GST_SECOND / 10 * 3;
@@ -274,8 +257,9 @@ gst_level_set_property (GObject * object, guint prop_id,
       break;
     case PROP_INTERVAL:
       filter->interval = g_value_get_uint64 (value);
-      if (GST_AUDIO_INFO_RATE (&filter->info)) {
-        gst_level_recalc_interval_frames (filter);
+      if (GST_AUDIO_INFO_IS_VALID (GST_AUDIO_FILTER_INFO (filter))) {
+        gst_level_recalc_interval_frames (filter,
+            GST_AUDIO_FILTER_INFO (filter));
       }
       break;
     case PROP_PEAK_TTL:
@@ -421,10 +405,10 @@ gst_level_calculate_gdouble (gpointer data, guint num, guint channels,
 
 /* called with object lock */
 static void
-gst_level_recalc_interval_frames (GstLevel * level)
+gst_level_recalc_interval_frames (GstLevel * level, const GstAudioInfo * info)
 {
   GstClockTime interval = level->interval;
-  guint sample_rate = GST_AUDIO_INFO_RATE (&level->info);
+  guint sample_rate = GST_AUDIO_INFO_RATE (info);
   guint interval_frames;
 
   interval_frames = GST_CLOCK_TIME_TO_FRAMES (interval, sample_rate);
@@ -445,66 +429,60 @@ gst_level_recalc_interval_frames (GstLevel * level)
 }
 
 static gboolean
-gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
+gst_level_setup (GstAudioFilter * filter, const GstAudioInfo * info)
 {
-  GstLevel *filter = GST_LEVEL (trans);
-  GstAudioInfo info;
+  GstLevel *level = GST_LEVEL (filter);
   gint i, channels;
 
-  if (!gst_audio_info_from_caps (&info, in))
-    return FALSE;
+  GST_OBJECT_LOCK (level);
 
-  GST_OBJECT_LOCK (filter);
-
-  switch (GST_AUDIO_INFO_FORMAT (&info)) {
+  switch (GST_AUDIO_INFO_FORMAT (info)) {
     case GST_AUDIO_FORMAT_S8:
-      filter->process = gst_level_calculate_gint8;
+      level->process = gst_level_calculate_gint8;
       break;
     case GST_AUDIO_FORMAT_S16:
-      filter->process = gst_level_calculate_gint16;
+      level->process = gst_level_calculate_gint16;
       break;
     case GST_AUDIO_FORMAT_S32:
-      filter->process = gst_level_calculate_gint32;
+      level->process = gst_level_calculate_gint32;
       break;
     case GST_AUDIO_FORMAT_F32:
-      filter->process = gst_level_calculate_gfloat;
+      level->process = gst_level_calculate_gfloat;
       break;
     case GST_AUDIO_FORMAT_F64:
-      filter->process = gst_level_calculate_gdouble;
+      level->process = gst_level_calculate_gdouble;
       break;
     default:
-      filter->process = NULL;
+      level->process = NULL;
       break;
   }
 
-  filter->info = info;
-
-  channels = GST_AUDIO_INFO_CHANNELS (&info);
+  channels = GST_AUDIO_INFO_CHANNELS (info);
 
   /* allocate channel variable arrays */
-  g_free (filter->CS);
-  g_free (filter->peak);
-  g_free (filter->last_peak);
-  g_free (filter->decay_peak);
-  g_free (filter->decay_peak_base);
-  g_free (filter->decay_peak_age);
-  filter->CS = g_new (gdouble, channels);
-  filter->peak = g_new (gdouble, channels);
-  filter->last_peak = g_new (gdouble, channels);
-  filter->decay_peak = g_new (gdouble, channels);
-  filter->decay_peak_base = g_new (gdouble, channels);
+  g_free (level->CS);
+  g_free (level->peak);
+  g_free (level->last_peak);
+  g_free (level->decay_peak);
+  g_free (level->decay_peak_base);
+  g_free (level->decay_peak_age);
+  level->CS = g_new (gdouble, channels);
+  level->peak = g_new (gdouble, channels);
+  level->last_peak = g_new (gdouble, channels);
+  level->decay_peak = g_new (gdouble, channels);
+  level->decay_peak_base = g_new (gdouble, channels);
 
-  filter->decay_peak_age = g_new (GstClockTime, channels);
+  level->decay_peak_age = g_new (GstClockTime, channels);
 
   for (i = 0; i < channels; ++i) {
-    filter->CS[i] = filter->peak[i] = filter->last_peak[i] =
-        filter->decay_peak[i] = filter->decay_peak_base[i] = 0.0;
-    filter->decay_peak_age[i] = G_GUINT64_CONSTANT (0);
+    level->CS[i] = level->peak[i] = level->last_peak[i] =
+        level->decay_peak[i] = level->decay_peak_base[i] = 0.0;
+    level->decay_peak_age[i] = G_GUINT64_CONSTANT (0);
   }
 
-  gst_level_recalc_interval_frames (filter);
+  gst_level_recalc_interval_frames (level, info);
 
-  GST_OBJECT_UNLOCK (filter);
+  GST_OBJECT_UNLOCK (level);
   return TRUE;
 }
 
@@ -626,12 +604,12 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
   filter = GST_LEVEL (trans);
 
-  if (!GST_AUDIO_INFO_IS_VALID (&filter->info))
+  if (!GST_AUDIO_INFO_IS_VALID (GST_AUDIO_FILTER_INFO (filter)))
     return GST_FLOW_NOT_NEGOTIATED;
 
-  channels = GST_AUDIO_INFO_CHANNELS (&filter->info);
-  bps = GST_AUDIO_INFO_BPS (&filter->info);
-  rate = GST_AUDIO_INFO_RATE (&filter->info);
+  channels = GST_AUDIO_FILTER_CHANNELS (filter);
+  bps = GST_AUDIO_FILTER_BPS (filter);
+  rate = GST_AUDIO_FILTER_RATE (filter);
 
   gst_buffer_map (in, &map, GST_MAP_READ);
   in_data = map.data;
@@ -760,11 +738,11 @@ gst_level_post_message (GstLevel * filter)
   gint channels, rate, frames = filter->num_frames;
   GstClockTime duration;
 
-  if (!GST_AUDIO_INFO_IS_VALID (&filter->info))
+  if (!GST_AUDIO_INFO_IS_VALID (GST_AUDIO_FILTER_INFO (filter)))
     return;
 
-  channels = GST_AUDIO_INFO_CHANNELS (&filter->info);
-  rate = GST_AUDIO_INFO_RATE (&filter->info);
+  channels = GST_AUDIO_FILTER_CHANNELS (filter);
+  rate = GST_AUDIO_FILTER_RATE (filter);
   duration = GST_FRAMES_TO_CLOCK_TIME (frames, rate);
 
   if (filter->post_messages) {

@@ -25,7 +25,7 @@
 
 
 #include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
+#include <gst/base/base.h>
 #include <gst/audio/audio.h>
 
 G_BEGIN_DECLS
@@ -54,7 +54,7 @@ typedef struct _GstLevelClass GstLevelClass;
  * Opaque data structure.
  */
 struct _GstLevel {
-  GstBaseTransform element;
+  GstAudioFilter parent;
 
   /* properties, protected by object lock */
   gboolean post_messages;       /* whether or not to post messages */
@@ -63,7 +63,6 @@ struct _GstLevel {
   gdouble decay_peak_falloff;   /* falloff in dB/sec */
   gboolean audio_level_meta; /* whether or not generate GstAudioLevelMeta */
 
-  GstAudioInfo info;
   gint num_frames;              /* frame count (1 sample per channel)
                                  * since last emit */
   gint interval_frames;         /* after how many frame to sent a message */
@@ -81,7 +80,7 @@ struct _GstLevel {
 };
 
 struct _GstLevelClass {
-  GstBaseTransformClass parent_class;
+  GstAudioFilterClass parent_class;
 };
 
 GType gst_level_get_type (void);

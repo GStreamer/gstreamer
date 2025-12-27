@@ -9905,6 +9905,7 @@
                 "description": "RMS/Peak/Decaying Peak Level messager for audio/raw",
                 "hierarchy": [
                     "GstLevel",
+                    "GstAudioFilter",
                     "GstBaseTransform",
                     "GstElement",
                     "GstObject",
