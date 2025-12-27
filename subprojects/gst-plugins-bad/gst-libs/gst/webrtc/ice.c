@@ -508,7 +508,7 @@ gst_webrtc_ice_get_http_proxy (GstWebRTCICE * ice)
 /**
  * gst_webrtc_ice_close:
  * @ice: The #GstWebRTCICE
- * @promise: (transfer full) (nullable): a #GstPromise to be notified when the task is
+ * @promise: (transfer none) (nullable): a #GstPromise to be notified when the task is
  * complete.
  *
  * Invoke the close procedure as specified in

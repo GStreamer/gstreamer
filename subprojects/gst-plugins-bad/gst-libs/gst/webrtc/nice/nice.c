@@ -1619,7 +1619,7 @@ close_data_new (GstWebRTCNice * ice, GstPromise * p)
 {
   struct close_data *d = g_atomic_rc_box_new0 (struct close_data);
   g_weak_ref_init (&d->nice_weak, ice);
-  d->promise = p;
+  d->promise = p ? gst_promise_ref (p) : NULL;
   d->agent_closed = FALSE;
   return d;
 }

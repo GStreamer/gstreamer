@@ -8831,6 +8831,7 @@ gst_webrtc_bin_close (GstWebRTCBin * webrtc, GstPromise * promise)
       gst_promise_new_with_change_func (on_ice_closed, d,
       (GDestroyNotify) close_data_unref);
   gst_webrtc_ice_close (webrtc->priv->ice, close_promise);
+  gst_promise_unref (close_promise);
 }
 
 static void
