@@ -906,7 +906,6 @@ fluster v4l2-stateless on visl:
       -Dgst-plugins-base:typefind=enabled
       -Dgst-plugins-base:playback=enabled
       -Dgst-plugins-good:matroska=enabled
-    GTK_ARGS: "-Dgtk=disabled"
   script:
   - $CI_PROJECT_DIR/ci/scripts/build.sh build/
   - meson test -C build -v --suite v4l2-stateless-decoders
@@ -914,6 +913,8 @@ fluster v4l2-stateless on visl:
     reports:
       junit: build/fluster-results-*.xml
   rules:
+    - if: $GTK_ARGS =~ /-Dgtk=enabled/
+      when: never
     - changes:
         paths:
           - ".gitlab-ci.yml"
