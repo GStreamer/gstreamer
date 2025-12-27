@@ -6791,7 +6791,7 @@ gst_qtdemux_split_and_push_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
     if (n_field1 > 1 || n_field2 > 1) {
       n_output_buffers =
           gst_util_uint64_scale (duration, CUR_STREAM (stream)->fps_n,
-          CUR_STREAM (stream)->fps_d);
+          stream->timescale * CUR_STREAM (stream)->fps_d);
 
       for (i = 0; i < n_output_buffers; i++) {
         GstBuffer *outbuf =
