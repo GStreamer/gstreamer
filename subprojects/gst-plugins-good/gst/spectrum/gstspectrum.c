@@ -809,6 +809,9 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   GstSpectrumChannel *cd;
   GstSpectrumInputData input_data;
 
+  if (!GST_AUDIO_INFO_IS_VALID (GST_AUDIO_FILTER_INFO (spectrum)))
+    return GST_FLOW_NOT_NEGOTIATED;
+
   g_mutex_lock (&spectrum->lock);
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   data = map.data;
