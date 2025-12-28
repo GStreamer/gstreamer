@@ -51,14 +51,14 @@ push_buffers (GstAppSrc * src)
   char *data;
   GstClockTime pts = 0;
 
-  g_assert (src != NULL);
+  g_assert_nonnull (src);
 
   caps = gst_app_src_get_caps (src);
   fail_unless (caps != NULL);
   s = gst_caps_get_structure (caps, 0);
-  g_assert (s != NULL);
-  g_assert (gst_structure_get_int (s, "id", &id));
-  g_assert (id < 256);
+  g_assert_nonnull (s);
+  fail_unless (gst_structure_get_int (s, "id", &id));
+  fail_unless (id < 256);
 
   gst_object_ref (src);
 
@@ -115,7 +115,7 @@ switch_sinkpads (GstElement * selector)
         active_pad_id);
     GST_DEBUG_OBJECT (selector, "switching to pad %s", active_pad_name);
     pad = gst_element_get_static_pad (selector, active_pad_name);
-    g_assert (pad != NULL);
+    g_assert_nonnull (pad);
 
     g_object_set (selector, "active-pad", pad, NULL);
 
@@ -216,7 +216,7 @@ GST_START_TEST (stress_test)
     s = gst_caps_get_structure (caps, 0);
     fail_unless (s != NULL);
     fail_unless (gst_structure_get_int (s, "id", &id));
-    g_assert (id < 256);
+    fail_unless (id < 256);
 
     buffer = gst_sample_get_buffer (sample);
     fail_unless (buffer != NULL);
