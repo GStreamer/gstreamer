@@ -108,13 +108,16 @@ exe = executable('gst-ptp-helper', 'main.rs',
   install_dir : helpers_install_dir,
   install : true)
 
-exe_test = executable('gst-ptp-helper-test', 'main.rs',
-  override_options : ['rust_std=2018'],
-  rust_args : ['--test', rust_args],
-  dependencies : [cap_dep],
-  link_with : conf)
+# sanity checking
+if get_option('tests').enabled()
+  exe_test = executable('gst_ptp_helper_test', 'main.rs',
+    override_options : ['rust_std=2018'],
+    rust_args : ['--test', rust_args],
+    dependencies : [cap_dep],
+    link_with : conf)
 
-test('gst-ptp-helper-test', exe_test, protocol : 'rust')
+  test('gst-ptp-helper-test', exe_test, protocol : 'rust')
+endif
 
 if host_system != 'windows'
   meson.add_install_script('ptp_helper_post_install.sh',
