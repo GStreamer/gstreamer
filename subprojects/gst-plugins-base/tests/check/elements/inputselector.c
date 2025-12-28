@@ -26,7 +26,13 @@
  */
 
 #ifdef HAVE_CONFIG_H
+#include "config.h"
 #endif
+
+#ifdef HAVE_VALGRIND
+# include <valgrind/valgrind.h>
+#endif
+
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
 #include <gst/app/app.h>
@@ -83,11 +89,18 @@ switch_sinkpads (GstElement * selector)
   gchar active_pad_id = 0;
   gchar active_pad_name[] = "sink_0";
   GstPad *pad;
+  gulong delay = SWITCH_INTERVAL;
+
+#ifdef HAVE_VALGRIND
+  if (RUNNING_ON_VALGRIND) {
+    delay *= 20;
+  }
+#endif
 
   gst_object_ref (selector);
 
   while (TRUE) {
-    g_usleep (SWITCH_INTERVAL);
+    g_usleep (delay);
     state_change_ret =
         gst_element_get_state (GST_ELEMENT (selector), &state, NULL,
         GST_CLOCK_TIME_NONE);
