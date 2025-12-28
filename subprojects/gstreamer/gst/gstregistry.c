@@ -1260,6 +1260,11 @@ skip_directory (const gchar * parent_path, const gchar * dirent)
   if (strcmp (dirent, ".git") == 0 || strcmp (dirent, ".deps") == 0)
     return TRUE;
 
+  /* skip the directories ending in .dSYM, these contain mach-o files with
+   * only debugging sections */
+  if (g_str_has_suffix (dirent, ".dSYM"))
+    return TRUE;
+
   return FALSE;
 }
 
