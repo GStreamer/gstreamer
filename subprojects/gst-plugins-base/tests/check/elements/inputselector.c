@@ -67,7 +67,7 @@ push_buffers (GstAppSrc * src)
     if (gst_app_src_push_buffer (src, buffer) != GST_FLOW_OK)
       break;
 
-    g_print ("Pushed buffer to src %d\n", id);
+    GST_DEBUG_OBJECT (src, "Pushed buffer to src %d", id);
 
     pts += (GstClockTime) BUFFER_INTERVAL;
   }
@@ -93,14 +93,14 @@ switch_sinkpads (GstElement * selector)
         GST_CLOCK_TIME_NONE);
     if (state_change_ret != GST_STATE_CHANGE_SUCCESS
         || state < GST_STATE_PAUSED) {
-      g_print ("Exiting switch_sinkpads loop");
+      GST_DEBUG_OBJECT (selector, "Exiting switch_sinkpads loop");
       break;
     }
 
     active_pad_id = (active_pad_id + 1) % 2;
     g_snprintf (active_pad_name, sizeof (active_pad_name), "sink_%d",
         active_pad_id);
-    g_print ("switching to pad %s\n", active_pad_name);
+    GST_DEBUG_OBJECT (selector, "switching to pad %s", active_pad_name);
     pad = gst_element_get_static_pad (selector, active_pad_name);
     g_assert (pad != NULL);
 
@@ -194,7 +194,7 @@ GST_START_TEST (stress_test)
 
     sample = gst_app_sink_pull_sample (GST_APP_SINK (sink));
     if (sample == NULL) {
-      g_print ("eos\n");
+      GST_DEBUG ("eos");
       break;
     }
 
@@ -215,9 +215,9 @@ GST_START_TEST (stress_test)
     gst_sample_unref (sample);
 
     count[id] += 1;
-    g_print ("Pulled buffer from src %d, count: %d\n", id, count[id]);
+    GST_DEBUG ("Pulled buffer from src %d, count: %d", id, count[id]);
     if (count[0] > MIN_COUNT && count[1] > MIN_COUNT) {
-      g_print ("Reached min count, sending eos...\n");
+      GST_DEBUG ("Reached min count, sending eos...");
       fail_unless (gst_element_send_event (pipeline, gst_event_new_eos ()));
     }
   }
