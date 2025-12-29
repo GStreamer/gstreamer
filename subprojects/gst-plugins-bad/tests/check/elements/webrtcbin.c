@@ -1803,11 +1803,14 @@ validate_candidate_stats (const GstStructure * s, const GstStructure * stats)
 }
 
 static void
-validate_transport_stats (const GstStructure * s, const GstStructure * stats)
+validate_transport_stats (const GstStructure * s, const GstStructure * stats,
+    const gchar * expected_tls_version)
 {
   gchar *selected_candidate_pair_id;
   GstWebRTCDTLSTransportState state;
   GstWebRTCDTLSRole dtls_role;
+  gchar *dtls_cipher;
+  gchar *srtp_cipher;
 
   fail_unless (gst_structure_get (s, "selected-candidate-pair-id",
           G_TYPE_STRING, &selected_candidate_pair_id, NULL));
@@ -1815,7 +1818,25 @@ validate_transport_stats (const GstStructure * s, const GstStructure * stats)
           GST_TYPE_WEBRTC_DTLS_TRANSPORT_STATE, &state, NULL));
   fail_unless (gst_structure_get (s, "dtls-role", GST_TYPE_WEBRTC_DTLS_ROLE,
           &dtls_role, NULL));
+  fail_unless (gst_structure_get (s, "dtls-cipher", G_TYPE_STRING,
+          &dtls_cipher, NULL));
+  fail_unless (gst_structure_get (s, "srtp-cipher", G_TYPE_STRING,
+          &srtp_cipher, NULL));
+  fail_unless_equals_string (dtls_cipher,
+      "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256");
+  fail_unless_equals_string (srtp_cipher, "SRTP_AES128_CM_HMAC_SHA1_80");
 
+  if (expected_tls_version) {
+    gchar *tls_version;
+    fail_unless (gst_structure_get (s, "tls-version", G_TYPE_STRING,
+            &tls_version, NULL));
+
+    fail_unless_equals_string (tls_version, expected_tls_version);
+    g_free (tls_version);
+  }
+
+  g_free (dtls_cipher);
+  g_free (srtp_cipher);
   g_free (selected_candidate_pair_id);
 }
 
@@ -1842,6 +1863,7 @@ struct stats_check_state
   gboolean saw_remote_outbound_rtp;
   gboolean saw_inbound_rtp;
   gboolean saw_remote_inbound_rtp;
+  const gchar *expected_tls_version;
 };
 
 static gboolean
@@ -1882,7 +1904,7 @@ validate_stats_foreach (const GstIdStr * fieldname, const GValue * value,
   } else if (type == GST_WEBRTC_STATS_DATA_CHANNEL) {
   } else if (type == GST_WEBRTC_STATS_STREAM) {
   } else if (type == GST_WEBRTC_STATS_TRANSPORT) {
-    validate_transport_stats (s, stats);
+    validate_transport_stats (s, stats, state->expected_tls_version);
   } else if (type == GST_WEBRTC_STATS_CANDIDATE_PAIR) {
   } else if (type == GST_WEBRTC_STATS_LOCAL_CANDIDATE) {
     validate_candidate_stats (s, stats);
@@ -2046,6 +2068,10 @@ GST_START_TEST (test_stats_with_two_streams)
   }
 
   struct stats_check_state state = {.t = t,.n_streams = 2, 0 };
+
+  /* Expecting DTLS version 1.2 in transport stats, because the transport should
+     be connected by now. */
+  state.expected_tls_version = "FEFD";
 
   while (TRUE) {
     g_usleep (100 * 1000);

@@ -772,6 +772,7 @@ _get_stats_from_dtls_transport (GstWebRTCBin * webrtc,
   double ts;
   gchar *ice_id;
   GstWebRTCDTLSRole dtls_role = GST_WEBRTC_DTLS_ROLE_UNKNOWN;
+  guint dtls_version = 0;
 
   gst_structure_get_double (s, "timestamp", &ts);
 
@@ -818,6 +819,20 @@ _get_stats_from_dtls_transport (GstWebRTCBin * webrtc,
   gst_structure_set (stats, "dtls-role", GST_TYPE_WEBRTC_DTLS_ROLE, dtls_role,
       "dtls-state", GST_TYPE_WEBRTC_DTLS_TRANSPORT_STATE, transport->state,
       NULL);
+
+  g_object_get (transport->dtlssrtpenc, "dtls-version", &dtls_version, NULL);
+  if (dtls_version) {
+    gchar *version = g_strdup_printf ("%04X", dtls_version);
+    gst_structure_set (stats, "tls-version", G_TYPE_STRING, version, NULL);
+    g_free (version);
+  }
+
+  /* The dtls agent hard-codes its SSL context to SRTP_AES128_CM_SHA1_80 and
+     uses an ECDSA certificate. These values should be adapted if the agent
+     settings change. */
+  gst_structure_set (stats, "dtls-cipher", G_TYPE_STRING,
+      "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256", "srtp-cipher",
+      G_TYPE_STRING, "SRTP_AES128_CM_HMAC_SHA1_80", NULL);
 
   gst_structure_set (s, id, GST_TYPE_STRUCTURE, stats, NULL);
   gst_structure_free (stats);
