@@ -19123,6 +19123,11 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       qtdemux_clear_cmpd (&cmpd);
       break;
     }
+    case GST_MAKE_FOURCC ('t', 's', 'c', '2'):
+      _codec ("TechSmith Screen Capture v2");
+      caps = gst_caps_new_simple ("video/x-tscc",
+          "tsccversion", G_TYPE_INT, 2, NULL);
+      break;
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:
     {
