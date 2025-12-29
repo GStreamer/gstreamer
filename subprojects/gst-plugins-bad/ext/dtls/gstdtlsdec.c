@@ -80,6 +80,7 @@ enum
   PROP_SRTP_CIPHER,
   PROP_SRTP_AUTH,
   PROP_CONNECTION_STATE,
+  PROP_VERSION,
   NUM_PROPERTIES
 };
 
@@ -190,6 +191,20 @@ gst_dtls_dec_class_init (GstDtlsDecClass * klass)
       "Current connection state",
       GST_DTLS_TYPE_CONNECTION_STATE,
       GST_DTLS_CONNECTION_STATE_NEW, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstDtlsDec:version:
+   *
+   * The negotiated DTLS protocol version, represented as 2 bytes. Each
+   * component of the version is translated to a byte using `hex(255 -
+   * component)`. For instance if the version is 1.3, the resulting value will
+   * be `0xFEFC`.
+   *
+   * Since: 1.30
+   */
+  properties[PROP_VERSION] =
+      g_param_spec_uint ("version", "DTLS version", "Negotiated version", 0,
+      G_MAXUINT16, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, NUM_PROPERTIES, properties);
 
@@ -328,6 +343,13 @@ gst_dtls_dec_get_property (GObject * object, guint prop_id, GValue * value,
       else
         g_value_set_enum (value, GST_DTLS_CONNECTION_STATE_CLOSED);
       break;
+    case PROP_VERSION:
+      if (self->connection)
+        g_object_get_property (G_OBJECT (self->connection), "version", value);
+      else
+        g_value_set_uint (value, 0);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
   }
