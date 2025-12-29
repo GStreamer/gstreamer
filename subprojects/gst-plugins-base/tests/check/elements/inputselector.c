@@ -52,6 +52,7 @@ push_buffers (GstAppSrc * src)
   GstClockTime pts = 0;
 
   g_assert_nonnull (src);
+  gst_object_ref (src);
 
   caps = gst_app_src_get_caps (src);
   fail_unless (caps != NULL);
@@ -60,7 +61,7 @@ push_buffers (GstAppSrc * src)
   fail_unless (gst_structure_get_int (s, "id", &id));
   fail_unless (id < 256);
 
-  gst_object_ref (src);
+  gst_caps_unref (caps);
 
   while (TRUE) {
     g_usleep (BUFFER_INTERVAL);
@@ -175,6 +176,7 @@ GST_START_TEST (stress_test)
   fail_unless (bus != NULL);
 
   g_signal_connect (bus, "message", (GCallback) message_cb, NULL);
+  gst_object_unref (bus);
 
   fail_if (gst_element_set_state (pipeline,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
@@ -241,6 +243,8 @@ GST_START_TEST (stress_test)
   g_thread_join (switch_thrd);
   g_thread_join (src_0_thrd);
   g_thread_join (src_1_thrd);
+
+  gst_object_unref (pipeline);
 }
 
 GST_END_TEST;
