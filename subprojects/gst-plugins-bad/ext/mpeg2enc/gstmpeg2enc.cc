@@ -162,6 +162,10 @@ gst_mpeg2enc_finalize (GObject * object)
   gst_mpeg2enc_reset (enc);
 
   delete enc->options;
+  if (enc->input_state) {
+    gst_video_codec_state_unref (enc->input_state);
+    enc->input_state = NULL;
+  }
 
   g_mutex_clear (&enc->tlock);
   g_cond_clear (&enc->cond);
@@ -456,11 +460,14 @@ gst_mpeg2enc_getcaps (GstVideoEncoder * video_encoder, GstCaps * filter)
     case 3:
     case 8:
     case 9:
-    default:
-      caps = gst_caps_copy (gst_pad_get_pad_template_caps (video_encoder->sinkpad));
+    default: {
+      GstCaps *tcaps = gst_pad_get_pad_template_caps (video_encoder->sinkpad);
+      caps = gst_caps_copy (tcaps);
+      gst_caps_unref (tcaps);
       gst_mpeg2enc_add_fps (gst_caps_get_structure (caps, 0),
           gst_mpeg2enc_get_fps (enc));
       break;
+    }
   }
 
   return caps;
@@ -562,10 +569,12 @@ gst_mpeg2enc_loop (GstVideoEncoder * video_encoder)
     gboolean ret;
     GstClockTime latency;
     GstVideoInfo *info = &enc->input_state->info;
+    GstCaps *caps;
 
     /* create new encoder with these settings */
-    enc->encoder = new GstMpeg2Encoder (enc->options, GST_ELEMENT (video_encoder),
-                        gst_pad_get_current_caps(video_encoder->sinkpad));
+    caps = gst_pad_get_current_caps(video_encoder->sinkpad);
+    enc->encoder = new GstMpeg2Encoder (enc->options, GST_ELEMENT (video_encoder), caps);
+    gst_clear_caps (&caps);
 
     ret = enc->encoder->setup ();
 
