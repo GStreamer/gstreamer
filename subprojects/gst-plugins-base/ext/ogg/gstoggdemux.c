@@ -2339,9 +2339,19 @@ gst_ogg_demux_class_init (GstOggDemuxClass * klass)
 
   gobject_class->finalize = gst_ogg_demux_finalize;
 
-  GST_DEBUG_CATEGORY_INIT (gst_ogg_demux_debug, "oggdemux", 0, "ogg demuxer");
-  GST_DEBUG_CATEGORY_INIT (gst_ogg_demux_setup_debug, "oggdemux_setup", 0,
-      "ogg demuxer setup stage when parsing pipeline");
+  gst_ogg_debug_category_init ();
+}
+
+void
+gst_ogg_debug_category_init (void)
+{
+  static gsize res = FALSE;
+  if (g_once_init_enter (&res)) {
+    GST_DEBUG_CATEGORY_INIT (gst_ogg_demux_debug, "oggdemux", 0, "ogg demuxer");
+    GST_DEBUG_CATEGORY_INIT (gst_ogg_demux_setup_debug, "oggdemux_setup", 0,
+        "ogg demuxer setup stage when parsing pipeline");
+    g_once_init_leave (&res, TRUE);
+  }
 }
 
 static void

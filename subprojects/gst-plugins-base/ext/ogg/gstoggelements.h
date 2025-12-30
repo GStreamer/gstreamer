@@ -31,4 +31,6 @@ GST_ELEMENT_REGISTER_DECLARE (ogmtextparse);
 GST_ELEMENT_REGISTER_DECLARE (oggparse);
 GST_ELEMENT_REGISTER_DECLARE (oggaviparse);
 
+G_GNUC_INTERNAL void gst_ogg_debug_category_init (void);
+
 #endif /* __GST_OGG_ELEMENT_H__ */
