@@ -1524,7 +1524,9 @@ gst_base_text_overlay_get_videosink_caps (GstPad * pad,
 
     if (gst_caps_is_any (peer_caps)) {
       /* if peer returns ANY caps, return filtered src pad template caps */
-      caps = gst_caps_copy (gst_pad_get_pad_template_caps (srcpad));
+      GstCaps *tcaps = gst_pad_get_pad_template_caps (srcpad);
+      caps = gst_caps_copy (tcaps);
+      gst_caps_unref (tcaps);
     } else {
 
       /* duplicate caps which contains the composition into one version with
@@ -1584,7 +1586,9 @@ gst_base_text_overlay_get_src_caps (GstPad * pad, GstBaseTextOverlay * overlay,
     if (gst_caps_is_any (peer_caps)) {
 
       /* if peer returns ANY caps, return filtered sink pad template caps */
-      caps = gst_caps_copy (gst_pad_get_pad_template_caps (sinkpad));
+      GstCaps *tcaps = gst_pad_get_pad_template_caps (sinkpad);
+      caps = gst_caps_copy (tcaps);
+      gst_caps_unref (tcaps);
 
     } else {
 

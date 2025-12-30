@@ -487,7 +487,9 @@ gst_dvd_spu_video_get_caps (GstDVDSpu * dvdspu, GstPad * pad, GstCaps * filter)
 
     if (gst_caps_is_any (peer_caps)) {
       /* if peer returns ANY caps, return filtered src pad template caps */
-      caps = gst_caps_copy (gst_pad_get_pad_template_caps (srcpad));
+      GstCaps *tcaps = gst_pad_get_pad_template_caps (srcpad);
+      caps = gst_caps_copy (tcaps);
+      gst_caps_unref (tcaps);
     } else {
       /* duplicate caps which contains the composition into one version with
        * the meta and one without. Filter the other caps by the software caps */
@@ -542,7 +544,9 @@ gst_dvd_spu_src_get_caps (GstDVDSpu * dvdspu, GstPad * pad, GstCaps * filter)
 
     if (gst_caps_is_any (peer_caps)) {
       /* if peer returns ANY caps, return filtered sink pad template caps */
-      caps = gst_caps_copy (gst_pad_get_pad_template_caps (sinkpad));
+      GstCaps *tcaps = gst_pad_get_pad_template_caps (sinkpad);
+      caps = gst_caps_copy (tcaps);
+      gst_caps_unref (tcaps);
     } else {
       /* return upstream caps + composition feature + upstream caps
        * filtered by the software caps. */

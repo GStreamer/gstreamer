@@ -405,11 +405,13 @@ static GstCaps *
 gst_sf_src_get_caps (GstBaseSrc * bsrc)
 {
   GstSFSrc *this;
-  GstCaps *ret;
+  GstCaps *ret, *tcaps;
 
   this = GST_SF_SRC (bsrc);
 
-  ret = gst_caps_copy (gst_pad_get_pad_template_caps (bsrc->srcpad));
+  tcaps = gst_pad_get_pad_template_caps (bsrc->srcpad);
+  ret = gst_caps_copy (tcaps);
+  gst_caps_unref (tcaps);
 
   if (this->file) {
     GstStructure *s;

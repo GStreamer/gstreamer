@@ -3505,7 +3505,7 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
 {
   GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
   GstFlowReturn ret = GST_FLOW_OK;
-  GstCaps *caps;
+  GstCaps *caps, *tcaps;
   GstClockTime reserved_max_duration;
   guint reserved_bytes_per_sec_per_trak;
   GList *l;
@@ -3518,9 +3518,10 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
   reserved_bytes_per_sec_per_trak = qtmux->reserved_bytes_per_sec_per_trak;
   GST_OBJECT_UNLOCK (qtmux);
 
-  caps =
-      gst_caps_copy (gst_pad_get_pad_template_caps (GST_AGGREGATOR_SRC_PAD
-          (qtmux)));
+  tcaps = gst_pad_get_pad_template_caps (GST_AGGREGATOR_SRC_PAD (qtmux));
+  caps = gst_caps_copy (tcaps);
+  gst_caps_unref (tcaps);
+
   /* qtmux has structure with and without variant, remove all but the first */
   trunc_caps = gst_caps_truncate (caps);
   g_assert (trunc_caps);

@@ -194,7 +194,7 @@ gst_audio_interleave_sink_getcaps (GstAggregator * agg, GstPad * pad,
     GstCaps * filter)
 {
   GstAudioInterleave *self = GST_AUDIO_INTERLEAVE (agg);
-  GstCaps *result = NULL, *peercaps, *sinkcaps;
+  GstCaps *result = NULL, *peercaps, *sinkcaps, *tcaps;
 
   GST_OBJECT_LOCK (self);
   /* If we already have caps on one of the sink pads return them */
@@ -207,7 +207,10 @@ gst_audio_interleave_sink_getcaps (GstAggregator * agg, GstPad * pad,
     peercaps = gst_pad_peer_query_caps (agg->srcpad, NULL);
 
     /* get the allowed caps on this sinkpad */
-    sinkcaps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    tcaps = gst_pad_get_pad_template_caps (pad);
+    sinkcaps = gst_caps_copy (tcaps);
+    gst_caps_unref (tcaps);
+
     __remove_channels (sinkcaps);
     if (peercaps) {
       peercaps = gst_caps_make_writable (peercaps);
