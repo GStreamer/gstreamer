@@ -1891,7 +1891,9 @@ gst_subtitle_overlay_get_videosink_caps (GstSubtitleOverlay * overlay,
     if (gst_caps_is_any (peer_caps)) {
 
       /* if peer returns ANY caps, return filtered src pad template caps */
-      caps = gst_caps_copy (gst_pad_get_pad_template_caps (srcpad));
+      GstCaps *tcaps = gst_pad_get_pad_template_caps (srcpad);
+      caps = gst_caps_copy (tcaps);
+      gst_caps_unref (tcaps);
     } else {
 
       /* duplicate caps which contains the composition into one version with

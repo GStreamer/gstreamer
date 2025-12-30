@@ -160,7 +160,9 @@ gst_segment_clip_getcaps (GstSegmentClip * self, GstPad * pad, GstCaps * filter)
     ret = gst_caps_intersect (tmp, gst_pad_get_pad_template_caps (pad));
     gst_caps_unref (tmp);
   } else {
-    ret = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    tmp = gst_pad_get_pad_template_caps (pad);
+    ret = gst_caps_copy (tmp);
+    gst_caps_unref (tmp);
   }
 
   GST_LOG_OBJECT (pad, "Returning caps: %" GST_PTR_FORMAT, ret);

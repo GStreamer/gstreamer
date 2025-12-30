@@ -526,7 +526,9 @@ gst_overlay_composition_sink_query_caps (GstOverlayComposition * self,
 
     if (gst_caps_is_any (peer_caps)) {
       /* if peer returns ANY caps, return filtered src pad template caps */
-      caps = gst_caps_copy (gst_pad_get_pad_template_caps (self->srcpad));
+      GstCaps *tcaps = gst_pad_get_pad_template_caps (self->srcpad);
+      caps = gst_caps_copy (tcaps);
+      gst_caps_unref (tcaps);
     } else {
 
       /* duplicate caps which contains the composition into one version with
@@ -586,7 +588,9 @@ gst_overlay_composition_src_query_caps (GstOverlayComposition * self,
     if (gst_caps_is_any (peer_caps)) {
 
       /* if peer returns ANY caps, return filtered sink pad template caps */
-      caps = gst_caps_copy (gst_pad_get_pad_template_caps (self->sinkpad));
+      GstCaps *tcaps = gst_pad_get_pad_template_caps (self->sinkpad);
+      caps = gst_caps_copy (tcaps);
+      gst_caps_unref (tcaps);
 
     } else {
 

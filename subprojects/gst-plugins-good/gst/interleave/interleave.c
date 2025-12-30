@@ -725,7 +725,7 @@ static GstCaps *
 gst_interleave_sink_getcaps (GstPad * pad, GstInterleave * self,
     GstCaps * filter)
 {
-  GstCaps *result, *peercaps, *sinkcaps;
+  GstCaps *result, *peercaps, *sinkcaps, *tcaps;
 
   GST_OBJECT_LOCK (self);
 
@@ -740,7 +740,10 @@ gst_interleave_sink_getcaps (GstPad * pad, GstInterleave * self,
     peercaps = gst_pad_peer_query_caps (self->src, NULL);
 
     /* get the allowed caps on this sinkpad */
-    sinkcaps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    tcaps = gst_pad_get_pad_template_caps (pad);
+    sinkcaps = gst_caps_copy (tcaps);
+    gst_caps_unref (tcaps);
+
     __remove_channels (sinkcaps);
     if (peercaps) {
       peercaps = gst_caps_make_writable (peercaps);

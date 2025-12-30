@@ -76,13 +76,15 @@ static GstCaps*
 gst_replace_sink_getcaps (GstPad *pad)
 {
   GstReplace *replace;
-  GstCaps *caps;
+  GstCaps *caps, *tcaps;
 
   replace = GST_REPLACE (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT(replace, "getcaps");
 
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  tcaps = gst_pad_get_pad_template_caps (pad);
+  caps = gst_caps_copy (tcaps);
+  gst_caps_unref (tcaps);
 
   gst_object_unref (replace);
   return caps;
