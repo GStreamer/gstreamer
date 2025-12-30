@@ -169,6 +169,7 @@ tsmux_put_ts (guint8 **pos, guint8 id, gint64 ts)
 
 GST_DEBUG_CATEGORY_EXTERN (gst_base_ts_mux_debug);
 #define TS_DEBUG GST_DEBUG
+#define TS_LOG GST_LOG
 
 G_END_DECLS
 

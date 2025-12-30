@@ -1023,8 +1023,7 @@ tsmux_write_adaptation_field (guint8 * buf,
       pcr_ext = (pi->pcr % 300);
 
       flags |= 0x10;
-      TS_DEBUG ("Writing PCR %" G_GUINT64_FORMAT " + ext %u", pcr_base,
-          pcr_ext);
+      TS_LOG ("Writing PCR %" G_GUINT64_FORMAT " + ext %u", pcr_base, pcr_ext);
       buf[pos++] = (pcr_base >> 25) & 0xff;
       buf[pos++] = (pcr_base >> 17) & 0xff;
       buf[pos++] = (pcr_base >> 9) & 0xff;
@@ -1040,7 +1039,7 @@ tsmux_write_adaptation_field (guint8 * buf,
       opcr_ext = (pi->opcr % 300);
 
       flags |= 0x08;
-      TS_DEBUG ("Writing OPCR");
+      TS_LOG ("Writing OPCR");
       buf[pos++] = (opcr_base >> 25) & 0xff;
       buf[pos++] = (opcr_base >> 17) & 0xff;
       buf[pos++] = (opcr_base >> 9) & 0xff;
@@ -1060,11 +1059,11 @@ tsmux_write_adaptation_field (guint8 * buf,
       buf[pos++] = pi->private_data_len;
       memcpy (&(buf[pos]), pi->private_data, pi->private_data_len);
       pos += pi->private_data_len;
-      TS_DEBUG ("%u bytes of private data", pi->private_data_len);
+      TS_LOG ("%u bytes of private data", pi->private_data_len);
     }
     if (pi->flags & TSMUX_PACKET_FLAG_WRITE_ADAPT_EXT) {
       flags |= 0x01;
-      TS_DEBUG ("FIXME: write Adaptation extension");
+      TS_LOG ("FIXME: write Adaptation extension");
       /* Write an empty extension for now */
       buf[pos++] = 1;
       buf[pos++] = 0x1f;        /* lower 5 bits are reserved, and should be all 1 */
@@ -1100,7 +1099,7 @@ tsmux_write_ts_header (TsMux * mux, guint8 * buf, TsMuxPacketInfo * pi,
   /* Sync byte */
   buf[0] = TSMUX_SYNC_BYTE;
 
-  TS_DEBUG ("PID 0x%04x, counter = 0x%01x, %u bytes avail", pi->pid,
+  TS_LOG ("PID 0x%04x, counter = 0x%01x, %u bytes avail", pi->pid,
       mux->pid_packet_counts[pi->pid] & 0x0f, stream_avail);
 
   /* 3 bits:
@@ -1177,10 +1176,10 @@ tsmux_write_ts_header (TsMux * mux, guint8 * buf, TsMuxPacketInfo * pi,
 
 
   if (write_adapt) {
-    TS_DEBUG ("Adaptation field of size >= %d + %d bytes payload",
+    TS_LOG ("Adaptation field of size >= %d + %d bytes payload",
         adapt_len, payload_len);
   } else {
-    TS_DEBUG ("Payload of %d bytes only", payload_len);
+    TS_LOG ("Payload of %d bytes only", payload_len);
   }
 
   return TRUE;
@@ -1688,7 +1687,7 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
 
   gst_buffer_unmap (buf, &map);
 
-  GST_DEBUG ("Writing PES of size %d", (int) gst_buffer_get_size (buf));
+  GST_LOG ("Writing PES of size %d", (int) gst_buffer_get_size (buf));
   res = tsmux_packet_out (mux, buf, new_pcr, TRUE);
 
   /* Reset all dynamic flags */
