@@ -92,6 +92,7 @@ run_pipeline (GstElement * pipe, const gchar * descr,
 
 done:
   gst_element_set_state (pipe, GST_STATE_NULL);
+  gst_object_unref (bus);
   gst_object_unref (pipe);
 }
 

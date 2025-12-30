@@ -134,6 +134,7 @@ cleanup_tsmux (GstElement * mux, const gchar * sinkname)
   teardown_src_pad (mux, sinkname);
   gst_check_teardown_sink_pad (mux);
   gst_check_teardown_element (mux);
+  gst_check_drop_buffers ();
 }
 
 static void
