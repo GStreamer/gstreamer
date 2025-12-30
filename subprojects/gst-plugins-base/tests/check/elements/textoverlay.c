@@ -971,7 +971,6 @@ GST_START_TEST (test_video_waits_for_text)
   thread = g_thread_try_new ("gst-check",
       test_video_waits_for_text_shutdown_element, textoverlay, NULL);
   fail_unless (thread != NULL);
-  g_thread_unref (thread);
 
   GST_LOG ("pushing video buffer 4");
   fail_unless (gst_pad_push (myvideosrcpad, inbuffer) == GST_FLOW_FLUSHING);
@@ -982,6 +981,7 @@ GST_START_TEST (test_video_waits_for_text)
   buffers = NULL;
 
   /* cleanup */
+  g_thread_join (thread);
   cleanup_textoverlay (textoverlay);
 
   /* give up our ref, textoverlay should've cleared its queued buffer by now */
