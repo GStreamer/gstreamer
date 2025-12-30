@@ -112,12 +112,14 @@ static GstBuffer *
 create_original_buffer (void)
 {
   GstClock *clock;
+  gsize len;
 
   if (original_buffer != NULL)
     return original_buffer;
 
-  original_buffer =
-      gst_buffer_new_wrapped ((guint8 *) payload, strlen (payload));
+  len = strlen (payload);
+  original_buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      (guint8 *) payload, len, 0, len, NULL, NULL);
   fail_unless (original_buffer != NULL);
 
   clock = gst_system_clock_obtain ();
@@ -1608,17 +1610,31 @@ GST_START_TEST (test_bufferlist_recv_muxed_invalid)
 GST_END_TEST;
 
 
+static void
+setup (void)
+{
+  create_original_buffer ();
+}
+
+static void
+teardown (void)
+{
+  gst_clear_buffer (&original_buffer);
+}
+
+
 static Suite *
 bufferlist_suite (void)
 {
   Suite *s = suite_create ("BufferList");
-
   TCase *tc_chain = tcase_create ("general");
+
+  suite_add_tcase (s, tc_chain);
 
   /* time out after 30s. */
   tcase_set_timeout (tc_chain, 10);
+  tcase_add_checked_fixture (tc_chain, setup, teardown);
 
-  suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_bufferlist);
   tcase_add_test (tc_chain, test_bufferlist_recv);
   tcase_add_test (tc_chain, test_bufferlist_recv_probation_failed);

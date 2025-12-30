@@ -74,6 +74,7 @@ test_element (const gchar * element)
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   g_main_loop_unref (loop);
+  gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
   gst_object_unref (pipeline);
 }

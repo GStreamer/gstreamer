@@ -1375,6 +1375,8 @@ GST_START_TEST (test_time_level_before_output)
   fail_unless_equals_int (overrun_count, 0);
   fail_unless_equals_int (underrun_count, 1);
 
+  unblock_src ();
+
   fail_unless (gst_element_set_state (queue,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
 }

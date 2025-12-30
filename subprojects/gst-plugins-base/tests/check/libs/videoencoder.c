@@ -276,6 +276,7 @@ cleanup_videoencodertest (void)
   gst_check_teardown_src_pad (enc);
   gst_check_teardown_sink_pad (enc);
   gst_check_teardown_element (enc);
+  gst_check_drop_buffers ();
 
   g_list_free_full (events, (GDestroyNotify) gst_event_unref);
   events = NULL;
