@@ -90,7 +90,7 @@ static gboolean gst_mpeg2enc_start (GstVideoEncoder * video_encoder);
 static gboolean gst_mpeg2enc_stop (GstVideoEncoder * video_encoder);
 static gboolean gst_mpeg2enc_set_format (GstVideoEncoder *
     video_encoder, GstVideoCodecState * state);
-static GstCaps * gst_mpeg2enc_getcaps (GstVideoEncoder *
+static GstCaps *gst_mpeg2enc_getcaps (GstVideoEncoder *
     video_encoder, GstCaps * filter);
 static GstFlowReturn gst_mpeg2enc_handle_frame (GstVideoEncoder *
     video_encoder, GstVideoCodecFrame * frame);
@@ -104,8 +104,8 @@ static void gst_mpeg2enc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_mpeg2enc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-static gboolean gst_mpeg2enc_src_activate_mode (GstPad * pad, GstObject * parent,
-    GstPadMode mode, gboolean active);
+static gboolean gst_mpeg2enc_src_activate_mode (GstPad * pad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 static gboolean mpeg2enc_element_init (GstPlugin * plugin);
 
 #define gst_mpeg2enc_parent_class parent_class
@@ -145,7 +145,8 @@ gst_mpeg2enc_class_init (GstMpeg2encClass * klass)
 
   video_encoder_class->start = GST_DEBUG_FUNCPTR (gst_mpeg2enc_start);
   video_encoder_class->stop = GST_DEBUG_FUNCPTR (gst_mpeg2enc_stop);
-  video_encoder_class->handle_frame = GST_DEBUG_FUNCPTR (gst_mpeg2enc_handle_frame);
+  video_encoder_class->handle_frame =
+      GST_DEBUG_FUNCPTR (gst_mpeg2enc_handle_frame);
   video_encoder_class->set_format = GST_DEBUG_FUNCPTR (gst_mpeg2enc_set_format);
   video_encoder_class->finish = GST_DEBUG_FUNCPTR (gst_mpeg2enc_finish);
   //video_encoder_class->pre_push = GST_DEBUG_FUNCPTR (gst_mpeg2enc_pre_push);
@@ -223,7 +224,8 @@ gst_mpeg2enc_reset (GstMpeg2enc * enc)
 
   /* in case of error'ed ending */
   if (enc->pending_frame) {
-    gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (enc), enc->pending_frame);
+    gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (enc),
+        enc->pending_frame);
     enc->pending_frame = NULL;
   }
 
@@ -248,8 +250,7 @@ gst_mpeg2enc_start (GstVideoEncoder * video_encoder)
   }
   /* start task to create multiplexor and start muxing */
   if (G_UNLIKELY (enc->srcresult != GST_FLOW_OK)) {
-    GST_ELEMENT_ERROR (enc, LIBRARY, INIT,
-        ("Invalid encoder state"), (NULL));
+    GST_ELEMENT_ERROR (enc, LIBRARY, INIT, ("Invalid encoder state"), (NULL));
     return FALSE;
   }
 
@@ -294,7 +295,8 @@ static void
 gst_mpeg2enc_add_fps (GstStructure * structure, gint fpss[])
 {
   GValue list = { 0, }, fps = {
-  0,};
+    0,
+  };
   guint n;
 
   g_value_init (&list, GST_TYPE_LIST);
@@ -327,7 +329,8 @@ gst_mpeg2enc_get_fps (GstMpeg2enc * enc)
 }
 
 static gboolean
-gst_mpeg2enc_set_format (GstVideoEncoder * video_encoder, GstVideoCodecState * state)
+gst_mpeg2enc_set_format (GstVideoEncoder * video_encoder,
+    GstVideoCodecState * state)
 {
   GstVideoCodecState *output_state;
   GstMpeg2enc *enc;
@@ -352,11 +355,10 @@ gst_mpeg2enc_set_format (GstVideoEncoder * video_encoder, GstVideoCodecState * s
 
   caps = gst_caps_new_simple ("video/mpeg",
       "systemstream", G_TYPE_BOOLEAN, FALSE,
-      "mpegversion", G_TYPE_INT, (enc->options->mpeg == 1)?1:2, NULL);
+      "mpegversion", G_TYPE_INT, (enc->options->mpeg == 1) ? 1 : 2, NULL);
 
   output_state =
-    gst_video_encoder_set_output_state (video_encoder,
-    caps, state);
+      gst_video_encoder_set_output_state (video_encoder, caps, state);
   gst_video_codec_state_unref (output_state);
 
   gst_video_encoder_negotiate (GST_VIDEO_ENCODER (enc));
@@ -392,7 +394,8 @@ gst_mpeg2enc_structure_from_norm (GstMpeg2enc * enc, gint horiz,
     {
       GValue list = { 0, }
       , val = {
-      0,};
+        0,
+      };
 
       g_value_init (&list, GST_TYPE_LIST);
       g_value_init (&val, G_TYPE_INT);
@@ -460,7 +463,7 @@ gst_mpeg2enc_getcaps (GstVideoEncoder * video_encoder, GstCaps * filter)
     case 3:
     case 8:
     case 9:
-    default: {
+    default:{
       GstCaps *tcaps = gst_pad_get_pad_template_caps (video_encoder->sinkpad);
       caps = gst_caps_copy (tcaps);
       gst_caps_unref (tcaps);
@@ -503,14 +506,18 @@ gst_mpeg2enc_sink_event (GstVideoEncoder * video_encoder, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
       /* forward event */
-      result = GST_VIDEO_ENCODER_CLASS (parent_class)->sink_event (video_encoder, event);
+      result =
+          GST_VIDEO_ENCODER_CLASS (parent_class)->sink_event (video_encoder,
+          event);
 
       /* no special action as there is not much to flush;
        * neither is it possible to halt the mpeg encoding loop */
       goto done;
     case GST_EVENT_FLUSH_STOP:
       /* forward event */
-      result = GST_VIDEO_ENCODER_CLASS (parent_class)->sink_event (video_encoder, event);
+      result =
+          GST_VIDEO_ENCODER_CLASS (parent_class)->sink_event (video_encoder,
+          event);
       if (!result)
         goto done;
 
@@ -542,7 +549,8 @@ gst_mpeg2enc_sink_event (GstVideoEncoder * video_encoder, GstEvent * event)
       break;
   }
 
-  result = GST_VIDEO_ENCODER_CLASS (parent_class)->sink_event (video_encoder, event);
+  result =
+      GST_VIDEO_ENCODER_CLASS (parent_class)->sink_event (video_encoder, event);
 
 done:
   return result;
@@ -572,8 +580,9 @@ gst_mpeg2enc_loop (GstVideoEncoder * video_encoder)
     GstCaps *caps;
 
     /* create new encoder with these settings */
-    caps = gst_pad_get_current_caps(video_encoder->sinkpad);
-    enc->encoder = new GstMpeg2Encoder (enc->options, GST_ELEMENT (video_encoder), caps);
+    caps = gst_pad_get_current_caps (video_encoder->sinkpad);
+    enc->encoder =
+        new GstMpeg2Encoder (enc->options, GST_ELEMENT (video_encoder), caps);
     gst_clear_caps (&caps);
 
     ret = enc->encoder->setup ();
@@ -596,7 +605,8 @@ gst_mpeg2enc_loop (GstVideoEncoder * video_encoder)
           1 * GST_SECOND, 25);
     } else {
       latency = gst_util_uint64_scale (enc->options->max_GOP_size + 5,
-          GST_VIDEO_INFO_FPS_D (info) * GST_SECOND, GST_VIDEO_INFO_FPS_N (info));
+          GST_VIDEO_INFO_FPS_D (info) * GST_SECOND,
+          GST_VIDEO_INFO_FPS_N (info));
     }
 
     gst_video_encoder_set_latency (video_encoder, latency, latency);
@@ -648,7 +658,7 @@ done:
 encoder:
   {
     GST_ELEMENT_ERROR (enc, CORE, NEGOTIATION, (NULL),
-       ("encoder setup failed"));
+        ("encoder setup failed"));
     if (enc->encoder) {
       delete enc->encoder;
 
@@ -671,7 +681,8 @@ ignore:
 }
 
 static GstFlowReturn
-gst_mpeg2enc_handle_frame (GstVideoEncoder *video_encoder, GstVideoCodecFrame *frame)
+gst_mpeg2enc_handle_frame (GstVideoEncoder * video_encoder,
+    GstVideoCodecFrame * frame)
 {
   GstMpeg2enc *enc = GST_MPEG2ENC (video_encoder);
 
@@ -705,7 +716,8 @@ gst_mpeg2enc_handle_frame (GstVideoEncoder *video_encoder, GstVideoCodecFrame *f
 
   if (!enc->started) {
     GST_DEBUG_OBJECT (video_encoder, "handle_frame: START task");
-    gst_pad_start_task (video_encoder->srcpad, (GstTaskFunction) gst_mpeg2enc_loop, enc, NULL);
+    gst_pad_start_task (video_encoder->srcpad,
+        (GstTaskFunction) gst_mpeg2enc_loop, enc, NULL);
     enc->started = TRUE;
   }
 
