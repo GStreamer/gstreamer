@@ -656,7 +656,7 @@ gst_decodebin3_class_init (GstDecodebin3Class * klass)
           GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstDecodebin3::select-stream
+   * GstDecodebin3::select-stream:
    * @decodebin: a #GstDecodebin3
    * @collection: a #GstStreamCollection
    * @stream: a #GstStream
