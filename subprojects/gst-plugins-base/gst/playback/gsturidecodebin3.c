@@ -529,8 +529,8 @@ gst_uri_decode_bin3_class_init (GstURIDecodeBin3Class * klass)
           DEFAULT_INSTANT_URI, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstURIDecodebin3::select-stream
-   * @decodebin: a #GstURIDecodebin3
+   * GstURIDecodeBin3::select-stream:
+   * @decodebin: a #GstURIDecodeBin3
    * @collection: a #GstStreamCollection
    * @stream: a #GstStream
    *
