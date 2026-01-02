@@ -790,23 +790,111 @@ static gboolean
 gst_vpx_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
 {
   GstVPXDec *dec = GST_VPX_DEC (bdec);
-  GstBufferPool *pool;
+  GstBufferPool *pool = NULL;
+  GstCaps *caps = NULL;
   GstStructure *config;
+  GstAllocator *allocator = NULL;
+  GstAllocationParams params;
+  guint size, min = 2, max = 0, n_allocs, n_pools;
 
-  if (!GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (bdec, query))
-    return FALSE;
+  gst_query_parse_allocation (query, &caps, NULL);
 
-  g_assert (gst_query_get_n_allocation_pools (query) > 0);
-  gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
-  g_assert (pool != NULL);
+  n_allocs = gst_query_get_n_allocation_params (query);
+  for (guint i = 0; i < n_allocs; i++) {
+    gst_query_parse_nth_allocation_param (query, i, &allocator, &params);
 
-  config = gst_buffer_pool_get_config (pool);
-  if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
-    dec->have_video_meta = TRUE;
+    if (allocator)
+      break;
   }
-  gst_buffer_pool_set_config (pool, config);
+  if (allocator) {
+    gst_query_set_nth_allocation_param (query, 0, allocator, &params);
+  } else {
+    gst_allocation_params_init (&params);
+  }
+
+  dec->have_video_meta =
+      gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+
+  n_pools = gst_query_get_n_allocation_pools (query);
+  for (guint i = 0; i < n_pools; i++) {
+    gst_query_parse_nth_allocation_pool (query, i, &pool, &size, NULL, NULL);
+    if (!pool)
+      continue;
+
+    config = gst_buffer_pool_get_config (pool);
+
+    gst_buffer_pool_config_set_params (config, caps, size, min, max);
+    gst_buffer_pool_config_set_allocator (config, allocator, &params);
+
+    if (dec->have_video_meta) {
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_META);
+      if (gst_buffer_pool_has_option (pool,
+              GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
+        gst_buffer_pool_config_add_option (config,
+            GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+      }
+    }
+
+    if (!gst_buffer_pool_set_config (pool, config)) {
+      config = gst_buffer_pool_get_config (pool);
+
+      if (!gst_buffer_pool_config_validate_params (config, caps, size, min,
+              max)) {
+        gst_structure_free (config);
+        g_clear_object (&pool);
+        continue;
+      }
+
+      if (!gst_buffer_pool_set_config (pool, config)) {
+        GST_DEBUG_OBJECT (dec, "can't set pool config, skipping");
+        g_clear_object (&pool);
+        continue;
+      }
+    }
+
+    GST_INFO_OBJECT (dec, "Using downstream pool");
+    break;
+  }
+
+  if (!pool) {
+    GstVideoInfo info;
+
+    GST_INFO_OBJECT (dec, "Using fallback pool");
+
+    gst_video_info_from_caps (&info, caps);
+
+    size = GST_VIDEO_INFO_SIZE (&info);
+
+    GST_DEBUG_OBJECT (dec, "no pool, making new pool");
+    pool = gst_video_buffer_pool_new ();
+    {
+      gchar *name = g_strdup_printf ("%s-fallback-pool", GST_OBJECT_NAME (dec));
+      g_object_set (pool, "name", name, NULL);
+      g_free (name);
+    }
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_params (config, caps, size, min, max);
+    gst_buffer_pool_config_set_allocator (config, allocator, &params);
+
+    if (dec->have_video_meta) {
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_META);
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+    }
+
+    gst_buffer_pool_set_config (pool, config);
+  }
+
+  if (n_pools > 0)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  if (allocator)
+    gst_object_unref (allocator);
   gst_object_unref (pool);
 
   return TRUE;
