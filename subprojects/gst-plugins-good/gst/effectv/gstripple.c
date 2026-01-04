@@ -585,7 +585,7 @@ gst_rippletv_class_init (GstRippleTVClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "RippleTV effect",
       "Filter/Effect/Video",
       "RippleTV does ripple mark effect on the video input",
-      "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>, "
+      "Kentaro Fukuchi <fukuchi@users.sourceforge.net>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
   gst_element_class_add_static_pad_template (gstelement_class,

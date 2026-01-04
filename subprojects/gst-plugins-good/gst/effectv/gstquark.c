@@ -279,7 +279,7 @@ gst_quarktv_class_init (GstQuarkTVClass * klass)
 
   gst_element_class_set_static_metadata (gstelement_class, "QuarkTV effect",
       "Filter/Effect/Video",
-      "Motion dissolver", "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>");
+      "Motion dissolver", "Kentaro Fukuchi <fukuchi@users.sourceforge.net>");
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_quarktv_sink_template);
