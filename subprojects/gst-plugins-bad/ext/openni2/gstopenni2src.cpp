@@ -156,7 +156,7 @@ gst_openni2_src_class_init (GstOpenni2SrcClass * klass)
 
   gst_element_class_set_static_metadata (element_class, "Openni2 client source",
       "Source/Video",
-      "Extract readings from an OpenNI supported device (Kinect etc). ",
+      "Extract readings from an OpenNI supported device (Kinect etc.)",
       "Miguel Casas-Sanchez <miguelecasassanchez@gmail.com>");
 
   element_class->change_state = gst_openni2_src_change_state;
