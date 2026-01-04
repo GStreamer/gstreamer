@@ -274,7 +274,7 @@ gst_rtp_pt_demux_class_init (GstRtpPtDemuxClass * klass)
       &rtp_pt_demux_src_template);
 
   gst_element_class_set_static_metadata (gstelement_klass, "RTP Demux",
-      "Demux/Network/RTP",
+      "Demuxer/Network/RTP",
       "Parses codec streams transmitted in the same RTP session",
       "Kai Vehmanen <kai.vehmanen@nokia.com>");
 

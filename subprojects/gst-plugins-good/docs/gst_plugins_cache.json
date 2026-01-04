@@ -20128,7 +20128,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Demux/Network/RTP",
+                "klass": "Demuxer/Network/RTP",
                 "long-name": "RTP Demux",
                 "pad-templates": {
                     "sink": {
@@ -20978,7 +20978,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Demux/Network/RTP",
+                "klass": "Demuxer/Network/RTP",
                 "long-name": "RTP SSRC Demux",
                 "pad-templates": {
                     "rtcp_sink": {
