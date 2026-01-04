@@ -91,7 +91,7 @@ gst_v4l2_mpeg4_enc_class_init (GstV4l2Mpeg4EncClass * klass)
       "V4L2 MPEG4 Encoder",
       "Codec/Encoder/Video/Hardware",
       "Encode MPEG4 video streams via V4L2 API",
-      "Nicolas Dufresne <nicolas.dufresne@collabora.com");
+      "Nicolas Dufresne <nicolas.dufresne@collabora.com>");
 
   gobject_class->set_property =
       GST_DEBUG_FUNCPTR (gst_v4l2_mpeg4_enc_set_property);

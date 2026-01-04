@@ -1344,7 +1344,7 @@ gst_rist_sink_class_init (GstRistSinkClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "RIST Sink", "Source/Network",
       "Sink that implements RIST TR-06-1 streaming specification",
-      "Nicolas Dufresne <nicolas.dufresne@collabora.com");
+      "Nicolas Dufresne <nicolas.dufresne@collabora.com>");
   gst_element_class_add_static_pad_template (element_class, &sink_templ);
 
   element_class->change_state = gst_rist_sink_change_state;

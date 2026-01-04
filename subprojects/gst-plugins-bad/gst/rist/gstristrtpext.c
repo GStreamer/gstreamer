@@ -282,7 +282,7 @@ gst_rist_rtp_ext_class_init (GstRistRtpExtClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "RIST RTP Extension adder", "Filter/Network",
       "Adds RIST TR-06-2 RTP Header extension",
-      "Olivier Crete <olivier.crete@collabora.com");
+      "Olivier Crete <olivier.crete@collabora.com>");
   gst_element_class_add_static_pad_template (element_class, &src_templ);
   gst_element_class_add_static_pad_template (element_class, &sink_templ);
 

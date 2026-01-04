@@ -91,7 +91,7 @@ gst_v4l2_vp9_enc_class_init (GstV4l2Vp9EncClass * klass)
       "V4L2 VP9 Encoder",
       "Codec/Encoder/Video/Hardware",
       "Encode VP9 video streams via V4L2 API",
-      "Nicolas Dufresne <nicolas.dufresne@collabora.com");
+      "Nicolas Dufresne <nicolas.dufresne@collabora.com>");
 
   gobject_class->set_property =
       GST_DEBUG_FUNCPTR (gst_v4l2_vp9_enc_set_property);

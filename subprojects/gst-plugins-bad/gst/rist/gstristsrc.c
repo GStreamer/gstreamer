@@ -1355,7 +1355,7 @@ gst_rist_src_class_init (GstRistSrcClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "RIST Source", "Source/Network",
       "Source that implements RIST TR-06-1 streaming specification",
-      "Nicolas Dufresne <nicolas.dufresne@collabora.com");
+      "Nicolas Dufresne <nicolas.dufresne@collabora.com>");
   gst_element_class_add_static_pad_template (element_class, &src_templ);
 
   bin_class->handle_message = gst_rist_src_handle_message;

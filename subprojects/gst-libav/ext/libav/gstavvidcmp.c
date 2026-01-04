@@ -230,7 +230,7 @@ gst_ffmpegvidcmp_class_init (GstFFMpegVidCmpClass * klass)
       &gst_ffmpegvidcmp_src_tmpl);
   gst_element_class_set_static_metadata (gstelement_class,
       "A libav video compare element", "Filter/Compare/Video",
-      "Compare Video", "U. Artie Eoff <ullysses.a.eoff@intel.com");
+      "Compare Video", "U. Artie Eoff <ullysses.a.eoff@intel.com>");
 }
 
 static void

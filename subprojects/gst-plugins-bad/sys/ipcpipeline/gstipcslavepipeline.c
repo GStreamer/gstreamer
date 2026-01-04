@@ -74,7 +74,7 @@ gst_ipc_slave_pipeline_class_init (GstIpcSlavePipelineClass * klass)
       "Inter-process slave pipeline",
       "Generic/Bin/Slave",
       "Contains the slave part of an inter-process pipeline",
-      "Vincent Penquerc'h <vincent.penquerch@collabora.co.uk");
+      "Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>");
 }
 
 static void
