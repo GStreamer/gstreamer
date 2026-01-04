@@ -149,7 +149,7 @@ gst_break_my_data_class_init (GstBreakMyDataClass * klass)
 
   gst_element_class_set_static_metadata (gstelement_class, "Break my data",
       "Testing",
-      "randomly change data in the stream", "Benjamin Otte <otte@gnome>");
+      "randomly change data in the stream", "Benjamin Otte <otte@gnome.org>");
 
   gstbasetrans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_break_my_data_transform_ip);

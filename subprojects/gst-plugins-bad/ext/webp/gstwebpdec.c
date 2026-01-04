@@ -104,7 +104,7 @@ gst_webp_dec_class_init (GstWebPDecClass * klass)
       &gst_webp_dec_sink_pad_template);
   gst_element_class_set_static_metadata (element_class, "WebP image decoder",
       "Codec/Decoder/Image", "Decode images from WebP format",
-      "Sreerenj Balachandran <sreerenj.balachandrn@intel.com>");
+      "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
 
   g_object_class_install_property (gobject_class, PROP_BYPASS_FILTERING,
       g_param_spec_boolean ("bypass-filtering", "Bypass Filtering",
