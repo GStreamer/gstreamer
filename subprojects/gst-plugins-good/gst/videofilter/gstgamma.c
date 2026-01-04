@@ -124,7 +124,8 @@ gst_gamma_class_init (GstGammaClass * g_class)
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Video gamma correction", "Filter/Effect/Video",
-      "Adjusts gamma on a video stream", "Arwed v. Merkatz <v.merkatz@gmx.net");
+      "Adjusts gamma on a video stream",
+      "Arwed v. Merkatz <v.merkatz@gmx.net>");
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_gamma_sink_template);

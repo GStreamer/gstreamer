@@ -127,7 +127,7 @@ gst_round_robin_class_init (GstRoundRobinClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "Round Robin", "Source/Network",
       "A round robin dispatcher element.",
-      "Nicolas Dufresne <nicolas.dufresne@collabora.com");
+      "Nicolas Dufresne <nicolas.dufresne@collabora.com>");
 
   gst_element_class_add_static_pad_template (element_class, &sink_templ);
   gst_element_class_add_static_pad_template (element_class, &src_templ);
