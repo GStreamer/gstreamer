@@ -394,7 +394,7 @@ gst_optv_class_init (GstOpTVClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "OpTV effect",
       "Filter/Effect/Video",
       "Optical art meets real-time video effect",
-      "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>, "
+      "Kentaro Fukuchi <fukuchi@users.sourceforge.net>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
   gst_element_class_add_static_pad_template (gstelement_class,
