@@ -435,7 +435,7 @@ gst_rtp_h263_pay_class_init (GstRtpH263PayClass * klass)
   gst_element_class_set_static_metadata (gstelement_class,
       "RTP H263 packet payloader", "Codec/Payloader/Network/RTP",
       "Payload-encodes H263 video in RTP packets (RFC 2190)",
-      "Neil Stratford <neils@vipadia.com>"
+      "Neil Stratford <neils@vipadia.com>, "
       "Dejan Sakelsak <dejan.sakelsak@marand.si>");
 
   GST_DEBUG_CATEGORY_INIT (rtph263pay_debug, "rtph263pay", 0,
