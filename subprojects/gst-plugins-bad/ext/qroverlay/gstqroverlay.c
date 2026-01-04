@@ -181,7 +181,7 @@ gst_qr_overlay_class_init (GstQROverlayClass * klass)
 
   gst_element_class_set_details_simple (gstelement_class,
       "qroverlay",
-      "Qrcode overlay containing random data",
+      "Video/Overlay",
       "Overlay Qrcodes over each buffer with data passed in",
       "Thibault Saunier <tsaunier@igalia.com>");
 

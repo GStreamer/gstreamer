@@ -156,8 +156,8 @@ gst_debug_qr_overlay_class_init (GstDebugQROverlayClass * klass)
 
 
   gst_element_class_set_details_simple (gstelement_class,
-      "qroverlay",
-      "Qrcode overlay containing buffer information",
+      "debugqroverlay",
+      "Video/Overlay/Debug",
       "Overlay Qrcodes over each buffer with buffer information and custom data",
       "Anthony Violo <anthony.violo@ubicast.eu>");
 
