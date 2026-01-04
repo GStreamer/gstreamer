@@ -265,7 +265,7 @@ gst_webrtc_echo_probe_class_init (GstWebrtcEchoProbeClass * klass)
       "Acoustic Echo Canceller probe",
       "Generic/Audio",
       "Gathers playback buffers for webrtcdsp",
-      "Nicolas Dufresne <nicolas.dufrsesne@collabora.com>");
+      "Nicolas Dufresne <nicolas.dufresne@collabora.com>");
 }
 
 

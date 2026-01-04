@@ -157,7 +157,7 @@ gst_mpegv_parse_class_init (GstMpegvParseClass * klass)
       "MPEG video elementary stream parser",
       "Codec/Parser/Video",
       "Parses and frames MPEG-1 and MPEG-2 elementary video streams",
-      "Wim Taymans <wim.taymans@ccollabora.co.uk>, "
+      "Wim Taymans <wim.taymans@collabora.co.uk>, "
       "Jan Schmidt <thaytan@mad.scientist.com>, "
       "Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>");
 
