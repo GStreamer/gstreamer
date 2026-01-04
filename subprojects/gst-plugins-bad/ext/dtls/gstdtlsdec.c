@@ -214,7 +214,7 @@ gst_dtls_dec_class_init (GstDtlsDecClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "DTLS Decoder",
       "Decoder/Network/DTLS",
-      "Decodes DTLS packets", "Patrik Oldsberg patrik.oldsberg@ericsson.com");
+      "Decodes DTLS packets", "Patrik Oldsberg <patrik.oldsberg@ericsson.com>");
 }
 
 static void

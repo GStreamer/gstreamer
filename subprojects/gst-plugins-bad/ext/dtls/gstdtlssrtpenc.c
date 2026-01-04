@@ -184,7 +184,7 @@ gst_dtls_srtp_enc_class_init (GstDtlsSrtpEncClass * klass)
       "DTLS-SRTP Encoder",
       "Encoder/Network/DTLS/SRTP",
       "Encodes SRTP packets with a key received from DTLS",
-      "Patrik Oldsberg patrik.oldsberg@ericsson.com");
+      "Patrik Oldsberg <patrik.oldsberg@ericsson.com>");
 }
 
 static void

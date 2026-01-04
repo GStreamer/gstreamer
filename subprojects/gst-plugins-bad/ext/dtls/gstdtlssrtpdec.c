@@ -179,7 +179,7 @@ gst_dtls_srtp_dec_class_init (GstDtlsSrtpDecClass * klass)
       "DTLS-SRTP Decoder",
       "Decoder/Network/DTLS/SRTP",
       "Decodes SRTP packets with a key received from DTLS",
-      "Patrik Oldsberg patrik.oldsberg@ericsson.com");
+      "Patrik Oldsberg <patrik.oldsberg@ericsson.com>");
 }
 
 static void

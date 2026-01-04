@@ -194,7 +194,7 @@ gst_dtls_enc_class_init (GstDtlsEncClass * klass)
       "DTLS Encoder",
       "Encoder/Network/DTLS",
       "Encodes packets with DTLS",
-      "Patrik Oldsberg patrik.oldsberg@ericsson.com");
+      "Patrik Oldsberg <patrik.oldsberg@ericsson.com>");
 }
 
 static void
