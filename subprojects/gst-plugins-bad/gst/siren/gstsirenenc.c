@@ -77,7 +77,7 @@ gst_siren_enc_class_init (GstSirenEncClass * klass)
   gst_element_class_add_static_pad_template (element_class, &sinktemplate);
 
   gst_element_class_set_static_metadata (element_class, "Siren Encoder element",
-      "Codec/Encoder/Audio ",
+      "Codec/Encoder/Audio",
       "Encode 16bit PCM streams into the Siren7 codec",
       "Youness Alaoui <kakaroto@kakaroto.homelinux.net>");
 
