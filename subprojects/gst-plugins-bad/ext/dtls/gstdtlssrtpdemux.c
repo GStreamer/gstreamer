@@ -81,7 +81,7 @@ gst_dtls_srtp_demux_class_init (GstDtlsSrtpDemuxClass * klass)
       "DTLS SRTP Demultiplexer",
       "DTLS/SRTP/Demux",
       "Demultiplexes DTLS and SRTP packets",
-      "Patrik Oldsberg patrik.oldsberg@ericsson.com");
+      "Patrik Oldsberg <patrik.oldsberg@ericsson.com>");
 }
 
 static void
