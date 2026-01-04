@@ -496,7 +496,7 @@ gst_rtp_ssrc_demux_class_init (GstRtpSsrcDemuxClass * klass)
       &rtp_ssrc_demux_rtcp_src_template);
 
   gst_element_class_set_static_metadata (gstelement_klass, "RTP SSRC Demux",
-      "Demux/Network/RTP",
+      "Demuxer/Network/RTP",
       "Splits RTP streams based on the SSRC",
       "Wim Taymans <wim.taymans@gmail.com>");
 
