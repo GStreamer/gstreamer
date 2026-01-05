@@ -4,14 +4,14 @@
 #
 # Matej Urbančič <matej.urban@gmail.com>, 2010.
 # Klemen Košir <klemen913@gmail.com>, 2011 - 2013.
-# Martin Srebotnjak  <miles@filmsi.net>, 2011, 2024.
+# Martin Srebotnjak  <miles@filmsi.net>, 2011, 2024-2025.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-23 16:55+0000\n"
-"PO-Revision-Date: 2024-08-05 15:59+0200\n"
+"POT-Creation-Date: 2026-01-05 18:57+0000\n"
+"PO-Revision-Date: 2025-11-23 19:30+0100\n"
 "Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
 "Language: sl\n"
@@ -252,6 +252,9 @@ msgstr "Oblika podnapisov Kate"
 
 msgid "WebVTT subtitle format"
 msgstr "Oblika podnapisov WebVTT"
+
+msgid "Timed ID3 tag Metadata"
+msgstr "Časovno omejeni metapodatki oznake ID3"
 
 msgid "Uncompressed video"
 msgstr "Nestisnjen video"
@@ -499,13 +502,11 @@ msgstr "ravnotežje bele barve zajema"
 msgid "The white balance mode set when capturing an image"
 msgstr "Način ravnotežja bele barve, uporabljen med zajemanjem slike"
 
-#, fuzzy
 msgid "capturing light source"
-msgstr "vir zajema"
+msgstr "zajemanje svetlobnega vira"
 
-#, fuzzy
 msgid "The light source indicates the kind of light when capturing animage"
-msgstr "Način zajemanja scene, uporabljen med zajemanjem slike"
+msgstr "Svetlobni vir označuje vrsto svetlobe pri zajemanju slike"
 
 msgid "capturing contrast"
 msgstr "kontrast zajema"
@@ -597,6 +598,44 @@ msgstr "Izklopi zvok: vklopljeno"
 
 msgid "Mute: off"
 msgstr "Izklopi zvok: izklopljeno"
+
+msgid "Missing plugin installation was disabled via command line options."
+msgstr ""
+"Manjkajoča namestitev vstavkov je bila onemogočena preko možnosti ukazne "
+"vrstice."
+
+msgid "All missing plugins could be installed."
+msgstr "Vse manjkajoče vstavke je bilo možno namestiti."
+
+msgid "Some missing plugins could be installed."
+msgstr "Nekatere manjkajoče vstavke je bilo možno namestiti."
+
+msgid ""
+"The missing plugins could not be found in the available package repositories."
+msgstr ""
+"Manjkajočih vstavkov ni bilo mogoče najti v razpoložljivih skladiščih "
+"paketov."
+
+msgid "An error occurred during plugin installation."
+msgstr "Med namestitvijo vstavka je prišlo do napake."
+
+msgid "Plugin installation was cancelled by the user."
+msgstr "Namestitev vstavka je preklical uporabnik."
+
+msgid ""
+"Something went wrong when trying to invoke the missing plugin installer."
+msgstr ""
+"Nekaj je šlo narobe pri poskusu proženja namestitvenega programa "
+"manjkajočega vstavka."
+
+msgid "This system does not have a missing plugin handler installed."
+msgstr "Ta sistem nima nameščenega upravljalnika manjkajočih vstavkov."
+
+msgid "Updating plugin registry for newly installed plugins.."
+msgstr "Posodabljanje registra vstavkov za novo nameščene vstavke."
+
+msgid "Error updating plugin registry."
+msgstr "Napaka pri posodabljanju registra vstavkov."
 
 msgid "Buffering..."
 msgstr "Medpomnjenje …"
@@ -760,6 +799,9 @@ msgstr ""
 
 msgid "Do not print current position of pipeline"
 msgstr "Ne natisni trenutnega položaja cevovoda"
+
+msgid "Disable missing plugin installation"
+msgstr "Onemogoči namestitev manjkajočih vstavkov"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

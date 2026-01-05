@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-23 16:55+0000\n"
+"POT-Creation-Date: 2026-01-05 18:57+0000\n"
 "PO-Revision-Date: 2019-09-03 10:01+0200\n"
 "Last-Translator: Milo Casagrande <milo@milo.name>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -264,6 +264,9 @@ msgstr "Sottotitoli formato Kate"
 
 msgid "WebVTT subtitle format"
 msgstr "Sottotitoli formato WebVTT"
+
+msgid "Timed ID3 tag Metadata"
+msgstr ""
 
 msgid "Uncompressed video"
 msgstr "Video non compresso"
@@ -636,6 +639,38 @@ msgstr ""
 msgid "Mute: off"
 msgstr ""
 
+msgid "Missing plugin installation was disabled via command line options."
+msgstr ""
+
+msgid "All missing plugins could be installed."
+msgstr ""
+
+msgid "Some missing plugins could be installed."
+msgstr ""
+
+msgid ""
+"The missing plugins could not be found in the available package repositories."
+msgstr ""
+
+msgid "An error occurred during plugin installation."
+msgstr ""
+
+msgid "Plugin installation was cancelled by the user."
+msgstr ""
+
+msgid ""
+"Something went wrong when trying to invoke the missing plugin installer."
+msgstr ""
+
+msgid "This system does not have a missing plugin handler installed."
+msgstr ""
+
+msgid "Updating plugin registry for newly installed plugins.."
+msgstr ""
+
+msgid "Error updating plugin registry."
+msgstr ""
+
 msgid "Buffering..."
 msgstr "Riempimento buffer..."
 
@@ -800,6 +835,9 @@ msgstr ""
 "di modifica della playlist (gapless viene ignorato)"
 
 msgid "Do not print current position of pipeline"
+msgstr ""
+
+msgid "Disable missing plugin installation"
 msgstr ""
 
 #, c-format

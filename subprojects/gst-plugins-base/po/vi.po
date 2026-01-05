@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-23 16:55+0000\n"
+"POT-Creation-Date: 2026-01-05 18:57+0000\n"
 "PO-Revision-Date: 2022-02-14 09:24+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -254,6 +254,9 @@ msgstr "Định dạng phụ đề Kate"
 
 msgid "WebVTT subtitle format"
 msgstr "Định dạng phụ đề WebVTT"
+
+msgid "Timed ID3 tag Metadata"
+msgstr ""
 
 msgid "Uncompressed video"
 msgstr "Video không nén"
@@ -604,6 +607,38 @@ msgstr "Câm: bật"
 msgid "Mute: off"
 msgstr "Câm: tắt"
 
+msgid "Missing plugin installation was disabled via command line options."
+msgstr ""
+
+msgid "All missing plugins could be installed."
+msgstr ""
+
+msgid "Some missing plugins could be installed."
+msgstr ""
+
+msgid ""
+"The missing plugins could not be found in the available package repositories."
+msgstr ""
+
+msgid "An error occurred during plugin installation."
+msgstr ""
+
+msgid "Plugin installation was cancelled by the user."
+msgstr ""
+
+msgid ""
+"Something went wrong when trying to invoke the missing plugin installer."
+msgstr ""
+
+msgid "This system does not have a missing plugin handler installed."
+msgstr ""
+
+msgid "Updating plugin registry for newly installed plugins.."
+msgstr ""
+
+msgid "Error updating plugin registry."
+msgstr ""
+
 msgid "Buffering..."
 msgstr "Đang đệm…"
 
@@ -766,6 +801,9 @@ msgstr ""
 "danh sách phát (khe trống bị bỏ qua)"
 
 msgid "Do not print current position of pipeline"
+msgstr ""
+
+msgid "Disable missing plugin installation"
 msgstr ""
 
 #, c-format

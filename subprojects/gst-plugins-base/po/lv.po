@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-23 16:55+0000\n"
+"POT-Creation-Date: 2026-01-05 18:57+0000\n"
 "PO-Revision-Date: 2024-12-22 10:02+0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -254,6 +254,9 @@ msgstr "Kate subtitru formāts"
 
 msgid "WebVTT subtitle format"
 msgstr "WebVTT subtitru formāts"
+
+msgid "Timed ID3 tag Metadata"
+msgstr ""
 
 msgid "Uncompressed video"
 msgstr "Nesaspiests video"
@@ -597,6 +600,38 @@ msgstr "Skaņa: izslēgta"
 msgid "Mute: off"
 msgstr "Skaņa: ieslēgta"
 
+msgid "Missing plugin installation was disabled via command line options."
+msgstr ""
+
+msgid "All missing plugins could be installed."
+msgstr ""
+
+msgid "Some missing plugins could be installed."
+msgstr ""
+
+msgid ""
+"The missing plugins could not be found in the available package repositories."
+msgstr ""
+
+msgid "An error occurred during plugin installation."
+msgstr ""
+
+msgid "Plugin installation was cancelled by the user."
+msgstr ""
+
+msgid ""
+"Something went wrong when trying to invoke the missing plugin installer."
+msgstr ""
+
+msgid "This system does not have a missing plugin handler installed."
+msgstr ""
+
+msgid "Updating plugin registry for newly installed plugins.."
+msgstr ""
+
+msgid "Error updating plugin registry."
+msgstr ""
+
 msgid "Buffering..."
 msgstr "Buferēšana..."
 
@@ -757,6 +792,9 @@ msgstr ""
 
 msgid "Do not print current position of pipeline"
 msgstr "Nedrukāt cauruļvada pašreizējo pozīciju"
+
+msgid "Disable missing plugin installation"
+msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

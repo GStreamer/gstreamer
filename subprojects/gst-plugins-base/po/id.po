@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-23 16:55+0000\n"
+"POT-Creation-Date: 2026-01-05 18:57+0000\n"
 "PO-Revision-Date: 2024-03-07 19:38+0700\n"
 "Last-Translator: Andika Triwidada <andika@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -249,6 +249,9 @@ msgstr "Format subjudul Kate"
 
 msgid "WebVTT subtitle format"
 msgstr "Format subjudul WebVTT"
+
+msgid "Timed ID3 tag Metadata"
+msgstr ""
 
 msgid "Uncompressed video"
 msgstr "Video tak dikompresi"
@@ -596,6 +599,38 @@ msgstr "Senyap: nyala"
 msgid "Mute: off"
 msgstr "Senyap: mati"
 
+msgid "Missing plugin installation was disabled via command line options."
+msgstr ""
+
+msgid "All missing plugins could be installed."
+msgstr ""
+
+msgid "Some missing plugins could be installed."
+msgstr ""
+
+msgid ""
+"The missing plugins could not be found in the available package repositories."
+msgstr ""
+
+msgid "An error occurred during plugin installation."
+msgstr ""
+
+msgid "Plugin installation was cancelled by the user."
+msgstr ""
+
+msgid ""
+"Something went wrong when trying to invoke the missing plugin installer."
+msgstr ""
+
+msgid "This system does not have a missing plugin handler installed."
+msgstr ""
+
+msgid "Updating plugin registry for newly installed plugins.."
+msgstr ""
+
+msgid "Error updating plugin registry."
+msgstr ""
+
 msgid "Buffering..."
 msgstr "Menyangga..."
 
@@ -754,6 +789,9 @@ msgstr ""
 
 msgid "Do not print current position of pipeline"
 msgstr "Jangan cetak posisi saat ini dari pipeline"
+
+msgid "Disable missing plugin installation"
+msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
