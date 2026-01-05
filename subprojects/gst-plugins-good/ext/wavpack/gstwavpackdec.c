@@ -63,8 +63,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-wavpack, "
         "depth = (int) [ 1, 32 ], "
-        "channels = (int) [ 1, 8 ], "
-        "rate = (int) [ 6000, 192000 ], " "framed = (boolean) true")
+        "channels = (int) [ 1, 4096 ], "
+        "rate = (int) [ 6000, MAX ], " "framed = (boolean) true")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -73,21 +73,21 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) S8, "
         "layout = (string) interleaved, "
-        "channels = (int) [ 1, 8 ], "
-        "rate = (int) [ 6000, 192000 ]; "
+        "channels = (int) [ 1, 4096 ], "
+        "rate = (int) [ 6000, MAX ]; "
         "audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (S16) ", "
         "layout = (string) interleaved, "
-        "channels = (int) [ 1, 8 ], "
-        "rate = (int) [ 6000, 192000 ]; "
+        "channels = (int) [ 1, 4096 ], "
+        "rate = (int) [ 6000, MAX ]; "
         "audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (S32) ", "
         "layout = (string) interleaved, "
-        "channels = (int) [ 1, 8 ], " "rate = (int) [ 6000, 192000 ]; "
+        "channels = (int) [ 1, 4096 ], " "rate = (int) [ 6000, MAX ]; "
         "audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (F32) ", "
         "layout = (string) interleaved, "
-        "channels = (int) [ 1, 8 ], " "rate = (int) [ 6000, 192000 ]")
+        "channels = (int) [ 1, 4096 ], " "rate = (int) [ 6000, MAX ]")
     );
 
 static gboolean gst_wavpack_dec_start (GstAudioDecoder * dec);
@@ -207,7 +207,7 @@ gst_wavpack_dec_negotiate (GstWavpackDec * dec)
 {
   GstAudioInfo info;
   GstAudioFormat fmt;
-  GstAudioChannelPosition pos[64] = { GST_AUDIO_CHANNEL_POSITION_INVALID, };
+  GstAudioChannelPosition pos[64] = { GST_AUDIO_CHANNEL_POSITION_NONE, };
 
   /* arrange for 1, 2 or 4-byte width == depth output */
   dec->width = dec->depth;
@@ -231,18 +231,21 @@ gst_wavpack_dec_negotiate (GstWavpackDec * dec)
       break;
   }
 
-  g_assert (dec->channel_mask != 0);
-
-  if (!gst_wavpack_get_channel_positions (dec->channels,
-          dec->channel_mask, pos))
-    GST_WARNING_OBJECT (dec, "Failed to set channel layout");
+  if (dec->channel_mask) {
+    if (!gst_wavpack_get_channel_positions (dec->channels,
+            dec->channel_mask, pos))
+      GST_WARNING_OBJECT (dec, "Failed to set channel layout");
+  }
 
   gst_audio_info_init (&info);
-  gst_audio_info_set_format (&info, fmt, dec->sample_rate, dec->channels, pos);
+  gst_audio_info_set_format (&info, fmt, dec->sample_rate, dec->channels,
+      pos[0] != GST_AUDIO_CHANNEL_POSITION_NONE ? pos : NULL);
 
-  gst_audio_channel_positions_to_valid_order (info.position, info.channels);
-  gst_audio_get_channel_reorder_map (info.channels,
-      info.position, pos, dec->channel_reorder_map);
+  if (dec->channels < 64 && pos[0] != GST_AUDIO_CHANNEL_POSITION_NONE) {
+    gst_audio_channel_positions_to_valid_order (info.position, info.channels);
+    gst_audio_get_channel_reorder_map (info.channels,
+        info.position, pos, dec->channel_reorder_map);
+  }
 
   /* should always succeed */
   gst_audio_decoder_set_output_format (GST_AUDIO_DECODER (dec), &info);
