@@ -2,11 +2,290 @@ GStreamer 1.27.x Release Notes
 
 GStreamer 1.27.x is an API/ABI-unstable development series leading up to the stable 1.28 series.
 
-GStreamer 1.28.0 has not been released yet. It will be released in late 2025 or early 2026.
+GStreamer 1.28.0 has not been released yet. It will be released in January 2026.
 
 The current stable series is 1.26.
 
-The latest development release towards the upcoming 1.28 stable series is 1.27.50 and was released on 09 December 2025.
+The latest pre-release towards the upcoming 1.28 stable series is 1.27.90 (1.28.0 release candidate 1) and was released on 05
+January 2026.
+
+1.27.90 (1.28.0 release candidate 1)
+
+The 1.27.90 pre-release is the first release candidate for the upcoming 1.28.0 stable feature release, and was released on 05
+January 2026.
+
+Any newly-added API in the 1.27.x series may still change or be removed again before 1.28 and should be considered unstable
+until 1.28 is released.
+
+Highlighted changes in 1.27.90
+
+-   Add a burn-based YOLOX inference element and a YOLOX tensor decoder in Rust
+-   Add an audio source separation element based on demuc in Rust
+-   Add new GIF decoder element in Rust with looping support
+-   Add a Rust-based icecastsink element with AAC support
+-   analytics: Improvement to inference elements; move modelinfo to analytics lib; add script to help with modelinfo generation
+    and upgrade
+-   decklinkvideosink: Fix frame duration to be based on the decklink clock
+-   flv: Fix track ID 0 semantics and extended FLV for non multitrack type packets
+-   GstPlay: Add support for gapless looping
+-   input-selector: implements a two-phase sinkpad switch now to avoid races when switching input pads
+-   intersrc: new event-types property to forward upstream events to sink
+-   isomp4mux: Support caps change and add support for raw audio as per ISO/IEC 23003-5
+-   jpegparse: fix handling of JPEGs with HDR gain maps
+-   jsontovtt: add property to enable per-cue line attributes
+-   textaccumulate: implement no-timeout mode for forwarding full sentences
+-   matroskademux: make maximum allowed block size large enough to support 4k uncompressed video
+-   qtdemux: fix various MP4 demuxing issues and regressions
+-   GstValue: The recently-introduced GstSet API was renamed to GstUniqueList
+-   cerbero: add support for Python wheel packaging, fix Windows build with Python 3.14, support system recipes, ship Gtk4 and
+    more plugins
+-   Countless bug fixes, build fixes, memory leak fixes, and other stability and reliability improvements
+
+gstreamer
+
+-   input-selector: implement a two-phase sinkpad switch
+-   value: Rename GstSet to GstUniqueList
+-   GstValueSet: gst_value_set_stuff() functions became static methods now
+-   utils: Fix race in gst_element_link_pads_filtered() (backported)
+-   queue: Log the status of the queue at debug level
+-   info: Increase test interval when running under valgrind
+-   Assorted fixes for the Cerbero symbolication support under macOS
+-   Fix several memory leaks (backported)
+
+gst-plugins-base
+
+-   basetextoverlay: Don’t negotiate if caps haven’t changed (backported)
+-   gl: Add support for Y444_12
+-   gl: adjust log level from error to warning when copying memory
+-   glimagesink: don’t assume GstVideoMeta always exists in the buffer
+-   gloverlaycompositor: Type change of member in public struct
+-   glupload: Fix GST_DEBUG GObject warning
+-   opusenc: Simplify Vorbis channel layout mapping code and fix 7.1 layout & use surround multistream encoder (backported)
+-   playbin3: ensure GST_EVENT_SELECT_STREAMS event is sent to collection source (backported)
+-   tagdemux: propagate seek event seqnum to upstream (backported)
+-   uridecodebin3: Fix docs for the select-stream signal (backported)
+-   videoaggregator/videomixer2: handle non-TIME segment events gracefully
+-   video: Include gstvideodmabufpool.h from video.h
+-   Fix debug logging crashes (backported)
+-   Fix several memory leaks (backported)
+-   Properly unref pad template caps (backported)
+
+gst-plugins-good
+
+-   flac: Fix 6.1 / 7.1 channel layouts (backported)
+-   flacdec: Don’t forbid S32 sample size (0x07) unnecessarily (backported)
+-   flacenc: Support S32 samples (backported)
+-   flv: Fix track ID 0 semantics and extended FLV for non multitrack type packets
+-   gl: Add support for Y444_12
+-   level: fix crash if no caps have been sent (backported)
+-   matroskamux: Fix some more thread-safety issues (backported)
+-   matroskademux: Bump maximum block size from 15MB to 32MB (backported)
+-   mxfdemux / aiffparse / matroskaparse: Remove segment closing on non-flushing seeks (backported)
+-   qtdemux: Regression in pull mode where EOS is never reached
+-   qtdemux: Some mp4 videos don’t start to play and stutter
+-   qtdemux: Fix splitting up / padding of captions (regression)
+-   qtdemux: use PTS instead of DTS for sample scheduling (backported)
+-   qtdemux: Add mapping for tsc2 fourcc
+-   splitmuxsrc - fix for seeking / flushing deadlock (backported)
+-   videoaggregator/videomixer2: handle non-TIME segment events gracefully
+-   wavenc: Fix downstream negotiation (backported)
+-   Fix several memory leaks (backported)
+-   Properly unref pad template caps (backported)
+
+gst-plugins-bad
+
+-   analyticsrelationmeta: Skip Mtd that can’t be transformed
+-   ModelInfo: use model info in onnxinference + tool
+-   decklinkvideosink: Fix frame duration to be based on the decklink clock
+-   gstplay: Add gapless looping
+-   jpgparse: support multi picture format
+-   jpegparse: reports the wrong dimensions for JPEGs containing half-size HDR gain maps
+-   tensordecoder: rename ssdobjectdetector to ssdtensordec
+-   tensordecoder: ssdtensordec backward compat with oldname
+-   value: Rename GstSet to GstUniqueList
+-   video: decoders: Fix possible crash when flushing H265/H266 decoder (backported)
+-   vkformat: Add VK_FORMAT_G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16 format (backported)
+-   webrtc/nice: fix crashes on gathering stats for relay candidates
+-   webrtcbin: Check transport before setting state when closing
+-   webrtcnice: Plug leaks caused by outstanding resolve tasks
+-   win32ipcbasesink: Serialize metas from uploaded buffer
+-   win32ipcsink: Preserve original buffer flags in raw-video fallback path
+
+Build improvements, introspection fixes, leak fixes, clean-ups and other smaller improvements:
+
+-   aesenc / aesdec: use correct format specifier for buffer size in debug log (backported)
+-   dtlsdec: mark generated cert agent with GST_OBJECT_FLAG_MAY_BE_LEAKED (backported)
+-   fdkaacdec: Invalidate channel_types/indices when setting a known config (backported)
+-   geometrictransform: Fix integer overflow in map allocation (backported)
+-   hlsdemux: Mark discontinuity on seek
+-   hlssink: Guard NULL structure and use gst_structure_has_name() (backported)
+-   kaleidoscope: Fix potential division by zero in geometric transform (backported)
+-   meson: fix building -bad tests with disabled vmaf
+-   modelinfo: Add some missing annotations
+-   mxfdemux / aiffparse / matroskaparse: Remove segment closing on non-flushing seeks (backported)
+-   mxfdemux: Simplify timestamp tracking (backported)
+-   mxfdemux: send event SegmentDone for segment seeks (backported)
+-   onnx: remove invalid properties
+-   onnxinference: Fix integer overflow in buffer allocation
+-   qroverlay: use proper klass
+-   tensordecoder: fix typo in header
+-   video: Include gstvideodmabufpool.h from video.h
+-   vp8decoder: Fix incorrect variable in warning message
+-   Fix several memory leaks (backported)
+-   Properly unref pad template caps (backported)
+
+gst-plugins-ugly
+
+-   No changes
+
+GStreamer Rust plugins
+
+-   Add a burn-based YOLOX inference element and a YOLOX tensor decoder
+-   Add audio source separation element based on demucs
+-   Add new icecastsink element with AAC support
+-   audiornnoise: Fix audio level value reporting (backported)
+-   gif: add new decoder element g- gtk4paintablesink: Propose a udmabuf pool / allocator if upstream asks for sysmem
+    (backported)
+-   gtk4: Use safe udmabuf allocator / pool bindings (backported)
+-   intersrc: event-types property to forward upstream events
+-   isobmff/mp4mux: Add support for raw audio as per ISO/IEC 23003-5
+-   jsontovtt: add property to enable per-cue line attributes
+-   mp4mux: Support caps change
+-   rtp: basepay2: Consider size of header extensions in maximum payload size (backported)
+-   textaccumulate: implement no-timeout mode for forwarding full sentences
+-   threadshare: allow disabling the IPv4 or IPv6 socket in ts-udpsink (backported)
+-   tracers: add function and signal for writing logs to PadPushTimings (backported)
+-   webrtc: mark static caps with GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED (backported)
+-   webrtc: Deprecate webrtchttp plugin
+
+Build improvements, clean-ups and other smaller improvements:
+
+-   burn: Update to dirs 6
+-   demucs: Update to async-tungstenite 0.32
+-   demucs: Update to pyo3 0.27
+-   dav1d: Stop iteration after finding first working pool (backported)
+-   dav1d: Various fixes to allocation query handling (backported)
+-   gtk4: Fix typo in odd-size subsample workaround (backported)
+-   isobmff/fmp4mux: Fix incorrect log level
+-   isobmff: Refactor and consolidate code for brands
+-   quinn: Fix broken tests
+-   quinn: Reduce mini object copying and allocations, and remove unused imports
+-   quinn: Explicitly use ring as rustls crypto provider, fix up TLS certificate configuration, and minor cleanups
+-   rtp: Fix amr tests test_amr_{nb,wb}_bit_packed (backported)
+-   rtp: Update to rtcp-types 0.3 (backported)
+-   threadshare: Update to flume 0.12 (backported)
+-   tracers: Update to signal-hook 0.4 (backported)
+-   Fix new clippy 1.92 warnings (backported)
+-   Port from rustls-pemfile to rustls-pki-types (backported)
+-   Update dependencies (backported)
+-   Update dependencies II (backported)
+-   Update MSRV to 1.92
+-   version-helper: Update to toml_edit 0.24 (backported)
+
+gst-libav
+
+-   avviddec: Set video alignment to internal pool (backported)
+-   Fix several memory leaks (backported)
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-python
+
+-   webrtcnice: Plug leaks caused by outstanding resolve tasks
+-   Make python linter happy with test_analytics
+
+gst-editing-services
+
+-   No changes
+
+gst-devtools, gst-validate + gst-integration-testsuites
+
+-   devtool: New script to generate ModelInfo from ONNX
+-   dots-viewer: add build directory to devenv PATH
+-   gst-validate-launcher: Fix typo in –help
+-   webrtcnice: Plug leaks caused by outstanding resolve tasks
+-   mxfdemux: Simplify timestamp tracking (backported)
+-   Update Rust dependencies (backported)
+
+gst-examples
+
+-   Update Rust dependencies (backported)
+-   gst-examples: Allow using real sources for webrtc-sendrecv
+
+gstreamer-docs
+
+-   Document Python wheel support in Cerbero
+-   value: Rename GstSet to GstUniqueList
+-   Fix typo
+
+Development build environment
+
+-   Update wraps, incl. glib: directxmath, expat, fdk-aac, flac, freetype2, gdk-pixbuf, gtest, harfbuzz, json-glib, lame,
+    libjpeg-turbbb, libopenjp2, libpng, libsrtp2, libxml2, nghttp2, ogg, pango, pcre2, soundtoch, sqlite3, wayland-protocols,
+    zlib
+
+Cerbero build tool and packaging changes in 1.27.90
+
+-   Add a Windows ARM64 MSI
+-   Be able to install cerbero
+-   Ship Gtk4 and gtk4paintablesink
+-   Replace use_system_libs with SystemRecipes
+-   More python 3.14 fixes on Windows, get rid of os.path.join hack (backported)
+-   Update to Rust 1.92 and cargo-c 0.10.19
+-   cache: Fix post-merge pipeline by moving to Path.as_posix()
+-   cerbero: Assorted fixes for issues found during frei0r PDB testing
+-   cerbero: Implement symbol listing and packaging
+-   cerbero: Remove UWP support, leaving cross-win-arm64 support in its place
+-   cerbero: Use ninja for all cmake recipes by default (backported)
+-   Cleanup env vars that can affect the build, fix lcevcdec.recipe, don’t set PKG_CONFIG_PATH in the wheels env
+-   ci: Mark a racy xcode toolchain bug for retrying (backported)
+-   cmake, harfbuzz, graphene: Misc fixes split out from !1750
+-   frei0r-plugins: Fix files_plugins considering more than just modules
+-   gst-plugins-bad: Temporarily disable lcevcdec on 32-bit Windows
+-   gst-plugins-rs: ship rust audioparsers and speechmatics plugins
+-   gst-plugins-rs: ship new burn and demucs plugins; add analytics category + package
+-   gtk: fix InvalidRecipeError call
+-   lcevcdec: Update to 4.0.4
+-   macOS packages do not ship debug symbol files *.dsym
+-   packages: Add support for Python wheel packaging
+-   pkg-config: Ship it in the devel package (backported)
+-   recipe: Update License enums to SPDX expressions (backported)
+-   recipes: Fix GPL categorization of some plugins (backported)
+-   recipes: add GstAnalytics and GstApp python binding
+-   setup: Fix the logging import
+-   wheel: Also add gstreamer_gtk rpath to libgmodule
+-   wheel: Don’t try to add ‘.’ as a dll directory
+-   wheel: Fix entrypoint invocation
+-   wheel: Fix entrypoint naming on non-Windows
+-   wheel: Make frei0r plugins be an opt-in feature
+-   Put frei0r plugins behind an option on the gstreamer wheel
+-   Windows build broken with Python 3.14.x
+-   Windows ARM64 packaging support
+-   Error loading the environment setup whether GStreamer environment variables are already present
+-   Python plugin doesn’t load via the wheels distribution, only on macOS
+-   python: Fix loading of gstpython plugin on macOS
+
+Contributors to 1.27.90
+
+Aaron Boxer, Adrien Plazas, Alicia Boya García, Brad Reitmeyer, Carlos Falgueras García, Christian Gräfe, Daniel Morin, Doug
+Nazar, Elliot Chen, François Laignel, Gang Zhao, Hyunjun Ko, Jakub Adam, Jan Schmidt, Jeongmin Kwak, Jerome Colle, Johan
+Sternerup, Jorge Zapata, L. E. Segovia, Mathieu Duponchelle, Nicolas Dufresne, Nirbheek Chauhan, Olivier Crête, Paxton Hare,
+Philippe Normand, Piotr Brzeziński, Ratchanan Srirattanamet, Robert Mader, Ruben Gonzalez, Sanchayan Maity, Sebastian Dröge,
+Seungha Yang, Taruntej Kanakamalla, Stéphane Cerveau, Thibault Saunier, Tim-Philipp Müller, Tjitte de Wert, Tobias Schlager,
+Víctor Manuel Jáquez Leal, Yun Liu,
+
+… and many others who have contributed bug reports, translations, sent suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.27.90
+
+-   List of Merge Requests applied in 1.27.90
+-   List of Issues fixed in 1.27.90
 
 1.27.50
 
