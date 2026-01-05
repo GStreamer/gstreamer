@@ -142,6 +142,7 @@ gst_wavpack_dec_reset (GstWavpackDec * dec)
   dec->channel_mask = 0;
   dec->sample_rate = 0;
   dec->depth = 0;
+  dec->width = 0;
   dec->mode_float = FALSE;
 }
 
@@ -210,8 +211,7 @@ gst_wavpack_dec_negotiate (GstWavpackDec * dec)
   GstAudioChannelPosition pos[64] = { GST_AUDIO_CHANNEL_POSITION_NONE, };
 
   /* arrange for 1, 2 or 4-byte width == depth output */
-  dec->width = dec->depth;
-  switch (dec->depth) {
+  switch (dec->width) {
     case 8:
       fmt = GST_AUDIO_FORMAT_S8;
       break;
@@ -223,7 +223,6 @@ gst_wavpack_dec_negotiate (GstWavpackDec * dec)
       fmt =
           dec->mode_float ? _GST_AUDIO_FORMAT_NE (F32) :
           _GST_AUDIO_FORMAT_NE (S32);
-      dec->width = 32;
       break;
     default:
       fmt = GST_AUDIO_FORMAT_UNKNOWN;
@@ -254,8 +253,20 @@ gst_wavpack_dec_negotiate (GstWavpackDec * dec)
 static gboolean
 gst_wavpack_dec_set_format (GstAudioDecoder * bdec, GstCaps * caps)
 {
-  /* pretty much nothing to do here,
-   * we'll parse it all from the stream and setup then */
+  GstWavpackDec *wpdec = GST_WAVPACK_DEC (bdec);
+
+  GST_DEBUG_OBJECT (bdec, "Setting new caps %" GST_PTR_FORMAT, caps);
+
+  /* Need to close the context here and create a new one later as it doesn't
+   * allow format changes in the middle of the stream.
+   *
+   * The base class already makes sure to only call set_format() whenever the
+   * caps actually change
+   */
+  if (wpdec->context) {
+    WavpackCloseFile (wpdec->context);
+    wpdec->context = NULL;
+  }
 
   return TRUE;
 }
@@ -293,8 +304,7 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   WavpackHeader wph;
   int32_t decoded, unpacked_size;
-  gboolean format_changed;
-  gint width, depth, i, j, max, wavpack_mode;
+  gint width, depth, i, j, num_samples, wavpack_mode;
   gboolean mode_float;
   gint32 *dec_data = NULL;
   guint8 *out_data;
@@ -327,6 +337,7 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
    * was already one (i.e. caps were set on the srcpad) check whether
    * the new one has the same caps */
   if (!dec->context) {
+    gint channel_mask;
     gchar error_msg[80];
 
     dec->context = WavpackOpenFileInputEx (dec->stream_reader,
@@ -337,27 +348,14 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
       GST_WARNING_OBJECT (dec, "Couldn't decode buffer: %s", error_msg);
       goto context_failed;
     }
-  }
 
-  g_assert (dec->context != NULL);
-
-  wavpack_mode = WavpackGetMode (dec->context);
-  mode_float = (wavpack_mode & MODE_FLOAT) == MODE_FLOAT;
-
-  format_changed =
-      (dec->sample_rate != WavpackGetSampleRate (dec->context)) ||
-      (dec->channels != WavpackGetNumChannels (dec->context)) ||
-      (dec->depth != WavpackGetBytesPerSample (dec->context) * 8) ||
-      (dec->mode_float != mode_float) ||
-      (dec->channel_mask != WavpackGetChannelMask (dec->context));
-
-  if (!gst_pad_has_current_caps (GST_AUDIO_DECODER_SRC_PAD (dec)) ||
-      format_changed) {
-    gint channel_mask;
+    wavpack_mode = WavpackGetMode (dec->context);
+    mode_float = (wavpack_mode & MODE_FLOAT) == MODE_FLOAT;
 
     dec->sample_rate = WavpackGetSampleRate (dec->context);
     dec->channels = WavpackGetNumChannels (dec->context);
-    dec->depth = WavpackGetBytesPerSample (dec->context) * 8;
+    dec->depth = WavpackGetBitsPerSample (dec->context);
+    dec->width = WavpackGetBytesPerSample (dec->context) * 8;
     dec->mode_float = mode_float;
 
     channel_mask = WavpackGetChannelMask (dec->context);
@@ -373,6 +371,7 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
     gst_wavpack_dec_post_tags (dec);
   }
 
+  g_assert (dec->context != NULL);
   /* alloc output buffer */
   dec_data = g_malloc (4 * wph.block_samples * dec->channels);
 
@@ -381,7 +380,13 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
   if (decoded != wph.block_samples)
     goto decode_error;
 
-  unpacked_size = (dec->width / 8) * wph.block_samples * dec->channels;
+  width = dec->width;
+  if (width == 24)
+    width = 32;
+  depth = dec->depth;
+  num_samples = dec->channels * wph.block_samples;
+
+  unpacked_size = (width / 8) * num_samples;
   outbuf = gst_buffer_new_and_alloc (unpacked_size);
 
   /* legacy; pass along offset, whatever that might entail */
@@ -390,43 +395,46 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
   gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
   out_data = omap.data;
 
-  width = dec->width;
-  depth = dec->depth;
-  max = dec->channels * wph.block_samples;
-  if (width == 8) {
-    gint8 *outbuffer = (gint8 *) out_data;
-    gint *reorder_map = dec->channel_reorder_map;
+  switch (width) {
+    case 8:{
+      gint8 *outbuffer = (gint8 *) out_data;
+      gint *reorder_map = dec->channel_reorder_map;
 
-    for (i = 0; i < max; i += dec->channels) {
-      for (j = 0; j < dec->channels; j++)
-        *outbuffer++ = (gint8) (dec_data[i + reorder_map[j]]);
-    }
-  } else if (width == 16) {
-    gint16 *outbuffer = (gint16 *) out_data;
-    gint *reorder_map = dec->channel_reorder_map;
-
-    for (i = 0; i < max; i += dec->channels) {
-      for (j = 0; j < dec->channels; j++)
-        *outbuffer++ = (gint16) (dec_data[i + reorder_map[j]]);
-    }
-  } else if (dec->width == 32) {
-    gint32 *outbuffer = (gint32 *) out_data;
-    gint *reorder_map = dec->channel_reorder_map;
-
-    if (width != depth) {
-      for (i = 0; i < max; i += dec->channels) {
+      for (i = 0; i < num_samples; i += dec->channels) {
         for (j = 0; j < dec->channels; j++)
-          *outbuffer++ =
-              (gint32) (dec_data[i + reorder_map[j]] << (width - depth));
+          *outbuffer++ = (gint8) (dec_data[i + reorder_map[j]]);
       }
-    } else {
-      for (i = 0; i < max; i += dec->channels) {
-        for (j = 0; j < dec->channels; j++)
-          *outbuffer++ = (gint32) (dec_data[i + reorder_map[j]]);
-      }
+      break;
     }
-  } else {
-    g_assert_not_reached ();
+    case 16:{
+      gint16 *outbuffer = (gint16 *) out_data;
+      gint *reorder_map = dec->channel_reorder_map;
+
+      for (i = 0; i < num_samples; i += dec->channels) {
+        for (j = 0; j < dec->channels; j++)
+          *outbuffer++ = (gint16) (dec_data[i + reorder_map[j]]);
+      }
+      break;
+    }
+    case 32:{
+      gint32 *outbuffer = (gint32 *) out_data;
+      gint *reorder_map = dec->channel_reorder_map;
+
+      if (dec->width == 24) {
+        for (i = 0; i < num_samples; i += dec->channels) {
+          for (j = 0; j < dec->channels; j++)
+            *outbuffer++ = (gint32) (dec_data[i + reorder_map[j]] << 8);
+        }
+      } else {
+        for (i = 0; i < num_samples; i += dec->channels) {
+          for (j = 0; j < dec->channels; j++)
+            *outbuffer++ = (gint32) (dec_data[i + reorder_map[j]]);
+        }
+      }
+      break;
+    }
+    default:
+      g_assert_not_reached ();
   }
 
   gst_buffer_unmap (outbuf, &omap);
