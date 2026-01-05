@@ -58,6 +58,7 @@ G_BEGIN_DECLS
 #define ID_WVC_BITSTREAM        0xb
 #define ID_WVX_BITSTREAM        0xc
 #define ID_CHANNEL_INFO         0xd
+#define ID_DSD_BLOCK            0xe
 
 #define ID_RIFF_HEADER          (ID_OPTIONAL_DATA | 0x1)
 #define ID_RIFF_TRAILER         (ID_OPTIONAL_DATA | 0x2)
@@ -66,9 +67,45 @@ G_BEGIN_DECLS
 #define ID_CONFIG_BLOCK         (ID_OPTIONAL_DATA | 0x5)
 #define ID_MD5_CHECKSUM         (ID_OPTIONAL_DATA | 0x6)
 #define ID_SAMPLE_RATE          (ID_OPTIONAL_DATA | 0x7)
+#define ID_ALT_EXTENSION        (ID_OPTIONAL_DATA | 0x8)
+#define ID_ALT_MD5_CHECKSUM     (ID_OPTIONAL_DATA | 0x9)
+#define ID_NEW_CONFIG_BLOCK     (ID_OPTIONAL_DATA | 0xa)
+#define ID_CHANNEL_IDENTITIES   (ID_OPTIONAL_DATA | 0xb)
 #define ID_WVX_NEW_BITSTREAM    (ID_OPTIONAL_DATA | ID_WVX_BITSTREAM)
+#define ID_BLOCK_CHECKSUM       (ID_OPTIONAL_DATA | 0xf)
 
-#define FLAG_FINAL_BLOCK        (1 << 12)
+#define FLAG_BYTES_STORED    3       // 1-4 bytes/sample
+#define FLAG_MONO_FLAG       4       // not stereo
+#define FLAG_HYBRID_FLAG     8       // hybrid mode
+#define FLAG_JOINT_STEREO    0x10    // joint stereo
+#define FLAG_CROSS_DECORR    0x20    // no-delay cross decorrelation
+#define FLAG_HYBRID_SHAPE    0x40    // noise shape (hybrid mode only)
+#define FLAG_FLOAT_DATA      0x80    // ieee 32-bit floating point data
+
+#define FLAG_INT32_DATA      0x100   // special extended int handling
+#define FLAG_HYBRID_BITRATE  0x200   // bitrate noise (hybrid mode only)
+#define FLAG_HYBRID_BALANCE  0x400   // balance noise (hybrid stereo mode only)
+
+#define FLAG_INITIAL_BLOCK   0x800   // initial block of multichannel segment
+#define FLAG_FINAL_BLOCK     0x1000  // final block of multichannel segment
+
+#define FLAG_SHIFT_LSB       13
+#define FLAG_SHIFT_MASK      (0x1fL << FLAG_SHIFT_LSB)
+
+#define FLAG_MAG_LSB         18
+#define FLAG_MAG_MASK        (0x1fL << FLAG_MAG_LSB)
+
+#define FLAG_SRATE_LSB       23
+#define FLAG_SRATE_MASK      (0xfL << FLAG_SRATE_LSB)
+
+#define FLAG_FALSE_STEREO    0x40000000      // block is stereo, but data is mono
+#define FLAG_NEW_SHAPING     0x20000000      // use IIR filter for negative shaping
+
+#define FLAG_MONO_DATA (FLAG_MONO_FLAG | FLAG_FALSE_STEREO)
+
+// Introduced in WavPack 5.0:
+#define FLAG_HAS_CHECKSUM    0x10000000      // block contains a trailing checksum
+#define FLAG_DSD_FLAG        0x80000000      // block is encoded DSD (1-bit PCM)
 
 typedef struct {
   char ckID [4];             /* "wvpk" */
