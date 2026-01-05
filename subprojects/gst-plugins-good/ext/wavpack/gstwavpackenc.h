@@ -59,6 +59,7 @@ struct _GstWavpackEnc
   gint8 channel_mapping[64];
   gboolean need_channel_remap;
   gint width, depth;
+  gboolean float_mode;
 
   GstWavpackEncWriteID wv_id;
   GstWavpackEncWriteID wvc_id;
