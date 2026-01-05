@@ -740,3 +740,191 @@ id=output_logits
                 os.unlink(temp_modelinfo)
             if os.path.exists(model_filename):
                 os.unlink(model_filename)
+
+
+class TestAnalyticsGroupMtdIterator(TestCase):
+    def test_keypoint_group_iteration(self):
+        """Test iterating through keypoints in a group"""
+        buf = Gst.Buffer()
+        self.assertIsNotNone(buf)
+
+        rmeta = GstAnalytics.buffer_add_analytics_relation_meta(buf)
+        self.assertIsNotNone(rmeta)
+
+        # Create a group of 3 keypoints
+        positions = [10, 20, 30, 40, 50, 60]  # 3 keypoints (x, y pairs)
+        (ret, group) = rmeta.add_keypoints_group("test-3-kp",
+                                                 GstAnalytics.KeypointDimensions_2D,
+                                                 positions, None, None, None)
+        self.assertTrue(ret)
+        self.assertIsNotNone(group)
+
+        # Test iteration using __iter__
+        keypoints = list(group)
+        self.assertEqual(len(keypoints), 3)
+
+        # Verify each keypoint can be accessed and has correct data
+        for i, kp in enumerate(keypoints):
+            success, x, y, z, dim = kp.get_position()
+            self.assertTrue(success)
+            self.assertEqual(x, positions[i * 2])
+            self.assertEqual(y, positions[i * 2 + 1])
+            self.assertEqual(z, 0)  # 2D keypoint
+            self.assertEqual(dim, GstAnalytics.KeypointDimensions_2D)
+
+    def test_keypoint_group_iteration_with_type_filter(self):
+        """Test iterating through keypoints with type filtering"""
+        buf = Gst.Buffer()
+        self.assertIsNotNone(buf)
+
+        rmeta = GstAnalytics.buffer_add_analytics_relation_meta(buf)
+        self.assertIsNotNone(rmeta)
+
+        # Create a group of keypoints
+        positions = [10, 20, 30, 40]  # 2 keypoints
+        (ret, group) = rmeta.add_keypoints_group("test-2-kp",
+                                                 GstAnalytics.KeypointDimensions_2D,
+                                                 positions, None, None, None)
+        self.assertTrue(ret)
+        self.assertIsNotNone(group)
+
+        # Iterate with type filter - only get KeypointMtd
+        keypoints = list(group.iter_on_type(GstAnalytics.KeypointMtd))
+        self.assertEqual(len(keypoints), 2)
+
+        # Verify they're all KeypointMtd
+        for kp in keypoints:
+            self.assertIsInstance(kp, GstAnalytics.KeypointMtd)
+
+    def test_keypoint_group_with_skeleton(self):
+        """Test keypoint group with skeleton links"""
+        buf = Gst.Buffer()
+        self.assertIsNotNone(buf)
+
+        rmeta = GstAnalytics.buffer_add_analytics_relation_meta(buf)
+        self.assertIsNotNone(rmeta)
+
+        # Create keypoints with skeleton links
+        positions = [10, 20, 30, 40, 50, 60]  # 3 keypoints
+        confidences = [0.9, 0.8, 0.7]
+
+        # Skeleton links as flat array [kp1_idx, kp2_idx, kp1_idx, kp2_idx, ...]
+        # Creates links: 0<->1, 1<->2
+        skeleton_pairs = [0, 1, 1, 2]
+
+        (ret, group) = rmeta.add_keypoints_group("test-skeleton-3-kp",
+                                                 GstAnalytics.KeypointDimensions_2D,
+                                                 positions, confidences, None,
+                                                 skeleton_pairs)
+        self.assertTrue(ret)
+        self.assertIsNotNone(group)
+
+        # Verify group has 3 members
+        member_count = group.get_member_count()
+        self.assertEqual(member_count, 3)
+
+        # Verify skeleton relations exist
+        kp0 = group.get_member(0)
+        self.assertTrue(kp0[0])  # success
+        kp1 = group.get_member(1)
+        self.assertTrue(kp1[0])  # success
+        kp2 = group.get_member(2)
+        self.assertTrue(kp2[0])  # success
+
+        # Check if relation exists between first two keypoints (link 0<->1)
+        has_relation, _ = rmeta.exist(kp0[1].id, kp1[1].id, 1,
+                                      GstAnalytics.RelTypes.RELATE_TO)
+        self.assertTrue(has_relation)
+
+        # Check if relation exists between keypoints 1<->2
+        has_relation, _ = rmeta.exist(kp1[1].id, kp2[1].id, 1,
+                                      GstAnalytics.RelTypes.RELATE_TO)
+        self.assertTrue(has_relation)
+
+        # Verify confidences
+        keypoints = list(group)
+        for i, kp in enumerate(keypoints):
+            success, conf = kp.get_confidence()
+            self.assertTrue(success)
+            self.assertAlmostEqual(conf, confidences[i], places=5)
+
+    def test_keypoint_3d_group(self):
+        """Test 3D keypoint group"""
+        buf = Gst.Buffer()
+        self.assertIsNotNone(buf)
+
+        rmeta = GstAnalytics.buffer_add_analytics_relation_meta(buf)
+        self.assertIsNotNone(rmeta)
+
+        # Create 3D keypoints (2 keypoints with x, y, z)
+        positions = [10, 20, 100, 30, 40, 200]  # 2 keypoints (x, y, z pairs)
+        (ret, group) = rmeta.add_keypoints_group("test-3d-2-kp",
+                                                 GstAnalytics.KeypointDimensions_3D,
+                                                 positions, None, None, None)
+        self.assertTrue(ret)
+        self.assertIsNotNone(group)
+
+        # Iterate and verify 3D coordinates
+        keypoints = list(group)
+        self.assertEqual(len(keypoints), 2)
+
+        # First keypoint: (10, 20, 100)
+        success, x, y, z, dim = keypoints[0].get_position()
+        self.assertTrue(success)
+        self.assertEqual(x, 10)
+        self.assertEqual(y, 20)
+        self.assertEqual(z, 100)
+        self.assertEqual(dim, GstAnalytics.KeypointDimensions_3D)
+
+        # Second keypoint: (30, 40, 200)
+        success, x, y, z, dim = keypoints[1].get_position()
+        self.assertTrue(success)
+        self.assertEqual(x, 30)
+        self.assertEqual(y, 40)
+        self.assertEqual(z, 200)
+        self.assertEqual(dim, GstAnalytics.KeypointDimensions_3D)
+
+
+class TestAnalyticsGroupMtdSemanticTag(TestCase):
+    def _make_group(self, tag):
+        buf = Gst.Buffer()
+        rmeta = GstAnalytics.buffer_add_analytics_relation_meta(buf)
+        ret, group = rmeta.add_group_mtd_with_size(2)
+        self.assertTrue(ret)
+        group.set_semantic_tag(tag)
+        return buf, group
+
+    def test_has_semantic_tag_match(self):
+        """has_semantic_tag returns True for the exact stored tag"""
+        _, group = self._make_group("hand-21-kp")
+        self.assertTrue(group.has_semantic_tag("hand-21-kp"))
+
+    def test_has_semantic_tag_no_match(self):
+        """has_semantic_tag returns False for a different tag"""
+        _, group = self._make_group("hand-21-kp")
+        self.assertFalse(group.has_semantic_tag("pose-17-kp"))
+
+    def test_has_semantic_tag_unset(self):
+        """has_semantic_tag returns False when no tag is set"""
+        _, group = self._make_group(None)
+        self.assertFalse(group.has_semantic_tag("hand-21-kp"))
+
+    def test_semantic_tag_has_prefix_match(self):
+        """semantic_tag_has_prefix returns True for a matching prefix"""
+        _, group = self._make_group("posture/hand-21-kp")
+        self.assertTrue(group.semantic_tag_has_prefix("posture/"))
+
+    def test_semantic_tag_has_prefix_full_match(self):
+        """semantic_tag_has_prefix returns True when prefix equals the full tag"""
+        _, group = self._make_group("posture/hand-21-kp")
+        self.assertTrue(group.semantic_tag_has_prefix("posture/hand-21-kp"))
+
+    def test_semantic_tag_has_prefix_no_match(self):
+        """semantic_tag_has_prefix returns False for a non-matching prefix"""
+        _, group = self._make_group("posture/hand-21-kp")
+        self.assertFalse(group.semantic_tag_has_prefix("keypoint/"))
+
+    def test_semantic_tag_has_prefix_unset(self):
+        """semantic_tag_has_prefix returns False when no tag is set"""
+        _, group = self._make_group(None)
+        self.assertFalse(group.semantic_tag_has_prefix("posture/"))

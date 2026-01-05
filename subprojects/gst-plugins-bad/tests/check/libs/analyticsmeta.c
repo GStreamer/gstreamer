@@ -2107,6 +2107,1016 @@ GST_START_TEST (test_get_tensor)
 
 GST_END_TEST;
 
+GST_START_TEST (test_add_group_mtd_with_size)
+{
+  /* Verify we can create a group metadata with fixed size */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsGroupMtd group_mtd;
+  GstAnalyticsODMtd od_mtd1, od_mtd2;
+  gboolean ret;
+  gsize member_count;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  /* Create a group with space for 2 members */
+  ret = gst_analytics_relation_meta_add_group_mtd_with_size (rmeta, 2,
+      &group_mtd);
+  fail_unless (ret == TRUE);
+
+  /* Verify initial member count is 0 */
+  member_count = gst_analytics_group_mtd_get_member_count (&group_mtd);
+  fail_unless (member_count == 0);
+
+  /* Add some OD members */
+  GQuark type1 = g_quark_from_string ("person");
+  gst_analytics_relation_meta_add_od_mtd (rmeta, type1, 10, 20, 30, 40, 0.9f,
+      &od_mtd1);
+
+  GQuark type2 = g_quark_from_string ("car");
+  gst_analytics_relation_meta_add_od_mtd (rmeta, type2, 50, 60, 70, 80, 0.8f,
+      &od_mtd2);
+
+  /* Add members to the group */
+  ret = gst_analytics_group_mtd_add_member (&group_mtd, od_mtd1.id);
+  fail_unless (ret == TRUE);
+
+  ret = gst_analytics_group_mtd_add_member (&group_mtd, od_mtd2.id);
+  fail_unless (ret == TRUE);
+
+  /* Verify member count */
+  member_count = gst_analytics_group_mtd_get_member_count (&group_mtd);
+  fail_unless (member_count == 2);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_add_group_mtd_dynamic)
+{
+  /* Verify we can create a group metadata with dynamic allocation */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsGroupMtd group_mtd;
+  GstAnalyticsODMtd od_mtd;
+  gboolean ret;
+  gsize member_count;
+  gint i;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  /* Create a group with initial allocation for 2 members */
+  ret = gst_analytics_relation_meta_add_group_mtd (rmeta, 2, &group_mtd);
+  fail_unless (ret == TRUE);
+
+  /* Add 5 members to trigger dynamic reallocation */
+  for (i = 0; i < 5; i++) {
+    GQuark type = g_quark_from_string ("object");
+    gst_analytics_relation_meta_add_od_mtd (rmeta, type, i * 10, i * 10,
+        20, 20, 0.5f, &od_mtd);
+
+    ret = gst_analytics_group_mtd_add_member (&group_mtd, od_mtd.id);
+    fail_unless (ret == TRUE);
+  }
+
+  /* Verify all members were added */
+  member_count = gst_analytics_group_mtd_get_member_count (&group_mtd);
+  fail_unless (member_count == 5);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_group_mtd_get_member)
+{
+  /* Verify we can retrieve members from a group */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsGroupMtd group_mtd;
+  GstAnalyticsODMtd od_mtd1, od_mtd2;
+  GstAnalyticsMtd member;
+  gboolean ret;
+  gint x, y, w, h;
+  gfloat conf;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  /* Create group with fixed size */
+  ret = gst_analytics_relation_meta_add_group_mtd_with_size (rmeta, 2,
+      &group_mtd);
+  fail_unless (ret == TRUE);
+
+  /* Add two different OD metadata */
+  GQuark type1 = g_quark_from_string ("person");
+  gst_analytics_relation_meta_add_od_mtd (rmeta, type1, 10, 20, 30, 40, 0.9f,
+      &od_mtd1);
+
+  GQuark type2 = g_quark_from_string ("car");
+  gst_analytics_relation_meta_add_od_mtd (rmeta, type2, 50, 60, 70, 80, 0.8f,
+      &od_mtd2);
+
+  gst_analytics_group_mtd_add_member (&group_mtd, od_mtd1.id);
+  gst_analytics_group_mtd_add_member (&group_mtd, od_mtd2.id);
+
+  /* Retrieve first member */
+  ret = gst_analytics_group_mtd_get_member (&group_mtd, 0, &member);
+  fail_unless (ret == TRUE);
+
+  /* Verify it's the first OD we added */
+  fail_unless (gst_analytics_mtd_get_mtd_type (&member) ==
+      gst_analytics_od_mtd_get_mtd_type ());
+
+  gst_analytics_od_mtd_get_location ((GstAnalyticsODMtd *) & member, &x, &y,
+      &w, &h, &conf);
+  fail_unless (x == 10 && y == 20 && w == 30 && h == 40);
+  fail_unless_equals_float (conf, 0.9f);
+
+  /* Retrieve second member */
+  ret = gst_analytics_group_mtd_get_member (&group_mtd, 1, &member);
+  fail_unless (ret == TRUE);
+
+  gst_analytics_od_mtd_get_location ((GstAnalyticsODMtd *) & member, &x, &y,
+      &w, &h, &conf);
+  fail_unless (x == 50 && y == 60 && w == 70 && h == 80);
+  fail_unless_equals_float (conf, 0.8f);
+
+  /* Test invalid index */
+  ret = gst_analytics_group_mtd_get_member (&group_mtd, 2, &member);
+  fail_unless (ret == FALSE);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_group_mtd_semantic_tag)
+{
+  /* Verify we can set and get semantic tags */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsGroupMtd group_mtd;
+  gboolean ret;
+  const gchar *tag_str = "hand-21-kp";
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  ret = gst_analytics_relation_meta_add_group_mtd_with_size (rmeta, 5,
+      &group_mtd);
+  fail_unless (ret == TRUE);
+
+  /* Set semantic tag using string */
+  ret = gst_analytics_group_mtd_set_semantic_tag (&group_mtd, tag_str);
+  fail_unless (ret == TRUE);
+
+  /* Verify the tag was set correctly */
+  fail_unless (gst_analytics_group_mtd_semantic_tag_is (&group_mtd, tag_str));
+
+  /* Test unsetting tag with NULL */
+  ret = gst_analytics_group_mtd_set_semantic_tag (&group_mtd, NULL);
+  fail_unless (ret == TRUE);
+
+  fail_unless (!gst_analytics_group_mtd_semantic_tag_is (&group_mtd, tag_str));
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_group_mtd_semantic_tag_has_prefix)
+{
+  /* Verify semantic tag prefix matching */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsGroupMtd group_mtd;
+  gboolean ret;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  ret = gst_analytics_relation_meta_add_group_mtd_with_size (rmeta, 5,
+      &group_mtd);
+  fail_unless (ret == TRUE);
+
+  ret =
+      gst_analytics_group_mtd_set_semantic_tag (&group_mtd,
+      "posture/hand-21-kp");
+  fail_unless (ret == TRUE);
+
+  fail_unless (gst_analytics_group_mtd_semantic_tag_has_prefix (&group_mtd,
+          "posture/"));
+  fail_unless (gst_analytics_group_mtd_semantic_tag_has_prefix (&group_mtd,
+          "posture/hand-21-kp"));
+  fail_unless (!gst_analytics_group_mtd_semantic_tag_has_prefix (&group_mtd,
+          "posture/body"));
+  fail_unless (!gst_analytics_group_mtd_semantic_tag_has_prefix (&group_mtd,
+          "keypoint/"));
+
+  /* Unset tag should not match any prefix */
+  ret = gst_analytics_group_mtd_set_semantic_tag (&group_mtd, NULL);
+  fail_unless (ret == TRUE);
+  fail_unless (!gst_analytics_group_mtd_semantic_tag_has_prefix (&group_mtd,
+          "posture/"));
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_group_mtd_retrieval)
+{
+  /* Verify we can retrieve group metadata from relation meta */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsGroupMtd group_mtd, retrieved_mtd;
+  gboolean ret;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  /* Create group and set semantic tag */
+  ret = gst_analytics_relation_meta_add_group_mtd_with_size (rmeta, 3,
+      &group_mtd);
+  fail_unless (ret == TRUE);
+
+  /* Setting semantic tag */
+  gst_analytics_group_mtd_set_semantic_tag (&group_mtd, "test-group");
+
+  /* Retrieve the group using the get function */
+  ret = gst_analytics_relation_meta_get_group_mtd (rmeta, group_mtd.id,
+      &retrieved_mtd);
+  fail_unless (ret == TRUE);
+
+  /* Verify it's the same group */
+  fail_unless (retrieved_mtd.id == group_mtd.id);
+  fail_unless (retrieved_mtd.meta == group_mtd.meta);
+
+  fail_unless (gst_analytics_group_mtd_semantic_tag_is (&retrieved_mtd,
+          "test-group"));
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_group_mtd_with_relations)
+{
+  /* Verify groups can participate in relations */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsGroupMtd group_mtd;
+  GstAnalyticsODMtd od_mtd;
+  GstAnalyticsClsMtd cls_mtd;
+  gboolean ret;
+  gfloat conf_lvl[] = { 0.8f };
+  GQuark class_quarks[] = { g_quark_from_string ("hand") };
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  /* Create a group for hand keypoints */
+  ret = gst_analytics_relation_meta_add_group_mtd_with_size (rmeta, 21,
+      &group_mtd);
+  fail_unless (ret == TRUE);
+
+  gst_analytics_group_mtd_set_semantic_tag (&group_mtd, "hand-21-kp");
+
+  /* Create an OD for the hand bounding box */
+  GQuark type = g_quark_from_string ("hand");
+  gst_analytics_relation_meta_add_od_mtd (rmeta, type, 100, 100, 50, 80, 0.95f,
+      &od_mtd);
+
+  /* Create a classification */
+  gst_analytics_relation_meta_add_cls_mtd (rmeta, 1, conf_lvl, class_quarks,
+      &cls_mtd);
+
+  /* Set relation: OD contains the group */
+  ret = gst_analytics_relation_meta_set_relation (rmeta,
+      GST_ANALYTICS_REL_TYPE_CONTAIN, od_mtd.id, group_mtd.id);
+  fail_unless (ret == TRUE);
+
+  /* Set relation: group relates to classification */
+  ret = gst_analytics_relation_meta_set_relation (rmeta,
+      GST_ANALYTICS_REL_TYPE_RELATE_TO, group_mtd.id, cls_mtd.id);
+  fail_unless (ret == TRUE);
+
+  /* Verify the relations exist */
+  gboolean exist;
+  exist = gst_analytics_relation_meta_exist (rmeta, od_mtd.id, group_mtd.id,
+      1, GST_ANALYTICS_REL_TYPE_CONTAIN, NULL);
+  fail_unless (exist == TRUE);
+
+  exist = gst_analytics_relation_meta_exist (rmeta, group_mtd.id, cls_mtd.id,
+      1, GST_ANALYTICS_REL_TYPE_RELATE_TO, NULL);
+  fail_unless (exist == TRUE);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_group_mtd_iterate_all)
+{
+  /* Verify we can iterate all members using GST_ANALYTICS_MTD_TYPE_ANY */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsGroupMtd group_mtd;
+  GstAnalyticsODMtd od_mtd;
+  GstAnalyticsMtd member;
+  gpointer state = NULL;
+  gboolean ret;
+  gint count = 0;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  /* Create group with 3 members */
+  ret = gst_analytics_relation_meta_add_group_mtd_with_size (rmeta, 3,
+      &group_mtd);
+  fail_unless (ret == TRUE);
+
+  /* Add 3 OD members */
+  for (gint i = 0; i < 3; i++) {
+    GQuark type = g_quark_from_string ("object");
+    gst_analytics_relation_meta_add_od_mtd (rmeta, type, i * 10, i * 20,
+        30, 40, 0.5f + i * 0.1f, &od_mtd);
+    gst_analytics_group_mtd_add_member (&group_mtd, od_mtd.id);
+  }
+
+  /* Iterate all members */
+  while (gst_analytics_group_mtd_iterate (&group_mtd, &state,
+          GST_ANALYTICS_MTD_TYPE_ANY, &member)) {
+    /* Verify it's an OD type */
+    fail_unless (gst_analytics_mtd_get_mtd_type (&member) ==
+        gst_analytics_od_mtd_get_mtd_type ());
+    count++;
+  }
+
+  /* Verify we iterated all 3 members */
+  fail_unless (count == 3);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_group_mtd_iterate_with_type_filter)
+{
+  /* Verify we can filter members by type during iteration */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsGroupMtd group_mtd;
+  GstAnalyticsODMtd od_mtd;
+  GstAnalyticsClsMtd cls_mtd;
+  GstAnalyticsMtd member;
+  gpointer state = NULL;
+  gboolean ret;
+  gint od_count = 0, cls_count = 0, total_count = 0;
+  gfloat conf_lvl[] = { 0.8f };
+  GQuark class_quarks[] = { g_quark_from_string ("test") };
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  /* Create group with space for mixed types */
+  ret = gst_analytics_relation_meta_add_group_mtd_with_size (rmeta, 6,
+      &group_mtd);
+  fail_unless (ret == TRUE);
+
+  /* Add 3 OD members */
+  for (gint i = 0; i < 3; i++) {
+    GQuark type = g_quark_from_string ("person");
+    gst_analytics_relation_meta_add_od_mtd (rmeta, type, i * 10, i * 10,
+        20, 30, 0.9f, &od_mtd);
+    gst_analytics_group_mtd_add_member (&group_mtd, od_mtd.id);
+  }
+
+  /* Add 3 classification members */
+  for (gint i = 0; i < 3; i++) {
+    gst_analytics_relation_meta_add_cls_mtd (rmeta, 1, conf_lvl, class_quarks,
+        &cls_mtd);
+    gst_analytics_group_mtd_add_member (&group_mtd, cls_mtd.id);
+  }
+
+  /* Count all members */
+  state = NULL;
+  while (gst_analytics_group_mtd_iterate (&group_mtd, &state,
+          GST_ANALYTICS_MTD_TYPE_ANY, &member)) {
+    total_count++;
+  }
+  fail_unless (total_count == 6);
+
+  /* Iterate only OD members */
+  state = NULL;
+  while (gst_analytics_group_mtd_iterate (&group_mtd, &state,
+          gst_analytics_od_mtd_get_mtd_type (), &member)) {
+    fail_unless (gst_analytics_mtd_get_mtd_type (&member) ==
+        gst_analytics_od_mtd_get_mtd_type ());
+    od_count++;
+  }
+  fail_unless (od_count == 3);
+
+  /* Iterate only classification members */
+  state = NULL;
+  while (gst_analytics_group_mtd_iterate (&group_mtd, &state,
+          gst_analytics_cls_mtd_get_mtd_type (), &member)) {
+    fail_unless (gst_analytics_mtd_get_mtd_type (&member) ==
+        gst_analytics_cls_mtd_get_mtd_type ());
+    cls_count++;
+  }
+  fail_unless (cls_count == 3);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_group_mtd_iterate_empty)
+{
+  /* Verify iteration on empty group works correctly */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsGroupMtd group_mtd;
+  GstAnalyticsMtd member;
+  gpointer state = NULL;
+  gboolean ret;
+  gint count = 0;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  /* Create empty group */
+  ret = gst_analytics_relation_meta_add_group_mtd_with_size (rmeta, 5,
+      &group_mtd);
+  fail_unless (ret == TRUE);
+
+  /* Verify iteration returns FALSE immediately */
+  ret = gst_analytics_group_mtd_iterate (&group_mtd, &state,
+      GST_ANALYTICS_MTD_TYPE_ANY, &member);
+  fail_unless (ret == FALSE);
+
+  /* Verify no members were iterated */
+  fail_unless (count == 0);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_group_mtd_iterate_member_data)
+{
+  /* Verify iterated members contain correct data */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsGroupMtd group_mtd;
+  GstAnalyticsODMtd od_mtd;
+  GstAnalyticsMtd member;
+  gpointer state = NULL;
+  gboolean ret;
+  gint x, y, w, h;
+  gfloat conf;
+  gint expected_positions[] = { 0, 10, 20 };
+  gint index = 0;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  ret = gst_analytics_relation_meta_add_group_mtd_with_size (rmeta, 3,
+      &group_mtd);
+  fail_unless (ret == TRUE);
+
+  /* Add 3 OD members with different positions */
+  for (gint i = 0; i < 3; i++) {
+    GQuark type = g_quark_from_string ("car");
+    gst_analytics_relation_meta_add_od_mtd (rmeta, type, i * 10, i * 10,
+        15, 25, 0.95f, &od_mtd);
+    gst_analytics_group_mtd_add_member (&group_mtd, od_mtd.id);
+  }
+
+  /* Iterate and verify each member's data */
+  while (gst_analytics_group_mtd_iterate (&group_mtd, &state,
+          GST_ANALYTICS_MTD_TYPE_ANY, &member)) {
+    gst_analytics_od_mtd_get_location ((GstAnalyticsODMtd *) & member,
+        &x, &y, &w, &h, &conf);
+
+    fail_unless (x == expected_positions[index]);
+    fail_unless (y == expected_positions[index]);
+    fail_unless (w == 15);
+    fail_unless (h == 25);
+    fail_unless_equals_float (conf, 0.95f);
+
+    index++;
+  }
+
+  fail_unless (index == 3);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_add_keypoint_mtd_2d)
+{
+  /* Verify we can create a 2D keypoint metadata */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsKeypointMtd kp_mtd;
+  gint x, y, z;
+  gfloat conf;
+  GstAnalyticsKeypointDimensions dim;
+  gboolean ret;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  /* Add a 2D keypoint */
+  ret = gst_analytics_relation_meta_add_keypoint_mtd (rmeta,
+      GST_ANALYTICS_KEYPOINT_DIMENSIONS_2D, 100, 200, 0,
+      GST_ANALYTICS_KEYPOINT_VISIBILITY_UNKNOWN, 0.95f, &kp_mtd);
+  fail_unless (ret == TRUE);
+
+  /* Retrieve and verify position and dimension */
+  ret = gst_analytics_keypoint_mtd_get_position (&kp_mtd, &x, &y, &z, &dim);
+  fail_unless (ret == TRUE);
+  fail_unless (x == 100 && y == 200 && z == 0);
+  fail_unless (dim == GST_ANALYTICS_KEYPOINT_DIMENSIONS_2D);
+
+  /* Verify confidence */
+  ret = gst_analytics_keypoint_mtd_get_confidence (&kp_mtd, &conf);
+  fail_unless (ret == TRUE);
+  fail_unless_equals_float (conf, 0.95f);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_add_keypoint_mtd_3d)
+{
+  /* Verify we can create a 3D keypoint metadata */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsKeypointMtd kp_mtd;
+  gint x, y, z;
+  gfloat conf;
+  GstAnalyticsKeypointDimensions dim;
+  gboolean ret;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  /* Add a 3D keypoint */
+  ret = gst_analytics_relation_meta_add_keypoint_mtd (rmeta,
+      GST_ANALYTICS_KEYPOINT_DIMENSIONS_3D, 100, 200, 300,
+      GST_ANALYTICS_KEYPOINT_VISIBILITY_UNKNOWN, 0.85f, &kp_mtd);
+  fail_unless (ret == TRUE);
+
+  /* Retrieve and verify position and dimension */
+  ret = gst_analytics_keypoint_mtd_get_position (&kp_mtd, &x, &y, &z, &dim);
+  fail_unless (ret == TRUE);
+  fail_unless (x == 100 && y == 200 && z == 300);
+  fail_unless (dim == GST_ANALYTICS_KEYPOINT_DIMENSIONS_3D);
+
+  /* Verify confidence */
+  ret = gst_analytics_keypoint_mtd_get_confidence (&kp_mtd, &conf);
+  fail_unless (ret == TRUE);
+  fail_unless_equals_float (conf, 0.85f);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_keypoint_mtd_retrieval)
+{
+  /* Verify we can retrieve keypoint metadata by ID */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsKeypointMtd kp_mtd_orig, kp_mtd_retrieved;
+  gint x, y, z;
+  gfloat conf;
+  GstAnalyticsKeypointDimensions dim;
+  gboolean ret;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  /* Add a keypoint */
+  ret = gst_analytics_relation_meta_add_keypoint_mtd (rmeta,
+      GST_ANALYTICS_KEYPOINT_DIMENSIONS_2D, 150, 250, 0,
+      GST_ANALYTICS_KEYPOINT_VISIBILITY_UNKNOWN, 0.9f, &kp_mtd_orig);
+  fail_unless (ret == TRUE);
+
+  /* Retrieve using ID */
+  ret = gst_analytics_relation_meta_get_keypoint_mtd (rmeta, kp_mtd_orig.id,
+      &kp_mtd_retrieved);
+  fail_unless (ret == TRUE);
+
+  /* Verify retrieved data matches */
+  ret = gst_analytics_keypoint_mtd_get_position (&kp_mtd_retrieved, &x, &y,
+      &z, &dim);
+  fail_unless (ret == TRUE);
+  fail_unless (x == 150 && y == 250 && z == 0);
+  fail_unless (dim == GST_ANALYTICS_KEYPOINT_DIMENSIONS_2D);
+
+  ret = gst_analytics_keypoint_mtd_get_confidence (&kp_mtd_retrieved, &conf);
+  fail_unless (ret == TRUE);
+  fail_unless_equals_float (conf, 0.9f);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_add_keypoints_group_without_skeleton)
+{
+  /* Verify we can create a group of keypoints without skeleton */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsGroupMtd group_mtd;
+  gint positions[] = { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
+  gboolean ret;
+  gsize member_count;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  /* Add group of 5 keypoints without skeleton */
+  ret = gst_analytics_relation_meta_add_keypoints_group (rmeta, "test-5-kp",
+      GST_ANALYTICS_KEYPOINT_DIMENSIONS_2D, 10, positions, 5, NULL, NULL, 0,
+      NULL, &group_mtd);
+  fail_unless (ret == TRUE);
+
+  /* Verify group member count */
+  member_count = gst_analytics_group_mtd_get_member_count (&group_mtd);
+  fail_unless (member_count == 5);
+
+  /* Verify semantic tag */
+  fail_unless (gst_analytics_group_mtd_semantic_tag_is (&group_mtd,
+          "test-5-kp"));
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_add_keypoints_group_with_skeleton)
+{
+  /* Verify we can create a group of keypoints with skeleton links */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsGroupMtd group_mtd;
+  gint positions[] = { 10, 20, 30, 40, 50, 60 };
+  gfloat confidences[] = { 0.9f, 0.8f, 0.7f };
+  gint skeleton_pairs[] = { 0, 1, 1, 2 };       /* Links: 0<->1, 1<->2 */
+  gboolean ret;
+  gsize member_count;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  /* Add group of 3 keypoints with 2 skeleton links */
+  ret = gst_analytics_relation_meta_add_keypoints_group (rmeta, "simple-3-kp",
+      GST_ANALYTICS_KEYPOINT_DIMENSIONS_2D, 6, positions, 3, confidences, NULL,
+      4, skeleton_pairs, &group_mtd);
+  fail_unless (ret == TRUE);
+
+  /* Verify group member count */
+  member_count = gst_analytics_group_mtd_get_member_count (&group_mtd);
+  fail_unless (member_count == 3);
+
+  /* Verify skeleton relations exist - get first two keypoints and check relation */
+  GstAnalyticsMtd member0, member1;
+  ret = gst_analytics_group_mtd_get_member (&group_mtd, 0, &member0);
+  fail_unless (ret == TRUE);
+
+  ret = gst_analytics_group_mtd_get_member (&group_mtd, 1, &member1);
+  fail_unless (ret == TRUE);
+
+  /* Verify relation exists between first two keypoints */
+  gboolean has_relation = gst_analytics_relation_meta_exist (rmeta,
+      member0.id, member1.id, 1, GST_ANALYTICS_REL_TYPE_RELATE_TO, NULL);
+  fail_unless (has_relation == TRUE);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_keypoints_group_hand_pose)
+{
+  /* Verify we can create a hand pose (21 keypoints) with skeleton */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsGroupMtd group_mtd;
+  gint positions[42];           /* 21 keypoints * 2 coordinates */
+  gfloat confidences[21];
+  gint skeleton_pairs[40];      /* 20 links * 2 indices = 40 values */
+  gint i;
+  gboolean ret;
+  gsize member_count;
+
+  /* Initialize positions and confidences */
+  for (i = 0; i < 21; i++) {
+    positions[i * 2] = 100 + i * 10;
+    positions[i * 2 + 1] = 200 + i * 5;
+    confidences[i] = 0.8f + (i * 0.01f);
+  }
+
+  /* Initialize skeleton links. See https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker
+     for hand-21-kp seleton definition */
+
+  /* Palm connections */
+  skeleton_pairs[0] = 0;
+  skeleton_pairs[1] = 1;
+
+  skeleton_pairs[2] = 0;
+  skeleton_pairs[3] = 5;
+
+  skeleton_pairs[4] = 0;
+  skeleton_pairs[5] = 17;
+
+  skeleton_pairs[6] = 5;
+  skeleton_pairs[7] = 9;
+
+  skeleton_pairs[8] = 9;
+  skeleton_pairs[9] = 13;
+
+  skeleton_pairs[10] = 13;
+  skeleton_pairs[11] = 17;
+
+  /* Thumb: 1->2->3->4 */
+  skeleton_pairs[12] = 1;
+  skeleton_pairs[13] = 2;
+
+  skeleton_pairs[14] = 2;
+  skeleton_pairs[15] = 3;
+
+  skeleton_pairs[16] = 3;
+  skeleton_pairs[17] = 4;
+
+  /* Index: 5->6->7->8 */
+  skeleton_pairs[18] = 5;
+  skeleton_pairs[19] = 6;
+
+  skeleton_pairs[20] = 6;
+  skeleton_pairs[21] = 7;
+
+  skeleton_pairs[22] = 7;
+  skeleton_pairs[23] = 8;
+
+  /* Middle: 9->10->11->12 */
+  skeleton_pairs[24] = 9;
+  skeleton_pairs[25] = 10;
+
+  skeleton_pairs[26] = 10;
+  skeleton_pairs[27] = 11;
+
+  skeleton_pairs[28] = 11;
+  skeleton_pairs[29] = 12;
+
+  /* Ring: 13->14->15->16 */
+  skeleton_pairs[30] = 13;
+  skeleton_pairs[31] = 14;
+
+  skeleton_pairs[32] = 14;
+  skeleton_pairs[33] = 15;
+
+  skeleton_pairs[34] = 15;
+  skeleton_pairs[35] = 16;
+
+  /* Pinky: 17->18->19 */
+  skeleton_pairs[36] = 17;
+  skeleton_pairs[37] = 18;
+
+  skeleton_pairs[38] = 18;
+  skeleton_pairs[39] = 19;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  /* Add hand pose group */
+  ret = gst_analytics_relation_meta_add_keypoints_group (rmeta, "hand-21-kp",
+      GST_ANALYTICS_KEYPOINT_DIMENSIONS_2D, 42, positions, 21, confidences,
+      NULL, 40, skeleton_pairs, &group_mtd);
+  fail_unless (ret == TRUE);
+
+  /* Verify all keypoints are in group */
+  member_count = gst_analytics_group_mtd_get_member_count (&group_mtd);
+  fail_unless (member_count == 21);
+
+  /* Verify some skeleton relations exist */
+  GstAnalyticsMtd kp0, kp1;
+  ret = gst_analytics_group_mtd_get_member (&group_mtd, 0, &kp0);
+  fail_unless (ret == TRUE);
+  ret = gst_analytics_group_mtd_get_member (&group_mtd, 1, &kp1);
+  fail_unless (ret == TRUE);
+
+  gboolean has_relation = gst_analytics_relation_meta_exist (rmeta,
+      kp0.id, kp1.id, 1, GST_ANALYTICS_REL_TYPE_RELATE_TO, NULL);
+  fail_unless (has_relation == TRUE);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_keypoints_group_iteration)
+{
+  /* Verify we can iterate through keypoints in a group */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsGroupMtd group_mtd;
+  gint positions[] = { 10, 20, 30, 40, 50, 60 };
+  gboolean ret;
+  GstAnalyticsMtd member;
+  gpointer state = NULL;
+  gint kp_count = 0;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  /* Add group of 3 keypoints */
+  ret = gst_analytics_relation_meta_add_keypoints_group (rmeta, "iter-3-kp",
+      GST_ANALYTICS_KEYPOINT_DIMENSIONS_2D, 6, positions, 3, NULL, NULL, 0,
+      NULL, &group_mtd);
+  fail_unless (ret == TRUE);
+
+  /* Iterate through keypoints */
+  while (gst_analytics_group_mtd_iterate (&group_mtd, &state,
+          gst_analytics_keypoint_mtd_get_mtd_type (), &member)) {
+    gint x, y, z;
+    gfloat conf;
+    GstAnalyticsKeypointDimensions dim;
+
+    /* Verify we can get data from each keypoint */
+    ret = gst_analytics_keypoint_mtd_get_position ((GstAnalyticsKeypointMtd *)
+        & member, &x, &y, &z, &dim);
+    fail_unless (ret == TRUE);
+    fail_unless (dim == GST_ANALYTICS_KEYPOINT_DIMENSIONS_2D);
+
+    ret = gst_analytics_keypoint_mtd_get_confidence ((GstAnalyticsKeypointMtd
+            *) & member, &conf);
+    fail_unless (ret == TRUE);
+
+    kp_count++;
+  }
+
+  /* Verify correct number of keypoints iterated */
+  fail_unless (kp_count == 3);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_keypoints_group_with_confidences)
+{
+  /* Verify confidence values are preserved in keypoints group */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsGroupMtd group_mtd;
+  gint positions[] = { 10, 20, 30, 40, 50, 60 };
+  gfloat confidences[] = { 0.9f, 0.8f, 0.7f };
+  gboolean ret;
+  GstAnalyticsMtd member;
+  gpointer state = NULL;
+  gint expected_count = 0;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  /* Add group with specific confidences */
+  ret = gst_analytics_relation_meta_add_keypoints_group (rmeta, "conf-3-kp",
+      GST_ANALYTICS_KEYPOINT_DIMENSIONS_2D, 6, positions, 3, confidences, NULL,
+      0, NULL, &group_mtd);
+  fail_unless (ret == TRUE);
+
+  /* Verify each keypoint has correct confidence */
+  float expected_confidences[] = { 0.9f, 0.8f, 0.7f };
+  while (gst_analytics_group_mtd_iterate (&group_mtd, &state,
+          gst_analytics_keypoint_mtd_get_mtd_type (), &member)) {
+    gfloat conf;
+    ret = gst_analytics_keypoint_mtd_get_confidence ((GstAnalyticsKeypointMtd
+            *) & member, &conf);
+    fail_unless (ret == TRUE);
+    fail_unless_equals_float (conf, expected_confidences[expected_count]);
+    expected_count++;
+  }
+
+  fail_unless (expected_count == 3);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_keypoints_group_without_confidences)
+{
+  /* Verify default confidence (1.0f) when confidences=NULL */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsGroupMtd group_mtd;
+  gint positions[] = { 10, 20, 30, 40, 50, 60 };
+  gboolean ret;
+  GstAnalyticsMtd member;
+  gpointer state = NULL;
+  gint kp_count = 0;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  /* Add group without confidences (should default to 1.0f) */
+  ret = gst_analytics_relation_meta_add_keypoints_group (rmeta, "noconf-3-kp",
+      GST_ANALYTICS_KEYPOINT_DIMENSIONS_2D, 6, positions, 3, NULL, NULL, 0,
+      NULL, &group_mtd);
+  fail_unless (ret == TRUE);
+
+  /* Verify each keypoint has default confidence of 1.0f */
+  while (gst_analytics_group_mtd_iterate (&group_mtd, &state,
+          gst_analytics_keypoint_mtd_get_mtd_type (), &member)) {
+    gfloat conf;
+    ret = gst_analytics_keypoint_mtd_get_confidence ((GstAnalyticsKeypointMtd
+            *) & member, &conf);
+    fail_unless (ret == TRUE);
+    fail_unless_equals_float (conf, 1.0f);
+    kp_count++;
+  }
+
+  fail_unless (kp_count == 3);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_keypoint_group_2d_vs_3d)
+{
+  /* Verify 2D and 3D keypoints are handled correctly */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsGroupMtd group_2d, group_3d;
+  gint positions_2d[] = { 10, 20, 30, 40 };
+  gint positions_3d[] = { 10, 20, 100, 30, 40, 200 };
+  gboolean ret;
+  GstAnalyticsMtd member;
+  gpointer state;
+  gint x, y, z;
+  GstAnalyticsKeypointDimensions dim;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  /* Add 2D keypoints group */
+  ret = gst_analytics_relation_meta_add_keypoints_group (rmeta, "2d-2-kp",
+      GST_ANALYTICS_KEYPOINT_DIMENSIONS_2D, 4, positions_2d, 2, NULL, NULL, 0,
+      NULL, &group_2d);
+  fail_unless (ret == TRUE);
+
+  /* Add 3D keypoints group */
+  ret = gst_analytics_relation_meta_add_keypoints_group (rmeta, "3d-2-kp",
+      GST_ANALYTICS_KEYPOINT_DIMENSIONS_3D, 6, positions_3d, 2, NULL, NULL, 0,
+      NULL, &group_3d);
+  fail_unless (ret == TRUE);
+
+  /* Verify 2D keypoints */
+  state = NULL;
+  gint idx = 0;
+  while (gst_analytics_group_mtd_iterate (&group_2d, &state,
+          gst_analytics_keypoint_mtd_get_mtd_type (), &member)) {
+    ret = gst_analytics_keypoint_mtd_get_position ((GstAnalyticsKeypointMtd *)
+        & member, &x, &y, &z, &dim);
+    fail_unless (ret == TRUE);
+    fail_unless (dim == GST_ANALYTICS_KEYPOINT_DIMENSIONS_2D);
+    fail_unless (z == 0);       /* Z should be 0 for 2D */
+    idx++;
+  }
+  fail_unless (idx == 2);
+
+  /* Verify 3D keypoints */
+  state = NULL;
+  idx = 0;
+  while (gst_analytics_group_mtd_iterate (&group_3d, &state,
+          gst_analytics_keypoint_mtd_get_mtd_type (), &member)) {
+    ret = gst_analytics_keypoint_mtd_get_position ((GstAnalyticsKeypointMtd *)
+        & member, &x, &y, &z, &dim);
+    fail_unless (ret == TRUE);
+    fail_unless (dim == GST_ANALYTICS_KEYPOINT_DIMENSIONS_3D);
+    fail_unless (z != 0);       /* Z should not be 0 for 3D */
+    idx++;
+  }
+  fail_unless (idx == 2);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 static Suite *
 analyticmeta_suite (void)
 {
@@ -2121,6 +3131,8 @@ analyticmeta_suite (void)
   TCase *tc_chain_util;
   TCase *tc_chain_tensors;
   TCase *tc_chain_tensor_mtd;
+  TCase *tc_chain_group;
+  TCase *tc_chain_keypoint;
 
   s = suite_create ("Analytic Meta Library");
 
@@ -2180,6 +3192,34 @@ analyticmeta_suite (void)
   tc_chain_tensor_mtd = tcase_create ("Tensor Mtd");
   suite_add_tcase (s, tc_chain_tensor_mtd);
   tcase_add_test (tc_chain_tensor_mtd, test_add_tensor_mtd);
+
+  tc_chain_group = tcase_create ("Group Mtd");
+  suite_add_tcase (s, tc_chain_group);
+  tcase_add_test (tc_chain_group, test_add_group_mtd_with_size);
+  tcase_add_test (tc_chain_group, test_add_group_mtd_dynamic);
+  tcase_add_test (tc_chain_group, test_group_mtd_get_member);
+  tcase_add_test (tc_chain_group, test_group_mtd_semantic_tag);
+  tcase_add_test (tc_chain_group, test_group_mtd_semantic_tag_has_prefix);
+  tcase_add_test (tc_chain_group, test_group_mtd_retrieval);
+  tcase_add_test (tc_chain_group, test_group_mtd_with_relations);
+  tcase_add_test (tc_chain_group, test_group_mtd_iterate_all);
+  tcase_add_test (tc_chain_group, test_group_mtd_iterate_with_type_filter);
+  tcase_add_test (tc_chain_group, test_group_mtd_iterate_empty);
+  tcase_add_test (tc_chain_group, test_group_mtd_iterate_member_data);
+
+  tc_chain_keypoint = tcase_create ("Keypoint Mtd");
+  suite_add_tcase (s, tc_chain_keypoint);
+  tcase_add_test (tc_chain_keypoint, test_add_keypoint_mtd_2d);
+  tcase_add_test (tc_chain_keypoint, test_add_keypoint_mtd_3d);
+  tcase_add_test (tc_chain_keypoint, test_keypoint_mtd_retrieval);
+  tcase_add_test (tc_chain_keypoint, test_add_keypoints_group_without_skeleton);
+  tcase_add_test (tc_chain_keypoint, test_add_keypoints_group_with_skeleton);
+  tcase_add_test (tc_chain_keypoint, test_keypoints_group_hand_pose);
+  tcase_add_test (tc_chain_keypoint, test_keypoints_group_iteration);
+  tcase_add_test (tc_chain_keypoint, test_keypoints_group_with_confidences);
+  tcase_add_test (tc_chain_keypoint, test_keypoints_group_without_confidences);
+  tcase_add_test (tc_chain_keypoint, test_keypoint_group_2d_vs_3d);
+
   return s;
 }
 
