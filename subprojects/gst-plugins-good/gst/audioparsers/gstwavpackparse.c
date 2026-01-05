@@ -303,12 +303,12 @@ gst_wavpack_parse_frame_metadata (GstWavpackParse * parse, GstBuffer * buf,
   gst_byte_reader_skip_unchecked (&br, sizeof (WavpackHeader));
 
   /* get some basics from header */
-  i = (wph->flags >> 23) & 0xF;
+  i = (wph->flags & FLAG_SRATE_MASK) >> FLAG_SRATE_LSB;
   if (!wpi->rate)
     wpi->rate = (i < G_N_ELEMENTS (sample_rates)) ? sample_rates[i] : 44100;
-  wpi->width = ((wph->flags & 0x3) + 1) * 8;
+  wpi->width = ((wph->flags & FLAG_BYTES_STORED) + 1) * 8;
   if (!wpi->channels)
-    wpi->channels = (wph->flags & 0x4) ? 1 : 2;
+    wpi->channels = (wph->flags & FLAG_MONO_FLAG) ? 1 : 2;
   if (!wpi->channel_mask)
     wpi->channel_mask = 5 - wpi->channels;
 
@@ -339,7 +339,7 @@ gst_wavpack_parse_frame_metadata (GstWavpackParse * parse, GstBuffer * buf,
 
     /* 0x1f is the metadata id mask and 0x20 flag is for later extensions
      * that do not need to be handled by the decoder */
-    switch (id & 0x3f) {
+    switch (id & ID_UNIQUE) {
       case ID_WVC_BITSTREAM:
         GST_LOG_OBJECT (parse, "correction bitstream");
         wpi->correction = TRUE;
