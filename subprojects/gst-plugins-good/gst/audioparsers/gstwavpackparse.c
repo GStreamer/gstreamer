@@ -55,7 +55,9 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-wavpack, "
         "depth = (int) [ 1, 32 ], "
         "channels = (int) [ 1, 4096 ], "
-        "rate = (int) [ 6000, MAX ], " "framed = (boolean) TRUE; "
+        "rate = (int) [ 6000, MAX ], "
+        "sample-type = (string) { int, float, dsd }, "
+        "framed = (boolean) TRUE; "
         "audio/x-wavpack-correction, " "framed = (boolean) TRUE")
     );
 
@@ -116,6 +118,7 @@ gst_wavpack_parse_reset (GstWavpackParse * wvparse)
   wvparse->channel_mask = 0;
   wvparse->sample_rate = -1;
   wvparse->width = -1;
+  wvparse->sample_type = SAMPLE_TYPE_INT;
   wvparse->total_samples = 0;
   wvparse->sent_codec_tag = FALSE;
 }
@@ -311,6 +314,12 @@ gst_wavpack_parse_frame_metadata (GstWavpackParse * parse, GstBuffer * buf,
     wpi->channels = (wph->flags & FLAG_MONO_FLAG) ? 1 : 2;
   if (!wpi->channel_mask)
     wpi->channel_mask = 5 - wpi->channels;
+  if ((wph->flags & FLAG_FLOAT_DATA) != 0)
+    wpi->sample_type = SAMPLE_TYPE_FLOAT;
+  else if ((wph->flags & FLAG_DSD_FLAG) != 0)
+    wpi->sample_type = SAMPLE_TYPE_DSD;
+  else
+    wpi->sample_type = SAMPLE_TYPE_INT;
 
   /* need to dig metadata blocks for some more */
   while (gst_byte_reader_get_remaining (&br)) {
@@ -470,6 +479,7 @@ gst_wavpack_parse_handle_frame (GstBaseParse * parse,
   GstByteReader reader;
   gint off;
   guint rate, chans, width, mask;
+  WavpackSampleType sample_type;
   gboolean lost_sync, draining, final;
   guint frmsize = 0;
   WavpackHeader wph;
@@ -561,8 +571,10 @@ gst_wavpack_parse_handle_frame (GstBaseParse * parse,
   width = wpi.width;
   chans = wpi.channels;
   mask = wpi.channel_mask;
+  sample_type = wpi.sample_type;
 
-  GST_LOG_OBJECT (parse, "rate: %u, width: %u, chans: %u", rate, width, chans);
+  GST_LOG_OBJECT (parse, "rate: %u, width: %u, chans: %u, sample type: %d",
+      rate, width, chans, sample_type);
 
   GST_BUFFER_PTS (buf) =
       gst_util_uint64_scale_int (wph.block_index, GST_SECOND, rate);
@@ -572,17 +584,37 @@ gst_wavpack_parse_handle_frame (GstBaseParse * parse,
       GST_SECOND, rate) - GST_BUFFER_PTS (buf);
 
   if (G_UNLIKELY (wvparse->sample_rate != rate || wvparse->channels != chans
-          || wvparse->width != width || wvparse->channel_mask != mask)) {
+          || wvparse->width != width || wvparse->channel_mask != mask
+          || wvparse->sample_type != sample_type)) {
     GstCaps *caps;
 
     if (wpi.correction) {
       caps = gst_caps_new_simple ("audio/x-wavpack-correction",
           "framed", G_TYPE_BOOLEAN, TRUE, NULL);
     } else {
+      const gchar *sample_type_str;
+
+      switch (wpi.sample_type) {
+        case SAMPLE_TYPE_INT:
+          sample_type_str = "int";
+          break;
+        case SAMPLE_TYPE_FLOAT:
+          sample_type_str = "float";
+          break;
+        case SAMPLE_TYPE_DSD:
+          sample_type_str = "dsd";
+          break;
+        default:
+          sample_type_str = "unknown";
+          g_assert_not_reached ();
+      }
+
       caps = gst_caps_new_simple ("audio/x-wavpack",
           "channels", G_TYPE_INT, chans,
           "rate", G_TYPE_INT, rate,
-          "depth", G_TYPE_INT, width, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
+          "depth", G_TYPE_INT, width,
+          "sample-type", G_TYPE_STRING, sample_type_str,
+          "framed", G_TYPE_BOOLEAN, TRUE, NULL);
 
       if (!mask)
         mask = gst_wavpack_get_default_channel_mask (wvparse->channels);
@@ -609,6 +641,7 @@ gst_wavpack_parse_handle_frame (GstBaseParse * parse,
     wvparse->channels = chans;
     wvparse->width = width;
     wvparse->channel_mask = mask;
+    wvparse->sample_type = sample_type;
 
     if (wvparse->total_samples) {
       GST_DEBUG_OBJECT (wvparse, "setting duration");

@@ -124,12 +124,19 @@ typedef struct {
   guint32 crc;               /* crc for actual decoded data */
 } WavpackHeader;
 
+typedef enum {
+  SAMPLE_TYPE_INT,
+  SAMPLE_TYPE_FLOAT,
+  SAMPLE_TYPE_DSD,
+} WavpackSampleType;
+
 typedef struct {
   gboolean correction;
   guint rate;
   guint width;
   guint channels;
   guint channel_mask;
+  WavpackSampleType sample_type;
 } WavpackInfo;
 
 typedef struct _GstWavpackParse GstWavpackParse;
@@ -148,6 +155,7 @@ struct _GstWavpackParse {
   gint          channels;
   gint          width;
   gint          channel_mask;
+  WavpackSampleType sample_type;
 
   guint         total_samples;
 
