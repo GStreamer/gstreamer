@@ -386,7 +386,7 @@ gst_wavpack_parse_frame_metadata (GstWavpackParse * parse, GstBuffer * buf,
         break;
       }
       default:
-        GST_LOG_OBJECT (parse, "unparsed ID 0x%x", id);
+        GST_LOG_OBJECT (parse, "unparsed ID 0x%02x", id);
         break;
     }
   }
@@ -440,12 +440,12 @@ gst_wavpack_parse_frame_header (GstWavpackParse * parse, GstBuffer * buf,
 
   /* dump */
   GST_LOG_OBJECT (parse, "size %d", wph.ckSize);
-  GST_LOG_OBJECT (parse, "version 0x%x", wph.version);
+  GST_LOG_OBJECT (parse, "version 0x%04x", wph.version);
   GST_LOG_OBJECT (parse, "total samples %d", wph.total_samples);
   GST_LOG_OBJECT (parse, "block index %d", wph.block_index);
   GST_LOG_OBJECT (parse, "block samples %d", wph.block_samples);
-  GST_LOG_OBJECT (parse, "flags 0x%x", wph.flags);
-  GST_LOG_OBJECT (parse, "crc 0x%x", wph.flags);
+  GST_LOG_OBJECT (parse, "flags 0x%08x", wph.flags);
+  GST_LOG_OBJECT (parse, "crc 0x%08x", wph.flags);
 
   if (!parse->total_samples && wph.block_index == 0 && wph.total_samples != -1) {
     GST_DEBUG_OBJECT (parse, "determined duration of %u samples",
@@ -528,7 +528,7 @@ gst_wavpack_parse_handle_frame (GstBaseParse * parse,
       goto more;
     } else {
       if (word != 0x7776706b) {
-        GST_DEBUG_OBJECT (wvparse, "0x%x not OK", word);
+        GST_DEBUG_OBJECT (wvparse, "0x%08x not OK", word);
         *skipsize = off + 2;
         goto skip;
       }
