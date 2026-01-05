@@ -54,6 +54,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-wavpack, "
         "depth = (int) [ 1, 32 ], "
+        "width = (int) { 8, 16, 24, 32 }, "
         "channels = (int) [ 1, 4096 ], "
         "rate = (int) [ 6000, MAX ], "
         "sample-type = (string) { int, float, dsd }, "
@@ -118,6 +119,7 @@ gst_wavpack_parse_reset (GstWavpackParse * wvparse)
   wvparse->channel_mask = 0;
   wvparse->sample_rate = -1;
   wvparse->width = -1;
+  wvparse->depth = -1;
   wvparse->sample_type = SAMPLE_TYPE_INT;
   wvparse->total_samples = 0;
   wvparse->sent_codec_tag = FALSE;
@@ -321,6 +323,13 @@ gst_wavpack_parse_frame_metadata (GstWavpackParse * parse, GstBuffer * buf,
   else
     wpi->sample_type = SAMPLE_TYPE_INT;
 
+  if ((wph->flags & FLAG_DSD_FLAG) != 0) {
+    wpi->depth = 8;
+  } else {
+    wpi->depth =
+        wpi->width - ((wph->flags & FLAG_SHIFT_MASK) >> FLAG_SHIFT_LSB);
+  }
+
   /* need to dig metadata blocks for some more */
   while (gst_byte_reader_get_remaining (&br)) {
     guint32 size = 0;
@@ -478,7 +487,7 @@ gst_wavpack_parse_handle_frame (GstBaseParse * parse,
   GstBuffer *buf = frame->buffer;
   GstByteReader reader;
   gint off;
-  guint rate, chans, width, mask;
+  guint rate, chans, width, depth, mask;
   WavpackSampleType sample_type;
   gboolean lost_sync, draining, final;
   guint frmsize = 0;
@@ -569,6 +578,7 @@ gst_wavpack_parse_handle_frame (GstBaseParse * parse,
 
   rate = wpi.rate;
   width = wpi.width;
+  depth = wpi.depth;
   chans = wpi.channels;
   mask = wpi.channel_mask;
   sample_type = wpi.sample_type;
@@ -584,7 +594,8 @@ gst_wavpack_parse_handle_frame (GstBaseParse * parse,
       GST_SECOND, rate) - GST_BUFFER_PTS (buf);
 
   if (G_UNLIKELY (wvparse->sample_rate != rate || wvparse->channels != chans
-          || wvparse->width != width || wvparse->channel_mask != mask
+          || wvparse->width != width || wvparse->depth != depth
+          || wvparse->channel_mask != mask
           || wvparse->sample_type != sample_type)) {
     GstCaps *caps;
 
@@ -612,7 +623,8 @@ gst_wavpack_parse_handle_frame (GstBaseParse * parse,
       caps = gst_caps_new_simple ("audio/x-wavpack",
           "channels", G_TYPE_INT, chans,
           "rate", G_TYPE_INT, rate,
-          "depth", G_TYPE_INT, width,
+          "width", G_TYPE_INT, width,
+          "depth", G_TYPE_INT, depth,
           "sample-type", G_TYPE_STRING, sample_type_str,
           "framed", G_TYPE_BOOLEAN, TRUE, NULL);
 
@@ -640,6 +652,7 @@ gst_wavpack_parse_handle_frame (GstBaseParse * parse,
     wvparse->sample_rate = rate;
     wvparse->channels = chans;
     wvparse->width = width;
+    wvparse->depth = depth;
     wvparse->channel_mask = mask;
     wvparse->sample_type = sample_type;
 
