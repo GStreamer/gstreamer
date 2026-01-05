@@ -327,7 +327,7 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
     gchar error_msg[80];
 
     dec->context = WavpackOpenFileInputEx (dec->stream_reader,
-        &dec->wv_id, NULL, error_msg, OPEN_STREAMING, 0);
+        &dec->wv_id, NULL, error_msg, OPEN_STREAMING | OPEN_NORMALIZE, 0);
 
     /* expect this to work */
     if (!dec->context) {
