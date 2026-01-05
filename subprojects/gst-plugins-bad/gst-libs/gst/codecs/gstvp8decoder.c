@@ -289,7 +289,7 @@ gst_vp8_decoder_update_reference (GstVp8Decoder * self, GstVp8Picture * picture)
         break;
       default:
         GST_WARNING_OBJECT (self, "unrecognized copy_buffer_to_golden %d",
-            frame_hdr->copy_buffer_to_alternate);
+            frame_hdr->copy_buffer_to_golden);
         break;
     }
   }
