@@ -54,8 +54,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-wavpack, "
         "depth = (int) [ 1, 32 ], "
-        "channels = (int) [ 1, 8 ], "
-        "rate = (int) [ 6000, 192000 ], " "framed = (boolean) TRUE; "
+        "channels = (int) [ 1, 4096 ], "
+        "rate = (int) [ 6000, MAX ], " "framed = (boolean) TRUE; "
         "audio/x-wavpack-correction, " "framed = (boolean) TRUE")
     );
 
@@ -351,7 +351,10 @@ gst_wavpack_parse_frame_metadata (GstWavpackParse * parse, GstBuffer * buf,
       case ID_SAMPLE_RATE:
         if (size == 3) {
           CHECK (gst_byte_reader_get_uint24_le (&mbr, &wpi->rate));
-          GST_LOG_OBJECT (parse, "updated with custom rate %d", wpi->rate);
+          GST_LOG_OBJECT (parse, "updated with custom rate %u", wpi->rate);
+        } else if (size == 4) {
+          CHECK (gst_byte_reader_get_uint32_le (&mbr, &wpi->rate));
+          GST_LOG_OBJECT (parse, "updated with custom rate %u", wpi->rate);
         } else {
           GST_DEBUG_OBJECT (parse, "unexpected size for SAMPLE_RATE metadata");
         }
@@ -361,10 +364,14 @@ gst_wavpack_parse_frame_metadata (GstWavpackParse * parse, GstBuffer * buf,
         guint16 channels;
         guint32 mask = 0;
 
-        if (size == 6) {
+        if (size == 6 || size == 7) {
           CHECK (gst_byte_reader_get_uint16_le (&mbr, &channels));
-          channels = channels & 0xFFF;
-          CHECK (gst_byte_reader_get_uint24_le (&mbr, &mask));
+          channels = (channels & 0xFFF) + 1;
+          if (size == 6) {
+            CHECK (gst_byte_reader_get_uint24_le (&mbr, &mask));
+          } else if (size == 7) {
+            CHECK (gst_byte_reader_get_uint32_le (&mbr, &mask));
+          }
         } else if (size) {
           CHECK (gst_byte_reader_get_uint8 (&mbr, &c));
           channels = c;
