@@ -56,9 +56,9 @@ struct _GstWavpackEnc
   gint samplerate;
   gint channels;
   gint channel_mask;
-  gint8 channel_mapping[8];
+  gint8 channel_mapping[64];
   gboolean need_channel_remap;
-  gint depth;
+  gint width, depth;
 
   GstWavpackEncWriteID wv_id;
   GstWavpackEncWriteID wvc_id;

@@ -94,7 +94,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (S32) ", "
         "layout = (string) interleaved, "
-        "channels = (int) [ 1, 8 ], " "rate = (int) [ 6000, 192000 ]")
+        "channels = (int) [ 1, 4096 ], " "rate = (int) [ 6000, MAX ]")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -102,8 +102,10 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-wavpack, "
         "depth = (int) [ 1, 32 ], "
-        "channels = (int) [ 1, 8 ], "
-        "rate = (int) [ 6000, 192000 ], " "framed = (boolean) TRUE")
+        "width = (int) { 8, 16, 24, 32 }, "
+        "sample-type = (string) int, "
+        "channels = (int) [ 1, 4096 ], "
+        "rate = (int) [ 6000, MAX ], " "framed = (boolean) TRUE")
     );
 
 static GstStaticPadTemplate wvcsrc_factory = GST_STATIC_PAD_TEMPLATE ("wvcsrc",
@@ -391,6 +393,7 @@ gst_wavpack_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
 
   enc->channels = GST_AUDIO_INFO_CHANNELS (info);
   enc->depth = GST_AUDIO_INFO_DEPTH (info);
+  enc->width = GST_AUDIO_INFO_WIDTH (info);
   enc->samplerate = GST_AUDIO_INFO_RATE (info);
 
   pos = info->position;
@@ -414,7 +417,10 @@ gst_wavpack_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
   caps = gst_caps_new_simple ("audio/x-wavpack",
       "channels", G_TYPE_INT, enc->channels,
       "rate", G_TYPE_INT, enc->samplerate,
-      "depth", G_TYPE_INT, enc->depth, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
+      "width", G_TYPE_INT, enc->width,
+      "depth", G_TYPE_INT, enc->depth,
+      "sample-type", G_TYPE_STRING, "int",
+      "framed", G_TYPE_BOOLEAN, TRUE, NULL);
 
   if (mask)
     gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, mask, NULL);
