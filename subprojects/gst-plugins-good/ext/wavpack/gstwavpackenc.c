@@ -730,7 +730,7 @@ gst_wavpack_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
 
   if (enc->need_channel_remap) {
     buf = gst_buffer_make_writable (buf);
-    gst_buffer_map (buf, &map, GST_MAP_WRITE);
+    gst_buffer_map (buf, &map, GST_MAP_READWRITE);
     gst_wavpack_enc_fix_channel_order (enc, (gint32 *) map.data, sample_count);
     gst_buffer_unmap (buf, &map);
   }
