@@ -134,6 +134,7 @@ typedef struct {
   gboolean correction;
   guint rate;
   guint width;
+  guint depth;
   guint channels;
   guint channel_mask;
   WavpackSampleType sample_type;
@@ -154,6 +155,7 @@ struct _GstWavpackParse {
   gint          sample_rate;
   gint          channels;
   gint          width;
+  gint          depth;
   gint          channel_mask;
   WavpackSampleType sample_type;
 
