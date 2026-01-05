@@ -923,7 +923,7 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     in_type = GST_CUDA_BUFFER_COPY_CUDA;
     use_device_copy = TRUE;
 #ifdef HAVE_CUDA_GST_GL
-  } else if (self->gl_context && gst_is_gl_memory_pbo (in_mem)) {
+  } else if (gst_is_gl_memory_pbo (in_mem)) {
     in_type = GST_CUDA_BUFFER_COPY_GL;
 #endif
 #ifdef G_OS_WIN32
@@ -943,7 +943,7 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     out_type = GST_CUDA_BUFFER_COPY_CUDA;
     use_device_copy = TRUE;
 #ifdef HAVE_CUDA_GST_GL
-  } else if (self->gl_context && gst_is_gl_memory_pbo (out_mem)) {
+  } else if (gst_is_gl_memory_pbo (out_mem)) {
     out_type = GST_CUDA_BUFFER_COPY_GL;
 #endif
 #ifdef G_OS_WIN32
