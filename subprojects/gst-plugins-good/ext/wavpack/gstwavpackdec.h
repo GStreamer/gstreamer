@@ -48,7 +48,7 @@ struct _GstWavpackDec
   read_id wv_id;
 
   gint sample_rate;
-  gint depth;
+  gint depth, depth_shift;
   gint width;
   gint channels;
   gint channel_mask;
