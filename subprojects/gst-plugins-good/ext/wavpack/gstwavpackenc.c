@@ -43,10 +43,6 @@
  *
  */
 
-/*
- * TODO: - add 32 bit float mode. CONFIG_FLOAT_DATA
- */
-
 #include <string.h>
 #include <gst/gst.h>
 #include <glib/gprintf.h>
@@ -92,9 +88,13 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) " GST_AUDIO_NE (S32) ", "
-        "layout = (string) interleaved, "
-        "channels = (int) [ 1, 4096 ], " "rate = (int) [ 6000, MAX ]")
+        "format = (string) { S8, " GST_AUDIO_NE (S16) ", " GST_AUDIO_NE (S18)
+        ", " GST_AUDIO_NE (S20) ", " GST_AUDIO_NE (S24) ", " GST_AUDIO_NE (S32)
+        " }, " "layout = (string) interleaved, "
+        "channels = (int) [ 1, 4096 ], " "rate = (int) [ 6000, MAX ]; "
+        "audio/x-raw, " "format = (string) " GST_AUDIO_NE (F32) ", "
+        "layout = (string) interleaved, " "channels = (int) [ 1, 4096 ], "
+        "rate = (int) [ 6000, MAX ]")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -103,7 +103,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-wavpack, "
         "depth = (int) [ 1, 32 ], "
         "width = (int) { 8, 16, 24, 32 }, "
-        "sample-type = (string) int, "
+        "sample-type = (string) { int, float }, "
         "channels = (int) [ 1, 4096 ], "
         "rate = (int) [ 6000, MAX ], " "framed = (boolean) TRUE")
     );
@@ -395,6 +395,7 @@ gst_wavpack_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
   enc->depth = GST_AUDIO_INFO_DEPTH (info);
   enc->width = GST_AUDIO_INFO_WIDTH (info);
   enc->samplerate = GST_AUDIO_INFO_RATE (info);
+  enc->float_mode = GST_AUDIO_INFO_FORMAT (info) == GST_AUDIO_FORMAT_F32;
 
   pos = info->position;
   g_assert (pos);
@@ -419,7 +420,7 @@ gst_wavpack_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
       "rate", G_TYPE_INT, enc->samplerate,
       "width", G_TYPE_INT, enc->width,
       "depth", G_TYPE_INT, enc->depth,
-      "sample-type", G_TYPE_STRING, "int",
+      "sample-type", G_TYPE_STRING, enc->float_mode ? "float" : "int",
       "framed", G_TYPE_BOOLEAN, TRUE, NULL);
 
   if (mask)
@@ -454,11 +455,13 @@ gst_wavpack_enc_set_wp_config (GstWavpackEnc * enc)
 {
   enc->wp_config = g_new0 (WavpackConfig, 1);
   /* set general stream information in the WavpackConfig */
-  enc->wp_config->bytes_per_sample = GST_ROUND_UP_8 (enc->depth) / 8;
+  enc->wp_config->bytes_per_sample = enc->width / 8;
   enc->wp_config->bits_per_sample = enc->depth;
   enc->wp_config->num_channels = enc->channels;
   enc->wp_config->channel_mask = enc->channel_mask;
   enc->wp_config->sample_rate = enc->samplerate;
+  enc->wp_config->float_norm_exp = enc->float_mode ? 127 : 0;
+  enc->wp_config->qmode |= QMODE_SIGNED_BYTES;
 
   /*
    * Set parameters in WavpackConfig
@@ -688,6 +691,7 @@ gst_wavpack_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
 {
   GstWavpackEnc *enc = GST_WAVPACK_ENC (benc);
   uint32_t sample_count;
+  gint32 *temp_buffer = NULL;
   GstFlowReturn ret;
   GstMapInfo map;
 
@@ -701,9 +705,6 @@ gst_wavpack_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
 
   if (G_UNLIKELY (!buf))
     return gst_wavpack_enc_drain (enc);
-
-  sample_count = gst_buffer_get_size (buf) / 4;
-  GST_DEBUG_OBJECT (enc, "got %u raw samples", sample_count);
 
   /* check if we already have a valid WavpackContext, otherwise make one */
   if (!enc->wp_context) {
@@ -728,6 +729,9 @@ gst_wavpack_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
     GST_DEBUG_OBJECT (enc, "setup of encoding context successful");
   }
 
+  sample_count = gst_buffer_get_size (buf) / (enc->width / 8);
+  GST_DEBUG_OBJECT (enc, "got %u raw samples", sample_count);
+
   if (enc->need_channel_remap) {
     buf = gst_buffer_make_writable (buf);
     gst_buffer_map (buf, &map, GST_MAP_READWRITE);
@@ -737,6 +741,71 @@ gst_wavpack_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
 
+  if (enc->width != 32) {
+    gint i;
+
+    temp_buffer = g_new0 (gint32, sample_count);
+
+    switch (enc->width) {
+      case 8:{
+        const gint8 *inbuffer = (const gint8 *) map.data;
+
+        for (i = 0; i < sample_count; i++) {
+          temp_buffer[i] = inbuffer[i];
+        }
+        break;
+      }
+      case 16:{
+        const gint16 *inbuffer = (const gint16 *) map.data;
+
+        for (i = 0; i < sample_count; i++) {
+          temp_buffer[i] = inbuffer[i];
+        }
+        break;
+      }
+      case 24:{
+        const guint8 *inbuffer = (const guint8 *) map.data;
+        gint depth_shift;
+
+        switch (enc->depth) {
+          case 18:
+            depth_shift = 6;
+            break;
+          case 20:
+            depth_shift = 4;
+            break;
+          default:
+            g_assert_not_reached ();
+            break;
+        }
+
+        if (depth_shift) {
+          for (i = 0; i < sample_count; i++) {
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+            temp_buffer[i] = GST_READ_UINT24_BE (inbuffer) << depth_shift;
+#else
+            temp_buffer[i] = GST_READ_UINT24_LE (inbuffer) << depth_shift;
+#endif
+            inbuffer += 3;
+          }
+        } else {
+          for (i = 0; i < sample_count; i++) {
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+            temp_buffer[i] = GST_READ_UINT24_BE (inbuffer);
+#else
+            temp_buffer[i] = GST_READ_UINT24_LE (inbuffer);
+#endif
+            inbuffer += 3;
+          }
+        }
+        break;
+      }
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+  }
+
   /* if we want to append the MD5 sum to the stream update it here
    * with the current raw samples */
   if (enc->md5) {
@@ -744,7 +813,8 @@ gst_wavpack_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
   }
 
   /* encode and handle return values from encoding */
-  if (WavpackPackSamples (enc->wp_context, (int32_t *) map.data,
+  if (WavpackPackSamples (enc->wp_context,
+          temp_buffer ? temp_buffer : (int32_t *) map.data,
           sample_count / enc->channels)) {
     GST_DEBUG_OBJECT (enc, "encoding samples successful");
     gst_buffer_unmap (buf, &map);
@@ -766,6 +836,8 @@ gst_wavpack_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
   }
 
 exit:
+  g_free (temp_buffer);
+
   return ret;
 
   /* ERRORS */
