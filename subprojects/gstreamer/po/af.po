@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -551,7 +551,16 @@ msgstr "serienommer van snit"
 msgid "replaygain track gain"
 msgstr "terugspeelversterking snitversterking"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "snitversterking (in db)"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "terugspeelversterking snitversterking"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "snitversterking (in db)"
 
 msgid "replaygain track peak"
@@ -563,7 +572,16 @@ msgstr "toppunt van die snit"
 msgid "replaygain album gain"
 msgstr "terugspeelversterking albumversterking"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "albumversterking (in db)"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "terugspeelversterking albumversterking"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "albumversterking (in db)"
 
 msgid "replaygain album peak"
@@ -1178,6 +1196,16 @@ msgid "No such element or plugin '%s'\n"
 msgstr "geen bronelement vir URI \"%s\""
 
 msgid "Index statistics"
+msgstr ""
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
 msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"

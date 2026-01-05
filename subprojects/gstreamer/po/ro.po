@@ -20,7 +20,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-23 16:55+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2024-03-08 14:24+0100\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -608,7 +608,20 @@ msgstr "numărul serial al pistei"
 msgid "replaygain track gain"
 msgstr "câștigul replaygain al pistei"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "câștigul în db al pistei"
+
+# R-GC, scrie:
+# cred că traducerea corectă, ar fi:
+# „câștig pistă câștig (de) redare”
+# Aplicând în consecvență pentru mesajele următoare....
+#, fuzzy
+msgid "r128 track gain"
+msgstr "câștigul replaygain al pistei"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "câștigul în db al pistei"
 
 # DȘ, scrie (ca sugestie):
@@ -626,7 +639,16 @@ msgstr "vârful pistei"
 msgid "replaygain album gain"
 msgstr "câștigul replaygain al albumului"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "câștigul în db al albumului"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "câștigul replaygain al albumului"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "câștigul în db al albumului"
 
 msgid "replaygain album peak"
@@ -1310,6 +1332,16 @@ msgstr "Niciun astfel de element sau modul „%s”\n"
 
 msgid "Index statistics"
 msgstr "Statistici de index"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Se stabilește linia de asamblare pe REDARE ...\n"

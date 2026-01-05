@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -557,7 +557,16 @@ msgstr "serial number of track"
 msgid "replaygain track gain"
 msgstr "replaygain track gain"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "track gain in db"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "replaygain track gain"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "track gain in db"
 
 msgid "replaygain track peak"
@@ -569,7 +578,16 @@ msgstr "peak of the track"
 msgid "replaygain album gain"
 msgstr "replaygain album gain"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "album gain in db"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "replaygain album gain"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "album gain in db"
 
 msgid "replaygain album peak"
@@ -1182,6 +1200,16 @@ msgid "No such element or plugin '%s'\n"
 msgstr "no source element for URI \"%s\""
 
 msgid "Index statistics"
+msgstr ""
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
 msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"

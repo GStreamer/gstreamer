@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2024-03-07 18:17+0800\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -541,7 +541,16 @@ msgstr "serienummer för spår"
 msgid "replaygain track gain"
 msgstr "uppspelningsförstärkning spårförstärkning"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "spårförstärkning i db"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "uppspelningsförstärkning spårförstärkning"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "spårförstärkning i db"
 
 msgid "replaygain track peak"
@@ -553,7 +562,16 @@ msgstr "toppen för spåret"
 msgid "replaygain album gain"
 msgstr "uppspelningsförstärkning albumförstärkning"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "albumförstärkning i db"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "uppspelningsförstärkning albumförstärkning"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "albumförstärkning i db"
 
 msgid "replaygain album peak"
@@ -1195,6 +1213,16 @@ msgstr "Inget sådant element eller insticksmodul ”%s”\n"
 
 msgid "Index statistics"
 msgstr "Indexstatistik"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Ställer in rörledningen till PLAYING...\n"

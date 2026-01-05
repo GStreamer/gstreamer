@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.0.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2013-08-20 14:56+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -527,7 +527,13 @@ msgstr "トラックのシリアル番号"
 msgid "replaygain track gain"
 msgstr ""
 
-msgid "track gain in db"
+msgid "track gain in dB"
+msgstr ""
+
+msgid "r128 track gain"
+msgstr ""
+
+msgid "track gain in dB (r128)"
 msgstr ""
 
 msgid "replaygain track peak"
@@ -539,7 +545,13 @@ msgstr "トラックのピーク"
 msgid "replaygain album gain"
 msgstr ""
 
-msgid "album gain in db"
+msgid "album gain in dB"
+msgstr ""
+
+msgid "r128 album gain"
+msgstr ""
+
+msgid "album gain in dB (r128)"
 msgstr ""
 
 msgid "replaygain album peak"
@@ -1144,6 +1156,16 @@ msgid "No such element or plugin '%s'\n"
 msgstr ""
 
 msgid "Index statistics"
+msgstr ""
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
 msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"

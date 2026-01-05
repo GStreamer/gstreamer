@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2024-02-25 08:00+0300\n"
 "Last-Translator: Emin Tufan Çetin <etcetin@gmail.com>\n"
 "Language-Team: Turkish <gnome-turk@gnome.org>\n"
@@ -537,7 +537,16 @@ msgstr "parçanın seri numarası"
 msgid "replaygain track gain"
 msgstr "yeniden kazanç parça kazancı"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "db olarak parça kazancı"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "yeniden kazanç parça kazancı"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "db olarak parça kazancı"
 
 msgid "replaygain track peak"
@@ -549,7 +558,16 @@ msgstr "parçanın üst sınırı"
 msgid "replaygain album gain"
 msgstr "yeniden kazanç albüm kazancı"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "db olarak albüm kazancı"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "yeniden kazanç albüm kazancı"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "db olarak albüm kazancı"
 
 msgid "replaygain album peak"
@@ -1176,6 +1194,16 @@ msgstr "Böyle bir öge ya da '%s' eklentisi yok\n"
 
 msgid "Index statistics"
 msgstr "Dizin istatistikleri"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Boru hattı PLAYING olarak ayarlanıyor ...\n"

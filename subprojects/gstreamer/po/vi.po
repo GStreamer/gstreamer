@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.12.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2017-05-05 06:45+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -539,7 +539,16 @@ msgstr "số sê-ri của rãnh"
 msgid "replaygain track gain"
 msgstr "nhớ âm lượng rãnh"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "tăng hay giảm âm lượng của rãnh tính theo đề-xi-ben"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "nhớ âm lượng rãnh"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "tăng hay giảm âm lượng của rãnh tính theo đề-xi-ben"
 
 msgid "replaygain track peak"
@@ -551,7 +560,16 @@ msgstr "âm lượng tối đa bạn muốn cho rãnh này"
 msgid "replaygain album gain"
 msgstr "nhớ âm lượng tập nhạc/ảnh"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "tăng hay giảm âm lượng của tập nhạc/ảnh tính theo đề-xi-ben"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "nhớ âm lượng tập nhạc/ảnh"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "tăng hay giảm âm lượng của tập nhạc/ảnh tính theo đề-xi-ben"
 
 msgid "replaygain album peak"
@@ -1191,6 +1209,16 @@ msgstr "Không có phần tử hay phần bổ sung như vậy “%s”\n"
 
 msgid "Index statistics"
 msgstr "Thống kê chỉ mục"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Đang đặt đường ống thành ĐANG PHÁT …\n"

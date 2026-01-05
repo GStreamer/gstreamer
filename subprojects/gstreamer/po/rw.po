@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -706,7 +706,15 @@ msgid "replaygain track gain"
 msgstr ""
 
 #, fuzzy
-msgid "track gain in db"
+msgid "track gain in dB"
+msgstr "in DB"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "in DB"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "in DB"
 
 msgid "replaygain track peak"
@@ -720,7 +728,15 @@ msgid "replaygain album gain"
 msgstr ""
 
 #, fuzzy
-msgid "album gain in db"
+msgid "album gain in dB"
+msgstr "in DB"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "in DB"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "in DB"
 
 msgid "replaygain album peak"
@@ -1357,6 +1373,16 @@ msgid "No such element or plugin '%s'\n"
 msgstr "Oya Inkomoko Ikigize: kugirango"
 
 msgid "Index statistics"
+msgstr ""
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
 msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"

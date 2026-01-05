@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.26.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-23 16:55+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2010-03-25 13:10+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -552,7 +552,16 @@ msgstr "pistaren serie-zenbakia"
 msgid "replaygain track gain"
 msgstr "replaygain pista-irabazia"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "pista-irabazia (db)"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "replaygain pista-irabazia"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "pista-irabazia (db)"
 
 msgid "replaygain track peak"
@@ -564,7 +573,16 @@ msgstr "pistaren gailurra"
 msgid "replaygain album gain"
 msgstr "replaygain album-irabazia"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "album-irabazia (db)"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "replaygain album-irabazia"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "album-irabazia (db)"
 
 msgid "replaygain album peak"
@@ -1199,6 +1217,16 @@ msgid "No such element or plugin '%s'\n"
 msgstr "'%s' elementua edo plugina ez da existitzen\n"
 
 msgid "Index statistics"
+msgstr ""
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
 msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.28.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2010-06-07 22:01+0100\n"
 "Last-Translator: astur <maacub@gmail.com>\n"
 "Language-Team: Asturian <ubuntu-l10n-ast@lists.ubuntu.com>\n"
@@ -548,7 +548,16 @@ msgstr "númberu de serie de la pista"
 msgid "replaygain track gain"
 msgstr "ganancia na reproducción de la pista"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "ganancia de la pista en db"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "ganancia na reproducción de la pista"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "ganancia de la pista en db"
 
 msgid "replaygain track peak"
@@ -560,7 +569,16 @@ msgstr "peak de la pista"
 msgid "replaygain album gain"
 msgstr "ganancia na reproducción del álbum"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "ganancia del álbum en db"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "ganancia na reproducción del álbum"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "ganancia del álbum en db"
 
 msgid "replaygain album peak"
@@ -1190,6 +1208,16 @@ msgid "No such element or plugin '%s'\n"
 msgstr "Nun esiste l'elementu o complementu «%s»\n"
 
 msgid "Index statistics"
+msgstr ""
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
 msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"

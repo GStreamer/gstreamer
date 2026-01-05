@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-23 16:55+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2024-03-16 23:40+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -560,7 +560,17 @@ msgstr "Seriennummer des Titels"
 msgid "replaygain track gain"
 msgstr "Lautstärkeanpassung des Titelpegels"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "Pegelanpassung des Titels in dB"
+
+# http://www.audiohq.de/index.php?showtopic=23#Referenzlautstaerke
+#, fuzzy
+msgid "r128 track gain"
+msgstr "Lautstärkeanpassung des Titelpegels"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "Pegelanpassung des Titels in dB"
 
 msgid "replaygain track peak"
@@ -572,7 +582,16 @@ msgstr "Spitzenpegel des Titels"
 msgid "replaygain album gain"
 msgstr "Lautstärkeanpassung des Albenpegels"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "Pegelanpassung des Albums in dB"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "Lautstärkeanpassung des Albenpegels"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "Pegelanpassung des Albums in dB"
 
 msgid "replaygain album peak"
@@ -1227,6 +1246,16 @@ msgstr "Kein solches Element oder Plugin »%s«\n"
 
 msgid "Index statistics"
 msgstr "Index-Statistiken"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Leitung wird auf ABSPIELEN gesetzt ...\n"

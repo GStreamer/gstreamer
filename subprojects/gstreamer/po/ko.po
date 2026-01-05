@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2021-10-07 17:01+0900\n"
 "Last-Translator: SooHyun Kim <soohyunkim@kw.ac.kr>\n"
 "Language-Team: Korean <translation-team-ko@googlegroups.com>\n"
@@ -524,7 +524,14 @@ msgstr ""
 msgid "replaygain track gain"
 msgstr ""
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "앨범의 이득 값 (dB)"
+
+msgid "r128 track gain"
+msgstr ""
+
+msgid "track gain in dB (r128)"
 msgstr ""
 
 msgid "replaygain track peak"
@@ -536,7 +543,16 @@ msgstr "트랙의 피크"
 msgid "replaygain album gain"
 msgstr ""
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "앨범의 이득 값 (dB)"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "앨범의 이득 값 (dB)"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "앨범의 이득 값 (dB)"
 
 msgid "replaygain album peak"
@@ -1129,6 +1145,16 @@ msgid "No such element or plugin '%s'\n"
 msgstr ""
 
 msgid "Index statistics"
+msgstr ""
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
 msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"

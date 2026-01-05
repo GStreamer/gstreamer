@@ -27,7 +27,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2021-09-26 21:45+0800\n"
 "Last-Translator: Wen Liao <wen.cf83@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@lists.linux.org.tw>\n"
@@ -548,7 +548,16 @@ msgstr "音軌的流水號"
 msgid "replaygain track gain"
 msgstr "回放增益音軌增益"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "音軌增益(db)"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "回放增益音軌增益"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "音軌增益(db)"
 
 msgid "replaygain track peak"
@@ -560,7 +569,16 @@ msgstr "音軌峰值"
 msgid "replaygain album gain"
 msgstr "回放增益專輯增益"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "專輯增益(db)"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "回放增益專輯增益"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "專輯增益(db)"
 
 msgid "replaygain album peak"
@@ -1175,6 +1193,16 @@ msgstr "找不到element或外掛程式'%s'\n"
 
 msgid "Index statistics"
 msgstr "索引統計"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "將pipeline狀態設為PLAYING...\n"

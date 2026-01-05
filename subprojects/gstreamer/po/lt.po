@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-23 16:55+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2010-07-16 00:50+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -541,7 +541,16 @@ msgstr "takelio serijos numeris"
 msgid "replaygain track gain"
 msgstr "replaygain takelio stiprinimas"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "takelio stiprinimas decibelais"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "replaygain takelio stiprinimas"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "takelio stiprinimas decibelais"
 
 msgid "replaygain track peak"
@@ -553,7 +562,16 @@ msgstr "takelio viršūnė"
 msgid "replaygain album gain"
 msgstr "replaygain albumo stiprinimas"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "albumo stiprinimas decibelais"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "replaygain albumo stiprinimas"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "albumo stiprinimas decibelais"
 
 msgid "replaygain album peak"
@@ -1194,6 +1212,16 @@ msgid "No such element or plugin '%s'\n"
 msgstr "Nėra tokio elemento arba įskiepio „%s“\n"
 
 msgid "Index statistics"
+msgstr ""
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
 msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"

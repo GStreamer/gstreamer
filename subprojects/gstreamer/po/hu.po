@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2022-10-18 21:55+0200\n"
 "Last-Translator: Balázs Úr <ur.balazs@fsf.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -539,7 +539,16 @@ msgstr "a dal sorszáma"
 msgid "replaygain track gain"
 msgstr "visszajátszási hangerő: dal hangosítása"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "dal hangosítása dB-ben"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "visszajátszási hangerő: dal hangosítása"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "dal hangosítása dB-ben"
 
 msgid "replaygain track peak"
@@ -551,7 +560,16 @@ msgstr "a dal hangerejének csúcsértéke"
 msgid "replaygain album gain"
 msgstr "visszajátszási hangerő: album hangosítása"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "album hangosítása dB-ben"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "visszajátszási hangerő: album hangosítása"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "album hangosítása dB-ben"
 
 msgid "replaygain album peak"
@@ -1191,6 +1209,16 @@ msgstr "Nincs ilyen elem vagy bővítmény: „%s”\n"
 
 msgid "Index statistics"
 msgstr "Indexstatisztika"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Adatcsatorna beállítása LEJÁTSZÁSRA…\n"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-23 16:55+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2024-03-07 20:30+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -539,7 +539,16 @@ msgstr "numer seryjny ścieżki"
 msgid "replaygain track gain"
 msgstr "osiągi odtwarzania ścieżki"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "osiągi ścieżki w db"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "osiągi odtwarzania ścieżki"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "osiągi ścieżki w db"
 
 msgid "replaygain track peak"
@@ -551,7 +560,16 @@ msgstr "szczyt ścieżki"
 msgid "replaygain album gain"
 msgstr "osiągi odtwarzania albumu"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "osiągi albumu w db"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "osiągi odtwarzania albumu"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "osiągi albumu w db"
 
 msgid "replaygain album peak"
@@ -1199,6 +1217,16 @@ msgstr "Nie ma takiego elementu lub wtyczki '%s'\n"
 
 msgid "Index statistics"
 msgstr "Statystyki indeksu"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Ustawianie potoku na ODTWARZANIE...\n"

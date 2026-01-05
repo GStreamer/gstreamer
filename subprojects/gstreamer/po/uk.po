@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-23 16:55+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2024-07-21 19:42+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <trans-uk@lists.fedoraproject.org>\n"
@@ -539,7 +539,16 @@ msgstr "послідовний номер композиції"
 msgid "replaygain track gain"
 msgstr "рівень відтворення композиції"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "рівень композиції, у дБ"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "рівень відтворення композиції"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "рівень композиції, у дБ"
 
 msgid "replaygain track peak"
@@ -551,7 +560,16 @@ msgstr "пік композиції"
 msgid "replaygain album gain"
 msgstr "рівень відтворення альбому"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "рівень альбому, у дБ"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "рівень відтворення альбому"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "рівень альбому, у дБ"
 
 msgid "replaygain album peak"
@@ -1194,6 +1212,16 @@ msgstr "Немає елемента елемента або модуля «%s»\
 
 msgid "Index statistics"
 msgstr "Статистичні дані покажчика"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Канал переводиться у стан ВІДТВОРЕННЯ...\n"

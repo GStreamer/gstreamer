@@ -4,14 +4,14 @@
 #
 # Matej Urbančič <matej.urban@gmail.com>, 2010 - 2011.
 # Klemen Košir <klemen913@gmail.com>, 2011 - 2014.
-# Martin Srebotnjak <miles@filmsi.net>, 2011, 2024.
+# Martin Srebotnjak <miles@filmsi.net>, 2011, 2024-2025.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
-"PO-Revision-Date: 2024-08-05 15:36+0200\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
+"PO-Revision-Date: 2025-11-08 18:28+0100\n"
 "Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
 "Language: sl\n"
@@ -343,16 +343,16 @@ msgstr ""
 "ključ[en]=opomba"
 
 msgid "track number"
-msgstr "številka skladbe"
+msgstr "številka posnetka"
 
 msgid "track number inside a collection"
-msgstr "številka skladbe v zbirki"
+msgstr "številka posnetka v zbirki"
 
 msgid "track count"
-msgstr "število skladb"
+msgstr "število posnetkov"
 
 msgid "count of tracks inside collection this track belongs to"
-msgstr "skupno število skladb znotraj zbirke, ki ji skladba pripada"
+msgstr "skupno število posnetkov znotraj zbirke, ki ji posnetek pripada"
 
 msgid "disc number"
 msgstr "številka diska"
@@ -535,25 +535,39 @@ msgid "serial"
 msgstr "zaporedna številka"
 
 msgid "serial number of track"
-msgstr "zaporedna številka skladbe"
+msgstr "zaporedna številka posnetka"
 
 msgid "replaygain track gain"
-msgstr "ojačitev sledi ReplayGain"
+msgstr "ojačitev posnetka ReplayGain"
 
-msgid "track gain in db"
-msgstr "pridobitev sledi v dB"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "ojačitev posnetka v dB"
+
+msgid "r128 track gain"
+msgstr "ojačitev posnetka ReplayGain"
+
+msgid "track gain in dB (r128)"
+msgstr "ojačitev posnetka v dB (r128)"
 
 msgid "replaygain track peak"
-msgstr "vrh sledi ReplayGain"
+msgstr "vrh posnetka ReplayGain"
 
 msgid "peak of the track"
-msgstr "ojačanje vrha sledi"
+msgstr "ojačanje vrha posnetka"
 
 msgid "replaygain album gain"
 msgstr "ojačitev albuma ReplayGain"
 
-msgid "album gain in db"
-msgstr "pridobitev albuma v dB"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "ojačitev albuma v dB"
+
+msgid "r128 album gain"
+msgstr "ojačitev albuma ReplayGain"
+
+msgid "album gain in dB (r128)"
+msgstr "ojačitev albuma v dB (r128)"
 
 msgid "replaygain album peak"
 msgstr "vrha albuma ReplayGain"
@@ -565,7 +579,7 @@ msgid "replaygain reference level"
 msgstr "sklicna raven ReplayGain"
 
 msgid "reference level of track and album gain values"
-msgstr "sklicna raven vrednosti pridobitve sledi in albuma"
+msgstr "sklicna raven vrednosti ojačitve posnetka in albuma"
 
 msgid "language code"
 msgstr "jezikovna koda"
@@ -759,8 +773,8 @@ msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
-"Vsebina, ki sega čez več posnetkov, podobno kot stavki simfonije. Je višje "
-"ravni kot posnetek, vendar nižje kot album."
+"Vsebina, ki sega čez več posnetkov, podobno kot stavki simfonije ali "
+"koncerta. Je višje ravni kot posnetek, vendar nižje kot album."
 
 msgid "user rating"
 msgstr "ocena uporabnika"
@@ -827,10 +841,10 @@ msgid "Private data"
 msgstr "Zasebni podatki"
 
 msgid "container-specific-track-id"
-msgstr "ID-steze-specifične-za-vsebnik"
+msgstr "ID-posnetka-specifična-za-vsebnik"
 
 msgid "Container-specific Track ID"
-msgstr "ID steze, specifičen za vsebnik"
+msgstr "ID posnetka, specifičen za vsebnik"
 
 #. separator between two strings
 msgid ", "
@@ -1068,9 +1082,9 @@ msgstr "Pretok ne vsebuje podatkov."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sVgrajeni vmesniki%s:\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sElement Flags%s:\n"
-msgstr "%sVgrajeni vmesniki%s:\n"
+msgstr "%sZastavice elementov%s:\n"
 
 msgid "readable"
 msgstr "berljivo"
@@ -1198,6 +1212,18 @@ msgstr "Predmet ali datoteka \"%s\" ne obstaja\n"
 
 msgid "Index statistics"
 msgstr "Statistika kazala"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr "NAPAKA: %s\n"
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
+"Podrobnosti:\n"
+"%s\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Nastavljanje cevovoda na PLAYING ...\n"

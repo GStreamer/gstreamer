@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2024-10-14 13:52+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -45,8 +45,8 @@ msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
-"Komma-gescheiden lijst van categorie_naam:niveau paren om specifieke "
-"niveau's in te stellen voor de individuele categorieën. Voorbeeld: "
+"Komma-gescheiden lijst van categorie_naam:niveau paren om specifieke niveaus "
+"in te stellen voor de individuele categorieën. Voorbeeld: "
 "GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 msgid "LIST"
@@ -547,7 +547,16 @@ msgstr "volgnummer van dit nummer"
 msgid "replaygain track gain"
 msgstr "aangepaste-geluidssterkte nummer"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "versterking van nummer in db"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "aangepaste-geluidssterkte nummer"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "versterking van nummer in db"
 
 msgid "replaygain track peak"
@@ -559,7 +568,16 @@ msgstr "piek van het nummer"
 msgid "replaygain album gain"
 msgstr "aangepaste-geluidssterkte album"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "versterking album in db"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "aangepaste-geluidssterkte album"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "versterking album in db"
 
 msgid "replaygain album peak"
@@ -1203,6 +1221,16 @@ msgstr "Geen element of plugin '%s'\n"
 
 msgid "Index statistics"
 msgstr "Indexstatistieken"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Pijplijn gezet op afspelen ...\n"

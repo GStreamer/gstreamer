@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-23 16:55+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2022-03-22 10:52-0400\n"
 "Last-Translator: Agron Selimaj <as9902613@gmail.com>\n"
 "Language-Team: Albanian <translation-team-sq@lists.sourceforge.net>\n"
@@ -567,7 +567,16 @@ msgstr "numri serisë së pjesës"
 msgid "replaygain track gain"
 msgstr "ecuria i pjesës në replygain"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "rritja e pjesës në db"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "ecuria i pjesës në replygain"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "rritja e pjesës në db"
 
 msgid "replaygain track peak"
@@ -579,7 +588,16 @@ msgstr "skaji i pistës"
 msgid "replaygain album gain"
 msgstr "replaygain album gain"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "gain i albumit në db"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "replaygain album gain"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "gain i albumit në db"
 
 msgid "replaygain album peak"
@@ -1191,6 +1209,16 @@ msgid "No such element or plugin '%s'\n"
 msgstr "asnjë element burues për URI \"%s\""
 
 msgid "Index statistics"
+msgstr ""
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
 msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"

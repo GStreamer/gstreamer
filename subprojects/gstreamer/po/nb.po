@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2024-09-11 12:09+0200\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <l10n-no@lister.huftis.org>\n"
@@ -538,7 +538,16 @@ msgstr "serienummer for spor"
 msgid "replaygain track gain"
 msgstr "avspillingsforsterkning sporforsterkning"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "sporforsterkning i db"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "avspillingsforsterkning sporforsterkning"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "sporforsterkning i db"
 
 msgid "replaygain track peak"
@@ -550,7 +559,16 @@ msgstr "sporets maksimum"
 msgid "replaygain album gain"
 msgstr "avspillingsforsterkning albumforsterkning"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "albumforsterkning i db"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "avspillingsforsterkning albumforsterkning"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "albumforsterkning i db"
 
 msgid "replaygain album peak"
@@ -1187,6 +1205,16 @@ msgstr "Ingen slik element eller programtillegg '%s'\n"
 
 msgid "Index statistics"
 msgstr "Indeksstatistikk"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Setter rørledning til SPILLER ...\n"

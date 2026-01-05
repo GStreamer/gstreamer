@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2024-05-07 07:40+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
@@ -543,7 +543,17 @@ msgstr "серијски број нумере"
 msgid "replaygain track gain"
 msgstr "појачање нумере појачања пуштања"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "појачање песме у децибелима"
+
+# bug: this is something strange
+#, fuzzy
+msgid "r128 track gain"
+msgstr "појачање нумере појачања пуштања"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "појачање песме у децибелима"
 
 msgid "replaygain track peak"
@@ -555,7 +565,16 @@ msgstr "врхунац нумере"
 msgid "replaygain album gain"
 msgstr "појачање албума појачања пуштања"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "појачање албума у децибелима"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "појачање албума појачања пуштања"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "појачање албума у децибелима"
 
 msgid "replaygain album peak"
@@ -1197,6 +1216,16 @@ msgstr "Нема таквог елемента или прикључка „%s�
 
 msgid "Index statistics"
 msgstr "Статистике пописа"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Постављам спојку низа на ПУШТАМ ...\n"

@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.15.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2019-01-29 09:16+0100\n"
 "Last-Translator: Milo Casagrande <milo@milo.name>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -670,7 +670,16 @@ msgstr "il numero seriale della traccia"
 msgid "replaygain track gain"
 msgstr "guadagno traccia replaygain"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "il guadagno della traccia in dB"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "guadagno traccia replaygain"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "il guadagno della traccia in dB"
 
 msgid "replaygain track peak"
@@ -682,7 +691,16 @@ msgstr "il picco della traccia"
 msgid "replaygain album gain"
 msgstr "guadagno album replaygain"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "il guadagno dell'album in dB"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "guadagno album replaygain"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "il guadagno dell'album in dB"
 
 msgid "replaygain album peak"
@@ -1369,6 +1387,16 @@ msgstr "Elemento o plugin «%s» inesistente\n"
 
 msgid "Index statistics"
 msgstr "Statistiche indice"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Impostazione della pipeline a PLAYING ...\n"

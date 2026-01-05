@@ -19,7 +19,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-23 16:55+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2024-10-09 11:12-0300\n"
 "Last-Translator: Rafael Fontenelle <rafaelff@gnome.org>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-"
@@ -558,7 +558,16 @@ msgstr "número de série da faixa"
 msgid "replaygain track gain"
 msgstr "ganho da faixa (ReplayGain)"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "ganho da faixa em decibéis"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "ganho da faixa (ReplayGain)"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "ganho da faixa em decibéis"
 
 msgid "replaygain track peak"
@@ -570,7 +579,16 @@ msgstr "pico da faixa"
 msgid "replaygain album gain"
 msgstr "ganho do álbum (ReplayGain)"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "ganho do álbum em decibéis"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "ganho do álbum (ReplayGain)"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "ganho do álbum em decibéis"
 
 msgid "replaygain album peak"
@@ -1215,6 +1233,16 @@ msgstr "Nenhum elemento ou plug-in \"%s\"\n"
 
 msgid "Index statistics"
 msgstr "Tabela de estatísticas"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Definindo a fila de processamento para REPRODUZINDO...\n"

@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-23 16:55+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2023-06-04 11:11+0200\n"
 "Last-Translator: Christian Wiatr <w9204-fs@yahoo.com>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -546,7 +546,16 @@ msgstr "numéro de série de la piste"
 msgid "replaygain track gain"
 msgstr "gain de piste replaygain"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "gain de la piste en décibels"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "gain de piste replaygain"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "gain de la piste en décibels"
 
 msgid "replaygain track peak"
@@ -558,7 +567,16 @@ msgstr "crête de la piste"
 msgid "replaygain album gain"
 msgstr "gain d’album replaygain"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "gain de l’album en décibels"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "gain d’album replaygain"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "gain de l’album en décibels"
 
 msgid "replaygain album peak"
@@ -1206,6 +1224,16 @@ msgstr "Aucun élément ou greffon « %s »\n"
 
 msgid "Index statistics"
 msgstr "Statistiques d’index"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Passage du pipeline à la phase PLAYING…\n"

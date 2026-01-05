@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-23 16:55+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2024-03-07 19:31+0700\n"
 "Last-Translator: Andika Triwidada <andika@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -542,7 +542,16 @@ msgstr "nomor seri jalur"
 msgid "replaygain track gain"
 msgstr "peraihan jalur peraihan putar ulang"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "peraihan jalur dalam db"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "peraihan jalur peraihan putar ulang"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "peraihan jalur dalam db"
 
 msgid "replaygain track peak"
@@ -554,7 +563,16 @@ msgstr "puncak jalur"
 msgid "replaygain album gain"
 msgstr "peraihan album peraihan putar ulang"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "peraihan album dalam db"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "peraihan album peraihan putar ulang"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "peraihan album dalam db"
 
 msgid "replaygain album peak"
@@ -1199,6 +1217,16 @@ msgstr "Tak ada elemen atau plugin '%s'\n"
 
 msgid "Index statistics"
 msgstr "Statistik indeks"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Mengatur baris pipa ke PUTAR ...\n"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2010-11-29 11:14+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -554,7 +554,16 @@ msgstr "σειριακός αριθμός του κομματιού"
 msgid "replaygain track gain"
 msgstr "κέρδος κομματιού replaygain"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "κέρδος κομματιού σε db"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "κέρδος κομματιού replaygain"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "κέρδος κομματιού σε db"
 
 msgid "replaygain track peak"
@@ -566,7 +575,16 @@ msgstr "κορύφωση του κομματιού"
 msgid "replaygain album gain"
 msgstr "κέρδος δίσκου replaygain"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "κέρδος δίσκου σε db"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "κέρδος δίσκου replaygain"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "κέρδος δίσκου σε db"
 
 msgid "replaygain album peak"
@@ -1207,6 +1225,16 @@ msgid "No such element or plugin '%s'\n"
 msgstr "Δεν υπάρχει τέτοιο στοιχείο ή πρόσθετο '%s'\n"
 
 msgid "Index statistics"
+msgstr ""
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
 msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"

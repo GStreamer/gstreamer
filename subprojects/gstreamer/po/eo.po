@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-23 16:55+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2023-01-08 11:53-0300\n"
 "Last-Translator: Felipe Castro <fefcas@gmail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -534,7 +534,16 @@ msgstr "seria numero de trako"
 msgid "replaygain track gain"
 msgstr "trak-amplifo de ReplayGain"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "trak-amplifo laŭ db"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "trak-amplifo de ReplayGain"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "trak-amplifo laŭ db"
 
 msgid "replaygain track peak"
@@ -546,7 +555,16 @@ msgstr "pinto de la trako"
 msgid "replaygain album gain"
 msgstr "albuma amplifo de ReplayGain"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "albuma amplifo laŭ db"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "albuma amplifo de ReplayGain"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "albuma amplifo laŭ db"
 
 msgid "replaygain album peak"
@@ -1179,6 +1197,16 @@ msgstr "Neniu elemento aŭ kromprogramo tia '%s'\n"
 
 msgid "Index statistics"
 msgstr "Indeksaj statistikoj"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Ni difinas ĉenstablon kiel LUDANTA ...\n"

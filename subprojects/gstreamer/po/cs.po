@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.12.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-23 16:55+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2017-09-13 15:04+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -539,7 +539,16 @@ msgstr "Sériové číslo stopy"
 msgid "replaygain track gain"
 msgstr "hlasitost přehrávání stopy"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "Zesílení stopy v db"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "hlasitost přehrávání stopy"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "Zesílení stopy v db"
 
 msgid "replaygain track peak"
@@ -551,7 +560,16 @@ msgstr "Špičkové zesílení stopy"
 msgid "replaygain album gain"
 msgstr "hlasitost přehrávání alba"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "Zesílení alba v db"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "hlasitost přehrávání alba"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "Zesílení alba v db"
 
 msgid "replaygain album peak"
@@ -1193,6 +1211,16 @@ msgstr "Element nebo zásuvný modul „%s“ neexistuje\n"
 
 msgid "Index statistics"
 msgstr "Přehledové statistiky"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Nastavuje se roura na PŘEHRÁVÁNÍ…\n"

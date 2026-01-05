@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2026-01-05 18:56+0000\n"
 "PO-Revision-Date: 2010-11-17 23:10+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -545,7 +545,16 @@ msgstr "raidan sarjanumero"
 msgid "replaygain track gain"
 msgstr "raidan replaygain-vahvistus"
 
-msgid "track gain in db"
+#, fuzzy
+msgid "track gain in dB"
+msgstr "raidan vahvistus desibeleissä"
+
+#, fuzzy
+msgid "r128 track gain"
+msgstr "raidan replaygain-vahvistus"
+
+#, fuzzy
+msgid "track gain in dB (r128)"
 msgstr "raidan vahvistus desibeleissä"
 
 msgid "replaygain track peak"
@@ -557,7 +566,16 @@ msgstr "raidan huippu"
 msgid "replaygain album gain"
 msgstr "levyn replaygain-vahvistus"
 
-msgid "album gain in db"
+#, fuzzy
+msgid "album gain in dB"
+msgstr "levyn vahvistus desibeleissä"
+
+#, fuzzy
+msgid "r128 album gain"
+msgstr "levyn replaygain-vahvistus"
+
+#, fuzzy
+msgid "album gain in dB (r128)"
 msgstr "levyn vahvistus desibeleissä"
 
 msgid "replaygain album peak"
@@ -1193,6 +1211,16 @@ msgid "No such element or plugin '%s'\n"
 msgstr "Ei tällaista elementtiä tai liitännäistä ”%s”\n"
 
 msgid "Index statistics"
+msgstr ""
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
 msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
