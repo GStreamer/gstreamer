@@ -375,7 +375,7 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
   num_samples = dec->channels * wph.block_samples;
 
   unpacked_size = (width / 8) * num_samples;
-  outbuf = gst_buffer_new_and_alloc (unpacked_size);
+  outbuf = gst_audio_decoder_allocate_output_buffer (bdec, unpacked_size);
 
   /* legacy; pass along offset, whatever that might entail */
   GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buf);
