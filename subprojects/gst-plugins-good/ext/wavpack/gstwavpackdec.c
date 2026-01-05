@@ -71,23 +71,12 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) S8, "
-        "layout = (string) interleaved, "
-        "channels = (int) [ 1, 4096 ], "
-        "rate = (int) [ 6000, MAX ]; "
-        "audio/x-raw, "
-        "format = (string) " GST_AUDIO_NE (S16) ", "
-        "layout = (string) interleaved, "
-        "channels = (int) [ 1, 4096 ], "
-        "rate = (int) [ 6000, MAX ]; "
-        "audio/x-raw, "
-        "format = (string) " GST_AUDIO_NE (S32) ", "
-        "layout = (string) interleaved, "
+        "format = (string) { S8, " GST_AUDIO_NE (S16) ", " GST_AUDIO_NE (S24)
+        ", " GST_AUDIO_NE (S32) " }, " "layout = (string) interleaved, "
         "channels = (int) [ 1, 4096 ], " "rate = (int) [ 6000, MAX ]; "
-        "audio/x-raw, "
-        "format = (string) " GST_AUDIO_NE (F32) ", "
-        "layout = (string) interleaved, "
-        "channels = (int) [ 1, 4096 ], " "rate = (int) [ 6000, MAX ]")
+        "audio/x-raw, " "format = (string) " GST_AUDIO_NE (F32) ", "
+        "layout = (string) interleaved, " "channels = (int) [ 1, 4096 ], "
+        "rate = (int) [ 6000, MAX ]")
     );
 
 static gboolean gst_wavpack_dec_start (GstAudioDecoder * dec);
@@ -216,9 +205,11 @@ gst_wavpack_dec_negotiate (GstWavpackDec * dec)
       fmt = GST_AUDIO_FORMAT_S8;
       break;
     case 16:
-      fmt = _GST_AUDIO_FORMAT_NE (S16);
+      fmt = GST_AUDIO_FORMAT_S16;
       break;
     case 24:
+      fmt = GST_AUDIO_FORMAT_S24;
+      break;
     case 32:
       fmt =
           dec->mode_float ? _GST_AUDIO_FORMAT_NE (F32) :
@@ -304,7 +295,7 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   WavpackHeader wph;
   int32_t decoded, unpacked_size;
-  gint width, depth, i, j, num_samples, wavpack_mode;
+  gint width, i, j, num_samples, wavpack_mode;
   gboolean mode_float;
   gint32 *dec_data = NULL;
   guint8 *out_data;
@@ -381,9 +372,6 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
     goto decode_error;
 
   width = dec->width;
-  if (width == 24)
-    width = 32;
-  depth = dec->depth;
   num_samples = dec->channels * wph.block_samples;
 
   unpacked_size = (width / 8) * num_samples;
@@ -416,20 +404,32 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
       }
       break;
     }
+    case 24:{
+      guint8 *outbuffer = (guint8 *) out_data;
+      gint *reorder_map = dec->channel_reorder_map;
+
+      for (i = 0; i < num_samples; i += dec->channels) {
+        for (j = 0; j < dec->channels; j++) {
+          gint32 sample = (gint32) (dec_data[i + reorder_map[j]]);
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+          GST_WRITE_UINT24_LE (outbuffer, sample);
+#else
+          GST_WRITE_UINT24_BE (outbuffer, sample);
+#endif
+
+          outbuffer += 3;
+        }
+      }
+      break;
+    }
     case 32:{
       gint32 *outbuffer = (gint32 *) out_data;
       gint *reorder_map = dec->channel_reorder_map;
 
-      if (dec->width == 24) {
-        for (i = 0; i < num_samples; i += dec->channels) {
-          for (j = 0; j < dec->channels; j++)
-            *outbuffer++ = (gint32) (dec_data[i + reorder_map[j]] << 8);
-        }
-      } else {
-        for (i = 0; i < num_samples; i += dec->channels) {
-          for (j = 0; j < dec->channels; j++)
-            *outbuffer++ = (gint32) (dec_data[i + reorder_map[j]]);
-        }
+      for (i = 0; i < num_samples; i += dec->channels) {
+        for (j = 0; j < dec->channels; j++)
+          *outbuffer++ = (gint32) (dec_data[i + reorder_map[j]]);
       }
       break;
     }
