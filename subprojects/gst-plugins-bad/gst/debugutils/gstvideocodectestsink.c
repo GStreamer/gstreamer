@@ -434,7 +434,7 @@ gst_video_codec_test_sink_class_init (GstVideoCodecTestSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,
-      "Video CODEC Test Sink", "Debug/video/Sink",
+      "Video CODEC Test Sink", "Debug/Video/Sink",
       "Sink to test video CODEC conformance",
       "Nicolas Dufresne <nicolas.dufresne@collabora.com>");
 }
