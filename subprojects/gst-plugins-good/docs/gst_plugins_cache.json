@@ -4475,7 +4475,7 @@
         "description": "elements for testing and debugging",
         "elements": {
             "breakmydata": {
-                "author": "Benjamin Otte <otte@gnome>",
+                "author": "Benjamin Otte <otte@gnome.org>",
                 "description": "randomly change data in the stream",
                 "hierarchy": [
                     "GstBreakMyData",
@@ -5044,7 +5044,7 @@
                 "rank": "none"
             },
             "testsink": {
-                "author": "Benjamin Otte <otte@gnome>",
+                "author": "Benjamin Otte <otte@gnome.org>",
                 "description": "perform a number of tests",
                 "hierarchy": [
                     "GstTest",
@@ -6022,7 +6022,7 @@
                 "rank": "none"
             },
             "optv": {
-                "author": "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>, Sebastian Dröge <sebastian.droege@collabora.co.uk>",
+                "author": "Kentaro Fukuchi <fukuchi@users.sourceforge.net>, Sebastian Dröge <sebastian.droege@collabora.co.uk>",
                 "description": "Optical art meets real-time video effect",
                 "hierarchy": [
                     "GstOpTV",
@@ -6092,7 +6092,7 @@
                 "rank": "none"
             },
             "quarktv": {
-                "author": "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>",
+                "author": "Kentaro Fukuchi <fukuchi@users.sourceforge.net>",
                 "description": "Motion dissolver",
                 "hierarchy": [
                     "GstQuarkTV",
@@ -6136,7 +6136,7 @@
                 "rank": "none"
             },
             "radioactv": {
-                "author": "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>, Sebastian Dröge <sebastian.droege@collabora.co.uk>",
+                "author": "Kentaro Fukuchi <fukuchi@users.sourceforge.net>, Sebastian Dröge <sebastian.droege@collabora.co.uk>",
                 "description": "motion-enlightment effect",
                 "hierarchy": [
                     "GstRadioacTV",
@@ -6288,7 +6288,7 @@
                 "rank": "none"
             },
             "rippletv": {
-                "author": "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>, Sebastian Dröge <sebastian.droege@collabora.co.uk>",
+                "author": "Kentaro Fukuchi <fukuchi@users.sourceforge.net>, Sebastian Dröge <sebastian.droege@collabora.co.uk>",
                 "description": "RippleTV does ripple mark effect on the video input",
                 "hierarchy": [
                     "GstRippleTV",
@@ -6371,7 +6371,7 @@
                 "rank": "none"
             },
             "streaktv": {
-                "author": "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>, Sebastian Dröge <sebastian.droege@collabora.co.uk>",
+                "author": "Kentaro Fukuchi <fukuchi@users.sourceforge.net>, Sebastian Dröge <sebastian.droege@collabora.co.uk>",
                 "description": "StreakTV makes after images of moving objects",
                 "hierarchy": [
                     "GstStreakTV",
@@ -15625,7 +15625,7 @@
                 "rank": "secondary"
             },
             "rtph263pay": {
-                "author": "Neil Stratford <neils@vipadia.com>Dejan Sakelsak <dejan.sakelsak@marand.si>",
+                "author": "Neil Stratford <neils@vipadia.com>, Dejan Sakelsak <dejan.sakelsak@marand.si>",
                 "description": "Payload-encodes H263 video in RTP packets (RFC 2190)",
                 "hierarchy": [
                     "GstRtpH263Pay",
@@ -27838,7 +27838,7 @@
         "description": "Video filters plugin",
         "elements": {
             "gamma": {
-                "author": "Arwed v. Merkatz <v.merkatz@gmx.net",
+                "author": "Arwed v. Merkatz <v.merkatz@gmx.net>",
                 "description": "Adjusts gamma on a video stream",
                 "hierarchy": [
                     "GstGamma",
