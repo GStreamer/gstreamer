@@ -520,7 +520,7 @@ gst_rtp_src_class_init (GstRtpSrcClass * klass)
 
   gst_element_class_set_static_metadata (gstelement_class,
       "RTP Source element",
-      "Generic/Bin/Src",
+      "Generic/Bin/Source",
       "Simple RTP src", "Marc Leeman <marc.leeman@gmail.com>");
 }
 
