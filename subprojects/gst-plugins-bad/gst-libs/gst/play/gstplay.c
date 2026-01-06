@@ -2240,6 +2240,7 @@ is_track_enabled (GstPlay * self, gint pos)
   return FALSE;
 }
 
+/* Must be called with lock */
 static GstPlayStreamInfo *
 gst_play_stream_info_get_current_from_stream_id (GstPlay * self,
     const gchar * stream_id, GType type)
@@ -2249,13 +2250,11 @@ gst_play_stream_info_get_current_from_stream_id (GstPlay * self,
   if (!self->media_info || !stream_id)
     return NULL;
 
-  g_mutex_lock (&self->lock);
   info = gst_play_stream_info_find_from_stream_id (self->media_info, stream_id);
   if (info && G_OBJECT_TYPE (info) == type)
     info = gst_play_stream_info_copy (info);
   else
     info = NULL;
-  g_mutex_unlock (&self->lock);
 
   return info;
 }
@@ -3466,12 +3465,16 @@ gst_play_get_current_audio_track (GstPlay * self)
 
   g_return_val_if_fail (GST_IS_PLAY (self), NULL);
 
-  if (!is_track_enabled (self, GST_PLAY_FLAG_AUDIO))
+  g_mutex_lock (&self->lock);
+  if (!is_track_enabled (self, GST_PLAY_FLAG_AUDIO)) {
+    g_mutex_unlock (&self->lock);
     return NULL;
+  }
 
   info = (GstPlayAudioInfo *)
       gst_play_stream_info_get_current_from_stream_id (self,
       self->audio_sid, GST_TYPE_PLAY_AUDIO_INFO);
+  g_mutex_unlock (&self->lock);
 
   return info;
 }
@@ -3494,12 +3497,16 @@ gst_play_get_current_video_track (GstPlay * self)
 
   g_return_val_if_fail (GST_IS_PLAY (self), NULL);
 
-  if (!is_track_enabled (self, GST_PLAY_FLAG_VIDEO))
+  g_mutex_lock (&self->lock);
+  if (!is_track_enabled (self, GST_PLAY_FLAG_VIDEO)) {
+    g_mutex_unlock (&self->lock);
     return NULL;
+  }
 
   info = (GstPlayVideoInfo *)
       gst_play_stream_info_get_current_from_stream_id (self,
       self->video_sid, GST_TYPE_PLAY_VIDEO_INFO);
+  g_mutex_unlock (&self->lock);
 
   return info;
 }
@@ -3522,12 +3529,16 @@ gst_play_get_current_subtitle_track (GstPlay * self)
 
   g_return_val_if_fail (GST_IS_PLAY (self), NULL);
 
-  if (!is_track_enabled (self, GST_PLAY_FLAG_SUBTITLE))
+  g_mutex_lock (&self->lock);
+  if (!is_track_enabled (self, GST_PLAY_FLAG_SUBTITLE)) {
+    g_mutex_unlock (&self->lock);
     return NULL;
+  }
 
   info = (GstPlaySubtitleInfo *)
       gst_play_stream_info_get_current_from_stream_id (self,
       self->subtitle_sid, GST_TYPE_PLAY_SUBTITLE_INFO);
+  g_mutex_unlock (&self->lock);
 
   return info;
 }
