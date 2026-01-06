@@ -1566,33 +1566,25 @@ gst_play_bin3_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case PROP_URI:
     {
-      GST_PLAY_BIN3_LOCK (playbin);
       g_object_get_property ((GObject *) playbin->uridecodebin, "uri", value);
-      GST_PLAY_BIN3_UNLOCK (playbin);
       break;
     }
     case PROP_CURRENT_URI:
     {
-      GST_PLAY_BIN3_LOCK (playbin);
       g_object_get_property ((GObject *) playbin->uridecodebin, "current-uri",
           value);
-      GST_PLAY_BIN3_UNLOCK (playbin);
       break;
     }
     case PROP_SUBURI:
     {
-      GST_PLAY_BIN3_LOCK (playbin);
       g_object_get_property ((GObject *) playbin->uridecodebin, "suburi",
           value);
-      GST_PLAY_BIN3_UNLOCK (playbin);
       break;
     }
     case PROP_CURRENT_SUBURI:
     {
-      GST_PLAY_BIN3_LOCK (playbin);
       g_object_get_property ((GObject *) playbin->uridecodebin,
           "current-suburi", value);
-      GST_PLAY_BIN3_UNLOCK (playbin);
       break;
     }
     case PROP_FLAGS:
@@ -1657,22 +1649,16 @@ gst_play_bin3_get_property (GObject * object, guint prop_id, GValue * value,
           gst_play_sink_get_font_desc (playbin->playsink));
       break;
     case PROP_CONNECTION_SPEED:
-      GST_PLAY_BIN3_LOCK (playbin);
       g_object_get_property ((GObject *) playbin->uridecodebin,
           "connection-speed", value);
-      GST_PLAY_BIN3_UNLOCK (playbin);
       break;
     case PROP_BUFFER_SIZE:
-      GST_OBJECT_LOCK (playbin);
       g_object_get_property ((GObject *) playbin->uridecodebin, "buffer-size",
           value);
-      GST_OBJECT_UNLOCK (playbin);
       break;
     case PROP_BUFFER_DURATION:
-      GST_OBJECT_LOCK (playbin);
       g_object_get_property ((GObject *) playbin->uridecodebin,
           "buffer-duration", value);
-      GST_OBJECT_UNLOCK (playbin);
       break;
     case PROP_AV_OFFSET:
       g_value_set_int64 (value,
