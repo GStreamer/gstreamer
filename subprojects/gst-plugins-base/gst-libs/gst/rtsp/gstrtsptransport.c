@@ -523,8 +523,12 @@ gst_rtsp_transport_parse (const gchar * str, GstRTSPTransport * transport)
       RTSP_TRANSPORT_PARAMETER_IS_UNIQUE (RTSP_TRANSPORT_SOURCE);
       transport->source = g_strdup (split[i] + 7);
     } else if (g_str_has_prefix (split[i], "layers=")) {
+      guint64 layers;
       RTSP_TRANSPORT_PARAMETER_IS_UNIQUE (RTSP_TRANSPORT_LAYERS);
-      transport->layers = strtoul (split[i] + 7, NULL, 10);
+      if (!g_ascii_string_to_unsigned (split[i] + 7, 10, 0, G_MAXUINT, &layers,
+              NULL))
+        goto invalid_transport;
+      transport->layers = layers;
     } else if (g_str_has_prefix (split[i], "mode=")) {
       RTSP_TRANSPORT_PARAMETER_IS_UNIQUE (RTSP_TRANSPORT_MODE);
       parse_mode (transport, split[i] + 5);
@@ -539,10 +543,11 @@ gst_rtsp_transport_parse (const gchar * str, GstRTSPTransport * transport)
       if (!IS_VALID_INTERLEAVE_RANGE (transport->interleaved))
         goto invalid_transport;
     } else if (g_str_has_prefix (split[i], "ttl=")) {
+      guint64 ttl;
       RTSP_TRANSPORT_PARAMETER_IS_UNIQUE (RTSP_TRANSPORT_TTL);
-      transport->ttl = strtoul (split[i] + 4, NULL, 10);
-      if (transport->ttl >= 256)
+      if (!g_ascii_string_to_unsigned (split[i] + 4, 10, 0, 255, &ttl, NULL))
         goto invalid_transport;
+      transport->ttl = ttl;
     } else if (g_str_has_prefix (split[i], "port=")) {
       RTSP_TRANSPORT_PARAMETER_IS_UNIQUE (RTSP_TRANSPORT_PORT);
       if (parse_range (split[i] + 5, &transport->port)) {
@@ -562,8 +567,12 @@ gst_rtsp_transport_parse (const gchar * str, GstRTSPTransport * transport)
           goto invalid_transport;
       }
     } else if (g_str_has_prefix (split[i], "ssrc=")) {
+      guint64 ssrc;
       RTSP_TRANSPORT_PARAMETER_IS_UNIQUE (RTSP_TRANSPORT_SSRC);
-      transport->ssrc = strtoul (split[i] + 5, NULL, 16);
+      if (!g_ascii_string_to_unsigned (split[i] + 5, 16, 0, G_MAXUINT, &ssrc,
+              NULL))
+        goto invalid_transport;
+      transport->ssrc = ssrc;
     } else {
       /* unknown field... */
       if (strlen (split[i]) > 0) {
