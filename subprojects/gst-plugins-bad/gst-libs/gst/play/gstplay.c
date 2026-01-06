@@ -197,6 +197,7 @@ struct _GstPlay
   GstClockTime seek_position;
 
   GstStreamCollection *collection;
+  guint32 selection_seqnum;
   gchar *video_sid;
   gboolean video_enabled;
   gchar *audio_sid;
@@ -310,6 +311,7 @@ gst_play_init (GstPlay * self)
   self->audio_enabled = TRUE;
   self->video_enabled = TRUE;
   self->subtitle_enabled = TRUE;
+  self->selection_seqnum = GST_SEQNUM_INVALID;
 
   GST_TRACE_OBJECT (self, "Initialized");
 }
@@ -1866,22 +1868,13 @@ streams_selected_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
     gpointer user_data)
 {
   GstPlay *self = GST_PLAY (user_data);
-  GstStreamCollection *collection = NULL;
-
-  gst_message_parse_streams_selected (msg, &collection);
-
-  if (!collection)
-    return;
+  guint32 seqnum = gst_message_get_seqnum (msg);
 
   g_mutex_lock (&self->lock);
-  gboolean updated = update_stream_collection (self, collection);
-  gst_object_unref (collection);
-
-  // This should not really happen: we should first get a stream-collection
-  // message with the new collection, then selection happens.
-  if (updated) {
-    GST_WARNING_OBJECT (self,
-        "Updated stream collection from streams-selected message");
+  // Ignore selections for previous select-streams events
+  if (self->selection_seqnum != seqnum) {
+    g_mutex_unlock (&self->lock);
+    return;
   }
 
   gboolean found_audio = self->audio_sid == NULL;
@@ -1944,9 +1937,6 @@ streams_selected_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
         self->subtitle_sid);
   }
   g_mutex_unlock (&self->lock);
-
-  if (self->media_info && updated)
-    on_media_info_updated (self);
 }
 
 static void
@@ -2984,6 +2974,7 @@ gst_play_stop_internal (GstPlay * self, gboolean transient)
     gst_object_unref (self->collection);
     self->collection = NULL;
   }
+  self->selection_seqnum = GST_SEQNUM_INVALID;
   g_free (self->video_sid);
   g_free (self->audio_sid);
   g_free (self->subtitle_sid);
@@ -3560,15 +3551,16 @@ gst_play_select_streams (GstPlay * self)
     stream_list = g_list_append (stream_list, g_strdup (self->subtitle_sid));
   }
 
-  g_mutex_unlock (&self->lock);
   if (stream_list) {
-    ret = gst_element_send_event (self->playbin,
-        gst_event_new_select_streams (stream_list));
+    GstEvent *ev = gst_event_new_select_streams (stream_list);
     g_list_free_full (stream_list, g_free);
+    self->selection_seqnum = gst_event_get_seqnum (ev);
+    g_mutex_unlock (&self->lock);
+    ret = gst_element_send_event (self->playbin, ev);
+    g_mutex_lock (&self->lock);
   } else {
     GST_ERROR_OBJECT (self, "No available streams for select-streams");
   }
-  g_mutex_lock (&self->lock);
 
   return ret;
 }
