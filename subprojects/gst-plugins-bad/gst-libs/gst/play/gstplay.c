@@ -198,6 +198,7 @@ struct _GstPlay
 
   GstStreamCollection *collection;
   guint32 selection_seqnum;
+  GList *current_selection;
   gchar *video_sid;
   gboolean video_enabled;
   gchar *audio_sid;
@@ -515,6 +516,7 @@ gst_play_finalize (GObject * object)
     gst_structure_free (self->config);
   if (self->collection)
     gst_object_unref (self->collection);
+  g_list_free_full (self->current_selection, g_free);
   if (self->media_info)
     g_object_unref (self->media_info);
   g_mutex_clear (&self->lock);
@@ -2952,6 +2954,8 @@ gst_play_stop_internal (GstPlay * self, gboolean transient)
     self->collection = NULL;
   }
   self->selection_seqnum = GST_SEQNUM_INVALID;
+  g_list_free_full (self->current_selection, g_free);
+  self->current_selection = NULL;
   g_free (self->video_sid);
   g_free (self->audio_sid);
   g_free (self->subtitle_sid);
@@ -3505,6 +3509,23 @@ gst_play_get_current_subtitle_track (GstPlay * self)
   return info;
 }
 
+static gboolean
+is_same_stream_selection (GList * a, GList * b)
+{
+  // We always create the list in the same order so
+  // checking both lists linearly is sufficient
+  while (a && b) {
+    if (!g_str_equal (a->data, b->data))
+      return FALSE;
+
+    a = a->next;
+    b = b->next;
+  }
+
+  // If both lists are at the end now then they were equal
+  return a == b;
+}
+
 /* Must be called with lock */
 static gboolean
 gst_play_select_streams (GstPlay * self)
@@ -3529,12 +3550,21 @@ gst_play_select_streams (GstPlay * self)
   }
 
   if (stream_list) {
-    GstEvent *ev = gst_event_new_select_streams (stream_list);
-    g_list_free_full (stream_list, g_free);
-    self->selection_seqnum = gst_event_get_seqnum (ev);
-    g_mutex_unlock (&self->lock);
-    ret = gst_element_send_event (self->playbin, ev);
-    g_mutex_lock (&self->lock);
+    if (is_same_stream_selection (self->current_selection, stream_list)) {
+      GST_DEBUG_OBJECT (self, "Stream selection did not change");
+      g_list_free_full (stream_list, g_free);
+    } else {
+      GstEvent *ev = gst_event_new_select_streams (stream_list);
+      g_list_free_full (self->current_selection, g_free);
+      self->current_selection = stream_list;
+      self->selection_seqnum = gst_event_get_seqnum (ev);
+      g_mutex_unlock (&self->lock);
+      ret = gst_element_send_event (self->playbin, ev);
+      g_mutex_lock (&self->lock);
+      if (!ret) {
+        GST_WARNING_OBJECT (self, "Stream selection failed");
+      }
+    }
   } else {
     GST_ERROR_OBJECT (self, "No available streams for select-streams");
   }
