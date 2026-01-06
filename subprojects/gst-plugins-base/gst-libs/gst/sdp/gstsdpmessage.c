@@ -3030,7 +3030,16 @@ gst_sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
 #define READ_STRING(field) \
   do { read_string (str, sizeof (str), &p); REPLACE_STRING (field, str); } while (0)
 #define READ_UINT(field) \
-  do { read_string (str, sizeof (str), &p); field = strtoul (str, NULL, 10); } while (0)
+  do { \
+    guint64 _val; \
+    read_string (str, sizeof (str), &p); \
+    if (!g_ascii_string_to_unsigned (str, 10, 0, G_MAXUINT, &_val, NULL)) { \
+      GST_WARNING ("Invalid numeric value '%s' in SDP, using 0 (RFC 4566 violation)", str); \
+      field = 0; \
+    } else { \
+      field = _val; \
+    } \
+  } while (0)
 
   switch (type) {
     case 'v':
@@ -3096,15 +3105,25 @@ gst_sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
     case 'b':
     {
       gchar str2[32];
+      guint64 bandwidth_val;
 
       read_string_del (str, sizeof (str), ':', &p);
       if (*p != '\0')
         p++;
       read_string (str2, sizeof (str2), &p);
+
+      if (!g_ascii_string_to_unsigned (str2, 10, 0, G_MAXUINT, &bandwidth_val,
+              NULL)) {
+        GST_WARNING
+            ("Invalid bandwidth value '%s' in SDP, using 0 (RFC 4566 violation)",
+            str2);
+        bandwidth_val = 0;
+      }
+
       if (c->state == SDP_SESSION)
-        gst_sdp_message_add_bandwidth (c->msg, str, atoi (str2));
+        gst_sdp_message_add_bandwidth (c->msg, str, bandwidth_val);
       else
-        gst_sdp_media_add_bandwidth (c->media, str, atoi (str2));
+        gst_sdp_media_add_bandwidth (c->media, str, bandwidth_val);
       break;
     }
     case 't':
@@ -3130,6 +3149,8 @@ gst_sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
     case 'm':
     {
       gchar *slash;
+      guint64 port_val;
+      guint64 num_ports_val;
       GstSDPMedia nmedia;
 
       c->state = SDP_MEDIA;
@@ -3140,12 +3161,29 @@ gst_sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
       READ_STRING (nmedia.media);
       read_string (str, sizeof (str), &p);
       slash = g_strrstr (str, "/");
+
       if (slash) {
         *slash = '\0';
-        nmedia.port = atoi (str);
-        nmedia.num_ports = atoi (slash + 1);
+      }
+
+      if (!g_ascii_string_to_unsigned (str, 10, 0, 65535, &port_val, NULL)) {
+        GST_WARNING
+            ("Invalid port value '%s' in SDP, using 0 (RFC 4566 violation)",
+            str);
+        port_val = 0;
+      }
+      nmedia.port = port_val;
+
+      if (slash) {
+        if (!g_ascii_string_to_unsigned (slash + 1, 10, 0, G_MAXUINT,
+                &num_ports_val, NULL)) {
+          GST_WARNING
+              ("Invalid num_ports value '%s' in SDP, using 1 (RFC 4566 violation)",
+              slash + 1);
+          num_ports_val = 1;
+        }
+        nmedia.num_ports = num_ports_val;
       } else {
-        nmedia.port = atoi (str);
         nmedia.num_ports = 0;
       }
       READ_STRING (nmedia.proto);
@@ -3232,7 +3270,10 @@ gst_sdp_message_parse_buffer (const guint8 * data, guint size,
     memcpy (buffer, s, len);
     buffer[len] = '\0';
 
-    gst_sdp_parse_line (&c, type, buffer);
+    if (!gst_sdp_parse_line (&c, type, buffer)) {
+      g_free (buffer);
+      return GST_SDP_EINVAL;
+    }
 
     SIZE_CHECK_GUARD;
 
