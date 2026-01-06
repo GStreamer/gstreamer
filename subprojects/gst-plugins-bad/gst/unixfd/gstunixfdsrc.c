@@ -488,7 +488,7 @@ gst_unix_fd_src_class_init (GstUnixFdSrcClass * klass)
   GST_DEBUG_CATEGORY_INIT (unixfdsrc_debug, "unixfdsrc", 0,
       "Unix file descriptor source");
   gst_element_class_set_static_metadata (gstelement_class,
-      "Unix file descriptor source", "Src", "Unix file descriptor source",
+      "Unix file descriptor source", "Source", "Unix file descriptor source",
       "Xavier Claessens <xavier.claessens@collabora.com>");
   gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
 
