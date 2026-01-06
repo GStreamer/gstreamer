@@ -787,6 +787,13 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
     gint64 cur_running_time;
     GstClockTime running_time;
 
+    if (!sel->active_sinkpad) {
+      GST_DEBUG_OBJECT (selpad,
+          "Not waiting because there are no active sink pads");
+      GST_INPUT_SELECTOR_UNLOCK (sel);
+      break;
+    }
+
     active_selpad = GST_SELECTOR_PAD_CAST (sel->active_sinkpad);
 
     if (seg->format != GST_FORMAT_TIME) {
@@ -1282,7 +1289,7 @@ done:
   /* dropped buffers */
 ignore:
   {
-    gboolean active_pad_pushed =
+    gboolean active_pad_pushed = sel->active_sinkpad &&
         GST_SELECTOR_PAD_CAST (sel->active_sinkpad)->pushed;
 
     /* when we drop a buffer, we're creating a discont on this pad */
