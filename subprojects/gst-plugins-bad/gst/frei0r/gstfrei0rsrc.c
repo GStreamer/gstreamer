@@ -341,7 +341,7 @@ gst_frei0r_src_class_init (GstFrei0rSrcClass * klass,
   if (desc == NULL || *desc == '\0')
     desc = "No details";
   gst_element_class_set_metadata (gstelement_class, class_data->info.name,
-      "Src/Video", desc, author);
+      "Source/Video", desc, author);
   g_free (author);
 
   caps = gst_frei0r_caps_from_color_model (class_data->info.color_model);
