@@ -118,7 +118,7 @@ gst_avtp_src_class_init (GstAvtpSrcClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "Audio/Video Transport Protocol (AVTP) Source",
-      "Src/Network", "Receive AVTPDUs from the network",
+      "Source/Network", "Receive AVTPDUs from the network",
       "Andre Guedes <andre.guedes@intel.com>");
 
   basesrc_class->start = GST_DEBUG_FUNCPTR (gst_avtp_src_start);
