@@ -102,7 +102,7 @@ gst_gl_src_bin_class_init (GstGLSrcBinClass * klass)
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, GST_TYPE_ELEMENT, 0);
 
   gst_element_class_set_static_metadata (element_class,
-      "GL Src Bin", "Src/Video",
+      "GL Src Bin", "Source/Video",
       "Infrastructure to process GL textures",
       "Matthew Waters <matthew@centricular.com>");
 

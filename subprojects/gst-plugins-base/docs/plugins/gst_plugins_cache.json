@@ -6574,7 +6574,7 @@
                 "interfaces": [
                     "GstChildProxy"
                 ],
-                "klass": "Src/Video",
+                "klass": "Source/Video",
                 "long-name": "GL Src Bin",
                 "pad-templates": {
                     "src": {
