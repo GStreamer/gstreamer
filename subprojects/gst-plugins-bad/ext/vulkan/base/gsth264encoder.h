@@ -27,12 +27,13 @@
 #include <gst/codecparsers/gsth264parser.h>
 #include <gst/video/gstvideoencoder.h>
 
+#include "gsth26xgopmapper.h"
+
 G_BEGIN_DECLS
 
 typedef struct _GstH264Encoder GstH264Encoder;
 typedef struct _GstH264EncoderClass GstH264EncoderClass;
 typedef struct _GstH264EncoderFrame GstH264EncoderFrame;
-typedef struct _GstH264GOPFrame GstH264GOPFrame;
 
 typedef struct _GstH264LevelDescriptor GstH264LevelDescriptor;
 
@@ -271,25 +272,6 @@ gsize                gst_h264_calculate_coded_size           (const GstH264SPS *
 #define GST_H264_ENCODER_FRAME(obj)    ((GstH264EncoderFrame *)obj)
 
 /**
- * GstH264GOPFrame:
- *
- * Description of an H.264 frame in the Group Of Pictures (GOP).
- *
- * Since: 1.30
- */
-struct _GstH264GOPFrame
-{
-  /*< private >*/
-  GstH264SliceType slice_type;
-  gboolean is_ref;
-  guint8 pyramid_level;
-
-  /* Only for b pyramid */
-  gint left_ref_poc_diff;
-  gint right_ref_poc_diff;
-};
-
-/**
  * GstH264EncoderFrame:
  *
  * Represents a frame that is going to be encoded with H.264
@@ -301,7 +283,7 @@ struct _GstH264EncoderFrame
   /*< private >*/
   GstMiniObject parent;
 
-  GstH264GOPFrame type;
+  GstH26XGOP gop;
 
   /* Number of ref frames within current GOP. H264's frame number. */
   guint16 gop_frame_num;
