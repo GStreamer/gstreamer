@@ -1916,9 +1916,10 @@ streams_selected_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
       }
     }
 
-    if ((stream_type & GST_STREAM_TYPE_TEXT) && self->subtitle_enabled) {
+    if ((stream_type & GST_STREAM_TYPE_TEXT)) {
       GST_DEBUG_OBJECT (self, "Selected subtitle track %s", stream_id);
-      if (g_strcmp0 (self->subtitle_sid, stream_id) == 0) {
+      if (g_strcmp0 (self->subtitle_sid, stream_id) == 0
+          && self->subtitle_enabled) {
         found_subtitle = TRUE;
       } else {
         GST_WARNING_OBJECT (self, "Unexpected subtitle stream id '%s' selected",
