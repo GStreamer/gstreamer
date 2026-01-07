@@ -3444,7 +3444,7 @@ gst_play_get_current_audio_track (GstPlay * self)
   g_return_val_if_fail (GST_IS_PLAY (self), NULL);
 
   g_mutex_lock (&self->lock);
-  if (!is_track_enabled (self, GST_PLAY_FLAG_AUDIO)) {
+  if (!self->audio_enabled) {
     g_mutex_unlock (&self->lock);
     return NULL;
   }
@@ -3476,7 +3476,7 @@ gst_play_get_current_video_track (GstPlay * self)
   g_return_val_if_fail (GST_IS_PLAY (self), NULL);
 
   g_mutex_lock (&self->lock);
-  if (!is_track_enabled (self, GST_PLAY_FLAG_VIDEO)) {
+  if (!self->video_enabled) {
     g_mutex_unlock (&self->lock);
     return NULL;
   }
@@ -3508,7 +3508,7 @@ gst_play_get_current_subtitle_track (GstPlay * self)
   g_return_val_if_fail (GST_IS_PLAY (self), NULL);
 
   g_mutex_lock (&self->lock);
-  if (!is_track_enabled (self, GST_PLAY_FLAG_SUBTITLE)) {
+  if (!self->subtitle_enabled) {
     g_mutex_unlock (&self->lock);
     return NULL;
   }
