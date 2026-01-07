@@ -129,7 +129,7 @@ static PyObject *_gst_analytics_mtd_direct_related_iterator_next
     return NULL;
   }
 
-  py_mtd_type = PyLong_FromUnsignedLong (gst_analytics_mtd_get_mtd_type (&mtd));
+  py_mtd_type = PyLong_FromSize_t (gst_analytics_mtd_get_mtd_type (&mtd));
   py_rmeta = PyObject_GetAttrString (self->py_mtd, "meta");
   py_mtd_id = PyLong_FromUnsignedLong (mtd.id);
   py_args = PyTuple_Pack (3, py_mtd_type, py_rmeta, py_mtd_id);
@@ -144,6 +144,8 @@ static PyObject *_gst_analytics_mtd_direct_related_iterator_next
 
   Py_DECREF (py_args);
   Py_DECREF (py_rmeta);
+  Py_DECREF (py_mtd_id);
+  Py_DECREF (py_mtd_type);
 
   return py_result;
 }
@@ -203,7 +205,7 @@ _gst_analytics_relation_meta_iterator_next (_GstAnalyticsRelationMetaIterator *
     return NULL;
   }
 
-  py_mtd_type = PyLong_FromUnsignedLong (gst_analytics_mtd_get_mtd_type (&mtd));
+  py_mtd_type = PyLong_FromSize_t (gst_analytics_mtd_get_mtd_type (&mtd));
   py_mtd_id = PyLong_FromUnsignedLong (mtd.id);
   py_args = PyTuple_Pack (3, py_mtd_type, self->py_rmeta, py_mtd_id);
 
