@@ -121,6 +121,10 @@ static char *gst_info_printf_pointer_extension_func (const char *format,
 #  include <unistd.h>           /* getpid on UNIX */
 #endif
 
+#ifdef HAVE_STDINT_H
+#  include <stdint.h>           /* uintptr_t */
+#endif
+
 #if !defined(G_OS_WIN32) && !defined(HAVE_GETTID)
 #  ifdef __linux__
 #    include <sys/types.h>
@@ -1700,7 +1704,7 @@ _get_thread_id (void)
 #elif defined(__linux__)
   return syscall (SYS_gettid);
 #else
-  return pthread_self ();
+  return (gpointer) (uintptr_t) pthread_self ();
 #endif
 }
 
