@@ -13720,14 +13720,19 @@ and GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS().</doc>
       </member>
       <member name="non_default_params" value="4" c:identifier="GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS" glib:nick="non-default-params" glib:name="GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstdebugutils.h">show modified parameters on
-                                          elements</doc>
+                                          elements. When this flag is set
+                                          without GST_DEBUG_GRAPH_SHOW_FULL_PARAMS,
+                                          a tooltip with full parameter values
+                                          is added to each element.</doc>
       </member>
       <member name="states" value="8" c:identifier="GST_DEBUG_GRAPH_SHOW_STATES" glib:nick="states" glib:name="GST_DEBUG_GRAPH_SHOW_STATES">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstdebugutils.h">show element states</doc>
       </member>
       <member name="full_params" value="16" c:identifier="GST_DEBUG_GRAPH_SHOW_FULL_PARAMS" glib:nick="full-params" glib:name="GST_DEBUG_GRAPH_SHOW_FULL_PARAMS">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstdebugutils.h">show full element parameter values even
-                                   if they are very long</doc>
+                                   if they are very long. When this flag is
+                                   set, no tooltip is added since the full
+                                   values are already visible in the label.</doc>
       </member>
       <member name="all" value="15" c:identifier="GST_DEBUG_GRAPH_SHOW_ALL" glib:nick="all" glib:name="GST_DEBUG_GRAPH_SHOW_ALL">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstdebugutils.h">show all the typical details that one might want</doc>

@@ -34,10 +34,15 @@ G_BEGIN_DECLS
  * @GST_DEBUG_GRAPH_SHOW_MEDIA_TYPE: show caps-name on edges
  * @GST_DEBUG_GRAPH_SHOW_CAPS_DETAILS: show caps-details on edges
  * @GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS: show modified parameters on
- *                                           elements
+ *                                           elements. When this flag is set
+ *                                           without GST_DEBUG_GRAPH_SHOW_FULL_PARAMS,
+ *                                           a tooltip with full parameter values
+ *                                           is added to each element.
  * @GST_DEBUG_GRAPH_SHOW_STATES: show element states
  * @GST_DEBUG_GRAPH_SHOW_FULL_PARAMS: show full element parameter values even
- *                                    if they are very long
+ *                                    if they are very long. When this flag is
+ *                                    set, no tooltip is added since the full
+ *                                    values are already visible in the label.
  * @GST_DEBUG_GRAPH_SHOW_ALL: show all the typical details that one might want
  * @GST_DEBUG_GRAPH_SHOW_VERBOSE: show all details regardless of how large or
  *                                verbose they make the resulting output

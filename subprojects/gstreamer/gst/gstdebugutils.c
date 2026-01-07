@@ -693,6 +693,21 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details,
             G_OBJECT_TYPE_NAME (element), GST_OBJECT_NAME (element),
             (state_name ? state_name : ""), (param_name ? param_name : "")
             );
+        /* add tooltip with full (non-truncated) params when label is truncated */
+        if ((details & GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS) &&
+            !(details & GST_DEBUG_GRAPH_SHOW_FULL_PARAMS)) {
+          gchar *full_param_name =
+              debug_dump_get_object_params (G_OBJECT (element),
+              details | GST_DEBUG_GRAPH_SHOW_FULL_PARAMS, ignore_propnames,
+              "&#10;");
+          if (full_param_name) {
+            const gchar *params = full_param_name;
+            if (g_str_has_prefix (params, "&#10;"))
+              params += 5;
+            g_string_append_printf (str, "%s  tooltip=\"%s\";\n", spc, params);
+            g_free (full_param_name);
+          }
+        }
         if (state_name) {
           g_free (state_name);
           state_name = NULL;
