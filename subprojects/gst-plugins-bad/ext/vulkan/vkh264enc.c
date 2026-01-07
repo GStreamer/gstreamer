@@ -276,14 +276,14 @@ _GET_FRAME (GstH264EncoderFrame * frame)
 }
 
 static StdVideoH264SliceType
-gst_vulkan_h264_slice_type (GstH264SliceType type)
+gst_vulkan_h264_slice_type (GstH26XGOPType type)
 {
   switch (type) {
-    case GST_H264_I_SLICE:
+    case GST_H26X_GOP_TYPE_I:
       return STD_VIDEO_H264_SLICE_TYPE_I;
-    case GST_H264_P_SLICE:
+    case GST_H26X_GOP_TYPE_P:
       return STD_VIDEO_H264_SLICE_TYPE_P;
-    case GST_H264_B_SLICE:
+    case GST_H26X_GOP_TYPE_B:
       return STD_VIDEO_H264_SLICE_TYPE_B;
     default:
       GST_WARNING ("Unsupported picture type '%d'", type);
@@ -1498,7 +1498,7 @@ _setup_slice (GstVulkanH264Encoder * self, GstH264EncoderFrame * h264_frame,
     GstH264SliceHdr * slice_hdr)
 {
   GstVulkanH264EncoderFrame *vk_frame = _GET_FRAME (h264_frame);
-  GstH264SliceType slice_type = h264_frame->type.slice_type;
+  GstH264SliceType slice_type = (GstH264SliceType) h264_frame->gop.type;
 
   /* *INDENT-OFF* */
   vk_frame->slice_hdr = (StdVideoEncodeH264SliceHeader) {
@@ -1508,7 +1508,7 @@ _setup_slice (GstVulkanH264Encoder * self, GstH264EncoderFrame * h264_frame,
           slice_hdr->num_ref_idx_active_override_flag,
     },
     .first_mb_in_slice = slice_hdr->first_mb_in_slice, /* 0 */
-    .slice_type = gst_vulkan_h264_slice_type(h264_frame->type.slice_type),
+    .slice_type = gst_vulkan_h264_slice_type (h264_frame->gop.type),
     .cabac_init_idc = slice_hdr->cabac_init_idc,
     .disable_deblocking_filter_idc = slice_hdr->disable_deblocking_filter_idc,
     .slice_qp_delta = slice_hdr->slice_qp_delta,
@@ -1586,20 +1586,19 @@ _reset_rc_props (GstVulkanH264Encoder * self)
 }
 
 static StdVideoH264PictureType
-_gst_slice_type_2_vk_pic_type (GstH264GOPFrame * frame)
+_gst_slice_type_2_vk_pic_type (GstH26XGOP * frame)
 {
-  if ((frame->slice_type == GST_H264_I_SLICE) && frame->is_ref)
+  if (GST_H26X_GOP_IS_IDR (frame))
     return STD_VIDEO_H264_PICTURE_TYPE_IDR;
-  switch (frame->slice_type) {
-    case GST_H264_B_SLICE:
+  switch (frame->type) {
+    case GST_H26X_GOP_TYPE_B:
       return STD_VIDEO_H264_PICTURE_TYPE_B;
-    case GST_H264_P_SLICE:
+    case GST_H26X_GOP_TYPE_P:
       return STD_VIDEO_H264_PICTURE_TYPE_P;
-    case GST_H264_I_SLICE:
+    case GST_H26X_GOP_TYPE_I:
       return STD_VIDEO_H264_PICTURE_TYPE_I;
     default:
-      GST_WARNING ("Unsupported slice type '%d' for picture",
-          frame->slice_type);
+      GST_WARNING ("Unsupported slice type '%d' for picture", frame->type);
       return STD_VIDEO_H264_PICTURE_TYPE_INVALID;
   }
 }
@@ -1637,9 +1636,8 @@ gst_vulkan_h264_encoder_encode_frame (GstH264Encoder * base,
   /* *INDENT-OFF* */
   vk_frame->h264pic_info = (StdVideoEncodeH264PictureInfo) {
     .flags = {
-      .IdrPicFlag = ((h264_frame->type.slice_type == GST_H264_I_SLICE)
-          && h264_frame->type.is_ref),
-      .is_reference = h264_frame->type.is_ref,
+      .IdrPicFlag = GST_H26X_GOP_IS_IDR (&h264_frame->gop),
+      .is_reference = h264_frame->gop.is_ref,
       .no_output_of_prior_pics_flag =
           slice_hdr->dec_ref_pic_marking.no_output_of_prior_pics_flag,
       .long_term_reference_flag =
@@ -1650,7 +1648,7 @@ gst_vulkan_h264_encoder_encode_frame (GstH264Encoder * base,
     .seq_parameter_set_id = self->params.sps.seq_parameter_set_id,
     .pic_parameter_set_id = self->params.pps.pic_parameter_set_id,
     .idr_pic_id = slice_hdr->idr_pic_id,
-    .primary_pic_type = _gst_slice_type_2_vk_pic_type (&h264_frame->type),
+    .primary_pic_type = _gst_slice_type_2_vk_pic_type (&h264_frame->gop),
     .frame_num = h264_frame->gop_frame_num,
     .PicOrderCnt = h264_frame->poc,
     .temporal_id = 0,  /* no support for MVC extension */
