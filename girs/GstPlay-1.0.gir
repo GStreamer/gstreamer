@@ -1940,6 +1940,9 @@ See also #gst_play_get_message_bus()</doc-version>
       <member name="seek_done" value="12" c:identifier="GST_PLAY_MESSAGE_SEEK_DONE" glib:nick="seek-done" glib:name="GST_PLAY_MESSAGE_SEEK_DONE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">Any pending seeking operation has been completed</doc>
       </member>
+      <member name="tracks_selected" value="13" c:identifier="GST_PLAY_MESSAGE_TRACKS_SELECTED" version="1.30" glib:nick="tracks-selected" glib:name="GST_PLAY_MESSAGE_TRACKS_SELECTED">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">A new track selection has been applied.</doc>
+      </member>
       <function name="get_name" c:identifier="gst_play_message_get_name" version="1.20">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
         <return-value transfer-ownership="none">
@@ -2191,6 +2194,31 @@ gst_install_plugins_async().</doc>
           <parameter name="state" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting play state</doc>
             <type name="PlayState" c:type="GstPlayState*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="parse_tracks_selected" c:identifier="gst_play_message_parse_tracks_selected" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given tracks-selected @msg and extract the corresponding track ids.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+          <parameter name="audio_track_id" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the selected audio track id</doc>
+            <type name="utf8" c:type="gchar**"/>
+          </parameter>
+          <parameter name="video_track_id" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the selected video track id</doc>
+            <type name="utf8" c:type="gchar**"/>
+          </parameter>
+          <parameter name="subtitle_track_id" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the selected subtitle track id</doc>
+            <type name="utf8" c:type="gchar**"/>
           </parameter>
         </parameters>
       </function>
@@ -3334,6 +3362,31 @@ gst_install_plugins_async().</doc>
         <parameter name="state" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting play state</doc>
           <type name="PlayState" c:type="GstPlayState*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="play_message_parse_tracks_selected" c:identifier="gst_play_message_parse_tracks_selected" moved-to="PlayMessage.parse_tracks_selected" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given tracks-selected @msg and extract the corresponding track ids.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+        <parameter name="audio_track_id" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the selected audio track id</doc>
+          <type name="utf8" c:type="gchar**"/>
+        </parameter>
+        <parameter name="video_track_id" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the selected video track id</doc>
+          <type name="utf8" c:type="gchar**"/>
+        </parameter>
+        <parameter name="subtitle_track_id" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the selected subtitle track id</doc>
+          <type name="utf8" c:type="gchar**"/>
         </parameter>
       </parameters>
     </function>

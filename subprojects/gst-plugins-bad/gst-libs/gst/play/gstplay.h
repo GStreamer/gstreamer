@@ -92,6 +92,7 @@ typedef enum
  * @GST_PLAY_MESSAGE_VOLUME_CHANGED: The volume of the audio ouput has changed
  * @GST_PLAY_MESSAGE_MUTE_CHANGED: Audio muting flag has been toggled
  * @GST_PLAY_MESSAGE_SEEK_DONE: Any pending seeking operation has been completed
+ * @GST_PLAY_MESSAGE_TRACKS_SELECTED: A new track selection has been applied (Since: 1.30).
  *
  * Since: 1.20
  *
@@ -114,7 +115,16 @@ typedef enum
   GST_PLAY_MESSAGE_MEDIA_INFO_UPDATED,
   GST_PLAY_MESSAGE_VOLUME_CHANGED,
   GST_PLAY_MESSAGE_MUTE_CHANGED,
-  GST_PLAY_MESSAGE_SEEK_DONE
+  GST_PLAY_MESSAGE_SEEK_DONE,
+
+  /**
+   * GST_PLAY_MESSAGE_TRACKS_SELECTED:
+   *
+   * A new track selection has been applied.
+   *
+   * Since: 1.30
+   */
+  GST_PLAY_MESSAGE_TRACKS_SELECTED
 } GstPlayMessage;
 
 /**
@@ -533,6 +543,9 @@ void           gst_play_message_parse_muted_changed              (GstMessage *ms
 
 GST_PLAY_API
 void           gst_play_message_parse_seek_done                  (GstMessage *msg, GstClockTime *position);
+
+GST_PLAY_API
+void           gst_play_message_parse_tracks_selected            (GstMessage *msg, gchar **audio_track_id, gchar **video_track_id, gchar **subtitle_track_id);
 
 G_END_DECLS
 

@@ -38,5 +38,8 @@
 #define GST_PLAY_MESSAGE_DATA_MEDIA_INFO "media-info"
 #define GST_PLAY_MESSAGE_DATA_VOLUME "volume"
 #define GST_PLAY_MESSAGE_DATA_IS_MUTED "is-muted"
+#define GST_PLAY_MESSAGE_DATA_AUDIO_TRACK_ID "audio-track-id"
+#define GST_PLAY_MESSAGE_DATA_VIDEO_TRACK_ID "video-track-id"
+#define GST_PLAY_MESSAGE_DATA_SUBTITLE_TRACK_ID "subtitle-track-id"
 
 #endif

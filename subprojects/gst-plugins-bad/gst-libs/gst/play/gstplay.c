@@ -1866,6 +1866,55 @@ stream_collection_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
 }
 
 static void
+on_streams_selected (GstPlay * self, GstMessage * msg)
+{
+  const gchar *audio_stream_id = NULL;
+  const gchar *video_stream_id = NULL;
+  const gchar *subtitle_stream_id = NULL;
+
+  guint len = gst_message_streams_selected_get_size (msg);
+  for (guint i = 0; i < len; i++) {
+    GstStream *stream;
+    GstStreamType stream_type;
+    const gchar *stream_id;
+
+    stream = gst_message_streams_selected_get_stream (msg, i);
+    stream_type = gst_stream_get_stream_type (stream);
+    stream_id = gst_stream_get_stream_id (stream);
+
+    if ((stream_type & GST_STREAM_TYPE_AUDIO)) {
+      if (audio_stream_id) {
+        GST_WARNING_OBJECT (self, "Multiple audio streams selected");
+        continue;
+      }
+      audio_stream_id = stream_id;
+    }
+
+    if ((stream_type & GST_STREAM_TYPE_VIDEO)) {
+      if (video_stream_id) {
+        GST_WARNING_OBJECT (self, "Multiple video streams selected");
+        continue;
+      }
+      video_stream_id = stream_id;
+    }
+
+    if ((stream_type & GST_STREAM_TYPE_TEXT)) {
+      if (subtitle_stream_id) {
+        GST_WARNING_OBJECT (self, "Multiple subtitle streams selected");
+        continue;
+      }
+      subtitle_stream_id = stream_id;
+    }
+  }
+
+  api_bus_post_message (self, GST_PLAY_MESSAGE_TRACKS_SELECTED,
+      GST_PLAY_MESSAGE_DATA_AUDIO_TRACK_ID, G_TYPE_STRING, audio_stream_id,
+      GST_PLAY_MESSAGE_DATA_VIDEO_TRACK_ID, G_TYPE_STRING, video_stream_id,
+      GST_PLAY_MESSAGE_DATA_SUBTITLE_TRACK_ID, G_TYPE_STRING,
+      subtitle_stream_id, NULL);
+}
+
+static void
 streams_selected_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
     gpointer user_data)
 {
@@ -1873,9 +1922,11 @@ streams_selected_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
   guint32 seqnum = gst_message_get_seqnum (msg);
 
   g_mutex_lock (&self->lock);
-  // Ignore selections for previous select-streams events
+  // Ignore selections for previous select-streams events but tell the
+  // application that this was applied now.
   if (self->selection_seqnum != seqnum) {
     g_mutex_unlock (&self->lock);
+    on_streams_selected (self, msg);
     return;
   }
 
@@ -1940,6 +1991,7 @@ streams_selected_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
         self->subtitle_sid);
   }
   g_mutex_unlock (&self->lock);
+  on_streams_selected (self, msg);
 }
 
 static void
@@ -4534,6 +4586,8 @@ gst_play_message_get_type (void)
         "GST_PLAY_MESSAGE_MUTE_CHANGED", "mute-changed"},
     {C_ENUM (GST_PLAY_MESSAGE_SEEK_DONE), "GST_PLAY_MESSAGE_SEEK_DONE",
         "seek-done"},
+    {C_ENUM (GST_PLAY_MESSAGE_TRACKS_SELECTED),
+        "GST_PLAY_MESSAGE_TRACKS_SELECTED", "tracks-selected"},
     {0, NULL, NULL}
   };
 
@@ -5565,4 +5619,29 @@ gst_play_message_parse_seek_done (GstMessage * msg, GstClockTime * position)
 {
   PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_SEEK_DONE,
       GST_PLAY_MESSAGE_DATA_POSITION, GST_TYPE_CLOCK_TIME, position);
+}
+
+/**
+ * gst_play_message_parse_tracks_selected:
+ * @msg: A #GstMessage
+ * @audio_track_id: (out) (optional) (transfer full): the selected audio track id
+ * @video_track_id: (out) (optional) (transfer full): the selected video track id
+ * @subtitle_track_id: (out) (optional) (transfer full): the selected subtitle track id
+ *
+ * Parse the given tracks-selected @msg and extract the corresponding track ids.
+ *
+ * Since: 1.30
+ */
+void
+gst_play_message_parse_tracks_selected (GstMessage * msg,
+    gchar ** audio_track_id, gchar ** video_track_id,
+    gchar ** subtitle_track_id)
+{
+  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_TRACKS_SELECTED,
+      GST_PLAY_MESSAGE_DATA_AUDIO_TRACK_ID, G_TYPE_STRING, audio_track_id);
+  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_TRACKS_SELECTED,
+      GST_PLAY_MESSAGE_DATA_VIDEO_TRACK_ID, G_TYPE_STRING, video_track_id);
+  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_TRACKS_SELECTED,
+      GST_PLAY_MESSAGE_DATA_SUBTITLE_TRACK_ID, G_TYPE_STRING,
+      subtitle_track_id);
 }
