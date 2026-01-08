@@ -528,7 +528,7 @@ gst_input_selector_all_eos (GstInputSelector * sel)
     GstSelectorPad *selpad;
 
     selpad = GST_SELECTOR_PAD_CAST (walk->data);
-    if (!selpad->eos) {
+    if (!selpad->eos && !selpad->being_released) {
       ret = FALSE;
       break;
     }
