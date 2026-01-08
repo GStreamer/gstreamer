@@ -713,7 +713,7 @@ gst_identity_update_last_message_for_buffer (GstIdentity * identity,
   g_free (identity->last_message);
   identity->last_message = g_strdup_printf ("%s   ******* (%s:%s) "
       "(%" G_GSIZE_FORMAT " bytes, dts: %s, pts: %s, duration: %s, offset: %"
-      G_GINT64_FORMAT ", " "offset_end: % " G_GINT64_FORMAT
+      G_GINT64_FORMAT ", " "offset_end: %" G_GINT64_FORMAT
       ", flags: %08x %s, meta: %s) %p", action,
       GST_DEBUG_PAD_NAME (GST_BASE_TRANSFORM_CAST (identity)->sinkpad), size,
       print_pretty_time (dts_str, sizeof (dts_str), GST_BUFFER_DTS (buf)),
