@@ -3635,7 +3635,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-wavpack:\n          depth: [ 1, 32 ]\n       channels: [ 1, 8 ]\n           rate: [ 6000, 192000 ]\n         framed: true\naudio/x-wavpack-correction:\n         framed: true\n",
+                        "caps": "audio/x-wavpack:\n          depth: [ 1, 32 ]\n          width: { (int)8, (int)16, (int)24, (int)32 }\n       channels: [ 1, 4096 ]\n           rate: [ 6000, 2147483647 ]\n    sample-type: { (string)int, (string)float, (string)dsd }\n         framed: true\naudio/x-wavpack-correction:\n         framed: true\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -29411,12 +29411,12 @@
                 "long-name": "Wavpack audio decoder",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-wavpack:\n          depth: [ 1, 32 ]\n       channels: [ 1, 8 ]\n           rate: [ 6000, 192000 ]\n         framed: true\n",
+                        "caps": "audio/x-wavpack:\n          depth: [ 1, 32 ]\n       channels: [ 1, 4096 ]\n           rate: [ 6000, 2147483647 ]\n         framed: true\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-raw:\n         format: S8\n         layout: interleaved\n       channels: [ 1, 8 ]\n           rate: [ 6000, 192000 ]\naudio/x-raw:\n         format: S16LE\n         layout: interleaved\n       channels: [ 1, 8 ]\n           rate: [ 6000, 192000 ]\naudio/x-raw:\n         format: S32LE\n         layout: interleaved\n       channels: [ 1, 8 ]\n           rate: [ 6000, 192000 ]\naudio/x-raw:\n         format: F32LE\n         layout: interleaved\n       channels: [ 1, 8 ]\n           rate: [ 6000, 192000 ]\n",
+                        "caps": "audio/x-raw:\n         format: { S8, S16LE, S18LE, S20LE, S24LE, S32LE }\n         layout: interleaved\n       channels: [ 1, 4096 ]\n           rate: [ 6000, 2147483647 ]\naudio/x-raw:\n         format: F32LE\n         layout: interleaved\n       channels: [ 1, 4096 ]\n           rate: [ 6000, 2147483647 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -29442,12 +29442,12 @@
                 "long-name": "Wavpack audio encoder",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-raw:\n         format: S32LE\n         layout: interleaved\n       channels: [ 1, 8 ]\n           rate: [ 6000, 192000 ]\n",
+                        "caps": "audio/x-raw:\n         format: { S8, S16LE, S18LE, S20LE, S24LE, S32LE }\n         layout: interleaved\n       channels: [ 1, 4096 ]\n           rate: [ 6000, 2147483647 ]\naudio/x-raw:\n         format: F32LE\n         layout: interleaved\n       channels: [ 1, 4096 ]\n           rate: [ 6000, 2147483647 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-wavpack:\n          depth: [ 1, 32 ]\n       channels: [ 1, 8 ]\n           rate: [ 6000, 192000 ]\n         framed: true\n",
+                        "caps": "audio/x-wavpack:\n          depth: [ 1, 32 ]\n          width: { (int)8, (int)16, (int)24, (int)32 }\n    sample-type: { (string)int, (string)float }\n       channels: [ 1, 4096 ]\n           rate: [ 6000, 2147483647 ]\n         framed: true\n",
                         "direction": "src",
                         "presence": "always"
                     },
