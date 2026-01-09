@@ -554,6 +554,124 @@ GST_START_TEST (pad_release_stress_test)
 
 GST_END_TEST;
 
+typedef struct
+{
+  gboolean eos_received;
+  GMutex lock;
+  GCond cond;
+} EosReceivedCtx;
+
+static GstPadProbeReturn
+eos_received_probe (GstPad * pad, GstPadProbeInfo * info, gpointer udata)
+{
+  EosReceivedCtx *ctx = udata;
+
+  if (GST_EVENT_TYPE (info->data) == GST_EVENT_EOS) {
+    g_mutex_lock (&ctx->lock);
+    ctx->eos_received = TRUE;
+    g_cond_broadcast (&ctx->cond);
+    g_mutex_unlock (&ctx->lock);
+  }
+  return GST_PAD_PROBE_OK;
+}
+
+GST_START_TEST (eos_on_remaining_inactive_pad)
+{
+  GstElement *pipeline, *remaining_src, *active_src, *selector, *sink;
+  GstBus *bus;
+  GstPad *remaining_srcpad, *remaining_sinkpad;
+  GstPad *active_srcpad, *active_sinkpad;
+  GstPad *sinkpad;
+  GstBuffer *buf;
+  EosReceivedCtx eos_received_ctx = { 0 };
+
+  pipeline = gst_pipeline_new (NULL);
+
+  remaining_src = gst_element_factory_make ("appsrc", "remaining-src");
+  fail_unless (remaining_src != NULL);
+
+  active_src = gst_element_factory_make ("appsrc", "active-src");
+  fail_unless (active_src != NULL);
+
+  selector = gst_element_factory_make ("input-selector", NULL);
+  fail_unless (selector != NULL);
+  g_object_set (selector, "sync-mode", 1, "drop-backwards", TRUE, NULL);
+
+  sink = gst_element_factory_make ("fakesink", NULL);
+  fail_unless (sink != NULL);
+  g_object_set (sink, "sync", FALSE, "async", FALSE, NULL);
+
+  gst_bin_add_many (GST_BIN (pipeline), remaining_src, active_src, selector,
+      sink, NULL);
+
+  remaining_srcpad = gst_element_get_static_pad (remaining_src, "src");
+  remaining_sinkpad = gst_element_request_pad_simple (selector, "sink_%u");
+  fail_unless (gst_pad_link (remaining_srcpad, remaining_sinkpad) ==
+      GST_PAD_LINK_OK);
+
+  active_srcpad = gst_element_get_static_pad (active_src, "src");
+  active_sinkpad = gst_element_request_pad_simple (selector, "sink_%u");
+  fail_unless (gst_pad_link (active_srcpad, active_sinkpad) == GST_PAD_LINK_OK);
+
+  fail_unless (gst_element_link (selector, sink));
+
+  g_object_set (selector, "active-pad", active_sinkpad, NULL);
+
+  sinkpad = gst_element_get_static_pad (sink, "sink");
+
+  g_mutex_init (&eos_received_ctx.lock);
+  g_cond_init (&eos_received_ctx.cond);
+  gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      eos_received_probe, &eos_received_ctx, NULL);
+  gst_object_unref (sinkpad);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  fail_unless (bus != NULL);
+  g_signal_connect (bus, "message", (GCallback) message_cb, NULL);
+  gst_object_unref (bus);
+
+  fail_if (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+
+  buf = gst_buffer_new_wrapped (g_memdup2 ("a", 1), 1);
+  GST_BUFFER_PTS (buf) = 0;
+  fail_unless (gst_app_src_push_buffer (GST_APP_SRC (active_src),
+          buf) == GST_FLOW_OK);
+
+  buf = gst_buffer_new_wrapped (g_memdup2 ("b", 1), 1);
+  GST_BUFFER_PTS (buf) = 0;
+  fail_unless (gst_app_src_push_buffer (GST_APP_SRC (remaining_src),
+          buf) == GST_FLOW_OK);
+
+  g_usleep (BUFFER_INTERVAL);
+
+  /* it's ok not to block the pad here because we won't send other buffers / events */
+  gst_pad_unlink (active_srcpad, active_sinkpad);
+  gst_element_release_request_pad (selector, active_sinkpad);
+
+  gst_app_src_end_of_stream (GST_APP_SRC (remaining_src));
+
+  g_mutex_lock (&eos_received_ctx.lock);
+  while (!eos_received_ctx.eos_received)
+    g_cond_wait (&eos_received_ctx.cond, &eos_received_ctx.lock);
+
+  g_mutex_unlock (&eos_received_ctx.lock);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline,
+          GST_STATE_NULL), GST_STATE_CHANGE_SUCCESS);
+
+  gst_object_unref (remaining_srcpad);
+  gst_object_unref (remaining_sinkpad);
+  gst_object_unref (active_srcpad);
+  gst_object_unref (active_sinkpad);
+  gst_object_unref (pipeline);
+
+  g_mutex_clear (&eos_received_ctx.lock);
+  g_cond_clear (&eos_received_ctx.cond);
+}
+
+GST_END_TEST;
+
 static Suite *
 inputselector_suite (void)
 {
@@ -564,6 +682,7 @@ inputselector_suite (void)
 
   tcase_add_test (tc, stress_test);
   tcase_add_test (tc, pad_release_stress_test);
+  tcase_add_test (tc, eos_on_remaining_inactive_pad);
 
   return s;
 }
