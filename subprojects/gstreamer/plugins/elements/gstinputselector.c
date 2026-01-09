@@ -553,8 +553,7 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   g_rw_lock_reader_lock (&sel->active_sinkpad_lock);
   GST_INPUT_SELECTOR_LOCK (sel);
-  if (GST_EVENT_TYPE (event) != GST_EVENT_EOS)
-    gst_input_selector_maybe_commit_active_pad (sel);
+  gst_input_selector_maybe_commit_active_pad (sel);
 
   /* only forward if we are dealing with the active sinkpad */
   forward = pad == sel->active_sinkpad;
