@@ -247,6 +247,17 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_clip_is_moving_between_layers(IntPtr raw);
+
+		public bool IsMovingBetweenLayers { 
+			get {
+				bool raw_ret = ges_clip_is_moving_between_layers(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool ges_clip_move_to_layer(IntPtr raw, IntPtr layer);
 
 		public bool MoveToLayer(GES.Layer layer) {

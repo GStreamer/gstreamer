@@ -1146,6 +1146,10 @@
         <return-type type="GList*" element_type="GESTrackElement*" elements_owned="true" owned="true"/>
         <parameters/>
       </method>
+      <method name="IsMovingBetweenLayers" cname="ges_clip_is_moving_between_layers" version="1.28">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
       <method name="MoveToLayer" cname="ges_clip_move_to_layer">
         <return-type type="gboolean"/>
         <parameters>
@@ -4460,6 +4464,9 @@
           <parameter name="mode" type="GESEditMode"/>
         </parameters>
       </method>
+      <method name="ErrorQuark" cname="ges_error_quark" shared="true" version="1.28">
+        <return-type type="GLib.Quark"/>
+      </method>
       <method name="FindFormatterForUri" cname="ges_find_formatter_for_uri" shared="true" version="1.18">
         <return-type type="GESAsset*"/>
         <parameters>
@@ -4551,7 +4558,7 @@
       <constant value="1" ctype="gint" gtype="gint" name="VERSION_MAJOR"/>
       <constant value="90" ctype="gint" gtype="gint" name="VERSION_MICRO"/>
       <constant value="27" ctype="gint" gtype="gint" name="VERSION_MINOR"/>
-      <constant value="0" ctype="gint" gtype="gint" name="VERSION_NANO"/>
+      <constant value="1" ctype="gint" gtype="gint" name="VERSION_NANO"/>
     </object>
   </namespace>
 </api>

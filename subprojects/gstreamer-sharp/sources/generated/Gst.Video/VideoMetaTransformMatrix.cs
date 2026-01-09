@@ -72,12 +72,12 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_video_meta_transform_matrix_point_clipped(IntPtr raw, int x, int y);
+		static extern bool gst_video_meta_transform_matrix_point_clipped(IntPtr raw, ref int x, ref int y);
 
-		public bool PointClipped(int x, int y) {
+		public bool PointClipped(ref int x, ref int y) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			bool raw_ret = gst_video_meta_transform_matrix_point_clipped(this_as_native, x, y);
+			bool raw_ret = gst_video_meta_transform_matrix_point_clipped(this_as_native, ref x, ref y);
 			bool ret = raw_ret;
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);

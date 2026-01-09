@@ -29,7 +29,7 @@ namespace GES {
 		public const int VERSION_MAJOR = 1;
 		public const int VERSION_MICRO = 90;
 		public const int VERSION_MINOR = 27;
-		public const int VERSION_NANO = 0;
+		public const int VERSION_NANO = 1;
 #endregion
 	}
 }

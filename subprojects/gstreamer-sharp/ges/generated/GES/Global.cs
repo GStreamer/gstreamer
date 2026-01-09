@@ -57,6 +57,15 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern int ges_error_quark();
+
+		public static int ErrorQuark() {
+			int raw_ret = ges_error_quark();
+			int ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_find_formatter_for_uri(IntPtr uri);
 
 		public static GES.Asset FindFormatterForUri(string uri) {

@@ -33188,11 +33188,11 @@
           <parameter name="y" type="gint*" owned="true" pass_as="ref"/>
         </parameters>
       </method>
-      <method name="PointClipped" cname="gst_video_meta_transform_matrix_point_clipped">
+      <method name="PointClipped" cname="gst_video_meta_transform_matrix_point_clipped" version="1.28">
         <return-type type="gboolean"/>
         <parameters>
-          <parameter name="x" type="gint"/>
-          <parameter name="y" type="gint"/>
+          <parameter name="x" type="gint*" owned="true" pass_as="ref"/>
+          <parameter name="y" type="gint*" owned="true" pass_as="ref"/>
         </parameters>
       </method>
       <method name="Rectangle" cname="gst_video_meta_transform_matrix_rectangle" version="1.28">
