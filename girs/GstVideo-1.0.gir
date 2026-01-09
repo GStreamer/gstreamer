@@ -12789,19 +12789,29 @@ after the transformation has been applied</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="point_clipped" c:identifier="gst_video_meta_transform_matrix_point_clipped">
+      <method name="point_clipped" c:identifier="gst_video_meta_transform_matrix_point_clipped" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">Transforms the (@x, @y) point from the input coordinates to the
+output ones.  The point's coordinates are transformed by first
+applying the @transform.matrix to it using the top left (x, y) of
+@transform.in_rectangle as the origin, then translate it to use
+the top-left of @transform.out_rectangle as new origin.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h"/>
         <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">%FALSE if the point is outside of @transform.out_rectangle
+after the transformation has been applied</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="transform" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">a #GstVideoMetaTransformMatrix</doc>
             <type name="VideoMetaTransformMatrix" c:type="const GstVideoMetaTransformMatrix*"/>
           </instance-parameter>
-          <parameter name="x" transfer-ownership="none">
+          <parameter name="x" direction="inout" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">a non-NULL pointer to the X value of the coordinate</doc>
             <type name="gint" c:type="gint*"/>
           </parameter>
-          <parameter name="y" transfer-ownership="none">
+          <parameter name="y" direction="inout" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">a non-NULL pointer to the Y value of the coordinate</doc>
             <type name="gint" c:type="gint*"/>
           </parameter>
         </parameters>

@@ -1007,7 +1007,7 @@ gst_video_meta_transform_matrix_point (const GstVideoMetaTransformMatrix *
 }
 
 /**
- * gst_video_meta_transform_matrix_point:
+ * gst_video_meta_transform_matrix_point_clipped:
  * @transform: a #GstVideoMetaTransformMatrix
  * @x: (inout): a non-NULL pointer to the X value of the coordinate
  * @y: (inout): a non-NULL pointer to the Y value of the coordinate
