@@ -932,10 +932,11 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
         GST_INPUT_SELECTOR_UNLOCK (sel);
         break;
       }
-    } else if (!GST_CLOCK_TIME_IS_VALID (cur_running_time)
-        || running_time >= cur_running_time) {
+    } else if (!active_selpad->eos
+        && (!GST_CLOCK_TIME_IS_VALID (cur_running_time)
+            || running_time >= cur_running_time)) {
       GST_DEBUG_OBJECT (selpad,
-          "Waiting for active streams to advance. %" GST_TIME_FORMAT " >= %"
+          "Waiting for active stream to advance. %" GST_TIME_FORMAT " >= %"
           GST_TIME_FORMAT, GST_TIME_ARGS (running_time),
           GST_TIME_ARGS (cur_running_time));
 
