@@ -35,7 +35,7 @@ static GstStaticPadTemplate audio_sink_template =
                             GST_STATIC_CAPS("audio/x-raw, "
                                             "format = (string) S32LE, "
                                             "rate = (int) 48000, "
-                                            "channels = (int) [ 1, 16 ], "
+                                            "channels = (int) { 6, 8, 16 }, "
                                             "layout = (string) interleaved"));
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE(
