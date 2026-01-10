@@ -233,31 +233,25 @@ class Caps(MiniObjectMixin, Gst.Caps):  # type: ignore[misc]
     def __nonzero__(self):
         return not self.is_empty()
 
-    def __new__(cls, *args):
-        if not args:
-            return Caps.new_empty()
-        if len(args) > 1:
-            raise TypeError("wrong arguments when creating GstCaps object")
-
-        assert len(args) == 1
-        if isinstance(args[0], str):
-            return Caps.from_string(args[0])
-        elif isinstance(args[0], Caps):
-            return args[0].copy()
-        elif isinstance(args[0], Structure):
+    @staticmethod
+    def __new__(cls: type[Self], arg: typing.Optional[typing.Union[str, Caps, Structure, list[Structure], tuple[Structure, ...]]] = None) -> Self:
+        if not arg:
+            return Caps.new_empty()  # type: ignore[return-value]
+        elif isinstance(arg, str):
+            return Caps.from_string(arg)  # type: ignore[return-value]
+        elif isinstance(arg, Caps):
+            return arg.copy()  # type: ignore[return-value]
+        elif isinstance(arg, Structure):
             res = Caps.new_empty()
-            res.append_structure(args[0])
-            return res
-        elif isinstance(args[0], (list, tuple)):
+            res.append_structure(arg)
+            return res  # type: ignore[return-value]
+        elif isinstance(arg, (list, tuple)):
             res = Caps.new_empty()
-            for e in args[0]:
+            for e in arg:
                 res.append_structure(e)
-            return res
+            return res  # type: ignore[return-value]
 
-        raise TypeError("wrong arguments when creating GstCaps object")
-
-    def __init__(self, *args, **kwargs):
-        return super(Caps, self).__init__()
+        raise TypeError(f"wrong arguments when creating GstCaps object")
 
     def __str__(self) -> str:
         return self.to_string()
