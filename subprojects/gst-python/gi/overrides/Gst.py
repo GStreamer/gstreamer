@@ -512,32 +512,21 @@ __all__.append('StructureContextManager')
 
 
 class Structure(Gst.Structure):
-    def __new__(cls, *args, **kwargs):
-        if not args:
-            if kwargs:
-                raise TypeError("wrong arguments when creating GstStructure, first argument"
-                                " must be the structure name.")
-            struct = Structure.new_empty()
-            return struct
-        elif len(args) > 1:
-            raise TypeError("wrong arguments when creating GstStructure object")
-        elif isinstance(args[0], str):
+    @staticmethod
+    def __new__(cls: type[Self], arg: typing.Union[str, Structure], **kwargs) -> Self:
+        if isinstance(arg, str):
             if not kwargs:
-                struct = Structure.from_string(args[0])[0]
-                return struct
-            struct = Structure.new_empty(args[0])
+                struct = Structure.from_string(arg)[0]
+                return struct  # type: ignore[return-value]
+            struct = Structure.new_empty(arg)
             for k, v in kwargs.items():
                 struct[k] = v
-
-            return struct
-        elif isinstance(args[0], Structure):
-            struct = args[0].copy()
-            return struct
+            return struct  # type: ignore[return-value]
+        elif isinstance(arg, Structure):
+            struct = arg.copy()
+            return struct  # type: ignore[return-value]
 
         raise TypeError("wrong arguments when creating GstStructure object")
-
-    def __init__(self, *args, **kwargs):
-        pass
 
     def __ptr__(self):
         return _gi_gst._get_object_ptr(self)
