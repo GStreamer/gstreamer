@@ -45,6 +45,10 @@ plugin_sources += {
   'closedcaption': pathsep.join(doc_sources)
 }
 
+if get_option('closedcaption').disabled()
+  subdir_done()
+endif
+
 gstclosedcaption = library('gstclosedcaption',
   closedcaption_sources,
   zvbi_sources,
