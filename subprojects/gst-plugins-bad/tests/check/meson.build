@@ -68,7 +68,7 @@ base_tests = [
   [['elements/nvenc.c'], false, [gstgl_dep, gmodule_dep]],
   [['elements/nvdec.c'], not gstgl_dep.found(), [gstgl_dep, gmodule_dep]],
   [['elements/svthevcenc.c'], not svthevcenc_dep.found(), [svthevcenc_dep]],
-   [['elements/openjpeg.c'], not openjpeg_dep.found(), [openjpeg_dep]],
+  [['elements/openjpeg.c'], not openjpeg_dep.found(), [openjpeg_dep]],
   [['elements/pcapparse.c'], false, [libparser_dep]],
   [['elements/pnm.c'], get_option('pnm').disabled()],
   [['elements/proxysink.c'], get_option('proxy').disabled()],
