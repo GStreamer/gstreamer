@@ -961,13 +961,18 @@ def pairwise(iterable: typing.Iterable[Element]) -> typing.Iterator[tuple[Elemen
 
 
 class MapInfo:
+    memory: typing.Optional[Memory]
+    flags: MapFlags
+    size: int
+    maxsize: int
+    data: typing.Optional[memoryview]
+
     def __init__(self):
         self.memory = None
         self.flags = Gst.MapFlags(0)
         self.size = 0
         self.maxsize = 0
         self.data = None
-        self.user_data = None
         self.__parent__ = None
 
     def __iter__(self):
