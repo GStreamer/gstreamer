@@ -300,7 +300,7 @@ debug_dump_pad (GstPad * pad, const gchar * color_name,
 
   param_name =
       debug_dump_get_object_params (G_OBJECT (pad), details, ignore_propnames,
-      "\n");
+      "\\n");
   if (details & GST_DEBUG_GRAPH_SHOW_STATES) {
     gchar pad_flags[5];
     const gchar *activation_mode = "-><";
@@ -679,7 +679,7 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details,
         }
         if (details & GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS) {
           param_name = debug_dump_get_object_params (G_OBJECT (element),
-              details, ignore_propnames, "\n");
+              details, ignore_propnames, "\\n");
         }
         /* elements */
         g_string_append_printf (str, "%ssubgraph cluster_%s {\n", spc,
@@ -840,7 +840,7 @@ debug_dump_header (GstBin * bin, GstDebugGraphDetails details, GString * str)
   }
   if (details & GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS) {
     param_name =
-        debug_dump_get_object_params (G_OBJECT (bin), details, NULL, "\n");
+        debug_dump_get_object_params (G_OBJECT (bin), details, NULL, "\\n");
   }
 
   /* write header */
