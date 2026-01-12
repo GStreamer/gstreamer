@@ -17,6 +17,21 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-win32ipcsrc
+ * @title: win32ipcsink
+ *
+ * Receive Windows memory mapped file backed buffers over Windows named pipe from
+ * win32ipcsink
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 win32ipcsrc ! queue ! videoconvert ! d3d12videosink
+ * ```
+ *
+ * Since: 1.28
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

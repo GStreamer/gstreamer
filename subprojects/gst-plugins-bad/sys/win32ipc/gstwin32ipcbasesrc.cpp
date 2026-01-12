@@ -90,6 +90,11 @@ static GstCaps *gst_win32_ipc_base_src_get_caps (GstBaseSrc * src,
 static GstFlowReturn gst_win32_ipc_base_src_create (GstBaseSrc * src,
     guint64 offset, guint size, GstBuffer ** buf);
 
+/**
+ * GstWin32IpcBaseSrc:
+ *
+ * Since: 1.28
+ */
 #define gst_win32_ipc_base_src_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE (GstWin32IpcBaseSrc,
     gst_win32_ipc_base_src, GST_TYPE_BASE_SRC);
@@ -149,6 +154,11 @@ gst_win32_ipc_base_src_class_init (GstWin32IpcBaseSrcClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_win32_ipc_base_src_debug, "win32ipcbasesrc",
       0, "win32ipcbasesrc");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_WIN32_IPC_BASE_SRC,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_WIN32_IPC_LEAKY_TYPE,
+      (GstPluginAPIFlags) 0);
 }
 
 static void

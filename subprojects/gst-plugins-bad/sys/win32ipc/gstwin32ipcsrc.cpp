@@ -17,6 +17,21 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-win32ipcsink
+ * @title: win32ipcsink
+ *
+ * Send Windows memory mapped file backed buffers over Windows named pipe to
+ * win32ipcsrc
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc ! queue ! win32ipcsink
+ * ```
+ *
+ * Since: 1.28
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

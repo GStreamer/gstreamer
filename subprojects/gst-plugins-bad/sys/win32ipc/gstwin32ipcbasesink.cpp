@@ -111,6 +111,11 @@ static GstFlowReturn gst_win32_ipc_base_sink_render (GstBaseSink * sink,
 static gboolean gst_win32_ipc_base_sink_event (GstBaseSink * sink,
     GstEvent * event);
 
+/**
+ * GstWin32IpcBaseSink:
+ *
+ * Since: 1.28
+ */
 #define gst_win32_ipc_base_sink_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE (GstWin32IpcBaseSink, gst_win32_ipc_base_sink,
     GST_TYPE_BASE_SINK);
@@ -179,6 +184,11 @@ gst_win32_ipc_base_sink_class_init (GstWin32IpcBaseSinkClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_win32_ipc_base_sink_debug, "win32ipcbasesink",
       0, "win32ipcbasesink");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_WIN32_IPC_BASE_SINK,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_WIN32_IPC_LEAKY_TYPE,
+      (GstPluginAPIFlags) 0);
 }
 
 static void

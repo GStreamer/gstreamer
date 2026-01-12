@@ -24,6 +24,11 @@
 #include "gstwin32ipc.h"
 #include <mutex>
 
+/**
+ * GstWin32IpcLeakyType:
+ *
+ * Since: 1.28
+ */
 GType
 gst_win32_ipc_leaky_type_get_type (void)
 {
