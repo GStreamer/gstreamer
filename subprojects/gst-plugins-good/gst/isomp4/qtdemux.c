@@ -5254,7 +5254,7 @@ gst_qtdemux_seek_to_previous_keyframe (GstQTDemux * qtdemux)
 {
   guint32 seg_idx = 0, k_index = 0;
   guint32 ref_seg_idx, ref_k_index;
-  GstClockTime k_pos = 0, last_stop = 0;
+  GstClockTime k_pos = 0, position = 0;
   QtDemuxSegment *seg = NULL;
   QtDemuxStream *ref_str = NULL;
   guint64 seg_media_start_mov;  /* segment media start time in mov format */
@@ -5337,7 +5337,7 @@ gst_qtdemux_seek_to_previous_keyframe (GstQTDemux * qtdemux)
   k_pos =
       QTSTREAMTIME_TO_GSTTIME (ref_str,
       target_ts - seg->trak_media_start) + seg->time;
-  last_stop =
+  position =
       QTSTREAMTIME_TO_GSTTIME (ref_str,
       ref_str->samples[ref_str->from_sample].timestamp -
       seg->trak_media_start) + seg->time;
@@ -5346,12 +5346,12 @@ gst_qtdemux_seek_to_previous_keyframe (GstQTDemux * qtdemux)
       "now going to sample %u (pts %" GST_TIME_FORMAT ")", ref_str->from_sample,
       k_index, GST_TIME_ARGS (k_pos));
 
-  /* Set last_stop with the keyframe timestamp we pushed of that stream */
-  qtdemux->segment.position = last_stop;
-  GST_DEBUG_OBJECT (qtdemux, "last_stop now is %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (last_stop));
+  /* Set position with the keyframe timestamp we pushed of that stream */
+  qtdemux->segment.position = position;
+  GST_DEBUG_OBJECT (qtdemux, "segment position now is %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (position));
 
-  if (G_UNLIKELY (last_stop < qtdemux->segment.start)) {
+  if (G_UNLIKELY (position < qtdemux->segment.start)) {
     GST_DEBUG_OBJECT (qtdemux, "reached the beginning of segment");
     goto eos;
   }
