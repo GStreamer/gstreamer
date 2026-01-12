@@ -65,6 +65,9 @@ GST_DEBUG_CATEGORY_STATIC (wavparse_debug);
  * see http://tech.ebu.ch/docs/tech/tech3306-2009.pdf */
 #define GST_RS64_TAG_DS64 GST_MAKE_FOURCC ('d','s','6','4')
 
+/* Maximum valid size is INT32_MAX */
+#define MAX_CHUNK_SIZE ((guint32) G_MAXINT32)
+
 static void gst_wavparse_dispose (GObject * object);
 
 static gboolean gst_wavparse_sink_activate (GstPad * sinkpad,
@@ -695,7 +698,7 @@ gst_wavparse_peek_chunk (GstWavParse * wav, guint32 * tag, guint32 * size)
    * large size -> do not bother trying to squeeze that into adapter,
    * so we throw poor man's exception, which can be caught if caller really
    * wants to handle 0 size chunk */
-  if (!(*size) || (*size) >= (1 << 30)) {
+  if (!(*size) || (*size) > MAX_CHUNK_SIZE) {
     GST_INFO ("Invalid/unexpected chunk size %u for tag %" GST_FOURCC_FORMAT,
         *size, GST_FOURCC_ARGS (*tag));
     /* chain should give up */
@@ -1340,10 +1343,9 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         "Got TAG: %" GST_FOURCC_FORMAT ", offset %" G_GUINT64_FORMAT ", size %"
         G_GUINT32_FORMAT, GST_FOURCC_ARGS (tag), wav->offset, size);
 
-    /* Maximum valid size is INT_MAX */
-    if (size & 0x80000000) {
-      GST_WARNING_OBJECT (wav, "Invalid size, clipping to 0x7fffffff");
-      size = 0x7fffffff;
+    if (size > MAX_CHUNK_SIZE) {
+      GST_WARNING_OBJECT (wav, "Invalid size, clipping to %u", MAX_CHUNK_SIZE);
+      size = MAX_CHUNK_SIZE;
     }
 
     /* Clip to upstream size if known */
