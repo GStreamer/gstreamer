@@ -760,6 +760,8 @@ gst_waveparse_ignore_chunk (GstWavParse * wav, GstBuffer * buf, guint32 tag,
   }
   GST_DEBUG_OBJECT (wav, "Ignoring tag %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (tag));
+  /* Checked in all callers */
+  g_assert (size < MAX_CHUNK_SIZE);
   flush = 8 + GST_ROUND_UP_2 (size);
   wav->offset += flush;
   if (wav->streaming) {
@@ -940,7 +942,7 @@ gst_wavparse_adtl_chunk (GstWavParse * wav, const guint8 * data, guint32 size)
     ltag = GST_READ_UINT32_LE (data + offset);
     lsize = GST_READ_UINT32_LE (data + offset + 4);
 
-    if (lsize > (G_MAXUINT - 8) || lsize + 8 > size) {
+    if (lsize > MAX_CHUNK_SIZE || GST_ROUND_UP_2 (lsize) + 8 > size) {
       GST_WARNING_OBJECT (wav, "Invalid adtl size: %u + 8 > %u", lsize, size);
       return FALSE;
     }
@@ -958,8 +960,9 @@ gst_wavparse_adtl_chunk (GstWavParse * wav, const guint8 * data, guint32 size)
         GST_MEMDUMP_OBJECT (wav, "Unknowm adtl", &data[offset], lsize);
         break;
     }
-    offset += 8 + GST_ROUND_UP_2 (lsize);
-    size -= 8 + GST_ROUND_UP_2 (lsize);
+    lsize = GST_ROUND_UP_2 (lsize);
+    offset += 8 + lsize;
+    size -= 8 + lsize;
   }
 
   return TRUE;
