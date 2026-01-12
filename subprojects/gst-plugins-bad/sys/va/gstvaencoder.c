@@ -290,13 +290,11 @@ gst_va_encoder_close (GstVaEncoder * self)
   GST_OBJECT_LOCK (self);
   config = self->config;
 
-  self->config = VA_INVALID_ID;
-  self->profile = VAProfileNone;
-  self->rt_format = 0;
+  gst_va_encoder_init (self);
   GST_OBJECT_UNLOCK (self);
 
   if (config == VA_INVALID_ID)
-    return FALSE;
+    return TRUE;
 
   dpy = gst_va_display_get_va_dpy (self->display);
   status = vaDestroyConfig (dpy, config);
