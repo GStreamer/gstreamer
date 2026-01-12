@@ -702,7 +702,7 @@ gst_wavparse_peek_chunk (GstWavParse * wav, guint32 * tag, guint32 * size)
     wav->abort_buffering = TRUE;
     return FALSE;
   }
-  peek_size = (*size + 1) & ~1;
+  peek_size = GST_ROUND_UP_2 (*size);
   available = gst_adapter_available (wav->adapter);
 
   if (available >= (8 + peek_size)) {
@@ -758,7 +758,7 @@ gst_waveparse_ignore_chunk (GstWavParse * wav, GstBuffer * buf, guint32 tag,
   }
   GST_DEBUG_OBJECT (wav, "Ignoring tag %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (tag));
-  flush = 8 + ((size + 1) & ~1);
+  flush = 8 + GST_ROUND_UP_2 (size);
   wav->offset += flush;
   if (wav->streaming) {
     gst_adapter_flush (wav->adapter, flush);
