@@ -50,6 +50,27 @@ struct CData
   gchar *description;
 };
 
+typedef struct
+{
+  GstBufferPool *pool;
+  GstVideoInfo info;
+} OverlayPool;
+
+static void
+_overlay_pool_free (OverlayPool * overlay_pool)
+{
+  gst_buffer_pool_set_active (overlay_pool->pool, FALSE);
+  gst_clear_object (&overlay_pool->pool);
+  g_clear_pointer (&overlay_pool, g_free);
+}
+
+/* To import an overlay rectangle into VA, the element needs a buffer pool that
+ * allocates memory of the corresponding size. Since overlay composition meta
+ * can include rectangles of various dimensions, new pools are created as needed
+ * and kept in a list for reuse. The size of the list is limited by this value.
+ * (The oldest pool is freed to make space for a new one.) */
+static const guint MAX_OVERLAY_POOLS = 10;
+
 #define GST_VA_OVERLAY_COMPOSITOR(obj) ((GstVaOverlayCompositor *) obj)
 #define GST_VA_OVERLAY_COMPOSITOR_GET_CLASS(obj) \
     (G_TYPE_INSTANCE_GET_CLASS ((obj), G_TYPE_FROM_INSTANCE (obj), GstVaOverlayCompositorClass))
@@ -336,25 +357,18 @@ gst_va_overlay_compositor_set_info (GstVaBaseTransform * bt, GstCaps * incaps,
   return TRUE;
 }
 
-static GstBufferPool *
+static OverlayPool *
 gst_va_overlay_compositor_lookup_pool_by_info (GstVaOverlayCompositor * self,
     GstVideoInfo * info)
 {
-  GstBufferPool *result = NULL;
+  OverlayPool *result = NULL;
   GSList *it;
 
   for (it = self->pools; !result && it; it = g_slist_next (it)) {
-    GstBufferPool *pool = it->data;
-    GstStructure *config = gst_buffer_pool_get_config (pool);
-    GstAllocator *allocator;
-    GstVideoInfo pool_info;
+    OverlayPool *pool = it->data;
 
-    gst_buffer_pool_config_get_allocator (config, &allocator, NULL);
-    gst_va_allocator_get_format (allocator, &pool_info, NULL, NULL);
-    gst_clear_structure (&config);
-
-    if (GST_VIDEO_INFO_WIDTH (info) == GST_VIDEO_INFO_WIDTH (&pool_info) &&
-        GST_VIDEO_INFO_HEIGHT (info) == GST_VIDEO_INFO_HEIGHT (&pool_info)) {
+    if (GST_VIDEO_INFO_WIDTH (info) == GST_VIDEO_INFO_WIDTH (&pool->info) &&
+        GST_VIDEO_INFO_HEIGHT (info) == GST_VIDEO_INFO_HEIGHT (&pool->info)) {
       result = pool;
       break;
     }
@@ -381,12 +395,13 @@ _get_pool (GstElement * element, gpointer data)
   GstVaBaseTransform *vabtrans = GST_VA_BASE_TRANSFORM (self);
 
   GstVaBufferImporter *importer = data;
-  GstBufferPool *pool = NULL;
+  OverlayPool *pool = NULL;
 
   pool =
       gst_va_overlay_compositor_lookup_pool_by_info (self, importer->in_info);
   if (!pool) {
     GstCaps *caps = NULL;
+    GstBufferPool *vapool;
     GstAllocator *allocator = NULL;
     GstAllocationParams params = { 0, };
     guint usage_hint;
@@ -404,14 +419,23 @@ _get_pool (GstElement * element, gpointer data)
 
     allocator = gst_va_base_transform_allocator_from_caps (vabtrans, caps);
 
-    pool = gst_va_pool_new_with_config (caps, 1, 0, usage_hint,
+    vapool = gst_va_pool_new_with_config (caps, 1, 0, usage_hint,
         GST_VA_FEATURE_AUTO, allocator, &params);
-    if (!pool) {
+    if (!vapool) {
       goto out;
     }
 
-    if (gst_buffer_pool_set_active (pool, TRUE)) {
+    if (gst_buffer_pool_set_active (vapool, TRUE)) {
+      pool = g_new0 (OverlayPool, 1);
+      pool->pool = vapool;
+      gst_va_allocator_get_format (allocator, &pool->info, NULL, NULL);
+
       self->pools = g_slist_append (self->pools, pool);
+
+      if (g_slist_length (self->pools) > MAX_OVERLAY_POOLS) {
+        g_clear_pointer (&self->pools->data, _overlay_pool_free);
+        self->pools = g_slist_delete_link (self->pools, self->pools);
+      }
     } else {
       GST_WARNING_OBJECT (self, "failed to activate pool %" GST_PTR_FORMAT, pool);
       gst_clear_object (&pool);
@@ -423,16 +447,11 @@ _get_pool (GstElement * element, gpointer data)
   }
 
   if (pool) {
-    GstStructure *config = gst_buffer_pool_get_config (pool);
-    GstAllocator *allocator;
-
-    gst_buffer_pool_config_get_allocator (config, &allocator, NULL);
-    gst_va_allocator_get_format (allocator, importer->sinkpad_info, NULL, NULL);
-
-    gst_clear_structure (&config);
+    *importer->sinkpad_info = pool->info;
+    return pool->pool;
   }
 
-  return pool;
+  return NULL;
 }
 
 static GstFlowReturn
@@ -611,14 +630,7 @@ gst_va_overlay_compositor_stop (GstBaseTransform * bt)
 {
   GstVaOverlayCompositor *self = GST_VA_OVERLAY_COMPOSITOR (bt);
 
-  while (self->pools) {
-    GstBufferPool *pool = self->pools->data;
-
-    self->pools = g_slist_delete_link (self->pools, self->pools);
-
-    gst_buffer_pool_set_active (pool, FALSE);
-    gst_clear_object (&pool);
-  }
+  g_clear_slist (&self->pools, (GDestroyNotify) _overlay_pool_free);
 
   return TRUE;
 }
