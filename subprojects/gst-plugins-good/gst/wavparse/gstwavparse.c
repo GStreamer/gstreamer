@@ -1666,7 +1666,6 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         } else {
           gst_buffer_unref (buf);
         }
-        size = GST_ROUND_UP_2 (size);
         wav->offset += size;
         break;
       }
@@ -1712,7 +1711,6 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         } else {
           gst_buffer_unref (buf);
         }
-        size = GST_ROUND_UP_2 (size);
         wav->offset += size;
         break;
       }
