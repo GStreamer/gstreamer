@@ -17,6 +17,15 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-d3d12fisheyedewarp
+ * @title: d3d12fisheyedewarp
+ *
+ * A Direct3D12-based fisheye dewarping element
+ *
+ * Since: 1.28
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -67,6 +76,11 @@ enum ProjectionType
   PROJECTION_PERSPECTIVE,
 };
 
+/**
+ * GstD3D12FisheyeDewarpProjectionType:
+ *
+ * Since: 1.28
+ */
 static GType
 gst_d3d12_fisheye_dewarp_projection_type_get_type (void)
 {
@@ -93,6 +107,11 @@ enum RotationSpace
   ROTATION_SPACE_WORLD,
 };
 
+/**
+ * GstD3D12FisheyeDewarpRotationSpace:
+ *
+ * Since: 1.28
+ */
 static GType
 gst_d3d12_fisheye_dewarp_rotation_space_get_type (void)
 {
@@ -120,6 +139,11 @@ enum RotationOrder
   ROT_ZYX,
 };
 
+/**
+ * GstD3D12FisheyeDewarpRotationOrder:
+ *
+ * Since: 1.28
+ */
 static GType
 gst_d3d12_fisheye_rotation_order_get_type (void)
 {
@@ -476,7 +500,11 @@ gst_d3d12_fisheye_dewarp_class_init (GstD3D12FisheyeDewarpClass * klass)
   filter_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_d3d12_fisheye_dewarp_propose_allocation);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_D3D12_SAMPLING_METHOD,
+  gst_type_mark_as_plugin_api (gst_d3d12_fisheye_dewarp_projection_type_get_type
+      (), (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (gst_d3d12_fisheye_dewarp_rotation_space_get_type
+      (), (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (gst_d3d12_fisheye_rotation_order_get_type (),
       (GstPluginAPIFlags) 0);
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_fisheye_dewarp_debug, "d3d12fisheyedewarp",

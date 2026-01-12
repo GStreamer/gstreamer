@@ -151,6 +151,11 @@ enum GstD3D12MemcpyCmdQueueType
   GST_D3D12_MEMCPY_CMD_QUEUE_COPY,
 };
 
+/**
+ * GstD3D12MemcpyCmdQueueType:
+ *
+ * Since: 1.28
+ */
 #define GST_TYPE_D3D12_MEMCPY_CMD_QUEUE_TYPE (gst_d3d12_memcpy_cmd_queue_type_get_type())
 static GType
 gst_d3d12_memcpy_cmd_queue_type_get_type (void)

@@ -17,6 +17,15 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-d3d12remap
+ * @title: d3d12remap
+ *
+ * A Direct3D12-based UV coordinate remapping element
+ *
+ * Since: 1.28
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
