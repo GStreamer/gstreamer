@@ -52,6 +52,7 @@
 #include <gst/video/video.h>
 #include <gst/analytics/analytics.h>
 #include <pango/pangocairo.h>
+#include <math.h>
 
 #include "gstobjectdetectionoverlay.h"
 
@@ -95,6 +96,7 @@ struct _GstObjectDetectionOverlay
 
 
 #define MINIMUM_TEXT_OUTLINE_OFFSET 1.0
+#define ROTATION_EPSILON 0.001f /* Threshold to consider there's a rotation */
 
 GST_DEBUG_CATEGORY_STATIC (objectdetectionoverlay_debug);
 #define GST_CAT_DEFAULT objectdetectionoverlay_debug
@@ -1011,6 +1013,7 @@ gst_object_detection_overlay_render_boundingbox (GstObjectDetectionOverlay
     GstAnalyticsRelationMeta * rmeta, GstAnalyticsODMtd * od_mtd)
 {
   gint x, y, w, h;
+  gfloat r = 0.0f;
   gfloat _dummy;
   gint maxw = GST_VIDEO_INFO_WIDTH (overlay->in_info) - 1;
   gint maxh = GST_VIDEO_INFO_HEIGHT (overlay->in_info) - 1;
@@ -1018,7 +1021,8 @@ gst_object_detection_overlay_render_boundingbox (GstObjectDetectionOverlay
   guint32 color;
 
   cairo_save (ctx->cr);
-  gst_analytics_od_mtd_get_location (od_mtd, &x, &y, &w, &h, &_dummy);
+  gst_analytics_od_mtd_get_oriented_location (od_mtd, &x, &y, &w, &h, &r,
+      &_dummy);
 
   x = CLAMP (x, 0, maxw);
   y = CLAMP (y, 0, maxh);
@@ -1046,7 +1050,38 @@ gst_object_detection_overlay_render_boundingbox (GstObjectDetectionOverlay
   cairo_set_line_width (ctx->cr, overlay->od_outline_stroke_width);
 
   /* draw bounding box */
-  cairo_rectangle (ctx->cr, x, y, w, h);
+  if (fabsf (r) < ROTATION_EPSILON) {
+    /* Fast path: axis-aligned rectangle */
+    cairo_rectangle (ctx->cr, x, y, w, h);
+  } else {
+    /* Rotated path: calculate 4 corners and draw */
+    gfloat xc = x + w / 2.0f;
+    gfloat yc = y + h / 2.0f;
+    gfloat cos_r = cosf (r);
+    gfloat sin_r = sinf (r);
+
+    /* Corner offsets (pre-rotation, relative to center) */
+    gfloat corners[4][2] = {
+      {-w / 2.0f, -h / 2.0f},   /* top-left */
+      {w / 2.0f, -h / 2.0f},    /* top-right */
+      {w / 2.0f, h / 2.0f},     /* bottom-right */
+      {-w / 2.0f, h / 2.0f}     /* bottom-left */
+    };
+
+    /* Draw rotated box */
+    for (int i = 0; i < 4; i++) {
+      gfloat dx = corners[i][0];
+      gfloat dy = corners[i][1];
+      gfloat rx = dx * cos_r - dy * sin_r + xc;
+      gfloat ry = dx * sin_r + dy * cos_r + yc;
+
+      if (i == 0)
+        cairo_move_to (ctx->cr, rx, ry);
+      else
+        cairo_line_to (ctx->cr, rx, ry);
+    }
+    cairo_close_path (ctx->cr);
+  }
 
   if (overlay->filled_box == FALSE)
     cairo_stroke (ctx->cr);
