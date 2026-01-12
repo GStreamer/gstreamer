@@ -1293,7 +1293,8 @@ gst_qtdemux_do_push_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   gint64 original_stop;
   guint32 seqnum;
 
-  GST_DEBUG_OBJECT (qtdemux, "doing push-based seek");
+  GST_DEBUG_OBJECT (qtdemux,
+      "doing push-based seek with event %" GST_PTR_FORMAT, event);
 
   gst_event_parse_seek (event, &rate, &format, &flags,
       &cur_type, &cur, &stop_type, &stop);
@@ -1498,7 +1499,7 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   GstEvent *flush_event;
   gboolean ret;
 
-  GST_DEBUG_OBJECT (qtdemux, "doing seek with event");
+  GST_DEBUG_OBJECT (qtdemux, "doing seek with event %" GST_PTR_FORMAT, event);
 
   gst_event_parse_seek (event, &rate, &format, &flags,
       &cur_type, &cur, &stop_type, &stop);
@@ -1563,13 +1564,19 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
 
   /* configure the segment with the seek variables */
   GST_DEBUG_OBJECT (qtdemux, "configuring seek");
-  if (!gst_segment_do_seek (&seeksegment, rate, format, flags,
-          cur_type, cur, stop_type, stop, &update)) {
+  GST_DEBUG_OBJECT (qtdemux, "Previous segment was %" GST_SEGMENT_FORMAT,
+      &seeksegment);
+  if (!gst_segment_do_seek (&seeksegment, rate, format, flags, cur_type, cur,
+          stop_type, stop, &update)) {
     ret = FALSE;
     GST_ERROR_OBJECT (qtdemux, "inconsistent seek values, doing nothing");
   } else {
     /* now do the seek */
+    GST_DEBUG_OBJECT (qtdemux, "New segment is %" GST_SEGMENT_FORMAT,
+        &seeksegment);
     ret = gst_qtdemux_perform_seek (qtdemux, &seeksegment, seqnum, flags);
+    GST_DEBUG_OBJECT (qtdemux, "Adjusted segment is %" GST_SEGMENT_FORMAT,
+        &seeksegment);
   }
 
   /* prepare for streaming again */
