@@ -2534,6 +2534,8 @@ gst_base_sink_do_preroll (GstBaseSink * sink, GstMiniObject * obj)
       ret = gst_base_sink_wait_preroll (sink);
       if ((ret != GST_FLOW_OK) && (ret != GST_FLOW_STEP))
         goto preroll_failed;
+    } else {
+      sink->have_preroll = FALSE;
     }
   }
   return GST_FLOW_OK;
