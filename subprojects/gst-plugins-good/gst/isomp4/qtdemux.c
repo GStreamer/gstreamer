@@ -5423,6 +5423,10 @@ gst_qtdemux_seek_to_previous_keyframe (GstQTDemux * qtdemux)
   return GST_FLOW_OK;
 
 eos:
+  /* Set position to the beginning of the seek segment now */
+  qtdemux->segment.position = qtdemux->segment.start;
+  GST_DEBUG_OBJECT (qtdemux, "segment position now is %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (qtdemux->segment.start));
   return GST_FLOW_EOS;
 }
 
@@ -7601,6 +7605,15 @@ pause:
         } else {
           GstMessage *message;
           GstEvent *event;
+
+          if (qtdemux->segment.position != qtdemux->segment.start) {
+            GST_DEBUG_OBJECT (qtdemux,
+                "End of segment, updating segment.position from %"
+                GST_TIME_FORMAT " to start %" GST_TIME_FORMAT,
+                GST_TIME_ARGS (qtdemux->segment.position),
+                GST_TIME_ARGS (qtdemux->segment.start));
+            qtdemux->segment.position = qtdemux->segment.start;
+          }
 
           /*  For Reverse Playback */
           GST_LOG_OBJECT (qtdemux, "Sending segment done, at start of segment");

@@ -1,0 +1,19 @@
+set-globals, media_dir="$(test_dir)/../../../medias/defaults/mp4/"
+meta,
+    seek=true,
+    handles-states=true,
+    args = {
+         "filesrc location=$(media_dir)/mp3_h264.1.mp4 ! qtdemux ! fakesink sync=false name=video-fakesink",
+    },
+    configs = {
+       "$(validateflow), pad=video-fakesink:sink, record-buffers=true, logged-event-types={segment, eos, segment-done}",
+    }
+pause
+seek, name=Seek-A, rate=1.0, start=0.0, stop="$(duration)", flags="flush+segment"
+play
+wait, message-type=segment-done
+seek, name=Seek-B, rate=1.0, start=0.0, stop="$(duration)", flags="segment"
+wait, message-type=segment-done
+seek, name=Seek-C, rate=1.0, start=0.0, stop="$(duration)", flags="none"
+wait, message-type=eos
+stop
