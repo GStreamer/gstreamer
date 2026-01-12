@@ -1534,7 +1534,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         }
         switch (ltag) {
           case GST_RIFF_LIST_INFO:{
-            const gint data_size = size - 4;
+            const guint data_size = size - 4;
             GstTagList *new;
 
             GST_INFO_OBJECT (wav, "Have LIST chunk INFO size %u", data_size);
@@ -1580,7 +1580,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
             break;
           }
           case GST_RIFF_LIST_adtl:{
-            const gint data_size = size - 4;
+            const guint data_size = size - 4;
 
             GST_INFO_OBJECT (wav, "Have 'adtl' LIST, size %u", data_size);
             if (wav->streaming) {
@@ -1669,7 +1669,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         break;
       }
       case GST_RIFF_TAG_smpl:{
-        const gint data_size = size;
+        const guint data_size = size;
 
         GST_DEBUG_OBJECT (wav, "Have 'smpl' TAG, size : %u", data_size);
         if (wav->streaming) {
