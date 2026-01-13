@@ -91,8 +91,7 @@ static GstVideoCodecFrame *gst_h265_cc_inserter_pop (GstCodecSEIInserter *
     inserter);
 static void gst_h265_cc_inserter_drain (GstCodecSEIInserter * inserter);
 static GstBuffer *gst_h265_cc_inserter_insert_sei (GstCodecSEIInserter *
-    inserter, GstBuffer * buffer, GPtrArray * cc_metas,
-    GPtrArray * sei_unregistered_metas);
+    inserter, GstBuffer * buffer, GPtrArray * metas);
 
 #define gst_h265_cc_inserter_parent_class parent_class
 G_DEFINE_TYPE (GstH265CCInserter,
@@ -219,8 +218,7 @@ gst_h265_cc_inserter_get_num_buffered (GstCodecSEIInserter * inserter)
 
 static GstBuffer *
 gst_h265_cc_inserter_insert_sei (GstCodecSEIInserter * inserter,
-    GstBuffer * buffer, GPtrArray * cc_metas,
-    GPtrArray * sei_unregistered_metas)
+    GstBuffer * buffer, GPtrArray * metas)
 {
   GstH265CCInserter *self = GST_H265_CC_INSERTER (inserter);
   guint i;
@@ -229,13 +227,19 @@ gst_h265_cc_inserter_insert_sei (GstCodecSEIInserter * inserter,
   g_array_set_size (self->sei_array, 0);
 
   /* Process closed caption metas */
-  for (i = 0; i < cc_metas->len; i++) {
-    GstVideoCaptionMeta *meta = g_ptr_array_index (cc_metas, i);
+  for (i = 0; i < metas->len; i++) {
+    GstMeta *meta = g_ptr_array_index (metas, i);
+    GstVideoCaptionMeta *cc_meta;
     GstH265SEIMessage sei;
     GstH265RegisteredUserData *rud;
     guint8 *data;
 
-    if (meta->caption_type != GST_VIDEO_CAPTION_TYPE_CEA708_RAW)
+    if (meta->info->api != GST_VIDEO_CAPTION_META_API_TYPE)
+      continue;
+
+    cc_meta = (GstVideoCaptionMeta *) meta;
+
+    if (cc_meta->caption_type != GST_VIDEO_CAPTION_TYPE_CEA708_RAW)
       continue;
 
     memset (&sei, 0, sizeof (GstH265SEIMessage));
@@ -243,10 +247,10 @@ gst_h265_cc_inserter_insert_sei (GstCodecSEIInserter * inserter,
     rud = &sei.payload.registered_user_data;
 
     rud->country_code = 181;
-    rud->size = meta->size + 10;
+    rud->size = cc_meta->size + 10;
 
     data = g_malloc (rud->size);
-    memcpy (data + 9, meta->data, meta->size);
+    memcpy (data + 9, cc_meta->data, cc_meta->size);
 
     data[0] = 0;                /* 16-bits itu_t_t35_provider_code */
     data[1] = 49;
@@ -261,9 +265,9 @@ gst_h265_cc_inserter_insert_sei (GstCodecSEIInserter * inserter,
      * 1 bit additional_data_flag (0)
      * 5-bits cc_count
      */
-    data[7] = ((meta->size / 3) & 0x1f) | 0x40;
+    data[7] = ((cc_meta->size / 3) & 0x1f) | 0x40;
     data[8] = 255;              /* 8 bits em_data, unused */
-    data[meta->size + 9] = 255; /* 8 marker bits */
+    data[cc_meta->size + 9] = 255;      /* 8 marker bits */
 
     rud->data = data;
 
@@ -271,22 +275,27 @@ gst_h265_cc_inserter_insert_sei (GstCodecSEIInserter * inserter,
   }
 
   /* Process unregistered SEI metas */
-  for (i = 0; i < sei_unregistered_metas->len; i++) {
-    GstVideoSEIUserDataUnregisteredMeta *meta =
-        g_ptr_array_index (sei_unregistered_metas, i);
+  for (i = 0; i < metas->len; i++) {
+    GstMeta *meta = g_ptr_array_index (metas, i);
+    GstVideoSEIUserDataUnregisteredMeta *sei_meta;
     GstH265SEIMessage sei;
     GstH265UserDataUnregistered *udu;
     guint8 *data;
+
+    if (meta->info->api != GST_VIDEO_SEI_USER_DATA_UNREGISTERED_META_API_TYPE)
+      continue;
+
+    sei_meta = (GstVideoSEIUserDataUnregisteredMeta *) meta;
 
     memset (&sei, 0, sizeof (GstH265SEIMessage));
     sei.payloadType = GST_H265_SEI_USER_DATA_UNREGISTERED;
     udu = &sei.payload.user_data_unregistered;
 
-    memcpy (udu->uuid, meta->uuid, 16);
-    udu->size = meta->size;
+    memcpy (udu->uuid, sei_meta->uuid, 16);
+    udu->size = sei_meta->size;
 
-    data = g_malloc (meta->size);
-    memcpy (data, meta->data, meta->size);
+    data = g_malloc (sei_meta->size);
+    memcpy (data, sei_meta->data, sei_meta->size);
     udu->data = data;
 
     g_array_append_val (self->sei_array, sei);

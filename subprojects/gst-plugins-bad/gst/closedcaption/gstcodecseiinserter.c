@@ -100,8 +100,7 @@ struct _GstCodecSEIInserterPrivate
   GMutex lock;
 
   GList *current_frame_events;
-  GPtrArray *caption_metas;
-  GPtrArray *sei_unregistered_metas;
+  GPtrArray *sei_metas;
   GstClockTime latency;
 
   GstCodecSEIInsertMetaOrder meta_order;
@@ -260,8 +259,7 @@ gst_codec_sei_inserter_init (GstCodecSEIInserter * self,
   priv->remove_meta = DEFAULT_REMOVE_CAPTION_META;
   priv->sei_types = DEFAULT_SEI_TYPES;
   priv->remove_sei_unregistered_meta = DEFAULT_REMOVE_SEI_UNREGISTERED_META;
-  priv->caption_metas = g_ptr_array_new ();
-  priv->sei_unregistered_metas = g_ptr_array_new ();
+  priv->sei_metas = g_ptr_array_new ();
 }
 
 static void
@@ -331,8 +329,7 @@ gst_codec_sei_inserter_finalize (GObject * object)
   GstCodecSEIInserterPrivate *priv = self->priv;
 
   g_mutex_clear (&priv->lock);
-  g_ptr_array_unref (priv->caption_metas);
-  g_ptr_array_unref (priv->sei_unregistered_metas);
+  g_ptr_array_unref (priv->sei_metas);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -609,22 +606,20 @@ gst_codec_sei_inserter_output_frame (GstCodecSEIInserter * self,
     gst_buffer_foreach_meta (caption_source, copy_sei_unregistered_meta,
         output);
 
-  g_ptr_array_set_size (priv->caption_metas, 0);
-  g_ptr_array_set_size (priv->sei_unregistered_metas, 0);
+  g_ptr_array_set_size (priv->sei_metas, 0);
 
   /* Collect metas based on sei-types property */
   if (priv->sei_types & GST_CODEC_SEI_INSERT_CC) {
     gst_buffer_foreach_meta (caption_source,
-        extract_caption_meta, priv->caption_metas);
+        extract_caption_meta, priv->sei_metas);
   }
 
   if (priv->sei_types & GST_CODEC_SEI_INSERT_UNREGISTERED) {
     gst_buffer_foreach_meta (caption_source,
-        extract_sei_unregistered_meta, priv->sei_unregistered_metas);
+        extract_sei_unregistered_meta, priv->sei_metas);
   }
 
-  output = klass->insert_sei (self, output, priv->caption_metas,
-      priv->sei_unregistered_metas);
+  output = klass->insert_sei (self, output, priv->sei_metas);
   g_mutex_unlock (&priv->lock);
 
   gst_video_codec_frame_unref (frame);

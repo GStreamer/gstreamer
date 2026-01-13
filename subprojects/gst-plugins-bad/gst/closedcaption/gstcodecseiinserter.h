@@ -94,8 +94,7 @@ struct _GstCodecSEIInserterClass
 
   GstBuffer *   (*insert_sei)    (GstCodecSEIInserter * inserter,
                                   GstBuffer * buffer,
-                                  GPtrArray * cc_metas,
-                                  GPtrArray * sei_unregistered_metas);
+                                  GPtrArray * metas);
 };
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstCodecSEIInserter, gst_object_unref);
