@@ -780,7 +780,7 @@ class DoubleRange(Gst.DoubleRange):
     start: float
     stop: float
 
-    def __init__(self, start: int | float, stop: int | float):
+    def __init__(self, start: float, stop: float):
         self.start = float(start)
         self.stop = float(stop)
 
