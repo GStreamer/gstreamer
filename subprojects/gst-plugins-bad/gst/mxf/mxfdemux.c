@@ -4695,9 +4695,12 @@ gst_mxf_demux_pad_get_stream_time (GstMXFDemux * demux,
   }
 
   *stream_time =
-      gst_util_uint64_scale (position + sum,
+      gst_util_uint64_scale (sum,
       pad->material_track->edit_rate.d * GST_SECOND,
-      pad->material_track->edit_rate.n);
+      pad->material_track->edit_rate.n)
+      + gst_util_uint64_scale (position,
+      etrack->source_track->edit_rate.d * GST_SECOND,
+      etrack->source_track->edit_rate.n);
 
   return TRUE;
 }
