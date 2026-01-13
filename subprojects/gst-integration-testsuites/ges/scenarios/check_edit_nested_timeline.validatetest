@@ -9,7 +9,7 @@ meta, seek=true, handles-states=true, needs_preroll=true,
         "$(validateflow), pad=videosink:sink, buffers-checksum=true, ignored-fields=\"stream-start={stream-id,group-id,stream}\"",
     }
 
-include, location="../../medias/defaults/matroska/timed_frames_video_only_1fps.mkv.frames_checksums.scenario"
+include, location="../../medias/defaults/matroska/timed_frames_video_only_1fps.mkv.frames_checksums"
 
 set-vars,\
     nested_timeline_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nested_timeline.xges",\
