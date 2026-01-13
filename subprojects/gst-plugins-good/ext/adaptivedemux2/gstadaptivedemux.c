@@ -2292,37 +2292,54 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
   if (IS_SNAP_SEEK (flags)) {
     GstAdaptiveDemux2Stream *default_stream = NULL;
     GstAdaptiveDemux2Stream *stream = NULL;
+    GstAdaptiveDemux2Stream *video_stream = NULL;
     GList *iter;
     /*
      * Handle snap seeks as follows:
-     * 1) do the snap seeking a (random) active stream
-     * 1.1) If none are active yet (early-seek), pick a random default one
+     * 1) do the snap seeking on a video stream (if available)
+     * 1.1) If no video stream is active, use any active stream
+     * 1.2) If none are active yet (early-seek), pick a random default one
      * 2) use the final position on this stream to seek
      *    on the other streams to the same position
      *
      * We can't snap at all streams at the same time as they might end in
-     * different positions, so just pick one and align all others to that
-     * position.
+     * different positions, so we prefer to snap on the video stream (to find
+     * keyframes) and align all others to that position. This prevents
+     * subtitle/audio tracks with long segments from forcing seeks to their
+     * segment boundaries.
      */
 
-    /* Pick a random active stream on which to do the stream seek */
+    /* Pick a video stream (preferred) or any active stream for snap seeking */
     for (iter = demux->output_period->streams; iter; iter = iter->next) {
       GstAdaptiveDemux2Stream *cand = iter->data;
       if (gst_adaptive_demux2_stream_is_selected_locked (cand)) {
-        stream = cand;
-        break;
+        /* Prefer video streams for snapping to keyframes */
+        if (cand->stream_type & GST_STREAM_TYPE_VIDEO) {
+          video_stream = cand;
+          break;
+        }
+        /* Keep first selected stream as fallback */
+        if (stream == NULL)
+          stream = cand;
       }
       if (default_stream == NULL
           && gst_adaptive_demux2_stream_is_default_locked (cand))
         default_stream = cand;
     }
 
-    if (stream == NULL)
+    /* Use video stream if found, otherwise fallback to any stream */
+    if (video_stream != NULL)
+      stream = video_stream;
+    else if (stream == NULL)
       stream = default_stream;
 
     if (stream) {
       GstClockTimeDiff ts;
       GstSeekFlags stream_seek_flags = flags;
+
+      GST_DEBUG_OBJECT (demux,
+          "Snap seeking on stream %" GST_PTR_FORMAT " (type: %s)", stream,
+          gst_stream_type_get_name (stream->stream_type));
 
       /* snap-seek on the chosen stream and then
        * use the resulting position to seek on all streams */
