@@ -1340,9 +1340,11 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
     goto done;
   // Clean up output names
 
-  for (i = 0; i < self->output_count; i++) {
-    if (self->output_names[i])
-      self->allocator->Free (self->allocator, self->output_names[i]);
+  if (self->output_names) {
+    for (i = 0; i < self->output_count; i++) {
+      if (self->output_names[i])
+        self->allocator->Free (self->allocator, self->output_names[i]);
+    }
   }
   g_free (self->output_names);
   self->output_names = NULL;
