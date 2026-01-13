@@ -1355,6 +1355,7 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
 
   if (self->memory_info)
     api->ReleaseMemoryInfo (self->memory_info);
+  self->memory_info = NULL;
 
   api->ReleaseSession (self->session);
   self->session = NULL;
