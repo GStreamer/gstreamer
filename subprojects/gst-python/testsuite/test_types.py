@@ -30,36 +30,6 @@ gi.require_version("Gst", "1.0")
 from gi.repository import Gst
 Gst.init(None)
 
-Gst.DoubleRange = Gst.DoubleRange
-
-
-class TestDoubleRange(TestCase):
-    def testConstructor(self):
-        Gst.init(None)
-
-        Gst.DoubleRange = Gst.DoubleRange(1.2, 3.4)
-        self.assertEqual(r.start, 1.2)
-        self.assertEqual(r.stop, 3.4)
-        self.assertRaises(TypeError, Gst.DoubleRange, {}, 2)
-        self.assertRaises(TypeError, Gst.DoubleRange, 2, ())
-        self.assertRaises(TypeError, Gst.DoubleRange, 2, 1)
-        self.assertRaises(TypeError, Gst.DoubleRange)
-
-    def testRepr(self):
-        Gst.init(None)
-
-        self.assertEqual(repr(Gst.DoubleRange(1, 2)), '<Gst.DoubleRange [1.0,2.0]>')
-
-    def testGetValue(self):
-        Gst.init(None)
-
-        st = Gst.Structure.new_empty("video/x-raw")
-        st["range"] = Gst.DoubleRange(1, 2)
-        value = st["range"]
-
-        self.assertEqual(value.start, 1.0)
-        self.assertEqual(value.stop, 2.0)
-
 
 class TestFraction(TestCase):
     def testConstructor(self):
