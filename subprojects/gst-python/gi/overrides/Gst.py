@@ -753,6 +753,8 @@ class Int64Range(Gst.Int64Range):
 
 
 class Bitmask(Gst.Bitmask):
+    v: int
+
     def __init__(self, v: int) -> None:
         if not isinstance(v, int):
             raise TypeError(f"{type(v)} is not an int.")
@@ -775,6 +777,9 @@ __all__.append('Int64Range')
 
 
 class DoubleRange(Gst.DoubleRange):
+    start: float
+    stop: float
+
     def __init__(self, start: int | float, stop: int | float):
         self.start = float(start)
         self.stop = float(stop)
@@ -794,6 +799,9 @@ __all__.append('DoubleRange')
 
 
 class FractionRange(Gst.FractionRange):
+    start: Fraction
+    stop: Fraction
+
     def __init__(self, start: Fraction, stop: Fraction):
         if not isinstance(start, Fraction):
             raise TypeError(f"{type(start)} is not a Gst.Fraction.")
