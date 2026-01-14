@@ -52,6 +52,10 @@
 
 #include "gstvabasedec.h"
 
+#if !VA_CHECK_VERSION(1, 24, 0)
+#define VA_PICTURE_H264_NON_EXISTING        0x00000020
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_va_h264dec_debug);
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT gst_va_h264dec_debug
@@ -157,6 +161,9 @@ _fill_vaapi_pic (VAPictureH264 * va_picture, GstH264Picture * picture,
 
   va_picture->picture_id = gst_va_decode_picture_get_surface (va_pic);
   va_picture->flags = 0;
+
+  if (picture->nonexisting)
+    va_picture->flags |= VA_PICTURE_H264_NON_EXISTING;
 
   if (GST_H264_PICTURE_IS_LONG_TERM_REF (picture)) {
     va_picture->flags |= VA_PICTURE_H264_LONG_TERM_REFERENCE;
