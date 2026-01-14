@@ -23,7 +23,6 @@
 # SPDX-License-Identifier: LGPL-2.0-or-later
 
 from __future__ import annotations
-from typing_extensions import Self
 
 import sys
 import inspect
@@ -47,6 +46,7 @@ if typing.TYPE_CHECKING:
     # Bin.add(). The type checker will use signature from stubs which is our
     # override signature.
     from gi.repository import Gst
+    from typing_extensions import Self
 
     # Type annotations cannot have `Gst.` prefix because they are copied into
     # Gst stubs module which cannot refer to itself. Use type aliases.
