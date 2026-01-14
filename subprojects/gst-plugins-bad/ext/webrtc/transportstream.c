@@ -229,7 +229,8 @@ transport_stream_constructed (GObject * object)
   GstWebRTCBin *webrtc;
   GstWebRTCICETransport *ice_trans;
 
-  stream->transport = gst_webrtc_dtls_transport_new (stream->session_id);
+  stream->transport =
+      gst_object_ref_sink (gst_webrtc_dtls_transport_new (stream->session_id));
 
   webrtc = GST_WEBRTC_BIN (gst_object_get_parent (GST_OBJECT (object)));
 
