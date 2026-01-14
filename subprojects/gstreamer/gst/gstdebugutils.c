@@ -64,6 +64,7 @@
 #include "gstutils.h"
 #include "gstvalue.h"
 #include "gstidstr-private.h"
+#include "gstversion.h"
 
 /*** PIPELINE GRAPHS **********************************************************/
 
@@ -861,6 +862,7 @@ debug_dump_header (GstBin * bin, GstDebugGraphDetails details, GString * str)
   /* write header */
   g_string_append_printf (str,
       "digraph pipeline {\n"
+      "  gst_version=\"%d.%d.%d\";\n"
       "  rankdir=LR;\n"
       "  fontname=\"sans\";\n"
       "  fontsize=\"10\";\n"
@@ -877,7 +879,8 @@ debug_dump_header (GstBin * bin, GstDebugGraphDetails details, GString * str)
       "    style=\"filled\",\n"
       "    label=\"Legend\\lElement-States: [~] void-pending, [0] null, [-] ready, [=] paused, [>] playing\\lPad-Activation: [-] none, [>] push, [<] pull\\lPad-Flags: [b]locked, [f]lushing, [b]locking, [E]OS; upper-case is set\\lPad-Task: [T] has started task, [t] has paused task\\l\",\n"
       "  ];"
-      "\n", G_OBJECT_TYPE_NAME (bin), GST_OBJECT_NAME (bin),
+      "\n", GST_VERSION_MAJOR, GST_VERSION_MINOR, GST_VERSION_MICRO,
+      G_OBJECT_TYPE_NAME (bin), GST_OBJECT_NAME (bin),
       (state_name ? state_name : ""), (param_name ? param_name : "")
       );
 
