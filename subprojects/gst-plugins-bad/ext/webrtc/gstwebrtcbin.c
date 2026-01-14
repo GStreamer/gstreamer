@@ -2828,6 +2828,7 @@ _get_or_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
 
     if (!(sctp_transport = webrtc->priv->sctp_transport)) {
       sctp_transport = webrtc_sctp_transport_new ();
+      gst_object_ref_sink (sctp_transport);
       sctp_transport->transport =
           g_object_ref (webrtc->priv->data_channel_transport->transport);
       sctp_transport->webrtcbin = webrtc;

@@ -193,6 +193,7 @@ gst_webrtc_nice_stream_find_transport (GstWebRTCICEStream * stream,
   ret =
       GST_WEBRTC_ICE_TRANSPORT (gst_webrtc_nice_transport_new (nice_stream,
           component));
+  gst_object_ref_sink (ret);
   nice_stream->priv->transports =
       g_list_prepend (nice_stream->priv->transports, weak_new (ret));
 
