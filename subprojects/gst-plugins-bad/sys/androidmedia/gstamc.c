@@ -2329,6 +2329,8 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
         } else if (strcmp (type->mime, "video/avc") == 0) {
           gint j;
           gboolean have_profile_level = FALSE;
+          gboolean have_baseline_profile = FALSE;
+          gboolean have_constrained_baseline_profile = FALSE;
 
           tmp = gst_structure_new ("video/x-h264",
               "width", GST_TYPE_INT_RANGE, 16, 4096,
@@ -2353,6 +2355,12 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
                 continue;
               }
 
+              if (type->profile_levels[j].profile ==
+                  AVCProfileConstrainedBaseline)
+                have_constrained_baseline_profile = TRUE;
+              else if (type->profile_levels[j].profile == AVCProfileBaseline)
+                have_baseline_profile = TRUE;
+
               tmp2 = gst_structure_copy (tmp);
               gst_structure_set (tmp2, "profile", G_TYPE_STRING, profile, NULL);
 
@@ -2360,8 +2368,9 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
                 tmp3 = gst_structure_copy (tmp);
                 gst_structure_set (tmp3, "profile", G_TYPE_STRING, alternative,
                     NULL);
-              } else
+              } else {
                 tmp3 = NULL;
+              }
 
               if (codec_info->is_encoder) {
                 const gchar *level;
@@ -2400,6 +2409,12 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
           if (!have_profile_level) {
             encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
           } else {
+            if (have_baseline_profile && !have_constrained_baseline_profile) {
+              tmp2 = gst_structure_copy (tmp);
+              gst_structure_set (tmp2, "profile", G_TYPE_STRING,
+                  "constrained-baseline", NULL);
+              encoded_ret = gst_caps_merge_structure (encoded_ret, tmp2);
+            }
             gst_structure_free (tmp);
           }
         } else if (strcmp (type->mime, "video/hevc") == 0) {
