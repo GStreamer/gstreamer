@@ -24,8 +24,12 @@ list(APPEND CMAKE_MODULE_PATH "${GSTREAMER_ROOT}/share/cmake")
 
 set(GSTREAMER_NDK_BUILD_PATH  "${GSTREAMER_ROOT}/share/gst-android/ndk-build/")
 include("${GSTREAMER_NDK_BUILD_PATH}/plugins.cmake")
-set(GSTREAMER_PLUGINS         ${GSTREAMER_PLUGINS_CORE} ${GSTREAMER_PLUGINS_PLAYBACK} ${GSTREAMER_PLUGINS_CODECS} ${GSTREAMER_PLUGINS_NET} ${GSTREAMER_PLUGINS_SYS})
-set(GStreamer_EXTRA_DEPS gstreamer-video-1.0)
+set(GSTREAMER_PLUGINS coreelements coretracers audioconvert audioparsers audiorate audioresample autodetect playback typefindfunctions videoconvertscale videoparsersbad videorate volume androidmedia isomp4 soup  opengl opensles deinterlace videofilter)
+# deinterlace / videofilter are optionally used by playbin and can be removed if not needed
+
+# Uncomment this for lots more plugins
+#set(GSTREAMER_PLUGINS ${GSTREAMER_PLUGINS_CORE} ${GSTREAMER_PLUGINS_PLAYBACK} ${GSTREAMER_PLUGINS_CODECS} ${GSTREAMER_PLUGINS_NET} ${GSTREAMER_PLUGINS_SYS})
+set(GStreamer_EXTRA_DEPS gstreamer-video-1.0 openssl)
 set(G_IO_MODULES openssl)
 find_library(ANDROID_LIB android REQUIRED)
 find_library(LOG_LIB log REQUIRED)

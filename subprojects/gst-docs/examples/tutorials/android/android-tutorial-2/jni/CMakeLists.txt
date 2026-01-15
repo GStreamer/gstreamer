@@ -24,7 +24,9 @@ list(APPEND CMAKE_MODULE_PATH "${GSTREAMER_ROOT}/share/cmake")
 
 set(GSTREAMER_NDK_BUILD_PATH  "${GSTREAMER_ROOT}/share/gst-android/ndk-build/")
 include("${GSTREAMER_NDK_BUILD_PATH}/plugins.cmake")
-set(GSTREAMER_PLUGINS         ${GSTREAMER_PLUGINS_CORE} ${GSTREAMER_PLUGINS_SYS})
+set(GSTREAMER_PLUGINS coreelements audiotestsrc audioconvert audioresample autodetect opensles)
+# Uncomment this for more plugins
+#set(GSTREAMER_PLUGINS ${GSTREAMER_PLUGINS_CORE} ${GSTREAMER_PLUGINS_SYS})
 find_library(LOG_LIB log REQUIRED)
 find_package(GStreamerMobile COMPONENTS ${GSTREAMER_PLUGINS} fonts REQUIRED)
 
