@@ -24,7 +24,9 @@ list(APPEND CMAKE_MODULE_PATH "${GSTREAMER_ROOT}/share/cmake")
 
 set(GSTREAMER_NDK_BUILD_PATH  "${GSTREAMER_ROOT}/share/gst-android/ndk-build/")
 include("${GSTREAMER_NDK_BUILD_PATH}/plugins.cmake")
-set(GSTREAMER_PLUGINS         ${GSTREAMER_PLUGINS_CORE} ${GSTREAMER_PLUGINS_SYS} ${GSTREAMER_PLUGINS_EFFECTS})
+set(GSTREAMER_PLUGINS coreelements videoconvertscale videotestsrc autodetect effectv opengl)
+# Uncomment this for more plugins
+#set(GSTREAMER_PLUGINS ${GSTREAMER_PLUGINS_CORE} ${GSTREAMER_PLUGINS_SYS} ${GSTREAMER_PLUGINS_EFFECTS})
 set(GStreamer_EXTRA_DEPS gstreamer-video-1.0 gobject-2.0)
 find_library(ANDROID_LIB android REQUIRED)
 find_library(LOG_LIB log REQUIRED)
