@@ -107,8 +107,13 @@ run_pipeline (GstElement * pipeline, guint num_segments_expected,
   GstBus *bus = gst_element_get_bus (GST_ELEMENT (pipeline));
   GstMessage *msg;
   guint segments_seen = 0;
+  GstStateChangeReturn ret;
 
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  if (ret == GST_STATE_CHANGE_ASYNC) {
+    ret = gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+    fail_unless (ret != GST_STATE_CHANGE_FAILURE);
+  }
   do {
     msg =
         gst_bus_poll (bus,
@@ -269,7 +274,7 @@ test_playback (const gchar * filename, GstClockTime exp_first_time,
 
   GST_DEBUG ("Playing back file %s", filename);
 
-  pipeline = gst_element_factory_make ("playbin", NULL);
+  pipeline = gst_element_factory_make ("playbin3", NULL);
   fail_if (pipeline == NULL);
 
   appsink = gst_element_factory_make ("appsink", NULL);
@@ -348,9 +353,7 @@ GST_START_TEST (test_dashsink_video_ts)
   fail_unless (count == 4, "Expected 4 output files, got %d", count);
 
   filename = g_build_filename (tmpdir, "dash.mpd", NULL);
-  // mpegtsmux generates a first PTS at 0.125 second and does not end at 3 seconds exactly.
-  test_playback (filename, 0.125 * GST_SECOND, 2.925 * GST_SECOND, 3,
-      durations);
+  test_playback (filename, 0, 2.8 * GST_SECOND, 3, durations);
   g_free (filename);
 }
 
