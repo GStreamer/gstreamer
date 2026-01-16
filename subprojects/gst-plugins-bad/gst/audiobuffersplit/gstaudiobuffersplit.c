@@ -486,16 +486,23 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
   GstFlowReturn ret = GST_FLOW_OK;
   guint avail = gst_adapter_available (self->adapter);
   guint avail_samples = avail / bpf;
+  guint input_samples, input_scaled_samples;
   guint64 new_offset;
   GstClockTime input_rt, current_rt;
-  GstClockTime input_duration;
   GstClockTime current_rt_end;
 
   input_rt =
       gst_segment_to_running_time (&self->in_segment, GST_FORMAT_TIME,
       GST_BUFFER_PTS (buffer));
-  input_duration =
-      (gst_buffer_get_size (buffer) / bpf) / ABS (self->in_segment.rate);
+
+  input_samples = gst_buffer_get_size (buffer) / bpf;
+  if (self->in_segment.rate == 1.0 || self->in_segment.rate == -1.0) {
+    input_scaled_samples = input_samples;
+  } else if (self->in_segment.rate < 0.0) {
+    input_scaled_samples = ((gdouble) input_samples) / (-self->in_segment.rate);
+  } else {
+    input_scaled_samples = ((gdouble) input_samples) / self->in_segment.rate;
+  }
 
   GST_OBJECT_LOCK (self);
 
@@ -515,7 +522,7 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
 
   discont =
       gst_audio_stream_align_process (self->stream_align,
-      discont, input_rt, input_duration, NULL, NULL, NULL);
+      discont, input_rt, input_scaled_samples, NULL, NULL, NULL);
   GST_OBJECT_UNLOCK (self);
 
   if (!discont)
