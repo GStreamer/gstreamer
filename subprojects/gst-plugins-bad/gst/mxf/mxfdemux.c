@@ -4839,26 +4839,35 @@ gst_mxf_demux_pad_get_stream_time (GstMXFDemux * demux,
   return TRUE;
 }
 
-static void
+/* Returns FALSE if the requested position is past the end of the track */
+static gboolean
 gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
     GstClockTime start)
 {
+  gboolean ret = TRUE;
   guint i;
-  guint64 sum = 0;
+  guint64 sum = 0, requested_material_position;
   MXFMetadataSourceClip *clip = NULL;
 
+  requested_material_position =
+      gst_util_uint64_scale (start, p->material_track->edit_rate.n,
+      p->material_track->edit_rate.d * GST_SECOND);
+
   if (!p->current_component) {
-    p->current_essence_track_position =
-        gst_util_uint64_scale (start, p->material_track->edit_rate.n,
-        p->material_track->edit_rate.d * GST_SECOND);
-
-    if (p->current_essence_track_position >= p->current_essence_track->duration
-        && p->current_essence_track->duration > 0) {
+    if (requested_material_position >= p->current_essence_track->duration) {
+      GST_DEBUG_OBJECT (p,
+          "Requested position %" G_GUINT64_FORMAT
+          " >= current etrack duration %" G_GUINT64_FORMAT,
+          p->current_essence_track_position,
+          p->current_essence_track->duration);
       p->current_essence_track_position = p->current_essence_track->duration;
+      ret = FALSE;
+    } else {
+      p->current_essence_track_position = requested_material_position;
     }
-    p->current_material_track_position = p->current_essence_track_position;
 
-    return;
+    p->current_material_track_position = p->current_essence_track_position;
+    return ret;
   }
 
   for (i = 0; i < p->material_track->parent.sequence->n_structural_components;
@@ -4878,10 +4887,19 @@ gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
   }
 
   if (i == p->material_track->parent.sequence->n_structural_components) {
+    if (requested_material_position > sum) {
+      GST_DEBUG_OBJECT (p,
+          "Requested position %" G_GUINT64_FORMAT
+          " >= current etrack duration %" G_GUINT64_FORMAT,
+          requested_material_position, p->current_essence_track->duration);
+
+      ret = FALSE;
+    }
+
     p->current_material_track_position = sum;
 
     gst_mxf_demux_pad_set_component (demux, p, i);
-    return;
+    return ret;
   }
 
   if (clip->parent.duration > 0)
@@ -4908,6 +4926,8 @@ gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
     p->current_material_track_position =
         sum + p->current_component->parent.duration;
   }
+
+  return ret;
 }
 
 static GstClockTime
@@ -5013,6 +5033,12 @@ gst_mxf_demux_seek_to_previous_keyframe (GstMXFDemux * demux)
     else
       chunk_start_ts = 0;
 
+    if (!gst_mxf_demux_pad_set_position (demux, p, chunk_start_ts)) {
+      GST_DEBUG_OBJECT (p,
+          "Track is not long enough => no using this pad as ref");
+      continue;
+    }
+
     /* use as ref track, unless another one with higher priority is found */
     ref_pad = p;
     ref_target_track = cur_track;
@@ -5030,11 +5056,7 @@ gst_mxf_demux_seek_to_previous_keyframe (GstMXFDemux * demux)
   /* Find actual chunk start for selected ref pad,
    * preferably on a keyframe */
   {
-    gint64 position;
-
-    gst_mxf_demux_pad_set_position (demux, ref_pad, target_chunk_start_ts);
-
-    position = ref_pad->current_essence_track_position;
+    gint64 position = ref_pad->current_essence_track_position;
     new_offset =
         gst_mxf_demux_find_essence_element (demux,
         ref_pad->current_essence_track, &position, TRUE);
