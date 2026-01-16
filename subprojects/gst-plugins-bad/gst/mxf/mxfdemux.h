@@ -134,7 +134,9 @@ struct _GstMXFDemuxEssenceTrack
   GstTagList *tags;
 
   GstCaps *caps;
+  gboolean is_video;
   gboolean intra_only;
+  gboolean is_audio;
 
   MXFEssenceWrapping wrapping;
 
@@ -221,6 +223,9 @@ struct _GstMXFDemuxPad
   /* Current essence track and position (in edit units) */
   GstMXFDemuxEssenceTrack *current_essence_track;
   guint64 current_essence_track_position;
+
+  /* reverse playback related */
+  gboolean chunk_complete;
 };
 
 struct _GstMXFDemuxPadClass
@@ -261,6 +266,8 @@ struct _GstMXFDemux
   /* MXF file state */
   GList *partitions;
   GstMXFDemuxPartition *current_partition;
+  /* for reverse playback */
+  guint64 chunk_start_ts;
 
   GPtrArray *essence_tracks;
 
