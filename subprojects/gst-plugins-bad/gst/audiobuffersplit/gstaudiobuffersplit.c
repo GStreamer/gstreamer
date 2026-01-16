@@ -526,10 +526,10 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
 
   current_rt =
       self->resync_rt + gst_util_uint64_scale (self->current_offset,
-      GST_SECOND, rate * ABS (self->in_segment.rate));
+      GST_SECOND, rate * ABS (self->out_segment.rate));
   current_rt_end =
       self->resync_rt + gst_util_uint64_scale (self->current_offset +
-      avail_samples, GST_SECOND, rate * ABS (self->in_segment.rate));
+      avail_samples, GST_SECOND, rate * ABS (self->out_segment.rate));
 
   if (self->gapless && self->current_offset != -1) {
     GST_DEBUG_OBJECT (self,
@@ -541,13 +541,13 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
 
     new_offset =
         gst_util_uint64_scale (input_rt - self->resync_rt,
-        rate * ABS (self->in_segment.rate), GST_SECOND);
+        rate * ABS (self->out_segment.rate), GST_SECOND);
     if (input_rt < self->resync_rt) {
       guint64 drop_samples;
 
       new_offset =
           gst_util_uint64_scale (self->resync_rt -
-          input_rt, rate * ABS (self->in_segment.rate), GST_SECOND);
+          input_rt, rate * ABS (self->out_segment.rate), GST_SECOND);
       drop_samples = self->current_offset + avail_samples + new_offset;
 
       GST_DEBUG_OBJECT (self,
