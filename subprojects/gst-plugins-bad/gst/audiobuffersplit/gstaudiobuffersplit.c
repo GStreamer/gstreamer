@@ -713,12 +713,13 @@ gst_audio_buffer_split_sink_chain (GstPad * pad, GstObject * parent,
   GST_LOG_OBJECT (self,
       "Processing buffer at running time %" GST_TIME_FORMAT
       " with timestamp %" GST_TIME_FORMAT " with duration %" GST_TIME_FORMAT
-      " (%u samples)",
+      " (%u samples)%s",
       GST_TIME_ARGS (gst_segment_to_running_time (&self->in_segment,
               GST_FORMAT_TIME, GST_BUFFER_PTS (buffer))),
       GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)),
-      (guint) (gst_buffer_get_size (buffer) / bpf));
+      (guint) (gst_buffer_get_size (buffer) / bpf),
+      GST_BUFFER_IS_DISCONT (buffer) ? " with discont" : "");
 
   if (format == GST_AUDIO_FORMAT_UNKNOWN || samples_per_buffer == 0) {
     gst_buffer_unref (buffer);
