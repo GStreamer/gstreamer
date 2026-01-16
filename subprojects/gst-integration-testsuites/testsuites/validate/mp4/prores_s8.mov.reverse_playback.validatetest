@@ -1,0 +1,17 @@
+set-globals, media_dir="$(test_dir)/../../../medias/defaults/mp4/"
+meta,
+    seek=true,
+    handles-states=true,
+    args = {
+         "filesrc location=$(media_dir)/prores_s8.mov ! qtdemux name=d  d.video_0 ! queue max-size-buffers=0 max-size-bytes=0 max-size-time=1000000000 ! fakesink sync=false name=video-fakesink  d.audio_0 ! queue max-size-buffers=0 max-size-bytes=0 max-size-time=1000000000 ! fakesink sync=false name=audio-fakesink",
+    },
+    configs = {
+       "$(validateflow), pad=video-fakesink:sink, record-buffers=true, logged-event-types={segment, eos}",
+       "$(validateflow), pad=audio-fakesink:sink, record-buffers=true, logged-event-types={segment, eos}",
+    }
+pause
+seek, name=Seek, rate=-1.0, start=0.0, stop="$(duration)", flags="flush"
+play
+wait, message-type=eos
+stop
+
