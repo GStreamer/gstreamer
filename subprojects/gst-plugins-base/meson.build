@@ -388,15 +388,18 @@ have_orcc = false
 orcc_args = []
 orc_targets = []
 # Used by various libraries/elements that use Orc code
-orc_dep = dependency('orc-0.4', version : orc_req, required : get_option('orc'),
-    fallback : ['orc', 'orc_dep'])
-orcc = find_program('orcc', required : get_option('orc'))
-if orc_dep.found() and orcc.found()
-  have_orcc = true
-  orcc_args = [orcc, '--include', 'glib.h']
+orc_dep = dependency('orc-0.4', version: orc_req, required: get_option('orc'), allow_fallback: true)
+orcc = find_program('orcc', required: get_option('orc-compiler'))
+if orc_dep.found()
+  if orcc.found()
+    have_orcc = true
+    orcc_args = [orcc, '--include', 'glib.h']
+  else
+    message('Orc Compiler not found, not regenerating Orc sources')
+  endif
   core_conf.set('HAVE_ORC', 1)
 else
-  message('Orc Compiler not found or disabled, will use backup C code')
+  warning('Orc not found or disabled, will use backup C code')
   core_conf.set('DISABLE_ORC', 1)
 endif
 

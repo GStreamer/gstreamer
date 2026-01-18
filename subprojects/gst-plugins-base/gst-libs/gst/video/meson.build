@@ -126,9 +126,8 @@ gstvideo_h = video_enums[1]
 video_gen_sources = [gstvideo_h]
 
 orcsrc = 'video-orc'
-gstvideo_deps = [allocators_dep, gst_base_dep, libm]
+gstvideo_deps = [allocators_dep, gst_base_dep, orc_dep, libm]
 if have_orcc
-  gstvideo_deps += [orc_dep]
   orc_h = custom_target(orcsrc + '.h',
     input : orcsrc + '.orc',
     output : orcsrc + '.h',

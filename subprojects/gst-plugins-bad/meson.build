@@ -484,16 +484,21 @@ have_orcc = false
 orcc_args = []
 orc_targets = []
 # Used by various libraries/elements that use Orc code
-orc_dep = dependency('orc-0.4', version : orc_req, required : get_option('orc'), allow_fallback: true)
-orcc = find_program('orcc', required : get_option('orc'))
-if orc_dep.found() and orcc.found()
-  have_orcc = true
-  orcc_args = [orcc, '--include', 'glib.h']
+orc_dep = dependency('orc-0.4', version: orc_req, required: get_option('orc'), allow_fallback: true)
+orcc = find_program('orcc', required: get_option('orc-compiler'))
+if orc_dep.found()
+  if orcc.found()
+    have_orcc = true
+    orcc_args = [orcc, '--include', 'glib.h']
+  else
+    message('Orc Compiler not found, not regenerating Orc sources')
+  endif
   cdata.set('HAVE_ORC', 1)
 else
-  message('Orc Compiler not found or disabled, will use backup C code')
+  warning('Orc not found or disabled, will use backup C code')
   cdata.set('DISABLE_ORC', 1)
 endif
+
 cdata.set('GST_ENABLE_EXTRA_CHECKS', not get_option('extra-checks').disabled())
 
 # Disable compiler warnings for unused variables and args if gst debug system is disabled

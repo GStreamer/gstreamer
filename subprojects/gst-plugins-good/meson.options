@@ -119,6 +119,7 @@ option('examples', type : 'feature', value : 'auto', yield : true)
 option('tests', type : 'feature', value : 'auto', yield : true)
 option('nls', type : 'feature', value : 'auto', yield: true, description : 'Enable native language support (translations)')
 option('orc', type : 'feature', value : 'auto', yield : true)
+option('orc-compiler', type : 'feature', value : 'auto', yield: true, description : 'Enable targets to allow regeneration of disted orc files')
 option('asm', type : 'feature', value : 'auto', yield : true)
 
 # Common options

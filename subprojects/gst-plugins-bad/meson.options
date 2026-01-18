@@ -298,6 +298,7 @@ option('tests', type : 'feature', value : 'auto', yield : true)
 option('introspection', type : 'feature', value : 'auto', yield : true, description : 'Generate gobject-introspection bindings')
 option('nls', type : 'feature', value : 'auto', yield: true, description : 'Enable native language support (translations)')
 option('orc', type : 'feature', value : 'auto', yield : true)
+option('orc-compiler', type : 'feature', value : 'auto', yield: true, description : 'Enable targets to allow regeneration of disted orc files')
 option('extra-checks', type : 'feature', value : 'enabled', yield : true, description : 'Enable extra runtime checks')
 
 # Common options

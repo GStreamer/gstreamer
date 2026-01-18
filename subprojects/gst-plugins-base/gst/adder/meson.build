@@ -19,10 +19,9 @@ if get_option('adder').disabled()
   subdir_done()
 endif
 
-adder_deps = [audio_dep]
+adder_deps = [audio_dep, orc_dep]
 orcsrc = 'gstadderorc'
 if have_orcc
-  adder_deps += [orc_dep]
   orc_h = custom_target(orcsrc + '.h',
     input : orcsrc + '.orc',
     output : orcsrc + '.h',

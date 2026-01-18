@@ -87,10 +87,9 @@ gstaudio_h = audio_enums[1]
 
 audio_gen_sources = [gstaudio_h]
 
-gstaudio_deps = [tag_dep, gst_base_dep, libm]
+gstaudio_deps = [tag_dep, gst_base_dep, orc_dep, libm]
 orcsrc = 'gstaudiopack'
 if have_orcc
-  gstaudio_deps += [orc_dep]
   orc_h = custom_target(orcsrc + '.h',
     input : orcsrc + '.orc',
     output : orcsrc + '.h',
