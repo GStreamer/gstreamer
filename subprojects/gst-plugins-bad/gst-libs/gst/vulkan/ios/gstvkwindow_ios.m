@@ -299,16 +299,47 @@ gst_vulkan_window_ios_set_window_handle (GstVulkanWindow * window,
   window_ios = window;
 }
 
--(void) layoutSubViews
+-(void) didMoveToWindow
+{
+  [super didMoveToWindow];
+  [self updateDrawableSize];
+}
+
+-(void) layoutSubviews
 {
   [super layoutSubviews];
-  CGSize rect = self.bounds.size;
-  GST_ERROR ("%ix%i", (int) rect.width, (int) rect.height);
-  gboolean resize = self->width != rect.width || self->height != rect.height;
-  self->width = rect.width;
-  self->height = rect.height;
+  [self updateDrawableSize];
+}
+
+-(void) updateDrawableSize
+{
+  CGFloat scale = self.contentScaleFactor;
+  if (self.window) {
+    scale = self.window.screen.scale;
+  }
+
+  CAMetalLayer *metalLayer = (CAMetalLayer*) self.layer;
+  metalLayer.contentsScale = scale;
+
+  // Set drawable size in pixels, not points
+  CGSize drawableSize = CGSizeMake(
+    self.bounds.size.width * scale,
+    self.bounds.size.height * scale
+  );
+  metalLayer.drawableSize = drawableSize;
+
+  guint pixel_width = (guint) drawableSize.width;
+  guint pixel_height = (guint) drawableSize.height;
+
+  GST_DEBUG ("%ux%u (scale=%.1f)", pixel_width, pixel_height, scale);
+
+  gboolean resize = self->width != pixel_width || self->height != pixel_height;
+  self->width = pixel_width;
+  self->height = pixel_height;
+
   if (resize && self->window_ios) {
-    gst_vulkan_window_resize (GST_VULKAN_WINDOW (self->window_ios), rect.width, rect.height);
+    gst_vulkan_window_resize (GST_VULKAN_WINDOW (self->window_ios),
+        pixel_width, pixel_height);
   }
 }
 
