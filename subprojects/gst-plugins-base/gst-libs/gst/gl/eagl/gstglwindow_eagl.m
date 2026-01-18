@@ -376,6 +376,37 @@ gst_gl_window_eagl_get_layer (GstGLWindowEagl * window_eagl)
   window_eagl = window;
 }
 
+-(void) didMoveToWindow
+{
+  [super didMoveToWindow];
+  [self updateScale];
+}
+
+-(void) layoutSubviews
+{
+  [super layoutSubviews];
+  [self updateScale];
+
+  if (window_eagl) {
+    GstGLWindow *window = GST_GL_WINDOW (window_eagl);
+    GstGLContext *context = gst_gl_window_get_context (window);
+    if (context) {
+      gst_gl_window_queue_resize (window);
+      gst_object_unref (context);
+    }
+  }
+}
+
+-(void) updateScale
+{
+  CGFloat scale = self.contentScaleFactor;
+  if (self.window) {
+    scale = self.window.screen.scale;
+  }
+  self.layer.contentsScale = scale;
+  self.contentScaleFactor = scale;
+}
+
 @end
 
 void
