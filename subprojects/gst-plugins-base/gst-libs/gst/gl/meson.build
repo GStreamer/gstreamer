@@ -907,7 +907,7 @@ if need_platform_eagl == 'yes'
   endif
   if need_win_eagl == 'no'
     error('Impossible situation requested: Cannot use EAGL platform without the EAGL window system')
-  elif need_api_gles == 'no'
+  elif need_api_gles2 == 'no'
     error('Impossible situation requested: Cannot use EAGL platform without the GLES library')
   endif
 elif need_platform_eagl == 'no' and need_win_eagl == 'yes'
