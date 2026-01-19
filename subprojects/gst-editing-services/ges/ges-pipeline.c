@@ -310,11 +310,13 @@ ges_pipeline_handle_message (GstBin * bin, GstMessage * msg)
         gst_object_unref (pool);
 
         have_msg =
-            gst_message_new_have_context (GST_OBJECT_CAST (self), pool_context);
+            gst_message_new_have_context (GST_OBJECT_CAST (self),
+            gst_context_ref (pool_context));
         gst_element_post_message (GST_ELEMENT_CAST (self), have_msg);
       }
 
       gst_element_set_context (child, pool_context);
+      gst_context_unref (pool_context);
       gst_message_unref (msg);
 
       return;
