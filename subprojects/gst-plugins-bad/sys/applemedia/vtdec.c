@@ -131,6 +131,7 @@ static gboolean gst_vtdec_handle_av1_sequence_header (GstVtdec * vtdec,
     GstVideoCodecFrame * frame);
 static void gst_vtdec_set_latency (GstVtdec * vtdec);
 static void gst_vtdec_set_context (GstElement * element, GstContext * context);
+static GstCaps *gst_vtdec_getcaps (GstVideoDecoder * decoder, GstCaps * filter);
 
 static GstStaticPadTemplate gst_vtdec_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -218,6 +219,7 @@ gst_vtdec_class_init (GstVtdecClass * klass)
   video_decoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_vtdec_handle_frame);
   video_decoder_class->sink_event = GST_DEBUG_FUNCPTR (gst_vtdec_sink_event);
+  video_decoder_class->getcaps = GST_DEBUG_FUNCPTR (gst_vtdec_getcaps);
 }
 
 static void
@@ -736,23 +738,11 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
       return FALSE;
     }
   } else if (!strcmp (caps_name, "video/x-vp9")) {
-    if (!gst_vtdec_check_vp9_support (vtdec)) {
-      GST_ERROR_OBJECT (vtdec, "VP9 decoding not supported on this system");
-      return FALSE;
-    }
-
     GST_INFO_OBJECT (vtdec, "cm_format is VP9");
     cm_format = kCMVideoCodecType_VP9;
   } else if (!strcmp (caps_name, "video/x-av1")) {
     GST_INFO_OBJECT (vtdec,
         "Setting up for AV1 - will wait for sequence header");
-
-    /* Runtime check for AV1 support */
-    if (!gst_vtdec_check_av1_support (vtdec)) {
-      GST_ERROR_OBJECT (vtdec, "AV1 decoding not supported on this system");
-      return FALSE;
-    }
-
     cm_format = kCMVideoCodecType_AV1;
     vtdec->av1_needs_sequence_header = TRUE;    /* Delay session creation until we get sequence header */
   }
@@ -1934,6 +1924,37 @@ gst_vtdec_check_av1_support (GstVtdec * vtdec)
   }
 
   return av1_supported;
+}
+
+static GstCaps *
+gst_vtdec_getcaps (GstVideoDecoder * decoder, GstCaps * filter)
+{
+  GstVtdec *vtdec = GST_VTDEC (decoder);
+  GstCaps *sinkcaps, *result;
+
+  sinkcaps =
+      gst_pad_get_pad_template_caps (GST_VIDEO_DECODER_SINK_PAD (decoder));
+  sinkcaps = gst_caps_make_writable (sinkcaps);
+
+  guint n = gst_caps_get_size (sinkcaps);
+  for (guint i = 0; i < n;) {
+    GstStructure *s = gst_caps_get_structure (sinkcaps, i);
+
+    if ((gst_structure_has_name (s, "video/x-av1")
+            && !gst_vtdec_check_av1_support (vtdec))
+        || (gst_structure_has_name (s, "video/x-vp9")
+            && !gst_vtdec_check_vp9_support (vtdec))) {
+      gst_caps_remove_structure (sinkcaps, i);
+      n--;
+    } else {
+      i++;
+    }
+  }
+
+  result = gst_video_decoder_proxy_getcaps (decoder, sinkcaps, filter);
+  gst_caps_unref (sinkcaps);
+
+  return result;
 }
 
 static gboolean
