@@ -233,7 +233,14 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   GstGLContextCocoa *context_cocoa = GST_GL_CONTEXT_COCOA (context);
   GstGLContextCocoaPrivate *priv = context_cocoa->priv;
   GstGLWindow *window = gst_gl_context_get_window (context);
-  GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (window);
+  GstGLWindowCocoa *window_cocoa = NULL;
+
+  if (GST_IS_GL_WINDOW_COCOA (window)) {
+    window_cocoa = GST_GL_WINDOW_COCOA (window);
+  } else {
+    GST_INFO_OBJECT (context, "Using non-Cocoa window (%s), Cocoa window "
+        "features will not be available", G_OBJECT_TYPE_NAME (window));
+  }
   GstGLAPI context_api = GST_GL_API_NONE;
   const GLint swapInterval = 1;
   CGLPixelFormatObj fmt = NULL;
@@ -317,8 +324,10 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   context_cocoa->priv->pixel_format = fmt;
   context_cocoa->priv->gl_context = glContext;
 
-  _gst_gl_invoke_on_main ((GstGLWindowCB) gst_gl_window_cocoa_create_window,
-      gst_object_ref (window_cocoa), (GDestroyNotify) gst_object_unref);
+  if (window_cocoa) {
+    _gst_gl_invoke_on_main ((GstGLWindowCB) gst_gl_window_cocoa_create_window,
+        gst_object_ref (window_cocoa), (GDestroyNotify) gst_object_unref);
+  }
 
   if (!context_cocoa->priv->gl_context) {
     goto error;
