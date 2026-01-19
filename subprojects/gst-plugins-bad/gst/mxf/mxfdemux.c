@@ -126,6 +126,9 @@ static void
 gst_mxf_demux_pad_init (GstMXFDemuxPad * pad)
 {
   pad->current_material_track_position = 0;
+  pad->prev_chunk_min_stream_time = GST_CLOCK_TIME_NONE;
+  pad->cur_chunk_min_stream_time = GST_CLOCK_TIME_NONE;
+  pad->chunk_complete = FALSE;
 }
 
 #define DEFAULT_MAX_DRIFT 100 * GST_MSECOND
@@ -3031,6 +3034,18 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
         pad->chunk_complete = TRUE;
         continue;
       }
+      if (time >= pad->prev_chunk_min_stream_time) {
+        GST_LOG_OBJECT (pad,
+            "Skipping buffer %" GST_TIME_FORMAT
+            ", passed previous chunk min stream time %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (time),
+            GST_TIME_ARGS (pad->prev_chunk_min_stream_time));
+        pad->chunk_complete = TRUE;
+        continue;
+      }
+
+      if (!GST_CLOCK_TIME_IS_VALID (pad->cur_chunk_min_stream_time))
+        pad->cur_chunk_min_stream_time = time;
     }
 
     /* Create another subbuffer to have writable metadata */
@@ -5088,6 +5103,8 @@ gst_mxf_demux_seek_to_previous_keyframe (GstMXFDemux * demux)
     ref_pad->eos = FALSE;
     ref_pad->discont = TRUE;
     ref_pad->chunk_complete = FALSE;
+    ref_pad->prev_chunk_min_stream_time = ref_pad->cur_chunk_min_stream_time;
+    ref_pad->cur_chunk_min_stream_time = GST_CLOCK_TIME_NONE;
   }
 
   if (!gst_mxf_demux_pad_get_stream_time (demux, ref_pad,
@@ -5152,6 +5169,8 @@ gst_mxf_demux_seek_to_previous_keyframe (GstMXFDemux * demux)
     p->eos = FALSE;
     p->discont = TRUE;
     p->chunk_complete = FALSE;
+    p->prev_chunk_min_stream_time = p->cur_chunk_min_stream_time;
+    p->cur_chunk_min_stream_time = GST_CLOCK_TIME_NONE;
   }
 
   gst_flow_combiner_reset (demux->flowcombiner);
@@ -5250,6 +5269,7 @@ gst_mxf_demux_seek_push (GstMXFDemux * demux, GstEvent * event)
           &position, keyframe);
       new_offset = MIN (off, new_offset);
       p->discont = TRUE;
+      /* TODO prepare for reverse playback */
     }
 
     if (new_offset == -1)
@@ -5648,8 +5668,11 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
 
       p->discont = TRUE;
 
-      if (demux->segment.rate < 0.0)
+      if (demux->segment.rate < 0.0) {
         p->chunk_complete = FALSE;
+        p->prev_chunk_min_stream_time = GST_CLOCK_TIME_NONE;
+        p->cur_chunk_min_stream_time = GST_CLOCK_TIME_NONE;
+      }
     }
     gst_flow_combiner_reset (demux->flowcombiner);
     if (new_offset == -1) {

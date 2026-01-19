@@ -226,6 +226,8 @@ struct _GstMXFDemuxPad
 
   /* reverse playback related */
   gboolean chunk_complete;
+  GstClockTime prev_chunk_min_stream_time;
+  GstClockTime cur_chunk_min_stream_time;
 };
 
 struct _GstMXFDemuxPadClass
