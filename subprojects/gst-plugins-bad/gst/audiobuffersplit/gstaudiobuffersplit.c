@@ -833,6 +833,7 @@ gst_audio_buffer_split_sink_event (GstPad * pad, GstObject * parent,
       }
       break;
     case GST_EVENT_EOS:
+    case GST_EVENT_SEGMENT_DONE:
       if (self->strict_buffer_size) {
         gst_adapter_clear (self->adapter);
       } else {
