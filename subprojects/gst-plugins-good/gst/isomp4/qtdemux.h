@@ -456,6 +456,10 @@ struct _QtDemuxStream
   /* buffer needs potentially be split, e.g. CEA608 subtitles */
   gboolean need_split;
 
+  /* buffer need reordering in reverse playback mode, e.g. raw streams */
+  gboolean need_reorder;
+  GQueue reorder_queue;
+
   /* current position */
   guint32 segment_index;
   guint32 sample_index;
