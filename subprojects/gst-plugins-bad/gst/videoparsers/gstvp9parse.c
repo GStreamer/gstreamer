@@ -622,6 +622,7 @@ gst_vp9_parse_update_src_caps (GstVp9Parse * self, GstCaps * caps)
   gchar *colorimetry = NULL;
   const gchar *chroma_format = NULL;
   const gchar *profile = NULL;
+  const gchar *level = NULL;
 
   if (!self->update_caps)
     return;
@@ -767,6 +768,15 @@ gst_vp9_parse_update_src_caps (GstVp9Parse * self, GstCaps * caps)
   profile = gst_vp9_parse_profile_to_string (self->profile);
   if (profile)
     gst_caps_set_simple (final_caps, "profile", G_TYPE_STRING, profile, NULL);
+
+  if (!s || !gst_structure_has_field (s, "level")) {
+    guint8 level_idc =
+        gst_codec_utils_vp9_estimate_level_idc_from_caps (final_caps);
+    level = gst_codec_utils_vp9_get_level (level_idc);
+    if (level) {
+      gst_caps_set_simple (final_caps, "level", G_TYPE_STRING, level, NULL);
+    }
+  }
 
   gst_caps_set_simple (final_caps, "codec-alpha", G_TYPE_BOOLEAN,
       self->codec_alpha, NULL);
