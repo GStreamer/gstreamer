@@ -1485,6 +1485,229 @@ GST_START_TEST (test_pb_utils_h265_profiles)
 
 GST_END_TEST;
 
+GST_START_TEST (test_pb_utils_vp9_levels)
+{
+  const gchar *level;
+
+  level = gst_codec_utils_vp9_get_level (10);
+  fail_unless_equals_string (level, "1");
+
+  level = gst_codec_utils_vp9_get_level (21);
+  fail_unless_equals_string (level, "2.1");
+
+  level = gst_codec_utils_vp9_get_level (41);
+  fail_unless_equals_string (level, "4.1");
+
+  level = gst_codec_utils_vp9_get_level (62);
+  fail_unless_equals_string (level, "6.2");
+
+  level = gst_codec_utils_vp9_get_level (42);
+  fail_unless (level == NULL);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_pb_utils_vp9_level_idc)
+{
+  guint8 level_idc;
+
+  level_idc = gst_codec_utils_vp9_get_level_idc ("1");
+  fail_unless_equals_int (level_idc, 10);
+
+  level_idc = gst_codec_utils_vp9_get_level_idc ("2.1");
+  fail_unless_equals_int (level_idc, 21);
+
+  level_idc = gst_codec_utils_vp9_get_level_idc ("4.1");
+  fail_unless_equals_int (level_idc, 41);
+
+  level_idc = gst_codec_utils_vp9_get_level_idc ("6.2");
+  fail_unless_equals_int (level_idc, 62);
+
+  level_idc = gst_codec_utils_vp9_get_level_idc ("4.2");
+  fail_unless_equals_int (level_idc, 0);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_pb_utils_vp9_estimate_level_idc_from_caps)
+{
+  GstCaps *caps;
+  guint8 level_idc;
+
+  caps = gst_caps_new_simple ("video/x-vp9",
+      "width", G_TYPE_INT, 160,
+      "height", G_TYPE_INT, 120, "framerate", GST_TYPE_FRACTION, 25, 1, NULL);
+  level_idc = gst_codec_utils_vp9_estimate_level_idc_from_caps (caps);
+  fail_unless_equals_int (level_idc, 10);
+  gst_caps_unref (caps);
+
+  caps = gst_caps_new_simple ("video/x-vp9",
+      "width", G_TYPE_INT, 640, "height", G_TYPE_INT, 360, NULL);
+  level_idc = gst_codec_utils_vp9_estimate_level_idc_from_caps (caps);
+  fail_unless_equals_int (level_idc, 30);
+  gst_caps_unref (caps);
+
+  caps = gst_caps_new_simple ("video/x-vp9",
+      "width", G_TYPE_INT, 10000, "height", G_TYPE_INT, 10000, NULL);
+  level_idc = gst_codec_utils_vp9_estimate_level_idc_from_caps (caps);
+  fail_unless_equals_int (level_idc, 62);
+  gst_caps_unref (caps);
+
+  caps = gst_caps_new_empty_simple ("video/x-vp9");
+  level_idc = gst_codec_utils_vp9_estimate_level_idc_from_caps (caps);
+  fail_unless_equals_int (level_idc, 0);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_pb_utils_vpx_create_vpcc_from_caps)
+{
+  GstCaps *caps;
+  GstBuffer *buffer;
+  GstMapInfo map;
+  guint8 val;
+
+  caps = gst_caps_new_simple ("video/x-vp9",
+      "profile", G_TYPE_STRING, "0",
+      "level", G_TYPE_STRING, "4.1",
+      "bit-depth-luma", G_TYPE_UINT, 8,
+      "bit-depth-chroma", G_TYPE_UINT, 8,
+      "chroma-format", G_TYPE_STRING, "4:2:0",
+      "chroma-site", G_TYPE_STRING, "v-cosited",
+      "colorimetry", G_TYPE_STRING, "bt709", NULL);
+  buffer = gst_codec_utils_vpx_create_vpcc_from_caps (caps);
+  fail_unless (buffer != NULL);
+  fail_unless (gst_buffer_map (buffer, &map, GST_MAP_READ));
+  fail_unless_equals_int (map.size, 12);
+  fail_unless_equals_int (map.data[0], 1);
+  fail_unless_equals_int (map.data[1], 0);
+  fail_unless_equals_int (map.data[2], 0);
+  fail_unless_equals_int (map.data[3], 0);
+  fail_unless_equals_int (map.data[4], 0);
+  fail_unless_equals_int (map.data[5], 41);
+  val = map.data[6];
+  fail_unless_equals_int (val & 0xF0, 0x80);
+  fail_unless_equals_int (val & 0x06, 0x00);
+  gst_buffer_unmap (buffer, &map);
+  gst_buffer_unref (buffer);
+  gst_caps_unref (caps);
+
+  /* Missing VP9 bit-depth is allowed for profile 0 (assume 8-bit) */
+  caps = gst_caps_new_simple ("video/x-vp9",
+      "profile", G_TYPE_STRING, "0",
+      "level", G_TYPE_STRING, "4.1",
+      "chroma-format", G_TYPE_STRING, "4:2:0",
+      "colorimetry", G_TYPE_STRING, "bt709", NULL);
+  buffer = gst_codec_utils_vpx_create_vpcc_from_caps (caps);
+  fail_unless (buffer != NULL);
+  fail_unless (gst_buffer_map (buffer, &map, GST_MAP_READ));
+  val = map.data[6];
+  fail_unless_equals_int (val & 0xF0, 0x80);
+  gst_buffer_unmap (buffer, &map);
+  gst_buffer_unref (buffer);
+  gst_caps_unref (caps);
+
+  /* Missing VP9 bit-depth is not allowed for profile 2 */
+  caps = gst_caps_new_simple ("video/x-vp9",
+      "profile", G_TYPE_STRING, "2",
+      "level", G_TYPE_STRING, "4.1",
+      "chroma-format", G_TYPE_STRING, "4:2:0",
+      "colorimetry", G_TYPE_STRING, "bt709", NULL);
+  buffer = gst_codec_utils_vpx_create_vpcc_from_caps (caps);
+  fail_unless (buffer == NULL);
+  gst_caps_unref (caps);
+
+  caps = gst_caps_new_simple ("video/x-vp8",
+      "bit-depth-luma", G_TYPE_UINT, 8,
+      "bit-depth-chroma", G_TYPE_UINT, 8,
+      "chroma-format", G_TYPE_STRING, "4:2:0",
+      "colorimetry", G_TYPE_STRING, "bt709", NULL);
+  buffer = gst_codec_utils_vpx_create_vpcc_from_caps (caps);
+  fail_unless (buffer != NULL);
+  fail_unless (gst_buffer_map (buffer, &map, GST_MAP_READ));
+  fail_unless_equals_int (map.size, 12);
+  fail_unless_equals_int (map.data[0], 1);
+  fail_unless_equals_int (map.data[4], 0);
+  fail_unless_equals_int (map.data[5], 0);
+  val = map.data[6];
+  fail_unless_equals_int (val & 0xF0, 0x80);
+  fail_unless_equals_int (val & 0x06, 0x02);
+  gst_buffer_unmap (buffer, &map);
+  gst_buffer_unref (buffer);
+  gst_caps_unref (caps);
+
+  /* Missing VP8 bit-depth is allowed when both are absent (assume 8-bit) */
+  caps = gst_caps_new_simple ("video/x-vp8",
+      "chroma-format", G_TYPE_STRING, "4:2:0",
+      "colorimetry", G_TYPE_STRING, "bt709", NULL);
+  buffer = gst_codec_utils_vpx_create_vpcc_from_caps (caps);
+  fail_unless (buffer != NULL);
+  gst_buffer_unref (buffer);
+  gst_caps_unref (caps);
+
+  /* Missing VP8 bit-depth is not allowed when only one is present */
+  caps = gst_caps_new_simple ("video/x-vp8",
+      "bit-depth-luma", G_TYPE_UINT, 8,
+      "chroma-format", G_TYPE_STRING, "4:2:0",
+      "colorimetry", G_TYPE_STRING, "bt709", NULL);
+  buffer = gst_codec_utils_vpx_create_vpcc_from_caps (caps);
+  fail_unless (buffer == NULL);
+  gst_caps_unref (caps);
+
+  /* Fails because of unsupported profile 9 */
+  caps = gst_caps_new_simple ("video/x-vp9",
+      "profile", G_TYPE_STRING, "9",
+      "bit-depth-luma", G_TYPE_UINT, 8,
+      "bit-depth-chroma", G_TYPE_UINT, 8,
+      "chroma-format", G_TYPE_STRING, "4:2:0",
+      "colorimetry", G_TYPE_STRING, "bt709", NULL);
+  buffer = gst_codec_utils_vpx_create_vpcc_from_caps (caps);
+  fail_unless (buffer == NULL);
+  gst_caps_unref (caps);
+
+  /* Fails because not vp8 or vp9 */
+  caps = gst_caps_new_simple ("video/x-h264",
+      "profile", G_TYPE_STRING, "baseline", NULL);
+  buffer = gst_codec_utils_vpx_create_vpcc_from_caps (caps);
+  fail_unless (buffer == NULL);
+  gst_caps_unref (caps);
+
+  /* Fails because missing chroma-format */
+  caps = gst_caps_new_simple ("video/x-vp9",
+      "profile", G_TYPE_STRING, "0",
+      "bit-depth-luma", G_TYPE_UINT, 8,
+      "bit-depth-chroma", G_TYPE_UINT, 8,
+      "colorimetry", G_TYPE_STRING, "bt709", NULL);
+  buffer = gst_codec_utils_vpx_create_vpcc_from_caps (caps);
+  fail_unless (buffer == NULL);
+  gst_caps_unref (caps);
+
+  /* Fails because luma and chroma bit depth differ */
+  caps = gst_caps_new_simple ("video/x-vp9",
+      "profile", G_TYPE_STRING, "0",
+      "bit-depth-luma", G_TYPE_UINT, 8,
+      "bit-depth-chroma", G_TYPE_UINT, 10,
+      "chroma-format", G_TYPE_STRING, "4:2:0",
+      "colorimetry", G_TYPE_STRING, "bt709", NULL);
+  buffer = gst_codec_utils_vpx_create_vpcc_from_caps (caps);
+  fail_unless (buffer == NULL);
+  gst_caps_unref (caps);
+
+  /* Fails because luma and chroma bit depth is not 8, 10 or 12 */
+  caps = gst_caps_new_simple ("video/x-vp9",
+      "profile", G_TYPE_STRING, "0",
+      "bit-depth-luma", G_TYPE_UINT, 0,
+      "bit-depth-chroma", G_TYPE_UINT, 0,
+      "chroma-format", G_TYPE_STRING, "4:2:0",
+      "colorimetry", G_TYPE_STRING, "bt709", NULL);
+  buffer = gst_codec_utils_vpx_create_vpcc_from_caps (caps);
+  fail_unless (buffer == NULL);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 static const guint8 h265_sample_codec_data[] = {
   0x01, 0x01, 0x60, 0x00, 0x00, 0x00, 0xb0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x5d,
   0xf0, 0x00, 0xfc,
@@ -1785,6 +2008,10 @@ libgstpbutils_suite (void)
   tcase_add_test (tc_chain, test_pb_utils_h264_profiles);
   tcase_add_test (tc_chain, test_pb_utils_h264_get_profile_flags_level);
   tcase_add_test (tc_chain, test_pb_utils_h265_profiles);
+  tcase_add_test (tc_chain, test_pb_utils_vp9_levels);
+  tcase_add_test (tc_chain, test_pb_utils_vp9_level_idc);
+  tcase_add_test (tc_chain, test_pb_utils_vp9_estimate_level_idc_from_caps);
+  tcase_add_test (tc_chain, test_pb_utils_vpx_create_vpcc_from_caps);
   tcase_add_test (tc_chain, test_pb_utils_caps_mime_codec);
   tcase_add_test (tc_chain, test_pb_utils_caps_from_mime_codec);
   tcase_add_test (tc_chain, test_pb_utils_h266_caps_set_level_tier_and_profile);
