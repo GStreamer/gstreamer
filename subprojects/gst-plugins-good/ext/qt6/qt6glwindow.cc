@@ -32,6 +32,7 @@
 
 #include <QtCore/QDateTime>
 #include <QtGui/QGuiApplication>
+#include <QtQuick/QQuickOpenGLUtils>
 #include <QtQuick/QQuickWindow>
 #include <QQuickRenderTarget>
 
@@ -208,6 +209,8 @@ Qt6GLWindow::afterFrameEnd()
     g_mutex_unlock (&this->priv->lock);
     return;
   }
+
+  QQuickOpenGLUtils::resetOpenGLState();
 
   width = GST_VIDEO_INFO_WIDTH (&this->priv->v_info);
   height = GST_VIDEO_INFO_HEIGHT (&this->priv->v_info);
