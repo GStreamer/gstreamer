@@ -15905,7 +15905,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
               const guint8 *data = vpcC->data;
               guint32 size = QT_UINT32 (data);
               const gchar *profile_str = NULL;
+              const gchar *level_str = NULL;
               const gchar *chroma_format_str = NULL;
+              const gchar *chroma_site_str = NULL;
               guint8 profile;
               guint8 bitdepth;
               guint8 chroma_format;
@@ -15966,9 +15968,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
                     "profile", G_TYPE_STRING, profile_str, NULL);
               }
 
-              /* skip level, the VP9 spec v0.6 defines only one level atm,
-               * but webm spec define various ones. Add level to caps
-               * if we really need it then */
+              if ((level_str = gst_codec_utils_vp9_get_level (data[13]))) {
+                gst_caps_set_simple (entry->caps, "level", G_TYPE_STRING,
+                    level_str, NULL);
+              }
 
               bitdepth = (data[14] & 0xf0) >> 4;
               if (bitdepth == 8 || bitdepth == 10 || bitdepth == 12) {
@@ -15980,7 +15983,11 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
               chroma_format = (data[14] & 0xe) >> 1;
               switch (chroma_format) {
                 case 0:
+                  chroma_site_str = "v-cosited";
+                  chroma_format_str = "4:2:0";
+                  break;
                 case 1:
+                  chroma_site_str = "cosited";
                   chroma_format_str = "4:2:0";
                   break;
                 case 2:
@@ -15996,6 +16003,11 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
               if (chroma_format_str) {
                 gst_caps_set_simple (entry->caps,
                     "chroma-format", G_TYPE_STRING, chroma_format_str, NULL);
+              }
+
+              if (chroma_site_str) {
+                gst_caps_set_simple (entry->caps,
+                    "chroma-site", G_TYPE_STRING, chroma_site_str, NULL);
               }
 
               if ((data[14] & 0x1) != 0)
