@@ -41,6 +41,9 @@ plugin_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (rtmpsrc, plugin);
   ret |= GST_ELEMENT_REGISTER (rtmpsink, plugin);
 
+  gst_plugin_add_status_warning (plugin, "The rtmp plugin is deprecated, "
+      "please use rtmp2");
+
   return ret;
 }
 

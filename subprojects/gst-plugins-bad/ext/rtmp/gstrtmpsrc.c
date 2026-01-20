@@ -180,6 +180,9 @@ gst_rtmp_src_init (GstRTMPSrc * rtmpsrc)
   }
 #endif
 
+  GST_WARNING_OBJECT (rtmpsrc, "rtmpsrc is deprecated, please move to "
+      "rtmp2src");
+
   rtmpsrc->cur_offset = 0;
   rtmpsrc->last_timestamp = 0;
   rtmpsrc->timeout = DEFAULT_TIMEOUT;

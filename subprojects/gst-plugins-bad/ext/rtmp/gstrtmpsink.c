@@ -137,6 +137,9 @@ gst_rtmp_sink_init (GstRTMPSink * sink)
     GST_ERROR_OBJECT (sink, "WSAStartup failed: 0x%08x", WSAGetLastError ());
   }
 #endif
+
+  GST_WARNING_OBJECT (sink, "rtmpsink is deprecated, please move to "
+      "rtmp2sink");
 }
 
 static void
