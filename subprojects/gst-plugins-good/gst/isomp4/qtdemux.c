@@ -6960,9 +6960,14 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
     if (CUR_STREAM (stream)->needs_reorder)
       buffer = gst_qtdemux_reorder_audio_channels (qtdemux, stream, buffer);
 
-    gst_pad_push (stream->pad, buffer);
+    ret = gst_pad_push (stream->pad, buffer);
 
     stream->buffers = g_slist_delete_link (stream->buffers, stream->buffers);
+
+    if (ret != GST_FLOW_OK) {
+      gst_buffer_unref (buf);
+      goto exit;
+    }
   }
 
   /* we're going to modify the metadata */
