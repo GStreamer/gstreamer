@@ -852,6 +852,19 @@ gst_audio_buffer_split_sink_event (GstPad * pad, GstObject * parent,
           gst_audio_buffer_split_output (self, TRUE, rate, bpf,
               samples_per_buffer);
       }
+
+      if (self->segment_pending) {
+        GstEvent *event;
+
+        self->out_segment = self->in_segment;
+        GST_DEBUG_OBJECT (self, "Updating output segment %" GST_SEGMENT_FORMAT,
+            &self->out_segment);
+        event = gst_event_new_segment (&self->out_segment);
+        gst_event_set_seqnum (event, self->segment_seqnum);
+        gst_pad_push_event (self->srcpad, event);
+        self->segment_pending = FALSE;
+      }
+
       ret = gst_pad_event_default (pad, parent, event);
       break;
     default:
