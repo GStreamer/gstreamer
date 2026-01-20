@@ -49,6 +49,7 @@
 #include <gst/base/gstbytewriter.h>
 #include <gst/base/gstbitwriter.h>
 #include <math.h>
+#include <gst/pbutils/codec-utils.h>
 #include <gst/tag/tag.h>
 #include <gst/video/video.h>
 
@@ -5778,11 +5779,11 @@ AtomInfo *
 build_eac3_extension (GArray * bitstreamInfo)
 {
   /* EC3SpecificBox structure (ETSI TS 102 366 V1.4.1 Annex F.5.1):
-   * 
+   *
    * Bits from the spec:
    * data_rate       13 bits
    * num_ind_sub      3 bits
-   * 
+   *
    * For each independent substream (num_ind_sub):
    *   fscod          2 bits
    *   bsid           5 bits
@@ -5797,7 +5798,7 @@ build_eac3_extension (GArray * bitstreamInfo)
    *     chan_loc     9 bits
    *   else
    *     reserved     1 bit
-   * 
+   *
    * See documentation: https://ott.dolby.com/OnDelKits/DDP/Dolby_Digital_Plus_Online_Delivery_Kit_v1.5/Documentation/Content_Creation/SDM/help_files/topics/ddp_iso_bmff_c_ov_ddp_isobmff.html
    */
 
@@ -5864,7 +5865,7 @@ build_eac3_extension (GArray * bitstreamInfo)
     guint8 asvc = 0;
 
     /* We take asvc from bsmod (Section 4.4.2.2). Not sure if this is correct, as it is redundant to store info twice.
-       My guess is that asvc is a quick way of telling the decoder device to ignore the audio track, whereas bsmod provides a 
+       My guess is that asvc is a quick way of telling the decoder device to ignore the audio track, whereas bsmod provides a
        more detailed explanation of the service type */
     if ((ind_info->bsmod >= 2 && ind_info->bsmod <= 6) ||
         (ind_info->bsmod == 7 && ind_info->acmod < 2))
@@ -5967,48 +5968,18 @@ build_uuid_xmp_atom (GstBuffer * xmp_data)
       atom_uuid_free);
 }
 
-/* https://www.webmproject.org/vp9/mp4/#vp-codec-configuration-box */
 AtomInfo *
-build_vpcC_extension (guint8 profile, guint8 level, guint8 bit_depth,
-    guint8 chroma_subsampling, gboolean video_full_range,
-    guint8 colour_primaries, guint8 transfer_characteristics,
-    guint8 matrix_coefficients)
+build_vpcC_extension (GstCaps * caps)
 {
   AtomData *atom_data;
-  guint8 *data_block;
-  guint data_block_len;
-  GstByteWriter bw;
-  gboolean hdl = TRUE;
-  guint8 val = 0;
+  GstBuffer *buffer = NULL;
 
-  gst_byte_writer_init (&bw);
-  /* version, always 1 */
-  hdl &= gst_byte_writer_put_uint8 (&bw, 1);
-  /* flags of 24 bits */
-  hdl &= gst_byte_writer_put_uint8 (&bw, 0);
-  hdl &= gst_byte_writer_put_uint8 (&bw, 0);
-  hdl &= gst_byte_writer_put_uint8 (&bw, 0);
-  hdl &= gst_byte_writer_put_uint8 (&bw, profile);
-  hdl &= gst_byte_writer_put_uint8 (&bw, level);
-  val |= (bit_depth & 0xF) << 4;
-  val |= (chroma_subsampling & 0x3) << 1;
-  val |= !(!video_full_range);
-  hdl &= gst_byte_writer_put_uint8 (&bw, val);
-  hdl &= gst_byte_writer_put_uint8 (&bw, colour_primaries);
-  hdl &= gst_byte_writer_put_uint8 (&bw, transfer_characteristics);
-  hdl &= gst_byte_writer_put_uint8 (&bw, matrix_coefficients);
-  /* codec initialization data, currently unused */
-  hdl &= gst_byte_writer_put_uint16_le (&bw, 0);
-
-  if (!hdl) {
-    GST_WARNING ("error creating header");
+  if (!(buffer = gst_codec_utils_vpx_create_vpcc_from_caps (caps))) {
     return NULL;
   }
 
-  data_block_len = gst_byte_writer_get_size (&bw);
-  data_block = gst_byte_writer_reset_and_get_data (&bw);
-  atom_data = atom_data_new_from_data (FOURCC_vpcC, data_block, data_block_len);
-  g_free (data_block);
+  atom_data = atom_data_new_from_gst_buffer (FOURCC_vpcC, buffer);
+  gst_buffer_unref (buffer);
 
   return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
       atom_data_free);

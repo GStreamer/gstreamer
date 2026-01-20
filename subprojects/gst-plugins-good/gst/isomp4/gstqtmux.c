@@ -7045,73 +7045,15 @@ gst_qt_mux_video_sink_set_caps (GstQTMuxPad * qtpad, GstCaps * caps)
       GST_DEBUG_OBJECT (qtmux, "missing or invalid fourcc in jp2 caps");
       goto refuse_caps;
     }
-  } else if (strcmp (mimetype, "video/x-vp8") == 0) {
-    entry.fourcc = FOURCC_vp08;
-  } else if (strcmp (mimetype, "video/x-vp9") == 0) {
-    const char *profile_str, *chroma_format_str, *colorimetry_str;
-    guint bitdepth_luma, bitdepth_chroma;
-    guint8 profile = -1, chroma_format = -1;
-    gboolean video_full_range;
-    GstVideoColorimetry cinfo = { 0, };
-
-    entry.fourcc = FOURCC_vp09;
-
-    profile_str = gst_structure_get_string (structure, "profile");
-    if (g_strcmp0 (profile_str, "0") == 0) {
-      profile = 0;
-    } else if (g_strcmp0 (profile_str, "1") == 0) {
-      profile = 1;
-    } else if (g_strcmp0 (profile_str, "2") == 0) {
-      profile = 2;
-    } else if (g_strcmp0 (profile_str, "3") == 0) {
-      profile = 3;
-    }
-
-    colorimetry_str = gst_structure_get_string (structure, "colorimetry");
-    gst_video_colorimetry_from_string (&cinfo, colorimetry_str);
-    video_full_range = cinfo.range == GST_VIDEO_COLOR_RANGE_0_255;
-
-    chroma_format_str = gst_structure_get_string (structure, "chroma-format");
-    if (g_strcmp0 (chroma_format_str, "4:2:0") == 0) {
-      const char *chroma_site_str;
-      GstVideoChromaSite chroma_site;
-
-      chroma_site_str = gst_structure_get_string (structure, "chroma-site");
-      if (chroma_site_str) {
-        chroma_site = gst_video_chroma_site_from_string (chroma_site_str);
-      } else {
-        chroma_site = GST_VIDEO_CHROMA_SITE_UNKNOWN;
-      }
-
-      if (chroma_site == GST_VIDEO_CHROMA_SITE_V_COSITED) {
-        chroma_format = 0;
-      } else if (chroma_site == GST_VIDEO_CHROMA_SITE_COSITED) {
-        chroma_format = 1;
-      } else {
-        chroma_format = 1;
-      }
-    } else if (g_strcmp0 (chroma_format_str, "4:2:2") == 0) {
-      chroma_format = 2;
-    } else if (g_strcmp0 (chroma_format_str, "4:4:4") == 0) {
-      chroma_format = 3;
-    }
-
-    gst_structure_get (structure, "bit-depth-luma", G_TYPE_UINT,
-        &bitdepth_luma, "bit-depth-chroma", G_TYPE_UINT, &bitdepth_chroma,
-        NULL);
-
-    if (profile == 0xFF || chroma_format == 0xFF
-        || bitdepth_luma != bitdepth_chroma || bitdepth_luma == 0) {
-      GST_WARNING_OBJECT (qtmux, "cannot construct vpcC atom from "
-          "incomplete caps");
+  } else if (strcmp (mimetype, "video/x-vp8") == 0 ||
+      strcmp (mimetype, "video/x-vp9") == 0) {
+    entry.fourcc =
+        g_str_has_suffix (mimetype, "vp8") ? FOURCC_vp08 : FOURCC_vp09;
+    ext_atom = build_vpcC_extension (caps);
+    if (ext_atom == NULL) {
+      GST_WARNING_OBJECT (qtmux, "cannot construct vpcC atom");
     } else {
-      ext_atom = build_vpcC_extension (profile, /* XXX: level */ 10,
-          bitdepth_luma, chroma_format, video_full_range,
-          gst_video_color_primaries_to_iso (cinfo.primaries),
-          gst_video_transfer_function_to_iso (cinfo.transfer),
-          gst_video_color_matrix_to_iso (cinfo.matrix));
-      if (ext_atom)
-        ext_atom_list = g_list_append (ext_atom_list, ext_atom);
+      ext_atom_list = g_list_append (ext_atom_list, ext_atom);
     }
   } else if (strcmp (mimetype, "video/x-dirac") == 0) {
     entry.fourcc = FOURCC_drac;
@@ -7152,86 +7094,12 @@ gst_qt_mux_video_sink_set_caps (GstQTMuxPad * qtpad, GstCaps * caps)
     entry.fourcc = FOURCC_cfhd;
     sync = FALSE;
   } else if (strcmp (mimetype, "video/x-av1") == 0) {
-    gint presentation_delay = -1;
     GstBuffer *av1_codec_data = NULL;
 
     if (codec_data) {
       av1_codec_data = gst_buffer_ref ((GstBuffer *) codec_data);
     } else {
-      GstMapInfo map;
-      const gchar *tmp;
-      guint tmp2;
-
-      gst_structure_get_int (structure, "presentation-delay",
-          &presentation_delay);
-
-      av1_codec_data = gst_buffer_new_allocate (NULL, 4, NULL);
-      gst_buffer_map (av1_codec_data, &map, GST_MAP_WRITE);
-
-      /*
-       *  unsigned int (1) marker = 1;
-       *  unsigned int (7) version = 1;
-       *  unsigned int (3) seq_profile;
-       *  unsigned int (5) seq_level_idx_0;
-       *  unsigned int (1) seq_tier_0;
-       *  unsigned int (1) high_bitdepth;
-       *  unsigned int (1) twelve_bit;
-       *  unsigned int (1) monochrome;
-       *  unsigned int (1) chroma_subsampling_x;
-       *  unsigned int (1) chroma_subsampling_y;
-       *  unsigned int (2) chroma_sample_position;
-       *  unsigned int (3) reserved = 0;
-       *
-       *  unsigned int (1) initial_presentation_delay_present;
-       *  if (initial_presentation_delay_present) {
-       *    unsigned int (4) initial_presentation_delay_minus_one;
-       *  } else {
-       *    unsigned int (4) reserved = 0;
-       *  }
-       */
-
-      map.data[0] = 0x81;
-      map.data[1] = 0x00;
-      if ((tmp = gst_structure_get_string (structure, "profile"))) {
-        if (strcmp (tmp, "main") == 0)
-          map.data[1] |= (0 << 5);
-        if (strcmp (tmp, "high") == 0)
-          map.data[1] |= (1 << 5);
-        if (strcmp (tmp, "professional") == 0)
-          map.data[1] |= (2 << 5);
-      }
-      /* FIXME: level set to 1 */
-      map.data[1] |= 0x01;
-      /* FIXME: tier set to 0 */
-
-      if (gst_structure_get_uint (structure, "bit-depth-luma", &tmp2)) {
-        if (tmp2 == 10) {
-          map.data[2] |= 0x40;
-        } else if (tmp2 == 12) {
-          map.data[2] |= 0x60;
-        }
-      }
-
-      /* Assume 4:2:0 if nothing else is given */
-      map.data[2] |= 0x0C;
-      if ((tmp = gst_structure_get_string (structure, "chroma-format"))) {
-        if (strcmp (tmp, "4:0:0") == 0)
-          map.data[2] |= 0x1C;
-        if (strcmp (tmp, "4:2:0") == 0)
-          map.data[2] |= 0x0C;
-        if (strcmp (tmp, "4:2:2") == 0)
-          map.data[2] |= 0x08;
-        if (strcmp (tmp, "4:4:4") == 0)
-          map.data[2] |= 0x00;
-      }
-
-      /* FIXME: keep chroma-site unknown */
-
-      if (presentation_delay != -1) {
-        map.data[3] = 0x10 | (MAX (0xF, presentation_delay) & 0xF);
-      }
-
-      gst_buffer_unmap (av1_codec_data, &map);
+      av1_codec_data = gst_codec_utils_av1_create_av1c_from_caps (caps);
     }
 
     entry.fourcc = FOURCC_av01;

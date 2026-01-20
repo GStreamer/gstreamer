@@ -1137,10 +1137,7 @@ AtomInfo *   build_SMI_atom              (const GstBuffer *seqh);
 AtomInfo *   build_ima_adpcm_extension   (gint channels, gint rate,
                                           gint blocksize);
 AtomInfo *   build_uuid_xmp_atom         (GstBuffer * xmp);
-AtomInfo *   build_vpcC_extension        (guint8 profile, guint8 level, guint8 bit_depth,
-                                          guint8 chroma_subsampling, gboolean video_full_range,
-                                          guint8 colour_primaries, guint8 transfer_characteristics,
-                                          guint8 matrix_coefficients);
+AtomInfo *   build_vpcC_extension        (GstCaps * caps);
 AtomInfo *   build_vvcC_extension        (guint8 version, guint32 flags, const GstBuffer* codec_data);
 
 
