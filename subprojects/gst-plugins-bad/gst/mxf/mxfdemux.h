@@ -137,6 +137,7 @@ struct _GstMXFDemuxEssenceTrack
   gboolean is_video;
   gboolean intra_only;
   gboolean is_audio;
+  gboolean need_reorder;
 
   MXFEssenceWrapping wrapping;
 
@@ -228,6 +229,11 @@ struct _GstMXFDemuxPad
   gboolean chunk_complete;
   GstClockTime prev_chunk_min_stream_time;
   GstClockTime cur_chunk_min_stream_time;
+
+  /* reverse playback queue for unencoded stream
+   * buffers & gap events are prepended to this queue
+   * and pushed on DISCONT or at the end of current chunk */
+  GQueue reorder_queue;
 };
 
 struct _GstMXFDemuxPadClass

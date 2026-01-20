@@ -98,6 +98,10 @@ static GstClockTime gst_mxf_demux_pad_get_current_time (GstMXFDemux * demux,
 static GstFlowReturn gst_mxf_demux_seek_to_previous_keyframe (GstMXFDemux *
     demux);
 
+static gboolean
+gst_mxf_demux_pad_push_reversed_queue (GstElement * element, GstPad * pad,
+    void *userdata);
+
 GType gst_mxf_demux_pad_get_type (void);
 G_DEFINE_TYPE (GstMXFDemuxPad, gst_mxf_demux_pad, GST_TYPE_PAD);
 
@@ -110,6 +114,9 @@ gst_mxf_demux_pad_finalize (GObject * object)
     gst_tag_list_unref (pad->tags);
     pad->tags = NULL;
   }
+
+  g_queue_clear_full (&pad->reorder_queue,
+      (GDestroyNotify) gst_mini_object_unref);
 
   G_OBJECT_CLASS (gst_mxf_demux_pad_parent_class)->finalize (object);
 }
@@ -129,6 +136,7 @@ gst_mxf_demux_pad_init (GstMXFDemuxPad * pad)
   pad->prev_chunk_min_stream_time = GST_CLOCK_TIME_NONE;
   pad->cur_chunk_min_stream_time = GST_CLOCK_TIME_NONE;
   pad->chunk_complete = FALSE;
+  g_queue_init (&pad->reorder_queue);
 }
 
 #define DEFAULT_MAX_DRIFT 100 * GST_MSECOND
@@ -949,8 +957,10 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
       etrack->source_package = NULL;
       etrack->source_track = NULL;
       etrack->delta_id = -1;
+      etrack->intra_only = FALSE;
       etrack->is_video = FALSE;
       etrack->is_audio = FALSE;
+      etrack->need_reorder = FALSE;
 
       if (!track->parent.sequence) {
         GST_WARNING_OBJECT (demux, "Source track has no sequence");
@@ -1022,10 +1032,6 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
 
         caps = gst_caps_new_empty_simple (name);
         g_free (name);
-
-        etrack->is_video = FALSE;
-        etrack->intra_only = FALSE;
-        etrack->is_audio = FALSE;
       } else {
         caps =
             etrack->handler->create_caps (track, &etrack->tags,
@@ -1050,6 +1056,9 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
 
         etrack->is_video = g_str_has_prefix (name, "video/");
         etrack->is_audio = g_str_has_prefix (name, "audio/");
+        etrack->need_reorder = g_str_has_suffix (name, "/x-raw")
+            || g_str_has_prefix (name, "meta/")
+            || g_str_has_prefix (name, "closedcaption/");
 
         if (etrack->caps)
           gst_caps_unref (etrack->caps);
@@ -1063,9 +1072,7 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
       /* Ensure we don't output one buffer per sample for audio */
       if (gst_util_uint64_scale (GST_SECOND, track->edit_rate.d,
               track->edit_rate.n) < 10 * GST_MSECOND) {
-        GstStructure *s = gst_caps_get_structure (etrack->caps, 0);
-        const gchar *name = gst_structure_get_name (s);
-        if (g_str_has_prefix (name, "audio/x-raw")) {
+        if (etrack->is_audio && etrack->need_reorder) {
           etrack->min_edit_units =
               gst_util_uint64_scale (25 * GST_MSECOND, track->edit_rate.n,
               track->edit_rate.d * GST_SECOND);
@@ -3141,7 +3148,8 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
 
     pad->current_material_track_position += index_entry.duration;
 
-    if (pad->discont) {
+    if (pad->discont && (demux->segment.rate >= 0.0
+            || !pad->current_essence_track->need_reorder)) {
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
       pad->discont = FALSE;
     }
@@ -3154,12 +3162,21 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
       GstEvent *gap = gst_event_new_gap (time,
           GST_BUFFER_DURATION (outbuf));
       gst_buffer_unref (outbuf);
+      if (demux->segment.rate < 0.0 && pad->current_essence_track->need_reorder) {
+        GST_DEBUG_OBJECT (pad,
+            "Stacking gap event with %" GST_PTR_FORMAT
+            " in replacement of empty gap buffer", gap);
+        g_queue_push_head (&pad->reorder_queue, gap);
+      } else {
+        GST_DEBUG_OBJECT (pad,
+            "Pushing gap event with %" GST_PTR_FORMAT
+            " in replacement of empty gap buffer", gap);
+        gst_pad_push_event (GST_PAD_CAST (pad), gap);
+      }
+    } else if (demux->segment.rate < 0.0
+        && pad->current_essence_track->need_reorder) {
       GST_DEBUG_OBJECT (pad,
-          "Replacing empty gap buffer with gap event %" GST_PTR_FORMAT, gap);
-      gst_pad_push_event (GST_PAD_CAST (pad), gap);
-    } else {
-      GST_DEBUG_OBJECT (pad,
-          "Pushing buffer of size %" G_GSIZE_FORMAT " for track %u: pts %"
+          "Stacking buffer of size %" G_GSIZE_FORMAT " for track %u: pts %"
           GST_TIME_FORMAT " dts %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT
           " position %" G_GUINT64_FORMAT, gst_buffer_get_size (outbuf),
           pad->material_track->parent.track_id,
@@ -3168,10 +3185,26 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
           GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)),
           pad->current_essence_track_position);
 
+      g_queue_push_head (&pad->reorder_queue, outbuf);
+    } else {
+      GST_DEBUG_OBJECT (pad,
+          "Pushing buffer of size %" G_GSIZE_FORMAT " for track %u: pts %"
+          GST_TIME_FORMAT " dts %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT
+          " position %" G_GUINT64_FORMAT " discont %d",
+          gst_buffer_get_size (outbuf),
+          pad->material_track->parent.track_id,
+          GST_TIME_ARGS (GST_BUFFER_PTS (outbuf)),
+          GST_TIME_ARGS (GST_BUFFER_DTS (outbuf)),
+          GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)),
+          pad->current_essence_track_position,
+          GST_BUFFER_FLAG_IS_SET (outbuf, GST_BUFFER_FLAG_DISCONT));
+
       ret = gst_pad_push (GST_PAD_CAST (pad), outbuf);
     }
     outbuf = NULL;
-    ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
+    ret =
+        gst_flow_combiner_update_pad_flow (demux->flowcombiner,
+        GST_PAD_CAST (pad), ret);
     GST_LOG_OBJECT (pad, "combined return %s", gst_flow_get_name (ret));
 
     if (time_end > demux->segment.position && demux->segment.rate > 0.0)
@@ -4976,6 +5009,12 @@ gst_mxf_demux_seek_to_previous_keyframe (GstMXFDemux * demux)
   guint64 offset, new_offset = -1;
   guint i;
 
+  if (!gst_element_foreach_src_pad (GST_ELEMENT (demux),
+          gst_mxf_demux_pad_push_reversed_queue, NULL)) {
+    GST_DEBUG_OBJECT (demux, "Error pushing reversed queued items");
+    goto eos;
+  }
+
   if (prev_chunk_start_ts <= demux->segment.start) {
     GST_DEBUG_OBJECT (demux,
         "Reverse playback is complete: previous chunk start %" GST_TIME_FORMAT,
@@ -5000,17 +5039,18 @@ gst_mxf_demux_seek_to_previous_keyframe (GstMXFDemux * demux)
     GST_LOG_OBJECT (p,
         "candidate track %d (body_sid:%d index_sid:%d)"
         ", material track position %" G_GINT64_FORMAT
-        ", video %d, audio %d, is linked %d",
+        ", video %d, audio %d, is unencoded %d, is linked %d",
         cur_track->track_id, cur_track->body_sid, cur_track->index_sid,
         p->current_material_track_position,
-        cur_track->is_video, cur_track->is_audio, GST_PAD_IS_LINKED (p));
+        cur_track->is_video, cur_track->is_audio, cur_track->need_reorder,
+        GST_PAD_IS_LINKED (p));
 
     if (!GST_PAD_IS_LINKED (p))
       continue;
 
     /* Prefer, in this order:
      * - non-intra-only video tracks so as to step on a key frame
-     * - intra video tracks
+     * - intra or unencoded video tracks
      * - audio tracks
      * - other */
     if (ref_target_track && (
@@ -5101,7 +5141,7 @@ gst_mxf_demux_seek_to_previous_keyframe (GstMXFDemux * demux)
         ref_pad->current_essence_track_position;
 
     ref_pad->eos = FALSE;
-    ref_pad->discont = TRUE;
+    ref_pad->discont |= !ref_pad->current_essence_track->need_reorder;
     ref_pad->chunk_complete = FALSE;
     ref_pad->prev_chunk_min_stream_time = ref_pad->cur_chunk_min_stream_time;
     ref_pad->cur_chunk_min_stream_time = GST_CLOCK_TIME_NONE;
@@ -5167,7 +5207,7 @@ gst_mxf_demux_seek_to_previous_keyframe (GstMXFDemux * demux)
     p->current_essence_track->position = p->current_essence_track_position;
 
     p->eos = FALSE;
-    p->discont = TRUE;
+    p->discont |= !p->current_essence_track->need_reorder;
     p->chunk_complete = FALSE;
     p->prev_chunk_min_stream_time = p->cur_chunk_min_stream_time;
     p->cur_chunk_min_stream_time = GST_CLOCK_TIME_NONE;
@@ -5201,6 +5241,78 @@ eos:
   demux->segment.position = demux->segment.start;
   demux->chunk_start_ts = demux->segment.start;
   return GST_FLOW_EOS;
+}
+
+static gboolean
+gst_mxf_demux_pad_push_reversed_queue (GstElement * element, GstPad * pad,
+    void *userdata)
+{
+  GstMXFDemux *demux = GST_MXF_DEMUX (element);
+  GstMXFDemuxPad *p = (GstMXFDemuxPad *) pad;
+  GstFlowReturn flow = GST_FLOW_OK;
+  GstMXFDemuxEssenceTrack *etrack = p->current_essence_track;
+  gpointer *data;
+
+  if (g_queue_is_empty (&p->reorder_queue))
+    return TRUE;
+
+  GST_LOG_OBJECT (p,
+      "Pushing pending reversed items for track %d (body_sid:%d index_sid:%d)",
+      etrack->track_id, etrack->body_sid, etrack->index_sid);
+
+  while ((data = g_queue_pop_head (&p->reorder_queue))) {
+    if (GST_IS_BUFFER (data)) {
+      GstBuffer *buffer = GST_BUFFER_CAST (data);
+
+      if (p->discont) {
+        GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+        p->discont = FALSE;
+      }
+
+      GST_DEBUG_OBJECT (p,
+          "Pushing reordered buffer of size %" G_GSIZE_FORMAT
+          " for track %u: pts %" GST_TIME_FORMAT " dts %" GST_TIME_FORMAT
+          " duration %" GST_TIME_FORMAT " position %" G_GUINT64_FORMAT
+          " discont %d",
+          gst_buffer_get_size (buffer), p->material_track->parent.track_id,
+          GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
+          GST_TIME_ARGS (GST_BUFFER_DTS (buffer)),
+          GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)),
+          p->current_essence_track_position,
+          GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT));
+
+      flow = gst_pad_push (GST_PAD_CAST (p), buffer);
+      flow =
+          gst_flow_combiner_update_pad_flow (demux->flowcombiner,
+          GST_PAD_CAST (p), flow);
+
+      if (flow != GST_FLOW_OK && flow != GST_FLOW_EOS) {
+        GST_WARNING_OBJECT (p, "combined return %s", gst_flow_get_name (flow));
+        goto error;
+      }
+
+      GST_LOG_OBJECT (p, "combined return %s", gst_flow_get_name (flow));
+    } else if (GST_IS_EVENT (data)) {
+      GstEvent *event = GST_EVENT_CAST (data);
+      g_assert (GST_EVENT_TYPE (event) == GST_EVENT_GAP);
+
+      GST_DEBUG_OBJECT (p, "Pushing reordered gap event %" GST_PTR_FORMAT,
+          event);
+      gst_pad_push_event (GST_PAD_CAST (p), event);
+    } else {
+      GST_WARNING_OBJECT (p,
+          "unexpected reversed queue entry: %" GST_PTR_FORMAT, data);
+      goto error;
+    }
+  }
+
+  return TRUE;
+
+error:
+  g_queue_clear_full (&p->reorder_queue,
+      (GDestroyNotify) gst_mini_object_unref);
+
+  return FALSE;
 }
 
 static gboolean
