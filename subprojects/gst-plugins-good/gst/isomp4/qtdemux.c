@@ -7185,6 +7185,12 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   GST_TRACE_OBJECT (qtdemux, "Chose to advance track_ID=%d",
       target_stream->track_id);
 
+  /* fetch info for the current sample of this stream */
+  if (G_UNLIKELY (!gst_qtdemux_prepare_current_sample (qtdemux, target_stream,
+              &empty, &offset, &sample_size, &dts, &pts, &duration,
+              &round_up_duration, &keyframe)))
+    goto eos_stream;
+
   /* check for segment end */
   if (G_UNLIKELY (qtdemux->segment.stop != -1
           && qtdemux->segment.rate >= 0
@@ -7193,12 +7199,6 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
     target_stream->cur_global_pts = GST_CLOCK_TIME_NONE;
     goto eos_stream;
   }
-
-  /* fetch info for the current sample of this stream */
-  if (G_UNLIKELY (!gst_qtdemux_prepare_current_sample (qtdemux, target_stream,
-              &empty, &offset, &sample_size, &dts, &pts, &duration,
-              &round_up_duration, &keyframe)))
-    goto eos_stream;
 
   /* Send catche-up GAP event for each other stream if required.
    * This logic will be applied only for positive rate */

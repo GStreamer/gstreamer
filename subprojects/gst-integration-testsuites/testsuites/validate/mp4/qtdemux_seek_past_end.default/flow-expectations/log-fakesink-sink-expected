@@ -1,0 +1,11 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)1;
+event caps: audio/x-raw, channels=(int)1, format=(string)S16LE, layout=(string)interleaved, rate=(int)44100;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:09.984580498, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ audio-codec\=\(string\)\"Raw\\\ 16-bit\\\ PCM\\\ audio\"\,\ language-code\=\(string\)en\,\ container-specific-track-id\=\(string\)2\,\ bitrate\=\(uint\)704524\;";
+event tag: GstTagList-global, taglist=(taglist)"taglist\,\ datetime\=\(datetime\)2013-09-03T16:21:35Z\,\ description\=\(string\)\"audiotest\\\ wave\"\,\ encoder\=\(string\)x264\,\ container-format\=\(string\)Quicktime\;";
+buffer: pts=0:00:00.000000000, dur=0:00:00.023219954, flags=discont
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:09.984580498, offset=0:00:00.000000000, stop=0:00:09.984580498, flags=0x01, time=0:00:10.000000000, base=0:00:00.000000000, position=0:00:09.984580498
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ audio-codec\=\(string\)\"Raw\\\ 16-bit\\\ PCM\\\ audio\"\,\ language-code\=\(string\)en\,\ container-specific-track-id\=\(string\)2\,\ bitrate\=\(uint\)704524\;";
+event eos: (no structure)
