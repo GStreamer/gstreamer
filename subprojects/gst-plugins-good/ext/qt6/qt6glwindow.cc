@@ -47,7 +47,7 @@
 /**
  * SECTION:
  *
- * #Qt6GLWindow is an #QQuickWindow that grab QtQuick view to GStreamer OpenGL video buffers.
+ * #Qt6GLWindow is an #QObject that grab QtQuick view to GStreamer OpenGL video buffers.
  */
 
 GST_DEBUG_CATEGORY_STATIC (qt6_gl_window_debug);
@@ -80,8 +80,8 @@ struct _Qt6GLWindowPrivate
   GstBuffer *produced_buffer;
 };
 
-Qt6GLWindow::Qt6GLWindow (QWindow * parent, QQuickWindow *src)
-  : QQuickWindow( parent ), source (src)
+Qt6GLWindow::Qt6GLWindow (QQuickWindow *src, QObject *parent)
+  : QObject( parent ), source (src)
 {
   QGuiApplication *app = static_cast<QGuiApplication *> (QCoreApplication::instance ());
   static gsize _debug;

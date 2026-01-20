@@ -162,7 +162,7 @@ gst_qml6_gl_src_set_property (GObject * object, guint prop_id,
       }
 
       if (qt_src->qwindow)
-        qt_src->window = new Qt6GLWindow (NULL, qt_src->qwindow);
+        qt_src->window = new Qt6GLWindow (qt_src->qwindow);
 
       break;
     }
