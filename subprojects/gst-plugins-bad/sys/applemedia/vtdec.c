@@ -55,7 +55,7 @@
 #endif
 #include <string.h>
 #include <gst/gst.h>
-#include <gst/base/gstbytewriter.h>
+#include <gst/pbutils/codec-utils.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideodecoder.h>
 #include <gst/gl/gstglcontext.h>
@@ -126,7 +126,7 @@ static gboolean gst_vtdec_compute_dpb_size (GstVtdec * vtdec,
     CMVideoCodecType cm_format, GstBuffer * codec_data);
 static gboolean gst_vtdec_check_vp9_support (GstVtdec * vtdec);
 static gboolean gst_vtdec_build_vp9_vpcc_from_caps (GstVtdec * vtdec,
-    GstStructure * caps_struct);
+    GstCaps * caps);
 static gboolean gst_vtdec_check_av1_support (GstVtdec * vtdec);
 static gboolean gst_vtdec_handle_av1_sequence_header (GstVtdec * vtdec,
     GstVideoCodecFrame * frame);
@@ -311,8 +311,10 @@ gst_vtdec_stop (GstVideoDecoder * decoder)
     CFRelease (vtdec->format_description);
   vtdec->format_description = NULL;
 
-  g_clear_pointer (&vtdec->vp9_vpcc, g_free);
-  vtdec->vp9_vpcc_size = 0;
+  if (vtdec->vp9_vpcc)
+    gst_buffer_unref (vtdec->vp9_vpcc);
+  vtdec->vp9_vpcc = NULL;
+
   if (vtdec->av1_sequence_header_obu)
     gst_buffer_unref (vtdec->av1_sequence_header_obu);
   vtdec->av1_sequence_header_obu = NULL;
@@ -798,7 +800,7 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
     GST_INFO_OBJECT (vtdec, "waiting for codec_data before negotiation");
     negotiate_now = FALSE;
   } else if (cm_format == kCMVideoCodecType_VP9) {
-    negotiate_now = gst_vtdec_build_vp9_vpcc_from_caps (vtdec, structure);
+    negotiate_now = gst_vtdec_build_vp9_vpcc_from_caps (vtdec, state->caps);
   }
 
   if (cm_format == kCMVideoCodecType_AV1 && vtdec->av1_needs_sequence_header) {
@@ -1137,115 +1139,13 @@ gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format,
   return status;
 }
 
-/* https://www.webmproject.org/vp9/mp4/#vp-codec-configuration-box */
 static gboolean
-gst_vtdec_build_vp9_vpcc_from_caps (GstVtdec * vtdec,
-    GstStructure * caps_struct)
+gst_vtdec_build_vp9_vpcc_from_caps (GstVtdec * vtdec, GstCaps * caps)
 {
   GST_INFO_OBJECT (vtdec, "gst_vtdec_build_vp9_vpcc_from_caps");
 
-  gint profile = 0;             /* Undefined profile 0 is generally acceptable. */
-  guint bit_depth = 8;
-  guint bit_depth_chroma = 8;
-  /* Default to 4:2:0 */
-  guint8 chroma_subsampling = 1;
-  const gchar *chroma_format = NULL;
-  /* Default to BT.709 limited range */
-  gboolean video_full_range = FALSE;
-  guint8 colour_primaries = 1;
-  guint8 transfer_characteristics = 1;
-  guint8 matrix_coefficients = 1;
-  const gchar *colorimetry_str = NULL;
-  guint8 color_info_field = 0;
-  gboolean hdl = TRUE;
-  GstByteWriter writer;
-
-  if (!gst_structure_has_name (caps_struct, "video/x-vp9")) {
-    return FALSE;
-  }
-
-  gst_byte_writer_init (&writer);
-
-  /* version is always 1 */
-  hdl &= gst_byte_writer_put_uint8 (&writer, 1);
-
-  hdl &= gst_byte_writer_put_uint8 (&writer, 0);
-  hdl &= gst_byte_writer_put_uint8 (&writer, 0);
-  hdl &= gst_byte_writer_put_uint8 (&writer, 0);
-
-  gst_structure_get_int (caps_struct, "profile", &profile);
-  hdl &= gst_byte_writer_put_uint8 (&writer, profile);
-
-  /* level is not in caps for VP9; 0 is acceptable */
-  hdl &= gst_byte_writer_put_uint8 (&writer, 0);
-
-  gst_structure_get_uint (caps_struct, "bit-depth-luma", &bit_depth);
-
-  /* ensure chroma bit depth matches luma if present */
-  if (gst_structure_get_uint (caps_struct, "bit-depth-chroma",
-          &bit_depth_chroma)
-      && (bit_depth != bit_depth_chroma)) {
-    GST_WARNING_OBJECT (vtdec,
-        "bit-depth-luma and bit-depth-chroma in caps disagree");
-  }
-
-  chroma_format = gst_structure_get_string (caps_struct, "chroma-format");
-  if (chroma_format) {
-    if (g_strcmp0 (chroma_format, "4:2:0") == 0) {
-      const gchar *chroma_site =
-          gst_structure_get_string (caps_struct, "chroma-site");
-      if (chroma_site) {
-        const GstVideoChromaSite site =
-            gst_video_chroma_site_from_string (chroma_site);
-        if (site == GST_VIDEO_CHROMA_SITE_V_COSITED) {
-          chroma_subsampling = 0;
-        }
-      }
-    } else if (g_strcmp0 (chroma_format, "4:2:2") == 0) {
-      chroma_subsampling = 2;
-    } else if (g_strcmp0 (chroma_format, "4:4:4") == 0) {
-      chroma_subsampling = 3;
-    }
-  }
-
-  colorimetry_str = gst_structure_get_string (caps_struct, "colorimetry");
-  if (colorimetry_str) {
-    GstVideoColorimetry vid_col;
-    if (gst_video_colorimetry_from_string (&vid_col, colorimetry_str)) {
-      video_full_range =
-          (vid_col.range == GST_VIDEO_COLOR_RANGE_0_255) ? TRUE : FALSE;
-      colour_primaries = gst_video_color_primaries_to_iso (vid_col.primaries);
-      transfer_characteristics =
-          gst_video_transfer_function_to_iso (vid_col.transfer);
-      matrix_coefficients = gst_video_color_matrix_to_iso (vid_col.matrix);
-    }
-  }
-
-  color_info_field |= (bit_depth & 0xF) << 4;
-  color_info_field |= (chroma_subsampling & 0x3) << 1;
-  color_info_field |= !(!video_full_range);
-  hdl &= gst_byte_writer_put_uint8 (&writer, color_info_field);
-  hdl &= gst_byte_writer_put_uint8 (&writer, colour_primaries);
-  hdl &= gst_byte_writer_put_uint8 (&writer, transfer_characteristics);
-  hdl &= gst_byte_writer_put_uint8 (&writer, matrix_coefficients);
-
-  /* codec initialization data, unused for VP9 */
-  hdl &= gst_byte_writer_put_uint16_le (&writer, 0);
-
-  if (!hdl) {
-    GST_ERROR_OBJECT (vtdec, "error creating vpcC header");
-    return FALSE;
-  }
-
-  guint vpcc_size = gst_byte_writer_get_size (&writer);
-  vtdec->vp9_vpcc = gst_byte_writer_reset_and_get_data (&writer);
-  if (vtdec->vp9_vpcc == NULL) {
-    GST_ERROR_OBJECT (vtdec, "error acquiring vpcC header");
-    return FALSE;
-  }
-  vtdec->vp9_vpcc_size = vpcc_size;
-
-  return TRUE;
+  vtdec->vp9_vpcc = gst_codec_utils_vpx_create_vpcc_from_caps (caps);
+  return vtdec->vp9_vpcc != NULL;
 }
 
 static CMFormatDescriptionRef
@@ -1254,12 +1154,16 @@ create_format_description (GstVtdec * vtdec, CMVideoCodecType cm_format)
   OSStatus status;
   CMFormatDescriptionRef format_description = NULL;
   CFMutableDictionaryRef extensions = NULL;
+  GstMapInfo map;
 
   if (vtdec->vp9_vpcc) {
+    if (!gst_buffer_map (vtdec->vp9_vpcc, &map, GST_MAP_READ))
+      return NULL;
+
     CFMutableDictionaryRef atoms = CFDictionaryCreateMutable (NULL, 0,
         &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-    gst_vtutil_dict_set_data (atoms, CFSTR ("vpcC"), vtdec->vp9_vpcc,
-        vtdec->vp9_vpcc_size);
+    gst_vtutil_dict_set_data (atoms, CFSTR ("vpcC"), map.data, map.size);
+    gst_buffer_unmap (vtdec->vp9_vpcc, &map);
 
     extensions =
         CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,

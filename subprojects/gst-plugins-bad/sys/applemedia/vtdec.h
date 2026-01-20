@@ -77,8 +77,7 @@ struct _GstVtdec
   gboolean av1_needs_sequence_header;  /* TRUE if we need to wait for sequence header OBU before creating session */
   GstBuffer *av1_sequence_header_obu;  /* Store the sequence header OBU for format description */
 
-  guint8* vp9_vpcc;
-  gsize   vp9_vpcc_size;
+  GstBuffer *vp9_vpcc;
 };
 
 struct _GstVtdecClass
