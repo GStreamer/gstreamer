@@ -611,6 +611,10 @@ gst_matroska_index_compare (GstMatroskaIndex * i1, GstMatroskaIndex * i2)
     return -1;
   else if (i1->time > i2->time)
     return 1;
+  else if (i1->pos < i2->pos)
+    return -1;
+  else if (i1->pos > i2->pos)
+    return 1;
   else if (i1->block < i2->block)
     return -1;
   else if (i1->block > i2->block)
@@ -634,7 +638,7 @@ gst_matroska_index_seek_find (GstMatroskaIndex * i1, GstClockTime * time,
 GstMatroskaIndex *
 gst_matroska_read_common_do_index_seek (GstMatroskaReadCommon * common,
     GstMatroskaTrackContext * track, gint64 seek_pos, GArray ** _index,
-    gint * _entry_index, GstSearchMode snap_dir)
+    guint * _entry_index, GstSearchMode snap_dir)
 {
   GstMatroskaIndex *entry = NULL;
   GArray *index;
@@ -645,6 +649,12 @@ gst_matroska_read_common_do_index_seek (GstMatroskaReadCommon * common,
   } else {
     GST_DEBUG_OBJECT (common->sinkpad, "Missing track index table");
     index = common->index;
+
+    if (!common->index_sorted) {
+      /* Sort index by time, smallest time first, for easier searching */
+      g_array_sort (common->index, (GCompareFunc) gst_matroska_index_compare);
+      common->index_sorted = TRUE;
+    }
   }
 
   if (!index || !index->len)
@@ -672,6 +682,41 @@ gst_matroska_read_common_do_index_seek (GstMatroskaReadCommon * common,
     *_entry_index = entry - (GstMatroskaIndex *) index->data;
 
   return entry;
+}
+
+/* Sort the index, if needed, and re-locate the request entry and its position in the index array */
+gboolean
+gst_matroska_read_common_locate_in_index (GstMatroskaReadCommon * common,
+    GstMatroskaIndex * seek_entry, GArray ** _index, guint * _entry_index)
+{
+  GstMatroskaIndex *entry = NULL;
+  GArray *index = common->index;
+
+  /* find entry just before or at the requested position */
+  if (!common->index_sorted) {
+    /* Sort index by time, smallest time first, for easier searching */
+    g_array_sort (common->index, (GCompareFunc) gst_matroska_index_compare);
+    common->index_sorted = TRUE;
+  }
+
+  if (!index->len)
+    return FALSE;
+
+  entry =
+      gst_util_array_binary_search (index->data, index->len,
+      sizeof (GstMatroskaIndex),
+      (GCompareDataFunc) gst_matroska_index_compare, GST_SEARCH_MODE_EXACT,
+      seek_entry, NULL);
+  if (entry == NULL) {
+    return FALSE;
+  }
+
+  if (_index)
+    *_index = index;
+  if (_entry_index)
+    *_entry_index = entry - (GstMatroskaIndex *) index->data;
+
+  return TRUE;
 }
 
 static gint
@@ -1917,6 +1962,7 @@ gst_matroska_read_common_parse_index (GstMatroskaReadCommon * common,
 
   /* Sort index by time, smallest time first, for easier searching */
   g_array_sort (common->index, (GCompareFunc) gst_matroska_index_compare);
+  common->index_sorted = TRUE;
 
   /* Now sort the track specific index entries into their own arrays */
   for (i = 0; i < common->index->len; i++) {

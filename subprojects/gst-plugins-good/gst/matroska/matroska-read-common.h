@@ -84,8 +84,9 @@ typedef struct _GstMatroskaReadCommon {
   guint64                  ebml_segment_start;
   guint64                  ebml_segment_length;
 
-  /* a cue (index) table */
+  /* a cue (index) table (may be dynamically built, in which case index_parsed == FALSE) */
   GArray                  *index;
+  gboolean                index_sorted;
 
   /* timescale in the file */
   guint64                  time_scale;
@@ -127,7 +128,8 @@ gint gst_matroska_index_seek_find (GstMatroskaIndex * i1, GstClockTime * time,
     gpointer user_data);
 GstMatroskaIndex * gst_matroska_read_common_do_index_seek (
     GstMatroskaReadCommon * common, GstMatroskaTrackContext * track, gint64
-    seek_pos, GArray ** _index, gint * _entry_index, GstSearchMode snap_dir);
+    seek_pos, GArray ** _index, guint * _entry_index, GstSearchMode snap_dir);
+gboolean gst_matroska_read_common_locate_in_index (GstMatroskaReadCommon *common, GstMatroskaIndex *seek_entry, GArray ** _index, guint * _entry_index);
 void gst_matroska_read_common_found_global_tag (GstMatroskaReadCommon * common,
     GstElement * el, GstTagList * taglist);
 gint64 gst_matroska_read_common_get_length (GstMatroskaReadCommon * common);

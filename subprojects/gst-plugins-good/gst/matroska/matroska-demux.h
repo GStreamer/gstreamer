@@ -43,6 +43,13 @@ G_BEGIN_DECLS
 #define GST_IS_MATROSKA_DEMUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MATROSKA_DEMUX))
 
+typedef struct {
+  GstClockTime start_time;
+  GstClockTime last_index_time; /* Largest time accepted for an index point into this range */
+  GstClockTime cur_end_time;    /* Largest time actually observed in this range */
+  GstClockTime end_time; /* End of this range (start of the next). NONE for the last range */
+} GstMatroskaSeekRange;
+
 typedef struct _GstMatroskaDemux {
   GstElement              parent;
 
@@ -117,7 +124,8 @@ typedef struct _GstMatroskaDemux {
 
   /* reverse playback */
   GArray                  *seek_index;
-  gint                     seek_entry;
+  GstMatroskaIndex         seek_entry;
+  guint                    seek_entry_idx;
 
   gboolean                 seen_cluster_prevsize;  /* We track this because the
                                                     * first cluster won't have
@@ -138,6 +146,15 @@ typedef struct _GstMatroskaDemux {
 
   /* Cached upstream length (default G_MAXUINT64) */
   guint64	           cached_length;
+
+  /* Interval for creating index entries in incomplete files */
+  GstClockTime             min_index_interval;
+
+  /* List of GstMatroskaSeekRange, sorted by start_offset */
+  GList                   *seek_ranges;
+
+  /* Pointer to the entry in seek_ranges currently being extended */
+  GList                   *current_seek_range;
 } GstMatroskaDemux;
 
 typedef struct _GstMatroskaDemuxClass {

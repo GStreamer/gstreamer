@@ -256,7 +256,7 @@ gst_matroska_parse_reset (GstElement * element)
   }
 
   parse->seek_index = NULL;
-  parse->seek_entry = 0;
+  parse->seek_entry_idx = 0;
 
   if (parse->new_segment) {
     gst_event_unref (parse->new_segment);
@@ -1315,7 +1315,7 @@ gst_matroska_parse_handle_seek_event (GstMatroskaParse * parse,
   /* check sanity before we start flushing and all that */
   GST_OBJECT_LOCK (parse);
   if ((entry = gst_matroska_read_common_do_index_seek (&parse->common, track,
-              seeksegment.position, &parse->seek_index, &parse->seek_entry,
+              seeksegment.position, &parse->seek_index, &parse->seek_entry_idx,
               snap_dir)) == NULL) {
     /* pull mode without index can scan later on */
     GST_DEBUG_OBJECT (parse, "No matching seek entry in index");

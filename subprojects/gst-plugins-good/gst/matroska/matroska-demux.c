@@ -88,11 +88,13 @@ enum
   PROP_METADATA,
   PROP_STREAMINFO,
   PROP_MAX_GAP_TIME,
-  PROP_MAX_BACKTRACK_DISTANCE
+  PROP_MAX_BACKTRACK_DISTANCE,
+  PROP_MIN_INDEX_INTERVAL
 };
 
 #define DEFAULT_MAX_GAP_TIME           (2 * GST_SECOND)
 #define DEFAULT_MAX_BACKTRACK_DISTANCE 30
+#define DEFAULT_MIN_INDEX_INTERVAL     (500 * GST_MSECOND)
 #define INVALID_DATA_THRESHOLD         (2 * 1024 * 1024)
 
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -189,6 +191,10 @@ static const gchar *gst_matroska_track_encoding_scope_name (gint val);
 static void gst_matroska_demux_reset (GstElement * element);
 static gboolean perform_seek_to_offset (GstMatroskaDemux * demux,
     gdouble rate, guint64 offset, guint32 seqnum, GstSeekFlags flags);
+static gboolean gst_matroska_demux_update_stream_seek_ranges (GstMatroskaDemux *
+    demux, GstClockTime start_time, GstClockTime end_time);
+static GList *gst_matroska_demux_find_seek_range (GstMatroskaDemux * demux,
+    GstClockTime time);
 
 /* gobject functions */
 static void gst_matroska_demux_set_property (GObject * object,
@@ -243,9 +249,24 @@ gst_matroska_demux_class_init (GstMatroskaDemuxClass * klass)
       g_param_spec_uint ("max-backtrack-distance",
           "Maximum backtrack distance",
           "Maximum backtrack distance in seconds when seeking without "
-          "and index in pull mode and search for a keyframe "
+          "an index in pull mode and search for a keyframe "
           "(0 = disable backtracking).",
           0, G_MAXUINT, DEFAULT_MAX_BACKTRACK_DISTANCE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstMatroskaDemux:min-index-interval:
+   *
+   * Minimum interval between index entries (in nanoseconds) when building
+   * a dynamic seek table.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_MIN_INDEX_INTERVAL,
+      g_param_spec_uint64 ("min-index-interval",
+          "Minimum Dynamic Index interval",
+          "Minimum interval between index entries (in nanoseconds) when building a dynamic seek table",
+          0, G_MAXUINT64, DEFAULT_MIN_INDEX_INTERVAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
@@ -298,6 +319,7 @@ gst_matroska_demux_init (GstMatroskaDemux * demux)
   /* property defaults */
   demux->max_gap_time = DEFAULT_MAX_GAP_TIME;
   demux->max_backtrack_distance = DEFAULT_MAX_BACKTRACK_DISTANCE;
+  demux->min_index_interval = DEFAULT_MIN_INDEX_INTERVAL;
 
   GST_OBJECT_FLAG_SET (demux, GST_ELEMENT_FLAG_INDEXABLE);
 
@@ -366,7 +388,7 @@ gst_matroska_demux_reset (GstElement * element)
   }
 
   demux->seek_index = NULL;
-  demux->seek_entry = 0;
+  demux->seek_entry_idx = 0;
 
   if (demux->new_segment) {
     gst_event_unref (demux->new_segment);
@@ -383,6 +405,12 @@ gst_matroska_demux_reset (GstElement * element)
   demux->deferred_seek_pad = NULL;
 
   gst_flow_combiner_clear (demux->flowcombiner);
+
+  demux->current_seek_range = NULL;
+  if (demux->seek_ranges) {
+    g_list_free_full (demux->seek_ranges, g_free);
+    demux->seek_ranges = NULL;
+  }
 }
 
 static GstBuffer *
@@ -2988,7 +3016,6 @@ static gboolean
 gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     GstPad * pad, GstEvent * event)
 {
-  GstMatroskaIndex *entry = NULL;
   GstMatroskaIndex scan_entry;
   GstSeekFlags flags;
   GstSeekType cur_type, stop_type;
@@ -3060,11 +3087,12 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
    * segment when we close the current segment. */
   memcpy (&seeksegment, &demux->common.segment, sizeof (GstSegment));
 
-  /* pull mode without index means that the actual duration is not known,
+  /* pull mode without cues-based index means that the actual duration is not known,
    * we might be playing a file that's still being recorded
    * so, invalidate our current duration, which is only a moving target,
    * and should not be used to clamp anything */
-  if (!demux->streaming && !demux->common.index && demux->invalid_duration) {
+  if (!demux->streaming && !demux->common.index_parsed
+      && demux->invalid_duration) {
     seeksegment.duration = GST_CLOCK_TIME_NONE;
   }
 
@@ -3120,23 +3148,41 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   }
 
   track = gst_matroska_read_common_get_seek_track (&demux->common, track);
-  if ((entry = gst_matroska_read_common_do_index_seek (&demux->common, track,
-              seekpos, &demux->seek_index, &demux->seek_entry,
-              snap_dir)) == NULL) {
-    /* pull mode without index can scan later on */
+
+  /* If the seek position is within a known range, use the index to seek.
+   * Otherwise, if we are not in streaming mode, we might want to fall back
+   * to scanning/searching if the index doesn't give us a result (or a bad one).
+   */
+  GstMatroskaIndex *entry = NULL;
+
+  if (demux->common.index_parsed
+      || gst_matroska_demux_find_seek_range (demux, seekpos)) {
+    entry =
+        gst_matroska_read_common_do_index_seek (&demux->common, track, seekpos,
+        &demux->seek_index, &demux->seek_entry_idx, snap_dir);
+    if (entry)
+      demux->seek_entry = *entry;
+  } else {
+    /* Not in range, and index not fully parsed.
+     * We should not rely on the partial index (which would snap to the last
+     * parsed keyframe). entry is NULL, so we'll do fallback seek */
+    GST_DEBUG_OBJECT (demux,
+        "Seek position %" GST_TIME_FORMAT
+        " not in known ranges, index_parsed FALSE, forcing fallback",
+        GST_TIME_ARGS (seekpos));
+  }
+
+  /* pull mode without index can scan later on */
+  if (!entry) {
+    demux->seek_index = NULL;
     if (demux->streaming) {
       GST_DEBUG_OBJECT (demux, "No matching seek entry in index");
       GST_OBJECT_UNLOCK (demux);
       return FALSE;
     } else if (rate < 0.0) {
-      /* FIXME: We should build an index during playback or when scanning
-       * that can be used here. The reverse playback code requires seek_index
-       * and seek_entry to be set!
-       */
+      /* Fall back to scan, and building a dynamic index as needed */
       GST_DEBUG_OBJECT (demux,
-          "No matching seek entry in index, needed for reverse playback");
-      GST_OBJECT_UNLOCK (demux);
-      return FALSE;
+          "No matching seek entry in index for reverse playback, falling back to scan");
     }
   }
   GST_DEBUG_OBJECT (demux, "Seek position looks sane");
@@ -3250,6 +3296,7 @@ exit:
   /* now update the real segment info */
   GST_DEBUG_OBJECT (demux, "Committing new seek segment");
   memcpy (&demux->common.segment, &seeksegment, sizeof (GstSegment));
+  demux->current_seek_range = NULL;     /* We need to re-check the seek index ranges after restarting */
   GST_OBJECT_UNLOCK (demux);
 
   /* update some (segment) state */
@@ -3376,14 +3423,9 @@ gst_matroska_demux_handle_seek_push (GstMatroskaDemux * demux, GstPad * pad,
   }
 
   /* check for having parsed index already */
-  if (!demux->common.index_parsed) {
+  if (!demux->common.index_parsed && demux->index_offset != 0) {
     gboolean building_index;
     guint64 offset = 0;
-
-    if (!demux->index_offset) {
-      GST_DEBUG_OBJECT (demux, "no index (location); no seek in push mode");
-      return FALSE;
-    }
 
     GST_OBJECT_LOCK (demux);
     /* handle the seek event in the chain function */
@@ -3579,17 +3621,10 @@ gst_matroska_demux_seek_to_previous_keyframe (GstMatroskaDemux * demux)
   GstFlowReturn ret = GST_FLOW_EOS;
   gboolean done = TRUE;
   gint i;
-
-  g_return_val_if_fail (demux->seek_index, GST_FLOW_EOS);
-  g_return_val_if_fail (demux->seek_entry < demux->seek_index->len,
-      GST_FLOW_EOS);
+  GstMatroskaIndex *entry = NULL;
+  GstMatroskaIndex cluster_entry;
 
   GST_DEBUG_OBJECT (demux, "locating previous keyframe");
-
-  if (!demux->seek_entry) {
-    GST_DEBUG_OBJECT (demux, "no earlier index entry");
-    goto exit;
-  }
 
   for (i = 0; i < demux->common.src->len; i++) {
     GstMatroskaTrackContext *stream = g_ptr_array_index (demux->common.src, i);
@@ -3611,15 +3646,88 @@ gst_matroska_demux_seek_to_previous_keyframe (GstMatroskaDemux * demux)
     }
   }
 
-  if (!done) {
-    GstMatroskaIndex *entry;
+  if (done) {
+    GST_DEBUG_OBJECT (demux, "all streams at segment start");
+    goto exit;
+  }
 
+  if (demux->seek_index && demux->seek_entry_idx > 0) {
+    /* If we are building a dynamic index, we might need to refresh our seek
+     * entry as the index might have grown or been re-sorted since the last
+     * seek event. */
+    if (!demux->common.index_parsed && demux->common.index) {
+      GST_DEBUG_OBJECT (demux,
+          "Relocating in seek index time %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (demux->seek_entry.time));
+      if (!gst_matroska_read_common_locate_in_index (&demux->common,
+              &demux->seek_entry, &demux->seek_index, &demux->seek_entry_idx)) {
+        g_assert_not_reached ();        // Our entry must exist or there's a code logic error somewhere
+      }
+      GST_LOG_OBJECT (demux, "Found entry at seek idx %u",
+          demux->seek_entry_idx);
+    }
+
+    /* Decide on the next target: an index entry or the previous cluster */
+
+    /* 1. Use the previous index entry */
+    demux->seek_entry_idx--;
     entry = &g_array_index (demux->seek_index, GstMatroskaIndex,
-        --demux->seek_entry);
+        demux->seek_entry_idx);
+
+    if (!demux->common.index_parsed) {
+      /* 2. If we have a gap in a dynamically-built index, step back cluster-by-cluster */
+      GList *current_range_l = gst_matroska_demux_find_seek_range (demux,
+          demux->seek_entry.time);
+
+      if (current_range_l) {
+        GstMatroskaSeekRange *range = current_range_l->data;
+        if (entry->time < range->start_time) {
+          GST_DEBUG_OBJECT (demux,
+              "Previous index entry %" GST_TIMEP_FORMAT
+              " is outside current seek range start %" GST_TIMEP_FORMAT,
+              &entry->time, &range->start_time);
+          entry = NULL;         /* Force fallback to ClusterPrevSize */
+        }
+      }
+    }
+  }
+
+  if (entry) {
+    GST_DEBUG_OBJECT (demux,
+        "moving to previous index entry %d, track %d TS %" GST_TIMEP_FORMAT,
+        demux->seek_entry_idx, entry->track, &entry->time);
+    demux->seek_entry = *entry;
     if (!gst_matroska_demux_move_to_entry (demux, entry, FALSE, TRUE))
       goto exit;
+    ret = GST_FLOW_OK;
+  } else if (demux->cluster_prevsize > 0 &&
+      demux->cluster_offset >=
+      demux->cluster_prevsize + demux->common.ebml_segment_start) {
+    /* Fallback to ClusterPrevSize */
+    guint64 prev_cluster_pos =
+        demux->cluster_offset - demux->cluster_prevsize -
+        demux->common.ebml_segment_start;
+
+    GST_DEBUG_OBJECT (demux,
+        "Index gap detected or at start of range. Stepping back one cluster to %"
+        G_GUINT64_FORMAT, prev_cluster_pos);
+
+    cluster_entry.pos = prev_cluster_pos;
+    cluster_entry.time = GST_CLOCK_TIME_NONE;
+    cluster_entry.block = 1;
+    cluster_entry.relative = FALSE;
+    cluster_entry.track = 0;
+
+    if (!gst_matroska_demux_move_to_entry (demux, &cluster_entry, FALSE, TRUE))
+      goto exit;
+
+    /* Moving block-by-block means we've lost our place for stepping back by index, so clear that */
+    demux->seek_index = NULL;
+    demux->seek_entry_idx = 0;
 
     ret = GST_FLOW_OK;
+  } else {
+    GST_DEBUG_OBJECT (demux, "no earlier index entry and no ClusterPrevSize");
   }
 
 exit:
@@ -4639,9 +4747,259 @@ gst_matroska_demux_parse_blockadditions (GstMatroskaDemux * demux,
   return ret;
 }
 
+/* Check if the new time-index would extend the current dynamic seek index'
+ * range or if it's already within a known region
+ * Return FALSE if this point is within an existing range and does not need indexing */
+static gboolean
+gst_matroska_demux_update_stream_seek_ranges (GstMatroskaDemux * demux,
+    GstClockTime start_time, GstClockTime end_time)
+{
+  gboolean switched_range = FALSE;
+
+  /* Don't add ranges if we don't have valid time */
+  if (!GST_CLOCK_TIME_IS_VALID (start_time)) {
+    return FALSE;
+  }
+  g_assert (GST_CLOCK_TIME_IS_VALID (end_time));
+
+  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_TRACE) {
+    /* Dump the list of ranges at the start */
+    GList *l;
+    for (l = demux->seek_ranges; l; l = l->next) {
+      GstMatroskaSeekRange *range = l->data;
+      GST_TRACE_OBJECT (demux,
+          "range: %" GST_TIMEP_FORMAT " - %" GST_TIMEP_FORMAT " end %"
+          GST_TIMEP_FORMAT, &range->start_time, &range->cur_end_time,
+          &range->end_time);
+    }
+  }
+
+  /* If we dont have an existing range to extend, find or create one */
+  if (demux->current_seek_range == NULL) {
+    if (demux->seek_ranges == NULL) {
+      /* No seek range yet - create the initial one */
+      g_assert (demux->seek_ranges == NULL);
+
+      GstMatroskaSeekRange *new_range = g_new (GstMatroskaSeekRange, 1);
+      new_range->start_time = start_time;
+      new_range->cur_end_time = new_range->last_index_time = end_time;
+      new_range->end_time = GST_CLOCK_TIME_NONE;
+
+      demux->seek_ranges = g_list_prepend (demux->seek_ranges, new_range);
+      demux->current_seek_range = demux->seek_ranges;
+      GST_LOG_OBJECT (demux,
+          "Created initial seek range: time %" GST_TIMEP_FORMAT " - %"
+          GST_TIMEP_FORMAT " (end %" GST_TIMEP_FORMAT ")",
+          &new_range->start_time, &new_range->last_index_time,
+          &new_range->end_time);
+      switched_range = TRUE;
+      return TRUE;
+    }
+
+    GST_LOG_OBJECT (demux,
+        "Locating/creating seek range: time %" GST_TIME_FORMAT " - %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (start_time), GST_TIME_ARGS (end_time));
+
+    /* Walk the list to find where this timestamp belongs */
+    GList *l;
+    for (l = demux->seek_ranges; l; l = l->next) {
+      GstMatroskaSeekRange *range = l->data;
+
+      /* See if the time is within this range */
+      if ((start_time >= range->start_time) &&
+          (!GST_CLOCK_TIME_IS_VALID (range->end_time)
+              || start_time < range->end_time)) {
+        break;
+      }
+    }
+
+    g_assert (l != NULL);       /* We must have found an entry, because they cover the entire timeline */
+    GstMatroskaSeekRange *range = l->data;
+    GST_LOG_OBJECT (demux,
+        "Timestamp lands in seek range: time %" GST_TIMEP_FORMAT
+        " - %" GST_TIMEP_FORMAT " (end %" GST_TIMEP_FORMAT ")",
+        &range->start_time, &range->cur_end_time, &range->end_time);
+
+    demux->current_seek_range = l;
+    switched_range = TRUE;
+  }
+
+  /* To reach here, we need to have established a current_seek_range, but might need
+   * to walk backward to a previous range in reverse play */
+  g_assert (demux->current_seek_range != NULL);
+
+  GstMatroskaSeekRange *range = demux->current_seek_range->data;
+  if (start_time < range->start_time) {
+    /* We're walking backward, so we need to find the correct range */
+    GList *l = demux->current_seek_range;
+    g_assert (l->prev != NULL); /* We can't be *before* the first range */
+
+    while (l->prev) {
+      GList *prev = l->prev;
+      GstMatroskaSeekRange *r = prev->data;
+      if (start_time >= r->start_time) {
+        demux->current_seek_range = prev;
+        range = r;
+        break;
+      }
+      l = prev;
+    }
+
+    GST_LOG_OBJECT (demux, "timestamp moved backward into range %"
+        GST_TIMEP_FORMAT " - %" GST_TIMEP_FORMAT, &range->start_time,
+        &range->end_time);
+    /* We might need to split this range, since we're entering it at the end */
+    switched_range = TRUE;
+
+    /* NOTE: If we've moved backward over the start of the 'current_seek_range' into
+     * an unindexed region of the previous range, we could move the split point / end
+     * of the previous range and start of this one, but only if we know there are no
+     * intermediate entries between the 2 points in the future. At the moment,
+     * we'll end up creating a new split range below and potentially merging
+     * later once the range is fully indexed */
+  }
+
+  if (switched_range) {
+    if (end_time <= range->cur_end_time) {
+      /* Entirely within the existing range - nothing to do, and don't insert */
+      GST_LOG_OBJECT (demux,
+          "Found in existing indexed seek range: time %" GST_TIMEP_FORMAT
+          " - %" GST_TIMEP_FORMAT " (end %" GST_TIMEP_FORMAT ")",
+          &range->start_time, &range->cur_end_time, &range->end_time);
+      return FALSE;
+    }
+
+    if (end_time >= range->last_index_time + demux->min_index_interval &&
+        end_time <= range->last_index_time + 2 * demux->min_index_interval) {
+      /* Extends the current range within threshold, take it as current and break */
+      GST_LOG_OBJECT (demux, "Found seek range: time %" GST_TIMEP_FORMAT
+          " - %" GST_TIMEP_FORMAT " (end %" GST_TIMEP_FORMAT ")",
+          &range->start_time, &range->cur_end_time, &range->end_time);
+    } else if (!GST_CLOCK_TIME_IS_VALID (range->end_time)
+        || end_time <= range->end_time) {
+      /* Is within this range, but not within threshold to extend the range, split the
+       * seek range into 2 with a new range after this for the new position. */
+      GstMatroskaSeekRange *new_range = g_new (GstMatroskaSeekRange, 1);
+      new_range->start_time = start_time;
+      new_range->cur_end_time = new_range->last_index_time = end_time;
+      new_range->end_time = range->end_time;
+
+      /* Place after the current entry, but we don't have g_list_insert_after() */
+      GList *l = demux->current_seek_range;
+      demux->seek_ranges =
+          g_list_insert_before (demux->seek_ranges, g_list_next (l), new_range);
+
+      /* Update the current_seek_range to point to the new range */
+      demux->current_seek_range = g_list_next (l);
+      g_assert (demux->current_seek_range->data == new_range);
+
+      /* Trim the end of the previous range */
+      range->end_time = start_time;
+
+      GST_LOG_OBJECT (demux, "Split seek range: time %" GST_TIMEP_FORMAT
+          " - %" GST_TIMEP_FORMAT " and %" GST_TIMEP_FORMAT " - %"
+          GST_TIMEP_FORMAT, &range->start_time, &range->cur_end_time,
+          &new_range->start_time, &new_range->end_time);
+      return TRUE;
+    }
+  }
+
+  /* If we get here, we have a current seek range, but it might need extending
+   * and possibly merging with the following range */
+
+  /* Check if the new range overlaps or touches the current range */
+  if ((start_time >= range->start_time) &&
+      (!GST_CLOCK_TIME_IS_VALID (range->end_time)
+          || start_time <= range->end_time)) {
+    /* Merge with current range */
+    if (end_time < range->last_index_time + demux->min_index_interval) {
+      GST_TRACE_OBJECT (demux,
+          "time %" GST_TIMEP_FORMAT
+          " is within threshold of existing indexed range %" GST_TIMEP_FORMAT
+          " - %" GST_TIMEP_FORMAT, &start_time, &range->start_time,
+          &range->last_index_time);
+      return FALSE;             /* Isn't extending the range */
+    }
+
+    GST_LOG_OBJECT (demux, "Extending current seek range: time %"
+        GST_TIMEP_FORMAT " - %" GST_TIMEP_FORMAT
+        " (end %" GST_TIMEP_FORMAT ") now %" GST_TIMEP_FORMAT,
+        &range->start_time, &range->last_index_time, &range->end_time,
+        &end_time);
+    range->cur_end_time = range->last_index_time = end_time;
+  }
+
+  /* We might have bridged a gap, so we need to check if we can
+   * merge with the next range(s). Bridging a gap happens when
+   * the last_index_time is close enough to the end_time of the
+   * current range that we couldn't insert another point */
+  gboolean insert_this_point = TRUE;
+
+  if (range->last_index_time + demux->min_index_interval >= range->end_time) {
+    GList *l = demux->current_seek_range;
+    while (l->next) {
+      GList *next = g_list_next (l);
+      GstMatroskaSeekRange *next_range = next->data;
+      if (range->last_index_time + demux->min_index_interval <
+          next_range->start_time) {
+        /* We've merged enough that the last_index_time is back within the range */
+        break;
+      }
+
+      /* Merge next_range into range */
+      range->end_time = next_range->end_time;
+      range->cur_end_time = next_range->cur_end_time;
+      range->last_index_time = next_range->last_index_time;
+
+      GST_LOG_OBJECT (demux, "Bridged to next seek range: time %"
+          GST_TIMEP_FORMAT " - %" GST_TIMEP_FORMAT " - end %" GST_TIMEP_FORMAT
+          " merged", &range->start_time, &range->cur_end_time,
+          &range->end_time);
+
+      demux->seek_ranges = g_list_delete_link (demux->seek_ranges, next);
+      g_free (next_range);
+      insert_this_point = FALSE;
+      /* If we merged into an existing range, we don't need this index point */
+    }
+  }
+
+  return insert_this_point;
+}
+
+static GList *
+gst_matroska_demux_find_seek_range (GstMatroskaDemux * demux, GstClockTime time)
+{
+  GList *l;
+  GstMatroskaSeekRange *range;
+
+  if (!GST_CLOCK_TIME_IS_VALID (time))
+    return NULL;
+
+  for (l = demux->seek_ranges; l; l = l->next) {
+    range = l->data;
+
+    GST_LOG_OBJECT (demux,
+        "Checking range: %" GST_TIMEP_FORMAT " - %" GST_TIMEP_FORMAT
+        " end %" GST_TIMEP_FORMAT,
+        &range->start_time, &range->cur_end_time, &range->end_time);
+
+    if (time >= range->start_time && time <= range->cur_end_time) {
+      GST_LOG_OBJECT (demux,
+          "Time %" GST_TIMEP_FORMAT " is in indexed range %" GST_TIMEP_FORMAT
+          " - %" GST_TIMEP_FORMAT, &time, &range->start_time,
+          &range->cur_end_time);
+      return l;
+    }
+  }
+
+  GST_LOG_OBJECT (demux,
+      "Time %" GST_TIMEP_FORMAT " is NOT in an indexed range", &time);
+  return NULL;
+}
+
 static GstFlowReturn
-gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
-    GstEbmlRead * ebml, guint64 cluster_time, guint64 cluster_offset,
+gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux *
+    demux, GstEbmlRead * ebml, guint64 cluster_time, guint64 cluster_offset,
     gboolean is_simpleblock)
 {
   GstMatroskaTrackContext *stream = NULL;
@@ -5018,6 +5376,78 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
             stream->index);
         ret = GST_FLOW_OK;
         goto done;
+      }
+    }
+
+    if (!demux->common.index_parsed && GST_CLOCK_TIME_IS_VALID (lace_time)) {
+      /* Update the seek range for every block we parse */
+      gboolean is_keyframe = TRUE;
+
+      if (demux->common.has_video) {
+        if (stream->type != GST_MATROSKA_TRACK_TYPE_VIDEO)
+          is_keyframe = FALSE;
+        else if (is_simpleblock && !(flags & 0x80))
+          is_keyframe = FALSE;
+        else if (!is_simpleblock && referenceblock)
+          is_keyframe = FALSE;
+      }
+
+      if (is_keyframe) {
+        gboolean need_index_point =
+            gst_matroska_demux_update_stream_seek_ranges (demux, lace_time,
+            lace_time + duration);
+
+        if (need_index_point) {
+          g_assert (demux->current_seek_range != NULL);
+          GstMatroskaIndex idx;
+
+          /* pos is the cluster start relative to the segment */
+          idx.pos = cluster_offset - demux->common.ebml_segment_start;
+          idx.time = lace_time;
+          idx.track = stream->num;
+          /* Store offset relative to the start of cluster data */
+          idx.offset = offset - cluster_offset - demux->cluster_prefix;
+          idx.relative = TRUE;
+
+          GST_TRACE_OBJECT (demux,
+              "Adding dynamic index point track %u offset %" G_GUINT64_FORMAT
+              " = segment %" G_GUINT64_FORMAT " + cluster pos %"
+              G_GUINT64_FORMAT " + cluster_prefix %u + offset %u time %"
+              GST_TIMEP_FORMAT, idx.track, offset,
+              demux->common.ebml_segment_start, idx.pos, demux->cluster_prefix,
+              idx.offset, &idx.time);
+
+          /* Create the index array if this is the first entry */
+          if (demux->common.index == NULL) {
+            demux->common.index =
+                g_array_sized_new (FALSE, FALSE, sizeof (GstMatroskaIndex),
+                128);
+          }
+
+          g_array_append_val (demux->common.index, idx);
+
+          /* If seek_index is NULL, we didn't arrive at this location with an index,
+           * and this is the first entry we're creating. Use it as the anchor in reverse playback */
+          if (demux->seek_index == NULL && demux->common.segment.rate < 0) {
+            demux->seek_entry = idx;
+            if (!gst_matroska_read_common_locate_in_index (&demux->common,
+                    &demux->seek_entry, &demux->seek_index,
+                    &demux->seek_entry_idx)) {
+              g_assert_not_reached ();
+            }
+            GST_LOG_OBJECT (demux,
+                "Taking this entry at seek idx %u as anchor point for reverse playback",
+                demux->seek_entry_idx);
+          }
+
+          /* If we're not appending to the end of the last index range,
+           * then the index is now unsorted and needs sorting first before use.
+           * We can check for the 'last range' by seeing if it has an end_time */
+          GstMatroskaSeekRange *range = demux->current_seek_range->data;
+          if (GST_CLOCK_TIME_IS_VALID (range->end_time)) {
+            demux->common.index_sorted = FALSE;
+          }
+        }
       }
     }
 
@@ -6551,8 +6981,9 @@ gst_matroska_demux_handle_sink_event (GstPad * pad, GstObject * parent,
         demux->upstream_format_is_time = TRUE;
         demux->segment_seqnum = gst_event_get_seqnum (event);
         gst_segment_copy_into (segment, &demux->common.segment);
-        GST_DEBUG_OBJECT (demux, "Got segment in TIME format: %" GST_PTR_FORMAT,
-            event);
+        GST_DEBUG_OBJECT (demux,
+            "Got segment in TIME format: %" GST_PTR_FORMAT, event);
+        demux->current_seek_range = NULL;       /* We need to re-check the seek index ranges after restarting */
         goto exit;
       }
 
@@ -6601,6 +7032,7 @@ gst_matroska_demux_handle_sink_event (GstPad * pad, GstObject * parent,
       }
       demux->requested_seek_time = GST_CLOCK_TIME_NONE;
       demux->seek_offset = -1;
+      demux->current_seek_range = NULL; /* We need to re-check the seek index ranges after restarting */
       GST_OBJECT_UNLOCK (demux);
     exit:
       /* chain will send initial segment after pads have been added,
@@ -7842,6 +8274,11 @@ gst_matroska_demux_set_property (GObject * object,
       demux->max_backtrack_distance = g_value_get_uint (value);
       GST_OBJECT_UNLOCK (demux);
       break;
+    case PROP_MIN_INDEX_INTERVAL:
+      GST_OBJECT_LOCK (demux);
+      demux->min_index_interval = g_value_get_uint64 (value);
+      GST_OBJECT_UNLOCK (demux);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -7866,6 +8303,11 @@ gst_matroska_demux_get_property (GObject * object,
     case PROP_MAX_BACKTRACK_DISTANCE:
       GST_OBJECT_LOCK (demux);
       g_value_set_uint (value, demux->max_backtrack_distance);
+      GST_OBJECT_UNLOCK (demux);
+      break;
+    case PROP_MIN_INDEX_INTERVAL:
+      GST_OBJECT_LOCK (demux);
+      g_value_set_uint64 (value, demux->min_index_interval);
       GST_OBJECT_UNLOCK (demux);
       break;
     default:

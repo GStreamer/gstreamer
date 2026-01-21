@@ -90,7 +90,7 @@ typedef struct _GstMatroskaParse {
 
   /* reverse playback */
   GArray                  *seek_index;
-  gint                     seek_entry;
+  guint                    seek_entry_idx;
 } GstMatroskaParse;
 
 typedef struct _GstMatroskaParseClass {
