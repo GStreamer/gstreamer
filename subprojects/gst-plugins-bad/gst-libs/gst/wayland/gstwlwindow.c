@@ -1286,10 +1286,10 @@ gst_wl_window_set_image_description (GstWlWindow * self,
 
     /* We can't set the light level if we don't know the luminance range */
     if (linfo) {
-      guint maxFALL = CLAMP (min_luminance + 1,
-          linfo->max_frame_average_light_level, max_luminance);
+      guint maxFALL = CLAMP (linfo->max_frame_average_light_level,
+          min_luminance + 1, max_luminance);
       guint maxCLL =
-          CLAMP (maxFALL, linfo->max_content_light_level, max_luminance);
+          CLAMP (linfo->max_content_light_level, maxFALL, max_luminance);
       wp_image_description_creator_params_v1_set_max_cll (params, maxCLL);
       wp_image_description_creator_params_v1_set_max_fall (params, maxFALL);
     }
