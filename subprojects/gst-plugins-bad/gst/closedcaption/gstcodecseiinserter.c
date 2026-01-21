@@ -840,7 +840,8 @@ gst_codec_sei_inserter_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_codec_sei_inserter_start (self);
+      if (!gst_codec_sei_inserter_start (self))
+        return GST_STATE_CHANGE_FAILURE;
       break;
     default:
       break;
@@ -850,7 +851,8 @@ gst_codec_sei_inserter_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_codec_sei_inserter_stop (self);
+      if (!gst_codec_sei_inserter_stop (self))
+        return GST_STATE_CHANGE_FAILURE;
       break;
     default:
       break;
