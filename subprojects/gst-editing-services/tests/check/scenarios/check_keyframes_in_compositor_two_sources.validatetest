@@ -19,6 +19,7 @@ meta,
         [expected-issue, issue-id=validateflow::mismatch, details=".*content-id=12.*\\n.*content-id=10.*", sometimes=true],
         [expected-issue, issue-id=validateflow::mismatch, details=".*content-id=0.*\\n.*content-id=12.*", sometimes=true],
         [expected-issue, issue-id=validateflow::mismatch, details=".*content-id=0.*\\n.*content-id=13.*", sometimes=true],
+        [expected-issue, issue-id=validateflow::mismatch, details=".*content-id=1.*\\n.*content-id=11.*", sometimes=true],
     }
 
 remove-feature, name=queue

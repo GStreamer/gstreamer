@@ -749,7 +749,10 @@ ges.render.vorbis_and_vp8_in_webm.test_transition.audio_video.raw_h264_mp4
 ges.render.vorbis_and_vp8_in_webm.test_transition.audio_video.vorbis_theora_ogg
 ges.render.vorbis_and_vp8_in_webm.test_transition.audio_video.vorbis_vp8_webm
 ges.test.add_effect_and_split
+ges.test.backward_playback_with_start
 ges.test.check_edit_nested_timeline
+ges.test.check_last_time_effect_framerate_filter
+ges.test.check_reverse_source
 ges.test.check_seek_on_nested_clips
 ges.test.check_seek_on_nested_timelines
 ges.test.check_seek_on_very_deeply_nested_timeline
@@ -757,11 +760,9 @@ ges.test.check_set_inpoint
 ges.test.check_set_inpoint_on_nested_timeline
 ges.test.check_simple_seek
 ges.test.edit_deeply_nested_timeline_too_short
+ges.test.input_audio_channels_reorder
 ges.test.play_deeply_nested_back_to_back
 ges.test.play_two_nested_back_to_back
 ges.test.seek_on_stack_change_on_internal_subtimeline
-ges.test.videoscale_effect
-ges.test.backward_playback_with_start
-ges.test.check_reverse_source
 ges.test.timelineelement.set_child_prop_on_all_instances
-ges.test.input_audio_channels_reorder
+ges.test.videoscale_effect
