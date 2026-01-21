@@ -1214,13 +1214,17 @@ picture_changed (GstFFMpegVidDec * ffmpegdec, AVFrame * picture,
         "Upstream states mixed interlace mode, ignore interlace changes");
   } else {
     gint pic_field_order = 0;
+    gint picture_interlaced;
+
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
+    picture_interlaced = picture->flags & AV_FRAME_FLAG_INTERLACED;
+#else
+    picture_interlaced = picture->interlaced_frame;
+#endif
+
     if (one_field) {
       pic_field_order = ffmpegdec->pic_field_order;
-#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
-    } else if (picture->flags & AV_FRAME_FLAG_INTERLACED) {
-#else
-    } else if (picture->interlaced_frame) {
-#endif
+    } else if (picture_interlaced) {
       if (picture->repeat_pict)
         pic_field_order |= GST_VIDEO_BUFFER_FLAG_RFF;
 #if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
@@ -1230,20 +1234,12 @@ picture_changed (GstFFMpegVidDec * ffmpegdec, AVFrame * picture,
 #endif
         pic_field_order |= GST_VIDEO_BUFFER_FLAG_TFF;
     }
-    interlace_field_same =
-#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
-        ffmpegdec->pic_interlaced == (picture->flags & AV_FRAME_FLAG_INTERLACED)
-#else
-        ffmpegdec->pic_interlaced == picture->interlaced_frame
-#endif
-        && ffmpegdec->pic_field_order == pic_field_order;
-#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
-    GST_DEBUG_OBJECT (ffmpegdec, "NEW pic_interlaced:%d frame_interlaced:%d",
-        ffmpegdec->pic_interlaced, (picture->flags & AV_FRAME_FLAG_INTERLACED));
-#else
-    GST_DEBUG_OBJECT (ffmpegdec, "OLD pic_interlaced:%d frame_interlaced:%d"
-        ffmpegdec->pic_interlaced, picture->interlaced_frame);
-#endif
+    interlace_field_same = ffmpegdec->pic_interlaced == picture_interlaced &&
+        ffmpegdec->pic_field_order == pic_field_order;
+    GST_DEBUG_OBJECT (ffmpegdec,
+        "picture_interlaced %s. Previously:%d Now:%d",
+        interlace_field_same ? "SAME" : "CHANGED",
+        ffmpegdec->pic_interlaced, picture_interlaced);
   }
   return !(ffmpegdec->pic_width == picture->width
       && ffmpegdec->pic_height == picture->height
