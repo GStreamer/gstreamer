@@ -1346,9 +1346,9 @@ gst_vtdec_drain_decoder (GstVideoDecoder * decoder, gboolean flush)
 
   GST_VIDEO_DECODER_STREAM_LOCK (vtdec);
 
-  /* Only reset the draining flag here,
-   * is_flushing will be reset in sink_event() */
-  if (vtdec->is_draining)
+  if (flush)
+    vtdec->is_flushing = FALSE;
+  else
     vtdec->is_draining = FALSE;
 
   if (vtdec->downstream_ret == GST_FLOW_OK)
