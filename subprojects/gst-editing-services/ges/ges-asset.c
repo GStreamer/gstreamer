@@ -187,7 +187,13 @@ struct _GESAssetPrivate
 
   /* The error that occurred when an asset has been initialized with error */
   GError *error;
+
+  /* Per-instance lock for MT-safety */
+  GRecMutex lock;
 };
+
+#define LOCK_ASSET(asset) g_rec_mutex_lock (&(asset)->priv->lock)
+#define UNLOCK_ASSET(asset) g_rec_mutex_unlock (&(asset)->priv->lock)
 
 /* Internal structure to help avoid full loading
  * of one asset several times
@@ -420,10 +426,10 @@ ges_asset_get_property (GObject * object, guint property_id,
       g_value_set_string (value, asset->priv->id);
       break;
     case PROP_PROXY:
-      g_value_set_object (value, ges_asset_get_proxy (asset));
+      g_value_take_object (value, ges_asset_get_proxy_full (asset));
       break;
     case PROP_PROXY_TARGET:
-      g_value_set_object (value, ges_asset_get_proxy_target (asset));
+      g_value_take_object (value, ges_asset_get_proxy_target_full (asset));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -473,6 +479,8 @@ ges_asset_finalize (GObject * object)
 
   if (priv->proxies)
     g_list_free (priv->proxies);
+
+  g_rec_mutex_clear (&priv->lock);
 
   G_OBJECT_CLASS (ges_asset_parent_class)->finalize (object);
 }
@@ -566,6 +574,7 @@ ges_asset_init (GESAsset * self)
 
   self->priv->state = ASSET_INITIALIZING;
   self->priv->proxied_asset_id = NULL;
+  g_rec_mutex_init (&self->priv->lock);
 }
 
 /* Internal methods */
@@ -1065,13 +1074,51 @@ ges_asset_unproxy (GESAsset * asset, GESAsset * proxy)
  *
  * Returns: (element-type GESAsset) (transfer none): The list of proxies
  * that @asset has.
+ *
+ * Deprecated: 1.30: Use ges_asset_list_proxies_full() instead for MT-safety.
  */
 GList *
 ges_asset_list_proxies (GESAsset * asset)
 {
+  GList *res;
+
   g_return_val_if_fail (GES_IS_ASSET (asset), NULL);
 
-  return asset->priv->proxies;
+  LOCK_ASSET (asset);
+  res = asset->priv->proxies;
+  UNLOCK_ASSET (asset);
+
+  return res;
+}
+
+/**
+ * ges_asset_list_proxies_full:
+ * @asset: A #GESAsset
+ *
+ * Get all the proxies that the asset has. The first item of the list will
+ * be the default #GESAsset:proxy. The second will be the proxy that is
+ * 'next in line' to be default, and so on.
+ *
+ * Returns: (element-type GESAsset) (transfer full): The list of proxies
+ * that @asset has.
+ *
+ * Since: 1.30
+ */
+GList *
+ges_asset_list_proxies_full (GESAsset * asset)
+{
+  GList *res = NULL;
+  GList *tmp;
+
+  g_return_val_if_fail (GES_IS_ASSET (asset), NULL);
+
+  LOCK_ASSET (asset);
+  for (tmp = asset->priv->proxies; tmp; tmp = tmp->next) {
+    res = g_list_prepend (res, gst_object_ref (tmp->data));
+  }
+  UNLOCK_ASSET (asset);
+
+  return g_list_reverse (res);
 }
 
 /**
@@ -1081,17 +1128,50 @@ ges_asset_list_proxies (GESAsset * asset)
  * Gets the default #GESAsset:proxy of the asset.
  *
  * Returns: (transfer none) (nullable): The default proxy of @asset.
+ *
+ * Deprecated: 1.30: Use ges_asset_get_proxy_full() instead for MT-safety.
  */
 GESAsset *
 ges_asset_get_proxy (GESAsset * asset)
 {
+  GESAsset *res = NULL;
+
   g_return_val_if_fail (GES_IS_ASSET (asset), NULL);
 
+  LOCK_ASSET (asset);
   if (asset->priv->state == ASSET_PROXIED && asset->priv->proxies) {
-    return asset->priv->proxies->data;
+    res = asset->priv->proxies->data;
   }
+  UNLOCK_ASSET (asset);
 
-  return NULL;
+  return res;
+}
+
+/**
+ * ges_asset_get_proxy_full:
+ * @asset: A #GESAsset
+ *
+ * Gets the default #GESAsset:proxy of the asset.
+ *
+ * Returns: (transfer full) (nullable): The default proxy of @asset,
+ * or %NULL if @asset has no proxy.
+ *
+ * Since: 1.30
+ */
+GESAsset *
+ges_asset_get_proxy_full (GESAsset * asset)
+{
+  GESAsset *res = NULL;
+
+  g_return_val_if_fail (GES_IS_ASSET (asset), NULL);
+
+  LOCK_ASSET (asset);
+  if (asset->priv->state == ASSET_PROXIED && asset->priv->proxies) {
+    res = gst_object_ref (asset->priv->proxies->data);
+  }
+  UNLOCK_ASSET (asset);
+
+  return res;
 }
 
 /**
@@ -1105,13 +1185,51 @@ ges_asset_get_proxy (GESAsset * asset)
  *
  * Returns: (transfer none) (nullable): The asset that @proxy is a proxy
  * of.
+ *
+ * Deprecated: 1.30: Use ges_asset_get_proxy_target_full() instead for MT-safety.
  */
 GESAsset *
 ges_asset_get_proxy_target (GESAsset * proxy)
 {
+  GESAsset *res;
+
   g_return_val_if_fail (GES_IS_ASSET (proxy), NULL);
 
-  return proxy->priv->proxy_target;
+  LOCK_ASSET (proxy);
+  res = proxy->priv->proxy_target;
+  UNLOCK_ASSET (proxy);
+
+  return res;
+}
+
+/**
+ * ges_asset_get_proxy_target_full:
+ * @proxy: A #GESAsset
+ *
+ * Gets the #GESAsset:proxy-target of the asset.
+ *
+ * Note that the proxy target may have loaded with an error, so you should
+ * call ges_asset_get_error() on the returned target.
+ *
+ * Returns: (transfer full) (nullable): The asset that @proxy is a proxy
+ * of, or %NULL if @proxy is not a proxy for another asset.
+ *
+ * Since: 1.30
+ */
+GESAsset *
+ges_asset_get_proxy_target_full (GESAsset * proxy)
+{
+  GESAsset *res;
+
+  g_return_val_if_fail (GES_IS_ASSET (proxy), NULL);
+
+  LOCK_ASSET (proxy);
+  res = proxy->priv->proxy_target;
+  if (res)
+    gst_object_ref (res);
+  UNLOCK_ASSET (proxy);
+
+  return res;
 }
 
 /* Caution, this method should be used in rare cases (ie: for the project
@@ -1689,6 +1807,8 @@ ges_list_assets (GType filter)
  * %NULL if no error occurred when @asset was loaded.
  *
  * Since: 1.8
+ *
+ * Deprecated: 1.30: Use ges_asset_get_error_full() instead for MT-safety.
  */
 GError *
 ges_asset_get_error (GESAsset * self)
@@ -1696,4 +1816,30 @@ ges_asset_get_error (GESAsset * self)
   g_return_val_if_fail (GES_IS_ASSET (self), NULL);
 
   return self->priv->error;
+}
+
+/**
+ * ges_asset_get_error_full:
+ * @self: A #GESAsset
+ *
+ * Retrieve the error that was set on the asset when it was loaded.
+ *
+ * Returns: (transfer full) (nullable): A copy of the error set on @asset,
+ * or %NULL if no error occurred when @asset was loaded. Free with
+ * g_error_free() when no longer needed.
+ *
+ * Since: 1.30
+ */
+GError *
+ges_asset_get_error_full (GESAsset * self)
+{
+  GError *res;
+
+  g_return_val_if_fail (GES_IS_ASSET (self), NULL);
+
+  LOCK_ASSET (self);
+  res = self->priv->error ? g_error_copy (self->priv->error) : NULL;
+  UNLOCK_ASSET (self);
+
+  return res;
 }

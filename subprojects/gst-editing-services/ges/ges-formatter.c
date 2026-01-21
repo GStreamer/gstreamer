@@ -448,9 +448,33 @@ ges_formatter_save_to_uri (GESFormatter * formatter, GESTimeline *
  * the asset for the #GESFormatter that has the highest @rank
  *
  * Returns: (transfer none): The #GESAsset for the formatter with highest @rank
+ *
+ * Deprecated: 1.30: Use ges_formatter_get_default_full() instead for MT-safety.
  */
 GESAsset *
 ges_formatter_get_default (void)
+{
+  GESAsset *ret;
+
+  ret = ges_formatter_get_default_full ();
+  if (ret)
+    gst_object_unref (ret);
+
+  return ret;
+}
+
+/**
+ * ges_formatter_get_default_full:
+ *
+ * Get the default #GESAsset to use as formatter. It will return
+ * the asset for the #GESFormatter that has the highest @rank
+ *
+ * Returns: (transfer full): The #GESAsset for the formatter with highest @rank
+ *
+ * Since: 1.30
+ */
+GESAsset *
+ges_formatter_get_default_full (void)
 {
   GList *assets, *tmp;
   GESAsset *ret = NULL;
@@ -467,6 +491,9 @@ ges_formatter_get_default (void)
       ret = GES_ASSET (tmp->data);
     }
   }
+
+  if (ret)
+    gst_object_ref (ret);
   g_list_free (assets);
 
   return ret;
@@ -666,16 +693,41 @@ _find_formatter_asset_for_id (const gchar * id)
  * Returns: (transfer none): The #GESAsset for the best formatter to save to @uri
  *
  * Since: 1.18
+ *
+ * Deprecated: 1.30: Use ges_find_formatter_for_uri_full() instead for MT-safety.
  */
 GESAsset *
 ges_find_formatter_for_uri (const gchar * uri)
+{
+  GESAsset *asset;
+
+  asset = ges_find_formatter_for_uri_full (uri);
+  if (asset)
+    gst_object_unref (asset);
+
+  return asset;
+}
+
+/**
+ * ges_find_formatter_for_uri_full:
+ *
+ * Get the best formatter for @uri. It tries to find a formatter
+ * compatible with @uri extension, if none is found, it returns the default
+ * formatter asset.
+ *
+ * Returns: (transfer full): The #GESAsset for the best formatter to save to @uri
+ *
+ * Since: 1.30
+ */
+GESAsset *
+ges_find_formatter_for_uri_full (const gchar * uri)
 {
   GList *formatter_assets, *tmp;
   GESAsset *asset = NULL;
 
   gchar *extension = _get_extension (uri);
   if (!extension)
-    return ges_formatter_get_default ();
+    return ges_formatter_get_default_full ();
 
   formatter_assets = g_list_sort (ges_list_assets (GES_TYPE_FORMATTER),
       (GCompareFunc) _sort_formatters);
@@ -703,8 +755,8 @@ ges_find_formatter_for_uri (const gchar * uri)
 
   if (asset) {
     GST_INFO_OBJECT (asset, "Using for URI %s", uri);
-    return asset;
+    return gst_object_ref (asset);
   }
 
-  return ges_formatter_get_default ();
+  return ges_formatter_get_default_full ();
 }

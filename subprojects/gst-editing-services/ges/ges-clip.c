@@ -3748,6 +3748,8 @@ ges_clip_get_supported_formats (GESClip * clip)
  *
  * Returns: (transfer none) (nullable): The newly created element, or
  * %NULL if an error occurred.
+ *
+ * Deprecated: 1.30: Use ges_clip_add_asset_full() instead for MT-safety.
  */
 /* FIXME: this is not used elsewhere in the GES library */
 GESTrackElement *
@@ -3767,6 +3769,47 @@ ges_clip_add_asset (GESClip * clip, GESAsset * asset)
 
   if (!ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (element)))
     element = NULL;
+
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (clip), _locked_timeline);
+  return element;
+
+}
+
+/**
+ * ges_clip_add_asset_full:
+ * @clip: A #GESClip
+ * @asset: An asset with #GES_TYPE_TRACK_ELEMENT as its
+ * #GESAsset:extractable-type
+ *
+ * Extracts a #GESTrackElement from an asset and adds it to the clip.
+ * This can be used to add effects that derive from the asset to the
+ * clip, but this method is not intended to be used to create the core
+ * elements of the clip.
+ *
+ * Returns: (transfer full) (nullable): The newly created element, or
+ * %NULL if an error occurred.
+ *
+ * Since: 1.30
+ */
+GESTrackElement *
+ges_clip_add_asset_full (GESClip * clip, GESAsset * asset)
+{
+  GESTrackElement *element;
+  GESTimeline *_locked_timeline;
+
+  g_return_val_if_fail (GES_IS_CLIP (clip), NULL);
+  g_return_val_if_fail (GES_IS_ASSET (asset), NULL);
+  g_return_val_if_fail (g_type_is_a (ges_asset_get_extractable_type
+          (asset), GES_TYPE_TRACK_ELEMENT), NULL);
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (clip));
+
+  element = GES_TRACK_ELEMENT (ges_asset_extract (asset, NULL));
+
+  if (!ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (element)))
+    element = NULL;
+  else
+    gst_object_ref (element);
 
   _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (clip), _locked_timeline);
   return element;
@@ -4604,9 +4647,59 @@ done:
  * @child or a copy of child, or %NULL if the element could not be added.
  *
  * Since: 1.18
+ *
+ * Deprecated: 1.30: Use ges_clip_add_child_to_track_full() instead for MT-safety.
  */
 GESTrackElement *
 ges_clip_add_child_to_track (GESClip * clip, GESTrackElement * child,
+    GESTrack * track, GError ** error)
+{
+  GESTrackElement *el;
+
+  el = ges_clip_add_child_to_track_full (clip, child, track, error);
+  if (el)
+    gst_object_unref (el);
+
+  return el;
+}
+
+/**
+ * ges_clip_add_child_to_track_full:
+ * @clip: A #GESClip
+ * @child: A child of @clip
+ * @track: The track to add @child to
+ * @error: Return location for an error
+ *
+ * Adds the track element child of the clip to a specific track.
+ *
+ * If the given child is already in another track, this will create a copy
+ * of the child, add it to the clip, and add this copy to the track.
+ *
+ * You should only call this whilst a clip is part of a #GESTimeline, and
+ * for tracks that are in the same timeline.
+ *
+ * This method is an alternative to using the
+ * #GESTimeline::select-tracks-for-object signal, but can be used to
+ * complement it when, say, you wish to copy a clip's children from one
+ * track into a new one.
+ *
+ * When the child is a core child, it must be added to a track that does
+ * not already contain another core child of the same clip. If it is not a
+ * core child (an additional effect), then it must be added to a track
+ * that already contains one of the core children of the same clip.
+ *
+ * This method can also fail if the adding the track element to the track
+ * would break a configuration rule of the corresponding #GESTimeline,
+ * such as causing three sources to overlap at a single time, or causing
+ * a source to completely overlap another in the same track.
+ *
+ * Returns: (transfer full): The element that was added to @track, either
+ * @child or a copy of child, or %NULL if the element could not be added.
+ *
+ * Since: 1.30
+ */
+GESTrackElement *
+ges_clip_add_child_to_track_full (GESClip * clip, GESTrackElement * child,
     GESTrack * track, GError ** error)
 {
   GESTimeline *timeline;
@@ -4692,6 +4785,8 @@ ges_clip_add_child_to_track (GESClip * clip, GESTrackElement * child,
    * the elements are un-frozen, we need to ensure the "active" status
    * is already set before the duration-limit is calculated */
   _update_active_for_track (clip, el);
+
+  gst_object_ref (el);
 
 done:
   _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (clip), _locked_timeline);

@@ -112,15 +112,19 @@ gboolean ges_timeline_add_track (GESTimeline *timeline, GESTrack *track);
 GES_API
 gboolean ges_timeline_remove_track (GESTimeline *timeline, GESTrack *track);
 
-GES_API
+GES_DEPRECATED_FOR(ges_timeline_get_track_for_pad_full)
 GESTrack * ges_timeline_get_track_for_pad (GESTimeline *timeline, GstPad *pad);
+GES_API
+GESTrack * ges_timeline_get_track_for_pad_full (GESTimeline *timeline, GstPad *pad);
 GES_API
 GstPad * ges_timeline_get_pad_for_track (GESTimeline * timeline, GESTrack *track);
 GES_API
 GList *ges_timeline_get_tracks (GESTimeline *timeline) G_GNUC_WARN_UNUSED_RESULT;
 
-GES_API
+GES_DEPRECATED_FOR(ges_timeline_get_groups_full)
 GList* ges_timeline_get_groups (GESTimeline * timeline);
+GES_API
+GList* ges_timeline_get_groups_full (GESTimeline * timeline);
 
 GES_API
 gboolean ges_timeline_commit (GESTimeline * timeline);

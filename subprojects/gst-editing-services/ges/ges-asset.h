@@ -120,8 +120,10 @@ const gchar * ges_asset_get_id       (GESAsset* self);
 GES_API
 GESAsset * ges_asset_request_finish  (GAsyncResult *res,
                                       GError **error);
-GES_API
+GES_DEPRECATED_FOR(ges_asset_get_error_full)
 GError * ges_asset_get_error         (GESAsset * self);
+GES_API
+GError * ges_asset_get_error_full    (GESAsset * self) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
 GESExtractable * ges_asset_extract   (GESAsset * self,
                                       GError **error);
@@ -133,12 +135,18 @@ GES_API
 gboolean ges_asset_set_proxy         (GESAsset *asset, GESAsset *proxy);
 GES_API
 gboolean ges_asset_unproxy           (GESAsset *asset, GESAsset * proxy);
-GES_API
+GES_DEPRECATED_FOR(ges_asset_list_proxies_full)
 GList * ges_asset_list_proxies       (GESAsset *asset);
 GES_API
+GList * ges_asset_list_proxies_full  (GESAsset *asset);
+GES_DEPRECATED_FOR(ges_asset_get_proxy_target_full)
 GESAsset * ges_asset_get_proxy_target(GESAsset *proxy);
 GES_API
+GESAsset * ges_asset_get_proxy_target_full(GESAsset *proxy);
+GES_DEPRECATED_FOR(ges_asset_get_proxy_full)
 GESAsset * ges_asset_get_proxy       (GESAsset *asset);
+GES_API
+GESAsset * ges_asset_get_proxy_full  (GESAsset *asset);
 GES_API
 gboolean ges_asset_needs_reload 	 (GType extractable_type,
 									  const gchar * id);

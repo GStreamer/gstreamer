@@ -120,7 +120,13 @@ struct _GESMarkerList
   GSequence *markers;
   GHashTable *markers_iters;
   GESMarkerFlags flags;
+
+  /* Per-instance lock for MT-safety */
+  GRecMutex lock;
 };
+
+#define LOCK_MARKER_LIST(list) g_rec_mutex_lock (&(list)->lock)
+#define UNLOCK_MARKER_LIST(list) g_rec_mutex_unlock (&(list)->lock)
 
 enum
 {
@@ -187,6 +193,7 @@ ges_marker_list_init (GESMarkerList * self)
 {
   self->markers = g_sequence_new (remove_marker);
   self->markers_iters = g_hash_table_new (g_direct_hash, g_direct_equal);
+  g_rec_mutex_init (&self->lock);
 }
 
 static void
@@ -196,6 +203,7 @@ ges_marker_list_finalize (GObject * object)
 
   g_sequence_free (self->markers);
   g_hash_table_unref (self->markers_iters);
+  g_rec_mutex_clear (&self->lock);
 
   G_OBJECT_CLASS (ges_marker_list_parent_class)->finalize (object);
 }
@@ -298,16 +306,9 @@ ges_marker_list_new (void)
   return ret;
 }
 
-/**
- * ges_marker_list_add:
- * @position: The position of the new marker
- *
- * Returns: (transfer none): The newly-added marker, the list keeps ownership
- * of the marker
- * Since: 1.18
- */
-GESMarker *
-ges_marker_list_add (GESMarkerList * self, GstClockTime position)
+static GESMarker *
+ges_marker_list_add_internal (GESMarkerList * self, GstClockTime position,
+    gboolean return_ref)
 {
   GESMarker *ret;
   GSequenceIter *iter;
@@ -318,13 +319,56 @@ ges_marker_list_add (GESMarkerList * self, GstClockTime position)
 
   ret->position = position;
 
+  LOCK_MARKER_LIST (self);
   iter = g_sequence_insert_sorted (self->markers, ret, cmp_marker, NULL);
-
   g_hash_table_insert (self->markers_iters, ret, iter);
+  UNLOCK_MARKER_LIST (self);
+
+  if (return_ref) {
+    /* Take ref for caller BEFORE emitting signal, in case a signal handler
+     * removes the marker from the list (which would free it) */
+    g_object_ref (ret);
+  }
 
   g_signal_emit (self, ges_marker_list_signals[MARKER_ADDED], 0, position, ret);
 
   return ret;
+}
+
+/**
+ * ges_marker_list_add:
+ * @list: A #GESMarkerList
+ * @position: The position of the new marker
+ *
+ * Returns: (transfer none): The newly-added marker, the list keeps ownership
+ * of the marker
+ *
+ * Since: 1.18
+ *
+ * Deprecated: 1.30: Use ges_marker_list_add_full() instead for MT-safety.
+ */
+GESMarker *
+ges_marker_list_add (GESMarkerList * list, GstClockTime position)
+{
+  return ges_marker_list_add_internal (list, position, FALSE);
+}
+
+/**
+ * ges_marker_list_add_full:
+ * @list: A #GESMarkerList
+ * @position: The position of the new marker
+ *
+ * Adds a new marker to the list at the given position. The caller owns a
+ * reference to the returned marker.
+ *
+ * Returns: (transfer full): The newly-added marker
+ *
+ * Since: 1.30
+ */
+GESMarker *
+ges_marker_list_add_full (GESMarkerList * list, GstClockTime position)
+{
+  return ges_marker_list_add_internal (list, position, TRUE);
 }
 
 /**
@@ -336,9 +380,15 @@ ges_marker_list_add (GESMarkerList * self, GstClockTime position)
 guint
 ges_marker_list_size (GESMarkerList * self)
 {
+  guint res;
+
   g_return_val_if_fail (GES_IS_MARKER_LIST (self), 0);
 
-  return g_sequence_get_length (self->markers);
+  LOCK_MARKER_LIST (self);
+  res = g_sequence_get_length (self->markers);
+  UNLOCK_MARKER_LIST (self);
+
+  return res;
 }
 
 /**
@@ -359,15 +409,24 @@ ges_marker_list_remove (GESMarkerList * self, GESMarker * marker)
 
   g_return_val_if_fail (GES_IS_MARKER_LIST (self), FALSE);
 
+  LOCK_MARKER_LIST (self);
   if (!g_hash_table_lookup_extended (self->markers_iters,
-          marker, NULL, (gpointer *) & iter))
+          marker, NULL, (gpointer *) & iter)) {
+    UNLOCK_MARKER_LIST (self);
     goto done;
+  }
   g_assert (iter != NULL);
   g_hash_table_remove (self->markers_iters, marker);
+  UNLOCK_MARKER_LIST (self);
 
+  /* Emit signal BEFORE g_sequence_remove, which triggers the destroy
+   * notify and unrefs the marker. The marker must still be alive for
+   * the signal handlers. */
   g_signal_emit (self, ges_marker_list_signals[MARKER_REMOVED], 0, marker);
 
+  LOCK_MARKER_LIST (self);
   g_sequence_remove (iter);
+  UNLOCK_MARKER_LIST (self);
 
   ret = TRUE;
 
@@ -394,12 +453,14 @@ ges_marker_list_get_markers (GESMarkerList * self)
   g_return_val_if_fail (GES_IS_MARKER_LIST (self), NULL);
   ret = NULL;
 
+  LOCK_MARKER_LIST (self);
   for (iter = g_sequence_get_begin_iter (self->markers);
       !g_sequence_iter_is_end (iter); iter = g_sequence_iter_next (iter)) {
     marker = GES_MARKER (g_sequence_get (iter));
 
     ret = g_list_append (ret, g_object_ref (marker));
   }
+  UNLOCK_MARKER_LIST (self);
 
   return ret;
 }
@@ -418,6 +479,8 @@ ges_marker_list_get_closest (GESMarkerList * self, GstClockTime position)
   GESMarker *new_marker, *ret = NULL;
   GstClockTime distance_next, distance_prev;
   GSequenceIter *iter;
+
+  LOCK_MARKER_LIST (self);
 
   if (g_sequence_is_empty (self->markers))
     goto done;
@@ -447,8 +510,10 @@ ges_marker_list_get_closest (GESMarkerList * self, GstClockTime position)
 
 done:
   if (ret)
-    return g_object_ref (ret);
-  return NULL;
+    g_object_ref (ret);
+  UNLOCK_MARKER_LIST (self);
+
+  return ret;
 }
 
 /**
@@ -471,19 +536,21 @@ ges_marker_list_move (GESMarkerList * self, GESMarker * marker,
 
   g_return_val_if_fail (GES_IS_MARKER_LIST (self), FALSE);
 
+  LOCK_MARKER_LIST (self);
   if (!g_hash_table_lookup_extended (self->markers_iters,
           marker, NULL, (gpointer *) & iter)) {
+    UNLOCK_MARKER_LIST (self);
     GST_WARNING ("GESMarkerList doesn't contain GESMarker");
     goto done;
   }
 
   previous_position = marker->position;
   marker->position = position;
+  g_sequence_sort_changed (iter, cmp_marker, NULL);
+  UNLOCK_MARKER_LIST (self);
 
   g_signal_emit (self, ges_marker_list_signals[MARKER_MOVED], 0,
       previous_position, position, marker);
-
-  g_sequence_sort_changed (iter, cmp_marker, NULL);
 
   ret = TRUE;
 
@@ -598,6 +665,8 @@ ges_marker_list_serialize (const GValue * v)
   gchar *caps_str, *escaped, *res;
   GstStructure *s;
 
+  LOCK_MARKER_LIST (list);
+
   s = gst_structure_new ("marker-list-flags", "flags", G_TYPE_INT,
       list->flags, NULL);
   gst_caps_append_structure (caps, s);
@@ -620,6 +689,8 @@ ges_marker_list_serialize (const GValue * v)
 
     iter = g_sequence_iter_next (iter);
   }
+
+  UNLOCK_MARKER_LIST (list);
 
   caps_str = gst_caps_to_string (caps);
   escaped = g_strescape (caps_str, NULL);

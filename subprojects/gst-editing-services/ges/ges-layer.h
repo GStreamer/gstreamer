@@ -78,8 +78,10 @@ GESLayer*     ges_layer_new                   (void) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
 void          ges_layer_set_timeline          (GESLayer * layer,
                                                GESTimeline * timeline);
-GES_API
+GES_DEPRECATED_FOR(ges_layer_get_timeline_full)
 GESTimeline * ges_layer_get_timeline          (GESLayer * layer);
+GES_API
+GESTimeline * ges_layer_get_timeline_full     (GESLayer * layer);
 
 GES_API
 gboolean      ges_layer_add_clip              (GESLayer * layer,

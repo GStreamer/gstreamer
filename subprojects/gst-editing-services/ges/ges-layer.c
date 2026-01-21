@@ -1043,6 +1043,8 @@ ges_layer_new (void)
  * Returns: (transfer none) (nullable): The timeline that @layer
  * is currently part of, or %NULL if it is not associated with any
  * timeline.
+ *
+ * Deprecated: 1.30: Use ges_layer_get_timeline_full() instead for MT-safety.
  */
 GESTimeline *
 ges_layer_get_timeline (GESLayer * layer)
@@ -1053,6 +1055,34 @@ ges_layer_get_timeline (GESLayer * layer)
 
   g_mutex_lock (&layer->priv->timeline_lock);
   res = layer->timeline;
+  g_mutex_unlock (&layer->priv->timeline_lock);
+
+  return res;
+}
+
+/**
+ * ges_layer_get_timeline_full:
+ * @layer: The #GESLayer
+ *
+ * Gets the timeline that the layer is a part of.
+ *
+ * Returns: (transfer full) (nullable): The timeline that @layer
+ * is currently part of, or %NULL if it is not associated with any
+ * timeline.
+ *
+ * Since: 1.30
+ */
+GESTimeline *
+ges_layer_get_timeline_full (GESLayer * layer)
+{
+  GESTimeline *res;
+
+  g_return_val_if_fail (GES_IS_LAYER (layer), NULL);
+
+  g_mutex_lock (&layer->priv->timeline_lock);
+  res = layer->timeline;
+  if (res)
+    gst_object_ref (res);
   g_mutex_unlock (&layer->priv->timeline_lock);
 
   return res;

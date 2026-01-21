@@ -51,8 +51,10 @@ G_DECLARE_FINAL_TYPE (GESMarkerList, ges_marker_list, GES, MARKER_LIST, GObject)
 GES_API
 GESMarkerList * ges_marker_list_new (void) G_GNUC_WARN_UNUSED_RESULT;
 
-GES_API
+GES_DEPRECATED_FOR(ges_marker_list_add_full)
 GESMarker * ges_marker_list_add (GESMarkerList * list, GstClockTime position);
+GES_API
+GESMarker * ges_marker_list_add_full (GESMarkerList * list, GstClockTime position) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API
 gboolean ges_marker_list_remove (GESMarkerList * list, GESMarker *marker);

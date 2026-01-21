@@ -74,12 +74,16 @@ struct _GESTrackClass
   gpointer    _ges_reserved[GES_PADDING];
 };
 
-GES_API
+GES_DEPRECATED_FOR(ges_track_get_caps_full)
 const GstCaps*     ges_track_get_caps                        (GESTrack *track);
 GES_API
-GList*             ges_track_get_elements                    (GESTrack *track) G_GNUC_WARN_UNUSED_RESULT;
+GstCaps*           ges_track_get_caps_full                   (GESTrack *track) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
+GList*             ges_track_get_elements                    (GESTrack *track) G_GNUC_WARN_UNUSED_RESULT;
+GES_DEPRECATED_FOR(ges_track_get_timeline_full)
 const GESTimeline* ges_track_get_timeline                    (GESTrack *track);
+GES_API
+GESTimeline*       ges_track_get_timeline_full               (GESTrack *track);
 GES_API
 gboolean           ges_track_commit                          (GESTrack *track);
 GES_API

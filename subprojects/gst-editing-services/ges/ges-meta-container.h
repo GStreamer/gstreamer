@@ -293,17 +293,26 @@ ges_meta_container_get_date_time   (GESMetaContainer *container,
                                         const gchar* meta_item,
                                         GstDateTime** dest);
 
-GES_API const gchar *
+GES_DEPRECATED_FOR(ges_meta_container_get_string_full)
+const gchar *
 ges_meta_container_get_string      (GESMetaContainer * container,
                                         const gchar * meta_item);
+GES_API gchar *
+ges_meta_container_get_string_full (GESMetaContainer * container,
+                                        const gchar * meta_item) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API GESMarkerList *
 ges_meta_container_get_marker_list (GESMetaContainer * container,
                                     const gchar * key) G_GNUC_WARN_UNUSED_RESULT;
 
-GES_API const GValue *
+GES_DEPRECATED_FOR(ges_meta_container_get_meta_full)
+const GValue *
 ges_meta_container_get_meta            (GESMetaContainer * container,
                                         const gchar * key);
+GES_API gboolean
+ges_meta_container_get_meta_full       (GESMetaContainer * container,
+                                        const gchar * key,
+                                        GValue * dest);
 /**
  * GESMetaForeachFunc:
  * @container: A #GESMetaContainer

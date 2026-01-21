@@ -2307,6 +2307,8 @@ ges_timeline_save_to_uri (GESTimeline * timeline, const gchar * uri,
  * Returns: (transfer none) (element-type GESGroup): The list of
  * groups that contain clips present in @timeline's layers.
  * Must not be changed.
+ *
+ * Deprecated: 1.30: Use ges_timeline_get_groups_full() instead for MT-safety.
  */
 GList *
 ges_timeline_get_groups (GESTimeline * timeline)
@@ -2320,6 +2322,34 @@ ges_timeline_get_groups (GESTimeline * timeline)
   UNLOCK_DYN (timeline);
 
   return res;
+}
+
+/**
+ * ges_timeline_get_groups_full:
+ * @timeline: The #GESTimeline
+ *
+ * Get the list of #GESGroup-s present in the timeline.
+ *
+ * Returns: (transfer full) (element-type GESGroup): The list of
+ * groups that contain clips present in @timeline's layers.
+ *
+ * Since: 1.30
+ */
+GList *
+ges_timeline_get_groups_full (GESTimeline * timeline)
+{
+  GList *res = NULL;
+  GList *tmp;
+
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), NULL);
+
+  LOCK_DYN (timeline);
+  for (tmp = timeline->priv->groups; tmp; tmp = tmp->next) {
+    res = g_list_prepend (res, gst_object_ref (tmp->data));
+  }
+  UNLOCK_DYN (timeline);
+
+  return g_list_reverse (res);
 }
 
 /**
@@ -2721,6 +2751,8 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
  *
  * Returns: (transfer none) (nullable): The track corresponding to @pad,
  * or %NULL if there is an error.
+ *
+ * Deprecated: 1.30: Use ges_timeline_get_track_for_pad_full() instead for MT-safety.
  */
 
 GESTrack *
@@ -2741,6 +2773,39 @@ ges_timeline_get_track_for_pad (GESTimeline * timeline, GstPad * pad)
   UNLOCK_DYN (timeline);
 
   return NULL;
+}
+
+/**
+ * ges_timeline_get_track_for_pad_full:
+ * @timeline: The #GESTimeline
+ * @pad: A pad
+ *
+ * Search for the #GESTrack corresponding to the given timeline's pad.
+ *
+ * Returns: (transfer full) (nullable): The track corresponding to @pad,
+ * or %NULL if there is an error.
+ *
+ * Since: 1.30
+ */
+GESTrack *
+ges_timeline_get_track_for_pad_full (GESTimeline * timeline, GstPad * pad)
+{
+  GList *tmp;
+  GESTrack *res = NULL;
+
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), NULL);
+
+  LOCK_DYN (timeline);
+  for (tmp = timeline->priv->priv_tracks; tmp; tmp = g_list_next (tmp)) {
+    TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
+    if (pad == tr_priv->ghostpad) {
+      res = gst_object_ref (tr_priv->track);
+      break;
+    }
+  }
+  UNLOCK_DYN (timeline);
+
+  return res;
 }
 
 /**

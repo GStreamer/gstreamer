@@ -382,12 +382,29 @@ error occurred.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_error" c:identifier="ges_asset_get_error" version="1.8">
+      <method name="get_error" c:identifier="ges_asset_get_error" version="1.8" deprecated="1" deprecated-version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">Retrieve the error that was set on the asset when it was loaded.</doc>
+        <doc-deprecated xml:space="preserve">Use ges_asset_get_error_full() instead for MT-safety.</doc-deprecated>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-asset.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">The error set on @asset, or
 %NULL if no error occurred when @asset was loaded.</doc>
+          <type name="GLib.Error" c:type="GError*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">A #GESAsset</doc>
+            <type name="Asset" c:type="GESAsset*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_error_full" c:identifier="ges_asset_get_error_full" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">Retrieve the error that was set on the asset when it was loaded.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-asset.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">A copy of the error set on @asset,
+or %NULL if no error occurred when @asset was loaded. Free with
+g_error_free() when no longer needed.</doc>
           <type name="GLib.Error" c:type="GError*"/>
         </return-value>
         <parameters>
@@ -425,8 +442,9 @@ error occurred.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_proxy" c:identifier="ges_asset_get_proxy" glib:get-property="proxy">
+      <method name="get_proxy" c:identifier="ges_asset_get_proxy" glib:get-property="proxy" deprecated="1" deprecated-version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">Gets the default #GESAsset:proxy of the asset.</doc>
+        <doc-deprecated xml:space="preserve">Use ges_asset_get_proxy_full() instead for MT-safety.</doc-deprecated>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-asset.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">The default proxy of @asset.</doc>
@@ -439,11 +457,27 @@ error occurred.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_proxy_target" c:identifier="ges_asset_get_proxy_target" glib:get-property="proxy-target">
+      <method name="get_proxy_full" c:identifier="ges_asset_get_proxy_full" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">Gets the default #GESAsset:proxy of the asset.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-asset.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">The default proxy of @asset,
+or %NULL if @asset has no proxy.</doc>
+          <type name="Asset" c:type="GESAsset*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="asset" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">A #GESAsset</doc>
+            <type name="Asset" c:type="GESAsset*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_proxy_target" c:identifier="ges_asset_get_proxy_target" glib:get-property="proxy-target" deprecated="1" deprecated-version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">Gets the #GESAsset:proxy-target of the asset.
 
 Note that the proxy target may have loaded with an error, so you should
 call ges_asset_get_error() on the returned target.</doc>
+        <doc-deprecated xml:space="preserve">Use ges_asset_get_proxy_target_full() instead for MT-safety.</doc-deprecated>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-asset.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">The asset that @proxy is a proxy
@@ -457,12 +491,50 @@ of.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="list_proxies" c:identifier="ges_asset_list_proxies">
+      <method name="get_proxy_target_full" c:identifier="ges_asset_get_proxy_target_full" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">Gets the #GESAsset:proxy-target of the asset.
+
+Note that the proxy target may have loaded with an error, so you should
+call ges_asset_get_error() on the returned target.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-asset.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">The asset that @proxy is a proxy
+of, or %NULL if @proxy is not a proxy for another asset.</doc>
+          <type name="Asset" c:type="GESAsset*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="proxy" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">A #GESAsset</doc>
+            <type name="Asset" c:type="GESAsset*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="list_proxies" c:identifier="ges_asset_list_proxies" deprecated="1" deprecated-version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">Get all the proxies that the asset has. The first item of the list will
+be the default #GESAsset:proxy. The second will be the proxy that is
+'next in line' to be default, and so on.</doc>
+        <doc-deprecated xml:space="preserve">Use ges_asset_list_proxies_full() instead for MT-safety.</doc-deprecated>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-asset.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">The list of proxies
+that @asset has.</doc>
+          <type name="GLib.List" c:type="GList*">
+            <type name="Asset"/>
+          </type>
+        </return-value>
+        <parameters>
+          <instance-parameter name="asset" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">A #GESAsset</doc>
+            <type name="Asset" c:type="GESAsset*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="list_proxies_full" c:identifier="ges_asset_list_proxies_full" version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">Get all the proxies that the asset has. The first item of the list will
 be the default #GESAsset:proxy. The second will be the proxy that is
 'next in line' to be default, and so on.</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-asset.h"/>
-        <return-value transfer-ownership="none">
+        <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">The list of proxies
 that @asset has.</doc>
           <type name="GLib.List" c:type="GList*">
@@ -1344,8 +1416,11 @@ property name/value pairs</doc>
         </parameter>
       </parameters>
     </function-macro>
-    <function-macro name="CONTAINER_CHILDREN" c:identifier="GES_CONTAINER_CHILDREN" introspectable="0">
+    <function-macro name="CONTAINER_CHILDREN" c:identifier="GES_CONTAINER_CHILDREN" introspectable="0" deprecated="1" deprecated-version="1.30">
       <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-container.h">The #GList containing the children of @obj.</doc>
+      <doc-deprecated xml:space="preserve">Use ges_container_get_children() instead for MT-safety.
+The getter returns a newly allocated list of referenced children that must be freed.
+This macro returns an unreferenced pointer and is not MT-safe.</doc-deprecated>
       <source-position filename="../subprojects/gst-editing-services/ges/ges-container.h"/>
       <parameters>
         <parameter name="obj">
@@ -1354,7 +1429,10 @@ property name/value pairs</doc>
       </parameters>
     </function-macro>
     <function-macro name="CONTAINER_HEIGHT" c:identifier="GES_CONTAINER_HEIGHT" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-container.h">The #GESContainer:height of @obj.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-container.h">The #GESContainer:height of @obj.
+
+Note: This macro now calls ges_container_get_height() for MT-safety.
+It can no longer be used as an lvalue.</doc>
       <source-position filename="../subprojects/gst-editing-services/ges/ges-container.h"/>
       <parameters>
         <parameter name="obj">
@@ -1608,11 +1686,12 @@ if no track elements are created or an error occurred.</doc>
           </parameter>
         </parameters>
       </virtual-method>
-      <method name="add_asset" c:identifier="ges_clip_add_asset">
+      <method name="add_asset" c:identifier="ges_clip_add_asset" deprecated="1" deprecated-version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">Extracts a #GESTrackElement from an asset and adds it to the clip.
 This can be used to add effects that derive from the asset to the
 clip, but this method is not intended to be used to create the core
 elements of the clip.</doc>
+        <doc-deprecated xml:space="preserve">Use ges_clip_add_asset_full() instead for MT-safety.</doc-deprecated>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-clip.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">The newly created element, or
@@ -1631,7 +1710,75 @@ elements of the clip.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="add_child_to_track" c:identifier="ges_clip_add_child_to_track" version="1.18" throws="1">
+      <method name="add_asset_full" c:identifier="ges_clip_add_asset_full" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">Extracts a #GESTrackElement from an asset and adds it to the clip.
+This can be used to add effects that derive from the asset to the
+clip, but this method is not intended to be used to create the core
+elements of the clip.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-clip.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">The newly created element, or
+%NULL if an error occurred.</doc>
+          <type name="TrackElement" c:type="GESTrackElement*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="clip" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">A #GESClip</doc>
+            <type name="Clip" c:type="GESClip*"/>
+          </instance-parameter>
+          <parameter name="asset" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">An asset with #GES_TYPE_TRACK_ELEMENT as its
+#GESAsset:extractable-type</doc>
+            <type name="Asset" c:type="GESAsset*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="add_child_to_track" c:identifier="ges_clip_add_child_to_track" version="1.18" deprecated="1" deprecated-version="1.30" throws="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">Adds the track element child of the clip to a specific track.
+
+If the given child is already in another track, this will create a copy
+of the child, add it to the clip, and add this copy to the track.
+
+You should only call this whilst a clip is part of a #GESTimeline, and
+for tracks that are in the same timeline.
+
+This method is an alternative to using the
+#GESTimeline::select-tracks-for-object signal, but can be used to
+complement it when, say, you wish to copy a clip's children from one
+track into a new one.
+
+When the child is a core child, it must be added to a track that does
+not already contain another core child of the same clip. If it is not a
+core child (an additional effect), then it must be added to a track
+that already contains one of the core children of the same clip.
+
+This method can also fail if the adding the track element to the track
+would break a configuration rule of the corresponding #GESTimeline,
+such as causing three sources to overlap at a single time, or causing
+a source to completely overlap another in the same track.</doc>
+        <doc-deprecated xml:space="preserve">Use ges_clip_add_child_to_track_full() instead for MT-safety.</doc-deprecated>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-clip.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">The element that was added to @track, either
+@child or a copy of child, or %NULL if the element could not be added.</doc>
+          <type name="TrackElement" c:type="GESTrackElement*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="clip" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">A #GESClip</doc>
+            <type name="Clip" c:type="GESClip*"/>
+          </instance-parameter>
+          <parameter name="child" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">A child of @clip</doc>
+            <type name="TrackElement" c:type="GESTrackElement*"/>
+          </parameter>
+          <parameter name="track" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">The track to add @child to</doc>
+            <type name="Track" c:type="GESTrack*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="add_child_to_track_full" c:identifier="ges_clip_add_child_to_track_full" version="1.30" throws="1">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">Adds the track element child of the clip to a specific track.
 
 If the given child is already in another track, this will create a copy
@@ -1655,7 +1802,7 @@ would break a configuration rule of the corresponding #GESTimeline,
 such as causing three sources to overlap at a single time, or causing
 a source to completely overlap another in the same track.</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-clip.h"/>
-        <return-value transfer-ownership="none">
+        <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">The element that was added to @track, either
 @child or a copy of child, or %NULL if the element could not be added.</doc>
           <type name="TrackElement" c:type="GESTrackElement*"/>
@@ -2836,6 +2983,20 @@ themselves, and so on.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="get_height" c:identifier="ges_container_get_height" glib:get-property="height" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-container.c">Gets the #GESContainer:height of the container.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-container.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-container.c">The height of @container.</doc>
+          <type name="guint32" c:type="guint32"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="container" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-container.c">A #GESContainer</doc>
+            <type name="Container" c:type="GESContainer*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="remove" c:identifier="ges_container_remove">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-container.c">Removes a timeline element from the container. The element will no
 longer be controlled by the container.</doc>
@@ -2886,7 +3047,7 @@ new #GESContainer-s created from the splitting of @container.</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="height" transfer-ownership="none" default-value="1">
+      <property name="height" transfer-ownership="none" getter="get_height" default-value="1">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-container.c">The span of the container's children's #GESTimelineElement:priority
 values, which is the number of integers that lie between (inclusive)
 the minimum and maximum priorities found amongst the container's
@@ -3954,10 +4115,26 @@ its asset.</doc>
           </parameter>
         </parameters>
       </virtual-method>
-      <method name="get_asset" c:identifier="ges_extractable_get_asset">
+      <method name="get_asset" c:identifier="ges_extractable_get_asset" deprecated="1" deprecated-version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-extractable.c">Get the asset that has been set on the extractable object.</doc>
+        <doc-deprecated xml:space="preserve">Use ges_extractable_get_asset_full() instead for MT-safety.</doc-deprecated>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-extractable.h"/>
         <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-extractable.c">The asset set on @self, or %NULL
+if no asset has been set.</doc>
+          <type name="Asset" c:type="GESAsset*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-extractable.c">A #GESExtractable</doc>
+            <type name="Extractable" c:type="GESExtractable*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_asset_full" c:identifier="ges_extractable_get_asset_full" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-extractable.c">Get the asset that has been set on the extractable object.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-extractable.h"/>
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-extractable.c">The asset set on @self, or %NULL
 if no asset has been set.</doc>
           <type name="Asset" c:type="GESAsset*"/>
@@ -4285,11 +4462,21 @@ or FALSE if not.</doc>
           </parameter>
         </parameters>
       </function>
-      <function name="get_default" c:identifier="ges_formatter_get_default">
+      <function name="get_default" c:identifier="ges_formatter_get_default" deprecated="1" deprecated-version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-formatter.c">Get the default #GESAsset to use as formatter. It will return
+the asset for the #GESFormatter that has the highest @rank</doc>
+        <doc-deprecated xml:space="preserve">Use ges_formatter_get_default_full() instead for MT-safety.</doc-deprecated>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-formatter.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-formatter.c">The #GESAsset for the formatter with highest @rank</doc>
+          <type name="Asset" c:type="GESAsset*"/>
+        </return-value>
+      </function>
+      <function name="get_default_full" c:identifier="ges_formatter_get_default_full" version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-formatter.c">Get the default #GESAsset to use as formatter. It will return
 the asset for the #GESFormatter that has the highest @rank</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-formatter.h"/>
-        <return-value transfer-ownership="none">
+        <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-formatter.c">The #GESAsset for the formatter with highest @rank</doc>
           <type name="Asset" c:type="GESAsset*"/>
         </return-value>
@@ -5071,10 +5258,27 @@ index in the timeline. See ges_timeline_move_layer().</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_timeline" c:identifier="ges_layer_get_timeline">
+      <method name="get_timeline" c:identifier="ges_layer_get_timeline" deprecated="1" deprecated-version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-layer.c">Gets the timeline that the layer is a part of.</doc>
+        <doc-deprecated xml:space="preserve">Use ges_layer_get_timeline_full() instead for MT-safety.</doc-deprecated>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-layer.h"/>
         <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-layer.c">The timeline that @layer
+is currently part of, or %NULL if it is not associated with any
+timeline.</doc>
+          <type name="Timeline" c:type="GESTimeline*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="layer" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-layer.c">The #GESLayer</doc>
+            <type name="Layer" c:type="GESLayer*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_timeline_full" c:identifier="ges_layer_get_timeline_full" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-layer.c">Gets the timeline that the layer is a part of.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-layer.h"/>
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-layer.c">The timeline that @layer
 is currently part of, or %NULL if it is not associated with any
 timeline.</doc>
@@ -5463,7 +5667,8 @@ assets (string).</doc>
           <type name="MarkerList" c:type="GESMarkerList*"/>
         </return-value>
       </constructor>
-      <method name="add" c:identifier="ges_marker_list_add" version="1.18">
+      <method name="add" c:identifier="ges_marker_list_add" version="1.18" deprecated="1" deprecated-version="1.30">
+        <doc-deprecated xml:space="preserve">Use ges_marker_list_add_full() instead for MT-safety.</doc-deprecated>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-marker-list.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-marker-list.c">The newly-added marker, the list keeps ownership
@@ -5472,6 +5677,26 @@ of the marker</doc>
         </return-value>
         <parameters>
           <instance-parameter name="list" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-marker-list.c">A #GESMarkerList</doc>
+            <type name="MarkerList" c:type="GESMarkerList*"/>
+          </instance-parameter>
+          <parameter name="position" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-marker-list.c">The position of the new marker</doc>
+            <type name="Gst.ClockTime" c:type="GstClockTime"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="add_full" c:identifier="ges_marker_list_add_full" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-marker-list.c">Adds a new marker to the list at the given position. The caller owns a
+reference to the returned marker.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-marker-list.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-marker-list.c">The newly-added marker</doc>
+          <type name="Marker" c:type="GESMarker*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="list" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-marker-list.c">A #GESMarkerList</doc>
             <type name="MarkerList" c:type="GESMarkerList*"/>
           </instance-parameter>
           <parameter name="position" transfer-ownership="none">
@@ -5909,8 +6134,9 @@ or %NULL if it could not be fetched.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="get_meta" c:identifier="ges_meta_container_get_meta">
+      <method name="get_meta" c:identifier="ges_meta_container_get_meta" deprecated="1" deprecated-version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-meta-container.c">Gets the current value of the specified field of the meta container.</doc>
+        <doc-deprecated xml:space="preserve">Use ges_meta_container_get_meta_full() instead for MT-safety.</doc-deprecated>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-meta-container.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-meta-container.c">The value under @key, or %NULL if @container
@@ -5928,15 +6154,64 @@ does not have the field set.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="get_string" c:identifier="ges_meta_container_get_string">
+      <method name="get_meta_full" c:identifier="ges_meta_container_get_meta_full" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-meta-container.c">Gets a copy of the current value of the specified field of the meta
+container. The @dest parameter should be an uninitialized #GValue; the
+function will initialize it with the appropriate type and copy the value.
+The caller is responsible for calling g_value_unset() on @dest when done.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-meta-container.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-meta-container.c">%TRUE if the value was successfully copied to @dest, %FALSE if
+@container does not have the field set.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="container" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-meta-container.c">A #GESMetaContainer</doc>
+            <type name="MetaContainer" c:type="GESMetaContainer*"/>
+          </instance-parameter>
+          <parameter name="key" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-meta-container.c">The key for the @container field to get</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="dest" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-meta-container.c">An uninitialized #GValue to copy the value into</doc>
+            <type name="GObject.Value" c:type="GValue*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_string" c:identifier="ges_meta_container_get_string" deprecated="1" deprecated-version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-meta-container.c">Gets the current string value of the specified field of the meta
 container. If the field does not have a set value, or it is of the
 wrong type, the method will fail.</doc>
+        <doc-deprecated xml:space="preserve">Use ges_meta_container_get_string_full() instead for MT-safety.</doc-deprecated>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-meta-container.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-meta-container.c">The string value under @meta_item, or %NULL
 if it could not be fetched.</doc>
           <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="container" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-meta-container.c">A #GESMetaContainer</doc>
+            <type name="MetaContainer" c:type="GESMetaContainer*"/>
+          </instance-parameter>
+          <parameter name="meta_item" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-meta-container.c">The key for the @container field to get</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_string_full" c:identifier="ges_meta_container_get_string_full" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-meta-container.c">Gets a copy of the current string value of the specified field of the
+meta container. If the field does not have a set value, or it is of the
+wrong type, the method will fail.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-meta-container.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-meta-container.c">A copy of the string value under
+@meta_item, or %NULL if it could not be fetched. Free with g_free() when
+no longer needed.</doc>
+          <type name="utf8" c:type="gchar*"/>
         </return-value>
         <parameters>
           <instance-parameter name="container" transfer-ownership="none">
@@ -7697,14 +7972,36 @@ all assets</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="list_encoding_profiles" c:identifier="ges_project_list_encoding_profiles">
+      <method name="list_encoding_profiles" c:identifier="ges_project_list_encoding_profiles" deprecated="1" deprecated-version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">Lists the encoding profile that have been set to @project. The first one
 is the latest added.</doc>
+        <doc-deprecated xml:space="preserve">Use ges_project_list_encoding_profiles_full() instead for MT-safety.</doc-deprecated>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">The
 list of #GstEncodingProfile used in @project</doc>
           <type name="GLib.List" c:type="const GList*">
+            <type name="GstPbutils.EncodingProfile"/>
+          </type>
+        </return-value>
+        <parameters>
+          <instance-parameter name="project" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">A #GESProject</doc>
+            <type name="Project" c:type="GESProject*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="list_encoding_profiles_full" c:identifier="ges_project_list_encoding_profiles_full" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">Lists the encoding profiles that have been set to @project. The first one
+is the latest added. Each profile in the returned list has its reference
+count incremented.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">A
+newly-allocated list of #GstEncodingProfile used in @project, with references
+added to each profile. Free the list with g_list_free_full() using
+gst_object_unref() as the free function.</doc>
+          <type name="GLib.List" c:type="GList*">
             <type name="GstPbutils.EncodingProfile"/>
           </type>
         </return-value>
@@ -8234,7 +8531,10 @@ or %NULL if there was an error.</doc>
       <source-position filename="../subprojects/gst-editing-services/ges/ges-source.h"/>
     </record>
     <function-macro name="TIMELINE_ELEMENT_DURATION" c:identifier="GES_TIMELINE_ELEMENT_DURATION" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h">The #GESTimelineElement:duration of @obj.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h">The #GESTimelineElement:duration of @obj.
+
+Note: This macro now calls ges_timeline_element_get_duration() for MT-safety.
+It can no longer be used as an lvalue.</doc>
       <source-position filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h"/>
       <parameters>
         <parameter name="obj">
@@ -8244,7 +8544,9 @@ or %NULL if there was an error.</doc>
     </function-macro>
     <function-macro name="TIMELINE_ELEMENT_END" c:identifier="GES_TIMELINE_ELEMENT_END" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h">The end position of @obj: #GESTimelineElement:start +
-#GESTimelineElement:duration.</doc>
+#GESTimelineElement:duration.
+
+Note: This macro now calls getters for MT-safety.</doc>
       <source-position filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h"/>
       <parameters>
         <parameter name="obj">
@@ -8253,7 +8555,10 @@ or %NULL if there was an error.</doc>
       </parameters>
     </function-macro>
     <function-macro name="TIMELINE_ELEMENT_INPOINT" c:identifier="GES_TIMELINE_ELEMENT_INPOINT" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h">The #GESTimelineElement:in-point of @obj.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h">The #GESTimelineElement:in-point of @obj.
+
+Note: This macro now calls ges_timeline_element_get_inpoint() for MT-safety.
+It can no longer be used as an lvalue.</doc>
       <source-position filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h"/>
       <parameters>
         <parameter name="obj">
@@ -8271,7 +8576,10 @@ or %NULL if there was an error.</doc>
       </parameters>
     </function-macro>
     <function-macro name="TIMELINE_ELEMENT_MAX_DURATION" c:identifier="GES_TIMELINE_ELEMENT_MAX_DURATION" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h">The #GESTimelineElement:max-duration of @obj.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h">The #GESTimelineElement:max-duration of @obj.
+
+Note: This macro now calls ges_timeline_element_get_max_duration() for MT-safety.
+It can no longer be used as an lvalue.</doc>
       <source-position filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h"/>
       <parameters>
         <parameter name="obj">
@@ -8279,8 +8587,11 @@ or %NULL if there was an error.</doc>
         </parameter>
       </parameters>
     </function-macro>
-    <function-macro name="TIMELINE_ELEMENT_NAME" c:identifier="GES_TIMELINE_ELEMENT_NAME" introspectable="0">
+    <function-macro name="TIMELINE_ELEMENT_NAME" c:identifier="GES_TIMELINE_ELEMENT_NAME" introspectable="0" deprecated="1" deprecated-version="1.30">
       <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h">The #GESTimelineElement:name of @obj.</doc>
+      <doc-deprecated xml:space="preserve">Use ges_timeline_element_get_name() instead for MT-safety.
+The getter returns a newly allocated string that must be freed when done.
+This macro returns an unreferenced pointer and is not MT-safe.</doc-deprecated>
       <source-position filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h"/>
       <parameters>
         <parameter name="obj">
@@ -8293,8 +8604,11 @@ or %NULL if there was an error.</doc>
       <source-position filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h"/>
       <type name="guint32" c:type="guint32"/>
     </constant>
-    <function-macro name="TIMELINE_ELEMENT_PARENT" c:identifier="GES_TIMELINE_ELEMENT_PARENT" introspectable="0">
+    <function-macro name="TIMELINE_ELEMENT_PARENT" c:identifier="GES_TIMELINE_ELEMENT_PARENT" introspectable="0" deprecated="1" deprecated-version="1.30">
       <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h">The #GESTimelineElement:parent of @obj.</doc>
+      <doc-deprecated xml:space="preserve">Use ges_timeline_element_get_parent() instead for MT-safety.
+The getter returns a referenced object that must be unreffed when done.
+This macro returns an unreferenced pointer and is not MT-safe.</doc-deprecated>
       <source-position filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h"/>
       <parameters>
         <parameter name="obj">
@@ -8303,7 +8617,10 @@ or %NULL if there was an error.</doc>
       </parameters>
     </function-macro>
     <function-macro name="TIMELINE_ELEMENT_PRIORITY" c:identifier="GES_TIMELINE_ELEMENT_PRIORITY" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h">The #GESTimelineElement:priority of @obj.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h">The #GESTimelineElement:priority of @obj.
+
+Note: This macro now calls ges_timeline_element_get_priority() for MT-safety.
+It can no longer be used as an lvalue.</doc>
       <source-position filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h"/>
       <parameters>
         <parameter name="obj">
@@ -8312,7 +8629,10 @@ or %NULL if there was an error.</doc>
       </parameters>
     </function-macro>
     <function-macro name="TIMELINE_ELEMENT_START" c:identifier="GES_TIMELINE_ELEMENT_START" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h">The #GESTimelineElement:start of @obj.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h">The #GESTimelineElement:start of @obj.
+
+Note: This macro now calls ges_timeline_element_get_start() for MT-safety.
+It can no longer be used as an lvalue.</doc>
       <source-position filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h"/>
       <parameters>
         <parameter name="obj">
@@ -8320,8 +8640,11 @@ or %NULL if there was an error.</doc>
         </parameter>
       </parameters>
     </function-macro>
-    <function-macro name="TIMELINE_ELEMENT_TIMELINE" c:identifier="GES_TIMELINE_ELEMENT_TIMELINE" introspectable="0">
+    <function-macro name="TIMELINE_ELEMENT_TIMELINE" c:identifier="GES_TIMELINE_ELEMENT_TIMELINE" introspectable="0" deprecated="1" deprecated-version="1.30">
       <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h">The #GESTimelineElement:timeline of @obj.</doc>
+      <doc-deprecated xml:space="preserve">Use ges_timeline_element_get_timeline() instead for MT-safety.
+The getter returns a referenced object that must be unreffed when done.
+This macro returns an unreferenced pointer and is not MT-safe.</doc-deprecated>
       <source-position filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h"/>
       <parameters>
         <parameter name="obj">
@@ -9647,13 +9970,31 @@ an element within the timeline.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="get_groups" c:identifier="ges_timeline_get_groups">
+      <method name="get_groups" c:identifier="ges_timeline_get_groups" deprecated="1" deprecated-version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline.c">Get the list of #GESGroup-s present in the timeline.</doc>
+        <doc-deprecated xml:space="preserve">Use ges_timeline_get_groups_full() instead for MT-safety.</doc-deprecated>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-timeline.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline.c">The list of
 groups that contain clips present in @timeline's layers.
 Must not be changed.</doc>
+          <type name="GLib.List" c:type="GList*">
+            <type name="Group"/>
+          </type>
+        </return-value>
+        <parameters>
+          <instance-parameter name="timeline" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline.c">The #GESTimeline</doc>
+            <type name="Timeline" c:type="GESTimeline*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_groups_full" c:identifier="ges_timeline_get_groups_full" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline.c">Get the list of #GESGroup-s present in the timeline.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-timeline.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline.c">The list of
+groups that contain clips present in @timeline's layers.</doc>
           <type name="GLib.List" c:type="GList*">
             <type name="Group"/>
           </type>
@@ -9738,10 +10079,30 @@ or %NULL if there is an error.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_track_for_pad" c:identifier="ges_timeline_get_track_for_pad">
+      <method name="get_track_for_pad" c:identifier="ges_timeline_get_track_for_pad" deprecated="1" deprecated-version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline.c">Search for the #GESTrack corresponding to the given timeline's pad.</doc>
+        <doc-deprecated xml:space="preserve">Use ges_timeline_get_track_for_pad_full() instead for MT-safety.</doc-deprecated>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-timeline.h"/>
         <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline.c">The track corresponding to @pad,
+or %NULL if there is an error.</doc>
+          <type name="Track" c:type="GESTrack*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="timeline" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline.c">The #GESTimeline</doc>
+            <type name="Timeline" c:type="GESTimeline*"/>
+          </instance-parameter>
+          <parameter name="pad" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline.c">A pad</doc>
+            <type name="Gst.Pad" c:type="GstPad*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_track_for_pad_full" c:identifier="ges_timeline_get_track_for_pad_full" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline.c">Search for the #GESTrack corresponding to the given timeline's pad.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-timeline.h"/>
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline.c">The track corresponding to @pad,
 or %NULL if there is an error.</doc>
           <type name="Track" c:type="GESTrack*"/>
@@ -13418,12 +13779,27 @@ needed to be committed.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_caps" c:identifier="ges_track_get_caps" glib:get-property="caps">
+      <method name="get_caps" c:identifier="ges_track_get_caps" glib:get-property="caps" deprecated="1" deprecated-version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track.c">Get the #GESTrack:caps of the track.</doc>
+        <doc-deprecated xml:space="preserve">Use ges_track_get_caps_full() instead for MT-safety.</doc-deprecated>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-track.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track.c">The caps of @track.</doc>
           <type name="Gst.Caps" c:type="const GstCaps*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="track" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track.c">A #GESTrack</doc>
+            <type name="Track" c:type="GESTrack*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_caps_full" c:identifier="ges_track_get_caps_full" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track.c">Get the #GESTrack:caps of the track.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-track.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track.c">The caps of @track.</doc>
+          <type name="Gst.Caps" c:type="GstCaps*"/>
         </return-value>
         <parameters>
           <instance-parameter name="track" transfer-ownership="none">
@@ -13479,13 +13855,29 @@ all the #GESTrackElement-s in @track.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_timeline" c:identifier="ges_track_get_timeline">
+      <method name="get_timeline" c:identifier="ges_track_get_timeline" deprecated="1" deprecated-version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track.c">Get the timeline this track belongs to.</doc>
+        <doc-deprecated xml:space="preserve">Use ges_track_get_timeline_full() instead for MT-safety.</doc-deprecated>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-track.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track.c">The timeline that @track belongs to, or %NULL if
 it does not belong to a timeline.</doc>
           <type name="Timeline" c:type="const GESTimeline*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="track" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track.c">A #GESTrack</doc>
+            <type name="Track" c:type="GESTrack*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_timeline_full" c:identifier="ges_track_get_timeline_full" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track.c">Get the timeline this track belongs to.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-track.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track.c">The timeline that @track belongs to,
+or %NULL if it does not belong to a timeline.</doc>
+          <type name="Timeline" c:type="GESTimeline*"/>
         </return-value>
         <parameters>
           <instance-parameter name="track" transfer-ownership="none">
@@ -14034,7 +14426,32 @@ timeline</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="get_all_control_bindings" c:identifier="ges_track_element_get_all_control_bindings">
+      <method name="get_all_control_bindings" c:identifier="ges_track_element_get_all_control_bindings" deprecated="1" deprecated-version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">Get all the control bindings that have been created for the children
+properties of the track element using
+ges_track_element_set_control_source(). The keys used in the returned
+hash table are the child property names that were passed to
+ges_track_element_set_control_source(), and their values are the
+corresponding created #GstControlBinding.</doc>
+        <doc-deprecated xml:space="preserve">Use ges_track_element_get_all_control_bindings_full() instead for MT-safety.</doc-deprecated>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-track-element.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">A
+hash table containing all child-property-name/control-binding pairs
+for @trackelement.</doc>
+          <type name="GLib.HashTable" c:type="GHashTable*">
+            <type name="utf8"/>
+            <type name="Gst.ControlBinding"/>
+          </type>
+        </return-value>
+        <parameters>
+          <instance-parameter name="trackelement" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">A #GESTrackElement</doc>
+            <type name="TrackElement" c:type="GESTrackElement*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_all_control_bindings_full" c:identifier="ges_track_element_get_all_control_bindings_full" version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">Get all the control bindings that have been created for the children
 properties of the track element using
 ges_track_element_set_control_source(). The keys used in the returned
@@ -14042,7 +14459,7 @@ hash table are the child property names that were passed to
 ges_track_element_set_control_source(), and their values are the
 corresponding created #GstControlBinding.</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-track-element.h"/>
-        <return-value transfer-ownership="none">
+        <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">A
 hash table containing all child-property-name/control-binding pairs
 for @trackelement.</doc>
@@ -14176,12 +14593,13 @@ name/return location pairs, followed by NULL</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="get_control_binding" c:identifier="ges_track_element_get_control_binding">
+      <method name="get_control_binding" c:identifier="ges_track_element_get_control_binding" deprecated="1" deprecated-version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">Gets the control binding that was created for the specified child
 property of the track element using
 ges_track_element_set_control_source(). The given @property_name must
 be the same name of the child property that was passed to
 ges_track_element_set_control_source().</doc>
+        <doc-deprecated xml:space="preserve">Use ges_track_element_get_control_binding_full() instead for MT-safety.</doc-deprecated>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-track-element.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">The control binding that was
@@ -14201,11 +14619,53 @@ binding of</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="get_element" c:identifier="ges_track_element_get_element">
+      <method name="get_control_binding_full" c:identifier="ges_track_element_get_control_binding_full" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">Gets the control binding that was created for the specified child
+property of the track element using
+ges_track_element_set_control_source(). The given @property_name must
+be the same name of the child property that was passed to
+ges_track_element_set_control_source().</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-track-element.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">The control binding that was
+created for the specified child property of @object, or %NULL if
+@property_name does not correspond to any control binding.</doc>
+          <type name="Gst.ControlBinding" c:type="GstControlBinding*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="object" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">A #GESTrackElement</doc>
+            <type name="TrackElement" c:type="GESTrackElement*"/>
+          </instance-parameter>
+          <parameter name="property_name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">The name of the child property to return the control
+binding of</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_element" c:identifier="ges_track_element_get_element" deprecated="1" deprecated-version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">Get the #GstElement that the track element's underlying nleobject
+controls.</doc>
+        <doc-deprecated xml:space="preserve">Use ges_track_element_get_element_full() instead for MT-safety.</doc-deprecated>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-track-element.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">The #GstElement being controlled by the
+nleobject that @object wraps.</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="object" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">A #GESTrackElement</doc>
+            <type name="TrackElement" c:type="GESTrackElement*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_element_full" c:identifier="ges_track_element_get_element_full" version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">Get the #GstElement that the track element's underlying nleobject
 controls.</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-track-element.h"/>
-        <return-value transfer-ownership="none" nullable="1">
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">The #GstElement being controlled by the
 nleobject that @object wraps.</doc>
           <type name="Gst.Element" c:type="GstElement*"/>
@@ -14232,8 +14692,9 @@ nleobject that @object wraps.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_nleobject" c:identifier="ges_track_element_get_nleobject" version="1.6">
+      <method name="get_nleobject" c:identifier="ges_track_element_get_nleobject" version="1.6" deprecated="1" deprecated-version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">Get the nleobject that this element wraps.</doc>
+        <doc-deprecated xml:space="preserve">Use ges_track_element_get_nleobject_full() instead for MT-safety.</doc-deprecated>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-track-element.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">The nleobject that @object wraps.</doc>
@@ -14246,10 +14707,40 @@ nleobject that @object wraps.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_track" c:identifier="ges_track_element_get_track" glib:get-property="track">
+      <method name="get_nleobject_full" c:identifier="ges_track_element_get_nleobject_full" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">Get the nleobject that this element wraps.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-track-element.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">The nleobject that @object wraps.</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="object" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">A #GESTrackElement</doc>
+            <type name="TrackElement" c:type="GESTrackElement*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_track" c:identifier="ges_track_element_get_track" glib:get-property="track" deprecated="1" deprecated-version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">Get the #GESTrackElement:track for the element.</doc>
+        <doc-deprecated xml:space="preserve">Use ges_track_element_get_track_full() instead for MT-safety.</doc-deprecated>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-track-element.h"/>
         <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">The track that @object belongs to,
+or %NULL if it does not belong to a track.</doc>
+          <type name="Track" c:type="GESTrack*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="object" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">A #GESTrackElement</doc>
+            <type name="TrackElement" c:type="GESTrackElement*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_track_full" c:identifier="ges_track_element_get_track_full" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">Get the #GESTrackElement:track for the element.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-track-element.h"/>
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">The track that @object belongs to,
 or %NULL if it does not belong to a track.</doc>
           <type name="Track" c:type="GESTrack*"/>
@@ -16507,12 +16998,28 @@ After this call GES should not be used until another ges_init() call.</doc>
         <type name="GLib.Quark" c:type="GQuark"/>
       </return-value>
     </function>
-    <function name="find_formatter_for_uri" c:identifier="ges_find_formatter_for_uri" version="1.18">
+    <function name="find_formatter_for_uri" c:identifier="ges_find_formatter_for_uri" version="1.18" deprecated="1" deprecated-version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-formatter.c">Get the best formatter for @uri. It tries to find a formatter
+compatible with @uri extension, if none is found, it returns the default
+formatter asset.</doc>
+      <doc-deprecated xml:space="preserve">Use ges_find_formatter_for_uri_full() instead for MT-safety.</doc-deprecated>
+      <source-position filename="../subprojects/gst-editing-services/ges/ges-formatter.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-formatter.c">The #GESAsset for the best formatter to save to @uri</doc>
+        <type name="Asset" c:type="GESAsset*"/>
+      </return-value>
+      <parameters>
+        <parameter name="uri" transfer-ownership="none">
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="find_formatter_for_uri_full" c:identifier="ges_find_formatter_for_uri_full" version="1.30">
       <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-formatter.c">Get the best formatter for @uri. It tries to find a formatter
 compatible with @uri extension, if none is found, it returns the default
 formatter asset.</doc>
       <source-position filename="../subprojects/gst-editing-services/ges/ges-formatter.h"/>
-      <return-value transfer-ownership="none">
+      <return-value transfer-ownership="full">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-formatter.c">The #GESAsset for the best formatter to save to @uri</doc>
         <type name="Asset" c:type="GESAsset*"/>
       </return-value>

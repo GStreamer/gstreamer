@@ -118,8 +118,10 @@ GList * ges_project_get_loading_assets          (GESProject * project) G_GNUC_WA
 GES_API
 gboolean ges_project_add_encoding_profile       (GESProject *project,
                                                  GstEncodingProfile *profile);
-GES_API
+GES_DEPRECATED_FOR(ges_project_list_encoding_profiles_full)
 const GList *ges_project_list_encoding_profiles (GESProject *project);
+GES_API
+GList *ges_project_list_encoding_profiles_full  (GESProject *project) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
 gboolean ges_add_missing_uri_relocation_uri    (const gchar * uri,
                                                 gboolean recurse);

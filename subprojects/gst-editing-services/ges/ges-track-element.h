@@ -145,8 +145,10 @@ struct _GESTrackElementClass {
   } ABI;
 };
 
-GES_API
+GES_DEPRECATED_FOR(ges_track_element_get_track_full)
 GESTrack* ges_track_element_get_track          (GESTrackElement * object);
+GES_API
+GESTrack* ges_track_element_get_track_full     (GESTrackElement * object);
 
 GES_API
 GESTrackType ges_track_element_get_track_type  (GESTrackElement * object);
@@ -154,11 +156,15 @@ GES_API
 void ges_track_element_set_track_type          (GESTrackElement * object,
                                                GESTrackType     type);
 
-GES_API
+GES_DEPRECATED_FOR(ges_track_element_get_nleobject_full)
 GstElement * ges_track_element_get_nleobject   (GESTrackElement * object);
-
 GES_API
+GstElement * ges_track_element_get_nleobject_full (GESTrackElement * object);
+
+GES_DEPRECATED_FOR(ges_track_element_get_element_full)
 GstElement * ges_track_element_get_element     (GESTrackElement * object);
+GES_API
+GstElement * ges_track_element_get_element_full (GESTrackElement * object);
 
 GES_API
 gboolean ges_track_element_is_core             (GESTrackElement * object);
@@ -198,8 +204,12 @@ ges_track_element_set_auto_clamp_control_sources (GESTrackElement * object,
 GES_API gboolean
 ges_track_element_get_auto_clamp_control_sources (GESTrackElement * object);
 
-GES_API GstControlBinding *
+GES_DEPRECATED_FOR(ges_track_element_get_control_binding_full)
+GstControlBinding *
 ges_track_element_get_control_binding         (GESTrackElement *object,
+                                               const gchar *property_name);
+GES_API GstControlBinding *
+ges_track_element_get_control_binding_full    (GESTrackElement *object,
                                                const gchar *property_name);
 GES_API void
 ges_track_element_add_children_props          (GESTrackElement *self,
@@ -207,8 +217,11 @@ ges_track_element_add_children_props          (GESTrackElement *self,
                                                const gchar ** wanted_categories,
                                                const gchar **blacklist,
                                                const gchar **whitelist);
-GES_API GHashTable *
+GES_DEPRECATED_FOR(ges_track_element_get_all_control_bindings_full)
+GHashTable *
 ges_track_element_get_all_control_bindings    (GESTrackElement * trackelement);
+GES_API GHashTable *
+ges_track_element_get_all_control_bindings_full (GESTrackElement * trackelement);
 GES_API gboolean
 ges_track_element_remove_control_binding      (GESTrackElement * object,
                                                const gchar * property_name);

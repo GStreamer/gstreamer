@@ -149,10 +149,14 @@ gboolean ges_formatter_save_to_uri      (GESFormatter * formatter,
                                          gboolean overwrite,
                                          GError **error);
 
-GES_API
+GES_DEPRECATED_FOR(ges_formatter_get_default_full)
 GESAsset *ges_formatter_get_default    (void);
-
 GES_API
+GESAsset *ges_formatter_get_default_full(void) G_GNUC_WARN_UNUSED_RESULT;
+
+GES_DEPRECATED_FOR(ges_find_formatter_for_uri_full)
 GESAsset *ges_find_formatter_for_uri   (const gchar *uri);
+GES_API
+GESAsset *ges_find_formatter_for_uri_full(const gchar *uri) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS

@@ -1025,6 +1025,12 @@ ges_track_set_timeline (GESTrack * track, GESTimeline * timeline)
   g_return_if_fail (timeline == NULL || GES_IS_TIMELINE (timeline));
   GST_DEBUG ("track:%p, timeline:%p", track, timeline);
 
+  /* Take api_lock to protect trackelements_by_start access.
+   * When adding to timeline, track->priv->timeline is NULL, so other
+   * operations using _LOCK would use api_lock anyway.
+   * When removing from timeline, this provides consistent protection. */
+  g_rec_mutex_lock (&track->priv->api_lock);
+
   for (it = g_sequence_get_begin_iter (track->priv->trackelements_by_start);
       g_sequence_iter_is_end (it) == FALSE; it = g_sequence_iter_next (it)) {
     GESTimelineElement *trackelement =
@@ -1037,6 +1043,8 @@ ges_track_set_timeline (GESTrack * track, GESTimeline * timeline)
   g_mutex_unlock (&track->priv->timeline_lock);
 
   track_resort_and_fill_gaps (track);
+
+  g_rec_mutex_unlock (&track->priv->api_lock);
 }
 
 /**
@@ -1437,14 +1445,46 @@ ges_track_remove_element (GESTrack * track, GESTrackElement * object)
  *
  * Get the #GESTrack:caps of the track.
  *
- * Returns: (nullable): The caps of @track.
+ * Returns: (transfer none) (nullable): The caps of @track.
+ *
+ * Deprecated: 1.30: Use ges_track_get_caps_full() instead for MT-safety.
  */
 const GstCaps *
 ges_track_get_caps (GESTrack * track)
 {
+  const GstCaps *res;
+
   g_return_val_if_fail (GES_IS_TRACK (track), NULL);
 
-  return track->priv->caps;
+  _LOCK (track);
+  res = track->priv->caps;
+  _UNLOCK (track);
+
+  return res;
+}
+
+/**
+ * ges_track_get_caps_full:
+ * @track: A #GESTrack
+ *
+ * Get the #GESTrack:caps of the track.
+ *
+ * Returns: (transfer full) (nullable): The caps of @track.
+ *
+ * Since: 1.30
+ */
+GstCaps *
+ges_track_get_caps_full (GESTrack * track)
+{
+  GstCaps *res;
+
+  g_return_val_if_fail (GES_IS_TRACK (track), NULL);
+
+  _LOCK (track);
+  res = track->priv->caps ? gst_caps_ref (track->priv->caps) : NULL;
+  _UNLOCK (track);
+
+  return res;
 }
 
 /**
@@ -1455,13 +1495,48 @@ ges_track_get_caps (GESTrack * track)
  *
  * Returns: (nullable): The timeline that @track belongs to, or %NULL if
  * it does not belong to a timeline.
+ *
+ * Deprecated: 1.30: Use ges_track_get_timeline_full() instead for MT-safety.
  */
 const GESTimeline *
 ges_track_get_timeline (GESTrack * track)
 {
+  const GESTimeline *res;
+
   g_return_val_if_fail (GES_IS_TRACK (track), NULL);
 
-  return track->priv->timeline;
+  _LOCK (track);
+  res = track->priv->timeline;
+  _UNLOCK (track);
+
+  return res;
+}
+
+/**
+ * ges_track_get_timeline_full:
+ * @track: A #GESTrack
+ *
+ * Get the timeline this track belongs to.
+ *
+ * Returns: (transfer full) (nullable): The timeline that @track belongs to,
+ * or %NULL if it does not belong to a timeline.
+ *
+ * Since: 1.30
+ */
+GESTimeline *
+ges_track_get_timeline_full (GESTrack * track)
+{
+  GESTimeline *res;
+
+  g_return_val_if_fail (GES_IS_TRACK (track), NULL);
+
+  _LOCK (track);
+  res = track->priv->timeline;
+  if (res)
+    gst_object_ref (res);
+  _UNLOCK (track);
+
+  return res;
 }
 
 /**

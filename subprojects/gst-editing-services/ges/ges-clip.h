@@ -148,9 +148,12 @@ GESTrackType      ges_clip_get_supported_formats  (GESClip *clip);
 GES_API
 void              ges_clip_set_supported_formats  (GESClip *clip,
                                                    GESTrackType supportedformats);
-GES_API
+GES_DEPRECATED_FOR(ges_clip_add_asset_full)
 GESTrackElement*  ges_clip_add_asset              (GESClip *clip,
                                                    GESAsset *asset);
+GES_API
+GESTrackElement*  ges_clip_add_asset_full         (GESClip *clip,
+                                                   GESAsset *asset) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
 GESTrackElement*  ges_clip_find_track_element     (GESClip *clip,
                                                    GESTrack *track,
@@ -161,11 +164,16 @@ GList *           ges_clip_find_track_elements    (GESClip * clip,
                                                    GESTrackType track_type,
                                                    GType type) G_GNUC_WARN_UNUSED_RESULT;
 
-GES_API
+GES_DEPRECATED_FOR(ges_clip_add_child_to_track_full)
 GESTrackElement * ges_clip_add_child_to_track     (GESClip * clip,
                                                    GESTrackElement * child,
                                                    GESTrack * track,
                                                    GError ** error);
+GES_API
+GESTrackElement * ges_clip_add_child_to_track_full(GESClip * clip,
+                                                   GESTrackElement * child,
+                                                   GESTrack * track,
+                                                   GError ** error) G_GNUC_WARN_UNUSED_RESULT;
 
 /****************************************************
  *                     Layer                        *

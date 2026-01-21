@@ -59,6 +59,9 @@
 
 static GQuark ges_meta_key;
 
+/* Global lock for atomic container data creation (double-checked locking) */
+G_LOCK_DEFINE_STATIC (container_data_creation);
+
 G_DEFINE_INTERFACE_WITH_CODE (GESMetaContainer, ges_meta_container,
     G_TYPE_OBJECT, ges_meta_key =
     g_quark_from_static_string ("ges-meta-container-data"););
@@ -81,7 +84,12 @@ typedef struct ContainerData
 {
   GstStructure *structure;
   GHashTable *static_items;
+  /* Per-instance lock for MT-safety */
+  GRecMutex lock;
 } ContainerData;
+
+#define LOCK_CONTAINER(data) g_rec_mutex_lock (&(data)->lock)
+#define UNLOCK_CONTAINER(data) g_rec_mutex_unlock (&(data)->lock)
 
 static void
 ges_meta_container_default_init (GESMetaContainerInterface * iface)
@@ -109,6 +117,7 @@ _free_meta_container_data (ContainerData * data)
 {
   gst_structure_free (data->structure);
   g_hash_table_unref (data->static_items);
+  g_rec_mutex_clear (&data->lock);
 
   g_free (data);
 }
@@ -126,22 +135,32 @@ _create_container_data (GESMetaContainer * container)
   data->structure = gst_structure_new_empty ("metadatas");
   data->static_items = g_hash_table_new_full (g_str_hash, g_str_equal,
       g_free, (GDestroyNotify) (GDestroyNotify) _free_static_item);
+  g_rec_mutex_init (&data->lock);
   g_object_set_qdata_full (G_OBJECT (container), ges_meta_key, data,
       (GDestroyNotify) _free_meta_container_data);
 
   return data;
 }
 
-static GstStructure *
-_meta_container_get_structure (GESMetaContainer * container)
+static ContainerData *
+_get_container_data (GESMetaContainer * container, gboolean create)
 {
   ContainerData *data;
 
   data = g_object_get_qdata (G_OBJECT (container), ges_meta_key);
-  if (!data)
-    data = _create_container_data (container);
+  if (!data && create) {
+    /* Use double-checked locking to avoid race conditions where
+     * two threads both see NULL and both try to create container data.
+     * Without this lock, the second thread's g_object_set_qdata_full
+     * would free the first thread's data while it might still be in use. */
+    G_LOCK (container_data_creation);
+    data = g_object_get_qdata (G_OBJECT (container), ges_meta_key);
+    if (!data)
+      data = _create_container_data (container);
+    G_UNLOCK (container_data_creation);
+  }
 
-  return data->structure;
+  return data;
 }
 
 typedef struct
@@ -185,20 +204,22 @@ void
 ges_meta_container_foreach (GESMetaContainer * container,
     GESMetaForeachFunc func, gpointer user_data)
 {
-  GstStructure *structure;
+  ContainerData *data;
   MetadataForeachData foreach_data;
 
   g_return_if_fail (GES_IS_META_CONTAINER (container));
   g_return_if_fail (func != NULL);
 
-  structure = _meta_container_get_structure (container);
+  data = _get_container_data (container, TRUE);
 
   foreach_data.func = func;
   foreach_data.container = container;
   foreach_data.data = user_data;
 
-  gst_structure_foreach_id_str (structure,
+  LOCK_CONTAINER (data);
+  gst_structure_foreach_id_str (data->structure,
       (GstStructureForeachIdStrFunc) structure_foreach_wrapper, &foreach_data);
+  UNLOCK_CONTAINER (data);
 }
 
 static gboolean
@@ -207,15 +228,16 @@ _register_meta (GESMetaContainer * container, GESMetaFlag flags,
 {
   ContainerData *data;
   RegisteredMeta *static_item;
+  gboolean ret = TRUE;
 
-  data = g_object_get_qdata (G_OBJECT (container), ges_meta_key);
-  if (!data)
-    data = _create_container_data (container);
-  else if (g_hash_table_lookup (data->static_items, meta_item)) {
+  data = _get_container_data (container, TRUE);
+
+  LOCK_CONTAINER (data);
+  if (g_hash_table_lookup (data->static_items, meta_item)) {
     GST_WARNING_OBJECT (container, "Static meta %s already registered",
         meta_item);
-
-    return FALSE;
+    ret = FALSE;
+    goto done;
   }
 
   static_item = g_new0 (RegisteredMeta, 1);
@@ -223,7 +245,9 @@ _register_meta (GESMetaContainer * container, GESMetaFlag flags,
   static_item->flags = flags;
   g_hash_table_insert (data->static_items, g_strdup (meta_item), static_item);
 
-  return TRUE;
+done:
+  UNLOCK_CONTAINER (data);
+  return ret;
 }
 
 /* _can_write_value should have been checked before calling */
@@ -231,7 +255,7 @@ static gboolean
 _set_value (GESMetaContainer * container, const gchar * meta_item,
     const GValue * value)
 {
-  GstStructure *structure;
+  ContainerData *data;
   gchar *val = gst_value_serialize (value);
 
   if (val == NULL) {
@@ -247,12 +271,15 @@ _set_value (GESMetaContainer * container, const gchar * meta_item,
     }
   }
 
-  structure = _meta_container_get_structure (container);
+  data = _get_container_data (container, TRUE);
 
   GST_DEBUG_OBJECT (container, "Setting meta_item %s value: %s::%s",
       meta_item, G_VALUE_TYPE_NAME (value), val);
 
-  gst_structure_set_value (structure, meta_item, value);
+  LOCK_CONTAINER (data);
+  gst_structure_set_value (data->structure, meta_item, value);
+  UNLOCK_CONTAINER (data);
+
   g_signal_emit (container, _signals[NOTIFY_SIGNAL], 0, meta_item, value);
 
   g_free (val);
@@ -265,32 +292,35 @@ _can_write_value (GESMetaContainer * container, const gchar * item_name,
 {
   ContainerData *data;
   RegisteredMeta *static_item = NULL;
+  gboolean ret = TRUE;
 
-  data = g_object_get_qdata (G_OBJECT (container), ges_meta_key);
-  if (!data) {
-    _create_container_data (container);
-    return TRUE;
-  }
+  data = _get_container_data (container, TRUE);
 
+  LOCK_CONTAINER (data);
   static_item = g_hash_table_lookup (data->static_items, item_name);
 
-  if (static_item == NULL)
-    return TRUE;
+  if (static_item == NULL) {
+    goto done;
+  }
 
   if ((static_item->flags & GES_META_WRITABLE) == FALSE) {
     GST_WARNING_OBJECT (container, "Can not write %s of type %s", item_name,
         g_type_name (type));
-    return FALSE;
+    ret = FALSE;
+    goto done;
   }
 
   if (static_item->item_type != type) {
     GST_WARNING_OBJECT (container, "Can not set value of type %s on %s "
         "its type is: %s", g_type_name (static_item->item_type), item_name,
         g_type_name (type));
-    return FALSE;
+    ret = FALSE;
+    goto done;
   }
 
-  return TRUE;
+done:
+  UNLOCK_CONTAINER (data);
+  return ret;
 }
 
 #define CREATE_SETTER(name, value_ctype, value_gtype,  setter_name)     \
@@ -466,8 +496,11 @@ ges_meta_container_set_meta (GESMetaContainer * container,
   g_return_val_if_fail (meta_item != NULL, FALSE);
 
   if (value == NULL) {
-    GstStructure *structure = _meta_container_get_structure (container);
-    gst_structure_remove_field (structure, meta_item);
+    ContainerData *data = _get_container_data (container, TRUE);
+
+    LOCK_CONTAINER (data);
+    gst_structure_remove_field (data->structure, meta_item);
+    UNLOCK_CONTAINER (data);
 
     g_signal_emit (container, _signals[NOTIFY_SIGNAL], 0, meta_item, value);
 
@@ -503,8 +536,11 @@ ges_meta_container_set_marker_list (GESMetaContainer * container,
   g_return_val_if_fail (meta_item != NULL, FALSE);
 
   if (list == NULL) {
-    GstStructure *structure = _meta_container_get_structure (container);
-    gst_structure_remove_field (structure, meta_item);
+    ContainerData *data = _get_container_data (container, TRUE);
+
+    LOCK_CONTAINER (data);
+    gst_structure_remove_field (data->structure, meta_item);
+    UNLOCK_CONTAINER (data);
 
     g_signal_emit (container, _signals[NOTIFY_SIGNAL], 0, meta_item, list);
 
@@ -536,13 +572,18 @@ ges_meta_container_set_marker_list (GESMetaContainer * container,
 gchar *
 ges_meta_container_metas_to_string (GESMetaContainer * container)
 {
-  GstStructure *structure;
+  ContainerData *data;
+  gchar *res;
 
   g_return_val_if_fail (GES_IS_META_CONTAINER (container), NULL);
 
-  structure = _meta_container_get_structure (container);
+  data = _get_container_data (container, TRUE);
 
-  return gst_structure_to_string (structure);
+  LOCK_CONTAINER (data);
+  res = gst_structure_to_string (data->structure);
+  UNLOCK_CONTAINER (data);
+
+  return res;
 }
 
 /**
@@ -608,28 +649,36 @@ gboolean
 ges_meta_container_register_static_meta (GESMetaContainer * container,
     GESMetaFlag flags, const gchar * meta_item, GType type)
 {
-  GstStructure *structure;
+  ContainerData *data;
+  gboolean has_wrong_type = FALSE;
 
   g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);
   g_return_val_if_fail (meta_item != NULL, FALSE);
+
+  data = _get_container_data (container, TRUE);
 
   /* If the meta is already in use, and is of a different type, then we
    * want to fail since, unlike ges_meta_container_register_meta, we will
    * not be overwriting this value! If we didn't fail, the user could have
    * a false sense that this meta will always be of the reserved type.
    */
-  structure = _meta_container_get_structure (container);
-  if (gst_structure_has_field (structure, meta_item) &&
-      gst_structure_get_field_type (structure, meta_item) != type) {
+  LOCK_CONTAINER (data);
+  if (gst_structure_has_field (data->structure, meta_item) &&
+      gst_structure_get_field_type (data->structure, meta_item) != type) {
     gchar *value_string =
-        g_strdup_value_contents (gst_structure_get_value (structure,
+        g_strdup_value_contents (gst_structure_get_value (data->structure,
             meta_item));
     GST_WARNING_OBJECT (container,
         "Meta %s already assigned a value of %s, which is a different type",
         meta_item, value_string);
     g_free (value_string);
-    return FALSE;
+    has_wrong_type = TRUE;
   }
+  UNLOCK_CONTAINER (data);
+
+  if (has_wrong_type)
+    return FALSE;
+
   return _register_meta (container, flags, meta_item, type);
 }
 
@@ -900,17 +949,19 @@ ges_meta_container_check_meta_registered (GESMetaContainer * container,
 {
   ContainerData *data;
   RegisteredMeta *static_item;
+  gboolean ret = TRUE;
 
-  data = g_object_get_qdata (G_OBJECT (container), ges_meta_key);
+  data = _get_container_data (container, FALSE);
   if (!data)
     return FALSE;
 
+  LOCK_CONTAINER (data);
   static_item = g_hash_table_lookup (data->static_items, meta_item);
   if (static_item == NULL) {
     GST_WARNING_OBJECT (container, "Static meta %s has not been registered yet",
         meta_item);
-
-    return FALSE;
+    ret = FALSE;
+    goto done;
   }
 
   if (type)
@@ -919,7 +970,9 @@ ges_meta_container_check_meta_registered (GESMetaContainer * container,
   if (flags)
     *flags = static_item->flags;
 
-  return TRUE;
+done:
+  UNLOCK_CONTAINER (data);
+  return ret;
 }
 
 /* Copied from gsttaglist.c */
@@ -930,15 +983,20 @@ gboolean                                                                 \
 ges_meta_container_get_ ## name (GESMetaContainer *container,    \
                            const gchar *meta_item, type value)       \
 {                                                                        \
-  GstStructure *structure;                                                     \
+  ContainerData *data;                                                   \
+  gboolean ret;                                                          \
                                                                          \
   g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);   \
   g_return_val_if_fail (meta_item != NULL, FALSE);                   \
   g_return_val_if_fail (value != NULL, FALSE);                           \
                                                                          \
-  structure = _meta_container_get_structure (container);                    \
+  data = _get_container_data (container, TRUE);                          \
                                                                          \
-  return gst_structure_get_ ## name (structure, meta_item, value);   \
+  LOCK_CONTAINER (data);                                                 \
+  ret = gst_structure_get_ ## name (data->structure, meta_item, value);  \
+  UNLOCK_CONTAINER (data);                                               \
+                                                                         \
+  return ret;                                                            \
 }
 
 /**
@@ -1023,22 +1081,27 @@ gboolean
 ges_meta_container_get_int64 (GESMetaContainer * container,
     const gchar * meta_item, gint64 * dest)
 {
-  GstStructure *structure;
+  ContainerData *data;
   const GValue *value;
+  gboolean ret = FALSE;
 
   g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);
   g_return_val_if_fail (meta_item != NULL, FALSE);
   g_return_val_if_fail (dest != NULL, FALSE);
 
-  structure = _meta_container_get_structure (container);
+  data = _get_container_data (container, TRUE);
 
-  value = gst_structure_get_value (structure, meta_item);
+  LOCK_CONTAINER (data);
+  value = gst_structure_get_value (data->structure, meta_item);
   if (!value || G_VALUE_TYPE (value) != G_TYPE_INT64)
-    return FALSE;
+    goto done;
 
   *dest = g_value_get_int64 (value);
+  ret = TRUE;
 
-  return TRUE;
+done:
+  UNLOCK_CONTAINER (data);
+  return ret;
 }
 
 /**
@@ -1059,22 +1122,27 @@ gboolean
 ges_meta_container_get_uint64 (GESMetaContainer * container,
     const gchar * meta_item, guint64 * dest)
 {
-  GstStructure *structure;
+  ContainerData *data;
   const GValue *value;
+  gboolean ret = FALSE;
 
   g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);
   g_return_val_if_fail (meta_item != NULL, FALSE);
   g_return_val_if_fail (dest != NULL, FALSE);
 
-  structure = _meta_container_get_structure (container);
+  data = _get_container_data (container, TRUE);
 
-  value = gst_structure_get_value (structure, meta_item);
+  LOCK_CONTAINER (data);
+  value = gst_structure_get_value (data->structure, meta_item);
   if (!value || G_VALUE_TYPE (value) != G_TYPE_UINT64)
-    return FALSE;
+    goto done;
 
   *dest = g_value_get_uint64 (value);
+  ret = TRUE;
 
-  return TRUE;
+done:
+  UNLOCK_CONTAINER (data);
+  return ret;
 }
 
 /**
@@ -1095,22 +1163,27 @@ gboolean
 ges_meta_container_get_float (GESMetaContainer * container,
     const gchar * meta_item, gfloat * dest)
 {
-  GstStructure *structure;
+  ContainerData *data;
   const GValue *value;
+  gboolean ret = FALSE;
 
   g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);
   g_return_val_if_fail (meta_item != NULL, FALSE);
   g_return_val_if_fail (dest != NULL, FALSE);
 
-  structure = _meta_container_get_structure (container);
+  data = _get_container_data (container, TRUE);
 
-  value = gst_structure_get_value (structure, meta_item);
+  LOCK_CONTAINER (data);
+  value = gst_structure_get_value (data->structure, meta_item);
   if (!value || G_VALUE_TYPE (value) != G_TYPE_FLOAT)
-    return FALSE;
+    goto done;
 
   *dest = g_value_get_float (value);
+  ret = TRUE;
 
-  return TRUE;
+done:
+  UNLOCK_CONTAINER (data);
+  return ret;
 }
 
 /**
@@ -1124,19 +1197,66 @@ ges_meta_container_get_float (GESMetaContainer * container,
  *
  * Returns: (transfer none) (nullable): The string value under @meta_item, or %NULL
  * if it could not be fetched.
+ *
+ * Deprecated: 1.30: Use ges_meta_container_get_string_full() instead for MT-safety.
  */
 const gchar *
 ges_meta_container_get_string (GESMetaContainer * container,
     const gchar * meta_item)
 {
-  GstStructure *structure;
+  ContainerData *data;
+  const gchar *res;
 
-  g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);
-  g_return_val_if_fail (meta_item != NULL, FALSE);
+  g_return_val_if_fail (GES_IS_META_CONTAINER (container), NULL);
+  g_return_val_if_fail (meta_item != NULL, NULL);
 
-  structure = _meta_container_get_structure (container);
+  data = _get_container_data (container, TRUE);
 
-  return gst_structure_get_string (structure, meta_item);
+  LOCK_CONTAINER (data);
+  res = gst_structure_get_string (data->structure, meta_item);
+  UNLOCK_CONTAINER (data);
+
+  /* Note: This returns a borrowed reference which is not fully MT-safe.
+   * The string could become invalid if another thread modifies the metadata.
+   * For full MT-safety, use ges_meta_container_get_string_full(). */
+  return res;
+}
+
+/**
+ * ges_meta_container_get_string_full:
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to get
+ *
+ * Gets a copy of the current string value of the specified field of the
+ * meta container. If the field does not have a set value, or it is of the
+ * wrong type, the method will fail.
+ *
+ * Returns: (transfer full) (nullable): A copy of the string value under
+ * @meta_item, or %NULL if it could not be fetched. Free with g_free() when
+ * no longer needed.
+ *
+ * Since: 1.30
+ */
+gchar *
+ges_meta_container_get_string_full (GESMetaContainer * container,
+    const gchar * meta_item)
+{
+  ContainerData *data;
+  const gchar *str;
+  gchar *res = NULL;
+
+  g_return_val_if_fail (GES_IS_META_CONTAINER (container), NULL);
+  g_return_val_if_fail (meta_item != NULL, NULL);
+
+  data = _get_container_data (container, TRUE);
+
+  LOCK_CONTAINER (data);
+  str = gst_structure_get_string (data->structure, meta_item);
+  if (str)
+    res = g_strdup (str);
+  UNLOCK_CONTAINER (data);
+
+  return res;
 }
 
 /**
@@ -1148,18 +1268,70 @@ ges_meta_container_get_string (GESMetaContainer * container,
  *
  * Returns: (transfer none) (nullable): The value under @key, or %NULL if @container
  * does not have the field set.
+ *
+ * Deprecated: 1.30: Use ges_meta_container_get_meta_full() instead for MT-safety.
  */
 const GValue *
 ges_meta_container_get_meta (GESMetaContainer * container, const gchar * key)
 {
-  GstStructure *structure;
+  ContainerData *data;
+  const GValue *res;
+
+  g_return_val_if_fail (GES_IS_META_CONTAINER (container), NULL);
+  g_return_val_if_fail (key != NULL, NULL);
+
+  data = _get_container_data (container, TRUE);
+
+  LOCK_CONTAINER (data);
+  res = gst_structure_get_value (data->structure, key);
+  UNLOCK_CONTAINER (data);
+
+  /* Note: This returns a borrowed reference which is not fully MT-safe.
+   * The value could become invalid if another thread modifies the metadata.
+   * For full MT-safety, use ges_meta_container_get_meta_full(). */
+  return res;
+}
+
+/**
+ * ges_meta_container_get_meta_full:
+ * @container: A #GESMetaContainer
+ * @key: The key for the @container field to get
+ * @dest: (out caller-allocates): An uninitialized #GValue to copy the value into
+ *
+ * Gets a copy of the current value of the specified field of the meta
+ * container. The @dest parameter should be an uninitialized #GValue; the
+ * function will initialize it with the appropriate type and copy the value.
+ * The caller is responsible for calling g_value_unset() on @dest when done.
+ *
+ * Returns: %TRUE if the value was successfully copied to @dest, %FALSE if
+ * @container does not have the field set.
+ *
+ * Since: 1.30
+ */
+gboolean
+ges_meta_container_get_meta_full (GESMetaContainer * container,
+    const gchar * key, GValue * dest)
+{
+  ContainerData *data;
+  const GValue *src;
+  gboolean ret = FALSE;
 
   g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);
   g_return_val_if_fail (key != NULL, FALSE);
+  g_return_val_if_fail (dest != NULL, FALSE);
 
-  structure = _meta_container_get_structure (container);
+  data = _get_container_data (container, TRUE);
 
-  return gst_structure_get_value (structure, key);
+  LOCK_CONTAINER (data);
+  src = gst_structure_get_value (data->structure, key);
+  if (src) {
+    g_value_init (dest, G_VALUE_TYPE (src));
+    g_value_copy (src, dest);
+    ret = TRUE;
+  }
+  UNLOCK_CONTAINER (data);
+
+  return ret;
 }
 
 /**
@@ -1179,21 +1351,24 @@ GESMarkerList *
 ges_meta_container_get_marker_list (GESMetaContainer * container,
     const gchar * key)
 {
-  GstStructure *structure;
+  ContainerData *data;
   const GValue *v;
+  GESMarkerList *res = NULL;
 
-  g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);
-  g_return_val_if_fail (key != NULL, FALSE);
+  g_return_val_if_fail (GES_IS_META_CONTAINER (container), NULL);
+  g_return_val_if_fail (key != NULL, NULL);
 
-  structure = _meta_container_get_structure (container);
+  data = _get_container_data (container, TRUE);
 
-  v = gst_structure_get_value (structure, key);
+  LOCK_CONTAINER (data);
+  v = gst_structure_get_value (data->structure, key);
 
-  if (v == NULL) {
-    return NULL;
+  if (v != NULL) {
+    res = GES_MARKER_LIST (g_value_dup_object (v));
   }
+  UNLOCK_CONTAINER (data);
 
-  return GES_MARKER_LIST (g_value_dup_object (v));
+  return res;
 }
 
 /**

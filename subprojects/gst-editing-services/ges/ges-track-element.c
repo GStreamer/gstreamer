@@ -1302,6 +1302,8 @@ ges_track_element_set_layer_active (GESTrackElement * element, gboolean active)
  * Returns: (element-type gchar* GstControlBinding*)(transfer none): A
  * hash table containing all child-property-name/control-binding pairs
  * for @trackelement.
+ *
+ * Deprecated: 1.30: Use ges_track_element_get_all_control_bindings_full() instead for MT-safety.
  */
 GHashTable *
 ges_track_element_get_all_control_bindings (GESTrackElement * trackelement)
@@ -1319,6 +1321,50 @@ ges_track_element_get_all_control_bindings (GESTrackElement * trackelement)
   return ret;
 }
 
+static void
+copy_binding_to_hashtable (gpointer key, gpointer value, gpointer user_data)
+{
+  GHashTable *new_table = user_data;
+  g_hash_table_insert (new_table, g_strdup (key), gst_object_ref (value));
+}
+
+/**
+ * ges_track_element_get_all_control_bindings_full:
+ * @trackelement: A #GESTrackElement
+ *
+ * Get all the control bindings that have been created for the children
+ * properties of the track element using
+ * ges_track_element_set_control_source(). The keys used in the returned
+ * hash table are the child property names that were passed to
+ * ges_track_element_set_control_source(), and their values are the
+ * corresponding created #GstControlBinding.
+ *
+ * Returns: (element-type gchar* GstControlBinding*)(transfer full): A
+ * hash table containing all child-property-name/control-binding pairs
+ * for @trackelement.
+ *
+ * Since: 1.30
+ */
+GHashTable *
+ges_track_element_get_all_control_bindings_full (GESTrackElement * trackelement)
+{
+  GHashTable *ret;
+  GESTimeline *_locked_timeline;
+  GESTrackElementPrivate *priv = GES_TRACK_ELEMENT (trackelement)->priv;
+
+  ret = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
+      gst_object_unref);
+
+  _locked_timeline =
+      _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (trackelement));
+  g_hash_table_foreach (priv->bindings_hashtable, copy_binding_to_hashtable,
+      ret);
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (trackelement),
+      _locked_timeline);
+
+  return ret;
+}
+
 /**
  * ges_track_element_get_track:
  * @object: A #GESTrackElement
@@ -1327,6 +1373,8 @@ ges_track_element_get_all_control_bindings (GESTrackElement * trackelement)
  *
  * Returns: (transfer none) (nullable): The track that @object belongs to,
  * or %NULL if it does not belong to a track.
+ *
+ * Deprecated: 1.30: Use ges_track_element_get_track_full() instead for MT-safety.
  */
 GESTrack *
 ges_track_element_get_track (GESTrackElement * object)
@@ -1338,6 +1386,35 @@ ges_track_element_get_track (GESTrackElement * object)
 
   _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (object));
   ret = object->priv->track;
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (object),
+      _locked_timeline);
+
+  return ret;
+}
+
+/**
+ * ges_track_element_get_track_full:
+ * @object: A #GESTrackElement
+ *
+ * Get the #GESTrackElement:track for the element.
+ *
+ * Returns: (transfer full) (nullable): The track that @object belongs to,
+ * or %NULL if it does not belong to a track.
+ *
+ * Since: 1.30
+ */
+GESTrack *
+ges_track_element_get_track_full (GESTrackElement * object)
+{
+  GESTrack *ret;
+  GESTimeline *_locked_timeline;
+
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), NULL);
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (object));
+  ret = object->priv->track;
+  if (ret)
+    gst_object_ref (ret);
   _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (object),
       _locked_timeline);
 
@@ -1379,6 +1456,8 @@ ges_track_element_get_gnlobject (GESTrackElement * object)
  * Returns: (transfer none): The nleobject that @object wraps.
  *
  * Since: 1.6
+ *
+ * Deprecated: 1.30: Use ges_track_element_get_nleobject_full() instead for MT-safety.
  */
 GstElement *
 ges_track_element_get_nleobject (GESTrackElement * object)
@@ -1397,6 +1476,34 @@ ges_track_element_get_nleobject (GESTrackElement * object)
 }
 
 /**
+ * ges_track_element_get_nleobject_full:
+ * @object: A #GESTrackElement
+ *
+ * Get the nleobject that this element wraps.
+ *
+ * Returns: (transfer full) (nullable): The nleobject that @object wraps.
+ *
+ * Since: 1.30
+ */
+GstElement *
+ges_track_element_get_nleobject_full (GESTrackElement * object)
+{
+  GstElement *ret;
+  GESTimeline *_locked_timeline;
+
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), NULL);
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (object));
+  ret = object->priv->nleobject;
+  if (ret)
+    gst_object_ref (ret);
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (object),
+      _locked_timeline);
+
+  return ret;
+}
+
+/**
  * ges_track_element_get_element:
  * @object: A #GESTrackElement
  *
@@ -1405,6 +1512,8 @@ ges_track_element_get_nleobject (GESTrackElement * object)
  *
  * Returns: (transfer none) (nullable): The #GstElement being controlled by the
  * nleobject that @object wraps.
+ *
+ * Deprecated: 1.30: Use ges_track_element_get_element_full() instead for MT-safety.
  */
 GstElement *
 ges_track_element_get_element (GESTrackElement * object)
@@ -1416,6 +1525,36 @@ ges_track_element_get_element (GESTrackElement * object)
 
   _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (object));
   ret = object->priv->element;
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (object),
+      _locked_timeline);
+
+  return ret;
+}
+
+/**
+ * ges_track_element_get_element_full:
+ * @object: A #GESTrackElement
+ *
+ * Get the #GstElement that the track element's underlying nleobject
+ * controls.
+ *
+ * Returns: (transfer full) (nullable): The #GstElement being controlled by the
+ * nleobject that @object wraps.
+ *
+ * Since: 1.30
+ */
+GstElement *
+ges_track_element_get_element_full (GESTrackElement * object)
+{
+  GstElement *ret;
+  GESTimeline *_locked_timeline;
+
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), NULL);
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (object));
+  ret = object->priv->element;
+  if (ret)
+    gst_object_ref (ret);
   _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (object),
       _locked_timeline);
 
@@ -2112,6 +2251,8 @@ done:
  * Returns: (transfer none) (nullable): The control binding that was
  * created for the specified child property of @object, or %NULL if
  * @property_name does not correspond to any control binding.
+ *
+ * Deprecated: 1.30: Use ges_track_element_get_control_binding_full() instead for MT-safety.
  */
 GstControlBinding *
 ges_track_element_get_control_binding (GESTrackElement * object,
@@ -2130,6 +2271,51 @@ ges_track_element_get_control_binding (GESTrackElement * object,
   binding =
       (GstControlBinding *) g_hash_table_lookup (priv->bindings_hashtable,
       property_name);
+
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (object),
+      _locked_timeline);
+
+  return binding;
+}
+
+/**
+ * ges_track_element_get_control_binding_full:
+ * @object: A #GESTrackElement
+ * @property_name: The name of the child property to return the control
+ * binding of
+ *
+ * Gets the control binding that was created for the specified child
+ * property of the track element using
+ * ges_track_element_set_control_source(). The given @property_name must
+ * be the same name of the child property that was passed to
+ * ges_track_element_set_control_source().
+ *
+ * Returns: (transfer full) (nullable): The control binding that was
+ * created for the specified child property of @object, or %NULL if
+ * @property_name does not correspond to any control binding.
+ *
+ * Since: 1.30
+ */
+GstControlBinding *
+ges_track_element_get_control_binding_full (GESTrackElement * object,
+    const gchar * property_name)
+{
+  GESTrackElementPrivate *priv;
+  GstControlBinding *binding;
+  GESTimeline *_locked_timeline;
+
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), NULL);
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (object));
+
+  priv = GES_TRACK_ELEMENT (object)->priv;
+
+  binding =
+      (GstControlBinding *) g_hash_table_lookup (priv->bindings_hashtable,
+      property_name);
+
+  if (binding)
+    gst_object_ref (binding);
 
   _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (object),
       _locked_timeline);
