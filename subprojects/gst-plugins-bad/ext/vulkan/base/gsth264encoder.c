@@ -1876,42 +1876,15 @@ _h264_get_chroma_idc (GstVideoInfo * info)
   return GST_CHROMA_INVALID;
 }
 
-static const struct
-{
-  const char *name;
-  GstH264Level level;
-} _h264_level_map[] = {
-  {"1", GST_H264_LEVEL_L1},
-  {"1b", GST_H264_LEVEL_L1B},
-  {"1.1", GST_H264_LEVEL_L1_1},
-  {"1.2", GST_H264_LEVEL_L1_2},
-  {"1.3", GST_H264_LEVEL_L1_3},
-  {"2", GST_H264_LEVEL_L2},
-  {"2.1", GST_H264_LEVEL_L2_1},
-  {"2.2", GST_H264_LEVEL_L2_2},
-  {"3", GST_H264_LEVEL_L3},
-  {"3.1", GST_H264_LEVEL_L3_1},
-  {"3.2", GST_H264_LEVEL_L3_2},
-  {"4", GST_H264_LEVEL_L4},
-  {"4.1", GST_H264_LEVEL_L4_1},
-  {"4.2", GST_H264_LEVEL_L4_2},
-  {"5", GST_H264_LEVEL_L5},
-  {"5.1", GST_H264_LEVEL_L5_1},
-  {"5.2", GST_H264_LEVEL_L5_2},
-  {"6", GST_H264_LEVEL_L6},
-  {"6.1", GST_H264_LEVEL_L6_1},
-  {"6.2", GST_H264_LEVEL_L6_2},
-};
-
 static guint8
 _h264_get_level_idc (const gchar * level)
 {
   if (!level)
     return 0;
 
-  for (int i = 0; i < G_N_ELEMENTS (_h264_level_map); i++) {
-    if (strcmp (level, _h264_level_map[i].name) == 0)
-      return _h264_level_map[i].level;
+  for (int i = 0; i < G_N_ELEMENTS (_h264_levels); i++) {
+    if (strcmp (level, _h264_levels[i].name) == 0)
+      return _h264_levels[i].level_idc;
   }
 
   return 0;
