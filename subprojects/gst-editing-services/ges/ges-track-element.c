@@ -507,10 +507,10 @@ ges_track_element_init (GESTrackElement * self)
       ges_track_element_get_instance_private (self);
 
   /* Sane default values */
-  GES_TIMELINE_ELEMENT_START (self) = 0;
-  GES_TIMELINE_ELEMENT_INPOINT (self) = 0;
-  GES_TIMELINE_ELEMENT_DURATION (self) = GST_SECOND;
-  GES_TIMELINE_ELEMENT_PRIORITY (self) = 0;
+  GES_TIMELINE_ELEMENT (self)->start = 0;
+  GES_TIMELINE_ELEMENT (self)->inpoint = 0;
+  GES_TIMELINE_ELEMENT (self)->duration = GST_SECOND;
+  GES_TIMELINE_ELEMENT (self)->priority = 0;
   self->active = TRUE;
   self->priv->layer_active = TRUE;
 

@@ -86,14 +86,19 @@ G_STMT_START {                                          \
      g_type_name (type));                               \
 } G_STMT_END;
 
+/* Use public API macros in tests to exercise the same code path as external users */
+#undef _START
+#undef _DURATION
+#undef _INPOINT
+#undef _MAXDURATION
+#undef _PRIORITY
+#undef _END
 #define _START(obj) GES_TIMELINE_ELEMENT_START (obj)
 #define _DURATION(obj) GES_TIMELINE_ELEMENT_DURATION (obj)
 #define _INPOINT(obj) GES_TIMELINE_ELEMENT_INPOINT (obj)
 #define _MAX_DURATION(obj) GES_TIMELINE_ELEMENT_MAX_DURATION (obj)
 #define _PRIORITY(obj) GES_TIMELINE_ELEMENT_PRIORITY (obj)
-#ifndef _END
-#define _END(obj) (_START(obj) + _DURATION(obj))
-#endif
+#define _END(obj) GES_TIMELINE_ELEMENT_END (obj)
 
 #define CHECK_OBJECT_PROPS(obj, start, inpoint, duration) {\
   fail_unless (_START (obj) == start, "%s start is %" GST_TIME_FORMAT " != %" GST_TIME_FORMAT, GES_TIMELINE_ELEMENT_NAME(obj), GST_TIME_ARGS (_START(obj)), GST_TIME_ARGS (start));\

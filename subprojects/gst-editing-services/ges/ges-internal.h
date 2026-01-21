@@ -48,13 +48,16 @@ GstDebugCategory * _ges_debug (void);
 #define MIN_NLE_PRIO 2
 #define LAYER_HEIGHT 1000
 
-#define _START(obj) GES_TIMELINE_ELEMENT_START (obj)
-#define _INPOINT(obj) GES_TIMELINE_ELEMENT_INPOINT (obj)
-#define _DURATION(obj) GES_TIMELINE_ELEMENT_DURATION (obj)
-#define _MAXDURATION(obj) GES_TIMELINE_ELEMENT_MAX_DURATION (obj)
-#define _PRIORITY(obj) GES_TIMELINE_ELEMENT_PRIORITY (obj)
+/* Internal macros for direct field access - these do NOT call getters
+ * to avoid performance overhead.
+ * Use the public GES_TIMELINE_ELEMENT_* macros for MT-safe access from external code. */
+#define _START(obj) (((GESTimelineElement*)(obj))->start)
+#define _INPOINT(obj) (((GESTimelineElement*)(obj))->inpoint)
+#define _DURATION(obj) (((GESTimelineElement*)(obj))->duration)
+#define _MAXDURATION(obj) (((GESTimelineElement*)(obj))->maxduration)
+#define _PRIORITY(obj) (((GESTimelineElement*)(obj))->priority)
 #ifndef _END
-#define _END(obj) (_START (obj) + _DURATION (obj))
+#define _END(obj) (((GESTimelineElement*)(obj))->start + ((GESTimelineElement*)(obj))->duration)
 #endif
 #define _set_start0 ges_timeline_element_set_start
 #define _set_inpoint0 ges_timeline_element_set_inpoint

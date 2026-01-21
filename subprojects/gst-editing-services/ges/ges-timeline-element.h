@@ -36,8 +36,12 @@ GES_DECLARE_TYPE(TimelineElement, timeline_element, TIMELINE_ELEMENT);
  * @obj: A #GESTimelineElement
  *
  * The #GESTimelineElement:start of @obj.
+ *
+ * Note: This macro now calls ges_timeline_element_get_start() for MT-safety.
+ * It can no longer be used as an lvalue.
  */
-#define GES_TIMELINE_ELEMENT_START(obj) (((GESTimelineElement*)obj)->start)
+#define GES_TIMELINE_ELEMENT_START(obj) \
+    (ges_timeline_element_get_start ((GESTimelineElement*)(obj)))
 
 /**
  * GES_TIMELINE_ELEMENT_END:
@@ -45,40 +49,60 @@ GES_DECLARE_TYPE(TimelineElement, timeline_element, TIMELINE_ELEMENT);
  *
  * The end position of @obj: #GESTimelineElement:start +
  * #GESTimelineElement:duration.
+ *
+ * Note: This macro now calls getters for MT-safety.
  */
-#define GES_TIMELINE_ELEMENT_END(obj) ((((GESTimelineElement*)obj)->start) + (((GESTimelineElement*)obj)->duration))
+#define GES_TIMELINE_ELEMENT_END(obj) \
+    (ges_timeline_element_get_start ((GESTimelineElement*)(obj)) + \
+     ges_timeline_element_get_duration ((GESTimelineElement*)(obj)))
 
 /**
  * GES_TIMELINE_ELEMENT_INPOINT:
  * @obj: A #GESTimelineElement
  *
  * The #GESTimelineElement:in-point of @obj.
+ *
+ * Note: This macro now calls ges_timeline_element_get_inpoint() for MT-safety.
+ * It can no longer be used as an lvalue.
  */
-#define GES_TIMELINE_ELEMENT_INPOINT(obj) (((GESTimelineElement*)obj)->inpoint)
+#define GES_TIMELINE_ELEMENT_INPOINT(obj) \
+    (ges_timeline_element_get_inpoint ((GESTimelineElement*)(obj)))
 
 /**
  * GES_TIMELINE_ELEMENT_DURATION:
  * @obj: A #GESTimelineElement
  *
  * The #GESTimelineElement:duration of @obj.
+ *
+ * Note: This macro now calls ges_timeline_element_get_duration() for MT-safety.
+ * It can no longer be used as an lvalue.
  */
-#define GES_TIMELINE_ELEMENT_DURATION(obj) (((GESTimelineElement*)obj)->duration)
+#define GES_TIMELINE_ELEMENT_DURATION(obj) \
+    (ges_timeline_element_get_duration ((GESTimelineElement*)(obj)))
 
 /**
  * GES_TIMELINE_ELEMENT_MAX_DURATION:
  * @obj: A #GESTimelineElement
  *
  * The #GESTimelineElement:max-duration of @obj.
+ *
+ * Note: This macro now calls ges_timeline_element_get_max_duration() for MT-safety.
+ * It can no longer be used as an lvalue.
  */
-#define GES_TIMELINE_ELEMENT_MAX_DURATION(obj) (((GESTimelineElement*)obj)->maxduration)
+#define GES_TIMELINE_ELEMENT_MAX_DURATION(obj) \
+    (ges_timeline_element_get_max_duration ((GESTimelineElement*)(obj)))
 
 /**
  * GES_TIMELINE_ELEMENT_PRIORITY:
  * @obj: A #GESTimelineElement
  *
  * The #GESTimelineElement:priority of @obj.
+ *
+ * Note: This macro now calls ges_timeline_element_get_priority() for MT-safety.
+ * It can no longer be used as an lvalue.
  */
-#define GES_TIMELINE_ELEMENT_PRIORITY(obj) (((GESTimelineElement*)obj)->priority)
+#define GES_TIMELINE_ELEMENT_PRIORITY(obj) \
+    (ges_timeline_element_get_priority ((GESTimelineElement*)(obj)))
 
 /**
  * GES_TIMELINE_ELEMENT_NO_LAYER_PRIORITY:
@@ -100,6 +124,10 @@ GES_DECLARE_TYPE(TimelineElement, timeline_element, TIMELINE_ELEMENT);
  * @obj: A #GESTimelineElement
  *
  * The #GESTimelineElement:parent of @obj.
+ *
+ * Deprecated: 1.30: Use ges_timeline_element_get_parent() instead for MT-safety.
+ * The getter returns a referenced object that must be unreffed when done.
+ * This macro returns an unreferenced pointer and is not MT-safe.
  */
 #define GES_TIMELINE_ELEMENT_PARENT(obj) (((GESTimelineElement*)obj)->parent)
 
@@ -108,6 +136,10 @@ GES_DECLARE_TYPE(TimelineElement, timeline_element, TIMELINE_ELEMENT);
  * @obj: A #GESTimelineElement
  *
  * The #GESTimelineElement:timeline of @obj.
+ *
+ * Deprecated: 1.30: Use ges_timeline_element_get_timeline() instead for MT-safety.
+ * The getter returns a referenced object that must be unreffed when done.
+ * This macro returns an unreferenced pointer and is not MT-safe.
  */
 #define GES_TIMELINE_ELEMENT_TIMELINE(obj) (((GESTimelineElement*)obj)->timeline)
 
@@ -116,6 +148,10 @@ GES_DECLARE_TYPE(TimelineElement, timeline_element, TIMELINE_ELEMENT);
  * @obj: A #GESTimelineElement
  *
  * The #GESTimelineElement:name of @obj.
+ *
+ * Deprecated: 1.30: Use ges_timeline_element_get_name() instead for MT-safety.
+ * The getter returns a newly allocated string that must be freed when done.
+ * This macro returns an unreferenced pointer and is not MT-safe.
  */
 #define GES_TIMELINE_ELEMENT_NAME(obj) (((GESTimelineElement*)obj)->name)
 
