@@ -93,6 +93,7 @@ struct _GstOpenh264Enc
   ECOMPLEXITY_MODE complexity;
   gboolean bitrate_changed;
   gboolean max_bitrate_changed;
+  EProfileIdc profile;
 };
 
 struct _GstOpenh264EncClass

@@ -406,6 +406,7 @@ gst_openh264enc_init (GstOpenh264Enc * openh264enc)
   openh264enc->complexity = DEFAULT_COMPLEXITY;
   openh264enc->bitrate_changed = FALSE;
   openh264enc->max_bitrate_changed = FALSE;
+  openh264enc->profile = PRO_BASELINE;
   gst_openh264enc_set_usage_type (openh264enc, CAMERA_VIDEO_REAL_TIME);
   gst_openh264enc_set_rate_control (openh264enc, RC_QUALITY_MODE);
 }
@@ -807,7 +808,8 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
   enc_params.bPrefixNalAddingCtrl = 0;
   enc_params.fMaxFrameRate = fps_n * 1.0 / fps_d;
   enc_params.iLoopFilterDisableIdc = openh264enc->deblocking_mode;
-  enc_params.sSpatialLayers[0].uiProfileIdc = gst_openh264enc_get_profile_from_caps (outcaps, allowed_caps);
+  openh264enc->profile = gst_openh264enc_get_profile_from_caps (outcaps, allowed_caps);
+  enc_params.sSpatialLayers[0].uiProfileIdc = openh264enc->profile;
   enc_params.sSpatialLayers[0].uiLevelIdc = (ELevelIdc) gst_openh264enc_get_level_from_caps (outcaps, allowed_caps);
   enc_params.sSpatialLayers[0].iVideoWidth = enc_params.iPicWidth;
   enc_params.sSpatialLayers[0].iVideoHeight = enc_params.iPicHeight;
@@ -1055,7 +1057,16 @@ gst_openh264enc_finish (GstVideoEncoder * encoder)
   if (openh264enc->frame_count == 0)
     return GST_FLOW_OK;
 
-  /* Drain encoder */
+  /* Only drain if encoder might have buffered frames (B-frames).
+   * Baseline profile doesn't use B-frames, so nothing to drain.
+   * Attempting to drain when there are no buffered frames causes
+   * openh264 to return cmInitParaError. */
+  if (openh264enc->profile == PRO_BASELINE) {
+    GST_DEBUG_OBJECT (openh264enc,
+        "Baseline profile has no B-frames, skipping drain");
+    return GST_FLOW_OK;
+  }
+
   while ((gst_openh264enc_handle_frame (encoder, NULL)) == GST_FLOW_OK);
 
   return GST_FLOW_OK;
