@@ -1907,6 +1907,7 @@ _create_stream (GstQTDemux * demux, guint32 track_id)
   stream->n_samples_moof = 0;
   stream->duration_moof = 0;
   stream->duration_last_moof = 0;
+  stream->trun_next_dts = 0;
   stream->alignment = 1;
   stream->needs_row_alignment = FALSE;
   stream->need_reorder = FALSE;
@@ -3520,48 +3521,38 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
   if (stream->samples == NULL)
     goto out_of_memory;
 
-  if (qtdemux->fragment_start != -1) {
+  if (has_tfdt) {
+    /* this specific fragment has a tfdt, use it. */
+    timestamp = decode_ts;
+    gst_ts = QTSTREAMTIME_TO_GSTTIME (stream, timestamp);
+    GST_INFO_OBJECT (qtdemux, "first sample ts %" GST_TIME_FORMAT
+        " (using tfdt)", GST_TIME_ARGS (gst_ts));
+  } else if (qtdemux->fragment_start != -1) {
+    /* adaptive streaming: haven't seen any tfdt since the start of the current
+     * segment, so we use the PTS from the manifest as a fallback. */
     timestamp = GSTTIME_TO_QTSTREAMTIME (stream, qtdemux->fragment_start);
     qtdemux->fragment_start = -1;
+    gst_ts = QTSTREAMTIME_TO_GSTTIME (stream, timestamp);
+    GST_INFO_OBJECT (qtdemux, "first sample ts %" GST_TIME_FORMAT
+        " (using upstream buffer PTS)", GST_TIME_ARGS (gst_ts));
+  } else if (stream->pending_seek != NULL) {
+    /* if we don't have a timestamp from a tfdt box, we'll use the one
+     * from the mfra seek table */
+    GST_INFO_OBJECT (stream->pad, "pending seek ts = %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (stream->pending_seek->ts));
+
+    /* FIXME: this is not fully correct, the timestamp refers to the random
+     * access sample refered to in the tfra entry, which may not necessarily
+     * be the first sample in the tfrag/trun (but hopefully/usually is) */
+    timestamp = GSTTIME_TO_QTSTREAMTIME (stream, stream->pending_seek->ts);
   } else {
-    if (stream->n_samples == 0) {
-      if (decode_ts > 0) {
-        timestamp = decode_ts;
-      } else if (stream->pending_seek != NULL) {
-        /* if we don't have a timestamp from a tfdt box, we'll use the one
-         * from the mfra seek table */
-        GST_INFO_OBJECT (stream->pad, "pending seek ts = %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (stream->pending_seek->ts));
-
-        /* FIXME: this is not fully correct, the timestamp refers to the random
-         * access sample refered to in the tfra entry, which may not necessarily
-         * be the first sample in the tfrag/trun (but hopefully/usually is) */
-        timestamp = GSTTIME_TO_QTSTREAMTIME (stream, stream->pending_seek->ts);
-      } else {
-        timestamp = 0;
-      }
-
-      gst_ts = QTSTREAMTIME_TO_GSTTIME (stream, timestamp);
-      GST_INFO_OBJECT (stream->pad, "first sample ts %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (gst_ts));
-    } else {
-      /* If this is a GST_FORMAT_BYTES stream and we have a tfdt then use it
-       * instead of the sum of sample durations */
-      if (has_tfdt && !qtdemux->upstream_format_is_time) {
-        timestamp = decode_ts;
-        gst_ts = QTSTREAMTIME_TO_GSTTIME (stream, timestamp);
-        GST_INFO_OBJECT (qtdemux, "first sample ts %" GST_TIME_FORMAT
-            " (using tfdt)", GST_TIME_ARGS (gst_ts));
-      } else {
-        /* subsequent fragments extend stream */
-        timestamp =
-            stream->samples[stream->n_samples - 1].timestamp +
-            stream->samples[stream->n_samples - 1].duration;
-        gst_ts = QTSTREAMTIME_TO_GSTTIME (stream, timestamp);
-        GST_INFO_OBJECT (qtdemux, "first sample ts %" GST_TIME_FORMAT
-            " (extends previous samples)", GST_TIME_ARGS (gst_ts));
-      }
-    }
+    /* subsequent fragments extend the stream, be it the previous fragment or
+     * (in the case of the first fragment) the end of the non-fragmented part
+     * of the movie. */
+    timestamp = stream->trun_next_dts;
+    gst_ts = QTSTREAMTIME_TO_GSTTIME (stream, timestamp);
+    GST_INFO_OBJECT (qtdemux, "first sample ts %" GST_TIME_FORMAT "%s",
+        GST_TIME_ARGS (gst_ts), timestamp ? " (extends previous samples)" : "");
   }
 
   initial_offset = *running_offset;
@@ -3653,6 +3644,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
 
   stream->n_samples += samples_count;
   stream->n_samples_moof += samples_count;
+  stream->trun_next_dts = timestamp;
 
   if (stream->pending_seek != NULL)
     stream->pending_seek = NULL;
@@ -11397,6 +11389,9 @@ done:
           break;
     }
   }
+  /* fragments time start after the non-fragment part. */
+  if (stream->stts_time > stream->trun_next_dts)
+    stream->trun_next_dts = stream->stts_time;
   GST_OBJECT_UNLOCK (qtdemux);
 
   return TRUE;
