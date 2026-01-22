@@ -1,0 +1,11 @@
+set-globals, media_dir="$(test_dir)/../../../media/defaults/dash/mp4"
+meta,
+    seek=false,
+    handles-states=false,
+    args = {
+         "filesrc location=$(media_dir)/mp4box-tfdt-per-segment-not-per-fragment_dash.mpd ! dashdemux name=d ! queue max-size-buffers=0 max-size-bytes=0 max-size-time=1000000000 ! qtdemux ! fakesink sync=false name=video-fakesink",
+    },
+    configs = {
+       "$(validateflow), pad=video-fakesink:sink, record-buffers=true, logged-event-types={segment, eos}",
+    }
+

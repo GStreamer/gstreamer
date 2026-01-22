@@ -422,6 +422,8 @@ struct _QtDemuxStream
                                  * Currently only set for raw audio streams*/
   guint32 max_buffer_size;      /* Maximum allowed size for output buffers.
                                  * Currently only set for raw audio streams*/
+  guint64 trun_next_dts;        /* DTS in track units that would be used by the
+                                 * first sample of the next trun box. */
 
   /* video info */
   GstVideoInfo info;

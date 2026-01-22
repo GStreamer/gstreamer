@@ -597,6 +597,8 @@ validate.pushfile.media_check.qtdemux-test-frag-basic_zero_dur_no_mehd_mp4
 ~validate.rtsp.playback.change_state_intensive.mp3_h264_0_mp4
 ~validate.rtsp.playback.change_state_intensive.mp3_h264_1_mp4
 ~validate.rtsp.playback.change_state_intensive.mp3_h265_0_mp4
+~validate.rtsp.playback.change_state_intensive.mp4box-tfdt-per-segment-not-per-fragment_dashinit_mp4
+~validate.rtsp.playback.change_state_intensive.mp4box-tfdt-per-segment-not-per-fragment_mp4
 ~validate.rtsp.playback.change_state_intensive.numerated_frames_blue_ogv
 ~validate.rtsp.playback.change_state_intensive.opus_1_ogg
 ~validate.rtsp.playback.change_state_intensive.opus_vp9-alpha_webm
@@ -628,6 +630,8 @@ validate.pushfile.media_check.qtdemux-test-frag-basic_zero_dur_no_mehd_mp4
 ~validate.rtsp.playback.play_15s.mp3_h264_0_mp4
 ~validate.rtsp.playback.play_15s.mp3_h264_1_mp4
 ~validate.rtsp.playback.play_15s.mp3_h265_0_mp4
+~validate.rtsp.playback.play_15s.mp4box-tfdt-per-segment-not-per-fragment_dashinit_mp4
+~validate.rtsp.playback.play_15s.mp4box-tfdt-per-segment-not-per-fragment_mp4
 ~validate.rtsp.playback.play_15s.numerated_frames_blue_ogv
 ~validate.rtsp.playback.play_15s.op1a-mpeg2-wave_hd_mxf
 ~validate.rtsp.playback.play_15s.op1a-pal-mpeg2_mxf
@@ -663,6 +667,8 @@ validate.pushfile.media_check.qtdemux-test-frag-basic_zero_dur_no_mehd_mp4
 ~validate.rtsp.playback.seek_backward.mp3_h264_0_mp4
 ~validate.rtsp.playback.seek_backward.mp3_h264_1_mp4
 ~validate.rtsp.playback.seek_backward.mp3_h265_0_mp4
+~validate.rtsp.playback.seek_backward.mp4box-tfdt-per-segment-not-per-fragment_dashinit_mp4
+~validate.rtsp.playback.seek_backward.mp4box-tfdt-per-segment-not-per-fragment_mp4
 ~validate.rtsp.playback.seek_backward.numerated_frames_blue_ogv
 ~validate.rtsp.playback.seek_backward.opus_1_ogg
 ~validate.rtsp.playback.seek_backward.opus_vp9-alpha_webm
@@ -691,6 +697,8 @@ validate.pushfile.media_check.qtdemux-test-frag-basic_zero_dur_no_mehd_mp4
 ~validate.rtsp.playback.seek_forward.mp3_h264_0_mp4
 ~validate.rtsp.playback.seek_forward.mp3_h264_1_mp4
 ~validate.rtsp.playback.seek_forward.mp3_h265_0_mp4
+~validate.rtsp.playback.seek_forward.mp4box-tfdt-per-segment-not-per-fragment_dashinit_mp4
+~validate.rtsp.playback.seek_forward.mp4box-tfdt-per-segment-not-per-fragment_mp4
 ~validate.rtsp.playback.seek_forward.numerated_frames_blue_ogv
 ~validate.rtsp.playback.seek_forward.opus_1_ogg
 ~validate.rtsp.playback.seek_forward.opus_vp9-alpha_webm
@@ -720,6 +728,8 @@ validate.pushfile.media_check.qtdemux-test-frag-basic_zero_dur_no_mehd_mp4
 ~validate.rtsp2.playback.change_state_intensive.mp3_h264_0_mp4
 ~validate.rtsp2.playback.change_state_intensive.mp3_h264_1_mp4
 ~validate.rtsp2.playback.change_state_intensive.mp3_h265_0_mp4
+~validate.rtsp2.playback.change_state_intensive.mp4box-tfdt-per-segment-not-per-fragment_dashinit_mp4
+~validate.rtsp2.playback.change_state_intensive.mp4box-tfdt-per-segment-not-per-fragment_mp4
 ~validate.rtsp2.playback.change_state_intensive.numerated_frames_blue_ogv
 ~validate.rtsp2.playback.change_state_intensive.op1a-mpeg2-wave_hd_mxf
 ~validate.rtsp2.playback.change_state_intensive.op1a-pal-mpeg2_mxf
@@ -773,6 +783,8 @@ validate.pushfile.media_check.qtdemux-test-frag-basic_zero_dur_no_mehd_mp4
 ~validate.rtsp2.playback.play_15s.mp3_h264_0_mp4
 ~validate.rtsp2.playback.play_15s.mp3_h264_1_mp4
 ~validate.rtsp2.playback.play_15s.mp3_h265_0_mp4
+~validate.rtsp2.playback.play_15s.mp4box-tfdt-per-segment-not-per-fragment_dashinit_mp4
+~validate.rtsp2.playback.play_15s.mp4box-tfdt-per-segment-not-per-fragment_mp4
 ~validate.rtsp2.playback.play_15s.numerated_frames_blue_ogv
 ~validate.rtsp2.playback.play_15s.op1a-mpeg2-wave_hd_mxf
 ~validate.rtsp2.playback.play_15s.op1a-pal-mpeg2_mxf
@@ -819,6 +831,8 @@ validate.pushfile.media_check.qtdemux-test-frag-basic_zero_dur_no_mehd_mp4
 ~validate.rtsp2.playback.seek_backward.mp3_h264_0_mp4
 ~validate.rtsp2.playback.seek_backward.mp3_h264_1_mp4
 ~validate.rtsp2.playback.seek_backward.mp3_h265_0_mp4
+~validate.rtsp2.playback.seek_backward.mp4box-tfdt-per-segment-not-per-fragment_dashinit_mp4
+~validate.rtsp2.playback.seek_backward.mp4box-tfdt-per-segment-not-per-fragment_mp4
 ~validate.rtsp2.playback.seek_backward.numerated_frames_blue_ogv
 ~validate.rtsp2.playback.seek_backward.op1a-mpeg2-wave_hd_mxf
 ~validate.rtsp2.playback.seek_backward.op1a-pal-mpeg2_mxf
@@ -854,6 +868,8 @@ validate.pushfile.media_check.qtdemux-test-frag-basic_zero_dur_no_mehd_mp4
 ~validate.rtsp2.playback.seek_forward.mp3_h264_0_mp4
 ~validate.rtsp2.playback.seek_forward.mp3_h264_1_mp4
 ~validate.rtsp2.playback.seek_forward.mp3_h265_0_mp4
+~validate.rtsp2.playback.seek_forward.mp4box-tfdt-per-segment-not-per-fragment_dashinit_mp4
+~validate.rtsp2.playback.seek_forward.mp4box-tfdt-per-segment-not-per-fragment_mp4
 ~validate.rtsp2.playback.seek_forward.numerated_frames_blue_ogv
 ~validate.rtsp2.playback.seek_forward.op1a-mpeg2-wave_hd_mxf
 ~validate.rtsp2.playback.seek_forward.op1a-pal-mpeg2_mxf
