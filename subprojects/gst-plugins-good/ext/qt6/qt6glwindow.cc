@@ -103,7 +103,7 @@ Qt6GLWindow::Qt6GLWindow (QWindow * parent, QQuickWindow *src)
   this->priv->internal_format = GL_RGBA;
 
   connect (source, SIGNAL(beforeRendering()), this, SLOT(beforeRendering()), Qt::DirectConnection);
-  connect (source, SIGNAL(afterFrameEnd()), this, SLOT(afterFrameEnd()), Qt::DirectConnection);
+  connect (source, SIGNAL(afterRendering()), this, SLOT(afterRendering()), Qt::DirectConnection);
   if (source->isSceneGraphInitialized())
     source->scheduleRenderJob(new RenderJob(std::bind(&Qt6GLWindow::onSceneGraphInitialized, this)), QQuickWindow::BeforeSynchronizingStage);
   else
@@ -194,7 +194,7 @@ Qt6GLWindow::beforeRendering()
 }
 
 void
-Qt6GLWindow::afterFrameEnd()
+Qt6GLWindow::afterRendering()
 {
   gboolean ret;
   guint width, height;
@@ -209,6 +209,8 @@ Qt6GLWindow::afterFrameEnd()
     g_mutex_unlock (&this->priv->lock);
     return;
   }
+
+  source->beginExternalCommands();
 
   QQuickOpenGLUtils::resetOpenGLState();
 
@@ -284,6 +286,8 @@ Qt6GLWindow::afterFrameEnd()
   GST_DEBUG ("rendering finished");
 
 done:
+  source->endExternalCommands();
+
   gst_gl_context_activate (this->priv->other_context, FALSE);
 
   this->priv->result = ret;

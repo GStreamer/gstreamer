@@ -45,7 +45,7 @@ public:
 
 private Q_SLOTS:
     void beforeRendering ();
-    void afterFrameEnd ();
+    void afterRendering ();
     void onSceneGraphInitialized ();
     void onSceneGraphInvalidated ();
 
