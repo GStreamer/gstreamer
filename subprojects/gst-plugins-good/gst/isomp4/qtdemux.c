@@ -3016,7 +3016,7 @@ qtdemux_parse_piff (GstQTDemux * qtdemux, const guint8 * buffer, gint length,
 }
 
 static void
-qtdemux_parse_uuid (GstQTDemux * qtdemux, const guint8 * buffer, gint length)
+qtdemux_parse_uuid (GstQTDemux * qtdemux, const guint8 * buffer, gsize length)
 {
   static const guint8 xmp_uuid[] = { 0xBE, 0x7A, 0xCF, 0xCB,
     0x97, 0xA9, 0x42, 0xE8,
@@ -3060,16 +3060,18 @@ qtdemux_parse_uuid (GstQTDemux * qtdemux, const guint8 * buffer, gint length)
     qtdemux_handle_xmp_taglist (qtdemux, qtdemux->tag_list, taglist);
 
   } else if (memcmp (buffer + offset, playready_uuid, 16) == 0) {
-    int len;
-    const gunichar2 *s_utf16;
-    char *contents;
+    if (length >= offset + 0x30 + 2) {
+      guint16 len = GST_READ_UINT16_LE (buffer + offset + 0x30);
 
-    len = GST_READ_UINT16_LE (buffer + offset + 0x30);
-    s_utf16 = (const gunichar2 *) (buffer + offset + 0x32);
-    contents = g_utf16_to_utf8 (s_utf16, len / 2, NULL, NULL, NULL);
-    GST_ERROR_OBJECT (qtdemux, "contents: %s", contents);
+      if (length >= offset + 0x30 + 2 + len) {
+        const gunichar2 *s_utf16 = (const gunichar2 *) (buffer + offset + 0x32);
+        char *contents = g_utf16_to_utf8 (s_utf16, len / 2, NULL, NULL, NULL);
 
-    g_free (contents);
+        GST_ERROR_OBJECT (qtdemux, "contents: %s", GST_STR_NULL (contents));
+
+        g_free (contents);
+      }
+    }
 
     GST_ELEMENT_ERROR (qtdemux, STREAM, DECRYPT,
         (_("Cannot play stream because it is encrypted with PlayReady DRM.")),
