@@ -688,8 +688,11 @@ gst_codec_timestamper_src_query (GstPad * pad, GstObject * parent,
         gst_query_parse_latency (query, &live, &min, &max);
 
         g_rec_mutex_lock (&priv->lock);
-        if (GST_CLOCK_TIME_IS_VALID (priv->latency))
+        if (GST_CLOCK_TIME_IS_VALID (priv->latency)) {
           min += priv->latency;
+          if (GST_CLOCK_TIME_IS_VALID (max))
+            max += priv->latency;
+        }
         g_rec_mutex_unlock (&priv->lock);
 
         gst_query_set_latency (query, live, min, max);
