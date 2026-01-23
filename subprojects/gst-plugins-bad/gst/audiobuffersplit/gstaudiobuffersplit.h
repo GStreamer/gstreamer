@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2016 Sebastian Dröge <sebastian@centricular.com>
  *
@@ -17,7 +17,7 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
- 
+
 #ifndef __GST_AUDIO_BUFFER_SPLIT_H__
 #define __GST_AUDIO_BUFFER_SPLIT_H__
 
@@ -51,6 +51,7 @@ struct _GstAudioBufferSplit {
   GstSegment in_segment, out_segment;
   guint32 segment_seqnum;
   gboolean segment_pending;
+  gboolean segment_reversed;
   GstAudioInfo info;
 
   GstAdapter *adapter;
