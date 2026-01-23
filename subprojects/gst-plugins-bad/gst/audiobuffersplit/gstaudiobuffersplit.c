@@ -868,6 +868,49 @@ gst_audio_buffer_split_sink_event (GstPad * pad, GstObject * parent,
 
       ret = gst_pad_event_default (pad, parent, event);
       break;
+    case GST_EVENT_GAP:{
+      GstClockTime timestamp, duration;
+
+      gst_event_parse_gap (event, &timestamp, &duration);
+      gst_event_unref (event);
+
+      if (duration == GST_CLOCK_TIME_NONE || self->info.rate == 0) {
+        GST_DEBUG_OBJECT (self, "Dropping gap event %" GST_PTR_FORMAT, event);
+      } else {
+        GstClockTime pts = timestamp;
+        guint64 silence_samples =
+            gst_util_uint64_scale (duration, self->info.rate, GST_SECOND);
+
+        GST_DEBUG_OBJECT (self,
+            "Converting gap event %" GST_PTR_FORMAT " to silence buffer",
+            event);
+
+        while (silence_samples > 0) {
+          guint n_samples = MIN (silence_samples, self->info.rate);
+          GstBuffer *buffer;
+          GstMapInfo map;
+          GstFlowReturn flow_ret;
+
+          buffer = gst_buffer_new_and_alloc (n_samples * self->info.bpf);
+          GST_BUFFER_PTS (buffer) = pts;
+          GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_GAP);
+          gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+          gst_audio_format_info_fill_silence (self->info.finfo, map.data,
+              map.size);
+          gst_buffer_unmap (buffer, &map);
+
+          flow_ret = gst_audio_buffer_split_sink_chain (self->sinkpad,
+              GST_OBJECT_CAST (self), buffer);
+
+          if (flow_ret != GST_FLOW_OK)
+            return FALSE;
+
+          silence_samples -= n_samples;
+          pts += gst_util_uint64_scale (n_samples, GST_SECOND, self->info.rate);
+        }
+      }
+      break;
+    }
     default:
       ret = gst_pad_event_default (pad, parent, event);
       break;
