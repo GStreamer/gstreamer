@@ -25,6 +25,7 @@
 #include <gst/base/gstpushsrc.h>
 #include <gst/video/video.h>
 #include <gst/gl/gl.h>
+#include "gstqt6navigation.h"
 #include "qt6glwindow.h"
 
 G_BEGIN_DECLS
@@ -52,9 +53,12 @@ struct _GstQml6GLSrc
   GstGLContext         *context;
   GstGLContext         *qt_context;
 
+  NavigationContext    *navigation_context;
+
   gboolean              default_fbo;
   gboolean              downstream_supports_affine_meta;
   gboolean              pending_image_orientation;
+  gboolean              view_only;
 };
 
 G_END_DECLS

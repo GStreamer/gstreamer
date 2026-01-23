@@ -3,6 +3,7 @@ qt6_sources = [
   'gstqt6element.cc',
   'gstqsg6material.cc',
   'gstqt6glutility.cc',
+  'gstqt6navigation.cc',
   'gstqml6glsink.cc',
   'gstqml6glsrc.cc',
   'gstqml6glmixer.cc',
@@ -18,6 +19,7 @@ qt6_headers = [
   'gstqt6elements.h',
   'qt6glrenderer.h',
   'gstqt6glutility.h',
+  'gstqt6navigation.h',
   'qt6glitem.h',
   'gstqt6gl.h',
   'gstqsg6material.h',
@@ -85,7 +87,7 @@ if not have_tools
   subdir_done()
 endif
 
-qt6qml_dep = dependency('qt6', modules : ['Core', 'Gui', 'Qml', 'Quick'],
+qt6qml_dep = dependency('qt6', modules : ['Core', 'Gui', 'Qml', 'Quick', 'Test'],
                         method: qt6_method, required: qt6_option, static: host_system == 'ios', private_headers: true)
 if not qt6qml_dep.found()
   subdir_done()
@@ -98,10 +100,17 @@ if not qsb.found()
 endif
 qsb_wrapper = find_program('qsb-wrapper.py')
 
+xkbcommon_dep = dependency('xkbcommon', required: false)
+
 optional_deps = []
 qt_defines = []
 have_qpa_include = false
 have_qt_windowing = false
+
+if xkbcommon_dep.found()
+  qt_defines += ['-DHAVE_XKBCOMMON']
+  optional_deps += xkbcommon_dep
+endif
 
 # Look for the QPA platform native interface header
 qpa_header_path = join_paths(qt6qml_dep.version(), 'QtGui')

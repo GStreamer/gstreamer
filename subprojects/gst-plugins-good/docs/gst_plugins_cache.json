@@ -12914,6 +12914,18 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "view-only": {
+                        "blurb": "When set no navigation input is forwarded to the QQuickWindow",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "window": {
                         "blurb": "The QQuickWindow to place in the object hierarchy",
                         "conditionally-available": false,

@@ -50,6 +50,7 @@ static void gst_qml6_gl_src_finalize (GObject * object);
 static gboolean gst_qml6_gl_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
 static GstCaps *gst_qml6_gl_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter);
 static gboolean gst_qml6_gl_src_query (GstBaseSrc * bsrc, GstQuery * query);
+static gboolean gst_qml6_gl_src_event (GstBaseSrc * bsrc, GstEvent * event);
 
 static gboolean gst_qml6_gl_src_decide_allocation (GstBaseSrc * bsrc,
     GstQuery * query);
@@ -76,7 +77,8 @@ enum
 {
   ARG_0,
   PROP_WINDOW,
-  PROP_DEFAULT_FBO
+  PROP_DEFAULT_FBO,
+  PROP_VIEW_ONLY
 };
 
 #define gst_qml6_gl_src_parent_class parent_class
@@ -120,6 +122,19 @@ gst_qml6_gl_src_class_init (GstQml6GLSrcClass * klass)
           "When set it will not create a new FBO for the QML render thread",
           FALSE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstQml6GLSrc:view-only:
+   *
+   * Whether to forward navigation input into the QQuickWindow.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_VIEW_ONLY,
+      g_param_spec_boolean ("view-only",
+          "Whether navigation input is forwarded into the QQuickWindow",
+          "When set no navigation input is forwarded to the QQuickWindow",
+          TRUE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_qml6_gl_src_template));
 
@@ -132,6 +147,7 @@ gst_qml6_gl_src_class_init (GstQml6GLSrcClass * klass)
   gstbasesrc_class->decide_allocation = gst_qml6_gl_src_decide_allocation;
   gstbasesrc_class->unlock = gst_qml6_gl_src_unlock;
   gstbasesrc_class->unlock_stop = gst_qml6_gl_src_unlock_stop;
+  gstbasesrc_class->event = gst_qml6_gl_src_event;
 
   gstpushsrc_class->create = gst_qml6_gl_src_create;
 }
@@ -142,7 +158,9 @@ gst_qml6_gl_src_init (GstQml6GLSrc * src)
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (src), DEFAULT_IS_LIVE);
   src->default_fbo = FALSE;
+  src->view_only = TRUE;
   src->pending_image_orientation = TRUE;
+  src->navigation_context = nullptr;
 }
 
 static void
@@ -161,8 +179,19 @@ gst_qml6_gl_src_set_property (GObject * object, guint prop_id,
         qt_src->window = NULL;
       }
 
-      if (qt_src->qwindow)
+      if (qt_src->qwindow) {
         qt_src->window = new Qt6GLWindow (qt_src->qwindow);
+
+        GST_OBJECT_LOCK (qt_src);
+        if (!qt_src->navigation_context) {
+          qt_src->navigation_context = new NavigationContext{};
+          qt_src->navigation_context->setInvertedCoordinates(true);
+        }
+
+        qt_src->navigation_context->setWindow(qt_src->qwindow);
+        qt_src->navigation_context->setActive(!qt_src->view_only);
+        GST_OBJECT_UNLOCK (qt_src);
+      }
 
       break;
     }
@@ -170,6 +199,15 @@ gst_qml6_gl_src_set_property (GObject * object, guint prop_id,
       qt_src->default_fbo = g_value_get_boolean (value);
       if (qt_src->window)
         qt6_gl_window_use_default_fbo (qt_src->window, qt_src->default_fbo);
+      break;
+    case PROP_VIEW_ONLY:
+      qt_src->view_only = g_value_get_boolean (value);
+
+      GST_OBJECT_LOCK (qt_src);
+      if (qt_src->navigation_context) {
+        qt_src->navigation_context->setActive(!qt_src->view_only);
+      }
+      GST_OBJECT_UNLOCK (qt_src);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -189,6 +227,9 @@ gst_qml6_gl_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DEFAULT_FBO:
       g_value_set_boolean (value, qt_src->default_fbo);
+      break;
+    case PROP_VIEW_ONLY:
+      g_value_set_boolean (value, qt_src->view_only);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -213,6 +254,9 @@ gst_qml6_gl_src_finalize (GObject * object)
   if (qt_src->display)
     gst_object_unref (qt_src->display);
   qt_src->display = NULL;
+
+  if (qt_src->navigation_context)
+    delete qt_src->navigation_context;
 
   if (qt_src->window)
     delete qt_src->window;
@@ -314,6 +358,27 @@ gst_qml6_gl_src_query (GstBaseSrc * bsrc, GstQuery * query)
   }
 
   return res;
+}
+
+static gboolean
+gst_qml6_gl_src_event (GstBaseSrc * bsrc, GstEvent * event)
+{
+  GstQml6GLSrc *qt_src = GST_QML6_GL_SRC (bsrc);
+
+  GST_OBJECT_LOCK (qt_src);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NAVIGATION:
+      if (qt_src->navigation_context)
+        qt_src->navigation_context->processNavigationEvent(event);
+      break;
+    default:
+      break;
+  }
+
+  GST_OBJECT_UNLOCK (qt_src);
+
+  return GST_BASE_SRC_CLASS (parent_class)->event (bsrc, event);
 }
 
 static gboolean
