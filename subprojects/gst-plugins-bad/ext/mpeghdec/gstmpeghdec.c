@@ -730,6 +730,8 @@ gst_mpeghdec_handle_frame (GstAudioDecoder * dec, GstBuffer * inbuf)
     gst_buffer_unmap (inbuf, &imap);
     if (err != MPEGH_DEC_OK) {
       GST_ERROR_OBJECT (self, "mpeghdecoder_process failed with %d", err);
+      GST_AUDIO_DECODER_ERROR (self, 1, STREAM, DECODE, (NULL),
+          ("Call to mpeghdecoder_process failed with %d.", err), ret);
       goto out;
     }
   } else {
@@ -737,6 +739,8 @@ gst_mpeghdec_handle_frame (GstAudioDecoder * dec, GstBuffer * inbuf)
     err = mpeghdecoder_flushAndGet (self->dec);
     if (err != MPEGH_DEC_OK) {
       GST_ERROR_OBJECT (self, "mpeghdecoder_flushAndGet failed with %d", err);
+      GST_AUDIO_DECODER_ERROR (self, 1, STREAM, DECODE, (NULL),
+          ("Call to mpeghdecoder_flushAndGet failed with %d.", err), ret);
       goto out;
     }
   }
@@ -756,13 +760,17 @@ gst_mpeghdec_handle_frame (GstAudioDecoder * dec, GstBuffer * inbuf)
         MAX_OUTBUF_SIZE, &out_info);
     gst_buffer_unmap (outbuf, &omap);
     if (err != MPEGH_DEC_OK && err != MPEGH_DEC_FEED_DATA) {
+      gst_buffer_unref (outbuf);
       GST_ERROR_OBJECT (self, "mpeghdecoder_getSamples failed with %d", err);
+      GST_AUDIO_DECODER_ERROR (self, 1, STREAM, DECODE, (NULL),
+          ("Call to mpeghdecoder_getSamples failed with %d.", err), ret);
       goto out;
     } else {
       out_samples_per_channel = out_info.numSamplesPerChannel;
       out_samplerate = out_info.sampleRate;
       out_channels = out_info.numChannels;
       if (err == MPEGH_DEC_FEED_DATA) {
+        gst_buffer_unref (outbuf);
         continue;
       }
     }
@@ -771,6 +779,7 @@ gst_mpeghdec_handle_frame (GstAudioDecoder * dec, GstBuffer * inbuf)
         out_samples_per_channel * out_channels * sizeof (gint32));
 
     if (!gst_mpeghdec_update_info (self, out_channels, out_samplerate)) {
+      gst_buffer_unref (outbuf);
       ret = GST_FLOW_NOT_NEGOTIATED;
       goto out;
     }
@@ -803,7 +812,8 @@ gst_mpeghdec_flush (GstAudioDecoder * dec, gboolean hard)
     MPEGH_DECODER_ERROR err;
     err = mpeghdecoder_flush (self->dec);
     if (err != MPEGH_DEC_OK) {
-      GST_ERROR_OBJECT (self, "flushing error: %d", err);
+      GST_ERROR_OBJECT (self, "Call to mpeghdecoder_flush failed with %d.",
+          err);
     }
   }
 }
