@@ -714,7 +714,7 @@ gst_gl_transformation_src_event (GstBaseTransform * trans, GstEvent * event)
           return TRUE;
         }
 
-        gst_navigation_event_set_coordinates (event, x, y);
+        gst_navigation_event_set_coordinates (event, new_x, new_y);
       }
       break;
     }
