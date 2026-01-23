@@ -428,23 +428,12 @@ gst_audio_buffer_split_output (GstAudioBufferSplit * self, gboolean force,
 
     resync_time_diff =
         gst_util_uint64_scale (self->current_offset, GST_SECOND, rate);
-    if (self->out_segment.rate < 0.0) {
-      if (resync_pts > resync_time_diff)
-        GST_BUFFER_PTS (buffer) = resync_pts - resync_time_diff;
-      else
-        GST_BUFFER_PTS (buffer) = 0;
-      GST_BUFFER_DURATION (buffer) =
-          gst_util_uint64_scale (size / bpf, GST_SECOND, rate);
-
-      self->current_offset += size / bpf;
-    } else {
-      GST_BUFFER_PTS (buffer) = resync_pts + resync_time_diff;
-      self->current_offset += size / bpf;
-      resync_time_diff =
-          gst_util_uint64_scale (self->current_offset, GST_SECOND, rate);
-      GST_BUFFER_DURATION (buffer) =
-          resync_time_diff - (GST_BUFFER_PTS (buffer) - resync_pts);
-    }
+    GST_BUFFER_PTS (buffer) = resync_pts + resync_time_diff;
+    self->current_offset += size / bpf;
+    resync_time_diff =
+        gst_util_uint64_scale (self->current_offset, GST_SECOND, rate);
+    GST_BUFFER_DURATION (buffer) =
+        resync_time_diff - (GST_BUFFER_PTS (buffer) - resync_pts);
 
     GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;
     GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET_NONE;
@@ -496,22 +485,16 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
       GST_BUFFER_PTS (buffer));
 
   input_samples = gst_buffer_get_size (buffer) / bpf;
-  if (self->in_segment.rate == 1.0 || self->in_segment.rate == -1.0) {
+  if (self->in_segment.rate == 1.0) {
     input_scaled_samples = input_samples;
-  } else if (self->in_segment.rate < 0.0) {
-    input_scaled_samples = ((gdouble) input_samples) / (-self->in_segment.rate);
   } else {
     input_scaled_samples = ((gdouble) input_samples) / self->in_segment.rate;
   }
 
   GST_OBJECT_LOCK (self);
 
-  if (self->in_segment.rate < 0) {
-    discont = FALSE;
-  } else {
-    discont = GST_BUFFER_IS_DISCONT (buffer)
-        || GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_RESYNC);
-  }
+  discont = GST_BUFFER_IS_DISCONT (buffer)
+      || GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_RESYNC);
 
   /* If the segment rate is changing this is a discontinuity */
   discont = discont || (self->out_segment.format != GST_FORMAT_UNDEFINED
@@ -533,10 +516,10 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
 
   current_rt =
       self->resync_rt + gst_util_uint64_scale (self->current_offset,
-      GST_SECOND, rate * ABS (self->out_segment.rate));
+      GST_SECOND, rate * self->out_segment.rate);
   current_rt_end =
       self->resync_rt + gst_util_uint64_scale (self->current_offset +
-      avail_samples, GST_SECOND, rate * ABS (self->out_segment.rate));
+      avail_samples, GST_SECOND, rate * self->out_segment.rate);
 
   if (self->gapless && self->current_offset != -1) {
     GST_DEBUG_OBJECT (self,
@@ -548,13 +531,13 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
 
     new_offset =
         gst_util_uint64_scale (input_rt - self->resync_rt,
-        rate * ABS (self->out_segment.rate), GST_SECOND);
+        rate * self->out_segment.rate, GST_SECOND);
     if (input_rt < self->resync_rt) {
       guint64 drop_samples;
 
       new_offset =
           gst_util_uint64_scale (self->resync_rt -
-          input_rt, rate * ABS (self->out_segment.rate), GST_SECOND);
+          input_rt, rate * self->out_segment.rate, GST_SECOND);
       drop_samples = self->current_offset + avail_samples + new_offset;
 
       GST_DEBUG_OBJECT (self,
@@ -677,19 +660,93 @@ gst_audio_buffer_split_clip_buffer_start_for_gapless (GstAudioBufferSplit *
     return NULL;
   }
 
-  if (self->out_segment.rate < 0.0) {
-    buffer =
-        gst_audio_buffer_truncate (buffer, bpf, 0,
-        nsamples - self->drop_samples);
-    self->drop_samples = 0;
-    return buffer;
-  } else {
-    buffer = gst_audio_buffer_truncate (buffer, bpf, self->drop_samples, -1);
-    self->drop_samples = 0;
-    return buffer;
+  buffer = gst_audio_buffer_truncate (buffer, bpf, self->drop_samples, -1);
+  self->drop_samples = 0;
+  return buffer;
+}
+
+static GstBuffer *
+gst_audio_buffer_split_reverse_buffer (GstAudioBufferSplit * self,
+    GstBuffer * buffer,
+    const GstSegment * segment, gint rate, gint channels, gint bps)
+{
+  guint n_samples;
+  GstBuffer *outbuf;
+  GstClockTime pts, pts_end;
+  GstClockTime new_pts;
+  GstMapInfo in_map, out_map;
+
+  n_samples = gst_buffer_get_size (buffer) / (bps * channels);
+  outbuf = gst_buffer_new_and_alloc (gst_buffer_get_size (buffer));
+
+  gst_buffer_copy_into (outbuf, buffer, GST_BUFFER_COPY_METADATA, 0, -1);
+
+  pts = GST_BUFFER_PTS (buffer);
+  pts_end = pts + gst_util_uint64_scale (n_samples, GST_SECOND, rate);
+
+  // PTS / PTS end are already clipped into the segment but due to rounding
+  // errors PTS end might be just behind segment.stop
+  if (pts_end > self->in_segment.stop)
+    pts_end = self->in_segment.stop;
+  new_pts = self->in_segment.start + (self->in_segment.stop - pts_end);
+
+  GST_BUFFER_PTS (outbuf) = new_pts;
+
+  GST_LOG_OBJECT (self,
+      "Reversing buffer of %u samples from PTS %" GST_TIME_FORMAT " to PTS %"
+      GST_TIME_FORMAT, n_samples, GST_TIME_ARGS (pts), GST_TIME_ARGS (new_pts));
+
+  if (n_samples == 0)
+    goto out;
+
+  gst_buffer_map (buffer, &in_map, GST_MAP_READ);
+  gst_buffer_map (outbuf, &out_map, GST_MAP_WRITE);
+
+#define REVERSE_SAMPLES(type, stride) { \
+      gsize i, j; \
+      const guint8 *in = (const guint8 *) in_map.data; \
+      guint8 *out = ((guint8 *) out_map.data) + (n_samples - 1) * sizeof (guint8) * channels * stride; \
+      \
+      for (i = 0; i < n_samples; i++) { \
+        for (j = 0; j < channels * stride; j++) { \
+          out[j] = in[j]; \
+        } \
+        \
+        in += channels * stride; \
+        out -= channels * stride; \
+      } \
+}
+
+  switch (bps) {
+    case 1:
+      REVERSE_SAMPLES (guint8, 1);
+      break;
+    case 2:
+      REVERSE_SAMPLES (guint16, 1);
+      break;
+    case 3:
+      REVERSE_SAMPLES (guint8, 3);
+      break;
+    case 4:
+      REVERSE_SAMPLES (guint32, 1);
+      break;
+    case 8:
+      REVERSE_SAMPLES (guint64, 1);
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
   }
 
-  return buffer;
+#undef REVERSE_SAMPLES
+
+  gst_buffer_unmap (outbuf, &out_map);
+  gst_buffer_unmap (buffer, &in_map);
+
+out:
+  gst_buffer_unref (buffer);
+
+  return outbuf;
 }
 
 static GstFlowReturn
@@ -699,7 +756,7 @@ gst_audio_buffer_split_sink_chain (GstPad * pad, GstObject * parent,
   GstAudioBufferSplit *self = GST_AUDIO_BUFFER_SPLIT (parent);
   GstFlowReturn ret;
   GstAudioFormat format;
-  gint rate, bpf, samples_per_buffer;
+  gint rate, bpf, channels, bps, samples_per_buffer;
 
   GST_OBJECT_LOCK (self);
   format =
@@ -707,6 +764,8 @@ gst_audio_buffer_split_sink_chain (GstPad * pad, GstObject * parent,
       finfo ? GST_AUDIO_INFO_FORMAT (&self->info) : GST_AUDIO_FORMAT_UNKNOWN;
   rate = GST_AUDIO_INFO_RATE (&self->info);
   bpf = GST_AUDIO_INFO_BPF (&self->info);
+  channels = GST_AUDIO_INFO_CHANNELS (&self->info);
+  bps = GST_AUDIO_INFO_BPS (&self->info);
   samples_per_buffer = self->samples_per_buffer;
   GST_OBJECT_UNLOCK (self);
 
@@ -727,8 +786,18 @@ gst_audio_buffer_split_sink_chain (GstPad * pad, GstObject * parent,
   }
 
   buffer = gst_audio_buffer_clip (buffer, &self->in_segment, rate, bpf);
-  if (!buffer)
+  if (!buffer) {
+    GST_LOG_OBJECT (self, "Clipped buffer");
     return GST_FLOW_OK;
+  }
+
+  if (self->segment_reversed) {
+    buffer =
+        gst_audio_buffer_split_reverse_buffer (self, buffer, &self->in_segment,
+        rate, channels, bps);
+    if (!buffer)
+      return GST_FLOW_ERROR;
+  }
 
   ret =
       gst_audio_buffer_split_handle_discont (self, buffer, format, rate, bpf,
@@ -820,6 +889,7 @@ gst_audio_buffer_split_sink_event (GstPad * pad, GstObject * parent,
     case GST_EVENT_SEGMENT:
       gst_event_copy_segment (event, &self->in_segment);
       if (self->in_segment.format != GST_FORMAT_TIME) {
+        self->segment_reversed = FALSE;
         gst_event_unref (event);
         ret = FALSE;
       } else {
@@ -828,6 +898,13 @@ gst_audio_buffer_split_sink_event (GstPad * pad, GstObject * parent,
             &self->in_segment);
         self->segment_pending = TRUE;
         self->segment_seqnum = gst_event_get_seqnum (event);
+        if (self->in_segment.rate < 0.0) {
+          self->in_segment.rate = -self->in_segment.rate;
+          self->in_segment.applied_rate = -self->in_segment.applied_rate;
+          self->segment_reversed = TRUE;
+        } else {
+          self->segment_reversed = FALSE;
+        }
         gst_event_unref (event);
         ret = TRUE;
       }
@@ -864,6 +941,34 @@ gst_audio_buffer_split_sink_event (GstPad * pad, GstObject * parent,
         gst_event_set_seqnum (event, self->segment_seqnum);
         gst_pad_push_event (self->srcpad, event);
         self->segment_pending = FALSE;
+      }
+
+      if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT_DONE
+          && self->segment_reversed) {
+        GstFormat format;
+        gint64 new_position, position;
+        guint32 seqnum = gst_event_get_seqnum (event);
+
+        gst_event_parse_segment_done (event, &format, &position);
+        new_position = position;
+        if (new_position < self->in_segment.start)
+          new_position = self->in_segment.start;
+        new_position =
+            self->in_segment.stop - (new_position - self->in_segment.start);
+
+        gst_event_unref (event);
+        event = gst_event_new_segment_done (format, new_position);
+        if (format == GST_FORMAT_TIME) {
+          GST_DEBUG_OBJECT (self,
+              "Updating segment-done position from %" GST_TIME_FORMAT " to %"
+              GST_TIME_FORMAT, GST_TIME_ARGS (position),
+              GST_TIME_ARGS (new_position));
+        } else {
+          GST_DEBUG_OBJECT (self,
+              "Updating segment-done position from %" G_GINT64_FORMAT " to %"
+              G_GINT64_FORMAT, position, new_position);
+        }
+        gst_event_set_seqnum (event, seqnum);
       }
 
       ret = gst_pad_event_default (pad, parent, event);
