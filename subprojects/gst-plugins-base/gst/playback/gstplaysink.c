@@ -4527,7 +4527,11 @@ gst_play_sink_refresh_pad (GstPlaySink * playsink, GstPad * pad,
     *block_id =
         gst_pad_add_probe (blockpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
         sinkpad_blocked_cb, playsink, NULL);
-    PENDING_FLAG_SET (playsink, type);
+    /* Don't set PENDING for text pads - subtitle data is sparse and may
+     * not arrive before video/audio, which would cause reconfiguration to
+     * wait indefinitely. */
+    if (type != GST_PLAY_SINK_TYPE_TEXT)
+      PENDING_FLAG_SET (playsink, type);
     gst_object_unref (blockpad);
   }
   GST_PLAY_SINK_UNLOCK (playsink);
@@ -4662,7 +4666,11 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
       *block_id =
           gst_pad_add_probe (blockpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
           sinkpad_blocked_cb, playsink, NULL);
-      PENDING_FLAG_SET (playsink, type);
+      /* Don't set PENDING for text pads - subtitle data is sparse and may
+       * not arrive before video/audio, which would cause reconfiguration to
+       * wait indefinitely. */
+      if (type != GST_PLAY_SINK_TYPE_TEXT)
+        PENDING_FLAG_SET (playsink, type);
       gst_object_unref (blockpad);
     }
     GST_PLAY_SINK_UNLOCK (playsink);
