@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.24.0\n"
+"Project-Id-Version: gst-plugins-base-1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:57+0000\n"
-"PO-Revision-Date: 2024-03-16 23:45+0100\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
+"PO-Revision-Date: 2026-01-24 20:54+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.4.2\n"
+"X-Generator: Poedit 3.8\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Gerät konnte nicht zur Wiedergabe in Mono geöffnet werden."
@@ -214,7 +214,7 @@ msgid "FFMpeg v1"
 msgstr "FFMpeg v1"
 
 msgid "Lossless MSZH"
-msgstr "verlustloses MSZH"
+msgstr "Verlustloses MSZH"
 
 msgid "Run-length encoding"
 msgstr "RLE-Codierung"
@@ -255,7 +255,7 @@ msgid "WebVTT subtitle format"
 msgstr "Untertitel-Format WebVTT"
 
 msgid "Timed ID3 tag Metadata"
-msgstr ""
+msgstr "Gemessene ID3-Kennzeichnung-Metadaten"
 
 msgid "Uncompressed video"
 msgstr "Unkomprimiertes Video"
@@ -457,19 +457,19 @@ msgstr ""
 "eine zu 35 mm äquivalente Brennweite des Objektivs bei Bildaufnahme, in mm"
 
 msgid "capturing digital zoom ratio"
-msgstr "Digitale Vergrößerung"
+msgstr "Digitale Vergrößerung der Aufnahme"
 
 msgid "Digital zoom ratio used when capturing an image"
 msgstr "Die verwendete digitale Vergrößerung bei Bildaufnahme"
 
 msgid "capturing iso speed"
-msgstr "ISO-Empfindlichkeit"
+msgstr "ISO-Empfindlichkeit der Aufnahme"
 
 msgid "The ISO speed used when capturing an image"
 msgstr "Die verwendete ISO-Empfindlichkeit bei Bildaufnahme"
 
 msgid "capturing exposure program"
-msgstr "Belichtungsprogramm"
+msgstr "Belichtungsprogramm der Aufnahme"
 
 msgid "The exposure program used when capturing an image"
 msgstr "Das verwendete Belichtungsprogramm bei Bildaufnahme"
@@ -487,31 +487,30 @@ msgid "The exposure compensation used when capturing an image"
 msgstr "Der verwendete Belichtungskorrektur bei Bildaufnahme"
 
 msgid "capturing scene capture type"
-msgstr "Motivwahl"
+msgstr "Motivwahl der Aufnahme"
 
 msgid "The scene capture mode used when capturing an image"
 msgstr "Die verwendete Motivwahl bei Bildaufnahme"
 
 msgid "capturing gain adjustment"
-msgstr "Anpassung der Aufnahmebelichtung"
+msgstr "Pegelanpassung der Aufnahme"
 
 # »Gain adjustment« kenne ich eigentlich nur bei Audiodateien. Müsste sich hier um eine Anpassung der Belichtungswerte handeln.
 msgid "The overall gain adjustment applied on an image"
 msgstr "Die auf das Bild angewendete Anpassung der Belichtungswerte"
 
 msgid "capturing white balance"
-msgstr "Weißabgleich"
+msgstr "Weißabgleich der Aufnahme"
 
 msgid "The white balance mode set when capturing an image"
 msgstr "Der eingestellte Weißabgleich bei Bildaufnahme"
 
-#, fuzzy
 msgid "capturing light source"
-msgstr "Aufnahmequelle"
+msgstr "Lichtquelle der Aufnahme"
 
 #, fuzzy
-msgid "The light source indicates the kind of light when capturing animage"
-msgstr "Die verwendete Motivwahl bei Bildaufnahme"
+msgid "The light source indicates the kind of light when capturing an image"
+msgstr "Die Lichtquelle beschreibt die Lichtart bei Bildaufnahme"
 
 msgid "capturing contrast"
 msgstr "Kontrast"
@@ -608,35 +607,44 @@ msgstr "Stumm. Aus"
 
 msgid "Missing plugin installation was disabled via command line options."
 msgstr ""
+"Installation von fehlenden Erweiterungen wurde via Optionen auf der "
+"Befehlszeile deaktiviert."
 
 msgid "All missing plugins could be installed."
-msgstr ""
+msgstr "Es konnten alle fehlenden Erweiterungen installiert werden."
 
 msgid "Some missing plugins could be installed."
-msgstr ""
+msgstr "Es konnten einige fehlenden Erweiterungen installiert werden."
 
 msgid ""
 "The missing plugins could not be found in the available package repositories."
 msgstr ""
+"Die fehlenden Erweiterungen konnten nicht in den verfügbaren Paketdepots "
+"gefunden werden."
 
 msgid "An error occurred during plugin installation."
-msgstr ""
+msgstr "Ein Fehler trat während der Installation der Erweiterung auf."
 
 msgid "Plugin installation was cancelled by the user."
-msgstr ""
+msgstr "Die Installation der Erweiterung wurde durch den Benutzer abgebrochen."
 
 msgid ""
 "Something went wrong when trying to invoke the missing plugin installer."
 msgstr ""
+"Etwas hat nicht funktioniert beim Versuch die Installation der fehlenden "
+"Erweiterung aufzurufen."
 
 msgid "This system does not have a missing plugin handler installed."
 msgstr ""
+"Dieses System hat keinen Handler für fehlende Erweiterungen installiert."
 
 msgid "Updating plugin registry for newly installed plugins.."
 msgstr ""
+"Die Datenbank für Erweiterungen wird mit neu installierte Erweiterungen "
+"aktualisiert."
 
 msgid "Error updating plugin registry."
-msgstr ""
+msgstr "Fehler beim Aktualisieren der Datenbank für Erweiterungen."
 
 msgid "Buffering..."
 msgstr "Zwischenspeichern …"
@@ -800,7 +808,7 @@ msgid "Do not print current position of pipeline"
 msgstr "Nicht die aktuelle Position der Weiterleitung ausgeben"
 
 msgid "Disable missing plugin installation"
-msgstr ""
+msgstr "Die Installation von fehlenden Erweiterungen ausschalten"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

@@ -1,0 +1,795 @@
+# Arabic translation for gst-plugins-base-1.0 package.
+# Copyright (C) 2026 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gst-plugins-base package.
+# Zayed Al-Saidi <zayed.alsaidi@gmail.com>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-base-1.27.90\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
+"PO-Revision-Date: 2026-01-11 10:12+0400\n"
+"Last-Translator: Zayed Al-Saidi <zayed.alsaidi@gmail.com>\n"
+"Language-Team: Arabic <(nothing)>\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
+"X-Generator: Lokalize 23.08.5\n"
+
+msgid "Could not open device for playback in mono mode."
+msgstr "تعذر فتح الجهاز للتشغيل في الوضع الأحادي."
+
+msgid "Could not open device for playback in stereo mode."
+msgstr "تعذر فتح الجهاز للتشغيل في الوضع الثنائي (ستيريو)."
+
+#, c-format
+msgid "Could not open device for playback in %d-channel mode."
+msgstr "تعذر فتح الجهاز للتشغيل في وضع القنوات %d."
+
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr "تعذر فتح جهاز الصوت للتشغيل. الجهاز قيد الاستخدام من قبل تطبيق آخر."
+
+msgid "Could not open audio device for playback."
+msgstr "تعذر فتح جهاز الصوت للتشغيل."
+
+msgid "Error outputting to audio device. The device has been disconnected."
+msgstr "خطأ أثناء الإخراج إلى جهاز الصوت. فُصل الجهاز."
+
+msgid "Could not open device for recording in mono mode."
+msgstr "تعذر فتح الجهاز للتسجيل في الوضع الأحادي."
+
+msgid "Could not open device for recording in stereo mode."
+msgstr "تعذر فتح الجهاز للتسجيل في الوضع الثنائي (ستيريو)."
+
+#, c-format
+msgid "Could not open device for recording in %d-channel mode"
+msgstr "تعذر فتح الجهاز للتسجيل في وضع القنوات %d"
+
+msgid ""
+"Could not open audio device for recording. Device is being used by another "
+"application."
+msgstr "تعذر فتح جهاز الصوت للتسجيل. الجهاز قيد الاستخدام من قبل تطبيق آخر."
+
+msgid "Could not open audio device for recording."
+msgstr "تعذر فتح جهاز الصوت للتسجيل."
+
+msgid "Error recording from audio device. The device has been disconnected."
+msgstr "خطأ أثناء التسجيل من جهاز الصوت. فُصل الجهاز."
+
+msgid "Could not open CD device for reading."
+msgstr "تعذر فتح جهاز القرص المدمج للقراءة."
+
+msgid "Could not seek CD."
+msgstr "تعذر إجراء بحث (seek) في القرص المدمج."
+
+msgid "Could not read CD."
+msgstr "تعذر قراءة القرص المدمج."
+
+msgid "Could not determine type of stream"
+msgstr "تعذر تحديد نوع التدفق"
+
+msgid "This appears to be a text file"
+msgstr "يبدو أن هذا ملف نصي"
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "العنصر '%s' مفقود - افحص تثبيت GStreamer في حاسوبك."
+
+msgid "Could not create \"uridecodebin\" element."
+msgstr "تعذر إنشاء عنصر \"uridecodebin\"."
+
+#, c-format
+msgid "Both autovideosink and %s elements are missing."
+msgstr "كلا العنصرين autovideosink و %s مفقودان."
+
+msgid "The autovideosink element is missing."
+msgstr "عنصر autovideosink مفقود."
+
+#, c-format
+msgid "Configured videosink %s is not working."
+msgstr "عنصر videosink المضبوط %s لا يعمل."
+
+#, c-format
+msgid "Both autovideosink and %s elements are not working."
+msgstr "كلا العنصرين autovideosink و %s لا يعملان."
+
+msgid "The autovideosink element is not working."
+msgstr "عنصر autovideosink لا يعمل."
+
+msgid "Custom text sink element is not usable."
+msgstr "عنصر مصب النص المخصص غير قابل للاستخدام."
+
+msgid "No volume control found"
+msgstr "لم يعثر على متحكم في مستوى الصوت"
+
+#, c-format
+msgid "Both autoaudiosink and %s elements are missing."
+msgstr "كلا العنصرين autoaudiosink و %s مفقودان."
+
+msgid "The autoaudiosink element is missing."
+msgstr "عنصر autoaudiosink مفقود."
+
+#, c-format
+msgid "Configured audiosink %s is not working."
+msgstr "عنصر audiosink المضبوط %s لا يعمل."
+
+#, c-format
+msgid "Both autoaudiosink and %s elements are not working."
+msgstr "كلا العنصرين autoaudiosink و %s لا يعملان."
+
+msgid "The autoaudiosink element is not working."
+msgstr "عنصر autoaudiosink لا يعمل."
+
+msgid "Can't play a text file without video or visualizations."
+msgstr "لا يمكن تشغيل ملف نصي بدون فيديو أو تصورات بصرية."
+
+#, c-format
+msgid "No decoder available for type '%s'."
+msgstr "لا يوجد فك ترميز متاح للنوع '%s'."
+
+msgid "No URI specified to play from."
+msgstr "لم يحدد عنوان للتشغيل منه."
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "عنوان غير صالح \"%s\"."
+
+msgid "This stream type cannot be played yet."
+msgstr "نوع التدفق هذا لا يمكن تشغيله حالياً."
+
+#, c-format
+msgid "No URI handler implemented for \"%s\"."
+msgstr "لا يوجد معالج عنوان مطبق لـ \"%s\"."
+
+msgid "Source element can't be prepared"
+msgstr "لا يمكن تحضير عنصر المصدر"
+
+msgid "Source element is invalid."
+msgstr "عنصر المصدر غير صالح."
+
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr "فشل إنشاء دليل التنزيل '%s'."
+
+msgid "Source element has no pads."
+msgstr "عنصر المصدر لا يملك وصلات (pads)."
+
+#, c-format
+msgid "Error while sending data to \"%s:%d\"."
+msgstr "خطأ أثناء إرسال البيانات إلى \"%s:%d\"."
+
+msgid "Can't record audio fast enough"
+msgstr "لا يمكن تسجيل الصوت بالسرعة الكافية"
+
+msgid "This CD has no audio tracks"
+msgstr "هذا القرص المدمج لا يحتوي على مسارات صوتية"
+
+msgid "An OpenGL error occurred"
+msgstr "حدث خطأ في OpenGL"
+
+msgid "The GL API is not compatible with the current GL context"
+msgstr "واجهة برمجة تطبيقات GL غير متوافقة مع سياق GL الحالي"
+
+msgid "Subclass failed to initialize."
+msgstr "فشل تهيئة الصنف الفرعي."
+
+msgid "ID3 tag"
+msgstr "وسم ID3"
+
+msgid "APE tag"
+msgstr "وسم APE"
+
+msgid "ICY internet radio"
+msgstr "راديو إنترنت ICY"
+
+msgid "Apple Lossless Audio (ALAC)"
+msgstr "ترميز آبل الصوتي بدون فقدان (ALAC)"
+
+msgid "Free Lossless Audio Codec (FLAC)"
+msgstr "ترميز الصوت الحر بدون فقدان (FLAC)"
+
+msgid "Lossless True Audio (TTA)"
+msgstr "الصوت الحقيقي بدون فقدان (TTA)"
+
+msgid "Windows Media Speech"
+msgstr "كلام ويندوز ميديا"
+
+msgid "CYUV Lossless"
+msgstr "CYUV بدون فقدان"
+
+msgid "FFMpeg v1"
+msgstr "FFMpeg إصدار 1"
+
+msgid "Lossless MSZH"
+msgstr "MSZH بدون فقدان"
+
+msgid "Run-length encoding"
+msgstr "ترميز Run-length"
+
+#. subtitle formats with static descriptions
+msgid "Timed Text"
+msgstr "نص موقوت"
+
+#. FIXME: add variant field to typefinder?
+msgid "Subtitle"
+msgstr "العنوان الفرعيّ"
+
+msgid "MPL2 subtitle format"
+msgstr "تنسيق العناوين الفرعية MPL2"
+
+msgid "DKS subtitle format"
+msgstr "تنسيق العناوين الفرعية DKS"
+
+msgid "QTtext subtitle format"
+msgstr "تنسيق العناوين الفرعية QTtext"
+
+msgid "Sami subtitle format"
+msgstr "تنسيق العناوين الفرعية Sami"
+
+msgid "TMPlayer subtitle format"
+msgstr "تنسيق العناوين الفرعية TMPlayer"
+
+msgid "CEA 608 Closed Caption"
+msgstr "تسميات توضيحية مغلقة CEA 608"
+
+msgid "CEA 708 Closed Caption"
+msgstr "تسميات توضيحية مغلقة CEA 708"
+
+msgid "Kate subtitle format"
+msgstr "تنسيق العناوين الفرعية Kate"
+
+msgid "WebVTT subtitle format"
+msgstr "تنسيق العناوين الفرعية WebVTT"
+
+msgid "Timed ID3 tag Metadata"
+msgstr "بيانات وصفية لوسم ID3 موقوتة"
+
+msgid "Uncompressed video"
+msgstr "فيديو غير مضغوط"
+
+msgid "Uncompressed gray"
+msgstr "تدرج رمادي غير مضغوط"
+
+#, c-format
+msgid "Uncompressed packed YUV %s"
+msgstr "YUV %s معبأ غير مضغوط"
+
+#, c-format
+msgid "Uncompressed semi-planar YUV %s"
+msgstr "YUV %s شبه مستوٍ غير مضغوط"
+
+#, c-format
+msgid "Uncompressed planar YUV %s"
+msgstr "YUV %s مستوٍ غير مضغوط"
+
+#, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr "%2$s بت-%1$d بلوحة ألوان غير مضغوط"
+
+#, c-format
+msgid "Uncompressed %d-bit %s"
+msgstr "%2$s غير مضغوط %1$d-بت"
+
+#, c-format
+msgid "DivX MPEG-4 Version %d"
+msgstr "DivX MPEG-4 إصدار %d"
+
+msgid "Uncompressed audio"
+msgstr "صوت غير مضغوط"
+
+#, c-format
+msgid "Raw %d-bit %s audio"
+msgstr "صوت %2$s الخام %1$d-بت"
+
+msgid "Audio CD source"
+msgstr "مصدر قرص مدمج صوتي"
+
+msgid "DVD source"
+msgstr "مصدر DVD"
+
+msgid "Real Time Streaming Protocol (RTSP) source"
+msgstr "مصدر بروتوكول البث في الوقت الحقيقي (RTSP)"
+
+msgid "Microsoft Media Server (MMS) protocol source"
+msgstr "مصدر بروتوكول خادم مايكروسوفت ميديا (MMS)"
+
+#. TODO: find out how to add a comment for translators to the source code
+#. * (and tell them to make the first letter uppercase below if they move
+#. * the protocol to the middle or end of the string)
+#, c-format
+msgid "%s protocol source"
+msgstr "مصدر بروتوكول %s"
+
+#, c-format
+msgid "%s video RTP depayloader"
+msgstr "مزيل حمولة RTP لفيديو %s"
+
+#, c-format
+msgid "%s audio RTP depayloader"
+msgstr "مزيل حمولة RTP لصوت %s"
+
+#, c-format
+msgid "%s RTP depayloader"
+msgstr "مزيل حمولة RTP لـ %s"
+
+#, c-format
+msgid "%s demuxer"
+msgstr "فاكك دمج %s"
+
+#, c-format
+msgid "%s decoder"
+msgstr "فك ترميز %s"
+
+#, c-format
+msgid "%s video RTP payloader"
+msgstr "محمل حمولة RTP لفيديو %s"
+
+#, c-format
+msgid "%s audio RTP payloader"
+msgstr "محمل حمولة RTP لصوت %s"
+
+#, c-format
+msgid "%s RTP payloader"
+msgstr "محمل حمولة RTP لـ %s"
+
+#, c-format
+msgid "%s muxer"
+msgstr "دامِج %s"
+
+#, c-format
+msgid "%s encoder"
+msgstr "ترميز %s"
+
+#, c-format
+msgid "GStreamer element %s"
+msgstr "عنصر GStreamer %s"
+
+msgid "Unknown source element"
+msgstr "عنصر مصدر مجهول"
+
+msgid "Unknown sink element"
+msgstr "عنصر مصب مجهول"
+
+msgid "Unknown element"
+msgstr "عنصر مجهول"
+
+msgid "Unknown decoder element"
+msgstr "عنصر فك ترميز مجهول"
+
+msgid "Unknown encoder element"
+msgstr "عنصر ترميز مجهول"
+
+#. we should really never get here, but we better still return
+#. * something if we do
+msgid "Plugin or element of unknown type"
+msgstr "ملحق أو عنصر من نوع مجهول"
+
+msgid "Failed to read tag: not enough data"
+msgstr "فشل قراءة الوسم: لا توجد بيانات كافية"
+
+msgid "track ID"
+msgstr "معرف المسار"
+
+msgid "MusicBrainz track ID"
+msgstr "معرف مسار MusicBrainz"
+
+msgid "artist ID"
+msgstr "معرف الفنان"
+
+msgid "MusicBrainz artist ID"
+msgstr "معرف فنان MusicBrainz"
+
+msgid "album ID"
+msgstr "معرف الألبوم"
+
+msgid "MusicBrainz album ID"
+msgstr "معرف ألبوم MusicBrainz"
+
+msgid "album artist ID"
+msgstr "معرف فنان الألبوم"
+
+msgid "MusicBrainz album artist ID"
+msgstr "معرف فنان ألبوم MusicBrainz"
+
+msgid "release group ID"
+msgstr "معرف مجموعة الإصدار"
+
+msgid "MusicBrainz release group ID"
+msgstr "معرف مجموعة إصدار MusicBrainz"
+
+msgid "release track ID"
+msgstr "معرف مسار الإصدار"
+
+msgid "MusicBrainz release track ID"
+msgstr "معرف مسار إصدار MusicBrainz"
+
+msgid "track TRM ID"
+msgstr "معرف TRM للمسار"
+
+msgid "MusicBrainz TRM ID"
+msgstr "معرف MusicBrainz TRM"
+
+msgid "AcoustID ID"
+msgstr "معرف AcoustID"
+
+msgid "AcoustID fingerprint (chromaprint)"
+msgstr "بصمة AcoustID (chromaprint)"
+
+msgid "capturing shutter speed"
+msgstr "سرعة الغالق عند الالتقاط"
+
+msgid "Shutter speed used when capturing an image, in seconds"
+msgstr "سرعة الغالق المستخدمة عند التقاط الصورة، بالثواني"
+
+msgid "capturing focal ratio"
+msgstr "النسبة البؤرية عند الالتقاط"
+
+msgid "Focal ratio (f-number) used when capturing the image"
+msgstr "النسبة البؤرية (الرقم البؤري) المستخدمة عند التقاط الصورة"
+
+msgid "capturing focal length"
+msgstr "البعد البؤري عند الالتقاط"
+
+msgid "Focal length of the lens used capturing the image, in mm"
+msgstr "البعد البؤري للعدسة المستخدمة في التقاط الصورة، بالملليمتر"
+
+msgid "capturing 35 mm equivalent focal length"
+msgstr "البعد البؤري المكافئ لـ 35 مم عند الالتقاط"
+
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
+msgstr ""
+"البعد البؤري المكافئ لـ 35 مم للعدسة المستخدمة في التقاط الصورة، بالملليمتر"
+
+msgid "capturing digital zoom ratio"
+msgstr "نسبة التقريب الرقمي عند الالتقاط"
+
+msgid "Digital zoom ratio used when capturing an image"
+msgstr "نسبة التقريب الرقمي المستخدمة عند التقاط الصورة"
+
+msgid "capturing iso speed"
+msgstr "سرعة ISO عند الالتقاط"
+
+msgid "The ISO speed used when capturing an image"
+msgstr "سرعة ISO المستخدمة عند التقاط الصورة"
+
+msgid "capturing exposure program"
+msgstr "برنامج التعريض عند الالتقاط"
+
+msgid "The exposure program used when capturing an image"
+msgstr "برنامج التعريض المستخدم عند التقاط الصورة"
+
+msgid "capturing exposure mode"
+msgstr "وضع التعريض عند الالتقاط"
+
+msgid "The exposure mode used when capturing an image"
+msgstr "وضع التعريض المستخدم عند التقاط الصورة"
+
+msgid "capturing exposure compensation"
+msgstr "تعويض التعريض عند الالتقاط"
+
+msgid "The exposure compensation used when capturing an image"
+msgstr "تعويض التعريض المستخدم عند التقاط الصورة"
+
+msgid "capturing scene capture type"
+msgstr "نوع لقطة المشهد عند الالتقاط"
+
+msgid "The scene capture mode used when capturing an image"
+msgstr "وضع التقاط المشهد المستخدم عند التقاط الصورة"
+
+msgid "capturing gain adjustment"
+msgstr "تعديل الكسب عند الالتقاط"
+
+msgid "The overall gain adjustment applied on an image"
+msgstr "تعديل الكسب العام المطبق على الصورة"
+
+msgid "capturing white balance"
+msgstr "توازن اللون الأبيض عند الالتقاط"
+
+msgid "The white balance mode set when capturing an image"
+msgstr "وضع توازن اللون الأبيض المحدد عند التقاط الصورة"
+
+msgid "capturing light source"
+msgstr "مصدر الضوء عند الالتقاط"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing an image"
+msgstr "مصدر الضوء يشير إلى نوع الضوء عند التقاط الصورة"
+
+msgid "capturing contrast"
+msgstr "التباين عند الالتقاط"
+
+msgid "The direction of contrast processing applied when capturing an image"
+msgstr "اتجاه معالجة التباين المطبق عند التقاط الصورة"
+
+msgid "capturing saturation"
+msgstr "التشبع عند الالتقاط"
+
+msgid "The direction of saturation processing applied when capturing an image"
+msgstr "اتجاه معالجة التشبع المطبق عند التقاط الصورة"
+
+msgid "capturing sharpness"
+msgstr "الحدة عند الالتقاط"
+
+msgid "The direction of sharpness processing applied when capturing an image"
+msgstr "اتجاه معالجة الحدة المطبق عند التقاط الصورة"
+
+msgid "capturing flash fired"
+msgstr "انطلاق الفلاش عند الالتقاط"
+
+msgid "If the flash fired while capturing an image"
+msgstr "ما إذا انطلق الفلاش أثناء التقاط الصورة"
+
+msgid "capturing flash mode"
+msgstr "وضع الفلاش عند الالتقاط"
+
+msgid "The selected flash mode while capturing an image"
+msgstr "وضع الفلاش المختار أثناء التقاط الصورة"
+
+msgid "capturing metering mode"
+msgstr "وضع القياس عند الالتقاط"
+
+msgid ""
+"The metering mode used while determining exposure for capturing an image"
+msgstr "وضع القياس المستخدم أثناء تحديد التعريض لالتقاط الصورة"
+
+msgid "capturing source"
+msgstr "مصدر الالتقاط"
+
+msgid "The source or type of device used for the capture"
+msgstr "المصدر أو نوع الجهاز المستخدم للالتقاط"
+
+msgid "image horizontal ppi"
+msgstr "كثافة بكسلات الصورة الأفقية (ppi)"
+
+msgid "Media (image/video) intended horizontal pixel density in ppi"
+msgstr "كثافة البكسل الأفقية المقصودة للوسيط (صورة/فيديو) بـ ppi"
+
+msgid "image vertical ppi"
+msgstr "كثافة بكسلات الصورة الرأسية (ppi)"
+
+msgid "Media (image/video) intended vertical pixel density in ppi"
+msgstr "كثافة البكسل الرأسية المقصودة للوسيط (صورة/فيديو) بـ ppi"
+
+msgid "ID3v2 frame"
+msgstr "إطار ID3v2"
+
+msgid "unparsed id3v2 tag frame"
+msgstr "إطار وسم id3v2 غير محلل"
+
+msgid "musical-key"
+msgstr "المفتاح الموسيقي"
+
+msgid "Initial key in which the sound starts"
+msgstr "المفتاح الأولي الذي يبدأ به الصوت"
+
+msgid "Print version information and exit"
+msgstr "اطبع معلومات الإصدار واخرج"
+
+msgid ""
+"Don't exit after showing the initial device list, but wait for devices to "
+"added/removed."
+msgstr "لا تخرج بعد عرض قائمة الأجهزة الأولية، بل انتظر إضافة/إزالة الأجهزة."
+
+msgid "Include devices from hidden device providers."
+msgstr "تضمين الأجهزة من مزودي الأجهزة المخفيين."
+
+#, c-format
+msgid "Volume: %.0f%%"
+msgstr "مستوى الصوت: %.0f%%"
+
+msgid "Mute: on"
+msgstr "كتم الصوت: مفعل"
+
+msgid "Mute: off"
+msgstr "كتم الصوت: معطل"
+
+msgid "Missing plugin installation was disabled via command line options."
+msgstr "تثبيت الإضافات المفقودة عُطل عبر خيارات سطر الأوامر."
+
+msgid "All missing plugins could be installed."
+msgstr "كل الإضافات المفقودة يمكن تثبيتها."
+
+msgid "Some missing plugins could be installed."
+msgstr "بعض الإضافات المفقودة يمكن تثبيتها."
+
+msgid ""
+"The missing plugins could not be found in the available package repositories."
+msgstr "تعذر العثور على الإضافات المفقودة في مستودعات الحزم المتاحة."
+
+msgid "An error occurred during plugin installation."
+msgstr "حدث خطأ أثناء تثبيت الإضافة."
+
+msgid "Plugin installation was cancelled by the user."
+msgstr "إلغاء تثبيت الإضافة من قبل المستخدم."
+
+msgid ""
+"Something went wrong when trying to invoke the missing plugin installer."
+msgstr "حدث خطأ ما عند محاولة استدعاء مثبت الإضافات المفقودة."
+
+msgid "This system does not have a missing plugin handler installed."
+msgstr "هذا الحاسوب لا يحتوي على معالج للإضافات المفقودة."
+
+msgid "Updating plugin registry for newly installed plugins.."
+msgstr "تحديث سجل الإضافات للإضافات المثبتة حديثاً.."
+
+msgid "Error updating plugin registry."
+msgstr "خطأ في تحديث سجل الإضافات."
+
+msgid "Buffering..."
+msgstr "يخزن مؤقتاً..."
+
+msgid "Clock lost, selecting a new one\n"
+msgstr "فُقدت الساعة، جاري اختيار ساعة جديدة\n"
+
+msgid "Reached end of play list."
+msgstr "وصلت إلى نهاية قائمة التشغيل."
+
+msgid "Paused"
+msgstr "مُلبث"
+
+#, c-format
+msgid "Now playing %s\n"
+msgstr "يشتغل الآن %s\n"
+
+#, c-format
+msgid "About to finish, preparing next title: %s"
+msgstr "على وشك الانتهاء، جاري تحضير العنوان التالي: %s"
+
+#, c-format
+msgid "Playback rate: %.2f"
+msgstr "معدل التشغيل: %.2f"
+
+#, c-format
+msgid "Could not change playback rate to %.2f"
+msgstr "تعذر تغيير معدل التشغيل إلى %.2f"
+
+msgid "space"
+msgstr "المسافة"
+
+msgid "pause/unpause"
+msgstr "ألبث/استأنف"
+
+msgid "q or ESC"
+msgstr "q أو ESC"
+
+msgid "quit"
+msgstr "أنهِ"
+
+msgid "> or n"
+msgstr "> أو n"
+
+msgid "play next"
+msgstr "شغّل التالي"
+
+msgid "< or b"
+msgstr "< أو b"
+
+msgid "play previous"
+msgstr "شغّل السابق"
+
+msgid "seek forward"
+msgstr "قدم"
+
+msgid "seek backward"
+msgstr "أخر"
+
+msgid "volume up"
+msgstr "ارفع الصوت"
+
+msgid "volume down"
+msgstr "اخفِض الصوت"
+
+msgid "toggle audio mute on/off"
+msgstr "تبديل كتم الصوت"
+
+msgid "increase playback rate"
+msgstr "ارفع معدل التشغيل"
+
+msgid "decrease playback rate"
+msgstr "اخفض معدل التشغيل"
+
+msgid "change playback direction"
+msgstr "غيّر اتجاه التشغيل"
+
+msgid "enable/disable trick modes"
+msgstr "فعّل/عطّل أوضاع الخدع"
+
+msgid "change to previous/next audio track"
+msgstr "غيّر إلى مسار الصوت السابق/التالي"
+
+msgid "change to previous/next video track"
+msgstr "غيّر إلى مسار الفيديو السابق/التالي"
+
+msgid "change to previous/next subtitle track"
+msgstr "غيّر إلى مسار العنوان الفرعي السابق/التالي"
+
+msgid "seek to beginning"
+msgstr "تقدّم للبداية"
+
+msgid "show keyboard shortcuts"
+msgstr "اعرض اختصارات لوحة المفاتيح"
+
+msgid "Interactive mode - keyboard controls:"
+msgstr "الوضع التفاعلي - عناصر التحكم بلوحة المفاتيح:"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "استخدام ساعة ويندوز عالية الدقة، الدقة: %u ميلي ثانية\n"
+
+msgid "Output status information and property notifications"
+msgstr "إخراج معلومات الحالة وإخطارات الخصائص"
+
+msgid "Control playback behaviour setting playbin 'flags' property"
+msgstr "التحكم في سلوك التشغيل بضبط خاصية 'flags' لـ playbin"
+
+msgid "Video sink to use (default is autovideosink)"
+msgstr "مصب الفيديو المراد استخدامه (المبدئي آلي)"
+
+msgid "Audio sink to use (default is autoaudiosink)"
+msgstr "مصب الصوت المراد استخدامه (المبدئي آلي)"
+
+msgid "Enable gapless playback"
+msgstr "تفعيل التشغيل بدون فجوات"
+
+msgid "Enable instantaneous uri changes (only with playbin3)"
+msgstr "تفعيل تغييرات uri اللحظية (فقط مع playbin3)"
+
+msgid "Shuffle playlist"
+msgstr "خلط قائمة التشغيل"
+
+msgid "Disable interactive control via the keyboard"
+msgstr "تعطيل التحكم التفاعلي عبر لوحة المفاتيح"
+
+msgid "Volume"
+msgstr "المستوى"
+
+msgid "Start position in seconds."
+msgstr "موضع البدء بالثواني."
+
+msgid "Enable accurate seeking"
+msgstr "تفعيل البحث الدقيق"
+
+msgid "Playlist file containing input media files"
+msgstr "ملف قائمة التشغيل الذي يحتوي على ملفات الوسائط المدخلة"
+
+msgid "Use the experimental instant-rate-change flag when changing rate"
+msgstr "استخدم وسم تغيير المعدل اللحظي التجريبي عند تغيير المعدل"
+
+msgid "Do not print any output (apart from errors)"
+msgstr "لا تطبع أي مخرجات (باستثناء الأخطاء)"
+
+msgid "Use playbin3 pipeline (default)"
+msgstr "استخدم تسلسل playbin3 (مبدئي)"
+
+msgid "Use playbin2 pipeline"
+msgstr "استخدم تسلسل playbin2"
+
+msgid ""
+"Keep showing the last frame on EOS until quit or playlist change command "
+"(gapless is ignored)"
+msgstr ""
+"الاستمرار في عرض الإطار الأخير عند نهاية التدفق حتى الخروج أو أمر تغيير "
+"قائمة التشغيل (تُتجاهل ميزة بدون فجوات)"
+
+msgid "Do not print current position of pipeline"
+msgstr "لا تطبع الموضع الحالي للتسلسل"
+
+msgid "Disable missing plugin installation"
+msgstr "تعطيل تثبيت الإضافات المفقودة"
+
+#, c-format
+msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
+msgstr "الاستخدام: %s ملف1|URI1 [ملف2|URI2] [ملف3|URI3] ..."
+
+msgid "You must provide at least one filename or URI to play."
+msgstr "يجب توفير اسم ملف واحد على الأقل أو URI للتشغيل."
+
+msgid "Press 'k' to see a list of keyboard shortcuts.\n"
+msgstr "اضغط على 'k' لرؤية قائمة اختصارات لوحة المفاتيح.\n"

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:57+0000\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
 "PO-Revision-Date: 2012-05-05 19:13+0100\n"
 "Last-Translator: Savvas Radevic <vicedar@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -526,7 +526,7 @@ msgid "capturing light source"
 msgstr "πηγή λήψης"
 
 #, fuzzy
-msgid "The light source indicates the kind of light when capturing animage"
+msgid "The light source indicates the kind of light when capturing an image"
 msgstr "Ο τρόπος σύλληψης σκηνής που χρησιμοποιήθηκε για τη λήψη μιας εικόνας"
 
 msgid "capturing contrast"

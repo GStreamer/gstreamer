@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:57+0000\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
 "PO-Revision-Date: 2025-03-02 05:59+0100\n"
 "Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <(nothing)>\n"
@@ -502,7 +502,7 @@ msgid "capturing light source"
 msgstr "ჩაწერის წყარო"
 
 #, fuzzy
-msgid "The light source indicates the kind of light when capturing animage"
+msgid "The light source indicates the kind of light when capturing an image"
 msgstr "სურათის გადაღებისას გამოყენებული ISO სიჩქარე"
 
 msgid "capturing contrast"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:57+0000\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
 "PO-Revision-Date: 2024-09-11 12:23+0200\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <l10n-no@lister.huftis.org>\n"
@@ -503,7 +503,7 @@ msgid "capturing light source"
 msgstr "opptakskilde"
 
 #, fuzzy
-msgid "The light source indicates the kind of light when capturing animage"
+msgid "The light source indicates the kind of light when capturing an image"
 msgstr "Sceneopptaksmodus som anvendes når du tar et bilde"
 
 msgid "capturing contrast"

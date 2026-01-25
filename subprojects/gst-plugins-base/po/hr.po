@@ -4,13 +4,13 @@
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
-# Božidar Putanec <bozidarp@yahoo.com>, 2016-2025.
+# Božidar Putanec <bozidarp@yahoo.com>, 2016-2026.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.24.0\n"
+"Project-Id-Version: gst-plugins-base-1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:57+0000\n"
-"PO-Revision-Date: 2025-03-26 20:57-0700\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
+"PO-Revision-Date: 2026-01-07 20:51-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: hr\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.4.2\n"
+"X-Generator: Vim9.1\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Uređaj za reprodukciju nije moguće otvoriti u mono načinu."
@@ -256,7 +256,7 @@ msgid "WebVTT subtitle format"
 msgstr "Format naslova WebVTT"
 
 msgid "Timed ID3 tag Metadata"
-msgstr ""
+msgstr "Timed (vremenski programirana) ID3 tag Metadata"
 
 msgid "Uncompressed video"
 msgstr "Nekomprimirani video"
@@ -504,13 +504,12 @@ msgstr "balans bijele boje"
 msgid "The white balance mode set when capturing an image"
 msgstr "Primijenjeni balans bijele boje pri snimanju slike"
 
-#, fuzzy
 msgid "capturing light source"
-msgstr "izvor za snimanje"
+msgstr "izvor svjetla"
 
 #, fuzzy
-msgid "The light source indicates the kind of light when capturing animage"
-msgstr "Primijenjeni izbor motiva pri snimanju slike"
+msgid "The light source indicates the kind of light when capturing an image"
+msgstr "Izvor svjetla indicira vrstu svjetla prilikom snimanja"
 
 msgid "capturing contrast"
 msgstr "kontrast"
@@ -606,36 +605,37 @@ msgid "Mute: off"
 msgstr "Mute: off"
 
 msgid "Missing plugin installation was disabled via command line options."
-msgstr ""
+msgstr "Instalacija plugina (koji nedostaje) onemogućena je opcijom naredbe."
 
 msgid "All missing plugins could be installed."
-msgstr ""
+msgstr "Svi plugini koji nedostaju mogu se instalirati."
 
 msgid "Some missing plugins could be installed."
-msgstr ""
+msgstr "Neki plugini koji nedostaju mogu se instalirati."
 
 msgid ""
 "The missing plugins could not be found in the available package repositories."
-msgstr ""
+msgstr "Plugin koji nedostaju nisu pronađeni u dostupnim repozitorijima."
 
 msgid "An error occurred during plugin installation."
-msgstr ""
+msgstr "Dogodila se greška prilikom instalacije plugina."
 
 msgid "Plugin installation was cancelled by the user."
-msgstr ""
+msgstr "Instalaciju plugina prekinuo je korisnik."
 
 msgid ""
 "Something went wrong when trying to invoke the missing plugin installer."
 msgstr ""
+"Dogodila se greška prilikom pokušaja instaliranja plugina koji nedostaje."
 
 msgid "This system does not have a missing plugin handler installed."
-msgstr ""
+msgstr "Ovaj sustav nema rukovatelja za instalaciju plugina koji nedostaju."
 
 msgid "Updating plugin registry for newly installed plugins.."
-msgstr ""
+msgstr "Ažuriramo registar plugina s novo instaliranim pluginima."
 
 msgid "Error updating plugin registry."
-msgstr ""
+msgstr "Dogodila se greška prilikom ažuriranja registra plugina."
 
 msgid "Buffering..."
 msgstr "Punjenje međuspremnika..."
@@ -801,7 +801,7 @@ msgid "Do not print current position of pipeline"
 msgstr "Ne ispiše trenutnu poziciju cjevovoda"
 
 msgid "Disable missing plugin installation"
-msgstr ""
+msgstr "Onemogući instaliranje plugina koji nedostaju"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

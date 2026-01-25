@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:57+0000\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
 "PO-Revision-Date: 2024-10-09 10:56-0300\n"
 "Last-Translator: Rafael Fontenelle <rafaelff@gnome.org>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-"
@@ -515,7 +515,7 @@ msgid "capturing light source"
 msgstr "origem ao capturar"
 
 #, fuzzy
-msgid "The light source indicates the kind of light when capturing animage"
+msgid "The light source indicates the kind of light when capturing an image"
 msgstr "O modo de captura de cena utilizado ao capturar uma imagem"
 
 msgid "capturing contrast"

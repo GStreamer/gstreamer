@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:57+0000\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
 "PO-Revision-Date: 2022-02-14 09:24+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -512,7 +512,7 @@ msgid "capturing light source"
 msgstr "nguồn chụp"
 
 #, fuzzy
-msgid "The light source indicates the kind of light when capturing animage"
+msgid "The light source indicates the kind of light when capturing an image"
 msgstr "Chế độ chụp phông nền được sử dụng khi chụp một ảnh"
 
 msgid "capturing contrast"

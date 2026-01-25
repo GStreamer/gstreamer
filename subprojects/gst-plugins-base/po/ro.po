@@ -4,7 +4,7 @@
 #
 # Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
 # Florentina Mușat <florentina.musat.28@gmail.com>, 2020.
-# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>. 2022 - 2024.
+# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>. 2022 - 2024, 2026.
 #
 # Cronologia traducerii fișierului „gst-plugins-base”:
 # Traducerea inițială, făcută de LAG, pentru versiunea gst-plugins-base 0.10.29.2
@@ -14,14 +14,15 @@
 # Actualizare a traducerii pentru versiunea 1.19.2, făcută de R-GC, ian-2022.
 # Actualizare a traducerii pentru versiunea 1.21.90, făcută de R-GC, ian-2023.
 # Actualizare a traducerii pentru versiunea 1.24.0, făcută de R-GC, mar-2024.
+# Actualizare a traducerii pentru versiunea 1.27.90, făcută de R-GC, ian-2026.
 # Actualizare a traducerii pentru versiunea Y, făcută de X, Z(anul).
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.24.0\n"
+"Project-Id-Version: gst-plugins-base 1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:57+0000\n"
-"PO-Revision-Date: 2024-03-08 13:44+0100\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
+"PO-Revision-Date: 2026-01-06 23:23+0100\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
 "Language: ro\n"
@@ -31,7 +32,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.2.2\n"
+"X-Generator: Poedit 3.6\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Nu s-a putut deschide dispozitivul pentru redare în modul mono."
@@ -41,7 +42,7 @@ msgstr "Nu s-a putut deschide dispozitivul pentru redare în modul stereo."
 
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
-msgstr "Nu s-a putut deschide dispozitivul pentru redare în modul %d-canal."
+msgstr "Nu s-a putut deschide dispozitivul pentru redare în modul %d canal(e)."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -67,7 +68,7 @@ msgstr ""
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
 msgstr ""
-"Nu s-a putut deschide dispozitivul pentru înregistrare în modul %d-canal"
+"Nu s-a putut deschide dispozitivul pentru înregistrare în modul %d canal(e)"
 
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
@@ -85,7 +86,7 @@ msgstr ""
 "deconectat."
 
 msgid "Could not open CD device for reading."
-msgstr "Nu s-a putut deschide unitatea CD pentru redare."
+msgstr "Nu s-a putut deschide dispozitivul CD pentru citire."
 
 msgid "Could not seek CD."
 msgstr "Nu s-a putut accesa CD-ul."
@@ -115,7 +116,7 @@ msgstr "Elementul autovideosink lipsește."
 
 #, c-format
 msgid "Configured videosink %s is not working."
-msgstr "Elementul videosink configurat %s, nu funcționează."
+msgstr "Receptorul video configurat, %s, nu funcționează"
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
@@ -142,7 +143,7 @@ msgstr "Elementul autoaudiosink lipsește."
 
 #, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "Elementul audiosink configurat %s, nu funcționează."
+msgstr "Receptorul audio configurat, %s, nu funcționează"
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
@@ -246,7 +247,7 @@ msgstr "Codificarea run-length"
 # „Text contra cronometru”
 #. subtitle formats with static descriptions
 msgid "Timed Text"
-msgstr "Text temporizat"
+msgstr "Text cu marcaj temporal"
 
 #. FIXME: add variant field to typefinder?
 msgid "Subtitle"
@@ -280,7 +281,7 @@ msgid "WebVTT subtitle format"
 msgstr "Format de subtitrări WebVTT"
 
 msgid "Timed ID3 tag Metadata"
-msgstr ""
+msgstr "Metadate cu etichetă ID3 cu marcaj temporal"
 
 msgid "Uncompressed video"
 msgstr "Video necomprimat"
@@ -368,7 +369,7 @@ msgstr "modul de despachetare a datelor audio RTP %s"
 
 #, c-format
 msgid "%s RTP depayloader"
-msgstr "modul de despachetare a datelo RTP %s"
+msgstr "program de încărcare RTP %s"
 
 # R-GC, scrie:
 # modificat de la:
@@ -555,13 +556,13 @@ msgstr "balanță de alb de capturare"
 msgid "The white balance mode set when capturing an image"
 msgstr "Modul de balanță de alb stabilit când se capturează o imagine"
 
-#, fuzzy
 msgid "capturing light source"
-msgstr "sursă de capturare"
+msgstr "sursa de lumină la fotografiere"
 
 #, fuzzy
-msgid "The light source indicates the kind of light when capturing animage"
-msgstr "Modul de captură de scenă utilizat când se capturează o imagine"
+msgid "The light source indicates the kind of light when capturing an image"
+msgstr ""
+"Sursa de lumină indică tipul de lumină utilizat la capturarea unei imagini."
 
 msgid "capturing contrast"
 msgstr "contrast de capturare"
@@ -651,7 +652,7 @@ msgid ""
 "Don't exit after showing the initial device list, but wait for devices to "
 "added/removed."
 msgstr ""
-"Nu se iese după arătarea listei de dispozitive inițială, ci se așteaptă "
+"Nu se iese după afișarea listei de dispozitive inițială, ci se așteaptă "
 "pentru ca dispozitivele să fie adăugate/eliminate."
 
 msgid "Include devices from hidden device providers."
@@ -669,35 +670,41 @@ msgstr "Fără sunet: dezactivat"
 
 msgid "Missing plugin installation was disabled via command line options."
 msgstr ""
+"Instalarea modulului lipsă a fost dezactivată prin opțiunile liniei de "
+"comandă."
 
 msgid "All missing plugins could be installed."
-msgstr ""
+msgstr "Toate modulele lipsă au putut fi instalate."
 
 msgid "Some missing plugins could be installed."
-msgstr ""
+msgstr "Unele module lipsă pot fi instalate."
 
 msgid ""
 "The missing plugins could not be found in the available package repositories."
 msgstr ""
+"Modulele lipsă nu au putut fi găsite în depozitele de pachete disponibile."
 
 msgid "An error occurred during plugin installation."
-msgstr ""
+msgstr "A apărut o eroare în timpul instalării modulului."
 
 msgid "Plugin installation was cancelled by the user."
-msgstr ""
+msgstr "Instalarea modulului a fost anulată de utilizator."
 
 msgid ""
 "Something went wrong when trying to invoke the missing plugin installer."
 msgstr ""
+"A apărut o eroare la încercarea de a apela programul de instalare a "
+"modulului lipsă."
 
 msgid "This system does not have a missing plugin handler installed."
 msgstr ""
+"Acest sistem nu are instalat un program de gestionare a modulelor lipsă."
 
 msgid "Updating plugin registry for newly installed plugins.."
-msgstr ""
+msgstr "Actualizarea registrului de module pentru modulele nou instalate..."
 
 msgid "Error updating plugin registry."
-msgstr ""
+msgstr "Eroare la actualizarea registrului de module."
 
 msgid "Buffering..."
 msgstr "Se preîncarcă..."
@@ -709,7 +716,7 @@ msgid "Reached end of play list."
 msgstr "S-a ajuns la sfârșitul listei de redare."
 
 msgid "Paused"
-msgstr "Pauzat"
+msgstr "Pusă în pauză"
 
 #, c-format
 msgid "Now playing %s\n"
@@ -878,7 +885,7 @@ msgid "Do not print current position of pipeline"
 msgstr "Nu se imprimă poziția curentă a liniei de conexiune."
 
 msgid "Disable missing plugin installation"
-msgstr ""
+msgstr "Dezactivează instalarea modulului lipsă"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -888,7 +895,7 @@ msgid "You must provide at least one filename or URI to play."
 msgstr "Trebuie să furnizați cel puțin un nume de fișier sau URI de redat."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
-msgstr "Apăsați „k” pentru a vedea o listă de scurtături de tastatură.\n"
+msgstr "Apăsați tasta «k» pentru a vedea o listă de scurtături de tastatură.\n"
 
 #~ msgid "failed to draw pattern"
 #~ msgstr "nu s-a putut desena modelul"

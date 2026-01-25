@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-base.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2024.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2026.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.24.0\n"
+"Project-Id-Version: gst-plugins-base 1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:57+0000\n"
-"PO-Revision-Date: 2024-03-07 21:02+0100\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
+"PO-Revision-Date: 2026-01-07 19:11+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -259,7 +259,7 @@ msgid "WebVTT subtitle format"
 msgstr "Format podpisów WebVTT"
 
 msgid "Timed ID3 tag Metadata"
-msgstr ""
+msgstr "Metadane czasowe znacznika ID3"
 
 msgid "Uncompressed video"
 msgstr "Nieskompresowany obraz"
@@ -507,13 +507,12 @@ msgstr "balans bieli"
 msgid "The white balance mode set when capturing an image"
 msgstr "Tryb balansu bieli ustawiony przy robieniu zdjęcia"
 
-#, fuzzy
 msgid "capturing light source"
-msgstr "źródło zdjęcia"
+msgstr "źródło oświetlenia zdjęcia"
 
 #, fuzzy
-msgid "The light source indicates the kind of light when capturing animage"
-msgstr "Tryb sceny użyty przy robieniu zdjęcia"
+msgid "The light source indicates the kind of light when capturing an image"
+msgstr "Źródło oświetlenia określa rodzaj światła przy robieniu zdjęcia"
 
 msgid "capturing contrast"
 msgstr "kontrast zdjęcia"
@@ -607,35 +606,39 @@ msgstr "Wyciszenie: wyłączone"
 
 msgid "Missing plugin installation was disabled via command line options."
 msgstr ""
+"Instalowanie brakującej wtyczki zostało wyłączone opcjami linii polecenia."
 
 msgid "All missing plugins could be installed."
-msgstr ""
+msgstr "Udało się zainstalować wszystkie brakujące wtyczki."
 
 msgid "Some missing plugins could be installed."
-msgstr ""
+msgstr "Udało się zainstalować niektóre brakujące wtyczki."
 
 msgid ""
 "The missing plugins could not be found in the available package repositories."
 msgstr ""
+"Brakujących wtyczek nie udało się odnaleźć w dostępnych repozytoriach "
+"pakietów."
 
 msgid "An error occurred during plugin installation."
-msgstr ""
+msgstr "Przy instalowaniu wtyczki wystąpił błąd."
 
 msgid "Plugin installation was cancelled by the user."
-msgstr ""
+msgstr "Instalowanie wtyczki zostało anulowanie przez użytkownika."
 
 msgid ""
 "Something went wrong when trying to invoke the missing plugin installer."
 msgstr ""
+"Coś poszło nie tak przy próbie wywołania instalatora brakujących wtyczek."
 
 msgid "This system does not have a missing plugin handler installed."
-msgstr ""
+msgstr "Ten system nie posiada zainstalowanej obsługi brakujących wtyczek."
 
 msgid "Updating plugin registry for newly installed plugins.."
-msgstr ""
+msgstr "Uaktualnianie rejestru wtyczek pod kątem nowo zainstalowanych."
 
 msgid "Error updating plugin registry."
-msgstr ""
+msgstr "Błąd uaktualniania rejestru wtyczek."
 
 msgid "Buffering..."
 msgstr "Buforowanie..."
@@ -799,7 +802,7 @@ msgid "Do not print current position of pipeline"
 msgstr "Bez wypisywania bieżącego położenia w potoku"
 
 msgid "Disable missing plugin installation"
-msgstr ""
+msgstr "Wyłączenie instalacji brakujących wtyczek"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

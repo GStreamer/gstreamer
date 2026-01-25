@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:57+0000\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
 "PO-Revision-Date: 2024-03-27 05:18+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
@@ -507,7 +507,7 @@ msgid "capturing light source"
 msgstr "источник для съёмки"
 
 #, fuzzy
-msgid "The light source indicates the kind of light when capturing animage"
+msgid "The light source indicates the kind of light when capturing an image"
 msgstr "Тип сцены при съёмке изображения"
 
 msgid "capturing contrast"

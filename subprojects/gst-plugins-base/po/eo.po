@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:57+0000\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
 "PO-Revision-Date: 2023-01-08 15:54-0300\n"
 "Last-Translator: Felipe Castro <fefcas@gmail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -507,7 +507,7 @@ msgid "capturing light source"
 msgstr "kaptado de fonto"
 
 #, fuzzy
-msgid "The light source indicates the kind of light when capturing animage"
+msgid "The light source indicates the kind of light when capturing an image"
 msgstr "La pejzaĝ-haviga reĝimo uzata por kapti bildon"
 
 msgid "capturing contrast"

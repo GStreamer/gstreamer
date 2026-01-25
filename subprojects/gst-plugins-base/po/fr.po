@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:57+0000\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
 "PO-Revision-Date: 2023-06-04 12:44+0200\n"
 "Last-Translator: Christian Wiatr <w9204-fs@yahoo.com>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -522,7 +522,7 @@ msgid "capturing light source"
 msgstr "source de capture"
 
 #, fuzzy
-msgid "The light source indicates the kind of light when capturing animage"
+msgid "The light source indicates the kind of light when capturing an image"
 msgstr "Le mode scène utilisé lors de la capture de l’image"
 
 msgid "capturing contrast"

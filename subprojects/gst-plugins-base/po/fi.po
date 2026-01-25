@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:57+0000\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
 "PO-Revision-Date: 2010-12-31 23:21+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -522,7 +522,7 @@ msgid "capturing light source"
 msgstr "kuvaamisen lähde"
 
 #, fuzzy
-msgid "The light source indicates the kind of light when capturing animage"
+msgid "The light source indicates the kind of light when capturing an image"
 msgstr "Kuvausmoodi kuvattaessa"
 
 msgid "capturing contrast"
