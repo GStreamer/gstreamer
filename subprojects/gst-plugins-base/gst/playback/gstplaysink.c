@@ -4615,8 +4615,8 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
       block_id = &playsink->video_block_id;
       break;
     case GST_PLAY_SINK_TYPE_TEXT:
-      GST_LOG_OBJECT (playsink, "ghosting text");
       if (!playsink->text_pad) {
+        GST_LOG_OBJECT (playsink, "ghosting text");
         playsink->text_pad =
             gst_ghost_pad_new_no_target ("text_sink", GST_PAD_SINK);
         created = TRUE;
