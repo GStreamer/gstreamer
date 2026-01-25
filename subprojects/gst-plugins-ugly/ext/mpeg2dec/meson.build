@@ -23,6 +23,7 @@ plugin_sources += {
 mpeg2_dep = dependency('libmpeg2', version : '>= 0.4.0', required : mpeg2dec_opt)
 
 if mpeg2_dep.found()
+  warning('The `mpeg2dec` plugin is deprecated and will be removed in the next release cycle. `avdec_mpeg2video` from gst-libav should be used instead')
   mpeg2dec = library('gstmpeg2dec',
     mpeg2dec_sources,
     c_args : ugly_args,
