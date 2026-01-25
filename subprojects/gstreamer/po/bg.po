@@ -1,18 +1,18 @@
 # Bulgarian translation of gstreamer.
 # Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Free Software Fondation, Inc.
 # Copyright (C) 2011, 2016, 2017, 2019 Free Software Fondation, Inc.
-# Copyright (C) 2021, 2023, 2024 Alexander Shopov.
+# Copyright (C) 2021, 2023, 2024, 2026 Alexander Shopov.
 # This file is distributed under the same license as the gstreamer package.
 # Alexander Shopov <ash@kambanaria.org>, 2005, 2006, 2007, 2008, 2009, 2010.
 # Alexander Shopov <ash@kambanaria.org>, 2011, 2016, 2017, 2019, 2021, 2023.
-# Alexander Shopov <ash@kambanaria.org>, 2024.
+# Alexander Shopov <ash@kambanaria.org>, 2024, 2026.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.24.0\n"
+"Project-Id-Version: gstreamer 1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:56+0000\n"
-"PO-Revision-Date: 2024-03-09 11:13+0100\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
+"PO-Revision-Date: 2026-01-08 20:37+0100\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
 "Language: bg\n"
@@ -545,17 +545,14 @@ msgstr "сериен номер на песента"
 msgid "replaygain track gain"
 msgstr "усилване на песента при изпълнение"
 
-#, fuzzy
 msgid "track gain in dB"
-msgstr "усилване на песента [db]"
+msgstr "усилване на песента [dB]"
 
-#, fuzzy
 msgid "r128 track gain"
-msgstr "усилване на песента при изпълнение"
+msgstr "усилване на песента при изпълнение по r128"
 
-#, fuzzy
 msgid "track gain in dB (r128)"
-msgstr "усилване на песента [db]"
+msgstr "усилване на песента по r128 [dB]"
 
 msgid "replaygain track peak"
 msgstr "максимално усилване на песента при изпълнение"
@@ -566,17 +563,14 @@ msgstr "максимално усилване на песента"
 msgid "replaygain album gain"
 msgstr "усилване на албума при изпълнение"
 
-#, fuzzy
 msgid "album gain in dB"
-msgstr "усилване на албума [db]"
+msgstr "усилване на албума [dB]"
 
-#, fuzzy
 msgid "r128 album gain"
-msgstr "усилване на албума при изпълнение"
+msgstr "усилване на албума при изпълнение по r128"
 
-#, fuzzy
 msgid "album gain in dB (r128)"
-msgstr "усилване на албума [db]"
+msgstr "усилване на албума по r128 [dB]"
 
 msgid "replaygain album peak"
 msgstr "максимално усилване на албума при изпълнение"
@@ -1084,9 +1078,9 @@ msgstr "Потокът не съдържа никакви данни"
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sРеализирани интерфейси%s:\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sElement Flags%s:\n"
-msgstr "%sРеализирани интерфейси%s:\n"
+msgstr "%sФлагове на елемента%s:\n"
 
 msgid "readable"
 msgstr "с права за четене"
@@ -1214,13 +1208,15 @@ msgstr "Статистика на индекса"
 
 #, c-format
 msgid "ERROR: %s\n"
-msgstr ""
+msgstr "ГРЕШКА: %s\n"
 
 #, c-format
 msgid ""
 "Details:\n"
 "%s\n"
 msgstr ""
+"Подробности:\n"
+"%s\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Конвейерът се дава за ИЗПЪЛНЕНИЕ…\n"

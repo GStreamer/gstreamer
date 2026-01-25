@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the gstreamer package.
 #
 # Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
-# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019, 2021, 2023, 2024.
+# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019, 2021, 2023, 2024, 2026.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.24.0\n"
+"Project-Id-Version: gstreamer 1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:56+0000\n"
-"PO-Revision-Date: 2024-07-21 19:42+0300\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
+"PO-Revision-Date: 2026-01-06 18:09+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <trans-uk@lists.fedoraproject.org>\n"
 "Language: uk\n"
@@ -539,17 +539,14 @@ msgstr "послідовний номер композиції"
 msgid "replaygain track gain"
 msgstr "рівень відтворення композиції"
 
-#, fuzzy
 msgid "track gain in dB"
 msgstr "рівень композиції, у дБ"
 
-#, fuzzy
 msgid "r128 track gain"
-msgstr "рівень відтворення композиції"
+msgstr "рівень композиції r128"
 
-#, fuzzy
 msgid "track gain in dB (r128)"
-msgstr "рівень композиції, у дБ"
+msgstr "рівень композиції у дБ (r128)"
 
 msgid "replaygain track peak"
 msgstr "пік відтворення композиції"
@@ -560,17 +557,14 @@ msgstr "пік композиції"
 msgid "replaygain album gain"
 msgstr "рівень відтворення альбому"
 
-#, fuzzy
 msgid "album gain in dB"
 msgstr "рівень альбому, у дБ"
 
-#, fuzzy
 msgid "r128 album gain"
-msgstr "рівень відтворення альбому"
+msgstr "рівень альбому r128"
 
-#, fuzzy
 msgid "album gain in dB (r128)"
-msgstr "рівень альбому, у дБ"
+msgstr "рівень альбому, у дБ (r128)"
 
 msgid "replaygain album peak"
 msgstr "пік відтворення альбому"
@@ -1086,9 +1080,9 @@ msgstr "Потік не містить даних."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sРеалізовані інтерфейси%s:\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sElement Flags%s:\n"
-msgstr "%sРеалізовані інтерфейси%s:\n"
+msgstr "%sПрапорці елемента%s:\n"
 
 msgid "readable"
 msgstr "читання"
@@ -1215,13 +1209,15 @@ msgstr "Статистичні дані покажчика"
 
 #, c-format
 msgid "ERROR: %s\n"
-msgstr ""
+msgstr "ПОМИЛКА: %s\n"
 
 #, c-format
 msgid ""
 "Details:\n"
 "%s\n"
 msgstr ""
+"Подробиці:\n"
+"%s\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Канал переводиться у стан ВІДТВОРЕННЯ...\n"

@@ -2,13 +2,13 @@
 # Copyright © 2020 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Danilo Segan <dsegan@gmx.net>, 2004-2005.
-# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011-2024.
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011-2026.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.24.0\n"
+"Project-Id-Version: gstreamer-1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:56+0000\n"
-"PO-Revision-Date: 2024-05-07 07:40+0200\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
+"PO-Revision-Date: 2026-01-18 15:03+0100\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
 "Language: sr\n"
@@ -17,6 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Generator: Poedit 3.6\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 
 msgid "Print the GStreamer version"
@@ -105,7 +106,7 @@ msgstr ""
 "Програмери Гстримера су били сувише лењи да доделе неки кôд за ову грешку."
 
 msgid "Internal GStreamer error: code not implemented."
-msgstr "Унутрашња грешка Гстримера: кôд није примењен. "
+msgstr "Унутрашња грешка Гстримера: кôд није примењен."
 
 msgid ""
 "GStreamer error: state change failed and some element failed to post a "
@@ -543,18 +544,15 @@ msgstr "серијски број нумере"
 msgid "replaygain track gain"
 msgstr "појачање нумере појачања пуштања"
 
-#, fuzzy
 msgid "track gain in dB"
-msgstr "појачање песме у децибелима"
+msgstr "појачање песме у dB"
 
 # bug: this is something strange
-#, fuzzy
 msgid "r128 track gain"
-msgstr "појачање нумере појачања пуштања"
+msgstr "r128 појачање нумере"
 
-#, fuzzy
 msgid "track gain in dB (r128)"
-msgstr "појачање песме у децибелима"
+msgstr "појачање песме у dB (r128)"
 
 msgid "replaygain track peak"
 msgstr "врхунац нумере појачања пуштања"
@@ -565,17 +563,14 @@ msgstr "врхунац нумере"
 msgid "replaygain album gain"
 msgstr "појачање албума појачања пуштања"
 
-#, fuzzy
 msgid "album gain in dB"
-msgstr "појачање албума у децибелима"
+msgstr "појачање албума у dB"
 
-#, fuzzy
 msgid "r128 album gain"
-msgstr "појачање албума појачања пуштања"
+msgstr "r128 појачање албума"
 
-#, fuzzy
 msgid "album gain in dB (r128)"
-msgstr "појачање албума у децибелима"
+msgstr "појачање албума у dB (r128)"
 
 msgid "replaygain album peak"
 msgstr "врхунац албума појачања пуштања"
@@ -1090,9 +1085,9 @@ msgstr "Овај ток не садржи податке."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sПримењени уређаји%s:\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sElement Flags%s:\n"
-msgstr "%sПримењени уређаји%s:\n"
+msgstr "%sЗаставице елемента%s:\n"
 
 msgid "readable"
 msgstr "читљив"
@@ -1219,13 +1214,15 @@ msgstr "Статистике пописа"
 
 #, c-format
 msgid "ERROR: %s\n"
-msgstr ""
+msgstr "ГРЕШКА: %s\n"
 
 #, c-format
 msgid ""
 "Details:\n"
 "%s\n"
 msgstr ""
+"Детаљи:\n"
+"%s\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Постављам спојку низа на ПУШТАМ ...\n"

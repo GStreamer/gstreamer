@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.24.0\n"
+"Project-Id-Version: gstreamer 1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:56+0000\n"
-"PO-Revision-Date: 2024-03-16 23:40+0100\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
+"PO-Revision-Date: 2026-01-22 18:38+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.4.2\n"
+"X-Generator: Poedit 3.8\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 
 msgid "Print the GStreamer version"
@@ -560,18 +560,15 @@ msgstr "Seriennummer des Titels"
 msgid "replaygain track gain"
 msgstr "Lautstärkeanpassung des Titelpegels"
 
-#, fuzzy
 msgid "track gain in dB"
-msgstr "Pegelanpassung des Titels in dB"
+msgstr "Titelpegel in dB"
 
 # http://www.audiohq.de/index.php?showtopic=23#Referenzlautstaerke
-#, fuzzy
 msgid "r128 track gain"
-msgstr "Lautstärkeanpassung des Titelpegels"
+msgstr "Titelpegels r128"
 
-#, fuzzy
 msgid "track gain in dB (r128)"
-msgstr "Pegelanpassung des Titels in dB"
+msgstr "Titelpegel in dB (r128)"
 
 msgid "replaygain track peak"
 msgstr "Lautstärkeanpassung des Spitzenpegels"
@@ -582,17 +579,14 @@ msgstr "Spitzenpegel des Titels"
 msgid "replaygain album gain"
 msgstr "Lautstärkeanpassung des Albenpegels"
 
-#, fuzzy
 msgid "album gain in dB"
-msgstr "Pegelanpassung des Albums in dB"
+msgstr "Pegel des Albums in dB"
 
-#, fuzzy
 msgid "r128 album gain"
-msgstr "Lautstärkeanpassung des Albenpegels"
+msgstr "r128 Pegel des Albums"
 
-#, fuzzy
 msgid "album gain in dB (r128)"
-msgstr "Pegelanpassung des Albums in dB"
+msgstr "Pegel des Albums in dB (r128)"
 
 msgid "replaygain album peak"
 msgstr "Lautstärkeanpassung des Albenspitzenpegels"
@@ -1122,9 +1116,9 @@ msgstr "Der Datenstrom enthält keine Daten."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sImplementierte Schnittstellen%s:\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sElement Flags%s:\n"
-msgstr "%sImplementierte Schnittstellen%s:\n"
+msgstr "%sElement-Markierungen%s:\n"
 
 msgid "readable"
 msgstr "lesbar"
@@ -1249,13 +1243,15 @@ msgstr "Index-Statistiken"
 
 #, c-format
 msgid "ERROR: %s\n"
-msgstr ""
+msgstr "FEHLER: %s\n"
 
 #, c-format
 msgid ""
 "Details:\n"
 "%s\n"
 msgstr ""
+"Details:\n"
+"%s\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Leitung wird auf ABSPIELEN gesetzt ...\n"

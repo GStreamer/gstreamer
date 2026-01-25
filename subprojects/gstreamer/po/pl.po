@@ -1,13 +1,13 @@
 # Polish translation for gstreamer.
 # This file is distributed under the same license as the gstreamer package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2024.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2026.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.24.0\n"
+"Project-Id-Version: gstreamer 1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:56+0000\n"
-"PO-Revision-Date: 2024-03-07 20:30+0100\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
+"PO-Revision-Date: 2026-01-06 21:45+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -106,7 +106,7 @@ msgstr ""
 "Programiści GStreamera byli zbyt leniwi, aby przypisać temu błędowi kod."
 
 msgid "Internal GStreamer error: code not implemented."
-msgstr "Błąd wewnętrzny GStreamera: kod nie zaimplementowany."
+msgstr "Błąd wewnętrzny GStreamera: kod niezaimplementowany."
 
 msgid ""
 "GStreamer error: state change failed and some element failed to post a "
@@ -539,17 +539,14 @@ msgstr "numer seryjny ścieżki"
 msgid "replaygain track gain"
 msgstr "osiągi odtwarzania ścieżki"
 
-#, fuzzy
 msgid "track gain in dB"
-msgstr "osiągi ścieżki w db"
+msgstr "osiągi ścieżki w dB"
 
-#, fuzzy
 msgid "r128 track gain"
-msgstr "osiągi odtwarzania ścieżki"
+msgstr "osiągi ścieżki r128"
 
-#, fuzzy
 msgid "track gain in dB (r128)"
-msgstr "osiągi ścieżki w db"
+msgstr "osiągi ścieżki w dB (r128)"
 
 msgid "replaygain track peak"
 msgstr "szczyt odtwarzania ścieżki"
@@ -560,17 +557,14 @@ msgstr "szczyt ścieżki"
 msgid "replaygain album gain"
 msgstr "osiągi odtwarzania albumu"
 
-#, fuzzy
 msgid "album gain in dB"
-msgstr "osiągi albumu w db"
+msgstr "osiągi albumu w dB"
 
-#, fuzzy
 msgid "r128 album gain"
-msgstr "osiągi odtwarzania albumu"
+msgstr "osiągi albumu r128"
 
-#, fuzzy
 msgid "album gain in dB (r128)"
-msgstr "osiągi albumu w db"
+msgstr "osiągi albumu w dB (r128)"
 
 msgid "replaygain album peak"
 msgstr "szczyt odtwarzania albumu"
@@ -1090,9 +1084,9 @@ msgstr "Strumień nie zawiera danych."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sZaimplementowane interfejsy%s:\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sElement Flags%s:\n"
-msgstr "%sZaimplementowane interfejsy%s:\n"
+msgstr "%sFlagi elementu%s:\n"
 
 msgid "readable"
 msgstr "odczyt"
@@ -1181,7 +1175,7 @@ msgid ""
 "list. (unordered)"
 msgstr ""
 "Lista rozdzielonych ukośnikami ('/') typów elementów (znanych jako klass) do "
-"wypisania (nie uporządkowana)."
+"wypisania (nieuporządkowana)."
 
 msgid "Check if the specified element or plugin exists"
 msgstr "Sprawdzenie, czy podany element lub wtyczka istnieje"
@@ -1220,13 +1214,15 @@ msgstr "Statystyki indeksu"
 
 #, c-format
 msgid "ERROR: %s\n"
-msgstr ""
+msgstr "BŁĄD: %s\n"
 
 #, c-format
 msgid ""
 "Details:\n"
 "%s\n"
 msgstr ""
+"Szczegóły:\n"
+"%s\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Ustawianie potoku na ODTWARZANIE...\n"
@@ -1368,7 +1364,7 @@ msgid "Output status information and property notifications"
 msgstr "Wypisywanie informacji o stanie i powiadomień właściwości"
 
 msgid "Do not print any progress information"
-msgstr "Nie wypisywanie żadnej informacji o postępie"
+msgstr "Bez wypisywania żadnej informacji o postępie"
 
 msgid "Output messages"
 msgstr "Wypisywanie komunikatów"
@@ -1390,7 +1386,7 @@ msgid "PROGRAM-NAME"
 msgstr "NAZWA-PROGRAMU"
 
 msgid "Do not install a fault handler"
-msgstr "Nie instalowanie obsługi błędów"
+msgstr "Bez instalowania obsługi błędów"
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Wymuszanie EOS na źródłach przed zamknięciem potoku"

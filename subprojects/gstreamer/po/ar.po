@@ -1,0 +1,1423 @@
+# Arabic translation for gstreamer-1.0 package.
+# Copyright (C) 2025 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gstreamer package.
+# Zayed Al-Saidi <zayed.alsaidi@gmail.com>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gstreamer-1.27.90\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
+"PO-Revision-Date: 2026-01-11 07:50+0400\n"
+"Last-Translator: Zayed Al-Saidi <zayed.alsaidi@gmail.com>\n"
+"Language-Team: Arabic <(nothing)>\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
+"X-Generator: Lokalize 23.08.5\n"
+
+msgid "Print the GStreamer version"
+msgstr "اطبع إصدارة جي ستريمر"
+
+msgid "Make all warnings fatal"
+msgstr "اجعل كل التحذيرات قاتلة"
+
+msgid "Print available debug categories and exit"
+msgstr "اطبع فئات التنقيح المتاحة واخرج"
+
+msgid ""
+"Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
+msgstr ""
+"مستوى التنقيح المبدئي من 1 (خطأ فقط) إلى 9 (أي شيء) أو 0 لتعطيل المخرجات"
+
+msgid "LEVEL"
+msgstr "المستوى"
+
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr ""
+"قائمة مفصولة بفاصلة لأزواج (اسم_الفئة:المستوى) لضبط مستويات محددة للفئات "
+"الفردية. مثال: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+
+msgid "LIST"
+msgstr "القائمة"
+
+msgid "Disable colored debugging output"
+msgstr "عطّل مخرجات التنقيح الملونة"
+
+msgid ""
+"Changes coloring mode of the debug log. Possible modes: off, on, disable, "
+"auto, unix"
+msgstr ""
+"يغير نمط التلوين لسجل التنقيح. الأنماط الممكنة: off, on, disable, auto, unix"
+
+msgid "Disable debugging"
+msgstr "عطّل التنقيح"
+
+msgid "Colon-separated paths containing plugins"
+msgstr "مسارات مفصولة بنقطتين تحتوي على ملحقات"
+
+msgid "PATHS"
+msgstr "المسارات"
+
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"environment variable GST_PLUGIN_PATH"
+msgstr ""
+"قائمة مفصولة بفاصلة للملحقات التي تُحمل مسبقًا بالإضافة إلى القائمة المخزنة في "
+"متغير البيئة GST_PLUGIN_PATH"
+
+msgid "PLUGINS"
+msgstr "الملحقات"
+
+msgid "Disable trapping of segmentation faults during plugin loading"
+msgstr "عطّل اعتراض أخطاء التجزئة أثناء تحميل الملحقات"
+
+msgid "Disable updating the registry"
+msgstr "عطّل تحديث السجل"
+
+msgid "Disable spawning a helper process while scanning the registry"
+msgstr "عطّل إطلاق عملية مساعدة أثناء مسح السجل"
+
+msgid "GStreamer Options"
+msgstr "خيارات جي ستريمر"
+
+msgid "Show GStreamer Options"
+msgstr "أظهر خيارات جي ستريمر"
+
+#, c-format
+msgid "Unknown option"
+msgstr "خيار غير معروف"
+
+msgid "GStreamer encountered a general core library error."
+msgstr "واجه جي ستريمر خطأ عامًا في المكتبة الجوهرية."
+
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error."
+msgstr "مطورو جي ستريمر كانوا كسالى جدًا لتعيين رمز خطأ لهذا الخطأ."
+
+msgid "Internal GStreamer error: code not implemented."
+msgstr "خطأ داخلي في جي ستريمر: الرمز غير منفذ."
+
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
+"خطأ جي ستريمر: فشل تغيير الحالة وفشل أحد العناصر في إرسال رسالة خطأ مناسبة "
+"توضح سبب الفشل."
+
+msgid "Internal GStreamer error: pad problem."
+msgstr "خطأ داخلي في جي ستريمر: مشكلة في الحشية (pad)."
+
+msgid "Internal GStreamer error: thread problem."
+msgstr "خطأ داخلي في جي ستريمر: مشكلة في الخيط."
+
+msgid "GStreamer error: negotiation problem."
+msgstr "خطأ جي ستريمر: مشكلة في التفاوض."
+
+msgid "Internal GStreamer error: event problem."
+msgstr "خطأ داخلي في جي ستريمر: مشكلة في الحدث."
+
+msgid "Internal GStreamer error: seek problem."
+msgstr "خطأ داخلي في جي ستريمر: مشكلة في السعي."
+
+msgid "Internal GStreamer error: caps problem."
+msgstr "خطأ داخلي في جي ستريمر: مشكلة في الإمكانيات."
+
+msgid "Internal GStreamer error: tag problem."
+msgstr "خطأ داخلي في جي ستريمر: مشكلة في الوسم."
+
+msgid "Your GStreamer installation is missing a plug-in."
+msgstr "تثبيت جي ستريمر الخاص بك ينقصه ملحق."
+
+msgid "GStreamer error: clock problem."
+msgstr "خطأ جي ستريمر: مشكلة في الساعة."
+
+msgid ""
+"This application is trying to use GStreamer functionality that has been "
+"disabled."
+msgstr "يحاول هذا التطبيق استخدام وظائف جي ستريمر التي عُطلت."
+
+msgid "GStreamer encountered a general supporting library error."
+msgstr "واجه جي ستريمر خطأ عامًا في مكتبة الدعم."
+
+msgid "Could not initialize supporting library."
+msgstr "تعذر تهيئة مكتبة الدعم."
+
+msgid "Could not close supporting library."
+msgstr "تعذر إغلاق مكتبة الدعم."
+
+msgid "Could not configure supporting library."
+msgstr "تعذر ضبط مكتبة الدعم."
+
+msgid "Encoding error."
+msgstr "خطأ في التّرميز."
+
+msgid "GStreamer encountered a general resource error."
+msgstr "واجه جي ستريمر خطأ عامًا في الموارد."
+
+msgid "Resource not found."
+msgstr "المورد غير موجود."
+
+msgid "Resource busy or not available."
+msgstr "المورد مشغول أو غير متاح."
+
+msgid "Could not open resource for reading."
+msgstr "تعذر فتح المورد للقراءة."
+
+msgid "Could not open resource for writing."
+msgstr "تعذر فتح المورد للكتابة."
+
+msgid "Could not open resource for reading and writing."
+msgstr "تعذر فتح المورد للقراءة والكتابة."
+
+msgid "Could not close resource."
+msgstr "تعذر إغلاق المورد."
+
+msgid "Could not read from resource."
+msgstr "تعذر القراءة من المورد."
+
+msgid "Could not write to resource."
+msgstr "تعذر الكتابة إلى المورد."
+
+msgid "Could not perform seek on resource."
+msgstr "تعذر تنفيذ السعي في المورد."
+
+msgid "Could not synchronize on resource."
+msgstr "تعذر المزامنة على المورد."
+
+msgid "Could not get/set settings from/on resource."
+msgstr "تعذر الحصول على/ضبط الإعدادات من/على المورد."
+
+msgid "No space left on the resource."
+msgstr "لم تتبق مساحة في المورد."
+
+msgid "Not authorized to access resource."
+msgstr "غير مخول للوصول للمورد."
+
+msgid "GStreamer encountered a general stream error."
+msgstr "واجه جي ستريمر خطأ عامًا في التدفق."
+
+msgid "Element doesn't implement handling of this stream. Please file a bug."
+msgstr "العنصر لا ينفذ معالجة هذا التدفق. يرجى التبليغ عن علة."
+
+msgid "Could not determine type of stream."
+msgstr "تعذر تحديد نوع التدفق."
+
+msgid "The stream is of a different type than handled by this element."
+msgstr "التدفق من نوع مختلف عما يعالجه هذا العنصر."
+
+msgid "There is no codec present that can handle the stream's type."
+msgstr "لا يوجد مرماز يمكنه معالجة نوع التدفق هذا."
+
+msgid "Could not decode stream."
+msgstr "تعذر فك ترميز التدفق."
+
+msgid "Could not encode stream."
+msgstr "تعذر ترميز التدفق."
+
+msgid "Could not demultiplex stream."
+msgstr "تعذر فك تجميع التدفق."
+
+msgid "Could not multiplex stream."
+msgstr "تعذر تجميع التدفق."
+
+msgid "The stream is in the wrong format."
+msgstr "التدفق بتنسيق خاطئ."
+
+msgid "The stream is encrypted and decryption is not supported."
+msgstr "التدفق معمى وفك التعمية غير متاح."
+
+msgid ""
+"The stream is encrypted and can't be decrypted because no suitable key has "
+"been supplied."
+msgstr "التدفق معمى ولا يمكن فك تعميته لعدم توفير مفتاح مناسب."
+
+#, c-format
+msgid "No error message for domain %s."
+msgstr "لا توجد رسالة خطأ للنطاق %s."
+
+#, c-format
+msgid "No standard error message for domain %s and code %d."
+msgstr "لا توجد رسالة خطأ قياسية للنطاق %s والرمز %d."
+
+msgid "Selected clock cannot be used in pipeline."
+msgstr "الساعة المختارة لا يمكن استخدامها في أنبوب النقل."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr "خطأ أثناء كتابة خبيئة السجل إلى %s: %s"
+
+msgid "title"
+msgstr "العنوان"
+
+msgid "commonly used title"
+msgstr "العنوان المستخدم عادة"
+
+msgid "title sortname"
+msgstr "اسم فرز العنوان"
+
+msgid "commonly used title for sorting purposes"
+msgstr "العنوان المستخدم عادة لأغراض الفرز"
+
+msgid "artist"
+msgstr "الفنان"
+
+msgid "person(s) responsible for the recording"
+msgstr "الشخص (الأشخاص) المسؤول عن التسجيل"
+
+msgid "artist sortname"
+msgstr "اسم فرز الفنان"
+
+msgid "person(s) responsible for the recording for sorting purposes"
+msgstr "الشخص (الأشخاص) المسؤول عن التسجيل لأغراض الفرز"
+
+msgid "album"
+msgstr "الألبوم"
+
+msgid "album containing this data"
+msgstr "الألبوم الذي يحتوي على هذه البيانات"
+
+msgid "album sortname"
+msgstr "اسم فرز الألبوم"
+
+msgid "album containing this data for sorting purposes"
+msgstr "الألبوم الذي يحتوي على هذه البيانات لأغراض الفرز"
+
+msgid "album artist"
+msgstr "فنان الألبوم"
+
+msgid "The artist of the entire album, as it should be displayed"
+msgstr "فنان الألبوم كاملاً، كما ينبغي أن يُعرض"
+
+msgid "album artist sortname"
+msgstr "اسم فرز فنان الألبوم"
+
+msgid "The artist of the entire album, as it should be sorted"
+msgstr "فنان الألبوم كاملاً، كما ينبغي أن يُفرز"
+
+msgid "date"
+msgstr "التاريخ"
+
+msgid "date the data was created (as a GDate structure)"
+msgstr "تاريخ إنشاء البيانات (بنية GDate)"
+
+msgid "datetime"
+msgstr "التاريخ والوقت"
+
+msgid "date and time the data was created (as a GstDateTime structure)"
+msgstr "تاريخ ووقت إنشاء البيانات (بنية GstDateTime)"
+
+msgid "genre"
+msgstr "النوع"
+
+msgid "genre this data belongs to"
+msgstr "النوع الذي تنتمي إليه هذه البيانات"
+
+msgid "comment"
+msgstr "تعليق"
+
+msgid "free text commenting the data"
+msgstr "نص حر يعلق على البيانات"
+
+msgid "extended comment"
+msgstr "التعليق الممتد"
+
+msgid "free text commenting the data in key=value or key[en]=comment form"
+msgstr "نص حر يعلق على البيانات بصيغة مفتاح=قيمة أو مفتاح[ar]=تعليق"
+
+msgid "track number"
+msgstr "رقم المسار"
+
+msgid "track number inside a collection"
+msgstr "رقم المسار داخل مجموعة"
+
+msgid "track count"
+msgstr "عدد المسارات"
+
+msgid "count of tracks inside collection this track belongs to"
+msgstr "عدد المسارات داخل المجموعة التي ينتمي إليها هذا المسار"
+
+msgid "disc number"
+msgstr "رقم القرص"
+
+msgid "disc number inside a collection"
+msgstr "رقم القرص داخل مجموعة"
+
+msgid "disc count"
+msgstr "عدد الأقراص"
+
+msgid "count of discs inside collection this disc belongs to"
+msgstr "عدد الأقراص داخل المجموعة التي ينتمي إليها هذا القرص"
+
+msgid "location"
+msgstr "المكان"
+
+msgid ""
+"Origin of media as a URI (location, where the original of the file or stream "
+"is hosted)"
+msgstr "أصل الوسائط كعنوان (المكان، حيث يستضاف الملف الأصلي أو التدفق)"
+
+msgid "homepage"
+msgstr "الصفحة الرئيسة"
+
+msgid "Homepage for this media (i.e. artist or movie homepage)"
+msgstr "الصفحة الرئيسة لهذه الوسائط (مثلاً الصفحة الرئيسة للفنان أو الفيلم)"
+
+msgid "description"
+msgstr "الوصف"
+
+msgid "short text describing the content of the data"
+msgstr "نص قصير يصف محتوى البيانات"
+
+msgid "version"
+msgstr "الإصدارة"
+
+msgid "version of this data"
+msgstr "إصدارة هذه البيانات"
+
+msgid "ISRC"
+msgstr "ISRC"
+
+msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
+msgstr "رمز التسجيل القياسي الدولي - انظر http://www.ifpi.org/isrc/"
+
+msgid "organization"
+msgstr "المنظّمة"
+
+msgid "copyright"
+msgstr "حقوق النسخ"
+
+msgid "copyright notice of the data"
+msgstr "إشعار حقوق النسخ للبيانات"
+
+msgid "copyright uri"
+msgstr "عنوان حقوق النسخ"
+
+msgid "URI to the copyright notice of the data"
+msgstr "عنوان إشعار حقوق النسخ للبيانات"
+
+msgid "encoded by"
+msgstr "مرمزة بواسطة"
+
+msgid "name of the encoding person or organization"
+msgstr "اسم الشخص أو المنظمة التي قامت بالترميز"
+
+msgid "contact"
+msgstr "الاتصال"
+
+msgid "contact information"
+msgstr "معلومات الاتصال"
+
+msgid "license"
+msgstr "الرخصة"
+
+msgid "license of data"
+msgstr "رخصة البيانات"
+
+msgid "license uri"
+msgstr "عنوان الرخصة"
+
+msgid "URI to the license of the data"
+msgstr "عنوان رخصة البيانات"
+
+msgid "performer"
+msgstr "المؤدّي"
+
+msgid "person(s) performing"
+msgstr "الشخص (الأشخاص) المؤدي"
+
+msgid "composer"
+msgstr "الملحّن"
+
+msgid "person(s) who composed the recording"
+msgstr "الشخص (الأشخاص) الذي لحن التسجيل"
+
+msgid "conductor"
+msgstr "قائد الفرقة"
+
+msgid "conductor/performer refinement"
+msgstr "تحسين قائد الفرقة/المؤدي"
+
+msgid "duration"
+msgstr "المدّة"
+
+msgid "length in GStreamer time units (nanoseconds)"
+msgstr "الطول بوحدات زمن جي ستريمر (نانو ثانية)"
+
+msgid "codec"
+msgstr "المرماز"
+
+msgid "codec the data is stored in"
+msgstr "المرماز الذي خُزنت فيه البيانات"
+
+msgid "video codec"
+msgstr "مرماز الفيديو"
+
+msgid "codec the video data is stored in"
+msgstr "المرماز الذي خُزنت فيه بيانات الفيديو"
+
+msgid "audio codec"
+msgstr "مرماز الصوت"
+
+msgid "codec the audio data is stored in"
+msgstr "المرماز الذي خُزنت فيه بيانات الصوت"
+
+msgid "subtitle codec"
+msgstr "مرماز العنوان الفرعيّ"
+
+msgid "codec the subtitle data is stored in"
+msgstr "المرماز الذي خُزنت فيه بيانات العناوين الفرعية"
+
+msgid "container format"
+msgstr "تنسيق الحاوية"
+
+msgid "container format the data is stored in"
+msgstr "تنسيق الحاوية الذي خُزنت فيه البيانات"
+
+msgid "bitrate"
+msgstr "معدّل بِتّ"
+
+msgid "exact or average bitrate in bits/s"
+msgstr "معدل البت الدقيق أو المتوسط بـ بت/ثانية"
+
+msgid "nominal bitrate"
+msgstr "معدّل بتّ الاسميّ"
+
+msgid "nominal bitrate in bits/s"
+msgstr "معدل البت الاسمي بـ بت/ثانية"
+
+msgid "minimum bitrate"
+msgstr "أدنى معدل بت"
+
+msgid "minimum bitrate in bits/s"
+msgstr "أدنى معدل بت بـ بت/ثانية"
+
+msgid "maximum bitrate"
+msgstr "أقصى معدل بت"
+
+msgid "maximum bitrate in bits/s"
+msgstr "أقصى معدل بت بـ بت/ثانية"
+
+msgid "encoder"
+msgstr "المرمِز"
+
+msgid "encoder used to encode this stream"
+msgstr "المرمِز المستخدم لترميز هذا التدفق"
+
+msgid "encoder version"
+msgstr "إصدارة المرمِز"
+
+msgid "version of the encoder used to encode this stream"
+msgstr "إصدارة المرمِز المستخدم لترميز هذا التدفق"
+
+msgid "serial"
+msgstr "الرقم التسلسلي"
+
+msgid "serial number of track"
+msgstr "الرقم التسلسلي للمسار"
+
+msgid "replaygain track gain"
+msgstr "رافعة الصوت رفع المسار"
+
+msgid "track gain in dB"
+msgstr "رفع المسار بالديسيبل"
+
+msgid "r128 track gain"
+msgstr "رفع المسار r128"
+
+msgid "track gain in dB (r128)"
+msgstr "رفع المسار بالديسيبل (r128)"
+
+msgid "replaygain track peak"
+msgstr "رافعة الصوت قمة المسار"
+
+msgid "peak of the track"
+msgstr "قمة المسار"
+
+msgid "replaygain album gain"
+msgstr "رافعة الصوت رفع الألبوم"
+
+msgid "album gain in dB"
+msgstr "رفع الألبوم بالديسيبل"
+
+msgid "r128 album gain"
+msgstr "رفع الألبوم r128"
+
+msgid "album gain in dB (r128)"
+msgstr "رفع الألبوم بالديسيبل (r128)"
+
+msgid "replaygain album peak"
+msgstr "رافعة الصوت قمة الألبوم"
+
+msgid "peak of the album"
+msgstr "قمة الألبوم"
+
+msgid "replaygain reference level"
+msgstr "رافعة الصوت المستوى المرجعي"
+
+msgid "reference level of track and album gain values"
+msgstr "المستوى المرجعي لقيم رفع المسار والألبوم"
+
+msgid "language code"
+msgstr "رمز اللغة"
+
+msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
+msgstr "رمز لغة هذا التدفق، وفقاً لـ ISO-639-1 أو ISO-639-2"
+
+msgid "language name"
+msgstr "اسم اللغة"
+
+msgid "freeform name of the language this stream is in"
+msgstr "اسم حر للغة التي يستخدمها هذا التدفق"
+
+msgid "image"
+msgstr "الصورة"
+
+msgid "image related to this stream"
+msgstr "صورة متعلقة بهذا التدفق"
+
+#. TRANSLATORS: 'preview image' = image that shows a preview of the full image
+msgid "preview image"
+msgstr "صورة المعاينة"
+
+msgid "preview image related to this stream"
+msgstr "صورة معاينة متعلقة بهذا التدفق"
+
+msgid "attachment"
+msgstr "المرفق"
+
+msgid "file attached to this stream"
+msgstr "ملف مرفق بهذا التدفق"
+
+msgid "beats per minute"
+msgstr "ضربة في الدقيقة"
+
+msgid "number of beats per minute in audio"
+msgstr "عدد الضربات في الدقيقة في الصوت"
+
+msgid "keywords"
+msgstr "الكلمات المفتاحيّة"
+
+msgid "comma separated keywords describing the content"
+msgstr "كلمات مفتاحية مفصولة بفاصلة تصف المحتوى"
+
+msgid "geo location name"
+msgstr "اسم الموقع الجغرافي"
+
+msgid ""
+"human readable descriptive location of where the media has been recorded or "
+"produced"
+msgstr "موقع وصفي مقروء للبشر للمكان الذي سُجلت فيه الوسائط أو أُنتجت فيه"
+
+msgid "geo location latitude"
+msgstr "عرض الموقع الجغرافي"
+
+msgid ""
+"geo latitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the equator, negative values for "
+"southern latitudes)"
+msgstr ""
+"عرض الموقع الجغرافي حيث سُجلت الوسائط أو أُنتجت بالدرجات وفقاً لـ WGS84 (الصفر "
+"عند خط الاستواء، القيم السالبة للعروض الجنوبية)"
+
+msgid "geo location longitude"
+msgstr "طول الموقع الجغرافي"
+
+msgid ""
+"geo longitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
+"negative values for western longitudes)"
+msgstr ""
+"طول الموقع الجغرافي حيث سُجلت الوسائط أو أُنتجت بالدرجات وفقاً لـ WGS84 (الصفر "
+"عند خط غرينتش، القيم السالبة للأطوال الغربية)"
+
+msgid "geo location elevation"
+msgstr "ارتفاع الموقع الجغرافي"
+
+msgid ""
+"geo elevation of where the media has been recorded or produced in meters "
+"according to WGS84 (zero is average sea level)"
+msgstr ""
+"ارتفاع الموقع الجغرافي حيث سُجلت الوسائط أو أُنتجت بالأمتار وفقاً لـ WGS84 "
+"(الصفر هو متوسط مستوى سطح البحر)"
+
+msgid "geo location country"
+msgstr "بلد الموقع الجغرافي"
+
+msgid "country (english name) where the media has been recorded or produced"
+msgstr "البلد (بالاسم الإنجليزي) حيث سُجلت الوسائط أو أُنتجت"
+
+msgid "geo location city"
+msgstr "مدينة الموقع الجغرافي"
+
+msgid "city (english name) where the media has been recorded or produced"
+msgstr "المدينة (بالاسم الإنجليزي) حيث سُجلت الوسائط أو أُنتجت"
+
+msgid "geo location sublocation"
+msgstr "الموقع الفرعي للموقع الجغرافي"
+
+msgid ""
+"a location within a city where the media has been produced or created (e.g. "
+"the neighborhood)"
+msgstr "موقع داخل مدينة حيث أُنتجت الوسائط أو أُنشئت (مثل الحي)"
+
+msgid "geo location horizontal error"
+msgstr "الخطأ الأفقي للموقع الجغرافي"
+
+msgid "expected error of the horizontal positioning measures (in meters)"
+msgstr "الخطأ المتوقع لمقاييس التموضع الأفقي (بالأمتار)"
+
+msgid "geo location movement speed"
+msgstr "سرعة حركة الموقع الجغرافي"
+
+msgid ""
+"movement speed of the capturing device while performing the capture in m/s"
+msgstr "سرعة حركة جهاز الالتقاط أثناء القيام بالالتقاط بـ م/ث"
+
+msgid "geo location movement direction"
+msgstr "اتجاه حركة الموقع الجغرافي"
+
+msgid ""
+"indicates the movement direction of the device performing the capture of a "
+"media. It is represented as degrees in floating point representation, 0 "
+"means the geographic north, and increases clockwise"
+msgstr ""
+"يشير إلى اتجاه حركة الجهاز الذي يلتقط الوسائط. يُمثل بالدرجات في تمثيل النقطة "
+"العائمة، 0 تعني الشمال الجغرافي، وتزداد مع اتجاه عقارب الساعة"
+
+msgid "geo location capture direction"
+msgstr "اتجاه التقاط الموقع الجغرافي"
+
+msgid ""
+"indicates the direction the device is pointing to when capturing  a media. "
+"It is represented as degrees in floating point  representation, 0 means the "
+"geographic north, and increases clockwise"
+msgstr ""
+"يشير إلى الاتجاه الذي يشير إليه الجهاز عند التقاط الوسائط. يُمثل بالدرجات في "
+"تمثيل النقطة العائمة، 0 تعني الشمال الجغرافي، وتزداد مع اتجاه عقارب الساعة"
+
+#. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
+msgid "show name"
+msgstr "اسم العرض"
+
+msgid "Name of the tv/podcast/series show the media is from"
+msgstr "اسم عرض التلفاز/البودكاست/المسلسل الذي تنتمي إليه الوسائط"
+
+#. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
+msgid "show sortname"
+msgstr "اسم فرز العرض"
+
+msgid ""
+"Name of the tv/podcast/series show the media is from, for sorting purposes"
+msgstr ""
+"اسم عرض التلفاز/البودكاست/المسلسل الذي تنتمي إليه الوسائط، لأغراض الفرز"
+
+msgid "episode number"
+msgstr "رقم الحلقة"
+
+msgid "The episode number in the season the media is part of"
+msgstr "رقم الحلقة في الموسم الذي تنتمي إليه الوسائط"
+
+msgid "season number"
+msgstr "رقم الموسم"
+
+msgid "The season number of the show the media is part of"
+msgstr "رقم الموسم للعرض الذي تنتمي إليه الوسائط"
+
+msgid "lyrics"
+msgstr "الكلمات"
+
+msgid "The lyrics of the media, commonly used for songs"
+msgstr "كلمات الوسائط، تستخدم عادة للأغاني"
+
+msgid "composer sortname"
+msgstr "اسم فرز الملحن"
+
+msgid "person(s) who composed the recording, for sorting purposes"
+msgstr "الشخص (الأشخاص) الذي لحن التسجيل، لأغراض الفرز"
+
+msgid "grouping"
+msgstr "التجميع"
+
+msgid ""
+"Groups related media that spans multiple tracks, like the different pieces "
+"of a concerto. It is a higher level than a track, but lower than an album"
+msgstr ""
+"يجمع الوسائط ذات الصلة التي تمتد عبر مسارات متعددة، مثل المقطوعات المختلفة "
+"لكونسيرتو. هو مستوى أعلى من المسار وأقل من الألبوم"
+
+msgid "user rating"
+msgstr "تقييم المستخدم"
+
+msgid ""
+"Rating attributed by a user. The higher the rank, the more the user likes "
+"this media"
+msgstr ""
+"التقييم الذي وضعه المستخدم. كلما زادت الرتبة، زاد إعجاب المستخدم بهذه الوسائط"
+
+msgid "device manufacturer"
+msgstr "مصنع الجهاز"
+
+msgid "Manufacturer of the device used to create this media"
+msgstr "الشركة المصنعة للجهاز المستخدم لإنشاء هذه الوسائط"
+
+msgid "device model"
+msgstr "طراز الجهاز"
+
+msgid "Model of the device used to create this media"
+msgstr "طراز الجهاز المستخدم لإنشاء هذه الوسائط"
+
+msgid "application name"
+msgstr "اسم التطبيق"
+
+msgid "Application used to create the media"
+msgstr "التطبيق المستخدم لإنشاء هذه الوسائط"
+
+msgid "application data"
+msgstr "بيانات التطبيق"
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr "بيانات تطبيق عشوائية ستسلسل داخل الوسائط"
+
+msgid "image orientation"
+msgstr "اتجاه الصورة"
+
+msgid "How the image should be rotated or flipped before display"
+msgstr "كيف ينبغي تدوير أو قلب الصورة قبل عرضها"
+
+msgid "publisher"
+msgstr "الناشر"
+
+msgid "Name of the label or publisher"
+msgstr "اسم العلامة أو الناشر"
+
+msgid "interpreted-by"
+msgstr "مؤدى من"
+
+msgid "Information about the people behind a remix and similar interpretations"
+msgstr "معلومات حول الأشخاص وراء الريمكس والتفسيرات المماثلة"
+
+msgid "midi-base-note"
+msgstr "نغمة ميدي الأساسية"
+
+msgid "Midi note number of the audio track."
+msgstr "رقم نغمة ميدي لمسار الصوت."
+
+msgid "private-data"
+msgstr "بيانات خاصة"
+
+msgid "Private data"
+msgstr "بيانات خاصة"
+
+msgid "container-specific-track-id"
+msgstr "معرف المسار الخاص بالحاوية"
+
+msgid "Container-specific Track ID"
+msgstr "معرف المسار الخاص بالحاوية"
+
+#. separator between two strings
+msgid ", "
+msgstr "، "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr "عنوان غير صالح: %s"
+
+#, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr "لا يوجد معالج عنوان لميفاق %s"
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr "مخطط عنوان '%s' غير متاح"
+
+#, c-format
+msgid "ERROR: from element %s: %s\n"
+msgstr "خطأ: من العنصر %s: %s\n"
+
+#, c-format
+msgid ""
+"Additional debug info:\n"
+"%s\n"
+msgstr ""
+"معلومات التنقيح إضافية:\n"
+"%s\n"
+
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
+#, c-format
+msgid "link has no source [sink=%s@%p]"
+msgstr "الرابط ليس له مصدر [المصرف=%s@%p]"
+
+#, c-format
+msgid "link has no sink [source=%s@%p]"
+msgstr "الرابط ليس له مصرف [المصدر=%s@%p]"
+
+msgid "No such property."
+msgstr "لا توجد مثل هذه الخاصية."
+
+#, c-format
+msgid "no property \"%s\" in element \"%s\""
+msgstr "لا توجد خاصية \"%s\" في العنصر \"%s\""
+
+#, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "العنصر \"%s\" ليس GstPreset"
+
+#, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "تعذر ضبط الإعداد المسبق \"%s\" في العنصر \"%s\""
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "لا يوجد عنصر \"%s\""
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "تعذر ضبط الخاصية \"%s\" في العنصر \"%s\" إلى \"%s\""
+
+#, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
+msgstr "تعذر ضبط الخاصية \"%s\" في ابن العنصر \"%s\" إلى \"%s\""
+
+msgid "Delayed linking failed."
+msgstr "فشل الربط المتأخر."
+
+#, c-format
+msgid "could not link %s to %s, %s can't handle caps %s"
+msgstr "تعذر ربط %s بـ %s، %s لا يمكنه معالجة الإمكانيات %s"
+
+#, c-format
+msgid "could not link %s to %s, neither element can handle caps %s"
+msgstr "تعذر ربط %s بـ %s، لا يمكن لأي من العنصرين معالجة الإمكانيات %s"
+
+#, c-format
+msgid "could not link %s to %s with caps %s"
+msgstr "تعذر ربط %s بـ %s مع الإمكانيات %s"
+
+#, c-format
+msgid "could not link %s to %s"
+msgstr "تعذر ربط %s بـ %s"
+
+#, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr "مرجع غير متوقع \"%s\" - يتجاهله"
+
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr "مرجع حشية (pad) غير متوقع \"%s\" - يتجاهله"
+
+#, c-format
+msgid "could not parse caps \"%s\""
+msgstr "تعذر تحليل الإمكانيات \"%s\""
+
+#, c-format
+msgid "no sink element for URI \"%s\""
+msgstr "لا يوجد عنصر مصرف لعنوان URI \"%s\""
+
+#, c-format
+msgid "no source element for URI \"%s\""
+msgstr "لا يوجد عنصر مصدر لعنوان URI \"%s\""
+
+msgid "syntax error"
+msgstr "خطأ إملائي"
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "صندوق (bin) فارغ محدد \"%s\"، غير مسموح به"
+
+#, c-format
+msgid "no bin \"%s\", unpacking elements"
+msgstr "لا يوجد صندوق \"%s\"، يفك العناصر"
+
+msgid "empty pipeline not allowed"
+msgstr "أنبوب نقل فارغ غير مسموح به"
+
+msgid "Pipeline construction is invalid, please add queues."
+msgstr "بناء أنبوب النقل غير صالح، يرجى إضافة صفوف (queues)."
+
+msgid "A lot of buffers are being dropped."
+msgstr "يُسقط الكثير من المخازن المؤقتة."
+
+msgid "Internal data flow problem."
+msgstr "مشكلة تدفق بيانات داخلية."
+
+msgid "Internal data flow error."
+msgstr "خطأ تدفق بيانات داخلي."
+
+msgid "Internal clock error."
+msgstr "خطأ ساعة داخلي."
+
+msgid "Failed to map buffer."
+msgstr "فشل في تعيين المخزن المؤقت."
+
+msgid "Filter caps"
+msgstr "إمكانيات المرشح"
+
+msgid ""
+"Restrict the possible allowed capabilities (NULL means ANY). Setting this "
+"property takes a reference to the supplied GstCaps object."
+msgstr ""
+"تقييد الإمكانيات الممكن المسموح بها (NULL تعني الكل). ضبط هذه الخاصية يأخذ "
+"مرجعاً لكائن GstCaps الموفر."
+
+msgid "Caps Change Mode"
+msgstr "نمط تغيير الإمكانيات"
+
+msgid "Filter caps change behaviour"
+msgstr "سلوك تغيير إمكانيات المرشح"
+
+msgid "No Temp directory specified."
+msgstr "لم يحدد دليل مؤقت."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "تعذر إنشاء ملف مؤقت \"%s\"."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "تعذر فتح ملف \"%s\" للقراءة."
+
+msgid "Error while writing to download file."
+msgstr "خطأ أثناء الكتابة إلى ملف التنزيل."
+
+msgid "No file name specified for writing."
+msgstr "لم يحدد اسم ملف للكتابة."
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "تعذر فتح ملف \"%s\" للكتابة."
+
+#, c-format
+msgid "Error closing file \"%s\"."
+msgstr "خطأ في إغلاق ملف \"%s\"."
+
+#, c-format
+msgid "Error while seeking in file \"%s\"."
+msgstr "خطأ أثناء السعي في ملف \"%s\"."
+
+#, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "خطأ أثناء الكتابة إلى ملف \"%s\"."
+
+msgid "No file name specified for reading."
+msgstr "لم يحدد اسم ملف للقراءة."
+
+#, c-format
+msgid "Could not get info on \"%s\"."
+msgstr "تعذر الحصول على معلومات عن \"%s\"."
+
+#, c-format
+msgid "\"%s\" is a directory."
+msgstr "\"%s\" هو دليل."
+
+#, c-format
+msgid "File \"%s\" is a socket."
+msgstr "الملف \"%s\" هو مقبس."
+
+msgid "Failed after iterations as requested."
+msgstr "فشل بعد التكرارات كما هو مطلوب."
+
+msgid "eos-after and error-after can't both be defined."
+msgstr "لا يمكن تعريف eos-after و error-after معاً."
+
+msgid "caps"
+msgstr "الإمكانيات"
+
+msgid "detected capabilities in stream"
+msgstr "الإمكانيات المكتشفة في التدفق"
+
+msgid "minimum"
+msgstr "الأدنى"
+
+msgid "force caps"
+msgstr "فرض الإمكانيات"
+
+msgid "force caps without doing a typefind"
+msgstr "فرض الإمكانيات دون القيام باكتشاف النوع"
+
+msgid "Stream doesn't contain enough data."
+msgstr "التدفق لا يحتوي على بيانات كافية."
+
+msgid "Stream contains no data."
+msgstr "التدفق لا يحتوي على بيانات."
+
+#, c-format
+msgid "%sImplemented Interfaces%s:\n"
+msgstr "%sالواجهات المنفذة%s:\n"
+
+#, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sأعلام العناصر%s:\n"
+
+msgid "readable"
+msgstr "قابل للقراءة"
+
+msgid "writable"
+msgstr "قابل للكتابة"
+
+msgid "deprecated"
+msgstr "مهجور"
+
+msgid "controllable"
+msgstr "يمكن التحكم فيه"
+
+msgid "conditionally available"
+msgstr "متاح بشرط"
+
+msgid "can be set only at object construction time"
+msgstr "يمكن ضبطه فقط عند وقت بناء الكائن"
+
+msgid "changeable in NULL, READY, PAUSED or PLAYING state"
+msgstr "قابل للتغيير في حالة NULL، أو READY، أو PAUSED، أو PLAYING"
+
+msgid "changeable only in NULL, READY or PAUSED state"
+msgstr "قابل للتغيير فقط في حالة NULL، أو READY، أو PAUSED"
+
+msgid "changeable only in NULL or READY state"
+msgstr "قابل للتغيير فقط في حالة NULL، أو READY"
+
+msgid "Blacklisted files:"
+msgstr "الملفات المدرجة في القائمة السوداء:"
+
+#, c-format
+msgid "%sTotal count%s: %s"
+msgstr "%sالعدد الإجمالي%s: %s"
+
+#, c-format
+msgid "%d blacklisted file"
+msgid_plural "%d blacklisted files"
+msgstr[0] "لا ملفات في القائمة السوداء"
+msgstr[1] "ملف واحد في القائمة السوداء"
+msgstr[2] "ملفان في القائمة السوداء"
+msgstr[3] "%d ملفات في القائمة السوداء"
+msgstr[4] "%d ملفاً في القائمة السوداء"
+msgstr[5] "%d ملف في القائمة السوداء"
+
+#, c-format
+msgid "%d plugin"
+msgid_plural "%d plugins"
+msgstr[0] "لا ملحقات"
+msgstr[1] "ملحق واحد"
+msgstr[2] "ملحقان"
+msgstr[3] "%d ملحقات"
+msgstr[4] "%d ملحقاً"
+msgstr[5] "%d ملحق"
+
+#, c-format
+msgid "%d blacklist entry"
+msgid_plural "%d blacklist entries"
+msgstr[0] "لا مدخلات في القائمة السوداء"
+msgstr[1] "مدخل واحد في القائمة السوداء"
+msgstr[2] "مدخلان في القائمة السوداء"
+msgstr[3] "%d مدخلات في القائمة السوداء"
+msgstr[4] "%d مدخلاً في القائمة السوداء"
+msgstr[5] "%d مدخل في القائمة السوداء"
+
+#, c-format
+msgid "%d feature"
+msgid_plural "%d features"
+msgstr[0] "لا ميزات"
+msgstr[1] "ميزة واحدة"
+msgstr[2] "ميزتان"
+msgstr[3] "%d ميزات"
+msgstr[4] "%d ميزة"
+msgstr[5] "%d ميزة"
+
+msgid "Print all elements"
+msgstr "اطبع كل العناصر"
+
+msgid "Print list of blacklisted files"
+msgstr "اطبع قائمة الملفات المدرجة في القائمة السوداء"
+
+msgid ""
+"Print a machine-parsable list of features the specified plugin or all "
+"plugins provide.\n"
+"                                       Useful in connection with external "
+"automatic plugin installation mechanisms"
+msgstr ""
+"اطبع قائمة ميزات يمكن للآلة تحليلها يوفرها الملحق المحدد أو كل الملحقات. "
+"مفيدة في الاتصال بآليات تثبيت الملحقات الآلية الخارجية"
+
+msgid "List the plugin contents"
+msgstr "أدرج محتويات الملحق"
+
+msgid ""
+"A slashes ('/') separated list of types of elements (also known as klass) to "
+"list. (unordered)"
+msgstr ""
+"قائمة بأنواع العناصر (تُعرف أيضاً بـ klass) مفصولة بشرطة مائلة ('/') لإدراجها. "
+"(غير مرتبة)"
+
+msgid "Check if the specified element or plugin exists"
+msgstr "تحقق مما إذا كان العنصر أو الملحق المحدد موجوداً"
+
+msgid ""
+"When checking if an element or plugin exists, also check that its version is "
+"at least the version specified"
+msgstr ""
+"عند التحقق من وجود عنصر أو ملحق، تحقق أيضاً من أن إصداره على الأقل هي "
+"الإصدارة المحددة"
+
+msgid "Print supported URI schemes, with the elements that implement them"
+msgstr "اطبع مخططات العناوين المتاحة، مع العناصر التي تنفذها"
+
+msgid ""
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+"عطّل الألوان في المخرجات. يمكنك أيضاً تحقيق ذلك بضبط متغير البيئة "
+"'GST_INSPECT_NO_COLORS' على أي قيمة."
+
+msgid "Color output, even when not sending to a tty."
+msgstr "لون المخرجات، حتى لو لم تُرسل إلى tty."
+
+#, c-format
+msgid "Could not load plugin file: %s\n"
+msgstr "تعذر تحميل ملف الملحق: %s\n"
+
+#, c-format
+msgid "No such element or plugin '%s'\n"
+msgstr "لا يوجد مثل هذا العنصر أو الملحق '%s'\n"
+
+msgid "Index statistics"
+msgstr "إحصائيات الفهرس"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr "خطأ: %s\n"
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
+"التفاصيل:\n"
+"%s\n"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "يضبط أنبوب النقل إلى PLAYING ...\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "خطأ: أنبوب النقل لا يريد التشغيل.\n"
+
+#, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "تلقى الرسالة #%u من العنصر \"%s\" (%s): "
+
+#, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr "تلقى الرسالة #%u من الحشية (pad) \"%s:%s\" (%s): "
+
+#, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr "تلقى الرسالة #%u من الكائن \"%s\" (%s): "
+
+#, c-format
+msgid "Got message #%u (%s): "
+msgstr "تلقى الرسالة #%u (%s): "
+
+#, c-format
+msgid "Got EOS from element \"%s\".\n"
+msgstr "تلقى EOS من العنصر \"%s\".\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "تلقى EOS - يوقف أنبوب النقل...\n"
+
+#, c-format
+msgid "FOUND TAG      : found by element \"%s\".\n"
+msgstr "وُجد وسم      : وُجد بواسطة العنصر \"%s\".\n"
+
+#, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "وُجد وسم      : وُجد بواسطة الحشية (pad) \"%s:%s\".\n"
+
+#, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "وُجد وسم      : وُجد بواسطة الكائن \"%s\".\n"
+
+msgid "FOUND TAG\n"
+msgstr "وُجد وسم\n"
+
+#, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "وُجد TOC      : وُجد بواسطة العنصر \"%s\".\n"
+
+#, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "وُجد TOC      : وُجد بواسطة الكائن \"%s\".\n"
+
+msgid "FOUND TOC\n"
+msgstr "وُجد TOC\n"
+
+#, c-format
+msgid ""
+"INFO:\n"
+"%s\n"
+msgstr ""
+"معلومات:\n"
+"%s\n"
+
+#, c-format
+msgid "WARNING: from element %s: %s\n"
+msgstr "تحذير: من العنصر %s: %s\n"
+
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "أنبوب النقل في وضع PREROLLED ...\n"
+
+msgid "Prerolled, waiting for buffering to finish...\n"
+msgstr "وضع Prerolled، ينتظر انتهاء التخزين المؤقت...\n"
+
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr "وضع Prerolled، ينتظر انتهاء التقدم...\n"
+
+msgid "buffering..."
+msgstr "يخزن مؤقتاً..."
+
+msgid "Done buffering, setting pipeline to PLAYING ...\n"
+msgstr "انتهى التخزين المؤقت، يضبط أنبوب النقل إلى PLAYING ...\n"
+
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
+msgid "Buffering, setting pipeline to PAUSED ...\n"
+msgstr "يخزن مؤقتاً، يضبط أنبوب النقل إلى PAUSED ...\n"
+
+msgid "Redistribute latency...\n"
+msgstr "يعيد توزيع التأخير...\n"
+
+#, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr "يضبط الحالة إلى %s كما هو مطلوب من %s...\n"
+
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
+msgid "Interrupt: Stopping pipeline ...\n"
+msgstr "مقاطعة: يوقف أنبوب النقل ...\n"
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "مقاطعة أثناء انتظار EOS - يوقف أنبوب النقل...\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "EOS عند الإغلاق مفعل -- يفرض EOS على أنبوب النقل\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "ينتظر EOS...\n"
+
+#, c-format
+msgid "Progress: (%s) %s\n"
+msgstr "التقدم: (%s) %s\n"
+
+#, c-format
+msgid "Missing element: %s\n"
+msgstr "عنصر مفقود: %s\n"
+
+#, c-format
+msgid "Got context from element '%s': %s=%s\n"
+msgstr "تلقى سياقاً من العنصر '%s': %s=%s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "خطأ: أنبوب النقل لا يريد القيام بـ preroll.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "حدث خطأ أثناء انتظار EOS\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "يستخدم ساعة ويندوز عالية الدقة، الدقة: %u ميلي ثانية\n"
+
+msgid "Output tags (also known as metadata)"
+msgstr "يخرج الوسوم (تُعرف أيضاً بالبيانات الوصفية)"
+
+msgid "Output TOC (chapters and editions)"
+msgstr "يخرج TOC (الفصول والإصدارات)"
+
+msgid "Output status information and property notifications"
+msgstr "يخرج معلومات الحالة وإشعارات الخصائص"
+
+msgid "Do not print any progress information"
+msgstr "لا تطبع أي معلومات تقدم"
+
+msgid "Output messages"
+msgstr "يخرج الرسائل"
+
+msgid ""
+"Do not output status information for the specified property if verbose "
+"output is enabled (can be used multiple times)"
+msgstr ""
+"لا تخرج معلومات الحالة للخاصية المحددة إذا كانت المخرجات المفصلة مفعلة (يمكن "
+"استخدامها عدة مرات)"
+
+msgid "PROPERTY-NAME"
+msgstr "اسم_الخاصية"
+
+msgid "Set the name of the program"
+msgstr "اضبط اسم البرنامج"
+
+msgid "PROGRAM-NAME"
+msgstr "اسم_البرنامج"
+
+msgid "Do not install a fault handler"
+msgstr "لا تثبت معالجاً للأخطاء"
+
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr "افرض EOS على المصادر قبل إغلاق أنبوب النقل"
+
+msgid "Gather and print index statistics"
+msgstr "اجمع واطبع إحصائيات الفهرس"
+
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+"لا تطبع الموضع الحالي لأنبوب النقل. إذا لم يحدد هذا الخيار، سيُطبع الموضع "
+"عندما يكون stdout هو TTY. لتمكين طباعة الموضع عندما لا يكون stdout هو TTY، "
+"استخدم خيار \"force-position\""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+"اسمح بطباعة الموضع الحالي لأنبوب النقل حتى لو لم يكن stdout هو TTY. ليس لهذا "
+"الخيار أي تأثير إذا حدد خيار \"no-position\""
+
+#, c-format
+msgid "ERROR: pipeline could not be constructed: %s.\n"
+msgstr "خطأ: تعذر بناء أنبوب النقل: %s.\n"
+
+msgid "ERROR: pipeline could not be constructed.\n"
+msgstr "خطأ: تعذر بناء أنبوب النقل.\n"
+
+#, c-format
+msgid "WARNING: erroneous pipeline: %s\n"
+msgstr "تحذير: أنبوب نقل خاطئ: %s\n"
+
+msgid "ERROR: the 'pipeline' element wasn't found.\n"
+msgstr "خطأ: لم يعثر على عنصر 'pipeline'.\n"
+
+msgid "Setting pipeline to PAUSED ...\n"
+msgstr "يضبط أنبوب النقل إلى PAUSED ...\n"
+
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "فشل في ضبط أنبوب النقل إلى PAUSED.\n"
+
+msgid "Pipeline is live and does not need PREROLL ...\n"
+msgstr "أنبوب النقل مباشر ولا يحتاج إلى PREROLL ...\n"
+
+msgid "Pipeline is PREROLLING ...\n"
+msgstr "أنبوب النقل في وضع PREROLLING ...\n"
+
+msgid "Execution ended after %"
+msgstr "انتهى التنفيذ بعد %"
+
+msgid "Setting pipeline to NULL ...\n"
+msgstr "يضبط أنبوب النقل إلى NULL ...\n"
+
+msgid "Freeing pipeline ...\n"
+msgstr "يحرر أنبوب النقل ...\n"

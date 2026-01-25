@@ -7,23 +7,23 @@
 # https://gstreamer.freedesktop.org/data/doc/gstreamer/head/manual/html/index.html
 #
 # Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
-# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2017, 2018, 2019, 2021, 2022, 2024, 2025.
+# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2017, 2018, 2019, 2021, 2022, 2024, 2025, 2026.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.24.0\n"
+"Project-Id-Version: gstreamer-1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:56+0000\n"
-"PO-Revision-Date: 2025-03-26 20:57-0700\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
+"PO-Revision-Date: 2026-01-07 20:52-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
-"Language: hr_HR\n"
+"Language: hr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
-"n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.2.2\n"
+"X-Generator: Vim9.1\n"
 
 msgid "Print the GStreamer version"
 msgstr "ispiše inačicu GStreamera"
@@ -551,19 +551,16 @@ msgstr "serijski broj zapisa"
 msgid "replaygain track gain"
 msgstr "normalizacija razine glasnoće zapisa"
 
-#, fuzzy
 msgid "track gain in dB"
-msgstr "razina pojačanja zapisa u db"
+msgstr "razina pojačanja zapisa u dB"
 
 # https://en.wikipedia.org/wiki/ReplayGain
 # http://www.audiohq.de/index.php?showtopic=23#Referenzlautstaerke
-#, fuzzy
 msgid "r128 track gain"
-msgstr "normalizacija razine glasnoće zapisa"
+msgstr "r128 razina glasnoće zapisa"
 
-#, fuzzy
 msgid "track gain in dB (r128)"
-msgstr "razina pojačanja zapisa u db"
+msgstr "razina pojačanja zapisa u dB (r128)"
 
 msgid "replaygain track peak"
 msgstr "normalizacija vršne glasnoće zapisa"
@@ -574,17 +571,14 @@ msgstr "vršna razina zapisa"
 msgid "replaygain album gain"
 msgstr "normalizacija razine glasnoće albuma"
 
-#, fuzzy
 msgid "album gain in dB"
-msgstr "razina pojačanja albuma u db"
+msgstr "razina pojačanja albuma u dB"
 
-#, fuzzy
 msgid "r128 album gain"
-msgstr "normalizacija razine glasnoće albuma"
+msgstr "r128 razina glasnoće albuma"
 
-#, fuzzy
 msgid "album gain in dB (r128)"
-msgstr "razina pojačanja albuma u db"
+msgstr "razina pojačanja albuma u dB (r128)"
 
 msgid "replaygain album peak"
 msgstr "normalizacija vršne glasnoće albuma"
@@ -1096,9 +1090,9 @@ msgstr "Tok ne sadrži podatke."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sRealizirana sučelja%s:\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sElement Flags%s:\n"
-msgstr "%sRealizirana sučelja%s:\n"
+msgstr "%sElement Flags%s:\n"
 
 msgid "readable"
 msgstr "čitljivo"
@@ -1232,13 +1226,15 @@ msgstr "Indeksna statistika"
 
 #, c-format
 msgid "ERROR: %s\n"
-msgstr ""
+msgstr "GREŠKA: %s\n"
 
 #, c-format
 msgid ""
 "Details:\n"
 "%s\n"
 msgstr ""
+"Detalji:\n"
+"%s\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Postavljamo cjevovod na PLAYING ...\n"

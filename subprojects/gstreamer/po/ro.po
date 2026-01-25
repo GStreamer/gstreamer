@@ -4,7 +4,7 @@
 #
 # Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
 # Florentina Mușat <florentina.musat.28@gmail.com>, 2020.
-# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>. 2022 - 2024.
+# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>. 2022 - 2024, 2026.
 #
 # Cronologia traducerii fișierului „gstreamer”:
 # Traducerea inițială, făcută de LAG, pentru versiunea gstreamer 0.10.29.2
@@ -14,14 +14,15 @@
 # Actualizare a traducerii pentru versiunea 1.19.2, făcută de R-GC, ian-2022.
 # Actualizare a traducerii pentru versiunea 1.21.90, făcută de R-GC, ian-2023.
 # Actualizare a traducerii pentru versiunea 1.24.0, făcută de R-GC, mar-2024.
+# Actualizare a traducerii pentru versiunea 1.27.90, făcută de R-GC, ian-2026.
 # Actualizare a traducerii pentru versiunea Y, făcută de X, Z(anul).
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.24.0\n"
+"Project-Id-Version: gstreamer 1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:56+0000\n"
-"PO-Revision-Date: 2024-03-08 14:24+0100\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
+"PO-Revision-Date: 2026-01-06 23:57+0100\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
 "Language: ro\n"
@@ -31,7 +32,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.2.2\n"
+"X-Generator: Poedit 3.6\n"
 
 msgid "Print the GStreamer version"
 msgstr "Afișează versiunea GStreamer"
@@ -608,21 +609,18 @@ msgstr "numărul serial al pistei"
 msgid "replaygain track gain"
 msgstr "câștigul replaygain al pistei"
 
-#, fuzzy
 msgid "track gain in dB"
-msgstr "câștigul în db al pistei"
+msgstr "câștigul în dB al pistei"
 
 # R-GC, scrie:
 # cred că traducerea corectă, ar fi:
 # „câștig pistă câștig (de) redare”
 # Aplicând în consecvență pentru mesajele următoare....
-#, fuzzy
 msgid "r128 track gain"
-msgstr "câștigul replaygain al pistei"
+msgstr "câștigul r128 al pistei"
 
-#, fuzzy
 msgid "track gain in dB (r128)"
-msgstr "câștigul în db al pistei"
+msgstr "câștigul în dB (r128) al pistei"
 
 # DȘ, scrie (ca sugestie):
 # → „track” este în mare parte „piesă”
@@ -639,17 +637,14 @@ msgstr "vârful pistei"
 msgid "replaygain album gain"
 msgstr "câștigul replaygain al albumului"
 
-#, fuzzy
 msgid "album gain in dB"
-msgstr "câștigul în db al albumului"
+msgstr "câștigul în dB al albumului"
 
-#, fuzzy
 msgid "r128 album gain"
-msgstr "câștigul replaygain al albumului"
+msgstr "câștigul r128 al albumului"
 
-#, fuzzy
 msgid "album gain in dB (r128)"
-msgstr "câștigul în db al albumului"
+msgstr "câștigul în dB (r128) al albumului"
 
 msgid "replaygain album peak"
 msgstr "vârful replaygain al albumului"
@@ -1201,9 +1196,9 @@ msgstr "Fluxul nu conține date."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sInterfețe implementate%s:\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sElement Flags%s:\n"
-msgstr "%sInterfețe implementate%s:\n"
+msgstr "%sFanioane element%s:\n"
 
 msgid "readable"
 msgstr "se poate citi"
@@ -1335,13 +1330,15 @@ msgstr "Statistici de index"
 
 #, c-format
 msgid "ERROR: %s\n"
-msgstr ""
+msgstr "EROARE: %s\n"
 
 #, c-format
 msgid ""
 "Details:\n"
 "%s\n"
 msgstr ""
+"Detalii:\n"
+"%s\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Se stabilește linia de asamblare pe REDARE ...\n"
