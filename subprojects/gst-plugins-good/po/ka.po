@@ -1,14 +1,14 @@
 # Georgian translation for gst-plugins-good.
-# Copyright (C) 2022 THE PACKAGE'S COPYRIGHT HOLDER
+# Copyright (C) 2022 gst-plugins-good's authors
 # This file is distributed under the same license as the gst-plugins-good package.
-# Temuri Doghonadze <temuri.doghonadze@gmail.com>, 2022.
+# Temuri Doghonadze <temuri.doghonadze@gmail.com>, 2022 2026.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.24.0\n"
+"Project-Id-Version: gst-plugins-good-1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-08 17:06+0100\n"
-"PO-Revision-Date: 2025-03-02 06:00+0100\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
+"PO-Revision-Date: 2026-01-06 18:27+0100\n"
 "Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <(nothing)>\n"
 "Language: ka\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.5\n"
+"X-Generator: Poedit 3.8\n"
 
 msgid "Jack server not found"
 msgstr "Jack სერვერი ვერ ვიპოვე"
@@ -99,10 +99,10 @@ msgid "Invalid atom size."
 msgstr "ატომის არასწორი ზომა."
 
 msgid "Cannot query file size"
-msgstr ""
+msgstr "ფაილის ზომის გამოთხოვა შეუძლებელია"
 
 msgid "Cannot demux file"
-msgstr ""
+msgstr "ფაილის დემულტიპლექსირება შეუძლებელია"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "ფაილი დაუსრულებელია და მისი დაკვრა შეუძლებელია."
@@ -230,31 +230,31 @@ msgstr "მოწყობილობას \"%s\" მითითებულ 
 
 #, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr ""
+msgstr "მოწყობილობას '%s' უწყვეტი სიბრტყეების მხარდაჭერა არ აქვს"
 
 #, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr ""
+msgstr "მოწყობილობას '%s' არ აქვს %s ხაზგამოტოვების მხარდაჭერა"
 
 #, c-format
 msgid "Device '%s' does not support %s colorimetry"
-msgstr ""
+msgstr "მოწყობილობას '%s' კოლორიმეტრიის %s მხარდაჭერა არ აქვს"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
-msgstr ""
+msgstr "პარამეტრების მიღების შეცდომა მოწყობილობაზე '%s'"
 
 msgid "Video device did not accept new frame rate setting."
-msgstr ""
+msgstr "ვიდეომოწყობილობამ არ მიიღო ახალი კადრების სიხშირის პარამეტრი."
 
 msgid "Video device did not provide output format."
-msgstr ""
+msgstr "ვიდეომოწყობილობამ გამოტანის ფორმატი არ მოგვაწოდა."
 
 msgid "Video device returned invalid dimensions."
 msgstr "ვიდეო მოწყობილობამ არასწორი განზომილებები დააბრუნა."
 
 msgid "Video device uses an unsupported interlacing method."
-msgstr ""
+msgstr "ვიდეომოწყობილობა მხარდაუჭერელ ხაზგამოტოვების მეთოდს იყენებს."
 
 msgid "Video device uses an unsupported pixel format."
 msgstr "ვიდეო მოწყობილობა მხარდაუჭერელ პიქსელის ფორმატს იყენებს."
@@ -266,11 +266,11 @@ msgid "Video device did not suggest any buffer size."
 msgstr "ვიდეო მოწყობილობამ არც ერთ ბუფერის ზომაზე არ მიგვითითა."
 
 msgid "No downstream pool to import from."
-msgstr ""
+msgstr "შემოსატანად დაღმავალი პული არ არსებობს."
 
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
-msgstr ""
+msgstr "ტუნერის %d პარამეტრების მიღების შეცდომა მოწყობილობაზე '%s'."
 
 #, c-format
 msgid "Error getting capabilities for device '%s'."
@@ -278,7 +278,7 @@ msgstr "მოწყობილობის (%s) შესაძლებლო
 
 #, c-format
 msgid "Device '%s' is not a tuner."
-msgstr ""
+msgstr "მოწყობილობა '%s' ტუნერი არაა."
 
 #, c-format
 msgid "Failed to get radio input on device '%s'. "
@@ -286,7 +286,7 @@ msgstr "მოწყობილობაზე (%s) რადიო შეყ�
 
 #, c-format
 msgid "Failed to set input %d on device %s."
-msgstr ""
+msgstr "შეყვანის %d დაყენების შეცდომა მოწყობილობაზე %s."
 
 #, c-format
 msgid "Failed to change mute state for device '%s'."
@@ -340,19 +340,19 @@ msgstr ""
 
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
-msgstr ""
+msgstr "შეყვანის %d ატრიბუტების გამოთხოვა ჩავარდა მოწყობილობაზე %s"
 
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
-msgstr ""
+msgstr "ტუნერის %d პარამეტრის მიღების შეცდომა მოწყობილობაზე '%s'."
 
 #, c-format
 msgid "Failed to query norm on device '%s'."
-msgstr ""
+msgstr "მოწყობილობაზე '%s' ნორმის გამოთხოვა ჩავარდა."
 
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
-msgstr ""
+msgstr "კონტროლის ელემენტის ატრიბუტების მიღების შეცდომა მოწყობილობაზე '%s'."
 
 #, c-format
 msgid "Cannot identify device '%s'."
@@ -380,39 +380,47 @@ msgstr "მოწყობილოა %s M2M არაა."
 
 #, c-format
 msgid "Could not dup device '%s' for reading and writing."
-msgstr ""
+msgstr "მოწყობილობის '%s' ჩასაწერად და წასაკითხად გახსნა შეუძლებელია."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
-msgstr ""
+msgstr "მოწყობილობაზე '%s' ნორმის დაყენება ჩავარდა."
 
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
-msgstr ""
+msgstr "ტუნერის სიხშირის მიღების შეცდომა მოწყობილობისთვის '%s'."
 
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr ""
+"მიმდინარე ტუნერის სიხშირის დაყენების შეცდომა მოწყობილობისთვის '%s' სიხშირეზე "
+"%lu ჰც."
 
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
-msgstr ""
+msgstr "სიგნალის სიძლიერის მიღების შეცდომა მოწყობილობისთვის '%s'."
 
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
-msgstr ""
+msgstr "კონტროლის %d მნიშვნელობის მიღების შეცდომა მოწყობილობაზე '%s'."
 
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr ""
+"მნიშვნელობის %d დაყენების შეცდომა კონტროლის ელემენტისთვის %d მოწყობილობაზე "
+"'%s'."
 
 #, c-format
 msgid "Failed to set value %s for control %d on device '%s'."
 msgstr ""
+"მნიშვნელობის %s დაყენების შეცდომა კონტროლის ელემენტისთვის %d მოწყობილობაზე "
+"'%s'."
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
+"მიმდინარე შეყვანის მიღების შეცდომა მოწყობილობაზე '%s'. შეიძლება, ის "
+"რადიომოწყობილობაა"
 
 #, c-format
 msgid "Failed to set input %u on device %s."
@@ -422,6 +430,8 @@ msgstr "შეყვანის %u მოწყობილობაზე %s �
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
+"მიმდინარე გამოტანის მიღების შეცდომა მოწყობილობაზე '%s'. შეიძლება, ის "
+"რადიომოწყობილობაა"
 
 #, c-format
 msgid "Failed to set output %u on device %s."

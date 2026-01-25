@@ -4,7 +4,7 @@
 #
 # Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
 # Florentina Mușat <florentina.musat.28@gmail.com>, 2020.
-# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>, 2022 - 2024.
+# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>, 2022 - 2024, 2026.
 #
 # Cronologia traducerii fișierului „gst-plugins-good”:
 # Traducerea inițială, făcută de LAG, pentru versiunea gst-plugins-good 0.10.23.2
@@ -15,14 +15,15 @@
 # Actualizare a traducerii pentru versiunea 1.21.90, făcută de R-GC, ian-2023.
 # Revizuire și corectare a traducerii pentru versiunea 1.21.90, făcută de R-GC, noi-2023.
 # Actualizare a traducerii pentru versiunea 1.24.0, făcută de R-GC, mar-2024.
+# Actualizare a traducerii pentru versiunea 1.27.90, făcută de R-GC, ian-2026.
 # Actualizare a traducerii pentru versiunea Y, făcută de X, Z(anul).
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.24.0\n"
+"Project-Id-Version: gst-plugins-good 1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
-"PO-Revision-Date: 2024-03-08 10:53+0100\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
+"PO-Revision-Date: 2026-01-06 20:43+0100\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
 "Language: ro\n"
@@ -32,7 +33,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.2.2\n"
+"X-Generator: Poedit 3.6\n"
 "X-Launchpad-Export-Date: 2010-08-16 00:08+0000\n"
 
 msgid "Jack server not found"
@@ -71,7 +72,7 @@ msgid "Could not connect to server"
 msgstr "Nu se poate stabili o conexiune la server"
 
 msgid "No URL set."
-msgstr "Nu este stabilită nicio adresă URL."
+msgstr "Nu este definită nicio adresă URL."
 
 msgid "Could not resolve server name."
 msgstr "Nu s-a putut rezolva numele serverului."
@@ -91,7 +92,7 @@ msgid "Server sent bad data."
 msgstr "Serverul a trimis date incorecte."
 
 msgid "Server does not support seeking."
-msgstr "Serverul nu suportă căutarea."
+msgstr "Serverul nu oferă suport pentru căutare."
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
@@ -136,7 +137,7 @@ msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
-"Nu s-a găsit nici un flux suportat. Pentru fluxuri Real media s-ar putea să "
+"Nu s-a găsit nici un flux acceptat. Pentru fluxuri Real media s-ar putea să "
 "fie nevoie să instalați extensia GStreamer RTSP."
 
 # R-GC, scrie:
@@ -147,7 +148,7 @@ msgid ""
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-"Nu a fost găsit niciun flux suportat. S-ar putea să se necesite permiterea "
+"Nu a fost găsit niciun flux acceptat. S-ar putea să se necesite permiterea "
 "mai multor protocoale de transport sau, în caz contrar, s-ar putea să "
 "lipsească modulul corect de extensie GStreamer RTSP."
 
@@ -173,7 +174,7 @@ msgid ""
 "System is not supported by this element."
 msgstr ""
 "Nu s-a putut deschide dispozitivul audio pentru redare. Versiunea aceasta a "
-"OSS (Open Sound System) nu este suportată de acest element."
+"OSS (Open Sound System) nu este acceptată de acest element."
 
 msgid "Playback is not supported by this audio device."
 msgstr "Redarea nu este asigurată de acest dispozitiv audio."
@@ -484,7 +485,7 @@ msgstr "Obținerea nivelului semnalului pentru dispozitivul „%s” a eșuat."
 
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
-msgstr "Obținerea valorii %d pentru dispozitivul „%s” a eșuat."
+msgstr "Obținerea valorii pentru controlul %d al dispozitivului „%s” a eșuat."
 
 # R-GC, scrie:
 # s-a modificat de la:

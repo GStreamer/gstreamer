@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-good.
 # This file is distributed under the same license as the gst-plugins-good package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2024.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2026.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.24.0\n"
+"Project-Id-Version: gst-plugins-good 1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
-"PO-Revision-Date: 2024-03-07 21:16+0100\n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
+"PO-Revision-Date: 2026-01-07 19:45+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -252,10 +252,10 @@ msgid "Video device returned invalid dimensions."
 msgstr "Urządzenie obrazu zwróciło błędne wymiary."
 
 msgid "Video device uses an unsupported interlacing method."
-msgstr "Urządzenie obrazu wykorzystuje nie obsługiwany sposób przeplotu."
+msgstr "Urządzenie obrazu wykorzystuje nieobsługiwany sposób przeplotu."
 
 msgid "Video device uses an unsupported pixel format."
-msgstr "Urządzenie obrazu wykorzystuje nie obsługiwany format piksela."
+msgstr "Urządzenie obrazu wykorzystuje nieobsługiwany format piksela."
 
 msgid "Failed to configure internal buffer pool."
 msgstr "Nie udało się skonfigurować wewnętrznej puli buforów."

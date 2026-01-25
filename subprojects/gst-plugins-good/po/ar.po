@@ -1,0 +1,418 @@
+# Arabic translation for gst-plugins-good-1.0 package.
+# Copyright (C) 2026 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gst-plugins-good package.
+# Zayed Al-Saidi <zayed.alsaidi@gmail.com>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-good-1.27.90\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-25 17:17+0000\n"
+"PO-Revision-Date: 2026-01-11 11:17+0400\n"
+"Last-Translator: Zayed Al-Saidi <zayed.alsaidi@gmail.com>\n"
+"Language-Team: Arabic <(nothing)>\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
+"X-Generator: Lokalize 23.08.5\n"
+
+msgid "Jack server not found"
+msgstr "خادم Jack غير موجود"
+
+msgid "Failed to decode JPEG image"
+msgstr "فشل فك ترميز صورة JPEG"
+
+msgid "Failed to read memory"
+msgstr "فشلت قراءة الذاكرة"
+
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr "فشل ضبط مشفر صوت LAME mp3. تفقد معاملات الترميز."
+
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+"معدل البت المطلوب %d ك.بت/ثانية للخاصية '%s' غير مسموح به. تغير معدل البت "
+"إلى %d ك.بت/ثانية."
+
+#. TRANSLATORS: 'song title' by 'artist name'
+#, c-format
+msgid "'%s' by '%s'"
+msgstr "'%s' بواسطة '%s'"
+
+msgid "Could not connect to server"
+msgstr "يتعذر الاتصال بالخادم"
+
+msgid "No URL set."
+msgstr "لم يعين عنوان."
+
+msgid "Could not resolve server name."
+msgstr "يتعذر حل اسم الخادم."
+
+msgid "Could not establish connection to server."
+msgstr "يتعذر إنشاء اتصال بالخادم."
+
+msgid "Secure connection setup failed."
+msgstr "فشل إعداد الاتصال الآمن."
+
+msgid ""
+"A network error occurred, or the server closed the connection unexpectedly."
+msgstr "وقع خطأ في الشبكة، أو أغلق الخادم الاتصال بشكل غير متوقع."
+
+msgid "Server sent bad data."
+msgstr "أرسل الخادم بيانات سيئة."
+
+msgid "Server does not support seeking."
+msgstr "الخادم لا يدعم السعي."
+
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr "فشل ضبط مشفر TwoLAME. تفقد معاملات الترميز."
+
+msgid "No or invalid input audio, AVI stream will be corrupt."
+msgstr "لا يوجد صوت مدخل أو الصوت غير صالح، سيكون دفق AVI تالفًا."
+
+msgid "This file contains no playable streams."
+msgstr "لا يحتوي هذا الملف على دفقات قابلة للتشغيل."
+
+msgid "This file is invalid and cannot be played."
+msgstr "هذا الملف غير صالح ولا يمكن تشغيله."
+
+msgid "Cannot play stream because it is encrypted with PlayReady DRM."
+msgstr "يتعذر تشغيل الدفق لأنه مشفر بواسطة PlayReady DRM."
+
+msgid "This file is corrupt and cannot be played."
+msgstr "هذا الملف تالف ولا يمكن تشغيله."
+
+msgid "Invalid atom size."
+msgstr "حجم ذرة غير صالح."
+
+msgid "Cannot query file size"
+msgstr "يتعذر الاستعلام عن حجم الملف"
+
+msgid "Cannot demux file"
+msgstr "يتعذر فك دمج الملف"
+
+msgid "This file is incomplete and cannot be played."
+msgstr "هذا الملف غير مكتمل ولا يمكن تشغيله."
+
+msgid "The video in this file might not play correctly."
+msgstr "قد لا يشتغل الفيديو في هذا الملف بشكل صحيح."
+
+msgid ""
+"No supported stream was found. You might need to install a GStreamer RTSP "
+"extension plugin for Real media streams."
+msgstr ""
+"لم يعثر على دفق مدعوم. قد تحتاج إلى تثبيت ملحق GStreamer RTSP لدفقات Real "
+"media."
+
+msgid ""
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
+msgstr ""
+"لم يعثر على دفق مدعوم. قد تحتاج للسماح بمزيد من بروتوكولات النقل أو ربما "
+"تفتقد لملحق GStreamer RTSP الصحيح."
+
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr "يتعذر فتح جهاز الصوت للتشغيل. الجهاز مستخدم من قبل تطبيق آخر."
+
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
+msgstr "يتعذر فتح جهاز الصوت للتشغيل. لا تملك الصلاحية لفتح الجهاز."
+
+msgid "Could not open audio device for playback."
+msgstr "يتعذر فتح جهاز الصوت للتشغيل."
+
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+"يتعذر فتح جهاز الصوت للتشغيل. هذا العنصر لا يدعم هذه النسخة من Open Sound "
+"System."
+
+msgid "Playback is not supported by this audio device."
+msgstr "هذا الجهاز الصوتي لا يتيح التشغيل."
+
+msgid "Audio playback error."
+msgstr "خطأ في تشغيل الصوت."
+
+msgid "Recording is not supported by this audio device."
+msgstr "هذا الجهاز الصوتي لا يتيح التسجيل."
+
+msgid "Error recording from audio device."
+msgstr "خطأ أثناء التسجيل من جهاز الصوت."
+
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr "يتعذر فتح جهاز الصوت للتسجيل. لا تملك الصلاحية لفتح الجهاز."
+
+msgid "Could not open audio device for recording."
+msgstr "يتعذر فتح جهاز الصوت للتسجيل."
+
+msgid "CoreAudio device not found"
+msgstr "جهاز CoreAudio غير موجود"
+
+msgid "CoreAudio device could not be opened"
+msgstr "يتعذر فتح جهاز CoreAudio"
+
+msgid "Raspberry Pi Camera Module"
+msgstr "وحدة كاميرا Raspberry Pi"
+
+#, c-format
+msgid "Error reading %d bytes from device '%s'."
+msgstr "خطأ في قراءة %d بايت من الجهاز '%s'."
+
+#, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr "فشل حصر تنسيقات الفيديو الممكنة التي يمكن للجهاز '%s' العمل معها"
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "يتعذر ربط المخازن من الجهاز '%s'"
+
+#, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr "سائق الجهاز '%s' لا يدعم طريقة الإدخال والإخراج %d"
+
+#, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr "سائق الجهاز '%s' لا يدعم أي طريقة إدخال وإخراج معروفة."
+
+msgid "Invalid caps"
+msgstr "قدرات غير صالحة"
+
+#, c-format
+msgid "Device '%s' has no supported format"
+msgstr "الجهاز '%s' ليس لديه تنسيق مدعوم"
+
+#, c-format
+msgid "Device '%s' failed during initialization"
+msgstr "فشل الجهاز '%s' أثناء التهيئة"
+
+#, c-format
+msgid "Device '%s' is busy"
+msgstr "الجهاز '%s' مشغول"
+
+#, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "الجهاز '%s' لا يمكنه الالتقاط بدقة %dx%d"
+
+#, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "الجهاز '%s' لا يمكنه الالتقاط بالتنسيق المحدد"
+
+#, c-format
+msgid "Device '%s' does support non-contiguous planes"
+msgstr "الجهاز '%s' يدعم المستويات غير المتجاورة"
+
+#, c-format
+msgid "Device '%s' does not support %s interlacing"
+msgstr "الجهاز '%s' لا يدعم تشبيك %s"
+
+#, c-format
+msgid "Device '%s' does not support %s colorimetry"
+msgstr "الجهاز '%s' لا يدعم قياس الألوان %s"
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "يتعذر الحصول على المعاملات في الجهاز '%s'"
+
+msgid "Video device did not accept new frame rate setting."
+msgstr "لم يقبل جهاز الفيديو إعداد معدل الإطارات الجديد."
+
+msgid "Video device did not provide output format."
+msgstr "لم يوفر جهاز الفيديو تنسيق المخرجات."
+
+msgid "Video device returned invalid dimensions."
+msgstr "أعاد جهاز الفيديو أبعاداً غير صالحة."
+
+msgid "Video device uses an unsupported interlacing method."
+msgstr "يستخدم جهاز الفيديو طريقة تشبيك غير مدعومة."
+
+msgid "Video device uses an unsupported pixel format."
+msgstr "يستخدم جهاز الفيديو تنسيق بكسل غير متاح."
+
+msgid "Failed to configure internal buffer pool."
+msgstr "فشل ضبط مجمع المخازن الداخلي."
+
+msgid "Video device did not suggest any buffer size."
+msgstr "لم يقترح جهاز الفيديو أي حجم للمخزن."
+
+msgid "No downstream pool to import from."
+msgstr "لا يوجد مجمع تدفق سفلي للاستيراد منه."
+
+#, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr "فشل الحصول على إعدادات الموالف %d في الجهاز '%s'."
+
+#, c-format
+msgid "Error getting capabilities for device '%s'."
+msgstr "خطأ في الحصول على قدرات الجهاز '%s'."
+
+#, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "الجهاز '%s' ليس موالفاً."
+
+#, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "فشل الحصول على مدخل المذياع في الجهاز '%s'."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "فشل تعيين المدخل %d في الجهاز %s."
+
+#, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "فشل تغيير حالة الكتم للجهاز '%s'."
+
+msgid "Failed to allocated required memory."
+msgstr "فشل تخصيص الذاكرة المطلوبة."
+
+msgid "Failed to allocate required memory."
+msgstr "فشل تخصيص الذاكرة المطلوبة."
+
+#, c-format
+msgid "Converter on device %s has no supported input format"
+msgstr "المحول في الجهاز %s ليس لديه تنسيق مدخلات مدعوم"
+
+#, c-format
+msgid "Converter on device %s has no supported output format"
+msgstr "المحول في الجهاز %s ليس لديه تنسيق مخرجات مدعوم"
+
+#, c-format
+msgid "Decoder on device %s has no supported input format"
+msgstr "جهاز فك الترميز في الجهاز %s ليس لديه تنسيق مدخلات مدعوم"
+
+msgid "Failed to start decoding thread."
+msgstr "فشل بدء خيط فك الترميز."
+
+msgid "Failed to process frame."
+msgstr "فشل معالجة الإطار."
+
+#, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr "المرمز في الجهاز %s ليس لديه تنسيق مخرجات متاح"
+
+#, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "المرمز في الجهاز %s ليس لديه تنسيق مدخلات متاحة"
+
+msgid "Failed to force keyframe."
+msgstr "فشل فرض إطار مفتاحي."
+
+msgid "Failed to start encoding thread."
+msgstr "فشل بدء خيط الترميز."
+
+#, c-format
+msgid ""
+"Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
+"it is a v4l1 driver."
+msgstr ""
+"خطأ في الحصول على قدرات الجهاز '%s': ليس سائق v4l2. تفقد ما إذا كان سائق "
+"v4l1."
+
+#, c-format
+msgid "Failed to query attributes of input %d in device %s"
+msgstr "فشل الاستعلام عن سمات المدخل %d في الجهاز %s"
+
+#, c-format
+msgid "Failed to get setting of tuner %d on device '%s'."
+msgstr "فشل الحصول على إعداد الموالف %d في الجهاز '%s'."
+
+#, c-format
+msgid "Failed to query norm on device '%s'."
+msgstr "فشل الاستعلام عن المعيار في الجهاز '%s'."
+
+#, c-format
+msgid "Failed getting controls attributes on device '%s'."
+msgstr "فشل الحصول على سمات التحكم في الجهاز '%s'."
+
+#, c-format
+msgid "Cannot identify device '%s'."
+msgstr "يتعذر التعرف على الجهاز '%s'."
+
+#, c-format
+msgid "This isn't a device '%s'."
+msgstr "هذا ليس الجهاز '%s'."
+
+#, c-format
+msgid "Could not open device '%s' for reading and writing."
+msgstr "يتعذر فتح الجهاز '%s' للقراءة والكتابة."
+
+#, c-format
+msgid "Device '%s' is not a capture device."
+msgstr "الجهاز '%s' ليس جهاز التقاط."
+
+#, c-format
+msgid "Device '%s' is not a output device."
+msgstr "الجهاز '%s' ليس جهاز مخرجات."
+
+#, c-format
+msgid "Device '%s' is not a M2M device."
+msgstr "الجهاز '%s' ليس جهاز M2M."
+
+#, c-format
+msgid "Could not dup device '%s' for reading and writing."
+msgstr "يتعذر تكرار الجهاز '%s' للقراءة والكتابة."
+
+#, c-format
+msgid "Failed to set norm for device '%s'."
+msgstr "فشل تعيين المعيار للجهاز '%s'."
+
+#, c-format
+msgid "Failed to get current tuner frequency for device '%s'."
+msgstr "فشل الحصول على تردد الموالف الحالي للجهاز '%s'."
+
+#, c-format
+msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
+msgstr "فشل تعيين تردد الموالف الحالي للجهاز '%s' إلى %lu هرتز."
+
+#, c-format
+msgid "Failed to get signal strength for device '%s'."
+msgstr "فشل الحصول على قوة الإشارة للجهاز '%s'."
+
+#, c-format
+msgid "Failed to get value for control %d on device '%s'."
+msgstr "فشل الحصول على قيمة التحكم %d في الجهاز '%s'."
+
+#, c-format
+msgid "Failed to set value %d for control %d on device '%s'."
+msgstr "فشل تعيين القيمة %d للتحكم %d في الجهاز '%s'."
+
+#, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "فشل تعيين القيمة %s للتحكم %d في الجهاز '%s'."
+
+#, c-format
+msgid "Failed to get current input on device '%s'. May be it is a radio device"
+msgstr "فشل الحصول على المدخل الحالي في الجهاز '%s'. ربما هو جهاز مذياع"
+
+#, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "فشل تعيين المدخل %u في الجهاز %s."
+
+#, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr "فشل الحصول على المخرج الحالي في الجهاز '%s'. ربما هو جهاز مذياع"
+
+#, c-format
+msgid "Failed to set output %u on device %s."
+msgstr "فشل تعيين المخرج %u في الجهاز %s."
+
+msgid "Cannot operate without a clock"
+msgstr "لا يمكن العمل بدون ساعة"
