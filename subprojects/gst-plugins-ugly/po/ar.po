@@ -1,0 +1,61 @@
+# Arabic translation for gst-plugins-ugly-1.0 package.
+# Copyright (C) 2026 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gst-plugins-ugly package.
+# Zayed Al-Saidi <zayed.alsaidi@gmail.com>, 2026.
+#
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-ugly-1.27.90\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-25 17:18+0000\n"
+"PO-Revision-Date: 2026-01-11 14:02+0400\n"
+"Last-Translator: Zayed Al-Saidi <zayed.alsaidi@gmail.com>\n"
+"Language-Team: Arabic <(nothing)>\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
+"X-Generator: Lokalize 23.08.5\n"
+
+msgid "Could not read from CD."
+msgstr "يتعذر القراءة من القرص المدمج."
+
+msgid "Could not open CD device for reading."
+msgstr "تعذر فتح جهاز القرص المدمج للقراءة."
+
+msgid "Disc is not an Audio CD."
+msgstr "القرص ليس قرصاً مدمجاً صوتياً."
+
+msgid "Could not open DVD"
+msgstr "يتعذر فتح قرص DVD"
+
+#, c-format
+msgid "Could not open DVD title %d"
+msgstr "يتعذر فتح عنوان DVD %d"
+
+#, c-format
+msgid "Failed to go to chapter %d of DVD title %d"
+msgstr "فشل الذهاب إلى الفصل %d من عنوان DVD %d"
+
+#, c-format
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr "يتعذر فتح عنوان DVD %d. العناوين التفاعلية غير مدعومة بهذا العنصر"
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"يتعذر قراءة قرص DVD. قد يكون هذا بسبب أن قرص DVD معميّ ومكتبة فك التعمية لقرص "
+"DVD غير مثبتة."
+
+msgid "Could not read DVD."
+msgstr "يتعذر قراءة DVD."
+
+msgid "This stream contains no data."
+msgstr "هذا الدفق لا يحتوي على بيانات."
