@@ -2,9 +2,9 @@
 # Mesajele în limba română pentru pachetul gst-plugins-bad.
 # This file is distributed under the same license as the gst-plugins-bad package.
 #
-# Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010..
+# Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
 # Florentina Mușat <florentina.musat.28@gmail.com>, 2020.
-# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>. 2022 - 2024.
+# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>. 2022 - 2024, 2026.
 #
 # Cronologia traducerii fișierului „gstreamer”:
 # Traducerea inițială, făcută de LAG, pentru versiunea gst-plugins-bad 0.10.18.2
@@ -14,14 +14,15 @@
 # Actualizare a traducerii pentru versiunea 1.19.2, făcută de R-GC, ian-2022.
 # Actualizare a traducerii pentru versiunea 1.21.90, făcută de R-GC, ian-2023.
 # Actualizare a traducerii pentru versiunea 1.24.0, făcută de R-GC, mar-2024.
+# Actualizare a traducerii pentru versiunea 1.27.90, făcută de R-GC, ian-2026.
 # Actualizare a traducerii pentru versiunea Y, făcută de X, Z(anul).
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.24.0\n"
+"Project-Id-Version: gst-plugins-bad 1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:37+0000\n"
-"PO-Revision-Date: 2024-03-08 10:15+0100\n"
+"POT-Creation-Date: 2026-01-25 17:18+0000\n"
+"PO-Revision-Date: 2026-01-06 20:05+0100\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
 "Language: ro\n"
@@ -31,7 +32,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2);;\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.2.2\n"
+"X-Generator: Poedit 3.6\n"
 
 msgid "No URL set."
 msgstr "Nicio adresă URL definită."
@@ -53,14 +54,14 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
-"Nu s-a putut citi DVD-ul. Aceasta poate fi pentru că DVD-ul este criptat și "
-"o bibliotecă de decriptare a DVD-urilor nu este instalată."
+"Nu s-a putut citi DVD-ul. Acest lucru se poate datora faptului că DVD-ul "
+"este criptat și o bibliotecă de decriptare a DVD-ului nu este instalată."
 
 msgid "Could not read DVD."
 msgstr "Nu s-a putut citi DVD-ul."
 
 msgid "This file contains no playable streams."
-msgstr "Fișierul nu conține fluxuri de redat."
+msgstr "Acest fișier nu conține fluxuri ce pot fi redate."
 
 msgid "Could not open sndfile stream for reading."
 msgstr "Nu s-a putut deschide fluxul sndfile pentru citire."
@@ -112,24 +113,30 @@ msgstr "Dispozitivul „%s” nu există."
 # sinonimul, traducerea adaptată de «client»,
 # mi se pare cel puțin de moment o alegere
 # bună.
+# ****
+# modificat la (versiunea 1.27.90):
+# „Nu s-a putut deschide dispozitivul de interfață „%s”.”
 #, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Nu s-a putut deschide dispozitivul client „%s”."
+msgstr "Nu s-a putut deschide dispozitivul de interfață „%s”."
 
 # R-GC, scrie:
 # modificat de la:
-# „Nu s-au putut obține configurările de la dispozitivul frontend „%s”.”
+# „Nu s-au putut obține configurările de la dispozitivul frontend „%s”.” - la:
+# „Nu s-au putut obține configurările de la dispozitivul client „%s”.”
+# ***
+# modificat la (versiunea 1.27.90):
+# „Nu s-au putut obține configurările de la dispozitivul de interfață „%s”.”
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Nu s-au putut obține configurările de la dispozitivul client „%s”."
+msgstr ""
+"Nu s-au putut obține configurările de la dispozitivul de interfață „%s”."
 
-# R-GC, scrie:
-# modificat de la:
-# „Nu s-au putut enumera sistemele de livrare de la dispozitivul de interfață „%s”.”
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr ""
-"Nu s-au putut enumera sistemele de livrare de la dispozitivul client„%s”."
+"Nu s-au putut enumera sistemele de livrare de la dispozitivul de interfață "
+"„%s”."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
