@@ -3230,7 +3230,7 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
 
   GST_PLAY_SINK_LOCK (playsink);
   GST_OBJECT_LOCK (playsink);
-  /* get flags, there are protected with the object lock */
+  /* get flags, they're protected with the object lock */
   flags = playsink->flags;
   GST_OBJECT_UNLOCK (playsink);
 
