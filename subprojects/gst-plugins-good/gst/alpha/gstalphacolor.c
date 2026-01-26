@@ -303,7 +303,7 @@ transform_ayuv_ayuv (GstVideoFrame * frame, const gint * matrix)
 }
 
 static void
-transform_argb_bgra (GstVideoFrame * frame, const gint * matrix)
+transform_argb_bgra (GstVideoFrame * frame, const gint * matrix G_GNUC_UNUSED)
 {
   guint8 *data;
   gsize size;
@@ -330,7 +330,7 @@ transform_argb_bgra (GstVideoFrame * frame, const gint * matrix)
 #define transform_abgr_rgba transform_argb_bgra
 
 static void
-transform_argb_abgr (GstVideoFrame * frame, const gint * matrix)
+transform_argb_abgr (GstVideoFrame * frame, const gint * matrix G_GNUC_UNUSED)
 {
   guint8 *data;
   gsize size;
@@ -357,11 +357,12 @@ transform_argb_abgr (GstVideoFrame * frame, const gint * matrix)
 #define transform_abgr_argb transform_argb_abgr
 
 static void
-transform_rgba_bgra (GstVideoFrame * frame, const gint * matrix)
+transform_rgba_bgra (GstVideoFrame * frame, const gint * matrix G_GNUC_UNUSED)
 {
   guint8 *data;
   gsize size;
   gint r, g, b;
+
 
   data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   size = GST_VIDEO_FRAME_SIZE (frame);
@@ -384,7 +385,7 @@ transform_rgba_bgra (GstVideoFrame * frame, const gint * matrix)
 #define transform_bgra_rgba transform_rgba_bgra
 
 static void
-transform_argb_rgba (GstVideoFrame * frame, const gint * matrix)
+transform_argb_rgba (GstVideoFrame * frame, const gint * matrix G_GNUC_UNUSED)
 {
   guint8 *data;
   gsize size;
@@ -411,7 +412,7 @@ transform_argb_rgba (GstVideoFrame * frame, const gint * matrix)
 #define transform_abgr_bgra transform_argb_rgba
 
 static void
-transform_bgra_argb (GstVideoFrame * frame, const gint * matrix)
+transform_bgra_argb (GstVideoFrame * frame, const gint * matrix G_GNUC_UNUSED)
 {
   guint8 *data;
   gsize size;
@@ -438,7 +439,7 @@ transform_bgra_argb (GstVideoFrame * frame, const gint * matrix)
 #define transform_rgba_abgr transform_bgra_argb
 
 static void
-transform_rgba_argb (GstVideoFrame * frame, const gint * matrix)
+transform_rgba_argb (GstVideoFrame * frame, const gint * matrix G_GNUC_UNUSED)
 {
   guint8 *data;
   gsize size;
@@ -465,12 +466,12 @@ transform_rgba_argb (GstVideoFrame * frame, const gint * matrix)
 #define transform_bgra_abgr transform_rgba_argb
 
 static gboolean
-gst_alpha_color_set_info (GstVideoFilter * filter, GstCaps * incaps,
-    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
+gst_alpha_color_set_info (GstVideoFilter * filter,
+    GstCaps * incaps G_GNUC_UNUSED, GstVideoInfo * in_info,
+    GstCaps * outcaps G_GNUC_UNUSED, GstVideoInfo * out_info)
 {
   GstAlphaColor *alpha = GST_ALPHA_COLOR (filter);
   gboolean in_sdtv, out_sdtv;
-
   alpha->process = NULL;
   alpha->matrix = NULL;
 
