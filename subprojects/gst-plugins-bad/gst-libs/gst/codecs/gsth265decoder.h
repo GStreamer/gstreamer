@@ -198,6 +198,10 @@ GST_CODECS_API
 GstH265Picture * gst_h265_decoder_get_picture   (GstH265Decoder * decoder,
                                                  guint32 system_frame_number) G_GNUC_WARN_UNUSED_RESULT;
 
+GST_CODECS_API
+GstH265SPSEXT * gst_h265_decoder_get_sps_ext    (const GstH265Decoder * decoder,
+                                                 const GstH265SPS * sps);
+
 G_END_DECLS
 
 #endif /* __GST_H265_DECODER_H__ */
