@@ -49,6 +49,7 @@
 #include <gst/gst.h>
 #include <glib/gi18n-lib.h>
 #include <gst/pbutils/pbutils.h>
+#include <gst/tag/tag.h>
 
 #include "gstapedemux.h"
 
@@ -129,6 +130,8 @@ static const struct _GstApeDemuxTagTableEntry
       "comment", GST_TAG_COMMENT}, {
       "comments", GST_TAG_COMMENT}, {
       "copyright", GST_TAG_COPYRIGHT}, {
+      "cover art (back)", GST_TAG_IMAGE}, {
+      "cover art (front)", GST_TAG_IMAGE}, {
       "genre", GST_TAG_GENRE}, {
       "isrc", GST_TAG_ISRC}, {
       "disc", GST_TAG_ALBUM_VOLUME_NUMBER}, {
@@ -297,6 +300,43 @@ ape_demux_parse_tags (const guint8 * data, gint size)
 
               g_value_init (&v, G_TYPE_DATE);
               g_value_take_boxed (&v, date);
+            }
+          } else if (gst_tag_type == GST_TYPE_SAMPLE) {
+            if (strcmp (gst_tag, GST_TAG_IMAGE) == 0) {
+              const guint8 *img;
+              gsize img_len;
+              GstTagImageType img_type;
+              GstSample *sample;
+
+              img_len = strnlen (val, len) + 1;
+              if (img_len >= len) {
+                GST_WARNING ("No cover art data");
+                break;
+              }
+
+              img = data + n + img_len;
+              img_len = len - img_len;
+
+              if (g_ascii_strcasecmp (tag, "cover art (back)") == 0)
+                img_type = GST_TAG_IMAGE_TYPE_BACK_COVER;
+              else
+                img_type = GST_TAG_IMAGE_TYPE_FRONT_COVER;
+
+              if ((sample =
+                      gst_tag_image_data_to_image_sample (img, img_len,
+                          img_type))) {
+                if (val[0]) {
+                  const GstStructure *old = gst_sample_get_info (sample);
+                  GstStructure *info = old ? gst_structure_copy (old) :
+                      gst_structure_new_empty ("GstTagImageInfo");
+
+                  gst_structure_set (info, "filename", G_TYPE_STRING, val,
+                      NULL);
+                  gst_sample_set_info (sample, info);
+                }
+                g_value_init (&v, GST_TYPE_SAMPLE);
+                gst_value_take_sample (&v, sample);
+              }
             }
           } else {
             GST_WARNING ("Unhandled tag type '%s' for tag '%s'",
