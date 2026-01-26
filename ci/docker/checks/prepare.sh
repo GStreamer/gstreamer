@@ -34,7 +34,7 @@ python3 -m pip install gitlint
 
 # Install Rust
 RUSTUP_VERSION=1.28.1
-RUST_VERSION=1.92.0
+RUST_VERSION=1.93.0
 RUST_ARCH="x86_64-unknown-linux-gnu"
 
 RUSTUP_URL=https://static.rust-lang.org/rustup/archive/$RUSTUP_VERSION/$RUST_ARCH/rustup-init
@@ -49,7 +49,7 @@ chmod +x rustup-init;
 rm rustup-init;
 chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
-cargo install cargo-c --version 0.10.19+cargo-0.93 --locked
+cargo install cargo-c --version 0.10.20+cargo-0.94 --locked
 
 rustup --version
 cargo --version
