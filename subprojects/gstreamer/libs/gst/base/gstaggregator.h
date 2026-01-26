@@ -264,14 +264,42 @@ struct _GstAggregatorClass {
 
   GstFlowReturn     (*flush)          (GstAggregator    *  aggregator);
 
+  /**
+   * GstAggregatorClass::clip:
+   * @self: the #GstAggregator
+   * @aggregator_pad: a #GstAggregatorPad
+   * @buf: (transfer full): a #GstBuffer
+   *
+   * Called when a buffer is received on a sink pad, the task of
+   * clipping it and translating it to the current segment falls
+   * on the subclass. The function should use the segment of data
+   * and the negotiated media type on the pad to perform
+   * clipping of input buffer. This function takes ownership of
+   * buf and should output a buffer or return NULL in
+   * if the buffer should be dropped.
+   *
+   * Returns: (transfer full) (nullable): a #GstBuffer.
+   */
   GstBuffer *       (*clip)           (GstAggregator    *  aggregator,
                                        GstAggregatorPad *  aggregator_pad,
                                        GstBuffer        *  buf);
 
+  /**
+   * GstAggregatorClass::finish_buffer:
+   * @event: (transfer full): a #GstBuffer
+   */
   GstFlowReturn     (*finish_buffer)  (GstAggregator    * aggregator,
                                        GstBuffer        * buffer);
 
   /* sinkpads virtual methods */
+  /**
+   * GstAggregatorClass::sink_event:
+   * @aggregator_pad: a #GstAggregatorPad
+   * @event: (transfer full): a #GstEvent
+   *
+   * Called when an event is received on a sink pad, the subclass
+   * should always chain up.
+   */
   gboolean          (*sink_event)     (GstAggregator    *  aggregator,
                                        GstAggregatorPad *  aggregator_pad,
                                        GstEvent         *  event);
@@ -281,6 +309,13 @@ struct _GstAggregatorClass {
                                        GstQuery         *  query);
 
   /* srcpad virtual methods */
+  /**
+   * GstAggregatorClass::src_event:
+   * @event: (transfer full): a #GstEvent
+   *
+   * Called when an event is received on the src pad, the subclass
+   * should always chain up.
+   */
   gboolean          (*src_event)      (GstAggregator    *  aggregator,
                                        GstEvent         *  event);
 
@@ -300,6 +335,19 @@ struct _GstAggregatorClass {
 
   GstClockTime      (*get_next_time)  (GstAggregator    *  aggregator);
 
+  /**
+   * GstAggregatorClass::create_new_pad:
+   * @self: the #GstAggregator
+   * @templ: the pad template to use
+   * @req_name: (nullable) requested pad name
+   * @caps: (nullable) caps for the pad
+   *
+   * Called when a new pad needs to be created. Allows subclass that
+   * don't have a single sink pad template to provide a pad based
+   * on the provided information.
+   *
+   * Returns: (transfer floating): a new #GstAggregatorPad.
+   */
   GstAggregatorPad * (*create_new_pad) (GstAggregator  * self,
                                         GstPadTemplate * templ,
                                         const gchar    * req_name,
@@ -307,11 +355,21 @@ struct _GstAggregatorClass {
 
   /**
    * GstAggregatorClass::update_src_caps:
-   * @ret: (out) (allow-none):
+   * @ret: (out) (nullable):
    */
   GstFlowReturn     (*update_src_caps) (GstAggregator *  self,
                                         GstCaps       *  caps,
                                         GstCaps       ** ret);
+  /**
+   * GstAggregatorClass::fixate_src_caps:
+   * @caps: (transfer full): a #GstCaps to fixate
+   *
+   * Fixate and return the src pad caps provided. The function takes
+   * ownership of @caps and returns a fixated version of
+   * @caps. @caps is not guaranteed to be writable.
+   *
+   * Returns: (transfer full): the fixated caps #GstCaps.
+   */
   GstCaps *         (*fixate_src_caps) (GstAggregator *  self,
                                         GstCaps       *  caps);
   gboolean          (*negotiated_src_caps) (GstAggregator *  self,
@@ -325,6 +383,14 @@ struct _GstAggregatorClass {
 
   gboolean          (*negotiate) (GstAggregator * self);
 
+  /**
+   * GstAggregatorClass::sink_event_pre_queue:
+   * @aggregator_pad: a #GstAggregatorPad
+   * @event: (transfer full): a #GstEvent
+   *
+   * Called when an event is received on a sink pad before queueing up
+   * serialized events. The subclass should always chain up (Since: 1.18).
+   */
   GstFlowReturn     (*sink_event_pre_queue)     (GstAggregator    *  aggregator,
                                                  GstAggregatorPad *  aggregator_pad,
                                                  GstEvent         *  event);
@@ -335,6 +401,7 @@ struct _GstAggregatorClass {
 
   /**
    * GstAggregatorClass::finish_buffer_list:
+   * @bufferlist: (transfer full): a #GstBufferList
    *
    * Optional. Equivalent of #GstAggregatorClass::finish_buffer for
    * buffer lists.
@@ -345,6 +412,9 @@ struct _GstAggregatorClass {
                                            GstBufferList    * bufferlist);
   /**
    * GstAggregatorClass::peek_next_sample:
+   * @aggregator_pad: a #GstAggregatorPad
+   *
+   * Returns: (transfer full) (nullable): the #GstSample.
    *
    * See gst_aggregator_peek_next_sample().
    *
