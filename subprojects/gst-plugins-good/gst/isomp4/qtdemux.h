@@ -391,10 +391,6 @@ struct _QtDemuxStream
                                  * for MSS and fragmented streams */
 
   gboolean new_stream;          /* signals that a stream_start is required */
-  gboolean on_keyframe;         /* if this stream last pushed buffer was a
-                                 * keyframe. This is important to identify
-                                 * where to stop pushing buffers after a
-                                 * segment stop time */
 
   /* if the stream has a redirect URI in its headers, we store it here */
   gchar *redirect_uri;
@@ -430,7 +426,7 @@ struct _QtDemuxStream
   /* video info */
   GstVideoInfo info;
   GstVideoInfo pre_info;        /* Original file info, may be unaligned */
-  gboolean needs_row_alignment; 
+  gboolean needs_row_alignment;
 
   /* aspect ratio */
   gint display_width;

@@ -6570,11 +6570,13 @@ gst_qtdemux_push_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
   GST_LOG_OBJECT (qtdemux,
       "Pushing buffer with dts %" GST_TIME_FORMAT ", pts %" GST_TIME_FORMAT
-      ", duration %" GST_TIME_FORMAT " on pad %s",
+      ", duration %" GST_TIME_FORMAT " on pad %s (discont: %d, keyframe: %d)",
       GST_TIME_ARGS (QTSTREAMTIME_TO_GSTTIME (stream, dts)),
       GST_TIME_ARGS (QTSTREAMTIME_TO_GSTTIME (stream, pts)),
       GST_TIME_ARGS (QTSTREAMTIME_TO_GSTTIME (stream,
-              duration)) + round_up_duration, GST_PAD_NAME (stream->pad));
+              duration)) + round_up_duration, GST_PAD_NAME (stream->pad),
+      GST_BUFFER_IS_DISCONT (buf), !GST_BUFFER_FLAG_IS_SET (buf,
+          GST_BUFFER_FLAG_DELTA_UNIT));
 
   if (stream->protected && stream->protection_scheme_type == FOURCC_aavd) {
     GstStructure *crypto_info;
@@ -6977,9 +6979,6 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
 
   if (!keyframe) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
-    stream->on_keyframe = FALSE;
-  } else {
-    stream->on_keyframe = TRUE;
   }
 
   if (G_UNLIKELY (CUR_STREAM (stream)->rgb8_palette))
@@ -7191,13 +7190,27 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
               &round_up_duration, &keyframe)))
     goto eos_stream;
 
-  /* check for segment end */
-  if (G_UNLIKELY (qtdemux->segment.stop != -1
-          && qtdemux->segment.rate >= 0
-          && qtdemux->segment.stop <= min_time && target_stream->on_keyframe)) {
-    GST_DEBUG_OBJECT (qtdemux, "we reached the end of our segment.");
-    target_stream->cur_global_pts = GST_CLOCK_TIME_NONE;
-    goto eos_stream;
+  /* Check whether we're after the seek segment stop now. This check uses
+   * DTS instead of PTS to make sure no future samples have a PTS before
+   * the segment stop. */
+  if (G_UNLIKELY (qtdemux->segment.stop != -1 && qtdemux->segment.rate >= 0)) {
+    const QtDemuxSegment *segment;
+    GstClockTime dts_gst = QTSTREAMTIME_TO_GSTTIME (target_stream, dts);
+    GstClockTime global_dts;
+
+    /* Need to convert from time inside the media segment to global time */
+    g_assert (target_stream->segment_index < target_stream->n_segments);
+    segment = &target_stream->segments[target_stream->segment_index];
+    global_dts =
+        (dts_gst >=
+        segment->media_start) ? ((dts_gst - segment->media_start) +
+        segment->time) : 0;
+
+    if (qtdemux->segment.stop <= global_dts) {
+      GST_DEBUG_OBJECT (qtdemux, "we reached the end of our segment.");
+      target_stream->cur_global_pts = GST_CLOCK_TIME_NONE;
+      goto eos_stream;
+    }
   }
 
   /* Send catche-up GAP event for each other stream if required.
@@ -8076,42 +8089,6 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
   return gst_qtdemux_process_adapter (demux, FALSE);
 }
 
-static guint64
-gst_segment_to_stream_time_clamped (const GstSegment * segment,
-    guint64 position)
-{
-  guint64 segment_stream_time_start;
-  guint64 segment_stream_time_stop = GST_CLOCK_TIME_NONE;
-  guint64 stream_pts_unsigned;
-  int ret;
-
-  g_return_val_if_fail (segment != NULL, GST_CLOCK_TIME_NONE);
-  g_return_val_if_fail (segment->format == GST_FORMAT_TIME,
-      GST_CLOCK_TIME_NONE);
-
-  segment_stream_time_start = segment->time;
-  if (segment->stop != GST_CLOCK_TIME_NONE)
-    segment_stream_time_stop =
-        gst_segment_to_stream_time (segment, GST_FORMAT_TIME, segment->stop);
-
-  ret =
-      gst_segment_to_stream_time_full (segment, GST_FORMAT_TIME, position,
-      &stream_pts_unsigned);
-  /* ret == 0 if the segment is invalid (either position, segment->time or the segment start are -1). */
-  g_return_val_if_fail (ret != 0, GST_CLOCK_TIME_NONE);
-
-  if (ret == -1 || stream_pts_unsigned < segment_stream_time_start) {
-    /* Negative or prior to segment start stream time, clamp to segment start. */
-    return segment_stream_time_start;
-  } else if (segment_stream_time_stop != GST_CLOCK_TIME_NONE
-      && stream_pts_unsigned > segment_stream_time_stop) {
-    /* Clamp to segment end. */
-    return segment_stream_time_stop;
-  } else {
-    return stream_pts_unsigned;
-  }
-}
-
 static GstFlowReturn
 gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
 {
@@ -8532,7 +8509,6 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
         QtDemuxSample *sample;
         guint64 dts, pts, duration;
         gboolean round_up_duration = FALSE;
-        GstClockTime stream_pts;
         gboolean keyframe;
         gint i;
 
@@ -8639,21 +8615,39 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
         sample = &stream->samples[stream->sample_index];
 
         if (G_LIKELY (!(STREAM_IS_EOS (stream)))) {
+          GstClockTime global_dts;
+
           GST_DEBUG_OBJECT (demux, "stream : %" GST_FOURCC_FORMAT,
               GST_FOURCC_ARGS (CUR_STREAM (stream)->fourcc));
 
           dts = QTSAMPLE_DTS_STREAMTIME (sample);
           pts = QTSAMPLE_PTS_STREAMTIME (sample);
-          stream_pts =
-              gst_segment_to_stream_time_clamped (&stream->segment, pts);
           duration = QTSAMPLE_DUR_STREAMTIME (sample, dts);
           round_up_duration = QTSAMPLE_DUR_ROUND_UP (stream, sample);
           keyframe = QTSAMPLE_KEYFRAME (stream, sample);
 
-          /* check for segment end */
-          if (G_UNLIKELY (stream->segment.stop != -1
-                  && stream->segment.stop <= stream_pts && keyframe)
-              && !(demux->upstream_format_is_time && stream->segment.rate < 0)) {
+          if (!demux->upstream_format_is_time) {
+            const QtDemuxSegment *segment = NULL;
+
+            g_assert (stream->segment_index < stream->n_segments);
+            segment = &stream->segments[stream->segment_index];
+
+            /* Need to convert from time inside the media segment to global time */
+            global_dts =
+                (dts >=
+                segment->media_start) ? ((dts - segment->media_start) +
+                segment->time) : 0;
+          } else {
+            global_dts = dts;
+          }
+
+          /* Check whether we're after the seek segment stop now. This check uses
+           * DTS instead of PTS to make sure no future samples have a PTS before
+           * the segment stop. */
+          if (G_UNLIKELY (demux->segment.stop != -1
+                  && global_dts != GST_CLOCK_TIME_NONE
+                  && demux->segment.stop <= global_dts
+                  && stream->segment.rate >= 0)) {
             GST_DEBUG_OBJECT (demux, "we reached the end of our segment.");
             stream->cur_global_pts = GST_CLOCK_TIME_NONE;       /* this means EOS */
 
