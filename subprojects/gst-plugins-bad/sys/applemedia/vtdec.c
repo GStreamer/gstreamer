@@ -94,6 +94,7 @@ static gboolean gst_vtdec_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state);
 static gboolean gst_vtdec_flush (GstVideoDecoder * decoder);
 static GstFlowReturn gst_vtdec_finish (GstVideoDecoder * decoder);
+static GstFlowReturn gst_vtdec_drain (GstVideoDecoder * decoder);
 static gboolean gst_vtdec_sink_event (GstVideoDecoder * decoder,
     GstEvent * event);
 static GstStateChangeReturn gst_vtdec_change_state (GstElement * element,
@@ -216,6 +217,7 @@ gst_vtdec_class_init (GstVtdecClass * klass)
   video_decoder_class->set_format = GST_DEBUG_FUNCPTR (gst_vtdec_set_format);
   video_decoder_class->flush = GST_DEBUG_FUNCPTR (gst_vtdec_flush);
   video_decoder_class->finish = GST_DEBUG_FUNCPTR (gst_vtdec_finish);
+  video_decoder_class->drain = GST_DEBUG_FUNCPTR (gst_vtdec_drain);
   video_decoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_vtdec_handle_frame);
   video_decoder_class->sink_event = GST_DEBUG_FUNCPTR (gst_vtdec_sink_event);
@@ -373,6 +375,7 @@ gst_vtdec_output_loop (GstVtdec * vtdec)
         GST_TRACE_OBJECT (vtdec, "pushing frame %d",
             frame->system_frame_number);
         ret = gst_video_decoder_finish_frame (decoder, frame);
+        GST_TRACE_OBJECT (vtdec, "frame push ret %s", gst_flow_get_name (ret));
       }
 
       GST_VIDEO_DECODER_STREAM_UNLOCK (vtdec);
@@ -813,6 +816,19 @@ gst_vtdec_finish (GstVideoDecoder * decoder)
   GST_DEBUG_OBJECT (vtdec, "finish");
 
   return gst_vtdec_drain_decoder (GST_VIDEO_DECODER_CAST (vtdec), FALSE);
+}
+
+static GstFlowReturn
+gst_vtdec_drain (GstVideoDecoder * decoder)
+{
+  GstVtdec *vtdec = GST_VTDEC (decoder);
+
+  GST_DEBUG_OBJECT (vtdec, "drain");
+
+  gst_vtdec_finish (decoder);
+  gst_vtdec_flush (decoder);
+
+  return GST_FLOW_OK;
 }
 
 static gboolean
