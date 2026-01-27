@@ -56,6 +56,7 @@
 #include <gst/base/gsttypefindhelper.h>
 #include <gst/pbutils/descriptions.h>
 #include <glib/gi18n-lib.h>
+#include <gst/tag/tag.h>
 
 GST_DEBUG_CATEGORY_STATIC (wavparse_debug);
 #define GST_CAT_DEFAULT (wavparse_debug)
@@ -1713,6 +1714,47 @@ gst_wavparse_stream_headers (GstWavParse * wav)
           gst_buffer_unref (buf);
         }
         size = GST_ROUND_UP_2 (size);
+        wav->offset += size;
+        break;
+      }
+      case GST_RIFF_TAG_id3:
+      {
+        const guint data_size = size;
+        GstTagList *new_tags;
+
+        GST_DEBUG_OBJECT (wav, "Have 'id3 ' TAG, size: %u", data_size);
+        if (wav->streaming) {
+          if (!gst_wavparse_peek_chunk (wav, &tag, &size)) {
+            goto exit;
+          }
+          gst_adapter_flush (wav->adapter, 8);
+          wav->offset += 8;
+          buf = gst_adapter_get_buffer (wav->adapter, data_size);
+        } else {
+          wav->offset += 8;
+          gst_buffer_unref (buf);
+          buf = NULL;
+          res =
+              gst_wavparse_pull_range_exact (wav, wav->offset, data_size, &buf);
+          if (res == GST_FLOW_EOS)
+            break;
+          else if (res != GST_FLOW_OK)
+            goto header_pull_error;
+        }
+
+        if ((new_tags = gst_tag_list_from_id3v2_tag (buf))) {
+          GstTagList *old_tags = wav->tags;
+          wav->tags =
+              gst_tag_list_merge (old_tags, new_tags, GST_TAG_MERGE_REPLACE);
+          if (old_tags)
+            gst_tag_list_unref (old_tags);
+          gst_tag_list_unref (new_tags);
+        }
+
+        gst_buffer_unref (buf);
+        size = GST_ROUND_UP_2 (size);
+        if (wav->streaming)
+          gst_adapter_flush (wav->adapter, size);
         wav->offset += size;
         break;
       }
