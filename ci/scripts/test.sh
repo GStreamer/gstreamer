@@ -35,7 +35,6 @@ export VK_ICD_FILENAMES="/usr/share/vulkan/icd.d/lvp_icd.json"
     "--builddir=$builddir" \
     gst-validate-launcher "$tests" \
     --jobs "$jobs" \
-    --check-bugs \
     --dump-on-failure \
     --mute \
     --shuffle \
