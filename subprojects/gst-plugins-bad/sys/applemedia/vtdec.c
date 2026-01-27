@@ -755,8 +755,11 @@ gst_vtdec_flush (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (vtdec, "flush");
 
-  return gst_vtdec_drain_decoder (GST_VIDEO_DECODER_CAST (vtdec),
-      TRUE) == GST_FLOW_OK;
+  gst_vtdec_drain_decoder (GST_VIDEO_DECODER_CAST (vtdec), TRUE);
+
+  vtdec->downstream_ret = GST_FLOW_OK;
+
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
