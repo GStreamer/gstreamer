@@ -38,9 +38,10 @@ struct _GstLcevcH264DecodeBin
 G_DEFINE_TYPE (GstLcevcH264DecodeBin, gst_lcevc_h264_decode_bin,
     GST_TYPE_LCEVC_DECODE_BIN);
 
+// No rank for now owing to autoplugging issues with non-LCEVC streams.
+// was: GST_RANK_PRIMARY + GST_LCEVC_DECODE_BIN_RANK_OFFSET,
 GST_ELEMENT_REGISTER_DEFINE (lcevch264decodebin, "lcevch264decodebin",
-    GST_RANK_PRIMARY + GST_LCEVC_DECODE_BIN_RANK_OFFSET,
-    GST_TYPE_LCEVC_H264_DECODE_BIN);
+    GST_RANK_NONE, GST_TYPE_LCEVC_H264_DECODE_BIN);
 
 static GstCaps *
 gst_lcevc_h264_decode_bin_get_base_decoder_sink_caps (GstLcevcDecodeBin * base)
