@@ -80,7 +80,7 @@ plugin_sources += {
 xml2_dep = dependency('libxml-2.0',
   version : '>= 2.8',
   required : get_option('dash'),
-  default_options: {'python': false},
+  default_options: {'python': 'disabled'},
 )
 
 if xml2_dep.found()
