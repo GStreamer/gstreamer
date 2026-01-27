@@ -877,7 +877,6 @@ gst_vtdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   GstFlowReturn ret = GST_FLOW_OK;
   int decode_frame_number = frame->decode_frame_number;
   GstTaskState task_state;
-  gboolean is_flushing;
 
   if (vtdec->format_description == NULL) {
     ret = GST_FLOW_NOT_NEGOTIATED;
@@ -959,13 +958,13 @@ gst_vtdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     /* ...or if it stopped because of the flushing flag while the queue
      * was empty, in which case we didn't get GST_FLOW_FLUSHING... */
     g_mutex_lock (&vtdec->queue_mutex);
-    is_flushing = vtdec->is_flushing;
-    g_mutex_unlock (&vtdec->queue_mutex);
-    if (is_flushing) {
+    if (vtdec->is_flushing) {
+      g_mutex_unlock (&vtdec->queue_mutex);
       GST_DEBUG_OBJECT (vtdec, "Flushing flag set, ignoring frame");
       ret = GST_FLOW_FLUSHING;
       goto drop;
     }
+    g_mutex_unlock (&vtdec->queue_mutex);
 
     /* .. or if it refuses to resume - e.g. it was stopped instead of paused */
     if (!gst_vtdec_ensure_output_loop (vtdec)) {
