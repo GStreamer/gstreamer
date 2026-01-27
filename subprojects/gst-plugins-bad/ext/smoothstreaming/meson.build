@@ -21,7 +21,7 @@ plugin_sources += {
 }
 
 xml28_dep = dependency('libxml-2.0', version: '>= 2.8', required: get_option('smoothstreaming'),
-    default_options: {'python': false})
+    default_options: {'python': 'disabled'})
 
 if xml28_dep.found()
   gstmss = library('gstsmoothstreaming',

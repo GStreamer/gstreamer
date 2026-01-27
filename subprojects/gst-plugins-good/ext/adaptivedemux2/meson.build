@@ -125,7 +125,7 @@ if soup_lookup_dep and not libsoup3_dep.found() and not libsoup2_dep.found()
 endif
 
 adaptive_xml2_dep = dependency('libxml-2.0', version : '>= 2.8', allow_fallback: true,
-    default_options: {'python': false}, required: adaptivedemux2_opt)
+    default_options: {'python': 'disabled'}, required: adaptivedemux2_opt)
 
 if not adaptive_xml2_dep.found()
   message(f'Not building adaptivedemux2 plugin: libxml2 is needed')
