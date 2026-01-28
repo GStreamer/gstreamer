@@ -50,6 +50,7 @@ const char * gst_vtutil_codec_type_to_prores_variant (CMVideoCodecType codec_typ
 
 GstCaps * gst_vtutil_caps_append_video_format (GstCaps * caps,
                                                const char * vfmt);
+gboolean gst_vtutil_register_supplemental_decoder (CMVideoCodecType codec_type);
 
 G_END_DECLS
 

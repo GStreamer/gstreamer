@@ -18,6 +18,17 @@
  */
 
 #include "vtutil.h"
+#include <VideoToolbox/VideoToolbox.h>
+#include <TargetConditionals.h>
+
+#if TARGET_OS_OSX || TARGET_OS_IOS || TARGET_OS_TV || TARGET_OS_VISION
+#define HAVE_SUPPLEMENTAL
+#if (TARGET_OS_OSX && __MAC_OS_X_VERSION_MAX_ALLOWED >= 110000) || (TARGET_OS_IOS && __IPHONE_OS_VERSION_MAX_ALLOWED >= 260200) || (TARGET_OS_TV && __TV_OS_VERSION_MAX_ALLOWED >= 260200) || (TARGET_OS_VISION && __VISION_OS_VERSION_MAX_ALLOWED >= 260200)
+#define HAVE_SUPPLEMENTAL_DEFINITION
+#else
+#include <dlfcn.h>
+#endif
+#endif
 
 gchar *
 gst_vtutil_object_to_string (CFTypeRef obj)
@@ -158,4 +169,41 @@ gst_vtutil_caps_append_video_format (GstCaps * caps, const char *vfmt)
 
   gst_structure_set_list (s, "format", arr);
   return caps;
+}
+
+typedef void (*VTRegisterSupplementalVideoDecoderIfAvailableFunc)
+  (CMVideoCodecType codecType);
+
+gboolean
+gst_vtutil_register_supplemental_decoder (CMVideoCodecType codec_type)
+{
+  GST_INFO ("Registering supplemental VideoToolbox decoder: %"
+      GST_FOURCC_FORMAT, GST_FOURCC_ARGS (GUINT32_FROM_BE (codec_type)));
+
+#ifdef HAVE_SUPPLEMENTAL
+#ifdef HAVE_SUPPLEMENTAL_DEFINITION
+  if (__builtin_available (macOS 11.0, iOS 26.2, tvOS 26.2, visionOS 26.2, *)) {
+    GST_INFO ("Registering supplemental VideoToolbox decoder by direct call");
+    VTRegisterSupplementalVideoDecoderIfAvailable (codec_type);
+    return TRUE;
+  }
+#else
+  /* Needed temporarily till we can require a new-enough Xcode that has
+   * VTRegisterSupplementalVideoDecoderIfAvailable on iOS/tvOS/visionOS 26.2.
+   */
+  VTRegisterSupplementalVideoDecoderIfAvailableFunc func =
+      (VTRegisterSupplementalVideoDecoderIfAvailableFunc)
+      dlsym (RTLD_DEFAULT, "VTRegisterSupplementalVideoDecoderIfAvailable");
+
+  if (func != NULL) {
+    GST_INFO ("Registering supplemental VideoToolbox decoder by symbolic call");
+    func (codec_type);
+    return TRUE;
+  }
+#endif
+#endif
+
+  GST_INFO ("Supplemental decoder registration not available: %"
+      GST_FOURCC_FORMAT, GST_FOURCC_ARGS (GUINT32_FROM_BE (codec_type)));
+  return FALSE;
 }
