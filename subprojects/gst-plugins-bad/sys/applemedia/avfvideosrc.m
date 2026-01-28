@@ -28,9 +28,11 @@
 #include <TargetConditionals.h>
 #import <AVFoundation/AVFoundation.h>
 #import <CoreMedia/CoreMedia.h>
+
 #if TARGET_OS_OSX
 #import <AppKit/AppKit.h>
 #endif
+
 #include <gst/video/video.h>
 #include <gst/gl/gstglcontext.h>
 #include "coremediabuffer.h"
@@ -66,7 +68,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
             "UYVY") ", "
         "texture-target = " GST_GL_TEXTURE_TARGET_RECTANGLE_STR ";"
-#else
+#elif TARGET_OS_IOS || TARGET_OS_TV
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
             "NV12") ", "
@@ -261,8 +263,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 @end
 
-#if TARGET_OS_IOS
-
+#if TARGET_OS_IOS || TARGET_OS_TV
 static AVCaptureDeviceType GstAVFVideoSourceDeviceType2AVCaptureDeviceType(GstAVFVideoSourceDeviceType deviceType) {
   switch (deviceType) {
     case GST_AVF_VIDEO_SOURCE_DEVICE_TYPE_BUILT_IN_WIDE_ANGLE_CAMERA:
@@ -288,6 +289,21 @@ static AVCaptureDevicePosition GstAVFVideoSourcePosition2AVCaptureDevicePosition
 
 }
 
+static CGFloat GstAVFVideoSourceOrientation2VideoRotationAngle(GstAVFVideoSourceOrientation orientation) {
+  switch (orientation) {
+    case GST_AVF_VIDEO_SOURCE_ORIENTATION_PORTRAIT:
+      return 0.0;
+    case GST_AVF_VIDEO_SOURCE_ORIENTATION_PORTRAIT_UPSIDE_DOWN:
+      return 180.0;
+    case GST_AVF_VIDEO_SOURCE_ORIENTATION_LANDSCAPE_LEFT:
+      return -90.0;
+    case GST_AVF_VIDEO_SOURCE_ORIENTATION_LANDSCAPE_RIGHT:
+      return 90.0;
+    case GST_AVF_VIDEO_SOURCE_ORIENTATION_DEFAULT:
+      g_assert_not_reached();
+  }
+}
+
 static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrientation(GstAVFVideoSourceOrientation orientation) {
   switch (orientation) {
     case GST_AVF_VIDEO_SOURCE_ORIENTATION_PORTRAIT:
@@ -302,8 +318,7 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
       g_assert_not_reached();
   }
 }
-
-#endif
+#endif /* TARGET_OS_IOS || TARGET_OS_TV */
 
 @implementation GstAVFVideoSrcImpl
 
@@ -407,7 +422,8 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
   }
 
   if (deviceIndex == DEFAULT_DEVICE_INDEX) {
-#if TARGET_OS_IOS
+#if TARGET_OS_IOS || TARGET_OS_TV
+    // TODO: Also supported on macOS 10.15 and visionOS 2.1+
     if (deviceType != DEFAULT_DEVICE_TYPE && position != DEFAULT_POSITION) {
       device = [AVCaptureDevice
                 defaultDeviceWithDeviceType:GstAVFVideoSourceDeviceType2AVCaptureDeviceType(deviceType)
@@ -534,9 +550,15 @@ G_GNUC_END_IGNORE_DEPRECATIONS
 
     /* retained by session */
     connection = [[output connections] firstObject];
-#if TARGET_OS_IOS
-    if (orientation != DEFAULT_ORIENTATION)
-      connection.videoOrientation = GstAVFVideoSourceOrientation2AVCaptureVideoOrientation(orientation);
+#if TARGET_OS_IOS || TARGET_OS_TV
+    if (orientation != DEFAULT_ORIENTATION) {
+      if (__builtin_available(ios 17.0, tvos 17.0, *)) {
+        // TODO: Also suppored on macOS 14.0+
+        connection.videoRotationAngle = GstAVFVideoSourceOrientation2VideoRotationAngle(orientation);
+      } else {
+        connection.videoOrientation = GstAVFVideoSourceOrientation2AVCaptureVideoOrientation(orientation);
+      }
+    }
 #endif
     inputClock = ((AVCaptureInputPort *)connection.inputPorts[0]).clock;
     *successPtr = YES;
@@ -1571,11 +1593,13 @@ GstCaps*
 gst_av_capture_device_get_caps (AVCaptureDevice *device, AVCaptureVideoDataOutput *output, GstAVFVideoSourceOrientation orientation)
 {
   GstCaps *result_caps, *result_gl_caps;
+#if TARGET_OS_OSX || TARGET_OS_IOS || TARGET_OS_TV
   gboolean is_gl_format;
 #if TARGET_OS_OSX
   GstVideoFormat gl_formats[] = { GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_YUY2, 0 };
 #else
   GstVideoFormat gl_formats[] = { GST_VIDEO_FORMAT_NV12, 0 };
+#endif
 #endif
 
   result_caps = gst_caps_new_empty ();
@@ -1622,6 +1646,7 @@ gst_av_capture_device_get_caps (AVCaptureDevice *device, AVCaptureVideoDataOutpu
           caps = GST_AVF_FPS_RANGE_CAPS_NEW (gst_format, dimensions.width,
               dimensions.height, min_fps_n, min_fps_d, max_fps_n, max_fps_d);
 
+#if TARGET_OS_OSX || TARGET_OS_IOS || TARGET_OS_TV
         is_gl_format = FALSE;
         for (int i = 0; i < G_N_ELEMENTS (gl_formats); i++) {
           if (gst_format == gl_formats[i]) {
@@ -1648,6 +1673,9 @@ gst_av_capture_device_get_caps (AVCaptureDevice *device, AVCaptureVideoDataOutpu
                                NULL);
           gst_caps_append (result_gl_caps, caps);
         }
+#else
+        gst_caps_append (result_caps, caps);
+#endif
       }
     }
   }
