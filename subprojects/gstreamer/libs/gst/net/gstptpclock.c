@@ -567,7 +567,7 @@ parse_ptp_message_announce (PtpMessage * msg, GstByteReader * reader)
 {
   g_return_val_if_fail (msg->message_type == PTP_MESSAGE_TYPE_ANNOUNCE, FALSE);
 
-  if (gst_byte_reader_get_remaining (reader) < 20)
+  if (gst_byte_reader_get_remaining (reader) < 30)
     return FALSE;
 
   if (!parse_ptp_timestamp (&msg->message_specific.announce.origin_timestamp,
