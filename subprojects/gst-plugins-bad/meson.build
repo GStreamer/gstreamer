@@ -472,6 +472,12 @@ if host_system == 'darwin'
   avfoundation_dep = dependency('AVFoundation', required : false)
   if avfoundation_dep.found()
       cdata.set('HAVE_AVFOUNDATION', 1)
+      # TODO: Needs tvOS 17.0, but we only support 12.0 at present
+      if subsystem.startswith('tvos') or subsystem.startswith('watchos')
+        cdata.set('HAVE_AVCAPTUREDEVICE', 0)
+      else
+        cdata.set('HAVE_AVCAPTUREDEVICE', 1)
+      endif
   endif
 
   videotoolbox_dep = dependency('VideoToolbox', required : false)
