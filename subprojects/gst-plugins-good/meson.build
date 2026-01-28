@@ -232,8 +232,6 @@ foreach f : check_functions
   endif
 endforeach
 
-cdata.set('HAVE_IOS', subsystem.startswith('ios'))
-
 cdata.set('SIZEOF_CHAR', cc.sizeof('char'))
 cdata.set('SIZEOF_INT', cc.sizeof('int'))
 cdata.set('SIZEOF_LONG', cc.sizeof('long'))

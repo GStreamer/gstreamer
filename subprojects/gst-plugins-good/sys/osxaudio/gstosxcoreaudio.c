@@ -29,11 +29,11 @@ GST_DEBUG_CATEGORY (osx_coreaudio_debug);
 
 G_DEFINE_TYPE (GstCoreAudio, gst_core_audio, G_TYPE_OBJECT);
 
-#ifdef HAVE_IOS
-#include "gstosxcoreaudioremoteio.c"
-#else
+#if TARGET_OS_OSX
 #include "gstosxcoreaudiohal.c"
 #include <CoreAudio/CoreAudio.h>
+#else
+#include "gstosxcoreaudioremoteio.c"
 #endif
 
 enum
@@ -84,7 +84,7 @@ gst_core_audio_class_init (GstCoreAudioClass * klass)
           FALSE,
           G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
-#ifdef HAVE_IOS
+#if !TARGET_OS_OSX
   g_object_class_install_property (object_klass, PROP_CONFIGURE_SESSION,
       g_param_spec_boolean ("configure-session",
           "Enable automatic AVAudioSession setup",
@@ -103,7 +103,7 @@ gst_core_audio_init (GstCoreAudio * core_audio)
   core_audio->audiounit = NULL;
   core_audio->cached_caps = NULL;
   core_audio->cached_caps_valid = FALSE;
-#ifndef HAVE_IOS
+#if TARGET_OS_OSX
   core_audio->hog_pid = -1;
   core_audio->disabled_mixing = FALSE;
 #else
@@ -130,7 +130,7 @@ gst_core_audio_set_property (GObject * object, guint prop_id,
     case PROP_DEVICE:
       self->device_id = g_value_get_int (value);
       break;
-#ifdef HAVE_IOS
+#if !TARGET_OS_OSX
     case PROP_CONFIGURE_SESSION:
       self->configure_session = g_value_get_boolean (value);
       break;
@@ -157,7 +157,7 @@ gst_core_audio_get_property (GObject * object, guint prop_id,
     case PROP_DEVICE:
       g_value_set_int (value, self->device_id);
       break;
-#ifdef HAVE_IOS
+#if !TARGET_OS_OSX
     case PROP_CONFIGURE_SESSION:
       g_value_set_boolean (value, self->configure_session);
       break;
@@ -458,7 +458,7 @@ gst_core_audio_select_device (GstCoreAudio * core_audio)
 {
   gboolean ret = gst_core_audio_select_device_impl (core_audio);
 
-#ifndef HAVE_IOS
+#if TARGET_OS_OSX
   if (core_audio->device_id != kAudioDeviceUnknown)
     core_audio->unique_id =
         gst_core_audio_device_get_prop_str (core_audio->device_id,
@@ -975,7 +975,7 @@ gst_core_audio_probe_caps (GstCoreAudio * core_audio, GstCaps * in_caps)
         gst_structure_remove_field (out_s, "channel-mask");
       }
 
-#ifndef HAVE_IOS
+#if TARGET_OS_OSX
       if (core_audio->is_src && got_outer_asbd
           && outer_asbd.mSampleRate != kAudioStreamAnyRate) {
         /* According to Core Audio engineer, AUHAL does not support sample rate conversion.
