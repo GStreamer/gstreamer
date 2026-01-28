@@ -41,7 +41,7 @@ typedef struct _GstVideoTextureCacheGL
   GstVideoTextureCache parent;
 
   GstGLContext *ctx;
-#if TARGET_OS_IOS
+#if TARGET_OS_IOS || TARGET_OS_TV
   CVOpenGLESTextureCacheRef cache;
 #else
   GstBufferPool *pool;

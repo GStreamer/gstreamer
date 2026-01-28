@@ -54,8 +54,11 @@ vt_sources = [
   'vtdec.c'
 ]
 
-ios_sources = [
+ios_deprecated_sources = [
   'iosassetsrc.m',
+]
+
+ios_sources = [
   'iosglmemory.c',
 ]
 
@@ -69,7 +72,7 @@ vulkan_sources = [
 ]
 
 doc_sources = []
-foreach s: applemedia_sources + avfoundation_sources + vt_sources + ios_sources + non_ios_sources + vulkan_sources + applemedia_headers
+foreach s: applemedia_sources + avfoundation_sources + vt_sources + ios_sources + ios_deprecated_sources + non_ios_sources + vulkan_sources + applemedia_headers
   doc_sources += meson.current_source_dir() / s
 endforeach
 
@@ -118,11 +121,15 @@ if subsystem == 'macos'
     applemedia_frameworks += [cocoa_dep, applemedia_opengl_dep, iosurface_dep]
 else
     applemedia_sources += ios_sources
-    applemedia_objc_args += ['-fobjc-abi-version=2', '-fobjc-legacy-dispatch']
-
-    ios_media_dep = dependency('appleframeworks', modules : ['Foundation', 'AssetsLibrary'], required : applemedia_option)
+    if subsystem.startswith('ios')
+      applemedia_sources += ios_deprecated_sources
+      ios_media_dep = dependency('appleframeworks', modules : ['Foundation', 'AssetsLibrary'], required : applemedia_option)
+    else
+      ios_media_dep = dependency('appleframeworks', modules : ['Foundation'], required : applemedia_option)
+    endif
     iosurface_dep = dependency('IOSurface', required : applemedia_option)
     applemedia_frameworks += [ios_media_dep, iosurface_dep]
+    applemedia_objc_args += ['-fobjc-abi-version=2', '-fobjc-legacy-dispatch']
 endif
 
 applemedia_found_deps = true
