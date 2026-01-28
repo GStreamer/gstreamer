@@ -36,11 +36,6 @@
 #ifdef HAVE_VIDEOTOOLBOX
 #include "vtdec.h"
 #endif
-#ifndef HAVE_IOS
-#define AV_RANK GST_RANK_SECONDARY
-#else
-#define AV_RANK GST_RANK_PRIMARY
-#endif
 
 #ifdef HAVE_VIDEOTOOLBOX
 void gst_vtenc_register_elements (GstPlugin * plugin);
@@ -74,9 +69,9 @@ plugin_init (GstPlugin * plugin)
 #endif
 
 #ifdef HAVE_AVFOUNDATION
-  res &= gst_element_register (plugin, "avfvideosrc", AV_RANK,
+  res &= gst_element_register (plugin, "avfvideosrc", GST_RANK_PRIMARY,
       GST_TYPE_AVF_VIDEO_SRC);
-  res &= gst_element_register (plugin, "avfassetsrc", AV_RANK,
+  res &= gst_element_register (plugin, "avfassetsrc", GST_RANK_PRIMARY,
       GST_TYPE_AVF_ASSET_SRC);
   res &= gst_element_register (plugin, "avsamplebufferlayersink",
       GST_RANK_NONE, GST_TYPE_AV_SAMPLE_VIDEO_SINK);
