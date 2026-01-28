@@ -42,24 +42,24 @@ plugin_sources += {
 
 have_osxaudio = false
 osxaudio_option = get_option('osxaudio')
-if osxaudio_option.disabled() or not ['darwin', 'ios'].contains(host_system)
+if osxaudio_option.disabled() or host_system != 'darwin'
   subdir_done()
 endif
 
-if host_system == 'darwin'
+if subsystem == 'macos'
   # TODO: https://github.com/mesonbuild/meson/issues/3940
   have_osxaudio = cc.has_header('CoreAudio/CoreAudio.h', required: osxaudio_option)
   osxaudio_sources += darwin_sources
-elif host_system == 'ios'
+else
   have_osxaudio = cc.has_header('CoreAudio/CoreAudioTypes.h', required: osxaudio_option)
   osxaudio_sources += ios_sources
 endif
 
 if have_osxaudio
   modules = ['CoreAudio', 'AudioToolbox']
-  if host_system == 'darwin'
+  if subsystem == 'macos'
     modules += ['AudioUnit', 'CoreServices']
-  elif host_system == 'ios'
+  else
     modules += ['AVFAudio', 'Foundation']
   endif
   osxaudio_dep = dependency('appleframeworks', modules : modules)

@@ -155,7 +155,7 @@ gst_headers = files(
   'math-compat.h',
   'gstcpuid.h',
 )
-if host_system == 'darwin'
+if host_system == 'darwin' and subsystem == 'macos'
   gst_headers += files('gstmacos.h')
   gst_sources += files('gstmacos.m')
 endif
@@ -174,7 +174,7 @@ if host_system == 'android'
   extra_deps += cc.find_library('log')
 endif
 
-if host_system == 'darwin'
+if host_system == 'darwin' and subsystem == 'macos'
   extra_deps += dependency('appleframeworks', modules : ['Cocoa'])
 endif
 

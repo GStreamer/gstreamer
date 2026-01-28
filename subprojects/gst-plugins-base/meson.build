@@ -18,10 +18,18 @@ gst_version_is_stable = gst_version_minor.is_even()
 gst_version_is_dev = gst_version_minor % 2 == 1 and gst_version_micro < 90
 
 host_system = host_machine.system()
+subsystem = ''
+if host_system == 'ios'
+  warning('Setting system = \'ios\' in the cross file is deprecated, please use subsystem names')
+  host_system = 'darwin'
+  subsystem = 'ios'
+elif host_system == 'darwin'
+  subsystem = host_machine.subsystem()
+endif
 
 have_cxx = add_languages('cpp', native: false, required: false)
 
-if host_system in ['ios', 'darwin']
+if host_system == 'darwin'
   have_objc = add_languages('objc', native: false)
 else
   have_objc = false
@@ -318,7 +326,7 @@ core_conf.set('HAVE_VALGRIND', valgrind_dep.found())
 libdrm_dep = dependency('libdrm', version : '>= 2.4.98',
   default_options: {'cairo': 'disabled'},
   required : get_option('drm'),
-  allow_fallback: host_system not in ['darwin', 'ios', 'android', 'windows']
+  allow_fallback: host_system not in ['darwin', 'android', 'windows']
 )
 
 core_conf.set('HAVE_LIBDRM', libdrm_dep.found())
@@ -343,7 +351,7 @@ else
   gtk_x11_dep = dependency('', required : false)
 endif
 # gtk+ quartz backend is only available on macOS
-if host_system == 'darwin'
+if host_system == 'darwin' and subsystem == 'macos'
   gtk_quartz_dep = dependency('gtk+-quartz-3.0', version : '>= 3.10', required : get_option('examples'))
 else
   gtk_quartz_dep = dependency('', required : false)

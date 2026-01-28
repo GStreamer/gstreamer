@@ -176,7 +176,7 @@ if egl_dep.found() and drm_has_fourcc
   optional_deps += [allocators_dep, libdrm_dep]
 endif
 
-if ['darwin', 'ios'].contains(host_system)
+if host_system == 'darwin'
   if not have_objc
     error('No ObjC compiler found')
   endif

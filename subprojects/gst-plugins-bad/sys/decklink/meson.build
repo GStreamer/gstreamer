@@ -65,7 +65,7 @@ else
     if host_system == 'linux'
       decklink_sources += linux_sources
       build_decklink = true
-    elif ['darwin', 'ios'].contains(host_system)
+    elif host_system == 'darwin'
       decklink_sources += osx_sources
       decklink_ldflags = ['-Wl,-framework,CoreFoundation']
       build_decklink = true

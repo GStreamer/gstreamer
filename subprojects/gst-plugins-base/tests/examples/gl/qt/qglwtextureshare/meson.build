@@ -5,7 +5,7 @@ sources = [
   'qglrenderer.cpp',
 ]
 
-if host_system == 'darwin'
+if host_system == 'darwin' and subsystem == 'macos'
   sources += ['cocoa_utils.mm']
 endif
 

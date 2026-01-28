@@ -1,4 +1,4 @@
-if host_system == 'darwin'
+if host_system == 'darwin' and subsystem == 'macos'
   appkit_dep = dependency('appleframeworks', modules : ['AppKit'], required : true)
 
   executable('cocoa-videooverlay', 'cocoa-videooverlay.m',

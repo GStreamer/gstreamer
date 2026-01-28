@@ -39,8 +39,16 @@ plugin_sources = {}
 static_build = get_option('default_library') == 'static'
 
 host_system = host_machine.system()
+subsystem = ''
+if host_system == 'ios'
+  warning('Setting system = \'ios\' in the cross file is deprecated, please use subsystem names')
+  host_system = 'darwin'
+  subsystem = 'ios'
+elif host_system == 'darwin'
+  subsystem = host_machine.subsystem()
+endif
 
-if host_system in ['ios', 'darwin']
+if host_system == 'darwin'
   have_objc = add_languages('objc', native: false)
   have_objcpp = add_languages('objcpp', native: false)
 
@@ -224,7 +232,7 @@ foreach f : check_functions
   endif
 endforeach
 
-cdata.set('HAVE_IOS', host_system == 'ios')
+cdata.set('HAVE_IOS', subsystem.startswith('ios'))
 
 cdata.set('SIZEOF_CHAR', cc.sizeof('char'))
 cdata.set('SIZEOF_INT', cc.sizeof('int'))

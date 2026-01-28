@@ -114,7 +114,7 @@ foreach option : vulkan_conf_options
   vulkan_conf.set(option, 0)
 endforeach
 
-if ['ios', 'darwin'].contains(host_system)
+if host_system == 'darwin'
   vulkan_dep = dependency('vulkan', method: 'pkg-config', required : false)
   if not vulkan_dep.found()
     # - ios does not support the loader/validation layers
@@ -236,7 +236,7 @@ if 'wayland' in vulkan_windowing_opt or 'auto' in vulkan_windowing_opt
   endif
 endif
 
-if ['darwin', 'ios'].contains(host_system)
+if host_system == 'darwin'
   objc = meson.get_compiler('objc')
   if not objc.has_argument('-fobjc-arc')
     error('ARC is required for building')
@@ -252,7 +252,7 @@ if ['darwin', 'ios'].contains(host_system)
   endif
 endif
 
-if host_system == 'darwin'
+if subsystem == 'macos'
   cocoa_dep = dependency('appleframeworks', modules : ['Cocoa'], required : vulkan_opt)
 
   if cocoa_dep.found() and cc.has_header('vulkan/vulkan_macos.h', dependencies: vulkan_dep, required: vulkan_opt)
@@ -265,9 +265,7 @@ if host_system == 'darwin'
     vulkan_conf.set('GST_VULKAN_HAVE_WINDOW_COCOA', 1)
     enabled_vulkan_winsys += ['cocoa']
   endif
-endif
-
-if host_system == 'ios'
+elif host_system == 'darwin'
   uikit_dep = dependency('appleframeworks', modules : ['UIKit', 'IOSurface', 'CoreGraphics', 'Metal'], required : vulkan_opt)
 
   if uikit_dep.found() and cc.has_header('vulkan/vulkan_ios.h', dependencies : vulkan_dep, required: vulkan_opt)

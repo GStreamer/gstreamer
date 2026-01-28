@@ -1,4 +1,4 @@
-if ['darwin', 'ios'].contains(host_system)
+if host_system == 'darwin'
   avfoundation_dep = dependency('appleframeworks', modules : ['AVFoundation'], required : get_option('examples'))
   quartzcore_dep = dependency('appleframeworks', modules : ['QuartzCore'], required : get_option('examples'))
   corefoundation_dep = dependency('appleframeworks', modules : ['CoreFoundation'], required : get_option('examples'))

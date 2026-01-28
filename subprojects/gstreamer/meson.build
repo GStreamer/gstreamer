@@ -32,17 +32,17 @@ helpers_install_dir = join_paths(libexecdir, 'gstreamer-1.0')
 
 cc = meson.get_compiler('c')
 host_system = host_machine.system()
+subsystem = ''
+if host_system == 'ios'
+  warning('Setting system = \'ios\' in the cross file is deprecated, please use subsystem names')
+  host_system = 'darwin'
+  subsystem = 'ios'
+elif host_system == 'darwin'
+  subsystem = host_machine.subsystem()
+endif
 static_build = get_option('default_library') == 'static'
 
 if host_system == 'darwin'
-  ios_test_code = '''#include <TargetConditionals.h>
-  #if ! TARGET_OS_IPHONE
-  #error "Not iOS/tvOS/watchOS/iPhoneSimulator"
-  #endif'''
-  if cc.compiles(ios_test_code, name : 'building for iOS')
-    host_system = 'ios'
-  endif
-
   add_languages('objc', native: false, required: true)
 endif
 
@@ -165,7 +165,7 @@ else
   cdata.set('MEMORY_ALIGNMENT', mem_align_opt.to_int())
 endif
 
-if ['darwin', 'ios'].contains(host_system)
+if host_system == 'darwin'
   cdata.set_quoted('GST_EXTRA_MODULE_SUFFIX', '.dylib')
 endif
 
@@ -689,7 +689,7 @@ pkgconfig_uninstalled_variables = ['exec_prefix=${prefix}',
     'helpersdir=${gstreamerdir}/libs/gst/helpers']
 pkgconfig_subdirs = ['gstreamer-1.0']
 pkgconfig_libs = []
-if host_system == 'darwin'
+if host_system == 'darwin' and subsystem == 'macos'
   pkgconfig_libs = ['-Wl,-rpath,${libdir}']
 endif
 

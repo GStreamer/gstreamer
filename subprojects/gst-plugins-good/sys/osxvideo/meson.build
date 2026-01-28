@@ -15,7 +15,7 @@ plugin_sources += {
 }
 
 have_osxvideo = false
-if host_system != 'darwin'
+if host_system != 'darwin' or subsystem != 'macos'
   subdir_done()
 endif
 

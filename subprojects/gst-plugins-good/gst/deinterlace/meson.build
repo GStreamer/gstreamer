@@ -72,7 +72,7 @@ if have_nasm and host_cpu == 'x86_64'
   # Note that symbols_have_underscore_prefix does not work properly on macos
   # if the compiler -g flag is used. See:
   # https://github.com/mesonbuild/meson/issues/5482
-  if ['darwin', 'ios'].contains(host_system)
+  if host_system == 'darwin'
     asm_prefix_def = '-DPREFIX'
   elif cc.symbols_have_underscore_prefix()
     asm_prefix_def = '-DPREFIX'
@@ -83,7 +83,7 @@ if have_nasm and host_cpu == 'x86_64'
   asm_arch_def = '-DARCH_X86_64=1'
   if host_system == 'windows'
     asm_outformat = 'win64'
-  elif ['darwin', 'ios'].contains(host_system)
+  elif host_system == 'darwin'
     asm_outformat = 'macho64'
   else
     asm_outformat = 'elf64'
