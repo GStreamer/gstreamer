@@ -5,9 +5,17 @@ if ptp_helper_option.disabled()
   subdir_done()
 endif
 
-if host_system not in ['linux', 'freebsd', 'openbsd', 'netbsd', 'dragonfly', 'darwin', 'sunos', 'solaris', 'illumos', 'windows', 'gnu']
+ptp_supported = false
+if host_system in ['linux', 'darwin', 'freebsd', 'openbsd', 'netbsd', 'dragonfly', 'sunos', 'solaris', 'illumos', 'windows', 'gnu']
+  ptp_supported = true
+  if host_system == 'darwin' and subsystem != 'macos'
+    ptp_supported = false
+  endif
+endif
+
+if not ptp_supported
   if ptp_helper_option.enabled()
-    error('PTP not supported on this OS')
+    error(f'PTP not supported on @host_system@ (@subsystem@)')
   endif
   subdir_done()
 endif

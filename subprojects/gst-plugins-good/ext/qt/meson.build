@@ -77,7 +77,8 @@ if not have_tools
 endif
 
 qt5qml_dep = dependency('qt5', modules : ['Core', 'Gui', 'Qml', 'Quick'],
-                        method: qt5_method, required: qt5_option, static: host_system == 'ios')
+                        method: qt5_method, required: qt5_option,
+                        static: subsystem.startswith('ios'))
 if not qt5qml_dep.found()
   subdir_done()
 endif
@@ -181,7 +182,7 @@ if host_system == 'windows'
 endif
 
 # macOS windowing
-if host_system == 'darwin'
+if host_system == 'darwin' and subsystem == 'macos'
   qt5_macos = qt5_option \
       .require(gst_gl_have_window_cocoa, error_message: 'cocoa windowing support in gstreamer-gl is required') \
       .require(gst_gl_have_platform_cgl, error_message: 'cgl platform support in gstreamer-gl is required')
@@ -196,7 +197,7 @@ if host_system == 'darwin'
 endif
 
 # iOS windowing
-if host_system == 'ios'
+if subsystem.startswith('ios')
   qt5_ios = qt5_option \
       .require(gst_gl_have_window_eagl, error_message: 'eagl windowing support in gstreamer-gl is required') \
       .require(gst_gl_have_platform_eagl, error_message: 'eagl platform support in gstreamer-gl is required')
@@ -209,7 +210,7 @@ endif
 if qt5_option.require(have_qt_windowing, error_message: 'No windowing, enable one of the qt-* windowing options').allowed()
   # rpath is needed to be able to load the plugin on macOS inside the devenv
   qmlgl_kwargs = {}
-  if host_system == 'darwin'
+  if host_system == 'darwin' and subsystem == 'macos'
     fs = import('fs')
     qt_bindir = fs.parent(find_program('qmake').full_path())
     qt_libdir = fs.parent(qt_bindir) / 'lib'

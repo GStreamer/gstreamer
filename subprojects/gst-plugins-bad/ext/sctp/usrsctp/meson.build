@@ -64,7 +64,7 @@ elif system == 'freebsd'
     compile_args += [compiler.get_supported_arguments([
             '-Wno-address-of-packed-member',
         ])]
-elif system in ['darwin', 'ios']
+elif host_system == 'darwin'
     compile_args += [[
             '-D__APPLE_USE_RFC_2292',
         ] + compiler.get_supported_arguments([

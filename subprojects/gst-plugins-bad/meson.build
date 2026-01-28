@@ -43,8 +43,16 @@ gst_libraries = []
 cc = meson.get_compiler('c')
 cxx = meson.get_compiler('cpp')
 host_system = host_machine.system()
+subsystem = ''
+if host_system == 'ios'
+  warning('Setting system = \'ios\' in the cross file is deprecated, please use subsystem names')
+  host_system = 'darwin'
+  subsystem = 'ios'
+elif host_system == 'darwin'
+  subsystem = host_machine.subsystem()
+endif
 
-if host_system in ['ios', 'darwin']
+if host_system == 'darwin'
   have_objc = add_languages('objc', native: false)
   have_objcpp = add_languages('objcpp', native: false)
 else
@@ -288,7 +296,7 @@ cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('package-origin'))
 # FIXME: This should be exposed as a configuration option
 if host_system == 'linux'
   cdata.set_quoted('DEFAULT_VIDEOSRC', 'v4l2src')
-elif ['darwin', 'ios'].contains(host_system)
+elif host_system == 'darwin'
   cdata.set_quoted('DEFAULT_VIDEOSRC', 'avfvideosrc')
   cdata.set_quoted('GST_EXTRA_MODULE_SUFFIX', '.dylib')
   # Yes, we set this for iOS too. Same as Autotools.
@@ -407,7 +415,7 @@ if x11_dep.found()
 endif
 
 # Optional dep of msdk and va
-if host_system not in ['darwin', 'ios', 'android', 'windows', 'gnu']
+if host_system not in ['darwin', 'android', 'windows', 'gnu']
   libdrm_dep = dependency('libdrm', version : '>=2.4.50',
     required : get_option('drm').enabled() or get_option('msdk').enabled(),
   )
@@ -456,11 +464,11 @@ else
   winsock2 = []
 endif
 
-if ['darwin', 'ios'].contains(host_system)
+if host_system == 'darwin'
   if not have_objc
     error('Building on MacOS/iOS/etc requires an ObjC compiler')
   endif
-  if host_system == 'ios'
+  if subsystem == 'ios'
     cdata.set('HAVE_IOS', 1)
   endif
 

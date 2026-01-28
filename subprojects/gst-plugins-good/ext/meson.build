@@ -52,7 +52,7 @@ if get_option('soup').allowed() or get_option('adaptivedemux2').allowed()
   # add that for deps that are in the list of dependencies. We also need to add
   # install_rpath to cover the installation case. Every other dep is loaded via
   # absolute LC_LOAD_DYLIB entries.
-  if host_system == 'darwin'
+  if host_system == 'darwin' and subsystem == 'macos'
     foreach dep : [libsoup3_dep, libsoup2_dep]
       if not dep.found()
         continue

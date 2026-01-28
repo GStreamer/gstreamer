@@ -80,7 +80,7 @@ plugin_sources += {
 applemedia_objc_args = []
 applemedia_found_deps = false
 applemedia_option = get_option('applemedia')
-if not ['darwin', 'ios'].contains(host_system) or applemedia_option.disabled()
+if host_system != 'darwin' or applemedia_option.disabled()
   subdir_done()
 endif
 
@@ -110,19 +110,19 @@ if videotoolbox_dep.found()
     applemedia_frameworks += [videotoolbox_dep]
 endif
 
-if host_system == 'ios'
+if subsystem == 'macos'
+    applemedia_sources += non_ios_sources
+    cocoa_dep = dependency('Cocoa', required : applemedia_option)
+    iosurface_dep = dependency('IOSurface', required : applemedia_option)
+    applemedia_opengl_dep = dependency('appleframeworks', modules : ['OpenGL'], required : applemedia_option)
+    applemedia_frameworks += [cocoa_dep, applemedia_opengl_dep, iosurface_dep]
+else
     applemedia_sources += ios_sources
     applemedia_objc_args += ['-fobjc-abi-version=2', '-fobjc-legacy-dispatch']
 
     ios_media_dep = dependency('appleframeworks', modules : ['Foundation', 'AssetsLibrary'], required : applemedia_option)
     iosurface_dep = dependency('IOSurface', required : applemedia_option)
     applemedia_frameworks += [ios_media_dep, iosurface_dep]
-else
-    applemedia_sources += non_ios_sources
-    cocoa_dep = dependency('Cocoa', required : applemedia_option)
-    iosurface_dep = dependency('IOSurface', required : applemedia_option)
-    applemedia_opengl_dep = dependency('appleframeworks', modules : ['OpenGL'], required : applemedia_option)
-    applemedia_frameworks += [cocoa_dep, applemedia_opengl_dep, iosurface_dep]
 endif
 
 applemedia_found_deps = true

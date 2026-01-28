@@ -29,7 +29,7 @@ if get_option('shm').disabled()
 endif
 
 # NetBSD has shm_* in librt
-if ['darwin', 'ios', 'freebsd', 'openbsd'].contains(host_system)
+if host_system in ['darwin', 'freebsd', 'openbsd']
   rt_dep = []
   shm_enabled = true
 else
