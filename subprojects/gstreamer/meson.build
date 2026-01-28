@@ -379,11 +379,8 @@ if cc.has_function('strdup')
 elif host_system == 'windows' and cc.has_function('_strdup')
   cdata.set('HAVE__STRDUP', 1) # Windows (MSVC)
 endif
-if host_system != 'windows'
+if host_system != 'windows' and not subsystem.startswith('tvos') and not subsystem.startswith('watchos')
   cdata.set('HAVE_FORK', 1)
-else
-  # libcheck requires HAVE_FORK to be 0 when fork() is not available
-  cdata.set('HAVE_FORK', 0)
 endif
 if cc.has_function('strsignal')
   cdata.set('HAVE_DECL_STRSIGNAL', 1)
