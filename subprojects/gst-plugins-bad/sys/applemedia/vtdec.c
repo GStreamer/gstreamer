@@ -58,9 +58,9 @@
 #include <gst/video/gstvideodecoder.h>
 #include <gst/gl/gstglcontext.h>
 
-#if TARGET_OS_OSX || TARGET_OS_IOS
+#if TARGET_OS_OSX || TARGET_OS_IOS || TARGET_OS_TV || TARGET_OS_VISION
 #define HAVE_SUPPLEMENTAL
-#if (TARGET_OS_OSX && __MAC_OS_X_VERSION_MAX_ALLOWED >= 110000) || (TARGET_OS_IOS && __IPHONE_OS_VERSION_MAX_ALLOWED >= 260200)
+#if (TARGET_OS_OSX && __MAC_OS_X_VERSION_MAX_ALLOWED >= 110000) || (TARGET_OS_IOS && __IPHONE_OS_VERSION_MAX_ALLOWED >= 260200) || (TARGET_OS_TV && __TV_OS_VERSION_MAX_ALLOWED >= 260200) || (TARGET_OS_VISION && __VISION_OS_VERSION_MAX_ALLOWED >= 260200)
 #define HAVE_SUPPLEMENTAL_DEFINITION
 #else
 #include <dlfcn.h>
@@ -1933,12 +1933,12 @@ gst_vtdec_check_vp9_support (GstVtdec * vtdec)
 
 #ifdef HAVE_SUPPLEMENTAL
 #ifdef HAVE_SUPPLEMENTAL_DEFINITION
-  if (__builtin_available (macos 11.0, ios 26.2, *)) {
+  if (__builtin_available (macOS 11.0, iOS 26.2, tvOS 26.2, visionOS 26.2, *)) {
     VTRegisterSupplementalVideoDecoderIfAvailable (kCMVideoCodecType_VP9);
   }
 #else
   /* Needed temporarily till we can require a new-enough Xcode that has
-   * VTRegisterSupplementalVideoDecoderIfAvailable on iOS
+   * VTRegisterSupplementalVideoDecoderIfAvailable on iOS, tvOS, visionOS 26.2
    */
   VTRegisterSupplementalVideoDecoderIfAvailableFunc func =
       (VTRegisterSupplementalVideoDecoderIfAvailableFunc)
@@ -1972,12 +1972,12 @@ gst_vtdec_check_av1_support (GstVtdec * vtdec)
 
 #ifdef HAVE_SUPPLEMENTAL
 #ifdef HAVE_SUPPLEMENTAL_DEFINITION
-  if (__builtin_available (macos 11.0, ios 26.2, *)) {
+  if (__builtin_available (macOS 11.0, iOS 26.2, tvOS 26.2, visionOS 26.2, *)) {
     VTRegisterSupplementalVideoDecoderIfAvailable (kCMVideoCodecType_AV1);
   }
 #else
   /* Needed temporarily till we can require a new-enough Xcode that has
-   * VTRegisterSupplementalVideoDecoderIfAvailable on iOS
+   * VTRegisterSupplementalVideoDecoderIfAvailable on iOS, tvOS, visionOS 26.2
    */
   VTRegisterSupplementalVideoDecoderIfAvailableFunc func =
       (VTRegisterSupplementalVideoDecoderIfAvailableFunc)
