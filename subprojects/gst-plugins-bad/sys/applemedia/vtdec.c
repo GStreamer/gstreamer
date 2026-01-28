@@ -1112,15 +1112,16 @@ gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format,
       CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
       &kCFTypeDictionaryValueCallBacks);
 
-  /* This is the default on iOS and the key does not exist there */
-#if TARGET_OS_OSX
-  gst_vtutil_dict_set_boolean (videoDecoderSpecification,
-      kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder,
-      enable_hardware);
-  if (enable_hardware && vtdec->require_hardware)
+#if TARGET_OS_OSX || TARGET_OS_VISION || TARGET_OS_IOS || TARGET_OS_TV
+  if (__builtin_available (macOS 10.9, iOS 17.0, tvOS 17.0, visionOS 1.0, *)) {
     gst_vtutil_dict_set_boolean (videoDecoderSpecification,
-        kVTVideoDecoderSpecification_RequireHardwareAcceleratedVideoDecoder,
-        TRUE);
+        kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder,
+        enable_hardware);
+    if (enable_hardware && vtdec->require_hardware)
+      gst_vtutil_dict_set_boolean (videoDecoderSpecification,
+          kVTVideoDecoderSpecification_RequireHardwareAcceleratedVideoDecoder,
+          TRUE);
+  }
 #endif
 
   output_image_buffer_attrs =
@@ -2126,7 +2127,6 @@ gst_vtdec_set_context (GstElement * element, GstContext * context)
   GST_ELEMENT_CLASS (gst_vtdec_parent_class)->set_context (element, context);
 }
 
-#if TARGET_OS_OSX
 #define GST_TYPE_VTDEC_HW   (gst_vtdec_hw_get_type())
 #define GST_VTDEC_HW(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VTDEC_HW,GstVtdecHw))
 #define GST_VTDEC_HW_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VTDEC_HW,GstVtdecHwClass))
@@ -2157,19 +2157,21 @@ gst_vtdec_hw_init (GstVtdecHw * vtdec)
   GST_VTDEC (vtdec)->require_hardware = TRUE;
 }
 
-#endif
-
 void
 gst_vtdec_register_elements (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_vtdec_debug_category, "vtdec", 0,
       "debug category for vtdec element");
 
-#if !TARGET_OS_OSX
-  gst_element_register (plugin, "vtdec", GST_RANK_PRIMARY, GST_TYPE_VTDEC);
+#if !TARGET_OS_WATCH
+  if (__builtin_available (macOS 10.9, iOS 17.0, tvOS 17.0, visionOS 1.0, *)) {
+    gst_element_register (plugin, "vtdec_hw", GST_RANK_PRIMARY + 1,
+        GST_TYPE_VTDEC_HW);
+    gst_element_register (plugin, "vtdec", GST_RANK_SECONDARY, GST_TYPE_VTDEC);
+  } else {
+    gst_element_register (plugin, "vtdec", GST_RANK_PRIMARY, GST_TYPE_VTDEC);
+  }
 #else
-  gst_element_register (plugin, "vtdec_hw", GST_RANK_PRIMARY + 1,
-      GST_TYPE_VTDEC_HW);
-  gst_element_register (plugin, "vtdec", GST_RANK_SECONDARY, GST_TYPE_VTDEC);
+  gst_element_register (plugin, "vtdec", GST_RANK_PRIMARY, GST_TYPE_VTDEC);
 #endif
 }
