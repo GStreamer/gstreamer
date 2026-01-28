@@ -431,7 +431,8 @@ gles2_dep = unneeded_dep
 gles3_h = false
 gles3ext3_h = false
 if need_api_gles2 != 'no'
-  if subsystem.startswith('ios')
+  # watchOS and visionOS do not support CAEAGL
+  if subsystem.startswith('tvos') or subsystem.startswith('ios')
     gles2_dep = dependency('appleframeworks', modules : ['OpenGLES'], required : false)
   else
     if bcm_host_dep.found()
@@ -443,12 +444,7 @@ if need_api_gles2 != 'no'
   endif
 
   if not gles2_dep.found()
-#    if host_system == 'windows'
-#    elif host_system == ios
-#      gles2_dep = cc.find_library('GLESv2', required : false)
-#    else
-      gles2_dep = cc.find_library('GLESv2', required : false)
-#    endif
+    gles2_dep = cc.find_library('GLESv2', required : false)
 
     if not cc.has_header('GLES2/gl2.h', include_directories : compat_includes)
       gles2_dep = unneeded_dep
@@ -466,7 +462,7 @@ if need_api_gles2 != 'no'
   gles3_h = gles2_dep.found() and cc.has_header('GLES3/gl3.h', dependencies : gles2_dep, include_directories : compat_includes)
 
   gles_includes = ''
-  if subsystem.startswith('ios')
+  if subsystem.startswith('tvos') or subsystem.startswith('ios')
     gles_includes += '''
 # include <OpenGLES/ES2/gl.h>
 # include <OpenGLES/ES2/glext.h>
@@ -902,8 +898,8 @@ if host_system == 'darwin' and subsystem == 'macos'
 endif
 
 if need_platform_eagl == 'yes'
-  if not subsystem.startswith('ios')
-    error('Can only use EAGL on iOS')
+  if not subsystem.startswith('tvos') and not subsystem.startswith('ios')
+    error('Can only use EAGL on iOS and tvOS')
   endif
   if need_win_eagl == 'no'
     error('Impossible situation requested: Cannot use EAGL platform without the EAGL window system')
@@ -914,7 +910,7 @@ elif need_platform_eagl == 'no' and need_win_eagl == 'yes'
   error('Impossible situation requested: Cannot use EAGL window system without the EAGL platform')
 endif
 
-if subsystem.startswith('ios') and need_platform_eagl != 'no' and need_win_eagl != 'no'
+if (subsystem.startswith('tvos') or subsystem.startswith('ios')) and need_platform_eagl != 'no' and need_win_eagl != 'no'
   foundation_dep = dependency('appleframeworks', modules : ['Foundation'], required : false)
   corefoundation_dep = dependency('appleframeworks', modules : ['CoreFoundation'], required : false)
   coregraphics_dep = dependency('appleframeworks', modules : ['CoreGraphics'], required : false)
