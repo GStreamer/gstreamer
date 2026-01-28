@@ -192,7 +192,7 @@ impl PtpMessage {
                 if data.len() < 30 {
                     return Err(io::Error::new(
                         io::ErrorKind::InvalidInput,
-                        format!("Too short PTP SYNC message {} < 20", data.len(),),
+                        format!("Too short PTP ANNOUNCE message {} < 20", data.len(),),
                     ));
                 }
 
@@ -248,7 +248,7 @@ impl PtpMessage {
                 if data.len() < 10 {
                     return Err(io::Error::new(
                         io::ErrorKind::InvalidInput,
-                        format!("Too short PTP SYNC message {} < 20", data.len(),),
+                        format!("Too short PTP FOLLOW_UP message {} < 20", data.len(),),
                     ));
                 }
 
@@ -266,7 +266,7 @@ impl PtpMessage {
                 if data.len() < 10 {
                     return Err(io::Error::new(
                         io::ErrorKind::InvalidInput,
-                        format!("Too short PTP SYNC message {} < 20", data.len(),),
+                        format!("Too short PTP DELAY_REQ message {} < 20", data.len(),),
                     ));
                 }
 
@@ -282,7 +282,7 @@ impl PtpMessage {
                 if data.len() < 20 {
                     return Err(io::Error::new(
                         io::ErrorKind::InvalidInput,
-                        format!("Too short PTP SYNC message {} < 20", data.len(),),
+                        format!("Too short PTP DELAY_RESP message {} < 20", data.len(),),
                     ));
                 }
 
