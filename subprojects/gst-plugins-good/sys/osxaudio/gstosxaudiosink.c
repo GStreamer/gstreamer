@@ -177,7 +177,7 @@ gst_osx_audio_sink_class_init (GstOsxAudioSinkClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_osx_audio_sink_change_state);
 
-#ifndef HAVE_IOS
+#if TARGET_OS_OSX
   g_object_class_install_property (gobject_class, ARG_DEVICE,
       g_param_spec_int ("device", "Device ID", "Device ID of output device",
           0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -247,7 +247,7 @@ gst_osx_audio_sink_init (GstOsxAudioSink * sink)
   sink->device_id = kAudioDeviceUnknown;
   sink->volume = DEFAULT_VOLUME;
 
-#ifdef HAVE_IOS
+#if !TARGET_OS_OSX
   sink->configure_session = DEFAULT_CONFIGURE_SESSION;
 #endif
 }
@@ -267,7 +267,7 @@ gst_osx_audio_sink_set_property (GObject * object, guint prop_id,
   GstOsxAudioSink *sink = GST_OSX_AUDIO_SINK (object);
 
   switch (prop_id) {
-#ifndef HAVE_IOS
+#if TARGET_OS_OSX
     case ARG_DEVICE:
       sink->device_id = g_value_get_int (value);
       break;
@@ -344,7 +344,7 @@ gst_osx_audio_sink_get_property (GObject * object, guint prop_id,
 {
   GstOsxAudioSink *sink = GST_OSX_AUDIO_SINK (object);
   switch (prop_id) {
-#ifndef HAVE_IOS
+#if TARGET_OS_OSX
     case ARG_DEVICE:
       g_value_set_int (value, sink->device_id);
       break;
@@ -571,7 +571,7 @@ gst_osx_audio_sink_create_ringbuffer (GstAudioBaseSink * sink)
 
   ringbuffer->core_audio = g_object_new (GST_TYPE_CORE_AUDIO, "is-src", FALSE,
       "device", osxsink->device_id, "unique-id", osxsink->unique_id,
-#ifdef HAVE_IOS
+#if !TARGET_OS_OSX
       "configure-session", osxsink->configure_session,
 #endif
       NULL);

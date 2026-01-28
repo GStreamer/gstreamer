@@ -28,11 +28,8 @@
 
 #include <gst/gst.h>
 #include <gst/audio/audio-channels.h>
-#ifdef HAVE_IOS
-  #include <CoreAudio/CoreAudioTypes.h>
-  #define AudioDeviceID gint
-  #define kAudioDeviceUnknown 0
-#else
+#include <TargetConditionals.h>
+#if TARGET_OS_OSX
   #include <CoreAudio/CoreAudio.h>
   #include <AudioToolbox/AudioToolbox.h>
   #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
@@ -43,6 +40,10 @@
     #define AudioComponent Component
     #define AudioComponentDescription ComponentDescription
   #endif
+#else
+  #include <CoreAudio/CoreAudioTypes.h>
+  #define AudioDeviceID gint
+  #define kAudioDeviceUnknown 0
 #endif
 #include <AudioUnit/AudioUnit.h>
 #include <mach/mach_time.h>
@@ -104,7 +105,7 @@ struct _GstCoreAudio
   UInt32 recBufferSize; /* AudioUnitRender clobbers mDataByteSize */
   AudioBufferList *recBufferList;
 
-#ifndef HAVE_IOS
+#if TARGET_OS_OSX
   /* For SPDIF out */
   pid_t hog_pid;
   gboolean disabled_mixing;
@@ -120,7 +121,7 @@ struct _GstCoreAudio
   uint32_t anchor_pend_samples;
   float rate_scalar;
 
-#ifdef HAVE_IOS
+#if !TARGET_OS_OSX
   gdouble first_sample_time;
   gboolean configure_session;
 #endif

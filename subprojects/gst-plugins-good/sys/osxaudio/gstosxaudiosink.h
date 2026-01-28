@@ -89,7 +89,7 @@ struct _GstOsxAudioSink
 
   guint channels;
 
-#ifdef HAVE_IOS
+#if !TARGET_OS_OSX
   gboolean configure_session;
 #endif
 };

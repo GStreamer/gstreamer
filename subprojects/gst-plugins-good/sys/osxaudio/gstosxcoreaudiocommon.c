@@ -529,7 +529,7 @@ gst_core_audio_dump_channel_layout (AudioChannelLayout * channel_layout)
   }
 }
 
-#ifndef HAVE_IOS
+#if TARGET_OS_OSX
 char *
 gst_core_audio_device_get_prop_str (AudioDeviceID device_id,
     AudioObjectPropertyElement prop_id)

@@ -75,7 +75,7 @@ struct _GstOsxAudioSrc
   AudioDeviceID device_id;
   char *unique_id;
 
-#ifdef HAVE_IOS
+#if !TARGET_OS_OSX
   gboolean configure_session;
 #endif
 };

@@ -32,7 +32,7 @@
 #include "gstosxaudiosrc.h"
 #include "gstatdec.h"
 #include "gstatenc.h"
-#ifndef HAVE_IOS
+#if TARGET_OS_OSX
 #include "gstosxaudiodeviceprovider.h"
 #endif
 
@@ -45,7 +45,7 @@ plugin_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (osxaudiosink, plugin);
   ret |= GST_ELEMENT_REGISTER (atdec, plugin);
   ret |= GST_ELEMENT_REGISTER (atenc, plugin);
-#ifndef HAVE_IOS
+#if TARGET_OS_OSX
   ret |= GST_DEVICE_PROVIDER_REGISTER (osxaudiodeviceprovider, plugin);
 #endif
 
