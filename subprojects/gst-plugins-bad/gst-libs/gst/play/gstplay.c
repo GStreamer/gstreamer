@@ -2221,7 +2221,7 @@ gst_play_stream_info_find_from_stream_id (GstPlayMediaInfo * media_info,
   for (l = list; l != NULL; l = l->next) {
     info = (GstPlayStreamInfo *) l->data;
     if (g_str_equal (info->stream_id, stream_id)) {
-      return info;
+      return g_object_ref (info);
     }
   }
 
@@ -2247,17 +2247,19 @@ gst_play_stream_info_get_current_from_stream_id (GstPlay * self,
     const gchar * stream_id, GType type)
 {
   GstPlayStreamInfo *info;
+  GstPlayStreamInfo *result_info = NULL;
 
   if (!self->media_info || !stream_id)
     return NULL;
 
   info = gst_play_stream_info_find_from_stream_id (self->media_info, stream_id);
-  if (info && G_OBJECT_TYPE (info) == type)
-    info = gst_play_stream_info_copy (info);
-  else
-    info = NULL;
+  if (info) {
+    if (G_OBJECT_TYPE (info) == type)
+      result_info = gst_play_stream_info_copy (info);
+    g_object_unref (info);
+  }
 
-  return info;
+  return result_info;
 }
 
 static void
@@ -2280,6 +2282,7 @@ stream_notify_cb (GstStreamCollection * collection, GstStream * stream,
   info = gst_play_stream_info_find_from_stream_id (self->media_info, stream_id);
   if (info) {
     gst_play_stream_info_update_from_stream (self, info, stream);
+    g_object_unref (info);
     emit_signal = TRUE;
   }
   g_mutex_unlock (&self->lock);
