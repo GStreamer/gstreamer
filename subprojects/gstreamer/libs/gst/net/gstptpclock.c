@@ -2096,6 +2096,8 @@ have_stdout_body (GInputStream * stdout_pipe, GAsyncResult * res,
       GstClockTime helper_receive_time;
       PtpMessage msg;
 
+      memset (&msg, 0, sizeof (msg));
+
       iface_idx = GST_READ_UINT8 (stdout_buffer);
       helper_receive_time = GST_READ_UINT64_BE (stdout_buffer + 1);
 
