@@ -1777,7 +1777,7 @@ gst_vtenc_session_configure_bitrate (GstVTEnc * self,
     /*
      * In addition to the OS requirements, CBR also requires Apple Silicon
      */
-    if (__builtin_available (macOS 13.0, iOS 16.0, *)) {
+    if (__builtin_available (macOS 13.0, iOS 16.0, tvOS 16.0, visionOS 1.0, *)) {
       key = kVTCompressionPropertyKey_ConstantBitRate;
     } else
 #endif
