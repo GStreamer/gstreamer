@@ -60,15 +60,6 @@
 #include <gst/codecparsers/gstav1parser.h>
 #include <gst/codecparsers/gsth264parser.h>
 
-#if TARGET_OS_OSX || TARGET_OS_IOS || TARGET_OS_TV || TARGET_OS_VISION
-#define HAVE_SUPPLEMENTAL
-#if (TARGET_OS_OSX && __MAC_OS_X_VERSION_MAX_ALLOWED >= 110000) || (TARGET_OS_IOS && __IPHONE_OS_VERSION_MAX_ALLOWED >= 260200) || (TARGET_OS_TV && __TV_OS_VERSION_MAX_ALLOWED >= 260200) || (TARGET_OS_VISION && __VISION_OS_VERSION_MAX_ALLOWED >= 260200)
-#define HAVE_SUPPLEMENTAL_DEFINITION
-#else
-#include <dlfcn.h>
-#endif
-#endif
-
 #include "vtutil.h"
 #include "helpers.h"
 #include "corevideobuffer.h"
@@ -1873,9 +1864,6 @@ gst_vtdec_set_latency (GstVtdec * vtdec)
   gst_video_decoder_set_latency (GST_VIDEO_DECODER (vtdec), latency, latency);
 }
 
-typedef void (*VTRegisterSupplementalVideoDecoderIfAvailableFunc)
-  (CMVideoCodecType codecType);
-
 static gboolean
 gst_vtdec_check_vp9_support (GstVtdec * vtdec)
 {
@@ -1883,24 +1871,7 @@ gst_vtdec_check_vp9_support (GstVtdec * vtdec)
 
   GST_DEBUG_OBJECT (vtdec, "Checking VP9 VideoToolbox support");
 
-#ifdef HAVE_SUPPLEMENTAL
-#ifdef HAVE_SUPPLEMENTAL_DEFINITION
-  if (__builtin_available (macOS 11.0, iOS 26.2, tvOS 26.2, visionOS 26.2, *)) {
-    VTRegisterSupplementalVideoDecoderIfAvailable (kCMVideoCodecType_VP9);
-  }
-#else
-  /* Needed temporarily till we can require a new-enough Xcode that has
-   * VTRegisterSupplementalVideoDecoderIfAvailable on iOS, tvOS, visionOS 26.2
-   */
-  VTRegisterSupplementalVideoDecoderIfAvailableFunc func =
-      (VTRegisterSupplementalVideoDecoderIfAvailableFunc)
-      dlsym (RTLD_DEFAULT, "VTRegisterSupplementalVideoDecoderIfAvailable");
-
-  if (func != NULL) {
-    func (kCMVideoCodecType_VP9);
-  }
-#endif
-#endif
+  gst_vtutil_register_supplemental_decoder (kCMVideoCodecType_VP9);
 
   vp9_supported = VTIsHardwareDecodeSupported (kCMVideoCodecType_VP9);
 
@@ -1921,25 +1892,7 @@ gst_vtdec_check_av1_support (GstVtdec * vtdec)
 
   GST_DEBUG_OBJECT (vtdec, "Checking AV1 VideoToolbox support");
 
-#ifdef HAVE_SUPPLEMENTAL
-#ifdef HAVE_SUPPLEMENTAL_DEFINITION
-  if (__builtin_available (macOS 11.0, iOS 26.2, tvOS 26.2, visionOS 26.2, *)) {
-    VTRegisterSupplementalVideoDecoderIfAvailable (kCMVideoCodecType_AV1);
-  }
-#else
-  /* Needed temporarily till we can require a new-enough Xcode that has
-   * VTRegisterSupplementalVideoDecoderIfAvailable on iOS, tvOS, visionOS 26.2
-   */
-  VTRegisterSupplementalVideoDecoderIfAvailableFunc func =
-      (VTRegisterSupplementalVideoDecoderIfAvailableFunc)
-      dlsym (RTLD_DEFAULT,
-      "VTRegisterSupplementalVideoDecoderIfAvailable");
-
-  if (func != NULL) {
-    func (kCMVideoCodecType_AV1);
-  }
-#endif
-#endif
+  gst_vtutil_register_supplemental_decoder (kCMVideoCodecType_AV1);
 
   /* Check if hardware decode is supported for AV1 */
   av1_supported = VTIsHardwareDecodeSupported (kCMVideoCodecType_AV1);
