@@ -95,7 +95,7 @@ _get_implementation (const char *vendor)
 static char *
 _get_desc (const char *vendor, GstVaImplementation impl)
 {
-  char *end, *start;
+  const char *end, *start;
   char desc[1024];
   size_t size;
 
@@ -145,7 +145,7 @@ _get_driver_version (const char *vendor, GstVaImplementation impl,
       break;
     case GST_VA_IMPLEMENTATION_INTEL_IHD:
     case GST_VA_IMPLEMENTATION_INTEL_I965:{
-      char *end = strstr (vendor, " - ");
+      const char *end = strstr (vendor, " - ");
       if (end && sscanf (end, " - %d.%d.", &maj, &min) == 2) {
         *major = maj;
         *minor = min;
