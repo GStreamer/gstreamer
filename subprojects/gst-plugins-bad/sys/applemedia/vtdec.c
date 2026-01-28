@@ -629,7 +629,7 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   if (features) {
     gst_caps_set_features (output_state->caps, 0, features);
 
-#if TARGET_OS_OSX || TARGET_OS_IOS
+#if TARGET_OS_OSX || TARGET_OS_IOS || TARGET_OS_TV
     output_textures =
         gst_caps_features_contains (features,
         GST_CAPS_FEATURE_MEMORY_GL_MEMORY);

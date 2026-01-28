@@ -27,6 +27,9 @@
 
 #if TARGET_OS_IOS
 #include "iosassetsrc.h"
+#endif
+
+#if TARGET_OS_IOS || TARGET_OS_TV
 #include "iosglmemory.h"
 #endif
 
@@ -67,9 +70,11 @@ plugin_init (GstPlugin * plugin)
 
   gst_apple_core_video_memory_init ();
 
-#if TARGET_OS_IOS
+#if TARGET_OS_IOS || TARGET_OS_TV
   gst_ios_gl_memory_init ();
+#endif
 
+#if TARGET_OS_IOS
   res &= gst_element_register (plugin, "iosassetsrc", GST_RANK_SECONDARY,
       GST_TYPE_IOS_ASSET_SRC);
 #endif

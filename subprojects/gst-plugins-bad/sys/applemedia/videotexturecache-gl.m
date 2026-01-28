@@ -51,7 +51,7 @@ typedef struct _ContextThreadData
 
 typedef struct _TextureWrapper
 {
-#if TARGET_OS_IOS
+#if TARGET_OS_IOS || TARGET_OS_TV
   CVOpenGLESTextureCacheRef cache;
   CVOpenGLESTextureRef texture;
 #else
@@ -83,7 +83,7 @@ gst_video_texture_cache_gl_finalize (GObject * object)
 {
   GstVideoTextureCacheGL *cache_gl = GST_VIDEO_TEXTURE_CACHE_GL (object);
 
-#if TARGET_OS_IOS
+#if TARGET_OS_IOS || TARGET_OS_TV
   CFRelease (cache_gl->cache); /* iOS has no "CVOpenGLESTextureCacheRelease" */
 #else
 #if 0
@@ -137,7 +137,7 @@ gst_video_texture_cache_gl_constructed (GObject * object)
   G_OBJECT_CLASS (gst_video_texture_cache_gl_parent_class)->constructed (object);
   g_return_if_fail (GST_IS_GL_CONTEXT (cache_gl->ctx));
 
-#if TARGET_OS_IOS
+#if TARGET_OS_IOS || TARGET_OS_TV
   CFMutableDictionaryRef cache_attrs =
       CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
       &kCFTypeDictionaryValueCallBacks);
@@ -175,7 +175,7 @@ gst_video_texture_cache_gl_class_init (GstVideoTextureCacheGLClass *klass)
   cache_class->create_memory = gst_video_texture_cache_gl_create_memory;
 }
 
-#if TARGET_OS_IOS
+#if TARGET_OS_IOS || TARGET_OS_TV
 static void
 gst_video_texture_cache_gl_release_texture (TextureWrapper *data)
 {
@@ -262,7 +262,7 @@ gst_video_texture_cache_gl_create_memory (GstVideoTextureCache * cache,
   GstVideoTextureCacheGL *cache_gl = GST_VIDEO_TEXTURE_CACHE_GL (cache);
   ContextThreadData data = {cache_gl, gpixbuf, plane, size, NULL};
 
-#if TARGET_OS_IOS
+#if TARGET_OS_IOS || TARGET_OS_TV
   gst_gl_context_thread_add (cache_gl->ctx,
       (GstGLContextThreadFunc) _do_create_memory, &data);
 #endif
