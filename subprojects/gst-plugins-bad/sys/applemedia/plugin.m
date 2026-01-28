@@ -34,10 +34,12 @@
 #endif
 
 #ifdef HAVE_AVFOUNDATION
-#include "avfvideosrc.h"
 #include "avfassetsrc.h"
-#include "avfdeviceprovider.h"
 #include "avsamplevideosink.h"
+#if HAVE_AVCAPTUREDEVICE
+#include "avfvideosrc.h"
+#include "avfdeviceprovider.h"
+#endif
 #endif
 
 #ifdef HAVE_VIDEOTOOLBOX
@@ -79,14 +81,16 @@ plugin_init (GstPlugin * plugin)
 #endif
 
 #ifdef HAVE_AVFOUNDATION
-  res &= gst_element_register (plugin, "avfvideosrc", GST_RANK_PRIMARY,
-      GST_TYPE_AVF_VIDEO_SRC);
   res &= gst_element_register (plugin, "avfassetsrc", GST_RANK_PRIMARY,
       GST_TYPE_AVF_ASSET_SRC);
   res &= gst_element_register (plugin, "avsamplebufferlayersink",
       GST_RANK_NONE, GST_TYPE_AV_SAMPLE_VIDEO_SINK);
+#if HAVE_AVCAPTUREDEVICE
+  res &= gst_element_register (plugin, "avfvideosrc", GST_RANK_PRIMARY,
+      GST_TYPE_AVF_VIDEO_SRC);
   res &= gst_device_provider_register (plugin, "avfdeviceprovider",
     GST_RANK_PRIMARY, GST_TYPE_AVF_DEVICE_PROVIDER);
+#endif
 #endif
 
 #ifdef HAVE_VIDEOTOOLBOX

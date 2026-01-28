@@ -42,11 +42,14 @@ applemedia_args = [
     '-DGST_USE_UNSTABLE_API'
 ]
 
-avfoundation_sources = [
+avcapturedevice_sources = [
   'avfvideosrc.m',
+  'avfdeviceprovider.m',
+]
+
+avfoundation_sources = [
   'avfassetsrc.m',
   'avsamplevideosink.m',
-  'avfdeviceprovider.m',
 ]
 
 vt_sources = [
@@ -72,7 +75,7 @@ vulkan_sources = [
 ]
 
 doc_sources = []
-foreach s: applemedia_sources + avfoundation_sources + vt_sources + ios_sources + ios_deprecated_sources + non_ios_sources + vulkan_sources + applemedia_headers
+foreach s: applemedia_sources + avcapturedevice_sources + avfoundation_sources + vt_sources + ios_sources + ios_deprecated_sources + non_ios_sources + vulkan_sources + applemedia_headers
   doc_sources += meson.current_source_dir() / s
 endforeach
 
@@ -104,6 +107,9 @@ applemedia_frameworks += [corefoundation_dep, coremedia_dep, corevideo_dep]
 avfoundation_dep = dependency('AVFoundation', required : applemedia_option)
 if avfoundation_dep.found()
     applemedia_sources += avfoundation_sources
+    if cdata.get('HAVE_AVCAPTUREDEVICE') == 1
+      applemedia_sources += avcapturedevice_sources
+    endif
     applemedia_frameworks += [avfoundation_dep]
 endif
 
