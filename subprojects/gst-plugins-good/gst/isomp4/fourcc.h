@@ -120,6 +120,7 @@ G_BEGIN_DECLS
 #define FOURCC_clip     GST_MAKE_FOURCC('c','l','i','p')
 #define FOURCC_cmov     GST_MAKE_FOURCC('c','m','o','v')
 #define FOURCC_cmpd     GST_MAKE_FOURCC('c','m','p','d')
+#define FOURCC_cpat     GST_MAKE_FOURCC('c','p','a','t')
 #define FOURCC_cmvd     GST_MAKE_FOURCC('c','m','v','d')
 #define FOURCC_co64     GST_MAKE_FOURCC('c','o','6','4')
 #define FOURCC_covr     GST_MAKE_FOURCC('c','o','v','r')

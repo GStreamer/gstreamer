@@ -261,6 +261,10 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_mha1, "MPEG-H 3D Audio sample entry (mha1)", 0},
   {FOURCC_mhm1, "MPEG-H 3D Audio sample entry (mhm1)", 0},
   {FOURCC_mhaC, "MPEG-H 3D Audio Configuration Box", 0, qtdemux_dump_mhaC},
+  {FOURCC_uncv, "Uncompressed Video Sample Entry", 0},
+  {FOURCC_uncC, "Uncompressed Frame Configuration Box", 0},
+  {FOURCC_cpat, "Component Pattern Definition Box", 0},
+  {FOURCC_cmpd, "Component Definition Box", 0},
   {0, "unknown", 0,},
 };
 
