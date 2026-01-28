@@ -21,9 +21,10 @@
 # include "config.h"
 #endif
 
+#include <TargetConditionals.h>
 #include <Metal/Metal.h>
 
-#ifndef HAVE_IOS
+#if TARGET_OS_OSX
 #import <AppKit/AppKit.h>
 #endif
 #include "iosurfacevulkanmemory.h"

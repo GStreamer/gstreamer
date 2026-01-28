@@ -124,12 +124,15 @@
 #include "config.h"
 #endif
 
+#include <TargetConditionals.h>
 #include "vtenc.h"
 
 #include "coremediabuffer.h"
-#ifdef HAVE_IOS
+
+#if !TARGET_OS_OSX
 #include "corevideobuffer.h"
 #endif
+
 #include "vtutil.h"
 #include "helpers.h"
 #include <gst/pbutils/codec-utils.h>
@@ -261,7 +264,7 @@ static gboolean gst_vtenc_buffer_is_keyframe (GstVTEnc * self,
     CMSampleBufferRef sbuf);
 
 
-#ifndef HAVE_IOS
+#if TARGET_OS_OSX
 static GstVTEncFrame *gst_vtenc_frame_new (GstBuffer * buf,
     GstVideoInfo * videoinfo);
 static void gst_vtenc_frame_free (GstVTEncFrame * frame);
@@ -317,7 +320,7 @@ gst_vtenc_base_init (GstVTEncClass * klass)
 
   {
     GstCaps *caps = gst_static_caps_get (&sink_caps);
-#ifndef HAVE_IOS
+#if TARGET_OS_OSX
     gboolean enable_argb = TRUE;
     int retval;
     char cpu_name[30];
@@ -1490,7 +1493,7 @@ gst_vtenc_create_session (GstVTEnc * self)
   const GstVTEncoderDetails *codec_details =
       GST_VTENC_CLASS_GET_CODEC_DETAILS (G_OBJECT_GET_CLASS (self));
 
-#ifndef HAVE_IOS
+#if TARGET_OS_OSX
   /* Apple's M1 hardware encoding fails when provided with an interlaced ProRes source.
    * It's most likely a bug in VideoToolbox, as no such limitation has been officially mentioned anywhere.
    * For now let's disable HW encoding entirely when such case occurs. */
@@ -2125,7 +2128,7 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
   if (meta != NULL) {
     pbuf = gst_core_media_buffer_get_pixel_buffer (frame->input_buffer);
   }
-#ifdef HAVE_IOS
+#if !TARGET_OS_OSX
   if (pbuf == NULL) {
     GstVideoFrame inframe, outframe;
     GstBuffer *outbuf;
@@ -2507,7 +2510,7 @@ gst_vtenc_buffer_is_keyframe (GstVTEnc * self, CMSampleBufferRef sbuf)
   return result;
 }
 
-#ifndef HAVE_IOS
+#if TARGET_OS_OSX
 static GstVTEncFrame *
 gst_vtenc_frame_new (GstBuffer * buf, GstVideoInfo * video_info)
 {
@@ -2586,7 +2589,7 @@ static const GstVTEncoderDetails gst_vtenc_codecs[] = {
   {"H.265/HEVC with alpha", "h265a", "video/x-h265",
         "Piotr Brzeziński <piotr@centricular.com>",
       kCMVideoCodecType_HEVCWithAlpha, FALSE},
-#ifndef HAVE_IOS
+#if TARGET_OS_OSX
   {"H.264 (HW only)", "h264_hw", "video/x-h264",
         "Ole André Vadla Ravnås <oleavr@soundrop.com>, "
         "Dominik Röttsches <dominik.rottsches@intel.com>",

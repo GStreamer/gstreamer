@@ -21,18 +21,22 @@
 # include <config.h>
 #endif
 
+#include <TargetConditionals.h>
 #include <Foundation/Foundation.h>
 #include "corevideomemory.h"
-#ifdef HAVE_IOS
+
+#if TARGET_OS_IOS
 #include "iosassetsrc.h"
 #include "iosglmemory.h"
 #endif
+
 #ifdef HAVE_AVFOUNDATION
 #include "avfvideosrc.h"
 #include "avfassetsrc.h"
 #include "avfdeviceprovider.h"
 #include "avsamplevideosink.h"
 #endif
+
 #ifdef HAVE_VIDEOTOOLBOX
 #include "vtdec.h"
 #endif
@@ -41,8 +45,7 @@
 void gst_vtenc_register_elements (GstPlugin * plugin);
 #endif
 
-#ifndef HAVE_IOS
-
+#if TARGET_OS_OSX
 static void
 enable_mt_mode (void)
 {
@@ -59,12 +62,14 @@ plugin_init (GstPlugin * plugin)
 
   gst_apple_core_video_memory_init ();
 
-#ifdef HAVE_IOS
+#if TARGET_OS_IOS
   gst_ios_gl_memory_init ();
 
   res &= gst_element_register (plugin, "iosassetsrc", GST_RANK_SECONDARY,
       GST_TYPE_IOS_ASSET_SRC);
-#else
+#endif
+
+#if TARGET_OS_OSX
   enable_mt_mode ();
 #endif
 

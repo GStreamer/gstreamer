@@ -21,7 +21,8 @@
 #  include "config.h"
 #endif
 
-#ifndef HAVE_IOS
+#include <TargetConditionals.h>
+#if TARGET_OS_OSX
 #import <AppKit/AppKit.h>
 #endif
 #include "videotexturecache.h"

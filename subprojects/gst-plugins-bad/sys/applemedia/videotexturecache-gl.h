@@ -20,6 +20,7 @@
 #ifndef __GST_CORE_VIDEO_TEXTURE_CACHE_GL_H__
 #define __GST_CORE_VIDEO_TEXTURE_CACHE_GL_H__
 
+#include <TargetConditionals.h>
 #include <gst/video/gstvideometa.h>
 #include <gst/gl/gl.h>
 #include "corevideomemory.h"
@@ -40,7 +41,7 @@ typedef struct _GstVideoTextureCacheGL
   GstVideoTextureCache parent;
 
   GstGLContext *ctx;
-#ifdef HAVE_IOS
+#if TARGET_OS_IOS
   CVOpenGLESTextureCacheRef cache;
 #else
   GstBufferPool *pool;
