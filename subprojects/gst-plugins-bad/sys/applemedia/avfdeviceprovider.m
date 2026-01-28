@@ -82,12 +82,14 @@ gst_av_capture_device_get_props (AVCaptureDevice *device)
   g_free (unique_id);
   g_free (model_id);
 
-#if TARGET_OS_OSX
-  char *manufacturer = g_strdup ([[device manufacturer] UTF8String]);
-  gst_structure_set (props,
-    "avf.manufacturer", G_TYPE_STRING, manufacturer,
-  NULL);
-  g_free (manufacturer);
+#if !TARGET_OS_WATCH
+  if (__builtin_available (macos 10.9, ios 14.0, tvos 17.0, visionos 2.1, *)) {
+    char *manufacturer = g_strdup ([[device manufacturer] UTF8String]);
+    gst_structure_set (props,
+      "avf.manufacturer", G_TYPE_STRING, manufacturer,
+    NULL);
+    g_free (manufacturer);
+  }
 #endif
 
   return props;
