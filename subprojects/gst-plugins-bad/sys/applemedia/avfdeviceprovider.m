@@ -23,6 +23,7 @@
 #include "config.h"
 #endif
 
+#include <TargetConditionals.h>
 #import <AVFoundation/AVFoundation.h>
 #include "avfvideosrc.h"
 #include "avfdeviceprovider.h"
@@ -81,12 +82,11 @@ gst_av_capture_device_get_props (AVCaptureDevice *device)
   g_free (unique_id);
   g_free (model_id);
 
-#ifndef HAVE_IOS
+#if TARGET_OS_OSX
   char *manufacturer = g_strdup ([[device manufacturer] UTF8String]);
   gst_structure_set (props,
     "avf.manufacturer", G_TYPE_STRING, manufacturer,
   NULL);
-
   g_free (manufacturer);
 #endif
 

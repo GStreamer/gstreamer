@@ -468,9 +468,6 @@ if host_system == 'darwin'
   if not have_objc
     error('Building on MacOS/iOS/etc requires an ObjC compiler')
   endif
-  if subsystem == 'ios'
-    cdata.set('HAVE_IOS', 1)
-  endif
 
   avfoundation_dep = dependency('AVFoundation', required : false)
   if avfoundation_dep.found()
