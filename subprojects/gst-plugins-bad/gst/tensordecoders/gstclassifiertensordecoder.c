@@ -486,7 +486,7 @@ gst_classifier_tensor_decoder_decode (GstClassifierTensorDecoder * self,
   gfloat max = 0.0;
   gfloat *result_data = NULL;
   gsize len;
-  GQuark q, qmax;
+  GQuark q, qmax = 0;
   gint max_idx = -1;
   GstAnalyticsClsMtd cls_mtd;
 
@@ -557,11 +557,7 @@ gst_classifier_tensor_decoder_decode (GstClassifierTensorDecoder * self,
   }
 
   for (gint j = 0; j < len; j++) {
-    if (self->class_quark != NULL) {
-      q = g_array_index (self->class_quark, GQuark, j);
-    } else {
-      q = j;
-    }
+    q = g_array_index (self->class_quark, GQuark, j);
 
     if (result_data[j] > max) {
       max = result_data[j];
