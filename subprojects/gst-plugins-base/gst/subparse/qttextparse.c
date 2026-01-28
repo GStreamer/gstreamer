@@ -126,7 +126,7 @@ read_int (const gchar * line)
 static gboolean
 string_match (const gchar * line, const gchar * match, const gchar * upto)
 {
-  gchar *result = strstr (line, match);
+  const gchar *result = strstr (line, match);
   return (result < upto);
 }
 
@@ -180,7 +180,7 @@ make_color (gint r, gint g, gint b)
 static gboolean
 qttext_parse_tag (ParserState * state, const gchar * line, gint * index)
 {
-  gchar *next;
+  const gchar *next;
   gint next_index;
   gint aux;
   gchar *str;

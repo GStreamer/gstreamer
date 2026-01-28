@@ -111,7 +111,7 @@ static GstRTSPResult
 parse_npt_range (const gchar * str, GstRTSPTimeRange * range)
 {
   GstRTSPResult res;
-  gchar *p;
+  const gchar *p;
 
   range->unit = GST_RTSP_RANGE_NPT;
 
@@ -155,7 +155,7 @@ parse_utc_time (const gchar * str, GstRTSPTime * time, GstRTSPTime2 * time2,
     gint year, month, day;
     gint hours, mins;
     gdouble secs;
-    gchar *T, *Z;
+    const gchar *T, *Z;
 
     T = strchr (str, 'T');
     if (T == NULL || T != str + 8)
@@ -185,7 +185,7 @@ static GstRTSPResult
 parse_utc_range (const gchar * str, GstRTSPTimeRange * range)
 {
   GstRTSPResult res;
-  gchar *p;
+  const gchar *p;
 
   range->unit = GST_RTSP_RANGE_CLOCK;
 
@@ -237,7 +237,7 @@ static GstRTSPResult
 parse_smpte_range (const gchar * str, GstRTSPTimeRange * range)
 {
   GstRTSPResult res;
-  gchar *p;
+  const gchar *p;
 
   /* find '-' separator, can't have a single - */
   p = strstr (str, "-");

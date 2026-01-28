@@ -340,7 +340,7 @@ check_range (const gchar * str, gchar ** tmp, gint * range)
 static gboolean
 parse_range (const gchar * str, GstRTSPRange * range)
 {
-  gchar *minus;
+  const gchar *minus;
   gchar *tmp;
 
   /* even though strtol() allows white space, plus and minus in front of

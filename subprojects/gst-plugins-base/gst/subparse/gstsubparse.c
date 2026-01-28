@@ -1014,7 +1014,7 @@ parse_subrip (ParserState * state, const gchar * line)
     case 1:
     {
       GstClockTime ts_start, ts_end;
-      gchar *end_time;
+      const gchar *end_time;
 
       /* looking for start_time --> end_time */
       if ((end_time = strstr (line, " --> ")) &&
@@ -1121,8 +1121,8 @@ parse_webvtt (ParserState * state, const gchar * line)
    * already at the start --> end time marker */
   if (state->state == 0 || state->state == 1) {
     GstClockTime ts_start, ts_end;
-    gchar *end_time;
-    gchar *cue_settings = NULL;
+    const gchar *end_time;
+    const gchar *cue_settings = NULL;
 
     /* looking for start_time --> end_time */
     if ((end_time = strstr (line, " --> ")) &&
