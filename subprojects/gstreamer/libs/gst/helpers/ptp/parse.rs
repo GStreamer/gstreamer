@@ -189,7 +189,7 @@ impl PtpMessage {
 
         let message_payload = match message_type {
             PtpMessageType::ANNOUNCE => {
-                if data.len() < 20 {
+                if data.len() < 30 {
                     return Err(io::Error::new(
                         io::ErrorKind::InvalidInput,
                         format!("Too short PTP SYNC message {} < 20", data.len(),),
