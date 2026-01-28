@@ -4715,12 +4715,23 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
       guint answer_caps_size = gst_caps_get_size (answer_caps);
       for (guint l = 0; l < answer_caps_size; l++) {
         const GstStructure *s = gst_caps_get_structure (answer_caps, l);
-        const gchar *enc_name = gst_structure_get_string (s, "encoding-name");
-        gchar *tmp = g_ascii_strdown (enc_name, -1);
+        const gchar *enc_name = NULL;
+        gchar *tmp = NULL;
         gint target_pt = -1;
         gint original_target_pt = -1;
         guint target_ssrc = 0;
 
+        enc_name = gst_structure_get_string (s, "encoding-name");
+
+        /* The SDP might have been munged and we have no guarantee that
+         * gst_sdp_media_get_caps_from_media() adds an encoding-name field to all caps. */
+        if (!enc_name) {
+          GST_WARNING_OBJECT (webrtc,
+              "encoding-name missing in %" GST_PTR_FORMAT, s);
+          continue;
+        }
+
+        tmp = g_ascii_strdown (enc_name, -1);
         if (g_strv_contains (disallowed_payloads, tmp)) {
           g_free (tmp);
           continue;
