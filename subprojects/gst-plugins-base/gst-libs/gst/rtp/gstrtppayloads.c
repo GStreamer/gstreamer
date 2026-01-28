@@ -160,6 +160,7 @@ static const GstRTPPayloadInfo info[] = {
 
   {G_MAXUINT8, "video", "H264", 90000, NULL, 0},
   {G_MAXUINT8, "video", "H265", 90000, NULL, 0},
+  {G_MAXUINT8, "video", "H266", 90000, NULL, 0},
   {G_MAXUINT8, "video", "MPEG4-GENERIC", 90000, NULL, 0},
   {G_MAXUINT8, "video", "THEORA", 0, NULL, 0},
   {G_MAXUINT8, "video", "VORBIS", 0, NULL, 0},
@@ -167,6 +168,7 @@ static const GstRTPPayloadInfo info[] = {
   {G_MAXUINT8, "video", "X-SORENSON-VIDEO", 90000, NULL, 0},
   {G_MAXUINT8, "video", "VP8", 90000, NULL, 0},
   {G_MAXUINT8, "video", "VP9", 90000, NULL, 0},
+  {G_MAXUINT8, "video", "AV1", 90000, NULL, 0},
 
   /* real stuff */
   {G_MAXUINT8, "video", "x-pn-realvideo", 1000, NULL, 0},
