@@ -190,6 +190,7 @@ if ['darwin', 'ios'].contains(host_system)
   base_tests += [
     [['pipelines/avfassetsrc-supplemental.c'],
         not videotoolbox_dep.found(), [videotoolbox_dep]],
+    [['pipelines/avfassetsrc-partial.c']],
   ]
 endif
 

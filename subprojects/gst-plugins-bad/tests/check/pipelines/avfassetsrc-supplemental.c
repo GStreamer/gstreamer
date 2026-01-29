@@ -216,6 +216,9 @@ run_pipeline_for_uri (const gchar * uri)
 typedef void (*VTRegisterSupplementalVideoDecoderIfAvailableFunc)
   (CMVideoCodecType codecType);
 
+/*
+ * Keep in sync with gst_vtutil_register_supplemental_decoder in sys/applemedia/vtutil.c
+ */
 static gboolean
 register_supplemental_decoder (CMVideoCodecType codec_type)
 {
