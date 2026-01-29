@@ -914,7 +914,7 @@ tsmux_packet_out (TsMux * mux, GstBuffer * buf, gint64 pcr,
           tsmux_write_ts_header (mux, map.data, &stream->pi, 0, NULL, NULL);
           gst_buffer_unmap (pcr_buf, &map);
 
-          stream->pi.flags &= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
+          stream->pi.flags &= (TSMUX_PACKET_FLAG_PES_FULL_HEADER | TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT);
           if (!tsmux_packet_out (mux, pcr_buf, new_pcr, FALSE))
             goto error;
         }
@@ -1564,7 +1564,7 @@ pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts)
 
       gst_buffer_unmap (buf, &map);
 
-      stream->pi.flags &= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
+      stream->pi.flags &= (TSMUX_PACKET_FLAG_PES_FULL_HEADER | TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT);
       if (!tsmux_packet_out (mux, buf, new_pcr, pcr_checks))
         goto done;
     }
@@ -1691,8 +1691,8 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
   GST_DEBUG ("Writing PES of size %d", (int) gst_buffer_get_size (buf));
   res = tsmux_packet_out (mux, buf, new_pcr, TRUE);
 
-  /* Reset all dynamic flags */
-  stream->pi.flags &= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
+  /* Reset all dynamic flags, but preserve static stream flags */
+  stream->pi.flags &= (TSMUX_PACKET_FLAG_PES_FULL_HEADER | TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT);
   pi->packet_start_unit_indicator = FALSE;
 
   return res;

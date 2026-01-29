@@ -136,6 +136,9 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
   stream->pes_bytes_written = 0;
   stream->pmt_index = -1;
 
+  TS_DEBUG ("tsmux_stream_new: creating stream with PID 0x%04x, stream_type: 0x%x (TSMUX_ST_PS_ID3=0x%x, TSMUX_ST_PS_KLV=0x%x)",
+      pid, stream_type, TSMUX_ST_PS_ID3, TSMUX_ST_PS_KLV);
+
   switch (stream_type) {
     case TSMUX_ST_VIDEO_MPEG1:
     case TSMUX_ST_VIDEO_MPEG2:
@@ -250,10 +253,12 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
           TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT;
       break;
     case TSMUX_ST_PS_ID3:
+      TS_DEBUG ("ID3 stream detected, PID: 0x%04x, setting PES_DATA_ALIGNMENT flag", pid);
       stream->id = 0xBD;        // private stream
       stream->stream_type = TSMUX_ST_PES_METADATA;
       stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER |
           TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT;
+      TS_DEBUG ("ID3 stream flags after setup: 0x%04x", stream->pi.flags);
       break;
     case TSMUX_ST_PS_OPUS:
       /* FIXME: assign sequential extended IDs? */
@@ -278,6 +283,7 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
       break;
     default:
       /* Might be a custom stream type implemented by a subclass */
+      TS_DEBUG ("tsmux_stream_new: stream_type 0x%x fell through to default case!", stream_type);
       break;
   }
 
@@ -412,6 +418,7 @@ tsmux_stream_consume (TsMuxStream * stream, guint len)
 
     g_free (stream->cur_buffer);
     stream->cur_buffer = NULL;
+    stream->cur_buffer_consumed = 0;
     /* FIXME: As a hack, for unbounded streams, start a new PES packet for each
      * incoming packet we receive. This assumes that incoming data is
      * packetised sensibly - ie, every video frame */
@@ -743,11 +750,15 @@ tsmux_stream_write_pes_header (TsMuxStream * stream, guint8 * data)
   if (stream->pi.flags & TSMUX_PACKET_FLAG_PES_FULL_HEADER) {
     guint8 flags = 0;
 
+    TS_DEBUG ("Writing PES header for stream PID 0x%04x, stream_type: 0x%x, internal_type: 0x%x, pi.flags: 0x%04x",
+        stream->pi.pid, stream->stream_type, stream->internal_stream_type, stream->pi.flags);
+
     /* Not scrambled, original, not-copyrighted, data_alignment not specified */
     flags = 0x81;
 
     /* If this stream has PES data alignment *and* this PES is the start of
      * an input buffer, set the data aligment mark */
+    TS_DEBUG ("PES_DATA_ALIGNMENT: %d, cur_buffer_consumed: %u", !!(stream->pi.flags & TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT), stream->cur_buffer_consumed);
     if (stream->pi.flags & TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT &&
         stream->cur_buffer_consumed == 0) {
       TS_DEBUG ("Marking data_alignment flag for this PES");
@@ -997,7 +1008,9 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
       /* FIXME */
       break;
     case TSMUX_ST_PES_METADATA:
+      TS_DEBUG ("PES_METADATA stream, internal_stream_type: 0x%x, checking for ID3", stream->internal_stream_type);
       if (stream->internal_stream_type == TSMUX_ST_PS_ID3) {
+        TS_DEBUG ("ID3 metadata stream confirmed, adding descriptors for PID 0x%04x", stream->pi.pid);
         // metadata_descriptor
         GstMpegtsMetadataDescriptor metadata_descriptor;
 
