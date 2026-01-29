@@ -3365,10 +3365,21 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     /* already inform subclass what timestamps we have planned,
      * at least if provided by time-based upstream */
     if (parse->priv->upstream_format == GST_FORMAT_TIME) {
-      tmpbuf = gst_buffer_make_writable (tmpbuf);
-      GST_BUFFER_PTS (tmpbuf) = parse->priv->next_pts;
-      GST_BUFFER_DTS (tmpbuf) = parse->priv->next_dts;
-      GST_BUFFER_DURATION (tmpbuf) = GST_CLOCK_TIME_NONE;
+      gboolean timestamp_updated = FALSE;
+      if (GST_BUFFER_PTS (tmpbuf) != parse->priv->next_pts ||
+          GST_BUFFER_DTS (tmpbuf) != parse->priv->next_dts) {
+        timestamp_updated = TRUE;
+      }
+
+      /* Preserve upstream buffer duration if timestamp is the same as expected
+       * ones already and subclass disabled pts interpolation/inferring */
+      if (timestamp_updated || parse->priv->infer_ts ||
+          parse->priv->pts_interpolate) {
+        tmpbuf = gst_buffer_make_writable (tmpbuf);
+        GST_BUFFER_PTS (tmpbuf) = parse->priv->next_pts;
+        GST_BUFFER_DTS (tmpbuf) = parse->priv->next_dts;
+        GST_BUFFER_DURATION (tmpbuf) = GST_CLOCK_TIME_NONE;
+      }
     }
 
     /* keep the adapter mapped, so keep track of what has to be flushed */
