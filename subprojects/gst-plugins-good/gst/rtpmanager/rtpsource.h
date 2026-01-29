@@ -189,6 +189,7 @@ struct _RTPSource {
   RTPSourceStats stats;
   RTPReceiverReport last_rr; /* last_rr sent for this source */
 
+  GMutex received_rr_lock;
   GHashTable    *received_rr; /* set of sender SSRC -> (RTPReceiveReport *) */
 
   GList         *conflicting_addresses;

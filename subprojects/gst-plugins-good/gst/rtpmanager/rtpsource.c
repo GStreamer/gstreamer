@@ -297,7 +297,11 @@ rtp_source_reset (RTPSource * src)
   src->bye_reason = NULL;
   src->sent_bye = FALSE;
   g_hash_table_remove_all (src->reported_in_sr_of);
+
+  g_mutex_lock (&src->received_rr_lock);
   g_hash_table_remove_all (src->received_rr);
+  g_mutex_unlock (&src->received_rr_lock);
+
   g_queue_foreach (src->retained_feedback, (GFunc) gst_buffer_unref, NULL);
   g_queue_clear (src->retained_feedback);
   src->last_rtptime = -1;
@@ -347,6 +351,7 @@ rtp_source_init (RTPSource * src)
   src->nack_deadlines = g_array_new (FALSE, FALSE, sizeof (GstClockTime));
 
   src->reported_in_sr_of = g_hash_table_new (g_direct_hash, g_direct_equal);
+  g_mutex_init (&src->received_rr_lock);
   src->received_rr =
       g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, g_free);
 
@@ -394,7 +399,11 @@ rtp_source_finalize (GObject * object)
     g_object_unref (src->rtcp_from);
 
   g_hash_table_unref (src->reported_in_sr_of);
+
+  g_mutex_lock (&src->received_rr_lock);
   g_hash_table_unref (src->received_rr);
+  g_mutex_unlock (&src->received_rr_lock);
+  g_mutex_clear (&src->received_rr_lock);
 
   G_OBJECT_CLASS (rtp_source_parent_class)->finalize (object);
 }
@@ -456,7 +465,9 @@ rtp_source_get_rr_stats (RTPSource * src, GstStructure * s)
 {
   GValue rr_list = G_VALUE_INIT;
   g_value_init (&rr_list, GST_TYPE_LIST);
+  g_mutex_lock (&src->received_rr_lock);
   g_hash_table_foreach (src->received_rr, (GHFunc) _create_rr_entry, &rr_list);
+  g_mutex_unlock (&src->received_rr_lock);
 
   gst_structure_take_value (s, "received-rr", &rr_list);
 }
@@ -1659,8 +1670,10 @@ rtp_source_process_rb (RTPSource * src, guint32 ssrc, guint32 sender_ssrc,
     /* Make a copy to store in the received rr's hash table, but only for
      * internal sources to track which remote sources sent reports for this source */
     RTPReceiverReport *copy = g_memdup2 (curr, sizeof (RTPReceiverReport));
+    g_mutex_lock (&src->received_rr_lock);
     g_hash_table_replace (src->received_rr, GUINT_TO_POINTER (sender_ssrc),
         copy);
+    g_mutex_unlock (&src->received_rr_lock);
   }
 }
 
