@@ -83,7 +83,7 @@ intr_handler (gpointer user_data)
 }
 #endif
 
-static void
+static gpointer
 _run_app (Application * app)
 {
   GError *err = NULL;
@@ -143,6 +143,8 @@ _run_app (Application * app)
 done:
   g_clear_object (&app->subproc);
   g_main_loop_quit (app->ml);
+
+  return NULL;
 }
 
 int

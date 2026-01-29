@@ -1212,7 +1212,7 @@ signal_waiting_rtcp_thread_unlocked (GstRtpSession * rtpsession)
   }
 }
 
-static void
+static gpointer
 rtcp_thread (GstRtpSession * rtpsession)
 {
   GstClockID id;
@@ -1289,6 +1289,8 @@ rtcp_thread (GstRtpSession * rtpsession)
   GST_RTP_SESSION_UNLOCK (rtpsession);
 
   GST_DEBUG_OBJECT (rtpsession, "leaving RTCP thread");
+
+  return NULL;
 }
 
 static gboolean

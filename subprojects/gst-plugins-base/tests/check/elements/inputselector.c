@@ -45,7 +45,7 @@
 #define RELEASE_TEST_SWITCH_INTERVAL 25000      /* useconds */
 #define RELINK_INTERVAL 30000   /* useconds */
 
-static void
+static gpointer
 push_buffers (GstAppSrc * src)
 {
   GstCaps *caps;
@@ -93,9 +93,11 @@ push_buffers (GstAppSrc * src)
   }
 
   gst_object_unref (src);
+
+  return NULL;
 }
 
-static void
+static gpointer
 switch_sinkpads (GstElement * selector)
 {
   GstStateChangeReturn state_change_ret;
@@ -137,6 +139,8 @@ switch_sinkpads (GstElement * selector)
   }
 
   gst_object_unref (selector);
+
+  return NULL;
 }
 
 static void
