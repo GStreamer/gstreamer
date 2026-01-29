@@ -1,0 +1,16 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)2;
+event caps: video/x-av1, alignment=(string)tu, codec_data=(buffer)81200000, colorimetry=(string)bt601, framerate=(fraction)30/1, height=(int)120, pixel-aspect-ratio=(fraction)1/1, stream-format=(string)obu-stream, width=(int)160;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:00.333333333, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)AV1\,\ maximum-bitrate\=\(uint\)433200\,\ bitrate\=\(uint\)431208\,\ container-specific-track-id\=\(string\)1\;";
+event tag: GstTagList-global, taglist=(taglist)"taglist\,\ datetime\=\(datetime\)2026-02-02T12:29:45Z\,\ container-format\=\(string\)\"ISO\\\ MP4/M4A\"\;";
+buffer: checksum=201bc65734cd2d6d56fdbc7e8c59368034682478, dts=0:00:00.000000000, pts=0:00:00.000000000, dur=0:00:00.033333333, flags=discont
+buffer: checksum=b454c72f8cc8909b4c4692d2026c0f231aa34a38, dts=0:00:00.033333333, pts=0:00:00.033333333, dur=0:00:00.033333333, flags=delta-unit
+buffer: checksum=c94ead95fe129fce674feff0061c993ee1951bea, dts=0:00:00.066666666, pts=0:00:00.066666666, dur=0:00:00.033333334, flags=delta-unit
+buffer: checksum=53e29f2d5993a66276d920d80804dd9c41d4228a, dts=0:00:00.100000000, pts=0:00:00.100000000, dur=0:00:00.033333333, flags=delta-unit
+buffer: checksum=da0a2f8bf7fa4d0e6aab12f2cb7e94703cb4c127, dts=0:00:00.133333333, pts=0:00:00.133333333, dur=0:00:00.033333333, flags=delta-unit
+buffer: checksum=86fd2d7c2cb2dad797ff0360c231e71074ea9c24, dts=0:00:00.166666666, pts=0:00:00.166666666, dur=0:00:00.033333334, flags=delta-unit
+buffer: checksum=4fd1c52f277ac147658d95112f16ef1b6dac001f, dts=0:00:00.200000000, pts=0:00:00.200000000, dur=0:00:00.033333333, flags=delta-unit
+buffer: checksum=ec28ed83ea194e8bf02c64f3258d9366f1f507d3, dts=0:00:00.233333333, pts=0:00:00.233333333, dur=0:00:00.033333333, flags=delta-unit
+buffer: checksum=fa61d5e1a027773083dca507628ba13bdf8e4870, dts=0:00:00.266666666, pts=0:00:00.266666666, dur=0:00:00.033333334, flags=delta-unit
+buffer: checksum=9a2117bb24bed1d8b662c548c810ae03c698927d, dts=0:00:00.300000000, pts=0:00:00.300000000, dur=0:00:00.033333333, flags=delta-unit
+event eos: (no structure)

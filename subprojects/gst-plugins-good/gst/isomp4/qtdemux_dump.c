@@ -1195,6 +1195,22 @@ qtdemux_dump_mhaC (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 }
 
 gboolean
+qtdemux_dump_ccst (GstQTDemux * qtdemux, GstByteReader * data, int depth)
+{
+  guint8 val;
+
+  if (!gst_byte_reader_get_uint8 (data, &val))
+    return FALSE;
+
+  GST_LOG ("%*s  all_ref_pics_intra: %d", depth, "", val >> 7);
+  GST_LOG ("%*s  intra_pred_used:    %d", depth, "", (val >> 6) & 0x1);
+  GST_LOG ("%*s  max_ref_per_pic:    %d", depth, "", (val >> 2) & 0xF);
+
+  return TRUE;
+}
+
+
+gboolean
 qtdemux_dump_unknown (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 {
   int len;
