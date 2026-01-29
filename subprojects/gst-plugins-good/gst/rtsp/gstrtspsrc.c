@@ -4222,6 +4222,7 @@ update_srtcp_params (GstRTSPStream * stream)
   GstStructure *s = gst_caps_get_structure (stream->srtcpparams, 0);
   if (s) {
     GstBuffer *buf;
+    GstBuffer *mki_buf;
     const gchar *str;
     GType ciphertype, authtype;
     GValue rtcp_cipher = G_VALUE_INIT, rtcp_auth = G_VALUE_INIT;
@@ -4236,6 +4237,7 @@ update_srtcp_params (GstRTSPStream * stream)
     str = gst_structure_get_string (s, "srtcp-auth");
     gst_value_deserialize (&rtcp_auth, str);
     gst_structure_get (s, "srtp-key", GST_TYPE_BUFFER, &buf, NULL);
+    gst_structure_get (s, "mki", GST_TYPE_BUFFER, &mki_buf, NULL);
 
     g_object_set_property (G_OBJECT (stream->srtpenc), "rtp-cipher",
         &rtcp_cipher);
@@ -4244,10 +4246,12 @@ update_srtcp_params (GstRTSPStream * stream)
         &rtcp_cipher);
     g_object_set_property (G_OBJECT (stream->srtpenc), "rtcp-auth", &rtcp_auth);
     g_object_set (stream->srtpenc, "key", buf, NULL);
+    g_object_set (stream->srtpenc, "mki", mki_buf, NULL);
 
     g_value_unset (&rtcp_cipher);
     g_value_unset (&rtcp_auth);
     gst_buffer_unref (buf);
+    gst_buffer_unref (mki_buf);
   }
 }
 
