@@ -2708,7 +2708,8 @@ gst_h265_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   gst_h265_parse_update_src_caps (h265parse, NULL);
 
-  if (h265parse->fps_num > 0 && h265parse->fps_den > 0) {
+  if (h265parse->fps_num > 0 && h265parse->fps_den > 0 &&
+      !GST_BUFFER_DURATION_IS_VALID (buffer)) {
     GstClockTime val =
         gst_h265_parse_is_field_interlaced (h265parse) ? GST_SECOND /
         2 : GST_SECOND;
