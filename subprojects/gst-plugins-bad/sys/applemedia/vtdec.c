@@ -496,6 +496,35 @@ get_preferred_video_format (GstStructure * s, gboolean prores)
 }
 
 static gboolean
+gst_vtdec_needs_new_session (GstCaps * old_caps, GstCaps * new_caps)
+{
+  GstCaps *old_copy, *new_copy;
+  gboolean ret;
+
+  if (!old_caps)
+    return TRUE;
+
+  if (!new_caps)
+    return FALSE;
+
+  old_copy = gst_caps_copy (old_caps);
+  new_copy = gst_caps_copy (new_caps);
+
+  /* Just ignore the framerate for now, was causing decoding errors with some fmp4 files */
+  gst_structure_remove_field (gst_caps_get_structure (old_copy, 0),
+      "framerate");
+  gst_structure_remove_field (gst_caps_get_structure (new_copy, 0),
+      "framerate");
+
+  ret = !gst_caps_is_equal (old_copy, new_copy);
+
+  gst_caps_unref (old_copy);
+  gst_caps_unref (new_copy);
+
+  return ret;
+}
+
+static gboolean
 gst_vtdec_negotiate (GstVideoDecoder * decoder)
 {
   GstVideoCodecState *output_state = NULL;
@@ -611,20 +640,26 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
         "negotiated output format %" GST_PTR_FORMAT " previous %"
         GST_PTR_FORMAT, output_state->caps, prevcaps);
 
-    if (vtdec->session)
-      gst_vtdec_invalidate_session (vtdec);
+    /* Only recreate session if something other than framerate changed */
+    if (gst_vtdec_needs_new_session (prevcaps, output_state->caps)) {
+      if (vtdec->session)
+        gst_vtdec_invalidate_session (vtdec);
 
-    err = gst_vtdec_create_session (vtdec, format, TRUE);
-    if (err == noErr) {
-      GST_INFO_OBJECT (vtdec, "using hardware decoder");
-    } else if (err == kVTVideoDecoderNotAvailableNowErr && renegotiating) {
-      GST_WARNING_OBJECT (vtdec, "hw decoder not available anymore");
-      err = gst_vtdec_create_session (vtdec, format, FALSE);
-    }
+      err = gst_vtdec_create_session (vtdec, format, TRUE);
 
-    if (err != noErr) {
-      GST_ELEMENT_ERROR (vtdec, RESOURCE, FAILED, (NULL),
-          ("VTDecompressionSessionCreate returned %d", (int) err));
+      if (err == noErr) {
+        GST_INFO_OBJECT (vtdec, "using hardware decoder");
+      } else if (err == kVTVideoDecoderNotAvailableNowErr && renegotiating) {
+        GST_WARNING_OBJECT (vtdec, "hw decoder not available anymore");
+        err = gst_vtdec_create_session (vtdec, format, FALSE);
+      }
+
+      if (err != noErr) {
+        GST_ELEMENT_ERROR (vtdec, RESOURCE, FAILED, (NULL),
+            ("VTDecompressionSessionCreate returned %d", (int) err));
+      }
+    } else {
+      GST_INFO_OBJECT (vtdec, "no need to recreate VT session for this change");
     }
   }
 
