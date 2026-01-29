@@ -2825,7 +2825,7 @@ gst_h264_parse_get_timestamp (GstH264Parse * h264parse,
           sps->vui_parameters.num_units_in_tick,
           sps->vui_parameters.time_scale);
     }
-  } else {
+  } else if (!GST_CLOCK_TIME_IS_VALID (*out_dur)) {
     GstClockTime dur;
 
     GST_LOG_OBJECT (h264parse, "duration based ts");
@@ -2865,7 +2865,8 @@ gst_h264_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   /* don't mess with timestamps if provided by upstream,
    * particularly since our ts not that good they handle seeking etc */
-  if (h264parse->do_ts) {
+  if (h264parse->do_ts && (!GST_BUFFER_DTS_IS_VALID (buffer) ||
+          !GST_BUFFER_DURATION_IS_VALID (buffer))) {
     gst_h264_parse_get_timestamp (h264parse,
         &GST_BUFFER_DTS (buffer), &GST_BUFFER_DURATION (buffer),
         h264parse->frame_start);
