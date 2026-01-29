@@ -3734,7 +3734,7 @@ gst_decode_group_hide (GstDecodeGroup * group)
  *
  * Not MT-safe, call with parent's chain lock!
  */
-static void
+static gpointer
 gst_decode_chain_free_hidden_groups (GList * old_groups)
 {
   GList *l;
@@ -3745,6 +3745,8 @@ gst_decode_chain_free_hidden_groups (GList * old_groups)
     gst_decode_group_free (group);
   }
   g_list_free (old_groups);
+
+  return NULL;
 }
 
 static void

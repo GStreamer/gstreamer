@@ -114,6 +114,8 @@ handler_thread_func (Win32KeyHandler * handler)
         G_PRIORITY_DEFAULT,
         (GSourceFunc) handler_source_func, data, (GDestroyNotify) g_free);
   }
+
+  return NULL;
 }
 
 void
