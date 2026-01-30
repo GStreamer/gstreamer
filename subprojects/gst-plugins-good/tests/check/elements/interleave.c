@@ -53,7 +53,8 @@ GST_START_TEST (test_create_and_unref)
 {
   GstElement *interleave;
 
-  interleave = gst_element_factory_make ("interleave", NULL);
+  // Suppress deprecation warning
+  ASSERT_WARNING (interleave = gst_element_factory_make ("interleave", NULL));
   fail_unless (interleave != NULL);
 
   gst_element_set_state (interleave, GST_STATE_NULL);
@@ -67,7 +68,8 @@ GST_START_TEST (test_request_pads)
   GstElement *interleave;
   GstPad *pad1, *pad2;
 
-  interleave = gst_element_factory_make ("interleave", NULL);
+  // Suppress deprecation warning
+  ASSERT_WARNING (interleave = gst_element_factory_make ("interleave", NULL));
   fail_unless (interleave != NULL);
 
   pad1 = gst_element_request_pad_simple (interleave, "sink_%u");
@@ -157,7 +159,8 @@ GST_START_TEST (test_interleave_2ch)
 
   have_data = 0;
 
-  interleave = gst_element_factory_make ("interleave", NULL);
+  // Suppress deprecation warning
+  ASSERT_WARNING (interleave = gst_element_factory_make ("interleave", NULL));
   fail_unless (interleave != NULL);
 
   queue = gst_element_factory_make ("queue", "queue");
@@ -288,7 +291,8 @@ GST_START_TEST (test_interleave_2ch_1eos)
 
   have_data = 0;
 
-  interleave = gst_element_factory_make ("interleave", NULL);
+  // Suppress deprecation warning
+  ASSERT_WARNING (interleave = gst_element_factory_make ("interleave", NULL));
   fail_unless (interleave != NULL);
 
   queue = gst_element_factory_make ("queue", "queue");
@@ -560,7 +564,8 @@ test_interleave_2ch_pipeline (gboolean interleaved)
   fail_unless (queue != NULL);
   gst_bin_add (GST_BIN (pipeline), queue);
 
-  interleave = gst_element_factory_make ("interleave", "interleave");
+  // Suppress deprecation warning
+  ASSERT_WARNING (interleave = gst_element_factory_make ("interleave", NULL));
   fail_unless (interleave != NULL);
   gst_bin_add (GST_BIN (pipeline), gst_object_ref (interleave));
 
@@ -654,7 +659,8 @@ GST_START_TEST (test_interleave_2ch_pipeline_input_chanpos)
   fail_unless (queue != NULL);
   gst_bin_add (GST_BIN (pipeline), queue);
 
-  interleave = gst_element_factory_make ("interleave", "interleave");
+  // Suppress deprecation warning
+  ASSERT_WARNING (interleave = gst_element_factory_make ("interleave", NULL));
   fail_unless (interleave != NULL);
   g_object_set (interleave, "channel-positions-from-input", TRUE, NULL);
   gst_bin_add (GST_BIN (pipeline), gst_object_ref (interleave));
@@ -739,7 +745,8 @@ GST_START_TEST (test_interleave_2ch_pipeline_custom_chanpos)
   fail_unless (queue != NULL);
   gst_bin_add (GST_BIN (pipeline), queue);
 
-  interleave = gst_element_factory_make ("interleave", "interleave");
+  // Suppress deprecation warning
+  ASSERT_WARNING (interleave = gst_element_factory_make ("interleave", NULL));
   fail_unless (interleave != NULL);
   g_object_set (interleave, "channel-positions-from-input", FALSE, NULL);
   arr = g_value_array_new (2);

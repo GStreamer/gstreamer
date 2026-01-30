@@ -81,7 +81,7 @@ make_n_channel_wav (const gint channels, const GValueArray * arr)
   pipeline = gst_pipeline_new ("pipeline");
   fail_unless (pipeline != NULL);
 
-  interleave = gst_element_factory_make ("interleave", NULL);
+  interleave = gst_element_factory_make ("audiointerleave", NULL);
   fail_unless (interleave != NULL);
   g_object_set (interleave, "channel-positions", arr, NULL);
   gst_bin_add (GST_BIN (pipeline), interleave);

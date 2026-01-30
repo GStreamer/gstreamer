@@ -431,6 +431,9 @@ gst_interleave_class_init (GstInterleaveClass * klass)
 static void
 gst_interleave_init (GstInterleave * self)
 {
+  g_warning
+      ("The `interleave` element is deprecated. The `audiointerleave` element should be used instead");
+
   self->src = gst_pad_new_from_static_template (&src_template, "src");
 
   gst_pad_set_query_function (self->src,

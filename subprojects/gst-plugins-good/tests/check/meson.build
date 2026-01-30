@@ -204,10 +204,12 @@ gst_plugin_scanner_path = join_paths(gst_plugin_scanner_dir, 'gst-plugin-scanner
 #   gst-launch fakesrc ! alsasink device="hw:2"
 #
 # need a way to figure out value for the device property
+#
+# interleave: Would fail because of deprecation warnings
 state_ignore_elements = '''autoaudiosrc autoaudiosink autovideosrc
  autovideosink cairotextoverlay gtkglsink gtksink jackaudiosrc
  jackaudiosink osssrc osssink osxaudiosink osxaudiosrc osxvideosrc osxvideosink
- pulsesink pulsesrc pulsemixer v4l2src'''
+ pulsesink pulsesrc pulsemixer v4l2src interleave'''
 
 # FIXME: check, also + PTHREAD_CFLAGS
 test_deps = [gst_dep, gstbase_dep, gstnet_dep, gstcheck_dep, gstaudio_dep,
