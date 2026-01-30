@@ -704,8 +704,8 @@ gst_audio_buffer_split_reverse_buffer (GstAudioBufferSplit * self,
 
 #define REVERSE_SAMPLES(type, stride) { \
       gsize i, j; \
-      const guint8 *in = (const guint8 *) in_map.data; \
-      guint8 *out = ((guint8 *) out_map.data) + (n_samples - 1) * sizeof (guint8) * channels * stride; \
+      const type *in = (const type *) in_map.data; \
+      type *out = ((type *) out_map.data) + (n_samples - 1) * channels * stride; \
       \
       for (i = 0; i < n_samples; i++) { \
         for (j = 0; j < channels * stride; j++) { \
