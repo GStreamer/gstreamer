@@ -13,4 +13,4 @@ variables:
 
   ABI_CHECK_TAG: '2026-01-27.0'
 
-  WINDOWS_TAG: '2026-01-27.0'
+  WINDOWS_TAG: '2026-01-31.0'
