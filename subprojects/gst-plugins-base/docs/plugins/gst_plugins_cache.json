@@ -8656,7 +8656,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-raw:\n         format: S16LE\n         layout: interleaved\n           rate: { (int)48000, (int)24000, (int)16000, (int)12000, (int)8000 }\n       channels: [ 1, 255 ]\n",
+                        "caps": "audio/x-raw:\n         format: { F32LE, S16LE }\n         layout: interleaved\n           rate: { (int)48000, (int)24000, (int)16000, (int)12000, (int)8000 }\n       channels: [ 1, 255 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -8732,7 +8732,7 @@
                 "long-name": "Opus audio encoder",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-raw:\n         format: S16LE\n         layout: interleaved\n           rate: 48000\n       channels: [ 1, 255 ]\naudio/x-raw:\n         format: S16LE\n         layout: interleaved\n           rate: { (int)8000, (int)12000, (int)16000, (int)24000 }\n       channels: [ 1, 255 ]\n",
+                        "caps": "audio/x-raw:\n         format: { F32LE, S16LE }\n         layout: interleaved\n           rate: 48000\n       channels: [ 1, 255 ]\naudio/x-raw:\n         format: { F32LE, S16LE }\n         layout: interleaved\n           rate: { (int)8000, (int)12000, (int)16000, (int)24000 }\n       channels: [ 1, 255 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
