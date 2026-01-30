@@ -3885,6 +3885,70 @@ invalid Opus caps.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="codec_utils_vp9_estimate_level_idc_from_caps" c:identifier="gst_codec_utils_vp9_estimate_level_idc_from_caps" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">Estimates the vp9 level as defined in
+https://www.webmproject.org/vp9/mp4/#vp-codec-configuration-box, using
+the resolution and, if available, frame rate found in the structure passed
+in.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">The estimated vp9 level indicator, and 0 if it could not be
+estimated.</doc>
+        <type name="guint8" c:type="guint8"/>
+      </return-value>
+      <parameters>
+        <parameter name="caps" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">a video/x-vp9 #GstCaps</doc>
+          <type name="Gst.Caps" c:type="const GstCaps*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="codec_utils_vp9_get_level" c:identifier="gst_codec_utils_vp9_get_level" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">Converts the level indication in the vpcC record into a string.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.h"/>
+      <return-value transfer-ownership="none" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">The level as a const string and %NULL if the level could not be
+determined.</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="level_idc" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">vp9 level value from the vpcC record</doc>
+          <type name="guint8" c:type="guint8"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="codec_utils_vp9_get_level_idc" c:identifier="gst_codec_utils_vp9_get_level_idc" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">Transform a level string from the caps into the level_idc</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">The level indication or 0 if the level is unknown.</doc>
+        <type name="guint8" c:type="guint8"/>
+      </return-value>
+      <parameters>
+        <parameter name="level" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">A vp9 level string from caps</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="codec_utils_vpx_create_vpcc_from_caps" c:identifier="gst_codec_utils_vpx_create_vpcc_from_caps" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">Creates a vpcC record for VP8/VP9 as per the VP Codec ISO Media File Format
+Binding definition found at
+https://www.webmproject.org/vp9/mp4/#vp-codec-configuration-box</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.h"/>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">Buffer containing the vpcC record, or
+%NULL if the record could not be created.</doc>
+        <type name="Gst.Buffer" c:type="GstBuffer*"/>
+      </return-value>
+      <parameters>
+        <parameter name="caps" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">a video/x-vp8 or video/x-vp9 #GstCaps</doc>
+          <type name="Gst.Caps" c:type="GstCaps*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function-macro name="discoverer_info_ref" c:identifier="gst_discoverer_info_ref" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer-types.c">Increments the reference count of @info.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h"/>
