@@ -37,9 +37,14 @@ check_caps_event (GstHarness * h)
   GstEvent *event;
   GstCaps *caps = NULL;
   GstStructure *s;
+  const GValue *codec_data_value;
+  GstBuffer *codec_data;
   const gchar *profile;
+  const gchar *alignment = NULL;
+  const gchar *stream_format = NULL;
   gint width, height;
   guint depth;
+  gboolean expect_codec_data = FALSE;
 
   while ((event = gst_harness_try_pull_event (h))) {
     GstCaps *event_caps;
@@ -58,12 +63,61 @@ check_caps_event (GstHarness * h)
   fail_unless (gst_structure_get_int (s, "width", &width));
   fail_unless (gst_structure_get_int (s, "height", &height));
   fail_unless ((profile = gst_structure_get_string (s, "profile")));
+  alignment = gst_structure_get_string (s, "alignment");
+  stream_format = gst_structure_get_string (s, "stream-format");
+  if (alignment && stream_format &&
+      (g_strcmp0 (alignment, "tu") == 0 ||
+          g_strcmp0 (alignment, "frame") == 0) &&
+      g_strcmp0 (stream_format, "obu-stream") == 0) {
+    expect_codec_data = TRUE;
+  }
   fail_unless (gst_structure_get_uint (s, "bit-depth-chroma", &depth));
+  codec_data_value = gst_structure_get_value (s, "codec_data");
+  fail_unless_equals_int (codec_data_value != NULL, expect_codec_data);
+  if (expect_codec_data) {
+    codec_data = gst_value_get_buffer (codec_data_value);
+    fail_unless (codec_data != NULL);
+    fail_unless (gst_buffer_get_size (codec_data) > 4);
+  }
 
   fail_unless_equals_int (width, 400);
   fail_unless_equals_int (height, 300);
   fail_unless_equals_int (depth, 8);
   fail_unless_equals_string (profile, "main");
+  gst_caps_unref (caps);
+}
+
+static void
+check_codec_data_presence (GstHarness * h, gboolean expected)
+{
+  GstEvent *event;
+  GstCaps *caps = NULL;
+  GstStructure *s;
+  const GValue *codec_data_value;
+
+  while ((event = gst_harness_try_pull_event (h))) {
+    GstCaps *event_caps;
+    if (GST_EVENT_TYPE (event) != GST_EVENT_CAPS) {
+      gst_event_unref (event);
+      continue;
+    }
+
+    gst_event_parse_caps (event, &event_caps);
+    gst_caps_replace (&caps, event_caps);
+    gst_event_unref (event);
+  }
+
+  fail_unless (caps != NULL);
+  s = gst_caps_get_structure (caps, 0);
+  codec_data_value = gst_structure_get_value (s, "codec_data");
+  fail_unless_equals_int (codec_data_value != NULL, expected);
+  if (expected) {
+    GstBuffer *codec_data = gst_value_get_buffer (codec_data_value);
+
+    fail_unless (codec_data != NULL);
+    fail_unless (gst_buffer_get_size (codec_data) > 4);
+  }
+
   gst_caps_unref (caps);
 }
 
@@ -124,6 +178,7 @@ GST_START_TEST (test_byte_to_frame)
 }
 
 GST_END_TEST;
+
 
 GST_START_TEST (test_byte_to_annexb)
 {
@@ -355,6 +410,67 @@ GST_START_TEST (test_byte_to_obu)
 
 GST_END_TEST;
 
+static void
+run_codec_data_presence_test (const gchar * sink_caps, gboolean expected)
+{
+  GstHarness *h;
+  GstBuffer *in_buf, *out_buf = NULL;
+  GstMapInfo map;
+  GstFlowReturn ret;
+  gboolean got_output = FALSE;
+
+  h = gst_harness_new_parse ("av1parse");
+  fail_unless (h != NULL);
+
+  gst_harness_set_sink_caps_str (h, sink_caps);
+  gst_harness_set_src_caps_str (h, "video/x-av1");
+
+  gst_harness_play (h);
+
+  in_buf = gst_buffer_new_and_alloc (stream_no_annexb_av1_len);
+  gst_buffer_map (in_buf, &map, GST_MAP_WRITE);
+  memcpy (map.data, stream_no_annexb_av1, stream_no_annexb_av1_len);
+  gst_buffer_unmap (in_buf, &map);
+
+  ret = gst_harness_push (h, in_buf);
+  fail_unless (ret == GST_FLOW_OK, "GstFlowReturn was %s",
+      gst_flow_get_name (ret));
+
+  while ((out_buf = gst_harness_try_pull (h)) != NULL) {
+    check_codec_data_presence (h, expected);
+    got_output = TRUE;
+    gst_clear_buffer (&out_buf);
+    break;
+  }
+
+  fail_unless (got_output);
+  gst_harness_teardown (h);
+}
+
+GST_START_TEST (test_codec_data_for_tu_alignment)
+{
+  run_codec_data_presence_test ("video/x-av1,parsed=(boolean)true,"
+      "alignment=(string)tu,stream-format=(string)obu-stream", TRUE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_codec_data_for_frame_alignment)
+{
+  run_codec_data_presence_test ("video/x-av1,parsed=(boolean)true,"
+      "alignment=(string)frame,stream-format=(string)obu-stream", TRUE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_no_codec_data_for_obu_alignment)
+{
+  run_codec_data_presence_test ("video/x-av1,parsed=(boolean)true,"
+      "alignment=(string)obu,stream-format=(string)obu-stream", FALSE);
+}
+
+GST_END_TEST;
+
 static Suite *
 av1parse_suite (void)
 {
@@ -371,6 +487,9 @@ av1parse_suite (void)
   tcase_add_test (tc_chain, test_annexb_to_frame);
   tcase_add_test (tc_chain, test_annexb_to_obu);
   tcase_add_test (tc_chain, test_byte_to_obu);
+  tcase_add_test (tc_chain, test_codec_data_for_tu_alignment);
+  tcase_add_test (tc_chain, test_codec_data_for_frame_alignment);
+  tcase_add_test (tc_chain, test_no_codec_data_for_obu_alignment);
 
   return s;
 }
