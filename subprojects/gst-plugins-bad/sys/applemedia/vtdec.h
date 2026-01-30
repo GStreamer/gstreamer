@@ -32,8 +32,6 @@
 #if defined(APPLEMEDIA_MOLTENVK)
 #include <gst/vulkan/vulkan.h>
 #endif
-#include <gst/codecparsers/gsth264parser.h>
-#include <gst/codecparsers/gstav1parser.h>
 
 G_BEGIN_DECLS
 

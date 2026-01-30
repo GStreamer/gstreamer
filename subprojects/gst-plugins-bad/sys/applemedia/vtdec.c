@@ -57,6 +57,8 @@
 #include <gst/video/video.h>
 #include <gst/video/gstvideodecoder.h>
 #include <gst/gl/gstglcontext.h>
+#include <gst/codecparsers/gstav1parser.h>
+#include <gst/codecparsers/gsth264parser.h>
 
 #if TARGET_OS_OSX || TARGET_OS_IOS || TARGET_OS_TV || TARGET_OS_VISION
 #define HAVE_SUPPLEMENTAL
@@ -144,6 +146,9 @@ static gboolean gst_vtdec_build_vp9_vpcc_from_caps (GstVtdec * vtdec,
 static gboolean gst_vtdec_check_av1_support (GstVtdec * vtdec);
 static gboolean gst_vtdec_handle_av1_sequence_header (GstVtdec * vtdec,
     GstVideoCodecFrame * frame);
+static gboolean gst_vtdec_av1_codec_data_has_obu (GstBuffer * codec_data);
+static gboolean gst_vtdec_av1_config_record_has_seq_hdr_obu
+    (const GstAV1DecoderConfigRecord * config);
 static void gst_vtdec_set_latency (GstVtdec * vtdec);
 static void gst_vtdec_set_context (GstElement * element, GstContext * context);
 static GstCaps *gst_vtdec_getcaps (GstVideoDecoder * decoder, GstCaps * filter);
@@ -809,10 +814,16 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
     GST_INFO_OBJECT (vtdec, "cm_format is VP9");
     cm_format = kCMVideoCodecType_VP9;
   } else if (!strcmp (caps_name, "video/x-av1")) {
-    GST_INFO_OBJECT (vtdec,
-        "Setting up for AV1 - will wait for sequence header");
     cm_format = kCMVideoCodecType_AV1;
-    vtdec->av1_needs_sequence_header = TRUE;    /* Delay session creation until we get sequence header */
+    if (state->codec_data
+        && gst_vtdec_av1_codec_data_has_obu (state->codec_data)) {
+      vtdec->av1_needs_sequence_header = FALSE;
+      GST_INFO_OBJECT (vtdec, "AV1 codec_data includes sequence header OBU");
+    } else {
+      vtdec->av1_needs_sequence_header = TRUE;
+      GST_INFO_OBJECT (vtdec,
+          "Setting up for AV1 - will wait for sequence header");
+    }
   }
 
   if ((cm_format == kCMVideoCodecType_H264
@@ -1244,39 +1255,57 @@ create_format_description_from_codec_data (GstVtdec * vtdec,
   if (cm_format == kCMVideoCodecType_HEVC)
     gst_vtutil_dict_set_data (atoms, CFSTR ("hvcC"), map.data, map.size);
   else if (cm_format == kCMVideoCodecType_AV1) {
+    GstBuffer *av1c = NULL;
+    GstMapInfo av1c_map;
+    GstAV1DecoderConfigRecord *config = NULL;
+    GstAV1Parser *parser = NULL;
+
     GST_INFO_OBJECT (vtdec, "Creating av1C atom for VideoToolbox");
 
-    if (vtdec->av1_sequence_header_obu) {
-      /* The av1C atom should contain the 4-byte header followed by the sequence header OBU */
-      GstMapInfo seq_map;
-      if (gst_buffer_map (vtdec->av1_sequence_header_obu, &seq_map,
-              GST_MAP_READ)) {
-        gsize total_size = 4 + seq_map.size;    /* 4-byte av1C header + sequence header OBU */
-        guint8 *av1c_with_obu = g_malloc (total_size);
-
-        /* Copy the 4-byte av1C header */
-        memcpy (av1c_with_obu, map.data, 4);
-
-        /* Append the sequence header OBU */
-        memcpy (av1c_with_obu + 4, seq_map.data, seq_map.size);
-
-        GST_INFO_OBJECT (vtdec,
-            "Creating av1C with sequence header OBU: %zu bytes total",
-            total_size);
-
-        gst_vtutil_dict_set_data (atoms, CFSTR ("av1C"), av1c_with_obu,
-            total_size);
-        g_free (av1c_with_obu);
-        gst_buffer_unmap (vtdec->av1_sequence_header_obu, &seq_map);
-      } else {
-        GST_ERROR_OBJECT (vtdec, "Missing sequence header OBU");
-        return NULL;
-      }
-    } else {
-      /* No sequence header OBU yet, just use the 4-byte header */
-      gst_vtutil_dict_set_data (atoms, CFSTR ("av1C"), map.data, MIN (map.size,
-              4));
+    parser = gst_av1_parser_new ();
+    if (parser) {
+      gst_av1_parser_reset (parser, FALSE);
+      gst_av1_parser_parse_decoder_config_record (parser, map.data, map.size,
+          &config);
     }
+
+    GstMapInfo seq_map = { 0, };
+    if (parser && vtdec->av1_sequence_header_obu &&
+        (!config || !gst_vtdec_av1_config_record_has_seq_hdr_obu (config))) {
+      if (!gst_buffer_map (vtdec->av1_sequence_header_obu, &seq_map,
+              GST_MAP_READ)) {
+        GST_WARNING_OBJECT (vtdec, "Failed to map sequence header OBU");
+      } else
+          if (!gst_av1_parser_create_decoder_config_record_from_sequence_header
+          (parser, seq_map.data, seq_map.size, &config)) {
+        GST_WARNING_OBJECT (vtdec,
+            "Failed to create/update AV1 decoder config from sequence header OBU");
+      }
+    }
+
+    if (parser)
+      gst_av1_parser_free (parser);
+
+    if (config) {
+      av1c = gst_av1_create_decoder_config_record_buffer (config);
+      gst_av1_decoder_config_record_free (config);
+    }
+    if (seq_map.data)
+      gst_buffer_unmap (vtdec->av1_sequence_header_obu, &seq_map);
+    if (!av1c) {
+      GST_ERROR_OBJECT (vtdec, "Failed to build av1C from codec_data");
+      return NULL;
+    }
+
+    if (!gst_buffer_map (av1c, &av1c_map, GST_MAP_READ)) {
+      gst_buffer_unref (av1c);
+      return NULL;
+    }
+
+    gst_vtutil_dict_set_data (atoms, CFSTR ("av1C"), av1c_map.data,
+        av1c_map.size);
+    gst_buffer_unmap (av1c, &av1c_map);
+    gst_buffer_unref (av1c);
   } else {
     gst_vtutil_dict_set_data (atoms, CFSTR ("avcC"), map.data, map.size);
   }
@@ -2040,6 +2069,60 @@ gst_vtdec_handle_av1_sequence_header (GstVtdec * vtdec,
   gst_buffer_unmap (frame->input_buffer, &map_info);
 
   return found_sequence_header;
+}
+
+static gboolean
+gst_vtdec_av1_codec_data_has_obu (GstBuffer * codec_data)
+{
+  GstMapInfo map;
+  gboolean ret = FALSE;
+  GstAV1Parser *parser = NULL;
+  GstAV1DecoderConfigRecord *config = NULL;
+  GstAV1ParserResult result;
+
+  if (!codec_data)
+    return FALSE;
+
+  if (!gst_buffer_map (codec_data, &map, GST_MAP_READ))
+    return FALSE;
+
+  parser = gst_av1_parser_new ();
+  if (!parser)
+    goto out;
+
+  result =
+      gst_av1_parser_parse_decoder_config_record (parser, map.data, map.size,
+      &config);
+  if (result != GST_AV1_PARSER_OK || !config)
+    goto out;
+
+  ret = gst_vtdec_av1_config_record_has_seq_hdr_obu (config);
+
+out:
+  g_clear_pointer (&config, gst_av1_decoder_config_record_free);
+  g_clear_pointer (&parser, gst_av1_parser_free);
+  gst_buffer_unmap (codec_data, &map);
+
+  return ret;
+}
+
+static gboolean
+gst_vtdec_av1_config_record_has_seq_hdr_obu (const GstAV1DecoderConfigRecord *
+    config)
+{
+  guint i;
+
+  if (!config || !config->config_obus)
+    return FALSE;
+
+  for (i = 0; i < config->config_obus->len; i++) {
+    GstAV1OBU *obu = &g_array_index (config->config_obus, GstAV1OBU, i);
+
+    if (obu->obu_type == GST_AV1_OBU_SEQUENCE_HEADER)
+      return TRUE;
+  }
+
+  return FALSE;
 }
 
 static void
