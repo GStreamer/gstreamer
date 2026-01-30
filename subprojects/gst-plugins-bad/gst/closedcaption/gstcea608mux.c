@@ -216,8 +216,8 @@ out:
 static GstFlowReturn
 finish_s334_both_fields (GstCea608Mux * self)
 {
-  GstClockTime output_pts = gst_util_uint64_scale_int (GST_SECOND,
-      self->cdp_fps_entry->fps_d * self->n_output_buffers,
+  GstClockTime output_pts = gst_util_uint64_scale (GST_SECOND,
+      (guint64) self->cdp_fps_entry->fps_d * self->n_output_buffers,
       self->cdp_fps_entry->fps_n);
   GstClockTime output_duration =
       gst_util_uint64_scale_int (GST_SECOND, self->cdp_fps_entry->fps_d,
