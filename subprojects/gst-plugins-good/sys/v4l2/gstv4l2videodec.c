@@ -1044,6 +1044,41 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
       gst_v4l2_object_unlock_stop (self->v4l2capture);
       self->wait_for_source_change = TRUE;
     }
+
+    if (ret == GST_FLOW_FLUSHING) {
+      if (gst_pad_get_task_state (GST_VIDEO_DECODER_SRC_PAD (self)) !=
+          GST_TASK_STARTED)
+        ret = self->output_flow;
+      goto drop;
+    } else if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (decoder,
+          "Failed to process buffer: %s", gst_flow_get_name (ret));
+      goto process_failed;
+    }
+  }
+
+  /* according to https://elixir.bootlin.com/linux/v6.6/source/drivers/media/v4l2-core/v4l2-mem2mem.c#L925
+   * we should ensure following order:
+   * 1) streamon
+   * 2) start dec loop thread, and then poll device
+   */
+  if (!processed) {
+    GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+    GST_LOG_OBJECT (decoder, "Passing buffer with system frame number %u",
+        frame->system_frame_number);
+    ret =
+        gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (pool),
+        &frame->input_buffer, &frame->system_frame_number);
+    GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+
+    if (ret == GST_FLOW_FLUSHING) {
+      if (gst_pad_get_task_state (GST_VIDEO_DECODER_SRC_PAD (self)) !=
+          GST_TASK_STARTED)
+        ret = self->output_flow;
+      goto drop;
+    } else if (ret != GST_FLOW_OK) {
+      goto process_failed;
+    }
   }
 
   task_state = gst_pad_get_task_state (GST_VIDEO_DECODER_SRC_PAD (self));
@@ -1065,25 +1100,6 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     if (!gst_pad_start_task (decoder->srcpad,
             (GstTaskFunction) gst_v4l2_video_dec_loop, self, NULL))
       goto start_task_failed;
-  }
-
-  if (!processed) {
-    GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-    GST_LOG_OBJECT (decoder, "Passing buffer with system frame number %u",
-        frame->system_frame_number);
-    ret =
-        gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (pool),
-        &frame->input_buffer, &frame->system_frame_number);
-    GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-
-    if (ret == GST_FLOW_FLUSHING) {
-      if (gst_pad_get_task_state (GST_VIDEO_DECODER_SRC_PAD (self)) !=
-          GST_TASK_STARTED)
-        ret = self->output_flow;
-      goto drop;
-    } else if (ret != GST_FLOW_OK) {
-      goto process_failed;
-    }
   }
 
   /* No need to keep input around */
