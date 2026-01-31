@@ -1157,7 +1157,7 @@ cerbero trigger:
   stage: build
   trigger:
     project: gstreamer/cerbero
-    branch: 1.28
+    branch: '1.28'
     strategy: depend
   needs:
     - "trigger"
