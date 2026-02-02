@@ -1860,7 +1860,7 @@ gst_vtdec_check_vp9_support (GstVtdec * vtdec)
   if (vp9_supported) {
     GST_INFO_OBJECT (vtdec, "VP9 hardware decoding is supported");
   } else {
-    GST_WARNING_OBJECT (vtdec,
+    GST_INFO_OBJECT (vtdec,
         "VP9 hardware decoding is not supported on this system");
   }
 
@@ -1873,7 +1873,6 @@ gst_vtdec_check_av1_support (GstVtdec * vtdec)
   gboolean av1_supported = FALSE;
 
   GST_DEBUG_OBJECT (vtdec, "Checking AV1 VideoToolbox support");
-
 
 #ifdef HAVE_SUPPLEMENTAL
 #ifdef HAVE_SUPPLEMENTAL_DEFINITION
@@ -1901,7 +1900,7 @@ gst_vtdec_check_av1_support (GstVtdec * vtdec)
   if (av1_supported) {
     GST_INFO_OBJECT (vtdec, "AV1 hardware decoding is supported");
   } else {
-    GST_WARNING_OBJECT (vtdec,
+    GST_INFO_OBJECT (vtdec,
         "AV1 hardware decoding is not supported on this system");
   }
 
@@ -1911,6 +1910,8 @@ gst_vtdec_check_av1_support (GstVtdec * vtdec)
 static GstCaps *
 gst_vtdec_getcaps (GstVideoDecoder * decoder, GstCaps * filter)
 {
+  static gsize av1_once = 0;
+  static gsize vp9_once = 0;
   GstVtdec *vtdec = GST_VTDEC (decoder);
   GstCaps *sinkcaps, *result;
 
@@ -1922,10 +1923,24 @@ gst_vtdec_getcaps (GstVideoDecoder * decoder, GstCaps * filter)
   for (guint i = 0; i < n;) {
     GstStructure *s = gst_caps_get_structure (sinkcaps, i);
 
+    if (gst_structure_has_name (s, "video/x-av1")) {
+      if (g_once_init_enter (&av1_once)) {
+        if (gst_vtdec_check_av1_support (vtdec))
+          vtdec->codec_support |= Av1Supported;
+        g_once_init_leave (&av1_once, Av1Supported);
+      }
+    } else if (gst_structure_has_name (s, "video/x-vp9")) {
+      if (g_once_init_enter (&vp9_once)) {
+        if (gst_vtdec_check_vp9_support (vtdec))
+          vtdec->codec_support |= Vp9Supported;
+        g_once_init_leave (&vp9_once, Vp9Supported);
+      }
+    }
+
     if ((gst_structure_has_name (s, "video/x-av1")
-            && !gst_vtdec_check_av1_support (vtdec))
+            && !(vtdec->codec_support & Av1Supported))
         || (gst_structure_has_name (s, "video/x-vp9")
-            && !gst_vtdec_check_vp9_support (vtdec))) {
+            && !(vtdec->codec_support & Vp9Supported))) {
       gst_caps_remove_structure (sinkcaps, i);
       n--;
     } else {
