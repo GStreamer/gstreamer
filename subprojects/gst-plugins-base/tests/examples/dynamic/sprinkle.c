@@ -1,6 +1,6 @@
 /* GStreamer
  *
- * sprinkle.c: sample application to dynamically mix tones with adder
+ * sprinkle.c: sample application to dynamically mix tones with audiomixer
  *
  * Copyright (C) <2009> Wim Taymans <wim dot taymans at gmail dot com>
  *
@@ -22,7 +22,7 @@
 
 /*
  * Produces a sweeping sprinkle of tones by dynamically adding and removing
- * elements to adder.
+ * elements to audiomixer.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -31,7 +31,7 @@
 
 #include <gst/gst.h>
 
-static GstElement *pipeline, *adder;
+static GstElement *pipeline, *audiomixer;
 static GMainLoop *loop;
 
 typedef struct
@@ -43,7 +43,7 @@ typedef struct
 } SourceInfo;
 
 /* dynamically add the source to the pipeline and link it to a new pad on
- * adder */
+ * audiomixer */
 static SourceInfo *
 add_source (gdouble freq)
 {
@@ -63,10 +63,10 @@ add_source (gdouble freq)
   /* get pad from the element */
   info->srcpad = gst_element_get_static_pad (info->element, "src");
 
-  /* get new pad from adder, adder will now wait for data on this pad */
-  info->sinkpad = gst_element_request_pad_simple (adder, "sink_%u");
+  /* get new pad from audiomixer, audiomixer will now wait for data on this pad */
+  info->sinkpad = gst_element_request_pad_simple (audiomixer, "sink_%u");
 
-  /* link pad to adder */
+  /* link pad to audiomixer */
   gst_pad_link (info->srcpad, info->sinkpad);
 
   /* and play the element */
@@ -77,7 +77,7 @@ add_source (gdouble freq)
   return info;
 }
 
-/* remove the source from the pipeline after removing it from adder */
+/* remove the source from the pipeline after removing it from audiomixer */
 static void
 remove_source (SourceInfo * info)
 {
@@ -91,10 +91,10 @@ remove_source (SourceInfo * info)
    * state. Alternatively one could send EOS to the source, install an event
    * probe and schedule a state change/unlink/release from the mainthread.
    * Note that changing the state of a source makes it emit an EOS, which can
-   * make adder go EOS. */
+   * make audiomixer go EOS. */
   gst_element_set_state (info->element, GST_STATE_NULL);
 
-  /* unlink from adder */
+  /* unlink from audiomixer */
   gst_pad_unlink (info->srcpad, info->sinkpad);
   gst_object_unref (info->srcpad);
 
@@ -102,7 +102,7 @@ remove_source (SourceInfo * info)
   gst_bin_remove (GST_BIN (pipeline), info->element);
 
   /* give back the pad */
-  gst_element_release_request_pad (adder, info->sinkpad);
+  gst_element_release_request_pad (audiomixer, info->sinkpad);
   gst_object_unref (info->sinkpad);
 
   g_free (info);
@@ -217,9 +217,9 @@ main (int argc, char *argv[])
   pipeline = gst_pipeline_new ("pipeline");
 
   /* add the fixed part to the pipeline. Remember that we need a capsfilter
-   * after adder so that multiple sources are not racing to negotiate
+   * after audiomixer so that multiple sources are not racing to negotiate
    * a format */
-  adder = gst_element_factory_make ("adder", "adder");
+  audiomixer = gst_element_factory_make ("audiomixer", "audiomixer");
   filter = gst_element_factory_make ("capsfilter", "filter");
   convert = gst_element_factory_make ("audioconvert", "convert");
   sink = gst_element_factory_make ("autoaudiosink", "sink");
@@ -230,9 +230,10 @@ main (int argc, char *argv[])
   g_object_set (filter, "caps", caps, NULL);
   gst_caps_unref (caps);
 
-  gst_bin_add_many (GST_BIN (pipeline), adder, filter, convert, sink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), audiomixer, filter, convert, sink,
+      NULL);
 
-  linked = gst_element_link_many (adder, filter, convert, sink, NULL);
+  linked = gst_element_link_many (audiomixer, filter, convert, sink, NULL);
   g_assert (linked);
 
   /* setup message handling */

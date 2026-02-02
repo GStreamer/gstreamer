@@ -1826,15 +1826,15 @@ GST_START_TEST (test_raw_compressed_audio_stream_demuxer_manual_sink)
 
 GST_END_TEST;
 
-GST_START_TEST (test_raw_raw_audio_stream_adder_manual_sink)
+GST_START_TEST (test_raw_raw_audio_stream_audiomixer_manual_sink)
 {
   GstMessage *msg;
-  GstElement *adder;
+  GstElement *audiomixer;
   GstElement *playbin_combiner;
   GstElement *playbin;
   GstElement *sink;
   GstBus *bus;
-  gboolean adder_used = FALSE;
+  gboolean audiomixer_used = FALSE;
   gboolean done = FALSE;
 
   fail_unless (gst_element_register (NULL, "capssrc", GST_RANK_PRIMARY,
@@ -1861,9 +1861,11 @@ GST_START_TEST (test_raw_raw_audio_stream_adder_manual_sink)
   fail_unless (playbin_combiner == NULL);
 
   /* set audio combiner */
-  adder = gst_element_factory_make ("adder", NULL);
-  fail_unless (adder != NULL);
-  g_object_set (G_OBJECT (playbin), "audio-stream-combiner", adder, NULL);
+  audiomixer = gst_element_factory_make ("audiomixer", NULL);
+  fail_unless (audiomixer != NULL);
+  g_object_set (audiomixer, "output-buffer-duration", 31500 * GST_USECOND,
+      NULL);
+  g_object_set (G_OBJECT (playbin), "audio-stream-combiner", audiomixer, NULL);
 
   fail_unless_equals_int (gst_element_set_state (playbin, GST_STATE_READY),
       GST_STATE_CHANGE_SUCCESS);
@@ -1873,7 +1875,7 @@ GST_START_TEST (test_raw_raw_audio_stream_adder_manual_sink)
   /* audio combiner should still be there */
   g_object_get (G_OBJECT (playbin), "audio-stream-combiner", &playbin_combiner,
       NULL);
-  fail_unless (playbin_combiner == adder);
+  fail_unless (playbin_combiner == audiomixer);
   gst_object_unref (playbin_combiner);
 
   /* text and video combiners should still be NULL */
@@ -1897,11 +1899,11 @@ GST_START_TEST (test_raw_raw_audio_stream_adder_manual_sink)
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
         break;
       case GST_MESSAGE_STATE_CHANGED:
-        if (GST_MESSAGE_SRC (msg) == GST_OBJECT (adder)) {
+        if (GST_MESSAGE_SRC (msg) == GST_OBJECT (audiomixer)) {
           GstState state;
           gst_message_parse_state_changed (msg, &state, NULL, NULL);
           if (state == GST_STATE_PAUSED)
-            adder_used = TRUE;
+            audiomixer_used = TRUE;
         }
       default:
         break;
@@ -1909,7 +1911,7 @@ GST_START_TEST (test_raw_raw_audio_stream_adder_manual_sink)
     gst_message_unref (msg);
   }
   gst_object_unref (bus);
-  fail_unless (adder_used);
+  fail_unless (audiomixer_used);
 
   g_object_get (G_OBJECT (playbin), "video-sink", &sink, NULL);
   fail_unless (sink != NULL);
@@ -2758,7 +2760,7 @@ playbin_complex_suite (void)
   tcase_add_test (tc_chain,
       test_raw_compressed_video_stream_demuxer_manual_sink);
 
-  tcase_add_test (tc_chain, test_raw_raw_audio_stream_adder_manual_sink);
+  tcase_add_test (tc_chain, test_raw_raw_audio_stream_audiomixer_manual_sink);
 
   if (gst_registry_check_feature_version (gst_registry_get (),
           "oggdemux", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0)) {

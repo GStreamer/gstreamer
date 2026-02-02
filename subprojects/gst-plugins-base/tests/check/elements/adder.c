@@ -61,7 +61,8 @@ setup_pipeline (GstElement * adder, gint num_srcs)
 
   pipeline = gst_pipeline_new ("pipeline");
   if (!adder) {
-    adder = gst_element_factory_make ("adder", "adder");
+    // Suppress deprecation warning
+    ASSERT_WARNING (adder = gst_element_factory_make ("adder", "adder"));
   }
 
   sink = gst_element_factory_make ("fakesink", "sink");
@@ -204,7 +205,8 @@ GST_START_TEST (test_filter_caps)
       "rate", G_TYPE_INT, 44100, "channels", G_TYPE_INT, 1, NULL);
 
   /* build pipeline */
-  adder = gst_element_factory_make ("adder", "adder");
+  // Suppress deprecation warning
+  ASSERT_WARNING (adder = gst_element_factory_make ("adder", "adder"));
   g_object_set (adder, "caps", filter_caps, NULL);
   pipeline = setup_pipeline (adder, 1);
 
@@ -268,7 +270,8 @@ GST_START_TEST (test_event)
   g_object_set (src1, "wave", 4, NULL); /* silence */
   src2 = gst_element_factory_make ("audiotestsrc", "src2");
   g_object_set (src2, "wave", 4, NULL); /* silence */
-  adder = gst_element_factory_make ("adder", "adder");
+  // Suppress deprecation warning
+  ASSERT_WARNING (adder = gst_element_factory_make ("adder", "adder"));
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (bin), src1, src2, adder, sink, NULL);
 
@@ -386,7 +389,8 @@ GST_START_TEST (test_play_twice)
   GST_INFO ("preparing test");
 
   /* build pipeline */
-  adder = gst_element_factory_make ("adder", "adder");
+  // Suppress deprecation warning
+  ASSERT_WARNING (adder = gst_element_factory_make ("adder", "adder"));
   bin = setup_pipeline (adder, 2);
   bus = gst_element_get_bus (bin);
   gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
@@ -446,7 +450,8 @@ GST_START_TEST (test_play_twice_then_add_and_play_again)
   GST_INFO ("preparing test");
 
   /* build pipeline */
-  adder = gst_element_factory_make ("adder", "adder");
+  // Suppress deprecation warning
+  ASSERT_WARNING (adder = gst_element_factory_make ("adder", "adder"));
   bin = setup_pipeline (adder, 2);
   bus = gst_element_get_bus (bin);
   gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
@@ -536,7 +541,8 @@ GST_START_TEST (test_live_seeking)
   src2 = gst_element_factory_make ("audiotestsrc", "src2");
   g_object_set (src2, "wave", 4, NULL); /* silence */
   ac2 = gst_element_factory_make ("audioconvert", "ac2");
-  adder = gst_element_factory_make ("adder", "adder");
+  // Suppress deprecation warning
+  ASSERT_WARNING (adder = gst_element_factory_make ("adder", "adder"));
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (bin), src1, ac1, src2, ac2, adder, sink, NULL);
 
@@ -614,7 +620,8 @@ GST_START_TEST (test_add_pad)
   src2 = gst_element_factory_make ("audiotestsrc", "src2");
   /* one buffer less, we connect with 1 buffer of delay */
   g_object_set (src2, "num-buffers", 3, "wave", /* silence */ 4, NULL);
-  adder = gst_element_factory_make ("adder", "adder");
+  // Suppress deprecation warning
+  ASSERT_WARNING (adder = gst_element_factory_make ("adder", "adder"));
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (bin), src1, adder, sink, NULL);
 
@@ -677,7 +684,8 @@ GST_START_TEST (test_remove_pad)
 
   src = gst_element_factory_make ("audiotestsrc", "src");
   g_object_set (src, "num-buffers", 4, "wave", 4, NULL);
-  adder = gst_element_factory_make ("adder", "adder");
+  // Suppress deprecation warning
+  ASSERT_WARNING (adder = gst_element_factory_make ("adder", "adder"));
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (bin), src, adder, sink, NULL);
 
@@ -768,7 +776,8 @@ GST_START_TEST (test_clip)
   g_signal_connect (bus, "message::eos", (GCallback) message_received, bin);
 
   /* just an adder and a fakesink */
-  adder = gst_element_factory_make ("adder", "adder");
+  // Suppress deprecation warning
+  ASSERT_WARNING (adder = gst_element_factory_make ("adder", "adder"));
   sink = gst_element_factory_make ("fakesink", "sink");
   g_object_set (sink, "signal-handoffs", TRUE, NULL);
   g_signal_connect (sink, "handoff", (GCallback) handoff_buffer_cb, NULL);
@@ -857,7 +866,8 @@ GST_START_TEST (test_duration_is_max)
   src[0] = gst_element_factory_make ("audiotestsrc", NULL);
   src[1] = gst_element_factory_make ("audiotestsrc", NULL);
   src[2] = gst_element_factory_make ("audiotestsrc", NULL);
-  adder = gst_element_factory_make ("adder", "adder");
+  // Suppress deprecation warning
+  ASSERT_WARNING (adder = gst_element_factory_make ("adder", "adder"));
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (bin), src[0], src[1], src[2], adder, sink, NULL);
 
@@ -906,7 +916,8 @@ GST_START_TEST (test_duration_unknown_overrides)
   src[0] = gst_element_factory_make ("audiotestsrc", NULL);
   src[1] = gst_element_factory_make ("audiotestsrc", NULL);
   src[2] = gst_element_factory_make ("audiotestsrc", NULL);
-  adder = gst_element_factory_make ("adder", "adder");
+  // Suppress deprecation warning
+  ASSERT_WARNING (adder = gst_element_factory_make ("adder", "adder"));
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (bin), src[0], src[1], src[2], adder, sink, NULL);
 
@@ -1025,7 +1036,8 @@ GST_START_TEST (test_flush_start_flush_stop)
   g_object_set (src1, "wave", 4, NULL); /* silence */
   src2 = gst_element_factory_make ("audiotestsrc", "src2");
   g_object_set (src2, "wave", 4, NULL); /* silence */
-  adder = gst_element_factory_make ("adder", "adder");
+  // Suppress deprecation warning
+  ASSERT_WARNING (adder = gst_element_factory_make ("adder", "adder"));
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (pipeline), src1, src2, adder, sink, NULL);
 

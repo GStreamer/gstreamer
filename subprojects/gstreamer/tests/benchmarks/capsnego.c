@@ -51,7 +51,7 @@ enum
 };
 
 static const gchar *factories[NUM_FLAVOURS][NUM_ELEM] = {
-  {"audiotestsrc", "adder", "volume", "audioconvert"},
+  {"audiotestsrc", "audiomixer", "volume", "audioconvert"},
   {"videotestsrc", "videomixer", "videoscale", "videoconvert"}
 };
 

@@ -883,6 +883,9 @@ gst_adder_init (GstAdder * adder)
 {
   GstPadTemplate *template;
 
+  g_warning
+      ("The `adder` element is deprecated. The `audiomixer` element should be used instead");
+
   template = gst_static_pad_template_get (&gst_adder_src_template);
   adder->srcpad = gst_pad_new_from_template (template, "src");
   gst_object_unref (template);
@@ -1591,6 +1594,9 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gst_plugin_set_static_features_flag (plugin);
+
+  gst_plugin_add_status_warning (plugin,
+      "The `adder` element is deprecated. The `audiomixer` element should be used instead");
 
   return GST_ELEMENT_REGISTER (adder, plugin);
 }

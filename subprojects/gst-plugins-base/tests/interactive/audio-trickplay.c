@@ -1,11 +1,11 @@
 /*
  * audio-trickplay.c
  *
- * Builds a pipeline with two audiotestsources mixed with adder. Assigns
+ * Builds a pipeline with two audiotestsources mixed with audiomixer. Assigns
  * controller patterns to the audio generators and test various trick modes.
  *
  * There are currently several issues:
- * - adder only work with flushing seeks
+ * - audiomixer only work with flushing seeks
  * - there is a gap of almost 4 seconds before backwards playback
  *   - it is "waiting for free space"
  *   - using sync=false on the sink does not help (but has some other weird effects)
@@ -59,7 +59,7 @@ main (gint argc, gchar ** argv)
   GstSeekFlags flags;
   GstPad *src_pad;
   /* options */
-  gboolean use_adder = FALSE;
+  gboolean use_audiomixer = FALSE;
   gboolean use_flush = FALSE;
   gboolean be_quiet = FALSE;
 
@@ -69,7 +69,7 @@ main (gint argc, gchar ** argv)
     gint arg;
     for (arg = 0; arg < argc; arg++) {
       if (!strcmp (argv[arg], "-a"))
-        use_adder = TRUE;
+        use_audiomixer = TRUE;
       else if (!strcmp (argv[arg], "-f"))
         use_flush = TRUE;
       else if (!strcmp (argv[arg], "-q"))
@@ -85,10 +85,10 @@ main (gint argc, gchar ** argv)
     GST_WARNING ("need audiotestsrc from gst-plugins-base");
     goto Error;
   }
-  if (use_adder) {
-    mix = gst_element_factory_make ("adder", NULL);
+  if (use_audiomixer) {
+    mix = gst_element_factory_make ("audiomixer", NULL);
     if (!mix) {
-      GST_WARNING ("need adder from gst-plugins-base");
+      GST_WARNING ("need audiomixer from gst-plugins-base");
       goto Error;
     }
   }
@@ -99,7 +99,7 @@ main (gint argc, gchar ** argv)
     goto Error;
   }
 
-  if (use_adder) {
+  if (use_audiomixer) {
     gst_bin_add_many (GST_BIN (bin), src, mix, sink, NULL);
     if (!gst_element_link_many (src, mix, sink, NULL)) {
       GST_WARNING ("can't link elements");

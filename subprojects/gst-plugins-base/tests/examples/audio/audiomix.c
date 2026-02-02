@@ -175,7 +175,7 @@ main (int argc, char *argv[])
 
   /* prepare tail of pipeline */
   pipeline = gst_pipeline_new ("audiomix");
-  mix = gst_element_factory_make ("adder", NULL);
+  mix = gst_element_factory_make ("audiomixer", NULL);
   convert = gst_element_factory_make ("audioconvert", NULL);
   sink = gst_element_factory_make ("autoaudiosink", NULL);
   gst_bin_add_many (GST_BIN (pipeline), mix, convert, sink, NULL);
