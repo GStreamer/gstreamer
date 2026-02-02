@@ -45,6 +45,7 @@ enum
   SIGNAL_VOLUME_CHANGED,
   SIGNAL_MUTE_CHANGED,
   SIGNAL_SEEK_DONE,
+  SIGNAL_TRACKS_SELECTED,
   SIGNAL_LAST
 };
 
@@ -191,6 +192,17 @@ gst_play_signal_adapter_emit (GstPlaySignalAdapter * self,
       gst_structure_get (message_data, GST_PLAY_MESSAGE_DATA_POSITION,
           GST_TYPE_CLOCK_TIME, &pos, NULL);
       g_signal_emit (self, signals[SIGNAL_SEEK_DONE], 0, pos);
+      break;
+    }
+    case GST_PLAY_MESSAGE_TRACKS_SELECTED:{
+      gchar *audio_track_id, *video_track_id, *subtitle_track_id;
+      gst_structure_get (message_data,
+          GST_PLAY_MESSAGE_DATA_AUDIO_TRACK_ID, G_TYPE_STRING, &audio_track_id,
+          GST_PLAY_MESSAGE_DATA_VIDEO_TRACK_ID, G_TYPE_STRING, &video_track_id,
+          GST_PLAY_MESSAGE_DATA_SUBTITLE_TRACK_ID, G_TYPE_STRING,
+          &subtitle_track_id, NULL);
+      g_signal_emit (self, signals[SIGNAL_TRACKS_SELECTED], 0, audio_track_id,
+          video_track_id, subtitle_track_id);
       break;
     }
     default:
@@ -472,6 +484,22 @@ gst_play_signal_adapter_class_init (GstPlaySignalAdapterClass * klass)
       g_signal_new ("seek-done", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS, 0, NULL,
       NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_CLOCK_TIME);
+
+  /**
+   * GstPlaySignalAdapter::tracks-selected:
+   * @adapter: The #GstPlaySignalAdapter
+   * @audio_track_id: (nullable): the selected audio track id
+   * @video_track_id: (nullable): the selected video track id
+   * @subtitle_track_id: (nullable): the selected subtitle track id
+   *
+   * Emitted on warnings.
+   *
+   * Since: 1.30
+   */
+  signals[SIGNAL_TRACKS_SELECTED] =
+      g_signal_new ("tracks-selected", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS, 0, NULL,
+      NULL, NULL, G_TYPE_NONE, 3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
 
   g_object_class_install_properties (gobject_class, PROP_LAST, param_specs);
 }

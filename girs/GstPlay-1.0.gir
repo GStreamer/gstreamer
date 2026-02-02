@@ -2515,6 +2515,26 @@ it on the created adapter object.</doc>
           </parameter>
         </parameters>
       </glib:signal>
+      <glib:signal name="tracks-selected" when="last" no-recurse="1" no-hooks="1" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">Emitted on warnings.</doc>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="audio_track_id" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">the selected audio track id</doc>
+            <type name="utf8" c:type="gchar*"/>
+          </parameter>
+          <parameter name="video_track_id" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">the selected video track id</doc>
+            <type name="utf8" c:type="gchar*"/>
+          </parameter>
+          <parameter name="subtitle_track_id" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">the selected subtitle track id</doc>
+            <type name="utf8" c:type="gchar*"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
       <glib:signal name="uri-loaded" when="last" no-recurse="1" no-hooks="1">
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
