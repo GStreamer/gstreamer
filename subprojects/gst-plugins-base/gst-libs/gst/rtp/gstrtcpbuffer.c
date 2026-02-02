@@ -1413,12 +1413,16 @@ gst_rtcp_packet_sdes_next_entry (GstRTCPPacket * packet)
   /* move to entry */
   offset += packet->entry_offset;
 
+  /* don't overrun - check before reading item_len */
+  len = (packet->length << 2);
+  if (offset + 1 >= len)
+    return FALSE;
+
   item_len = data[offset + 1] + 2;
   /* skip item */
   offset += item_len;
 
-  /* don't overrun */
-  len = (packet->length << 2);
+  /* check again after adding item_len */
   if (offset >= len)
     return FALSE;
 
@@ -1467,6 +1471,14 @@ gst_rtcp_packet_sdes_get_entry (GstRTCPPacket * packet,
   offset = packet->item_offset;
   /* move to entry */
   offset += packet->entry_offset;
+
+  /* Warn if potentially accessing out of bounds */
+  guint pkt_len = (packet->length << 2);
+  if (offset + 1 >= pkt_len) {
+    GST_WARNING ("SDES entry offset %u exceeds packet length %u", offset,
+        pkt_len);
+    return FALSE;
+  }
 
   if (bdata[offset] == 0)
     return FALSE;
