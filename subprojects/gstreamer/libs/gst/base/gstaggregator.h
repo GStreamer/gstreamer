@@ -266,7 +266,7 @@ struct _GstAggregatorClass {
 
   /**
    * GstAggregatorClass::clip:
-   * @self: the #GstAggregator
+   * @aggregator: the #GstAggregator
    * @aggregator_pad: a #GstAggregatorPad
    * @buf: (transfer full): a #GstBuffer
    *
@@ -286,7 +286,8 @@ struct _GstAggregatorClass {
 
   /**
    * GstAggregatorClass::finish_buffer:
-   * @event: (transfer full): a #GstBuffer
+   * @aggregator: the #GstAggregator
+   * @buffer: (transfer full): a #GstBuffer
    */
   GstFlowReturn     (*finish_buffer)  (GstAggregator    * aggregator,
                                        GstBuffer        * buffer);
@@ -294,6 +295,7 @@ struct _GstAggregatorClass {
   /* sinkpads virtual methods */
   /**
    * GstAggregatorClass::sink_event:
+   * @aggregator: the #GstAggregator
    * @aggregator_pad: a #GstAggregatorPad
    * @event: (transfer full): a #GstEvent
    *
@@ -311,6 +313,7 @@ struct _GstAggregatorClass {
   /* srcpad virtual methods */
   /**
    * GstAggregatorClass::src_event:
+   * @aggregator: the #GstAggregator
    * @event: (transfer full): a #GstEvent
    *
    * Called when an event is received on the src pad, the subclass
@@ -339,8 +342,8 @@ struct _GstAggregatorClass {
    * GstAggregatorClass::create_new_pad:
    * @self: the #GstAggregator
    * @templ: the pad template to use
-   * @req_name: (nullable) requested pad name
-   * @caps: (nullable) caps for the pad
+   * @req_name: (nullable): requested pad name
+   * @caps: (nullable): caps for the pad
    *
    * Called when a new pad needs to be created. Allows subclass that
    * don't have a single sink pad template to provide a pad based
@@ -355,6 +358,8 @@ struct _GstAggregatorClass {
 
   /**
    * GstAggregatorClass::update_src_caps:
+   * @self: the #GstAggregator
+   * @caps: the new source pad #GstCaps
    * @ret: (out) (nullable):
    */
   GstFlowReturn     (*update_src_caps) (GstAggregator *  self,
@@ -362,6 +367,7 @@ struct _GstAggregatorClass {
                                         GstCaps       ** ret);
   /**
    * GstAggregatorClass::fixate_src_caps:
+   * @self: the #GstAggregator
    * @caps: (transfer full): a #GstCaps to fixate
    *
    * Fixate and return the src pad caps provided. The function takes
@@ -385,6 +391,7 @@ struct _GstAggregatorClass {
 
   /**
    * GstAggregatorClass::sink_event_pre_queue:
+   * @aggregator: the #GstAggregator
    * @aggregator_pad: a #GstAggregatorPad
    * @event: (transfer full): a #GstEvent
    *
@@ -401,6 +408,7 @@ struct _GstAggregatorClass {
 
   /**
    * GstAggregatorClass::finish_buffer_list:
+   * @aggregator: the #GstAggregator
    * @bufferlist: (transfer full): a #GstBufferList
    *
    * Optional. Equivalent of #GstAggregatorClass::finish_buffer for
@@ -412,6 +420,7 @@ struct _GstAggregatorClass {
                                            GstBufferList    * bufferlist);
   /**
    * GstAggregatorClass::peek_next_sample:
+   * @aggregator: the #GstAggregator
    * @aggregator_pad: a #GstAggregatorPad
    *
    * Returns: (transfer full) (nullable): the #GstSample.
