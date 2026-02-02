@@ -1,10 +1,10 @@
 [wrap-file]
-directory = pygobject-3.55.0
-source_url = https://download.gnome.org/sources/pygobject/3.55/pygobject-3.55.0.tar.gz
-source_filename = pygobject-3.55.0.tar.gz
-source_fallback_url = https://gstreamer.freedesktop.org/src/mirror/pygobject/pygobject-3.55.0.tar.gz
-source_hash = 8857ff725922a3b2c42d9f11c1bb609ccc25f319a2c802190a1c09ad267442c7
-diff_files = pygobject/0001-gi-Call-os.add_dll_directory-on-Windows-when-possibl.patch
+directory = pygobject-3.50.2
+source_url = https://download.gnome.org/sources/pygobject/3.50/pygobject-3.50.2.tar.gz
+source_filename = pygobject-3.50.2.tar.gz
+source_fallback_url = https://gstreamer.freedesktop.org/src/mirror/pygobject/pygobject-3.50.2.tar.gz
+source_hash = ece6b860aab77cb649fdfc6e88d8a83765e7a62f7ffd39a628d6e2a0d397a7ff
+diff_files = pygobject-3.50.2/0001-gi-Call-os.add_dll_directory-on-Windows-when-possibl.patch, pygobject-3.50.2/0002-Fix-syntax-error-for-missing.patch
 
 [provide]
 pygobject-3.0 = pygobject_dep
