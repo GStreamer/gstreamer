@@ -1079,6 +1079,7 @@ if the buffer should be dropped.</doc>
         </return-value>
         <parameters>
           <instance-parameter name="aggregator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">the #GstAggregator</doc>
             <type name="Aggregator" c:type="GstAggregator*"/>
           </instance-parameter>
           <parameter name="aggregator_pad" transfer-ownership="none">
@@ -1187,6 +1188,7 @@ ownership of @caps and returns a fixated version of
         </return-value>
         <parameters>
           <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">the #GstAggregator</doc>
             <type name="Aggregator" c:type="GstAggregator*"/>
           </instance-parameter>
           <parameter name="caps" transfer-ownership="full">
@@ -1274,6 +1276,7 @@ control aggregating parameters for a given set of input samples.</doc>
         </return-value>
         <parameters>
           <instance-parameter name="aggregator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">the #GstAggregator</doc>
             <type name="Aggregator" c:type="GstAggregator*"/>
           </instance-parameter>
           <parameter name="aggregator_pad" transfer-ownership="none">
@@ -1313,6 +1316,7 @@ should always chain up.</doc>
         </return-value>
         <parameters>
           <instance-parameter name="aggregator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">the #GstAggregator</doc>
             <type name="Aggregator" c:type="GstAggregator*"/>
           </instance-parameter>
           <parameter name="aggregator_pad" transfer-ownership="none">
@@ -1334,6 +1338,7 @@ serialized events. The subclass should always chain up (Since: 1.18).</doc>
         </return-value>
         <parameters>
           <instance-parameter name="aggregator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">the #GstAggregator</doc>
             <type name="Aggregator" c:type="GstAggregator*"/>
           </instance-parameter>
           <parameter name="aggregator_pad" transfer-ownership="none">
@@ -1415,6 +1420,7 @@ should always chain up.</doc>
         </return-value>
         <parameters>
           <instance-parameter name="aggregator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">the #GstAggregator</doc>
             <type name="Aggregator" c:type="GstAggregator*"/>
           </instance-parameter>
           <parameter name="event" transfer-ownership="full">
@@ -1476,9 +1482,11 @@ should always chain up.</doc>
         </return-value>
         <parameters>
           <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">the #GstAggregator</doc>
             <type name="Aggregator" c:type="GstAggregator*"/>
           </instance-parameter>
           <parameter name="caps" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">the new source pad #GstCaps</doc>
             <type name="Gst.Caps" c:type="GstCaps*"/>
           </parameter>
           <parameter name="ret" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1">
@@ -1937,6 +1945,7 @@ _finish_buffer from inside that function.</doc>
           </return-value>
           <parameters>
             <parameter name="aggregator" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">the #GstAggregator</doc>
               <type name="Aggregator" c:type="GstAggregator*"/>
             </parameter>
             <parameter name="aggregator_pad" transfer-ownership="none">
@@ -1986,6 +1995,7 @@ _finish_buffer from inside that function.</doc>
           </return-value>
           <parameters>
             <parameter name="aggregator" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">the #GstAggregator</doc>
               <type name="Aggregator" c:type="GstAggregator*"/>
             </parameter>
             <parameter name="aggregator_pad" transfer-ownership="none">
@@ -2032,6 +2042,7 @@ _finish_buffer from inside that function.</doc>
           </return-value>
           <parameters>
             <parameter name="aggregator" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">the #GstAggregator</doc>
               <type name="Aggregator" c:type="GstAggregator*"/>
             </parameter>
             <parameter name="event" transfer-ownership="full">
@@ -2202,9 +2213,11 @@ _finish_buffer from inside that function.</doc>
           </return-value>
           <parameters>
             <parameter name="self" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">the #GstAggregator</doc>
               <type name="Aggregator" c:type="GstAggregator*"/>
             </parameter>
             <parameter name="caps" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">the new source pad #GstCaps</doc>
               <type name="Gst.Caps" c:type="GstCaps*"/>
             </parameter>
             <parameter name="ret" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1">
@@ -2226,6 +2239,7 @@ _finish_buffer from inside that function.</doc>
           </return-value>
           <parameters>
             <parameter name="self" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">the #GstAggregator</doc>
               <type name="Aggregator" c:type="GstAggregator*"/>
             </parameter>
             <parameter name="caps" transfer-ownership="full">
@@ -2326,6 +2340,7 @@ _finish_buffer from inside that function.</doc>
           </return-value>
           <parameters>
             <parameter name="aggregator" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">the #GstAggregator</doc>
               <type name="Aggregator" c:type="GstAggregator*"/>
             </parameter>
             <parameter name="aggregator_pad" transfer-ownership="none">
@@ -2391,6 +2406,7 @@ _finish_buffer from inside that function.</doc>
           </return-value>
           <parameters>
             <parameter name="aggregator" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">the #GstAggregator</doc>
               <type name="Aggregator" c:type="GstAggregator*"/>
             </parameter>
             <parameter name="aggregator_pad" transfer-ownership="none">
