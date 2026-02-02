@@ -115,6 +115,22 @@ gst_gl_window_eagl_finalize (GObject * object)
 {
   GstGLWindowEagl *window = GST_GL_WINDOW_EAGL (object);
 
+  if (window->priv->internal_view) {
+    GstGLUIView *view = (__bridge GstGLUIView *) window->priv->internal_view;
+    /* UIKit teardown must run on the main thread. The block retains the view
+     * until removal, and its weak window reference makes callbacks safe. */
+    if ([NSThread isMainThread]) {
+      [view setGstWindow:NULL];
+      [view removeFromSuperview];
+    } else {
+      dispatch_async (dispatch_get_main_queue (), ^{
+        [view setGstWindow:NULL];
+        [view removeFromSuperview];
+      });
+    }
+    CFRelease (window->priv->internal_view);
+    window->priv->internal_view = NULL;
+  }
   if (window->priv->layer)
     CFRelease (window->priv->layer);
   window->priv->layer = NULL;
@@ -362,7 +378,7 @@ gst_gl_window_eagl_get_layer (GstGLWindowEagl * window_eagl)
 }
 
 @implementation GstGLUIView {
-    GstGLWindowEagl * window_eagl;
+    GWeakRef window_eagl;
 };
 
 +(Class) layerClass
@@ -370,9 +386,22 @@ gst_gl_window_eagl_get_layer (GstGLWindowEagl * window_eagl)
   return [CAEAGLLayer class];
 }
 
+-(instancetype) initWithFrame:(CGRect) frame
+{
+  self = [super initWithFrame:frame];
+  if (self)
+    g_weak_ref_init (&window_eagl, NULL);
+  return self;
+}
+
+-(void) dealloc
+{
+  g_weak_ref_clear (&window_eagl);
+}
+
 -(void) setGstWindow:(GstGLWindowEagl *) window
 {
-  window_eagl = window;
+  g_weak_ref_set (&window_eagl, window);
 }
 
 -(void) didMoveToWindow
@@ -386,13 +415,14 @@ gst_gl_window_eagl_get_layer (GstGLWindowEagl * window_eagl)
   [super layoutSubviews];
   [self updateScale];
 
-  if (window_eagl) {
-    GstGLWindow *window = GST_GL_WINDOW (window_eagl);
+  GstGLWindow *window = g_weak_ref_get (&window_eagl);
+  if (window) {
     GstGLContext *context = gst_gl_window_get_context (window);
     if (context) {
       gst_gl_window_queue_resize (window);
       gst_object_unref (context);
     }
+    gst_object_unref (window);
   }
 }
 
