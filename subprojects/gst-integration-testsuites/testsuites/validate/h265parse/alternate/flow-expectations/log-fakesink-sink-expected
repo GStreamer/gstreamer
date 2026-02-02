@@ -3,5 +3,5 @@ event caps: video/x-h265, alignment=(string)au, bit-depth-chroma=(uint)8, bit-de
 event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
 event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ Profile\\\)\"\;";
 buffer: dts=0:00:00.000000000, dur=0:00:00.013333333, flags=discont marker header last
-buffer: dts=0:00:00.013333333, dur=0:00:00.013333333, flags=header delta-unit last
+buffer: dts=0:00:00.013333333, dur=0:00:00.026666666, flags=header delta-unit last
 event eos: (no structure)
