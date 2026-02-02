@@ -2259,6 +2259,9 @@ gst_videomixer2_init (GstVideoMixer2 * mix)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (mix);
 
+  g_warning
+      ("The `videomixer` element is deprecated. The `compositor` element should be used instead");
+
   mix->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
           "src"), "src");
@@ -2301,6 +2304,9 @@ plugin_init (GstPlugin * plugin)
       "video mixer");
 
   gst_video_mixer_init_blend ();
+
+  gst_plugin_add_status_warning (plugin,
+      "The `videomixer` element is deprecated. The `compositor` element should be used instead");
 
   return gst_element_register (plugin, "videomixer", GST_RANK_PRIMARY,
       GST_TYPE_VIDEO_MIXER2);

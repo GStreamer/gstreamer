@@ -302,7 +302,13 @@ GST_END_TEST;
 
 GST_START_TEST (test_videomixer)
 {
-  run_pipeline (setup_pipeline (VIDEOMIXER_PIPELINE), VIDEOMIXER_PIPELINE,
+  GstElement *pipeline;
+
+  // Suppress deprecation warning
+  ASSERT_WARNING (pipeline = gst_parse_launch (VIDEOMIXER_PIPELINE, NULL));
+  fail_unless (GST_IS_PIPELINE (pipeline));
+
+  run_pipeline (pipeline, VIDEOMIXER_PIPELINE,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN, GST_STATE_PLAYING);
 }

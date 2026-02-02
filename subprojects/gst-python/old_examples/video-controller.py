@@ -14,7 +14,7 @@ import time
 def main():
     pipeline = gst.Pipeline("videocontroller")
     src = gst.element_factory_make("videotestsrc", "src")
-    mix = gst.element_factory_make("videomixer", "mix")
+    mix = gst.element_factory_make("compositor", "mix")
     conv = gst.element_factory_make("ffmpegcolorspace", "conv")
     sink = gst.element_factory_make("autovideosink", "sink")
     pipeline.add(src, mix, conv, sink)

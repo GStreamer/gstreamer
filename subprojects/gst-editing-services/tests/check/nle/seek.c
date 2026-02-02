@@ -1,5 +1,4 @@
 #include "common.h"
-static const gchar *compositor_element = NULL;
 
 static void late_ges_init (void);
 
@@ -525,8 +524,7 @@ GST_START_TEST (test_complex_operations)
    */
 
   oper =
-      new_operation ("oper", compositor_element, 2 * GST_SECOND, 2 * GST_SECOND,
-      1);
+      new_operation ("oper", "compositor", 2 * GST_SECOND, 2 * GST_SECOND, 1);
   fail_if (oper == NULL);
   check_start_stop_duration (oper, 2 * GST_SECOND, 4 * GST_SECOND,
       2 * GST_SECOND);
@@ -646,8 +644,7 @@ GST_START_TEST (test_complex_operations_bis)
    */
 
   oper =
-      new_operation ("oper", compositor_element, 2 * GST_SECOND, 2 * GST_SECOND,
-      1);
+      new_operation ("oper", "compositor", 2 * GST_SECOND, 2 * GST_SECOND, 1);
   fail_if (oper == NULL);
   check_start_stop_duration (oper, 2 * GST_SECOND, 4 * GST_SECOND,
       2 * GST_SECOND);
@@ -780,26 +777,13 @@ gnonlin_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
-  if (gst_registry_check_feature_version (gst_registry_get (), "compositor", 1,
-          0, 0)) {
-    compositor_element = "compositor";
-  } else if (gst_registry_check_feature_version (gst_registry_get (),
-          "videomixer", 1, 0, 0)) {
-    compositor_element = "videomixer";
-
-  }
-
   tcase_add_test (tc_chain, test_simplest);
   tcase_add_test (tc_chain, test_one_after_other);
   tcase_add_test (tc_chain, test_one_under_another);
   tcase_add_test (tc_chain, test_one_bin_after_other);
 
-  if (compositor_element) {
-    tcase_add_test (tc_chain, test_complex_operations);
-    tcase_add_test (tc_chain, test_complex_operations_bis);
-  } else {
-    GST_WARNING ("No compositor element, can not run operations tests");
-  }
+  tcase_add_test (tc_chain, test_complex_operations);
+  tcase_add_test (tc_chain, test_complex_operations_bis);
 
   return s;
 }

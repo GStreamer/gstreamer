@@ -54,7 +54,9 @@ GST_START_TEST (test_caps)
   pipeline = gst_pipeline_new ("pipeline");
 
   src = gst_element_factory_make ("videotestsrc", "src1");
-  videomixer = gst_element_factory_make ("videomixer", "videomixer");
+  // Suppress deprecation warning
+  ASSERT_WARNING (videomixer =
+      gst_element_factory_make ("videomixer", "videomixer"));
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (pipeline), src, videomixer, sink, NULL);
 
@@ -160,7 +162,9 @@ GST_START_TEST (test_event)
 
   src1 = gst_element_factory_make ("videotestsrc", "src1");
   src2 = gst_element_factory_make ("videotestsrc", "src2");
-  videomixer = gst_element_factory_make ("videomixer", "videomixer");
+  // Suppress deprecation warning
+  ASSERT_WARNING (videomixer =
+      gst_element_factory_make ("videomixer", "videomixer"));
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (bin), src1, src2, videomixer, sink, NULL);
 
@@ -308,7 +312,9 @@ GST_START_TEST (test_play_twice)
 
   src1 = gst_element_factory_make ("videotestsrc", "src1");
   src2 = gst_element_factory_make ("videotestsrc", "src2");
-  videomixer = gst_element_factory_make ("videomixer", "videomixer");
+  // Suppress deprecation warning
+  ASSERT_WARNING (videomixer =
+      gst_element_factory_make ("videomixer", "videomixer"));
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (bin), src1, src2, videomixer, sink, NULL);
 
@@ -395,7 +401,9 @@ GST_START_TEST (test_play_twice_then_add_and_play_again)
 
   src1 = gst_element_factory_make ("videotestsrc", "src1");
   src2 = gst_element_factory_make ("videotestsrc", "src2");
-  videomixer = gst_element_factory_make ("videomixer", "videomixer");
+  // Suppress deprecation warning
+  ASSERT_WARNING (videomixer =
+      gst_element_factory_make ("videomixer", "videomixer"));
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (bin), src1, src2, videomixer, sink, NULL);
 
@@ -501,7 +509,9 @@ GST_START_TEST (test_add_pad)
   src2 = gst_element_factory_make ("videotestsrc", "src2");
   /* one buffer less, we connect with 1 buffer of delay */
   g_object_set (src2, "num-buffers", 3, NULL);
-  videomixer = gst_element_factory_make ("videomixer", "videomixer");
+  // Suppress deprecation warning
+  ASSERT_WARNING (videomixer =
+      gst_element_factory_make ("videomixer", "videomixer"));
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (bin), src1, videomixer, sink, NULL);
 
@@ -579,7 +589,9 @@ GST_START_TEST (test_remove_pad)
 
   src = gst_element_factory_make ("videotestsrc", "src");
   g_object_set (src, "num-buffers", 4, NULL);
-  videomixer = gst_element_factory_make ("videomixer", "videomixer");
+  // Suppress deprecation warning
+  ASSERT_WARNING (videomixer =
+      gst_element_factory_make ("videomixer", "videomixer"));
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (bin), src, videomixer, sink, NULL);
 
@@ -678,7 +690,9 @@ GST_START_TEST (test_clip)
   g_signal_connect (bus, "message::eos", (GCallback) message_received, bin);
 
   /* just an videomixer and a fakesink */
-  videomixer = gst_element_factory_make ("videomixer", "videomixer");
+  // Suppress deprecation warning
+  ASSERT_WARNING (videomixer =
+      gst_element_factory_make ("videomixer", "videomixer"));
   sink = gst_element_factory_make ("fakesink", "sink");
   g_object_set (sink, "signal-handoffs", TRUE, NULL);
   g_signal_connect (sink, "handoff", (GCallback) handoff_buffer_cb, NULL);
@@ -775,7 +789,9 @@ GST_START_TEST (test_duration_is_max)
   src[0] = gst_element_factory_make ("videotestsrc", NULL);
   src[1] = gst_element_factory_make ("videotestsrc", NULL);
   src[2] = gst_element_factory_make ("videotestsrc", NULL);
-  videomixer = gst_element_factory_make ("videomixer", "videomixer");
+  // Suppress deprecation warning
+  ASSERT_WARNING (videomixer =
+      gst_element_factory_make ("videomixer", "videomixer"));
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (bin), src[0], src[1], src[2], videomixer, sink,
       NULL);
@@ -832,7 +848,9 @@ GST_START_TEST (test_duration_unknown_overrides)
   src[0] = gst_element_factory_make ("videotestsrc", NULL);
   src[1] = gst_element_factory_make ("videotestsrc", NULL);
   src[2] = gst_element_factory_make ("videotestsrc", NULL);
-  videomixer = gst_element_factory_make ("videomixer", "videomixer");
+  // Suppress deprecation warning
+  ASSERT_WARNING (videomixer =
+      gst_element_factory_make ("videomixer", "videomixer"));
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (bin), src[0], src[1], src[2], videomixer, sink,
       NULL);
@@ -915,7 +933,9 @@ GST_START_TEST (test_loop)
 
   src1 = gst_element_factory_make ("videotestsrc", "src1");
   src2 = gst_element_factory_make ("videotestsrc", "src2");
-  videomixer = gst_element_factory_make ("videomixer", "videomixer");
+  // Suppress deprecation warning
+  ASSERT_WARNING (videomixer =
+      gst_element_factory_make ("videomixer", "videomixer"));
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (bin), src1, src2, videomixer, sink, NULL);
 
@@ -984,7 +1004,9 @@ GST_START_TEST (test_flush_start_flush_stop)
   pipeline = gst_pipeline_new ("pipeline");
   src1 = gst_element_factory_make ("videotestsrc", "src1");
   src2 = gst_element_factory_make ("videotestsrc", "src2");
-  videomixer = gst_element_factory_make ("videomixer", "videomixer");
+  // Suppress deprecation warning
+  ASSERT_WARNING (videomixer =
+      gst_element_factory_make ("videomixer", "videomixer"));
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (pipeline), src1, src2, videomixer, sink, NULL);
 

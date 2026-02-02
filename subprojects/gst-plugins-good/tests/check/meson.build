@@ -205,11 +205,11 @@ gst_plugin_scanner_path = join_paths(gst_plugin_scanner_dir, 'gst-plugin-scanner
 #
 # need a way to figure out value for the device property
 #
-# interleave: Would fail because of deprecation warnings
+# interleave, videomixer: Would fail because of deprecation warnings
 state_ignore_elements = '''autoaudiosrc autoaudiosink autovideosrc
  autovideosink cairotextoverlay gtkglsink gtksink jackaudiosrc
  jackaudiosink osssrc osssink osxaudiosink osxaudiosrc osxvideosrc osxvideosink
- pulsesink pulsesrc pulsemixer v4l2src interleave'''
+ pulsesink pulsesrc pulsemixer v4l2src interleave videomixer'''
 
 # FIXME: check, also + PTHREAD_CFLAGS
 test_deps = [gst_dep, gstbase_dep, gstnet_dep, gstcheck_dep, gstaudio_dep,
