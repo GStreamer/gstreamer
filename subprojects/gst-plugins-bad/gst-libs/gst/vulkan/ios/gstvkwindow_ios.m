@@ -253,13 +253,27 @@ gst_vulkan_window_ios_close (GstVulkanWindow * window)
 {
   GstVulkanWindowIos *window_ios = GST_VULKAN_WINDOW_IOS (window);
   GstVulkanWindowIosPrivate *priv = GET_PRIV (window_ios);
-  GstVulkanUIView *view = (__bridge GstVulkanUIView *) priv->internal_view;
 
-  [view setGstWindow:NULL];
-  CFBridgingRelease (priv->internal_view);
-  priv->internal_view = NULL;
-  CFBridgingRelease (priv->internal_layer);
-  priv->internal_layer = NULL;
+  if (priv->internal_view) {
+    GstVulkanUIView *view = (__bridge GstVulkanUIView *) priv->internal_view;
+    /* UIKit teardown must run on the main thread. The block retains the view
+     * until removal, and its weak window reference makes callbacks safe. */
+    if ([NSThread isMainThread]) {
+      [view setGstWindow:NULL];
+      [view removeFromSuperview];
+    } else {
+      dispatch_async (dispatch_get_main_queue (), ^{
+        [view setGstWindow:NULL];
+        [view removeFromSuperview];
+      });
+    }
+    CFBridgingRelease (priv->internal_view);
+    priv->internal_view = NULL;
+  }
+  if (priv->internal_layer) {
+    CFBridgingRelease (priv->internal_layer);
+    priv->internal_layer = NULL;
+  }
 
   GST_VULKAN_WINDOW_CLASS (parent_class)->close (window);
 }
@@ -283,7 +297,7 @@ gst_vulkan_window_ios_set_window_handle (GstVulkanWindow * window,
 }
 
 @implementation GstVulkanUIView {
-    GstVulkanWindowIos * window_ios;
+    GWeakRef window_ios;
 
     guint width;
     guint height;
@@ -294,9 +308,22 @@ gst_vulkan_window_ios_set_window_handle (GstVulkanWindow * window,
   return [CAMetalLayer class];
 }
 
+-(instancetype) initWithFrame:(CGRect) frame
+{
+  self = [super initWithFrame:frame];
+  if (self)
+    g_weak_ref_init (&window_ios, NULL);
+  return self;
+}
+
+-(void) dealloc
+{
+  g_weak_ref_clear (&window_ios);
+}
+
 -(void) setGstWindow:(GstVulkanWindowIos *) window
 {
-  window_ios = window;
+  g_weak_ref_set (&window_ios, window);
 }
 
 -(void) didMoveToWindow
@@ -337,9 +364,12 @@ gst_vulkan_window_ios_set_window_handle (GstVulkanWindow * window,
   self->width = pixel_width;
   self->height = pixel_height;
 
-  if (resize && self->window_ios) {
-    gst_vulkan_window_resize (GST_VULKAN_WINDOW (self->window_ios),
-        pixel_width, pixel_height);
+  if (resize) {
+    GstVulkanWindow *window = g_weak_ref_get (&window_ios);
+    if (window) {
+      gst_vulkan_window_resize (window, pixel_width, pixel_height);
+      gst_object_unref (window);
+    }
   }
 }
 
