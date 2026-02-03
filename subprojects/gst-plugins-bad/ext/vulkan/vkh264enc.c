@@ -371,7 +371,7 @@ gst_vulkan_h264_level_idc (int level_idc)
   return STD_VIDEO_H264_LEVEL_IDC_INVALID;
 }
 
-static GstH264Level
+static gint
 gst_h264_level_idc_from_vk (StdVideoH264LevelIdc vk_level_idc)
 {
   for (guint i = 0; i < G_N_ELEMENTS (H264LevelMap); i++) {
@@ -886,10 +886,12 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
-  /* gallium drivers always reply 10 level idc  */
+  /* gallium drivers always reply 1.0 level idc  */
   vk_max_level = vk_caps.encoder.codec.h264.maxLevelIdc;
   if (vk_max_level > STD_VIDEO_H264_LEVEL_IDC_1_0 && *level > 0) {
-    *level = MIN (gst_h264_level_idc_from_vk (vk_max_level), *level);
+    gint max_level = gst_h264_level_idc_from_vk (vk_max_level);
+    if (max_level >= 0)
+      *level = MIN (max_level, *level);
   }
 
   gst_h264_encoder_set_max_num_references (encoder,
