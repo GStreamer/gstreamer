@@ -99,6 +99,8 @@ static gboolean gst_ffmpegviddec_can_direct_render (GstFFMpegVidDec *
 
 static GstFlowReturn gst_ffmpegviddec_finish (GstVideoDecoder * decoder);
 static GstFlowReturn gst_ffmpegviddec_drain (GstVideoDecoder * decoder);
+static gboolean gst_ffmpegviddec_sink_event (GstVideoDecoder * decoder,
+    GstEvent * event);
 
 static gboolean picture_changed (GstFFMpegVidDec * ffmpegdec,
     AVFrame * picture, gboolean one_field);
@@ -366,6 +368,7 @@ gst_ffmpegviddec_subclass_init (GstFFMpegVidDecClass * klass,
   viddec_class->flush = gst_ffmpegviddec_flush;
   viddec_class->finish = gst_ffmpegviddec_finish;
   viddec_class->drain = gst_ffmpegviddec_drain;
+  viddec_class->sink_event = gst_ffmpegviddec_sink_event;
   viddec_class->decide_allocation = gst_ffmpegviddec_decide_allocation;
   viddec_class->propose_allocation = gst_ffmpegviddec_propose_allocation;
 
@@ -2242,6 +2245,25 @@ no_codec:
   }
 }
 
+static gboolean
+gst_ffmpegviddec_sink_event (GstVideoDecoder * decoder, GstEvent * event)
+{
+  GstFFMpegVidDec *ffmpegdec = GST_FFMPEGVIDDEC (decoder);
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_GAP) {
+    gboolean got_frame = FALSE;
+    GstFlowReturn ret = GST_FLOW_OK;
+
+    GST_VIDEO_DECODER_STREAM_LOCK (ffmpegdec);
+    /* Check if new output frames are available now and forward them */
+    do {
+      got_frame = gst_ffmpegviddec_video_frame (ffmpegdec, NULL, &ret);
+    } while (got_frame && ret == GST_FLOW_OK);
+    GST_VIDEO_DECODER_STREAM_UNLOCK (ffmpegdec);
+  }
+
+  return GST_VIDEO_DECODER_CLASS (parent_class)->sink_event (decoder, event);
+}
 
 static GstFlowReturn
 gst_ffmpegviddec_drain (GstVideoDecoder * decoder)
