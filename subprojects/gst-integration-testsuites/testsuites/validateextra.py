@@ -29,18 +29,19 @@ TEST_MANAGER = "validate"
 
 BLACKLIST = [("validateextra.*reverse.*Sintel_2010_720p_mkv",
              "TODO in matroskademux: FIXME: We should build an index during playback or "
-             "when scanning that can be used here. The reverse playback code requires "
-             " seek_index and seek_entry to be set!"),
+              "when scanning that can be used here. The reverse playback code requires "
+              " seek_index and seek_entry to be set!"),
 
-            # Subtitles known issues
-            ("validateextra.file.playback.switch_subtitle_track.Sintel_2010_720p_mkv",
-             "https://bugzilla.gnome.org/show_bug.cgi?id=734051"),
-            ("validateextra.rtsp.*subtitle.*Sintel_2010_720p_mkv$",
+             # Subtitles known issues
+             ("validateextra.file.playback.switch_subtitle_track.Sintel_2010_720p_mkv",
+              "https://bugzilla.gnome.org/show_bug.cgi?id=734051"),
+             ("validateextra.rtsp.*subtitle.*Sintel_2010_720p_mkv$",
              "Subtitles are not exposed on RTSP?")
-]
+             ]
+
 
 def setup_tests(test_manager, options):
-    assets_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "medias", "big"))
+    assets_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "media", "big"))
     if options.sync:
         if not update_assets(options, assets_dir):
             return False

@@ -75,7 +75,7 @@ def reporthook(blocknum, blocksize, totalsize):
 def download_files(assets_dir):
     print("Downloading %s" % assets_dir if assets_dir else "all assets")
     fdir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                        '..', 'medias'))
+                                        '..', 'media'))
 
     with open(os.path.join(fdir, 'files.json'), 'r') as f:
         files = json.load(f)

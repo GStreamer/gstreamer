@@ -34,6 +34,6 @@ def setup_tests(test_manager, options):
                                           "ges",
                                           "ges-extra-projects"))
     options.add_paths(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                      "..", "medias")))
+                      "..", "media")))
     test_manager.register_defaults(extra_projects_path)
     return True

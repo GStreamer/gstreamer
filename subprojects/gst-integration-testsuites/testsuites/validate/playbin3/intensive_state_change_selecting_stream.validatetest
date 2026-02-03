@@ -1,5 +1,5 @@
 set-globals,
-    media_dir="$(test_dir)/../../../medias",
+    media_dir="$(test_dir)/../../../media",
     file="file://$(media_dir)/defaults/matroska/flac_jpeg.1.mkv"
 
 

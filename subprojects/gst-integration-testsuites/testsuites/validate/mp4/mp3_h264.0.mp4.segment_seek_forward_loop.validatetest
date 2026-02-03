@@ -1,4 +1,4 @@
-set-globals, media_dir="$(test_dir)/../../../medias/defaults/mp4/"
+set-globals, media_dir="$(test_dir)/../../../media/defaults/mp4/"
 meta,
     seek=true,
     handles-states=true,

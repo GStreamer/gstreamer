@@ -1,4 +1,4 @@
-set-globals, media_dir="$(test_dir)/../../medias/defaults"
+set-globals, media_dir="$(test_dir)/../../media/defaults"
 
 meta,
     seek=true,
@@ -10,7 +10,7 @@ meta,
         --videosink, "$(videosink) name=videosink",
     }
 
-include, location="../../medias/defaults/matroska/timed_frames_video_only_1fps.mkv.frames_checksums"
+include, location="../../media/defaults/matroska/timed_frames_video_only_1fps.mkv.frames_checksums"
 
 set-vars,
     nested_timeline_uri="file://$(LOGSDIR)/ges/scenarios/$(test_name)/nested_timeline.xges",

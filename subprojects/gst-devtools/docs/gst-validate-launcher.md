@@ -69,7 +69,7 @@ structured as follow:
 You should generate the `.media_info` files. To generate them for local
 files, you can use:
 
-    gst-validate-launcher --medias-paths /path/to/sample_files/ --generate-media-info
+    gst-validate-launcher --media-paths /path/to/sample_files/ --generate-media-info
 
 For remote streams, you should use
 `gst-validate-media-check-1.0`. For an http stream you can

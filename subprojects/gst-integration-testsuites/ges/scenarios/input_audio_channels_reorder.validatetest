@@ -1,4 +1,4 @@
-set-globals, media_file="$(test_dir)/../../medias/defaults/ogg/audio_5.1_separated_frequencies.ogg"
+set-globals, media_file="$(test_dir)/../../media/defaults/ogg/audio_5.1_separated_frequencies.ogg"
 meta,
     tool = "ges-launch-$(gst_api_version)",
     handles-states=true,

@@ -33,7 +33,7 @@ TEST_MANAGER = "ges"
 
 def setup_tests(test_manager, options):
     assets_dir = os.path.abspath(os.path.join(
-        os.path.dirname(__file__), "..", "medias", "defaults"))
+        os.path.dirname(__file__), "..", "media", "defaults"))
     if options.sync:
         if not utils.USING_SUBPROJECT:
             if not update_assets(options, assets_dir):
@@ -43,9 +43,9 @@ def setup_tests(test_manager, options):
             subprocess.check_call(['git', 'submodule', 'update', '--init'],
                                   cwd=utils.DEFAULT_GST_QA_ASSETS)
             subprocess.check_call(['git', 'lfs', 'pull', '--exclude='],
-                                  cwd=pathlib.Path(utils.DEFAULT_GST_QA_ASSETS) / 'medias')
+                                  cwd=pathlib.Path(utils.DEFAULT_GST_QA_ASSETS) / 'media')
     options.add_paths(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                   "..", "medias", "defaults")))
+                                                   "..", "media", "defaults")))
     projects_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ges",
                                                  "ges-projects"))
     scenarios_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ges",

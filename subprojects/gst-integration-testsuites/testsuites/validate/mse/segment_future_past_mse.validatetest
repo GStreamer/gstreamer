@@ -1,4 +1,4 @@
-set-globals, media_dir="$(test_dir)/../../../medias/fragments/mse.1/"
+set-globals, media_dir="$(test_dir)/../../../media/fragments/mse.1/"
 meta,
     seek=false,
     handles-states=false,

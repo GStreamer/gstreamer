@@ -9,7 +9,7 @@ meta, seek=true, handles-states=true, needs_preroll=true,
         "$(validateflow), pad=videosink:sink, buffers-checksum=true, ignored-fields=\"stream-start={stream-id,group-id,stream}\"",
     }
 
-include, location="../../medias/defaults/matroska/timed_frames_video_only_1fps.mkv.frames_checksums"
+include, location="../../media/defaults/matroska/timed_frames_video_only_1fps.mkv.frames_checksums"
 
 set-vars,\
     nested_timeline_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nested_timeline.xges",\
@@ -22,7 +22,7 @@ serialize-project, uri="$(nested_timeline_uri)"
 serialize-project, uri="$(nested_timeline_depth2_uri)"
 
 add-clip, name=clip, project-uri="$(nested_timeline_uri)",
-    asset-id="file://$(test_dir)/../../medias/defaults/matroska/timed_frames_video_only_1fps.mkv",
+    asset-id="file://$(test_dir)/../../media/defaults/matroska/timed_frames_video_only_1fps.mkv",
     layer-priority=0, type=GESUriClip, duration=4.0
 
 add-clip, name=nested-clip1, project-uri="$(nested_timeline_depth2_uri)",

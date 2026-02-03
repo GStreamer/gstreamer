@@ -102,9 +102,9 @@ def add_accurate_seek_tests(test_manager, media_dir, extra_data):
 
 def setup_tests(test_manager: GstValidateTestManager, options: LauncherConfig):
     testsuite_dir = os.path.realpath(os.path.join(os.path.dirname(__file__)))
-    media_dir = os.path.realpath(os.path.join(testsuite_dir, os.path.pardir, "medias"))
+    media_dir = os.path.realpath(os.path.join(testsuite_dir, os.path.pardir, "media"))
 
-    assets_dir = os.path.realpath(os.path.join(testsuite_dir, os.path.pardir, "medias", "defaults"))
+    assets_dir = os.path.realpath(os.path.join(testsuite_dir, os.path.pardir, "media", "defaults"))
     if options.sync:
         if not utils.USING_SUBPROJECT:
             if not update_assets(options, assets_dir):
@@ -114,7 +114,7 @@ def setup_tests(test_manager: GstValidateTestManager, options: LauncherConfig):
             subprocess.check_call(['git', 'submodule', 'update', '--init'],
                                 cwd=utils.DEFAULT_GST_QA_ASSETS)
             subprocess.check_call(['git', 'lfs', 'pull', '--exclude='],
-                                cwd=pathlib.Path(utils.DEFAULT_GST_QA_ASSETS) / 'medias')
+                                cwd=pathlib.Path(utils.DEFAULT_GST_QA_ASSETS) / 'media')
 
     options.add_paths(assets_dir)
     options.set_http_server_dir(media_dir)
@@ -122,7 +122,7 @@ def setup_tests(test_manager: GstValidateTestManager, options: LauncherConfig):
 
     extra_data = {
         "config_path": os.path.dirname(testsuite_dir),
-        "medias": media_dir,
+        "media": media_dir,
         "validate-flow-expectations-dir": os.path.join(testsuite_dir, "validate", "flow-expectations"),
         "validate-flow-actual-results-dir": test_manager.options.logsdir,
         "ssim-results-dir": os.path.join(test_manager.options.logsdir, "ssim-results"),

@@ -18,7 +18,7 @@ meta,
         "expected-issue, issue-id=\"scenario::execution-error\", details=\".*Error message happened while executing action.*\"",
     }
 
-start-http-server, working-directory="$(test_dir)/../../../medias/defaults/dash/webm/"
+start-http-server, working-directory="$(test_dir)/../../../media/defaults/dash/webm/"
 set-properties, pb::uri="http://127.0.0.1:$(http_server_port)/output.mpd"
 
 # Force the HTTP server to return 503 (Service Unavailable) for the first 3 attempts

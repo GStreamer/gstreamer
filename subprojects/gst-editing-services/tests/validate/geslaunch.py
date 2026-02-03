@@ -88,9 +88,9 @@ class XgesProjectDescriptor(MediaDescriptor):
         if self._duration:
             return self._duration
 
-        for l in self._root.iter():
-            if l.tag == "timeline":
-                self._duration=int(l.attrib['metadatas'].split("duration=(guint64)")[1].split(" ")[0].split(";")[0])
+        for elem in self._root.iter():
+            if elem.tag == "timeline":
+                self._duration = int(elem.attrib['metadatas'].split("duration=(guint64)")[1].split(" ")[0].split(";")[0])
                 break
 
         if not self._duration:
@@ -110,9 +110,9 @@ class XgesProjectDescriptor(MediaDescriptor):
 
     def get_num_tracks(self, track_type):
         num_tracks = 0
-        for l in self._root.iter():
-            if l.tag == "track":
-                if track_type in l.attrib["caps"]:
+        for elem in self._root.iter():
+            if elem.tag == "track":
+                if track_type in elem.attrib["caps"]:
                     num_tracks += 1
         return num_tracks
 
@@ -188,13 +188,15 @@ class GESTest(GstValidateTest):
         elif self.testfile:
             self.add_arguments("--set-test-file", self.testfile)
 
+
 class GESPlaybackTest(GESTest):
-    def __init__(self, classname, options, reporter, project, scenario,nest):
+    def __init__(self, classname, options, reporter, project, scenario, nest):
         super(GESPlaybackTest, self).__init__(classname, options, reporter,
-                                      project, scenario=scenario, nest=nest)
+                                              project, scenario=scenario, nest=nest)
 
     def get_current_value(self):
         return self.get_current_position()
+
 
 class GESScenarioTest(GESTest):
     def __init__(self, classname, options, reporter, scenario):
@@ -269,7 +271,7 @@ class GESTestsManager(TestsManager):
                     return True
                 else:
                     self.warning("Can not use ges-launch, it seems not to be compiled against"
-                                " gst-validate")
+                                 " gst-validate")
         except subprocess.CalledProcessError as e:
             self.warning("Can not use ges-launch: %s" % e)
         except OSError as e:
@@ -277,8 +279,8 @@ class GESTestsManager(TestsManager):
 
     def add_options(self, parser):
         group = parser.add_argument_group("GStreamer Editing Services specific option"
-                            " and behaviours",
-                            description="""
+                                          " and behaviours",
+                                          description="""
 The GStreamer Editing Services launcher will be usable only if GES has been compiled against GstValidate
 You can simply run scenarios specifying project as args. For example the following will run all available
 and activated scenarios on project.xges:
@@ -288,16 +290,16 @@ and activated scenarios on project.xges:
 
 Available options:""")
         group.add_argument("-P", "--projects-paths", dest="projects_paths",
-                         default=os.path.join(utils.DEFAULT_GST_QA_ASSETS,
-                                              "ges",
-                                              "ges-projects"),
-                         help="Paths in which to look for moved medias")
+                           default=os.path.join(utils.DEFAULT_GST_QA_ASSETS,
+                                                "ges",
+                                                "ges-projects"),
+                           help="Paths in which to look for moved media")
         group.add_argument("--ges-scenario-paths", dest="scenarios_path",
-                         default=None,
-                         help="Paths in which to look for moved medias")
+                           default=None,
+                           help="Paths in which to look for moved media")
         group.add_argument("-r", "--disable-recurse-paths", dest="disable_recurse",
-                         default=False, action="store_true",
-                         help="Whether to recurse into paths to find medias")
+                           default=False, action="store_true",
+                           help="Whether to recurse into paths to find media")
 
     def set_settings(self, options, args, reporter):
         TestsManager.set_settings(self, options, args, reporter)
@@ -315,7 +317,7 @@ Available options:""")
         projects = list()
         all_scenarios = {}
         if not self.args:
-            if project_paths == None:
+            if project_paths is None:
                 path = self.options.projects_paths
             else:
                 path = project_paths
@@ -378,16 +380,16 @@ Available options:""")
                     continue
 
                 classname = "playback.%s.%s" % (scenario.name,
-                                                    os.path.basename(proj_uri).replace(".xges", ""))
+                                                os.path.basename(proj_uri).replace(".xges", ""))
                 self.add_test(GESPlaybackTest(classname,
                                               self.options,
                                               self.reporter,
                                               project,
                                               scenario=scenario,
                                               nest=False))
-                #For nested timelines
+                # For nested timelines
                 classname = "playback.nested.%s.%s" % (scenario.name,
-                                                    os.path.basename(proj_uri).replace(".xges", ""))
+                                                       os.path.basename(proj_uri).replace(".xges", ""))
                 self.add_test(GESPlaybackTest(classname,
                                               self.options,
                                               self.reporter,
@@ -398,11 +400,11 @@ Available options:""")
             # And now rendering casses
             for comb in GES_ENCODING_TARGET_COMBINATIONS:
                 classname = "render.%s.%s" % (str(comb).replace(' ', '_'),
-                                                  os.path.splitext(os.path.basename(proj_uri))[0])
+                                              os.path.splitext(os.path.basename(proj_uri))[0])
                 self.add_test(GESRenderTest(classname, self.options,
                                             self.reporter, project,
                                             combination=comb)
-                                  )
+                              )
         if all_scenarios:
             for scenario in self._scenarios.discover_scenarios(list(all_scenarios.keys())):
                 config = all_scenarios[scenario.path]

@@ -75,10 +75,10 @@ you will need that tool to get started.
 ---------------------------
 
 To implement new tests, you will just need to set the media path using the
---medias-paths argument. If you want to run all available scenarios on all the
+--media-paths argument. If you want to run all available scenarios on all the
 file present in that folder, you should run the first time:
 
-.    $gst-validate-launcher --medias-paths /path/to/media/files --generate-media-info
+.    $gst-validate-launcher --media-paths /path/to/media/files --generate-media-info
 
 That will generate the .media_info files that contains information about the media
 files present in that folder. Those media_info files are simple XML file describing
@@ -144,7 +144,7 @@ if "--help" not in sys.argv:
     HELP = "Use --help for the full help"
 
 QA_ASSETS = "gstreamer"
-MEDIAS_FOLDER = "medias"
+MEDIA_FOLDER = "media"
 DEFAULT_GST_QA_ASSETS_REPO = "https://gitlab.freedesktop.org/gstreamer/gstreamer.git"
 
 
@@ -324,7 +324,7 @@ class LauncherConfig(Loggable):
                 self.sync = True
 
             if not self.sync and not os.path.exists(self.clone_dir) and \
-                    self.clone_dir == os.path.join(self.clone_dir, MEDIAS_FOLDER):
+                    self.clone_dir == os.path.join(self.clone_dir, MEDIA_FOLDER):
                 printc("Media path (%s) does not exists. Forgot to run --sync ?"
                        % self.clone_dir, Colors.FAIL, True)
                 return False
@@ -542,7 +542,7 @@ class LauncherConfig(Loggable):
                                help="Directory where to store logs, default is OUTPUT_DIR/logs.")
         dir_group.add_argument("-R", "--render-path", dest="dest",
                                help="Set the path to which projects should be rendered, default is OUTPUT_DIR/rendered")
-        dir_group.add_argument("-p", "--medias-paths", dest="user_paths", action="append",
+        dir_group.add_argument("-p", "--media-paths", "--medias-paths", dest="user_paths", action="append",
                                help="Paths in which to look for media files")
         dir_group.add_argument("-a", "--clone-dir", dest="clone_dir",
                                help="Paths where to clone the testuite to run."

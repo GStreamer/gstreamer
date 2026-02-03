@@ -1,4 +1,4 @@
-set-globals, media_dir="$(test_dir)/../../medias/defaults"
+set-globals, media_dir="$(test_dir)/../../media/defaults"
 meta, handles-states=true,
     tool = "ges-launch-$(gst_api_version)",
     ges-options={
@@ -7,8 +7,8 @@ meta, handles-states=true,
         --videosink, "$(videosink) name=videosink",
     }
 
-include, location="../../medias/defaults/matroska/red_timed_frames_video_only_1fps.mkv.frames_checksums"
-include, location="../../medias/defaults/matroska/timed_frames_video_only_1fps.mkv.frames_checksums"
+include, location="../../media/defaults/matroska/red_timed_frames_video_only_1fps.mkv.frames_checksums"
+include, location="../../media/defaults/matroska/timed_frames_video_only_1fps.mkv.frames_checksums"
 
 pause
 add-clip, name=red, asset-id="file://$(media_dir)/matroska/red_timed_frames_video_only_1fps.mkv", layer-priority=0, type=GESUriClip

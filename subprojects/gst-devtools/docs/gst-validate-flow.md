@@ -68,7 +68,7 @@ gst-validate-1.0 --set-test-file /path/to/fakesrc.simple.validatetest
 The following is an example of the `qtdemux_change_edit_list.validatetest` file using validateflow.
 
 ``` ini
-set-globals, media_dir="$(test_dir)/../../../medias/"
+set-globals, media_dir="$(test_dir)/../../../media/"
 meta,
     seek=false,
     handles-states=false,

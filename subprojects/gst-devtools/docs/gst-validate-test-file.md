@@ -138,10 +138,10 @@ git add testsuites/validate.testslist
 
 ## Adding media files
 
-Media files used by tests live in the `medias/` directory of
+Media files used by tests live in the `media/` directory of
 `gst-integration-testsuites`, which is a separate git repository using
 [git-lfs](https://git-lfs.com/) for binary file storage. The files are
-organized by container format under `medias/defaults/` (e.g. `mp4/`,
+organized by container format under `media/defaults/` (e.g. `mp4/`,
 `matroska/`, `ogg/`, etc.) with additional directories for specialized content
 (`fragments/`, `encrypted/`, `adaptivecontent/`, etc.).
 
@@ -153,7 +153,7 @@ To reference media files from a `.validatetest` file, use `set-globals` to
 define a relative path through `$(test_dir)`:
 
 ``` yaml
-set-globals, media_dir="$(test_dir)/../../../medias/"
+set-globals, media_dir="$(test_dir)/../../../media/"
 meta,
     args = {
         "filesrc location=$(media_dir)/defaults/mp4/raw_h264.0.mp4 ! qtdemux ! fakesink",
@@ -162,25 +162,25 @@ meta,
 
 ### Steps to add a new media file
 
-Since the `medias/` directory is a separate git repository, the new media file
+Since the `media/` directory is a separate git repository, the new media file
 must be available on `origin` before the `.validatetest` that uses it can run in
 CI. This means the media change has to either be merged first or pushed to a
 branch on `origin`, and the submodule reference in the main repository updated
 to point to that commit.
 
-1. Make sure the media file extension is tracked by git-lfs in the `medias/`
+1. Make sure the media file extension is tracked by git-lfs in the `media/`
    repository (check `.gitattributes`). If not, add it:
 
    ``` bash
-   cd medias/
+   cd media/
    git lfs track "*.ext"
    ```
 
-2. Place the file under the appropriate subdirectory in `medias/defaults/` (or
+2. Place the file under the appropriate subdirectory in `media/defaults/` (or
    `fragments/`, `encrypted/`, etc.).
 
 3. Commit and push the media file (and any updated `.gitattributes`) to `origin`
-   in the `medias/` repository.
+   in the `media/` repository.
 
 4. Update the submodule reference in the main `gstreamer` repository to point to
    the commit containing the new media file.

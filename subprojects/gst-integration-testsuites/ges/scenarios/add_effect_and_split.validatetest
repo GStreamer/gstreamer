@@ -1,4 +1,4 @@
-set-globals, media_file="$(test_dir)/../../medias/defaults/matroska/timed_frames_video_only_1fps.mkv"
+set-globals, media_file="$(test_dir)/../../media/defaults/matroska/timed_frames_video_only_1fps.mkv"
 meta,
     tool = "ges-launch-$(gst_api_version)",
     handles-states=true,

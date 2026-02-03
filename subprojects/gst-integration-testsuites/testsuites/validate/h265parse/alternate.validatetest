@@ -1,4 +1,4 @@
-set-globals, media_dir="$(test_dir)/../../../medias/"
+set-globals, media_dir="$(test_dir)/../../../media/"
 meta,
     args = {
          "filesrc location=$(media_dir)/defaults/h265/alternate.h265 ! h265parse ! fakesink name=fakesink",

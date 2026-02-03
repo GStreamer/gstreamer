@@ -14,7 +14,7 @@ meta,
         "expected-issue, issue-id=\"runtime::error-on-bus\", details=\".*Stream doesn't contain enough.*\", sometimes=true",
     }
 
-start-http-server, working-directory="$(test_dir)/../../../medias/defaults/dash/webm/"
+start-http-server, working-directory="$(test_dir)/../../../media/defaults/dash/webm/"
 set-vars,
   start_count_uri="http://127.0.0.1:$(http_server_port)/admin/failure-counts/start",
   status_rules_uri="http://127.0.0.1:$(http_server_port)/admin/status-rules",
