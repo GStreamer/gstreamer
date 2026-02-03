@@ -1531,7 +1531,7 @@ gst_vulkan_physical_device_has_feature_synchronization2 (GstVulkanPhysicalDevice
 }
 
 gboolean
-    gst_vulkan_physical_device_has_feature_timeline_sempahore
+    gst_vulkan_physical_device_has_feature_timeline_semaphore
     (GstVulkanPhysicalDevice * device) {
 #if defined (VK_KHR_timeline_semaphore)
   GstVulkanPhysicalDevicePrivate *priv;

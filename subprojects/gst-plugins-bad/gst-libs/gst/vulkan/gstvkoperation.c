@@ -159,7 +159,7 @@ gst_vulkan_operation_constructed (GObject * object)
       (device->physical_device);
 
   priv->has_timeline =
-      gst_vulkan_physical_device_has_feature_timeline_sempahore
+      gst_vulkan_physical_device_has_feature_timeline_semaphore
       (device->physical_device);
 
   if (priv->has_sync2) {

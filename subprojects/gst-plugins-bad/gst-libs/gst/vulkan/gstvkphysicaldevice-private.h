@@ -48,7 +48,7 @@ gboolean                    gst_vulkan_physical_device_has_feature_sampler_ycbrc
 gboolean                    gst_vulkan_physical_device_has_feature_synchronization2
                                                                             (GstVulkanPhysicalDevice * device);
 
-gboolean                    gst_vulkan_physical_device_has_feature_timeline_sempahore
+gboolean                    gst_vulkan_physical_device_has_feature_timeline_semaphore
                                                                             (GstVulkanPhysicalDevice * device);
 
 gboolean                    gst_vulkan_physical_device_has_feature_video_maintenance1
