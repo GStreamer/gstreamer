@@ -160,6 +160,8 @@ caps_to_mime (GstCaps * caps)
     return "audio/vorbis";
   } else if (strcmp (name, "audio/x-opus") == 0) {
     return "audio/opus";
+  } else if (strcmp (name, "audio/x-flac") == 0) {
+    return "audio/flac";
   } else if (strcmp (name, "audio/x-ac3") == 0) {
     return "audio/ac3";
   } else if (strcmp (name, "audio/x-eac3") == 0) {
