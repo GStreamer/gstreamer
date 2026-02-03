@@ -1342,15 +1342,90 @@ gst_video_decoder_handle_missing_data_default (GstVideoDecoder * decoder,
 }
 
 static gboolean
+gst_video_decoder_handle_gap (GstVideoDecoder * decoder, GstEvent * event)
+{
+  GstVideoDecoderClass *decoder_class;
+  GstClockTime timestamp, duration;
+  GstGapFlags gap_flags = 0;
+  gboolean ret = FALSE;
+
+  decoder_class = GST_VIDEO_DECODER_GET_CLASS (decoder);
+
+  gst_event_parse_gap (event, &timestamp, &duration);
+  gst_event_parse_gap_flags (event, &gap_flags);
+
+  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+  /* If this is not missing data, or the subclass does not handle it
+   * specifically, then drain out the decoder and forward the event
+   * directly. */
+  if ((gap_flags & GST_GAP_FLAG_MISSING_DATA) == 0
+      || !decoder_class->handle_missing_data
+      || decoder_class->handle_missing_data (decoder, timestamp, duration)) {
+    GstFlowReturn flow_ret = GST_FLOW_OK;
+    gboolean needs_reconfigure = FALSE;
+    GList *events;
+    GList *frame_events;
+
+    if (decoder->input_segment.flags & GST_SEEK_FLAG_TRICKMODE_KEY_UNITS)
+      flow_ret = gst_video_decoder_drain_out (decoder, FALSE);
+    ret = (flow_ret == GST_FLOW_OK);
+
+    /* Ensure we have caps before forwarding the event */
+    if (!decoder->priv->output_state) {
+      if (!gst_video_decoder_negotiate_default_caps (decoder)) {
+        GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+        GST_ELEMENT_ERROR (decoder, STREAM, FORMAT, (NULL),
+            ("Decoder output not negotiated before GAP event."));
+        goto out;
+      }
+      needs_reconfigure = TRUE;
+    }
+
+    needs_reconfigure = gst_pad_check_reconfigure (decoder->srcpad)
+        || needs_reconfigure;
+    if (decoder->priv->output_state_changed || needs_reconfigure) {
+      if (!gst_video_decoder_negotiate_unlocked (decoder)) {
+        GST_WARNING_OBJECT (decoder, "Failed to negotiate with downstream");
+        gst_pad_mark_reconfigure (decoder->srcpad);
+      }
+    }
+
+    GST_DEBUG_OBJECT (decoder, "Pushing all pending serialized events"
+        " before the gap");
+    events = decoder->priv->pending_events;
+    frame_events = decoder->priv->current_frame_events;
+    decoder->priv->pending_events = NULL;
+    decoder->priv->current_frame_events = NULL;
+
+    GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+
+    gst_video_decoder_push_event_list (decoder, events);
+    gst_video_decoder_push_event_list (decoder, frame_events);
+
+    /* Forward GAP immediately. Everything is drained after
+     * the GAP event and we can forward this event immediately
+     * now without having buffers out of order.
+     */
+  } else {
+    GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+    gst_clear_event (&event);
+  }
+
+out:
+  if (event) {
+    ret = gst_video_decoder_push_event (decoder, event);
+  }
+
+  return ret;
+}
+
+static gboolean
 gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
     GstEvent * event)
 {
-  GstVideoDecoderClass *decoder_class;
   GstVideoDecoderPrivate *priv;
   gboolean ret = FALSE;
   gboolean forward_immediate = FALSE;
-
-  decoder_class = GST_VIDEO_DECODER_GET_CLASS (decoder);
 
   priv = decoder->priv;
 
@@ -1439,70 +1514,8 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
     }
     case GST_EVENT_GAP:
     {
-      GstClockTime timestamp, duration;
-      GstGapFlags gap_flags = 0;
-      GstFlowReturn flow_ret = GST_FLOW_OK;
-      gboolean needs_reconfigure = FALSE;
-      GList *events;
-      GList *frame_events;
-
-      gst_event_parse_gap (event, &timestamp, &duration);
-      gst_event_parse_gap_flags (event, &gap_flags);
-
-      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-      /* If this is not missing data, or the subclass does not handle it
-       * specifically, then drain out the decoder and forward the event
-       * directly. */
-      if ((gap_flags & GST_GAP_FLAG_MISSING_DATA) == 0
-          || !decoder_class->handle_missing_data
-          || decoder_class->handle_missing_data (decoder, timestamp,
-              duration)) {
-        if (decoder->input_segment.flags & GST_SEEK_FLAG_TRICKMODE_KEY_UNITS)
-          flow_ret = gst_video_decoder_drain_out (decoder, FALSE);
-        ret = (flow_ret == GST_FLOW_OK);
-
-        /* Ensure we have caps before forwarding the event */
-        if (!decoder->priv->output_state) {
-          if (!gst_video_decoder_negotiate_default_caps (decoder)) {
-            GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-            GST_ELEMENT_ERROR (decoder, STREAM, FORMAT, (NULL),
-                ("Decoder output not negotiated before GAP event."));
-            forward_immediate = TRUE;
-            break;
-          }
-          needs_reconfigure = TRUE;
-        }
-
-        needs_reconfigure = gst_pad_check_reconfigure (decoder->srcpad)
-            || needs_reconfigure;
-        if (decoder->priv->output_state_changed || needs_reconfigure) {
-          if (!gst_video_decoder_negotiate_unlocked (decoder)) {
-            GST_WARNING_OBJECT (decoder, "Failed to negotiate with downstream");
-            gst_pad_mark_reconfigure (decoder->srcpad);
-          }
-        }
-
-        GST_DEBUG_OBJECT (decoder, "Pushing all pending serialized events"
-            " before the gap");
-        events = decoder->priv->pending_events;
-        frame_events = decoder->priv->current_frame_events;
-        decoder->priv->pending_events = NULL;
-        decoder->priv->current_frame_events = NULL;
-
-        GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-
-        gst_video_decoder_push_event_list (decoder, events);
-        gst_video_decoder_push_event_list (decoder, frame_events);
-
-        /* Forward GAP immediately. Everything is drained after
-         * the GAP event and we can forward this event immediately
-         * now without having buffers out of order.
-         */
-        forward_immediate = TRUE;
-      } else {
-        GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-        gst_clear_event (&event);
-      }
+      ret = gst_video_decoder_handle_gap (decoder, event);
+      event = NULL;
       break;
     }
     case GST_EVENT_CUSTOM_DOWNSTREAM:
