@@ -183,6 +183,8 @@ struct _GstQTMuxPad
   GstFlowReturn flow_status;
 
   GstCaps *configured_caps;
+
+  gboolean warned_av1_unparsed;
 };
 
 struct _GstQTMuxPadClass

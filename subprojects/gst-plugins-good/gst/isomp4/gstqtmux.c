@@ -306,6 +306,7 @@ static void
 gst_qt_mux_pad_init (GstQTMuxPad * pad)
 {
   pad->trak_timescale = DEFAULT_PAD_TRAK_TIMESCALE;
+  pad->warned_av1_unparsed = FALSE;
 }
 
 static guint32
@@ -689,6 +690,7 @@ gst_qt_mux_pad_reset (GstQTMuxPad * qtpad)
   gst_buffer_replace (&qtpad->last_buf, NULL);
 
   gst_caps_replace (&qtpad->configured_caps, NULL);
+  qtpad->warned_av1_unparsed = FALSE;
 
   if (qtpad->tags) {
     gst_tag_list_unref (qtpad->tags);
@@ -6266,7 +6268,8 @@ check_field (const GstIdStr * fieldname, const GValue * value,
 
   if (g_strcmp0 (name, "video/x-h264") == 0 ||
       g_strcmp0 (name, "video/x-h265") == 0 ||
-      g_strcmp0 (name, "video/x-h266") == 0) {
+      g_strcmp0 (name, "video/x-h266") == 0 ||
+      g_strcmp0 (name, "video/x-av1") == 0) {
     /* We support muxing multiple codec_data structures, and the new SPS
      * will contain updated tier / level / profiles, which means we do
      * not need to fail renegotiation when those change.
@@ -7095,11 +7098,19 @@ gst_qt_mux_video_sink_set_caps (GstQTMuxPad * qtpad, GstCaps * caps)
     sync = FALSE;
   } else if (strcmp (mimetype, "video/x-av1") == 0) {
     GstBuffer *av1_codec_data = NULL;
+    gboolean parsed = FALSE;
 
     if (codec_data) {
       av1_codec_data = gst_buffer_ref ((GstBuffer *) codec_data);
     } else {
       av1_codec_data = gst_codec_utils_av1_create_av1c_from_caps (caps);
+    }
+
+    if ((!gst_structure_get_boolean (structure, "parsed", &parsed) || !parsed)
+        && !qtpad->warned_av1_unparsed) {
+      GST_WARNING_OBJECT (qtmux,
+          "AV1 caps are not marked parsed; consider inserting av1parse");
+      qtpad->warned_av1_unparsed = TRUE;
     }
 
     entry.fourcc = FOURCC_av01;
