@@ -1926,12 +1926,6 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   if (G_UNLIKELY (!ffmpegdec->context))
     goto no_codec;
 
-#if LIBAVCODEC_VERSION_MAJOR >= 60
-  ffmpegdec->context->frame_num++;
-#else
-  ffmpegdec->context->frame_number++;
-#endif
-
   *ret = GST_FLOW_OK;
 
   /* in case we skip frames */
