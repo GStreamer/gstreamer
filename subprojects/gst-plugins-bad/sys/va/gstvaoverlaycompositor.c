@@ -358,7 +358,64 @@ gst_va_overlay_compositor_set_info (GstVaBaseTransform * bt, GstCaps * incaps,
 }
 
 static OverlayPool *
-gst_va_overlay_compositor_lookup_pool_by_info (GstVaOverlayCompositor * self,
+gst_va_overlay_compositor_create_pool (GstVaOverlayCompositor * self,
+    GstVideoInfo * info)
+{
+  GstVaBaseTransform *vabtrans = GST_VA_BASE_TRANSFORM (self);
+
+  OverlayPool *result = NULL;
+  GstCaps *caps = NULL;
+  GstBufferPool *vapool;
+  GstAllocator *allocator = NULL;
+  GstAllocationParams params = { 0, };
+  guint usage_hint;
+
+  caps = gst_video_info_to_caps (info);
+
+  if (!gst_va_base_convert_caps_to_va (caps)) {
+    GST_ERROR_OBJECT (self, "Invalid caps %" GST_PTR_FORMAT, caps);
+    goto out;
+  }
+
+  usage_hint = va_get_surface_usage_hint (vabtrans->display,
+      VAEntrypointVideoProc, GST_PAD_SINK, FALSE);
+  gst_allocation_params_init (&params);
+
+  allocator = gst_va_base_transform_allocator_from_caps (vabtrans, caps);
+
+  vapool = gst_va_pool_new_with_config (caps, 1, 0, usage_hint,
+      GST_VA_FEATURE_AUTO, allocator, &params);
+  if (!vapool) {
+    goto out;
+  }
+
+  if (gst_buffer_pool_set_active (vapool, TRUE)) {
+    result = g_new0 (OverlayPool, 1);
+    result->pool = vapool;
+    gst_va_allocator_get_format (allocator, &result->info, NULL, NULL);
+
+    self->pools = g_slist_append (self->pools, result);
+
+    if (g_slist_length (self->pools) > MAX_OVERLAY_POOLS) {
+      /* remove the oldest pool in the list */
+      g_clear_pointer (&self->pools->data, _overlay_pool_free);
+      self->pools = g_slist_delete_link (self->pools, self->pools);
+    }
+  } else {
+    GST_WARNING_OBJECT (self, "failed to activate pool %" GST_PTR_FORMAT,
+        vapool);
+    gst_clear_object (&vapool);
+  }
+
+out:
+  gst_clear_caps (&caps);
+  gst_clear_object (&allocator);
+
+  return result;
+}
+
+static OverlayPool *
+gst_va_overlay_compositor_get_pool_by_info (GstVaOverlayCompositor * self,
     GstVideoInfo * info)
 {
   OverlayPool *result = NULL;
@@ -372,6 +429,10 @@ gst_va_overlay_compositor_lookup_pool_by_info (GstVaOverlayCompositor * self,
       result = pool;
       break;
     }
+  }
+
+  if (!result) {
+    result = gst_va_overlay_compositor_create_pool (self, info);
   }
 
   return result;
@@ -392,60 +453,11 @@ static GstBufferPool *
 _get_pool (GstElement * element, gpointer data)
 {
   GstVaOverlayCompositor *self = GST_VA_OVERLAY_COMPOSITOR (element);
-  GstVaBaseTransform *vabtrans = GST_VA_BASE_TRANSFORM (self);
 
   GstVaBufferImporter *importer = data;
   OverlayPool *pool = NULL;
 
-  pool =
-      gst_va_overlay_compositor_lookup_pool_by_info (self, importer->in_info);
-  if (!pool) {
-    GstCaps *caps = NULL;
-    GstBufferPool *vapool;
-    GstAllocator *allocator = NULL;
-    GstAllocationParams params = { 0, };
-    guint usage_hint;
-
-    caps = gst_video_info_to_caps (importer->in_info);
-
-    if (!gst_va_base_convert_caps_to_va (caps)) {
-      GST_ERROR_OBJECT (self, "Invalid caps %" GST_PTR_FORMAT, caps);
-      goto out;
-    }
-
-    usage_hint = va_get_surface_usage_hint (vabtrans->display,
-        VAEntrypointVideoProc, GST_PAD_SINK, FALSE);
-    gst_allocation_params_init (&params);
-
-    allocator = gst_va_base_transform_allocator_from_caps (vabtrans, caps);
-
-    vapool = gst_va_pool_new_with_config (caps, 1, 0, usage_hint,
-        GST_VA_FEATURE_AUTO, allocator, &params);
-    if (!vapool) {
-      goto out;
-    }
-
-    if (gst_buffer_pool_set_active (vapool, TRUE)) {
-      pool = g_new0 (OverlayPool, 1);
-      pool->pool = vapool;
-      gst_va_allocator_get_format (allocator, &pool->info, NULL, NULL);
-
-      self->pools = g_slist_append (self->pools, pool);
-
-      if (g_slist_length (self->pools) > MAX_OVERLAY_POOLS) {
-        g_clear_pointer (&self->pools->data, _overlay_pool_free);
-        self->pools = g_slist_delete_link (self->pools, self->pools);
-      }
-    } else {
-      GST_WARNING_OBJECT (self, "failed to activate pool %" GST_PTR_FORMAT, pool);
-      gst_clear_object (&pool);
-    }
-
-  out:
-    gst_clear_caps (&caps);
-    gst_clear_object (&allocator);
-  }
-
+  pool = gst_va_overlay_compositor_get_pool_by_info (self, importer->in_info);
   if (pool) {
     *importer->sinkpad_info = pool->info;
     return pool->pool;
