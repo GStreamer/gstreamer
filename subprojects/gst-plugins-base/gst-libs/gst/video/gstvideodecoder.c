@@ -1366,8 +1366,16 @@ gst_video_decoder_handle_gap (GstVideoDecoder * decoder, GstEvent * event)
     GList *events;
     GList *frame_events;
 
-    if (decoder->input_segment.flags & GST_SEEK_FLAG_TRICKMODE_KEY_UNITS)
+    if (decoder->input_segment.flags & GST_SEEK_FLAG_TRICKMODE_KEY_UNITS) {
       flow_ret = gst_video_decoder_drain_out (decoder, FALSE);
+    } else if (decoder->priv->frames.length > 0) {
+      // Queue up gap events if we didn't actually drain and frames are pending,
+      // and forward them later before the next frame
+      decoder->priv->current_frame_events =
+          g_list_prepend (decoder->priv->current_frame_events, event);
+      GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+      return TRUE;
+    }
     ret = (flow_ret == GST_FLOW_OK);
 
     /* Ensure we have caps before forwarding the event */
@@ -1376,7 +1384,7 @@ gst_video_decoder_handle_gap (GstVideoDecoder * decoder, GstEvent * event)
         GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
         GST_ELEMENT_ERROR (decoder, STREAM, FORMAT, (NULL),
             ("Decoder output not negotiated before GAP event."));
-        goto out;
+        return gst_video_decoder_push_event (decoder, event);
       }
       needs_reconfigure = TRUE;
     }
@@ -1406,14 +1414,10 @@ gst_video_decoder_handle_gap (GstVideoDecoder * decoder, GstEvent * event)
      * the GAP event and we can forward this event immediately
      * now without having buffers out of order.
      */
+    ret = gst_video_decoder_push_event (decoder, event);
   } else {
     GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
     gst_clear_event (&event);
-  }
-
-out:
-  if (event) {
-    ret = gst_video_decoder_push_event (decoder, event);
   }
 
   return ret;
