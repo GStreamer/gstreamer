@@ -1,0 +1,60 @@
+From 464790d3fcfb8076c39efc452720046657d60ec3 Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Tue, 3 Feb 2026 16:20:15 +0530
+Subject: [PATCH 1/2] Fix build on non-macOS platforms that do not support JIT
+
+Encountered while building pcre2:
+
+```
+../src/../deps/sljit/sljit_src/allocator_src/sljitExecAllocatorApple.c:127:2: error: call to undeclared function 'SLJIT_UPDATE_WX_FLAGS';
+ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+  127 |         SLJIT_UPDATE_WX_FLAGS(retval, (uint8_t *)retval + size, 0);
+      |         ^
+```
+---
+ deps/sljit/sljit_src/allocator_src/sljitExecAllocatorApple.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/deps/sljit/sljit_src/allocator_src/sljitExecAllocatorApple.c b/deps/sljit/sljit_src/allocator_src/sljitExecAllocatorApple.c
+index 9bd2094..6f708a9 100644
+--- a/deps/sljit/sljit_src/allocator_src/sljitExecAllocatorApple.c
++++ b/deps/sljit/sljit_src/allocator_src/sljitExecAllocatorApple.c
+@@ -108,6 +108,7 @@ static SLJIT_INLINE void apple_update_wx_flags(sljit_s32 enable_exec)
+ #else
+ #define SLJIT_MAP_JIT	(0)
+ #endif
++#define SLJIT_UPDATE_WX_FLAGS(from, to, enable_exec)
+ 
+ #endif /* TARGET_OS_OSX */
+ 
+-- 
+2.39.5 (Apple Git-154)
+
+
+From 9d803b98c8233f5108e955861b029a36d086ea7d Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Tue, 3 Feb 2026 16:22:09 +0530
+Subject: [PATCH 2/2] Fix build on non-iPhone/Mac Apple platforms such as tvOS
+
+When TARGET_OS_OSX is not defined, the Xcode SDK only supports Mac.
+---
+ deps/sljit/sljit_src/allocator_src/sljitExecAllocatorApple.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/deps/sljit/sljit_src/allocator_src/sljitExecAllocatorApple.c b/deps/sljit/sljit_src/allocator_src/sljitExecAllocatorApple.c
+index 6f708a9..6e6ffd3 100644
+--- a/deps/sljit/sljit_src/allocator_src/sljitExecAllocatorApple.c
++++ b/deps/sljit/sljit_src/allocator_src/sljitExecAllocatorApple.c
+@@ -34,7 +34,8 @@
+ */
+ #include <TargetConditionals.h>
+ 
+-#if (defined(TARGET_OS_OSX) && TARGET_OS_OSX) || (TARGET_OS_MAC && !TARGET_OS_IPHONE)
++#if (defined (TARGET_OS_OSX) && TARGET_OS_OSX) || \
++       (!defined (TARGET_OS_OSX) && defined (TARGET_OS_MAC) && TARGET_OS_MAC)
+ 
+ #if defined(SLJIT_CONFIG_X86) && SLJIT_CONFIG_X86
+ 
+-- 
+2.39.5 (Apple Git-154)
+
