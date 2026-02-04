@@ -140,10 +140,12 @@ static gboolean gst_aja_sink_combiner_sink_event(GstAggregator *aggregator,
 
   switch (GST_EVENT_TYPE(event)) {
     case GST_EVENT_SEGMENT: {
-      const GstSegment *segment;
+      if (agg_pad == GST_AGGREGATOR_PAD_CAST(self->video_sinkpad)) {
+        const GstSegment *segment;
 
-      gst_event_parse_segment(event, &segment);
-      gst_aggregator_update_segment(GST_AGGREGATOR(self), segment);
+        gst_event_parse_segment(event, &segment);
+        gst_aggregator_update_segment(GST_AGGREGATOR(self), segment);
+      }
       break;
     }
     case GST_EVENT_CAPS: {
