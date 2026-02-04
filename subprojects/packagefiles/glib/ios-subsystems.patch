@@ -1,0 +1,43 @@
+From 4a922e9ac50989706a32a75a781608a8e74227fd Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Tue, 3 Feb 2026 16:37:06 +0530
+Subject: [PATCH 2/4] meson: Fix regression in building for iOS when using
+ subsystems
+
+---
+ meson.build | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/meson.build b/meson.build
+index 19fbed682e..a7b2f06177 100644
+--- a/meson.build
++++ b/meson.build
+@@ -69,6 +69,7 @@ else
+ endif
+ 
+ host_system = host_machine.system()
++subsystem = ''
+ 
+ if host_system == 'darwin'
+   ios_test_code = '''#include <TargetConditionals.h>
+@@ -89,6 +90,8 @@ if host_system == 'linux'
+   if cc.compiles(musl_test_code, name : 'building for musl libc')
+     linux_libc = 'musl'
+   endif
++elif host_system == 'darwin'
++  subsystem = host_machine.subsystem()
+ endif
+ 
+ glib_version = meson.project_version()
+@@ -1004,7 +1007,7 @@ endif
+ osx_ldflags = []
+ glib_have_carbon = false
+ glib_have_cocoa = false
+-if host_system == 'darwin'
++if host_system == 'darwin' and subsystem == 'macos'
+   add_languages('objc', native: false, required: true)
+   objcc = meson.get_compiler('objc')
+   if not objcc.compiles('''#include <AvailabilityMacros.h>
+-- 
+GitLab
+
