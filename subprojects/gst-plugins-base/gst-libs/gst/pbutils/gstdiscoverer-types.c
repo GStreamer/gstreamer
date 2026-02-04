@@ -1199,3 +1199,932 @@ gst_discoverer_info_get_missing_elements_installer_details (const
 
   return (const gchar **) info->missing_elements_details->pdata;
 }
+
+/* === Builder API Implementation === */
+
+struct _GstDiscovererInfoBuilder
+{
+  gchar *uri;
+  GstDiscovererResult result;
+  GstClockTime duration;
+  gboolean seekable;
+  gboolean live;
+  GstTagList *tags;
+  GstDiscovererStreamInfo *stream_info;
+};
+
+struct _GstDiscovererContainerInfoBuilder
+{
+  GstCaps *caps;
+  GstTagList *tags;
+  GList *streams;
+};
+
+struct _GstDiscovererAudioInfoBuilder
+{
+  gchar *stream_id;
+  GstCaps *caps;
+  GstTagList *tags;
+  guint bitrate;
+  guint max_bitrate;
+  gchar *language;
+};
+
+struct _GstDiscovererVideoInfoBuilder
+{
+  gchar *stream_id;
+  GstCaps *caps;
+  GstTagList *tags;
+  gboolean interlaced;
+  guint bitrate;
+  guint max_bitrate;
+  gboolean is_image;
+};
+
+struct _GstDiscovererSubtitleInfoBuilder
+{
+  gchar *stream_id;
+  GstCaps *caps;
+  GstTagList *tags;
+  gchar *language;
+};
+
+/* === Info Builder === */
+
+/**
+ * gst_discoverer_info_builder_new:
+ * @uri: the URI for this discoverer info
+ * @stream_info: (transfer full): the stream info (single stream or container)
+ *
+ * Creates a new #GstDiscovererInfoBuilder for building a #GstDiscovererInfo.
+ *
+ * The stream info can be either:
+ * - A single stream (audio, video, or subtitle) for files without a container
+ * - A #GstDiscovererContainerInfo for files with a container and multiple streams
+ *
+ * Returns: (transfer full): a new #GstDiscovererInfoBuilder
+ *
+ * Since: 1.30
+ */
+GstDiscovererInfoBuilder *
+gst_discoverer_info_builder_new (const gchar * uri,
+    GstDiscovererStreamInfo * stream_info)
+{
+  GstDiscovererInfoBuilder *builder;
+
+  g_return_val_if_fail (uri != NULL, NULL);
+  g_return_val_if_fail (GST_IS_DISCOVERER_STREAM_INFO (stream_info), NULL);
+
+  builder = g_new0 (GstDiscovererInfoBuilder, 1);
+  builder->uri = g_strdup (uri);
+  builder->stream_info = stream_info;   /* Takes ownership */
+  builder->result = GST_DISCOVERER_OK;
+  builder->duration = GST_CLOCK_TIME_NONE;
+
+  return builder;
+}
+
+/**
+ * gst_discoverer_info_builder_free:
+ * @builder: (transfer full): a #GstDiscovererInfoBuilder
+ *
+ * Frees a #GstDiscovererInfoBuilder without building.
+ *
+ * Since: 1.30
+ */
+void
+gst_discoverer_info_builder_free (GstDiscovererInfoBuilder * builder)
+{
+  if (builder == NULL)
+    return;
+
+  g_free (builder->uri);
+  if (builder->tags)
+    gst_tag_list_unref (builder->tags);
+  if (builder->stream_info)
+    gst_discoverer_stream_info_unref (builder->stream_info);
+
+  g_free (builder);
+}
+
+/**
+ * gst_discoverer_info_builder_set_duration:
+ * @builder: a #GstDiscovererInfoBuilder
+ * @duration: the duration in #GstClockTime
+ *
+ * Sets the duration of the URI.
+ *
+ * Returns: (transfer none): the same builder for chaining
+ *
+ * Since: 1.30
+ */
+GstDiscovererInfoBuilder *
+gst_discoverer_info_builder_set_duration (GstDiscovererInfoBuilder * builder,
+    GstClockTime duration)
+{
+  g_return_val_if_fail (builder != NULL, NULL);
+  builder->duration = duration;
+  return builder;
+}
+
+/**
+ * gst_discoverer_info_builder_set_seekable:
+ * @builder: a #GstDiscovererInfoBuilder
+ * @seekable: whether the URI is seekable
+ *
+ * Sets whether the URI is seekable.
+ *
+ * Returns: (transfer none): the same builder for chaining
+ *
+ * Since: 1.30
+ */
+GstDiscovererInfoBuilder *
+gst_discoverer_info_builder_set_seekable (GstDiscovererInfoBuilder * builder,
+    gboolean seekable)
+{
+  g_return_val_if_fail (builder != NULL, NULL);
+  builder->seekable = seekable;
+  return builder;
+}
+
+/**
+ * gst_discoverer_info_builder_set_live:
+ * @builder: a #GstDiscovererInfoBuilder
+ * @live: whether the URI is live
+ *
+ * Sets whether the URI is live.
+ *
+ * Returns: (transfer none): the same builder for chaining
+ *
+ * Since: 1.30
+ */
+GstDiscovererInfoBuilder *
+gst_discoverer_info_builder_set_live (GstDiscovererInfoBuilder * builder,
+    gboolean live)
+{
+  g_return_val_if_fail (builder != NULL, NULL);
+  builder->live = live;
+  return builder;
+}
+
+/**
+ * gst_discoverer_info_builder_set_result:
+ * @builder: a #GstDiscovererInfoBuilder
+ * @result: the #GstDiscovererResult
+ *
+ * Sets the result of the discovery.
+ *
+ * Returns: (transfer none): the same builder for chaining
+ *
+ * Since: 1.30
+ */
+GstDiscovererInfoBuilder *
+gst_discoverer_info_builder_set_result (GstDiscovererInfoBuilder * builder,
+    GstDiscovererResult result)
+{
+  g_return_val_if_fail (builder != NULL, NULL);
+  builder->result = result;
+  return builder;
+}
+
+/**
+ * gst_discoverer_info_builder_set_tags:
+ * @builder: a #GstDiscovererInfoBuilder
+ * @tags: (transfer none) (nullable): the global tags
+ *
+ * Sets the global tags for the URI.
+ *
+ * Returns: (transfer none): the same builder for chaining
+ *
+ * Since: 1.30
+ */
+GstDiscovererInfoBuilder *
+gst_discoverer_info_builder_set_tags (GstDiscovererInfoBuilder * builder,
+    GstTagList * tags)
+{
+  g_return_val_if_fail (builder != NULL, NULL);
+
+  if (builder->tags)
+    gst_tag_list_unref (builder->tags);
+  builder->tags = tags ? gst_tag_list_ref (tags) : NULL;
+  return builder;
+}
+
+/**
+ * gst_discoverer_info_builder_build:
+ * @builder: (transfer full): a #GstDiscovererInfoBuilder
+ *
+ * Builds and returns a new #GstDiscovererInfo. This frees the builder.
+ *
+ * Returns: (transfer full): a new #GstDiscovererInfo
+ *
+ * Since: 1.30
+ */
+GstDiscovererInfo *
+gst_discoverer_info_builder_build (GstDiscovererInfoBuilder * builder)
+{
+  GstDiscovererInfo *info;
+
+  g_return_val_if_fail (builder != NULL, NULL);
+
+  info = (GstDiscovererInfo *) g_object_new (GST_TYPE_DISCOVERER_INFO, NULL);
+  info->uri = g_steal_pointer (&builder->uri);
+  info->result = builder->result;
+  info->duration = builder->duration;
+  info->seekable = builder->seekable;
+  info->live = builder->live;
+  info->tags = g_steal_pointer (&builder->tags);
+  info->stream_info = g_steal_pointer (&builder->stream_info);
+
+  /* stream_list holds borrowed pointers into the stream_info tree (matching
+   * what the regular discoverer flow does — finalize uses g_list_free, not
+   * gst_discoverer_stream_info_list_free). */
+  if (GST_IS_DISCOVERER_CONTAINER_INFO (info->stream_info)) {
+    GstDiscovererContainerInfo *c =
+        GST_DISCOVERER_CONTAINER_INFO (info->stream_info);
+    GList *l;
+    for (l = c->streams; l; l = l->next)
+      info->stream_list = g_list_append (info->stream_list, l->data);
+  } else {
+    /* Single stream - the stream itself is the only entry */
+    GST_DISCOVERER_STREAM_INFO (info->stream_info)->stream_number = 0;
+    info->stream_list = g_list_append (info->stream_list, info->stream_info);
+  }
+
+  g_free (builder);
+  return info;
+}
+
+/* === Container Info Builder === */
+
+/**
+ * gst_discoverer_container_info_builder_new:
+ * @caps: (transfer none): the container caps
+ *
+ * Creates a new #GstDiscovererContainerInfoBuilder for building a
+ * #GstDiscovererContainerInfo with multiple streams.
+ *
+ * Returns: (transfer full) (nullable): a new #GstDiscovererContainerInfoBuilder,
+ *   or %NULL if @caps is %NULL
+ *
+ * Since: 1.30
+ */
+GstDiscovererContainerInfoBuilder *
+gst_discoverer_container_info_builder_new (GstCaps * caps)
+{
+  GstDiscovererContainerInfoBuilder *builder;
+
+  g_return_val_if_fail (caps != NULL, NULL);
+
+  builder = g_new0 (GstDiscovererContainerInfoBuilder, 1);
+  builder->caps = gst_caps_ref (caps);
+
+  return builder;
+}
+
+/**
+ * gst_discoverer_container_info_builder_free:
+ * @builder: (transfer full): a #GstDiscovererContainerInfoBuilder
+ *
+ * Frees a #GstDiscovererContainerInfoBuilder without building.
+ *
+ * Since: 1.30
+ */
+void
+gst_discoverer_container_info_builder_free (GstDiscovererContainerInfoBuilder *
+    builder)
+{
+  if (builder == NULL)
+    return;
+
+  if (builder->caps)
+    gst_caps_unref (builder->caps);
+  if (builder->tags)
+    gst_tag_list_unref (builder->tags);
+  if (builder->streams)
+    gst_discoverer_stream_info_list_free (builder->streams);
+
+  g_free (builder);
+}
+
+/**
+ * gst_discoverer_container_info_builder_set_tags:
+ * @builder: a #GstDiscovererContainerInfoBuilder
+ * @tags: (transfer none) (nullable): the container tags
+ *
+ * Sets the container-level tags.
+ *
+ * Returns: (transfer none): the same builder for chaining
+ *
+ * Since: 1.30
+ */
+GstDiscovererContainerInfoBuilder
+    * gst_discoverer_container_info_builder_set_tags
+    (GstDiscovererContainerInfoBuilder * builder, GstTagList * tags) {
+  g_return_val_if_fail (builder != NULL, NULL);
+
+  if (builder->tags)
+    gst_tag_list_unref (builder->tags);
+  builder->tags = tags ? gst_tag_list_ref (tags) : NULL;
+  return builder;
+}
+
+/**
+ * gst_discoverer_container_info_builder_add_stream:
+ * @builder: a #GstDiscovererContainerInfoBuilder
+ * @stream_info: (transfer full): the stream info to add
+ *
+ * Adds a stream to the container. Takes ownership of @stream_info.
+ *
+ * Returns: (transfer none): the same builder for chaining
+ *
+ * Since: 1.30
+ */
+GstDiscovererContainerInfoBuilder
+    * gst_discoverer_container_info_builder_add_stream
+    (GstDiscovererContainerInfoBuilder * builder,
+    GstDiscovererStreamInfo * stream_info) {
+  g_return_val_if_fail (builder != NULL, NULL);
+  g_return_val_if_fail (GST_IS_DISCOVERER_STREAM_INFO (stream_info), builder);
+
+  builder->streams = g_list_append (builder->streams, stream_info);
+  return builder;
+}
+
+/**
+ * gst_discoverer_container_info_builder_build:
+ * @builder: (transfer full): a #GstDiscovererContainerInfoBuilder
+ *
+ * Builds and returns a new #GstDiscovererContainerInfo. This frees the builder.
+ *
+ * Returns: (transfer full): a new #GstDiscovererContainerInfo
+ *
+ * Since: 1.30
+ */
+GstDiscovererContainerInfo *
+gst_discoverer_container_info_builder_build (GstDiscovererContainerInfoBuilder *
+    builder)
+{
+  GstDiscovererContainerInfo *info;
+  GList *l;
+  gint stream_number = 0;
+
+  g_return_val_if_fail (builder != NULL, NULL);
+
+  info = (GstDiscovererContainerInfo *)
+      g_object_new (GST_TYPE_DISCOVERER_CONTAINER_INFO, NULL);
+  GST_DISCOVERER_STREAM_INFO (info)->caps = g_steal_pointer (&builder->caps);
+  info->tags = g_steal_pointer (&builder->tags);
+
+  /* Container finalize expects streams to have 2 refs (it unrefs twice).
+   * Streams come in with refcount 1, so we ref once more.
+   * Steal the list so builder_free doesn't unref them. */
+  for (l = builder->streams; l; l = l->next) {
+    GstDiscovererStreamInfo *stream = l->data;
+    GST_DISCOVERER_STREAM_INFO (stream)->stream_number = stream_number++;
+    gst_discoverer_stream_info_ref (stream);
+  }
+  info->streams = g_steal_pointer (&builder->streams);
+
+  gst_discoverer_container_info_builder_free (builder);
+  return info;
+}
+
+/* === Audio Info Builder === */
+
+/**
+ * gst_discoverer_audio_info_builder_new:
+ * @stream_id: the stream ID
+ * @caps: (transfer none): the audio caps
+ *
+ * Creates a new #GstDiscovererAudioInfoBuilder.
+ * Audio properties (channels, sample_rate, depth) will be extracted from caps.
+ *
+ * Returns: (transfer full): a new #GstDiscovererAudioInfoBuilder
+ *
+ * Since: 1.30
+ */
+GstDiscovererAudioInfoBuilder *
+gst_discoverer_audio_info_builder_new (const gchar * stream_id, GstCaps * caps)
+{
+  GstDiscovererAudioInfoBuilder *builder;
+
+  g_return_val_if_fail (stream_id != NULL, NULL);
+  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
+
+  builder = g_new0 (GstDiscovererAudioInfoBuilder, 1);
+  builder->stream_id = g_strdup (stream_id);
+  builder->caps = gst_caps_ref (caps);
+
+  return builder;
+}
+
+/**
+ * gst_discoverer_audio_info_builder_free:
+ * @builder: (transfer full): a #GstDiscovererAudioInfoBuilder
+ *
+ * Frees a #GstDiscovererAudioInfoBuilder without building.
+ *
+ * Since: 1.30
+ */
+void
+gst_discoverer_audio_info_builder_free (GstDiscovererAudioInfoBuilder * builder)
+{
+  if (builder == NULL)
+    return;
+
+  g_free (builder->stream_id);
+  if (builder->caps)
+    gst_caps_unref (builder->caps);
+  if (builder->tags)
+    gst_tag_list_unref (builder->tags);
+  g_free (builder->language);
+  g_free (builder);
+}
+
+/**
+ * gst_discoverer_audio_info_builder_set_tags:
+ * @builder: a #GstDiscovererAudioInfoBuilder
+ * @tags: (transfer none) (nullable): the stream tags
+ *
+ * Sets the stream tags.
+ *
+ * Returns: (transfer none): the same builder for chaining
+ *
+ * Since: 1.30
+ */
+GstDiscovererAudioInfoBuilder *
+gst_discoverer_audio_info_builder_set_tags (GstDiscovererAudioInfoBuilder *
+    builder, GstTagList * tags)
+{
+  g_return_val_if_fail (builder != NULL, NULL);
+
+  if (builder->tags)
+    gst_tag_list_unref (builder->tags);
+  builder->tags = tags ? gst_tag_list_ref (tags) : NULL;
+  return builder;
+}
+
+/**
+ * gst_discoverer_audio_info_builder_set_bitrate:
+ * @builder: a #GstDiscovererAudioInfoBuilder
+ * @bitrate: the bitrate in bits/second
+ *
+ * Sets the bitrate.
+ *
+ * Returns: (transfer none): the same builder for chaining
+ *
+ * Since: 1.30
+ */
+GstDiscovererAudioInfoBuilder *
+gst_discoverer_audio_info_builder_set_bitrate (GstDiscovererAudioInfoBuilder *
+    builder, guint bitrate)
+{
+  g_return_val_if_fail (builder != NULL, NULL);
+  builder->bitrate = bitrate;
+  return builder;
+}
+
+/**
+ * gst_discoverer_audio_info_builder_set_max_bitrate:
+ * @builder: a #GstDiscovererAudioInfoBuilder
+ * @max_bitrate: the maximum bitrate in bits/second
+ *
+ * Sets the maximum bitrate.
+ *
+ * Returns: (transfer none): the same builder for chaining
+ *
+ * Since: 1.30
+ */
+GstDiscovererAudioInfoBuilder *
+gst_discoverer_audio_info_builder_set_max_bitrate (GstDiscovererAudioInfoBuilder
+    * builder, guint max_bitrate)
+{
+  g_return_val_if_fail (builder != NULL, NULL);
+  builder->max_bitrate = max_bitrate;
+  return builder;
+}
+
+/**
+ * gst_discoverer_audio_info_builder_set_language:
+ * @builder: a #GstDiscovererAudioInfoBuilder
+ * @language: (nullable): the language code
+ *
+ * Sets the language.
+ *
+ * Returns: (transfer none): the same builder for chaining
+ *
+ * Since: 1.30
+ */
+GstDiscovererAudioInfoBuilder *
+gst_discoverer_audio_info_builder_set_language (GstDiscovererAudioInfoBuilder *
+    builder, const gchar * language)
+{
+  g_return_val_if_fail (builder != NULL, NULL);
+
+  g_free (builder->language);
+  builder->language = g_strdup (language);
+  return builder;
+}
+
+/**
+ * gst_discoverer_audio_info_builder_build:
+ * @builder: (transfer full): a #GstDiscovererAudioInfoBuilder
+ *
+ * Builds and returns a new #GstDiscovererAudioInfo. This frees the builder.
+ *
+ * Returns: (transfer full): a new #GstDiscovererAudioInfo
+ *
+ * Since: 1.30
+ */
+GstDiscovererAudioInfo *
+gst_discoverer_audio_info_builder_build (GstDiscovererAudioInfoBuilder *
+    builder)
+{
+  GstDiscovererAudioInfo *info;
+
+  g_return_val_if_fail (builder != NULL, NULL);
+
+  info = (GstDiscovererAudioInfo *)
+      g_object_new (GST_TYPE_DISCOVERER_AUDIO_INFO, NULL);
+
+  /* Extract properties from caps before stealing */
+  if (builder->caps && !gst_caps_is_empty (builder->caps)) {
+    GstStructure *s = gst_caps_get_structure (builder->caps, 0);
+    gint val;
+
+    if (gst_structure_get_int (s, "channels", &val))
+      info->channels = val;
+    if (gst_structure_get_int (s, "rate", &val))
+      info->sample_rate = val;
+    if (gst_structure_get_int (s, "depth", &val))
+      info->depth = val;
+
+    /* Try to get channel mask from audio info in caps */
+    gst_structure_get (s, "channel-mask", GST_TYPE_BITMASK, &info->channel_mask,
+        NULL);
+  }
+
+  /* Base stream info fields - use g_steal_pointer consistently */
+  GST_DISCOVERER_STREAM_INFO (info)->stream_id =
+      g_steal_pointer (&builder->stream_id);
+  GST_DISCOVERER_STREAM_INFO (info)->caps = g_steal_pointer (&builder->caps);
+  GST_DISCOVERER_STREAM_INFO (info)->tags = g_steal_pointer (&builder->tags);
+
+  /* Properties NOT from caps */
+  info->bitrate = builder->bitrate;
+  info->max_bitrate = builder->max_bitrate;
+  info->language = g_steal_pointer (&builder->language);
+
+  gst_discoverer_audio_info_builder_free (builder);
+  return info;
+}
+
+/* === Video Info Builder === */
+
+/**
+ * gst_discoverer_video_info_builder_new:
+ * @stream_id: the stream ID
+ * @caps: (transfer none): the video caps
+ *
+ * Creates a new #GstDiscovererVideoInfoBuilder.
+ * Video properties (width, height, framerate, PAR) will be extracted from caps.
+ *
+ * Returns: (transfer full): a new #GstDiscovererVideoInfoBuilder
+ *
+ * Since: 1.30
+ */
+GstDiscovererVideoInfoBuilder *
+gst_discoverer_video_info_builder_new (const gchar * stream_id, GstCaps * caps)
+{
+  GstDiscovererVideoInfoBuilder *builder;
+
+  g_return_val_if_fail (stream_id != NULL, NULL);
+  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
+
+  builder = g_new0 (GstDiscovererVideoInfoBuilder, 1);
+  builder->stream_id = g_strdup (stream_id);
+  builder->caps = gst_caps_ref (caps);
+
+  return builder;
+}
+
+/**
+ * gst_discoverer_video_info_builder_free:
+ * @builder: (transfer full): a #GstDiscovererVideoInfoBuilder
+ *
+ * Frees a #GstDiscovererVideoInfoBuilder without building.
+ *
+ * Since: 1.30
+ */
+void
+gst_discoverer_video_info_builder_free (GstDiscovererVideoInfoBuilder * builder)
+{
+  if (builder == NULL)
+    return;
+
+  g_free (builder->stream_id);
+  if (builder->caps)
+    gst_caps_unref (builder->caps);
+  if (builder->tags)
+    gst_tag_list_unref (builder->tags);
+  g_free (builder);
+}
+
+/**
+ * gst_discoverer_video_info_builder_set_tags:
+ * @builder: a #GstDiscovererVideoInfoBuilder
+ * @tags: (transfer none) (nullable): the stream tags
+ *
+ * Sets the stream tags.
+ *
+ * Returns: (transfer none): the same builder for chaining
+ *
+ * Since: 1.30
+ */
+GstDiscovererVideoInfoBuilder *
+gst_discoverer_video_info_builder_set_tags (GstDiscovererVideoInfoBuilder *
+    builder, GstTagList * tags)
+{
+  g_return_val_if_fail (builder != NULL, NULL);
+
+  if (builder->tags)
+    gst_tag_list_unref (builder->tags);
+  builder->tags = tags ? gst_tag_list_ref (tags) : NULL;
+  return builder;
+}
+
+/**
+ * gst_discoverer_video_info_builder_set_bitrate:
+ * @builder: a #GstDiscovererVideoInfoBuilder
+ * @bitrate: the bitrate in bits/second
+ *
+ * Sets the bitrate.
+ *
+ * Returns: (transfer none): the same builder for chaining
+ *
+ * Since: 1.30
+ */
+GstDiscovererVideoInfoBuilder *
+gst_discoverer_video_info_builder_set_bitrate (GstDiscovererVideoInfoBuilder *
+    builder, guint bitrate)
+{
+  g_return_val_if_fail (builder != NULL, NULL);
+  builder->bitrate = bitrate;
+  return builder;
+}
+
+/**
+ * gst_discoverer_video_info_builder_set_max_bitrate:
+ * @builder: a #GstDiscovererVideoInfoBuilder
+ * @max_bitrate: the maximum bitrate in bits/second
+ *
+ * Sets the maximum bitrate.
+ *
+ * Returns: (transfer none): the same builder for chaining
+ *
+ * Since: 1.30
+ */
+GstDiscovererVideoInfoBuilder *
+gst_discoverer_video_info_builder_set_max_bitrate (GstDiscovererVideoInfoBuilder
+    * builder, guint max_bitrate)
+{
+  g_return_val_if_fail (builder != NULL, NULL);
+  builder->max_bitrate = max_bitrate;
+  return builder;
+}
+
+/**
+ * gst_discoverer_video_info_builder_set_interlaced:
+ * @builder: a #GstDiscovererVideoInfoBuilder
+ * @interlaced: whether the video is interlaced
+ *
+ * Sets whether the video is interlaced.
+ *
+ * Returns: (transfer none): the same builder for chaining
+ *
+ * Since: 1.30
+ */
+GstDiscovererVideoInfoBuilder *
+gst_discoverer_video_info_builder_set_interlaced (GstDiscovererVideoInfoBuilder
+    * builder, gboolean interlaced)
+{
+  g_return_val_if_fail (builder != NULL, NULL);
+  builder->interlaced = interlaced;
+  return builder;
+}
+
+/**
+ * gst_discoverer_video_info_builder_set_is_image:
+ * @builder: a #GstDiscovererVideoInfoBuilder
+ * @is_image: whether this is an image
+ *
+ * Sets whether this is an image (single frame).
+ *
+ * Returns: (transfer none): the same builder for chaining
+ *
+ * Since: 1.30
+ */
+GstDiscovererVideoInfoBuilder *
+gst_discoverer_video_info_builder_set_is_image (GstDiscovererVideoInfoBuilder *
+    builder, gboolean is_image)
+{
+  g_return_val_if_fail (builder != NULL, NULL);
+  builder->is_image = is_image;
+  return builder;
+}
+
+/**
+ * gst_discoverer_video_info_builder_build:
+ * @builder: (transfer full): a #GstDiscovererVideoInfoBuilder
+ *
+ * Builds and returns a new #GstDiscovererVideoInfo. This frees the builder.
+ *
+ * Returns: (transfer full): a new #GstDiscovererVideoInfo
+ *
+ * Since: 1.30
+ */
+GstDiscovererVideoInfo *
+gst_discoverer_video_info_builder_build (GstDiscovererVideoInfoBuilder *
+    builder)
+{
+  GstDiscovererVideoInfo *info;
+
+  g_return_val_if_fail (builder != NULL, NULL);
+
+  info = (GstDiscovererVideoInfo *)
+      g_object_new (GST_TYPE_DISCOVERER_VIDEO_INFO, NULL);
+
+  /* Extract properties from caps before stealing */
+  if (builder->caps && !gst_caps_is_empty (builder->caps)) {
+    GstStructure *s = gst_caps_get_structure (builder->caps, 0);
+    gint val, num, denom;
+
+    if (gst_structure_get_int (s, "width", &val))
+      info->width = val;
+    if (gst_structure_get_int (s, "height", &val))
+      info->height = val;
+    if (gst_structure_get_fraction (s, "framerate", &num, &denom)) {
+      info->framerate_num = num;
+      info->framerate_denom = denom;
+    }
+    if (gst_structure_get_fraction (s, "pixel-aspect-ratio", &num, &denom)) {
+      info->par_num = num;
+      info->par_denom = denom;
+    } else {
+      /* Default PAR is 1:1 */
+      info->par_num = 1;
+      info->par_denom = 1;
+    }
+    /* Try to get depth from format */
+    if (gst_structure_get_int (s, "depth", &val))
+      info->depth = val;
+  }
+
+  /* Base stream info fields - use g_steal_pointer consistently */
+  GST_DISCOVERER_STREAM_INFO (info)->stream_id =
+      g_steal_pointer (&builder->stream_id);
+  GST_DISCOVERER_STREAM_INFO (info)->caps = g_steal_pointer (&builder->caps);
+  GST_DISCOVERER_STREAM_INFO (info)->tags = g_steal_pointer (&builder->tags);
+
+  /* Properties NOT from caps */
+  info->interlaced = builder->interlaced;
+  info->bitrate = builder->bitrate;
+  info->max_bitrate = builder->max_bitrate;
+  info->is_image = builder->is_image;
+
+  gst_discoverer_video_info_builder_free (builder);
+  return info;
+}
+
+/* === Subtitle Info Builder === */
+
+/**
+ * gst_discoverer_subtitle_info_builder_new:
+ * @stream_id: the stream ID
+ * @caps: (transfer none): the subtitle caps
+ *
+ * Creates a new #GstDiscovererSubtitleInfoBuilder.
+ *
+ * Returns: (transfer full): a new #GstDiscovererSubtitleInfoBuilder
+ *
+ * Since: 1.30
+ */
+GstDiscovererSubtitleInfoBuilder *
+gst_discoverer_subtitle_info_builder_new (const gchar * stream_id,
+    GstCaps * caps)
+{
+  GstDiscovererSubtitleInfoBuilder *builder;
+
+  g_return_val_if_fail (stream_id != NULL, NULL);
+  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
+
+  builder = g_new0 (GstDiscovererSubtitleInfoBuilder, 1);
+  builder->stream_id = g_strdup (stream_id);
+  builder->caps = gst_caps_ref (caps);
+
+  return builder;
+}
+
+/**
+ * gst_discoverer_subtitle_info_builder_free:
+ * @builder: (transfer full): a #GstDiscovererSubtitleInfoBuilder
+ *
+ * Frees a #GstDiscovererSubtitleInfoBuilder without building.
+ *
+ * Since: 1.30
+ */
+void
+gst_discoverer_subtitle_info_builder_free (GstDiscovererSubtitleInfoBuilder *
+    builder)
+{
+  if (builder == NULL)
+    return;
+
+  g_free (builder->stream_id);
+  if (builder->caps)
+    gst_caps_unref (builder->caps);
+  if (builder->tags)
+    gst_tag_list_unref (builder->tags);
+  g_free (builder->language);
+  g_free (builder);
+}
+
+/**
+ * gst_discoverer_subtitle_info_builder_set_tags:
+ * @builder: a #GstDiscovererSubtitleInfoBuilder
+ * @tags: (transfer none) (nullable): the stream tags
+ *
+ * Sets the stream tags.
+ *
+ * Returns: (transfer none): the same builder for chaining
+ *
+ * Since: 1.30
+ */
+GstDiscovererSubtitleInfoBuilder *
+gst_discoverer_subtitle_info_builder_set_tags (GstDiscovererSubtitleInfoBuilder
+    * builder, GstTagList * tags)
+{
+  g_return_val_if_fail (builder != NULL, NULL);
+
+  if (builder->tags)
+    gst_tag_list_unref (builder->tags);
+  builder->tags = tags ? gst_tag_list_ref (tags) : NULL;
+  return builder;
+}
+
+/**
+ * gst_discoverer_subtitle_info_builder_set_language:
+ * @builder: a #GstDiscovererSubtitleInfoBuilder
+ * @language: (nullable): the language code
+ *
+ * Sets the language.
+ *
+ * Returns: (transfer none): the same builder for chaining
+ *
+ * Since: 1.30
+ */
+GstDiscovererSubtitleInfoBuilder
+    * gst_discoverer_subtitle_info_builder_set_language
+    (GstDiscovererSubtitleInfoBuilder * builder, const gchar * language)
+{
+  g_return_val_if_fail (builder != NULL, NULL);
+
+  g_free (builder->language);
+  builder->language = g_strdup (language);
+  return builder;
+}
+
+/**
+ * gst_discoverer_subtitle_info_builder_build:
+ * @builder: (transfer full): a #GstDiscovererSubtitleInfoBuilder
+ *
+ * Builds and returns a new #GstDiscovererSubtitleInfo. This frees the builder.
+ *
+ * Returns: (transfer full): a new #GstDiscovererSubtitleInfo
+ *
+ * Since: 1.30
+ */
+GstDiscovererSubtitleInfo *
+gst_discoverer_subtitle_info_builder_build (GstDiscovererSubtitleInfoBuilder *
+    builder)
+{
+  GstDiscovererSubtitleInfo *info;
+
+  g_return_val_if_fail (builder != NULL, NULL);
+
+  info = (GstDiscovererSubtitleInfo *)
+      g_object_new (GST_TYPE_DISCOVERER_SUBTITLE_INFO, NULL);
+
+  /* Base stream info fields - use g_steal_pointer consistently */
+  GST_DISCOVERER_STREAM_INFO (info)->stream_id =
+      g_steal_pointer (&builder->stream_id);
+  GST_DISCOVERER_STREAM_INFO (info)->caps = g_steal_pointer (&builder->caps);
+  GST_DISCOVERER_STREAM_INFO (info)->tags = g_steal_pointer (&builder->tags);
+
+  /* Subtitle-specific properties */
+  info->language = g_steal_pointer (&builder->language);
+
+  gst_discoverer_subtitle_info_builder_free (builder);
+  return info;
+}

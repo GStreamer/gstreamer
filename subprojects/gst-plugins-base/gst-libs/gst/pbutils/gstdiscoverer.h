@@ -430,6 +430,193 @@ gst_discoverer_discover_uri (GstDiscoverer * discoverer,
 			     const gchar * uri,
 			     GError ** err) G_GNUC_WARN_UNUSED_RESULT;
 
+/* === Builder API === */
+
+/**
+ * GstDiscovererInfoBuilder:
+ *
+ * Opaque structure for building #GstDiscovererInfo objects programmatically.
+ *
+ * Since: 1.30
+ */
+typedef struct _GstDiscovererInfoBuilder GstDiscovererInfoBuilder;
+
+/**
+ * GstDiscovererContainerInfoBuilder:
+ *
+ * Opaque structure for building #GstDiscovererContainerInfo objects programmatically.
+ *
+ * Since: 1.30
+ */
+typedef struct _GstDiscovererContainerInfoBuilder GstDiscovererContainerInfoBuilder;
+
+/**
+ * GstDiscovererAudioInfoBuilder:
+ *
+ * Opaque structure for building #GstDiscovererAudioInfo objects programmatically.
+ *
+ * Since: 1.30
+ */
+typedef struct _GstDiscovererAudioInfoBuilder GstDiscovererAudioInfoBuilder;
+
+/**
+ * GstDiscovererVideoInfoBuilder:
+ *
+ * Opaque structure for building #GstDiscovererVideoInfo objects programmatically.
+ *
+ * Since: 1.30
+ */
+typedef struct _GstDiscovererVideoInfoBuilder GstDiscovererVideoInfoBuilder;
+
+/**
+ * GstDiscovererSubtitleInfoBuilder:
+ *
+ * Opaque structure for building #GstDiscovererSubtitleInfo objects programmatically.
+ *
+ * Since: 1.30
+ */
+typedef struct _GstDiscovererSubtitleInfoBuilder GstDiscovererSubtitleInfoBuilder;
+
+/* Info Builder */
+
+GST_PBUTILS_API
+GstDiscovererInfoBuilder * gst_discoverer_info_builder_new (const gchar *uri,
+    GstDiscovererStreamInfo *stream_info);
+
+GST_PBUTILS_API
+GstDiscovererInfo * gst_discoverer_info_builder_build (GstDiscovererInfoBuilder *builder);
+
+GST_PBUTILS_API
+void gst_discoverer_info_builder_free (GstDiscovererInfoBuilder *builder);
+
+GST_PBUTILS_API
+GstDiscovererInfoBuilder * gst_discoverer_info_builder_set_duration (
+    GstDiscovererInfoBuilder *builder, GstClockTime duration);
+
+GST_PBUTILS_API
+GstDiscovererInfoBuilder * gst_discoverer_info_builder_set_seekable (
+    GstDiscovererInfoBuilder *builder, gboolean seekable);
+
+GST_PBUTILS_API
+GstDiscovererInfoBuilder * gst_discoverer_info_builder_set_live (
+    GstDiscovererInfoBuilder *builder, gboolean live);
+
+GST_PBUTILS_API
+GstDiscovererInfoBuilder * gst_discoverer_info_builder_set_result (
+    GstDiscovererInfoBuilder *builder, GstDiscovererResult result);
+
+GST_PBUTILS_API
+GstDiscovererInfoBuilder * gst_discoverer_info_builder_set_tags (
+    GstDiscovererInfoBuilder *builder, GstTagList *tags);
+
+/* Container Info Builder */
+
+GST_PBUTILS_API
+GstDiscovererContainerInfoBuilder * gst_discoverer_container_info_builder_new (
+    GstCaps *caps);
+
+GST_PBUTILS_API
+GstDiscovererContainerInfo * gst_discoverer_container_info_builder_build (
+    GstDiscovererContainerInfoBuilder *builder);
+
+GST_PBUTILS_API
+void gst_discoverer_container_info_builder_free (
+    GstDiscovererContainerInfoBuilder *builder);
+
+GST_PBUTILS_API
+GstDiscovererContainerInfoBuilder * gst_discoverer_container_info_builder_set_tags (
+    GstDiscovererContainerInfoBuilder *builder, GstTagList *tags);
+
+GST_PBUTILS_API
+GstDiscovererContainerInfoBuilder * gst_discoverer_container_info_builder_add_stream (
+    GstDiscovererContainerInfoBuilder *builder, GstDiscovererStreamInfo *stream_info);
+
+/* Audio Info Builder */
+GST_PBUTILS_API
+GstDiscovererAudioInfoBuilder * gst_discoverer_audio_info_builder_new (
+    const gchar *stream_id, GstCaps *caps);
+
+GST_PBUTILS_API
+GstDiscovererAudioInfo * gst_discoverer_audio_info_builder_build (
+    GstDiscovererAudioInfoBuilder *builder);
+
+GST_PBUTILS_API
+void gst_discoverer_audio_info_builder_free (GstDiscovererAudioInfoBuilder *builder);
+
+GST_PBUTILS_API
+GstDiscovererAudioInfoBuilder * gst_discoverer_audio_info_builder_set_tags (
+    GstDiscovererAudioInfoBuilder *builder, GstTagList *tags);
+
+GST_PBUTILS_API
+GstDiscovererAudioInfoBuilder * gst_discoverer_audio_info_builder_set_bitrate (
+    GstDiscovererAudioInfoBuilder *builder, guint bitrate);
+
+GST_PBUTILS_API
+GstDiscovererAudioInfoBuilder * gst_discoverer_audio_info_builder_set_max_bitrate (
+    GstDiscovererAudioInfoBuilder *builder, guint max_bitrate);
+
+GST_PBUTILS_API
+GstDiscovererAudioInfoBuilder * gst_discoverer_audio_info_builder_set_language (
+    GstDiscovererAudioInfoBuilder *builder, const gchar *language);
+
+/* Video Info Builder */
+GST_PBUTILS_API
+GstDiscovererVideoInfoBuilder * gst_discoverer_video_info_builder_new (
+    const gchar *stream_id, GstCaps *caps);
+
+GST_PBUTILS_API
+GstDiscovererVideoInfo * gst_discoverer_video_info_builder_build (
+    GstDiscovererVideoInfoBuilder *builder);
+
+GST_PBUTILS_API
+void gst_discoverer_video_info_builder_free (GstDiscovererVideoInfoBuilder *builder);
+
+GST_PBUTILS_API
+GstDiscovererVideoInfoBuilder * gst_discoverer_video_info_builder_set_tags (
+    GstDiscovererVideoInfoBuilder *builder, GstTagList *tags);
+
+GST_PBUTILS_API
+GstDiscovererVideoInfoBuilder * gst_discoverer_video_info_builder_set_bitrate (
+    GstDiscovererVideoInfoBuilder *builder, guint bitrate);
+
+GST_PBUTILS_API
+GstDiscovererVideoInfoBuilder * gst_discoverer_video_info_builder_set_max_bitrate (
+    GstDiscovererVideoInfoBuilder *builder, guint max_bitrate);
+
+GST_PBUTILS_API
+GstDiscovererVideoInfoBuilder * gst_discoverer_video_info_builder_set_interlaced (
+    GstDiscovererVideoInfoBuilder *builder, gboolean interlaced);
+
+GST_PBUTILS_API
+GstDiscovererVideoInfoBuilder * gst_discoverer_video_info_builder_set_is_image (
+    GstDiscovererVideoInfoBuilder *builder, gboolean is_image);
+
+/* Subtitle Info Builder */
+GST_PBUTILS_API
+GstDiscovererSubtitleInfoBuilder * gst_discoverer_subtitle_info_builder_new (
+    const gchar *stream_id, GstCaps *caps);
+
+GST_PBUTILS_API
+GstDiscovererSubtitleInfo * gst_discoverer_subtitle_info_builder_build (
+    GstDiscovererSubtitleInfoBuilder *builder);
+
+GST_PBUTILS_API
+void gst_discoverer_subtitle_info_builder_free (GstDiscovererSubtitleInfoBuilder *builder);
+
+GST_PBUTILS_API
+GstDiscovererSubtitleInfoBuilder * gst_discoverer_subtitle_info_builder_set_tags (
+    GstDiscovererSubtitleInfoBuilder *builder, GstTagList *tags);
+
+GST_PBUTILS_API
+GstDiscovererSubtitleInfoBuilder * gst_discoverer_subtitle_info_builder_set_language (
+    GstDiscovererSubtitleInfoBuilder *builder, const gchar *language);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstDiscovererInfoBuilder, gst_discoverer_info_builder_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstDiscovererContainerInfoBuilder, gst_discoverer_container_info_builder_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstDiscovererAudioInfoBuilder, gst_discoverer_audio_info_builder_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstDiscovererVideoInfoBuilder, gst_discoverer_video_info_builder_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstDiscovererSubtitleInfoBuilder, gst_discoverer_subtitle_info_builder_free)
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstDiscoverer, gst_object_unref)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstDiscovererAudioInfo, gst_object_unref)
@@ -443,6 +630,366 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstDiscovererStreamInfo, gst_object_unref)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstDiscovererSubtitleInfo, gst_object_unref)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstDiscovererVideoInfo, gst_object_unref)
+
+/* === Builder Macro DSL ===
+ *
+ * The DSL macros below rely on GCC statement expressions and are therefore
+ * only available with GCC/Clang. Code targeting MSVC must use the function
+ * builder API directly. */
+#if defined(__GNUC__) || defined(__clang__)
+
+/**
+ * GST_DISCOVERER_INFO_BUILD:
+ * @uri: the URI for the discoverer info
+ * @stream: the stream info (single stream or container built with GST_DISCOVERER_CONTAINER_BUILD)
+ * @...: statements using GST_DISCOVERER_INFO_* macros
+ *
+ * Macro to build a #GstDiscovererInfo using a declarative DSL.
+ *
+ * The @stream parameter is REQUIRED and determines the structure:
+ * - For single-stream files: pass a stream directly (audio/video/subtitle)
+ * - For container files: pass a container built with GST_DISCOVERER_CONTAINER_BUILD()
+ *
+ * Example for single stream:
+ * |[<!-- language="C" -->
+ * GstCaps *audio_caps = gst_caps_from_string ("audio/x-raw, rate=48000");
+ * GstDiscovererInfo *info = GST_DISCOVERER_INFO_BUILD ("file:///test.flac",
+ *     GST_DISCOVERER_AUDIO_STREAM_BUILD ("audio_0", audio_caps,
+ *         GST_DISCOVERER_AUDIO_LANGUAGE ("en");
+ *     ),
+ *     GST_DISCOVERER_INFO_DURATION (10 * GST_SECOND);
+ *     GST_DISCOVERER_INFO_SEEKABLE (TRUE);
+ * );
+ * gst_caps_unref (audio_caps);
+ * ]|
+ *
+ * Example for container with multiple streams:
+ * |[<!-- language="C" -->
+ * GstCaps *container_caps = gst_caps_from_string ("video/quicktime");
+ * GstDiscovererInfo *info = GST_DISCOVERER_INFO_BUILD ("file:///test.mp4",
+ *     GST_DISCOVERER_CONTAINER_BUILD (container_caps,
+ *         GST_DISCOVERER_CONTAINER_ADD_STREAM (
+ *             GST_DISCOVERER_VIDEO_STREAM_BUILD ("video_0", video_caps, ));
+ *         GST_DISCOVERER_CONTAINER_ADD_STREAM (
+ *             GST_DISCOVERER_AUDIO_STREAM_BUILD ("audio_0", audio_caps, ));
+ *     ),
+ *     GST_DISCOVERER_INFO_DURATION (10 * GST_SECOND);
+ *     GST_DISCOVERER_INFO_SEEKABLE (TRUE);
+ * );
+ * gst_caps_unref (container_caps);
+ * ]|
+ *
+ * Returns: (transfer full): a new #GstDiscovererInfo
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_INFO_BUILD(uri, stream, ...) \
+  ({ \
+    GstDiscovererInfoBuilder *_gsdi_b = gst_discoverer_info_builder_new (uri, \
+        GST_DISCOVERER_STREAM_INFO (stream)); \
+    __VA_ARGS__; \
+    gst_discoverer_info_builder_build (_gsdi_b); \
+  })
+
+/**
+ * GST_DISCOVERER_INFO_DURATION:
+ * @d: the duration in #GstClockTime
+ *
+ * Sets the duration on the info builder. Use within GST_DISCOVERER_INFO_BUILD().
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_INFO_DURATION(d) \
+    _gsdi_b = gst_discoverer_info_builder_set_duration (_gsdi_b, d)
+
+/**
+ * GST_DISCOVERER_INFO_SEEKABLE:
+ * @s: %TRUE if seekable
+ *
+ * Sets whether the stream is seekable. Use within GST_DISCOVERER_INFO_BUILD().
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_INFO_SEEKABLE(s) \
+    _gsdi_b = gst_discoverer_info_builder_set_seekable (_gsdi_b, s)
+
+/**
+ * GST_DISCOVERER_INFO_LIVE:
+ * @l: %TRUE if live
+ *
+ * Sets whether the stream is live. Use within GST_DISCOVERER_INFO_BUILD().
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_INFO_LIVE(l) \
+    _gsdi_b = gst_discoverer_info_builder_set_live (_gsdi_b, l)
+
+/**
+ * GST_DISCOVERER_INFO_TAGS:
+ * @t: a #GstTagList
+ *
+ * Sets the tags on the info builder. Use within GST_DISCOVERER_INFO_BUILD().
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_INFO_TAGS(t) \
+    _gsdi_b = gst_discoverer_info_builder_set_tags (_gsdi_b, t)
+
+/**
+ * GST_DISCOVERER_INFO_RESULT:
+ * @r: a #GstDiscovererResult
+ *
+ * Sets the result on the info builder. Use within GST_DISCOVERER_INFO_BUILD().
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_INFO_RESULT(r) \
+    _gsdi_b = gst_discoverer_info_builder_set_result (_gsdi_b, r)
+
+/* === Container Builder Macros === */
+
+/**
+ * GST_DISCOVERER_CONTAINER_BUILD:
+ * @caps: the container #GstCaps
+ * @...: statements using GST_DISCOVERER_CONTAINER_* macros
+ *
+ * Macro to build a #GstDiscovererContainerInfo with multiple streams.
+ *
+ * Example:
+ * |[<!-- language="C" -->
+ * GstCaps *container_caps = gst_caps_from_string ("video/quicktime");
+ * GstDiscovererContainerInfo *container = GST_DISCOVERER_CONTAINER_BUILD (
+ *     container_caps,
+ *     GST_DISCOVERER_CONTAINER_ADD_STREAM (
+ *         GST_DISCOVERER_VIDEO_STREAM_BUILD ("video_0", video_caps, ));
+ *     GST_DISCOVERER_CONTAINER_ADD_STREAM (
+ *         GST_DISCOVERER_AUDIO_STREAM_BUILD ("audio_0", audio_caps, ));
+ * );
+ * ]|
+ *
+ * Returns: (transfer full): a new #GstDiscovererContainerInfo
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_CONTAINER_BUILD(caps, ...) \
+  ({ \
+    GstDiscovererContainerInfoBuilder *_gsdi_c = \
+        gst_discoverer_container_info_builder_new (caps); \
+    __VA_ARGS__; \
+    gst_discoverer_container_info_builder_build (_gsdi_c); \
+  })
+
+/**
+ * GST_DISCOVERER_CONTAINER_TAGS:
+ * @t: a #GstTagList
+ *
+ * Sets the container tags. Use within GST_DISCOVERER_CONTAINER_BUILD().
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_CONTAINER_TAGS(t) \
+    _gsdi_c = gst_discoverer_container_info_builder_set_tags (_gsdi_c, t)
+
+/**
+ * GST_DISCOVERER_CONTAINER_ADD_STREAM:
+ * @stream_info: a #GstDiscovererStreamInfo
+ *
+ * Adds a stream to the container. Use within GST_DISCOVERER_CONTAINER_BUILD().
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_CONTAINER_ADD_STREAM(stream_info) \
+    _gsdi_c = gst_discoverer_container_info_builder_add_stream (_gsdi_c, \
+        GST_DISCOVERER_STREAM_INFO (stream_info))
+
+/* === Audio Stream Builder Macros === */
+
+/**
+ * GST_DISCOVERER_AUDIO_STREAM_BUILD:
+ * @stream_id: the stream ID
+ * @caps: the #GstCaps for the audio stream
+ * @...: statements using GST_DISCOVERER_AUDIO_* macros
+ *
+ * Macro to build a #GstDiscovererAudioInfo.
+ *
+ * Returns: (transfer full): a new #GstDiscovererAudioInfo
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_AUDIO_STREAM_BUILD(stream_id, caps, ...) \
+  ({ \
+    GstDiscovererAudioInfoBuilder *_gsdi_as = \
+        gst_discoverer_audio_info_builder_new (stream_id, caps); \
+    __VA_ARGS__; \
+    gst_discoverer_audio_info_builder_build (_gsdi_as); \
+  })
+
+/**
+ * GST_DISCOVERER_AUDIO_LANGUAGE:
+ * @l: the language code
+ *
+ * Sets the language. Use within GST_DISCOVERER_AUDIO_STREAM_BUILD().
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_AUDIO_LANGUAGE(l) \
+    _gsdi_as = gst_discoverer_audio_info_builder_set_language (_gsdi_as, l)
+
+/**
+ * GST_DISCOVERER_AUDIO_BITRATE:
+ * @br: the bitrate in bits/second
+ *
+ * Sets the bitrate. Use within GST_DISCOVERER_AUDIO_STREAM_BUILD().
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_AUDIO_BITRATE(br) \
+    _gsdi_as = gst_discoverer_audio_info_builder_set_bitrate (_gsdi_as, br)
+
+/**
+ * GST_DISCOVERER_AUDIO_MAX_BITRATE:
+ * @br: the maximum bitrate in bits/second
+ *
+ * Sets the maximum bitrate. Use within GST_DISCOVERER_AUDIO_STREAM_BUILD().
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_AUDIO_MAX_BITRATE(br) \
+    _gsdi_as = gst_discoverer_audio_info_builder_set_max_bitrate (_gsdi_as, br)
+
+/**
+ * GST_DISCOVERER_AUDIO_TAGS:
+ * @t: a #GstTagList
+ *
+ * Sets the stream tags. Use within GST_DISCOVERER_AUDIO_STREAM_BUILD().
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_AUDIO_TAGS(t) \
+    _gsdi_as = gst_discoverer_audio_info_builder_set_tags (_gsdi_as, t)
+
+/* === Video Stream Builder Macros === */
+
+/**
+ * GST_DISCOVERER_VIDEO_STREAM_BUILD:
+ * @stream_id: the stream ID
+ * @caps: the #GstCaps for the video stream
+ * @...: statements using GST_DISCOVERER_VIDEO_* macros
+ *
+ * Macro to build a #GstDiscovererVideoInfo.
+ *
+ * Returns: (transfer full): a new #GstDiscovererVideoInfo
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_VIDEO_STREAM_BUILD(stream_id, caps, ...) \
+  ({ \
+    GstDiscovererVideoInfoBuilder *_gsdi_vs = \
+        gst_discoverer_video_info_builder_new (stream_id, caps); \
+    __VA_ARGS__; \
+    gst_discoverer_video_info_builder_build (_gsdi_vs); \
+  })
+
+/**
+ * GST_DISCOVERER_VIDEO_BITRATE:
+ * @br: the bitrate in bits/second
+ *
+ * Sets the bitrate. Use within GST_DISCOVERER_VIDEO_STREAM_BUILD().
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_VIDEO_BITRATE(br) \
+    _gsdi_vs = gst_discoverer_video_info_builder_set_bitrate (_gsdi_vs, br)
+
+/**
+ * GST_DISCOVERER_VIDEO_MAX_BITRATE:
+ * @br: the maximum bitrate in bits/second
+ *
+ * Sets the maximum bitrate. Use within GST_DISCOVERER_VIDEO_STREAM_BUILD().
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_VIDEO_MAX_BITRATE(br) \
+    _gsdi_vs = gst_discoverer_video_info_builder_set_max_bitrate (_gsdi_vs, br)
+
+/**
+ * GST_DISCOVERER_VIDEO_INTERLACED:
+ * @i: %TRUE if interlaced
+ *
+ * Sets whether the video is interlaced. Use within GST_DISCOVERER_VIDEO_STREAM_BUILD().
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_VIDEO_INTERLACED(i) \
+    _gsdi_vs = gst_discoverer_video_info_builder_set_interlaced (_gsdi_vs, i)
+
+/**
+ * GST_DISCOVERER_VIDEO_IS_IMAGE:
+ * @i: %TRUE if this is an image
+ *
+ * Sets whether this is an image. Use within GST_DISCOVERER_VIDEO_STREAM_BUILD().
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_VIDEO_IS_IMAGE(i) \
+    _gsdi_vs = gst_discoverer_video_info_builder_set_is_image (_gsdi_vs, i)
+
+/**
+ * GST_DISCOVERER_VIDEO_TAGS:
+ * @t: a #GstTagList
+ *
+ * Sets the stream tags. Use within GST_DISCOVERER_VIDEO_STREAM_BUILD().
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_VIDEO_TAGS(t) \
+    _gsdi_vs = gst_discoverer_video_info_builder_set_tags (_gsdi_vs, t)
+
+/* === Subtitle Stream Builder Macros === */
+
+/**
+ * GST_DISCOVERER_SUBTITLE_STREAM_BUILD:
+ * @stream_id: the stream ID
+ * @caps: the #GstCaps for the subtitle stream
+ * @...: statements using GST_DISCOVERER_SUBTITLE_* macros
+ *
+ * Macro to build a #GstDiscovererSubtitleInfo.
+ *
+ * Returns: (transfer full): a new #GstDiscovererSubtitleInfo
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_SUBTITLE_STREAM_BUILD(stream_id, caps, ...) \
+  ({ \
+    GstDiscovererSubtitleInfoBuilder *_gsdi_ss = \
+        gst_discoverer_subtitle_info_builder_new (stream_id, caps); \
+    __VA_ARGS__; \
+    gst_discoverer_subtitle_info_builder_build (_gsdi_ss); \
+  })
+
+/**
+ * GST_DISCOVERER_SUBTITLE_LANGUAGE:
+ * @l: the language code
+ *
+ * Sets the language. Use within GST_DISCOVERER_SUBTITLE_STREAM_BUILD().
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_SUBTITLE_LANGUAGE(l) \
+    _gsdi_ss = gst_discoverer_subtitle_info_builder_set_language (_gsdi_ss, l)
+
+/**
+ * GST_DISCOVERER_SUBTITLE_TAGS:
+ * @t: a #GstTagList
+ *
+ * Sets the stream tags. Use within GST_DISCOVERER_SUBTITLE_STREAM_BUILD().
+ *
+ * Since: 1.30
+ */
+#define GST_DISCOVERER_SUBTITLE_TAGS(t) \
+    _gsdi_ss = gst_discoverer_subtitle_info_builder_set_tags (_gsdi_ss, t)
+
+#endif /* defined(__GNUC__) || defined(__clang__) */
 
 G_END_DECLS
 
