@@ -124,7 +124,10 @@ if ['ios', 'darwin'].contains(host_system)
     #   on implementing a proper Metal extension for Vulkan
     #   https://github.com/KhronosGroup/MoltenVK/issues/492
     objcpp = meson.get_compiler('objcpp')
-    vulkan_dep = objcpp.find_library('MoltenVK', required : vulkan_opt)
+    vulkan_dep = objcpp.find_library('MoltenVK', required: false)
+    if not vulkan_dep.found()
+      vulkan_dep = dependency('MoltenVK', fallback: 'moltenvk', required: vulkan_opt)
+    endif
   endif
 elif host_system == 'windows'
   vulkan_root = run_command(python3, '-c', 'import os; print(os.environ.get("VK_SDK_PATH"))', check: false).stdout().strip()
