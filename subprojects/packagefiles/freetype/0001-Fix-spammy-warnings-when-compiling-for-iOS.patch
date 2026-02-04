@@ -1,0 +1,43 @@
+From e03c4fecd9b22ca54da4609078587106f595695d Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Wed, 4 Feb 2026 14:38:06 +0530
+Subject: [PATCH] Fix spammy warnings when compiling for iOS
+
+This is technically a bug in the iPhoneOS SDK, but we shouldn't be
+doing this check anyway.
+
+```
+[1019/2377] Compiling C object subprojects/pango-1.56.4/pango/libpangoft2-1.0.a.p/pangoft2-render.c.o
+In file included from ../subprojects/pango-1.56.4/pango/pangoft2-render.c:27:
+In file included from ../subprojects/pango-1.56.4/pango/pangoft2-private.h:26:
+In file included from ../subprojects/pango-1.56.4/pango/pangoft2.h:29:
+In file included from ../subprojects/freetype-2.14.1/include/freetype/freetype.h:24:
+In file included from ../subprojects/freetype-2.14.1/include/freetype/config/ftconfig.h:46:
+../subprojects/freetype-2.14.1/include/freetype/config/mac-support.h:36:7: warning: 'MAC_OS_X_VERSION_10_5' is not defined, evaluates to 0 [-Wundef]
+   36 |     ( MAC_OS_X_VERSION_MIN_REQUIRED <= 1040 )
+      |       ^
+/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/usr/include/AvailabilityMacros.h:106:51: note: expanded from macro 'MAC_OS_X_VERSION_MIN_REQUIRED'
+  106 |             #define MAC_OS_X_VERSION_MIN_REQUIRED MAC_OS_X_VERSION_10_5
+      |                                                   ^
+1 warning generated.
+```
+---
+ include/freetype/config/mac-support.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/freetype/config/mac-support.h b/include/freetype/config/mac-support.h
+index d1b6a9898..73c208a3c 100644
+--- a/include/freetype/config/mac-support.h
++++ b/include/freetype/config/mac-support.h
+@@ -32,7 +32,7 @@
+ #ifdef ECANCELED /* defined since 10.2 */
+ #include "AvailabilityMacros.h"
+ #endif
+-#if defined( __LP64__ ) && \
++#if defined(FT_MACINTOSH) && defined( __LP64__ ) && \
+     ( MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_4 )
+ #undef FT_MACINTOSH
+ #endif
+-- 
+2.52.0
+
