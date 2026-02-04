@@ -5,6 +5,7 @@ source_filename = pango-1.56.4.tar.xz
 source_hash = 17065e2fcc5f5a5bdbffc884c956bfc7c451a96e8c4fb2f8ad837c6413cb5a01
 source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/pango_1.56.4-1/pango-1.56.4.tar.xz
 wrapdb_version = 1.56.4-1
+diff_files = pango/0001-meson-Add-support-for-cross-compiling-using-Apple-su.patch
 
 [provide]
 dependency_names = pango, pangoft2, pangoxft, pangowin32, pangocairo

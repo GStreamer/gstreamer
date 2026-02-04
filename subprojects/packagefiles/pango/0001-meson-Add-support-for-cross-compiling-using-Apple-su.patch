@@ -1,0 +1,50 @@
+Only in pango-1.56.4.new: .meson-subproject-wrap-hash.txt
+diff -ur pango-1.56.4/meson.build pango-1.56.4.new/meson.build
+--- pango-1.56.4/meson.build	2025-06-27 16:49:08
++++ pango-1.56.4.new/meson.build	2026-02-03 19:19:58
+@@ -52,9 +52,12 @@
+ cc = meson.get_compiler('c')
+ cpp = meson.get_compiler('cpp')
+ host_system = host_machine.system()
++subsystem = ''
+ 
+ if host_system == 'windows'
+   add_project_arguments('-D_WIN32_WINNT=_WIN32_WINNT_WIN10', language: 'c')
++elif host_system == 'darwin'
++  subsystem = host_machine.subsystem()
+ endif
+ 
+ # Compiler and linker flags
+@@ -340,7 +343,7 @@
+ endif
+ 
+ has_core_text = false
+-if host_system == 'darwin'
++if host_system == 'darwin' and subsystem == 'macos'
+   has_core_text = cc.links('''#include <CoreText/CoreText.h>
+                               int main (void) {
+                                 CTGetCoreTextVersion ();
+diff -ur pango-1.56.4/pango/meson.build pango-1.56.4.new/pango/meson.build
+--- pango-1.56.4/pango/meson.build	2025-06-27 16:49:08
++++ pango-1.56.4.new/pango/meson.build	2026-02-03 19:20:48
+@@ -514,7 +514,7 @@
+     pangocairo_deps += libpangowin32_dep
+   endif
+ 
+-  if host_system == 'darwin' and pango_font_backends.contains('quartz')
++  if host_system == 'darwin' and subsystem == 'macos' and pango_font_backends.contains('quartz')
+     pangocairo_sources += [
+       'pangocoretext.c',
+       'pangocoretext-fontmap.c',
+diff -ur pango-1.56.4/tests/meson.build pango-1.56.4.new/tests/meson.build
+--- pango-1.56.4/tests/meson.build	2025-06-27 16:49:08
++++ pango-1.56.4.new/tests/meson.build	2026-02-03 19:21:05
+@@ -8,7 +8,7 @@
+ 
+ if host_system == 'windows'
+   test_cflags += '-DHAVE_WIN32'
+-elif host_system == 'darwin'
++elif host_system == 'darwin' and subsystem == 'macos'
+   test_cflags += '-DHAVE_CARBON'
+ endif
+ 
