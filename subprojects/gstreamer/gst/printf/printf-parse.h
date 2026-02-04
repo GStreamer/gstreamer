@@ -56,6 +56,8 @@ typedef struct
 }
 char_directive;
 
+#define N_DIRECT_ALLOC_DIRECTIVES 7
+
 /* A parsed format string.  */
 typedef struct
 {
@@ -63,6 +65,7 @@ typedef struct
   char_directive *dir;
   unsigned int max_width_length;
   unsigned int max_precision_length;
+  char_directive direct_alloc_dir[N_DIRECT_ALLOC_DIRECTIVES];
 }
 char_directives;
 

@@ -260,34 +260,58 @@ printf_postprocess_args (char_directives * directives, arguments * arguments)
   }
 }
 
+static gboolean
+gather_logging_arguments (const char *format, char_directives * d,
+    arguments * a, va_list args)
+{
+  if (printf_parse (format, d, a) < 0) {
+    errno = EINVAL;
+    return FALSE;
+  }
+
+#define LOCAL_CLEANUP()                         \
+  if (d->dir != d->direct_alloc_dir) \
+    free (d->dir);                           \
+  while (a->count--) {                   \
+    if (a->arg[a->count].ext_string)      \
+      free (a->arg[a->count].ext_string); \
+  }                                     \
+  if (a->arg != a->direct_alloc_arg) {                            \
+    free (a->arg);                         \
+  }
+
+  if (printf_fetchargs (args, a) < 0) {
+    LOCAL_CLEANUP ();
+    errno = EINVAL;
+    return FALSE;
+  }
+
+  /* collect TYPE_POINTER_EXT argument strings */
+  printf_postprocess_args (d, a);
+
+  return TRUE;
+}
+
 char *
 vasnprintf (char *resultbuf, size_t *lengthp, const char *format, va_list args)
 {
   char_directives d;
   arguments a;
 
-  if (printf_parse (format, &d, &a) < 0) {
-    errno = EINVAL;
+  if (!gather_logging_arguments (format, &d, &a, args)) {
     return NULL;
   }
+
 #define CLEANUP()                         \
-  free (d.dir);                           \
-  if (a.arg) {                            \
-    while (a.count--) {                   \
-      if (a.arg[a.count].ext_string)      \
-        free (a.arg[a.count].ext_string); \
-    }                                     \
+  if (d.dir != d.direct_alloc_dir)        \
+    free (d.dir);                           \
+  while (a.count--) {                   \
+    if (a.arg[a.count].ext_string)      \
+      free (a.arg[a.count].ext_string); \
+  }                                     \
+  if (a.arg != a.direct_alloc_arg) {                            \
     free (a.arg);                         \
   }
-
-  if (printf_fetchargs (args, &a) < 0) {
-    CLEANUP ();
-    errno = EINVAL;
-    return NULL;
-  }
-
-  /* collect TYPE_POINTER_EXT argument strings */
-  printf_postprocess_args (&d, &a);
 
   {
     char *buf =

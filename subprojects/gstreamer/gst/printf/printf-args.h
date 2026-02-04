@@ -128,10 +128,14 @@ typedef struct
 }
 argument;
 
+/* Number of directly allocated arguments (no malloc() needed).  */
+#define N_DIRECT_ALLOC_ARGUMENTS 7
+
 typedef struct
 {
   unsigned int count;
   argument *arg;
+  argument direct_alloc_arg[N_DIRECT_ALLOC_ARGUMENTS];
 }
 arguments;
 

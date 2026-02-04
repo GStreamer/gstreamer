@@ -39,6 +39,9 @@
 /* malloc(), realloc(), free().  */
 #include <stdlib.h>
 
+/* memcpy().  */
+#include <string.h>
+
 #ifdef STATIC
 STATIC
 #endif
@@ -53,15 +56,12 @@ printf_parse (const char *format, char_directives * d, arguments * a)
   unsigned int max_precision_length = 0;
 
   d->count = 0;
-  d_allocated = 1;
-  d->dir = malloc (d_allocated * sizeof (char_directive));
-  if (d->dir == NULL)
-    /* Out of memory.  */
-    return -1;
+  d_allocated = N_DIRECT_ALLOC_DIRECTIVES;
+  d->dir = d->direct_alloc_dir;
 
   a->count = 0;
-  a_allocated = 0;
-  a->arg = NULL;
+  a_allocated = N_DIRECT_ALLOC_ARGUMENTS;
+  a->arg = a->direct_alloc_arg;
 
 #define REGISTER_ARG(_index_,_type_) \
   {									\
@@ -72,12 +72,14 @@ printf_parse (const char *format, char_directives * d, arguments * a)
 	a_allocated = 2 * a_allocated;					\
 	if (a_allocated <= n)						\
 	  a_allocated = n + 1;						\
-	memory = (a->arg						\
+	memory = (a->arg != a->direct_alloc_arg	 		\
 		  ? realloc (a->arg, a_allocated * sizeof (argument))	\
 		  : malloc (a_allocated * sizeof (argument)));		\
 	if (memory == NULL)						\
 	  /* Out of memory.  */						\
 	  goto error;							\
+  if (a->arg == a->direct_alloc_arg)                              \
+    memcpy (memory, a->arg, a->count * sizeof (argument));        \
 	a->arg = memory;						\
       }									\
     while (a->count <= n) {                             \
@@ -458,10 +460,19 @@ printf_parse (const char *format, char_directives * d, arguments * a)
         char_directive *memory;
 
         d_allocated = 2 * d_allocated;
-        memory = realloc (d->dir, d_allocated * sizeof (char_directive));
+
+        memory =
+            d->dir != d->direct_alloc_dir ? realloc (d->dir,
+            d_allocated * sizeof (char_directive)) : malloc (d_allocated *
+            sizeof (char_directive));
+
         if (memory == NULL)
           /* Out of memory.  */
           goto error;
+
+        if (d->dir == d->direct_alloc_dir)
+          memcpy (memory, d->dir, d->count * sizeof (char_directive));
+
         d->dir = memory;
       }
     }
@@ -473,9 +484,9 @@ printf_parse (const char *format, char_directives * d, arguments * a)
   return 0;
 
 error:
-  if (a->arg)
+  if (a->arg != a->direct_alloc_arg)
     free (a->arg);
-  if (d->dir)
+  if (d->dir != d->direct_alloc_dir)
     free (d->dir);
   return -1;
 }
