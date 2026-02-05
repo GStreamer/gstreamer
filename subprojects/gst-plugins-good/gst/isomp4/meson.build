@@ -44,7 +44,10 @@ mp4_headers = [
   'qtatomparser.h',
 ]
 
-doc_sources = []
+doc_sources = [
+  meson.current_source_dir() / 'gstqtmux-doc.c'
+]
+
 foreach s: mp4_sources + mp4_headers
   doc_sources += meson.current_source_dir() / s
 endforeach
