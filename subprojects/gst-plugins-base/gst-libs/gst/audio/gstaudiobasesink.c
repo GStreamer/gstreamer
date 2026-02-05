@@ -2082,8 +2082,9 @@ gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     goto too_late;
 
   /* and bring the time to the rate corrected offset in the buffer */
-  render_start = gst_util_uint64_scale_int (render_start, rate, GST_SECOND);
-  render_stop = gst_util_uint64_scale_int (render_stop, rate, GST_SECOND);
+  render_start =
+      gst_util_uint64_scale_int_round (render_start, rate, GST_SECOND);
+  render_stop = gst_util_uint64_scale_int_round (render_stop, rate, GST_SECOND);
 
   /* If the slaving got us an interval spanning 0, render_start will
      have been set to 0. So if render_start is 0, we check whether
