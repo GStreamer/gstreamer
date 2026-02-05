@@ -9301,12 +9301,12 @@ create_request_failed:
   }
 send_error:
   {
+    gst_rtsp_message_unset (&request);
+
     if (res == GST_RTSP_EEOF)
       goto close;
 
     gchar *str = gst_rtsp_strresult (res);
-
-    gst_rtsp_message_unset (&request);
     if (res != GST_RTSP_EINTR) {
       GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
           ("Could not send message. (%s)", str));
