@@ -1959,7 +1959,7 @@ get_running_time (GstSegment * segment, GstMiniObject * object, gboolean end)
       if (new_segment->format == GST_FORMAT_TIME) {
         time =
             my_segment_to_running_time ((GstSegment *) new_segment,
-            new_segment->start);
+            (new_segment->rate > 0.0) ? new_segment->start : new_segment->stop);
       }
     } else if (GST_EVENT_TYPE (event) == GST_EVENT_GAP) {
       GstClockTime ts, dur;
