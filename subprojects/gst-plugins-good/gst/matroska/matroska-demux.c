@@ -1524,21 +1524,34 @@ gst_matroska_demux_parse_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml,
       }
 
         /* language (matters for audio/subtitles, mostly) */
+      case GST_MATROSKA_ID_TRACKLANGUAGEBCP47:
       case GST_MATROSKA_ID_TRACKLANGUAGE:{
         gchar *text;
 
         if ((ret = gst_ebml_read_utf8 (ebml, &id, &text)) != GST_FLOW_OK)
           break;
 
-
+        // TRACKLANGUAGEBCP47 takes precedence if both are present
+        if (context->language != NULL) {
+          if (id == GST_MATROSKA_ID_TRACKLANGUAGE) {
+            g_free (text);
+            break;
+          }
+          g_free (context->language);
+        }
         context->language = text;
 
         /* fre-ca => fre */
         if (strlen (context->language) >= 4 && context->language[3] == '-')
           context->language[3] = '\0';
 
-        GST_DEBUG_OBJECT (demux, "TrackLanguage: %s",
-            GST_STR_NULL (context->language));
+        /* fr-ca => fr */
+        if (strlen (context->language) >= 3 && context->language[2] == '-')
+          context->language[2] = '\0';
+
+        GST_DEBUG_OBJECT (demux, "TrackLanguage%s: %s",
+            (id == GST_MATROSKA_ID_TRACKLANGUAGE) ? "" : "Bcp47",
+            context->language);
         break;
       }
 
@@ -1776,7 +1789,7 @@ gst_matroska_demux_parse_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml,
     const gchar *lang;
 
     /* Matroska contains ISO 639-2B codes, we want ISO 639-1 */
-    lang = gst_tag_get_language_code (context->language);
+    lang = gst_tag_get_language_code_iso_639_1 (context->language);
     gst_tag_list_add (context->tags, GST_TAG_MERGE_REPLACE,
         GST_TAG_LANGUAGE_CODE, (lang) ? lang : context->language, NULL);
 
