@@ -217,6 +217,10 @@ gst_writev (gint fd, const struct iovec *iov, gint iovcnt, gsize total_bytes)
         do {
           ret = write (fd, iov[i].iov_base, iov[i].iov_len);
         } while (ret < 0 && errno == EINTR);
+
+        if (ret < 0)
+          return ret;
+
         if (ret > 0)
           written += ret;
         if (ret != iov[i].iov_len)
