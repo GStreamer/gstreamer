@@ -110,6 +110,14 @@
  * a fixed sample size (such as raw audio and Prores Video) and that don't
  * have reordered samples.
  *
+ * ## AV1 compatibility note
+ *
+ * Some SDKs (notably Apple AVFoundation via AVAssetReader and AVPlayer)
+ * require an `av1C` box that includes a Sequence Header OBU, even though the
+ * spec makes this optional. When muxing AV1, insert #av1parse so it can set
+ * `codec_data` in caps to include the sequence header, otherwise decoding may
+ * fail.
+ *
  * ## Example pipelines
  * |[
  * gst-launch-1.0 v4l2src num-buffers=500 ! video/x-raw,width=320,height=240 ! videoconvert ! qtmux ! filesink location=video.mov
@@ -157,6 +165,8 @@
  * If such fragmented layout is intended for streaming purposes, then
  * #GstMP4Mux:streamable allows foregoing to add index metadata (at the end of
  * file).
+ *
+ * For AV1 muxing, see the “AV1 compatibility note” section under #qtmux.
  *
  * ## Example pipelines
  * |[
@@ -306,6 +316,8 @@
  * fragmented layout is intended for streaming purposes, then
  * #GstISMLMux:streamable allows foregoing to add index metadata (at the end of
  * file).
+ *
+ * For AV1 muxing, see the “AV1 compatibility note” section under #qtmux.
  *
  * ## Example pipelines
  * |[
