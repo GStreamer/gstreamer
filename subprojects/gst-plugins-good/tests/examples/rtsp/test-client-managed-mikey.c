@@ -36,14 +36,14 @@ typedef struct
 } KeyParam;
 
 static KeyParam *
-key_param_new (guint key_size, guint32 mki, const gchar * cipher)
+key_param_new (guint key_size, guint32 mki, const gchar * cipher,
+    const gchar * auth)
 {
   KeyParam *key_param = NULL;
   guint8 *data, *mki_data;
   guint data_size = GST_ROUND_UP_4 (key_size);
   GstBuffer *srtp_key, *mki_buf;
   guint i;
-  const gchar *auth = "hmac-sha1-80";
 
   key_param = g_malloc0 (sizeof (KeyParam));
 
@@ -63,9 +63,6 @@ key_param_new (guint key_size, guint32 mki, const gchar * cipher)
   mki_buf = gst_buffer_new_wrapped (mki_data, sizeof (guint32));
 
   /* parameters for MIKEY SETUP and srtpdec */
-  if (!g_strcmp0 (cipher, "aes-128-gcm") || !g_strcmp0 (cipher, "aes-256-gcm")) {
-    auth = "null";
-  }
   key_param->key_caps =
       gst_caps_new_static_str_simple ("application/x-srtp", "srtp-key",
       GST_TYPE_BUFFER, srtp_key, "srtp-cipher", G_TYPE_STRING, cipher,
@@ -719,6 +716,26 @@ validate_cipher (const gchar * cipher)
   return FALSE;
 }
 
+static gboolean
+validate_auth (const gchar * auth)
+{
+  static const gchar *valid_auth[] = {
+    "hmac-sha1-80",
+    "null",
+    NULL
+  };
+
+  if (!auth || !auth[0])
+    return FALSE;
+
+  for (guint i = 0; valid_auth[i] != NULL; i++) {
+    if (g_strcmp0 (auth, valid_auth[i]) == 0)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 gint
 main (gint argc, gchar ** argv)
 {
@@ -727,6 +744,7 @@ main (gint argc, gchar ** argv)
   KeyParam *key_param = NULL;
   gchar *location = NULL;
   const gchar *cipher = "aes-128-icm";
+  const gchar *auth = "hmac-sha1-80";
   guint32 key_len = 30;
   guint32 mki = 1200;
   guint32 rekey_int = 0;
@@ -736,6 +754,11 @@ main (gint argc, gchar ** argv)
     {"cipher", 'c', 0, G_OPTION_ARG_STRING, &cipher,
         "Encryption cipher to use (aes-128-icm, aes-256-icm, aes-128-gcm, "
           "aes-256-gcm). Default: aes-128-icm", "CIPHER"},
+    {"auth", 'a', 0, G_OPTION_ARG_STRING, &cipher,
+          "Authentication method to use (hmac-sha1-80, null). Set to 'null' for "
+          "authenticated encryption ciphers(AEAD) such as the aes-128-gcm. "
+          "Default: hmac-sha1-80",
+        "AUTH"},
     {"key-length", 'k', 0, G_OPTION_ARG_INT, &key_len,
         "Length of the key+salt (e.g. 30 for aes-128-icm, 28 for "
           "aes-128-gcm, 44 for aes-256-gcm). Default: 30", "KEY_LEN"},
@@ -779,8 +802,14 @@ main (gint argc, gchar ** argv)
     goto out;
   }
 
+  if (!validate_auth (auth)) {
+    g_printerr ("Error: Unsupported auth '%s'\n", auth);
+    g_printerr ("Supported auth methods: hmac-sha1-80, null\n");
+    goto out;
+  }
+
   loop = g_main_loop_new (NULL, TRUE);
-  key_param = key_param_new (key_len, mki, cipher);
+  key_param = key_param_new (key_len, mki, cipher, auth);
   if (!build_pipeline (location, key_param)) {
     GST_ERROR ("Pipeline could not be built");
     goto out;
