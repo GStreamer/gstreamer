@@ -444,7 +444,7 @@ gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
   self->buffer_size = DEFAULT_BUFFER_SIZE;
   self->video_format = GST_DECKLINK_VIDEO_FORMAT_AUTO;
   self->profile_id = GST_DECKLINK_PROFILE_ID_DEFAULT;
-  self->timecode_format = bmdTimecodeRP188Any;
+  self->timecode_format = GST_DECKLINK_TIMECODE_FORMAT_RP188ANY;
   self->signal_state = SIGNAL_STATE_UNKNOWN;
   self->output_stream_time = DEFAULT_OUTPUT_STREAM_TIME;
   self->skip_first_time = DEFAULT_SKIP_FIRST_TIME;
@@ -523,9 +523,8 @@ gst_decklink_video_src_set_property (GObject * object, guint property_id,
       self->profile_id = (GstDecklinkProfileId) g_value_get_enum (value);
       break;
     case PROP_TIMECODE_FORMAT:
-      self->timecode_format =
-          gst_decklink_timecode_format_from_enum ((GstDecklinkTimecodeFormat)
-          g_value_get_enum (value));
+      self->timecode_format = (GstDecklinkTimecodeFormat)
+          g_value_get_enum (value);
       break;
     case PROP_OUTPUT_STREAM_TIME:
       self->output_stream_time = g_value_get_boolean (value);
@@ -580,8 +579,7 @@ gst_decklink_video_src_get_property (GObject * object, guint property_id,
       g_value_set_enum (value, self->profile_id);
       break;
     case PROP_TIMECODE_FORMAT:
-      g_value_set_enum (value,
-          gst_decklink_timecode_format_to_enum (self->timecode_format));
+      g_value_set_enum (value, self->timecode_format);
       break;
     case PROP_OUTPUT_STREAM_TIME:
       g_value_set_boolean (value, self->output_stream_time);
@@ -891,7 +889,7 @@ gst_decklink_video_src_got_frame (GstElement * element,
     IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode,
     GstClockTime capture_time, GstClockTime stream_time,
     GstClockTime stream_duration, GstClockTime hardware_time,
-    GstClockTime hardware_duration, IDeckLinkTimecode * dtc, gboolean no_signal)
+    GstClockTime hardware_duration, gboolean no_signal)
 {
   GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (element);
   GstClockTime timestamp, duration;
@@ -1163,6 +1161,54 @@ gst_decklink_video_src_got_frame (GstElement * element,
     }
     frame_metadata = nullptr;
 
+    IDeckLinkTimecode *dtc = NULL;
+    gboolean high_frame_rate_tc = FALSE;
+    {
+      int res = S_FALSE;
+
+      switch (self->timecode_format) {
+        case GST_DECKLINK_TIMECODE_FORMAT_RP188VITC1:
+          res = frame->GetTimecode (bmdTimecodeRP188VITC1, &dtc);
+          break;
+        case GST_DECKLINK_TIMECODE_FORMAT_RP188VITC2:
+          res = frame->GetTimecode (bmdTimecodeRP188VITC2, &dtc);
+          break;
+        case GST_DECKLINK_TIMECODE_FORMAT_RP188LTC:
+          res = frame->GetTimecode (bmdTimecodeRP188LTC, &dtc);
+          break;
+        case GST_DECKLINK_TIMECODE_FORMAT_VITC:
+          res = frame->GetTimecode (bmdTimecodeVITC, &dtc);
+          break;
+        case GST_DECKLINK_TIMECODE_FORMAT_VITCFIELD2:
+          res = frame->GetTimecode (bmdTimecodeVITCField2, &dtc);
+          break;
+        case GST_DECKLINK_TIMECODE_FORMAT_SERIAL:
+          res = frame->GetTimecode (bmdTimecodeSerial, &dtc);
+          break;
+        case GST_DECKLINK_TIMECODE_FORMAT_RP188ANY:{
+          const BMDTimecodeFormat formats[] =
+              { bmdTimecodeRP188HighFrameRate, bmdTimecodeRP188VITC1,
+            bmdTimecodeRP188LTC, bmdTimecodeRP188VITC2
+          };
+
+          for (size_t i = 0; i < G_N_ELEMENTS (formats); i++) {
+            res = frame->GetTimecode (formats[i], &dtc);
+            if (res == S_OK) {
+              high_frame_rate_tc = formats[i] == bmdTimecodeRP188HighFrameRate;
+              break;
+            }
+          }
+
+          break;
+        }
+      }
+
+      if (res != S_OK) {
+        GST_DEBUG_OBJECT (self, "Failed to get timecode: 0x%08lx",
+            (unsigned long) res);
+      }
+    }
+
     if (dtc != NULL) {
       uint8_t hours, minutes, seconds, frames;
       HRESULT res;
@@ -1175,26 +1221,19 @@ gst_decklink_video_src_got_frame (GstElement * element,
       } else {
         GST_DEBUG_OBJECT (self, "Got timecode %02d:%02d:%02d:%02d",
             hours, minutes, seconds, frames);
-        if (bmode->interlaced)
+
+        if (((double) bmode->fps_n) / ((double) bmode->fps_d) > 30.0
+            && !high_frame_rate_tc) {
+          frames =
+              frames * 2 + ((dtc->GetFlags () & bmdTimecodeFieldMark) ? 1 : 0);
+        }
+
+        if (bmode->interlaced) {
           flags =
               (GstVideoTimeCodeFlags) (flags |
               GST_VIDEO_TIME_CODE_FLAGS_INTERLACED);
-        if (bmode->fps_d == 1001) {
-          if (bmode->fps_n == 30000 || bmode->fps_n == 60000) {
-            /* Some occurrences have been spotted where the driver mistakenly
-             * fails to set the drop-frame flag for drop-frame timecodes.
-             * Assume always drop-frame for 29.97 and 59.94 FPS */
-            flags =
-                (GstVideoTimeCodeFlags) (flags |
-                GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME);
-          } else {
-            /* Drop-frame isn't defined for any other framerates (e.g. 23.976)
-             * */
-            flags =
-                (GstVideoTimeCodeFlags) (flags &
-                ~GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME);
-          }
         }
+
         f.tc =
             gst_video_time_code_new (bmode->fps_n, bmode->fps_d, NULL, flags,
             hours, minutes, seconds, frames, field_count);

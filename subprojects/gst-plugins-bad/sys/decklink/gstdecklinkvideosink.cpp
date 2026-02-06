@@ -154,23 +154,21 @@ public:
   {
     BMDTimecodeBCD bcd = 0;
 
-    bcd |= (m_timecode->frames % 10) << 0;
-    bcd |= ((m_timecode->frames / 10) & 0x0f) << 4;
-    bcd |= (m_timecode->seconds % 10) << 8;
+    if (((double) m_timecode->config.fps_n) /
+        ((double) m_timecode->config.fps_d) > 30.0) {
+      guint frames = m_timecode->frames / 2;
+      bcd |= ((frames % 10) & 0x0f) << 0;
+      bcd |= ((frames / 10) & 0x0f) << 4;
+    } else {
+      bcd |= ((m_timecode->frames % 10) & 0x0f) << 0;
+      bcd |= ((m_timecode->frames / 10) & 0x0f) << 4;
+    }
+    bcd |= ((m_timecode->seconds % 10) & 0x0f) << 8;
     bcd |= ((m_timecode->seconds / 10) & 0x0f) << 12;
-    bcd |= (m_timecode->minutes % 10) << 16;
+    bcd |= ((m_timecode->minutes % 10) & 0x0f) << 16;
     bcd |= ((m_timecode->minutes / 10) & 0x0f) << 20;
-    bcd |= (m_timecode->hours % 10) << 24;
+    bcd |= ((m_timecode->hours % 10) & 0x0f) << 24;
     bcd |= ((m_timecode->hours / 10) & 0x0f) << 28;
-
-    if (m_timecode->config.fps_n == 24 && m_timecode->config.fps_d == 1)
-      bcd |= 0x0 << 30;
-    else if (m_timecode->config.fps_n == 25 && m_timecode->config.fps_d == 1)
-      bcd |= 0x1 << 30;
-    else if (m_timecode->config.fps_n == 30 && m_timecode->config.fps_d == 1001)
-      bcd |= 0x2 << 30;
-    else if (m_timecode->config.fps_n == 30 && m_timecode->config.fps_d == 1)
-      bcd |= 0x3 << 30;
 
     return bcd;
   }
@@ -181,7 +179,12 @@ public:
     *hours = m_timecode->hours;
     *minutes = m_timecode->minutes;
     *seconds = m_timecode->seconds;
-    *frames = m_timecode->frames;
+    if (((double) m_timecode->config.fps_n) /
+        ((double) m_timecode->config.fps_d) > 30.0) {
+      *frames = m_timecode->frames / 2;
+    } else {
+      *frames = m_timecode->frames;
+    }
 
     return S_OK;
   }
@@ -196,15 +199,19 @@ public:
 
   virtual BMDTimecodeFlags STDMETHODCALLTYPE GetFlags (void)
   {
-    BMDTimecodeFlags flags = (BMDTimecodeFlags) 0;
+    BMDTimecodeFlags flags = (BMDTimecodeFlags) bmdTimecodeFlagDefault;
 
     if (((GstVideoTimeCodeFlags) (m_timecode->
                 config.flags)) & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME)
       flags = (BMDTimecodeFlags) (flags | bmdTimecodeIsDropFrame);
-    else
-      flags = (BMDTimecodeFlags) (flags | bmdTimecodeFlagDefault);
-    if (m_timecode->field_count == 2)
+
+    if (((double) m_timecode->config.fps_n) /
+        ((double) m_timecode->config.fps_d) > 30.0) {
+      if (m_timecode->frames % 2 == 1)
+        flags = (BMDTimecodeFlags) (flags | bmdTimecodeFieldMark);
+    } else if (m_timecode->field_count == 2) {
       flags = (BMDTimecodeFlags) (flags | bmdTimecodeFieldMark);
+    }
 
     return flags;
   }
@@ -259,7 +266,7 @@ public:
   GstDecklinkVideoFrame (GstVideoFrame * frame):
       running_time(0), running_time_duration(0), sync_buffer(0), m_frame(0),
       have_light_level(FALSE), have_mastering_info(FALSE), m_dframe (0),
-      m_ancillary (0), m_timecode (0), m_refcount (1)
+      m_ancillary (0), m_timecode_format(bmdTimecodeRP188Any), m_timecode (0), m_refcount (1)
   {
     m_frame = g_new0 (GstVideoFrame, 1);
     *m_frame = *frame;
@@ -271,7 +278,7 @@ public:
   GstDecklinkVideoFrame (IDeckLinkMutableVideoFrame * dframe):
       running_time(0), running_time_duration(0), sync_buffer(0), m_frame(0),
       have_light_level(FALSE), have_mastering_info(FALSE), m_dframe (dframe),
-      m_ancillary (0), m_timecode (0), m_refcount (1)
+      m_ancillary (0), m_timecode_format(bmdTimecodeRP188Any), m_timecode (0), m_refcount (1)
   {
     memset (&light_level, 0, sizeof (light_level));
     memset (&mastering_info, 0, sizeof (mastering_info));
@@ -352,6 +359,9 @@ public:
   virtual HRESULT STDMETHODCALLTYPE GetTimecode (BMDTimecodeFormat format,
       IDeckLinkTimecode ** timecode)
   {
+    if (format != m_timecode_format)
+      return S_FALSE;
+
     *timecode = m_timecode;
     if (m_timecode) {
       m_timecode->AddRef ();
@@ -361,10 +371,31 @@ public:
     }
   }
 
-  virtual HRESULT STDMETHODCALLTYPE SetTimecode (GstVideoTimeCode * timecode)
+  virtual HRESULT STDMETHODCALLTYPE SetTimecode (GstDecklinkTimecodeFormat format, GstVideoTimeCode * timecode)
   {
     if (m_timecode) {
       m_timecode->Release ();
+    }
+    switch (format) {
+      case GST_DECKLINK_TIMECODE_FORMAT_RP188VITC1:
+      case GST_DECKLINK_TIMECODE_FORMAT_RP188ANY:
+        m_timecode_format = bmdTimecodeRP188VITC1;
+        break;
+      case GST_DECKLINK_TIMECODE_FORMAT_RP188VITC2:
+        m_timecode_format = bmdTimecodeRP188VITC2;
+        break;
+      case GST_DECKLINK_TIMECODE_FORMAT_RP188LTC:
+        m_timecode_format = bmdTimecodeRP188LTC;
+        break;
+      case GST_DECKLINK_TIMECODE_FORMAT_VITC:
+        m_timecode_format = bmdTimecodeVITC;
+        break;
+      case GST_DECKLINK_TIMECODE_FORMAT_VITCFIELD2:
+        m_timecode_format = bmdTimecodeVITCField2;
+        break;
+      case GST_DECKLINK_TIMECODE_FORMAT_SERIAL:
+        m_timecode_format = bmdTimecodeSerial;
+        break;
     }
     m_timecode = new GstDecklinkTimecode (timecode);
 
@@ -600,6 +631,7 @@ private:
   gboolean have_mastering_info;
   IDeckLinkMutableVideoFrame *m_dframe;
   IDeckLinkVideoFrameAncillary *m_ancillary;
+  BMDTimecodeFormat m_timecode_format;
   GstDecklinkTimecode *m_timecode;
   int m_refcount;
   GstVideoContentLightLevel light_level;
@@ -902,7 +934,7 @@ gst_decklink_video_sink_class_init (GstDecklinkVideoSinkClass * klass)
       g_param_spec_enum ("timecode-format", "Timecode format",
           "Timecode format type to use for playback",
           GST_TYPE_DECKLINK_TIMECODE_FORMAT,
-          GST_DECKLINK_TIMECODE_FORMAT_RP188ANY,
+          GST_DECKLINK_TIMECODE_FORMAT_RP188VITC1,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
@@ -999,7 +1031,7 @@ gst_decklink_video_sink_init (GstDecklinkVideoSink * self)
   self->video_format = GST_DECKLINK_VIDEO_FORMAT_8BIT_YUV;
   self->profile_id = GST_DECKLINK_PROFILE_ID_DEFAULT;
   /* VITC is legacy, we should expect RP188 in modern use cases */
-  self->timecode_format = bmdTimecodeRP188Any;
+  self->timecode_format = GST_DECKLINK_TIMECODE_FORMAT_RP188VITC1;
   self->caption_line = 0;
   self->afd_bar_line = 0;
   self->output_vanc = FALSE;
@@ -1048,9 +1080,8 @@ gst_decklink_video_sink_set_property (GObject * object, guint property_id,
       self->profile_id = (GstDecklinkProfileId) g_value_get_enum (value);
       break;
     case PROP_TIMECODE_FORMAT:
-      self->timecode_format =
-          gst_decklink_timecode_format_from_enum ((GstDecklinkTimecodeFormat)
-          g_value_get_enum (value));
+      self->timecode_format = (GstDecklinkTimecodeFormat)
+          g_value_get_enum (value);
       break;
     case PROP_KEYER_MODE:
       self->keyer_mode =
@@ -1102,8 +1133,7 @@ gst_decklink_video_sink_get_property (GObject * object, guint property_id,
       g_value_set_enum (value, self->profile_id);
       break;
     case PROP_TIMECODE_FORMAT:
-      g_value_set_enum (value,
-          gst_decklink_timecode_format_to_enum (self->timecode_format));
+      g_value_set_enum (value, self->timecode_format);
       break;
     case PROP_KEYER_MODE:
       g_value_set_enum (value,
@@ -2040,7 +2070,7 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
   if (tc_meta) {
     gchar *tc_str;
 
-    frame->SetTimecode (&tc_meta->tc);
+    frame->SetTimecode (self->timecode_format, &tc_meta->tc);
     tc_str = gst_video_time_code_to_string (&tc_meta->tc);
     GST_DEBUG_OBJECT (self, "Set frame timecode to %s", tc_str);
     g_free (tc_str);

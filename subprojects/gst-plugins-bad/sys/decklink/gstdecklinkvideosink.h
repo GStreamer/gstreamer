@@ -54,7 +54,7 @@ struct _GstDecklinkVideoSink
   gint64 persistent_id;
   GstDecklinkVideoFormat video_format;
   GstDecklinkProfileId profile_id;
-  BMDTimecodeFormat timecode_format;
+  GstDecklinkTimecodeFormat timecode_format;
   BMDKeyerMode keyer_mode;
   gint keyer_level;
 

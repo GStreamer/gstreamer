@@ -304,97 +304,97 @@ typedef enum {
 
   /**
    * GstDecklinkModes::640x480p60
-   * 
+   *
    * Since: 1.26
    */
   GST_DECKLINK_MODE_640x480p60,
   /**
    * GstDecklinkModes::800x600p60
-   * 
+   *
    * Since: 1.26
    */
   GST_DECKLINK_MODE_800x600p60,
   /**
    * GstDecklinkModes::1440x900p50
-   * 
+   *
    * Since: 1.26
    */
   GST_DECKLINK_MODE_1440x900p50,
   /**
    * GstDecklinkModes::1440x900p60
-   * 
+   *
    * Since: 1.26
    */
   GST_DECKLINK_MODE_1440x900p60,
   /**
    * GstDecklinkModes::1440x1080p50
-   * 
+   *
    * Since: 1.26
    */
   GST_DECKLINK_MODE_1440x1080p50,
   /**
    * GstDecklinkModes::1440x1080p60
-   * 
+   *
    * Since: 1.26
    */
   GST_DECKLINK_MODE_1440x1080p60,
   /**
    * GstDecklinkModes::1600x1200p50
-   * 
+   *
    * Since: 1.26
    */
   GST_DECKLINK_MODE_1600x1200p50,
   /**
    * GstDecklinkModes::1600x1200p60
-   * 
+   *
    * Since: 1.26
    */
   GST_DECKLINK_MODE_1600x1200p60,
   /**
    * GstDecklinkModes::1920x1200p50
-   * 
+   *
    * Since: 1.26
    */
   GST_DECKLINK_MODE_1920x1200p50,
   /**
    * GstDecklinkModes::1920x1200p60
-   * 
+   *
    * Since: 1.26
    */
   GST_DECKLINK_MODE_1920x1200p60,
   /**
    * GstDecklinkModes::1920x1440p50
-   * 
+   *
    * Since: 1.26
    */
   GST_DECKLINK_MODE_1920x1440p50,
   /**
    * GstDecklinkModes::1920x1440p60
-   * 
+   *
    * Since: 1.26
    */
   GST_DECKLINK_MODE_1920x1440p60,
   /**
    * GstDecklinkModes::2560x1440p50
-   * 
+   *
    * Since: 1.26
    */
   GST_DECKLINK_MODE_2560x1440p50,
   /**
    * GstDecklinkModes::2560x1440p60
-   * 
+   *
    * Since: 1.26
    */
   GST_DECKLINK_MODE_2560x1440p60,
   /**
    * GstDecklinkModes::2560x1600p50
-   * 
+   *
    * Since: 1.26
    */
   GST_DECKLINK_MODE_2560x1600p50,
   /**
    * GstDecklinkModes::2560x1600p60
-   * 
+   *
    * Since: 1.26
    */
   GST_DECKLINK_MODE_2560x1600p60
@@ -583,7 +583,7 @@ struct _GstDecklinkInput {
   GMutex lock;
 
   /* Set by the video source */
-  void (*got_video_frame) (GstElement *videosrc, IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode, GstClockTime capture_time, GstClockTime stream_time, GstClockTime stream_duration, GstClockTime hardware_time, GstClockTime hardware_duration, IDeckLinkTimecode *dtc, gboolean no_signal);
+  void (*got_video_frame) (GstElement *videosrc, IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode, GstClockTime capture_time, GstClockTime stream_time, GstClockTime stream_duration, GstClockTime hardware_time, GstClockTime hardware_duration, gboolean no_signal);
   /* Configured mode or NULL */
   const GstDecklinkMode *mode;
   BMDPixelFormat format;

@@ -1334,8 +1334,7 @@ public:
         IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode,
         GstClockTime capture_time, GstClockTime stream_time,
         GstClockTime stream_duration, GstClockTime hardware_time,
-        GstClockTime hardware_duration, IDeckLinkTimecode * dtc,
-        gboolean no_signal) = NULL;
+        GstClockTime hardware_duration, gboolean no_signal) = NULL;
     void (*got_audio_packet) (GstElement * videosrc,
         IDeckLinkAudioInputPacket * packet, GstClockTime capture_time,
         GstClockTime stream_time, GstClockTime stream_duration,
@@ -1426,8 +1425,6 @@ public:
     }
 
     if (got_video_frame && videosrc && video_frame) {
-      IDeckLinkTimecode *dtc = 0;
-
       res =
           video_frame->GetStreamTime (&stream_time, &stream_duration,
           GST_SECOND);
@@ -1446,24 +1443,8 @@ public:
         hardware_duration = GST_CLOCK_TIME_NONE;
       }
 
-      if (m_input->videosrc) {
-        /* FIXME: Avoid circularity between gstdecklink.cpp and
-         * gstdecklinkvideosrc.cpp */
-        res =
-            video_frame->
-            GetTimecode (GST_DECKLINK_VIDEO_SRC (videosrc)->timecode_format,
-            &dtc);
-
-        if (res != S_OK) {
-          GST_DEBUG_OBJECT (videosrc, "Failed to get timecode: 0x%08lx",
-              (unsigned long) res);
-          dtc = NULL;
-        }
-      }
-
-      /* passing dtc reference */
       got_video_frame (videosrc, video_frame, mode, capture_time,
-          stream_time, stream_duration, hardware_time, hardware_duration, dtc,
+          stream_time, stream_duration, hardware_time, hardware_duration,
           no_signal);
     }
 
