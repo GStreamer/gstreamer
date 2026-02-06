@@ -505,6 +505,7 @@ ges_track_handle_message (GstBin * bin, GstMessage * message)
 
         ges_track_select_subtimeline_streams (track, collection,
             GST_ELEMENT (GST_MESSAGE_SRC (message)));
+        gst_object_unref (collection);
 
         GST_INFO_OBJECT (bin,
             "Handled ges-timeline-collection message, dropping");
