@@ -142,12 +142,14 @@ nle_bin_handle_message (GstBin * bin, GstMessage * message)
       g_mutex_unlock (&query->lock);
       nle_query_parent_nle_object_release (query);
 
+      gst_message_unref (message);
       return;
     }
   } else if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STREAM_COLLECTION) {
     GST_INFO_OBJECT (bin, "Dropping stream collection message, "
         " those are internal to and should be kept as such");
 
+    gst_message_unref (message);
     return;
   }
 
