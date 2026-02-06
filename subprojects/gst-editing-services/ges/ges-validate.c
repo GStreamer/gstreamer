@@ -1091,9 +1091,12 @@ prepare_seek_action (GstValidateAction * action)
 
   gst_object_unref (scenario);
   gst_object_unref (timeline);
-  return type->overriden_type->prepare (action);
+  res = type->overriden_type->prepare (action);
+  gst_mini_object_unref (GST_MINI_OBJECT (type));
+  return res;
 
 done:
+  gst_mini_object_unref (GST_MINI_OBJECT (type));
   gst_object_unref (scenario);
   gst_object_unref (timeline);
   return res;
