@@ -80,6 +80,8 @@ ges_base_bin_dispose (GObject * object)
     priv->track_removed_sigid = 0;
     GST_OBJECT_UNLOCK (self);
 
+    gst_element_set_locked_state (GST_ELEMENT (priv->timeline), FALSE);
+    gst_element_set_state (GST_ELEMENT (priv->timeline), GST_STATE_NULL);
     gst_bin_remove (GST_BIN (self), GST_ELEMENT (priv->timeline));
 
     GST_OBJECT_LOCK (self);
@@ -133,6 +135,25 @@ ges_base_bin_set_property (GObject * object, guint property_id,
   }
 }
 
+static GstStateChangeReturn
+ges_base_bin_change_state (GstElement * element, GstStateChange transition)
+{
+  GESBaseBin *self = GES_BASE_BIN (element);
+  GESBaseBinPrivate *priv = ges_base_bin_get_instance_private (self);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      if (priv->timeline)
+        gst_element_set_locked_state (GST_ELEMENT (priv->timeline), FALSE);
+      break;
+    default:
+      break;
+  }
+
+  return GST_ELEMENT_CLASS (ges_base_bin_parent_class)->change_state (element,
+      transition);
+}
+
 static void
 ges_base_bin_class_init (GESBaseBinClass * self_class)
 {
@@ -148,6 +169,8 @@ ges_base_bin_class_init (GESBaseBinClass * self_class)
   gclass->set_property = ges_base_bin_set_property;
   gclass->dispose = ges_base_bin_dispose;
   gclass->finalize = ges_base_bin_finalize;
+
+  gstelement_klass->change_state = ges_base_bin_change_state;
 
   /**
    * GESBaseBin:timeline:
