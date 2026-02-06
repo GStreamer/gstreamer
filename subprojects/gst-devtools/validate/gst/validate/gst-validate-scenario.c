@@ -2664,7 +2664,7 @@ _should_execute_action (GstValidateScenario * scenario, GstValidateAction * act,
   pipeline = gst_validate_scenario_get_pipeline (scenario);
   if (pipeline == NULL) {
 
-    if (!(GST_VALIDATE_ACTION_GET_TYPE (act)->flags &
+    if (!(_find_action_type (act->type)->flags &
             GST_VALIDATE_ACTION_TYPE_DOESNT_NEED_PIPELINE)) {
       GST_VALIDATE_REPORT_ACTION (scenario, act,
           SCENARIO_ACTION_EXECUTION_ERROR,
