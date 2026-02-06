@@ -574,6 +574,7 @@ ges_timeline_send_event (GstElement * element, GstEvent * event)
 
     g_list_free_full (stream_ids, g_free);
     g_list_free (to_remove);
+    gst_event_unref (event);
 
     return TRUE;
   }
