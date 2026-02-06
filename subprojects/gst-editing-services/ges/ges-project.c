@@ -746,9 +746,19 @@ ges_project_try_updating_id (GESProject * project, GESAsset * asset,
   }
 
   /* Always send the MISSING_URI signal if requesting new ID is possible
-   * so that subclasses of GESProject are aware of the missing-uri */
-  g_signal_emit (project, _signals[MISSING_URI_SIGNAL], 0, error, asset,
-      &new_id);
+   * so that subclasses of GESProject are aware of the missing-uri.
+   * Save the proposed id beforehand since g_signal_emit overwrites the
+   * return value pointer without freeing the old value. */
+  {
+    gchar *proposed_id = new_id;
+    new_id = NULL;
+    g_signal_emit (project, _signals[MISSING_URI_SIGNAL], 0, error, asset,
+        &new_id);
+    if (!new_id)
+      new_id = proposed_id;
+    else
+      g_free (proposed_id);
+  }
 
   if (new_id) {
     GST_DEBUG_OBJECT (project, "new id found: %s", new_id);
