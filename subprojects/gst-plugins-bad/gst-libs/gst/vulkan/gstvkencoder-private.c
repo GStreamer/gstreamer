@@ -93,7 +93,8 @@ _populate_function_table (GstVulkanEncoder * self)
     return TRUE;
 
   priv->vk_loaded =
-      gst_vulkan_video_get_vk_functions (self->queue->device, &priv->vk);
+      gst_vulkan_video_get_vk_functions (self->queue->device, &priv->vk,
+      self->codec);
   return priv->vk_loaded;
 }
 
