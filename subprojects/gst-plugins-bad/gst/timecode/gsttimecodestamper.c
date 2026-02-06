@@ -71,7 +71,8 @@ enum
   PROP_LTC_TIMEOUT,
   PROP_RTC_MAX_DRIFT,
   PROP_RTC_AUTO_RESYNC,
-  PROP_TIMECODE_OFFSET
+  PROP_TIMECODE_OFFSET,
+  PROP_ANCILLARY_META_LOCATIONS,
 };
 
 #define DEFAULT_SOURCE GST_TIME_CODE_STAMPER_SOURCE_INTERNAL
@@ -88,6 +89,7 @@ enum
 #define DEFAULT_RTC_MAX_DRIFT 250000000
 #define DEFAULT_RTC_AUTO_RESYNC TRUE
 #define DEFAULT_TIMECODE_OFFSET 0
+#define DEFAULT_ANCILLARY_META_LOCATIONS NULL
 
 #define DEFAULT_LTC_QUEUE 100
 
@@ -198,6 +200,20 @@ gst_timecodestamper_source_get_type (void)
      */
     {GST_TIME_CODE_STAMPER_SOURCE_RUNNING_TIME,
         "Buffer running time as timecode", "running-time"},
+    /**
+     * GstTimeCodeStamperSource::ancillary-meta:
+     *
+     * `GstAncillaryMeta` in ST12-2 or ST12-3 format.
+     *
+     * Line and horizontal offset can be configured by the corresponding
+     * properties, otherwise the first one on the buffer will be used.
+     *
+     * Will be all zeroes if not available.
+     *
+     * Since: 1.30
+     */
+    {GST_TIME_CODE_STAMPER_SOURCE_ANCILLARY_META,
+        "Ancillary meta in ST12-2 or ST12-3 format", "ancillary-meta"},
     {0, NULL, NULL},
   };
 
@@ -325,6 +341,24 @@ gst_timecodestamper_class_init (GstTimeCodeStamperClass * klass)
           "Add this offset in frames to internal, LTC or RTC timecode, "
           "useful if there is an offset between the timecode source and video",
           G_MININT, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstTimeCodeStamper:ancillary-meta-locations:
+   *
+   * If using ancillary meta as source, this specifies the lines and horizontal
+   * offsets that should be used. If unset then the first meta will be used, if
+   * more than one location is provided then the first matching one will be
+   * used.
+   *
+   * The format of the string is "line:offset,line:offset,...".
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_ANCILLARY_META_LOCATIONS,
+      g_param_spec_string ("ancillary-meta-locations",
+          "Ancillary Meta Locations",
+          "Locations to use for ancillary meta",
+          DEFAULT_ANCILLARY_META_LOCATIONS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_timecodestamper_sink_template));
@@ -372,10 +406,13 @@ gst_timecodestamper_init (GstTimeCodeStamper * timecodestamper)
   timecodestamper->rtc_max_drift = DEFAULT_RTC_MAX_DRIFT;
   timecodestamper->rtc_auto_resync = DEFAULT_RTC_AUTO_RESYNC;
   timecodestamper->timecode_offset = 0;
+  timecodestamper->ancillary_meta_locations = DEFAULT_ANCILLARY_META_LOCATIONS;
 
   timecodestamper->internal_tc = NULL;
   timecodestamper->last_tc = NULL;
   timecodestamper->last_tc_running_time = GST_CLOCK_TIME_NONE;
+  timecodestamper->last_anc_tc = NULL;
+  timecodestamper->last_anc_tc_running_time = GST_CLOCK_TIME_NONE;
   timecodestamper->rtc_tc = NULL;
 
   timecodestamper->seeked_frames = -1;
@@ -452,6 +489,13 @@ gst_timecodestamper_dispose (GObject * object)
     timecodestamper->last_tc = NULL;
   }
   timecodestamper->last_tc_running_time = GST_CLOCK_TIME_NONE;
+  if (timecodestamper->last_anc_tc != NULL) {
+    gst_video_time_code_free (timecodestamper->last_anc_tc);
+    timecodestamper->last_anc_tc = NULL;
+  }
+  timecodestamper->last_anc_tc_running_time = GST_CLOCK_TIME_NONE;
+  g_free (timecodestamper->ancillary_meta_locations);
+  timecodestamper->ancillary_meta_locations = NULL;
 
   if (timecodestamper->rtc_tc != NULL) {
     gst_video_time_code_free (timecodestamper->rtc_tc);
@@ -578,6 +622,10 @@ gst_timecodestamper_set_property (GObject * object, guint prop_id,
     case PROP_TIMECODE_OFFSET:
       timecodestamper->timecode_offset = g_value_get_int (value);
       break;
+    case PROP_ANCILLARY_META_LOCATIONS:
+      g_free (timecodestamper->ancillary_meta_locations);
+      timecodestamper->ancillary_meta_locations = g_value_dup_string (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -636,6 +684,9 @@ gst_timecodestamper_get_property (GObject * object, guint prop_id,
     case PROP_TIMECODE_OFFSET:
       g_value_set_int (value, timecodestamper->timecode_offset);
       break;
+    case PROP_ANCILLARY_META_LOCATIONS:
+      g_value_set_string (value, timecodestamper->ancillary_meta_locations);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -679,6 +730,11 @@ gst_timecodestamper_stop (GstBaseTransform * trans)
     timecodestamper->last_tc = NULL;
   }
   timecodestamper->last_tc_running_time = GST_CLOCK_TIME_NONE;
+  if (timecodestamper->last_anc_tc != NULL) {
+    gst_video_time_code_free (timecodestamper->last_anc_tc);
+    timecodestamper->last_anc_tc = NULL;
+  }
+  timecodestamper->last_anc_tc_running_time = GST_CLOCK_TIME_NONE;
 #if HAVE_LTC
   g_mutex_lock (&timecodestamper->mutex);
   gst_audio_info_init (&timecodestamper->ainfo);
@@ -841,6 +897,8 @@ gst_timecodestamper_update_framerate (GstTimeCodeStamper * timecodestamper,
       timecodestamper->internal_tc, FALSE);
   gst_timecodestamper_update_timecode_framerate (timecodestamper, fps_n, fps_d,
       timecodestamper->last_tc, FALSE);
+  gst_timecodestamper_update_timecode_framerate (timecodestamper, fps_n, fps_d,
+      timecodestamper->last_anc_tc, FALSE);
   gst_timecodestamper_update_timecode_framerate (timecodestamper, fps_n, fps_d,
       timecodestamper->rtc_tc, FALSE);
 
@@ -1109,6 +1167,248 @@ gst_timecodestamper_update_latency (GstTimeCodeStamper * timecodestamper,
 }
 #endif
 
+typedef struct
+{
+  GstTimeCodeStamper *self;
+  GstVideoTimeCode *anc_tc;
+} ExtractAncillaryTimecodeData;
+
+// While parsing the string every time is not great, it's not going to be long
+// and there are not going to be many metas. If this turns out to be a problem,
+// it can be parsed into an array, etc. when setting the property.
+static gboolean
+ancillary_meta_location_matches (GstTimeCodeStamper * self, guint16 line,
+    guint16 offset)
+{
+  const gchar *p;
+
+  // If no locations then the first one found matches
+  if (!self->ancillary_meta_locations)
+    return TRUE;
+
+  // Otherwise parse the comma separated line:offset pairs until
+  // there is a match.
+  p = self->ancillary_meta_locations;
+  while (*p != '\0') {
+    gchar *endptr;
+    guint64 loc_line, loc_offset;
+
+    loc_line = g_ascii_strtoull (p, &endptr, 10);
+    // String did not start with a number or the number was not
+    // followed by a colon
+    if (endptr == p || *endptr != ':')
+      return FALSE;
+
+    p = endptr + 1;
+
+    loc_offset = g_ascii_strtoull (p, &endptr, 10);
+    // String did not start with a number
+    if (endptr == p)
+      return FALSE;
+
+    if (loc_line == line && loc_offset == offset)
+      return TRUE;
+
+    if (*endptr == ',') {
+      // Go to next pair if comma,
+      p = endptr + 1;
+    } else if (*endptr == '\0') {
+      // or no match but string ended,
+      break;
+    } else {
+      // or invalid string format
+      break;
+    }
+  }
+
+  return FALSE;
+}
+
+static gboolean
+extract_ancillary_timecode (GstBuffer * buffer, GstMeta ** gmeta,
+    gpointer user_data)
+{
+  ExtractAncillaryTimecodeData *data = user_data;
+  GstAncillaryMeta *meta;
+  const guint16 *tc;
+
+  if ((*gmeta)->info->api != GST_ANCILLARY_META_API_TYPE)
+    return TRUE;
+
+  meta = (GstAncillaryMeta *) * gmeta;
+
+  // Needs to be exactly 16 bytes
+  if ((meta->data_count & 0xff) != 16)
+    return TRUE;
+
+  tc = meta->data;
+  if ((meta->DID & 0xff) == 0x60 && (meta->SDID_block_number & 0xff) == 0x60) {
+    guint8 dbb1, dbb2;
+    guint frames, ten_frames;
+    guint seconds, ten_seconds;
+    guint minutes, ten_minutes;
+    guint hours, ten_hours;
+    guint8 drop_frame_flag, field_flag;
+    guint field;
+
+    // ST12-2
+    GST_MEMDUMP_OBJECT (data->self, "ST12-2 timecode", (const guint8 *) tc, 32);
+
+    dbb1 = 0;
+    for (gsize i = 0; i < 8; i++)
+      dbb1 |= ((tc[i] >> 2) & 0x01) << i;
+
+    dbb2 = 0;
+    for (gsize i = 8; i < 16; i++)
+      dbb2 |= ((tc[i] >> 2) & 0x01) << (i - 8);
+
+    frames = (tc[0] >> 4) & 0x0f;
+    ten_frames = (tc[2] >> 4) & 0x03;
+
+    drop_frame_flag = (tc[2] >> 6) & 0x01;
+
+    seconds = (tc[4] >> 4) & 0x0f;
+    ten_seconds = (tc[6] >> 4) & 0x07;
+
+    field_flag = (tc[6] >> 7) & 0x01;
+
+    minutes = (tc[8] >> 4) & 0x0f;
+    ten_minutes = (tc[10] >> 4) & 0x07;
+
+    hours = (tc[12] >> 4) & 0x0f;
+    ten_hours = (tc[14] >> 4) & 0x03;
+
+    hours = hours + 10 * ten_hours;
+    minutes = minutes + 10 * ten_minutes;
+    seconds = seconds + 10 * ten_seconds;
+    frames = frames + 10 * ten_frames;
+
+    if (((double) data->self->fps_n) / ((double) data->self->fps_d) > 30.0) {
+      frames = frames * 2 + field_flag;
+      field = 0;
+    } else {
+      field = (data->self->interlace_mode ==
+          GST_VIDEO_INTERLACE_MODE_PROGRESSIVE ? 0 : (1 + field_flag));
+    }
+
+    GST_TRACE_OBJECT (data->self,
+        "Got ancillary meta ST12-2 timecode on line %d horizontal offset %d: %02u:%02u:%02u%c%02u (%s, F%d, DBB1 %02x, DBB2 %02x)",
+        meta->line, meta->offset, hours, minutes,
+        seconds, drop_frame_flag ? ';' : ':', frames,
+        drop_frame_flag ? "DF" : "NDF", field, dbb1, dbb2);
+
+    if (!data->anc_tc
+        && ancillary_meta_location_matches (data->self, meta->line,
+            meta->offset)) {
+      data->anc_tc =
+          gst_video_time_code_new (data->self->fps_n, data->self->fps_d, NULL,
+          (drop_frame_flag ? GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME : 0) | (field
+              > 0 ? GST_VIDEO_TIME_CODE_FLAGS_INTERLACED : 0), hours, minutes,
+          seconds, frames, field);
+    }
+  } else if ((meta->DID & 0xff) == 0x60
+      && (meta->SDID_block_number >> 2) == 0x61) {
+    guint8 dbb1, dbb2;
+    guint super_frames, ten_super_frames, frames;
+    guint seconds, ten_seconds;
+    guint minutes, ten_minutes;
+    guint hours, ten_hours;
+    guint8 drop_frame_flag;
+    guint super_frame_count, multiplier;
+    guint8 sub_frame = 0;
+
+    // ST12-3
+    GST_MEMDUMP_OBJECT (data->self, "ST12-3 timecode", (const guint8 *) tc, 32);
+    dbb1 = 0;
+    for (gsize i = 0; i < 8; i++)
+      dbb1 |= ((tc[i] >> 2) & 0x01) << i;
+
+    // Reserved otherwise
+    if ((dbb1 & 0x8f) != 0x8f)
+      return FALSE;
+
+    dbb2 = 0;
+    for (gsize i = 8; i < 16; i++)
+      dbb2 |= ((tc[i] >> 2) & 0x01) << (i - 8);
+
+    super_frame_count = (dbb2 >> 4) & 0x03;
+    switch (super_frame_count) {
+      case 0:
+        super_frame_count = 24;
+        break;
+      case 1:
+        super_frame_count = 25;
+        break;
+      case 2:
+        super_frame_count = 30;
+        break;
+      case 3:
+        // Reserved
+        return FALSE;
+    }
+
+    multiplier = dbb2 & 0x0f;
+
+    super_frames = (tc[0] >> 4) & 0x0f;
+    ten_super_frames = (tc[2] >> 4) & 0x03;
+
+    drop_frame_flag = (tc[2] >> 6) & 0x01;
+    sub_frame |= ((tc[2] >> 7) & 0x01) << (4 - 1);
+
+    seconds = (tc[4] >> 4) & 0x0f;
+    ten_seconds = (tc[6] >> 4) & 0x07;
+
+    if (super_frame_count == 24) {
+      sub_frame |= ((tc[6] >> 7) & 0x01) << (4 - 2);
+    } else {
+      sub_frame |= ((tc[6] >> 7) & 0x01) << (4 - 0);
+    }
+
+    minutes = (tc[8] >> 4) & 0x0f;
+    ten_minutes = (tc[10] >> 4) & 0x07;
+
+    if (super_frame_count == 24) {
+      sub_frame |= ((tc[10] >> 7) & 0x01) << (4 - 4);
+    } else {
+      sub_frame |= ((tc[10] >> 7) & 0x01) << (4 - 2);
+    }
+
+    hours = (tc[12] >> 4) & 0x0f;
+    ten_hours = (tc[14] >> 4) & 0x03;
+
+    sub_frame |= ((tc[14] >> 6) & 0x01) << (4 - 3);
+    if (super_frame_count == 24) {
+      sub_frame |= ((tc[14] >> 7) & 0x01) << (4 - 0);
+    } else {
+      sub_frame |= ((tc[14] >> 7) & 0x01) << (4 - 4);
+    }
+
+    frames = (ten_super_frames * 10 + super_frames) * multiplier
+        + (sub_frame & (0x1f >> (5 - multiplier)));
+
+    hours = hours + 10 * ten_hours;
+    minutes = minutes + 10 * ten_minutes;
+    seconds = seconds + 10 * ten_seconds;
+
+    GST_TRACE_OBJECT (data->self,
+        "Got ancillary meta ST12-3 timecode on line %d horizontal offset %d: %02u:%02u:%02u%c%03u (%s, DBB1 %02x, DBB2 %02x)",
+        meta->line, meta->offset, hours, minutes,
+        seconds, drop_frame_flag ? ';' : ':', frames,
+        drop_frame_flag ? "DF" : "NDF", dbb1, dbb2);
+
+    if (!data->anc_tc
+        && ancillary_meta_location_matches (data->self, meta->line,
+            meta->offset)) {
+      data->anc_tc =
+          gst_video_time_code_new (data->self->fps_n, data->self->fps_d, NULL,
+          (drop_frame_flag ? GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME : 0)
+          , hours, minutes, seconds, frames, 0);
+    }
+  }
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
     GstBuffer * buffer)
@@ -1120,6 +1420,7 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
   GDateTime *dt_now, *dt_frame;
   GstVideoTimeCode *tc = NULL;
   gboolean free_tc = FALSE;
+  GstVideoTimeCode *anc_tc = NULL;
   GstVideoTimeCodeMeta *tc_meta;
   GstFlowReturn flow_ret = GST_FLOW_OK;
   GstVideoTimeCodeFlags tc_flags = 0;
@@ -1285,6 +1586,62 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
       GST_DEBUG_OBJECT (timecodestamper, "Never saw an upstream timecode");
     }
   }
+
+  {
+    ExtractAncillaryTimecodeData data = {.self = timecodestamper,.anc_tc = NULL
+    };
+    gst_buffer_foreach_meta (buffer, extract_ancillary_timecode, &data);
+    anc_tc = data.anc_tc;
+  }
+
+  /* If we have a new timecode on the incoming frame in ancillary meta, update our last known
+   * timecode or otherwise increment it by one */
+  if (anc_tc && (!timecodestamper->last_anc_tc
+          || timecodestamper->tc_auto_resync)) {
+    gchar *tc_str;
+
+    if (timecodestamper->last_anc_tc)
+      gst_video_time_code_free (timecodestamper->last_anc_tc);
+    timecodestamper->last_anc_tc = g_steal_pointer (&anc_tc);
+    timecodestamper->last_anc_tc_running_time = running_time;
+
+    tc_str = gst_video_time_code_to_string (timecodestamper->last_anc_tc);
+    GST_DEBUG_OBJECT (timecodestamper,
+        "Updated upstream ancillary meta timecode to %s", tc_str);
+    g_free (tc_str);
+  } else {
+    if (timecodestamper->last_anc_tc) {
+      if (timecodestamper->tc_auto_resync
+          && timecodestamper->tc_timeout != GST_CLOCK_TIME_NONE
+          && (running_time + timecodestamper->tc_timeout <
+              timecodestamper->last_anc_tc_running_time
+              || running_time >=
+              timecodestamper->last_anc_tc_running_time +
+              timecodestamper->tc_timeout)) {
+        if (timecodestamper->last_anc_tc)
+          gst_video_time_code_free (timecodestamper->last_anc_tc);
+        timecodestamper->last_anc_tc = NULL;
+        timecodestamper->last_anc_tc_running_time = GST_CLOCK_TIME_NONE;
+        GST_DEBUG_OBJECT (timecodestamper,
+            "Upstream ancillary meta timecode timed out");
+      } else {
+        gchar *tc_str;
+
+        gst_video_time_code_increment_frame (timecodestamper->last_anc_tc);
+
+        tc_str = gst_video_time_code_to_string (timecodestamper->last_anc_tc);
+        GST_DEBUG_OBJECT (timecodestamper,
+            "Incremented upstream ancillary meta timecode to %s", tc_str);
+        g_free (tc_str);
+      }
+    } else {
+      GST_DEBUG_OBJECT (timecodestamper,
+          "Never saw an upstream ancillary meta timecode");
+    }
+  }
+
+  if (anc_tc)
+    gst_video_time_code_free (anc_tc);
 
   /* Update RTC-based timecode */
   {
@@ -1600,6 +1957,14 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
         tc = gst_video_time_code_new (timecodestamper->fps_n,
             timecodestamper->fps_d, NULL, tc_flags, 0, 0, 0, 0, field_count);
         gst_video_time_code_add_frames (tc, num_frames);
+        free_tc = TRUE;
+      }
+      break;
+    case GST_TIME_CODE_STAMPER_SOURCE_ANCILLARY_META:
+      tc = timecodestamper->last_anc_tc;
+      if (!tc) {
+        tc = gst_video_time_code_new (timecodestamper->fps_n,
+            timecodestamper->fps_d, NULL, tc_flags, 0, 0, 0, 0, 0);
         free_tc = TRUE;
       }
       break;

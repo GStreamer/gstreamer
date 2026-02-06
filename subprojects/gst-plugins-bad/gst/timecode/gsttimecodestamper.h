@@ -53,6 +53,7 @@ typedef enum GstTimeCodeStamperSource
   GST_TIME_CODE_STAMPER_SOURCE_LTC,
   GST_TIME_CODE_STAMPER_SOURCE_RTC,
   GST_TIME_CODE_STAMPER_SOURCE_RUNNING_TIME,
+  GST_TIME_CODE_STAMPER_SOURCE_ANCILLARY_META,
 } GstTimeCodeStamperSource;
 
 typedef enum GstTimeCodeStamperSet {
@@ -90,11 +91,14 @@ struct _GstTimeCodeStamper
   GstClockTime rtc_max_drift;
   gboolean rtc_auto_resync;
   gint timecode_offset;
+  gchar *ancillary_meta_locations;
 
   /* Timecode tracking, protected by object lock */
   GstVideoTimeCode *internal_tc;
   GstVideoTimeCode *last_tc;
   GstClockTime last_tc_running_time;
+  GstVideoTimeCode *last_anc_tc;
+  GstClockTime last_anc_tc_running_time;
   GstVideoTimeCode *rtc_tc;
 
   /* Internal state, protected by object lock, changed only from video streaming thread */
