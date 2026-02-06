@@ -162,7 +162,19 @@ if qt6_egl.allowed()
   have_qt_windowing = true
 endif
 
-# TODO: Android windowing
+if host_system == 'android'
+  qt6_android = qt6_option \
+      .require(gst_gl_have_window_android, error_message: 'android windowing support in gstreamer-gl is required') \
+      .require(gst_gl_have_platform_egl, error_message: 'egl platform support in gstreamer-gl is required')
+  if gst_gl_have_window_android
+    glesv2_dep = cc.find_library('GLESv2', required : qt6_android)
+    if glesv2_dep.found()
+      optional_deps += [glesv2_dep]
+      qt_defines += ['-DHAVE_QT_ANDROID']
+      have_qt_windowing = true
+    endif
+  endif
+endif
 
 # Win32 windowing
 if host_system == 'windows'
@@ -233,7 +245,7 @@ if qt6_option.require(have_qt_windowing, error_message: 'No windowing, enable on
     endif
   endforeach
   resource_file = configure_file(input: 'resources.qrc', output: 'resources.qrc', copy: true)
-  qresources = qt6_mod.compile_resources(sources: resource_file, method: qt6_method)
+  qresources = qt6_mod.compile_resources(name: 'qml6', sources: resource_file, method: qt6_method)
 
   qml6gl_kwargs = {}
   if subsystem == 'macos'
@@ -252,6 +264,5 @@ if qt6_option.require(have_qt_windowing, error_message: 'No windowing, enable on
     override_options : ['cpp_std=c++17'],
     install: true,
     install_dir : plugins_install_dir)
-  pkgconfig.generate(gstqml6gl, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstqml6gl]
 endif
