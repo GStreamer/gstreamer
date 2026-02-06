@@ -70,7 +70,8 @@ const VkComponentMapping _vk_identity_component_map = {
 
 gboolean
 gst_vulkan_video_get_vk_functions (GstVulkanDevice * device,
-    GstVulkanVideoFunctions * vk_funcs)
+    GstVulkanVideoFunctions * vk_funcs,
+    VkVideoCodecOperationFlagBitsKHR codec_op)
 {
   gboolean ret = FALSE;
   GstVulkanInstance *instance;
@@ -91,8 +92,16 @@ gst_vulkan_video_get_vk_functions (GstVulkanDevice * device,
   } G_STMT_END;
 #define GET_DEVICE_PROC_ADDRESS_REQUIRED(name) GET_PROC_ADDRESS_REQUIRED(name, device)
 #define GET_INSTANCE_PROC_ADDRESS_REQUIRED(name) GET_PROC_ADDRESS_REQUIRED(name, instance)
-  GST_VULKAN_DEVICE_VIDEO_FN_LIST (GET_DEVICE_PROC_ADDRESS_REQUIRED);
-  GST_VULKAN_INSTANCE_VIDEO_FN_LIST (GET_INSTANCE_PROC_ADDRESS_REQUIRED);
+  GST_VULKAN_DEVICE_VIDEO_FN_LIST_COMMON (GET_DEVICE_PROC_ADDRESS_REQUIRED);
+
+  if (GST_VULKAN_VIDEO_CODEC_OPERATION_IS_DECODE (codec_op))
+    GST_VULKAN_DEVICE_VIDEO_FN_LIST_DECODE (GET_DEVICE_PROC_ADDRESS_REQUIRED);
+
+  if (GST_VULKAN_VIDEO_CODEC_OPERATION_IS_ENCODE (codec_op)) {
+    GST_VULKAN_DEVICE_VIDEO_FN_LIST_ENCODE (GET_DEVICE_PROC_ADDRESS_REQUIRED);
+    GST_VULKAN_INSTANCE_VIDEO_FN_LIST_ENCODE
+        (GET_INSTANCE_PROC_ADDRESS_REQUIRED);
+  }
 #undef GET_DEVICE_PROC_ADDRESS_REQUIRED
 #undef GET_INSTANCE_PROC_ADDRESS_REQUIRED
 #undef GET_PROC_ADDRESS_REQUIRED

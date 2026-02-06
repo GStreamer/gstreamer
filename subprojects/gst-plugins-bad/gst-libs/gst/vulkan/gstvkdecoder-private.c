@@ -84,7 +84,8 @@ _populate_function_table (GstVulkanDecoder * self)
     return TRUE;
 
   priv->vk_populated =
-      gst_vulkan_video_get_vk_functions (self->queue->device, &priv->vk);
+      gst_vulkan_video_get_vk_functions (self->queue->device, &priv->vk,
+      self->codec);
   return priv->vk_populated;
 }
 
