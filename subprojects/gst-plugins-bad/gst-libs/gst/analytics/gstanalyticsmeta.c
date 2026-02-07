@@ -673,7 +673,7 @@ gst_analytics_relation_meta_set_relation (GstAnalyticsRelationMeta * meta,
  *    @an_meta_second_id.
  *    A value of 1 mean only only consider direct relation.
  * @cond_types: condition on relation types.
- * @relations_path: (transfer full)(nullable)(out caller-allocates)(array)
+ * @relations_path: (transfer full)(nullable)(inout)(array)
  *    (element-type gint):
  *    If not NULL this list will be filled with relation path between
  *    @an_meta_first_id and
