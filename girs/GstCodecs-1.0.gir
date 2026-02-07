@@ -3,8 +3,10 @@ To affect the contents of this file, edit the original C definitions,
 and/or use gtk-doc annotations.  -->
 <repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
   <include name="Gst" version="1.0"/>
+  <include name="GstCodecParsers" version="1.0"/>
   <include name="GstVideo" version="1.0"/>
   <package name="gstreamer-codecs-1.0"/>
+  <c:include name="gst/codecs/gstav1decoder.h"/>
   <c:include name="gst/codecs/gsth264decoder.h"/>
   <c:include name="gst/codecs/gsth265decoder.h"/>
   <c:include name="gst/codecs/gsth266decoder.h"/>
@@ -120,7 +122,7 @@ on the #GstAV1Picture via gst_av1_picture_set_user_data</doc>
           </parameter>
         </parameters>
       </virtual-method>
-      <virtual-method name="new_sequence" version="1.20" introspectable="0">
+      <virtual-method name="new_sequence" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1decoder.h">Notifies subclass of SPS update</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1decoder.h"/>
         <return-value transfer-ownership="none">
@@ -133,7 +135,7 @@ on the #GstAV1Picture via gst_av1_picture_set_user_data</doc>
           </instance-parameter>
           <parameter name="seq_hdr" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1decoder.h">a #GstAV1SequenceHeaderOBU</doc>
-            <type c:type="const GstAV1SequenceHeaderOBU*"/>
+            <type name="GstCodecParsers.AV1SequenceHeaderOBU" c:type="const GstAV1SequenceHeaderOBU*"/>
           </parameter>
           <parameter name="max_dpb_size" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1decoder.h">the size of dpb including preferred output delay
@@ -209,8 +211,8 @@ decoding process for the #GstAV1Picture</doc>
       <field name="parent_class">
         <type name="GstVideo.VideoDecoderClass" c:type="GstVideoDecoderClass"/>
       </field>
-      <field name="new_sequence" introspectable="0">
-        <callback name="new_sequence" introspectable="0">
+      <field name="new_sequence">
+        <callback name="new_sequence">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1decoder.h"/>
           <return-value transfer-ownership="none">
             <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -222,7 +224,7 @@ decoding process for the #GstAV1Picture</doc>
             </parameter>
             <parameter name="seq_hdr" transfer-ownership="none">
               <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1decoder.h">a #GstAV1SequenceHeaderOBU</doc>
-              <type c:type="const GstAV1SequenceHeaderOBU*"/>
+              <type name="GstCodecParsers.AV1SequenceHeaderOBU" c:type="const GstAV1SequenceHeaderOBU*"/>
             </parameter>
             <parameter name="max_dpb_size" transfer-ownership="none">
               <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1decoder.h">the size of dpb including preferred output delay
@@ -452,8 +454,8 @@ decoding process for the #GstAV1Picture</doc>
       <field name="parent" readable="0" private="1">
         <type name="CodecPicture" c:type="GstCodecPicture"/>
       </field>
-      <field name="frame_hdr" introspectable="0" readable="0" private="1">
-        <type c:type="GstAV1FrameHeaderOBU"/>
+      <field name="frame_hdr" readable="0" private="1">
+        <type name="GstCodecParsers.AV1FrameHeaderOBU" c:type="GstAV1FrameHeaderOBU"/>
       </field>
       <field name="temporal_id" readable="0" private="1">
         <type name="guint8" c:type="guint8"/>
@@ -484,11 +486,11 @@ decoding process for the #GstAV1Picture</doc>
     </record>
     <record name="AV1Tile" c:type="GstAV1Tile" version="1.20">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1picture.h"/>
-      <field name="tile_group" introspectable="0" writable="1">
-        <type c:type="GstAV1TileGroupOBU"/>
+      <field name="tile_group" writable="1">
+        <type name="GstCodecParsers.AV1TileGroupOBU" c:type="GstAV1TileGroupOBU"/>
       </field>
-      <field name="obu" introspectable="0" writable="1">
-        <type c:type="GstAV1OBU"/>
+      <field name="obu" writable="1">
+        <type name="GstCodecParsers.AV1OBU" c:type="GstAV1OBU"/>
       </field>
     </record>
     <function-macro name="AV1_DECODER" c:identifier="GST_AV1_DECODER" introspectable="0">
@@ -757,7 +759,7 @@ on the #GstH264Picture via gst_h264_picture_set_user_data</doc>
           </parameter>
         </parameters>
       </virtual-method>
-      <virtual-method name="new_sequence" introspectable="0">
+      <virtual-method name="new_sequence">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.h">Notifies subclass of SPS update</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.h"/>
         <return-value transfer-ownership="none">
@@ -770,7 +772,7 @@ on the #GstH264Picture via gst_h264_picture_set_user_data</doc>
           </instance-parameter>
           <parameter name="sps" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.h">a #GstH264SPS</doc>
-            <type c:type="const GstH264SPS*"/>
+            <type name="GstCodecParsers.H264SPS" c:type="const GstH264SPS*"/>
           </parameter>
           <parameter name="max_dpb_size" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.h">the size of dpb including preferred output delay
@@ -891,8 +893,8 @@ etc.</doc>
       <field name="parent_class" readable="0" private="1">
         <type name="GstVideo.VideoDecoderClass" c:type="GstVideoDecoderClass"/>
       </field>
-      <field name="new_sequence" introspectable="0">
-        <callback name="new_sequence" introspectable="0">
+      <field name="new_sequence">
+        <callback name="new_sequence">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.h"/>
           <return-value transfer-ownership="none">
             <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -904,7 +906,7 @@ etc.</doc>
             </parameter>
             <parameter name="sps" transfer-ownership="none">
               <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.h">a #GstH264SPS</doc>
-              <type c:type="const GstH264SPS*"/>
+              <type name="GstCodecParsers.H264SPS" c:type="const GstH264SPS*"/>
             </parameter>
             <parameter name="max_dpb_size" transfer-ownership="none">
               <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.h">the size of dpb including preferred output delay
@@ -1453,7 +1455,7 @@ appended to the array.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="perform_memory_management_control_operation" c:identifier="gst_h264_dpb_perform_memory_management_control_operation" version="1.20" introspectable="0">
+      <method name="perform_memory_management_control_operation" c:identifier="gst_h264_dpb_perform_memory_management_control_operation" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264picture.c">Perform "8.2.5.4 Adaptive memory control decoded reference picture marking process"</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264picture.h"/>
         <return-value transfer-ownership="none">
@@ -1467,7 +1469,7 @@ appended to the array.</doc>
           </instance-parameter>
           <parameter name="ref_pic_marking" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264picture.c">a #GstH264RefPicMarking</doc>
-            <type c:type="GstH264RefPicMarking*"/>
+            <type name="GstCodecParsers.H264RefPicMarking" c:type="GstH264RefPicMarking*"/>
           </parameter>
           <parameter name="picture" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264picture.c">a #GstH264Picture</doc>
@@ -1569,8 +1571,8 @@ should not exceed the max size of DPB.</doc>
       <field name="parent" readable="0" private="1">
         <type name="CodecPicture" c:type="GstCodecPicture"/>
       </field>
-      <field name="type" introspectable="0" readable="0" private="1">
-        <type c:type="GstH264SliceType"/>
+      <field name="type" readable="0" private="1">
+        <type name="GstCodecParsers.H264SliceType" c:type="GstH264SliceType"/>
       </field>
       <field name="pic_order_cnt_type" readable="0" private="1">
         <type name="guint8" c:type="guint8"/>
@@ -1647,8 +1649,8 @@ should not exceed the max size of DPB.</doc>
       <field name="field" readable="0" private="1">
         <type name="H264PictureField" c:type="GstH264PictureField"/>
       </field>
-      <field name="dec_ref_pic_marking" introspectable="0" readable="0" private="1">
-        <type c:type="GstH264DecRefPicMarking"/>
+      <field name="dec_ref_pic_marking" readable="0" private="1">
+        <type name="GstCodecParsers.H264DecRefPicMarking" c:type="GstH264DecRefPicMarking"/>
       </field>
       <field name="reorder_frame_number" readable="0" private="1">
         <type name="guint32" c:type="guint32"/>
@@ -1694,11 +1696,11 @@ should not exceed the max size of DPB.</doc>
     </enumeration>
     <record name="H264Slice" c:type="GstH264Slice">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264picture.h"/>
-      <field name="header" introspectable="0" writable="1">
-        <type c:type="GstH264SliceHdr"/>
+      <field name="header" writable="1">
+        <type name="GstCodecParsers.H264SliceHdr" c:type="GstH264SliceHdr"/>
       </field>
-      <field name="nalu" introspectable="0" writable="1">
-        <type c:type="GstH264NalUnit"/>
+      <field name="nalu" writable="1">
+        <type name="GstCodecParsers.H264NalUnit" c:type="GstH264NalUnit"/>
       </field>
     </record>
     <function-macro name="H264_DECODER" c:identifier="GST_H264_DECODER" introspectable="0">
@@ -1884,7 +1886,7 @@ on the #GstH265Picture via gst_h265_picture_set_user_data</doc>
           </parameter>
         </parameters>
       </virtual-method>
-      <virtual-method name="new_sequence" introspectable="0">
+      <virtual-method name="new_sequence">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265decoder.h">Notifies subclass of video sequence update</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265decoder.h"/>
         <return-value transfer-ownership="none">
@@ -1897,7 +1899,7 @@ on the #GstH265Picture via gst_h265_picture_set_user_data</doc>
           </instance-parameter>
           <parameter name="sps" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265decoder.h">a #GstH265SPS</doc>
-            <type c:type="const GstH265SPS*"/>
+            <type name="GstCodecParsers.H265SPS" c:type="const GstH265SPS*"/>
           </parameter>
           <parameter name="max_dpb_size" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265decoder.h">the size of dpb including preferred output delay
@@ -1965,6 +1967,24 @@ the @system_frame_number</doc>
           <parameter name="system_frame_number" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265decoder.c">a target system frame number of #GstH265Picture</doc>
             <type name="guint32" c:type="guint32"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_sps_ext" c:identifier="gst_h265_decoder_get_sps_ext" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265decoder.c">Retrieve the extended SPS values attached to the given #GstH265SPS</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265decoder.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265decoder.c">a #GstH265SPSEXT if successful, or %NULL otherwise</doc>
+          <type name="GstCodecParsers.H265SPSEXT" c:type="const GstH265SPSEXT*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265decoder.c">a #GstH265Decoder</doc>
+            <type name="H265Decoder" c:type="const GstH265Decoder*"/>
+          </instance-parameter>
+          <parameter name="sps" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265decoder.c">the #GstH265SPS matching the requested #GstH265SPSEXT</doc>
+            <type name="GstCodecParsers.H265SPS" c:type="const GstH265SPS*"/>
           </parameter>
         </parameters>
       </method>
@@ -2049,8 +2069,8 @@ the @system_frame_number</doc>
       <field name="parent_class">
         <type name="GstVideo.VideoDecoderClass" c:type="GstVideoDecoderClass"/>
       </field>
-      <field name="new_sequence" introspectable="0">
-        <callback name="new_sequence" introspectable="0">
+      <field name="new_sequence">
+        <callback name="new_sequence">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265decoder.h"/>
           <return-value transfer-ownership="none">
             <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -2062,7 +2082,7 @@ the @system_frame_number</doc>
             </parameter>
             <parameter name="sps" transfer-ownership="none">
               <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265decoder.h">a #GstH265SPS</doc>
-              <type c:type="const GstH265SPS*"/>
+              <type name="GstCodecParsers.H265SPS" c:type="const GstH265SPS*"/>
             </parameter>
             <parameter name="max_dpb_size" transfer-ownership="none">
               <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265decoder.h">the size of dpb including preferred output delay
@@ -2517,8 +2537,8 @@ corresponding to the @system_frame_number</doc>
       <field name="parent" readable="0" private="1">
         <type name="CodecPicture" c:type="GstCodecPicture"/>
       </field>
-      <field name="type" introspectable="0" readable="0" private="1">
-        <type c:type="GstH265SliceType"/>
+      <field name="type" readable="0" private="1">
+        <type name="GstCodecParsers.H265SliceType" c:type="GstH265SliceType"/>
       </field>
       <field name="pic_order_cnt" readable="0" private="1">
         <type name="gint" c:type="gint"/>
@@ -2556,8 +2576,8 @@ corresponding to the @system_frame_number</doc>
       <field name="needed_for_output" readable="0" private="1">
         <type name="gboolean" c:type="gboolean"/>
       </field>
-      <field name="pic_struct" introspectable="0" readable="0" private="1">
-        <type c:type="GstH265SEIPicStructType"/>
+      <field name="pic_struct" readable="0" private="1">
+        <type name="GstCodecParsers.H265SEIPicStructType" c:type="GstH265SEIPicStructType"/>
       </field>
       <field name="source_scan_type" readable="0" private="1">
         <type name="guint8" c:type="guint8"/>
@@ -2579,11 +2599,11 @@ corresponding to the @system_frame_number</doc>
     </record>
     <record name="H265Slice" c:type="GstH265Slice">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265picture.h"/>
-      <field name="header" introspectable="0" writable="1">
-        <type c:type="GstH265SliceHdr"/>
+      <field name="header" writable="1">
+        <type name="GstCodecParsers.H265SliceHdr" c:type="GstH265SliceHdr"/>
       </field>
-      <field name="nalu" introspectable="0" writable="1">
-        <type c:type="GstH265NalUnit"/>
+      <field name="nalu" writable="1">
+        <type name="GstCodecParsers.H265NalUnit" c:type="GstH265NalUnit"/>
       </field>
       <field name="rap_pic_flag" readable="0" private="1">
         <type name="gboolean" c:type="gboolean"/>
@@ -2732,7 +2752,7 @@ on the #GstH266Picture via gst_h266_picture_set_user_data</doc>
           </parameter>
         </parameters>
       </virtual-method>
-      <virtual-method name="new_sequence" version="1.26" introspectable="0">
+      <virtual-method name="new_sequence" version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">Notifies subclass of video sequence update</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
         <return-value transfer-ownership="none">
@@ -2745,7 +2765,7 @@ on the #GstH266Picture via gst_h266_picture_set_user_data</doc>
           </instance-parameter>
           <parameter name="sps" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266SPS</doc>
-            <type c:type="const GstH266SPS*"/>
+            <type name="GstCodecParsers.H266SPS" c:type="const GstH266SPS*"/>
           </parameter>
           <parameter name="max_dpb_size" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">the size of dpb including preferred output delay
@@ -2860,8 +2880,8 @@ decoding process for the #GstH266Picture</doc>
       <field name="parent_class">
         <type name="GstVideo.VideoDecoderClass" c:type="GstVideoDecoderClass"/>
       </field>
-      <field name="new_sequence" introspectable="0">
-        <callback name="new_sequence" introspectable="0">
+      <field name="new_sequence">
+        <callback name="new_sequence">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
           <return-value transfer-ownership="none">
             <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -2873,7 +2893,7 @@ decoding process for the #GstH266Picture</doc>
             </parameter>
             <parameter name="sps" transfer-ownership="none">
               <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266SPS</doc>
-              <type c:type="const GstH266SPS*"/>
+              <type name="GstCodecParsers.H266SPS" c:type="const GstH266SPS*"/>
             </parameter>
             <parameter name="max_dpb_size" transfer-ownership="none">
               <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">the size of dpb including preferred output delay
@@ -3275,8 +3295,8 @@ removal of pictures from the DPB".</doc>
       <field name="parent" readable="0" private="1">
         <type name="CodecPicture" c:type="GstCodecPicture"/>
       </field>
-      <field name="type" introspectable="0" readable="0" private="1">
-        <type c:type="GstH266SliceType"/>
+      <field name="type" readable="0" private="1">
+        <type name="GstCodecParsers.H266SliceType" c:type="GstH266SliceType"/>
       </field>
       <field name="pic_order_cnt" readable="0" private="1">
         <type name="gint" c:type="gint"/>
@@ -3335,8 +3355,8 @@ removal of pictures from the DPB".</doc>
       <field name="needed_for_output" readable="0" private="1">
         <type name="gboolean" c:type="gboolean"/>
       </field>
-      <field name="ff_info" introspectable="0" readable="0" private="1">
-        <type c:type="GstH266FrameFieldInfo"/>
+      <field name="ff_info" readable="0" private="1">
+        <type name="GstCodecParsers.H266FrameFieldInfo" c:type="GstH266FrameFieldInfo"/>
       </field>
       <field name="buffer_flags" readable="0" private="1">
         <type name="GstVideo.VideoBufferFlags" c:type="GstVideoBufferFlags"/>
@@ -3353,11 +3373,11 @@ removal of pictures from the DPB".</doc>
     <record name="H266Slice" c:type="GstH266Slice" version="1.26">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h">The #GstH266Slice represents a slice for decoding.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
-      <field name="header" introspectable="0" writable="1">
-        <type c:type="GstH266SliceHdr"/>
+      <field name="header" writable="1">
+        <type name="GstCodecParsers.H266SliceHdr" c:type="GstH266SliceHdr"/>
       </field>
-      <field name="nalu" introspectable="0" writable="1">
-        <type c:type="GstH266NalUnit"/>
+      <field name="nalu" writable="1">
+        <type name="GstCodecParsers.H266NalUnit" c:type="GstH266NalUnit"/>
       </field>
       <field name="no_output_before_recovery_flag" readable="0" private="1">
         <type name="gboolean" c:type="gboolean"/>
@@ -3692,7 +3712,7 @@ on the #GstMpeg2Picture via gst_mpeg2_picture_set_user_data</doc>
           </parameter>
         </parameters>
       </virtual-method>
-      <virtual-method name="new_sequence" version="1.20" introspectable="0">
+      <virtual-method name="new_sequence" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2decoder.h">Notifies subclass of SPS update</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2decoder.h"/>
         <return-value transfer-ownership="none">
@@ -3705,17 +3725,17 @@ on the #GstMpeg2Picture via gst_mpeg2_picture_set_user_data</doc>
           </instance-parameter>
           <parameter name="seq" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2decoder.h">a #GstMpegVideoSequenceHdr</doc>
-            <type c:type="const GstMpegVideoSequenceHdr*"/>
+            <type name="GstCodecParsers.MpegVideoSequenceHdr" c:type="const GstMpegVideoSequenceHdr*"/>
           </parameter>
           <parameter name="seq_ext" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2decoder.h">a #GstMpegVideoSequenceExt</doc>
-            <type c:type="const GstMpegVideoSequenceExt*"/>
+            <type name="GstCodecParsers.MpegVideoSequenceExt" c:type="const GstMpegVideoSequenceExt*"/>
           </parameter>
           <parameter name="seq_display_ext" transfer-ownership="none">
-            <type c:type="const GstMpegVideoSequenceDisplayExt*"/>
+            <type name="GstCodecParsers.MpegVideoSequenceDisplayExt" c:type="const GstMpegVideoSequenceDisplayExt*"/>
           </parameter>
           <parameter name="seq_scalable_ext" transfer-ownership="none">
-            <type c:type="const GstMpegVideoSequenceScalableExt*"/>
+            <type name="GstCodecParsers.MpegVideoSequenceScalableExt" c:type="const GstMpegVideoSequenceScalableExt*"/>
           </parameter>
           <parameter name="max_dpb_size" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2decoder.h">the size of dpb including preferred output delay
@@ -3796,8 +3816,8 @@ decoding process for the #GstMpeg2Picture</doc>
       <field name="parent_class">
         <type name="GstVideo.VideoDecoderClass" c:type="GstVideoDecoderClass"/>
       </field>
-      <field name="new_sequence" introspectable="0">
-        <callback name="new_sequence" introspectable="0">
+      <field name="new_sequence">
+        <callback name="new_sequence">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2decoder.h"/>
           <return-value transfer-ownership="none">
             <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -3809,17 +3829,17 @@ decoding process for the #GstMpeg2Picture</doc>
             </parameter>
             <parameter name="seq" transfer-ownership="none">
               <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2decoder.h">a #GstMpegVideoSequenceHdr</doc>
-              <type c:type="const GstMpegVideoSequenceHdr*"/>
+              <type name="GstCodecParsers.MpegVideoSequenceHdr" c:type="const GstMpegVideoSequenceHdr*"/>
             </parameter>
             <parameter name="seq_ext" transfer-ownership="none">
               <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2decoder.h">a #GstMpegVideoSequenceExt</doc>
-              <type c:type="const GstMpegVideoSequenceExt*"/>
+              <type name="GstCodecParsers.MpegVideoSequenceExt" c:type="const GstMpegVideoSequenceExt*"/>
             </parameter>
             <parameter name="seq_display_ext" transfer-ownership="none">
-              <type c:type="const GstMpegVideoSequenceDisplayExt*"/>
+              <type name="GstCodecParsers.MpegVideoSequenceDisplayExt" c:type="const GstMpegVideoSequenceDisplayExt*"/>
             </parameter>
             <parameter name="seq_scalable_ext" transfer-ownership="none">
-              <type c:type="const GstMpegVideoSequenceScalableExt*"/>
+              <type name="GstCodecParsers.MpegVideoSequenceScalableExt" c:type="const GstMpegVideoSequenceScalableExt*"/>
             </parameter>
             <parameter name="max_dpb_size" transfer-ownership="none">
               <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2decoder.h">the size of dpb including preferred output delay
@@ -4122,11 +4142,11 @@ outputted</doc>
       <field name="tsn" readable="0" private="1">
         <type name="gint" c:type="gint"/>
       </field>
-      <field name="structure" introspectable="0" readable="0" private="1">
-        <type c:type="GstMpegVideoPictureStructure"/>
+      <field name="structure" readable="0" private="1">
+        <type name="GstCodecParsers.MpegVideoPictureStructure" c:type="GstMpegVideoPictureStructure"/>
       </field>
-      <field name="type" introspectable="0" readable="0" private="1">
-        <type c:type="GstMpegVideoPictureType"/>
+      <field name="type" readable="0" private="1">
+        <type name="GstCodecParsers.MpegVideoPictureType" c:type="GstMpegVideoPictureType"/>
       </field>
       <constructor name="new" c:identifier="gst_mpeg2_picture_new" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2picture.c">Create new #GstMpeg2Picture</doc>
@@ -4139,20 +4159,20 @@ outputted</doc>
     </record>
     <record name="Mpeg2Slice" c:type="GstMpeg2Slice" version="1.20">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2picture.h"/>
-      <field name="quant_matrix" introspectable="0" readable="0" private="1">
-        <type c:type="GstMpegVideoQuantMatrixExt*"/>
+      <field name="quant_matrix" readable="0" private="1">
+        <type name="GstCodecParsers.MpegVideoQuantMatrixExt" c:type="GstMpegVideoQuantMatrixExt*"/>
       </field>
-      <field name="pic_hdr" introspectable="0" readable="0" private="1">
-        <type c:type="GstMpegVideoPictureHdr*"/>
+      <field name="pic_hdr" readable="0" private="1">
+        <type name="GstCodecParsers.MpegVideoPictureHdr" c:type="GstMpegVideoPictureHdr*"/>
       </field>
-      <field name="pic_ext" introspectable="0" readable="0" private="1">
-        <type c:type="GstMpegVideoPictureExt*"/>
+      <field name="pic_ext" readable="0" private="1">
+        <type name="GstCodecParsers.MpegVideoPictureExt" c:type="GstMpegVideoPictureExt*"/>
       </field>
-      <field name="header" introspectable="0" readable="0" private="1">
-        <type c:type="GstMpegVideoSliceHdr"/>
+      <field name="header" readable="0" private="1">
+        <type name="GstCodecParsers.MpegVideoSliceHdr" c:type="GstMpegVideoSliceHdr"/>
       </field>
-      <field name="packet" introspectable="0" readable="0" private="1">
-        <type c:type="GstMpegVideoPacket"/>
+      <field name="packet" readable="0" private="1">
+        <type name="GstCodecParsers.MpegVideoPacket" c:type="GstMpegVideoPacket"/>
       </field>
       <field name="sc_offset" readable="0" private="1">
         <type name="guint" c:type="guint"/>
@@ -4373,7 +4393,7 @@ outputted</doc>
     <class name="Vp8Decoder" c:symbol-prefix="vp8_decoder" c:type="GstVp8Decoder" parent="GstVideo.VideoDecoder" abstract="1" glib:type-name="GstVp8Decoder" glib:get-type="gst_vp8_decoder_get_type" glib:type-struct="Vp8DecoderClass">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h">The opaque #GstVp8Decoder data structure.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h"/>
-      <virtual-method name="decode_picture" introspectable="0">
+      <virtual-method name="decode_picture">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -4386,7 +4406,7 @@ outputted</doc>
             <type name="Vp8Picture" c:type="GstVp8Picture*"/>
           </parameter>
           <parameter name="parser" transfer-ownership="none">
-            <type c:type="GstVp8Parser*"/>
+            <type name="GstCodecParsers.Vp8Parser" c:type="GstVp8Parser*"/>
           </parameter>
         </parameters>
       </virtual-method>
@@ -4447,7 +4467,7 @@ preferred by subclass or not.</doc>
           </parameter>
         </parameters>
       </virtual-method>
-      <virtual-method name="new_sequence" introspectable="0">
+      <virtual-method name="new_sequence">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h">Notifies subclass of SPS update</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h"/>
         <return-value transfer-ownership="none">
@@ -4458,7 +4478,7 @@ preferred by subclass or not.</doc>
             <type name="Vp8Decoder" c:type="GstVp8Decoder*"/>
           </instance-parameter>
           <parameter name="frame_hdr" transfer-ownership="none">
-            <type c:type="const GstVp8FrameHdr*"/>
+            <type name="GstCodecParsers.Vp8FrameHdr" c:type="const GstVp8FrameHdr*"/>
           </parameter>
           <parameter name="max_dpb_size" transfer-ownership="none">
             <type name="gint" c:type="gint"/>
@@ -4533,9 +4553,9 @@ preferred by subclass or not.</doc>
       <field name="parent_class">
         <type name="GstVideo.VideoDecoderClass" c:type="GstVideoDecoderClass"/>
       </field>
-      <field name="new_sequence" introspectable="0">
+      <field name="new_sequence">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h">Notifies subclass of SPS update</doc>
-        <callback name="new_sequence" introspectable="0">
+        <callback name="new_sequence">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h"/>
           <return-value transfer-ownership="none">
             <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -4545,7 +4565,7 @@ preferred by subclass or not.</doc>
               <type name="Vp8Decoder" c:type="GstVp8Decoder*"/>
             </parameter>
             <parameter name="frame_hdr" transfer-ownership="none">
-              <type c:type="const GstVp8FrameHdr*"/>
+              <type name="GstCodecParsers.Vp8FrameHdr" c:type="const GstVp8FrameHdr*"/>
             </parameter>
             <parameter name="max_dpb_size" transfer-ownership="none">
               <type name="gint" c:type="gint"/>
@@ -4595,8 +4615,8 @@ preferred by subclass or not.</doc>
           </parameters>
         </callback>
       </field>
-      <field name="decode_picture" introspectable="0">
-        <callback name="decode_picture" introspectable="0">
+      <field name="decode_picture">
+        <callback name="decode_picture">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h"/>
           <return-value transfer-ownership="none">
             <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -4609,7 +4629,7 @@ preferred by subclass or not.</doc>
               <type name="Vp8Picture" c:type="GstVp8Picture*"/>
             </parameter>
             <parameter name="parser" transfer-ownership="none">
-              <type c:type="GstVp8Parser*"/>
+              <type name="GstCodecParsers.Vp8Parser" c:type="GstVp8Parser*"/>
             </parameter>
           </parameters>
         </callback>
@@ -4690,8 +4710,8 @@ preferred by subclass or not.</doc>
       <field name="parent" readable="0" private="1">
         <type name="CodecPicture" c:type="GstCodecPicture"/>
       </field>
-      <field name="frame_hdr" introspectable="0" readable="0" private="1">
-        <type c:type="GstVp8FrameHdr"/>
+      <field name="frame_hdr" readable="0" private="1">
+        <type name="GstCodecParsers.Vp8FrameHdr" c:type="GstVp8FrameHdr"/>
       </field>
       <field name="data" readable="0" private="1">
         <type name="guint8" c:type="const guint8*"/>
@@ -5681,14 +5701,14 @@ using previously parsed values.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="parse_compressed_frame_header" c:identifier="gst_vp9_stateful_parser_parse_compressed_frame_header" version="1.20" introspectable="0">
+      <method name="parse_compressed_frame_header" c:identifier="gst_vp9_stateful_parser_parse_compressed_frame_header" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.c">Parses the compressed information in the VP9 bitstream contained in @data,
 and fills in @header with the parsed values.
 The @size argument represent the whole frame size.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.h"/>
-        <return-value>
+        <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.c">a #GstVp9ParserResult</doc>
-          <type c:type="GstVp9ParserResult"/>
+          <type name="GstCodecParsers.Vp9ParserResult" c:type="GstVp9ParserResult"/>
         </return-value>
         <parameters>
           <instance-parameter name="parser" transfer-ownership="none">
@@ -5709,13 +5729,13 @@ The @size argument represent the whole frame size.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="parse_uncompressed_frame_header" c:identifier="gst_vp9_stateful_parser_parse_uncompressed_frame_header" version="1.20" introspectable="0">
+      <method name="parse_uncompressed_frame_header" c:identifier="gst_vp9_stateful_parser_parse_uncompressed_frame_header" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.c">Parses the VP9 bitstream contained in @data, and fills in @header
 with the information. The @size argument represent the whole frame size.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.h"/>
-        <return-value>
+        <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.c">a #GstVp9ParserResult</doc>
-          <type c:type="GstVp9ParserResult"/>
+          <type name="GstCodecParsers.Vp9ParserResult" c:type="GstVp9ParserResult"/>
         </return-value>
         <parameters>
           <instance-parameter name="parser" transfer-ownership="none">
