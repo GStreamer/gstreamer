@@ -57,11 +57,13 @@ G_DEFINE_TYPE (GstRtpQDM2Depay, gst_rtp_qdm2_depay,
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpqdm2depay, "rtpqdm2depay",
     GST_RANK_SECONDARY, GST_TYPE_RTP_QDM2_DEPAY, _do_init);
 
+#if 0
 static const guint8 headheader[20] = {
   0x0, 0x0, 0x0, 0xc, 0x66, 0x72, 0x6d, 0x61,
   0x51, 0x44, 0x4d, 0x32, 0x0, 0x0, 0x0, 0x24,
   0x51, 0x44, 0x43, 0x41
 };
+#endif
 
 static void gst_rtp_qdm2_depay_finalize (GObject * object);
 
@@ -138,6 +140,7 @@ gst_rtp_qdm2_depay_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
   return TRUE;
 }
 
+#if 0
 static void
 flush_data (GstRtpQDM2Depay * depay)
 {
@@ -230,10 +233,26 @@ add_packet (GstRtpQDM2Depay * depay, guint32 pid, guint32 len, guint8 * data)
   memcpy (packet->data + packet->offs, data, len);
   packet->offs += len;
 }
+#endif
 
 static GstBuffer *
 gst_rtp_qdm2_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 {
+  /* There is no plausible reason this code should ever be executed in 2026
+   * seeing that this was a streaming format produced by Darwin Streaming Server
+   * ca 2009 which hasn't been in active use for well over a decade.
+   *
+   * We simply return here as defensive measure.
+   *
+   * We post an error message in the state change function, so this processing
+   * function should never be reached, we just ifdef the code out for clarity.
+   *
+   * If anyone actually does have a legitimate need for this and can provide
+   * sample streams, we will happily implement a depayloader in Rust.
+   */
+  return NULL;
+
+#if 0
   GstRtpQDM2Depay *rtpqdm2depay;
   GstBuffer *outbuf = NULL;
   guint16 seq;
@@ -378,6 +397,7 @@ bad_packet:
         (NULL), ("Packet was too short"));
     return NULL;
   }
+#endif
 }
 
 static GstStateChangeReturn
@@ -391,7 +411,10 @@ gst_rtp_qdm2_depay_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
+      GST_ELEMENT_ERROR (rtpqdm2depay, STREAM, DECODE,
+          ("This element should not be used."),
+          ("Please report an issue if you encounter this message."));
+      return GST_STATE_CHANGE_FAILURE;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_adapter_clear (rtpqdm2depay->adapter);
       break;
