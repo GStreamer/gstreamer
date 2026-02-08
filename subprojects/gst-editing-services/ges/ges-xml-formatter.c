@@ -1325,14 +1325,16 @@ _save_assets (GESXmlFormatter * self, GString * str, GESProject * project,
   GESXmlFormatterPrivate *priv = self->priv;
 
   assets = ges_project_list_assets (project, GES_TYPE_EXTRACTABLE);
-  for (tmp = g_list_sort (assets, (GCompareFunc) sort_assets); tmp;
-      tmp = tmp->next) {
+  assets = g_list_sort (assets, (GCompareFunc) sort_assets);
+  for (tmp = assets; tmp; tmp = tmp->next) {
     asset = GES_ASSET (tmp->data);
     id = ges_asset_get_id (asset);
 
     if (GES_IS_PROJECT (asset)) {
-      if (!_save_subproject (self, str, project, asset, error, depth))
+      if (!_save_subproject (self, str, project, asset, error, depth)) {
+        g_list_free_full (assets, gst_object_unref);
         return FALSE;
+      }
 
       continue;
     }
