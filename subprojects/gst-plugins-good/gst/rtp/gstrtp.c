@@ -101,7 +101,6 @@ plugin_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (rtpmp4gdepay, plugin);
   ret |= GST_ELEMENT_REGISTER (rtpmp4gpay, plugin);
   ret |= GST_ELEMENT_REGISTER (rtpqcelpdepay, plugin);
-  ret |= GST_ELEMENT_REGISTER (rtpqdm2depay, plugin);
   ret |= GST_ELEMENT_REGISTER (rtpsbcdepay, plugin);
   ret |= GST_ELEMENT_REGISTER (rtpsbcpay, plugin);
   ret |= GST_ELEMENT_REGISTER (rtpsirenpay, plugin);

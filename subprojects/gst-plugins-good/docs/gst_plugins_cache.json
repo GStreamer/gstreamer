@@ -17177,34 +17177,6 @@
                 "properties": {},
                 "rank": "secondary"
             },
-            "rtpqdm2depay": {
-                "author": "Edward Hervey <bilboed@bilboed.com>",
-                "description": "Extracts QDM2 audio from RTP packets (no RFC)",
-                "hierarchy": [
-                    "GstRtpQDM2Depay",
-                    "GstRTPBaseDepayload",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "klass": "Codec/Depayloader/Network/RTP",
-                "long-name": "RTP QDM2 depayloader",
-                "pad-templates": {
-                    "sink": {
-                        "caps": "application/x-rtp:\n          media: audio\n  encoding-name: X-QDM\n",
-                        "direction": "sink",
-                        "presence": "always"
-                    },
-                    "src": {
-                        "caps": "audio/x-qdm2:\n",
-                        "direction": "src",
-                        "presence": "always"
-                    }
-                },
-                "properties": {},
-                "rank": "secondary"
-            },
             "rtpreddec": {
                 "author": "Hani Mustafa <hani@pexip.com>, Mikhail Fludkov <misha@pexip.com>",
                 "description": "Decode Redundant Audio Data (RED)",
