@@ -2275,13 +2275,13 @@ GST_START_TEST (test_group_mtd_semantic_tag)
   fail_unless (ret == TRUE);
 
   /* Verify the tag was set correctly */
-  fail_unless (gst_analytics_group_mtd_semantic_tag_is (&group_mtd, tag_str));
+  fail_unless (gst_analytics_group_mtd_has_semantic_tag (&group_mtd, tag_str));
 
   /* Test unsetting tag with NULL */
   ret = gst_analytics_group_mtd_set_semantic_tag (&group_mtd, NULL);
   fail_unless (ret == TRUE);
 
-  fail_unless (!gst_analytics_group_mtd_semantic_tag_is (&group_mtd, tag_str));
+  fail_unless (!gst_analytics_group_mtd_has_semantic_tag (&group_mtd, tag_str));
 
   gst_buffer_unref (buf);
 }
@@ -2356,7 +2356,7 @@ GST_START_TEST (test_group_mtd_retrieval)
   fail_unless (retrieved_mtd.id == group_mtd.id);
   fail_unless (retrieved_mtd.meta == group_mtd.meta);
 
-  fail_unless (gst_analytics_group_mtd_semantic_tag_is (&retrieved_mtd,
+  fail_unless (gst_analytics_group_mtd_has_semantic_tag (&retrieved_mtd,
           "test-group"));
 
   gst_buffer_unref (buf);
@@ -2757,7 +2757,7 @@ GST_START_TEST (test_add_keypoints_group_without_skeleton)
   fail_unless (member_count == 5);
 
   /* Verify semantic tag */
-  fail_unless (gst_analytics_group_mtd_semantic_tag_is (&group_mtd,
+  fail_unless (gst_analytics_group_mtd_has_semantic_tag (&group_mtd,
           "test-5-kp"));
 
   gst_buffer_unref (buf);

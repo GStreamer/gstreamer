@@ -23,18 +23,19 @@
 import overrides_hack
 overrides_hack
 
-from common import TestCase
-
 import gi
 gi.require_version("GLib", "2.0")
 gi.require_version("Gst", "1.0")
 gi.require_version("GstAnalytics", "1.0")
 gi.require_version("GstVideo", "1.0")
-from gi.repository import GLib
-from gi.repository import Gst
-from gi.repository import GstAnalytics
+
 from gi.repository import GstVideo
-Gst.init(None)
+from gi.repository import GstAnalytics
+from gi.repository import Gst
+from gi.repository import GLib
+from common import TestCase
+
+Gst.init([])
 
 
 class TestAnalyticsODMtd(TestCase):
@@ -465,7 +466,7 @@ id=output_logits
             input_mins = [0.0]  # uint8 minimum
             input_maxs = [255.0]  # uint8 maximum
             result = modelinfo.get_input_scales_offsets("input_tensor",
-              input_mins, input_maxs)
+                                                        input_mins, input_maxs)
             self.assertTrue(result[0])  # success
             scales = result[1]
             offsets = result[2]
@@ -624,7 +625,7 @@ ranges=0.0,1.0;0.0,1.0;0.0,1.0
             input_mins = [0.0, 0.0, 0.0]
             input_maxs = [255.0, 255.0, 255.0]
             result = modelinfo.get_input_scales_offsets("input_normalized",
-                input_mins, input_maxs)
+                                                        input_mins, input_maxs)
             self.assertTrue(result[0])
             scales = result[1]
             offsets = result[2]
@@ -669,7 +670,7 @@ ranges=-1.0,1.0;-1.0,1.0;-1.0,1.0
             input_mins = [-128.0, -128.0, -128.0]
             input_maxs = [127.0, 127.0, 127.0]
             result = modelinfo.get_input_scales_offsets("input_signed",
-              input_mins, input_maxs)
+                                                        input_mins, input_maxs)
             self.assertTrue(result[0])
             scales = result[1]
             offsets = result[2]
