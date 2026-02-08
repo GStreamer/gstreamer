@@ -576,6 +576,9 @@ ges_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           goto error;
 
       done:
+        gst_buffer_unmap (xges_buffer, &map);
+        gst_buffer_unref (xges_buffer);
+        gst_event_unref (event);
         g_free (filename);
         g_free (uri);
         g_close (f, NULL);
@@ -593,6 +596,7 @@ ges_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GST_ELEMENT_ERROR (self, RESOURCE, READ,
             ("Could not map buffer containing timeline description"),
             ("Not info"));
+        gst_buffer_unref (xges_buffer);
       }
     }
     default:
