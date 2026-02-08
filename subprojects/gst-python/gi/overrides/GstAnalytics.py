@@ -81,6 +81,9 @@ for c in dir(GstAnalytics):
 
 
 def _get_mtd(mtd_type, rmeta, mtd_id):
+    # If rmeta has a 'meta' attribute (e.g., GroupMtd), extract the actual RelationMeta
+    if hasattr(rmeta, 'meta') and not isinstance(rmeta, GstAnalytics.RelationMeta):
+        rmeta = rmeta.meta
     res = __mtd_types__[mtd_type](rmeta, mtd_id)
     if not res[0]:
         raise Gst.AddError('Mtd with id={mtd_id} of rmeta={rmeta} is not known.')
@@ -104,3 +107,29 @@ class RelationMeta(GstAnalytics.RelationMeta):
 
 
 __all__.append('RelationMeta')
+
+
+class GroupMtd(GstAnalytics.GroupMtd):
+    def __iter__(self):
+        return _gi_gst_analytics.AnalyticsGroupMtdIterator(sys.modules[__name__], self)
+
+    def iter_on_type(self, filter):
+        if filter == GstAnalytics.Mtd:
+            return self.__iter__()
+
+        mtdtype = filter.get_mtd_type()
+        if mtdtype in __mtd_types__:
+            return _gi_gst_analytics.AnalyticsGroupMtdIteratorWithMtdTypeFilter(
+                sys.modules[__name__], self, mtdtype)
+        else:
+            raise TypeError('Wrong filter type is used for iter_on_type method.')
+
+
+__all__.append('GroupMtd')
+
+
+# Keypoint dimension enum helpers (for numeric enum values starting with digits)
+KeypointDimensions_2D = getattr(GstAnalytics.KeypointDimensions, '2D')
+KeypointDimensions_3D = getattr(GstAnalytics.KeypointDimensions, '3D')
+
+__all__.extend(['KeypointDimensions_2D', 'KeypointDimensions_3D'])
