@@ -51,7 +51,7 @@
 #endif
 
 #include <string.h>
-#include <TargetConditionals.h>
+#include "vtdec.h"
 #include <gst/gst.h>
 #include <gst/base/gstbytewriter.h>
 #include <gst/video/video.h>
@@ -67,7 +67,6 @@
 #endif
 #endif
 
-#include "vtdec.h"
 #include "vtutil.h"
 #include "helpers.h"
 #include "corevideobuffer.h"
@@ -2173,21 +2172,64 @@ gst_vtdec_hw_init (GstVtdecHw * vtdec)
   GST_VTDEC (vtdec)->require_hardware = TRUE;
 }
 
-void
-gst_vtdec_register_elements (GstPlugin * plugin)
+static void
+gst_vtdec_init_once (void)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_vtdec_debug_category, "vtdec", 0,
-      "debug category for vtdec element");
+  static gsize init_once = 0;
+
+  if (g_once_init_enter (&init_once)) {
+    gst_applemedia_init_once ();
+    GST_DEBUG_CATEGORY_INIT (gst_vtdec_debug_category, "vtdec", 0,
+        "debug category for vtdec element");
+    g_once_init_leave (&init_once, 1);
+  }
+}
+
+
+static gboolean
+gst_vtdec_register_vtdec (GstPlugin * plugin)
+{
+  gint rank = GST_RANK_PRIMARY;
+
+  gst_vtdec_init_once ();
 
 #if !TARGET_OS_WATCH
-  if (__builtin_available (macOS 10.9, iOS 17.0, tvOS 17.0, visionOS 1.0, *)) {
-    gst_element_register (plugin, "vtdec_hw", GST_RANK_PRIMARY + 1,
-        GST_TYPE_VTDEC_HW);
-    gst_element_register (plugin, "vtdec", GST_RANK_SECONDARY, GST_TYPE_VTDEC);
-  } else {
-    gst_element_register (plugin, "vtdec", GST_RANK_PRIMARY, GST_TYPE_VTDEC);
-  }
-#else
-  gst_element_register (plugin, "vtdec", GST_RANK_PRIMARY, GST_TYPE_VTDEC);
+  if (__builtin_available (macOS 10.9, iOS 17.0, tvOS 17.0, visionOS 1.0, *))
+    rank = GST_RANK_SECONDARY;
 #endif
+
+  return gst_element_register (plugin, "vtdec", rank, GST_TYPE_VTDEC);
+}
+
+#if !TARGET_OS_WATCH
+static gboolean
+gst_vtdec_register_vtdec_hw (GstPlugin * plugin)
+{
+  gst_vtdec_init_once ();
+
+  if (__builtin_available (macOS 10.9, iOS 17.0, tvOS 17.0, visionOS 1.0, *)) {
+    return gst_element_register (plugin, "vtdec_hw", GST_RANK_PRIMARY + 1,
+        GST_TYPE_VTDEC_HW);
+  }
+
+  return TRUE;
+}
+#endif
+
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtdec, gst_vtdec_register_vtdec);
+#if !TARGET_OS_WATCH
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtdec_hw, gst_vtdec_register_vtdec_hw);
+#endif
+
+gboolean
+gst_vtdec_register_elements (GstPlugin * plugin)
+{
+  gboolean ret = FALSE;
+
+#if !TARGET_OS_WATCH
+  ret |= GST_ELEMENT_REGISTER (vtdec_hw, plugin);
+#endif
+  ret |= GST_ELEMENT_REGISTER (vtdec, plugin);
+
+  return ret;
 }

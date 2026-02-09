@@ -92,8 +92,16 @@ typedef enum _QueueState {
   HAS_BUFFER_OR_STOP_REQUEST,
 } QueueState;
 
+#ifndef HAVE_IOS
+#define AV_RANK GST_RANK_SECONDARY
+#else
+#define AV_RANK GST_RANK_PRIMARY
+#endif
+
 #define gst_avf_video_src_parent_class parent_class
 G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (avfvideosrc, "avfvideosrc",
+    AV_RANK, GST_TYPE_AVF_VIDEO_SRC, gst_applemedia_init_once ());
 
 #define GST_TYPE_AVF_VIDEO_SOURCE_POSITION (gst_avf_video_source_position_get_type ())
 static GType

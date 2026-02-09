@@ -24,6 +24,7 @@
 #include <gst/base/gstqueuearray.h>
 #include <gst/codecparsers/gsth264parser.h>
 #include <gst/video/video.h>
+#include <TargetConditionals.h>
 #include <VideoToolbox/VideoToolbox.h>
 
 G_BEGIN_DECLS
@@ -131,7 +132,17 @@ struct _GstVTEnc
 
 GType gst_vtenc_get_type (void);
 
-void gst_vtenc_register_elements (GstPlugin * plugin);
+gboolean gst_vtenc_register_elements (GstPlugin * plugin);
+
+GST_ELEMENT_REGISTER_DECLARE (vtenc_h264);
+GST_ELEMENT_REGISTER_DECLARE (vtenc_h265);
+GST_ELEMENT_REGISTER_DECLARE (vtenc_h265a);
+#if TARGET_OS_OSX
+GST_ELEMENT_REGISTER_DECLARE (vtenc_h264_hw);
+GST_ELEMENT_REGISTER_DECLARE (vtenc_h265_hw);
+GST_ELEMENT_REGISTER_DECLARE (vtenc_h265a_hw);
+#endif
+GST_ELEMENT_REGISTER_DECLARE (vtenc_prores);
 
 G_END_DECLS
 

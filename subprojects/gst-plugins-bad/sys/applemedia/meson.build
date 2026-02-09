@@ -7,7 +7,7 @@ applemedia_sources = [
     'videotexturecache.m',
     'videotexturecache-gl.m',
     'glcontexthelper.c',
-    'helpers.c',
+    'helpers.m',
 ]
 
 applemedia_headers = [

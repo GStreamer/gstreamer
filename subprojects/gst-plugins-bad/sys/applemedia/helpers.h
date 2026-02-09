@@ -46,5 +46,7 @@ G_BEGIN_DECLS
 GstVideoFormat          gst_video_format_from_cvpixelformat         (int fmt);
 int                     gst_video_format_to_cvpixelformat           (GstVideoFormat fmt);
 
+void                    gst_applemedia_init_once                    (void);
+
 G_END_DECLS
 #endif /* _APPLEMEDIA_HELPERS_H_ */

@@ -91,6 +91,7 @@ struct _GstIOSAssetSrcClass {
 };
 
 GType gst_ios_asset_src_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (iosassetsrc);
 
 G_END_DECLS
 
