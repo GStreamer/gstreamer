@@ -77,7 +77,7 @@ struct _GstCodecSEIInserterClass
   GstElementClass parent_class;
 
   gboolean      (*start)         (GstCodecSEIInserter * inserter,
-                                  GstCodecSEIInsertMetaOrder meta_order);
+                                  gboolean need_reorder);
 
   gboolean      (*stop)          (GstCodecSEIInserter * inserter);
 
@@ -124,5 +124,10 @@ GstCodecSEIInsertType gst_codec_sei_inserter_get_sei_types (GstCodecSEIInserter 
 void gst_codec_sei_inserter_set_remove_sei_unregistered_meta (GstCodecSEIInserter * inserter,
     gboolean remove);
 gboolean gst_codec_sei_inserter_get_remove_sei_unregistered_meta (GstCodecSEIInserter * inserter);
+
+void gst_codec_sei_inserter_set_do_timestamp (GstCodecSEIInserter * inserter,
+                                              gboolean enable);
+
+gboolean gst_codec_sei_inserter_get_do_timestamp (GstCodecSEIInserter * inserter);
 
 G_END_DECLS

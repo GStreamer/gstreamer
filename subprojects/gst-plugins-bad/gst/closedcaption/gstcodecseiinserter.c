@@ -105,11 +105,17 @@ struct _GstCodecSEIInserterPrivate
   GList *current_frame_events;
   GPtrArray *sei_metas;
   GstClockTime latency;
+  GArray *timestamp_queue;
+  GstClockTime last_pts;
+  GstClockTime last_dts;
+  GstClockTime dts_offset;
+  GstSegment segment;
 
   GstCodecSEIInsertMetaOrder meta_order;
   gboolean remove_meta;
   GstCodecSEIInsertType sei_types;
   gboolean remove_sei_unregistered_meta;
+  gboolean do_timestamp;
 };
 
 static void gst_codec_sei_inserter_class_init (GstCodecSEIInserterClass *
@@ -263,6 +269,8 @@ gst_codec_sei_inserter_init (GstCodecSEIInserter * self,
   priv->sei_types = DEFAULT_SEI_TYPES;
   priv->remove_sei_unregistered_meta = DEFAULT_REMOVE_SEI_UNREGISTERED_META;
   priv->sei_metas = g_ptr_array_new ();
+  priv->timestamp_queue =
+      g_array_sized_new (FALSE, FALSE, sizeof (GstClockTime), 16);
 }
 
 static void
@@ -333,6 +341,7 @@ gst_codec_sei_inserter_finalize (GObject * object)
 
   g_mutex_clear (&priv->lock);
   g_ptr_array_unref (priv->sei_metas);
+  g_array_unref (priv->timestamp_queue);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -357,6 +366,18 @@ gst_codec_sei_inserter_flush_events (GstCodecSEIInserter * self,
   g_clear_pointer (events, g_list_free);
 }
 
+
+static void
+gst_codec_sei_inserter_reset_timestamp_history (GstCodecSEIInserter * self)
+{
+  GstCodecSEIInserterPrivate *priv = self->priv;
+
+  priv->last_dts = GST_CLOCK_TIME_NONE;
+  priv->last_pts = GST_CLOCK_TIME_NONE;
+  priv->dts_offset = GST_CLOCK_TIME_NONE;
+  g_array_set_size (priv->timestamp_queue, 0);
+}
+
 static void
 gst_codec_sei_inserter_flush (GstCodecSEIInserter * self)
 {
@@ -372,6 +393,7 @@ gst_codec_sei_inserter_flush (GstCodecSEIInserter * self)
   }
 
   gst_codec_sei_inserter_flush_events (self, &priv->current_frame_events);
+  gst_codec_sei_inserter_reset_timestamp_history (self);
 }
 
 static void
@@ -436,6 +458,18 @@ gst_codec_sei_inserter_sink_event (GstPad * pad, GstObject * parent,
         gst_event_unref (event);
         return FALSE;
       }
+
+      g_mutex_lock (&priv->lock);
+      if (priv->do_timestamp && !gst_segment_is_equal (&segment,
+              &priv->segment)) {
+        g_mutex_unlock (&priv->lock);
+        GST_DEBUG_OBJECT (self, "Segment changed, force drain for timetamping");
+        gst_codec_sei_inserter_drain (self);
+      } else {
+        g_mutex_unlock (&priv->lock);
+      }
+
+      gst_segment_copy_into (&segment, &priv->segment);
 
       if (klass->get_num_buffered (self) == 0) {
         GST_DEBUG_OBJECT (self,
@@ -680,6 +714,52 @@ gst_codec_sei_inserter_output_frame (GstCodecSEIInserter * self,
   }
 
   output = klass->insert_sei (self, output, priv->sei_metas);
+
+  if (priv->do_timestamp) {
+    GstClockTime dts = GST_CLOCK_TIME_NONE;
+    if (GST_CLOCK_TIME_IS_VALID (frame->pts)) {
+      if (priv->timestamp_queue->len > 0) {
+        dts = g_array_index (priv->timestamp_queue, GstClockTime, 0);
+        g_array_remove_index (priv->timestamp_queue, 0);
+      } else {
+        GST_ERROR_OBJECT (self, "Empty timestamp queue detected");
+      }
+
+      if (GST_CLOCK_TIME_IS_VALID (dts) &&
+          GST_CLOCK_TIME_IS_VALID (priv->dts_offset)) {
+        if (priv->dts_offset <= dts)
+          dts -= priv->dts_offset;
+        else
+          dts = 0;
+      }
+    }
+
+    if (GST_CLOCK_TIME_IS_VALID (dts)) {
+      if (!GST_CLOCK_TIME_IS_VALID (priv->last_dts))
+        priv->last_dts = dts;
+
+      /* make sure DTS <= PTS */
+      if (GST_CLOCK_TIME_IS_VALID (frame->pts)) {
+        if (dts > frame->pts) {
+          if (frame->pts >= priv->last_dts)
+            dts = frame->pts;
+          else {
+            GST_WARNING_OBJECT (self,
+                "Setting DTS to last DTS to avoid PTS < DTS and backward DTS");
+            dts = priv->last_dts;
+          }
+        }
+
+        if (GST_CLOCK_TIME_IS_VALID (dts))
+          priv->last_dts = dts;
+      }
+    }
+
+    output = gst_buffer_make_writable (output);
+    GST_BUFFER_PTS (output) = frame->pts;
+    GST_BUFFER_DTS (output) = dts;
+  }
+
   g_mutex_unlock (&priv->lock);
 
   gst_video_codec_frame_unref (frame);
@@ -701,6 +781,19 @@ gst_codec_sei_inserter_drain (GstCodecSEIInserter * self)
 
   while ((frame = klass->pop (self)) != NULL)
     gst_codec_sei_inserter_output_frame (self, frame);
+
+  gst_codec_sei_inserter_reset_timestamp_history (self);
+}
+
+static gint
+pts_compare_func (const GstClockTime * a, const GstClockTime * b)
+{
+  if (*a < *b)
+    return -1;
+  else if (*a > *b)
+    return 1;
+  else
+    return 0;
 }
 
 static GstFlowReturn
@@ -712,13 +805,23 @@ gst_codec_sei_inserter_chain (GstPad * pad, GstObject * parent,
   GstCodecSEIInserterClass *klass = GST_CODEC_SEI_INSERTER_GET_CLASS (self);
   GstVideoCodecFrame *frame;
   GstClockTime latency = 0;
+  GstClockTime pts;
 
   GST_LOG_OBJECT (self, "Handle %" GST_PTR_FORMAT, buffer);
+
+  pts = GST_BUFFER_PTS (buffer);
+  if (GST_CLOCK_TIME_IS_VALID (pts)) {
+    priv->last_pts = pts;
+  } else if (GST_CLOCK_TIME_IS_VALID (priv->last_pts)) {
+    /* Reuse last valid pts */
+    pts = priv->last_pts;
+  }
 
   frame = g_new0 (GstVideoCodecFrame, 1);
   frame->ref_count = 1;
   frame->input_buffer = buffer;
   frame->events = priv->current_frame_events;
+  frame->pts = pts;
   priv->current_frame_events = NULL;
 
   gst_video_codec_frame_ref (frame);
@@ -733,6 +836,18 @@ gst_codec_sei_inserter_chain (GstPad * pad, GstObject * parent,
 
   gst_video_codec_frame_unref (frame);
   gst_codec_sei_insert_update_latency (self, latency);
+
+  /* subclass reported latency is calculated based on possible reorder
+   * delay. Use the value as dts offset to ensure PTS >= DTS */
+  if (!GST_CLOCK_TIME_IS_VALID (priv->dts_offset))
+    priv->dts_offset = latency;
+
+  g_mutex_lock (&priv->lock);
+  if (priv->do_timestamp && GST_CLOCK_TIME_IS_VALID (pts)) {
+    g_array_append_val (priv->timestamp_queue, pts);
+    g_array_sort (priv->timestamp_queue, (GCompareFunc) pts_compare_func);
+  }
+  g_mutex_unlock (&priv->lock);
 
   while ((frame = klass->pop (self)) != NULL) {
     GstFlowReturn ret = gst_codec_sei_inserter_output_frame (self, frame);
@@ -862,6 +977,8 @@ gst_codec_sei_inserter_reset (GstCodecSEIInserter * self)
   }
 
   priv->latency = 0;
+  gst_codec_sei_inserter_reset_timestamp_history (self);
+  gst_segment_init (&priv->segment, GST_FORMAT_TIME);
 }
 
 static gboolean
@@ -869,11 +986,22 @@ gst_codec_sei_inserter_start (GstCodecSEIInserter * self)
 {
   GstCodecSEIInserterClass *klass = GST_CODEC_SEI_INSERTER_GET_CLASS (self);
   GstCodecSEIInserterPrivate *priv = self->priv;
+  gboolean need_reorder = FALSE;
+  gboolean do_timestamp;
 
   gst_codec_sei_inserter_reset (self);
 
+  g_mutex_lock (&priv->lock);
+  do_timestamp = priv->do_timestamp;
+  g_mutex_unlock (&priv->lock);
+
+  if (priv->meta_order == GST_CODEC_SEI_INSERT_META_ORDER_DISPLAY ||
+      do_timestamp) {
+    need_reorder = TRUE;
+  }
+
   if (klass->start)
-    return klass->start (self, priv->meta_order);
+    return klass->start (self, need_reorder);
 
   return TRUE;
 }
@@ -982,6 +1110,38 @@ gst_codec_sei_inserter_get_remove_sei_unregistered_meta (GstCodecSEIInserter *
 
   g_mutex_lock (&priv->lock);
   ret = priv->remove_sei_unregistered_meta;
+  g_mutex_unlock (&priv->lock);
+
+  return ret;
+}
+
+void
+gst_codec_sei_inserter_set_do_timestamp (GstCodecSEIInserter * inserter,
+    gboolean enable)
+{
+  GstCodecSEIInserterPrivate *priv;
+
+  g_return_if_fail (GST_IS_CODEC_SEI_INSERTER (inserter));
+
+  priv = inserter->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->do_timestamp = enable;
+  g_mutex_unlock (&priv->lock);
+}
+
+gboolean
+gst_codec_sei_inserter_get_do_timestamp (GstCodecSEIInserter * inserter)
+{
+  GstCodecSEIInserterPrivate *priv;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_CODEC_SEI_INSERTER (inserter), FALSE);
+
+  priv = inserter->priv;
+
+  g_mutex_lock (&priv->lock);
+  ret = priv->do_timestamp;
   g_mutex_unlock (&priv->lock);
 
   return ret;

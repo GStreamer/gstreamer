@@ -57,7 +57,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 static void gst_h266_sei_inserter_finalize (GObject * object);
 
 static gboolean gst_h266_sei_inserter_start (GstCodecSEIInserter * inserter,
-    GstCodecSEIInsertMetaOrder meta_order);
+    gboolean need_reorder);
 static gboolean gst_h266_sei_inserter_stop (GstCodecSEIInserter * inserter);
 static gboolean gst_h266_sei_inserter_set_caps (GstCodecSEIInserter * inserter,
     GstCaps * caps, GstClockTime * latency);
@@ -89,10 +89,10 @@ gst_h266_sei_inserter_finalize (GObject * object)
 
 static gboolean
 gst_h266_sei_inserter_start (GstCodecSEIInserter * inserter,
-    GstCodecSEIInsertMetaOrder meta_order)
+    gboolean need_reorder)
 {
   GstH266SEIInserter *self = GST_H266_SEI_INSERTER (inserter);
-  if (meta_order == GST_CODEC_SEI_INSERT_META_ORDER_DISPLAY) {
+  if (need_reorder) {
     GST_ERROR_OBJECT (self,
         "H.266 SEI Inserter does not support display order caption metas.");
     return FALSE;

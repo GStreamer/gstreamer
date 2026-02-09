@@ -90,10 +90,22 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h264, alignment=(string) au"));
 
+enum
+{
+  PROP_CC_0,
+  PROP_CC_DO_TIMESTAMP,
+};
+
+#define DEFAULT_DO_TIMESTAMP FALSE
+
 static void gst_h264_cc_inserter_finalize (GObject * object);
+static void gst_h264_cc_inserter_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+static void gst_h264_cc_inserter_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
 
 static gboolean gst_h264_cc_inserter_start (GstCodecSEIInserter * inserter,
-    GstCodecSEIInsertMetaOrder meta_order);
+    gboolean need_reorder);
 static gboolean gst_h264_cc_inserter_stop (GstCodecSEIInserter * inserter);
 static gboolean gst_h264_cc_inserter_set_caps (GstCodecSEIInserter * inserter,
     GstCaps * caps, GstClockTime * latency);
@@ -122,6 +134,25 @@ gst_h264_cc_inserter_class_init (GstH264CCInserterClass * klass)
       GST_CODEC_SEI_INSERTER_CLASS (klass);
 
   object_class->finalize = gst_h264_cc_inserter_finalize;
+  object_class->set_property = gst_h264_cc_inserter_set_property;
+  object_class->get_property = gst_h264_cc_inserter_get_property;
+
+  /**
+   * GstH264CCInserter:do-timestamp:
+   *
+   * Recalculate DTS based on input PTS and output frame order.
+   *
+   * When enabled, the element ignores any DTS values present on
+   * incoming frames and always derives new DTS values from the input PTS
+   * and the actual output (decode) order of frames.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (object_class, PROP_CC_DO_TIMESTAMP,
+      g_param_spec_boolean ("do-timestamp", "Do Timestamp",
+          "Recalculate DTS from input PTS and output frame order",
+          DEFAULT_DO_TIMESTAMP, GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
+          G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (element_class, &sinktemplate);
   gst_element_class_add_static_pad_template (element_class, &srctemplate);
@@ -164,14 +195,45 @@ gst_h264_cc_inserter_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static void
+gst_h264_cc_inserter_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstCodecSEIInserter *inserter = GST_CODEC_SEI_INSERTER (object);
+
+  switch (prop_id) {
+    case PROP_CC_DO_TIMESTAMP:
+      gst_codec_sei_inserter_set_do_timestamp (inserter,
+          g_value_get_boolean (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_h264_cc_inserter_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstCodecSEIInserter *inserter = GST_CODEC_SEI_INSERTER (object);
+
+  switch (prop_id) {
+    case PROP_CC_DO_TIMESTAMP:
+      g_value_set_boolean (value,
+          gst_codec_sei_inserter_get_do_timestamp (inserter));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
 static gboolean
 gst_h264_cc_inserter_start (GstCodecSEIInserter * inserter,
-    GstCodecSEIInsertMetaOrder meta_order)
+    gboolean need_reorder)
 {
   GstH264CCInserter *self = GST_H264_CC_INSERTER (inserter);
-  gboolean need_reorder = FALSE;
-  if (meta_order == GST_CODEC_SEI_INSERT_META_ORDER_DISPLAY)
-    need_reorder = TRUE;
 
   self->reorder = gst_h264_reorder_new (need_reorder);
 
@@ -339,6 +401,7 @@ enum
   PROP_0,
   PROP_SEI_TYPES,
   PROP_REMOVE_SEI_UNREGISTERED_META,
+  PROP_DO_TIMESTAMP,
 };
 
 #define gst_h264_sei_inserter_parent_class sei_inserter_parent_class
@@ -362,6 +425,10 @@ gst_h264_sei_inserter_set_property (GObject * object, guint prop_id,
       gst_codec_sei_inserter_set_remove_sei_unregistered_meta (inserter,
           g_value_get_boolean (value));
       break;
+    case PROP_DO_TIMESTAMP:
+      gst_codec_sei_inserter_set_do_timestamp (inserter,
+          g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_CLASS (sei_inserter_parent_class)->set_property (object, prop_id,
           value, pspec);
@@ -383,6 +450,10 @@ gst_h264_sei_inserter_get_property (GObject * object, guint prop_id,
     case PROP_REMOVE_SEI_UNREGISTERED_META:
       g_value_set_boolean (value,
           gst_codec_sei_inserter_get_remove_sei_unregistered_meta (inserter));
+      break;
+    case PROP_DO_TIMESTAMP:
+      g_value_set_boolean (value,
+          gst_codec_sei_inserter_get_do_timestamp (inserter));
       break;
     default:
       G_OBJECT_CLASS (sei_inserter_parent_class)->get_property (object, prop_id,
@@ -432,6 +503,23 @@ gst_h264_sei_inserter_class_init (GstH264SEIInserterClass * klass)
           "Remove SEI Unregistered Meta",
           "Remove SEI unregistered user data meta from outgoing video buffers",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstH264SEIInserter:do-timestamp:
+   *
+   * Recalculate DTS based on input PTS and output frame order.
+   *
+   * When enabled, the element ignores any DTS values present on
+   * incoming frames and always derives new DTS values from the input PTS
+   * and the actual output (decode) order of frames.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (object_class, PROP_DO_TIMESTAMP,
+      g_param_spec_boolean ("do-timestamp", "Do Timestamp",
+          "Recalculate DTS from input PTS and output frame order",
+          DEFAULT_DO_TIMESTAMP, GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
+          G_PARAM_STATIC_STRINGS));
 }
 
 static void
