@@ -38,6 +38,9 @@ static GstDevice *gst_avf_device_new (const gchar * device_name, int device_inde
 G_DEFINE_TYPE (GstAVFDeviceProvider, gst_avf_device_provider,
                GST_TYPE_DEVICE_PROVIDER);
 
+GST_DEVICE_PROVIDER_REGISTER_DEFINE (avfdeviceprovider, "avfdeviceprovider",
+    GST_RANK_PRIMARY, GST_TYPE_AVF_DEVICE_PROVIDER);
+
 static GList *gst_avf_device_provider_probe (GstDeviceProvider * provider);
 
 static void

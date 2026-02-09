@@ -40,6 +40,7 @@
 #include <gst/gst.h>
 #include <gst/base/base.h>
 #include "iosassetsrc.h"
+#include "helpers.h"
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -93,6 +94,9 @@ _do_init (GType ios_assetsrc_type)
 
 G_DEFINE_TYPE_WITH_CODE (GstIOSAssetSrc, gst_ios_asset_src, GST_TYPE_BASE_SRC,
     _do_init (g_define_type_id));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (iosassetsrc, "iosassetsrc",
+    GST_RANK_SECONDARY, GST_TYPE_IOS_ASSET_SRC,
+    gst_applemedia_init_once ());
 
 static void
 gst_ios_asset_src_class_init (GstIOSAssetSrcClass * klass)

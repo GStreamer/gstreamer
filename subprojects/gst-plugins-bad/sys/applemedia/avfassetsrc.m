@@ -38,6 +38,7 @@
 #endif
 
 #include "avfassetsrc.h"
+#include "helpers.h"
 #include "coremediabuffer.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_avf_asset_src_debug);
@@ -124,6 +125,8 @@ _do_init (GType avf_assetsrc_type)
 
 G_DEFINE_TYPE_WITH_CODE (GstAVFAssetSrc, gst_avf_asset_src, GST_TYPE_ELEMENT,
     _do_init (g_define_type_id));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (avfassetsrc, "avfassetsrc", GST_RANK_PRIMARY,
+    GST_TYPE_AVF_ASSET_SRC, gst_applemedia_init_once ());
 
 
 /* GObject vmethod implementations */

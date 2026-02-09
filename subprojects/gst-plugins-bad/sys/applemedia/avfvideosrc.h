@@ -82,6 +82,7 @@ struct _GstAVFVideoSrcClass
 };
 
 GType gst_avf_video_src_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (avfvideosrc);
 
 void gst_avf_video_src_debug_init (void);
 GstCaps *gst_av_capture_device_get_caps (AVCaptureDevice *device, AVCaptureVideoDataOutput *output, GstAVFVideoSourceOrientation orientation);

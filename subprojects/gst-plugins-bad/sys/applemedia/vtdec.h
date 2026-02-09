@@ -24,6 +24,7 @@
 #include <gst/base/gstqueuearray.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideodecoder.h>
+#include <TargetConditionals.h>
 #include <CoreMedia/CoreMedia.h>
 #include <VideoToolbox/VideoToolbox.h>
 #include "videotexturecache.h"
@@ -94,8 +95,12 @@ struct _GstVtdecClass
 };
 
 GType gst_vtdec_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (vtdec);
+#if !TARGET_OS_WATCH
+GST_ELEMENT_REGISTER_DECLARE (vtdec_hw);
+#endif
 
-void gst_vtdec_register_elements (GstPlugin * plugin);
+gboolean gst_vtdec_register_elements (GstPlugin * plugin);
 
 G_END_DECLS
 

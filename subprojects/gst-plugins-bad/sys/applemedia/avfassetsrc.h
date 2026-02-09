@@ -133,6 +133,7 @@ struct _GstAVFAssetSrcClass
 };
 
 GType gst_avf_asset_src_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (avfassetsrc);
 
 G_END_DECLS
 

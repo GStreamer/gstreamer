@@ -75,6 +75,7 @@ struct _GstAVSampleVideoSinkClass
 };
 
 GType gst_av_sample_video_sink_get_type(void);
+GST_ELEMENT_REGISTER_DECLARE (avsamplebufferlayersink);
 
 G_END_DECLS
 

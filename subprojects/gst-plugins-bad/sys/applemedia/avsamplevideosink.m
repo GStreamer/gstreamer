@@ -30,6 +30,7 @@
 #endif
 
 #include "avsamplevideosink.h"
+#include "helpers.h"
 
 GST_DEBUG_CATEGORY (gst_debug_av_sink);
 #define GST_CAT_DEFAULT gst_debug_av_sink
@@ -72,6 +73,9 @@ enum
 G_DEFINE_TYPE_WITH_CODE (GstAVSampleVideoSink, gst_av_sample_video_sink,
     GST_TYPE_VIDEO_SINK, GST_DEBUG_CATEGORY_INIT (gst_debug_av_sink, "avsamplevideosink", 0,
         "AV Sample Video Sink"));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (avsamplebufferlayersink,
+    "avsamplebufferlayersink", GST_RANK_NONE,
+    GST_TYPE_AV_SAMPLE_VIDEO_SINK, gst_applemedia_init_once ());
 
 static void
 gst_av_sample_video_sink_class_init (GstAVSampleVideoSinkClass * klass)

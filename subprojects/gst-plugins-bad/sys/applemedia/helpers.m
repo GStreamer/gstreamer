@@ -17,8 +17,29 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <TargetConditionals.h>
+#import <Foundation/Foundation.h>
 #include <CoreVideo/CVPixelBuffer.h>
 #include "helpers.h"
+#include "corevideomemory.h"
+
+#if TARGET_OS_IOS || TARGET_OS_TV
+#include "iosglmemory.h"
+#endif
+
+#if TARGET_OS_OSX
+static void
+enable_mt_mode (void)
+{
+  NSThread * th = [[NSThread alloc] init];
+  [th start];
+  g_assert ([NSThread isMultiThreaded]);
+}
+#endif
 
 GstVideoFormat
 gst_video_format_from_cvpixelformat (int fmt)
@@ -90,5 +111,22 @@ gst_video_format_to_cvpixelformat (GstVideoFormat fmt)
     default:
       g_assert_not_reached ();
       return -1;
+  }
+}
+
+void
+gst_applemedia_init_once (void)
+{
+  static gsize init_once = 0;
+
+  if (g_once_init_enter (&init_once)) {
+    gst_apple_core_video_memory_init ();
+#if TARGET_OS_IOS || TARGET_OS_TV
+    gst_ios_gl_memory_init ();
+#endif
+#if TARGET_OS_OSX
+    enable_mt_mode ();
+#endif
+    g_once_init_leave (&init_once, 1);
   }
 }

@@ -96,7 +96,7 @@
  *
  * Apple VideoToolbox H265 encoder with alpha channel support.
  * This encoder can either use HW or a SW implementation depending on the device.
- * 
+ *
  * ## Example pipeline (assuming a PNG with an alpha channel as input)
  * |[
  * gst-launch-1.0 -v filesrc location=test.png ! pngdec ! imagefreeze num-buffers=1000 ! videoconvert ! vtenc_h265a ! qtmux ! filesink location=out.mov
@@ -111,7 +111,7 @@
  *
  * Apple VideoToolbox H265 HW-only encoder with alpha channel support.
  * Currently only available on macOS.
- * 
+ *
  * ## Example pipeline (assuming a PNG with an alpha channel as input)
  * |[
  * gst-launch-1.0 -v filesrc location=test.png ! pngdec ! imagefreeze num-buffers=1000 ! videoconvert ! vtenc_h265a ! qtmux ! filesink location=out.mov
@@ -124,7 +124,6 @@
 #include "config.h"
 #endif
 
-#include <TargetConditionals.h>
 #include "vtenc.h"
 
 #include "coremediabuffer.h"
@@ -2246,7 +2245,7 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
    * When paired with a fast enough source like videotestsrc, this can result in
    * a ton of memory being taken up by frames inside the encoder, eventually killing
    * the process because of OOM.
-   * 
+   *
    * The workaround here tries to block until the number of pending frames falls
    * below a certain threshold. Best we can do until Apple fixes this. */
   if (self->specific_format_id == kCMVideoCodecType_HEVCWithAlpha) {
@@ -2460,7 +2459,7 @@ gst_vtenc_output_loop (GstVTEnc * self)
   GST_VIDEO_ENCODER_STREAM_LOCK (self);
   self->downstream_ret = ret;
 
-  /* We need to empty the queue immediately so that enqueue_buffer() 
+  /* We need to empty the queue immediately so that enqueue_buffer()
    * can push out the current buffer, otherwise it can block other
    * encoder callbacks completely */
   if (ret != GST_FLOW_OK) {
@@ -2544,7 +2543,7 @@ gst_pixel_buffer_release_cb (void *releaseRefCon, const void *dataPtr,
 }
 #endif
 
-static void
+static gboolean
 gst_vtenc_register (GstPlugin * plugin,
     const GstVTEncoderDetails * codec_details)
 {
@@ -2576,44 +2575,150 @@ gst_vtenc_register (GstPlugin * plugin,
   }
 
   g_free (type_name);
+
+  return result;
 }
 
-static const GstVTEncoderDetails gst_vtenc_codecs[] = {
-  {"H.264", "h264", "video/x-h264",
-        "Ole André Vadla Ravnås <oleavr@soundrop.com>, "
-        "Dominik Röttsches <dominik.rottsches@intel.com>",
-      kCMVideoCodecType_H264, FALSE},
-  {"H.265/HEVC", "h265", "video/x-h265",
-        "Piotr Brzeziński <piotr@centricular.com>",
-      kCMVideoCodecType_HEVC, FALSE},
-  {"H.265/HEVC with alpha", "h265a", "video/x-h265",
-        "Piotr Brzeziński <piotr@centricular.com>",
-      kCMVideoCodecType_HEVCWithAlpha, FALSE},
-#if TARGET_OS_OSX
-  {"H.264 (HW only)", "h264_hw", "video/x-h264",
-        "Ole André Vadla Ravnås <oleavr@soundrop.com>, "
-        "Dominik Röttsches <dominik.rottsches@intel.com>",
-      kCMVideoCodecType_H264, TRUE},
-  {"H.265/HEVC (HW only)", "h265_hw", "video/x-h265",
-        "Piotr Brzeziński <piotr@centricular.com>",
-      kCMVideoCodecType_HEVC, TRUE},
-  {"H.265/HEVC with alpha (HW only)", "h265a_hw", "video/x-h265",
-        "Piotr Brzeziński <piotr@centricular.com>",
-      kCMVideoCodecType_HEVCWithAlpha, TRUE},
-#endif
-  {"Apple ProRes", "prores", "video/x-prores",
-        "Nirbheek Chauhan <nirbheek@centricular.com>",
-      GST_kCMVideoCodecType_Some_AppleProRes, FALSE},
-};
+static void
+gst_vtenc_init_once (void)
+{
+  static gsize init_once = 0;
 
-void
+  if (g_once_init_enter (&init_once)) {
+    gst_applemedia_init_once ();
+    GST_DEBUG_CATEGORY_INIT (gst_vtenc_debug, "vtenc", 0,
+        "Apple VideoToolbox Encoder Wrapper");
+    g_once_init_leave (&init_once, 1);
+  }
+}
+
+static gboolean
+gst_vtenc_register_h264 (GstPlugin * plugin)
+{
+  gst_vtenc_init_once ();
+
+  static const GstVTEncoderDetails codec = {
+    "H.264", "h264", "video/x-h264",
+    "Ole André Vadla Ravnås <oleavr@soundrop.com>, "
+        "Dominik Röttsches <dominik.rottsches@intel.com>",
+    kCMVideoCodecType_H264, FALSE
+  };
+
+  return gst_vtenc_register (plugin, &codec);
+}
+
+static gboolean
+gst_vtenc_register_h265 (GstPlugin * plugin)
+{
+  gst_vtenc_init_once ();
+
+  static const GstVTEncoderDetails codec = {
+    "H.265/HEVC", "h265", "video/x-h265",
+    "Piotr Brzeziński <piotr@centricular.com>",
+    kCMVideoCodecType_HEVC, FALSE
+  };
+
+  return gst_vtenc_register (plugin, &codec);
+}
+
+static gboolean
+gst_vtenc_register_h265a (GstPlugin * plugin)
+{
+  gst_vtenc_init_once ();
+
+  static const GstVTEncoderDetails codec = {
+    "H.265/HEVC with alpha", "h265a", "video/x-h265",
+    "Piotr Brzeziński <piotr@centricular.com>",
+    kCMVideoCodecType_HEVCWithAlpha, FALSE
+  };
+
+  return gst_vtenc_register (plugin, &codec);
+}
+
+#if TARGET_OS_OSX
+static gboolean
+gst_vtenc_register_h264_hw (GstPlugin * plugin)
+{
+  gst_vtenc_init_once ();
+
+  static const GstVTEncoderDetails codec = {
+    "H.264 (HW only)", "h264_hw", "video/x-h264",
+    "Ole André Vadla Ravnås <oleavr@soundrop.com>, "
+        "Dominik Röttsches <dominik.rottsches@intel.com>",
+    kCMVideoCodecType_H264, TRUE
+  };
+
+  return gst_vtenc_register (plugin, &codec);
+}
+
+static gboolean
+gst_vtenc_register_h265_hw (GstPlugin * plugin)
+{
+  gst_vtenc_init_once ();
+
+  static const GstVTEncoderDetails codec = {
+    "H.265/HEVC (HW only)", "h265_hw", "video/x-h265",
+    "Piotr Brzeziński <piotr@centricular.com>",
+    kCMVideoCodecType_HEVC, TRUE
+  };
+
+  return gst_vtenc_register (plugin, &codec);
+}
+
+static gboolean
+gst_vtenc_register_h265a_hw (GstPlugin * plugin)
+{
+  gst_vtenc_init_once ();
+
+  static const GstVTEncoderDetails codec = {
+    "H.265/HEVC with alpha (HW only)", "h265a_hw", "video/x-h265",
+    "Piotr Brzeziński <piotr@centricular.com>",
+    kCMVideoCodecType_HEVCWithAlpha, TRUE
+  };
+
+  return gst_vtenc_register (plugin, &codec);
+}
+#endif
+
+static gboolean
+gst_vtenc_register_prores (GstPlugin * plugin)
+{
+  gst_vtenc_init_once ();
+
+  static const GstVTEncoderDetails codec = {
+    "Apple ProRes", "prores", "video/x-prores",
+    "Nirbheek Chauhan <nirbheek@centricular.com>",
+    GST_kCMVideoCodecType_Some_AppleProRes, FALSE
+  };
+
+  return gst_vtenc_register (plugin, &codec);
+}
+
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtenc_h264, gst_vtenc_register_h264);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtenc_h265, gst_vtenc_register_h265);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtenc_h265a, gst_vtenc_register_h265a);
+#if TARGET_OS_OSX
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtenc_h264_hw, gst_vtenc_register_h264_hw);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtenc_h265_hw, gst_vtenc_register_h265_hw);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtenc_h265a_hw,
+    gst_vtenc_register_h265a_hw);
+#endif
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtenc_prores, gst_vtenc_register_prores);
+
+gboolean
 gst_vtenc_register_elements (GstPlugin * plugin)
 {
-  guint i;
+  gboolean ret = FALSE;
 
-  GST_DEBUG_CATEGORY_INIT (gst_vtenc_debug, "vtenc",
-      0, "Apple VideoToolbox Encoder Wrapper");
+  ret |= GST_ELEMENT_REGISTER (vtenc_h264, plugin);
+  ret |= GST_ELEMENT_REGISTER (vtenc_h265, plugin);
+  ret |= GST_ELEMENT_REGISTER (vtenc_h265a, plugin);
+#if TARGET_OS_OSX
+  ret |= GST_ELEMENT_REGISTER (vtenc_h264_hw, plugin);
+  ret |= GST_ELEMENT_REGISTER (vtenc_h265_hw, plugin);
+  ret |= GST_ELEMENT_REGISTER (vtenc_h265a_hw, plugin);
+#endif
+  ret |= GST_ELEMENT_REGISTER (vtenc_prores, plugin);
 
-  for (i = 0; i != G_N_ELEMENTS (gst_vtenc_codecs); i++)
-    gst_vtenc_register (plugin, &gst_vtenc_codecs[i]);
+  return ret;
 }

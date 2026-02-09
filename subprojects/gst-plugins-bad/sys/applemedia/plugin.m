@@ -44,10 +44,7 @@
 
 #ifdef HAVE_VIDEOTOOLBOX
 #include "vtdec.h"
-#endif
-
-#ifdef HAVE_VIDEOTOOLBOX
-void gst_vtenc_register_elements (GstPlugin * plugin);
+#include "vtenc.h"
 #endif
 
 #if TARGET_OS_OSX
@@ -63,7 +60,7 @@ enable_mt_mode (void)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean res = TRUE;
+  gboolean res = FALSE;
 
   gst_apple_core_video_memory_init ();
 
@@ -72,8 +69,7 @@ plugin_init (GstPlugin * plugin)
 #endif
 
 #if TARGET_OS_IOS
-  res &= gst_element_register (plugin, "iosassetsrc", GST_RANK_SECONDARY,
-      GST_TYPE_IOS_ASSET_SRC);
+  res |= GST_ELEMENT_REGISTER (iosassetsrc, plugin);
 #endif
 
 #if TARGET_OS_OSX
@@ -81,26 +77,21 @@ plugin_init (GstPlugin * plugin)
 #endif
 
 #ifdef HAVE_AVFOUNDATION
-  res &= gst_element_register (plugin, "avfassetsrc", GST_RANK_PRIMARY,
-      GST_TYPE_AVF_ASSET_SRC);
-  res &= gst_element_register (plugin, "avsamplebufferlayersink",
-      GST_RANK_NONE, GST_TYPE_AV_SAMPLE_VIDEO_SINK);
+  res |= GST_ELEMENT_REGISTER (avfassetsrc, plugin);
+  res |= GST_ELEMENT_REGISTER (avsamplebufferlayersink, plugin);
 #if HAVE_AVCAPTUREDEVICE
-  res &= gst_element_register (plugin, "avfvideosrc", GST_RANK_PRIMARY,
-      GST_TYPE_AVF_VIDEO_SRC);
-  res &= gst_device_provider_register (plugin, "avfdeviceprovider",
-    GST_RANK_PRIMARY, GST_TYPE_AVF_DEVICE_PROVIDER);
+  res |= GST_ELEMENT_REGISTER (avfvideosrc, plugin);
+  res |= GST_DEVICE_PROVIDER_REGISTER (avfdeviceprovider, plugin);
 #endif
 #endif
 
 #ifdef HAVE_VIDEOTOOLBOX
   /* Check if the framework actually exists at runtime */
   if (&VTCompressionSessionCreate != NULL) {
-    gst_vtdec_register_elements (plugin);
-    gst_vtenc_register_elements (plugin);
+    res |= gst_vtdec_register_elements (plugin);
+    res |= gst_vtenc_register_elements (plugin);
   }
 #endif
-
 
   return res;
 }
