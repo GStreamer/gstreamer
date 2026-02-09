@@ -51,14 +51,22 @@ typedef enum
  * @obj: a #GESContainer
  *
  * The #GESContainer:height of @obj.
+ *
+ * Note: This macro now calls ges_container_get_height() for MT-safety.
+ * It can no longer be used as an lvalue.
  */
-#define GES_CONTAINER_HEIGHT(obj) (((GESContainer*)obj)->height)
+#define GES_CONTAINER_HEIGHT(obj) \
+    (ges_container_get_height ((GESContainer*)(obj)))
 
 /**
  * GES_CONTAINER_CHILDREN:
  * @obj: a #GESContainer
  *
  * The #GList containing the children of @obj.
+ *
+ * Deprecated: 1.30: Use ges_container_get_children() instead for MT-safety.
+ * The getter returns a newly allocated list of referenced children that must be freed.
+ * This macro returns an unreferenced pointer and is not MT-safe.
  */
 #define GES_CONTAINER_CHILDREN(obj) (((GESContainer*)obj)->children)
 
@@ -135,6 +143,9 @@ struct _GESContainerClass
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING_LARGE];
 };
+
+GES_API
+guint32 ges_container_get_height (GESContainer *container);
 
 /* Children handling */
 GES_API

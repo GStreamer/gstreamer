@@ -132,7 +132,8 @@ _update_our_values (GESGroup * group)
       max_layer_prio = MAX (prio, max_layer_prio);
       gst_object_unref (layer);
     } else if (GES_IS_GROUP (child)) {
-      guint32 prio = _PRIORITY (child), height = GES_CONTAINER_HEIGHT (child);
+      guint32 prio = _PRIORITY (child), height =
+          ((GESContainer *) child)->height;
 
       min_layer_prio = MIN (prio, min_layer_prio);
       max_layer_prio = MAX ((prio + height - 1), max_layer_prio);

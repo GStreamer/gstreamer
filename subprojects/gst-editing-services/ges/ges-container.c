@@ -685,6 +685,33 @@ _ges_container_set_height (GESContainer * container, guint32 height)
  **********************************************/
 
 /**
+ * ges_container_get_height:
+ * @container: A #GESContainer
+ *
+ * Gets the #GESContainer:height of the container.
+ *
+ * Returns: The height of @container.
+ *
+ * Since: 1.30
+ */
+guint32
+ges_container_get_height (GESContainer * container)
+{
+  guint32 res;
+  GESTimeline *_locked_timeline;
+
+  g_return_val_if_fail (GES_IS_CONTAINER (container), 0);
+
+  _locked_timeline =
+      _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (container));
+  res = container->height;
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (container),
+      _locked_timeline);
+
+  return res;
+}
+
+/**
  * ges_container_add:
  * @container: A #GESContainer
  * @child: The element to add as a child

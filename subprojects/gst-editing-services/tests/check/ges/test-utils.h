@@ -163,17 +163,19 @@ G_STMT_START {                                          \
 
 #define assert_num_children(clip, cmp) \
 { \
-  guint num_children = g_list_length (GES_CONTAINER_CHILDREN (clip)); \
+  GList *_children = ges_container_get_children (GES_CONTAINER (clip), FALSE); \
+  guint num_children = g_list_length (_children); \
   fail_unless (cmp == num_children, \
       "clip %s contains %u children rather than %u", \
       GES_TIMELINE_ELEMENT_NAME (clip), num_children, cmp); \
+  g_list_free_full (_children, gst_object_unref); \
 }
 
 /* assert that the time property (start, duration or in-point) is the
  * same as @cmp for the clip and all its children */
 #define assert_clip_children_time_val(clip, property, cmp) \
 { \
-  GList *tmp; \
+  GList *tmp, *_children; \
   GstClockTime read_val; \
   gchar *name = GES_TIMELINE_ELEMENT (clip)->name; \
   gboolean is_inpoint = (g_strcmp0 (property, "in-point") == 0); \
@@ -182,8 +184,8 @@ G_STMT_START {                                          \
       GST_TIME_FORMAT ", rather than the expected value of %" \
       GST_TIME_FORMAT, property, name, GST_TIME_ARGS (read_val), \
       GST_TIME_ARGS (cmp)); \
-  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp != NULL; \
-      tmp = tmp->next) { \
+  _children = ges_container_get_children (GES_CONTAINER (clip), FALSE); \
+  for (tmp = _children; tmp != NULL; tmp = tmp->next) { \
     GESTimelineElement *child = tmp->data; \
     g_object_get (child, property, &read_val, NULL); \
     if (!is_inpoint || ges_track_element_has_internal_source ( \
@@ -197,6 +199,7 @@ G_STMT_START {                                          \
           "of clip %s is %" GST_TIME_FORMAT ", rather than 0", \
           property, child->name, name, GST_TIME_ARGS (read_val)); \
   } \
+  g_list_free_full (_children, gst_object_unref); \
 }
 
 #define check_layer(clip, layer_prio) {                                      \

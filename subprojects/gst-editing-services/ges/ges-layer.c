@@ -379,7 +379,7 @@ ges_layer_resync_priorities_by_type (GESLayer * layer,
       next_reset = element->start + element->duration;
 
     _set_priority0 (element, priority);
-    priority = priority + GES_CONTAINER_HEIGHT (element);
+    priority = priority + ((GESContainer *) element)->height;
 
     if (priority > max_priority)
       max_priority = priority;
