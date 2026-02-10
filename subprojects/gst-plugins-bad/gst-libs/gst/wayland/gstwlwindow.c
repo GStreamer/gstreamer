@@ -741,8 +741,6 @@ gst_wl_window_commit_buffer (GstWlWindow * self, GstWlBuffer * buffer)
   GstVideoContentLightLevel *linfo = priv->next_linfo;
   struct wl_callback *callback;
   gboolean needs_layout_update = FALSE;
-  GstVideoMeta *vmeta = gst_wl_buffer_get_video_meta (buffer);
-  GstVideoCropMeta *cmeta = gst_wl_buffer_get_video_crop_meta (buffer);
   GstVideoRectangle crop = priv->crop;
 
   if (G_UNLIKELY (info)) {
@@ -761,20 +759,23 @@ gst_wl_window_commit_buffer (GstWlWindow * self, GstWlBuffer * buffer)
     needs_layout_update = TRUE;
   }
 
-  if (vmeta) {
-    if (priv->buffer_width != vmeta->width
-        || priv->buffer_height != vmeta->height) {
+  if (G_LIKELY (buffer)) {
+    GstVideoMeta *vmeta = gst_wl_buffer_get_video_meta (buffer);
+    GstVideoCropMeta *cmeta = gst_wl_buffer_get_video_crop_meta (buffer);
+
+    if (vmeta && (priv->buffer_width != vmeta->width
+            || priv->buffer_height != vmeta->height)) {
       priv->buffer_width = vmeta->width;
       priv->buffer_height = vmeta->height;
       needs_layout_update = TRUE;
     }
-  }
 
-  if (cmeta) {
-    crop.x = cmeta->x;
-    crop.y = cmeta->y;
-    crop.w = cmeta->width;
-    crop.h = cmeta->height;
+    if (cmeta) {
+      crop.x = cmeta->x;
+      crop.y = cmeta->y;
+      crop.w = cmeta->width;
+      crop.h = cmeta->height;
+    }
   }
 
   if (gst_wl_window_crop_rectangle_changed (self, &crop)) {
