@@ -1181,6 +1181,57 @@ GST_START_TEST (test_ges_timeline_element_name)
 
 GST_END_TEST;
 
+GST_START_TEST (test_ges_pipeline_shared_pool_context)
+{
+  GstState state;
+  GESAsset *asset;
+  GESLayer *layer;
+  GESTimeline *timeline;
+  GESPipeline *pipeline;
+  GstContext *context;
+  GstTaskPool *pool = NULL;
+
+  ges_init ();
+
+  layer = ges_layer_new ();
+  timeline = ges_timeline_new_audio_video ();
+  fail_unless (ges_timeline_add_layer (timeline, layer));
+
+  pipeline = ges_test_create_pipeline (timeline);
+
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
+  ges_layer_add_asset (layer, asset, 0, 0, 10 * GST_MSECOND,
+      GES_TRACK_TYPE_UNKNOWN);
+  gst_object_unref (asset);
+
+  ges_timeline_commit (timeline);
+  ASSERT_SET_STATE (GST_ELEMENT (pipeline), GST_STATE_PLAYING,
+      GST_STATE_CHANGE_ASYNC);
+  fail_unless (gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL,
+          GST_CLOCK_TIME_NONE) == GST_STATE_CHANGE_SUCCESS);
+
+  /* Verify that the pipeline stored the shared task pool context on itself
+   * so that subsequent NEED_CONTEXT requests reuse the same pool */
+  context =
+      gst_element_get_context (GST_ELEMENT (pipeline),
+      GST_TASK_POOL_CONTEXT_TYPE);
+  fail_unless (context != NULL,
+      "Pipeline should store the shared task pool context");
+  fail_unless (gst_context_get_task_pool (context, &pool));
+  fail_unless (GST_IS_SHARED_TASK_POOL (pool));
+  gst_object_unref (pool);
+  gst_context_unref (context);
+
+  ASSERT_SET_STATE (GST_ELEMENT (pipeline), GST_STATE_NULL,
+      GST_STATE_CHANGE_SUCCESS);
+
+  gst_object_unref (pipeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -1197,6 +1248,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_ges_timeline_multiple_tracks);
   tcase_add_test (tc_chain, test_ges_pipeline_change_state);
   tcase_add_test (tc_chain, test_ges_timeline_element_name);
+  tcase_add_test (tc_chain, test_ges_pipeline_shared_pool_context);
 
   return s;
 }

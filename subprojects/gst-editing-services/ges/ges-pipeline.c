@@ -90,6 +90,8 @@ struct _GESPipelinePrivate
   GstEncodingProfile *profile;
 
   GThread *valid_thread;
+
+  GstTaskPool *shared_pool;
 };
 
 enum
@@ -305,9 +307,16 @@ ges_pipeline_handle_message (GstBin * bin, GstMessage * msg)
             g_get_num_processors ());
         gst_task_pool_prepare (pool, NULL);
 
+        self->priv->shared_pool = gst_object_ref (pool);
+
         pool_context = gst_context_new (GST_TASK_POOL_CONTEXT_TYPE, FALSE);
         gst_context_set_task_pool (pool_context, pool);
         gst_object_unref (pool);
+
+        /* Store the context on the pipeline itself so that subsequent
+         * NEED_CONTEXT messages from other children will find it via
+         * gst_element_get_context() instead of creating a new pool */
+        gst_element_set_context (GST_ELEMENT_CAST (self), pool_context);
 
         have_msg =
             gst_message_new_have_context (GST_OBJECT_CAST (self),
@@ -330,6 +339,12 @@ static void
 ges_pipeline_dispose (GObject * object)
 {
   GESPipeline *self = GES_PIPELINE (object);
+
+  if (self->priv->shared_pool) {
+    gst_task_pool_cleanup (self->priv->shared_pool);
+    gst_object_unref (self->priv->shared_pool);
+    self->priv->shared_pool = NULL;
+  }
 
   if (self->priv->playsink) {
     if (self->priv->mode & (GES_PIPELINE_MODE_PREVIEW))
