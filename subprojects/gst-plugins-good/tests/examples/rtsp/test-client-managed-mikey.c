@@ -754,7 +754,7 @@ main (gint argc, gchar ** argv)
     {"cipher", 'c', 0, G_OPTION_ARG_STRING, &cipher,
         "Encryption cipher to use (aes-128-icm, aes-256-icm, aes-128-gcm, "
           "aes-256-gcm). Default: aes-128-icm", "CIPHER"},
-    {"auth", 'a', 0, G_OPTION_ARG_STRING, &cipher,
+    {"auth", 'a', 0, G_OPTION_ARG_STRING, &auth,
           "Authentication method to use (hmac-sha1-80, null). Set to 'null' for "
           "authenticated encryption ciphers(AEAD) such as the aes-128-gcm. "
           "Default: hmac-sha1-80",
