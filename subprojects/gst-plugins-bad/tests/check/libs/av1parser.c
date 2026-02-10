@@ -20,6 +20,7 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/codecparsers/gstav1parser.h>
+#include <gst/codecparsers/gstav1bitwriter.h>
 
 static const guint8 aom_testdata_av1_1_b8_01_size_16x16[] = {
   0x12, 0x00, 0x0a, 0x0a, 0x00, 0x00, 0x00, 0x01, 0x9f, 0xfb, 0xff, 0xf3,
@@ -103,6 +104,94 @@ static const guint8 metadata_obu[] = {
 static const guint8 tile_list_obu[] = {
   0x42, 0x0a, 0x01, 0x01, 0x00, 0x01, 0x11, 0x22, 0x33, 0x00, 0x01, 0xa5
 };
+
+static gboolean
+buffers_equal (GstBuffer * a, GstBuffer * b)
+{
+  GstMapInfo map_a;
+  gboolean equal = FALSE;
+
+  if (a == NULL || b == NULL)
+    return FALSE;
+
+  if (a == b)
+    return TRUE;
+
+  if (!gst_buffer_map (a, &map_a, GST_MAP_READ))
+    return FALSE;
+
+  equal = (map_a.size == gst_buffer_get_size (b) &&
+      gst_buffer_memcmp (b, 0, map_a.data, map_a.size) == 0);
+
+  gst_buffer_unmap (a, &map_a);
+
+  return equal;
+}
+
+static GstBuffer *
+av1_decoder_config_record_get_seq_hdr_obu (const GstAV1DecoderConfigRecord *
+    config)
+{
+  guint i;
+
+  if (!config || !config->config_obus)
+    return NULL;
+
+  for (i = 0; i < config->config_obus->len; i++) {
+    GstAV1OBU *obu = &g_array_index (config->config_obus, GstAV1OBU, i);
+
+    if (obu->obu_type == GST_AV1_OBU_SEQUENCE_HEADER)
+      return gst_av1_build_obu_buffer (obu, TRUE);
+  }
+
+  return NULL;
+}
+
+static gboolean
+av1_decoder_config_record_has_seq_hdr_obu (const GstAV1DecoderConfigRecord *
+    config)
+{
+  guint i;
+
+  if (!config || !config->config_obus)
+    return FALSE;
+
+  for (i = 0; i < config->config_obus->len; i++) {
+    GstAV1OBU *obu = &g_array_index (config->config_obus, GstAV1OBU, i);
+
+    if (obu->obu_type == GST_AV1_OBU_SEQUENCE_HEADER)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+static GstBuffer *
+get_seq_hdr_obu_from_testdata (GstAV1Parser * parser, const guint8 * data,
+    gsize size)
+{
+  GstAV1OBU obu;
+  GstAV1ParserResult ret;
+  guint32 consumed = 0;
+  const guint8 *data_ptr = data;
+  gsize data_sz = size;
+
+  gst_av1_parser_reset (parser, FALSE);
+
+  ret = gst_av1_parser_identify_one_obu (parser, data_ptr, data_sz,
+      &obu, &consumed);
+  if (ret != GST_AV1_PARSER_OK)
+    return NULL;
+  data_ptr += consumed;
+  data_sz -= consumed;
+
+  ret = gst_av1_parser_identify_one_obu (parser, data_ptr, data_sz,
+      &obu, &consumed);
+  if (ret != GST_AV1_PARSER_OK || obu.obu_type != GST_AV1_OBU_SEQUENCE_HEADER)
+    return NULL;
+
+  return gst_buffer_new_wrapped (g_memdup2 (data_ptr, consumed), consumed);
+}
 
 GST_START_TEST (test_av1_parse_aom_testdata_av1_1_b8_01_size_16x16)
 {
@@ -380,6 +469,313 @@ GST_START_TEST (test_av1_parse_aom_testdata_av1_1_b8_01_size_16x16)
 
 GST_END_TEST;
 
+static void
+append_dummy_obu (GstAV1DecoderConfigRecord * config, GstAV1OBUType obu_type)
+{
+  GstAV1OBU obu = { 0 };
+
+  obu.obu_type = obu_type;
+  obu.obu_size = 1;
+  obu.data = (guint8 *) "\0";
+  g_array_append_val (config->config_obus, obu);
+}
+
+GST_START_TEST
+    (test_av1_parser_create_decoder_config_record_from_sequence_header_invalid_args)
+{
+  GstAV1Parser *parser;
+  GstAV1DecoderConfigRecord *config;
+  GstBuffer *seq_hdr_obu;
+  GstMapInfo map = { 0, };
+  gboolean ret;
+
+  parser = gst_av1_parser_new ();
+  config = g_new0 (GstAV1DecoderConfigRecord, 1);
+  seq_hdr_obu = get_seq_hdr_obu_from_testdata (parser,
+      aom_testdata_av1_1_b8_01_size_16x16,
+      sizeof (aom_testdata_av1_1_b8_01_size_16x16));
+  fail_unless (seq_hdr_obu != NULL);
+
+  fail_unless (gst_buffer_map (seq_hdr_obu, &map, GST_MAP_READ));
+
+  ASSERT_CRITICAL (ret =
+      gst_av1_parser_create_decoder_config_record_from_sequence_header (NULL,
+          map.data, map.size, &config));
+  fail_unless (!ret);
+
+  ASSERT_CRITICAL (ret =
+      gst_av1_parser_create_decoder_config_record_from_sequence_header (parser,
+          map.data, map.size, NULL));
+  fail_unless (!ret);
+
+  ASSERT_CRITICAL (ret =
+      gst_av1_parser_create_decoder_config_record_from_sequence_header (parser,
+          NULL, map.size, &config));
+  fail_unless (!ret);
+
+  gst_buffer_unmap (seq_hdr_obu, &map);
+  gst_av1_decoder_config_record_free (config);
+  gst_buffer_unref (seq_hdr_obu);
+  gst_av1_parser_free (parser);
+}
+
+GST_END_TEST;
+
+GST_START_TEST
+    (test_av1_parser_create_decoder_config_record_from_sequence_header_new_record)
+{
+  GstAV1Parser *parser;
+  GstAV1DecoderConfigRecord *config = NULL;
+  GstBuffer *seq_hdr_obu;
+  GstMapInfo map = { 0, };
+
+  parser = gst_av1_parser_new ();
+  seq_hdr_obu = get_seq_hdr_obu_from_testdata (parser,
+      aom_testdata_av1_1_b8_01_size_16x16,
+      sizeof (aom_testdata_av1_1_b8_01_size_16x16));
+  fail_unless (seq_hdr_obu != NULL);
+
+  fail_unless (gst_buffer_map (seq_hdr_obu, &map, GST_MAP_READ));
+  fail_unless
+      (gst_av1_parser_create_decoder_config_record_from_sequence_header
+      (parser, map.data, map.size, &config));
+  fail_unless (config != NULL);
+  assert_equals_int (config->version, 1);
+  assert_equals_int (config->config_obus->len, 1);
+  assert_equals_int (g_array_index (config->config_obus, GstAV1OBU,
+          0).obu_type, GST_AV1_OBU_SEQUENCE_HEADER);
+
+  gst_buffer_unmap (seq_hdr_obu, &map);
+  gst_av1_decoder_config_record_free (config);
+  gst_buffer_unref (seq_hdr_obu);
+  gst_av1_parser_free (parser);
+}
+
+GST_END_TEST;
+
+GST_START_TEST
+    (test_av1_parser_create_decoder_config_record_from_sequence_header_replaces_existing)
+{
+  GstAV1Parser *parser;
+  GstAV1DecoderConfigRecord *config;
+  GstBuffer *seq_hdr_obu;
+  GstBuffer *parsed_seq_hdr;
+  GstMapInfo map = { 0, };
+
+  parser = gst_av1_parser_new ();
+  config = g_new0 (GstAV1DecoderConfigRecord, 1);
+  config->config_obus = g_array_new (FALSE, FALSE, sizeof (GstAV1OBU));
+  append_dummy_obu (config, GST_AV1_OBU_SEQUENCE_HEADER);
+  seq_hdr_obu = get_seq_hdr_obu_from_testdata (parser,
+      aom_testdata_av1_1_b8_01_size_16x16,
+      sizeof (aom_testdata_av1_1_b8_01_size_16x16));
+  fail_unless (seq_hdr_obu != NULL);
+
+  fail_unless (gst_buffer_map (seq_hdr_obu, &map, GST_MAP_READ));
+  fail_unless
+      (gst_av1_parser_create_decoder_config_record_from_sequence_header
+      (parser, map.data, map.size, &config));
+  assert_equals_int (config->config_obus->len, 1);
+
+  parsed_seq_hdr = av1_decoder_config_record_get_seq_hdr_obu (config);
+  fail_unless (parsed_seq_hdr != NULL);
+  fail_unless (buffers_equal (parsed_seq_hdr, seq_hdr_obu));
+  gst_buffer_unref (parsed_seq_hdr);
+
+  gst_buffer_unmap (seq_hdr_obu, &map);
+  gst_av1_decoder_config_record_free (config);
+  gst_buffer_unref (seq_hdr_obu);
+  gst_av1_parser_free (parser);
+}
+
+GST_END_TEST;
+
+GST_START_TEST
+    (test_av1_parser_create_decoder_config_record_from_sequence_header_appends_when_missing)
+{
+  GstAV1Parser *parser;
+  GstAV1DecoderConfigRecord *config;
+  GstBuffer *seq_hdr_obu;
+  GstMapInfo map = { 0, };
+  guint i;
+
+  parser = gst_av1_parser_new ();
+  config = g_new0 (GstAV1DecoderConfigRecord, 1);
+  config->config_obus = g_array_new (FALSE, FALSE, sizeof (GstAV1OBU));
+  append_dummy_obu (config, GST_AV1_OBU_TEMPORAL_DELIMITER);
+
+  seq_hdr_obu = get_seq_hdr_obu_from_testdata (parser,
+      aom_testdata_av1_1_b8_01_size_16x16,
+      sizeof (aom_testdata_av1_1_b8_01_size_16x16));
+  fail_unless (seq_hdr_obu != NULL);
+
+  assert_equals_int (config->config_obus->len, 1);
+  fail_unless (gst_buffer_map (seq_hdr_obu, &map, GST_MAP_READ));
+  fail_unless
+      (gst_av1_parser_create_decoder_config_record_from_sequence_header
+      (parser, map.data, map.size, &config));
+  assert_equals_int (config->config_obus->len, 2);
+
+  {
+    gboolean found = FALSE;
+    for (i = 0; i < config->config_obus->len; i++) {
+      GstAV1OBU *obu = &g_array_index (config->config_obus, GstAV1OBU, i);
+      if (obu->obu_type == GST_AV1_OBU_SEQUENCE_HEADER) {
+        found = TRUE;
+        break;
+      }
+    }
+    fail_unless (found);
+  }
+
+  gst_buffer_unmap (seq_hdr_obu, &map);
+  gst_av1_decoder_config_record_free (config);
+  gst_buffer_unref (seq_hdr_obu);
+  gst_av1_parser_free (parser);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_av1_decoder_config_record_roundtrip)
+{
+  GstAV1Parser *parser;
+  GstAV1DecoderConfigRecord *config;
+  GstAV1DecoderConfigRecord *parsed = NULL;
+  GstBuffer *seq_hdr_obu;
+  GstBuffer *av1c;
+  GstMapInfo map;
+  GstAV1ParserResult ret;
+  /* av1C header for the test bitstream: marker/version=0x81, seq_profile=0,
+   * seq_level_idx_0=0, flags (high_bitdepth=0, twelve_bit=0, monochrome=0,
+   * subsampling_x=1, subsampling_y=1), initial_presentation_delay=0. */
+  static const guint8 expected_header[] = { 0x81, 0x00, 0x0c, 0x00 };
+
+  parser = gst_av1_parser_new ();
+  seq_hdr_obu = get_seq_hdr_obu_from_testdata (parser,
+      aom_testdata_av1_1_b8_01_size_16x16,
+      sizeof (aom_testdata_av1_1_b8_01_size_16x16));
+  fail_unless (seq_hdr_obu != NULL);
+
+  config = g_new0 (GstAV1DecoderConfigRecord, 1);
+  config->version = 1;
+  config->seq_profile = 0;
+  config->seq_level_idx_0 = 0;
+  config->seq_tier_0 = FALSE;
+  config->high_bitdepth = FALSE;
+  config->twelve_bit = FALSE;
+  config->monochrome = FALSE;
+  config->chroma_subsampling_x = TRUE;
+  config->chroma_subsampling_y = TRUE;
+  config->chroma_sample_position = 0;
+  config->initial_presentation_delay_present = FALSE;
+  {
+    GstMapInfo map = { 0, };
+    fail_unless (gst_buffer_map (seq_hdr_obu, &map, GST_MAP_READ));
+    fail_unless
+        (gst_av1_parser_create_decoder_config_record_from_sequence_header
+        (parser, map.data, map.size, &config));
+    gst_buffer_unmap (seq_hdr_obu, &map);
+  }
+
+  av1c = gst_av1_create_decoder_config_record_buffer (config);
+  fail_unless (av1c != NULL);
+  assert_equals_int ((gint) gst_buffer_get_size (av1c),
+      (gint) (sizeof (expected_header) + gst_buffer_get_size (seq_hdr_obu)));
+
+  assert_equals_int (gst_buffer_memcmp (av1c, 0, expected_header,
+          sizeof (expected_header)), 0);
+
+  fail_unless (gst_buffer_map (av1c, &map, GST_MAP_READ));
+  ret = gst_av1_parser_parse_decoder_config_record (parser, map.data, map.size,
+      &parsed);
+  assert_equals_int (ret, GST_AV1_PARSER_OK);
+  fail_unless (parsed != NULL);
+
+  assert_equals_int (parsed->version, config->version);
+  assert_equals_int (parsed->seq_profile, config->seq_profile);
+  assert_equals_int (parsed->seq_level_idx_0, config->seq_level_idx_0);
+  assert_equals_int (parsed->seq_tier_0, config->seq_tier_0);
+  assert_equals_int (parsed->high_bitdepth, config->high_bitdepth);
+  assert_equals_int (parsed->twelve_bit, config->twelve_bit);
+  assert_equals_int (parsed->monochrome, config->monochrome);
+  assert_equals_int (parsed->chroma_subsampling_x,
+      config->chroma_subsampling_x);
+  assert_equals_int (parsed->chroma_subsampling_y,
+      config->chroma_subsampling_y);
+  assert_equals_int (parsed->chroma_sample_position,
+      config->chroma_sample_position);
+  assert_equals_int (parsed->initial_presentation_delay_present,
+      config->initial_presentation_delay_present);
+
+  {
+    GstBuffer *parsed_seq_hdr;
+    parsed_seq_hdr = av1_decoder_config_record_get_seq_hdr_obu (parsed);
+    fail_unless (parsed_seq_hdr != NULL);
+    fail_unless (buffers_equal (parsed_seq_hdr, seq_hdr_obu));
+    gst_buffer_unref (parsed_seq_hdr);
+  }
+
+  gst_buffer_unmap (av1c, &map);
+  gst_av1_decoder_config_record_free (parsed);
+  gst_av1_decoder_config_record_free (config);
+  gst_buffer_unref (seq_hdr_obu);
+  gst_buffer_unref (av1c);
+  gst_av1_parser_free (parser);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_av1_decoder_config_record_no_obu)
+{
+  GstAV1Parser *parser;
+  GstAV1DecoderConfigRecord *config;
+  GstAV1DecoderConfigRecord *parsed = NULL;
+  GstBuffer *av1c;
+  GstMapInfo map;
+  GstAV1ParserResult ret;
+  /* av1C header for the test bitstream: marker/version=0x81, seq_profile=0,
+   * seq_level_idx_0=0, flags (high_bitdepth=0, twelve_bit=0, monochrome=0,
+   * subsampling_x=1, subsampling_y=1), initial_presentation_delay=0. */
+  static const guint8 expected_header[] = { 0x81, 0x00, 0x0c, 0x00 };
+
+  parser = gst_av1_parser_new ();
+
+  config = g_new0 (GstAV1DecoderConfigRecord, 1);
+  config->version = 1;
+  config->seq_profile = 0;
+  config->seq_level_idx_0 = 0;
+  config->seq_tier_0 = FALSE;
+  config->high_bitdepth = FALSE;
+  config->twelve_bit = FALSE;
+  config->monochrome = FALSE;
+  config->chroma_subsampling_x = TRUE;
+  config->chroma_subsampling_y = TRUE;
+  config->chroma_sample_position = 0;
+  config->initial_presentation_delay_present = FALSE;
+
+  av1c = gst_av1_create_decoder_config_record_buffer (config);
+  fail_unless (av1c != NULL);
+  assert_equals_int ((gint) gst_buffer_get_size (av1c),
+      (gint) sizeof (expected_header));
+  assert_equals_int (gst_buffer_memcmp (av1c, 0, expected_header,
+          sizeof (expected_header)), 0);
+
+  fail_unless (gst_buffer_map (av1c, &map, GST_MAP_READ));
+  ret = gst_av1_parser_parse_decoder_config_record (parser, map.data, map.size,
+      &parsed);
+  assert_equals_int (ret, GST_AV1_PARSER_OK);
+  fail_unless (parsed != NULL);
+  fail_unless (!av1_decoder_config_record_has_seq_hdr_obu (parsed));
+  gst_buffer_unmap (av1c, &map);
+
+  gst_av1_decoder_config_record_free (parsed);
+  gst_av1_decoder_config_record_free (config);
+  gst_buffer_unref (av1c);
+  gst_av1_parser_free (parser);
+}
+
+GST_END_TEST;
+
 GST_START_TEST
     (test_av1_parse_aom_testdata_av1_1_b8_01_size_16x16_reencoded_annexb) {
   GstAV1Parser *parser;
@@ -576,6 +972,16 @@ av1parsers_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_av1_parse_aom_testdata_av1_1_b8_01_size_16x16);
+  tcase_add_test (tc_chain,
+      test_av1_parser_create_decoder_config_record_from_sequence_header_invalid_args);
+  tcase_add_test (tc_chain,
+      test_av1_parser_create_decoder_config_record_from_sequence_header_new_record);
+  tcase_add_test (tc_chain,
+      test_av1_parser_create_decoder_config_record_from_sequence_header_replaces_existing);
+  tcase_add_test (tc_chain,
+      test_av1_parser_create_decoder_config_record_from_sequence_header_appends_when_missing);
+  tcase_add_test (tc_chain, test_av1_decoder_config_record_roundtrip);
+  tcase_add_test (tc_chain, test_av1_decoder_config_record_no_obu);
   tcase_add_test (tc_chain,
       test_av1_parse_aom_testdata_av1_1_b8_01_size_16x16_reencoded_annexb);
   tcase_add_test (tc_chain, test_metadata_obu);

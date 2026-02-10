@@ -76,8 +76,10 @@
 #endif
 
 #include "gstav1parser.h"
+#include "gstav1bitwriter.h"
 
 #include <gst/base/gstbitreader.h>
+#include <gst/base/gstbitwriter.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -290,7 +292,7 @@ av1_bitstreamfn_leb128 (GstBitReader * br, GstAV1ParserResult * retval)
   guint64 value = 0;
   gint i;
 
-  for (i = 0; i < 8; i++) {
+  for (i = 0; i < GST_AV1_LEB128_MAX_SIZE; i++) {
     leb128_byte = AV1_READ_UINT8_CHECKED (br, retval);
     if (*retval != GST_AV1_PARSER_OK)
       return 0;
@@ -301,7 +303,7 @@ av1_bitstreamfn_leb128 (GstBitReader * br, GstAV1ParserResult * retval)
   }
 
   /* check for bitstream conformance see chapter4.10.5 */
-  if (value < G_MAXUINT32) {
+  if (value < GST_AV1_LEB128_MAX_VALUE) {
     return (guint32) value;
   } else {
     GST_WARNING ("invalid leb128");
@@ -309,6 +311,7 @@ av1_bitstreamfn_leb128 (GstBitReader * br, GstAV1ParserResult * retval)
     return 0;
   }
 }
+
 
 /* 4.10.3
  *
@@ -4701,4 +4704,361 @@ gst_av1_parser_free (GstAV1Parser * parser)
   if (parser->seq_header)
     g_free (parser->seq_header);
   g_free (parser);
+}
+
+/**
+ * gst_av1_build_obu_buffer:
+ * @obu: a #GstAV1OBU to serialize
+ * @write_size_field: whether to include the OBU size field in the output.
+ *   This flag overrides @obu->header.obu_has_size_field.
+ *
+ * Builds a buffer containing the OBU header and payload for @obu.
+ *
+ * Returns: (transfer full) (nullable): the serialized OBU buffer, or %NULL on
+ *   failure.
+ *
+ * Since: 1.30
+ */
+GstBuffer *
+gst_av1_build_obu_buffer (GstAV1OBU * obu, gboolean write_size_field)
+{
+  GstBitWriter bs;
+
+  g_return_val_if_fail (obu != NULL, NULL);
+  g_return_val_if_fail (obu->data != NULL || obu->obu_size == 0, NULL);
+
+  gst_bit_writer_init_with_size (&bs, 128, FALSE);
+  /* obu_forbidden_bit */
+  gst_bit_writer_put_bits_uint8 (&bs, 0, 1);
+  /* obu_type */
+  gst_bit_writer_put_bits_uint8 (&bs, obu->obu_type, 4);
+  /* obu_extension_flag */
+  gst_bit_writer_put_bits_uint8 (&bs, obu->header.obu_extention_flag, 1);
+  /* obu_has_size_field */
+  gst_bit_writer_put_bits_uint8 (&bs, write_size_field ? 1 : 0, 1);
+  /* obu_reserved_1bit */
+  gst_bit_writer_put_bits_uint8 (&bs, 0, 1);
+  if (obu->header.obu_extention_flag) {
+    /* temporal_id */
+    gst_bit_writer_put_bits_uint8 (&bs, obu->header.obu_temporal_id, 3);
+    /* spatial_id */
+    gst_bit_writer_put_bits_uint8 (&bs, obu->header.obu_spatial_id, 2);
+    /* extension_header_reserved_3bits */
+    gst_bit_writer_put_bits_uint8 (&bs, 0, 3);
+  }
+  g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
+
+  if (write_size_field) {
+    guint8 size_data[GST_AV1_LEB128_MAX_SIZE];
+    guint size_len = 0;
+    gst_av1_bit_writer_write_leb128 (size_data, sizeof (size_data), &size_len,
+        obu->obu_size);
+    gst_bit_writer_put_bytes (&bs, size_data, size_len);
+  }
+
+  if (obu->obu_size > 0)
+    gst_bit_writer_put_bytes (&bs, obu->data, obu->obu_size);
+
+  return gst_bit_writer_reset_and_get_buffer (&bs);
+}
+
+/**
+ * gst_av1_parser_parse_decoder_config_record:
+ * @parser: a #GstAV1Parser
+ * @data: (array length=size): the data to parse
+ * @size: the size of @data
+ * @config: (out) (transfer full): the parsed #GstAV1DecoderConfigRecord
+ *
+ * Parses an AV1CodecConfigurationRecord as defined in the AV1 ISOBMFF mapping
+ * specification (see https://aomediacodec.github.io/av1-isobmff/).
+ *
+ * The returned @config references data inside @data. The caller must keep
+ * @data valid for the lifetime of @config.
+ *
+ * Returns: The #GstAV1ParserResult.
+ *
+ * Since: 1.30
+ */
+GstAV1ParserResult
+gst_av1_parser_parse_decoder_config_record (GstAV1Parser * parser,
+    const guint8 * data, gsize size, GstAV1DecoderConfigRecord ** config)
+{
+  GstAV1DecoderConfigRecord *record;
+  GstBitReader br;
+  gsize offset;
+  guint32 value;
+
+  g_return_val_if_fail (parser != NULL, GST_AV1_PARSER_INVALID_OPERATION);
+  g_return_val_if_fail (data != NULL, GST_AV1_PARSER_INVALID_OPERATION);
+  g_return_val_if_fail (config != NULL, GST_AV1_PARSER_INVALID_OPERATION);
+
+  if (size < 4)
+    return GST_AV1_PARSER_INVALID_OPERATION;
+
+  gst_bit_reader_init (&br, data, size);
+
+  if (!gst_bit_reader_get_bits_uint32 (&br, &value, 1) || value != 1)
+    return GST_AV1_PARSER_BITSTREAM_ERROR;
+  if (!gst_bit_reader_get_bits_uint32 (&br, &value, 7) || value != 1)
+    return GST_AV1_PARSER_BITSTREAM_ERROR;
+
+  record = g_new0 (GstAV1DecoderConfigRecord, 1);
+  record->version = value;
+
+#define READ_CONFIG_UINT8(val, nbits) G_STMT_START { \
+  guint8 _tmp; \
+  if (!gst_bit_reader_get_bits_uint8 (&br, &_tmp, nbits)) { \
+    GST_WARNING ("Failed to read " G_STRINGIFY (val)); \
+    goto bitstream_error; \
+  } \
+  (val) = _tmp; \
+} G_STMT_END
+
+#define READ_CONFIG_BOOL(val, nbits) G_STMT_START { \
+  guint8 _tmp; \
+  if (!gst_bit_reader_get_bits_uint8 (&br, &_tmp, nbits)) { \
+    GST_WARNING ("Failed to read " G_STRINGIFY (val)); \
+    goto bitstream_error; \
+  } \
+  (val) = _tmp ? TRUE : FALSE; \
+} G_STMT_END
+
+#define SKIP_CONFIG_BITS(nbits) G_STMT_START { \
+  if (!gst_bit_reader_skip (&br, nbits)) { \
+    GST_WARNING ("Failed to skip %d bits", nbits);   \
+    goto bitstream_error; \
+  } \
+} G_STMT_END
+
+
+  READ_CONFIG_UINT8 (record->seq_profile, 3);
+  READ_CONFIG_UINT8 (record->seq_level_idx_0, 5);
+  READ_CONFIG_BOOL (record->seq_tier_0, 1);
+  READ_CONFIG_BOOL (record->high_bitdepth, 1);
+  READ_CONFIG_BOOL (record->twelve_bit, 1);
+  READ_CONFIG_BOOL (record->monochrome, 1);
+  READ_CONFIG_BOOL (record->chroma_subsampling_x, 1);
+  READ_CONFIG_BOOL (record->chroma_subsampling_y, 1);
+  READ_CONFIG_UINT8 (record->chroma_sample_position, 2);
+  SKIP_CONFIG_BITS (3);
+  READ_CONFIG_BOOL (record->initial_presentation_delay_present, 1);
+  if (record->initial_presentation_delay_present)
+    READ_CONFIG_UINT8 (record->initial_presentation_delay_minus_one, 4);
+  else
+    SKIP_CONFIG_BITS (4);
+
+  offset = gst_bit_reader_get_pos (&br) / 8;
+  record->config_obus = g_array_new (FALSE, FALSE, sizeof (GstAV1OBU));
+
+  while (offset < size) {
+    GstAV1OBU obu;
+    guint32 consumed = 0;
+    GstAV1ParserResult res;
+
+    res = gst_av1_parser_identify_one_obu (parser, data + offset,
+        size - offset, &obu, &consumed);
+    if (res != GST_AV1_PARSER_OK)
+      break;
+
+    g_array_append_val (record->config_obus, obu);
+
+    if (consumed == 0)
+      break;
+
+    offset += consumed;
+  }
+
+  *config = record;
+  return GST_AV1_PARSER_OK;
+
+bitstream_error:
+  gst_av1_decoder_config_record_free (record);
+  return GST_AV1_PARSER_BITSTREAM_ERROR;
+
+#undef READ_CONFIG_UINT8
+#undef READ_CONFIG_BOOL
+#undef SKIP_CONFIG_BITS
+}
+
+/**
+ * gst_av1_create_decoder_config_record_buffer:
+ * @config: a #GstAV1DecoderConfigRecord
+ *
+ * Creates an AV1CodecConfigurationRecord as defined in the AV1 ISOBMFF mapping
+ * specification (see https://aomediacodec.github.io/av1-isobmff/).
+ *
+ * Since: 1.30
+ *
+ * Returns: (transfer full) (nullable): The AV1 Codec Configuration Record, or
+ * %NULL if there was an error.
+ */
+GstBuffer *
+gst_av1_create_decoder_config_record_buffer (const GstAV1DecoderConfigRecord *
+    config)
+{
+  GstBuffer *av1c;
+  GstBitWriter bw;
+  guint8 presentation_delay = 0;
+  gboolean presentation_delay_present = FALSE;
+
+  g_return_val_if_fail (config != NULL, NULL);
+
+  if (config->initial_presentation_delay_present) {
+    if (config->initial_presentation_delay_minus_one <= 0x0F) {
+      presentation_delay_present = TRUE;
+      presentation_delay = config->initial_presentation_delay_minus_one;
+    } else {
+      GST_WARNING ("invalid initial presentation delay %u (expected 0..15)",
+          config->initial_presentation_delay_minus_one);
+    }
+  }
+
+  gst_bit_writer_init_with_size (&bw, 32, FALSE);
+  gst_bit_writer_put_bits_uint8 (&bw, 1, 1);
+  gst_bit_writer_put_bits_uint8 (&bw, config->version, 7);
+  gst_bit_writer_put_bits_uint8 (&bw, config->seq_profile, 3);
+  gst_bit_writer_put_bits_uint8 (&bw, config->seq_level_idx_0, 5);
+  gst_bit_writer_put_bits_uint8 (&bw, config->seq_tier_0, 1);
+  gst_bit_writer_put_bits_uint8 (&bw, config->high_bitdepth, 1);
+  gst_bit_writer_put_bits_uint8 (&bw, config->twelve_bit, 1);
+  gst_bit_writer_put_bits_uint8 (&bw, config->monochrome, 1);
+  gst_bit_writer_put_bits_uint8 (&bw, config->chroma_subsampling_x, 1);
+  gst_bit_writer_put_bits_uint8 (&bw, config->chroma_subsampling_y, 1);
+  gst_bit_writer_put_bits_uint8 (&bw, config->chroma_sample_position, 2);
+  gst_bit_writer_put_bits_uint8 (&bw, 0, 3);
+  gst_bit_writer_put_bits_uint8 (&bw, presentation_delay_present, 1);
+  gst_bit_writer_put_bits_uint8 (&bw, presentation_delay, 4);
+  g_assert (GST_BIT_WRITER_BIT_SIZE (&bw) == 32);
+
+  av1c = gst_bit_writer_reset_and_get_buffer (&bw);
+
+  if (config->config_obus) {
+    guint i;
+    for (i = 0; i < config->config_obus->len; i++) {
+      GstAV1OBU *obu = &g_array_index (config->config_obus, GstAV1OBU, i);
+      GstBuffer *buf = gst_av1_build_obu_buffer (obu, TRUE);
+
+      if (buf)
+        av1c = gst_buffer_append (av1c, buf);
+    }
+  }
+
+  return av1c;
+}
+
+/**
+ * gst_av1_decoder_config_record_free:
+ * @config: a #GstAV1DecoderConfigRecord
+ *
+ * Frees the @config and any associated data.
+ *
+ * Since: 1.30
+ */
+void
+gst_av1_decoder_config_record_free (GstAV1DecoderConfigRecord * config)
+{
+  if (!config)
+    return;
+
+  if (config->config_obus)
+    g_array_unref (config->config_obus);
+
+  g_free (config);
+}
+
+/**
+ * gst_av1_parser_create_decoder_config_record_from_sequence_header:
+ * @parser: a #GstAV1Parser
+ * @seq_hdr_data: (array length=seq_hdr_data_size): one complete sequence
+ *   header OBU in AV1 bitstream form (including OBU header and size field)
+ * @seq_hdr_data_size: size of @seq_hdr_data
+ * @config: (inout) (nullable) (transfer full): pointer to a
+ *   #GstAV1DecoderConfigRecord. If *@config is %NULL, a new record is
+ *   allocated.
+ *
+ * Creates or updates a #GstAV1DecoderConfigRecord from a sequence header OBU.
+ * If *@config is non-%NULL, fields derived from the sequence header are updated
+ * and existing sequence header OBU entries in @config->config_obus are
+ * replaced. Other OBUs are preserved.
+ *
+ * The memory at @seq_hdr_data must remain valid for the lifetime of *@config.
+ *
+ * Returns: %TRUE if @seq_hdr_data was parsed and stored, %FALSE otherwise. On
+ *   success, ownership of the resulting config record remains with the caller.
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_av1_parser_create_decoder_config_record_from_sequence_header (GstAV1Parser *
+    parser, const guint8 * seq_hdr_data, gsize seq_hdr_data_size,
+    GstAV1DecoderConfigRecord ** config)
+{
+  GstAV1DecoderConfigRecord *record;
+  GstAV1OBU parsed_obu = { 0, };
+  GstAV1SequenceHeaderOBU seq_hdr;
+  guint32 consumed = 0;
+  GstAV1ParserResult res;
+  guint i;
+  gboolean replaced = FALSE;
+  gboolean allocated = FALSE;
+
+  g_return_val_if_fail (parser != NULL, FALSE);
+  g_return_val_if_fail (seq_hdr_data != NULL, FALSE);
+  g_return_val_if_fail (config != NULL, FALSE);
+
+  record = *config;
+  if (!record) {
+    record = g_new0 (GstAV1DecoderConfigRecord, 1);
+    record->version = 1;
+    allocated = TRUE;
+  }
+
+  res = gst_av1_parser_identify_one_obu (parser, seq_hdr_data,
+      seq_hdr_data_size, &parsed_obu, &consumed);
+  if (res != GST_AV1_PARSER_OK ||
+      parsed_obu.obu_type != GST_AV1_OBU_SEQUENCE_HEADER) {
+    GST_WARNING ("Failed to identify sequence header OBU, res %d, obu_type %u",
+        res, parsed_obu.obu_type);
+    if (allocated)
+      gst_av1_decoder_config_record_free (record);
+    return FALSE;
+  }
+
+  res = gst_av1_parser_parse_sequence_header_obu (parser, &parsed_obu,
+      &seq_hdr);
+  if (res != GST_AV1_PARSER_OK) {
+    GST_WARNING ("Failed to parse sequence header OBU, res %d", res);
+    if (allocated)
+      gst_av1_decoder_config_record_free (record);
+    return FALSE;
+  }
+
+  record->seq_profile = seq_hdr.seq_profile;
+  record->seq_level_idx_0 = seq_hdr.operating_points[0].seq_level_idx;
+  record->seq_tier_0 = seq_hdr.operating_points[0].seq_tier;
+  record->high_bitdepth = seq_hdr.color_config.high_bitdepth;
+  record->twelve_bit = seq_hdr.color_config.twelve_bit;
+  record->monochrome = seq_hdr.color_config.mono_chrome;
+  record->chroma_subsampling_x = seq_hdr.color_config.subsampling_x;
+  record->chroma_subsampling_y = seq_hdr.color_config.subsampling_y;
+  record->chroma_sample_position = seq_hdr.color_config.chroma_sample_position;
+
+  if (!record->config_obus)
+    record->config_obus = g_array_new (FALSE, FALSE, sizeof (GstAV1OBU));
+
+  for (i = 0; i < record->config_obus->len; i++) {
+    GstAV1OBU *obu = &g_array_index (record->config_obus, GstAV1OBU, i);
+
+    if (obu->obu_type == GST_AV1_OBU_SEQUENCE_HEADER) {
+      *obu = parsed_obu;
+      replaced = TRUE;
+    }
+  }
+
+  if (!replaced)
+    g_array_append_val (record->config_obus, parsed_obu);
+
+  *config = record;
+
+  return TRUE;
 }

@@ -83,12 +83,31 @@ G_BEGIN_DECLS
 #define GST_AV1_DIV_LUT_BITS                   8
 #define GST_AV1_DIV_LUT_NUM                    (1 << GST_AV1_DIV_LUT_BITS)
 
+/**
+ * GST_AV1_LEB128_MAX_SIZE:
+ *
+ * Maximum number of bytes in an AV1 leb128-encoded value.
+ *
+ * Since: 1.30
+ */
+#define GST_AV1_LEB128_MAX_SIZE                8
+
+/**
+ * GST_AV1_LEB128_MAX_VALUE:
+ *
+ * Maximum value represented by an AV1 leb128-encoded value.
+ *
+ * Since: 1.30
+ */
+#define GST_AV1_LEB128_MAX_VALUE               0xffffffffU
+
 
 typedef struct _GstAV1Parser GstAV1Parser;
 typedef struct _GstAV1ParserState GstAV1ParserState;
 
 typedef struct _GstAV1OBUHeader GstAV1OBUHeader;
 typedef struct _GstAV1OBU GstAV1OBU;
+typedef struct _GstAV1DecoderConfigRecord GstAV1DecoderConfigRecord;
 
 typedef struct _GstAV1SequenceHeaderOBU GstAV1SequenceHeaderOBU;
 typedef struct _GstAV1MetadataOBU GstAV1MetadataOBU;
@@ -592,6 +611,48 @@ struct _GstAV1OBU {
   GstAV1OBUType obu_type;
   guint8 *data;
   guint32 obu_size;
+};
+
+/**
+ * GstAV1DecoderConfigRecord:
+ * @version: configurationVersion, must be 1.
+ * @seq_profile: AV1 sequence profile.
+ * @seq_level_idx_0: AV1 sequence level index.
+ * @seq_tier_0: AV1 sequence tier.
+ * @high_bitdepth: %TRUE if the stream uses high bit depth.
+ * @twelve_bit: %TRUE if the stream uses 12-bit depth.
+ * @monochrome: %TRUE if the stream is monochrome.
+ * @chroma_subsampling_x: Chroma subsampling in the horizontal direction.
+ * @chroma_subsampling_y: Chroma subsampling in the vertical direction.
+ * @chroma_sample_position: Chroma sample position.
+ * @initial_presentation_delay_present: %TRUE if
+ *   @initial_presentation_delay_minus_one is present.
+ * @initial_presentation_delay_minus_one: Initial presentation delay minus one.
+ * @config_obus: Array of identified #GstAV1OBU from the configOBUs field.
+ *
+ * Contains AV1CodecConfigurationRecord data as defined in the AV1 ISOBMFF
+ * mapping specification (see https://aomediacodec.github.io/av1-isobmff/).
+ *
+ * Since: 1.30
+ */
+struct _GstAV1DecoderConfigRecord
+{
+  guint8 version;
+  guint8 seq_profile;
+  guint8 seq_level_idx_0;
+  gboolean seq_tier_0;
+  gboolean high_bitdepth;
+  gboolean twelve_bit;
+  gboolean monochrome;
+  gboolean chroma_subsampling_x;
+  gboolean chroma_subsampling_y;
+  guint8 chroma_sample_position;
+  gboolean initial_presentation_delay_present;
+  guint8 initial_presentation_delay_minus_one;
+  GArray *config_obus;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -1899,6 +1960,26 @@ GstAV1Parser * gst_av1_parser_new (void);
 
 GST_CODEC_PARSERS_API
 void gst_av1_parser_free (GstAV1Parser * parser);
+
+GST_CODEC_PARSERS_API
+GstBuffer * gst_av1_build_obu_buffer (GstAV1OBU * obu, gboolean write_size_field);
+
+GST_CODEC_PARSERS_API
+GstAV1ParserResult
+gst_av1_parser_parse_decoder_config_record (GstAV1Parser * parser,
+    const guint8 * data, gsize size, GstAV1DecoderConfigRecord ** config);
+
+GST_CODEC_PARSERS_API
+GstBuffer * gst_av1_create_decoder_config_record_buffer
+    (const GstAV1DecoderConfigRecord * config);
+
+GST_CODEC_PARSERS_API
+void gst_av1_decoder_config_record_free (GstAV1DecoderConfigRecord * config);
+
+GST_CODEC_PARSERS_API
+gboolean gst_av1_parser_create_decoder_config_record_from_sequence_header
+    (GstAV1Parser * parser, const guint8 * seq_hdr_data,
+     gsize seq_hdr_data_size, GstAV1DecoderConfigRecord ** config);
 
 G_END_DECLS
 

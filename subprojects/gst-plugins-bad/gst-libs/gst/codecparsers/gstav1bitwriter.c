@@ -80,14 +80,13 @@ static gboolean
 _av1_encode_uleb (guint64 value, guint available,
     guint8 * coded_value, guint coded_size)
 {
-  const guint kMaximumLeb128Size = 8;
   const guint leb_size = _av1_uleb_size_in_bytes (value);
-  const guint64 kMaximumLeb128Value = 0xffffffff /* 4294967295U */ ;
   guint i;
 
   g_assert (coded_size >= leb_size);
 
-  if (value > kMaximumLeb128Value || coded_size > kMaximumLeb128Size ||
+  if (value > GST_AV1_LEB128_MAX_VALUE ||
+      coded_size > GST_AV1_LEB128_MAX_SIZE ||
       coded_size > available || !coded_value) {
     return FALSE;
   }
@@ -116,6 +115,39 @@ _av1_encode_uleb (guint64 value, guint available,
       *(coded_value + i) |= 0x80;
   }
 
+  return TRUE;
+}
+
+/**
+ * gst_av1_bit_writer_write_leb128:
+ * @data: (out caller-allocates) (array length=data_size): destination buffer
+ *   for the encoded value
+ * @data_size: size of @data in bytes
+ * @len: (out): length in bytes written to @data
+ * @value: value to encode
+ *
+ * Encodes @value as unsigned LEB128 and writes it to @data. The caller should
+ * provide at least #GST_AV1_LEB128_MAX_SIZE bytes.
+ *
+ * Returns: %TRUE on success, %FALSE if @value exceeds
+ *   #GST_AV1_LEB128_MAX_VALUE, if @data is too small, or if arguments are
+ *   invalid.
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_av1_bit_writer_write_leb128 (guint8 * data, gsize data_size, guint * len,
+    guint64 value)
+{
+  const guint leb_size = _av1_uleb_size_in_bytes (value);
+
+  g_return_val_if_fail (len != NULL, FALSE);
+
+  if (!_av1_encode_uleb (value, data_size, data, leb_size)) {
+    return FALSE;
+  }
+
+  *len = leb_size;
   return TRUE;
 }
 

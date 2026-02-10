@@ -643,6 +643,104 @@ GST_START_TEST (test_av1_bitwriter_metadata)
 
 GST_END_TEST;
 
+GST_START_TEST (test_av1_bitwriter_leb128)
+{
+  guint8 data[8];
+  guint len;
+  gboolean ok;
+
+  /* Zero is the smallest valid LEB128 payload (single byte). */
+  memset (data, 0xaa, sizeof (data));
+  len = 0;
+  ok = gst_av1_bit_writer_write_leb128 (data, sizeof (data), &len, 0);
+  fail_unless (ok);
+  assert_equals_int (len, 1);
+  assert_equals_int (data[0], 0x00);
+
+  /* One confirms non-zero single-byte encoding. */
+  memset (data, 0xaa, sizeof (data));
+  len = 0;
+  ok = gst_av1_bit_writer_write_leb128 (data, sizeof (data), &len, 1);
+  fail_unless (ok);
+  assert_equals_int (len, 1);
+  assert_equals_int (data[0], 0x01);
+
+  /* 0x7f is the largest value that still fits in one byte. */
+  memset (data, 0xaa, sizeof (data));
+  len = 0;
+  ok = gst_av1_bit_writer_write_leb128 (data, sizeof (data), &len, 0x7f);
+  fail_unless (ok);
+  assert_equals_int (len, 1);
+  assert_equals_int (data[0], 0x7f);
+
+  /* 0x80 is the smallest value that requires two bytes. */
+  memset (data, 0xaa, sizeof (data));
+  len = 0;
+  ok = gst_av1_bit_writer_write_leb128 (data, sizeof (data), &len, 0x80);
+  fail_unless (ok);
+  assert_equals_int (len, 2);
+  assert_equals_int (data[0], 0x80);
+  assert_equals_int (data[1], 0x01);
+
+  /* 0x3fff is the largest value that fits in two bytes. */
+  memset (data, 0xaa, sizeof (data));
+  len = 0;
+  ok = gst_av1_bit_writer_write_leb128 (data, sizeof (data), &len, 0x3fff);
+  fail_unless (ok);
+  assert_equals_int (len, 2);
+  assert_equals_int (data[0], 0xff);
+  assert_equals_int (data[1], 0x7f);
+
+  /* 0x4000 is the smallest value that requires three bytes. */
+  memset (data, 0xaa, sizeof (data));
+  len = 0;
+  ok = gst_av1_bit_writer_write_leb128 (data, sizeof (data), &len, 0x4000);
+  fail_unless (ok);
+  assert_equals_int (len, 3);
+  assert_equals_int (data[0], 0x80);
+  assert_equals_int (data[1], 0x80);
+  assert_equals_int (data[2], 0x01);
+
+  memset (data, 0xaa, sizeof (data));
+  len = 0;
+  ok = gst_av1_bit_writer_write_leb128 (data, sizeof (data), &len,
+      GST_AV1_LEB128_MAX_VALUE);
+  fail_unless (ok);
+  assert_equals_int (len, 5);
+  assert_equals_int (data[0], 0xff);
+  assert_equals_int (data[1], 0xff);
+  assert_equals_int (data[2], 0xff);
+  assert_equals_int (data[3], 0xff);
+  assert_equals_int (data[4], 0x0f);
+
+  /* NULL data verifies error reporting without touching len. */
+  len = 99;
+  ok = gst_av1_bit_writer_write_leb128 (NULL, 0, &len, 0);
+  fail_unless (!ok);
+  assert_equals_int (len, 99);
+
+  /* Too-small output buffer must be rejected. */
+  len = 66;
+  ok = gst_av1_bit_writer_write_leb128 (data, 1, &len, 0x80);
+  fail_unless (!ok);
+  assert_equals_int (len, 66);
+
+  /* NULL output length is invalid. */
+  ASSERT_CRITICAL (ok =
+      gst_av1_bit_writer_write_leb128 (data, sizeof (data), NULL, 0));
+  fail_unless (!ok);
+
+  /* Overflow verifies inputs above the AV1 LEB128 limit are rejected. */
+  memset (data, 0xaa, sizeof (data));
+  len = 77;
+  ok = gst_av1_bit_writer_write_leb128 (data, sizeof (data), &len,
+      (guint64) GST_AV1_LEB128_MAX_VALUE + 1);
+  fail_unless (!ok);
+  assert_equals_int (len, 77);
+}
+
+GST_END_TEST;
+
 static Suite *
 av1bitwriter_suite (void)
 {
@@ -655,6 +753,8 @@ av1bitwriter_suite (void)
   tcase_add_test (tc_chain, test_av1_bitwriter_sequence_and_frame_hdr);
 
   tcase_add_test (tc_chain, test_av1_bitwriter_metadata);
+
+  tcase_add_test (tc_chain, test_av1_bitwriter_leb128);
 
   return s;
 }

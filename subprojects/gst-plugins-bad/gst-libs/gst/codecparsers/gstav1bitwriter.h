@@ -46,6 +46,12 @@ typedef enum
 } GstAV1BitWriterResult;
 
 GST_CODEC_PARSERS_API
+gboolean                 gst_av1_bit_writer_write_leb128      (guint8 * data,
+                                                               gsize data_size,
+                                                               guint * len,
+                                                               guint64 value);
+
+GST_CODEC_PARSERS_API
 GstAV1BitWriterResult    gst_av1_bit_writer_sequence_header_obu (const GstAV1SequenceHeaderOBU * seq_hdr,
                                                                  gboolean size_field,
                                                                  guint8 * data,
