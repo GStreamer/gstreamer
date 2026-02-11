@@ -137,6 +137,15 @@ extern HMODULE _priv_gst_dll_handle;
 #endif
 #define GST_REGISTRY_FILE_NAME "registry." GST_REGISTRY_FILE_SUFFIX ".bin"
 
+#ifdef G_OS_WIN32
+#define GST_MODULE_SUFFIX ".dll"
+#else
+#define GST_MODULE_SUFFIX ".so"
+#ifdef __APPLE__
+#define GST_EXTRA_MODULE_SUFFIX ".dylib"
+#endif
+#endif
+
 
 #define GST_CAT_DEFAULT GST_CAT_REGISTRY
 
@@ -1319,7 +1328,7 @@ gst_registry_scan_path_level (GstRegistryScanContext * context,
       g_free (filename);
       continue;
     }
-    if (!g_str_has_suffix (dirent, "." G_MODULE_SUFFIX)
+    if (!g_str_has_suffix (dirent, GST_MODULE_SUFFIX)
 #ifdef GST_EXTRA_MODULE_SUFFIX
         && !g_str_has_suffix (dirent, GST_EXTRA_MODULE_SUFFIX)
 #endif
