@@ -298,9 +298,6 @@ if host_system == 'linux'
   cdata.set_quoted('DEFAULT_VIDEOSRC', 'v4l2src')
 elif host_system == 'darwin'
   cdata.set_quoted('DEFAULT_VIDEOSRC', 'avfvideosrc')
-  cdata.set_quoted('GST_EXTRA_MODULE_SUFFIX', '.dylib')
-  # Yes, we set this for iOS too. Same as Autotools.
-  cdata.set('HAVE_OSX', 1)
 else
   cdata.set_quoted('DEFAULT_VIDEOSRC', 'videotestsrc')
 endif

@@ -53,10 +53,14 @@ GST_DEBUG_CATEGORY (lv2_debug);
 #if defined (G_OS_WIN32)
 #define GST_LV2_ENVVARS "APPDATA/LV2:COMMONPROGRAMFILES/LV2"
 #define GST_LV2_DEFAULT_PATH NULL
-#elif defined (HAVE_OSX)
+#elif defined (__APPLE__)
+#include <TargetConditionals.h>
+#if TARGET_OS_OSX
 #define GST_LV2_ENVVARS "HOME/Library/Audio/Plug-Ins/LV2:HOME/.lv2"
 #define GST_LV2_DEFAULT_PATH \
   "/usr/local/lib/lv2:/usr/lib/lv2:/Library/Audio/Plug-Ins/LV2"
+#endif
+// No defaults paths on non-macOS
 #elif defined (G_OS_UNIX)
 #define GST_LV2_ENVVARS "HOME/.lv2"
 #define GST_LV2_DEFAULT_PATH \
@@ -323,9 +327,11 @@ plugin_init (GstPlugin * plugin)
   gst_lv2_side_right_role_node =
       lilv_new_uri (gst_lv2_world_node, LV2_PORT_GROUPS__sideRight);
 
+#ifdef GST_LV2_DEFAULT_PATH
   gst_plugin_add_dependency_simple (plugin,
       "LV2_PATH:" GST_LV2_ENVVARS, GST_LV2_DEFAULT_PATH, NULL,
       GST_PLUGIN_DEPENDENCY_FLAG_RECURSE);
+#endif
 
   /* ensure GstAudioChannelPosition type is registered */
   if (!gst_audio_channel_position_get_type ())
