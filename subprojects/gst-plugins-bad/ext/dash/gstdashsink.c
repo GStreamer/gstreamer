@@ -1147,7 +1147,8 @@ gst_dash_sink_release_pad (GstElement * element, GstPad * pad)
   if (stream->splitmuxsink) {
     gst_element_set_locked_state (stream->splitmuxsink, TRUE);
     gst_element_set_state (stream->splitmuxsink, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN (sink), stream->splitmuxsink);
+    if (GST_OBJECT_PARENT (stream->splitmuxsink) == GST_OBJECT (sink))
+      gst_bin_remove (GST_BIN (sink), stream->splitmuxsink);
     gst_object_unref (stream->splitmuxsink);
   }
 
