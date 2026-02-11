@@ -62,9 +62,12 @@
 
 #include <gst/video/video.h>
 
-#include "ReadBarcode.h"
-#include "TextUtfEncoding.h"
-#include "ZXVersion.h"
+#if __has_include("ZXing/WriteBarcode.h") /* only available in version >= 3.x */
+#include "ZXing/ZXingCpp.h" /* future proof one-stop-shop header */
+#else
+#include "ZXing/ReadBarcode.h"
+#include "ZXing/ZXVersion.h"
+#endif
 
 using namespace ZXing;
 
@@ -139,7 +142,7 @@ static const GEnumValue barcode_formats[] = {
   {BARCODE_FORMAT_CODE_39, "CODE_39", "code_39"},
   {BARCODE_FORMAT_CODE_93, "CODE_93", "code_93"},
   {BARCODE_FORMAT_CODE_128, "CODE_128", "code_128"},
-  {BARCODE_FORMAT_DATA_MATRIX, "PNG", "png"},
+  {BARCODE_FORMAT_DATA_MATRIX, "DATA_MATRIX", "data_matrix"},
   {BARCODE_FORMAT_EAN_8, "EAN_8", "ean_8"},
   {BARCODE_FORMAT_EAN_13, "EAN_13", "ean_13"},
   {BARCODE_FORMAT_ITF, "ITF", "itf"},
@@ -392,7 +395,11 @@ gst_zxing_set_info (GstVideoFilter * vfilter, GstCaps * in,
   switch (in_info->finfo->format) {
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_xRGB:
+  #if ZXING_VERSION_MAJOR >= 3
+      zxing->image_format = ImageFormat::ARGB;
+  #else
       zxing->image_format = ImageFormat::XRGB;
+  #endif
       break;
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y42B:
@@ -423,7 +430,12 @@ gst_zxing_transform_frame_ip (GstVideoFilter * vfilter, GstVideoFrame * frame)
 
   hints.setTryRotate(zxing->rotate);
   hints.setTryHarder(!zxing->faster);
-  hints.setFormats(BarcodeFormatFromString (barcode_formats[zxing->barcode_format].value_name));
+  try {
+    hints.setFormats(BarcodeFormatFromString (barcode_formats[zxing->barcode_format].value_name));
+  } catch (const std::invalid_argument&) {
+    /* since 3.0 zxing-cpp throws if BarcodeFormatFromString() can't parse the string.
+     * see https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4893#note_3325953 */
+  }
 
   /* all formats we support start with an 8-bit Y plane. zxing doesn't need
    * to know about the chroma plane(s) */
