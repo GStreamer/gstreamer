@@ -2616,6 +2616,9 @@ gst_asf_demux_setup_pad (GstASFDemux * demux, GstPad * src_pad,
 {
   AsfStream *stream;
 
+  /* Checked in the callers */
+  g_assert (demux->num_streams < G_N_ELEMENTS (demux->stream));
+
   gst_pad_use_fixed_caps (src_pad);
   gst_pad_set_caps (src_pad, caps);
 
@@ -3071,6 +3074,12 @@ gst_asf_demux_parse_stream_object (GstASFDemux * demux, guint8 * data,
     case ASF_STREAM_AUDIO:{
       asf_stream_audio audio_object;
 
+      if (demux->num_streams >= G_N_ELEMENTS (demux->stream)) {
+        GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
+            ("File has too many streams"));
+        return NULL;
+      }
+
       if (!gst_asf_demux_get_stream_audio (&audio_object, &data, &size))
         goto not_enough_data;
 
@@ -3148,6 +3157,12 @@ gst_asf_demux_parse_stream_object (GstASFDemux * demux, guint8 * data,
       asf_stream_video_format video_format_object;
       asf_stream_video video_object;
       guint16 vsize;
+
+      if (demux->num_streams >= G_N_ELEMENTS (demux->stream)) {
+        GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
+            ("File has too many streams"));
+        return NULL;
+      }
 
       if (!gst_asf_demux_get_stream_video (&video_object, &data, &size))
         goto not_enough_data;
