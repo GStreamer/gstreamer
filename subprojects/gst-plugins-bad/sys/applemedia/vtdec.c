@@ -1282,9 +1282,10 @@ cm_block_buffer_freeblock (void *refCon, void *doomedMemoryBlock,
     size_t sizeInBytes)
 {
   GstMapInfo *info = (GstMapInfo *) refCon;
+  GstMemory *mem = info->memory;
 
-  gst_memory_unmap (info->memory, info);
-  gst_memory_unref (info->memory);
+  gst_memory_unmap (mem, info);
+  gst_memory_unref (mem);
   g_slice_free (GstMapInfo, info);
 }
 
