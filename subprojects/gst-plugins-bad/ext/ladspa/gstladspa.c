@@ -137,6 +137,7 @@ GST_DEBUG_CATEGORY (ladspa_debug);
 #if defined (G_OS_WIN32)
 #define GST_LADSPA_ENVVARS "APPDATA/LADSPA:COMMONPROGRAMFILES/LADSPA"
 #define GST_LADSPA_DEFAULT_PATH ""
+#define GST_MODULE_SUFFIX ".dll"
 #elif defined (__APPLE__)
 #include <TargetConditionals.h>
 #if TARGET_OS_OSX
@@ -144,6 +145,8 @@ GST_DEBUG_CATEGORY (ladspa_debug);
 #define GST_LADSPA_DEFAULT_PATH \
   "/usr/local/lib/ladspa:/usr/lib/ladspa:/Library/Audio/Plug-Ins/LADSPA"
 #endif
+#define GST_MODULE_SUFFIX ".so"
+#define GST_EXTRA_MODULE_SUFFIX ".dylib"
 // No default paths on non-macOS
 #elif defined (G_OS_UNIX)
 #define GST_LADSPA_ENVVARS "HOME/.ladspa"
@@ -153,6 +156,7 @@ GST_DEBUG_CATEGORY (ladspa_debug);
   "/usr/local/lib/ladspa:" \
   "/usr/local/lib64/ladspa:" \
    LIBDIR "/ladspa"
+#define GST_MODULE_SUFFIX ".so"
 #else
 #error "Unsupported OS"
 #endif
@@ -309,7 +313,7 @@ ladspa_plugin_directory_search (GstPlugin * ladspa_plugin, const char *dir_name)
 
   while ((entry_name = g_dir_read_name (dir))) {
     /* Only attempt to open files with the module suffixes */
-    if (!g_str_has_suffix (entry_name, "." G_MODULE_SUFFIX)
+    if (!g_str_has_suffix (entry_name, GST_MODULE_SUFFIX)
 #ifdef GST_EXTRA_MODULE_SUFFIX
         && !g_str_has_suffix (entry_name, GST_EXTRA_MODULE_SUFFIX)
 #endif

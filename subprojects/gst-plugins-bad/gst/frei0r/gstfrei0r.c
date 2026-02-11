@@ -29,6 +29,15 @@
 #include <string.h>
 #include <gmodule.h>
 
+#ifdef G_OS_WIN32
+#define GST_MODULE_SUFFIX ".dll"
+#else
+#define GST_MODULE_SUFFIX ".so"
+#ifdef __APPLE__
+#define GST_EXTRA_MODULE_SUFFIX ".dylib"
+#endif
+#endif
+
 GST_DEBUG_CATEGORY (frei0r_debug);
 #define GST_CAT_DEFAULT frei0r_debug
 
@@ -636,7 +645,7 @@ register_plugins (GstPlugin * plugin, GHashTable * plugin_names,
     }
 
     filename = g_build_filename (path, entry_name, NULL);
-    if ((g_str_has_suffix (filename, G_MODULE_SUFFIX)
+    if ((g_str_has_suffix (filename, GST_MODULE_SUFFIX)
 #ifdef GST_EXTRA_MODULE_SUFFIX
             || g_str_has_suffix (filename, GST_EXTRA_MODULE_SUFFIX)
 #endif
