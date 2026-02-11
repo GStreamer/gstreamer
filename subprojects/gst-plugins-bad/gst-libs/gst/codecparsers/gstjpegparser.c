@@ -77,6 +77,10 @@ ensure_debug_category (void)
 
 #define READ_BYTES(reader, buf, length) G_STMT_START {          \
     const guint8 *vals;                                         \
+    if (length > sizeof (buf)) {                                \
+      GST_WARNING ("data size is bigger than its storage");     \
+      goto failed;                                              \
+    }                                                           \
     if (!gst_byte_reader_get_data (reader, length, &vals)) {    \
       GST_WARNING ("failed to read bytes, size:%d", length);    \
       goto failed;                                              \
