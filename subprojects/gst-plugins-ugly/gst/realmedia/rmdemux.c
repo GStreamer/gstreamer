@@ -2348,7 +2348,8 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
     }
     GST_DEBUG_OBJECT (rmdemux, "fragment size %d", fragment_size);
 
-    if (map.size < (data - map.data) + fragment_size)
+    if (fragment_size > map.size
+        || (data - map.data) > map.size - fragment_size)
       goto not_enough_data;
 
     /* get the fragment */
