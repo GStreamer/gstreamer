@@ -205,7 +205,7 @@ on_incoming_decodebin_stream (GstElement * decodebin, GstPad * pad,
       webrtc->video_sink = sink;
       if (webrtc->native_window)
         gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (sink),
-            (gpointer) webrtc->native_window);
+            (guintptr) webrtc->native_window);
     }
   } else if (g_str_has_prefix (name, "audio")) {
     handle_media_stream (pad, webrtc->pipe, "audioconvert", "autoaudiosink");
