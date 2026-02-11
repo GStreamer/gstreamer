@@ -1927,6 +1927,13 @@ gst_aggregator_default_sink_event (GstAggregator * self,
         endpts = GST_CLOCK_TIME_NONE;
 
       GST_OBJECT_LOCK (aggpad);
+      if (aggpad->segment.format != GST_FORMAT_TIME) {
+        GST_WARNING_OBJECT (self, "GAP event before segment, dropping");
+        res = FALSE;
+        GST_OBJECT_UNLOCK (aggpad);
+        goto eat;
+      }
+
       res = gst_segment_clip (&aggpad->segment, GST_FORMAT_TIME, pts, endpts,
           &pts, &endpts);
       GST_OBJECT_UNLOCK (aggpad);
