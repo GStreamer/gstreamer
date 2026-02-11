@@ -479,8 +479,9 @@ load_opengl_dll_module (gpointer user_data)
   module_opengl_dll =
       g_module_open (GST_GL_LIBGL_MODULE_NAME, G_MODULE_BIND_LAZY);
 #else
-  if (g_strcmp0 (G_MODULE_SUFFIX, "dll") == 0)
-    module_opengl_dll = g_module_open ("opengl32.dll", G_MODULE_BIND_LAZY);
+#ifdef G_OS_WIN32
+  module_opengl_dll = g_module_open ("opengl32.dll", G_MODULE_BIND_LAZY);
+#endif
 
   /* This automatically handles the suffix and even .la files */
   if (!module_opengl_dll)

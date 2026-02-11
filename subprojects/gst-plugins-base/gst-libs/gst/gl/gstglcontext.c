@@ -107,10 +107,11 @@ load_opengl_module (gpointer user_data)
 #else
   /* On Linux the .so is only in -dev packages, try with a real soname
    * Proper compilers will optimize away the strcmp */
-  if (g_strcmp0 (G_MODULE_SUFFIX, "so") == 0)
-    module_opengl = g_module_open ("libGL.so.1", G_MODULE_BIND_LAZY);
-  else if (g_strcmp0 (G_MODULE_SUFFIX, "dll") == 0)
-    module_opengl = g_module_open ("opengl32.dll", G_MODULE_BIND_LAZY);
+#ifdef __linux__
+  module_opengl = g_module_open ("libGL.so.1", G_MODULE_BIND_LAZY);
+#elif defined(G_OS_WIN32)
+  module_opengl = g_module_open ("opengl32.dll", G_MODULE_BIND_LAZY);
+#endif
 
   /* This automatically handles the suffix and even .la files */
   if (!module_opengl)
@@ -134,8 +135,9 @@ load_gles2_module (gpointer user_data)
 #else
   /* On Linux the .so is only in -dev packages, try with a real soname
    * Proper compilers will optimize away the strcmp */
-  if (g_strcmp0 (G_MODULE_SUFFIX, "so") == 0)
-    module_gles2 = g_module_open ("libGLESv2.so.2", G_MODULE_BIND_LAZY);
+#ifdef __linux__
+  module_gles2 = g_module_open ("libGLESv2.so.2", G_MODULE_BIND_LAZY);
+#endif
 
   /* This automatically handles the suffix and even .la files */
   if (!module_gles2)
