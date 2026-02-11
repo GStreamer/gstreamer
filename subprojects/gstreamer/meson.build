@@ -165,10 +165,6 @@ else
   cdata.set('MEMORY_ALIGNMENT', mem_align_opt.to_int())
 endif
 
-if host_system == 'darwin'
-  cdata.set_quoted('GST_EXTRA_MODULE_SUFFIX', '.dylib')
-endif
-
 if gst_version_nano > 0
     # Have GST_ERROR message printed when running from git
     cdata.set('GST_LEVEL_DEFAULT', 'GST_LEVEL_ERROR')
