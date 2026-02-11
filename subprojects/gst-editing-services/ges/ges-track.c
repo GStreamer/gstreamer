@@ -279,7 +279,7 @@ update_gaps (GESTrack * track)
 
   /* 3- Add a gap at the end of the timeline if needed */
   if (priv->timeline) {
-    g_object_get (priv->timeline, "duration", &timeline_duration, NULL);
+    timeline_duration = ges_timeline_get_duration (priv->timeline);
 
     if (duration < timeline_duration) {
       gap = gap_new (track, duration, timeline_duration - duration);
