@@ -1343,8 +1343,9 @@ load_egl_module (gpointer user_data)
 #else
   /* On Linux the .so is only in -dev packages, try with a real soname
    * Proper compilers will optimize away the strcmp */
-  if (g_strcmp0 (G_MODULE_SUFFIX, "so") == 0)
-    module_egl = g_module_open ("libEGL.so.1", G_MODULE_BIND_LAZY);
+#ifdef __linux__
+  module_egl = g_module_open ("libEGL.so.1", G_MODULE_BIND_LAZY);
+#endif
 
   /* This automatically handles the suffix and even .la files */
   if (!module_egl)
