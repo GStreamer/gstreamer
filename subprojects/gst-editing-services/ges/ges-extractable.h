@@ -138,8 +138,10 @@ struct _GESExtractableInterface
 };
 G_GNUC_END_IGNORE_DEPRECATIONS
 
+GES_DEPRECATED_FOR(ges_extractable_get_asset_full)
+GESAsset* ges_extractable_get_asset              (GESExtractable *self);
 GES_API
-GESAsset* ges_extractable_get_asset      (GESExtractable *self);
+GESAsset* ges_extractable_get_asset_full         (GESExtractable *self) G_GNUC_WARN_UNUSED_RESULT;
 GES_API
 gboolean ges_extractable_set_asset              (GESExtractable *self,
                                                 GESAsset *asset);

@@ -105,6 +105,12 @@ ges_extractable_default_init (GESExtractableInterface * iface)
   iface->can_update_asset = FALSE;
 }
 
+static gpointer
+_ref_asset (gpointer data, gpointer user_data)
+{
+  return data ? gst_object_ref (data) : NULL;
+}
+
 /**
  * ges_extractable_get_asset:
  * @self: A #GESExtractable
@@ -113,13 +119,35 @@ ges_extractable_default_init (GESExtractableInterface * iface)
  *
  * Returns: (transfer none) (nullable): The asset set on @self, or %NULL
  * if no asset has been set.
+ *
+ * Deprecated: 1.30: Use ges_extractable_get_asset_full() instead for MT-safety.
  */
 GESAsset *
 ges_extractable_get_asset (GESExtractable * self)
 {
   g_return_val_if_fail (GES_IS_EXTRACTABLE (self), NULL);
 
-  return g_object_get_qdata (G_OBJECT (self), ges_asset_key);;
+  return g_object_get_qdata (G_OBJECT (self), ges_asset_key);
+}
+
+/**
+ * ges_extractable_get_asset_full:
+ * @self: A #GESExtractable
+ *
+ * Get the asset that has been set on the extractable object.
+ *
+ * Returns: (transfer full) (nullable): The asset set on @self, or %NULL
+ * if no asset has been set.
+ *
+ * Since: 1.30
+ */
+GESAsset *
+ges_extractable_get_asset_full (GESExtractable * self)
+{
+  g_return_val_if_fail (GES_IS_EXTRACTABLE (self), NULL);
+
+  return g_object_dup_data (G_OBJECT (self), "ges-extractable-data",
+      _ref_asset, NULL);
 }
 
 /**
