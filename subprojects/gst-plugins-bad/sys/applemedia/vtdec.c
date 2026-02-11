@@ -682,6 +682,7 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
       GST_INFO_OBJECT (vtdec, "no need to recreate VT session for this change");
     }
   }
+  gst_video_codec_state_unref (output_state);
 
   if (vtdec->texture_cache != NULL
       && ((GST_IS_VIDEO_TEXTURE_CACHE_GL (vtdec->texture_cache)
