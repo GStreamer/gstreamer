@@ -118,6 +118,7 @@ VALGRIND_BLACKLIST = [
     (r'check.gst-libav.generic_plugin_test', '?'),
     (r'check.gst-libav.generic_libavcodec_locking', '?'),
     (r'check.gst-libav.elements_avdemux_ape', '?'),
+    (r'check.gst-editing-services.check_edit_in_frames_with_framerate_mismatch', 'Massive external library leaks (PipeWire, ALSA, OpenAL) during audio sink autodetection'),
     (r'check.gst-editing-services.pythontests', 'Need to figure out how to introduce python suppressions'),
     (r'check.gst-editing-services.check_keyframes_in_compositor_two_sources', 'Valgrind exit with an exitcode 20 but shows no issue: https://gitlab.freedesktop.org/thiblahute/gst-editing-services/-/jobs/4079972'),
     (r'check.gst-plugins-good.elements_splitmuxsrc.test_splitmuxsrc_sparse_streams', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/739'),
