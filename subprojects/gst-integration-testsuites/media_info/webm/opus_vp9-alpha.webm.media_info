@@ -1,0 +1,21 @@
+<file duration="2333000000" frame-detection="0" skip-parsers="0" uri="file:///home/nicolas/Sources/gst-build-master/gst-integration-testsuites/medias/defaults/webm/opus_vp9-alpha.webm" seekable="true">
+  <streams caps="video/webm">
+    <stream type="video" caps="video/x-vp9, codec-alpha=(boolean)true, width=(int)1920, height=(int)1080, framerate=(fraction)60/1, chroma-format=(string)4:2:0, bit-depth-luma=(uint)8, bit-depth-chroma=(uint)8, parsed=(boolean)true, alignment=(string)super-frame, profile=(string)0, level=(string)4.1" id="53fc101edde58a7b8a9576feefb46a469ea6b68819671a62d07a48ddaf88035f/001:4232488308902414">
+      <segments>
+      </segments>
+      <tags>
+        <tag content="taglist, video-codec=(string)&quot;VP9\ video&quot;, datetime=(datetime)2020-02-08T18:32:07Z, container-format=(string)Matroska;"/>
+      </tags>
+    </stream>
+    <stream type="audio" caps="audio/x-opus, rate=(int)48000, channels=(int)2, channel-mapping-family=(int)0, stream-count=(int)1, coupled-count=(int)1, streamheader=(buffer)&lt; 4f707573486561640102380180bb0000000000, 4f707573546167731f0000004753747265616d657220656e636f64656420766f72626973636f6d6d656e740000000001 &gt;" id="53fc101edde58a7b8a9576feefb46a469ea6b68819671a62d07a48ddaf88035f/002:17082337896019765">
+      <segments>
+      </segments>
+      <tags>
+        <tag content="taglist, datetime=(datetime)2020-02-08T18:32:07Z, container-format=(string)Matroska, audio-codec=(string)Opus, language-code=(string)en;"/>
+      </tags>
+    </stream>
+  </streams>
+  <tags>
+    <tag content="taglist, video-codec=(string)&quot;VP9\ video&quot;, datetime=(datetime)2020-02-08T18:32:07Z, container-format=(string)Matroska, audio-codec=(string)Opus, language-code=(string)en;"/>
+  </tags>
+</file>

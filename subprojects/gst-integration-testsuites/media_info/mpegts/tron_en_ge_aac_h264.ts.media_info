@@ -1,0 +1,28 @@
+<file duration="45523848740" frame-detection="0" skip-parsers="0" uri="file:///home/thiblahute/devel/gstreamer/gst-build/gst-integration-testsuites/medias/defaults/mpegts/tron_en_ge_aac_h264.ts" seekable="true">
+  <streams caps="video/mpegts, systemstream=(boolean)true, packetsize=(int)188">
+    <stream type="video" caps="video/x-h264, stream-format=(string)avc, pixel-aspect-ratio=(fraction)1/1, width=(int)688, height=(int)320, framerate=(fraction)25/1, coded-picture-structure=(string)frame, chroma-format=(string)4:2:0, bit-depth-luma=(uint)8, bit-depth-chroma=(uint)8, parsed=(boolean)true, alignment=(string)au, profile=(string)high, level=(string)3, lcevc=(boolean)false, codec_data=(buffer)0164001effe100196764001eacd940ac29b011000003000100000300328f162d9601000568ebecb22c" id="446f6a0d557ce1b330b12d1503616e64e4c14d86d1594aaee23137103758615f:1/00000041">
+      <segments>
+      </segments>
+      <tags>
+        <tag content="taglist, video-codec=(string)H.264;"/>
+      </tags>
+    </stream>
+    <stream type="audio" caps="audio/mpeg, framed=(boolean)true, mpegversion=(int)4, level=(string)2, base-profile=(string)lc, profile=(string)lc, rate=(int)48000, channels=(int)2, stream-format=(string)adts" id="446f6a0d557ce1b330b12d1503616e64e4c14d86d1594aaee23137103758615f:1/00000042">
+      <segments>
+      </segments>
+      <tags>
+        <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC&quot;;"/>
+      </tags>
+    </stream>
+    <stream type="audio" caps="audio/mpeg, framed=(boolean)true, mpegversion=(int)4, level=(string)2, base-profile=(string)lc, profile=(string)lc, rate=(int)48000, channels=(int)2, stream-format=(string)adts" id="446f6a0d557ce1b330b12d1503616e64e4c14d86d1594aaee23137103758615f:1/00000043">
+      <segments>
+      </segments>
+      <tags>
+        <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC&quot;;"/>
+      </tags>
+    </stream>
+  </streams>
+  <tags>
+    <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC&quot;, video-codec=(string)H.264;"/>
+  </tags>
+</file>

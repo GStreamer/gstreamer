@@ -1,0 +1,8 @@
+<file duration="3333333333" frame-detection="0" skip-parsers="0" uri="imagesequence:/home/thiblahute/devel/gstreamer/gst-build/subprojects/gst-integration-testsuites/medias/defaults/imagesequences/jpeg/%2505d.jpeg?start-index=0&amp;framerate=30" seekable="true">
+  <streams caps="">
+    <stream type="video" caps="image/jpeg, parsed=(boolean)true, width=(int)320, height=(int)240, sof-marker=(int)0, colorspace=(string)sYUV, sampling=(string)YCbCr-4:2:0, interlace-mode=(string)progressive, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)1/1" id="f3c76b31116fe2f298868dceff02dbaa227cc25faa3b3d7be017e37bc61a1c85">
+      <segments>
+      </segments>
+    </stream>
+  </streams>
+</file>

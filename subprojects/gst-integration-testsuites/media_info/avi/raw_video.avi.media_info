@@ -1,0 +1,115 @@
+<file duration="3333333333" frame-detection="1" skip-parsers="0" uri="file:///home/thiblahute/gst-validate/gst-integration-testsuites/medias/defaults/avi/raw_video.avi" seekable="true">
+  <streams caps="video/x-msvideo">
+    <stream type="video" caps="video/x-raw, format=(string)I420, framerate=(fraction)30/1, width=(int)320, height=(int)240, pixel-aspect-ratio=(fraction)1/1" id="a67334c4182acfe26d61e49bfc1423b61bfb898f4d4ce7d0b610c4c93b90cdfa/001">
+      <segments>
+        <segment next-frame-id="0" flags="0" rate="1.000000" applied-rate="1.000000" format="3" base="0" offset="0" start="0" stop="18446744073709551615" time="0" position="0" duration="3333333333"/>
+      </segments>
+       <frame duration="33333333" id="0" is-keyframe="true" offset="0" offset-end="1" pts="0" dts="0" running-time="0" checksum="ee2750c913334b098a06dc4a7aa25956"/>
+       <frame duration="33333333" id="1" is-keyframe="true" offset="1" offset-end="2" pts="33333333" dts="33333333" running-time="33333333" checksum="6c35f8bb5ed4b07945e764c5d55de554"/>
+       <frame duration="33333334" id="2" is-keyframe="true" offset="2" offset-end="3" pts="66666666" dts="66666666" running-time="66666666" checksum="b5283c0de33492bd7f0d19e67adcdc5c"/>
+       <frame duration="33333333" id="3" is-keyframe="true" offset="3" offset-end="4" pts="100000000" dts="100000000" running-time="100000000" checksum="8fa54e1326577ab74cceb2ed6fec45ca"/>
+       <frame duration="33333333" id="4" is-keyframe="true" offset="4" offset-end="5" pts="133333333" dts="133333333" running-time="133333333" checksum="46618c4217d259888af2e96f2f9841d0"/>
+       <frame duration="33333334" id="5" is-keyframe="true" offset="5" offset-end="6" pts="166666666" dts="166666666" running-time="166666666" checksum="dcf994ca75c4b2343d7a02b841b62e65"/>
+       <frame duration="33333333" id="6" is-keyframe="true" offset="6" offset-end="7" pts="200000000" dts="200000000" running-time="200000000" checksum="824dcf7d4de6a814635d45323ac95117"/>
+       <frame duration="33333333" id="7" is-keyframe="true" offset="7" offset-end="8" pts="233333333" dts="233333333" running-time="233333333" checksum="a84f6daca9c5acc940b87cf4be57a852"/>
+       <frame duration="33333334" id="8" is-keyframe="true" offset="8" offset-end="9" pts="266666666" dts="266666666" running-time="266666666" checksum="2c818af3811b0715f9f2c4516ce96ef9"/>
+       <frame duration="33333333" id="9" is-keyframe="true" offset="9" offset-end="10" pts="300000000" dts="300000000" running-time="300000000" checksum="5cb813faae4ddcd3d15035dd08b20507"/>
+       <frame duration="33333333" id="10" is-keyframe="true" offset="10" offset-end="11" pts="333333333" dts="333333333" running-time="333333333" checksum="4aa583b0fffe29f4cb90b5cf1de9fb93"/>
+       <frame duration="33333334" id="11" is-keyframe="true" offset="11" offset-end="12" pts="366666666" dts="366666666" running-time="366666666" checksum="99f570ab6630aafc67f1f3b715a23899"/>
+       <frame duration="33333333" id="12" is-keyframe="true" offset="12" offset-end="13" pts="400000000" dts="400000000" running-time="400000000" checksum="b3cc937a7a13881c07c89cd065857339"/>
+       <frame duration="33333333" id="13" is-keyframe="true" offset="13" offset-end="14" pts="433333333" dts="433333333" running-time="433333333" checksum="2f43dea103ecacc80881262e09de3546"/>
+       <frame duration="33333334" id="14" is-keyframe="true" offset="14" offset-end="15" pts="466666666" dts="466666666" running-time="466666666" checksum="6cbe61854d048cfc28eaa87378b222da"/>
+       <frame duration="33333333" id="15" is-keyframe="true" offset="15" offset-end="16" pts="500000000" dts="500000000" running-time="500000000" checksum="15897c07af34354e86e61d58d7d5c163"/>
+       <frame duration="33333333" id="16" is-keyframe="true" offset="16" offset-end="17" pts="533333333" dts="533333333" running-time="533333333" checksum="e8e710cdcee93d84e66166b8fea04c49"/>
+       <frame duration="33333334" id="17" is-keyframe="true" offset="17" offset-end="18" pts="566666666" dts="566666666" running-time="566666666" checksum="4446e8340500d87d105abae9d78c9218"/>
+       <frame duration="33333333" id="18" is-keyframe="true" offset="18" offset-end="19" pts="600000000" dts="600000000" running-time="600000000" checksum="8514ee16319b4fb48343b34d9798e10e"/>
+       <frame duration="33333333" id="19" is-keyframe="true" offset="19" offset-end="20" pts="633333333" dts="633333333" running-time="633333333" checksum="4e2b1f7d7dbcd9cfc562aceabaee4bc5"/>
+       <frame duration="33333334" id="20" is-keyframe="true" offset="20" offset-end="21" pts="666666666" dts="666666666" running-time="666666666" checksum="44c0f3756aeb4bd816959f04ab020661"/>
+       <frame duration="33333333" id="21" is-keyframe="true" offset="21" offset-end="22" pts="700000000" dts="700000000" running-time="700000000" checksum="323488eb6e70e51723d64d1c33a8466e"/>
+       <frame duration="33333333" id="22" is-keyframe="true" offset="22" offset-end="23" pts="733333333" dts="733333333" running-time="733333333" checksum="dbe8879447a4a04ed9417d95854e67c6"/>
+       <frame duration="33333334" id="23" is-keyframe="true" offset="23" offset-end="24" pts="766666666" dts="766666666" running-time="766666666" checksum="722c12774cebda8b89cf27e20e08cfdc"/>
+       <frame duration="33333333" id="24" is-keyframe="true" offset="24" offset-end="25" pts="800000000" dts="800000000" running-time="800000000" checksum="986cda08646a95dcd120a8538612696d"/>
+       <frame duration="33333333" id="25" is-keyframe="true" offset="25" offset-end="26" pts="833333333" dts="833333333" running-time="833333333" checksum="509fea86f0b326445d7184ef4d9b12ad"/>
+       <frame duration="33333334" id="26" is-keyframe="true" offset="26" offset-end="27" pts="866666666" dts="866666666" running-time="866666666" checksum="fe229a068c60af0bf51ef3051de33d6f"/>
+       <frame duration="33333333" id="27" is-keyframe="true" offset="27" offset-end="28" pts="900000000" dts="900000000" running-time="900000000" checksum="adf2506dbca8a89dcc8c1af797b2c86a"/>
+       <frame duration="33333333" id="28" is-keyframe="true" offset="28" offset-end="29" pts="933333333" dts="933333333" running-time="933333333" checksum="1c064dcbfd206c23a8d2611b7df9e36b"/>
+       <frame duration="33333334" id="29" is-keyframe="true" offset="29" offset-end="30" pts="966666666" dts="966666666" running-time="966666666" checksum="2006727a467be3143520244b2a67680d"/>
+       <frame duration="33333333" id="30" is-keyframe="true" offset="30" offset-end="31" pts="1000000000" dts="1000000000" running-time="1000000000" checksum="5b5113c90764e140a6304402621c8324"/>
+       <frame duration="33333333" id="31" is-keyframe="true" offset="31" offset-end="32" pts="1033333333" dts="1033333333" running-time="1033333333" checksum="860543516118c59bfbec38e490afed97"/>
+       <frame duration="33333334" id="32" is-keyframe="true" offset="32" offset-end="33" pts="1066666666" dts="1066666666" running-time="1066666666" checksum="6e92c65944e634a6a2d40120c33a3172"/>
+       <frame duration="33333333" id="33" is-keyframe="true" offset="33" offset-end="34" pts="1100000000" dts="1100000000" running-time="1100000000" checksum="5ff4d1091380ccb549db86b30e4267d0"/>
+       <frame duration="33333333" id="34" is-keyframe="true" offset="34" offset-end="35" pts="1133333333" dts="1133333333" running-time="1133333333" checksum="6ddf64cd11121b831d478cf28decf384"/>
+       <frame duration="33333334" id="35" is-keyframe="true" offset="35" offset-end="36" pts="1166666666" dts="1166666666" running-time="1166666666" checksum="07806e7cbcc71010f45c14d16ee3cb4d"/>
+       <frame duration="33333333" id="36" is-keyframe="true" offset="36" offset-end="37" pts="1200000000" dts="1200000000" running-time="1200000000" checksum="4a73b7a6391032e72735c86768fd6bf2"/>
+       <frame duration="33333333" id="37" is-keyframe="true" offset="37" offset-end="38" pts="1233333333" dts="1233333333" running-time="1233333333" checksum="adb0612b9ed17cdd5e950b25ea90d21e"/>
+       <frame duration="33333334" id="38" is-keyframe="true" offset="38" offset-end="39" pts="1266666666" dts="1266666666" running-time="1266666666" checksum="fb5833d7fe5c740ce3e19cbc38c6bdcf"/>
+       <frame duration="33333333" id="39" is-keyframe="true" offset="39" offset-end="40" pts="1300000000" dts="1300000000" running-time="1300000000" checksum="b0e3cd9ea29d1bf30575dafaf3031fa2"/>
+       <frame duration="33333333" id="40" is-keyframe="true" offset="40" offset-end="41" pts="1333333333" dts="1333333333" running-time="1333333333" checksum="af7d264688279eae242e70469cbaaa6e"/>
+       <frame duration="33333334" id="41" is-keyframe="true" offset="41" offset-end="42" pts="1366666666" dts="1366666666" running-time="1366666666" checksum="a725f766f9ac297852abaf27674b68a2"/>
+       <frame duration="33333333" id="42" is-keyframe="true" offset="42" offset-end="43" pts="1400000000" dts="1400000000" running-time="1400000000" checksum="aac4ac7cb1376cce59eca17bd11f60b2"/>
+       <frame duration="33333333" id="43" is-keyframe="true" offset="43" offset-end="44" pts="1433333333" dts="1433333333" running-time="1433333333" checksum="d2fa9217fcdede74547f1eeb9a5eec2c"/>
+       <frame duration="33333334" id="44" is-keyframe="true" offset="44" offset-end="45" pts="1466666666" dts="1466666666" running-time="1466666666" checksum="16f2b07f57936a8fd1ce18c65efb4413"/>
+       <frame duration="33333333" id="45" is-keyframe="true" offset="45" offset-end="46" pts="1500000000" dts="1500000000" running-time="1500000000" checksum="ff21aff8bc2eb52b83a4b6399e50cda7"/>
+       <frame duration="33333333" id="46" is-keyframe="true" offset="46" offset-end="47" pts="1533333333" dts="1533333333" running-time="1533333333" checksum="5157665c511075a8abfa333ce5d12262"/>
+       <frame duration="33333334" id="47" is-keyframe="true" offset="47" offset-end="48" pts="1566666666" dts="1566666666" running-time="1566666666" checksum="04718a4e538afbba9dc58be21406e795"/>
+       <frame duration="33333333" id="48" is-keyframe="true" offset="48" offset-end="49" pts="1600000000" dts="1600000000" running-time="1600000000" checksum="4621762d18245980910f9902c0a9bdbc"/>
+       <frame duration="33333333" id="49" is-keyframe="true" offset="49" offset-end="50" pts="1633333333" dts="1633333333" running-time="1633333333" checksum="7b106c98cb4d87012164ba38a2a96be4"/>
+       <frame duration="33333334" id="50" is-keyframe="true" offset="50" offset-end="51" pts="1666666666" dts="1666666666" running-time="1666666666" checksum="f6bd5b3f8c0ecb3aeadb38b91a4730f3"/>
+       <frame duration="33333333" id="51" is-keyframe="true" offset="51" offset-end="52" pts="1700000000" dts="1700000000" running-time="1700000000" checksum="246d3d6aa4f4622f66f82a8e83322fda"/>
+       <frame duration="33333333" id="52" is-keyframe="true" offset="52" offset-end="53" pts="1733333333" dts="1733333333" running-time="1733333333" checksum="bc642ddf0523f3898cd91971b3c64d44"/>
+       <frame duration="33333334" id="53" is-keyframe="true" offset="53" offset-end="54" pts="1766666666" dts="1766666666" running-time="1766666666" checksum="a5553147a4cc265054a65f25e60f0206"/>
+       <frame duration="33333333" id="54" is-keyframe="true" offset="54" offset-end="55" pts="1800000000" dts="1800000000" running-time="1800000000" checksum="ad64d0d36029d728ee48f6d87e679bdf"/>
+       <frame duration="33333333" id="55" is-keyframe="true" offset="55" offset-end="56" pts="1833333333" dts="1833333333" running-time="1833333333" checksum="e3a3e745962ecfb3cda4eb87444c288e"/>
+       <frame duration="33333334" id="56" is-keyframe="true" offset="56" offset-end="57" pts="1866666666" dts="1866666666" running-time="1866666666" checksum="28916ba86ce3437bd3524d65bcf35dc9"/>
+       <frame duration="33333333" id="57" is-keyframe="true" offset="57" offset-end="58" pts="1900000000" dts="1900000000" running-time="1900000000" checksum="607e2cb35534cb188aa490dbd2129a73"/>
+       <frame duration="33333333" id="58" is-keyframe="true" offset="58" offset-end="59" pts="1933333333" dts="1933333333" running-time="1933333333" checksum="fe857a820ba46810a62d7f675a57e287"/>
+       <frame duration="33333334" id="59" is-keyframe="true" offset="59" offset-end="60" pts="1966666666" dts="1966666666" running-time="1966666666" checksum="b0cc3e31108552987c54a7587e5da619"/>
+       <frame duration="33333333" id="60" is-keyframe="true" offset="60" offset-end="61" pts="2000000000" dts="2000000000" running-time="2000000000" checksum="7327980b1ef7c1de45971d1cf1e781dd"/>
+       <frame duration="33333333" id="61" is-keyframe="true" offset="61" offset-end="62" pts="2033333333" dts="2033333333" running-time="2033333333" checksum="78bbf52990205b4604b488bf7a529e48"/>
+       <frame duration="33333334" id="62" is-keyframe="true" offset="62" offset-end="63" pts="2066666666" dts="2066666666" running-time="2066666666" checksum="6758354f119ed3f1f0aa40961bc54831"/>
+       <frame duration="33333333" id="63" is-keyframe="true" offset="63" offset-end="64" pts="2100000000" dts="2100000000" running-time="2100000000" checksum="ccdef511024dd13752ca4cd3cbf5a526"/>
+       <frame duration="33333333" id="64" is-keyframe="true" offset="64" offset-end="65" pts="2133333333" dts="2133333333" running-time="2133333333" checksum="0d23403fdc50cd918daa8378eae432ed"/>
+       <frame duration="33333334" id="65" is-keyframe="true" offset="65" offset-end="66" pts="2166666666" dts="2166666666" running-time="2166666666" checksum="71716314fe7821e89f66f3b93d6a97b3"/>
+       <frame duration="33333333" id="66" is-keyframe="true" offset="66" offset-end="67" pts="2200000000" dts="2200000000" running-time="2200000000" checksum="ed4063c966d7976c236504e71c85186b"/>
+       <frame duration="33333333" id="67" is-keyframe="true" offset="67" offset-end="68" pts="2233333333" dts="2233333333" running-time="2233333333" checksum="26ecb04e811fb7098087cad8c70e21b7"/>
+       <frame duration="33333334" id="68" is-keyframe="true" offset="68" offset-end="69" pts="2266666666" dts="2266666666" running-time="2266666666" checksum="65f80338229f7dd20897b35be6698f25"/>
+       <frame duration="33333333" id="69" is-keyframe="true" offset="69" offset-end="70" pts="2300000000" dts="2300000000" running-time="2300000000" checksum="8639e56dcf8e2eb2601bc967306313f9"/>
+       <frame duration="33333333" id="70" is-keyframe="true" offset="70" offset-end="71" pts="2333333333" dts="2333333333" running-time="2333333333" checksum="2a157f27a9d6a62928400571e577f149"/>
+       <frame duration="33333334" id="71" is-keyframe="true" offset="71" offset-end="72" pts="2366666666" dts="2366666666" running-time="2366666666" checksum="870e614a1d7f4e8581226d81945bf0f5"/>
+       <frame duration="33333333" id="72" is-keyframe="true" offset="72" offset-end="73" pts="2400000000" dts="2400000000" running-time="2400000000" checksum="e6a3192a982b7057a07f1c60de5b9c06"/>
+       <frame duration="33333333" id="73" is-keyframe="true" offset="73" offset-end="74" pts="2433333333" dts="2433333333" running-time="2433333333" checksum="b098c268b78a2f2709801b95f7152801"/>
+       <frame duration="33333334" id="74" is-keyframe="true" offset="74" offset-end="75" pts="2466666666" dts="2466666666" running-time="2466666666" checksum="006906574492ee9a4d4d42aaee880d4f"/>
+       <frame duration="33333333" id="75" is-keyframe="true" offset="75" offset-end="76" pts="2500000000" dts="2500000000" running-time="2500000000" checksum="e74fa0477f96565d0d7a6fb0dc3a6935"/>
+       <frame duration="33333333" id="76" is-keyframe="true" offset="76" offset-end="77" pts="2533333333" dts="2533333333" running-time="2533333333" checksum="3f554f77060b870fb0f5e9d7e51260c1"/>
+       <frame duration="33333334" id="77" is-keyframe="true" offset="77" offset-end="78" pts="2566666666" dts="2566666666" running-time="2566666666" checksum="71059f6a1965ba46b57dd50bba9fc7a8"/>
+       <frame duration="33333333" id="78" is-keyframe="true" offset="78" offset-end="79" pts="2600000000" dts="2600000000" running-time="2600000000" checksum="44c55d28038ca8236089e1851439b79b"/>
+       <frame duration="33333333" id="79" is-keyframe="true" offset="79" offset-end="80" pts="2633333333" dts="2633333333" running-time="2633333333" checksum="ebdb860eeb43fe7a5335ff15b8f1b844"/>
+       <frame duration="33333334" id="80" is-keyframe="true" offset="80" offset-end="81" pts="2666666666" dts="2666666666" running-time="2666666666" checksum="ab88423771006f7a778cac599c647ff2"/>
+       <frame duration="33333333" id="81" is-keyframe="true" offset="81" offset-end="82" pts="2700000000" dts="2700000000" running-time="2700000000" checksum="6ffaa43dcb851b5a2ee62b3565b76950"/>
+       <frame duration="33333333" id="82" is-keyframe="true" offset="82" offset-end="83" pts="2733333333" dts="2733333333" running-time="2733333333" checksum="26e08ee04ae00ab41e2d777091512558"/>
+       <frame duration="33333334" id="83" is-keyframe="true" offset="83" offset-end="84" pts="2766666666" dts="2766666666" running-time="2766666666" checksum="2e3fb59c2949d42c03eaf1518c732b5c"/>
+       <frame duration="33333333" id="84" is-keyframe="true" offset="84" offset-end="85" pts="2800000000" dts="2800000000" running-time="2800000000" checksum="c8b0d45e571c757460990c67c4a48304"/>
+       <frame duration="33333333" id="85" is-keyframe="true" offset="85" offset-end="86" pts="2833333333" dts="2833333333" running-time="2833333333" checksum="ec3399488aa94495cebefe30f5a0c005"/>
+       <frame duration="33333334" id="86" is-keyframe="true" offset="86" offset-end="87" pts="2866666666" dts="2866666666" running-time="2866666666" checksum="d295c9a1fe6104d5cdb622651580a684"/>
+       <frame duration="33333333" id="87" is-keyframe="true" offset="87" offset-end="88" pts="2900000000" dts="2900000000" running-time="2900000000" checksum="2af8f42ed06087bc52278169506019a5"/>
+       <frame duration="33333333" id="88" is-keyframe="true" offset="88" offset-end="89" pts="2933333333" dts="2933333333" running-time="2933333333" checksum="fb1098fe6f547cc029f356d76ca0e5bf"/>
+       <frame duration="33333334" id="89" is-keyframe="true" offset="89" offset-end="90" pts="2966666666" dts="2966666666" running-time="2966666666" checksum="5a3fd5ae371c5e0c88a24d5b2a6faae7"/>
+       <frame duration="33333333" id="90" is-keyframe="true" offset="90" offset-end="91" pts="3000000000" dts="3000000000" running-time="3000000000" checksum="b5b82656bba900b9455f80ebb9133d3e"/>
+       <frame duration="33333333" id="91" is-keyframe="true" offset="91" offset-end="92" pts="3033333333" dts="3033333333" running-time="3033333333" checksum="ae1c6a4022cacf3558119de3f298af0f"/>
+       <frame duration="33333334" id="92" is-keyframe="true" offset="92" offset-end="93" pts="3066666666" dts="3066666666" running-time="3066666666" checksum="0a95d8e9a82860c6ee3c6f60d817eef5"/>
+       <frame duration="33333333" id="93" is-keyframe="true" offset="93" offset-end="94" pts="3100000000" dts="3100000000" running-time="3100000000" checksum="29829a56571ee70b5dfbd51e7d631a84"/>
+       <frame duration="33333333" id="94" is-keyframe="true" offset="94" offset-end="95" pts="3133333333" dts="3133333333" running-time="3133333333" checksum="828b5ae715b289a186a6d201414d8608"/>
+       <frame duration="33333334" id="95" is-keyframe="true" offset="95" offset-end="96" pts="3166666666" dts="3166666666" running-time="3166666666" checksum="623e60e99abf6c73d4f9d0c9afae49f2"/>
+       <frame duration="33333333" id="96" is-keyframe="true" offset="96" offset-end="97" pts="3200000000" dts="3200000000" running-time="3200000000" checksum="0df09cf83a826b3a28794a4c9ddfa87a"/>
+       <frame duration="33333333" id="97" is-keyframe="true" offset="97" offset-end="98" pts="3233333333" dts="3233333333" running-time="3233333333" checksum="b09058cee083ad12c2166f496367b135"/>
+       <frame duration="33333334" id="98" is-keyframe="true" offset="98" offset-end="99" pts="3266666666" dts="3266666666" running-time="3266666666" checksum="b191e86057ee74e0f8ec33aa4d562d05"/>
+       <frame duration="33333333" id="99" is-keyframe="true" offset="99" offset-end="100" pts="3300000000" dts="3300000000" running-time="3300000000" checksum="756cb74cfd80c8d1daac65094e7d68ca"/>
+      <tags>
+        <tag content="taglist, video-codec=(string)&quot;Uncompressed\ planar\ YUV\ 4:2:0&quot;, bitrate=(uint)27648000, container-format=(string)AVI;"/>
+      </tags>
+    </stream>
+  </streams>
+  <tags>
+    <tag content="taglist, video-codec=(string)&quot;Uncompressed\ planar\ YUV\ 4:2:0&quot;, bitrate=(uint)27648000, container-format=(string)AVI;"/>
+  </tags>
+</file>

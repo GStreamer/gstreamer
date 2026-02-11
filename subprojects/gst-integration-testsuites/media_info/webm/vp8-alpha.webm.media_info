@@ -1,0 +1,14 @@
+<file duration="2033000000" frame-detection="0" skip-parsers="0" uri="file:///home/nicolas/Sources/gst-build-master/gst-integration-testsuites/medias/defaults/webm/vp8-alpha.webm" seekable="true">
+  <streams caps="video/webm">
+    <stream type="video" caps="video/x-vp8, codec-alpha=(boolean)true, width=(int)1920, height=(int)1080, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)30/1" id="c4e52f1a2654f535d4e5275d9213c6c73ace426f229fd13d29fd23322e3f6a14/001:001">
+      <segments>
+      </segments>
+      <tags>
+        <tag content="taglist, video-codec=(string)&quot;VP8\ video&quot;, container-format=(string)Matroska, language-code=(string)en;"/>
+      </tags>
+    </stream>
+  </streams>
+  <tags>
+    <tag content="taglist, video-codec=(string)&quot;VP8\ video&quot;, container-format=(string)Matroska, language-code=(string)en;"/>
+  </tags>
+</file>

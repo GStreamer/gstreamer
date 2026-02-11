@@ -1,0 +1,14 @@
+<file duration="4004004004" frame-detection="0" skip-parsers="0" uri="file:///home/thiblahute/devel/gstreamer/gst-build/subprojects/gst-integration-testsuites/medias/defaults/mp4/timecoded_h264_2997fps.mp4" seekable="true">
+  <streams caps="video/quicktime">
+    <stream type="video" caps="video/x-h264, stream-format=(string)avc, alignment=(string)au, level=(string)3, profile=(string)high, codec_data=(buffer)0164001effe1001c6764001eacd940a031fbc05a83008352800001f480007530478b16cb01000568ebecb22c, width=(int)640, height=(int)380, framerate=(fraction)30000/1001, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive, colorimetry=(string)bt601, chroma-format=(string)4:2:0, bit-depth-luma=(uint)8, bit-depth-chroma=(uint)8, parsed=(boolean)true" id="684b27223786bdc09874227edf7b5ff5ebaf0ff186bf52ab3daea95a5e3b49e9/001">
+      <segments>
+      </segments>
+      <tags>
+        <tag content="taglist, video-codec=(string)&quot;H.264\ /\ AVC&quot;, maximum-bitrate=(uint)2097152, bitrate=(uint)446627, encoder=(string)x264, datetime=(datetime)2020-01-30T20:42:36Z, container-format=(string)Quicktime;"/>
+      </tags>
+    </stream>
+  </streams>
+  <tags>
+    <tag content="taglist, video-codec=(string)&quot;H.264\ /\ AVC&quot;, maximum-bitrate=(uint)2097152, bitrate=(uint)446627, encoder=(string)x264, datetime=(datetime)2020-01-30T20:42:36Z, container-format=(string)Quicktime;"/>
+  </tags>
+</file>

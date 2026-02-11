@@ -1,0 +1,21 @@
+<file duration="2000000000" frame-detection="1" skip-parsers="1" uri="file:///home/thiblahute/gst-validate/gst-integration-testsuites/medias/defaults/mp4/qtdemux-test-frag-basic_zero_dur_no_mehd.mp4" seekable="true">
+  <streams caps="video/quicktime, variant=(string)iso">
+    <stream type="video" caps="video/x-h264, stream-format=(string)avc, alignment=(string)au, level=(string)1.1, profile=(string)high, codec_data=(buffer)0164000bffe1001d6764000bace40507ec05a830082d280000030008000003003478a1489001000568ebecb22c, width=(int)320, height=(int)240, framerate=(fraction)3/1, pixel-aspect-ratio=(fraction)1/1, colorimetry=(string)2:4:5:4, coded-picture-structure=(string)frame, chroma-format=(string)4:2:0, bit-depth-luma=(uint)8, bit-depth-chroma=(uint)8, parsed=(boolean)true, lcevc=(boolean)false" id="47fdce73c9aca9f0a61c30337384e56a8c2018d5cd6fe4d3aaaac1227b4901a1/001">
+      <segments>
+        <segment next-frame-id="0" flags="0" rate="1.000000" applied-rate="1.000000" format="3" base="0" offset="0" start="333333333" stop="18446744073709551615" time="0" position="333333333" duration="18446744073709551615"/>
+      </segments>
+       <frame duration="333333333" id="0" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="333333333" dts="0" running-time="0" checksum="66fec1a425a67df8c770b183db871b95"/>
+       <frame duration="333333333" id="1" is-keyframe="false" offset="18446744073709551615" offset-end="18446744073709551615" pts="1000000000" dts="333333333" running-time="666666667" checksum="a250224fe275ba03334bb56ffe92bc98"/>
+       <frame duration="333333334" id="2" is-keyframe="false" offset="18446744073709551615" offset-end="18446744073709551615" pts="666666666" dts="666666666" running-time="333333333" checksum="ec1a907fa750b481e7cbac4d845fd1bb"/>
+       <frame duration="333333333" id="3" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="1333333333" dts="1000000000" running-time="1000000000" checksum="ad555c636fae91b041c1de48eae84926"/>
+       <frame duration="333333333" id="4" is-keyframe="false" offset="18446744073709551615" offset-end="18446744073709551615" pts="2000000000" dts="1333333333" running-time="1666666667" checksum="a4d389f10b8528a4d83a948f7823803c"/>
+       <frame duration="333333334" id="5" is-keyframe="false" offset="18446744073709551615" offset-end="18446744073709551615" pts="1666666666" dts="1666666666" running-time="1333333333" checksum="7abca7bd77910a050362ad1340fecc0c"/>
+      <tags>
+        <tag content="taglist, video-codec=(string)&quot;H.264\ /\ AVC&quot;, maximum-bitrate=(uint)17408, bitrate=(uint)10884, encoder=(string)x264, datetime=(datetime)2018-03-01T17:36:17Z, container-format=(string)&quot;ISO\ fMP4&quot;;"/>
+      </tags>
+    </stream>
+  </streams>
+  <tags>
+    <tag content="taglist, video-codec=(string)&quot;H.264\ /\ AVC&quot;, maximum-bitrate=(uint)17408, bitrate=(uint)10884, encoder=(string)x264, datetime=(datetime)2018-03-01T17:36:17Z, container-format=(string)&quot;ISO\ fMP4&quot;;"/>
+  </tags>
+</file>

@@ -1,0 +1,8 @@
+<file duration="0" frame-detection="0" skip-parsers="0" uri="file:///home/thiblahute/gst-validate/gst-integration-testsuites/medias/defaults/svg/opacity01.svg" seekable="false">
+  <streams caps="">
+    <stream type="image" caps="image/svg+xml" id="278cae74d4426e6e88fa983abce42a74d7745319e914543aab71ea13a25ef64d">
+      <segments>
+      </segments>
+    </stream>
+  </streams>
+</file>

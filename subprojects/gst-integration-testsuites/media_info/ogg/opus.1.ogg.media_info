@@ -1,0 +1,14 @@
+<file duration="21333333333" frame-detection="0" skip-parsers="0" uri="file:///home/thiblahute/gst-validate/gst-integration-testsuites/medias/defaults/ogg/opus.1.ogg" seekable="true">
+  <streams caps="audio/ogg">
+    <stream type="audio" caps="audio/x-opus, rate=(int)48000, channels=(int)1, channel-mapping-family=(int)0, stream-count=(int)1, coupled-count=(int)0, streamheader=(buffer)&lt; 4f707573486561640101000080bb0000000000, 4f707573546167731e000000456e636f6465642077697468204753747265616d6572204f707573656e63010000001a0000004445534352495054494f4e3d617564696f74657374207761766501 &gt;" id="947cd03b178f37b31eaf27d04484eb02890c2b80fd48e56a41bc1ca956171531/79b9578e">
+      <segments>
+      </segments>
+      <tags>
+        <tag content="taglist, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)&quot;Encoded\ with\ GStreamer\ Opusenc&quot;, audio-codec=(string)Opus, container-format=(string)Ogg;"/>
+      </tags>
+    </stream>
+  </streams>
+  <tags>
+    <tag content="taglist, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)&quot;Encoded\ with\ GStreamer\ Opusenc&quot;, audio-codec=(string)Opus, container-format=(string)Ogg;"/>
+  </tags>
+</file>

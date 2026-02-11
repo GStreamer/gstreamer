@@ -1,0 +1,14 @@
+<file duration="0" frame-detection="0" skip-parsers="0" uri="file:///home/thiblahute/gst-validate/gst-integration-testsuites/medias/defaults/png/png.png" seekable="true">
+  <streams caps="">
+    <stream type="image" caps="image/png, width=(int)320, height=(int)240" id="d03eb3dc86a52e331636786c5aaf20e80b3d26949736d89448b0b0bb45a66208">
+      <segments>
+      </segments>
+      <tags>
+        <tag content="taglist, video-codec=(string)PNG;"/>
+      </tags>
+    </stream>
+  </streams>
+  <tags>
+    <tag content="taglist, video-codec=(string)PNG;"/>
+  </tags>
+</file>

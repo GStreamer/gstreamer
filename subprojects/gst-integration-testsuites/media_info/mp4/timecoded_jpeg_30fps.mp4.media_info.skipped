@@ -1,0 +1,14 @@
+<file duration="4000000000" frame-detection="0" skip-parsers="0" uri="file:///home/thiblahute/devel/gstreamer/gst-build/subprojects/gst-integration-testsuites/medias/defaults/mp4/timecoded_jpeg_30fps.mp4" seekable="true">
+  <streams caps="video/quicktime">
+    <stream type="video" caps="image/jpeg, parsed=(boolean)true, width=(int)640, height=(int)380, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)1/1" id="1ae36199921049c4e0e083da9c93e9579ad083c73a3c0956deb22477bb535df3/001">
+      <segments>
+      </segments>
+      <tags>
+        <tag content="taglist, video-codec=(string)&quot;JPEG\ still\ images&quot;, bitrate=(uint)3365536, datetime=(datetime)2020-01-30T20:42:34Z, container-format=(string)Quicktime;"/>
+      </tags>
+    </stream>
+  </streams>
+  <tags>
+    <tag content="taglist, video-codec=(string)&quot;JPEG\ still\ images&quot;, bitrate=(uint)3365536, datetime=(datetime)2020-01-30T20:42:34Z, container-format=(string)Quicktime;"/>
+  </tags>
+</file>

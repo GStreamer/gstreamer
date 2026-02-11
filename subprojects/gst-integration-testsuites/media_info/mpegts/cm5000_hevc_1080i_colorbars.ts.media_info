@@ -1,0 +1,21 @@
+<file duration="119994487185" frame-detection="0" skip-parsers="0" uri="file:///home/nicolas/Sources/gstreamer/subprojects/gst-integration-testsuites/medias/defaults/mpegts/cm5000_hevc_1080i_colorbars.ts" seekable="true">
+  <streams caps="video/mpegts, systemstream=(boolean)true, packetsize=(int)188">
+    <stream type="video" caps="video/x-h265, stream-format=(string)hvc1, width=(int)1920, height=(int)1080, framerate=(fraction)30000/1001, chroma-format=(string)4:2:0, bit-depth-luma=(uint)8, bit-depth-chroma=(uint)8, colorimetry=(string)bt709, lcevc=(boolean)false, parsed=(boolean)true, alignment=(string)au, pixel-aspect-ratio=(fraction)1/1, profile=(string)main, tier=(string)main, level=(string)4, codec_data=(buffer)01016000000060000000000078f000fcfdf8f800000f03200001002140010c01ffff016000000300600000030000030078083140c00000fa40003a983a210001003c420101016000000300600000030000030078a003c080221f7a08316adc2f01b50101013400000fa40003a983c0179cbc0003df3a00018295fd45094022000100074401c072b63b51" id="2fa49c44be6b5be2658538377115500b06f53b849495249d2eaac7535ad7ce7e:1/00000200">
+      <segments>
+      </segments>
+      <tags>
+        <tag content="taglist, video-codec=(string)H.265;"/>
+      </tags>
+    </stream>
+    <stream type="audio" caps="audio/mpeg, framed=(boolean)true, mpegversion=(int)2, level=(string)2, profile=(string)lc, rate=(int)48000, channels=(int)2, stream-format=(string)adts" id="2fa49c44be6b5be2658538377115500b06f53b849495249d2eaac7535ad7ce7e:1/00001010">
+      <segments>
+      </segments>
+      <tags>
+        <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC&quot;;"/>
+      </tags>
+    </stream>
+  </streams>
+  <tags>
+    <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC&quot;, video-codec=(string)H.265;"/>
+  </tags>
+</file>

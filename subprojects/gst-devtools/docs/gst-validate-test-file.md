@@ -185,9 +185,11 @@ to point to that commit.
 4. Update the submodule reference in the main `gstreamer` repository to point to
    the commit containing the new media file.
 
-> **Note**: You may see `.media_info` files next to some media files. These are
-> used by the legacy test generation system that automatically creates test
-> combinations by running all existing `.scenario` files against each media
-> file. Adding a `.media_info` for a new file is generally not needed — writing
-> a `.validatetest` file that references the media directly is the preferred
-> approach.
+> **Note**: You may see `.media_info` files in the `media_info/` directory of
+> `gst-integration-testsuites`. These are used by the test generation system
+> that automatically creates test combinations by running all existing
+> `.scenario` files against each media file. They live in the main repository
+> (not in the `media/` submodule) so they can be updated atomically with code
+> changes. Adding a `.media_info` for a new file is generally not needed —
+> writing a `.validatetest` file that references the media directly is the
+> preferred approach.

@@ -1,0 +1,42 @@
+<file duration="626666666" frame-detection="1" skip-parsers="0" uri="file:///var/home/phil/gstreamer/subprojects/gst-integration-testsuites/medias/defaults/mp4/aac.mp4" seekable="true">
+  <streams caps="video/quicktime, variant=(string)iso">
+    <stream type="audio" caps="audio/mpeg, mpegversion=(int)4, framed=(boolean)true, stream-format=(string)raw, level=(string)2, base-profile=(string)lc, profile=(string)lc, codec_data=(buffer)1210, rate=(int)44100, channels=(int)2" id="f4e6c8273862d8ca7f0fde5751cef8fbeeb77b8924c6f91d20eb60020b1fcf82/001">
+      <segments>
+        <segment next-frame-id="0" flags="0" rate="1.000000" applied-rate="1.000000" format="3" base="0" offset="0" start="0" stop="626666666" time="0" position="0" duration="18446744073709551615"/>
+      </segments>
+       <frame duration="23219954" id="0" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="0" dts="0" running-time="0" checksum="f16a0c0e5d9863b43fa05a2b6deecc7e"/>
+       <frame duration="23219955" id="1" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="23219954" dts="23219954" running-time="23219954" checksum="2b81c4d5d2d31a6a4c3934d5ead931a1"/>
+       <frame duration="23219954" id="2" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="46439909" dts="46439909" running-time="46439909" checksum="0d3f1213c592a1a3f8eb9186410cc263"/>
+       <frame duration="23219955" id="3" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="69659863" dts="69659863" running-time="69659863" checksum="0a4ca006a7dfb30730c90fe08081d1af"/>
+       <frame duration="23219955" id="4" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="92879818" dts="92879818" running-time="92879818" checksum="c5e56f934d554c6ccc70f4379f0e078a"/>
+       <frame duration="23219954" id="5" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="116099773" dts="116099773" running-time="116099773" checksum="c84ece6d6c876723a27cc93ad1355a8b"/>
+       <frame duration="23219955" id="6" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="139319727" dts="139319727" running-time="139319727" checksum="0762ff21e070dc38cb55811af171e319"/>
+       <frame duration="23219955" id="7" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="162539682" dts="162539682" running-time="162539682" checksum="3386c37f77caea78258941bcb4ec04ec"/>
+       <frame duration="23219954" id="8" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="185759637" dts="185759637" running-time="185759637" checksum="7f6a5780c889a538a16936865af94f36"/>
+       <frame duration="23219955" id="9" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="208979591" dts="208979591" running-time="208979591" checksum="c6977ea093bc2a314a6319593af56158"/>
+       <frame duration="23219955" id="10" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="232199546" dts="232199546" running-time="232199546" checksum="7e50e28bdf615f50acc3a8b8b42115ed"/>
+       <frame duration="23219954" id="11" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="255419501" dts="255419501" running-time="255419501" checksum="a76baac9924ecbb94dc5bf96a7fc8500"/>
+       <frame duration="23219955" id="12" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="278639455" dts="278639455" running-time="278639455" checksum="d989aa56843d4c8afa8cb228e66e407a"/>
+       <frame duration="23219955" id="13" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="301859410" dts="301859410" running-time="301859410" checksum="d40536f4b30616b24972cb3bf0fb944e"/>
+       <frame duration="23219954" id="14" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="325079365" dts="325079365" running-time="325079365" checksum="9653e74412c06c4a8771ef854608443f"/>
+       <frame duration="23219955" id="15" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="348299319" dts="348299319" running-time="348299319" checksum="21f54cd702ab4f107837108088770cbc"/>
+       <frame duration="23219955" id="16" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="371519274" dts="371519274" running-time="371519274" checksum="b0795b4f78bc100b955ef6d1e536d59a"/>
+       <frame duration="23219954" id="17" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="394739229" dts="394739229" running-time="394739229" checksum="c48eb60be24427d377795d4dd9340fee"/>
+       <frame duration="23219955" id="18" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="417959183" dts="417959183" running-time="417959183" checksum="2d52feb225f51b7821637a569312a586"/>
+       <frame duration="23219954" id="19" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="441179138" dts="441179138" running-time="441179138" checksum="e7079a2d39e87d254c41024092873cd9"/>
+       <frame duration="23219955" id="20" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="464399092" dts="464399092" running-time="464399092" checksum="560f36ed9bda875c820f89ea3d5600e2"/>
+       <frame duration="23219955" id="21" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="487619047" dts="487619047" running-time="487619047" checksum="ab5ed958a1c57acf69135d4af95b855a"/>
+       <frame duration="23219954" id="22" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="510839002" dts="510839002" running-time="510839002" checksum="ed11cd821d8422ca2c9ca2fb68bd47cb"/>
+       <frame duration="23219955" id="23" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="534058956" dts="534058956" running-time="534058956" checksum="446a7fc4be0cb7d06933d18e397b3c48"/>
+       <frame duration="23219955" id="24" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="557278911" dts="557278911" running-time="557278911" checksum="28cbfff12559ced3c13690944a902165"/>
+       <frame duration="23219954" id="25" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="580498866" dts="580498866" running-time="580498866" checksum="d269bc13d70fb7e33cd6ae9821653db5"/>
+       <frame duration="23219955" id="26" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="603718820" dts="603718820" running-time="603718820" checksum="190f262d3a1768efee33c26fcfafa870"/>
+      <tags>
+        <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, bitrate=(uint)112649, container-specific-track-id=(string)1, description=(string)&quot;audiotest\ wave&quot;;"/>
+      </tags>
+    </stream>
+  </streams>
+  <tags>
+    <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, bitrate=(uint)112649, container-specific-track-id=(string)1, description=(string)&quot;audiotest\ wave&quot;, datetime=(datetime)2025-08-26T09:04:09Z, container-format=(string)&quot;ISO\ MP4/M4A&quot;;"/>
+  </tags>
+</file>

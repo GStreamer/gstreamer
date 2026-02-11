@@ -1,0 +1,21 @@
+<file duration="10000000000" frame-detection="0" skip-parsers="0" uri="file:///home/thiblahute/gst-validate/gst-integration-testsuites/medias/defaults/mp4/raw_h264.1.mp4" seekable="true">
+  <streams caps="video/quicktime">
+    <stream type="video" caps="video/x-h264, stream-format=(string)avc, alignment=(string)au, level=(string)2, profile=(string)high, codec_data=(buffer)01640014ffe1001867640014acd94141fb0110000003001773594000f142996001000568ebecb22c, width=(int)320, height=(int)240, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)1/1, coded-picture-structure=(string)frame, chroma-format=(string)4:2:0, bit-depth-luma=(uint)8, bit-depth-chroma=(uint)8, parsed=(boolean)true, lcevc=(boolean)false" id="302704a821f2289c69b51385ea0282db72801c6f18e0c538338c298df5175b97/001">
+      <segments>
+      </segments>
+      <tags>
+        <tag content="taglist, video-codec=(string)&quot;H.264\ /\ AVC&quot;, bitrate=(uint)1474665, language-code=(string)en, datetime=(datetime)2013-09-03T16:21:37Z, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)x264, container-format=(string)Quicktime;"/>
+      </tags>
+    </stream>
+    <stream type="audio" caps="audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)44100, channels=(int)1" id="302704a821f2289c69b51385ea0282db72801c6f18e0c538338c298df5175b97/002">
+      <segments>
+      </segments>
+      <tags>
+        <tag content="taglist, audio-codec=(string)&quot;Raw\ 16-bit\ PCM\ audio&quot;, language-code=(string)en, bitrate=(uint)704524, datetime=(datetime)2013-09-03T16:21:37Z, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)x264, container-format=(string)Quicktime;"/>
+      </tags>
+    </stream>
+  </streams>
+  <tags>
+    <tag content="taglist, audio-codec=(string)&quot;Raw\ 16-bit\ PCM\ audio&quot;, language-code=(string)en, bitrate=(uint)704524, datetime=(datetime)2013-09-03T16:21:37Z, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)x264, container-format=(string)Quicktime, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
+  </tags>
+</file>

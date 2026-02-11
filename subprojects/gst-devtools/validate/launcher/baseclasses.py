@@ -2811,10 +2811,10 @@ class GstValidateMediaDescriptor(MediaDescriptor):
             return cls.__all_descriptors[xml_path]
         return GstValidateMediaDescriptor(xml_path)
 
-    def __init__(self, xml_path):
+    def __init__(self, xml_path, media_file_path=None):
         super(GstValidateMediaDescriptor, self).__init__()
 
-        self._media_file_path = None
+        self._media_file_path = media_file_path
         main_descriptor = self.__all_descriptors.get(xml_path)
         if main_descriptor:
             self._copy_data_from_main(main_descriptor)
@@ -2865,8 +2865,12 @@ class GstValidateMediaDescriptor(MediaDescriptor):
             if not os.path.exists(parsed_uri.path) and os.path.exists(self.get_media_filepath()):
                 self._uri = "file://" + self.get_media_filepath()
         elif parsed_uri.scheme == Protocols.IMAGESEQUENCE:
-            self._media_file_path = os.path.join(os.path.dirname(self.__cleanup_media_info_ext()), os.path.basename(parsed_uri.path))
-            self._uri = parsed_uri._replace(path=os.path.join(os.path.dirname(self.__cleanup_media_info_ext()), os.path.basename(self._media_file_path))).geturl()
+            if self._media_file_path is None:
+                media_dir = os.path.dirname(self.__cleanup_media_info_ext())
+            else:
+                media_dir = os.path.dirname(self._media_file_path)
+            self._media_file_path = os.path.join(media_dir, os.path.basename(parsed_uri.path))
+            self._uri = parsed_uri._replace(path=self._media_file_path).geturl()
         self._is_seekable = media_xml.attrib["seekable"].lower() == "true"
         self._is_live = media_xml.get("live", "false").lower() == "true"
         self._is_image = False
@@ -2886,7 +2890,8 @@ class GstValidateMediaDescriptor(MediaDescriptor):
         assert "Not reached" == None  # noqa
 
     @staticmethod
-    def new_from_uri(uri, verbose=False, include_frames=False, is_push=False, is_skipped=False):
+    def new_from_uri(uri, verbose=False, include_frames=False, is_push=False, is_skipped=False,
+                     media_info_dir=None, media_root=None):
         """
             include_frames = 0 # Never
             include_frames = 1 # always
@@ -2900,7 +2905,13 @@ class GstValidateMediaDescriptor(MediaDescriptor):
             ext = GstValidateMediaDescriptor.PUSH_MEDIA_INFO_EXT
         elif is_skipped:
             ext = GstValidateMediaDescriptor.SKIPPED_MEDIA_INFO_EXT
-        descriptor_path = "%s.%s" % (media_path, ext)
+
+        if media_info_dir and media_root:
+            rel_path = os.path.relpath(media_path, media_root)
+            descriptor_path = os.path.join(media_info_dir, "%s.%s" % (rel_path, ext))
+            os.makedirs(os.path.dirname(descriptor_path), exist_ok=True)
+        else:
+            descriptor_path = "%s.%s" % (media_path, ext)
         args = GstValidateBaseTestManager.MEDIA_CHECK_COMMAND.split(" ")
         if include_frames == 2:
             try:
@@ -2941,7 +2952,8 @@ class GstValidateMediaDescriptor(MediaDescriptor):
             printc("Result: Passed", Colors.OKGREEN)
 
         try:
-            return GstValidateMediaDescriptor(descriptor_path)
+            return GstValidateMediaDescriptor(descriptor_path,
+                                              media_file_path=media_path if media_info_dir else None)
         except (IOError, xml.etree.ElementTree.ParseError):
             return None
 

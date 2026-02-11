@@ -225,6 +225,7 @@ class LauncherConfig(Loggable):
         # paths passed with --media-path, and not defined by a testsuite
         self.user_paths = []
         self.paths = []
+        self.media_info_dir = None
         self.testsuites_dirs = utils.DEFAULT_TESTSUITES_DIRS
 
         self.clone_dir = None
@@ -544,6 +545,10 @@ class LauncherConfig(Loggable):
                                help="Set the path to which projects should be rendered, default is OUTPUT_DIR/rendered")
         dir_group.add_argument("-p", "--media-paths", "--medias-paths", dest="user_paths", action="append",
                                help="Paths in which to look for media files")
+        dir_group.add_argument("--media-info-dir", dest="media_info_dir",
+                               help="Directory containing .media_info files that override or supplement\n"
+                               "those next to media files. The directory structure should mirror the\n"
+                               "media paths structure.")
         dir_group.add_argument("-a", "--clone-dir", dest="clone_dir",
                                help="Paths where to clone the testuite to run."
                                " default is MAIN_DIR/gst-integration-testsuites")
