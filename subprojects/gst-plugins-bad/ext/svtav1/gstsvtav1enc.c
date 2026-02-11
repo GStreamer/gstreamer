@@ -436,7 +436,7 @@ gst_svtav1enc_set_property (GObject * object, guint property_id,
       break;
     case PROP_LEVEL_OF_PARALLELISM:
 #if SVT_AV1_CHECK_VERSION(3, 0, 0)
-      svtav1enc->level_of_parallelism = g_value_get_int (value);
+      svtav1enc->level_of_parallelism = g_value_get_uint (value);
 #endif
       break;
     case PROP_LOGICAL_PROCESSORS:
@@ -502,7 +502,7 @@ gst_svtav1enc_get_property (GObject * object, guint property_id, GValue * value,
     case PROP_LEVEL_OF_PARALLELISM:
     case PROP_LOGICAL_PROCESSORS:
 #if SVT_AV1_CHECK_VERSION(3, 0, 0)
-      g_value_set_int (value, svtav1enc->level_of_parallelism);
+      g_value_set_uint (value, svtav1enc->level_of_parallelism);
 #else
       g_value_set_uint (value, svtav1enc->logical_processors);
 #endif
