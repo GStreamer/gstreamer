@@ -1021,7 +1021,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
   if (palette) {
     GstBuffer *copy;
     guint num_colors;
-    gsize size;
+    gsize expected_size, size;
 
     if (strf != NULL)
       num_colors = strf->num_colors;
@@ -1030,7 +1030,9 @@ gst_riff_create_video_caps (guint32 codec_fcc,
 
     size = gst_buffer_get_size (palette);
 
-    if (size >= (num_colors * 4)) {
+    if (!g_size_checked_mul (&expected_size, num_colors, 4)) {
+      GST_WARNING ("Palette too large: broken file");
+    } else if (size >= expected_size) {
       guint8 *pdata;
 
       /* palette is always at least 256*4 bytes */
