@@ -171,7 +171,6 @@ _create_gl_window (GstGLWindowEagl * window_eagl)
   view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   view.contentMode = UIViewContentModeRedraw;
 
-  priv->internal_view = (__bridge_retained gpointer) view;
   [external_view addSubview:view];
   priv->internal_view = (__bridge_retained gpointer) view;
   priv->layer = (__bridge_retained gpointer) [view layer];
