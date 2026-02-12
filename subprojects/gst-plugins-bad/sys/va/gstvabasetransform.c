@@ -488,13 +488,14 @@ gst_va_base_transform_generate_output (GstBaseTransform * trans,
     GstBuffer ** outbuf)
 {
   GstVaBaseTransform *self = GST_VA_BASE_TRANSFORM (trans);
+  GstBaseTransformClass *btrans_klass = GST_BASE_TRANSFORM_CLASS (parent_class);
   GstVideoFrame src_frame;
   GstVideoFrame dest_frame;
   GstBuffer *buffer = NULL;
   GstFlowReturn ret;
+  gboolean res;
 
-  ret = GST_BASE_TRANSFORM_CLASS (parent_class)->generate_output (trans,
-      outbuf);
+  ret = btrans_klass->generate_output (trans, outbuf);
 
   if (ret != GST_FLOW_OK || *outbuf == NULL)
     return ret;
@@ -534,7 +535,17 @@ gst_va_base_transform_generate_output (GstBaseTransform * trans,
   gst_video_frame_unmap (&src_frame);
   gst_video_frame_unmap (&dest_frame);
 
-  gst_buffer_replace (outbuf, buffer);
+  res = btrans_klass->copy_metadata (trans, *outbuf, buffer);
+  if (!res)
+    GST_WARNING_OBJECT (self, "failed to copy metadata");
+
+  res = gst_buffer_replace (outbuf, buffer);
+  if (!res) {
+    GST_ERROR_OBJECT (self, "couldn't replace output buffer");
+    gst_buffer_unref (buffer);
+    return GST_FLOW_ERROR;
+  }
+
   ret = GST_FLOW_OK;
 
 out:
