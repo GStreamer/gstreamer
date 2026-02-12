@@ -483,6 +483,17 @@ _dvb_sub_parse_region_segment (DvbSub * dvb_sub, guint16 page_id,
   region->height = GST_READ_UINT16_BE (buf);
   buf += 2;
 
+  /* Avoid integer overflows and also clamp to a reasonable size of 8kx8k for
+   * the region size. We allow 16kx16k display sizes. */
+  if (region->width > 8192 || region->height > 8192) {
+    GST_WARNING ("too large region of %ux%x", region->width, region->height);
+    g_free (region->pbuf);
+    region->pbuf = NULL;
+    region->buf_size = 0;
+    region->width = region->height = 0;
+    return;
+  }
+
   if (region->width * region->height != region->buf_size) {     /* FIXME: Read closer from spec what happens when dimensions change */
     g_free (region->pbuf);
 
@@ -1195,6 +1206,18 @@ _dvb_sub_parse_display_definition_segment (DvbSub * dvb_sub, const guint8 * buf,
   buf += 2;
   display_height = GST_READ_UINT16_BE (buf) + 1;
   buf += 2;
+
+  /* Avoid integer overflows and also clamp to a reasonable size of 16kx16k */
+  if (display_width > 16384 || display_height > 16384) {
+    GST_WARNING ("too large display size of %ux%x", display_width,
+        display_height);
+    /* Reset to the initial values */
+    dvb_sub->display_def.version = -1;
+    dvb_sub->display_def.window_flag = 0;
+    dvb_sub->display_def.display_width = 720;
+    dvb_sub->display_def.display_height = 576;
+    return -1;
+  }
 
   if ((display_width != dvb_sub->display_def.display_width)
       || (display_height != dvb_sub->display_def.display_height)) {
