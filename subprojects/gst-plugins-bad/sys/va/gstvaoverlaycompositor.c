@@ -68,7 +68,7 @@ _overlay_pool_free (OverlayPool * overlay_pool)
  * allocates memory of the corresponding size. Since overlay composition meta
  * can include rectangles of various dimensions, new pools are created as needed
  * and kept in a list for reuse. The size of the list is limited by this value.
- * (The oldest pool is freed to make space for a new one.) */
+ * (The least used pool is freed to make space for a new one.) */
 static const guint MAX_OVERLAY_POOLS = 10;
 
 #define GST_VA_OVERLAY_COMPOSITOR(obj) ((GstVaOverlayCompositor *) obj)
@@ -393,8 +393,6 @@ gst_va_overlay_compositor_create_pool (GstVaOverlayCompositor * self,
     result = g_new0 (OverlayPool, 1);
     result->pool = vapool;
     gst_va_allocator_get_format (allocator, &result->info, NULL, NULL);
-
-    self->pools = g_slist_append (self->pools, result);
   } else {
     GST_WARNING_OBJECT (self, "failed to activate pool %" GST_PTR_FORMAT,
         vapool);
@@ -421,12 +419,20 @@ gst_va_overlay_compositor_get_pool_by_info (GstVaOverlayCompositor * self,
     if (GST_VIDEO_INFO_WIDTH (info) == GST_VIDEO_INFO_WIDTH (&pool->info) &&
         GST_VIDEO_INFO_HEIGHT (info) == GST_VIDEO_INFO_HEIGHT (&pool->info)) {
       result = pool;
+
+      /* Remove the pool from the list. It will later get added to the front as
+       * the most recently used item. */
+      self->pools = g_slist_delete_link (self->pools, it);
       break;
     }
   }
 
   if (!result) {
     result = gst_va_overlay_compositor_create_pool (self, info);
+  }
+
+  if (result) {
+    self->pools = g_slist_prepend (self->pools, result);
   }
 
   return result;
@@ -628,10 +634,13 @@ gst_va_overlay_compositor_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     ret = GST_FLOW_ERROR;
   }
 
-  /* Trim the overlay pool list by removing the oldest items. */
+  /* TODO: Consider using a special surface allocator instead of a new pool per
+   * rectangle. */
+  /* Trim the overlay pool list by removing the least used items. */
   while (g_slist_length (self->pools) > MAX_OVERLAY_POOLS) {
-    g_clear_pointer (&self->pools->data, _overlay_pool_free);
-    self->pools = g_slist_delete_link (self->pools, self->pools);
+    GSList *least_used = g_slist_last (self->pools);
+    g_clear_pointer (&least_used->data, _overlay_pool_free);
+    self->pools = g_slist_delete_link (self->pools, least_used);
   }
 
   return ret;
