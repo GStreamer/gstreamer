@@ -3,7 +3,6 @@
 import os
 import sys
 import ssl
-import shutil
 import zipfile
 import hashlib
 import subprocess
@@ -17,23 +16,26 @@ ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
 version = sys.argv[1]
-platform = sys.argv[2]
 want_sha256 = sys.argv[3]
 
 if sys.argv[2] == 'darwin':
-    platform = 'macos'
+    platform = 'mac'
+    target = 'macos'
     ext = 'zip'
 elif sys.argv[2] == 'linux':
-    platform = 'linux-x86_64'
+    platform = 'linux'
+    target = 'linux-x86_64'
     ext = 'tar.xz'
 elif sys.argv[2] == 'windows':
-    platform = 'windows-X64'
+    platform = 'windows'
+    target = 'windows-X64'
     ext = 'exe'
 else:
     raise RuntimeError('Unsupported platform:', sys.argv[2])
 
-BASENAME = f'vulkansdk-{platform}-{version}.{ext}'
-UPSTREAM_URL = f'https://sdk.lunarg.com/sdk/download/{platform}/{version}/' + BASENAME
+# Example URL: https://sdk.lunarg.com/sdk/download/1.4.341.0/mac/vulkansdk-macos-1.4.341.0.zip
+BASENAME = f'vulkansdk-{target}-{version}.{ext}'
+UPSTREAM_URL = f'https://sdk.lunarg.com/sdk/download/{version}/{platform}/' + BASENAME
 GSTREAMER_URL = 'https://gstreamer.freedesktop.org/src/mirror/' + BASENAME
 
 source_dir = os.path.join(os.environ['MESON_SOURCE_ROOT'], os.environ['MESON_SUBDIR'])
@@ -59,19 +61,21 @@ def verify_download(dest_path):
 
 if not verify_download(dest_path):
     for url in (GSTREAMER_URL, UPSTREAM_URL):
+        # sdk.lunarg.com returns 403 if we don't have a user agent
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         print(f'Downloading {url} to {BASENAME}')
         try:
+            with urllib.request.urlopen(req, context=ctx) as f:
+                data = f.read()
             with open(dest_path, 'wb') as d:
-                f = urllib.request.urlopen(url, context=ctx)
-                d.write(f.read())
+                d.write(data)
             break
         except urllib.error.URLError as ex:
             print(ex)
-            print('Failed to download from {url}, trying mirror...')
-            continue
+            print(f'Failed to download from {url}, trying mirror...')
     else:
         curdir = os.path.dirname(sys.argv[0])
-        print(f'Couldn\'t download {url}! Try downloading it manually and placing it into {curdir}')
+        print(f'Couldn\'t download {BASENAME}! Try downloading it manually and placing it into {curdir}')
         sys.exit(1)
     found_sha256 = get_sha256(dest_path)
     if found_sha256 != want_sha256:
