@@ -806,11 +806,6 @@ _fill_ref_slot (GstVulkanAV1Decoder * self, GstAV1Picture * picture,
   guint8 ref_frame_sign_bias = 0;
   guint8 i;
 
-  for (i = 0; i < STD_VIDEO_AV1_NUM_REF_FRAMES; i++) {
-    ref_frame_sign_bias |= (fh->ref_frame_sign_bias[i] <= 0) << i;
-    stdav1_ref->SavedOrderHints[i] = fh->order_hints[i];
-  }
-
   /* *INDENT-OFF* */
   *stdav1_ref = (StdVideoDecodeAV1ReferenceInfo) {
     .flags = (StdVideoDecodeAV1ReferenceInfoFlags) {
@@ -818,9 +813,14 @@ _fill_ref_slot (GstVulkanAV1Decoder * self, GstAV1Picture * picture,
       .segmentation_enabled = fh->segmentation_params.segmentation_enabled,
     },
     .frame_type = (StdVideoAV1FrameType)fh->frame_type,
-    .RefFrameSignBias = ref_frame_sign_bias,
     .OrderHint = fh->order_hint,
   };
+
+  for (i = 0; i < STD_VIDEO_AV1_NUM_REF_FRAMES; i++) {
+    ref_frame_sign_bias |= (fh->ref_frame_sign_bias[i] <= 0) << i;
+    stdav1_ref->SavedOrderHints[i] = fh->order_hints[i];
+  }
+  stdav1_ref->RefFrameSignBias = ref_frame_sign_bias;
 
   *vkav1_slot = (VkVideoDecodeAV1DpbSlotInfoKHR) {
     .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_AV1_DPB_SLOT_INFO_KHR,
