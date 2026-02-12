@@ -24,7 +24,7 @@ else
 endif
 
 downloader = find_program('download-binary.py')
-message('Downloading and extracting MoltenVK binaries for Windows...')
+message(f'Downloading and extracting MoltenVK binaries for @host_system@...')
 ret = run_command(downloader, meson.project_version(), host_system, sha256, check: true)
 
 cc = meson.get_compiler('c')
