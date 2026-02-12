@@ -395,12 +395,6 @@ gst_va_overlay_compositor_create_pool (GstVaOverlayCompositor * self,
     gst_va_allocator_get_format (allocator, &result->info, NULL, NULL);
 
     self->pools = g_slist_append (self->pools, result);
-
-    if (g_slist_length (self->pools) > MAX_OVERLAY_POOLS) {
-      /* remove the oldest pool in the list */
-      g_clear_pointer (&self->pools->data, _overlay_pool_free);
-      self->pools = g_slist_delete_link (self->pools, self->pools);
-    }
   } else {
     GST_WARNING_OBJECT (self, "failed to activate pool %" GST_PTR_FORMAT,
         vapool);
@@ -632,6 +626,12 @@ gst_va_overlay_compositor_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   if (!gst_va_filter_compose (vabtrans->filter, &tx)) {
     GST_ERROR_OBJECT (self, "couldn't apply filter");
     ret = GST_FLOW_ERROR;
+  }
+
+  /* Trim the overlay pool list by removing the oldest items. */
+  while (g_slist_length (self->pools) > MAX_OVERLAY_POOLS) {
+    g_clear_pointer (&self->pools->data, _overlay_pool_free);
+    self->pools = g_slist_delete_link (self->pools, self->pools);
   }
 
   return ret;
