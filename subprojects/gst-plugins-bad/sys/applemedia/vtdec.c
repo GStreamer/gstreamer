@@ -206,6 +206,7 @@ gst_vtdec_class_init (GstVtdecClass * klass)
       caps = gst_vtutil_caps_append_video_format (caps, "RGBA64_LE");
     gst_element_class_add_pad_template (element_class,
         gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps));
+    gst_caps_unref (caps);
   }
 
   gst_element_class_set_static_metadata (element_class,
