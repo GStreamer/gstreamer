@@ -85,6 +85,7 @@ if build_decklink
     link_args : decklink_ldflags + noseh_link_args,
     include_directories : [configinc],
     dependencies : [gstvideo_dep, gstaudio_dep, gstbase_dep, gst_dep] + decklink_libs,
+    override_options : ['cpp_std=c++11'],
     install : true,
     install_dir : plugins_install_dir,
   )
