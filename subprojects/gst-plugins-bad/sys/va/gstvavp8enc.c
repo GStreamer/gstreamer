@@ -45,6 +45,7 @@
 
 #include <math.h>
 #include <gst/codecparsers/gstvp8parser.h>
+#include <gst/va/gstvavideoformat.h>
 
 #include "gstvabaseenc.h"
 #include "gstvapluginutils.h"
@@ -579,7 +580,7 @@ gst_va_vp8_enc_reconfig (GstVaBaseEnc * base)
   GstVideoFormat format;
   const GstVideoFormatInfo *format_info;
   gboolean do_renegotiation = TRUE;
-  guint max_ref_frames, latency_num;
+  guint max_ref_frames, latency_num, rt_format;
   gint width, height;
   GstClockTime latency;
 
@@ -594,6 +595,13 @@ gst_va_vp8_enc_reconfig (GstVaBaseEnc * base)
       GST_VIDEO_FORMAT_INFO_H_SUB (format_info, 1) != 1)
     return FALSE;
 
+  rt_format = gst_va_chroma_from_video_format (format);
+  if (!rt_format) {
+    GST_ERROR_OBJECT (self, "unrecognized input format: %s",
+        gst_video_format_to_string (format));
+    return FALSE;
+  }
+
   gst_va_base_enc_reset_state (base);
 
   if (base->is_live) {
@@ -605,6 +613,7 @@ gst_va_vp8_enc_reconfig (GstVaBaseEnc * base)
   base->profile = VAProfileVP8Version0_3;
   base->width = width;
   base->height = height;
+  base->rt_format = rt_format;
 
   /* Frame rate is needed for rate control and PTS setting. */
   if (GST_VIDEO_INFO_FPS_N (&base->in_info) == 0
