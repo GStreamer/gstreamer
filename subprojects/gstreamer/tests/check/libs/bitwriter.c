@@ -118,6 +118,7 @@ GST_START_TEST (test_reset)
   gst_bit_writer_init_with_data (&writer, sdata, sizeof (sdata), TRUE);
   data = gst_bit_writer_reset_and_get_data (&writer);
   fail_unless (data != NULL);
+  g_free (data);
 
   gst_bit_writer_init_with_data (&writer, sdata, sizeof (sdata), TRUE);
   buf = gst_bit_writer_reset_and_get_buffer (&writer);
