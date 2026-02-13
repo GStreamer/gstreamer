@@ -196,13 +196,19 @@ gst_bit_writer_reset (GstBitWriter * bitwriter)
 guint8 *
 gst_bit_writer_reset_and_get_data (GstBitWriter * bitwriter)
 {
-  guint8 *data;
+  guint8 *data = NULL;
 
   g_return_val_if_fail (bitwriter != NULL, NULL);
 
-  data = bitwriter->data;
-  if (bitwriter->owned)
-    data = g_memdup2 (data, GST_ROUND_UP_8 (bitwriter->bit_size) >> 3);
+  /* Data may point to pre-allocated storage without written bits.
+   * Only return/steal data when there's actually written data */
+  if (bitwriter->bit_size) {
+    data = bitwriter->data;
+    if (!bitwriter->owned)
+      data = g_memdup2 (data, GST_ROUND_UP_8 (bitwriter->bit_size) >> 3);
+    bitwriter->data = NULL;
+  }
+
   gst_bit_writer_reset (bitwriter);
 
   return data;
@@ -225,19 +231,11 @@ gst_bit_writer_reset_and_get_buffer (GstBitWriter * bitwriter)
   GstBuffer *buffer;
   gpointer data;
   gsize size;
-  gboolean owned;
 
   g_return_val_if_fail (bitwriter != NULL, NULL);
 
-  owned = bitwriter->owned;
-
   size = GST_ROUND_UP_8 (bitwriter->bit_size) >> 3;
   data = gst_bit_writer_reset_and_get_data (bitwriter);
-
-  /* we cannot rely on buffers allocated externally, thus let's dup
-   * the data */
-  if (data && !owned)
-    data = g_memdup2 (data, size);
 
   buffer = gst_buffer_new ();
   if (data != NULL) {
