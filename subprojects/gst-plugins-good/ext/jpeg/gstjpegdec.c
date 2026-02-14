@@ -1616,27 +1616,48 @@ alloc_failed:
 static gboolean
 gst_jpeg_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
 {
-  GstBufferPool *pool = NULL;
-  GstStructure *config;
+  guint n_pools;
 
-  if (!GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (bdec, query))
-    return FALSE;
+  if (!gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL))
+    goto out;
 
-  if (gst_query_get_n_allocation_pools (query) > 0)
-    gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
+  n_pools = gst_query_get_n_allocation_pools (query);
+  if (n_pools == 0) {
+    GstBufferPool *pool;
 
-  if (pool == NULL)
-    return FALSE;
-
-  config = gst_buffer_pool_get_config (pool);
-  if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
+    pool = gst_video_buffer_pool_new ();
+    gst_query_add_allocation_pool (query, pool, 0, 2, 0);
+    gst_object_unref (pool);
+    n_pools++;
   }
-  gst_buffer_pool_set_config (pool, config);
-  gst_object_unref (pool);
 
-  return TRUE;
+  for (guint i = 0; i < n_pools; i++) {
+    GstBufferPool *pool = NULL;
+    GstStructure *config;
+    guint size, min, max;
+
+    gst_query_parse_nth_allocation_pool (query, i, &pool, &size, &min, &max);
+    if (!pool)
+      pool = gst_video_buffer_pool_new ();
+
+    config = gst_buffer_pool_get_config (pool);
+    if (gst_buffer_pool_has_option (pool, GST_BUFFER_POOL_OPTION_VIDEO_META)) {
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_META);
+      if (gst_buffer_pool_has_option (pool,
+              GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
+        gst_buffer_pool_config_add_option (config,
+            GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+      }
+    }
+    gst_buffer_pool_set_config (pool, config);
+    gst_query_set_nth_allocation_pool (query, i, pool, size, min, max);
+    gst_object_unref (pool);
+  }
+
+out:
+  return GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (bdec,
+      query);
 }
 
 static gboolean
