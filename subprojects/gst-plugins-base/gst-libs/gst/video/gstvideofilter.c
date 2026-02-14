@@ -164,6 +164,13 @@ gst_video_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL) &&
+      gst_buffer_pool_has_option (pool, GST_BUFFER_POOL_OPTION_VIDEO_META) &&
+      gst_buffer_pool_has_option (pool,
+          GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+  }
   if (outcaps)
     gst_buffer_pool_config_set_params (config, outcaps, size, 0, 0);
   gst_buffer_pool_set_config (pool, config);
