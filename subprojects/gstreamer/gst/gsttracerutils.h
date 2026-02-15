@@ -129,6 +129,15 @@ typedef enum /*< skip >*/
    */
   GST_TRACER_QUARK_HOOK_POOL_BUFFER_DEQUEUED,
 
+  /**
+   * GST_TRACER_QUARK_HOOK_OBJECT_PARENT_SET:
+   *
+   * Hook for object parent changes.
+   *
+   * Since: 1.30
+   */
+  GST_TRACER_QUARK_HOOK_OBJECT_PARENT_SET,
+
   GST_TRACER_QUARK_MAX
 } GstTracerQuarkId;
 
@@ -722,6 +731,24 @@ typedef void (*GstTracerHookObjectReffed) (GObject *self, GstClockTime ts,
 }G_STMT_END
 
 /**
+ * GST_TRACER_OBJECT_PARENT_SET:
+ * @object: a #GstObject
+ * @parent: (nullable): the new parent of @object
+ *
+ * Dispatches the "object-parent-set" hook when @object parent changes.
+ *
+ * NOTE: @parent object lock will likely be held when this hook is called.
+ *
+ * Since: 1.30
+ */
+typedef void (*GstTracerHookObjectParentSet) (GObject *self, GstClockTime ts,
+    GstObject *object, GstObject *parent);
+#define GST_TRACER_OBJECT_PARENT_SET(object, parent) G_STMT_START{ \
+  GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_OBJECT_PARENT_SET), \
+    GstTracerHookObjectParentSet, (GST_TRACER_ARGS, object, parent)); \
+}G_STMT_END
+
+/**
  * GstTracerHookMiniObjectUnreffed:
  * @self: the tracer instance
  * @ts: the current timestamp
@@ -1100,6 +1127,7 @@ _priv_gst_tracing_deinit (void)
 #define GST_TRACER_OBJECT_DESTROYED(object)
 #define GST_TRACER_OBJECT_REFFED(object, new_refcount)
 #define GST_TRACER_OBJECT_UNREFFED(object, new_refcount)
+#define GST_TRACER_OBJECT_PARENT_SET(object, parent)
 #define GST_TRACER_PLUGIN_FEATURE_LOADED(feature)
 #define GST_TRACER_PAD_CHAIN_PRE(pad, buffer)
 #define GST_TRACER_PAD_CHAIN_POST(pad, res)
@@ -1119,4 +1147,3 @@ _priv_gst_tracing_deinit (void)
 G_END_DECLS
 
 #endif /* __GST_TRACER_UTILS_H__ */
-

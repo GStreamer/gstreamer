@@ -725,6 +725,7 @@ gst_object_set_parent (GstObject * object, GstObject * parent)
    */
   /* g_object_notify_by_pspec ((GObject *)object, properties[PROP_PARENT]); */
 
+  GST_TRACER_OBJECT_PARENT_SET (object, parent);
   return TRUE;
 
   /* ERROR handling */
@@ -822,6 +823,7 @@ gst_object_unparent (GstObject * object)
     GST_OBJECT_UNLOCK (object);
 
     /* g_object_notify_by_pspec ((GObject *)object, properties[PROP_PARENT]); */
+    GST_TRACER_OBJECT_PARENT_SET (object, NULL);
 
     gst_object_unref (object);
   } else {

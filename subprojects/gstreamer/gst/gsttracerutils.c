@@ -59,7 +59,7 @@ static const gchar *_quark_strings[] = {
   "pad-chain-pre", "pad-chain-post", "pad-chain-list-pre",
   "pad-chain-list-post", "pad-send-event-pre", "pad-send-event-post",
   "memory-init", "memory-free-pre", "memory-free-post",
-  "pool-buffer-queued", "pool-buffer-dequeued",
+  "pool-buffer-queued", "pool-buffer-dequeued", "object-parent-set",
 
 
   "none",                       /* This is a special quark for no hook - should always be LAST */
