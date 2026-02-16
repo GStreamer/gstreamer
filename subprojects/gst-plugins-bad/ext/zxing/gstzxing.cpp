@@ -422,7 +422,8 @@ gst_zxing_transform_frame_ip (GstVideoFilter * vfilter, GstVideoFrame * frame)
   GstZXing *zxing = GST_ZXING (vfilter);
   gpointer data;
   gint height, width;
-  #if ZXING_VERSION_MAJOR >= 2 && ZXING_VERSION_MINOR >= 2
+  #if ZXING_VERSION_MAJOR >= 3 || \
+      (ZXING_VERSION_MAJOR >= 2 && ZXING_VERSION_MINOR >= 2)
     ReaderOptions hints;
   #else
     DecodeHints hints;
