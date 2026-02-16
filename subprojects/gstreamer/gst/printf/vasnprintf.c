@@ -341,7 +341,7 @@ vasnprintf (char *resultbuf, size_t *lengthp, const char *format, va_list args)
       {									\
 	char *memory;							\
 									\
-	allocated = (allocated > 0 ? 2 * allocated : 12);		\
+	allocated = (allocated > 0 ? 2 * allocated : 320);		\
 	if ((needed) > allocated)					\
 	  allocated = (needed);						\
 	if (result == resultbuf || result == NULL)			\
