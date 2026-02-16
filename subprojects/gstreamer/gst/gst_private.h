@@ -224,7 +224,7 @@ void      __gst_element_factory_add_interface           (GstElementFactory    * 
 /* used in gstvalue.c and gststructure.c */
 #define GST_ASCII_IS_STRING(c) (g_ascii_isalnum((c)) || ((c) == '_') || \
     ((c) == '-') || ((c) == '+') || ((c) == '/') || ((c) == ':') || \
-    ((c) == '.'))
+    ((c) == '.') || ((c) == '*'))
 
 /* This is only meant for internal uses */
 G_GNUC_INTERNAL

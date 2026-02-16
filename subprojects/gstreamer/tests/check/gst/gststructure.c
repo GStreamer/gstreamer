@@ -238,10 +238,21 @@ GST_START_TEST (test_from_string)
   fail_unless (G_VALUE_HOLDS_STRING (val));
   gst_structure_free (structure);
 
-  /* make sure we bail out correctly in case of an error or if parsing fails */
-  s = "***foo***, abc=(boolean)false";
+  /* make sure we bail out correctly in case of an error or if parsing fails
+   * '!' is an operator in the pipeline syntax and can not be part of a
+   * structure name */
+  s = "foo!bar, abc=(boolean)false";
   structure = gst_structure_from_string (s, NULL);
   fail_unless (structure == NULL);
+
+  /* '*' is valid in structure names and values */
+  s = "foo*bar, value=*:6";
+  structure = gst_structure_from_string (s, NULL);
+  fail_if (structure == NULL, "Could not get structure from string %s", s);
+  fail_unless ((val = gst_structure_get_value (structure, "value")) != NULL);
+  fail_unless (G_VALUE_HOLDS_STRING (val));
+  fail_unless_equals_string (g_value_get_string (val), "*:6");
+  gst_structure_free (structure);
 
   /* assert that we get a warning if the structure wasn't entirely consumed, but
    * we didn't provide an end pointer */
