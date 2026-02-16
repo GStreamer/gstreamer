@@ -24,13 +24,23 @@
 /**
  * SECTION:element-avfassetsrc
  *
- * Read and decode samples from AVFoundation assets using the AVFAssetReader API
+ * Read and decode samples from AVFoundation assets using the AVFAssetReader API.
  *
- * ## Example launch line
+ * Two URI protocols are supported: `avf+file://` and `ipod-library://`.
  *
- * |[
- * gst-launch-1.0 -v -m avfassetsrc uri="file://movie.mp4" ! autovideosink
- * ]|
+ * 'avf+file://' is used to distinguish media URIs which should be handled
+ *  and decoded by AVFoundation from regular arbitrary `file://` URIs.
+ * `ipod-library://` URIs are returned by the MPMediaItem API.
+ *
+ * ## Example launch lines
+ *
+ * ```
+ * gst-launch-1.0 -v -m avfassetsrc uri="file:///path/to/movie.mp4" ! autovideosink
+ * ```
+ *
+ * ```
+ * gst-play-1.0 -v avf+file:///path/to/movie.mp4
+ * ```
  */
 
 #ifdef HAVE_CONFIG_H
@@ -773,7 +783,10 @@ gst_avf_asset_src_uri_get_type (GType type)
 static const gchar * const *
 gst_avf_asset_src_uri_get_protocols (GType type)
 {
-  static const gchar * const protocols[] = { "file", "ipod-library", NULL };
+  /* ipod-library:// is returned by MPMediaItemPropertyAssetURL, rarely used these days but not deprecated yet.
+   * avf+file:// is what we use to distinguish file URLs which should be handled by AVFoundation
+   * (and have to point to a media file AVF can decode) from regular arbitrary file:// URIs we use elsewhere in GStreamer. */
+  static const gchar * const protocols[] = { "avf+file", "ipod-library", NULL };
 
   return protocols;
 }
@@ -794,19 +807,27 @@ gst_avf_asset_src_uri_set_uri (GstURIHandler * handler, const gchar * uri, GErro
   NSURL *url;
   AVAsset *asset;
   gboolean ret = FALSE;
+  const gchar *asset_uri;
 
-  str = [NSString stringWithUTF8String: uri];
+  if (g_str_has_prefix (uri, "avf+")) {
+    asset_uri = uri + 4;
+  } else {
+    asset_uri = uri;
+  }
+
+  str = [NSString stringWithUTF8String: asset_uri];
   url = [[NSURL alloc] initWithString: str];
   asset = [AVAsset assetWithURL: url];
 
   if (asset.playable) {
     ret = TRUE;
     g_free (self->uri);
-    self->uri = g_strdup (uri);
+    self->uri = g_strdup (asset_uri);
   } else {
     g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
         "Invalid URI '%s' for avfassetsrc", uri);
   }
+
   return ret;
 }
 
