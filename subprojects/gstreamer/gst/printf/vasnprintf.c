@@ -1052,15 +1052,6 @@ vasnprintf (char *resultbuf, size_t *lengthp, const char *format, va_list args)
     ENSURE_ALLOCATION (length + 1);
     result[length] = '\0';
 
-    if (result != resultbuf && length + 1 < allocated) {
-      /* Shrink the allocated memory if possible.  */
-      char *memory;
-
-      memory = (char *) realloc (result, length + 1);
-      if (memory != NULL)
-        result = memory;
-    }
-
     freea (buf);
     CLEANUP ();
     *lengthp = length;
