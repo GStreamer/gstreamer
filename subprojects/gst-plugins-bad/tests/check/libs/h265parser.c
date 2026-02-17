@@ -896,8 +896,8 @@ GST_START_TEST (test_h265_nal_type_classification)
         test_vector[i].is_rasl);
   }
 
-  for (i = RESERVED_NON_IRAP_NAL_TYPE_MIN;
-      i <= UNSPECIFIED_NON_VCL_NAL_TYPE_MAX; i++) {
+  for (i = GST_H265_RESERVED_NON_IRAP_NAL_TYPE_MIN;
+      i <= GST_H265_UNSPECIFIED_NON_VCL_NAL_TYPE_MAX; i++) {
     assert_equals_int (GST_H265_IS_NAL_TYPE_IDR (i), FALSE);
     assert_equals_int (GST_H265_IS_NAL_TYPE_IRAP (i), FALSE);
     assert_equals_int (GST_H265_IS_NAL_TYPE_BLA (i), FALSE);
