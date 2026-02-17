@@ -129,12 +129,17 @@ gst_mpeg_video_meta_get_info (void)
 /**
  * gst_buffer_add_mpeg_video_meta:
  * @buffer: a #GstBuffer
+ * @seq_hdr: a #GstMpegVideoSequenceHdr
+ * @seq_ext: a #GstMpegVideoSequenceExt
+ * @disp_ext: a #GstMpegVideoSequenceDisplayExt
+ * @pic_hdr: a #GstMpegVideoPictureHdr
+ * @pic_ext: a #GstMpegVideoPictureExt
+ * @quant_ext: a #GstMpegVideoQuantMatrixExt
  *
  * Creates and adds a #GstMpegVideoMeta to a @buffer.
- *
  * Provided structures must either be %NULL or GSlice-allocated.
  *
- * Returns: (transfer full): a newly created #GstMpegVideoMeta
+ * Returns: (transfer none): a newly created #GstMpegVideoMeta
  *
  * Since: 1.2
  */

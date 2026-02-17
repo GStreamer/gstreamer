@@ -26,9 +26,6 @@
 
 /**
  * GstJPEG2000Sampling:
- * Sampling values from RF 5371 for JPEG 2000 over RTP : https://datatracker.ietf.org/doc/rfc5371/C
- * Note: sampling extensions that are not listed in the RFC are signified by an _EXT at the end of the enum
- *
  * @GST_JPEG2000_SAMPLING_NONE: no sampling
  * @GST_JPEG2000_SAMPLING_RGB: standard Red, Green, Blue color space.
  * @GST_JPEG2000_SAMPLING_BGR: standard Blue, Green, Red color space.
@@ -41,6 +38,9 @@
  * @GST_JPEG2000_SAMPLING_YBR410: standard YCbCr color space; Cb and Cr are subsampled vertically by 1/4 alternating the Cb and Cr component.
  * @GST_JPEG2000_SAMPLING_GRAYSCALE:  basically, a single component image of just multilevels of grey.
  * @GST_JPEG2000_SAMPLING_YBRA4444_EXT: standard YCbCr color space, alpha channel, no subsampling,
+ *
+ * Sampling values from RF 5371 for JPEG 2000 over RTP : https://datatracker.ietf.org/doc/rfc5371/C
+ * Note: sampling extensions that are not listed in the RFC are signified by an _EXT at the end of the enum
  */
 
 /**

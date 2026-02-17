@@ -90,14 +90,14 @@ typedef enum
 } GstVp9ParserResult;
 
 /**
- * GstVp9Profile: Bitstream profiles indicated by 2-3 bits in the uncompressed header
+ * GstVp9Profile:
  * @GST_VP9_PROFILE_0: Profile 0, 8-bit 4:2:0 only.
  * @GST_VP9_PROFILE_1: Profile 1, 8-bit 4:4:4, 4:2:2, and 4:4:0.
  * @GST_VP9_PROFILE_2: Profile 2, 10-bit and 12-bit color only, with 4:2:0 sampling.
  * @GST_VP9_PROFILE_3: Profile 3, 10-bit and 12-bit color only, with 4:2:2/4:4:4/4:4:0 sampling.
  * @GST_VP9_PROFILE_UNDEFINED: Undefined profile
  *
- * VP9 Profiles
+ * VP9 Bitstream profiles indicated by 2-3 bits in the uncompressed header.
  *
  * Since: 1.8
  */

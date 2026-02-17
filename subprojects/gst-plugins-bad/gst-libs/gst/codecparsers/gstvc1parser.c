@@ -2146,7 +2146,7 @@ failed:
 }
 
 /**
- * gst_vc1_bitplanes_new:
+ * gst_vc1_bitplanes_new: (skip)
  *
  * Creates a new #GstVC1BitPlanes. It should be freed with
  * gst_vc1_bitplanes_free() after use.

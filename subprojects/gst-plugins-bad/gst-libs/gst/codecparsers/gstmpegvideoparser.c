@@ -28,6 +28,8 @@
  * @title: GstMpegvideoParser
  * @short_description: Convenience library for mpeg1 and 2 video
  * bitstream parsing.
+ * @sources:
+ * - gstmpegvideometa.h
  *
  * Provides useful functions for mpeg videos bitstream parsing.
  *
@@ -703,7 +705,7 @@ failed:
 /**
  * gst_mpeg_video_packet_parse_picture_extension:
  * @packet: The #GstMpegVideoPacket that carries the data
- * @ext: (out): The #GstMpegVideoPictureExt structure to fill
+ * @picext: (out): The #GstMpegVideoPictureExt structure to fill
  *
  * Parse the @ext MPEG Video Picture Extension structure members from
  * video @packet
@@ -932,7 +934,7 @@ failed:
  * gst_mpeg_video_packet_parse_slice_header:
  * @packet: The #GstMpegVideoPacket that carries the data
  * @slice_hdr: (out): The #GstMpegVideoSliceHdr structure to fill
- * @seqhdr: The #GstMpegVideoSequenceHdr header
+ * @seq_hdr: The #GstMpegVideoSequenceHdr header
  * @seqscaleext: The #GstMpegVideoSequenceScalableExt header
  *
  * Parses the @GstMpegVideoSliceHdr  structure members from @data

@@ -626,7 +626,7 @@ gst_vp9_parser_update (GstVp9Parser * parser, GstVp9FrameHdr * const frame_hdr)
 /******** API *************/
 
 /**
- * gst_vp9_parser_new:
+ * gst_vp9_parser_new: (skip)
  *
  * Creates a new #GstVp9Parser. It should be freed with
  * gst_vp9_parser_free() after use.

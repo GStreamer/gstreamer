@@ -18,6 +18,14 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstvp9bitwriter
+ * @title: GstVp9BitWriter
+ * @short_description: Functions for writing bitstream headers
+ *
+ * Since: 1.28
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

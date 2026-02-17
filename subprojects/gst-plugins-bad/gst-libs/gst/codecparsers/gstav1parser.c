@@ -21,6 +21,7 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+
 /**
  * SECTION:gstav1parser
  * @title: GstAV1Parser
@@ -67,7 +68,7 @@
  * should call gst_av1_parser_reference_frame_update() to update the parser's inside
  * state(such as reference information, global segmentation information, etc).
  *
- * @since: 1.18.00
+ * Since: 1.18
  */
 
 #ifdef HAVE_CONFIG_H
@@ -4668,7 +4669,7 @@ gst_av1_parser_set_operating_point (GstAV1Parser * parser,
 }
 
 /**
- * gst_av1_parser_new:
+ * gst_av1_parser_new: (skip)
  *
  * Allocates a new #GstAV1Parser,
  *

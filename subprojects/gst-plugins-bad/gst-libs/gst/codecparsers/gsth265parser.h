@@ -1752,11 +1752,12 @@ struct _GstH265ContentLightLevel
 };
 
 /**
- * _GstH265SEIMessage.payload.user_data_unregistered:
+ * GstH265SEIMessage:
+ * @payloadType: #GstH265SEIPayloadType
+ * @payload: union of all possible SEI message data types
  *
- * User Data Unregistered
- *
- * Since: 1.24
+ * Constains information about SEI message. The content depends on the
+ * @payloadType.
  */
 struct _GstH265SEIMessage
 {
@@ -1770,6 +1771,14 @@ struct _GstH265SEIMessage
     GstH265TimeCode time_code;
     GstH265MasteringDisplayColourVolume mastering_display_colour_volume;
     GstH265ContentLightLevel content_light_level;
+
+    /**
+     * GstH265SEIMessage.user_data_unregistered:
+     *
+     * User Data Unregistered
+     *
+     * Since: 1.24
+     */
     GstH265UserDataUnregistered user_data_unregistered;
     /* ... could implement more */
   } payload;

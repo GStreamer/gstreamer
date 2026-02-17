@@ -1732,7 +1732,7 @@ error:
 }
 
 /**
- * gst_h266_parser_new:
+ * gst_h266_parser_new: (skip)
  *
  * Creates a new #GstH266Parser. It should be freed with
  * gst_h266_parser_free after use.
@@ -1984,7 +1984,7 @@ gst_h266_parser_identify_nalu_vvc (GstH266Parser * parser,
  * @offset: the offset from which to parse @data
  * @size: the size of @data
  * @nal_length_size: the size in bytes of the VVC nal length prefix.
- * @nalus: a caller allocated #GArray of #GstH266NalUnit where to store parsed nal headers
+ * @nalus: (element-type GstH266NalUnit): a caller allocated #GArray of #GstH266NalUnit where to store parsed nal headers
  * @consumed: the size of consumed bytes
  *
  * Parses @data for packetized (e.g., vvc1/vvi1) bitstream and
@@ -5348,7 +5348,7 @@ error_with_ret:
  * gst_h266_parser_parse_picture_hdr:
  * @parser: a #GstH266Parser
  * @nalu: The picture header #GstH266NalUnit to parse
- * @ph: The #GstH266PicHdr to fill.
+ * @picture: The #GstH266PicHdr to fill.
  *
  * Parses @data, and fills the @ph structure.
  *
@@ -5440,7 +5440,7 @@ error:
  * gst_h266_parser_parse_slice_hdr:
  * @parser: a #GstH266Parser
  * @nalu: The slice #GstH266NalUnit to parse
- * @sh: The #GstH266SliceHdr to fill.
+ * @slice: The #GstH266SliceHdr to fill.
  *
  * Parses @data, and fills the @sh structure.
  *
@@ -6116,9 +6116,9 @@ error:
 
 /**
  * gst_h266_parser_parse_sei:
- * @nalparser: a #GstH266Parser
+ * @parser: a #GstH266Parser
  * @nalu: The `GST_H266_NAL_*_SEI` #GstH266NalUnit to parse
- * @messages: The GArray of #GstH266SEIMessage to fill. The caller must free
+ * @messages: (element-type GstH266SEIMessage): The GArray of #GstH266SEIMessage to fill. The caller must free
  *  it when done.
  *
  * Parses @data, create and fills the @messages array.
