@@ -636,7 +636,7 @@ GstVC1ParserResult gst_vc1_parse_field_header          (const guint8 *data,
 GST_CODEC_PARSERS_API
 GstVC1ParserResult gst_vc1_parse_slice_header           (const guint8 *data,
                                                          gsize size,
-                                                         GstVC1SliceHdr *slicehdr, 
+                                                         GstVC1SliceHdr *slicehdr,
                                                          GstVC1SeqHdr *seqhdr);
 
 GST_CODEC_PARSERS_API

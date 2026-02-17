@@ -182,9 +182,6 @@ G_BEGIN_DECLS
 
 /**
  * GstH266ParserResult:
- *
- * The result of parsing H266 data.
- *
  * @GST_H266_PARSER_OK: The parsing succeeded.
  * @GST_H266_PARSER_BROKEN_DATA: The data to parse is broken.
  * @GST_H266_PARSER_BROKEN_LINK: The link to structure needed for the parsing
@@ -192,6 +189,8 @@ G_BEGIN_DECLS
  * @GST_H266_PARSER_ERROR: An error accured when parsing.
  * @GST_H266_PARSER_NO_NAL: No nal found during the parsing.
  * @GST_H266_PARSER_NO_NAL_END: Start of the nal found, but not the end.
+ *
+ * The result of parsing H266 data.
  *
  * Since: 1.26
  */
@@ -207,9 +206,6 @@ typedef enum
 
 /**
  * GstH266Profile:
- *
- * H.266 Profiles.
- *
  * @GST_H266_PROFILE_MAIN_10: Main 10 profile (A.3.1).
  * @GST_H266_PROFILE_MAIN_10_STILL_PICTURE: Main 10 Still Picture profile (A.3.1).
  * @GST_H266_PROFILE_MULTILAYER_MAIN_10: MultiLayer Main 10 profile (A.3.3).
@@ -233,6 +229,8 @@ typedef enum
  *  profile (A.3.5).
  * @GST_H266_PROFILE_MAIN_16_444_STILL_PICTURE: Main 16 4:4:4 Still Picture
  *  profile (A.3.5).
+ *
+ * H.266 Profiles.
  *
  * Since: 1.26
  */
@@ -292,10 +290,6 @@ typedef enum
 
 /**
  * GstH266NalUnitType:
- *
- * Indicates the types of H266 Nal Units as
- * table 5 - NAL unit type codes and NAL unit type classes.
- *
  * @GST_H266_NAL_SLICE_TRAIL: Coded slice of a trailing picture or subpicture.
  * @GST_H266_NAL_SLICE_STSA: Coded slice of an STSA picture or subpicture.
  * @GST_H266_NAL_SLICE_RADL: Coded slice of a RADL picture or subpicture.
@@ -318,6 +312,9 @@ typedef enum
  * @GST_H266_NAL_PREFIX_SEI: Prefix Supplemental enhancement information.
  * @GST_H266_NAL_SUFFIX_SEI: Suffix Suppliemental enhancement information.
  * @GST_H266_NAL_FD: Filler data (FD).
+ *
+ * Indicates the types of H266 Nal Units as
+ * table 5 - NAL unit type codes and NAL unit type classes.
  *
  * Since: 1.26
  */
@@ -349,10 +346,6 @@ typedef enum
 
 /**
  * GstH266SEIPayloadType:
- *
- * The type of SEI message.
- * More other SEIs are specified in Rec.ITU-T H.274 | ISO/IEC 23002-7.
- *
  * @GST_H266_SEI_BUF_PERIOD: Buffering Period SEI Message.
  * @GST_H266_SEI_PIC_TIMING: Picture Timing SEI Message.
  * @GST_H266_SEI_REGISTERED_USER_DATA: Registered user data.
@@ -361,6 +354,9 @@ typedef enum
  * @GST_H266_SEI_SCALABLE_NETING: Scalable Nesting SEI Message.
  * @GST_H266_SEI_FRAME_FIELD_INFO: Frame Field Info SEI Message.
  * @GST_H266_SEI_SUBPIC_LEVEL_INFO: Subpicture Level Information SEI.
+ *
+ * The type of SEI message.
+ * More other SEIs are specified in Rec.ITU-T H.274 | ISO/IEC 23002-7.
  *
  * Since: 1.26
  */
@@ -379,12 +375,11 @@ typedef enum
 
 /**
  * GstH266SliceType:
- *
- * Types of Picture slice.
- *
  * @GST_H266_B_SLICE: B slice type.
  * @GST_H266_P_SLICE: P slice type.
  * @GST_H266_I_SLICE: I slice type.
+ *
+ * Types of Picture slice.
  *
  * Since: 1.26
  */
@@ -397,13 +392,12 @@ typedef enum
 
 /**
  * GstH266APSType:
- *
- * Indicates the types of Adaptation parameter set (APS) as
- * Table 6 - APS parameters type codes and types of APS parameters.
- *
  * @GST_H266_ALF_APS: ALF parameters.
  * @GST_H266_LMCS_APS: LMCS parameters.
  * @GST_H266_SCALING_APS: Scaling list parameters.
+ *
+ * Indicates the types of Adaptation parameter set (APS) as
+ * Table 6 - APS parameters type codes and types of APS parameters.
  *
  * Since: 1.26
  */
@@ -460,9 +454,6 @@ typedef struct _GstH266DecoderConfigRecord      GstH266DecoderConfigRecord;
 
 /**
  * GstH266NalUnit:
- *
- * Structure defining the H266 Nal unit headers.
- *
  * @type: A #GstH266NalUnitType.
  * @layer_id: A nal unit layer id.
  * @temporal_id_plus1: A nal unit temporal identifier.
@@ -473,6 +464,8 @@ typedef struct _GstH266DecoderConfigRecord      GstH266DecoderConfigRecord;
  *  already been parsed.
  * @data: The data from which the Nalu has been parsed.
  * @header_bytes: The size of the NALU header in bytes.
+ *
+ * Structure defining the H266 Nal unit headers.
  *
  * Since: 1.26
  */
@@ -494,9 +487,6 @@ struct _GstH266NalUnit
 
 /**
  * GstH266GeneralConstraintsInfo:
- *
- * Structure defining the H266 general constraints info.
- *
  * @present_flag: specifies whether additional syntax elements are present.
  * @intra_only_constraint_flag: specifies whether sh_slice_type for all slices
  *  in OlsInScope shall be equal to 2.
@@ -676,6 +666,8 @@ struct _GstH266NalUnit
  *  shall be equal to 0.
  * @reserved_zero_bit: the reserved bits.
  *
+ * Structure defining the H266 general constraints info.
+ *
  * Since: 1.26
  */
 struct _GstH266GeneralConstraintsInfo {
@@ -769,9 +761,6 @@ struct _GstH266GeneralConstraintsInfo {
 
 /**
  * GstH266ProfileTierLevel:
- *
- * Structure defining the H266 profile, tier and level.
- *
  * @profile_idc: the profile id.
  * @tier_flag: specifies the main tier or high tier.
  * @level_idc: indicates a level to which OlsInScope conforms
@@ -789,6 +778,8 @@ struct _GstH266GeneralConstraintsInfo {
  *  syntax elements.
  * @sub_profile_idc: specifies the i-th interoperability indicator registered
  *  as specified by Rec. ITU-T T.35
+ *
+ * Structure defining the H266 profile, tier and level.
  *
  * Since: 1.26
  */
@@ -811,9 +802,6 @@ struct _GstH266ProfileTierLevel {
 
 /**
  * GstH266DPBParameters:
- *
- * Structure defining the H266 DPB parameters.
- *
  * @max_dec_pic_buffering_minus1: specifies the maximum required size of the
  *  DPB in units of picture storage buffers.
  * @max_num_reorder_pics: specifies the maximum allowed number of pictures of
@@ -821,6 +809,8 @@ struct _GstH266ProfileTierLevel {
  *  follow that picture in output.
  * @max_latency_increase_plus1: used to compute the value of MaxLatencyPictures,
  *  which specifies the maximum number of pictures in the OLS.
+ *
+ * Structure defining the H266 DPB parameters.
  *
  * Since: 1.26
  */
@@ -833,9 +823,6 @@ struct _GstH266DPBParameters
 
 /**
  * GstH266GeneralHRDParameters:
- *
- * Structure defining the H266 HDR parameters.
- *
  * @num_units_in_tick: the number of time units of a clock operating at the
  *  frequency time_scale.
  * @time_scale: number of time units that pass in one second.
@@ -854,6 +841,8 @@ struct _GstH266DPBParameters
  * @cpb_size_du_scale: specifies the CPB size of the CPB at du level.
  * @hrd_cpb_cnt_minus1: plus 1 specifies the number of alternative CPB
  *  delivery schedules.
+ *
+ * Structure defining the H266 HDR parameters.
  *
  * Since: 1.26
  */
@@ -874,9 +863,6 @@ struct _GstH266GeneralHRDParameters
 
 /**
  * GstH266SubLayerHRDParameters:
- *
- * Structure defining the H266 sub layer HDR parameters.
- *
  * @bit_rate_value_minus1: specifies the maximum input bit rate for the CPB.
  * @cpb_size_value_minus1: together with cpb_size_scale to specify the CPB size.
  * @cpb_size_du_value_minus1: together with cpb_size_du_scale to specify
@@ -886,6 +872,8 @@ struct _GstH266GeneralHRDParameters
  *  the CPB specification.
  * @bit_rate: the calculated bit rate.
  * @cpb_size: the calculated cpb size.
+ *
+ * Structure defining the H266 sub layer HDR parameters.
  *
  * Since: 1.26
  */
@@ -903,9 +891,6 @@ struct _GstH266SubLayerHRDParameters
 
 /**
  * GstH266OLSHRDParameters:
- *
- * Structure defining the H266 OLS HDR parameters.
- *
  * @fixed_pic_rate_general_flag: indicates the temporal distance between the
  *  HRD output times of consecutive pictures in output order is constrained as
  *  specified in this clause using the variable DpbOutputElementalInterval[n].
@@ -919,6 +904,8 @@ struct _GstH266SubLayerHRDParameters
  *  in Annex C.
  * @nal_sub_layer_hrd_parameters: sub layer nal #GstH266SubLayerHRDParameters.
  * @vcl_sub_layer_hrd_parameters: sub layer vcl #GstH266SubLayerHRDParameters.
+ *
+ * Structure defining the H266 OLS HDR parameters.
  *
  * Since: 1.26
  */
@@ -934,9 +921,6 @@ struct _GstH266OLSHRDParameters
 
 /**
  * GstH266VPS:
- *
- * Structure defining the H266 VPS.
- *
  * @vps_id: provides an identifier for the VPS for reference by other syntax
  *  elements.
  * @max_layers_minus1: specifies the number of layers specified by the VPS.
@@ -1030,6 +1014,8 @@ struct _GstH266OLSHRDParameters
  *  this Specification.
  * @valid: whether this VPS is valid.
  *
+ * Structure defining the H266 VPS.
+ *
  * Since: 1.26
  */
 struct _GstH266VPS {
@@ -1092,9 +1078,6 @@ struct _GstH266VPS {
 
 /**
  * GstH266RefPicListStruct:
- *
- * Structure defining the H266 reference picture list.
- *
  * @num_ref_entries: specifies the number of entries in the
  *  ref_pic_list_struct(listIdx, rplsIdx) syntax structure.
  * @ltrp_in_header_flag: specifies whether the POC LSBs of the LTRP entries
@@ -1117,6 +1100,8 @@ struct _GstH266VPS {
  * @num_inter_layer_pic: the number of inter layer reference picture.
  * @delta_poc_val_st: the calculated DeltaPocValSt value.
  *
+ * Structure defining the H266 reference picture list.
+ *
  * Since: 1.26
  */
 struct _GstH266RefPicListStruct {
@@ -1136,9 +1121,6 @@ struct _GstH266RefPicListStruct {
 
 /**
  * GstH266RefPicLists:
- *
- * Structure defining the H266 reference picture lists.
- *
  * @rpl_sps_flag: specifies whether RPL i in ref_pic_lists is derived based
  *  on one of the ref_pic_list_struct(listIdx, rplsIdx) syntax structures
  *  with listIdx equal to i in the SPS.
@@ -1150,6 +1132,8 @@ struct _GstH266RefPicListStruct {
  * @delta_poc_msb_cycle_present_flag: specifies whether
  *  delta_poc_msb_cycle_lt[i][j] is present.
  * @delta_poc_msb_cycle_lt: specifies the value of the variable FullPocLt[i][j].
+ *
+ * Structure defining the H266 reference picture lists.
  *
  * Since: 1.26
  */
@@ -1164,9 +1148,6 @@ struct _GstH266RefPicLists {
 
 /**
  * GstH266VUIParams:
- *
- * Structure defining the H266 VUI parameters.
- *
  * @progressive_source_flag: flag to indicate the progressive type of stream.
  * @interlaced_source_flag: flag to indicate the interlaced type of stream.
  * @non_packed_constraint_flag: indicate the presence of frame packing
@@ -1201,6 +1182,8 @@ struct _GstH266RefPicLists {
  *  bottom field.
  * @par_n: calculated aspect ratio numerator value.
  * @par_d: calculated aspect ratio denominator value.
+ *
+ * Structure defining the H266 VUI parameters.
  *
  * Since: 1.26
  */
@@ -1241,9 +1224,6 @@ struct _GstH266VUIParams
 
 /**
  * GstH266SPSRangeExtensionParams:
- *
- * Structure defining the H266 SPS range extension parameters.
- *
  * @extended_precision_flag: specifies whether an extended dynamic range is
  *  used for transform coefficients.
  * @ts_residual_coding_rice_present_in_sh_flag: specifies whether
@@ -1258,6 +1238,8 @@ struct _GstH266VUIParams
  *  sh_reverse_last_sig_coeff_flag is present in slice_header syntax
  *  structures referring to the SPS.
  *
+ * Structure defining the H266 SPS range extension parameters.
+ *
  * Since: 1.26
  */
 struct _GstH266SPSRangeExtensionParams {
@@ -1270,9 +1252,6 @@ struct _GstH266SPSRangeExtensionParams {
 
 /**
  * GstH266SPS:
- *
- * Structure defining the H266 SPS.
- *
  * @nuh_layer_id: specifies the identifier of the layer to which a VCL NAL unit
  *  belongs or the identifier of a layer to which a non-VCL NAL unit applies.
  * @sps_id: provides an identifier for the SPS for reference by other
@@ -1618,6 +1597,8 @@ struct _GstH266SPSRangeExtensionParams {
  * @fps_den: the calculated FPS denominator.
  * @valid: whether the SPS is valid.
  *
+ * Structure defining the H266 SPS.
+ *
  * Since: 1.26
  */
 struct _GstH266SPS
@@ -1813,9 +1794,6 @@ struct _GstH266SPS
 
 /**
  * GstH266PPS:
- *
- * Structure defining the H266 PPS.
- *
  * @pps_id: provides an identifier for the PPS for reference by other
  *  syntax elements.
  * @sps_id: specifies the SPS referred to by this PPS.
@@ -1991,6 +1969,8 @@ struct _GstH266SPS
  * @num_slices_in_subpic: slice number in subpicture.
  * @valid: whether this PPS is valid.
  *
+ * Structure defining the H266 PPS.
+ *
  * Since: 1.26
  */
 struct _GstH266PPS
@@ -2110,9 +2090,6 @@ struct _GstH266PPS
 
 /**
  * GstH266ALF:
- *
- * Structure defining the H266 ALF parameters.
- *
  * @luma_filter_signal_flag: specifies whether a luma filter set is signalled.
  * @chroma_filter_signal_flag: specifies whether a chroma filter is signalled.
  * @cc_cb_filter_signal_flag: specifies whether cross-component filters for the
@@ -2157,6 +2134,8 @@ struct _GstH266PPS
  * @cc_cr_coeff_sign: specifies the sign of the j-th coefficient of the
  *  signalled k-th cross-component filter for the Cr colour component.
  *
+ * Structure defining the H266 ALF parameters.
+ *
  * Since: 1.26
  */
 struct _GstH266ALF
@@ -2186,9 +2165,6 @@ struct _GstH266ALF
 
 /**
  * GstH266LMCS:
- *
- * Structure defining the H266 LMCS parameters.
- *
  * @min_bin_idx: minimum bin index used in the luma mapping with chroma scaling
  *  construction process.
  * @delta_max_bin_idx: specifies the delta value between 15 and the maximum bin
@@ -2201,6 +2177,8 @@ struct _GstH266ALF
  * @delta_abs_crs: specifies the absolute codeword value of the variable
  *  lmcsDeltaCrs.
  * @delta_sign_crs_flag: specifies the sign of the variable lmcsDeltaCrs.
+ *
+ * Structure defining the H266 LMCS parameters.
  *
  * Since: 1.26
  */
@@ -2217,9 +2195,6 @@ struct _GstH266LMCS
 
 /**
  * GstH266ScalingList:
- *
- * Structure defining the H266 scaling list parameters.
- *
  * @copy_mode_flag: specifies whether the values of the scaling list are the
  *  same as the values of a reference scaling list.
  * @pred_mode_flag: specifies whether the values of the scaling list can be
@@ -2231,6 +2206,8 @@ struct _GstH266LMCS
  *  ScalingList.
  * @scaling_list_DC: the scaling list DC coef.
  * @scaling_list: the calculated scaling list coefs.
+ *
+ * Structure defining the H266 scaling list parameters.
  *
  * Since: 1.26
  */
@@ -2247,9 +2224,6 @@ struct _GstH266ScalingList
 
 /**
  * GstH266APS:
- *
- * Structure defining the H266 Adaptation Parameter Set.
- *
  * @params_type: specifies the type of APS parameters carried in the APS as
  *  specified in Table 6.
  * @aps_id: provides an identifier for the APS for reference by other syntax
@@ -2265,6 +2239,8 @@ struct _GstH266ScalingList
  * @extension_data_flag: could have any value and do not affect the decoding
  *  process now.
  * @valid: whether this APS is valid.
+ *
+ * Structure defining the H266 Adaptation Parameter Set.
  *
  * Since: 1.26
  */
@@ -2287,9 +2263,6 @@ struct _GstH266APS
 
 /**
  * GstH266PredWeightTable:
- *
- * Structure defining the H266 weight table parameters.
- *
  * @luma_log2_weight_denom: the base 2 logarithm of the denominator for all
  *  luma weighting factors.
  * @delta_chroma_log2_weight_denom: the difference of the base 2 logarithm of
@@ -2323,6 +2296,8 @@ struct _GstH266APS
  * @delta_chroma_offset_l1: the difference of the additive offset applied to
  *  the chroma prediction values for list 1 prediction.
  *
+ * Structure defining the H266 weight table parameters.
+ *
  * Since: 1.26
  */
 struct _GstH266PredWeightTable
@@ -2349,9 +2324,6 @@ struct _GstH266PredWeightTable
 
 /**
  * GstH266PicHdr:
- *
- * Structure defining the H266 picture header.
- *
  * @gdr_or_irap_pic_flag: specifies whethers the current picture is a GDR or
  *  IRAP picture.
  * @non_ref_pic_flag: specifies whether the current picture is never used as
@@ -2519,6 +2491,8 @@ struct _GstH266PredWeightTable
  * @extension_data_byte: could have any value.
  * @valid: whether this picture header is valid.
  *
+ * Structure defining the H266 picture header.
+ *
  * Since: 1.26
  */
 struct _GstH266PicHdr {
@@ -2618,9 +2592,6 @@ struct _GstH266PicHdr {
 
 /**
  * GstH266SliceHdr:
- *
- * Structure defining the H266 slice header.
- *
  * @gdr_or_irap_pic_flag: specifies that the PH syntax structure is present in
  *  the slice header.
  * @picture_header: the picture header of #GstH266PicHdr.
@@ -2722,6 +2693,8 @@ struct _GstH266PicHdr {
  * @n_emulation_prevention_bytes: number of emulation prevention bytes (EPB) in
  *  this slice_header.
  *
+ * Structure defining the H266 slice header.
+ *
  * Since: 1.26
  */
 struct _GstH266SliceHdr
@@ -2802,12 +2775,11 @@ struct _GstH266SliceHdr
 
 /**
  * GstH266AUD:
- *
- * Structure defining the H266 AU delimiter.
- *
  * @irap_or_gdr_flag: specifies whether the AU containing the AU delimiter is
  *  an IRAP or GDR AU.
  * @pic_type: indicates sh_slice_type values that could be present in the AU.
+ *
+ * Structure defining the H266 AU delimiter.
  *
  * Since: 1.26
  */
@@ -2818,9 +2790,6 @@ struct _GstH266AUD {
 
 /**
  * GstH266OPI:
- *
- * Structure defining the H266 operating point information.
- *
  * @ols_info_present_flag: specifies whether opi_ols_idx is present in the OPI.
  * @htid_info_present_flag: specifies whether opi_htid_plus1 is present.
  * @ols_idx: specifies that the current CVS and the next CVSs in decoding order
@@ -2834,6 +2803,8 @@ struct _GstH266AUD {
  * @extension_flag: specifies whether opi_extension_data_flag syntax elements
  *  are present.
  * @extension_data_flag: could have any value.
+ *
+ * Structure defining the H266 operating point information.
  *
  * Since: 1.26
  */
@@ -2850,14 +2821,13 @@ struct _GstH266OPI {
 
 /**
  * GstH266DCI:
- *
- * Structure defining the H266 decoding capability information.
- *
  * @num_ptls_minus1: specifies the number of profile_tier_level syntax
  *  structures in the DCI NAL unit.
  * @extension_flag: specifies whether dci_extension_data_flag syntax elements
  *  are present.
  * @extension_data_flag: could have any value.
+ *
+ * Structure defining the H266 decoding capability information.
  *
  * Since: 1.26
  */
@@ -2872,9 +2842,6 @@ struct _GstH266DCI {
 
 /**
  * GstH266BufferingPeriod:
- *
- * Structure defining the H266 buffering period.
- *
  * @nal_hrd_params_present_flag: specifies whether a list of syntax element
  *  pairs bp_nal_initial_cpb_removal_delay and bp_nal_initial_cpb_removal_offset
  *  are present in the BP SEI message.
@@ -2952,6 +2919,8 @@ struct _GstH266DCI {
  * @use_alt_cpb_params_flag: could be used to derive the value of
  *  UseAltCpbParamsFlag.
  *
+ * Structure defining the H266 buffering period.
+ *
  * Since: 1.26
  */
 struct _GstH266BufferingPeriod {
@@ -2991,9 +2960,6 @@ struct _GstH266BufferingPeriod {
 
 /**
  * GstH266PicTiming:
- *
- * Structure defining the H266 picture timing.
- *
  * @cpb_removal_delay_minus: calculate the number of clock ticks between the
  *  nominal CPB removal times of the AU associated with the PT SEI message.
  * @sublayer_delays_present_flag: specifies whether cpb removal values are
@@ -3044,6 +3010,8 @@ struct _GstH266BufferingPeriod {
  * @display_elemental_periods_minus1: indicates the number of elemental picture
  *  period intervals.
  *
+ * Structure defining the H266 picture timing.
+ *
  * Since: 1.26
  */
 struct _GstH266PicTiming {
@@ -3075,15 +3043,14 @@ struct _GstH266PicTiming {
 
 /**
  * GstH266RegisteredUserData:
- *
- * The User data registered by Rec. ITU-T T.35 SEI message.
- *
  * @country_code: an itu_t_t35_country_code.
  * @country_code_extension: an itu_t_t35_country_code_extension_byte.
  *   Should be ignored when @country_code is not 0xff
  * @size: the size of @data in bytes
  * @data: the data of itu_t_t35_payload_byte
  *   excluding @country_code and @country_code_extension
+ *
+ * The User data registered by Rec. ITU-T T.35 SEI message.
  *
  * Since: 1.28
  */
@@ -3097,9 +3064,6 @@ struct _GstH266RegisteredUserData
 
 /**
  * GstH266DUInfo:
- *
- * Structure defining the H266 decoding unit info.
- *
  * @decoding_unit_idx: specifies the index to the list of DUs in the current AU.
  * @sublayer_delays_present_flag: specifies whether
  *  dui_du_cpb_removal_delay_increment[i] is present for the sublayer.
@@ -3108,6 +3072,8 @@ struct _GstH266RegisteredUserData
  * @dpb_output_du_delay_present_flag: specifies the presence of the
  *  dui_dpb_output_du_delay syntax element in the DUI SEI message.
  * @dpb_output_du_delay: is used to compute the DPB output time of the AU.
+ *
+ * Structure defining the H266 decoding unit info.
  *
  * Since: 1.26
  */
@@ -3121,9 +3087,6 @@ struct _GstH266DUInfo {
 
 /**
  * GstH266ScalableNesting:
- *
- * Structure defining the H266 scalable nesting.
- *
  * @ols_flag: specifies whether the scalable-nested SEI messages apply to
  *  specific OLSs.
  * @subpic_flag: specifies whether the scalable-nested SEI messages that apply
@@ -3147,6 +3110,8 @@ struct _GstH266DUInfo {
  *  picture in the multiSubpicLayers.
  * @num_seis_minus1: specifies the number of scalable-nested SEI messages.
  *
+ * Structure defining the H266 scalable nesting.
+ *
  * Since: 1.26
  */
 struct _GstH266ScalableNesting {
@@ -3165,9 +3130,6 @@ struct _GstH266ScalableNesting {
 
 /**
  * GstH266SubPicLevelInfo:
- *
- * Structure defining the H266 subpicture level information.
- *
  * @num_ref_levels_minus1: specifies the number of reference levels signalled
  *  for each subpicture sequences.
  * @cbr_constraint_flag: specifies whether to decode the sub-bitstreams
@@ -3187,6 +3149,8 @@ struct _GstH266ScalableNesting {
  * @ref_level_fraction_minus1: specifies the i-th fraction of the level limits
  *  for the subpictures.
  *
+ * Structure defining the H266 subpicture level information.
+ *
  * Since: 1.26
  */
 struct _GstH266SubPicLevelInfo {
@@ -3203,9 +3167,6 @@ struct _GstH266SubPicLevelInfo {
 
 /**
  * GstH266FrameFieldInfo:
- *
- * Structure defining the H266 frame field information.
- *
  * @field_pic_flag: indicates whether the display model considers the current
  *  picture as a field.
  * @bottom_field_flag: indicates whether the current picture is a bottom field.
@@ -3228,6 +3189,8 @@ struct _GstH266SubPicLevelInfo {
  *  duplicate of a previous picture in output order.
  * @valid: whether this frame field info is valid.
  *
+ * Structure defining the H266 frame field information.
+ *
  * Since: 1.26
  */
 struct _GstH266FrameFieldInfo {
@@ -3245,9 +3208,6 @@ struct _GstH266FrameFieldInfo {
 
 /**
  * GstH266SEIMessage:
- *
- * Structure defining the H266 sei message.
- *
  * @payloadType: the payload type of #GstH266SEIPayloadType.
  * @buffering_period: buffering period sei of #GstH266BufferingPeriod.
  * @pic_timing: picture timing sei of #GstH266PicTiming.
@@ -3256,6 +3216,8 @@ struct _GstH266FrameFieldInfo {
  * @subpic_level_info: subpicture level info sei of #GstH266SubPicLevelInfo.
  * @frame_field_info: frame field info sei of #GstH266FrameFieldInfo.
  * @registered_user_data: registered user data sei of #GstH266RegisteredUserData. (Since: 1.28)
+ *
+ * Structure defining the H266 sei message.
  *
  * Since: 1.26
  */
@@ -3272,7 +3234,7 @@ struct _GstH266SEIMessage
     GstH266FrameFieldInfo frame_field_info;
 
     /**
-     * _GstH266SEIMessage.payload.registered_user_data:
+     * GstH266SEIMessage.registered_user_data:
      *
      * Registered user data sei of #GstH266RegisteredUserData.
      *
@@ -3323,9 +3285,6 @@ struct _GstH266DecoderConfigRecordNalUnitArray
 
 /**
  * GstH266PTLRecord:
- *
- * Contains VvcPTLRecord data as defined in ISO/IEC 14496-15
- *
  * @num_bytes_constraint_info: Number of bytes for constraint information.
  * @general_profile_idc: General profile id.
  * @general_tier_flag: General tier flag.
@@ -3337,6 +3296,8 @@ struct _GstH266DecoderConfigRecordNalUnitArray
  * @sublayer_level_idc: Array containing sublayer level ids.
  * @ptl_num_sub_profiles: Number of sub-profiles.
  * @general_sub_profile_idc: Array containing general sub-profile ids.
+ *
+ * Contains VvcPTLRecord data as defined in ISO/IEC 14496-15
  *
  * Since: 1.26
  */

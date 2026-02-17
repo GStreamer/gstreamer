@@ -1385,7 +1385,7 @@ error:
 /******** API *************/
 
 /**
- * gst_h265_parser_new:
+ * gst_h265_parser_new: (skip)
  *
  * Creates a new #GstH265Parser. It should be freed with
  * gst_h265_parser_free after use.
@@ -1629,7 +1629,7 @@ gst_h265_parser_identify_nalu_hevc (GstH265Parser * parser,
  * @offset: the offset from which to parse @data
  * @size: the size of @data
  * @nal_length_size: the size in bytes of the HEVC nal length prefix.
- * @nalus: a caller allocated GArray of #GstH265NalUnit where to store parsed nal headers
+ * @nalus: (element-type GstH265NalUnit): a caller allocated GArray of #GstH265NalUnit where to store parsed nal headers
  * @consumed: the size of consumed bytes
  *
  * Parses @data for packetized (e.g., hvc1/hev1) bitstream and
@@ -1856,7 +1856,7 @@ gst_h265_parser_parse_vps (GstH265Parser * parser, GstH265NalUnit * nalu,
 /**
  * gst_h265_parse_vps:
  * @nalu: The %GST_H265_NAL_VPS #GstH265NalUnit to parse
- * @sps: The #GstH265VPS to fill.
+ * @vps: The #GstH265VPS to fill.
  *
  * Parses @data, and fills the @vps structure.
  *
@@ -3331,7 +3331,7 @@ gst_h265_slice_hdr_free (GstH265SliceHdr * slice_hdr)
 
 /**
  * gst_h265_sei_copy:
- * @dst_sei: The destination #GstH265SEIMessage to copy into
+ * @dest_sei: The destination #GstH265SEIMessage to copy into
  * @src_sei: The source #GstH265SEIMessage to copy from
  *
  * Copies @src_sei into @dst_sei
@@ -3424,9 +3424,9 @@ gst_h265_sei_free (GstH265SEIMessage * sei)
 
 /**
  * gst_h265_parser_parse_sei:
- * @nalparser: a #GstH265Parser
+ * @parser: a #GstH265Parser
  * @nalu: The `GST_H265_NAL_*_SEI` #GstH265NalUnit to parse
- * @messages: The GArray of #GstH265SEIMessage to fill. The caller must free it when done.
+ * @messages: (element-type GstH265SEIMessage): The GArray of #GstH265SEIMessage to fill. The caller must free it when done.
  *
  * Parses @data, create and fills the @messages array.
  *
@@ -4590,7 +4590,7 @@ error:
  * @layer_id: a nal unit layer id
  * @temporal_id_plus1: a nal unit temporal identifier
  * @start_code_prefix_length: a length of start code prefix, must be 3 or 4
- * @messages: (transfer none): a GArray of #GstH265SEIMessage
+ * @messages: (element-type GstH265SEIMessage) (transfer none): a GArray of #GstH265SEIMessage
  *
  * Creates raw byte-stream format (a.k.a Annex B type) SEI nal unit data
  * from @messages
@@ -4617,7 +4617,7 @@ gst_h265_create_sei_memory (guint8 layer_id, guint8 temporal_id_plus1,
  * @layer_id: a nal unit layer id
  * @temporal_id_plus1: a nal unit temporal identifier
  * @nal_length_size: a size of nal length field, allowed range is [1, 4]
- * @messages: (transfer none): a GArray of #GstH265SEIMessage
+ * @messages: (element-type GstH265SEIMessage) (transfer none): a GArray of #GstH265SEIMessage
  *
  * Creates raw packetized format SEI nal unit data from @messages
  *

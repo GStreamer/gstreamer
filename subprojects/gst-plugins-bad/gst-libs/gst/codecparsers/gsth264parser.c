@@ -1414,7 +1414,7 @@ error:
 /******** API *************/
 
 /**
- * gst_h264_nal_parser_new:
+ * gst_h264_nal_parser_new: (skip)
  *
  * Creates a new #GstH264NalParser. It should be freed with
  * gst_h264_nal_parser_free after use.
@@ -1650,7 +1650,7 @@ gst_h264_parser_identify_nalu_avc (GstH264NalParser * nalparser,
  * @offset: the offset in @data from which to parse the NAL unit
  * @size: the size of @data
  * @nal_length_size: the size in bytes of the AVC nal length prefix.
- * @nalus: a caller allocated GArray of #GstH264NalUnit where to store parsed nal headers
+ * @nalus: (element-type GstH264NalUnit): a caller allocated GArray of #GstH264NalUnit where to store parsed nal headers
  * @consumed: (out): the size of consumed bytes
  *
  * Parses @data for packetized (e.g., avc/avc3) bitstream and
@@ -2709,7 +2709,7 @@ gst_h264_sei_clear (GstH264SEIMessage * sei)
  * gst_h264_parser_parse_sei:
  * @nalparser: a #GstH264NalParser
  * @nalu: The %GST_H264_NAL_SEI #GstH264NalUnit to parse
- * @messages: The GArray of #GstH264SEIMessage to fill. The caller must free it when done.
+ * @messages: (element-type GstH264SEIMessage): The GArray of #GstH264SEIMessage to fill. The caller must free it when done.
  *
  * Parses @nalu containing one or more Supplementary Enhancement Information messages,
  * and allocates and fills the @messages array.
@@ -3485,7 +3485,7 @@ error:
 /**
  * gst_h264_create_sei_memory:
  * @start_code_prefix_length: a length of start code prefix, must be 3 or 4
- * @messages: (transfer none): a GArray of #GstH264SEIMessage
+ * @messages: (element-type GstH264SEIMessage) (transfer none): a GArray of #GstH264SEIMessage
  *
  * Creates raw byte-stream format (a.k.a Annex B type) SEI nal unit data
  * from @messages
@@ -3509,7 +3509,7 @@ gst_h264_create_sei_memory (guint8 start_code_prefix_length, GArray * messages)
 /**
  * gst_h264_create_sei_memory_avc:
  * @nal_length_size: a size of nal length field, allowed range is [1, 4]
- * @messages: (transfer none): a GArray of #GstH264SEIMessage
+ * @messages: (element-type GstH264SEIMessage) (transfer none): a GArray of #GstH264SEIMessage
  *
  * Creates raw packetized format SEI nal unit data from @messages
  *
@@ -3913,7 +3913,7 @@ static const H264ProfileMapping h264_profiles[] = {
 
 /**
  * gst_h264_profile_from_string:
- * @string: the descriptive name for #GstH264Profile
+ * @profile: the descriptive name for #GstH264Profile
  *
  * Returns a #GstH264Profile for the @string.
  *

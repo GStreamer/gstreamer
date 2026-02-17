@@ -1321,11 +1321,12 @@ struct _GstH264SEIUnhandledPayload
 };
 
 /**
- * _GstH264SEIMessage.payload.user_data_unregistered:
+ * GstH264SEIMessage:
+ * @payloadType: #GstH264SEIPayloadType
+ * @payload: union of all possible SEI message data types
  *
- * User Data Unregistered
- *
- * Since: 1.22
+ * Constains information about SEI message. The content depends on the
+ * @payloadType.
  */
 struct _GstH264SEIMessage
 {
@@ -1341,6 +1342,14 @@ struct _GstH264SEIMessage
     GstH264MasteringDisplayColourVolume mastering_display_colour_volume;
     GstH264ContentLightLevel content_light_level;
     GstH264SEIUnhandledPayload unhandled_payload;
+
+    /**
+     * GstH264SEIMessage.user_data_unregistered:
+     *
+     * User Data Unregistered
+     *
+     * Since: 1.22
+     */
     GstH264UserDataUnregistered user_data_unregistered;
     /* ... could implement more */
   } payload;
