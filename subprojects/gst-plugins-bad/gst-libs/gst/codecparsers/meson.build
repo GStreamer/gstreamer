@@ -51,7 +51,7 @@ foreach s: codecparser_sources + codecparser_headers
   doc_sources += s.full_path()
 endforeach
 
-libs_c_sources += {
+libs_sources += {
   'codecparsers': pathsep.join(doc_sources)
 }
 
@@ -84,8 +84,52 @@ pkgconfig.generate(gstcodecparsers,
   description : 'Bitstream parsers for GStreamer elements',
 )
 
+gen_sources = []
+if build_gir
+  gir = {
+    'sources' : codecparser_sources + codecparser_headers,
+    'namespace' : 'GstCodecParsers',
+    'nsversion' : api_version,
+    'identifier_prefix' : 'Gst',
+    'symbol_prefix' : 'gst',
+    'export_packages' : pkg_name,
+    'includes' : ['Gst-1.0', 'GstBase-1.0'],
+    'install' : true,
+    'extra_args' : gir_init_section + cp_args +
+      ['--c-include=gst/codecs/gstav1decoder.h',
+       '--c-include=gst/codecparsers/gstav1bitwriter.h',
+       '--c-include=gst/codecparsers/gstav1parser.h',
+       '--c-include=gst/codecparsers/gsth264bitwriter.h',
+       '--c-include=gst/codecparsers/gsth264parser.h',
+       '--c-include=gst/codecparsers/gsth265parser.h',
+       '--c-include=gst/codecparsers/gsth266parser.h',
+       '--c-include=gst/codecparsers/gstjpeg2000sampling.h',
+       '--c-include=gst/codecparsers/gstjpegbitwriter.h',
+       '--c-include=gst/codecparsers/gstjpegparser.h',
+       '--c-include=gst/codecparsers/gstlcevcmeta.h',
+       '--c-include=gst/codecparsers/gstmpeg4parser.h',
+       '--c-include=gst/codecparsers/gstmpegvideometa.h',
+       '--c-include=gst/codecparsers/gstmpegvideoparser.h',
+       '--c-include=gst/codecparsers/gstvc1parser.h',
+       '--c-include=gst/codecparsers/gstvp8parser.h',
+       '--c-include=gst/codecparsers/gstvp8rangedecoder.h',
+       '--c-include=gst/codecparsers/gstvp9parser.h',
+      ],
+    'dependencies' : [gstbase_dep]
+  }
+  library_def += {'gir': [gir]}
+  if not static_build
+    codecparsers_gir = gnome.generate_gir(gstcodecparsers, kwargs: gir)
+    library_def += {'gir_targets':  library_def.get('gir_targets', []) + [codecparsers_gir]}
+    gen_sources += codecparsers_gir
+  endif
+endif
+gst_libraries += [[pkg_name, library_def]]
+
+
 gstcodecparsers_dep = declare_dependency(link_with : gstcodecparsers,
   include_directories : [libsinc],
+  sources: gen_sources,
   dependencies : [gstbase_dep])
 
 gst_libraries += [[pkg_name, {'lib': gstcodecparsers}]]
