@@ -2273,11 +2273,11 @@ gst_h265_decoder_get_picture (GstH265Decoder * decoder,
  *
  * Retrieve the extended SPS values attached to the given #GstH265SPS
  *
- * Returns: (transfer full) (nullable): a #GstH265SPSEXT if successful, or %NULL otherwise
+ * Returns: (transfer none) (nullable): a #GstH265SPSEXT if successful, or %NULL otherwise
  *
  * Since: 1.28
  */
-GstH265SPSEXT *
+const GstH265SPSEXT *
 gst_h265_decoder_get_sps_ext (const GstH265Decoder * decoder,
     const GstH265SPS * sps)
 {
