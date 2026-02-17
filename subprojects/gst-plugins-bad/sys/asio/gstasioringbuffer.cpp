@@ -26,9 +26,19 @@
 #include <string.h>
 #include "gstasioutils.h"
 #include "gstasioobject.h"
+#include <atomic>
+#include <vector>
 
 GST_DEBUG_CATEGORY_STATIC (gst_asio_ring_buffer_debug);
 #define GST_CAT_DEFAULT gst_asio_ring_buffer_debug
+
+/* *INDENT-OFF* */
+struct GstAsioRingBufferPrivate
+{
+  std::vector<guint8> empty_buf;
+  std::atomic<bool> paused = { false };
+};
+/* *INDENT-ON* */
 
 struct _GstAsioRingBuffer
 {
@@ -51,6 +61,8 @@ struct _GstAsioRingBuffer
   gboolean is_first;
   guint64 expected_sample_position;
   gboolean trace_sample_position;
+
+  GstAsioRingBufferPrivate *priv;
 };
 
 enum
@@ -60,6 +72,7 @@ enum
 };
 
 static void gst_asio_ring_buffer_dispose (GObject * object);
+static void gst_asio_ring_buffer_finalize (GObject * object);
 
 static gboolean gst_asio_ring_buffer_open_device (GstAudioRingBuffer * buf);
 static gboolean gst_asio_ring_buffer_close_device (GstAudioRingBuffer * buf);
@@ -69,6 +82,8 @@ static gboolean gst_asio_ring_buffer_release (GstAudioRingBuffer * buf);
 static gboolean gst_asio_ring_buffer_start (GstAudioRingBuffer * buf);
 static gboolean gst_asio_ring_buffer_stop (GstAudioRingBuffer * buf);
 static guint gst_asio_ring_buffer_delay (GstAudioRingBuffer * buf);
+static gboolean gst_asio_ring_buffer_resume (GstAudioRingBuffer * buf);
+static gboolean gst_asio_ring_buffer_pause (GstAudioRingBuffer * buf);
 
 #define gst_asio_ring_buffer_parent_class parent_class
 G_DEFINE_TYPE (GstAsioRingBuffer, gst_asio_ring_buffer,
@@ -82,6 +97,7 @@ gst_asio_ring_buffer_class_init (GstAsioRingBufferClass * klass)
       GST_AUDIO_RING_BUFFER_CLASS (klass);
 
   gobject_class->dispose = gst_asio_ring_buffer_dispose;
+  gobject_class->finalize = gst_asio_ring_buffer_finalize;
 
   ring_buffer_class->open_device =
       GST_DEBUG_FUNCPTR (gst_asio_ring_buffer_open_device);
@@ -93,6 +109,8 @@ gst_asio_ring_buffer_class_init (GstAsioRingBufferClass * klass)
   ring_buffer_class->resume = GST_DEBUG_FUNCPTR (gst_asio_ring_buffer_start);
   ring_buffer_class->stop = GST_DEBUG_FUNCPTR (gst_asio_ring_buffer_stop);
   ring_buffer_class->delay = GST_DEBUG_FUNCPTR (gst_asio_ring_buffer_delay);
+  ring_buffer_class->resume = GST_DEBUG_FUNCPTR (gst_asio_ring_buffer_resume);
+  ring_buffer_class->pause = GST_DEBUG_FUNCPTR (gst_asio_ring_buffer_pause);
 
   GST_DEBUG_CATEGORY_INIT (gst_asio_ring_buffer_debug,
       "asioringbuffer", 0, "asioringbuffer");
@@ -101,6 +119,7 @@ gst_asio_ring_buffer_class_init (GstAsioRingBufferClass * klass)
 static void
 gst_asio_ring_buffer_init (GstAsioRingBuffer * self)
 {
+  self->priv = new GstAsioRingBufferPrivate ();
 }
 
 static void
@@ -112,6 +131,16 @@ gst_asio_ring_buffer_dispose (GObject * object)
   g_clear_pointer (&self->channel_indices, g_free);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_asio_ring_buffer_finalize (GObject * object)
+{
+  auto self = GST_ASIO_RING_BUFFER (object);
+
+  delete self->priv;
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -146,6 +175,7 @@ gst_asio_buffer_switch_cb (GstAsioObject * obj, glong index,
 {
   GstAsioRingBuffer *self = (GstAsioRingBuffer *) user_data;
   GstAudioRingBuffer *ringbuffer = GST_AUDIO_RING_BUFFER_CAST (self);
+  auto priv = self->priv;
   gint segment;
   guint8 *readptr;
   gint len;
@@ -158,7 +188,15 @@ gst_asio_buffer_switch_cb (GstAsioObject * obj, glong index,
 
   GST_TRACE_OBJECT (self, "Buffer Switch callback, index %ld", index);
 
-  if (!gst_audio_ring_buffer_prepare_read (ringbuffer,
+  auto paused = priv->paused.load ();
+  if (paused) {
+    /* Source is always live, do nothing when paused */
+    if (self->type != GST_ASIO_DEVICE_CLASS_RENDER)
+      return TRUE;
+
+    readptr = priv->empty_buf.data ();
+    len = (gint) priv->empty_buf.size ();
+  } else if (!gst_audio_ring_buffer_prepare_read (ringbuffer,
           &segment, &readptr, &len)) {
     GST_WARNING_OBJECT (self, "No segment available");
     return TRUE;
@@ -282,6 +320,10 @@ gst_asio_buffer_switch_cb (GstAsioObject * obj, glong index,
     }
   }
 
+  /* Do not advance ringbuffer position if we didn't consume its buffer */
+  if (paused)
+    return TRUE;
+
   if (self->type == GST_ASIO_DEVICE_CLASS_RENDER)
     gst_audio_ring_buffer_clear (ringbuffer, segment);
   gst_audio_ring_buffer_advance (ringbuffer, 1);
@@ -294,6 +336,7 @@ gst_asio_ring_buffer_acquire (GstAudioRingBuffer * buf,
     GstAudioRingBufferSpec * spec)
 {
   GstAsioRingBuffer *self = GST_ASIO_RING_BUFFER (buf);
+  auto priv = self->priv;
 
   if (!self->asio_object) {
     GST_ERROR_OBJECT (self, "No configured ASIO object");
@@ -321,6 +364,11 @@ gst_asio_ring_buffer_acquire (GstAudioRingBuffer * buf,
   gst_audio_format_info_fill_silence (buf->spec.info.finfo,
       buf->memory, buf->size);
 
+  /* Prepare empty buffer to fill silence when paused state */
+  priv->empty_buf.resize (spec->segsize);
+  gst_audio_format_info_fill_silence (buf->spec.info.finfo,
+      priv->empty_buf.data (), spec->segsize);
+
   return TRUE;
 }
 
@@ -338,6 +386,7 @@ static gboolean
 gst_asio_ring_buffer_start (GstAudioRingBuffer * buf)
 {
   GstAsioRingBuffer *self = GST_ASIO_RING_BUFFER (buf);
+  auto priv = self->priv;
   GstAsioObjectCallbacks callbacks;
 
   GST_DEBUG_OBJECT (buf, "Start");
@@ -347,6 +396,7 @@ gst_asio_ring_buffer_start (GstAudioRingBuffer * buf)
 
   self->is_first = TRUE;
   self->expected_sample_position = 0;
+  priv->paused = false;
 
   if (!gst_asio_object_install_callback (self->asio_object, self->type,
           &callbacks, &self->callback_id)) {
@@ -398,6 +448,32 @@ gst_asio_ring_buffer_delay (GstAudioRingBuffer * buf)
   /* FIXME: impl. */
 
   return 0;
+}
+
+static gboolean
+gst_asio_ring_buffer_resume (GstAudioRingBuffer * buf)
+{
+  auto self = GST_ASIO_RING_BUFFER (buf);
+  auto priv = self->priv;
+
+  GST_DEBUG_OBJECT (self, "Resume");
+
+  priv->paused = false;
+
+  return TRUE;
+}
+
+static gboolean
+gst_asio_ring_buffer_pause (GstAudioRingBuffer * buf)
+{
+  auto self = GST_ASIO_RING_BUFFER (buf);
+  auto priv = self->priv;
+
+  GST_DEBUG_OBJECT (self, "Pause");
+
+  priv->paused = true;
+
+  return TRUE;
 }
 
 GstAsioRingBuffer *
