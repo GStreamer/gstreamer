@@ -1959,11 +1959,11 @@ gst_vc1_parse_entry_point_header (const guint8 * data, gsize size,
 
   if (advanced->hrd_param_flag) {
     if (seqhdr->advanced.hrd_param.hrd_num_leaky_buckets >
-        MAX_HRD_NUM_LEAKY_BUCKETS) {
+        GST_VC1_MAX_HRD_NUM_LEAKY_BUCKETS) {
       GST_WARNING
-          ("hrd_num_leaky_buckets (%d) > MAX_HRD_NUM_LEAKY_BUCKETS (%d)",
+          ("hrd_num_leaky_buckets (%d) > GST_VC1_MAX_HRD_NUM_LEAKY_BUCKETS (%d)",
           seqhdr->advanced.hrd_param.hrd_num_leaky_buckets,
-          MAX_HRD_NUM_LEAKY_BUCKETS);
+          GST_VC1_MAX_HRD_NUM_LEAKY_BUCKETS);
       goto failed;
     }
     for (i = 0; i < seqhdr->advanced.hrd_param.hrd_num_leaky_buckets; i++)
