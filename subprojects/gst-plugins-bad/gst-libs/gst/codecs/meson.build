@@ -76,12 +76,13 @@ if build_gir
     'includes' : ['Gst-1.0', 'GstVideo-1.0'],
     'install' : true,
     'extra_args' : gir_init_section + ['-DGST_USE_UNSTABLE_API'] +
-      ['--c-include=gst/codecs/gsth264decoder.h',
-      '--c-include=gst/codecs/gsth265decoder.h',
-      '--c-include=gst/codecs/gstvp9decoder.h',
-      '--c-include=gst/codecs/gstvp8decoder.h',
-      '--c-include=gst/codecs/gstmpeg2decoder.h',
-      '--c-include=gst/codecs/gsth266decoder.h',
+      ['--c-include=gst/codecs/gstav1decoder.h',
+       '--c-include=gst/codecs/gsth264decoder.h',
+       '--c-include=gst/codecs/gsth265decoder.h',
+       '--c-include=gst/codecs/gsth266decoder.h',
+       '--c-include=gst/codecs/gstmpeg2decoder.h',
+       '--c-include=gst/codecs/gstvp8decoder.h',
+       '--c-include=gst/codecs/gstvp9decoder.h',
       ],
     'dependencies' : [gstvideo_dep, gstcodecparsers_dep]
   }
