@@ -73,7 +73,7 @@ if build_gir
     'identifier_prefix' : 'Gst',
     'symbol_prefix' : 'gst',
     'export_packages' : pkg_name,
-    'includes' : ['Gst-1.0', 'GstVideo-1.0'],
+    'includes' : ['Gst-1.0', 'GstVideo-1.0', 'GstCodecParsers-1.0'],
     'install' : true,
     'extra_args' : gir_init_section + ['-DGST_USE_UNSTABLE_API'] +
       ['--c-include=gst/codecs/gstav1decoder.h',
