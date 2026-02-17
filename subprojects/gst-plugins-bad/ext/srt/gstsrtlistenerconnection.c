@@ -260,6 +260,15 @@ srt_listen_callback_func (GstSRTListenerConnection * connection, SRTSOCKET sock,
       goto reject_auth;
   }
 
+  /* Apply per-object latency to the accepted socket so that elements sharing
+   * the same listener connection can use different SRT latency values. */
+  {
+    gint latency;
+    if (gst_structure_get_int (object->parameters, "latency", &latency)) {
+      srt_setsockopt (sock, 0, SRTO_LATENCY, &latency, sizeof latency);
+    }
+  }
+
   GST_INFO_OBJECT (object->element, "Accepting sink %d streamid: %s", sock,
       stream_id);
   g_free (parsed_streamid);
