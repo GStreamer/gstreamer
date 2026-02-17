@@ -937,7 +937,7 @@ gst_v4l2_codec_h265_dec_fill_ext_sps_rps (GstV4l2CodecH265Dec * self,
   GstH265Decoder *decoder = (GstH265Decoder *) self;
   struct v4l2_ctrl_hevc_ext_sps_st_rps *ext_sps_st_rps_set;
   struct v4l2_ctrl_hevc_ext_sps_lt_rps *ext_sps_lt_rps_set;
-  GstH265SPSEXT *sps_ext = gst_h265_decoder_get_sps_ext (decoder, sps);
+  const GstH265SPSEXT *sps_ext = gst_h265_decoder_get_sps_ext (decoder, sps);
   gint i, j;
 
   for (i = 0; i < sps->num_short_term_ref_pic_sets; i++) {
