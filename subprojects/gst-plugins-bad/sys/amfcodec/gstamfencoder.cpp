@@ -25,15 +25,19 @@
 #include <core/Factory.h>
 #include "gstamfencoder.h"
 
+#ifdef G_OS_WIN32
 #include <gst/d3d11/gstd3d11.h>
 #include <wrl.h>
-#include <string.h>
 #include <mmsystem.h>
+#endif //G_OS_WIN32
+#include <string.h>
 #include <queue>
 #include <algorithm>
 
 /* *INDENT-OFF* */
+#ifdef G_OS_WIN32
 using namespace Microsoft::WRL;
+#endif //G_OS_WIN32
 using namespace amf;
 /* *INDENT-ON* */
 
@@ -334,9 +338,11 @@ gst_amf_enc_pa_hmbq_mode_get_type (void)
 GST_DEBUG_CATEGORY_STATIC (gst_amf_encoder_debug);
 #define GST_CAT_DEFAULT gst_amf_encoder_debug
 
+#ifdef G_OS_WIN32
 static GUID AMFTextureArrayIndexGUID = { 0x28115527, 0xe7c3, 0x4b66, 0x99, 0xd3,
   0x4f, 0x2a, 0xe6, 0xb4, 0x7f, 0xaf
 };
+#endif // G_OS_WIN32
 
 #define GST_AMF_BUFFER_PROP L"GstAmfFrameData"
 
@@ -355,8 +361,10 @@ struct _GstAmfEncoderPrivate
   gint64 adapter_luid = 0;
   const wchar_t *codec_id = nullptr;
 
+#ifdef G_OS_WIN32
   GstD3D11Device *device = nullptr;
   GstD3D11Fence *fence = nullptr;
+#endif
   AMFContext *context = nullptr;
   AMFComponent *comp = nullptr;
   GstBufferPool *internal_pool = nullptr;
@@ -446,13 +454,13 @@ static void
 gst_amf_encoder_init (GstAmfEncoder * self)
 {
   GstAmfEncoderPrivate *priv;
-  TIMECAPS time_caps;
-
   priv = self->priv = new GstAmfEncoderPrivate ();
 
   gst_video_encoder_set_min_pts (GST_VIDEO_ENCODER (self),
       GST_SECOND * 60 * 60 * 1000);
 
+#ifdef G_OS_WIN32
+  TIMECAPS time_caps;
   if (timeGetDevCaps (&time_caps, sizeof (TIMECAPS)) == TIMERR_NOERROR) {
     guint resolution;
     MMRESULT ret;
@@ -462,16 +470,22 @@ gst_amf_encoder_init (GstAmfEncoder * self)
     if (ret == TIMERR_NOERROR)
       priv->timer_resolution = resolution;
   }
+#else
+  timespec resolution;
+  if (clock_getres (CLOCK_MONOTONIC, &resolution) == 0) {
+    priv->timer_resolution = resolution.tv_nsec / 1000000;
+  }
+#endif
 }
 
 static void
 gst_amf_encoder_dispose (GObject * object)
 {
+#ifdef G_OS_WIN32
   GstAmfEncoder *self = GST_AMF_ENCODER (object);
   GstAmfEncoderPrivate *priv = self->priv;
-
   gst_clear_object (&priv->device);
-
+#endif
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -481,8 +495,10 @@ gst_amf_encoder_finalize (GObject * object)
   GstAmfEncoder *self = GST_AMF_ENCODER (object);
   GstAmfEncoderPrivate *priv = self->priv;
 
+#ifdef G_OS_WIN32
   if (priv->timer_resolution)
     timeEndPeriod (priv->timer_resolution);
+#endif
 
   delete priv;
 
@@ -492,24 +508,26 @@ gst_amf_encoder_finalize (GObject * object)
 static void
 gst_amf_encoder_set_context (GstElement * element, GstContext * context)
 {
+#ifdef G_OS_WIN32
   GstAmfEncoder *self = GST_AMF_ENCODER (element);
   GstAmfEncoderPrivate *priv = self->priv;
-
   gst_d3d11_handle_set_context_for_adapter_luid (element,
       context, priv->adapter_luid, &priv->device);
+#endif // G_OS_WIN32
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
+#ifdef G_OS_WIN32
 static gboolean
 gst_amf_encoder_open (GstVideoEncoder * encoder)
 {
   GstAmfEncoder *self = GST_AMF_ENCODER (encoder);
   GstAmfEncoderPrivate *priv = self->priv;
-  ComPtr < ID3D10Multithread > multi_thread;
-  ID3D11Device *device_handle;
   AMFFactory *factory = (AMFFactory *) gst_amf_get_factory ();
   AMF_RESULT result;
+  ComPtr < ID3D10Multithread > multi_thread;
+  ID3D11Device *device_handle;
   HRESULT hr;
   D3D_FEATURE_LEVEL feature_level;
   AMF_DX_VERSION dx_ver = AMF_DX11_1;
@@ -557,6 +575,37 @@ error:
 
   return FALSE;
 }
+#else // G_OS_WIN32
+static gboolean
+gst_amf_encoder_open (GstVideoEncoder * encoder)
+{
+  GstAmfEncoder *self = GST_AMF_ENCODER (encoder);
+  GstAmfEncoderPrivate *priv = self->priv;
+  AMFFactory *factory = (AMFFactory *) gst_amf_get_factory ();
+  AMF_RESULT result;
+
+  result = factory->CreateContext (&priv->context);
+  if (result != AMF_OK) {
+    GST_ERROR_OBJECT (self, "Failed to create context");
+    goto error;
+  }
+
+  result = AMFContext1Ptr (priv->context)->InitVulkan (NULL);
+  if (result != AMF_OK) {
+    GST_ERROR_OBJECT (self, "Failed to init context");
+    goto error;
+  }
+
+  return TRUE;
+
+error:
+  if (priv->context)
+    priv->context->Release ();
+  priv->context = nullptr;
+
+  return FALSE;
+}
+#endif // G_OS_WIN32
 
 static gboolean
 gst_amf_encoder_reset (GstAmfEncoder * self)
@@ -790,8 +839,10 @@ gst_amf_encoder_close (GstVideoEncoder * encoder)
     priv->context = nullptr;
   }
 
+#ifdef G_OS_WIN32
   gst_clear_d3d11_fence (&priv->fence);
   gst_clear_object (&priv->device);
+#endif
 
   return TRUE;
 }
@@ -803,13 +854,16 @@ gst_amf_encoder_prepare_internal_pool (GstAmfEncoder * self)
   GstVideoInfo *info = &priv->input_state->info;
   GstCaps *caps = priv->input_state->caps;
   GstStructure *config;
+#ifdef G_OS_WIN32
   GstD3D11AllocationParams *params;
+#endif // G_OS_WIN32
 
   if (priv->internal_pool) {
     gst_buffer_pool_set_active (priv->internal_pool, FALSE);
     gst_clear_object (&priv->internal_pool);
   }
 
+#ifdef G_OS_WIN32
   priv->internal_pool = gst_d3d11_buffer_pool_new (priv->device);
   config = gst_buffer_pool_get_config (priv->internal_pool);
   gst_buffer_pool_config_set_params (config, caps,
@@ -821,6 +875,12 @@ gst_amf_encoder_prepare_internal_pool (GstAmfEncoder * self)
 
   gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
   gst_d3d11_allocation_params_free (params);
+#else
+  priv->internal_pool = gst_buffer_pool_new ();
+  config = gst_buffer_pool_get_config (priv->internal_pool);
+  gst_buffer_pool_config_set_params (config, caps,
+      GST_VIDEO_INFO_SIZE (info), 0, 0);
+#endif // G_OS_WIN32
 
   if (!gst_buffer_pool_set_config (priv->internal_pool, config)) {
     GST_ERROR_OBJECT (self, "Failed to set config");
@@ -967,6 +1027,7 @@ gst_amf_encoder_upload_sysmem (GstAmfEncoder * self, GstBuffer * src_buf,
   return dst_buf;
 }
 
+#ifdef G_OS_WIN32
 static GstBuffer *
 gst_amf_encoder_copy_d3d11 (GstAmfEncoder * self, GstBuffer * src_buffer,
     gboolean shared)
@@ -1106,7 +1167,7 @@ error:
 }
 
 static GstBuffer *
-gst_amf_encoder_upload_buffer (GstAmfEncoder * self, GstBuffer * buffer)
+gst_amf_encoder_upload_buffer_d3d11 (GstAmfEncoder * self, GstBuffer * buffer)
 {
   GstAmfEncoderPrivate *priv = self->priv;
   GstVideoInfo *info = &priv->input_state->info;
@@ -1152,6 +1213,8 @@ gst_amf_encoder_upload_buffer (GstAmfEncoder * self, GstBuffer * buffer)
 
   return gst_buffer_ref (buffer);
 }
+#endif // G_OS_WIN32
+
 
 static void
 gst_amf_frame_data_free (GstAmfEncoderFrameData * data)
@@ -1205,6 +1268,67 @@ gst_amf_encoder_submit_input (GstAmfEncoder * self, GstVideoCodecFrame * frame,
   return ret;
 }
 
+#ifdef G_OS_WIN32
+static AMF_RESULT
+gst_amf_encoder_create_surface_from_frame_data (GstAmfEncoder * self,
+    GstAmfEncoderFrameData * frame_data, AMFSurfacePtr & surface)
+{
+  GstAmfEncoderPrivate *priv = self->priv;
+  guint subresource_index = GPOINTER_TO_UINT (frame_data->info.user_data[0]);
+  GstD3D11Device *device = priv->device;
+  ID3D11Texture2D *texture;
+
+  gst_d3d11_device_lock (device);
+  texture = (ID3D11Texture2D *) frame_data->info.data;
+  texture->SetPrivateData (AMFTextureArrayIndexGUID,
+      sizeof (guint), &subresource_index);
+  AMF_RESULT result = priv->context->CreateSurfaceFromDX11Native (texture,
+      &surface, nullptr);
+  gst_d3d11_device_unlock (device);
+
+  return result;
+}
+#else // G_OS_WIN32
+static AMF_RESULT
+gst_amf_encoder_create_surface_from_frame_data (GstAmfEncoder * self,
+    GstAmfEncoderFrameData * frame_data, AMFSurfacePtr & surface)
+{
+  GstAmfEncoderPrivate *priv = self->priv;
+  GstVideoInfo *info = &priv->input_state->info;
+  AMF_SURFACE_FORMAT format;
+  GstVideoFrame vframe;
+  AMF_RESULT result;
+
+  if (!gst_video_frame_map (&vframe, info, frame_data->buffer, GST_MAP_READ)) {
+    GST_ERROR_OBJECT (self, "Failed to map frame data as video frame");
+    return AMF_FAIL;
+  }
+
+  const amf_int32 width = GST_VIDEO_FRAME_WIDTH (&vframe);
+  const amf_int32 height = GST_VIDEO_FRAME_HEIGHT (&vframe);
+  const amf_int32 hPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0);
+
+  if (GST_VIDEO_FRAME_FORMAT (&vframe) == GST_VIDEO_FORMAT_NV12) {
+    format = amf::AMF_SURFACE_NV12;
+  } else if (GST_VIDEO_FRAME_FORMAT (&vframe) == GST_VIDEO_FORMAT_P010_10LE) {
+    format = AMF_SURFACE_P010;
+  } else {
+    GST_ERROR_OBJECT (self, "Unexpected video format %d",
+        GST_VIDEO_FRAME_FORMAT (&vframe));
+    result = AMF_INVALID_ARG;
+    goto out;
+  }
+
+  result = priv->context->CreateSurfaceFromHostNative (format, width, height,
+      hPitch, height, GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0),
+      &surface, nullptr);
+
+out:
+  gst_video_frame_unmap (&vframe);
+  return result;
+}
+#endif // G_OS_WIN32
+
 static GstFlowReturn
 gst_amf_encoder_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame)
@@ -1218,9 +1342,7 @@ gst_amf_encoder_handle_frame (GstVideoEncoder * encoder,
   AMFSurfacePtr surface;
   AMF_RESULT result;
   guint32 *system_frame_number;
-  guint subresource_index;
   GstAmfEncoderFrameData *frame_data;
-  ID3D11Texture2D *texture;
   gboolean need_reconfigure;
   GstFlowReturn ret;
 
@@ -1246,26 +1368,29 @@ gst_amf_encoder_handle_frame (GstVideoEncoder * encoder,
   system_frame_number = (guint32 *) user_data->GetNative ();
   *system_frame_number = frame->system_frame_number;
 
-  buffer = gst_amf_encoder_upload_buffer (self, frame->input_buffer);
+#ifdef G_OS_WIN32
+  buffer = gst_amf_encoder_upload_buffer_d3d11 (self, frame->input_buffer);
+#else
+  // TODO: Use zero-copy approach instead whenever it's possible
+  buffer = gst_amf_encoder_upload_sysmem (self, frame->input_buffer, info);
+#endif // G_OS_WIN32
   if (!buffer)
     goto error;
 
   frame_data = g_new0 (GstAmfEncoderFrameData, 1);
   frame_data->buffer = buffer;
+
+#ifdef G_OS_WIN32
   gst_buffer_map (frame_data->buffer, &frame_data->info,
       (GstMapFlags) (GST_MAP_READ | GST_MAP_D3D11));
+#else
+  gst_buffer_map (frame_data->buffer, &frame_data->info, GST_MAP_READ);
+#endif
   gst_video_codec_frame_set_user_data (frame, frame_data,
       (GDestroyNotify) gst_amf_frame_data_free);
 
-  subresource_index = GPOINTER_TO_UINT (frame_data->info.user_data[0]);
-
-  gst_d3d11_device_lock (priv->device);
-  texture = (ID3D11Texture2D *) frame_data->info.data;
-  texture->SetPrivateData (AMFTextureArrayIndexGUID,
-      sizeof (guint), &subresource_index);
-  result = priv->context->CreateSurfaceFromDX11Native (texture,
-      &surface, nullptr);
-  gst_d3d11_device_unlock (priv->device);
+  result = gst_amf_encoder_create_surface_from_frame_data (self, frame_data,
+      surface);
   if (result != AMF_OK) {
     GST_ERROR_OBJECT (self, "Failed to create surface, result %"
         GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
@@ -1327,10 +1452,13 @@ gst_amf_encoder_flush (GstVideoEncoder * encoder)
 static gboolean
 gst_amf_encoder_handle_context_query (GstAmfEncoder * self, GstQuery * query)
 {
+#ifdef G_OS_WIN32
   GstAmfEncoderPrivate *priv = self->priv;
-
   return gst_d3d11_handle_context_query (GST_ELEMENT (self), query,
       priv->device);
+#else
+  return FALSE;
+#endif // G_OS_WIN32
 }
 
 static gboolean
@@ -1367,12 +1495,13 @@ gst_amf_encoder_src_query (GstVideoEncoder * encoder, GstQuery * query)
   return GST_VIDEO_ENCODER_CLASS (parent_class)->src_query (encoder, query);
 }
 
+#ifdef G_OS_WIN32
 static gboolean
 gst_amf_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
 {
   GstAmfEncoder *self = GST_AMF_ENCODER (encoder);
   GstAmfEncoderPrivate *priv = self->priv;
-  GstD3D11Device *device = GST_D3D11_DEVICE (priv->device);
+  GstD3D11Device *device = priv->device;
   GstVideoInfo info;
   GstBufferPool *pool;
   GstCaps *caps;
@@ -1442,6 +1571,50 @@ gst_amf_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
 
   return TRUE;
 }
+#else // G_OS_WIN32
+static gboolean
+gst_amf_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
+{
+  GstAmfEncoder *self = GST_AMF_ENCODER (encoder);
+  GstVideoInfo info;
+  GstBufferPool *pool;
+  GstCaps *caps;
+  guint size;
+  GstStructure *config;
+
+  gst_query_parse_allocation (query, &caps, nullptr);
+  if (!caps) {
+    GST_WARNING_OBJECT (self, "null caps in query");
+    return FALSE;
+  }
+
+  if (!gst_video_info_from_caps (&info, caps)) {
+    GST_WARNING_OBJECT (self, "Failed to convert caps into info");
+    return FALSE;
+  }
+
+  pool = gst_video_buffer_pool_new ();
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_buffer_pool_config_add_option (config,
+      GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+
+  size = GST_VIDEO_INFO_SIZE (&info);
+  gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+
+  if (!gst_buffer_pool_set_config (pool, config)) {
+    GST_WARNING_OBJECT (self, "Failed to set pool config");
+    gst_object_unref (pool);
+    return FALSE;
+  }
+
+  gst_query_add_allocation_pool (query, pool, size, 0, 0);
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, nullptr);
+  gst_object_unref (pool);
+
+  return TRUE;
+}
+#endif // G_OS_WIN32
 
 /* *INDENT-OFF* */
 void

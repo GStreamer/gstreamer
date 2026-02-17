@@ -28,10 +28,15 @@
 #endif
 
 #include <gst/gst.h>
+#ifdef G_OS_WIN32
 #include <gst/d3d11/gstd3d11.h>
 #include <wrl.h>
-#include <core/Factory.h>
 #include <versionhelpers.h>
+#else
+#include <memory>
+#include <vector>
+#endif //G_OS_WIN32
+#include <core/Factory.h>
 #include "gstamfutils.h"
 #include "gstamfh264enc.h"
 #include "gstamfh265enc.h"
@@ -40,12 +45,15 @@
 #include <glib/gi18n-lib.h>
 
 /* *INDENT-OFF* */
+#ifdef G_OS_WIN32
 using namespace Microsoft::WRL;
+#endif //G_OS_WIN32
 using namespace amf;
 /* *INDENT-ON* */
 
+#ifdef G_OS_WIN32
 static gboolean
-plugin_init (GstPlugin * plugin)
+plugin_init_d3d11 (GstPlugin * plugin)
 {
   AMFFactory *amf_factory;
   ComPtr < IDXGIFactory1 > factory;
@@ -116,11 +124,11 @@ plugin_init (GstPlugin * plugin)
       result = context->InitDX11 (device_handle, dx_ver);
 
     if (result == AMF_OK) {
-      gst_amf_h264_enc_register_d3d11 (plugin, device,
+      gst_amf_h264_enc_register (plugin, device,
           (gpointer) context.GetPtr (), GST_RANK_PRIMARY);
-      gst_amf_h265_enc_register_d3d11 (plugin, device,
+      gst_amf_h265_enc_register (plugin, device,
           (gpointer) context.GetPtr (), GST_RANK_PRIMARY);
-      gst_amf_av1_enc_register_d3d11 (plugin, device,
+      gst_amf_av1_enc_register (plugin, device,
           (gpointer) context.GetPtr (), GST_RANK_NONE);
     }
 
@@ -135,6 +143,45 @@ plugin_init (GstPlugin * plugin)
   }
 
   return TRUE;
+}
+#endif // G_OS_WIN32
+
+#ifndef G_OS_WIN32
+static gboolean
+plugin_init_vulkan (GstPlugin * plugin)
+{
+  if (!gst_amf_init_once ())
+    return TRUE;
+
+  AMFFactory *amf_factory =
+      static_cast < AMFFactory * >(gst_amf_get_factory ());
+  if (!amf_factory)
+    return TRUE;
+
+  AMFContextPtr context;
+  AMF_RESULT result = amf_factory->CreateContext (&context);
+  if (result == AMF_OK)
+    result = AMFContext1Ptr (context)->InitVulkan (NULL);
+  if (result == AMF_OK) {
+    gst_amf_h264_enc_register (plugin, nullptr,
+        (gpointer) context.GetPtr (), GST_RANK_PRIMARY);
+    gst_amf_h265_enc_register (plugin, nullptr,
+        (gpointer) context.GetPtr (), GST_RANK_PRIMARY);
+    gst_amf_av1_enc_register (plugin, nullptr,
+        (gpointer) context.GetPtr (), GST_RANK_NONE);
+  }
+  return TRUE;
+}
+#endif // !G_OS_WIN32
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+#ifdef G_OS_WIN32
+  return plugin_init_d3d11 (plugin);
+#else
+  return plugin_init_vulkan (plugin);
+#endif // G_OS_WIN32
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

@@ -20,13 +20,13 @@
 #pragma once
 
 #include "gstamfencoder.h"
-#include <gst/d3d11/gstd3d11.h>
+#include "gstamfplatform.h"
 
 G_BEGIN_DECLS
 
-void gst_amf_h265_enc_register_d3d11 (GstPlugin * plugin,
-                                      GstD3D11Device * device,
-                                      gpointer context,
-                                      guint rank);
+void gst_amf_h265_enc_register (GstPlugin * plugin,
+                                GST_AMF_PLATFORM_DEVICE * device,
+                                gpointer context,
+                                guint rank);
 
 G_END_DECLS

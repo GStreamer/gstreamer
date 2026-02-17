@@ -13,6 +13,7 @@ amf_headers = [
   'gstamfh265enc.h',
   'gstamfh264enc.h',
   'gstamfav1enc.h',
+  'gstamfplatform.h',
 ]
 
 doc_sources = []
@@ -65,12 +66,6 @@ if host_system == 'windows'
   endif
 
   platform_deps += [gstd3d11_dep, winmm_lib]
-else
-  if amf_option.enabled()
-    error('amf plugin supports only Windows')
-  else
-    subdir_done()
-  endif
 endif
 
 if cxx.get_id() != 'msvc'

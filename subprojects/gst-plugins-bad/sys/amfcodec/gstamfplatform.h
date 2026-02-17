@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2022 Seungha Yang <seungha@centricular.com>
+ * Copyright (C) 2026
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,15 +19,12 @@
 
 #pragma once
 
-#include "gstamfencoder.h"
-#include "gstamfplatform.h"
+#include <glib.h>
 
+#ifdef G_OS_WIN32
+#include <gst/d3d11/gstd3d11.h>
+typedef GstD3D11Device GST_AMF_PLATFORM_DEVICE;
+#else
+typedef void GST_AMF_PLATFORM_DEVICE;
+#endif // G_OS_WIN32
 
-G_BEGIN_DECLS
-
-void gst_amf_h264_enc_register (GstPlugin * plugin,
-                                GST_AMF_PLATFORM_DEVICE * device,
-                                gpointer context,
-                                guint rank);
-
-G_END_DECLS

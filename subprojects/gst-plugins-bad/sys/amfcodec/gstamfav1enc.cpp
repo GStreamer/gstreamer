@@ -1494,7 +1494,8 @@ gst_amf_av1_enc_check_reconfigure (GstAmfEncoder * encoder)
 }
 
 static GstAmfAv1EncClassData *
-gst_amf_av1_enc_create_class_data (GstD3D11Device * device, AMFComponent * comp)
+gst_amf_av1_enc_create_class_data (GST_AMF_PLATFORM_DEVICE * device,
+    AMFComponent * comp)
 {
   AMF_RESULT result;
   GstAmfAv1EncDeviceCaps dev_caps = { 0, };
@@ -1519,7 +1520,9 @@ gst_amf_av1_enc_create_class_data (GstD3D11Device * device, AMFComponent * comp)
   gboolean d3d11_supported = FALSE;
   gint min_width, max_width, min_height, max_height;
   GstCaps *sink_caps;
+#ifdef G_OS_WIN32
   GstCaps *system_caps;
+#endif
 
   result = comp->GetCaps (&amf_caps);
   if (result != AMF_OK) {
@@ -1605,11 +1608,14 @@ gst_amf_av1_enc_create_class_data (GstD3D11Device * device, AMFComponent * comp)
     if (type == AMF_MEMORY_DX11)
       d3d11_supported = TRUE;
   }
-
+#ifdef G_OS_WIN32
   if (!d3d11_supported) {
     GST_WARNING_OBJECT (device, "D3D11 is not supported");
     return nullptr;
   }
+#else
+  (void) d3d11_supported;
+#endif // G_OS_WIN32
 
   result = amf_caps->GetOutputCaps (&out_iocaps);
   if (result != AMF_OK) {
@@ -1740,18 +1746,24 @@ gst_amf_av1_enc_create_class_data (GstD3D11Device * device, AMFComponent * comp)
   src_caps_str = "video/x-av1, " + resolution_str + ", profile = (string) main"
       ", stream-format = (string) obu-stream, alignment = (string) tu";
 
+#ifdef G_OS_WIN32
   system_caps = gst_caps_from_string (sink_caps_str.c_str ());
   sink_caps = gst_caps_copy (system_caps);
   gst_caps_set_features (sink_caps, 0,
       gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
           nullptr));
   gst_caps_append (sink_caps, system_caps);
+#else
+  sink_caps = gst_caps_from_string (sink_caps_str.c_str ());
+#endif // G_OS_WIN32
 
   cdata = g_new0 (GstAmfAv1EncClassData, 1);
   cdata->sink_caps = sink_caps;
   cdata->src_caps = gst_caps_from_string (src_caps_str.c_str ());
   cdata->dev_caps = dev_caps;
+#ifdef G_OS_WIN32
   g_object_get (device, "adapter-luid", &cdata->adapter_luid, nullptr);
+#endif // G_OS_WIN32
 
   GST_MINI_OBJECT_FLAG_SET (cdata->sink_caps,
       GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
@@ -1765,7 +1777,7 @@ gst_amf_av1_enc_create_class_data (GstD3D11Device * device, AMFComponent * comp)
 }
 
 void
-gst_amf_av1_enc_register_d3d11 (GstPlugin * plugin, GstD3D11Device * device,
+gst_amf_av1_enc_register (GstPlugin * plugin, GST_AMF_PLATFORM_DEVICE * device,
     gpointer context, guint rank)
 {
   GstAmfAv1EncClassData *cdata;
