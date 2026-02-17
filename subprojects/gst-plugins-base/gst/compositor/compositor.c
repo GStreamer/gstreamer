@@ -1685,7 +1685,8 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
   struct CompositePadInfo *pads_info;
   guint i, n_pads = 0;
 
-  if (!gst_video_frame_map (&out_frame, &vagg->info, outbuf, GST_MAP_WRITE)) {
+  if (!gst_video_frame_map (&out_frame, &vagg->info, outbuf,
+          GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF)) {
     GST_WARNING_OBJECT (vagg, "Could not map output buffer");
     return GST_FLOW_ERROR;
   }
@@ -1695,7 +1696,7 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
   if (compositor->intermediate_frame) {
     if (!gst_video_frame_map (&intermediate_frame,
             &compositor->intermediate_info, compositor->intermediate_frame,
-            GST_MAP_READWRITE)) {
+            GST_MAP_READWRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF)) {
       GST_WARNING_OBJECT (vagg, "Could not map intermediate buffer");
       gst_video_frame_unmap (&out_frame);
       return GST_FLOW_ERROR;
@@ -1758,6 +1759,7 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
       if (!drawn_a_pad && !draw_background &&
           frames_can_copy (prepared_frame, outframe)) {
         gst_video_frame_copy (outframe, prepared_frame);
+        copy_metas (compositor, compo_pad, prepared_frame, outbuf);
       } else {
         pads_info[n_pads].pad = compo_pad;
         pads_info[n_pads].prepared_frame = prepared_frame;
