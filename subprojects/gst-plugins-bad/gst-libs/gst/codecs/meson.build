@@ -99,4 +99,5 @@ gstcodecs_dep = declare_dependency(link_with : gstcodecs,
   include_directories : [libsinc],
   sources: gen_sources,
   dependencies : [gstvideo_dep, gstcodecparsers_dep])
+
 meson.override_dependency(pkg_name, gstcodecs_dep)
