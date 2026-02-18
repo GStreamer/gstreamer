@@ -788,6 +788,7 @@ integration testsuites fedora:
       -Dgst-plugins-rs:auto_plugin_features=disabled
       -Dgst-plugins-rs:debugseimetainserter=enabled
     EXTRA_VALIDATE_ARGS: "--timeout-factor=2 --retry-on-failures --parts=${CI_NODE_TOTAL} --part-index=${CI_NODE_INDEX} --sync"
+    GST_VALIDATE_CONFIG: "core,fail-on-missing-plugin=true"
     TEST_SUITE: "validate ges"
 
 check video formats:
