@@ -1208,7 +1208,8 @@ not been tested and explicitly activated if you set use --wanted-tests ALL""")
                     media_info_dir=self.options.media_info_dir,
                     media_root=media_root)
                 if media_descriptor:
-                    self._add_media(media_descriptor, uri)
+                    if not is_skipped:
+                        self._add_media(media_descriptor, uri)
                 else:
                     self.warning("Could not get any descriptor for %s" % uri)
 
