@@ -8970,6 +8970,9 @@ gst_video_converter_transform_metas (GstVideoConverter * convert,
 
   g_return_val_if_fail (gst_buffer_is_writable (dest), FALSE);
 
+  if (G_UNLIKELY ((convert->out_width <= 0) || (convert->out_height <= 0)))
+    return FALSE;
+
   gst_video_meta_transform_matrix_init (&trans_matrix, &convert->in_info,
       &in_rectangle, &convert->out_info, &out_rectangle);
 
