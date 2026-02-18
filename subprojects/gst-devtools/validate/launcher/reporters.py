@@ -67,7 +67,8 @@ class Reporter(Loggable):
 
     def init_timer(self):
         """Initialize a timer before starting tests."""
-        self._start_time = time.time()
+        if not self._start_time:
+            self._start_time = time.time()
 
     def set_failed(self, test):
         if test.result == Result.SKIPPED:
