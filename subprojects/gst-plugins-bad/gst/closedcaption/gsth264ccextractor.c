@@ -207,6 +207,9 @@ gst_h264_cc_extractor_set_format (GstVideoDecoder * decoder,
   if (self->caption_type == GST_VIDEO_CAPTION_TYPE_UNKNOWN)
     self->caption_type = GST_VIDEO_CAPTION_TYPE_CEA708_RAW;
 
+  self->fps_n = state->info.fps_n;
+  self->fps_d = state->info.fps_d;
+
   /* Create dummy output state. Otherwise decoder baseclass will try to create
    * video caps on GAP event */
   out_state = gst_video_decoder_set_output_state (decoder,
