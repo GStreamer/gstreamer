@@ -51,6 +51,102 @@ GST_START_TEST (test_rtsp_url_basic)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtsp_url_emptyuser)
+{
+  GstRTSPUrl *url = NULL;
+  GstRTSPResult res;
+
+  res = gst_rtsp_url_parse ("rtsp://@localhost/foo/bar", &url);
+  fail_unless (res == GST_RTSP_OK);
+  fail_unless (url != NULL);
+  fail_unless (url->transports & GST_RTSP_LOWER_TRANS_TCP);
+  fail_unless (url->transports & GST_RTSP_LOWER_TRANS_UDP);
+  fail_unless (url->transports & GST_RTSP_LOWER_TRANS_UDP_MCAST);
+  fail_unless (url->family == GST_RTSP_FAM_INET);
+  fail_unless_equals_string (url->user, "");
+  fail_unless (!url->passwd);
+  fail_unless_equals_string (url->host, "localhost");
+  /* fail_unless (url->port == GST_RTSP_DEFAULT_PORT); */
+  fail_unless_equals_string (url->abspath, "/foo/bar");
+  fail_unless (!url->query);
+
+  gst_rtsp_url_free (url);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtsp_url_user)
+{
+  GstRTSPUrl *url = NULL;
+  GstRTSPResult res;
+
+  res = gst_rtsp_url_parse ("rtsp://user@localhost/foo/bar", &url);
+  fail_unless (res == GST_RTSP_OK);
+  fail_unless (url != NULL);
+  fail_unless (url->transports & GST_RTSP_LOWER_TRANS_TCP);
+  fail_unless (url->transports & GST_RTSP_LOWER_TRANS_UDP);
+  fail_unless (url->transports & GST_RTSP_LOWER_TRANS_UDP_MCAST);
+  fail_unless (url->family == GST_RTSP_FAM_INET);
+  fail_unless_equals_string (url->user, "user");
+  fail_unless (!url->passwd);
+  fail_unless_equals_string (url->host, "localhost");
+  /* fail_unless (url->port == GST_RTSP_DEFAULT_PORT); */
+  fail_unless_equals_string (url->abspath, "/foo/bar");
+  fail_unless (!url->query);
+
+  gst_rtsp_url_free (url);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtsp_url_user_emptypasswd)
+{
+  GstRTSPUrl *url = NULL;
+  GstRTSPResult res;
+
+  res = gst_rtsp_url_parse ("rtsp://user:@localhost/foo/bar", &url);
+  fail_unless (res == GST_RTSP_OK);
+  fail_unless (url != NULL);
+  fail_unless (url->transports & GST_RTSP_LOWER_TRANS_TCP);
+  fail_unless (url->transports & GST_RTSP_LOWER_TRANS_UDP);
+  fail_unless (url->transports & GST_RTSP_LOWER_TRANS_UDP_MCAST);
+  fail_unless (url->family == GST_RTSP_FAM_INET);
+  fail_unless_equals_string (url->user, "user");
+  fail_unless_equals_string (url->passwd, "");
+  fail_unless_equals_string (url->host, "localhost");
+  /* fail_unless (url->port == GST_RTSP_DEFAULT_PORT); */
+  fail_unless_equals_string (url->abspath, "/foo/bar");
+  fail_unless (!url->query);
+
+  gst_rtsp_url_free (url);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtsp_url_user_passwd)
+{
+  GstRTSPUrl *url = NULL;
+  GstRTSPResult res;
+
+  res = gst_rtsp_url_parse ("rtsp://user:passwd@localhost/foo/bar", &url);
+  fail_unless (res == GST_RTSP_OK);
+  fail_unless (url != NULL);
+  fail_unless (url->transports & GST_RTSP_LOWER_TRANS_TCP);
+  fail_unless (url->transports & GST_RTSP_LOWER_TRANS_UDP);
+  fail_unless (url->transports & GST_RTSP_LOWER_TRANS_UDP_MCAST);
+  fail_unless (url->family == GST_RTSP_FAM_INET);
+  fail_unless_equals_string (url->user, "user");
+  fail_unless_equals_string (url->passwd, "passwd");
+  fail_unless_equals_string (url->host, "localhost");
+  /* fail_unless (url->port == GST_RTSP_DEFAULT_PORT); */
+  fail_unless_equals_string (url->abspath, "/foo/bar");
+  fail_unless (!url->query);
+
+  gst_rtsp_url_free (url);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_rtsp_url_query)
 {
   GstRTSPUrl *url = NULL;
@@ -1008,6 +1104,10 @@ rtsp_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_rtsp_url_basic);
+  tcase_add_test (tc_chain, test_rtsp_url_emptyuser);
+  tcase_add_test (tc_chain, test_rtsp_url_user);
+  tcase_add_test (tc_chain, test_rtsp_url_user_emptypasswd);
+  tcase_add_test (tc_chain, test_rtsp_url_user_passwd);
   tcase_add_test (tc_chain, test_rtsp_url_query);
   tcase_add_test (tc_chain, test_rtsp_url_components_1);
   tcase_add_test (tc_chain, test_rtsp_url_components_2);
