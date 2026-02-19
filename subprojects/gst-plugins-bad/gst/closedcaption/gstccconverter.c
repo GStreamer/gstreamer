@@ -1747,7 +1747,7 @@ gst_cc_converter_sink_event (GstBaseTransform * trans, GstEvent * event)
       drain_input (self);
 
       /* fallthrough */
-    case GST_EVENT_FLUSH_START:
+    case GST_EVENT_FLUSH_STOP:
       reset_counters (self);
       break;
     default:
