@@ -70,10 +70,13 @@ struct _GstVtdec
   GMutex queue_mutex;
   GCond queue_cond;
 
-  GstFlowReturn downstream_ret;
+  /* protected by queue_mutex */
   gboolean is_flushing;
   gboolean is_draining;
   gboolean pause_task;
+  
+  /* protected by the STREAM_LOCK */
+  GstFlowReturn downstream_ret;
 
 #if defined(APPLEMEDIA_MOLTENVK)
   GstVulkanInstance *instance;

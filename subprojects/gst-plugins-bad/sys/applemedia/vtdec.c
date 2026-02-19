@@ -411,6 +411,7 @@ gst_vtdec_output_loop (GstVtdec * vtdec)
       gst_video_decoder_release_frame (decoder, frame);
     }
 
+    /* Don't consider the FLUSHING ret an error if something flagged is_flushing in the meantime */
     if (vtdec->is_flushing && ret == GST_FLOW_FLUSHING) {
       ret = GST_FLOW_OK;
     }
@@ -1636,8 +1637,13 @@ gst_vtdec_drain_decoder (GstVideoDecoder * decoder, gboolean flush)
 
   /* Only early-return here if we're draining (as that needs to output frames).
    * Flushing doesn't care about errors from downstream. */
-  if (!flush && vtdec->downstream_ret != GST_FLOW_OK
-      && vtdec->downstream_ret != GST_FLOW_FLUSHING) {
+  if (!flush && vtdec->downstream_ret != GST_FLOW_OK) {
+    /* Makes sure the output callback won't get stuck waiting for space in the queue */
+    g_mutex_lock (&vtdec->queue_mutex);
+    vtdec->is_flushing = TRUE;
+    g_cond_signal (&vtdec->queue_cond);
+    g_mutex_unlock (&vtdec->queue_mutex);
+
     GST_WARNING_OBJECT (vtdec, "Output loop stopped with error (%s), leaving",
         gst_flow_get_name (vtdec->downstream_ret));
     return vtdec->downstream_ret;
