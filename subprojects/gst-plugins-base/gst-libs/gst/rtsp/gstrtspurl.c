@@ -83,7 +83,7 @@ static const struct
         GST_RTSP_LOWER_TRANS_TLS}
 };
 
-/* format is rtsp[u]://[user:passwd@]host[:port]/abspath[?query] where host
+/* format is rtsp[u]://[user[:passwd]@]host[:port]/abspath[?query] where host
  * is a host name, an IPv4 dotted decimal address ("aaa.bbb.ccc.ddd") or an
  * [IPv6] address ("[aabb:ccdd:eeff:gghh::sstt]" note the brackets around the
  * address to allow the distinction between ':' as an IPv6 hexgroup separator
@@ -140,13 +140,12 @@ gst_rtsp_url_parse (const gchar * urlstr, GstRTSPUrl ** url)
   if (at) {
     col = strchr (p, ':');
 
-    /* must have a ':' and it must be before the '@' */
-    if (col == NULL || col > at)
-      goto invalid;
-
+    if (col != NULL && col < at) {
+      res->passwd = g_uri_unescape_segment (col + 1, at, NULL);
+    } else {
+      col = at;
+    }
     res->user = g_uri_unescape_segment (p, col, NULL);
-    col++;
-    res->passwd = g_uri_unescape_segment (col, at, NULL);
 
     /* move to host */
     p = at + 1;
