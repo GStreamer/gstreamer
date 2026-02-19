@@ -1271,7 +1271,7 @@ skip_directory (const gchar * parent_path, const gchar * dirent)
 
   /* skip the directories ending in .dSYM, these contain mach-o files with
    * only debugging sections */
-  if (g_str_has_suffix (dirent, ".dSYM"))
+  if (strstr (dirent, ".dSYM") != NULL)
     return TRUE;
 
   return FALSE;
