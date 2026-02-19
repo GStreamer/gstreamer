@@ -307,6 +307,7 @@ gst_rtsp_client_sink_ntp_time_source_get_type (void)
 #define DEFAULT_PROFILES         GST_RTSP_PROFILE_AVP
 #define DEFAULT_RTX_TIME_MS      500
 #define DEFAULT_PUBLISH_CLOCK_MODE GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK
+#define DEFAULT_KEEPALIVE_TIMEOUT 0
 
 enum
 {
@@ -338,6 +339,7 @@ enum
   PROP_USER_AGENT,
   PROP_PROFILES,
   PROP_PUBLISH_CLOCK_MODE,
+  PROP_KEEPALIVE_TIMEOUT,
 };
 
 static void gst_rtsp_client_sink_finalize (GObject * object);
@@ -751,6 +753,23 @@ gst_rtsp_client_sink_class_init (GstRTSPClientSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRTSPClientSink:keepalive-timeout:
+   *
+   * How long to wait without receiving keepalive notifications
+   * before erroring out, in microseconds.
+   *
+   * 0 = never error out
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_KEEPALIVE_TIMEOUT,
+      g_param_spec_uint64 ("keepalive-timeout", "Keepalive Timeout",
+          "How long to wait without receiving keepalive notifications "
+          "before erroring out, in microseconds (0 == never error out)",
+          0, G_MAXUINT64, DEFAULT_KEEPALIVE_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRTSPClientSink::handle-request:
    * @rtsp_client_sink: a #GstRTSPClientSink
    * @request: a #GstRTSPMessage
@@ -899,6 +918,8 @@ gst_rtsp_client_sink_init (GstRTSPClientSink * sink)
   sink->ntp_time_source = DEFAULT_NTP_TIME_SOURCE;
   sink->user_agent = g_strdup (DEFAULT_USER_AGENT);
   sink->publish_clock_mode = DEFAULT_PUBLISH_CLOCK_MODE;
+  sink->keepalive_timeout = DEFAULT_KEEPALIVE_TIMEOUT;
+  sink->keepalive_timeout_id = NULL;
 
   sink->pool = NULL;
 
@@ -1735,6 +1756,9 @@ gst_rtsp_client_sink_set_property (GObject * object, guint prop_id,
     case PROP_PUBLISH_CLOCK_MODE:
       rtsp_client_sink->publish_clock_mode = g_value_get_enum (value);
       break;
+    case PROP_KEEPALIVE_TIMEOUT:
+      rtsp_client_sink->keepalive_timeout = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1851,6 +1875,9 @@ gst_rtsp_client_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PUBLISH_CLOCK_MODE:
       g_value_set_enum (value, rtsp_client_sink->publish_clock_mode);
+      break;
+    case PROP_KEEPALIVE_TIMEOUT:
+      g_value_set_uint64 (value, rtsp_client_sink->keepalive_timeout);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -4005,6 +4032,53 @@ transport_timed_out_notify_cb (GstRTSPStreamTransport * transport,
   }
 }
 
+static gboolean
+keepalive_timeout_cb (GstClock * clock, GstClockTime time, GstClockID id,
+    GstRTSPClientSink * sink)
+{
+  GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (NULL),
+      ("stream transport didn't notify keepalives for longer than keepalive-timeout"));
+  return TRUE;
+}
+
+static void
+gst_rtsp_client_sink_schedule_keepalive_timeout (GstRTSPClientSink * sink)
+{
+  if (sink->keepalive_timeout == 0) {
+    return;
+  }
+
+  GstClock *clock = gst_system_clock_obtain ();
+  GstClockTime now = gst_clock_get_time (clock);
+  GstClockTime deadline = now + sink->keepalive_timeout * 1000;
+  GstClockID timeout_id = gst_clock_new_single_shot_id (clock, deadline);
+
+  GST_LOG_OBJECT (sink,
+      "(re) scheduling keepalive timeout, now %" GST_TIME_FORMAT " deadline: %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (now),
+      GST_TIME_ARGS (now + 10 * GST_SECOND));
+
+  GST_OBJECT_LOCK (sink);
+  if (sink->keepalive_timeout_id) {
+    GST_TRACE_OBJECT (sink, "unscheduling keepalive timeout %p",
+        sink->keepalive_timeout_id);
+    gst_clock_id_unschedule (sink->keepalive_timeout_id);
+  }
+
+  GST_TRACE_OBJECT (sink, "scheduling keepalive timeout %p", timeout_id);
+
+  sink->keepalive_timeout_id = timeout_id;
+  GST_OBJECT_UNLOCK (sink);
+
+  gst_clock_id_wait_async (timeout_id, (GstClockCallback) keepalive_timeout_cb,
+      sink, NULL);
+}
+
+static void
+do_keepalive (GstRTSPClientSink * sink)
+{
+  gst_rtsp_client_sink_schedule_keepalive_timeout (sink);
+}
 
 static GstRTSPResult
 gst_rtsp_client_sink_setup_streams (GstRTSPClientSink * sink, gboolean async)
@@ -4297,6 +4371,9 @@ gst_rtsp_client_sink_setup_streams (GstRTSPClientSink * sink, gboolean async)
 
           g_signal_connect (context->stream_transport, "notify::timed-out",
               (GCallback) transport_timed_out_notify_cb, sink);
+
+          gst_rtsp_stream_transport_set_keepalive (context->stream_transport,
+              (GstRTSPKeepAliveFunc) do_keepalive, sink, NULL);
         } else
           gst_rtsp_stream_transport_set_transport (context->stream_transport,
               transport);
@@ -4652,6 +4729,8 @@ gst_rtsp_client_sink_record (GstRTSPClientSink * sink, gboolean async)
           &hval, 0) == GST_RTSP_OK)
     gst_rtspsrc_handle_rtcp_interval (src, hval);
 #endif
+
+  gst_rtsp_client_sink_schedule_keepalive_timeout (sink);
 
   gst_rtsp_client_sink_set_state (sink, GST_STATE_PLAYING);
   sink->state = GST_RTSP_STATE_PLAYING;

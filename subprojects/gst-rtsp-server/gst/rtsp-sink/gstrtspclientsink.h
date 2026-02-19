@@ -187,6 +187,7 @@ struct _GstRTSPClientSink {
   gint              ntp_time_source;
   gchar            *user_agent;
   GstRTSPPublishClockMode publish_clock_mode;
+  guint64           keepalive_timeout;
 
   /* state */
   GstRTSPState        state;
@@ -200,6 +201,7 @@ struct _GstRTSPClientSink {
   gchar              *control;
   guint               next_port_num;
   GstClock           *provided_clock;
+  GstClockID          keepalive_timeout_id;
 
   /* supported methods */
   gint               methods;
