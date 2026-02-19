@@ -2827,13 +2827,14 @@ handle_new_sample (GstAppSink * sink, gpointer user_data)
     }
   }
 
+  g_mutex_unlock (&priv->lock);
+
+  g_mutex_lock (&priv->send_lock);
+
   if (priv->send_thread == NULL) {
     priv->send_thread = g_thread_new (NULL, (GThreadFunc) send_func, user_data);
   }
 
-  g_mutex_unlock (&priv->lock);
-
-  g_mutex_lock (&priv->send_lock);
   priv->send_cookie++;
   g_cond_signal (&priv->send_cond);
   g_mutex_unlock (&priv->send_lock);
@@ -4121,6 +4122,7 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
 {
   GstRTSPStreamPrivate *priv;
   gint i;
+  GThread *send_thread;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
   g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
@@ -4131,11 +4133,12 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
   g_mutex_lock (&priv->send_lock);
   priv->continue_sending = FALSE;
   priv->send_cookie++;
+  send_thread = g_steal_pointer (&priv->send_thread);
   g_cond_signal (&priv->send_cond);
   g_mutex_unlock (&priv->send_lock);
 
-  if (priv->send_thread) {
-    g_thread_join (priv->send_thread);
+  if (send_thread) {
+    g_thread_join (send_thread);
   }
 
   g_mutex_lock (&priv->lock);
