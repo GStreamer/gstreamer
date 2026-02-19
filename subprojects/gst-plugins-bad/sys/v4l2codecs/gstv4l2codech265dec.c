@@ -117,6 +117,8 @@ struct _GstV4l2CodecH265Dec
   struct v4l2_ctrl_hevc_pps pps;
   struct v4l2_ctrl_hevc_scaling_matrix scaling_matrix;
   struct v4l2_ctrl_hevc_decode_params decode_params;
+  GArray *ext_sps_st_rps;
+  GArray *ext_sps_lt_rps;
   GArray *slice_params;
   GArray *entry_point_offsets;
 
@@ -129,6 +131,7 @@ struct _GstV4l2CodecH265Dec
   gboolean support_scaling_matrix;
   gboolean support_slice_parameters;
   gboolean support_entry_point_offsets;
+  gboolean support_long_short_term_rps;
 
   GstVideoConverter *convert;
   gboolean need_crop;
@@ -196,6 +199,14 @@ gst_v4l2_decoder_h265_api_check (GstV4l2Decoder * decoder)
       SET_ID (V4L2_CID_STATELESS_HEVC_SLICE_PARAMS),
       .size = sizeof(struct v4l2_ctrl_hevc_slice_params),
       .optional = TRUE,
+    }, {
+      SET_ID (V4L2_CID_STATELESS_HEVC_EXT_SPS_ST_RPS),
+      .size = sizeof(struct v4l2_ctrl_hevc_ext_sps_st_rps),
+      .optional = TRUE,
+    }, {
+      SET_ID (V4L2_CID_STATELESS_HEVC_EXT_SPS_LT_RPS),
+      .size = sizeof(struct v4l2_ctrl_hevc_ext_sps_lt_rps),
+      .optional = TRUE,
     }
   };
   #undef SET_ID
@@ -247,6 +258,18 @@ gst_v4l2_codec_h265_dec_open (GstVideoDecoder * decoder)
       .size = sizeof (self->scaling_matrix),
     },
   };
+  struct v4l2_ext_control long_short_term_rps[] = {
+    {
+      .id = V4L2_CID_STATELESS_HEVC_EXT_SPS_ST_RPS,
+      .ptr = self->ext_sps_st_rps->data,
+      .size = sizeof (struct v4l2_ctrl_hevc_ext_sps_st_rps),
+    },
+    {
+      .id = V4L2_CID_STATELESS_HEVC_EXT_SPS_LT_RPS,
+      .ptr = self->ext_sps_lt_rps->data,
+      .size = sizeof (struct v4l2_ctrl_hevc_ext_sps_lt_rps),
+    },
+  };
   /* *INDENT-ON* */
 
   if (!gst_v4l2_decoder_open (self->decoder)) {
@@ -275,6 +298,10 @@ gst_v4l2_codec_h265_dec_open (GstVideoDecoder * decoder)
   self->support_entry_point_offsets =
       gst_v4l2_decoder_query_control_size (self->decoder,
       V4L2_CID_STATELESS_HEVC_ENTRY_POINT_OFFSETS, NULL);
+
+  self->support_long_short_term_rps =
+      gst_v4l2_decoder_get_controls (self->decoder, long_short_term_rps,
+      G_N_ELEMENTS (long_short_term_rps));
 
   self->decode_mode = control[0].value;
   self->start_code = control[1].value;
@@ -903,6 +930,57 @@ gst_v4l2_codec_h265_dec_fill_slice_params (GstV4l2CodecH265Dec * self,
   }
 }
 
+static void
+gst_v4l2_codec_h265_dec_fill_ext_sps_rps (GstV4l2CodecH265Dec * self,
+    const GstH265SPS * sps)
+{
+  GstH265Decoder *decoder = (GstH265Decoder *) self;
+  struct v4l2_ctrl_hevc_ext_sps_st_rps *ext_sps_st_rps_set;
+  struct v4l2_ctrl_hevc_ext_sps_lt_rps *ext_sps_lt_rps_set;
+  GstH265SPSEXT *sps_ext = gst_h265_decoder_get_sps_ext (decoder, sps);
+  gint i, j;
+
+  for (i = 0; i < sps->num_short_term_ref_pic_sets; i++) {
+    ext_sps_st_rps_set = &g_array_index (self->ext_sps_st_rps,
+        struct v4l2_ctrl_hevc_ext_sps_st_rps, i);
+
+    ext_sps_st_rps_set->flags |=
+        sps->short_term_ref_pic_set[i].inter_ref_pic_set_prediction_flag ?
+        V4L2_HEVC_EXT_SPS_ST_RPS_FLAG_INTER_REF_PIC_SET_PRED : 0;
+    ext_sps_st_rps_set->delta_idx_minus1 =
+        sps->short_term_ref_pic_set[i].delta_idx_minus1;
+    ext_sps_st_rps_set->delta_rps_sign =
+        sps->short_term_ref_pic_set[i].delta_rps_sign;
+    ext_sps_st_rps_set->abs_delta_rps_minus1 =
+        sps->short_term_ref_pic_set[i].abs_delta_rps_minus1;
+    ext_sps_st_rps_set->num_negative_pics =
+        sps->short_term_ref_pic_set[i].NumNegativePics;
+    ext_sps_st_rps_set->num_positive_pics =
+        sps->short_term_ref_pic_set[i].NumPositivePics;
+
+    for (j = 0; j < 16; j++) {
+      ext_sps_st_rps_set->used_by_curr_pic |=
+          (!!(sps_ext->
+              short_term_ref_pic_set_ext[i].used_by_curr_pic_flag[j])) << j;
+      ext_sps_st_rps_set->use_delta_flag |=
+          (!!(sps_ext->short_term_ref_pic_set_ext[i].use_delta_flag[j])) << j;
+      ext_sps_st_rps_set->delta_poc_s0_minus1[j] =
+          sps_ext->short_term_ref_pic_set_ext[i].delta_poc_s0_minus1[j];
+      ext_sps_st_rps_set->delta_poc_s1_minus1[j] =
+          sps_ext->short_term_ref_pic_set_ext[i].delta_poc_s1_minus1[j];
+    }
+  }
+
+  for (i = 0; i < sps->num_long_term_ref_pics_sps; i++) {
+    ext_sps_lt_rps_set = &g_array_index (self->ext_sps_lt_rps,
+        struct v4l2_ctrl_hevc_ext_sps_lt_rps, i);
+
+    ext_sps_lt_rps_set->lt_ref_pic_poc_lsb_sps = sps->lt_ref_pic_poc_lsb_sps[i];
+    ext_sps_lt_rps_set->flags = sps->used_by_curr_pic_lt_sps_flag[i] ?
+        V4L2_HEVC_EXT_SPS_LT_RPS_FLAG_USED_LT : 0;
+  }
+}
+
 static guint8
 lookup_dpb_index (struct v4l2_hevc_dpb_entry dpb[16], GstH265Picture * ref_pic)
 {
@@ -1016,6 +1094,7 @@ gst_v4l2_codec_h265_dec_new_sequence (GstH265Decoder * decoder,
   }
 
   gst_v4l2_codec_h265_dec_fill_sequence (self, sps);
+  gst_v4l2_codec_h265_dec_fill_ext_sps_rps (self, sps);
 
   if (negotiation_needed) {
     gst_v4l2_codec_h265_dec_streamoff (self);
@@ -1128,8 +1207,10 @@ gst_v4l2_codec_h265_dec_start_picture (GstH265Decoder * decoder,
 
   /* The base class will only emit new_sequence for allocation related changes
    * in the SPS, make sure to keep the SPS upt-to-date */
-  if (slice->header.pps->sps->id != self->sps.seq_parameter_set_id)
+  if (slice->header.pps->sps->id != self->sps.seq_parameter_set_id) {
     gst_v4l2_codec_h265_dec_fill_sequence (self, slice->header.pps->sps);
+    gst_v4l2_codec_h265_dec_fill_ext_sps_rps (self, slice->header.pps->sps);
+  }
 
   gst_v4l2_codec_h265_dec_fill_pps (self, slice->header.pps);
   gst_v4l2_codec_h265_dec_fill_scaling_matrix (self, slice->header.pps);
@@ -1383,6 +1464,8 @@ gst_v4l2_codec_h265_dec_submit_bitstream (GstV4l2CodecH265Dec * self,
     { }, /* SLICE_PARAMS */
     { }, /* SCALING_MATRIX */
     { }, /* ENTRY_POINT_OFFSETS */
+    { }, /* EXT_SPS_ST_RPS */
+    { }, /* EXT_SPS_LT_RPS */
   };
   /* *INDENT-ON* */
 
@@ -1427,6 +1510,24 @@ gst_v4l2_codec_h265_dec_submit_bitstream (GstV4l2CodecH265Dec * self,
     control[num_controls].size = sizeof (self->sps);
     num_controls++;
     self->need_sequence = FALSE;
+    if (self->sps.num_short_term_ref_pic_sets
+        && self->support_long_short_term_rps) {
+      control[num_controls].id = V4L2_CID_STATELESS_HEVC_EXT_SPS_ST_RPS;
+      control[num_controls].ptr = self->ext_sps_st_rps->data;
+      control[num_controls].size =
+          g_array_get_element_size (self->ext_sps_st_rps)
+          * self->sps.num_short_term_ref_pic_sets;
+      num_controls++;
+    }
+    if (self->sps.num_long_term_ref_pics_sps
+        && self->support_long_short_term_rps) {
+      control[num_controls].id = V4L2_CID_STATELESS_HEVC_EXT_SPS_LT_RPS;
+      control[num_controls].ptr = self->ext_sps_lt_rps->data;
+      control[num_controls].size =
+          g_array_get_element_size (self->ext_sps_lt_rps)
+          * self->sps.num_long_term_ref_pics_sps;
+      num_controls++;
+    }
   }
 
   if (self->first_slice) {
@@ -1682,6 +1783,12 @@ gst_v4l2_codec_h265_dec_init (GstV4l2CodecH265Dec * self,
   g_array_set_size (self->slice_params, 4);
   self->entry_point_offsets = g_array_sized_new (FALSE, TRUE,
       sizeof (guint32), 4);
+  self->ext_sps_st_rps = g_array_sized_new (FALSE, TRUE,
+      sizeof (struct v4l2_ctrl_hevc_ext_sps_st_rps), 65);
+  g_array_set_size (self->ext_sps_st_rps, 65);
+  self->ext_sps_lt_rps = g_array_sized_new (FALSE, TRUE,
+      sizeof (struct v4l2_ctrl_hevc_ext_sps_lt_rps), 65);
+  g_array_set_size (self->ext_sps_lt_rps, 65);
 }
 
 static void
@@ -1690,6 +1797,8 @@ gst_v4l2_codec_h265_dec_dispose (GObject * object)
   GstV4l2CodecH265Dec *self = GST_V4L2_CODEC_H265_DEC (object);
 
   g_clear_object (&self->decoder);
+  g_clear_pointer (&self->ext_sps_st_rps, g_array_unref);
+  g_clear_pointer (&self->ext_sps_lt_rps, g_array_unref);
   g_clear_pointer (&self->slice_params, g_array_unref);
   g_clear_pointer (&self->entry_point_offsets, g_array_unref);
 
