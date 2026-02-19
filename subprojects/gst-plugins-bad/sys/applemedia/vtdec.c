@@ -860,7 +860,7 @@ gst_vtdec_flush (GstVideoDecoder * decoder)
 
   vtdec->downstream_ret = GST_FLOW_OK;
 
-  return GST_FLOW_OK;
+  return TRUE;
 }
 
 static GstFlowReturn
