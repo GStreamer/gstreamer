@@ -106,7 +106,7 @@ struct _GstVTEnc
   GstClockTime dts_offset;
 
   GstVecDeque * output_queue;
-  /* Protects output_queue, is_flushing and pause_task */
+  /* Protects output_queue, is_flushing, is_draining and pause_task */
   GMutex queue_mutex;
   GCond queue_cond;
 
@@ -118,6 +118,7 @@ struct _GstVTEnc
   GstFlowReturn downstream_ret;
   gboolean negotiate_downstream;
   gboolean is_flushing;
+  gboolean is_draining;
   gboolean pause_task;
 
   /* If we get an EncoderMalfunctionErr or similar, we restart the session

@@ -256,7 +256,7 @@ static void gst_vtenc_session_configure_realtime (GstVTEnc * self,
 
 static GstFlowReturn gst_vtenc_encode_frame (GstVTEnc * self,
     GstVideoCodecFrame * frame);
-static void gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
+static void gst_vtenc_session_output_callback (void *outputCallbackRefCon,
     void *sourceFrameRefCon, OSStatus status, VTEncodeInfoFlags infoFlags,
     CMSampleBufferRef sampleBuffer);
 static gboolean gst_vtenc_buffer_is_keyframe (GstVTEnc * self,
@@ -776,38 +776,40 @@ gst_vtenc_pause_output_loop (GstVTEnc * self)
   g_mutex_unlock (&self->queue_mutex);
 }
 
-static void
-gst_vtenc_set_flushing_flag (GstVTEnc * self)
-{
-  g_mutex_lock (&self->queue_mutex);
-  self->is_flushing = TRUE;
-  g_cond_signal (&self->queue_cond);
-  g_mutex_unlock (&self->queue_mutex);
-}
-
 static GstFlowReturn
-gst_vtenc_finish_encoding (GstVTEnc * self, gboolean is_flushing)
+gst_vtenc_drain_encoder (GstVTEnc * self, gboolean flush)
 {
-  GST_DEBUG_OBJECT (self,
-      "complete encoding and clean buffer queue, is flushing %d", is_flushing);
+  GST_DEBUG_OBJECT (self, "drain_encoder, flushing: %d", flush);
   OSStatus vt_status;
 
   /* In case of EOS before the first buffer/caps */
   if (self->session == NULL)
     return GST_FLOW_OK;
 
-  /* If output loop failed to push things downstream */
-  if (self->downstream_ret != GST_FLOW_OK
-      && self->downstream_ret != GST_FLOW_FLUSHING) {
-    /* Tells enqueue_buffer() to instantly discard any new encoded frames */
-    gst_vtenc_set_flushing_flag (self);
+  /* Only early-return here if we're draining (as that needs to output frames).
+   * Flushing doesn't care about errors from downstream. */
+  if (!flush && self->downstream_ret != GST_FLOW_OK) {
+    /* Makes sure the output callback won't get stuck waiting for space in the queue */
+    g_mutex_lock (&self->queue_mutex);
+    self->is_flushing = TRUE;
+    g_cond_signal (&self->queue_cond);
+    g_mutex_unlock (&self->queue_mutex);
+
     GST_WARNING_OBJECT (self, "Output loop stopped with error (%s), leaving",
         gst_flow_get_name (self->downstream_ret));
     return self->downstream_ret;
   }
 
-  if (is_flushing)
-    gst_vtenc_set_flushing_flag (self);
+  g_mutex_lock (&self->queue_mutex);
+  if (flush) {
+    GST_DEBUG_OBJECT (self, "setting flushing flag");
+    self->is_flushing = TRUE;
+  } else {
+    GST_DEBUG_OBJECT (self, "setting draining flag");
+    self->is_draining = TRUE;
+  }
+  g_cond_signal (&self->queue_cond);
+  g_mutex_unlock (&self->queue_mutex);
 
   if (!gst_vtenc_ensure_output_loop (self)) {
     GST_ERROR_OBJECT (self, "Output loop failed to resume");
@@ -829,8 +831,17 @@ gst_vtenc_finish_encoding (GstVTEnc * self, gboolean is_flushing)
         (int) vt_status);
   }
 
+  /* This will only pause after all frames are out because is_flushing/is_draining=TRUE */
   gst_vtenc_pause_output_loop (self);
   GST_VIDEO_ENCODER_STREAM_LOCK (self);
+
+  if (flush) {
+    GST_DEBUG_OBJECT (self, "clearing flushing flag");
+    self->is_flushing = FALSE;
+  } else {
+    GST_DEBUG_OBJECT (self, "clearing draining flag");
+    self->is_draining = FALSE;
+  }
 
   if (self->downstream_ret == GST_FLOW_OK)
     GST_DEBUG_OBJECT (self, "buffer queue cleaned");
@@ -851,6 +862,7 @@ gst_vtenc_start (GstVideoEncoder * enc)
   gst_video_encoder_set_min_pts (enc, GST_SECOND * 60 * 60 * 1000);
 
   self->is_flushing = FALSE;
+  self->is_draining = FALSE;
   self->downstream_ret = GST_FLOW_OK;
   g_atomic_int_set (&self->require_restart, FALSE);
   g_atomic_int_set (&self->require_reconfigure, FALSE);
@@ -892,6 +904,7 @@ gst_vtenc_stop (GstVideoEncoder * enc)
 
   self->negotiate_downstream = TRUE;
   self->is_flushing = TRUE;
+  self->is_draining = FALSE;
 
   if (self->profile_level)
     CFRelease (self->profile_level);
@@ -1086,7 +1099,7 @@ gst_vtenc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   VTCompressionSessionRef session;
 
   if (self->input_state) {
-    gst_vtenc_finish_encoding (self, FALSE);
+    gst_vtenc_drain_encoder (self, FALSE);
     gst_video_codec_state_unref (self->input_state);
   }
 
@@ -1316,18 +1329,22 @@ static GstFlowReturn
 gst_vtenc_finish (GstVideoEncoder * enc)
 {
   GstVTEnc *self = GST_VTENC_CAST (enc);
-  return gst_vtenc_finish_encoding (self, FALSE);
+
+  GST_DEBUG_OBJECT (self, "finish");
+  return gst_vtenc_drain_encoder (self, FALSE);
 }
 
 static gboolean
 gst_vtenc_flush (GstVideoEncoder * enc)
 {
   GstVTEnc *self = GST_VTENC_CAST (enc);
-  GstFlowReturn ret;
 
-  ret = gst_vtenc_finish_encoding (self, TRUE);
+  GST_DEBUG_OBJECT (self, "flush");
+  gst_vtenc_drain_encoder (self, TRUE);
 
-  return (ret == GST_FLOW_OK);
+  self->downstream_ret = GST_FLOW_OK;
+
+  return TRUE;
 }
 
 static void
@@ -1537,7 +1554,7 @@ gst_vtenc_create_session (GstVTEnc * self)
   status = VTCompressionSessionCreate (NULL,
       self->video_info.width, self->video_info.height,
       self->specific_format_id, encoder_spec, pb_attrs, NULL,
-      gst_vtenc_enqueue_buffer, self, &session);
+      gst_vtenc_session_output_callback, self, &session);
   GST_INFO_OBJECT (self, "VTCompressionSessionCreate for %d x %d => %d",
       self->video_info.width, self->video_info.height, (int) status);
   if (status != noErr) {
@@ -2303,13 +2320,14 @@ release:
 }
 
 static void
-gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
+gst_vtenc_session_output_callback (void *outputCallbackRefCon,
     void *sourceFrameRefCon,
     OSStatus status,
     VTEncodeInfoFlags infoFlags, CMSampleBufferRef sampleBuffer)
 {
   GstVTEnc *self = outputCallbackRefCon;
   GstVideoCodecFrame *frame;
+  gboolean push_anyway;
 
   frame =
       gst_video_encoder_get_frame (GST_VIDEO_ENCODER_CAST (self),
@@ -2350,17 +2368,6 @@ gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
     return;
   }
 
-  g_mutex_lock (&self->queue_mutex);
-  if (self->is_flushing) {
-    GST_DEBUG_OBJECT (self, "Ignoring frame %d because we're flushing",
-        frame->system_frame_number);
-
-    gst_video_encoder_release_frame (GST_VIDEO_ENCODER_CAST (self), frame);
-    g_mutex_unlock (&self->queue_mutex);
-    return;
-  }
-  g_mutex_unlock (&self->queue_mutex);
-
   /* This may happen if we don't have enough bitrate */
   if (sampleBuffer == NULL)
     goto drop;
@@ -2377,9 +2384,14 @@ gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
   /* Limit the amount of frames in our output queue
    * to avoid processing too many frames ahead */
   g_mutex_lock (&self->queue_mutex);
-  while (gst_vec_deque_get_length (self->output_queue) >
+  /* Let's make sure we don't block this thread when the output loop
+   * paused because of a downstream error */
+  push_anyway = self->is_flushing || self->is_draining;
+  while (!push_anyway
+      && gst_vec_deque_get_length (self->output_queue) >
       VTENC_OUTPUT_QUEUE_SIZE) {
     g_cond_wait (&self->queue_cond, &self->queue_mutex);
+    push_anyway = self->is_flushing || self->is_draining;
   }
 
   gst_vec_deque_push_tail (self->output_queue, frame);
@@ -2397,15 +2409,18 @@ gst_vtenc_output_loop (GstVTEnc * self)
   GstVideoCodecFrame *outframe;
   GstCoreMediaMeta *meta;
   GstFlowReturn ret = GST_FLOW_OK;
-  gboolean should_pause;
 
   g_mutex_lock (&self->queue_mutex);
   while (gst_vec_deque_is_empty (self->output_queue) && !self->pause_task
-      && !self->is_flushing) {
+      && !self->is_flushing && !self->is_draining) {
     g_cond_wait (&self->queue_cond, &self->queue_mutex);
   }
 
-  if (self->pause_task) {
+  /* If we're currently draining/flushing, make sure to not pause before we
+   * output all the frames */
+  if (self->pause_task && ((!self->is_flushing && !self->is_draining)
+          || gst_vec_deque_is_empty (self->output_queue))) {
+    GST_DEBUG_OBJECT (self, "pausing output loop as requested");
     g_mutex_unlock (&self->queue_mutex);
     gst_pad_pause_task (GST_VIDEO_ENCODER_CAST (self)->srcpad);
     return;
@@ -2457,7 +2472,6 @@ gst_vtenc_output_loop (GstVTEnc * self)
 
   g_mutex_unlock (&self->queue_mutex);
   GST_VIDEO_ENCODER_STREAM_LOCK (self);
-  self->downstream_ret = ret;
 
   /* We need to empty the queue immediately so that enqueue_buffer()
    * can push out the current buffer, otherwise it can block other
@@ -2470,22 +2484,21 @@ gst_vtenc_output_loop (GstVTEnc * self)
       gst_video_encoder_release_frame (GST_VIDEO_ENCODER_CAST (self), outframe);
     }
 
+    /* Don't consider the FLUSHING ret an error if something flagged is_flushing in the meantime */
+    if (self->is_flushing && ret == GST_FLOW_FLUSHING) {
+      ret = GST_FLOW_OK;
+    }
     g_cond_signal (&self->queue_cond);
     g_mutex_unlock (&self->queue_mutex);
   }
 
+  self->downstream_ret = ret;
   GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
 
-  /* Check is_flushing here in case we had an empty queue.
-   * In that scenario we also want to pause, as the encoder callback
-   * will discard any frames that are output while flushing */
-  g_mutex_lock (&self->queue_mutex);
-  should_pause = ret != GST_FLOW_OK || self->is_flushing;
-  g_mutex_unlock (&self->queue_mutex);
-  if (should_pause) {
-    GST_DEBUG_OBJECT (self, "pausing output task: %s",
-        ret != GST_FLOW_OK ? gst_flow_get_name (ret) : "flushing");
-    gst_pad_pause_task (GST_VIDEO_ENCODER_CAST (self)->srcpad);
+  if (ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (self, "pausing output task because of downstream: %s",
+        gst_flow_get_name (ret));
+    gst_pad_pause_task (GST_VIDEO_ENCODER_SRC_PAD (self));
   }
 }
 
