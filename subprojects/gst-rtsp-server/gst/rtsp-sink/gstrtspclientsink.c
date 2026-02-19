@@ -1965,6 +1965,12 @@ gst_rtsp_client_sink_cleanup (GstRTSPClientSink * sink)
     sink->provided_clock = NULL;
   }
 
+  if (sink->keepalive_timeout_id) {
+    gst_clock_id_unschedule (sink->keepalive_timeout_id);
+    gst_clock_id_unref (sink->keepalive_timeout_id);
+    sink->keepalive_timeout_id = NULL;
+  }
+
   g_free (sink->server_ip);
   sink->server_ip = NULL;
 
@@ -4025,11 +4031,6 @@ transport_timed_out_notify_cb (GstRTSPStreamTransport * transport,
 
   GST_DEBUG_OBJECT (sink, "Transport %p timed out notify: %d", transport,
       timed_out);
-
-  if (timed_out) {
-    GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (NULL),
-        ("stream transport timed out"));
-  }
 }
 
 static gboolean
@@ -4050,8 +4051,10 @@ gst_rtsp_client_sink_schedule_keepalive_timeout (GstRTSPClientSink * sink)
 
   GstClock *clock = gst_system_clock_obtain ();
   GstClockTime now = gst_clock_get_time (clock);
-  GstClockTime deadline = now + sink->keepalive_timeout * 1000;
+  GstClockTime deadline = now + sink->keepalive_timeout * GST_USECOND;
   GstClockID timeout_id = gst_clock_new_single_shot_id (clock, deadline);
+
+  gst_object_unref (clock);
 
   GST_LOG_OBJECT (sink,
       "(re) scheduling keepalive timeout, now %" GST_TIME_FORMAT " deadline: %"
@@ -4063,6 +4066,7 @@ gst_rtsp_client_sink_schedule_keepalive_timeout (GstRTSPClientSink * sink)
     GST_TRACE_OBJECT (sink, "unscheduling keepalive timeout %p",
         sink->keepalive_timeout_id);
     gst_clock_id_unschedule (sink->keepalive_timeout_id);
+    gst_clock_id_unref (sink->keepalive_timeout_id);
   }
 
   GST_TRACE_OBJECT (sink, "scheduling keepalive timeout %p", timeout_id);

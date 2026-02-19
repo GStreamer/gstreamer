@@ -52,6 +52,20 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "keepalive-timeout": {
+                        "blurb": "How long to wait without receiving keepalive notifications before erroring out, in microseconds (0 == never error out)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
                     "latency": {
                         "blurb": "Amount of ms to buffer",
                         "conditionally-available": false,
