@@ -7,7 +7,7 @@
 
 class TooltipManager {
     constructor() {
-        this.$tooltip = null;
+        this.tooltipEl = null;
         this.tooltipText = '';
         this.isTooltipInteractive = false;
         this.currentTooltipElement = null;
@@ -16,10 +16,10 @@ class TooltipManager {
     }
 
     init() {
-        // Create custom tooltip element
-        this.$tooltip = $('<div class="custom-tooltip"></div>').appendTo('body');
+        this.tooltipEl = document.createElement('div');
+        this.tooltipEl.className = 'custom-tooltip';
+        document.body.appendChild(this.tooltipEl);
 
-        // Set up document click handler for hiding tooltips
         this.setupDocumentClickHandler();
     }
 
@@ -32,11 +32,11 @@ class TooltipManager {
     showTooltip(element, text, event) {
         this.tooltipText = text;
         this.currentTooltipElement = element;
-        this.$tooltip.text(text);
-        this.$tooltip.css({
-            left: event.pageX + 10 + 'px',
-            top: event.pageY - 30 + 'px'
-        }).removeClass('interactive').addClass('show');
+        this.tooltipEl.textContent = text;
+        this.tooltipEl.style.left = (event.pageX + 10) + 'px';
+        this.tooltipEl.style.top = (event.pageY - 30) + 'px';
+        this.tooltipEl.classList.remove('interactive');
+        this.tooltipEl.classList.add('show');
         this.isTooltipInteractive = false;
     }
 
@@ -45,25 +45,24 @@ class TooltipManager {
      */
     makeTooltipInteractive() {
         if (!this.isTooltipInteractive && this.currentTooltipElement) {
-            this.$tooltip.addClass('interactive');
+            this.tooltipEl.classList.add('interactive');
             this.isTooltipInteractive = true;
 
-            // Position tooltip in a fixed position relative to the element
-            const elementOffset = $(this.currentTooltipElement).offset();
+            const elementRect = this.currentTooltipElement.getBoundingClientRect();
 
-            this.$tooltip.css({
-                left: Math.min(elementOffset.left + 20, window.innerWidth - 420) + 'px',
-                top: Math.max(elementOffset.top - 80, 10) + 'px',
-                'pointer-events': 'auto'
-            });
+            this.tooltipEl.style.left = Math.min(elementRect.left + window.scrollX + 20, window.innerWidth - 420) + 'px';
+            this.tooltipEl.style.top = Math.max(elementRect.top + window.scrollY - 80, 10) + 'px';
+            this.tooltipEl.style.pointerEvents = 'auto';
 
-            // Prevent mouseleave from hiding the tooltip by removing the handler temporarily
-            $(this.currentTooltipElement).off('mouseleave.tooltip');
+            // Remove mouseleave handler from the element
+            if (this.currentTooltipElement._tooltipMouseleave) {
+                this.currentTooltipElement.removeEventListener('mouseleave', this.currentTooltipElement._tooltipMouseleave);
+            }
 
             // Select all text when made interactive
             setTimeout(() => {
                 const range = document.createRange();
-                range.selectNodeContents(this.$tooltip[0]);
+                range.selectNodeContents(this.tooltipEl);
                 const selection = window.getSelection();
                 selection.removeAllRanges();
                 selection.addRange(range);
@@ -75,7 +74,7 @@ class TooltipManager {
      * Hides the tooltip and resets state
      */
     hideTooltip() {
-        this.$tooltip.removeClass('show interactive');
+        this.tooltipEl.classList.remove('show', 'interactive');
         this.isTooltipInteractive = false;
         this.currentTooltipElement = null;
     }
@@ -84,17 +83,15 @@ class TooltipManager {
      * Sets up document click handler to hide tooltips when clicking outside
      */
     setupDocumentClickHandler() {
-        $(document).on('click', (e) => {
+        document.addEventListener('click', (e) => {
             if (this.isTooltipInteractive) {
-                // Only hide interactive tooltip when clicking outside both tooltip and original element
-                if (!$(e.target).closest('.custom-tooltip').length &&
-                    !$(e.target).is('[data-has-tooltip]') &&
+                if (!e.target.closest('.custom-tooltip') &&
+                    !e.target.hasAttribute('data-has-tooltip') &&
                     e.target !== this.currentTooltipElement) {
                     this.hideTooltip();
                 }
             } else {
-                // Hide non-interactive tooltip when clicking anywhere except on elements with tooltips
-                if (!$(e.target).is('[data-has-tooltip]')) {
+                if (!e.target.hasAttribute('data-has-tooltip')) {
                     this.hideTooltip();
                 }
             }

@@ -13,6 +13,8 @@
     <link rel="icon" type="image/png" href="/images/favicon-128.png" sizes="128x128">
     <link rel="icon" type="image/png" href="/images/favicon-192.png" sizes="192x192">
     <link rel="icon" type="image/png" href="/images/favicon-228.png" sizes="228x228">
+
+    <script src="/dist/bundle.js"></script>
   </head>
 
   <style>
@@ -44,14 +46,13 @@
       width: -webkit-fill-available;
       width: -moz-available;
       max-height: 40vh;
+      overflow: hidden;
     }
 
-    .internalframe {
-      flex-grow: 1;
-      border: none;
-      margin: 0;
-      padding: 0;
-      background-color: #1a1a1a;
+    .preview svg {
+      width: 100%;
+      height: auto;
+      max-height: 40vh;
     }
 
     .overlay {
@@ -64,35 +65,118 @@
         background-color: rgba(0,0,0, 0.95);
         overflow-x: hidden;
         transition: 0.5s;
-        visibility: "visible";
-        display: block;
-    }
-
-    .overlay-content {
         display: flex;
-        width: 100%;
-        height: 100%;
         flex-direction: column;
-        overflow: hidden;
     }
 
-    .overlay a {
-        padding: 8px;
-        text-decoration: none;
-        font-size: 36px;
-        color: #a0a0a0;
-        display: block;
-        transition: 0.3s;
+    .overlay-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 16px;
+        flex-shrink: 0;
     }
 
-    .overlay a:hover, .overlay a:focus {
-        color: #ffffff;
+    .overlay-header h2 {
+        margin: 0;
+        font-size: 1rem;
+        color: #e0e0e0;
     }
 
     .overlay .closebtn {
-        top: 20px;
-        right: 45px;
         font-size: 30px;
+        color: #a0a0a0;
+        cursor: pointer;
+        text-decoration: none;
+        padding: 0 8px;
+        transition: 0.3s;
+    }
+
+    .overlay .closebtn:hover {
+        color: #ffffff;
+    }
+
+    .overlay-content {
+        flex: 1;
+        display: flex;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    #graph {
+        flex: 1;
+        overflow: hidden;
+    }
+
+    #graph svg {
+        width: 100%;
+        height: 100%;
+    }
+
+    .overlay-instructions {
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        color: #808080;
+        font-size: 12px;
+        text-align: left;
+    }
+
+    .overlay-actions {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+    }
+
+    .overlay-actions button {
+        background-color: #2a2a2a;
+        color: #e0e0e0;
+        border: 1px solid #404040;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+    }
+
+    .overlay-actions button:hover {
+        background-color: #3a3a3a;
+    }
+
+    .custom-tooltip {
+        position: absolute;
+        background-color: #333;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        z-index: 10000;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s;
+        max-width: 400px;
+        word-wrap: break-word;
+        white-space: normal;
+        user-select: text;
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+    }
+
+    .custom-tooltip.show {
+        opacity: 1;
+    }
+
+    .custom-tooltip.interactive {
+        pointer-events: auto;
+        cursor: text;
+        border: 2px solid #555;
+    }
+
+    .custom-tooltip.interactive::after {
+        content: " (Text selected - Ctrl+C to copy)";
+        font-size: 10px;
+        color: #aaa;
+        font-style: italic;
     }
 
     input[type="text"] {
@@ -133,12 +217,9 @@
     }
 
     @media screen and (max-height: 250000px) {
-      .overlay a {font-size: 20px}
       .overlay .closebtn {
         text-align: right;
         font-size: 20px;
-        top: 15px;
-        right: 35px;
       }
     }
 
@@ -188,6 +269,11 @@
     .collapsible-content p { margin-bottom: 0; }
   </style>
 
+  <script src="/js/tooltip.js"></script>
+  <script src="/js/pipeline-navigation.js"></script>
+  <script src="/js/text-ellipsizer.js"></script>
+  <script src="/js/svg-overlay-manager.js"></script>
+
   <script src="/js/gstdots.js" type="module"> </script>
   <script type="module">
     import {updateFromUrl, connectWs, connectSearch, removePipelineOverlay,  dumpPipelines } from '/js/gstdots.js';
@@ -205,24 +291,13 @@
     });
 
     document.addEventListener('keyup', function(e) {
-      if (e.key == "Escape") {
+      if (e.key === 'Escape') {
         removePipelineOverlay();
-      }
-
-      if (event.key === '/' && event.target.tagName !== 'INPUT' && event.target.tagName !== 'TEXTAREA') {
-        event.preventDefault(); // Prevent the default action to avoid typing '/' into an input or textarea
-        document.getElementById('search').focus(); // Focus the input element with ID 'search'
+      } else if (e.key === '/' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        document.getElementById('search').focus();
       }
     });
-
-
-    for (let iframe of document.getElementsByClassName("internalframe")) {
-      iframe.addEventListener('keyup', function(e) {
-        if (e.key == "Escape") {
-          removePipelineOverlay();
-        }
-      });
-    }
   </script>
 
   <body>
@@ -231,6 +306,7 @@
     <div>
       <input type="text" id="search" placeholder="Search for pipeline">
       <button id="dump-button">Dump Pipelines</button>
+      <a href="/pipeline.html" style="margin-left: 10px; color: #a0a0ff; text-decoration: none;">Pipeline Viewer</a>
     </div>
 
     <div id="pipelines"></div>

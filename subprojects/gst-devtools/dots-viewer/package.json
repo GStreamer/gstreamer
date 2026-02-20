@@ -12,21 +12,13 @@
   "author": "Thibault Saunier <tsaunier@igalia.com>",
   "license": "MPL-2.0",
   "dependencies": {
-    "@viz-js/viz": "^3.4.0",
-    "bootstrap": "^3.3.4",
-    "dragscroll": "0.0.8",
+    "d3": "^7.0.0",
+    "d3-graphviz": "^5.6.0",
     "fuse.js": "^7.0.0",
-    "jquery": "^2.2.4",
-    "jquery-color": "^2.2.0",
-    "jquery-mousewheel": "^3.2.2"
+    "gststructure": "github:thiblahute/gststructure-ts"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^11.0.0",
-    "css-loader": "^7.1.2",
-    "css-minimizer-webpack-plugin": "^7.0.2",
-    "file-loader": "^6.2.0",
-    "mini-css-extract-plugin": "^2.9.2",
-    "style-loader": "^4.0.0",
     "terser-webpack-plugin": "^5.3.14",
     "webpack": "^5.98.0",
     "webpack-cli": "^5.1.4"

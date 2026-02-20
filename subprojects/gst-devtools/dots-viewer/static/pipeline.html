@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GStreamer Pipeline Viewer</title>
+  <link rel="stylesheet" href="/css/pipeline.css">
+  <link rel="icon" type="image/png" href="/images/favicon-32.png" sizes="32x32">
+  <script src="/dist/bundle.js"></script>
+</head>
+<body>
+
+  <!-- ── Drop zone (initial state) ──────────────────────────────── -->
+  <div id="drop-zone" class="drop-zone">
+    <div class="drop-content">
+      <h1>GStreamer Pipeline Viewer</h1>
+      <p>Drop a .dot file here or choose one below</p>
+      <input type="file" id="file-input" accept=".dot,.gv,.txt">
+      <label for="file-input" class="file-label">Choose .dot file</label>
+      <div class="paste-toggle">
+        <button id="paste-btn">Or paste DOT content</button>
+      </div>
+      <textarea id="dot-input" class="dot-input" placeholder="Paste GStreamer DOT content here..."></textarea>
+      <button id="load-dot-btn" class="hidden">Load from pasted DOT</button>
+      <div id="error-msg" class="error-msg hidden"></div>
+    </div>
+  </div>
+
+  <!-- ── Pipeline view (shown after loading) ─────────────────────── -->
+  <div id="pipeline-view" class="pipeline-view hidden">
+    <header class="header">
+      <h1>GStreamer Pipeline Viewer</h1>
+      <div class="header-actions">
+        <span id="filename" class="filename"></span>
+        <button id="load-another">Load another file</button>
+        <a class="btn" href="/">Pipeline list</a>
+      </div>
+    </header>
+    <nav id="breadcrumb" class="breadcrumb hidden"></nav>
+    <div class="main-layout">
+      <aside id="info-panel" class="sidebar info-panel"></aside>
+      <main  id="pipeline-container" class="pipeline-container"></main>
+      <div id="detail-resize-handle" class="detail-resize-handle"></div>
+      <aside id="detail-panel" class="sidebar detail-panel"></aside>
+    </div>
+  </div>
+
+  <script type="module">
+    import { PipelineViewer } from '/js/pipeline-viewer.js';
+
+    const dropZone      = document.getElementById('drop-zone');
+    const pipelineView  = document.getElementById('pipeline-view');
+    const fileInput     = document.getElementById('file-input');
+    const pasteBtn      = document.getElementById('paste-btn');
+    const dotInput      = document.getElementById('dot-input');
+    const loadDotBtn    = document.getElementById('load-dot-btn');
+    const errorMsg      = document.getElementById('error-msg');
+    const filenameEl    = document.getElementById('filename');
+    const loadAnother   = document.getElementById('load-another');
+
+    const viewer = new PipelineViewer({
+      containerEl:   document.getElementById('pipeline-container'),
+      detailEl:      document.getElementById('detail-panel'),
+      infoEl:        document.getElementById('info-panel'),
+      breadcrumbEl:  document.getElementById('breadcrumb'),
+    });
+
+    /* ── file input ──────────────────────────────────────────────── */
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (file) loadFile(file);
+    });
+
+    /* ── drag & drop ─────────────────────────────────────────────── */
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) loadFile(file);
+    });
+
+    /* ── paste toggle ────────────────────────────────────────────── */
+    pasteBtn.addEventListener('click', () => {
+      const visible = dotInput.classList.toggle('visible');
+      loadDotBtn.classList.toggle('hidden', !visible);
+    });
+
+    loadDotBtn.addEventListener('click', () => {
+      const text = dotInput.value.trim();
+      if (!text) { showError('Please paste DOT content first'); return; }
+      loadDotContent(text, 'pasted content');
+    });
+
+    /* ── load another ────────────────────────────────────────────── */
+    loadAnother.addEventListener('click', () => {
+      pipelineView.classList.add('hidden');
+      dropZone.classList.remove('hidden');
+      fileInput.value = '';
+    });
+
+    /* ── core ─────────────────────────────────────────────────────── */
+    function loadFile(file) {
+      const reader = new FileReader();
+      reader.onload = () => loadDotContent(reader.result, file.name);
+      reader.onerror = () => showError('Failed to read file');
+      reader.readAsText(file);
+    }
+
+    function loadDotContent(dotString, name) {
+      hideError();
+      try {
+        /* d3-graphviz handles DOT parsing natively — just render it */
+        dropZone.classList.add('hidden');
+        pipelineView.classList.remove('hidden');
+        filenameEl.textContent = name || '';
+        viewer.render(dotString);
+      } catch (e) {
+        showError(e.message);
+        console.error(e);
+      }
+    }
+
+    function showError(msg) { errorMsg.textContent = msg; errorMsg.classList.remove('hidden'); }
+    function hideError()    { errorMsg.classList.add('hidden'); }
+
+    /* ── resizable detail panel ──────────────────────────────────── */
+    {
+      const handle = document.getElementById('detail-resize-handle');
+      const panel  = document.getElementById('detail-panel');
+      let startX, startW;
+
+      handle.addEventListener('mousedown', e => {
+        e.preventDefault();
+        startX = e.clientX;
+        startW = panel.getBoundingClientRect().width;
+        handle.classList.add('active');
+        document.addEventListener('mousemove', onDrag);
+        document.addEventListener('mouseup', onUp);
+      });
+
+      function onDrag(e) {
+        panel.style.width = Math.max(200, Math.min(window.innerWidth * 0.6, startW + (startX - e.clientX))) + 'px';
+      }
+      function onUp() {
+        handle.classList.remove('active');
+        document.removeEventListener('mousemove', onDrag);
+        document.removeEventListener('mouseup', onUp);
+      }
+    }
+
+    /* ── auto-load from URL parameter (linked from pipeline list) ── */
+    const urlParams = new URLSearchParams(window.location.search);
+    const pipelineParam = urlParams.get('pipeline');
+    if (pipelineParam) {
+      const storageKey = `dot-${pipelineParam}`;
+      const dotContent = sessionStorage.getItem(storageKey);
+      if (dotContent) {
+        loadDotContent(dotContent, pipelineParam);
+        sessionStorage.removeItem(storageKey);
+      } else {
+        showError(`No pipeline data found for "${pipelineParam}". Navigate from the pipeline list to load pipeline data.`);
+      }
+    }
+  </script>
+</body>
+</html>

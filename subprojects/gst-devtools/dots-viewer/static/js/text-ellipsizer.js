@@ -14,10 +14,10 @@ class TextEllipsizerManager {
 
     /**
      * Processes all text elements in SVG to ellipsize long content
-     * @param {jQuery} $svg - jQuery object containing the SVG element
+     * @param {Element} svg - SVG element
      */
-    ellipsizeLongText($svg) {
-        $svg.find("text, tspan").each((index, element) => {
+    ellipsizeLongText(svg) {
+        svg.querySelectorAll('text, tspan').forEach(element => {
             const text = element.textContent;
 
             if (this.shouldEllipsize(text)) {
@@ -43,17 +43,12 @@ class TextEllipsizerManager {
     ellipsizeElement(element, originalText) {
         const ellipsizedText = originalText.substring(0, 77) + "...";
 
-        // Update the text content
-        $(element).text(ellipsizedText);
+        element.textContent = ellipsizedText;
 
-        // Store original text and mark as having tooltip
-        $(element).data('original-text', originalText);
-        $(element).attr('data-has-tooltip', 'true');
+        element.dataset.originalText = originalText;
+        element.setAttribute('data-has-tooltip', 'true');
 
-        // Style to indicate there's more content
-        $(element).css({
-            'cursor': 'help'
-        });
+        element.style.cursor = 'help';
 
         this.setupTooltipHandlers(element, originalText);
     }
@@ -79,28 +74,28 @@ class TextEllipsizerManager {
      * @param {string} originalText - Original full text content
      */
     setupRegularTooltipHandlers(element, originalText) {
-        $(element).on('mouseenter', (e) => {
+        element.addEventListener('mouseenter', (e) => {
             this.tooltipManager.showTooltip(element, originalText, e);
         });
 
-        $(element).on('mousemove', (e) => {
+        element.addEventListener('mousemove', (e) => {
             if (!this.tooltipManager.isInteractive()) {
                 this.tooltipManager.showTooltip(element, originalText, e);
             }
         });
 
-        $(element).on('mouseleave.tooltip', () => {
-            // Don't hide tooltip on mouseleave if it's interactive
+        const mouseleaveHandler = () => {
             if (!this.tooltipManager.isInteractive()) {
                 this.tooltipManager.hideTooltip();
             }
-        });
+        };
+        element._tooltipMouseleave = mouseleaveHandler;
+        element.addEventListener('mouseleave', mouseleaveHandler);
 
-        // Double-click to make tooltip interactive
-        $(element).on('dblclick', (e) => {
+        element.addEventListener('dblclick', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            if (this.tooltipManager.$tooltip.hasClass('show')) {
+            if (this.tooltipManager.tooltipEl.classList.contains('show')) {
                 this.tooltipManager.makeTooltipInteractive();
             }
         });
@@ -112,38 +107,32 @@ class TextEllipsizerManager {
      * @param {string} originalText - Original full text content
      */
     setupPipelineDotTooltipHandlers(element, originalText) {
-        // Make it clickable for navigation
         this.pipelineNavigationManager.makePipelineDotClickable(element, originalText);
 
-        // Add tooltip functionality
-        $(element).on('mouseenter', (e) => {
-            $(element).css({
-                'color': '#0056b3',
-                'cursor': 'pointer'
-            });
+        element.addEventListener('mouseenter', (e) => {
+            element.style.color = '#0056b3';
+            element.style.cursor = 'pointer';
             this.tooltipManager.showTooltip(element, originalText, e);
         });
 
-        $(element).on('mousemove', (e) => {
+        element.addEventListener('mousemove', (e) => {
             if (!this.tooltipManager.isInteractive()) {
                 this.tooltipManager.showTooltip(element, originalText, e);
             }
         });
 
-        $(element).on('mouseleave.tooltip', () => {
-            $(element).css({
-                'color': '#007acc',
-                'cursor': 'pointer'
-            });
-            // Don't hide tooltip on mouseleave if it's interactive
+        const mouseleaveHandler = () => {
+            element.style.color = '#007acc';
+            element.style.cursor = 'pointer';
             if (!this.tooltipManager.isInteractive()) {
                 this.tooltipManager.hideTooltip();
             }
-        });
+        };
+        element._tooltipMouseleave = mouseleaveHandler;
+        element.addEventListener('mouseleave', mouseleaveHandler);
 
-        // Right-click to make tooltip interactive (since left-click navigates)
-        $(element).on('contextmenu', (e) => {
-            if (this.tooltipManager.$tooltip.hasClass('show')) {
+        element.addEventListener('contextmenu', (e) => {
+            if (this.tooltipManager.tooltipEl.classList.contains('show')) {
                 e.preventDefault();
                 e.stopPropagation();
                 this.tooltipManager.makeTooltipInteractive();

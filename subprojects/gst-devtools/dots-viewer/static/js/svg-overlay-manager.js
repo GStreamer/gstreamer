@@ -2,7 +2,9 @@
  * SVG Overlay Manager
  *
  * Main coordinator for all SVG overlay functionality including tooltips,
- * text ellipsizing, pipeline navigation, and drag-to-pan interaction.
+ * text ellipsizing, pipeline navigation, and node highlighting.
+ *
+ * Uses d3-graphviz for rendering DOT content directly into SVG.
  */
 
 class SvgOverlayManager {
@@ -10,91 +12,404 @@ class SvgOverlayManager {
         this.tooltipManager = null;
         this.pipelineNavigationManager = null;
         this.textEllipsizerManager = null;
-        this.gv = null;
+        this.pipelineTitle = '';
+        this._nodesByName = {};
+        this._edgesByName = {};
+        this._highlighted = false;
+        this._abortController = new AbortController();
     }
 
     /**
-     * Initializes all managers and sets up the SVG overlay functionality
+     * Tears down document-level event listeners added by this manager.
+     * Call when the overlay is removed from the DOM.
      */
-    init() {
-        // Initialize managers
+    destroy() {
+        this._abortController.abort();
+    }
+
+    /**
+     * Initializes all managers and renders the DOT content with d3-graphviz
+     * @param {string} dotContent - DOT graph content to render
+     * @param {string} pipelineTitle - Title of the pipeline
+     */
+    init(dotContent, pipelineTitle) {
+        this.pipelineTitle = pipelineTitle || '';
+
         this.tooltipManager = new TooltipManager();
         this.pipelineNavigationManager = new PipelineNavigationManager(this.tooltipManager);
         this.textEllipsizerManager = new TextEllipsizerManager(this.tooltipManager, this.pipelineNavigationManager);
 
-        // Set up GraphViz SVG functionality
-        this.setupGraphvizSvg();
+        this.gv = d3.select("#graph").graphviz()
+            .zoom(true)
+            .fit(true)
+            .on('end', () => this.onSvgReady())
+            .renderDot(dotContent);
     }
 
     /**
-     * Sets up GraphViz SVG functionality and event handlers
+     * Called when d3-graphviz has finished rendering the SVG
      */
-    setupGraphvizSvg() {
-        $("#graph").graphviz({
-            url: this.getSvgUrl(),
-            ready: () => {
-                this.onSvgReady();
+    onSvgReady() {
+        const svg = document.querySelector('#graph svg');
+
+        this._fitSvgToContainer(svg);
+        this._extendZoomRange();
+        this._setupScrollBehavior();
+        this._indexElements(svg);
+        this.setupNodeHighlighting();
+        this.setupClusterZoom();
+        this.setupHoverEffects();
+        this.setupSmartDragBehavior();
+        this.setupKeyboardShortcuts();
+        this.setupSaveSvg();
+        this.processSvgContent(svg);
+    }
+
+    /**
+     * Extends d3-graphviz's default zoom scale extent so users can zoom in
+     * far enough on large graphs.
+     */
+    _extendZoomRange() {
+        try {
+            const zoomBehavior = this.gv.zoomBehavior();
+            if (zoomBehavior) {
+                zoomBehavior.scaleExtent([0.01, 500]);
+                /* Disable d3-zoom's built-in double-click-to-zoom so it
+                   doesn't fight with our cluster double-click handler. */
+                const zoomSelection = this.gv.zoomSelection();
+                if (zoomSelection) {
+                    zoomSelection.on('dblclick.zoom', null);
+                }
+            }
+        } catch (e) {
+            /* graphviz may not expose zoom behavior in all cases */
+        }
+    }
+
+    /**
+     * Replaces d3-graphviz's default wheel-to-zoom with:
+     *   - plain scroll / trackpad two-finger swipe → pan
+     *   - Ctrl+scroll / trackpad pinch (ctrlKey) → zoom around cursor
+     */
+    _setupScrollBehavior() {
+        try {
+            const zoomBehavior = this.gv.zoomBehavior();
+            const zoomSelection = this.gv.zoomSelection();
+            if (!zoomBehavior || !zoomSelection) return;
+
+            const svgEl = zoomSelection.node();
+
+            /* Remove d3-zoom's built-in wheel-to-zoom handler */
+            zoomSelection.on('wheel.zoom', null);
+
+            svgEl.addEventListener('wheel', (evt) => {
+                evt.preventDefault();
+
+                const current = svgEl.__zoom || d3.zoomIdentity;
+
+                /* Normalise delta to CSS pixels */
+                const px = evt.deltaMode === 1 ? 18 : evt.deltaMode === 2 ? window.innerHeight : 1;
+                const dx = evt.deltaX * px;
+                const dy = evt.deltaY * px;
+
+                if (evt.ctrlKey) {
+                    /* Ctrl+wheel / trackpad pinch → zoom around the cursor */
+                    const scaleFactor = Math.pow(2, -dy * 0.002);
+                    const newK = Math.max(0.01, Math.min(500, current.k * scaleFactor));
+                    const [mx, my] = d3.pointer(evt, svgEl);
+                    const newX = mx - (newK / current.k) * (mx - current.x);
+                    const newY = my - (newK / current.k) * (my - current.y);
+                    zoomBehavior.transform(zoomSelection,
+                        d3.zoomIdentity.translate(newX, newY).scale(newK));
+                } else {
+                    /* Plain scroll → pan */
+                    const vb = svgEl.viewBox.baseVal;
+                    if (!vb || !vb.width) return;
+                    const rect = svgEl.getBoundingClientRect();
+                    const toSvg = vb.width / rect.width;
+                    zoomBehavior.transform(zoomSelection,
+                        d3.zoomIdentity
+                            .translate(current.x - dx * toSvg, current.y - dy * toSvg)
+                            .scale(current.k));
+                }
+            }, { passive: false });
+        } catch (e) {
+            /* graphviz may not expose zoom behavior in all cases */
+        }
+    }
+
+    /**
+     * Ensures the SVG is properly sized to fit its container.
+     * d3-graphviz .fit(true) can miscalculate when the container
+     * hasn't finished layout, so we re-apply the fit here.
+     * @param {SVGElement} svg - The rendered SVG element
+     */
+    _fitSvgToContainer(svg) {
+        if (!svg) return;
+        const container = svg.parentElement;
+        if (!container) return;
+
+        const containerW = container.clientWidth;
+        const containerH = container.clientHeight;
+        if (!containerW || !containerH) return;
+
+        /* read the native graph size from the viewBox or the SVG attributes */
+        let vb = svg.viewBox.baseVal;
+        if (!vb || (!vb.width && !vb.height)) {
+            const w = parseFloat(svg.getAttribute('width'));
+            const h = parseFloat(svg.getAttribute('height'));
+            if (w && h) {
+                svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+                vb = svg.viewBox.baseVal;
+            }
+        }
+
+        if (vb && vb.width && vb.height) {
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', '100%');
+            svg.style.width = '100%';
+            svg.style.height = '100%';
+        }
+    }
+
+    /**
+     * Indexes nodes and edges from SVG title elements for name-based lookup
+     * @param {Element} svg - SVG element
+     */
+    _indexElements(svg) {
+        this._nodesByName = {};
+        this._edgesByName = {};
+
+        svg.querySelectorAll('.node').forEach(node => {
+            const title = node.querySelector('title');
+            if (title) {
+                const name = title.textContent.replace(/:[snew][ew]?/g, '');
+                this._nodesByName[name] = node;
+                node.setAttribute('data-name', name);
+            }
+        });
+
+        svg.querySelectorAll('.edge').forEach(edge => {
+            const title = edge.querySelector('title');
+            if (title) {
+                const name = title.textContent.replace(/:[snew][ew]?/g, '');
+                this._edgesByName[name] = edge;
+                edge.setAttribute('data-name', name);
             }
         });
     }
 
     /**
-     * Called when SVG is loaded and ready
+     * Finds all nodes and edges connected to the given node, recursively
+     * following the full ghostpad/proxypad chain in both directions.
+     * @param {string} nodeName - Name of the node to find connections for
+     * @returns {Set<Element>} Set of connected elements (nodes + edges)
      */
-    onSvgReady() {
-        this.gv = $("#graph").data('graphviz.svg');
-        const $svg = $("#graph svg");
+    _findConnected(nodeName) {
+        const result = new Set();
+        const node = this._nodesByName[nodeName];
+        if (node) result.add(node);
 
-        // Set up node click functionality for highlighting
-        this.setupNodeHighlighting();
+        this._findLinked(nodeName, true, true, result);
+        this._findLinked(nodeName, false, true, result);
 
-        // Setup cluster zooms
-        this.setupClusterZoom();
-
-        // Set up smart drag-to-pan behavior that doesn't interfere with text selection
-        this.setupSmartDragBehavior();
-
-        // Set up keyboard shortcuts
-        this.setupKeyboardShortcuts();
-
-        // Set up save SVG functionality
-        this.setupSaveSvg();
-
-        // Process SVG content
-        this.processSvgContent($svg);
+        return result;
     }
 
     /**
-     * Processes SVG content with all managers
-     * @param {jQuery} $svg - jQuery object containing the SVG element
+     * Recursively follows edges from a node in one direction.
+     * @param {string} nodeName - Current node name
+     * @param {boolean} forward - true for downstream (src->X), false for upstream (X->dst)
+     * @param {boolean} includeEdges - Whether to include edge elements in the result
+     * @param {Set<Element>} result - Accumulated result set
      */
-    processSvgContent($svg) {
-        // Set up pipeline-dot navigation
-        this.pipelineNavigationManager.setupPipelineDotNavigation($svg);
+    _findLinked(nodeName, forward, includeEdges, result) {
+        const connectedNames = [];
 
-        // Process text ellipsizing (this must come after pipeline navigation setup)
-        this.textEllipsizerManager.ellipsizeLongText($svg);
+        for (const [edgeName, edgeEl] of Object.entries(this._edgesByName)) {
+            let otherName = null;
+            if (forward) {
+                const prefix = nodeName + '->';
+                if (edgeName.startsWith(prefix)) {
+                    otherName = edgeName.substring(prefix.length);
+                }
+            } else {
+                const suffix = '->' + nodeName;
+                if (edgeName.endsWith(suffix)) {
+                    otherName = edgeName.substring(0, edgeName.length - suffix.length);
+                }
+            }
+
+            if (otherName !== null) {
+                if (includeEdges) {
+                    result.add(edgeEl);
+                }
+                connectedNames.push(otherName);
+            }
+        }
+
+        for (const name of connectedNames) {
+            const n = this._nodesByName[name];
+            if (n && !result.has(n)) {
+                result.add(n);
+                this._findLinked(name, forward, includeEdges, result);
+            }
+        }
+    }
+
+    /**
+     * Highlights the given elements and dims everything else
+     * @param {Set<Element>|null} selected - Elements to highlight, or null to restore all
+     */
+    _highlight(selected) {
+        const all = document.querySelectorAll('#graph .node, #graph .edge');
+
+        if (selected && selected.size) {
+            this._highlighted = true;
+            all.forEach(el => {
+                el.style.opacity = selected.has(el) ? '1' : '0.15';
+            });
+            selected.forEach(el => {
+                el.parentNode.appendChild(el);
+            });
+        } else {
+            this._highlighted = false;
+            all.forEach(el => {
+                el.style.opacity = '1';
+            });
+        }
     }
 
     /**
      * Sets up node click functionality for highlighting connected nodes
      */
     setupNodeHighlighting() {
-        this.gv.nodes().on('click', function () {
-            const gv = $("#graph").data('graphviz.svg');
-            let $set = $();
-            $set.push(this);
-            $set = $set.add(gv.linkedFrom(this, true));
-            $set = $set.add(gv.linkedTo(this, true));
-            gv.highlight($set, true);
-            gv.bringToFront($set);
+        const that = this;
+
+        document.querySelectorAll('#graph .node').forEach(node => {
+            node.addEventListener('click', function(evt) {
+                evt.stopPropagation();
+                const nodeName = this.getAttribute('data-name');
+                if (!nodeName) return;
+
+                const connected = that._findConnected(nodeName);
+                that._highlight(connected);
+            });
+        });
+
+        /* Click on SVG background clears the highlight */
+        const svg = document.querySelector('#graph svg');
+        if (svg) {
+            svg.addEventListener('click', () => {
+                that._highlight(null);
+            });
+        }
+    }
+
+    /**
+     * Sets up double-click on clusters to zoom-to-fit the cluster in the viewport.
+     */
+    setupClusterZoom() {
+        const that = this;
+        d3.select('#graph svg').selectAll('.cluster').on('dblclick', function(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+            that._zoomToElement(this);
         });
     }
 
-    setupClusterZoom() {
-        this.gv.clusters().on('dblclick', function () {
-            const gv = $("#graph").data('graphviz.svg');
-            gv.scaleToNode($(this));
+    /**
+     * Zooms the viewport to fit a given SVG element (e.g. a cluster).
+     * d3-zoom's transform operates in SVG coordinate space (viewBox units),
+     * not pixel space, so we must use the SVG's rendered dimensions.
+     * @param {SVGElement} el - The SVG element to zoom to
+     */
+    _zoomToElement(el) {
+        const svg = document.querySelector('#graph svg');
+        if (!svg) return;
+
+        const bbox = el.getBBox();
+        if (!bbox.width || !bbox.height) return;
+
+        /* d3-zoom's transform operates in the SVG's viewBox coordinate space.
+         * getBBox() also returns viewBox-space coords. We must use viewBox
+         * dimensions for the viewport, not pixel dimensions. */
+        const vb = svg.viewBox.baseVal;
+        if (!vb || !vb.width || !vb.height) return;
+        const W = vb.width;
+        const H = vb.height;
+
+        /* Convert pixel padding to viewBox units so padding is consistent
+         * regardless of the physical SVG size. */
+        const graphDiv = document.getElementById('graph');
+        const graphRect = graphDiv.getBoundingClientRect();
+        const padPx = 40;
+        const padX = padPx * (W / graphRect.width);
+        const padY = padPx * (H / graphRect.height);
+
+        const scale = Math.min(
+            (W - 2 * padX) / bbox.width,
+            (H - 2 * padY) / bbox.height
+        );
+        const cx = bbox.x + bbox.width / 2;
+        const cy = bbox.y + bbox.height / 2;
+        const tx = W / 2 - scale * cx;
+        const ty = H / 2 - scale * cy;
+
+        const target = d3.zoomIdentity.translate(tx, ty).scale(scale);
+
+        try {
+            const zoomBehavior = this.gv.zoomBehavior();
+            const zoomSelection = this.gv.zoomSelection();
+            const svgEl = zoomSelection.node();
+            const start = svgEl.__zoom || d3.zoomIdentity;
+
+            /* d3-zoom's built-in transition uses d3.interpolateZoom regardless
+             * of the .interpolate() override, producing an incorrect final zoom.
+             * Drive the animation ourselves with a rAF loop so we can use simple
+             * linear interpolation (which gives the correct final transform). */
+            const duration = 750;
+            const ease = (t) => t < 0.5 ? 4*t*t*t : 1 - (-2*t + 2)**3 / 2;
+            let startTime = null;
+            const animate = (now) => {
+                if (startTime === null) startTime = now;
+                const et = ease(Math.min(1, (now - startTime) / duration));
+                const k = start.k + et * (target.k - start.k);
+                const x = start.x + et * (target.x - start.x);
+                const y = start.y + et * (target.y - start.y);
+                zoomBehavior.transform(zoomSelection,
+                    d3.zoomIdentity.translate(x, y).scale(k));
+                if (et < 1) requestAnimationFrame(animate);
+            };
+            requestAnimationFrame(animate);
+        } catch (e) {
+            d3.select('#graph svg > g').transition()
+                .duration(750)
+                .attr('transform', target.toString());
+        }
+    }
+
+    /**
+     * Adds a subtle brightness boost on hover to nodes (click to highlight)
+     * and clusters (double-click to zoom), so users can see what is interactive.
+     */
+    setupHoverEffects() {
+        document.querySelectorAll('#graph .node').forEach(node => {
+            node.addEventListener('mouseenter', () => {
+                node.style.filter = 'drop-shadow(0 0 5px rgba(66, 133, 244, 0.85))';
+            });
+            node.addEventListener('mouseleave', () => {
+                node.style.filter = '';
+            });
+        });
+
+        document.querySelectorAll('#graph .cluster').forEach(cluster => {
+            cluster.addEventListener('mouseenter', () => {
+                cluster.style.filter = 'drop-shadow(0 0 6px rgba(66, 133, 244, 0.6))';
+            });
+            cluster.addEventListener('mouseleave', () => {
+                cluster.style.filter = '';
+            });
         });
     }
 
@@ -104,15 +419,14 @@ class SvgOverlayManager {
     setupSmartDragBehavior() {
         const graphDiv = document.getElementById('graph');
 
-        // Intercept mousedown events to prevent dragscroll on text elements
         graphDiv.addEventListener('mousedown', (e) => {
             if (e.target.tagName === 'text' || e.target.tagName === 'tspan') {
                 if (e.target.textContent &&
                     e.target.textContent.startsWith("pipeline-dot=") &&
                     e.target.textContent.includes(".dot")) {
-                    return; // Let pipeline dot click handler take precedence
+                    return;
                 }
-                e.stopPropagation(); // Stop dragscroll for regular text
+                e.stopPropagation();
                 return true;
             }
         }, true);
@@ -122,31 +436,34 @@ class SvgOverlayManager {
      * Sets up keyboard shortcuts for the SVG viewer
      */
     setupKeyboardShortcuts() {
-        $(document).on('keyup', (evt) => {
-            if (evt.key == "Escape") {
-                this.gv.highlight();
-            } else if (evt.key == "w") {
-                this.gv.scaleInView((this.gv.zoom.percentage + 100));
-            } else if (evt.key == "s") {
-                const newPercentage = Math.max(100, this.gv.zoom.percentage - 100);
-                this.gv.scaleInView(newPercentage);
+        /* Use capture phase so this fires before index.html's bubbling keyup
+         * handler that calls removePipelineOverlay() on Escape. */
+        document.addEventListener('keyup', (evt) => {
+            if (evt.key === "Escape" && this._highlighted) {
+                evt.stopPropagation();
+                this._highlight(null);
             }
-        });
+        }, { capture: true, signal: this._abortController.signal });
     }
 
     /**
      * Sets up SVG save functionality
      */
     setupSaveSvg() {
-        $("#save-svg").on('click', () => {
-            const svgElement = $("#graph svg")[0];
+        const saveSvgBtn = document.getElementById('save-svg');
+        if (!saveSvgBtn) return;
+
+        saveSvgBtn.addEventListener('click', () => {
+            const svgElement = document.querySelector('#graph svg');
+            if (!svgElement) return;
             const svgData = new XMLSerializer().serializeToString(svgElement);
             const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
             const url = URL.createObjectURL(blob);
-            const title = document.getElementById("title").textContent.trim();
+            const titleEl = document.getElementById("title");
+            const filename = (titleEl ? titleEl.textContent.trim() : 'pipeline') + ".svg";
             const downloadLink = document.createElement("a");
             downloadLink.href = url;
-            downloadLink.download = title + ".svg";
+            downloadLink.download = filename;
             document.body.appendChild(downloadLink);
             downloadLink.click();
             document.body.removeChild(downloadLink);
@@ -155,24 +472,12 @@ class SvgOverlayManager {
     }
 
     /**
-     * Gets the SVG URL from query parameters
-     * @returns {string} SVG URL
+     * Processes SVG content with all managers
+     * @param {Element} svg - SVG element
      */
-    getSvgUrl() {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get('svg');
-    }
-
-    /**
-     * Gets the title from query parameters and sets it in the document
-     */
-    setTitle() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const title = urlParams.get('title');
-        if (title) {
-            document.getElementById("title").textContent = title;
-            document.title = "Dots viewer: " + title;
-        }
+    processSvgContent(svg) {
+        this.pipelineNavigationManager.setupPipelineDotNavigation(svg);
+        this.textEllipsizerManager.ellipsizeLongText(svg);
     }
 }
 
