@@ -112,6 +112,7 @@ struct _GstOnnxInference
   size_t output_count;
   gchar **output_names;
   GQuark *output_ids;
+  GstTensorDimOrder *output_dims_orders;
   GstTensorDataType input_data_type;
   bool fixedInputImageSize;
   double *scales;
@@ -1104,6 +1105,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   g_value_init (&v_tensors_set, GST_TYPE_UNIQUE_LIST);
 
   self->output_ids = g_new0 (GQuark, self->output_count);
+  self->output_dims_orders = g_new0 (GstTensorDimOrder, self->output_count);
 
   for (i = 0; i < self->output_count; i++) {
     OrtTypeInfo *output_type_info = NULL;
@@ -1228,6 +1230,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     /* Get dims-order from modelinfo (defaults to row-major if not specified) */
     GstTensorDimOrder dims_order =
         gst_analytics_modelinfo_get_dims_order (modelinfo, tensor_name);
+    self->output_dims_orders[i] = dims_order;
     const gchar *dims_order_str =
         dims_order ==
         GST_TENSOR_DIM_ORDER_COL_MAJOR ? "col-major" : "row-major";
@@ -1351,6 +1354,8 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
 
   g_free (self->output_ids);
   self->output_ids = NULL;
+  g_free (self->output_dims_orders);
+  self->output_dims_orders = NULL;
   self->output_count = 0;
 
   if (self->memory_info)
@@ -1731,6 +1736,7 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     GstTensor *tensor = gst_tensor_alloc (num_dims);
     tmeta->tensors[i] = tensor;
     tensor->id = self->output_ids[i];
+    tensor->dims_order = self->output_dims_orders[i];
 
     for (j = 0; j < num_dims; ++j)
       tensor->dims[j] = shape[j];
