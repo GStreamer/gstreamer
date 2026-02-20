@@ -342,7 +342,7 @@ gst_vtdec_output_loop (GstVtdec * vtdec)
   GstVideoDecoder *decoder = GST_VIDEO_DECODER (vtdec);
 
   g_mutex_lock (&vtdec->queue_mutex);
-  while (gst_vec_deque_get_length (vtdec->reorder_queue) < vtdec->dbp_size
+  while (gst_vec_deque_get_length (vtdec->reorder_queue) <= vtdec->dbp_size
       && !vtdec->pause_task && !vtdec->is_flushing && !vtdec->is_draining) {
     g_cond_wait (&vtdec->queue_cond, &vtdec->queue_mutex);
   }
@@ -359,7 +359,7 @@ gst_vtdec_output_loop (GstVtdec * vtdec)
 
   /* push a buffer if there are enough frames to guarantee
    * that we push in PTS order, or if we're draining/flushing */
-  while ((gst_vec_deque_get_length (vtdec->reorder_queue) >=
+  while ((gst_vec_deque_get_length (vtdec->reorder_queue) >
           vtdec->dbp_size) || vtdec->is_flushing || vtdec->is_draining) {
     gboolean is_flushing;
 
