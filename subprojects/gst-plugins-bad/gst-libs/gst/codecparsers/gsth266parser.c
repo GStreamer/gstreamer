@@ -3841,15 +3841,28 @@ gst_h266_parser_parse_picture_partition (GstH266SPS * sps,
               goto error;
             }
 
-            tile_idx += pps->tile_idx_delta_val[i];
+            gint new_tile_idx = (gint) tile_idx + pps->tile_idx_delta_val[i];
+            if (new_tile_idx < 0 ||
+                new_tile_idx >= (gint) pps->num_tiles_in_pic) {
+              GST_WARNING ("tile_idx %d out of bounds.", new_tile_idx);
+              goto error;
+            }
+            tile_idx = new_tile_idx;
           } else {
             pps->tile_idx_delta_val[i] = 0;
 
-            tile_idx += pps->slice_width_in_tiles_minus1[i] + 1;
-            if (tile_idx % pps->num_tile_columns == 0) {
-              tile_idx += pps->slice_height_in_tiles_minus1[i] *
+            gint new_tile_idx = (gint) tile_idx +
+                pps->slice_width_in_tiles_minus1[i] + 1;
+            if (new_tile_idx % pps->num_tile_columns == 0) {
+              new_tile_idx += pps->slice_height_in_tiles_minus1[i] *
                   pps->num_tile_columns;
             }
+            if (new_tile_idx < 0 ||
+                new_tile_idx >= (gint) pps->num_tiles_in_pic) {
+              GST_WARNING ("tile_idx %d out of bounds.", new_tile_idx);
+              goto error;
+            }
+            tile_idx = new_tile_idx;
           }
         }
       }
