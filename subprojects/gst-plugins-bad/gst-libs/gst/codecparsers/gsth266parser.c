@@ -1460,7 +1460,8 @@ gst_h266_parser_parse_pic_timing (GstH266PicTiming * pt,
 
   if (bp->du_hrd_params_present_flag &&
       bp->du_cpb_params_in_pic_timing_sei_flag) {
-    READ_UE (nr, pt->num_decoding_units_minus1);
+    READ_UE_MAX (nr, pt->num_decoding_units_minus1,
+        GST_H266_MAX_DECODING_UNITS_IN_PIC_TIMING - 1);
     if (pt->num_decoding_units_minus1 > 0) {
       READ_UINT8 (nr, pt->du_common_cpb_removal_delay_flag, 1);
       if (pt->du_common_cpb_removal_delay_flag) {
