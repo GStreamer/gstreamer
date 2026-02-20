@@ -831,6 +831,19 @@ gst_vtenc_drain_encoder (GstVTEnc * self, gboolean flush)
         (int) vt_status);
   }
 
+  /* If self->first_frame is still true, that means we never got more than 1 frame
+   * and that's all for now, so let's push it manually now */
+  if (self->first_frame) {
+    GST_DEBUG_OBJECT (self,
+        "first frame never pushed downstream, sending to output loop");
+
+    g_mutex_lock (&self->queue_mutex);
+    gst_vec_deque_push_tail (self->output_queue, self->first_frame);
+    self->first_frame = NULL;
+    g_cond_signal (&self->queue_cond);
+    g_mutex_unlock (&self->queue_mutex);
+  }
+
   /* This will only pause after all frames are out because is_flushing/is_draining=TRUE */
   gst_vtenc_pause_output_loop (self);
   GST_VIDEO_ENCODER_STREAM_LOCK (self);
@@ -860,6 +873,7 @@ gst_vtenc_start (GstVideoEncoder * enc)
 
   /* DTS can be negative if b-frames are enabled */
   gst_video_encoder_set_min_pts (enc, GST_SECOND * 60 * 60 * 1000);
+  self->dts_offset = GST_CLOCK_TIME_NONE;
 
   self->is_flushing = FALSE;
   self->is_draining = FALSE;
@@ -913,6 +927,10 @@ gst_vtenc_stop (GstVideoEncoder * enc)
   if (self->input_state)
     gst_video_codec_state_unref (self->input_state);
   self->input_state = NULL;
+
+  if (self->first_frame)
+    gst_video_codec_frame_unref (self->first_frame);
+  self->first_frame = NULL;
 
   self->video_info.width = self->video_info.height = 0;
   self->video_info.fps_n = self->video_info.fps_d = 0;
@@ -1464,42 +1482,6 @@ gst_vtenc_set_colorimetry (GstVTEnc * self, VTCompressionSessionRef session)
   }
 }
 
-static gboolean
-gst_vtenc_compute_dts_offset (GstVTEnc * self, gint fps_n, gint fps_d)
-{
-  gint num_offset_frames;
-
-  // kVTCompressionPropertyKey_AllowFrameReordering enables B-Frames
-  if (!self->allow_frame_reordering ||
-      (self->specific_format_id == kCMVideoCodecType_H264
-          && self->h264_profile == GST_H264_PROFILE_BASELINE)) {
-    num_offset_frames = 0;
-  } else {
-    if (self->specific_format_id == kCMVideoCodecType_H264) {
-      // H264 encoder always sets 2 max_num_ref_frames
-      num_offset_frames = 1;
-    } else {
-      // HEVC encoder uses B-pyramid
-      num_offset_frames = 2;
-    }
-  }
-
-  if (fps_d == 0 && num_offset_frames != 0) {
-    GST_ERROR_OBJECT (self,
-        "Variable framerate is not supported with B-Frames");
-    return FALSE;
-  }
-
-  self->dts_offset =
-      gst_util_uint64_scale (num_offset_frames * GST_SECOND,
-      self->video_info.fps_d, self->video_info.fps_n);
-
-  GST_DEBUG_OBJECT (self, "DTS Offset:%" GST_TIME_FORMAT,
-      GST_TIME_ARGS (self->dts_offset));
-
-  return TRUE;
-}
-
 static VTCompressionSessionRef
 gst_vtenc_create_session (GstVTEnc * self)
 {
@@ -1532,23 +1514,27 @@ gst_vtenc_create_session (GstVTEnc * self)
         TRUE);
 #endif
 
+  /* This was set in gst_vtenc_negotiate_specific_format_details() */
+  g_assert_cmpint (self->specific_format_id, !=, 0);
+
   if (self->profile_level) {
+    /* If there's no B-frames, the DTS offset doesn't need to be calculated
+     * (kVTCompressionPropertyKey_AllowFrameReordering enables B-Frames) */
+    if (!self->allow_frame_reordering
+        || CFStringHasPrefix (self->profile_level, CFSTR ("H264_Baseline"))) {
+      self->dts_offset = 0;
+    } else if (self->video_info.fps_n == 0) {
+      GST_ERROR_OBJECT (self,
+          "Variable framerate is not supported with B-Frames");
+      goto beach;
+    }
+
     pb_attrs = CFDictionaryCreateMutable (NULL, 0,
         &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
     gst_vtutil_dict_set_i32 (pb_attrs, kCVPixelBufferWidthKey,
         self->video_info.width);
     gst_vtutil_dict_set_i32 (pb_attrs, kCVPixelBufferHeightKey,
         self->video_info.height);
-  }
-
-  /* This was set in gst_vtenc_negotiate_specific_format_details() */
-  g_assert_cmpint (self->specific_format_id, !=, 0);
-
-  if (self->profile_level) {
-    if (!gst_vtenc_compute_dts_offset (self, self->video_info.fps_d,
-            self->video_info.fps_n)) {
-      goto beach;
-    }
   }
 
   status = VTCompressionSessionCreate (NULL,
@@ -1946,14 +1932,14 @@ gst_vtenc_update_latency (GstVTEnc * self)
 }
 
 static void
-gst_vtenc_update_timestamps (GstVTEnc * self, GstVideoCodecFrame * frame,
+gst_vtenc_set_timestamps_from_sample_buf (GstVideoCodecFrame * frame,
     CMSampleBufferRef sample_buf)
 {
   CMTime pts = CMSampleBufferGetOutputPresentationTimeStamp (sample_buf);
   frame->pts = CMTIME_TO_GST_CLOCK_TIME (pts);
   CMTime dts = CMSampleBufferGetOutputDecodeTimeStamp (sample_buf);
   if (CMTIME_IS_VALID (dts)) {
-    frame->dts = CMTIME_TO_GST_CLOCK_TIME (dts) - self->dts_offset;
+    frame->dts = CMTIME_TO_GST_CLOCK_TIME (dts);
   }
 }
 
@@ -2379,13 +2365,50 @@ gst_vtenc_session_output_callback (void *outputCallbackRefCon,
    * to enable the use of the video meta API on the core media buffer */
   frame->output_buffer = gst_core_media_buffer_new (sampleBuffer, FALSE, NULL);
 
-  gst_vtenc_update_timestamps (self, frame, sampleBuffer);
+  gst_vtenc_set_timestamps_from_sample_buf (frame, sampleBuffer);
 
-  /* Limit the amount of frames in our output queue
-   * to avoid processing too many frames ahead */
   g_mutex_lock (&self->queue_mutex);
-  /* Let's make sure we don't block this thread when the output loop
-   * paused because of a downstream error */
+
+  /* VT can give us frames with DTS>PTS. We need to offset DTS by the max possible difference
+   * between PTS and DTS, which can be calculated from the PTS diff between the 1st and 2nd frame */
+  if (self->first_frame) {
+    if (GST_CLOCK_TIME_IS_VALID (self->first_frame->pts)
+        && GST_CLOCK_TIME_IS_VALID (frame->pts)) {
+      self->dts_offset = frame->pts - self->first_frame->pts;
+      GST_INFO_OBJECT (self, "DTS offset: %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (self->dts_offset));
+    } else {
+      GST_INFO_OBJECT (self,
+          "DTS offset set to 0 because of invalid PTS: frame 1 PTS %"
+          GST_TIME_FORMAT ", frame 2 PTS %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (self->first_frame->pts), GST_TIME_ARGS (frame->pts));
+      self->dts_offset = 0;
+    }
+
+    if (GST_CLOCK_TIME_IS_VALID (self->first_frame->dts))
+      self->first_frame->dts -= self->dts_offset;
+
+    gst_vec_deque_push_tail (self->output_queue, self->first_frame);
+    self->first_frame = NULL;
+  } else if (!GST_CLOCK_TIME_IS_VALID (self->dts_offset)) {
+    self->first_frame = frame;
+    g_mutex_unlock (&self->queue_mutex);
+    return;
+  }
+
+  if (GST_CLOCK_TIME_IS_VALID (self->dts_offset)
+      && GST_CLOCK_TIME_IS_VALID (frame->dts)) {
+    frame->dts -= self->dts_offset;
+  }
+
+  GST_TRACE_OBJECT (self,
+      "encoded frame %d PTS %" GST_TIME_FORMAT " DTS %" GST_TIME_FORMAT,
+      frame->system_frame_number, GST_TIME_ARGS (frame->pts),
+      GST_TIME_ARGS (frame->dts));
+
+  /* Limit the amount of frames in our output queue to avoid processing
+   * too many frames ahead, and also make sure we don't block here 
+   * if the output loop paused due to a downstream error. */
   push_anyway = self->is_flushing || self->is_draining;
   while (!push_anyway
       && gst_vec_deque_get_length (self->output_queue) >
@@ -2458,7 +2481,10 @@ gst_vtenc_output_loop (GstVTEnc * self)
 
     gst_vtenc_update_latency (self);
 
-    GST_LOG_OBJECT (self, "finishing frame %d", outframe->system_frame_number);
+    GST_LOG_OBJECT (self,
+        "finishing frame %d dts %" GST_TIME_FORMAT " pts %" GST_TIME_FORMAT,
+        outframe->system_frame_number,
+        GST_TIME_ARGS (outframe->dts), GST_TIME_ARGS (outframe->pts));
     GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
     /* releases frame, even if it has no output buffer (i.e. failed to encode) */
     ret =
