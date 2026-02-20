@@ -13685,6 +13685,10 @@ bcw_enabled_flag: specifies whether bi-prediction with CU weights is enabled
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
+    <constant name="H266_MAX_DECODING_UNITS_IN_PIC_TIMING" value="600" c:type="GST_H266_MAX_DECODING_UNITS_IN_PIC_TIMING">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
     <constant name="H266_MAX_DPB_SIZE" value="16" c:type="GST_H266_MAX_DPB_SIZE">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h"/>
       <type name="gint" c:type="gint"/>
