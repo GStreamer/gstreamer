@@ -953,7 +953,7 @@ init (const gchar * tracer_regexp)
       /* 2: pid */
       "\\\x1b\\[[0-9;]+m *[0-9]+\\\x1b\\[00m +"
       /* 3: thread */
-      "0x[0-9a-fA-F]+ +"
+      "0?x?[0-9a-fA-F]+ +"
       /* 4: level */
       "(?:\\\x1b\\[[0-9;]+m)?TRACE +\\\x1b\\[00m +"
       /* 5: category */
