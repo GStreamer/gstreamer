@@ -4388,7 +4388,7 @@ gst_h266_parse_aps (GstH266Parser * parser, GstH266NalUnit * nalu,
   READ_UINT8 (&nr, params_type, 3);
   aps->params_type = params_type;
   READ_UINT8 (&nr, aps->aps_id, 5);
-  CHECK_ALLOWED_MAX (aps->aps_id, GST_H266_MAX_APS_COUNT);
+  CHECK_ALLOWED_MAX (aps->aps_id, GST_H266_MAX_APS_COUNT - 1);
   READ_UINT8 (&nr, aps->chroma_present_flag, 1);
 
   switch (aps->params_type) {
