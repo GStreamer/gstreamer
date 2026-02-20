@@ -43,7 +43,56 @@
     font-variant-numeric: tabular-nums;
 }
 
+/* Better font for pipeline/graph SVG text */
+.preview svg text,
+#graph svg text,
+#pipeline-container svg text {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif !important;
+}
+
 /* show that nodes and clusters are (double) clickable */
 .node, .cluster {
   cursor: pointer;
 }
+
+/*
+ * Dark theme for graphviz-rendered SVGs.
+ *
+ * Apply invert+hue-rotate to the inner <g> (not the <svg>) so the SVG
+ * element itself stays transparent and the container's dark background
+ * shows through.  The graph background polygon is made transparent for
+ * the same reason — otherwise it would render as pure black on top of
+ * the container.
+ *
+ * hue-rotate(180deg) cancels the hue shift that inversion introduces,
+ * so saturated semantic colors (red=PLAYING, green=PAUSED …) are
+ * roughly preserved.
+ */
+body:not(.svg-light-theme) .preview svg .graph,
+body:not(.svg-light-theme) #graph svg .graph,
+body:not(.svg-light-theme) #pipeline-container svg .graph {
+    filter: invert(1) hue-rotate(180deg);
+}
+
+/* Graph background polygon → transparent, let container bg show through */
+body:not(.svg-light-theme) .preview svg .graph > polygon:first-child,
+body:not(.svg-light-theme) #graph svg .graph > polygon:first-child,
+body:not(.svg-light-theme) #pipeline-container svg .graph > polygon:first-child {
+    fill: transparent !important;
+    stroke: none !important;
+}
+
+/*
+ * Pre-soften white fills so that after invert(1) they land at ~#404040
+ * (dark grey) instead of pure black. Black text is unaffected (0 → 1 = white).
+ * Colored fills (state indicators) are left alone.
+ */
+body:not(.svg-light-theme) .preview svg .graph [fill="white"],
+body:not(.svg-light-theme) .preview svg .graph [fill="#ffffff"],
+body:not(.svg-light-theme) #graph svg .graph [fill="white"],
+body:not(.svg-light-theme) #graph svg .graph [fill="#ffffff"],
+body:not(.svg-light-theme) #pipeline-container svg .graph [fill="white"],
+body:not(.svg-light-theme) #pipeline-container svg .graph [fill="#ffffff"] {
+    fill: #c0c0c0 !important;
+}
+

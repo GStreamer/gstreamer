@@ -15,6 +15,7 @@
     <link rel="icon" type="image/png" href="/images/favicon-228.png" sizes="228x228">
 
     <script src="/dist/bundle.js"></script>
+    <link rel="stylesheet" href="/css/graphviz.svg.css">
   </head>
 
   <style>
@@ -117,7 +118,7 @@
         position: fixed;
         bottom: 10px;
         left: 10px;
-        color: #808080;
+        color: #e0e0e0;
         font-size: 12px;
         text-align: left;
     }
@@ -298,6 +299,22 @@
         document.getElementById('search').focus();
       }
     });
+
+    /* ── SVG theme toggle ──────────────────────────────────────────── */
+    (function() {
+      const btn = document.getElementById('svg-theme-btn');
+      const STORAGE_KEY = 'svg-theme';
+      function applyTheme(light) {
+        document.body.classList.toggle('svg-light-theme', light);
+        btn.textContent = light ? '🌙 Dark SVGs' : '☀ Light SVGs';
+      }
+      applyTheme(localStorage.getItem(STORAGE_KEY) === 'light');
+      btn.addEventListener('click', function() {
+        const light = !document.body.classList.contains('svg-light-theme');
+        localStorage.setItem(STORAGE_KEY, light ? 'light' : 'dark');
+        applyTheme(light);
+      });
+    })();
   </script>
 
   <body>
@@ -306,6 +323,7 @@
     <div>
       <input type="text" id="search" placeholder="Search for pipeline">
       <button id="dump-button">Dump Pipelines</button>
+      <button id="svg-theme-btn" style="margin-left: 10px;">☀ Light SVGs</button>
       <a href="/pipeline.html" style="margin-left: 10px; color: #a0a0ff; text-decoration: none;">Pipeline Viewer</a>
     </div>
 

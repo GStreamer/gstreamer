@@ -258,7 +258,10 @@ class SvgOverlayManager {
     }
 
     /**
-     * Highlights the given elements and dims everything else
+     * Highlights the given elements and dims everything else.
+     *
+     * Dimmed elements use opacity 0.35 + grayscale rather than a very low
+     * opacity so that text on non-selected pads remains readable.
      * @param {Set<Element>|null} selected - Elements to highlight, or null to restore all
      */
     _highlight(selected) {
@@ -267,7 +270,13 @@ class SvgOverlayManager {
         if (selected && selected.size) {
             this._highlighted = true;
             all.forEach(el => {
-                el.style.opacity = selected.has(el) ? '1' : '0.15';
+                if (selected.has(el)) {
+                    el.style.opacity = '1';
+                    el.style.filter = '';
+                } else {
+                    el.style.opacity = '0.35';
+                    el.style.filter = 'grayscale(1)';
+                }
             });
             selected.forEach(el => {
                 el.parentNode.appendChild(el);
@@ -276,6 +285,7 @@ class SvgOverlayManager {
             this._highlighted = false;
             all.forEach(el => {
                 el.style.opacity = '1';
+                el.style.filter = '';
             });
         }
     }
@@ -433,15 +443,48 @@ class SvgOverlayManager {
     }
 
     /**
-     * Sets up keyboard shortcuts for the SVG viewer
+     * Sets up keyboard shortcuts for the SVG viewer.
+     *
+     * Escape behaviour (two-press-to-close):
+     *   • Overlay not open       – not intercepted at all (guard on #overlay).
+     *   • Something highlighted  – first Esc unhighlights; second Esc closes.
+     *   • Nothing highlighted    – first Esc is consumed and arms "pending";
+     *                              second Esc lets the event through so
+     *                              index.html's removePipelineOverlay() runs.
+     *   • 2-second timeout       – resets a stale first-press so it never
+     *                              blocks a later single-Esc close attempt.
+     *
+     * The listener runs in capture phase so it always fires before the
+     * bubbling handler in index.html.
      */
     setupKeyboardShortcuts() {
-        /* Use capture phase so this fires before index.html's bubbling keyup
-         * handler that calls removePipelineOverlay() on Escape. */
+        let escPending = false;
+        let escTimer   = null;
+
+        const resetPending = () => {
+            escPending = false;
+            clearTimeout(escTimer);
+        };
+
         document.addEventListener('keyup', (evt) => {
-            if (evt.key === "Escape" && this._highlighted) {
+            /* Only intercept while the overlay is actually in the DOM */
+            if (!document.getElementById('overlay')) return;
+
+            if (evt.key !== 'Escape') return;
+
+            if (this._highlighted) {
+                /* Unhighlight on first Esc; a subsequent Esc will close */
                 evt.stopPropagation();
                 this._highlight(null);
+                resetPending();
+            } else if (!escPending) {
+                /* First Esc with nothing highlighted: arm pending, consume */
+                evt.stopPropagation();
+                escPending = true;
+                escTimer = setTimeout(resetPending, 2000);
+            } else {
+                /* Second Esc: let event bubble → index.html closes the overlay */
+                resetPending();
             }
         }, { capture: true, signal: this._abortController.signal });
     }

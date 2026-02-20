@@ -62,7 +62,7 @@ function createOverlayElement(dot_info, fname) {
     // Instructions
     const instructions = document.createElement('div');
     instructions.className = 'overlay-instructions';
-    instructions.innerHTML = 'Click node to highlight | Esc to unhighlight | Scroll to zoom | Double-click text to copy';
+    instructions.innerHTML = 'Click node to highlight | Esc to unhighlight | Esc×2 to close | Ctrl+Scroll to zoom | Scroll to pan | Double-click text to copy';
     overlayDiv.appendChild(instructions);
 
     // Actions

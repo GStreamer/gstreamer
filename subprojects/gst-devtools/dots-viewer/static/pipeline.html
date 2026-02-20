@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GStreamer Pipeline Viewer</title>
   <link rel="stylesheet" href="/css/pipeline.css">
+  <link rel="stylesheet" href="/css/graphviz.svg.css">
   <link rel="icon" type="image/png" href="/images/favicon-32.png" sizes="32x32">
   <script src="/dist/bundle.js"></script>
 </head>
@@ -33,6 +34,7 @@
       <div class="header-actions">
         <span id="filename" class="filename"></span>
         <button id="load-another">Load another file</button>
+        <button id="svg-theme-btn">☀ Light SVGs</button>
         <a class="btn" href="/">Pipeline list</a>
       </div>
     </header>
@@ -124,6 +126,22 @@
 
     function showError(msg) { errorMsg.textContent = msg; errorMsg.classList.remove('hidden'); }
     function hideError()    { errorMsg.classList.add('hidden'); }
+
+    /* ── SVG theme toggle ────────────────────────────────────────── */
+    {
+      const btn = document.getElementById('svg-theme-btn');
+      const STORAGE_KEY = 'svg-theme';
+      function applyTheme(light) {
+        document.body.classList.toggle('svg-light-theme', light);
+        btn.textContent = light ? '🌙 Dark SVGs' : '☀ Light SVGs';
+      }
+      applyTheme(localStorage.getItem(STORAGE_KEY) === 'light');
+      btn.addEventListener('click', () => {
+        const light = !document.body.classList.contains('svg-light-theme');
+        localStorage.setItem(STORAGE_KEY, light ? 'light' : 'dark');
+        applyTheme(light);
+      });
+    }
 
     /* ── resizable detail panel ──────────────────────────────────── */
     {
