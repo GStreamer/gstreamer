@@ -217,14 +217,14 @@ gst_yolo_seg_tensor_decoder_get_tensors (GstYoloSegTensorDecoder * self,
 
     *logits_tensor = gst_tensor_meta_get_typed_tensor (tmeta,
         YOLO_SEGMENTATION_LOGITS_TENSOR_ID, GST_TENSOR_DATA_TYPE_FLOAT32,
-        GST_TENSOR_DIM_ORDER_ROW_MAJOR, YOLO_LOGITS_TENSOR_N_DIMS, logits_dims);
+        GST_TENSOR_DIM_ORDER_COL_MAJOR, YOLO_LOGITS_TENSOR_N_DIMS, logits_dims);
     if (*logits_tensor == NULL)
       continue;
 
 
     *detections_tensor = gst_tensor_meta_get_typed_tensor (tmeta,
         YOLO_SEGMENTATION_DETECTION_MASK_ID, GST_TENSOR_DATA_TYPE_FLOAT32,
-        GST_TENSOR_DIM_ORDER_ROW_MAJOR, YOLO_DETECTIONS_TENSOR_N_DIMS,
+        GST_TENSOR_DIM_ORDER_COL_MAJOR, YOLO_DETECTIONS_TENSOR_N_DIMS,
         detections_dims);
 
     if (*detections_tensor == NULL)

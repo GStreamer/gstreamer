@@ -439,7 +439,7 @@ gst_yolo_tensor_decoder_get_tensor (GstYoloTensorDecoder *
 
     tensor = gst_tensor_meta_get_typed_tensor (tensor_meta,
         YOLO_DETECTION_MASK_ID, GST_TENSOR_DATA_TYPE_FLOAT32,
-        GST_TENSOR_DIM_ORDER_ROW_MAJOR, YOLO_DETECTIONS_TENSOR_N_DIMS, dims);
+        GST_TENSOR_DIM_ORDER_COL_MAJOR, YOLO_DETECTIONS_TENSOR_N_DIMS, dims);
 
     if (tensor) {
       if (tensor->dims[1] < 5) {
