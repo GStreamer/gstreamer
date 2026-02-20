@@ -105,6 +105,11 @@ G_BEGIN_DECLS
    The min coding block size is 8, so min width or height is 8.
    The min CTU size is 32. */
 #define GST_H266_MAX_CTUS_IN_PICTURE (80216064 / 8 / 32)
+/* Practical limit for number of decoding units per picture.
+   The spec allows up to PicSizeInCtbsY which could be very large,
+   but 600 is a reasonable practical limit matching the array sizes
+   in GstH266PicTiming. */
+#define GST_H266_MAX_DECODING_UNITS_IN_PIC_TIMING 600
 
 /**
  * GST_H266_IS_NAL_TYPE_IDR:
@@ -3066,8 +3071,8 @@ struct _GstH266PicTiming {
   guint8 du_common_cpb_removal_delay_flag;
   guint8 du_common_cpb_removal_delay_increment_minus1[8];
   /* TODO: PicSizeInCtbsY could be very large */
-  guint32 num_nalus_in_du_minus1[600];
-  guint8 du_cpb_removal_delay_increment_minus1[600][8];
+  guint32 num_nalus_in_du_minus1[GST_H266_MAX_DECODING_UNITS_IN_PIC_TIMING];
+  guint8 du_cpb_removal_delay_increment_minus1[GST_H266_MAX_DECODING_UNITS_IN_PIC_TIMING][8];
   guint8 delay_for_concatenation_ensured_flag;
   guint8 display_elemental_periods_minus1;
 };
