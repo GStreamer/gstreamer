@@ -103,7 +103,6 @@ struct _GstVTEnc
   GstVideoInfo video_info;
   VTCompressionSessionRef session;
   CFDictionaryRef keyframe_props;
-  GstClockTime dts_offset;
 
   GstVecDeque * output_queue;
   /* Protects output_queue, is_flushing, is_draining and pause_task */
@@ -129,6 +128,11 @@ struct _GstVTEnc
    * We can't do it straight from the setter as that would often deadlock,
    * so we instead reconfigure on next encode call. */
   gboolean require_reconfigure;
+
+  /* DTS offset: frame2 PTS - frame1 PTS
+   * Explanation here: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6791#note_2396581 */
+  GstClockTime dts_offset;
+  GstVideoCodecFrame *first_frame;
 };
 
 GType gst_vtenc_get_type (void);
