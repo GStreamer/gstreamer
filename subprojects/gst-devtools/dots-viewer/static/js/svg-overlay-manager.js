@@ -15,6 +15,7 @@ class SvgOverlayManager {
         this.pipelineTitle = '';
         this._nodesByName = {};
         this._edgesByName = {};
+        this._capsMap = {};
         this._highlighted = false;
         this._abortController = new AbortController();
     }
@@ -28,23 +29,37 @@ class SvgOverlayManager {
     }
 
     /**
-     * Initializes all managers and renders the DOT content with d3-graphviz
+     * Initializes all managers and renders the DOT content with d3-graphviz.
+     * Performs a single layout pass (DOT → xdot) then extracts caps data from
+     * the JSON view of that xdot (nop2, no re-layout) before rendering SVG.
      * @param {string} dotContent - DOT graph content to render
      * @param {string} pipelineTitle - Title of the pipeline
      */
-    init(dotContent, pipelineTitle) {
+    async init(dotContent, pipelineTitle) {
         this.pipelineTitle = pipelineTitle || '';
 
         this.tooltipManager = new TooltipManager();
         this.pipelineNavigationManager = new PipelineNavigationManager(this.tooltipManager);
-        this.textEllipsizerManager = new TextEllipsizerManager(this.tooltipManager, this.pipelineNavigationManager);
+        this.textEllipsizerManager = new TextEllipsizerManager(this.tooltipManager, this.pipelineNavigationManager,
+            (text) => this._capsHtmlFormatterForEllipsizer(text));
 
-        this.gv = d3.select("#graph").graphviz()
+        // Single layout computation: DOT → xdot
+        const gv = await Graphviz.load();
+        const xdot = gv.layout(dotContent, 'xdot', 'dot');
+
+        // Extract caps from xdot via JSON (nop2 = no re-layout, cheap)
+        const graphJson = JSON.parse(gv.layout(xdot, 'json', 'nop2'));
+        this._capsMap = this._buildCapsMap(graphJson);
+
+        // Render SVG from the already-laid-out xdot (nop2, no re-layout)
+        this.gv = d3.select('#graph').graphviz()
+            .engine('nop2')
             .zoom(true)
             .fit(true)
             .on('end', () => this.onSvgReady())
-            .renderDot(dotContent);
+            .renderDot(xdot);
     }
+
 
     /**
      * Called when d3-graphviz has finished rendering the SVG
@@ -192,6 +207,7 @@ class SvgOverlayManager {
         svg.querySelectorAll('.edge').forEach(edge => {
             const title = edge.querySelector('title');
             if (title) {
+                // When CAPS_DETAILS are shown, graphviz replaces <title> with the
                 const name = title.textContent.replace(/:[snew][ew]?/g, '');
                 this._edgesByName[name] = edge;
                 edge.setAttribute('data-name', name);
@@ -446,6 +462,7 @@ class SvgOverlayManager {
      * Sets up keyboard shortcuts for the SVG viewer.
      *
      * Escape behaviour (two-press-to-close):
+     *   • Tooltip visible        – first Esc hides it.
      *   • Overlay not open       – not intercepted at all (guard on #overlay).
      *   • Something highlighted  – first Esc unhighlights; second Esc closes.
      *   • Nothing highlighted    – first Esc is consumed and arms "pending";
@@ -472,7 +489,12 @@ class SvgOverlayManager {
 
             if (evt.key !== 'Escape') return;
 
-            if (this._highlighted) {
+            if (this.tooltipManager?.tooltipEl.classList.contains('show')) {
+                /* Hide any visible tooltip first */
+                evt.stopPropagation();
+                this.tooltipManager.hideTooltip();
+                resetPending();
+            } else if (this._highlighted) {
                 /* Unhighlight on first Esc; a subsequent Esc will close */
                 evt.stopPropagation();
                 this._highlight(null);
@@ -514,6 +536,112 @@ class SvgOverlayManager {
         });
     }
 
+    _capsHtmlFormatterForEllipsizer(text) {
+        const eqIdx = text.indexOf('=');
+        if (eqIdx < 0) return null;
+        const value = text.substring(eqIdx + 1);
+        try { GstCaps.fromString(value); } catch (e) { return null; }
+        return this._formatCapsHtml(value);
+    }
+
+    _formatCapsHtml(capsStr) {
+        const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        let caps;
+        try { caps = GstCaps.fromString(capsStr); } catch (e) {
+            return `<div class="caps-tooltip">${esc(capsStr)}</div>`;
+        }
+        if (caps.isAny || caps.isEmpty)
+            return `<div class="caps-tooltip"><b>${esc(capsStr)}</b></div>`;
+
+        let html = '<div class="caps-tooltip">';
+        for (let i = 0; i < caps.length; i++) {
+            const struct = caps[i];
+            const features = caps.getFeatures(i);
+            if (i > 0) html += '<div class="caps-tooltip-sep"></div>';
+            let header = struct.name;
+            if (features.length > 0) header += `(${features.join(',')})`;
+            html += `<div><b>${esc(header)}</b></div>`;
+            const keys = [...struct.keys()];
+            if (keys.length > 0) {
+                const keyW = Math.max(...keys.map(k => k.length)) + 2;
+                keys.forEach(key => {
+                    html += `<div class="caps-tooltip-field" style="--key-w:${keyW}ch">` +
+                        `<span class="caps-tooltip-key">${esc(key)}:</span>` +
+                        `${esc(valueToStringBare(struct.getTyped(key)))}` +
+                        `</div>`;
+                });
+            }
+        }
+        html += '</div>';
+        return html;
+    }
+
+    /**
+     * Builds a map from "srcNode->dstNode" edge key to caps string by reading
+     * the custom caps= attribute from the graphviz JSON representation.
+     * @param {Object} graphJson - Parsed JSON from graphviz nop2 layout
+     * @returns {Object} Map of edge key → caps string
+     */
+    _buildCapsMap(graphJson) {
+        const map = {};
+        const objects = graphJson.objects || [];
+        for (const edge of (graphJson.edges || [])) {
+            if (!edge.tooltip) continue;
+            const src = objects[edge.tail]?.name;
+            const dst = objects[edge.head]?.name;
+            if (src && dst) map[`${src}->${dst}`] = edge.tooltip;
+        }
+        return map;
+    }
+
+    /**
+     * For each edge with a caps attribute, attaches a hover tooltip showing the
+     * formatted caps to the visible label elements.
+     *
+     * The C code emits caps="..." as a custom DOT attribute on each edge.
+     * Graphviz ignores unknown attributes during SVG rendering (zero layout
+     * impact), but they appear in xdot/JSON output.  We built _capsMap from
+     * that JSON and now look up each edge by its SVG <title> text, which
+     * graphviz writes as "srcnode->dstnode".
+     */
+    setupEdgeCapsTooltips(svg) {
+        svg.querySelectorAll('.edge').forEach(edge => {
+            const titleEl = edge.querySelector('title');
+            if (!titleEl) return;
+            const caps = this._capsMap[titleEl.textContent.trim()];
+            if (!caps) return;
+
+            const capsHtml = this._formatCapsHtml(caps);
+
+            // Attach tooltip to every text/tspan in this edge
+            // (i.e. the visible media-type label and any taillabel/headlabel)
+            edge.querySelectorAll('text, tspan').forEach(textEl => {
+                textEl.setAttribute('data-has-tooltip', 'true');
+                textEl.style.cursor = 'help';
+
+                textEl.addEventListener('mouseenter', e =>
+                    this.tooltipManager.showHtmlTooltip(textEl, capsHtml, e));
+                textEl.addEventListener('mousemove', e => {
+                    if (!this.tooltipManager.isInteractive())
+                        this.tooltipManager.showHtmlTooltip(textEl, capsHtml, e);
+                });
+                const leave = () => {
+                    if (!this.tooltipManager.isInteractive())
+                        this.tooltipManager.hideTooltip();
+                };
+                textEl._tooltipMouseleave = leave;
+                textEl.addEventListener('mouseleave', leave);
+
+                textEl.addEventListener('dblclick', e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (this.tooltipManager.tooltipEl.classList.contains('show'))
+                        this.tooltipManager.makeTooltipInteractive();
+                });
+            });
+        });
+    }
+
     /**
      * Processes SVG content with all managers
      * @param {Element} svg - SVG element
@@ -521,6 +649,9 @@ class SvgOverlayManager {
     processSvgContent(svg) {
         this.pipelineNavigationManager.setupPipelineDotNavigation(svg);
         this.textEllipsizerManager.ellipsizeLongText(svg);
+        this.setupEdgeCapsTooltips(svg);
+        /* Remove graphviz <title> text so the browser doesn't show native tooltips */
+        svg.querySelectorAll('title').forEach(t => { t.textContent = ''; });
     }
 }
 

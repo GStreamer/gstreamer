@@ -41,6 +41,23 @@ class TooltipManager {
     }
 
     /**
+     * Shows tooltip with HTML content at event position
+     * @param {Element} element - Element that triggered the tooltip
+     * @param {string} html - HTML to display in tooltip
+     * @param {Event} event - Mouse event for positioning
+     */
+    showHtmlTooltip(element, html, event) {
+        this.tooltipText = html;
+        this.currentTooltipElement = element;
+        this.tooltipEl.innerHTML = html;
+        this.tooltipEl.style.left = (event.pageX + 10) + 'px';
+        this.tooltipEl.style.top = (event.pageY - 30) + 'px';
+        this.tooltipEl.classList.remove('interactive');
+        this.tooltipEl.classList.add('show');
+        this.isTooltipInteractive = false;
+    }
+
+    /**
      * Makes tooltip interactive (selectable and fixed position)
      */
     makeTooltipInteractive() {

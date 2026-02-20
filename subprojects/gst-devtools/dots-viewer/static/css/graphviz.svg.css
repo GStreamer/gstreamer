@@ -96,3 +96,9 @@ body:not(.svg-light-theme) #pipeline-container svg .graph [fill="#ffffff"] {
     fill: #c0c0c0 !important;
 }
 
+
+/* Caps hover tooltip content */
+.caps-tooltip { font-family: monospace; font-size: 12px; line-height: 1.5; }
+.caps-tooltip-sep { height: 5px; }
+.caps-tooltip-field { margin-left: 1em; }
+.caps-tooltip-key { display: inline-block; min-width: var(--key-w); color: #bbb; }

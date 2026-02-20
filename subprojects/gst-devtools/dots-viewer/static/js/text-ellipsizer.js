@@ -6,10 +6,11 @@
  */
 
 class TextEllipsizerManager {
-    constructor(tooltipManager, pipelineNavigationManager) {
+    constructor(tooltipManager, pipelineNavigationManager, capsHtmlFormatter = null) {
         this.tooltipManager = tooltipManager;
         this.pipelineNavigationManager = pipelineNavigationManager;
         this.maxLength = 80;
+        this.capsHtmlFormatter = capsHtmlFormatter;
     }
 
     /**
@@ -74,14 +75,15 @@ class TextEllipsizerManager {
      * @param {string} originalText - Original full text content
      */
     setupRegularTooltipHandlers(element, originalText) {
-        element.addEventListener('mouseenter', (e) => {
-            this.tooltipManager.showTooltip(element, originalText, e);
-        });
+        const capsHtml = this.capsHtmlFormatter ? this.capsHtmlFormatter(originalText) : null;
+        const showFn = capsHtml
+            ? (e) => this.tooltipManager.showHtmlTooltip(element, capsHtml, e)
+            : (e) => this.tooltipManager.showTooltip(element, originalText, e);
+
+        element.addEventListener('mouseenter', showFn);
 
         element.addEventListener('mousemove', (e) => {
-            if (!this.tooltipManager.isInteractive()) {
-                this.tooltipManager.showTooltip(element, originalText, e);
-            }
+            if (!this.tooltipManager.isInteractive()) showFn(e);
         });
 
         const mouseleaveHandler = () => {

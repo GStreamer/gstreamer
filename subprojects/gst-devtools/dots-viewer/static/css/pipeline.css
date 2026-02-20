@@ -329,3 +329,30 @@ h4 { font-size: .82rem; color: var(--text-dim); margin-top: .6em; }
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+/* Custom tooltip (shared with index.html) */
+.custom-tooltip {
+  position: absolute;
+  background-color: #333;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 10000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  max-width: 600px;
+  word-break: break-word;
+  white-space: pre-wrap;
+  font-family: monospace;
+  text-align: left;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.custom-tooltip.show { opacity: 1; }
+.custom-tooltip.interactive {
+  pointer-events: auto;
+  cursor: text;
+  border: 2px solid #555;
+}
