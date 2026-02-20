@@ -822,7 +822,6 @@ gst_codec_utils_h264_caps_set_level_and_profile (GstCaps * caps,
 
   g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
   g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), FALSE);
-  g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
   g_return_val_if_fail (GST_SIMPLE_CAPS_HAS_NAME (caps, "video/x-h264"), FALSE);
   g_return_val_if_fail (sps != NULL, FALSE);
 
@@ -1524,7 +1523,6 @@ gst_codec_utils_h265_caps_set_level_tier_and_profile (GstCaps * caps,
 
   g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
   g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), FALSE);
-  g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
   g_return_val_if_fail (GST_SIMPLE_CAPS_HAS_NAME (caps, "video/x-h265"), FALSE);
   g_return_val_if_fail (profile_tier_level != NULL, FALSE);
 
@@ -1813,7 +1811,6 @@ gst_codec_utils_h266_caps_set_level_tier_and_profile (GstCaps * caps,
 
   g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
   g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), FALSE);
-  g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
   g_return_val_if_fail (GST_SIMPLE_CAPS_HAS_NAME (caps, "video/x-h266"), FALSE);
   g_return_val_if_fail (decoder_configuration != NULL, FALSE);
 
