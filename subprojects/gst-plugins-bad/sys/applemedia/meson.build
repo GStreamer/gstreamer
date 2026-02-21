@@ -1,45 +1,45 @@
 applemedia_sources = [
-    'plugin.m',
-    'vtutil.c',
-    'corevideomemory.c',
-    'corevideobuffer.c',
-    'coremediabuffer.c',
-    'videotexturecache.m',
-    'videotexturecache-gl.m',
-    'glcontexthelper.c',
-    'helpers.m',
+  'coremediabuffer.c',
+  'corevideobuffer.c',
+  'corevideomemory.c',
+  'glcontexthelper.c',
+  'helpers.m',
+  'plugin.m',
+  'videotexturecache-gl.m',
+  'videotexturecache.m',
+  'vtutil.c',
 ]
 
 applemedia_headers = [
-  'metal-helpers.h',
-  'vtutil.h',
-  'iosglmemory.h',
-  'corevideobuffer.h',
-  'videotexturecache.h',
-  'coremediabuffer.h',
-  'vtenc.h',
-  'avsamplevideosink.h',
-  'helpers.h',
-  'corevideomemory.h',
-  'iosassetsrc.h',
-  'iosurfaceglmemory.h',
-  'avfdeviceprovider.h',
   'avfassetsrc.h',
-  'iosurfacevulkanmemory.h',
-  'videotexturecache-vulkan.h',
-  'vtdec.h',
+  'avfdeviceprovider.h',
   'avfvideosrc.h',
-  'videotexturecache-gl.h',
+  'avsamplevideosink.h',
+  'coremediabuffer.h',
+  'corevideobuffer.h',
+  'corevideomemory.h',
   'glcontexthelper.h',
+  'helpers.h',
+  'iosassetsrc.h',
+  'iosglmemory.h',
+  'iosurfaceglmemory.h',
+  'iosurfacevulkanmemory.h',
+  'metal-helpers.h',
+  'videotexturecache-gl.h',
+  'videotexturecache-vulkan.h',
+  'videotexturecache.h',
+  'vtdec.h',
+  'vtenc.h',
+  'vtutil.h',
 ]
 
 applemedia_args = [
-    '-Dgst_core_media_buffer_new=gst_core_media_buffer_priv_new',
-    '-Dgst_core_media_buffer_get_type=gst_core_media_buffer_priv_get_type',
-    '-Dgst_core_media_buffer_get_pixel_buffer=gst_core_media_buffer_priv_get_pixel_buffer',
-    '-Dgst_core_video_buffer_new=gst_core_video_buffer_priv_new',
-    '-Dgst_core_video_buffer_get_type=gst_core_video_buffer_priv_get_type',
-    '-DGST_USE_UNSTABLE_API'
+  '-Dgst_core_media_buffer_new=gst_core_media_buffer_priv_new',
+  '-Dgst_core_media_buffer_get_type=gst_core_media_buffer_priv_get_type',
+  '-Dgst_core_media_buffer_get_pixel_buffer=gst_core_media_buffer_priv_get_pixel_buffer',
+  '-Dgst_core_video_buffer_new=gst_core_video_buffer_priv_new',
+  '-Dgst_core_video_buffer_get_type=gst_core_video_buffer_priv_get_type',
+  '-DGST_USE_UNSTABLE_API'
 ]
 
 avcapturedevice_sources = [
@@ -120,29 +120,29 @@ if videotoolbox_dep.found()
 endif
 
 if subsystem == 'macos'
-    applemedia_sources += non_ios_sources
-    cocoa_dep = dependency('Cocoa', required : applemedia_option)
-    iosurface_dep = dependency('IOSurface', required : applemedia_option)
-    applemedia_opengl_dep = dependency('appleframeworks', modules : ['OpenGL'], required : applemedia_option)
-    applemedia_frameworks += [cocoa_dep, applemedia_opengl_dep, iosurface_dep]
+  applemedia_sources += non_ios_sources
+  cocoa_dep = dependency('Cocoa', required : applemedia_option)
+  iosurface_dep = dependency('IOSurface', required : applemedia_option)
+  applemedia_opengl_dep = dependency('appleframeworks', modules : ['OpenGL'], required : applemedia_option)
+  applemedia_frameworks += [cocoa_dep, applemedia_opengl_dep, iosurface_dep]
 else
-    applemedia_sources += ios_sources
-    if subsystem.startswith('ios')
-      applemedia_sources += ios_deprecated_sources
-      ios_media_dep = dependency('appleframeworks', modules : ['Foundation', 'AssetsLibrary'], required : applemedia_option)
-    else
-      ios_media_dep = dependency('appleframeworks', modules : ['Foundation'], required : applemedia_option)
-    endif
-    iosurface_dep = dependency('IOSurface', required : applemedia_option)
-    applemedia_frameworks += [ios_media_dep, iosurface_dep]
-    applemedia_objc_args += ['-fobjc-abi-version=2', '-fobjc-legacy-dispatch']
+  applemedia_sources += ios_sources
+  if subsystem.startswith('ios')
+    applemedia_sources += ios_deprecated_sources
+    ios_media_dep = dependency('appleframeworks', modules : ['Foundation', 'AssetsLibrary'], required : applemedia_option)
+  else
+    ios_media_dep = dependency('appleframeworks', modules : ['Foundation'], required : applemedia_option)
+  endif
+  iosurface_dep = dependency('IOSurface', required : applemedia_option)
+  applemedia_frameworks += [ios_media_dep, iosurface_dep]
+  applemedia_objc_args += ['-fobjc-abi-version=2', '-fobjc-legacy-dispatch']
 endif
 
 applemedia_found_deps = true
 foreach framework : applemedia_frameworks
-    if not framework.found()
-        applemedia_found_deps = false
-    endif
+  if not framework.found()
+    applemedia_found_deps = false
+  endif
 endforeach
 
 applemedia_objcpp_args = []
@@ -169,17 +169,17 @@ if gstvulkan_dep.found() and have_objcpp and not vulkan_option.disabled()
 endif
 
 if applemedia_found_deps
-    gstapplemedia = library('gstapplemedia',
-        applemedia_sources,
-        c_args : gst_plugins_bad_args + applemedia_args,
-        objc_args : gst_plugins_bad_args + applemedia_args + applemedia_objc_args,
-        objcpp_args : gst_plugins_bad_args + applemedia_args + applemedia_objc_args + applemedia_objcpp_args,
-        link_args : noseh_link_args,
-        include_directories : [configinc, libsinc],
-        dependencies : [gstvideo_dep, gstpbutils_dep, gst_dep, gstbase_dep, gstgl_dep, gstglproto_dep, gstcodecparsers_dep] + applemedia_frameworks,
-        override_options : ['cpp_std=c++11'],
-        install : true,
-        install_dir : plugins_install_dir,
-    )
-    plugins += [gstapplemedia]
+  gstapplemedia = library('gstapplemedia',
+    applemedia_sources,
+    c_args : gst_plugins_bad_args + applemedia_args,
+    objc_args : gst_plugins_bad_args + applemedia_args + applemedia_objc_args,
+    objcpp_args : gst_plugins_bad_args + applemedia_args + applemedia_objc_args + applemedia_objcpp_args,
+    link_args : noseh_link_args,
+    include_directories : [configinc, libsinc],
+    dependencies : [gstvideo_dep, gstpbutils_dep, gst_dep, gstbase_dep, gstgl_dep, gstglproto_dep, gstcodecparsers_dep] + applemedia_frameworks,
+    override_options : ['cpp_std=c++11'],
+    install : true,
+    install_dir : plugins_install_dir,
+  )
+  plugins += [gstapplemedia]
 endif
