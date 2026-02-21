@@ -173,12 +173,6 @@ CFSTR ("H264_Baseline_AutoLevel");
 const CFStringRef kVTCompressionPropertyKey_Quality = CFSTR ("Quality");
 #endif
 
-#ifdef HAVE_VIDEOTOOLBOX_10_9_6
-extern OSStatus
-VTCompressionSessionPrepareToEncodeFrames (VTCompressionSessionRef session)
-    __attribute__((weak_import));
-#endif
-
 /* This property key is currently completely undocumented. The only way you can
  * know about its existence is if Apple tells you. It allows you to tell the
  * encoder to not preserve alpha even when outputting alpha formats. */
@@ -1637,8 +1631,8 @@ gst_vtenc_create_session (GstVTEnc * self)
     gst_vtenc_session_dump_properties (self, session);
     self->dump_properties = FALSE;
   }
-#ifdef HAVE_VIDEOTOOLBOX_10_9_6
-  if (VTCompressionSessionPrepareToEncodeFrames) {
+#if !TARGET_OS_WATCH
+  if (__builtin_available (ios 8.0, macos 10.9, tvos 10.2, visionos 1.0, *)) {
     status = VTCompressionSessionPrepareToEncodeFrames (session);
     if (status != noErr) {
       GST_ERROR_OBJECT (self,
