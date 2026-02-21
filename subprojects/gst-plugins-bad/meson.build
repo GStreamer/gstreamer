@@ -481,11 +481,6 @@ if host_system == 'darwin'
   if videotoolbox_dep.found()
       cdata.set('HAVE_VIDEOTOOLBOX', 1)
   endif
-
-#  FIXME: framework.version() returns 'unknown'
-#  if videotoolbox_dep.version().version_compare('>=10.9.6')
-#    cdata.set('HAVE_VIDEOTOOLBOX_10_9_6', 1)
-#  endif
 endif
 
 have_orcc = false
