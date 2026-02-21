@@ -1,0 +1,206 @@
+From 9adec080ab80787eb53ef4dafaa1561e31731a6a Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Tue, 27 Jan 2026 05:52:20 +0530
+Subject: [PATCH 1/3] giomodule: Simplify macro usage for getting the giomodule
+ dir
+
+The original code is a bit hard to follow, and has one extra
+allocation in the common case on macOS.
+---
+ gio/giomodule.c | 79 ++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 48 insertions(+), 31 deletions(-)
+
+diff --git a/gio/giomodule.c b/gio/giomodule.c
+index 38761e4fd9..ccc3cb51d2 100644
+--- a/gio/giomodule.c
++++ b/gio/giomodule.c
+@@ -76,6 +76,14 @@
+ 
+ #ifdef __APPLE__
+ #include <AvailabilityMacros.h>
++#include <TargetConditionals.h>
++
++#if (defined (TARGET_OS_OSX) && TARGET_OS_OSX) || \
++     (!defined (TARGET_OS_OSX) && defined (TARGET_OS_MAC) && TARGET_OS_MAC)
++#define HAVE_MACOS
++#include <dlfcn.h>
++#endif
++
+ #endif
+ 
+ #define __GLIB_H_INSIDE__
+@@ -1246,12 +1254,9 @@ _g_io_modules_ensure_extension_points_registered (void)
+     }
+ }
+ 
+-static gchar *
+-get_gio_module_dir (void)
++static inline gchar *
++get_gio_module_dir_env (void)
+ {
+-  gchar *module_dir;
+-  gboolean is_setuid = GLIB_PRIVATE_CALL (g_check_setuid) ();
+-
+   /* If running as setuid, loading modules from an arbitrary directory
+    * controlled by the unprivileged user who is running the program could allow
+    * for execution of arbitrary code (in constructors in modules).
+@@ -1259,7 +1264,42 @@ get_gio_module_dir (void)
+    *
+    * If a setuid program somehow needs to load additional GIO modules, it should
+    * explicitly call g_io_modules_scan_all_in_directory(). */
+-  module_dir = !is_setuid ? g_strdup (g_getenv ("GIO_MODULE_DIR")) : NULL;
++  if (GLIB_PRIVATE_CALL (g_check_setuid) ())
++    return NULL;
++
++  return g_strdup (g_getenv ("GIO_MODULE_DIR"));
++}
++
++#ifdef __APPLE__
++static inline gchar *
++get_gio_module_dir_darwin (void)
++{
++/* Only auto-relocate on macOS, not watchOS etc; older macOS SDKs only define TARGET_OS_MAC */
++#ifdef HAVE_MACOS
++  g_autofree gchar *path = NULL;
++  g_autofree gchar *possible_dir = NULL;
++  Dl_info info;
++
++  if (dladdr (get_gio_module_dir_darwin, &info))
++    {
++      /* Gets path to the PREFIX/lib directory */
++      path = g_path_get_dirname (info.dli_fname);
++      possible_dir = g_build_filename (path, "gio", "modules", NULL);
++      if (g_file_test (possible_dir, G_FILE_TEST_IS_DIR))
++        {
++          return g_steal_pointer (&possible_dir);
++        }
++    }
++#endif
++  return g_strdup (GIO_MODULE_DIR);
++}
++#endif
++
++static gchar *
++get_gio_module_dir (void)
++{
++  gchar *module_dir = get_gio_module_dir_env ();
++
+   if (module_dir == NULL)
+     {
+ #ifdef G_OS_WIN32
+@@ -1270,33 +1310,10 @@ get_gio_module_dir (void)
+                                      "lib", "gio", "modules",
+                                      NULL);
+       g_free (install_dir);
++#elif defined(__APPLE__)
++      module_dir = get_gio_module_dir_darwin ();
+ #else
+       module_dir = g_strdup (GIO_MODULE_DIR);
+-#ifdef __APPLE__
+-#include "TargetConditionals.h"
+-/* Only auto-relocate on macOS, not watchOS etc; older macOS SDKs only define TARGET_OS_MAC */
+-#if (defined (TARGET_OS_OSX) && TARGET_OS_OSX) || \
+-     (!defined (TARGET_OS_OSX) && defined (TARGET_OS_MAC) && TARGET_OS_MAC)
+-#include <dlfcn.h>
+-      {
+-        g_autofree gchar *path = NULL;
+-        g_autofree gchar *possible_dir = NULL;
+-        Dl_info info;
+-
+-        if (dladdr (get_gio_module_dir, &info))
+-          {
+-            /* Gets path to the PREFIX/lib directory */
+-            path = g_path_get_dirname (info.dli_fname);
+-            possible_dir = g_build_filename (path, "gio", "modules", NULL);
+-            if (g_file_test (possible_dir, G_FILE_TEST_IS_DIR))
+-              {
+-                g_free (module_dir);
+-                module_dir = g_steal_pointer (&possible_dir);
+-              }
+-          }
+-      }
+-#endif
+-#endif
+ #endif
+     }
+ 
+-- 
+GitLab
+
+
+From 67ebcc653e2758befe61bab8a7b29fddc46c09b4 Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Tue, 27 Jan 2026 05:53:24 +0530
+Subject: [PATCH 2/3] giomodule: Do not try to use GIO_MODULE_DIR on iOS
+
+When we try to load that dir on a real phone, nothing happens because
+the path doesn't exist since the app is a statically-linked bundle.
+When we try on the simulator, we get warnings when the compiled-in
+path exists in the user machine because the modules fail to load.
+---
+ gio/giomodule.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/gio/giomodule.c b/gio/giomodule.c
+index ccc3cb51d2..4abf3df8ae 100644
+--- a/gio/giomodule.c
++++ b/gio/giomodule.c
+@@ -1290,8 +1290,10 @@ get_gio_module_dir_darwin (void)
+           return g_steal_pointer (&possible_dir);
+         }
+     }
+-#endif
+   return g_strdup (GIO_MODULE_DIR);
++#else
++  return NULL;
++#endif
+ }
+ #endif
+ 
+-- 
+GitLab
+
+
+From 905ae60475140693ce3ab56fb0f1ef4a10a2ac6d Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Tue, 27 Jan 2026 07:37:04 +0530
+Subject: [PATCH 3/3] giomodule: Simplify macOS macros further
+
+Since we require macOS 11 (and 10.13 support is best-effort), we do
+not need to support older than Xcode 8 which added TARGET_OS_OSX and
+shipped with macOS 10.12.
+---
+ gio/giomodule.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/gio/giomodule.c b/gio/giomodule.c
+index 4abf3df8ae..7311775574 100644
+--- a/gio/giomodule.c
++++ b/gio/giomodule.c
+@@ -77,13 +77,9 @@
+ #ifdef __APPLE__
+ #include <AvailabilityMacros.h>
+ #include <TargetConditionals.h>
+-
+-#if (defined (TARGET_OS_OSX) && TARGET_OS_OSX) || \
+-     (!defined (TARGET_OS_OSX) && defined (TARGET_OS_MAC) && TARGET_OS_MAC)
+-#define HAVE_MACOS
++#if TARGET_OS_OSX
+ #include <dlfcn.h>
+ #endif
+-
+ #endif
+ 
+ #define __GLIB_H_INSIDE__
+@@ -1275,7 +1271,7 @@ static inline gchar *
+ get_gio_module_dir_darwin (void)
+ {
+ /* Only auto-relocate on macOS, not watchOS etc; older macOS SDKs only define TARGET_OS_MAC */
+-#ifdef HAVE_MACOS
++#if TARGET_OS_OSX
+   g_autofree gchar *path = NULL;
+   g_autofree gchar *possible_dir = NULL;
+   Dl_info info;
+-- 
+GitLab
+
