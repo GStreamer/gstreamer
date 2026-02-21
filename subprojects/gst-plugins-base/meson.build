@@ -30,7 +30,7 @@ endif
 have_cxx = add_languages('cpp', native: false, required: false)
 
 if host_system == 'darwin'
-  have_objc = add_languages('objc', native: false)
+  have_objc = add_languages('objc', 'objcpp', native: false)
 else
   have_objc = false
 endif
