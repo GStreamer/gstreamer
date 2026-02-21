@@ -1,4 +1,6 @@
 applemedia_sources = [
+  'avfassetsrc.m',
+  'avsamplevideosink.m',
   'coremediabuffer.c',
   'corevideobuffer.c',
   'corevideomemory.c',
@@ -49,11 +51,6 @@ avcapturedevice_sources = [
   'avfdeviceprovider.m',
 ]
 
-avfoundation_sources = [
-  'avfassetsrc.m',
-  'avsamplevideosink.m',
-]
-
 ios_deprecated_sources = [
   'iosassetsrc.m',
 ]
@@ -72,7 +69,7 @@ vulkan_sources = [
 ]
 
 doc_sources = []
-foreach s: applemedia_sources + avcapturedevice_sources + avfoundation_sources + ios_sources + ios_deprecated_sources + non_ios_sources + vulkan_sources + applemedia_headers
+foreach s: applemedia_sources + avcapturedevice_sources + ios_sources + ios_deprecated_sources + non_ios_sources + vulkan_sources + applemedia_headers
   doc_sources += meson.current_source_dir() / s
 endforeach
 
@@ -96,18 +93,14 @@ applemedia_objc_args += ['-fobjc-arc']
 objcpp = meson.get_compiler('objcpp')
 
 applemedia_frameworks = [
+  dependency('AVFoundation', required: applemedia_option),
   dependency('CoreFoundation', required : applemedia_option),
   dependency('CoreMedia', required : applemedia_option),
   dependency('CoreVideo', required : applemedia_option),
 ]
 
-avfoundation_dep = dependency('AVFoundation', required : applemedia_option)
-if avfoundation_dep.found()
-    applemedia_sources += avfoundation_sources
-    if cdata.get('HAVE_AVCAPTUREDEVICE') == 1
-      applemedia_sources += avcapturedevice_sources
-    endif
-    applemedia_frameworks += [avfoundation_dep]
+if subsystem == 'macos' or subsystem.startswith('ios')
+  applemedia_sources += avcapturedevice_sources
 endif
 
 if not subsystem.startswith('watchos')
