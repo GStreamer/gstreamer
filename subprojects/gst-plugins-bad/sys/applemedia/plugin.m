@@ -42,7 +42,7 @@
 #endif
 #endif
 
-#ifdef HAVE_VIDEOTOOLBOX
+#if !TARGET_OS_WATCH
 #include "vtdec.h"
 #include "vtenc.h"
 #endif
@@ -85,12 +85,9 @@ plugin_init (GstPlugin * plugin)
 #endif
 #endif
 
-#ifdef HAVE_VIDEOTOOLBOX
-  /* Check if the framework actually exists at runtime */
-  if (&VTCompressionSessionCreate != NULL) {
-    res |= gst_vtdec_register_elements (plugin);
-    res |= gst_vtenc_register_elements (plugin);
-  }
+#if !TARGET_OS_WATCH
+  res |= gst_vtdec_register_elements (plugin);
+  res |= gst_vtenc_register_elements (plugin);
 #endif
 
   return res;
