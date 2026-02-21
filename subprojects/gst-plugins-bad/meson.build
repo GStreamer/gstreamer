@@ -476,11 +476,6 @@ if host_system == 'darwin'
         cdata.set('HAVE_AVCAPTUREDEVICE', 1)
       endif
   endif
-
-  videotoolbox_dep = dependency('VideoToolbox', required : false)
-  if videotoolbox_dep.found()
-      cdata.set('HAVE_VIDEOTOOLBOX', 1)
-  endif
 endif
 
 have_orcc = false

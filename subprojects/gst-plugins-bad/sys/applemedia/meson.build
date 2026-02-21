@@ -7,6 +7,8 @@ applemedia_sources = [
   'plugin.m',
   'videotexturecache-gl.m',
   'videotexturecache.m',
+  'vtenc.c',
+  'vtdec.c',
   'vtutil.c',
 ]
 
@@ -52,11 +54,6 @@ avfoundation_sources = [
   'avsamplevideosink.m',
 ]
 
-vt_sources = [
-  'vtenc.c',
-  'vtdec.c'
-]
-
 ios_deprecated_sources = [
   'iosassetsrc.m',
 ]
@@ -75,7 +72,7 @@ vulkan_sources = [
 ]
 
 doc_sources = []
-foreach s: applemedia_sources + avcapturedevice_sources + avfoundation_sources + vt_sources + ios_sources + ios_deprecated_sources + non_ios_sources + vulkan_sources + applemedia_headers
+foreach s: applemedia_sources + avcapturedevice_sources + avfoundation_sources + ios_sources + ios_deprecated_sources + non_ios_sources + vulkan_sources + applemedia_headers
   doc_sources += meson.current_source_dir() / s
 endforeach
 
@@ -98,11 +95,11 @@ endif
 applemedia_objc_args += ['-fobjc-arc']
 objcpp = meson.get_compiler('objcpp')
 
-applemedia_frameworks = []
-corefoundation_dep = dependency('CoreFoundation', required : applemedia_option)
-coremedia_dep = dependency('CoreMedia', required : applemedia_option)
-corevideo_dep = dependency('CoreVideo', required : applemedia_option)
-applemedia_frameworks += [corefoundation_dep, coremedia_dep, corevideo_dep]
+applemedia_frameworks = [
+  dependency('CoreFoundation', required : applemedia_option),
+  dependency('CoreMedia', required : applemedia_option),
+  dependency('CoreVideo', required : applemedia_option),
+]
 
 avfoundation_dep = dependency('AVFoundation', required : applemedia_option)
 if avfoundation_dep.found()
@@ -113,10 +110,8 @@ if avfoundation_dep.found()
     applemedia_frameworks += [avfoundation_dep]
 endif
 
-videotoolbox_dep = dependency('VideoToolbox', required : applemedia_option)
-if videotoolbox_dep.found()
-    applemedia_sources += vt_sources
-    applemedia_frameworks += [videotoolbox_dep]
+if not subsystem.startswith('watchos')
+  applemedia_frameworks += [dependency('VideoToolbox', required : applemedia_option)]
 endif
 
 if subsystem == 'macos'
