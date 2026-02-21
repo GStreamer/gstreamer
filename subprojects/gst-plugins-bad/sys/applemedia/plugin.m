@@ -33,11 +33,11 @@
 #include "iosglmemory.h"
 #endif
 
-#ifdef HAVE_AVFOUNDATION
 #include "avfassetsrc.h"
 #include "avsamplevideosink.h"
-#if HAVE_AVCAPTUREDEVICE
+#if !TARGET_OS_WATCH && !TARGET_OS_TV
 #include "avfvideosrc.h"
+#if !TARGET_OS_TV && !TARGET_OS_VISION
 #include "avfdeviceprovider.h"
 #endif
 #endif
@@ -76,11 +76,11 @@ plugin_init (GstPlugin * plugin)
   enable_mt_mode ();
 #endif
 
-#ifdef HAVE_AVFOUNDATION
   res |= GST_ELEMENT_REGISTER (avfassetsrc, plugin);
   res |= GST_ELEMENT_REGISTER (avsamplebufferlayersink, plugin);
-#if HAVE_AVCAPTUREDEVICE
+#if !TARGET_OS_WATCH && !TARGET_OS_TV
   res |= GST_ELEMENT_REGISTER (avfvideosrc, plugin);
+#if !TARGET_OS_VISION
   res |= GST_DEVICE_PROVIDER_REGISTER (avfdeviceprovider, plugin);
 #endif
 #endif
