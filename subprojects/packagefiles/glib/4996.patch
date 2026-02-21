@@ -1,7 +1,7 @@
 From 4a922e9ac50989706a32a75a781608a8e74227fd Mon Sep 17 00:00:00 2001
 From: Nirbheek Chauhan <nirbheek@centricular.com>
 Date: Tue, 3 Feb 2026 16:37:06 +0530
-Subject: [PATCH 2/4] meson: Fix regression in building for iOS when using
+Subject: [PATCH 2/6] meson: Fix regression in building for iOS when using
  subsystems
 
 ---
@@ -40,4 +40,3 @@ index 19fbed682e..a7b2f06177 100644
    if not objcc.compiles('''#include <AvailabilityMacros.h>
 -- 
 GitLab
-

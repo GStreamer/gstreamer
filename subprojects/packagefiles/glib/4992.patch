@@ -1,0 +1,463 @@
+From 328b9f5ffb764df3d23bd3890bc9095efec346d7 Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Tue, 27 Jan 2026 22:14:15 +0530
+Subject: [PATCH 1/6] gbacktrace: Don't attempt to get a stack trace on
+ non-macOS
+
+fork(), execvpe() and friends are explicitly banned on tvOS and
+watchOS, and you cannot really run a debugger this way anywhere except
+on macOS.
+
+```
+../glib/gbacktrace.c:412:9: error: 'fork' is unavailable: not available on tvOS
+  412 |   pid = fork ();
+      |         ^
+/Applications/Xcode.app/Contents/Developer/Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS18.5.sdk/usr/include/unistd.h:451:8: note: 'fork' has been explicitly marked unavailable here
+  451 | pid_t    fork(void) __WATCHOS_PROHIBITED __TVOS_PROHIBITED;
+      |          ^
+../glib/gbacktrace.c:431:7: error: 'execvp' is unavailable: not available on tvOS
+  431 |       execvp (args[0], (char **) args);      /* exec gdb */
+      |       ^
+/Applications/Xcode.app/Contents/Developer/Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS18.5.sdk/usr/include/unistd.h:450:6: note: 'execvp' has been explicitly marked unavailable here
+  450 | int      execvp(const char * __file, char *_LIBC_CSTR const *_LIBC_NULL_TERMINATED __argv) __WATCHOS_PROHIBITED __TVOS_PROHIBITED;
+      |          ^
+2 errors generated.
+```
+---
+ glib/gbacktrace.c | 16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
+
+diff --git a/glib/gbacktrace.c b/glib/gbacktrace.c
+index 19923ae767..f3097463df 100644
+--- a/glib/gbacktrace.c
++++ b/glib/gbacktrace.c
+@@ -70,12 +70,9 @@
+ #include "gunicode.h"
+ #include "gutils.h"
+ 
+-#ifndef G_OS_WIN32
+-static void stack_trace (const char * const *args);
+-#endif
+-
+ /* Default to using LLDB for backtraces on macOS. */
+ #ifdef __APPLE__
++#include <TargetConditionals.h>
+ #define USE_LLDB
+ #endif
+ 
+@@ -85,6 +82,11 @@ static void stack_trace (const char * const *args);
+ #define DEBUGGER "gdb"
+ #endif
+ 
++#if defined(G_OS_UNIX) && (!defined(__APPLE__) || TARGET_OS_OSX)
++#define HAVE_STACK_TRACE
++static void stack_trace (const char * const *args);
++#endif
++
+ /* People want to hit this from their debugger... */
+ GLIB_AVAILABLE_IN_ALL volatile gboolean glib_on_error_halt;
+ volatile gboolean glib_on_error_halt = TRUE;
+@@ -248,7 +250,7 @@ g_on_error_query (const gchar *prg_name)
+ void
+ g_on_error_stack_trace (const gchar *prg_name)
+ {
+-#if defined(G_OS_UNIX)
++#ifdef HAVE_STACK_TRACE
+   pid_t pid;
+   gchar buf[16];
+   gchar buf2[64];
+@@ -300,14 +302,16 @@ g_on_error_stack_trace (const gchar *prg_name)
+         break;
+     }
+ #else
++#ifdef G_OS_WIN32
+   if (IsDebuggerPresent ())
+     G_BREAKPOINT ();
+   else
++#endif
+     g_abort ();
+ #endif
+ }
+ 
+-#ifndef G_OS_WIN32
++#ifdef HAVE_STACK_TRACE
+ 
+ static gboolean stack_trace_done = FALSE;
+ 
+-- 
+GitLab
+
+
+From 9e0cc4fc8a29b493549c90ea42904fa08118a158 Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Tue, 27 Jan 2026 23:21:37 +0530
+Subject: [PATCH 2/6] gtestutils: Don't implement g_test_trap_fork on
+ tvOS/watchOS
+
+Those platforms do not allow calling fork()
+---
+ glib/gtestutils.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/glib/gtestutils.c b/glib/gtestutils.c
+index 28e3d4edd0..f929f69fe8 100644
+--- a/glib/gtestutils.c
++++ b/glib/gtestutils.c
+@@ -55,6 +55,10 @@
+ #endif /* HAVE_SYS_SELECT_H */
+ #include <glib/gstdio.h>
+ 
++#ifdef __APPLE__
++#include <TargetConditionals.h>
++#endif
++
+ #include "gmain.h"
+ #include "gpattern.h"
+ #include "grand.h"
+@@ -3945,7 +3949,7 @@ gboolean
+ g_test_trap_fork (guint64        usec_timeout,
+                   GTestTrapFlags test_trap_flags)
+ {
+-#ifdef G_OS_UNIX
++#if defined(G_OS_UNIX) && (!defined(__APPLE__) || (!TARGET_OS_TV && !TARGET_OS_WATCH))
+   int stdout_pipe[2] = { -1, -1 };
+   int stderr_pipe[2] = { -1, -1 };
+   int errsv;
+-- 
+GitLab
+
+
+From 2556270ff089aa9ed12c3107cef914a40743ae3b Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Tue, 27 Jan 2026 23:20:58 +0530
+Subject: [PATCH 3/6] meson: Remove host_system = ios and warn if cross files
+ set it
+
+Prior to the addition of subsystem support in Meson, people who wanted
+to cross-compile to iOS often set `system = 'ios'` in the cross file and
+meson happily plumbed that to `host_machine.system()`.
+
+However, we now use subsystems, so we should stop accepting
+host_system == ios.
+---
+ glib/tests/meson.build    |  2 +-
+ gmodule/tests/meson.build |  2 +-
+ meson.build               | 18 ++++++------------
+ 3 files changed, 8 insertions(+), 14 deletions(-)
+
+diff --git a/glib/tests/meson.build b/glib/tests/meson.build
+index 16c9abf391..93f886eadc 100644
+--- a/glib/tests/meson.build
++++ b/glib/tests/meson.build
+@@ -271,7 +271,7 @@ else
+                                       install_tag : 'tests',
+                                       install: installed_tests_enabled)
+ 
+-    if host_system not in ['ios', 'darwin']
++    if host_system != 'darwin'
+       var_preload = 'LD_PRELOAD'
+     else
+       var_preload = 'DYLD_INSERT_LIBRARIES'
+diff --git a/gmodule/tests/meson.build b/gmodule/tests/meson.build
+index f7a836a97d..bc5c335849 100644
+--- a/gmodule/tests/meson.build
++++ b/gmodule/tests/meson.build
+@@ -26,7 +26,7 @@ endif
+ module_suffix = []
+ # Keep the autotools convention for shared module suffix because GModule
+ # depends on it: https://gitlab.gnome.org/GNOME/glib/issues/520
+-if ['darwin', 'ios'].contains(host_machine.system())
++if host_system == 'darwin'
+   module_suffix = 'so'
+ endif
+ 
+diff --git a/meson.build b/meson.build
+index cd29fd153a..02b42043e5 100644
+--- a/meson.build
++++ b/meson.build
+@@ -71,16 +71,6 @@ endif
+ host_system = host_machine.system()
+ subsystem = ''
+ 
+-if host_system == 'darwin'
+-  ios_test_code = '''#include <TargetConditionals.h>
+-  #if ! TARGET_OS_IPHONE
+-  #error "Not iOS/tvOS/watchOS/iPhoneSimulator"
+-  #endif'''
+-  if cc.compiles(ios_test_code, name : 'building for iOS')
+-    host_system = 'ios'
+-  endif
+-endif
+-
+ linux_libc = ''
+ if host_system == 'linux'
+   musl_test_code = '''#include <stdlib.h>
+@@ -92,6 +82,10 @@ if host_system == 'linux'
+   endif
+ elif host_system == 'darwin'
+   subsystem = host_machine.subsystem()
++elif host_system == 'ios'
++  warning('Setting system = \'ios\' in cross files is deprecated, please use subsystem names')
++  host_system = 'darwin'
++  subsystem = 'ios'
+ endif
+ 
+ glib_version = meson.project_version()
+@@ -1239,7 +1233,7 @@ if host_system == 'windows' and (cc.get_id() == 'msvc' or cc.get_id() == 'clang-
+   glib_conf.set('HAVE_C99_SNPRINTF', false)
+   glib_conf.set('HAVE_C99_VSNPRINTF', false)
+   glib_conf.set('HAVE_UNIX98_PRINTF', false)
+-elif not cc_can_run and host_system in ['ios', 'darwin']
++elif not cc_can_run and host_system == 'darwin'
+   # All these are true when compiling natively on macOS, so we should use good
+   # defaults when building for iOS and tvOS.
+   glib_conf.set('HAVE_C99_SNPRINTF', true)
+@@ -2590,7 +2584,7 @@ if host_system == 'windows'
+   export_dynamic_ldflags = []
+ elif host_system == 'cygwin'
+   export_dynamic_ldflags = ['-Wl,--export-all-symbols']
+-elif host_system in ['darwin', 'ios']
++elif host_system == 'darwin'
+   export_dynamic_ldflags = []
+ elif host_system == 'sunos'
+   export_dynamic_ldflags = []
+-- 
+GitLab
+
+
+From a499f27793ec0f91d7e8b5b6d16909507af3f50a Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Tue, 27 Jan 2026 23:22:35 +0530
+Subject: [PATCH 4/6] gspawn: Add an implementation for tvOS/watchOS that
+ simply errors out
+
+Process spawning is banned on this platform.
+---
+ glib/gspawn-unsupported.c | 85 +++++++++++++++++++++++++++++++++++++++
+ glib/meson.build          |  7 +++-
+ meson.build               |  5 +++
+ 3 files changed, 96 insertions(+), 1 deletion(-)
+ create mode 100644 glib/gspawn-unsupported.c
+
+diff --git a/glib/gspawn-unsupported.c b/glib/gspawn-unsupported.c
+new file mode 100644
+index 0000000000..9f9a739a53
+--- /dev/null
++++ b/glib/gspawn-unsupported.c
+@@ -0,0 +1,85 @@
++/* gspawn.c - Process launching implementation that simply return an error
++ *
++ * Copyright 2026 Nirbheek Chauhan
++ *
++ * SPDX-License-Identifier: LGPL-2.1-or-later
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public License
++ * along with this library; if not, see <http://www.gnu.org/licenses/>.
++ */
++
++#include "config.h"
++
++
++#include "gspawn.h"
++#include "gspawn-private.h"
++#include "gtestutils.h"
++
++G_DEFINE_QUARK (g-exec-error-quark, g_spawn_error)
++G_DEFINE_QUARK (g-spawn-exit-error-quark, g_spawn_exit_error)
++
++gboolean
++g_spawn_sync_impl (const gchar           *working_directory,
++                   gchar                **argv,
++                   gchar                **envp,
++                   GSpawnFlags            flags,
++                   GSpawnChildSetupFunc   child_setup,
++                   gpointer               user_data,
++                   gchar                **standard_output,
++                   gchar                **standard_error,
++                   gint                  *wait_status,
++                   GError               **error)
++{
++  g_set_error_literal (error, G_SPAWN_ERROR, G_SPAWN_ERROR_FAILED,
++      "g_spawn_sync() is unavailable on this platform");
++  return FALSE;
++}
++
++gboolean
++g_spawn_async_with_pipes_and_fds_impl (const gchar           *working_directory,
++                                       const gchar * const   *argv,
++                                       const gchar * const   *envp,
++                                       GSpawnFlags            flags,
++                                       GSpawnChildSetupFunc   child_setup,
++                                       gpointer               user_data,
++                                       gint                   stdin_fd,
++                                       gint                   stdout_fd,
++                                       gint                   stderr_fd,
++                                       const gint            *source_fds,
++                                       const gint            *target_fds,
++                                       gsize                  n_fds,
++                                       GPid                  *child_pid_out,
++                                       gint                  *stdin_pipe_out,
++                                       gint                  *stdout_pipe_out,
++                                       gint                  *stderr_pipe_out,
++                                       GError               **error)
++{
++  g_set_error_literal (error, G_SPAWN_ERROR, G_SPAWN_ERROR_FAILED,
++      "g_spawn_async_with_pipes_and_fds() is unavailable on this platform");
++  return FALSE;
++}
++
++gboolean
++g_spawn_check_wait_status_impl (gint     wait_status,
++                                GError **error)
++{
++  g_set_error_literal (error, G_SPAWN_ERROR, G_SPAWN_ERROR_FAILED,
++      "g_spawn_check_wait_status() is unavailable on this platform");
++  return FALSE;
++}
++
++void
++g_spawn_close_pid_impl (GPid pid)
++{
++  /* no-op */
++}
+diff --git a/glib/meson.build b/glib/meson.build
+index 0e46ba13ee..0fb6e2696e 100644
+--- a/glib/meson.build
++++ b/glib/meson.build
+@@ -380,7 +380,12 @@ if host_system == 'windows'
+     glib_sources += files('dirent/wdirent.c')
+   endif
+ else
+-  glib_sources += files('glib-unix.c', 'gspawn-posix.c', 'giounix.c')
++  glib_sources += files('glib-unix.c', 'giounix.c')
++  if process_spawn_allowed
++    glib_sources += files('gspawn-posix.c')
++  else
++    glib_sources += files('gspawn-unsupported.c')
++  endif
+   platform_deps = []
+ endif
+ 
+diff --git a/meson.build b/meson.build
+index 02b42043e5..4f1fe70aa7 100644
+--- a/meson.build
++++ b/meson.build
+@@ -295,6 +295,11 @@ glib_conf.set('ENABLE_NLS', 1)
+ # used by the .rc.in files
+ glibconfig_conf.set('LT_CURRENT_MINUS_AGE', soversion)
+ 
++process_spawn_allowed = true
++if subsystem.startswith('tvos') or subsystem.startswith('watchos')
++  process_spawn_allowed = false
++endif
++
+ glib_conf.set('_GNU_SOURCE', 1)
+ 
+ if host_system in ['windows', 'darwin']
+-- 
+GitLab
+
+
+From 1f76a92d516371014258b0c6796e645cfbe39259 Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Tue, 27 Jan 2026 23:23:53 +0530
+Subject: [PATCH 5/6] gtestdbus: Compile-out fork() usage on tvOS/watchOS
+
+The APIs will mostly error out early when trying to spawn processes,
+but just in case they reach this point, explicitl g_error().
+---
+ gio/gtestdbus.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/gio/gtestdbus.c b/gio/gtestdbus.c
+index 66c278d292..ee1d972623 100644
+--- a/gio/gtestdbus.c
++++ b/gio/gtestdbus.c
+@@ -233,6 +233,7 @@ watch_parent (gint fd)
+   while (TRUE);
+ }
+
++#if !defined(__APPLE__) || (!TARGET_OS_TV && !TARGET_OS_WATCH)
+ static GIOChannel *
+ watcher_init (void)
+ {
+@@ -287,6 +288,11 @@ watcher_init (void)
+   g_io_channel_flush (channel, &error);
+   g_assert_no_error (error);
+ }
++#else
++#define watcher_init() \
++  g_error("GTestDBus spawns processes which is not allowed on tvOS and " \
++      "watchOS");
++#endif
+ 
+ /* This could be interesting to expose in public API */
+ static void
+-- 
+GitLab
+
+
+From 04badb981bb3b5028ad4a5b18a4e64c3331725bc Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Tue, 27 Jan 2026 23:31:02 +0530
+Subject: [PATCH 6/6] gio: Don't build gio-launch-desktop when process spawning
+ is disallowed
+
+This uses execvp() which is disallowed on tvOS and watchOS.
+---
+ gio/meson.build | 29 ++++++++++++++++-------------
+ 1 file changed, 16 insertions(+), 13 deletions(-)
+
+diff --git a/gio/meson.build b/gio/meson.build
+index 459846f8d8..6a28aa563b 100644
+--- a/gio/meson.build
++++ b/gio/meson.build
+@@ -419,20 +419,23 @@ if host_system != 'windows'
+     contenttype_sources += files('gcontenttype-fdo.c')
+     unix_sources += files('gdesktopappinfo.c')
+     gio_unix_include_headers += files('gdesktopappinfo.h')
+-    launch_desktop_sources = files('gio-launch-desktop.c')
+ 
+-    if host_system == 'linux'
+-      launch_desktop_sources += files('../glib/gjournal-private.c')
++    if process_spawn_allowed
++      launch_desktop_sources = files('gio-launch-desktop.c')
++
++      if host_system == 'linux'
++        launch_desktop_sources += files('../glib/gjournal-private.c')
++      endif
++
++      gio_launch_desktop = executable('gio-launch-desktop', launch_desktop_sources,
++        include_directories : glibinc,
++        install : true,
++        install_dir : multiarch_libexecdir,
++        install_tag : 'bin',
++        c_args : gio_c_args,
++        # intl.lib is not compatible with SAFESEH
++        link_args : noseh_link_args)
+     endif
+-
+-    gio_launch_desktop = executable('gio-launch-desktop', launch_desktop_sources,
+-      include_directories : glibinc,
+-      install : true,
+-      install_dir : multiarch_libexecdir,
+-      install_tag : 'bin',
+-      c_args : gio_c_args,
+-      # intl.lib is not compatible with SAFESEH
+-      link_args : noseh_link_args)
+   endif
+ 
+   subdir('xdgmime')
+-- 
+GitLab
+

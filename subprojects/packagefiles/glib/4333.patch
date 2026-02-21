@@ -1,0 +1,240 @@
+From c30f1b14f81cb043521c30aef92513d974112b74 Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Fri, 4 Oct 2024 05:25:47 +0530
+Subject: [PATCH 1/2] gio: Fix multicast iface selection on macOS
+
+ip_mreqn.imr_ifindex is not used correctly by the XNU kernel, and
+causes us to bind to the default interface; so fallback to ip_mreq
+and set the iface source address (not SSM).
+
+Fixes https://gitlab.gnome.org/GNOME/glib/-/issues/3489
+---
+ gio/gsocket.c | 95 ++++++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 63 insertions(+), 32 deletions(-)
+
+diff --git a/gio/gsocket.c b/gio/gsocket.c
+index c36ca62f4c..642c13b605 100644
+--- a/gio/gsocket.c
++++ b/gio/gsocket.c
+@@ -2402,6 +2402,42 @@ g_socket_w32_get_adapter_ipv4_addr (const gchar *name_or_ip)
+ 
+   return ip_result;
+ }
++#elif defined(HAVE_SIOCGIFADDR)
++static gulong
++g_socket_get_adapter_ipv4_addr (GSocket * socket,
++                                const char * iface,
++                                GError ** error)
++{
++  int ret;
++  struct ifreq ifr;
++  struct sockaddr_in *iface_addr;
++  size_t if_name_len = strlen (iface);
++
++  memset (&ifr, 0, sizeof (ifr));
++
++  if (if_name_len >= sizeof (ifr.ifr_name))
++    {
++      g_set_error (error, G_IO_ERROR,  G_IO_ERROR_FILENAME_TOO_LONG,
++                   _("Interface name too long"));
++      return ULONG_MAX;
++    }
++
++  memcpy (ifr.ifr_name, iface, if_name_len);
++
++  /* Get the IPv4 address of the given network interface name. */
++  ret = ioctl (socket->priv->fd, SIOCGIFADDR, &ifr);
++  if (ret < 0)
++    {
++      int errsv = errno;
++
++      g_set_error (error, G_IO_ERROR,  g_io_error_from_errno (errsv),
++                   _("Interface not found: %s"), g_strerror (errsv));
++      return ULONG_MAX;
++    }
++
++  iface_addr = (struct sockaddr_in *) &ifr.ifr_addr;
++  return iface_addr->sin_addr.s_addr;
++}
+ #endif
+ 
+ static gboolean
+@@ -2418,6 +2454,7 @@ g_socket_multicast_group_operation (GSocket       *socket,
+   g_return_val_if_fail (G_IS_SOCKET (socket), FALSE);
+   g_return_val_if_fail (socket->priv->type == G_SOCKET_TYPE_DATAGRAM, FALSE);
+   g_return_val_if_fail (G_IS_INET_ADDRESS (group), FALSE);
++  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+ 
+   if (!check_socket (socket, error))
+     return FALSE;
+@@ -2425,7 +2462,7 @@ g_socket_multicast_group_operation (GSocket       *socket,
+   native_addr = g_inet_address_to_bytes (group);
+   if (g_inet_address_get_family (group) == G_SOCKET_FAMILY_IPV4)
+     {
+-#ifdef HAVE_IP_MREQN
++#if defined(HAVE_IP_MREQN) && !defined(__APPLE__)
+       struct ip_mreqn mc_req;
+ #else
+       struct ip_mreq mc_req;
+@@ -2434,7 +2471,11 @@ g_socket_multicast_group_operation (GSocket       *socket,
+       memset (&mc_req, 0, sizeof (mc_req));
+       memcpy (&mc_req.imr_multiaddr, native_addr, sizeof (struct in_addr));
+ 
+-#ifdef HAVE_IP_MREQN
++      /* mc_req.imr_ifindex is not used correctly by the XNU kernel, and
++       * causes us to bind to the default interface; so fallback to ip_mreq
++       * and set the iface source address (not SSM).
++       * See: https://gitlab.gnome.org/GNOME/glib/-/issues/3489 */
++#if defined(HAVE_IP_MREQN) && !defined(__APPLE__)
+       if (iface)
+         mc_req.imr_ifindex = if_nametoindex (iface);
+       else
+@@ -2444,6 +2485,18 @@ g_socket_multicast_group_operation (GSocket       *socket,
+         mc_req.imr_interface.s_addr = g_socket_w32_get_adapter_ipv4_addr (iface);
+       else
+         mc_req.imr_interface.s_addr = g_htonl (INADDR_ANY);
++#elif defined(HAVE_SIOCGIFADDR)
++      if (iface) {
++        GError *local_error = NULL;
++        mc_req.imr_interface.s_addr = g_socket_get_adapter_ipv4_addr (socket,
++            iface, &local_error);
++        if (local_error != NULL) {
++          g_propagate_error (error, local_error);
++          return FALSE;
++        }
++      } else {
++        mc_req.imr_interface.s_addr = g_htonl (INADDR_ANY);
++      }
+ #else
+       mc_req.imr_interface.s_addr = g_htonl (INADDR_ANY);
+ #endif
+@@ -2642,36 +2695,14 @@ g_socket_multicast_group_operation_ssm (GSocket       *socket,
+           {
+ #if defined(G_OS_WIN32)
+             S_ADDR_FIELD(mc_req_src) = g_socket_w32_get_adapter_ipv4_addr (iface);
+-#elif defined (HAVE_SIOCGIFADDR)
+-            int ret;
+-            struct ifreq ifr;
+-            struct sockaddr_in *iface_addr;
+-            size_t if_name_len = strlen (iface);
+-
+-            memset (&ifr, 0, sizeof (ifr));
+-
+-            if (if_name_len >= sizeof (ifr.ifr_name))
+-              {
+-                g_set_error (error, G_IO_ERROR,  G_IO_ERROR_FILENAME_TOO_LONG,
+-                             _("Interface name too long"));
+-                return FALSE;
+-              }
+-
+-            memcpy (ifr.ifr_name, iface, if_name_len);
+-
+-            /* Get the IPv4 address of the given network interface name. */
+-            ret = ioctl (socket->priv->fd, SIOCGIFADDR, &ifr);
+-            if (ret < 0)
+-              {
+-                int errsv = errno;
+-
+-                g_set_error (error, G_IO_ERROR,  g_io_error_from_errno (errsv),
+-                             _("Interface not found: %s"), g_strerror (errsv));
+-                return FALSE;
+-              }
+-
+-            iface_addr = (struct sockaddr_in *) &ifr.ifr_addr;
+-            S_ADDR_FIELD(mc_req_src) = iface_addr->sin_addr.s_addr;
++#elif defined(HAVE_SIOCGIFADDR)
++            GError *local_error = NULL;
++            S_ADDR_FIELD(mc_req_src) = g_socket_get_adapter_ipv4_addr (socket,
++                iface, &local_error);
++            if (local_error != NULL) {
++              g_propagate_error (error, local_error);
++              return FALSE;
++            }
+ #endif  /* defined(G_OS_WIN32) && defined (HAVE_IF_NAMETOINDEX) */
+           }
+ 
+-- 
+GitLab
+
+
+From 5eed810c99359e417c67fd47e0c280b4a2b54822 Mon Sep 17 00:00:00 2001
+From: Philip Withnall <philip@tecnocode.co.uk>
+Date: Mon, 7 Oct 2024 13:42:21 +0000
+Subject: [PATCH 2/2] Apply 3 suggestion(s) to 1 file(s)
+
+---
+ gio/gsocket.c | 43 ++++++++++++++++++++++++-------------------
+ 1 file changed, 24 insertions(+), 19 deletions(-)
+
+diff --git a/gio/gsocket.c b/gio/gsocket.c
+index 642c13b605..4600bc8239 100644
+--- a/gio/gsocket.c
++++ b/gio/gsocket.c
+@@ -2404,9 +2404,9 @@ g_socket_w32_get_adapter_ipv4_addr (const gchar *name_or_ip)
+ }
+ #elif defined(HAVE_SIOCGIFADDR)
+ static gulong
+-g_socket_get_adapter_ipv4_addr (GSocket * socket,
+-                                const char * iface,
+-                                GError ** error)
++g_socket_get_adapter_ipv4_addr (GSocket     *socket,
++                                const char  *iface,
++                                GError     **error)
+ {
+   int ret;
+   struct ifreq ifr;
+@@ -2486,17 +2486,21 @@ g_socket_multicast_group_operation (GSocket       *socket,
+       else
+         mc_req.imr_interface.s_addr = g_htonl (INADDR_ANY);
+ #elif defined(HAVE_SIOCGIFADDR)
+-      if (iface) {
+-        GError *local_error = NULL;
+-        mc_req.imr_interface.s_addr = g_socket_get_adapter_ipv4_addr (socket,
+-            iface, &local_error);
+-        if (local_error != NULL) {
+-          g_propagate_error (error, local_error);
+-          return FALSE;
++      if (iface)
++        {
++          GError *local_error = NULL;
++
++          mc_req.imr_interface.s_addr = g_socket_get_adapter_ipv4_addr (socket, iface, &local_error);
++          if (local_error != NULL)
++            {
++              g_propagate_error (error, g_steal_pointer (&local_error));
++              return FALSE;
++            }
++        }
++      else
++        {
++          mc_req.imr_interface.s_addr = g_htonl (INADDR_ANY);
+         }
+-      } else {
+-        mc_req.imr_interface.s_addr = g_htonl (INADDR_ANY);
+-      }
+ #else
+       mc_req.imr_interface.s_addr = g_htonl (INADDR_ANY);
+ #endif
+@@ -2697,12 +2701,13 @@ g_socket_multicast_group_operation_ssm (GSocket       *socket,
+             S_ADDR_FIELD(mc_req_src) = g_socket_w32_get_adapter_ipv4_addr (iface);
+ #elif defined(HAVE_SIOCGIFADDR)
+             GError *local_error = NULL;
+-            S_ADDR_FIELD(mc_req_src) = g_socket_get_adapter_ipv4_addr (socket,
+-                iface, &local_error);
+-            if (local_error != NULL) {
+-              g_propagate_error (error, local_error);
+-              return FALSE;
+-            }
++
++            S_ADDR_FIELD(mc_req_src) = g_socket_get_adapter_ipv4_addr (socket, iface, &local_error);
++            if (local_error != NULL)
++              {
++                g_propagate_error (error, g_steal_pointer (&local_error));
++                return FALSE;
++              }
+ #endif  /* defined(G_OS_WIN32) && defined (HAVE_IF_NAMETOINDEX) */
+           }
+ 
+-- 
+GitLab
+
