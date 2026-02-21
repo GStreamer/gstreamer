@@ -85,6 +85,8 @@ static gboolean gst_av1_dec_flush (GstVideoDecoder * dec);
 static GstFlowReturn
 gst_av1_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
+static gboolean gst_av1_dec_decide_allocation (GstVideoDecoder * dec,
+    GstQuery * query);
 
 static void gst_av1_dec_image_to_buffer (GstAV1Dec * dec,
     const aom_image_t * img, GstBuffer * buffer);
@@ -129,6 +131,8 @@ gst_av1_dec_class_init (GstAV1DecClass * klass)
 
   vdec_class->set_format = GST_DEBUG_FUNCPTR (gst_av1_dec_set_format);
   vdec_class->handle_frame = GST_DEBUG_FUNCPTR (gst_av1_dec_handle_frame);
+  vdec_class->decide_allocation =
+      GST_DEBUG_FUNCPTR (gst_av1_dec_decide_allocation);
 
   klass->codec_algo = &aom_codec_av1_dx_algo;
   GST_DEBUG_CATEGORY_INIT (av1_dec_debug, "av1dec", 0, "AV1 decoding element");
@@ -486,4 +490,41 @@ gst_av1_dec_handle_frame (GstVideoDecoder * dec, GstVideoCodecFrame * frame)
 
 
   return ret;
+}
+
+static gboolean
+gst_av1_dec_decide_allocation (GstVideoDecoder * dec, GstQuery * query)
+{
+  guint n_pools;
+
+  if (!gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL))
+    goto out;
+
+  n_pools = gst_query_get_n_allocation_pools (query);
+  for (guint i = 0; i < n_pools; i++) {
+    GstBufferPool *pool = NULL;
+    GstStructure *config;
+    guint size, min, max;
+
+    gst_query_parse_nth_allocation_pool (query, i, &pool, &size, &min, &max);
+    if (!pool)
+      continue;
+
+    config = gst_buffer_pool_get_config (pool);
+    if (gst_buffer_pool_has_option (pool, GST_BUFFER_POOL_OPTION_VIDEO_META)) {
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_META);
+      if (gst_buffer_pool_has_option (pool,
+              GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
+        gst_buffer_pool_config_add_option (config,
+            GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+      }
+    }
+    gst_buffer_pool_set_config (pool, config);
+    gst_query_set_nth_allocation_pool (query, i, pool, size, min, max);
+    gst_object_unref (pool);
+  }
+
+out:
+  return GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (dec, query);
 }
