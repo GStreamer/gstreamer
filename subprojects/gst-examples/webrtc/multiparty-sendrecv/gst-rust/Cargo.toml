@@ -11,11 +11,11 @@ futures = "0.3"
 tokio = { version = "1", features = ["full"] }
 clap = { version = "4", features = ["derive"] }
 anyhow = "1"
-rand = { version = "0.9", features = ["thread_rng"] }
-async-tungstenite = { version = "0.32", features = ["tokio-runtime", "tokio-native-tls"] }
-gst = { package = "gstreamer", version = "0.24" }
-gst-webrtc = { package = "gstreamer-webrtc", version = "0.24" }
-gst-sdp = { package = "gstreamer-sdp", version = "0.24" }
+rand = "0.10"
+async-tungstenite = { version = "0.33", features = ["tokio-runtime", "tokio-native-tls"] }
+gst = { package = "gstreamer", version = "0.25" }
+gst-webrtc = { package = "gstreamer-webrtc", version = "0.25" }
+gst-sdp = { package = "gstreamer-sdp", version = "0.25" }
 serde = "1"
 serde_derive = "1"
 serde_json = "1"
