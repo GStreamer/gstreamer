@@ -86,6 +86,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 /* class initialization */
 
+#define parent_class gst_openh264dec_parent_class
 G_DEFINE_TYPE (GstOpenh264Dec, gst_openh264dec, GST_TYPE_VIDEO_DECODER);
 GST_ELEMENT_REGISTER_DEFINE_CUSTOM (openh264dec, openh264dec_element_init);
 
@@ -425,33 +426,48 @@ gst_openh264dec_finish (GstVideoDecoder * decoder)
 static gboolean
 gst_openh264dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 {
-  GstVideoCodecState *state;
-  GstBufferPool *pool;
-  guint size, min, max;
-  GstStructure *config;
+  guint n_pools;
 
-  if (!GST_VIDEO_DECODER_CLASS (gst_openh264dec_parent_class)->decide_allocation
-      (decoder, query))
-    return FALSE;
+  if (!gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL))
+    goto out;
 
-  state = gst_video_decoder_get_output_state (decoder);
+  n_pools = gst_query_get_n_allocation_pools (query);
+  if (n_pools == 0) {
+    GstBufferPool *pool;
 
-  gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
-
-  config = gst_buffer_pool_get_config (pool);
-  if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
+    pool = gst_video_buffer_pool_new ();
+    gst_query_add_allocation_pool (query, pool, 0, 2, 0);
+    gst_object_unref (pool);
+    n_pools++;
   }
 
-  gst_buffer_pool_set_config (pool, config);
+  for (guint i = 0; i < n_pools; i++) {
+    GstBufferPool *pool = NULL;
+    GstStructure *config;
+    guint size, min, max;
 
-  gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+    gst_query_parse_nth_allocation_pool (query, i, &pool, &size, &min, &max);
+    if (!pool)
+      pool = gst_video_buffer_pool_new ();
 
-  gst_object_unref (pool);
-  gst_video_codec_state_unref (state);
+    config = gst_buffer_pool_get_config (pool);
+    if (gst_buffer_pool_has_option (pool, GST_BUFFER_POOL_OPTION_VIDEO_META)) {
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_META);
+      if (gst_buffer_pool_has_option (pool,
+              GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
+        gst_buffer_pool_config_add_option (config,
+            GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+      }
+    }
+    gst_buffer_pool_set_config (pool, config);
+    gst_query_set_nth_allocation_pool (query, i, pool, size, min, max);
+    gst_object_unref (pool);
+  }
 
-  return TRUE;
+out:
+  return GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (decoder,
+      query);
 }
 
 static gboolean
