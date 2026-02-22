@@ -3998,13 +3998,7 @@ transport_timed_out_notify_cb (GstRTSPStreamTransport * transport,
 
   GST_DEBUG_OBJECT (sink, "Transport %p timed out notify: %d", transport,
       timed_out);
-
-  if (timed_out) {
-    GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (NULL),
-        ("stream transport timed out"));
-  }
 }
-
 
 static GstRTSPResult
 gst_rtsp_client_sink_setup_streams (GstRTSPClientSink * sink, gboolean async)
