@@ -5049,12 +5049,17 @@ gst_call_async_func (gpointer data, gpointer user_data)
   GstCallAsyncData *async_data = data;
 
   if (async_data->object) {
+    /* gst_element_call_async() or gst_object_call_async() */
     GstObjectCallAsyncFunc func = (GstObjectCallAsyncFunc) async_data->func;
     (*func) (async_data->object, async_data->user_data);
   } else {
+    /* gst_call_async() */
     async_data->func (async_data->user_data);
   }
 
+  /* gst_element_call_async() (deprecated) had a separate destroy callback
+   * for user_data, while newer APIs (gst_object_call_async() and
+   * gst_call_async()) do not */
   if (async_data->notify)
     async_data->notify (async_data->user_data);
   gst_clear_object (&async_data->object);
