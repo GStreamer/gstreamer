@@ -1300,15 +1300,23 @@ update_video_context (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context,
     return FALSE;
 
   GST_DEBUG_OBJECT (ffmpegdec,
-      "Renegotiating video from %dx%d@ %d:%d PAR %d/%d fps pixfmt %d to %dx%d@ %d:%d PAR %d/%d fps pixfmt %d",
+      "Renegotiating video from "
+      "%dx%d PAR %d:%d, %d/%d fps; pixfmt %d T %d IL %d:%d MV %d:%d"
+      " to "
+      "%dx%d PAR %d:%d, %d/%d fps; pixfmt %d T %d IL %d:%d MV %d:%d",
       ffmpegdec->pic_width, ffmpegdec->pic_height,
       ffmpegdec->pic_par_n, ffmpegdec->pic_par_d,
       ffmpegdec->ctx_time_n, ffmpegdec->ctx_time_d,
-      ffmpegdec->pic_pix_fmt,
+      ffmpegdec->pic_pix_fmt, ffmpegdec->ctx_ticks,
+      ffmpegdec->pic_interlaced, ffmpegdec->pic_field_order,
+      ffmpegdec->cur_multiview_mode, ffmpegdec->cur_multiview_flags,
+      /* to */
       picture->width, picture->height,
-      picture->sample_aspect_ratio.num,
-      picture->sample_aspect_ratio.den,
-      context->time_base.num, context->time_base.den, picture->format);
+      picture->sample_aspect_ratio.num, picture->sample_aspect_ratio.den,
+      context->time_base.num, context->time_base.den,
+      picture->format, ticks_per_frame,
+      picture_interlaced, pic_field_order,
+      ffmpegdec->picture_multiview_mode, ffmpegdec->picture_multiview_flags);
 
   ffmpegdec->pic_pix_fmt = picture->format;
   ffmpegdec->pic_width = picture->width;
