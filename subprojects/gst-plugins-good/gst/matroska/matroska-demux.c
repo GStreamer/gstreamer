@@ -7433,7 +7433,30 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       gst_caps_set_simple (caps, "codec-alpha", G_TYPE_BOOLEAN, TRUE, NULL);
     *codec_name = g_strdup_printf ("On2 VP8");
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP9)) {
+    guint8 profile = G_MAXUINT8, level = G_MAXUINT8;
+    guint8 bit_depth = G_MAXUINT8, chroma_subsampling = G_MAXUINT8;
+
     caps = gst_caps_new_empty_simple ("video/x-vp9");
+
+    if (data != NULL &&
+        gst_matroska_get_vpx_config_from_codec_private (data, size, &profile,
+            &level, &bit_depth, &chroma_subsampling)) {
+      gint profile_i, level_i, bit_depth_i, chroma_subsampling_i;
+
+      profile_i = (profile == G_MAXUINT8) ? -1 : profile;
+      level_i = (level == G_MAXUINT8) ? -1 : level;
+      bit_depth_i = (bit_depth == G_MAXUINT8) ? -1 : bit_depth;
+      chroma_subsampling_i =
+          (chroma_subsampling == G_MAXUINT8) ? -1 : chroma_subsampling;
+
+      if (!gst_codec_utils_vpx_caps_set_format_fields (caps, profile_i,
+              level_i, bit_depth_i, chroma_subsampling_i))
+        GST_DEBUG ("Invalid VP9 format fields in CodecPrivate");
+    } else if (data != NULL) {
+      GST_DEBUG
+          ("Invalid VP9 CodecPrivate, not setting VP9 profile/chroma fields");
+    }
+
     if (videocontext->alpha_mode)
       gst_caps_set_simple (caps, "codec-alpha", G_TYPE_BOOLEAN, TRUE, NULL);
     *codec_name = g_strdup_printf ("On2 VP9");
