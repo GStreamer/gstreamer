@@ -22,14 +22,31 @@
  * - xdg-cache=true
  * - folder-mode=numbered
  *
+ * ## Features
+ *
+ * The `features` parameter controls which optional features are enabled.
+ * By default all features are enabled.
+ *
+ * - **snapshot**: Enables the pipeline-snapshot tracer composition for use with
+ *   the `gst-dots-viewer` tool. The pipeline-snapshot tracer is part of the
+ *   Rust tracers plugin (`rstracers`), which is shipped as a separate
+ *   distribution package or enabled in gst-plugins-rs subproject with, at least `-Drs=enabled -Dauto_plugin_features=disabled -Dgst-plugins-rs:tracers=enabled` (disabled by default).
+ *   If the tracer is not installed, this flag has no effect.
+ * - **dump**: If you only need the dot-dir setup without loading
+ *   the pipeline-snapshot tracer and you want to disable the `pipeline-snapshot`
+ *   tracer composition.
+ *
  * ## Examples:
  *
  * ```
- * # Basic usage - will delete existing .dot files
+ * # Basic usage - will delete existing .dot files, snapshot enabled (default)
  * GST_TRACERS=dots gst-launch-1.0 videotestsrc ! autovideosink
  *
  * # Keep existing .dot files
  * GST_TRACERS="dots(no-delete=true)" gst-launch-1.0 videotestsrc ! autovideosink
+ *
+ * # Disable pipeline-snapshot tracer composition (just dot-dir setup)
+ * GST_TRACERS="dots(features=dump)" gst-launch-1.0 videotestsrc ! autovideosink
  * ```
  *
  * Since: 1.26
@@ -57,15 +74,52 @@ struct _GstDotsTracer
   GstTracer parent;
 
   gboolean no_delete;
+  guint features;
   gchar *output_dir;
   GstTracer *pipeline_snapshot_tracer;
 };
 
 G_DEFINE_TYPE (GstDotsTracer, gst_dots_tracer, GST_TYPE_TRACER);
 
+/**
+ * GstDotsTracerFeatures:
+ * @GST_DOTS_TRACER_FEATURE_DUMP: Disable pipeline-snapshot tracer composition
+ * @GST_DOTS_TRACER_FEATURE_SNAPSHOT: Enable pipeline-snapshot tracer composition
+ *
+ * Feature flags for #GstDotsTracer.
+ *
+ * Since: 1.30
+ */
+typedef enum {
+  GST_DOTS_TRACER_FEATURE_DUMP = (1 << 0),
+  GST_DOTS_TRACER_FEATURE_SNAPSHOT = (1 << 1),
+} GstDotsTracerFeatures;
+
+#define GST_DOTS_TRACER_FEATURES_DEFAULT GST_DOTS_TRACER_FEATURE_SNAPSHOT
+#define GST_TYPE_DOTS_TRACER_FEATURES (gst_dots_tracer_features_get_type())
+
+static GType
+gst_dots_tracer_features_get_type (void)
+{
+  static GType type = 0;
+  static const GFlagsValue values[] = {
+    {GST_DOTS_TRACER_FEATURE_DUMP, "Disable pipeline-snapshot tracer composition",
+        "dump"},
+    {GST_DOTS_TRACER_FEATURE_SNAPSHOT, "Enable pipeline-snapshot tracer composition",
+        "snapshot"},
+    {0, NULL, NULL}
+  };
+
+  if (!type) {
+    type = g_flags_register_static ("GstDotsTracerFeatures", values);
+  }
+  return type;
+}
+
 enum {
   PROP_0,
   PROP_NO_DELETE,
+  PROP_FEATURES,
   N_PROPERTIES
 };
 
@@ -87,6 +141,9 @@ gst_dots_tracer_set_property (GObject * object, guint prop_id,
     case PROP_NO_DELETE:
       self->no_delete = g_value_get_boolean (value);
       break;
+    case PROP_FEATURES:
+      self->features = g_value_get_flags (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -102,6 +159,9 @@ gst_dots_tracer_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_NO_DELETE:
       g_value_set_boolean (value, self->no_delete);
+      break;
+    case PROP_FEATURES:
+      g_value_set_flags (value, self->features);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -252,13 +312,24 @@ static void
 gst_dots_tracer_init (GstDotsTracer * self)
 {
   self->no_delete = FALSE;
+  self->features = GST_DOTS_TRACER_FEATURES_DEFAULT;
   self->pipeline_snapshot_tracer = NULL;
+}
+
+static void
+gst_dots_tracer_constructed (GObject * object)
+{
+  GstDotsTracer *self = GST_DOTS_TRACER (object);
+
+  G_OBJECT_CLASS (gst_dots_tracer_parent_class)->constructed (object);
 
   setup_output_directory (self);
 
   // Try to create pipeline-snapshot tracer with exact same configuration as
   // gstdump.rs
-  try_create_pipeline_snapshot_tracer (self);
+  if (self->features & GST_DOTS_TRACER_FEATURE_SNAPSHOT) {
+    try_create_pipeline_snapshot_tracer (self);
+  }
 }
 
 static void
@@ -268,6 +339,7 @@ gst_dots_tracer_class_init (GstDotsTracerClass * klass)
 
   gobject_class->set_property = gst_dots_tracer_set_property;
   gobject_class->get_property = gst_dots_tracer_get_property;
+  gobject_class->constructed = gst_dots_tracer_constructed;
   gobject_class->finalize = gst_dots_tracer_finalize;
 
   gst_tracer_class_set_use_structure_params (GST_TRACER_CLASS (gobject_class),
@@ -284,6 +356,20 @@ gst_dots_tracer_class_init (GstDotsTracerClass * klass)
       g_param_spec_boolean ("no-delete", "No Delete",
       "Don't delete existing .dot files on startup", FALSE,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstDotsTracer:features:
+   *
+   * Feature flags to control which optional features are enabled.
+   * Use `features=dump` to disable the pipeline-snapshot tracer composition.
+   *
+   * Since: 1.30
+   */
+  properties[PROP_FEATURES] =
+      g_param_spec_flags ("features", "Features",
+      "Feature flags to control optional tracer features",
+      GST_TYPE_DOTS_TRACER_FEATURES, GST_DOTS_TRACER_FEATURES_DEFAULT,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, N_PROPERTIES, properties);
 

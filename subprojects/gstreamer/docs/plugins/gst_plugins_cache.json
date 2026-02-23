@@ -2979,6 +2979,18 @@
                     "GObject"
                 ],
                 "properties": {
+                    "features": {
+                        "blurb": "Feature flags to control optional tracer features",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": true,
+                        "controllable": false,
+                        "default": "snapshot",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstDotsTracerFeatures",
+                        "writable": true
+                    },
                     "no-delete": {
                         "blurb": "Don't delete existing .dot files on startup",
                         "conditionally-available": false,
