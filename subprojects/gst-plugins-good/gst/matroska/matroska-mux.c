@@ -793,6 +793,118 @@ gst_matroska_mux_build_vobsub_private (GstMatroskaTrackContext * context,
   }
 }
 
+static gboolean
+gst_matroska_mux_vp9_codec_private_validate (GstMatroskaMux * mux,
+    const guint8 * data, gsize size)
+{
+  guint8 profile = G_MAXUINT8, level = G_MAXUINT8;
+  guint8 bit_depth = G_MAXUINT8, chroma_subsampling = G_MAXUINT8;
+  gboolean have_profile = FALSE, have_level = FALSE;
+  gboolean have_bit_depth = FALSE, have_chroma_subsampling = FALSE;
+
+  if (!data || size == 0) {
+    GST_DEBUG_OBJECT (mux, "VP9 CodecPrivate validation failed: empty data");
+    return FALSE;
+  }
+
+  if (!gst_matroska_get_vpx_config_from_codec_private (data, size, &profile,
+          &level, &bit_depth, &chroma_subsampling)) {
+    GST_DEBUG_OBJECT (mux,
+        "VP9 CodecPrivate validation failed: malformed metadata");
+    return FALSE;
+  }
+
+  have_profile = (profile != G_MAXUINT8);
+  have_level = (level != G_MAXUINT8);
+  have_bit_depth = (bit_depth != G_MAXUINT8);
+  have_chroma_subsampling = (chroma_subsampling != G_MAXUINT8);
+
+  if (!(have_profile && have_level && have_bit_depth
+          && have_chroma_subsampling)) {
+    GST_DEBUG_OBJECT (mux,
+        "VP9 CodecPrivate validation failed: found profile=%s level=%s "
+        "bit-depth=%s chroma-subsampling=%s",
+        have_profile ? "yes" : "no", have_level ? "yes" : "no",
+        have_bit_depth ? "yes" : "no", have_chroma_subsampling ? "yes" : "no");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_matroska_mux_vp9_codec_private_from_caps (GstMatroskaMux * mux,
+    GstCaps * caps, guint8 ** data, gsize * size)
+{
+  gint vpx_version = 0;
+  guint8 profile = G_MAXUINT8, level = G_MAXUINT8;
+  guint8 bit_depth = G_MAXUINT8, chroma_subsampling = G_MAXUINT8;
+  GstByteWriter bw;
+  gboolean hdl = TRUE;
+  guint8 *codec_private = NULL;
+  gsize codec_private_size = 0;
+
+  g_return_val_if_fail (GST_IS_MATROSKA_MUX (mux), FALSE);
+  g_return_val_if_fail (data != NULL, FALSE);
+  g_return_val_if_fail (size != NULL, FALSE);
+
+  *data = NULL;
+  *size = 0;
+
+  if (!gst_codec_utils_vpx_caps_get_config (caps, &vpx_version, &profile,
+          &level, &bit_depth, &chroma_subsampling, NULL, NULL, NULL, NULL)) {
+    GST_DEBUG_OBJECT (mux, "Could not derive VP9 configuration from caps");
+    return FALSE;
+  }
+
+  if (vpx_version != 9) {
+    GST_DEBUG_OBJECT (mux,
+        "Could not derive VP9 CodecPrivate: input caps are for VP8");
+    return FALSE;
+  }
+  if (profile == G_MAXUINT8 || level == G_MAXUINT8 || bit_depth == G_MAXUINT8
+      || chroma_subsampling == G_MAXUINT8) {
+    GST_DEBUG_OBJECT (mux,
+        "Could not derive complete VP9 configuration from caps");
+    return FALSE;
+  }
+
+  gst_byte_writer_init_with_size (&bw, 12, FALSE);
+  hdl &= gst_byte_writer_put_uint8 (&bw, GST_MATROSKA_VP9_FEATURE_PROFILE_ID);
+  hdl &= gst_byte_writer_put_uint8 (&bw, 1);
+  hdl &= gst_byte_writer_put_uint8 (&bw, profile);
+  hdl &= gst_byte_writer_put_uint8 (&bw, GST_MATROSKA_VP9_FEATURE_LEVEL_ID);
+  hdl &= gst_byte_writer_put_uint8 (&bw, 1);
+  hdl &= gst_byte_writer_put_uint8 (&bw, level);
+  hdl &= gst_byte_writer_put_uint8 (&bw, GST_MATROSKA_VP9_FEATURE_BIT_DEPTH_ID);
+  hdl &= gst_byte_writer_put_uint8 (&bw, 1);
+  hdl &= gst_byte_writer_put_uint8 (&bw, bit_depth);
+  hdl &= gst_byte_writer_put_uint8 (&bw,
+      GST_MATROSKA_VP9_FEATURE_CHROMA_SUBSAMPLING_ID);
+  hdl &= gst_byte_writer_put_uint8 (&bw, 1);
+  hdl &= gst_byte_writer_put_uint8 (&bw, chroma_subsampling);
+
+  if (!hdl) {
+    GST_DEBUG_OBJECT (mux, "Could not write VP9 CodecPrivate");
+    gst_byte_writer_reset (&bw);
+    return FALSE;
+  }
+
+  codec_private_size = gst_byte_writer_get_size (&bw);
+  codec_private = gst_byte_writer_reset_and_get_data (&bw);
+
+  if (!gst_matroska_mux_vp9_codec_private_validate (mux, codec_private,
+          codec_private_size)) {
+    GST_DEBUG_OBJECT (mux, "Generated VP9 CodecPrivate did not validate");
+    g_free (codec_private);
+    return FALSE;
+  }
+
+  *data = codec_private;
+  *size = codec_private_size;
+
+  return TRUE;
+}
 
 static gboolean
 gst_matroska_mux_sink_event (GstAggregator * agg, GstAggregatorPad * agg_pad,
@@ -1410,7 +1522,37 @@ skip_details:
   } else if (!strcmp (mimetype, "video/x-vp8")) {
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_VIDEO_VP8);
   } else if (!strcmp (mimetype, "video/x-vp9")) {
+    guint8 *vp9_codec_private = NULL;
+    gsize vp9_codec_private_size = 0;
+
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_VIDEO_VP9);
+    gst_matroska_mux_free_codec_priv (context);
+
+    /* Prefer a valid upstream VP9 CodecPrivate if supplied, otherwise build
+     * one from caps fields. */
+    if (codec_buf != NULL)
+      gst_buffer_extract_dup (codec_buf, 0, gst_buffer_get_size (codec_buf),
+          (gpointer *) & vp9_codec_private, &vp9_codec_private_size);
+
+    if (vp9_codec_private != NULL
+        && gst_matroska_mux_vp9_codec_private_validate (mux,
+            vp9_codec_private, vp9_codec_private_size)) {
+      context->codec_priv = vp9_codec_private;
+      context->codec_priv_size = vp9_codec_private_size;
+    } else {
+      if (vp9_codec_private != NULL)
+        GST_DEBUG_OBJECT (mux,
+            "Ignoring upstream VP9 codec_data: not valid Matroska CodecPrivate");
+      g_clear_pointer (&vp9_codec_private, g_free);
+
+      if (gst_matroska_mux_vp9_codec_private_from_caps (mux, caps,
+              &vp9_codec_private, &vp9_codec_private_size)) {
+        context->codec_priv = vp9_codec_private;
+        context->codec_priv_size = vp9_codec_private_size;
+      } else {
+        GST_DEBUG_OBJECT (mux, "Could not build VP9 CodecPrivate from caps");
+      }
+    }
   } else if (!strcmp (mimetype, "video/x-av1")) {
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_VIDEO_AV1);
     gst_matroska_mux_free_codec_priv (context);

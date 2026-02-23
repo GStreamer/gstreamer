@@ -27,6 +27,8 @@
 #include "matroska-ids.h"
 
 #include <string.h>
+#include <gst/base/gstbytereader.h>
+#include <gst/pbutils/codec-utils.h>
 
 gboolean
 gst_matroska_track_init_video_context (GstMatroskaTrackContext ** p_context)
@@ -317,6 +319,94 @@ gst_matroska_parse_flac_stream_headers (gpointer codec_data,
     off += 4 + len;
   }
   return list;
+}
+
+gboolean
+gst_matroska_get_vpx_config_from_codec_private (const guint8 * data,
+    gsize size, guint8 * profile, guint8 * level, guint8 * bit_depth,
+    guint8 * chroma_subsampling)
+{
+  GstByteReader br;
+  guint8 local_profile = G_MAXUINT8, local_level = G_MAXUINT8;
+  guint8 local_bit_depth = G_MAXUINT8;
+  guint8 local_chroma_subsampling = G_MAXUINT8;
+
+  g_return_val_if_fail (data != NULL, FALSE);
+  g_return_val_if_fail (size > 0, FALSE);
+
+  gst_byte_reader_init (&br, data, size);
+
+  while (gst_byte_reader_get_remaining (&br) > 0) {
+    guint8 feature_id;
+    guint8 feature_size;
+    guint8 value;
+
+    if (gst_byte_reader_get_remaining (&br) < 2)
+      return FALSE;
+
+    feature_id = gst_byte_reader_get_uint8_unchecked (&br);
+    feature_size = gst_byte_reader_get_uint8_unchecked (&br);
+
+    /* X bit shall be set to 0 according to the WebM VP9 metadata format */
+    if (feature_id & 0x80)
+      return FALSE;
+
+    if (gst_byte_reader_get_remaining (&br) < feature_size)
+      return FALSE;
+
+    if (feature_id == GST_MATROSKA_VP9_FEATURE_PROFILE_ID ||
+        feature_id == GST_MATROSKA_VP9_FEATURE_LEVEL_ID ||
+        feature_id == GST_MATROSKA_VP9_FEATURE_BIT_DEPTH_ID ||
+        feature_id == GST_MATROSKA_VP9_FEATURE_CHROMA_SUBSAMPLING_ID) {
+      if (feature_size != 1)
+        return FALSE;
+      if (!gst_byte_reader_get_uint8 (&br, &value))
+        return FALSE;
+    } else {
+      /* Unknown feature: skip and keep parsing known ones. */
+      if (!gst_byte_reader_skip (&br, feature_size))
+        return FALSE;
+      continue;
+    }
+
+    switch (feature_id) {
+      case GST_MATROSKA_VP9_FEATURE_PROFILE_ID:
+        if (local_profile != G_MAXUINT8 || value > 3)
+          return FALSE;
+        local_profile = value;
+        break;
+      case GST_MATROSKA_VP9_FEATURE_LEVEL_ID:
+        if (local_level != G_MAXUINT8
+            || gst_codec_utils_vp9_get_level (value) == NULL)
+          return FALSE;
+        local_level = value;
+        break;
+      case GST_MATROSKA_VP9_FEATURE_BIT_DEPTH_ID:
+        if (local_bit_depth != G_MAXUINT8
+            || (value != 8 && value != 10 && value != 12))
+          return FALSE;
+        local_bit_depth = value;
+        break;
+      case GST_MATROSKA_VP9_FEATURE_CHROMA_SUBSAMPLING_ID:
+        if (local_chroma_subsampling != G_MAXUINT8 || value > 3)
+          return FALSE;
+        local_chroma_subsampling = value;
+        break;
+      default:
+        break;
+    }
+  }
+
+  if (profile)
+    *profile = local_profile;
+  if (level)
+    *level = local_level;
+  if (bit_depth)
+    *bit_depth = local_bit_depth;
+  if (chroma_subsampling)
+    *chroma_subsampling = local_chroma_subsampling;
+
+  return TRUE;
 }
 
 GstClockTime
