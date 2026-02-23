@@ -88,6 +88,7 @@ base_tests = [
   [['elements/vkupload.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['elements/voamrwbenc.c'], not voamrwbenc_dep.found(), [voamrwbenc_dep]],
   [['elements/vp9parse.c'], false, [gstcodecparsers_dep]],
+  [['pipelines/vp9parse-vpcc.c']],
   [['elements/av1parse.c'], false, [gstcodecparsers_dep]],
   [['elements/wasapi.c'], host_machine.system() != 'windows', ],
   [['elements/wasapi2.c'], host_machine.system() != 'windows', ],

@@ -84,6 +84,8 @@ good_tests = [
   [ 'elements/equalizer', get_option('equalizer').disabled()],
   [ 'pipelines/simple-launch-lines' ],
   [ 'pipelines/tagschecking' ],
+  [ 'pipelines/isomp4-vpcc', get_option('isomp4').disabled() ],
+  [ 'pipelines/vp9-codecprivate', get_option('matroska').disabled(), [gstriff_dep] ],
   [ 'generic/states' ],
 ]
 
