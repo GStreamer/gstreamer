@@ -16099,13 +16099,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
             if (vpcC) {
               const guint8 *data = vpcC->data;
               guint32 size = QT_UINT32 (data);
-              const gchar *profile_str = NULL;
-              const gchar *level_str = NULL;
-              const gchar *chroma_format_str = NULL;
-              const gchar *chroma_site_str = NULL;
-              guint8 profile;
-              guint8 bitdepth;
-              guint8 chroma_format;
+              gint profile = -1;
+              gint level = -1;
+              gint bitdepth = -1;
+              gint chroma_format = -1;
               GstVideoColorimetry cinfo;
 
               /* parse, if found */
@@ -16140,69 +16137,22 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
                 break;
               }
 
-              profile = data[12];
-              switch (profile) {
-                case 0:
-                  profile_str = "0";
-                  break;
-                case 1:
-                  profile_str = "1";
-                  break;
-                case 2:
-                  profile_str = "2";
-                  break;
-                case 3:
-                  profile_str = "3";
-                  break;
-                default:
-                  break;
-              }
-
-              if (profile_str) {
-                gst_caps_set_simple (entry->caps,
-                    "profile", G_TYPE_STRING, profile_str, NULL);
-              }
-
-              if ((level_str = gst_codec_utils_vp9_get_level (data[13]))) {
-                gst_caps_set_simple (entry->caps, "level", G_TYPE_STRING,
-                    level_str, NULL);
-              }
+              if (data[12] <= 3)
+                profile = data[12];
+              if (gst_codec_utils_vp9_get_level (data[13]) != NULL)
+                level = data[13];
 
               bitdepth = (data[14] & 0xf0) >> 4;
-              if (bitdepth == 8 || bitdepth == 10 || bitdepth == 12) {
-                gst_caps_set_simple (entry->caps,
-                    "bit-depth-luma", G_TYPE_UINT, bitdepth,
-                    "bit-depth-chroma", G_TYPE_UINT, bitdepth, NULL);
-              }
+              if (bitdepth != 8 && bitdepth != 10 && bitdepth != 12)
+                bitdepth = -1;
 
               chroma_format = (data[14] & 0xe) >> 1;
-              switch (chroma_format) {
-                case 0:
-                  chroma_site_str = "v-cosited";
-                  chroma_format_str = "4:2:0";
-                  break;
-                case 1:
-                  chroma_site_str = "cosited";
-                  chroma_format_str = "4:2:0";
-                  break;
-                case 2:
-                  chroma_format_str = "4:2:2";
-                  break;
-                case 3:
-                  chroma_format_str = "4:4:4";
-                  break;
-                default:
-                  break;
-              }
+              if (chroma_format < 0 || chroma_format > 3)
+                chroma_format = -1;
 
-              if (chroma_format_str) {
-                gst_caps_set_simple (entry->caps,
-                    "chroma-format", G_TYPE_STRING, chroma_format_str, NULL);
-              }
-
-              if (chroma_site_str) {
-                gst_caps_set_simple (entry->caps,
-                    "chroma-site", G_TYPE_STRING, chroma_site_str, NULL);
+              if (!gst_codec_utils_vpx_caps_set_format_fields (entry->caps,
+                      profile, level, bitdepth, chroma_format)) {
+                GST_DEBUG_OBJECT (qtdemux, "Invalid VPX vpcC format fields");
               }
 
               if ((data[14] & 0x1) != 0)
