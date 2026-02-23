@@ -72,6 +72,9 @@
 
 #define MAX_DPB_SIZE 16
 
+/* ITU-T H.265 (V10) (07/2024) A.4.2, Table A.8: MaxSliceSegmentsPerPicture */
+#define GST_H265_MAX_SLICE_SEGMENTS_PER_PICTURE 1800
+
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT gst_h265_debug_category_get()
 static GstDebugCategory *
@@ -1140,7 +1143,8 @@ gst_h265_parser_parse_pic_timing (GstH265Parser * parser,
 
       if (hrd->sub_pic_hrd_params_present_flag
           && hrd->sub_pic_cpb_params_in_pic_timing_sei_flag) {
-        READ_UE (nr, tim->num_decoding_units_minus1);
+        READ_UE_MAX (nr, tim->num_decoding_units_minus1,
+            GST_H265_MAX_SLICE_SEGMENTS_PER_PICTURE - 1);
 
         READ_UINT8 (nr, tim->du_common_cpb_removal_delay_flag, 1);
         if (tim->du_common_cpb_removal_delay_flag)
