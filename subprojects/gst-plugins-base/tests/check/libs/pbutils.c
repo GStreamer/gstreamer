@@ -1708,6 +1708,152 @@ GST_START_TEST (test_pb_utils_vpx_create_vpcc_from_caps)
 
 GST_END_TEST;
 
+GST_START_TEST (test_pb_utils_vpx_caps_set_format_fields)
+{
+  GstCaps *caps;
+  const GstStructure *s;
+  gboolean ret;
+
+  /* Valid VP9 inputs should populate all mapped format fields. */
+  caps = gst_caps_new_empty_simple ("video/x-vp9");
+  ret = gst_codec_utils_vpx_caps_set_format_fields (caps, 2, 31, 10, 0);
+  fail_unless (ret);
+  s = gst_caps_get_structure (caps, 0);
+  fail_unless_equals_string (gst_structure_get_string (s, "profile"), "2");
+  fail_unless_equals_string (gst_structure_get_string (s, "level"), "3.1");
+  fail_unless (gst_structure_has_field (s, "bit-depth-luma"));
+  fail_unless (gst_structure_has_field (s, "bit-depth-chroma"));
+  fail_unless_equals_string (gst_structure_get_string (s, "chroma-format"),
+      "4:2:0");
+  fail_unless_equals_string (gst_structure_get_string (s, "chroma-site"),
+      "v-cosited");
+  gst_caps_unref (caps);
+
+  /* Unknown inputs are valid and should not write any VP9 format fields. */
+  caps = gst_caps_new_empty_simple ("video/x-vp9");
+  ret = gst_codec_utils_vpx_caps_set_format_fields (caps, -1, -1, -1, -1);
+  fail_unless (ret);
+  s = gst_caps_get_structure (caps, 0);
+  fail_if (gst_structure_has_field (s, "profile"));
+  fail_if (gst_structure_has_field (s, "level"));
+  fail_if (gst_structure_has_field (s, "bit-depth-luma"));
+  fail_if (gst_structure_has_field (s, "bit-depth-chroma"));
+  fail_if (gst_structure_has_field (s, "chroma-format"));
+  fail_if (gst_structure_has_field (s, "chroma-site"));
+  gst_caps_unref (caps);
+
+  /* Failure must not partially overwrite fields already present in caps. */
+  caps = gst_caps_new_simple ("video/x-vp9",
+      "profile", G_TYPE_STRING, "3", "level", G_TYPE_STRING, "2.1", NULL);
+  ret = gst_codec_utils_vpx_caps_set_format_fields (caps, 0, 21, 7, 1);
+  fail_if (ret);
+  s = gst_caps_get_structure (caps, 0);
+  fail_unless_equals_string (gst_structure_get_string (s, "profile"), "3");
+  fail_unless_equals_string (gst_structure_get_string (s, "level"), "2.1");
+  fail_if (gst_structure_has_field (s, "bit-depth-luma"));
+  fail_if (gst_structure_has_field (s, "bit-depth-chroma"));
+  fail_if (gst_structure_has_field (s, "chroma-format"));
+  fail_if (gst_structure_has_field (s, "chroma-site"));
+  gst_caps_unref (caps);
+
+  /* Non-VPX caps must be rejected and not modified. */
+  caps = gst_caps_new_empty_simple ("video/x-h264");
+  ret = gst_codec_utils_vpx_caps_set_format_fields (caps, 0, 10, 8, 1);
+  fail_if (ret);
+  s = gst_caps_get_structure (caps, 0);
+  fail_if (gst_structure_has_field (s, "profile"));
+  fail_if (gst_structure_has_field (s, "level"));
+  fail_if (gst_structure_has_field (s, "bit-depth-luma"));
+  fail_if (gst_structure_has_field (s, "bit-depth-chroma"));
+  fail_if (gst_structure_has_field (s, "chroma-format"));
+  fail_if (gst_structure_has_field (s, "chroma-site"));
+  gst_caps_unref (caps);
+
+  /* Valid VP8 inputs should accept the constrained VP8-compatible values. */
+  caps = gst_caps_new_empty_simple ("video/x-vp8");
+  ret = gst_codec_utils_vpx_caps_set_format_fields (caps, 0, -1, 8, 1);
+  fail_unless (ret);
+  s = gst_caps_get_structure (caps, 0);
+  fail_unless_equals_string (gst_structure_get_string (s, "profile"), "0");
+  fail_unless (gst_structure_get_string (s, "level") == NULL);
+  fail_unless_equals_string (gst_structure_get_string (s, "chroma-format"),
+      "4:2:0");
+  fail_unless_equals_string (gst_structure_get_string (s, "chroma-site"),
+      "cosited");
+  gst_caps_unref (caps);
+
+  /* Invalid VP8 combinations must be rejected. */
+  caps = gst_caps_new_empty_simple ("video/x-vp8");
+  ret = gst_codec_utils_vpx_caps_set_format_fields (caps, 1, -1, 8, 1);
+  fail_if (ret);
+  ret = gst_codec_utils_vpx_caps_set_format_fields (caps, 0, 10, 8, 1);
+  fail_if (ret);
+  ret = gst_codec_utils_vpx_caps_set_format_fields (caps, 0, -1, 10, 1);
+  fail_if (ret);
+  ret = gst_codec_utils_vpx_caps_set_format_fields (caps, 0, -1, 8, 0);
+  fail_if (ret);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_pb_utils_get_vpx_config_from_caps)
+{
+  GstCaps *caps;
+  gboolean ret;
+  gint vpx_version = 0;
+  guint8 profile = 0, level = 0, bit_depth = 0, chroma_subsampling = 0;
+
+  caps = gst_caps_new_simple ("video/x-vp9",
+      "profile", G_TYPE_STRING, "0",
+      "level", G_TYPE_STRING, "4.1",
+      "bit-depth-luma", G_TYPE_UINT, 8,
+      "bit-depth-chroma", G_TYPE_UINT, 8,
+      "chroma-format", G_TYPE_STRING, "4:2:0",
+      "chroma-site", G_TYPE_STRING, "v-cosited",
+      "colorimetry", G_TYPE_STRING, "bt709", NULL);
+
+  ret = gst_codec_utils_vpx_caps_get_config (caps, NULL, &profile, NULL,
+      &bit_depth, NULL, NULL, NULL, NULL, NULL);
+  fail_unless (ret);
+  fail_unless_equals_int (profile, 0);
+  fail_unless_equals_int (bit_depth, 8);
+
+  ret = gst_codec_utils_vpx_caps_get_config (caps, &vpx_version, &profile,
+      &level, &bit_depth, &chroma_subsampling, NULL, NULL, NULL, NULL);
+  fail_unless (ret);
+  fail_unless_equals_int (vpx_version, 9);
+  fail_unless_equals_int (profile, 0);
+  fail_unless_equals_int (level, 41);
+  fail_unless_equals_int (bit_depth, 8);
+  fail_unless_equals_int (chroma_subsampling, 0);
+  gst_caps_unref (caps);
+
+  /* On failure, out-parameters must remain unchanged. */
+  vpx_version = 7;
+  profile = 9;
+  level = 9;
+  bit_depth = 9;
+  chroma_subsampling = 9;
+
+  caps = gst_caps_new_simple ("video/x-vp9",
+      "profile", G_TYPE_STRING, "9",
+      "bit-depth-luma", G_TYPE_UINT, 8,
+      "bit-depth-chroma", G_TYPE_UINT, 8,
+      "chroma-format", G_TYPE_STRING, "4:2:0", NULL);
+  ret = gst_codec_utils_vpx_caps_get_config (caps, &vpx_version, &profile,
+      &level, &bit_depth, &chroma_subsampling, NULL, NULL, NULL, NULL);
+  fail_if (ret);
+  fail_unless_equals_int (vpx_version, 7);
+  fail_unless_equals_int (profile, 9);
+  fail_unless_equals_int (level, 9);
+  fail_unless_equals_int (bit_depth, 9);
+  fail_unless_equals_int (chroma_subsampling, 9);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 static const guint8 h265_sample_codec_data[] = {
   0x01, 0x01, 0x60, 0x00, 0x00, 0x00, 0xb0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x5d,
   0xf0, 0x00, 0xfc,
@@ -2011,6 +2157,8 @@ libgstpbutils_suite (void)
   tcase_add_test (tc_chain, test_pb_utils_vp9_levels);
   tcase_add_test (tc_chain, test_pb_utils_vp9_level_idc);
   tcase_add_test (tc_chain, test_pb_utils_vp9_estimate_level_idc_from_caps);
+  tcase_add_test (tc_chain, test_pb_utils_vpx_caps_set_format_fields);
+  tcase_add_test (tc_chain, test_pb_utils_get_vpx_config_from_caps);
   tcase_add_test (tc_chain, test_pb_utils_vpx_create_vpcc_from_caps);
   tcase_add_test (tc_chain, test_pb_utils_caps_mime_codec);
   tcase_add_test (tc_chain, test_pb_utils_caps_from_mime_codec);

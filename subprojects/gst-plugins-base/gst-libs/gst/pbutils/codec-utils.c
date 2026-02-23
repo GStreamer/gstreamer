@@ -1843,6 +1843,7 @@ gst_codec_utils_h266_caps_set_level_tier_and_profile (GstCaps * caps,
   return (level != NULL && tier != NULL && profile != NULL);
 }
 
+/* VP9 */
 typedef struct
 {
   guint8 level_idc;             /* vpcC / codec integer form: 10,11,20,21, ... */
@@ -2928,6 +2929,322 @@ vpx_create_vpcc_record (guint8 profile,
 }
 
 /**
+ * gst_codec_utils_vpx_caps_set_format_fields:
+ * @caps: the #GstCaps to set VPX fields on (video/x-vp8 or video/x-vp9)
+ * @profile: VPX profile, or -1 if unknown
+ * @level: VP9 level idc, or -1 if unknown
+ * @bit_depth: VPX bit depth, or -1 if unknown
+ * @chroma_subsampling: VPX chroma subsampling (0-3), or -1 if unknown
+ *
+ * Sets VPX format fields in @caps from parsed VPX configuration values.
+ * This setter handles the VPX format-field subset shared between VP9
+ * CodecPrivate and vpcC signaling.
+ * Any field set to -1 is treated as unknown and not written.
+ * For VP8 caps, only profile 0, 8-bit depth, and chroma subsampling 1 are
+ * accepted.
+ *
+ * Returns: %TRUE if provided values were valid, %FALSE otherwise.
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_codec_utils_vpx_caps_set_format_fields (GstCaps * caps, gint profile,
+    gint level, gint bit_depth, gint chroma_subsampling)
+{
+  const GstStructure *caps_st = NULL;
+  gboolean is_vp8 = FALSE;
+  const gchar *profile_str = NULL;
+  const gchar *level_str = NULL;
+  const gchar *chroma_format_str = NULL;
+  const gchar *chroma_site_str = NULL;
+
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
+  g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), FALSE);
+
+  caps_st = gst_caps_get_structure (caps, 0);
+  is_vp8 = gst_structure_has_name (caps_st, "video/x-vp8");
+  if (!is_vp8 && !gst_structure_has_name (caps_st, "video/x-vp9"))
+    return FALSE;
+
+  if (is_vp8) {
+    if (profile != -1 && profile != 0)
+      return FALSE;
+    if (level != -1)
+      return FALSE;
+    if (bit_depth != -1 && bit_depth != 8)
+      return FALSE;
+    if (chroma_subsampling != -1 && chroma_subsampling != 1)
+      return FALSE;
+  }
+
+  if (profile != -1) {
+    switch (profile) {
+      case 0:
+        profile_str = "0";
+        break;
+      case 1:
+        profile_str = "1";
+        break;
+      case 2:
+        profile_str = "2";
+        break;
+      case 3:
+        profile_str = "3";
+        break;
+      default:
+        return FALSE;
+    }
+  }
+
+  if (level != -1) {
+    level_str = gst_codec_utils_vp9_get_level ((guint8) level);
+    if (level_str == NULL)
+      return FALSE;
+  }
+
+  if (bit_depth != -1) {
+    if (bit_depth != 8 && bit_depth != 10 && bit_depth != 12)
+      return FALSE;
+  }
+
+  if (chroma_subsampling != -1) {
+    switch (chroma_subsampling) {
+      case 0:
+        chroma_format_str = "4:2:0";
+        chroma_site_str = "v-cosited";
+        break;
+      case 1:
+        chroma_format_str = "4:2:0";
+        chroma_site_str = "cosited";
+        break;
+      case 2:
+        chroma_format_str = "4:2:2";
+        break;
+      case 3:
+        chroma_format_str = "4:4:4";
+        break;
+      default:
+        return FALSE;
+    }
+  }
+
+  if (profile_str != NULL)
+    gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile_str, NULL);
+
+  if (level_str != NULL)
+    gst_caps_set_simple (caps, "level", G_TYPE_STRING, level_str, NULL);
+
+  if (bit_depth != -1) {
+    gst_caps_set_simple (caps,
+        "bit-depth-luma", G_TYPE_UINT, bit_depth,
+        "bit-depth-chroma", G_TYPE_UINT, bit_depth, NULL);
+  }
+
+  if (chroma_format_str != NULL) {
+    gst_caps_set_simple (caps,
+        "chroma-format", G_TYPE_STRING, chroma_format_str, NULL);
+
+    if (chroma_site_str != NULL)
+      gst_caps_set_simple (caps,
+          "chroma-site", G_TYPE_STRING, chroma_site_str, NULL);
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_codec_utils_vpx_caps_get_config:
+ * @caps: a video/x-vp8 or video/x-vp9 #GstCaps
+ * @vpx_version: (nullable) (out): VPX version described by @caps (8 or 9)
+ * @profile: (nullable) (out): profile value
+ * @level: (nullable) (out): level value
+ * @bit_depth: (nullable) (out): bit depth value
+ * @chroma_subsampling: (nullable) (out): chroma subsampling value
+ * @video_full_range: (nullable) (out): whether full-range signaling is set
+ * @colour_primaries: (nullable) (out): ISO color primaries value
+ * @transfer_characteristics: (nullable) (out): ISO transfer characteristics value
+ * @matrix_coefficients: (nullable) (out): ISO matrix coefficients value
+ *
+ * Parses VP8/VP9 caps and extracts normalized VPX configuration fields.
+ * Unlike gst_codec_utils_vpx_caps_set_format_fields(), this getter includes
+ * the colorimetry-derived fields needed to build a full vpcC record.
+ *
+ * Returns: %TRUE if extraction succeeded, %FALSE otherwise.
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_codec_utils_vpx_caps_get_config (GstCaps * caps,
+    gint * vpx_version, guint8 * profile, guint8 * level, guint8 * bit_depth,
+    guint8 * chroma_subsampling, gboolean * video_full_range,
+    guint8 * colour_primaries, guint8 * transfer_characteristics,
+    guint8 * matrix_coefficients)
+{
+  const GstStructure *caps_st = NULL;
+  gboolean local_is_vp9 = FALSE;
+  const char *colorimetry_str;
+  guint bitdepth_luma = 0, bitdepth_chroma = 0;
+  gboolean have_luma = FALSE, have_chroma = FALSE;
+  guint8 local_profile = G_MAXUINT8, local_level = G_MAXUINT8;
+  guint8 local_chroma_format = G_MAXUINT8;
+  GstVideoColorimetry cinfo = { 0, };
+
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
+  g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), FALSE);
+  g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
+
+  caps_st = gst_caps_get_structure (caps, 0);
+  local_is_vp9 = gst_structure_has_name (caps_st, "video/x-vp9");
+
+  if (!local_is_vp9 && !gst_structure_has_name (caps_st, "video/x-vp8")) {
+    GST_WARNING ("Caps provided is not video/x-vp8 or video/x-vp9");
+    return FALSE;
+  }
+
+  if (local_is_vp9) {
+    const gchar *profile_str = gst_structure_get_string (caps_st, "profile");
+    if (g_strcmp0 (profile_str, "0") == 0) {
+      local_profile = 0;
+    } else if (g_strcmp0 (profile_str, "1") == 0) {
+      local_profile = 1;
+    } else if (g_strcmp0 (profile_str, "2") == 0) {
+      local_profile = 2;
+    } else if (g_strcmp0 (profile_str, "3") == 0) {
+      local_profile = 3;
+    } else {
+      GST_WARNING ("Caps use unsupported vp9 profile: %s",
+          profile_str ? profile_str : "<missing>");
+      return FALSE;
+    }
+  } else {
+    local_profile = 0;
+  }
+
+  if (local_is_vp9) {
+    local_level = vp9_get_level_idc_from_caps_struct (caps_st);
+    if (local_level == 0) {
+      local_level = gst_codec_utils_vp9_estimate_level_idc_from_caps (caps);
+    }
+  } else {
+    local_level = 0;
+  }
+
+  if (local_is_vp9) {
+    const gchar *chroma_format_str =
+        gst_structure_get_string (caps_st, "chroma-format");
+    if (g_strcmp0 (chroma_format_str, "4:2:0") == 0) {
+      const char *chroma_site_str;
+      GstVideoChromaSite chroma_site;
+
+      chroma_site_str = gst_structure_get_string (caps_st, "chroma-site");
+      if (chroma_site_str) {
+        chroma_site = gst_video_chroma_site_from_string (chroma_site_str);
+      } else {
+        chroma_site = GST_VIDEO_CHROMA_SITE_UNKNOWN;
+      }
+      if (chroma_site == GST_VIDEO_CHROMA_SITE_V_COSITED) {
+        local_chroma_format = 0;
+      } else if (chroma_site == GST_VIDEO_CHROMA_SITE_COSITED) {
+        local_chroma_format = 1;
+      } else {
+        local_chroma_format = 1;
+      }
+    } else if (g_strcmp0 (chroma_format_str, "4:2:2") == 0) {
+      local_chroma_format = 2;
+    } else if (g_strcmp0 (chroma_format_str, "4:4:4") == 0) {
+      local_chroma_format = 3;
+    }
+
+    if (local_chroma_format == G_MAXUINT8) {
+      GST_WARNING ("Unsupported vp9 chroma format: %s",
+          chroma_format_str ? chroma_format_str : "<missing>");
+      return FALSE;
+    }
+  } else {
+    local_chroma_format = 1;
+  }
+
+  have_luma = gst_structure_get (caps_st, "bit-depth-luma", G_TYPE_UINT,
+      &bitdepth_luma, NULL);
+  have_chroma = gst_structure_get (caps_st, "bit-depth-chroma", G_TYPE_UINT,
+      &bitdepth_chroma, NULL);
+
+  if (local_is_vp9) {
+    if (!have_luma || !have_chroma) {
+      if (local_profile == 0 || local_profile == 1) {
+        bitdepth_luma = bitdepth_chroma = 8;
+        have_luma = have_chroma = TRUE;
+        GST_LOG
+            ("Missing VP9 bit-depth in caps; inferring 8-bit from profile %d",
+            local_profile);
+      } else {
+        GST_WARNING ("Missing VP9 bit depth in caps (bit-depth-luma:%s, "
+            "bit-depth-chroma:%s) and cannot infer from profile",
+            have_luma ? "present" : "missing",
+            have_chroma ? "present" : "missing");
+        return FALSE;
+      }
+    }
+  } else {
+    if (!have_luma && !have_chroma) {
+      bitdepth_luma = bitdepth_chroma = 8;
+    } else if (!have_luma || !have_chroma) {
+      GST_WARNING
+          ("Caps missing one of VP8 bit-depth fields (luma:%s chroma:%s)",
+          have_luma ? "present" : "missing",
+          have_chroma ? "present" : "missing");
+      return FALSE;
+    }
+  }
+
+  if (bitdepth_luma != bitdepth_chroma || bitdepth_luma == 0) {
+    GST_WARNING ("Caps using invalid bit depth (luma: %d, chroma: %d)",
+        (int) bitdepth_luma, (int) bitdepth_chroma);
+    return FALSE;
+  }
+
+  if (local_is_vp9) {
+    if (bitdepth_luma != 8 && bitdepth_luma != 10 && bitdepth_luma != 12) {
+      GST_WARNING ("Caps using unsupported vp9 bit depth: %d "
+          "(only 8, 10 and 12 supported)", (int) bitdepth_luma);
+      return FALSE;
+    }
+  } else {
+    if (bitdepth_luma != 8) {
+      GST_WARNING
+          ("Caps using unsupported vp8 bit depth: %d (only 8 supported)",
+          (int) bitdepth_luma);
+      return FALSE;
+    }
+  }
+
+  colorimetry_str = gst_structure_get_string (caps_st, "colorimetry");
+  gst_video_colorimetry_from_string (&cinfo, colorimetry_str);
+
+  if (vpx_version)
+    *vpx_version = local_is_vp9 ? 9 : 8;
+  if (profile)
+    *profile = local_profile;
+  if (level)
+    *level = local_level;
+  if (bit_depth)
+    *bit_depth = (guint8) bitdepth_luma;
+  if (chroma_subsampling)
+    *chroma_subsampling = local_chroma_format;
+  if (video_full_range)
+    *video_full_range = cinfo.range == GST_VIDEO_COLOR_RANGE_0_255;
+  if (colour_primaries)
+    *colour_primaries = gst_video_color_primaries_to_iso (cinfo.primaries);
+  if (transfer_characteristics)
+    *transfer_characteristics =
+        gst_video_transfer_function_to_iso (cinfo.transfer);
+  if (matrix_coefficients)
+    *matrix_coefficients = gst_video_color_matrix_to_iso (cinfo.matrix);
+
+  return TRUE;
+}
+
+/**
  * gst_codec_utils_vpx_create_vpcc_from_caps:
  * @caps: a video/x-vp8 or video/x-vp9 #GstCaps
  *
@@ -2943,151 +3260,20 @@ vpx_create_vpcc_record (guint8 profile,
 GstBuffer *
 gst_codec_utils_vpx_create_vpcc_from_caps (GstCaps * caps)
 {
-  const GstStructure *caps_st = NULL;
-  gboolean is_vp9 = FALSE;
-  const char *profile_str, *chroma_format_str, *colorimetry_str;
-  guint bitdepth_luma = 0, bitdepth_chroma = 0;
-  gboolean have_luma = FALSE, have_chroma = FALSE;
-  guint8 profile = -1, level = -1, chroma_format = -1;
+  guint8 profile = -1, level = -1, bit_depth = -1, chroma_subsampling = -1;
+  guint8 colour_primaries = -1;
+  guint8 transfer_characteristics = -1;
+  guint8 matrix_coefficients = -1;
   gboolean video_full_range;
-  GstVideoColorimetry cinfo = { 0, };
 
-  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
-  g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), FALSE);
-  g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
-
-  caps_st = gst_caps_get_structure (caps, 0);
-  is_vp9 = gst_structure_has_name (caps_st, "video/x-vp9");
-
-  if (!is_vp9 && !gst_structure_has_name (caps_st, "video/x-vp8")) {
-    GST_WARNING ("Caps provided is not video/x-vp8 or video/x-vp9");
+  if (!gst_codec_utils_vpx_caps_get_config (caps, NULL, &profile, &level,
+          &bit_depth, &chroma_subsampling, &video_full_range,
+          &colour_primaries, &transfer_characteristics, &matrix_coefficients))
     return NULL;
-  }
 
-  if (is_vp9) {
-    profile_str = gst_structure_get_string (caps_st, "profile");
-    if (g_strcmp0 (profile_str, "0") == 0) {
-      profile = 0;
-    } else if (g_strcmp0 (profile_str, "1") == 0) {
-      profile = 1;
-    } else if (g_strcmp0 (profile_str, "2") == 0) {
-      profile = 2;
-    } else if (g_strcmp0 (profile_str, "3") == 0) {
-      profile = 3;
-    } else {
-      GST_WARNING ("Caps use unsupported vp9 profile: %s",
-          profile_str ? profile_str : "<missing>");
-      return NULL;
-    }
-  } else {
-    profile = 0;
-  }
-
-  if (is_vp9) {
-    level = vp9_get_level_idc_from_caps_struct (caps_st);
-    if (level == 0) {
-      level = gst_codec_utils_vp9_estimate_level_idc_from_caps (caps);
-    }
-  } else {
-    level = 0;
-  }
-
-  if (is_vp9) {
-    chroma_format_str = gst_structure_get_string (caps_st, "chroma-format");
-    if (g_strcmp0 (chroma_format_str, "4:2:0") == 0) {
-      const char *chroma_site_str;
-      GstVideoChromaSite chroma_site;
-
-      chroma_site_str = gst_structure_get_string (caps_st, "chroma-site");
-      if (chroma_site_str) {
-        chroma_site = gst_video_chroma_site_from_string (chroma_site_str);
-      } else {
-        chroma_site = GST_VIDEO_CHROMA_SITE_UNKNOWN;
-      }
-      if (chroma_site == GST_VIDEO_CHROMA_SITE_V_COSITED) {
-        chroma_format = 0;
-      } else if (chroma_site == GST_VIDEO_CHROMA_SITE_COSITED) {
-        chroma_format = 1;
-      } else {
-        chroma_format = 1;
-      }
-    } else if (g_strcmp0 (chroma_format_str, "4:2:2") == 0) {
-      chroma_format = 2;
-    } else if (g_strcmp0 (chroma_format_str, "4:4:4") == 0) {
-      chroma_format = 3;
-    }
-
-    if (chroma_format == 0xFF) {
-      GST_WARNING ("Unsupported vp9 chroma format: %s",
-          chroma_format_str ? chroma_format_str : "<missing>");
-      return NULL;
-    }
-  } else {
-    chroma_format = 1;
-  }
-
-  have_luma = gst_structure_get (caps_st, "bit-depth-luma", G_TYPE_UINT,
-      &bitdepth_luma, NULL);
-  have_chroma = gst_structure_get (caps_st, "bit-depth-chroma", G_TYPE_UINT,
-      &bitdepth_chroma, NULL);
-
-  if (is_vp9) {
-    if (!have_luma || !have_chroma) {
-      if (profile == 0 || profile == 1) {
-        bitdepth_luma = bitdepth_chroma = 8;
-        have_luma = have_chroma = TRUE;
-        GST_LOG
-            ("Missing VP9 bit-depth in caps; inferring 8-bit from profile %d",
-            profile);
-      } else {
-        GST_WARNING ("Missing VP9 bit depth in caps (bit-depth-luma:%s, "
-            "bit-depth-chroma:%s) and cannot infer from profile",
-            have_luma ? "present" : "missing",
-            have_chroma ? "present" : "missing");
-        return NULL;
-      }
-    }
-  } else {
-    if (!have_luma && !have_chroma) {
-      bitdepth_luma = bitdepth_chroma = 8;
-    } else if (!have_luma || !have_chroma) {
-      GST_WARNING
-          ("Caps missing one of VP8 bit-depth fields (luma:%s chroma:%s)",
-          have_luma ? "present" : "missing",
-          have_chroma ? "present" : "missing");
-      return NULL;
-    }
-  }
-
-  if (bitdepth_luma != bitdepth_chroma || bitdepth_luma == 0) {
-    GST_WARNING ("Caps using invalid bit depth (luma: %d, chroma: %d)",
-        (int) bitdepth_luma, (int) bitdepth_chroma);
-    return NULL;
-  }
-
-  if (is_vp9) {
-    if (bitdepth_luma != 8 && bitdepth_luma != 10 && bitdepth_luma != 12) {
-      GST_WARNING ("Caps using unsupported vp9 bit depth: %d "
-          "(only 8, 10 and 12 supported)", (int) bitdepth_luma);
-      return NULL;
-    }
-  } else {
-    if (bitdepth_luma != 8) {
-      GST_WARNING
-          ("Caps using unsupported vp8 bit depth: %d (only 8 supported)",
-          (int) bitdepth_luma);
-      return NULL;
-    }
-  }
-
-  colorimetry_str = gst_structure_get_string (caps_st, "colorimetry");
-  gst_video_colorimetry_from_string (&cinfo, colorimetry_str);
-  video_full_range = cinfo.range == GST_VIDEO_COLOR_RANGE_0_255;
-
-  return vpx_create_vpcc_record (profile, level, bitdepth_luma, chroma_format,
-      video_full_range, gst_video_color_primaries_to_iso (cinfo.primaries),
-      gst_video_transfer_function_to_iso (cinfo.transfer),
-      gst_video_color_matrix_to_iso (cinfo.matrix));
+  return vpx_create_vpcc_record (profile, level, bit_depth, chroma_subsampling,
+      video_full_range, colour_primaries, transfer_characteristics,
+      matrix_coefficients);
 }
 
 /**

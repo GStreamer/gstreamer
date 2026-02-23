@@ -3932,6 +3932,93 @@ determined.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="codec_utils_vpx_caps_get_config" c:identifier="gst_codec_utils_vpx_caps_get_config" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">Parses VP8/VP9 caps and extracts normalized VPX configuration fields.
+Unlike gst_codec_utils_vpx_caps_set_format_fields(), this getter includes
+the colorimetry-derived fields needed to build a full vpcC record.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">%TRUE if extraction succeeded, %FALSE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="caps" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">a video/x-vp8 or video/x-vp9 #GstCaps</doc>
+          <type name="Gst.Caps" c:type="GstCaps*"/>
+        </parameter>
+        <parameter name="vpx_version" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">VPX version described by @caps (8 or 9)</doc>
+          <type name="gint" c:type="gint*"/>
+        </parameter>
+        <parameter name="profile" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">profile value</doc>
+          <type name="guint8" c:type="guint8*"/>
+        </parameter>
+        <parameter name="level" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">level value</doc>
+          <type name="guint8" c:type="guint8*"/>
+        </parameter>
+        <parameter name="bit_depth" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">bit depth value</doc>
+          <type name="guint8" c:type="guint8*"/>
+        </parameter>
+        <parameter name="chroma_subsampling" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">chroma subsampling value</doc>
+          <type name="guint8" c:type="guint8*"/>
+        </parameter>
+        <parameter name="video_full_range" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">whether full-range signaling is set</doc>
+          <type name="gboolean" c:type="gboolean*"/>
+        </parameter>
+        <parameter name="colour_primaries" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">ISO color primaries value</doc>
+          <type name="guint8" c:type="guint8*"/>
+        </parameter>
+        <parameter name="transfer_characteristics" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">ISO transfer characteristics value</doc>
+          <type name="guint8" c:type="guint8*"/>
+        </parameter>
+        <parameter name="matrix_coefficients" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">ISO matrix coefficients value</doc>
+          <type name="guint8" c:type="guint8*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="codec_utils_vpx_caps_set_format_fields" c:identifier="gst_codec_utils_vpx_caps_set_format_fields" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">Sets VPX format fields in @caps from parsed VPX configuration values.
+This setter handles the VPX format-field subset shared between VP9
+CodecPrivate and vpcC signaling.
+Any field set to -1 is treated as unknown and not written.
+For VP8 caps, only profile 0, 8-bit depth, and chroma subsampling 1 are
+accepted.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">%TRUE if provided values were valid, %FALSE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="caps" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">the #GstCaps to set VPX fields on (video/x-vp8 or video/x-vp9)</doc>
+          <type name="Gst.Caps" c:type="GstCaps*"/>
+        </parameter>
+        <parameter name="profile" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">VPX profile, or -1 if unknown</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="level" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">VP9 level idc, or -1 if unknown</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="bit_depth" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">VPX bit depth, or -1 if unknown</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="chroma_subsampling" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">VPX chroma subsampling (0-3), or -1 if unknown</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="codec_utils_vpx_create_vpcc_from_caps" c:identifier="gst_codec_utils_vpx_create_vpcc_from_caps" version="1.30">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">Creates a vpcC record for VP8/VP9 as per the VP Codec ISO Media File Format
 Binding definition found at
