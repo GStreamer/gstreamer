@@ -1260,9 +1260,8 @@ context_changed (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context)
 #if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
   const gint ticks_per_frame =
       (GST_VIDEO_INFO_IS_INTERLACED (&ffmpegdec->input_state->info)
-      && ffmpegdec->context->codec_descriptor
-      && ffmpegdec->context->
-      codec_descriptor->props & AV_CODEC_PROP_FIELDS) ? 2 : 1;
+      && context->codec_descriptor
+      && context->codec_descriptor->props & AV_CODEC_PROP_FIELDS) ? 2 : 1;
 #else
   const gint ticks_per_frame = context->ticks_per_frame;
 #endif
@@ -1275,20 +1274,24 @@ static gboolean
 update_video_context (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context,
     AVFrame * picture, gboolean one_field)
 {
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
+  const gint ticks_per_frame =
+      (GST_VIDEO_INFO_IS_INTERLACED (&ffmpegdec->input_state->info)
+      && context->codec_descriptor
+      && context->codec_descriptor->props & AV_CODEC_PROP_FIELDS) ? 2 : 1;
+  const gint picture_interlaced = picture->flags & AV_FRAME_FLAG_INTERLACED;
+  const gint top_field_first = picture->flags & AV_FRAME_FLAG_TOP_FIELD_FIRST;
+#else
+  const gint ticks_per_frame = context->ticks_per_frame;
+  const gint picture_interlaced = picture->interlaced_frame;
+  const gint top_field_first = picture->top_field_first;
+#endif
   gint pic_field_order = 0;
 
-#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
-  if (picture->flags & AV_FRAME_FLAG_INTERLACED) {
-#else
-  if (picture->interlaced_frame) {
-#endif
+  if (picture_interlaced) {
     if (picture->repeat_pict)
       pic_field_order |= GST_VIDEO_BUFFER_FLAG_RFF;
-#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
-    if (picture->flags & AV_FRAME_FLAG_TOP_FIELD_FIRST)
-#else
-    if (picture->top_field_first)
-#endif
+    if (top_field_first)
       pic_field_order |= GST_VIDEO_BUFFER_FLAG_TFF;
   }
 
@@ -1324,24 +1327,11 @@ update_video_context (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context,
     ffmpegdec->pic_field_order_changed = TRUE;
 
   ffmpegdec->pic_field_order = pic_field_order;
-#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
-  ffmpegdec->pic_interlaced = picture->flags & AV_FRAME_FLAG_INTERLACED;
-#else
-  ffmpegdec->pic_interlaced = picture->interlaced_frame;
-#endif
+  ffmpegdec->pic_interlaced = picture_interlaced;
 
   if (!ffmpegdec->pic_interlaced)
     ffmpegdec->pic_field_order_changed = FALSE;
 
-#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
-  const gint ticks_per_frame =
-      (GST_VIDEO_INFO_IS_INTERLACED (&ffmpegdec->input_state->info)
-      && ffmpegdec->context->codec_descriptor
-      && ffmpegdec->context->
-      codec_descriptor->props & AV_CODEC_PROP_FIELDS) ? 2 : 1;
-#else
-  const gint ticks_per_frame = context->ticks_per_frame;
-#endif
   ffmpegdec->ctx_ticks = ticks_per_frame;
   ffmpegdec->ctx_time_n = context->time_base.num;
   ffmpegdec->ctx_time_d = context->time_base.den;
