@@ -501,6 +501,15 @@ gst_av1_dec_decide_allocation (GstVideoDecoder * dec, GstQuery * query)
     goto out;
 
   n_pools = gst_query_get_n_allocation_pools (query);
+  if (n_pools == 0) {
+    GstBufferPool *pool;
+
+    pool = gst_video_buffer_pool_new ();
+    gst_query_add_allocation_pool (query, pool, 0, 2, 0);
+    gst_object_unref (pool);
+    n_pools++;
+  }
+
   for (guint i = 0; i < n_pools; i++) {
     GstBufferPool *pool = NULL;
     GstStructure *config;
@@ -508,7 +517,7 @@ gst_av1_dec_decide_allocation (GstVideoDecoder * dec, GstQuery * query)
 
     gst_query_parse_nth_allocation_pool (query, i, &pool, &size, &min, &max);
     if (!pool)
-      continue;
+      pool = gst_video_buffer_pool_new ();
 
     config = gst_buffer_pool_get_config (pool);
     if (gst_buffer_pool_has_option (pool, GST_BUFFER_POOL_OPTION_VIDEO_META)) {
