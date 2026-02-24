@@ -44,7 +44,7 @@ if __name__ == "__main__":
         exit(1)
     options.builddir = os.path.abspath(options.builddir)
 
-    cmd = ["meson", "devenv", "-C", options.builddir, "--workdir", options.srcdir]
+    cmd = ["meson", "devenv", "-C", options.builddir, "--workdir", os.getcwd()]
     if options.only_environment:
         cmd.append("--dump")
     else:
