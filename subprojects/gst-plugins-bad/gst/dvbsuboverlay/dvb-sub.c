@@ -373,8 +373,8 @@ dvb_sub_init (void)
 }
 
 static void
-_dvb_sub_parse_page_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
-    gint buf_size)
+_dvb_sub_parse_page_segment (DvbSub * dvb_sub, guint16 page_id,
+    const guint8 * buf, gint buf_size)
 {                               /* FIXME: Use guint for buf_size here and in many other places? */
   DVBSubRegionDisplay *display;
   DVBSubRegionDisplay *tmp_display_list, **tmp_ptr;
@@ -451,8 +451,8 @@ _dvb_sub_parse_page_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
 }
 
 static void
-_dvb_sub_parse_region_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
-    gint buf_size)
+_dvb_sub_parse_region_segment (DvbSub * dvb_sub, guint16 page_id,
+    const guint8 * buf, gint buf_size)
 {
   const guint8 *buf_end = buf + buf_size;
   guint8 region_id;
@@ -574,8 +574,8 @@ _dvb_sub_parse_region_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
 }
 
 static void
-_dvb_sub_parse_clut_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
-    gint buf_size)
+_dvb_sub_parse_clut_segment (DvbSub * dvb_sub, guint16 page_id,
+    const guint8 * buf, gint buf_size)
 {
   const guint8 *buf_end = buf + buf_size;
   guint8 clut_id;
@@ -1076,8 +1076,8 @@ _dvb_sub_parse_pixel_data_block (DvbSub * dvb_sub,
 }
 
 static void
-_dvb_sub_parse_object_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
-    gint buf_size)
+_dvb_sub_parse_object_segment (DvbSub * dvb_sub, guint16 page_id,
+    const guint8 * buf, gint buf_size)
 {
   const guint8 *buf_end = buf + buf_size;
   guint object_id;
@@ -1147,7 +1147,7 @@ _dvb_sub_parse_object_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
 }
 
 static gint
-_dvb_sub_parse_display_definition_segment (DvbSub * dvb_sub, guint8 * buf,
+_dvb_sub_parse_display_definition_segment (DvbSub * dvb_sub, const guint8 * buf,
     gint buf_size)
 {
   int dds_version, info_byte;
@@ -1386,7 +1386,8 @@ dvb_sub_free (DvbSub * sub)
  *				  0 or positive if data was handled. If positive, then amount of data consumed on success. FIXME: List the positive return values.
  */
 gint
-dvb_sub_feed_with_pts (DvbSub * dvb_sub, guint64 pts, guint8 * data, gint len)
+dvb_sub_feed_with_pts (DvbSub * dvb_sub, guint64 pts, const guint8 * data,
+    gint len)
 {
   unsigned int pos = 0;
   guint8 segment_type;
