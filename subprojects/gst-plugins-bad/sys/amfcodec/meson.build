@@ -30,6 +30,13 @@ if amf_option.disabled()
   subdir_done()
 endif
 
+if host_system not in ['windows', 'linux']
+  if amf_option.enabled()
+    error('amfcodec plugin is only supported on Windows and Linux')
+  endif
+  subdir_done()
+endif
+
 platform_deps = []
 extra_args = ['-DGST_USE_UNSTABLE_API']
 extra_cpp_args = []
