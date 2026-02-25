@@ -3,6 +3,7 @@ index.md
 	gst-validate-transcoding.md
 	gst-validate-media-check.md
 	gst-validate-launcher.md
+		gst-validate-launcher-writing-testsuites.md
 	gst-validate-scenarios.md
 	gst-validate-test-file.md
 	gst-validate-config.md
