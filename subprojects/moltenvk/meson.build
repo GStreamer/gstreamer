@@ -34,6 +34,7 @@ vulkan_dep = declare_dependency(
     cc.find_library('MoltenVK', dirs: meson.current_source_dir() / libdir),
   ]
 )
+install_data(libdir / 'libMoltenVK.dylib', install_dir: get_option('libdir'), install_tag: 'runtime')
 meson.override_find_program('glslc', files(sdk_dir / 'bin/glslc'))
 meson.override_find_program('glslang', files(sdk_dir / 'bin/glslang'))
 meson.override_dependency('MoltenVK', vulkan_dep, native: false, static: true)
