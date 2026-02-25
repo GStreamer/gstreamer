@@ -114,6 +114,7 @@ foreach option : vulkan_conf_options
   vulkan_conf.set(option, 0)
 endforeach
 
+vulkan_plugin_kwargs = {}
 if host_system == 'darwin'
   vulkan_dep = dependency('vulkan', method: 'pkg-config', required : false)
   if not vulkan_dep.found()
@@ -127,6 +128,8 @@ if host_system == 'darwin'
     vulkan_dep = objcpp.find_library('MoltenVK', required: false)
     if not vulkan_dep.found()
       vulkan_dep = dependency('MoltenVK', fallback: 'moltenvk', required: vulkan_opt)
+      # We need this to find libMoltenVK.dylib when installed
+      vulkan_plugin_kwargs += {'install_rpath': '@loader_path/..'}
     endif
   endif
 elif host_system == 'windows'

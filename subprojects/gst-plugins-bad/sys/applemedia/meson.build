@@ -134,6 +134,7 @@ foreach framework : applemedia_frameworks
 endforeach
 
 applemedia_objcpp_args = []
+applemedia_kwargs = {}
 vulkan_option = get_option('vulkan')
 vk_required = applemedia_option.enabled() and vulkan_option.enabled()
 if gstvulkan_dep.found() and not vulkan_option.disabled()
@@ -149,6 +150,10 @@ if gstvulkan_dep.found() and not vulkan_option.disabled()
     applemedia_frameworks += [moltenvk_dep, gstvulkan_dep, metal_dep]
     applemedia_sources += vulkan_sources
     applemedia_args += ['-DAPPLEMEDIA_MOLTENVK']
+    if moltenvk_dep.type_name() == 'internal'
+      # Needed to find libMoltenVK.dylib when installed
+      applemedia_kwargs += {'install_rpath': '@loader_path/..'}
+    endif
     # override_options : ['cpp_std=c++11'] doesn't seem to work for objcpp
     applemedia_objcpp_args += objcpp.get_supported_arguments([
       '-std=c++11',
@@ -163,6 +168,7 @@ if applemedia_found_deps
     objc_args : gst_plugins_bad_args + applemedia_args + applemedia_objc_args,
     objcpp_args : gst_plugins_bad_args + applemedia_args + applemedia_objc_args + applemedia_objcpp_args,
     link_args : noseh_link_args,
+    kwargs: applemedia_kwargs,
     include_directories : [configinc, libsinc],
     dependencies : [gstvideo_dep, gstpbutils_dep, gst_dep, gstbase_dep, gstgl_dep, gstglproto_dep, gstcodecparsers_dep] + applemedia_frameworks,
     override_options : ['cpp_std=c++11'],
