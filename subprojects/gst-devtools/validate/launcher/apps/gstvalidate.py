@@ -28,6 +28,7 @@ import shlex
 import socket
 import subprocess
 import configparser
+import xml.etree.ElementTree as ET
 import json
 import glob
 import math
@@ -1184,7 +1185,17 @@ not been tested and explicitly activated if you set use --wanted-tests ALL""")
                     self._add_media(media_info, uri, media_file_path=media_file_path)
                     continue
                 elif fpath.endswith(GstValidateMediaDescriptor.STREAM_INFO_EXT) and not is_skipped:
-                    self._add_media(fpath)
+                    if self.options.update_media_info:
+                        media_xml = ET.parse(fpath).getroot()
+                        stream_uri = media_xml.attrib['uri']
+                        include_frames = bool(int(media_xml.attrib.get("frame-detection", 0)))
+                        stream_args = GstValidateBaseTestManager.MEDIA_CHECK_COMMAND.split(" ")
+                        stream_args.extend([stream_uri, "--output-file", fpath])
+                        if include_frames:
+                            stream_args.append("--full")
+                        subprocess.check_output(stream_args, stderr=open(os.devnull))
+                    else:
+                        self._add_media(fpath)
                     continue
                 elif not self.options.generate_info and not self.options.update_media_info and not self.options.validate_uris:
                     continue

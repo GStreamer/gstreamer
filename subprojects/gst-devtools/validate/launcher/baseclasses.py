@@ -2054,9 +2054,14 @@ class _TestsLauncher(Loggable):
         if self.options.check_bugs_status:
             printc("OK", Colors.OKGREEN)
 
-        if self.needs_http_server() or options.httponly is True:
+        if options.update_media_info or options.generate_info:
             self.httpsrv = HTTPServer(options)
             self.httpsrv.start()
+
+        if self.needs_http_server() or options.httponly is True:
+            if not self.httpsrv:
+                self.httpsrv = HTTPServer(options)
+                self.httpsrv.start()
             configsdir = Path(options.logsdir) / "_validate_test_extra_configs"
             os.makedirs(configsdir, exist_ok=True)
             with open(configsdir / "http_server_port.var", "w") as f:

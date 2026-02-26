@@ -667,6 +667,12 @@ def main(libsdir):
     if res is False:
         return 1
 
+    if options.update_media_info or options.generate_info:
+        if tests_launcher.httpsrv:
+            tests_launcher.httpsrv.stop()
+        printc("Media info files have been updated", Colors.OKGREEN)
+        return 0
+
     if options.list_tests:
         if tests_launcher.list_tests() == -1:
             printc("\nFailling as tests have been removed/added "
