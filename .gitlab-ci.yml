@@ -768,7 +768,7 @@ check fedora:
 
 integration testsuites fedora:
   extends: '.test fedora x86_64'
-  parallel: 8
+  parallel: 9
   variables:
     MESON_ARGS: >-
       ${SIMPLE_BUILD}
@@ -787,9 +787,19 @@ integration testsuites fedora:
       -Drs=enabled
       -Dgst-plugins-rs:auto_plugin_features=disabled
       -Dgst-plugins-rs:debugseimetainserter=enabled
-    EXTRA_VALIDATE_ARGS: "--timeout-factor=2 --retry-on-failures --parts=${CI_NODE_TOTAL} --part-index=${CI_NODE_INDEX} --sync"
+    EXTRA_VALIDATE_ARGS: "--timeout-factor=2 --retry-on-failures --parts=${CI_NODE_TOTAL} --part-index=${CI_NODE_INDEX} --sync --dedicated-part media_check"
     GST_VALIDATE_CONFIG: "core,fail-on-missing-plugin=true"
     TEST_SUITE: "validate ges"
+  artifacts:
+    expire_in: '14 days'
+    when: always
+    paths:
+      - 'meson-logs/'
+      - "$CI_PROJECT_DIR/validate-logs"
+      - 'diffs/'
+    reports:
+      junit:
+        - "$CI_PROJECT_DIR/validate-logs/*.xml"
 
 check video formats:
   stage: 'test'

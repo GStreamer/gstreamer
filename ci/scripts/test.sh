@@ -31,6 +31,7 @@ export LIBGL_ALWAYS_SOFTWARE="true"
 # This the hardcoded value for llvmpipe
 export VK_ICD_FILENAMES="/usr/share/vulkan/icd.d/lvp_icd.json"
 
+ret=0
 meson devenv -C $builddir \
     gst-validate-launcher "$tests" \
     --jobs "$jobs" \
@@ -45,4 +46,14 @@ meson devenv -C $builddir \
     --fail-on-testlist-change \
     -l "$parent/validate-logs/" \
     --xunit-file "$parent/validate-logs/xunit.xml" \
-    $validate
+    $validate || ret=$?
+
+# On the dedicated media_check runner (last part), generate a diff on failure
+# or when FORCE_MEDIA_INFO_UPDATE is set
+if echo "$tests" | grep -q "validate" && [ "${CI_NODE_INDEX:-}" = "${CI_NODE_TOTAL:-}" ]; then
+    if [ "$ret" -ne 0 ] || [ "${FORCE_MEDIA_INFO_UPDATE:-}" = "1" ]; then
+        python3 "$parent/ci/scripts/media-check-diff.py" "$builddir" || true
+    fi
+fi
+
+exit $ret
