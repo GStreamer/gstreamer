@@ -5002,8 +5002,8 @@ static GstFlowReturn
 gst_mxf_demux_seek_to_previous_keyframe (GstMXFDemux * demux)
 {
   GstFlowReturn ret;
-  GstClockTime target_chunk_start_ts, actual_chunk_start_ts,
-      prev_chunk_start_ts = demux->chunk_start_ts;
+  GstClockTime target_chunk_start_ts = GST_CLOCK_TIME_NONE,
+      actual_chunk_start_ts, prev_chunk_start_ts = demux->chunk_start_ts;
   GstMXFDemuxPad *ref_pad = NULL;
   GstMXFDemuxEssenceTrack *ref_target_track = NULL;
   guint64 offset, new_offset = -1;
