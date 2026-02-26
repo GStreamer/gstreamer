@@ -1,0 +1,22 @@
+<file duration="3600040000000" frame-detection="0" uri="http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-ctv-events.mpd" seekable="true">
+  <streams caps="application/dash+xml">
+    <stream type="video" caps="video/x-h264, stream-format=(string)avc, alignment=(string)au, level=(string)2.1, profile=(string)constrained-baseline, codec_data=(buffer)0142c015ffe100236742c0159194181df9701100000300010000030032e080011260007a13b2cc03e2c5cb01000468c923c8, width=(int)384, height=(int)216, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)99/4, interlace-mode=(string)progressive, parsed=(boolean)true" id="170484ee480f5047144274be7b46179f16f0ba245beed3b533721f7596aeebc0/video_00/001">
+      <tags>
+        <tag content="taglist, video-codec=(string)&quot;H.264\ /\ AVC&quot;, datetime=(datetime)2015-01-07T19:00:27Z, container-format=(string)&quot;ISO\ fMP4&quot;, nominal-bitrate=(uint)177402;"/>
+      </tags>
+    </stream>
+    <stream type="audio" caps="audio/mpeg, mpegversion=(int)4, framed=(boolean)true, stream-format=(string)raw, level=(string)2, base-profile=(string)lc, profile=(string)lc, codec_data=(buffer)1190, rate=(int)48000, channels=(int)2" id="170484ee480f5047144274be7b46179f16f0ba245beed3b533721f7596aeebc0/audio_00/001">
+      <tags>
+        <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, maximum-bitrate=(uint)130912, bitrate=(uint)125368, language-code=(string)en, datetime=(datetime)2014-10-03T15:29:29Z, container-format=(string)&quot;ISO\ fMP4&quot;, nominal-bitrate=(uint)127550;"/>
+      </tags>
+    </stream>
+    <stream type="audio" caps="audio/mpeg, mpegversion=(int)4, framed=(boolean)true, stream-format=(string)raw, level=(string)4, base-profile=(string)lc, profile=(string)lc, codec_data=(buffer)11b0, rate=(int)48000, channels=(int)6, channel-mask=(bitmask)0x0000000000000000" id="170484ee480f5047144274be7b46179f16f0ba245beed3b533721f7596aeebc0/audio_01/001">
+      <tags>
+        <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, maximum-bitrate=(uint)330992, bitrate=(uint)317376, language-code=(string)en, datetime=(datetime)2013-12-10T11:45:12Z, container-format=(string)&quot;ISO\ fMP4&quot;, nominal-bitrate=(uint)319091;"/>
+      </tags>
+    </stream>
+  </streams>
+  <tags>
+    <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, maximum-bitrate=(uint)130912, bitrate=(uint)125368, language-code=(string)en, datetime=(datetime)2014-10-03T15:29:29Z, container-format=(string)&quot;ISO\ fMP4&quot;, nominal-bitrate=(uint)127550, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
+  </tags>
+</file>

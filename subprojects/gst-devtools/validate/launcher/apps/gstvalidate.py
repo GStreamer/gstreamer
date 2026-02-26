@@ -1255,11 +1255,19 @@ not been tested and explicitly activated if you set use --wanted-tests ALL""")
                             fpath = os.path.abspath(os.path.join(root, f))
                             if os.path.isdir(fpath) or \
                                     fpath.endswith(GstValidateMediaDescriptor.MEDIA_INFO_EXT) or\
-                                    fpath.endswith(ScenarioManager.FILE_EXTENSION):
+                                    fpath.endswith(ScenarioManager.FILE_EXTENSION) or \
+                                    (self.options.media_info_dir and fpath.endswith(GstValidateMediaDescriptor.STREAM_INFO_EXT)):
                                 continue
                             else:
                                 self._discover_file(path2url(fpath), fpath,
                                                     media_root=path)
+
+            if self.options.media_info_dir and os.path.isdir(self.options.media_info_dir):
+                for root, dirs, files in os.walk(self.options.media_info_dir):
+                    for f in files:
+                        fpath = os.path.abspath(os.path.join(root, f))
+                        if fpath.endswith(GstValidateMediaDescriptor.STREAM_INFO_EXT):
+                            self._discover_file(path2url(fpath), fpath)
 
         self.debug("Uris found: %s", self._uris)
 

@@ -1,0 +1,17 @@
+<file duration="13900000000000" frame-detection="0" uri="http://dash-live-streams.appspot.com/dash/manifest_e.mpd?acodec=mp4a&amp;depth=300" seekable="true" live="true">
+  <streams caps="application/dash+xml">
+    <stream type="video" caps="video/x-h264, stream-format=(string)avc, alignment=(string)au, level=(string)3.1, profile=(string)constrained-baseline, codec_data=(buffer)0142c01fffe100186742c01fd9008025a4880000030008000003018078c1924001000468cb8cb2, width=(int)896, height=(int)504, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)95/4, interlace-mode=(string)progressive, parsed=(boolean)true" id="cf079ead59dbefbc80d158dfd398a06180d7279f68e0c4a957c2312fe503809a/video_00/001">
+      <tags>
+        <tag content="taglist, video-codec=(string)&quot;H.264\ /\ AVC&quot;, language-code=(string)en, datetime=(datetime)2015-08-03T08:03:11Z, container-format=(string)&quot;ISO\ fMP4&quot;, nominal-bitrate=(uint)153574;"/>
+      </tags>
+    </stream>
+    <stream type="audio" caps="audio/mpeg, mpegversion=(int)4, framed=(boolean)true, stream-format=(string)raw, level=(string)2, base-profile=(string)lc, profile=(string)lc, codec_data=(buffer)119056e500, rate=(int)48000, channels=(int)2" id="cf079ead59dbefbc80d158dfd398a06180d7279f68e0c4a957c2312fe503809a/audio_00/002">
+      <tags>
+        <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, maximum-bitrate=(uint)450000, bitrate=(uint)96235, language-code=(string)en, encoder=(string)Lavf56.40.101, container-format=(string)&quot;ISO\ fMP4&quot;, nominal-bitrate=(uint)98056, minimum-bitrate=(uint)102375;"/>
+      </tags>
+    </stream>
+  </streams>
+  <tags>
+    <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, maximum-bitrate=(uint)450000, bitrate=(uint)96235, language-code=(string)en, encoder=(string)Lavf56.40.101, container-format=(string)&quot;ISO\ fMP4&quot;, nominal-bitrate=(uint)98056, video-codec=(string)&quot;H.264\ /\ AVC&quot;, datetime=(datetime)2015-08-03T08:03:11Z, minimum-bitrate=(uint)102375;"/>
+  </tags>
+</file>

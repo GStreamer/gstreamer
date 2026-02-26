@@ -1,0 +1,21 @@
+<file duration="654000000000" frame-detection="0" skip-parsers="0" uri="http://dash.akamaized.net/dash264/TestCases/1a/qualcomm/2/MultiRate.mpd" seekable="true">
+  <streams caps="application/dash+xml">
+    <stream type="video" caps="video/x-h264, stream-format=(string)avc, alignment=(string)au, level=(string)3.1, profile=(string)main, codec_data=(buffer)014d401fffe10019674d401feca02802dd80880000030008000003018078c18cb001000468ebecb2, width=(int)1280, height=(int)720, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)24/1, coded-picture-structure=(string)frame, chroma-format=(string)4:2:0, bit-depth-luma=(uint)8, bit-depth-chroma=(uint)8, parsed=(boolean)true, lcevc=(boolean)false" id="/video_00/001">
+      <segments>
+      </segments>
+      <tags>
+        <tag content="taglist, video-codec=(string)&quot;H.264\ /\ AVC&quot;, container-specific-track-id=(string)1, nominal-bitrate=(uint)927346;"/>
+      </tags>
+    </stream>
+    <stream type="audio" caps="audio/mpeg, mpegversion=(int)4, framed=(boolean)true, stream-format=(string)raw, level=(string)2, base-profile=(string)lc, profile=(string)lc, codec_data=(buffer)eb098800, rate=(int)48000, channels=(int)2" id="/audio_00/001">
+      <segments>
+      </segments>
+      <tags>
+        <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, maximum-bitrate=(uint)32001, bitrate=(uint)32001, container-specific-track-id=(string)1, nominal-bitrate=(uint)32943;"/>
+      </tags>
+    </stream>
+  </streams>
+  <tags>
+    <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, maximum-bitrate=(uint)32001, bitrate=(uint)32001, container-specific-track-id=(string)1, encoder=(string)Lavf55.16.101, container-format=(string)&quot;ISO\ fMP4&quot;, nominal-bitrate=(uint)32943, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
+  </tags>
+</file>

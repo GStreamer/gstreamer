@@ -1,0 +1,17 @@
+<file duration="3600040000000" frame-detection="0" uri="http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-audio.mpd" seekable="true">
+  <streams caps="application/dash+xml">
+    <stream type="audio" caps="audio/mpeg, mpegversion=(int)4, framed=(boolean)true, stream-format=(string)raw, level=(string)2, base-profile=(string)lc, profile=(string)lc, codec_data=(buffer)1190, rate=(int)48000, channels=(int)2" id="eea7ee5df9eb174ca0b51ecf372ff7a61fe8b967a3a4cb8d278594bf6e301ba0/audio_00/001">
+      <tags>
+        <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, maximum-bitrate=(uint)130912, bitrate=(uint)125368, language-code=(string)en, datetime=(datetime)2014-10-03T15:29:29Z, container-format=(string)&quot;ISO\ fMP4&quot;, nominal-bitrate=(uint)127550;"/>
+      </tags>
+    </stream>
+    <stream type="audio" caps="audio/mpeg, mpegversion=(int)4, framed=(boolean)true, stream-format=(string)raw, level=(string)4, base-profile=(string)lc, profile=(string)lc, codec_data=(buffer)11b0, rate=(int)48000, channels=(int)6, channel-mask=(bitmask)0x0000000000000000" id="eea7ee5df9eb174ca0b51ecf372ff7a61fe8b967a3a4cb8d278594bf6e301ba0/audio_01/001">
+      <tags>
+        <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, maximum-bitrate=(uint)330992, bitrate=(uint)317376, language-code=(string)en, datetime=(datetime)2013-12-10T11:45:12Z, container-format=(string)&quot;ISO\ fMP4&quot;, nominal-bitrate=(uint)319091;"/>
+      </tags>
+    </stream>
+  </streams>
+  <tags>
+    <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, maximum-bitrate=(uint)130912, bitrate=(uint)125368, language-code=(string)en, datetime=(datetime)2014-10-03T15:29:29Z, container-format=(string)&quot;ISO\ fMP4&quot;, nominal-bitrate=(uint)127550;"/>
+  </tags>
+</file>

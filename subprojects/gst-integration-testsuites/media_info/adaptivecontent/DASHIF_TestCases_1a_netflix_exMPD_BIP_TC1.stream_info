@@ -1,0 +1,21 @@
+<file duration="654000000000" frame-detection="0" skip-parsers="0" uri="http://dash.akamaized.net/dash264/TestCases/1a/netflix/exMPD_BIP_TC1.mpd" seekable="true">
+  <streams caps="application/dash+xml">
+    <stream type="audio" caps="audio/mpeg, mpegversion=(int)4, framed=(boolean)true, stream-format=(string)raw, level=(string)1, base-profile=(string)lc, profile=(string)lc, codec_data=(buffer)1310, rate=(int)24000, channels=(int)2" id="/audio_00/001">
+      <segments>
+      </segments>
+      <tags>
+        <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, maximum-bitrate=(uint)119813, bitrate=(uint)65319, container-specific-track-id=(string)1, nominal-bitrate=(uint)65440;"/>
+      </tags>
+    </stream>
+    <stream type="video" caps="video/x-h264, stream-format=(string)avc, alignment=(string)au, level=(string)3, profile=(string)constrained-baseline, codec_data=(buffer)0142c01effe100256742c01e925203c17fcbff800200018800001f480005dc07320092800c3540c2c0f162e48001000468ce32c8, width=(int)480, height=(int)360, pixel-aspect-ratio=(fraction)4/3, framerate=(fraction)24000/1001, coded-picture-structure=(string)frame, chroma-format=(string)4:2:0, bit-depth-luma=(uint)8, bit-depth-chroma=(uint)8, parsed=(boolean)true, lcevc=(boolean)false" id="/video_00/002">
+      <segments>
+      </segments>
+      <tags>
+        <tag content="taglist, video-codec=(string)&quot;H.264\ /\ AVC&quot;, container-specific-track-id=(string)2, nominal-bitrate=(uint)95482;"/>
+      </tags>
+    </stream>
+  </streams>
+  <tags>
+    <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, maximum-bitrate=(uint)119813, bitrate=(uint)65319, container-specific-track-id=(string)1, datetime=(datetime)2012-05-30T10:53:59Z, container-format=(string)&quot;ISO\ fMP4&quot;, nominal-bitrate=(uint)65440, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
+  </tags>
+</file>

@@ -1,0 +1,17 @@
+<file duration="704000000000" frame-detection="0" uri="http://dash.akamaized.net/dash264/TestCases/5c/nomor/4_1a.mpd" seekable="true">
+  <streams caps="application/dash+xml">
+    <stream type="video" caps="video/x-h264, stream-format=(string)avc, alignment=(string)au, level=(string)3.1, profile=(string)main, codec_data=(buffer)014d401fffe10019674d401feca02802dd80880000030008000003018078c18cb001000468ebecb2, width=(int)1280, height=(int)720, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)47/2, interlace-mode=(string)progressive, parsed=(boolean)true" id="3a8db876ee14a383b9a67c22e5145db48296a592e7928ed95406b1c4ba8ecdec/video_00/001">
+      <tags>
+        <tag content="taglist, video-codec=(string)&quot;H.264\ /\ AVC&quot;, encoder=(string)Lavf55.16.101, container-format=(string)&quot;ISO\ fMP4&quot;, nominal-bitrate=(uint)1622956;"/>
+      </tags>
+    </stream>
+    <stream type="audio" caps="audio/mpeg, mpegversion=(int)4, framed=(boolean)true, stream-format=(string)raw, level=(string)1, codec_data=(buffer)eb098800, rate=(int)48000, channels=(int)2" id="3a8db876ee14a383b9a67c22e5145db48296a592e7928ed95406b1c4ba8ecdec/audio_00/001">
+      <tags>
+        <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, maximum-bitrate=(uint)32002, bitrate=(uint)32002, encoder=(string)Lavf55.16.101, container-format=(string)&quot;ISO\ fMP4&quot;, nominal-bitrate=(uint)34344;"/>
+      </tags>
+    </stream>
+  </streams>
+  <tags>
+    <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, maximum-bitrate=(uint)32002, bitrate=(uint)32002, encoder=(string)Lavf55.16.101, container-format=(string)&quot;ISO\ fMP4&quot;, nominal-bitrate=(uint)34344, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
+  </tags>
+</file>

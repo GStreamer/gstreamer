@@ -1,0 +1,14 @@
+<file duration="3333000000" frame-detection="0" skip-parsers="0" uri="http://127.0.0.1:8079/defaults/mp4/raw_video.mov" seekable="true">
+  <streams caps="video/quicktime">
+    <stream type="video" caps="video/x-raw, format=(string)UYVY, width=(int)320, height=(int)240, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, colorimetry=(string)bt601, framerate=(fraction)30/1" id="/001">
+      <segments>
+      </segments>
+      <tags>
+        <tag content="taglist, video-codec=(string)&quot;Uncompressed\ packed\ YUV\ 4:2:2&quot;, language-code=(string)en, container-specific-track-id=(string)1, bitrate=(uint)36867725;"/>
+      </tags>
+    </stream>
+  </streams>
+  <tags>
+    <tag content="taglist, video-codec=(string)&quot;Uncompressed\ packed\ YUV\ 4:2:2&quot;, language-code=(string)en, container-specific-track-id=(string)1, bitrate=(uint)36867725, datetime=(datetime)2013-11-14T20:00:20Z, container-format=(string)Quicktime;"/>
+  </tags>
+</file>

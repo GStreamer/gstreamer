@@ -1,0 +1,17 @@
+<file duration="1491220992000000000" frame-detection="0" uri="http://vm2.dashif.org/livesim/testpic_2s/Manifest.mpd#t=posix:now" seekable="true" live="true">
+  <streams caps="application/dash+xml">
+    <stream type="audio" caps="audio/mpeg, mpegversion=(int)4, framed=(boolean)true, stream-format=(string)raw, level=(string)2, base-profile=(string)lc, profile=(string)lc, codec_data=(buffer)1190, rate=(int)48000, channels=(int)2" id="d1358c4723f528093c4780910d03b80d31a2e7e0abe0d072edccbc09a727f987/audio_00/001">
+      <tags>
+        <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, datetime=(datetime)2015-01-26T10:48:56Z, container-format=(string)&quot;ISO\ fMP4&quot;, nominal-bitrate=(uint)52692;"/>
+      </tags>
+    </stream>
+    <stream type="video" caps="video/x-h264, stream-format=(string)avc, alignment=(string)au, level=(string)3, profile=(string)high, codec_data=(buffer)0164001effe100196764001eacd940a02ff9610000030001000003003c8f162d9601000568ebecb22c, width=(int)640, height=(int)360, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)59/2, interlace-mode=(string)progressive, parsed=(boolean)true" id="d1358c4723f528093c4780910d03b80d31a2e7e0abe0d072edccbc09a727f987/video_00/002">
+      <tags>
+        <tag content="taglist, video-codec=(string)&quot;H.264\ /\ AVC&quot;, language-code=(string)en, datetime=(datetime)2015-01-26T10:48:57Z, container-format=(string)&quot;ISO\ fMP4&quot;, nominal-bitrate=(uint)156456;"/>
+      </tags>
+    </stream>
+  </streams>
+  <tags>
+    <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, datetime=(datetime)2015-01-26T10:48:56Z, container-format=(string)&quot;ISO\ fMP4&quot;, nominal-bitrate=(uint)52692, video-codec=(string)&quot;H.264\ /\ AVC&quot;, language-code=(string)en;"/>
+  </tags>
+</file>
