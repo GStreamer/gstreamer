@@ -1403,16 +1403,33 @@ rewrite_si (TsMux * mux, gint64 cur_ts)
   /* check if we need to rewrite pat */
   if (mux->next_pat_pcr == -1 || mux->pat_changed)
     write_pat = TRUE;
-  else if (next_pcr > mux->next_pat_pcr)
+  else if (next_pcr > mux->next_pat_pcr) {
+    TS_DEBUG ("PCR %" G_GINT64_FORMAT " > next PAT PCR %" G_GINT64_FORMAT,
+        next_pcr, mux->next_pat_pcr);
     write_pat = TRUE;
-  else
+  } else {
     write_pat = FALSE;
+  }
 
   if (write_pat) {
+    TS_DEBUG ("Writing PAT at PCR %" G_GINT64_FORMAT, next_pcr);
+
     if (mux->next_pat_pcr == -1)
       mux->next_pat_pcr = next_pcr + mux->pat_interval * 300;
     else
       mux->next_pat_pcr += mux->pat_interval * 300;
+
+    if (mux->next_pat_pcr < next_pcr) {
+      gint64 pat_interval_pcr = 300 * mux->pat_interval;
+      gint64 pat_pcr_delay =
+          ((next_pcr - mux->next_pat_pcr + pat_interval_pcr -
+              1) / pat_interval_pcr) * pat_interval_pcr;
+
+      mux->next_pat_pcr += pat_pcr_delay;
+      TS_WARN
+          ("PAT was scheduled late. Improve the mpegtsmux packet scheduler. Delaying the next to %"
+          G_GINT64_FORMAT, mux->next_pat_pcr);
+    }
 
     if (!tsmux_write_pat (mux))
       return FALSE;
@@ -1434,6 +1451,18 @@ rewrite_si (TsMux * mux, gint64 cur_ts)
     else
       mux->next_si_pcr += mux->si_interval * 300;
 
+    if (mux->next_si_pcr < next_pcr) {
+      gint64 si_interval_pcr = 300 * mux->si_interval;
+      gint64 si_pcr_delay =
+          ((next_pcr - mux->next_si_pcr + si_interval_pcr -
+              1) / si_interval_pcr) * si_interval_pcr;
+
+      mux->next_si_pcr += si_pcr_delay;
+      TS_WARN
+          ("SI sections were scheduled late. Improve the mpegtsmux packet scheduler. Delaying the next to %"
+          G_GINT64_FORMAT, mux->next_si_pcr);
+    }
+
     if (!tsmux_write_si (mux))
       return FALSE;
 
@@ -1453,10 +1482,26 @@ rewrite_si (TsMux * mux, gint64 cur_ts)
       write_pmt = FALSE;
 
     if (write_pmt) {
+      TS_DEBUG ("Writing PMT for program %d at PCR %" G_GINT64_FORMAT,
+          program->pgm_number, next_pcr);
+
       if (program->next_pmt_pcr == -1)
         program->next_pmt_pcr = next_pcr + program->pmt_interval * 300;
       else
         program->next_pmt_pcr += program->pmt_interval * 300;
+
+      if (program->next_pmt_pcr < next_pcr) {
+        gint64 pmt_interval_pcr = 300 * program->pmt_interval;
+        gint64 pmt_pcr_delay =
+            ((next_pcr - program->next_pmt_pcr + pmt_interval_pcr -
+                1) / pmt_interval_pcr) * pmt_interval_pcr;
+
+        program->next_pmt_pcr += pmt_pcr_delay;
+        TS_WARN
+            ("PMT for program %d was scheduled late. Improve the mpegtsmux packet scheduler. "
+            "Delaying the next to %" G_GINT64_FORMAT, program->pgm_number,
+            program->next_pmt_pcr);
+      }
 
       if (!tsmux_write_pmt (mux, program))
         return FALSE;
@@ -1479,6 +1524,13 @@ rewrite_si (TsMux * mux, gint64 cur_ts)
               next_pcr + program->scte35_null_interval * 300ULL;
         else
           program->next_scte35_pcr += program->scte35_null_interval * 300ULL;
+
+        if (program->next_scte35_pcr < next_pcr) {
+          TS_WARN
+              ("scte35 for program %d was scheduled late. Improve the mpegtsmux packet scheduler.",
+              program->pgm_number);
+        }
+
         GST_DEBUG ("next scte35 NOW pcr %" G_GINT64_FORMAT,
             program->next_scte35_pcr);
 
