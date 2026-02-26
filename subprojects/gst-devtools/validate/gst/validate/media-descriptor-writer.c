@@ -120,6 +120,15 @@ static void
 }
 
 /* Private methods */
+static gint
+_compare_stream_nodes (gconstpointer a, gconstpointer b)
+{
+  const GstValidateMediaStreamNode *sa = a;
+  const GstValidateMediaStreamNode *sb = b;
+
+  return sa->stream_number - sb->stream_number;
+}
+
 static gchar *
 serialize_filenode (GstValidateMediaDescriptorWriter * writer)
 {
@@ -148,6 +157,8 @@ serialize_filenode (GstValidateMediaDescriptorWriter * writer)
   g_string_append (res, tmpstr);
   g_free (tmpstr);
   g_free (caps_str);
+  filenode->streams = g_list_sort (filenode->streams,
+      (GCompareFunc) _compare_stream_nodes);
   for (tmp = filenode->streams; tmp; tmp = tmp->next) {
     GList *tmp3;
     GstValidateMediaStreamNode
@@ -287,6 +298,8 @@ static gboolean
   snode->cframe = NULL;
 
   snode->id = g_strdup (gst_discoverer_stream_info_get_stream_id (info));
+  snode->stream_number =
+      gst_discoverer_stream_info_get_stream_number (info);
   if (snode->id == NULL) {
     caps = gst_discoverer_stream_info_get_caps (info);
     capsstr = gst_caps_to_string (caps);

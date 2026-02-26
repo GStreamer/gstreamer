@@ -148,6 +148,7 @@ typedef struct
   GList * segments;
   gchar *id;
   gchar *padname;
+  gint stream_number;
 
   /* Testing infos */
   GstPad *pad;
