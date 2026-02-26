@@ -671,7 +671,7 @@ GST_START_TEST (test_vp9_decoder)
     .flags = {
       .color_range = 0,
     },
-    .BitDepth = 0,
+    .BitDepth = 8,
     .color_space = STD_VIDEO_VP9_COLOR_SPACE_BT_601,
     .subsampling_x = 1,
     .subsampling_y = 1,
