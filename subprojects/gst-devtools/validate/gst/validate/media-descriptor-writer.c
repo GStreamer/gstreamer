@@ -329,6 +329,7 @@ static gboolean
     stype = "Unknown";
   }
 
+  snode->type = stype;
   snode->str_open =
       g_markup_printf_escaped
       ("<stream type=\"%s\" caps=\"%s\" id=\"%s\">", stype, capsstr, snode->id);
@@ -1145,12 +1146,38 @@ gst_validate_media_descriptor_writer_write (GstValidateMediaDescriptorWriter *
     g_free (media_path);
   }
 
+  /* Strip SHA256 prefix from stream IDs to make them portable across machines.
+   * Stream IDs have the format "SHA256(uri)/suffix" — we store only the
+   * "/suffix" part (or "" for single-stream files with no suffix). */
+  {
+    GList *tmp;
+
+    for (tmp = filenode->streams; tmp; tmp = tmp->next) {
+      GstValidateMediaStreamNode *snode = tmp->data;
+      const gchar *slash;
+      gchar *capsstr, *new_id;
+
+      slash = strchr (snode->id, '/');
+      new_id = g_strdup (slash ? slash : "");
+      g_free (snode->id);
+      snode->id = new_id;
+
+      capsstr = gst_caps_to_string (snode->caps);
+      g_free (snode->str_open);
+      snode->str_open =
+          g_markup_printf_escaped
+          ("<stream type=\"%s\" caps=\"%s\" id=\"%s\">",
+          snode->type, capsstr, snode->id);
+      g_free (capsstr);
+    }
+  }
+
   serialized = serialize_filenode (writer);
 
   if (g_file_set_contents (filename, serialized, -1, NULL) == TRUE)
     ret = TRUE;
 
-  /* Restore original URI */
+  /* Restore original URI — needed for stream_id_is_equal legacy SHA256 path */
   if (orig_uri) {
     g_free (filenode->uri);
     filenode->uri = orig_uri;

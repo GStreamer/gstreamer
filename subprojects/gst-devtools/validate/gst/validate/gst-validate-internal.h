@@ -148,6 +148,7 @@ typedef struct
   GList * segments;
   gchar *id;
   gchar *padname;
+  const gchar *type;
   gint stream_number;
 
   /* Testing infos */

@@ -298,7 +298,7 @@ compare_tags (GstValidateMediaDescriptor * ref,
   return 1;
 }
 
-/* Workaround false warning caused by differnet file path */
+/* Workaround false warning caused by different file path */
 static gboolean
 stream_id_is_equal (const gchar * uri, const gchar * rid, const gchar * cid)
 {
@@ -308,6 +308,18 @@ stream_id_is_equal (const gchar * uri, const gchar * rid, const gchar * cid)
   /* Simple case it's the same */
   if (g_strcmp0 (rid, cid) == 0)
     return TRUE;
+
+  /* Portable format: empty rid means single-stream file */
+  if (rid[0] == '\0')
+    return TRUE;
+
+  /* Portable format: rid starts with "/" — compare with suffix of cid */
+  if (rid[0] == '/') {
+    const gchar *cid_suffix = strchr (cid, '/');
+    return cid_suffix && g_strcmp0 (rid, cid_suffix) == 0;
+  }
+
+  /* Legacy full-hash format below — kept for backwards compatibility */
 
   /* If it's not from file or from our local http server, it should have been the same */
   if (!g_str_has_prefix (uri, "file://")
