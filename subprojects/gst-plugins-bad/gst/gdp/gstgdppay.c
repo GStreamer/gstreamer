@@ -513,7 +513,7 @@ no_buffer:
 static gboolean
 gst_gdp_pay_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstBuffer *outbuffer;
+  GstBuffer *outbuffer = NULL;
   GstGDPPay *this = GST_GDP_PAY (parent);
   GstFlowReturn flowret;
   GstCaps *caps;
@@ -522,13 +522,15 @@ gst_gdp_pay_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GST_DEBUG_OBJECT (this, "received event %p of type %s (%d)",
       event, gst_event_type_get_name (event->type), event->type);
 
-  /* now turn the event into a buffer */
-  outbuffer = gst_gdp_buffer_from_event (this, event);
-  if (!outbuffer)
-    goto no_outbuffer;
+  if (GST_EVENT_TYPE (event) != GST_EVENT_CAPS) {
+    /* now turn the event into a buffer */
+    outbuffer = gst_gdp_buffer_from_event (this, event);
+    if (!outbuffer)
+      goto no_outbuffer;
 
-  GST_BUFFER_TIMESTAMP (outbuffer) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_DURATION (outbuffer) = 0;
+    GST_BUFFER_TIMESTAMP (outbuffer) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_DURATION (outbuffer) = 0;
+  }
 
   /* if we got a new segment or tag event, we should put it on our streamheader,
    * and not send it on */
@@ -545,21 +547,23 @@ gst_gdp_pay_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_DEBUG_OBJECT (this, "Received caps %" GST_PTR_FORMAT, event);
       this->have_caps = TRUE;
       gst_event_parse_caps (event, &caps);
-      gst_buffer_replace (&outbuffer, NULL);
       if (this->caps == NULL || !gst_caps_is_equal (this->caps, caps)) {
         GST_INFO_OBJECT (pad, "caps changed to %" GST_PTR_FORMAT, caps);
         gst_caps_replace (&this->caps, caps);
-        outbuffer = gst_gdp_buffer_from_caps (this, caps);
-        if (outbuffer == NULL)
-          goto no_buffer_from_caps;
-
-        GST_BUFFER_DURATION (outbuffer) = 0;
       }
+
+      outbuffer = gst_gdp_buffer_from_caps (this, caps);
+      if (outbuffer == NULL)
+        goto no_buffer_from_caps;
+
+      GST_BUFFER_DURATION (outbuffer) = 0;
       break;
     }
     default:
       break;
   }
+
+  g_assert (outbuffer);
 
   if (GST_EVENT_IS_STICKY (event)) {
     GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_HEADER);
