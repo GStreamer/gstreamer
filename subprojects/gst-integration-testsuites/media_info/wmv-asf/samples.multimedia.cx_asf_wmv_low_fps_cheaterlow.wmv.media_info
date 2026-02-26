@@ -1,6 +1,6 @@
-<file duration="107136000000" frame-detection="1" skip-parsers="0" uri="file:///home/thiblahute/gst-validate/gst-integration-testsuites/medias/defaults/wmv-asf/samples.multimedia.cx_asf_wmv_low_fps_cheaterlow.wmv" seekable="true">
+<file duration="107136000000" frame-detection="1" skip-parsers="0" uri="file:///../../media/defaults/wmv-asf/samples.multimedia.cx_asf_wmv_low_fps_cheaterlow.wmv" seekable="true">
   <streams caps="video/x-ms-asf">
-    <stream type="audio" caps="audio/x-wma, wmaversion=(int)2, bitrate=(int)64040, depth=(int)16, rate=(int)44100, channels=(int)2, block_align=(int)1487, codec_data=(buffer)009000000f00cf050000" id="94616b24a86ab0c7d74efd5720e22397fe2ca086fdfbe09f2657da7fd34df0e9/001">
+    <stream type="audio" caps="audio/x-wma, wmaversion=(int)2, bitrate=(int)64040, depth=(int)16, rate=(int)44100, channels=(int)2, block_align=(int)1487, codec_data=(buffer)009000000f00cf050000" id="/001">
       <segments>
         <segment next-frame-id="0" flags="0" rate="1.000000" applied-rate="1.000000" format="3" base="0" offset="0" start="0" stop="107136000000" time="0" position="0" duration="107136000000"/>
       </segments>
@@ -585,10 +585,10 @@
        <frame duration="18446744073709551615" id="578" is-keyframe="false" offset="18446744073709551615" offset-end="18446744073709551615" pts="106904000000" dts="18446744073709551615" running-time="106904000000" checksum="3fde9811dce22bb8d68d6d70427c3cfa"/>
        <frame duration="18446744073709551615" id="579" is-keyframe="false" offset="18446744073709551615" offset-end="18446744073709551615" pts="107136000000" dts="18446744073709551615" running-time="107136000000" checksum="85a1691948dafa969e162a3bd9b5c6c3"/>
       <tags>
-        <tag content="taglist, container-format=(string)ASF, audio-codec=(string)&quot;WMA\ Version\ 8&quot;, bitrate=(uint)64040;"/>
+        <tag content="taglist, audio-codec=(string)&quot;WMA\ Version\ 8&quot;, bitrate=(uint)64040;"/>
       </tags>
     </stream>
-    <stream type="video" caps="video/x-wmv, wmvversion=(int)1, width=(int)360, height=(int)240, format=(string)WMV1" id="94616b24a86ab0c7d74efd5720e22397fe2ca086fdfbe09f2657da7fd34df0e9/002">
+    <stream type="video" caps="video/x-wmv, wmvversion=(int)1, width=(int)360, height=(int)240, format=(string)WMV1" id="/002">
       <segments>
         <segment next-frame-id="0" flags="0" rate="1.000000" applied-rate="1.000000" format="3" base="0" offset="0" start="0" stop="107136000000" time="0" position="0" duration="107136000000"/>
       </segments>
@@ -1972,7 +1972,7 @@
        <frame duration="55000000" id="1377" is-keyframe="false" offset="18446744073709551615" offset-end="18446744073709551615" pts="104504000000" dts="18446744073709551615" running-time="104504000000" checksum="a2a62c3563c13d7db928ac762aa9c338"/>
        <frame duration="55000000" id="1378" is-keyframe="false" offset="18446744073709551615" offset-end="18446744073709551615" pts="104571000000" dts="18446744073709551615" running-time="104571000000" checksum="a6543ff8ed5bdfbf8897e3859ef49d93"/>
       <tags>
-        <tag content="taglist, container-format=(string)ASF, video-codec=(string)&quot;Microsoft\ Windows\ Media\ 7&quot;;"/>
+        <tag content="taglist, video-codec=(string)&quot;Microsoft\ Windows\ Media\ 7&quot;;"/>
       </tags>
     </stream>
   </streams>

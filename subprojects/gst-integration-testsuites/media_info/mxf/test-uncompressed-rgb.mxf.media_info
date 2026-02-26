@@ -1,6 +1,6 @@
-<file duration="1000000000" frame-detection="1" skip-parsers="0" uri="file:///home/bilboed/work/devel/gst-build/gst-integration-testsuites/medias/defaults/mxf/test-uncompressed-rgb.mxf" seekable="true">
+<file duration="1000000000" frame-detection="1" skip-parsers="0" uri="file:///../../media/defaults/mxf/test-uncompressed-rgb.mxf" seekable="true">
   <streams caps="application/mxf">
-    <stream type="video" caps="video/x-raw, format=(string)RGB, width=(int)320, height=(int)240, framerate=(fraction)10/1, pixel-aspect-ratio=(fraction)1/1" id="9130d80a4b6add31c737027902003cd6b441b976c4ea77237fd746fa071a7db0/002">
+    <stream type="video" caps="video/x-raw, format=(string)RGB, width=(int)320, height=(int)240, framerate=(fraction)10/1, pixel-aspect-ratio=(fraction)1/1" id="/002">
       <segments>
         <segment next-frame-id="0" flags="0" rate="1.000000" applied-rate="1.000000" format="3" base="0" offset="0" start="0" stop="18446744073709551615" time="0" position="0" duration="18446744073709551615"/>
       </segments>

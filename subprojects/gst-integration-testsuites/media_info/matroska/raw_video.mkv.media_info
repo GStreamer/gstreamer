@@ -1,6 +1,6 @@
-<file duration="3333333333" frame-detection="1" skip-parsers="0" uri="file:///home/thiblahute/gst-validate/gst-integration-testsuites/medias/defaults/matroska/raw_video.mkv" seekable="true">
+<file duration="3333333333" frame-detection="1" skip-parsers="0" uri="file:///../../media/defaults/matroska/raw_video.mkv" seekable="true">
   <streams caps="video/x-matroska">
-    <stream type="video" caps="video/x-raw, format=(string)I420, width=(int)320, height=(int)240, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, colorimetry=(string)bt601, framerate=(fraction)30/1" id="48bd245b1a8f3d74faace2b54cb270ead6705308b299ec1f55ee80db0b85770a/001:16024164111892462553">
+    <stream type="video" caps="video/x-raw, format=(string)I420, width=(int)320, height=(int)240, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, colorimetry=(string)bt601, framerate=(fraction)30/1" id="/001:16024164111892462553">
       <segments>
         <segment next-frame-id="0" flags="0" rate="1.000000" applied-rate="1.000000" format="3" base="0" offset="0" start="0" stop="18446744073709551615" time="0" position="0" duration="3333333333"/>
       </segments>
@@ -105,11 +105,11 @@
        <frame duration="33333333" id="98" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="3266000000" dts="18446744073709551615" running-time="3266000000" checksum="b191e86057ee74e0f8ec33aa4d562d05"/>
        <frame duration="33333333" id="99" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="3300000000" dts="18446744073709551615" running-time="3300000000" checksum="756cb74cfd80c8d1daac65094e7d68ca"/>
       <tags>
-        <tag content="taglist, container-format=(string)Matroska, video-codec=(string)&quot;Uncompressed\ planar\ YUV\ 4:4:4&quot;;"/>
+        <tag content="taglist, video-codec=(string)&quot;Uncompressed\ planar\ YUV\ 4:2:0&quot;, container-specific-track-id=(string)1;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, container-format=(string)Matroska, video-codec=(string)&quot;Uncompressed\ planar\ YUV\ 4:4:4&quot;;"/>
+    <tag content="taglist, datetime=(datetime)2013-11-14T12:08:43Z, container-format=(string)Matroska, video-codec=(string)&quot;Uncompressed\ planar\ YUV\ 4:2:0&quot;, container-specific-track-id=(string)1;"/>
   </tags>
 </file>

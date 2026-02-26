@@ -1,6 +1,6 @@
-<file duration="27699000000" frame-detection="1" skip-parsers="0" uri="file:///home/thiblahute/gst-validate/gst-integration-testsuites/medias/defaults/wmv-asf/samples.multimedia.cx_asf_wmv_elephant.asf" seekable="true">
+<file duration="27699000000" frame-detection="1" skip-parsers="0" uri="file:///../../media/defaults/wmv-asf/samples.multimedia.cx_asf_wmv_elephant.asf" seekable="true">
   <streams caps="video/x-ms-asf">
-    <stream type="audio" caps="audio/x-wma, wmaversion=(int)2, bitrate=(int)128, depth=(int)16, rate=(int)8000, channels=(int)1, block_align=(int)1, codec_data=(buffer)00020000000001000000" id="f05e0942456814ae7b50848407e1a09f258fb9aa5ad9e204061c7b9af816436e/001">
+    <stream type="audio" caps="audio/x-wma, wmaversion=(int)2, bitrate=(int)128, depth=(int)16, rate=(int)8000, channels=(int)1, block_align=(int)1, codec_data=(buffer)00020000000001000000" id="/001">
       <segments>
         <segment next-frame-id="0" flags="0" rate="1.000000" applied-rate="1.000000" format="3" base="0" offset="0" start="0" stop="27699000000" time="0" position="0" duration="27699000000"/>
       </segments>
@@ -112,10 +112,10 @@
        <frame duration="18446744073709551615" id="105" is-keyframe="false" offset="18446744073709551615" offset-end="18446744073709551615" pts="27287000000" dts="18446744073709551615" running-time="27287000000" checksum="f1d3ff8443297732862df21dc4e57262"/>
        <frame duration="18446744073709551615" id="106" is-keyframe="false" offset="18446744073709551615" offset-end="18446744073709551615" pts="27537000000" dts="18446744073709551615" running-time="27537000000" checksum="93b885adfe0da089cdf634904fd59f71"/>
       <tags>
-        <tag content="taglist, container-format=(string)ASF, audio-codec=(string)&quot;WMA\ Version\ 8&quot;, bitrate=(uint)128;"/>
+        <tag content="taglist, audio-codec=(string)&quot;WMA\ Version\ 8&quot;, bitrate=(uint)128;"/>
       </tags>
     </stream>
-    <stream type="video" caps="video/x-msmpeg, msmpegversion=(int)43, width=(int)160, height=(int)120" id="f05e0942456814ae7b50848407e1a09f258fb9aa5ad9e204061c7b9af816436e/002">
+    <stream type="video" caps="video/x-msmpeg, msmpegversion=(int)43, width=(int)160, height=(int)120" id="/002">
       <segments>
         <segment next-frame-id="0" flags="0" rate="1.000000" applied-rate="1.000000" format="3" base="0" offset="0" start="0" stop="27699000000" time="0" position="0" duration="27699000000"/>
       </segments>
@@ -273,7 +273,7 @@
        <frame duration="18446744073709551615" id="151" is-keyframe="false" offset="18446744073709551615" offset-end="18446744073709551615" pts="26966000000" dts="18446744073709551615" running-time="26966000000" checksum="f58d9382eb0c61453fd00d6504713057"/>
        <frame duration="18446744073709551615" id="152" is-keyframe="false" offset="18446744073709551615" offset-end="18446744073709551615" pts="27199000000" dts="18446744073709551615" running-time="27199000000" checksum="cdf30b9d1009643002c9a1ea266f0766"/>
       <tags>
-        <tag content="taglist, container-format=(string)ASF, video-codec=(string)&quot;Microsoft\ MPEG-4\ 4.3&quot;;"/>
+        <tag content="taglist, video-codec=(string)&quot;Microsoft\ MPEG-4\ 4.3&quot;;"/>
       </tags>
     </stream>
   </streams>

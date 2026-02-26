@@ -1,6 +1,6 @@
-<file duration="9988888888" frame-detection="1" skip-parsers="0" uri="file:///home/thiblahute/gst-validate/gst-integration-testsuites/medias/defaults/mp4/rawaudioS32LE_prores.mov" seekable="true">
+<file duration="9988888888" frame-detection="1" skip-parsers="0" uri="file:///../../media/defaults/mp4/rawaudioS32LE_prores.mov" seekable="true">
   <streams caps="video/quicktime">
-    <stream type="video" caps="video/x-prores, variant=(string)standard, width=(int)320, height=(int)240, framerate=(fraction)91/3, pixel-aspect-ratio=(fraction)1/1" id="b828f3f6b3a925cbeb00f2f640b0efaa6d49a2d8265eff729b3a43ba7e7580fe/001">
+    <stream type="video" caps="video/x-prores, variant=(string)standard, width=(int)320, height=(int)240, framerate=(fraction)91/3, pixel-aspect-ratio=(fraction)1/1" id="/001">
       <segments>
         <segment next-frame-id="0" flags="0" rate="1.000000" applied-rate="1.000000" format="3" base="0" offset="0" start="0" stop="9988888888" time="0" position="0" duration="18446744073709551615"/>
       </segments>
@@ -308,10 +308,10 @@
        <frame duration="32967033" id="301" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="9923076923" dts="9923076923" running-time="9923076923" checksum="47981060e408b69482b1b091cd742928"/>
        <frame duration="32967033" id="302" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="9956043956" dts="9956043956" running-time="9956043956" checksum="1b8d36745d7d7e290b73e3b92192a020"/>
       <tags>
-        <tag content="taglist, video-codec=(string)&quot;Apple\ ProRes&quot;, language-code=(string)en, datetime=(datetime)2015-10-11T11:13:06Z, container-format=(string)Quicktime;"/>
+        <tag content="taglist, video-codec=(string)&quot;Apple\ ProRes&quot;, language-code=(string)en, container-specific-track-id=(string)1;"/>
       </tags>
     </stream>
-    <stream type="audio" caps="audio/x-raw, format=(string)S32LE, layout=(string)interleaved, rate=(int)44100, channels=(int)1" id="b828f3f6b3a925cbeb00f2f640b0efaa6d49a2d8265eff729b3a43ba7e7580fe/002">
+    <stream type="audio" caps="audio/x-raw, format=(string)S32LE, layout=(string)interleaved, rate=(int)44100, channels=(int)1" id="/002">
       <segments>
         <segment next-frame-id="0" flags="0" rate="1.000000" applied-rate="1.000000" format="3" base="0" offset="0" start="0" stop="9984580498" time="0" position="0" duration="18446744073709551615"/>
       </segments>
@@ -748,11 +748,11 @@
        <frame duration="2902494" id="430" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="9978775510" dts="18446744073709551615" running-time="9978775510" checksum="0ee94e2ce5bc4187312ce729094985a1"/>
        <frame duration="2902494" id="431" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="9981678004" dts="18446744073709551615" running-time="9981678004" checksum="2c0361e0cdf30eb46fdb4ca0b7791f72"/>
       <tags>
-        <tag content="taglist, audio-codec=(string)&quot;Raw\ 32-bit\ PCM\ audio&quot;, language-code=(string)en, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)&quot;Xiph.Org\ libVorbis\ I\ 20120203\ \(Omnipresent\)&quot;, datetime=(datetime)2015-10-11T11:13:06Z, container-format=(string)Quicktime;"/>
+        <tag content="taglist, audio-codec=(string)&quot;Raw\ 32-bit\ PCM\ audio&quot;, language-code=(string)en, container-specific-track-id=(string)2, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)&quot;Xiph.Org\ libVorbis\ I\ 20120203\ \(Omnipresent\)&quot;;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, audio-codec=(string)&quot;Raw\ 32-bit\ PCM\ audio&quot;, language-code=(string)en, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)&quot;Xiph.Org\ libVorbis\ I\ 20120203\ \(Omnipresent\)&quot;, datetime=(datetime)2015-10-11T11:13:06Z, container-format=(string)Quicktime, video-codec=(string)&quot;Apple\ ProRes&quot;;"/>
+    <tag content="taglist, audio-codec=(string)&quot;Raw\ 32-bit\ PCM\ audio&quot;, language-code=(string)en, container-specific-track-id=(string)2, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)&quot;Xiph.Org\ libVorbis\ I\ 20120203\ \(Omnipresent\)&quot;, datetime=(datetime)2015-10-11T11:13:06Z, container-format=(string)Quicktime, video-codec=(string)&quot;Apple\ ProRes&quot;;"/>
   </tags>
 </file>

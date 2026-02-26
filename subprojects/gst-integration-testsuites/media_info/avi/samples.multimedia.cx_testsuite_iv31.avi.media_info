@@ -1,6 +1,6 @@
-<file duration="47416477000" frame-detection="1" skip-parsers="0" uri="file:///home/thiblahute/gst-validate/gst-integration-testsuites/medias/defaults/avi/samples.multimedia.cx_testsuite_iv31.avi" seekable="true">
+<file duration="47416477000" frame-detection="1" skip-parsers="0" uri="file:///../../media/defaults/avi/samples.multimedia.cx_testsuite_iv31.avi" seekable="true">
   <streams caps="video/x-msvideo">
-    <stream type="video" caps="video/x-indeo, indeoversion=(int)3, framerate=(fraction)1000000/83333, width=(int)160, height=(int)120" id="0740b58b00e63354cbdab279ce720ae7283c983517ff4be9487e4103321e7f5b/001">
+    <stream type="video" caps="video/x-indeo, indeoversion=(int)3, framerate=(fraction)1000000/83333, width=(int)160, height=(int)120" id="/001">
       <segments>
         <segment next-frame-id="0" flags="0" rate="1.000000" applied-rate="1.000000" format="3" base="0" offset="0" start="0" stop="18446744073709551615" time="0" position="0" duration="47416477000"/>
       </segments>
@@ -574,10 +574,10 @@
        <frame duration="83333000" id="567" is-keyframe="false" offset="567" offset-end="568" pts="18446744073709551615" dts="47249811000" running-time="18446744073709551615" checksum="d34a0f6d783f44be67324e9c039bfaba"/>
        <frame duration="83333000" id="568" is-keyframe="false" offset="568" offset-end="569" pts="18446744073709551615" dts="47333144000" running-time="18446744073709551615" checksum="355916990c5b2e039c6e06f00584c321"/>
       <tags>
-        <tag content="taglist, video-codec=(string)&quot;Intel\ Video\ 3&quot;, bitrate=(uint)426762, container-format=(string)AVI;"/>
+        <tag content="taglist, video-codec=(string)&quot;Intel\ Video\ 3&quot;, bitrate=(uint)426762;"/>
       </tags>
     </stream>
-    <stream type="audio" caps="audio/x-raw, format=(string)U8, layout=(string)interleaved, channels=(int)1, rate=(int)11025" id="0740b58b00e63354cbdab279ce720ae7283c983517ff4be9487e4103321e7f5b/002">
+    <stream type="audio" caps="audio/x-raw, format=(string)U8, layout=(string)interleaved, channels=(int)1, rate=(int)11025" id="/002">
       <segments>
         <segment next-frame-id="0" flags="0" rate="1.000000" applied-rate="1.000000" format="3" base="0" offset="0" start="0" stop="18446744073709551615" time="0" position="0" duration="47416477000"/>
       </segments>
@@ -1151,7 +1151,7 @@
        <frame duration="83356009" id="567" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="47249795918" dts="47249795918" running-time="47249795918" checksum="a2a6f175ececda4bc80709ba2b461a2d"/>
        <frame duration="82811791" id="568" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="47333151927" dts="47333151927" running-time="47333151927" checksum="5d8b192119eed070235c468e6d191bb8"/>
       <tags>
-        <tag content="taglist, audio-codec=(string)&quot;Uncompressed\ 8-bit\ PCM\ audio&quot;, bitrate=(uint)88200, container-format=(string)AVI;"/>
+        <tag content="taglist, audio-codec=(string)&quot;Uncompressed\ 8-bit\ PCM\ audio&quot;, bitrate=(uint)88200;"/>
       </tags>
     </stream>
   </streams>

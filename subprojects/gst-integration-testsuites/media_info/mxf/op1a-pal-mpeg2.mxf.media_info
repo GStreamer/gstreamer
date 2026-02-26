@@ -1,6 +1,6 @@
-<file duration="1720000000" frame-detection="1" skip-parsers="0" uri="file:///home/bilboed/work/devel/gst-build/gst-integration-testsuites/medias/defaults/mxf/op1a-pal-mpeg2.mxf" seekable="true">
+<file duration="1720000000" frame-detection="1" skip-parsers="0" uri="file:///../../media/defaults/mxf/op1a-pal-mpeg2.mxf" seekable="true">
   <streams caps="application/mxf">
-    <stream type="video" caps="video/mpeg, mpegversion=(int)2, systemstream=(boolean)false, framerate=(fraction)25/1, interlaced=(boolean)true, field-order=(string)top-field-first, width=(int)720, height=(int)608, pixel-aspect-ratio=(fraction)152/135, parsed=(boolean)true, codec_data=(buffer)000001b32d026023493e23d8000001b5185400010080000001b200010100070200, profile=(string)4:2:2, level=(string)main, interlace-mode=(string)mixed" id="5a7e08facc352a228613a33f93950d5950026747dc6979b2aa2a437c4fcb5372/002">
+    <stream type="video" caps="video/mpeg, mpegversion=(int)2, systemstream=(boolean)false, framerate=(fraction)25/1, interlaced=(boolean)true, field-order=(string)top-field-first, width=(int)720, height=(int)608, pixel-aspect-ratio=(fraction)152/135, parsed=(boolean)true, codec_data=(buffer)000001b32d026023493e23d8000001b5185400010080000001b200010100070200, profile=(string)4:2:2, level=(string)main, interlace-mode=(string)mixed" id="/002">
       <segments>
         <segment next-frame-id="0" flags="0" rate="1.000000" applied-rate="1.000000" format="3" base="0" offset="0" start="0" stop="18446744073709551615" time="0" position="0" duration="18446744073709551615"/>
       </segments>
