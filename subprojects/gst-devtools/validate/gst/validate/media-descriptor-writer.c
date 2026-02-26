@@ -1033,24 +1033,115 @@ gst_validate_media_descriptor_writer_add_frame (GstValidateMediaDescriptorWriter
   return TRUE;
 }
 
+/*
+ * Compute a relative path from @from_dir to @to_path.
+ * Both must be canonical absolute paths. Returns a newly-allocated string.
+ */
+static gchar *
+compute_relative_path (const gchar * from_dir, const gchar * to_path)
+{
+  gchar **from_parts, **to_parts;
+  guint from_len, to_len, common, i;
+  GString *result;
+
+  from_parts = g_strsplit (from_dir, G_DIR_SEPARATOR_S, -1);
+  to_parts = g_strsplit (to_path, G_DIR_SEPARATOR_S, -1);
+
+  from_len = g_strv_length (from_parts);
+  to_len = g_strv_length (to_parts);
+
+  /* Find common prefix */
+  common = 0;
+  for (i = 0; i < from_len && i < to_len; i++) {
+    if (g_strcmp0 (from_parts[i], to_parts[i]) != 0)
+      break;
+    common = i + 1;
+  }
+
+  result = g_string_new (NULL);
+
+  /* Add ".." for each remaining component in from_dir */
+  for (i = common; i < from_len; i++) {
+    if (from_parts[i][0] == '\0')
+      continue;
+    if (result->len > 0)
+      g_string_append_c (result, G_DIR_SEPARATOR);
+    g_string_append (result, "..");
+  }
+
+  /* Append remaining components of to_path */
+  for (i = common; i < to_len; i++) {
+    if (to_parts[i][0] == '\0')
+      continue;
+    if (result->len > 0)
+      g_string_append_c (result, G_DIR_SEPARATOR);
+    g_string_append (result, to_parts[i]);
+  }
+
+  g_strfreev (from_parts);
+  g_strfreev (to_parts);
+
+  return g_string_free (result, FALSE);
+}
+
 gboolean
 gst_validate_media_descriptor_writer_write (GstValidateMediaDescriptorWriter *
     writer, const gchar * filename)
 {
   gboolean ret = FALSE;
   gchar *serialized;
+  GstValidateMediaFileNode *filenode;
+  gchar *orig_uri = NULL;
 
   g_return_val_if_fail (GST_IS_VALIDATE_MEDIA_DESCRIPTOR_WRITER (writer),
       FALSE);
-  g_return_val_if_fail (gst_validate_media_descriptor_get_file_node (
-          (GstValidateMediaDescriptor *) writer), FALSE);
+
+  filenode = gst_validate_media_descriptor_get_file_node (
+      (GstValidateMediaDescriptor *) writer);
+  g_return_val_if_fail (filenode, FALSE);
+
+  /* Make URI relative to the output file location for local URIs */
+  if (g_str_has_prefix (filenode->uri, "file://")
+      || g_str_has_prefix (filenode->uri, "imagesequence:/")) {
+    const gchar *scheme;
+    gchar *media_path;
+
+    if (g_str_has_prefix (filenode->uri, "file://")) {
+      scheme = "file:///";
+      media_path = g_filename_from_uri (filenode->uri, NULL, NULL);
+    } else {
+      scheme = "imagesequence:///";
+      media_path = gst_uri_get_location (filenode->uri);
+    }
+
+    if (media_path) {
+      gchar *output_dir = g_path_get_dirname (filename);
+      gchar *output_dir_canon = g_canonicalize_filename (output_dir, NULL);
+      gchar *media_path_canon = g_canonicalize_filename (media_path, NULL);
+      gchar *relative_path =
+          compute_relative_path (output_dir_canon, media_path_canon);
+
+      orig_uri = filenode->uri;
+      filenode->uri = g_strdup_printf ("%s%s", scheme, relative_path);
+
+      g_free (relative_path);
+      g_free (output_dir);
+      g_free (output_dir_canon);
+      g_free (media_path_canon);
+    }
+    g_free (media_path);
+  }
 
   serialized = serialize_filenode (writer);
-
 
   if (g_file_set_contents (filename, serialized, -1, NULL) == TRUE)
     ret = TRUE;
 
+  /* Restore original URI */
+  if (orig_uri) {
+    g_free (filenode->uri);
+    filenode->uri = orig_uri;
+  }
 
   g_free (serialized);
 
