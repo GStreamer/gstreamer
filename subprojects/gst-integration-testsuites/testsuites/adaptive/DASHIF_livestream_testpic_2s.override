@@ -1,0 +1,2 @@
+# Ignore caps changing issues (aacparse and container reporting bogus streams)
+change-severity, issue-id=caps::field-unexpected-value, new-severity=warning

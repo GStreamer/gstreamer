@@ -39,8 +39,10 @@ BLACKLIST = [
 def setup_tests(test_manager, options):
     print("Setting up GstValidate Adaptive Streaming test-vectors tests")
 
-    assets_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "media", "adaptivecontent"))
-    options.add_paths(assets_dir)
+    testsuite_dir = os.path.dirname(__file__)
+    stream_info_dir = os.path.join(testsuite_dir, "adaptive")
+    if os.path.isdir(stream_info_dir):
+        options.add_paths(stream_info_dir)
     test_manager.set_default_blacklist(BLACKLIST)
     # test_manager.add_expected_issues(EXPECTED_ISSUES)
     test_manager.register_defaults()
