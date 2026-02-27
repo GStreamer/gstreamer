@@ -305,11 +305,11 @@
        <frame duration="33333333" id="298" is-keyframe="false" offset="1877703" offset-end="18446744073709551615" pts="9966666666" dts="9933333333" running-time="9966666666" checksum="ab4ec011d4ad328bd9937db47e21ffaa"/>
        <frame duration="33333334" id="299" is-keyframe="false" offset="1883936" offset-end="18446744073709551615" pts="10033333333" dts="9966666666" running-time="10033333333" checksum="d1578e0703a0ee0d3b15abbf78e64c0f"/>
       <tags>
-        <tag content="taglist, video-codec=(string)&quot;H.264\ /\ AVC&quot;, language-code=(string)en, container-specific-track-id=(string)1, encoder=(string)x264;"/>
+        <tag content="taglist, container-specific-track-id=(string)1, encoder=(string)x264, language-code=(string)en, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, video-codec=(string)&quot;H.264\ /\ AVC&quot;, language-code=(string)en, container-specific-track-id=(string)1, encoder=(string)x264, datetime=(datetime)2016-05-03T19:17:43Z, container-format=(string)&quot;ISO\ fMP4&quot;;"/>
+    <tag content="taglist, container-format=(string)&quot;ISO\ fMP4&quot;, container-specific-track-id=(string)1, datetime=(datetime)2016-05-03T19:17:43Z, encoder=(string)x264, language-code=(string)en, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
   </tags>
 </file>

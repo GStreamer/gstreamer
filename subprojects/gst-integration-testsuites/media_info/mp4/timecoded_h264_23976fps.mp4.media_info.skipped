@@ -4,11 +4,11 @@
       <segments>
       </segments>
       <tags>
-        <tag content="taglist, video-codec=(string)&quot;H.264\ /\ AVC&quot;, maximum-bitrate=(uint)2097152, bitrate=(uint)359696, container-specific-track-id=(string)1, encoder=(string)x264;"/>
+        <tag content="taglist, bitrate=(uint)359696, container-specific-track-id=(string)1, encoder=(string)x264, maximum-bitrate=(uint)2097152, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, video-codec=(string)&quot;H.264\ /\ AVC&quot;, maximum-bitrate=(uint)2097152, bitrate=(uint)359696, container-specific-track-id=(string)1, encoder=(string)x264, datetime=(datetime)2020-01-30T20:42:35Z, container-format=(string)Quicktime;"/>
+    <tag content="taglist, bitrate=(uint)359696, container-format=(string)Quicktime, container-specific-track-id=(string)1, datetime=(datetime)2020-01-30T20:42:35Z, encoder=(string)x264, maximum-bitrate=(uint)2097152, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
   </tags>
 </file>

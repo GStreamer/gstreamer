@@ -105,11 +105,11 @@
        <frame duration="33333334" id="98" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="3266666666" dts="18446744073709551615" running-time="3266666666" checksum="b33ece119b482cf9b7bbe45be9e8e508"/>
        <frame duration="33000000" id="99" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="3300000000" dts="18446744073709551615" running-time="3300000000" checksum="a57896eefa70b7502d1aca703d089ca1"/>
       <tags>
-        <tag content="taglist, video-codec=(string)&quot;Uncompressed\ packed\ YUV\ 4:2:2&quot;, language-code=(string)en, container-specific-track-id=(string)1, bitrate=(uint)36867725;"/>
+        <tag content="taglist, bitrate=(uint)36867725, container-specific-track-id=(string)1, language-code=(string)en, video-codec=(string)&quot;Uncompressed\ packed\ YUV\ 4:2:2&quot;;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, video-codec=(string)&quot;Uncompressed\ packed\ YUV\ 4:2:2&quot;, language-code=(string)en, container-specific-track-id=(string)1, bitrate=(uint)36867725, datetime=(datetime)2013-11-14T20:00:20Z, container-format=(string)Quicktime;"/>
+    <tag content="taglist, bitrate=(uint)36867725, container-format=(string)Quicktime, container-specific-track-id=(string)1, datetime=(datetime)2013-11-14T20:00:20Z, language-code=(string)en, video-codec=(string)&quot;Uncompressed\ packed\ YUV\ 4:2:2&quot;;"/>
   </tags>
 </file>

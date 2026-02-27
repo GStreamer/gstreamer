@@ -574,7 +574,7 @@
        <frame duration="83333000" id="567" is-keyframe="false" offset="567" offset-end="568" pts="18446744073709551615" dts="47249811000" running-time="18446744073709551615" checksum="d34a0f6d783f44be67324e9c039bfaba"/>
        <frame duration="83333000" id="568" is-keyframe="false" offset="568" offset-end="569" pts="18446744073709551615" dts="47333144000" running-time="18446744073709551615" checksum="355916990c5b2e039c6e06f00584c321"/>
       <tags>
-        <tag content="taglist, video-codec=(string)&quot;Intel\ Video\ 3&quot;, bitrate=(uint)426762;"/>
+        <tag content="taglist, bitrate=(uint)426762, video-codec=(string)&quot;Intel\ Video\ 3&quot;;"/>
       </tags>
     </stream>
     <stream type="audio" caps="audio/x-raw, format=(string)U8, layout=(string)interleaved, channels=(int)1, rate=(int)11025" id="/002">

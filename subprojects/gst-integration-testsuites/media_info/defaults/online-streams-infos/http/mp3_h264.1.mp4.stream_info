@@ -4,18 +4,18 @@
       <segments>
       </segments>
       <tags>
-        <tag content="taglist, video-codec=(string)&quot;H.264\ /\ AVC&quot;, bitrate=(uint)1477790, language-code=(string)en, container-specific-track-id=(string)1;"/>
+        <tag content="taglist, bitrate=(uint)1477790, container-specific-track-id=(string)1, language-code=(string)en, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
       </tags>
     </stream>
     <stream type="audio" caps="audio/mpeg, mpegversion=(int)1, mpegaudioversion=(int)1, layer=(int)3, rate=(int)44100, channels=(int)1, parsed=(boolean)true" id="/002">
       <segments>
       </segments>
       <tags>
-        <tag content="taglist, audio-codec=(string)&quot;MPEG-1\ layer\ 3&quot;, language-code=(string)en, container-specific-track-id=(string)2, bitrate=(uint)28066, has-crc=(boolean)false, channel-mode=(string)mono, nominal-bitrate=(uint)224000;"/>
+        <tag content="taglist, audio-codec=(string)&quot;MPEG-1\ layer\ 3&quot;, bitrate=(uint)28066, channel-mode=(string)mono, container-specific-track-id=(string)2, has-crc=(boolean)false, language-code=(string)en, nominal-bitrate=(uint)224000;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, audio-codec=(string)&quot;MPEG-1\ layer\ 3&quot;, language-code=(string)en, container-specific-track-id=(string)2, bitrate=(uint)28066, datetime=(datetime)2013-09-03T16:21:40Z, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)x264, container-format=(string)Quicktime, has-crc=(boolean)false, channel-mode=(string)mono, nominal-bitrate=(uint)224000, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
+    <tag content="taglist, audio-codec=(string)&quot;MPEG-1\ layer\ 3&quot;, bitrate=(uint)1477790, channel-mode=(string)mono, container-format=(string)Quicktime, container-specific-track-id=(string)1, datetime=(datetime)2013-09-03T16:21:40Z, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)x264, has-crc=(boolean)false, language-code=(string)en, nominal-bitrate=(uint)224000, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
   </tags>
 </file>

@@ -278,6 +278,6 @@
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, container-format=(string)ASF, audio-codec=(string)&quot;WMA\ Version\ 8&quot;, bitrate=(uint)128, video-codec=(string)&quot;Microsoft\ MPEG-4\ 4.3&quot;;"/>
+    <tag content="taglist, audio-codec=(string)&quot;WMA\ Version\ 8&quot;, bitrate=(uint)128, container-format=(string)ASF, video-codec=(string)&quot;Microsoft\ MPEG-4\ 4.3&quot;;"/>
   </tags>
 </file>

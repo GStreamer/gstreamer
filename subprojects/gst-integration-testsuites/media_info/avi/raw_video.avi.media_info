@@ -105,11 +105,11 @@
        <frame duration="33333334" id="98" is-keyframe="true" offset="98" offset-end="99" pts="3266666666" dts="3266666666" running-time="3266666666" checksum="b191e86057ee74e0f8ec33aa4d562d05"/>
        <frame duration="33333333" id="99" is-keyframe="true" offset="99" offset-end="100" pts="3300000000" dts="3300000000" running-time="3300000000" checksum="756cb74cfd80c8d1daac65094e7d68ca"/>
       <tags>
-        <tag content="taglist, video-codec=(string)&quot;Uncompressed\ planar\ YUV\ 4:2:0&quot;, bitrate=(uint)27648000;"/>
+        <tag content="taglist, bitrate=(uint)27648000, video-codec=(string)&quot;Uncompressed\ planar\ YUV\ 4:2:0&quot;;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, video-codec=(string)&quot;Uncompressed\ planar\ YUV\ 4:2:0&quot;, bitrate=(uint)27648000, container-format=(string)AVI;"/>
+    <tag content="taglist, bitrate=(uint)27648000, container-format=(string)AVI, video-codec=(string)&quot;Uncompressed\ planar\ YUV\ 4:2:0&quot;;"/>
   </tags>
 </file>

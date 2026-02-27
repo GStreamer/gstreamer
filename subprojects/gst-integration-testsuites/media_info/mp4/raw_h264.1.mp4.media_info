@@ -4,18 +4,18 @@
       <segments>
       </segments>
       <tags>
-        <tag content="taglist, video-codec=(string)&quot;H.264\ /\ AVC&quot;, bitrate=(uint)1474665, language-code=(string)en, container-specific-track-id=(string)1;"/>
+        <tag content="taglist, bitrate=(uint)1474665, container-specific-track-id=(string)1, language-code=(string)en, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
       </tags>
     </stream>
     <stream type="audio" caps="audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)44100, channels=(int)1" id="/002">
       <segments>
       </segments>
       <tags>
-        <tag content="taglist, audio-codec=(string)&quot;Raw\ 16-bit\ PCM\ audio&quot;, language-code=(string)en, container-specific-track-id=(string)2, bitrate=(uint)704524;"/>
+        <tag content="taglist, audio-codec=(string)&quot;Raw\ 16-bit\ PCM\ audio&quot;, bitrate=(uint)704524, container-specific-track-id=(string)2, language-code=(string)en;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, audio-codec=(string)&quot;Raw\ 16-bit\ PCM\ audio&quot;, language-code=(string)en, container-specific-track-id=(string)2, bitrate=(uint)704524, datetime=(datetime)2013-09-03T16:21:37Z, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)x264, container-format=(string)Quicktime, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
+    <tag content="taglist, audio-codec=(string)&quot;Raw\ 16-bit\ PCM\ audio&quot;, bitrate=(uint)704524, container-format=(string)Quicktime, container-specific-track-id=(string)2, datetime=(datetime)2013-09-03T16:21:37Z, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)x264, language-code=(string)en, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
   </tags>
 </file>

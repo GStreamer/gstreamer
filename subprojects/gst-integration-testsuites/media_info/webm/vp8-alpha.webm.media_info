@@ -4,11 +4,11 @@
       <segments>
       </segments>
       <tags>
-        <tag content="taglist, video-codec=(string)&quot;VP8\ video&quot;, language-code=(string)en, container-specific-track-id=(string)1;"/>
+        <tag content="taglist, container-specific-track-id=(string)1, language-code=(string)en, video-codec=(string)&quot;VP8\ video&quot;;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, video-codec=(string)&quot;VP8\ video&quot;, container-format=(string)Matroska, language-code=(string)en, container-specific-track-id=(string)1;"/>
+    <tag content="taglist, container-format=(string)Matroska, container-specific-track-id=(string)1, language-code=(string)en, video-codec=(string)&quot;VP8\ video&quot;;"/>
   </tags>
 </file>

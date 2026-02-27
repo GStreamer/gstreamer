@@ -4,11 +4,11 @@
       <segments>
       </segments>
       <tags>
-        <tag content="taglist, encoder=(string)&quot;Xiph.Org\ libtheora\ 1.1\ 20090822\ \(Thusnelda\)&quot;, video-codec=(string)Theora, encoder-version=(uint)3;"/>
+        <tag content="taglist, encoder=(string)&quot;Xiph.Org\ libtheora\ 1.1\ 20090822\ \(Thusnelda\)&quot;, encoder-version=(uint)3, video-codec=(string)Theora;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, encoder=(string)&quot;Xiph.Org\ libtheora\ 1.1\ 20090822\ \(Thusnelda\)&quot;, video-codec=(string)Theora, container-format=(string)Ogg, encoder-version=(uint)3;"/>
+    <tag content="taglist, container-format=(string)Ogg, encoder=(string)&quot;Xiph.Org\ libtheora\ 1.1\ 20090822\ \(Thusnelda\)&quot;, encoder-version=(uint)3, video-codec=(string)Theora;"/>
   </tags>
 </file>

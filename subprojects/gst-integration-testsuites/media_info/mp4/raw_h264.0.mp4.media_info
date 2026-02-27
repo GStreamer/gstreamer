@@ -305,7 +305,7 @@
        <frame duration="33333333" id="298" is-keyframe="false" offset="123811" offset-end="18446744073709551615" pts="10033333333" dts="9933333333" running-time="9966666667" checksum="495e06554e6ee612a9b9adf8e5c28c40"/>
        <frame duration="33333334" id="299" is-keyframe="false" offset="124186" offset-end="18446744073709551615" pts="10000000000" dts="9966666666" running-time="9933333334" checksum="0b6906dc10fdc0ecfde1cc69e90c0b18"/>
       <tags>
-        <tag content="taglist, video-codec=(string)&quot;H.264\ /\ AVC&quot;, bitrate=(uint)99582, language-code=(string)en, container-specific-track-id=(string)1;"/>
+        <tag content="taglist, bitrate=(uint)99582, container-specific-track-id=(string)1, language-code=(string)en, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
       </tags>
     </stream>
     <stream type="audio" caps="audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)44100, channels=(int)1" id="/002">
@@ -743,11 +743,11 @@
        <frame duration="23219955" id="428" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="9938140589" dts="18446744073709551615" running-time="9938140589" checksum="36132f4fa6e0bd1cf0b106ba8328e86b"/>
        <frame duration="23219954" id="429" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="9961360544" dts="18446744073709551615" running-time="9961360544" checksum="b5e7340a1228ff39fca47738208215b8"/>
       <tags>
-        <tag content="taglist, audio-codec=(string)&quot;Raw\ 16-bit\ PCM\ audio&quot;, language-code=(string)en, container-specific-track-id=(string)2, bitrate=(uint)704524;"/>
+        <tag content="taglist, audio-codec=(string)&quot;Raw\ 16-bit\ PCM\ audio&quot;, bitrate=(uint)704524, container-specific-track-id=(string)2, language-code=(string)en;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, audio-codec=(string)&quot;Raw\ 16-bit\ PCM\ audio&quot;, language-code=(string)en, container-specific-track-id=(string)2, bitrate=(uint)704524, datetime=(datetime)2013-09-03T16:21:35Z, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)x264, container-format=(string)Quicktime, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
+    <tag content="taglist, audio-codec=(string)&quot;Raw\ 16-bit\ PCM\ audio&quot;, bitrate=(uint)704524, container-format=(string)Quicktime, container-specific-track-id=(string)2, datetime=(datetime)2013-09-03T16:21:35Z, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)x264, language-code=(string)en, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
   </tags>
 </file>

@@ -655,7 +655,7 @@
        <frame duration="24000000" id="254" is-keyframe="true" offset="292608" offset-end="18446744073709551615" pts="79885579022222" dts="79885579022222" running-time="6096000000" checksum="03b1fa672b79e1064626342d9d0d0457"/>
        <frame duration="24000000" id="255" is-keyframe="true" offset="293760" offset-end="18446744073709551615" pts="79885603022222" dts="79885603022222" running-time="6120000000" checksum="bb402b6556106ad6459b1e56d0ded358"/>
       <tags>
-        <tag content="taglist, audio-codec=(string)&quot;MPEG-1\ Layer\ 2\ \(MP2\)&quot;, has-crc=(boolean)false, channel-mode=(string)stereo, nominal-bitrate=(uint)384000;"/>
+        <tag content="taglist, audio-codec=(string)&quot;MPEG-1\ Layer\ 2\ \(MP2\)&quot;, channel-mode=(string)stereo, has-crc=(boolean)false, nominal-bitrate=(uint)384000;"/>
       </tags>
     </stream>
     <stream type="audio" caps="audio/mpeg, mpegversion=(int)1, mpegaudioversion=(int)1, layer=(int)2, rate=(int)48000, channels=(int)2, parsed=(boolean)true" id="/c1">
@@ -919,11 +919,11 @@
        <frame duration="24000000" id="254" is-keyframe="true" offset="292608" offset-end="18446744073709551615" pts="79885579022222" dts="79885579022222" running-time="6096000000" checksum="43148ffd0b55ebcffdfae646718537d6"/>
        <frame duration="24000000" id="255" is-keyframe="true" offset="293760" offset-end="18446744073709551615" pts="79885603022222" dts="79885603022222" running-time="6120000000" checksum="e6f01a02cb32990f2206eca3369a1c8e"/>
       <tags>
-        <tag content="taglist, audio-codec=(string)&quot;MPEG-1\ Layer\ 2\ \(MP2\)&quot;, has-crc=(boolean)false, channel-mode=(string)stereo, nominal-bitrate=(uint)384000;"/>
+        <tag content="taglist, audio-codec=(string)&quot;MPEG-1\ Layer\ 2\ \(MP2\)&quot;, channel-mode=(string)stereo, has-crc=(boolean)false, nominal-bitrate=(uint)384000;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, audio-codec=(string)&quot;MPEG-1\ Layer\ 2\ \(MP2\)&quot;, has-crc=(boolean)false, channel-mode=(string)stereo, nominal-bitrate=(uint)384000, video-codec=(string)&quot;MPEG-2\ Video&quot;;"/>
+    <tag content="taglist, audio-codec=(string)&quot;MPEG-1\ Layer\ 2\ \(MP2\)&quot;, channel-mode=(string)stereo, has-crc=(boolean)false, nominal-bitrate=(uint)384000, video-codec=(string)&quot;MPEG-2\ Video&quot;;"/>
   </tags>
 </file>

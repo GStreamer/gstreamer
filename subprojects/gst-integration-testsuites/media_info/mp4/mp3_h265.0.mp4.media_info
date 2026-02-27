@@ -389,7 +389,7 @@
        <frame duration="26122448" id="382" is-keyframe="true" offset="40381" offset-end="18446744073709551615" pts="9978775510" dts="9978775510" running-time="9978775510" checksum="99b93d0ea746002f1f92919ddb2f7498"/>
        <frame duration="26122448" id="383" is-keyframe="true" offset="40798" offset-end="18446744073709551615" pts="10004897959" dts="10004897959" running-time="10004897959" checksum="a0263d13ef1032aca36e811da9d070f1"/>
       <tags>
-        <tag content="taglist, audio-codec=(string)&quot;MPEG-1\ audio&quot;, bitrate=(uint)32620, container-specific-track-id=(string)1, description=(string)&quot;audiotest\ wave&quot;, has-crc=(boolean)false, channel-mode=(string)mono, nominal-bitrate=(uint)224000;"/>
+        <tag content="taglist, audio-codec=(string)&quot;MPEG-1\ audio&quot;, bitrate=(uint)32620, channel-mode=(string)mono, container-specific-track-id=(string)1, description=(string)&quot;audiotest\ wave&quot;, has-crc=(boolean)false, nominal-bitrate=(uint)224000;"/>
       </tags>
     </stream>
     <stream type="video" caps="video/x-h265, stream-format=(string)hvc1, alignment=(string)au, level=(string)2.1, tier=(string)main, profile=(string)main-10, codec_data=(buffer)0102200000009000000000003ff000fcfdfafa00000f03200001001840010c01ffff02200000030090000003000003003f959009210001002e42010102200000030090000003000003003fa00a080f136595924932bffc0004000404000003000400000300782022000100074401c172b46240, width=(int)320, height=(int)240, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)1/1, colorimetry=(string)2:4:5:4, chroma-format=(string)4:2:0, bit-depth-luma=(uint)10, bit-depth-chroma=(uint)10, parsed=(boolean)true, lcevc=(boolean)false" id="/002">
@@ -697,11 +697,11 @@
        <frame duration="33333333" id="298" is-keyframe="false" offset="1927158" offset-end="18446744073709551615" pts="9933333333" dts="9933333333" running-time="9866666667" checksum="d71e206137c80e4056857a51becb0e66"/>
        <frame duration="33333334" id="299" is-keyframe="false" offset="1933767" offset-end="18446744073709551615" pts="10033333333" dts="9966666666" running-time="9966666667" checksum="2c48faefe1aae06028f56fb070103644"/>
       <tags>
-        <tag content="taglist, video-codec=(string)&quot;H.265\ /\ HEVC&quot;, maximum-bitrate=(uint)1937280, bitrate=(uint)1537413, container-specific-track-id=(string)2, encoder=(string)x265;"/>
+        <tag content="taglist, bitrate=(uint)1537413, container-specific-track-id=(string)2, encoder=(string)x265, maximum-bitrate=(uint)1937280, video-codec=(string)&quot;H.265\ /\ HEVC&quot;;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, audio-codec=(string)&quot;MPEG-1\ audio&quot;, bitrate=(uint)32620, container-specific-track-id=(string)1, description=(string)&quot;audiotest\ wave&quot;, datetime=(datetime)2019-07-15T17:28:39Z, container-format=(string)&quot;ISO\ MP4/M4A&quot;, has-crc=(boolean)false, channel-mode=(string)mono, nominal-bitrate=(uint)224000, video-codec=(string)&quot;H.265\ /\ HEVC&quot;, maximum-bitrate=(uint)1937280, encoder=(string)x265;"/>
+    <tag content="taglist, audio-codec=(string)&quot;MPEG-1\ audio&quot;, bitrate=(uint)32620, channel-mode=(string)mono, container-format=(string)&quot;ISO\ MP4/M4A&quot;, container-specific-track-id=(string)1, datetime=(datetime)2019-07-15T17:28:39Z, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)x265, has-crc=(boolean)false, maximum-bitrate=(uint)1937280, nominal-bitrate=(uint)224000, video-codec=(string)&quot;H.265\ /\ HEVC&quot;;"/>
   </tags>
 </file>

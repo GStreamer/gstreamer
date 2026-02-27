@@ -4,11 +4,11 @@
       <segments>
       </segments>
       <tags>
-        <tag content="taglist, video-codec=(string)&quot;Uncompressed\ planar\ YUV\ 4:2:0&quot;, container-specific-track-id=(string)1;"/>
+        <tag content="taglist, container-specific-track-id=(string)1, video-codec=(string)&quot;Uncompressed\ planar\ YUV\ 4:2:0&quot;;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, datetime=(datetime)2013-11-14T12:08:43Z, container-format=(string)Matroska, video-codec=(string)&quot;Uncompressed\ planar\ YUV\ 4:2:0&quot;, container-specific-track-id=(string)1;"/>
+    <tag content="taglist, container-format=(string)Matroska, container-specific-track-id=(string)1, datetime=(datetime)2013-11-14T12:08:43Z, video-codec=(string)&quot;Uncompressed\ planar\ YUV\ 4:2:0&quot;;"/>
   </tags>
 </file>

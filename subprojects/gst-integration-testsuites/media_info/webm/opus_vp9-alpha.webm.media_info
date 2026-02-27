@@ -4,18 +4,18 @@
       <segments>
       </segments>
       <tags>
-        <tag content="taglist, video-codec=(string)&quot;VP9\ video&quot;, container-specific-track-id=(string)1;"/>
+        <tag content="taglist, container-specific-track-id=(string)1, video-codec=(string)&quot;VP9\ video&quot;;"/>
       </tags>
     </stream>
     <stream type="audio" caps="audio/x-opus, rate=(int)48000, channels=(int)2, channel-mapping-family=(int)0, stream-count=(int)1, coupled-count=(int)1, streamheader=(buffer)&lt; 4f707573486561640102380180bb0000000000, 4f707573546167731f0000004753747265616d657220656e636f64656420766f72626973636f6d6d656e740000000001 &gt;" id="/002:17082337896019765">
       <segments>
       </segments>
       <tags>
-        <tag content="taglist, audio-codec=(string)Opus, language-code=(string)en, container-specific-track-id=(string)2;"/>
+        <tag content="taglist, audio-codec=(string)Opus, container-specific-track-id=(string)2, language-code=(string)en;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, video-codec=(string)&quot;VP9\ video&quot;, datetime=(datetime)2020-02-08T18:32:07Z, container-format=(string)Matroska, audio-codec=(string)Opus, language-code=(string)en, container-specific-track-id=(string)2;"/>
+    <tag content="taglist, audio-codec=(string)Opus, container-format=(string)Matroska, container-specific-track-id=(string)2, datetime=(datetime)2020-02-08T18:32:07Z, language-code=(string)en, video-codec=(string)&quot;VP9\ video&quot;;"/>
   </tags>
 </file>

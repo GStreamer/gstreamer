@@ -80,11 +80,11 @@
        <frame duration="33333333" id="73" is-keyframe="false" offset="181566" offset-end="18446744073709551615" pts="2499000000" dts="18446744073709551615" running-time="2433000000" checksum="a1d9232c21aa247e13a17d7c6cdb95f5"/>
        <frame duration="33333333" id="74" is-keyframe="false" offset="184181" offset-end="18446744073709551615" pts="2466000000" dts="18446744073709551615" running-time="2400000000" checksum="ce41a4f4c50b5fa19a535d8f544e7d7c"/>
       <tags>
-        <tag content="taglist, video-codec=(string)H264, container-specific-track-id=(string)1;"/>
+        <tag content="taglist, container-specific-track-id=(string)1, video-codec=(string)H264;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, datetime=(datetime)2015-01-29T13:13:07Z, container-format=(string)Matroska, video-codec=(string)H264, container-specific-track-id=(string)1, encoder=(string)x264;"/>
+    <tag content="taglist, container-format=(string)Matroska, container-specific-track-id=(string)1, datetime=(datetime)2015-01-29T13:13:07Z, encoder=(string)x264, video-codec=(string)H264;"/>
   </tags>
 </file>

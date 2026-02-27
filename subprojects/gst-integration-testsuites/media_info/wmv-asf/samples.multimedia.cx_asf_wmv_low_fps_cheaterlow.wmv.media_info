@@ -1977,6 +1977,6 @@
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, container-format=(string)ASF, audio-codec=(string)&quot;WMA\ Version\ 8&quot;, bitrate=(uint)64040, video-codec=(string)&quot;Microsoft\ Windows\ Media\ 7&quot;;"/>
+    <tag content="taglist, audio-codec=(string)&quot;WMA\ Version\ 8&quot;, bitrate=(uint)64040, container-format=(string)ASF, video-codec=(string)&quot;Microsoft\ Windows\ Media\ 7&quot;;"/>
   </tags>
 </file>

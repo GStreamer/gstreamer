@@ -335,7 +335,7 @@
        <frame duration="16683333" id="328" is-keyframe="false" offset="9733654" offset-end="18446744073709551615" pts="5847705778" dts="5847705778" running-time="5472133333" checksum="6c9e9bfdb165e35613a36e8073937a16"/>
        <frame duration="16683333" id="329" is-keyframe="false" offset="9768087" offset-end="18446744073709551615" pts="18446744073709551615" dts="5864389111" running-time="18446744073709551615" checksum="4222910be0a50acfc97535fc8f4fdd33"/>
       <tags>
-        <tag content="taglist, video-codec=(string)&quot;H.264\ \(High\ Profile\)&quot;, minimum-bitrate=(uint)25894, maximum-bitrate=(uint)25894, bitrate=(uint)20726793;"/>
+        <tag content="taglist, video-codec=(string)H.264;"/>
       </tags>
     </stream>
     <stream type="audio" caps="audio/x-ac3, framed=(boolean)true, rate=(int)48000, channels=(int)2, alignment=(string)frame" id="/00001100">
@@ -521,6 +521,6 @@
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, audio-codec=(string)&quot;AC-3\ \(ATSC\ A/52\)&quot;, bitrate=(uint)192000, video-codec=(string)&quot;H.264\ \(High\ Profile\)&quot;, minimum-bitrate=(uint)25894, maximum-bitrate=(uint)25894;"/>
+    <tag content="taglist, audio-codec=(string)&quot;AC-3\ \(ATSC\ A/52\)&quot;, bitrate=(uint)192000, video-codec=(string)H.264;"/>
   </tags>
 </file>

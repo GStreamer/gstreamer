@@ -308,7 +308,7 @@
        <frame duration="32967033" id="301" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="9923076923" dts="9923076923" running-time="9923076923" checksum="47981060e408b69482b1b091cd742928"/>
        <frame duration="32967033" id="302" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="9956043956" dts="9956043956" running-time="9956043956" checksum="1b8d36745d7d7e290b73e3b92192a020"/>
       <tags>
-        <tag content="taglist, video-codec=(string)&quot;Apple\ ProRes&quot;, language-code=(string)en, container-specific-track-id=(string)1;"/>
+        <tag content="taglist, container-specific-track-id=(string)1, language-code=(string)en, video-codec=(string)&quot;Apple\ ProRes&quot;;"/>
       </tags>
     </stream>
     <stream type="audio" caps="audio/x-raw, format=(string)S32LE, layout=(string)interleaved, rate=(int)44100, channels=(int)1" id="/002">
@@ -748,11 +748,11 @@
        <frame duration="2902494" id="430" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="9978775510" dts="18446744073709551615" running-time="9978775510" checksum="0ee94e2ce5bc4187312ce729094985a1"/>
        <frame duration="2902494" id="431" is-keyframe="true" offset="18446744073709551615" offset-end="18446744073709551615" pts="9981678004" dts="18446744073709551615" running-time="9981678004" checksum="2c0361e0cdf30eb46fdb4ca0b7791f72"/>
       <tags>
-        <tag content="taglist, audio-codec=(string)&quot;Raw\ 32-bit\ PCM\ audio&quot;, language-code=(string)en, container-specific-track-id=(string)2, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)&quot;Xiph.Org\ libVorbis\ I\ 20120203\ \(Omnipresent\)&quot;;"/>
+        <tag content="taglist, audio-codec=(string)&quot;Raw\ 32-bit\ PCM\ audio&quot;, container-specific-track-id=(string)2, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)&quot;Xiph.Org\ libVorbis\ I\ 20120203\ \(Omnipresent\)&quot;, language-code=(string)en;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, audio-codec=(string)&quot;Raw\ 32-bit\ PCM\ audio&quot;, language-code=(string)en, container-specific-track-id=(string)2, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)&quot;Xiph.Org\ libVorbis\ I\ 20120203\ \(Omnipresent\)&quot;, datetime=(datetime)2015-10-11T11:13:06Z, container-format=(string)Quicktime, video-codec=(string)&quot;Apple\ ProRes&quot;;"/>
+    <tag content="taglist, audio-codec=(string)&quot;Raw\ 32-bit\ PCM\ audio&quot;, container-format=(string)Quicktime, container-specific-track-id=(string)2, datetime=(datetime)2015-10-11T11:13:06Z, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)&quot;Xiph.Org\ libVorbis\ I\ 20120203\ \(Omnipresent\)&quot;, language-code=(string)en, video-codec=(string)&quot;Apple\ ProRes&quot;;"/>
   </tags>
 </file>

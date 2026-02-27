@@ -4,18 +4,18 @@
       <segments>
       </segments>
       <tags>
-        <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, maximum-bitrate=(uint)119813, bitrate=(uint)65319, container-specific-track-id=(string)1;"/>
+        <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, bitrate=(uint)65319, container-specific-track-id=(string)1, maximum-bitrate=(uint)119813;"/>
       </tags>
     </stream>
     <stream type="video" caps="video/x-h264, stream-format=(string)avc, alignment=(string)au, level=(string)3, profile=(string)constrained-baseline, codec_data=(buffer)0142c01effe100256742c01e925203c17fcbff800200018800001f480005dc07320092800c3540c2c0f162e48001000468ce32c8, width=(int)480, height=(int)360, pixel-aspect-ratio=(fraction)4/3, framerate=(fraction)24000/1001, coded-picture-structure=(string)frame, chroma-format=(string)4:2:0, bit-depth-luma=(uint)8, bit-depth-chroma=(uint)8, parsed=(boolean)true, lcevc=(boolean)false" id="/video_00/002">
       <segments>
       </segments>
       <tags>
-        <tag content="taglist, video-codec=(string)&quot;H.264\ /\ AVC&quot;, container-specific-track-id=(string)2;"/>
+        <tag content="taglist, container-specific-track-id=(string)2, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, maximum-bitrate=(uint)119813, bitrate=(uint)65319, container-specific-track-id=(string)1, datetime=(datetime)2012-05-30T10:53:59Z, container-format=(string)&quot;ISO\ fMP4&quot;, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
+    <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC\ audio&quot;, bitrate=(uint)65319, container-format=(string)&quot;ISO\ fMP4&quot;, container-specific-track-id=(string)1, datetime=(datetime)2012-05-30T10:53:59Z, maximum-bitrate=(uint)119813, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
   </tags>
 </file>

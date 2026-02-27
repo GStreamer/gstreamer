@@ -4,11 +4,11 @@
       <segments>
       </segments>
       <tags>
-        <tag content="taglist, video-codec=(string)&quot;Motion\ JPEG&quot;, bitrate=(uint)4721297;"/>
+        <tag content="taglist, bitrate=(uint)4721297, video-codec=(string)&quot;Motion\ JPEG&quot;;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, video-codec=(string)&quot;Motion\ JPEG&quot;, bitrate=(uint)4721297, container-format=(string)AVI;"/>
+    <tag content="taglist, bitrate=(uint)4721297, container-format=(string)AVI, video-codec=(string)&quot;Motion\ JPEG&quot;;"/>
   </tags>
 </file>

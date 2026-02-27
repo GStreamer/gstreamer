@@ -4,11 +4,11 @@
       <segments>
       </segments>
       <tags>
-        <tag content="taglist, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)&quot;Encoded\ with\ GStreamer\ Opusenc&quot;, audio-codec=(string)Opus;"/>
+        <tag content="taglist, audio-codec=(string)Opus, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)&quot;Encoded\ with\ GStreamer\ Opusenc&quot;;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)&quot;Encoded\ with\ GStreamer\ Opusenc&quot;, audio-codec=(string)Opus, container-format=(string)Ogg;"/>
+    <tag content="taglist, audio-codec=(string)Opus, container-format=(string)Ogg, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)&quot;Encoded\ with\ GStreamer\ Opusenc&quot;;"/>
   </tags>
 </file>

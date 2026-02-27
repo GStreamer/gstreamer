@@ -4,11 +4,11 @@
       <segments>
       </segments>
       <tags>
-        <tag content="taglist, video-codec=(string)&quot;On2\ VP8&quot;, container-specific-track-id=(string)1, bitrate=(uint)213696;"/>
+        <tag content="taglist, bitrate=(uint)213696, container-specific-track-id=(string)1, video-codec=(string)&quot;VP8\ video&quot;;"/>
       </tags>
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, video-codec=(string)&quot;On2\ VP8&quot;, container-specific-track-id=(string)1, bitrate=(uint)213696, datetime=(datetime)2020-01-30T20:42:39Z, container-format=(string)Quicktime;"/>
+    <tag content="taglist, bitrate=(uint)213696, container-format=(string)Quicktime, container-specific-track-id=(string)1, datetime=(datetime)2020-01-30T20:42:39Z, video-codec=(string)&quot;VP8\ video&quot;;"/>
   </tags>
 </file>

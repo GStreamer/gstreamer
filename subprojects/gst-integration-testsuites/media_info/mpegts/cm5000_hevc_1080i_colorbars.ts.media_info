@@ -4,7 +4,7 @@
       <segments>
       </segments>
       <tags>
-        <tag content="taglist, video-codec=(string)H.265;"/>
+        <tag content="taglist, bitrate=(uint)4273764, maximum-bitrate=(uint)4060099, minimum-bitrate=(uint)4060099, video-codec=(string)H.265;"/>
       </tags>
     </stream>
     <stream type="audio" caps="audio/mpeg, framed=(boolean)true, mpegversion=(int)2, level=(string)2, profile=(string)lc, rate=(int)48000, channels=(int)2, stream-format=(string)adts" id="/00001010">
@@ -16,6 +16,6 @@
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC&quot;, video-codec=(string)H.265;"/>
+    <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC&quot;, bitrate=(uint)4273764, maximum-bitrate=(uint)4060099, minimum-bitrate=(uint)4060099, video-codec=(string)H.265;"/>
   </tags>
 </file>

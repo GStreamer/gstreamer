@@ -121,6 +121,43 @@ static void
 
 /* Private methods */
 static gint
+_compare_field_names (gconstpointer a, gconstpointer b)
+{
+  return g_strcmp0 (*(const gchar **) a, *(const gchar **) b);
+}
+
+/* Create a copy of a tag list with tags sorted alphabetically by name.
+ * GstStructure preserves insertion order, so inserting in sorted
+ * order guarantees gst_tag_list_to_string() outputs sorted fields. */
+static GstTagList *
+_sorted_tag_list (const GstTagList * taglist)
+{
+  GstTagList *sorted;
+  gint n = gst_tag_list_n_tags (taglist);
+  GPtrArray *names = g_ptr_array_sized_new (n);
+  gint i;
+
+  for (i = 0; i < n; i++)
+    g_ptr_array_add (names, (gpointer) gst_tag_list_nth_tag_name (taglist, i));
+  g_ptr_array_sort (names, _compare_field_names);
+
+  sorted = gst_tag_list_new_empty ();
+  for (i = 0; i < (gint) names->len; i++) {
+    const gchar *tag_name = g_ptr_array_index (names, i);
+    guint count = gst_tag_list_get_tag_size (taglist, tag_name);
+    guint j;
+
+    for (j = 0; j < count; j++) {
+      const GValue *val = gst_tag_list_get_value_index (taglist, tag_name, j);
+      gst_tag_list_add_value (sorted, GST_TAG_MERGE_APPEND, tag_name, val);
+    }
+  }
+
+  g_ptr_array_unref (names);
+  return sorted;
+}
+
+static gint
 _compare_stream_nodes (gconstpointer a, gconstpointer b)
 {
   const GstValidateMediaStreamNode *sa = a;
@@ -298,8 +335,7 @@ static gboolean
   snode->cframe = NULL;
 
   snode->id = g_strdup (gst_discoverer_stream_info_get_stream_id (info));
-  snode->stream_number =
-      gst_discoverer_stream_info_get_stream_number (info);
+  snode->stream_number = gst_discoverer_stream_info_get_stream_number (info);
   if (snode->id == NULL) {
     caps = gst_discoverer_stream_info_get_caps (info);
     capsstr = gst_caps_to_string (caps);
@@ -852,7 +888,7 @@ gst_validate_media_descriptor_writer_add_tags (GstValidateMediaDescriptorWriter
   }
 
   tagnode = g_new0 (GstValidateMediaTagNode, 1);
-  tagnode->taglist = gst_tag_list_copy (taglist);
+  tagnode->taglist = _sorted_tag_list (taglist);
   str_str = gst_tag_list_to_string (tagnode->taglist);
   tagnode->str_open =
       g_markup_printf_escaped ("<tag content=\"%s\"/>", str_str);
@@ -955,7 +991,7 @@ gboolean
   }
 
   tagnode = g_new0 (GstValidateMediaTagNode, 1);
-  tagnode->taglist = gst_tag_list_copy (taglist);
+  tagnode->taglist = _sorted_tag_list (taglist);
   str_str = gst_tag_list_to_string (tagnode->taglist);
   tagnode->str_open =
       g_markup_printf_escaped ("<tag content=\"%s\"/>", str_str);
