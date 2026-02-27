@@ -3927,7 +3927,7 @@ GST_START_TEST (test_twcc_recv_late_packet_fb_pkt_count_wrap)
     0x01, 0x00,                 /* base sequence number: 256 */
     0x00, 0x01,                 /* packet status count: 1 */
     0x00, 0x00, 0x01,           /* reference time: 1 */
-    0x00,                       /* feedback packet count: 00 */
+    0xFF,                       /* feedback packet count: 255 */
     /* packet chunks: */
     0x20, 0x01,                 /* 0 0 1 0 0 0 0 0 | 0 0 0 0 0 0 0 1 */
     0x00,                       /* 0 recv-delta */
@@ -3938,7 +3938,7 @@ GST_START_TEST (test_twcc_recv_late_packet_fb_pkt_count_wrap)
     0x01, 0x01,                 /* base sequence number: 257 */
     0x00, 0x01,                 /* packet status count: 1 */
     0x00, 0x00, 0x01,           /* reference time: 1 */
-    0x01,                       /* feedback packet count: 1 */
+    0x00,                       /* feedback packet count: 0 */
     /* packet chunks: */
     0x20, 0x01,                 /* 0 0 1 0 0 0 0 0 | 0 0 0 0 0 0 0 1 */
     0x01,                       /* 1 recv-delta */
