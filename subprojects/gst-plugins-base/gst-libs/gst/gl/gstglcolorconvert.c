@@ -3428,10 +3428,12 @@ _init_convert (GstGLColorConvert * convert)
   }
 
   GstVideoMeta *v_meta = gst_buffer_get_video_meta (convert->inbuf);
-  if (v_meta->width != convert->priv->padded_width
-      || v_meta->height != convert->priv->padded_height) {
-    gdouble padded_width = v_meta->width;
-    gdouble padded_height = v_meta->height;
+  if ((v_meta && (v_meta->width != convert->priv->padded_width
+              || v_meta->height != convert->priv->padded_height)) ||
+      (!v_meta && (convert->in_info.width != convert->priv->padded_width ||
+              convert->in_info.height != convert->priv->padded_height))) {
+    gdouble padded_width = v_meta ? v_meta->width : convert->in_info.width;
+    gdouble padded_height = v_meta ? v_meta->height : convert->in_info.height;
     gdouble display_width = GST_VIDEO_INFO_WIDTH (&convert->in_info);
     gdouble display_height = GST_VIDEO_INFO_HEIGHT (&convert->in_info);
 
@@ -3449,8 +3451,8 @@ _init_convert (GstGLColorConvert * convert)
         crop_vertices, GL_STATIC_DRAW);
     gl->BindBuffer (GL_ARRAY_BUFFER, 0);
 
-    convert->priv->padded_width = v_meta->width;
-    convert->priv->padded_height = v_meta->height;
+    convert->priv->padded_width = padded_width;
+    convert->priv->padded_height = padded_height;
   }
 
   gl->BindTexture (GL_TEXTURE_2D, 0);
