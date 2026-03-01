@@ -60,7 +60,7 @@ static gboolean gst_rtp_opus_depay_setcaps (GstRTPBaseDepayload * depayload,
 G_DEFINE_TYPE (GstRTPOpusDepay, gst_rtp_opus_depay,
     GST_TYPE_RTP_BASE_DEPAYLOAD);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpopusdepay, "rtpopusdepay",
-    GST_RANK_PRIMARY, GST_TYPE_RTP_OPUS_DEPAY, rtp_element_init (plugin));
+    GST_RANK_SECONDARY, GST_TYPE_RTP_OPUS_DEPAY, rtp_element_init (plugin));
 
 static void
 gst_rtp_opus_depay_class_init (GstRTPOpusDepayClass * klass)
