@@ -109,7 +109,7 @@ trigger:
   stage: 'preparation'
   variables:
     GIT_STRATEGY: none
-  tags: [ 'placeholder-job' ]
+  tags: [ 'kvm' ]
   script:
     - echo "Trigger job done, now running the pipeline."
   rules:
@@ -219,7 +219,7 @@ gst indent:
   needs:
     - job: 'gst-indent amd64 docker'
       artifacts: false
-  tags: [ 'placeholder-job' ]
+  tags: [ 'kvm' ]
   script:
     - ./scripts/check-format-c
     - ./scripts/format-csharp --check
@@ -237,7 +237,7 @@ rustfmt:
   stage: 'preparation'
   needs:
     - "fedora amd64 docker"
-  tags: [ 'placeholder-job' ]
+  tags: [ 'kvm' ]
   script:
     - export RUSTUP_HOME="/usr/local/rustup"
     - export PATH="/usr/local/cargo/bin:$PATH"
@@ -248,7 +248,7 @@ commitlint:
     - '.commitlint image'
     - '.fdo.suffixed-image@fedora'
   stage: 'preparation'
-  tags: [ 'placeholder-job' ]
+  tags: [ 'kvm' ]
   variables:
     GIT_STRATEGY: fetch
     GIT_DEPTH: 100
