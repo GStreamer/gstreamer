@@ -1166,7 +1166,16 @@ gst_rtp_h264_finish_fragmentation_unit (GstRtpH264Depay * rtph264depay)
   outsize = gst_adapter_available (rtph264depay->adapter);
   outbuf = gst_adapter_take_buffer (rtph264depay->adapter, outsize);
 
-  gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+  if (!gst_buffer_map (outbuf, &map, GST_MAP_WRITE)) {
+    GST_ERROR_OBJECT (rtph264depay, "failed to map buffer");
+    return;
+  }
+  /* sync_bytes is 4 bytes */
+  if (map.size < sizeof (sync_bytes)) {
+    GST_WARNING_OBJECT (rtph264depay, "unexpected buffer size. size: %zu",
+        map.size);
+    return;
+  }
   GST_DEBUG_OBJECT (rtph264depay, "output %d bytes", outsize);
 
   if (rtph264depay->byte_stream) {
