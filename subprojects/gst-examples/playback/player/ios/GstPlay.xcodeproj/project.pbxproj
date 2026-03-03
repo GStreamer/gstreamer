@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -22,8 +22,8 @@
 		AD2B885C198D65470070367B /* MainStoryboard_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AD2B885A198D65470070367B /* MainStoryboard_iPad.storyboard */; };
 		AD2B8861198D65780070367B /* LibraryViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AD2B885E198D65780070367B /* LibraryViewController.m */; };
 		AD2B8862198D65780070367B /* VideoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AD2B8860198D65780070367B /* VideoViewController.m */; };
-		C911037C220A89150054FB11 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C911037B220A89150054FB11 /* GStreamer.framework */; };
 		C9C4AEFD2136C6880048ED8D /* ssl in Resources */ = {isa = PBXBuildFile; fileRef = C9C4AEFB2136C6430048ED8D /* ssl */; };
+		EC9E002A2F57522700FC0A89 /* GStreamer.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC9E00292F57522700FC0A89 /* GStreamer.xcframework */; };
 		F4D8C7D71ED455260019B8A3 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = F4D8C7D61ED455260019B8A3 /* libiconv.tbd */; };
 /* End PBXBuildFile section */
 
@@ -35,7 +35,6 @@
 		AD2B881E198D631B0070367B /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		AD2B8820198D631B0070367B /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		AD2B8822198D631B0070367B /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
-		AD2B8824198D631B0070367B /* GStreamer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GStreamer.framework; path = Library/Frameworks/GStreamer.framework; sourceTree = DEVELOPER_DIR; };
 		AD2B8828198D631B0070367B /* GstPlay-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GstPlay-Info.plist"; sourceTree = "<group>"; };
 		AD2B882A198D631B0070367B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		AD2B882C198D631B0070367B /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -55,8 +54,8 @@
 		AD2B885E198D65780070367B /* LibraryViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LibraryViewController.m; sourceTree = "<group>"; };
 		AD2B885F198D65780070367B /* VideoViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoViewController.h; sourceTree = "<group>"; };
 		AD2B8860198D65780070367B /* VideoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoViewController.m; sourceTree = "<group>"; };
-		C911037B220A89150054FB11 /* GStreamer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GStreamer.framework; path = ../../../../../../../../../Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework; sourceTree = "<group>"; };
 		C9C4AEFB2136C6430048ED8D /* ssl */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ssl; sourceTree = "<group>"; };
+		EC9E00292F57522700FC0A89 /* GStreamer.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = GStreamer.xcframework; path = ./GStreamer.xcframework; sourceTree = "<group>"; };
 		F4D8C7D61ED455260019B8A3 /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -65,7 +64,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C911037C220A89150054FB11 /* GStreamer.framework in Frameworks */,
+				EC9E002A2F57522700FC0A89 /* GStreamer.xcframework in Frameworks */,
 				F4D8C7D71ED455260019B8A3 /* libiconv.tbd in Frameworks */,
 				AD2B8821198D631B0070367B /* CoreGraphics.framework in Frameworks */,
 				AD2B8823198D631B0070367B /* UIKit.framework in Frameworks */,
@@ -96,14 +95,13 @@
 		AD2B881D198D631B0070367B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				C911037B220A89150054FB11 /* GStreamer.framework */,
+				EC9E00292F57522700FC0A89 /* GStreamer.xcframework */,
 				637F54462097C4D900C00B38 /* libstdc++.6.tbd */,
 				637F54422097C36400C00B38 /* libstdc++.tbd */,
 				F4D8C7D61ED455260019B8A3 /* libiconv.tbd */,
 				AD2B881E198D631B0070367B /* Foundation.framework */,
 				AD2B8820198D631B0070367B /* CoreGraphics.framework */,
 				AD2B8822198D631B0070367B /* UIKit.framework */,
-				AD2B8824198D631B0070367B /* GStreamer.framework */,
 				AD2B8840198D631B0070367B /* XCTest.framework */,
 			);
 			name = Frameworks;
@@ -178,6 +176,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = AD2B8812198D631B0070367B;
@@ -285,7 +284,8 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator";
+				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Debug;
 		};
@@ -331,7 +331,8 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator";
+				TARGETED_DEVICE_FAMILY = "1,2,3";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -344,16 +345,9 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_BITCODE = NO;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(HOME)/Library/Developer/GStreamer/iPhone.sdk",
-					"$(DEVELOPER_FRAMEWORKS_DIR)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_FRAMEWORKS_DIR)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "GstPlay/GstPlay-Prefix.pch";
-				HEADER_SEARCH_PATHS = (
-					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"",
-					../lib,
-				);
 				INFOPLIST_FILE = "GstPlay/GstPlay-Info.plist";
 				OTHER_LDFLAGS = (
 					"-lresolv",
@@ -387,8 +381,11 @@
 					"-framework",
 					Metal,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = simon.himmelbauer;
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-examples.GstPlay";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = "1,2,3";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -401,16 +398,9 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_BITCODE = NO;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(HOME)/Library/Developer/GStreamer/iPhone.sdk",
-					"$(DEVELOPER_FRAMEWORKS_DIR)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_FRAMEWORKS_DIR)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "GstPlay/GstPlay-Prefix.pch";
-				HEADER_SEARCH_PATHS = (
-					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"",
-					../lib,
-				);
 				INFOPLIST_FILE = "GstPlay/GstPlay-Info.plist";
 				OTHER_LDFLAGS = (
 					"-lresolv",
@@ -444,8 +434,11 @@
 					"-framework",
 					Metal,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = simon.himmelbauer;
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-examples.GstPlay";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = "1,2,3";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
