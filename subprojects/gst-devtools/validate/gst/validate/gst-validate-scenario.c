@@ -7316,6 +7316,19 @@ _action_set_done (GstValidateAction * action)
       gst_validate_action_return_get_name (action->priv->state),
       repeat_message ? repeat_message : "",
       GST_TIME_ARGS (action->priv->execution_duration));
+
+  GstClockTime max_execution_duration;
+  if (gst_validate_action_get_clocktime (scenario, action,
+          "max-execution-duration", &max_execution_duration)) {
+    if (action->priv->execution_duration > max_execution_duration) {
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
+          "Action execution duration (%" GST_TIME_FORMAT
+          ") is longer than the expected max execution duration (%"
+          GST_TIME_FORMAT ")", GST_TIME_ARGS (action->priv->execution_duration),
+          GST_TIME_ARGS (max_execution_duration));
+    }
+  }
   g_free (repeat_message);
 
   g_signal_emit (scenario, scenario_signals[ACTION_DONE], 0, action);
