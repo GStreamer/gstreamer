@@ -366,6 +366,10 @@ gst_rtp_buffer_map (GstBuffer * buffer, GstMapFlags flags, GstRTPBuffer * rtp)
 
   bufsize = gst_buffer_get_size (buffer);
 
+  /* CSRC list must not extend beyond packet boundary (RFC 3550) */
+  if (G_UNLIKELY (header_len > bufsize))
+    goto invalid_csrc;
+
   /* calc extension length when present. */
   if (data[0] & 0x10) {
     guint8 *extdata;
@@ -467,6 +471,12 @@ wrong_version:
 reserved_pt:
   {
     GST_DEBUG ("reserved PT %d found", pt);
+    goto dump_packet;
+  }
+invalid_csrc:
+  {
+    GST_DEBUG ("CSRC list extends beyond packet boundary (%u > %"
+        G_GSIZE_FORMAT ")", header_len, bufsize);
     goto dump_packet;
   }
 wrong_padding:
