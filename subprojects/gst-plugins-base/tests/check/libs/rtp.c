@@ -173,6 +173,30 @@ GST_START_TEST (test_rtp_buffer_validate_corrupt)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtp_buffer_csrc_overflow)
+{
+  GstBuffer *buf;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  /* RTP packet with CSRC count of 15 but only 12 bytes total
+   * Version=2, Padding=0, Extension=0, CC=15 (0x8F), Marker=0, PT=0
+   * This should be rejected as the CSRC list would extend beyond packet */
+  guint8 invalid_packet[] = {
+    0x8F, 0x00, 0x00, 0x00,     /* V=2, CC=15, M=0, PT=0, seq=0 */
+    0x00, 0x00, 0x00, 0x00,     /* timestamp = 0 */
+    0x00, 0x00, 0x00, 0x00      /* ssrc = 0 */
+        /* CSRC list missing - only 12 bytes but needs 12 + 15*4 = 72 bytes */
+  };
+
+  buf = gst_buffer_new_and_alloc (sizeof (invalid_packet));
+  gst_buffer_fill (buf, 0, invalid_packet, sizeof (invalid_packet));
+
+  /* This should fail due to CSRC list extending beyond packet boundary */
+  fail_if (gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp));
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_rtp_buffer_validate_padding)
 {
   GstBuffer *buf;
@@ -2348,6 +2372,7 @@ rtp_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_rtp_buffer);
   tcase_add_test (tc_chain, test_rtp_buffer_validate_corrupt);
+  tcase_add_test (tc_chain, test_rtp_buffer_csrc_overflow);
   tcase_add_test (tc_chain, test_rtp_buffer_validate_padding);
   tcase_add_test (tc_chain, test_rtp_buffer_set_extension_data);
   //tcase_add_test (tc_chain, test_rtp_buffer_list_set_extension);
