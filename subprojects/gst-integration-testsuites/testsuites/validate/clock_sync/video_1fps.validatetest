@@ -5,7 +5,7 @@ meta,
        "videotestsrc pattern=blue ! video/x-raw,format=I420,framerate=1/1 ! timeoverlay ! $(videosink) name=videosink allocation-meta-flags=0",
     },
     configs = {
-       "$(validateflow), pad=videosink:sink, record-buffers=true",
+       [validateflow, pad=videosink:sink, record-buffers=true],
     }
 
 play

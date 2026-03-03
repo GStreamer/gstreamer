@@ -76,7 +76,7 @@ meta,
          "appsrc ! qtdemux ! fakesink async=false",
     },
     configs = {
-       "$(validateflow), pad=fakesink0:sink, record-buffers=false",
+       [validateflow, pad=fakesink0:sink, record-buffers=false],
     }
 
 # Scenario action types
@@ -91,14 +91,7 @@ stop
 This example shows the elements of a typical validate flow test (a pipeline, a
 config and a scenario). Some actions typically used together with validateflow
 can also be seen. Notice variable interpolation is used to fill absolute paths
-for media files in the scenario (`$(test_dir)`). In the configuration,
-`$(validateflow)` is expanded to something like this, containing proper paths
-for expectations and actual results (these values are interpolated from the
-`.validatetest` file location):
-
-``` ini
-validateflow, expectations-dir="/validate/test/file/path/validateqtdemux_change_edit_list/flow-expectations/", actual-results-dir="$(GST_VALIDATE_LOGSDIR)/logs/validate/launch_pipeline/qtdemux_change_edit_list"
-```
+for media files in the scenario (`$(test_dir)`).
 
 The resulting log looks like this:
 
@@ -161,16 +154,12 @@ several overrides and listening to different pads with different settings.
   metas to record. Only `GstVideoSEIUserDataUnregisteredMeta` with matching UUIDs
   will be logged. If not specified, no SEI metas are logged.
 * `expectations-dir`: Path to the directory where the expectations will be
-   written if they don't exist, relative to the current working directory. By
-   default the current working directory is used, but this setting is usually
-   set automatically as part of the `%(validateflow)s` expansion to a correct
-   path like `~/gst-validate/gst-integration-testsuites/flow-expectations/<test
-   name>`.
+   written if they don't exist. Automatically derived from the test file path
+   as `<test_dir>/<test_name>/flow-expectations/`. Can be overridden explicitly.
 * `actual-results-dir`: Path to the directory where the events will be recorded.
-   The expectation file will be compared to this. By default the current working
-   directory is used, but this setting is usually set automatically as part of
-   the `%(validateflow)s` expansion to the test log directory, i.e.
-   `~/gst-validate/logs/validate/launch_pipeline/<test name>`.
+   The expectation file will be compared to this. Automatically derived as
+   `$GST_VALIDATE_LOGSDIR/<test_name_dir>/` (where dots in the test name are
+   replaced by directory separators). Can be overridden explicitly.
 * `generate-expectations`: Default: unset. When set to `true` the expectation
    file will be written and no testing will be done and if set to `false`, the
    expectation file will be required. If a validateflow config is used without

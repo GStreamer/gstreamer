@@ -14,8 +14,8 @@ meta,
          giosrc name=giosrc is-growing=true location=file://$(growing_file_location) ! fakesink name=growing-file-sink async=false" \
     },
     configs = {
-       "$(validateflow), pad=filesink:sink, record-buffers=true, ignored-fields=\"stream-start={stream-id,group-id,stream}\", buffers-checksum=as-id",
-       "$(validateflow), pad=growing-file-sink:sink, record-buffers=true, ignored-fields=\"stream-start={stream-id,group-id,stream}\", buffers-checksum=as-id",
+       [validateflow, pad=filesink:sink, record-buffers=true, ignored-fields="stream-start={stream-id,group-id,stream}", buffers-checksum=as-id],
+       [validateflow, pad=growing-file-sink:sink, record-buffers=true, ignored-fields="stream-start={stream-id,group-id,stream}", buffers-checksum=as-id],
     }
 
 

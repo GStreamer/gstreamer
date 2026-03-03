@@ -6,8 +6,8 @@ meta,
         "videotestsrc ! video/x-raw,format=I420,framerate=10/1,width=320,height=240 ! videorate name=videorate drop-out-of-segment=true ! fakesink sync=true qos=true",
     },
     configs = {
-        "$(validateflow), pad=videorate:src, buffers-checksum=as-id, ignored-event-types={ tag }",
-        "$(validateflow), pad=videorate:sink, buffers-checksum=as-id, ignored-event-types={ tag }",
+        [validateflow, pad=videorate:src, buffers-checksum=as-id, ignored-event-types={ tag }],
+        [validateflow, pad=videorate:sink, buffers-checksum=as-id, ignored-event-types={ tag }],
     }
 
 play

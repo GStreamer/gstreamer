@@ -15,8 +15,8 @@ meta,
       "appsrc name=src $(appsrc_props) ! videoconvert ! $(videosink) name=sink",
     },
     configs = {
-       "$(validateflow), pad=source-sink:sink, buffers-checksum=as-id, ignored-event-types={ tag, stream-start }",
-       "$(validateflow), pad=selector-sink:sink, buffers-checksum=as-id, ignored-event-types={ tag, stream-start }",
+       [validateflow, pad=source-sink:sink, buffers-checksum=as-id, ignored-event-types={ tag, stream-start }],
+       [validateflow, pad=selector-sink:sink, buffers-checksum=as-id, ignored-event-types={ tag, stream-start }],
     },
     handles-states=true,
     ignore-eos=true

@@ -346,18 +346,66 @@ validate_flow_override_new (GstStructure * config)
 
   /* expectations-dir: Path to the directory where the expectations will be
    * written if they don't exist, relative to the current working directory.
-   * By default the current working directory is used. */
+   * By default, derived from the test file path (__filename__) if available,
+   * otherwise the current working directory is used. */
   flow->expectations_dir =
       g_strdup (gst_structure_get_string (config, "expectations-dir"));
-  if (!flow->expectations_dir)
-    flow->expectations_dir = g_strdup (".");
 
   /* actual-results-dir: Path to the directory where the events will be
-   * recorded. The expectation file will be compared to this. */
+   * recorded. The expectation file will be compared to this. By default,
+   * derived from the test file path (__filename__) if available, otherwise
+   * the current working directory is used. */
   flow->actual_results_dir =
       g_strdup (gst_structure_get_string (config, "actual-results-dir"));
-  if (!flow->actual_results_dir)
-    flow->actual_results_dir = g_strdup (".");
+
+  /* Auto-derive directories from __filename__ when not explicitly set */
+  if (!flow->expectations_dir || !flow->actual_results_dir) {
+    const gchar *filename = gst_structure_get_string (config, "__filename__");
+
+    if (filename) {
+      gchar *config_dir = g_path_get_dirname (filename);
+      gchar *config_fname = g_path_get_basename (filename);
+      gchar *config_name = g_strdup (config_fname);
+      gchar *dot;
+
+      /* Strip .validatetest extension */
+      dot = strrchr (config_name, '.');
+      if (dot && dot > config_name)
+        *dot = '\0';
+
+      if (!flow->expectations_dir)
+        flow->expectations_dir =
+            g_build_path ("/", config_dir, config_name, "flow-expectations",
+            NULL);
+
+      if (!flow->actual_results_dir) {
+        const gchar *logsdir = g_getenv ("GST_VALIDATE_LOGSDIR");
+        gchar *config_name_dir, *t;
+
+        if (!logsdir)
+          logsdir = g_get_tmp_dir ();
+
+        config_name_dir = g_strdup (config_name);
+        for (t = config_name_dir; *t != '\0'; t++) {
+          if (*t == '.')
+            *t = '/';
+        }
+
+        flow->actual_results_dir =
+            g_build_path ("/", logsdir, config_name_dir, NULL);
+        g_free (config_name_dir);
+      }
+
+      g_free (config_dir);
+      g_free (config_fname);
+      g_free (config_name);
+    } else {
+      if (!flow->expectations_dir)
+        flow->expectations_dir = g_strdup (".");
+      if (!flow->actual_results_dir)
+        flow->actual_results_dir = g_strdup (".");
+    }
+  }
 
   {
     gchar *pad_name_safe = make_safe_file_name (flow->pad_name);

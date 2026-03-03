@@ -6,7 +6,7 @@ meta,
     },
     configs = {
         "core, fail-on-missing-plugin=true",
-        "$(validateflow), pad=sink:sink, buffers-checksum=true",
+        [validateflow, pad=sink:sink, buffers-checksum=true],
     }
 
 play

@@ -6,7 +6,7 @@ meta,
          "appsrc ! qtdemux ! fakesink async=false",
     },
     configs = {
-       "$(validateflow), pad=fakesink0:sink, record-buffers=false",
+       [validateflow, pad=fakesink0:sink, record-buffers=false],
     }
 
 appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/fragments/car-20120827-85.mp4/init.mp4"

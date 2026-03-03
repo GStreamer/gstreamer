@@ -3,6 +3,6 @@ meta,
          "fakesrc num-buffers=1 ! fakesink name=sink",
     },
     configs = {
-       "$(validateflow), pad=sink:sink, buffers-checksum=true",
+       [validateflow, pad=sink:sink, buffers-checksum=true],
     }
 # The validate tool will simply play the pipeline until EOS is reached.

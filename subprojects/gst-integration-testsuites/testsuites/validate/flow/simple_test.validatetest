@@ -3,6 +3,6 @@ meta,
          "videotestsrc num-buffers=3 ! fakesink",
     },
     configs = {
-       "$(validateflow), pad=fakesink0:sink, record-buffers=true, caps-properties={ width, height };",
+       [validateflow, pad=fakesink0:sink, record-buffers=true, caps-properties={ width, height };],
     }
 

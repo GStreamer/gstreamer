@@ -6,7 +6,7 @@ meta,
          "appsrc ! qtdemux ! fakesink async=false",
     },
     configs = {
-       "$(validateflow), pad=fakesink0:sink, record-buffers=true, logged-event-types={segment, eos}",
+       [validateflow, pad=fakesink0:sink, record-buffers=true, logged-event-types={segment, eos}],
         "change-issue-severity, issue-id=event::eos-has-wrong-seqnum, new-severity=ignore",
     }
 

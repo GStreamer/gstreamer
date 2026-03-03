@@ -4,8 +4,8 @@ meta,
          "playbin uri=pushfile://$(media_dir)/defaults/mp4/redirect.mp4 name=playbin video-sink=\"$(videosink) name=videosink\" audio-sink=\"$(audiosink)\"",
     },
     configs = {
-       "$(validateflow), pad=qtdemux0:sink",
-       "$(validateflow), pad=qtdemux1:sink",
+       [validateflow, pad=qtdemux0:sink],
+       [validateflow, pad=qtdemux1:sink],
     },
     scenario=play_15s
 

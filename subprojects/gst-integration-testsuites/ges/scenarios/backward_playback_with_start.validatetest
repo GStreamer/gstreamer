@@ -10,7 +10,7 @@ meta,
     handles-states = true,
     ignore-eos = true,
     configs = {
-        "$(validateflow), pad=videosink:sink, buffers-checksum=true, ignored-fields=\"stream-start={stream-id, group-id, stream}\"",
+        [validateflow, pad=videosink:sink, buffers-checksum=true, ignored-fields="stream-start={stream-id, group-id, stream}"],
     }
 
 # timecodestamper doesn't allow reverse playback yet

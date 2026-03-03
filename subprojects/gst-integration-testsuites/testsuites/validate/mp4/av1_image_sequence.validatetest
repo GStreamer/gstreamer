@@ -5,7 +5,7 @@ meta,
          "playbin uri=file://$(media_dir)/defaults/mp4/av1-image-sequence.mp4 name=playbin video-sink=\"$(videosink) name=videosink\"",
     },
     configs = {
-       "$(validateflow), pad=qtdemux0:video_0, record-buffers=true, buffers-checksum=sha1",
+       [validateflow, pad=qtdemux0:video_0, record-buffers=true, buffers-checksum=sha1],
     },
     scenario="play_15s"
 

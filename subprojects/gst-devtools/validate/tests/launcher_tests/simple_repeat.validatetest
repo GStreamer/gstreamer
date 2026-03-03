@@ -4,7 +4,7 @@ meta,
         "videotestsrc pattern=ball animation-mode=frames num-buffers=30 ! video/x-raw,framerate=10/1 ! $(videosink) name=sink sync=true",
     },
     configs = {
-       "$(validateflow), pad=sink:sink, buffers-checksum=true",
+       [validateflow, pad=sink:sink, buffers-checksum=true],
     }
 
 pause;

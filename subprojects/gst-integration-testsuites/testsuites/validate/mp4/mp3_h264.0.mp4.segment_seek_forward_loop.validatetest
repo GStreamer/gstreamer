@@ -6,7 +6,7 @@ meta,
          "filesrc location=$(media_dir)/mp3_h264.1.mp4 ! qtdemux ! fakesink sync=false name=video-fakesink",
     },
     configs = {
-       "$(validateflow), pad=video-fakesink:sink, record-buffers=true, logged-event-types={segment, eos, segment-done}",
+       [validateflow, pad=video-fakesink:sink, record-buffers=true, logged-event-types={segment, eos, segment-done}],
     }
 pause
 seek, name=Seek-A, rate=1.0, start=0.0, stop="$(duration)", flags="flush+segment"

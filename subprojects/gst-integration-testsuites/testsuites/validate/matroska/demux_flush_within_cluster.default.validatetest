@@ -6,7 +6,7 @@ meta,
          "appsrc ! matroskademux ! fakesink async=false",
     },
     configs = {
-       "$(validateflow), pad=fakesink0:sink, record-buffers=true",
+       [validateflow, pad=fakesink0:sink, record-buffers=true],
     }
 
 appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/fragments/feelings_vp9-20130806-242.webm/init.webm"

@@ -8,7 +8,7 @@ meta,
         --videosink, "$(videosink) name=videosink",
     },
     configs = {
-        "$(validateflow), pad=videosink:sink, buffers-checksum=true, ignored-fields=\"stream-start={stream-id,group-id,stream}\"",
+        [validateflow, pad=videosink:sink, buffers-checksum=true, ignored-fields="stream-start={stream-id,group-id,stream}"],
     }
 
 include, location="../../media/defaults/matroska/timed_frames_video_only_1fps.mkv.frames_checksums"

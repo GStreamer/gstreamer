@@ -10,7 +10,7 @@ meta,
         --audiosink, "$(audiosink) name=audiosink",
     },
     configs = {
-        "$(validateflow), pad=audiosink:sink, buffers-checksum=true, ignored-fields=\"stream-start={stream-id,group-id,stream}\"",
+        [validateflow, pad=audiosink:sink, buffers-checksum=true, ignored-fields="stream-start={stream-id,group-id,stream}"],
     }
 
 # Add a 5.1 audio clip with forced default order (gst)

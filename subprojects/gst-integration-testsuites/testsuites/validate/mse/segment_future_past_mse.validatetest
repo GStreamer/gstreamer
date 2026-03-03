@@ -6,7 +6,7 @@ meta,
          "appsrc ! video/quicktime, variant=mse-bytestream ! qtdemux ! fakesink async=false",
     },
     configs = {
-       "$(validateflow), pad=fakesink0:sink, record-buffers=false, logged-event-types={segment}",
+       [validateflow, pad=fakesink0:sink, record-buffers=false, logged-event-types={segment}],
     }
 
 # Scenario action types
