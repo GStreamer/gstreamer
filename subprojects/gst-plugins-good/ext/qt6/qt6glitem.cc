@@ -859,13 +859,18 @@ Qt6GLVideoItemInterface::setCaps (GstCaps * caps)
   if (qt_item == NULL)
     return FALSE;
 
-  if (qt_item->priv->caps && gst_caps_is_equal_fixed (qt_item->priv->caps, caps))
-    return TRUE;
-
-  if (!gst_video_info_from_caps (&v_info, caps))
-    return FALSE;
-
   g_mutex_lock (&qt_item->priv->lock);
+
+  GstCaps *current_caps = qt_item->priv->new_caps ? qt_item->priv->new_caps : qt_item->priv->caps;
+  if (current_caps && gst_caps_is_equal_fixed (current_caps, caps)) {
+    g_mutex_unlock (&qt_item->priv->lock);
+    return TRUE;
+  }
+
+  if (!gst_video_info_from_caps (&v_info, caps)) {
+    g_mutex_unlock (&qt_item->priv->lock);
+    return FALSE;
+  }
 
   GST_DEBUG ("%p set caps %" GST_PTR_FORMAT, qt_item, caps);
 
