@@ -12,8 +12,8 @@ meta,
         "--videosink=fakesink name=videosink",
     },
     configs={
-        "$(validateflow), pad=last:src, caps-properties={ framerate }, logged-event-types = { caps }",
-        "$(validateflow), pad=first:src, caps-properties={ framerate }, logged-event-types = { caps }",
+        [validateflow, pad=last:src, caps-properties={ framerate }, logged-event-types = { caps }],
+        [validateflow, pad=first:src, caps-properties={ framerate }, logged-event-types = { caps }],
     }
 
 play

@@ -6,7 +6,7 @@ meta,
          "file://$(media_dir)/defaults/matroska/numerated_frames_blue.mkv ! matroskademux ! h264parse name=parser ! fakesink",
     },
     configs = {
-       "$(validateflow), pad=parser:src, record-buffers=true, logged-event-types={ segment }",
+       [validateflow, pad=parser:src, record-buffers=true, logged-event-types={ segment }],
     }
 
 pause

@@ -4,8 +4,8 @@ meta,
                 videorate drop-out-of-segment=true name=videorate ! video/x-raw,framerate=1/1 ! $(videosink) name=sink",
     },
     configs = {
-       "$(validateflow), pad=videorate:sink, buffers-checksum=as-id, ignored-event-types={ tag }",
-       "$(validateflow), pad=videorate:src, buffers-checksum=as-id, ignored-event-types={ tag }",
+       [validateflow, pad=videorate:sink, buffers-checksum=as-id, ignored-event-types={ tag }],
+       [validateflow, pad=videorate:src, buffers-checksum=as-id, ignored-event-types={ tag }],
     },
     handles-states=true
 

@@ -10,10 +10,10 @@ meta,
     ignore-eos = true,
     configs = {
         # We can't record buffers on sources as we have no timing guarantees
-        "$(validateflow), pad=videosrcbin:src, ignored-fields=\"stream-start={stream-id, group-id, stream}\"",
-        "$(validateflow), pad=videosink:sink, record-buffers=true, ignored-fields=\"stream-start={stream-id, group-id, stream}\"",
-        "$(validateflow), pad=audiosrcbin:src, ignored-fields=\"stream-start={stream-id, group-id, stream}\"",
-        "$(validateflow), pad=audiosink:sink, record-buffers=true, ignored-fields=\"stream-start={stream-id, group-id, stream}\"",
+        [validateflow, pad=videosrcbin:src, ignored-fields="stream-start={stream-id, group-id, stream}"],
+        [validateflow, pad=videosink:sink, record-buffers=true, ignored-fields="stream-start={stream-id, group-id, stream}"],
+        [validateflow, pad=audiosrcbin:src, ignored-fields="stream-start={stream-id, group-id, stream}"],
+        [validateflow, pad=audiosink:sink, record-buffers=true, ignored-fields="stream-start={stream-id, group-id, stream}"],
     }
 
 add-clip, name=c0, asset-id="time-overlay,disable-timecodestamper=true", layer-priority=0, type=GESTestClip, start=0, duration=1.0

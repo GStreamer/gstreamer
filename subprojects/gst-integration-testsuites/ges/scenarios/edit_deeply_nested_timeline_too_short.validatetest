@@ -10,9 +10,9 @@ meta,
         --video-caps, "video/x-raw,format=I420,chroma-site=mpeg2,colorimetry=bt709,framerate=1/1,height=720,width=1080",
     },
     configs = {
-        "$(validateflow), pad=videosink:sink, record-buffers=true,
-            ignored-fields=\"stream-start={stream-id,group-id,stream},buffer={meta},segment={position}\",
-            caps-properties={height,width,framerate}",
+        [validateflow, pad=videosink:sink, record-buffers=true,
+            ignored-fields="stream-start={stream-id,group-id,stream},buffer={meta},segment={position}",
+            caps-properties={height,width,framerate}],
     },
     expected-issues = {
         # Sometimes the segment arrives before the caps, and sometimes the other way around

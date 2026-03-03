@@ -5,8 +5,8 @@ meta,
          "appsrc name=src format=time  ! fakevideodec name=dec ! videoconvert ! $(videosink)",
     },
     configs = {
-       "$(validateflow), pad=dec:sink, buffers-checksum=as-id, ignored-event-types={ tag, stream-start }",
-       "$(validateflow), pad=dec:src, buffers-checksum=as-id, ignored-event-types={ tag, stream-start }",
+       [validateflow, pad=dec:sink, buffers-checksum=as-id, ignored-event-types={ tag, stream-start }],
+       [validateflow, pad=dec:src, buffers-checksum=as-id, ignored-event-types={ tag, stream-start }],
     }
 
 foreach,

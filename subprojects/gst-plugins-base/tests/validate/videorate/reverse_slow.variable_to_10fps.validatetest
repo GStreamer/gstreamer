@@ -7,8 +7,8 @@ meta,
          "videotestsrc pattern=ball animation-mode=frames ! video/x-raw,format=I420,framerate=30/1 ! capssetter caps=\"video/x-raw,framerate=$(in_framerate)\" ! videorate name=videorate ! video/x-raw,format=I420,framerate=$(out_framerate) ! fakesink sync=true",
     },
     configs = {
-       "$(validateflow), pad=videorate:sink, buffers-checksum=true",
-       "$(validateflow), pad=videorate:src, buffers-checksum=true",
+       [validateflow, pad=videorate:sink, buffers-checksum=true],
+       [validateflow, pad=videorate:src, buffers-checksum=true],
     }
 
 

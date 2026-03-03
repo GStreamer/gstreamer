@@ -9,7 +9,7 @@ meta,
         "--video-caps", "video/x-raw, format=I420, width=1280, height=720, framerate=30/1, chroma-site=jpeg, colorimetry=bt601",
     },
     configs = {
-        "$(validateflow), pad=videosink:sink, buffers-checksum=true, ignored-fields=\"stream-start={stream-id,group-id,stream}, segment={position,}\", ignored-event-types={gap}",
+        [validateflow, pad=videosink:sink, buffers-checksum=true, ignored-fields="stream-start={stream-id,group-id,stream}, segment={position,}", ignored-event-types={gap}],
     }
 
 

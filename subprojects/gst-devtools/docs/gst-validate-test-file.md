@@ -50,10 +50,11 @@ Validate testfile will define some variables to make those files relocable:
 * `$(test_name_dir)`: The name of the test directory (test_name with folder
                       separator instead of `.`).
 
-* `$(validateflow)`: The validateflow structure name with the default/right
-                     values for the `expectations-dir` and `actual-results-dir`
-                     fields. See [validateflow](gst-validate-flow.md) for more
-                     information.
+* `$(validateflow)`: Legacy variable that expands to the validateflow structure
+                     name with `expectations-dir` and `actual-results-dir` set.
+                     Not needed when using the nested structure syntax (e.g.
+                     `[validateflow, pad=sink:sink]`) since directories are
+                     auto-derived from the test file path.
 
 * `$(videosink)`: The GStreamer videosink to use if the test can work with
                   different sinks for the video. It allows the tool to use

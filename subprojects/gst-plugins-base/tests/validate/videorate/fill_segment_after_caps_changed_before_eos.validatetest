@@ -4,8 +4,8 @@ meta,
                 videorate max-closing-segment-duplication-duration=999999999999999 name=videorate ! video/x-raw,framerate=1/1 ! fakesink sync=true",
     },
     configs = {
-       "$(validateflow), pad=videorate:sink, buffers-checksum=as-id, ignored-event-types={ tag }",
-       "$(validateflow), pad=videorate:src, buffers-checksum=as-id, ignored-event-types={ tag }",
+       [validateflow, pad=videorate:sink, buffers-checksum=as-id, ignored-event-types={ tag }],
+       [validateflow, pad=videorate:src, buffers-checksum=as-id, ignored-event-types={ tag }],
     },
     handles-states=true,
     ignore-eos=true

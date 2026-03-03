@@ -3,5 +3,5 @@ meta,
         "testbin://video,caps=[video/x-raw,width=1920,height=1080],num-buffers=1 ! fakesink",
     },
     configs = {
-        "$(validateflow), pad=testsrcbin0:video_src_0",
+        [validateflow, pad=testsrcbin0:video_src_0],
     }

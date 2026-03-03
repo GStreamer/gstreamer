@@ -6,7 +6,7 @@ meta,
         "uridecodebin3 uri=http://127.0.0.1:8079/defaults/dash/webm/output.mpd ! fakevideosink sync=true name=i",
     },
     configs = {
-       "$(validateflow), pad=i:sink, ignored-event-types={ tag }, buffers-checksum=as-id",
+       [validateflow, pad=i:sink, ignored-event-types={ tag }, buffers-checksum=as-id],
     }
 
 pause

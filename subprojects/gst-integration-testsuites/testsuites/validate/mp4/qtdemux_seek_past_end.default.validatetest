@@ -7,7 +7,7 @@ meta,
          "filesrc location=$(media_dir)/defaults/mp4/raw_h264.0.mp4 ! qtdemux ! audio/x-raw ! fakesink name=fakesink",
     },
     configs = {
-       "$(validateflow), pad=fakesink:sink, record-buffers=true",
+       [validateflow, pad=fakesink:sink, record-buffers=true],
     }
 
 pause
