@@ -549,11 +549,12 @@ run_diff (const gchar * expected_file, const gchar * actual_file)
         g_clear_error (&error);
       }
       g_clear_object (&process2);
-      g_free (fname);
     }
 
-    fprintf (stderr, "%s%s%s\n",
-        !colored ? "``` diff\n" : "", stdout_text, !colored ? "\n```" : "");
+    fprintf (stderr, "%sdiff -u -- %s %s\n%s%s\n",
+        !colored ? "``` diff\n" : "",
+        expected_file, actual_file, stdout_text, !colored ? "\n```" : "");
+    g_free (fname);
   } else {
     fprintf (stderr, "Cannot show more details, failed to run diff: %s",
         error->message);
