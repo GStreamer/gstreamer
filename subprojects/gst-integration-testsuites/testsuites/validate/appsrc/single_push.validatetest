@@ -2,11 +2,11 @@ set-globals, media_dir="$(test_dir)/../../../media/"
 meta,
     seek=false,
     handles-states=false,
-    args = {
-         "appsrc ! qtdemux name=demux ! video/x-h264 ! fakesink async=false demux. ! audio/x-raw ! fakesink async=false",
+    args={
+        "appsrc ! qtdemux name=demux ! video/x-h264 ! fakesink async=false demux. ! audio/x-raw ! fakesink async=false",
     },
-    configs = {
-       [validateflow, pad=fakesink0:sink, record-buffers=true],
+    configs={
+        [validateflow, pad=fakesink0:sink, record-buffers=true],
     }
 
 appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/defaults/mp4/raw_h264.0.mp4"

@@ -1,6 +1,6 @@
 meta,
     handles-states=true,
-    args = {
+    args={
         "appsrc name=src ! typefind ! fakesink",
     }
 

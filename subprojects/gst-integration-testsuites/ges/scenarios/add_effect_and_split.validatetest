@@ -1,19 +1,19 @@
 set-globals, media_file="$(test_dir)/../../media/defaults/matroska/timed_frames_video_only_1fps.mkv"
 meta,
-    tool = "ges-launch-$(gst_api_version)",
+    tool="ges-launch-$(gst_api_version)",
     handles-states=true,
     seek=true,
     needs_preroll=true,
-    args = {
-        --track-types, video,
-        --video-caps, "video/x-raw, format=(string)I420, width=(int)1080, height=(int)720, framerate=(fraction)1/1",
-        --videosink, "$(videosink) name=videosink",
+    args={
+        --track-types, video, --video-caps,
+        "video/x-raw, format=(string)I420, width=(int)1080, height=(int)720, framerate=(fraction)1/1", --videosink,
+        "$(videosink) name=videosink",
     }
 
-set-vars,\
-    frame0=68cc0c0b6d6863a135f40297a54aec9f1593f34c,\
-    frame1=9b42849e45e15981115cff9da00ecbf7afafd462, \
-    frame1_rotated=8a2966951d269e9aa4dccf38fe93fce8093d3847
+set-vars, frame0=68
+cc0c0b6d6863a135f40297a54aec9f1593f34c, frame1=9
+b42849e45e15981115cff9da00ecbf7afafd462, frame1_rotated=8
+a2966951d269e9aa4dccf38fe93fce8093d3847
 
 pause
 
@@ -47,7 +47,7 @@ seek, start=(double)0.0, flags=(string)accurate+flush;
 check-last-sample, sinkpad-caps="video/x-raw", checksum="$(frame0)"
 
 play;
-pause,playback_time=1.0
+pause, playback_time=1.0
 check-last-sample, sinkpad-caps="video/x-raw", checksum="$(frame1_rotated)"
 
 stop;

@@ -1,33 +1,39 @@
 meta,
     handles-states=true,
-    args = {
+    args={
         "videotestsrc pattern=ball name=s ! fakesink",
     }
 
-foreach, pattern=<green, blue>,
-    actions = {
-        [set-properties, s::pattern="$(pattern)"],
+foreach,
+    pattern=<green, blue>,
+    actions={
+        [set-properties,
+            s::pattern="$(pattern)"],
     }
 
 priv_check-action-type-calls, type=set-properties, n=2
 
-check-properties, s::pattern="Blue"
+check-properties,
+    s::pattern="Blue"
 
-foreach, pattern=<
-            # We can also pass int values (which works for enums)
-            1,  3, 5, # green
-        >,
-    actions = {
-        [set-properties, s::pattern="$(pattern)"],
+foreach,
+    pattern=<1, 3, 5>,
+    actions={
+        [set-properties,
+            s::pattern="$(pattern)"],
     }
 
 priv_check-action-type-calls, type=set-properties, n=5
-check-properties, s::pattern="Green"
+check-properties,
+    s::pattern="Green"
 
-foreach, pattern=<blue, white, black>,
-    actions = {
-        [set-properties, s::pattern="$(pattern)"],
+foreach,
+    pattern=<blue, white, black>,
+    actions={
+        [set-properties,
+            s::pattern="$(pattern)"],
     }
 priv_check-action-type-calls, type=set-properties, n=8
-check-properties, s::pattern="100\%\ Black"
+check-properties,
+    s::pattern="100\%\ Black"
 stop

@@ -2,11 +2,16 @@ set-globals, media_dir="$(test_dir)/../../../media/"
 meta,
     seek=false,
     handles-states=false,
-    args = {
-         "appsrc ! qtdemux ! fakesink async=false",
+    args={
+        "appsrc ! qtdemux ! fakesink async=false",
     },
-    configs = {
-       [validateflow, pad=fakesink0:sink, record-buffers=true, logged-event-types={segment, eos}],
+    configs={
+        [validateflow,
+            pad=fakesink0:sink,
+            record-buffers=true,
+            logged-event-types={
+                segment, eos,
+            }],
         "change-issue-severity, issue-id=event::eos-has-wrong-seqnum, new-severity=ignore",
     }
 

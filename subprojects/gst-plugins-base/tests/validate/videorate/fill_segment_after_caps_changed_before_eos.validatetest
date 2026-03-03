@@ -1,29 +1,50 @@
 meta,
-    args = {
-            "appsrc name=src format=time handle-segment-change=true ! \
+    args={
+        "appsrc name=src format=time handle-segment-change=true ! \
                 videorate max-closing-segment-duplication-duration=999999999999999 name=videorate ! video/x-raw,framerate=1/1 ! fakesink sync=true",
     },
-    configs = {
-       [validateflow, pad=videorate:sink, buffers-checksum=as-id, ignored-event-types={ tag }],
-       [validateflow, pad=videorate:src, buffers-checksum=as-id, ignored-event-types={ tag }],
+    configs={
+        [validateflow,
+            pad=videorate:sink,
+            buffers-checksum=as-id,
+            ignored-event-types={
+                tag,
+            }],
+        [validateflow,
+            pad=videorate:src,
+            buffers-checksum=as-id,
+            ignored-event-types={
+                tag,
+            }],
     },
     handles-states=true,
     ignore-eos=true
 
 
-appsrc-push, target-element-name=src, fill-mode=counter, pts=0.0, duration=1.0, size=115200,
-    caps=(GstCaps)[video/x-raw,format=I420,framerate=1/1,width=320,height=240],
+appsrc-push,
+    target-element-name=src,
+    fill-mode=counter,
+    pts=0.0,
+    duration=1.0,
+    size=115200,
+    caps=(GstCaps)[video/x-raw, format=I420, framerate=1/1, width=320, height=240],
     segment=[segment, stop=3.0, format=(GstFormat)time]
 
-appsrc-push, target-element-name=src, fill-mode=counter, pts=1.0, duration=1.0, size=115200,
-    caps=(GstCaps)[video/x-raw,format=I420,framerate=1/1,width=320,height=240],
+appsrc-push,
+    target-element-name=src,
+    fill-mode=counter,
+    pts=1.0,
+    duration=1.0,
+    size=115200,
+    caps=(GstCaps)[video/x-raw, format=I420, framerate=1/1, width=320, height=240],
     segment=[segment, stop=3.0, format=(GstFormat)time]
 
 play
 
 crank-clock, repeat=1
 
-set-properties, src::caps="video/x-raw,width=322,height=244,framerate=1/1"
+set-properties,
+    src::caps="video/x-raw,width=322,height=244,framerate=1/1"
 
 appsrc-eos, target-element-name=src
 crank-clock, repeat=3
@@ -32,6 +53,3 @@ wait, message-type=eos
 
 # check-position, expected-position=2.0
 stop
-
-
-

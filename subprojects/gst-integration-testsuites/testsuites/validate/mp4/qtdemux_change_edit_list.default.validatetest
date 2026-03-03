@@ -2,11 +2,11 @@ set-globals, media_dir="$(test_dir)/../../../media/"
 meta,
     seek=false,
     handles-states=false,
-    args = {
-         "appsrc ! qtdemux ! fakesink async=false",
+    args={
+        "appsrc ! qtdemux ! fakesink async=false",
     },
-    configs = {
-       [validateflow, pad=fakesink0:sink, record-buffers=false],
+    configs={
+        [validateflow, pad=fakesink0:sink, record-buffers=false],
     }
 
 appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/fragments/car-20120827-85.mp4/init.mp4"

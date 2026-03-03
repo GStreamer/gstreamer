@@ -1,10 +1,9 @@
 meta,
-    tool = "ges-launch-$(gst_api_version)",
+    tool="ges-launch-$(gst_api_version)",
     handles-states=true,
-    args = {
-        --track-types, video,
-        --videosink, "fakevideosink name=videosink sync=true",
-        --video-caps, "video/x-raw,format=I420,width=320,height=240,framerate=10/1",
+    args={
+        --track-types, video, --videosink, "fakevideosink name=videosink sync=true", --video-caps,
+        "video/x-raw,format=I420,width=320,height=240,framerate=10/1",
     }
 
 remove-feature, name=queue
@@ -14,8 +13,20 @@ add-clip, name=c0, asset-id="pattern=red", layer-priority=0, type=GESTestClip, s
 add-clip, name=c1, asset-id="pattern=blue", layer-priority=1, type=GESTestClip, start=0, duration=2.0
 
 # Set initial properties for both clips
-set-child-properties, element-name=c0, width=200, height=150, posx=0, posy=0, pattern=red
-set-child-properties, element-name=c1, width=200, height=150, posx=120, posy=90, pattern=blue
+set-child-properties,
+    element-name=c0,
+    width=200,
+    height=150,
+    posx=0,
+    posy=0,
+    pattern=red
+set-child-properties,
+    element-name=c1,
+    width=200,
+    height=150,
+    posx=120,
+    posy=90,
+    pattern=blue
 
 play
 crank-clock
@@ -23,12 +34,20 @@ wait, on-clock=true
 
 # Now manually set zorder to reverse the stacking
 # Make c0 appear on top by giving it a lower zorder value
-set-child-properties, element-name=c0, zorder=1
-set-child-properties, element-name=c1, zorder=2
+set-child-properties,
+    element-name=c0,
+    zorder=1
+set-child-properties,
+    element-name=c1,
+    zorder=2
 
 # Verify the zorder values were set
-check-child-properties, element-name=c0, zorder=1
-check-child-properties, element-name=c1, zorder=2
+check-child-properties,
+    element-name=c0,
+    zorder=1
+check-child-properties,
+    element-name=c1,
+    zorder=2
 
 # Test controllable aspect - set up keyframes for zorder
 set-control-source, element-name=c0, property-name=zorder, binding-type=direct-absolute

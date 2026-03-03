@@ -2,11 +2,16 @@ set-globals, media_dir="$(test_dir)/../../../media/fragments/"
 meta,
     seek=false,
     handles-states=false,
-    args = {
-         "appsrc ! video/quicktime, variant=mse-bytestream ! qtdemux ! fakesink async=false",
+    args={
+        "appsrc ! video/quicktime, variant=mse-bytestream ! qtdemux ! fakesink async=false",
     },
-    configs = {
-       [validateflow, pad=fakesink0:sink, record-buffers=false, logged-event-types={segment}],
+    configs={
+        [validateflow,
+            pad=fakesink0:sink,
+            record-buffers=false,
+            logged-event-types={
+                segment,
+            }],
     }
 
 # Scenario action types

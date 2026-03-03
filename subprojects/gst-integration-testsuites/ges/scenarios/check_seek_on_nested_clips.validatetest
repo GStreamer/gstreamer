@@ -1,6 +1,6 @@
 set-globals, media_dir="$(test_dir)/../../media/defaults"
 meta,
-    tool = "ges-launch-$(gst_api_version)",
+    tool="ges-launch-$(gst_api_version)",
     seek=true,
     handles-states=true,
     needs_preroll=true,
@@ -12,8 +12,7 @@ meta,
 
 include, location="../../media/defaults/matroska/timed_frames_video_only_1fps.mkv.frames_checksums"
 
-set-vars,
-    nested_timeline_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nested_timeline.xges"
+set-vars, nested_timeline_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nested_timeline.xges"
 
 add-clip,
     name=clip,
@@ -24,10 +23,22 @@ add-clip,
 serialize-project, uri="$(nested_timeline_uri)"
 remove-clip, name=clip
 
-add-clip, name=nested-clip1, asset-id="$(nested_timeline_uri)",
-    layer-priority=0, type=GESUriClip, inpoint=0.0, duration=2.0
+add-clip,
+    name=nested-clip1,
+    asset-id="$(nested_timeline_uri)",
+    layer-priority=0,
+    type=GESUriClip,
+    inpoint=0.0,
+    duration=2.0
 
-add-clip, name=nested-clip2, asset-id="$(nested_timeline_uri)", layer-priority=0, type=GESUriClip, inpoint=0.0, duration=2.0, start=2.0
+add-clip,
+    name=nested-clip2,
+    asset-id="$(nested_timeline_uri)",
+    layer-priority=0,
+    type=GESUriClip,
+    inpoint=0.0,
+    duration=2.0,
+    start=2.0
 
 commit;
 pause;
@@ -44,7 +55,12 @@ container-add-child, container-name=nested-clip2, asset-id=videoflip, child-type
 set-child-property, element-name=effect0, property=method, value=2;
 
 # trim nested-clip2 to 1 sec
-edit-container, container-name=nested-clip2, edit-mode=edit_trim, position=1, new-layer-priority=(int)-1, edge=(string)edge_end;
+edit-container,
+    container-name=nested-clip2,
+    edit-mode=edit_trim,
+    position=1,
+    new-layer-priority=(int)-1,
+    edge=(string)edge_end;
 
 # seek to 1.2 sec and check frame
 seek, flags=accurate+flush, start=1.2

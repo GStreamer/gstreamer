@@ -9,13 +9,21 @@ set-globals, growing_file_location="$(logsdir)/$(test_name)-growing.rand"
 meta,
     seek=false,
     handles-states=false,
-    args = {
+    args={
         "fakesrc num-buffers=30 datarate=30 filltype=pattern-span sizetype=fixed filltype=random format=time ! filesink sync=true location=$(growing_file_location) name=filesink buffer-mode=unbuffered \
-         giosrc name=giosrc is-growing=true location=file://$(growing_file_location) ! fakesink name=growing-file-sink async=false" \
+         giosrc name=giosrc is-growing=true location=file://$(growing_file_location) ! fakesink name=growing-file-sink async=false",
     },
-    configs = {
-       [validateflow, pad=filesink:sink, record-buffers=true, ignored-fields="stream-start={stream-id,group-id,stream}", buffers-checksum=as-id],
-       [validateflow, pad=growing-file-sink:sink, record-buffers=true, ignored-fields="stream-start={stream-id,group-id,stream}", buffers-checksum=as-id],
+    configs={
+        [validateflow,
+            pad=filesink:sink,
+            record-buffers=true,
+            ignored-fields="stream-start={stream-id,group-id,stream}",
+            buffers-checksum=as-id],
+        [validateflow,
+            pad=growing-file-sink:sink,
+            record-buffers=true,
+            ignored-fields="stream-start={stream-id,group-id,stream}",
+            buffers-checksum=as-id],
     }
 
 
@@ -39,4 +47,5 @@ wait, signal-name=waiting-data, target-element-name=giosrc
 checkpoint
 
 # Make sure EOS is outputted now, the scenario will automatically quit on EOS
-set-properties, giosrc::is_growing=false
+set-properties,
+    giosrc::is_growing=false

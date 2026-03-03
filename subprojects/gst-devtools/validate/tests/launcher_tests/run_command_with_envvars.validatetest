@@ -1,5 +1,5 @@
 meta,
-    args = {
+    args={
         "videotestsrc ! fakesink sync=true",
     },
     handles-states=true,
@@ -9,9 +9,6 @@ run-command,
     argv={
         python3, -c, "import os; assert os.environ['ENVVAR_CHECK'] == 'set'",
     },
-    env=[
-        vars,
-            ENVVAR_CHECK="set",
-    ]
+    env=[vars, ENVVAR_CHECK="set"]
 
 stop

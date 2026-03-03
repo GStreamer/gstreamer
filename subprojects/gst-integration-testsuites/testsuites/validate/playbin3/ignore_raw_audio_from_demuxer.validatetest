@@ -2,7 +2,7 @@ set-globals, media_dir="$(test_dir)/../../../media/"
 
 meta,
     handles-states=true,
-    args = {
+    args={
         "uridecodebin3 uri=\"file://$(media_dir)/defaults/mp4/raw_h264.0.mp4\" caps=video/x-raw ! $(videosink) ",
     }
 

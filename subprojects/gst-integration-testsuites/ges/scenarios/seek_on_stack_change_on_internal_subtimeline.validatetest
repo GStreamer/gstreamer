@@ -1,14 +1,14 @@
 set-globals, media_dir="$(test_dir)/../../media/defaults"
 meta,
-    tool = "ges-launch-$(gst_api_version)",
-    seek = true,
-    handles-states = true,
-    args = {
-        --track-types, video,
-        --video-caps, "video/x-raw, format=(string)I420, width=(int)1080, height=(int)720, framerate=(fraction)1/1",
-        --videosink, "$(videosink) name=videosink",
+    tool="ges-launch-$(gst_api_version)",
+    seek=true,
+    handles-states=true,
+    args={
+        --track-types, video, --video-caps,
+        "video/x-raw, format=(string)I420, width=(int)1080, height=(int)720, framerate=(fraction)1/1", --videosink,
+        "$(videosink) name=videosink",
     },
-    configs = {
+    configs={
         [validateflow, pad=videosink:sink, buffers-checksum=true, ignored-fields="stream-start={stream-id,group-id,stream}"],
     }
 
@@ -16,8 +16,23 @@ set-vars, nested_timeline_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nest
 
 serialize-project, uri="$(nested_timeline_uri)"
 
-add-clip, name=clip, asset-id="file://$(media_dir)/matroska/timed_frames_video_only_1fps.mkv", layer-priority=0, type=GESUriClip, duration=2.0, project-uri="$(nested_timeline_uri)", inpoint=1.0
-add-clip, name=clip1, asset-id="file://$(media_dir)/matroska/timed_frames_video_only_1fps.mkv", layer-priority=0, type=GESUriClip, duration=2.0, project-uri="$(nested_timeline_uri)", inpoint=5.0, start=2.0
+add-clip,
+    name=clip,
+    asset-id="file://$(media_dir)/matroska/timed_frames_video_only_1fps.mkv",
+    layer-priority=0,
+    type=GESUriClip,
+    duration=2.0,
+    project-uri="$(nested_timeline_uri)",
+    inpoint=1.0
+add-clip,
+    name=clip1,
+    asset-id="file://$(media_dir)/matroska/timed_frames_video_only_1fps.mkv",
+    layer-priority=0,
+    type=GESUriClip,
+    duration=2.0,
+    project-uri="$(nested_timeline_uri)",
+    inpoint=5.0,
+    start=2.0
 
 add-clip, name=nested-clip1, asset-id="$(nested_timeline_uri)", layer-priority=0, type=GESUriClip
 
@@ -28,4 +43,3 @@ seek, flags=accurate+flush, start=1.0
 seek, flags=accurate+flush, start=2.0
 
 stop;
-

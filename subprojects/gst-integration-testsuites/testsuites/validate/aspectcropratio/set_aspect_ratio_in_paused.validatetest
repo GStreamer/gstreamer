@@ -1,8 +1,8 @@
 meta,
     seek=true,
     handles-states=true,
-    args = {
-         "videotestsrc !  aspectratiocrop name=cropper ! $(videosink)",
+    args={
+        "videotestsrc !  aspectratiocrop name=cropper ! $(videosink)",
     }
 
 pause

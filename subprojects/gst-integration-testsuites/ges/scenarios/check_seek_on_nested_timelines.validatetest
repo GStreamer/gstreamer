@@ -3,11 +3,11 @@ set-globals, media_dir="$(test_dir)/../../media/defaults"
 meta,
     seek=true,
     handles-states=true,
-    tool = "ges-launch-$(gst_api_version)",
-    args = {
-        --track-types, video,
-        --video-caps, "video/x-raw, format=(string)I420, width=(int)1080, height=(int)720, framerate=(fraction)1/1",
-        --videosink, "$(videosink) name=videosink",
+    tool="ges-launch-$(gst_api_version)",
+    args={
+        --track-types, video, --video-caps,
+        "video/x-raw, format=(string)I420, width=(int)1080, height=(int)720, framerate=(fraction)1/1", --videosink,
+        "$(videosink) name=videosink",
     }
 
 include, location="../../media/defaults/matroska/timed_frames_video_only_1fps.mkv.frames_checksums"
@@ -19,12 +19,34 @@ set-vars,
 serialize-project, uri="$(nested_timeline_uri)"
 serialize-project, uri="$(nested_timeline_depth2_uri)"
 
-add-clip, name=clip, project-uri="$(nested_timeline_uri)",
-    asset-id="file://$(media_dir)/matroska/timed_frames_video_only_1fps.mkv", layer-priority=0, type=GESUriClip
-add-clip, name=nested-clip1, asset-id="$(nested_timeline_uri)", layer-priority=0, type=GESUriClip, project-uri="$(nested_timeline_depth2_uri)"
+add-clip,
+    name=clip,
+    project-uri="$(nested_timeline_uri)",
+    asset-id="file://$(media_dir)/matroska/timed_frames_video_only_1fps.mkv",
+    layer-priority=0,
+    type=GESUriClip
+add-clip,
+    name=nested-clip1,
+    asset-id="$(nested_timeline_uri)",
+    layer-priority=0,
+    type=GESUriClip,
+    project-uri="$(nested_timeline_depth2_uri)"
 
-add-clip, name=nested-timeline1, asset-id="$(nested_timeline_depth2_uri)", layer-priority=0, type=GESUriClip, inpoint=0, duration=2.0
-add-clip, name=nested-timeline2, asset-id="$(nested_timeline_depth2_uri)", layer-priority=0, type=GESUriClip, inpoint=0, duration=2.0, start=2.0
+add-clip,
+    name=nested-timeline1,
+    asset-id="$(nested_timeline_depth2_uri)",
+    layer-priority=0,
+    type=GESUriClip,
+    inpoint=0,
+    duration=2.0
+add-clip,
+    name=nested-timeline2,
+    asset-id="$(nested_timeline_depth2_uri)",
+    layer-priority=0,
+    type=GESUriClip,
+    inpoint=0,
+    duration=2.0,
+    start=2.0
 
 commit;
 pause;
@@ -41,7 +63,12 @@ container-add-child, container-name=nested-timeline2, asset-id=videoflip, child-
 set-child-property, element-name=effect0, property=method, value=2;
 
 # trim nested-timeline2 to 1 sec
-edit-container, container-name=nested-timeline2, edit-mode=edit_trim, position=1, new-layer-priority=(int)-1, edge=(string)edge_end;
+edit-container,
+    container-name=nested-timeline2,
+    edit-mode=edit_trim,
+    position=1,
+    new-layer-priority=(int)-1,
+    edge=(string)edge_end;
 
 # seek to 1.2 sec and check frame
 seek, flags=accurate+flush, start=1.2
