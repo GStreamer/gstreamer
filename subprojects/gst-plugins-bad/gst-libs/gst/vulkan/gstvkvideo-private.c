@@ -402,8 +402,6 @@ gst_vulkan_video_try_configuration (GstVulkanPhysicalDevice * device,
 
   /* fill vkcaps & output format usage */
   if (decode) {
-    gboolean dedicated_dpb;
-
     vkcaps.caps.pNext = &vkcaps.decoder;
     /* *INDENT-OFF* */
     vkcaps.decoder.caps = (VkVideoDecodeCapabilitiesKHR) {
@@ -411,14 +409,6 @@ gst_vulkan_video_try_configuration (GstVulkanPhysicalDevice * device,
       .pNext = &vkcaps.decoder.codec,
     };
     /* *INDENT-ON* */
-
-    dedicated_dpb = ((vkcaps.decoder.caps.flags &
-            VK_VIDEO_DECODE_CAPABILITY_DPB_AND_OUTPUT_COINCIDE_BIT_KHR) == 0);
-
-    image_usage = VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
-        | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-    if (!dedicated_dpb)
-      image_usage |= VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR;
   } else if (encode) {
     vkcaps.caps.pNext = &vkcaps.encoder;
     /* *INDENT-OFF* */
@@ -427,9 +417,6 @@ gst_vulkan_video_try_configuration (GstVulkanPhysicalDevice * device,
       .pNext = &vkcaps.encoder.codec,
     };
     /* *INDENT-ON* */
-
-    image_usage = VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR
-        | VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR;
   } else {
     g_assert_not_reached ();
   }
@@ -491,6 +478,21 @@ gst_vulkan_video_try_configuration (GstVulkanPhysicalDevice * device,
   if (!gst_vulkan_physical_device_get_video_capabilities (device,
           &profile->profile, &vkcaps.caps, error))
     return FALSE;
+
+  if (decode) {
+    gboolean dedicated_dpb;
+
+    image_usage = VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
+        | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+
+    dedicated_dpb = ((vkcaps.decoder.caps.flags &
+            VK_VIDEO_DECODE_CAPABILITY_DPB_AND_OUTPUT_COINCIDE_BIT_KHR) == 0);
+    if (!dedicated_dpb)
+      image_usage |= VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR;
+  } else {
+    image_usage = VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR
+        | VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR;
+  }
 
   fmts =
       gst_vulkan_physical_device_get_video_formats (device, image_usage,
