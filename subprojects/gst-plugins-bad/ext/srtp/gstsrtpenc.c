@@ -380,9 +380,9 @@ max_cipher_key_size (GstSrtpEnc * filter)
  * Should be called with the filter locked
  */
 static srtp_err_status_t
-gst_srtp_enc_create_session (GstSrtpEnc * filter)
+gst_srtp_enc_manage_session (GstSrtpEnc * filter)
 {
-  srtp_err_status_t ret;
+  srtp_err_status_t ret = srtp_err_status_fail;
   srtp_policy_t policy;
   GstMapInfo map;
   guchar tmp[1];
@@ -462,11 +462,26 @@ gst_srtp_enc_create_session (GstSrtpEnc * filter)
   policy.window_size = filter->replay_window_size;
   policy.allow_repeat_tx = filter->allow_repeat_tx;
 
-  /* If it is the first stream, create the session
-   * If not, add the stream to the session
-   */
-  ret = srtp_create (&filter->session, &policy);
-  filter->first_session = FALSE;
+  if (filter->session) {
+    /*
+     * Update all outbound streams/SSRCs.
+     * The existing ROC value of all streams will be preserved.
+     */
+    ret = srtp_update_stream (filter->session, &policy);
+  } else if (filter->first_session) {
+    /*
+     * Create the session. The policy will apply to any outbound stream/SSRC
+     * later on.
+     *
+     * Streams are created on the fly. The first time a packet is processed
+     * in srtp_protect_*():
+     *     - libsrtp looks at the packet’s SSRC
+     *     - It creates a new internal stream state for that SSRC
+     *     - ROC starts at 0, sequence numbers tracked, crypto context initialized
+     */
+    ret = srtp_create (&filter->session, &policy);
+    filter->first_session = FALSE;
+  }
 
 done:
 
@@ -1063,20 +1078,20 @@ gst_srtp_enc_check_set_caps (GstSrtpEnc * filter, GstPad * pad,
 
   GST_OBJECT_LOCK (filter);
 
-  if (filter->key_changed) {
-    gst_srtp_enc_reset_no_lock (filter);
-    do_setcaps = TRUE;
-  }
-
-  if (filter->first_session) {
-    srtp_err_status_t status = gst_srtp_enc_create_session (filter);
+  if (filter->first_session || filter->key_changed) {
+    srtp_err_status_t status = gst_srtp_enc_manage_session (filter);
 
     if (status != srtp_err_status_ok) {
       GST_OBJECT_UNLOCK (filter);
       GST_ELEMENT_ERROR (filter, LIBRARY, INIT,
           ("Could not initialize SRTP encoder"),
-          ("Failed to add stream to SRTP encoder (err: %d)", status));
+          ("Failed to manage session in SRTP encoder (err: %d)", status));
       return GST_FLOW_ERROR;
+    }
+
+    if (filter->key_changed) {
+      filter->key_changed = FALSE;
+      do_setcaps = TRUE;
     }
   }
 
