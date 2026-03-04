@@ -796,7 +796,6 @@ integration testsuites fedora:
     paths:
       - 'meson-logs/'
       - "$CI_PROJECT_DIR/validate-logs"
-      - 'diffs/'
     reports:
       junit:
         - "$CI_PROJECT_DIR/validate-logs/*.xml"

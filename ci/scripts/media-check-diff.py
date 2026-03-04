@@ -49,13 +49,15 @@ def get_diff():
     if result.returncode == 0:
         return None
 
-    os.makedirs("diffs", exist_ok=True)
+    parent = os.environ.get("CI_PROJECT_DIR", os.getcwd())
+    diff_dir = os.path.join(parent, "validate-logs", "diffs")
+    os.makedirs(diff_dir, exist_ok=True)
     result = run(
         ["git", "-C", TESTSUITES_DIR, "diff", "--", "media_info/"],
         capture_output=True,
     )
     diff = result.stdout
-    with open("diffs/media_info.diff", "wb") as f:
+    with open(os.path.join(diff_dir, "media_info.diff"), "wb") as f:
         f.write(diff)
     return diff
 
