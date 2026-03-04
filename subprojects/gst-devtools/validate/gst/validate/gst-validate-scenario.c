@@ -5205,8 +5205,16 @@ handle_bus_message (MessageData * d)
       if (old_state == GST_STATE_PAUSED && state == GST_STATE_READY)
         gst_validate_scenario_reset (scenario);
 
-      if (reached_state && gst_validate_scenario_is_flush_seeking (scenario))
-        gst_validate_action_set_done (priv->current_seek->action);
+      if (reached_state && gst_validate_scenario_is_flush_seeking (scenario)) {
+        if (priv->actions) {
+          GstClockTime position = GST_CLOCK_TIME_NONE;
+          gdouble rate;
+
+          _check_position (scenario, priv->current_seek->action, &position,
+              &rate);
+          gst_validate_action_set_done (priv->current_seek->action);
+        }
+      }
 
       if (priv->changing_state && priv->target_state == state) {
         priv->changing_state = FALSE;
