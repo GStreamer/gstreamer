@@ -15,10 +15,10 @@ meta,
         # some reason. It has been manually checked and the contents are very
         # slightly off and ssim would detect no difference at all between the
         # images
-        "expected-issue, issue-id=validateflow::mismatch, details=\".*content-id=10.*\\\\n.*\\\\n.*content-id=12.*\", sometimes=true",
-        "expected-issue, issue-id=validateflow::mismatch, details=\".*content-id=12.*\\\\n.*\\\\n.*content-id=10.*\", sometimes=true",
-        "expected-issue, issue-id=validateflow::mismatch, details=\".*content-id=0.*\\\\n.*\\\\n.*content-id=12.*\", sometimes=true",
-        "expected-issue, issue-id=validateflow::mismatch, details=\".*content-id=0.*\\\\n.*\\\\n.*content-id=13.*\", sometimes=true",
+        [expected-issue, issue-id=validateflow::mismatch, details=".*content-id=10.*\\n.*content-id=12.*", sometimes=true],
+        [expected-issue, issue-id=validateflow::mismatch, details=".*content-id=12.*\\n.*content-id=10.*", sometimes=true],
+        [expected-issue, issue-id=validateflow::mismatch, details=".*content-id=0.*\\n.*content-id=12.*", sometimes=true],
+        [expected-issue, issue-id=validateflow::mismatch, details=".*content-id=0.*\\n.*content-id=13.*", sometimes=true],
     }
 
 remove-feature, name=queue

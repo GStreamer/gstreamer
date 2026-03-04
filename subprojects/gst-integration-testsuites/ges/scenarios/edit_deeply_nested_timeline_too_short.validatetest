@@ -16,7 +16,7 @@ meta,
     },
     expected-issues = {
         # Sometimes the segment arrives before the caps, and sometimes the other way around
-        "expected-issue, issue-id=validateflow::mismatch, details=\".*event segment:.*\\\\n.*\\\\n.*event caps:.*\", sometimes=true",
+        [expected-issue, issue-id=validateflow::mismatch, details=".*event segment:.*\\n.*event caps:.*", sometimes=true],
     }
 
 set-vars,
