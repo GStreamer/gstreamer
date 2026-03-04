@@ -1,6 +1,6 @@
 <file duration="45523848740" frame-detection="0" skip-parsers="0" uri="file:///../../media/defaults/mpegts/tron_en_ge_aac_h264.ts" seekable="true">
   <streams caps="video/mpegts, systemstream=(boolean)true, packetsize=(int)188">
-    <stream type="video" caps="video/x-h264, stream-format=(string)avc, pixel-aspect-ratio=(fraction)1/1, width=(int)688, height=(int)320, framerate=(fraction)25/1, coded-picture-structure=(string)frame, chroma-format=(string)4:2:0, bit-depth-luma=(uint)8, bit-depth-chroma=(uint)8, parsed=(boolean)true, alignment=(string)au, profile=(string)high, level=(string)3, lcevc=(boolean)false, codec_data=(buffer)0164001effe100196764001eacd940ac29b011000003000100000300328f162d9601000568ebecb22cfdf8f800" id="/00000041">
+    <stream type="video" caps="video/x-h264, stream-format=(string)avc, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive, width=(int)688, height=(int)320, framerate=(fraction)25/1, coded-picture-structure=(string)frame, chroma-format=(string)4:2:0, bit-depth-luma=(uint)8, bit-depth-chroma=(uint)8, parsed=(boolean)true, alignment=(string)au, profile=(string)high, level=(string)3, lcevc=(boolean)false, codec_data=(buffer)0164001effe100196764001eacd940ac29b011000003000100000300328f162d9601000568ebecb22cfdf8f800" id="/00000041">
       <segments>
       </segments>
       <tags>

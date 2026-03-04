@@ -7,7 +7,7 @@
         <tag content="taglist, audio-codec=(string)&quot;MPEG-4\ AAC&quot;;"/>
       </tags>
     </stream>
-    <stream type="video" caps="video/x-h264, stream-format=(string)avc, width=(int)192, height=(int)144, framerate=(fraction)0/1, coded-picture-structure=(string)frame, chroma-format=(string)4:2:0, bit-depth-luma=(uint)8, bit-depth-chroma=(uint)8, colorimetry=(string)2:4:5:4, parsed=(boolean)true, alignment=(string)au, profile=(string)constrained-baseline, level=(string)1.1, lcevc=(boolean)false, codec_data=(buffer)0142e00bffe100132742e00ba918609d8035060106b6c2b5ef7c0401000428de0988" id="/src_0:1/00000102">
+    <stream type="video" caps="video/x-h264, stream-format=(string)avc, interlace-mode=(string)progressive, width=(int)192, height=(int)144, framerate=(fraction)0/1, coded-picture-structure=(string)frame, chroma-format=(string)4:2:0, bit-depth-luma=(uint)8, bit-depth-chroma=(uint)8, colorimetry=(string)2:4:5:4, parsed=(boolean)true, alignment=(string)au, profile=(string)constrained-baseline, level=(string)1.1, lcevc=(boolean)false, codec_data=(buffer)0142e00bffe100132742e00ba918609d8035060106b6c2b5ef7c0401000428de0988" id="/src_0:1/00000102">
       <segments>
       </segments>
       <tags>

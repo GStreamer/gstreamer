@@ -1,4 +1,4 @@
-<file duration="3333333333" frame-detection="0" skip-parsers="0" uri="imagesequence:/builds/thiblahute/gstreamer/subprojects/gst-integration-testsuites/media/defaults/imagesequences/jpeg/%2505d.jpeg?start-index=0&amp;framerate=30" seekable="true">
+<file duration="3333333333" frame-detection="0" skip-parsers="0" uri="imagesequence:/builds/gstreamer/gstreamer/subprojects/gst-integration-testsuites/media/defaults/imagesequences/jpeg/%2505d.jpeg?start-index=0&amp;framerate=30" seekable="true">
   <streams caps="">
     <stream type="video" caps="image/jpeg, parsed=(boolean)true, width=(int)320, height=(int)240, sof-marker=(int)0, colorspace=(string)sYUV, sampling=(string)YCbCr-4:2:0, interlace-mode=(string)progressive, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)1/1" id="">
       <segments>

@@ -1,6 +1,6 @@
 <file duration="10000000000" frame-detection="0" skip-parsers="0" uri="file:///../../media/defaults/mp4/raw_h264.1.mp4" seekable="true">
   <streams caps="video/quicktime">
-    <stream type="video" caps="video/x-h264, stream-format=(string)avc, alignment=(string)au, level=(string)2, profile=(string)high, codec_data=(buffer)01640014ffe1001867640014acd94141fb0110000003001773594000f142996001000568ebecb22cfdf8f800, width=(int)320, height=(int)240, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)1/1, coded-picture-structure=(string)frame, chroma-format=(string)4:2:0, bit-depth-luma=(uint)8, bit-depth-chroma=(uint)8, parsed=(boolean)true, lcevc=(boolean)false" id="/001">
+    <stream type="video" caps="video/x-h264, stream-format=(string)avc, alignment=(string)au, level=(string)2, profile=(string)high, codec_data=(buffer)01640014ffe1001867640014acd94141fb0110000003001773594000f142996001000568ebecb22cfdf8f800, width=(int)320, height=(int)240, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive, coded-picture-structure=(string)frame, chroma-format=(string)4:2:0, bit-depth-luma=(uint)8, bit-depth-chroma=(uint)8, parsed=(boolean)true, lcevc=(boolean)false" id="/001">
       <segments>
       </segments>
       <tags>
