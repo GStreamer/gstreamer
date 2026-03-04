@@ -41,10 +41,8 @@ try_profile (GstVulkanPhysicalDevice * device, GstVulkanVideoProfile * profile,
       gst_vulkan_video_try_configuration (device, profile, &vkcaps, &codec,
       &vkformats, &err);
   if (!ret) {
-    GST_LOG ("Couldn't get configuration for 0x%x, %u [%d %d]: %s",
-        profile->profile.videoCodecOperation,
-        profile->profile.chromaSubsampling,
-        profile->profile.chromaBitDepth, profile->profile.lumaBitDepth,
+    GST_LOG ("Couldn't get configuration for profile %" GST_PTR_FORMAT ": %s",
+        gst_vulkan_video_profile_to_caps (profile),
         err ? err->message : "Unknown error");
     g_clear_error (&err);
     return FALSE;
