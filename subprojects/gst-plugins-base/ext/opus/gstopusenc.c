@@ -585,7 +585,8 @@ gst_opus_enc_setup_channel_mappings (GstOpusEnc * enc,
      *     positions, and e.g. for the MPEG-TS mapping this has short forms
      *     in the signalling
      */
-    memcpy (enc->opus_pos, opus_positions, sizeof (enc->opus_pos));
+    memcpy (enc->opus_pos, opus_positions,
+        sizeof (gst_opus_channel_positions[0]));
     enc->needs_reorder =
         memcmp (opus_positions, gst_positions,
         info->channels * sizeof (*gst_positions)) != 0;
