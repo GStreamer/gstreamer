@@ -1102,6 +1102,9 @@ gst_onnx_inference_start (GstBaseTransform * trans)
         self->scales[i], self->offsets[i]);
   }
 
+  gst_caps_set_simple (self->input_tensors_caps, "pixel-aspect-ratio",
+      GST_TYPE_FRACTION, 1, 1, NULL);
+
   g_free (tensor_name);
   if (onnx_input_tensor_name)
     self->allocator->Free (self->allocator, (char *) onnx_input_tensor_name);
