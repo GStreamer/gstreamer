@@ -158,6 +158,11 @@ class Bin(Gst.Bin):
     def iterate_sorted(self) -> Iterator[Element]:
         return super().iterate_sorted()  # type: ignore[return-value]
 
+    def __iter__(self) -> typing.Iterator[Element]:
+        """Iterate over all elements in the bin, non-recursive."""
+        for elem in self.iterate_elements():
+            yield elem
+
 
 override(Bin)
 __all__.append('Bin')
