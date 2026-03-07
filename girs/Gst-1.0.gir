@@ -1351,7 +1351,7 @@ name</doc>
 The function recurses inside child bins. The iterator will yield a series of
 #GstElement.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstbin.h"/>
-        <return-value transfer-ownership="full" nullable="1">
+        <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.c">a #GstIterator of #GstElement
     for all elements in the bin with the given element factory name</doc>
           <type name="Iterator" c:type="GstIterator*"/>
@@ -1373,7 +1373,7 @@ interface. You can safely cast all returned elements to the given interface.
 The function recurses inside child bins. The iterator will yield a series
 of #GstElement.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstbin.h"/>
-        <return-value transfer-ownership="full" nullable="1">
+        <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.c">a #GstIterator of #GstElement
     for all elements in the bin implementing the given interface</doc>
           <type name="Iterator" c:type="GstIterator*"/>
@@ -1392,7 +1392,7 @@ of #GstElement.</doc>
       <method name="iterate_elements" c:identifier="gst_bin_iterate_elements">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.c">Gets an iterator for the elements in this bin.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstbin.h"/>
-        <return-value transfer-ownership="full" nullable="1">
+        <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.c">a #GstIterator of #GstElement</doc>
           <type name="Iterator" c:type="GstIterator*"/>
         </return-value>
@@ -1407,7 +1407,7 @@ of #GstElement.</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.c">Gets an iterator for the elements in this bin.
 This iterator recurses into GstBin children.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstbin.h"/>
-        <return-value transfer-ownership="full" nullable="1">
+        <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.c">a #GstIterator of #GstElement</doc>
           <type name="Iterator" c:type="GstIterator*"/>
         </return-value>
@@ -1422,7 +1422,7 @@ This iterator recurses into GstBin children.</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.c">Gets an iterator for all elements in the bin that have the
 #GST_ELEMENT_FLAG_SINK flag set.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstbin.h"/>
-        <return-value transfer-ownership="full" nullable="1">
+        <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.c">a #GstIterator of #GstElement</doc>
           <type name="Iterator" c:type="GstIterator*"/>
         </return-value>
@@ -1441,7 +1441,7 @@ the most downstream elements (sinks) to the sources.
 This function is used internally to perform the state changes
 of the bin elements and for clock selection.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstbin.h"/>
-        <return-value transfer-ownership="full" nullable="1">
+        <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.c">a #GstIterator of #GstElement</doc>
           <type name="Iterator" c:type="GstIterator*"/>
         </return-value>
@@ -1456,7 +1456,7 @@ of the bin elements and for clock selection.</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.c">Gets an iterator for all elements in the bin that have the
 #GST_ELEMENT_FLAG_SOURCE flag set.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstbin.h"/>
-        <return-value transfer-ownership="full" nullable="1">
+        <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.c">a #GstIterator of #GstElement</doc>
           <type name="Iterator" c:type="GstIterator*"/>
         </return-value>
