@@ -253,6 +253,23 @@ class TestBin(TestCase):
         Gst.init(None)
         self.assertEqual(Gst.ElementFactory.make("bin", None).sinkpads, [])
 
+    def test_make_and_add(self):
+        Gst.init(None)
+        bin = Gst.Bin()
+        with self.assertRaises(Gst.MissingPluginError):
+            bin.make_and_add("nonexistent")
+        e = bin.make_and_add("identity")
+        # Adding the same element again should fail
+        with self.assertRaises(Gst.AddError):
+            bin.add(e)
+
+    def test_iterate(self):
+        Gst.init(None)
+        bin = Gst.Bin()
+        e = bin.make_and_add("identity")
+        chidren = [c for c in bin]
+        self.assertEqual(chidren, [e])
+
 
 class TestBuffer(TestCase):
 
