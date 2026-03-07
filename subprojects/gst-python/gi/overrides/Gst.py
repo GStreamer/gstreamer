@@ -108,6 +108,15 @@ class Element(Gst.Element):
             if not pair[0].link(pair[1]):
                 raise LinkError(f'Failed to link {pair[0]} and {pair[1]}')
 
+    def iterate_pads(self) -> Iterator[Gst.Pad]:
+        return super().iterate_pads()  # type: ignore[return-value]
+
+    def iterate_sink_pads(self) -> Iterator[Gst.Pad]:
+        return super().iterate_sink_pads()  # type: ignore[return-value]
+
+    def iterate_src_pads(self) -> Iterator[Gst.Pad]:
+        return super().iterate_src_pads()  # type: ignore[return-value]
+
 
 override(Element)
 __all__.append('Element')
@@ -130,6 +139,24 @@ class Bin(Gst.Bin):
         elem = ElementFactory.make(factoryname, name)
         self.add(elem)
         return elem
+
+    def iterate_all_by_element_factory_name(self, factory_name: str) -> Iterator[Element]:
+        return super().iterate_all_by_element_factory_name(factory_name)  # type: ignore[return-value]
+
+    def iterate_elements(self) -> Iterator[Element]:
+        return super().iterate_elements()  # type: ignore[return-value]
+
+    def iterate_recurse(self) -> Iterator[Element]:
+        return super().iterate_recurse()  # type: ignore[return-value]
+
+    def iterate_sinks(self) -> Iterator[Element]:
+        return super().iterate_sinks()  # type: ignore[return-value]
+
+    def iterate_sources(self) -> Iterator[Element]:
+        return super().iterate_sources()  # type: ignore[return-value]
+
+    def iterate_sorted(self) -> Iterator[Element]:
+        return super().iterate_sorted()  # type: ignore[return-value]
 
 
 override(Bin)
@@ -444,8 +471,11 @@ class MapError(Exception):
 __all__.append('MapError')
 
 
-class Iterator(Gst.Iterator):
-    def __iter__(self) -> typing.Iterator[typing.Any]:
+T = typing.TypeVar('T')
+
+
+class Iterator(Gst.Iterator, typing.Generic[T]):
+    def __iter__(self) -> typing.Iterator[T]:
         while True:
             result, value = self.next()
             if result == Gst.IteratorResult.DONE:
