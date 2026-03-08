@@ -658,6 +658,9 @@ gst_tflite_inference_start (GstBaseTransform * trans)
       gst_caps_set_simple (priv->model_incaps, "format", G_TYPE_STRING,
           gst_format, NULL);
 
+    gst_caps_set_simple (priv->model_incaps, "pixel-aspect-ratio",
+        GST_TYPE_FRACTION, 1, 1, NULL);
+
     g_free (tensor_name);
   }
 
