@@ -485,6 +485,12 @@ G_BEGIN_DECLS
 #define FOURCC_mha1     GST_MAKE_FOURCC('m','h','a','1')
 #define FOURCC_mhm1     GST_MAKE_FOURCC('m','h','m','1')
 
+/* Generic compression for samples (ISO/IEC 23001-17:2024/Amd. 2) */
+#define FOURCC_resv     GST_MAKE_FOURCC('r','e','s','v')
+#define FOURCC_rinf     GST_MAKE_FOURCC('r','i','n','f')
+#define FOURCC_cmpC     GST_MAKE_FOURCC('c','m','p','C')
+#define FOURCC_gcmp     GST_MAKE_FOURCC('g','c','m','p')
+
 G_END_DECLS
 
 #endif /* __FOURCC_H__ */

@@ -267,6 +267,9 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_cpat, "Component Pattern Definition Box", 0},
   {FOURCC_cmpd, "Component Definition Box", 0},
   {FOURCC_ccst, "Coding Constraints", 0, qtdemux_dump_ccst},
+  {FOURCC_resv, "Restricted Video Sample Entry", 0},
+  {FOURCC_rinf, "Restricted Scheme Info Box", QT_FLAG_CONTAINER},
+  {FOURCC_cmpC, "Compression Configuration Box", 0},
   {0, "unknown", 0,},
 };
 
