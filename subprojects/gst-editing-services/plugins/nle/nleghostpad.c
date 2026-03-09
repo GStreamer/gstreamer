@@ -26,18 +26,49 @@
 GST_DEBUG_CATEGORY_STATIC (nleghostpad);
 #define GST_CAT_DEFAULT nleghostpad
 
-typedef struct _NlePadPrivate NlePadPrivate;
+#define NLE_TYPE_GHOST_PAD            (nle_ghost_pad_get_type())
+#define NLE_GHOST_PAD(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), NLE_TYPE_GHOST_PAD, NleGhostPad))
+#define NLE_GHOST_PAD_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), NLE_TYPE_GHOST_PAD, NleGhostPadClass))
+#define NLE_IS_GHOST_PAD(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), NLE_TYPE_GHOST_PAD))
 
-struct _NlePadPrivate
+typedef struct _NleGhostPad NleGhostPad;
+typedef struct _NleGhostPadClass NleGhostPadClass;
+
+struct _NleGhostPad
 {
+  GstGhostPad parent;
+
   NleObject *object;
-  NlePadPrivate *ghostpriv;
   GstPadDirection dir;
-  GstPadEventFunction eventfunc;
-  GstPadQueryFunction queryfunc;
+
+  /* Original ghost pad event/query functions (saved before override) */
+  GstPadEventFunction ghostpad_eventfunc;
+  GstPadQueryFunction ghostpad_queryfunc;
+
+  /* Original internal proxy pad event/query functions */
+  GstPadEventFunction internalpad_eventfunc;
+  GstPadQueryFunction internalpad_queryfunc;
 
   GstEvent *pending_seek;
 };
+
+struct _NleGhostPadClass
+{
+  GstGhostPadClass parent_class;
+};
+
+GType nle_ghost_pad_get_type (void);
+G_DEFINE_TYPE (NleGhostPad, nle_ghost_pad, GST_TYPE_GHOST_PAD);
+
+static void
+nle_ghost_pad_init (NleGhostPad * self)
+{
+}
+
+static void
+nle_ghost_pad_class_init (NleGhostPadClass * klass)
+{
+}
 
 /**
  * nle_object_translate_incoming_seek:
@@ -313,24 +344,53 @@ translate_incoming_segment (NleObject * object, GstEvent * event)
   return event2;
 }
 
+/* Retrieve the NleGhostPad that owns this internal proxy pad.
+ * Returns a reffed NleGhostPad, or NULL if not an NleGhostPad. */
+static NleGhostPad *
+get_nle_ghost_pad_from_internal (GstPad * internal)
+{
+  GstProxyPad *ghost;
+  NleGhostPad *nle_ghost = NULL;
+
+  ghost = gst_proxy_pad_get_internal (GST_PROXY_PAD (internal));
+  if (ghost) {
+    if (NLE_IS_GHOST_PAD (ghost))
+      nle_ghost = NLE_GHOST_PAD (ghost);
+    else
+      gst_object_unref (ghost);
+  }
+
+  return nle_ghost;
+}
+
 static gboolean
 internalpad_event_function (GstPad * internal, GstObject * parent,
     GstEvent * event)
 {
-  NlePadPrivate *priv = gst_pad_get_element_private (internal);
-  NleObject *object = priv->object;
+  NleGhostPad *nle_ghost;
+  NleObject *object;
   gboolean res;
+
+  nle_ghost = get_nle_ghost_pad_from_internal (internal);
+  if (G_UNLIKELY (!nle_ghost)) {
+    GST_WARNING_OBJECT (internal, "No NleGhostPad owner, pad being disposed");
+    gst_event_unref (event);
+    return FALSE;
+  }
+
+  object = nle_ghost->object;
 
   GST_DEBUG_OBJECT (internal, "event:%s (seqnum::%d)",
       GST_EVENT_TYPE_NAME (event), GST_EVENT_SEQNUM (event));
 
-  if (G_UNLIKELY (!(priv->eventfunc))) {
+  if (G_UNLIKELY (!(nle_ghost->internalpad_eventfunc))) {
     GST_WARNING_OBJECT (internal,
-        "priv->eventfunc == NULL !! What is going on ?");
+        "internalpad_eventfunc == NULL !! What is going on ?");
+    gst_object_unref (nle_ghost);
     return FALSE;
   }
 
-  switch (priv->dir) {
+  switch (nle_ghost->dir) {
     case GST_PAD_SRC:{
       switch (GST_EVENT_TYPE (event)) {
         case GST_EVENT_SEGMENT:
@@ -357,8 +417,11 @@ internalpad_event_function (GstPad * internal, GstObject * parent,
     default:
       break;
   }
-  GST_DEBUG_OBJECT (internal, "Calling priv->eventfunc %p", priv->eventfunc);
-  res = priv->eventfunc (internal, parent, event);
+  GST_DEBUG_OBJECT (internal, "Calling internalpad_eventfunc %p",
+      nle_ghost->internalpad_eventfunc);
+  res = nle_ghost->internalpad_eventfunc (internal, parent, event);
+
+  gst_object_unref (nle_ghost);
 
   return res;
 }
@@ -450,22 +513,31 @@ static gboolean
 internalpad_query_function (GstPad * internal, GstObject * parent,
     GstQuery * query)
 {
-  NlePadPrivate *priv = gst_pad_get_element_private (internal);
-  NleObject *object = priv->object;
+  NleGhostPad *nle_ghost;
+  NleObject *object;
   gboolean ret;
+
+  nle_ghost = get_nle_ghost_pad_from_internal (internal);
+  if (G_UNLIKELY (!nle_ghost)) {
+    GST_WARNING_OBJECT (internal, "No NleGhostPad owner, pad being disposed");
+    return FALSE;
+  }
+
+  object = nle_ghost->object;
 
   GST_DEBUG_OBJECT (internal, "querytype:%s",
       gst_query_type_get_name (GST_QUERY_TYPE (query)));
 
-  if (!(priv->queryfunc)) {
+  if (!(nle_ghost->internalpad_queryfunc)) {
     GST_WARNING_OBJECT (internal,
-        "priv->queryfunc == NULL !! What is going on ?");
+        "internalpad_queryfunc == NULL !! What is going on ?");
+    gst_object_unref (nle_ghost);
     return FALSE;
   }
 
-  if ((ret = priv->queryfunc (internal, parent, query))) {
+  if ((ret = nle_ghost->internalpad_queryfunc (internal, parent, query))) {
 
-    switch (priv->dir) {
+    switch (nle_ghost->dir) {
       case GST_PAD_SRC:
         break;
       case GST_PAD_SINK:
@@ -481,6 +553,8 @@ internalpad_query_function (GstPad * internal, GstObject * parent,
         break;
     }
   }
+
+  gst_object_unref (nle_ghost);
   return ret;
 }
 
@@ -488,19 +562,16 @@ static gboolean
 ghostpad_event_function (GstPad * ghostpad, GstObject * parent,
     GstEvent * event)
 {
-  NlePadPrivate *priv;
-  NleObject *object;
+  NleGhostPad *nle_ghost = NLE_GHOST_PAD (ghostpad);
+  NleObject *object = nle_ghost->object;
   gboolean ret = FALSE;
-
-  priv = gst_pad_get_element_private (ghostpad);
-  object = priv->object;
 
   GST_DEBUG_OBJECT (ghostpad, "event:%s", GST_EVENT_TYPE_NAME (event));
 
-  if (G_UNLIKELY (priv->eventfunc == NULL))
+  if (G_UNLIKELY (nle_ghost->ghostpad_eventfunc == NULL))
     goto no_function;
 
-  switch (priv->dir) {
+  switch (nle_ghost->dir) {
     case GST_PAD_SRC:
     {
       switch (GST_EVENT_TYPE (event)) {
@@ -539,10 +610,10 @@ ghostpad_event_function (GstPad * ghostpad, GstObject * parent,
   }
 
   if (event) {
-    GST_DEBUG_OBJECT (ghostpad, "Calling priv->eventfunc");
-    ret = priv->eventfunc (ghostpad, parent, event);
-    GST_DEBUG_OBJECT (ghostpad, "Returned from calling priv->eventfunc : %d",
-        ret);
+    GST_DEBUG_OBJECT (ghostpad, "Calling ghostpad_eventfunc");
+    ret = nle_ghost->ghostpad_eventfunc (ghostpad, parent, event);
+    GST_DEBUG_OBJECT (ghostpad,
+        "Returned from calling ghostpad_eventfunc : %d", ret);
   }
 
   return ret;
@@ -551,7 +622,7 @@ ghostpad_event_function (GstPad * ghostpad, GstObject * parent,
 no_function:
   {
     GST_WARNING_OBJECT (ghostpad,
-        "priv->eventfunc == NULL !! What's going on ?");
+        "ghostpad_eventfunc == NULL !! What's going on ?");
     return FALSE;
   }
 }
@@ -560,7 +631,7 @@ static gboolean
 ghostpad_query_function (GstPad * ghostpad, GstObject * parent,
     GstQuery * query)
 {
-  NlePadPrivate *priv = gst_pad_get_element_private (ghostpad);
+  NleGhostPad *nle_ghost = NLE_GHOST_PAD (ghostpad);
   NleObject *object = NLE_OBJECT (parent);
   gboolean pret = TRUE;
 
@@ -571,7 +642,7 @@ ghostpad_query_function (GstPad * ghostpad, GstObject * parent,
       /* skip duration upstream query, we'll fill it in ourselves */
       break;
     default:
-      pret = priv->queryfunc (ghostpad, parent, query);
+      pret = nle_ghost->ghostpad_queryfunc (ghostpad, parent, query);
   }
 
   if (pret) {
@@ -589,13 +660,6 @@ ghostpad_query_function (GstPad * ghostpad, GstObject * parent,
   }
 
   return pret;
-}
-
-/* internal pad going away */
-static void
-internal_pad_finalizing (NlePadPrivate * priv, GObject * pad G_GNUC_UNUSED)
-{
-  g_free (priv);
 }
 
 static inline GstPad *
@@ -617,49 +681,30 @@ get_proxy_pad (GstPad * ghostpad)
 }
 
 static void
-control_internal_pad (GstPad * ghostpad, NleObject * object)
+control_internal_pad (NleGhostPad * nle_ghost)
 {
-  NlePadPrivate *priv;
-  NlePadPrivate *privghost;
   GstPad *internal;
 
-  if (!ghostpad) {
-    GST_DEBUG_OBJECT (object, "We don't have a valid ghostpad !");
-    return;
-  }
-  privghost = gst_pad_get_element_private (ghostpad);
+  GST_LOG_OBJECT (nle_ghost, "overriding ghostpad's internal pad function");
 
-  GST_LOG_OBJECT (ghostpad, "overriding ghostpad's internal pad function");
+  internal = get_proxy_pad (GST_PAD (nle_ghost));
 
-  internal = get_proxy_pad (ghostpad);
+  /* Save the original internal pad functions (only once) */
+  if (!nle_ghost->internalpad_eventfunc) {
+    nle_ghost->internalpad_eventfunc = GST_PAD_EVENTFUNC (internal);
+    nle_ghost->internalpad_queryfunc = GST_PAD_QUERYFUNC (internal);
 
-  if (G_UNLIKELY (!(priv = gst_pad_get_element_private (internal)))) {
-    GST_DEBUG_OBJECT (internal,
-        "Creating a NlePadPrivate to put in element_private");
-    priv = g_new0 (NlePadPrivate, 1);
-
-    /* Remember existing pad functions */
-    priv->eventfunc = GST_PAD_EVENTFUNC (internal);
-    priv->queryfunc = GST_PAD_QUERYFUNC (internal);
-    gst_pad_set_element_private (internal, priv);
-
-    g_object_weak_ref ((GObject *) internal,
-        (GWeakNotify) internal_pad_finalizing, priv);
-
-    /* add query/event function overrides on internal pad */
+    /* Override with our wrappers */
     gst_pad_set_event_function (internal,
         GST_DEBUG_FUNCPTR (internalpad_event_function));
     gst_pad_set_query_function (internal,
         GST_DEBUG_FUNCPTR (internalpad_query_function));
   }
 
-  priv->object = object;
-  priv->ghostpriv = privghost;
-  priv->dir = GST_PAD_DIRECTION (ghostpad);
   gst_object_unref (internal);
 
-  GST_DEBUG_OBJECT (ghostpad, "Done with pad %s:%s",
-      GST_DEBUG_PAD_NAME (ghostpad));
+  GST_DEBUG_OBJECT (nle_ghost, "Done with pad %s:%s",
+      GST_DEBUG_PAD_NAME (nle_ghost));
 }
 
 
@@ -722,38 +767,36 @@ GstPad *
 nle_object_ghost_pad_no_target (NleObject * object, const gchar * name,
     GstPadDirection dir, GstPadTemplate * template)
 {
-  GstPad *ghost;
-  NlePadPrivate *priv;
+  NleGhostPad *nle_ghost;
 
-  /* create a no_target ghostpad */
+  /* create a no_target ghostpad using our NleGhostPad subclass */
   if (template)
-    ghost = gst_ghost_pad_new_no_target_from_template (name, template);
+    nle_ghost = g_object_new (NLE_TYPE_GHOST_PAD, "name", name,
+        "direction", dir, "template", template, NULL);
   else
-    ghost = gst_ghost_pad_new_no_target (name, dir);
-  if (!ghost)
+    nle_ghost = g_object_new (NLE_TYPE_GHOST_PAD, "name", name,
+        "direction", dir, NULL);
+
+  if (!nle_ghost)
     return NULL;
 
+  nle_ghost->dir = dir;
+  nle_ghost->object = object;
 
-  /* remember the existing ghostpad event/query/link/unlink functions */
-  priv = g_new0 (NlePadPrivate, 1);
-  priv->dir = dir;
-  priv->object = object;
+  /* Save and replace event/query functions */
+  GST_DEBUG_OBJECT (nle_ghost, "Setting ghostpad_eventfunc to %p",
+      GST_PAD_EVENTFUNC (nle_ghost));
+  nle_ghost->ghostpad_eventfunc = GST_PAD_EVENTFUNC (nle_ghost);
+  nle_ghost->ghostpad_queryfunc = GST_PAD_QUERYFUNC (nle_ghost);
 
-  /* grab/replace event/query functions */
-  GST_DEBUG_OBJECT (ghost, "Setting priv->eventfunc to %p",
-      GST_PAD_EVENTFUNC (ghost));
-  priv->eventfunc = GST_PAD_EVENTFUNC (ghost);
-  priv->queryfunc = GST_PAD_QUERYFUNC (ghost);
-
-  gst_pad_set_event_function (ghost,
+  gst_pad_set_event_function (GST_PAD (nle_ghost),
       GST_DEBUG_FUNCPTR (ghostpad_event_function));
-  gst_pad_set_query_function (ghost,
+  gst_pad_set_query_function (GST_PAD (nle_ghost),
       GST_DEBUG_FUNCPTR (ghostpad_query_function));
 
-  gst_pad_set_element_private (ghost, priv);
-  control_internal_pad (ghost, object);
+  control_internal_pad (nle_ghost);
 
-  return ghost;
+  return GST_PAD (nle_ghost);
 }
 
 
@@ -761,49 +804,45 @@ nle_object_ghost_pad_no_target (NleObject * object, const gchar * name,
 void
 nle_object_remove_ghost_pad (NleObject * object, GstPad * ghost)
 {
-  NlePadPrivate *priv;
-
   GST_DEBUG_OBJECT (object, "ghostpad %s:%s", GST_DEBUG_PAD_NAME (ghost));
 
-  priv = gst_pad_get_element_private (ghost);
   gst_ghost_pad_set_target (GST_GHOST_PAD (ghost), NULL);
   gst_element_remove_pad (GST_ELEMENT (object), ghost);
-  if (priv)
-    g_free (priv);
 }
 
 gboolean
 nle_object_ghost_pad_set_target (NleObject * object, GstPad * ghost,
     GstPad * target)
 {
-  NlePadPrivate *priv = gst_pad_get_element_private (ghost);
+  NleGhostPad *nle_ghost;
 
-  g_return_val_if_fail (priv, FALSE);
-  g_return_val_if_fail (GST_IS_PAD (ghost), FALSE);
+  g_return_val_if_fail (NLE_IS_GHOST_PAD (ghost), FALSE);
+
+  nle_ghost = NLE_GHOST_PAD (ghost);
 
   if (target) {
     GST_DEBUG_OBJECT (object, "setting target %s:%s on %s:%s",
         GST_DEBUG_PAD_NAME (target), GST_DEBUG_PAD_NAME (ghost));
   } else {
     GST_DEBUG_OBJECT (object, "removing target from ghostpad");
-    priv->pending_seek = NULL;
+    nle_ghost->pending_seek = NULL;
   }
 
   /* set target */
   if (!(gst_ghost_pad_set_target (GST_GHOST_PAD (ghost), target))) {
-    GST_WARNING_OBJECT (priv->object, "Could not set ghost %s:%s "
+    GST_WARNING_OBJECT (nle_ghost->object, "Could not set ghost %s:%s "
         "target to: %s:%s", GST_DEBUG_PAD_NAME (ghost),
         GST_DEBUG_PAD_NAME (target));
     return FALSE;
   }
 
-  if (target && priv->pending_seek) {
-    gboolean res = gst_pad_send_event (ghost, priv->pending_seek);
+  if (target && nle_ghost->pending_seek) {
+    gboolean res = gst_pad_send_event (ghost, nle_ghost->pending_seek);
 
     GST_INFO_OBJECT (object, "Sending our pending seek event: %" GST_PTR_FORMAT
-        " -- Result is %i", priv->pending_seek, res);
+        " -- Result is %i", nle_ghost->pending_seek, res);
 
-    priv->pending_seek = NULL;
+    nle_ghost->pending_seek = NULL;
   }
 
   return TRUE;
