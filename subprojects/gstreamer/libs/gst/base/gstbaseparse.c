@@ -739,6 +739,8 @@ gst_base_parse_frame_copy (GstBaseParseFrame * frame)
 
   copy = g_memdup2 (frame, sizeof (GstBaseParseFrame));
   copy->buffer = gst_buffer_ref (frame->buffer);
+  if (copy->out_buffer)
+    gst_buffer_ref (copy->out_buffer);
   copy->_private_flags &= ~GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC;
 
   GST_TRACE ("copied frame %p -> %p", frame, copy);
@@ -760,6 +762,11 @@ gst_base_parse_frame_free (GstBaseParseFrame * frame)
   if (frame->buffer) {
     gst_buffer_unref (frame->buffer);
     frame->buffer = NULL;
+  }
+
+  if (frame->out_buffer) {
+    gst_buffer_unref (frame->out_buffer);
+    frame->out_buffer = NULL;
   }
 
   if (!(frame->_private_flags & GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC)) {
