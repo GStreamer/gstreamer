@@ -514,6 +514,22 @@ gst_rg_volume_tag_event (GstRgVolume * self, GstEvent * event)
       !has_album_gain && !has_album_gain_r128 && !has_album_peak)
     return event;
 
+  /* Only apply the dBSPL reference level compensation when the stored
+   * reference level is positive (traditional ReplayGain uses ~89 dBSPL).
+   * A negative reference level indicates LUFS format (e.g. -18 LUFS as
+   * written by loudgain); in that case the gains are already computed
+   * relative to the LUFS target and need no dBSPL adjustment.
+   * When no reference level tag is present at all (e.g. as written by
+   * rsgain), has_ref_level is FALSE and compensation is skipped entirely,
+   * which is also correct: the gain values are self-consistent and need
+   * no adjustment. */
+  if (has_ref_level && self->reference_level <= 0) {
+    GST_DEBUG_OBJECT (self,
+        "ignoring LUFS reference level %" GAIN_FORMAT
+        " for ReplayGain dBSPL compensation", self->reference_level);
+    has_ref_level = FALSE;
+    self->reference_level = RG_REFERENCE_LEVEL;
+  }
   if (has_ref_level && (has_track_gain || has_album_gain)
       && (ABS (self->reference_level - RG_REFERENCE_LEVEL) > 1.e-6)) {
     /* Log a message stating the amount of adjustment that is applied below. */
@@ -521,10 +537,10 @@ gst_rg_volume_tag_event (GstRgVolume * self, GstEvent * event)
         "compensating for reference level difference by %" GAIN_FORMAT,
         RG_REFERENCE_LEVEL - self->reference_level);
   }
-  if (has_track_gain) {
+  if (has_track_gain && has_ref_level) {
     self->track_gain += RG_REFERENCE_LEVEL - self->reference_level;
   }
-  if (has_album_gain) {
+  if (has_album_gain && has_ref_level) {
     self->album_gain += RG_REFERENCE_LEVEL - self->reference_level;
   }
 
