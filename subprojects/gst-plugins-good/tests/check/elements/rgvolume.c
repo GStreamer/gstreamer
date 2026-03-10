@@ -655,6 +655,83 @@ GST_START_TEST (test_reference_level)
 
 GST_END_TEST;
 
+/* A REPLAYGAIN_REFERENCE_LOUDNESS tag with a negative value indicates LUFS
+ * (as written by loudgain/rsgain). In this case the gain must be applied
+ * as-is, without any dBSPL reference level compensation. */
+GST_START_TEST (test_lufs_reference_level)
+{
+  GstElement *element = setup_rgvolume ();
+  GstTagList *tag_list;
+
+  g_object_set (element,
+      "album-mode", FALSE,
+      "headroom", +0.00, "pre-amp", +0.00, "fallback-gain", +0.00, NULL);
+  set_playing_state (element);
+
+  send_stream_start_event (element);
+  send_caps_event (element);
+  send_segment_event (element);
+
+  send_empty_buffer ();
+
+  /* Simulate tags written by loudgain/rsgain with -18 LUFS reference */
+  tag_list = gst_tag_list_new_empty ();
+  gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
+      GST_TAG_TRACK_GAIN, -1.31, GST_TAG_TRACK_PEAK, 0.62,
+      GST_TAG_REFERENCE_LEVEL, -18., NULL);
+  fail_unless (send_tag_event (element, gst_event_new_tag (tag_list)) == NULL);
+  /* Gain must be -1.31 dB, NOT -1.31 + (89 - (-18)) = +105.69 dB */
+  fail_unless_gain (element, -1.31);
+  send_eos_event (element);
+
+  g_object_set (element, "album-mode", TRUE, NULL);
+
+  /* Same, but with album gain */
+  send_flush_events (element);
+  send_segment_event (element);
+
+  tag_list = gst_tag_list_new_empty ();
+  gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
+      GST_TAG_TRACK_GAIN, -5.00, GST_TAG_TRACK_PEAK, 0.9,
+      GST_TAG_ALBUM_GAIN, -2.50, GST_TAG_ALBUM_PEAK, 0.8,
+      GST_TAG_REFERENCE_LEVEL, -23., NULL);
+  fail_unless (send_tag_event (element, gst_event_new_tag (tag_list)) == NULL);
+  fail_unless_gain (element, -2.50);
+
+  cleanup_rgvolume (element);
+}
+
+GST_END_TEST;
+
+/* Negative gain without a reference level tag, as written by rsgain.
+ * The gain must be applied as-is with no compensation. */
+GST_START_TEST (test_negative_gain_no_reference_level)
+{
+  GstElement *element = setup_rgvolume ();
+  GstTagList *tag_list;
+
+  g_object_set (element,
+      "album-mode", FALSE,
+      "headroom", +0.00, "pre-amp", +0.00, "fallback-gain", +0.00, NULL);
+  set_playing_state (element);
+
+  send_stream_start_event (element);
+  send_caps_event (element);
+  send_segment_event (element);
+
+  send_empty_buffer ();
+
+  tag_list = gst_tag_list_new_empty ();
+  gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
+      GST_TAG_TRACK_GAIN, -3.21, GST_TAG_TRACK_PEAK, 0.94, NULL);
+  fail_unless (send_tag_event (element, gst_event_new_tag (tag_list)) == NULL);
+  fail_unless_gain (element, -3.21);
+
+  cleanup_rgvolume (element);
+}
+
+GST_END_TEST;
+
 static Suite *
 rgvolume_suite (void)
 {
@@ -671,6 +748,8 @@ rgvolume_suite (void)
   tcase_add_test (tc_chain, test_fallback_album);
   tcase_add_test (tc_chain, test_headroom);
   tcase_add_test (tc_chain, test_reference_level);
+  tcase_add_test (tc_chain, test_lufs_reference_level);
+  tcase_add_test (tc_chain, test_negative_gain_no_reference_level);
 
   return s;
 }
