@@ -183,6 +183,7 @@ struct _GstRTSPConnection
   gchar tunnelid[TUNNELID_LEN];
   gboolean tunneled;
   gboolean ignore_x_server_reply;
+  GstRTSPBackchannelHttpMethod backchannel_method;
   GstRTSPTunnelState tstate;
 
   /* the remote and local ip */
@@ -2137,7 +2138,9 @@ gst_rtsp_connection_send_messages_usec (GstRTSPConnection * conn,
                 &serialized_messages[i])))
       goto no_message;
 
-    if (conn->tunneled) {
+    if (conn->tunneled
+        && !(conn->backchannel_method == GST_RTSP_BACKCHANNEL_HTTP_METHOD_GET
+            && serialized_messages[i].data_is_data_header)) {
       gint state = 0, save = 0;
       gchar *base64_buffer, *out_buffer;
       gsize written = 0;
@@ -2240,9 +2243,20 @@ gst_rtsp_connection_send_messages_usec (GstRTSPConnection * conn,
   set_write_socket_timeout (conn, timeout);
 
   cancellable = get_cancellable (conn);
-  res =
-      writev_bytes (conn->output_stream, vectors, n_vectors, &bytes_written,
-      TRUE, cancellable);
+
+  {
+    GOutputStream *target_stream = conn->output_stream;
+
+    if (conn->tunneled
+        && conn->backchannel_method == GST_RTSP_BACKCHANNEL_HTTP_METHOD_GET
+        && n_messages == 1 && messages[0].type == GST_RTSP_MESSAGE_DATA) {
+      target_stream = g_io_stream_get_output_stream (conn->stream0);
+    }
+
+    res =
+        writev_bytes (target_stream, vectors, n_vectors, &bytes_written,
+        TRUE, cancellable);
+  }
   g_clear_object (&cancellable);
 
   clear_write_socket_timeout (conn);
@@ -3789,6 +3803,51 @@ gst_rtsp_connection_get_ignore_x_server_reply (const GstRTSPConnection * conn)
   g_return_val_if_fail (conn != NULL, FALSE);
 
   return conn->ignore_x_server_reply;
+}
+
+/**
+ * gst_rtsp_connection_set_backchannel_method:
+ * @conn: a #GstRTSPConnection
+ * @method: the #GstRTSPBackchannelHttpMethod to use
+ *
+ * Set the HTTP method for sending backchannel interleaved data in tunnel mode.
+ *
+ * %GST_RTSP_BACKCHANNEL_HTTP_METHOD_POST sends data base64-encoded via the POST
+ * connection (default). %GST_RTSP_BACKCHANNEL_HTTP_METHOD_GET sends data as raw
+ * binary on the GET connection, which is required for compatibility with
+ * some servers that only parse RTSP text commands from POST and cannot
+ * process interleaved RTP data there.
+ *
+ * This has no effect when not using HTTP tunneling.
+ *
+ * Since: 1.30
+ */
+void
+gst_rtsp_connection_set_backchannel_method (GstRTSPConnection * conn,
+    GstRTSPBackchannelHttpMethod method)
+{
+  g_return_if_fail (conn != NULL);
+
+  conn->backchannel_method = method;
+}
+
+/**
+ * gst_rtsp_connection_get_backchannel_method:
+ * @conn: a #GstRTSPConnection
+ *
+ * Get the HTTP method used for sending backchannel interleaved data in
+ * tunnel mode.
+ *
+ * Returns: the #GstRTSPBackchannelHttpMethod currently set.
+ *
+ * Since: 1.30
+ */
+GstRTSPBackchannelHttpMethod
+gst_rtsp_connection_get_backchannel_method (const GstRTSPConnection * conn)
+{
+  g_return_val_if_fail (conn != NULL, GST_RTSP_BACKCHANNEL_HTTP_METHOD_POST);
+
+  return conn->backchannel_method;
 }
 
 /**

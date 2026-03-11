@@ -78,6 +78,17 @@ and/or use gtk-doc annotations.  -->
         </parameters>
       </method>
     </record>
+    <enumeration name="RTSPBackchannelHttpMethod" version="1.30" glib:type-name="GstRTSPBackchannelHttpMethod" glib:get-type="gst_rtsp_backchannel_http_method_get_type" c:type="GstRTSPBackchannelHttpMethod">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">Preferred HTTP method for sending backchannel interleaved data in tunnel
+mode. If the server closes the connection after backchannel data is sent,
+automatically reconnects using the other method.</doc>
+      <member name="post" value="0" c:identifier="GST_RTSP_BACKCHANNEL_HTTP_METHOD_POST" version="1.30" glib:nick="post" glib:name="GST_RTSP_BACKCHANNEL_HTTP_METHOD_POST">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">Send base64-encoded via POST, fall back to GET on failure (default).</doc>
+      </member>
+      <member name="get" value="1" c:identifier="GST_RTSP_BACKCHANNEL_HTTP_METHOD_GET" version="1.30" glib:nick="get" glib:name="GST_RTSP_BACKCHANNEL_HTTP_METHOD_GET">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">Send raw binary via GET, fall back to POST on failure.</doc>
+      </member>
+    </enumeration>
     <record name="RTSPConnection" c:type="GstRTSPConnection" disguised="1" opaque="1">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.c">This object manages the RTSP connection to the server. It provides function
 to receive and send bytes and messages.</doc>
@@ -293,6 +304,21 @@ is set to non-flushing mode again.</doc>
           <instance-parameter name="conn" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.c">a #GstRTSPConnection</doc>
             <type name="RTSPConnection" c:type="GstRTSPConnection*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_backchannel_method" c:identifier="gst_rtsp_connection_get_backchannel_method" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.c">Get the HTTP method used for sending backchannel interleaved data in
+tunnel mode.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.c">the #GstRTSPBackchannelHttpMethod currently set.</doc>
+          <type name="RTSPBackchannelHttpMethod" c:type="GstRTSPBackchannelHttpMethod"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="conn" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.c">a #GstRTSPConnection</doc>
+            <type name="RTSPConnection" c:type="const GstRTSPConnection*"/>
           </instance-parameter>
         </parameters>
       </method>
@@ -916,6 +942,31 @@ nonce, opaque, stale, algorithm, qop as per RFC2617.</doc>
           <parameter name="value" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.c">value</doc>
             <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_backchannel_method" c:identifier="gst_rtsp_connection_set_backchannel_method" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.c">Set the HTTP method for sending backchannel interleaved data in tunnel mode.
+
+%GST_RTSP_BACKCHANNEL_HTTP_METHOD_POST sends data base64-encoded via the POST
+connection (default). %GST_RTSP_BACKCHANNEL_HTTP_METHOD_GET sends data as raw
+binary on the GET connection, which is required for compatibility with
+some servers that only parse RTSP text commands from POST and cannot
+process interleaved RTP data there.
+
+This has no effect when not using HTTP tunneling.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="conn" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.c">a #GstRTSPConnection</doc>
+            <type name="RTSPConnection" c:type="GstRTSPConnection*"/>
+          </instance-parameter>
+          <parameter name="method" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.c">the #GstRTSPBackchannelHttpMethod to use</doc>
+            <type name="RTSPBackchannelHttpMethod" c:type="GstRTSPBackchannelHttpMethod"/>
           </parameter>
         </parameters>
       </method>

@@ -344,6 +344,7 @@ gst_rtsp_backchannel_get_type (void)
 #define DEFAULT_ONVIF_RATE_CONTROL TRUE
 #define DEFAULT_IS_LIVE TRUE
 #define DEFAULT_IGNORE_X_SERVER_REPLY FALSE
+#define DEFAULT_BACKCHANNEL_HTTP_METHOD GST_RTSP_BACKCHANNEL_HTTP_METHOD_POST
 #define DEFAULT_TCP_TIMESTAMP FALSE
 #define DEFAULT_FORCE_NON_COMPLIANT_URL FALSE
 #define DEFAULT_CLIENT_MANAGED_MIKEY FALSE
@@ -397,6 +398,7 @@ enum
   PROP_ONVIF_RATE_CONTROL,
   PROP_IS_LIVE,
   PROP_IGNORE_X_SERVER_REPLY,
+  PROP_BACKCHANNEL_HTTP_METHOD,
   PROP_EXTRA_HTTP_REQUEST_HEADERS,
   PROP_TCP_TIMESTAMP,
   PROP_FORCE_NON_COMPLIANT_URL,
@@ -1145,6 +1147,36 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           "Ignore x-server-ip-address",
           "Whether to ignore the x-server-ip-address server header reply",
           DEFAULT_IGNORE_X_SERVER_REPLY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRTSPSrc:backchannel-http-method
+   *
+   * Select how backchannel data is sent in HTTP tunnel mode.
+   *
+   * In HTTP tunnel mode, "post" sends backchannel interleaved RTP data
+   * base64-encoded via the POST connection as per the RTSP over HTTP
+   * specification. "get" sends it as raw binary on the GET connection,
+   * which is required for compatibility with some servers that only parse
+   * RTSP text commands from POST and cannot process interleaved RTP there.
+   *
+   * If the server closes the connection after backchannel data is sent,
+   * automatically reconnects using the other method.
+   *
+   * ONVIF Streaming Specification Section 5.1.1.5 requires POST data to
+   * be base64-encoded, but does not specify which connection should carry
+   * backchannel data in HTTP tunnel mode (Section 5.3).
+   *
+   * This property has no effect when not using HTTP tunneling.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_BACKCHANNEL_HTTP_METHOD,
+      g_param_spec_enum ("backchannel-http-method",
+          "Backchannel HTTP method",
+          "HTTP method for sending backchannel data in tunnel mode",
+          GST_TYPE_RTSP_BACKCHANNEL_HTTP_METHOD,
+          DEFAULT_BACKCHANNEL_HTTP_METHOD,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
    /**
@@ -2171,6 +2203,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_IGNORE_X_SERVER_REPLY:
       rtspsrc->ignore_x_server_reply = g_value_get_boolean (value);
       break;
+    case PROP_BACKCHANNEL_HTTP_METHOD:
+      rtspsrc->backchannel_http_method = g_value_get_enum (value);
+      break;
     case PROP_EXTRA_HTTP_REQUEST_HEADERS:{
       const GstStructure *s = gst_value_get_structure (value);
       if (rtspsrc->prop_extra_http_request_headers) {
@@ -2362,6 +2397,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_IGNORE_X_SERVER_REPLY:
       g_value_set_boolean (value, rtspsrc->ignore_x_server_reply);
+      break;
+    case PROP_BACKCHANNEL_HTTP_METHOD:
+      g_value_set_enum (value, rtspsrc->backchannel_http_method);
       break;
     case PROP_EXTRA_HTTP_REQUEST_HEADERS:
       gst_value_set_structure (value, rtspsrc->prop_extra_http_request_headers);
@@ -3796,6 +3834,12 @@ gst_rtspsrc_push_backchannel_sample (GstRTSPSrc * src, guint id,
 
     GST_DEBUG_OBJECT (src, "sending %u bytes backchannel RTP",
         (guint) gst_buffer_get_size (buffer));
+
+    if (!src->backchannel_fallback_armed) {
+      src->backchannel_fallback_armed = TRUE;
+      GST_DEBUG_OBJECT (src, "backchannel http fallback armed");
+    }
+
     ret = gst_rtspsrc_connection_send (src, conninfo, &message, 0);
     GST_DEBUG_OBJECT (src, "sent backchannel RTP, %d", ret);
 
@@ -5828,9 +5872,19 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
       }
 
       if (info->url->transports & GST_RTSP_LOWER_TRANS_HTTP) {
+        GstRTSPBackchannelHttpMethod method = src->backchannel_http_method;
+
         gst_rtsp_connection_set_tunneled (info->connection, TRUE);
         gst_rtsp_connection_set_ignore_x_server_reply (info->connection,
             src->ignore_x_server_reply);
+
+        if (src->backchannel_fallen_back) {
+          method = (method == GST_RTSP_BACKCHANNEL_HTTP_METHOD_POST) ?
+              GST_RTSP_BACKCHANNEL_HTTP_METHOD_GET :
+              GST_RTSP_BACKCHANNEL_HTTP_METHOD_POST;
+        }
+
+        gst_rtsp_connection_set_backchannel_method (info->connection, method);
       }
 
       if (src->proxy_host) {
@@ -6406,6 +6460,19 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
 server_eof:
   {
     GST_DEBUG_OBJECT (src, "we got an eof from the server");
+
+    if (src->backchannel_fallback_armed && !src->backchannel_fallen_back) {
+      GST_WARNING_OBJECT (src,
+          "server closed connection after backchannel send, "
+          "falling back to other HTTP method");
+      src->backchannel_fallback_armed = FALSE;
+      src->backchannel_fallen_back = TRUE;
+      src->conninfo.connected = FALSE;
+      gst_rtsp_message_unset (&message);
+      gst_rtspsrc_loop_send_cmd (src, CMD_RECONNECT, CMD_LOOP);
+      return GST_FLOW_OK;
+    }
+
     GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
         ("The server closed the connection."));
     src->conninfo.connected = FALSE;
@@ -6612,6 +6679,23 @@ gst_rtspsrc_reconnect (GstRTSPSrc * src, gboolean async)
   gboolean restart;
 
   GST_DEBUG_OBJECT (src, "doing reconnect");
+
+  /* backchannel HTTP method fallback: reconnect with other method */
+  if (src->backchannel_fallen_back) {
+    GST_DEBUG_OBJECT (src,
+        "backchannel fallback: reconnecting with other HTTP method");
+
+    if ((res = gst_rtspsrc_close (src, async, FALSE)) < 0)
+      goto done;
+
+    if (gst_rtspsrc_open (src, async) < 0)
+      goto open_failed;
+
+    if (gst_rtspsrc_play (src, &src->segment, async, NULL) < 0)
+      goto play_failed;
+
+    goto done;
+  }
 
   GST_OBJECT_LOCK (src);
   /* only restart when the pads were not yet activated, else we were

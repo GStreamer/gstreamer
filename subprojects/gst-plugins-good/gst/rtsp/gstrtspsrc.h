@@ -283,6 +283,9 @@ struct _GstRTSPSrc {
   gboolean          onvif_rate_control;
   gboolean          is_live;
   gboolean          ignore_x_server_reply;
+  GstRTSPBackchannelHttpMethod backchannel_http_method;
+  gboolean          backchannel_fallback_armed;
+  gboolean          backchannel_fallen_back;
   GstStructure     *prop_extra_http_request_headers;
   gboolean          tcp_timestamp;
   gboolean          force_non_compliant_url;

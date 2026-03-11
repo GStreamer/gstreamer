@@ -432,6 +432,36 @@ typedef enum {
   GST_RTSP_STS_OPTION_NOT_SUPPORTED                 = 551
 } GstRTSPStatusCode;
 
+/**
+ * GstRTSPBackchannelHttpMethod:
+ * @GST_RTSP_BACKCHANNEL_HTTP_METHOD_POST: send base64-encoded via POST, fall back to GET on failure (default)
+ * @GST_RTSP_BACKCHANNEL_HTTP_METHOD_GET: send raw binary via GET, fall back to POST on failure
+ *
+ * Preferred HTTP method for sending backchannel interleaved data in tunnel
+ * mode. If the server closes the connection after backchannel data is sent,
+ * automatically reconnects using the other method.
+ *
+ * Since: 1.30
+ */
+typedef enum {
+  /**
+   * GST_RTSP_BACKCHANNEL_HTTP_METHOD_POST:
+   *
+   * Send base64-encoded via POST, fall back to GET on failure (default).
+   *
+   * Since: 1.30
+   */
+  GST_RTSP_BACKCHANNEL_HTTP_METHOD_POST,
+  /**
+   * GST_RTSP_BACKCHANNEL_HTTP_METHOD_GET:
+   *
+   * Send raw binary via GET, fall back to POST on failure.
+   *
+   * Since: 1.30
+   */
+  GST_RTSP_BACKCHANNEL_HTTP_METHOD_GET
+} GstRTSPBackchannelHttpMethod;
+
 GST_RTSP_API
 gchar*             gst_rtsp_strresult          (GstRTSPResult result);
 

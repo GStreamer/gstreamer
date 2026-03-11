@@ -242,6 +242,12 @@ GST_RTSP_API
 gboolean           gst_rtsp_connection_get_ignore_x_server_reply (const GstRTSPConnection *conn);
 
 GST_RTSP_API
+void                         gst_rtsp_connection_set_backchannel_method (GstRTSPConnection *conn, GstRTSPBackchannelHttpMethod method);
+
+GST_RTSP_API
+GstRTSPBackchannelHttpMethod gst_rtsp_connection_get_backchannel_method (const GstRTSPConnection *conn);
+
+GST_RTSP_API
 void               gst_rtsp_connection_add_extra_http_request_header (GstRTSPConnection *conn, const gchar *key, const gchar *value);
 
 /* async IO */

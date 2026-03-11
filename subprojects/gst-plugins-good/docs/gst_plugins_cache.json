@@ -22356,6 +22356,18 @@
                         "type": "GstRTSPBackchannel",
                         "writable": true
                     },
+                    "backchannel-http-method": {
+                        "blurb": "HTTP method for sending backchannel data in tunnel mode",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "post (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstRTSPBackchannelHttpMethod",
+                        "writable": true
+                    },
                     "buffer-mode": {
                         "blurb": "Control the buffering algorithm in use",
                         "conditionally-available": false,
