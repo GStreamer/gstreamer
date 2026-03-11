@@ -133,6 +133,7 @@ enum
   SIGNAL_SOFT_LIMIT,
   SIGNAL_HARD_LIMIT,
   SIGNAL_REMOVE_KEY,
+  SIGNAL_INVALIDATE_KEY,
   LAST_SIGNAL
 };
 
@@ -190,6 +191,7 @@ static void gst_srtp_dec_get_property (GObject * object, guint prop_id,
 
 static void gst_srtp_dec_clear_streams (GstSrtpDec * filter);
 static void gst_srtp_dec_remove_stream (GstSrtpDec * filter, guint ssrc);
+static void gst_srtp_dec_invalidate_stream (GstSrtpDec * filter, guint ssrc);
 
 static gboolean gst_srtp_dec_sink_event_rtp (GstPad * pad, GstObject * parent,
     GstEvent * event);
@@ -231,6 +233,7 @@ struct _GstSrtpDecSsrcStream
   GArray *keys;
   guint recv_count;
   guint recv_drop_count;
+  gboolean key_valid;
 };
 
 struct GstSrtpDecKey
@@ -279,6 +282,7 @@ gst_srtp_dec_class_init (GstSrtpDecClass * klass)
 
   klass->clear_streams = GST_DEBUG_FUNCPTR (gst_srtp_dec_clear_streams);
   klass->remove_stream = GST_DEBUG_FUNCPTR (gst_srtp_dec_remove_stream);
+  klass->invalidate_stream = GST_DEBUG_FUNCPTR (gst_srtp_dec_invalidate_stream);
 
   /* Install properties */
   g_object_class_install_property (gobject_class, PROP_REPLAY_WINDOW_SIZE,
@@ -353,7 +357,9 @@ gst_srtp_dec_class_init (GstSrtpDecClass * klass)
    * @gstsrtpdec: the element on which the signal is emitted
    * @ssrc: The SSRC for which to remove the key.
    *
-   * Removes keys for a specific SSRC
+   * Removes keys for a specific SSRC. Note that this will force srtpdec
+   * to request new keys (see signal 'request-key') when a new buffer is
+   * received for this SSRC.
    */
   gst_srtp_dec_signals[SIGNAL_REMOVE_KEY] =
       g_signal_new ("remove-key", G_TYPE_FROM_CLASS (klass),
@@ -361,6 +367,24 @@ gst_srtp_dec_class_init (GstSrtpDecClass * klass)
       G_STRUCT_OFFSET (GstSrtpDecClass, remove_stream), NULL, NULL, NULL,
       G_TYPE_NONE, 1, G_TYPE_UINT);
 
+
+  /**
+   * GstSrtpDec::invalidate-key:
+   * @gstsrtpdec: the element on which the signal is emitted
+   * @ssrc: The SSRC for which to expire the key.
+   *
+   * Invalidate keys for a specific SSRC. Note that this will force srtpdec
+   * to request new keys (see signal 'request-key') when a new buffer is
+   * received for this SSRC. When accepting the new keys the existing ROC
+   * value of the stream will be preserved.
+   *
+   * Since: 1.30
+   */
+  gst_srtp_dec_signals[SIGNAL_INVALIDATE_KEY] =
+      g_signal_new ("invalidate-key", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GstSrtpDecClass, invalidate_stream), NULL, NULL, NULL,
+      G_TYPE_NONE, 1, G_TYPE_UINT);
 }
 
 /* initialize the new element
@@ -530,6 +554,21 @@ gst_srtp_dec_remove_stream (GstSrtpDec * filter, guint ssrc)
   }
 }
 
+static void
+gst_srtp_dec_invalidate_stream (GstSrtpDec * filter, guint ssrc)
+{
+  GstSrtpDecSsrcStream *stream = NULL;
+
+  if (filter->streams == NULL)
+    return;
+
+  stream = g_hash_table_lookup (filter->streams, GUINT_TO_POINTER (ssrc));
+
+  if (stream) {
+    stream->key_valid = FALSE;
+  }
+}
+
 static GstSrtpDecSsrcStream *
 find_stream_by_ssrc (GstSrtpDec * filter, guint32 ssrc)
 {
@@ -559,6 +598,7 @@ get_stream_from_caps (GstSrtpDec * filter, GstCaps * caps, guint32 ssrc)
   stream = g_new0 (GstSrtpDecSsrcStream, 1);
   stream->ssrc = ssrc;
   stream->key = NULL;
+  stream->key_valid = TRUE;
 
   /* Get info from caps */
   s = gst_caps_get_structure (caps, 0);
@@ -675,16 +715,16 @@ signal_get_srtp_params (GstSrtpDec * filter, guint32 ssrc, gint signal)
   g_signal_emit (filter, gst_srtp_dec_signals[signal], 0, ssrc, &caps);
 
   if (caps != NULL)
-    GST_DEBUG_OBJECT (filter, "Caps received");
+    GST_DEBUG_OBJECT (filter, "Caps received %" GST_PTR_FORMAT, caps);
 
   return caps;
 }
 
-/* Create a stream in the session
+/* Create or update a stream in the session
  */
 static srtp_err_status_t
 init_session_stream (GstSrtpDec * filter, guint32 ssrc,
-    GstSrtpDecSsrcStream * stream)
+    GstSrtpDecSsrcStream * stream, gboolean update)
 {
   srtp_err_status_t ret;
   srtp_policy_t policy;
@@ -744,6 +784,8 @@ init_session_stream (GstSrtpDec * filter, guint32 ssrc,
    */
   if (filter->first_session)
     ret = srtp_create (&filter->session, &policy);
+  else if (update)
+    ret = srtp_update_stream (filter->session, &policy);
   else
     ret = srtp_add_stream (filter->session, &policy);
 
@@ -774,6 +816,24 @@ init_session_stream (GstSrtpDec * filter, guint32 ssrc,
   }
 
   return ret;
+}
+
+/* Update a stream in the session
+ */
+static gboolean
+gst_srtp_dec_update_stream (GstSrtpDec * filter, GstSrtpDecSsrcStream * stream,
+    guint32 ssrc)
+{
+  return init_session_stream (filter, ssrc, stream, TRUE);
+}
+
+/* Create a stream in the session
+ */
+static gboolean
+gst_srtp_dec_create_stream (GstSrtpDec * filter, GstSrtpDecSsrcStream * stream,
+    guint32 ssrc)
+{
+  return init_session_stream (filter, ssrc, stream, FALSE);
 }
 
 /* Return a stream structure for a given buffer
@@ -809,8 +869,13 @@ have_ssrc:
 
   stream = find_stream_by_ssrc (filter, *ssrc);
 
-  if (stream)
-    return stream;
+  if (stream) {
+    if (stream->key_valid) {
+      GST_INFO_OBJECT (filter, "Key is valid, returning existing stream");
+      return stream;
+    }
+    GST_INFO_OBJECT (filter, "Key is not valid, updating existing stream");
+  }
 
   return request_key_with_signal (filter, *ssrc, SIGNAL_REQUEST_KEY);
 }
@@ -901,11 +966,19 @@ update_session_stream_from_caps (GstSrtpDec * filter, guint32 ssrc,
       stream->rtp_cipher == old_stream->rtp_cipher &&
       stream->rtcp_cipher == old_stream->rtcp_cipher &&
       stream->rtp_auth == old_stream->rtp_auth &&
-      stream->rtcp_auth == old_stream->rtcp_auth &&
-      ((stream->keys && keys_are_equal (stream->keys, old_stream->keys)) ||
-          buffers_are_equal (stream->key, old_stream->key))) {
-    free_stream (stream);
-    return old_stream;
+      stream->rtcp_auth == old_stream->rtcp_auth) {
+    if ((stream->keys && keys_are_equal (stream->keys, old_stream->keys)) ||
+        (stream->key && buffers_are_equal (stream->key, old_stream->key))) {
+      GST_DEBUG_OBJECT (filter, "same key, keeping stream");
+      free_stream (stream);
+      return old_stream;
+    } else {
+      /* gst_srtp_dec_update_stream() will replace old_stream with stream,
+         libsrtp will be updated and ROC preserved */
+      GST_DEBUG_OBJECT (filter, "new key, recreating stream");
+      gst_srtp_dec_update_stream (filter, stream, ssrc);
+      return stream;
+    }
   }
 
   /* Remove existing stream, if any */
@@ -913,7 +986,7 @@ update_session_stream_from_caps (GstSrtpDec * filter, guint32 ssrc,
 
   if (stream) {
     /* Create new session stream */
-    err = init_session_stream (filter, ssrc, stream);
+    err = gst_srtp_dec_create_stream (filter, stream, ssrc);
 
     if (err != srtp_err_status_ok) {
       GST_WARNING_OBJECT (filter, "Failed to create the stream (err: %d)", err);
@@ -969,10 +1042,11 @@ request_key_with_signal (GstSrtpDec * filter, guint32 ssrc, gint signal)
 
   if (caps) {
     stream = update_session_stream_from_caps (filter, ssrc, caps);
-    if (stream)
+    if (stream) {
       GST_DEBUG_OBJECT (filter, "New stream set with SSRC %u", ssrc);
-    else
+    } else {
       GST_WARNING_OBJECT (filter, "Could not set stream with SSRC %u", ssrc);
+    }
     gst_caps_unref (caps);
   } else {
     GST_WARNING_OBJECT (filter, "Could not get caps for stream with SSRC %u",

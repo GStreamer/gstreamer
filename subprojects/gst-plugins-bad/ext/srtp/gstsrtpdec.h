@@ -92,6 +92,7 @@ struct _GstSrtpDecClass
 
   void (*clear_streams) (GstSrtpDec * filter);
   void (*remove_stream) (GstSrtpDec * filter, guint ssrc);
+  void (*invalidate_stream) (GstSrtpDec * filter, guint ssrc);
 };
 
 GType gst_srtp_dec_get_type (void);
