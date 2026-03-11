@@ -83,6 +83,10 @@ d3d11_winapi_desktop = cxx.compiles('''#include <winapifamily.h>
     dependencies: [d3d11_lib, dxgi_lib],
     name: 'building for Win32')
 
+
+windows_ui_xaml_h = cc.has_header('windows.ui.xaml.h')
+windows_ui_xaml_media_dxinterop_h = cc.has_header('windows.ui.xaml.media.dxinterop.h')
+
 if runtimeobject_lib.found() and d3dcompiler_lib.found()
   d3d11_winapi_app = cxx.compiles('''#include <winapifamily.h>
       #include <windows.applicationmodel.core.h>
@@ -97,7 +101,7 @@ if runtimeobject_lib.found() and d3dcompiler_lib.found()
       #error "Windows 10 API is not guaranteed"
       #endif''',
       dependencies: [d3d11_lib, dxgi_lib, runtimeobject_lib],
-      name: 'building for WinRT')
+      name: 'building for WinRT') and windows_ui_xaml_h and windows_ui_xaml_media_dxinterop_h
 endif
 
 if not d3d11_winapi_desktop and not d3d11_winapi_app
