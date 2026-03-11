@@ -71,15 +71,15 @@ enum
 #define SUPPORTED_CAPS \
     "audio/x-raw, " \
       "format = (string) " GST_AUDIO_NE (F32) ", " \
-      "rate = (int) [ 8000, MAX ], " \
-      "channels = (int) [ 1, MAX ], " \
+      "rate = (int) [ 8000, 192000 ], " \
+      "channels = (int) [ 1, 16 ], " \
       "layout = (string) interleaved"
 #elif defined(SOUNDTOUCH_INTEGER_SAMPLES)
 #define SUPPORTED_CAPS \
     "audio/x-raw, " \
       "format = (string) " GST_AUDIO_NE (S16) ", " \
-      "rate = (int) [ 8000, MAX ], " \
-      "channels = (int) [ 1, MAX ], " \
+      "rate = (int) [ 8000, 192000 ], " \
+      "channels = (int) [ 1, 16 ], " \
       "layout = (string) interleaved"
 #else
 #error "Only integer or float samples are supported"
