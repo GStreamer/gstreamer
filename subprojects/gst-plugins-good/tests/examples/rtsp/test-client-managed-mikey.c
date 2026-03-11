@@ -148,7 +148,7 @@ key_param_inc_mki (KeyParam * key_param)
  * * When configuring srtpenc for RTCP.
  * * When preparing the KeyMgmt parameter for the SETUP request.
  * * When srtpdec needs a key to decrypt an incoming packet.
- * * After 'remove-key', which we call when re-keying.
+ * * After 'invalidate-key', which we call when re-keying.
  */
 static GstCaps *
 request_key (G_GNUC_UNUSED GstElement * src,
@@ -269,9 +269,9 @@ on_rekey_reply (GstPromise * promise, gpointer user_data)
     goto next;
   }
 
-  g_signal_emit_by_name (rtspsrc, "remove-key", stream_id, &res);
+  g_signal_emit_by_name (rtspsrc, "invalidate-key", stream_id, &res);
   if (!res) {
-    GST_ERROR ("Failed to remove key from client for stream with id %u",
+    GST_ERROR ("Failed to invalidate key from client for stream with id %u",
         stream_id);
     goto next;
   }
@@ -303,7 +303,7 @@ rekey_all (gpointer user_data)
   key_param_inc_mki (key_param);
 
   /* rtspsrc can only process one SET_PARAMETER at once.
-   * We will chain SET_PARAMETER then remove-key for each stream.
+   * We will chain SET_PARAMETER then invalidate-key for each stream.
    */
   data = rekey_data_new (key_param, g_list_copy (streams));
   rekey_next_stream (data);

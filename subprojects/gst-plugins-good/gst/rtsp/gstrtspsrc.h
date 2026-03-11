@@ -347,6 +347,7 @@ struct _GstRTSPSrcClass {
   gboolean (*set_parameter) (GstRTSPSrc *rtsp, const gchar *name, const gchar *value, const gchar *content_type, GstPromise *promise);
   gboolean (*set_mikey_parameter) (GstRTSPSrc *rtsp, guint id, GstCaps *mikey, GstPromise *promise);
   gboolean (*remove_key) (GstRTSPSrc *rtsp, guint id);
+  gboolean (*invalidate_key) (GstRTSPSrc *rtsp, guint id);
   GstFlowReturn (*push_backchannel_buffer) (GstRTSPSrc *src, guint id, GstSample *sample);
   GstFlowReturn (*push_backchannel_sample) (GstRTSPSrc *src, guint id, GstSample *sample);
 };

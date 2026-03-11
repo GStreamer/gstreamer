@@ -113,7 +113,7 @@
  *   The convenience signal 'set-mikey-parameter' can be used to build a
  *   'KeyMgmt' parameter with a MIKEY payload.
  * * After the server accepts the new parameter, the user can call
- *   'remove-key' and prepare for the new key(s) to be served by signals
+ *   'invalidate-key' and prepare for the new key(s) to be served by signals
  *   'request-rtp-key' & 'request-rtcp-key'.
  * * The signals 'soft-limit' & 'hard-limit' are called when a key
  *   reaches the limits of its utilisation.
@@ -183,6 +183,7 @@ enum
   SIGNAL_PUSH_BACKCHANNEL_SAMPLE,
   SIGNAL_SET_MIKEY_PARAMETER,
   SIGNAL_REMOVE_KEY,
+  SIGNAL_INVALIDATE_KEY,
   LAST_SIGNAL
 };
 
@@ -519,6 +520,7 @@ static gboolean set_mikey_parameter (GstRTSPSrc * src, const guint id,
     GstCaps * mikey, GstPromise * promise);
 
 static gboolean remove_key (GstRTSPSrc * src, const guint id);
+static gboolean invalidate_key (GstRTSPSrc * src, const guint id);
 
 typedef struct
 {
@@ -1570,6 +1572,28 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTSPSrcClass,
           remove_key), NULL, NULL, NULL, G_TYPE_BOOLEAN, 1, G_TYPE_UINT);
 
+  /**
+   * GstRTSPSrc::invalidate-key:
+   * @rtspsrc: a #GstRTSPSrc
+   * @parameter: the id of the stream for which to invalidate the key.
+   *
+   * Invalidates the key for a specific stream.
+   *
+   * When the 'client-managed-mikey' mode is enabled, this can be used
+   * after informing the server of the new crypto params (see signal
+   * 'set-mikey-parameter') to invalidate previous keys and force srtpdec
+   * to request new keys. When accepting the new keys the existing ROC
+   * value of the stream will be preserved.
+   *
+   * Returns: %TRUE when the command could be issued, %FALSE otherwise
+   *
+   * Since: 1.30
+   */
+  gst_rtspsrc_signals[SIGNAL_INVALIDATE_KEY] =
+      g_signal_new ("invalidate-key", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTSPSrcClass,
+          invalidate_key), NULL, NULL, NULL, G_TYPE_BOOLEAN, 1, G_TYPE_UINT);
+
   gstelement_class->send_event = gst_rtspsrc_send_event;
   gstelement_class->provide_clock = gst_rtspsrc_provide_clock;
   gstelement_class->change_state = gst_rtspsrc_change_state;
@@ -1592,6 +1616,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   klass->set_parameter = GST_DEBUG_FUNCPTR (set_parameter);
   klass->set_mikey_parameter = GST_DEBUG_FUNCPTR (set_mikey_parameter);
   klass->remove_key = GST_DEBUG_FUNCPTR (remove_key);
+  klass->invalidate_key = GST_DEBUG_FUNCPTR (invalidate_key);
 
   gst_rtsp_ext_list_init ();
 
@@ -8526,11 +8551,12 @@ set_mikey_parameter (GstRTSPSrc * src, const guint id, GstCaps * mikey_caps,
 }
 
 static gboolean
-remove_key (GstRTSPSrc * src, const guint id)
+manage_key (GstRTSPSrc * src, const guint id, gboolean remove)
 {
   GstRTSPStream *stream;
 
-  GST_LOG_OBJECT (src, "Removing key for stream with id %u", id);
+  GST_LOG_OBJECT (src, "%s key for stream with id %u", (remove ? "Removing" :
+          "Invalidating"), id);
 
   if (src->state == GST_RTSP_STATE_INVALID) {
     GST_ERROR_OBJECT (src, "invalid state");
@@ -8554,7 +8580,11 @@ remove_key (GstRTSPSrc * src, const guint id)
     return FALSE;
   }
 
-  g_signal_emit_by_name (stream->srtpdec, "remove-key", stream->ssrc, NULL);
+  if (remove)
+    g_signal_emit_by_name (stream->srtpdec, "remove-key", stream->ssrc, NULL);
+  else
+    g_signal_emit_by_name (stream->srtpdec, "invalidate-key", stream->ssrc,
+        NULL);
   if (stream->mikey) {
     gst_mikey_message_unref (stream->mikey);
     stream->mikey = NULL;
@@ -8563,6 +8593,18 @@ remove_key (GstRTSPSrc * src, const guint id)
   GST_OBJECT_UNLOCK (src);
 
   return TRUE;
+}
+
+static gboolean
+remove_key (GstRTSPSrc * src, const guint id)
+{
+  return manage_key (src, id, TRUE);
+}
+
+static gboolean
+invalidate_key (GstRTSPSrc * src, const guint id)
+{
+  return manage_key (src, id, FALSE);
 }
 
 static gboolean
