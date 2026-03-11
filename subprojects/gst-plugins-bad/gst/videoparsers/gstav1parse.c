@@ -230,7 +230,7 @@ _obu_name (GstAV1OBUType type)
 }
 
 static guint32
-_read_leb128 (guint8 * data, GstAV1ParserResult * retval, guint32 * comsumed)
+_read_leb128 (guint8 * data, GstAV1ParserResult * retval, guint32 * consumed)
 {
   guint8 leb128_byte = 0;
   guint64 value = 0;
@@ -255,7 +255,7 @@ _read_leb128 (guint8 * data, GstAV1ParserResult * retval, guint32 * comsumed)
       break;
   }
 
-  *comsumed = (gst_bit_reader_get_pos (&br) - cur_pos) / 8;
+  *consumed = (gst_bit_reader_get_pos (&br) - cur_pos) / 8;
   /* check for bitstream conformance see chapter4.10.5 */
   if (value < G_MAXUINT32) {
     *retval = GST_AV1_PARSER_OK;
