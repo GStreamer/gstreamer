@@ -821,7 +821,7 @@ gst_av1_parse_update_src_caps (GstAV1Parse * self, GstCaps * caps)
 
   if (s)
     cll_str = gst_structure_get_string (s, "content-light-level");
-  if (mdi_str) {
+  if (cll_str) {
     gst_caps_set_simple (final_caps, "content-light-level", G_TYPE_STRING,
         cll_str, NULL);
   } else if (self->content_light_level_state != GST_AV1_PARSE_OBU_EXPIRED &&
