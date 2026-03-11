@@ -822,8 +822,10 @@ if need_win_winrt != 'no' and host_system == 'windows'
     windows_graphics_h = cc.has_header('windows.graphics.h')
     windows_app_dep = cc.find_library('WindowsApp', required: false)
     runtimeobject_lib = cc.find_library('runtimeobject', required: false)
+    windows_ui_xaml_h = cc.has_header('windows.ui.xaml.h')
+    windows_ui_xaml_media_dxinterop_h = cc.has_header('windows.ui.xaml.media.dxinterop.h')
 
-    if windows_graphics_h and windows_app_dep.found() and runtimeobject_lib.found()
+    if windows_graphics_h and windows_ui_xaml_h and windows_ui_xaml_media_dxinterop_h and windows_app_dep.found() and runtimeobject_lib.found()
       enabled_gl_winsys += 'winrt'
       glconf.set('GST_GL_HAVE_WINDOW_WINRT', 1)
       gl_priv_sources += [
