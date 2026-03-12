@@ -6539,7 +6539,6 @@ convert_Y444_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
   convert_fill_border (convert, dest);
 }
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
 static void
 convert_AYUV_ARGB_task (FConvertPlaneTask * task)
 {
@@ -6767,7 +6766,6 @@ convert_AYUV_RGBA (GstVideoConverter * convert, const GstVideoFrame * src,
 
   convert_fill_border (convert, dest);
 }
-#endif
 
 static void
 convert_I420_BGRA_task (FConvertTask * task)
@@ -6786,17 +6784,10 @@ convert_I420_BGRA_task (FConvertTask * task)
     sv = FRAME_GET_V_LINE (task->src, (i + task->in_y) >> 1);
     sv += (task->in_x >> 1);
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
     video_orc_convert_I420_BGRA (d, sy, su, sv,
         task->data->im[0][0], task->data->im[0][2],
         task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
         task->width);
-#else
-    video_orc_convert_I420_ARGB (d, sy, su, sv,
-        task->data->im[0][0], task->data->im[0][2],
-        task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
-        task->width);
-#endif
   }
 }
 
@@ -6862,17 +6853,10 @@ convert_I420_ARGB_task (FConvertTask * task)
     sv = FRAME_GET_V_LINE (task->src, (i + task->in_y) >> 1);
     sv += (task->in_x >> 1);
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
     video_orc_convert_I420_ARGB (d, sy, su, sv,
         task->data->im[0][0], task->data->im[0][2],
         task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
         task->width);
-#else
-    video_orc_convert_I420_BGRA (d, sy, su, sv,
-        task->data->im[0][0], task->data->im[0][2],
-        task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
-        task->width);
-#endif
   }
 }
 
@@ -6942,17 +6926,10 @@ convert_I420_pack_ARGB_task (FConvertTask * task)
     sv = FRAME_GET_V_LINE (task->src, (i + task->in_y) >> 1);
     sv += (task->in_x >> 1);
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
     video_orc_convert_I420_ARGB (task->tmpline, sy, su, sv,
         task->data->im[0][0], task->data->im[0][2],
         task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
         task->width);
-#else
-    video_orc_convert_I420_BGRA (task->tmpline, sy, su, sv,
-        task->data->im[0][0], task->data->im[0][2],
-        task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
-        task->width);
-#endif
     task->dest->info.finfo->pack_func (task->dest->info.finfo,
         (GST_VIDEO_FRAME_IS_INTERLACED (task->dest) ?
             GST_VIDEO_PACK_FLAG_INTERLACED :
@@ -7032,17 +7009,10 @@ convert_A420_pack_ARGB_task (FConvertTask * task)
     sa = FRAME_GET_A_LINE (task->src, i + task->in_y);
     sa += task->in_x;
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
     video_orc_convert_A420_ARGB (task->tmpline, sy, su, sv, sa,
         task->data->im[0][0], task->data->im[0][2],
         task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
         task->width);
-#else
-    video_orc_convert_A420_BGRA (task->tmpline, sy, su, sv, sa,
-        task->data->im[0][0], task->data->im[0][2],
-        task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
-        task->width);
-#endif
 
     task->dest->info.finfo->pack_func (task->dest->info.finfo,
         (GST_VIDEO_FRAME_IS_INTERLACED (task->dest) ?
@@ -7119,17 +7089,10 @@ convert_A420_BGRA_task (FConvertTask * task)
     sa = FRAME_GET_A_LINE (task->src, i + task->in_y);
     sa += task->in_x;
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
     video_orc_convert_A420_BGRA (d, sy, su, sv, sa,
         task->data->im[0][0], task->data->im[0][2],
         task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
         task->width);
-#else
-    video_orc_convert_A420_ARGB (d, sy, su, sv, sa,
-        task->data->im[0][0], task->data->im[0][2],
-        task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
-        task->width);
-#endif
   }
 }
 
@@ -8623,7 +8586,6 @@ static const VideoTransform transforms[] = {
   {GST_VIDEO_FORMAT_NV24, GST_VIDEO_FORMAT_NV24, TRUE, FALSE, FALSE, TRUE,
       TRUE, FALSE, FALSE, FALSE, 0, 0, convert_scale_planes},
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
   {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_ARGB, TRUE, TRUE, TRUE, TRUE, TRUE,
       TRUE, FALSE, FALSE, 0, 0, convert_AYUV_ARGB},
   {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_BGRA, TRUE, TRUE, TRUE, TRUE, TRUE,
@@ -8640,7 +8602,6 @@ static const VideoTransform transforms[] = {
       FALSE, FALSE, FALSE, 0, 0, convert_AYUV_ABGR},    /* alias */
   {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_RGBx, TRUE, TRUE, TRUE, TRUE, TRUE,
       FALSE, FALSE, FALSE, 0, 0, convert_AYUV_RGBA},    /* alias */
-#endif
 
   {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_BGRA, FALSE, TRUE, TRUE, TRUE,
       TRUE, FALSE, FALSE, FALSE, 0, 0, convert_I420_BGRA},
