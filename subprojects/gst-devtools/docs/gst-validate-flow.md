@@ -133,6 +133,8 @@ several overrides and listening to different pads with different settings.
   * `sha1`: sha1 checksum
   * `sha256`: sha256 checksum
   * `sha512`: sha512 checksum
+  * `raw-hex`: Rather than a checksum, record hex-encoded raw buffer contents
+  * `raw-text`: Record raw buffer contents assuming they contain text (e.g. subtitles)
   * *Note*: for backward compatibility reasons, this can be passed as a
             boolean and it will default to 'sha1' if true, 'none' if false.
 * `ignored-fields`: Default: `"stream-start={ stream-id }"` (as they are often

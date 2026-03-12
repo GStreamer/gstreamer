@@ -28,6 +28,7 @@
 #define CHECKSUM_TYPE_AS_ID -1
 #define CHECKSUM_TYPE_NONE -2
 #define CHECKSUM_TYPE_CONTENT_HEX -3
+#define CHECKSUM_TYPE_CONTENT_TEXT -4
 
 void format_time(gchar* dest_str, guint64 time);
 

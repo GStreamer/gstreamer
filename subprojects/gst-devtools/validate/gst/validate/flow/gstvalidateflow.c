@@ -60,6 +60,7 @@ validate_flow_checksum_type_get_type (void)
       {CHECKSUM_TYPE_NONE, "NONE", "none"},
       {CHECKSUM_TYPE_AS_ID, "AS-ID", "as-id"},
       {CHECKSUM_TYPE_CONTENT_HEX, "raw-hex", "raw-hex"},
+      {CHECKSUM_TYPE_CONTENT_TEXT, "raw-text", "raw-text"},
       {G_CHECKSUM_MD5, "MD5", "md5"},
       {G_CHECKSUM_SHA1, "SHA-1", "sha1"},
       {G_CHECKSUM_SHA256, "SHA-256", "sha256"},
