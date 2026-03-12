@@ -1,0 +1,37 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_SPARSE, group-id=(uint)1;
+event caps: application/x-subtitle-vtt;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:10.000000000, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ subtitle-codec\=\(string\)\"WebVTT\\\ subtitles\"\,\ container-specific-track-id\=\(string\)4\;";
+event tag: GstTagList-global, taglist=(taglist)"taglist\,\ datetime\=\(datetime\)2025-02-20T17:37:42Z\,\ encoder\=\(string\)GPAC-2.4-revrelease\,\ container-format\=\(string\)\"ISO\\\ fMP4\"\;";
+buffer: content=WEBVTT\n\n, flags=discont
+buffer: content=00:00:00.000 --> 00:00:00.333\nThe screen should show number 1.\n\n, dts=0:00:00.000000000, pts=0:00:00.000000000, dur=0:00:00.333000000
+buffer: content=00:00:00.333 --> 00:00:00.666\nThe screen should show number 2.\n\n, dts=0:00:00.333000000, pts=0:00:00.333000000, dur=0:00:00.333000000
+buffer: content=00:00:00.666 --> 00:00:01.000\nThe screen should show number 3.\n\n, dts=0:00:00.666000000, pts=0:00:00.666000000, dur=0:00:00.334000000
+buffer: content=00:00:01.000 --> 00:00:01.333\nThe screen should show number 4.\n\n, dts=0:00:01.000000000, pts=0:00:01.000000000, dur=0:00:00.333000000
+buffer: content=00:00:01.333 --> 00:00:01.666\nThe screen should show number 5.\n\n, dts=0:00:01.333000000, pts=0:00:01.333000000, dur=0:00:00.333000000
+buffer: content=00:00:01.666 --> 00:00:02.000\nThe screen should show number 6.\n\n, dts=0:00:01.666000000, pts=0:00:01.666000000, dur=0:00:00.334000000
+buffer: content=00:00:02.000 --> 00:00:02.333\nThe screen should show number 7.\n\n, dts=0:00:02.000000000, pts=0:00:02.000000000, dur=0:00:00.333000000
+buffer: content=00:00:02.333 --> 00:00:02.666\nThe screen should show number 8.\n\n, dts=0:00:02.333000000, pts=0:00:02.333000000, dur=0:00:00.333000000
+buffer: content=00:00:02.666 --> 00:00:03.000\nThe screen should show number 9.\n\n, dts=0:00:02.666000000, pts=0:00:02.666000000, dur=0:00:00.334000000
+buffer: content=00:00:03.000 --> 00:00:03.333\nThe screen should show number 10.\n\n, dts=0:00:03.000000000, pts=0:00:03.000000000, dur=0:00:00.333000000
+buffer: content=00:00:03.333 --> 00:00:03.666\nThe screen should show number 11.\n\n, dts=0:00:03.333000000, pts=0:00:03.333000000, dur=0:00:00.333000000
+buffer: content=00:00:03.666 --> 00:00:04.000\nThe screen should show number 12.\n\n, dts=0:00:03.666000000, pts=0:00:03.666000000, dur=0:00:00.334000000
+buffer: content=00:00:04.000 --> 00:00:04.333\nThe screen should show number 13.\n\n, dts=0:00:04.000000000, pts=0:00:04.000000000, dur=0:00:00.333000000
+buffer: content=00:00:04.333 --> 00:00:04.666\nThe screen should show number 14.\n\n, dts=0:00:04.333000000, pts=0:00:04.333000000, dur=0:00:00.333000000
+buffer: content=00:00:04.666 --> 00:00:05.000\nThe screen should show number 15.\n\n, dts=0:00:04.666000000, pts=0:00:04.666000000, dur=0:00:00.334000000
+buffer: content=00:00:05.000 --> 00:00:05.333\nThe screen should show number 16.\n\n, dts=0:00:05.000000000, pts=0:00:05.000000000, dur=0:00:00.333000000
+buffer: content=00:00:05.333 --> 00:00:05.666\nThe screen should show number 17.\n\n, dts=0:00:05.333000000, pts=0:00:05.333000000, dur=0:00:00.333000000
+buffer: content=00:00:05.666 --> 00:00:06.000\nThe screen should show number 18.\n\n, dts=0:00:05.666000000, pts=0:00:05.666000000, dur=0:00:00.334000000
+buffer: content=00:00:06.000 --> 00:00:06.333\nThe screen should show number 19.\n\n, dts=0:00:06.000000000, pts=0:00:06.000000000, dur=0:00:00.333000000
+buffer: content=00:00:06.333 --> 00:00:06.666\nThe screen should show number 20.\n\n, dts=0:00:06.333000000, pts=0:00:06.333000000, dur=0:00:00.333000000
+buffer: content=00:00:06.666 --> 00:00:07.000\nThe screen should show number 21.\n\n, dts=0:00:06.666000000, pts=0:00:06.666000000, dur=0:00:00.334000000
+buffer: content=00:00:07.000 --> 00:00:07.333\nThe screen should show number 22.\n\n, dts=0:00:07.000000000, pts=0:00:07.000000000, dur=0:00:00.333000000
+buffer: content=00:00:07.333 --> 00:00:07.666\nThe screen should show number 23.\n\n, dts=0:00:07.333000000, pts=0:00:07.333000000, dur=0:00:00.333000000
+buffer: content=00:00:07.666 --> 00:00:08.000\nThe screen should show number 24.\n\n, dts=0:00:07.666000000, pts=0:00:07.666000000, dur=0:00:00.334000000
+buffer: content=00:00:08.000 --> 00:00:08.333\nThe screen should show number 25.\n\n, dts=0:00:08.000000000, pts=0:00:08.000000000, dur=0:00:00.333000000
+buffer: content=00:00:08.333 --> 00:00:08.666\nThe screen should show number 26.\n\n, dts=0:00:08.333000000, pts=0:00:08.333000000, dur=0:00:00.333000000
+buffer: content=00:00:08.666 --> 00:00:09.000\nThe screen should show number 27.\n\n, dts=0:00:08.666000000, pts=0:00:08.666000000, dur=0:00:00.334000000
+buffer: content=00:00:09.000 --> 00:00:09.333\nThe screen should show number 28.\n\n, dts=0:00:09.000000000, pts=0:00:09.000000000, dur=0:00:00.333000000
+buffer: content=00:00:09.333 --> 00:00:09.666\nThe screen should show number 29.\n\n, dts=0:00:09.333000000, pts=0:00:09.333000000, dur=0:00:00.333000000
+buffer: content=00:00:09.666 --> 00:00:10.000\nThe screen should show number 30.\n\n, dts=0:00:09.666000000, pts=0:00:09.666000000, dur=0:00:00.334000000
+event eos: (no structure)

@@ -1,0 +1,8 @@
+set-globals, media_dir="$(test_dir)/../../../media/defaults/mp4/"
+meta,
+    args = {
+      "filesrc location=\"$(media_dir)/counting-vtt.mp4\" ! qtdemux ! application/x-subtitle-vtt ! fakesink name=sink",
+    },
+    configs = {
+      [validateflow, pad=sink:sink, buffers-checksum=raw-text],
+    }

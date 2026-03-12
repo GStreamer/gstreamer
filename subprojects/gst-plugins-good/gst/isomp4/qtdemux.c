@@ -6494,7 +6494,8 @@ invalid_cdat:
  * but time/duration etc not yet set and need not be preserved */
 static GstBuffer *
 gst_qtdemux_process_buffer_clcp (GstQTDemux * qtdemux, QtDemuxStream * stream,
-    GstBuffer * buf)
+    GstBuffer * buf, guint64 dts, guint64 pts, guint64 duration,
+    gboolean round_up_duration)
 {
   GstBuffer *outbuf = NULL;
   GstMapInfo map;
@@ -6530,7 +6531,8 @@ gst_qtdemux_process_buffer_clcp (GstQTDemux * qtdemux, QtDemuxStream * stream,
  * but time/duration etc not yet set and need not be preserved */
 static GstBuffer *
 gst_qtdemux_process_buffer_dvd (GstQTDemux * qtdemux, QtDemuxStream * stream,
-    GstBuffer * buf)
+    GstBuffer * buf, guint64 dts, guint64 pts, guint64 duration,
+    gboolean round_up_duration)
 {
   /* send a one time dvd clut event */
   if (stream->pending_event && stream->pad)
@@ -6552,7 +6554,8 @@ gst_qtdemux_process_buffer_dvd (GstQTDemux * qtdemux, QtDemuxStream * stream,
  * but time/duration etc not yet set and need not be preserved */
 static GstBuffer *
 gst_qtdemux_process_buffer_text (GstQTDemux * qtdemux, QtDemuxStream * stream,
-    GstBuffer * buf)
+    GstBuffer * buf, guint64 dts, guint64 pts, guint64 duration,
+    gboolean round_up_duration)
 {
   GstBuffer *outbuf = NULL;
   GstMapInfo map;
@@ -6601,10 +6604,16 @@ gst_qtdemux_process_buffer_text (GstQTDemux * qtdemux, QtDemuxStream * stream,
 /* WebVTT sample handling according to 14496-30 */
 static GstBuffer *
 gst_qtdemux_process_buffer_wvtt (GstQTDemux * qtdemux, QtDemuxStream * stream,
-    GstBuffer * buf)
+    GstBuffer * buf, guint64 dts, guint64 pts, guint64 duration,
+    gboolean round_up_duration)
 {
   GstBuffer *outbuf = NULL;
   GstMapInfo map;
+
+  GstClockTime pts_gsttime = (pts == -1) ? GST_CLOCK_TIME_NONE :
+      QTSTREAMTIME_TO_GSTTIME (stream, pts);
+  GstClockTime duration_gsttime = (duration == -1) ? GST_CLOCK_TIME_NONE :
+      QTSTREAMTIME_TO_GSTTIME (stream, duration) + round_up_duration;
 
   if (!gst_buffer_map (buf, &map, GST_MAP_READ)) {
     g_assert_not_reached ();    /* The buffer must be mappable */
@@ -6613,21 +6622,20 @@ gst_qtdemux_process_buffer_wvtt (GstQTDemux * qtdemux, QtDemuxStream * stream,
   if (qtdemux_webvtt_is_empty (qtdemux, map.data, map.size)) {
     GstEvent *gap = NULL;
     /* Push a gap event */
-    stream->segment.position = GST_BUFFER_PTS (buf);
-    gap =
-        gst_event_new_gap (stream->segment.position, GST_BUFFER_DURATION (buf));
+    stream->segment.position = pts_gsttime;
+    gap = gst_event_new_gap (stream->segment.position, duration_gsttime);
     if (stream->segment.rate < 0.0 && stream->need_reorder) {
       g_queue_push_head (&stream->reorder_queue, gap);
     } else {
       gst_pad_push_event (stream->pad, gap);
     }
 
-    if (GST_BUFFER_DURATION_IS_VALID (buf))
-      stream->segment.position += GST_BUFFER_DURATION (buf);
+    if (GST_CLOCK_TIME_IS_VALID (duration_gsttime))
+      stream->segment.position += duration_gsttime;
   } else {
     outbuf =
-        qtdemux_webvtt_decode (qtdemux, GST_BUFFER_PTS (buf),
-        GST_BUFFER_DURATION (buf), map.data, map.size);
+        qtdemux_webvtt_decode (qtdemux, pts_gsttime, duration_gsttime, map.data,
+        map.size);
     gst_buffer_copy_into (outbuf, buf, GST_BUFFER_COPY_METADATA, 0, -1);
   }
 
@@ -7079,7 +7087,9 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
   GST_BUFFER_OFFSET_END (buf) = -1;
 
   if (G_UNLIKELY (stream->process_func))
-    buf = stream->process_func (qtdemux, stream, buf);
+    buf =
+        stream->process_func (qtdemux, stream, buf, dts, pts, duration,
+        round_up_duration);
 
   if (!buf) {
     goto exit;
