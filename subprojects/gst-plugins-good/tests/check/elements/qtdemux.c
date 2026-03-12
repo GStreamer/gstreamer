@@ -683,7 +683,8 @@ GST_START_TEST (test_qtdemux_stream_change)
   fail_unless_equals_int (data.num_srcpad, 1);
 
   /* Check stream-id */
-  event = gst_pad_get_sticky_event (data.sinkpad, GST_EVENT_STREAM_START, 0);
+  event =
+      gst_pad_get_sticky_event (data.pending_pad, GST_EVENT_STREAM_START, 0);
   fail_unless (event != NULL);
   gst_event_parse_stream_start (event, &stream_id);
   fail_unless_equals_string (stream_id, expected_stream_id);
@@ -720,7 +721,8 @@ GST_START_TEST (test_qtdemux_stream_change)
   upstream_id = "TEST-GROUP-1"; /* upstream-id does not changed from GROUP 1 */
   track_id = 1;                 /* track-id is changed from 2 to 1 */
   expected_stream_id = g_strdup_printf ("%s/%03u", upstream_id, track_id);
-  event = gst_pad_get_sticky_event (data.sinkpad, GST_EVENT_STREAM_START, 0);
+  event =
+      gst_pad_get_sticky_event (data.pending_pad, GST_EVENT_STREAM_START, 0);
   fail_unless (event != NULL);
   gst_event_parse_stream_start (event, &stream_id);
   fail_unless_equals_string (stream_id, expected_stream_id);
@@ -766,7 +768,8 @@ GST_START_TEST (test_qtdemux_stream_change)
   fail_unless_equals_int (data.num_srcpad, 3);
 
   /* Check stream-id */
-  event = gst_pad_get_sticky_event (data.sinkpad, GST_EVENT_STREAM_START, 0);
+  event =
+      gst_pad_get_sticky_event (data.pending_pad, GST_EVENT_STREAM_START, 0);
   fail_unless (event != NULL);
   gst_event_parse_stream_start (event, &stream_id);
   fail_unless_equals_string (stream_id, expected_stream_id);
@@ -812,7 +815,8 @@ GST_START_TEST (test_qtdemux_stream_change)
   fail_unless_equals_int (data.num_srcpad, 4);
 
   /* Check stream-id */
-  event = gst_pad_get_sticky_event (data.sinkpad, GST_EVENT_STREAM_START, 0);
+  event =
+      gst_pad_get_sticky_event (data.pending_pad, GST_EVENT_STREAM_START, 0);
   fail_unless (event != NULL);
   gst_event_parse_stream_start (event, &stream_id);
   fail_unless_equals_string (stream_id, expected_stream_id);
