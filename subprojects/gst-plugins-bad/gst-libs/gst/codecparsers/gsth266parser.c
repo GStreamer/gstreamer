@@ -380,7 +380,7 @@ static gboolean
 gst_h266_parse_profile_tier_level (GstH266ProfileTierLevel * ptl,
     NalReader * nr, guint8 profileTierPresentFlag, guint8 MaxNumSubLayersMinus1)
 {
-  gint8 i;
+  gint i;
 
   GST_LOG ("parsing \"Profile Tier Level parameters\"");
 
