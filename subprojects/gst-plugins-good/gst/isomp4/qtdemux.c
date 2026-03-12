@@ -8429,9 +8429,11 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             if (ret != GST_FLOW_OK)
               break;
 
+            /* For fragmented MP4 we need to parse the moof first to be able to
+             * create the correct segment */
+            if (!demux->fragmented)
+              gst_qtdemux_check_send_pending_segment (demux);
             demux->got_moov = TRUE;
-
-            gst_qtdemux_check_send_pending_segment (demux);
 
             if (demux->moov_node_compressed) {
               g_node_destroy (demux->moov_node_compressed);
