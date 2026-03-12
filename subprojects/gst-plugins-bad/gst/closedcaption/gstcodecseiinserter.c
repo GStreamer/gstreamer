@@ -23,6 +23,8 @@
 
 #include "gstcodecseiinserter.h"
 #include <gst/video/video-sei.h>
+#include <gst/video/gsth274.h>
+#include <gst/video/gstvideodscmeta.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_codec_sei_inserter_debug);
@@ -67,6 +69,7 @@ gst_codec_sei_insert_type_get_type (void)
     {GST_CODEC_SEI_INSERT_CC, "Closed caption", "cc"},
     {GST_CODEC_SEI_INSERT_UNREGISTERED, "Unregistered user data",
         "unregistered"},
+    {GST_CODEC_SEI_INSERT_DSC, "Digitally Signed Content", "dsc"},
     {0, NULL, NULL},
   };
 
@@ -558,6 +561,54 @@ extract_sei_unregistered_meta (GstBuffer * buffer, GstMeta ** meta,
   return TRUE;
 }
 
+static gboolean
+extract_sei_dsc_initialization_meta (GstBuffer * buffer, GstMeta ** meta,
+    gpointer user_data)
+{
+  GstVideoDSCInitializationMeta *sei_meta;
+  GPtrArray *array = user_data;
+
+  if ((*meta)->info->api != GST_VIDEO_DSC_INITIALIZATION_META_API_TYPE)
+    return TRUE;
+
+  sei_meta = (GstVideoDSCInitializationMeta *) (*meta);
+  g_ptr_array_add (array, sei_meta);
+
+  return TRUE;
+}
+
+static gboolean
+extract_sei_dsc_selection_meta (GstBuffer * buffer, GstMeta ** meta,
+    gpointer user_data)
+{
+  GstVideoDSCSelectionMeta *sei_meta;
+  GPtrArray *array = user_data;
+
+  if ((*meta)->info->api != GST_VIDEO_DSC_SELECTION_META_API_TYPE)
+    return TRUE;
+
+  sei_meta = (GstVideoDSCSelectionMeta *) (*meta);
+  g_ptr_array_add (array, sei_meta);
+
+  return TRUE;
+}
+
+static gboolean
+extract_sei_dsc_verification_meta (GstBuffer * buffer, GstMeta ** meta,
+    gpointer user_data)
+{
+  GstVideoDSCVerificationMeta *sei_meta;
+  GPtrArray *array = user_data;
+
+  if ((*meta)->info->api != GST_VIDEO_DSC_VERIFICATION_META_API_TYPE)
+    return TRUE;
+
+  sei_meta = (GstVideoDSCVerificationMeta *) (*meta);
+  g_ptr_array_add (array, sei_meta);
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_codec_sei_inserter_output_frame (GstCodecSEIInserter * self,
     GstVideoCodecFrame * frame)
@@ -617,6 +668,15 @@ gst_codec_sei_inserter_output_frame (GstCodecSEIInserter * self,
   if (priv->sei_types & GST_CODEC_SEI_INSERT_UNREGISTERED) {
     gst_buffer_foreach_meta (caption_source,
         extract_sei_unregistered_meta, priv->sei_metas);
+  }
+
+  if (priv->sei_types & GST_CODEC_SEI_INSERT_DSC) {
+    gst_buffer_foreach_meta (caption_source,
+        extract_sei_dsc_initialization_meta, priv->sei_metas);
+    gst_buffer_foreach_meta (caption_source,
+        extract_sei_dsc_selection_meta, priv->sei_metas);
+    gst_buffer_foreach_meta (caption_source,
+        extract_sei_dsc_verification_meta, priv->sei_metas);
   }
 
   output = klass->insert_sei (self, output, priv->sei_metas);

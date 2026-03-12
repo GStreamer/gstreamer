@@ -46,6 +46,7 @@ typedef enum
  * GstCodecSEIInsertType:
  * @GST_CODEC_SEI_INSERT_CC: Insert closed caption SEI messages
  * @GST_CODEC_SEI_INSERT_UNREGISTERED: Insert unregistered user data SEI messages
+ * @GST_CODEC_SEI_INSERT_DSC: Insert Digitally Signed Content SEI messages
  *
  * Flags to control which SEI message types to insert.
  *
@@ -55,9 +56,11 @@ typedef enum
 {
   GST_CODEC_SEI_INSERT_CC = (1 << 0),
   GST_CODEC_SEI_INSERT_UNREGISTERED = (1 << 1),
+  GST_CODEC_SEI_INSERT_DSC = (1 << 2),
 } GstCodecSEIInsertType;
 
-#define GST_CODEC_SEI_INSERT_ALL (GST_CODEC_SEI_INSERT_CC | GST_CODEC_SEI_INSERT_UNREGISTERED)
+#define GST_CODEC_SEI_INSERT_ALL (GST_CODEC_SEI_INSERT_CC | GST_CODEC_SEI_INSERT_UNREGISTERED | \
+    GST_CODEC_SEI_INSERT_DSC)
 
 struct _GstCodecSEIInserter
 {

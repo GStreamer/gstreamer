@@ -36,6 +36,7 @@
 #include "gsth265ccextractor.h"
 #include "gsth264seiinserter.h"
 #include "gsth265seiinserter.h"
+#include "gsth266seiinserter.h"
 
 static gboolean
 closedcaption_init (GstPlugin * plugin)
@@ -57,6 +58,7 @@ closedcaption_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (h264seiinserter, plugin);
   ret |= GST_ELEMENT_REGISTER (h265ccinserter, plugin);
   ret |= GST_ELEMENT_REGISTER (h265seiinserter, plugin);
+  ret |= GST_ELEMENT_REGISTER (h266seiinserter, plugin);
 
   return ret;
 }
