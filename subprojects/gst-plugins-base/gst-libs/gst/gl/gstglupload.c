@@ -1300,6 +1300,10 @@ _dma_buf_filter_egl_supported_formats (GstGLContext * context,
   GstVideoFormat gst_format;
   guint32 fourcc;
 
+  /* Until we have a context, simply assume all formats are supported */
+  if (!context)
+    return TRUE;
+
   all_formats = gst_structure_get_value (structure, "format");
   if (!all_formats)
     return FALSE;
@@ -1314,8 +1318,7 @@ _dma_buf_filter_egl_supported_formats (GstGLContext * context,
     if (fourcc == DRM_FORMAT_INVALID)
       return FALSE;
 
-    if (context &&
-        !gst_gl_context_egl_format_supports_modifier (context, fourcc,
+    if (!gst_gl_context_egl_format_supports_modifier (context, fourcc,
             DRM_FORMAT_MOD_LINEAR, include_external))
       return FALSE;
 
@@ -1337,8 +1340,7 @@ _dma_buf_filter_egl_supported_formats (GstGLContext * context,
       if (fourcc == DRM_FORMAT_INVALID)
         continue;
 
-      if (context &&
-          !gst_gl_context_egl_format_supports_modifier (context, fourcc,
+      if (!gst_gl_context_egl_format_supports_modifier (context, fourcc,
               DRM_FORMAT_MOD_LINEAR, include_external))
         continue;
 
