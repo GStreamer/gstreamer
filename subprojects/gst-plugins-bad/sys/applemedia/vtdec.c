@@ -79,6 +79,13 @@
 GST_DEBUG_CATEGORY_STATIC (gst_vtdec_debug_category);
 #define GST_CAT_DEFAULT gst_vtdec_debug_category
 
+typedef enum
+{
+  NoneSupported = 0,
+  Av1Supported = 1 << 0,
+  Vp9Supported = 1 << 1,
+} SupplementalSupport;
+
 enum
 {
   /* leave some headroom for new GstVideoCodecFrameFlags flags */
@@ -158,6 +165,8 @@ static GstStaticPadTemplate gst_vtdec_sink_template =
         "video/x-vp9, profile=(string){ 0, 2 }, "
         " width=(int)[64, MAX], height=(int)[64, MAX];")
     );
+
+static SupplementalSupport gst_vtdec_codec_support = NoneSupported;
 
 /* define EnableHardwareAcceleratedVideoDecoder in < 10.9 */
 #if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED < 1090
@@ -2028,21 +2037,21 @@ gst_vtdec_getcaps (GstVideoDecoder * decoder, GstCaps * filter)
     if (gst_structure_has_name (s, "video/x-av1")) {
       if (g_once_init_enter (&av1_once)) {
         if (gst_vtdec_check_av1_support (vtdec))
-          vtdec->codec_support |= Av1Supported;
+          g_atomic_int_or (&gst_vtdec_codec_support, Av1Supported);
         g_once_init_leave (&av1_once, Av1Supported);
       }
     } else if (gst_structure_has_name (s, "video/x-vp9")) {
       if (g_once_init_enter (&vp9_once)) {
         if (gst_vtdec_check_vp9_support (vtdec))
-          vtdec->codec_support |= Vp9Supported;
+          g_atomic_int_or (&gst_vtdec_codec_support, Vp9Supported);
         g_once_init_leave (&vp9_once, Vp9Supported);
       }
     }
 
     if ((gst_structure_has_name (s, "video/x-av1")
-            && !(vtdec->codec_support & Av1Supported))
+            && !(g_atomic_int_get (&gst_vtdec_codec_support) & Av1Supported))
         || (gst_structure_has_name (s, "video/x-vp9")
-            && !(vtdec->codec_support & Vp9Supported))) {
+            && !(g_atomic_int_get (&gst_vtdec_codec_support) & Vp9Supported))) {
       gst_caps_remove_structure (sinkcaps, i);
       n--;
     } else {
