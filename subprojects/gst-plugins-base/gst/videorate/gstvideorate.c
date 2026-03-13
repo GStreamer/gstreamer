@@ -2193,9 +2193,18 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
         videorate->in, videorate->out, videorate->drop, videorate->dup);
 
     /* swap in new one when it's the best */
-    gst_video_rate_swap_prev (videorate, buffer, in_ts, restore_caps);
+    gst_video_rate_swap_prev (videorate,
+        buffer, in_ts, g_steal_pointer (&restore_caps));
   }
 done:
+  if (restore_caps) {
+    /* Handle the case where previous caps was temporarily pushed to drain
+     * previously queued buffers but no output was generated for the current
+     * buffer. Since the previous caps was already configured on the srcpad
+     * in this iteration, restore it and reset the state */
+    gst_video_rate_swap_prev (videorate, NULL, 0, restore_caps);
+  }
+
   return res;
 
   /* ERRORS */
