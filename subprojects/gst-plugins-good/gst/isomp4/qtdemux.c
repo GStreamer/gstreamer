@@ -12340,6 +12340,14 @@ qtdemux_parse_cmpd (GstQTDemux * qtdemux, GstByteReader * reader,
 
   cmpd->component_count = gst_byte_reader_get_uint32_be_unchecked (reader);
 
+  /* Let's use 16 as a upper bound here for now to avoid overflows and
+   * allocating lots of memory */
+  if (cmpd->component_count > 16) {
+    GST_ERROR_OBJECT (qtdemux, "Unsupported number of cmpd components %u",
+        cmpd->component_count);
+    goto error;
+  }
+
   guint32 minimum_size = cmpd->component_count * 2 + 4; // assuming type_uris are not used
   if (gst_byte_reader_get_size (reader) < minimum_size) {
     GST_ERROR_OBJECT (qtdemux, "cmpd size is too short");
@@ -12406,6 +12414,16 @@ qtdemux_parse_cpat (GstQTDemux * qtdemux, GstByteReader * reader,
     goto error;
   }
 
+  /* Let's use 8x8 as a upper bound here for now to avoid overflows and
+   * allocating lots of memory, which also matches the 64 check further
+   * below. */
+  if (cpat->pattern_width > 8 || cpat->pattern_height > 8) {
+    GST_ERROR_OBJECT (qtdemux,
+        "Unsupported cpat pattern dimensions components %ux%u",
+        cpat->pattern_width, cpat->pattern_height);
+    goto error;
+  }
+
   cpat->pattern_size = cpat->pattern_width * cpat->pattern_height;
 
   GST_DEBUG_OBJECT (qtdemux, "cpat pattern: width=%u, height=%u, size=%u",
@@ -12469,6 +12487,14 @@ qtdemux_parse_uncC (GstQTDemux * qtdemux, GstByteReader * reader,
 
   if (!gst_byte_reader_get_uint32_be (reader, &uncC->component_count)) {
     GST_ERROR_OBJECT (qtdemux, "Failed to read component count");
+    goto error;
+  }
+
+  /* Let's use 16 as a upper bound here for now to avoid overflows and
+   * allocating lots of memory */
+  if (uncC->component_count > 16) {
+    GST_ERROR_OBJECT (qtdemux, "Unsupported number of uncC components %u",
+        uncC->component_count);
     goto error;
   }
 
@@ -12725,7 +12751,6 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
   guint32 num_components = uncC->component_count;
   guint16 component_types[4];
 
-
   if (uncC->version == 1) {
     // Determine format with profile
     // The only permitted profiles for version 1 are `rgb3`, `rgba`, and `abgr`
@@ -12753,6 +12778,11 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
     goto unsupported_feature;
   }
 
+  if (num_components > 4 || num_components == 0) {
+    GST_WARNING_OBJECT (qtdemux,
+        "Unsupported number of components for uncC: %u", num_components);
+    goto unsupported_feature;
+  }
 
   /* Assert that components are similar */
   UncompressedFrameConfigComponent *first_comp = &uncC->components[0];
@@ -12794,6 +12824,11 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
   // Get Component Types
   for (guint32 i = 0; i < num_components; i++) {
     guint16 component_index = uncC->components[i].index;
+    if (component_index >= cmpd->component_count) {
+      GST_WARNING_OBJECT (qtdemux,
+          "Invalid component index %u for component %u", component_index, i);
+      goto unsupported_feature;
+    }
     component_types[i] = cmpd->types[component_index];
   }
 
@@ -12875,13 +12910,12 @@ qtdemux_get_bayer_format_from_cpat (GstQTDemux * qtdemux,
     return NULL;
   }
 
-  // Validate preconditions for Bayer/FILTER_ARRAY processing
-  g_return_val_if_fail (uncC->component_count == 1, NULL);
-  g_return_val_if_fail (uncC->components != NULL, NULL);
-  g_return_val_if_fail (uncC->components[0].index < cmpd->component_count,
-      NULL);
-  g_return_val_if_fail (cmpd->types[uncC->components[0].index] ==
-      COMPONENT_FILTER_ARRAY, NULL);
+  if (uncC->component_count != 1 ||
+      uncC->components[0].index >= cmpd->component_count ||
+      cmpd->types[uncC->components[0].index] != COMPONENT_FILTER_ARRAY) {
+    GST_WARNING_OBJECT (qtdemux, "Invalid parameters for bayer formats");
+    return NULL;
+  }
 
   // Validate 2x2 pattern
   if (cpat->pattern_width != 2 || cpat->pattern_height != 2) {
@@ -19429,8 +19463,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       }
 
       /* Check for Bayer format (FilterArray with cpat) */
-      if (cpat_node && uncC.component_count == 1 &&
-          cmpd.types[uncC.components[0].index] == COMPONENT_FILTER_ARRAY) {
+      if (cpat_node) {
         gchar *bayer_format =
             qtdemux_get_bayer_format_from_cpat (qtdemux, &cpat, &uncC, &cmpd);
 
@@ -19454,13 +19487,17 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           qtdemux_clear_cmpd (&cmpd);
           break;
         }
+
+        /* Fall back to normal video format handling below */
       }
 
       format = qtdemux_get_format_from_uncv (qtdemux, &uncC, &cmpd);
-      gst_video_info_set_format (&stream->pre_info, format, entry->width,
-          entry->height);
-      qtdemux_set_info_from_uncv (qtdemux, entry, &uncC, &stream->pre_info);
-      stream->alignment = 32;
+      if (format != GST_VIDEO_FORMAT_UNKNOWN) {
+        gst_video_info_set_format (&stream->pre_info, format, entry->width,
+            entry->height);
+        qtdemux_set_info_from_uncv (qtdemux, entry, &uncC, &stream->pre_info);
+        stream->alignment = 32;
+      }
 
       /* Free Memory */
       qtdemux_clear_cpat (&cpat);
