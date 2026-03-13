@@ -373,6 +373,8 @@ _gst_vk_debug_utils_callback (VkDebugUtilsMessageSeverityFlagBitsEXT severity,
   switch (data->messageIdNumber) {
     case 0x24b5c69f:           /* VkPhysicalDeviceVulkan12Properties::maxUpdateAfterBindDescriptorsInAllPools
                                    = 32 */
+    case 0x86fe6721:           /* Setting-Limit-Adjusted: validation layer adjusting
+                                   maxUpdateAfterBindDescriptorsInAllPools */
       return VK_FALSE;
     default:
       break;
