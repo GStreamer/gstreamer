@@ -2235,6 +2235,136 @@ GST_START_TEST (test_drop_only_ref_count)
 
 GST_END_TEST;
 
+static GstPadProbeReturn
+backward_pts_with_caps_change_probe (GstPad * pad, GstPadProbeInfo * info,
+    gint * expected_buffer_size)
+{
+  if (GST_IS_EVENT (GST_PAD_PROBE_INFO_DATA (info))) {
+    GstEvent *ev = GST_PAD_PROBE_INFO_EVENT (info);
+    if (GST_EVENT_TYPE (ev) == GST_EVENT_CAPS) {
+      GstCaps *caps;
+      GstStructure *s;
+      gint size;
+
+      gst_event_parse_caps (ev, &caps);
+      s = gst_caps_get_structure (caps, 0);
+      fail_unless (gst_structure_get_int (s, "expected-size", &size));
+      *expected_buffer_size = size;
+    }
+  } else if (GST_IS_BUFFER (GST_PAD_PROBE_INFO_DATA (info))) {
+    GstBuffer *buf = GST_PAD_PROBE_INFO_BUFFER (info);
+    gint size = (gint) gst_buffer_get_size (buf);
+
+    fail_unless (size == *expected_buffer_size);
+  }
+
+  return GST_PAD_PROBE_OK;
+}
+
+/* Tests correct caps and buffer sequence when the first buffer after caps change
+ * has backward PTS thus the buffer should be dropped */
+GST_START_TEST (test_backward_pts_with_caps_change)
+{
+  GstElement *videorate;
+  GstElement *capsfilter;
+  GstElement *fakesink;
+  GstElement *bin;
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstSegment segment;
+  GstPad *sinkpad;
+  GstPad *srcpad;
+  gint expected_buffer_size = 4;
+  GstStateChangeReturn state_ret;
+  gboolean ret;
+  GstFlowReturn flow_ret;
+
+  /* Setup simple videorate ! capsfilter ! fakesink pipeline */
+  videorate = gst_element_factory_make ("videorate", NULL);
+  capsfilter = gst_element_factory_make ("capsfilter", NULL);
+  fakesink = gst_element_factory_make ("fakesink", NULL);
+
+  bin = gst_bin_new (NULL);
+  gst_bin_add_many (GST_BIN (bin), videorate, capsfilter, fakesink, NULL);
+  gst_element_link_many (videorate, capsfilter, fakesink, NULL);
+
+  caps = gst_caps_from_string ("image/jpeg,framerate=2/1");
+  g_object_set (capsfilter, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  sinkpad = gst_element_get_static_pad (videorate, "sink");
+  srcpad = gst_element_get_static_pad (capsfilter, "src");
+
+  /* Add probe to validate caps and buffer sequence */
+  gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
+      (GstPadProbeCallback) backward_pts_with_caps_change_probe,
+      &expected_buffer_size, NULL);
+
+  state_ret = gst_element_set_state (bin, GST_STATE_PLAYING);
+  fail_unless (state_ret != GST_STATE_CHANGE_FAILURE);
+
+  /* Push initial mandatory events */
+  ret = gst_pad_send_event (sinkpad,
+      gst_event_new_stream_start ("test-stream-start"));
+  fail_unless (ret);
+
+  caps = gst_caps_from_string ("image/jpeg,framerate=1/1,expected-size=4");
+  ret = gst_pad_send_event (sinkpad, gst_event_new_caps (caps));
+  fail_unless (ret);
+  gst_caps_unref (caps);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  ret = gst_pad_send_event (sinkpad, gst_event_new_segment (&segment));
+  fail_unless (ret);
+
+  /* Push two buffers for expected-size=4 */
+  buf = gst_buffer_new_and_alloc (4);
+  gst_buffer_memset (buf, 0, 0, 4);
+  GST_BUFFER_PTS (buf) = 0;
+  GST_BUFFER_DURATION (buf) = GST_SECOND;
+  flow_ret = gst_pad_chain (sinkpad, buf);
+  fail_unless (flow_ret == GST_FLOW_OK);
+
+  buf = gst_buffer_new_and_alloc (4);
+  gst_buffer_memset (buf, 0, 0, 4);
+  GST_BUFFER_PTS (buf) = GST_SECOND;
+  GST_BUFFER_DURATION (buf) = GST_SECOND;
+  flow_ret = gst_pad_chain (sinkpad, buf);
+  fail_unless (flow_ret == GST_FLOW_OK);
+
+  /* Change framerate and expected-size */
+  caps = gst_caps_from_string ("image/jpeg,framerate=1/2,expected-size=8");
+  ret = gst_pad_send_event (sinkpad, gst_event_new_caps (caps));
+  fail_unless (ret);
+  gst_caps_unref (caps);
+
+  /* Push buffer with backward PTS. videorate should drop this buffer */
+  buf = gst_buffer_new_and_alloc (8);
+  gst_buffer_memset (buf, 0, 0, 8);
+  GST_BUFFER_PTS (buf) = 0;
+  GST_BUFFER_DURATION (buf) = GST_MSECOND * 500;
+  flow_ret = gst_pad_chain (sinkpad, buf);
+  fail_unless (flow_ret == GST_FLOW_OK);
+
+  /* Then push buffer with valid PTS */
+  buf = gst_buffer_new_and_alloc (8);
+  gst_buffer_memset (buf, 0, 0, 8);
+  GST_BUFFER_PTS (buf) = 2 * GST_SECOND;
+  GST_BUFFER_DURATION (buf) = GST_MSECOND * 500;
+  flow_ret = gst_pad_chain (sinkpad, buf);
+  fail_unless (flow_ret == GST_FLOW_OK);
+
+  /* drain and cleanup */
+  gst_pad_send_event (sinkpad, gst_event_new_eos ());
+
+  gst_element_set_state (bin, GST_STATE_NULL);
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
 static Suite *
 videorate_suite (void)
 {
@@ -2267,6 +2397,7 @@ videorate_suite (void)
   tcase_add_test (tc_chain, test_segment_update_average_period);
   tcase_add_test (tc_chain, test_segment_update);
   tcase_add_test (tc_chain, test_drop_only_ref_count);
+  tcase_add_test (tc_chain, test_backward_pts_with_caps_change);
 
   return s;
 }
