@@ -1522,6 +1522,19 @@ _dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
     if (tmp)
       ret = gst_caps_merge (ret, tmp);
 
+    /* In case we don't have a context yet, we may endup linking gainst a narrow
+     * caps filter with dmabuf feature, make sure we allow linking, as this
+     * format may be supported as GLMemory with RGBA format (direct dmabuf
+     * uploads).
+     */
+    if (!ret && !context) {
+      ret = gst_caps_new_static_str_simple ("video/x-raw",
+          "format", G_TYPE_STRING, "RGBA", NULL);
+      gst_caps_set_features_simple (ret,
+          gst_caps_features_new_single_static_str
+          (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+    }
+
     if (!ret) {
       GST_DEBUG_OBJECT (dmabuf->upload,
           "direction %s, fails to transformed DMA caps %" GST_PTR_FORMAT,
