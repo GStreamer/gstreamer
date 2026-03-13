@@ -12319,6 +12319,14 @@ qtdemux_parse_cmpd (GstQTDemux * qtdemux, GstByteReader * reader,
 
   cmpd->component_count = gst_byte_reader_get_uint32_be_unchecked (reader);
 
+  /* Let's use 16 as a upper bound here for now to avoid overflows and
+   * allocating lots of memory */
+  if (cmpd->component_count > 16) {
+    GST_ERROR_OBJECT (qtdemux, "Unsupported number of cmpd components %u",
+        cmpd->component_count);
+    goto error;
+  }
+
   guint32 minimum_size = cmpd->component_count * 2 + 4; // assuming type_uris are not used
   if (gst_byte_reader_get_size (reader) < minimum_size) {
     GST_ERROR_OBJECT (qtdemux, "cmpd size is too short");
@@ -12374,6 +12382,14 @@ qtdemux_parse_uncC (GstQTDemux * qtdemux, GstByteReader * reader,
 
   if (!gst_byte_reader_get_uint32_be (reader, &uncC->component_count)) {
     GST_ERROR_OBJECT (qtdemux, "Failed to read component count");
+    goto error;
+  }
+
+  /* Let's use 16 as a upper bound here for now to avoid overflows and
+   * allocating lots of memory */
+  if (uncC->component_count > 16) {
+    GST_ERROR_OBJECT (qtdemux, "Unsupported number of uncC components %u",
+        uncC->component_count);
     goto error;
   }
 
@@ -12630,7 +12646,6 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
   guint32 num_components = uncC->component_count;
   guint16 component_types[4];
 
-
   if (uncC->version == 1) {
     // Determine format with profile
     // The only permitted profiles for version 1 are `rgb3`, `rgba`, and `abgr`
@@ -12658,6 +12673,11 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
     goto unsupported_feature;
   }
 
+  if (num_components > 4 || num_components == 0) {
+    GST_WARNING_OBJECT (qtdemux,
+        "Unsupported number of components for uncC: %u", num_components);
+    goto unsupported_feature;
+  }
 
   /* Assert that components are similar */
   UncompressedFrameConfigComponent *first_comp = &uncC->components[0];
@@ -12699,6 +12719,11 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
   // Get Component Types
   for (guint32 i = 0; i < num_components; i++) {
     guint16 component_index = uncC->components[i].index;
+    if (component_index >= cmpd->component_count) {
+      GST_WARNING_OBJECT (qtdemux,
+          "Invalid component index %u for component %u", component_index, i);
+      goto unsupported_feature;
+    }
     component_types[i] = cmpd->types[component_index];
   }
 
@@ -19311,10 +19336,12 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       }
 
       format = qtdemux_get_format_from_uncv (qtdemux, &uncC, &cmpd);
-      gst_video_info_set_format (&stream->pre_info, format, entry->width,
-          entry->height);
-      qtdemux_set_info_from_uncv (qtdemux, entry, &uncC, &stream->pre_info);
-      stream->alignment = 32;
+      if (format != GST_VIDEO_FORMAT_UNKNOWN) {
+        gst_video_info_set_format (&stream->pre_info, format, entry->width,
+            entry->height);
+        qtdemux_set_info_from_uncv (qtdemux, entry, &uncC, &stream->pre_info);
+        stream->alignment = 32;
+      }
 
       /* Free Memory */
       qtdemux_clear_uncC (&uncC);
