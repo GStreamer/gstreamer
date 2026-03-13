@@ -1055,6 +1055,10 @@ and/or use gtk-doc annotations.  -->
   Recommendation ITU-T T.35.</doc>
         <type name="guint8" c:type="guint8*"/>
       </field>
+      <field name="itu_t_t35_payload_size" version="1.30" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h">Contains the byte size of @itu_t_t35_payload_bytes.</doc>
+        <type name="guint" c:type="guint"/>
+      </field>
     </record>
     <record name="AV1MetadataOBU" c:type="GstAV1MetadataOBU">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h"/>
