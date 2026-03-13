@@ -529,6 +529,9 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
   GArray *fmts;
   GstVideoFormat format;
   GError *query_err = NULL;
+  const VkVideoEncodeFeedbackFlagsKHR feedback_flags =
+      VK_VIDEO_ENCODE_FEEDBACK_BITSTREAM_BUFFER_OFFSET_BIT_KHR |
+      VK_VIDEO_ENCODE_FEEDBACK_BITSTREAM_BYTES_WRITTEN_BIT_KHR;
 
   g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), FALSE);
   g_return_val_if_fail (profile != NULL, FALSE);
@@ -598,6 +601,14 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
     goto failed;
   }
 
+  if ((priv->caps.encoder.caps.supportedEncodeFeedbackFlags & feedback_flags) !=
+      feedback_flags) {
+    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_FEATURE_NOT_PRESENT,
+        "Driver does not support required encode feedback flags "
+        "(BUFFER_OFFSET and BYTES_WRITTEN)");
+    goto failed;
+  }
+
   /* Get output format */
   for (i = 0; i < fmts->len; i++) {
     VkVideoFormatPropertiesKHR *fmt =
@@ -628,13 +639,11 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
   priv->exec = gst_vulkan_operation_new (cmd_pool);
   gst_object_unref (cmd_pool);
 
-  /* we don't want overridden parameters in queries */
   /* *INDENT-OFF* */
   query_create = (VkQueryPoolVideoEncodeFeedbackCreateInfoKHR) {
     .sType = VK_STRUCTURE_TYPE_QUERY_POOL_VIDEO_ENCODE_FEEDBACK_CREATE_INFO_KHR,
     .pNext = &profile->profile,
-    .encodeFeedbackFlags = priv->caps.encoder.caps.supportedEncodeFeedbackFlags &
-        (~VK_VIDEO_ENCODE_FEEDBACK_BITSTREAM_HAS_OVERRIDES_BIT_KHR),
+    .encodeFeedbackFlags = feedback_flags,
   };
   /* *INDENT-ON* */
 
