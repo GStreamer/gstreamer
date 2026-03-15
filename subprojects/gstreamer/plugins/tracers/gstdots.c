@@ -376,4 +376,5 @@ gst_dots_tracer_class_init (GstDotsTracerClass * klass)
   gst_type_mark_as_plugin_api (GST_TYPE_DOTS_TRACER_FEATURES, 0);
 
   GST_DEBUG_CATEGORY_INIT (dots_debug, "dots", 0, "dots tracer");
+  gst_type_mark_as_plugin_api (GST_TYPE_DOTS_TRACER_FEATURES, 0);
 }

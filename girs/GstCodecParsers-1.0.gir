@@ -1,7 +1,7 @@
 <!-- This file was automatically generated from C sources - DO NOT EDIT!
 To affect the contents of this file, edit the original C definitions,
 and/or use gtk-doc annotations.  -->
-<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
+<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:doc="http://www.gtk.org/introspection/doc/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
   <include name="Gst" version="1.0"/>
   <include name="GstBase" version="1.0"/>
   <package name="gstreamer-codecparsers-1.0"/>
@@ -24,6 +24,7 @@ and/or use gtk-doc annotations.  -->
   <c:include name="gst/codecparsers/gstvp8rangedecoder.h"/>
   <c:include name="gst/codecparsers/gstvp9parser.h"/>
   <c:include name="gst/codecs/gstav1decoder.h"/>
+  <doc:format name="unknown"/>
   <namespace name="GstCodecParsers" version="1.0" shared-library="libgstcodecparsers-1.0.so.0" c:identifier-prefixes="Gst" c:symbol-prefixes="gst">
     <enumeration name="AV1BitWriterResult" version="1.24" c:type="GstAV1BitWriterResult">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1bitwriter.h">The result of writing AV1 data into bit stream.</doc>

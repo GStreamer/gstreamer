@@ -141,7 +141,7 @@ trigger:
   variables:
     FDO_USER: 'containeruser'
     CCACHE_DIR: '/cache/gstreamer/gstreamer/ccache_fedora_containeruser/'
-    FDO_DISTRIBUTION_VERSION: '42'
+    FDO_DISTRIBUTION_VERSION: '43'
     FDO_REPO_SUFFIX: "$FEDORA_AMD64_SUFFIX"
     FDO_DISTRIBUTION_TAG: "$FEDORA_TAG-$GST_UPSTREAM_BRANCH"
     FDO_DISTRIBUTION_EXEC: 'bash ci/docker/fedora/prepare.sh'

@@ -56,13 +56,12 @@ llvm-devel
 log4c-devel
 make
 mesa-dri-drivers
-mesa-libd3d-devel
 mesa-libgbm-devel
 mesa-libGL-devel
 mesa-libGLES-devel
 mesa-libGLU-devel
 mesa-libOpenCL-devel
-mesa-libOSMesa-devel
+mesa-compat-libOSMesa-devel
 mesa-va-drivers
 mesa-vulkan-drivers
 nasm

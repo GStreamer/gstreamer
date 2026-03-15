@@ -10936,7 +10936,7 @@ It remains valid for as long as @trans is valid.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="is_timed_out" c:identifier="gst_rtsp_stream_transport_is_timed_out">
+      <method name="is_timed_out" c:identifier="gst_rtsp_stream_transport_is_timed_out" glib:get-property="timed-out">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream-transport.c">Check if @trans is timed out.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream-transport.h"/>
         <return-value transfer-ownership="none">
@@ -11277,7 +11277,7 @@ passed @tr.</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="timed-out" version="1.28" transfer-ownership="none" default-value="FALSE">
+      <property name="timed-out" version="1.28" transfer-ownership="none" getter="is_timed_out" default-value="FALSE">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream-transport.c">Whether this transport is timed out</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>

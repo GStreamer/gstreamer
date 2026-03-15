@@ -60040,20 +60040,6 @@ the GStreamer core. See gst_segtrap_is_enabled() for more information.</doc>
         </parameter>
       </parameters>
     </function>
-    <function name="static_caps_get_type" c:identifier="gst_static_caps_get_type">
-      <attribute name="doc.skip" value="true"/>
-      <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
-      <return-value transfer-ownership="none">
-        <type name="GType" c:type="GType"/>
-      </return-value>
-    </function>
-    <function name="static_pad_template_get_type" c:identifier="gst_static_pad_template_get_type">
-      <attribute name="doc.skip" value="true"/>
-      <source-position filename="../subprojects/gstreamer/gst/gstpadtemplate.h"/>
-      <return-value transfer-ownership="none">
-        <type name="GType" c:type="GType"/>
-      </return-value>
-    </function>
     <function name="stream_error_quark" c:identifier="gst_stream_error_quark" moved-to="StreamError.quark">
       <attribute name="doc.skip" value="true"/>
       <return-value transfer-ownership="none">
