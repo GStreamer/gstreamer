@@ -338,6 +338,10 @@ from `NONE`(0) to `PRIMARY`(256) in case-insensitive manner.
 In addition to the pre-defined rank values, `MAX` is an acceptable value to set
 higher rank than the rank of other existing plugin features.
 
+Before 1.30 only element factories could be configured using this environment
+variable. Since 1.30 any object inheriting from `GstPluginFeature` can have its
+rank tweaked as well.
+
 Example: `GST_PLUGIN_FEATURE_RANK=foo:PRIMARY,bar:primary,foobar:128`
 
 As a result of the above example,

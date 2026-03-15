@@ -488,11 +488,13 @@ _priv_gst_plugin_feature_rank_initialize (void)
           GstPluginFeature *feature;
 
           feature = gst_registry_find_feature (gst_registry_get (), str,
-              GST_TYPE_ELEMENT_FACTORY);
+              GST_TYPE_PLUGIN_FEATURE);
           if (feature) {
             gst_plugin_feature_set_rank (feature, rank);
             GST_DEBUG ("Update rank of plugin feature \"%s\" to %d", str, rank);
             gst_object_unref (feature);
+          } else {
+            GST_DEBUG ("Unable to find plugin feature \"%s\". Skipping", str);
           }
         }
       }
