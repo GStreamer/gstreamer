@@ -3319,6 +3319,27 @@ GST_START_TEST (test_video_formats_pstrides)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_UYVP_strides)
+{
+  GstVideoInfo vinfo;
+
+  gst_video_info_init (&vinfo);
+
+  // width 320 = 160 macro blocks of 2 pixels at 5 bytes = 800 bytes, roundup 4
+  gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_UYVP, 320, 240);
+  fail_unless_equals_int (GST_VIDEO_INFO_PLANE_STRIDE (&vinfo, 0), 800);
+
+  // width 321 = 161 macro blocks of 2 pixels at 5 bytes = 805 bytes, roundup 4
+  gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_UYVP, 321, 240);
+  fail_unless_equals_int (GST_VIDEO_INFO_PLANE_STRIDE (&vinfo, 0), 808);
+
+  // width 319 = 160 macro blocks of 2 pixels at 5 bytes = 800 bytes, roundup 4
+  gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_UYVP, 319, 240);
+  fail_unless_equals_int (GST_VIDEO_INFO_PLANE_STRIDE (&vinfo, 0), 800);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_hdr)
 {
   GstCaps *caps;
@@ -4872,6 +4893,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_overlay_composition_over_transparency);
   tcase_add_test (tc_chain, test_video_format_enum_stability);
   tcase_add_test (tc_chain, test_video_formats_pstrides);
+  tcase_add_test (tc_chain, test_video_UYVP_strides);
   tcase_add_test (tc_chain, test_hdr);
   tcase_add_test (tc_chain, test_video_color_from_to_iso);
   tcase_add_test (tc_chain, test_video_format_info_plane_to_components);
