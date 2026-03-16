@@ -3866,6 +3866,7 @@ static gboolean
 gst_adaptive_demux2_manual_manifest_update_cb (GstAdaptiveDemux * demux)
 {
   GST_MANIFEST_LOCK (demux);
+  demux->priv->manifest_updates_cb = 0;
   gst_adaptive_demux_update_manifest (demux);
   GST_MANIFEST_UNLOCK (demux);
 
