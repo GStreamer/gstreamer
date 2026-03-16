@@ -7433,6 +7433,22 @@
                         "presence": "sometimes"
                     }
                 },
+                "properties": {
+                    "no-more-pads-threshold": {
+                        "blurb": "Timeout in nanoseconds to wait before emitting no-more-pads. Only effective in non-streams-aware pipelines",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551614",
+                        "min": "0",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    }
+                },
                 "rank": "primary",
                 "signals": {}
             },

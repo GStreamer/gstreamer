@@ -142,7 +142,12 @@ GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (flvdemux, "flvdemux",
 #define RESYNC_THRESHOLD 2000
 
 /* how much stream time to wait for audio tags to appear after we have video, or vice versa */
-#define NO_MORE_PADS_THRESHOLD (6 * GST_SECOND)
+#define DEFAULT_NO_MORE_PADS_THRESHOLD (6 * GST_SECOND)
+
+enum
+{
+  PROP_NO_MORE_PADS_THRESHOLD = 1,
+};
 
 static gboolean flv_demux_handle_seek_push (GstFlvDemux * demux,
     GstEvent * event);
@@ -1960,9 +1965,11 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 
   if (G_UNLIKELY (!demux->streams_aware && !demux->no_more_pads
           && (GST_CLOCK_DIFF (track->start,
-                  GST_BUFFER_TIMESTAMP (outbuf)) > NO_MORE_PADS_THRESHOLD))) {
+                  GST_BUFFER_TIMESTAMP (outbuf)) >
+              demux->no_more_pads_threshold))) {
     GST_DEBUG_OBJECT (demux,
-        "Signalling no-more-pads after 6 seconds of audio");
+        "Signalling no-more-pads after %" GST_TIME_FORMAT " of audio",
+        GST_TIME_ARGS (demux->no_more_pads_threshold));
     gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
     demux->no_more_pads = TRUE;
   }
@@ -2685,10 +2692,12 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
 
   if (G_UNLIKELY (!demux->streams_aware && !demux->no_more_pads
           && (GST_CLOCK_DIFF (track->start,
-                  GST_BUFFER_TIMESTAMP (outbuf)) > NO_MORE_PADS_THRESHOLD))) {
+                  GST_BUFFER_TIMESTAMP (outbuf)) >
+              demux->no_more_pads_threshold))) {
     GST_DEBUG_OBJECT (demux,
         "Signalling no-more-pads because no other stream was found"
-        " after 6 seconds of video");
+        " after %" GST_TIME_FORMAT " of video",
+        GST_TIME_ARGS (demux->no_more_pads_threshold));
     gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
     demux->no_more_pads = TRUE;
   }
@@ -4714,6 +4723,42 @@ gst_flv_demux_cleanup_track (gpointer data, gpointer user_data)
 }
 
 static void
+gst_flv_demux_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstFlvDemux *demux = GST_FLV_DEMUX (object);
+
+  GST_OBJECT_LOCK (demux);
+  switch (property_id) {
+    case PROP_NO_MORE_PADS_THRESHOLD:
+      demux->no_more_pads_threshold = g_value_get_uint64 (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (demux);
+}
+
+static void
+gst_flv_demux_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstFlvDemux *demux = GST_FLV_DEMUX (object);
+
+  GST_OBJECT_LOCK (demux);
+  switch (property_id) {
+    case PROP_NO_MORE_PADS_THRESHOLD:
+      g_value_set_uint64 (value, demux->no_more_pads_threshold);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (demux);
+}
+
+static void
 gst_flv_demux_class_init (GstFlvDemuxClass * klass)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
@@ -4728,6 +4773,22 @@ gst_flv_demux_class_init (GstFlvDemuxClass * klass)
   gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_flv_demux_set_index);
   gstelement_class->get_index = GST_DEBUG_FUNCPTR (gst_flv_demux_get_index);
 #endif
+
+  gobject_class->get_property = gst_flv_demux_get_property;
+  gobject_class->set_property = gst_flv_demux_set_property;
+
+    /**
+     * GstFlvDemux:no-more-pads-threshold:
+     *
+     * Since: 1.30
+     */
+  g_object_class_install_property (gobject_class, PROP_NO_MORE_PADS_THRESHOLD,
+      g_param_spec_uint64 ("no-more-pads-threshold", "no-more-pads threshold",
+          "Timeout in nanoseconds to wait before emitting no-more-pads. "
+          "Only effective in non-streams-aware pipelines", 0,
+          G_MAXUINT64 - 1, DEFAULT_NO_MORE_PADS_THRESHOLD,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              GST_PARAM_MUTABLE_READY)));
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &flv_sink_template);

@@ -99,6 +99,7 @@ struct _GstFlvDemux
   gboolean flushing;
 
   gboolean no_more_pads;
+  GstClockTime no_more_pads_threshold;
 
 #ifndef GST_DISABLE_DEBUG
   gboolean no_audio_warned;
