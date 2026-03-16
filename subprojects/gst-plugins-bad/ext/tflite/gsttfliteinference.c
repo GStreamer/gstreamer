@@ -30,13 +30,30 @@
  * To install TFLITE on your system, follow the instructions in the
  * README.md in with this plugin.
  *
- * ## Example launch command:
+ * ## Example launch line
  *
- * GST_DEBUG=ssdobjectdetector:5 \
+ * |[
+ * GST_DEBUG=classifiertensordecoder:6 \
  * gst-launch-1.0 filesrc location=tflite-models/images/bus.jpg ! \
- * jpegdec ! videoconvert ! tfliteinference model-file=tflite-models/models/ssd_mobilenet_v1_coco.tflite !  \
- * ssdobjectdetector label-file=tflite-models/labels/COCO_classes.txt  ! videoconvert ! imagefreeze ! autovideosink
+ * jpegdec ! videoconvertscale ! tfliteinference model-file=/path/to/ssd_mobilenet_v1_coco.tflite ! \
+ * classifiertensordecoder labels-file=/path/to/labels.txt ! fakesink
+ * ]|
  *
+ * Note: in order for downstream tensor decoders to correctly parse the tensor
+ * data in the GstTensorMeta, meta data must be attached to tensors. The
+ * inference element gets this model metadata from the modelinfo file annexed
+ * to the model. The modelinfo-helper tool can be used to create a modelinfo
+ * file: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/tree/main/subprojects/gst-devtools/modelinfo-helper
+ *
+ * The modelinfo file should be placed alongside the model file with a
+ * `.modelinfo` suffix appended to the model filename. For example:
+ *
+ * |[
+ * /path/to/model.tflite
+ * /path/to/model.tflite.modelinfo
+ * ]|
+ *
+ * Since: 1.26
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
