@@ -30,29 +30,73 @@
  * To install ONNX on your system, follow the instructions in the
  * README.md in with this plugin.
  *
- * ## Example launch command:
+ * ## Example launch line
  *
- * Test image file, model file (SSD) and label file can be found here :
+ * Test image file, model file (SSD) and label file can be found here:
  * https://gitlab.collabora.com/gstreamer/onnx-models
  *
+ * |[
  * GST_DEBUG=ssdobjectdetector:5 \
  * gst-launch-1.0 filesrc location=onnx-models/images/bus.jpg ! \
- * jpegdec ! videoconvert ! onnxinference execution-provider=cpu model-file=onnx-models/models/ssd_mobilenet_v1_coco.onnx !  \
- * ssdobjectdetector label-file=onnx-models/labels/COCO_classes.txt  ! videoconvert ! imagefreeze ! autovideosink
- *
+ * jpegdec ! videoconvert ! onnxinference execution-provider=cpu model-file=onnx-models/models/ssd_mobilenet_v1_coco.onnx ! \
+ * ssdobjectdetector label-file=onnx-models/labels/COCO_classes.txt ! videoconvert ! imagefreeze ! autovideosink
+ * ]|
  *
  * Note: in order for downstream tensor decoders to correctly parse the tensor
- * data in the GstTensorMeta, meta data must be attached to the ONNX model
- * assigning a unique string id to each output layer. These unique string ids
- * and corresponding GQuark ids are currently stored in the tensor decoder's
- * header file, in this case gstssdobjectdetector.h. If the meta data is absent,
- * the pipeline will fail.
+ * data in the GstTensorMeta, meta data must be attached to tensors. The
+ * inference element gets this model metadata from the modelinfo file annexed
+ * to the model. The modelinfo-helper tool can be used to create a modelinfo
+ * file: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/tree/main/subprojects/gst-devtools/modelinfo-helper
  *
- * As a convenience, there is a python script
- * currently stored at
- * https://gitlab.collabora.com/gstreamer/onnx-models/-/blob/master/scripts/modify_onnx_metadata.py
- * to enable users to easily add and remove meta data from json files. It can also dump
- * the names of all output layers, which can then be used to craft the json meta data file.
+ * ## Modelinfo example for ssd_mobilenet_v1_coco.onnx
+ *
+ * |[
+ * [modelinfo]
+ * version=1.0
+ * group-id=ssd-mobilenet-v1-variant-1-out
+ *
+ * [image_tensor:0]
+ * id=image_tensor_0
+ * type=uint8
+ * dims=-1,-1,-1,3
+ * dir=input
+ * ranges=0.0,255.0;0.0,255.0;0.0,255.0
+ *
+ * [detection_boxes:0]
+ * id=ssd-mobilenet-v1-variant-1-out-boxes
+ * type=float32
+ * dims=-1,-1,4
+ * dir=output
+ *
+ * [detection_classes:0]
+ * id=ssd-mobilenet-v1-variant-1-out-classes
+ * type=float32
+ * dims=-1,-1
+ * dir=output
+ *
+ * [detection_scores:0]
+ * id=ssd-mobilenet-v1-variant-1-out-scores
+ * type=float32
+ * dims=-1,-1
+ * dir=output
+ *
+ * [num_detections:0]
+ * id=generic-variant-1-out-count
+ * type=float32
+ * dims=-1
+ * dir=output
+ * ]|
+ *
+ * The modelinfo file should be placed alongside the model file with a
+ * `.modelinfo` suffix appended to the model filename. For example:
+ *
+ * |[
+ * /path/to/model.onnx
+ * /path/to/model.onnx.modelinfo
+ * ]|
+ *
+ * As a convenience, sample models with their modelinfo files are available
+ * here: https://gitlab.collabora.com/gstreamer/onnx-models/-/tree/master/models
  *
  * Since: 1.20
  */
