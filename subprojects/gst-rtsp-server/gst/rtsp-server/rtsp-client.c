@@ -645,6 +645,12 @@ filter_session_media (GstRTSPSession * sess, GstRTSPSessionMedia * sessmedia,
   media = gst_rtsp_session_media_get_media (sessmedia);
   n_streams = gst_rtsp_media_n_streams (media);
 
+  /* Lock the media to synchronize with concurrent request handlers (e.g.
+   * handle_play_request) that hold the media lock while operating on session
+   * resources and emitting signals. Without this, a session timeout could
+   * tear down the media while a play request is still in progress. */
+  gst_rtsp_media_lock (media);
+
   for (i = 0; i < n_streams; i++) {
     GstRTSPStreamTransport *transport =
         gst_rtsp_session_media_get_transport (sessmedia, i);
@@ -664,8 +670,10 @@ filter_session_media (GstRTSPSession * sess, GstRTSPSessionMedia * sessmedia,
 
   if (!is_all_udp || gst_rtsp_media_is_stop_on_disconnect (media)) {
     gst_rtsp_session_media_set_state (sessmedia, GST_STATE_NULL);
+    gst_rtsp_media_unlock (media);
     return GST_RTSP_FILTER_REMOVE;
   } else {
+    gst_rtsp_media_unlock (media);
     *closed = FALSE;
     return GST_RTSP_FILTER_KEEP;
   }
