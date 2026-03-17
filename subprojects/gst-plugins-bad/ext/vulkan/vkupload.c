@@ -616,22 +616,46 @@ _raw_to_image_transform_caps (gpointer impl, GstPadDirection direction,
 static gboolean
 _raw_to_image_set_caps (gpointer impl, GstCaps * in_caps, GstCaps * out_caps)
 {
+  GstVideoInfo in_info, out_info;
   struct RawToImageUpload *raw = impl;
 
-  if (!gst_video_info_from_caps (&raw->in_info, in_caps))
+  if (!gst_video_info_from_caps (&in_info, in_caps))
     return FALSE;
 
-  if (!gst_video_info_from_caps (&raw->out_info, out_caps))
+  if (!gst_video_info_from_caps (&out_info, out_caps))
     return FALSE;
 
   if (raw->in_pool) {
-    if (raw->in_pool_active) {
-      gst_buffer_pool_set_active (raw->in_pool, FALSE);
+    GstVideoInfo copy;
+    gboolean realloc_pool = FALSE;
+
+    // Check that all caps fields are the same, except for the framerate which
+    // can be changed freely without re-allocating the buffer pool.
+    copy = in_info;
+    copy.fps_n = raw->in_info.fps_n;
+    copy.fps_d = raw->in_info.fps_d;
+    if (!gst_video_info_is_equal (&copy, &raw->in_info))
+      realloc_pool = TRUE;
+
+    copy = out_info;
+    copy.fps_n = raw->out_info.fps_n;
+    copy.fps_d = raw->out_info.fps_d;
+    if (!gst_video_info_is_equal (&copy, &raw->out_info))
+      realloc_pool = TRUE;
+
+    if (realloc_pool) {
+      GST_INFO ("Reallocating pool");
+      if (raw->in_pool_active) {
+        gst_buffer_pool_set_active (raw->in_pool, FALSE);
+      }
+      raw->in_pool_active = FALSE;
+      gst_object_unref (raw->in_pool);
+      raw->in_pool = NULL;
     }
-    raw->in_pool_active = FALSE;
-    gst_object_unref (raw->in_pool);
-    raw->in_pool = NULL;
   }
+
+  raw->in_info = in_info;
+  raw->out_info = out_info;
 
   return TRUE;
 }
