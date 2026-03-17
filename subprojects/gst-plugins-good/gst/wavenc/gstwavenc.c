@@ -616,12 +616,18 @@ gst_wavenc_write_tags (GstWavEnc * wavenc)
   /* add tags */
   gst_tag_list_foreach (tags, gst_wavparse_tags_foreach, &bw);
 
-  /* sets real size of LIST INFO chunk */
+  gst_tag_list_unref (tags);
+
+  /* check whether buffer contains "LIST" + <size> + "INFO" only */
   size = gst_byte_writer_get_pos (&bw);
+  if (size <= 12) {
+    GST_DEBUG_OBJECT (wavenc, "skipped all tags");
+    gst_byte_writer_reset (&bw);
+    return GST_FLOW_OK;
+  }
+  /* sets real size of LIST INFO chunk */
   gst_byte_writer_set_pos (&bw, 4);
   gst_byte_writer_put_uint32_le (&bw, size - 8);
-
-  gst_tag_list_unref (tags);
 
   buf = gst_byte_writer_reset_and_get_buffer (&bw);
   wavenc->meta_length += gst_buffer_get_size (buf);
