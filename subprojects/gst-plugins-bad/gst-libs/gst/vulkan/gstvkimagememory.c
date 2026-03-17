@@ -407,6 +407,8 @@ _vk_image_mem_free (GstAllocator * allocator, GstMemory * memory)
 
   gst_object_unref (mem->device);
 
+  g_mutex_clear (&mem->lock);
+
   g_free (mem);
 }
 
