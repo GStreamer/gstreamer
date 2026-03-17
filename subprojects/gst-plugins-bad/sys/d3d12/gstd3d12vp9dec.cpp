@@ -320,7 +320,7 @@ gst_d3d12_vp9_dec_output_picture (GstDxvaVp9Decoder * decoder,
       buffer_flags, display_width, display_height);
 }
 
-void
+GstD3D12Vp9DecRegisterData *
 gst_d3d12_vp9_dec_register (GstPlugin * plugin, GstD3D12Device * device,
     ID3D12VideoDevice * video_device, guint rank, gboolean d3d11_interop)
 {
@@ -346,7 +346,7 @@ gst_d3d12_vp9_dec_register (GstPlugin * plugin, GstD3D12Device * device,
   auto cdata = gst_d3d12_decoder_check_feature_support (device, video_device,
       GST_DXVA_CODEC_VP9);
   if (!cdata)
-    return;
+    return nullptr;
 
   cdata->subclass_data.d3d11_interop = d3d11_interop;
   type_info.class_data = cdata;
@@ -361,6 +361,10 @@ gst_d3d12_vp9_dec_register (GstPlugin * plugin, GstD3D12Device * device,
     type_name = g_strdup_printf ("GstD3D12Vp9Device%dDec", index);
     feature_name = g_strdup_printf ("d3d12vp9device%ddec", index);
   }
+
+  auto register_data = g_new0 (GstD3D12Vp9DecRegisterData, 1);
+  register_data->factory_name = g_strdup (feature_name);
+  register_data->sink_caps = gst_caps_copy (cdata->sink_caps);
 
   type = g_type_register_static (GST_TYPE_DXVA_VP9_DECODER,
       type_name, &type_info, (GTypeFlags) 0);
@@ -377,4 +381,6 @@ gst_d3d12_vp9_dec_register (GstPlugin * plugin, GstD3D12Device * device,
 
   g_free (type_name);
   g_free (feature_name);
+
+  return register_data;
 }

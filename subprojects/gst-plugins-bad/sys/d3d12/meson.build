@@ -40,6 +40,7 @@ d3d12_sources = [
   'gstd3d12weaveinterlace.cpp',
   'gstd3d12interlace.cpp',
   'gstd3d12overlaycompositor.cpp',
+  'gstd3d12vp9alphadbin.cpp',
   'plugin.cpp',
 ]
 
@@ -253,7 +254,7 @@ gstd3d12 = library('gstd3d12',
   c_args : gst_plugins_bad_args + extra_args,
   cpp_args: gst_plugins_bad_args + extra_args,
   include_directories : [configinc],
-  dependencies : [gstbase_dep, gstvideo_dep, gstcodecs_dep, gmodule_dep,
+  dependencies : [gstbase_dep, gstvideo_dep, gstcodecs_dep, gmodule_dep, gstpbutils_dep,
                   gstdxva_dep, gstd3dshader_dep, gstd3d12_dep, d3d11_lib,
                   d2d_lib, dx_headers_dep] + extra_deps,
   install : true,
