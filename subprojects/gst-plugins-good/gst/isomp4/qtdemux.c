@@ -10095,6 +10095,14 @@ gst_qtdemux_guess_framerate (GstQTDemux * qtdemux, QtDemuxStream * stream)
     /* still frame */
     CUR_STREAM (stream)->fps_n = 0;
     CUR_STREAM (stream)->fps_d = 1;
+  } else if (qtdemux->fragmented) {
+    /* For fragmented formats, the framerate guessed from a single moof is
+     * unreliable and fluctuates with each fragment, causing unnecessary caps
+     * changes and segment events. Set variable framerate (0/1) and let
+     * downstream parsers (e.g. h264parse) extract the correct framerate
+     * from the stream itself. */
+    CUR_STREAM (stream)->fps_n = 0;
+    CUR_STREAM (stream)->fps_d = 1;
   } else {
     if (stream->duration == 0 || stream->n_samples < 2) {
       CUR_STREAM (stream)->fps_n = stream->timescale;
@@ -10105,16 +10113,8 @@ gst_qtdemux_guess_framerate (GstQTDemux * qtdemux, QtDemuxStream * stream)
       guint64 duration;
       guint32 n_samples;
 
-      /* duration and n_samples can be updated for fragmented format
-       * so, framerate of fragmented format is calculated using data in a moof */
-      if (qtdemux->fragmented && stream->n_samples_moof > 0
-          && stream->duration_moof > 0) {
-        n_samples = stream->n_samples_moof;
-        duration = stream->duration_moof;
-      } else {
-        n_samples = stream->n_samples;
-        duration = stream->duration;
-      }
+      n_samples = stream->n_samples;
+      duration = stream->duration;
 
       /* Calculate a framerate, ignoring the first sample which is sometimes truncated */
       /* stream->duration is guint64, timescale, n_samples are guint32 */
@@ -10124,7 +10124,7 @@ gst_qtdemux_guess_framerate (GstQTDemux * qtdemux, QtDemuxStream * stream)
           (guint64) (stream->timescale) * (n_samples - 1));
 
       GST_LOG_OBJECT (qtdemux,
-          "Calculating avg sample duration based on stream (or moof) duration %"
+          "Calculating avg sample duration based on stream duration %"
           G_GUINT64_FORMAT
           " minus first sample %u, leaving %d samples gives %"
           GST_TIME_FORMAT, duration, first_duration,
