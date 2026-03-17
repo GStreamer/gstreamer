@@ -63,6 +63,9 @@ struct _GstDtlsEnc {
     guint srtp_auth;
 
     gboolean send_initial_events;
+
+    gulong signal_notify_id;
+    gulong signal_key_receive_id;
 };
 
 struct _GstDtlsEncClass {
