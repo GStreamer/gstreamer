@@ -197,6 +197,84 @@ and/or use gtk-doc annotations.  -->
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h">EBU Tech. 3213-E</doc>
       </member>
     </enumeration>
+    <record name="AV1DecoderConfigRecord" c:type="GstAV1DecoderConfigRecord" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h">Contains AV1CodecConfigurationRecord data as defined in the AV1 ISOBMFF
+mapping specification (see https://aomediacodec.github.io/av1-isobmff/).</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h"/>
+      <field name="version" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h">configurationVersion, must be 1.</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="seq_profile" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h">AV1 sequence profile.</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="seq_level_idx_0" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h">AV1 sequence level index.</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="seq_tier_0" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h">AV1 sequence tier.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="high_bitdepth" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h">%TRUE if the stream uses high bit depth.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="twelve_bit" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h">%TRUE if the stream uses 12-bit depth.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="monochrome" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h">%TRUE if the stream is monochrome.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="chroma_subsampling_x" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h">Chroma subsampling in the horizontal direction.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="chroma_subsampling_y" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h">Chroma subsampling in the vertical direction.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="chroma_sample_position" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h">Chroma sample position.</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="initial_presentation_delay_present" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h">%TRUE if
+  @initial_presentation_delay_minus_one is present.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="initial_presentation_delay_minus_one" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h">Initial presentation delay minus one.</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="config_obus" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h">Array of identified #GstAV1OBU from the configOBUs field.</doc>
+        <array name="GLib.Array" c:type="GArray*">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+      <method name="free" c:identifier="gst_av1_decoder_config_record_free" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">Frees the @config and any associated data.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="config" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">a #GstAV1DecoderConfigRecord</doc>
+            <type name="AV1DecoderConfigRecord" c:type="GstAV1DecoderConfigRecord*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </record>
     <record name="AV1DecoderModelInfo" c:type="GstAV1DecoderModelInfo">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h"/>
       <field name="buffer_delay_length_minus_1" writable="1">
@@ -1530,6 +1608,43 @@ state(such as reference information, global segmentation information, etc).</doc
       <field name="seq_header" readable="0" private="1">
         <type name="AV1SequenceHeaderOBU" c:type="GstAV1SequenceHeaderOBU*"/>
       </field>
+      <method name="create_decoder_config_record_from_sequence_header" c:identifier="gst_av1_parser_create_decoder_config_record_from_sequence_header" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">Creates or updates a #GstAV1DecoderConfigRecord from a sequence header OBU.
+If *@config is non-%NULL, fields derived from the sequence header are updated
+and existing sequence header OBU entries in @config-&gt;config_obus are
+replaced. Other OBUs are preserved.
+
+The memory at @seq_hdr_data must remain valid for the lifetime of *@config.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">%TRUE if @seq_hdr_data was parsed and stored, %FALSE otherwise. On
+  success, ownership of the resulting config record remains with the caller.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="parser" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">a #GstAV1Parser</doc>
+            <type name="AV1Parser" c:type="GstAV1Parser*"/>
+          </instance-parameter>
+          <parameter name="seq_hdr_data" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">one complete sequence
+  header OBU in AV1 bitstream form (including OBU header and size field)</doc>
+            <array length="1" zero-terminated="0" c:type="const guint8*">
+              <type name="guint8" c:type="guint8"/>
+            </array>
+          </parameter>
+          <parameter name="seq_hdr_data_size" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">size of @seq_hdr_data</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="config" direction="inout" caller-allocates="0" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">pointer to a
+  #GstAV1DecoderConfigRecord. If *@config is %NULL, a new record is
+  allocated.</doc>
+            <type name="AV1DecoderConfigRecord" c:type="GstAV1DecoderConfigRecord**"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="free" c:identifier="gst_av1_parser_free" version="1.18">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">If parser is not %NULL, frees its allocated memory.
 
@@ -1573,6 +1688,38 @@ should be called first to know the type of @obu before other parse APIs.</doc>
           <parameter name="consumed" direction="out" caller-allocates="0" transfer-ownership="full">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">the consumed data size</doc>
             <type name="guint32" c:type="guint32*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="parse_decoder_config_record" c:identifier="gst_av1_parser_parse_decoder_config_record" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">Parses an AV1CodecConfigurationRecord as defined in the AV1 ISOBMFF mapping
+specification (see https://aomediacodec.github.io/av1-isobmff/).
+
+The returned @config references data inside @data. The caller must keep
+@data valid for the lifetime of @config.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">The #GstAV1ParserResult.</doc>
+          <type name="AV1ParserResult" c:type="GstAV1ParserResult"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="parser" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">a #GstAV1Parser</doc>
+            <type name="AV1Parser" c:type="GstAV1Parser*"/>
+          </instance-parameter>
+          <parameter name="data" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">the data to parse</doc>
+            <array length="1" zero-terminated="0" c:type="const guint8*">
+              <type name="guint8" c:type="guint8"/>
+            </array>
+          </parameter>
+          <parameter name="size" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">the size of @data</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="config" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">the parsed #GstAV1DecoderConfigRecord</doc>
+            <type name="AV1DecoderConfigRecord" c:type="GstAV1DecoderConfigRecord**"/>
           </parameter>
         </parameters>
       </method>
@@ -2798,6 +2945,16 @@ The other part of the state is kept.</doc>
       <type name="gint" c:type="gint"/>
     </constant>
     <constant name="AV1_GM_TRANS_PREC_BITS" value="6" c:type="GST_AV1_GM_TRANS_PREC_BITS">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
+    <constant name="AV1_LEB128_MAX_SIZE" value="8" c:type="GST_AV1_LEB128_MAX_SIZE" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h">Maximum number of bytes in an AV1 leb128-encoded value.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
+    <constant name="AV1_LEB128_MAX_VALUE" value="4294967295" c:type="GST_AV1_LEB128_MAX_VALUE" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h">Maximum value represented by an AV1 leb128-encoded value.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
@@ -18121,6 +18278,74 @@ the according fields in the frame header during the real encoding job.</doc>
         <parameter name="size" direction="inout" caller-allocates="0" transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1bitwriter.c">the size in bytes of the input and output</doc>
           <type name="guint" c:type="guint*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="av1_bit_writer_write_leb128" c:identifier="gst_av1_bit_writer_write_leb128" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1bitwriter.c">Encodes @value as unsigned LEB128 and writes it to @data. The caller should
+provide at least #GST_AV1_LEB128_MAX_SIZE bytes.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1bitwriter.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1bitwriter.c">%TRUE on success, %FALSE if @value exceeds
+  #GST_AV1_LEB128_MAX_VALUE, if @data is too small, or if arguments are
+  invalid.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="data" direction="out" caller-allocates="1" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1bitwriter.c">destination buffer
+  for the encoded value</doc>
+          <array length="1" zero-terminated="0" c:type="guint8*">
+            <type name="guint8" c:type="guint8"/>
+          </array>
+        </parameter>
+        <parameter name="data_size" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1bitwriter.c">size of @data in bytes</doc>
+          <type name="gsize" c:type="gsize"/>
+        </parameter>
+        <parameter name="len" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1bitwriter.c">length in bytes written to @data</doc>
+          <type name="guint" c:type="guint*"/>
+        </parameter>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1bitwriter.c">value to encode</doc>
+          <type name="guint64" c:type="guint64"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="av1_build_obu_buffer" c:identifier="gst_av1_build_obu_buffer" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">Builds a buffer containing the OBU header and payload for @obu.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h"/>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">the serialized OBU buffer, or %NULL on
+  failure.</doc>
+        <type name="Gst.Buffer" c:type="GstBuffer*"/>
+      </return-value>
+      <parameters>
+        <parameter name="obu" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">a #GstAV1OBU to serialize</doc>
+          <type name="AV1OBU" c:type="GstAV1OBU*"/>
+        </parameter>
+        <parameter name="write_size_field" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">whether to include the OBU size field in the output.
+  This flag overrides @obu-&gt;header.obu_has_size_field.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="av1_create_decoder_config_record_buffer" c:identifier="gst_av1_create_decoder_config_record_buffer" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">Creates an AV1CodecConfigurationRecord as defined in the AV1 ISOBMFF mapping
+specification (see https://aomediacodec.github.io/av1-isobmff/).</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.h"/>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">The AV1 Codec Configuration Record, or
+%NULL if there was an error.</doc>
+        <type name="Gst.Buffer" c:type="GstBuffer*"/>
+      </return-value>
+      <parameters>
+        <parameter name="config" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstav1parser.c">a #GstAV1DecoderConfigRecord</doc>
+          <type name="AV1DecoderConfigRecord" c:type="const GstAV1DecoderConfigRecord*"/>
         </parameter>
       </parameters>
     </function>
