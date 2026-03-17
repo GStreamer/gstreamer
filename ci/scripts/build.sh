@@ -5,6 +5,7 @@ builddir="$1"
 error="${GST_WERROR:-false}"
 gtk_args="${GTK_ARGS:-}"
 meson_args="${MESON_ARGS:-}"
+meson_test_args="${MESON_TEST_ARGS:-}"
 
 if [[ -z "$builddir" ]]; then
   echo "Usage: build.sh <build_directory>"
@@ -51,6 +52,10 @@ fi
 date -R
 meson compile -C "$builddir" --jobs "$jobs"
 date -R
+
+if [[ -n "$meson_test_args" ]]; then
+    meson test -C "$builddir" $meson_test_args
+fi
 
 if command -v ccache
 then
