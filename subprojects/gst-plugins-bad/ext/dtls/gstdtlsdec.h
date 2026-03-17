@@ -63,6 +63,10 @@ struct _GstDtlsDec {
     GstBuffer *decoder_key;
     guint srtp_cipher;
     guint srtp_auth;
+
+    gulong signal_peer_certificate;
+    gulong signal_decoder_key;
+    gulong signal_state_changed;
 };
 
 struct _GstDtlsDecClass {

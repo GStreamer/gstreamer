@@ -85,6 +85,7 @@ static GParamSpec *properties[NUM_PROPERTIES];
 #define INITIAL_QUEUE_SIZE 64
 
 static void gst_dtls_enc_finalize (GObject *);
+static void gst_dtls_enc_dispose (GObject *);
 static void gst_dtls_enc_set_property (GObject *, guint prop_id,
     const GValue *, GParamSpec *);
 static void gst_dtls_enc_get_property (GObject *, guint prop_id, GValue *,
@@ -98,6 +99,7 @@ static GstPad *gst_dtls_enc_request_new_pad (GstElement *, GstPadTemplate *,
 static gboolean src_activate_mode (GstPad *, GstObject *, GstPadMode,
     gboolean active);
 static void src_task_loop (GstPad *);
+static void clear_signals (GstDtlsEnc *);
 
 static GstFlowReturn sink_chain (GstPad *, GstObject *, GstBuffer *);
 static gboolean sink_event (GstPad * pad, GstObject * parent, GstEvent * event);
@@ -117,6 +119,7 @@ gst_dtls_enc_class_init (GstDtlsEncClass * klass)
   element_class = (GstElementClass *) klass;
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_dtls_enc_finalize);
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_dtls_enc_dispose);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_dtls_enc_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_dtls_enc_get_property);
 
@@ -209,6 +212,9 @@ gst_dtls_enc_init (GstDtlsEnc * self)
   self->srtp_cipher = DEFAULT_SRTP_CIPHER;
   self->srtp_auth = DEFAULT_SRTP_AUTH;
 
+  self->signal_notify_id = 0;
+  self->signal_key_receive_id = 0;
+
   g_queue_init (&self->queue);
   g_mutex_init (&self->queue_lock);
   g_cond_init (&self->queue_cond_add);
@@ -248,6 +254,36 @@ gst_dtls_enc_finalize (GObject * object)
   GST_LOG_OBJECT (self, "finalized");
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+gst_dtls_enc_dispose (GObject * object)
+{
+  GstDtlsEnc *self = GST_DTLS_ENC (object);
+
+  if (self->connection) {
+    clear_signals (self);
+    g_object_unref (self->connection);
+    self->connection = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+clear_signals (GstDtlsEnc * self)
+{
+  if (self->connection) {
+    if (self->signal_key_receive_id) {
+      g_signal_handler_disconnect (self->connection,
+          self->signal_key_receive_id);
+      self->signal_key_receive_id = 0;
+    }
+    if (self->signal_notify_id) {
+      g_signal_handler_disconnect (self->connection, self->signal_notify_id);
+      self->signal_notify_id = 0;
+    }
+  }
 }
 
 static void
@@ -340,11 +376,11 @@ gst_dtls_enc_change_state (GstElement * element, GstStateChange transition)
           return GST_STATE_CHANGE_FAILURE;
         }
 
-        g_signal_connect_object (self->connection,
-            "on-encoder-key", G_CALLBACK (on_key_received), self, 0);
-        g_signal_connect_object (self->connection,
+        self->signal_key_receive_id = g_signal_connect (self->connection,
+            "on-encoder-key", G_CALLBACK (on_key_received), self);
+        self->signal_notify_id = g_signal_connect (self->connection,
             "notify::connection-state",
-            G_CALLBACK (on_connection_state_changed), self, 0);
+            G_CALLBACK (on_connection_state_changed), self);
         on_connection_state_changed (NULL, NULL, self);
 
         gst_dtls_connection_set_send_callback (self->connection,
@@ -367,6 +403,7 @@ gst_dtls_enc_change_state (GstElement * element, GstStateChange transition)
         gst_dtls_connection_close (self->connection);
         gst_dtls_connection_set_send_callback (self->connection, NULL, NULL,
             NULL);
+        clear_signals (self);
         g_object_unref (self->connection);
         self->connection = NULL;
       }
