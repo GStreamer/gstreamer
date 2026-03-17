@@ -1830,18 +1830,26 @@ gst_h264_parser_identify_and_split_nalu_avc (GstH264NalParser * nalparser,
 GstH264ParserResult
 gst_h264_parser_parse_nal (GstH264NalParser * nalparser, GstH264NalUnit * nalu)
 {
-  GstH264SPS sps;
-  GstH264PPS pps;
+  GstH264ParserResult res = GST_H264_PARSER_OK;
 
   switch (nalu->type) {
-    case GST_H264_NAL_SPS:
-      return gst_h264_parser_parse_sps (nalparser, nalu, &sps);
+    case GST_H264_NAL_SPS:{
+      GstH264SPS sps;
+
+      res = gst_h264_parser_parse_sps (nalparser, nalu, &sps);
+      gst_h264_sps_clear (&sps);
       break;
-    case GST_H264_NAL_PPS:
-      return gst_h264_parser_parse_pps (nalparser, nalu, &pps);
+    }
+    case GST_H264_NAL_PPS:{
+      GstH264PPS pps;
+
+      res = gst_h264_parser_parse_pps (nalparser, nalu, &pps);
+      gst_h264_pps_clear (&pps);
+      break;
+    }
   }
 
-  return GST_H264_PARSER_OK;
+  return res;
 }
 
 /**
