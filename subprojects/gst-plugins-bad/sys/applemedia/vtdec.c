@@ -1291,11 +1291,17 @@ create_format_description_from_codec_data (GstVtdec * vtdec,
       gst_buffer_unmap (vtdec->av1_sequence_header_obu, &seq_map);
     if (!av1c) {
       GST_ERROR_OBJECT (vtdec, "Failed to build av1C from codec_data");
+      gst_buffer_unmap (codec_data, &map);
+      CFRelease (atoms);
+      CFRelease (extensions);
       return NULL;
     }
 
     if (!gst_buffer_map (av1c, &av1c_map, GST_MAP_READ)) {
       gst_buffer_unref (av1c);
+      gst_buffer_unmap (codec_data, &map);
+      CFRelease (atoms);
+      CFRelease (extensions);
       return NULL;
     }
 
