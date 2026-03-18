@@ -141,6 +141,7 @@ _show_window (gpointer data)
   GstVulkanNSWindow *internal_win_id = (__bridge GstVulkanNSWindow *)priv->internal_win_id;
 
   GST_DEBUG_OBJECT (window_cocoa, "showing");
+  [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
   [internal_win_id makeMainWindow];
   [internal_win_id orderFrontRegardless];
   [internal_win_id setViewsNeedDisplay:YES];
