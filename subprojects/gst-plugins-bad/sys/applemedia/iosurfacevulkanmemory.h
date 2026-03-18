@@ -55,6 +55,7 @@ GstIOSurfaceVulkanMemory *
 gst_io_surface_vulkan_memory_wrapped (GstVulkanDevice * device,
     IOSurfaceRef surface,
     unsigned int fmt, /* MTLPixelFormat */
+    gpointer metal_texture,
     GstVideoInfo * info,
     guint plane,
     gpointer user_data,

@@ -37,8 +37,5 @@ GstMemory *             _create_vulkan_memory                           (GstAppl
                                                                          gsize size,
                                                                          GstVideoTextureCache * cache);
 
-void                    gst_io_surface_vulkan_memory_set_surface        (GstIOSurfaceVulkanMemory * memory,
-                                                                         IOSurfaceRef surface);
-
 G_END_DECLS
 #endif /* _APPLEMEDIA_METAL_HELPERS_H_ */
