@@ -2,13 +2,13 @@
 # This file is put in the public domain.
 # Funda Wang <fundawang@linux.net.cn>, 2005.
 # Ji ZhengYu <zhengyuji@gmail.com>, 2008, 2009.
-# zwpwjwtz <zwpwjwtz@126.com>, 2015.
+# zwpwjwtz <zwpwjwtz@126.com>, 2015, 2026.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.21.90\n"
+"Project-Id-Version: gst-plugins-good 1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
-"PO-Revision-Date: 2023-01-21 13:45+0800\n"
+"POT-Creation-Date: 2026-03-18 23:43+0100\n"
+"PO-Revision-Date: 2026-02-17 11:09+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
@@ -16,7 +16,8 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 2.2.1\n"
+"X-Generator: Lokalize 22.12.3\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 
 msgid "Jack server not found"
 msgstr "未找到插口设备"
@@ -95,10 +96,10 @@ msgid "Invalid atom size."
 msgstr "无效的原子尺寸。"
 
 msgid "Cannot query file size"
-msgstr ""
+msgstr "无法查询文件大小"
 
 msgid "Cannot demux file"
-msgstr ""
+msgstr "无法解复用（demux）文件"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "此文件不完整且无法播放。"
@@ -307,9 +308,8 @@ msgstr "设备 %s 上的编码器没有支持的输出格式"
 msgid "Encoder on device %s has no supported input format"
 msgstr "设备 %s 上的编码器没有支持的输入格式"
 
-#, fuzzy
 msgid "Failed to force keyframe."
-msgstr "处理帧失败。"
+msgstr "强制指定关键帧失败。"
 
 msgid "Failed to start encoding thread."
 msgstr "启动编码线程失败。"
