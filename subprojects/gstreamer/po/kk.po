@@ -1,0 +1,1437 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026 gstreamer-1.0's COPYRIGHT HOLDER
+# This file is distributed under the same license as the gstreamer package.
+# Baurzhan Muftakhidinov <baurthefirst@gmail.com>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: gstreamer 1.27.90\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-03-18 23:42+0100\n"
+"PO-Revision-Date: 2026-03-01 14:14+0500\n"
+"Last-Translator: Baurzhan Muftakhidinov <baurthefirst@gmail.com>\n"
+"Language-Team: Kazakh <(nothing)>\n"
+"Language: kk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 3.8\n"
+
+msgid "Print the GStreamer version"
+msgstr "GStreamer нұсқасын шығару"
+
+msgid "Make all warnings fatal"
+msgstr "Барлық ескертулерді қатаң ету"
+
+msgid "Print available debug categories and exit"
+msgstr "Қолжетімді жөндеу категорияларын шығару және шығу"
+
+msgid ""
+"Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
+msgstr ""
+"Бастапқы жөндеу деңгейі 1-ден (тек қате) 9-ға (барлығы) дейін немесе "
+"шығыссыз болу үшін 0"
+
+msgid "LEVEL"
+msgstr "ДЕҢГЕЙ"
+
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr ""
+"Жеке категориялар үшін нақты деңгейлерді орнатуға арналған үтірмен "
+"ажыратылған категория_аты:деңгей жұптарының тізімі. Мысалы: "
+"GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+
+msgid "LIST"
+msgstr "ТІЗІМ"
+
+msgid "Disable colored debugging output"
+msgstr "Түрлі-түсті жөндеу шығысын сөндіру"
+
+msgid ""
+"Changes coloring mode of the debug log. Possible modes: off, on, disable, "
+"auto, unix"
+msgstr ""
+"Жөндеу журналының бояу режимін өзгертеді. Мүмкін режимдер: off, on, disable, "
+"auto, unix"
+
+msgid "Disable debugging"
+msgstr "Жөндеуді сөндіру"
+
+msgid "Colon-separated paths containing plugins"
+msgstr "Плагиндері бар қос нүктемен ажыратылған жолдар"
+
+msgid "PATHS"
+msgstr "ЖОЛДАР"
+
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"environment variable GST_PLUGIN_PATH"
+msgstr ""
+"GST_PLUGIN_PATH орта айнымалысында сақталған тізімге қосымша алдын ала "
+"жүктелетін плагиндердің үтірмен ажыратылған тізімі"
+
+msgid "PLUGINS"
+msgstr "ПЛАГИНДЕР"
+
+msgid "Disable trapping of segmentation faults during plugin loading"
+msgstr ""
+"Плагиндерді жүктеу кезінде сегменттеу қателерін (segmentation faults) "
+"ұстауды сөндіру"
+
+msgid "Disable updating the registry"
+msgstr "Тізілімді жаңартуды сөндіру"
+
+msgid "Disable spawning a helper process while scanning the registry"
+msgstr "Тізілімді сканерлеу кезінде көмекші процесті қосуды сөндіру"
+
+msgid "GStreamer Options"
+msgstr "GStreamer опциялары"
+
+msgid "Show GStreamer Options"
+msgstr "GStreamer опцияларын көрсету"
+
+#, c-format
+msgid "Unknown option"
+msgstr "Белгісіз опция"
+
+msgid "GStreamer encountered a general core library error."
+msgstr "GStreamer негізгі кітапханасының жалпы қатесіне тап болды."
+
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error."
+msgstr "GStreamer әзірлеушілері бұл қатеге қате кодын тағайындауға ерінген."
+
+msgid "Internal GStreamer error: code not implemented."
+msgstr "GStreamer ішкі қатесі: код іске асырылмаған."
+
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
+"GStreamer қатесі: күйді өзгерту сәтсіз аяқталды және кейбір элемент "
+"сәтсіздік себебімен дұрыс қате хабарын жібере алмады."
+
+msgid "Internal GStreamer error: pad problem."
+msgstr "GStreamer ішкі қатесі: блок (pad) мәселесі."
+
+msgid "Internal GStreamer error: thread problem."
+msgstr "GStreamer ішкі қатесі: ағын (thread) мәселесі."
+
+msgid "GStreamer error: negotiation problem."
+msgstr "GStreamer қатесі: келісу (negotiation) мәселесі."
+
+msgid "Internal GStreamer error: event problem."
+msgstr "GStreamer ішкі қатесі: оқиға мәселесі."
+
+msgid "Internal GStreamer error: seek problem."
+msgstr "GStreamer ішкі қатесі: іздеу (seek) мәселесі."
+
+msgid "Internal GStreamer error: caps problem."
+msgstr "GStreamer ішкі қатесі: мүмкіндіктер (caps) мәселесі."
+
+msgid "Internal GStreamer error: tag problem."
+msgstr "GStreamer ішкі қатесі: тег мәселесі."
+
+msgid "Your GStreamer installation is missing a plug-in."
+msgstr "GStreamer орнатылымыңызда плагин жетіспейді."
+
+msgid "GStreamer error: clock problem."
+msgstr "GStreamer қатесі: сағат мәселесі."
+
+msgid ""
+"This application is trying to use GStreamer functionality that has been "
+"disabled."
+msgstr ""
+"Бұл қолданба GStreamer-дің сөндірілген функциясын пайдалануға тырысуда."
+
+msgid "GStreamer encountered a general supporting library error."
+msgstr "GStreamer жалпы көмекші кітапхана қатесіне тап болды."
+
+msgid "Could not initialize supporting library."
+msgstr "Көмекші кітапхананы іске қосу мүмкін болмады."
+
+msgid "Could not close supporting library."
+msgstr "Көмекші кітапхананы жабу мүмкін болмады."
+
+msgid "Could not configure supporting library."
+msgstr "Көмекші кітапхананы баптау мүмкін болмады."
+
+msgid "Encoding error."
+msgstr "Кодтау қатесі."
+
+msgid "GStreamer encountered a general resource error."
+msgstr "GStreamer жалпы ресурс қатесіне тап болды."
+
+msgid "Resource not found."
+msgstr "Ресурс табылмады."
+
+msgid "Resource busy or not available."
+msgstr "Ресурс бос емес немесе қолжетімді емес."
+
+msgid "Could not open resource for reading."
+msgstr "Ресурсты оқу үшін ашу мүмкін болмады."
+
+msgid "Could not open resource for writing."
+msgstr "Ресурсты жазу үшін ашу мүмкін болмады."
+
+msgid "Could not open resource for reading and writing."
+msgstr "Ресурсты оқу және жазу үшін ашу мүмкін болмады."
+
+msgid "Could not close resource."
+msgstr "Ресурсты жабу мүмкін болмады."
+
+msgid "Could not read from resource."
+msgstr "Ресурстан оқу мүмкін болмады."
+
+msgid "Could not write to resource."
+msgstr "Ресурсқа жазу мүмкін болмады."
+
+msgid "Could not perform seek on resource."
+msgstr "Ресурста іздеу (seek) амалын орындау мүмкін болмады."
+
+msgid "Could not synchronize on resource."
+msgstr "Ресурста синхрондау мүмкін болмады."
+
+msgid "Could not get/set settings from/on resource."
+msgstr "Ресурстың баптауларын алу/орнату мүмкін болмады."
+
+msgid "No space left on the resource."
+msgstr "Ресурста бос орын қалмады."
+
+msgid "Not authorized to access resource."
+msgstr "Ресурсқа қол жеткізуге рұқсат жоқ."
+
+msgid "GStreamer encountered a general stream error."
+msgstr "GStreamer жалпы ағын қатесіне тап болды."
+
+msgid "Element doesn't implement handling of this stream. Please file a bug."
+msgstr "Элемент бұл ағынды өңдеуді іске асырмаған. Қате туралы хабарлаңыз."
+
+msgid "Could not determine type of stream."
+msgstr "Ағын түрін анықтау мүмкін болмады."
+
+msgid "The stream is of a different type than handled by this element."
+msgstr "Ағын түрі бұл элемент өңдейтін түрден өзгеше."
+
+msgid "There is no codec present that can handle the stream's type."
+msgstr "Ағын түрін өңдей алатын кодек жоқ."
+
+msgid "Could not decode stream."
+msgstr "Ағынды декодтау мүмкін болмады."
+
+msgid "Could not encode stream."
+msgstr "Ағынды кодтау мүмкін болмады."
+
+msgid "Could not demultiplex stream."
+msgstr "Ағынды демультиплекстеу мүмкін болмады."
+
+msgid "Could not multiplex stream."
+msgstr "Ағынды мультиплекстеу мүмкін болмады."
+
+msgid "The stream is in the wrong format."
+msgstr "Ағын пішімі қате."
+
+msgid "The stream is encrypted and decryption is not supported."
+msgstr "Ағын шифрленген және шифрды ашуға қолдау көрсетілмейді."
+
+msgid ""
+"The stream is encrypted and can't be decrypted because no suitable key has "
+"been supplied."
+msgstr ""
+"Ағын шифрленген және тиісті кілт берілмегендіктен, оның шифрын ашу мүмкін "
+"емес."
+
+#, c-format
+msgid "No error message for domain %s."
+msgstr "%s домені үшін қате хабары жоқ."
+
+#, c-format
+msgid "No standard error message for domain %s and code %d."
+msgstr "%s домені және %d коды үшін стандартты қате хабары жоқ."
+
+msgid "Selected clock cannot be used in pipeline."
+msgstr "Таңдалған сағатты конвейерде пайдалану мүмкін емес."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr "Тізілім кэшін %s жолына жазу қатесі: %s"
+
+msgid "title"
+msgstr "тақырыбы"
+
+msgid "commonly used title"
+msgstr "жиі қолданылатын тақырыбы"
+
+msgid "title sortname"
+msgstr "сұрыптау тақырыбы"
+
+msgid "commonly used title for sorting purposes"
+msgstr "сұрыптау мақсатында жиі қолданылатын тақырыбы"
+
+msgid "artist"
+msgstr "орындаушы"
+
+msgid "person(s) responsible for the recording"
+msgstr "жазбаға жауапты тұлға(лар)"
+
+msgid "artist sortname"
+msgstr "орындаушының сұрыптау аты"
+
+msgid "person(s) responsible for the recording for sorting purposes"
+msgstr "сұрыптау мақсатындағы жазбаға жауапты тұлға(лар)"
+
+msgid "album"
+msgstr "альбом"
+
+msgid "album containing this data"
+msgstr "осы деректерді қамтитын альбом"
+
+msgid "album sortname"
+msgstr "альбомның сұрыптау аты"
+
+msgid "album containing this data for sorting purposes"
+msgstr "сұрыптау мақсатындағы осы деректерді қамтитын альбом"
+
+msgid "album artist"
+msgstr "альбом орындаушысы"
+
+msgid "The artist of the entire album, as it should be displayed"
+msgstr "Көрсетілуі тиіс бүкіл альбомның орындаушысы"
+
+msgid "album artist sortname"
+msgstr "альбом орындаушысының сұрыптау аты"
+
+msgid "The artist of the entire album, as it should be sorted"
+msgstr "Сұрыпталуы тиіс бүкіл альбомның орындаушысы"
+
+msgid "date"
+msgstr "күні"
+
+msgid "date the data was created (as a GDate structure)"
+msgstr "деректер жасалған күн (GDate құрылымы ретінде)"
+
+msgid "datetime"
+msgstr "күн-уақыт"
+
+msgid "date and time the data was created (as a GstDateTime structure)"
+msgstr "деректер жасалған күн мен уақыт (GstDateTime құрылымы ретінде)"
+
+msgid "genre"
+msgstr "жанр"
+
+msgid "genre this data belongs to"
+msgstr "бұл деректер жататын жанр"
+
+msgid "comment"
+msgstr "түсініктеме"
+
+msgid "free text commenting the data"
+msgstr "деректерге қатысты еркін мәтіндік түсініктеме"
+
+msgid "extended comment"
+msgstr "кеңейтілген түсініктеме"
+
+msgid "free text commenting the data in key=value or key[en]=comment form"
+msgstr ""
+"кілт=мән немесе кілт[kk]=түсініктеме пішіміндегі деректерге қатысты еркін "
+"мәтіндік түсініктеме"
+
+msgid "track number"
+msgstr "жол нөмірі"
+
+msgid "track number inside a collection"
+msgstr "жинақтағы жол нөмірі"
+
+msgid "track count"
+msgstr "жолдар саны"
+
+msgid "count of tracks inside collection this track belongs to"
+msgstr "осы жол жататын жинақтағы жолдардың саны"
+
+msgid "disc number"
+msgstr "диск нөмірі"
+
+msgid "disc number inside a collection"
+msgstr "жинақтағы диск нөмірі"
+
+msgid "disc count"
+msgstr "дискілер саны"
+
+msgid "count of discs inside collection this disc belongs to"
+msgstr "осы диск жататын жинақтағы дискілердің саны"
+
+msgid "location"
+msgstr "орналасуы"
+
+msgid ""
+"Origin of media as a URI (location, where the original of the file or stream "
+"is hosted)"
+msgstr ""
+"Медианың шығу тегі URI ретінде (файлдың немесе ағынның түпнұсқасы орналасқан "
+"жер)"
+
+msgid "homepage"
+msgstr "үй парақшасы"
+
+msgid "Homepage for this media (i.e. artist or movie homepage)"
+msgstr ""
+"Осы медиаға арналған үй парақшасы (яғни орындаушы немесе фильм парақшасы)"
+
+msgid "description"
+msgstr "сипаттамасы"
+
+msgid "short text describing the content of the data"
+msgstr "деректер мазмұнын сипаттайтын қысқа мәтін"
+
+msgid "version"
+msgstr "нұсқасы"
+
+msgid "version of this data"
+msgstr "осы деректердің нұсқасы"
+
+msgid "ISRC"
+msgstr "ISRC"
+
+msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
+msgstr ""
+"International Standard Recording Code - http://www.ifpi.org/isrc/ қараңыз"
+
+msgid "organization"
+msgstr "ұйым"
+
+msgid "copyright"
+msgstr "авторлық құқық"
+
+msgid "copyright notice of the data"
+msgstr "деректердің авторлық құқық туралы ескертуі"
+
+msgid "copyright uri"
+msgstr "авторлық құқық URI"
+
+msgid "URI to the copyright notice of the data"
+msgstr "деректердің авторлық құқық туралы ескертуіне URI сілтемесі"
+
+msgid "encoded by"
+msgstr "кодтаған"
+
+msgid "name of the encoding person or organization"
+msgstr "кодтаған тұлғаның немесе ұйымның аты"
+
+msgid "contact"
+msgstr "байланыс"
+
+msgid "contact information"
+msgstr "байланыс ақпараты"
+
+msgid "license"
+msgstr "лицензия"
+
+msgid "license of data"
+msgstr "деректер лицензиясы"
+
+msgid "license uri"
+msgstr "лицензия URI"
+
+msgid "URI to the license of the data"
+msgstr "деректер лицензиясына URI сілтемесі"
+
+msgid "performer"
+msgstr "орындаушы"
+
+msgid "person(s) performing"
+msgstr "орындаушы тұлға(лар)"
+
+msgid "composer"
+msgstr "композитор"
+
+msgid "person(s) who composed the recording"
+msgstr "жазбаны шығарған тұлға(лар)"
+
+msgid "conductor"
+msgstr "дирижер"
+
+msgid "conductor/performer refinement"
+msgstr "дирижер/орындаушыны нақтылау"
+
+msgid "duration"
+msgstr "ұзақтығы"
+
+msgid "length in GStreamer time units (nanoseconds)"
+msgstr "GStreamer уақыт бірліктеріндегі ұзақтығы (наносекундтар)"
+
+msgid "codec"
+msgstr "кодек"
+
+msgid "codec the data is stored in"
+msgstr "деректер сақталған кодек"
+
+msgid "video codec"
+msgstr "видео кодегі"
+
+msgid "codec the video data is stored in"
+msgstr "видео деректері сақталған кодек"
+
+msgid "audio codec"
+msgstr "аудио кодегі"
+
+msgid "codec the audio data is stored in"
+msgstr "аудио деректері сақталған кодек"
+
+msgid "subtitle codec"
+msgstr "субтитр кодегі"
+
+msgid "codec the subtitle data is stored in"
+msgstr "субтитр деректері сақталған кодек"
+
+msgid "container format"
+msgstr "контейнер пішімі"
+
+msgid "container format the data is stored in"
+msgstr "деректер сақталған контейнер пішімі"
+
+msgid "bitrate"
+msgstr "битрейт"
+
+msgid "exact or average bitrate in bits/s"
+msgstr "бит/с есебімен нақты немесе орташа битрейт"
+
+msgid "nominal bitrate"
+msgstr "номиналды битрейт"
+
+msgid "nominal bitrate in bits/s"
+msgstr "бит/с есебімен номиналды битрейт"
+
+msgid "minimum bitrate"
+msgstr "минималды битрейт"
+
+msgid "minimum bitrate in bits/s"
+msgstr "бит/с есебімен минималды битрейт"
+
+msgid "maximum bitrate"
+msgstr "максималды битрейт"
+
+msgid "maximum bitrate in bits/s"
+msgstr "бит/с есебімен максималды битрейт"
+
+msgid "encoder"
+msgstr "кодер"
+
+msgid "encoder used to encode this stream"
+msgstr "осы ағынды кодтау үшін пайдаланылған кодер"
+
+msgid "encoder version"
+msgstr "кодер нұсқасы"
+
+msgid "version of the encoder used to encode this stream"
+msgstr "осы ағынды кодтау үшін пайдаланылған кодердің нұсқасы"
+
+msgid "serial"
+msgstr "сериялық"
+
+msgid "serial number of track"
+msgstr "жолдың сериялық нөмірі"
+
+msgid "replaygain track gain"
+msgstr "replaygain жол күшейтуі"
+
+msgid "track gain in dB"
+msgstr "дБ есебімен жол күшейтуі"
+
+msgid "r128 track gain"
+msgstr "r128 жол күшейтуі"
+
+msgid "track gain in dB (r128)"
+msgstr "дБ (r128) есебімен жол күшейтуі"
+
+msgid "replaygain track peak"
+msgstr "replaygain жол шыңы"
+
+msgid "peak of the track"
+msgstr "жолдың шыңы"
+
+msgid "replaygain album gain"
+msgstr "replaygain альбом күшейтуі"
+
+msgid "album gain in dB"
+msgstr "дБ есебімен альбом күшейтуі"
+
+msgid "r128 album gain"
+msgstr "r128 альбом күшейтуі"
+
+msgid "album gain in dB (r128)"
+msgstr "дБ (r128) есебімен альбом күшейтуі"
+
+msgid "replaygain album peak"
+msgstr "replaygain альбом шыңы"
+
+msgid "peak of the album"
+msgstr "альбомның шыңы"
+
+msgid "replaygain reference level"
+msgstr "replaygain эталондық деңгейі"
+
+msgid "reference level of track and album gain values"
+msgstr "жол және альбом күшейту мәндерінің эталондық деңгейі"
+
+msgid "language code"
+msgstr "тіл коды"
+
+msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
+msgstr ""
+"Осы ағынның ISO-639-1 немесе ISO-639-2 стандарттарына сәйкес келетін тіл коды"
+
+msgid "language name"
+msgstr "тіл аты"
+
+msgid "freeform name of the language this stream is in"
+msgstr "осы ағын тілінің еркін пішімдегі аты"
+
+msgid "image"
+msgstr "сурет"
+
+msgid "image related to this stream"
+msgstr "осы ағынға қатысты сурет"
+
+#. TRANSLATORS: 'preview image' = image that shows a preview of the full image
+msgid "preview image"
+msgstr "алдын ала қарау суреті"
+
+msgid "preview image related to this stream"
+msgstr "осы ағынға қатысты алдын ала қарау суреті"
+
+msgid "attachment"
+msgstr "салыным"
+
+msgid "file attached to this stream"
+msgstr "осы ағынға тіркелген файл"
+
+msgid "beats per minute"
+msgstr "минутына соққылар саны"
+
+msgid "number of beats per minute in audio"
+msgstr "аудиодағы минутына соққылар саны"
+
+msgid "keywords"
+msgstr "кілт сөздер"
+
+msgid "comma separated keywords describing the content"
+msgstr "мазмұнды сипаттайтын үтірмен ажыратылған кілт сөздер"
+
+msgid "geo location name"
+msgstr "гео орналасу аты"
+
+msgid ""
+"human readable descriptive location of where the media has been recorded or "
+"produced"
+msgstr ""
+"медиа жазылған немесе шығарылған жердің адам оқи алатын сипаттамалық орны"
+
+msgid "geo location latitude"
+msgstr "гео орналасу ендігі"
+
+msgid ""
+"geo latitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the equator, negative values for "
+"southern latitudes)"
+msgstr ""
+"медиа жазылған немесе шығарылған жердің WGS84 бойынша градуспен берілген "
+"ендігі (экваторда нөл, оңтүстік ендіктер үшін теріс мәндер)"
+
+msgid "geo location longitude"
+msgstr "гео орналасу бойлығы"
+
+msgid ""
+"geo longitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
+"negative values for western longitudes)"
+msgstr ""
+"медиа жазылған немесе шығарылған жердің WGS84 бойынша градуспен берілген "
+"бойлығы (Гринвичтегі нөлдік меридианда нөл, батыс бойлықтар үшін теріс "
+"мәндер)"
+
+msgid "geo location elevation"
+msgstr "гео орналасу биіктігі"
+
+msgid ""
+"geo elevation of where the media has been recorded or produced in meters "
+"according to WGS84 (zero is average sea level)"
+msgstr ""
+"медиа жазылған немесе шығарылған жердің WGS84 бойынша метрмен берілген "
+"биіктігі (нөл - орташа теңіз деңгейі)"
+
+msgid "geo location country"
+msgstr "гео орналасу елі"
+
+msgid "country (english name) where the media has been recorded or produced"
+msgstr "медиа жазылған немесе шығарылған ел (ағылшынша аты)"
+
+msgid "geo location city"
+msgstr "гео орналасу қаласы"
+
+msgid "city (english name) where the media has been recorded or produced"
+msgstr "медиа жазылған немесе шығарылған қала (ағылшынша аты)"
+
+msgid "geo location sublocation"
+msgstr "гео орналасу бөлігі"
+
+msgid ""
+"a location within a city where the media has been produced or created (e.g. "
+"the neighborhood)"
+msgstr "медиа шығарылған немесе жасалған қала ішіндегі орын (мысалы, аудан)"
+
+msgid "geo location horizontal error"
+msgstr "гео орналасудың горизонталды қатесі"
+
+msgid "expected error of the horizontal positioning measures (in meters)"
+msgstr "горизонталды позициялау өлшемдерінің күтілетін қатесі (метрмен)"
+
+msgid "geo location movement speed"
+msgstr "гео орналасудың қозғалыс жылдамдығы"
+
+msgid ""
+"movement speed of the capturing device while performing the capture in m/s"
+msgstr "түсіру кезіндегі түсіру құрылғысының қозғалыс жылдамдығы (м/с)"
+
+msgid "geo location movement direction"
+msgstr "гео орналасудың қозғалыс бағыты"
+
+msgid ""
+"indicates the movement direction of the device performing the capture of a "
+"media. It is represented as degrees in floating point representation, 0 "
+"means the geographic north, and increases clockwise"
+msgstr ""
+"медианы түсіруді орындайтын құрылғының қозғалыс бағытын көрсетеді. Ол "
+"жылжымалы нүктелі градус түрінде беріледі, 0 - географиялық солтүстік, сағат "
+"тілімен артады"
+
+msgid "geo location capture direction"
+msgstr "гео орналасудың түсіру бағыты"
+
+msgid ""
+"indicates the direction the device is pointing to when capturing  a media. "
+"It is represented as degrees in floating point  representation, 0 means the "
+"geographic north, and increases clockwise"
+msgstr ""
+"медианы түсіру кезінде құрылғы бағытталған жақты көрсетеді. Ол жылжымалы "
+"нүктелі градус түрінде беріледі, 0 - географиялық солтүстік, сағат тілімен "
+"артады"
+
+#. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
+msgid "show name"
+msgstr "шоу аты"
+
+msgid "Name of the tv/podcast/series show the media is from"
+msgstr "Медиа алынған телебағдарламаның/подкасттың/сериалдың аты"
+
+#. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
+msgid "show sortname"
+msgstr "шоудың сұрыптау аты"
+
+msgid ""
+"Name of the tv/podcast/series show the media is from, for sorting purposes"
+msgstr ""
+"Сұрыптау мақсатындағы медиа алынған телебағдарламаның/подкасттың/сериалдың "
+"аты"
+
+msgid "episode number"
+msgstr "эпизод нөмірі"
+
+msgid "The episode number in the season the media is part of"
+msgstr "Медиа бөлігі болып табылатын маусымдағы эпизод нөмірі"
+
+msgid "season number"
+msgstr "маусым нөмірі"
+
+msgid "The season number of the show the media is part of"
+msgstr "Медиа бөлігі болып табылатын шоудың маусым нөмірі"
+
+msgid "lyrics"
+msgstr "өлең мәтіні"
+
+msgid "The lyrics of the media, commonly used for songs"
+msgstr "Әдетте әндер үшін қолданылатын медианың өлең мәтіні"
+
+msgid "composer sortname"
+msgstr "композитордың сұрыптау аты"
+
+msgid "person(s) who composed the recording, for sorting purposes"
+msgstr "сұрыптау мақсатындағы жазбаны шығарған тұлға(лар)"
+
+msgid "grouping"
+msgstr "топтау"
+
+msgid ""
+"Groups related media that spans multiple tracks, like the different pieces "
+"of a concerto. It is a higher level than a track, but lower than an album"
+msgstr ""
+"Концерттің әртүрлі бөлімдері сияқты бірнеше жолдан тұратын қатысты медианы "
+"топтайды. Бұл жолдан жоғары, бірақ альбомнан төмен деңгей"
+
+msgid "user rating"
+msgstr "пайдаланушы рейтингі"
+
+msgid ""
+"Rating attributed by a user. The higher the rank, the more the user likes "
+"this media"
+msgstr ""
+"Пайдаланушы берген рейтинг. Ранг неғұрлым жоғары болса, пайдаланушыға бұл "
+"медиа соғұрлым ұнайды"
+
+msgid "device manufacturer"
+msgstr "құрылғы өндірушісі"
+
+msgid "Manufacturer of the device used to create this media"
+msgstr "Осы медианы жасау үшін пайдаланылған құрылғының өндірушісі"
+
+msgid "device model"
+msgstr "құрылғы моделі"
+
+msgid "Model of the device used to create this media"
+msgstr "Осы медианы жасау үшін пайдаланылған құрылғының моделі"
+
+msgid "application name"
+msgstr "қолданба аты"
+
+msgid "Application used to create the media"
+msgstr "Медианы жасау үшін пайдаланылған қолданба"
+
+msgid "application data"
+msgstr "қолданба деректері"
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr "Медиа ішіне серияланатын еркін қолданба деректері"
+
+msgid "image orientation"
+msgstr "сурет бағдары"
+
+msgid "How the image should be rotated or flipped before display"
+msgstr "Көрсету алдында суретті қалай бұру немесе айналдыру керек"
+
+msgid "publisher"
+msgstr "баспагер"
+
+msgid "Name of the label or publisher"
+msgstr "Лейблдің немесе баспагердің аты"
+
+msgid "interpreted-by"
+msgstr "түсіндірмесін жасаған"
+
+msgid "Information about the people behind a remix and similar interpretations"
+msgstr "Ремикс және ұқсас түсіндірмелердің авторлары туралы ақпарат"
+
+msgid "midi-base-note"
+msgstr "midi-base-note"
+
+msgid "Midi note number of the audio track."
+msgstr "Аудио жолдың Midi нота нөмірі."
+
+msgid "private-data"
+msgstr "private-data"
+
+msgid "Private data"
+msgstr "Жеке деректер"
+
+msgid "container-specific-track-id"
+msgstr "container-specific-track-id"
+
+msgid "Container-specific Track ID"
+msgstr "Контейнерге тән жол идентификаторы (Track ID)"
+
+#. separator between two strings
+msgid ", "
+msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr "Жарамсыз URI: %s"
+
+#, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr "%s протоколы үшін URI өңдеушісі табылмады"
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr "«%s» URI схемасына қолдау көрсетілмейді"
+
+#, c-format
+msgid "ERROR: from element %s: %s\n"
+msgstr "ҚАТЕ: %s элементінен: %s\n"
+
+#, c-format
+msgid ""
+"Additional debug info:\n"
+"%s\n"
+msgstr ""
+"Қосымша жөндеу ақпараты:\n"
+"%s\n"
+
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
+#, c-format
+msgid "link has no source [sink=%s@%p]"
+msgstr "байланыстың көзі жоқ [sink=%s@%p]"
+
+#, c-format
+msgid "link has no sink [source=%s@%p]"
+msgstr "байланыстың қабылдағышы (sink) жоқ [source=%s@%p]"
+
+msgid "No such property."
+msgstr "Мұндай қасиет жоқ."
+
+#, c-format
+msgid "no property \"%s\" in element \"%s\""
+msgstr "«%2$s» элементінде «%1$s» қасиеті жоқ"
+
+#, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "«%s» элементі GstPreset болып табылмайды"
+
+#, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "«%2$s» элементінде «%1$s» алдын ала баптауын орнату мүмкін болмады"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "«%s» элементі жоқ"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr ""
+"«%2$s» элементіндегі «%1$s» қасиетін «%3$s» мәніне орнату мүмкін болмады"
+
+#, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
+msgstr ""
+"«%2$s» элементінің ішкі бөлігіндегі «%1$s» қасиетін «%3$s» мәніне орнату "
+"мүмкін болмады"
+
+msgid "Delayed linking failed."
+msgstr "Кейінге қалдырылған байланыстыру сәтсіз аяқталды."
+
+#, c-format
+msgid "could not link %s to %s, %s can't handle caps %s"
+msgstr ""
+"%s және %s байланыстыру мүмкін болмады, %s элементі %s мүмкіндіктерін (caps) "
+"өңдей алмайды"
+
+#, c-format
+msgid "could not link %s to %s, neither element can handle caps %s"
+msgstr ""
+"%s және %s байланыстыру мүмкін болмады, ешбір элемент %s мүмкіндіктерін "
+"(caps) өңдей алмайды"
+
+#, c-format
+msgid "could not link %s to %s with caps %s"
+msgstr ""
+"%s және %s арасында %s мүмкіндіктерімен (caps) байланыс орнату мүмкін болмады"
+
+#, c-format
+msgid "could not link %s to %s"
+msgstr "%s және %s байланыстыру мүмкін болмады"
+
+#, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr "күтілмеген «%s» сілтемесі - еленбейді"
+
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr "күтілмеген «%s» блок-сілтемесі - еленбейді"
+
+#, c-format
+msgid "could not parse caps \"%s\""
+msgstr "«%s» мүмкіндіктерін (caps) талдау мүмкін болмады"
+
+#, c-format
+msgid "no sink element for URI \"%s\""
+msgstr "«%s» URI үшін қабылдағыш (sink) элементі жоқ"
+
+#, c-format
+msgid "no source element for URI \"%s\""
+msgstr "«%s» URI үшін көз (source) элементі жоқ"
+
+msgid "syntax error"
+msgstr "синтаксистік қате"
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "бос «%s» контейнері (bin) көрсетілген, бұған рұқсат жоқ"
+
+#, c-format
+msgid "no bin \"%s\", unpacking elements"
+msgstr "«%s» контейнері (bin) жоқ, элементтерді шығару"
+
+msgid "empty pipeline not allowed"
+msgstr "бос конвейерге рұқсат жоқ"
+
+msgid "Pipeline construction is invalid, please add queues."
+msgstr "Конвейер құрылымы дұрыс емес, кезектерді (queues) қосыңыз."
+
+msgid "A lot of buffers are being dropped."
+msgstr "Көптеген буферлер тасталуда."
+
+msgid "Internal data flow problem."
+msgstr "Деректер ағынының ішкі мәселесі."
+
+msgid "Internal data flow error."
+msgstr "Деректер ағынының ішкі қатесі."
+
+msgid "Internal clock error."
+msgstr "Ішкі сағат қатесі."
+
+msgid "Failed to map buffer."
+msgstr "Буферді сәйкестеу мүмкін болмады."
+
+msgid "Filter caps"
+msgstr "Мүмкіндіктерді сүзгілеу"
+
+msgid ""
+"Restrict the possible allowed capabilities (NULL means ANY). Setting this "
+"property takes a reference to the supplied GstCaps object."
+msgstr ""
+"Рұқсат етілген ықтимал мүмкіндіктерді шектеу (NULL кез келген дегенді "
+"білдіреді). Бұл қасиетті орнату берілген GstCaps объектісіне сілтеме алады."
+
+msgid "Caps Change Mode"
+msgstr "Мүмкіндіктерді өзгерту режимі"
+
+msgid "Filter caps change behaviour"
+msgstr "Мүмкіндіктерді өзгерту кезіндегі сүзгі әрекеті"
+
+msgid "No Temp directory specified."
+msgstr "Уақытша бума көрсетілмеген."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "«%s» уақытша файлын жасау мүмкін болмады."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "«%s» файлын оқу үшін ашу мүмкін болмады."
+
+msgid "Error while writing to download file."
+msgstr "Жүктеу файлына жазу кезінде қате орын алды."
+
+msgid "No file name specified for writing."
+msgstr "Жазу үшін файл аты көрсетілмеген."
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "«%s» файлын жазу үшін ашу мүмкін болмады."
+
+#, c-format
+msgid "Error closing file \"%s\"."
+msgstr "«%s» файлын жабу қатесі."
+
+#, c-format
+msgid "Error while seeking in file \"%s\"."
+msgstr "«%s» файлында іздеу (seek) кезінде қате орын алды."
+
+#, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "«%s» файлына жазу кезінде қате орын алды."
+
+msgid "No file name specified for reading."
+msgstr "Оқу үшін файл аты көрсетілмеген."
+
+#, c-format
+msgid "Could not get info on \"%s\"."
+msgstr "«%s» туралы ақпарат алу мүмкін болмады."
+
+#, c-format
+msgid "\"%s\" is a directory."
+msgstr "«%s» — бума."
+
+#, c-format
+msgid "File \"%s\" is a socket."
+msgstr "«%s» файлы сокет болып табылады."
+
+msgid "Failed after iterations as requested."
+msgstr "Сұралған итерациялардан кейін сәтсіз аяқталды."
+
+msgid "eos-after and error-after can't both be defined."
+msgstr "eos-after және error-after екеуі бірдей анықтала алмайды."
+
+msgid "caps"
+msgstr "caps"
+
+msgid "detected capabilities in stream"
+msgstr "ағында анықталған мүмкіндіктер"
+
+msgid "minimum"
+msgstr "минималды"
+
+msgid "force caps"
+msgstr "мүмкіндіктерді мәжбүрлеу"
+
+msgid "force caps without doing a typefind"
+msgstr "түрді анықтамай-ақ мүмкіндіктерді мәжбүрлеу"
+
+msgid "Stream doesn't contain enough data."
+msgstr "Ағында деректер жеткіліксіз."
+
+msgid "Stream contains no data."
+msgstr "Ағында деректер жоқ."
+
+#, c-format
+msgid "%sImplemented Interfaces%s:\n"
+msgstr "%sІске асырылған интерфейстер%s:\n"
+
+#, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sЭлемент жалаушалары%s:\n"
+
+msgid "readable"
+msgstr "оқылатын"
+
+msgid "writable"
+msgstr "жазылатын"
+
+msgid "deprecated"
+msgstr "ескірген"
+
+msgid "controllable"
+msgstr "басқарылатын"
+
+msgid "conditionally available"
+msgstr "шартты түрде қолжетімді"
+
+msgid "can be set only at object construction time"
+msgstr "тек объектіні жасау кезінде орнатылуы мүмкін"
+
+msgid "changeable in NULL, READY, PAUSED or PLAYING state"
+msgstr "NULL, READY, PAUSED немесе PLAYING күйлерінде өзгертіледі"
+
+msgid "changeable only in NULL, READY or PAUSED state"
+msgstr "тек NULL, READY немесе PAUSED күйлерінде өзгертіледі"
+
+msgid "changeable only in NULL or READY state"
+msgstr "тек NULL немесе READY күйлерінде өзгертіледі"
+
+msgid "Blacklisted files:"
+msgstr "Қара тізімдегі файлдар:"
+
+#, c-format
+msgid "%sTotal count%s: %s"
+msgstr "%sЖалпы саны%s: %s"
+
+#, c-format
+msgid "%d blacklisted file"
+msgid_plural "%d blacklisted files"
+msgstr[0] "%d қара тізімдегі файл"
+
+#, c-format
+msgid "%d plugin"
+msgid_plural "%d plugins"
+msgstr[0] "%d плагин"
+
+#, c-format
+msgid "%d blacklist entry"
+msgid_plural "%d blacklist entries"
+msgstr[0] "%d қара тізім жазбасы"
+
+#, c-format
+msgid "%d feature"
+msgid_plural "%d features"
+msgstr[0] "%d мүмкіндік"
+
+msgid "Print all elements"
+msgstr "Барлық элементтерді шығару"
+
+msgid "Print list of blacklisted files"
+msgstr "Қара тізімдегі файлдардың тізімін шығару"
+
+msgid ""
+"Print a machine-parsable list of features the specified plugin or all "
+"plugins provide.\n"
+"                                       Useful in connection with external "
+"automatic plugin installation mechanisms"
+msgstr ""
+"Көрсетілген плагин немесе барлық плагиндер беретін мүмкіндіктердің машинамен "
+"талданатын тізімін шығару. Сыртқы автоматты плагин орнату механизмдерімен "
+"бірге пайдалы"
+
+msgid "List the plugin contents"
+msgstr "Плагин мазмұнын тізімдеу"
+
+msgid ""
+"A slashes ('/') separated list of types of elements (also known as klass) to "
+"list. (unordered)"
+msgstr ""
+"Тізімдеуге арналған элементтер түрлерінің (кластар ретінде де белгілі) қиғаш "
+"сызықпен ('/') бөлінген тізімі. (сұрыпталмаған)"
+
+msgid "Check if the specified element or plugin exists"
+msgstr "Көрсетілген элемент немесе плагин бар-жоғын тексеру"
+
+msgid ""
+"When checking if an element or plugin exists, also check that its version is "
+"at least the version specified"
+msgstr ""
+"Элемент немесе плагин бар-жоғын тексеру кезінде, сондай-ақ оның нұсқасы "
+"көрсетілген нұсқадан төмен емес екенін тексеру"
+
+msgid "Print supported URI schemes, with the elements that implement them"
+msgstr ""
+"Қолдау көрсетілетін URI схемаларын оларды іске асыратын элементтермен бірге "
+"шығару"
+
+msgid ""
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+"Шығыста түстерді сөндіру. Сондай-ақ «GST_INSPECT_NO_COLORS» орта айнымалысын "
+"кез келген мәнге орнату арқылы бұған қол жеткізуге болады."
+
+msgid "Color output, even when not sending to a tty."
+msgstr "Тіпті tty-ге жіберілмесе де, шығысты бояу."
+
+#, c-format
+msgid "Could not load plugin file: %s\n"
+msgstr "Плагин файлын жүктеу мүмкін болмады: %s\n"
+
+#, c-format
+msgid "No such element or plugin '%s'\n"
+msgstr "«%s» атты элемент немесе плагин табылмады\n"
+
+msgid "Index statistics"
+msgstr "Индекс статистикасы"
+
+#, c-format
+msgid "ERROR: %s\n"
+msgstr "ҚАТЕ: %s\n"
+
+#, c-format
+msgid ""
+"Details:\n"
+"%s\n"
+msgstr ""
+"Мәліметтер:\n"
+"%s\n"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Конвейер ОЙНАТУ күйіне қойылуда ...\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "ҚАТЕ: конвейер ойнатқысы келмейді.\n"
+
+#, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "«%2$s» (%3$s) элементінен №%1$u хабарлама алынды: "
+
+#, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr "«%2$s:%3$s» (%4$s) блогынан (pad) №%1$u хабарлама алынды: "
+
+#, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr "«%2$s» (%3$s) объектісінен №%1$u хабарлама алынды: "
+
+#, c-format
+msgid "Got message #%u (%s): "
+msgstr "№%u (%s) хабарлама алынды: "
+
+#, c-format
+msgid "Got EOS from element \"%s\".\n"
+msgstr "«%s» элементінен ағын соңы (EOS) алынды.\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Ағын соңы (EOS) алынды — конвейер тоқтатылуда...\n"
+
+#, c-format
+msgid "FOUND TAG      : found by element \"%s\".\n"
+msgstr "ТЕГ ТАБЫЛДЫ      : «%s» элементі тапты.\n"
+
+#, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "ТЕГ ТАБЫЛДЫ      : «%s:%s» блогы тапты.\n"
+
+#, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "ТЕГ ТАБЫЛДЫ      : «%s» объектісі тапты.\n"
+
+msgid "FOUND TAG\n"
+msgstr "ТЕГ ТАБЫЛДЫ\n"
+
+#, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "МАЗМҰН (TOC) ТАБЫЛДЫ : «%s» элементі тапты.\n"
+
+#, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "МАЗМҰН (TOC) ТАБЫЛДЫ : «%s» объектісі тапты.\n"
+
+msgid "FOUND TOC\n"
+msgstr "МАЗМҰН (TOC) ТАБЫЛДЫ\n"
+
+#, c-format
+msgid ""
+"INFO:\n"
+"%s\n"
+msgstr ""
+"АҚПАРАТ:\n"
+"%s\n"
+
+#, c-format
+msgid "WARNING: from element %s: %s\n"
+msgstr "ЕСКЕРТУ: %s элементінен: %s\n"
+
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Конвейер ДАЙЫН (PREROLLED) ...\n"
+
+msgid "Prerolled, waiting for buffering to finish...\n"
+msgstr "Дайын, буферлеудің аяқталуы күтілуде...\n"
+
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr "Дайын, орындалудың аяқталуы күтілуде...\n"
+
+msgid "buffering..."
+msgstr "буферлеу..."
+
+msgid "Done buffering, setting pipeline to PLAYING ...\n"
+msgstr "Буферлеу аяқталды, конвейер ОЙНАТУ күйіне қойылуда ...\n"
+
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
+msgid "Buffering, setting pipeline to PAUSED ...\n"
+msgstr "Буферлеу, конвейер АЯЛДАТУ күйіне қойылуда ...\n"
+
+msgid "Redistribute latency...\n"
+msgstr "Күту уақытын қайта бөлу...\n"
+
+#, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr "%2$s сұрауы бойынша күй %1$s мәніне орнатылуда...\n"
+
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
+msgid "Interrupt: Stopping pipeline ...\n"
+msgstr "Үзіліс: Конвейер тоқтатылуда ...\n"
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Ағын соңын (EOS) күту кезіндегі үзіліс — конвейер тоқтатылуда...\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+"Жұмысты аяқтау кезіндегі ағын соңы (EOS) іске қосылған — Конвейерге EOS "
+"мәжбүрлеу\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Ағын соңы (EOS) күтілуде...\n"
+
+#, c-format
+msgid "Progress: (%s) %s\n"
+msgstr "Орындалуы: (%s) %s\n"
+
+#, c-format
+msgid "Missing element: %s\n"
+msgstr "Жетіспейтін элемент: %s\n"
+
+#, c-format
+msgid "Got context from element '%s': %s=%s\n"
+msgstr "«%s» элементінен контекст алынды: %s=%s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "ҚАТЕ: конвейер дайын (preroll) болғысы келмейді.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Ағын соңын (EOS) күту кезінде қате орын алды\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "Windows-тың жоғары дәлдікті сағатын пайдалану, дәлдік: %u мс\n"
+
+msgid "Output tags (also known as metadata)"
+msgstr "Тегтерді шығару (метадеректер ретінде де белгілі)"
+
+msgid "Output TOC (chapters and editions)"
+msgstr "Мазмұнды (TOC) шығару (тараулар мен басылымдар)"
+
+msgid "Output status information and property notifications"
+msgstr "Күй туралы ақпаратты және қасиет туралы хабарландыруларды шығару"
+
+msgid "Do not print any progress information"
+msgstr "Ешқандай орындалу ақпаратын шығармау"
+
+msgid "Output messages"
+msgstr "Хабарламаларды шығару"
+
+msgid ""
+"Do not output status information for the specified property if verbose "
+"output is enabled (can be used multiple times)"
+msgstr ""
+"Егер толық (verbose) шығыс іске қосылған болса, көрсетілген қасиет үшін күй "
+"ақпаратын шығармау (бірнеше рет пайдалануға болады)"
+
+msgid "PROPERTY-NAME"
+msgstr "ҚАСИЕТ-АТЫ"
+
+msgid "Set the name of the program"
+msgstr "Бағдарламаның атын орнату"
+
+msgid "PROGRAM-NAME"
+msgstr "БАҒДАРЛАМА-АТЫ"
+
+msgid "Do not install a fault handler"
+msgstr "Қателерді өңдеушіні орнатпау"
+
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr "Конвейерді жабу алдында көздерге (sources) ағын соңын (EOS) мәжбүрлеу"
+
+msgid "Gather and print index statistics"
+msgstr "Индекс статистикасын жинау және шығару"
+
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+"Конвейердің ағымдағы орнын шығармау. Егер бұл опция көрсетілмесе, stdout TTY "
+"болған кезде орын шығарылады. stdout TTY болмаған кезде орынды шығаруды іске "
+"қосу үшін «force-position» опциясын пайдаланыңыз"
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+"Stdout TTY болмаса да, конвейердің ағымдағы орнын шығаруға рұқсат беру. Егер "
+"«no-position» опциясы көрсетілсе, бұл опцияның әсері болмайды"
+
+#, c-format
+msgid "ERROR: pipeline could not be constructed: %s.\n"
+msgstr "ҚАТЕ: конвейерді құрастыру мүмкін болмады: %s.\n"
+
+msgid "ERROR: pipeline could not be constructed.\n"
+msgstr "ҚАТЕ: конвейерді құрастыру мүмкін болмады.\n"
+
+#, c-format
+msgid "WARNING: erroneous pipeline: %s\n"
+msgstr "ЕСКЕРТУ: қате конвейер: %s\n"
+
+msgid "ERROR: the 'pipeline' element wasn't found.\n"
+msgstr "ҚАТЕ: 'pipeline' элементі табылмады.\n"
+
+msgid "Setting pipeline to PAUSED ...\n"
+msgstr "Конвейер АЯЛДАТУ күйіне қойылуда ...\n"
+
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Конвейерді АЯЛДАТУ күйіне қою сәтсіз аяқталды.\n"
+
+msgid "Pipeline is live and does not need PREROLL ...\n"
+msgstr "Конвейер тікелей эфирде және оған ДАЙЫНДАУ (PREROLL) қажет емес ...\n"
+
+msgid "Pipeline is PREROLLING ...\n"
+msgstr "Конвейер ДАЙЫНДАЛУДА (PREROLLING) ...\n"
+
+msgid "Execution ended after %"
+msgstr "Орындау % соң аяқталды"
+
+msgid "Setting pipeline to NULL ...\n"
+msgstr "Конвейер НӨЛ (NULL) күйіне қойылуда ...\n"
+
+msgid "Freeing pipeline ...\n"
+msgstr "Конвейер босатылуда ...\n"
