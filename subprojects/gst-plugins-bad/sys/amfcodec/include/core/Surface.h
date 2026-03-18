@@ -1,4 +1,4 @@
-// 
+//
 // Notice Regarding Standards.  AMD does not provide a license or sublicense to
 // any Intellectual Property Rights relating to any standards, including but not
 // limited to any audio and/or video codec technologies such as MPEG-2, MPEG-4;
@@ -6,9 +6,9 @@
 // (collectively, the "Media Technologies"). For clarity, you will pay any
 // royalties due for such third party technologies, which may include the Media
 // Technologies that are owed as a result of AMD providing the Software to you.
-// 
-// MIT license 
-// 
+//
+// MIT license
+//
 // Copyright (c) 2018 Advanced Micro Devices, Inc. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -62,24 +62,29 @@ namespace amf
         AMF_SURFACE_P010,               ///< 10 - planar 4:2:0 Y width x height + packed UV width/2 x height/2 - 10 bit per component (16 allocated, upper 10 bits are used)
         AMF_SURFACE_RGBA_F16,           ///< 11 - packed 4:4:4 - 16 bit per component float
         AMF_SURFACE_UYVY,               ///< 12 - packed 4:2:2 the similar to YUY2 but Y and UV swapped: Byte 0=8-bit Cb; Byte 1=8-bit Y'0; Byte 2=8-bit Cr Byte 3=8-bit Y'1; (used the same DX/CL/Vulkan storage as YUY2)
-        AMF_SURFACE_R10G10B10A2,        ///< 13 - packed 4:4:4 to 4 bytes, 10 bit per RGB component, 2 bits per A 
+        AMF_SURFACE_R10G10B10A2,        ///< 13 - packed 4:4:4 to 4 bytes, 10 bit per RGB component, 2 bits per A, ABGR
         AMF_SURFACE_Y210,               ///< 14 - packed 4:2:2 - Word 0=10-bit Y'0; Word 1=10-bit Cb; Word 2=10-bit Y'1; Word 3=10-bit Cr
-        AMF_SURFACE_AYUV,               ///< 15 - packed 4:4:4 - 8 bit per component YUVA
-        AMF_SURFACE_Y410,               ///< 16 - packed 4:4:4 - 10 bit per YUV component, 2 bits per A, AVYU 
-        AMF_SURFACE_Y416,               ///< 16 - packed 4:4:4 - 16 bit per component 4 bytes, AVYU
-        AMF_SURFACE_GRAY32,             ///< 17 - single component - 32 bit
-        AMF_SURFACE_P012,               ///< 18 - planar 4:2:0 Y width x height + packed UV width/2 x height/2 - 12 bit per component (16 allocated, upper 12 bits are used)
-        AMF_SURFACE_P016,               ///< 19 - planar 4:2:0 Y width x height + packed UV width/2 x height/2 - 16 bit per component (16 allocated, all bits are used)
+        AMF_SURFACE_AYUV,               ///< 15 - packed 4:4:4 - 8 bit per component VUYA
+        AMF_SURFACE_Y410,               ///< 16 - packed 4:4:4 - 10 bit per YUV component, 2 bits per A, AVYU
+        AMF_SURFACE_Y416,               ///< 17 - packed 4:4:4 - 16 bit per component 8 bytes, UYVA
+        AMF_SURFACE_GRAY32,             ///< 18 - single component - 32 bit
+        AMF_SURFACE_P012,               ///< 19 - planar 4:2:0 Y width x height + packed UV width/2 x height/2 - 12 bit per component (16 allocated, upper 12 bits are used)
+        AMF_SURFACE_P016,               ///< 20 - planar 4:2:0 Y width x height + packed UV width/2 x height/2 - 16 bit per component (16 allocated, all bits are used)
+        AMF_SURFACE_Y216,               ///< 21 - packed 4:2:2 - Word 0=16-bit Y'0; Word 1=16-bit Cb; Word 2=16-bit Y'1; Word 3=16-bit Cr
+        AMF_SURFACE_R16G16,             ///< 22 - packed 4:4 - 16-bit R; 16-bit G
+        AMF_SURFACE_R24G8,              ///< 23 - packed 4:4 - 24-bit R; 8-bit G
+        AMF_SURFACE_R32,                ///< 24 - single component float - 32 bit
+        AMF_SURFACE_R16,                ///< 25 - single component float - 16 bit
 
         AMF_SURFACE_FIRST = AMF_SURFACE_NV12,
-        AMF_SURFACE_LAST = AMF_SURFACE_P016
+        AMF_SURFACE_LAST = AMF_SURFACE_R16
     } AMF_SURFACE_FORMAT;
     //----------------------------------------------------------------------------------------------
     // AMF_SURFACE_USAGE translates to D3D11_BIND_FLAG or VkImageUsageFlags
     // bit mask
     //----------------------------------------------------------------------------------------------
     typedef enum AMF_SURFACE_USAGE_BITS
-    {                                                       // D3D11                        D3D12                                       Vulkan 
+    {                                                       // D3D11                        D3D12                                       Vulkan
         AMF_SURFACE_USAGE_DEFAULT           = 0x80000000,   // will apply default           D3D12_RESOURCE_FLAG_NONE                    VK_IMAGE_USAGE_TRANSFER_SRC_BIT| VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT
         AMF_SURFACE_USAGE_NONE              = 0x00000000,   // 0,                           D3D12_RESOURCE_FLAG_NONE,                   0
         AMF_SURFACE_USAGE_SHADER_RESOURCE   = 0x00000001,   // D3D11_BIND_SHADER_RESOURCE,	D3D12_RESOURCE_FLAG_NONE					VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT
@@ -87,7 +92,11 @@ namespace amf
         AMF_SURFACE_USAGE_UNORDERED_ACCESS  = 0x00000004,   // D3D11_BIND_UNORDERED_ACCESS, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT
         AMF_SURFACE_USAGE_TRANSFER_SRC      = 0x00000008,   //								D3D12_RESOURCE_FLAG_NONE    	            VK_IMAGE_USAGE_TRANSFER_SRC_BIT
         AMF_SURFACE_USAGE_TRANSFER_DST      = 0x00000010,   //								D3D12_RESOURCE_FLAG_NONE		            VK_IMAGE_USAGE_TRANSFER_DST_BIT
-        AMF_SURFACE_USAGE_LINEAR            = 0x00000020    
+        AMF_SURFACE_USAGE_LINEAR            = 0x00000020,   //
+        AMF_SURFACE_USAGE_NOSYNC            = 0x00000040,   //							    no fence (AMFFenceGUID) created	            no semaphore (AMFVulkanSync::hSemaphore) created
+        AMF_SURFACE_USAGE_DECODER_DST       = 0x00000080,   //							    AMFResourceDecodeGUID is set to 1           VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
+        AMF_SURFACE_USAGE_DECODER_DPB       = 0x00000100,   //							    	                                        VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR
+        AMF_SURFACE_USAGE_NO_TRANSITION     = 0x00000200,   //							    	                                        no layout transition
     } AMF_SURFACE_USAGE_BITS;
     typedef amf_flags AMF_SURFACE_USAGE;
     //----------------------------------------------------------------------------------------------
@@ -195,8 +204,15 @@ namespace amf
     #pragma clang diagnostic push
     #pragma clang diagnostic ignored "-Woverloaded-virtual"
 #endif
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+#endif
         virtual void                AMF_STD_CALL AddObserver(AMFSurfaceObserver* pObserver) = 0;
         virtual void                AMF_STD_CALL RemoveObserver(AMFSurfaceObserver* pObserver) = 0;
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 #ifdef __clang__
     #pragma clang diagnostic pop
 #endif

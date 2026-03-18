@@ -1,4 +1,4 @@
-// 
+//
 // Notice Regarding Standards.  AMD does not provide a license or sublicense to
 // any Intellectual Property Rights relating to any standards, including but not
 // limited to any audio and/or video codec technologies such as MPEG-2, MPEG-4;
@@ -6,9 +6,9 @@
 // (collectively, the "Media Technologies"). For clarity, you will pay any
 // royalties due for such third party technologies, which may include the Media
 // Technologies that are owed as a result of AMD providing the Software to you.
-// 
-// MIT license 
-// 
+//
+// MIT license
+//
 // Copyright (c) 2018 Advanced Micro Devices, Inc. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -64,6 +64,7 @@ namespace amf
         AMF_MEMORY_COMPUTE_FOR_DX11 = 9, // deprecated, the same as AMF_MEMORY_OPENCL
         AMF_MEMORY_VULKAN           = 10,
         AMF_MEMORY_DX12             = 11,
+        AMF_MEMORY_LAST
     } AMF_MEMORY_TYPE;
 
     //----------------------------------------------------------------------------------------------
@@ -81,7 +82,7 @@ namespace amf
     // bit mask
     //----------------------------------------------------------------------------------------------
     typedef enum AMF_MEMORY_CPU_ACCESS_BITS
-    {                                           // D3D11                    D3D12                      Vulkan 
+    {                                           // D3D11                    D3D12                      Vulkan
         AMF_MEMORY_CPU_DEFAULT  = 0x80000000,   // 0                     ,  D3D12_HEAP_TYPE_DEFAULT ,  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
         AMF_MEMORY_CPU_NONE     = 0x00000000,   // 0                     ,  D3D12_HEAP_TYPE_DEFAULT ,
         AMF_MEMORY_CPU_READ     = 0x00000001,   // D3D11_CPU_ACCESS_READ ,  D3D12_HEAP_TYPE_READBACK,  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT

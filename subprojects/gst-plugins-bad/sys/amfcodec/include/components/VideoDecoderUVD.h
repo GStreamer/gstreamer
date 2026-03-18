@@ -1,4 +1,4 @@
-// 
+//
 // Notice Regarding Standards.  AMD does not provide a license or sublicense to
 // any Intellectual Property Rights relating to any standards, including but not
 // limited to any audio and/or video codec technologies such as MPEG-2, MPEG-4;
@@ -6,9 +6,9 @@
 // (collectively, the "Media Technologies"). For clarity, you will pay any
 // royalties due for such third party technologies, which may include the Media
 // Technologies that are owed as a result of AMD providing the Software to you.
-// 
-// MIT license 
-// 
+//
+// MIT license
+//
 // Copyright (c) 2018 Advanced Micro Devices, Inc. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -49,22 +49,22 @@
 #define AMFVideoDecoderUVD_H264_SVC                  L"AMFVideoDecoderUVD_H264_SVC"
 #define AMFVideoDecoderUVD_MJPEG                     L"AMFVideoDecoderUVD_MJPEG"
 #define AMFVideoDecoderHW_H265_HEVC                  L"AMFVideoDecoderHW_H265_HEVC"
-#define AMFVideoDecoderHW_H265_MAIN10                L"AMFVideoDecoderHW_H265_MAIN10"
+#define AMFVideoDecoderHW_H265_MAIN10                L"AMFVideoDecoderHW_H265_MAIN10" // deprecated, AMFVideoDecoderHW_H265_HEVC can be used
 #define AMFVideoDecoderHW_VP9                        L"AMFVideoDecoderHW_VP9"
-#define AMFVideoDecoderHW_VP9_10BIT                  L"AMFVideoDecoderHW_VP9_10BIT"
+#define AMFVideoDecoderHW_VP9_10BIT                  L"AMFVideoDecoderHW_VP9_10BIT" // deprecated, AMFVideoDecoderHW_VP9 can be used
 #define AMFVideoDecoderHW_AV1                        L"AMFVideoDecoderHW_AV1"
-#define AMFVideoDecoderHW_AV1_12BIT                  L"AMFVideoDecoderHW_AV1_12BIT"
+#define AMFVideoDecoderHW_AV1_12BIT                  L"AMFVideoDecoderHW_AV1_12BIT" // deprecated, AMFVideoDecoderHW_AV1 can be used
 
 enum AMF_VIDEO_DECODER_MODE_ENUM
 {
     AMF_VIDEO_DECODER_MODE_REGULAR = 0,     // DPB delay is based on number of reference frames + 1 (from SPS)
     AMF_VIDEO_DECODER_MODE_COMPLIANT,       // DPB delay is based on profile - up to 16
-    AMF_VIDEO_DECODER_MODE_LOW_LATENCY,     // DPB delay is 0. Expect stream with no reordering in P-Frames or B-Frames. B-frames can be present as long as they do not introduce any frame re-ordering 
+    AMF_VIDEO_DECODER_MODE_LOW_LATENCY,     // DPB delay is 0. Expect stream with no reordering in P-Frames or B-Frames. B-frames can be present as long as they do not introduce any frame re-ordering
 };
 enum AMF_TIMESTAMP_MODE_ENUM
 {
     AMF_TS_PRESENTATION = 0, // default. decoder will preserve timestamps from input to output
-       AMF_TS_SORT,             // decoder will resort PTS list 
+       AMF_TS_SORT,             // decoder will resort PTS list
     AMF_TS_DECODE            // timestamps reflect decode order - decoder will reuse them
 };
 
@@ -86,7 +86,7 @@ enum AMF_TIMESTAMP_MODE_ENUM
 #define AMF_VIDEO_DECODER_DEFAULT_SURFACES_FOR_TRANSIT  5                      // if AMF_VIDEO_DECODER_SURFACE_POOL_SIZE is 0 , AMF_VIDEO_DECODER_SURFACE_POOL_SIZE=AMF_VIDEO_DECODER_DEFAULT_SURFACES_FOR_TRANSIT+AMF_VIDEO_DECODER_DPB_SIZE
 
 // Decoder capabilities - exposed in AMFCaps interface
-#define AMF_VIDEO_DECODER_CAP_NUM_OF_STREAMS            L"NumOfStreams"               // amf_int64; maximum number of decode streams supported 
+#define AMF_VIDEO_DECODER_CAP_NUM_OF_STREAMS            L"NumOfStreams"               // amf_int64; maximum number of decode streams supported
 
 
 // metadata information: can be set on output surface
@@ -97,7 +97,7 @@ enum AMF_TIMESTAMP_MODE_ENUM
 #define AMF_VIDEO_DECODER_HDR_METADATA                  L"HdrMetadata"          // AMFBuffer containing AMFHDRMetadata; default NULL
 
 /////// AMF_VIDEO_DECODER_FULL_RANGE_COLOR deprecated, use AMF_VIDEO_DECODER_COLOR_RANGE
-#define AMF_VIDEO_DECODER_FULL_RANGE_COLOR              L"FullRangeColor"       // bool; default = false; false =  studio range, true = full range 
+#define AMF_VIDEO_DECODER_FULL_RANGE_COLOR              L"FullRangeColor"       // bool; default = false; false =  studio range, true = full range
 ///////
 #define AMF_VIDEO_DECODER_COLOR_RANGE                   L"ColorRange"           // amf_int64(AMF_COLOR_RANGE_ENUM) default = AMF_COLOR_RANGE_UNDEFINED
 
@@ -105,8 +105,8 @@ enum AMF_TIMESTAMP_MODE_ENUM
 #define AMF_VIDEO_DECODER_COLOR_PROFILE                 L"ColorProfile"         // amf_int64(AMF_VIDEO_CONVERTER_COLOR_PROFILE_ENUM); default = AMF_VIDEO_CONVERTER_COLOR_PROFILE_UNKNOWN - mean AUTO
 
 // properties to be set on decoder if internal converter is used
-#define AMF_VIDEO_DECODER_OUTPUT_TRANSFER_CHARACTERISTIC        L"OutColorTransferChar"     // amf_int64(AMF_COLOR_TRANSFER_CHARACTERISTIC_ENUM); default = AMF_COLOR_TRANSFER_CHARACTERISTIC_UNDEFINED, ISO/IEC 23001-8_2013   7.2 See VideoDecoderUVD.h for enum 
-#define AMF_VIDEO_DECODER_OUTPUT_COLOR_PRIMARIES                L"OutputColorPrimaries"     // amf_int64(AMF_COLOR_PRIMARIES_ENUM); default = AMF_COLOR_PRIMARIES_UNDEFINED, ISO/IEC 23001-8_2013   7.1 See ColorSpace.h for enum 
+#define AMF_VIDEO_DECODER_OUTPUT_TRANSFER_CHARACTERISTIC        L"OutColorTransferChar"     // amf_int64(AMF_COLOR_TRANSFER_CHARACTERISTIC_ENUM); default = AMF_COLOR_TRANSFER_CHARACTERISTIC_UNDEFINED, ISO/IEC 23001-8_2013   7.2 See VideoDecoderUVD.h for enum
+#define AMF_VIDEO_DECODER_OUTPUT_COLOR_PRIMARIES                L"OutputColorPrimaries"     // amf_int64(AMF_COLOR_PRIMARIES_ENUM); default = AMF_COLOR_PRIMARIES_UNDEFINED, ISO/IEC 23001-8_2013   7.1 See ColorSpace.h for enum
 #define AMF_VIDEO_DECODER_OUTPUT_HDR_METADATA                   L"OutHDRMetadata"           // AMFBuffer containing AMFHDRMetadata; default NULL
 
 #define AMF_VIDEO_DECODER_LOW_LATENCY                           L"LowLatencyDecode"         // amf_bool; default = false; true = low latency decode, false = regular decode
@@ -122,5 +122,14 @@ enum AMF_TIMESTAMP_MODE_ENUM
 
 #define AMF_VIDEO_DECODER_ENABLE_SMART_ACCESS_VIDEO             L"EnableDecoderSmartAccessVideo"     // amf_bool; default = false; true = enables smart access video feature
 #define AMF_VIDEO_DECODER_SKIP_TRANSFER_SMART_ACCESS_VIDEO      L"SkipTransferSmartAccessVideo"      // amf_bool; default = false; true = keeps output on GPU where it ran
+#define AMF_VIDEO_DECODER_OUTPUT_FORMAT                         L"OutputDecodeFormat"                // amf_int64 (AMF_SURFACE_FORMAT) detected output format
+
+#define AMF_VIDEO_DECODER_CAP_SUPPORT_SMART_ACCESS_VIDEO        L"SupportSmartAccessVideo"           // amf_bool; returns true if system supports SmartAccess Video
+
+#define AMF_VIDEO_DECODER_SURFACE_CPU                           L"SurfaceCpu"                        // amf_bool. default = false, true = hint to decoder that output will be consumed on cpu
+
+#define AMF_VIDEO_DECODER_INSTANCE_INDEX                        L"DecoderInstance"                   // amf_int64; selected HW instance idx
+#define AMF_VIDEO_DECODER_CAP_NUM_OF_HW_INSTANCES               L"NumOfHwDecoderInstances"           // amf_int64 number of HW decoder instances
+
 
 #endif //#ifndef AMF_VideoDecoderUVD_h

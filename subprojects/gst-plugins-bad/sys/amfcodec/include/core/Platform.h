@@ -1,4 +1,4 @@
-// 
+//
 // Notice Regarding Standards.  AMD does not provide a license or sublicense to
 // any Intellectual Property Rights relating to any standards, including but not
 // limited to any audio and/or video codec technologies such as MPEG-2, MPEG-4;
@@ -6,9 +6,9 @@
 // (collectively, the "Media Technologies"). For clarity, you will pay any
 // royalties due for such third party technologies, which may include the Media
 // Technologies that are owed as a result of AMD providing the Software to you.
-// 
-// MIT license 
-// 
+//
+// MIT license
+//
 // Copyright (c) 2018 Advanced Micro Devices, Inc. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -47,20 +47,43 @@
             #define AMF_CORE_LINK __declspec(dllimport)
         #endif
     #endif
-#elif defined(__linux)        
+#elif defined(__linux)
         #if defined(AMF_CORE_EXPORTS)
             #define AMF_CORE_LINK __attribute__((visibility("default")))
         #else
             #define AMF_CORE_LINK
         #endif
-#else 
+#else
     #define AMF_CORE_LINK
 #endif // #ifdef _WIN32
+
+#if defined(_DEBUG) && !defined(DEBUG) // prevents other headers to #define DEBUG without assigned value what causes failure in PAL build
+#define DEBUG 1
+#endif
 
 #define AMF_MACRO_STRING2(x) #x
 #define AMF_MACRO_STRING(x) AMF_MACRO_STRING2(x)
 
+#ifdef _WIN32
 #define AMF_TODO(_todo) (__FILE__ "(" AMF_MACRO_STRING(__LINE__) "): TODO: "_todo)
+#else
+//TODO is not helpful on linux because the pragma already includes line number and file
+#define AMF_TODO
+#endif
+
+/**
+*******************************************************************************
+*   AMF_UNICODE
+*
+*   @brief
+*       Macro to convert string constant into wide char string constant
+*
+*   Auxilary AMF_UNICODE_ macro is needed as otherwise it is not possible to use AMF_UNICODE(__FILE__)
+*   Microsoft macro _T also uses 2 passes to accomplish that
+*******************************************************************************
+*/
+#define AMF_UNICODE(s) AMF_UNICODE_(s)
+#define AMF_UNICODE_(s) L ## s
 
 
  #if defined(__GNUC__) || defined(__clang__)
@@ -82,6 +105,12 @@ typedef signed int HRESULT;
 #include <stdint.h>
 #include <string.h>
 
+#if defined(_MSC_VER)
+    #define AMF_NO_VTABLE           __declspec(novtable)
+#else
+    #define AMF_NO_VTABLE
+#endif
+
 #if defined(_WIN32)
 
 
@@ -98,16 +127,6 @@ typedef signed int HRESULT;
     #define AMF_INLINE              __inline
     #define AMF_FORCEINLINE         __forceinline
 #endif
-    #define AMF_NO_VTABLE           __declspec(novtable)
-
-    #define AMFPRId64   "I64d"
-    #define LPRId64    L"I64d"
-
-    #define AMFPRIud64   "Iu64d"
-    #define LPRIud64    L"Iu64d"
-
-    #define AMFPRIx64   "I64x"
-    #define LPRIx64    L"I64x"
 
 #else // !WIN32 - Linux and Mac
 
@@ -121,24 +140,42 @@ typedef signed int HRESULT;
     #define AMF_INLINE              __inline__
     #define AMF_FORCEINLINE         __inline__
 #endif
-    #define AMF_NO_VTABLE           
 
-    #if !defined(AMFPRId64)
-        #define AMFPRId64    "lld"
-        #define LPRId64     L"lld"
-
-        #define AMFPRIud64    "ulld"
-        #define LPRIud64     L"ulld"
-
-        #define AMFPRIx64    "llx"
-        #define LPRIx64     L"llx"
-    #endif
 
 #endif // WIN32
 
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
+    #include <cinttypes>
+    #define AMFPRId64   PRId64
+    #define AMFPRIud64  PRIu64
+    #define AMFPRIx64   PRIx64
+#else
+#if defined(_MSC_VER)
+    #define AMFPRId64   "I64d"
+    #define AMFPRIud64  "Iu64d"
+    #define AMFPRIx64   "I64x"
+#else
+    #if !defined(AMFPRId64)
+        #define AMFPRId64    "lld"
+        #define AMFPRIud64   "ulld"
+        #define AMFPRIx64    "llx"
+    #endif
+#endif
+#endif
+
+#ifndef LPRId64
+#define LPRId64   AMF_UNICODE(AMFPRId64)
+#endif
+#ifndef LPRIud64
+#define LPRIud64  AMF_UNICODE(AMFPRIud64)
+#endif
+#ifndef LPRIx64
+#define LPRIx64   AMF_UNICODE(AMFPRIx64)
+#endif
+
 
 #if defined(_WIN32)
-#define AMF_WEAK __declspec( selectany ) 
+#define AMF_WEAK __declspec( selectany )
 #elif defined (__GNUC__) || defined (__GCC__) || defined(__clang__)//GCC or CLANG
 #define AMF_WEAK __attribute__((weak))
 #endif
@@ -169,14 +206,14 @@ typedef     void                amf_void;
 typedef     bool                amf_bool;
 #else
 typedef     amf_uint8           amf_bool;
-#define     true                1 
-#define     false               0 
+#define     true                1
+#define     false               0
 #endif
 
-typedef     long                amf_long; 
-typedef     int                 amf_int; 
-typedef     unsigned long       amf_ulong; 
-typedef     unsigned int        amf_uint; 
+typedef     long                amf_long;
+typedef     int                 amf_int;
+typedef     unsigned long       amf_ulong;
+typedef     unsigned int        amf_uint;
 
 typedef     amf_int64           amf_pts;     // in 100 nanosecs
 
@@ -207,15 +244,22 @@ typedef struct AMFRect
     amf_int32 right;
     amf_int32 bottom;
 #if defined(__cplusplus)
-    bool operator==(const AMFRect& other) const
-    {
-         return left == other.left && top == other.top && right == other.right && bottom == other.bottom; 
-    }
-    AMF_INLINE bool operator!=(const AMFRect& other) const { return !operator==(other); }
     amf_int32 Width() const { return right - left; }
     amf_int32 Height() const { return bottom - top; }
 #endif
 } AMFRect;
+
+#if defined(__cplusplus)
+static AMF_INLINE bool operator==(const AMFRect& self, const AMFRect& other)
+{
+        return self.left == other.left && self.top == other.top && self.right == other.right && self.bottom == other.bottom;
+}
+
+static AMF_INLINE bool operator!=(const AMFRect& self, const AMFRect& other)
+{
+    return !operator==(self, other);
+}
+#endif
 
 static AMF_INLINE struct AMFRect AMFConstructRect(amf_int32 left, amf_int32 top, amf_int32 right, amf_int32 bottom)
 {
@@ -230,7 +274,7 @@ typedef struct AMFSize
 #if defined(__cplusplus)
     bool operator==(const AMFSize& other) const
     {
-         return width == other.width && height == other.height; 
+         return width == other.width && height == other.height;
     }
     AMF_INLINE bool operator!=(const AMFSize& other) const { return !operator==(other); }
 #endif
@@ -249,7 +293,7 @@ typedef struct AMFPoint
 #if defined(__cplusplus)
     bool operator==(const AMFPoint& other) const
     {
-         return x == other.x && y == other.y; 
+         return x == other.x && y == other.y;
     }
     AMF_INLINE bool operator!=(const AMFPoint& other) const { return !operator==(other); }
 #endif
@@ -348,7 +392,7 @@ typedef struct AMFRate
 #if defined(__cplusplus)
     bool operator==(const AMFRate& other) const
     {
-         return num == other.num && den == other.den; 
+         return num == other.num && den == other.den;
     }
     AMF_INLINE bool operator!=(const AMFRate& other) const { return !operator==(other); }
 #endif
@@ -367,7 +411,7 @@ typedef struct AMFRatio
 #if defined(__cplusplus)
     bool operator==(const AMFRatio& other) const
     {
-         return num == other.num && den == other.den; 
+         return num == other.num && den == other.den;
     }
     AMF_INLINE bool operator!=(const AMFRatio& other) const { return !operator==(other); }
 #endif
@@ -402,7 +446,7 @@ typedef struct AMFColor
 #if defined(__cplusplus)
     bool operator==(const AMFColor& other) const
     {
-         return r == other.r && g == other.g && b == other.b && a == other.a; 
+         return r == other.r && g == other.g && b == other.b && a == other.a;
     }
     AMF_INLINE bool operator!=(const AMFColor& other) const { return !operator==(other); }
 #endif

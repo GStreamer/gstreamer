@@ -9,7 +9,7 @@
 // 
 // MIT license 
 // 
-// Copyright (c) 2017 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018 Advanced Micro Devices, Inc. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -30,30 +30,25 @@
 // THE SOFTWARE.
 //
 
-/**
-***************************************************************************************************
-* @file  Version.h
-* @brief Version declaration
-***************************************************************************************************
-*/
-#ifndef AMF_Version_h
-#define AMF_Version_h
+//-------------------------------------------------------------------------------------------------
+// FFMPEG components definitions
+//-------------------------------------------------------------------------------------------------
+ 
+#ifndef AMF_ComponentsFFMPEG_h
+#define AMF_ComponentsFFMPEG_h
+
 #pragma once
 
-#include "Platform.h"
 
-#define AMF_MAKE_FULL_VERSION(VERSION_MAJOR, VERSION_MINOR, VERSION_RELEASE, VERSION_BUILD_NUM)    ( ((amf_uint64)(VERSION_MAJOR) << 48ull) | ((amf_uint64)(VERSION_MINOR) << 32ull) | ((amf_uint64)(VERSION_RELEASE) << 16ull)  | (amf_uint64)(VERSION_BUILD_NUM))
+#if defined(_WIN32)
+    #if defined(_M_AMD64)
+        #define FFMPEG_DLL_NAME    L"amf-component-ffmpeg64.dll"
+    #else
+        #define FFMPEG_DLL_NAME    L"amf-component-ffmpeg32.dll"
+    #endif
+#elif defined(__linux)
+    #define FFMPEG_DLL_NAME    L"amf-component-ffmpeg.so"
+#endif
 
-#define AMF_GET_MAJOR_VERSION(x)      ((x >> 48ull) & 0xFFFF)
-#define AMF_GET_MINOR_VERSION(x)      ((x >> 32ull) & 0xFFFF)
-#define AMF_GET_SUBMINOR_VERSION(x)   ((x >> 16ull) & 0xFFFF)
-#define AMF_GET_BUILD_VERSION(x)      ((x >>  0ull) & 0xFFFF)
 
-#define AMF_VERSION_MAJOR       1
-#define AMF_VERSION_MINOR       5
-#define AMF_VERSION_RELEASE     0
-#define AMF_VERSION_BUILD_NUM   0
-
-#define AMF_FULL_VERSION AMF_MAKE_FULL_VERSION(AMF_VERSION_MAJOR, AMF_VERSION_MINOR, AMF_VERSION_RELEASE, AMF_VERSION_BUILD_NUM)
-
-#endif //#ifndef AMF_Version_h
+#endif //#ifndef AMF_ComponentsFFMPEG_h

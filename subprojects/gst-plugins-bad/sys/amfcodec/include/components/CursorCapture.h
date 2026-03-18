@@ -30,30 +30,25 @@
 // THE SOFTWARE.
 //
 
-/**
-***************************************************************************************************
-* @file  Version.h
-* @brief Version declaration
-***************************************************************************************************
-*/
-#ifndef AMF_Version_h
-#define AMF_Version_h
+//-------------------------------------------------------------------------------------------------
+// Cursor capture interface declaration
+//-------------------------------------------------------------------------------------------------
+
+#ifndef AMF_CursorCapture_h
+#define AMF_CursorCapture_h
 #pragma once
 
-#include "Platform.h"
+namespace amf
+{
+    class AMFCursorCapture : public AMFInterface
+    {
+    public:
+        AMF_DECLARE_IID(0x166efa1a, 0x19b8, 0x42f2, 0x86, 0x0f, 0x56, 0x69, 0xca, 0x7a, 0x85, 0x4c)
+        virtual AMF_RESULT AMF_STD_CALL AcquireCursor(amf::AMFSurface** pSurface) = 0;
+        virtual AMF_RESULT AMF_STD_CALL Reset() = 0;
+    };
 
-#define AMF_MAKE_FULL_VERSION(VERSION_MAJOR, VERSION_MINOR, VERSION_RELEASE, VERSION_BUILD_NUM)    ( ((amf_uint64)(VERSION_MAJOR) << 48ull) | ((amf_uint64)(VERSION_MINOR) << 32ull) | ((amf_uint64)(VERSION_RELEASE) << 16ull)  | (amf_uint64)(VERSION_BUILD_NUM))
+    typedef AMFInterfacePtr_T<AMFCursorCapture> AMFCursorCapturePtr;
+}
 
-#define AMF_GET_MAJOR_VERSION(x)      ((x >> 48ull) & 0xFFFF)
-#define AMF_GET_MINOR_VERSION(x)      ((x >> 32ull) & 0xFFFF)
-#define AMF_GET_SUBMINOR_VERSION(x)   ((x >> 16ull) & 0xFFFF)
-#define AMF_GET_BUILD_VERSION(x)      ((x >>  0ull) & 0xFFFF)
-
-#define AMF_VERSION_MAJOR       1
-#define AMF_VERSION_MINOR       5
-#define AMF_VERSION_RELEASE     0
-#define AMF_VERSION_BUILD_NUM   0
-
-#define AMF_FULL_VERSION AMF_MAKE_FULL_VERSION(AMF_VERSION_MAJOR, AMF_VERSION_MINOR, AMF_VERSION_RELEASE, AMF_VERSION_BUILD_NUM)
-
-#endif //#ifndef AMF_Version_h
+#endif // #ifndef AMF_CursorCapture_h

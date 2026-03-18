@@ -41,6 +41,12 @@
 namespace amf
 {
 #endif
+    typedef enum AMF_VULKAN_EXTENSION_TYPE
+    {
+        AMF_VULKAN_EXTENSION_UNKNOWN    = 0,
+        AMF_VARIANT_TIMELINE_SEMAPHORE  = 1,
+    } AMF_VULKAN_EXTENSION_TYPE;
+
     typedef struct AMFVulkanDevice
     {
         amf_size            cbSizeof;           // sizeof(AMFVulkanDevice)
@@ -55,11 +61,19 @@ namespace amf
         amf_size            cbSizeof;           // sizeof(AMFVulkanSync)
         void*               pNext;              // reserved for extensions
         VkSemaphore         hSemaphore;         // VkSemaphore; can be nullptr
-        bool                bSubmitted;         // if true - wait for hSemaphore. re-submit hSemaphore if not synced by other ways and set to true
+        amf_bool            bSubmitted;         // if true - wait for hSemaphore. re-submit hSemaphore if not synced by other ways and set to true, ignored if timeline
         VkFence             hFence;             // To sync on CPU; can be nullptr. Submitted in vkQueueSubmit. If waited for hFence, null it, do not delete or reset.
     } AMFVulkanSync;
 
-    typedef struct AMFVulkanBuffer
+    typedef struct AMFVulkanTimeline // can be attached to AMFVulkanSync::pNext
+    {
+        amf_size            cbSizeof;           // sizeof(AMFVulkanTimeline)
+        AMF_VULKAN_EXTENSION_TYPE eExtensionType;// identifies extensions to make extension chains in the future AMF_VARIANT_TIMELINE_SEMAPHORE
+        void*               pNext;              // reserved for extensions
+        amf_uint64          uiCount;             // count for timeline semaphores
+    } AMFVulkanTimeline;
+
+        typedef struct AMFVulkanBuffer
     {
         amf_size            cbSizeof;           // sizeof(AMFVulkanBuffer)
         void*               pNext;              // reserved for extensions
@@ -90,6 +104,14 @@ namespace amf
         AMFVulkanSync       Sync;               // To sync on GPU
     } AMFVulkanSurface;
 
+    typedef struct AMFVulkanSurface1
+    {
+        amf_size            cbSizeof;           // sizeof(AMFVulkanSurface)
+        void*               pNext;              // reserved for extensions
+        // surface properties
+        amf_uint32          eTiling;            // VkImageTiling
+    } AMFVulkanSurface1;
+
     typedef struct AMFVulkanView
     {
         amf_size            cbSizeof;           // sizeof(AMFVulkanView)
@@ -104,6 +126,7 @@ namespace amf
     } AMFVulkanView;
 
 #define AMF_CONTEXT_VULKAN_COMPUTE_QUEUE  L"VulkanComputeQueue" // amf_int64; default=0; Compute queue index in range [0, (VkQueueFamilyProperties.queueCount-1)] of the compute queue family.
+#define AMF_CONTEXT_VULKAN_USE_TIMELINE_SEMAPHORES  L"VulkanTimelineSemaphores" //  amf_bool; default=false; Use timeline semaphores in Vulkan
 
 #if defined(__cplusplus)
 } // namespace amf

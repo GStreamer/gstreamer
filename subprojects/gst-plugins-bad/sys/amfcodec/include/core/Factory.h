@@ -110,10 +110,17 @@ extern "C"
     #if defined(_M_AMD64)
         #define AMF_DLL_NAME    L"amfrt64.dll"
         #define AMF_DLL_NAMEA   "amfrt64.dll"
+
+        #define AMFLITE_DLL_NAME    L"amfrtlt64.dll"
+        #define AMFLITE_DLL_NAMEA   "amfrtlt64.dll"
+
 #else
         #define AMF_DLL_NAME    L"amfrt32.dll"
         #define AMF_DLL_NAMEA   "amfrt32.dll"
-    #endif
+
+        #define AMFLITE_DLL_NAME    L"amfrtlt32.dll"
+        #define AMFLITE_DLL_NAMEA   "amfrtlt32.dll"
+#endif
 #elif defined(__ANDROID__) && !defined(AMF_ANDROID_ENCODER)
     #define AMF_DLL_NAME    L"libamf.so"
     #define AMF_DLL_NAMEA    "libamf.so"
@@ -124,9 +131,17 @@ extern "C"
     #if defined(__x86_64__) || defined(__aarch64__)
         #define AMF_DLL_NAME    L"libamfrt64.so.1"
         #define AMF_DLL_NAMEA   "libamfrt64.so.1"
+
+        #define AMFLITE_DLL_NAME    L"libamfrtlt64.so.1"
+        #define AMFLITE_DLL_NAMEA   "libamfrtlt64.so.1"
+
     #else
         #define AMF_DLL_NAME    L"libamfrt32.so.1"
         #define AMF_DLL_NAMEA   "libamfrt32.so.1"
+
+        #define AMFLITE_DLL_NAME    L"libamfrtlt32.so.1"
+        #define AMFLITE_DLL_NAMEA   "libamfrtlt32.so.1"
+
     #endif
 #endif
 //----------------------------------------------------------------------------------------------

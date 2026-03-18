@@ -49,7 +49,7 @@ namespace amf
         }
 #else
 #define AMF_DECLARE_IID(name, _data1, _data2, _data3, _data41, _data42, _data43, _data44, _data45, _data46, _data47, _data48) \
-        AMF_INLINE static const AMFGuid IID_##name(void) \
+        AMF_INLINE static AMFGuid IID_##name(void) \
         { \
             AMFGuid uid = {_data1, _data2, _data3, _data41, _data42, _data43, _data44, _data45, _data46, _data47, _data48}; \
             return uid; \

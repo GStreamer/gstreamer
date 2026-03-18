@@ -61,6 +61,7 @@ namespace amf
         AMF_CHANNEL_ORDER_RGBA          = 4,
         AMF_CHANNEL_ORDER_ARGB          = 5,
         AMF_CHANNEL_ORDER_YUY2          = 6,
+        AMF_CHANNEL_ORDER_ABGR          = 7,
     } AMF_CHANNEL_ORDER;
     //----------------------------------------------------------------------------------------------
     typedef enum AMF_CHANNEL_TYPE

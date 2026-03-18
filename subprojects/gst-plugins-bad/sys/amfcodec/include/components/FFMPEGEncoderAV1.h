@@ -1,5 +1,15 @@
 //
-// Copyright (c) 2017 Advanced Micro Devices, Inc. All rights reserved.
+// Notice Regarding Standards.  AMD does not provide a license or sublicense to
+// any Intellectual Property Rights relating to any standards, including but not
+// limited to any audio and/or video codec technologies such as MPEG-2, MPEG-4;
+// AVC/H.264; HEVC/H.265; AAC decode/FFMPEG; AAC encode/FFMPEG; VC-1; and MP3
+// (collectively, the "Media Technologies"). For clarity, you will pay any
+// royalties due for such third party technologies, which may include the Media
+// Technologies that are owed as a result of AMD providing the Software to you.
+//
+// MIT license
+//
+// Copyright (c) 2018 Advanced Micro Devices, Inc. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,34 +30,15 @@
 // THE SOFTWARE.
 //
 
-#ifndef AMF_CurrentTime_h
-#define AMF_CurrentTime_h
+//-------------------------------------------------------------------------------------------------
+// HEVCEncoderFFMPEG  interface declaration
+//-------------------------------------------------------------------------------------------------
+#ifndef AMF_AV1EncoderFFMPEG_h
+#define AMF_AV1EncoderFFMPEG_h
 
-#include "Platform.h"
-#include "Interface.h"
+#pragma once
 
-namespace amf
-{
-	// Current time interface class. This interface object can be passed
-	// as a property to components requiring synchronized timing. The
-	// implementation is:
-	// - first call to Get() starts time and returns 0
-	// - subsequent calls to Get() returns values relative to 0
-	// - Reset() puts time back at 0 at next Get() call
-	//
-	class AMF_NO_VTABLE AMFCurrentTime : public AMFInterface
-	{
-	public:
+#define FFMPEG_ENCODER_AV1 L"AV1EncoderFFMPEG"
 
-		virtual amf_pts AMF_STD_CALL Get() = 0;
 
-		virtual void AMF_STD_CALL Reset() = 0;
-	};
-
-	//----------------------------------------------------------------------------------------------
-	// smart pointer
-	//----------------------------------------------------------------------------------------------
-	typedef AMFInterfacePtr_T<AMFCurrentTime> AMFCurrentTimePtr;
-	//----------------------------------------------------------------------------------------------}
-}
-#endif // AMF_CurrentTime_h
+#endif //#ifndef AMF_HEVCEncoderFFMPEG_h

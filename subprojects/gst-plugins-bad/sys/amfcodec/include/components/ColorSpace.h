@@ -37,6 +37,8 @@
 #define AMF_ColorSpace_h
 #pragma once
 
+#include "../core/Platform.h"
+
 // YUV <--> RGB conversion matrix with range
 typedef enum AMF_VIDEO_CONVERTER_COLOR_PROFILE_ENUM
 {
@@ -64,7 +66,7 @@ typedef enum AMF_COLOR_PRIMARIES_ENUM // as in VUI color_primaries AVC and HEVC
     AMF_COLOR_PRIMARIES_RESERVED    = 3,
     AMF_COLOR_PRIMARIES_BT470M      = 4,
     AMF_COLOR_PRIMARIES_BT470BG     = 5,
-    AMF_COLOR_PRIMARIES_SMPTE170M   = 6,
+    AMF_COLOR_PRIMARIES_SMPTE170M   = 6, //BT601
     AMF_COLOR_PRIMARIES_SMPTE240M   = 7,
     AMF_COLOR_PRIMARIES_FILM        = 8,
     AMF_COLOR_PRIMARIES_BT2020      = 9,
@@ -98,6 +100,26 @@ typedef enum AMF_COLOR_TRANSFER_CHARACTERISTIC_ENUM // as in VUI transfer_charac
     AMF_COLOR_TRANSFER_CHARACTERISTIC_ARIB_STD_B67  = 18, //HLG
 } AMF_COLOR_TRANSFER_CHARACTERISTIC_ENUM;
 
+typedef enum AMF_COLOR_MATRIX_COEFF_ENUM // as in VUI matrix coefficinet for encoder
+{
+    AMF_COLOR_MATRIX_COEFF_UNKNOWN      = -1,
+    AMF_COLOR_MATRIX_COEFF_GBR          = 0, // RGB
+    AMF_COLOR_MATRIX_COEFF_BT_709       = 1, // BT.709
+    AMF_COLOR_MATRIX_COEFF_UNSPECIFIED  = 2, // Unspecified
+    AMF_COLOR_MATRIX_COEFF_RESERVED     = 3, // For future use
+    AMF_COLOR_MATRIX_COEFF_FCC          = 4, // US FCC 73.628
+    AMF_COLOR_MATRIX_COEFF_BT_470_B_G   = 5, // BT.470 System B, G (historical)
+    AMF_COLOR_MATRIX_COEFF_BT_601       = 6, // BT.601
+    AMF_COLOR_MATRIX_COEFF_SMPTE_240    = 7, // SMPTE 240 M
+    AMF_COLOR_MATRIX_COEFF_SMPTE_YCGCO  = 8, // YCgCo
+    AMF_COLOR_MATRIX_COEFF_BT_2020_NCL  = 9, // BT.2020 non-constant luminance, BT.2100 YCbCr
+    AMF_COLOR_MATRIX_COEFF_BT_2020_CL   = 10, // BT.2020 constant luminance
+    AMF_COLOR_MATRIX_COEFF_SMPTE_2085   = 11, // SMPTE ST 2085 YDzDx
+    AMF_COLOR_MATRIX_COEFF_CHROMAT_NCL  = 12, // (only used in AV1) Chromaticity-derived non-constant luminance
+    AMF_COLOR_MATRIX_COEFF_CHROMAT_CL   = 13, // (only used in AV1) Chromaticity-derived constant luminance
+    AMF_COLOR_MATRIX_COEFF_ICTCP        = 14  // (only used in AV1) BT.2100 ICtCp
+} AMF_COLOR_MATRIX_COEFFICIENTS_ENUM;
+
 typedef enum AMF_COLOR_BIT_DEPTH_ENUM
 {
     AMF_COLOR_BIT_DEPTH_UNDEFINED   = 0,
@@ -116,6 +138,26 @@ typedef struct AMFHDRMetadata
     amf_uint16  maxContentLightLevel;       // nit value 
     amf_uint16  maxFrameAverageLightLevel;  // nit value 
 } AMFHDRMetadata;
+
+#if defined(__cplusplus)
+// Fieldwise equality comparison.
+// C-style structs don't have this by default.
+AMF_INLINE bool operator==(const AMFHDRMetadata& lhs, const AMFHDRMetadata& rhs)
+{
+    return (lhs.redPrimary[0] == rhs.redPrimary[0] &&
+        lhs.redPrimary[1] == rhs.redPrimary[1] &&
+        lhs.greenPrimary[0] == rhs.greenPrimary[0] &&
+        lhs.greenPrimary[1] == rhs.greenPrimary[1] &&
+        lhs.bluePrimary[0] == rhs.bluePrimary[0] &&
+        lhs.bluePrimary[1] == rhs.bluePrimary[1] &&
+        lhs.whitePoint[0] == rhs.whitePoint[0] &&
+        lhs.whitePoint[1] == rhs.whitePoint[1] &&
+        lhs.maxMasteringLuminance == rhs.maxMasteringLuminance &&
+        lhs.minMasteringLuminance == rhs.minMasteringLuminance &&
+        lhs.maxContentLightLevel == rhs.maxContentLightLevel &&
+        lhs.maxFrameAverageLightLevel == rhs.maxFrameAverageLightLevel);
+}
+#endif
 
 
 typedef enum AMF_COLOR_RANGE_ENUM

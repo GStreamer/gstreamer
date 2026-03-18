@@ -9,7 +9,7 @@
 // 
 // MIT license 
 // 
-// Copyright (c) 2017 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2018 Advanced Micro Devices, Inc. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -30,30 +30,24 @@
 // THE SOFTWARE.
 //
 
-/**
-***************************************************************************************************
-* @file  Version.h
-* @brief Version declaration
-***************************************************************************************************
-*/
-#ifndef AMF_Version_h
-#define AMF_Version_h
+//-------------------------------------------------------------------------------------------------
+// VideoDecoderFFMPEG  interface declaration
+//-------------------------------------------------------------------------------------------------
+#ifndef AMF_VideoDecoderFFMPEG_h
+#define AMF_VideoDecoderFFMPEG_h
+
 #pragma once
 
-#include "Platform.h"
+#define FFMPEG_VIDEO_DECODER    L"VideoDecoderFFMPEG"
 
-#define AMF_MAKE_FULL_VERSION(VERSION_MAJOR, VERSION_MINOR, VERSION_RELEASE, VERSION_BUILD_NUM)    ( ((amf_uint64)(VERSION_MAJOR) << 48ull) | ((amf_uint64)(VERSION_MINOR) << 32ull) | ((amf_uint64)(VERSION_RELEASE) << 16ull)  | (amf_uint64)(VERSION_BUILD_NUM))
+#define VIDEO_DECODER_ENABLE_DECODING      L"EnableDecoding"   // bool (default = true) - if false, component will not decode anything
+#define VIDEO_DECODER_CODEC_ID             L"CodecID"          // amf_int64 (AMF_STREAM_CODEC_ID_ENUM) codec ID
+#define VIDEO_DECODER_EXTRA_DATA           L"ExtraData"        // interface to AMFBuffer
+#define VIDEO_DECODER_RESOLUTION           L"Resolution"       // AMFSize 
+#define VIDEO_DECODER_BITRATE              L"BitRate"          // amf_int64 (default = 0)
+#define VIDEO_DECODER_FRAMERATE            L"FrameRate"        // AMFRate
+#define VIDEO_DECODER_SEEK_POSITION        L"SeekPosition"     // amf_int64 (default = 0)
 
-#define AMF_GET_MAJOR_VERSION(x)      ((x >> 48ull) & 0xFFFF)
-#define AMF_GET_MINOR_VERSION(x)      ((x >> 32ull) & 0xFFFF)
-#define AMF_GET_SUBMINOR_VERSION(x)   ((x >> 16ull) & 0xFFFF)
-#define AMF_GET_BUILD_VERSION(x)      ((x >>  0ull) & 0xFFFF)
+#define VIDEO_DECODER_COLOR_TRANSFER_CHARACTERISTIC L"ColorTransferChar"    // amf_int64(AMF_COLOR_TRANSFER_CHARACTERISTIC_ENUM); default = AMF_COLOR_TRANSFER_CHARACTERISTIC_UNDEFINED, ISO/IEC 23001-8_2013   7.2
 
-#define AMF_VERSION_MAJOR       1
-#define AMF_VERSION_MINOR       5
-#define AMF_VERSION_RELEASE     0
-#define AMF_VERSION_BUILD_NUM   0
-
-#define AMF_FULL_VERSION AMF_MAKE_FULL_VERSION(AMF_VERSION_MAJOR, AMF_VERSION_MINOR, AMF_VERSION_RELEASE, AMF_VERSION_BUILD_NUM)
-
-#endif //#ifndef AMF_Version_h
+#endif //#ifndef AMF_VideoDecoderFFMPEG_h

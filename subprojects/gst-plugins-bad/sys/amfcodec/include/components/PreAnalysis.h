@@ -92,8 +92,11 @@ enum AMF_PA_HIGH_MOTION_QUALITY_BOOST_MODE_ENUM
 
 
 // PA object properties
-#define AMF_PA_ENGINE_TYPE                          L"PAEngineType"                         // AMF_MEMORY_TYPE (Host, DX11, OpenCL, Vulkan, Auto default : UNKNOWN (Auto))" - determines how the object is initialized and what kernels to use
+#define AMF_PA_ENGINE_TYPE                          L"PAEngineType"                         // AMF_MEMORY_TYPE (Host, DX11, OpenCL, Vulkan, DX12, Auto default : UNKNOWN (Auto))" - determines how the object is initialized and what kernels to use
                                                                                             //                                                                        by default it is Auto (DX11, OpenCL and Vulkan are currently available)
+
+#define AMF_PA_QUERY_TIMEOUT                        L"PAQueryTimeout"                       // amf_int64; default = 0 (no wait); timeout for QueryOutput call in ms.
+
 
 #define AMF_PA_SCENE_CHANGE_DETECTION_ENABLE        L"PASceneChangeDetectionEnable"         // bool       (default : True)                                          - Enable Scene Change Detection GPU algorithm
 #define AMF_PA_SCENE_CHANGE_DETECTION_SENSITIVITY   L"PASceneChangeDetectionSensitivity"	// AMF_PA_SCENE_CHANGE_DETECTION_SENSITIVITY_ENUM (default : Medium)    - Scene Change Detection Sensitivity
@@ -124,10 +127,10 @@ enum AMF_PA_HIGH_MOTION_QUALITY_BOOST_MODE_ENUM
 
 
 //////////////////////////////////////////////////
-// properties set by PA on output buffer interface
+// properties set by PA on output buffer interface in standalone mode
 #define AMF_PA_ACTIVITY_MAP                         L"PAActivityMap"                        // AMFInterface* -> AMFSurface*;       Values: int32                    - When PA is standalone, there will be a 2D Activity map generated for each frame
-#define AMF_PA_SCENE_CHANGE_DETECT                  L"PASceneChangeDetect"                  // bool                                                                 - True/False - available if AMF_PA_SCENE_CHANGE_DETECTION_ENABLE was set to True
-#define AMF_PA_STATIC_SCENE_DETECT                  L"PAStaticSceneDetect"                  // bool                                                                 - True/False - available if AMF_PA_STATIC_SCENE_DETECTION_ENABLE was set to True
+#define AMF_PA_SCENE_CHANGE_DETECT                  L"PASceneChangeDetect"                  // bool                                                                 - True/False - available if AMF_PA_SCENE_CHANGE_DETECTION_ENABLE was set to True when PA is standalone
+#define AMF_PA_STATIC_SCENE_DETECT                  L"PAStaticSceneDetect"                  // bool                                                                 - True/False - available if AMF_PA_STATIC_SCENE_DETECTION_ENABLE was set to True when PA is standalone
 
 
 #endif //#ifndef AMFPreAnalysis_h
