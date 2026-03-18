@@ -186,15 +186,15 @@ CFSTR ("RequireHardwareAcceleratedVideoDecoder");
 #define VIDEO_SRC_CAPS_FORMATS "{ NV12, AYUV64, ARGB64_BE, P010_10LE }"
 
 #define VIDEO_SRC_CAPS_NATIVE                                           \
-    GST_VIDEO_CAPS_MAKE(VIDEO_SRC_CAPS_FORMATS) ";"                     \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(GST_CAPS_FEATURE_MEMORY_GL_MEMORY,\
         VIDEO_SRC_CAPS_FORMATS) ", "                                    \
-    "texture-target = (string) rectangle "
+    "texture-target = (string) rectangle ;"                             \
+    GST_VIDEO_CAPS_MAKE(VIDEO_SRC_CAPS_FORMATS)
 
 #if defined(APPLEMEDIA_MOLTENVK)
-#define VIDEO_SRC_CAPS VIDEO_SRC_CAPS_NATIVE "; "                           \
+#define VIDEO_SRC_CAPS                                                      \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, \
-        VIDEO_SRC_CAPS_FORMATS)
+        VIDEO_SRC_CAPS_FORMATS) ";" VIDEO_SRC_CAPS_NATIVE
 #else
 #define VIDEO_SRC_CAPS VIDEO_SRC_CAPS_NATIVE
 #endif
