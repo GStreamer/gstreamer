@@ -1,8 +1,8 @@
 # Brazilian Portuguese translation of GStreamer.
-# Copyright (C) 2008-2024 Free Software Foundation, Inc.
+# Copyright (C) 2008-2026 Free Software Foundation, Inc.
 # This file is distributed under the same license as the GStreamer package.
 # Fabrício Godoy <skarllot@gmail.com>, 2008-2021.
-# Rafael Fontenelle <rafaelff@gnome.org>, 2024.
+# Rafael Fontenelle <rafaelff@gnome.org>, 2024-2026.
 #
 # pipeline -> fila de processamento
 # sink -> consumidor
@@ -17,10 +17,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.24.0\n"
+"Project-Id-Version: gstreamer-1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:56+0000\n"
-"PO-Revision-Date: 2024-10-09 11:12-0300\n"
+"POT-Creation-Date: 2026-03-18 23:42+0100\n"
+"PO-Revision-Date: 2026-02-08 21:42-0300\n"
 "Last-Translator: Rafael Fontenelle <rafaelff@gnome.org>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-"
 "translation@lists.sourceforge.net>\n"
@@ -28,18 +28,18 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"Plural-Forms: nplurals=2; plural=(n > 1)\n"
-"X-Generator: Gtranslator 47.0\n"
+"X-Generator: Poedit 3.8\n"
 
 msgid "Print the GStreamer version"
-msgstr "Exibir a versão do GStreamer"
+msgstr "Exibe a versão do GStreamer"
 
 msgid "Make all warnings fatal"
-msgstr "Tratar todos avisos como fatais"
+msgstr "Trata todos avisos como fatais"
 
 msgid "Print available debug categories and exit"
-msgstr "Exibir as categorias de depuração disponíveis e sair"
+msgstr "Exibe as categorias de depuração disponíveis e sair"
 
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
@@ -62,7 +62,7 @@ msgid "LIST"
 msgstr "LISTA"
 
 msgid "Disable colored debugging output"
-msgstr "Desabilitar saída de depuração colorida"
+msgstr "Desabilita saída de depuração colorida"
 
 msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
@@ -72,7 +72,7 @@ msgstr ""
 "on (ligado), disable (desabilitado), auto (automático) e unix"
 
 msgid "Disable debugging"
-msgstr "Desabilitar depuração"
+msgstr "Desabilita depuração"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Caminhos, separados por dois-pontos, de plug-ins"
@@ -92,21 +92,21 @@ msgstr "PLUG-INS"
 
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
-"Desabilitar intercepção das falhas de segmentação durante o carregamento do "
+"Desabilita intercepção das falhas de segmentação durante o carregamento do "
 "plug-in"
 
 msgid "Disable updating the registry"
-msgstr "Desabilitar atualização do registro"
+msgstr "Desabilita atualização do registro"
 
 msgid "Disable spawning a helper process while scanning the registry"
 msgstr ""
-"Desabilitar a criação de um processo auxiliar durante a análise do registro"
+"Desabilita a criação de um processo auxiliar durante a análise do registro"
 
 msgid "GStreamer Options"
 msgstr "Opções do GStreamer"
 
 msgid "Show GStreamer Options"
-msgstr "Exibir opções do GStreamer"
+msgstr "Exibe opções do GStreamer"
 
 #, c-format
 msgid "Unknown option"
@@ -558,17 +558,14 @@ msgstr "número de série da faixa"
 msgid "replaygain track gain"
 msgstr "ganho da faixa (ReplayGain)"
 
-#, fuzzy
 msgid "track gain in dB"
 msgstr "ganho da faixa em decibéis"
 
-#, fuzzy
 msgid "r128 track gain"
-msgstr "ganho da faixa (ReplayGain)"
+msgstr "ganho da faixa (r128)"
 
-#, fuzzy
 msgid "track gain in dB (r128)"
-msgstr "ganho da faixa em decibéis"
+msgstr "ganho da faixa em decibéis (r128)"
 
 msgid "replaygain track peak"
 msgstr "pico da faixa (ReplayGain)"
@@ -579,17 +576,14 @@ msgstr "pico da faixa"
 msgid "replaygain album gain"
 msgstr "ganho do álbum (ReplayGain)"
 
-#, fuzzy
 msgid "album gain in dB"
 msgstr "ganho do álbum em decibéis"
 
-#, fuzzy
 msgid "r128 album gain"
-msgstr "ganho do álbum (ReplayGain)"
+msgstr "ganho do álbum (r128)"
 
-#, fuzzy
 msgid "album gain in dB (r128)"
-msgstr "ganho do álbum em decibéis"
+msgstr "ganho do álbum em decibéis (r128)"
 
 msgid "replaygain album peak"
 msgstr "pico do álbum (ReplayGain)"
@@ -1111,9 +1105,9 @@ msgstr "O fluxo não contém dados."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sInterfaces implementadas%s:\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sElement Flags%s:\n"
-msgstr "%sInterfaces implementadas%s:\n"
+msgstr "%sSinalizadores do elemento%s:\n"
 
 msgid "readable"
 msgstr "legível"
@@ -1236,13 +1230,15 @@ msgstr "Tabela de estatísticas"
 
 #, c-format
 msgid "ERROR: %s\n"
-msgstr ""
+msgstr "ERRO: %s\n"
 
 #, c-format
 msgid ""
 "Details:\n"
 "%s\n"
 msgstr ""
+"Detalhes:\n"
+"%s\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Definindo a fila de processamento para REPRODUZINDO...\n"
@@ -1406,13 +1402,13 @@ msgid "PROPERTY-NAME"
 msgstr "NOME-PROPRIEDADE"
 
 msgid "Set the name of the program"
-msgstr "Definir "
+msgstr "Define o nome do programa"
 
 msgid "PROGRAM-NAME"
 msgstr "NOME-PROGRAMA"
 
 msgid "Do not install a fault handler"
-msgstr "Não instal um manipulador de falhas"
+msgstr "Não instala um manipulador de falhas"
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr ""

@@ -1,16 +1,16 @@
 # Swedish messages for gstreamer.
-# Copyright © 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2014, 2015, 2016, 2017, 2019, 2022, 2023, 2024 Free Software Foundation, Inc.
+# Copyright © 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2014, 2015, 2016, 2017, 2019, 2022, 2023, 2024, 2026 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Christian Rose <menthos@menthos.com>, 2004, 2005.
 # Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009, 2010, 2011.
-# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016, 2017, 2019, 2022, 2023, 2024.
+# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016, 2017, 2019, 2022, 2023, 2024, 2026.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.24.0\n"
+"Project-Id-Version: gstreamer 1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:56+0000\n"
-"PO-Revision-Date: 2024-03-07 18:17+0800\n"
+"POT-Creation-Date: 2026-03-18 23:42+0100\n"
+"PO-Revision-Date: 2026-02-22 17:11+0800\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -541,17 +541,14 @@ msgstr "serienummer för spår"
 msgid "replaygain track gain"
 msgstr "uppspelningsförstärkning spårförstärkning"
 
-#, fuzzy
 msgid "track gain in dB"
-msgstr "spårförstärkning i db"
+msgstr "spårförstärkning i dB"
 
-#, fuzzy
 msgid "r128 track gain"
-msgstr "uppspelningsförstärkning spårförstärkning"
+msgstr "r128 spårförstärkning"
 
-#, fuzzy
 msgid "track gain in dB (r128)"
-msgstr "spårförstärkning i db"
+msgstr "spårförstärkning i dB (r128)"
 
 msgid "replaygain track peak"
 msgstr "uppspelningsförstärkning spårtopp"
@@ -562,17 +559,14 @@ msgstr "toppen för spåret"
 msgid "replaygain album gain"
 msgstr "uppspelningsförstärkning albumförstärkning"
 
-#, fuzzy
 msgid "album gain in dB"
-msgstr "albumförstärkning i db"
+msgstr "albumförstärkning i dB"
 
-#, fuzzy
 msgid "r128 album gain"
-msgstr "uppspelningsförstärkning albumförstärkning"
+msgstr "r128 albumförstärkning"
 
-#, fuzzy
 msgid "album gain in dB (r128)"
-msgstr "albumförstärkning i db"
+msgstr "albumförstärkning i dB (r128)"
 
 msgid "replaygain album peak"
 msgstr "uppspelningsförstärkning albumtopp"
@@ -1087,9 +1081,9 @@ msgstr "Strömmen innehåller inget data."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sImplementerade gränssnitt%s:\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sElement Flags%s:\n"
-msgstr "%sImplementerade gränssnitt%s:\n"
+msgstr "%sElementflaggor%s:\n"
 
 msgid "readable"
 msgstr "läsbar"
@@ -1216,13 +1210,15 @@ msgstr "Indexstatistik"
 
 #, c-format
 msgid "ERROR: %s\n"
-msgstr ""
+msgstr "FEL: %s\n"
 
 #, c-format
 msgid ""
 "Details:\n"
 "%s\n"
 msgstr ""
+"Detaljer:\n"
+"%s\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Ställer in rörledningen till PLAYING...\n"
