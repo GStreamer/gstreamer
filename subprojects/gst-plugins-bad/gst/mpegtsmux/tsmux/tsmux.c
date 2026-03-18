@@ -1476,9 +1476,9 @@ rewrite_si (TsMux * mux, gint64 cur_ts)
             program->next_scte35_pcr);
         if (program->next_scte35_pcr == -1)
           program->next_scte35_pcr =
-              next_pcr + program->scte35_null_interval * 300;
+              next_pcr + program->scte35_null_interval * 300ULL;
         else
-          program->next_scte35_pcr += program->scte35_null_interval * 300;
+          program->next_scte35_pcr += program->scte35_null_interval * 300ULL;
         GST_DEBUG ("next scte35 NOW pcr %" G_GINT64_FORMAT,
             program->next_scte35_pcr);
 
