@@ -1,0 +1,130 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026 gst-plugins-bad's COPYRIGHT HOLDER
+# This file is distributed under the same license as the gst-plugins-bad package.
+# Baurzhan Muftakhidinov <baurthefirst@gmail.com>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-bad 1.27.90\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-03-18 23:43+0100\n"
+"PO-Revision-Date: 2026-03-01 14:48+0500\n"
+"Last-Translator: Baurzhan Muftakhidinov <baurthefirst@gmail.com>\n"
+"Language-Team: Kazakh <(nothing)>\n"
+"Language: kk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 3.8\n"
+
+msgid "No URL set."
+msgstr "URL орнатылмаған."
+
+msgid "OpenCV failed to load template image"
+msgstr "OpenCV үлгі суретін жүктеу сәтсіз аяқталды"
+
+msgid "Could not read title information for DVD."
+msgstr "DVD үшін тақырып ақпаратын оқу мүмкін болмады."
+
+#, c-format
+msgid "Failed to open DVD device '%s'."
+msgstr "'%s' DVD құрылғысын ашу сәтсіз аяқталды."
+
+msgid "Failed to set PGC based seeking."
+msgstr "PGC негізіндегі іздеуді орнату сәтсіз аяқталды."
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"DVD-ні оқу мүмкін болмады. Бұл DVD шифрленгендіктен немесе DVD-ні дешифрлеу "
+"кітапханасы орнатылмағандықтан болуы мүмкін."
+
+msgid "Could not read DVD."
+msgstr "DVD-ні оқу мүмкін болмады."
+
+msgid "This file contains no playable streams."
+msgstr "Бұл файлда ойнатылатын ағындар жоқ."
+
+msgid "Could not open sndfile stream for reading."
+msgstr "Оқу үшін sndfile ағынын ашу мүмкін болмады."
+
+msgid "Generated file has a larger preroll time than its streams duration"
+msgstr ""
+"Генерацияланған файлдың алдын ала жүктеу уақыты оның ағындарының ұзақтығынан "
+"көп"
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "'%s' элементі жетіспейді - GStreamer орнатылымын тексеріңіз."
+
+msgid "File location is set to NULL, please set it to a valid filename"
+msgstr "Файл орны NULL мәніне орнатылған, оны жарамды файл атына орнатыңыз"
+
+msgid "Digitalzoom element couldn't be created"
+msgstr "Digitalzoom элементін жасау мүмкін болмады"
+
+msgid "Subpicture format was not configured before data flow"
+msgstr "Мәліметтер ағыны басталмай тұрып қосымша сурет пішімі бапталмады"
+
+msgid "Failed to get fragment URL."
+msgstr "Фрагмент URL-ін алу сәтсіз аяқталды."
+
+#, c-format
+msgid "Couldn't download fragments"
+msgstr "Фрагменттерді жүктеп алу мүмкін болмады"
+
+msgid "Internal data stream error."
+msgstr "Ішкі деректер ағынының қатесі."
+
+#, c-format
+msgid "Device \"%s\" does not exist."
+msgstr "\"%s\" құрылғысы жоқ."
+
+#, c-format
+msgid "Could not open frontend device \"%s\"."
+msgstr "\"%s\" интерфейс құрылғысын ашу мүмкін болмады."
+
+#, c-format
+msgid "Could not get settings from frontend device \"%s\"."
+msgstr "\"%s\" интерфейс құрылғысынан баптауларды алу мүмкін болмады."
+
+#, c-format
+msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
+msgstr ""
+"\"%s\" интерфейс құрылғысынан жеткізу жүйелерін тізіп шығу мүмкін емес."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "\"%s\" файлын оқу үшін ашу мүмкін болмады."
+
+#, c-format
+msgid "Couldn't find channel configuration file"
+msgstr "Арна баптаулары файлы табылмады"
+
+#, c-format
+msgid "Couldn't load channel configuration file: '%s'"
+msgstr "Арна баптаулары файлын жүктеу мүмкін болмады: '%s'"
+
+#, c-format
+msgid "Couldn't find details for channel '%s'"
+msgstr "'%s' арнасының мәліметтері табылмады"
+
+#, c-format
+msgid "No properties for channel '%s'"
+msgstr "'%s' арнасының қасиеттері жоқ"
+
+#, c-format
+msgid "Failed to set properties for channel '%s'"
+msgstr "'%s' арнасының қасиеттерін орнату сәтсіз аяқталды"
+
+#, c-format
+msgid "Couldn't find channel configuration file: '%s'"
+msgstr "Арна баптаулары файлы табылмады: '%s'"
+
+#, c-format
+msgid "Channel configuration file doesn't contain any channels"
+msgstr "Арна баптаулары файлында ешқандай арна жоқ"
