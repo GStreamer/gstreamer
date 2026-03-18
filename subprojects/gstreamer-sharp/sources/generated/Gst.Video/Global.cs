@@ -96,6 +96,15 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_buffer_add_video_hdr_meta(IntPtr buffer, int format, byte data, UIntPtr size);
+
+		public static Gst.Video.VideoHDRMeta BufferAddVideoHdrMeta(Gst.Buffer buffer, Gst.Video.VideoHDRFormat format, byte data, ulong size) {
+			IntPtr raw_ret = gst_buffer_add_video_hdr_meta(buffer == null ? IntPtr.Zero : buffer.Handle, (int) format, data, new UIntPtr (size));
+			Gst.Video.VideoHDRMeta ret = Gst.Video.VideoHDRMeta.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_add_video_meta(IntPtr buffer, int flags, int format, uint width, uint height);
 
 		public static Gst.Video.VideoMeta BufferAddVideoMeta(Gst.Buffer buffer, Gst.Video.VideoFrameFlags flags, Gst.Video.VideoFormat format, uint width, uint height) {
@@ -1203,6 +1212,60 @@ namespace Gst.Video {
 		public static bool VideoGuessFramerate(ulong duration, out int dest_n, out int dest_d) {
 			bool raw_ret = gst_video_guess_framerate(duration, out dest_n, out dest_d);
 			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_video_hdr_format_from_string(IntPtr format);
+
+		public static Gst.Video.VideoHDRFormat VideoHdrFormatFromString(string format) {
+			IntPtr native_format = GLib.Marshaller.StringToPtrGStrdup (format);
+			int raw_ret = gst_video_hdr_format_from_string(native_format);
+			Gst.Video.VideoHDRFormat ret = (Gst.Video.VideoHDRFormat) raw_ret;
+			GLib.Marshaller.Free (native_format);
+			return ret;
+		}
+
+		public static Gst.Video.VideoHDRFormat VideoHdrFormatFromString() {
+			return VideoHdrFormatFromString (null);
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_hdr_format_to_string(int format);
+
+		public static string VideoHdrFormatToString(Gst.Video.VideoHDRFormat format) {
+			IntPtr raw_ret = gst_video_hdr_format_to_string((int) format);
+			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_hdr_meta_api_get_type();
+
+		public static GLib.GType VideoHdrMetaApiGetType() {
+			IntPtr raw_ret = gst_video_hdr_meta_api_get_type();
+			GLib.GType ret = new GLib.GType(raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_hdr_meta_get_info();
+
+		public static Gst.MetaInfo VideoHdrMetaGetInfo() {
+			IntPtr raw_ret = gst_video_hdr_meta_get_info();
+			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_hdr_parse_hdr10_plus(byte data, UIntPtr size, IntPtr hdr10_plus);
+
+		public static bool VideoHdrParseHdr10Plus(byte data, ulong size, out Gst.Video.VideoHDR10Plus hdr10_plus) {
+			IntPtr native_hdr10_plus = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Video.VideoHDR10Plus)));
+			bool raw_ret = gst_video_hdr_parse_hdr10_plus(data, new UIntPtr (size), native_hdr10_plus);
+			bool ret = raw_ret;
+			hdr10_plus = Gst.Video.VideoHDR10Plus.New (native_hdr10_plus);
+			Marshal.FreeHGlobal (native_hdr10_plus);
 			return ret;
 		}
 

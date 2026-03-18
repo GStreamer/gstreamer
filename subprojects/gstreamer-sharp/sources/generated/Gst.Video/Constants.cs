@@ -76,6 +76,10 @@ namespace Gst.Video {
 		public const string VIDEO_FORMATS_ANY_STR = @"DMA_DRM, ";
 		public const int VIDEO_FORMAT_LAST = 142;
 		public const string VIDEO_FPS_RANGE = @"(fraction) [ 0, max ]";
+		public const int VIDEO_HDR10_PLUS_MAX_BYTES = 1024;
+		public const int VIDEO_HDR10_PLUS_MAX_COLS_MD_APL = 25;
+		public const int VIDEO_HDR10_PLUS_MAX_ROWS_TSD_APL = 25;
+		public const int VIDEO_HDR10_PLUS_NUM_WINDOWS = 1;
 		public const int VIDEO_MAX_COMPONENTS = 4;
 		public const int VIDEO_MAX_PLANES = 4;
 		public const string VIDEO_RESAMPLER_OPT_CUBIC_B = @"GstVideoResampler.cubic-b";

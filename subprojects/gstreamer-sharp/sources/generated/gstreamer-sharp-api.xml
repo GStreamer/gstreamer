@@ -29644,6 +29644,11 @@
       <member cname="GST_VIDEO_GAMMA_MODE_NONE" name="None" value="0" />
       <member cname="GST_VIDEO_GAMMA_MODE_REMAP" name="Remap" value="1" />
     </enum>
+    <enum name="VideoHDRFormat" cname="GstVideoHDRFormat" type="enum" version="1.30">
+      <member cname="GST_VIDEO_HDR_FORMAT_NONE" name="None" value="0" />
+      <member cname="GST_VIDEO_HDR_FORMAT_HDR10" name="Hdr10" value="1" />
+      <member cname="GST_VIDEO_HDR_FORMAT_HDR10_PLUS" name="Hdr10Plus" value="2" />
+    </enum>
     <enum name="VideoInterlaceMode" cname="GstVideoInterlaceMode" type="enum" gtype="gst_video_interlace_mode_get_type">
       <member cname="GST_VIDEO_INTERLACE_MODE_PROGRESSIVE" name="Progressive" value="0" />
       <member cname="GST_VIDEO_INTERLACE_MODE_INTERLEAVED" name="Interleaved" value="1" />
@@ -32141,6 +32146,32 @@
       <field cname="Bx" access="public" writeable="true" readable="true" is_callback="false" name="Bx" type="gdouble" />
       <field cname="By" access="public" writeable="true" readable="true" is_callback="false" name="By" type="gdouble" />
     </struct>
+    <struct name="VideoColorVolumeTransformation" cname="GstVideoColorVolumeTransformation" opaque="false" hidden="false" version="1.30">
+      <field cname="window_upper_left_corner_x" access="public" writeable="true" readable="true" is_callback="false" name="WindowUpperLeftCornerX" type="guint16" />
+      <field cname="window_upper_left_corner_y" access="public" writeable="true" readable="true" is_callback="false" name="WindowUpperLeftCornerY" type="guint16" />
+      <field cname="window_lower_right_corner_x" access="public" writeable="true" readable="true" is_callback="false" name="WindowLowerRightCornerX" type="guint16" />
+      <field cname="window_lower_right_corner_y" access="public" writeable="true" readable="true" is_callback="false" name="WindowLowerRightCornerY" type="guint16" />
+      <field cname="center_of_ellipse_x" access="public" writeable="true" readable="true" is_callback="false" name="CenterOfEllipseX" type="guint16" />
+      <field cname="center_of_ellipse_y" access="public" writeable="true" readable="true" is_callback="false" name="CenterOfEllipseY" type="guint16" />
+      <field cname="rotation_angle" access="public" writeable="true" readable="true" is_callback="false" name="RotationAngle" type="guint8" />
+      <field cname="semimajor_axis_internal_ellipse" access="public" writeable="true" readable="true" is_callback="false" name="SemimajorAxisInternalEllipse" type="guint16" />
+      <field cname="semimajor_axis_external_ellipse" access="public" writeable="true" readable="true" is_callback="false" name="SemimajorAxisExternalEllipse" type="guint16" />
+      <field cname="semiminor_axis_external_ellipse" access="public" writeable="true" readable="true" is_callback="false" name="SemiminorAxisExternalEllipse" type="guint16" />
+      <field cname="overlap_process_option" access="public" writeable="true" readable="true" is_callback="false" name="OverlapProcessOption" type="guint8" />
+      <field cname="maxscl" access="public" writeable="true" readable="true" is_callback="false" name="Maxscl" type="guint32" array="true" array_len="3" element_type="guint32" />
+      <field cname="average_maxrgb" access="public" writeable="true" readable="true" is_callback="false" name="AverageMaxrgb" type="guint32" />
+      <field cname="num_distributions" access="public" writeable="true" readable="true" is_callback="false" name="NumDistributions" type="guint8" />
+      <field cname="distribution_index" access="public" writeable="true" readable="true" is_callback="false" name="DistributionIndex" type="guint8" array="true" array_len="16" element_type="guint8" />
+      <field cname="distribution_values" access="public" writeable="true" readable="true" is_callback="false" name="DistributionValues" type="guint32" array="true" array_len="16" element_type="guint32" />
+      <field cname="fraction_bright_pixels" access="public" writeable="true" readable="true" is_callback="false" name="FractionBrightPixels" type="guint16" />
+      <field cname="tone_mapping_flag" access="public" writeable="true" readable="true" is_callback="false" name="ToneMappingFlag" type="guint8" />
+      <field cname="knee_point_x" access="public" writeable="true" readable="true" is_callback="false" name="KneePointX" type="guint16" />
+      <field cname="knee_point_y" access="public" writeable="true" readable="true" is_callback="false" name="KneePointY" type="guint16" />
+      <field cname="num_bezier_curve_anchors" access="public" writeable="true" readable="true" is_callback="false" name="NumBezierCurveAnchors" type="guint8" />
+      <field cname="bezier_curve_anchors" access="public" writeable="true" readable="true" is_callback="false" name="BezierCurveAnchors" type="guint16" array="true" array_len="16" element_type="guint16" />
+      <field cname="color_saturation_mapping_flag" access="public" writeable="true" readable="true" is_callback="false" name="ColorSaturationMappingFlag" type="guint8" />
+      <field cname="color_saturation_weight" access="public" writeable="true" readable="true" is_callback="false" name="ColorSaturationWeight" type="guint8" />
+    </struct>
     <struct name="VideoColorimetry" cname="GstVideoColorimetry" opaque="false" hidden="false">
       <field cname="range" access="public" writeable="true" readable="true" is_callback="false" name="Range" type="GstVideoColorRange" />
       <field cname="matrix" access="public" writeable="true" readable="true" is_callback="false" name="Matrix" type="GstVideoColorMatrix" />
@@ -32438,6 +32469,34 @@
         </parameters>
       </method>
       <method name="GetInfo" cname="gst_video_gl_texture_upload_meta_get_info" shared="true">
+        <return-type type="GstMetaInfo*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+      </method>
+    </struct>
+    <struct name="VideoHDR10Plus" cname="GstVideoHDR10Plus" opaque="false" hidden="false" version="1.30">
+      <field cname="application_identifier" access="public" writeable="true" readable="true" is_callback="false" name="ApplicationIdentifier" type="guint8" />
+      <field cname="application_version" access="public" writeable="true" readable="true" is_callback="false" name="ApplicationVersion" type="guint8" />
+      <field cname="num_windows" access="public" writeable="true" readable="true" is_callback="false" name="NumWindows" type="guint8" />
+      <field cname="processing_window" access="public" writeable="true" readable="true" is_callback="false" name="ProcessingWindow" type="GstVideoColorVolumeTransformation" array="true" array_len="1" element_type="VideoColorVolumeTransformation" />
+      <field cname="targeted_system_display_maximum_luminance" access="public" writeable="true" readable="true" is_callback="false" name="TargetedSystemDisplayMaximumLuminance" type="guint32" />
+      <field cname="targeted_system_display_actual_peak_luminance_flag" access="public" writeable="true" readable="true" is_callback="false" name="TargetedSystemDisplayActualPeakLuminanceFlag" type="guint8" />
+      <field cname="num_rows_targeted_system_display_actual_peak_luminance" access="public" writeable="true" readable="true" is_callback="false" name="NumRowsTargetedSystemDisplayActualPeakLuminance" type="guint8" />
+      <field cname="num_cols_targeted_system_display_actual_peak_luminance" access="public" writeable="true" readable="true" is_callback="false" name="NumColsTargetedSystemDisplayActualPeakLuminance" type="guint8" />
+      <field cname="targeted_system_display_actual_peak_luminance" access="public" writeable="true" readable="true" is_callback="false" name="TargetedSystemDisplayActualPeakLuminance" type="guint8" array="true" array_len="625" element_type="guint8" />
+      <field cname="mastering_display_actual_peak_luminance_flag" access="public" writeable="true" readable="true" is_callback="false" name="MasteringDisplayActualPeakLuminanceFlag" type="guint8" />
+      <field cname="num_rows_mastering_display_actual_peak_luminance" access="public" writeable="true" readable="true" is_callback="false" name="NumRowsMasteringDisplayActualPeakLuminance" type="guint8" />
+      <field cname="num_cols_mastering_display_actual_peak_luminance" access="public" writeable="true" readable="true" is_callback="false" name="NumColsMasteringDisplayActualPeakLuminance" type="guint8" />
+      <field cname="mastering_display_actual_peak_luminance" access="public" writeable="true" readable="true" is_callback="false" name="MasteringDisplayActualPeakLuminance" type="guint8" array="true" array_len="625" element_type="guint8" />
+    </struct>
+    <struct name="VideoHDRMeta" cname="GstVideoHDRMeta" opaque="false" hidden="false" version="1.30">
+      <field cname="meta" access="public" writeable="true" readable="true" is_callback="false" name="Meta" type="GstMeta">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="format" access="public" writeable="true" readable="true" is_callback="false" name="Format" type="GstVideoHDRFormat" />
+      <field cname="data" access="public" writeable="true" readable="true" is_callback="false" name="Data" type="guint8" />
+      <field cname="size" access="public" writeable="true" readable="true" is_callback="false" name="Size" type="gsize" />
+      <method name="GetInfo" cname="gst_video_hdr_meta_get_info" shared="true">
         <return-type type="GstMetaInfo*">
           <warning>missing glib:type-name</warning>
         </return-type>
@@ -33561,6 +33620,19 @@
           <parameter scope="call" name="user_data_free" type="GBoxedFreeFunc" />
         </parameters>
       </method>
+      <method name="BufferAddVideoHdrMeta" cname="gst_buffer_add_video_hdr_meta" shared="true" version="1.30">
+        <return-type type="GstVideoHDRMeta*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="buffer" type="GstBuffer*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="format" type="GstVideoHDRFormat" />
+          <parameter name="data" type="guint8" />
+          <parameter name="size" type="gsize" />
+        </parameters>
+      </method>
       <method name="BufferAddVideoMeta" cname="gst_buffer_add_video_meta" shared="true">
         <return-type type="GstVideoMeta*">
           <warning>missing glib:type-name</warning>
@@ -34607,6 +34679,36 @@
           <parameter allow-none="1" name="dest_d" type="gint*" owned="true" pass_as="out" />
         </parameters>
       </method>
+      <method name="VideoHdrFormatFromString" cname="gst_video_hdr_format_from_string" shared="true" version="1.30">
+        <return-type type="GstVideoHDRFormat" />
+        <parameters>
+          <parameter allow-none="1" name="format" type="const-gchar*" />
+        </parameters>
+      </method>
+      <method name="VideoHdrFormatToString" cname="gst_video_hdr_format_to_string" shared="true" version="1.30">
+        <return-type type="const-gchar*" />
+        <parameters>
+          <parameter name="format" type="GstVideoHDRFormat" />
+        </parameters>
+      </method>
+      <method name="VideoHdrMetaApiGetType" cname="gst_video_hdr_meta_api_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="VideoHdrMetaGetInfo" cname="gst_video_hdr_meta_get_info" shared="true">
+        <return-type type="GstMetaInfo*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+      </method>
+      <method name="VideoHdrParseHdr10Plus" cname="gst_video_hdr_parse_hdr10_plus" shared="true" version="1.30">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter name="data" type="guint8" />
+          <parameter name="size" type="gsize" />
+          <parameter name="hdr10_plus" type="GstVideoHDR10Plus*" pass_as="out">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
       <method name="VideoInfoDmaDrmFromCaps" cname="gst_video_info_dma_drm_from_caps" shared="true" version="1.24">
         <return-type type="gboolean" />
         <parameters>
@@ -34970,6 +35072,10 @@
       <constant value="DMA_DRM, " ctype="gchar*" gtype="gchar*" name="VIDEO_FORMATS_ANY_STR" version="1.24" />
       <constant value="142" ctype="gint" gtype="gint" name="VIDEO_FORMAT_LAST" version="1.26" />
       <constant value="(fraction) [ 0, max ]" ctype="gchar*" gtype="gchar*" name="VIDEO_FPS_RANGE" />
+      <constant value="1024" ctype="gint" gtype="gint" name="VIDEO_HDR10_PLUS_MAX_BYTES" version="1.30" />
+      <constant value="25" ctype="gint" gtype="gint" name="VIDEO_HDR10_PLUS_MAX_COLS_MD_APL" version="1.30" />
+      <constant value="25" ctype="gint" gtype="gint" name="VIDEO_HDR10_PLUS_MAX_ROWS_TSD_APL" version="1.30" />
+      <constant value="1" ctype="gint" gtype="gint" name="VIDEO_HDR10_PLUS_NUM_WINDOWS" version="1.30" />
       <constant value="4" ctype="gint" gtype="gint" name="VIDEO_MAX_COMPONENTS" />
       <constant value="4" ctype="gint" gtype="gint" name="VIDEO_MAX_PLANES" />
       <constant value="GstVideoResampler.cubic-b" ctype="gchar*" gtype="gchar*" name="VIDEO_RESAMPLER_OPT_CUBIC_B" />
