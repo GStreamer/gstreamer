@@ -116,21 +116,15 @@ endforeach
 
 vulkan_plugin_kwargs = {}
 if host_system == 'darwin'
-  vulkan_dep = dependency('vulkan', method: 'pkg-config', required : false)
+  # Prefer direct MoltenVK linkage on Darwin instead of the Vulkan loader.
+  # This matches the framework packaging model and avoids depending on local
+  # ICD/loader setup when running the Vulkan plugin.
+  objcpp = meson.get_compiler('objcpp')
+  vulkan_dep = objcpp.find_library('MoltenVK', required: false)
   if not vulkan_dep.found()
-    # - ios does not support the loader/validation layers
-    # - We need to link directly to MoltenVK to be able to use
-    #   MoltenVK-specific functions that use dispatchable handles (like
-    #   retrieving the metal device from the VkDevice) which is currently waiting
-    #   on implementing a proper Metal extension for Vulkan
-    #   https://github.com/KhronosGroup/MoltenVK/issues/492
-    objcpp = meson.get_compiler('objcpp')
-    vulkan_dep = objcpp.find_library('MoltenVK', required: false)
-    if not vulkan_dep.found()
-      vulkan_dep = dependency('MoltenVK', fallback: 'moltenvk', required: vulkan_opt)
-      # We need this to find libMoltenVK.dylib when installed
-      vulkan_plugin_kwargs += {'install_rpath': '@loader_path/..'}
-    endif
+    vulkan_dep = dependency('MoltenVK', fallback: 'moltenvk', required: vulkan_opt)
+    # We need this to find libMoltenVK.dylib when installed
+    vulkan_plugin_kwargs += {'install_rpath': '@loader_path/..'}
   endif
 elif host_system == 'windows'
   vulkan_root = run_command(python3, '-c', 'import os; print(os.environ.get("VK_SDK_PATH"))', check: false).stdout().strip()
