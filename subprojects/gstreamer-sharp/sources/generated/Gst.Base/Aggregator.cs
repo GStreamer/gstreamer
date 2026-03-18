@@ -261,7 +261,7 @@ namespace Gst.Base {
 			try {
 				Aggregator __obj = GLib.Object.GetObject (inst, false) as Aggregator;
 				Gst.Buffer __result;
-				__result = __obj.OnClip (GLib.Object.GetObject(aggregator_pad) as Gst.Base.AggregatorPad, buf == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (buf, typeof (Gst.Buffer), false));
+				__result = __obj.OnClip (GLib.Object.GetObject(aggregator_pad) as Gst.Base.AggregatorPad, buf == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (buf, typeof (Gst.Buffer), true));
 				return __result == null ? IntPtr.Zero : __result.OwnedCopy;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -285,6 +285,7 @@ namespace Gst.Base {
 			}
 			if (unmanaged == null) return null;
 
+			buf.Owned = false;
 			IntPtr __result = unmanaged (this.Handle, aggregator_pad == null ? IntPtr.Zero : aggregator_pad.Handle, buf == null ? IntPtr.Zero : buf.Handle);
 			return __result == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (__result, typeof (Gst.Buffer), true);
 		}
@@ -378,7 +379,7 @@ namespace Gst.Base {
 			try {
 				Aggregator __obj = GLib.Object.GetObject (inst, false) as Aggregator;
 				bool __result;
-				__result = __obj.OnSinkEvent (GLib.Object.GetObject(aggregator_pad) as Gst.Base.AggregatorPad, evnt == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (evnt, typeof (Gst.Event), false));
+				__result = __obj.OnSinkEvent (GLib.Object.GetObject(aggregator_pad) as Gst.Base.AggregatorPad, evnt == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (evnt, typeof (Gst.Event), true));
 				return __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -402,6 +403,7 @@ namespace Gst.Base {
 			}
 			if (unmanaged == null) return false;
 
+			evnt.Owned = false;
 			bool __result = unmanaged (this.Handle, aggregator_pad == null ? IntPtr.Zero : aggregator_pad.Handle, evnt == null ? IntPtr.Zero : evnt.Handle);
 			return __result;
 		}
@@ -494,7 +496,7 @@ namespace Gst.Base {
 			try {
 				Aggregator __obj = GLib.Object.GetObject (inst, false) as Aggregator;
 				bool __result;
-				__result = __obj.OnSrcEvent (evnt == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (evnt, typeof (Gst.Event), false));
+				__result = __obj.OnSrcEvent (evnt == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (evnt, typeof (Gst.Event), true));
 				return __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -518,6 +520,7 @@ namespace Gst.Base {
 			}
 			if (unmanaged == null) return false;
 
+			evnt.Owned = false;
 			bool __result = unmanaged (this.Handle, evnt == null ? IntPtr.Zero : evnt.Handle);
 			return __result;
 		}
@@ -870,6 +873,66 @@ namespace Gst.Base {
 			return __result;
 		}
 
+		static CreateNewPadNativeDelegate CreateNewPad_cb_delegate;
+		static CreateNewPadNativeDelegate CreateNewPadVMCallback {
+			get {
+				if (CreateNewPad_cb_delegate == null)
+					CreateNewPad_cb_delegate = new CreateNewPadNativeDelegate (CreateNewPad_cb);
+				return CreateNewPad_cb_delegate;
+			}
+		}
+
+		static void OverrideCreateNewPad (GLib.GType gtype)
+		{
+			OverrideCreateNewPad (gtype, CreateNewPadVMCallback);
+		}
+
+		static void OverrideCreateNewPad (GLib.GType gtype, CreateNewPadNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("create_new_pad"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate IntPtr CreateNewPadNativeDelegate (IntPtr inst, IntPtr templ, IntPtr req_name, IntPtr caps);
+
+		static IntPtr CreateNewPad_cb (IntPtr inst, IntPtr templ, IntPtr req_name, IntPtr caps)
+		{
+			try {
+				Aggregator __obj = GLib.Object.GetObject (inst, false) as Aggregator;
+				Gst.Base.AggregatorPad __result;
+				__result = __obj.OnCreateNewPad (GLib.Object.GetObject(templ) as Gst.PadTemplate, GLib.Marshaller.Utf8PtrToString (req_name), caps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (caps, typeof (Gst.Caps), false));
+				return __result == null ? IntPtr.Zero : __result.Handle;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.Base.Aggregator), ConnectionMethod="OverrideCreateNewPad")]
+		protected virtual Gst.Base.AggregatorPad OnCreateNewPad (Gst.PadTemplate templ, string req_name, Gst.Caps caps)
+		{
+			return InternalCreateNewPad (templ, req_name, caps);
+		}
+
+		private Gst.Base.AggregatorPad InternalCreateNewPad (Gst.PadTemplate templ, string req_name, Gst.Caps caps)
+		{
+			CreateNewPadNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("create_new_pad"));
+				unmanaged = (CreateNewPadNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(CreateNewPadNativeDelegate));
+			}
+			if (unmanaged == null) return null;
+
+			IntPtr native_req_name = GLib.Marshaller.StringToPtrGStrdup (req_name);
+			IntPtr __result = unmanaged (this.Handle, templ == null ? IntPtr.Zero : templ.Handle, native_req_name, caps == null ? IntPtr.Zero : caps.Handle);
+			GLib.Marshaller.Free (native_req_name);
+			return GLib.Object.GetObject(__result) as Gst.Base.AggregatorPad;
+		}
+
 		static UpdateSrcCapsNativeDelegate UpdateSrcCaps_cb_delegate;
 		static UpdateSrcCapsNativeDelegate UpdateSrcCapsVMCallback {
 			get {
@@ -962,7 +1025,7 @@ namespace Gst.Base {
 			try {
 				Aggregator __obj = GLib.Object.GetObject (inst, false) as Aggregator;
 				Gst.Caps __result;
-				__result = __obj.OnFixateSrcCaps (caps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (caps, typeof (Gst.Caps), false));
+				__result = __obj.OnFixateSrcCaps (caps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (caps, typeof (Gst.Caps), true));
 				return __result == null ? IntPtr.Zero : __result.OwnedCopy;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -986,6 +1049,7 @@ namespace Gst.Base {
 			}
 			if (unmanaged == null) return null;
 
+			caps.Owned = false;
 			IntPtr __result = unmanaged (this.Handle, caps == null ? IntPtr.Zero : caps.Handle);
 			return __result == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (__result, typeof (Gst.Caps), true);
 		}
@@ -1252,7 +1316,7 @@ namespace Gst.Base {
 			try {
 				Aggregator __obj = GLib.Object.GetObject (inst, false) as Aggregator;
 				Gst.FlowReturn __result;
-				__result = __obj.OnSinkEventPreQueue (GLib.Object.GetObject(aggregator_pad) as Gst.Base.AggregatorPad, evnt == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (evnt, typeof (Gst.Event), false));
+				__result = __obj.OnSinkEventPreQueue (GLib.Object.GetObject(aggregator_pad) as Gst.Base.AggregatorPad, evnt == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (evnt, typeof (Gst.Event), true));
 				return (int) __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -1276,6 +1340,7 @@ namespace Gst.Base {
 			}
 			if (unmanaged == null) return (Gst.FlowReturn) 0;
 
+			evnt.Owned = false;
 			int __result = unmanaged (this.Handle, aggregator_pad == null ? IntPtr.Zero : aggregator_pad.Handle, evnt == null ? IntPtr.Zero : evnt.Handle);
 			return (Gst.FlowReturn) __result;
 		}
