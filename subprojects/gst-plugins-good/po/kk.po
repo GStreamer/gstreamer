@@ -1,0 +1,442 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026 gst-plugins-good's COPYRIGHT HOLDER
+# This file is distributed under the same license as the gst-plugins-good package.
+# Baurzhan Muftakhidinov <baurthefirst@gmail.com>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-good 1.27.90\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-03-18 23:43+0100\n"
+"PO-Revision-Date: 2026-03-01 14:44+0500\n"
+"Last-Translator: Baurzhan Muftakhidinov <baurthefirst@gmail.com>\n"
+"Language-Team: Kazakh <(nothing)>\n"
+"Language: kk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 3.8\n"
+
+msgid "Jack server not found"
+msgstr "Jack сервері табылмады"
+
+msgid "Failed to decode JPEG image"
+msgstr "JPEG суретін декодтау сәтсіз аяқталды"
+
+msgid "Failed to read memory"
+msgstr "Жадты оқу сәтсіз аяқталды"
+
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr ""
+"LAME mp3 аудио кодтаушысын баптау сәтсіз аяқталды. Кодтау параметрлерін "
+"тексеріңіз."
+
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+"'%2$s' қасиеті үшін сұралған %1$d кбит/с битрейтіне рұқсат жоқ. Битрейт %3$d "
+"кбит/с мәніне өзгертілді."
+
+#. TRANSLATORS: 'song title' by 'artist name'
+#, c-format
+msgid "'%s' by '%s'"
+msgstr "«%s», авторы: «%s»"
+
+msgid "Could not connect to server"
+msgstr "Серверге қосылу мүмкін емес"
+
+msgid "No URL set."
+msgstr "URL орнатылмаған."
+
+msgid "Could not resolve server name."
+msgstr "Сервер атын шешу мүмкін емес."
+
+msgid "Could not establish connection to server."
+msgstr "Сервермен байланыс орнату мүмкін емес."
+
+msgid "Secure connection setup failed."
+msgstr "Қауіпсіз қосылымды баптау сәтсіз аяқталды."
+
+msgid ""
+"A network error occurred, or the server closed the connection unexpectedly."
+msgstr "Желілік қате орын алды немесе сервер қосылымды күтпеген жерден үзді."
+
+msgid "Server sent bad data."
+msgstr "Сервер қате деректер жіберді."
+
+msgid "Server does not support seeking."
+msgstr "Сервер позицияны ауыстыруды қолдамайды."
+
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+"TwoLAME кодтаушысын баптау сәтсіз аяқталды. Кодтау параметрлерін тексеріңіз."
+
+msgid "No or invalid input audio, AVI stream will be corrupt."
+msgstr "Кіріс аудио жоқ немесе жарамсыз, AVI ағыны зақымдалады."
+
+msgid "This file contains no playable streams."
+msgstr "Бұл файлда ойнатылатын ағындар жоқ."
+
+msgid "This file is invalid and cannot be played."
+msgstr "Бұл файл жарамсыз және оны ойнату мүмкін емес."
+
+msgid "Cannot play stream because it is encrypted with PlayReady DRM."
+msgstr "Ағынды ойнату мүмкін емес, себебі ол PlayReady DRM арқылы шифрленген."
+
+msgid "This file is corrupt and cannot be played."
+msgstr "Бұл файл зақымдалған және оны ойнату мүмкін емес."
+
+msgid "Invalid atom size."
+msgstr "Атом өлшемі жарамсыз."
+
+msgid "Cannot query file size"
+msgstr "Файл өлшемін сұрау мүмкін емес"
+
+msgid "Cannot demux file"
+msgstr "Файлды демукстеу мүмкін емес"
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Бұл файл толық емес және оны ойнату мүмкін емес."
+
+msgid "The video in this file might not play correctly."
+msgstr "Бұл файлдағы видео дұрыс ойнатылмауы мүмкін."
+
+msgid ""
+"No supported stream was found. You might need to install a GStreamer RTSP "
+"extension plugin for Real media streams."
+msgstr ""
+"Қолдау көрсетілетін ағын табылмады. Real медиа ағындары үшін GStreamer RTSP "
+"кеңейту плагинін орнату қажет болуы мүмкін."
+
+msgid ""
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
+msgstr ""
+"Қолдау көрсетілетін ағын табылмады. Көбірек тасымалдау протоколдарына рұқсат "
+"беруіңіз керек немесе тиісті GStreamer RTSP кеңейту плагині жетіспейді."
+
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Аудио құрылғысын ойнату үшін ашу мүмкін болмады. Құрылғыны басқа қолданба "
+"пайдаланып жатыр."
+
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
+msgstr ""
+"Аудио құрылғысын ойнату үшін ашу мүмкін болмады. Құрылғыны ашуға құқығыңыз "
+"жоқ."
+
+msgid "Could not open audio device for playback."
+msgstr "Аудио құрылғысын ойнату үшін ашу мүмкін болмады."
+
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+"Аудио құрылғысын ойнату үшін ашу мүмкін болмады. Open Sound System жүйесінің "
+"бұл нұсқасын бұл элемент қолдамайды."
+
+msgid "Playback is not supported by this audio device."
+msgstr "Бұл аудио құрылғысы ойнатуды қолдамайды."
+
+msgid "Audio playback error."
+msgstr "Аудионы ойнату қатесі."
+
+msgid "Recording is not supported by this audio device."
+msgstr "Бұл аудио құрылғысы жазуды қолдамайды."
+
+msgid "Error recording from audio device."
+msgstr "Аудио құрылғысынан жазу қатесі."
+
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+"Аудио құрылғысын жазу үшін ашу мүмкін болмады. Құрылғыны ашуға құқығыңыз жоқ."
+
+msgid "Could not open audio device for recording."
+msgstr "Аудио құрылғысын жазу үшін ашу мүмкін болмады."
+
+msgid "CoreAudio device not found"
+msgstr "CoreAudio құрылғысы табылмады"
+
+msgid "CoreAudio device could not be opened"
+msgstr "CoreAudio құрылғысын ашу мүмкін болмады"
+
+msgid "Raspberry Pi Camera Module"
+msgstr "Raspberry Pi камера модулі"
+
+#, c-format
+msgid "Error reading %d bytes from device '%s'."
+msgstr "«%2$s» құрылғысынан %1$d байт оқу қатесі."
+
+#, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+"«%s» құрылғысы жұмыс істей алатын ықтимал видео пішімдерін тізіп шығу сәтсіз "
+"аяқталды"
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "«%s» құрылғысынан буферлерді бейнелеу мүмкін болмады"
+
+#, c-format
+msgid "The driver of device '%s' does not support the IO method %d"
+msgstr "«%s» құрылғысының драйвері %d Е/Ш әдісін қолдамайды"
+
+#, c-format
+msgid "The driver of device '%s' does not support any known IO method."
+msgstr ""
+"«%s» құрылғысының драйвері белгілі Е/Ш әдістерінің ешқайсысын қолдамайды."
+
+msgid "Invalid caps"
+msgstr "Мүмкіндіктер (caps) жарамсыз"
+
+#, c-format
+msgid "Device '%s' has no supported format"
+msgstr "«%s» құрылғысында қолдау көрсетілетін пішім жоқ"
+
+#, c-format
+msgid "Device '%s' failed during initialization"
+msgstr "«%s» құрылғысын инициализациялау сәтсіз аяқталды"
+
+#, c-format
+msgid "Device '%s' is busy"
+msgstr "«%s» құрылғысы бос емес"
+
+#, c-format
+msgid "Device '%s' cannot capture at %dx%d"
+msgstr "«%s» құрылғысы %dx%d ажыратымдылығымен түсіре алмайды"
+
+#, c-format
+msgid "Device '%s' cannot capture in the specified format"
+msgstr "«%s» құрылғысы көрсетілген пішімде түсіре алмайды"
+
+#, c-format
+msgid "Device '%s' does support non-contiguous planes"
+msgstr "«%s» құрылғысы үздіксіз емес жазықтықтарды қолдайды"
+
+#, c-format
+msgid "Device '%s' does not support %s interlacing"
+msgstr "«%s» құрылғысы %s жоларалық жаймасын (interlacing) қолдамайды"
+
+#, c-format
+msgid "Device '%s' does not support %s colorimetry"
+msgstr "«%s» құрылғысы %s колориметриясын қолдамайды"
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "«%s» құрылғысының параметрлерін алу мүмкін болмады"
+
+msgid "Video device did not accept new frame rate setting."
+msgstr "Видео құрылғысы жаңа кадр жиілігі баптауын қабылдамады."
+
+msgid "Video device did not provide output format."
+msgstr "Видео құрылғысы шығыс пішімін ұсынбады."
+
+msgid "Video device returned invalid dimensions."
+msgstr "Видео құрылғысы жарамсыз өлшемдерді қайтарды."
+
+msgid "Video device uses an unsupported interlacing method."
+msgstr ""
+"Видео құрылғысы қолдау көрсетілмейтін жоларалық жайма әдісін пайдаланады."
+
+msgid "Video device uses an unsupported pixel format."
+msgstr "Видео құрылғысы қолдау көрсетілмейтін пиксель пішімін пайдаланады."
+
+msgid "Failed to configure internal buffer pool."
+msgstr "Ішкі буфер пулын баптау сәтсіз аяқталды."
+
+msgid "Video device did not suggest any buffer size."
+msgstr "Видео құрылғысы ешқандай буфер өлшемін ұсынбады."
+
+msgid "No downstream pool to import from."
+msgstr "Импорттайтын төменгі ағын пулы жоқ."
+
+#, c-format
+msgid "Failed to get settings of tuner %d on device '%s'."
+msgstr "«%2$s» құрылғысындағы %1$d тюнерінің баптауларын алу сәтсіз аяқталды."
+
+#, c-format
+msgid "Error getting capabilities for device '%s'."
+msgstr "«%s» құрылғысының мүмкіндіктерін алу қатесі."
+
+#, c-format
+msgid "Device '%s' is not a tuner."
+msgstr "«%s» құрылғысы тюнер емес."
+
+#, c-format
+msgid "Failed to get radio input on device '%s'. "
+msgstr "«%s» құрылғысынан радио кірісін алу сәтсіз аяқталды. "
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "«%2$s» құрылғысында %1$d кірісін орнату сәтсіз аяқталды."
+
+#, c-format
+msgid "Failed to change mute state for device '%s'."
+msgstr "«%s» құрылғысының дыбысын өшіру күйін өзгерту сәтсіз аяқталды."
+
+msgid "Failed to allocated required memory."
+msgstr "Қажетті жадты бөлу сәтсіз аяқталды."
+
+msgid "Failed to allocate required memory."
+msgstr "Қажетті жадты бөлу сәтсіз аяқталды."
+
+#, c-format
+msgid "Converter on device %s has no supported input format"
+msgstr "%s құрылғысындағы түрлендіргіште қолдау көрсетілетін кіріс пішімі жоқ"
+
+#, c-format
+msgid "Converter on device %s has no supported output format"
+msgstr "%s құрылғысындағы түрлендіргіште қолдау көрсетілетін шығыс пішімі жоқ"
+
+#, c-format
+msgid "Decoder on device %s has no supported input format"
+msgstr "%s құрылғысындағы декодерде қолдау көрсетілетін кіріс пішімі жоқ"
+
+msgid "Failed to start decoding thread."
+msgstr "Декодтау ағынын іске қосу сәтсіз аяқталды."
+
+msgid "Failed to process frame."
+msgstr "Кадрды өңдеу сәтсіз аяқталды."
+
+#, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr "%s құрылғысындағы кодтаушыда қолдау көрсетілетін шығыс пішімі жоқ"
+
+#, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "%s құрылғысындағы кодтаушыда қолдау көрсетілетін кіріс пішімі жоқ"
+
+msgid "Failed to force keyframe."
+msgstr "Тірек кадрды мәжбүрлеу сәтсіз аяқталды."
+
+msgid "Failed to start encoding thread."
+msgstr "Кодтау ағынын іске қосу сәтсіз аяқталды."
+
+#, c-format
+msgid ""
+"Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
+"it is a v4l1 driver."
+msgstr ""
+"«%s» құрылғысының мүмкіндіктерін алу қатесі: ол v4l2 драйвері емес. Оның "
+"v4l1 драйвері екенін тексеріңіз."
+
+#, c-format
+msgid "Failed to query attributes of input %d in device %s"
+msgstr "%2$s құрылғысында %1$d кірісінің атрибуттарын сұрау сәтсіз аяқталды"
+
+#, c-format
+msgid "Failed to get setting of tuner %d on device '%s'."
+msgstr "«%2$s» құрылғысындағы %1$d тюнерінің баптауын алу сәтсіз аяқталды."
+
+#, c-format
+msgid "Failed to query norm on device '%s'."
+msgstr "«%s» құрылғысында норманы сұрау сәтсіз аяқталды."
+
+#, c-format
+msgid "Failed getting controls attributes on device '%s'."
+msgstr ""
+"«%s» құрылғысында басқару элементтерінің атрибуттарын алу сәтсіз аяқталды."
+
+#, c-format
+msgid "Cannot identify device '%s'."
+msgstr "«%s» құрылғысын анықтау мүмкін емес."
+
+#, c-format
+msgid "This isn't a device '%s'."
+msgstr "Бұл «%s» құрылғысы емес."
+
+#, c-format
+msgid "Could not open device '%s' for reading and writing."
+msgstr "«%s» құрылғысын оқу және жазу үшін ашу мүмкін болмады."
+
+#, c-format
+msgid "Device '%s' is not a capture device."
+msgstr "«%s» құрылғысы түсіру құрылғысы емес."
+
+#, c-format
+msgid "Device '%s' is not a output device."
+msgstr "«%s» құрылғысы шығыс құрылғысы емес."
+
+#, c-format
+msgid "Device '%s' is not a M2M device."
+msgstr "«%s» құрылғысы M2M құрылғысы емес."
+
+#, c-format
+msgid "Could not dup device '%s' for reading and writing."
+msgstr "«%s» құрылғысын оқу және жазу үшін дубликаттау (dup) мүмкін болмады."
+
+#, c-format
+msgid "Failed to set norm for device '%s'."
+msgstr "«%s» құрылғысы үшін норманы орнату сәтсіз аяқталды."
+
+#, c-format
+msgid "Failed to get current tuner frequency for device '%s'."
+msgstr "«%s» құрылғысының ағымдағы тюнер жиілігін алу сәтсіз аяқталды."
+
+#, c-format
+msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
+msgstr ""
+"«%s» құрылғысының ағымдағы тюнер жиілігін %lu Гц мәніне орнату сәтсіз "
+"аяқталды."
+
+#, c-format
+msgid "Failed to get signal strength for device '%s'."
+msgstr "«%s» құрылғысының сигнал күшін алу сәтсіз аяқталды."
+
+#, c-format
+msgid "Failed to get value for control %d on device '%s'."
+msgstr ""
+"«%2$s» құрылғысындағы %1$d басқару элементінің мәнін алу сәтсіз аяқталды."
+
+#, c-format
+msgid "Failed to set value %d for control %d on device '%s'."
+msgstr ""
+"«%3$s» құрылғысында %2$d басқару элементі үшін %1$d мәнін орнату сәтсіз "
+"аяқталды."
+
+#, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr ""
+"«%3$s» құрылғысында %2$d басқару элементі үшін %1$s мәнін орнату сәтсіз "
+"аяқталды."
+
+#, c-format
+msgid "Failed to get current input on device '%s'. May be it is a radio device"
+msgstr ""
+"«%s» құрылғысында ағымдағы кірісті алу сәтсіз аяқталды. Ол радио құрылғысы "
+"болуы мүмкін"
+
+#, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "%2$s құрылғысында %1$u кірісін орнату сәтсіз аяқталды."
+
+#, c-format
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"«%s» құрылғысында ағымдағы шығысты алу сәтсіз аяқталды. Ол радио құрылғысы "
+"болуы мүмкін"
+
+#, c-format
+msgid "Failed to set output %u on device %s."
+msgstr "%2$s құрылғысында %1$u шығысын орнату сәтсіз аяқталды."
+
+msgid "Cannot operate without a clock"
+msgstr "Сағатсыз жұмыс істеу мүмкін емес"
