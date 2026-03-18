@@ -31,6 +31,10 @@ hlsl_sources = [
   ['CSMain_weave_interlace_1', 'cs'],
   ['CSMain_weave_interlace_2', 'cs'],
   ['CSMain_weave_interlace_4', 'cs'],
+  ['CSMain_nv12_to_r8_load', 'cs'],
+  ['CSMain_nv12_to_r8_sample', 'cs'],
+  ['CSMain_p010_to_a420_10_load', 'cs'],
+  ['CSMain_p010_to_a420_10_sample', 'cs'],
 ]
 
 shader_model = '5_0'

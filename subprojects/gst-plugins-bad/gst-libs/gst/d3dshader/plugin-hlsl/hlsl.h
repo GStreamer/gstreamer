@@ -51,3 +51,7 @@
 #include "CSMain_weave_interlace_1.hlsl"
 #include "CSMain_weave_interlace_2.hlsl"
 #include "CSMain_weave_interlace_4.hlsl"
+#include "CSMain_nv12_to_r8_load.hlsl"
+#include "CSMain_nv12_to_r8_sample.hlsl"
+#include "CSMain_p010_to_a420_10_load.hlsl"
+#include "CSMain_p010_to_a420_10_sample.hlsl"

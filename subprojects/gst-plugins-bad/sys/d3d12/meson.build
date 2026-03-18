@@ -41,6 +41,7 @@ d3d12_sources = [
   'gstd3d12interlace.cpp',
   'gstd3d12overlaycompositor.cpp',
   'gstd3d12vp9alphadbin.cpp',
+  'gstd3d12alphacombine.cpp',
   'plugin.cpp',
 ]
 
