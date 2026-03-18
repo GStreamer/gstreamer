@@ -2,14 +2,14 @@
 # This file is put in the public domain.
 # Funda Wang <fundawang@linux.net.cn>, 2005.
 # Ji ZhengYu <zhengyuji@gmail.com>, 2008.
-# Tianze Wang <zwpwjwtz@126.com>, 2015.
+# Tianze Wang <zwpwjwtz@126.com>, 2015, 2026.
 # Boyuan Yang <073plan@gmail.com>, 2022.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.21.90\n"
+"Project-Id-Version: gst-plugins-base 1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-25 17:17+0000\n"
-"PO-Revision-Date: 2023-01-21 13:42+0800\n"
+"POT-Creation-Date: 2026-03-18 23:42+0100\n"
+"PO-Revision-Date: 2026-02-17 11:06+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
@@ -17,7 +17,8 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 2.2.1\n"
+"X-Generator: Lokalize 22.12.3\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "无法在单声道模式打开设备播放。"
@@ -146,16 +147,15 @@ msgstr "此类型的数据流尚不能播放。"
 msgid "No URI handler implemented for \"%s\"."
 msgstr "“%s”未实现 URI 处理器。"
 
-#, fuzzy
 msgid "Source element can't be prepared"
-msgstr "源组件缺少pad。"
+msgstr "无法设置源元素"
 
 msgid "Source element is invalid."
 msgstr "无效的源组件。"
 
 #, c-format
 msgid "Failed to create download directory '%s'."
-msgstr ""
+msgstr "无法创建下载目录“%s”。"
 
 msgid "Source element has no pads."
 msgstr "源组件缺少pad。"
@@ -170,15 +170,14 @@ msgstr "无法足够快的录音"
 msgid "This CD has no audio tracks"
 msgstr "此 CD 无音轨"
 
-#, fuzzy
 msgid "An OpenGL error occurred"
-msgstr "发生了 GL 错误"
+msgstr "发生了 OpenGL 错误"
 
 msgid "The GL API is not compatible with the current GL context"
-msgstr ""
+msgstr "GL API 与当前 GL 上下文不兼容"
 
 msgid "Subclass failed to initialize."
-msgstr ""
+msgstr "子类初始化失败。"
 
 msgid "ID3 tag"
 msgstr "ID3 标识"
@@ -249,7 +248,7 @@ msgid "WebVTT subtitle format"
 msgstr "WebVTT 字幕格式"
 
 msgid "Timed ID3 tag Metadata"
-msgstr ""
+msgstr "包含时间的 ID3 标签元数据"
 
 msgid "Uncompressed video"
 msgstr "未压缩的视频"
@@ -495,13 +494,12 @@ msgstr "捕捉白平衡"
 msgid "The white balance mode set when capturing an image"
 msgstr "捕捉图像时的白平衡"
 
-#, fuzzy
 msgid "capturing light source"
-msgstr "捕捉源"
+msgstr "捕捉光源"
 
 #, fuzzy
 msgid "The light source indicates the kind of light when capturing an image"
-msgstr "用于捕捉图像的场景模式"
+msgstr "“光源”指捕捉图像时光的种类"
 
 msgid "capturing contrast"
 msgstr "捕捉对比度"
@@ -592,36 +590,36 @@ msgid "Mute: off"
 msgstr "静音：关闭"
 
 msgid "Missing plugin installation was disabled via command line options."
-msgstr ""
+msgstr "已通过命令行选项禁用缺失插件安装功能。"
 
 msgid "All missing plugins could be installed."
-msgstr ""
+msgstr "可以安装所有的缺失插件。"
 
 msgid "Some missing plugins could be installed."
-msgstr ""
+msgstr "可以安装部分缺失插件。"
 
 msgid ""
 "The missing plugins could not be found in the available package repositories."
-msgstr ""
+msgstr "可用软件包仓库中找不到缺失的插件。"
 
 msgid "An error occurred during plugin installation."
-msgstr ""
+msgstr "安装插件时出现错误。"
 
 msgid "Plugin installation was cancelled by the user."
-msgstr ""
+msgstr "用户取消了插件安装流程。"
 
 msgid ""
 "Something went wrong when trying to invoke the missing plugin installer."
-msgstr ""
+msgstr "尝试运行缺失插件安装程序时出错。"
 
 msgid "This system does not have a missing plugin handler installed."
-msgstr ""
+msgstr "本系统中尚未安装缺失插件处理程序。"
 
 msgid "Updating plugin registry for newly installed plugins.."
-msgstr ""
+msgstr "正在为新安装的插件更新插件注册表.."
 
 msgid "Error updating plugin registry."
-msgstr ""
+msgstr "更新插件注册表时出错。"
 
 msgid "Buffering..."
 msgstr "缓冲中..."
@@ -755,7 +753,7 @@ msgid "Start position in seconds."
 msgstr "以秒计算的起始位置。"
 
 msgid "Enable accurate seeking"
-msgstr ""
+msgstr "启用精确定位"
 
 msgid "Playlist file containing input media files"
 msgstr "播放列表文件含有媒体文件"
@@ -766,13 +764,11 @@ msgstr "改变速率时使用实验性的 instant-rate-change 旗标"
 msgid "Do not print any output (apart from errors)"
 msgstr "不显示任何输出（除了错误信息）"
 
-#, fuzzy
 msgid "Use playbin3 pipeline (default)"
-msgstr "使用 playbin3 管道"
+msgstr "使用 playbin3 管道（默认）"
 
-#, fuzzy
 msgid "Use playbin2 pipeline"
-msgstr "使用 playbin3 管道"
+msgstr "使用 playbin2 管道"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -782,10 +778,10 @@ msgstr ""
 "缝切换”选项）"
 
 msgid "Do not print current position of pipeline"
-msgstr ""
+msgstr "不显示管道的当前位置"
 
 msgid "Disable missing plugin installation"
-msgstr ""
+msgstr "禁用缺失插件安装功能"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

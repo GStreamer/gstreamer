@@ -1,8 +1,8 @@
 # Brazilian Portuguese translation of gst-plugins-base.
-# Copyright (C) 2008-2024 Free Software Foundation, Inc.
+# Copyright (C) 2008-2026 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
 # Fabrício Godoy <skarllot@gmail.com>, 2008-2021.
-# Rafael Fontenelle <rafaelff@gnome.org>, 2024.
+# Rafael Fontenelle <rafaelff@gnome.org>, 2024-2026.
 #
 # PCM -> PCM
 # buffering -> preenchendo buffer
@@ -11,10 +11,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.24.0\n"
+"Project-Id-Version: gst-plugins-base-1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-25 17:17+0000\n"
-"PO-Revision-Date: 2024-10-09 10:56-0300\n"
+"POT-Creation-Date: 2026-03-18 23:42+0100\n"
+"PO-Revision-Date: 2026-02-08 22:44-0300\n"
 "Last-Translator: Rafael Fontenelle <rafaelff@gnome.org>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-"
 "translation@lists.sourceforge.net>\n"
@@ -22,9 +22,9 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"Plural-Forms: nplurals=2; plural=(n > 1)\n"
-"X-Generator: Gtranslator 47.0\n"
+"X-Generator: Poedit 3.8\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Não foi possível abrir o dispositivo para reprodução em mono."
@@ -262,7 +262,7 @@ msgid "WebVTT subtitle format"
 msgstr "Formato de legendas WebVTT"
 
 msgid "Timed ID3 tag Metadata"
-msgstr ""
+msgstr "Metadados temporizados de etiqueta ID3"
 
 msgid "Uncompressed video"
 msgstr "Vídeo sem compressão"
@@ -510,13 +510,12 @@ msgstr "balanço de branco ao capturar"
 msgid "The white balance mode set when capturing an image"
 msgstr "O modo de balanço de branco definido ao capturar uma imagem"
 
-#, fuzzy
 msgid "capturing light source"
-msgstr "origem ao capturar"
+msgstr "origem de luz ao capturar"
 
 #, fuzzy
 msgid "The light source indicates the kind of light when capturing an image"
-msgstr "O modo de captura de cena utilizado ao capturar uma imagem"
+msgstr "A origem de luz indica o tipo de luz ao capturar uma imagem"
 
 msgid "capturing contrast"
 msgstr "contraste ao capturar"
@@ -599,11 +598,11 @@ msgid ""
 "Don't exit after showing the initial device list, but wait for devices to "
 "added/removed."
 msgstr ""
-"Não sair após exibir a lista inicial de dispositivos, mas sim, esperar por "
+"Não sai após exibir a lista inicial de dispositivos, mas sim, esperar por "
 "dispositivos serem adicionados ou removidos."
 
 msgid "Include devices from hidden device providers."
-msgstr "Incluir dispositivos de provedores ocultos de dispositivos."
+msgstr "Inclui dispositivos de provedores ocultos de dispositivos."
 
 #, c-format
 msgid "Volume: %.0f%%"
@@ -617,35 +616,38 @@ msgstr "Áudio: desligado"
 
 msgid "Missing plugin installation was disabled via command line options."
 msgstr ""
+"Instalação de plug-in faltante foi desativada via opções de linha de comando."
 
 msgid "All missing plugins could be installed."
-msgstr ""
+msgstr "Todos os plug-ins faltantes puderam ser instalados."
 
 msgid "Some missing plugins could be installed."
-msgstr ""
+msgstr "Alguns plug-ins faltantes puderam ser instalados."
 
 msgid ""
 "The missing plugins could not be found in the available package repositories."
 msgstr ""
+"Os plug-ins faltantes não puderam ser encontrados nos repositórios de pacote "
+"disponíveis."
 
 msgid "An error occurred during plugin installation."
-msgstr ""
+msgstr "Ocorreu um erro durante a instalação de plug-in."
 
 msgid "Plugin installation was cancelled by the user."
-msgstr ""
+msgstr "A instalação de plug-in foi cancelada pelo usuário."
 
 msgid ""
 "Something went wrong when trying to invoke the missing plugin installer."
-msgstr ""
+msgstr "Ocorreu um erro ao tentar invocar o instalador de plugins faltante."
 
 msgid "This system does not have a missing plugin handler installed."
-msgstr ""
+msgstr "O sistema não tem um manipulador de plugin faltante instalado."
 
 msgid "Updating plugin registry for newly installed plugins.."
-msgstr ""
+msgstr "Atualizando o registro de plug-ins para plug-ins recém-instalados..."
 
 msgid "Error updating plugin registry."
-msgstr ""
+msgstr "Erro ao atualizar o registro de plug-ins."
 
 msgid "Buffering..."
 msgstr "Preenchendo buffer..."
@@ -821,7 +823,7 @@ msgid "Do not print current position of pipeline"
 msgstr "Não exibe a posição atual da fila de processamento"
 
 msgid "Disable missing plugin installation"
-msgstr ""
+msgstr "Desativa instalação de plug-in faltante"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

@@ -1,0 +1,808 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026 gst-plugins-base's COPYRIGHT HOLDER
+# This file is distributed under the same license as the gst-plugins-base package.
+# Baurzhan Muftakhidinov <baurthefirst@gmail.com>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-base 1.27.90\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-03-18 23:42+0100\n"
+"PO-Revision-Date: 2026-03-01 14:36+0500\n"
+"Last-Translator: Baurzhan Muftakhidinov <baurthefirst@gmail.com>\n"
+"Language-Team: Kazakh <(nothing)>\n"
+"Language: kk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 3.8\n"
+
+msgid "Could not open device for playback in mono mode."
+msgstr "Құрылғыны моно режимінде ойнату үшін ашу мүмкін болмады."
+
+msgid "Could not open device for playback in stereo mode."
+msgstr "Құрылғыны стерео режимінде ойнату үшін ашу мүмкін болмады."
+
+#, c-format
+msgid "Could not open device for playback in %d-channel mode."
+msgstr "Құрылғыны %d-каналды режимде ойнату үшін ашу мүмкін болмады."
+
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Аудио құрылғыны ойнату үшін ашу мүмкін болмады. Құрылғыны басқа қолданба "
+"қолданып жатыр."
+
+msgid "Could not open audio device for playback."
+msgstr "Аудио құрылғыны ойнату үшін ашу мүмкін болмады."
+
+msgid "Error outputting to audio device. The device has been disconnected."
+msgstr "Аудио құрылғыға шығару қатесі. Құрылғы ажыратылған."
+
+msgid "Could not open device for recording in mono mode."
+msgstr "Құрылғыны моно режимінде жазу үшін ашу мүмкін болмады."
+
+msgid "Could not open device for recording in stereo mode."
+msgstr "Құрылғыны стерео режимінде жазу үшін ашу мүмкін болмады."
+
+#, c-format
+msgid "Could not open device for recording in %d-channel mode"
+msgstr "Құрылғыны %d-каналды режимде жазу үшін ашу мүмкін болмады"
+
+msgid ""
+"Could not open audio device for recording. Device is being used by another "
+"application."
+msgstr ""
+"Аудио құрылғыны жазу үшін ашу мүмкін болмады. Құрылғыны басқа қолданба "
+"қолданып жатыр."
+
+msgid "Could not open audio device for recording."
+msgstr "Аудио құрылғыны жазу үшін ашу мүмкін болмады."
+
+msgid "Error recording from audio device. The device has been disconnected."
+msgstr "Аудио құрылғыдан жазу қатесі. Құрылғы ажыратылған."
+
+msgid "Could not open CD device for reading."
+msgstr "CD құрылғысын оқу үшін ашу мүмкін болмады."
+
+msgid "Could not seek CD."
+msgstr "CD ішінен іздеу мүмкін болмады."
+
+msgid "Could not read CD."
+msgstr "CD оқу мүмкін болмады."
+
+msgid "Could not determine type of stream"
+msgstr "Ағын түрін анықтау мүмкін болмады"
+
+msgid "This appears to be a text file"
+msgstr "Бұл мәтіндік файл сияқты"
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "«%s» элементі жетіспейді - GStreamer орнатылымын тексеріңіз."
+
+msgid "Could not create \"uridecodebin\" element."
+msgstr "«uridecodebin» элементін жасау мүмкін болмады."
+
+#, c-format
+msgid "Both autovideosink and %s elements are missing."
+msgstr "Autovideosink және %s элементтерінің екеуі де жоқ."
+
+msgid "The autovideosink element is missing."
+msgstr "Autovideosink элементі жоқ."
+
+#, c-format
+msgid "Configured videosink %s is not working."
+msgstr "Бапталған %s videosink жұмыс істемейді."
+
+#, c-format
+msgid "Both autovideosink and %s elements are not working."
+msgstr "Autovideosink және %s элементтерінің екеуі де жұмыс істемейді."
+
+msgid "The autovideosink element is not working."
+msgstr "Autovideosink элементі жұмыс істемейді."
+
+msgid "Custom text sink element is not usable."
+msgstr "Пайдаланушылық мәтіндік қабылдағыш (sink) элементі жарамсыз."
+
+msgid "No volume control found"
+msgstr "Дыбыс деңгейін басқару табылмады"
+
+#, c-format
+msgid "Both autoaudiosink and %s elements are missing."
+msgstr "Autoaudiosink және %s элементтерінің екеуі де жоқ."
+
+msgid "The autoaudiosink element is missing."
+msgstr "Autoaudiosink элементі жоқ."
+
+#, c-format
+msgid "Configured audiosink %s is not working."
+msgstr "Бапталған %s audiosink жұмыс істемейді."
+
+#, c-format
+msgid "Both autoaudiosink and %s elements are not working."
+msgstr "Autoaudiosink және %s элементтерінің екеуі де жұмыс істемейді."
+
+msgid "The autoaudiosink element is not working."
+msgstr "Autoaudiosink элементі жұмыс істемейді."
+
+msgid "Can't play a text file without video or visualizations."
+msgstr "Видеосыз немесе визуализациясыз мәтіндік файлды ойнату мүмкін емес."
+
+#, c-format
+msgid "No decoder available for type '%s'."
+msgstr "«%s» түрі үшін декодер жоқ."
+
+msgid "No URI specified to play from."
+msgstr "Ойнату үшін URI көрсетілмеген."
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "Жарамсыз URI «%s»."
+
+msgid "This stream type cannot be played yet."
+msgstr "Ағынның бұл түрін ойнату әлі мүмкін емес."
+
+#, c-format
+msgid "No URI handler implemented for \"%s\"."
+msgstr "«%s» үшін URI өңдеушісі іске асырылмаған."
+
+msgid "Source element can't be prepared"
+msgstr "Көз элементін дайындау мүмкін болмады"
+
+msgid "Source element is invalid."
+msgstr "Көз элементі жарамсыз."
+
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr "«%s» жүктеп алу бумасын жасау сәтсіз аяқталды."
+
+msgid "Source element has no pads."
+msgstr "Көз элементінде байланыс нүктелері (pads) жоқ."
+
+#, c-format
+msgid "Error while sending data to \"%s:%d\"."
+msgstr "«%s:%d» адресіне деректер жіберу қатесі."
+
+msgid "Can't record audio fast enough"
+msgstr "Аудионы жеткілікті жылдамдықпен жазу мүмкін емес"
+
+msgid "This CD has no audio tracks"
+msgstr "Бұл CD-де аудио тректер жоқ"
+
+msgid "An OpenGL error occurred"
+msgstr "OpenGL қатесі орын алды"
+
+msgid "The GL API is not compatible with the current GL context"
+msgstr "GL API ағымдағы GL контексімен үйлесімді емес"
+
+msgid "Subclass failed to initialize."
+msgstr "Ішкі класс (subclass) инициализациясы сәтсіз аяқталды."
+
+msgid "ID3 tag"
+msgstr "ID3 тегі"
+
+msgid "APE tag"
+msgstr "APE тегі"
+
+msgid "ICY internet radio"
+msgstr "ICY интернет радиосы"
+
+msgid "Apple Lossless Audio (ALAC)"
+msgstr "Apple Lossless Audio (ALAC)"
+
+msgid "Free Lossless Audio Codec (FLAC)"
+msgstr "Free Lossless Audio Codec (FLAC)"
+
+msgid "Lossless True Audio (TTA)"
+msgstr "Lossless True Audio (TTA)"
+
+msgid "Windows Media Speech"
+msgstr "Windows Media Speech"
+
+msgid "CYUV Lossless"
+msgstr "CYUV Lossless"
+
+msgid "FFMpeg v1"
+msgstr "FFMpeg v1"
+
+msgid "Lossless MSZH"
+msgstr "Lossless MSZH"
+
+msgid "Run-length encoding"
+msgstr "Run-length encoding (RLE)"
+
+#. subtitle formats with static descriptions
+msgid "Timed Text"
+msgstr "Уақытпен үйлестірілген мәтін"
+
+#. FIXME: add variant field to typefinder?
+msgid "Subtitle"
+msgstr "Субтитр"
+
+msgid "MPL2 subtitle format"
+msgstr "MPL2 субтитр пішімі"
+
+msgid "DKS subtitle format"
+msgstr "DKS субтитр пішімі"
+
+msgid "QTtext subtitle format"
+msgstr "QTtext субтитр пішімі"
+
+msgid "Sami subtitle format"
+msgstr "Sami субтитр пішімі"
+
+msgid "TMPlayer subtitle format"
+msgstr "TMPlayer субтитр пішімі"
+
+msgid "CEA 608 Closed Caption"
+msgstr "CEA 608 жабық субтитрлері"
+
+msgid "CEA 708 Closed Caption"
+msgstr "CEA 708 жабық субтитрлері"
+
+msgid "Kate subtitle format"
+msgstr "Kate субтитр пішімі"
+
+msgid "WebVTT subtitle format"
+msgstr "WebVTT субтитр пішімі"
+
+msgid "Timed ID3 tag Metadata"
+msgstr "Уақытпен үйлестірілген ID3 тег метадеректері"
+
+msgid "Uncompressed video"
+msgstr "Сығылмаған видео"
+
+msgid "Uncompressed gray"
+msgstr "Сығылмаған сұр түсті"
+
+#, c-format
+msgid "Uncompressed packed YUV %s"
+msgstr "Сығылмаған пакеттелген YUV %s"
+
+#, c-format
+msgid "Uncompressed semi-planar YUV %s"
+msgstr "Сығылмаған жартылай планарлы YUV %s"
+
+#, c-format
+msgid "Uncompressed planar YUV %s"
+msgstr "Сығылмаған планарлы YUV %s"
+
+#, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr "Сығылмаған палитралы %d-биттік %s"
+
+#, c-format
+msgid "Uncompressed %d-bit %s"
+msgstr "Сығылмаған %d-биттік %s"
+
+#, c-format
+msgid "DivX MPEG-4 Version %d"
+msgstr "DivX MPEG-4 %d нұсқасы"
+
+msgid "Uncompressed audio"
+msgstr "Сығылмаған аудио"
+
+#, c-format
+msgid "Raw %d-bit %s audio"
+msgstr "Шикі %d-биттік %s аудиосы"
+
+msgid "Audio CD source"
+msgstr "Audio CD көзі"
+
+msgid "DVD source"
+msgstr "DVD көзі"
+
+msgid "Real Time Streaming Protocol (RTSP) source"
+msgstr "Real Time Streaming Protocol (RTSP) көзі"
+
+msgid "Microsoft Media Server (MMS) protocol source"
+msgstr "Microsoft Media Server (MMS) протокол көзі"
+
+#. TODO: find out how to add a comment for translators to the source code
+#. * (and tell them to make the first letter uppercase below if they move
+#. * the protocol to the middle or end of the string)
+#, c-format
+msgid "%s protocol source"
+msgstr "%s протокол көзі"
+
+#, c-format
+msgid "%s video RTP depayloader"
+msgstr "%s видео RTP депайлодері"
+
+#, c-format
+msgid "%s audio RTP depayloader"
+msgstr "%s аудио RTP депайлодері"
+
+#, c-format
+msgid "%s RTP depayloader"
+msgstr "%s RTP депайлодері"
+
+#, c-format
+msgid "%s demuxer"
+msgstr "%s демуксері"
+
+#, c-format
+msgid "%s decoder"
+msgstr "%s декодері"
+
+#, c-format
+msgid "%s video RTP payloader"
+msgstr "%s видео RTP пайлодері"
+
+#, c-format
+msgid "%s audio RTP payloader"
+msgstr "%s аудио RTP пайлодері"
+
+#, c-format
+msgid "%s RTP payloader"
+msgstr "%s RTP пайлодері"
+
+#, c-format
+msgid "%s muxer"
+msgstr "%s муксері"
+
+#, c-format
+msgid "%s encoder"
+msgstr "%s кодері"
+
+#, c-format
+msgid "GStreamer element %s"
+msgstr "GStreamer %s элементі"
+
+msgid "Unknown source element"
+msgstr "Белгісіз көз элементі"
+
+msgid "Unknown sink element"
+msgstr "Белгісіз қабылдағыш (sink) элементі"
+
+msgid "Unknown element"
+msgstr "Белгісіз элемент"
+
+msgid "Unknown decoder element"
+msgstr "Белгісіз декодер элементі"
+
+msgid "Unknown encoder element"
+msgstr "Белгісіз кодер элементі"
+
+#. we should really never get here, but we better still return
+#. * something if we do
+msgid "Plugin or element of unknown type"
+msgstr "Белгісіз типті плагин немесе элемент"
+
+msgid "Failed to read tag: not enough data"
+msgstr "Тегті оқу сәтсіз аяқталды: деректер жеткіліксіз"
+
+msgid "track ID"
+msgstr "трек ID-і"
+
+msgid "MusicBrainz track ID"
+msgstr "MusicBrainz трек ID-і"
+
+msgid "artist ID"
+msgstr "орындаушы ID-і"
+
+msgid "MusicBrainz artist ID"
+msgstr "MusicBrainz орындаушы ID-і"
+
+msgid "album ID"
+msgstr "альбом ID-і"
+
+msgid "MusicBrainz album ID"
+msgstr "MusicBrainz альбом ID-і"
+
+msgid "album artist ID"
+msgstr "альбом орындаушысының ID-і"
+
+msgid "MusicBrainz album artist ID"
+msgstr "MusicBrainz альбом орындаушысының ID-і"
+
+msgid "release group ID"
+msgstr "релиз тобының ID-і"
+
+msgid "MusicBrainz release group ID"
+msgstr "MusicBrainz релиз тобының ID-і"
+
+msgid "release track ID"
+msgstr "релиз трегінің ID-і"
+
+msgid "MusicBrainz release track ID"
+msgstr "MusicBrainz релиз трегінің ID-і"
+
+msgid "track TRM ID"
+msgstr "трек TRM ID-і"
+
+msgid "MusicBrainz TRM ID"
+msgstr "MusicBrainz TRM ID-і"
+
+msgid "AcoustID ID"
+msgstr "AcoustID ID-і"
+
+msgid "AcoustID fingerprint (chromaprint)"
+msgstr "AcoustID саусақ ізі (chromaprint)"
+
+msgid "capturing shutter speed"
+msgstr "түсіру кезіндегі ысырма жылдамдығы"
+
+msgid "Shutter speed used when capturing an image, in seconds"
+msgstr "Суретті түсіру кезінде пайдаланылған ысырма жылдамдығы, секундпен"
+
+msgid "capturing focal ratio"
+msgstr "түсіру кезіндегі диафрагма саны"
+
+msgid "Focal ratio (f-number) used when capturing the image"
+msgstr "Суретті түсіру кезінде пайдаланылған диафрагма саны (f-number)"
+
+msgid "capturing focal length"
+msgstr "түсіру кезіндегі фокустық қашықтық"
+
+msgid "Focal length of the lens used capturing the image, in mm"
+msgstr ""
+"Суретті түсіру кезінде пайдаланылған линзаның фокустық қашықтығы, мм есебімен"
+
+msgid "capturing 35 mm equivalent focal length"
+msgstr "түсіру кезіндегі 35 мм-лік эквивалентті фокустық қашықтық"
+
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
+msgstr ""
+"Суретті түсіру кезінде пайдаланылған линзаның 35 мм-лік эквивалентті "
+"фокустық қашықтығы, мм есебімен"
+
+msgid "capturing digital zoom ratio"
+msgstr "түсіру кезіндегі цифрлық масштабтау коэффиценті"
+
+msgid "Digital zoom ratio used when capturing an image"
+msgstr "Суретті түсіру кезінде пайдаланылған цифрлық масштабтау коэффиценті"
+
+msgid "capturing iso speed"
+msgstr "түсіру кезіндегі ISO сезімталдығы"
+
+msgid "The ISO speed used when capturing an image"
+msgstr "Суретті түсіру кезінде пайдаланылған ISO сезімталдығы"
+
+msgid "capturing exposure program"
+msgstr "түсіру кезіндегі экспозиция бағдарламасы"
+
+msgid "The exposure program used when capturing an image"
+msgstr "Суретті түсіру кезінде пайдаланылған экспозиция бағдарламасы"
+
+msgid "capturing exposure mode"
+msgstr "түсіру кезіндегі экспозиция режимі"
+
+msgid "The exposure mode used when capturing an image"
+msgstr "Суретті түсіру кезінде пайдаланылған экспозиция режимі"
+
+msgid "capturing exposure compensation"
+msgstr "түсіру кезіндегі экспозиция өтемі"
+
+msgid "The exposure compensation used when capturing an image"
+msgstr "Суретті түсіру кезінде пайдаланылған экспозиция өтемі"
+
+msgid "capturing scene capture type"
+msgstr "түсіру кезіндегі сахна түрі"
+
+msgid "The scene capture mode used when capturing an image"
+msgstr "Суретті түсіру кезінде пайдаланылған сахнаны түсіру режимі"
+
+msgid "capturing gain adjustment"
+msgstr "түсіру кезіндегі күшейтуді реттеу"
+
+msgid "The overall gain adjustment applied on an image"
+msgstr "Суретке қолданылған жалпы күшейтуді реттеу"
+
+msgid "capturing white balance"
+msgstr "түсіру кезіндегі ақ түс теңгерімі"
+
+msgid "The white balance mode set when capturing an image"
+msgstr "Суретті түсіру кезінде орнатылған ақ түс теңгерімі режимі"
+
+msgid "capturing light source"
+msgstr "түсіру кезіндегі жарық көзі"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing an image"
+msgstr "Жарық көзі суретті түсіру кезіндегі жарық түрін көрсетеді"
+
+msgid "capturing contrast"
+msgstr "түсіру кезіндегі контраст"
+
+msgid "The direction of contrast processing applied when capturing an image"
+msgstr "Суретті түсіру кезінде қолданылған контрастты өңдеу бағыты"
+
+msgid "capturing saturation"
+msgstr "түсіру кезіндегі қанықтық"
+
+msgid "The direction of saturation processing applied when capturing an image"
+msgstr "Суретті түсіру кезінде қолданылған қанықтықты өңдеу бағыты"
+
+msgid "capturing sharpness"
+msgstr "түсіру кезіндегі айқындық"
+
+msgid "The direction of sharpness processing applied when capturing an image"
+msgstr "Суретті түсіру кезінде қолданылған айқындықты өңдеу бағыты"
+
+msgid "capturing flash fired"
+msgstr "түсіру кезіндегі жарқылдың қосылуы"
+
+msgid "If the flash fired while capturing an image"
+msgstr "Суретті түсіру кезінде жарқыл іске қосылды ма"
+
+msgid "capturing flash mode"
+msgstr "түсіру кезіндегі жарқыл режимі"
+
+msgid "The selected flash mode while capturing an image"
+msgstr "Суретті түсіру кезінде таңдалған жарқыл режимі"
+
+msgid "capturing metering mode"
+msgstr "түсіру кезіндегі экспозицияны өлшеу режимі"
+
+msgid ""
+"The metering mode used while determining exposure for capturing an image"
+msgstr ""
+"Суретті түсіру үшін экспозицияны анықтау кезінде пайдаланылған өлшеу режимі"
+
+msgid "capturing source"
+msgstr "түсіру көзі"
+
+msgid "The source or type of device used for the capture"
+msgstr "Түсіру үшін пайдаланылған құрылғының көзі немесе түрі"
+
+msgid "image horizontal ppi"
+msgstr "суреттің көлденең ppi тығыздығы"
+
+msgid "Media (image/video) intended horizontal pixel density in ppi"
+msgstr "Медианың (сурет/видео) ppi бойынша мақсатты көлденең пиксель тығыздығы"
+
+msgid "image vertical ppi"
+msgstr "суреттің вертикалды ppi тығыздығы"
+
+msgid "Media (image/video) intended vertical pixel density in ppi"
+msgstr ""
+"Медианың (сурет/видео) ppi бойынша мақсатты вертикалды пиксель тығыздығы"
+
+msgid "ID3v2 frame"
+msgstr "ID3v2 фреймі"
+
+msgid "unparsed id3v2 tag frame"
+msgstr "өңделмеген id3v2 тег фреймі"
+
+msgid "musical-key"
+msgstr "музыкалық-кілт"
+
+msgid "Initial key in which the sound starts"
+msgstr "Дыбыс басталатын бастапқы кілт"
+
+msgid "Print version information and exit"
+msgstr "Нұсқа туралы ақпаратты шығару және шығу"
+
+msgid ""
+"Don't exit after showing the initial device list, but wait for devices to "
+"added/removed."
+msgstr ""
+"Құрылғылардың бастапқы тізімін көрсеткеннен кейін шықпай, құрылғылардың "
+"қосылуын/өшірілуін күту."
+
+msgid "Include devices from hidden device providers."
+msgstr "Жасырын құрылғы жеткізушілерінің құрылғыларын қосу."
+
+#, c-format
+msgid "Volume: %.0f%%"
+msgstr "Дыбыс деңгейі: %.0f%%"
+
+msgid "Mute: on"
+msgstr "Дыбысты өшіру: қосулы"
+
+msgid "Mute: off"
+msgstr "Дыбысты өшіру: өшірулі"
+
+msgid "Missing plugin installation was disabled via command line options."
+msgstr ""
+"Жетіспейтін плагинді орнату командалық жол опциялары арқылы сөндірілген."
+
+msgid "All missing plugins could be installed."
+msgstr "Барлық жетіспейтін плагиндер орнатылуы мүмкін."
+
+msgid "Some missing plugins could be installed."
+msgstr "Кейбір жетіспейтін плагиндер орнатылуы мүмкін."
+
+msgid ""
+"The missing plugins could not be found in the available package repositories."
+msgstr "Жетіспейтін плагиндер қолжетімді десте репозиторийлерінен табылмады."
+
+msgid "An error occurred during plugin installation."
+msgstr "Плагинді орнату кезінде қате орын алды."
+
+msgid "Plugin installation was cancelled by the user."
+msgstr "Плагинді орнатуды пайдаланушы тоқтатты."
+
+msgid ""
+"Something went wrong when trying to invoke the missing plugin installer."
+msgstr "Жетіспейтін плагиндерді орнатушыны шақыру кезінде қате орын алды."
+
+msgid "This system does not have a missing plugin handler installed."
+msgstr "Бұл жүйеде жетіспейтін плагиндерді өңдеуші орнатылмаған."
+
+msgid "Updating plugin registry for newly installed plugins.."
+msgstr "Жаңадан орнатылған плагиндер үшін плагиндер тізілімі жаңартылуда.."
+
+msgid "Error updating plugin registry."
+msgstr "Плагиндер тізілімін жаңарту қатесі."
+
+msgid "Buffering..."
+msgstr "Аралық сақтау (Buffering)..."
+
+msgid "Clock lost, selecting a new one\n"
+msgstr "Уақыт жоғалды, жаңасы таңдалуда\n"
+
+msgid "Reached end of play list."
+msgstr "Ойнату тізімінің соңына жетті."
+
+msgid "Paused"
+msgstr "Аялдатылды"
+
+#, c-format
+msgid "Now playing %s\n"
+msgstr "Қазір %s ойнатылуда\n"
+
+#, c-format
+msgid "About to finish, preparing next title: %s"
+msgstr "Аяқталуға жақын, келесі тақырып дайындалуда: %s"
+
+#, c-format
+msgid "Playback rate: %.2f"
+msgstr "Ойнату жылдамдығы: %.2f"
+
+#, c-format
+msgid "Could not change playback rate to %.2f"
+msgstr "Ойнату жылдамдығын %.2f мәніне өзгерту мүмкін болмады"
+
+msgid "space"
+msgstr "бос орын"
+
+msgid "pause/unpause"
+msgstr "аялдату/жалғастыру"
+
+msgid "q or ESC"
+msgstr "q немесе ESC"
+
+msgid "quit"
+msgstr "шығу"
+
+msgid "> or n"
+msgstr "> немесе n"
+
+msgid "play next"
+msgstr "келесіні ойнату"
+
+msgid "< or b"
+msgstr "< немесе b"
+
+msgid "play previous"
+msgstr "алдыңғыны ойнату"
+
+msgid "seek forward"
+msgstr "алға іздеу"
+
+msgid "seek backward"
+msgstr "артқа іздеу"
+
+msgid "volume up"
+msgstr "дыбысты көтеру"
+
+msgid "volume down"
+msgstr "дыбысты азайту"
+
+msgid "toggle audio mute on/off"
+msgstr "дыбысты өшіруді қосу/сөндіру"
+
+msgid "increase playback rate"
+msgstr "ойнату жылдамдығын арттыру"
+
+msgid "decrease playback rate"
+msgstr "ойнату жылдамдығын азайту"
+
+msgid "change playback direction"
+msgstr "ойнату бағытын өзгерту"
+
+msgid "enable/disable trick modes"
+msgstr "трюк режимдерін іске қосу/сөндіру"
+
+msgid "change to previous/next audio track"
+msgstr "алдыңғы/келесі аудио трекке ауысу"
+
+msgid "change to previous/next video track"
+msgstr "алдыңғы/келесі видео трекке ауысу"
+
+msgid "change to previous/next subtitle track"
+msgstr "алдыңғы/келесі субтитр трегіне ауысу"
+
+msgid "seek to beginning"
+msgstr "басына қарай іздеу"
+
+msgid "show keyboard shortcuts"
+msgstr "пернетақта жарлықтарын көрсету"
+
+msgid "Interactive mode - keyboard controls:"
+msgstr "Интерактивті режим - пернетақта арқылы басқару:"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "Windows жоғары ажыратымдылықты сағатын пайдалану, дәлдігі: %u мс\n"
+
+msgid "Output status information and property notifications"
+msgstr "Күй туралы ақпаратты және қасиеттер туралы хабарландыруларды шығару"
+
+msgid "Control playback behaviour setting playbin 'flags' property"
+msgstr "Playbin 'flags' қасиетін баптау арқылы ойнату әрекетін басқару"
+
+msgid "Video sink to use (default is autovideosink)"
+msgstr "Пайдаланылатын видео қабылдағыш (әдепкі бойынша autovideosink)"
+
+msgid "Audio sink to use (default is autoaudiosink)"
+msgstr "Пайдаланылатын аудио қабылдағыш (әдепкі бойынша autoaudiosink)"
+
+msgid "Enable gapless playback"
+msgstr "Үзіліссіз ойнатуды іске қосу"
+
+msgid "Enable instantaneous uri changes (only with playbin3)"
+msgstr "URI-ды лезде өзгертуді іске қосу (тек playbin3-пен)"
+
+msgid "Shuffle playlist"
+msgstr "Ойнату тізімін араластыру"
+
+msgid "Disable interactive control via the keyboard"
+msgstr "Пернетақта арқылы интерактивті басқаруды сөндіру"
+
+msgid "Volume"
+msgstr "Дыбыс деңгейі"
+
+msgid "Start position in seconds."
+msgstr "Секундпен есептелген бастапқы позиция."
+
+msgid "Enable accurate seeking"
+msgstr "Дәл іздеуді іске қосу"
+
+msgid "Playlist file containing input media files"
+msgstr "Кіріс медиа файлдары бар ойнату тізімі файлы"
+
+msgid "Use the experimental instant-rate-change flag when changing rate"
+msgstr ""
+"Жылдамдықты өзгерткен кезде эксперименттік instant-rate-change жалаушасын "
+"пайдалану"
+
+msgid "Do not print any output (apart from errors)"
+msgstr "Ешқандай ақпаратты шығармау (қателерден басқа)"
+
+msgid "Use playbin3 pipeline (default)"
+msgstr "Playbin3 конвейерін пайдалану (әдепкі бойынша)"
+
+msgid "Use playbin2 pipeline"
+msgstr "Playbin2 конвейерін пайдалану"
+
+msgid ""
+"Keep showing the last frame on EOS until quit or playlist change command "
+"(gapless is ignored)"
+msgstr ""
+"Шығу немесе ойнату тізімін өзгерту командасына дейін EOS кезінде соңғы "
+"кадрды көрсетіп тұру (үзіліссіз ойнату еленбейді)"
+
+msgid "Do not print current position of pipeline"
+msgstr "Конвейердің ағымдағы позициясын шығармау"
+
+msgid "Disable missing plugin installation"
+msgstr "Жетіспейтін плагиндерді орнатуды сөндіру"
+
+#, c-format
+msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
+msgstr "Қолданылуы: %s ФАЙЛ1|URI1 [ФАЙЛ2|URI2] [ФАЙЛ3|URI3] ..."
+
+msgid "You must provide at least one filename or URI to play."
+msgstr "Ойнату үшін кем дегенде бір файл атын немесе URI көрсетуіңіз керек."
+
+msgid "Press 'k' to see a list of keyboard shortcuts.\n"
+msgstr "Пернетақта жарлықтарының тізімін көру үшін 'k' пернесін басыңыз.\n"
