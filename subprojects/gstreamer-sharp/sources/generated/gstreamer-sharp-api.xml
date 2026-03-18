@@ -23590,6 +23590,65 @@
           <parameter allow-none="1" name="output_gain" type="gint16*" owned="true" pass_as="out" />
         </parameters>
       </method>
+      <method name="CodecUtilsVp9EstimateLevelIdcFromCaps" cname="gst_codec_utils_vp9_estimate_level_idc_from_caps" shared="true" version="1.30">
+        <return-type type="guint8" />
+        <parameters>
+          <parameter name="caps" type="GstCaps*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="CodecUtilsVp9GetLevel" cname="gst_codec_utils_vp9_get_level" shared="true" version="1.30">
+        <return-type type="const-gchar*" />
+        <parameters>
+          <parameter name="level_idc" type="guint8" />
+        </parameters>
+      </method>
+      <method name="CodecUtilsVp9GetLevelIdc" cname="gst_codec_utils_vp9_get_level_idc" shared="true" version="1.30">
+        <return-type type="guint8" />
+        <parameters>
+          <parameter name="level" type="const-gchar*" />
+        </parameters>
+      </method>
+      <method name="CodecUtilsVpxCapsGetConfig" cname="gst_codec_utils_vpx_caps_get_config" shared="true" version="1.30">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter name="caps" type="GstCaps*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="vpx_version" type="gint*" owned="true" pass_as="out" />
+          <parameter name="profile" type="guint8*" owned="true" pass_as="out" />
+          <parameter name="level" type="guint8*" owned="true" pass_as="out" />
+          <parameter name="bit_depth" type="guint8*" owned="true" pass_as="out" />
+          <parameter name="chroma_subsampling" type="guint8*" owned="true" pass_as="out" />
+          <parameter name="video_full_range" type="gboolean*" owned="true" pass_as="out" />
+          <parameter name="colour_primaries" type="guint8*" owned="true" pass_as="out" />
+          <parameter name="transfer_characteristics" type="guint8*" owned="true" pass_as="out" />
+          <parameter name="matrix_coefficients" type="guint8*" owned="true" pass_as="out" />
+        </parameters>
+      </method>
+      <method name="CodecUtilsVpxCapsSetFormatFields" cname="gst_codec_utils_vpx_caps_set_format_fields" shared="true" version="1.30">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter name="caps" type="GstCaps*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="profile" type="gint" />
+          <parameter name="level" type="gint" />
+          <parameter name="bit_depth" type="gint" />
+          <parameter name="chroma_subsampling" type="gint" />
+        </parameters>
+      </method>
+      <method name="CodecUtilsVpxCreateVpccFromCaps" cname="gst_codec_utils_vpx_create_vpcc_from_caps" shared="true" version="1.30">
+        <return-type type="GstBuffer*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="caps" type="GstCaps*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
       <method name="EncodingListAllTargets" cname="gst_encoding_list_all_targets" shared="true">
         <return-type type="GList*" element_type="GstEncodingTarget*" elements_owned="true" owned="true" />
         <parameters>
