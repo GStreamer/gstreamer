@@ -23,6 +23,7 @@
 #endif
 
 #include "iosurfacevulkanmemory.h"
+#include <vulkan/vulkan_metal.h>
 #include "metal-helpers.h"
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_IO_SURFACE_VULKAN_MEMORY);
@@ -43,8 +44,10 @@ static GstAllocator *_io_surface_vulkan_memory_allocator;
 static void
 _mem_free (GstAllocator * allocator, GstMemory * mem)
 {
-  gst_io_surface_vulkan_memory_set_surface ((GstIOSurfaceVulkanMemory *) mem,
-      NULL);
+  GstIOSurfaceVulkanMemory *io_surface_mem = (GstIOSurfaceVulkanMemory *) mem;
+  if (io_surface_mem && io_surface_mem->surface) {
+    IOSurfaceDecrementUseCount (io_surface_mem->surface);
+  }
 
   GST_ALLOCATOR_CLASS
       (gst_io_surface_vulkan_memory_allocator_parent_class)->free (allocator,
@@ -140,12 +143,13 @@ gst_is_io_surface_vulkan_memory (GstMemory * mem)
 
 static GstIOSurfaceVulkanMemory *
 _io_surface_vulkan_memory_new (GstVulkanDevice * device, IOSurfaceRef surface,
-    unsigned int /* MTLPixelFormat */ fmt, GstVideoInfo * info, guint plane,
-    gpointer user_data, GDestroyNotify notify)
+    unsigned int /* MTLPixelFormat */ fmt, gpointer metal_texture,
+    GstVideoInfo * info, guint plane, gpointer user_data, GDestroyNotify notify)
 {
   GstIOSurfaceVulkanMemory *mem;
   GstAllocationParams params = { 0, };
   VkImageCreateInfo image_info;
+  VkImportMetalTextureInfoEXT import_texture_info;
   VkPhysicalDevice gpu;
   VkImageUsageFlags usage;
   VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -163,9 +167,17 @@ _io_surface_vulkan_memory_new (GstVulkanDevice * device, IOSurfaceRef surface,
       VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
 
   /* *INDENT-OFF* */
+  import_texture_info = (VkImportMetalTextureInfoEXT) {
+      .sType = VK_STRUCTURE_TYPE_IMPORT_METAL_TEXTURE_INFO_EXT,
+      .pNext = NULL,
+      .plane = VK_IMAGE_ASPECT_COLOR_BIT,
+      .mtlTexture = metal_texture,
+  };
+
+  /* *INDENT-OFF* */
   image_info = (VkImageCreateInfo) {
       .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-      .pNext = NULL,
+      .pNext = metal_texture ? &import_texture_info : NULL,
       .flags = 0,
       .imageType = VK_IMAGE_TYPE_2D,
       .format = vk_format,
@@ -210,9 +222,10 @@ _io_surface_vulkan_memory_new (GstVulkanDevice * device, IOSurfaceRef surface,
 
   GST_MINI_OBJECT_FLAG_SET (mem, GST_MEMORY_FLAG_READONLY);
 
-  mem->surface = NULL;
+  mem->surface = surface;
+  if (surface)
+    IOSurfaceIncrementUseCount (surface);
   mem->plane = plane;
-  gst_io_surface_vulkan_memory_set_surface (mem, surface);
 
   return mem;
 
@@ -235,8 +248,9 @@ error:
 GstIOSurfaceVulkanMemory *
 gst_io_surface_vulkan_memory_wrapped (GstVulkanDevice * device,
     IOSurfaceRef surface, unsigned int /* MTLPixelFormat */ fmt,
+    gpointer metal_texture,
     GstVideoInfo * info, guint plane, gpointer user_data, GDestroyNotify notify)
 {
-  return _io_surface_vulkan_memory_new (device, surface, fmt, info, plane,
-      user_data, notify);
+  return _io_surface_vulkan_memory_new (device, surface, fmt, metal_texture,
+      info, plane, user_data, notify);
 }

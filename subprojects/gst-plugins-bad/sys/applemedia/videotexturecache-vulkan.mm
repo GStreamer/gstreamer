@@ -64,11 +64,11 @@ G_DEFINE_TYPE_WITH_PRIVATE (GstVideoTextureCacheVulkan, gst_video_texture_cache_
 #define GET_PRIV(instance) \
     G_TYPE_INSTANCE_GET_PRIVATE (instance, GST_TYPE_VIDEO_TEXTURE_CACHE_VULKAN, GstVideoTextureCacheVulkanPrivate)
 
-typedef struct _IOSTextureWrapper
+typedef struct _IOSurfaceTextureWrapper
 {
-  CVMetalTextureCacheRef cache;
-  CVMetalTextureRef texture;
-} IOSTextureWrapper;
+  CVPixelBufferRef pixbuf;
+  gpointer texture; /* id<MTLTexture> */
+} IOSurfaceTextureWrapper;
 
 enum
 {
@@ -78,6 +78,15 @@ enum
 
 static GstMemory * gst_video_texture_cache_vulkan_create_memory (GstVideoTextureCache * cache,
       GstAppleCoreVideoPixelBuffer *gpixbuf, guint plane, gsize size);
+
+static void
+free_texture_wrapper (IOSurfaceTextureWrapper * wrapper)
+{
+  CFRelease (wrapper->pixbuf);
+  id<MTLTexture> tex = (__bridge_transfer id<MTLTexture>) wrapper->texture;
+  (void) tex;
+  g_free (wrapper);
+}
 
 GstVideoTextureCache *
 gst_video_texture_cache_vulkan_new (GstVulkanDevice * device)
@@ -223,95 +232,42 @@ _create_vulkan_memory (GstAppleCoreVideoPixelBuffer * gpixbuf,
   GstVideoTextureCacheVulkan *cache_vulkan =
       GST_VIDEO_TEXTURE_CACHE_VULKAN (cache);
   MTLPixelFormat fmt = (MTLPixelFormat) video_info_to_metal_format (info, plane);
+  GstVulkanDevice *device = cache_vulkan->device;
+  VkPhysicalDevice gpu;
+  id<MTLDevice> mtl_dev = nil;
+  MTLTextureDescriptor *tex_desc;
+  id<MTLTexture> texture = nil;
 
-  CFRetain (pixel_buf);
-  mem = gst_io_surface_vulkan_memory_wrapped (cache_vulkan->device,
-      surface, fmt, info, plane, pixel_buf, (GDestroyNotify) CFRelease);
+  gpu = gst_vulkan_device_get_physical_device (device);
+  G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
+  vkGetMTLDeviceMVK (gpu, &mtl_dev);
+  G_GNUC_END_IGNORE_DEPRECATIONS;
 
-  if (!mem)
+  tex_desc = [MTLTextureDescriptor new];
+  tex_desc.pixelFormat = fmt;
+  tex_desc.textureType = MTLTextureType2D;
+  tex_desc.width = GST_VIDEO_INFO_COMP_WIDTH (info, plane);
+  tex_desc.height = GST_VIDEO_INFO_COMP_HEIGHT (info, plane);
+  tex_desc.depth = 1;
+  tex_desc.mipmapLevelCount = 1;
+  tex_desc.sampleCount = 1;
+  tex_desc.arrayLength = 1;
+  tex_desc.usage = MTLTextureUsageShaderRead;
+  tex_desc.cpuCacheMode = MTLCPUCacheModeDefaultCache;
+
+  texture = [mtl_dev newTextureWithDescriptor:tex_desc iosurface:surface plane:plane];
+  if (!texture)
     return NULL;
 
+  IOSurfaceTextureWrapper *texture_data = g_new0 (IOSurfaceTextureWrapper, 1);
+  texture_data->pixbuf = (CVPixelBufferRef) CFRetain (pixel_buf);
+  texture_data->texture = (__bridge_retained gpointer) texture;
+
+  mem = gst_io_surface_vulkan_memory_wrapped (device, surface, fmt,
+      (__bridge void *) texture, info, plane, texture_data,
+      (GDestroyNotify) free_texture_wrapper);
+  if (!mem)
+    free_texture_wrapper (texture_data);
+
   return GST_MEMORY_CAST (mem);
-}
-
-typedef struct _IOSurfaceTextureWrapper
-{
-  CVPixelBufferRef pixbuf;
-  gpointer texture; /* id<MTLTexture> */
-} IOSurfaceTextureWrapper;
-
-static void
-free_texture_wrapper (IOSurfaceTextureWrapper * wrapper)
-{
-  CFRelease (wrapper->pixbuf);
-  id<MTLTexture> tex = (__bridge_transfer id<MTLTexture>) wrapper->texture;
-  (void) tex;
-  g_free (wrapper);
-}
-
-static MTLTextureDescriptor *
-gst_new_mtl_tex_descripter_from_memory (GstIOSurfaceVulkanMemory * memory)
-{
-  GstVulkanImageMemory *vk_mem = (GstVulkanImageMemory *) memory;
-  MTLTextureDescriptor* tex_desc = [MTLTextureDescriptor new];
-  tex_desc.pixelFormat = mvkMTLPixelFormatFromVkFormat (vk_mem->create_info.format);
-  tex_desc.textureType = mvkMTLTextureTypeFromVkImageType (vk_mem->create_info.imageType, 0, false);
-  tex_desc.width = vk_mem->create_info.extent.width;
-  tex_desc.height = vk_mem->create_info.extent.height;
-  tex_desc.depth = vk_mem->create_info.extent.depth;
-  tex_desc.mipmapLevelCount = vk_mem->create_info.mipLevels;
-  tex_desc.sampleCount = mvkSampleCountFromVkSampleCountFlagBits(vk_mem->create_info.samples);
-  tex_desc.arrayLength = vk_mem->create_info.arrayLayers;
-  tex_desc.usage = MTLTextureUsageShaderRead | MTLTextureUsagePixelFormatView;//mvkMTLTextureUsageFromVkImageUsageFlags(vk_mem->create_info.usage);
-  tex_desc.storageMode = MTLStorageModeShared;
-  tex_desc.cpuCacheMode = MTLCPUCacheModeDefaultCache;//mvkMTLCPUCacheModeFromVkMemoryPropertyFlags(vk_mem->vk_mem->properties);
-
-  return tex_desc;
-}
-
-void
-gst_io_surface_vulkan_memory_set_surface (GstIOSurfaceVulkanMemory * memory,
-    IOSurfaceRef surface)
-{
-  GstVulkanImageMemory *vk_mem = (GstVulkanImageMemory *) memory;
-
-  if (memory->surface) {
-     IOSurfaceDecrementUseCount (memory->surface);
-  } else {
-    g_assert (vk_mem->notify == (GDestroyNotify) CFRelease);
-    g_assert (vk_mem->user_data != NULL);
-  }
-
-  memory->surface = surface;
-  if (surface) {
-    id<MTLDevice> mtl_dev = nil;
-    id<MTLTexture> texture = nil;
-    VkPhysicalDevice gpu;
-
-    IOSurfaceIncrementUseCount (surface);
-
-    gpu = gst_vulkan_device_get_physical_device (vk_mem->device);
-    G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
-    vkGetMTLDeviceMVK (gpu, &mtl_dev);
-    G_GNUC_END_IGNORE_DEPRECATIONS;
-
-    /* We cannot use vkUseIOSurfaceMVK() for multi-planer as MoltenVK does not
-     * support them. */
-
-    MTLTextureDescriptor *tex_desc = gst_new_mtl_tex_descripter_from_memory (memory);
-    texture = [mtl_dev newTextureWithDescriptor:tex_desc iosurface:surface plane:memory->plane];
-
-    IOSurfaceTextureWrapper *texture_data = g_new0 (IOSurfaceTextureWrapper, 1);
-    texture_data->pixbuf = (CVPixelBufferRef) vk_mem->user_data;
-    texture_data->texture = (__bridge_retained gpointer) texture;
-
-    G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
-    VkResult err = vkSetMTLTextureMVK (memory->vulkan_mem.image, texture);
-    G_GNUC_END_IGNORE_DEPRECATIONS;
-    GST_DEBUG ("bound texture %p to image %" GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT ": 0x%x",
-               texture, memory->vulkan_mem.image, err);
-
-    vk_mem->user_data = texture_data;
-    vk_mem->notify = (GDestroyNotify) free_texture_wrapper;
-  }
 }
