@@ -13479,6 +13479,14 @@ qtdemux_parse_chnl (GstQTDemux * qtdemux, GstByteReader * br,
           }
         }
 
+        if (defined_layout >= G_N_ELEMENTS (chnl_layouts) ||
+            chnl_layouts[defined_layout][0] ==
+            GST_AUDIO_CHANNEL_POSITION_INVALID) {
+          GST_WARNING_OBJECT (qtdemux, "Unsupported defined layout %u",
+              defined_layout);
+          goto error;
+        }
+
         const GstAudioChannelPosition *layout = chnl_layouts[defined_layout];
 
         // Calculate number of channels: number of channels in the layout
