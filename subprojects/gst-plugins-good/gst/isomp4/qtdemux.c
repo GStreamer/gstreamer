@@ -13291,7 +13291,8 @@ qtdemux_parse_chnl (GstQTDemux * qtdemux, GstByteReader * br,
           n_channels += 1;
         }
         for (unsigned int i = 0; i < 64; i++) {
-          if ((omitted_channels_map >> i) == 1) {
+          // The i-th channel is omitted
+          if (((omitted_channels_map >> i) & 1) == 1) {
             n_channels -= 1;
           }
           // No channels present
