@@ -13287,6 +13287,10 @@ qtdemux_parse_chnl (GstQTDemux * qtdemux, GstByteReader * br,
       }
 
       n_channels = entry->n_channels;
+      if (n_channels == 0) {
+        GST_WARNING_OBJECT (qtdemux, "Unknown number of channels");
+        goto error;
+      }
 
       if (defined_layout == 0) {
         for (unsigned int i = 0; i < n_channels; i++) {
@@ -16442,20 +16446,20 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
           /* Sometimes these are set to 0 in the sound sample descriptions so
            * let's try to infer useful values from the other information we
            * have available */
-          if (entry->bytes_per_sample == 0)
+          if (entry->bytes_per_sample == 0 && entry->n_channels > 0)
             entry->bytes_per_sample =
                 entry->bytes_per_frame / entry->n_channels;
           if (entry->bytes_per_sample == 0)
             entry->bytes_per_sample = samplesize / 8;
 
-          if (entry->bytes_per_frame == 0)
+          if (entry->bytes_per_frame == 0 && entry->n_channels > 0)
             entry->bytes_per_frame =
                 entry->bytes_per_sample * entry->n_channels;
 
           if (entry->bytes_per_packet == 0)
             entry->bytes_per_packet = entry->bytes_per_sample;
 
-          if (entry->samples_per_frame == 0)
+          if (entry->samples_per_frame == 0 && entry->n_channels > 0)
             entry->samples_per_frame = entry->n_channels;
 
           if (entry->samples_per_packet == 0)
@@ -19817,7 +19821,8 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       data = stsd_entry->data;
       len = QT_UINT32 (data);
 
-      if (stsd_version == 0 && version == 0x00020000 && len >= 16 + 56) {
+      if (stsd_version == 0 && version == 0x00020000 && len >= 16 + 56
+          && entry->n_channels > 0) {
         /* sample description entry (16) + sound sample description v0 (20) */
         depth = QT_UINT32 (data + 36 + 20);
         flags = QT_UINT32 (data + 36 + 24);
