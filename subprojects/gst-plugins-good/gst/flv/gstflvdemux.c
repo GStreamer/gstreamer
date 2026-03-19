@@ -1699,6 +1699,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
     /* header starts after 4 bytes of timestamp and 3 bytes of stream id
      * these 7 bytes are present in the buffer before the actual payload (i.e., AudioTagHeader)
      */
+    g_assert (gst_byte_reader_get_pos (&reader) >= 7);
     tag_header_len = gst_byte_reader_get_pos (&reader) - 7;
   } else {
     /* legacy FLV */
@@ -1744,6 +1745,11 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
         codec_tag, flags);
   }
 
+  if (demux->tag_data_size < tag_header_len) {
+    GST_ERROR_OBJECT (demux, "too small tag for audio tag header");
+    goto beach;
+  }
+
   track = gst_flv_demux_get_track (demux, track_id, TRUE);
 
   if (enhanced) {
@@ -1772,11 +1778,16 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
             track_id);
         if (track->codec_data) {
           gst_buffer_unref (track->codec_data);
+          track->codec_data = NULL;
         }
 
         /* make sure there are enough bytes remaining */
-        g_assert (gst_byte_reader_get_remaining (&reader) >=
-            (demux->tag_data_size - tag_header_len));
+        if (gst_byte_reader_get_remaining (&reader) <
+            demux->tag_data_size - tag_header_len) {
+          GST_ERROR_OBJECT (demux,
+              "Not enough data available for AAC sequence header");
+          goto beach;
+        }
 
         track->codec_data =
             gst_buffer_copy_region (buffer, GST_BUFFER_COPY_MEMORY,
@@ -1889,8 +1900,11 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
   }
 
   /* make sure there are enough bytes remaining */
-  g_assert (gst_byte_reader_get_remaining (&reader) >=
-      (demux->tag_data_size - tag_header_len));
+  if (gst_byte_reader_get_remaining (&reader) <
+      demux->tag_data_size - tag_header_len) {
+    GST_ERROR_OBJECT (demux, "Not enough data available for audio tag");
+    goto beach;
+  }
 
   /* Create buffer from pad */
   outbuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_MEMORY,
@@ -2453,7 +2467,12 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   /* header starts after 4 bytes of timestamp and 3 bytes of stream id
    * these 7 bytes are present in the buffer before the actual payload (i.e., VideoTagHeader)
    */
+  g_assert (gst_byte_reader_get_pos (&reader) >= 7);
   codec_data = gst_byte_reader_get_pos (&reader) - 7;
+  if (demux->tag_data_size < codec_data) {
+    GST_ERROR_OBJECT (demux, "too small tag for video codec_data");
+    goto beach;
+  }
 
   GST_LOG_OBJECT (demux, "video tag with codec tag %u, keyframe (%d) "
       "(flags %02X)", codec_tag, keyframe, flags);
@@ -2464,20 +2483,19 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
     switch (packet_type) {
       case FLV_VIDEO_PACKET_TYPE_SEQUENCE_START:
       {
-        if (demux->tag_data_size < codec_data) {
-          GST_ERROR_OBJECT (demux,
-              "Got invalid sequence start tag size, ignoring.");
-          break;
-        }
-
         GST_LOG_OBJECT (demux, "got a sequence start packet");
         if (track->codec_data) {
           gst_buffer_unref (track->codec_data);
+          track->codec_data = NULL;
         }
 
         /* make sure there are enough bytes remaining */
-        g_assert (gst_byte_reader_get_remaining (&reader) >=
-            (demux->tag_data_size - codec_data));
+        if (gst_byte_reader_get_remaining (&reader) <
+            demux->tag_data_size - codec_data) {
+          GST_ERROR_OBJECT (demux,
+              "Not enough data available for video sequence start");
+          goto beach;
+        }
 
         track->codec_data = gst_buffer_copy_region (buffer,
             GST_BUFFER_COPY_MEMORY, gst_byte_reader_get_pos (&reader),
@@ -2610,8 +2628,11 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   }
 
   /* make sure there are enough bytes remaining */
-  g_assert (gst_byte_reader_get_remaining (&reader) >=
-      (demux->tag_data_size - codec_data));
+  if (gst_byte_reader_get_remaining (&reader) <
+      demux->tag_data_size - codec_data) {
+    GST_ERROR_OBJECT (demux, "Not enough data available for video tag");
+    goto beach;
+  }
 
   /* Create buffer from pad */
   outbuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_MEMORY,
