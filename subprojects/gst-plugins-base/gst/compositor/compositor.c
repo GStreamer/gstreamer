@@ -723,8 +723,6 @@ gst_compositor_pad_class_init (GstCompositorPadClass * klass)
       GST_DEBUG_FUNCPTR (gst_compositor_pad_create_conversion_info);
 
   gst_type_mark_as_plugin_api (GST_TYPE_COMPOSITOR_SIZING_POLICY, 0);
-
-  gst_compositor_init_blend ();
 }
 
 static void
@@ -2035,6 +2033,8 @@ gst_compositor_class_init (GstCompositorClass * klass)
   agg_class->negotiated_src_caps = _negotiated_caps;
   agg_class->stop = GST_DEBUG_FUNCPTR (gst_composior_stop);
   videoaggregator_class->aggregate_frames = gst_compositor_aggregate_frames;
+
+  gst_compositor_init_blend ();
 
   g_object_class_install_property (gobject_class, PROP_BACKGROUND,
       g_param_spec_enum ("background", "Background", "Background type",
