@@ -441,8 +441,6 @@ gst_vp9_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstVp9Parse *self = GST_VP9_PARSE (parse);
 
-  frame->flags |= GST_BASE_PARSE_FRAME_FLAG_CLIP;
-
   if (!frame->buffer)
     return GST_FLOW_OK;
 
