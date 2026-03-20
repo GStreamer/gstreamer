@@ -240,6 +240,8 @@ gst_d3d12_vp9_alpha_dbin_constructed (GObject * object)
   g_object_set (alpha_dec, "qos", FALSE, nullptr);
 
   auto combine = gst_element_factory_make ("d3d12alphacombine", nullptr);
+  g_object_set (combine, "adapter-luid", klass->adapter_luid, nullptr);
+
   auto download = gst_element_factory_make ("d3d12download", nullptr);
   gst_bin_add_many (bin, combine, download, nullptr);
 

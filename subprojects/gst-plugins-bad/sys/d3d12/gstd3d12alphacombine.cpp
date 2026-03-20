@@ -55,6 +55,12 @@ using namespace Microsoft::WRL;
 using namespace DirectX;
 /* *INDENT-ON* */
 
+enum
+{
+  PROP_0,
+  PROP_ADAPTER_LUID,
+};
+
 /* *INDENT-OFF* */
 struct CopyParams
 {
@@ -144,6 +150,7 @@ struct GstD3D12AlphaCombinePrivate
   D3D12_RESOURCE_DESC out_alpha_desc = { };
   D3D12_PLACED_SUBRESOURCE_FOOTPRINT out_alpha_layout = { };
   GstClockTime timeout_advance;
+  gint64 adapter_luid;
 };
 /* *INDENT-ON* */
 
@@ -173,6 +180,10 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
         (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY, "{ AV12, A420_10LE }")));
 
 static void gst_d3d12_alpha_combine_finalize (GObject * object);
+static void gst_d3d12_alpha_combine_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
+static void gst_d3d12_alpha_combine_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
 
 static void gst_d3d12_alpha_combine_set_context (GstElement * element,
     GstContext * context);
@@ -204,6 +215,14 @@ gst_d3d12_alpha_combine_class_init (GstD3D12AlphaCombineClass * klass)
   auto agg_class = GST_AGGREGATOR_CLASS (klass);
 
   object_class->finalize = gst_d3d12_alpha_combine_finalize;
+  object_class->set_property = gst_d3d12_alpha_combine_set_property;
+  object_class->get_property = gst_d3d12_alpha_combine_get_property;
+
+  g_object_class_install_property (object_class, PROP_ADAPTER_LUID,
+      g_param_spec_int64 ("adapter-luid", "Adapter LUID",
+          "DXGI Adapter LUID (Locally Unique Identifier) of created device",
+          G_MININT64, G_MAXINT64, 0, (GParamFlags) (GST_PARAM_DOC_SHOW_DEFAULT |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d12_alpha_combine_set_context);
@@ -266,15 +285,49 @@ gst_d3d12_alpha_combine_finalize (GObject * object)
 }
 
 static void
+gst_d3d12_alpha_combine_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  auto self = GST_D3D12_ALPHA_COMBINE (object);
+  auto priv = self->priv;
+
+  switch (prop_id) {
+    case PROP_ADAPTER_LUID:
+      priv->adapter_luid = g_value_get_int64 (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_d3d12_alpha_combine_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  auto self = GST_D3D12_ALPHA_COMBINE (object);
+  auto priv = self->priv;
+
+  switch (prop_id) {
+    case PROP_ADAPTER_LUID:
+      g_value_set_int64 (value, priv->adapter_luid);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_d3d12_alpha_combine_set_context (GstElement * element, GstContext * context)
 {
   auto self = GST_D3D12_ALPHA_COMBINE (element);
   auto priv = self->priv;
 
   {
-    /* TODO: use luid */
     std::lock_guard < std::recursive_mutex > lk (priv->lock);
-    gst_d3d12_handle_set_context (element, context, -1, &priv->device);
+    gst_d3d12_handle_set_context_for_adapter_luid (element, context,
+        priv->adapter_luid, &priv->device);
   }
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
@@ -408,9 +461,9 @@ gst_d3d12_alpha_combine_start (GstAggregator * agg)
 
   {
     std::lock_guard < std::recursive_mutex > lk (priv->lock);
-    /* TODO: use luid */
-    if (!gst_d3d12_ensure_element_data (GST_ELEMENT_CAST (self),
-            -1, &priv->device)) {
+    auto elem = GST_ELEMENT_CAST (self);
+    if (!gst_d3d12_ensure_element_data_for_adapter_luid (elem,
+            priv->adapter_luid, &priv->device)) {
       GST_ERROR_OBJECT (self, "Failed to get D3D12 device");
       return FALSE;
     }
