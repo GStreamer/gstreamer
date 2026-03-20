@@ -649,18 +649,14 @@ gst_gl_filter_transform_caps (GstBaseTransform * bt,
   GstCaps *tmp = NULL;
   GstCaps *result = NULL;
 
-  if (gst_base_transform_is_passthrough (bt)) {
-    tmp = gst_caps_ref (caps);
-  } else {
-    tmp = GST_GL_FILTER_GET_CLASS (filter)->transform_internal_caps (filter,
-        direction, caps, NULL);
+  tmp = GST_GL_FILTER_GET_CLASS (filter)->transform_internal_caps (filter,
+      direction, caps, NULL);
 
-    result =
-        gst_gl_filter_ensure_caps_contains_features (tmp,
-        GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
-    gst_caps_unref (tmp);
-    tmp = result;
-  }
+  result =
+      gst_gl_filter_ensure_caps_contains_features (tmp,
+      GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+  gst_caps_unref (tmp);
+  tmp = result;
 
   if (filter_caps) {
     result =
