@@ -72,6 +72,7 @@ npm
 nunit
 openjpeg2-devel
 patch
+protobuf-compiler
 procps-ng
 python3-pip
 python3-wheel
