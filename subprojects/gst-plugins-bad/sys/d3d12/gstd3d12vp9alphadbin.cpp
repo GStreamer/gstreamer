@@ -239,19 +239,15 @@ gst_d3d12_vp9_alpha_dbin_constructed (GObject * object)
   g_object_set (main_dec, "qos", FALSE, nullptr);
   g_object_set (alpha_dec, "qos", FALSE, nullptr);
 
-  auto combine = gst_element_factory_make ("alphacombine", nullptr);
-  if (!combine) {
-    self->missing_elem = "alphacombine";
-    return;
-  }
-
-  gst_bin_add (bin, combine);
+  auto combine = gst_element_factory_make ("d3d12alphacombine", nullptr);
+  auto download = gst_element_factory_make ("d3d12download", nullptr);
+  gst_bin_add_many (bin, combine, download, nullptr);
 
   auto pad = gst_element_get_static_pad (demux, "sink");
   gst_ghost_pad_set_target (GST_GHOST_PAD (sinkpad), pad);
   gst_object_unref (pad);
 
-  pad = gst_element_get_static_pad (combine, "src");
+  pad = gst_element_get_static_pad (download, "src");
   gst_ghost_pad_set_target (GST_GHOST_PAD (srcpad), pad);
   gst_object_unref (pad);
 
@@ -262,6 +258,8 @@ gst_d3d12_vp9_alpha_dbin_constructed (GObject * object)
   gst_element_link_pads (demux, "alpha", alpha_parse, "sink");
   gst_element_link_many (alpha_parse, alpha_queue, alpha_dec, nullptr);
   gst_element_link_pads (alpha_dec, "src", combine, "alpha");
+
+  gst_element_link (combine, download);
 }
 
 static GstStateChangeReturn
