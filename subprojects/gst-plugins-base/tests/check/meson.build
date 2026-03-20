@@ -31,6 +31,7 @@ base_tests = [
   [ 'libs/videoencoder.c' ],
   [ 'libs/videodecoder.c' ],
   [ 'libs/videotimecode.c' ],
+  [ 'libs/video-convertscale-helper.c' ],
   [ 'libs/xmpwriter.c' ],
   [ 'elements/adder.c', get_option('adder').disabled()],
   [ 'elements/appsink.c', get_option('app').disabled()],

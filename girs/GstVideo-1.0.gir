@@ -7118,6 +7118,61 @@ with the parsed values.</doc>
         </parameter>
       </parameters>
     </callback>
+    <bitfield name="VideoConvertScaleFixateFlags" version="1.30" c:type="GstVideoConvertScaleFixateFlags">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.h">Flags for gst_video_convertscale_fixate_caps().</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.h"/>
+      <member name="none" value="0" c:identifier="GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_NONE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.h">no flags</doc>
+      </member>
+      <member name="format" value="1" c:identifier="GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_FORMAT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.h">fixate the format</doc>
+      </member>
+      <member name="size" value="2" c:identifier="GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_SIZE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.h">fixate the size</doc>
+      </member>
+    </bitfield>
+    <callback name="VideoConvertScaleFormatLossFunc" c:type="GstVideoConvertScaleFormatLossFunc" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.h">Callback to guestimate conversion loss between the input and output formats.
+A value of %G_MAXINT means the conversion is not possible, a value of 0 means
+it is passthrough.
+
+This function only needs to consider extra loss caused by custom fields,
+"format" and "drm-format" are already taken into account.
+
+@outs is writable to allow custom fields to be fixated.
+For example, this is used by glcolorconvert to fixate "target-texture" field.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.h">An integer representing the estimated loss. Lower values indicate less loss.</doc>
+        <type name="gint" c:type="gint"/>
+      </return-value>
+      <parameters>
+        <parameter name="object" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.h">The object passed to gst_video_convertscale_fixate_caps()</doc>
+          <type name="Gst.Object" c:type="GstObject*"/>
+        </parameter>
+        <parameter name="in_info" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.h">The input #GstVideoFormatInfo</doc>
+          <type name="VideoFormatInfo" c:type="const GstVideoFormatInfo*"/>
+        </parameter>
+        <parameter name="out_info" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.h">The output #GstVideoFormatInfo</doc>
+          <type name="VideoFormatInfo" c:type="const GstVideoFormatInfo*"/>
+        </parameter>
+        <parameter name="out_features" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.h">The output #GstCapsFeatures</doc>
+          <type name="Gst.CapsFeatures" c:type="const GstCapsFeatures*"/>
+        </parameter>
+        <parameter name="ins" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.h">#GstStructure of the input caps</doc>
+          <type name="Gst.Structure" c:type="const GstStructure*"/>
+        </parameter>
+        <parameter name="outs" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.h">#GstStructure of the output caps</doc>
+          <type name="Gst.Structure" c:type="GstStructure*"/>
+        </parameter>
+      </parameters>
+    </callback>
     <record name="VideoConverter" c:type="GstVideoConverter" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-converter.h"/>
       <method name="frame" c:identifier="gst_video_converter_frame" version="1.6">
@@ -20357,6 +20412,50 @@ Returns (nullable): a #GstVideoConverter or %NULL if conversion is not possible.
         <parameter name="pool" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-converter.c">a #GstTaskPool to spawn threads from</doc>
           <type name="Gst.TaskPool" c:type="GstTaskPool*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="video_convertscale_fixate_caps" c:identifier="gst_video_convertscale_fixate_caps" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.c">Fixates the output video format and resolution given the input caps and the pad direction.
+This uses heuristics to minimize the loss when converting the video format and/or resolution.
+
+When fixating the format, also transfer colorimetry and chroma-site from the input if possible.
+
+@format_loss callback is used to estimate the conversion loss between input and output formats.
+If %NULL, all format conversions are considered supported.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.h"/>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.c">The fixated output caps or %NULL if fixating failed.</doc>
+        <type name="Gst.Caps" c:type="GstCaps*"/>
+      </return-value>
+      <parameters>
+        <parameter name="object" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.c">The object to use for logging</doc>
+          <type name="Gst.Object" c:type="GstObject*"/>
+        </parameter>
+        <parameter name="direction" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.c">The #GstPadDirection of the pad</doc>
+          <type name="Gst.PadDirection" c:type="GstPadDirection"/>
+        </parameter>
+        <parameter name="orientation" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.c">The #GstVideoOrientationMethod</doc>
+          <type name="VideoOrientationMethod" c:type="GstVideoOrientationMethod"/>
+        </parameter>
+        <parameter name="format_loss" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.c">A callback to estimate the conversion loss, or %NULL</doc>
+          <type name="VideoConvertScaleFormatLossFunc" c:type="GstVideoConvertScaleFormatLossFunc"/>
+        </parameter>
+        <parameter name="flags" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.c">#GstVideoConvertScaleFixateFlags</doc>
+          <type name="VideoConvertScaleFixateFlags" c:type="GstVideoConvertScaleFixateFlags"/>
+        </parameter>
+        <parameter name="caps" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.c">The input #GstCaps</doc>
+          <type name="Gst.Caps" c:type="GstCaps*"/>
+        </parameter>
+        <parameter name="othercaps" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.c">The output #GstCaps</doc>
+          <type name="Gst.Caps" c:type="GstCaps*"/>
         </parameter>
       </parameters>
     </function>
