@@ -202,6 +202,7 @@ _stop_thread (GstWebRTCNice * ice)
   g_mutex_unlock (&ice->priv->lock);
 
   g_thread_unref (ice->priv->thread);
+  ice->priv->thread = NULL;
 }
 
 struct NiceStreamItem
@@ -1609,43 +1610,29 @@ gst_webrtc_nice_get_http_proxy (GstWebRTCICE * ice)
 
 struct close_data
 {
-  GWeakRef nice_weak;
   GstPromise *promise;
   gboolean agent_closed;
 };
 
 static struct close_data *
-close_data_new (GstWebRTCNice * ice, GstPromise * p)
+close_data_new (GstPromise * p)
 {
-  struct close_data *d = g_atomic_rc_box_new0 (struct close_data);
-  g_weak_ref_init (&d->nice_weak, ice);
+  struct close_data *d = g_new0 (struct close_data, 1);
   d->promise = p ? gst_promise_ref (p) : NULL;
   d->agent_closed = FALSE;
   return d;
 }
 
 static void
-close_data_clear (struct close_data *d)
+close_data_free (struct close_data *d)
 {
-  g_weak_ref_clear (&d->nice_weak);
   if (d->promise)
     gst_promise_unref (d->promise);
-}
-
-static struct close_data *
-close_data_ref (struct close_data *d)
-{
-  return (struct close_data *) g_atomic_rc_box_acquire (d);
+  g_free (d);
 }
 
 static void
-close_data_unref (struct close_data *d)
-{
-  g_atomic_rc_box_release_full (d, (GDestroyNotify) close_data_clear);
-}
-
-static void
-on_agent_closed (GObject * src, GAsyncResult * result, gpointer user_data)
+_agent_closed_cb (GObject * src, GAsyncResult * result, gpointer user_data)
 {
   struct close_data *d = (struct close_data *) user_data;
 
@@ -1658,41 +1645,76 @@ on_agent_closed (GObject * src, GAsyncResult * result, gpointer user_data)
   }
 
   d->agent_closed = TRUE;
-  close_data_unref (d);
 }
 
 static gboolean
-close_main_cb (gpointer user_data)
+_agent_closed_timeout_cb (gpointer user_data)
 {
-  struct close_data *d = (struct close_data *) user_data;
-  GstWebRTCNice *nice = g_weak_ref_get (&d->nice_weak);
+  gboolean *agent_timeout = user_data;
 
-  if (nice) {
-    /* 8. Destroy connection's ICE Agent, abruptly ending any active ICE
-     * processing and releasing any relevant resources (e.g. TURN permissions). */
-    nice_agent_close_async (NICE_AGENT (nice->priv->nice_agent),
-        on_agent_closed, close_data_ref (d));
-    if (!d->promise) {
-      while (!d->agent_closed) {
-        g_main_context_iteration (nice->priv->main_context, TRUE);
-      }
-    }
-    gst_object_unref (nice);
+  *agent_timeout = TRUE;
+  return FALSE;
+};
+
+static void
+_close_agent (GstWebRTCNice * ice, GstPromise * promise)
+{
+  GMainContext *main_context = NULL;
+  struct close_data *agent_close_data = NULL;
+  gboolean agent_timeout = FALSE;
+  GSource *timeout_source;
+
+  if (!ice->priv->thread) {
+    if (promise) {
+      GError *error =
+          g_error_new (GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_INTERNAL_FAILURE,
+          "ICE thread not running");
+      GstStructure *s = gst_structure_new ("application/x-gst-promise", "error",
+          G_TYPE_ERROR, error, NULL);
+      gst_promise_reply (promise, s);
+      g_clear_error (&error);
+    };
+    return;
   }
 
-  return G_SOURCE_REMOVE;
+  g_cancellable_cancel (ice->priv->resolve_cancellable);
+
+  main_context = g_main_context_new ();
+  g_main_context_push_thread_default (main_context);
+  timeout_source = g_timeout_source_new (MAX_CLOSING_TIME_MILLI_SECONDS);
+  g_source_set_callback (timeout_source, _agent_closed_timeout_cb,
+      &agent_timeout, NULL);
+  g_source_attach (timeout_source, main_context);
+
+  /* 8. Destroy connection's ICE Agent, abruptly ending any active ICE
+   * processing and releasing any relevant resources (e.g. TURN permissions). */
+  agent_close_data = close_data_new (promise);
+  nice_agent_close_async (ice->priv->nice_agent, _agent_closed_cb,
+      agent_close_data);
+
+  while (!agent_close_data->agent_closed && !agent_timeout) {
+    g_main_context_iteration (main_context, TRUE);
+  }
+  if (agent_timeout) {
+    GST_WARNING ("nice_agent_close_async() did not finish");
+  }
+  g_source_destroy (timeout_source);
+  g_source_unref (timeout_source);
+  g_main_context_pop_thread_default (main_context);
+  g_main_context_unref (main_context);
+  close_data_free (agent_close_data);
+
+  outstanding_resolves_wait (ice->priv->outstanding_resolves);
+  _stop_thread (ice);
 }
 
 static void
 gst_webrtc_nice_close (GstWebRTCICE * ice, GstPromise * promise)
 {
   GstWebRTCNice *nice = GST_WEBRTC_NICE (ice);
-  struct close_data *d = close_data_new (nice, promise);
 
   /* https://www.w3.org/TR/webrtc/#dom-rtcpeerconnection-close */
-
-  g_main_context_invoke_full (nice->priv->main_context, G_PRIORITY_DEFAULT,
-      close_main_cb, d, (GDestroyNotify) close_data_unref);
+  _close_agent (nice, promise);
 }
 
 static void
@@ -1761,62 +1783,13 @@ gst_webrtc_nice_get_property (GObject * object, guint prop_id,
 }
 
 static void
-_agent_closed_cb (GObject * source_object, GAsyncResult * res,
-    gpointer user_data)
-{
-  gboolean *agent_closed = user_data;
-
-  *agent_closed = TRUE;
-}
-
-static gboolean
-_agent_closed_timeout_cb (gpointer user_data)
-{
-  gboolean *agent_timeout = user_data;
-
-  *agent_timeout = TRUE;
-  return FALSE;
-};
-
-static void
-_close_agent (GstWebRTCNice * ice)
-{
-  GMainContext *main_context = g_main_context_new ();
-  gboolean agent_closed = FALSE;
-  gboolean agent_timeout = FALSE;
-  GSource *timeout_source;
-
-  g_main_context_push_thread_default (main_context);
-  timeout_source = g_timeout_source_new (MAX_CLOSING_TIME_MILLI_SECONDS);
-  g_source_set_callback (timeout_source, _agent_closed_timeout_cb,
-      &agent_timeout, NULL);
-  g_source_attach (timeout_source, main_context);
-  nice_agent_close_async (ice->priv->nice_agent, _agent_closed_cb,
-      &agent_closed);
-  while (!agent_closed && !agent_timeout) {
-    g_main_context_iteration (main_context, TRUE);
-  }
-  if (agent_timeout) {
-    GST_WARNING ("nice_agent_close_async() did not finish");
-  }
-  g_source_destroy (timeout_source);
-  g_source_unref (timeout_source);
-  g_main_context_pop_thread_default (main_context);
-  g_main_context_unref (main_context);
-}
-
-static void
 gst_webrtc_nice_finalize (GObject * object)
 {
   GstWebRTCNice *ice = GST_WEBRTC_NICE (object);
 
   g_signal_handlers_disconnect_by_data (ice->priv->nice_agent, ice);
 
-  g_cancellable_cancel (ice->priv->resolve_cancellable);
-  _close_agent (ice);
-  outstanding_resolves_wait (ice->priv->outstanding_resolves);
-
-  _stop_thread (ice);
+  _close_agent (ice, NULL);
 
   g_clear_object (&ice->priv->resolve_cancellable);
   outstanding_resolves_unref (ice->priv->outstanding_resolves);
