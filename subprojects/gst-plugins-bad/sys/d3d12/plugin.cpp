@@ -172,7 +172,9 @@ plugin_init (GstPlugin * plugin)
         gst_structure_set (s, "codec-alpha", G_TYPE_BOOLEAN, TRUE, nullptr);
       }
 
-      gst_d3d12_vp9_alpha_decodebin_register (plugin, device, 0, sink_caps,
+      /* Make this higher rank than SW vp9alphadecodebin */
+      guint rank = GST_RANK_PRIMARY + 10 + 1;
+      gst_d3d12_vp9_alpha_decodebin_register (plugin, device, rank, sink_caps,
           vp9_data->factory_name);
       gst_caps_unref (sink_caps);
       g_free (vp9_data->factory_name);
