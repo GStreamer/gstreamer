@@ -378,8 +378,6 @@ gst_vtdec_output_loop (GstVtdec * vtdec)
     /* we need to check this in case dpb_size=0 (jpeg for
      * example) or we're draining/flushing */
     if (frame) {
-      GST_VIDEO_DECODER_STREAM_LOCK (vtdec);
-
       if (frame->flags & VTDEC_FRAME_FLAG_ERROR) {
         GST_VIDEO_DECODER_ERROR (vtdec, 1, STREAM, DECODE,
             ("Got frame %d with an error flag", frame->system_frame_number),
@@ -398,8 +396,6 @@ gst_vtdec_output_loop (GstVtdec * vtdec)
         GST_TRACE_OBJECT (vtdec, "frame %d push ret %s", frame_num,
             gst_flow_get_name (ret));
       }
-
-      GST_VIDEO_DECODER_STREAM_UNLOCK (vtdec);
     }
 
     g_mutex_lock (&vtdec->queue_mutex);
