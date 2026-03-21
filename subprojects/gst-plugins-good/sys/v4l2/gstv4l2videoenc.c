@@ -52,6 +52,8 @@ enum
 {
   PROP_0,
   V4L2_STD_OBJECT_PROPS,
+  PROP_BITRATE,
+  PROP_GOP_SIZE,
 };
 
 #define gst_v4l2_video_enc_parent_class parent_class
@@ -64,7 +66,22 @@ gst_v4l2_video_enc_set_property (GObject * object,
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (object);
 
+  GST_OBJECT_LOCK (self);
   switch (prop_id) {
+    case PROP_BITRATE:
+      self->bitrate = g_value_get_int (value);
+      if (GST_V4L2_IS_OPEN (self->v4l2output)) {
+        gst_v4l2_set_attribute (self->v4l2output,
+            V4L2_CID_MPEG_VIDEO_BITRATE, self->bitrate);
+      }
+      break;
+    case PROP_GOP_SIZE:
+      self->gop_size = g_value_get_int (value);
+      if (GST_V4L2_IS_OPEN (self->v4l2output)) {
+        gst_v4l2_set_attribute (self->v4l2output,
+            V4L2_CID_MPEG_VIDEO_GOP_SIZE, self->gop_size);
+      }
+      break;
     case PROP_CAPTURE_IO_MODE:
       if (!gst_v4l2_object_set_property_helper (self->v4l2capture,
               prop_id, value, pspec)) {
@@ -80,6 +97,7 @@ gst_v4l2_video_enc_set_property (GObject * object,
       }
       break;
   }
+  GST_OBJECT_UNLOCK (self);
 }
 
 static void
@@ -88,7 +106,28 @@ gst_v4l2_video_enc_get_property (GObject * object,
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (object);
 
+  GST_OBJECT_LOCK (self);
   switch (prop_id) {
+    case PROP_BITRATE:
+      if (GST_V4L2_IS_OPEN (self->v4l2output)) {
+        gint bitrate;
+        if (gst_v4l2_get_attribute (self->v4l2output,
+                V4L2_CID_MPEG_VIDEO_BITRATE, &bitrate)) {
+          self->bitrate = bitrate;
+        }
+      }
+      g_value_set_int (value, self->bitrate);
+      break;
+    case PROP_GOP_SIZE:
+      if (GST_V4L2_IS_OPEN (self->v4l2output)) {
+        gint gop_size;
+        if (gst_v4l2_get_attribute (self->v4l2output,
+                V4L2_CID_MPEG_VIDEO_GOP_SIZE, &gop_size)) {
+          self->gop_size = gop_size;
+        }
+      }
+      g_value_set_int (value, self->gop_size);
+      break;
     case PROP_CAPTURE_IO_MODE:
       if (!gst_v4l2_object_get_property_helper (self->v4l2capture,
               prop_id, value, pspec)) {
@@ -104,6 +143,7 @@ gst_v4l2_video_enc_get_property (GObject * object,
       }
       break;
   }
+  GST_OBJECT_UNLOCK (self);
 }
 
 static gboolean
@@ -120,6 +160,16 @@ gst_v4l2_video_enc_open (GstVideoEncoder * encoder)
 
   if (!gst_v4l2_object_open_shared (self->v4l2capture, self->v4l2output))
     goto failure;
+
+  /* Apply any rate control settings that were configured before open */
+  if (self->bitrate > 0) {
+    gst_v4l2_set_attribute (self->v4l2output,
+        V4L2_CID_MPEG_VIDEO_BITRATE, self->bitrate);
+  }
+  if (self->gop_size > 0) {
+    gst_v4l2_set_attribute (self->v4l2output,
+        V4L2_CID_MPEG_VIDEO_GOP_SIZE, self->gop_size);
+  }
 
   self->probed_sinkcaps = gst_v4l2_object_probe_caps (self->v4l2output,
       gst_v4l2_object_get_raw_caps ());
@@ -1106,6 +1156,10 @@ gst_v4l2_video_enc_subinstance_init (GTypeInstance * instance, gpointer g_class)
   self->v4l2output->no_initial_format = TRUE;
   self->v4l2output->keep_aspect = FALSE;
 
+  /* Rate control defaults */
+  self->bitrate = 0;
+  self->gop_size = 0;
+
   self->v4l2capture = gst_v4l2_object_new (GST_ELEMENT (self),
       GST_OBJECT (GST_VIDEO_ENCODER_SRC_PAD (self)),
       V4L2_BUF_TYPE_VIDEO_CAPTURE, klass->default_device,
@@ -1162,6 +1216,18 @@ gst_v4l2_video_enc_class_init (GstV4l2VideoEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_v4l2_video_enc_change_state);
 
   gst_v4l2_object_install_m2m_properties_helper (gobject_class);
+
+  g_object_class_install_property (gobject_class, PROP_BITRATE,
+      g_param_spec_int ("bitrate", "Bitrate",
+          "Video bitrate in bits per second",
+          0, G_MAXINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_PLAYING));
+
+  g_object_class_install_property (gobject_class, PROP_GOP_SIZE,
+      g_param_spec_int ("gop-size", "GOP Size",
+          "Group of pictures size (number of frames between keyframes)",
+          0, G_MAXINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_PLAYING));
 }
 
 static void

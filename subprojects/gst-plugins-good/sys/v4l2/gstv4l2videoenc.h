@@ -65,6 +65,10 @@ struct _GstV4l2VideoEnc
   gboolean active;
   GstFlowReturn output_flow;
 
+  /* Rate control */
+  gint bitrate;
+  gint gop_size;
+
 };
 
 struct _GstV4l2VideoEncClass
