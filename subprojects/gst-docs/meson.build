@@ -1,5 +1,5 @@
 project('GStreamer manuals and tutorials', 'c',
-  version: '1.29.0.1',
+  version: '1.29.1',
   meson_version : '>= 1.4')
 
 hotdoc_p = find_program('hotdoc')
@@ -166,7 +166,7 @@ run_target('release',
   depends: [gstreamer_doc]
 )
 
-meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.26.0', meson.project_version())
+meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.28.0', meson.project_version())
 
 # dist common files from monorepo root
 if not meson.is_subproject()

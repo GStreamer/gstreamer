@@ -1,0 +1,531 @@
+GStreamer 1.29.x Release Notes
+
+GStreamer 1.29.x is an API/ABI-unstable development series leading up to the stable 1.30 series.
+
+The latest unstable development snapshot in the 1.29 series is 1.29.1 and was released on 22 March 2026.
+
+1.29.1
+
+The first API/ABI-unstable 1.29.x development snapshot release (1.29.1) was released on 22 March 2026.
+
+Any newly-added API in the 1.29.x series may still change or be removed again before 1.30 and should be considered unstable
+until 1.30 is released.
+
+The 1.29.x release series is for testing and development purposes, and distros should probably not package it.
+
+Highlighted changes in 1.29.1
+
+-   ac4parse: New basic AC-4 parser element, plus AC-4 typefinding
+-   analytics: New GstAnalyticsMtd derivative to represent grouping of Mtd’s and Keypoint
+-   analytics: Added a hand tracking tensor decoder element
+-   Parse HDR10+ metadata out of H.265 and AV1 bitstreams
+-   Matroska demuxer: Can build a dynamic seek index now if needed
+-   New h264seiinserter and h265seiinserter elements that support both closed captions and unregistered user data SEIs
+-   Add HLS WebVTT sink element to the hlssink3 plugin
+-   New DASH sink element that uses CMAF muxer without splitmuxsink
+-   New plugin for general purpose compress/decompress
+-   New udpsrc2 element with better performance for high bitrate streams
+-   New VA-API overlay compositor
+-   Opus audio support for F32 and S24_32 samples and 96kHz sample rate
+-   Playbin3 subtitle switching fixes
+-   Bump ranks of the new Rust RTP (de)payloaders to PRIMARY and default to mtu 1200 for payloaders
+-   rtspsrc2 authentication support
+-   GstPlay track selection notification improvements
+-   QML6 GL Source now supports navigation events
+-   QuickTime demuxer gained Bayer support
+-   Splitmuxsink now includes the start and end timecodes in fragment-opened and closed messages
+-   srtpdec gained a way to invalidate keys for a specific SSRC
+-   The APE tag demuxer can extract cover art tags now
+-   translationbin can control the textaccumulate latency now via a new property
+-   Allow device providers rank override using GST_PLUGIN_FEATURE_RANK
+-   cerbero gained support for Android on RISC-V64
+-   Countless bug fixes, build fixes, memory leak fixes, and other stability and reliability improvements
+
+gstreamer
+
+-   Allow device providers rank override using GST_PLUGIN_FEATURE_RANK
+-   basesink: Unset have_preroll if not actually waiting for preroll
+-   debugutils: add tooltip with full params to dot graph elements
+-   dots: add features parameter to control pipeline-snapshot composition
+-   logging: improve performance by reducing allocations in __gst_vasnprintf
+-   structure/tracer: Some simple UX enhancements to set tracer properties
+-   tracer: add object-parent-set hook
+-   validateflow: auto-derive directories from test file path
+
+Backported into 1.28:
+
+-   Fix a couple of new const-ness warnings around strstr() usage, out-of-bounds read in PTP clock and uninitialized variable
+    compiler warning (backported)
+-   Fix support for cross-compiling to iOS and add a cross file for it, remove HAVE_IOS, port to tvOS (backported)
+-   GThreadFunc return type fixes (backported)
+-   aggregator: Handle gap event before segment (backported)
+-   aggregator: Various introspection annotations / docs fixes for vfuncs (backported)
+-   baseparse, Preserve upstream buffer duration if possible (backported)
+-   baseparse: Fix out_buffer leak in frame_free and missing ref in frame_copy (backported)
+-   bin: iterator is not nullable (backported)
+-   bitwriter: Steal owned data in reset_and_get_data() (backported)
+-   caps: Fix the features leak in gst_caps_append_structure_full (backported)
+-   filesink: Fix wrong open() in overwrite mode (backported)
+-   filesink: Report write error correctly on Windows (backported)
+-   ges: Plug all leaks reported running valgrind on our testsuite (backported)
+-   gst-stats: Also allow ANSI colored logs without 0x in front of the thread id (backported)
+-   gst: Add explanatory comment to call_async implementation (backported)
+-   input-selector: fix several shortcomings (backported)
+-   multiqueue: reverse playback: use segment stop position as start time (backported)
+-   registry: Skip .dSYM bundles when loading plugins, try 2 (backported)
+-   registry: Skip .dSYM bundles when loading plugins, try 3 (backported)
+-   typefindfunctions: Promote y4m_typefind (backported)
+
+gst-plugins-base
+
+-   Parse HDR10+ metadata out of H.265 and AV1 bitstreams
+-   video-hdr: HDR10plus signalling by using only blob data might be suboptimal
+-   audiobasesink: Fix rounding when calculating render start/stop
+-   gl: cocoa: Handle non-Cocoa windows in CGL context creation
+-   gst-env.py: Keep a simple wrapper for meson devenv
+-   opusenc/dec: Add support for F32 / S24_32 samples
+-   opusenc/dec: Support 96kHz sample rate
+-   playbin3: Reproducible deadlock switching subtitle tracks in MKV containers
+-   playsink: don’t wait for text pad block during reconfiguration
+-   pbutils, qtmux, qtdemux, vtdec, vp9parse: vp9 improvements to unify vpcC creation and level handling
+-   pbutils: Remove fixed caps check when not strictly necessary
+-   typefind: Add AC-4 support
+-   validateflow: auto-derive directories from test file path
+
+Backported into 1.28:
+
+-   Fix a couple of new const-ness warnings around strstr() usage, out-of-bounds read in PTP clock and uninitialized variable
+    compiler warning (backported)
+-   Fix scaling and resizing with UIView on EAGL and Vulkan (backported)
+-   Fix support for cross-compiling to iOS and add a cross file for it, remove HAVE_IOS, port to tvOS (backported)
+-   GThreadFunc return type fixes (backported)
+-   Various element factory metadata fixes (backported)
+-   audiobuffersplit: Various smaller fixes and implement handling of negative rates correctly (backported)
+-   audiodecoder / videodecoder: Fix gap event handling (backported)
+-   compositor: Do copy_metas also for background frame (backported)
+-   compositor: move gst_compositor_init_blend() to element class_init (backported)
+-   decodebin3: Fix switch to smaller collections (backported)
+-   decodebin3: Improve handling collection change on existing pad (backported)
+-   glcolorconvert: Fix NULL pointer dereference on buffers without video meta (backported)
+-   glupload: Fix linking glupload with restrictive caps filter (backported)
+-   input-selector: fix several shortcomings (backported)
+-   opusenc: Use correct memcpy() size when copying Vorbis channel positions (backported)
+-   playsink: unref color balance channels with g_object_unref() (backported)
+-   riff: Correctly check that enough RGB palette data is available (backported)
+-   rtcp: Fix buffer overread in SDES packet parsing (backported)
+-   rtp: Add mappings for H266 and AV1 encoding-names (backported)
+-   rtpbuffer: Add validation for CSRC list length (backported)
+-   rtsp: Validate transport parameter parsing in RFC 2326 (backported)
+-   typefindfunctions: Promote y4m_typefind (backported)
+-   video-converter: Do not transform_metas with 0 width or height (backported)
+-   video-converter: fix I420/A420 BGRA/ARGB output on big-endian (backported)
+-   video: fix too small default stride for UYVP with odd widths (backported)
+-   videodecoder: Handle recovery from temporary reordered output (backported)
+-   videofilter: Add VIDEO_ALIGNMENT to downstream pool (backported)
+-   videorate: Fix unrestored caps on backward PTS (backported)
+
+gst-plugins-good
+
+-   Bayer support for qtdemux (mp4/uncv)
+-   apedemux: Add support for cover art tags
+-   av1dec, vpxdec, openh264dec, jpegdec: Streamline and simplify decide_allocation
+-   deinterlace: Allow allocation queries to pass through in mixed mode
+-   dtmfsrc: expose properties for controlling minimum durations
+-   flvdemux: Make no-more-pads threshold configurable
+-   flvmux: Timestamp outgoing buffers from mux, not incoming buffer
+-   gst-plugins-good: Fix unused parameter warnings in alphacolor
+-   level: Port from GstBaseTransform to GstAudioFilter
+-   matroska-demux: parse TrackLanguageBcp47 tags
+-   matroskademux: Build dynamic seek index if needed
+-   matroska: Read and write vp9 CodecPrivate to assist initial decoder config
+-   pbutils, qtmux, qtdemux, vtdec, vp9parse: vp9 improvements to unify vpcC creation and level handling
+-   qml6glsrc: Add support to handle navigation events
+-   qml6glsrc: Simplify implementation of Qt6GLWindow
+-   qt6: fixed build for Android
+-   qtdemux: Handle ‘pict’ tracks as if they were video tracks
+-   qtmux: include gstqtmux-doc.c in doc_sources
+-   rgvolume: don’t apply dBSPL reference level compensation for LUFS values (backported)
+-   rtp: Lower Opus (de)payloader ranks to SECONDARY
+-   rtspsrc: add backchannel-http-method property for HTTP tunnel mode
+-   rtspsrc: Correctly parse RTSP 2.0 RTP-Info headers
+-   splitmuxsink: Include start/end timecodes in fragment-opened/closed messages
+-   srtpdec: Add API for invalidating keys for a specific SSRC
+-   test-client-managed-mikey: Allow user to select cipher
+-   test-client-managed-mikey: Fix parsing of auth
+-   wavparse: Add support for ID3 tags
+
+Backported into 1.28:
+
+-   Fix support for cross-compiling to iOS and add a cross file for it, remove HAVE_IOS, port to tvOS (backported)
+-   GThreadFunc return type fixes (backported)
+-   Qt6GLVideoItem: caps update fixed (backported)
+-   Various element factory metadata fixes (backported)
+-   gstrtspsrc: Set new mki in the encoder upon crypto update (backported)
+-   hlsdemux2: fix seekable range for live HLS streams (backported)
+-   meson: Fix libxml2 not building due to wrong option type (backported)
+-   qml6glsrc: Fix rendering of scene with clipped items (backported)
+-   qtdemux: Don’t ignore flow return when pushing queued buffers downstream (backported)
+-   qtdemux: Don’t immediately push segment after moov in push mode for fmp4 (backported)
+-   qtdemux: Fix handling of in-between fragments without tfdt (backported)
+-   qtdemux: Fix invalid WebVTT timestamps (backported)
+-   qtdemux: Fix out-of-bounds read when parsing PlayReady DRM UUIDs (backported)
+-   qtdemux: Make sure to not output the same samples multiple times in reverse playback mode (backported)
+-   qtdemux: Push raw audio/video buffers downstream in reverse order if rate < 0 (backported)
+-   qtdemux: Set the segment position to the start on EOS in reverse playback mode (backported)
+-   rtph264depay: fix invalid memory access in gst_rtp_h264_finish_fragmentation_unit (backported)
+-   rtpqdm2depay: error out if anyone tries to use this element (and remove it) (backported)
+-   rtpsource: Add locking for receive reports table (backported)
+-   rtptwcc: fix feedback packet count wrapping at 255 (backported)
+-   rtspsrc: fix Memory leak in gst_rtspsrc_close() when GST_RTSP_EEOF error occurs (backported)
+-   v4l2: Add support for AV1 stateful V4l2 decoder (backported)
+-   vpxdec: Support downstream pools with alignment requirements (backported)
+-   wavenc: Skip writing empty LIST INFO chunk (backported)
+-   wavpack: Fix handling of format changes, extend parser with new features, handle non-S32 samples in all variations
+    (backported)
+-   wavparse: Avoid integer overflow and out-of-bounds read when parsing adtl chunks (backported)
+-   wavparse: Avoid overflow in length when setting ignore-length=true (backported)
+-   wavparse: Fix parsing of RF64 wave files (backported)
+
+gst-plugins-bad
+
+-   Parse HDR10+ metadata out of H.265 and AV1 bitstreams
+-   VA-API overlay compositor
+-   amfcodec: Add Linux support
+-   amfcodec: fix build for platforms other than Windows and Linux
+-   amfcodec: update the SDK headers
+-   analytics: adding group mtd and keypoint mtd
+-   av1dec, vpxdec, openh264dec, jpegdec: Streamline and simplify decide_allocation
+-   av1parse: now adds av1c in caps codec_data
+-   avfassetsrc: Replace file:// URI support with avf+file://
+-   closedcaption: Add h264seiinserter and h265seiinserter elements
+-   decklink: Fix timecode handling
+-   doc: cleanup gst-launch comment
+-   doc: correct inference elements doc
+-   mxfdemux: fix uninitialized warning
+-   mxfdemux: handle reverse playback in pull mode
+-   pbutils, qtmux, qtdemux, vtdec, vp9parse: vp9 improvements to unify vpcC creation and level handling
+-   play: Add new tracks-selected message as signal to the signal adapter
+-   play: Add new tracks-selected message to notify about track selections having happened
+-   rtmp2: Don’t retry on G_IO_ERROR_TIMED_OUT
+-   srtpdec: Add API for invalidating keys for a specific SSRC
+-   rtsp: gstrtspurl: Parse URL having user without password (backported)
+-   tests: add vulkan av1 decode
+-   tests: fix vp9 vulkan decode test on radv
+-   timecodestamper: Add timecode source mode based on ST12-2/3 ancillary meta
+-   vah264dec: Set VA_PICTURE_H264_NON_EXISTING
+-   validateflow: auto-derive directories from test file path
+-   vkh264enc: fix level if required in new_sequence() and avoid renegotiation if possible
+-   vkvideo: move dedicated DPB detection after capability query
+-   vulkan: add H.26X GOP mapper utility for video encoding
+-   vulkan: fix grammar of function _has_feature_timeline_semaphore()
+-   vulkan: ignore Setting-Limit-Adjusted validation layer warning
+-   vulkan: Expose Vulkan physical device features and properties
+-   webrtc: Populate certificate stats
+-   webrtcbin: Fill crypto-related transport stats
+
+Backported into 1.28:
+
+-   analytics: Set default pixel-aspect-ratio for inference elements (backported)
+-   Fix a couple of new const-ness warnings around strstr() usage, out-of-bounds read in PTP clock and uninitialized variable
+    compiler warning (backported)
+-   Fix dims_order handling (backported)
+-   Fix scaling and resizing with UIView on EAGL and Vulkan (backported)
+-   Fix support for cross-compiling to iOS and add a cross file for it, remove HAVE_IOS, port to tvOS (backported)
+-   GThreadFunc return type fixes (backported)
+-   GstPlay: fix segmentation fault due to use after free (backported)
+-   Minimal support for compiling with zxing-cpp 3.x (backported)
+-   Various element factory metadata fixes (backported)
+-   ajasink: Only allow 6 / 8 / 16 audio channels (backported)
+-   ajasinkcombiner: Only forward the segment events from the video sinkpad (backported)
+-   applemedia: Fix vtenc draining logic, port other existing fixes between vtdec and vtenc (backported)
+-   applemedia: elements can now be individually registered with gst-full (backported)
+-   asiosink: Fill silence when paused (backported)
+-   audiobuffersplit: Various smaller fixes and implement handling of negative rates correctly (backported)
+-   audiobuffersplit: fix reverse playback (backported)
+-   av1dec: Enable VIDEO_META and VIDEO_ALIGNMENT for pool (backported)
+-   av1parse: split the alignment and stream type logic (backported)
+-   av1parse: Misc fixes 2 typo (backported)
+-   av1parse, vp9parse: Remove segment clipping to let downstream handle frame boundaries (backported)
+-   [baseparse, h264parse, h265parse: Preserve upstream buffer duration if possible
+    (backported)](https://gitlab.freedesktop.org/gstreamer/gstreamer/-/ - baseparse, h264parse, h265parse: Preserve upstream
+    buffer duration if possible (backported)
+-   ccconverter: Reset counters on flush-stop (backported)
+-   cea608mux: fix overflow when calculating output PTS (backported)
+-   codecs: v4l2: Add short and long term ref sets support in v4l2 codecs – stable ABI (backported)
+-   codectimestamper: Fix latency query handling (backported)
+-   cudaupload, cudadownload: Fix CUDA/GL interop copy path (backported)
+-   dashsink: test: use playbin3 for DASH playback verification (backported)
+-   decklinkvideosink: fix element leak in decklink callback (backported)
+-   dtls: unregister signal handlers from connection (backported)
+-   dvbsuboverlay: Add missing bounds checks to the parser everywhere (backported)
+-   gdppay: Fix null pointer dereference on duplicated caps event (backported)
+-   h264,h265ccextractor: Fix framerate in initial caps (backported)
+-   h264parse: Fix framerate calculation and interlaced features (backported)
+-   h264parser: Fix memory leak in gst_h264_parser_parse_nal() (backported)
+-   h265parser: Validate num_decoding_units_minus1 in pic_timing SEI (backported)
+-   h266parser: Fix APS ID bounds check in APS parsing (backported)
+-   h266parser: Fix out of bounds write when parsing pic_timing SEI (backported)
+-   h266parser: Validate tile index bounds in picture partition parsing (backported)
+-   libs: jpegparser: boundary checks before copying it (backported)
+-   meson: Add a subproject for providing the LunarG MoltenVK SDK (backported)
+-   meson: Explicitly use cpp_std=c++11 for decklink (backported)
+-   meson: Fix downloading MoltenVK SDK, make it work when meson-installed (backported)
+-   meson: Fix libxml2 not building due to wrong option type (backported)
+-   mpeghdec: memory leak fix in MPEG-H Audio decoder plugin (backported)
+-   mpegtspacketizer: Handle clock change/resets without skew correction (backported)
+-   mxfdemux: always send a segment before sending eos or segment-done (backported)
+-   mxfdemux: fix gst_mxf_demux_pad_get_stream_time () (backported)
+-   nvcodec: Add capability caching to speed up plugin initialization (backported)
+-   objectdetectionoverlay: add support for rotated bounding boxes (backported)
+-   openh264enc: remove broken drain and simplify handle_frame (backported)
+-   soundtouch: Only allow up to 192kHz and 16 channels (backported)
+-   srtpenc: preserve ROC when master key is updated for an ongoing session (backported)
+-   svtav1: fix “Level of parallelism” property type discrepencies (backported)
+-   tsdemux: Fix Continuity Counter handling (backported)
+-   tsmux: reduce noise for DEBUG log level (backported)
+-   tsmux: Fix integer overflow in SCTE35 NULL interval (backported)
+-   v4l2: Add support for AV1 stateful V4l2 decoder (backported)
+-   vabasetransform: copy buffer’s metadata at copy when import buffer (backported)
+-   vavp8enc: set color format chroma (backported)
+-   vkav1dec: fix to set SavedOrderHints properly (backported)
+-   vtdec: Avoid busy looping when queue length is smaller than DPB size (backported)
+-   vtdec: Don’t re-create session if only the framerate changed (backported)
+-   vtdec: Fix race condition when negotiating during playback (backported)
+-   vtdec: Fix wrong DPB size check in the output loop (backported)
+-   vtdec: Reverse playback fixes (backported)
+-   vtenc: Fix DTS offset calculation (backported)
+-   vtdec: Store supplemental codec support in a global variable (backported)
+-   vulkan: load video function pointers conditionally based on codec operation (backported)
+-   vulkan: Clear mutex when GstVulkanImageMemory is freed (backported)
+-   wayland: Fix CLAMP operation of maxFALL and maxCLL (backported)
+-   wayland: display: Add protection when replacing wl_output (backported)
+-   waylandsink: make gst_wl_window_commit_buffer handle NULL buffers (backported)
+-   webrtc: sink floating refs of ICE transports (backported)
+-   webrtcbin: Check the presence of encoding-name fields in answer caps (backported)
+-   zxing: Fix version check for zxing-cpp 3.0.1 (backported)
+
+gst-plugins-ugly
+
+-   No changes that haven’t been backported
+
+Backported into 1.28:
+
+-   asfdemux: Error out on files with more than 32 streams (backported)
+-   rmdemux: Check if new video fragment overflows the fragment storage before storing it (backported)
+
+GStreamer Rust plugins
+
+-   ac4parse: Basic AC-4 parser element creation
+-   analytics: Add a hand tracking tensor decoder element
+-   compress: adding deflate algo support
+-   compress: Adding brotli support
+-   dashsink2: add new DASH sink element that uses CMAF muxer without splitmuxsink
+-   flate: adding flate, for general purpose compress/decompress
+-   hlssink3: Add HLS WebVTT sink element
+-   png: implement image repacking when buffer is padded (backported)
+-   rtp: Bump ranks of new Rust (de)payloaders to PRIMARY
+-   rtp: basepay2: default to lower MTU of 1200 instead of 1400
+-   rtprecv: Add add-reference-timestamp-meta property
+-   speechmatics: Fix infinite reconnection on discont buffer
+-   transcriberbin: handle error messages fully asynchronously
+-   translationbin: expose property to control textaccumulate latency
+-   udp: Add new plugin with udpsrc2
+-   udpsrc2: handle ICMP errors
+-   webrtcsink: add support for qtic2venc encoder
+-   Update dependencies
+-   gstwebrtc-api: fix example offer options
+-   Add explanation to the README.md why gst-plugins-rs is a separate repository
+
+Backported into 0.15:
+
+-   burn: yoloxinference: Restrict widths/heights to a multiple of 32 (backported)
+-   cargo_wrapper: Add nasm dir to path only if needed (backported)
+-   Don’t transform push_event() false returns into flow errors (backported)
+-   fallbacksrc: Send select-streams event to collection source element (backported)
+-   gst-plugins-rs: only add example features when dependencies are found (backported)
+-   gtk4paintablesink: Error out in NULL->READY if there is no default GDK display (backported)
+-   rtpav1pay: insert sequence header if a keyframe is missing it (backported)
+-   rtpbin2: don’t panic in Drop impl (backported)
+-   rtpsend: send mandatory events on the rtcp srcpad before sending the first buffer (backported)
+-   rtspsrc2: Implement authentication support
+-   speechmatics: fix first_buffer_pts race condition in dispatch_message (backported)
+-   speechmatics, textaccumulate: fix flushing issues (backported)
+-   threadshare: examples: add rtpbin2 send / recv (backported)
+-   threadshare: fix socket leak in ts-udpsink (backported)
+-   threadshare: udpsink/src: don’t error out failing to send packet to a client / receiving an ICMP error (backported)
+-   Update dependencies (backported)
+-   webrtc: Silence new clippy warning (backported)
+-   whisper: update to latest release 0.16 (backported)
+
+gst-libav
+
+-   No changes that haven’t been backported
+
+Backported into 1.28:
+
+-   Various element factory metadata fixes (backported)
+-   audiodecoder / videodecoder: Fix gap event handling (backported)
+-   avviddec: Allow stride changes for some decoders (backported)
+-   avviddec: Fix handling of mixed interlaced content (backported)
+-   avviddec: Handle field/order changes in mixed interlace mode (backported)
+-   gst-libav: avvidcmp: set colorimetry on AVFrame (backported)
+-   libav: Don’t process lines that won’t be outputted (backported)
+
+gst-rtsp-server
+
+-   No changes that haven’t been backported
+
+Backported into 1.28:
+
+-   rtsp-client: Lock media when unlinking session medias (backported)
+-   rtsp-stream: Clear send_thread when it’s freed (backported)
+-   rtspclient: expose property to control error posting on RTCP timeout (backported)
+
+gstreamer-sharp
+
+-   gstreamer-sharp: update for latest API additions and introspection annotation changes in 1.29.0.1
+
+gst-python
+
+-   analytics: adding group mtd and keypoint mtd
+
+Backported into 1.28:
+
+-   Python typing (backported)
+-   bin: iterator is not nullable (backported)
+
+gst-editing-services
+
+-   ges-launcher: fix crash when error message has no source
+-   validate: Cleanup media and scenarios and add documentation
+-   validateflow: auto-derive directories from test file path
+
+Backported into 1.28:
+
+-   Plug all leaks reported running valgrind on our testsuite (backported)
+-   Remove spurious python-embed dependency from libges (backported)
+-   meson: Fix libxml2 not building due to wrong option type (backported)
+
+gst-devtools, gst-validate + gst-integration-testsuites
+
+-   gst-validate-launcher: Fix –help for Python 3.14
+-   validate: Cleanup media and scenarios and add documentation
+-   validate: support .media_info files in the main repo
+-   validateflow: auto-derive directories from test file path
+-   validate-launcher: don’t generate tests for skipped media info files after updating them
+-   validate: Cleanup media and scenarios and add documentation
+-   validate: launcher: fix total time spent when re-running flaky tests
+-   validate: support .media_info files in the main repo
+-   validateflow: auto-derive directories from test file path
+
+Backported into 1.28:
+
+-   Update Rust dependencies (backported)
+
+gstreamer-docs
+
+-   doc: sync cerbero doc with last system-recipe change
+-   doc: add design doc for generic-raw-format
+
+Backported into 1.28:
+
+-   tutorials/android: bump up ndkVersion to 29 (backported)
+
+Development build environment
+
+-   Add release notes snippets directory
+-   vscode: avoid to track launch.json
+-   gst-env.py: Don’t change CWD when entering the devenv
+-   gst-env.py: Keep a simple wrapper for meson devenv
+-   macos: enforce meson >= 1.8.3 for Xcode 26+
+-   wraps: update ffmpeg to 7.1.1, cairo to 1.18.4
+-   wraps: bump libvpx to 1.15
+
+Backported into 1.28:
+
+-   Add a subproject for providing the LunarG MoltenVK SDK (backported)
+-   Fix downloading MoltenVK SDK, make it work when meson-installed (backported)
+-   wraps: update libxml2 to v2.15.2 (backported)
+
+Cerbero build tool and packaging changes in 1.29.1
+
+-   Adding Support for Android on RISC-V64
+-   build-tools: remove gtk-doc-lite recipe
+-   cerbero: fixes for background build setup
+-   hacks: Remove xml hack in favor of etree.indent
+-   system_recipes: drop arch assert
+-   x265: unify all recipes in a single file
+-   oven: do not mark skipped recipes as built
+
+Backported into 1.28:
+
+-   Add tvOS support (backported)
+-   Ensure there’s no gstreamer in the artifact cache (backported)
+-   Rename vaapi variant to va and by default on Linux, test built plugins correctly on CI (backported)
+-   Update to Rust 1.93 / cargo-c 0.10.20 (backported)
+-   Update to Rust 1.94 and cargo-c 0.10.21 (backported)
+-   build: include plugin’s .pc file in Linux and macOS (backported)
+-   bump up to NDK 29 and pin cpp_std to c++11 in opencore-amr (backported)
+-   cerbero: Use static python requires for all wheels (backported)
+-   cerbero: add environment variable for building run with background priority (backported)
+-   cerbero: os.PRIO_DARWIN_PROCESS is only available on Python 3.12+ (backported)
+-   fetch: use the Oven for parsing the dependency tree (backported)
+-   filesprovider: Check missing files at the recipe level on CI runs (backported)
+-   glib.recipe: Upstream old iOS GIO_MODULE_DIR hack (backported)
+-   gtk.recipe: Enable gstreamer media backend on Windows (backported)
+-   gtk: Enable GStreamer media backend on Windows
+-   inno: assorted fixes for Registry key handling (backported)
+-   inno: Fix incorrect MSVC redistributable when cross-building for Arm64 (backported)
+-   inno: Restrict usage to native Windows as exposed by sys.platform (backported)
+-   inno: fix environment variable being created outside SessionManager/Environment (backported)
+-   libpng: update to 1.6.55 (backported)
+-   libsoup: update to 3.6.6 (backported)
+-   libsrtp: update to v2.8.0 (backported)
+-   osx-framework: Add missing gstreamer libraries (backported)
+-   osx: fix file duplication in .pkg payloads (backported)
+-   packaging: Fix missing devel payloads for gstreamer-1.0-python (backported)
+-   pygobject.recipe: Fix overflow when comparing GstMessageType on Windows (backported)
+-   recipe: do not run symbolication if nodebug (backported)
+-   wheel: Add a new gstreamer_meta package with fewer deps (backported)
+-   wheel: Add debuginfo wheel (backported)
+-   wheels: Add a new meta-package ‘gstreamer_bundle’ (backported)
+-   wheels: Add proper description / long_description (backported)
+-   wheels: Don’t raise an exception if cli exits with non-zero code (backported)
+-   x265: drop common source recipe (backported)
+
+Contributors to 1.29.1
+
+Adrian Perez de Castro, Albert Sjölund, Alicia Boya García, Amyspark, Andoni Morales Alastruey, Andrey Sidorov,
+ArokyaMatthewNathan, axxel, Azat Nurgaliev, Carlos Bentzen, Charles, Chris Bainbridge, Christian Gräfe, Cole Richardson, Daniel
+Morin, David Rosca, Deepa Guthyappa Madivalara, Detlev Casanova, Dominique Leroux, Edward Hervey, Fabian Orccon, François
+Laignel, freedesktop, Guillaume Desmottes, He Junyan, Hou Qi, Hyunjun Ko, Jakub Adam, James Liu, Jan Alexander Steffens
+(heftig), Jan Schmidt, jeongmin kwak, Jeremy Whiting, Jorge Zapata, László Károlyi, L. E. Segovia, Mao Han, Marko Kohtala,
+Martin Rodriguez Reboredo, Mathieu Duponchelle, Matthew Waters, Mattia, Matus Gajdos, Monty C, Nicolas Dufresne, Nirbheek
+Chauhan, Ognyan Tonchev, Olivier Crête, Pablo García, Peter Stensson, Philippe Normand, Piotr Brzeziński, Rinat Zeh, Robert
+Mader, Roberto Viola, Ruben Gonzalez, Sanchayan Maity, Sebastian Dröge, Sergey Radionov, Seungha Yang, Shigeharu Kamiya, Sjoerd
+Simons, Stéphane Cerveau, Sven Püschel, Taruntej Kanakamalla, Thibault Saunier, Tim-Philipp Müller, Tobias Koenig, Tobias Rapp,
+Tobias Schlager, Víctor Manuel Jáquez Leal, Vitaly Vlasov, Vivia Nikolaidou, Vivienne Watermeier, Wojciech Kapsa, Xabier
+Rodriguez Calvar, Xavier Claessens, Xi Ruoyao,
+
+… and many others who have contributed bug reports, translations, sent suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.29.1
+
+-   List of Merge Requests applied in 1.29.1
+-   List of Issues fixed in 1.29.1
+
+Schedule for 1.30
+
+Our next major feature release will be 1.30, and 1.29.x is the unstable development series leading up to the stable 1.30
+release. The development of 1.29/1.30 will happen in the git main branch of the GStreamer mono repository.
+
+The schedule for 1.30 is yet to be decided, but we’re targetting Q4/2026.
+
+1.30 will be backwards-compatible to the stable 1.28, 1.26, 1.24, 1.22, 1.20, 1.18, 1.16, 1.14, 1.12, 1.10, 1.8, 1.6, 1.4, 1.2
+and 1.0 release series.
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+These release notes have been prepared by Tim-Philipp Müller.
+
+License: CC BY-SA 4.0
