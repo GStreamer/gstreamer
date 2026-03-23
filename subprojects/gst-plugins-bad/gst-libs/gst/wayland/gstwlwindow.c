@@ -89,10 +89,20 @@ typedef struct _GstWlWindowPrivate
   gboolean is_area_surface_mapped;
 
   GMutex window_lock;
+
   GstWlBuffer *next_buffer;
-  GstVideoInfo *next_video_info;
-  GstVideoMasteringDisplayInfo *next_minfo;
-  GstVideoContentLightLevel *next_linfo;
+
+  /* Video information for the next render */
+  GstVideoInfo src_video_info;
+  GstVideoInfoDmaDrm src_drm_info;
+  GstVideoMasteringDisplayInfo src_minfo;
+  GstVideoContentLightLevel src_linfo;
+  GstCaps *src_caps;
+  gchar *drm_device;
+  GstBufferPool *pool;
+  gboolean skip_dumb_buffer_copy;
+  gboolean src_info_changed;
+
   GstWlBuffer *staged_buffer;
   gboolean clear_window;
   struct wl_callback *frame_callback;
@@ -121,7 +131,7 @@ static void gst_wl_window_update_geometry (GstWlWindow * self);
 static void gst_wl_window_update_borders (GstWlWindow * self);
 
 static void gst_wl_window_commit_buffer (GstWlWindow * self,
-    GstWlBuffer * buffer);
+    GstWlBuffer * buffer, gboolean redraw);
 
 static void gst_wl_window_set_colorimetry (GstWlWindow * self,
     const GstVideoColorimetry * colorimetry,
@@ -240,6 +250,13 @@ gst_wl_window_finalize (GObject * gobject)
 
   if (priv->staged_buffer)
     gst_wl_buffer_unref_buffer (priv->staged_buffer);
+
+  if (priv->pool) {
+    gst_buffer_pool_set_active (priv->pool, FALSE);
+    gst_clear_object (&priv->pool);
+  }
+  gst_clear_caps (&priv->src_caps);
+  g_free (priv->drm_device);
 
   g_cond_clear (&priv->configure_cond);
   g_mutex_clear (&priv->configure_mutex);
@@ -696,6 +713,7 @@ frame_redraw_callback (void *data, struct wl_callback *callback, uint32_t time)
   GstWlWindow *self = data;
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
   GstWlBuffer *next_buffer;
+  gboolean redraw;
 
   GST_DEBUG_OBJECT (self, "frame_redraw_cb");
 
@@ -703,12 +721,13 @@ frame_redraw_callback (void *data, struct wl_callback *callback, uint32_t time)
   priv->frame_callback = NULL;
 
   g_mutex_lock (&priv->window_lock);
+  redraw = (priv->staged_buffer == priv->next_buffer);
   next_buffer = priv->next_buffer = priv->staged_buffer;
   priv->staged_buffer = NULL;
   g_mutex_unlock (&priv->window_lock);
 
   if (next_buffer || priv->clear_window)
-    gst_wl_window_commit_buffer (self, next_buffer);
+    gst_wl_window_commit_buffer (self, next_buffer, redraw);
 
   if (next_buffer)
     gst_wl_buffer_unref_buffer (next_buffer);
@@ -733,17 +752,19 @@ gst_wl_window_crop_rectangle_changed (GstWlWindow * self,
 }
 
 static void
-gst_wl_window_commit_buffer (GstWlWindow * self, GstWlBuffer * buffer)
+gst_wl_window_commit_buffer (GstWlWindow * self, GstWlBuffer * buffer,
+    gboolean redraw)
 {
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
-  GstVideoInfo *info = priv->next_video_info;
-  GstVideoMasteringDisplayInfo *minfo = priv->next_minfo;
-  GstVideoContentLightLevel *linfo = priv->next_linfo;
+  GstVideoInfo *info = &priv->src_video_info;
+  GstVideoMasteringDisplayInfo *minfo = &priv->src_minfo;
+  GstVideoContentLightLevel *linfo = &priv->src_linfo;
   struct wl_callback *callback;
   gboolean needs_layout_update = FALSE;
   GstVideoRectangle crop = priv->crop;
 
-  if (G_UNLIKELY (info)) {
+  if (G_UNLIKELY (priv->src_info_changed && !redraw)) {
+    priv->src_info_changed = FALSE;
     priv->scaled_width =
         gst_util_uint64_scale_int_round (info->width, info->par_n, info->par_d);
     priv->video_width = priv->buffer_width = info->width;
@@ -817,12 +838,7 @@ gst_wl_window_commit_buffer (GstWlWindow * self, GstWlBuffer * buffer)
      * the position of the video_subsurface */
     wl_surface_commit (priv->area_surface_wrapper);
     wl_subsurface_set_desync (priv->video_subsurface);
-    gst_video_info_free (priv->next_video_info);
-    priv->next_video_info = NULL;
-    g_clear_pointer (&priv->next_minfo, g_free);
-    g_clear_pointer (&priv->next_linfo, g_free);
   }
-
 }
 
 static void
@@ -839,7 +855,7 @@ commit_callback (void *data, struct wl_callback *callback, uint32_t serial)
   next_buffer = priv->next_buffer;
   g_mutex_unlock (&priv->window_lock);
 
-  gst_wl_window_commit_buffer (self, next_buffer);
+  gst_wl_window_commit_buffer (self, next_buffer, FALSE);
 
   if (next_buffer)
     gst_wl_buffer_unref_buffer (next_buffer);
@@ -867,9 +883,7 @@ static const struct wl_callback_listener commit_listener = {
  * Since: 1.28
  */
 gboolean
-gst_wl_window_render (GstWlWindow * self, GstBuffer * buffer,
-    const GstVideoInfo * info, const GstVideoMasteringDisplayInfo * minfo,
-    const GstVideoContentLightLevel * linfo)
+gst_wl_window_render (GstWlWindow * self, GstBuffer * buffer)
 {
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
   GstWlBuffer *wlbuffer = NULL;
@@ -886,20 +900,6 @@ gst_wl_window_render (GstWlWindow * self, GstBuffer * buffer,
   }
 
   g_mutex_lock (&priv->window_lock);
-  if (G_UNLIKELY (info)) {
-    gst_video_info_free (priv->next_video_info);
-    priv->next_video_info = gst_video_info_copy (info);
-  }
-
-  if (G_UNLIKELY (minfo)) {
-    g_clear_pointer (&priv->next_minfo, g_free);
-    priv->next_minfo = g_memdup2 (minfo, sizeof (*minfo));
-  }
-
-  if (G_UNLIKELY (linfo)) {
-    g_clear_pointer (&priv->next_linfo, g_free);
-    priv->next_linfo = g_memdup2 (linfo, sizeof (*linfo));
-  }
 
   if (priv->next_buffer && priv->staged_buffer) {
     GST_LOG_OBJECT (self, "buffer %p dropped (replaced)", priv->staged_buffer);
@@ -1421,4 +1421,50 @@ gst_wl_window_set_force_aspect_ratio (GstWlWindow * self,
   priv->force_aspect_ratio = force_aspect_ratio;
 
   gst_wl_window_update_geometry (self);
+}
+
+/**
+ * gst_wl_window_set_source_info:
+ * @self: a #GstWlWindow
+ * @drm_info: (nullable): DRM format info for DMABuf import
+ * @video_info: the #GstVideoInfo describing the incoming video
+ * @caps: the negotiated #GstCaps
+ * @drm_device: (nullable): DRM device path for dumb buffer allocation
+ *
+ * Configures the source video format on @self so that
+ * gst_wl_window_render() can import buffers internally. This should be
+ * called whenever the stream format changes (i.e. from set_caps).
+ *
+ * Since: 1.30
+ */
+void
+gst_wl_window_set_source_info (GstWlWindow * self,
+    const GstVideoInfoDmaDrm * drm_info, const GstVideoInfo * video_info,
+    GstCaps * caps, const gchar * drm_device)
+{
+  GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
+
+  g_return_if_fail (GST_IS_WL_WINDOW (self));
+  g_return_if_fail (video_info != NULL);
+  g_return_if_fail (caps != NULL);
+
+  if (priv->pool) {
+    gst_buffer_pool_set_active (priv->pool, FALSE);
+    gst_clear_object (&priv->pool);
+  }
+
+  priv->src_video_info = *video_info;
+
+  if (drm_info)
+    priv->src_drm_info = *drm_info;
+  else
+    gst_video_info_dma_drm_init (&priv->src_drm_info);
+
+  gst_caps_replace (&priv->src_caps, caps);
+
+  g_free (priv->drm_device);
+  priv->drm_device = g_strdup (drm_device);
+
+  priv->skip_dumb_buffer_copy = FALSE;
+  priv->src_info_changed = TRUE;
 }

@@ -103,7 +103,6 @@ typedef struct _GstGtkWaylandSinkPrivate
   GstBufferPool *pool;
   GstBuffer *last_buffer;
 
-  gboolean render_info_changed;
   GstVideoInfo render_info;
   GstVideoInfo video_info;
   GstVideoInfoDmaDrm drm_info;
@@ -506,6 +505,9 @@ setup_wl_window (GstGtkWaylandSink * self)
         wl_surface, &priv->render_lock);
     gst_wl_window_set_rotate_method (priv->wl_window,
         priv->current_rotate_method);
+    if (priv->caps)
+      gst_wl_window_set_source_info (priv->wl_window, &priv->drm_info,
+          &priv->video_info, priv->caps, priv->drm_device);
     g_signal_connect_object (priv->wl_window, "map",
         G_CALLBACK (wl_window_map_cb), self, 0);
   }
@@ -771,7 +773,7 @@ gst_gtk_wayland_sink_change_state (GstElement * element,
       gst_buffer_replace (&priv->last_buffer, NULL);
       if (priv->wl_window) {
         /* remove buffer from surface, show nothing */
-        gst_wl_window_render (priv->wl_window, NULL, NULL, NULL, NULL);
+        gst_wl_window_render (priv->wl_window, NULL);
       }
       break;
     default:
@@ -949,7 +951,6 @@ gst_gtk_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   priv->have_light_info =
       gst_video_content_light_level_from_caps (&priv->linfo, caps);
 
-  priv->render_info_changed = TRUE;
   priv->skip_dumb_buffer_copy = FALSE;
 
   /* free pooled buffer used with previous caps */
@@ -999,6 +1000,10 @@ gst_gtk_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   /* Will be used to create buffer pools */
   gst_caps_replace (&priv->caps, caps);
   priv->video_info = priv->render_info;
+
+  if (priv->wl_window)
+    gst_wl_window_set_source_info (priv->wl_window, &priv->drm_info,
+        &priv->video_info, priv->caps, priv->drm_device);
 
   return TRUE;
 
@@ -1099,26 +1104,11 @@ render_last_buffer (GstGtkWaylandSink * self, gboolean redraw)
 {
   GstGtkWaylandSinkPrivate *priv =
       gst_gtk_wayland_sink_get_instance_private (self);
-  const GstVideoInfo *info = NULL;
-  const GstVideoMasteringDisplayInfo *minfo = NULL;
-  const GstVideoContentLightLevel *linfo = NULL;
 
   if (!priv->wl_window)
     return FALSE;
 
-  if (G_UNLIKELY (priv->render_info_changed && !redraw)) {
-    info = &priv->render_info;
-
-    if (priv->have_mastering_info)
-      minfo = &priv->minfo;
-
-    if (priv->have_light_info)
-      linfo = &priv->linfo;
-
-    priv->render_info_changed = FALSE;
-  }
-  return gst_wl_window_render (priv->wl_window, priv->last_buffer, info, minfo,
-      linfo);
+  return gst_wl_window_render (priv->wl_window, priv->last_buffer);
 }
 
 static GstFlowReturn

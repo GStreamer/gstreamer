@@ -67,10 +67,7 @@ GST_WL_API
 gboolean gst_wl_window_is_toplevel (GstWlWindow * self);
 
 GST_WL_API
-gboolean gst_wl_window_render (GstWlWindow * self, GstBuffer * buffer,
-        const GstVideoInfo * info,
-        const GstVideoMasteringDisplayInfo * minfo,
-        const GstVideoContentLightLevel * linfo);
+gboolean gst_wl_window_render (GstWlWindow * self, GstBuffer * buffer);
 
 GST_WL_API
 gboolean gst_wl_window_flush (GstWlWindow * self);
@@ -89,5 +86,12 @@ void gst_wl_window_set_rotate_method (GstWlWindow               *self,
 GST_WL_API
 void gst_wl_window_set_force_aspect_ratio (GstWlWindow * self,
         gboolean force_aspect_ratio);
+
+GST_WL_API
+void gst_wl_window_set_source_info (GstWlWindow * self,
+        const GstVideoInfoDmaDrm * drm_info,
+        const GstVideoInfo * video_info,
+        GstCaps * caps,
+        const gchar * drm_device);
 
 G_END_DECLS

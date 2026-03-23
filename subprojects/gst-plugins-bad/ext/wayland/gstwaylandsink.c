@@ -553,7 +553,7 @@ gst_wayland_sink_change_state (GstElement * element, GstStateChange transition)
           g_clear_object (&self->window);
         } else {
           /* remove buffer from surface, show nothing */
-          gst_wl_window_render (self->window, NULL, NULL, NULL, NULL);
+          gst_wl_window_render (self->window, NULL);
         }
       }
 
@@ -804,7 +804,6 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   self->have_light_info =
       gst_video_content_light_level_from_caps (&self->linfo, caps);
 
-  self->render_info_changed = TRUE;
   self->skip_dumb_buffer_copy = FALSE;
 
   /* free pooled buffer used with previous caps */
@@ -832,6 +831,10 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   /* Will be used to create buffer pools */
   gst_caps_replace (&self->caps, caps);
   self->video_info = self->render_info;
+
+  if (self->window)
+    gst_wl_window_set_source_info (self->window, &self->drm_info,
+        &self->video_info, self->caps, self->drm_device);
 
   return TRUE;
 
@@ -924,30 +927,6 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   return TRUE;
 }
 
-/* must be called with the render lock */
-static gboolean
-render_last_buffer (GstWaylandSink * self, gboolean redraw)
-{
-  const GstVideoInfo *info = NULL;
-  const GstVideoMasteringDisplayInfo *minfo = NULL;
-  const GstVideoContentLightLevel *linfo = NULL;
-
-  if (G_UNLIKELY (self->render_info_changed && !redraw)) {
-    info = &self->render_info;
-
-    if (self->have_mastering_info)
-      minfo = &self->minfo;
-
-    if (self->have_light_info)
-      linfo = &self->linfo;
-
-    self->render_info_changed = FALSE;
-  }
-
-  return gst_wl_window_render (self->window, self->last_buffer, info, minfo,
-      linfo);
-}
-
 static void
 on_window_closed (GstWlWindow * window, gpointer user_data)
 {
@@ -1036,6 +1015,9 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
           self->current_rotate_method);
       gst_wl_window_set_force_aspect_ratio (self->window,
           self->force_aspect_ratio);
+      if (self->caps)
+        gst_wl_window_set_source_info (self->window, &self->drm_info,
+            &self->video_info, self->caps, self->drm_device);
     }
   }
 
@@ -1204,7 +1186,7 @@ render:
   }
 
   gst_buffer_replace (&self->last_buffer, to_render);
-  if (!render_last_buffer (self, FALSE))
+  if (!gst_wl_window_render (self->window, self->last_buffer))
     ret = GST_BASE_SINK_FLOW_DROPPED;
 
   if (buffer != to_render)
@@ -1298,6 +1280,9 @@ gst_wayland_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
             self->current_rotate_method);
         gst_wl_window_set_force_aspect_ratio (self->window,
             self->force_aspect_ratio);
+        if (self->caps)
+          gst_wl_window_set_source_info (self->window, &self->drm_info,
+              &self->video_info, self->caps, self->drm_device);
       }
     } else {
       GST_ERROR_OBJECT (self, "Failed to find display handle, "
@@ -1343,7 +1328,7 @@ gst_wayland_sink_expose (GstVideoOverlay * overlay)
   g_mutex_lock (&self->render_lock);
   if (self->last_buffer) {
     GST_DEBUG_OBJECT (self, "redrawing last buffer");
-    render_last_buffer (self, TRUE);
+    gst_wl_window_render (self->window, self->last_buffer);
   }
   g_mutex_unlock (&self->render_lock);
 }
