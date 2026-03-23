@@ -30,6 +30,41 @@
 #define LAST_CONTAINER_QDATA g_quark_from_string("ges-structured-last-container")
 #define LAST_CHILD_QDATA g_quark_from_string("ges-structured-last-child")
 
+static void
+_last_container_weak_ref_free (gpointer data)
+{
+  GWeakRef *ref = data;
+
+  g_weak_ref_clear (ref);
+  g_free (ref);
+}
+
+static GESContainer *
+_get_last_container (GObject * timeline)
+{
+  GWeakRef *ref = g_object_get_qdata (timeline, LAST_CONTAINER_QDATA);
+
+  if (!ref)
+    return NULL;
+
+  return g_weak_ref_get (ref);
+}
+
+static void
+_set_last_container (GObject * timeline, GESClip * clip)
+{
+  GWeakRef *ref = g_object_get_qdata (timeline, LAST_CONTAINER_QDATA);
+
+  if (!ref) {
+    ref = g_new0 (GWeakRef, 1);
+    g_weak_ref_init (ref, clip);
+    g_object_set_qdata_full (timeline, LAST_CONTAINER_QDATA, ref,
+        _last_container_weak_ref_free);
+  } else {
+    g_weak_ref_set (ref, clip);
+  }
+}
+
 #define REPORT_UNLESS(condition, errpoint, ...)                                \
   G_STMT_START {                                                               \
     if (!(condition)) {                                                        \
@@ -228,9 +263,7 @@ find_element_for_property (GESTimeline * timeline, GstStructure * structure,
   }
 
   if (!element) {
-    element = g_object_get_qdata (G_OBJECT (timeline), LAST_CONTAINER_QDATA);
-    if (element)
-      gst_object_ref (element);
+    element = GES_TIMELINE_ELEMENT (_get_last_container (G_OBJECT (timeline)));
   }
 
   REPORT_UNLESS (GES_IS_TIMELINE_ELEMENT (element), err,
@@ -687,11 +720,13 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   if (layer_priority == -1) {
     GESContainer *container;
 
-    container = g_object_get_qdata (G_OBJECT (timeline), LAST_CONTAINER_QDATA);
-    if (!container || !GES_IS_CLIP (container))
+    container = _get_last_container (G_OBJECT (timeline));
+    if (!container || !GES_IS_CLIP (container)) {
       layer = _ges_get_layer_by_priority (timeline, 0);
-    else
+    } else {
       layer = ges_clip_get_layer (GES_CLIP (container));
+    }
+    g_clear_object (&container);
 
     if (!layer)
       layer = _ges_get_layer_by_priority (timeline, 0);
@@ -774,7 +809,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   }
 
   if (res) {
-    g_object_set_qdata (G_OBJECT (timeline), LAST_CONTAINER_QDATA, clip);
+    _set_last_container (G_OBJECT (timeline), GES_CLIP (clip));
     g_object_set_qdata (G_OBJECT (timeline), LAST_CHILD_QDATA, NULL);
   }
 
@@ -856,7 +891,7 @@ _ges_container_add_child_from_struct (GESTimeline * timeline,
     GstStructure * structure, GError ** error)
 {
   GESAsset *asset = NULL;
-  GESContainer *container;
+  GESContainer *container = NULL;
   GESTimelineElement *child = NULL;
   const gchar *container_name, *child_name, *child_type, *id;
 
@@ -873,7 +908,7 @@ _ges_container_add_child_from_struct (GESTimeline * timeline,
   container_name = gst_structure_get_string (structure, "container-name");
 
   if (container_name == NULL) {
-    container = g_object_get_qdata (G_OBJECT (timeline), LAST_CONTAINER_QDATA);
+    container = _get_last_container (G_OBJECT (timeline));
   } else {
     container =
         GES_CONTAINER (ges_timeline_get_element (timeline, container_name));
@@ -994,6 +1029,7 @@ _ges_container_add_child_from_struct (GESTimeline * timeline,
 
 beach:
   gst_clear_object (&asset);
+  g_clear_object (&container);
   return res;
 }
 
