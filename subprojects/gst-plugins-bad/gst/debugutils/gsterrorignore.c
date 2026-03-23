@@ -51,7 +51,8 @@ enum
   PROP_IGNORE_NOTLINKED,
   PROP_IGNORE_NOTNEGOTIATED,
   PROP_IGNORE_EOS,
-  PROP_CONVERT_TO
+  PROP_CONVERT_TO,
+  PROP_POST_WARNINGS,
 };
 
 static void gst_error_ignore_set_property (GObject * object, guint prop_id,
@@ -138,6 +139,18 @@ gst_error_ignore_class_init (GstErrorIgnoreClass * klass)
           "Which GstFlowReturn value we should convert to when ignoring",
           GST_TYPE_FLOW_RETURN,
           GST_FLOW_NOT_LINKED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstErrorIgnore:post-warnings:
+   *
+   * Whether to post warnings on first flow conversion
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (object_class, PROP_POST_WARNINGS,
+      g_param_spec_boolean ("post-warnings", "Post warnings",
+          "Whether to post warnings on first flow conversion",
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -166,6 +179,7 @@ gst_error_ignore_init (GstErrorIgnore * self)
   self->ignore_notnegotiated = TRUE;
   self->ignore_eos = FALSE;
   self->convert_to = GST_FLOW_NOT_LINKED;
+  self->post_warnings = TRUE;
 }
 
 static void
@@ -189,6 +203,9 @@ gst_error_ignore_set_property (GObject * object, guint prop_id,
       break;
     case PROP_CONVERT_TO:
       self->convert_to = g_value_get_enum (value);
+      break;
+    case PROP_POST_WARNINGS:
+      self->post_warnings = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -217,6 +234,9 @@ gst_error_ignore_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_CONVERT_TO:
       g_value_set_enum (value, self->convert_to);
+      break;
+    case PROP_POST_WARNINGS:
+      g_value_set_boolean (value, self->post_warnings);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -251,6 +271,7 @@ gst_error_ignore_sink_chain (GstPad * pad, GstObject * parent,
 {
   GstErrorIgnore *self = GST_ERROR_IGNORE (parent);
   GstFlowReturn ret = GST_FLOW_OK;
+  gboolean warn = self->keep_pushing && self->post_warnings;
 
   if (gst_pad_check_reconfigure (pad))
     self->keep_pushing = TRUE;
@@ -265,10 +286,18 @@ gst_error_ignore_sink_chain (GstPad * pad, GstObject * parent,
   if ((ret == GST_FLOW_ERROR && self->ignore_error) ||
       (ret == GST_FLOW_NOT_LINKED && self->ignore_notlinked) ||
       (ret == GST_FLOW_EOS && self->ignore_eos) ||
-      (ret == GST_FLOW_NOT_NEGOTIATED && self->ignore_notnegotiated))
+      (ret == GST_FLOW_NOT_NEGOTIATED && self->ignore_notnegotiated)) {
+    if (warn) {
+      GST_ELEMENT_WARNING (self,
+          STREAM, FAILED,
+          (NULL),
+          ("converted %s to %s", gst_flow_get_name (ret),
+              gst_flow_get_name (self->convert_to)));
+    }
     return self->convert_to;
-  else
+  } else {
     return ret;
+  }
 }
 
 static GstStateChangeReturn
