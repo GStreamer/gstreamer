@@ -55,7 +55,7 @@ enum
   PROP_VIRTUAL_MEMORY,
   PROP_OS_HANDLE,
   PROP_STREAM_ORDERED_ALLOC,
-  PROP_PREFER_STREAM_ORDERED_ALLLOC,
+  PROP_PREFER_STREAM_ORDERED_ALLOC,
   PROP_EXT_INTEROP,
   PROP_DEFAULT_GPU_STACK_SIZE,
 };
@@ -135,7 +135,7 @@ gst_cuda_context_class_init (GstCudaContextClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_VIRTUAL_MEMORY,
       g_param_spec_boolean ("virtual-memory", "Virtual Memory",
-          "Whether virtual memory management is supporte or not", FALSE,
+          "Whether virtual memory management is supported or not", FALSE,
           (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
   /**
@@ -166,7 +166,7 @@ gst_cuda_context_class_init (GstCudaContextClass * klass)
    * Since: 1.26
    */
   g_object_class_install_property (gobject_class,
-      PROP_PREFER_STREAM_ORDERED_ALLLOC,
+      PROP_PREFER_STREAM_ORDERED_ALLOC,
       g_param_spec_boolean ("prefer-stream-ordered-alloc",
           "Prefer Stream Ordered Alloc", "Prefers stream ordered allocation",
           FALSE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
@@ -224,7 +224,7 @@ gst_cuda_context_set_property (GObject * object, guint prop_id,
     case PROP_DEVICE_ID:
       priv->device_id = g_value_get_uint (value);
       break;
-    case PROP_PREFER_STREAM_ORDERED_ALLLOC:
+    case PROP_PREFER_STREAM_ORDERED_ALLOC:
       g_mutex_lock (&priv->lock);
       priv->prefer_stream_ordered_alloc = g_value_get_boolean (value);
       g_mutex_unlock (&priv->lock);
@@ -279,7 +279,7 @@ gst_cuda_context_get_property (GObject * object, guint prop_id,
     case PROP_STREAM_ORDERED_ALLOC:
       g_value_set_boolean (value, priv->stream_ordered_alloc_supported);
       break;
-    case PROP_PREFER_STREAM_ORDERED_ALLLOC:
+    case PROP_PREFER_STREAM_ORDERED_ALLOC:
       g_mutex_lock (&priv->lock);
       g_value_set_boolean (value, priv->prefer_stream_ordered_alloc);
       g_mutex_unlock (&priv->lock);
