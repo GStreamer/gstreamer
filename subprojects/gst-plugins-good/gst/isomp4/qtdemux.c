@@ -10746,6 +10746,11 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   if (!stream->n_samples)
     goto no_samples;
 
+  if (stream->sample_size == 0) {
+    if (!qt_atom_parser_has_chunks (&stream->stsz, stream->n_samples, 4))
+      goto corrupt_file;
+  }
+
   /* sample-to-chunk atom */
   if (!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stsc, &stream->stsc))
     goto corrupt_file;
@@ -10766,7 +10771,6 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   if (!qt_atom_parser_has_chunks (&stream->stsc, stream->n_samples_per_chunk,
           12))
     goto corrupt_file;
-
 
   /* chunk offset */
   if (qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stco, &stream->stco))
@@ -10791,9 +10795,20 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
     /* treat chunks as samples */
     if (!gst_byte_reader_get_uint32_be (&stream->stco, &stream->n_samples))
       goto corrupt_file;
+
+    /* make sure there's enough data */
+    if (!qt_atom_parser_has_chunks (&stream->stco, stream->n_samples,
+            stream->co_size))
+      goto corrupt_file;
   } else {
-    /* skip number of entries */
-    if (!gst_byte_reader_skip (&stream->stco, 4))
+    guint32 num_entries;
+
+    if (!gst_byte_reader_get_uint32_be (&stream->stco, &num_entries))
+      goto corrupt_file;
+
+    /* make sure there's enough data */
+    if (!qt_atom_parser_has_chunks (&stream->stco, num_entries,
+            stream->co_size))
       goto corrupt_file;
 
     /* make sure there are enough data in the stsz atom */
