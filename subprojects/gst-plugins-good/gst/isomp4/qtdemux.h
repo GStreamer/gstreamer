@@ -228,8 +228,8 @@ struct _GstQTDemux {
    * ALL VARIABLES BELOW ARE ONLY USED IN PUSH-BASED MODE
    */
   GstAdapter *adapter;
-  guint neededbytes;
-  guint todrop;
+  guint64 neededbytes;
+  guint64 todrop;
   /* Used to store data if [mdat] is before the headers */
   GstBuffer *mdatbuffer;
   /* Amount of bytes left to read in the current [mdat] */
