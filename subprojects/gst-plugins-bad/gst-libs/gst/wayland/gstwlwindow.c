@@ -849,23 +849,41 @@ static const struct wl_callback_listener commit_listener = {
   commit_callback
 };
 
+/**
+ * gst_wl_window_render:
+ * @self: a #GstWlWindow
+ * @buffer: (nullable): the #GstBuffer to render, or %NULL to clear the surface
+ * @info: (nullable): updated #GstVideoInfo when the stream format changes, or %NULL
+ * @minfo: (nullable): HDR mastering display info, or %NULL
+ * @linfo: (nullable): HDR content light level info, or %NULL
+ *
+ * Renders @buffer on the Wayland surface managed by @self. The #GstBuffer
+ * must already have an associated #GstWlBuffer (created via
+ * gst_buffer_add_wl_buffer()). Passing %NULL clears the surface.
+ *
+ * Returns: %TRUE if the buffer was queued for display, %FALSE if it was
+ *   dropped because a previous frame was still being staged.
+ *
+ * Since: 1.28
+ */
 gboolean
-gst_wl_window_render (GstWlWindow * self, GstWlBuffer * buffer,
-    const GstVideoInfo * info)
-{
-  return gst_wl_window_render_hdr (self, buffer, info, NULL, NULL);
-}
-
-gboolean
-gst_wl_window_render_hdr (GstWlWindow * self, GstWlBuffer * buffer,
+gst_wl_window_render (GstWlWindow * self, GstBuffer * buffer,
     const GstVideoInfo * info, const GstVideoMasteringDisplayInfo * minfo,
     const GstVideoContentLightLevel * linfo)
 {
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
+  GstWlBuffer *wlbuffer = NULL;
   gboolean ret = TRUE;
 
-  if (G_LIKELY (buffer))
-    gst_wl_buffer_ref_gst_buffer (buffer);
+  if (G_LIKELY (buffer)) {
+    wlbuffer = gst_buffer_get_wl_buffer (priv->display, buffer);
+    if (G_UNLIKELY (!wlbuffer)) {
+      GST_ERROR_OBJECT (self,
+          "buffer %" GST_PTR_FORMAT " has no GstWlBuffer attached", buffer);
+      return FALSE;
+    }
+    gst_wl_buffer_ref_gst_buffer (wlbuffer);
+  }
 
   g_mutex_lock (&priv->window_lock);
   if (G_UNLIKELY (info)) {
@@ -890,12 +908,12 @@ gst_wl_window_render_hdr (GstWlWindow * self, GstWlBuffer * buffer,
   }
 
   if (!priv->next_buffer) {
-    priv->next_buffer = buffer;
+    priv->next_buffer = wlbuffer;
     priv->commit_callback =
         gst_wl_display_sync (priv->display, &commit_listener, self);
     wl_display_flush (gst_wl_display_get_display (priv->display));
   } else {
-    priv->staged_buffer = buffer;
+    priv->staged_buffer = wlbuffer;
   }
   if (!buffer)
     priv->clear_window = TRUE;

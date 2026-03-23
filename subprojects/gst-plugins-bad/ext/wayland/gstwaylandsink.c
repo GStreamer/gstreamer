@@ -553,7 +553,7 @@ gst_wayland_sink_change_state (GstElement * element, GstStateChange transition)
           g_clear_object (&self->window);
         } else {
           /* remove buffer from surface, show nothing */
-          gst_wl_window_render (self->window, NULL, NULL);
+          gst_wl_window_render (self->window, NULL, NULL, NULL, NULL);
         }
       }
 
@@ -928,12 +928,9 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 static gboolean
 render_last_buffer (GstWaylandSink * self, gboolean redraw)
 {
-  GstWlBuffer *wlbuffer;
   const GstVideoInfo *info = NULL;
   const GstVideoMasteringDisplayInfo *minfo = NULL;
   const GstVideoContentLightLevel *linfo = NULL;
-
-  wlbuffer = gst_buffer_get_wl_buffer (self->display, self->last_buffer);
 
   if (G_UNLIKELY (self->render_info_changed && !redraw)) {
     info = &self->render_info;
@@ -947,7 +944,8 @@ render_last_buffer (GstWaylandSink * self, gboolean redraw)
     self->render_info_changed = FALSE;
   }
 
-  return gst_wl_window_render_hdr (self->window, wlbuffer, info, minfo, linfo);
+  return gst_wl_window_render (self->window, self->last_buffer, info, minfo,
+      linfo);
 }
 
 static void

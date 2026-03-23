@@ -771,7 +771,7 @@ gst_gtk_wayland_sink_change_state (GstElement * element,
       gst_buffer_replace (&priv->last_buffer, NULL);
       if (priv->wl_window) {
         /* remove buffer from surface, show nothing */
-        gst_wl_window_render (priv->wl_window, NULL, NULL);
+        gst_wl_window_render (priv->wl_window, NULL, NULL, NULL, NULL);
       }
       break;
     default:
@@ -1099,15 +1099,12 @@ render_last_buffer (GstGtkWaylandSink * self, gboolean redraw)
 {
   GstGtkWaylandSinkPrivate *priv =
       gst_gtk_wayland_sink_get_instance_private (self);
-  GstWlBuffer *wlbuffer;
   const GstVideoInfo *info = NULL;
   const GstVideoMasteringDisplayInfo *minfo = NULL;
   const GstVideoContentLightLevel *linfo = NULL;
 
   if (!priv->wl_window)
     return FALSE;
-
-  wlbuffer = gst_buffer_get_wl_buffer (priv->display, priv->last_buffer);
 
   if (G_UNLIKELY (priv->render_info_changed && !redraw)) {
     info = &priv->render_info;
@@ -1120,7 +1117,7 @@ render_last_buffer (GstGtkWaylandSink * self, gboolean redraw)
 
     priv->render_info_changed = FALSE;
   }
-  return gst_wl_window_render_hdr (priv->wl_window, wlbuffer, info, minfo,
+  return gst_wl_window_render (priv->wl_window, priv->last_buffer, info, minfo,
       linfo);
 }
 
