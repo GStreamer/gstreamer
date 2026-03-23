@@ -8072,8 +8072,9 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
   gst_adapter_push (demux->adapter, inbuf);
 
   GST_DEBUG_OBJECT (demux,
-      "pushing in inbuf %p, neededbytes:%u, available:%" G_GSIZE_FORMAT, inbuf,
-      demux->neededbytes, gst_adapter_available (demux->adapter));
+      "pushing in inbuf %p, neededbytes:%" G_GUINT64_FORMAT ", available:%"
+      G_GSIZE_FORMAT, inbuf, demux->neededbytes,
+      gst_adapter_available (demux->adapter));
 
   return gst_qtdemux_process_adapter (demux, FALSE);
 }
@@ -8136,10 +8137,11 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
           gst_adapter_distance_from_discont (demux->adapter);
 
       GST_DEBUG_OBJECT (demux,
-          "state:%s , demux->neededbytes:%d, demux->offset:%" G_GUINT64_FORMAT
-          " adapter offset :%" G_GUINT64_FORMAT " (+ %" G_GUINT64_FORMAT
-          " bytes)", qt_demux_state_string (demux->state), demux->neededbytes,
-          demux->offset, discont_offset, distance_from_discont);
+          "state:%s , demux->neededbytes:%" G_GUINT64_FORMAT ", demux->offset:%"
+          G_GUINT64_FORMAT " adapter offset :%" G_GUINT64_FORMAT " (+ %"
+          G_GUINT64_FORMAT " bytes)", qt_demux_state_string (demux->state),
+          demux->neededbytes, demux->offset, discont_offset,
+          distance_from_discont);
     }
 #endif
 
@@ -8169,7 +8171,7 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
           break;
         }
         if (fourcc == FOURCC_mdat) {
-          gint next_entry = next_entry_size (demux);
+          guint64 next_entry = next_entry_size (demux);
           if (QTDEMUX_N_STREAMS (demux) > 0 && (next_entry != -1
                   || !demux->fragmented)) {
             /* we have the headers, start playback */
@@ -8693,7 +8695,8 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
         stream->offset_in_sample = 0;
 
         /* update current offset and figure out size of next buffer */
-        GST_LOG_OBJECT (demux, "increasing offset %" G_GUINT64_FORMAT " by %u",
+        GST_LOG_OBJECT (demux,
+            "increasing offset %" G_GUINT64_FORMAT " by %" G_GUINT64_FORMAT,
             demux->offset, demux->neededbytes);
         demux->offset += demux->neededbytes;
         GST_LOG_OBJECT (demux, "offset is now %" G_GUINT64_FORMAT,
