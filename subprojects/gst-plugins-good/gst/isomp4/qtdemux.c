@@ -11840,7 +11840,8 @@ qtdemux_transformation_matrix_is_simple (GstQTDemux * qtdemux, guint32 * m)
         break;
       default:
         /* 16.16 */
-        if (m[i] != 0U && m[i] != (1U << 16) && m[i] != (G_MAXUINT16 << 16))
+        if (m[i] != 0U && m[i] != (1U << 16)
+            && m[i] != (((guint32) G_MAXUINT16) << 16))
           return FALSE;
         break;
     }
@@ -11856,7 +11857,7 @@ qtdemux_mul_transformation_matrix (GstQTDemux * qtdemux,
 #define QTMUL_MATRIX(_a,_b) (((_a) == 0 || (_b) == 0) ? 0 : \
       ((_a) == (_b) ? 1 : -1))
 #define QTADD_MATRIX(_a,_b) ((_a) + (_b) > 0 ? (1U << 16) : \
-      ((_a) + (_b) < 0) ? (G_MAXUINT16 << 16) : 0u)
+      ((_a) + (_b) < 0) ? (((guint32) G_MAXUINT16) << 16) : 0u)
 
   if (!qtdemux_transformation_matrix_is_simple (qtdemux, a) ||
       !qtdemux_transformation_matrix_is_simple (qtdemux, b)) {
@@ -11891,8 +11892,8 @@ qtdemux_inspect_transformation_matrix (GstQTDemux * qtdemux,
  * This macro will only compare value abde, it expects cfi to have already
  * been checked
  */
-#define QTCHECK_MATRIX(m,a,b,d,e) ((m)[0] == (a << 16) && (m)[1] == (b << 16) && \
-                                   (m)[3] == (d << 16) && (m)[4] == (e << 16))
+#define QTCHECK_MATRIX(m,a,b,d,e) ((m)[0] == (((guint32) (a)) << 16) && (m)[1] == (((guint32) (b)) << 16) && \
+                                   (m)[3] == (((guint32) (d)) << 16) && (m)[4] == (((guint32) (e)) << 16))
 
   /* only handle the cases where the last column has standard values */
   if (matrix[2] == 0 && matrix[5] == 0 && matrix[8] == 1 << 30) {
