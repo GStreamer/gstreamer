@@ -1188,7 +1188,7 @@ gst_vulkan_vp9_decoder_register (GstPlugin * plugin, GstVulkanDevice * device,
 
   gst_vulkan_create_feature_name (device, "GstVulkanVp9Decoder",
       "GstVulkanVp9Device%dDecoder", &type_name, "vulkanvp9dec",
-      "vulkanVp9device%ddec", &feature_name, &cdata->description, &rank);
+      "vulkanvp9device%ddec", &feature_name, &cdata->description, &rank);
 
   type_info.class_data = cdata;
 
