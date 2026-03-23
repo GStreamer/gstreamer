@@ -67,7 +67,7 @@ GST_WL_API
 gboolean gst_wl_window_is_toplevel (GstWlWindow * self);
 
 GST_WL_API
-gboolean gst_wl_window_render (GstWlWindow * self, GstBuffer * buffer);
+GstFlowReturn gst_wl_window_render (GstWlWindow * self, GstBuffer * buffer);
 
 GST_WL_API
 gboolean gst_wl_window_flush (GstWlWindow * self);
