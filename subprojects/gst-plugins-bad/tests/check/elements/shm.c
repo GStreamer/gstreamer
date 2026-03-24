@@ -229,6 +229,52 @@ GST_START_TEST (test_shm_live)
 
 GST_END_TEST;
 
+GST_START_TEST (test_shm_stop_no_error)
+{
+  GstElement *pipeline, *fakesrc, *shmsink;
+  GstBus *bus;
+  GstMessage *msg;
+  GstStateChangeReturn state_res;
+
+  fakesrc = gst_element_factory_make ("fakesrc", NULL);
+  g_object_set (fakesrc, "num-buffers", 5, "sizetype", 2, NULL);
+
+  shmsink = gst_element_factory_make ("shmsink", NULL);
+  g_object_set (shmsink, "socket-path", "shm-stop-test",
+      "wait-for-connection", FALSE, NULL);
+
+  pipeline = gst_pipeline_new ("stop-test");
+  gst_bin_add_many (GST_BIN (pipeline), fakesrc, shmsink, NULL);
+  fail_unless (gst_element_link (fakesrc, shmsink));
+
+  bus = gst_element_get_bus (pipeline);
+
+  state_res = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_unless (state_res != GST_STATE_CHANGE_FAILURE);
+
+  /* Wait for EOS */
+  msg = gst_bus_timed_pop_filtered (bus, 5 * GST_SECOND,
+      GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
+  fail_unless (msg != NULL);
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS,
+      "Expected EOS but got %s", GST_MESSAGE_TYPE_NAME (msg));
+  gst_message_unref (msg);
+
+  /* Set to NULL — this triggers gst_poll_set_flushing() in the poll thread.
+   * Before the fix, this would post a spurious GST_MESSAGE_ERROR with
+   * errno=EBUSY on the bus. */
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  /* Check no error was posted during shutdown */
+  msg = gst_bus_pop_filtered (bus, GST_MESSAGE_ERROR);
+  fail_unless (msg == NULL, "Unexpected error on bus during clean shutdown");
+
+  gst_object_unref (bus);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 shm_suite (void)
 {
@@ -243,6 +289,7 @@ shm_suite (void)
 
   tc = tcase_create ("shm2");
   tcase_add_test (tc, test_shm_live);
+  tcase_add_test (tc, test_shm_stop_no_error);
   suite_add_tcase (s, tc);
 
   return s;

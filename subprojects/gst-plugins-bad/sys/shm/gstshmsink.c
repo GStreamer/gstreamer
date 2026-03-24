@@ -839,6 +839,8 @@ pollthread_func (gpointer data)
     } while (rv < 0 && errno == EINTR);
 
     if (rv < 0) {
+      if (self->stop)
+        return NULL;
       GST_ELEMENT_ERROR (self, RESOURCE, READ,
           ("Failed waiting on fd activity"),
           ("gst_poll_wait returned %d, errno: %d", rv, errno));
