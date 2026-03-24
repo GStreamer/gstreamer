@@ -28,6 +28,7 @@
 #include <fcntl.h>
 #include <gst/allocators/gstdmabuf.h>
 #include <gst/allocators/gstfdmemory.h>
+#include <gst/allocators/gstshmallocator.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -137,6 +138,43 @@ GST_START_TEST (test_fdmem_dont_close)
 
 GST_END_TEST;
 
+GST_START_TEST (test_shm_alloc_page_aligned)
+{
+  GstAllocator *alloc;
+  GstMemory *mem;
+  long page_size = sysconf (_SC_PAGESIZE);
+
+  gst_shm_allocator_init_once ();
+  alloc = gst_shm_allocator_get ();
+  fail_unless (alloc != NULL);
+
+  /* Small allocation: maxsize should be rounded up to page size */
+  mem = gst_allocator_alloc (alloc, 100, NULL);
+  fail_unless (mem != NULL);
+  fail_unless (mem->maxsize >= (gsize) page_size,
+      "maxsize %" G_GSIZE_FORMAT " should be >= page_size %ld",
+      mem->maxsize, page_size);
+  gst_memory_unref (mem);
+
+  /* Allocation crossing page boundary */
+  mem = gst_allocator_alloc (alloc, 5000, NULL);
+  fail_unless (mem != NULL);
+  fail_unless (mem->maxsize >= 2 * (gsize) page_size,
+      "maxsize %" G_GSIZE_FORMAT " should be >= 2 * page_size %ld",
+      mem->maxsize, page_size);
+  gst_memory_unref (mem);
+
+  /* Exact page size allocation */
+  mem = gst_allocator_alloc (alloc, page_size, NULL);
+  fail_unless (mem != NULL);
+  fail_unless (mem->maxsize >= (gsize) page_size);
+  gst_memory_unref (mem);
+
+  gst_object_unref (alloc);
+}
+
+GST_END_TEST;
+
 static Suite *
 allocators_suite (void)
 {
@@ -147,6 +185,7 @@ allocators_suite (void)
   tcase_add_test (tc_chain, test_dmabuf);
   tcase_add_test (tc_chain, test_fdmem);
   tcase_add_test (tc_chain, test_fdmem_dont_close);
+  tcase_add_test (tc_chain, test_shm_alloc_page_aligned);
 
   return s;
 }

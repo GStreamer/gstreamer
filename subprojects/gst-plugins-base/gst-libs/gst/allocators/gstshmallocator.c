@@ -76,8 +76,13 @@ gst_shm_allocator_alloc (GstAllocator * allocator, gsize size,
   /* See _sysmem_new_block() for details */
   gsize maxsize = size + params->prefix + params->padding;
   gsize align = params->align;
+  gsize page_size = sysconf (_SC_PAGESIZE);
   align |= gst_memory_alignment;
   maxsize += align;
+
+  /* Round up to page size — the OS allocates full pages for shm anyway,
+   * so maxsize should reflect the actual usable region */
+  maxsize = GST_ROUND_UP_N (maxsize, page_size);
 
 #ifdef HAVE_MEMFD_CREATE
   fd = memfd_create ("gst-shm", MFD_CLOEXEC | MFD_ALLOW_SEALING);
