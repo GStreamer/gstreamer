@@ -2796,6 +2796,13 @@ gst_wasapi2_rbuf_loop_thread (GstWasapi2Rbuf * self)
               hr = gst_wasapi2_rbuf_process_write (self);
           }
 
+          if ((hr == AUDCLNT_E_ENDPOINT_CREATE_FAILED ||
+                  hr == AUDCLNT_E_DEVICE_INVALIDATED) && priv->ctx->is_default
+              && !gst_wasapi2_is_loopback_class (priv->ctx->endpoint_class)) {
+            GST_WARNING_OBJECT (self, "Ignore write error from default device");
+            hr = S_OK;
+          }
+
           if (FAILED (hr)) {
             gst_wasapi2_rbuf_post_io_error (self, hr, TRUE);
             gst_wasapi2_rbuf_start_fallback_timer (self);
