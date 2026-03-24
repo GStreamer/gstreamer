@@ -614,6 +614,8 @@ gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
           GST_LATENCY_TRACER_FLAG_PIPELINE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
 
+  gst_type_mark_as_plugin_api (gst_latency_tracer_flags_get_type (), 0);
+
   latency_probe_id = g_quark_from_static_string ("latency_probe.id");
   sub_latency_probe_id = g_quark_from_static_string ("sub_latency_probe.id");
   drop_sub_latency_quark =

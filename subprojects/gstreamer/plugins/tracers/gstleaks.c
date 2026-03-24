@@ -1235,6 +1235,8 @@ gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
 
   g_object_class_install_properties (gobject_class, N_PROPERTIES, properties);
 
+  gst_type_mark_as_plugin_api (GST_TYPE_LEAKS_STACK_TRACE_FLAGS, 0);
+
   tr_alive = gst_tracer_record_new ("object-alive.class",
       RECORD_FIELD_TYPE_NAME, RECORD_FIELD_ADDRESS, RECORD_FIELD_DESC,
       RECORD_FIELD_REF_COUNT, RECORD_FIELD_TRACE, NULL);

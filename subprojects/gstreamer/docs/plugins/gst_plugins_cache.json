@@ -2966,7 +2966,63 @@
         "elements": {},
         "filename": "gstcoretracers",
         "license": "LGPL",
-        "other-types": {},
+        "other-types": {
+            "GstDotsTracerFeatures": {
+                "kind": "flags",
+                "values": [
+                    {
+                        "desc": "Disable pipeline-snapshot tracer composition",
+                        "name": "dump",
+                        "value": "0x00000001"
+                    },
+                    {
+                        "desc": "Enable pipeline-snapshot tracer composition",
+                        "name": "snapshot",
+                        "value": "0x00000002"
+                    }
+                ]
+            },
+            "GstLatencyTracerFlags": {
+                "kind": "flags",
+                "values": [
+                    {
+                        "desc": "Trace pipeline latency",
+                        "name": "pipeline",
+                        "value": "0x00000001"
+                    },
+                    {
+                        "desc": "Trace per-element latency",
+                        "name": "element",
+                        "value": "0x00000002"
+                    },
+                    {
+                        "desc": "Trace reported element latency",
+                        "name": "reported",
+                        "value": "0x00000004"
+                    }
+                ]
+            },
+            "GstLeaksStackTraceFlags": {
+                "kind": "flags",
+                "values": [
+                    {
+                        "desc": "Disabled",
+                        "name": "disabled",
+                        "value": "0xffffffff"
+                    },
+                    {
+                        "desc": "None",
+                        "name": "none",
+                        "value": "0x00000000"
+                    },
+                    {
+                        "desc": "Full",
+                        "name": "full",
+                        "value": "0x00000001"
+                    }
+                ]
+            }
+        },
         "package": "GStreamer",
         "source": "gstreamer",
         "tracers": {

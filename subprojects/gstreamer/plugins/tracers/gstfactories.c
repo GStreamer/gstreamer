@@ -115,6 +115,8 @@ do_plugin_feature_loaded (GstFactoriesTracer * self, GstClockTime ts,
     factory_type = "device-provider";
   else if (GST_IS_DYNAMIC_TYPE_FACTORY (feature))
     factory_type = "dynamic-type";
+  else if (GST_IS_TRACER_FACTORY (feature))
+    factory_type = "tracer";
   else
     g_assert_not_reached ();
 
