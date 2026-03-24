@@ -4720,46 +4720,48 @@ unknown_template:
 void
 gst_play_sink_release_pad (GstPlaySink * playsink, GstPad * pad)
 {
-  GstPad **res = NULL;
+  GstPad **res_ptr = NULL;
+  GstPad *res = NULL;
   gboolean untarget = TRUE;
 
   GST_DEBUG_OBJECT (playsink, "release pad %" GST_PTR_FORMAT, pad);
 
   GST_PLAY_SINK_LOCK (playsink);
   if (pad == playsink->video_pad) {
-    res = &playsink->video_pad;
+    res_ptr = &playsink->video_pad;
     g_signal_handler_disconnect (playsink->video_pad,
         playsink->video_notify_caps_id);
     video_set_blocked (playsink, FALSE);
   } else if (pad == playsink->audio_pad) {
-    res = &playsink->audio_pad;
+    res_ptr = &playsink->audio_pad;
     g_signal_handler_disconnect (playsink->audio_pad,
         playsink->audio_notify_caps_id);
     audio_set_blocked (playsink, FALSE);
   } else if (pad == playsink->text_pad) {
-    res = &playsink->text_pad;
+    res_ptr = &playsink->text_pad;
     text_set_blocked (playsink, FALSE);
   } else {
     /* try to release the given pad anyway, these could be the FLUSHING pads. */
-    res = &pad;
+    res_ptr = &pad;
     untarget = FALSE;
   }
 
-  GST_PLAY_SINK_UNLOCK (playsink);
+  /* Steal the pad reference, then complete the release outside the lock */
+  res = *res_ptr;
+  *res_ptr = NULL;
 
-  if (*res) {
-    GST_DEBUG_OBJECT (playsink, "deactivate pad %" GST_PTR_FORMAT, *res);
-    gst_pad_set_active (*res, FALSE);
+  if (res != NULL) {
+    GST_PLAY_SINK_UNLOCK (playsink);
+    GST_DEBUG_OBJECT (playsink, "deactivate pad %" GST_PTR_FORMAT, res);
+    gst_pad_set_active (res, FALSE);
     if (untarget) {
-      GST_DEBUG_OBJECT (playsink, "untargeting pad %" GST_PTR_FORMAT, *res);
-      gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (*res), NULL);
+      GST_DEBUG_OBJECT (playsink, "untargeting pad %" GST_PTR_FORMAT, res);
+      gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (res), NULL);
     }
-    GST_DEBUG_OBJECT (playsink, "remove pad %" GST_PTR_FORMAT, *res);
-    gst_element_remove_pad (GST_ELEMENT_CAST (playsink), *res);
-    *res = NULL;
+    GST_DEBUG_OBJECT (playsink, "remove pad %" GST_PTR_FORMAT, res);
+    gst_element_remove_pad (GST_ELEMENT_CAST (playsink), res);
+    GST_PLAY_SINK_LOCK (playsink);
   }
-
-  GST_PLAY_SINK_LOCK (playsink);
 
   /* If we have a pending reconfigure, we might have met the conditions
    * to reconfigure now */
@@ -4773,7 +4775,6 @@ gst_play_sink_release_pad (GstPlaySink * playsink, GstPad * pad)
     audio_set_blocked (playsink, FALSE);
     text_set_blocked (playsink, FALSE);
   }
-
   GST_PLAY_SINK_UNLOCK (playsink);
 }
 
