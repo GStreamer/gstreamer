@@ -69,6 +69,9 @@ struct _GstVtdec
   /* protected by the STREAM_LOCK */
   GstFlowReturn downstream_ret;
 
+  /* access via g_atomic_int_* */
+  gboolean require_reset;
+
 #if defined(APPLEMEDIA_MOLTENVK)
   GstVulkanInstance *instance;
   GstVulkanDevice *device;
