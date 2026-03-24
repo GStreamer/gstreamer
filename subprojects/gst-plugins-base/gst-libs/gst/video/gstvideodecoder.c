@@ -1546,8 +1546,10 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
     case GST_EVENT_SEGMENT:
     {
       GstSegment segment;
+      guint32 seqnum;
 
       gst_event_copy_segment (event, &segment);
+      seqnum = gst_event_get_seqnum (event);
 
       if (segment.format == GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (decoder,
@@ -1575,6 +1577,7 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
           /* replace event */
           gst_event_unref (event);
           event = gst_event_new_segment (&segment);
+          gst_event_set_seqnum (event, seqnum);
         } else {
           goto newseg_wrong_format;
         }
