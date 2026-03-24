@@ -43,9 +43,14 @@
 
 #define GST_USE_UNSTABLE_API
 
+#include <gst/gst.h>
+
+#ifdef G_OS_WIN32
+#include <windows.h>
+#endif
+
 #include <gst/app/gstappsrc.h>
 #include <gst/cuda/gstcuda.h>
-#include <gst/gst.h>
 #include <gst/video/video.h>
 
 #include <cuda_runtime.h>
@@ -187,9 +192,9 @@ appsrc_thread_func (gpointer data)
   // Allocate some memory for the frame we will push to the appsrc (use cuda
   // runtime API). Memory here is not pitched, just simple contiguous RGB
   unsigned char *cuda_mem;
-  size_t width = WIDTH;
-  size_t height = HEIGHT;
-  size_t cuda_mem_size = width * height * 3;
+  guint width = WIDTH;
+  guint height = HEIGHT;
+  guint cuda_mem_size = width * height * 3;
   if (!cuda_check_error (cudaMalloc ((void **) &cuda_mem, cuda_mem_size))) {
     gst_printerrln ("Failed to allocate CUDA memory");
     return NULL;
@@ -198,17 +203,16 @@ appsrc_thread_func (gpointer data)
   set_cuda_rbg_color (cuda_mem, width, height, r, g, b);
 
   // Setup appsrc caps
-  char caps_str[256];
-  snprintf (caps_str, sizeof (caps_str),
-      "video/x-raw(memory:CUDAMemory),format=RGB,framerate=%d/1,width=%ld,"
-      "height=%ld", FPS, width, height);
-  GstCaps *caps = gst_caps_from_string (caps_str);
-  gst_app_src_set_caps (appsrc, caps);
-  gst_caps_unref (caps);
-
-  // Consturct output VideoInfo object
   GstVideoInfo output_info;
   gst_video_info_set_format (&output_info, GST_VIDEO_FORMAT_RGB, width, height);
+  output_info.fps_n = FPS;
+  output_info.fps_d = 1;
+
+  GstCaps *caps = gst_video_info_to_caps (&output_info);
+  gst_caps_set_features_simple (caps,
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY));
+  gst_app_src_set_caps (appsrc, caps);
+  gst_caps_unref (caps);
 
   // Allocate cuda stream for pushing buffers to appsrc
   GstCudaStream *stream = gst_cuda_stream_new (cuda_context);
