@@ -6328,6 +6328,10 @@ gst_qtdemux_row_align_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
   /* Cleanup before returning */
   gst_video_frame_unmap (&pre_frame);
   gst_video_frame_unmap (&new_frame);
+
+  gst_buffer_copy_into (new_buffer, pre_buffer, GST_BUFFER_COPY_METADATA, 0,
+      -1);
+
   gst_buffer_unref (pre_buffer);
   return new_buffer;
 
