@@ -1580,6 +1580,80 @@ GST_START_TEST (test_packetized_hvcc_drop_corrupt)
 
 GST_END_TEST;
 
+GST_START_TEST (test_non_vcl_nal_duration)
+{
+  /* Verify that non-VCL NALs (VPS, SPS, PPS) get duration=0 while
+   * VCL NALs (slices) get the proper fps-based duration.
+   * Regression test for: "h265parse: only extrapolate duration for vcl nal"
+   *
+   * Push non-VCL NALs with an arbitrary non-zero PTS to make it clear
+   * that the resulting duration=0 is a deliberate parser decision, not
+   * an artifact of the input timestamps.
+   */
+
+  GstCaps *in_caps, *out_caps;
+  GstBuffer *buf_in, *buf_out;
+  GstClockTime expected_duration;
+  GstHarness *h = gst_harness_new ("h265parse");
+  const GstClockTime fake_dts = 12345 * GST_MSECOND;
+
+  const gchar *in_caps_str = "video/x-h265, alignment=(string)nal";
+  const gchar *out_caps_str = "video/x-h265, alignment=(string)nal";
+
+  in_caps = gst_caps_from_string (in_caps_str);
+  out_caps = gst_caps_from_string (out_caps_str);
+  gst_harness_set_caps (h, in_caps, out_caps);
+
+  /* Push VPS, SPS, PPS with an arbitrary non-zero PTS */
+  buf_in = wrap_buffer (h265_128x128_vps, sizeof (h265_128x128_vps), 0, 0);
+  GST_BUFFER_DURATION (buf_in) = fake_dts;
+  fail_unless_equals_int (gst_harness_push (h, buf_in), GST_FLOW_OK);
+
+  buf_in = wrap_buffer (h265_128x128_sps, sizeof (h265_128x128_sps), 0, 0);
+  GST_BUFFER_DURATION (buf_in) = fake_dts;
+  fail_unless_equals_int (gst_harness_push (h, buf_in), GST_FLOW_OK);
+
+  buf_in = wrap_buffer (h265_128x128_pps, sizeof (h265_128x128_pps), 0, 0);
+  GST_BUFFER_DURATION (buf_in) = fake_dts;
+  fail_unless_equals_int (gst_harness_push (h, buf_in), GST_FLOW_OK);
+
+  /* Push an IDR slice (VCL) to complete the AU */
+  buf_in = wrap_buffer (h265_128x128_slice_idr_n_lp,
+      sizeof (h265_128x128_slice_idr_n_lp), 0, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf_in), GST_FLOW_OK);
+
+  /* With framerate=30/1, a VCL frame should get duration = 1/30 s */
+  expected_duration = gst_util_uint64_scale (GST_SECOND, 1, 30);
+
+  /* First AU produces: VPS + SPS + PPS + slice = 4 buffers */
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 4);
+
+  /* VPS - non-VCL, must have duration=0 */
+  buf_out = gst_harness_pull (h);
+  fail_unless_equals_clocktime (GST_BUFFER_DURATION (buf_out), 0);
+  gst_buffer_unref (buf_out);
+
+  /* SPS - non-VCL, must have duration=0 */
+  buf_out = gst_harness_pull (h);
+  fail_unless_equals_clocktime (GST_BUFFER_DURATION (buf_out), 0);
+  gst_buffer_unref (buf_out);
+
+  /* PPS - non-VCL, must have duration=0 */
+  buf_out = gst_harness_pull (h);
+  fail_unless_equals_clocktime (GST_BUFFER_DURATION (buf_out), 0);
+  gst_buffer_unref (buf_out);
+
+  /* IDR slice - VCL, must have the fps-based duration */
+  buf_out = gst_harness_pull (h);
+  fail_unless_equals_clocktime (GST_BUFFER_DURATION (buf_out),
+      expected_duration);
+  gst_buffer_unref (buf_out);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 h265parse_harnessed_suite (void)
 {
@@ -1620,6 +1694,7 @@ h265parse_harnessed_suite (void)
 
   tcase_add_test (tc_chain, test_parse_fallback_profile);
   tcase_add_test (tc_chain, test_packetized_hvcc_drop_corrupt);
+  tcase_add_test (tc_chain, test_non_vcl_nal_duration);
   return s;
 }
 
