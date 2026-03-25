@@ -5,6 +5,7 @@ tensordecoders_sources = [
   'gstfacedetectortensordecoder.c',
   'gstioutracker.c',
   'gstyolotensordecoder.c',
+  'gstyolo26tensordecoder.c',
   'gstyolosegtensordecoder.c',
   'gsttensordecodebin.c',
 ]
@@ -15,6 +16,7 @@ tensordecoders_headers = [
   'gstfacedetectortensordecoder.h',
   'gstioutracker.h',
   'gstyolotensordecoder.h',
+  'gstyolo26tensordecoder.h',
   'gstyolosegtensordecoder.h',
   'gsttensordecodebin.h'
 ]

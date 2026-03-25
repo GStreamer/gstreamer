@@ -24,7 +24,7 @@
  */
 
 /**
- * SECTION:element-yolotensordec
+ * SECTION:element-yolov8tensordec
  * @short_description: Decode tensors from YOLO detection models
  *
  * This element can parse per-buffer inference tensors meta data generated
