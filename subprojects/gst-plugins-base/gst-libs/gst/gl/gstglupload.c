@@ -699,8 +699,6 @@ _udmabuf_upload_accept (gpointer impl, GstBuffer * buffer,
   struct UdmabufUpload *upload = impl;
   GstCaps *static_sink_caps;
   GstCaps *static_src_caps;
-  GstCaps *common_in_caps;
-  GstCaps *common_out_caps;
   guint n_mem;
   gboolean all_mem_udmabuf = TRUE;
 
@@ -741,22 +739,13 @@ _udmabuf_upload_accept (gpointer impl, GstBuffer * buffer,
   gst_clear_caps (&upload->out_caps);
 
   static_sink_caps = gst_static_caps_get (&_udmabuf_upload_sink_caps);
-  common_in_caps = gst_caps_intersect_full (in_caps, static_sink_caps,
-      GST_CAPS_INTERSECT_FIRST);
-  gst_caps_unref (static_sink_caps);
-  if (gst_caps_is_empty (common_in_caps)) {
+  if (!gst_caps_can_intersect (in_caps, static_sink_caps)) {
     GST_DEBUG_OBJECT (upload->upload, "No common caps with upstream");
-    gst_caps_unref (common_in_caps);
     return FALSE;
   }
 
   static_src_caps = gst_static_caps_get (&_udmabuf_upload_src_caps);
-  common_out_caps = gst_caps_intersect_full (out_caps, static_src_caps,
-      GST_CAPS_INTERSECT_FIRST);
-  gst_caps_unref (static_src_caps);
-  if (gst_caps_is_empty (common_out_caps)) {
-    gst_caps_unref (common_in_caps);
-    gst_caps_unref (common_out_caps);
+  if (!gst_caps_can_intersect (out_caps, static_src_caps)) {
     GST_DEBUG_OBJECT (upload->upload, "No common caps with downstream");
     return FALSE;
   }
