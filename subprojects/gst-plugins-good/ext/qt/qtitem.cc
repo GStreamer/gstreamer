@@ -844,16 +844,21 @@ QtGLVideoItemInterface::setCaps (GstCaps * caps)
   if (qt_item == NULL)
     return FALSE;
 
-  if (qt_item->priv->caps && gst_caps_is_equal_fixed (qt_item->priv->caps, caps))
-    return TRUE;
+  g_mutex_lock (&qt_item->priv->lock);
 
-  if (!gst_video_info_from_caps (&v_info, caps))
+  GstCaps *current_caps = qt_item->priv->new_caps ? qt_item->priv->new_caps : qt_item->priv->caps;
+  if (current_caps && gst_caps_is_equal_fixed (current_caps, caps)) {
+    g_mutex_unlock (&qt_item->priv->lock);
+    return TRUE;
+  }
+
+  if (!gst_video_info_from_caps (&v_info, caps)) {
+    g_mutex_unlock (&qt_item->priv->lock);
     return FALSE;
+  }
 
   GstStructure *s = gst_caps_get_structure (caps, 0);
   const gchar *target_str = gst_structure_get_string (s, "texture-target");
-
-  g_mutex_lock (&qt_item->priv->lock);
 
   GST_DEBUG ("%p set caps %" GST_PTR_FORMAT, qt_item, caps);
 
