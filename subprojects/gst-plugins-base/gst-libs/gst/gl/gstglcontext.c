@@ -2080,7 +2080,7 @@ _gst_gl_context_debug_is_enabled (GstGLContext * context)
   level = gst_debug_category_get_threshold (gst_gl_debug);
 
   if (level < GST_LEVEL_WARNING) {
-    GST_CAT_INFO_OBJECT (gst_gl_context_debug, context, "Disabling GL context "
+    GST_CAT_TRACE_OBJECT (gst_gl_context_debug, context, "Disabling GL context "
         "debugging (gldebug category debug level < warning)");
     return FALSE;
   }
