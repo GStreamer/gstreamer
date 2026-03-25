@@ -140,7 +140,9 @@ if host_machine.system() != 'windows'
     [ 'elements/dash_mpd', not adaptivedemux2_dep.found(), [adaptivedemux2_dep] ],
     [ 'pipelines/flacdec', not flac_dep.found() ],
     [ 'elements/gdkpixbufsink', not gdkpixbuf_dep.found(), [gdkpixbuf_dep] ],
-    [ 'elements/gdkpixbufoverlay', not gdkpixbuf_dep.found() ],
+    # Enable the below test after
+    # https://bugzilla.redhat.com/show_bug.cgi?id=2412232 is fixed
+    # [ 'elements/gdkpixbufoverlay', not gdkpixbuf_dep.found() ],
     [ 'elements/jpegdec', not jpeglib.found() ],
     [ 'elements/jpegenc', not jpeglib.found() ],
     [ 'elements/mpg123audiodec', not mpg123_dep.found(), [gstfft_dep]],
