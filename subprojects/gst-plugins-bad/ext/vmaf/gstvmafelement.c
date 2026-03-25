@@ -119,7 +119,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_vmaf_debug);
 #define DEFAULT_MS_SSIM            FALSE
 #define DEFAULT_FRAME_MESSAGING    FALSE
 #define DEFAULT_POOL_METHOD        VMAF_POOL_METHOD_MEAN
-#define DEFAULT_NUM_THREADS        g_get_num_processors()
+#define DEFAULT_NUM_THREADS        0
 #define DEFAULT_SUBSAMPLE          1
 #define DEFAULT_CONF_INT           FALSE
 #define DEFAULT_VMAF_LOG_LEVEL     VMAF_LOG_LEVEL_NONE
@@ -338,11 +338,16 @@ gst_vmaf_context_init (GstVmaf * self)
   gboolean result = TRUE;
   VmafFeatureDictionary *d = NULL;
   enum VmafModelFlags flags = VMAF_MODEL_FLAGS_DEFAULT;
+  guint n_threads = self->vmaf_config_num_threads;
+
+  if (n_threads == 0) {
+    n_threads = g_get_num_processors ();
+  }
+
   VmafModelConfig model_cfg = { 0 };
   VmafConfiguration cfg = {
     .log_level = self->vmaf_config_log_level,
-    .n_threads =
-        self->vmaf_config_frame_messaging ? 0 : self->vmaf_config_num_threads,
+    .n_threads = self->vmaf_config_frame_messaging ? 0 : n_threads,
     .n_subsample = self->vmaf_config_subsample,
   };
 
@@ -1150,7 +1155,7 @@ gst_vmaf_class_init (GstVmafClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_NUM_THREADS,
       g_param_spec_uint ("threads", "threads",
-          "The number of threads",
+          "The number of threads (0 = automatic)",
           0, G_MAXINT, DEFAULT_NUM_THREADS, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_SUBSAMPLE,
