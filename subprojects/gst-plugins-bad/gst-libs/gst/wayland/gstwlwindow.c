@@ -749,12 +749,8 @@ gst_wl_window_commit_buffer (GstWlWindow * self, GstWlBuffer * buffer)
     priv->video_width = priv->buffer_width = info->width;
     priv->video_height = priv->buffer_height = info->height;
 
-    /* we don't have video_width/height saved initially, so if we didn't have a
-     * crop meta the width/height needs to be fixed from its reset value of 0 */
-    if (crop.w == 0)
-      crop.w = priv->video_width;
-    if (crop.h == 0)
-      crop.h = priv->video_height;
+    crop.w = priv->video_width;
+    crop.h = priv->video_height;
 
     needs_layout_update = TRUE;
   }
