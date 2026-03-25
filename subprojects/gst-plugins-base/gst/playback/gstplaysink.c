@@ -291,6 +291,13 @@ struct _GstPlaySink
   gboolean text_custom_flush_finished;
   gboolean text_ignore_wrong_state;
   gboolean text_pending_flush;
+
+  /* Serialisation of reconfigure sequences: */
+  GMutex reconfigure_lock;
+  GCond reconfigure_cond;
+  gboolean reconfiguration_allowed;     /* Disabled when shutting down */
+  gboolean reconfiguration_in_progress;
+  /* */
 };
 
 struct _GstPlaySinkClass
@@ -400,7 +407,13 @@ static void notify_mute_cb (GObject * object, GParamSpec * pspec,
 static void update_av_offset (GstPlaySink * playsink);
 static void update_text_offset (GstPlaySink * playsink);
 
-static gboolean gst_play_sink_do_reconfigure (GstPlaySink * playsink);
+static void video_set_blocked (GstPlaySink * playsink, gboolean blocked);
+static void audio_set_blocked (GstPlaySink * playsink, gboolean blocked);
+static void text_set_blocked (GstPlaySink * playsink, gboolean blocked);
+static gboolean gst_play_sink_ready_to_reconfigure_locked (GstPlaySink *
+    playsink);
+static void gst_play_sink_handle_pending_reconfigure (GstPlaySink * playsink);
+static gboolean gst_play_sink_do_reconfigure_locked (GstPlaySink * playsink);
 
 #define PLAYSINK_RESET_SEGMENT_EVENT_MARKER "gst-playsink-reset-segment-event-marker"
 
@@ -743,6 +756,9 @@ gst_play_sink_init (GstPlaySink * playsink)
   playsink->colorbalance_channels =
       g_list_append (playsink->colorbalance_channels, channel);
   playsink->colorbalance_values[3] = 0;
+
+  g_mutex_init (&playsink->reconfigure_lock);
+  g_cond_init (&playsink->reconfigure_cond);
 }
 
 static void
@@ -871,6 +887,9 @@ gst_play_sink_finalize (GObject * object)
   playsink = GST_PLAY_SINK (object);
 
   g_rec_mutex_clear (&playsink->lock);
+
+  g_mutex_clear (&playsink->reconfigure_lock);
+  g_cond_clear (&playsink->reconfigure_cond);
 
   G_OBJECT_CLASS (gst_play_sink_parent_class)->finalize (object);
 }
@@ -3213,12 +3232,82 @@ link_failed:
   }
 }
 
+/* Must not be called with the PLAYSINK LOCK held */
+static void
+gst_play_sink_set_reconfiguration_allowed (GstPlaySink * playsink,
+    gboolean reconfiguration_allowed)
+{
+  g_mutex_lock (&playsink->reconfigure_lock);
+  playsink->reconfiguration_allowed = reconfiguration_allowed;
+  g_cond_broadcast (&playsink->reconfigure_cond);
+  /* If a reconfiguration was already in progress and we're stopping, wait for it to complete */
+  if (!reconfiguration_allowed) {
+    while (playsink->reconfiguration_in_progress) {
+      g_cond_wait (&playsink->reconfigure_cond, &playsink->reconfigure_lock);
+    }
+  }
+  g_mutex_unlock (&playsink->reconfigure_lock);
+}
+
+static void
+gst_play_sink_handle_pending_reconfigure (GstPlaySink * playsink)
+{
+  /* This function is called with the PLAY_SINK lock held. It
+   * checks for a pending reconfiguration, and waits for an ongoing
+   * one before performing the reconfigure if necessary */
+  if (!gst_play_sink_ready_to_reconfigure_locked (playsink)) {
+    GST_DEBUG_OBJECT (playsink,
+        "Reconfiguration disallowed or unnecessary - skipping");
+    return;
+  }
+
+  /* Wait for a claim on the 'reconfiguration_in_progress' marker */
+  g_mutex_lock (&playsink->reconfigure_lock);
+  GST_PLAY_SINK_UNLOCK (playsink);
+
+  while (playsink->reconfiguration_allowed
+      && playsink->reconfiguration_in_progress) {
+    g_cond_wait (&playsink->reconfigure_cond, &playsink->reconfigure_lock);
+  }
+  if (!playsink->reconfiguration_allowed) {
+    g_mutex_unlock (&playsink->reconfigure_lock);
+    return;
+  }
+
+  GST_DEBUG_OBJECT (playsink,
+      "All pads ready to reconfigure -- beginning reconfiguration");
+  playsink->reconfiguration_in_progress = TRUE;
+  g_mutex_unlock (&playsink->reconfigure_lock);
+
+  GST_PLAY_SINK_LOCK (playsink);
+  gst_play_sink_do_reconfigure_locked (playsink);
+
+  video_set_blocked (playsink, FALSE);
+  audio_set_blocked (playsink, FALSE);
+  text_set_blocked (playsink, FALSE);
+
+  /* Release the reconfiguration-in-progress token */
+  g_mutex_lock (&playsink->reconfigure_lock);
+  GST_DEBUG_OBJECT (playsink, "Reconfiguration finished");
+  playsink->reconfiguration_in_progress = FALSE;
+  g_cond_broadcast (&playsink->reconfigure_cond);
+  g_mutex_unlock (&playsink->reconfigure_lock);
+}
+
 /* this function is called when all the request pads are requested and when we
  * have to construct the final pipeline. Based on the flags we construct the
  * final output pipelines.
+ *
+ * Called from within gst_play_sink_handle_pending_reconfigure(), after taking
+ * the reconfiguration_in_progress token to ensure reconfigurations don't overlap
+ *
+ * Called with PLAY SINK held at the start, but drops it in various places to avoid
+ * deadlocks against the stream lock. The reconfiguration_in_progress sequencing
+ * protects against other threads modifying the data that's accessed outside
+ * the play sink lock.
  */
 static gboolean
-gst_play_sink_do_reconfigure (GstPlaySink * playsink)
+gst_play_sink_do_reconfigure_locked (GstPlaySink * playsink)
 {
   GstPlayFlags flags;
   gboolean need_audio, need_video, need_deinterlace, need_vis, need_text;
@@ -3228,7 +3317,6 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
   /* assume we need nothing */
   need_audio = need_video = need_deinterlace = need_vis = need_text = FALSE;
 
-  GST_PLAY_SINK_LOCK (playsink);
   GST_OBJECT_LOCK (playsink);
   /* get flags, they're protected with the object lock */
   flags = playsink->flags;
@@ -3293,7 +3381,6 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
       GST_ELEMENT_ERROR (playsink, STREAM, FORMAT,
           (_("Can't play a text file without video or visualizations.")),
           ("Have text pad but no video pad or visualizations"));
-      GST_PLAY_SINK_UNLOCK (playsink);
       return FALSE;
     }
   }
@@ -3405,9 +3492,10 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
       if (!playsink->videodeinterlacechain)
         goto no_chain;
 
-      GST_DEBUG_OBJECT (playsink, "adding video deinterlace chain");
+      /* Don't hold the lock across state changes (including inside activate_chain) */
+      GST_PLAY_SINK_UNLOCK (playsink);
 
-      GST_DEBUG_OBJECT (playsink, "setting up deinterlacing chain");
+      GST_DEBUG_OBJECT (playsink, "adding video deinterlace chain");
 
       add_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain), TRUE);
       activate_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain), TRUE);
@@ -3416,17 +3504,28 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
           playsink->videochain->sinkpad);
       gst_pad_link_full (playsink->video_srcpad_stream_synchronizer,
           playsink->videodeinterlacechain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
+
+      GST_PLAY_SINK_LOCK (playsink);
     } else {
       if (playsink->videodeinterlacechain) {
+        /* Don't hold the lock across state changes (including inside activate_chain) */
+        GST_PLAY_SINK_UNLOCK (playsink);
         add_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain), FALSE);
         activate_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain),
             FALSE);
+        GST_PLAY_SINK_LOCK (playsink);
       }
     }
+
+    /* Don't hold the lock across state changes (including inside activate_chain) */
+    GST_PLAY_SINK_UNLOCK (playsink);
 
     GST_DEBUG_OBJECT (playsink, "adding video chain");
     add_chain (GST_PLAY_CHAIN (playsink->videochain), TRUE);
     activate_chain (GST_PLAY_CHAIN (playsink->videochain), TRUE);
+
+    GST_PLAY_SINK_LOCK (playsink);
+
     /* if we are not part of vis or subtitles, set the ghostpad target */
     if (!need_vis && !need_text && (!playsink->textchain
             || !playsink->text_pad)) {
@@ -3500,16 +3599,26 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
         playsink->video_srcpad_stream_synchronizer = NULL;
       }
 
+      /* Don't hold the lock across state changes (including inside activate_chain) */
+      GST_PLAY_SINK_UNLOCK (playsink);
+
       add_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
       activate_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
       if (playsink->videochain->ts_offset)
         gst_object_unref (playsink->videochain->ts_offset);
       playsink->videochain->ts_offset = NULL;
+
+      GST_PLAY_SINK_LOCK (playsink);
     }
 
     if (playsink->videodeinterlacechain) {
+      /* Don't hold the lock across state changes (including inside activate_chain) */
+      GST_PLAY_SINK_UNLOCK (playsink);
+
       add_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain), FALSE);
       activate_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain), FALSE);
+
+      GST_PLAY_SINK_LOCK (playsink);
     }
 
     if (playsink->video_pad)
@@ -3529,10 +3638,26 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
     playsink->colorbalance_element = NULL;
     GST_OBJECT_UNLOCK (playsink);
 
-    if (playsink->video_sink)
-      gst_element_set_state (playsink->video_sink, GST_STATE_NULL);
-    if (playsink->video_filter)
-      gst_element_set_state (playsink->video_filter, GST_STATE_NULL);
+    GstElement *old_video_sink = NULL;
+    GstElement *old_video_filter = NULL;
+    if (playsink->video_sink) {
+      old_video_sink = gst_object_ref (playsink->video_sink);
+    }
+    if (playsink->video_filter) {
+      old_video_filter = gst_object_ref (playsink->video_filter);
+    }
+
+    /* Release the old elements outside the play lock */
+    GST_PLAY_SINK_UNLOCK (playsink);
+    if (old_video_sink) {
+      gst_element_set_state (old_video_sink, GST_STATE_NULL);
+      gst_object_unref (old_video_sink);
+    }
+    if (old_video_filter) {
+      gst_element_set_state (old_video_filter, GST_STATE_NULL);
+      gst_object_unref (old_video_filter);
+    }
+    GST_PLAY_SINK_LOCK (playsink);
   }
 
   if (need_audio) {
@@ -3557,6 +3682,10 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
           gst_object_unref (playsink->audio_tee_asrc);
           playsink->audio_tee_asrc = NULL;
         }
+
+        /* Don't hold the lock across state changes (including inside activate_chain
+         * and gst_play_sink_remove_audio_ssync_queue) */
+        GST_PLAY_SINK_UNLOCK (playsink);
 
         if (playsink->audio_sinkpad_stream_synchronizer) {
           gst_element_release_request_pad (GST_ELEMENT_CAST
@@ -3593,6 +3722,8 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
 
         activate_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
         disconnect_audio_chain (playsink->audiochain, playsink);
+        GST_PLAY_SINK_LOCK (playsink);
+
         if (playsink->audiochain->volume)
           gst_object_unref (playsink->audiochain->volume);
         playsink->audiochain->volume = NULL;
@@ -3640,6 +3771,9 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
         gst_object_unref (peer_pad);
       }
 
+      /* Don't hold the lock across state changes (including inside activate_chain) */
+      GST_PLAY_SINK_UNLOCK (playsink);
+
       if (!playsink->audio_ssync_queue) {
         GST_DEBUG_OBJECT (playsink, "adding audio stream synchronizer queue");
         playsink->audio_ssync_queue =
@@ -3665,6 +3799,8 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
           GST_PAD_LINK_CHECK_NOTHING);
       gst_object_unref (audio_queue_srcpad);
       gst_element_sync_state_with_parent (playsink->audio_ssync_queue);
+
+      GST_PLAY_SINK_LOCK (playsink);
     }
 
     if (playsink->audiochain) {
@@ -3680,17 +3816,26 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
       if (!sinkpad)
         sinkpad = playsink->audio_sinkpad_stream_synchronizer;
 
+      /* Don't hold the lock across state changes (including inside activate_chain) */
+      GST_PLAY_SINK_UNLOCK (playsink);
+
       add_chain (GST_PLAY_CHAIN (playsink->audiochain), TRUE);
       activate_chain (GST_PLAY_CHAIN (playsink->audiochain), TRUE);
       gst_pad_link_full (playsink->audio_tee_asrc, sinkpad,
           GST_PAD_LINK_CHECK_NOTHING);
       gst_pad_link_full (playsink->audio_srcpad_stream_synchronizer,
           playsink->audiochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
+
+      GST_PLAY_SINK_LOCK (playsink);
     }
   } else {
     GST_DEBUG_OBJECT (playsink, "no audio needed");
+
     /* we have no audio or we are requested to not play audio */
     if (playsink->audiochain) {
+      /* Don't hold the lock across state changes (including inside activate_chain) */
+      GST_PLAY_SINK_UNLOCK (playsink);
+
       GST_DEBUG_OBJECT (playsink, "removing audio chain");
       /* release the audio pad */
       if (playsink->audio_tee_asrc) {
@@ -3723,12 +3868,31 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
       }
       add_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
       activate_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
+      GST_PLAY_SINK_LOCK (playsink);
     }
 
-    if (playsink->audio_sink)
-      gst_element_set_state (playsink->audio_sink, GST_STATE_NULL);
-    if (playsink->audio_filter)
-      gst_element_set_state (playsink->audio_filter, GST_STATE_NULL);
+    GstElement *old_audio_sink = NULL;
+    GstElement *old_audio_filter = NULL;
+    if (playsink->audio_sink) {
+      old_audio_sink = gst_object_ref (playsink->audio_sink);
+    }
+    if (playsink->audio_filter) {
+      old_audio_filter = gst_object_ref (playsink->audio_filter);
+    }
+
+    if (old_audio_sink != NULL || old_audio_filter != NULL) {
+      /* Release the old elements outside the play lock */
+      GST_PLAY_SINK_UNLOCK (playsink);
+      if (old_audio_sink) {
+        gst_element_set_state (old_audio_sink, GST_STATE_NULL);
+        gst_object_unref (old_audio_sink);
+      }
+      if (old_audio_filter) {
+        gst_element_set_state (old_audio_filter, GST_STATE_NULL);
+        gst_object_unref (old_audio_filter);
+      }
+      GST_PLAY_SINK_LOCK (playsink);
+    }
   }
 
   if (need_vis) {
@@ -3741,6 +3905,13 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
 
     if (playsink->vischain) {
       GST_DEBUG_OBJECT (playsink, "setting up vis chain");
+
+      /* Don't hold the lock across state changes (including inside activate_chain) */
+      GstElement *configured_vis =
+          playsink->
+          visualisation ? gst_object_ref (playsink->visualisation) : NULL;
+
+      GST_PLAY_SINK_UNLOCK (playsink);
 
       /* Lazily add and activate chain */
       if (!playsink->vischain->chain.added) {
@@ -3762,7 +3933,7 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
       }
 
       /* Is a reconfiguration required? */
-      if (playsink->vischain->vis != playsink->visualisation) {
+      if (playsink->vischain->vis != configured_vis) {
         /* unlink the old plugin and unghost the pad */
         gst_pad_unlink (playsink->vischain->vispeerpad,
             playsink->vischain->vissinkpad);
@@ -3775,7 +3946,7 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
             playsink->vischain->vis);
 
         /* add new plugin and set state to playing */
-        playsink->vischain->vis = playsink->visualisation;
+        playsink->vischain->vis = configured_vis;       // Don't add a ref - the bin will keep it alive
         gst_bin_add (GST_BIN_CAST (playsink->vischain->chain.bin),
             playsink->vischain->vis);
         gst_element_set_state (playsink->vischain->vis, GST_STATE_PLAYING);
@@ -3792,10 +3963,16 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
         gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->vischain->
                 srcpad), playsink->vischain->vissrcpad);
       }
+
+      gst_clear_object (&configured_vis);
+      GST_PLAY_SINK_LOCK (playsink);
     }
   } else {
     GST_DEBUG_OBJECT (playsink, "no vis needed");
     if (playsink->vischain) {
+      /* Don't hold the lock across state changes (including inside activate_chain) */
+      GST_PLAY_SINK_UNLOCK (playsink);
+
       if (playsink->audio_tee_vissrc) {
         gst_element_release_request_pad (playsink->audio_tee,
             playsink->audio_tee_vissrc);
@@ -3805,6 +3982,8 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
       GST_DEBUG_OBJECT (playsink, "removing vis chain");
       add_chain (GST_PLAY_CHAIN (playsink->vischain), FALSE);
       activate_chain (GST_PLAY_CHAIN (playsink->vischain), FALSE);
+
+      GST_PLAY_SINK_LOCK (playsink);
     }
   }
 
@@ -3817,11 +3996,16 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
     if (playsink->textchain) {
       GstIterator *it;
 
+      /* Don't hold the lock across state changes (including inside activate_chain) */
+      GST_PLAY_SINK_UNLOCK (playsink);
+
       GST_DEBUG_OBJECT (playsink, "adding text chain");
       if (playsink->textchain->overlay)
         g_object_set (G_OBJECT (playsink->textchain->overlay), "silent", FALSE,
             NULL);
       add_chain (GST_PLAY_CHAIN (playsink->textchain), TRUE);
+
+      GST_PLAY_SINK_LOCK (playsink);
 
       if (!playsink->text_sinkpad_stream_synchronizer) {
         GValue item = { 0, };
@@ -3871,7 +4055,9 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
             playsink->videochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
       }
 
+      GST_PLAY_SINK_UNLOCK (playsink);
       activate_chain (GST_PLAY_CHAIN (playsink->textchain), TRUE);
+      GST_PLAY_SINK_LOCK (playsink);
     }
   } else {
     GST_DEBUG_OBJECT (playsink, "no text needed");
@@ -3879,10 +4065,15 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
 
     if (playsink->textchain) {
       if (playsink->text_pad == NULL) {
+        /* Don't hold the lock across state changes (including inside activate_chain) */
+        GST_PLAY_SINK_UNLOCK (playsink);
+
         /* no text pad, remove the chain entirely */
         GST_DEBUG_OBJECT (playsink, "removing text chain");
         add_chain (GST_PLAY_CHAIN (playsink->textchain), FALSE);
         activate_chain (GST_PLAY_CHAIN (playsink->textchain), FALSE);
+
+        GST_PLAY_SINK_LOCK (playsink);
 
         if (playsink->text_sinkpad_stream_synchronizer) {
           gst_element_release_request_pad (GST_ELEMENT_CAST
@@ -3909,12 +4100,22 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
               NULL);
         }
 
-        if (playsink->text_pad && !playsink->textchain)
+        if (playsink->text_pad && !playsink->textchain) {
           gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->text_pad),
               NULL);
+        }
 
-        if (playsink->text_sink)
-          gst_element_set_state (playsink->text_sink, GST_STATE_NULL);
+        GstElement *old_text_sink = NULL;
+        if (playsink->text_sink) {
+          old_text_sink = gst_object_ref (playsink->text_sink);
+        }
+
+        if (old_text_sink != NULL) {
+          GST_PLAY_SINK_UNLOCK (playsink);
+          gst_element_set_state (old_text_sink, GST_STATE_NULL);
+          gst_object_unref (old_text_sink);
+          GST_PLAY_SINK_LOCK (playsink);
+        }
       } else {
         /* we have a chain and a textpad, turn the subtitles off */
         GST_DEBUG_OBJECT (playsink, "turning off the text");
@@ -3929,9 +4130,6 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
   do_async_done (playsink);
 
   playsink->reconfigure_pending = FALSE;
-
-  GST_PLAY_SINK_UNLOCK (playsink);
-
   return TRUE;
 
   /* ERRORS */
@@ -3939,7 +4137,6 @@ no_chain:
   {
     /* gen_ chain already posted error */
     GST_DEBUG_OBJECT (playsink, "failed to setup chain");
-    GST_PLAY_SINK_UNLOCK (playsink);
     return FALSE;
   }
 }
@@ -4442,15 +4639,7 @@ sinkpad_blocked_cb (GstPad * blockedpad, GstPadProbeInfo * info,
     GST_DEBUG_OBJECT (pad, "Text pad blocked");
   }
 
-  if (gst_play_sink_ready_to_reconfigure_locked (playsink)) {
-    GST_DEBUG_OBJECT (playsink, "All pads blocked -- reconfiguring");
-
-    gst_play_sink_do_reconfigure (playsink);
-
-    video_set_blocked (playsink, FALSE);
-    audio_set_blocked (playsink, FALSE);
-    text_set_blocked (playsink, FALSE);
-  }
+  gst_play_sink_handle_pending_reconfigure (playsink);
 
   gst_object_unref (pad);
 
@@ -4765,16 +4954,7 @@ gst_play_sink_release_pad (GstPlaySink * playsink, GstPad * pad)
 
   /* If we have a pending reconfigure, we might have met the conditions
    * to reconfigure now */
-  if (gst_play_sink_ready_to_reconfigure_locked (playsink)) {
-    GST_DEBUG_OBJECT (playsink,
-        "All pads ready after release -- reconfiguring");
-
-    gst_play_sink_do_reconfigure (playsink);
-
-    video_set_blocked (playsink, FALSE);
-    audio_set_blocked (playsink, FALSE);
-    text_set_blocked (playsink, FALSE);
-  }
+  gst_play_sink_handle_pending_reconfigure (playsink);
   GST_PLAY_SINK_UNLOCK (playsink);
 }
 
@@ -4984,15 +5164,20 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       do_async_start (playsink);
       ret = GST_STATE_CHANGE_ASYNC;
 
-      /* block all pads here */
+      /* Enable reconfiguration and trigger one to get everything set up */
+      gst_play_sink_set_reconfiguration_allowed (playsink, TRUE);
       if (!gst_play_sink_reconfigure (playsink)) {
         ret = GST_STATE_CHANGE_FAILURE;
         goto activate_failed;
       }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      /* Disable reconfiguration */
+      gst_play_sink_set_reconfiguration_allowed (playsink, FALSE);
+
       /* unblock all pads here */
       GST_PLAY_SINK_LOCK (playsink);
+
       video_set_blocked (playsink, FALSE);
       audio_set_blocked (playsink, FALSE);
       text_set_blocked (playsink, FALSE);
