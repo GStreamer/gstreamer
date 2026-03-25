@@ -256062,12 +256062,12 @@
                         "writable": true
                     },
                     "threads": {
-                        "blurb": "The number of threads",
+                        "blurb": "The number of threads (0 = automatic)",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "8",
+                        "default": "0",
                         "max": "2147483647",
                         "min": "0",
                         "mutable": "null",
