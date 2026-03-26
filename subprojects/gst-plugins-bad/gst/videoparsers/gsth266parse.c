@@ -2358,16 +2358,8 @@ gst_h266_parse_update_src_caps (GstH266Parse * h266parse, GstCaps * caps)
 
       caps = gst_caps_copy (sink_caps);
 
-      /* sps should give this but upstream overrides */
-      if (s && gst_structure_has_field (s, "width"))
-        gst_structure_get_int (s, "width", &width);
-      else
-        width = h266parse->width;
-
-      if (s && gst_structure_has_field (s, "height"))
-        gst_structure_get_int (s, "height", &height);
-      else
-        height = h266parse->height;
+      width = h266parse->width;
+      height = h266parse->height;
 
       gst_caps_set_simple (caps, "width", G_TYPE_INT, width,
           "height", G_TYPE_INT, height, NULL);

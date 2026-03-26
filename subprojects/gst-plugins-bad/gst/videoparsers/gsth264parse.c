@@ -2395,16 +2395,8 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
 
       caps = gst_caps_copy (sink_caps);
 
-      /* sps should give this but upstream overrides */
-      if (s && gst_structure_has_field (s, "width"))
-        gst_structure_get_int (s, "width", &width);
-      else
-        width = h264parse->width;
-
-      if (s && gst_structure_has_field (s, "height"))
-        gst_structure_get_int (s, "height", &height);
-      else
-        height = h264parse->height;
+      width = h264parse->width;
+      height = h264parse->height;
 
       if (s == NULL ||
           !gst_structure_get_fraction (s, "pixel-aspect-ratio", &par_n,

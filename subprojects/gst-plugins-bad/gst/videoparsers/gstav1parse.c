@@ -765,14 +765,8 @@ gst_av1_parse_update_src_caps (GstAV1Parse * self, GstCaps * caps)
 
   final_caps = gst_caps_copy (sink_caps);
 
-  if (s && gst_structure_has_field (s, "width") &&
-      gst_structure_has_field (s, "height")) {
-    gst_structure_get_int (s, "width", &width);
-    gst_structure_get_int (s, "height", &height);
-  } else {
-    width = self->width;
-    height = self->height;
-  }
+  width = self->width;
+  height = self->height;
 
   if (width > 0 && height > 0)
     gst_caps_set_simple (final_caps, "width", G_TYPE_INT, width,
