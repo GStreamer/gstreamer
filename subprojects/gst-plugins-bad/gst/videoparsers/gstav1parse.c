@@ -254,7 +254,7 @@ _read_leb128 (guint8 * data, GstAV1ParserResult * retval, guint32 * consumed)
       return 0;
     }
 
-    value |= (((gint) leb128_byte & 0x7f) << (i * 7));
+    value |= (((guint64) leb128_byte & 0x7f) << (i * 7));
     if (!(leb128_byte & 0x80))
       break;
   }
