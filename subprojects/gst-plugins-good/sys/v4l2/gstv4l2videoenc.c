@@ -61,8 +61,8 @@ G_DEFINE_ABSTRACT_TYPE (GstV4l2VideoEnc, gst_v4l2_video_enc,
     GST_TYPE_VIDEO_ENCODER);
 
 static void
-gst_v4l2_video_enc_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec * pspec)
+gst_v4l2_video_enc_set_property (GObject *object,
+    guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (object);
 
@@ -101,8 +101,8 @@ gst_v4l2_video_enc_set_property (GObject * object,
 }
 
 static void
-gst_v4l2_video_enc_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec)
+gst_v4l2_video_enc_get_property (GObject *object,
+    guint prop_id, GValue *value, GParamSpec *pspec)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (object);
 
@@ -147,7 +147,7 @@ gst_v4l2_video_enc_get_property (GObject * object,
 }
 
 static gboolean
-gst_v4l2_video_enc_open (GstVideoEncoder * encoder)
+gst_v4l2_video_enc_open (GstVideoEncoder *encoder)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
   GstV4l2Error error = GST_V4L2_ERROR_INIT;
@@ -225,7 +225,7 @@ failure:
 }
 
 static gboolean
-gst_v4l2_video_enc_close (GstVideoEncoder * encoder)
+gst_v4l2_video_enc_close (GstVideoEncoder *encoder)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
 
@@ -240,7 +240,7 @@ gst_v4l2_video_enc_close (GstVideoEncoder * encoder)
 }
 
 static gboolean
-gst_v4l2_video_enc_start (GstVideoEncoder * encoder)
+gst_v4l2_video_enc_start (GstVideoEncoder *encoder)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
 
@@ -254,7 +254,7 @@ gst_v4l2_video_enc_start (GstVideoEncoder * encoder)
 }
 
 static gboolean
-gst_v4l2_video_enc_stop (GstVideoEncoder * encoder)
+gst_v4l2_video_enc_stop (GstVideoEncoder *encoder)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
 
@@ -287,7 +287,7 @@ gst_v4l2_video_enc_stop (GstVideoEncoder * encoder)
 }
 
 static gboolean
-gst_v4l2_encoder_cmd (GstV4l2Object * v4l2object, guint cmd, guint flags)
+gst_v4l2_encoder_cmd (GstV4l2Object *v4l2object, guint cmd, guint flags)
 {
   struct v4l2_encoder_cmd ecmd = { 0, };
 
@@ -318,7 +318,7 @@ ecmd_failed:
 }
 
 static GstFlowReturn
-gst_v4l2_video_enc_finish (GstVideoEncoder * encoder)
+gst_v4l2_video_enc_finish (GstVideoEncoder *encoder)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
   GstFlowReturn ret = GST_FLOW_OK;
@@ -360,7 +360,7 @@ done:
 }
 
 static gboolean
-gst_v4l2_video_enc_flush (GstVideoEncoder * encoder)
+gst_v4l2_video_enc_flush (GstVideoEncoder *encoder)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
 
@@ -375,8 +375,8 @@ gst_v4l2_video_enc_flush (GstVideoEncoder * encoder)
 }
 
 static gboolean
-gst_v4l2_video_enc_set_format (GstVideoEncoder * encoder,
-    GstVideoCodecState * state)
+gst_v4l2_video_enc_set_format (GstVideoEncoder *encoder,
+    GstVideoCodecState *state)
 {
   gboolean ret = TRUE;
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
@@ -433,7 +433,7 @@ struct ProfileLevelCtx
 };
 
 static gboolean
-get_string_list (GstStructure * s, const gchar * field, GQueue * queue)
+get_string_list (GstStructure *s, const gchar *field, GQueue *queue)
 {
   const GValue *value;
 
@@ -462,7 +462,7 @@ get_string_list (GstStructure * s, const gchar * field, GQueue * queue)
 }
 
 static gboolean
-negotiate_profile_and_level (GstCapsFeatures * features, GstStructure * s,
+negotiate_profile_and_level (GstCapsFeatures *features, GstStructure *s,
     gpointer user_data)
 {
   struct ProfileLevelCtx *ctx = user_data;
@@ -563,7 +563,7 @@ negotiate_profile_and_level (GstCapsFeatures * features, GstStructure * s,
 }
 
 static GstCaps *
-gst_v4l2_video_enc_sink_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
+gst_v4l2_video_enc_sink_getcaps (GstVideoEncoder *encoder, GstCaps *filter)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
   GstCaps *probed_caps = NULL;
@@ -583,7 +583,7 @@ gst_v4l2_video_enc_sink_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
 }
 
 static gboolean
-gst_v4l2_video_enc_negotiate (GstVideoEncoder * encoder)
+gst_v4l2_video_enc_negotiate (GstVideoEncoder *encoder)
 {
   GstV4l2VideoEncClass *klass = GST_V4L2_VIDEO_ENC_GET_CLASS (encoder);
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
@@ -700,7 +700,7 @@ check_system_frame_number_too_old (guint32 current, guint32 old)
 }
 
 static void
-gst_v4l2_video_enc_loop (GstVideoEncoder * encoder)
+gst_v4l2_video_enc_loop (GstVideoEncoder *encoder)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
   GstBufferPool *pool = gst_v4l2_object_get_buffer_pool (self->v4l2capture);
@@ -786,7 +786,7 @@ beach:
 }
 
 static void
-gst_v4l2_video_enc_loop_stopped (GstV4l2VideoEnc * self)
+gst_v4l2_video_enc_loop_stopped (GstV4l2VideoEnc *self)
 {
   GST_DEBUG_OBJECT (self, "Encoding task destroyed: %s",
       gst_flow_get_name (self->output_flow));
@@ -794,8 +794,8 @@ gst_v4l2_video_enc_loop_stopped (GstV4l2VideoEnc * self)
 }
 
 static GstFlowReturn
-gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
-    GstVideoCodecFrame * frame)
+gst_v4l2_video_enc_handle_frame (GstVideoEncoder *encoder,
+    GstVideoCodecFrame *frame)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
   GstFlowReturn ret = GST_FLOW_OK;
@@ -955,8 +955,7 @@ drop:
 }
 
 static gboolean
-gst_v4l2_video_enc_decide_allocation (GstVideoEncoder *
-    encoder, GstQuery * query)
+gst_v4l2_video_enc_decide_allocation (GstVideoEncoder *encoder, GstQuery *query)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
   GstVideoCodecState *state = gst_video_encoder_get_output_state (encoder);
@@ -1005,8 +1004,8 @@ done:
 }
 
 static gboolean
-gst_v4l2_video_enc_propose_allocation (GstVideoEncoder *
-    encoder, GstQuery * query)
+gst_v4l2_video_enc_propose_allocation (GstVideoEncoder *encoder,
+    GstQuery *query)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
   gboolean ret = FALSE;
@@ -1026,7 +1025,7 @@ gst_v4l2_video_enc_propose_allocation (GstVideoEncoder *
 }
 
 static gboolean
-gst_v4l2_video_enc_src_query (GstVideoEncoder * encoder, GstQuery * query)
+gst_v4l2_video_enc_src_query (GstVideoEncoder *encoder, GstQuery *query)
 {
   gboolean ret = TRUE;
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
@@ -1069,7 +1068,7 @@ gst_v4l2_video_enc_src_query (GstVideoEncoder * encoder, GstQuery * query)
 }
 
 static gboolean
-gst_v4l2_video_enc_sink_event (GstVideoEncoder * encoder, GstEvent * event)
+gst_v4l2_video_enc_sink_event (GstVideoEncoder *encoder, GstEvent *event)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
   gboolean ret;
@@ -1099,8 +1098,7 @@ gst_v4l2_video_enc_sink_event (GstVideoEncoder * encoder, GstEvent * event)
 }
 
 static GstStateChangeReturn
-gst_v4l2_video_enc_change_state (GstElement * element,
-    GstStateChange transition)
+gst_v4l2_video_enc_change_state (GstElement *element, GstStateChange transition)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (element);
 
@@ -1115,7 +1113,7 @@ gst_v4l2_video_enc_change_state (GstElement * element,
 
 
 static void
-gst_v4l2_video_enc_dispose (GObject * object)
+gst_v4l2_video_enc_dispose (GObject *object)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (object);
 
@@ -1126,7 +1124,7 @@ gst_v4l2_video_enc_dispose (GObject * object)
 }
 
 static void
-gst_v4l2_video_enc_finalize (GObject * object)
+gst_v4l2_video_enc_finalize (GObject *object)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (object);
 
@@ -1138,13 +1136,13 @@ gst_v4l2_video_enc_finalize (GObject * object)
 
 
 static void
-gst_v4l2_video_enc_init (GstV4l2VideoEnc * self)
+gst_v4l2_video_enc_init (GstV4l2VideoEnc *self)
 {
   /* V4L2 object are created in subinstance_init */
 }
 
 static void
-gst_v4l2_video_enc_subinstance_init (GTypeInstance * instance, gpointer g_class)
+gst_v4l2_video_enc_subinstance_init (GTypeInstance *instance, gpointer g_class)
 {
   GstV4l2VideoEncClass *klass = GST_V4L2_VIDEO_ENC_CLASS (g_class);
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (instance);
@@ -1167,7 +1165,7 @@ gst_v4l2_video_enc_subinstance_init (GTypeInstance * instance, gpointer g_class)
 }
 
 static void
-gst_v4l2_video_enc_class_init (GstV4l2VideoEncClass * klass)
+gst_v4l2_video_enc_class_init (GstV4l2VideoEncClass *klass)
 {
   GstElementClass *element_class;
   GObjectClass *gobject_class;
@@ -1221,13 +1219,15 @@ gst_v4l2_video_enc_class_init (GstV4l2VideoEncClass * klass)
       g_param_spec_int ("bitrate", "Bitrate",
           "Video bitrate in bits per second",
           0, G_MAXINT, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_PLAYING));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
 
   g_object_class_install_property (gobject_class, PROP_GOP_SIZE,
       g_param_spec_int ("gop-size", "GOP Size",
           "Group of pictures size (number of frames between keyframes)",
           0, G_MAXINT, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_PLAYING));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
 }
 
 static void
@@ -1254,8 +1254,8 @@ gst_v4l2_video_enc_subclass_init (gpointer g_class, gpointer data)
 
 /* Probing functions */
 gboolean
-gst_v4l2_is_video_enc (GstCaps * sink_caps, GstCaps * src_caps,
-    GstCaps * codec_caps)
+gst_v4l2_is_video_enc (GstCaps *sink_caps, GstCaps *src_caps,
+    GstCaps *codec_caps)
 {
   gboolean ret = FALSE;
   gboolean (*check_caps) (const GstCaps *, const GstCaps *);
@@ -1275,10 +1275,10 @@ gst_v4l2_is_video_enc (GstCaps * sink_caps, GstCaps * src_caps,
 }
 
 void
-gst_v4l2_video_enc_register (GstPlugin * plugin, GType type,
-    const char *codec_name, const gchar * basename, const gchar * device_path,
-    const GstV4l2Codec * codec, gint video_fd, GstCaps * sink_caps,
-    GstCaps * codec_caps, GstCaps * src_caps)
+gst_v4l2_video_enc_register (GstPlugin *plugin, GType type,
+    const char *codec_name, const gchar *basename, const gchar *device_path,
+    const GstV4l2Codec *codec, gint video_fd, GstCaps *sink_caps,
+    GstCaps *codec_caps, GstCaps *src_caps)
 {
   GstCaps *filtered_caps;
   GTypeQuery type_query;
