@@ -1,0 +1,3 @@
+./subprojects/gst-plugins-base/tests/files/id3-*
+./subprojects/gst-plugins-good/tests/files/audiotestsrc.*
+./subprojects/gst-plugins-base/tests/files/vorbis.*
