@@ -300,6 +300,11 @@ av1_bitstreamfn_leb128 (GstBitReader * br, GstAV1ParserResult * retval)
     value |= (((guint64) leb128_byte & 0x7f) << (i * 7));
     if (!(leb128_byte & 0x80))
       break;
+
+    if (i == 7 && leb128_byte & 0x80) {
+      *retval = GST_AV1_PARSER_BITSTREAM_ERROR;
+      return 0;
+    }
   }
 
   /* check for bitstream conformance see chapter4.10.5 */
