@@ -6881,7 +6881,7 @@ av1_leb128 (const guint8 * data, guint32 * retval, gint * read_bytes)
 
   for (i = 0; i < 8; i++) {
     leb128_byte = data[i];
-    value |= (((gint) leb128_byte & 0x7f) << (i * 7));
+    value |= (((guint64) leb128_byte & 0x7f) << (i * 7));
     if (!(leb128_byte & 0x80))
       break;
 
