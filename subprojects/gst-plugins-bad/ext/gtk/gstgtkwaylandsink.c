@@ -210,8 +210,8 @@ gst_gtk_wayland_sink_finalize (GObject * object)
   GstGtkWaylandSinkPrivate *priv =
       gst_gtk_wayland_sink_get_instance_private (self);
 
-  g_clear_object (&priv->display);
-  g_clear_object (&priv->wl_window);
+  gst_clear_object (&priv->display);
+  gst_clear_object (&priv->wl_window);
 
   g_clear_object (&priv->gtk_widget);
   gst_clear_caps (&priv->caps);
@@ -239,7 +239,8 @@ window_destroy_cb (GtkWidget * widget, GstGtkWaylandSink * self)
       gst_gtk_wayland_sink_get_instance_private (self);
 
   GST_OBJECT_LOCK (self);
-  g_clear_object (&priv->wl_window);
+  gst_wl_window_flush (priv->wl_window);
+  gst_clear_object (&priv->wl_window);
   priv->gtk_window = NULL;
   GST_OBJECT_UNLOCK (self);
 
@@ -671,7 +672,8 @@ gst_gtk_wayland_sink_stop_on_main (GstGtkWaylandSink * self)
       g_signal_handler_disconnect (priv->gtk_window,
           priv->gtk_window_destroy_id);
     priv->gtk_window_destroy_id = 0;
-    g_clear_object (&priv->wl_window);
+    gst_wl_window_flush (priv->wl_window);
+    gst_clear_object (&priv->wl_window);
     gtk_widget_destroy (priv->gtk_window);
     priv->gtk_window = NULL;
   }
@@ -765,11 +767,12 @@ gst_gtk_wayland_sink_change_state (GstElement * element,
           gst_gtk_wayland_sink_stop_on_main, element);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_buffer_replace (&priv->last_buffer, NULL);
       if (priv->wl_window) {
+        gst_wl_window_flush (priv->wl_window);
         /* remove buffer from surface, show nothing */
         gst_wl_window_render (priv->wl_window, NULL);
       }
+      gst_buffer_replace (&priv->last_buffer, NULL);
       break;
     default:
       break;
@@ -982,7 +985,7 @@ gst_gtk_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 
   gst_query_add_allocation_pool (query, pool, size, 2, 0);
   if (pool)
-    g_object_unref (pool);
+    gst_object_unref (pool);
 
   if (!gst_video_is_dma_drm_caps (caps))
     gst_query_add_allocation_param (query, allocator, NULL);
@@ -1019,39 +1022,32 @@ gst_gtk_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
   if (G_UNLIKELY (gst_wl_window_get_render_rectangle (priv->wl_window)->w == 0))
     goto no_window_size;
 
-  {
-    /* drop double rendering */
-    if (G_UNLIKELY (priv->last_buffer
-            && gst_buffer_get_wl_buffer (priv->display, buffer)
-            && gst_buffer_get_wl_buffer (priv->display, buffer) ==
-            gst_buffer_get_wl_buffer (priv->display, priv->last_buffer))) {
+  /* drop double rendering */
+  if (priv->last_buffer) {
+    const GstMemory *last_mem = gst_buffer_peek_memory (priv->last_buffer, 0);
+    const GstMemory *next_mem = gst_buffer_peek_memory (buffer, 0);
+
+    if (G_UNLIKELY (last_mem == next_mem)) {
       GST_LOG_OBJECT (self, "Buffer already being rendered");
       goto done;
     }
-
-    ret = gst_wl_window_render (priv->wl_window, buffer);
-    if (ret == GST_FLOW_CUSTOM_SUCCESS)
-      ret = GST_BASE_SINK_FLOW_DROPPED;
-
-    if (ret == GST_FLOW_OK)
-      gst_buffer_replace (&priv->last_buffer, buffer);
   }
 
-  goto done;
+  ret = gst_wl_window_render (priv->wl_window, buffer);
+
+  if (ret >= GST_FLOW_OK)
+    gst_buffer_replace (&priv->last_buffer, buffer);
+
+done:
+  g_mutex_unlock (&priv->render_lock);
+  return ret;
 
 no_window_size:
-  {
-    GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
-        ("Window has no size set"),
-        ("Make sure you set the size after calling set_window_handle"));
-    ret = GST_FLOW_ERROR;
-    goto done;
-  }
-done:
-  {
-    g_mutex_unlock (&priv->render_lock);
-    return ret;
-  }
+  GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
+      ("Window has no size set"),
+      ("Make sure you set the size after calling set_window_handle"));
+  ret = GST_FLOW_ERROR;
+  goto done;
 }
 
 static void

@@ -44,13 +44,6 @@ GST_WL_API
 GstWlDisplay *gst_wl_display_new_existing (struct wl_display * display,
     gboolean take_ownership, GError ** error);
 
-/* see wlbuffer.c for explanation */
-GST_WL_API
-void gst_wl_display_register_buffer (GstWlDisplay * self, gpointer gstmem,
-    gpointer wlbuffer);
-
-GST_WL_API
-void gst_wl_display_unregister_buffer (GstWlDisplay * self, gpointer gstmem);
 
 GST_WL_API
 struct wl_callback * gst_wl_display_sync(GstWlDisplay * self, const struct wl_callback_listener *listener,
@@ -61,9 +54,6 @@ void gst_wl_display_object_destroy (GstWlDisplay * self, gpointer *object, GDest
 
 GST_WL_API
 void gst_wl_display_callback_destroy(GstWlDisplay * self, struct wl_callback ** callback);
-
-GST_WL_API
-gpointer gst_wl_display_lookup_buffer (GstWlDisplay * self, gpointer gstmem);
 
 GST_WL_API
 gboolean gst_wl_display_check_format_for_shm (GstWlDisplay * self,

@@ -300,7 +300,7 @@ gtk_gst_base_widget_key_event (GtkWidget * widget, GdkEventKey * event)
           gst_navigation_event_new_key_press (str, event->state) :
           gst_navigation_event_new_key_release (str, event->state));
     }
-    g_object_unref (element);
+    gst_object_unref (element);
   }
 
   return FALSE;
@@ -387,7 +387,7 @@ gtk_gst_base_widget_button_event (GtkWidget * widget, GdkEventButton * event)
           gst_navigation_event_new_mouse_button_release (event->button,
               event->x, event->y, event->state));
     }
-    g_object_unref (element);
+    gst_object_unref (element);
   }
 
   return FALSE;
@@ -405,7 +405,7 @@ gtk_gst_base_widget_motion_event (GtkWidget * widget, GdkEventMotion * event)
           gst_navigation_event_new_mouse_move (event->x, event->y,
               event->state));
     }
-    g_object_unref (element);
+    gst_object_unref (element);
   }
 
   return FALSE;
@@ -451,7 +451,7 @@ gtk_gst_base_widget_scroll_event (GtkWidget * widget, GdkEventScroll * event)
           gst_navigation_event_new_mouse_scroll (x, y, delta_x, delta_y,
               event->state));
     }
-    g_object_unref (element);
+    gst_object_unref (element);
   }
   return FALSE;
 }
@@ -502,7 +502,7 @@ gtk_gst_base_widget_touch_event (GtkWidget * widget, GdkEventTouch * event)
       if (nav_event)
         gst_navigation_send_event_simple (GST_NAVIGATION (element), nav_event);
     }
-    g_object_unref (element);
+    gst_object_unref (element);
   }
 
   return FALSE;

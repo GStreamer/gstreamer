@@ -52,6 +52,7 @@ typedef struct _GstWlWindowPrivate
   GstWlDisplay *display;
   struct wl_surface *area_surface;
   struct wl_surface *area_surface_wrapper;
+  GstWlBuffer *area_surface_buffer;
   struct wl_subsurface *area_subsurface;
   struct wp_viewport *area_viewport;
   struct wl_surface *video_surface;
@@ -108,15 +109,20 @@ typedef struct _GstWlWindowPrivate
   gboolean skip_dumb_buffer_copy;
   gboolean src_info_changed;
 
-  GstBuffer *next_buffer;
-  GstBuffer *staged_buffer;
-  GstBuffer *last_rendered;
+  GstWlBuffer *next_buffer;
+  GstWlBuffer *staged_buffer;
+  GstWlBuffer *last_rendered;
   gboolean clear_window;
   struct wl_callback *frame_callback;
   struct wl_callback *commit_callback;
+
+  /* wl_buffer cache */
+  GMutex buffers_mutex;
+  GHashTable *buffers;
+  gboolean shutting_down;
 } GstWlWindowPrivate;
 
-G_DEFINE_TYPE_WITH_CODE (GstWlWindow, gst_wl_window, G_TYPE_OBJECT,
+G_DEFINE_TYPE_WITH_CODE (GstWlWindow, gst_wl_window, GST_TYPE_OBJECT,
     G_ADD_PRIVATE (GstWlWindow)
     GST_DEBUG_CATEGORY_INIT (gst_wl_window_debug,
         "wlwindow", 0, "wlwindow library");
@@ -138,7 +144,7 @@ static void gst_wl_window_update_geometry (GstWlWindow * self);
 static void gst_wl_window_update_borders (GstWlWindow * self);
 
 static void gst_wl_window_commit_buffer (GstWlWindow * self,
-    GstBuffer * buffer, gboolean redraw);
+    GstWlBuffer * buffer, gboolean redraw);
 
 static void gst_wl_window_set_colorimetry (GstWlWindow * self,
     const GstVideoColorimetry * colorimetry,
@@ -240,6 +246,32 @@ gst_wl_window_init (GstWlWindow * self)
   g_cond_init (&priv->configure_cond);
   g_mutex_init (&priv->configure_mutex);
   g_mutex_init (&priv->window_lock);
+  priv->buffers = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL,
+      (GDestroyNotify) gst_object_unref);
+  g_mutex_init (&priv->buffers_mutex);
+}
+
+static void
+gstmemory_disposed (GstWlWindow * self, gpointer gstmem)
+{
+  GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
+  GstWlBuffer *wlbuffer;
+
+  GST_DEBUG_OBJECT (self, "Uncaching disposed GstMemory %p.", gstmem);
+
+  g_mutex_lock (&priv->buffers_mutex);
+  wlbuffer = g_hash_table_lookup (priv->buffers, gstmem);
+  g_hash_table_steal (priv->buffers, gstmem);
+  g_mutex_unlock (&priv->buffers_mutex);
+
+  gst_clear_object (&wlbuffer);
+}
+
+static void
+gst_wl_buffer_weak_unref (gpointer key, gpointer value, gpointer user_data)
+{
+  gst_mini_object_weak_unref (GST_MINI_OBJECT (key),
+      (GstMiniObjectNotify) gstmemory_disposed, user_data);
 }
 
 static void
@@ -255,10 +287,16 @@ gst_wl_window_finalize (GObject * gobject)
   gst_wl_display_object_destroy (priv->display,
       (gpointer *) & priv->xdg_surface, (GDestroyNotify) xdg_surface_destroy);
 
-  if (priv->staged_buffer)
-    gst_buffer_unref (priv->staged_buffer);
+  /* to avoid buffers being unregistered from another thread
+   * at the same time */
+  g_mutex_lock (&priv->buffers_mutex);
+  priv->shutting_down = TRUE;
+  g_hash_table_foreach (priv->buffers, (GHFunc) gst_wl_buffer_weak_unref, self);
+  g_mutex_unlock (&priv->buffers_mutex);
 
-  gst_clear_buffer (&priv->last_rendered);
+  g_hash_table_remove_all (priv->buffers);
+  g_hash_table_unref (priv->buffers);
+  g_mutex_clear (&priv->buffers_mutex);
 
   if (priv->pool) {
     gst_buffer_pool_set_active (priv->pool, FALSE);
@@ -292,6 +330,7 @@ gst_wl_window_finalize (GObject * gobject)
     wp_viewport_destroy (priv->area_viewport);
 
   wl_proxy_wrapper_destroy (priv->area_surface_wrapper);
+  g_clear_object (&priv->area_surface_buffer);
   wl_surface_destroy (priv->area_surface);
 
   g_clear_object (&priv->display);
@@ -721,7 +760,6 @@ frame_redraw_callback (void *data, struct wl_callback *callback, uint32_t time)
 {
   GstWlWindow *self = data;
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
-  GstBuffer *next_buffer;
   gboolean redraw;
 
   GST_DEBUG_OBJECT (self, "frame_redraw_cb");
@@ -731,15 +769,14 @@ frame_redraw_callback (void *data, struct wl_callback *callback, uint32_t time)
 
   g_mutex_lock (&priv->window_lock);
   redraw = (priv->staged_buffer == priv->next_buffer);
-  next_buffer = priv->next_buffer = priv->staged_buffer;
+  g_object_unref (priv->next_buffer);
+  priv->next_buffer = priv->staged_buffer;
   priv->staged_buffer = NULL;
+
+  if (priv->next_buffer || priv->clear_window)
+    gst_wl_window_commit_buffer (self, priv->next_buffer, redraw);
+
   g_mutex_unlock (&priv->window_lock);
-
-  if (next_buffer || priv->clear_window)
-    gst_wl_window_commit_buffer (self, next_buffer, redraw);
-
-  if (next_buffer)
-    gst_buffer_unref (next_buffer);
 }
 
 static const struct wl_callback_listener frame_callback_listener = {
@@ -761,7 +798,7 @@ gst_wl_window_crop_rectangle_changed (GstWlWindow * self,
 }
 
 static void
-gst_wl_window_commit_buffer (GstWlWindow * self, GstBuffer * buffer,
+gst_wl_window_commit_buffer (GstWlWindow * self, GstWlBuffer * buffer,
     gboolean redraw)
 {
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
@@ -786,8 +823,8 @@ gst_wl_window_commit_buffer (GstWlWindow * self, GstBuffer * buffer,
   }
 
   if (G_LIKELY (buffer)) {
-    GstVideoMeta *vmeta = gst_buffer_get_video_meta (buffer);
-    GstVideoCropMeta *cmeta = gst_buffer_get_video_crop_meta (buffer);
+    GstVideoMeta *vmeta = gst_wl_buffer_get_video_meta (buffer);
+    GstVideoCropMeta *cmeta = gst_wl_buffer_get_video_crop_meta (buffer);
 
     if (vmeta && (priv->buffer_width != vmeta->width
             || priv->buffer_height != vmeta->height)) {
@@ -818,14 +855,12 @@ gst_wl_window_commit_buffer (GstWlWindow * self, GstBuffer * buffer,
   }
 
   if (G_LIKELY (buffer)) {
-    GstWlBuffer *wlbuf;
-
-    wlbuf = gst_buffer_get_wl_buffer (priv->display, buffer);
-
     callback = wl_surface_frame (priv->video_surface_wrapper);
     priv->frame_callback = callback;
     wl_callback_add_listener (callback, &frame_callback_listener, self);
-    gst_wl_buffer_attach (wlbuf, priv->video_surface_wrapper);
+
+    gst_wl_buffer_attach (buffer, priv->video_surface_wrapper);
+
     wl_surface_damage_buffer (priv->video_surface_wrapper, 0, 0, G_MAXINT32,
         G_MAXINT32);
     wl_surface_commit (priv->video_surface_wrapper);
@@ -859,19 +894,13 @@ commit_callback (void *data, struct wl_callback *callback, uint32_t serial)
 {
   GstWlWindow *self = data;
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
-  GstBuffer *next_buffer;
 
   wl_callback_destroy (callback);
   priv->commit_callback = NULL;
 
   g_mutex_lock (&priv->window_lock);
-  next_buffer = priv->next_buffer;
+  gst_wl_window_commit_buffer (self, priv->next_buffer, FALSE);
   g_mutex_unlock (&priv->window_lock);
-
-  gst_wl_window_commit_buffer (self, next_buffer, FALSE);
-
-  if (next_buffer)
-    gst_buffer_unref (next_buffer);
 }
 
 static const struct wl_callback_listener commit_listener = {
@@ -1012,7 +1041,7 @@ dst_map_failed:
  * if the original could not be imported directly). */
 static GstFlowReturn
 gst_wl_window_import_buffer (GstWlWindow * self, GstBuffer * buffer,
-    GstBuffer ** to_render)
+    GstWlBuffer ** to_render)
 {
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
   GstWlBuffer *wlbuffer;
@@ -1020,14 +1049,13 @@ gst_wl_window_import_buffer (GstWlWindow * self, GstBuffer * buffer,
   struct wl_buffer *wbuf = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  wlbuffer = gst_buffer_get_wl_buffer (priv->display, buffer);
+  wlbuffer = gst_buffer_get_wl_buffer (self, buffer);
 
-  if (G_LIKELY (wlbuffer &&
-          gst_wl_buffer_get_display (wlbuffer) == priv->display)) {
+  if (G_LIKELY (wlbuffer)) {
     GST_LOG_OBJECT (self,
         "buffer %" GST_PTR_FORMAT " has a wl_buffer from our display, "
         "writing directly", buffer);
-    *to_render = buffer;
+    *to_render = wlbuffer;
     return GST_FLOW_OK;
   }
 
@@ -1061,7 +1089,7 @@ gst_wl_window_import_buffer (GstWlWindow * self, GstBuffer * buffer,
       if (ret != GST_FLOW_OK)
         goto no_buffer;
 
-      wlbuffer = gst_buffer_get_wl_buffer (priv->display, pool_buf);
+      wlbuffer = gst_buffer_get_wl_buffer (self, pool_buf);
 
       if (G_UNLIKELY (!wlbuffer)) {
         wbuf = gst_wl_linux_dmabuf_construct_wl_buffer (pool_buf,
@@ -1074,16 +1102,19 @@ gst_wl_window_import_buffer (GstWlWindow * self, GstBuffer * buffer,
           goto handle_shm;
         }
 
-        gst_buffer_add_wl_buffer (pool_buf, wbuf, priv->display);
+        wlbuffer = gst_buffer_add_wl_buffer (pool_buf, wbuf, self);
       }
 
+      /* The wlbuffer holds a reference on pool_buf, drop ours to make
+       * it writable. */
+      gst_buffer_unref (pool_buf);
       ret = gst_wl_window_copy_frame (self, buffer, pool_buf);
       if (ret != GST_FLOW_OK) {
-        gst_buffer_unref (pool_buf);
+        g_object_unref (wlbuffer);
         return ret;
       }
 
-      *to_render = pool_buf;
+      *to_render = wlbuffer;
       return GST_FLOW_OK;
     }
   }
@@ -1109,7 +1140,7 @@ handle_shm:
       if (ret != GST_FLOW_OK)
         goto no_buffer;
 
-      wlbuffer = gst_buffer_get_wl_buffer (priv->display, pool_buf);
+      wlbuffer = gst_buffer_get_wl_buffer (self, pool_buf);
 
       if (G_UNLIKELY (!wlbuffer)) {
         mem = gst_buffer_peek_memory (pool_buf, 0);
@@ -1121,16 +1152,19 @@ handle_shm:
           goto no_wl_buffer_shm;
         }
 
-        gst_buffer_add_wl_buffer (pool_buf, wbuf, priv->display);
+        wlbuffer = gst_buffer_add_wl_buffer (pool_buf, wbuf, self);
       }
 
+      /* The wlbuffer holds a reference on pool_buf, drop ours to make
+       * it writable. */
+      gst_buffer_unref (pool_buf);
       ret = gst_wl_window_copy_frame (self, buffer, pool_buf);
       if (ret != GST_FLOW_OK) {
-        gst_buffer_unref (pool_buf);
+        gst_object_unref (wlbuffer);
         return ret;
       }
 
-      *to_render = pool_buf;
+      *to_render = wlbuffer;
       return GST_FLOW_OK;
     }
   }
@@ -1138,8 +1172,7 @@ handle_shm:
   if (!wbuf)
     goto no_wl_buffer;
 
-  gst_buffer_add_wl_buffer (buffer, wbuf, priv->display);
-  *to_render = buffer;
+  *to_render = gst_buffer_add_wl_buffer (buffer, wbuf, self);
   return GST_FLOW_OK;
 
 no_buffer:
@@ -1165,6 +1198,22 @@ activate_failed:
   }
 }
 
+static void
+gst_wl_window_clear_buffers (GstWlWindow * self)
+{
+  GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
+  GList *buffers;
+
+  GST_DEBUG_OBJECT (self, "Removing all cached wl_buffer");
+  g_mutex_lock (&priv->buffers_mutex);
+  g_hash_table_foreach (priv->buffers, (GHFunc) gst_wl_buffer_weak_unref, self);
+  buffers = g_hash_table_get_values (priv->buffers);
+  g_hash_table_steal_all (priv->buffers);
+  g_mutex_unlock (&priv->buffers_mutex);
+
+  g_list_free_full (buffers, gst_object_unref);
+}
+
 /**
  * gst_wl_window_render:
  * @self: a #GstWlWindow
@@ -1185,7 +1234,7 @@ GstFlowReturn
 gst_wl_window_render (GstWlWindow * self, GstBuffer * buffer)
 {
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
-  GstBuffer *to_render = NULL;
+  GstWlBuffer *to_render = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean dropped = FALSE;
 
@@ -1218,41 +1267,44 @@ gst_wl_window_render (GstWlWindow * self, GstBuffer * buffer)
       }
     }
 
+    if (priv->src_info_changed)
+      gst_wl_window_clear_buffers (self);
+
     ret = gst_wl_window_import_buffer (self, buffer, &to_render);
     if (ret != GST_FLOW_OK)
       return ret;
 
-    // FIXME: ODD ref
-    gst_buffer_replace (&priv->last_rendered, to_render);
-    if (to_render != buffer)
-      gst_buffer_unref (to_render);
-
-    /* ref the buffer to keep it alive while queued */
-    gst_buffer_ref (priv->last_rendered);
+    gst_clear_object (&priv->last_rendered);
+    priv->last_rendered = to_render;
   }
 
   g_mutex_lock (&priv->window_lock);
 
   if (priv->next_buffer && priv->staged_buffer) {
     GST_LOG_OBJECT (self, "buffer %p dropped (replaced)", priv->staged_buffer);
-    gst_buffer_unref (priv->staged_buffer);
+    gst_wl_buffer_detach (priv->staged_buffer);
+    g_clear_object (&priv->staged_buffer);
+
     dropped = TRUE;
   }
 
+  if (to_render)
+    g_object_ref (to_render);
+
   if (!priv->next_buffer) {
-    priv->next_buffer = buffer ? priv->last_rendered : NULL;
+    priv->next_buffer = to_render;
     priv->commit_callback =
         gst_wl_display_sync (priv->display, &commit_listener, self);
     wl_display_flush (gst_wl_display_get_display (priv->display));
   } else {
-    priv->staged_buffer = buffer ? priv->last_rendered : NULL;
+    priv->staged_buffer = to_render;
   }
   if (!buffer)
     priv->clear_window = TRUE;
 
   g_mutex_unlock (&priv->window_lock);
 
-  return dropped ? GST_FLOW_CUSTOM_SUCCESS : GST_FLOW_OK;
+  return dropped ? GST_BASE_SINK_FLOW_DROPPED : GST_FLOW_OK;
 }
 
 /**
@@ -1275,10 +1327,15 @@ gst_wl_window_flush (GstWlWindow * self)
   g_mutex_lock (&priv->window_lock);
   if (priv->staged_buffer) {
     GST_LOG_OBJECT (self, "drop buffer %p", priv->staged_buffer);
-    gst_buffer_unref (priv->staged_buffer);
-    priv->staged_buffer = NULL;
+    gst_wl_buffer_detach (priv->staged_buffer);
+    gst_clear_object (&priv->staged_buffer);
   }
+  gst_clear_object (&priv->next_buffer);
+  gst_clear_object (&priv->last_rendered);
+  gst_clear_object (&priv->area_surface_buffer);
   g_mutex_unlock (&priv->window_lock);
+
+  gst_wl_window_clear_buffers (self);
 
   return TRUE;
 }
@@ -1294,7 +1351,6 @@ gst_wl_window_update_borders (GstWlWindow * self)
   GstBuffer *buf;
   struct wl_buffer *wlbuf;
   struct wp_single_pixel_buffer_manager_v1 *single_pixel;
-  GstWlBuffer *gwlbuf;
 
   if (gst_wl_display_get_viewporter (priv->display)) {
     wp_viewport_set_destination (priv->area_viewport,
@@ -1342,8 +1398,10 @@ gst_wl_window_update_borders (GstWlWindow * self)
     g_object_unref (alloc);
   }
 
-  gwlbuf = gst_buffer_add_wl_buffer (buf, wlbuf, priv->display);
-  gst_wl_buffer_attach (gwlbuf, priv->area_surface_wrapper);
+  gst_clear_object (&priv->area_surface_buffer);
+  priv->area_surface_buffer = gst_buffer_add_wl_buffer (buf, wlbuf, self);
+  gst_wl_buffer_attach (priv->area_surface_buffer, priv->area_surface_wrapper);
+
   wl_surface_damage_buffer (priv->area_surface_wrapper, 0, 0, G_MAXINT32,
       G_MAXINT32);
 
@@ -1799,4 +1857,55 @@ gst_wl_window_set_source_info (GstWlWindow * self,
 
   priv->skip_dumb_buffer_copy = FALSE;
   priv->src_info_changed = TRUE;
+}
+
+void
+gst_wl_window_register_buffer (GstWlWindow * self, gpointer gstmem,
+    gpointer wlbuffer)
+{
+  GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
+
+  g_assert (!priv->shutting_down);
+
+  GST_TRACE_OBJECT (self, "registering GstWlBuffer %p to GstMem %p",
+      wlbuffer, gstmem);
+
+  g_mutex_lock (&priv->buffers_mutex);
+  gst_object_ref (wlbuffer);
+  g_hash_table_replace (priv->buffers, gstmem, wlbuffer);
+  gst_mini_object_weak_ref (GST_MINI_OBJECT (gstmem),
+      (GstMiniObjectNotify) gstmemory_disposed, self);
+  g_mutex_unlock (&priv->buffers_mutex);
+}
+
+gpointer
+gst_wl_window_lookup_buffer (GstWlWindow * self, gpointer gstmem)
+{
+  GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
+  gpointer wlbuffer;
+
+  g_mutex_lock (&priv->buffers_mutex);
+  wlbuffer = g_hash_table_lookup (priv->buffers, gstmem);
+  if (wlbuffer)
+    gst_object_ref (wlbuffer);
+  g_mutex_unlock (&priv->buffers_mutex);
+
+  GST_DEBUG_OBJECT (self, "Lookup up %p and fourn %p", gstmem, wlbuffer);
+  return wlbuffer;
+}
+
+void
+gst_wl_window_unregister_buffer (GstWlWindow * self, gpointer gstmem)
+{
+  GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
+
+  GST_TRACE_OBJECT (self, "unregistering GstWlBuffer owned by %p", gstmem);
+
+  g_mutex_lock (&priv->buffers_mutex);
+  if (g_hash_table_contains (priv->buffers, gstmem)) {
+    gst_mini_object_weak_unref (GST_MINI_OBJECT (gstmem),
+        (GstMiniObjectNotify) gstmemory_disposed, self);
+    g_hash_table_remove (priv->buffers, gstmem);
+  }
+  g_mutex_unlock (&priv->buffers_mutex);
 }

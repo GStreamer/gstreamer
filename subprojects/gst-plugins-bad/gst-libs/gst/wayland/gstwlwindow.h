@@ -94,4 +94,15 @@ void gst_wl_window_set_source_info (GstWlWindow * self,
         GstCaps * caps,
         const gchar * drm_device);
 
+GST_WL_API
+void gst_wl_window_register_buffer (GstWlWindow * self, gpointer gstmem,
+    gpointer wlbuffer);
+
+GST_WL_API
+void gst_wl_window_unregister_buffer (GstWlWindow * self, gpointer gstmem);
+
+GST_WL_API
+gpointer gst_wl_window_lookup_buffer (GstWlWindow * self, gpointer gstmem);
+
+
 G_END_DECLS
