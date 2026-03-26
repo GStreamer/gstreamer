@@ -254,6 +254,11 @@ _read_leb128 (guint8 * data, gsize size, GstAV1ParserResult * retval,
     value |= (((guint64) leb128_byte & 0x7f) << (i * 7));
     if (!(leb128_byte & 0x80))
       break;
+
+    if (i == 7 && leb128_byte & 0x80) {
+      *retval = GST_AV1_PARSER_BITSTREAM_ERROR;
+      return 0;
+    }
   }
 
   *consumed = (gst_bit_reader_get_pos (&br) - cur_pos) / 8;
