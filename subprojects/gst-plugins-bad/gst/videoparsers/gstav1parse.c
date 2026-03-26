@@ -262,7 +262,7 @@ _read_leb128 (guint8 * data, gsize size, GstAV1ParserResult * retval,
 
   *consumed = (gst_bit_reader_get_pos (&br) - cur_pos) / 8;
   /* check for bitstream conformance see chapter4.10.5 */
-  if (value < GST_AV1_LEB128_MAX_VALUE) {
+  if (value <= GST_AV1_LEB128_MAX_VALUE) {
     *retval = GST_AV1_PARSER_OK;
     return (guint32) value;
   } else {

@@ -303,7 +303,7 @@ av1_bitstreamfn_leb128 (GstBitReader * br, GstAV1ParserResult * retval)
   }
 
   /* check for bitstream conformance see chapter4.10.5 */
-  if (value < GST_AV1_LEB128_MAX_VALUE) {
+  if (value <= GST_AV1_LEB128_MAX_VALUE) {
     return (guint32) value;
   } else {
     GST_WARNING ("invalid leb128");
