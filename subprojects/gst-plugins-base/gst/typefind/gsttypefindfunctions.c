@@ -6815,9 +6815,6 @@ av1_leb128 (GstByteReader * br, guint32 * retval)
       return FALSE;
   }
 
-  if (i == 8)
-    return FALSE;
-
   /* check for bitstream conformance see chapter 4.10.5 */
   if (value <= G_MAXUINT32) {
     *retval = (guint32) value;
