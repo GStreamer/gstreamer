@@ -524,8 +524,13 @@ parse_mdvdsub (ParserState * state, const gchar * line)
   }
 
   /* skip the {%u}{%u} part */
-  line = strchr (line, '}') + 1;
-  line = strchr (line, '}') + 1;
+  line = strchr (line, '}');
+  if (!line)
+    return NULL;
+  line = strchr (line + 1, '}');
+  if (!line)
+    return NULL;
+  line++;
 
   /* see if there's a first line with a framerate */
   if (start_frame == 1 && end_frame == 1) {
@@ -578,7 +583,12 @@ parse_mdvdsub (ParserState * state, const gchar * line)
       line = strchr (line, '}') + 1;
     }
     if (sscanf (line, "{s:%u}", &fontsize) == 1) {
-      line = strchr (line, '}') + 1;
+      line = strchr (line, '}');
+      if (!line) {
+        g_string_free (markup, TRUE);
+        return NULL;
+      }
+      line++;
     }
     /* forward slashes at beginning/end signify italics too */
     if (g_str_has_prefix (line, "/")) {
