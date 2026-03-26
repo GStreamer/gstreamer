@@ -315,7 +315,7 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     else
       plane_aspect = aspects[i];
 
-    gst_vulkan_buffer_get_plane_dimensions (inbuf, &raw->in_info, i, &width,
+    gst_vulkan_buffer_get_plane_dimensions (*outbuf, &raw->out_info, i, &width,
         &height, &row, &img_h);
 
     /* *INDENT-OFF* */
