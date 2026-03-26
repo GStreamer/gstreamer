@@ -661,7 +661,7 @@ gst_vulkan_swapper_get_supported_caps (GstVulkanSwapper * swapper,
 {
   GstVulkanSwapperPrivate *priv = GET_PRIV (swapper);
   GstStructure *s;
-  GstCaps *caps;
+  GstCaps *caps, *allowed_caps;
 
   g_return_val_if_fail (GST_IS_VULKAN_SWAPPER (swapper), NULL);
 
@@ -702,6 +702,13 @@ gst_vulkan_swapper_get_supported_caps (GstVulkanSwapper * swapper,
         GST_TYPE_FRACTION, 1, 1, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
         G_MAXINT, 1, NULL);
   }
+
+  /* Make sure we only advertise what's listed in GST_VULKAN_SWAPPER_VIDEO_FORMATS */
+  allowed_caps =
+      gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+      (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, GST_VULKAN_SWAPPER_VIDEO_FORMATS));
+  caps = gst_caps_intersect_full (caps, allowed_caps, GST_CAPS_INTERSECT_FIRST);
+  gst_caps_unref (allowed_caps);
 
   GST_INFO_OBJECT (swapper, "Probed the following caps %" GST_PTR_FORMAT, caps);
 
