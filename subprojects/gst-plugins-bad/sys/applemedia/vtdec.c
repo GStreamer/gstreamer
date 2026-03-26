@@ -233,18 +233,24 @@ static GstStaticPadTemplate gst_vtdec_sink_template =
 
 static SupplementalSupport gst_vtdec_codec_support = NoneSupported;
 
-#define VIDEO_SRC_CAPS_FORMATS "{ NV12, AYUV64, ARGB64_BE, P010_10LE }"
+#define VIDEO_SRC_CAPS_NATIVE_FORMATS "{ NV12, AYUV64, ARGB64_BE, P010_10LE }"
+
+/* TODO: Add support for more formats to videotexturecache-vulkan/gl.
+ * VideoToolbox will output most formats with HW-backed buffers,
+ * but our GL/Vulkan code does not support handling them yet. */
+#define VIDEO_SRC_CAPS_GL_FORMATS "{ NV12 }"
+#define VIDEO_SRC_CAPS_VULKAN_FORMATS "{ NV12, BGRA }"
 
 #define VIDEO_SRC_CAPS_NATIVE                                           \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(GST_CAPS_FEATURE_MEMORY_GL_MEMORY,\
-        VIDEO_SRC_CAPS_FORMATS) ", "                                    \
-    "texture-target = (string) rectangle ;"                             \
-    GST_VIDEO_CAPS_MAKE(VIDEO_SRC_CAPS_FORMATS)
+        VIDEO_SRC_CAPS_GL_FORMATS) ", "                                 \
+    "texture-target = (string) rectangle ;"                              \
+    GST_VIDEO_CAPS_MAKE(VIDEO_SRC_CAPS_NATIVE_FORMATS)
 
 #ifdef APPLEMEDIA_MOLTENVK
 #define VIDEO_SRC_CAPS                                                      \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, \
-        VIDEO_SRC_CAPS_FORMATS) ";" VIDEO_SRC_CAPS_NATIVE
+        VIDEO_SRC_CAPS_VULKAN_FORMATS) ";" VIDEO_SRC_CAPS_NATIVE
 #else
 #define VIDEO_SRC_CAPS VIDEO_SRC_CAPS_NATIVE
 #endif
@@ -267,7 +273,8 @@ gst_vtdec_class_init (GstVtdecClass * klass)
     GstCaps *caps = gst_caps_from_string (VIDEO_SRC_CAPS);
     /* RGBA64_LE is kCVPixelFormatType_64RGBALE, only available on macOS 11.3+ */
     if (GST_APPLEMEDIA_HAVE_64RGBALE)
-      caps = gst_vtutil_caps_append_video_format (caps, "RGBA64_LE");
+      caps = gst_vtutil_caps_append_video_format (caps, "RGBA64_LE",
+          GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
     gst_element_class_add_pad_template (element_class,
         gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps));
     gst_caps_unref (caps);

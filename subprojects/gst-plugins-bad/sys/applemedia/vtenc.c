@@ -325,10 +325,10 @@ gst_vtenc_base_init (GstVTEncClass * klass)
     }
 
     if (enable_argb) {
-      caps = gst_vtutil_caps_append_video_format (caps, "ARGB64_BE");
+      caps = gst_vtutil_caps_append_video_format (caps, "ARGB64_BE", NULL);
       /* RGBA64_LE is kCVPixelFormatType_64RGBALE, only available on macOS 11.3+ */
       if (GST_APPLEMEDIA_HAVE_64RGBALE)
-        caps = gst_vtutil_caps_append_video_format (caps, "RGBA64_LE");
+        caps = gst_vtutil_caps_append_video_format (caps, "RGBA64_LE", NULL);
     }
 #endif
     gst_element_class_add_pad_template (element_class,

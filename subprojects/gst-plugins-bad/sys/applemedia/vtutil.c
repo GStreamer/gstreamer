@@ -149,26 +149,38 @@ gst_vtutil_codec_type_to_prores_variant (CMVideoCodecType codec_type)
 }
 
 GstCaps *
-gst_vtutil_caps_append_video_format (GstCaps * caps, const char *vfmt)
+gst_vtutil_caps_append_video_format (GstCaps * caps, const char *vfmt,
+    const char *features_filter)
 {
-  GstStructure *s;
-  GValueArray *arr;
+  guint i;
   GValue val = G_VALUE_INIT;
 
   caps = gst_caps_make_writable (caps);
-  s = gst_caps_get_structure (caps, 0);
-  gst_structure_get_list (s, "format", &arr);
-
   g_value_init (&val, G_TYPE_STRING);
-
   g_value_set_string (&val, vfmt);
-  G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
-  arr = g_value_array_append (arr, &val);
-  G_GNUC_END_IGNORE_DEPRECATIONS;
+
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstCapsFeatures *features;
+    GstStructure *s;
+    GValueArray *arr;
+
+    features = gst_caps_get_features (caps, i);
+    if (features_filter &&
+        (!features || !gst_caps_features_contains (features, features_filter)))
+      continue;
+
+    s = gst_caps_get_structure (caps, i);
+    gst_structure_get_list (s, "format", &arr);
+
+    G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
+    arr = g_value_array_append (arr, &val);
+    G_GNUC_END_IGNORE_DEPRECATIONS;
+
+    gst_structure_set_list (s, "format", arr);
+  }
 
   g_value_unset (&val);
 
-  gst_structure_set_list (s, "format", arr);
   return caps;
 }
 
