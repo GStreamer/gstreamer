@@ -73,8 +73,43 @@ struct _GstPresetInterface
                                        const gchar *tag, const gchar *value);
   gboolean     (*get_meta)            (GstPreset *preset, const gchar *name,
                                        const gchar *tag, gchar **value);
+
+  /**
+   * GstPresetInterface::get_property:
+   * @preset: a #GstPreset
+   * @name: preset name to read from
+   * @prop: property name (optionally suffixed with `[alternative]`)
+   * @value: (out): #GValue to store the property value
+   *
+   * Read a property value from @preset and return it as a #GValue.
+   *
+   * Returns: %TRUE if the value was found and read, %FALSE otherwise.
+   *
+   * Since: 1.30
+   */
+  gboolean     (*get_property)        (GstPreset *preset, const gchar *name,
+                                       const gchar *prop, GValue *value);
+
+  /**
+   * GstPresetInterface::get_property_alternatives:
+   * @preset: a #GstPreset
+   * @name: preset name to read from
+   * @prop: property name to list alternatives for
+   *
+   * List the alternative tags defined for @prop in @preset (e.g. the
+   * `WxH[@FPS]` keys following the property name in square brackets).
+   *
+   * Returns: (transfer full) (nullable) (array zero-terminated=1): a
+   *   %NULL-terminated array of alternative tag strings, or %NULL if
+   *   none are defined.
+   *
+   * Since: 1.30
+   */
+  gchar **     (*get_property_alternatives) (GstPreset *preset, const gchar *name,
+                                             const gchar *prop);
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING - 2];
 };
 
 GST_API
@@ -104,6 +139,17 @@ gboolean     gst_preset_set_meta           (GstPreset *preset, const gchar *name
 GST_API
 gboolean     gst_preset_get_meta           (GstPreset *preset, const gchar *name,
                                             const gchar *tag, gchar **value);
+GST_API
+gboolean     gst_preset_get_property              (GstPreset *preset,
+                                                    const gchar *name,
+                                                    const gchar *prop,
+                                                    GValue *value);
+
+GST_API
+gchar **     gst_preset_get_property_alternatives  (GstPreset *preset,
+                                                    const gchar *name,
+                                                    const gchar *prop);
+
 GST_API
 gboolean     gst_preset_set_app_dir        (const gchar *app_dir);
 

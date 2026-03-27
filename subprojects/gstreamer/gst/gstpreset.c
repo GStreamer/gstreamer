@@ -643,7 +643,6 @@ gst_preset_default_load_preset (GstPreset * preset, const gchar * name)
   GKeyFile *presets;
   gchar **props;
   guint i;
-  GObjectClass *gclass;
   gboolean is_child_proxy;
 
   /* get the presets from the type */
@@ -660,57 +659,31 @@ gst_preset_default_load_preset (GstPreset * preset, const gchar * name)
   if (!(props = gst_preset_get_property_names (preset)))
     goto no_properties;
 
-  gclass = G_OBJECT_CLASS (GST_ELEMENT_GET_CLASS (preset));
   is_child_proxy = GST_IS_CHILD_PROXY (preset);
 
   /* for each of the property names, find the preset parameter and try to
    * configure the property with its value */
   for (i = 0; props[i]; i++) {
-    gchar *str;
-    GValue gvalue = { 0, };
-    GParamSpec *property = NULL;
+    GValue gvalue = G_VALUE_INIT;
 
-    /* check if we have a settings for this element property */
-    if (!(str = g_key_file_get_value (presets, name, props[i], NULL))) {
-      /* the element has a property but the parameter is not in the keyfile */
+    /* check if we have a setting for this element property */
+    if (!g_key_file_has_key (presets, name, props[i], NULL)) {
       GST_INFO_OBJECT (preset, "parameter '%s' not in preset", props[i]);
       continue;
     }
 
-    GST_DEBUG_OBJECT (preset, "setting value '%s' for property '%s'", str,
-        props[i]);
+    if (!gst_preset_get_property (preset, name, props[i], &gvalue))
+      continue;
+
+    GST_DEBUG_OBJECT (preset, "setting property '%s'", props[i]);
 
     if (is_child_proxy) {
-      gst_child_proxy_lookup ((GstChildProxy *) preset, props[i], NULL,
-          &property);
+      gst_child_proxy_set_property ((GstChildProxy *) preset, props[i],
+          &gvalue);
     } else {
-      property = g_object_class_find_property (gclass, props[i]);
-    }
-    if (!property) {
-      /* the parameter was in the keyfile, the element said it supported it but
-       * then the property was not found in the element. This should not happen. */
-      GST_WARNING_OBJECT (preset, "property '%s' not in object", props[i]);
-      g_free (str);
-      continue;
-    }
-
-    /* try to deserialize the property value from the keyfile and set it as
-     * the object property */
-    g_value_init (&gvalue, property->value_type);
-    if (gst_value_deserialize (&gvalue, str)) {
-      if (is_child_proxy) {
-        gst_child_proxy_set_property ((GstChildProxy *) preset, props[i],
-            &gvalue);
-      } else {
-        g_object_set_property ((GObject *) preset, props[i], &gvalue);
-      }
-    } else {
-      GST_WARNING_OBJECT (preset,
-          "deserialization of value '%s' for property '%s' failed", str,
-          props[i]);
+      g_object_set_property ((GObject *) preset, props[i], &gvalue);
     }
     g_value_unset (&gvalue);
-    g_free (str);
   }
   g_strfreev (props);
 
@@ -1211,6 +1184,197 @@ gst_preset_get_meta (GstPreset * preset, const gchar * name, const gchar * tag,
   return GST_PRESET_GET_INTERFACE (preset)->get_meta (preset, name, tag, value);
 }
 
+static gboolean
+gst_preset_default_get_property (GstPreset * preset, const gchar * name,
+    const gchar * prop, GValue * value)
+{
+  GKeyFile *presets;
+  gchar *str = NULL;
+  gchar *base_prop = NULL;
+  const gchar *alt = NULL;
+  GParamSpec *property = NULL;
+  gboolean is_child_proxy;
+  gboolean ret = FALSE;
+
+  if (!(presets = preset_get_keyfile (preset)))
+    return FALSE;
+
+  if (!g_key_file_has_group (presets, name))
+    return FALSE;
+
+  is_child_proxy = GST_IS_CHILD_PROXY (preset);
+
+  /* check if prop has an [alternative] suffix */
+  {
+    const gchar *bracket = strchr (prop, '[');
+    if (bracket) {
+      const gchar *end_bracket = strchr (bracket, ']');
+      if (end_bracket) {
+        base_prop = g_strndup (prop, bracket - prop);
+        alt = bracket + 1;
+        /* alt points into prop, we need a null-terminated copy */
+        gchar *alt_copy = g_strndup (alt, end_bracket - alt);
+        str = g_key_file_get_locale_string (presets, name, base_prop,
+            alt_copy, NULL);
+        g_free (alt_copy);
+      }
+    }
+  }
+
+  if (!str && !base_prop) {
+    /* no alternative suffix, read base value */
+    str = g_key_file_get_value (presets, name, prop, NULL);
+  }
+
+  if (!str) {
+    g_free (base_prop);
+    return FALSE;
+  }
+
+  /* find the property spec using the base property name */
+  {
+    const gchar *lookup_name = base_prop ? base_prop : prop;
+    if (is_child_proxy) {
+      gst_child_proxy_lookup ((GstChildProxy *) preset, lookup_name, NULL,
+          &property);
+    } else {
+      property =
+          g_object_class_find_property (G_OBJECT_CLASS
+          (GST_ELEMENT_GET_CLASS (preset)), lookup_name);
+    }
+  }
+
+  if (!property) {
+    GST_WARNING_OBJECT (preset, "property '%s' not found",
+        base_prop ? base_prop : prop);
+    g_free (str);
+    g_free (base_prop);
+    return FALSE;
+  }
+
+  g_value_init (value, property->value_type);
+  if (gst_value_deserialize (value, str)) {
+    ret = TRUE;
+  } else {
+    GST_WARNING_OBJECT (preset,
+        "deserialization of value '%s' for property '%s' failed", str,
+        base_prop ? base_prop : prop);
+    g_value_unset (value);
+  }
+
+  g_free (str);
+  g_free (base_prop);
+  return ret;
+}
+
+static gchar **
+gst_preset_default_get_property_alternatives (GstPreset * preset,
+    const gchar * name, const gchar * prop)
+{
+  GKeyFile *presets;
+  gchar **keys;
+  gsize n_keys, i;
+  GPtrArray *alts;
+  gsize prop_len;
+
+  if (!(presets = preset_get_keyfile (preset)))
+    return NULL;
+
+  if (!g_key_file_has_group (presets, name))
+    return NULL;
+
+  keys = g_key_file_get_keys (presets, name, &n_keys, NULL);
+  if (!keys)
+    return NULL;
+
+  prop_len = strlen (prop);
+  alts = g_ptr_array_new ();
+
+  for (i = 0; i < n_keys; i++) {
+    /* look for keys matching "prop[*]" */
+    if (strncmp (keys[i], prop, prop_len) == 0 && keys[i][prop_len] == '[') {
+      const gchar *start = keys[i] + prop_len + 1;
+      const gchar *end = strchr (start, ']');
+      if (end) {
+        g_ptr_array_add (alts, g_strndup (start, end - start));
+      }
+    }
+  }
+  g_strfreev (keys);
+
+  if (alts->len == 0) {
+    g_ptr_array_free (alts, TRUE);
+    return NULL;
+  }
+
+  g_ptr_array_add (alts, NULL);
+  return (gchar **) g_ptr_array_free (alts, FALSE);
+}
+
+/**
+ * gst_preset_get_property:
+ * @preset: a #GObject that implements #GstPreset
+ * @name: preset name
+ * @prop: property name, optionally with an alternative suffix
+ *   (e.g. "bitrate" or "bitrate[1920x1080]")
+ *
+ * Gets the value of a property from a preset.
+ *
+ * If @prop contains an alternative suffix in brackets (e.g.
+ * "bitrate[1920x1080]"), the alternative value is read using
+ * GKeyFile's locale string mechanism. Otherwise the base property
+ * value is read.
+ *
+ * On success, @value is initialized to the property's type and
+ * filled with the deserialized value from the preset file. The
+ * caller must call g_value_unset() on @value when done.
+ *
+ * Returns: %TRUE if the property value was retrieved, %FALSE on error
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_preset_get_property (GstPreset * preset, const gchar * name,
+    const gchar * prop, GValue * value)
+{
+  g_return_val_if_fail (GST_IS_PRESET (preset), FALSE);
+  g_return_val_if_fail (name, FALSE);
+  g_return_val_if_fail (prop, FALSE);
+  g_return_val_if_fail (value, FALSE);
+
+  return GST_PRESET_GET_INTERFACE (preset)->get_property (preset, name, prop,
+      value);
+}
+
+/**
+ * gst_preset_get_property_alternatives:
+ * @preset: a #GObject that implements #GstPreset
+ * @name: preset name
+ * @prop: base property name (e.g. "bitrate")
+ *
+ * Gets the list of alternative suffixes defined for a property in a
+ * preset. These are the bracket-enclosed parts of keys like
+ * "bitrate[1920x1080]" or "bitrate[3840x2160@48]".
+ *
+ * Returns: (transfer full) (array zero-terminated=1) (element-type utf8) (nullable):
+ *   a %NULL-terminated array of alternative names (e.g.
+ *   ["1920x1080", "3840x2160@48", ...]), or %NULL if no
+ *   alternatives exist. Free with g_strfreev().
+ *
+ * Since: 1.30
+ */
+gchar **
+gst_preset_get_property_alternatives (GstPreset * preset, const gchar * name,
+    const gchar * prop)
+{
+  g_return_val_if_fail (GST_IS_PRESET (preset), NULL);
+  g_return_val_if_fail (name, NULL);
+  g_return_val_if_fail (prop, NULL);
+
+  return GST_PRESET_GET_INTERFACE (preset)->get_property_alternatives (preset,
+      name, prop);
+}
+
 /**
  * gst_preset_set_app_dir:
  * @app_dir: (type filename): the application specific preset dir
@@ -1281,6 +1445,10 @@ gst_preset_class_init (GstPresetInterface * iface)
 
   iface->set_meta = gst_preset_default_set_meta;
   iface->get_meta = gst_preset_default_get_meta;
+
+  iface->get_property = gst_preset_default_get_property;
+  iface->get_property_alternatives =
+      gst_preset_default_get_property_alternatives;
 }
 
 static void

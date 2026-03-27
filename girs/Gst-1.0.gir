@@ -38556,6 +38556,71 @@ or no value for the given @tag</doc>
           </instance-parameter>
         </parameters>
       </virtual-method>
+      <virtual-method name="get_property" invoker="get_property" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">Gets the value of a property from a preset.
+
+If @prop contains an alternative suffix in brackets (e.g.
+"bitrate[1920x1080]"), the alternative value is read using
+GKeyFile's locale string mechanism. Otherwise the base property
+value is read.
+
+On success, @value is initialized to the property's type and
+filled with the deserialized value from the preset file. The
+caller must call g_value_unset() on @value when done.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstpreset.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">%TRUE if the property value was retrieved, %FALSE on error</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="preset" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">a #GObject that implements #GstPreset</doc>
+            <type name="Preset" c:type="GstPreset*"/>
+          </instance-parameter>
+          <parameter name="name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">preset name</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="prop" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">property name, optionally with an alternative suffix
+  (e.g. "bitrate" or "bitrate[1920x1080]")</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="value" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.h">#GValue to store the property value</doc>
+            <type name="GObject.Value" c:type="GValue*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_property_alternatives" invoker="get_property_alternatives" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">Gets the list of alternative suffixes defined for a property in a
+preset. These are the bracket-enclosed parts of keys like
+"bitrate[1920x1080]" or "bitrate[3840x2160@48]".</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstpreset.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">
+  a %NULL-terminated array of alternative names (e.g.
+  ["1920x1080", "3840x2160@48", ...]), or %NULL if no
+  alternatives exist. Free with g_strfreev().</doc>
+          <array c:type="gchar**">
+            <type name="utf8"/>
+          </array>
+        </return-value>
+        <parameters>
+          <instance-parameter name="preset" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">a #GObject that implements #GstPreset</doc>
+            <type name="Preset" c:type="GstPreset*"/>
+          </instance-parameter>
+          <parameter name="name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">preset name</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="prop" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">base property name (e.g. "bitrate")</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
       <virtual-method name="get_property_names" invoker="get_property_names">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">Get a the names of the GObject properties that can be used for presets.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstpreset.h"/>
@@ -38722,6 +38787,70 @@ or no value for the given @tag</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">a #GObject that implements #GstPreset</doc>
             <type name="Preset" c:type="GstPreset*"/>
           </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_property" c:identifier="gst_preset_get_property" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">Gets the value of a property from a preset.
+
+If @prop contains an alternative suffix in brackets (e.g.
+"bitrate[1920x1080]"), the alternative value is read using
+GKeyFile's locale string mechanism. Otherwise the base property
+value is read.
+
+On success, @value is initialized to the property's type and
+filled with the deserialized value from the preset file. The
+caller must call g_value_unset() on @value when done.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstpreset.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">%TRUE if the property value was retrieved, %FALSE on error</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="preset" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">a #GObject that implements #GstPreset</doc>
+            <type name="Preset" c:type="GstPreset*"/>
+          </instance-parameter>
+          <parameter name="name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">preset name</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="prop" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">property name, optionally with an alternative suffix
+  (e.g. "bitrate" or "bitrate[1920x1080]")</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="value" transfer-ownership="none">
+            <type name="GObject.Value" c:type="GValue*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_property_alternatives" c:identifier="gst_preset_get_property_alternatives" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">Gets the list of alternative suffixes defined for a property in a
+preset. These are the bracket-enclosed parts of keys like
+"bitrate[1920x1080]" or "bitrate[3840x2160@48]".</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstpreset.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">
+  a %NULL-terminated array of alternative names (e.g.
+  ["1920x1080", "3840x2160@48", ...]), or %NULL if no
+  alternatives exist. Free with g_strfreev().</doc>
+          <array c:type="gchar**">
+            <type name="utf8"/>
+          </array>
+        </return-value>
+        <parameters>
+          <instance-parameter name="preset" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">a #GObject that implements #GstPreset</doc>
+            <type name="Preset" c:type="GstPreset*"/>
+          </instance-parameter>
+          <parameter name="name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">preset name</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="prop" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">base property name (e.g. "bitrate")</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
         </parameters>
       </method>
       <method name="get_property_names" c:identifier="gst_preset_get_property_names">
@@ -39030,8 +39159,64 @@ or no value for the given @tag</doc>
           </parameters>
         </callback>
       </field>
+      <field name="get_property">
+        <callback name="get_property">
+          <source-position filename="../subprojects/gstreamer/gst/gstpreset.h"/>
+          <return-value transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">%TRUE if the property value was retrieved, %FALSE on error</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="preset" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">a #GObject that implements #GstPreset</doc>
+              <type name="Preset" c:type="GstPreset*"/>
+            </parameter>
+            <parameter name="name" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">preset name</doc>
+              <type name="utf8" c:type="const gchar*"/>
+            </parameter>
+            <parameter name="prop" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">property name, optionally with an alternative suffix
+  (e.g. "bitrate" or "bitrate[1920x1080]")</doc>
+              <type name="utf8" c:type="const gchar*"/>
+            </parameter>
+            <parameter name="value" direction="out" caller-allocates="1" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.h">#GValue to store the property value</doc>
+              <type name="GObject.Value" c:type="GValue*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_property_alternatives">
+        <callback name="get_property_alternatives">
+          <source-position filename="../subprojects/gstreamer/gst/gstpreset.h"/>
+          <return-value transfer-ownership="full" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">
+  a %NULL-terminated array of alternative names (e.g.
+  ["1920x1080", "3840x2160@48", ...]), or %NULL if no
+  alternatives exist. Free with g_strfreev().</doc>
+            <array c:type="gchar**">
+              <type name="utf8"/>
+            </array>
+          </return-value>
+          <parameters>
+            <parameter name="preset" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">a #GObject that implements #GstPreset</doc>
+              <type name="Preset" c:type="GstPreset*"/>
+            </parameter>
+            <parameter name="name" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">preset name</doc>
+              <type name="utf8" c:type="const gchar*"/>
+            </parameter>
+            <parameter name="prop" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpreset.c">base property name (e.g. "bitrate")</doc>
+              <type name="utf8" c:type="const gchar*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
       <field name="_gst_reserved" readable="0" private="1">
-        <array zero-terminated="0" fixed-size="4">
+        <array zero-terminated="0" fixed-size="2">
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>
