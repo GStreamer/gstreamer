@@ -6174,6 +6174,69 @@ pxstr_type_find (GstTypeFind * tf, gpointer unused)
     gst_type_find_suggest (tf, GST_TYPE_FIND_MINIMUM, PXSTR_CAPS);
 }
 
+/* image/png (animated=true) */
+
+static GstStaticCaps png_caps = GST_STATIC_CAPS ("image/png");
+#define PNG_CAPS (gst_static_caps_get(&png_caps))
+
+/* how many chunks we check before we give up */
+#define PNG_MAXCHUNKS 25
+
+static void
+png_type_find (GstTypeFind * tf, gpointer unused)
+{
+  DataScanCtx c = { 0, NULL, 0 };
+  gboolean animated = FALSE;
+  GstTypeFindProbability prob = GST_TYPE_FIND_NONE;
+  guint chunks = 0;
+  static const guint8 signature[] =
+      { 0x89, 'P', 'N', 'G', 0x0d, 0x0a, 0x1a, 0x0a };
+
+  if (!data_scan_ctx_ensure_data (tf, &c, 8))
+    return;
+
+  if (memcmp (c.data, signature, sizeof (signature)) != 0)
+    return;
+
+  /* At least we found the right magic */
+  prob = GST_TYPE_FIND_LIKELY;
+  data_scan_ctx_advance (tf, &c, 8);
+
+  while (data_scan_ctx_ensure_data (tf, &c, 8)) {
+    // length: uint32_be
+    // type: fourcc
+    // <data>
+    // <crc32>: uint8[4]
+    const guint32 length = GST_READ_UINT32_BE (&c.data[0]);
+    const guint32 chunk = GST_READ_UINT32_LE (&c.data[4]);
+    // Test for critical chunks and the acTL chunk
+    if (chunk == GST_MAKE_FOURCC ('a', 'c', 'T', 'L')) {
+      animated = TRUE;
+      prob = GST_TYPE_FIND_NEARLY_CERTAIN;
+    } else if (chunk == GST_MAKE_FOURCC ('P', 'L', 'T', 'E')) {
+      prob = GST_TYPE_FIND_NEARLY_CERTAIN;
+    } else if (chunk == GST_MAKE_FOURCC ('I', 'D', 'A', 'T')) {
+      prob = GST_TYPE_FIND_MAXIMUM;
+      break;
+    }
+
+    data_scan_ctx_advance (tf, &c, 4 + 4);
+    data_scan_ctx_advance (tf, &c, length);
+    data_scan_ctx_advance (tf, &c, 4);
+    chunks++;
+
+    if (chunks >= PNG_MAXCHUNKS)
+      break;
+  }
+
+  if (animated) {
+    gst_type_find_suggest_simple (tf, prob, "image/png", "animated",
+        G_TYPE_BOOLEAN, TRUE, NULL);
+  } else {
+    gst_type_find_suggest (tf, prob, PNG_CAPS);
+  }
+}
+
 /*** application/x-smk ***/
 
 static GstStaticCaps smk_caps = GST_STATIC_CAPS ("application/x-smk");
@@ -7134,6 +7197,8 @@ GST_TYPE_FIND_REGISTER_DEFINE (tiff, "image/tiff", GST_RANK_PRIMARY,
     tiff_type_find, "tif,tiff", TIFF_CAPS, NULL, NULL);
 GST_TYPE_FIND_REGISTER_DEFINE (exr, "image/x-exr", GST_RANK_PRIMARY,
     exr_type_find, "exr", EXR_CAPS, NULL, NULL);
+GST_TYPE_FIND_REGISTER_DEFINE (png, "image/png", GST_RANK_PRIMARY + 14,
+    png_type_find, "png", PNG_CAPS, NULL, NULL);
 GST_TYPE_FIND_REGISTER_DEFINE (pnm, "image/x-portable-pixmap",
     GST_RANK_SECONDARY, pnm_type_find, "pnm,ppm,pgm,pbm", PNM_CAPS, NULL, NULL);
 GST_TYPE_FIND_REGISTER_DEFINE (matroska, "video/x-matroska", GST_RANK_PRIMARY,
