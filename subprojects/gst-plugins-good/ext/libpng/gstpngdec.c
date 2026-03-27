@@ -344,7 +344,7 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
     }
     gst_video_codec_state_unref (pngdec->output_state);
   }
-#ifdef HAVE_LIBPNG_1_5
+#if PNG_LIBPNG_VER >= 10500
   if ((pngdec->color_type & PNG_COLOR_MASK_COLOR)
       && !(pngdec->color_type & PNG_COLOR_MASK_PALETTE)
       && png_get_valid (pngdec->png, pngdec->info, PNG_INFO_iCCP)) {
