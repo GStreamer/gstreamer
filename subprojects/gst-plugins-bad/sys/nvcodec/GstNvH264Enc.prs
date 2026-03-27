@@ -1,0 +1,21 @@
+[_presets_]
+version=0.10
+element-name=GstNvH264Enc
+
+[Profile YouTube]
+_meta/comment=YouTube recommended settings (https://support.google.com/youtube/answer/1722171)
+rc-mode=vbr
+cabac=true
+bframes=2
+tune=high-quality
+bitrate=2500
+bitrate[3840x2160@48]=60000
+bitrate[3840x2160]=40000
+bitrate[2560x1440@48]=24000
+bitrate[2560x1440]=16000
+bitrate[1920x1080@48]=12000
+bitrate[1920x1080]=8000
+bitrate[1280x720@48]=7500
+bitrate[1280x720]=5000
+bitrate[640x480@48]=4000
+bitrate[640x480]=2500
