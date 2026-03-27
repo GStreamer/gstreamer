@@ -55,7 +55,6 @@ libavutil-dev
 libbluetooth-dev
 libboost-system-dev
 libbs2b-dev
-libcaca-dev
 libcairo2-dev
 libcamera-dev
 libcanberra-dev

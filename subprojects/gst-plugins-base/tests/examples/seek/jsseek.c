@@ -60,7 +60,6 @@ GST_DEBUG_CATEGORY_STATIC (seek_debug);
 //#define VSINK "sdlvideosink"
 //#define VSINK "ximagesink"
 //#define VSINK "aasink"
-//#define VSINK "cacasink"
 
 #define FILL_INTERVAL 100
 //#define UPDATE_INTERVAL 500

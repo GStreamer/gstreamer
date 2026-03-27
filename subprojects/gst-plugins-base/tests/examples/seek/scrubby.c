@@ -54,7 +54,6 @@ static guint schanged_id = 0;
 //#define VSINK "xvimagesink"
 //#define VSINK "ximagesink"
 //#define VSINK "aasink"
-//#define VSINK "cacasink"
 
 #define RANGE_PREC 10000
 #define SEGMENT_LEN 100

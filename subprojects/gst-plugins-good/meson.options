@@ -60,7 +60,6 @@ option('gtk3', type : 'feature', value : 'auto', description : 'GTK+ video sink 
 option('jack', type : 'feature', value : 'auto', description : 'JACK audio source/sink plugin')
 option('jpeg', type : 'feature', value : 'auto', description : 'JPEG image codec plugin')
 option('lame', type : 'feature', value : 'auto', description : 'LAME mp3 audio encoder plugin')
-option('libcaca', type : 'feature', value : 'auto', description : 'libcaca text console video sink plugin')
 option('mpg123', type : 'feature', value : 'auto', description : 'mpg123 mp3 audio decoder plugin')
 option('oss', type : 'feature', value : 'auto', description : 'OSS audio source/sink plugin')
 option('oss4', type : 'feature', value : 'auto', description : 'OSSv4 audio source/sink plugin')

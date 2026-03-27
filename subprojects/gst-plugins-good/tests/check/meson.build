@@ -197,7 +197,7 @@ gst_plugin_scanner_path = join_paths(gst_plugin_scanner_dir, 'gst-plugin-scanner
 #
 # need a way to figure out value for the device property
 state_ignore_elements = '''aasink autoaudiosrc autoaudiosink autovideosrc
- autovideosink cacasink cairotextoverlay gtkglsink gtksink jackaudiosrc
+ autovideosink cairotextoverlay gtkglsink gtksink jackaudiosrc
  jackaudiosink osssrc osssink osxaudiosink osxaudiosrc osxvideosrc osxvideosink
  pulsesink pulsesrc pulsemixer v4l2src'''
 
