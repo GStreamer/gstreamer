@@ -310,13 +310,6 @@ gst_shm_sink_allocator_alloc (GstAllocator * allocator, gsize size,
   memory = gst_shm_sink_allocator_alloc_locked (self, size, params);
   GST_OBJECT_UNLOCK (self->sink);
 
-  if (!memory) {
-    memory = gst_allocator_alloc (NULL, size, params);
-    GST_LOG_OBJECT (self,
-        "Not enough shared memory for GstMemory of %" G_GSIZE_FORMAT
-        "bytes, allocating using standard allocator", size);
-  }
-
   return memory;
 }
 

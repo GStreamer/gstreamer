@@ -616,7 +616,7 @@ sp_writer_send_buf (ShmPipe * self, char *buf, size_t size, void *tag)
     struct CommandBuffer cb = { 0 };
     cb.payload.buffer.offset = offset;
     cb.payload.buffer.size = bsize;
-    if (!send_command (client->fd, &cb, COMMAND_NEW_BUFFER, self->shm_area->id))
+    if (!send_command (client->fd, &cb, COMMAND_NEW_BUFFER, area->id))
       continue;
     sb->clients[i++] = client->fd;
     c++;
@@ -760,11 +760,12 @@ sp_client_recv_finish (ShmPipe * self, char *buf)
 
   offset = buf - shm_area->shm_area_buf;
 
+  int shm_area_id = shm_area->id;
+
   sp_shm_area_dec (self, shm_area);
 
   cb.payload.ack_buffer.offset = offset;
-  return send_command (self->main_socket, &cb, COMMAND_ACK_BUFFER,
-      self->shm_area->id);
+  return send_command (self->main_socket, &cb, COMMAND_ACK_BUFFER, shm_area_id);
 }
 
 ShmPipe *
