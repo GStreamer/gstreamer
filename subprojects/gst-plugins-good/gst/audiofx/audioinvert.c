@@ -217,7 +217,7 @@ gst_audio_invert_transform_float (GstAudioInvert * filter,
 {
   gint i;
   gfloat dry = 1.0 - filter->degree;
-  glong val;
+  gfloat val;
 
   for (i = 0; i < num_samples; i++) {
     val = (*data) * dry - (*data) * filter->degree;
