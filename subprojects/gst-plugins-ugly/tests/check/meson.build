@@ -4,13 +4,6 @@ ugly_tests = [
   [ 'generic/states' ],
 ]
 
-# FIXME: unistd dependency or not tested yet on windows
-if host_machine.system() != 'windows'
-  ugly_tests += [
-    [ 'elements/mpeg2dec', not mpeg2_dep.found() or not cdata.has('HAVE_UNISTD_H'), [ gstvideo_dep ] ],
-  ]
-endif
-
 fsmod = import('fs')
 test_defines = [
   '-UG_DISABLE_ASSERT',
@@ -75,11 +68,6 @@ foreach t : ugly_tests
     env.set('GST_PLUGIN_PATH_1_0', [meson.global_build_root()] + pluginsdirs)
     env.set('GST_REGISTRY', join_paths(meson.current_build_dir(), '@0@.registry'.format(test_name)))
     env.set('GST_PLUGIN_SCANNER_1_0', gst_plugin_scanner_path)
-
-    # Would fail because of deprecation warnings
-    if mpeg2_dep.found()
-      env.set('GST_STATE_IGNORE_ELEMENTS', 'mpeg2dec')
-    endif
 
     test(test_name, exe, env: env, timeout: 3 * 60)
   endif

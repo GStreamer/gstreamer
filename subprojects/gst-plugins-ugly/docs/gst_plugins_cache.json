@@ -464,46 +464,6 @@
         "tracers": {},
         "url": "Unknown package origin"
     },
-    "mpeg2dec": {
-        "description": "LibMpeg2 decoder",
-        "elements": {
-            "mpeg2dec": {
-                "author": "Wim Taymans <wim.taymans@chello.be>",
-                "description": "Uses libmpeg2 to decode MPEG video streams",
-                "hierarchy": [
-                    "GstMpeg2dec",
-                    "GstVideoDecoder",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "klass": "Codec/Decoder/Video",
-                "long-name": "mpeg1 and mpeg2 video decoder",
-                "pad-templates": {
-                    "sink": {
-                        "caps": "video/mpeg:\n    mpegversion: [ 1, 2 ]\n   systemstream: false\n",
-                        "direction": "sink",
-                        "presence": "always"
-                    },
-                    "src": {
-                        "caps": "video/x-raw:\n         format: { YV12, I420, Y42B, Y444 }\n          width: [ 16, 4096 ]\n         height: [ 16, 4096 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
-                        "direction": "src",
-                        "presence": "always"
-                    }
-                },
-                "properties": {},
-                "rank": "secondary"
-            }
-        },
-        "filename": "gstmpeg2dec",
-        "license": "GPL",
-        "other-types": {},
-        "package": "GStreamer Ugly Plug-ins",
-        "source": "gst-plugins-ugly",
-        "tracers": {},
-        "url": "Unknown package origin"
-    },
     "realmedia": {
         "description": "RealMedia support plugins",
         "elements": {
