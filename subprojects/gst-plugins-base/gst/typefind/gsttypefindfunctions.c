@@ -6548,7 +6548,7 @@ wbmp_typefind (GstTypeFind * find, gpointer user_data)
   if (data == NULL)
     return;
 
-  /* want 0x00 0x00 at start */
+  /* want WBMP type 0 + empty FixHeaderField */
   if (*data++ != 0 || *data++ != 0)
     return;
 
@@ -6558,8 +6558,10 @@ wbmp_typefind (GstTypeFind * find, gpointer user_data)
   /* let's assume max width/height is 65536 */
   w = *data++;
   if ((w & 0x80)) {
-    w = (w << 8) | *data++;
-    if ((w & 0x80))
+    /* It's a multibyte integer, mask continuation bit and add */
+    w = ((w & 0x7F) << 7) | (*data & 0x7F);
+    /* Block > 65536px images */
+    if ((*data & 0x80))
       return;
     ++size;
     data = gst_type_find_peek (find, 4, 2);
@@ -6568,8 +6570,8 @@ wbmp_typefind (GstTypeFind * find, gpointer user_data)
   }
   h = *data++;
   if ((h & 0x80)) {
-    h = (h << 8) | *data++;
-    if ((h & 0x80))
+    h = ((h & 0x7F) << 7) | (*data & 0x7F);
+    if ((*data & 0x80))
       return;
     ++size;
   }
