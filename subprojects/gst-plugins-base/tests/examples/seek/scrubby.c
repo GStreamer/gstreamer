@@ -53,7 +53,6 @@ static guint schanged_id = 0;
 #define VSINK   "autovideosink"
 //#define VSINK "xvimagesink"
 //#define VSINK "ximagesink"
-//#define VSINK "aasink"
 
 #define RANGE_PREC 10000
 #define SEGMENT_LEN 100

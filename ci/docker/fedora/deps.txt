@@ -1,4 +1,3 @@
-aalib-devel
 bat
 bison
 busybox

@@ -37,7 +37,6 @@ iso-codes
 itstool
 ladspa-sdk
 liba52-0.7.4-dev
-libaa1-dev
 liballeggl4-dev
 libaom-dev
 libasound2-dev

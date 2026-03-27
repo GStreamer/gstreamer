@@ -68,7 +68,6 @@ if get_option('soup').allowed() or get_option('adaptivedemux2').allowed()
   endif
 endif
 
-subdir('aalib')
 subdir('adaptivedemux2')
 subdir('amrnb')
 subdir('amrwbdec')
