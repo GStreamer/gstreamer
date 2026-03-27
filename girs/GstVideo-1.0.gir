@@ -9039,6 +9039,35 @@ Things that subclass need to take care of:
      @gst_video_encoder_finish_frame.
 
 
+## Adaptive Presets
+
+#GstVideoEncoder supports adaptive presets, where property values in a
+preset file can vary based on the input video resolution and framerate.
+This is done using GKeyFile's locale string syntax to define alternative
+values for properties.
+
+For example, a preset file can specify different bitrates for different
+resolutions:
+
+``` ini
+[Profile YouTube]
+bitrate=2500
+bitrate[1920x1080]=8000
+bitrate[1920x1080@48]=12000
+bitrate[3840x2160]=40000
+bitrate[3840x2160@48]=60000
+```
+
+When a preset with alternatives is loaded, the best matching
+alternative is applied each time the input format changes, before
+the subclass @set_format method runs.
+
+Alternative keys use the format `WxH` (matches when the actual pixel
+count &gt;= W*H) or `WxH@FPS` (additionally requires actual fps &gt;= FPS).
+The most specific match wins (highest pixel count, then highest fps
+threshold). If no alternative matches, the base property value set by
+gst_preset_load_preset() remains.
+
 The #GstVideoEncoder:qos property will enable the Quality-of-Service
 features of the encoder which gather statistics about the real-time
 performance of the downstream elements. If enabled, subclasses can

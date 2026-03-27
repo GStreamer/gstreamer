@@ -27,6 +27,7 @@
 #include <gst/check/gstharness.h>
 #include <gst/video/video.h>
 #include <gst/app/app.h>
+#include <glib/gstdio.h>
 
 static GstPad *mysrcpad, *mysinkpad;
 static GstElement *enc;
@@ -55,6 +56,8 @@ struct _GstVideoEncoderTester
   gboolean key_frame_sent;
   gboolean enable_step_by_step;
   gboolean negotiate_in_set_format;
+  guint bitrate;
+  guint bitrate_in_set_format;
   GstVideoCodecFrame *last_frame;
 };
 
@@ -96,6 +99,8 @@ gst_video_encoder_tester_set_format (GstVideoEncoder * enc,
   if (enc_tester->negotiate_in_set_format) {
     gst_video_encoder_negotiate (enc);
   }
+
+  enc_tester->bitrate_in_set_format = enc_tester->bitrate;
 
   return TRUE;
 }
@@ -191,11 +196,55 @@ gst_video_encoder_tester_pre_push (GstVideoEncoder * enc,
   return tester->pre_push_result;
 }
 
+enum
+{
+  PROP_0,
+  PROP_BITRATE,
+};
+
+static void
+gst_video_encoder_tester_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVideoEncoderTester *tester = GST_VIDEO_ENCODER_TESTER (object);
+  switch (prop_id) {
+    case PROP_BITRATE:
+      tester->bitrate = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_video_encoder_tester_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVideoEncoderTester *tester = GST_VIDEO_ENCODER_TESTER (object);
+  switch (prop_id) {
+    case PROP_BITRATE:
+      g_value_set_uint (value, tester->bitrate);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
 static void
 gst_video_encoder_tester_class_init (GstVideoEncoderTesterClass * klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoEncoderClass *videoencoder_class = GST_VIDEO_ENCODER_CLASS (klass);
+
+  gobject_class->set_property = gst_video_encoder_tester_set_property;
+  gobject_class->get_property = gst_video_encoder_tester_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_BITRATE,
+      g_param_spec_uint ("bitrate", "Bitrate", "Bitrate in kbps",
+          0, G_MAXUINT, 1000, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
       GST_PAD_SINK, GST_PAD_ALWAYS,
@@ -225,6 +274,7 @@ gst_video_encoder_tester_init (GstVideoEncoderTester * tester)
   tester->pre_push_result = GST_FLOW_OK;
   /* One subframe is considered as a whole single frame. */
   tester->num_subframes = 1;
+  tester->bitrate = 1000;
 }
 
 static gboolean
@@ -1264,6 +1314,126 @@ GST_START_TEST (videoencoder_hdr_metadata)
 
 GST_END_TEST;
 
+GST_START_TEST (videoencoder_adaptive_preset)
+{
+  GstVideoEncoderTester *enc_tester;
+  GstSegment segment;
+  gchar *preset_dir;
+  gchar *preset_file;
+  const gchar *preset_content =
+      "[_presets_]\n"
+      "version=0.10\n"
+      "element-name=GstVideoEncoderTester\n"
+      "\n"
+      "[Profile YouTube]\n"
+      "_meta/comment=YouTube recommended settings\n"
+      "bitrate=500\n"
+      "bitrate[3840x2160]=40000\n"
+      "bitrate[1920x1080]=8000\n"
+      "bitrate[1920x1080@48]=12000\n"
+      "bitrate[640x480]=2500\n" "bitrate[640x480@48]=4000\n";
+
+  /* Create a temporary preset file so load_preset succeeds */
+  preset_dir = g_dir_make_tmp ("gst-preset-XXXXXX", NULL);
+  preset_file =
+      g_build_filename (preset_dir, "GstVideoEncoderTester.prs", NULL);
+  g_file_set_contents (preset_file, preset_content, -1, NULL);
+  g_setenv ("GST_PRESET_PATH", preset_dir, TRUE);
+
+  setup_videoencodertester ();
+  enc_tester = GST_VIDEO_ENCODER_TESTER (enc);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (enc, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  /* Default bitrate before any preset */
+  fail_unless_equals_int (enc_tester->bitrate, 1000);
+
+  /* Load YouTube profile preset — base value sets bitrate to 500 */
+  fail_unless (gst_preset_load_preset (GST_PRESET (enc), "Profile YouTube"));
+  fail_unless_equals_int (enc_tester->bitrate, 500);
+
+  /* Send caps to trigger set_format — 640x480@30fps matches
+   * the 640x480 alternative (not @48 since fps=30 < 48) -> bitrate=2500 */
+  send_startup_events ();
+
+  /* Verify the adaptive property was applied before set_format */
+  fail_unless_equals_int (enc_tester->bitrate_in_set_format, 2500);
+
+  /* After set_format, the property should still have the adaptive value */
+  fail_unless_equals_int (enc_tester->bitrate, 2500);
+
+  /* Send segment and EOS to allow clean shutdown */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  cleanup_videoencodertest ();
+
+  g_unlink (preset_file);
+  g_rmdir (preset_dir);
+  g_free (preset_file);
+  g_free (preset_dir);
+  g_unsetenv ("GST_PRESET_PATH");
+}
+
+GST_END_TEST;
+
+/* Unknown alternative-name shapes must be skipped, not matched. */
+GST_START_TEST (videoencoder_adaptive_preset_unknown_alt_skipped)
+{
+  GstVideoEncoderTester *enc_tester;
+  GstSegment segment;
+  gchar *preset_dir;
+  gchar *preset_file;
+  const gchar *preset_content =
+      "[_presets_]\n"
+      "version=0.10\n"
+      "element-name=GstVideoEncoderTester\n"
+      "\n"
+      "[Profile Future]\n"
+      "bitrate=500\n"
+      "bitrate[640x480]=2500\n"
+      "bitrate[uhd-hdr]=9999\n" "bitrate[fhd.10bit]=9999\n";
+
+  preset_dir = g_dir_make_tmp ("gst-preset-XXXXXX", NULL);
+  preset_file =
+      g_build_filename (preset_dir, "GstVideoEncoderTester.prs", NULL);
+  g_file_set_contents (preset_file, preset_content, -1, NULL);
+  g_setenv ("GST_PRESET_PATH", preset_dir, TRUE);
+
+  setup_videoencodertester ();
+  enc_tester = GST_VIDEO_ENCODER_TESTER (enc);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (enc, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  fail_unless (gst_preset_load_preset (GST_PRESET (enc), "Profile Future"));
+  fail_unless_equals_int (enc_tester->bitrate, 500);
+
+  /* At 640x480@30, plain "640x480" wins; the unknown-shape entries
+   * must be skipped (otherwise bitrate would be 9999). */
+  send_startup_events ();
+  fail_unless_equals_int (enc_tester->bitrate_in_set_format, 2500);
+  fail_unless_equals_int (enc_tester->bitrate, 2500);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  cleanup_videoencodertest ();
+
+  g_unlink (preset_file);
+  g_rmdir (preset_dir);
+  g_free (preset_file);
+  g_free (preset_dir);
+  g_unsetenv ("GST_PRESET_PATH");
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_videoencoder_suite (void)
 {
@@ -1283,6 +1453,8 @@ gst_videoencoder_suite (void)
   tcase_add_test (tc, videoencoder_force_keyunit_handling);
   tcase_add_test (tc, videoencoder_force_keyunit_min_interval);
   tcase_add_test (tc, videoencoder_hdr_metadata);
+  tcase_add_test (tc, videoencoder_adaptive_preset);
+  tcase_add_test (tc, videoencoder_adaptive_preset_unknown_alt_skipped);
 
   return s;
 }
