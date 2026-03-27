@@ -6199,6 +6199,11 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
   if (outpad == NULL)
     goto unknown_stream;
 
+  /* In onvif mode, ignore data arriving before the PLAY response */
+  if (src->onvif_mode && src->out_segment.format == GST_FORMAT_UNDEFINED) {
+    goto early_data_discard;
+  }
+
   /* take the message body for further processing */
   gst_rtsp_message_steal_body (message, &data, &size);
 
@@ -6360,6 +6365,14 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
   return ret;
 
   /* ERRORS */
+early_data_discard:
+  {
+    GST_DEBUG_OBJECT (src,
+        "Discarding early data on channel %d in ONVIF mode (arrived before the PLAY response)",
+        channel);
+    gst_rtsp_message_unset (message);
+    return GST_FLOW_OK;
+  }
 unknown_stream:
   {
     GST_DEBUG_OBJECT (src, "unknown stream on channel %d, ignored", channel);
@@ -9991,6 +10004,12 @@ restart:
 
     if (async)
       GST_ELEMENT_PROGRESS (src, CONTINUE, "request", ("Sending PLAY request"));
+
+    /* In onvif mode, invalid output segment before sending PLAY request, as some
+     * servers will send us invalid data before the PLAY response and we should discard
+     * it
+     */
+    gst_segment_init (&src->out_segment, GST_FORMAT_UNDEFINED);
 
     if ((res =
             gst_rtspsrc_send (src, conninfo, &request, &response, NULL, NULL,
