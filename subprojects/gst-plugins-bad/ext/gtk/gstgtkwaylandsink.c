@@ -364,11 +364,18 @@ gst_gtk_wayland_sink_event (GstBaseSink * sink, GstEvent * event)
   GST_DEBUG_OBJECT (self, "handling %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_STREAM_START:
+      gst_gtk_wayland_sink_set_rotate_method (self,
+          GST_VIDEO_ORIENTATION_IDENTITY, TRUE);
+      break;
     case GST_EVENT_TAG:
       gst_event_parse_tag (event, &taglist);
 
       if (gst_video_orientation_from_tag (taglist, &method)) {
         gst_gtk_wayland_sink_set_rotate_method (self, method, TRUE);
+      } else {
+        gst_gtk_wayland_sink_set_rotate_method (self,
+            GST_VIDEO_ORIENTATION_IDENTITY, TRUE);
       }
 
       break;
