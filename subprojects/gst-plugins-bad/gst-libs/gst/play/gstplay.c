@@ -1868,9 +1868,9 @@ stream_collection_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
 static void
 on_streams_selected (GstPlay * self, GstMessage * msg)
 {
-  const gchar *audio_stream_id = NULL;
-  const gchar *video_stream_id = NULL;
-  const gchar *subtitle_stream_id = NULL;
+  gchar *audio_stream_id = NULL;
+  gchar *video_stream_id = NULL;
+  gchar *subtitle_stream_id = NULL;
 
   guint len = gst_message_streams_selected_get_size (msg);
   for (guint i = 0; i < len; i++) {
@@ -1885,33 +1885,41 @@ on_streams_selected (GstPlay * self, GstMessage * msg)
     if ((stream_type & GST_STREAM_TYPE_AUDIO)) {
       if (audio_stream_id) {
         GST_WARNING_OBJECT (self, "Multiple audio streams selected");
+        gst_object_unref (stream);
         continue;
       }
-      audio_stream_id = stream_id;
+      audio_stream_id = g_strdup (stream_id);
     }
 
     if ((stream_type & GST_STREAM_TYPE_VIDEO)) {
       if (video_stream_id) {
         GST_WARNING_OBJECT (self, "Multiple video streams selected");
+        gst_object_unref (stream);
         continue;
       }
-      video_stream_id = stream_id;
+      video_stream_id = g_strdup (stream_id);
     }
 
     if ((stream_type & GST_STREAM_TYPE_TEXT)) {
       if (subtitle_stream_id) {
         GST_WARNING_OBJECT (self, "Multiple subtitle streams selected");
+        gst_object_unref (stream);
         continue;
       }
-      subtitle_stream_id = stream_id;
+      subtitle_stream_id = g_strdup (stream_id);
     }
+    gst_object_unref (stream);
   }
 
   api_bus_post_message (self, GST_PLAY_MESSAGE_TRACKS_SELECTED,
-      GST_PLAY_MESSAGE_DATA_AUDIO_TRACK_ID, G_TYPE_STRING, audio_stream_id,
-      GST_PLAY_MESSAGE_DATA_VIDEO_TRACK_ID, G_TYPE_STRING, video_stream_id,
+      GST_PLAY_MESSAGE_DATA_AUDIO_TRACK_ID, G_TYPE_STRING,
+      audio_stream_id, GST_PLAY_MESSAGE_DATA_VIDEO_TRACK_ID,
+      G_TYPE_STRING, video_stream_id,
       GST_PLAY_MESSAGE_DATA_SUBTITLE_TRACK_ID, G_TYPE_STRING,
       subtitle_stream_id, NULL);
+  g_free (audio_stream_id);
+  g_free (video_stream_id);
+  g_free (subtitle_stream_id);
 }
 
 static void
