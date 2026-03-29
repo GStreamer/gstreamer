@@ -276,6 +276,7 @@ GstDebugCategory *GST_CAT_EVENT = NULL;
 GstDebugCategory *GST_CAT_MESSAGE = NULL;
 GstDebugCategory *GST_CAT_PARAMS = NULL;
 GstDebugCategory *GST_CAT_CALL_TRACE = NULL;
+GstDebugCategory *GST_CAT_SEGMENT = NULL;
 GstDebugCategory *GST_CAT_SIGNAL = NULL;
 GstDebugCategory *GST_CAT_PROBE = NULL;
 GstDebugCategory *GST_CAT_REGISTRY = NULL;
@@ -530,6 +531,7 @@ _priv_gst_debug_init (void)
       GST_DEBUG_BOLD | GST_DEBUG_FG_BLACK | GST_DEBUG_BG_YELLOW, NULL);
   GST_CAT_CALL_TRACE = _gst_debug_category_new ("GST_CALL_TRACE",
       GST_DEBUG_BOLD, NULL);
+  GST_CAT_SEGMENT = _gst_debug_category_new ("GST_SEGMENT", 0, "segment");
   GST_CAT_SIGNAL = _gst_debug_category_new ("GST_SIGNAL",
       GST_DEBUG_BOLD | GST_DEBUG_FG_WHITE | GST_DEBUG_BG_RED, NULL);
   GST_CAT_PROBE = _gst_debug_category_new ("GST_PROBE",

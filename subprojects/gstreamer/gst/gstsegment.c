@@ -88,6 +88,8 @@
  * See https://bugzilla.gnome.org/show_bug.cgi?id=788979
  */
 
+#define GST_CAT_DEFAULT GST_CAT_SEGMENT
+
 /**
  * gst_segment_copy:
  * @segment: (transfer none): a #GstSegment
