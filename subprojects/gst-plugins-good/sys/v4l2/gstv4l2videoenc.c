@@ -714,6 +714,7 @@ gst_v4l2_video_enc_negotiate (GstVideoEncoder * encoder)
       klass->codec_name, ctx.profile, ctx.level);
 
   state = gst_video_encoder_get_output_state (encoder);
+  state->caps = gst_caps_make_writable (state->caps);
   s = gst_caps_get_structure (state->caps, 0);
 
   if (codec->profile_cid)
