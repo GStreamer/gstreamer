@@ -35,6 +35,7 @@
 #endif
 
 #include "gstvideodmabufpool.h"
+#include "gstvideodmabufsynchandler.h"
 
 #include <gst/allocators/gstudmabufallocator.h>
 
@@ -51,9 +52,7 @@
 struct _GstVideoDmabufPool
 {
   GstVideoBufferPool parent;
-  GMainContext *context;
-  GMainLoop *loop;
-  GThread *thread;
+  GstVideoDmabufSyncHandler *sync_handler;
 };
 
 GST_DEBUG_CATEGORY_STATIC (gst_video_dmabuf_pool_debug);
@@ -66,170 +65,15 @@ G_DEFINE_TYPE_WITH_CODE (GstVideoDmabufPool, gst_video_dmabuf_pool,
     );
 
 #ifdef HAVE_LINUX_DMA_BUF_H
-#ifdef DMA_BUF_IOCTL_EXPORT_SYNC_FILE
-typedef struct _DmaBufSource
-{
-  GSource base;
-
-  GstVideoDmabufPool *pool;
-  GstBuffer *buffer;
-
-  gint mem_fds[GST_VIDEO_MAX_PLANES];
-  gpointer fd_tags[GST_VIDEO_MAX_PLANES];
-} DmaBufSource;
-
-static gboolean
-dma_buf_fd_readable (gint fd)
-{
-  GPollFD poll_fd;
-
-  poll_fd.fd = fd;
-  poll_fd.events = G_IO_IN;
-  poll_fd.revents = 0;
-
-  if (!g_poll (&poll_fd, 1, 0))
-    return FALSE;
-
-  return (poll_fd.revents & (G_IO_IN | G_IO_NVAL)) != 0;
-}
-
-static int
-get_sync_file (gint fd)
-{
-  struct dma_buf_export_sync_file sync_file_in_out = {
-    .flags = DMA_BUF_SYNC_WRITE,
-    .fd = -1
-  };
-  gint ret;
-
-  do {
-    ret = ioctl (fd, DMA_BUF_IOCTL_EXPORT_SYNC_FILE, &sync_file_in_out);
-  } while (ret == -1 && errno == EINTR);
-
-  if (ret == 0)
-    return sync_file_in_out.fd;
-
-  return -1;
-}
-
-static gboolean
-dma_buf_source_dispatch (GSource * base,
-    GSourceFunc callback, gpointer user_data)
-{
-  DmaBufSource *source = (DmaBufSource *) base;
-  GstVideoDmabufPool *self = GST_VIDEO_DMABUF_POOL (source->pool);
-  gboolean ready;
-
-  GST_DEBUG_OBJECT (self, "Dispatch source for buffer %p", source->buffer);
-
-  ready = TRUE;
-
-  for (gint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (!source->fd_tags[i])
-      continue;
-
-    if (!dma_buf_fd_readable (source->mem_fds[i])) {
-      GST_DEBUG_OBJECT (self, "Buffer %p not ready, sync file: %d",
-          source->buffer, source->mem_fds[i]);
-      ready = FALSE;
-      continue;
-    }
-
-    close (source->mem_fds[i]);
-    g_source_remove_unix_fd (base, source->fd_tags[i]);
-    source->fd_tags[i] = NULL;
-  }
-
-  if (!ready)
-    return G_SOURCE_CONTINUE;
-
-  GST_DEBUG_OBJECT (self, "Releasing buffer %p from source, pool %p",
-      source->buffer, self);
-  GST_BUFFER_POOL_CLASS (gst_video_dmabuf_pool_parent_class)->release_buffer
-      (GST_BUFFER_POOL_CAST (self), source->buffer);
-  g_source_unref (base);
-
-  return G_SOURCE_REMOVE;
-}
-
-static void
-dma_buf_source_finalize (GSource * base)
-{
-  DmaBufSource *source = (DmaBufSource *) base;
-  GstVideoDmabufPool *self = GST_VIDEO_DMABUF_POOL (source->pool);
-  gboolean need_buffer_release = FALSE;
-
-  for (gint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (!source->fd_tags[i])
-      continue;
-
-    close (source->mem_fds[i]);
-    g_source_remove_unix_fd (base, source->fd_tags[i]);
-    source->fd_tags[i] = NULL;
-    need_buffer_release = TRUE;
-  }
-
-  if (need_buffer_release) {
-    GST_DEBUG_OBJECT (self, "Releasing buffer %p from source, pool %p",
-        source->buffer, self);
-    GST_BUFFER_POOL_CLASS (gst_video_dmabuf_pool_parent_class)->release_buffer
-        (GST_BUFFER_POOL_CAST (self), source->buffer);
-  }
-}
-
-static GSourceFuncs dma_buf_source_funcs = {
-  .dispatch = dma_buf_source_dispatch,
-  .finalize = dma_buf_source_finalize,
-};
-
-static gpointer
-dmabuf_source_thread (gpointer data)
-{
-  GstVideoDmabufPool *self = data;
-  GMainContext *context = NULL;
-  GMainLoop *loop = NULL;
-
-  GST_OBJECT_LOCK (self);
-  if (self->context)
-    context = g_main_context_ref (self->context);
-  if (self->loop)
-    loop = g_main_loop_ref (self->loop);
-
-  if (context == NULL || loop == NULL) {
-    g_clear_pointer (&loop, g_main_loop_unref);
-    g_clear_pointer (&context, g_main_context_unref);
-    GST_OBJECT_UNLOCK (self);
-    return NULL;
-  }
-  GST_OBJECT_UNLOCK (self);
-
-  g_main_context_push_thread_default (context);
-
-  GST_DEBUG_OBJECT (self, "Running main loop");
-  g_main_loop_run (loop);
-  g_main_loop_unref (loop);
-  g_main_context_unref (context);
-
-  return NULL;
-}
 
 static gboolean
 gst_video_dmabuf_pool_start (GstBufferPool * pool)
 {
   GstVideoDmabufPool *self = GST_VIDEO_DMABUF_POOL (pool);
 
-  GST_OBJECT_LOCK (self);
-  GST_DEBUG_OBJECT (self, "Starting main loop");
-  g_assert (self->context == NULL);
+  if (!gst_video_dmabuf_sync_handler_start (self->sync_handler))
+    return FALSE;
 
-  self->context = g_main_context_new ();
-  self->loop = g_main_loop_new (self->context, FALSE);
-
-  self->thread =
-      g_thread_new ("video-dmabuf-pool-source-loop", dmabuf_source_thread,
-      self);
-
-  GST_OBJECT_UNLOCK (self);
   return
       GST_BUFFER_POOL_CLASS (gst_video_dmabuf_pool_parent_class)->start (pool);
 }
@@ -238,98 +82,38 @@ static gboolean
 gst_video_dmabuf_pool_stop (GstBufferPool * pool)
 {
   GstVideoDmabufPool *self = GST_VIDEO_DMABUF_POOL (pool);
-  GMainContext *context;
-  GMainLoop *loop;
-  GSource *idle_stop_source;
 
-  GST_OBJECT_LOCK (self);
-  GST_DEBUG_OBJECT (self, "Stopping main loop");
-  context = self->context;
-  loop = self->loop;
-  self->context = NULL;
-  self->loop = NULL;
-  GST_OBJECT_UNLOCK (self);
+  if (!gst_video_dmabuf_sync_handler_stop (self->sync_handler))
+    return FALSE;
 
-  if (!context || !loop) {
-    g_clear_pointer (&loop, g_main_loop_unref);
-    g_clear_pointer (&context, g_main_context_unref);
-    goto out;
-  }
-
-  idle_stop_source = g_idle_source_new ();
-  g_source_set_callback (idle_stop_source, (GSourceFunc) g_main_loop_quit, loop,
-      NULL);
-  g_source_attach (idle_stop_source, context);
-  g_source_unref (idle_stop_source);
-
-  g_thread_join (self->thread);
-  self->thread = NULL;
-
-  g_main_loop_unref (loop);
-  g_main_context_unref (context);
-
-out:
   return
       GST_BUFFER_POOL_CLASS (gst_video_dmabuf_pool_parent_class)->stop (pool);
+}
+
+static void
+gst_video_dmabuf_pool_final_release_buffer (gpointer user_data, gpointer buffer)
+{
+  GstBufferPool *pool = GST_BUFFER_POOL_CAST (user_data);
+  GstBuffer *buf = GST_BUFFER_CAST (buffer);
+
+  GST_BUFFER_POOL_CLASS (gst_video_dmabuf_pool_parent_class)->release_buffer
+      (pool, buf);
 }
 
 static void
 gst_video_dmabuf_pool_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
 {
   GstVideoDmabufPool *self = GST_VIDEO_DMABUF_POOL (pool);
-  DmaBufSource *source = NULL;
+  GstMemory *mems[GST_VIDEO_MAX_PLANES];
   guint n_mem;
 
-  GST_DEBUG_OBJECT (self, "Buffer: %p", buffer);
-
   n_mem = gst_buffer_n_memory (buffer);
-  for (gint i = 0; i < n_mem; i++) {
-    GstMemory *mem;
-    gint mem_fd, sync_file;
+  for (gint i = 0; i < n_mem; i++)
+    mems[i] = gst_buffer_peek_memory (buffer, i);
 
-    mem = gst_buffer_peek_memory (buffer, i);
-    if (!gst_is_dmabuf_memory (mem))
-      continue;
-
-    mem_fd = gst_dmabuf_memory_get_fd (mem);
-    sync_file = get_sync_file (mem_fd);
-    if (sync_file == -1) {
-      GST_ERROR_OBJECT (self, "Exporting sync file failed");
-      continue;
-    }
-
-    if (dma_buf_fd_readable (sync_file)) {
-      GST_DEBUG_OBJECT (self, "Sync file readable");
-      close (sync_file);
-      continue;
-    }
-
-    if (!source) {
-      GST_DEBUG_OBJECT (self, "Creating source for buffer %p, pool %p", buffer,
-          self);
-      source =
-          (DmaBufSource *) g_source_new (&dma_buf_source_funcs,
-          sizeof (*source));
-      source->pool = self;
-      source->buffer = buffer;
-    }
-
-    GST_DEBUG_OBJECT (self, "Adding sync file to source");
-    source->mem_fds[i] = sync_file;
-    source->fd_tags[i] =
-        g_source_add_unix_fd (&source->base, sync_file, G_IO_IN);
-  }
-
-  if (source) {
-    g_assert (self->context);
-    g_source_attach ((GSource *) source, self->context);
-    return;
-  }
-
-  GST_BUFFER_POOL_CLASS (gst_video_dmabuf_pool_parent_class)->release_buffer
-      (pool, buffer);
+  gst_video_dmabuf_sync_handler_release_buffer (self->sync_handler,
+      (gpointer) buffer, mems, n_mem);
 }
-#endif /* DMA_BUF_IOCTL_EXPORT_SYNC_FILE */
 
 static gboolean
 gst_video_dmabuf_pool_set_config (GstBufferPool * pool, GstStructure * config)
@@ -398,24 +182,38 @@ gst_video_dmabuf_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
   return res;
 }
+
+static void
+gst_video_dmabuf_pool_finalize (GObject * object)
+{
+  GstVideoDmabufPool *self = GST_VIDEO_DMABUF_POOL (object);
+
+  gst_object_unref (self->sync_handler);
+}
 #endif /* HAVE_LINUX_DMA_BUF_H */
 
 static void
 gst_video_dmabuf_pool_init (GstVideoDmabufPool * self)
 {
+#ifdef HAVE_LINUX_DMA_BUF_H
+  self->sync_handler =
+      gst_video_dmabuf_sync_handler_new
+      (gst_video_dmabuf_pool_final_release_buffer, (gpointer) self);
+#endif
 }
 
 static void
 gst_video_dmabuf_pool_class_init (GstVideoDmabufPoolClass * klass)
 {
 #ifdef HAVE_LINUX_DMA_BUF_H
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstBufferPoolClass *pool_class = GST_BUFFER_POOL_CLASS (klass);
 
-#ifdef DMA_BUF_IOCTL_EXPORT_SYNC_FILE
+  object_class->finalize = gst_video_dmabuf_pool_finalize;
+
   pool_class->start = gst_video_dmabuf_pool_start;
   pool_class->stop = gst_video_dmabuf_pool_stop;
   pool_class->release_buffer = gst_video_dmabuf_pool_release_buffer;
-#endif /* DMA_BUF_IOCTL_EXPORT_SYNC_FILE */
   pool_class->set_config = gst_video_dmabuf_pool_set_config;
 #endif
 }

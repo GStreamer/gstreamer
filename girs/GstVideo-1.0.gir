@@ -9451,6 +9451,93 @@ performance is achieved when @quantizer is a power of 2.
         <type name="VideoBufferPoolClass" c:type="GstVideoBufferPoolClass"/>
       </field>
     </record>
+    <class name="VideoDmabufSyncHandler" c:symbol-prefix="video_dmabuf_sync_handler" c:type="GstVideoDmabufSyncHandler" version="1.30" parent="Gst.Object" glib:type-name="GstVideoDmabufSyncHandler" glib:get-type="gst_video_dmabuf_sync_handler_get_type" glib:type-struct="VideoDmabufSyncHandlerClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodmabufsynchandler.h">Private instance object for #GstVideoDmabufSyncHandler.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodmabufsynchandler.h"/>
+      <constructor name="new" c:identifier="gst_video_dmabuf_sync_handler_new" version="1.30" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodmabufsynchandler.c">Create a new #GstVideoDmabufSyncHandler instance.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodmabufsynchandler.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodmabufsynchandler.c">a #GstVideoDmabufSyncHandler or %NULL
+    if dmabufs are not supported.</doc>
+          <type name="VideoDmabufSyncHandler" c:type="GstVideoDmabufSyncHandler*"/>
+        </return-value>
+        <parameters>
+          <parameter name="release_buffer" transfer-ownership="none" closure="1">
+            <type name="VideoDmabufSyncHandlerReleaseBuffer" c:type="GstVideoDmabufSyncHandlerReleaseBuffer"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <method name="release_buffer" c:identifier="gst_video_dmabuf_sync_handler_release_buffer">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodmabufsynchandler.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="sync_handler" transfer-ownership="none">
+            <type name="VideoDmabufSyncHandler" c:type="GstVideoDmabufSyncHandler*"/>
+          </instance-parameter>
+          <parameter name="buffer" transfer-ownership="none" nullable="1" allow-none="1">
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="memories" transfer-ownership="none">
+            <type name="Gst.Memory" c:type="GstMemory**"/>
+          </parameter>
+          <parameter name="n_memories" transfer-ownership="none">
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="start" c:identifier="gst_video_dmabuf_sync_handler_start">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodmabufsynchandler.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="sync_handler" transfer-ownership="none">
+            <type name="VideoDmabufSyncHandler" c:type="GstVideoDmabufSyncHandler*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="stop" c:identifier="gst_video_dmabuf_sync_handler_stop">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodmabufsynchandler.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="sync_handler" transfer-ownership="none">
+            <type name="VideoDmabufSyncHandler" c:type="GstVideoDmabufSyncHandler*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </class>
+    <record name="VideoDmabufSyncHandlerClass" c:type="GstVideoDmabufSyncHandlerClass" glib:is-gtype-struct-for="VideoDmabufSyncHandler">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodmabufsynchandler.h"/>
+      <field name="parent_class">
+        <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
+      </field>
+    </record>
+    <callback name="VideoDmabufSyncHandlerReleaseBuffer" c:type="GstVideoDmabufSyncHandlerReleaseBuffer" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodmabufsynchandler.h">@user_data privated data as configured in gst_video_dmabuf_sync_handler_new()
+@buffer the buffer that is released
+
+The prototype of a function that will be called to release a buffer.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodmabufsynchandler.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="0">
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
+        <parameter name="buffer" transfer-ownership="none" nullable="1" allow-none="1">
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
+      </parameters>
+    </callback>
     <class name="VideoEncoder" c:symbol-prefix="video_encoder" c:type="GstVideoEncoder" parent="Gst.Element" abstract="1" glib:type-name="GstVideoEncoder" glib:get-type="gst_video_encoder_get_type" glib:type-struct="VideoEncoderClass">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideoencoder.c">This base class is for video encoders turning raw video into
 encoded video data.
