@@ -1581,6 +1581,16 @@ parse_main_header (GstJP2kDecimator * self, GstByteReader * reader,
     return GST_FLOW_ERROR;
   }
 
+  if (header->siz.xt == 0 || header->siz.yt == 0) {
+    GST_ERROR_OBJECT (self, "Invalid zero tile sizes");
+    return GST_FLOW_ERROR;
+  }
+
+  if (header->siz.xto > header->siz.x || header->siz.yto > header->siz.y) {
+    GST_ERROR_OBJECT (self, "Invalid tile origin");
+    return GST_FLOW_ERROR;
+  }
+
   header->n_tiles_x =
       (header->siz.x - header->siz.xto + header->siz.xt - 1) / header->siz.xt;
   header->n_tiles_y =
