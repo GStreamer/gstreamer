@@ -869,29 +869,24 @@ subrip_fix_up_markup (gchar ** p_txt, gchar ** allowed_tags)
       continue;
     }
 
-    if (*next_tag == '<' && *(next_tag + 1) == '/') {
-      gchar *end_tag = strchr (next_tag, '>');
-      if (end_tag) {
-        const gchar *last = NULL;
-        if (num_open_tags > 0)
-          last = g_ptr_array_index (open_tags, num_open_tags - 1);
-        if (num_open_tags == 0
-            || g_ascii_strncasecmp (end_tag - 1, last, strlen (last))) {
-          GST_LOG ("broken input, closing tag '%s' is not open", next_tag);
-          /* Move everything after the tag end, including closing \0 */
-          memmove (next_tag, end_tag + 1, strlen (end_tag));
-          cur = next_tag;
-          continue;
-        } else {
-          --num_open_tags;
-          g_ptr_array_remove_index (open_tags, num_open_tags);
-          cur = end_tag + 1;
-          continue;
-        }
-      }
+    /* Otherwise a closing tag */
+    gchar *tag_end = strchr (next_tag, '>');
+    const gchar *last = NULL;
+    if (num_open_tags > 0)
+      last = g_ptr_array_index (open_tags, num_open_tags - 1);
+    /* Check if the closing tag is the last tag that was opened */
+    if (num_open_tags == 0
+        || g_ascii_strncasecmp (next_tag + 2, last, strlen (last)) != 0) {
+      GST_LOG ("broken input, closing tag '%s' is not open", next_tag);
+      /* Skip over the tag by moving everything after the tag end, including closing \0 */
+      memmove (next_tag, tag_end + 1, strlen (tag_end + 1) + 1);
+      cur = next_tag;
+      continue;
     }
-    ++next_tag;
-    cur = next_tag;
+
+    --num_open_tags;
+    g_ptr_array_remove_index (open_tags, num_open_tags);
+    cur = tag_end + 1;
   }
 
   /* if there are still open tags, close them all at the end */

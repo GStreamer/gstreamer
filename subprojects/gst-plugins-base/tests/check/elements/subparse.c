@@ -504,9 +504,25 @@ GST_START_TEST (test_webvtt)
     ,
   };
 
+  /* Tests with a wrong multi-character closing tags before the end of the line */
+  SubParseInputChunk webvtt_input3[] = {
+    {
+          "1\n00:00:00,000 --> 00:00:01,000\n<ruby>Hello!</ruby>World!\n\n",
+        0 * GST_SECOND, 1 * GST_SECOND, "<ruby>Hello!</ruby>World!"},
+    {
+          "1\n00:00:01,000 --> 00:00:02,000\n<ruby>Hello!</i></ruby>World!\n\n",
+        1 * GST_SECOND, 2 * GST_SECOND, "<ruby>Hello!</ruby>World!"}
+    ,
+    {
+          "1\n00:00:02,000 --> 00:00:03,000\n<i>World!</ruby></i>Hello!\n\n",
+        2 * GST_SECOND, 3 * GST_SECOND, "<i>World!</i>Hello!"}
+    ,
+  };
+
   test_vtt_do_test (webvtt_input, 0, G_N_ELEMENTS (webvtt_input));
   test_vtt_do_test (webvtt_input1, 0, G_N_ELEMENTS (webvtt_input1));
   test_vtt_do_test (webvtt_input2, 0, G_N_ELEMENTS (webvtt_input2));
+  test_vtt_do_test (webvtt_input3, 0, G_N_ELEMENTS (webvtt_input3));
 }
 
 GST_END_TEST;
