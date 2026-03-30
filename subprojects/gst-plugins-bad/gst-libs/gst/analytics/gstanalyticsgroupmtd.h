@@ -86,5 +86,9 @@ GST_ANALYTICS_META_API
 gboolean gst_analytics_relation_meta_get_group_mtd (GstAnalyticsRelationMeta * meta,
     guint an_meta_id, GstAnalyticsGroupMtd * rlt);
 
+GST_ANALYTICS_META_API
+gchar * gst_analytics_group_mtd_get_semantic_tag (const GstAnalyticsGroupMtd *
+    handle);
+
 G_END_DECLS
 #endif /* __GST_ANALYTICS_GROUP_MTD_H__ */

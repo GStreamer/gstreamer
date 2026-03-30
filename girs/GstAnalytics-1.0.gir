@@ -296,6 +296,22 @@ according to the semantic tag meaning.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="get_semantic_tag" c:identifier="gst_analytics_group_mtd_get_semantic_tag" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsgroupmtd.c">Get the semantic tag of the group.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsgroupmtd.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsgroupmtd.c">A copy of the semantic tag string. Returns an
+   empty string if no tag has been set. The caller must free the returned
+   string with g_free() when no longer needed.</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="handle" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsgroupmtd.c">handle</doc>
+            <type name="GroupMtd" c:type="const GstAnalyticsGroupMtd*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="has_semantic_tag" c:identifier="gst_analytics_group_mtd_has_semantic_tag" version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsgroupmtd.c">Check if the group's semantic tag matches @tag. An empty or unset tag never
 matches.</doc>

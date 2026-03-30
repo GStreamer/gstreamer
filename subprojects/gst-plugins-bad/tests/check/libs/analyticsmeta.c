@@ -2262,6 +2262,7 @@ GST_START_TEST (test_group_mtd_semantic_tag)
   GstAnalyticsGroupMtd group_mtd;
   gboolean ret;
   const gchar *tag_str = "hand-21-kp";
+  gchar *tag;
 
   buf = gst_buffer_new ();
   rmeta = gst_buffer_add_analytics_relation_meta (buf);
@@ -2270,18 +2271,46 @@ GST_START_TEST (test_group_mtd_semantic_tag)
       &group_mtd);
   fail_unless (ret == TRUE);
 
+  /* Before setting a tag, get_semantic_tag should return an empty string */
+  tag = gst_analytics_group_mtd_get_semantic_tag (&group_mtd);
+  fail_unless (tag != NULL);
+  fail_unless_equals_string (tag, "");
+  g_free (tag);
+
   /* Set semantic tag using string */
   ret = gst_analytics_group_mtd_set_semantic_tag (&group_mtd, tag_str);
   fail_unless (ret == TRUE);
 
-  /* Verify the tag was set correctly */
+  /* Verify the tag was set correctly via has_semantic_tag */
   fail_unless (gst_analytics_group_mtd_has_semantic_tag (&group_mtd, tag_str));
+
+  /* Verify the tag was set correctly via get_semantic_tag */
+  tag = gst_analytics_group_mtd_get_semantic_tag (&group_mtd);
+  fail_unless (tag != NULL);
+  fail_unless_equals_string (tag, tag_str);
+  g_free (tag);
+
+  /* Change the tag and verify the new value */
+  ret = gst_analytics_group_mtd_set_semantic_tag (&group_mtd,
+      "posture/body-17-kp");
+  fail_unless (ret == TRUE);
+
+  tag = gst_analytics_group_mtd_get_semantic_tag (&group_mtd);
+  fail_unless (tag != NULL);
+  fail_unless_equals_string (tag, "posture/body-17-kp");
+  g_free (tag);
+  fail_unless (!gst_analytics_group_mtd_has_semantic_tag (&group_mtd, tag_str));
 
   /* Test unsetting tag with NULL */
   ret = gst_analytics_group_mtd_set_semantic_tag (&group_mtd, NULL);
   fail_unless (ret == TRUE);
 
   fail_unless (!gst_analytics_group_mtd_has_semantic_tag (&group_mtd, tag_str));
+
+  tag = gst_analytics_group_mtd_get_semantic_tag (&group_mtd);
+  fail_unless (tag != NULL);
+  fail_unless_equals_string (tag, "");
+  g_free (tag);
 
   gst_buffer_unref (buf);
 }
@@ -2358,6 +2387,13 @@ GST_START_TEST (test_group_mtd_retrieval)
 
   fail_unless (gst_analytics_group_mtd_has_semantic_tag (&retrieved_mtd,
           "test-group"));
+
+  /* Verify get_semantic_tag also works on retrieved handle */
+  {
+    gchar *sem_tag = gst_analytics_group_mtd_get_semantic_tag (&retrieved_mtd);
+    fail_unless_equals_string (sem_tag, "test-group");
+    g_free (sem_tag);
+  }
 
   gst_buffer_unref (buf);
 }
@@ -2759,6 +2795,11 @@ GST_START_TEST (test_add_keypoints_group_without_skeleton)
   /* Verify semantic tag */
   fail_unless (gst_analytics_group_mtd_has_semantic_tag (&group_mtd,
           "test-5-kp"));
+  {
+    gchar *sem_tag = gst_analytics_group_mtd_get_semantic_tag (&group_mtd);
+    fail_unless_equals_string (sem_tag, "test-5-kp");
+    g_free (sem_tag);
+  }
 
   gst_buffer_unref (buf);
 }

@@ -45,7 +45,7 @@ typedef struct _GstAnalyticsGroupMtdData GstAnalyticsGroupMtdData;
 
 /*
  * GstAnalyticsGroupMtdData:
- * @semantic_tag: Semantic meaning of this grouping where a value of NULL means
+ * @semantic_tag: Semantic meaning of this grouping where an empty string means
  *    no semantic is defined for the group.
  * @members_len: Number of allocated member slots
  * @members_count: Number of assigned member slot
@@ -118,6 +118,30 @@ gst_analytics_group_mtd_has_semantic_tag (const GstAnalyticsGroupMtd * handle,
   g_return_val_if_fail (mtddata != NULL, FALSE);
 
   return gst_id_str_is_equal_to_str (&mtddata->semantic_tag, tag);
+}
+
+/**
+ * gst_analytics_group_mtd_get_semantic_tag:
+ * @handle: handle
+ *
+ * Get the semantic tag of the group.
+ *
+ * Returns: (transfer full): A copy of the semantic tag string. Returns an
+ *    empty string if no tag has been set. The caller must free the returned
+ *    string with g_free() when no longer needed.
+ *
+ * Since: 1.30
+ */
+gchar *
+gst_analytics_group_mtd_get_semantic_tag (const GstAnalyticsGroupMtd * handle)
+{
+  GstAnalyticsGroupMtdData *mtddata;
+  g_return_val_if_fail (handle, NULL);
+
+  mtddata = gst_analytics_relation_meta_get_mtd_data (handle->meta, handle->id);
+  g_return_val_if_fail (mtddata != NULL, NULL);
+
+  return g_strdup (gst_id_str_as_str (&mtddata->semantic_tag));
 }
 
 /**

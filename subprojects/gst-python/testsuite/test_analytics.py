@@ -929,3 +929,27 @@ class TestAnalyticsGroupMtdSemanticTag(TestCase):
         """semantic_tag_has_prefix returns False when no tag is set"""
         _, group = self._make_group(None)
         self.assertFalse(group.semantic_tag_has_prefix("posture/"))
+
+    def test_get_semantic_tag(self):
+        """get_semantic_tag returns the tag that was set"""
+        _, group = self._make_group("hand-21-kp")
+        self.assertEqual(group.get_semantic_tag(), "hand-21-kp")
+
+    def test_get_semantic_tag_unset(self):
+        """get_semantic_tag returns empty string when no tag is set"""
+        _, group = self._make_group(None)
+        self.assertEqual(group.get_semantic_tag(), "")
+
+    def test_get_semantic_tag_after_change(self):
+        """get_semantic_tag reflects the most recent set_semantic_tag call"""
+        _, group = self._make_group("hand-21-kp")
+        self.assertEqual(group.get_semantic_tag(), "hand-21-kp")
+        group.set_semantic_tag("pose-17-kp")
+        self.assertEqual(group.get_semantic_tag(), "pose-17-kp")
+
+    def test_get_semantic_tag_after_clear(self):
+        """get_semantic_tag returns empty string after tag is cleared"""
+        _, group = self._make_group("hand-21-kp")
+        self.assertEqual(group.get_semantic_tag(), "hand-21-kp")
+        group.set_semantic_tag(None)
+        self.assertEqual(group.get_semantic_tag(), "")
