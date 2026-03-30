@@ -41,7 +41,6 @@
 #include "gstsubparseelements.h"
 
 #define DEFAULT_ENCODING   NULL
-#define ATTRIBUTE_REGEX "\\s?[a-zA-Z0-9\\. \t\\(\\)]*"
 static const gchar *allowed_srt_tags[] = { "i", "b", "u", NULL };
 static const gchar *allowed_vtt_tags[] =
     { "i", "b", "c", "u", "v", "ruby", "rt", NULL };
@@ -639,50 +638,112 @@ strip_trailing_newlines (gchar * txt)
  * escaping everything (the text between these simple markers isn't
  * necessarily escaped, so it seems best to do it like this) */
 static void
-subrip_unescape_formatting (gchar * txt, gconstpointer allowed_tags_ptr,
+subrip_unescape_formatting (gchar * txt, gchar ** allowed_tags,
     gboolean allows_tag_attributes)
 {
-  gchar *res;
-  GRegex *tag_regex;
-  gchar *allowed_tags_pattern, *search_pattern;
-  const gchar *replace_pattern;
+  const gchar *p;
+  GString *out;
 
   /* No processing needed if no escaped tag marker found in the string. */
   if (strstr (txt, "&lt;") == NULL)
     return;
 
-  /* Build a list of alternates for our regexp.
-   * FIXME: Could be built once and stored */
-  allowed_tags_pattern = g_strjoinv ("|", (gchar **) allowed_tags_ptr);
-  /* Look for starting/ending escaped tags with optional attributes. */
-  search_pattern = g_strdup_printf ("&lt;(/)?\\ *(%s)(%s)&gt;",
-      allowed_tags_pattern, ATTRIBUTE_REGEX);
-  /* And unescape appropriately */
-  if (allows_tag_attributes) {
-    replace_pattern = "<\\1\\2\\3>";
-  } else {
-    replace_pattern = "<\\1\\2>";
+  out = g_string_new ("");
+  p = txt;
+
+  while (*p) {
+    const gchar *lt;
+    const gchar *gt;
+
+    /* Find next &lt; */
+    lt = strstr (p, "&lt;");
+    if (!lt) {
+      /* No more &lt; found - copy remainder and done */
+      g_string_append (out, p);
+      break;
+    }
+
+    /* Copy everything before &lt; */
+    g_string_append_len (out, p, lt - p);
+
+    /* Skip &lt; */
+    lt += 4;
+
+    /* Find matching &gt; */
+    gt = strstr (lt, "&gt;");
+    if (!gt) {
+      /* No closing &gt; - copy everything until the end as is and end */
+      g_string_append (out, lt - 4);
+      break;
+    }
+
+    /* Check for optional closing tag / */
+    gboolean is_closing = FALSE;
+    const gchar *tag_start = lt;
+    if (*tag_start == '/') {
+      is_closing = TRUE;
+      tag_start++;
+    }
+
+    /* Skip optional whitespace before tag name */
+    while (*tag_start == ' ' || *tag_start == '\t')
+      tag_start++;
+
+    /* Extract tag name */
+    const gchar *tag_end = tag_start;
+    while (g_ascii_isalnum (*tag_end))
+      tag_end++;
+    gsize tag_len = tag_end - tag_start;
+
+    /* Check if tag is allowed */
+    gboolean allowed = FALSE;
+    gchar **tag_ptr;
+    for (tag_ptr = allowed_tags; *tag_ptr; tag_ptr++) {
+      if (strlen (*tag_ptr) == tag_len &&
+          strncmp (*tag_ptr, tag_start, tag_len) == 0) {
+        allowed = TRUE;
+        break;
+      }
+    }
+
+    if (!allowed) {
+      /* Tag not allowed - copy everything between and including &lt;...&gt; as is */
+      g_string_append_len (out, lt - 4, gt + 4 - (lt - 4));
+      p = gt + 4;
+      continue;
+    }
+
+    /* Otherwise handle allowed tag by unescaping < */
+    g_string_append_c (out, '<');
+    if (is_closing)
+      g_string_append_c (out, '/');
+    g_string_append_len (out, tag_start, tag_len);
+
+    /* If attributes allowed then copy them over, otherwise ignore them */
+    if (allows_tag_attributes) {
+      /* Scan for optional attributes */
+      const gchar *attr_start = tag_end;
+
+      /* Find attributes end */
+      while (tag_end < gt &&
+          (g_ascii_isalnum (*tag_end) || *tag_end == '.' ||
+              *tag_end == ' ' || *tag_end == '\t' ||
+              *tag_end == '(' || *tag_end == ')'))
+        tag_end++;
+
+      /* Copy attributes */
+      g_string_append_len (out, attr_start, tag_end - attr_start);
+    }
+
+    /* Append closing > and skip to next */
+    g_string_append_c (out, '>');
+    p = gt + 4;
   }
 
-  tag_regex = g_regex_new (search_pattern, 0, 0, NULL);
-  res = g_regex_replace (tag_regex, txt, strlen (txt), 0,
-      replace_pattern, 0, NULL);
-
-  /* Replacing can fail. Return an empty string in that case. */
-  if (!res) {
-    strcpy (txt, "");
-    return;
-  }
-
-  /* res will always be shorter than the input or identical, so this
+  /* out will always be shorter than the input or identical, so this
    * copy is OK */
-  strcpy (txt, res);
-
-  g_free (res);
-  g_free (search_pattern);
-  g_free (allowed_tags_pattern);
-
-  g_regex_unref (tag_regex);
+  strcpy (txt, out->str);
+  g_string_free (out, TRUE);
 }
 
 
@@ -727,19 +788,11 @@ subrip_remove_unhandled_tags (gchar * txt)
  * input! This function adds missing closing markup tags and removes
  * broken closing tags for tags that have never been opened. */
 static void
-subrip_fix_up_markup (gchar ** p_txt, gconstpointer allowed_tags_ptr)
+subrip_fix_up_markup (gchar ** p_txt, gchar ** allowed_tags)
 {
   gchar *cur, *next_tag;
   GPtrArray *open_tags = NULL;
   guint num_open_tags = 0;
-  const gchar *iter_tag;
-  guint offset = 0;
-  guint index;
-  gchar *cur_tag;
-  gchar *end_tag;
-  GRegex *tag_regex;
-  GMatchInfo *match_info;
-  gchar **allowed_tags = (gchar **) allowed_tags_ptr;
 
   g_assert (*p_txt != NULL);
 
@@ -749,44 +802,75 @@ subrip_fix_up_markup (gchar ** p_txt, gconstpointer allowed_tags_ptr)
     next_tag = strchr (cur, '<');
     if (next_tag == NULL)
       break;
-    offset = 0;
-    index = 0;
-    while (index < g_strv_length (allowed_tags)) {
-      iter_tag = allowed_tags[index];
-      /* Look for a white listed tag */
-      cur_tag = g_strconcat ("<", iter_tag, ATTRIBUTE_REGEX, ">", NULL);
-      tag_regex = g_regex_new (cur_tag, 0, 0, NULL);
-      (void) g_regex_match (tag_regex, next_tag, 0, &match_info);
 
-      if (g_match_info_matches (match_info)) {
-        gint start_pos, end_pos;
-        gchar *word = g_match_info_fetch (match_info, 0);
-        g_match_info_fetch_pos (match_info, 0, &start_pos, &end_pos);
-        if (start_pos == 0) {
-          offset = strlen (word);
+    /* Look for allowed tag */
+    guint offset = 0;
+    gboolean is_closing = FALSE;
+    for (gchar ** tag_ptr = allowed_tags; *tag_ptr; tag_ptr++) {
+      const gchar *tag_start = next_tag + 1;
+
+      is_closing = (*tag_start == '/');
+      if (is_closing)
+        tag_start++;
+
+      /* Skip optional whitespace before tag start */
+      while (*tag_start == ' ' || *tag_start == '\t')
+        tag_start++;
+
+      /* Extract tag name length */
+      const gchar *tag_end = tag_start;
+      while (g_ascii_isalnum (*tag_end))
+        tag_end++;
+      gsize tag_len = tag_end - tag_start;
+
+      /* Check if tag name matches */
+      if (strlen (*tag_ptr) == tag_len &&
+          g_ascii_strncasecmp (*tag_ptr, tag_start, tag_len) == 0) {
+        /* Found allowed tag - calculate offset to position after tag */
+
+        /* Check for optional attributes */
+        if (*tag_end == ' ' || *tag_end == '\t' || *tag_end == '.') {
+          while (*tag_end && *tag_end != '>' &&
+              (g_ascii_isalnum (*tag_end) || *tag_end == '.' ||
+                  *tag_end == ' ' || *tag_end == '\t' ||
+                  *tag_end == '(' || *tag_end == ')')) {
+            tag_end++;
+          }
         }
-        g_free (word);
+
+        /* Check for closing >, if not found skip over this */
+        if (*tag_end == '>') {
+          offset = tag_end - (next_tag + 1);
+
+          /* Full opening tag found, let's keep track of it and continue */
+          if (!is_closing) {
+            g_ptr_array_add (open_tags, g_ascii_strdown (*tag_ptr, -1));
+            ++num_open_tags;
+          }
+          break;
+        }
       }
-      g_match_info_free (match_info);
-      g_regex_unref (tag_regex);
-      g_free (cur_tag);
-      index++;
-      if (offset) {
-        /* OK we found a tag, let's keep track of it */
-        g_ptr_array_add (open_tags, g_ascii_strdown (iter_tag, -1));
-        ++num_open_tags;
-        break;
-      }
+
+      /* No closing > found, continue */
+      offset = 0;
     }
 
-    if (offset) {
+    /* Not a valid tag - skip to next */
+    if (offset == 0) {
+      ++next_tag;
+      cur = next_tag;
+      continue;
+    }
+
+    /* Not a closing tag - skip to the next */
+    if (!is_closing) {
       next_tag += offset;
       cur = next_tag;
       continue;
     }
 
     if (*next_tag == '<' && *(next_tag + 1) == '/') {
-      end_tag = strchr (next_tag, '>');
+      gchar *end_tag = strchr (next_tag, '>');
       if (end_tag) {
         const gchar *last = NULL;
         if (num_open_tags > 0)
@@ -810,6 +894,7 @@ subrip_fix_up_markup (gchar ** p_txt, gconstpointer allowed_tags_ptr)
     cur = next_tag;
   }
 
+  /* if there are still open tags, close them all at the end */
   if (num_open_tags > 0) {
     GString *s;
 

@@ -48,7 +48,7 @@ typedef struct {
   guint8 text_size;          /* percent value */
   gchar *vertical;        /* "", "vertical", "vertical-lr" */
   gchar *alignment;       /* "", "start", "middle", "end" */
-  gconstpointer allowed_tags; /* list of markup tags allowed in the cue text. */
+  gchar **allowed_tags; /* list of markup tags allowed in the cue text. */
   gboolean allows_tag_attributes;
 } ParserState;
 
