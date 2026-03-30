@@ -108,4 +108,8 @@ vkmemory_suite (void)
 }
 
 
+#ifdef __APPLE__
+GST_CHECK_MAIN_NOFORK (vkmemory);
+#else
 GST_CHECK_MAIN (vkmemory);
+#endif

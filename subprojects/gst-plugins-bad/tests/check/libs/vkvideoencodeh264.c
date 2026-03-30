@@ -705,4 +705,8 @@ vkvideo_suite (void)
   return s;
 }
 
+#ifdef __APPLE__
+GST_CHECK_MAIN_NOFORK (vkvideo);
+#else
 GST_CHECK_MAIN (vkvideo);
+#endif

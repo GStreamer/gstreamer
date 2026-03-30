@@ -210,4 +210,8 @@ vkupload_suite (void)
   return s;
 }
 
+#ifdef __APPLE__
+GST_CHECK_MAIN_NOFORK (vkupload);
+#else
 GST_CHECK_MAIN (vkupload);
+#endif

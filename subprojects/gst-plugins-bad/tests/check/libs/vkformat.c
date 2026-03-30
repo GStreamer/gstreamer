@@ -112,4 +112,8 @@ vkformat_suite (void)
 }
 
 
+#ifdef __APPLE__
+GST_CHECK_MAIN_NOFORK (vkformat);
+#else
 GST_CHECK_MAIN (vkformat);
+#endif

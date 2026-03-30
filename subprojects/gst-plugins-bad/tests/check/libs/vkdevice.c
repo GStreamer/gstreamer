@@ -99,4 +99,8 @@ vkdevice_suite (void)
 }
 
 
+#ifdef __APPLE__
+GST_CHECK_MAIN_NOFORK (vkdevice);
+#else
 GST_CHECK_MAIN (vkdevice);
+#endif

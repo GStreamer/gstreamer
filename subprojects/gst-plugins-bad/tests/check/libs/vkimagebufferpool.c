@@ -238,4 +238,8 @@ vkimagebufferpool_suite (void)
   return s;
 }
 
+#ifdef __APPLE__
+GST_CHECK_MAIN_NOFORK (vkimagebufferpool);
+#else
 GST_CHECK_MAIN (vkimagebufferpool);
+#endif

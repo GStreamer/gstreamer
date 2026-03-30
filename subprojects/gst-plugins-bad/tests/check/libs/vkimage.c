@@ -246,4 +246,8 @@ vkimage_suite (void)
 }
 
 
+#ifdef __APPLE__
+GST_CHECK_MAIN_NOFORK (vkimage);
+#else
 GST_CHECK_MAIN (vkimage);
+#endif
