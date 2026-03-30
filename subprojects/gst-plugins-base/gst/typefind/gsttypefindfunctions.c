@@ -3812,7 +3812,7 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
 done:
   if (tip > 0) {
     if (variant) {
-      GstCaps *caps = gst_caps_copy (QT_CAPS);
+      GstCaps *caps = gst_caps_make_writable (QT_CAPS);
 
       gst_caps_set_simple (caps, "variant", G_TYPE_STRING, variant, NULL);
       gst_type_find_suggest (tf, tip, caps);
@@ -4305,7 +4305,7 @@ jpeg_type_find (GstTypeFind * tf, gpointer unused)
   num_markers = 1;
   data_scan_ctx_advance (tf, &c, 2);
 
-  caps = gst_caps_copy (JPEG_CAPS);
+  caps = gst_caps_make_writable (JPEG_CAPS);
 
   while (data_scan_ctx_ensure_data (tf, &c, 4) && c.offset < (200 * 1024)) {
     guint16 len;
