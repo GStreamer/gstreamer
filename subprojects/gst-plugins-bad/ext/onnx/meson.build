@@ -24,10 +24,11 @@ extra_args = []
 extra_deps = []
 extra_incs = []
 
+fsmod = import('fs')
+
 onnxrt_dep = dependency('libonnxruntime', version : '>= 1.16.1',
 			required: false)
 if not onnxrt_dep.found()
-  fsmod = import('fs')
   sysroot = meson.get_external_property('sys_root', '/')
   onnx_inc = join_paths(sysroot, 'usr/include/onnxruntime')
 
@@ -47,6 +48,8 @@ if not onnxrt_dep.found()
   subdir_done()
 endif
 
+onnxrt_libdir = onnxrt_dep.get_variable(pkgconfig: 'libdir', default_value: '')
+
 if gstcuda_dep.found()
     extra_args += ['-DHAVE_CUDA']
     extra_deps += [gstcuda_dep]
@@ -60,6 +63,15 @@ if cc.has_function('OrtSessionOptionsAppendExecutionProvider_VSINPU',
   message('Enabled VSI Onnx VSI NPU provider')
   extra_args += ['-DHAVE_VSI_NPU']
 endif
+
+migraphx_dep = cc.find_library('onnxruntime_providers_migraphx',
+    dirs: [onnxrt_libdir],
+    required: false)
+if migraphx_dep.found()
+  message('Enabled ONNX MIGraphX execution provider')
+  extra_args += ['-DHAVE_MIGRAPHX']
+endif
+
 
 gstonnx = library('gstonnx',
   onnx_sources,

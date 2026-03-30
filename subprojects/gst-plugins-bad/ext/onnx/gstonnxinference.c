@@ -107,6 +107,7 @@
 #include "gstonnxinference.h"
 
 #include <gst/gst.h>
+#include <string.h>
 #include <gst/analytics/analytics.h>
 
 #include <onnxruntime_c_api.h>
@@ -128,6 +129,7 @@ typedef enum
   GST_ONNX_EXECUTION_PROVIDER_CPU,
   GST_ONNX_EXECUTION_PROVIDER_CUDA,
   GST_ONNX_EXECUTION_PROVIDER_VSI,
+  GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX,
 } GstOnnxExecutionProvider;
 
 struct _GstOnnxInference
@@ -136,6 +138,7 @@ struct _GstOnnxInference
   gchar *model_file;
   GstOnnxOptimizationLevel optimization_level;
   GstOnnxExecutionProvider execution_provider;
+  gchar *device;
   GstVideoInfo video_info;
   GstCaps *input_tensors_caps;
   GstCaps *output_tensors_caps;
@@ -181,7 +184,8 @@ enum
   PROP_OPTIMIZATION_LEVEL,
   PROP_EXECUTION_PROVIDER,
   PROP_INPUT_OFFSET,
-  PROP_INPUT_SCALE
+  PROP_INPUT_SCALE,
+  PROP_DEVICE
 };
 
 #define GST_ONNX_INFERENCE_DEFAULT_EXECUTION_PROVIDER    GST_ONNX_EXECUTION_PROVIDER_CPU
@@ -289,6 +293,24 @@ gst_onnx_execution_provider_get_type (void)
             "VeriSilicon NPU execution provider (compiled out, will use CPU)",
           "vsi"},
 #endif
+
+#ifdef HAVE_MIGRAPHX
+      /**
+       * GstOnnxExecutionProvider::migraphx
+       *
+       * AMD MIGraphX execution provider
+       *
+       * Since: 1.30
+       */
+
+      {GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX,
+            "AMD MIGraphX execution provider",
+          "migraphx"},
+#else
+      {GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX,
+            "AMD MIGraphX execution provider (compiled out, will use CPU)",
+          "migraphx"},
+#endif
       {0, NULL, NULL},
     };
 
@@ -360,6 +382,22 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
           GST_ONNX_EXECUTION_PROVIDER_CPU, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstOnnxInference:device
+   *
+   * Device identifier to use for inference, interpreted per execution provider.
+   * For CUDA and MIGraphX this is the integer device index (e.g. "0").
+   * When NULL (the default) the execution provider default is used.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DEVICE,
+      g_param_spec_string ("device",
+          "Device",
+          "Device identifier for inference, interpreted per execution provider "
+          "(e.g. \"0\" for device index). NULL means use the provider default.",
+          NULL, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_element_class_set_static_metadata (element_class, "onnxinference",
       "Filter/Video",
       "Apply neural network to video frames and create tensor output",
@@ -394,6 +432,7 @@ gst_onnx_inference_init (GstOnnxInference * self)
   self->output_tensors_caps = gst_caps_new_empty_simple ("video/x-raw");
 
   self->execution_provider = GST_ONNX_EXECUTION_PROVIDER_CPU;
+  self->device = NULL;
 
   self->scales = NULL;
   self->offsets = NULL;
@@ -414,6 +453,7 @@ gst_onnx_inference_finalize (GObject * object)
 
   g_free (self->dest);
   g_free (self->model_file);
+  g_free (self->device);
   g_free (self->scales);
   g_free (self->offsets);
   gst_caps_unref (self->input_tensors_caps);
@@ -449,6 +489,10 @@ gst_onnx_inference_set_property (GObject * object, guint prop_id,
       self->execution_provider =
           (GstOnnxExecutionProvider) g_value_get_enum (value);
       break;
+    case PROP_DEVICE:
+      g_free (self->device);
+      self->device = g_value_dup_string (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -470,6 +514,9 @@ gst_onnx_inference_get_property (GObject * object, guint prop_id,
       break;
     case PROP_EXECUTION_PROVIDER:
       g_value_set_enum (value, self->execution_provider);
+      break;
+    case PROP_DEVICE:
+      g_value_set_string (value, self->device);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -883,6 +930,17 @@ gst_onnx_inference_start (GstBaseTransform * trans)
         goto error;
       }
 
+      if (self->device) {
+        const char *keys[] = { "device_id" };
+        const char *values[] = { self->device };
+        status = api->UpdateCUDAProviderOptions (cuda_options, keys, values, 1);
+        if (status) {
+          GST_ERROR_OBJECT (self, "Failed to set CUDA device_id: %s",
+              api->GetErrorMessage (status));
+          api->ReleaseCUDAProviderOptions (cuda_options);
+          goto error;
+        }
+      }
       status =
           api->SessionOptionsAppendExecutionProvider_CUDA_V2 (session_options,
           cuda_options);
@@ -906,6 +964,30 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       api->DisableCpuMemArena (session_options);
 #else
       GST_ERROR_OBJECT (self, "Compiled without VSI support");
+      goto error;
+#endif
+      break;
+    case GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX:
+#ifdef HAVE_MIGRAPHX
+    {
+      OrtMIGraphXProviderOptions migraphx_options;
+      memset (&migraphx_options, 0, sizeof (migraphx_options));
+
+      if (self->device)
+        migraphx_options.device_id =
+            (int) g_ascii_strtoll (self->device, NULL, 10);
+
+      status =
+          api->SessionOptionsAppendExecutionProvider_MIGraphX (session_options,
+          &migraphx_options);
+      if (status) {
+        GST_ERROR_OBJECT (self, "Failed to create MIGraphX provider: %s",
+            api->GetErrorMessage (status));
+        goto error;
+      }
+    }
+#else
+      GST_ERROR_OBJECT (self, "Compiled without MIGraphX support");
       goto error;
 #endif
       break;
