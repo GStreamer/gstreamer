@@ -501,7 +501,7 @@ gst_sdp_demux_parse_source_filter (GstSDPDemux * self,
 {
   const gchar *str;
   guint remaining;
-  gchar *del;
+  const gchar *del;
   gsize size;
   guint min_size;
   gboolean is_incl;
