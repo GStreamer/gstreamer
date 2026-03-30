@@ -51,6 +51,8 @@
 #endif
 
 #include <string.h>
+#include <stddef.h>
+#include <dlfcn.h>
 #include "vtdec.h"
 #include <gst/gst.h>
 #include <gst/base/gstbytewriter.h>
@@ -64,11 +66,81 @@
 #include "coremediabuffer.h"
 #include "videotexturecache-gl.h"
 #if defined(APPLEMEDIA_MOLTENVK)
+#include <MoltenVK/mvk_private_api.h>
 #include "videotexturecache-vulkan.h"
 #endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_vtdec_debug_category);
 #define GST_CAT_DEFAULT gst_vtdec_debug_category
+
+#if defined(APPLEMEDIA_MOLTENVK)
+/* Temporary MoltenVK-specific warning probe for issue #2705.
+ * Remove this once GStreamer ships a MoltenVK version containing the fix:
+ * https://github.com/KhronosGroup/MoltenVK/issues/2705
+ */
+static gboolean
+gst_vtdec_moltenvk_argument_buffers_enabled (GstVtdec * vtdec)
+{
+  static const size_t arg_buffers_field_end = offsetof (MVKConfiguration,
+      useMetalArgumentBuffers) + sizeof (VkBool32);
+  PFN_vkGetMoltenVKConfigurationMVK get_mvk_config;
+  MVKConfiguration config;
+  size_t config_size = sizeof (config);
+  VkResult result;
+
+  get_mvk_config =
+      (PFN_vkGetMoltenVKConfigurationMVK) dlsym (RTLD_DEFAULT,
+      "vkGetMoltenVKConfigurationMVK");
+  if (!get_mvk_config) {
+    get_mvk_config = (PFN_vkGetMoltenVKConfigurationMVK)
+        gst_vulkan_instance_get_proc_address (vtdec->instance,
+        "vkGetMoltenVKConfigurationMVK");
+  }
+  if (!get_mvk_config) {
+    GST_WARNING_OBJECT (vtdec,
+        "MoltenVK config probe could not resolve vkGetMoltenVKConfigurationMVK");
+    return FALSE;
+  }
+
+  memset (&config, 0, sizeof (config));
+  result = get_mvk_config (VK_NULL_HANDLE, &config, &config_size);
+  if (result != VK_SUCCESS && result != VK_INCOMPLETE) {
+    GST_WARNING_OBJECT (vtdec,
+        "MoltenVK configuration query failed with VkResult %d", result);
+    return FALSE;
+  }
+
+  if (config_size < arg_buffers_field_end) {
+    GST_WARNING_OBJECT (vtdec,
+        "MoltenVK configuration size %zu does not cover useMetalArgumentBuffers",
+        config_size);
+    return FALSE;
+  }
+
+  return config.useMetalArgumentBuffers != VK_FALSE;
+}
+
+static void
+gst_vtdec_warn_moltenvk_argument_buffers (GstVtdec * vtdec)
+{
+  static gsize warned_once = 0;
+  static const gchar *message =
+      "vtdec Vulkan output on MoltenVK may lose the device when Metal "
+      "argument buffers are enabled; workaround: "
+      "MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS=0; upstream: "
+      "https://github.com/KhronosGroup/MoltenVK/issues/2705.";
+
+  if (!gst_vtdec_moltenvk_argument_buffers_enabled (vtdec))
+    return;
+
+  if (!g_once_init_enter (&warned_once))
+    return;
+
+  GST_ELEMENT_WARNING (vtdec, RESOURCE, FAILED, ("%s", message), (NULL));
+
+  g_once_init_leave (&warned_once, 1);
+}
+#endif
 
 typedef enum
 {
@@ -568,7 +640,6 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   peercaps =
       gst_pad_peer_query_caps (GST_VIDEO_DECODER_SRC_PAD (vtdec), templcaps);
   gst_caps_unref (templcaps);
-
   if (gst_caps_is_empty (peercaps)) {
     GST_INFO_OBJECT (vtdec, "empty peer caps, can't negotiate");
 
@@ -735,6 +806,8 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
               vtdec->instance, &vtdec->device, 0)) {
         return FALSE;
       }
+
+      gst_vtdec_warn_moltenvk_argument_buffers (vtdec);
 
       GST_INFO_OBJECT (vtdec, "pushing vulkan images, device %" GST_PTR_FORMAT
           " old device %" GST_PTR_FORMAT, vtdec->device,
