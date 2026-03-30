@@ -42,8 +42,6 @@ static GstStaticPadTemplate gst_gdk_pixbuf_dec_sink_template =
         /*"image/gif; " disabled because we can't handle animated gifs */
         "image/x-icon; "
         "application/x-navi-animation; "
-        "image/x-cmu-raster; "
-        "image/x-sun-raster; "
         "image/x-pixmap; "
         "image/tiff; "
         "image/x-portable-anymap; "
