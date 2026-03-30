@@ -6746,7 +6746,7 @@
                 "long-name": "GdkPixbuf image decoder",
                 "pad-templates": {
                     "sink": {
-                        "caps": "image/png:\nimage/x-icon:\napplication/x-navi-animation:\nimage/x-cmu-raster:\nimage/x-sun-raster:\nimage/x-pixmap:\nimage/tiff:\nimage/x-portable-anymap:\nimage/x-portable-bitmap:\nimage/x-portable-graymap:\nimage/x-portable-pixmap:\nimage/bmp:\nimage/x-bmp:\nimage/x-MS-bmp:\nimage/vnd.wap.wbmp:\nimage/x-bitmap:\nimage/x-tga:\nimage/x-pcx:\nimage/svg:\nimage/svg+xml:\n",
+                        "caps": "image/png:\nimage/x-icon:\napplication/x-navi-animation:\nimage/x-pixmap:\nimage/tiff:\nimage/x-portable-anymap:\nimage/x-portable-bitmap:\nimage/x-portable-graymap:\nimage/x-portable-pixmap:\nimage/bmp:\nimage/x-bmp:\nimage/x-MS-bmp:\nimage/vnd.wap.wbmp:\nimage/x-bitmap:\nimage/x-tga:\nimage/x-pcx:\nimage/svg:\nimage/svg+xml:\n",
                         "direction": "sink",
                         "presence": "always"
                     },

@@ -335,8 +335,8 @@ static const gchar *caps_strings[] = {
   "video/x-zlib", "image/bmp", "image/x-bmp",
   "image/x-MS-bmp", "image/gif", "image/jpeg", "image/jng", "image/png",
   "image/pbm", "image/ppm", "image/svg+xml", "image/tiff",
-  "image/x-cmu-raster", "image/x-icon", "image/x-xcf", "image/x-pixmap",
-  "image/x-xpixmap", "image/x-quicktime", "image/x-sun-raster",
+  "image/x-icon", "image/x-xcf", "image/x-pixmap",
+  "image/x-xpixmap", "image/x-quicktime",
   "image/x-tga", "video/x-dv", "video/x-dv",
   /* some RTP formats */
   "application/x-rtp, media=(string)video, encoding-name=(string)TimVCodec",
