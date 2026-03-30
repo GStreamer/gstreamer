@@ -170,4 +170,8 @@ vkinstance_suite (void)
   return s;
 }
 
+#ifdef __APPLE__
+GST_CHECK_MAIN_NOFORK (vkinstance);
+#else
 GST_CHECK_MAIN (vkinstance);
+#endif

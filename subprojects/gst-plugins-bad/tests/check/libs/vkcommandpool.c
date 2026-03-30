@@ -123,4 +123,8 @@ vkcommandpool_suite (void)
   return s;
 }
 
+#ifdef __APPLE__
+GST_CHECK_MAIN_NOFORK (vkcommandpool);
+#else
 GST_CHECK_MAIN (vkcommandpool);
+#endif

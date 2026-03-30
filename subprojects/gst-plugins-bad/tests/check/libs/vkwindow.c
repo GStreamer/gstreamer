@@ -22,6 +22,10 @@
 #include "config.h"
 #endif
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
 #include <gst/vulkan/vulkan.h>
@@ -78,5 +82,26 @@ vkwindow_suite (void)
   return s;
 }
 
+#ifdef __APPLE__
+#if TARGET_OS_OSX
+static int
+run_tests ()
+{
+  Suite *s = vkwindow_suite ();
+  return gst_check_run_suite_nofork (s, "vkwindow", __FILE__);
+}
 
+int
+main (int argc, char **argv)
+{
+  /* gst_macos_main() is needed to setup an NSApplication,
+   * otherwise this test will print a critical warning and fail on macOS */
+  gst_check_init (&argc, &argv);
+  return gst_macos_main_simple ((GstMainFuncSimple) run_tests, NULL);
+}
+#else
+GST_CHECK_MAIN_NOFORK (vkwindow);
+#endif
+#else
 GST_CHECK_MAIN (vkwindow);
+#endif
