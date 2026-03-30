@@ -915,56 +915,53 @@ static void
 parse_webvtt_cue_settings (ParserState * state, const gchar * settings)
 {
   gchar **splitted_settings = g_strsplit_set (settings, " \t", -1);
-  gint i = 0;
   gint16 text_position, text_size;
   gint16 line_position;
   gboolean vertical_found = FALSE;
   gboolean alignment_found = FALSE;
 
-  while (i < g_strv_length (splitted_settings)) {
+  for (gchar ** setting_ptr = splitted_settings; *setting_ptr; setting_ptr++) {
     gboolean valid_tag = FALSE;
-    switch (splitted_settings[i][0]) {
+    switch ((*setting_ptr)[0]) {
       case 'T':
-        if (sscanf (splitted_settings[i], "T:%" G_GINT16_FORMAT "%%",
+        if (sscanf (*setting_ptr, "T:%" G_GINT16_FORMAT "%%",
                 &text_position) > 0) {
           state->text_position = (guint8) text_position;
           valid_tag = TRUE;
         }
         break;
       case 'D':
-        if (strlen (splitted_settings[i]) > 2) {
+        if (strlen (*setting_ptr) > 2) {
           vertical_found = TRUE;
           g_free (state->vertical);
-          state->vertical = g_strdup (splitted_settings[i] + 2);
+          state->vertical = g_strdup (*setting_ptr + 2);
           valid_tag = TRUE;
         }
         break;
       case 'L':
-        if (g_str_has_suffix (splitted_settings[i], "%")) {
-          if (sscanf (splitted_settings[i], "L:%" G_GINT16_FORMAT "%%",
+        if (g_str_has_suffix (*setting_ptr, "%")) {
+          if (sscanf (*setting_ptr, "L:%" G_GINT16_FORMAT "%%",
                   &line_position) > 0) {
             state->line_position = line_position;
             valid_tag = TRUE;
           }
         } else {
-          if (sscanf (splitted_settings[i], "L:%" G_GINT16_FORMAT,
-                  &line_position) > 0) {
+          if (sscanf (*setting_ptr, "L:%" G_GINT16_FORMAT, &line_position) > 0) {
             state->line_number = line_position;
             valid_tag = TRUE;
           }
         }
         break;
       case 'S':
-        if (sscanf (splitted_settings[i], "S:%" G_GINT16_FORMAT "%%",
-                &text_size) > 0) {
+        if (sscanf (*setting_ptr, "S:%" G_GINT16_FORMAT "%%", &text_size) > 0) {
           state->text_size = (guint8) text_size;
           valid_tag = TRUE;
         }
         break;
       case 'A':
-        if (strlen (splitted_settings[i]) > 2) {
+        if (strlen (*setting_ptr) > 2) {
           g_free (state->alignment);
-          state->alignment = g_strdup (splitted_settings[i] + 2);
+          state->alignment = g_strdup (*setting_ptr + 2);
           alignment_found = TRUE;
           valid_tag = TRUE;
         }
@@ -973,10 +970,8 @@ parse_webvtt_cue_settings (ParserState * state, const gchar * settings)
         break;
     }
     if (!valid_tag) {
-      GST_LOG ("Invalid or unrecognised setting found: %s",
-          splitted_settings[i]);
+      GST_LOG ("Invalid or unrecognised setting found: %s", *setting_ptr);
     }
-    i++;
   }
   g_strfreev (splitted_settings);
   if (!vertical_found) {
