@@ -20,6 +20,8 @@
 
 #include "gstv4l2codecallocator.h"
 
+#include <gst/video/gstvideodmabufsynchandler.h>
+
 #include <gst/video/video.h>
 #include <sys/types.h>
 
@@ -48,6 +50,7 @@ struct _GstV4l2CodecAllocator
   GCond buffer_cond;
   gboolean flushing;
 
+  GstVideoDmabufSyncHandler *sync_handler;
   GstV4l2Decoder *decoder;
   GstPadDirection direction;
 };
@@ -141,6 +144,21 @@ gst_v4l2_codec_buffer_release_mem (GstV4l2CodecBuffer * buf)
   return (--buf->outstanding_mems == 0);
 }
 
+static void
+gst_v4l2_codec_allocator_release_buffer (gpointer user_data, gpointer buffer)
+{
+  GstV4l2CodecAllocator *self = GST_V4L2_CODEC_ALLOCATOR (user_data);
+  GstV4l2CodecBuffer *buf = (GstV4l2CodecBuffer *) buffer;
+
+  GST_OBJECT_LOCK (self);
+
+  GST_DEBUG_OBJECT (self, "Placing back buffer %i into pool", buf->index);
+  g_queue_push_tail (&self->pool, buf);
+  g_cond_signal (&self->buffer_cond);
+
+  GST_OBJECT_UNLOCK (self);
+}
+
 static gboolean
 gst_v4l2_codec_allocator_release (GstMiniObject * mini_object)
 {
@@ -148,18 +166,12 @@ gst_v4l2_codec_allocator_release (GstMiniObject * mini_object)
   GstV4l2CodecAllocator *self = GST_V4L2_CODEC_ALLOCATOR (mem->allocator);
   GstV4l2CodecBuffer *buf;
 
-  GST_OBJECT_LOCK (self);
-
   buf = gst_mini_object_get_qdata (mini_object, gst_v4l2_codec_buffer_quark ());
   gst_memory_ref (mem);
 
-  if (gst_v4l2_codec_buffer_release_mem (buf)) {
-    GST_DEBUG_OBJECT (self, "Placing back buffer %i into pool", buf->index);
-    g_queue_push_tail (&self->pool, buf);
-    g_cond_signal (&self->buffer_cond);
-  }
-
-  GST_OBJECT_UNLOCK (self);
+  if (gst_v4l2_codec_buffer_release_mem (buf))
+    gst_video_dmabuf_sync_handler_release_buffer (self->sync_handler,
+        (gpointer) buf, buf->mem, buf->num_mems);
 
   /* Keep last in case we are holding on the last allocator ref */
   g_object_unref (mem->allocator);
@@ -242,12 +254,26 @@ gst_v4l2_codec_allocator_dispose (GObject * object)
   G_OBJECT_CLASS (gst_v4l2_codec_allocator_parent_class)->dispose (object);
 }
 
+gboolean
+gst_v4l2_codec_allocator_start (GstV4l2CodecAllocator * self)
+{
+  return gst_video_dmabuf_sync_handler_start (self->sync_handler);
+}
+
+gboolean
+gst_v4l2_codec_allocator_stop (GstV4l2CodecAllocator * self)
+{
+  return gst_video_dmabuf_sync_handler_stop (self->sync_handler);
+}
+
 static void
 gst_v4l2_codec_allocator_finalize (GObject * object)
 {
   GstV4l2CodecAllocator *self = GST_V4L2_CODEC_ALLOCATOR (object);
 
   g_cond_clear (&self->buffer_cond);
+
+  gst_object_unref (self->sync_handler);
 
   G_OBJECT_CLASS (gst_v4l2_codec_allocator_parent_class)->finalize (object);
 }
@@ -269,6 +295,10 @@ gst_v4l2_codec_allocator_new (GstV4l2Decoder * decoder,
 {
   GstV4l2CodecAllocator *self =
       g_object_new (GST_TYPE_V4L2_CODEC_ALLOCATOR, NULL);
+
+  self->sync_handler =
+      gst_video_dmabuf_sync_handler_new
+      (gst_v4l2_codec_allocator_release_buffer, (gpointer) self);
 
   self->decoder = g_object_ref (decoder);
   self->direction = direction;

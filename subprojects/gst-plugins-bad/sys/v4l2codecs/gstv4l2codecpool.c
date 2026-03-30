@@ -132,6 +132,7 @@ gst_v4l2_codec_pool_finalize (GObject * object)
     gst_buffer_unref (buf);
 
   gst_atomic_queue_unref (self->queue);
+  gst_v4l2_codec_allocator_stop (self->allocator);
   g_object_unref (self->allocator);
 
   if (self->vinfo_drm)
@@ -163,6 +164,8 @@ gst_v4l2_codec_pool_new (GstV4l2CodecAllocator * allocator,
   pool->allocator = g_object_ref (allocator);
 
   pool->vinfo_drm = g_boxed_copy (GST_TYPE_VIDEO_INFO_DMA_DRM, vinfo_drm);
+
+  gst_v4l2_codec_allocator_start (allocator);
 
   pool_size = gst_v4l2_codec_allocator_get_pool_size (allocator);
   for (gsize i = 0; i < pool_size; i++) {

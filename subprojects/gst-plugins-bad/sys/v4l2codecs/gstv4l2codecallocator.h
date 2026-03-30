@@ -54,3 +54,7 @@ void                    gst_v4l2_codec_allocator_set_flushing (GstV4l2CodecAlloc
                                                                gboolean flushing);
 
 guint32                 gst_v4l2_codec_memory_get_index (GstMemory * mem);
+
+gboolean                gst_v4l2_codec_allocator_start (GstV4l2CodecAllocator * self);
+
+gboolean                gst_v4l2_codec_allocator_stop (GstV4l2CodecAllocator * self);
