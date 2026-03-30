@@ -724,6 +724,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
 
   for (i = 0; i < n_planes; i++) {
     VkBufferImageCopy region;
+    GstBuffer *used_buf = inbuf;
     GstMemory *mem;
     GstVulkanBufferMemory *buf_mem;
     GstVulkanImageMemory *img_mem;
@@ -742,6 +743,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     } else if (in_vk_copy) {
       GST_TRACE_OBJECT (raw->upload,
           "Have buffer copy of GstVulkanBufferMemory");
+      used_buf = in_vk_copy;
       mem = gst_buffer_peek_memory (in_vk_copy, i);
       g_assert (gst_is_vulkan_buffer_memory (mem));
     } else {
@@ -774,6 +776,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
         goto unlock_error;
       }
 
+      used_buf = in_vk_copy;
       mem = gst_buffer_peek_memory (in_vk_copy, i);
     }
 
@@ -793,7 +796,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     else
       plane_aspect = aspects[i];
 
-    gst_vulkan_buffer_get_plane_dimensions (inbuf, &raw->in_info, i, &width,
+    gst_vulkan_buffer_get_plane_dimensions (used_buf, &raw->in_info, i, &width,
         &height, &row, &img_h);
 
     /* *INDENT-OFF* */

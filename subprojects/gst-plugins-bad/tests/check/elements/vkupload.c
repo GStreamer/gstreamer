@@ -27,10 +27,14 @@
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
+#include <gst/video/video.h>
 #include <gst/vulkan/vulkan.h>
-#include <stdio.h>
 
 static const gchar *formats[] = { "NV12", "RGBA" };
+
+#define STRIDE_TEST_WIDTH 360
+#define STRIDE_TEST_HEIGHT 480
+#define STRIDE_TEST_INPUT_STRIDE 1472
 
 static const struct
 {
@@ -96,6 +100,60 @@ bail:
   gst_video_frame_unmap (&frame2);
 
   return ret;
+}
+
+static gboolean
+fill_stride_test_rgba_buffer (GstBuffer * buf)
+{
+  GstMapInfo map;
+  guint x, y;
+
+  if (!gst_buffer_map (buf, &map, GST_MAP_WRITE))
+    return FALSE;
+
+  for (y = 0; y < STRIDE_TEST_HEIGHT; y++) {
+    guint8 *row = map.data + y * STRIDE_TEST_INPUT_STRIDE;
+    guint8 pixel[] = { (y * 3) & 0xff, (y * 7) & 0xff, (y * 11) & 0xff, 0xff };
+
+    for (x = 0; x < STRIDE_TEST_WIDTH; x++)
+      memcpy (row + x * 4, pixel, sizeof (pixel));
+
+    memset (row + STRIDE_TEST_WIDTH * 4, 0x5a,
+        STRIDE_TEST_INPUT_STRIDE - STRIDE_TEST_WIDTH * 4);
+  }
+
+  gst_buffer_unmap (buf, &map);
+
+  return TRUE;
+}
+
+static GstBuffer *
+create_stride_test_rgba_buffer (void)
+{
+  GstBuffer *buf;
+  gsize offsets[GST_VIDEO_MAX_PLANES] = { 0, };
+  gint strides[GST_VIDEO_MAX_PLANES] = { 0, };
+
+  buf =
+      gst_buffer_new_allocate (NULL,
+      STRIDE_TEST_INPUT_STRIDE * STRIDE_TEST_HEIGHT, NULL);
+  if (!buf)
+    return NULL;
+
+  if (!fill_stride_test_rgba_buffer (buf)) {
+    gst_buffer_unref (buf);
+    return NULL;
+  }
+
+  strides[0] = STRIDE_TEST_INPUT_STRIDE;
+  if (!gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
+          GST_VIDEO_FORMAT_RGBA, STRIDE_TEST_WIDTH, STRIDE_TEST_HEIGHT, 1,
+          offsets, strides)) {
+    gst_buffer_unref (buf);
+    return NULL;
+  }
+
+  return buf;
 }
 
 static gboolean
@@ -189,6 +247,40 @@ GST_START_TEST (test_vulkan_upload_image)
 
 GST_END_TEST;
 
+GST_START_TEST (test_vulkan_upload_image_padded_stride)
+{
+  GstHarness *h;
+  GstCaps *caps;
+  GstVideoInfo info;
+  GstBuffer *inbuf, *outbuf;
+
+  h = gst_harness_new_parse ("vulkanupload ! vulkandownload");
+  fail_unless (h != NULL);
+
+  caps = gst_caps_new_simple ("video/x-raw",
+      "format", G_TYPE_STRING, "RGBA",
+      "width", G_TYPE_INT, STRIDE_TEST_WIDTH,
+      "height", G_TYPE_INT, STRIDE_TEST_HEIGHT, NULL);
+  fail_unless (caps != NULL);
+  fail_unless (gst_video_info_from_caps (&info, caps));
+
+  gst_harness_set_caps (h, caps, gst_caps_ref (caps));
+
+  inbuf = create_stride_test_rgba_buffer ();
+  fail_unless (inbuf != NULL);
+
+  outbuf = gst_harness_push_and_pull (h, gst_buffer_ref (inbuf));
+  fail_unless (outbuf != NULL);
+
+  fail_unless (cmp_buffers (inbuf, outbuf, &info));
+
+  gst_buffer_unref (inbuf);
+  gst_buffer_unref (outbuf);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 vkupload_suite (void)
 {
@@ -205,6 +297,7 @@ vkupload_suite (void)
   if (have_instance) {
     tcase_add_test (tc_basic, test_vulkan_upload_buffer);
     tcase_add_test (tc_basic, test_vulkan_upload_image);
+    tcase_add_test (tc_basic, test_vulkan_upload_image_padded_stride);
   }
 
   return s;
