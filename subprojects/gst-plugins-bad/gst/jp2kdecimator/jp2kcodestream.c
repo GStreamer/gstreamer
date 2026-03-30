@@ -499,7 +499,7 @@ parse_siz (GstJP2kDecimator * self, GstByteReader * reader,
   siz->yto = gst_byte_reader_get_uint32_be_unchecked (reader);
   siz->n_components = gst_byte_reader_get_uint16_be_unchecked (reader);
 
-  if (length < 38 + 3 * siz->n_components) {
+  if (length < 38 + 3 * (gsize) siz->n_components) {
     GST_ERROR_OBJECT (self, "Invalid SIZ marker");
     return GST_FLOW_ERROR;
   }
@@ -591,9 +591,9 @@ parse_cod (GstJP2kDecimator * self, GstByteReader * reader,
 
   if ((Scod & 0x01)) {
     gint i;
-    /* User defined precincts */
 
-    if (length < 12 + (Scod & 0x01) * (cod->n_decompositions + 1)) {
+    /* User defined precincts */
+    if (length < 12 + 1 || length - 12 - 1 < cod->n_decompositions) {
       GST_ERROR_OBJECT (self, "Invalid COD marker");
       return GST_FLOW_ERROR;
     }
@@ -1072,8 +1072,8 @@ parse_tile (GstJP2kDecimator * self, GstByteReader * reader,
   tile->sot.tile_part_index = gst_byte_reader_get_uint8_unchecked (reader);
   tile->sot.n_tile_parts = gst_byte_reader_get_uint8_unchecked (reader);
 
-  if (tile->sot.tile_part_size >
-      2 + 10 + gst_byte_reader_get_remaining (reader)) {
+  if (tile->sot.tile_part_size < 12 || tile->sot.tile_part_size - 12 >
+      gst_byte_reader_get_remaining (reader)) {
     GST_ERROR_OBJECT (self, "Truncated tile part");
     ret = GST_FLOW_ERROR;
     goto done;
@@ -1585,9 +1585,17 @@ parse_main_header (GstJP2kDecimator * self, GstByteReader * reader,
       (header->siz.x - header->siz.xto + header->siz.xt - 1) / header->siz.xt;
   header->n_tiles_y =
       (header->siz.y - header->siz.yto + header->siz.yt - 1) / header->siz.yt;
-  header->n_tiles = header->n_tiles_x * header->n_tiles_y;
+  if (header->n_tiles_x == 0 || header->n_tiles_y == 0) {
+    GST_ERROR_OBJECT (self, "Zero tiles in one direction");
+    return GST_FLOW_ERROR;
+  }
+  if (!g_uint_checked_mul (&header->n_tiles, header->n_tiles_x,
+          header->n_tiles_y)) {
+    GST_ERROR_OBJECT (self, "Too many tiles");
+    return GST_FLOW_ERROR;
+  }
 
-  header->tiles = g_malloc0 (sizeof (Tile) * header->n_tiles);
+  header->tiles = g_new0 (Tile, header->n_tiles);
 
   /* now at SOT marker, read the tiles */
   {
