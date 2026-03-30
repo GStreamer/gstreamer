@@ -1572,7 +1572,7 @@ gst_rtsp_client_sink_provide_clock (GstElement * element)
 static gboolean
 gst_rtsp_client_sink_set_proxy (GstRTSPClientSink * rtsp, const gchar * proxy)
 {
-  gchar *p, *at, *col;
+  const gchar *p, *at, *col;
 
   g_free (rtsp->proxy_user);
   rtsp->proxy_user = NULL;
@@ -1582,7 +1582,7 @@ gst_rtsp_client_sink_set_proxy (GstRTSPClientSink * rtsp, const gchar * proxy)
   rtsp->proxy_host = NULL;
   rtsp->proxy_port = 0;
 
-  p = (gchar *) proxy;
+  p = proxy;
 
   if (p == NULL)
     return TRUE;

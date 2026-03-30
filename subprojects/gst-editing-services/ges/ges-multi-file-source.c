@@ -137,36 +137,31 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstElement * bin)
 GESMultiFileURI *
 ges_multi_file_uri_new (const gchar * uri)
 {
-  gchar *colon = NULL;
-  gchar *at = NULL;
-  gchar *indices;
-  int charpos;
+  const gchar *at;
+  const gchar *indices;
   GESMultiFileURI *uri_data;
   const int prefix_size = strlen (GES_MULTI_FILE_URI_PREFIX);
 
-  uri_data = malloc (sizeof (GESMultiFileURI));
-
+  uri_data = g_new0 (GESMultiFileURI, 1);
   uri_data->start = 0;
   uri_data->end = -1;
 
+  /* URI format: multifile://START:END@LOCATION or multifile://LOCATION */
   at = strchr (uri, '@');
   if (at != NULL) {
-    charpos = (int) (at - uri);
-    indices = g_strdup_printf ("%.*s", charpos, uri);
-    indices = &indices[prefix_size];
-    colon = strchr (indices, ':');
-    if (colon != NULL) {
-      charpos = (int) (colon - indices);
+    indices = uri + prefix_size;
+    const gchar *colon = strchr (indices, ':');
+    if (colon != NULL && colon < at) {
+      uri_data->start = atoi (indices);
       uri_data->end = atoi (colon + 1);
-      uri_data->start = atoi (g_strdup_printf ("%.*s", charpos, indices));
       GST_DEBUG ("indices start: %d end %d\n", uri_data->start, uri_data->end);
     } else {
       GST_ERROR
           ("Malformated multifile uri. You are using '@' and are missing ':'");
     }
-    uri_data->location = at + 1;
+    uri_data->location = g_strdup (at + 1);
   } else {
-    uri_data->location = g_strdup (&uri[prefix_size]);
+    uri_data->location = g_strdup (uri + prefix_size);
   }
   GST_DEBUG ("location: %s\n", uri_data->location);
 
