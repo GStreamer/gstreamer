@@ -1291,6 +1291,13 @@ parse_exif_ascii_tag (GstExifReader * reader, const GstExifTagMatch * tag,
       gst_buffer_unmap (reader->buffer, &info);
       return;
     }
+    if (info.size - real_offset < count) {
+      GST_WARNING ("Invalid offset %u with size %u for buffer of size %"
+          G_GSIZE_FORMAT ", not adding tag %s", real_offset, count, info.size,
+          tag->gst_tag);
+      gst_buffer_unmap (reader->buffer, &info);
+      return;
+    }
 
     str = g_strndup ((gchar *) (info.data + real_offset), count);
     gst_buffer_unmap (reader->buffer, &info);
@@ -1433,8 +1440,9 @@ parse_exif_undefined_tag (GstExifReader * reader, const GstExifTagMatch * tag,
     }
 
     if (info.size - real_offset < count) {
-      GST_WARNING ("Invalid size %u for buffer of size %" G_GSIZE_FORMAT
-          ", not adding tag %s", count, info.size, tag->gst_tag);
+      GST_WARNING ("Invalid offset %u with size %u for buffer of size %"
+          G_GSIZE_FORMAT ", not adding tag %s", real_offset, count, info.size,
+          tag->gst_tag);
       gst_buffer_unmap (reader->buffer, &info);
       return;
     }
@@ -1803,12 +1811,18 @@ parse_exif_ifd (GstExifReader * exif_reader, gint buf_offset,
      * and we try to continue the parsing
      */
     if (tagdata.tag == EXIF_GPS_IFD_TAG) {
+      if (tagdata.offset < exif_reader->base_offset)
+        continue;
+
       parse_exif_ifd (exif_reader,
           tagdata.offset - exif_reader->base_offset, tag_map_gps);
 
       continue;
     }
     if (tagdata.tag == EXIF_IFD_TAG) {
+      if (tagdata.offset < exif_reader->base_offset)
+        continue;
+
       parse_exif_ifd (exif_reader,
           tagdata.offset - exif_reader->base_offset, tag_map_exif);
 
@@ -2263,6 +2277,12 @@ deserialize_geo_coordinate (GstExifReader * exif_reader,
   if (next_tagdata.count != 3) {
     GST_WARNING ("Geo coordinate should use 3 fractions, we have %u",
         next_tagdata.count);
+    return ret;
+  }
+
+  if (next_tagdata.offset < exif_reader->base_offset) {
+    GST_WARNING ("Offset is smaller (%u) than base offset (%u)",
+        next_tagdata.offset, exif_reader->base_offset);
     return ret;
   }
 
