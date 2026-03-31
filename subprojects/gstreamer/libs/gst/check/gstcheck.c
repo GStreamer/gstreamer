@@ -1104,16 +1104,9 @@ gst_check_abi_list (GstCheckABIStruct list[], gboolean have_abi_sizes)
   }
 }
 
-/**
- * gst_check_run_suite: (skip)
- * @suite: the check test suite
- * @name: name
- * @fname: file name
- *
- * Returns: number of failed tests
- */
-gint
-gst_check_run_suite (Suite * suite, const gchar * name, const gchar * fname)
+static gint
+gst_check_run_suite_full (Suite * suite, const gchar * name,
+    const gchar * fname, gboolean fork_allowed)
 {
   SRunner *sr;
   gchar *xmlfilename = NULL;
@@ -1121,6 +1114,8 @@ gst_check_run_suite (Suite * suite, const gchar * name, const gchar * fname)
   GTimer *timer;
 
   sr = srunner_create (suite);
+  if (!fork_allowed)
+    srunner_set_fork_status (sr, CK_NOFORK);
 
   if (g_getenv ("GST_CHECK_XML")) {
     /* how lucky we are to have __FILE__ end in .c */
@@ -1139,6 +1134,39 @@ gst_check_run_suite (Suite * suite, const gchar * name, const gchar * fname)
   srunner_free (sr);
   g_thread_pool_stop_unused_threads ();
   return nf;
+}
+
+/**
+ * gst_check_run_suite: (skip)
+ * @suite: the check test suite
+ * @name: name
+ * @fname: file name
+ *
+ * Returns: number of failed tests
+ */
+gint
+gst_check_run_suite (Suite * suite, const gchar * name, const gchar * fname)
+{
+  return gst_check_run_suite_full (suite, name, fname, TRUE);
+}
+
+/**
+ * gst_check_run_suite_nofork: (skip)
+ * @suite: the check test suite
+ * @name: name
+ * @fname: file name
+ *
+ * Runs a given test suite with fork usage explicitly disabled.
+ *
+ * Returns: number of failed tests
+ *
+ * Since: 1.30
+ */
+gint
+gst_check_run_suite_nofork (Suite * suite, const gchar * name,
+    const gchar * fname)
+{
+  return gst_check_run_suite_full (suite, name, fname, FALSE);
 }
 
 static gboolean

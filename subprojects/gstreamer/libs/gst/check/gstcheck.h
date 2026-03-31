@@ -191,6 +191,10 @@ gint gst_check_run_suite (Suite * suite, const gchar * name,
     const gchar * fname);
 
 GST_CHECK_API
+gint gst_check_run_suite_nofork (Suite * suite, const gchar * name,
+    const gchar * fname);
+
+GST_CHECK_API
 void gst_check_setup_events (GstPad * srcpad, GstElement * element,
     GstCaps * caps, GstFormat format);
 
@@ -739,6 +743,22 @@ int main (int argc, char **argv)                                \
   gst_check_init (&argc, &argv);                                \
   s = name ## _suite ();                                        \
   return gst_check_run_suite (s, # name, __FILE__);             \
+}
+
+/**
+ * GST_CHECK_MAIN_NOFORK:
+ *
+ * Runs a given test suite with fork usage explicitly disabled.
+ *
+ * Since: 1.30
+ */
+#define GST_CHECK_MAIN_NOFORK(name)                             \
+int main (int argc, char **argv)                                \
+{                                                               \
+  Suite *s;                                                     \
+  gst_check_init (&argc, &argv);                                \
+  s = name ## _suite ();                                        \
+  return gst_check_run_suite_nofork (s, # name, __FILE__);      \
 }
 
 /* Hack to allow run-time selection of unit tests to run via the

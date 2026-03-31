@@ -3098,6 +3098,28 @@ MT safe.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="check_run_suite_nofork" c:identifier="gst_check_run_suite_nofork" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/check/gstcheck.c">Runs a given test suite with fork usage explicitly disabled.</doc>
+      <source-position filename="../subprojects/gstreamer/libs/gst/check/gstcheck.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/check/gstcheck.c">number of failed tests</doc>
+        <type name="gint" c:type="gint"/>
+      </return-value>
+      <parameters>
+        <parameter name="suite" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/check/gstcheck.c">the check test suite</doc>
+          <type c:type="Suite*"/>
+        </parameter>
+        <parameter name="name" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/check/gstcheck.c">name</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="fname" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/check/gstcheck.c">file name</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="check_setup_element" c:identifier="gst_check_setup_element">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/check/gstcheck.c">setup an element for a filter test with mysrcpad and mysinkpad</doc>
       <source-position filename="../subprojects/gstreamer/libs/gst/check/gstcheck.h"/>
