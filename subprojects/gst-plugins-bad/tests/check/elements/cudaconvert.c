@@ -170,9 +170,6 @@ cudaconvertscale_suite (void)
   Suite *s;
   TCase *tc_chain;
 
-  /* HACK: cuda device init/deinit with fork seems to problematic */
-  g_setenv ("CK_FORK", "no", TRUE);
-
   run_visual_test = g_getenv ("ENABLE_CUDA_VISUAL_TEST");
 
   s = suite_create ("cudaconvertscale");
@@ -197,4 +194,4 @@ end:
   return s;
 }
 
-GST_CHECK_MAIN (cudaconvertscale);
+GST_CHECK_MAIN_NOFORK (cudaconvertscale);
