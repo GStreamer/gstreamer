@@ -3167,6 +3167,10 @@ gst_wasapi2_rbuf_set_device (GstWasapi2Rbuf * rbuf, const gchar * device_id,
   cmd->low_latency = low_latency;
   cmd->exclusive = exclusive;
 
+  GST_DEBUG_OBJECT (rbuf, "device-id: %s, endpoint-class: %d, pid: %u, "
+      "low-latency: %d, exclusive: %d", GST_STR_NULL (device_id),
+      endpoint_class, pid, low_latency, exclusive);
+
   gst_wasapi2_rbuf_push_command (rbuf, cmd);
 
   WaitForSingleObject (cmd->event_handle, INFINITE);
