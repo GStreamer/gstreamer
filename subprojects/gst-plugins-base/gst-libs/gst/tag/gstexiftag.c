@@ -2750,6 +2750,7 @@ deserialize_sensitivity_type (GstExifReader * exif_reader,
 {
   GstExifTagData *sensitivity = NULL;
   guint16 type_data;
+  guint sensitivity_val;
 
   if (exif_reader->byte_order == G_LITTLE_ENDIAN) {
     type_data = GST_READ_UINT16_LE (tagdata->offset_as_data);
@@ -2774,8 +2775,13 @@ deserialize_sensitivity_type (GstExifReader * exif_reader,
   GST_LOG ("Starting to parse %s tag in exif 0x%x", exiftag->gst_tag,
       exiftag->exif_tag);
 
+  if (exif_reader->byte_order == G_LITTLE_ENDIAN) {
+    sensitivity_val = GST_READ_UINT16_LE (sensitivity->offset_as_data);
+  } else {
+    sensitivity_val = GST_READ_UINT16_BE (sensitivity->offset_as_data);
+  }
   gst_tag_list_add (exif_reader->taglist, GST_TAG_MERGE_KEEP,
-      GST_TAG_CAPTURING_ISO_SPEED, sensitivity->offset_as_data, NULL);
+      GST_TAG_CAPTURING_ISO_SPEED, sensitivity_val, NULL);
 
   return 0;
 }
