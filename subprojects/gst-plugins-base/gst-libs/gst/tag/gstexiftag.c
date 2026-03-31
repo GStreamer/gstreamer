@@ -1447,13 +1447,13 @@ parse_exif_undefined_tag (GstExifReader * reader, const GstExifTagMatch * tag,
     }
 
     /* +1 because it could be a string without the \0 */
-    data = malloc (alloc_size);
+    data = g_malloc (alloc_size);
     memcpy (data, info.data + real_offset, count);
     data[count] = 0;
 
     gst_buffer_unmap (reader->buffer, &info);
   } else {
-    data = malloc (count + 1);
+    data = g_malloc (count + 1);
     memcpy (data, (guint8 *) offset_as_data, count);
     data[count] = 0;
   }
