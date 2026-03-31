@@ -171,9 +171,6 @@ cudamemory_suite (void)
   Suite *s;
   TCase *tc_chain;
 
-  /* CUDA doesn't work well with fork  */
-  g_setenv ("CK_FORK", "no", TRUE);
-
   s = suite_create ("cudamemory");
   tc_chain = tcase_create ("general");
 
@@ -189,4 +186,4 @@ cudamemory_suite (void)
   return s;
 }
 
-GST_CHECK_MAIN (cudamemory);
+GST_CHECK_MAIN_NOFORK (cudamemory);

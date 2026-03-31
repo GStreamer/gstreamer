@@ -146,9 +146,6 @@ cudafilter_suite (void)
   Suite *s;
   TCase *tc_chain;
 
-  /* HACK: cuda device init/deinit with fork seems to problematic */
-  g_setenv ("CK_FORK", "no", TRUE);
-
   s = suite_create ("cudafilter");
   tc_chain = tcase_create ("general");
 
@@ -165,4 +162,4 @@ end:
   return s;
 }
 
-GST_CHECK_MAIN (cudafilter);
+GST_CHECK_MAIN_NOFORK (cudafilter);
