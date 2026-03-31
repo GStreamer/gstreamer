@@ -1780,6 +1780,7 @@ register_codecs (GstPlugin * plugin)
       GType type, subtype;
       gchar *type_name, *element_name;
       guint rank;
+      GstCaps *caps;
       GstAmcCodecType *codec_type = &codec_info->supported_types[i];
 
       if (g_str_has_prefix (codec_type->mime, "audio/")) {
@@ -1912,8 +1913,22 @@ register_codecs (GstPlugin * plugin)
       ret |= gst_element_register (plugin, element_name, rank, subtype);
       g_free (element_name);
 
-      GST_INFO ("Registered %s codec '%s' with rank %u",
-          gst_amc_accel_to_string (codec_info->accel), codec_info->name, rank);
+      if (codec_info->is_encoder) {
+        gst_amc_codec_info_to_caps (codec_info, NULL, &caps);
+        GST_INFO
+            ("Registered encoder %s for %s impl %s with rank %u and outcaps %"
+            GST_PTR_FORMAT, element_name,
+            gst_amc_accel_to_string (codec_info->accel), codec_info->name, rank,
+            caps);
+      } else {
+        gst_amc_codec_info_to_caps (codec_info, &caps, NULL);
+        GST_INFO
+            ("Registered decoder %s for %s impl %s with rank %u and incaps %"
+            GST_PTR_FORMAT, element_name,
+            gst_amc_accel_to_string (codec_info->accel), codec_info->name, rank,
+            caps);
+      }
+      gst_caps_unref (caps);
     }
   }
 
