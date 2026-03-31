@@ -351,22 +351,13 @@ avfassetsrc_partial_suite (void)
 }
 
 static int
-run_tests (int argc, char **argv, gpointer user_data)
+run_tests ()
 {
-  Suite *s;
-  SRunner *sr;
-
-  (void) user_data;
-
-  s = avfassetsrc_partial_suite ();
-  sr = srunner_create (s);
   /* AVFoundation/CoreFoundation APIs are not fork-safe. The default
    * check fork mode triggers a crash when these APIs are used, so we
    * must run the tests in-process. */
-  srunner_set_fork_status (sr, CK_NOFORK);
-  srunner_run (sr, NULL, NULL, CK_NORMAL);
-  srunner_free (sr);
-  return 0;
+  Suite *s = avfassetsrc_partial_suite ();
+  return gst_check_run_suite_nofork (s, "avfassetsrc_partial", __FILE__);
 }
 
 int
@@ -374,8 +365,8 @@ main (int argc, char **argv)
 {
   gst_check_init (&argc, &argv);
 #if TARGET_OS_OSX
-  return gst_macos_main ((GstMainFunc) run_tests, argc, argv, NULL);
+  return gst_macos_main_simple ((GstMainFuncSimple) run_tests, NULL);
 #else
-  return run_tests (argc, argv, NULL);
+  return run_tests ();
 #endif
 }
