@@ -190,14 +190,14 @@ gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
       new_size += 4096;
       new_data = g_realloc (new_data, new_size);
       bzstream.next_out =
-          (char *) (new_data + ((guint64) bzstream.total_out_hi32 << 32) +
-          bzstream.total_out_lo32);
+          (char *) (new_data + (((guint64) bzstream.total_out_hi32 << 32) +
+              bzstream.total_out_lo32));
       /* avail_out is an unsigned int */
-      g_assert (new_size - ((guint64) bzstream.total_out_hi32 << 32) +
-          bzstream.total_out_lo32 <= G_MAXUINT);
+      g_assert (new_size - (((guint64) bzstream.total_out_hi32 << 32) +
+              bzstream.total_out_lo32 <= G_MAXUINT));
       bzstream.avail_out =
-          new_size - ((guint64) bzstream.total_out_hi32 << 32) +
-          bzstream.total_out_lo32;
+          new_size - (((guint64) bzstream.total_out_hi32 << 32) +
+          bzstream.total_out_lo32);
     } while (bzstream.avail_in > 0);
 
     if (result != BZ_STREAM_END) {
