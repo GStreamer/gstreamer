@@ -3391,7 +3391,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   GstPlayBin *playbin;
   GstCaps *caps;
   const GstStructure *s;
-  const gchar *name;
+  const gchar *name = NULL;
   GstPad *sinkpad;
   GstPadLinkReturn res;
   GstSourceCombine *combine = NULL;
@@ -3407,6 +3407,8 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   caps = gst_pad_get_current_caps (pad);
   if (!caps)
     caps = gst_pad_query_caps (pad, NULL);
+  if (gst_caps_get_size (caps) == 0)
+    goto unknown_type;
   s = gst_caps_get_structure (caps, 0);
   name = gst_structure_get_name (s);
 
@@ -3627,7 +3629,7 @@ done:
 unknown_type:
   {
     GST_ERROR_OBJECT (playbin, "unknown type %s for pad %s:%s",
-        name, GST_DEBUG_PAD_NAME (pad));
+        GST_STR_NULL (name), GST_DEBUG_PAD_NAME (pad));
     goto done;
   }
 link_failed:
