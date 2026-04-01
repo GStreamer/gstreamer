@@ -80,8 +80,9 @@ LLVMFuzzerTestOneInput (const guint8 * data, size_t size)
 
   /* Set pipeline to READY so we can provide data to appsrc */
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY);
-  buf = gst_buffer_new_wrapped_full (0, (gpointer) data, size,
-      0, size, NULL, NULL);
+  buf =
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, (gpointer) data,
+      size, 0, size, NULL, NULL);
   g_object_set (G_OBJECT (source), "size", size, NULL);
   g_signal_emit_by_name (G_OBJECT (source), "push-buffer", buf, &flowret);
   gst_buffer_unref (buf);

@@ -54,8 +54,9 @@ appsrc_configuration (GstDiscoverer * dc, GstElement * source, gpointer data)
 
   /* Create buffer from fuzztesting_data which shouldn't be freed */
   buf =
-      gst_buffer_new_wrapped_full (0, (gpointer) fuzztesting_data,
-      fuzztesting_size, 0, fuzztesting_size, NULL, NULL);
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      (gpointer) fuzztesting_data, fuzztesting_size, 0, fuzztesting_size, NULL,
+      NULL);
   g_object_set (G_OBJECT (source), "size", fuzztesting_size, NULL);
   g_signal_emit_by_name (G_OBJECT (source), "push-buffer", buf, &ret);
   gst_buffer_unref (buf);

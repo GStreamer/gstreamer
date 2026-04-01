@@ -79,8 +79,8 @@ LLVMFuzzerTestOneInput (const guint8 * data, size_t size)
 
   /* Test 1: EXIF parsing without TIFF header */
   buffer =
-      gst_buffer_new_wrapped_full (0, (gpointer) data, size, 0, size, NULL,
-      NULL);
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, (gpointer) data,
+      size, 0, size, NULL, NULL);
   if (buffer) {
     taglist = gst_tag_list_from_exif_buffer (buffer, G_LITTLE_ENDIAN, 0);
     if (taglist != NULL) {
@@ -92,8 +92,8 @@ LLVMFuzzerTestOneInput (const guint8 * data, size_t size)
 
   /* Test 2: EXIF parsing with TIFF header */
   buffer =
-      gst_buffer_new_wrapped_full (0, (gpointer) data, size, 0, size, NULL,
-      NULL);
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, (gpointer) data,
+      size, 0, size, NULL, NULL);
   if (buffer) {
     taglist = gst_tag_list_from_exif_buffer_with_tiff_header (buffer);
     if (taglist != NULL) {
@@ -105,8 +105,8 @@ LLVMFuzzerTestOneInput (const guint8 * data, size_t size)
 
   /* Test 3: ID3v2 tag parsing */
   buffer =
-      gst_buffer_new_wrapped_full (0, (gpointer) data, size, 0, size, NULL,
-      NULL);
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, (gpointer) data,
+      size, 0, size, NULL, NULL);
   if (buffer) {
     taglist = gst_tag_list_from_id3v2_tag (buffer);
     if (taglist != NULL) {
@@ -127,8 +127,8 @@ LLVMFuzzerTestOneInput (const guint8 * data, size_t size)
 
   /* Test 5: XMP tag parsing */
   buffer =
-      gst_buffer_new_wrapped_full (0, (gpointer) data, size, 0, size, NULL,
-      NULL);
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, (gpointer) data,
+      size, 0, size, NULL, NULL);
   if (buffer) {
     taglist = gst_tag_list_from_xmp_buffer (buffer);
     if (taglist != NULL) {
@@ -140,8 +140,8 @@ LLVMFuzzerTestOneInput (const guint8 * data, size_t size)
 
   /* Test 6: Vorbis comment parsing */
   buffer =
-      gst_buffer_new_wrapped_full (0, (gpointer) data, size, 0, size, NULL,
-      NULL);
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, (gpointer) data,
+      size, 0, size, NULL, NULL);
   if (buffer) {
     taglist = gst_tag_list_from_vorbiscomment_buffer (buffer, NULL, 0, NULL);
     if (taglist != NULL) {
