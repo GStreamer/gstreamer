@@ -3503,8 +3503,8 @@ sort_end_pads (GstParsePad * da, GstParsePad * db)
   } else {
     GstStructure *sa, *sb;
 
-    sa = gst_caps_get_structure ((const GstCaps *) capsa, 0);
-    sb = gst_caps_get_structure ((const GstCaps *) capsb, 0);
+    sa = gst_caps_get_structure (capsa, 0);
+    sb = gst_caps_get_structure (capsb, 0);
 
     namea = gst_structure_get_name (sa);
     nameb = gst_structure_get_name (sb);
