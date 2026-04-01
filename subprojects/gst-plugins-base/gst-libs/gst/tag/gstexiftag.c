@@ -1544,8 +1544,10 @@ exif_reader_read_rational_tag (GstExifReader * exif_reader,
     }
   }
 
-  if (frac_d == 0)
+  if (frac_d == 0) {
+    gst_buffer_unmap (exif_reader->buffer, &info);
     return FALSE;               /* Ignore invalid fractions */
+  }
 
   if (_frac_n)
     *_frac_n = frac_n;
