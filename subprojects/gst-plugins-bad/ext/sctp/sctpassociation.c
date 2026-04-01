@@ -227,7 +227,14 @@ gst_sctp_association_init (GstSctpAssociation * self)
      */
     usrsctp_sysctl_set_sctp_default_frag_interleave (2);
 
+    /* Set the default number of SCTP streams to the same value for both incoming and outgoing streams.
+     * This makes sense for at least WebRTC data channels where the number of streams is the same in both directions. 
+     * Not setting this to the same value can cause issues with some WebRTC implementations, trying to open more
+     * outgoing streams than the number of incoming streams this peer is configured to support.
+     */
     usrsctp_sysctl_set_sctp_nr_outgoing_streams_default
+        (DEFAULT_NUMBER_OF_SCTP_STREAMS);
+    usrsctp_sysctl_set_sctp_nr_incoming_streams_default
         (DEFAULT_NUMBER_OF_SCTP_STREAMS);
 
 #if defined(SCTP_DEBUG) && !defined(GST_DISABLE_GST_DEBUG)
