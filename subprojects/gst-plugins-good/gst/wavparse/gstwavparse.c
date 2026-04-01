@@ -826,11 +826,11 @@ gst_wavparse_cue_chunk (GstWavParse * wav, const guint8 * data, guint32 size)
     cue->chunk_start = GST_READ_UINT32_LE (data + 12);
     cue->block_start = GST_READ_UINT32_LE (data + 16);
     cue->sample_offset = GST_READ_UINT32_LE (data + 20);
-    cues = g_list_append (cues, cue);
+    cues = g_list_prepend (cues, cue);
     data += 24;
   }
 
-  wav->cues = cues;
+  wav->cues = g_list_reverse (cues);
 
   return TRUE;
 }
