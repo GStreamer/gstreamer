@@ -124,11 +124,6 @@ static inline void
 inner_product_gint16_cubic_1_neon (gint16 * o, const gint16 * a,
     const gint16 * b, gint len, const gint16 * icoeff, gint bstride)
 {
-    const gint16 *c[4] = {(gint16*)((gint8*)b + 0*bstride),
-                          (gint16*)((gint8*)b + 1*bstride),
-                          (gint16*)((gint8*)b + 2*bstride),
-                          (gint16*)((gint8*)b + 3*bstride)};
-
     asm volatile ("      vmov.s32 q0, #0\n"
                   "      vmov.s32 q1, #0\n"
                   "      vmov.s32 q2, #0\n"
@@ -136,10 +131,13 @@ inner_product_gint16_cubic_1_neon (gint16 * o, const gint16 * a,
                   "      cmp %[len], #0\n"
                   "      beq 2f\n"
                   "1:"
-                  "      vld1.16 {d16, d17}, [%[c0]]!\n"
-                  "      vld1.16 {d18, d19}, [%[c1]]!\n"
-                  "      vld1.16 {d20, d21}, [%[c2]]!\n"
-                  "      vld1.16 {d22, d23}, [%[c3]]!\n"
+                  "      vld1.16 {d16, d17}, [%[b]]!\n"
+                  "      add r8, %[b], %[bstride]\n"
+                  "      vld1.16 {d18, d19}, [r8]!\n"
+                  "      add r8, r8, %[bstride]\n"
+                  "      vld1.16 {d20, d21}, [r8]!\n"
+                  "      add r8, r8, %[bstride]\n"
+                  "      vld1.16 {d22, d23}, [r8]!\n"
                   "      vld1.16 {d24, d25}, [%[a]]!\n"
                   "      subs %[len], %[len], #8\n"
                   "      vmlal.s16 q0, d16, d24\n"
@@ -165,10 +163,9 @@ inner_product_gint16_cubic_1_neon (gint16 * o, const gint16 * a,
                   "      vpadd.s32 d0, d0, d0\n"
                   "      vqrshrn.s32 d0, q0, #15\n"
                   "      vst1.16 d0[0], [%[o]]\n"
-                  : [a] "+r" (a), [c0] "+r" (c[0]), [c1] "+r" (c[1]),
-                    [c2] "+r" (c[2]), [c3] "+r" (c[3]), [len] "+r" (len)
+                  : [a] "+r" (a), [b] "+r" (b), [bstride] "+r" (bstride), [len] "+r" (len)
                   : [o] "r" (o), [ic] "r" (icoeff)
-                  : "cc", "q0", "q1", "q2", "q3",
+                  : "cc", "r8", "q0", "q1", "q2", "q3",
                     "d16", "d17", "d18", "d19",
                     "d20", "d21", "d22", "d23",
                     "d24", "d25", "memory");
