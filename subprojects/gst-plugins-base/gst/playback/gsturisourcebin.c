@@ -1894,6 +1894,8 @@ analyse_pad_foreach (const GValue * item, AnalyseData * data)
 
     expose_output_pad (urisrc, output_pad);
     gst_object_unref (output_pad);
+  } else if (gst_caps_get_size (padcaps) == 0) {
+    GST_DEBUG_OBJECT (urisrc, "Pad with empty or any caps -- ignoring");
   } else {
     GST_DEBUG_OBJECT (urisrc, "Handling non-raw pad");
     /* The caps are non-raw, we handle it directly */
