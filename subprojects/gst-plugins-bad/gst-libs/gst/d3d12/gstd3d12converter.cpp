@@ -2291,31 +2291,27 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CmdQueue * queue,
         in_info->width, in_info->height);
     priv->mipgen_info.colorimetry = in_info->colorimetry;
 
-    /* Create intermediate conversion pipeline if input format is not
-     * a supported mip format */
-    if (mipgen_format != GST_VIDEO_INFO_FORMAT (&priv->in_info)) {
-      if (!gst_d3d12_converter_setup_colorspace (self, &priv->in_info,
-              &priv->mipgen_info, FALSE, FALSE, FALSE, convert_type,
-              const_data)) {
-        gst_object_unref (self);
-        return nullptr;
-      }
+    if (!gst_d3d12_converter_setup_colorspace (self, &priv->in_info,
+            &priv->mipgen_info, FALSE, FALSE, FALSE, convert_type,
+            const_data)) {
+      gst_object_unref (self);
+      return nullptr;
+    }
 
-      DXGI_SAMPLE_DESC sample_desc_default = { };
-      sample_desc_default.Count = 1;
-      sample_desc_default.Quality = 0;
-      D3D12_BLEND_DESC blend_desc_default = CD3DX12_BLEND_DESC (D3D12_DEFAULT);
+    DXGI_SAMPLE_DESC sample_desc_default = { };
+    sample_desc_default.Count = 1;
+    sample_desc_default.Quality = 0;
+    D3D12_BLEND_DESC blend_desc_default = CD3DX12_BLEND_DESC (D3D12_DEFAULT);
 
-      priv->mipgen_ctx =
-          gst_d3d12_converter_setup_resource (self, &priv->in_info,
-          &priv->mipgen_info, DEFAULT_SAMPLER_FILTER, &sample_desc_default,
-          &blend_desc_default, convert_type, FALSE,
-          GST_D3D12_CONVERTER_ALPHA_MODE_STRAIGHT,
-          GST_D3D12_CONVERTER_ALPHA_MODE_STRAIGHT, const_data, nullptr);
-      if (!priv->mipgen_ctx) {
-        gst_object_unref (self);
-        return nullptr;
-      }
+    priv->mipgen_ctx =
+        gst_d3d12_converter_setup_resource (self, &priv->in_info,
+        &priv->mipgen_info, DEFAULT_SAMPLER_FILTER, &sample_desc_default,
+        &blend_desc_default, convert_type, FALSE,
+        GST_D3D12_CONVERTER_ALPHA_MODE_STRAIGHT,
+        GST_D3D12_CONVERTER_ALPHA_MODE_STRAIGHT, const_data, nullptr);
+    if (!priv->mipgen_ctx) {
+      gst_object_unref (self);
+      return nullptr;
     }
 
     D3D12_DESCRIPTOR_HEAP_DESC srv_heap_desc = { };
@@ -2766,13 +2762,12 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
       gst_clear_buffer (&priv->mipgen_buf);
       priv->mipgen_desc.Width = in_desc.Width;
       priv->mipgen_desc.Height = in_desc.Height;
-      if (priv->mipgen_ctx) {
-        auto & comm = priv->mipgen_ctx->comm;
-        comm->viewport[0].Width = (FLOAT) in_desc.Width;
-        comm->viewport[0].Height = (FLOAT) in_desc.Height;
-        comm->scissor_rect[0].right = (LONG) in_desc.Width;
-        comm->scissor_rect[0].bottom = (LONG) in_desc.Height;
-      }
+
+      auto & comm = priv->mipgen_ctx->comm;
+      comm->viewport[0].Width = (FLOAT) in_desc.Width;
+      comm->viewport[0].Height = (FLOAT) in_desc.Height;
+      comm->scissor_rect[0].right = (LONG) in_desc.Width;
+      comm->scissor_rect[0].bottom = (LONG) in_desc.Height;
     }
 
     if (priv->mip_levels != 1 && !priv->mipgen_buf) {
@@ -2866,44 +2861,24 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
       return FALSE;
     }
 
-    if (priv->mipgen_ctx) {
-      if (!gst_d3d12_converter_execute (converter, &in_frame, &mipgen_frame,
-              priv->mipgen_ctx, TRUE, fence_data, command_list)) {
-        GST_ERROR_OBJECT (converter, "Couldn't convert to mipmap format");
-        gst_d3d12_frame_unmap (&in_frame);
-        gst_d3d12_frame_unmap (&mipgen_frame);
-        gst_d3d12_frame_unmap (&out_frame);
+    if (!gst_d3d12_converter_execute (converter, &in_frame, &mipgen_frame,
+            priv->mipgen_ctx, TRUE, fence_data, command_list)) {
+      GST_ERROR_OBJECT (converter, "Couldn't convert to mipmap format");
+      gst_d3d12_frame_unmap (&in_frame);
+      gst_d3d12_frame_unmap (&mipgen_frame);
+      gst_d3d12_frame_unmap (&out_frame);
 
-        gst_buffer_unref (in_buf);
-        gst_buffer_unref (render_target);
+      gst_buffer_unref (in_buf);
+      gst_buffer_unref (render_target);
 
-        return FALSE;
-      }
-
-      auto barrier = CD3DX12_RESOURCE_BARRIER::Transition (mipgen_frame.data[0],
-          D3D12_RESOURCE_STATE_RENDER_TARGET,
-          D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
-          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, 0);
-      command_list->ResourceBarrier (1, &barrier);
-    } else {
-      D3D12_BOX src_box;
-      src_box.left = 0;
-      src_box.top = 0;
-      src_box.right = (UINT) priv->mipgen_desc.Width;
-      src_box.bottom = (UINT) priv->mipgen_desc.Height;
-      src_box.front = 0;
-      src_box.back = 1;
-
-      auto copy_src = CD3DX12_TEXTURE_COPY_LOCATION (in_frame.data[0], 0);
-      auto copy_dst = CD3DX12_TEXTURE_COPY_LOCATION (mipgen_frame.data[0], 0);
-      command_list->CopyTextureRegion (&copy_dst, 0, 0, 0, &copy_src, &src_box);
-
-      auto barrier = CD3DX12_RESOURCE_BARRIER::Transition (mipgen_frame.data[0],
-          D3D12_RESOURCE_STATE_COPY_DEST,
-          D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
-          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, 0);
-      command_list->ResourceBarrier (1, &barrier);
+      return FALSE;
     }
+
+    auto barrier = CD3DX12_RESOURCE_BARRIER::Transition (mipgen_frame.data[0],
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
+        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, 0);
+    command_list->ResourceBarrier (1, &barrier);
 
     ret = gst_d3d12_mip_gen_execute_full (priv->mipgen, mipgen_frame.data[0],
         fence_data, command_list, mip_levels,
@@ -2949,15 +2924,9 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
     }
 
     if (num_remap == 0) {
-      if (priv->post_mipgen_ctx) {
-        ret = gst_d3d12_converter_execute (converter,
-            &mipgen_frame, &out_frame, priv->post_mipgen_ctx,
-            FALSE, fence_data, command_list);
-      } else {
-        ret = gst_d3d12_converter_execute (converter,
-            &mipgen_frame, &out_frame, priv->main_ctx,
-            FALSE, fence_data, command_list);
-      }
+      ret = gst_d3d12_converter_execute (converter,
+          &mipgen_frame, &out_frame, priv->post_mipgen_ctx,
+          FALSE, fence_data, command_list);
     } else {
       auto prev_remap = priv->main_ctx->comm->sampler_remap;
       auto prev_x = priv->dest_x;
@@ -2975,15 +2944,9 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
         gst_d3d12_converter_calculate_remap_border_color (converter,
             border_color[i]);
 
-        if (priv->post_mipgen_ctx) {
-          ret = gst_d3d12_converter_execute (converter,
-              &mipgen_frame, &out_frame, priv->post_mipgen_ctx,
-              FALSE, fence_data, command_list);
-        } else {
-          ret = gst_d3d12_converter_execute (converter,
-              &mipgen_frame, &out_frame, priv->main_ctx,
-              FALSE, fence_data, command_list);
-        }
+        ret = gst_d3d12_converter_execute (converter,
+            &mipgen_frame, &out_frame, priv->post_mipgen_ctx,
+            FALSE, fence_data, command_list);
 
         if (!ret)
           break;
