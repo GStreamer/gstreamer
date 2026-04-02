@@ -23,6 +23,7 @@
 
 #include "gstd3d12.h"
 #include "gstd3d12-private.h"
+#include "gstd3d12device-converter-private.h"
 #include "gstd3d12cmdlistpool.h"
 #include <directx/d3dx12.h>
 #include <d3d11on12.h>
@@ -150,6 +151,7 @@ struct DeviceInner
     samplers.clear ();
     gamma_lut_pso = nullptr;
     gamma_lut_rs = nullptr;
+    mipmap_cache.clear ();
 
     factory = nullptr;
     adapter = nullptr;
@@ -293,6 +295,9 @@ struct DeviceInner
   std::vector<GstD3D12Device*> clients;
 
   std::unordered_map<D3D12_FILTER, ComPtr<ID3D12DescriptorHeap>> samplers;
+
+  std::mutex mipmap_cache_lock;
+  std::unordered_map<std::string, std::weak_ptr<GstD3D12TextureEntry>> mipmap_cache;
 };
 
 typedef std::shared_ptr<DeviceInner> DeviceInnerPtr;
@@ -2646,4 +2651,67 @@ gst_d3d12_device_get_converter_resources (GstD3D12Device * device,
   (*fence)->AddRef ();
 
   return S_OK;
+}
+
+GstD3D12TextureEntryPtr
+gst_d3d12_device_acquire_mipmap_texture (GstD3D12Device * device,
+    guint width, guint height, DXGI_FORMAT format)
+{
+  auto priv = device->priv->inner;
+
+  std::string key = std::to_string (width) + "_" + std::to_string (height) +
+      "_" + std::to_string ((guint) format);
+
+  GST_DEBUG_OBJECT (device, "Processing key %s", key.c_str ());
+
+  std::unique_lock < std::mutex > lk (priv->mipmap_cache_lock);
+  auto it = priv->mipmap_cache.find (key);
+  if (it != priv->mipmap_cache.end ()) {
+    auto locked = it->second.lock ();
+    if (locked) {
+      GST_DEBUG_OBJECT (device, "Found cached texture");
+      return locked;
+    }
+
+    priv->mipmap_cache.erase (it);
+  }
+
+  D3D12_HEAP_PROPERTIES heap_props =
+      CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
+  D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
+  if (priv->non_zeroed_supported)
+    heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+
+  auto desc = CD3DX12_RESOURCE_DESC::Tex2D (format,
+      width, height, 1, 0, 1, 0,
+      D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS |
+      D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET |
+      D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+
+  ComPtr < ID3D12Resource > resource;
+  auto hr = priv->device->CreateCommittedResource (&heap_props, heap_flags,
+      &desc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS (&resource));
+  if (FAILED (hr)) {
+    lk.unlock ();
+    gst_d3d12_result (hr, device);
+    return nullptr;
+  }
+
+  /* run GC */
+  it = priv->mipmap_cache.begin ();
+  while (it != priv->mipmap_cache.end ()) {
+    if (it->second.expired ()) {
+      GST_DEBUG_OBJECT (device, "%s expired", it->first.c_str ());
+      it = priv->mipmap_cache.erase (it);
+    } else {
+      it++;
+    }
+  }
+
+  auto entry = std::make_shared < GstD3D12TextureEntry > ();
+  entry->resource = resource;
+
+  priv->mipmap_cache[key] = entry;
+
+  return entry;
 }

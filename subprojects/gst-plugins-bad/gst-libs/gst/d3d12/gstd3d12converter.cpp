@@ -27,6 +27,7 @@
 #include "gstd3d12converter-private.h"
 #include "gstd3d12converter-pack.h"
 #include "gstd3d12converter-unpack.h"
+#include "gstd3d12device-converter-private.h"
 #include <directx/d3dx12.h>
 #include <wrl.h>
 #include <string.h>
@@ -383,6 +384,7 @@ struct _GstD3D12ConverterPrivate
     mipgen_ctx = nullptr;
     post_mipgen_ctx = nullptr;
     gst_clear_buffer (&mipgen_buf);
+    shared_mip_tex = nullptr;
 
     gst_clear_object (&mipgen_srv_heap_pool);
     gst_clear_object (&srv_heap_pool);
@@ -439,11 +441,14 @@ struct _GstD3D12ConverterPrivate
   D3D12_SHADER_RESOURCE_VIEW_DESC mipgen_srv_desc = { };
   D3D12_RESOURCE_DESC mipgen_desc = { };
   GstBuffer *mipgen_buf = nullptr;
+  GstD3D12TextureEntryPtr shared_mip_tex;
   guint auto_mipgen_level = 1;
   guint max_srv_desc = 0;
 
   std::mutex prop_lock;
   guint64 fence_val = 0;
+
+  gboolean is_default_cq = FALSE;
 
   /* properties */
   gint src_x = 0;
@@ -2103,12 +2108,16 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CmdQueue * queue,
   self = (GstD3D12Converter *) g_object_new (GST_TYPE_D3D12_CONVERTER, nullptr);
   gst_object_ref_sink (self);
   auto priv = self->priv;
+  auto default_queue = gst_d3d12_device_get_cmd_queue (device,
+      D3D12_COMMAND_LIST_TYPE_DIRECT);
+
   priv->cq = queue;
-  if (!priv->cq) {
-    priv->cq = gst_d3d12_device_get_cmd_queue (device,
-        D3D12_COMMAND_LIST_TYPE_DIRECT);
-  }
+  if (!priv->cq)
+    priv->cq = default_queue;
   gst_object_ref (priv->cq);
+
+  if (priv->cq == default_queue)
+    priv->is_default_cq = TRUE;
 
   priv->unpack = gst_d3d12_unpack_new (device, in_info);
   if (!priv->unpack) {
@@ -2760,6 +2769,7 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
     if (in_desc.Width != priv->mipgen_desc.Width ||
         in_desc.Height != priv->mipgen_desc.Height) {
       gst_clear_buffer (&priv->mipgen_buf);
+      priv->shared_mip_tex = nullptr;
       priv->mipgen_desc.Width = in_desc.Width;
       priv->mipgen_desc.Height = in_desc.Height;
 
@@ -2771,17 +2781,58 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
     }
 
     if (priv->mip_levels != 1 && !priv->mipgen_buf) {
-      D3D12_HEAP_PROPERTIES heap_props =
-          CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
-      D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
-      if (gst_d3d12_device_non_zeroed_supported (converter->device))
-        heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+      ComPtr < ID3D12Resource > mipgen_resource;
 
-      priv->mipgen_desc.MipLevels = 0;
-      auto mem = gst_d3d12_allocator_alloc (nullptr, converter->device,
-          &heap_props, heap_flags, &priv->mipgen_desc,
-          D3D12_RESOURCE_STATE_COMMON, nullptr);
-      priv->mipgen_desc.MipLevels = 1;
+      if (priv->is_default_cq) {
+        priv->shared_mip_tex =
+            gst_d3d12_device_acquire_mipmap_texture (converter->device,
+            (guint) priv->mipgen_desc.Width, priv->mipgen_desc.Height,
+            priv->mipgen_desc.Format);
+        if (!priv->shared_mip_tex) {
+          GST_ERROR_OBJECT (converter, "Couldn't acquire mipmap texture");
+          gst_d3d12_frame_unmap (&in_frame);
+          gst_d3d12_frame_unmap (&out_frame);
+
+          gst_buffer_unref (in_buf);
+          gst_buffer_unref (render_target);
+          return FALSE;
+        }
+
+        mipgen_resource = priv->shared_mip_tex->resource;
+
+        GST_DEBUG_OBJECT (converter, "Acquired shared mipmap texture %ux%u",
+            (guint) priv->mipgen_desc.Width, priv->mipgen_desc.Height);
+      } else {
+        auto device = gst_d3d12_device_get_device_handle (converter->device);
+
+        D3D12_HEAP_PROPERTIES heap_props =
+            CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
+        D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
+        if (gst_d3d12_device_non_zeroed_supported (converter->device))
+          heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+
+        priv->mipgen_desc.MipLevels = 0;
+        auto hr = device->CreateCommittedResource (&heap_props, heap_flags,
+            &priv->mipgen_desc, D3D12_RESOURCE_STATE_COMMON, nullptr,
+            IID_PPV_ARGS (&mipgen_resource));
+        priv->mipgen_desc.MipLevels = 1;
+
+        if (!gst_d3d12_result (hr, converter->device)) {
+          GST_ERROR_OBJECT (converter, "Couldn't create mipmap texture");
+          gst_d3d12_frame_unmap (&in_frame);
+          gst_d3d12_frame_unmap (&out_frame);
+
+          gst_buffer_unref (in_buf);
+          gst_buffer_unref (render_target);
+          return FALSE;
+        }
+
+        GST_DEBUG_OBJECT (converter, "Allocated new mipmap texture %ux%u",
+            (guint) priv->mipgen_desc.Width, priv->mipgen_desc.Height);
+      }
+
+      auto mem = gst_d3d12_allocator_alloc_wrapped (nullptr, converter->device,
+          mipgen_resource.Get (), 0, nullptr, nullptr);
       if (!mem) {
         GST_ERROR_OBJECT (converter, "Couldn't allocate mipmap texture");
         gst_d3d12_frame_unmap (&in_frame);
@@ -2799,20 +2850,6 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
 
       priv->mipgen_buf = gst_buffer_new ();
       gst_buffer_append_memory (priv->mipgen_buf, mem);
-
-      guint dst_width = priv->dest_width;
-      guint dst_height = priv->dest_height;
-      switch (priv->video_direction) {
-        case GST_VIDEO_ORIENTATION_90R:
-        case GST_VIDEO_ORIENTATION_90L:
-        case GST_VIDEO_ORIENTATION_UL_LR:
-        case GST_VIDEO_ORIENTATION_UR_LL:
-          dst_width = priv->dest_height;
-          dst_height = priv->dest_width;
-          break;
-        default:
-          break;
-      }
 
       calculate_auto_mipgen_level (converter);
       GST_DEBUG_OBJECT (converter, "Calculated mip level %d",
