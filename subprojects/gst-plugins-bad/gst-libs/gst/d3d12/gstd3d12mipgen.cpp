@@ -266,12 +266,22 @@ gst_d3d12_mip_gen_new (GstD3D12Device * device, GstD3DPluginCS cs_type)
 static gboolean
 gst_d3d12_mip_gen_execute_internal (GstD3D12MipGen * gen,
     ID3D12Resource * resource, GstD3D12FenceData * fence_data,
-    ID3D12GraphicsCommandList * cl, guint mip_levels)
+    ID3D12GraphicsCommandList * cl, guint base_level, guint mip_levels,
+    guint * end_mip_out)
 {
   auto desc = GetDesc (resource);
+  guint full_mip_levels = desc.MipLevels;
 
-  if (desc.MipLevels == 1) {
+  if (base_level >= full_mip_levels) {
+    GST_ERROR_OBJECT (gen, "Invalid base level %u (full level %u)",
+        base_level, full_mip_levels);
+    return FALSE;
+  }
+
+  if (full_mip_levels == 1) {
     GST_LOG_OBJECT (gen, "Single mip level texture");
+    if (end_mip_out)
+      *end_mip_out = full_mip_levels;
     return TRUE;
   }
 
@@ -283,12 +293,23 @@ gst_d3d12_mip_gen_execute_internal (GstD3D12MipGen * gen,
     return FALSE;
   }
 
-  if (mip_levels != 0 && mip_levels < desc.MipLevels)
-    desc.MipLevels = (UINT16) mip_levels;
+  guint end_mip = full_mip_levels;
+  if (mip_levels != 0)
+    end_mip = std::min < guint > (base_level + mip_levels, full_mip_levels);
+
+  if (end_mip_out)
+    *end_mip_out = end_mip;
+
+  if (end_mip <= base_level + 1) {
+    GST_LOG_OBJECT (gen, "Nothing to generate, base level %u, mip_levels %u",
+        base_level, mip_levels);
+    return TRUE;
+  }
 
   auto priv = gen->priv;
   auto device = gst_d3d12_device_get_device_handle (priv->device);
-  priv->resource_states.resize (desc.MipLevels);
+
+  priv->resource_states.resize (end_mip - base_level);
   priv->resource_states[0] = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 
   cl->SetComputeRootSignature (priv->rs.Get ());
@@ -302,13 +323,15 @@ gst_d3d12_mip_gen_execute_internal (GstD3D12MipGen * gen,
   srv_desc.Format = view_format;
   srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
   srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+  srv_desc.Texture2D.MostDetailedMip = 0;
   srv_desc.Texture2D.MipLevels = desc.MipLevels;
 
-  for (UINT16 srcMip = 0; srcMip < desc.MipLevels - 1;) {
-    guint64 srcWidth = desc.Width >> srcMip;
-    guint srcHeight = desc.Height >> srcMip;
-    guint dstWidth = static_cast < guint > (srcWidth >> 1);
-    guint dstHeight = srcHeight >> 1;
+  for (UINT16 srcMip = (UINT16) base_level; srcMip < end_mip - 1;) {
+    guint64 srcWidth = std::max < guint64 > (desc.Width >> srcMip, 1);
+    guint srcHeight = std::max < guint > (desc.Height >> srcMip, 1);
+    guint dstWidth =
+        std::max < guint > (static_cast < guint > (srcWidth >> 1), 1);
+    guint dstHeight = std::max < guint > (srcHeight >> 1, 1);
     GenerateMipsCB cbuf;
 
     // 0b00(0): Both width and height are even.
@@ -330,20 +353,14 @@ gst_d3d12_mip_gen_execute_internal (GstD3D12MipGen * gen,
     // Maximum number of mips to generate is 4.
     mipCount = std::min < DWORD > (4, mipCount + 1);
     // Clamp to total number of mips left over.
-    mipCount = (srcMip + mipCount) >= desc.MipLevels ?
-        desc.MipLevels - srcMip - 1 : mipCount;
-
-    // Dimensions should not reduce to 0.
-    // This can happen if the width and height are not the same.
-    dstWidth = std::max < DWORD > (1, dstWidth);
-    dstHeight = std::max < DWORD > (1, dstHeight);
+    mipCount = std::min < DWORD > (mipCount, end_mip - srcMip - 1);
 
     cbuf.SrcMipLevel = srcMip;
     cbuf.NumMipLevels = mipCount;
     cbuf.TexelSize.x = 1.0f / (float) dstWidth;
     cbuf.TexelSize.y = 1.0f / (float) dstHeight;
 
-    if (srcMip != 0) {
+    if (srcMip != base_level) {
       D3D12_RESOURCE_BARRIER barriers[2];
       barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition (resource,
           D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
@@ -352,7 +369,7 @@ gst_d3d12_mip_gen_execute_internal (GstD3D12MipGen * gen,
       barriers[1] = CD3DX12_RESOURCE_BARRIER::UAV (resource);
       cl->ResourceBarrier (2, barriers);
 
-      priv->resource_states[srcMip] =
+      priv->resource_states[srcMip - base_level] =
           D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
     }
@@ -377,7 +394,7 @@ gst_d3d12_mip_gen_execute_internal (GstD3D12MipGen * gen,
       uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
       uavDesc.Texture2D.MipSlice = srcMip + mip + 1;
 
-      priv->resource_states[uavDesc.Texture2D.MipSlice] =
+      priv->resource_states[uavDesc.Texture2D.MipSlice - base_level] =
           D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 
       cpu_handle.Offset (priv->desc_inc_size);
@@ -412,13 +429,14 @@ gst_d3d12_mip_gen_execute (GstD3D12MipGen * gen, ID3D12Resource * resource,
   g_return_val_if_fail (fence_data, FALSE);
   g_return_val_if_fail (cl, FALSE);
 
-  return gst_d3d12_mip_gen_execute_internal (gen, resource, fence_data, cl, 0);
+  return gst_d3d12_mip_gen_execute_internal (gen,
+      resource, fence_data, cl, 0, 0, nullptr);
 }
 
 gboolean
 gst_d3d12_mip_gen_execute_full (GstD3D12MipGen * gen, ID3D12Resource * resource,
     GstD3D12FenceData * fence_data, ID3D12GraphicsCommandList * cl,
-    guint mip_levels, D3D12_RESOURCE_STATES state_after)
+    guint base_level, guint mip_levels, D3D12_RESOURCE_STATES state_after)
 {
   g_return_val_if_fail (GST_IS_D3D12_MIP_GEN (gen), FALSE);
   g_return_val_if_fail (resource, FALSE);
@@ -426,24 +444,28 @@ gst_d3d12_mip_gen_execute_full (GstD3D12MipGen * gen, ID3D12Resource * resource,
   g_return_val_if_fail (cl, FALSE);
 
   auto priv = gen->priv;
+  guint end_mip = 0;
 
   if (!gst_d3d12_mip_gen_execute_internal (gen,
-          resource, fence_data, cl, mip_levels)) {
+          resource, fence_data, cl, base_level, mip_levels, &end_mip)) {
     return FALSE;
   }
 
-  priv->barriers.resize (0);
-  for (size_t i = 1; i < priv->resource_states.size (); i++) {
+  if (end_mip <= base_level + 1)
+    return TRUE;
+
+  priv->barriers.clear ();
+
+  for (guint i = 1; i < priv->resource_states.size (); i++) {
     auto state_before = priv->resource_states[i];
     if ((state_before & state_after) != state_after) {
       priv->barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
-              state_before, state_after, i));
+              state_before, state_after, base_level + i));
     }
   }
 
-  auto size = priv->barriers.size ();
-  if (size != 0)
-    cl->ResourceBarrier (size, priv->barriers.data ());
+  if (!priv->barriers.empty ())
+    cl->ResourceBarrier ((UINT) priv->barriers.size (), priv->barriers.data ());
 
   return TRUE;
 }

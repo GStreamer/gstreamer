@@ -2918,7 +2918,7 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
     command_list->ResourceBarrier (1, &barrier);
 
     ret = gst_d3d12_mip_gen_execute_full (priv->mipgen, mipgen_frame.data[0],
-        fence_data, command_list, mip_levels,
+        fence_data, command_list, 0, mip_levels,
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     if (!ret) {
       GST_ERROR_OBJECT (converter, "Couldn't generate mip levels");
