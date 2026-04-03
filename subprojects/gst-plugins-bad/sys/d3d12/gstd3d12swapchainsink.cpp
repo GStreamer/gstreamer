@@ -401,8 +401,10 @@ gst_d3d12_swapchain_sink_class_init (GstD3D12SwapChainSinkClass * klass)
   g_object_class_install_property (object_class, PROP_MAX_MIP_LEVELS,
       g_param_spec_uint ("max-mip-levels", "Max Mip Levels",
           "Maximum mip levels of shader resource to create "
-          "if viewport size is smaller than shader resource "
-          "(0 = maximum level)", 0, G_MAXUINT16, DEFAULT_MAX_MIP_LEVELS,
+          "if render viewport size is smaller than shader resource "
+          "(0 = generate full mip chain, G_MAXUINT16 = generate only "
+          "the target mip level and one additional level)", 0, G_MAXUINT16,
+          DEFAULT_MAX_MIP_LEVELS,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   d3d12_swapchain_sink_signals[SIGNAL_RESIZE] =

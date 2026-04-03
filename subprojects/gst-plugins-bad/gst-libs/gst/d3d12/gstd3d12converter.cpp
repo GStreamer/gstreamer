@@ -36,6 +36,7 @@
 #include <vector>
 #include <memory>
 #include <queue>
+#include <algorithm>
 
 #ifndef HAVE_DIRECTX_MATH_SIMD
 #define _XM_NO_INTRINSICS_
@@ -388,6 +389,7 @@ struct _GstD3D12ConverterPrivate
 
     gst_clear_object (&mipgen_srv_heap_pool);
     gst_clear_object (&srv_heap_pool);
+    gst_clear_object (&rtv_heap_pool);
     gst_clear_object (&cq);
     gst_clear_object (&pack);
     gst_clear_object (&unpack);
@@ -412,6 +414,7 @@ struct _GstD3D12ConverterPrivate
 
   GstD3D12DescHeapPool *srv_heap_pool = nullptr;
   GstD3D12DescHeapPool *mipgen_srv_heap_pool = nullptr;
+  GstD3D12DescHeapPool *rtv_heap_pool = nullptr;
 
   guint srv_inc_size;
   guint rtv_inc_size;
@@ -559,8 +562,9 @@ gst_d3d12_converter_class_init (GstD3D12ConverterClass * klass)
       g_param_spec_uint ("max-mip-levels", "Max Mip Levels",
           "Maximum mip levels of shader resource to create "
           "if render viewport size is smaller than shader resource "
-          "(0 = maximum level)", 0, G_MAXUINT16, DEFAULT_MAX_MIP_LEVELS,
-          param_flags));
+          "(0 = generate full mip chain, G_MAXUINT16 = generate only "
+          "the target mip level and one additional level)", 0, G_MAXUINT16,
+          DEFAULT_MAX_MIP_LEVELS, param_flags));
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_converter_debug,
       "d3d12converter", 0, "d3d12converter");
@@ -2395,6 +2399,12 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CmdQueue * queue,
       gst_object_unref (self);
       return nullptr;
     }
+
+    D3D12_DESCRIPTOR_HEAP_DESC rtv_heap_desc = { };
+    rtv_heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+    rtv_heap_desc.NumDescriptors = 1;
+    priv->rtv_heap_pool = gst_d3d12_desc_heap_pool_new (device_handle,
+        &rtv_heap_desc);
   }
 
   gst_d3d12_converter_calculate_border_color (self);
@@ -2764,6 +2774,7 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
   gboolean ret = TRUE;
   guint mip_levels = 1;
   auto in_desc = GetDesc (in_frame.data[0]);
+  auto device = gst_d3d12_device_get_device_handle (converter->device);
 
   if (priv->mipgen_enabled) {
     if (in_desc.Width != priv->mipgen_desc.Width ||
@@ -2772,12 +2783,6 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
       priv->shared_mip_tex = nullptr;
       priv->mipgen_desc.Width = in_desc.Width;
       priv->mipgen_desc.Height = in_desc.Height;
-
-      auto & comm = priv->mipgen_ctx->comm;
-      comm->viewport[0].Width = (FLOAT) in_desc.Width;
-      comm->viewport[0].Height = (FLOAT) in_desc.Height;
-      comm->scissor_rect[0].right = (LONG) in_desc.Width;
-      comm->scissor_rect[0].bottom = (LONG) in_desc.Height;
     }
 
     if (priv->mip_levels != 1 && !priv->mipgen_buf) {
@@ -2803,8 +2808,6 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
         GST_DEBUG_OBJECT (converter, "Acquired shared mipmap texture %ux%u",
             (guint) priv->mipgen_desc.Width, priv->mipgen_desc.Height);
       } else {
-        auto device = gst_d3d12_device_get_device_handle (converter->device);
-
         D3D12_HEAP_PROPERTIES heap_props =
             CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
         D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
@@ -2898,6 +2901,56 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
       return FALSE;
     }
 
+    guint mipgen_width = (guint) priv->mipgen_desc.Width;
+    guint mipgen_height = priv->mipgen_desc.Height;
+    guint base_mip_level = 0;
+    guint generated_mip_levels = mip_levels;
+
+    /* fast-path mipmap */
+    if (mip_levels > 2 && priv->mip_levels == G_MAXUINT16) {
+      GstD3D12DescHeap *rtv_heap;
+      if (!gst_d3d12_desc_heap_pool_acquire (priv->rtv_heap_pool, &rtv_heap)) {
+        GST_ERROR_OBJECT (converter, "Couldn't acquire descriptor heap");
+        gst_d3d12_frame_unmap (&in_frame);
+        gst_d3d12_frame_unmap (&mipgen_frame);
+        gst_d3d12_frame_unmap (&out_frame);
+
+        gst_buffer_unref (in_buf);
+        gst_buffer_unref (render_target);
+
+        return FALSE;
+      }
+
+      /* Create new rtv for non-zero level mip, and adjust viewport size too */
+      base_mip_level = std::min < guint > (mip_levels - 2,
+          priv->mipgen_desc.MipLevels - 2);
+      generated_mip_levels = 2;
+      mipgen_width = std::max < guint > (mipgen_width >> base_mip_level, 1);
+      mipgen_height = std::max < guint > (mipgen_height >> base_mip_level, 1);
+
+      D3D12_RENDER_TARGET_VIEW_DESC rtv_desc = { };
+      rtv_desc.Format = priv->mipgen_srv_desc.Format;
+      rtv_desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+      rtv_desc.Texture2D.MipSlice = base_mip_level;
+
+      auto rtv_handle = gst_d3d12_desc_heap_get_handle (rtv_heap);
+      auto cpu_handle = GetCPUDescriptorHandleForHeapStart (rtv_handle);
+      device->CreateRenderTargetView (mipgen_frame.data[0], &rtv_desc,
+          cpu_handle);
+
+      /* Replace with new rtv to bind non-zero base level */
+      mipgen_frame.rtv_desc_handle[0] = cpu_handle;
+
+      gst_d3d12_fence_data_push (fence_data,
+          FENCE_NOTIFY_MINI_OBJECT (rtv_heap));
+    }
+
+    auto & comm = priv->mipgen_ctx->comm;
+    comm->viewport[0].Width = (FLOAT) mipgen_width;
+    comm->viewport[0].Height = (FLOAT) mipgen_height;
+    comm->scissor_rect[0].right = (LONG) mipgen_width;
+    comm->scissor_rect[0].bottom = (LONG) mipgen_height;
+
     if (!gst_d3d12_converter_execute (converter, &in_frame, &mipgen_frame,
             priv->mipgen_ctx, TRUE, fence_data, command_list)) {
       GST_ERROR_OBJECT (converter, "Couldn't convert to mipmap format");
@@ -2914,11 +2967,11 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
     auto barrier = CD3DX12_RESOURCE_BARRIER::Transition (mipgen_frame.data[0],
         D3D12_RESOURCE_STATE_RENDER_TARGET,
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
-        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, 0);
+        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, base_mip_level);
     command_list->ResourceBarrier (1, &barrier);
 
     ret = gst_d3d12_mip_gen_execute_full (priv->mipgen, mipgen_frame.data[0],
-        fence_data, command_list, 0, mip_levels,
+        fence_data, command_list, base_mip_level, generated_mip_levels,
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     if (!ret) {
       GST_ERROR_OBJECT (converter, "Couldn't generate mip levels");
@@ -2932,7 +2985,7 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
       return FALSE;
     }
 
-    if (mip_levels != priv->mipgen_desc.MipLevels) {
+    {
       GstD3D12DescHeap *desc_heap;
       if (!gst_d3d12_desc_heap_pool_acquire (priv->mipgen_srv_heap_pool,
               &desc_heap)) {
@@ -2952,8 +3005,8 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
       gst_d3d12_fence_data_push (fence_data,
           FENCE_NOTIFY_MINI_OBJECT (desc_heap));
 
-      auto device = gst_d3d12_device_get_device_handle (converter->device);
-      priv->mipgen_srv_desc.Texture2D.MipLevels = mip_levels;
+      priv->mipgen_srv_desc.Texture2D.MostDetailedMip = base_mip_level;
+      priv->mipgen_srv_desc.Texture2D.MipLevels = generated_mip_levels;
       device->CreateShaderResourceView (mipgen_frame.data[0],
           &priv->mipgen_srv_desc, cpu_handle);
 
