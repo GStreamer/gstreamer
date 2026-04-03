@@ -817,6 +817,10 @@ gst_face_detector_tensor_decoder_decode_boxes_f32 (GstFaceDetectorTensorDecoder
     gfloat w_ = x2 - x1;
     gfloat h_ = y2 - y1;
 
+    GST_LOG_OBJECT (self, "Found face at (%d, %d) of size %dx%d with prob: %f",
+        (gint) (x1 + 0.5f), (gint) (y1 + 0.5f),
+        (gint) (w_ + 0.5f), (gint) (h_ + 0.5f), c->score);
+
     /* Add to analytics meta: (x, y, width, height). */
     gst_analytics_relation_meta_add_od_mtd (rmeta, FACE_QUARK,
         (gint) (x1 + 0.5f), (gint) (y1 + 0.5f),
