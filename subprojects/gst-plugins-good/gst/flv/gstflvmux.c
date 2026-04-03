@@ -1590,7 +1590,6 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
   }
 
   for (GList * p = mux->audio_pads; p; p = p->next) {
-    GstCaps *caps = NULL;
     GstFlvMuxPad *pad = p->data;
     gchar id[4];
 
@@ -1647,8 +1646,6 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
     GST_DEBUG_OBJECT (mux,
         "putting `audiocodecid` for track %d in the metadata", pad->codec);
 
-    gst_caps_unref (caps);
-
     tmp = gst_flv_mux_create_object_script_end_marker ();       // end track object
     script_tag = gst_buffer_append (script_tag, tmp);
     tags_written++;
@@ -1663,17 +1660,11 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
 
   /* go with default flv video track pad values as standard configuration */
   if (default_video_track_pad && default_video_track_pad->codec != G_MAXUINT) {
-    GstCaps *caps =
-        gst_pad_get_current_caps (GST_PAD (default_video_track_pad));
-
-    g_assert (caps != NULL);
     GST_DEBUG_OBJECT (mux,
         "found a video track/pad, adding default configuration in the metadata");
 
     tags_written +=
         _put_flv_header_video_meta (mux, default_video_track_pad, script_tag);
-
-    gst_caps_unref (caps);
   }
 
   /* go with default flv audio track pad values as standard configuration */
