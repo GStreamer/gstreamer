@@ -155,29 +155,16 @@ GST_DEBUG_CATEGORY (gst_vtenc_debug);
 
 #define CMTIME_TO_GST_CLOCK_TIME(time) time.value / (time.timescale / GST_SECOND)
 
-/* define EnableHardwareAcceleratedVideoEncoder in < 10.9 */
-#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED < 1090
-const CFStringRef
-    kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder =
-CFSTR ("EnableHardwareAcceleratedVideoEncoder");
-const CFStringRef
-    kVTVideoEncoderSpecification_RequireHardwareAcceleratedVideoEncoder =
-CFSTR ("RequireHardwareAcceleratedVideoEncoder");
-const CFStringRef kVTCompressionPropertyKey_ProfileLevel =
-CFSTR ("ProfileLevel");
-const CFStringRef kVTProfileLevel_H264_Baseline_AutoLevel =
-CFSTR ("H264_Baseline_AutoLevel");
-#endif
-
-#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED < 1080
-const CFStringRef kVTCompressionPropertyKey_Quality = CFSTR ("Quality");
-#endif
-
 /* This property key is currently completely undocumented. The only way you can
  * know about its existence is if Apple tells you. It allows you to tell the
  * encoder to not preserve alpha even when outputting alpha formats. */
 const CFStringRef gstVTCodecPropertyKey_PreserveAlphaChannel =
 CFSTR ("kVTCodecPropertyKey_PreserveAlphaChannel");
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 130000
+const CFStringRef kVTCompressionPropertyKey_ConstantBitRate =
+CFSTR ("ConstantBitrate");
+#endif
 
 enum
 {
@@ -1633,7 +1620,11 @@ gst_vtenc_create_session (GstVTEnc * self)
     self->dump_properties = FALSE;
   }
 #if !TARGET_OS_WATCH
-  if (__builtin_available (ios 8.0, macos 10.9, tvos 10.2, visionos 1.0, *)) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 140000
+  if (__builtin_available (iOS 8.0, macOS 10.9, tvOS 10.2, *)) {
+#else
+  if (__builtin_available (iOS 8.0, macOS 10.9, tvOS 10.2, visionOS 1.0, *)) {
+#endif
     status = VTCompressionSessionPrepareToEncodeFrames (session);
     if (status != noErr) {
       GST_ERROR_OBJECT (self,
@@ -1774,7 +1765,11 @@ gst_vtenc_session_configure_bitrate (GstVTEnc * self,
     /*
      * In addition to the OS requirements, CBR also requires Apple Silicon
      */
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 140000
+    if (__builtin_available (macOS 13.0, iOS 16.0, tvOS 16.0, *)) {
+#else
     if (__builtin_available (macOS 13.0, iOS 16.0, tvOS 16.0, visionOS 1.0, *)) {
+#endif
       key = kVTCompressionPropertyKey_ConstantBitRate;
     } else
 #endif

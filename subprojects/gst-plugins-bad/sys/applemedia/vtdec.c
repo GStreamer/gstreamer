@@ -65,7 +65,8 @@
 #include "corevideobuffer.h"
 #include "coremediabuffer.h"
 #include "videotexturecache-gl.h"
-#if defined(APPLEMEDIA_MOLTENVK)
+
+#ifdef APPLEMEDIA_MOLTENVK
 #include <MoltenVK/mvk_private_api.h>
 #include "videotexturecache-vulkan.h"
 #endif
@@ -73,7 +74,12 @@
 GST_DEBUG_CATEGORY_STATIC (gst_vtdec_debug_category);
 #define GST_CAT_DEFAULT gst_vtdec_debug_category
 
-#if defined(APPLEMEDIA_MOLTENVK)
+/* Added in Xcode 13 */
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 120000
+#define kVTVideoDecoderReferenceMissingErr -17694
+#endif
+
+#ifdef APPLEMEDIA_MOLTENVK
 /* Temporary MoltenVK-specific warning probe for issue #2705.
  * Remove this once GStreamer ships a MoltenVK version containing the fix:
  * https://github.com/KhronosGroup/MoltenVK/issues/2705
@@ -157,10 +163,6 @@ enum
   VTDEC_FRAME_FLAG_ERROR = (1 << 12),
 };
 
-#if (defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED < 140000) || (defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED < 110000)
-#define kCMVideoCodecType_VP9 'vp09'
-#endif
-
 static void gst_vtdec_finalize (GObject * object);
 
 static gboolean gst_vtdec_start (GstVideoDecoder * decoder);
@@ -231,16 +233,6 @@ static GstStaticPadTemplate gst_vtdec_sink_template =
 
 static SupplementalSupport gst_vtdec_codec_support = NoneSupported;
 
-/* define EnableHardwareAcceleratedVideoDecoder in < 10.9 */
-#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED < 1090
-const CFStringRef
-    kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder =
-CFSTR ("EnableHardwareAcceleratedVideoDecoder");
-const CFStringRef
-    kVTVideoDecoderSpecification_RequireHardwareAcceleratedVideoDecoder =
-CFSTR ("RequireHardwareAcceleratedVideoDecoder");
-#endif
-
 #define VIDEO_SRC_CAPS_FORMATS "{ NV12, AYUV64, ARGB64_BE, P010_10LE }"
 
 #define VIDEO_SRC_CAPS_NATIVE                                           \
@@ -249,7 +241,7 @@ CFSTR ("RequireHardwareAcceleratedVideoDecoder");
     "texture-target = (string) rectangle ;"                             \
     GST_VIDEO_CAPS_MAKE(VIDEO_SRC_CAPS_FORMATS)
 
-#if defined(APPLEMEDIA_MOLTENVK)
+#ifdef APPLEMEDIA_MOLTENVK
 #define VIDEO_SRC_CAPS                                                      \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, \
         VIDEO_SRC_CAPS_FORMATS) ";" VIDEO_SRC_CAPS_NATIVE
@@ -400,7 +392,7 @@ gst_vtdec_stop (GstVideoDecoder * decoder)
     gst_buffer_unref (vtdec->av1_sequence_header_obu);
   vtdec->av1_sequence_header_obu = NULL;
 
-#if defined(APPLEMEDIA_MOLTENVK)
+#ifdef APPLEMEDIA_MOLTENVK
   gst_clear_object (&vtdec->device);
   gst_clear_object (&vtdec->instance);
 #endif
@@ -619,7 +611,7 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   OSStatus err = noErr;
   GstCapsFeatures *features = NULL;
   gboolean output_textures = FALSE;
-#if defined(APPLEMEDIA_MOLTENVK)
+#ifdef APPLEMEDIA_MOLTENVK
   gboolean output_vulkan = FALSE;
 #endif
 
@@ -714,7 +706,7 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
           NULL);
 #endif
 
-#if defined(APPLEMEDIA_MOLTENVK)
+#ifdef APPLEMEDIA_MOLTENVK
     output_vulkan =
         gst_caps_features_contains (features,
         GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE);
@@ -756,7 +748,7 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   if (vtdec->texture_cache != NULL
       && ((GST_IS_VIDEO_TEXTURE_CACHE_GL (vtdec->texture_cache)
               && !output_textures)
-#if defined(APPLEMEDIA_MOLTENVK)
+#ifdef APPLEMEDIA_MOLTENVK
           || (GST_IS_VIDEO_TEXTURE_CACHE_VULKAN (vtdec->texture_cache)
               && !output_vulkan)
 #endif
@@ -792,7 +784,7 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
         setup_texture_cache (vtdec, format);
       }
     }
-#if defined(APPLEMEDIA_MOLTENVK)
+#ifdef APPLEMEDIA_MOLTENVK
     if (output_vulkan) {
       GstVideoTextureCacheVulkan *cache_vulkan = NULL;
 
@@ -1271,7 +1263,11 @@ gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format,
       &kCFTypeDictionaryValueCallBacks);
 
 #if TARGET_OS_OSX || TARGET_OS_VISION || TARGET_OS_IOS || TARGET_OS_TV
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 140000
+  if (__builtin_available (macOS 10.9, iOS 17.0, tvOS 17.0, *)) {
+#else
   if (__builtin_available (macOS 10.9, iOS 17.0, tvOS 17.0, visionOS 1.0, *)) {
+#endif
     gst_vtutil_dict_set_boolean (videoDecoderSpecification,
         kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder,
         enable_hardware);
@@ -2273,7 +2269,7 @@ gst_vtdec_set_context (GstElement * element, GstContext * context)
   gst_gl_handle_set_context (element, context,
       &vtdec->ctxh->display, &vtdec->ctxh->other_context);
 
-#if defined (APPLEMEDIA_MOLTENVK)
+#ifdef APPLEMEDIA_MOLTENVK
   gst_vulkan_handle_set_context (element, context, NULL, &vtdec->instance);
 #endif
 
@@ -2332,7 +2328,11 @@ gst_vtdec_register_vtdec (GstPlugin * plugin)
   gst_vtdec_init_once ();
 
 #if !TARGET_OS_WATCH
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 140000
+  if (__builtin_available (macOS 10.9, iOS 17.0, tvOS 17.0, *))
+#else
   if (__builtin_available (macOS 10.9, iOS 17.0, tvOS 17.0, visionOS 1.0, *))
+#endif
     rank = GST_RANK_SECONDARY;
 #endif
 
@@ -2345,7 +2345,11 @@ gst_vtdec_register_vtdec_hw (GstPlugin * plugin)
 {
   gst_vtdec_init_once ();
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 140000
+  if (__builtin_available (macOS 10.9, iOS 17.0, tvOS 17.0, *)) {
+#else
   if (__builtin_available (macOS 10.9, iOS 17.0, tvOS 17.0, visionOS 1.0, *)) {
+#endif
     return gst_element_register (plugin, "vtdec_hw", GST_RANK_PRIMARY + 1,
         GST_TYPE_VTDEC_HW);
   }

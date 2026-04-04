@@ -18,15 +18,16 @@
  */
 
 #include "vtutil.h"
+
+#include <dlfcn.h>
 #include <VideoToolbox/VideoToolbox.h>
 #include <TargetConditionals.h>
 
 #if TARGET_OS_OSX || TARGET_OS_IOS || TARGET_OS_TV || TARGET_OS_VISION
 #define HAVE_SUPPLEMENTAL
-#if (TARGET_OS_OSX && __MAC_OS_X_VERSION_MAX_ALLOWED >= 110000) || (TARGET_OS_IOS && __IPHONE_OS_VERSION_MAX_ALLOWED >= 260200) || (TARGET_OS_TV && __TV_OS_VERSION_MAX_ALLOWED >= 260200) || (TARGET_OS_VISION && __VISION_OS_VERSION_MAX_ALLOWED >= 260200)
+/* Added in Xcode 12 for macOS and in Xcode 26.2 for iPhone/tvOS/visionOS */
+#if (TARGET_OS_OSX && MAC_OS_X_VERSION_MAX_ALLOWED >= 110000) || __IPHONE_OS_VERSION_MAX_ALLOWED >= 260200
 #define HAVE_SUPPLEMENTAL_DEFINITION
-#else
-#include <dlfcn.h>
 #endif
 #endif
 
@@ -182,7 +183,11 @@ gst_vtutil_register_supplemental_decoder (CMVideoCodecType codec_type)
 
 #ifdef HAVE_SUPPLEMENTAL
 #ifdef HAVE_SUPPLEMENTAL_DEFINITION
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 140000
+  if (__builtin_available (macOS 11.0, iOS 26.2, tvOS 26.2, *)) {
+#else
   if (__builtin_available (macOS 11.0, iOS 26.2, tvOS 26.2, visionOS 26.2, *)) {
+#endif
     GST_INFO ("Registering supplemental VideoToolbox decoder by direct call");
     VTRegisterSupplementalVideoDecoderIfAvailable (codec_type);
     return TRUE;
