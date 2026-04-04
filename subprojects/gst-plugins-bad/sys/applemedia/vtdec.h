@@ -29,7 +29,7 @@
 #include <VideoToolbox/VideoToolbox.h>
 #include "videotexturecache.h"
 #include "glcontexthelper.h"
-#if defined(APPLEMEDIA_MOLTENVK)
+#ifdef APPLEMEDIA_MOLTENVK
 #include <gst/vulkan/vulkan.h>
 #endif
 
@@ -72,7 +72,7 @@ struct _GstVtdec
   /* access via g_atomic_int_* */
   gboolean require_reset;
 
-#if defined(APPLEMEDIA_MOLTENVK)
+#ifdef APPLEMEDIA_MOLTENVK
   GstVulkanInstance *instance;
   GstVulkanDevice *device;
 #endif

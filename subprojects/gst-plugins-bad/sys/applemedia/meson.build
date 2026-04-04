@@ -84,6 +84,14 @@ if host_system != 'darwin' or applemedia_option.disabled() or not have_objcpp
   subdir_done()
 endif
 
+if cc.get_define('MAC_OS_X_VERSION_MAX_ALLOWED', prefix: '#include <AvailabilityMacros.h>').to_int() < 110000
+  if applemedia_option.enabled()
+    error('applemedia plugin needs Xcode 12.4 or newer')
+  endif
+  warning('Disabling applemedia plugin: needs Xcode 12.4 or newer')
+  subdir_done()
+endif
+
 objc = meson.get_compiler('objc')
 if not objc.has_argument('-fobjc-arc')
   error('ARC is required for building')

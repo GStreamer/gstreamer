@@ -86,7 +86,11 @@ gst_av_capture_device_get_props (AVCaptureDevice *device)
   g_free (model_id);
 
 #if !TARGET_OS_WATCH
-  if (__builtin_available (macos 10.9, ios 14.0, tvos 17.0, visionos 2.1, *)) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 140000
+  if (__builtin_available (macOS 10.9, iOS 14.0, tvOS 17.0, *)) {
+#else
+  if (__builtin_available (macOS 10.9, iOS 14.0, tvOS 17.0, visionOS 2.1, *)) {
+#endif
     char *manufacturer = g_strdup ([[device manufacturer] UTF8String]);
     gst_structure_set (props,
       "avf.manufacturer", G_TYPE_STRING, manufacturer,

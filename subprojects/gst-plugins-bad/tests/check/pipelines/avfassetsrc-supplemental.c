@@ -224,7 +224,11 @@ register_supplemental_decoder (CMVideoCodecType codec_type)
 {
 #ifdef HAVE_SUPPLEMENTAL
 #ifdef HAVE_SUPPLEMENTAL_DEFINITION
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 130000
+  if (__builtin_available (macOS 11.0, iOS 26.2, tvOS 26.2, *)) {
+#else
   if (__builtin_available (macOS 11.0, iOS 26.2, tvOS 26.2, visionOS 26.2, *)) {
+#endif
     VTRegisterSupplementalVideoDecoderIfAvailable (codec_type);
     return TRUE;
   }
@@ -311,14 +315,14 @@ run_supplemental_codec_test (const gchar * filename,
 
 GST_START_TEST (test_avfassetsrc_vp9_supplemental)
 {
-  run_supplemental_codec_test ("vp9_only.mp4", kCMVideoCodecType_VP9);
+  run_supplemental_codec_test ("vp9_only.mp4", 'vp09');
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_avfassetsrc_av1_supplemental)
 {
-  run_supplemental_codec_test ("av1_only.mp4", kCMVideoCodecType_AV1);
+  run_supplemental_codec_test ("av1_only.mp4", 'av01');
 }
 
 GST_END_TEST;
