@@ -401,6 +401,8 @@ gst_yolo_seg_tensor_decoder_object_found (GstYoloTensorDecoder * od,
   g_assert (vmeta != NULL);
   vmeta->width = bb_mask.w;
   vmeta->height = bb_mask.h;
+  /* Keep metadata stride consistent with packed writes below (i++ indexing). */
+  vmeta->stride[0] = bb_mask.w;
 
 #define MX_MAX (bb_mask.x + bb_mask.w)
 #define MY_MAX (bb_mask.y + bb_mask.h)
