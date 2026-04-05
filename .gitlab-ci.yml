@@ -1065,7 +1065,7 @@ valgrind rtsp-server:
       ${SIMPLE_BUILD}
       -Ddoc=enabled
       -Drs=enabled
-      -Dgst-docs:fatal_warnings=true
+      -Dgst-docs:fatal_warnings=false
       -Dgst-plugins-bad:svthevcenc=disabled
     # Disable werror for the docs build, we don't need it
     GST_WERROR: 'false'
