@@ -1544,7 +1544,7 @@ exif_reader_read_rational_tag (GstExifReader * exif_reader,
     }
   }
 
-  if (frac_d == 0) {
+  if (frac_n == G_MININT || frac_d == G_MININT || frac_d == 0) {
     gst_buffer_unmap (exif_reader->buffer, &info);
     return FALSE;               /* Ignore invalid fractions */
   }
