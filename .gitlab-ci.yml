@@ -528,6 +528,9 @@ build debian x86_64 debug:
     - changes:
         paths:
           - "subprojects/win-*/*"
+  before_script:
+    # Install newer meson (don't want to regen the whole image just for that right now)
+    - pip3 install -U meson==1.10.2
   script:
     # Make sure powershell exits on errors
     # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-6

@@ -64,6 +64,7 @@ RUN C:\upgrade_msys2.ps1
 RUN C:\msys64\msys2_shell.cmd -ucrt64 -defterm -here -no-start -use-full-path -lc 'pacman -S --noconfirm mingw-w64-ucrt-x86_64-toolchain ninja openssh'
 
 # Setuptools 81.0.0 removes the dry-run param which breaks gobject-introspection
+# NOTE: When updating meson make sure to check for and remove any overrides in .gitlab-ci.yml
 RUN python -m pip install meson==1.9.0 python-gitlab setuptools==80.10.2 wheel
 
 RUN 'git config --global user.email "cirunner@gstreamer.freedesktop.org"; git config --global user.name "GStreamer CI system"'
