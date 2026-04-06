@@ -268,7 +268,7 @@ gsize                gst_h264_calculate_coded_size           (const GstH264SPS *
 /* H264 encoder frame */
 
 #define GST_TYPE_H264_ENCODER_FRAME    (gst_h264_encoder_frame_get_type ())
-#define GST_IS_H264_ENCODER_FRAME(obj) (GST_IS_MINI_OBJECT_TYPE (obj, GST_TYPE_H264_ENCODE_FRAME))
+#define GST_IS_H264_ENCODER_FRAME(obj) (GST_IS_MINI_OBJECT_TYPE (obj, GST_TYPE_H264_ENCODER_FRAME))
 #define GST_H264_ENCODER_FRAME(obj)    ((GstH264EncoderFrame *)obj)
 
 /**
@@ -315,7 +315,7 @@ gst_h264_encoder_frame_get_user_data (GstH264EncoderFrame * frame)
 }
 
 static inline GstH264EncoderFrame *
-gst_h264_encode_frame_ref (GstH264EncoderFrame * frame)
+gst_h264_encoder_frame_ref (GstH264EncoderFrame * frame)
 {
   return (GstH264EncoderFrame *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (frame));
 }
