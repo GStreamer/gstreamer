@@ -69,9 +69,11 @@ struct _GstVulkaneEncoderCallbacks
 /**
  * GstVulkanEncoderPicture:
  * @slotIndex: slot index
- * @offset: headers offset
+ * @bitstream_extra_size: bitstream headers extra size
  * @in_buffer: input buffer
  * @out_buffer: output buffer
+ * @img_view: input image's vulkan view
+ * @dpb_view: input image's in DPB vulkan view
  *
  * It contains the whole state for encoding a single picture.
  *
@@ -79,7 +81,7 @@ struct _GstVulkaneEncoderCallbacks
  */
 struct _GstVulkanEncoderPicture
 {
-  guint64 offset;
+  guint64 bitstream_header_size;
 
   GstBuffer *in_buffer;
   GstBuffer *dpb_buffer;
@@ -89,6 +91,7 @@ struct _GstVulkanEncoderPicture
   GstVulkanImageView *img_view;
   GstVulkanImageView *dpb_view;
 
+  /*< private >*/
   VkVideoPictureResourceInfoKHR dpb;
   VkVideoReferenceSlotInfoKHR dpb_slot;
 

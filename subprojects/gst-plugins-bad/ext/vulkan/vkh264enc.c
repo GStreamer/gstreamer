@@ -1284,7 +1284,7 @@ _write_headers (GstVulkanH264Encoder * self,
     offset += size + 1;
   }
 
-  vk_frame->picture.offset = offset;
+  vk_frame->picture.bitstream_header_size = offset;
 
   ret = TRUE;
 
