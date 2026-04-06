@@ -708,6 +708,9 @@ gst_h264_encoder_set_format (GstVideoEncoder * encoder,
     priv->fps_n = 30;
   }
 
+  priv->frame_duration =
+      gst_util_uint64_scale (GST_SECOND, priv->fps_d, priv->fps_n);
+
   /* in case live streaming, we should run on low-latency mode */
   priv->is_live = FALSE;
   query = gst_query_new_latency ();
@@ -2517,6 +2520,8 @@ gst_h264_encoder_init (GstH264Encoder * self)
   g_queue_init (&priv->reorder_list);
 
   priv->dts_queue = gst_vec_deque_new_for_struct (sizeof (GstClockTime), 8);
+
+  priv->frame_duration = GST_CLOCK_TIME_NONE;
 
   priv->config.max_num_reference_list0 = 1;
   priv->config.max_num_reference_list1 = 0;
