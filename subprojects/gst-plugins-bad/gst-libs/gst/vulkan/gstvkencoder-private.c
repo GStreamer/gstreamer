@@ -580,16 +580,6 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
     return FALSE;
   }
 
-  if (_vk_codec_extensions[codec_idx].specVersion <
-      priv->caps.caps.stdHeaderVersion.specVersion) {
-    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-        "The driver needs a newer version [%i.%i.%i] of the current headers"
-        "%d.%d.%d, please update the code to support this driver.",
-        VK_CODEC_VERSION (priv->caps.caps.stdHeaderVersion.specVersion),
-        VK_CODEC_VERSION (_vk_codec_extensions[codec_idx].specVersion));
-    return FALSE;
-  }
-
   priv->profile = *profile;
 
   /* ensure the chain up of structure */
@@ -600,6 +590,16 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
   if (!gst_vulkan_video_try_configuration (phy_dev, &priv->profile, &priv->caps,
           &priv->profile_caps, &fmts, error))
     return FALSE;
+
+  if (_vk_codec_extensions[codec_idx].specVersion <
+      priv->caps.caps.stdHeaderVersion.specVersion) {
+    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
+        "The driver needs a newer version [%i.%i.%i] of the current headers"
+        "%d.%d.%d, please update the code to support this driver.",
+        VK_CODEC_VERSION (priv->caps.caps.stdHeaderVersion.specVersion),
+        VK_CODEC_VERSION (_vk_codec_extensions[codec_idx].specVersion));
+    goto failed;
+  }
 
   /* Get output format */
   for (i = 0; i < fmts->len; i++) {
