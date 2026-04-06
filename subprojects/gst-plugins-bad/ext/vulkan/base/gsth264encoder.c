@@ -1752,6 +1752,19 @@ struct ProfileCandidate
   guint level;
 };
 
+static gboolean
+_fill_profile_candidate (const GValue * profile, const GValue * level,
+    struct ProfileCandidate *candidate)
+{
+  candidate->profile_name = g_value_get_string (profile);
+  candidate->profile =
+      gst_h264_encoder_profile_from_string (candidate->profile_name);
+  candidate->level =
+      level ? _h264_get_level_idc (g_value_get_string (level)) : 0;
+
+  return (candidate->profile != GST_H264_PROFILE_INVALID);
+}
+
 static GstFlowReturn
 gst_h264_encoder_negotiate_default (GstH264Encoder * self,
     GstVideoCodecState * in_state, GstH264Profile * profile,
@@ -1778,28 +1791,22 @@ gst_h264_encoder_negotiate_default (GstH264Encoder * self,
         *level = gst_structure_get_value (structure, "level");
     struct ProfileCandidate *candidate;
 
-    if (!profile)
+    if (!profiles)
       continue;
 
-    candidate = &candidates[num_candidates];
-
     if (G_VALUE_HOLDS_STRING (profiles)) {
-      candidate->profile_name = g_value_get_string (profiles);
-      candidate->profile =
-          gst_h264_encoder_profile_from_string (candidate->profile_name);
-      candidate->level = level ?
-          _h264_get_level_idc (g_value_get_string (level)) : 0;
-      num_candidates++;
+      candidate = &candidates[num_candidates];
+      if (_fill_profile_candidate (profiles, level, candidate))
+        num_candidates++;
     } else if (GST_VALUE_HOLDS_LIST (profiles)) {
       for (guint j = 0; j < gst_value_list_get_size (profiles); j++) {
         const GValue *profile = gst_value_list_get_value (profiles, j);
 
-        candidate->profile_name = g_value_get_string (profile);
-        candidate->profile =
-            gst_h264_encoder_profile_from_string (candidate->profile_name);
-        candidate->level = level ?
-            _h264_get_level_idc (g_value_get_string (level)) : 0;
-        num_candidates++;
+        candidate = &candidates[num_candidates];
+        if (_fill_profile_candidate (profile, level, candidate))
+          num_candidates++;
+        if (num_candidates == G_N_ELEMENTS (candidates))
+          break;
       }
     }
 
