@@ -1570,8 +1570,8 @@ gst_h264_encoder_encode_frame (GstH264Encoder * self,
     }
 
     /* Add it into the reference list. */
-    g_queue_push_tail (&priv->ref_list, gst_video_codec_frame_ref (frame));
-    g_queue_sort (&priv->ref_list, _sort_by_frame_num, NULL);
+    g_queue_insert_sorted (&priv->ref_list, gst_video_codec_frame_ref (frame),
+        _sort_by_frame_num, NULL);
 
     g_assert (g_queue_get_length (&priv->ref_list) <
         priv->gop.max_dec_frame_buffering);
