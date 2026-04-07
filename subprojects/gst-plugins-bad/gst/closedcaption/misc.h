@@ -329,20 +329,20 @@ VBI_CAT_LEVEL_LOG (GstDebugLevel level,
 #define debug3(hook, templ, args...)					\
 	VBI_CAT_LEVEL_LOG (GST_LEVEL_TRACE, NULL, templ , ##args)
 #elif defined(G_HAVE_ISO_VARARGS)
-#define error(hook, templ, ...)					\
-	VBI_CAT_LEVEL_LOG (GST_LEVEL_ERROR, NULL, templ, __VA_ARGS__)
-#define warn(hook, templ, ...)					\
-	VBI_CAT_LEVEL_LOG (GST_LEVEL_WARNING, NULL, templ, __VA_ARGS__)
-#define notice(hook, templ, ...)					\
-	VBI_CAT_LEVEL_LOG (GST_LEVEL_INFO, NULL, templ, __VA_ARGS__)
-#define info(hook, templ, ...)					\
-	VBI_CAT_LEVEL_LOG (GST_LEVEL_INFO, NULL, templ, __VA_ARGS__)
-#define debug1(hook, templ, ...)					\
-	VBI_CAT_LEVEL_LOG (GST_LEVEL_DEBUG, NULL, templ, __VA_ARGS__)
-#define debug2(hook, templ, ...)					\
-	VBI_CAT_LEVEL_LOG (GST_LEVEL_LOG, NULL, templ, __VA_ARGS__)
-#define debug3(hook, templ, ...)					\
-	VBI_CAT_LEVEL_LOG (GST_LEVEL_TRACE, NULL, templ, __VA_ARGS__)
+#define error(hook, ...)					\
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_ERROR, NULL, __VA_ARGS__)
+#define warn(hook, ...)						\
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_WARNING, NULL, __VA_ARGS__)
+#define notice(hook, ...)					\
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_INFO, NULL, __VA_ARGS__)
+#define info(hook, ...)						\
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_INFO, NULL, __VA_ARGS__)
+#define debug1(hook, ...)					\
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_DEBUG, NULL, __VA_ARGS__)
+#define debug2(hook, ...)					\
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_LOG, NULL, __VA_ARGS__)
+#define debug3(hook, ...)					\
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_TRACE, NULL, __VA_ARGS__)
 #else
 /* if someone needs this, they can implement the inline functions for it */
 #error "variadic macros are required"
