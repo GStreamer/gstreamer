@@ -303,10 +303,11 @@ static guint64
 qttext_parse_timestamp (ParserState * state, const gchar * line, gint index)
 {
   int ret;
-  gint hour, min, sec, dec;
+  guint hour, min, sec, dec;
+  guint64 timestamp, tmp;
   GstQTTextContext *context = GST_QTTEXT_CONTEXT (state);
 
-  ret = sscanf (line + index, "[%d:%d:%d.%d]", &hour, &min, &sec, &dec);
+  ret = sscanf (line + index, "[%u:%u:%u.%u]", &hour, &min, &sec, &dec);
   if (ret != 3 && ret != 4) {
     /* bad timestamp */
     GST_WARNING ("Bad qttext timestamp found: %s", line);
@@ -320,10 +321,16 @@ qttext_parse_timestamp (ParserState * state, const gchar * line, gint index)
 
   /* parse the decimal part according to the timescale */
   g_assert (context->timescale != 0);
-  dec = (GST_SECOND * dec) / context->timescale;
+  timestamp = gst_util_uint64_scale (dec, GST_SECOND, context->timescale);
+  timestamp += (guint64) sec *GST_SECOND;
+  if (!g_uint64_checked_mul (&tmp, min, MIN_TO_NSEC))
+    return GST_CLOCK_TIME_NONE;
+  timestamp += tmp;
+  if (!g_uint64_checked_mul (&tmp, hour, HOUR_TO_NSEC))
+    return GST_CLOCK_TIME_NONE;
+  timestamp += tmp;
 
-  /* return the result */
-  return hour * HOUR_TO_NSEC + min * MIN_TO_NSEC + sec * GST_SECOND + dec;
+  return timestamp;
 }
 
 static void
