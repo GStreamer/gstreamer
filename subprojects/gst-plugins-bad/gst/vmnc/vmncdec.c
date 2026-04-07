@@ -438,6 +438,7 @@ vmnc_handle_wmvd_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
   } else {
     dec->cursor.cursordata = g_malloc (rect->width * rect->height * 4);
     memcpy (dec->cursor.cursordata, data + 2, rect->width * rect->height * 4);
+    dec->cursor.cursormask = NULL;
   }
 
   return datalen;
