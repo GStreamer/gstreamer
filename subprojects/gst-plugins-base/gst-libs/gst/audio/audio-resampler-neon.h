@@ -207,19 +207,17 @@ interpolate_gint16_cubic_neon (gpointer op, const gpointer ap,
     gint len, const gpointer icp, gint astride)
 {
     gint16 *o = op, *a = ap, *ic = icp;
-    const gint16 *c[4] = {(gint16*)((gint8*)a + 0*astride),
-                          (gint16*)((gint8*)a + 1*astride),
-                          (gint16*)((gint8*)a + 2*astride),
-                          (gint16*)((gint8*)a + 3*astride)};
-
     asm volatile ("      cmp %[len], #0\n"
                   "      beq 2f\n"
                   "      vld4.16 {d24[], d25[], d26[], d27[]}, [%[ic]]\n"
                   "1:"
-                  "      vld1.16 {d16, d17}, [%[c0]]!\n"
-                  "      vld1.16 {d18, d19}, [%[c1]]!\n"
-                  "      vld1.16 {d20, d21}, [%[c2]]!\n"
-                  "      vld1.16 {d22, d23}, [%[c3]]!\n"
+                  "      vld1.16 {d16, d17}, [%[a]]!\n"
+                  "      add r8, %[a], %[astride]\n"
+                  "      vld1.16 {d18, d19}, [r8]!\n"
+                  "      add r8, r8, %[astride]\n"
+                  "      vld1.16 {d20, d21}, [r8]!\n"
+                  "      add r8, r8, %[astride]\n"
+                  "      vld1.16 {d22, d23}, [r8]!\n"
                   "      subs %[len], %[len], #8\n"
                   "      vmull.s16 q0, d16, d24\n"
                   "      vmull.s16 q1, d17, d24\n"
@@ -234,10 +232,10 @@ interpolate_gint16_cubic_neon (gpointer op, const gpointer ap,
                   "      vst1.16 {d0, d1}, [%[o]]!\n"
                   "      bne 1b\n"
                   "2:"
-                  : [a] "+r" (a), [c0] "+r" (c[0]), [c1] "+r" (c[1]), [c2] "+r" (c[2]), [c3] "+r" (c[3]),
+                  : [a] "+r" (a), [astride] "+r" (astride),
                     [len] "+r" (len), [o] "+r" (o)
                   : [ic] "r" (ic)
-                  : "cc", "q0", "q1",
+                  : "cc", "r8", "q0", "q1",
                     "d16", "d17", "d18", "d19", "d20", "d21", "d22",
                     "d23", "d24", "d25", "d26", "d27", "memory");
 }
@@ -331,11 +329,6 @@ static inline void
 inner_product_gint32_cubic_1_neon (gint32 * o, const gint32 * a,
     const gint32 * b, gint len, const gint32 * icoeff, gint bstride)
 {
-    const gint32 *c[4] = {(gint32*)((gint8*)b + 0*bstride),
-                          (gint32*)((gint8*)b + 1*bstride),
-                          (gint32*)((gint8*)b + 2*bstride),
-                          (gint32*)((gint8*)b + 3*bstride)};
-
     asm volatile ("      vmov.s64 q0, #0\n"
                   "      vmov.s64 q1, #0\n"
                   "      vmov.s64 q2, #0\n"
@@ -343,10 +336,13 @@ inner_product_gint32_cubic_1_neon (gint32 * o, const gint32 * a,
                   "      cmp %[len], #0\n"
                   "      beq 2f\n"
                   "1:"
-                  "      vld1.32 {d16, d17}, [%[c0]]!\n"
-                  "      vld1.32 {d18, d19}, [%[c1]]!\n"
-                  "      vld1.32 {d20, d21}, [%[c2]]!\n"
-                  "      vld1.32 {d22, d23}, [%[c3]]!\n"
+                  "      vld1.32 {d16, d17}, [%[b]]!\n"
+                  "      add r8, %[b], %[bstride]\n"
+                  "      vld1.32 {d18, d19}, [r8]!\n"
+                  "      add r8, r8, %[bstride]\n"
+                  "      vld1.32 {d20, d21}, [r8]!\n"
+                  "      add r8, r8, %[bstride]\n"
+                  "      vld1.32 {d22, d23}, [r8]!\n"
                   "      vld1.32 {d24, d25}, [%[a]]!\n"
                   "      subs %[len], %[len], #4\n"
                   "      vmlal.s32 q0, d16, d24\n"
@@ -371,10 +367,9 @@ inner_product_gint32_cubic_1_neon (gint32 * o, const gint32 * a,
                   "      vadd.s64 d0, d0, d1\n"
                   "      vqrshrn.s64 d0, q0, #31\n"
                   "      vst1.32 d0[0], [%[o]]\n"
-                  : [a] "+r" (a), [c0] "+r" (c[0]), [c1] "+r" (c[1]),
-                    [c2] "+r" (c[2]), [c3] "+r" (c[3]), [len] "+r" (len)
+                  : [a] "+r" (a), [b] "+r" (b), [bstride] "+r" (bstride), [len] "+r" (len)
                   : [o] "r" (o), [ic] "r" (icoeff)
-                  : "cc", "q0", "q1", "q2", "q3",
+                  : "cc", "r8", "q0", "q1", "q2", "q3",
                     "d16", "d17", "d18", "d19",
                     "d20", "d21", "d22", "d23", "d24", "d25", "memory");
 }
@@ -421,19 +416,18 @@ interpolate_gint32_cubic_neon (gpointer op, const gpointer ap,
     gint len, const gpointer icp, gint astride)
 {
     gint32 *o = op, *a = ap, *ic = icp;
-    const gint32 *c[4] = {(gint32*)((gint8*)a + 0*astride),
-                          (gint32*)((gint8*)a + 1*astride),
-                          (gint32*)((gint8*)a + 2*astride),
-                          (gint32*)((gint8*)a + 3*astride)};
 
     asm volatile ("      cmp %[len], #0\n"
                   "      beq 2f\n"
                   "      vld4.32 {d24[], d25[], d26[], d27[]}, [%[ic]]!\n"
                   "1:"
-                  "      vld1.32 {d16, d17}, [%[c0]]!\n"
-                  "      vld1.32 {d18, d19}, [%[c1]]!\n"
-                  "      vld1.32 {d20, d21}, [%[c2]]!\n"
-                  "      vld1.32 {d22, d23}, [%[c3]]!\n"
+                  "      vld1.32 {d16, d17}, [%[a]]!\n"
+                  "      add r8, %[a], %[astride]\n"
+                  "      vld1.32 {d18, d19}, [r8]!\n"
+                  "      add r8, r8, %[astride]\n"
+                  "      vld1.32 {d20, d21}, [r8]!\n"
+                  "      add r8, r8, %[astride]\n"
+                  "      vld1.32 {d22, d23}, [r8]!\n"
                   "      subs %[len], %[len], #4\n"
                   "      vmull.s32 q0, d16, d24\n"
                   "      vmull.s32 q1, d17, d24\n"
@@ -448,10 +442,9 @@ interpolate_gint32_cubic_neon (gpointer op, const gpointer ap,
                   "      vst1.32 {d0, d1}, [%[o]]!\n"
                   "      bne 1b\n"
                   "2:"
-                  : [a] "+r" (a), [c0] "+r" (c[0]), [c1] "+r" (c[1]),
-                    [c2] "+r" (c[2]), [c3] "+r" (c[3]), [len] "+r" (len), [o] "+r" (o)
+                  : [a] "+r" (a), [astride] "+r" (astride), [len] "+r" (len), [o] "+r" (o)
                   : [ic] "r" (ic)
-                  : "cc", "q0", "q1",
+                  : "cc", "r8", "q0", "q1",
                     "d16", "d17", "d18", "d19", "d20",
                     "d21", "d22", "d23", "d24", "d25", "d26", "d27", "memory");
 }
@@ -539,11 +532,6 @@ static inline void
 inner_product_gfloat_cubic_1_neon (gfloat * o, const gfloat * a,
     const gfloat * b, gint len, const gfloat * icoeff, gint bstride)
 {
-    const gfloat *c[4] = {(gfloat*)((gint8*)b + 0*bstride),
-                          (gfloat*)((gint8*)b + 1*bstride),
-                          (gfloat*)((gint8*)b + 2*bstride),
-                          (gfloat*)((gint8*)b + 3*bstride)};
-
     asm volatile ("      vmov.f32 q0, #0.0\n"
                   "      vmov.f32 q1, #0.0\n"
                   "      vmov.f32 q2, #0.0\n"
@@ -551,10 +539,14 @@ inner_product_gfloat_cubic_1_neon (gfloat * o, const gfloat * a,
                   "      cmp %[len], #0\n"
                   "      beq 2f\n"
                   "1:"
-                  "      vld1.32 {q8}, [%[c0]]!\n"
-                  "      vld1.32 {q9}, [%[c1]]!\n"
-                  "      vld1.32 {q10}, [%[c2]]!\n"
-                  "      vld1.32 {q11}, [%[c3]]!\n"
+                  "      vld1.32 {q8}, [%[b]]!\n"
+                  "      add r8, %[b], %[bstride]\n"
+                  "      vld1.32 {q9}, [r8]!\n"
+                  "      add r8, r8, %[bstride]\n"
+                  "      vld1.32 {q10}, [r8]!\n"
+                  "      add r8, r8, %[bstride]\n"
+                  "      vld1.32 {q11}, [r8]!\n"
+                  "      add r8, r8, %[bstride]\n"
                   "      vld1.32 {q12}, [%[a]]!\n"
                   "      subs %[len], %[len], #4\n"
                   "      vmla.f32 q0, q8, q12\n"
@@ -574,10 +566,9 @@ inner_product_gfloat_cubic_1_neon (gfloat * o, const gfloat * a,
                   "      vmla.f32 d0, d7, d23\n"
                   "      vpadd.f32 d0, d0, d0\n"
                   "      vst1.32 d0[0], [%[o]]\n"
-                  : [a] "+r" (a), [c0] "+r" (c[0]), [c1] "+r" (c[1]),
-                    [c2] "+r" (c[2]), [c3] "+r" (c[3]), [len] "+r" (len), [o] "+r" (o)
+                  : [a] "+r" (a), [b] "+r" (b), [bstride] "+r" (bstride), [len] "+r" (len), [o] "+r" (o)
                   : [ic] "r" (icoeff)
-                  : "cc", "q0", "q1", "q2", "q3",
+                  : "cc", "r8", "q0", "q1", "q2", "q3",
                     "q8", "q9", "q10", "q11", "q12", "memory");
 }
 
@@ -617,10 +608,6 @@ interpolate_gfloat_cubic_neon (gpointer op, const gpointer ap,
     gint len, const gpointer icp, gint astride)
 {
     gfloat *o = op, *a = ap, *ic = icp;
-    const gfloat *c[4] = {(gfloat*)((gint8*)a + 0*astride),
-                          (gfloat*)((gint8*)a + 1*astride),
-                          (gfloat*)((gint8*)a + 2*astride),
-                          (gfloat*)((gint8*)a + 3*astride)};
 
     asm volatile ("      cmp %[len], #0\n"
                   "      beq 2f\n"
@@ -630,10 +617,13 @@ interpolate_gfloat_cubic_neon (gpointer op, const gpointer ap,
                   "      vmov.32 d29, d28\n"
                   "      vmov.32 d31, d30\n"
                   "1:"
-                  "      vld1.32 {q8}, [%[c0]]!\n"
-                  "      vld1.32 {q9}, [%[c1]]!\n"
-                  "      vld1.32 {q10}, [%[c2]]!\n"
-                  "      vld1.32 {q11}, [%[c3]]!\n"
+                  "      vld1.32 {q8}, [%[a]]!\n"
+                  "      add r8, %[a], %[astride]\n"
+                  "      vld1.32 {q9}, [r8]!\n"
+                  "      add r8, r8, %[astride]\n"
+                  "      vld1.32 {q10}, [r8]!\n"
+                  "      add r8, r8, %[astride]\n"
+                  "      vld1.32 {q11}, [r8]!\n"
                   "      subs %[len], %[len], #4\n"
                   "      vmul.f32 q0, q8, q12\n"
                   "      vmla.f32 q0, q9, q13\n"
@@ -642,11 +632,10 @@ interpolate_gfloat_cubic_neon (gpointer op, const gpointer ap,
                   "      vst1.32 {q0}, [%[o]]!\n"
                   "      bne 1b\n"
                   "2:"
-                  : [a] "+r" (a), [c0] "+r" (c[0]), [c1] "+r" (c[1]),
-                    [c2] "+r" (c[2]), [c3] "+r" (c[3]),
+                  : [a] "+r" (a), [astride] "+r" (astride),
                     [len] "+r" (len), [o] "+r" (o)
                   : [ic] "r" (ic)
-                  : "cc", "q0", "q8", "q9",
+                  : "cc", "r8", "q0", "q8", "q9",
                     "q10", "q11", "q12", "q13", "q14", "q15", "memory");
 }
 
