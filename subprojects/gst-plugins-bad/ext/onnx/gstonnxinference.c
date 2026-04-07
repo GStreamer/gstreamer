@@ -236,7 +236,7 @@ gst_onnx_optimization_level_get_type (void)
       {GST_ONNX_OPTIMIZATION_LEVEL_DISABLE_ALL, "Disable all optimization",
           "disable-all"},
       {GST_ONNX_OPTIMIZATION_LEVEL_ENABLE_BASIC,
-            "Enable basic optimizations (redundant node removals))",
+            "Enable basic optimizations (redundant node removals)",
           "enable-basic"},
       {GST_ONNX_OPTIMIZATION_LEVEL_ENABLE_EXTENDED,
             "Enable extended optimizations (redundant node removals + node fusions)",
