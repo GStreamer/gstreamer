@@ -313,10 +313,11 @@ class TFLiteTensorAdapter:
 
         Args:
             tensor_detail: Dict with keys: 'name', 'dtype', 'shape', 'index'
+                           and optionally 'shape_signature' for variable dims.
         """
         self.name = tensor_detail['name']
         self.dtype = tensor_detail['dtype']
-        self._shape_value = tensor_detail['shape']
+        self._shape_value = tensor_detail.get('shape_signature', tensor_detail['shape'])
         self._shape_obj = None
 
     @property
