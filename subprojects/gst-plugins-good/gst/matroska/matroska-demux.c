@@ -3700,7 +3700,8 @@ gst_matroska_demux_seek_to_previous_keyframe (GstMatroskaDemux * demux)
     if (!gst_matroska_demux_move_to_entry (demux, entry, FALSE, TRUE))
       goto exit;
     ret = GST_FLOW_OK;
-  } else if (demux->cluster_prevsize > 0 &&
+  } else if (!demux->common.index_parsed &&
+      demux->cluster_prevsize > 0 &&
       demux->cluster_offset >=
       demux->cluster_prevsize + demux->common.ebml_segment_start) {
     /* Fallback to ClusterPrevSize */
