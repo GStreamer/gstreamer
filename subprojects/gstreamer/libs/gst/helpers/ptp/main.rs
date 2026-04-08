@@ -119,6 +119,11 @@ fn list_interfaces(args: &args::Args) -> Result<Vec<net::InterfaceInfo>, Error> 
 fn run() -> Result<(), Error> {
     let args = args::parse_args().context("Failed parsing commandline parameters")?;
 
+    #[cfg(windows)]
+    if let Some(ref pipe_err) = args.pipe_err {
+        io::Stderr::init_named_pipe(pipe_err).context("Failed initializing stderr named pipe")?;
+    }
+
     let ifaces = list_interfaces(&args).context("Failed listing interfaces")?;
 
     let mut sockets = vec![];
@@ -158,6 +163,15 @@ fn run() -> Result<(), Error> {
 
     privileges::drop().context("Failed dropping privileges")?;
 
+    #[cfg(windows)]
+    let mut poll = if let (Some(ref pipe_in), Some(ref pipe_out)) = (&args.pipe_in, &args.pipe_out)
+    {
+        io::Poll::new_with_named_pipes(sockets, pipe_in, pipe_out)
+            .context("Failed creating poller with named pipes")?
+    } else {
+        io::Poll::new(sockets).context("Failed creating poller")?
+    };
+    #[cfg(not(windows))]
     let mut poll = io::Poll::new(sockets).context("Failed creating poller")?;
 
     // Write clock ID first

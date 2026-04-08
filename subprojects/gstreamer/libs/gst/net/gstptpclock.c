@@ -66,6 +66,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <processthreadsapi.h>  /* GetCurrentProcessId */
+#include <gio/gwin32inputstream.h>
+#include <gio/gwin32outputstream.h>
 #endif
 
 #ifdef HAVE_UNISTD_H
@@ -2477,10 +2479,12 @@ ptp_helper_main (gpointer data)
       STDIO_MESSAGE_HEADER_SIZE, G_PRIORITY_DEFAULT, NULL,
       (GAsyncReadyCallback) have_stdout_header, NULL);
 
-  memset (&stderr_header, 0, STDERR_MESSAGE_HEADER_SIZE);
-  g_input_stream_read_all_async (stderr_pipe, stderr_header,
-      STDERR_MESSAGE_HEADER_SIZE, G_PRIORITY_DEFAULT, NULL,
-      (GAsyncReadyCallback) have_stderr_header, NULL);
+  if (stderr_pipe) {
+    memset (&stderr_header, 0, STDERR_MESSAGE_HEADER_SIZE);
+    g_input_stream_read_all_async (stderr_pipe, stderr_header,
+        STDERR_MESSAGE_HEADER_SIZE, G_PRIORITY_DEFAULT, NULL,
+        (GAsyncReadyCallback) have_stderr_header, NULL);
+  }
 
   /* Check every 1 seconds, if we have to cleanup ANNOUNCE or pending syncs message */
   cleanup_source = g_timeout_source_new_seconds (1);
@@ -2769,6 +2773,11 @@ gst_ptp_init_full (const GstStructure * config)
   gst_structure_get_uint (config, "ttl", &ttl);
   argc += 2;
 
+#ifdef G_OS_WIN32
+  /* --pipe-in <name> --pipe-out <name> --pipe-err <name> for named pipe IPC */
+  argc += 6;
+#endif
+
   // 3 for: executable, -v and NULL
   argv = g_new0 (gchar *, argc + 3);
   argc_c = 0;
@@ -2858,6 +2867,252 @@ gst_ptp_init_full (const GstStructure * config)
     argv[argc_c++] = g_strdup ("-v");
   }
 
+#ifdef G_OS_WIN32
+  /* On Windows, use named pipes instead of inherited anonymous pipes for
+   * stdin/stdout communication with the helper process. This avoids depending
+   * on handle inheritance via CreateProcess(bInheritHandles=TRUE) which is
+   * unreliable in Session 0 (Windows services). */
+  {
+    HANDLE h_stdin_wr = INVALID_HANDLE_VALUE;
+    HANDLE h_stdout_rd = INVALID_HANDLE_VALUE;
+    HANDLE h_stderr_rd = INVALID_HANDLE_VALUE;
+    gchar *pipe_name_in = NULL;
+    gchar *pipe_name_out = NULL;
+    gchar *pipe_name_err = NULL;
+    guint32 pipe_id;
+    /* Timeout for the helper to connect to the named pipes */
+    const DWORD connect_timeout_ms = 30000;
+
+    pipe_id = g_random_int ();
+
+    /* Create named pipe for stdin (parent writes, child reads).
+     * Use FILE_FLAG_OVERLAPPED so ConnectNamedPipe can be awaited
+     * with a timeout instead of blocking indefinitely. */
+    pipe_name_in = g_strdup_printf ("\\\\.\\pipe\\gst-ptp-%lu-%08x-in",
+        (gulong) GetCurrentProcessId (), pipe_id);
+    h_stdin_wr = CreateNamedPipeA (pipe_name_in,
+        PIPE_ACCESS_OUTBOUND | FILE_FLAG_OVERLAPPED,
+        PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+        1, 4096, 4096, 5000, NULL);
+    if (h_stdin_wr == INVALID_HANDLE_VALUE) {
+      guint last_err = GetLastError ();
+      gchar *msg = g_win32_error_message (last_err);
+      GST_ERROR ("Failed to create named pipe for stdin: 0x%x (%s)",
+          last_err, msg);
+      g_free (msg);
+      g_free (pipe_name_in);
+      ret = FALSE;
+      supported = FALSE;
+      goto done;
+    }
+
+    /* Create named pipe for stdout (child writes, parent reads) */
+    pipe_name_out = g_strdup_printf ("\\\\.\\pipe\\gst-ptp-%lu-%08x-out",
+        (gulong) GetCurrentProcessId (), pipe_id);
+    h_stdout_rd = CreateNamedPipeA (pipe_name_out,
+        PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
+        PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+        1, 4096, 4096, 5000, NULL);
+    if (h_stdout_rd == INVALID_HANDLE_VALUE) {
+      guint last_err = GetLastError ();
+      gchar *msg = g_win32_error_message (last_err);
+      GST_ERROR ("Failed to create named pipe for stdout: 0x%x (%s)",
+          last_err, msg);
+      g_free (msg);
+      g_free (pipe_name_out);
+      g_free (pipe_name_in);
+      CloseHandle (h_stdin_wr);
+      ret = FALSE;
+      supported = FALSE;
+      goto done;
+    }
+
+    /* Create named pipe for stderr (child writes, parent reads) */
+    pipe_name_err = g_strdup_printf ("\\\\.\\pipe\\gst-ptp-%lu-%08x-err",
+        (gulong) GetCurrentProcessId (), pipe_id);
+    h_stderr_rd = CreateNamedPipeA (pipe_name_err,
+        PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
+        PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+        1, 4096, 4096, 5000, NULL);
+    if (h_stderr_rd == INVALID_HANDLE_VALUE) {
+      guint last_err = GetLastError ();
+      gchar *msg = g_win32_error_message (last_err);
+      GST_ERROR ("Failed to create named pipe for stderr: 0x%x (%s)",
+          last_err, msg);
+      g_free (msg);
+      g_free (pipe_name_err);
+      g_free (pipe_name_out);
+      g_free (pipe_name_in);
+      CloseHandle (h_stdout_rd);
+      CloseHandle (h_stdin_wr);
+      ret = FALSE;
+      supported = FALSE;
+      goto done;
+    }
+
+    argv[argc_c++] = g_strdup ("--pipe-in");
+    argv[argc_c++] = pipe_name_in;      /* ownership transferred to argv */
+    argv[argc_c++] = g_strdup ("--pipe-out");
+    argv[argc_c++] = pipe_name_out;     /* ownership transferred to argv */
+    argv[argc_c++] = g_strdup ("--pipe-err");
+    argv[argc_c++] = pipe_name_err;     /* ownership transferred to argv */
+
+    ptp_helper_process =
+        g_subprocess_newv ((const gchar * const *) argv,
+        G_SUBPROCESS_FLAGS_NONE, &err);
+    if (!ptp_helper_process) {
+      GST_ERROR ("Failed to start ptp helper process: %s", err->message);
+      g_clear_error (&err);
+      CloseHandle (h_stdin_wr);
+      CloseHandle (h_stdout_rd);
+      CloseHandle (h_stderr_rd);
+      ret = FALSE;
+      supported = FALSE;
+      goto done;
+    }
+
+    /* Wait for the child to connect to the named pipes using overlapped I/O
+     * with a timeout, so we don't block indefinitely if the helper never
+     * connects. */
+    {
+      OVERLAPPED ov_in = { 0, };
+      OVERLAPPED ov_out = { 0, };
+      OVERLAPPED ov_err = { 0, };
+      gboolean stdin_connected = FALSE;
+      gboolean stdout_connected = FALSE;
+      gboolean stderr_connected = FALSE;
+      DWORD wait_ret;
+
+      ov_in.hEvent = CreateEvent (NULL, TRUE, FALSE, NULL);
+      ov_out.hEvent = CreateEvent (NULL, TRUE, FALSE, NULL);
+      ov_err.hEvent = CreateEvent (NULL, TRUE, FALSE, NULL);
+
+      /* Start async connect for stdin pipe */
+      if (ConnectNamedPipe (h_stdin_wr, &ov_in)) {
+        stdin_connected = TRUE;
+      } else {
+        guint last_err = GetLastError ();
+        if (last_err == ERROR_PIPE_CONNECTED) {
+          stdin_connected = TRUE;
+        } else if (last_err != ERROR_IO_PENDING) {
+          gchar *msg = g_win32_error_message (last_err);
+          GST_ERROR ("ConnectNamedPipe (stdin) failed: 0x%x (%s)",
+              last_err, msg);
+          g_free (msg);
+          CloseHandle (ov_in.hEvent);
+          CloseHandle (ov_out.hEvent);
+          CloseHandle (ov_err.hEvent);
+          CloseHandle (h_stdin_wr);
+          CloseHandle (h_stdout_rd);
+          CloseHandle (h_stderr_rd);
+          ret = FALSE;
+          supported = FALSE;
+          goto done;
+        }
+      }
+
+      /* Start async connect for stdout pipe */
+      if (ConnectNamedPipe (h_stdout_rd, &ov_out)) {
+        stdout_connected = TRUE;
+      } else {
+        guint last_err = GetLastError ();
+        if (last_err == ERROR_PIPE_CONNECTED) {
+          stdout_connected = TRUE;
+        } else if (last_err != ERROR_IO_PENDING) {
+          gchar *msg = g_win32_error_message (last_err);
+          GST_ERROR ("ConnectNamedPipe (stdout) failed: 0x%x (%s)",
+              last_err, msg);
+          g_free (msg);
+          if (!stdin_connected)
+            CancelIo (h_stdin_wr);
+          CloseHandle (ov_in.hEvent);
+          CloseHandle (ov_out.hEvent);
+          CloseHandle (ov_err.hEvent);
+          CloseHandle (h_stdin_wr);
+          CloseHandle (h_stdout_rd);
+          CloseHandle (h_stderr_rd);
+          ret = FALSE;
+          supported = FALSE;
+          goto done;
+        }
+      }
+
+      /* Start async connect for stderr pipe */
+      if (ConnectNamedPipe (h_stderr_rd, &ov_err)) {
+        stderr_connected = TRUE;
+      } else {
+        guint last_err = GetLastError ();
+        if (last_err == ERROR_PIPE_CONNECTED) {
+          stderr_connected = TRUE;
+        } else if (last_err != ERROR_IO_PENDING) {
+          gchar *msg = g_win32_error_message (last_err);
+          GST_ERROR ("ConnectNamedPipe (stderr) failed: 0x%x (%s)",
+              last_err, msg);
+          g_free (msg);
+          if (!stdin_connected)
+            CancelIo (h_stdin_wr);
+          if (!stdout_connected)
+            CancelIo (h_stdout_rd);
+          CloseHandle (ov_in.hEvent);
+          CloseHandle (ov_out.hEvent);
+          CloseHandle (ov_err.hEvent);
+          CloseHandle (h_stdin_wr);
+          CloseHandle (h_stdout_rd);
+          CloseHandle (h_stderr_rd);
+          ret = FALSE;
+          supported = FALSE;
+          goto done;
+        }
+      }
+
+      /* Wait for all pending connects */
+      {
+        HANDLE wait_events[3];
+        DWORD wait_count = 0;
+
+        if (!stdin_connected)
+          wait_events[wait_count++] = ov_in.hEvent;
+        if (!stdout_connected)
+          wait_events[wait_count++] = ov_out.hEvent;
+        if (!stderr_connected)
+          wait_events[wait_count++] = ov_err.hEvent;
+
+        if (wait_count > 0) {
+          wait_ret = WaitForMultipleObjects (wait_count, wait_events,
+              TRUE, connect_timeout_ms);
+          if (wait_ret == WAIT_TIMEOUT || wait_ret == WAIT_FAILED) {
+            GST_ERROR ("Timed out waiting for helper to connect to pipes");
+            if (!stdin_connected)
+              CancelIo (h_stdin_wr);
+            if (!stdout_connected)
+              CancelIo (h_stdout_rd);
+            if (!stderr_connected)
+              CancelIo (h_stderr_rd);
+            CloseHandle (ov_in.hEvent);
+            CloseHandle (ov_out.hEvent);
+            CloseHandle (ov_err.hEvent);
+            CloseHandle (h_stdin_wr);
+            CloseHandle (h_stdout_rd);
+            CloseHandle (h_stderr_rd);
+            ret = FALSE;
+            supported = FALSE;
+            goto done;
+          }
+        }
+      }
+
+      CloseHandle (ov_in.hEvent);
+      CloseHandle (ov_out.hEvent);
+      CloseHandle (ov_err.hEvent);
+    }
+
+    /* Create GIO streams from the named pipe handles.
+     * The streams take ownership of the handles (close_handle=TRUE). */
+    stdin_pipe = G_OUTPUT_STREAM (g_win32_output_stream_new (h_stdin_wr, TRUE));
+    stdout_pipe = G_INPUT_STREAM (g_win32_input_stream_new (h_stdout_rd, TRUE));
+    stderr_pipe = G_INPUT_STREAM (g_win32_input_stream_new (h_stderr_rd, TRUE));
+  }
+#else
   ptp_helper_process =
       g_subprocess_newv ((const gchar * const *) argv,
       G_SUBPROCESS_FLAGS_STDIN_PIPE | G_SUBPROCESS_FLAGS_STDOUT_PIPE |
@@ -2885,6 +3140,7 @@ gst_ptp_init_full (const GstStructure * config)
     supported = FALSE;
     goto done;
   }
+#endif
 
   delay_req_rand = g_rand_new ();
   observation_system_clock =
