@@ -17,11 +17,18 @@ use crate::{
 
 /// Parsed command-line arguments.
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct Args {
     pub interfaces: Vec<String>,
     pub verbose: bool,
     pub clock_id: u64,
     pub ttl: u32,
+    /// Named pipe path for stdin replacement (Windows named pipe IPC).
+    pub pipe_in: Option<String>,
+    /// Named pipe path for stdout replacement (Windows named pipe IPC).
+    pub pipe_out: Option<String>,
+    /// Named pipe path for stderr replacement (Windows named pipe IPC).
+    pub pipe_err: Option<String>,
 }
 
 /// Parse the command-line arguments.
@@ -30,6 +37,9 @@ pub fn parse_args() -> Result<Args, Error> {
     let mut verbose = false;
     let mut clock_id = 0;
     let mut ttl = 1;
+    let mut pipe_in = None;
+    let mut pipe_out = None;
+    let mut pipe_err = None;
 
     let mut args = env::args();
     // Skip executable name
@@ -56,6 +66,15 @@ pub fn parse_args() -> Result<Args, Error> {
                 let ttl_arg = args.next().context("No TTL following --ttl")?;
                 ttl = ttl_arg.parse::<u32>().context("Invalid TTL value")?;
             }
+            "--pipe-in" => {
+                pipe_in = Some(args.next().context("No pipe path following --pipe-in")?);
+            }
+            "--pipe-out" => {
+                pipe_out = Some(args.next().context("No pipe path following --pipe-out")?);
+            }
+            "--pipe-err" => {
+                pipe_err = Some(args.next().context("No pipe path following --pipe-err")?);
+            }
 
             arg => {
                 bail!("Unknown command-line argument {}", arg);
@@ -68,6 +87,9 @@ pub fn parse_args() -> Result<Args, Error> {
         verbose,
         clock_id,
         ttl,
+        pipe_in,
+        pipe_out,
+        pipe_err,
     };
 
     info!("Running with arguments {:#?}", args);

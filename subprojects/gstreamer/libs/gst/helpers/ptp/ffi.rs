@@ -868,7 +868,22 @@ pub mod windows {
 
         pub fn QueryPerformanceFrequency(lpfrequence: *mut i64) -> i32;
         pub fn QueryPerformanceCounter(lpperformancecount: *mut i64) -> i32;
+
+        pub fn CreateFileA(
+            lpfilename: *const u8,
+            dwdesiredaccess: u32,
+            dwsharemode: u32,
+            lpsecurityattributes: *const c_void,
+            dwcreationdisposition: u32,
+            dwflagsandattributes: u32,
+            htemplatefile: HANDLE,
+        ) -> HANDLE;
     }
+
+    pub const GENERIC_READ: u32 = 0x80000000;
+    pub const GENERIC_WRITE: u32 = 0x40000000;
+    pub const OPEN_EXISTING: u32 = 3;
+    pub const FILE_ATTRIBUTE_NORMAL: u32 = 0x80;
 
     pub const BCRYPT_USE_SYSTEM_PREFERRED_RNG: u32 = 0x00000002;
 

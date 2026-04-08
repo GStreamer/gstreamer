@@ -579,7 +579,8 @@ glib_dep = dependency('glib-2.0', version: glib_req,
 gobject_dep = dependency('gobject-2.0')
 gmodule_dep = dependency('gmodule-no-export-2.0')
 if host_system == 'windows'
-    gio_dep = dependency('gio-2.0')
+    gio_dep = [dependency('gio-2.0'),
+               dependency('gio-windows-2.0')]
 else
     gio_dep = [dependency('gio-2.0'),
                dependency('gio-unix-2.0')]

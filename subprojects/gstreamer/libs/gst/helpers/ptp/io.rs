@@ -469,7 +469,7 @@ mod imp {
         net::UdpSocket,
         os::windows::{io::AsRawSocket, raw::HANDLE},
         ptr,
-        sync::{Arc, Condvar, Mutex},
+        sync::{Arc, Condvar, Mutex, OnceLock},
         thread,
     };
 
@@ -684,6 +684,24 @@ mod imp {
         pub fn new(sockets: Vec<(UdpSocket, UdpSocket)>) -> Result<Self, Error> {
             let stdin = Stdin::acquire().context("Failure acquiring stdin handle")?;
             let stdout = Stdout::acquire().context("Failed acquiring stdout handle")?;
+
+            Self::new_internal(sockets, stdin, stdout)
+        }
+
+        /// Create a new `Poll` instance using named pipes for stdin/stdout.
+        ///
+        /// This is used on Windows to communicate with the parent process via named
+        /// pipes instead of inherited anonymous pipes, which is required for running
+        /// in Session 0 (Windows services).
+        pub fn new_with_named_pipes(
+            sockets: Vec<(UdpSocket, UdpSocket)>,
+            pipe_in: &str,
+            pipe_out: &str,
+        ) -> Result<Self, Error> {
+            let stdin =
+                Stdin::open_named_pipe(pipe_in).context("Failed opening named pipe for stdin")?;
+            let stdout = Stdout::open_named_pipe(pipe_out)
+                .context("Failed opening named pipe for stdout")?;
 
             Self::new_internal(sockets, stdin, stdout)
         }
@@ -1017,6 +1035,38 @@ mod imp {
             }
         }
 
+        /// Open a named pipe for reading (as a stdin replacement).
+        ///
+        /// This is used on Windows to communicate with the parent process via named
+        /// pipes instead of inherited anonymous pipes, which is required for running
+        /// in Session 0 (Windows services).
+        pub fn open_named_pipe(path: &str) -> Result<Self, Error> {
+            let path_cstr =
+                std::ffi::CString::new(path).context("Invalid named pipe path for stdin")?;
+            // SAFETY: CreateFileA with a valid null-terminated path returns a handle or
+            // INVALID_HANDLE_VALUE on error.
+            let handle = unsafe {
+                let h = CreateFileA(
+                    path_cstr.as_ptr() as *const u8,
+                    GENERIC_READ,
+                    0,
+                    ptr::null(),
+                    OPEN_EXISTING,
+                    FILE_ATTRIBUTE_NORMAL,
+                    ptr::null_mut(),
+                );
+                if h == INVALID_HANDLE_VALUE {
+                    bail!(
+                        source: io::Error::last_os_error(),
+                        "Failed to open named pipe for reading: {}",
+                        path
+                    );
+                }
+                h
+            };
+            Self::from_handle(handle)
+        }
+
         /// Thread function to signal readiness of stdin.
         ///
         /// This thread tries to read a single byte and buffers it, then signals an event
@@ -1178,6 +1228,38 @@ mod imp {
 
             Ok(Stdout(handle))
         }
+
+        /// Open a named pipe for writing (as a stdout replacement).
+        ///
+        /// This is used on Windows to communicate with the parent process via named
+        /// pipes instead of inherited anonymous pipes, which is required for running
+        /// in Session 0 (Windows services).
+        pub fn open_named_pipe(path: &str) -> Result<Self, Error> {
+            let path_cstr =
+                std::ffi::CString::new(path).context("Invalid named pipe path for stdout")?;
+            // SAFETY: CreateFileA with a valid null-terminated path returns a handle or
+            // INVALID_HANDLE_VALUE on error.
+            let handle = unsafe {
+                let h = CreateFileA(
+                    path_cstr.as_ptr() as *const u8,
+                    GENERIC_WRITE,
+                    0,
+                    ptr::null(),
+                    OPEN_EXISTING,
+                    FILE_ATTRIBUTE_NORMAL,
+                    ptr::null_mut(),
+                );
+                if h == INVALID_HANDLE_VALUE {
+                    bail!(
+                        source: io::Error::last_os_error(),
+                        "Failed to open named pipe for writing: {}",
+                        path
+                    );
+                }
+                h
+            };
+            Self::from_handle(handle)
+        }
     }
 
     impl Write for Stdout {
@@ -1227,29 +1309,60 @@ mod imp {
     /// cause interleaved output.
     pub struct Stderr(HANDLE);
 
+    struct SyncHandle(HANDLE);
+    // SAFETY: This is a single-threaded application and even otherwise writing from
+    // multiple threads at once to a pipe is safe and will only cause interleaved output.
+    unsafe impl Send for SyncHandle {}
+    unsafe impl Sync for SyncHandle {}
+
+    /// Lazily-initialized stderr handle. Set once, either by `init_named_pipe` (before any
+    /// logging) or on first `acquire()` call via the inherited standard error handle.
+    static STDERR_HANDLE: OnceLock<SyncHandle> = OnceLock::new();
+
     impl Stderr {
+        /// Open a named pipe for writing and use it as the stderr handle.
+        ///
+        /// This must be called before any logging so that the `OnceLock` is
+        /// populated with the named-pipe handle rather than the inherited one.
+        pub fn init_named_pipe(path: &str) -> Result<(), Error> {
+            let path_cstr =
+                std::ffi::CString::new(path).context("Invalid named pipe path for stderr")?;
+            // SAFETY: CreateFileA with a valid null-terminated path returns a handle or
+            // INVALID_HANDLE_VALUE on error.
+            let handle = unsafe {
+                let h = CreateFileA(
+                    path_cstr.as_ptr() as *const u8,
+                    GENERIC_WRITE,
+                    0,
+                    ptr::null(),
+                    OPEN_EXISTING,
+                    FILE_ATTRIBUTE_NORMAL,
+                    ptr::null_mut(),
+                );
+                if h == INVALID_HANDLE_VALUE {
+                    bail!(
+                        source: io::Error::last_os_error(),
+                        "Failed to open named pipe for stderr: {}",
+                        path
+                    );
+                }
+                h
+            };
+            let _ = STDERR_HANDLE.set(SyncHandle(handle));
+            Ok(())
+        }
+
         #[cfg(not(test))]
         pub fn acquire() -> Self {
-            use std::sync::Once;
-
-            struct SyncHandle(HANDLE);
-            // SAFETY: This is a single-threaded application and even otherwise writing from
-            // multiple threads at once to a pipe is safe and will only cause interleaved output.
-            unsafe impl Send for SyncHandle {}
-            unsafe impl Sync for SyncHandle {}
-
-            static mut STDERR: SyncHandle = SyncHandle(INVALID_HANDLE_VALUE);
-            static STDERR_ONCE: Once = Once::new();
-
-            STDERR_ONCE.call_once(|| {
+            let sync_handle = STDERR_HANDLE.get_or_init(|| {
                 // SAFETY: GetStdHandle returns a borrowed handle, or 0 if none is set or -1 if an
                 // error has happened.
                 let handle = unsafe {
                     let handle = GetStdHandle(STD_ERROR_HANDLE);
                     if handle.is_null() {
-                        return;
+                        return SyncHandle(INVALID_HANDLE_VALUE);
                     } else if handle == INVALID_HANDLE_VALUE {
-                        return;
+                        return SyncHandle(INVALID_HANDLE_VALUE);
                     }
 
                     handle
@@ -1268,19 +1381,13 @@ mod imp {
                         let _ = SetConsoleMode(handle, 0);
                     }
                 } else if type_ != FILE_TYPE_PIPE {
-                    return;
+                    return SyncHandle(INVALID_HANDLE_VALUE);
                 }
 
-                // SAFETY: Only accessed in this function and multiple mutable accesses are
-                // prevented by the `Once`.
-                unsafe {
-                    STDERR.0 = handle;
-                }
+                SyncHandle(handle)
             });
 
-            // SAFETY: Only accesses immutably here and all mutable accesses are serialized above
-            // by the `Once`.
-            Stderr(unsafe { STDERR.0 })
+            Stderr(sync_handle.0)
         }
     }
 
