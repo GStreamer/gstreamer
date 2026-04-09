@@ -196,12 +196,12 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res)
     /* ES_rate */
     if (G_UNLIKELY (length < 3))
       goto need_more_data;
-    val32 = GST_READ_UINT32_BE (data);
+    val32 = GST_READ_UINT24_BE (data);
     data += 3;
     length -= 3;
-    if (G_UNLIKELY ((val32 & 0x80000100) != 0x80000100))
+    if (G_UNLIKELY ((val32 & 0x00800001) != 0x00800001))
       goto bad_ES_rate;
-    res->ES_rate = ((val32 >> 9) & 0x003fffff) * 50;
+    res->ES_rate = ((val32 >> 1) & 0x003fffff) * 50;
     GST_LOG ("ES_rate : %d", res->ES_rate);
   }
 
