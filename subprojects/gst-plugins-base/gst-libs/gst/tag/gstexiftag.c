@@ -2321,6 +2321,11 @@ deserialize_geo_coordinate (GstExifReader * exif_reader,
       exiftag->gst_tag, degrees_n, degrees_d, minutes_n, minutes_d,
       seconds_n, seconds_d);
 
+  if (degrees_d == 0 || minutes_d == 0 || seconds_d == 0) {
+    GST_WARNING ("Zero denominator in geo coordinate fractions");
+    gst_buffer_unmap (exif_reader->buffer, &info);
+    return ret;
+  }
   gst_util_fraction_to_double (degrees_n, degrees_d, &degrees);
   gst_util_fraction_to_double (minutes_n, minutes_d, &minutes);
   gst_util_fraction_to_double (seconds_n, seconds_d, &seconds);
