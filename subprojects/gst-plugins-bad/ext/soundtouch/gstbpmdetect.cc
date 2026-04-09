@@ -224,7 +224,7 @@ gst_bpm_detect_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
   gst_buffer_map (in, &info, GST_MAP_READ);
 
-  nsamples = info.size / (GST_AUDIO_INFO_BPF (&filter->info) * GST_AUDIO_INFO_CHANNELS (&filter->info));
+  nsamples = info.size / GST_AUDIO_INFO_BPF (&filter->info);
 
   /* For stereo BPMDetect->inputSamples() does downmixing into the input
    * data but our buffer data shouldn't be modified.
