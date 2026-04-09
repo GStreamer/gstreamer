@@ -212,18 +212,15 @@ gst_pes_filter_parse (GstPESFilter * filter)
 
   /* stuffing bits, first two bits are '10' for mpeg2 pes so this code is
    * not triggered. */
-  while (TRUE) {
-    if (*data != 0xff)
-      break;
-
+  while (datalen > 0 && *data == 0xff) {
     data++;
     datalen--;
 
     GST_DEBUG ("got stuffing bit");
-
-    if (datalen < 1)
-      goto need_more_data;
   }
+
+  if (datalen < 1)
+    goto need_more_data;
 
   /* STD buffer size, never for mpeg2 */
   if ((*data & 0xc0) == 0x40) {
@@ -389,37 +386,60 @@ gst_pes_filter_parse (GstPESFilter * filter)
     }
     /* additional_copy_info_flag  */
     if ((flags & 0x04)) {
+      if (datalen < 1)
+        goto need_more_data;
       GST_DEBUG ("%x additional copy info, flags 0x%02x", filter->id, *data);
+      data++;
+      header_data_length--;
+      datalen--;
     }
     /* PES_CRC_flag  */
     if ((flags & 0x02)) {
+      if (datalen < 2)
+        goto need_more_data;
       GST_DEBUG ("%x PES_CRC", filter->id);
+      data += 2;
+      header_data_length -= 2;
+      datalen -= 2;
     }
     /* PES_extension_flag  */
     if ((flags & 0x01)) {
+      if (datalen < 1)
+        goto need_more_data;
       flags = *data++;
-      header_data_length -= 1;
-      datalen -= 1;
+      header_data_length--;
+      datalen--;
       GST_DEBUG ("%x PES_extension, flags 0x%02x", filter->id, flags);
       /* PES_private_data_flag */
       if ((flags & 0x80)) {
         GST_DEBUG ("%x PES_private_data_flag", filter->id);
+        if (datalen < 16)
+          goto need_more_data;
         data += 16;
         header_data_length -= 16;
         datalen -= 16;
       }
       /* pack_header_field_flag */
       if ((flags & 0x40)) {
-        guint8 pack_field_length = *data;
+        guint8 pack_field_length;
+        if (datalen < 1)
+          goto need_more_data;
+        pack_field_length = *data++;
+        header_data_length--;
+        datalen--;
         GST_DEBUG ("%x pack_header_field_flag, pack_field_length %d",
             filter->id, pack_field_length);
-        data += pack_field_length + 1;
-        header_data_length -= pack_field_length + 1;
-        datalen -= pack_field_length + 1;
+        if (datalen < pack_field_length)
+          goto need_more_data;
+        data += pack_field_length;
+        header_data_length -= pack_field_length;
+        datalen -= pack_field_length;
       }
       /* program_packet_sequence_counter_flag */
       if ((flags & 0x20)) {
         GST_DEBUG ("%x program_packet_sequence_counter_flag", filter->id);
+        if (datalen < 2)
+          goto need_more_data;
         data += 2;
         header_data_length -= 2;
         datalen -= 2;
@@ -427,21 +447,30 @@ gst_pes_filter_parse (GstPESFilter * filter)
       /* P-STD_buffer_flag */
       if ((flags & 0x10)) {
         GST_DEBUG ("%x P-STD_buffer_flag", filter->id);
+        if (datalen < 2)
+          goto need_more_data;
         data += 2;
         header_data_length -= 2;
         datalen -= 2;
       }
       /* PES_extension_flag_2 */
       if ((flags & 0x01)) {
-        guint8 PES_extension_field_length = *data++;
+        guint8 PES_extension_field_length;
+        if (datalen < 1)
+          goto need_more_data;
+        PES_extension_field_length = *data++;
+        header_data_length--;
+        datalen--;
         GST_DEBUG ("%x PES_extension_flag_2, len %d",
             filter->id, PES_extension_field_length & 0x7f);
+        if (datalen < (PES_extension_field_length & 0x7f))
+          goto need_more_data;
         if (PES_extension_field_length == 0x81) {
           GST_DEBUG ("%x substream id 0x%02x", filter->id, *data);
         }
         data += PES_extension_field_length & 0x7f;
-        header_data_length -= (PES_extension_field_length & 0x7f) + 1;
-        datalen -= (PES_extension_field_length & 0x7f) + 1;
+        header_data_length -= PES_extension_field_length & 0x7f;
+        datalen -= PES_extension_field_length & 0x7f;
       }
     }
     /* calculate the amount of real data in this PES packet */
