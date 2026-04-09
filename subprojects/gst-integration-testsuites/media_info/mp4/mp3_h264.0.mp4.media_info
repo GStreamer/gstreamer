@@ -702,6 +702,6 @@
     </stream>
   </streams>
   <tags>
-    <tag content="taglist, audio-codec=(string)&quot;MPEG-1\ layer\ 3&quot;, bitrate=(uint)75394, channel-mode=(string)mono, container-format=(string)Quicktime, container-specific-track-id=(string)2, datetime=(datetime)2013-09-03T16:21:39Z, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)x264, has-crc=(boolean)false, language-code=(string)en, nominal-bitrate=(uint)256000, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
+    <tag content="taglist, audio-codec=(string)&quot;MPEG-1\ layer\ 3&quot;, bitrate=(uint)99582, channel-mode=(string)mono, container-format=(string)Quicktime, container-specific-track-id=(string)1, datetime=(datetime)2013-09-03T16:21:39Z, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)x264, has-crc=(boolean)false, language-code=(string)en, nominal-bitrate=(uint)256000, video-codec=(string)&quot;H.264\ /\ AVC&quot;;"/>
   </tags>
 </file>

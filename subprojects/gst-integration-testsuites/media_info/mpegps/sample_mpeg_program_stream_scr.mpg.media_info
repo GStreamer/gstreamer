@@ -394,7 +394,7 @@
         <tag content="taglist, video-codec=(string)&quot;MPEG-2\ Video&quot;;"/>
       </tags>
     </stream>
-    <stream type="audio" caps="audio/mpeg, mpegversion=(int)1, mpegaudioversion=(int)1, layer=(int)2, rate=(int)48000, channels=(int)2, parsed=(boolean)true" id="/c0">
+    <stream type="audio" caps="audio/mpeg, mpegversion=(int)1, mpegaudioversion=(int)1, layer=(int)2, rate=(int)48000, channels=(int)2, parsed=(boolean)true, channel-mask=(bitmask)0x0000000000000003" id="/c0">
       <segments>
         <segment next-frame-id="0" flags="0" rate="1.000000" applied-rate="1.000000" format="3" base="0" offset="0" start="79879483022222" stop="18446744073709551615" time="357888889" position="79879549755555" duration="6120000000"/>
       </segments>
@@ -658,7 +658,7 @@
         <tag content="taglist, audio-codec=(string)&quot;MPEG-1\ Layer\ 2\ \(MP2\)&quot;, channel-mode=(string)stereo, has-crc=(boolean)false, nominal-bitrate=(uint)384000;"/>
       </tags>
     </stream>
-    <stream type="audio" caps="audio/mpeg, mpegversion=(int)1, mpegaudioversion=(int)1, layer=(int)2, rate=(int)48000, channels=(int)2, parsed=(boolean)true" id="/c1">
+    <stream type="audio" caps="audio/mpeg, mpegversion=(int)1, mpegaudioversion=(int)1, layer=(int)2, rate=(int)48000, channels=(int)2, parsed=(boolean)true, channel-mask=(bitmask)0x0000000000000003" id="/c1">
       <segments>
         <segment next-frame-id="0" flags="0" rate="1.000000" applied-rate="1.000000" format="3" base="0" offset="0" start="79879483022222" stop="18446744073709551615" time="357888889" position="79879549755555" duration="6120000000"/>
       </segments>
