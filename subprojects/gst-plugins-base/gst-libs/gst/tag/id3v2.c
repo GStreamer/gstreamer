@@ -75,7 +75,7 @@ id3v2_read_synch_uint (const guint8 * data, guint size)
         "- using the actual value instead");
     result = 0;
     for (i = 0; i <= size; i++) {
-      result |= data[i] << ((size - i) * 8);
+      result |= ((guint32) data[i]) << ((size - i) * 8);
     }
   }
 #endif
