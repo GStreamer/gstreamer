@@ -938,7 +938,8 @@ debug_dump_footer (GString * str)
  *
  * To aid debugging applications one can use this method to obtain the whole
  * network of gstreamer elements that form the pipeline into a dot file.
- * This data can be processed with graphviz to get an image.
+ *
+ * See gst_debug_bin_to_dot_file() for more details.
  *
  * Returns: (transfer full): a string containing the pipeline in graphviz
  * dot format.
@@ -963,15 +964,32 @@ gst_debug_bin_to_dot_data (GstBin * bin, GstDebugGraphDetails details)
  * gst_debug_bin_to_dot_file:
  * @bin: the top-level pipeline that should be analyzed
  * @details: type of #GstDebugGraphDetails to use
- * @file_name: (type filename): output base filename (e.g. "myplayer")
+ * @file_name: (type filename)(nullable): output base filename (e.g. "myplayer")
  *
  * To aid debugging applications one can use this method to write out the whole
  * network of gstreamer elements that form the pipeline into a dot file.
- * This file can be processed with graphviz to get an image.
+ * This file can be processed with graphviz to get an image, like this:
  *
  * ``` shell
- *  dot -Tpng -oimage.png graph_lowlevel.dot
+ * dot -Tpng -oimage.png graph_lowlevel.dot
  * ```
+ *
+ * There is also the interactive [gst-dots-viewer](https://gstreamer.freedesktop.org/documentation/coretracers/dots.html)
+ * tool, and [xdot](https://pypi.org/project/xdot/) which allows you to view the
+ * dot file directly without converting it first.
+ *
+ * If @file_name is NULL, the output filename will be based on the application
+ * name as returned by g_get_application_name(), or "unnamed" if the application
+ * name cannot be determined.
+ *
+ * The file will be written to the directory specified by the
+ * `GST_DEBUG_DUMP_DOT_DIR` environment variable, and the `.dot` extension will be
+ * added. If `GST_DEBUG_DUMP_DOT_DIR` was not defined at the time
+ * gst_init() was called, the file will not be generated. Note that the
+ * directory must already exist, it will not be created by this function.
+ *
+ * gst_debug_bin_to_dot_data() can be used if it is desired to generate the
+ * file even when `GST_DEBUG_DUMP_DOT_DIR` is not set.
  */
 void
 gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
@@ -1011,7 +1029,7 @@ gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
  * gst_debug_bin_to_dot_file_with_ts:
  * @bin: the top-level pipeline that should be analyzed
  * @details: type of #GstDebugGraphDetails to use
- * @file_name: (type filename): output base filename (e.g. "myplayer")
+ * @file_name: (type filename)(nullable): output base filename (e.g. "myplayer")
  *
  * This works like gst_debug_bin_to_dot_file(), but adds the current timestamp
  * to the filename, so that it can be used to take multiple snapshots.
