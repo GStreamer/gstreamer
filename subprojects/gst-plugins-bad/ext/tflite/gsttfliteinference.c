@@ -580,6 +580,8 @@ gst_tflite_inference_start (GstBaseTransform * trans)
     gchar *tensor_name = NULL;
     gint width = 0, height = 0;
     const gchar *gst_format = NULL;
+    gboolean is_passthrough = TRUE;
+    gsize c;
 
     if (!_get_input_params (self, &data_type, &width, &height, &gst_format,
             &priv->channels, &priv->planar)) {
@@ -603,6 +605,17 @@ gst_tflite_inference_start (GstBaseTransform * trans)
           "Model info file doesn't contain info for input_tensor[%u]:%s matching the"
           " type %s and dims %s", i, tname,
           gst_tensor_data_type_get_name (data_type), dims_str);
+
+      g_free (priv->scales);
+      g_free (priv->offsets);
+      priv->num_channels = MAX (1, (gsize) priv->channels);
+      priv->scales = g_new (gdouble, priv->num_channels);
+      priv->offsets = g_new (gdouble, priv->num_channels);
+      for (c = 0; c < priv->num_channels; c++) {
+        priv->scales[c] = 1.0;
+        priv->offsets[c] = 0.0;
+      }
+
       g_free (dims);
       g_free (dims_str);
     } else {
@@ -661,9 +674,9 @@ gst_tflite_inference_start (GstBaseTransform * trans)
           "height", G_TYPE_INT, height, NULL);
 
     /* Check if all channels are passthrough (scale=1.0, offset=0.0) */
-    gboolean is_passthrough = TRUE;
+    is_passthrough = TRUE;
     if (priv->scales && priv->offsets) {
-      for (gsize c = 0; c < priv->num_channels; c++) {
+      for (c = 0; c < priv->num_channels; c++) {
         if (priv->scales[c] != 1.0 || priv->offsets[c] != 0.0) {
           is_passthrough = FALSE;
           break;
@@ -842,6 +855,10 @@ gst_tflite_inference_stop (GstBaseTransform * trans)
   if (priv->model)
     TfLiteModelDelete (priv->model);
   priv->model = NULL;
+
+  g_clear_pointer (&priv->scales, g_free);
+  g_clear_pointer (&priv->offsets, g_free);
+  priv->num_channels = 0;
 
   gst_clear_caps (&priv->model_incaps);
 

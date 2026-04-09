@@ -230,6 +230,45 @@ setup_model_with_ranges (const gchar * base_model_name, const gchar * ranges)
   return tmp_model;
 }
 
+static gchar *
+setup_model_without_input_info (const gchar * base_model_name)
+{
+  gchar *base_model =
+      g_build_filename (GST_TFLITE_TEST_DATA_PATH, base_model_name, NULL);
+  gchar *base_modelinfo = g_strdup_printf ("%s.modelinfo", base_model);
+  GKeyFile *kf = g_key_file_new ();
+  gchar **groups;
+  gchar *data;
+  gsize len;
+  gsize i;
+  gchar *tmp_model;
+
+  g_key_file_set_list_separator (kf, ',');
+  fail_unless (g_key_file_load_from_file (kf, base_modelinfo, G_KEY_FILE_NONE,
+          NULL));
+
+  groups = g_key_file_get_groups (kf, NULL);
+  for (i = 0; groups[i]; i++) {
+    gchar *dir = g_key_file_get_string (kf, groups[i], "dir", NULL);
+
+    if (dir && g_strcmp0 (dir, "input") == 0)
+      g_key_file_remove_group (kf, groups[i], NULL);
+
+    g_free (dir);
+  }
+  g_strfreev (groups);
+
+  data = g_key_file_to_data (kf, &len, NULL);
+  tmp_model = setup_model_with_modelinfo (base_model_name, data);
+
+  g_free (data);
+  g_key_file_unref (kf);
+  g_free (base_modelinfo);
+  g_free (base_model);
+
+  return tmp_model;
+}
+
 static void
 cleanup_temp_model (gchar * model_path)
 {
@@ -554,6 +593,45 @@ GST_START_TEST (test_planar_uint8_input_passthrough)
   fill_expected_chw_rgb_f32 (expected, 11.f, 22.f, 33.f);
   TFLITE_TEST_ASSERT_TENSOR_VALUES_F32 (tensor, expected,
       G_N_ELEMENTS (expected), 1e-6f);
+  gst_buffer_unref (out);
+  gst_harness_teardown (h);
+  cleanup_temp_model (tmp_model);
+}
+
+GST_END_TEST;
+
+/* Test that a model without input information still produces the correct output. */
+GST_START_TEST (test_no_input_modelinfo)
+{
+  gchar *tmp_model =
+      setup_model_without_input_info ("flatten_uint8in_float32out.tflite");
+  GstHarness *h = harness_new_with_model (tmp_model);
+  GstBuffer *in = create_solid_color_buffer (GST_VIDEO_FORMAT_RGB);
+  GstBuffer *out;
+  GstTensorMeta *tmeta;
+  const GstTensor *tensor;
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw,format=RGB,width=4,height=4,framerate=30/1");
+  out = gst_harness_push_and_pull (h, in);
+  fail_unless (out);
+
+  fail_unless (gst_buffer_get_tensor_meta (out) != NULL);
+  tmeta = gst_buffer_get_tensor_meta (out);
+  fail_unless_equals_int (tmeta->num_tensors, 1);
+  tensor = gst_tensor_meta_get (tmeta, 0);
+  fail_unless (tensor != NULL);
+  fail_unless (gst_tensor_meta_get_by_id (tmeta,
+          g_quark_from_static_string ("output-0")) == tensor);
+  fail_unless (gst_tensor_meta_get_by_id (tmeta,
+          g_quark_from_static_string ("output-1")) == NULL);
+  fail_unless_equals_int (tensor->id, g_quark_from_static_string ("output-0"));
+  fail_unless_equals_int (tensor->layout, GST_TENSOR_LAYOUT_CONTIGUOUS);
+  fail_unless_equals_int (tensor->data_type, GST_TENSOR_DATA_TYPE_FLOAT32);
+  fail_unless_equals_int (tensor->dims_order, GST_TENSOR_DIM_ORDER_ROW_MAJOR);
+  fail_unless_equals_int ((gint) tensor->num_dims, 2);
+  fail_unless_equals_int ((gint) tensor->dims[0], 1);
+  fail_unless_equals_int ((gint) tensor->dims[1], 48);
 
   gst_buffer_unref (out);
   gst_harness_teardown (h);
@@ -1228,6 +1306,7 @@ tfliteinference_suite (void)
   tcase_add_test (tc, test_3d_input_tensor);
   tcase_add_test (tc, test_argb_input);
   tcase_add_test (tc, test_abgr_input);
+  tcase_add_test (tc, test_no_input_modelinfo);
   tcase_add_test (tc, test_timestamp_and_flags_propagation);
   tcase_add_test (tc, test_accept_caps_dimension_mismatch);
 
