@@ -1,0 +1,16 @@
+[modelinfo]
+version=1.0
+group-id=dynamic_batch-group
+
+[serving_default_input_dyn:0]
+id=input-0
+type=float32
+dims=-1,4,4,3
+dir=input
+ranges=0.0,255.0
+
+[PartitionedCall_1:0]
+id=output-0
+type=float32
+dims=-1,48
+dir=output

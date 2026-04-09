@@ -1,0 +1,16 @@
+[modelinfo]
+version=1.0
+group-id=invalid_dims_1d-group
+
+[input_1d]
+id=input-0
+type=float32
+dims=48
+dir=input
+ranges=0.0,255.0
+
+[input_1d]
+id=output-0
+type=float32
+dims=48
+dir=output

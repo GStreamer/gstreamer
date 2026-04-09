@@ -1,0 +1,16 @@
+[modelinfo]
+version=1.0
+group-id=flatten_3d_float32-group
+
+[serving_default_input_3d:0]
+id=input-0
+type=float32
+dims=3,4,4
+dir=input
+ranges=0.0,255.0
+
+[PartitionedCall_1:0]
+id=output-0
+type=float32
+dims=3,16
+dir=output

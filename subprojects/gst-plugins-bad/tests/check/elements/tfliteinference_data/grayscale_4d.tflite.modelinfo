@@ -1,0 +1,16 @@
+[modelinfo]
+version=1.0
+group-id=grayscale_4d-group
+
+[serving_default_input_gray4d:0]
+id=input-0
+type=float32
+dims=1,4,4,1
+dir=input
+ranges=0.0,255.0
+
+[serving_default_input_gray4d:0]
+id=output-0
+type=float32
+dims=1,4,4,1
+dir=output

@@ -1,0 +1,16 @@
+[modelinfo]
+version=1.0
+group-id=planar_chw-group
+
+[serving_default_input_chw:0]
+id=input-0
+type=float32
+dims=1,3,4,4
+dir=input
+ranges=0.0,255.0
+
+[serving_default_input_chw:0]
+id=output-0
+type=float32
+dims=1,3,4,4
+dir=output

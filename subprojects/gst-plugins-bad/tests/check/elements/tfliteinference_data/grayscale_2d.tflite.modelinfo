@@ -1,0 +1,16 @@
+[modelinfo]
+version=1.0
+group-id=grayscale_2d-group
+
+[input_gray2d]
+id=input-0
+type=float32
+dims=4,4
+dir=input
+ranges=0.0,255.0
+
+[input_gray2d]
+id=output-0
+type=float32
+dims=4,4
+dir=output

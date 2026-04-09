@@ -1,0 +1,16 @@
+[modelinfo]
+version=1.0
+group-id=invalid_dims_channels_2-group
+
+[serving_default_input_ch2:0]
+id=input-0
+type=float32
+dims=1,4,4,2
+dir=input
+ranges=0.0,255.0
+
+[serving_default_input_ch2:0]
+id=output-0
+type=float32
+dims=1,4,4,2
+dir=output

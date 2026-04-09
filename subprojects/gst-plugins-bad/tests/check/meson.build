@@ -55,6 +55,7 @@ base_tests = [
   [['elements/id3mux.c'], get_option('id3tag').disabled()],
   [['elements/interlace.c'], get_option('interlace').disabled()],
   [['elements/ioutracker.c'], get_option('tensordecoders').disabled(), gstanalytics_dep],
+  [['elements/tfliteinference.c'], get_option('tflite').disabled()],
   [['elements/jpeg2000parse.c'], false, [libparser_dep, gstcodecparsers_dep]],
   [['elements/line21.c'], get_option('closedcaption').disabled()],
   [['elements/mfvideosrc.c'], host_machine.system() != 'windows', ],
@@ -213,6 +214,7 @@ test_defines = [
   '-DGST_TEST_FILES_PATH="' + fsmod.as_posix(meson.current_source_dir()) + '/../files"',
   '-DTEST_PATH="' + fsmod.as_posix(meson.current_build_dir()) + '/media"',
   '-DDASH_MPD_DATADIR=' + fsmod.as_posix(meson.current_source_dir()) + '/elements/dash_mpd_data',
+  '-DGST_TFLITE_TEST_DATA_PATH="' + fsmod.as_posix(meson.current_source_dir()) + '/elements/tfliteinference_data"',
   '-DGST_USE_UNSTABLE_API',
 ]
 
