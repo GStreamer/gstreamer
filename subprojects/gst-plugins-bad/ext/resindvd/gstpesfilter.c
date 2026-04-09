@@ -322,9 +322,10 @@ gst_pes_filter_parse (GstPESFilter * filter)
     }
     /* check for DTS */
     if ((flags & 0x40)) {
-      READ_TS (data, filter->dts, lost_sync);
       if (datalen < 5)
         goto need_more_data;
+
+      READ_TS (data, filter->dts, lost_sync);
       GST_DEBUG ("DTS found %" G_GUINT64_FORMAT, filter->dts);
       header_data_length -= 5;
       datalen -= 5;
