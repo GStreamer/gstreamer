@@ -173,10 +173,20 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res)
 
   if (flags & 0x20) {
     /* ESCR */
-    if (G_UNLIKELY (length < 5))
+    if (G_UNLIKELY (length < 6))
       goto need_more_data;
-    READ_TS (data, res->ESCR, bad_ESCR_value);
-    length -= 5;
+
+    guint32 escr1 = GST_READ_UINT32_BE (data);
+    guint16 escr2 = GST_READ_UINT16_BE (data);
+    guint64 escr, escr_ext;
+
+    escr = ((guint64) escr1) << 1;
+    escr |= (escr2 & 0x8000) >> 15;
+    escr_ext = (escr2 & 0x01ff);
+    res->ESCR = escr * 300 + escr_ext % 300;
+
+    data += 6;
+    length -= 6;
 
     GST_LOG ("ESCR %" G_GUINT64_FORMAT " %" GST_TIME_FORMAT,
         res->ESCR, GST_TIME_ARGS (PCRTIME_TO_GSTTIME (res->ESCR)));
@@ -419,10 +429,6 @@ bad_PTS_value:
 
 bad_DTS_value:
   GST_WARNING ("bad DTS value");
-  return PES_PARSING_BAD;
-
-bad_ESCR_value:
-  GST_WARNING ("bad ESCR value");
   return PES_PARSING_BAD;
 
 bad_ES_rate:
