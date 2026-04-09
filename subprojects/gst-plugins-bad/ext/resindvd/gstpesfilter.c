@@ -345,10 +345,10 @@ gst_pes_filter_parse (GstPESFilter * filter)
       if (datalen < 3)
         goto need_more_data;
 
-      es_rate = ((guint32) (*data++ & 0x07)) << 14;
-      es_rate |= ((guint32) (*data++)) << 7;
-      es_rate |= ((guint32) (*data++ & 0xFE)) >> 1;
-      GST_DEBUG ("%x ES Rate found %u", filter->id, es_rate);
+      es_rate = GST_READ_UINT24_BE (data);
+      GST_DEBUG ("%x ES Rate found %u", filter->id,
+          ((es_rate >> 1) & 0x003fffff) * 50);
+      data += 3;
       header_data_length -= 3;
       datalen -= 3;
     }
