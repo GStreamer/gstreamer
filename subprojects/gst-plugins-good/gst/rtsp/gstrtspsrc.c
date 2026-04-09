@@ -5885,6 +5885,15 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
         }
 
         gst_rtsp_connection_set_backchannel_method (info->connection, method);
+
+        if (src->user_agent) {
+          GString *user_agent = g_string_new (src->user_agent);
+
+          g_string_replace (user_agent, "{VERSION}", PACKAGE_VERSION, 0);
+          gst_rtsp_connection_add_extra_http_request_header (info->connection,
+              "User-Agent", user_agent->str);
+          g_string_free (user_agent, TRUE);
+        }
       }
 
       if (src->proxy_host) {
