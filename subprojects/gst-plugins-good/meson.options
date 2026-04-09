@@ -52,7 +52,7 @@ option('bz2', type : 'feature', value : 'auto', description : 'libbz2 support in
 option('cairo', type : 'feature', value : 'auto', description : 'Cairo overlay plugin')
 option('directsound', type : 'feature', value : 'auto', description : 'Directsound audio source/sink plugin')
 option('dv', type : 'feature', value : 'auto', description : 'Digital video decoder and demuxer plugin')
-option('dv1394', type : 'feature', value : 'auto', description : 'Digital IEEE1394 interface video source plugin')
+option('dv1394', type : 'feature', value : 'disabled', description : 'Digital IEEE1394 interface video source plugin')
 option('flac', type : 'feature', value : 'auto', description : 'FLAC audio codec plugin')
 option('gdk-pixbuf', type : 'feature', value : 'auto', description : 'gdk-pixbuf image decoder, overlay, and sink plugin')
 option('gtk3', type : 'feature', value : 'auto', description : 'GTK+ video sink plugin')
