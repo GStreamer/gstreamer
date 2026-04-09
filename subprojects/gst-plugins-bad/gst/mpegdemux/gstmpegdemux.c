@@ -2554,16 +2554,17 @@ gst_ps_demux_scan_ts (GstPsDemux * demux, const guint8 * data,
   guint32 scr1, scr2;
   guint64 scr;
   guint64 pts, dts;
-  guint32 code;
-  guint16 len;
+
   /* read the 4 bytes for the sync code */
-  code = GST_READ_UINT32_BE (data);
-  if (G_LIKELY (code != ID_PS_PACK_START_CODE))
+  if (end - data < 4)
     goto beach;
-  if (data + 12 > end)
+  if (G_LIKELY (GST_READ_UINT32_BE (data) != ID_PS_PACK_START_CODE))
+    goto beach;
+  data += 4;
+
+  if (end - data < 8)
     goto beach;
   /* skip start code */
-  data += 4;
   scr1 = GST_READ_UINT32_BE (data);
   scr2 = GST_READ_UINT32_BE (data + 4);
   /* start parsing the stream */
@@ -2591,7 +2592,7 @@ gst_ps_demux_scan_ts (GstPsDemux * demux, const guint8 * data,
        to DTS/PTS, that also implies 1 tick rounding error */
     data += 6;
 
-    if (data + 4 > end)
+    if (end - data < 4)
       goto beach;
     /* PMR:22 ! :2==11 ! reserved:5 ! stuffing_len:3 */
     next32 = GST_READ_UINT32_BE (data);
@@ -2599,7 +2600,7 @@ gst_ps_demux_scan_ts (GstPsDemux * demux, const guint8 * data,
       goto beach;
     stuffing_bytes = (next32 & 0x07);
     data += 4;
-    if (data + stuffing_bytes > end)
+    if (end - data < stuffing_bytes)
       goto beach;
     while (stuffing_bytes--) {
       if (*data++ != 0xff)
@@ -2627,17 +2628,17 @@ gst_ps_demux_scan_ts (GstPsDemux * demux, const guint8 * data,
   }
 
   /* Possible optional System header here */
-  if (data + 8 > end)
+  if (end - data < 6)
     goto beach;
 
-  code = GST_READ_UINT32_BE (data);
-  len = GST_READ_UINT16_BE (data + 4);
+  guint32 code = GST_READ_UINT32_BE (data);
+  guint len = GST_READ_UINT16_BE (data + 4);
   if (code == ID_PS_SYSTEM_HEADER_START_CODE) {
     /* Found a system header, skip it */
     /* Check for sufficient data - system header, plus enough
      * left over for the PES packet header */
-    if (data + 6 + len + 6 > end)
-      return FALSE;
+    if (end - data < 6 + len + 6)
+      goto beach;
     data += len + 6;
     /* read the 4 bytes for the PES sync code */
     code = GST_READ_UINT32_BE (data);
@@ -2645,8 +2646,8 @@ gst_ps_demux_scan_ts (GstPsDemux * demux, const guint8 * data,
   }
 
   /* Check we have enough data left for reading the PES packet */
-  if (data + 6 + len > end)
-    return FALSE;
+  if (end - data < 6 + len)
+    goto beach;
   if (!gst_ps_demux_is_pes_sync (code))
     goto beach;
   switch (code) {
@@ -2665,29 +2666,49 @@ gst_ps_demux_scan_ts (GstPsDemux * demux, const guint8 * data,
 
   /* skip sync code and size */
   data += 6;
+  /* update end to the actual size of the PES packet */
+  end = data + len;
+
   pts = dts = -1;
   /* stuffing bits, first two bits are '10' for mpeg2 pes so this code is
    * not triggered. */
-  while (TRUE) {
+  while (data < end) {
     if (*data != 0xff)
       break;
     data++;
   }
+  if (data == end)
+    goto beach;
 
   /* STD buffer size, never for mpeg2 */
-  if ((*data & 0xc0) == 0x40)
+  if ((*data & 0xc0) == 0x40) {
+    if (end - data < 2)
+      goto beach;
     data += 2;
+  }
+
   /* PTS but no DTS, never for mpeg2 */
+  if (data == end)
+    goto beach;
   if ((*data & 0xf0) == 0x20) {
+    if (end - data < 5)
+      goto beach;
     READ_TS (data, pts, beach);
+    data += 5;
   }
   /* PTS and DTS, never for mpeg2 */
   else if ((*data & 0xf0) == 0x30) {
+    if (end - data < 10)
+      goto beach;
     READ_TS (data, pts, beach);
     READ_TS (data, dts, beach);
+    data += 10;
   } else if ((*data & 0xc0) == 0x80) {
+    guint8 flags;
+
+    if (end - data < 3)
+      goto beach;
     /* mpeg2 case */
-    guchar flags;
     /* 2: '10'
      * 2: PES_scrambling_control
      * 1: PES_priority
@@ -2695,9 +2716,8 @@ gst_ps_demux_scan_ts (GstPsDemux * demux, const guint8 * data,
      * 1: copyright
      * 1: original_or_copy
      */
-    flags = *data++;
-    if ((flags & 0xc0) != 0x80)
-      goto beach;
+    data++;
+
     /* 2: PTS_DTS_flags
      * 1: ESCR_flag
      * 1: ES_rate_flag
@@ -2707,17 +2727,23 @@ gst_ps_demux_scan_ts (GstPsDemux * demux, const guint8 * data,
      * 1: PES_extension_flag
      */
     flags = *data++;
-    /* 8: PES_header_data_length */
-    data++;
     /* only DTS: this is invalid */
     if ((flags & 0xc0) == 0x40)
       goto beach;
+
+    /* 8: PES_header_data_length */
+    data++;
+
     /* check for PTS */
     if ((flags & 0x80)) {
+      if (end - data < 5)
+        goto beach;
       READ_TS (data, pts, beach);
     }
     /* check for DTS */
     if ((flags & 0x40)) {
+      if (end - data < 5)
+        goto beach;
       READ_TS (data, dts, beach);
     }
   }
