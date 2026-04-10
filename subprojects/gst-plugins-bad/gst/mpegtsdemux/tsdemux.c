@@ -42,7 +42,6 @@
 
 #include "mpegtsbase.h"
 #include "tsdemux.h"
-#include "gstmpegdesc.h"
 #include "gstmpegdefs.h"
 #include "mpegtspacketizer.h"
 #include "pesparse.h"

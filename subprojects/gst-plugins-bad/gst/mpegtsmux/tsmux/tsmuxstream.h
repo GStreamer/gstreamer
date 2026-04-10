@@ -78,6 +78,8 @@ typedef struct TsMuxStreamBuffer TsMuxStreamBuffer;
 typedef void (*TsMuxStreamBufferReleaseFunc) (guint8 *data, void *user_data);
 typedef void (*TsMuxStreamGetESDescriptorsFunc) (TsMuxStream *stream, GstMpegtsPMTStream *pmt_stream, gpointer user_data);
 
+#define DRF_ID_ID3        0x49443320   /* defined in SMPTE registration authority */
+
 /* Stream type assignments
  *
  *   0x00    ITU-T | ISO/IEC Reserved

@@ -9,7 +9,6 @@ tsdemux_sources = [
 
 tsdemux_headers = [
   'tsdemux.h',
-  'gstmpegdesc.h',
   'mpegtsparse.h',
   'pesparse.h',
   'mpegtspacketizer.h',

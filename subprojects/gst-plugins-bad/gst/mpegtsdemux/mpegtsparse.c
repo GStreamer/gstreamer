@@ -32,7 +32,6 @@
 
 #include "mpegtsbase.h"
 #include "mpegtsparse.h"
-#include "gstmpegdesc.h"
 
 /* latency in mseconds is maximum 100 ms between PCR */
 #define TS_LATENCY 100

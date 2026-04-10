@@ -39,7 +39,6 @@
 #define PCR_GST_MAX_VALUE (PCR_MAX_VALUE * GST_MSECOND / (PCR_MSECOND))
 
 #include "mpegtspacketizer.h"
-#include "gstmpegdesc.h"
 
 GST_DEBUG_CATEGORY_STATIC (mpegts_packetizer_debug);
 #define GST_CAT_DEFAULT mpegts_packetizer_debug

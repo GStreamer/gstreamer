@@ -39,7 +39,6 @@
 
 #include <glib/gi18n-lib.h>
 #include "mpegtsbase.h"
-#include "gstmpegdesc.h"
 
 #define RUNNING_STATUS_RUNNING 4
 

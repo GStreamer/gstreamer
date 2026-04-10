@@ -69,7 +69,6 @@
 
 #include <gst/base/gstbytewriter.h>
 #include <gst/mpegts/mpegts.h>
-#include <gst/mpegtsdemux/gstmpegdesc.h>
 
 #include "tsmux.h"
 #include "tsmuxstream.h"

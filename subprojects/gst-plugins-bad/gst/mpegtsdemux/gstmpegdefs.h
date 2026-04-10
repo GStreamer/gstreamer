@@ -40,6 +40,43 @@
     SAFE_CHAR((a) >> 8 & 0xff),				\
     SAFE_CHAR(a & 0xff)
 
+/* FIXME: Replace by actual descriptor in mpegts lib */
+/* AC3_audio_stream_descriptor */
+#define DESC_AC_AUDIO_STREAM_bsid(desc)             ((desc)[2] & 0x1f)
+#define DESC_AC_AUDIO_STREAM_channels(desc)         ((desc[4] >> 1) & 0x0f)
+#define DESC_AC_AUDIO_STREAM_textlen(desc)          ((desc[7 + (DESC_AC_AUDIO_STREAM_channels(desc)==0)] >> 1) & 0x7f)
+#define DESC_AC_AUDIO_STREAM_has_lang1(desc)        ((desc[8 + DESC_AC_AUDIO_STREAM_textlen(desc)] >> 7) & 0x01)
+#define DESC_AC_AUDIO_STREAM_lang1_code(desc)       (desc + 9 + DESC_AC_AUDIO_STREAM_textlen(desc))
+
+/* FIXME : Move list of well know registration ids to an enum
+ * in the mpegts library.
+ *
+ * See http://www.smpte-ra.org/mpegreg/mpegreg.html for a full list
+ * */
+
+/* registration_descriptor format IDs */
+#define DRF_ID_HDMV       0x48444d56
+#define DRF_ID_VC1        0x56432D31   /* defined in RP227 */
+#define DRF_ID_DTS1       0x44545331
+#define DRF_ID_DTS2       0x44545332
+#define DRF_ID_DTS3       0x44545333
+#define DRF_ID_S302M      0x42535344
+#define DRF_ID_TSHV       0x54534856
+#define DRF_ID_AC3        0x41432d33
+#define DRF_ID_GA94       0x47413934
+#define DRF_ID_CUEI       0x43554549
+#define DRF_ID_ETV1       0x45545631
+#define DRF_ID_HEVC       0x48455643
+#define DRF_ID_KLVA       0x4b4c5641   /* defined in RP217 */
+#define DRF_ID_OPUS       0x4f707573
+#define DRF_ID_EAC3       0x45414333   /* defined in A/52 Annex G */
+#define DRF_ID_AC4        0x41432D34   /* defined in ETSI TS 103 190-2 Annex D */
+#define DRF_ID_ID3        0x49443320   /* defined in SMPTE registration authority */
+#define DRF_ID_VANC       0x56414e43   /* defined in SMPTE ST-2038 */
+#define DRF_ID_VP09       0x56503039   /* Custom GStreamer vp9 */
+#define DRF_ID_AV1G       0x41563147   /* Custom AV1 GStreamer mapping */
+
+
 /* Stream type assignments */
 /* FIXME: Put these in mpegts lib separate stream type enums */
 /* Un-official Dirac extension */
