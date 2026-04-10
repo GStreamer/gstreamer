@@ -96,7 +96,6 @@ typedef struct _GstTFliteInferencePrivate
   GstCaps *model_incaps;
   GstCaps *model_outcaps;
 
-
   gint channels;
   gdouble *scales;
   gdouble *offsets;
@@ -667,7 +666,6 @@ gst_tflite_inference_start (GstBaseTransform * trans)
 
     }
 
-    gst_clear_caps (&priv->model_incaps);
     priv->model_incaps = gst_caps_new_empty_simple ("video/x-raw");
     if (width && height)
       gst_caps_set_simple (priv->model_incaps, "width", G_TYPE_INT, width,
@@ -699,7 +697,6 @@ gst_tflite_inference_start (GstBaseTransform * trans)
     goto error;
   }
 
-  gst_clear_caps (&priv->model_outcaps);
   o_size = TfLiteInterpreterGetOutputTensorCount (priv->interpreter);
 
   if (o_size != 0) {
@@ -779,6 +776,7 @@ gst_tflite_inference_start (GstBaseTransform * trans)
 
     gst_structure_set (tensor_desc, "dims-order", G_TYPE_STRING, dims_order_str,
         "tensor-id", G_TYPE_STRING, id, NULL);
+    g_free (id);
 
     gst_structure_take_value (tensor_desc, "dims", &val_dims);
     g_value_unset (&val);
@@ -820,6 +818,10 @@ gst_tflite_inference_start (GstBaseTransform * trans)
   ret = TRUE;
 
 done:
+  if (tensors_s)
+    gst_structure_free (tensors_s);
+  if (G_IS_VALUE (&v_tensors_set) && G_VALUE_TYPE (&v_tensors_set))
+    g_value_unset (&v_tensors_set);
   if (modelinfo)
     gst_analytics_modelinfo_free (modelinfo);
 
@@ -861,6 +863,7 @@ gst_tflite_inference_stop (GstBaseTransform * trans)
   priv->num_channels = 0;
 
   gst_clear_caps (&priv->model_incaps);
+  gst_clear_caps (&priv->model_outcaps);
 
   g_ptr_array_set_size (priv->tensor_templates, 0);
 
