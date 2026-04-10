@@ -118,7 +118,7 @@ enum
   PROP_THREADS,
 };
 
-#define VIDEO_CAPS GST_VIDEO_CAPS_MAKE ("{ RGB, RGBA, BGR, BGRA }")
+#define VIDEO_CAPS GST_VIDEO_CAPS_MAKE ("{ RGB, RGBA, BGR, BGRA, GBR, ARGB, ABGR }")
 
 static GstStaticPadTemplate gst_tflite_inference_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -994,47 +994,10 @@ gst_tflite_inference_process (GstBaseTransform * trans, GstBuffer * buf)
       gst_tflite_inference_get_instance_private (self);
   GstMapInfo info;
   guint8 *srcPtr[3];
-  gsize srcSamplesPerPixel = 3;
+  gsize srcSamplesPerPixel = GST_VIDEO_INFO_N_COMPONENTS (&priv->video_info);;
   GstTensorDataType datatype;
 
   if (gst_buffer_map (buf, &info, GST_MAP_READ)) {
-
-    // <==
-    srcPtr[0] = info.data;
-    srcPtr[1] = info.data + 1;
-    srcPtr[2] = info.data + 2;
-
-    switch (priv->video_info.finfo->format) {
-      case GST_VIDEO_FORMAT_RGBA:
-        srcSamplesPerPixel = 4;
-        break;
-      case GST_VIDEO_FORMAT_BGRA:
-        srcSamplesPerPixel = 4;
-        srcPtr[0] = info.data + 2;
-        srcPtr[1] = info.data + 1;
-        srcPtr[2] = info.data + 0;
-        break;
-      case GST_VIDEO_FORMAT_ARGB:
-        srcSamplesPerPixel = 4;
-        srcPtr[0] = info.data + 1;
-        srcPtr[1] = info.data + 2;
-        srcPtr[2] = info.data + 3;
-        break;
-      case GST_VIDEO_FORMAT_ABGR:
-        srcSamplesPerPixel = 4;
-        srcPtr[0] = info.data + 3;
-        srcPtr[1] = info.data + 2;
-        srcPtr[2] = info.data + 1;
-        break;
-      case GST_VIDEO_FORMAT_BGR:
-        srcPtr[0] = info.data + 2;
-        srcPtr[1] = info.data + 1;
-        srcPtr[2] = info.data + 0;
-        break;
-      default:
-        break;
-    }
-
     TfLiteTensor *tensor = TfLiteInterpreterGetInputTensor (priv->interpreter,
         0);
 
@@ -1046,6 +1009,12 @@ gst_tflite_inference_process (GstBaseTransform * trans, GstBuffer * buf)
       channels = 1;
     } else if (GST_VIDEO_INFO_IS_RGB (&priv->video_info)) {
       channels = 3;
+      srcPtr[0] = info.data +
+          GST_VIDEO_INFO_COMP_OFFSET (&priv->video_info, GST_VIDEO_COMP_R);
+      srcPtr[1] = info.data +
+          GST_VIDEO_INFO_COMP_OFFSET (&priv->video_info, GST_VIDEO_COMP_G);
+      srcPtr[2] = info.data +
+          GST_VIDEO_INFO_COMP_OFFSET (&priv->video_info, GST_VIDEO_COMP_B);
     } else {
       g_assert_not_reached ();
     }
