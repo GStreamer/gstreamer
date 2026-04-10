@@ -803,7 +803,7 @@ static gboolean gst_aja_sink_set_caps(GstBaseSink *bsink, GstCaps *caps) {
   }
   GST_DEBUG_OBJECT(self, "Configuring reference source %d",
                    (int)reference_source);
-  self->device->device->SetFramePulseReference(reference_source);
+  self->device->device->SetReference(reference_source);
 
   self->device->device->DMABufferAutoLock(false, true, 0);
 
