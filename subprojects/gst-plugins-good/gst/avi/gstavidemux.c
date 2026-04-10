@@ -1806,6 +1806,12 @@ gst_avi_demux_riff_parse_vprp (GstElement * element,
   vprp->fields = GUINT32_FROM_LE (vprp->fields);
 #endif
 
+  if (vprp->fields == 0) {
+    g_free (vprp);
+    gst_buffer_unref (buf);
+    return FALSE;
+  }
+
   /* size checking */
   /* calculate fields based on size */
   k = (size - G_STRUCT_OFFSET (gst_riff_vprp, field_info)) / vprp->fields;
