@@ -1169,7 +1169,7 @@ section_start:
     GST_DEBUG ("Short packet");
     section_length = (GST_READ_UINT16_BE (data + 1) & 0xfff) + 3;
     /* Only do fast-path if we have enough byte */
-    if (data + section_length <= packet->data_end) {
+    if ((packet->data_end - data) >= section_length) {
       if ((section =
               gst_mpegts_section_new (packet->pid, g_memdup2 (data,
                       section_length), section_length))) {
