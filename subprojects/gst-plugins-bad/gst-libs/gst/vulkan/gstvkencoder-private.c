@@ -1277,6 +1277,9 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   }
   if (encode_res->status == VK_QUERY_RESULT_STATUS_COMPLETE_KHR) {
     guint64 buffer_size = encode_res->data_size + pic->bitstream_header_size;
+    /* Per spec, the offset of the bitstream data is always 0 for encode.
+     * See: VK_KHR_video_encode_queue feedback queries */
+    g_assert (encode_res->offset == 0);
     GST_INFO_OBJECT (self, "The frame %p has been encoded with size %"
         G_GUINT64_FORMAT, pic, buffer_size);
     gst_buffer_set_size (pic->out_buffer, buffer_size);
