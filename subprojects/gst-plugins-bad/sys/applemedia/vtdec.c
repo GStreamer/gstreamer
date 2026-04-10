@@ -367,8 +367,10 @@ gst_vtdec_stop (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (vtdec, "stop");
 
+  GST_VIDEO_DECODER_STREAM_LOCK (vtdec);
   gst_vtdec_drain_decoder (GST_VIDEO_DECODER_CAST (vtdec), TRUE);
   vtdec->downstream_ret = GST_FLOW_FLUSHING;
+  GST_VIDEO_DECODER_STREAM_UNLOCK (vtdec);
 
   while ((frame = gst_vec_deque_pop_head (vtdec->reorder_queue))) {
     gst_video_decoder_release_frame (decoder, frame);
