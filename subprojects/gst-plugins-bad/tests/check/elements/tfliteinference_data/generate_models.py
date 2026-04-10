@@ -169,6 +169,14 @@ def main():
     p = convert_keras(keras.Model(inp, out), "planar_chw.tflite")
     write_modelinfo(p)
 
+    inp = keras.Input(shape=(3, 4, 4), batch_size=1, dtype="uint8", name="input_chw_u8")
+    x = layers.Lambda(lambda t: ops.cast(t, "float32"))(inp)
+    out = layers.Reshape((48,), name="output_flat_f32")(x)
+    p = convert_keras(
+        keras.Model(inp, out), "planar_chw_uint8in_float32out.tflite"
+    )
+    write_modelinfo(p)
+
     @tf.function(input_signature=[tf.TensorSpec(shape=[4, 4], dtype=tf.float32, name="input_gray2d")])
     def model_gray2d(x):
         return tf.identity(x, name="output_gray2d")

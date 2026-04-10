@@ -118,7 +118,7 @@ enum
   PROP_THREADS,
 };
 
-#define VIDEO_CAPS GST_VIDEO_CAPS_MAKE ("{ RGB, RGBA, BGR, BGRA, GBR, ARGB, ABGR }")
+#define VIDEO_CAPS GST_VIDEO_CAPS_MAKE ("{ RGB, RGBA, BGR, BGRA, GBR, ARGB, ABGR, RGBP, GBRP, BGRP }")
 
 static GstStaticPadTemplate gst_tflite_inference_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -928,7 +928,7 @@ gst_tflite_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 }
 
 #define _convert_image_scale_offset(Type, dst, srcPtr,                        \
-    srcSamplesPerPixel, stride, scales, offsets)                               \
+  rowStrides, compPstrides, scales, offsets)                                 \
 G_STMT_START {                                                                \
   size_t destIndex = 0;                                                       \
   Type tmp;                                                                   \
@@ -939,12 +939,12 @@ G_STMT_START {                                                                \
         for (int32_t k = 0; k < dstChannels; ++k) {                           \
           tmp = *srcPtr[k];                                                   \
           dst[destIndex++] = (Type)(tmp * scales[k] + offsets[k]);            \
-          srcPtr[k] += srcSamplesPerPixel;                                    \
+          srcPtr[k] += compPstrides[k];                                       \
         }                                                                     \
       }                                                                       \
       /* correct for stride */                                                \
-      for (uint32_t k = 0; k < 3; ++k)                                        \
-        srcPtr[k] += stride - srcSamplesPerPixel * dstWidth;                  \
+      for (uint32_t k = 0; k < dstChannels; ++k)                              \
+        srcPtr[k] += rowStrides[k] - compPstrides[k] * dstWidth;              \
     }                                                                         \
   } else {                                                                    \
     size_t frameSize = dstWidth * dstHeight;                                  \
@@ -954,13 +954,13 @@ G_STMT_START {                                                                \
         for (int32_t k = 0; k < dstChannels; ++k) {                           \
           tmp = *srcPtr[k];                                                   \
           destPtr[k][destIndex] = (Type)(tmp * scales[k] + offsets[k]);       \
-          srcPtr[k] += srcSamplesPerPixel;                                    \
+          srcPtr[k] += compPstrides[k];                                       \
         }                                                                     \
         destIndex++;                                                          \
       }                                                                       \
       /* correct for stride */                                                \
-      for (uint32_t k = 0; k < 3; ++k)                                        \
-        srcPtr[k] += stride - srcSamplesPerPixel * dstWidth;                  \
+      for (uint32_t k = 0; k < dstChannels; ++k)                              \
+        srcPtr[k] += rowStrides[k] - compPstrides[k] * dstWidth;              \
     }                                                                         \
   }                                                                           \
 }                                                                             \
@@ -969,21 +969,21 @@ G_STMT_END;
 static void
 convert_image_scale_offset_u8 (guint8 * dst, gint dstWidth, gint dstHeight,
     gint dstChannels, gboolean planar, guint8 ** srcPtr,
-    guint8 srcSamplesPerPixel, guint32 stride, const gdouble * scales,
-    const gdouble * offsets)
+    const guint32 * rowStrides, const guint8 * compPstrides,
+    const gdouble * scales, const gdouble * offsets)
 {
-  _convert_image_scale_offset (guint8, dst, srcPtr, srcSamplesPerPixel,
-      stride, scales, offsets);
+  _convert_image_scale_offset (guint8, dst, srcPtr, rowStrides, compPstrides,
+      scales, offsets);
 }
 
 static void
 convert_image_scale_offset_f32 (gfloat * dst, gint dstWidth, gint dstHeight,
     gint dstChannels, gboolean planar, guint8 ** srcPtr,
-    guint8 srcSamplesPerPixel, guint32 stride, const gdouble * scales,
-    const gdouble * offsets)
+    const guint32 * rowStrides, const guint8 * compPstrides,
+    const gdouble * scales, const gdouble * offsets)
 {
-  _convert_image_scale_offset (gfloat, dst, srcPtr, srcSamplesPerPixel,
-      stride, scales, offsets);
+  _convert_image_scale_offset (gfloat, dst, srcPtr, rowStrides, compPstrides,
+      scales, offsets);
 }
 
 static gboolean
@@ -994,7 +994,8 @@ gst_tflite_inference_process (GstBaseTransform * trans, GstBuffer * buf)
       gst_tflite_inference_get_instance_private (self);
   GstMapInfo info;
   guint8 *srcPtr[3];
-  gsize srcSamplesPerPixel = GST_VIDEO_INFO_N_COMPONENTS (&priv->video_info);;
+  guint32 rowStrides[3] = { 0, 0, 0 };
+  guint8 compPstrides[3] = { 0, 0, 0 };
   GstTensorDataType datatype;
 
   if (gst_buffer_map (buf, &info, GST_MAP_READ)) {
@@ -1003,10 +1004,15 @@ gst_tflite_inference_process (GstBaseTransform * trans, GstBuffer * buf)
 
     guint width = GST_VIDEO_INFO_WIDTH (&priv->video_info);
     guint height = GST_VIDEO_INFO_HEIGHT (&priv->video_info);
-    guint32 stride = priv->video_info.stride[0];
     guint channels;
     if (GST_VIDEO_INFO_IS_GRAY (&priv->video_info)) {
       channels = 1;
+      srcPtr[0] = info.data +
+          GST_VIDEO_INFO_COMP_OFFSET (&priv->video_info, GST_VIDEO_COMP_Y);
+      rowStrides[0] =
+          GST_VIDEO_INFO_COMP_STRIDE (&priv->video_info, GST_VIDEO_COMP_Y);
+      compPstrides[0] =
+          GST_VIDEO_INFO_COMP_PSTRIDE (&priv->video_info, GST_VIDEO_COMP_Y);
     } else if (GST_VIDEO_INFO_IS_RGB (&priv->video_info)) {
       channels = 3;
       srcPtr[0] = info.data +
@@ -1015,6 +1021,18 @@ gst_tflite_inference_process (GstBaseTransform * trans, GstBuffer * buf)
           GST_VIDEO_INFO_COMP_OFFSET (&priv->video_info, GST_VIDEO_COMP_G);
       srcPtr[2] = info.data +
           GST_VIDEO_INFO_COMP_OFFSET (&priv->video_info, GST_VIDEO_COMP_B);
+      rowStrides[0] =
+          GST_VIDEO_INFO_COMP_STRIDE (&priv->video_info, GST_VIDEO_COMP_R);
+      rowStrides[1] =
+          GST_VIDEO_INFO_COMP_STRIDE (&priv->video_info, GST_VIDEO_COMP_G);
+      rowStrides[2] =
+          GST_VIDEO_INFO_COMP_STRIDE (&priv->video_info, GST_VIDEO_COMP_B);
+      compPstrides[0] =
+          GST_VIDEO_INFO_COMP_PSTRIDE (&priv->video_info, GST_VIDEO_COMP_R);
+      compPstrides[1] =
+          GST_VIDEO_INFO_COMP_PSTRIDE (&priv->video_info, GST_VIDEO_COMP_G);
+      compPstrides[2] =
+          GST_VIDEO_INFO_COMP_PSTRIDE (&priv->video_info, GST_VIDEO_COMP_B);
     } else {
       g_assert_not_reached ();
     }
@@ -1028,7 +1046,7 @@ gst_tflite_inference_process (GstBaseTransform * trans, GstBuffer * buf)
         if (dest == NULL)
           return false;
         convert_image_scale_offset_u8 (dest, width, height, channels,
-            priv->planar, srcPtr, srcSamplesPerPixel, stride, priv->scales,
+            priv->planar, srcPtr, rowStrides, compPstrides, priv->scales,
             priv->offsets);
         break;
       }
@@ -1038,7 +1056,7 @@ gst_tflite_inference_process (GstBaseTransform * trans, GstBuffer * buf)
         if (dest == NULL)
           return false;
         convert_image_scale_offset_f32 (dest, width, height, channels,
-            priv->planar, srcPtr, srcSamplesPerPixel, stride, priv->scales,
+            priv->planar, srcPtr, rowStrides, compPstrides, priv->scales,
             priv->offsets);
         break;
       }

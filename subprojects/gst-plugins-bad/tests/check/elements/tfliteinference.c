@@ -410,7 +410,8 @@ GST_START_TEST (test_input_formats)
 {
   const GstVideoFormat formats[] = {
     GST_VIDEO_FORMAT_RGB, GST_VIDEO_FORMAT_RGBA,
-    GST_VIDEO_FORMAT_BGR, GST_VIDEO_FORMAT_BGRA
+    GST_VIDEO_FORMAT_BGR, GST_VIDEO_FORMAT_BGRA,
+    GST_VIDEO_FORMAT_RGBP, GST_VIDEO_FORMAT_BGRP
   };
   guint i;
 
@@ -473,6 +474,90 @@ GST_START_TEST (test_input_formats)
     gst_harness_teardown (h);
     cleanup_temp_model (tmp_model);
   }
+}
+
+GST_END_TEST;
+
+/* Test that the GBRP planar format is advertised in the sink caps returned by a caps query. */
+GST_START_TEST (test_gbrp_caps_input)
+{
+  gchar *tmp_model =
+      setup_model_with_ranges ("flatten_float32in_float32out.tflite",
+      "0.0,255.0;0.0,255.0;0.0,255.0");
+  GstHarness *h = harness_new_with_model (tmp_model);
+  GstPad *sinkpad = gst_element_get_static_pad (h->element, "sink");
+  GstCaps *filter = gst_caps_new_simple ("video/x-raw",
+      "format", G_TYPE_STRING, "GBRP", NULL);
+  GstCaps *caps = gst_pad_query_caps (sinkpad, filter);
+
+  fail_unless (caps != NULL);
+  fail_if (gst_caps_is_empty (caps));
+
+  gst_caps_unref (caps);
+  gst_caps_unref (filter);
+  gst_object_unref (sinkpad);
+  gst_harness_teardown (h);
+  cleanup_temp_model (tmp_model);
+}
+
+GST_END_TEST;
+
+/* Test that planar RGBP input fed to a uint8 CHW model passes through without conversion and yields correct float32 output. */
+GST_START_TEST (test_planar_uint8_input_passthrough)
+{
+  gchar *tmp_model =
+      setup_model_with_ranges ("planar_chw_uint8in_float32out.tflite",
+      "0.0,255.0;0.0,255.0;0.0,255.0");
+  GstHarness *h = harness_new_with_model (tmp_model);
+  GstBuffer *in = create_solid_color_buffer (GST_VIDEO_FORMAT_RGBP);
+  GstBuffer *out;
+  GstTensorMeta *tmeta;
+  const GstTensor *tensor;
+  gfloat expected[TEST_NUM_PIXELS * TEST_NUM_CHANNELS];
+  GstCaps *actual_caps, *expected_caps;
+  const TfliteTestTensorInfo out_tensors[] = {
+    {"output-0", "float32", "row-major", {1, 48}, 2}
+  };
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw,format=RGBP,width=4,height=4,framerate=30/1");
+
+  out = gst_harness_push_and_pull (h, in);
+  fail_unless (out);
+  fail_unless (gst_buffer_get_tensor_meta (out) != NULL);
+
+  tmeta = gst_buffer_get_tensor_meta (out);
+  fail_unless_equals_int (tmeta->num_tensors, 1);
+  tensor = gst_tensor_meta_get (tmeta, 0);
+  fail_unless (tensor != NULL);
+  fail_unless (gst_tensor_meta_get_by_id (tmeta,
+          g_quark_from_static_string ("output-0")) == tensor);
+  fail_unless (gst_tensor_meta_get_by_id (tmeta,
+          g_quark_from_static_string ("output-1")) == NULL);
+  fail_unless_equals_int (tensor->id, g_quark_from_static_string ("output-0"));
+  fail_unless_equals_int (tensor->layout, GST_TENSOR_LAYOUT_CONTIGUOUS);
+  fail_unless_equals_int (tensor->data_type, GST_TENSOR_DATA_TYPE_FLOAT32);
+  fail_unless_equals_int (tensor->dims_order, GST_TENSOR_DIM_ORDER_ROW_MAJOR);
+  fail_unless_equals_int ((gint) tensor->num_dims, 2);
+  fail_unless_equals_int ((gint) tensor->dims[0], 1);
+  fail_unless_equals_int ((gint) tensor->dims[1], 48);
+
+  actual_caps = pull_output_caps (h);
+  expected_caps = build_expected_output_caps ("RGBP",
+      TEST_WIDTH, TEST_HEIGHT, 30, 1,
+      "planar_chw_uint8in_float32out-group",
+      out_tensors, G_N_ELEMENTS (out_tensors));
+  fail_unless (gst_caps_is_equal (actual_caps, expected_caps));
+  gst_caps_unref (actual_caps);
+  gst_caps_unref (expected_caps);
+
+  fill_expected_chw_rgb_f32 (expected, 11.f, 22.f, 33.f);
+  TFLITE_TEST_ASSERT_TENSOR_VALUES_F32 (tensor, expected,
+      G_N_ELEMENTS (expected), 1e-6f);
+
+  gst_buffer_unref (out);
+  gst_harness_teardown (h);
+  cleanup_temp_model (tmp_model);
 }
 
 GST_END_TEST;
@@ -1131,6 +1216,8 @@ tfliteinference_suite (void)
 
   suite_add_tcase (s, tc);
   tcase_add_test (tc, test_input_formats);
+  tcase_add_test (tc, test_gbrp_caps_input);
+  tcase_add_test (tc, test_planar_uint8_input_passthrough);
   tcase_add_test (tc, test_normalization_variants);
   tcase_add_test (tc, test_output_dtypes);
   tcase_add_test (tc, test_dynamic_dims);
