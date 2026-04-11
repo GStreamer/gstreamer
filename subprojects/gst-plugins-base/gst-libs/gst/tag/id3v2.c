@@ -148,31 +148,45 @@ empty:
   }
 }
 
+/*
+ * id3v2_ununsync_data:
+ * @unsync_data: Input unsynchronized data
+ * @size: Input data size, updated to output size on return
+ *
+ * Removes unsynchronisation from ID3v2 data by replacing 0xff 0x00 sequences
+ * with 0xff bytes. This is necessary when ID3v2 tags use data unsynchronisation
+ * to prevent accidental detection of 0xff 0x00 sync bytes.
+ *
+ * Returns: Newly allocated ununsync'd data, or NULL on error. The caller is
+ * responsible for freeing the returned buffer.  On error, @size is set to 0.
+ */
 guint8 *
 id3v2_ununsync_data (const guint8 * unsync_data, guint32 * size)
 {
-  const guint8 *end;
-  guint8 *out, *uu;
-  guint out_size;
+  gsize in_pos, out_pos;
+  guint8 *out;
 
-  uu = out = g_malloc (*size);
+  g_return_val_if_fail (unsync_data != NULL, NULL);
+  g_return_val_if_fail (size != NULL, NULL);
+  g_return_val_if_fail (*size != 0, NULL);
 
-  for (end = unsync_data + *size; unsync_data < end - 1; ++unsync_data, ++uu) {
-    *uu = *unsync_data;
-    if (G_UNLIKELY (*unsync_data == 0xff && *(unsync_data + 1) == 0x00))
-      ++unsync_data;
+  out = g_malloc (*size);
+  /* Replace any 0xff 0x00 sequence by 0xff */
+  for (in_pos = 0, out_pos = 0; in_pos < *size;) {
+    if ((*size - in_pos > 1) && unsync_data[in_pos] == 0xff
+        && unsync_data[in_pos + 1] == 0x00) {
+      out[out_pos++] = unsync_data[in_pos++];
+      /* Skip escape 0x00 byte */
+      in_pos += 1;
+    } else {
+      out[out_pos++] = unsync_data[in_pos++];
+    }
   }
 
-  /* take care of last byte (if last two bytes weren't 0xff 0x00) */
-  if (unsync_data < end) {
-    *uu = *unsync_data;
-    ++uu;
-  }
+  GST_DEBUG ("size after un-unsyncing: %" G_GSIZE_FORMAT " (before: %u)",
+      out_pos, *size);
 
-  out_size = uu - out;
-  GST_DEBUG ("size after un-unsyncing: %u (before: %u)", out_size, *size);
-
-  *size = out_size;
+  *size = out_pos;
   return out;
 }
 
