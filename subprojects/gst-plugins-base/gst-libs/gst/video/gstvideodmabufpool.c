@@ -209,8 +209,6 @@ dmabuf_source_thread (gpointer data)
   g_main_loop_unref (loop);
   g_main_context_unref (context);
 
-  gst_object_unref (self);
-
   return NULL;
 }
 
@@ -228,7 +226,7 @@ gst_video_dmabuf_pool_start (GstBufferPool * pool)
 
   self->thread =
       g_thread_new ("video-dmabuf-pool-source-loop", dmabuf_source_thread,
-      g_object_ref (self));
+      self);
 
   GST_OBJECT_UNLOCK (self);
   return
