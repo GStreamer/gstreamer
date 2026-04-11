@@ -71,12 +71,18 @@ enum
   PROP_TILE_COL,
   PROP_B_PYRAMID,
   PROP_P_PYRAMID,
+#if (MFX_VERSION >= 2013)
+  PROP_PALETTE,
+  PROP_INTRABC,
+#endif
 };
 
 #define PROP_TILE_ROW_DEFAULT           1
 #define PROP_TILE_COL_DEFAULT           1
 #define PROP_B_PYRAMID_DEFAULT          MFX_B_REF_UNKNOWN
 #define PROP_P_PYRAMID_DEFAULT          MFX_P_REF_DEFAULT
+#define PROP_PALETTE_DEFAULT            FALSE
+#define PROP_INTRABC_DEFAULT            FALSE
 
 /* *INDENT-OFF* */
 static const gchar *doc_sink_caps_str =
@@ -204,6 +210,23 @@ gst_msdkav1enc_configure (GstMsdkEnc * encoder)
   gst_msdkenc_add_extra_param (encoder,
       (mfxExtBuffer *) & av1enc->ext_av1_tile_param);
 
+#if (MFX_VERSION >= 2013)
+  /* Attach extended buffers & params only if at least intrabc or palette is enabled */
+  if (av1enc->palette || av1enc->intrabc) {
+    memset (&av1enc->ext_av1_scc_param, 0, sizeof (av1enc->ext_av1_scc_param));
+    av1enc->ext_av1_scc_param.Header.BufferId =
+        MFX_EXTBUFF_AV1_SCREEN_CONTENT_TOOLS;
+    av1enc->ext_av1_scc_param.Header.BufferSz =
+        sizeof (av1enc->ext_av1_scc_param);
+    av1enc->ext_av1_scc_param.Palette =
+        av1enc->palette ? MFX_CODINGOPTION_ON : MFX_CODINGOPTION_OFF;
+    av1enc->ext_av1_scc_param.IntraBlockCopy =
+        av1enc->intrabc ? MFX_CODINGOPTION_ON : MFX_CODINGOPTION_OFF;
+    gst_msdkenc_add_extra_param (encoder,
+        (mfxExtBuffer *) & av1enc->ext_av1_scc_param);
+  }
+#endif
+
   return TRUE;
 }
 
@@ -274,6 +297,16 @@ gst_msdkav1enc_set_property (GObject * object, guint prop_id,
       thiz->p_pyramid = g_value_get_boolean (value);
       break;
 
+#if (MFX_VERSION >= 2013)
+    case PROP_PALETTE:
+      thiz->palette = g_value_get_boolean (value);
+      break;
+
+    case PROP_INTRABC:
+      thiz->intrabc = g_value_get_boolean (value);
+      break;
+#endif
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -308,6 +341,16 @@ gst_msdkav1enc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_P_PYRAMID:
       g_value_set_boolean (value, thiz->p_pyramid);
       break;
+
+#if (MFX_VERSION >= 2013)
+    case PROP_PALETTE:
+      g_value_set_boolean (value, thiz->palette);
+      break;
+
+    case PROP_INTRABC:
+      g_value_set_boolean (value, thiz->intrabc);
+      break;
+#endif
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -349,6 +392,18 @@ _msdkav1enc_install_properties (GObjectClass * gobject_class,
       g_param_spec_boolean ("p-pyramid", "P-pyramid",
           "Enable P-Pyramid Reference structure", PROP_P_PYRAMID_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+#if (MFX_VERSION >= 2013)
+  g_object_class_install_property (gobject_class, PROP_PALETTE,
+      g_param_spec_boolean ("palette", "Palette Mode",
+          "Enable Palette mode for Screen Content Coding, only available on supported hardware",
+          PROP_PALETTE_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_INTRABC,
+      g_param_spec_boolean ("intrabc", "Intra Block Copy",
+          "Enable Intra Block Copy for Screen Content Coding, only available on supported hardware",
+          PROP_INTRABC_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
 }
 
 static void
@@ -401,6 +456,8 @@ gst_msdkav1enc_init (GTypeInstance * instance, gpointer g_class)
   thiz->num_tile_cols = PROP_TILE_COL_DEFAULT;
   thiz->b_pyramid = PROP_B_PYRAMID_DEFAULT;
   thiz->p_pyramid = PROP_P_PYRAMID_DEFAULT;
+  thiz->palette = PROP_PALETTE_DEFAULT;
+  thiz->intrabc = PROP_INTRABC_DEFAULT;
 }
 
 gboolean

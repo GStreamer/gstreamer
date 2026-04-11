@@ -49,10 +49,15 @@ struct _GstMsdkAV1Enc
   gushort num_tile_cols;
   guint b_pyramid;
   guint p_pyramid;
+  gboolean palette;
+  gboolean intrabc;
 
   mfxExtAV1BitstreamParam ext_av1_bs_param;
   mfxExtAV1ResolutionParam ext_av1_res_param;
   mfxExtAV1TileParam ext_av1_tile_param;
+#if (MFX_VERSION >= 2013)
+  mfxExtAV1ScreenContentTools ext_av1_scc_param;
+#endif
 };
 
 struct _GstMsdkAV1EncClass
