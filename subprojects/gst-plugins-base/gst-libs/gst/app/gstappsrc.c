@@ -2645,7 +2645,7 @@ gst_app_src_push_internal (GstAppSrc * appsrc, GstBuffer * buffer,
         gst_app_src_update_queued_pop (appsrc, item, FALSE);
 
         if (GST_IS_BUFFER_LIST (item))
-          priv->dropped += gst_buffer_list_length (buflist);
+          priv->dropped += gst_buffer_list_length ((GstBufferList *) item);
         else
           priv->dropped += 1;
         gst_mini_object_unref (item);
