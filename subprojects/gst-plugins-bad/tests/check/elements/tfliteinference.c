@@ -557,7 +557,10 @@ GST_START_TEST (test_normalization_variants)
           11.f * (2.f / 255.f) - 1.f, 22.f * (2.f / 255.f) - 1.f,
         33.f * (2.f / 255.f) - 1.f}, {
           "0.0,255.0;-1.0,1.0;0.0,1.0",
-        11.f, 22.f * (2.f / 255.f) - 1.f, 33.f / 255.f},
+        11.f, 22.f * (2.f / 255.f) - 1.f, 33.f / 255.f}, {
+          /* Single range broadcasts to all channels */
+          "0.0,1.0",
+        11.f / 255.f, 22.f / 255.f, 33.f / 255.f},
   };
   guint i;
 
@@ -1226,6 +1229,25 @@ GST_START_TEST (test_accept_caps_dimension_mismatch)
 
 GST_END_TEST;
 
+GST_START_TEST (test_invalid_range_count)
+{
+  /* 2 ranges for a 3-channel model must fail */
+  gchar *tmp_model =
+      setup_model_with_ranges ("flatten_float32in_float32out.tflite",
+      "0.0,1.0;0.0,1.0");
+  GstElement *e = gst_element_factory_make ("tfliteinference", NULL);
+
+  g_object_set (e, "model-file", tmp_model, NULL);
+  fail_if (gst_element_set_state (e, GST_STATE_PAUSED)
+      != GST_STATE_CHANGE_FAILURE);
+
+  gst_element_set_state (e, GST_STATE_NULL);
+  gst_object_unref (e);
+  cleanup_temp_model (tmp_model);
+}
+
+GST_END_TEST;
+
 static Suite *
 tfliteinference_suite (void)
 {
@@ -1251,6 +1273,7 @@ tfliteinference_suite (void)
   tcase_add_test (tc, test_no_input_modelinfo);
   tcase_add_test (tc, test_timestamp_and_flags_propagation);
   tcase_add_test (tc, test_accept_caps_dimension_mismatch);
+  tcase_add_test (tc, test_invalid_range_count);
 
   return s;
 }

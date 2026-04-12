@@ -99,7 +99,6 @@ typedef struct _GstTFliteInferencePrivate
   gint channels;
   gdouble *scales;
   gdouble *offsets;
-  gsize num_channels;
 
 } GstTFliteInferencePrivate;
 
@@ -224,7 +223,6 @@ gst_tflite_inference_init (GstTFliteInference * self)
   priv->tflite_disabled = TRUE;
   priv->scales = NULL;
   priv->offsets = NULL;
-  priv->num_channels = 0;
 
   /* Passthrough would propagate tensors caps upstream */
   gst_base_transform_set_prefer_passthrough (GST_BASE_TRANSFORM (self), FALSE);
@@ -516,6 +514,7 @@ gst_tflite_inference_start (GstBaseTransform * trans)
   GstTFliteInferenceClass *klass = GST_TFLITE_INFERENCE_GET_CLASS (self);
   GstStructure *tensors_s = NULL;
   GValue v_tensors_set = G_VALUE_INIT;
+  guint i, j;
 
   GST_OBJECT_LOCK (self);
   if (gst_tflite_inference_has_session (self)) {
@@ -569,9 +568,8 @@ gst_tflite_inference_start (GstBaseTransform * trans)
   }
 
   {
-    const guint i = 0;
     const TfLiteTensor *tflite_tensor =
-        TfLiteInterpreterGetInputTensor (priv->interpreter, i);
+        TfLiteInterpreterGetInputTensor (priv->interpreter, 0);
     const gchar *tname;
     GstTensorDataType data_type;
     gsize dims_count;
@@ -580,7 +578,6 @@ gst_tflite_inference_start (GstBaseTransform * trans)
     gint width = 0, height = 0;
     const gchar *gst_format = NULL;
     gboolean is_passthrough = TRUE;
-    gsize c;
 
     if (!_get_input_params (self, &data_type, &width, &height, &gst_format,
             &priv->channels, &priv->planar)) {
@@ -591,79 +588,48 @@ gst_tflite_inference_start (GstBaseTransform * trans)
     if (!convert_tensor_info (tflite_tensor, &tname, &data_type,
             &dims_count, &dims)) {
       GST_ERROR_OBJECT (self, "Rejecting input_tensor[%d]:%s with no dims",
-          i, tname);
+          0, tname);
       goto error;
     }
 
     tensor_name = gst_analytics_modelinfo_find_tensor_name (modelinfo,
-        MODELINFO_DIRECTION_INPUT, i, tname, data_type, dims_count, dims);
+        MODELINFO_DIRECTION_INPUT, 0, tname, data_type, dims_count, dims);
 
     if (tensor_name == NULL) {
       gchar *dims_str = build_dims_str (dims_count, dims);
       GST_DEBUG_OBJECT (self,
           "Model info file doesn't contain info for input_tensor[%u]:%s matching the"
-          " type %s and dims %s", i, tname,
+          " type %s and dims %s", 0, tname,
           gst_tensor_data_type_get_name (data_type), dims_str);
 
       g_free (priv->scales);
       g_free (priv->offsets);
-      priv->num_channels = MAX (1, (gsize) priv->channels);
-      priv->scales = g_new (gdouble, priv->num_channels);
-      priv->offsets = g_new (gdouble, priv->num_channels);
-      for (c = 0; c < priv->num_channels; c++) {
-        priv->scales[c] = 1.0;
-        priv->offsets[c] = 0.0;
+      priv->scales = g_new (gdouble, priv->channels);
+      priv->offsets = g_new (gdouble, priv->channels);
+      for (i = 0; i < priv->channels; i++) {
+        priv->scales[i] = 1.0;
+        priv->offsets[i] = 0.0;
       }
 
       g_free (dims);
       g_free (dims_str);
     } else {
+      gdouble *input_mins = g_alloca (sizeof (gdouble) * priv->channels);
+      gdouble *input_maxs = g_alloca (sizeof (gdouble) * priv->channels);
 
-      /* Get per-channel scales and offsets from modelinfo */
-      /* For video input, we assume uint8 pixel values in range [0, 255] */
-      {
-        gdouble *input_mins = NULL;
-        gdouble *input_maxs = NULL;
-        gsize num_target_ranges;
-        gsize j;
-
-        /* First, get the number of target ranges from modelinfo to allocate input ranges */
-        if (!gst_analytics_modelinfo_get_target_ranges (modelinfo, tensor_name,
-                &num_target_ranges, &input_mins, &input_maxs)) {
-          GST_ERROR_OBJECT (self,
-              "Failed to get target ranges from modelinfo for tensor %s",
-              tensor_name);
-          g_free (tensor_name);
-          goto error;
-        }
-
-        /* Free the target ranges - we only needed them to know the count */
-        g_free (input_mins);
-        g_free (input_maxs);
-
-        /* Prepare input ranges - for video uint8 input, range is [0, 255] for all channels */
-        input_mins = g_new (gdouble, num_target_ranges);
-        input_maxs = g_new (gdouble, num_target_ranges);
-        for (j = 0; j < num_target_ranges; j++) {
-          input_mins[j] = 0.0;
-          input_maxs[j] = 255.0;
-        }
-
-        if (!gst_analytics_modelinfo_get_input_scales_offsets (modelinfo,
-                tensor_name, num_target_ranges, input_mins, input_maxs,
-                &priv->num_channels, &priv->scales, &priv->offsets)) {
-          GST_ERROR_OBJECT (self, "Failed to get scales/offsets for tensor %s",
-              tensor_name);
-          g_free (input_mins);
-          g_free (input_maxs);
-          g_free (tensor_name);
-          goto error;
-        }
-
-        g_free (input_mins);
-        g_free (input_maxs);
+      for (i = 0; i < priv->channels; i++) {
+        input_mins[i] = 0.0;
+        input_maxs[i] = 255.0;
       }
 
+      if (!gst_analytics_modelinfo_get_input_scales_offsets (modelinfo,
+              tensor_name, priv->channels, input_mins, input_maxs,
+              NULL, &priv->scales, &priv->offsets)) {
+        GST_ERROR_OBJECT (self, "Failed to get scales/offsets for tensor %s",
+            tensor_name);
+        g_free (tensor_name);
+        goto error;
+      }
     }
 
     priv->model_incaps = gst_caps_new_empty_simple ("video/x-raw");
@@ -674,8 +640,8 @@ gst_tflite_inference_start (GstBaseTransform * trans)
     /* Check if all channels are passthrough (scale=1.0, offset=0.0) */
     is_passthrough = TRUE;
     if (priv->scales && priv->offsets) {
-      for (c = 0; c < priv->num_channels; c++) {
-        if (priv->scales[c] != 1.0 || priv->offsets[c] != 0.0) {
+      for (i = 0; i < priv->channels; i++) {
+        if (priv->scales[i] != 1.0 || priv->offsets[i] != 0.0) {
           is_passthrough = FALSE;
           break;
         }
@@ -717,7 +683,7 @@ gst_tflite_inference_start (GstBaseTransform * trans)
     g_value_init (&v_tensors_set, GST_TYPE_UNIQUE_LIST);
   }
 
-  for (guint i = 0; i < o_size; i++) {
+  for (i = 0; i < o_size; i++) {
     const TfLiteTensor *tflite_tensor =
         TfLiteInterpreterGetOutputTensor (priv->interpreter, i);
     const gchar *tname;
@@ -782,8 +748,8 @@ gst_tflite_inference_start (GstBaseTransform * trans)
     g_value_init (&val_caps, GST_TYPE_CAPS);
     g_value_init (&val_dt, G_TYPE_STRING);
 
-    for (gsize i = 0; i < t->num_dims; i++) {
-      g_value_set_int (&val, t->dims[i] ? t->dims[i] : 0);
+    for (j = 0; j < t->num_dims; j++) {
+      g_value_set_int (&val, t->dims[j] ? t->dims[j] : 0);
       gst_value_array_append_value (&val_dims, &val);
     }
 
@@ -873,7 +839,6 @@ gst_tflite_inference_stop (GstBaseTransform * trans)
 
   g_clear_pointer (&priv->scales, g_free);
   g_clear_pointer (&priv->offsets, g_free);
-  priv->num_channels = 0;
 
   gst_clear_caps (&priv->model_incaps);
   gst_clear_caps (&priv->model_outcaps);
