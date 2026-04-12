@@ -521,7 +521,11 @@ gst_nvcodec_get_or_build_cache (GstPlugin * plugin, guint current_api_major,
       /* Query current LUID - it changes per boot so can't use cached value */
       device_cache.adapter_luid = gst_cuda_context_find_dxgi_adapter_luid (i);
 
-      /* Update encoder class data with current LUID */
+      /* Update decoder/encoder class data with current LUID */
+      for (GList * l = device_cache.decoders; l; l = l->next) {
+        GstNvDecoderClassData *dec_cdata = (GstNvDecoderClassData *) l->data;
+        dec_cdata->adapter_luid = device_cache.adapter_luid;
+      }
       for (GList * l = device_cache.encoders; l; l = l->next) {
         GstNvEncoderClassData *enc_cdata = (GstNvEncoderClassData *) l->data;
         enc_cdata->adapter_luid = device_cache.adapter_luid;
@@ -560,6 +564,7 @@ gst_nvcodec_get_or_build_cache (GstPlugin * plugin, guint current_api_major,
                 g_strdup (gst_cuda_video_codec_to_string (codec));
             dec_cdata->sink_caps = sink_template;
             dec_cdata->src_caps = src_template;
+            dec_cdata->adapter_luid = device_cache.adapter_luid;
             dec_cdata->cuda_device_id = i;
             device_cache.decoders =
                 g_list_append (device_cache.decoders, dec_cdata);
