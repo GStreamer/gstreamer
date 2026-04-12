@@ -61,6 +61,8 @@
 
 #define YOLO_OBB "yolo-v8-obb-out"
 GQuark YOLO_OBB_ID;
+#define YOLO_OBB_NORMALIZED "yolo-v8-obb-out-normalized"
+GQuark YOLO_OBB_NORMALIZED_ID;
 
 /* *INDENT-OFF* */
 static GstStaticPadTemplate gst_yolo_obb_tensor_decoder_sink_template =
@@ -73,7 +75,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
             "yolo-v8-obb-out=(/uniquelist){"
             "(GstCaps)["
               "tensor/strided,"
-                "tensor-id=yolo-v8-obb-out,"
+                "tensor-id=(string){yolo-v8-obb-out, yolo-v8-obb-out-normalized},"
                 "dims=(int)<1, [1, max], [1,max]>,"
                 "dims-order=(string)col-major,"
                 "type=(string)float32"
@@ -118,6 +120,7 @@ gst_yolo_obb_tensor_decoder_class_init (GstYoloObbTensorDecoderClass * klass)
       "Tensor decoder for Yolo Oriented Bounding Boxes (OBB) models");
 
   YOLO_OBB_ID = g_quark_from_static_string (YOLO_OBB);
+  YOLO_OBB_NORMALIZED_ID = g_quark_from_static_string (YOLO_OBB_NORMALIZED);
 
   gst_element_class_set_static_metadata (element_class,
       "YOLO v8-11 oriented bounding box tensor decoder", "Tensordecoder/Video",
@@ -165,6 +168,17 @@ gst_yolo_obb_tensor_decoder_get_tensors (GstYoloObbTensorDecoder * self,
         YOLO_OBB_ID, GST_TENSOR_DATA_TYPE_FLOAT32,
         GST_TENSOR_DIM_ORDER_COL_MAJOR, YOLO_OBB_TENSOR_N_DIMS,
         detections_dims);
+
+    if (*detections_tensor != NULL) {
+      GST_YOLO_TENSOR_DECODER (self)->normalized_coords = FALSE;
+    } else {
+      *detections_tensor = gst_tensor_meta_get_typed_tensor (tmeta,
+          YOLO_OBB_NORMALIZED_ID, GST_TENSOR_DATA_TYPE_FLOAT32,
+          GST_TENSOR_DIM_ORDER_COL_MAJOR, YOLO_OBB_TENSOR_N_DIMS,
+          detections_dims);
+      GST_YOLO_TENSOR_DECODER (self)->normalized_coords =
+          (*detections_tensor != NULL);
+    }
 
     if (*detections_tensor == NULL)
       continue;

@@ -73,18 +73,43 @@ GQuark YOLO_SEGMENTATION_LOGITS_TENSOR_ID;
 #define YOLO_SEGMENTATION_DETECTION_MASK "yolo-v8-segmentation-out-detections"
 GQuark YOLO_SEGMENTATION_DETECTION_MASK_ID;
 
+#define YOLO_SEGMENTATION_DETECTION_MASK_NORMALIZED "yolo-v8-segmentation-out-detections-normalized"
+GQuark YOLO_SEGMENTATION_DETECTION_MASK_NORMALIZED_ID;
+
 /* *INDENT-OFF* */
 static GstStaticPadTemplate gst_yolo_seg_tensor_decoder_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw(ANY),"
+    GST_STATIC_CAPS (
+      "video/x-raw(ANY),"
         "tensors=(structure)["
           "tensorgroups,"
             "yolo-v8-segmentation-out=(/uniquelist){"
             "(GstCaps)["
               "tensor/strided,"
                 "tensor-id=yolo-v8-segmentation-out-detections,"
+                "dims=(int)<1, [1,max], [1,max]>,"
+                "dims-order=(string)col-major,"
+                "type=(string)float32"
+              "],"
+            "(GstCaps)["
+              "tensor/strided,"
+                "tensor-id=yolo-v8-segmentation-out-protos,"
+                "dims=(int)<1, [1,max], [1,max], [1,max]>,"
+                "dims-order=(string)col-major,"
+                "type=(string)float32"
+              "]"
+            "}"
+        "]"
+      ";"
+      "video/x-raw,"
+        "tensors=(structure)["
+          "tensorgroups,"
+            "yolo-v8-segmentation-out-normalized=(/uniquelist){"
+            "(GstCaps)["
+              "tensor/strided,"
+                "tensor-id=yolo-v8-segmentation-out-detections-normalized,"
                 "dims=(int)<1, [1,max], [1,max]>,"
                 "dims-order=(string)col-major,"
                 "type=(string)float32"
@@ -158,6 +183,8 @@ gst_yolo_seg_tensor_decoder_class_init (GstYoloSegTensorDecoderClass * klass)
 
   YOLO_SEGMENTATION_DETECTION_MASK_ID =
       g_quark_from_static_string (YOLO_SEGMENTATION_DETECTION_MASK);
+  YOLO_SEGMENTATION_DETECTION_MASK_NORMALIZED_ID =
+      g_quark_from_static_string (YOLO_SEGMENTATION_DETECTION_MASK_NORMALIZED);
   YOLO_SEGMENTATION_LOGITS_TENSOR_ID =
       g_quark_from_static_string (YOLO_SEGMENTATION_LOGITS);
 
@@ -226,6 +253,17 @@ gst_yolo_seg_tensor_decoder_get_tensors (GstYoloSegTensorDecoder * self,
         YOLO_SEGMENTATION_DETECTION_MASK_ID, GST_TENSOR_DATA_TYPE_FLOAT32,
         GST_TENSOR_DIM_ORDER_COL_MAJOR, YOLO_DETECTIONS_TENSOR_N_DIMS,
         detections_dims);
+
+    if (*detections_tensor == NULL) {
+      *detections_tensor = gst_tensor_meta_get_typed_tensor (tmeta,
+          YOLO_SEGMENTATION_DETECTION_MASK_NORMALIZED_ID,
+          GST_TENSOR_DATA_TYPE_FLOAT32, GST_TENSOR_DIM_ORDER_COL_MAJOR,
+          YOLO_DETECTIONS_TENSOR_N_DIMS, detections_dims);
+      GST_YOLO_TENSOR_DECODER (self)->normalized_coords =
+          (*detections_tensor != NULL);
+    } else {
+      GST_YOLO_TENSOR_DECODER (self)->normalized_coords = FALSE;
+    }
 
     if (*detections_tensor == NULL)
       continue;

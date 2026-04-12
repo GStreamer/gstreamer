@@ -80,6 +80,8 @@ struct _GstYoloTensorDecoder
   gchar *label_file;
   /* Labels */
   GArray *labels;
+  /* TRUE if bbox coordinates are normalized (0-1), FALSE if in pixel space */
+  gboolean normalized_coords;
 };
 
 struct _GstYoloTensorDecoderClass

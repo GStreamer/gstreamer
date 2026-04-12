@@ -867,6 +867,192 @@ GST_START_TEST (test_accept_caps)
 
 GST_END_TEST;
 
+/* Test that a candidate with normalized [0, 1] coords is scaled to pixel space */
+GST_START_TEST (test_normalized_basic_decode)
+{
+  GstHarness *h;
+  GstBuffer *inbuf;
+  GstBuffer *outbuf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsODMtd od_mtd;
+  GstTensor *detections;
+  GstTensor *tensors[1];
+  DetectionCandidate candidate;
+  gfloat class_confidences[1];
+  gint x, y, w, height;
+  gfloat confidence;
+
+  class_confidences[0] = 0.9f;
+  candidate.x = 0.5f;
+  candidate.y = 0.5f;
+  candidate.w = 0.25f;
+  candidate.h = 0.25f;
+  candidate.class_confidences = class_confidences;
+  candidate.extras = NULL;
+
+  detections = make_detections_tensor ("yolo-v8-out-normalized", 1, 0,
+      &candidate, 1);
+  tensors[0] = detections;
+
+  inbuf = gst_buffer_new ();
+  attach_tensors_meta (inbuf, tensors, 1);
+
+  h = setup_decoder_harness ("yolov8tensordec", 640, 480);
+  outbuf = gst_harness_push_and_pull (h, inbuf);
+  fail_unless (outbuf != NULL);
+
+  rmeta = gst_buffer_get_analytics_relation_meta (outbuf);
+  fail_unless (rmeta != NULL);
+  fail_unless_equals_int (count_mtd_type (rmeta,
+          gst_analytics_od_mtd_get_mtd_type ()), 1);
+  fail_unless (get_single_od_mtd (rmeta, &od_mtd));
+  fail_unless (gst_analytics_od_mtd_get_location (&od_mtd, &x, &y, &w, &height,
+          &confidence));
+  fail_unless_equals_int (x, 240);
+  fail_unless_equals_int (y, 180);
+  fail_unless_equals_int (w, 160);
+  fail_unless_equals_int (height, 120);
+  fail_unless (approx_equal (confidence, 0.9f, TEST_EPSILON));
+
+  gst_buffer_unref (outbuf);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+/* Test that normalized candidates outside the [0, 1] validation range are rejected */
+GST_START_TEST (test_normalized_invalid_bbox_rejected)
+{
+  GstHarness *h;
+  GstBuffer *inbuf;
+  GstBuffer *outbuf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstTensor *detections;
+  GstTensor *tensors[1];
+  DetectionCandidate candidates[4];
+  gfloat class_0[1];
+  gfloat class_1[1];
+  gfloat class_2[1];
+  gfloat class_3[1];
+
+  class_0[0] = 0.95f;
+  class_1[0] = 0.90f;
+  class_2[0] = 0.92f;
+  class_3[0] = 0.93f;
+
+  /* w = 0 is degenerate */
+  candidates[0].x = 0.5f;
+  candidates[0].y = 0.5f;
+  candidates[0].w = 0.0f;
+  candidates[0].h = 0.2f;
+  candidates[0].class_confidences = class_0;
+  candidates[0].extras = NULL;
+
+  /* x outside [-0.5, 1.0] */
+  candidates[1].x = 1.2f;
+  candidates[1].y = 0.5f;
+  candidates[1].w = 0.1f;
+  candidates[1].h = 0.1f;
+  candidates[1].class_confidences = class_1;
+  candidates[1].extras = NULL;
+
+  /* w > 1.0 */
+  candidates[2].x = 0.5f;
+  candidates[2].y = 0.5f;
+  candidates[2].w = 1.5f;
+  candidates[2].h = 0.1f;
+  candidates[2].class_confidences = class_2;
+  candidates[2].extras = NULL;
+
+  /* Valid candidate */
+  candidates[3].x = 0.5f;
+  candidates[3].y = 0.5f;
+  candidates[3].w = 0.2f;
+  candidates[3].h = 0.2f;
+  candidates[3].class_confidences = class_3;
+  candidates[3].extras = NULL;
+
+  detections = make_detections_tensor ("yolo-v8-out-normalized", 1, 0,
+      candidates, 4);
+  tensors[0] = detections;
+  inbuf = gst_buffer_new ();
+  attach_tensors_meta (inbuf, tensors, 1);
+
+  h = setup_decoder_harness ("yolov8tensordec", 640, 480);
+  outbuf = gst_harness_push_and_pull (h, inbuf);
+  fail_unless (outbuf != NULL);
+
+  rmeta = gst_buffer_get_analytics_relation_meta (outbuf);
+  fail_unless (rmeta != NULL);
+  fail_unless_equals_int (count_mtd_type (rmeta,
+          gst_analytics_od_mtd_get_mtd_type ()), 1);
+  fail_unless (find_od_by_location (rmeta, 256, 192, 128, 96, NULL));
+
+  gst_buffer_unref (outbuf);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+/* Test that NMS runs on the pixel-space bboxes derived from normalized coords */
+GST_START_TEST (test_normalized_nms)
+{
+  GstHarness *h;
+  GstBuffer *inbuf;
+  GstBuffer *outbuf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstTensor *detections;
+  GstTensor *tensors[1];
+  DetectionCandidate candidates[2];
+  gfloat class_0[1];
+  gfloat class_1[1];
+  gboolean has_first;
+  gboolean has_second;
+
+  class_0[0] = 0.95f;
+  class_1[0] = 0.80f;
+
+  candidates[0].x = 0.25f;
+  candidates[0].y = 0.25f;
+  candidates[0].w = 0.1f;
+  candidates[0].h = 0.1f;
+  candidates[0].class_confidences = class_0;
+  candidates[0].extras = NULL;
+
+  candidates[1].x = 0.2625f;
+  candidates[1].y = 0.2625f;
+  candidates[1].w = 0.1f;
+  candidates[1].h = 0.1f;
+  candidates[1].class_confidences = class_1;
+  candidates[1].extras = NULL;
+
+  detections = make_detections_tensor ("yolo-v8-out-normalized", 1, 0,
+      candidates, 2);
+  tensors[0] = detections;
+  inbuf = gst_buffer_new ();
+  attach_tensors_meta (inbuf, tensors, 1);
+
+  h = setup_decoder_harness ("yolov8tensordec", 400, 400);
+  g_object_set (h->element, "iou-threshold", 0.3f, NULL);
+
+  outbuf = gst_harness_push_and_pull (h, inbuf);
+  fail_unless (outbuf != NULL);
+  rmeta = gst_buffer_get_analytics_relation_meta (outbuf);
+  fail_unless (rmeta != NULL);
+  fail_unless_equals_int (count_mtd_type (rmeta,
+          gst_analytics_od_mtd_get_mtd_type ()), 1);
+
+  has_first = find_od_by_location (rmeta, 80, 80, 40, 40, NULL);
+  has_second = find_od_by_location (rmeta, 85, 85, 40, 40, NULL);
+  fail_unless (has_first);
+  fail_if (has_second);
+
+  gst_buffer_unref (outbuf);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 /* Test that OBB decoder stores oriented bounding boxes with rotation angle */
 GST_START_TEST (test_obb_basic_decode)
 {
@@ -1066,6 +1252,63 @@ GST_START_TEST (test_obb_accept_caps)
   gst_caps_unref (audio_caps);
   gst_object_unref (obb_sinkpad);
   gst_object_unref (obb_element);
+}
+
+GST_END_TEST;
+
+/* Test that the OBB decoder scales normalized coords and preserves the rotation angle */
+GST_START_TEST (test_obb_normalized_decode)
+{
+  GstHarness *h;
+  GstBuffer *inbuf;
+  GstBuffer *outbuf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsODMtd od_mtd;
+  GstTensor *detections;
+  GstTensor *tensors[1];
+  DetectionCandidate candidate;
+  gfloat class_confidences[1];
+  gfloat extras[1];
+  gint x, y, w, height;
+  gfloat confidence;
+  gfloat rotation;
+
+  class_confidences[0] = 0.9f;
+  extras[0] = 0.5f;
+
+  candidate.x = 0.5f;
+  candidate.y = 0.4f;
+  candidate.w = 0.2f;
+  candidate.h = 0.1f;
+  candidate.class_confidences = class_confidences;
+  candidate.extras = extras;
+
+  detections = make_detections_tensor ("yolo-v8-obb-out-normalized", 1, 1,
+      &candidate, 1);
+  tensors[0] = detections;
+  inbuf = gst_buffer_new ();
+  attach_tensors_meta (inbuf, tensors, 1);
+
+  h = setup_decoder_harness ("yoloobbv8tensordec", 300, 300);
+  outbuf = gst_harness_push_and_pull (h, inbuf);
+  fail_unless (outbuf != NULL);
+
+  rmeta = gst_buffer_get_analytics_relation_meta (outbuf);
+  fail_unless (rmeta != NULL);
+  fail_unless_equals_int (count_mtd_type (rmeta,
+          gst_analytics_od_mtd_get_mtd_type ()), 1);
+  fail_unless (get_single_od_mtd (rmeta, &od_mtd));
+  fail_unless (gst_analytics_od_mtd_get_oriented_location (&od_mtd, &x, &y, &w,
+          &height, &rotation, &confidence));
+  fail_unless_equals_int (x, 120);
+  fail_unless_equals_int (y, 105);
+  fail_unless_equals_int (w, 60);
+  fail_unless_equals_int (height, 30);
+  fail_unless (approx_equal (rotation, 0.5f, TEST_EPSILON));
+  fail_unless (approx_equal (confidence, 0.9f, TEST_EPSILON));
+
+  gst_buffer_unref (outbuf);
+  gst_harness_teardown (h);
 }
 
 GST_END_TEST;
@@ -1466,6 +1709,83 @@ GST_START_TEST (test_seg_dims_too_small)
 
 GST_END_TEST;
 
+/* Test that segmentation decoder scales normalized detections and still emits linked OD and segmentation metadata */
+GST_START_TEST (test_seg_normalized_decode)
+{
+  GstHarness *h;
+  GstBuffer *inbuf;
+  GstBuffer *outbuf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsODMtd od_mtd;
+  GstAnalyticsSegmentationMtd seg_mtd;
+  GstTensor *detections;
+  GstTensor *logits;
+  GstTensor *tensors[2];
+  DetectionCandidate candidate;
+  gfloat class_confidences[1];
+  gfloat extras[1];
+  gfloat logits_values[16];
+  guint i;
+  GstBuffer *mask_buf;
+  gint masks_x, masks_y;
+  guint masks_w, masks_h;
+  gboolean has_od_to_seg_relation;
+  gboolean has_seg_to_od_relation;
+
+  for (i = 0; i < G_N_ELEMENTS (logits_values); i++)
+    logits_values[i] = 1.0f;
+
+  class_confidences[0] = 0.95f;
+  extras[0] = 2.0f;
+  candidate.x = 0.5f;
+  candidate.y = 0.5f;
+  candidate.w = 0.5f;
+  candidate.h = 0.5f;
+  candidate.class_confidences = class_confidences;
+  candidate.extras = extras;
+
+  detections = make_detections_tensor
+      ("yolo-v8-segmentation-out-detections-normalized", 1, 1, &candidate, 1);
+  logits = make_logits_tensor (1, 4, 4, logits_values);
+  tensors[0] = detections;
+  tensors[1] = logits;
+
+  inbuf = gst_buffer_new ();
+  attach_tensors_meta (inbuf, tensors, 2);
+
+  h = setup_decoder_harness ("yolosegv8tensordec", 4, 4);
+  outbuf = gst_harness_push_and_pull (h, inbuf);
+  fail_unless (outbuf != NULL);
+  rmeta = gst_buffer_get_analytics_relation_meta (outbuf);
+  fail_unless (rmeta != NULL);
+  fail_unless_equals_int (count_mtd_type (rmeta,
+          gst_analytics_od_mtd_get_mtd_type ()), 1);
+  fail_unless_equals_int (count_mtd_type (rmeta,
+          gst_analytics_segmentation_mtd_get_mtd_type ()), 1);
+  fail_unless (get_single_od_mtd (rmeta, &od_mtd));
+  fail_unless (get_single_segmentation_mtd (rmeta, &seg_mtd));
+
+  has_od_to_seg_relation = gst_analytics_relation_meta_exist (rmeta, od_mtd.id,
+      seg_mtd.id, 1, GST_ANALYTICS_REL_TYPE_RELATE_TO, NULL);
+  has_seg_to_od_relation = gst_analytics_relation_meta_exist (rmeta, seg_mtd.id,
+      od_mtd.id, 1, GST_ANALYTICS_REL_TYPE_RELATE_TO, NULL);
+  fail_unless (has_od_to_seg_relation);
+  fail_unless (has_seg_to_od_relation);
+  mask_buf = gst_analytics_segmentation_mtd_get_mask (&seg_mtd, &masks_x,
+      &masks_y, &masks_w, &masks_h);
+  fail_unless (mask_buf != NULL);
+  fail_unless_equals_int (masks_x, 1);
+  fail_unless_equals_int (masks_y, 1);
+  fail_unless_equals_int (masks_w, 2);
+  fail_unless_equals_int (masks_h, 2);
+  gst_buffer_unref (mask_buf);
+
+  gst_buffer_unref (outbuf);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 yolotensordecoder_suite (void)
 {
@@ -1489,10 +1809,15 @@ yolotensordecoder_suite (void)
   tcase_add_test (tc, test_properties_roundtrip);
   tcase_add_test (tc, test_accept_caps);
 
+  tcase_add_test (tc, test_normalized_basic_decode);
+  tcase_add_test (tc, test_normalized_invalid_bbox_rejected);
+  tcase_add_test (tc, test_normalized_nms);
+
   tcase_add_test (tc, test_obb_basic_decode);
   tcase_add_test (tc, test_obb_dims_too_small);
   tcase_add_test (tc, test_obb_polygon_iou_nms);
   tcase_add_test (tc, test_obb_accept_caps);
+  tcase_add_test (tc, test_obb_normalized_decode);
 
   tcase_add_test (tc, test_seg_basic_decode);
   tcase_add_test (tc, test_seg_mask_pixel_values);
@@ -1500,6 +1825,7 @@ yolotensordecoder_suite (void)
   tcase_add_test (tc, test_seg_mask_roi_portrait);
   tcase_add_test (tc, test_seg_missing_logits_tensor);
   tcase_add_test (tc, test_seg_dims_too_small);
+  tcase_add_test (tc, test_seg_normalized_decode);
 
   return s;
 }
