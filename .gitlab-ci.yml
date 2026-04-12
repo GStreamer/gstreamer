@@ -417,6 +417,29 @@ build fedora gcc:
   variables:
     CC: 'ccache gcc'
     CXX: 'ccache g++'
+    # Passing Dpython=enabled prohibits us from -Dgst-editing-services:python=disabled which we
+    # currently need to statically build ges.
+    #
+    # subprojects/gst-editing-services/meson.build:153:4: ERROR: Problem encountered: Want to build python based modules but it is not supported while static building
+    # https://github.com/mesonbuild/meson/issues/5214
+    # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/4281?commit_id=d1a687b61d8fbc5ae35b4bb62aa7fd1d091818f2#note_1875699
+    #
+    # VAAPI can't be build statically yet
+    # subprojects/gstreamer-vaapi/meson.build:8:2: ERROR: Problem encountered: GStreamer-VAAPI plugin not supported with `static` builds yet.
+    #
+    # Disabling gstreamer-sharp tests because they download things as part of configure with
+    # nuget which frequently fails on the CI (possibly because we're hammering the site)
+    #
+    # Disabling building both qt5 and qt6 when doing static builds since we can only link against one
+    GCC_STATIC_MESON_ARGS: >-
+      -Dgst-devtools:dots_viewer=enabled
+      -Dvaapi=disabled
+      -Dpython=auto
+      -Dgst-editing-services:python=disabled
+      -Dintrospection=disabled
+      -Ddoc=disabled
+      -Dgstreamer-sharp:tests=disabled
+      -Dqt5=disabled -Dqt6=enabled
   parallel:
     matrix:
       - BUILD_TYPE: [ "--default-library=shared", "--default-library=both"]
@@ -424,36 +447,29 @@ build fedora gcc:
 
       - BUILD_TYPE: ["--default-library=static"]
         BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true", "-Dgstreamer:gst_debug=false"]
-        # Passing Dpython=enabled prohibits us from -Dgst-editing-services:python=disabled which we
-        # currently need to statically build ges.
-        #
-        # subprojects/gst-editing-services/meson.build:153:4: ERROR: Problem encountered: Want to build python based modules but it is not supported while static building
-        # https://github.com/mesonbuild/meson/issues/5214
-        # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/4281?commit_id=d1a687b61d8fbc5ae35b4bb62aa7fd1d091818f2#note_1875699
-        #
-        # VAAPI can't be build statically yet
-        # subprojects/gstreamer-vaapi/meson.build:8:2: ERROR: Problem encountered: GStreamer-VAAPI plugin not supported with `static` builds yet.
-        #
-        # Disabling gstreamer-sharp tests because they download things as part of configure with
-        # nuget which frequently fails on the CI (possibly because we're hammering the site)
-        #
-        # Disabling building both qt5 and qt6 when doing static builds since we can only link against one
         MESON_ARGS: >-
           ${DEFAULT_MESON_ARGS}
-          -Dgst-devtools:dots_viewer=enabled
-          -Dvaapi=disabled
-          -Dpython=auto
-          -Dgst-editing-services:python=disabled
-          -Dintrospection=disabled
-          -Ddoc=disabled
-          -Dgstreamer-sharp:tests=disabled
-          -Dqt5=disabled -Dqt6=enabled
+          ${GCC_STATIC_MESON_ARGS}
 
 build fedora clang:
   extends: '.build fedora x86_64'
   variables:
     CC: 'ccache clang'
     CXX: 'ccache clang++'
+    # VAAPI can't be build statically yet
+    # subprojects/gstreamer-vaapi/meson.build:8:2: ERROR: Problem encountered: GStreamer-VAAPI plugin not supported with `static` builds yet.
+    #
+    # Disabling gstreamer-sharp tests because they download things as part of configure with
+    # nuget which frequently fails on the CI (possibly because we're hammering the site)
+    #
+    # Disabling building both qt5 and qt6 when doing static builds since we can only link against one
+    CLANG_STATIC_MESON_ARGS: >-
+      -Dvaapi=disabled
+      -Dintrospection=disabled
+      -Dpython=disabled
+      -Ddoc=disabled
+      -Dgstreamer-sharp:tests=disabled
+      -Dqt5=disabled -Dqt6=enabled
   parallel:
     matrix:
       - BUILD_TYPE: [ "--default-library=shared", "--default-library=both"]
@@ -463,21 +479,9 @@ build fedora clang:
 
       - BUILD_TYPE: ["--default-library=static"]
         BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true", "-Dgstreamer:gst_debug=false"]
-        # VAAPI can't be build statically yet
-        # subprojects/gstreamer-vaapi/meson.build:8:2: ERROR: Problem encountered: GStreamer-VAAPI plugin not supported with `static` builds yet.
-        #
-        # Disabling gstreamer-sharp tests because they download things as part of configure with
-        # nuget which frequently fails on the CI (possibly because we're hammering the site)
-        #
-        # Disabling building both qt5 and qt6 when doing static builds since we can only link against one
         MESON_ARGS: >-
           ${DEFAULT_MESON_ARGS}
-          -Dvaapi=disabled
-          -Dintrospection=disabled
-          -Dpython=disabled
-          -Ddoc=disabled
-          -Dgstreamer-sharp:tests=disabled
-          -Dqt5=disabled -Dqt6=enabled
+          ${CLANG_STATIC_MESON_ARGS}
 
 build debian x86_64:
   extends:
@@ -647,6 +651,15 @@ build macos:
     GST_WERROR: "false"
     MESON_ARGS: "${DEFAULT_MESON_ARGS}"
     SUBPROJECTS_CACHE_DIR: "/Users/gst-ci/subprojects"
+    MACOS_MESON_ARGS: >-
+      -Dintrospection=disabled
+      -Dvaapi=disabled
+      -Dsharp=disabled
+      -Dpython=disabled
+      -Ddoc=disabled
+      -Dgst-plugins-base:pango=enabled
+      -Dgst-plugins-good:cairo=enabled
+      -Dgst-plugins-good:soup=enabled
   rules:
     - !reference [.upstream-branch-rules, rules]
     - changes:
@@ -663,14 +676,7 @@ build macos:
         # macos doesn't support vaapi
         MESON_ARGS: >-
           ${SIMPLE_BUILD}
-          -Dintrospection=disabled
-          -Dvaapi=disabled
-          -Dsharp=disabled
-          -Dpython=disabled
-          -Ddoc=disabled
-          -Dgst-plugins-base:pango=enabled
-          -Dgst-plugins-good:cairo=enabled
-          -Dgst-plugins-good:soup=enabled
+          ${MACOS_MESON_ARGS}
 
 abi-check:
   stage: 'build'
