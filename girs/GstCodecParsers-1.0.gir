@@ -18616,7 +18616,7 @@ the byte and the all the emulations are inserted.</doc>
       </parameters>
     </function>
     <function name="h264_bit_writer_filler" c:identifier="gst_h264_bit_writer_filler" version="1.26">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth264bitwriter.c">Generates the according h264 bit stream nal bitstream of a filler with @size.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth264bitwriter.c">Generating the according h264 bit stream of a filler NAL unit with @num filler bytes (0xFF).</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth264bitwriter.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth264bitwriter.c">a #GstH264BitWriterResult</doc>
@@ -18628,10 +18628,10 @@ the byte and the all the emulations are inserted.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </parameter>
         <parameter name="num" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth264bitwriter.c">number of filler codes to add</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth264bitwriter.c">number of filler bytes to add</doc>
           <type name="guint" c:type="guint"/>
         </parameter>
-        <parameter name="data" direction="inout" caller-allocates="0" transfer-ownership="full">
+        <parameter name="data" direction="out" caller-allocates="0" transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth264bitwriter.c">bit stream storage</doc>
           <type name="guint8" c:type="guint8*"/>
         </parameter>

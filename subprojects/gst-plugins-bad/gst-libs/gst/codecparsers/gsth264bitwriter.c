@@ -1694,11 +1694,11 @@ error:
 /**
  * gst_h264_bit_writer_filler:
  * @start_code: whether adding the nal start code
- * @num: number of filler codes to add
- * @data: (inout): bit stream storage
+ * @num: number of filler bytes to add
+ * @data: (out): bit stream storage
  * @size: (inout): size in bytes of the input and output
  *
- * Generates the according h264 bit stream nal bitstream of a filler with @size.
+ * Generating the according h264 bit stream of a filler NAL unit with @num filler bytes (0xFF).
  *
  * Returns: a #GstH264BitWriterResult
  *
