@@ -256,7 +256,7 @@ struct _GstExifReader
   gint byte_order;
 
   /* tags waiting for their complementary tags */
-  GSList *pending_tags;
+  GHashTable *pending_tags;
 };
 
 EXIF_SERIALIZATION_DESERIALIZATION_FUNC (aperture_value);
@@ -489,7 +489,8 @@ gst_exif_reader_init (GstExifReader * reader, gint byte_order,
   reader->buffer = buf;
   reader->base_offset = base_offset;
   reader->byte_order = byte_order;
-  reader->pending_tags = NULL;
+  reader->pending_tags = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+      NULL, (GDestroyNotify) g_free);
   if (reader->byte_order != G_LITTLE_ENDIAN &&
       reader->byte_order != G_BIG_ENDIAN) {
     GST_WARNING ("Unexpected byte order %d, using system default: %d",
@@ -506,35 +507,23 @@ gst_exif_reader_add_pending_tag (GstExifReader * reader, GstExifTagData * data)
   copy = g_new (GstExifTagData, 1);
   memcpy (copy, data, sizeof (GstExifTagData));
 
-  reader->pending_tags = g_slist_prepend (reader->pending_tags, copy);
+  g_hash_table_insert (reader->pending_tags, GUINT_TO_POINTER (data->tag),
+      copy);
 }
 
 static GstExifTagData *
 gst_exif_reader_get_pending_tag (GstExifReader * reader, gint tagid)
 {
-  GSList *walker;
-
-  for (walker = reader->pending_tags; walker; walker = g_slist_next (walker)) {
-    GstExifTagData *data = (GstExifTagData *) walker->data;
-    if (data->tag == tagid)
-      return data;
-  }
-
-  return NULL;
+  return g_hash_table_lookup (reader->pending_tags, GUINT_TO_POINTER (tagid));
 }
 
 static GstTagList *
 gst_exif_reader_reset (GstExifReader * reader, gboolean return_taglist)
 {
   GstTagList *ret = NULL;
-  GSList *walker;
 
-  for (walker = reader->pending_tags; walker; walker = g_slist_next (walker)) {
-    GstExifTagData *data = (GstExifTagData *) walker->data;
-
-    g_free (data);
-  }
-  g_slist_free (reader->pending_tags);
+  g_hash_table_unref (reader->pending_tags);
+  reader->pending_tags = NULL;
 
   if (return_taglist) {
     ret = reader->taglist;
@@ -1874,12 +1863,12 @@ parse_exif_ifd (GstExifReader * exif_reader, gint buf_offset,
 
   /* check if the pending tags have something that can still be added */
   {
-    GSList *walker;
-    GstExifTagData *data;
+    GHashTableIter iter;
+    gpointer key, value;
 
-    for (walker = exif_reader->pending_tags; walker;
-        walker = g_slist_next (walker)) {
-      data = (GstExifTagData *) walker->data;
+    g_hash_table_iter_init (&iter, exif_reader->pending_tags);
+    while (g_hash_table_iter_next (&iter, &key, &value)) {
+      GstExifTagData *data = value;
       switch (data->tag) {
         case EXIF_TAG_XRESOLUTION:
           parse_exif_rational_tag (exif_reader, GST_TAG_IMAGE_HORIZONTAL_PPI,
