@@ -533,7 +533,7 @@ html_context_handle_element (HtmlContext * ctxt,
 }
 
 static void
-html_context_parse (HtmlContext * ctxt, gchar * text, gsize text_len)
+html_context_parse (HtmlContext * ctxt, const gchar * text, gsize text_len)
 {
   const gchar *next = NULL;
 
@@ -572,12 +572,13 @@ html_context_parse (HtmlContext * ctxt, gchar * text, gsize text_len)
       g_free (text);
 
     } else {
-      gchar *text = (gchar *) next;
+      gchar *text = g_strdup (next);
       gsize length;
       text = g_strstrip (text);
       length = strlen (text);
       ctxt->parser->text (ctxt, text, length, ctxt->user_data);
       ctxt->buf = g_string_assign (ctxt->buf, "");
+      g_free (text);
       return;
     }
   }
@@ -708,8 +709,7 @@ handle_start_font (GstSamiContext * sctx, const gchar ** atts)
           gchar *r;
 
           /* check if it looks like hex */
-          if (strtol ((const char *) value, &r, 16) >= 0 &&
-              ((gchar *) r == (value + 6) && len == 6)) {
+          if (strtol (value, &r, 16) >= 0 && (len == 6 && r == (value + 6))) {
             sharp = "#";
           }
         }
@@ -890,8 +890,7 @@ parse_sami (ParserState * state, const gchar * line)
   GstSamiContext *context = (GstSamiContext *) state->user_data;
 
   gchar *unescaped = unescape_string (line);
-  html_context_parse (context->htmlctxt, (gchar *) unescaped,
-      strlen (unescaped));
+  html_context_parse (context->htmlctxt, unescaped, strlen (unescaped));
   g_free (unescaped);
 
   if (context->has_result) {
