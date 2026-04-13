@@ -1804,6 +1804,7 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
         } else {
           GST_WARNING_OBJECT (self, "Failed to strip pango markup: %s",
               error->message);
+          g_clear_error (&error);
         }
       }
 
