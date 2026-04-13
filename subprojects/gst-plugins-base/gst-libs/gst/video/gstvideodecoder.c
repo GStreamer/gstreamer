@@ -1341,6 +1341,137 @@ gst_video_decoder_handle_missing_data_default (GstVideoDecoder * decoder,
   return TRUE;
 }
 
+/* Must be called after holding the GST_VIDEO_DECODER_STREAM_LOCK
+ * and the function will release the lock before returning */
+static gboolean
+gst_video_decoder_store_gap_event (GstVideoDecoder * decoder, GstEvent * event)
+{
+  GstClockTime current_pos = GST_CLOCK_TIME_NONE;
+  GList *send_list = NULL;
+
+  /* Queue up gap events if we didn't actually drain and frames are pending,
+   * and forward them later before the next frame */
+  decoder->priv->current_frame_events =
+      g_list_prepend (decoder->priv->current_frame_events, event);
+
+  /* For some streams, video track is very sparse and video decoder may not
+   * output decoded frame immediately to sink to finish pre-roll and demuxer
+   * will send gap event instead. Create a new gap event based on current
+   * position and send it immediately if the received gap event is cached. */
+  const GstSegment *segment;
+  GstVideoCodecFrame *frame = NULL;
+  if (decoder->output_segment.format == GST_FORMAT_TIME) {
+    segment = &decoder->output_segment;
+  } else if (decoder->input_segment.format == GST_FORMAT_TIME) {
+    frame =
+        decoder->priv->frames.head ? decoder->priv->frames.head->data : NULL;
+    if (!frame) {
+      goto no_output_segment;
+    }
+
+    /* Events are stored in reverse order. Extract pending segment event
+     * and all the events received before it.*/
+    GList **events = &frame->events;
+    gboolean found_initial_segment = FALSE;
+    for (GList * walk = g_list_first (*events); walk;) {
+      GList *cur = walk;
+      GstEvent *pending_event = GST_EVENT_CAST (walk->data);
+      walk = g_list_next (walk);
+
+      /* Get the segment information from the latest pending segment event */
+      if (!found_initial_segment
+          && GST_EVENT_TYPE (pending_event) == GST_EVENT_SEGMENT) {
+        gst_event_parse_segment (pending_event, &segment);
+        if (segment->format != GST_FORMAT_TIME) {
+          GST_WARNING_OBJECT (decoder, "Segment format is not TIME");
+          break;
+        }
+        found_initial_segment = TRUE;
+      }
+
+      if (found_initial_segment) {
+        send_list = g_list_append (send_list, pending_event);
+        *events = g_list_delete_link (*events, cur);
+      }
+    }
+
+    if (!found_initial_segment) {
+      goto no_output_segment;
+    }
+  } else {
+    goto no_output_segment;
+  }
+
+  /* Get current position from output segment */
+  current_pos = decoder->priv->last_timestamp_out;
+  if (segment->rate >= 0 && (!GST_CLOCK_TIME_IS_VALID (current_pos)
+          || current_pos < segment->start))
+    current_pos = segment->start;
+  else if (segment->rate < 0 && (!GST_CLOCK_TIME_IS_VALID (current_pos)
+          || current_pos > segment->stop))
+    current_pos = segment->stop;
+
+  if (!GST_CLOCK_TIME_IS_VALID (current_pos)) {
+    goto invalid_position;
+  }
+
+  /* Ensure we have caps before forwarding the segment event */
+  if (send_list) {
+    gboolean needs_reconfigure = FALSE;
+
+    if (!decoder->priv->output_state) {
+      if (!gst_video_decoder_negotiate_default_caps (decoder)) {
+        goto not_negotiated;
+      }
+      needs_reconfigure = TRUE;
+    }
+
+    needs_reconfigure = gst_pad_check_reconfigure (decoder->srcpad)
+        || needs_reconfigure;
+    if (decoder->priv->output_state_changed || needs_reconfigure) {
+      if (!gst_video_decoder_negotiate_unlocked (decoder)) {
+        GST_WARNING_OBJECT (decoder, "Failed to negotiate with downstream");
+        gst_pad_mark_reconfigure (decoder->srcpad);
+        goto not_negotiated;
+      }
+    }
+  }
+
+  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+  if (send_list) {
+    GST_DEBUG_OBJECT (decoder, "Pushing pending segment event"
+        " and all the events received before it in order");
+    gst_video_decoder_push_event_list (decoder, send_list);
+  }
+
+  event = gst_event_new_gap (current_pos, GST_CLOCK_TIME_NONE);
+  GST_DEBUG_OBJECT (decoder,
+      "Sending new gap event, position: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (current_pos));
+  return gst_video_decoder_push_event (decoder, event);
+
+no_output_segment:
+  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+  GST_DEBUG_OBJECT (decoder,
+      "No valid output segment, forwarding gap event later");
+  return TRUE;
+
+invalid_position:
+  if (frame)
+    frame->events = g_list_concat (frame->events, send_list);
+  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+  GST_DEBUG_OBJECT (decoder,
+      "Can not get current position, forwarding gap event later");
+  return TRUE;
+
+not_negotiated:
+  frame->events = g_list_concat (frame->events, send_list);
+  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+  GST_ELEMENT_ERROR (decoder, STREAM, FORMAT, (NULL),
+      ("Decoder output not negotiated before segment event."));
+  return TRUE;
+}
+
 static gboolean
 gst_video_decoder_handle_gap (GstVideoDecoder * decoder, GstEvent * event)
 {
@@ -1369,12 +1500,7 @@ gst_video_decoder_handle_gap (GstVideoDecoder * decoder, GstEvent * event)
     if (decoder->input_segment.flags & GST_SEEK_FLAG_TRICKMODE_KEY_UNITS) {
       flow_ret = gst_video_decoder_drain_out (decoder, FALSE);
     } else if (decoder->priv->frames.length > 0) {
-      // Queue up gap events if we didn't actually drain and frames are pending,
-      // and forward them later before the next frame
-      decoder->priv->current_frame_events =
-          g_list_prepend (decoder->priv->current_frame_events, event);
-      GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-      return TRUE;
+      return gst_video_decoder_store_gap_event (decoder, event);
     }
     ret = (flow_ret == GST_FLOW_OK);
 
