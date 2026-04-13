@@ -56,9 +56,9 @@ struct _GstSamiContext
 
 struct _HtmlParser
 {
-  void (*start_element) (HtmlContext * ctx,
+  gboolean (*start_element) (HtmlContext * ctx,
       const gchar * name, const gchar ** attr, gpointer user_data);
-  void (*end_element) (HtmlContext * ctx,
+  gboolean (*end_element) (HtmlContext * ctx,
       const gchar * name, gpointer user_data);
   void (*text) (HtmlContext * ctx,
       const gchar * text, gsize text_len, gpointer user_data);
@@ -548,10 +548,20 @@ html_context_handle_element (HtmlContext * ctxt,
     attrs[i + 1] = attr_value;
   }
 
-  ctxt->parser->start_element (ctxt, name,
-      (const gchar **) attrs, ctxt->user_data);
+  if (!ctxt->parser->start_element (ctxt, name,
+          (const gchar **) attrs, ctxt->user_data)) {
+    g_strfreev (attrs);
+    g_free (name);
+
+    return FALSE;
+  }
   if (must_close) {
-    ctxt->parser->end_element (ctxt, name, ctxt->user_data);
+    if (!ctxt->parser->end_element (ctxt, name, ctxt->user_data)) {
+      g_strfreev (attrs);
+      g_free (name);
+
+      return FALSE;
+    }
   }
   g_strfreev (attrs);
   g_free (name);
@@ -614,7 +624,10 @@ html_context_parse (HtmlContext * ctxt, const gchar * text, gsize text_len)
           g_free (element);
           goto error;
         }
-        ctxt->parser->end_element (ctxt, element + 2, ctxt->user_data);
+        if (!ctxt->parser->end_element (ctxt, element + 2, ctxt->user_data)) {
+          g_free (element);
+          goto error;
+        }
       } else {
         /* handle <blah> */
         if (!is_valid_element_name (element + 1)) {
@@ -810,13 +823,17 @@ handle_start_font (GstSamiContext * sctx, const gchar ** atts)
   }
 }
 
-static void
+static gboolean
 handle_start_element (HtmlContext * ctx, const gchar * name,
     const char **atts, gpointer user_data)
 {
   GstSamiContext *sctx = (GstSamiContext *) user_data;
 
   GST_LOG ("name:%s", name);
+
+  /* Don't allow nesting by more than 64 levels to avoid DoS */
+  if (sctx->state->len > 64)
+    return FALSE;
 
   if (!g_ascii_strcasecmp ("sync", name)) {
     handle_start_sync (sctx, atts);
@@ -839,9 +856,11 @@ handle_start_element (HtmlContext * ctx, const gchar * name,
     sami_context_push_state (sctx, ITALIC_TAG);
   } else if (!g_ascii_strcasecmp ("p", name)) {
   }
+
+  return TRUE;
 }
 
-static void
+static gboolean
 handle_end_element (HtmlContext * ctx, const char *name, gpointer user_data)
 {
   GstSamiContext *sctx = (GstSamiContext *) user_data;
@@ -871,6 +890,8 @@ handle_end_element (HtmlContext * ctx, const char *name, gpointer user_data)
   } else if (!g_ascii_strcasecmp ("i", name)) {
     sami_context_pop_state (sctx, ITALIC_TAG);
   }
+
+  return TRUE;
 }
 
 static void
