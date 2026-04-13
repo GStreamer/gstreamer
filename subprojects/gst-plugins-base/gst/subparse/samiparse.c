@@ -550,7 +550,9 @@ html_context_parse (HtmlContext * ctxt, const gchar * text, gsize text_len)
 
       next = string_token (next, ">", &element);
       next++;
-      if (g_str_has_suffix (element, "/")) {
+      if (g_str_has_prefix (element, "<!")) {
+        /* skip comments, DOCTYPE, [CDATA or similar tags */
+      } else if (g_str_has_suffix (element, "/")) {
         /* handle <blah/> */
         element[strlen (element) - 1] = '\0';
         html_context_handle_element (ctxt, element + 1, TRUE);
