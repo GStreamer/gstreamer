@@ -880,6 +880,8 @@ sami_context_reset (ParserState * state)
     context->in_sync = FALSE;
     context->time1 = 0;
     context->time2 = 0;
+
+    g_string_truncate (context->htmlctxt->buf, 0);
   }
 }
 
