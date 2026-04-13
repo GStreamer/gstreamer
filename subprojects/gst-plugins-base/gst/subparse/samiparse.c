@@ -468,7 +468,26 @@ string_token (const gchar * string, const gchar * delimiter, gchar ** first)
   return next;
 }
 
-static void
+static gboolean
+is_valid_attribute_name (const char *name)
+{
+  const gchar *p = name;
+
+  while (*p) {
+    /* stop on =, attribute value starts here */
+    if (*p == '=')
+      break;
+
+    /* this is stricter than required by the spec */
+    if (!g_ascii_isalnum (*p))
+      return FALSE;
+    p++;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 html_context_handle_element (HtmlContext * ctxt,
     const gchar * string, gboolean must_close)
 {
@@ -504,6 +523,12 @@ html_context_handle_element (HtmlContext * ctxt,
       g_free (attr_name);
       break;
     }
+    if (!is_valid_attribute_name (attr_name)) {
+      g_free (attr_name);
+      g_strfreev (attrs);
+      g_free (name);
+      return FALSE;
+    }
     next = string_token (next + 1, " ", &attr_value);
 
     /* strip " or ' from attribute value */
@@ -530,9 +555,29 @@ html_context_handle_element (HtmlContext * ctxt,
   }
   g_strfreev (attrs);
   g_free (name);
+
+  return TRUE;
 }
 
-static void
+static gboolean
+is_valid_element_name (const char *name)
+{
+  const gchar *p = name;
+
+  while (*p) {
+    /* stop on space, afterwards attributes start */
+    if (*p == ' ')
+      break;
+
+    if (!g_ascii_isalnum (*p))
+      return FALSE;
+    p++;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 html_context_parse (HtmlContext * ctxt, const gchar * text, gsize text_len)
 {
   const gchar *next = NULL;
@@ -545,7 +590,7 @@ html_context_parse (HtmlContext * ctxt, const gchar * text, gsize text_len)
       /* find <blahblah> */
       if (!strchr (next, '>')) {
         /* no tag end point. buffer will be process in next time */
-        return;
+        return TRUE;
       }
 
       next = string_token (next, ">", &element);
@@ -555,13 +600,31 @@ html_context_parse (HtmlContext * ctxt, const gchar * text, gsize text_len)
       } else if (g_str_has_suffix (element, "/")) {
         /* handle <blah/> */
         element[strlen (element) - 1] = '\0';
-        html_context_handle_element (ctxt, element + 1, TRUE);
+        if (!is_valid_element_name (element + 1)) {
+          g_free (element);
+          goto error;
+        }
+        if (!html_context_handle_element (ctxt, element + 1, TRUE)) {
+          g_free (element);
+          goto error;
+        }
       } else if (element[1] == '/') {
         /* handle </blah> */
+        if (!is_valid_element_name (element + 2)) {
+          g_free (element);
+          goto error;
+        }
         ctxt->parser->end_element (ctxt, element + 2, ctxt->user_data);
       } else {
         /* handle <blah> */
-        html_context_handle_element (ctxt, element + 1, FALSE);
+        if (!is_valid_element_name (element + 1)) {
+          g_free (element);
+          goto error;
+        }
+        if (!html_context_handle_element (ctxt, element + 1, FALSE)) {
+          g_free (element);
+          goto error;
+        }
       }
       g_free (element);
     } else if (strchr (next, '<')) {
@@ -581,11 +644,13 @@ html_context_parse (HtmlContext * ctxt, const gchar * text, gsize text_len)
       ctxt->parser->text (ctxt, text, length, ctxt->user_data);
       ctxt->buf = g_string_assign (ctxt->buf, "");
       g_free (text);
-      return;
+      return TRUE;
     }
   }
 
-  g_assert_not_reached ();
+error:
+  g_string_truncate (ctxt->buf, 0);
+  return FALSE;
 }
 
 static gchar *
@@ -892,10 +957,17 @@ parse_sami (ParserState * state, const gchar * line)
 {
   gchar *ret = NULL;
   GstSamiContext *context = (GstSamiContext *) state->user_data;
+  gboolean success;
 
   gchar *unescaped = unescape_string (line);
-  html_context_parse (context->htmlctxt, unescaped, strlen (unescaped));
+  success =
+      html_context_parse (context->htmlctxt, unescaped, strlen (unescaped));
   g_free (unescaped);
+
+  if (!success) {
+    sami_context_reset (state);
+    return NULL;
+  }
 
   if (context->has_result) {
     if (context->rubybuf->len) {
