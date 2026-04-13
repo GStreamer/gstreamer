@@ -946,6 +946,37 @@ GST_START_TEST (test_h265_bitwriter_vps_sps_pps_slice_hdr)
 }
 
 GST_END_TEST;
+GST_START_TEST (test_h265_bitwriter_filler)
+{
+  GstH265ParserResult res;
+  GstH265BitWriterResult ret;
+  GstH265Parser *const parser = gst_h265_parser_new ();
+  guint size, nal_size;
+  guint8 header_data[128] = { 0, };
+  guint8 header_nal[128] = { 0, };
+  GstH265NalUnit nalu;
+
+  size = sizeof (header_data);
+  ret = gst_h265_bit_writer_filler (TRUE, 5, header_data, &size);
+  fail_if (ret != GST_H265_BIT_WRITER_OK);
+
+  nal_size = sizeof (header_nal);
+  ret = gst_h265_bit_writer_convert_to_nal (4, FALSE, TRUE, FALSE,
+      header_data, size * 8, header_nal, &nal_size);
+  fail_if (ret != GST_H265_BIT_WRITER_OK);
+  fail_if (nal_size < size);
+
+  /* Parse it again */
+  res = gst_h265_parser_identify_nalu (parser, header_nal, 0,
+      sizeof (header_nal), &nalu);
+  assert_equals_int (res, GST_H265_PARSER_NO_NAL_END);
+
+  fail_if (nalu.type != GST_H265_NAL_FD);
+  fail_if (nalu.size != sizeof (header_nal) - nalu.offset);
+  gst_h265_parser_free (parser);
+}
+
+GST_END_TEST;
 
 static Suite *
 h265bitwriter_suite (void)
@@ -956,6 +987,7 @@ h265bitwriter_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_h265_bitwriter_vps_sps_pps_slice_hdr);
+  tcase_add_test (tc_chain, test_h265_bitwriter_filler);
 
   return s;
 }

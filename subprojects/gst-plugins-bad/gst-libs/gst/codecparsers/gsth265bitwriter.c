@@ -2224,6 +2224,71 @@ error:
   return GST_H265_BIT_WRITER_INVALID_DATA;
 }
 
+
+/**
+ * gst_h265_bit_writer_filler:
+ * @start_code: whether adding the nal start code
+ * @num: number of filler bytes to add
+ * @data: (out): bit stream storage
+ * @size: (inout): size in bytes of the input and output
+ *
+ * Generating the according h265 bit stream of a filler NAL unit with @num filler bytes (0xFF).
+ *
+ * Returns: a #GstH265BitWriterResult
+ *
+ * Since: 1.30
+ **/
+GstH265BitWriterResult
+gst_h265_bit_writer_filler (gboolean start_code, guint num, guint8 * data,
+    guint * size)
+{
+  gboolean have_space = TRUE;
+  GstBitWriter bw;
+  guint i;
+
+  g_return_val_if_fail (data != NULL, GST_H265_BIT_WRITER_ERROR);
+  g_return_val_if_fail (size != NULL, GST_H265_BIT_WRITER_ERROR);
+  g_return_val_if_fail (*size > 0, GST_H265_BIT_WRITER_ERROR);
+
+  gst_bit_writer_init_with_data (&bw, data, *size, FALSE);
+
+  if (start_code)
+    WRITE_BITS (&bw, 0x00000001, 32);
+
+  /* NAL unit header */
+  /* forbidden_zero_bit */
+  WRITE_BITS (&bw, 0, 1);
+  /* nal_unit_type */
+  WRITE_BITS (&bw, GST_H265_NAL_FD, 6);
+  /* nuh_layer_id, only support 0 now */
+  WRITE_BITS (&bw, 0, 6);
+  /* nuh_temporal_id_plus1, only support 1 now */
+  WRITE_BITS (&bw, 1, 3);
+
+  for (i = 0; i < num; i++)
+    WRITE_BITS (&bw, 0xff, 8);
+
+  /* Add trailings. */
+  WRITE_BITS (&bw, 1, 1);
+  if (!gst_bit_writer_align_bytes (&bw, 0)) {
+    have_space = FALSE;
+    goto error;
+  }
+
+  *size = gst_bit_writer_get_size (&bw) / 8;
+  gst_bit_writer_reset (&bw);
+
+  return GST_H265_BIT_WRITER_OK;
+
+error:
+  gst_bit_writer_reset (&bw);
+  *size = 0;
+
+  if (!have_space)
+    return GST_H265_BIT_WRITER_NO_MORE_SPACE;
+  return GST_H265_BIT_WRITER_INVALID_DATA;
+}
+
 /**
  * gst_h265_bit_writer_convert_to_nal:
  * @nal_prefix_size: the size in bytes for the prefix of a nal, may

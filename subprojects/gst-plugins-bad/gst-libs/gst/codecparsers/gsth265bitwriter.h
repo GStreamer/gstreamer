@@ -80,6 +80,12 @@ GstH265BitWriterResult    gst_h265_bit_writer_aud       (guint8 pic_type,
                                                          guint * size);
 
 GST_CODEC_PARSERS_API
+GstH265BitWriterResult    gst_h265_bit_writer_filler    (gboolean start_code,
+                                                         guint num,
+                                                         guint8 * data,
+                                                         guint * size);
+
+GST_CODEC_PARSERS_API
 GstH265BitWriterResult    gst_h265_bit_writer_convert_to_nal (guint nal_prefix_size,
                                                               gboolean packetized,
                                                               gboolean has_startcode,
