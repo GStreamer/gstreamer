@@ -41,9 +41,10 @@ try_profile (GstVulkanPhysicalDevice * device, GstVulkanVideoProfile * profile,
       gst_vulkan_video_try_configuration (device, profile, &vkcaps, &codec,
       &vkformats, &err);
   if (!ret) {
+    GstCaps *caps = gst_vulkan_video_profile_to_caps (profile);
     GST_LOG ("Couldn't get configuration for profile %" GST_PTR_FORMAT ": %s",
-        gst_vulkan_video_profile_to_caps (profile),
-        err ? err->message : "Unknown error");
+        caps, err ? err->message : "Unknown error");
+    gst_caps_unref (caps);
     g_clear_error (&err);
     return FALSE;
   }
