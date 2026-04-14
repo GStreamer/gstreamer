@@ -511,7 +511,7 @@ typedef struct _GstH265DecoderConfigRecord      GstH265DecoderConfigRecord;
  * @temporal_id_plus1: A nal unit temporal identifier
  * @size: The size of the nal unit starting from @offset
  * @offset: The offset of the actual start of the nal unit
- * @sc_offset:The offset of the start code of the nal unit
+ * @sc_offset: The offset of the start code of the nal unit
  * @valid: If the nal unit is valid, which mean it has
  * already been parsed
  * @data: The data from which the Nalu has been parsed
@@ -558,18 +558,18 @@ struct _GstH265NalUnit
  * @max_14bit_constraint_flag: used to define profile extensions, see Annex A
  * @level idc: indicate the level which the CVS confirms
  * @sub_layer_profile_present_flag: sublayer profile presence ind
- * @sub_layer_level_present_flag:sublayer level presence indicator.
+ * @sub_layer_level_present_flag: sublayer level presence indicator.
  * @sub_layer_profile_space: profile space for sublayers
  * @sub_layer_tier_flag: tier flags for sublayers.
  * @sub_layer_profile_idc: conformant profile indicator for sublayers.
  * @sub_layer_profile_compatibility_flag[6][32]: compatibility flags for sublayers
- * @sub_layer_progressive_source_flag:progressive stream indicator for sublayer
+ * @sub_layer_progressive_source_flag: progressive stream indicator for sublayer
  * @sub_layer_interlaced_source_flag: interlaced stream indicator for sublayer
  * @sub_layer_non_packed_constraint_flag: indicate the presence of
  *   frame packing arrangement sei message with in sublayers
- * @sub_layer_frame_only_constraint_flag:recognize the sublayer
+ * @sub_layer_frame_only_constraint_flag: recognize the sublayer
  *   specific field_seq_flag
- * @sub_layer_level_idc:indicate the sublayer specific level
+ * @sub_layer_level_idc: indicate the sublayer specific level
  *
  * Define ProfileTierLevel parameters
  */
@@ -614,7 +614,7 @@ struct _GstH265ProfileTierLevel {
 
 /**
  * GstH265SubLayerHRDParams:
- * @bit_rate_value_minus1:togeter with bit_rate_scale, it specifies
+ * @bit_rate_value_minus1: together with bit_rate_scale, it specifies
  *   the maximum input bitrate when the CPB operates at the access
  *   unit level
  * @cpb_size_value_minus1: is used together with cpb_size_scale to
@@ -670,7 +670,7 @@ struct _GstH265SubLayerHRDParams
  * @fixed_pic_rate_within_cvs_flag: same as fixed_pic_rate_general_flag
  * @elemental_duration_in_tc_minus1: temporal distance in clock ticks
  * @low_delay_hrd_flag: specifies the HRD operational mode
- * @cpb_cnt_minus1:specifies the number of alternative CPS specifications.
+ * @cpb_cnt_minus1: specifies the number of alternative CPB specifications.
  * @sublayer_hrd_params: Sublayer HRD parameters.
  *
  * Defines the HRD parameters
@@ -709,7 +709,7 @@ struct _GstH265HRDParams
  * @base_layer_internal_flag and @base_layer_available_flag:
  *   specify availability of base layer
  * @max_layers_minus1: should be zero, but can be other values in future
- * @max_sub_layers_minus1:specifies the maximum number of temporal sub-layers
+ * @max_sub_layers_minus1: specifies the maximum number of temporal sub-layers
  * @temporal_id_nesting_flag: specifies whether inter prediction is
  *   additionally restricted
  * @profile_tier_level: ProfileTierLevel info
