@@ -23,7 +23,7 @@
  * @title: GstH265BitWriter
  * @short_description: Functions for writing bitstream headers
  *
- * Since: 1.28
+ * Since: 1.30
  */
 
 #ifdef HAVE_CONFIG_H
@@ -483,7 +483,7 @@ error:
  *
  * Returns: a #GstH265BitWriterResult
  *
- * Since: 1.22
+ * Since: 1.30
  **/
 GstH265BitWriterResult
 gst_h265_bit_writer_vps (const GstH265VPS * vps, gboolean start_code,
@@ -1086,7 +1086,7 @@ error:
  *
  * Returns: a #GstH265BitWriterResult
  *
- * Since: 1.22
+ * Since: 1.30
  **/
 GstH265BitWriterResult
 gst_h265_bit_writer_sps (const GstH265SPS * sps, gboolean start_code,
@@ -1375,7 +1375,7 @@ error:
  *
  * Returns: a #GstH265BitWriterResult
  *
- * Since: 1.22
+ * Since: 1.30
  **/
 GstH265BitWriterResult
 gst_h265_bit_writer_pps (const GstH265PPS * pps, gboolean start_code,
@@ -1805,7 +1805,7 @@ error:
  *
  * Returns: a #GstH265BitWriterResult
  *
- * Since: 1.22
+ * Since: 1.30
  **/
 GstH265BitWriterResult
 gst_h265_bit_writer_slice_hdr (const GstH265SliceHdr * slice,
@@ -2054,7 +2054,7 @@ error:
  *
  * Returns: a #GstH265BitWriterResult
  *
- * Since: 1.22
+ * Since: 1.30
  **/
 GstH265BitWriterResult
 gst_h265_bit_writer_sei (GArray * sei_messages,
@@ -2173,7 +2173,7 @@ error:
  *
  * Returns: a #GstH265BitWriterResult
  *
- * Since: 1.22
+ * Since: 1.30
  **/
 GstH265BitWriterResult
 gst_h265_bit_writer_aud (guint8 pic_type, gboolean start_code,
@@ -2312,7 +2312,7 @@ error:
  *
  * Returns: a #GstH265BitWriterResult
  *
- * Since: 1.22
+ * Since: 1.30
  **/
 GstH265BitWriterResult
 gst_h265_bit_writer_convert_to_nal (guint nal_prefix_size,
