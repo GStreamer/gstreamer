@@ -113,36 +113,27 @@ typedef struct
 } GstV4l2ColorspaceVariant;
 
 /* Colorspace variant definitions */
-static const GstV4l2ColorspaceVariant rec709_full_range = {
-  .colorspace = V4L2_COLORSPACE_REC709,
-  .quantization = V4L2_QUANTIZATION_FULL_RANGE,
-  .xfer_func = 0,
-  .primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN
-};
-
-static const GstV4l2ColorspaceVariant bt470bg_full_range = {
-  .colorspace = V4L2_COLORSPACE_470_SYSTEM_BG,
-  .quantization = V4L2_QUANTIZATION_FULL_RANGE,
-  .xfer_func = 0,
-  .primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN
-};
-
-static const GstV4l2ColorspaceVariant bt2020_pq = {
-  .colorspace = V4L2_COLORSPACE_BT2020,
-  .quantization = 0,
-  .xfer_func = V4L2_XFER_FUNC_SMPTE2084,
-  .primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN
-};
-
-static const GstV4l2ColorspaceVariant smpte170m_full_range = {
-  .colorspace = V4L2_COLORSPACE_SMPTE170M,
-  .quantization = V4L2_QUANTIZATION_FULL_RANGE,
-  .xfer_func = 0,
-  .primaries = GST_VIDEO_COLOR_PRIMARIES_BT470BG
-};
-
 static const GstV4l2ColorspaceVariant colorspace_variants[] = {
-  rec709_full_range, bt470bg_full_range, bt2020_pq, smpte170m_full_range
+  [0] = {                       /* rec709_full_range */
+        .colorspace = V4L2_COLORSPACE_REC709,
+        .quantization = V4L2_QUANTIZATION_FULL_RANGE,
+        .xfer_func = 0,
+      .primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN},
+  [1] = {                       /* bt470bg_full_range */
+        .colorspace = V4L2_COLORSPACE_470_SYSTEM_BG,
+        .quantization = V4L2_QUANTIZATION_FULL_RANGE,
+        .xfer_func = 0,
+      .primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN},
+  [2] = {                       /* bt2020_pq */
+        .colorspace = V4L2_COLORSPACE_BT2020,
+        .quantization = 0,
+        .xfer_func = V4L2_XFER_FUNC_SMPTE2084,
+      .primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN},
+  [3] = {                       /* smpte170m_full_range */
+        .colorspace = V4L2_COLORSPACE_SMPTE170M,
+        .quantization = V4L2_QUANTIZATION_FULL_RANGE,
+        .xfer_func = 0,
+      .primaries = GST_VIDEO_COLOR_PRIMARIES_BT470BG},
 };
 
 /* *INDENT-OFF* */
