@@ -1060,7 +1060,7 @@ gst_h265_parser_parse_buffering_period (GstH265Parser * parser,
         (hrd->au_cpb_removal_delay_length_minus1 + 1));
 
     if (hrd->nal_hrd_parameters_present_flag) {
-      for (i = 0; i <= hrd->cpb_cnt_minus1[i]; i++) {
+      for (i = 0; i <= hrd->cpb_cnt_minus1[0]; i++) {
         READ_UINT8 (nr, per->nal_initial_cpb_removal_delay[i], n);
         READ_UINT8 (nr, per->nal_initial_cpb_removal_offset[i], n);
         if (hrd->sub_pic_hrd_params_present_flag
@@ -1072,7 +1072,7 @@ gst_h265_parser_parse_buffering_period (GstH265Parser * parser,
     }
 
     if (hrd->vcl_hrd_parameters_present_flag) {
-      for (i = 0; i <= hrd->cpb_cnt_minus1[i]; i++) {
+      for (i = 0; i <= hrd->cpb_cnt_minus1[0]; i++) {
         READ_UINT8 (nr, per->vcl_initial_cpb_removal_delay[i], n);
         READ_UINT8 (nr, per->vcl_initial_cpb_removal_offset[i], n);
         if (hrd->sub_pic_hrd_params_present_flag
