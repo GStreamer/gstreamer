@@ -5355,7 +5355,7 @@ Shall be VPS, SPS, PPS, prefix SEI or suffix SEI</doc>
         </array>
       </field>
       <field name="cpb_cnt_minus1" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.h">specifies the number of alternative CPS specifications.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.h">specifies the number of alternative CPB specifications.</doc>
         <array zero-terminated="0" fixed-size="7">
           <type name="guint8" c:type="guint8"/>
         </array>
@@ -7855,7 +7855,7 @@ Frees @slice_hdr fields.</doc>
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.h">Defines the Sublayer HRD parameters</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.h"/>
       <field name="bit_rate_value_minus1" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.h">togeter with bit_rate_scale, it specifies
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.h">together with bit_rate_scale, it specifies
   the maximum input bitrate when the CPB operates at the access
   unit level</doc>
         <array zero-terminated="0" fixed-size="32">
