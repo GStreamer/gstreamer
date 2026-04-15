@@ -3538,6 +3538,11 @@ gst_h266_parser_parse_picture_partition (GstH266SPS * sps,
             guint16 slice_height_in_ctus;
 
             for (j = 0; j < pps->num_exp_slices_in_tile[i]; j++) {
+              if (i + j >= pps->num_slices_in_pic_minus1) {
+                GST_WARNING ("Too may slices %d", i + j + 1);
+                goto error;
+              }
+
               READ_UE_MAX (nr, pps->exp_slice_height_in_ctus_minus1[i][j],
                   pps->tile_row_height_minus1[tile_y]);
 
