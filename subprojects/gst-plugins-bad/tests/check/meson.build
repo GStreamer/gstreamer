@@ -89,6 +89,7 @@ base_tests = [
   [['elements/vkdownload.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['elements/vkdeviceprovider.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['elements/vkupload.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
+  [['elements/vkh264enc.c'], not gstvulkan_dep.found() or vulkan_conf.get('GST_VULKAN_HAVE_VIDEO_EXTENSIONS') != 1, [gstvulkan_dep]],
   [['elements/voamrwbenc.c'], not voamrwbenc_dep.found(), [voamrwbenc_dep]],
   [['elements/vp9parse.c'], false, [gstcodecparsers_dep]],
   [['pipelines/vp9parse-vpcc.c']],
