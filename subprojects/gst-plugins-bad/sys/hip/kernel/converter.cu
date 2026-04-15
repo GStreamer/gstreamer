@@ -80,31 +80,31 @@ clamp3 (float3 val, const float min_val[3], const float max_val[3])
 __device__ inline unsigned char
 scale_to_2bits (float val)
 {
-  return (unsigned short) __float2int_rz (val * 3.0);
+  return (unsigned short) __float2int_rz (val * 3.0f);
 }
 
 __device__ inline unsigned char
 scale_to_uchar (float val)
 {
-  return (unsigned char) __float2int_rz (val * 255.0);
+  return (unsigned char) __float2int_rz (val * 255.0f);
 }
 
 __device__ inline unsigned short
 scale_to_ushort (float val)
 {
-  return (unsigned short) __float2int_rz (val * 65535.0);
+  return (unsigned short) __float2int_rz (val * 65535.0f);
 }
 
 __device__ inline unsigned short
 scale_to_10bits (float val)
 {
-  return (unsigned short) __float2int_rz (val * 1023.0);
+  return (unsigned short) __float2int_rz (val * 1023.0f);
 }
 
 __device__ inline unsigned short
 scale_to_12bits (float val)
 {
-  return (unsigned short) __float2int_rz (val * 4095.0);
+  return (unsigned short) __float2int_rz (val * 4095.0f);
 }
 
 __device__ inline unsigned char
@@ -112,8 +112,8 @@ blend_uchar (unsigned char dst, float src, float src_alpha)
 {
   // DstColor' = SrcA * SrcColor + (1 - SrcA) DstColor
   float src_val = src * src_alpha;
-  float dst_val = __int2float_rz (dst) / 255.0 * (1.0 - src_alpha);
-  return scale_to_uchar(clamp(src_val + dst_val, 0, 1.0));
+  float dst_val = __int2float_rz (dst) / 255.0f * (1.0f - src_alpha);
+  return scale_to_uchar(clamp(src_val + dst_val, 0, 1.0f));
 }
 
 __device__ inline unsigned short
@@ -121,8 +121,8 @@ blend_ushort (unsigned short dst, float src, float src_alpha)
 {
   // DstColor' = SrcA * SrcColor + (1 - SrcA) DstColor
   float src_val = src * src_alpha;
-  float dst_val = __int2float_rz (dst) / 65535.0 * (1.0 - src_alpha);
-  return scale_to_ushort(clamp(src_val + dst_val, 0, 1.0));
+  float dst_val = __int2float_rz (dst) / 65535.0f * (1.0f - src_alpha);
+  return scale_to_ushort(clamp(src_val + dst_val, 0, 1.0f));
 }
 
 __device__ inline unsigned short
@@ -130,8 +130,8 @@ blend_10bits (unsigned short dst, float src, float src_alpha)
 {
   // DstColor' = SrcA * SrcColor + (1 - SrcA) DstColor
   float src_val = src * src_alpha;
-  float dst_val = __int2float_rz (dst) / 1023.0 * (1.0 - src_alpha);
-  return scale_to_10bits(clamp(src_val + dst_val, 0, 1.0));
+  float dst_val = __int2float_rz (dst) / 1023.0f * (1.0f - src_alpha);
+  return scale_to_10bits(clamp(src_val + dst_val, 0, 1.0f));
 }
 
 __device__ inline unsigned short
@@ -139,8 +139,8 @@ blend_12bits (unsigned short dst, float src, float src_alpha)
 {
   // DstColor' = SrcA * SrcColor + (1 - SrcA) DstColor
   float src_val = src * src_alpha;
-  float dst_val = __int2float_rz (dst) / 4095.0 * (1.0 - src_alpha);
-  return scale_to_12bits(clamp(src_val + dst_val, 0, 1.0));
+  float dst_val = __int2float_rz (dst) / 4095.0f * (1.0f - src_alpha);
+  return scale_to_12bits(clamp(src_val + dst_val, 0, 1.0f));
 }
 
 struct IConverter
@@ -772,7 +772,7 @@ struct OutputRGBA : public IOutput
     dst0[pos] = blend_uchar (dst0[pos], sample.x, sample.w);
     dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.y, sample.w);
     dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.z, sample.w);
-    dst0[pos + 3] = blend_uchar (dst0[pos + 3], 1.0, sample.w);
+    dst0[pos + 3] = blend_uchar (dst0[pos + 3], 1.0f, sample.w);
   }
 };
 
@@ -826,7 +826,7 @@ struct OutputBGRA : public IOutput
     dst0[pos] = blend_uchar (dst0[pos], sample.z, sample.w);
     dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.y, sample.w);
     dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.x, sample.w);
-    dst0[pos + 3] = blend_uchar (dst0[pos + 3], 1.0, sample.w);
+    dst0[pos + 3] = blend_uchar (dst0[pos + 3], 1.0f, sample.w);
   }
 };
 
@@ -877,7 +877,7 @@ struct OutputARGB : public IOutput
       int stride1)
   {
     int pos = x * 4 + y * stride0;
-    dst0[pos] = blend_uchar (dst0[pos], 1.0, sample.w);
+    dst0[pos] = blend_uchar (dst0[pos], 1.0f, sample.w);
     dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.x, sample.w);
     dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.y, sample.w);
     dst0[pos + 3] = blend_uchar (dst0[pos + 3], sample.z, sample.w);
@@ -904,7 +904,7 @@ struct OutputABGR : public IOutput
       int stride1)
   {
     int pos = x * 4 + y * stride0;
-    dst0[pos] = blend_uchar (dst0[pos], 1.0, sample.w);
+    dst0[pos] = blend_uchar (dst0[pos], 1.0f, sample.w);
     dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.z, sample.w);
     dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.y, sample.w);
     dst0[pos + 3] = blend_uchar (dst0[pos + 3], sample.x, sample.w);
@@ -1327,7 +1327,7 @@ struct OutputGBRA : public IOutput
     dst0[pos] = blend_uchar (dst0[pos], sample.y, sample.w);
     dst1[pos] = blend_uchar (dst1[pos], sample.z, sample.w);
     dst2[pos] = blend_uchar (dst2[pos], sample.x, sample.w);
-    dst3[pos] = blend_uchar (dst3[pos], 1.0, sample.w);
+    dst3[pos] = blend_uchar (dst3[pos], 1.0f, sample.w);
   }
 };
 
@@ -1354,7 +1354,7 @@ struct OutputVUYA : public IOutput
     dst0[pos] = blend_uchar (dst0[pos], sample.z, sample.w);
     dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.y, sample.w);
     dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.x, sample.w);
-    dst0[pos + 3] = blend_uchar (dst0[pos + 3], 1.0, sample.w);
+    dst0[pos + 3] = blend_uchar (dst0[pos + 3], 1.0f, sample.w);
   }
 };
 
@@ -1367,31 +1367,31 @@ rotate_identity (float x, float y)
 __device__ inline float2
 rotate_90r (float x, float y)
 {
-  return make_float2(y, 1.0 - x);
+  return make_float2(y, 1.0f - x);
 }
 
 __device__ inline float2
 rotate_180 (float x, float y)
 {
-  return make_float2(1.0 - x, 1.0 - y);
+  return make_float2(1.0f - x, 1.0f - y);
 }
 
 __device__ inline float2
 rotate_90l (float x, float y)
 {
-  return make_float2(1.0 - y, x);
+  return make_float2(1.0f - y, x);
 }
 
 __device__ inline float2
 rotate_horiz (float x, float y)
 {
-  return make_float2(1.0 - x, y);
+  return make_float2(1.0f - x, y);
 }
 
 __device__ inline float2
 rotate_vert (float x, float y)
 {
-  return make_float2(x, 1.0 - y);
+  return make_float2(x, 1.0f - y);
 }
 
 __device__ inline float2
@@ -1403,7 +1403,7 @@ rotate_ul_lr (float x, float y)
 __device__ inline float2
 rotate_ur_ll (float x, float y)
 {
-  return make_float2(1.0 - y, 1.0 - x);
+  return make_float2(1.0f - y, 1.0f - x);
 }
 __device__ inline float2
 do_rotate (float x, float y, int direction)
@@ -1451,11 +1451,11 @@ GstHipConverterMain (TextureObject_t tex0, TextureObject_t tex1,
     sample = make_float4 (const_buf.border_x, const_buf.border_y,
        const_buf.border_z, const_buf.border_w);
   } else {
-    float x = (__int2float_rz (x_pos - const_buf.left) + 0.5) / const_buf.view_width;
-    if (x < 0.0 || x > 1.0)
+    float x = (__int2float_rz (x_pos - const_buf.left) + 0.5f) / const_buf.view_width;
+    if (x < 0.0f || x > 1.0f)
       return;
-    float y = (__int2float_rz (y_pos - const_buf.top) + 0.5) / const_buf.view_height;
-    if (y < 0.0 || y > 1.0)
+    float y = (__int2float_rz (y_pos - const_buf.top) + 0.5f) / const_buf.view_height;
+    if (y < 0.0f || y > 1.0f)
       return;
     float2 rotated = do_rotate (x, y, const_buf.video_direction);
     float4 s = g_sampler.Execute (tex0, tex1, tex2, tex3, rotated.x, rotated.y);
@@ -1532,31 +1532,31 @@ static const char ConverterMain_str[] =
 "__device__ inline unsigned char\n"
 "scale_to_2bits (float val)\n"
 "{\n"
-"  return (unsigned short) __float2int_rz (val * 3.0);\n"
+"  return (unsigned short) __float2int_rz (val * 3.0f);\n"
 "}\n"
 "\n"
 "__device__ inline unsigned char\n"
 "scale_to_uchar (float val)\n"
 "{\n"
-"  return (unsigned char) __float2int_rz (val * 255.0);\n"
+"  return (unsigned char) __float2int_rz (val * 255.0f);\n"
 "}\n"
 "\n"
 "__device__ inline unsigned short\n"
 "scale_to_ushort (float val)\n"
 "{\n"
-"  return (unsigned short) __float2int_rz (val * 65535.0);\n"
+"  return (unsigned short) __float2int_rz (val * 65535.0f);\n"
 "}\n"
 "\n"
 "__device__ inline unsigned short\n"
 "scale_to_10bits (float val)\n"
 "{\n"
-"  return (unsigned short) __float2int_rz (val * 1023.0);\n"
+"  return (unsigned short) __float2int_rz (val * 1023.0f);\n"
 "}\n"
 "\n"
 "__device__ inline unsigned short\n"
 "scale_to_12bits (float val)\n"
 "{\n"
-"  return (unsigned short) __float2int_rz (val * 4095.0);\n"
+"  return (unsigned short) __float2int_rz (val * 4095.0f);\n"
 "}\n"
 "\n"
 "__device__ inline unsigned char\n"
@@ -1564,8 +1564,8 @@ static const char ConverterMain_str[] =
 "{\n"
 "  // DstColor' = SrcA * SrcColor + (1 - SrcA) DstColor\n"
 "  float src_val = src * src_alpha;\n"
-"  float dst_val = __int2float_rz (dst) / 255.0 * (1.0 - src_alpha);\n"
-"  return scale_to_uchar(clamp(src_val + dst_val, 0, 1.0));\n"
+"  float dst_val = __int2float_rz (dst) / 255.0f * (1.0f - src_alpha);\n"
+"  return scale_to_uchar(clamp(src_val + dst_val, 0, 1.0f));\n"
 "}\n"
 "\n"
 "__device__ inline unsigned short\n"
@@ -1573,8 +1573,8 @@ static const char ConverterMain_str[] =
 "{\n"
 "  // DstColor' = SrcA * SrcColor + (1 - SrcA) DstColor\n"
 "  float src_val = src * src_alpha;\n"
-"  float dst_val = __int2float_rz (dst) / 65535.0 * (1.0 - src_alpha);\n"
-"  return scale_to_ushort(clamp(src_val + dst_val, 0, 1.0));\n"
+"  float dst_val = __int2float_rz (dst) / 65535.0f * (1.0f - src_alpha);\n"
+"  return scale_to_ushort(clamp(src_val + dst_val, 0, 1.0f));\n"
 "}\n"
 "\n"
 "__device__ inline unsigned short\n"
@@ -1582,8 +1582,8 @@ static const char ConverterMain_str[] =
 "{\n"
 "  // DstColor' = SrcA * SrcColor + (1 - SrcA) DstColor\n"
 "  float src_val = src * src_alpha;\n"
-"  float dst_val = __int2float_rz (dst) / 1023.0 * (1.0 - src_alpha);\n"
-"  return scale_to_10bits(clamp(src_val + dst_val, 0, 1.0));\n"
+"  float dst_val = __int2float_rz (dst) / 1023.0f * (1.0f - src_alpha);\n"
+"  return scale_to_10bits(clamp(src_val + dst_val, 0, 1.0f));\n"
 "}\n"
 "\n"
 "__device__ inline unsigned short\n"
@@ -1591,8 +1591,8 @@ static const char ConverterMain_str[] =
 "{\n"
 "  // DstColor' = SrcA * SrcColor + (1 - SrcA) DstColor\n"
 "  float src_val = src * src_alpha;\n"
-"  float dst_val = __int2float_rz (dst) / 4095.0 * (1.0 - src_alpha);\n"
-"  return scale_to_12bits(clamp(src_val + dst_val, 0, 1.0));\n"
+"  float dst_val = __int2float_rz (dst) / 4095.0f * (1.0f - src_alpha);\n"
+"  return scale_to_12bits(clamp(src_val + dst_val, 0, 1.0f));\n"
 "}\n"
 "\n"
 "struct IConverter\n"
@@ -2224,7 +2224,7 @@ static const char ConverterMain_str[] =
 "    dst0[pos] = blend_uchar (dst0[pos], sample.x, sample.w);\n"
 "    dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.y, sample.w);\n"
 "    dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.z, sample.w);\n"
-"    dst0[pos + 3] = blend_uchar (dst0[pos + 3], 1.0, sample.w);\n"
+"    dst0[pos + 3] = blend_uchar (dst0[pos + 3], 1.0f, sample.w);\n"
 "  }\n"
 "};\n"
 "\n"
@@ -2278,7 +2278,7 @@ static const char ConverterMain_str[] =
 "    dst0[pos] = blend_uchar (dst0[pos], sample.z, sample.w);\n"
 "    dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.y, sample.w);\n"
 "    dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.x, sample.w);\n"
-"    dst0[pos + 3] = blend_uchar (dst0[pos + 3], 1.0, sample.w);\n"
+"    dst0[pos + 3] = blend_uchar (dst0[pos + 3], 1.0f, sample.w);\n"
 "  }\n"
 "};\n"
 "\n"
@@ -2329,7 +2329,7 @@ static const char ConverterMain_str[] =
 "      int stride1)\n"
 "  {\n"
 "    int pos = x * 4 + y * stride0;\n"
-"    dst0[pos] = blend_uchar (dst0[pos], 1.0, sample.w);\n"
+"    dst0[pos] = blend_uchar (dst0[pos], 1.0f, sample.w);\n"
 "    dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.x, sample.w);\n"
 "    dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.y, sample.w);\n"
 "    dst0[pos + 3] = blend_uchar (dst0[pos + 3], sample.z, sample.w);\n"
@@ -2356,7 +2356,7 @@ static const char ConverterMain_str[] =
 "      int stride1)\n"
 "  {\n"
 "    int pos = x * 4 + y * stride0;\n"
-"    dst0[pos] = blend_uchar (dst0[pos], 1.0, sample.w);\n"
+"    dst0[pos] = blend_uchar (dst0[pos], 1.0f, sample.w);\n"
 "    dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.z, sample.w);\n"
 "    dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.y, sample.w);\n"
 "    dst0[pos + 3] = blend_uchar (dst0[pos + 3], sample.x, sample.w);\n"
@@ -2779,7 +2779,7 @@ static const char ConverterMain_str[] =
 "    dst0[pos] = blend_uchar (dst0[pos], sample.y, sample.w);\n"
 "    dst1[pos] = blend_uchar (dst1[pos], sample.z, sample.w);\n"
 "    dst2[pos] = blend_uchar (dst2[pos], sample.x, sample.w);\n"
-"    dst3[pos] = blend_uchar (dst3[pos], 1.0, sample.w);\n"
+"    dst3[pos] = blend_uchar (dst3[pos], 1.0f, sample.w);\n"
 "  }\n"
 "};\n"
 "\n"
@@ -2806,7 +2806,7 @@ static const char ConverterMain_str[] =
 "    dst0[pos] = blend_uchar (dst0[pos], sample.z, sample.w);\n"
 "    dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.y, sample.w);\n"
 "    dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.x, sample.w);\n"
-"    dst0[pos + 3] = blend_uchar (dst0[pos + 3], 1.0, sample.w);\n"
+"    dst0[pos + 3] = blend_uchar (dst0[pos + 3], 1.0f, sample.w);\n"
 "  }\n"
 "};\n"
 "\n"
@@ -2819,31 +2819,31 @@ static const char ConverterMain_str[] =
 "__device__ inline float2\n"
 "rotate_90r (float x, float y)\n"
 "{\n"
-"  return make_float2(y, 1.0 - x);\n"
+"  return make_float2(y, 1.0f - x);\n"
 "}\n"
 "\n"
 "__device__ inline float2\n"
 "rotate_180 (float x, float y)\n"
 "{\n"
-"  return make_float2(1.0 - x, 1.0 - y);\n"
+"  return make_float2(1.0f - x, 1.0f - y);\n"
 "}\n"
 "\n"
 "__device__ inline float2\n"
 "rotate_90l (float x, float y)\n"
 "{\n"
-"  return make_float2(1.0 - y, x);\n"
+"  return make_float2(1.0f - y, x);\n"
 "}\n"
 "\n"
 "__device__ inline float2\n"
 "rotate_horiz (float x, float y)\n"
 "{\n"
-"  return make_float2(1.0 - x, y);\n"
+"  return make_float2(1.0f - x, y);\n"
 "}\n"
 "\n"
 "__device__ inline float2\n"
 "rotate_vert (float x, float y)\n"
 "{\n"
-"  return make_float2(x, 1.0 - y);\n"
+"  return make_float2(x, 1.0f - y);\n"
 "}\n"
 "\n"
 "__device__ inline float2\n"
@@ -2855,7 +2855,7 @@ static const char ConverterMain_str[] =
 "__device__ inline float2\n"
 "rotate_ur_ll (float x, float y)\n"
 "{\n"
-"  return make_float2(1.0 - y, 1.0 - x);\n"
+"  return make_float2(1.0f - y, 1.0f - x);\n"
 "}\n"
 "__device__ inline float2\n"
 "do_rotate (float x, float y, int direction)\n"
@@ -2903,11 +2903,11 @@ static const char ConverterMain_str[] =
 "    sample = make_float4 (const_buf.border_x, const_buf.border_y,\n"
 "       const_buf.border_z, const_buf.border_w);\n"
 "  } else {\n"
-"    float x = (__int2float_rz (x_pos - const_buf.left) + 0.5) / const_buf.view_width;\n"
-"    if (x < 0.0 || x > 1.0)\n"
+"    float x = (__int2float_rz (x_pos - const_buf.left) + 0.5f) / const_buf.view_width;\n"
+"    if (x < 0.0f || x > 1.0f)\n"
 "      return;\n"
-"    float y = (__int2float_rz (y_pos - const_buf.top) + 0.5) / const_buf.view_height;\n"
-"    if (y < 0.0 || y > 1.0)\n"
+"    float y = (__int2float_rz (y_pos - const_buf.top) + 0.5f) / const_buf.view_height;\n"
+"    if (y < 0.0f || y > 1.0f)\n"
 "      return;\n"
 "    float2 rotated = do_rotate (x, y, const_buf.video_direction);\n"
 "    float4 s = g_sampler.Execute (tex0, tex1, tex2, tex3, rotated.x, rotated.y);\n"
