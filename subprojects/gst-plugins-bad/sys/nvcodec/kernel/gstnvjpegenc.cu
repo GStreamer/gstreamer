@@ -21,7 +21,7 @@
 __device__ inline unsigned char
 scale_to_uchar (float val)
 {
-  return (unsigned char) __float2int_rz (val * 255.0);
+  return (unsigned char) __float2int_rz (val * 255.0f);
 }
 
 extern "C" {
@@ -50,7 +50,7 @@ static const gchar *GstNvJpegEncConvertMain_str = R"(
 __device__ inline unsigned char
 scale_to_uchar (float val)
 {
-  return (unsigned char) __float2int_rz (val * 255.0);
+  return (unsigned char) __float2int_rz (val * 255.0f);
 }
 
 extern "C" {
