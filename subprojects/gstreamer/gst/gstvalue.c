@@ -3337,12 +3337,13 @@ wrong_length:
   }
 map_failed:
   {
+    gst_buffer_unref (buffer);
     return FALSE;
   }
 wrong_char:
   {
-    gst_buffer_unref (buffer);
     gst_buffer_unmap (buffer, &info);
+    gst_buffer_unref (buffer);
     return FALSE;
   }
 }
