@@ -62,6 +62,7 @@ ges_sources = files([
     'ges-smart-adder.c',
     'ges-smart-video-mixer.c',
     'ges-utils.c',
+    'ges-video-element-selector.c',
     'ges-group.c',
     'ges-validate.c',
     'ges-structured-interface.c',

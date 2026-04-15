@@ -306,6 +306,7 @@ ges_effect_from_description (const gchar * bin_desc, GESTrackType type,
   GstCaps *valid_caps = NULL;
   gboolean add_caps_filter = FALSE;
   const gchar *converter_str = NULL;
+  gchar *converter_str_heap = NULL;
   GList *tmp, *sinkpads = NULL, *elems_with_reqsink = NULL,
       *elems_with_reqsrc = NULL;
   GstElement *effect =
@@ -320,9 +321,19 @@ ges_effect_from_description (const gchar * bin_desc, GESTrackType type,
 
   if (type == GES_TRACK_TYPE_VIDEO) {
     valid_caps = gst_caps_from_string ("video/x-raw(ANY)");
-    converter_str = "videoconvert";
 
-    add_caps_filter = TRUE;
+    if (!ges_video_element_selector_is_strict (ges_video_element_selector ())) {
+      /* Wrap each effect pad with a format converter so the effect
+       * works regardless of the upstream/downstream memory type. In
+       * strict mode no wrapping is done: the caller is expected to
+       * supply an effect bin description whose elements already
+       * consume and produce the backend's native memory. */
+      converter_str_heap =
+          ges_video_element_selector_colorconvert_bin_desc
+          (ges_video_element_selector ());
+      converter_str = converter_str_heap;
+      add_caps_filter = TRUE;
+    }
   } else if (type == GES_TRACK_TYPE_AUDIO) {
     valid_caps = gst_caps_from_string ("audio/x-raw(ANY)");
     converter_str = "audioconvert ! audioresample ! audioconvert";
@@ -363,6 +374,7 @@ ges_effect_from_description (const gchar * bin_desc, GESTrackType type,
     goto err;
 
 done:
+  g_free (converter_str_heap);
   g_list_free (elems_with_reqsink);
   g_list_free (elems_with_reqsrc);
   g_list_free_full (sinkpads, gst_object_unref);

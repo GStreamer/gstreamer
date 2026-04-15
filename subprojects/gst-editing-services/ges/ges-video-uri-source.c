@@ -29,7 +29,6 @@
 
 #include <stdio.h>
 
-#include <gst/pbutils/missing-plugins.h>
 #include "ges-utils.h"
 #include "ges-internal.h"
 #include "ges-track-element.h"
@@ -204,15 +203,6 @@ _find_positioner (GstElement * a, GstElement * b)
       "framepositioner");
 }
 
-static void
-post_missing_element_message (GstElement * element, const gchar * name)
-{
-  GstMessage *msg;
-
-  msg = gst_missing_element_message_new (element, name);
-  gst_element_post_message (element, msg);
-}
-
 /* GObject VMethods */
 static gboolean
 ges_video_uri_source_create_filters (GESVideoSource * source,
@@ -230,26 +220,18 @@ ges_video_uri_source_create_filters (GESVideoSource * source,
 
   if (gst_discoverer_video_info_is_interlaced (info)) {
     const gchar *deinterlace_props[] = { "mode", "fields", "tff", NULL };
+    GstElement *deinterlace_core = NULL;
     GstElement *deinterlace =
-        gst_element_factory_make ("deinterlace", "deinterlace");
+        ges_video_element_selector_make_deinterlace
+        (ges_video_element_selector (), "deinterlace", &deinterlace_core);
 
-    if (deinterlace == NULL) {
-      post_missing_element_message (ges_track_element_get_nleobject
-          (GES_TRACK_ELEMENT (source)), "deinterlace");
-
-      GST_ELEMENT_WARNING (ges_track_element_get_nleobject (GES_TRACK_ELEMENT
-              (source)), CORE, MISSING_PLUGIN,
-          ("Missing element '%s' - check your GStreamer installation.",
-              "deinterlace"), ("deinterlacing won't work"));
-    } else {
-      /* Right after the queue */
-      g_ptr_array_insert (elements, 1, gst_element_factory_make ("videoconvert",
-              NULL));
-      g_ptr_array_insert (elements, 2, deinterlace);
-      ges_track_element_add_children_props (GES_TRACK_ELEMENT (source),
-          deinterlace, NULL, NULL, deinterlace_props);
-    }
-
+    /* Right after the queue */
+    g_ptr_array_insert (elements, 1,
+        ges_video_element_selector_make_colorconvert
+        (ges_video_element_selector (), "deinterlace-convert", NULL));
+    g_ptr_array_insert (elements, 2, deinterlace);
+    ges_track_element_add_children_props (GES_TRACK_ELEMENT (source),
+        deinterlace_core, NULL, NULL, deinterlace_props);
   }
 
   if (ges_uri_source_asset_is_image (GES_URI_SOURCE_ASSET (asset))) {

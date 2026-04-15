@@ -25,6 +25,7 @@
 #include <math.h>
 
 #include "ges-frame-composition-meta.h"
+#include "ges-internal.h"
 
 typedef struct _GESVideoScale GESVideoScale;
 typedef struct
@@ -130,28 +131,30 @@ change_state (GstElement * element, GstStateChange transition)
 static void
 ges_video_scale_init (GESVideoScale * self)
 {
-  GstPad *pad;
-  GstElement *scale;
+  GstPad *pad, *scale_sink, *capsfilter_src;
+  GstElement *scale, *scale_core = NULL;
   GstPadTemplate *template =
       gst_static_pad_template_get (&gst_video_scale_sink_template);
 
-  scale = gst_element_factory_make ("videoscale", NULL);
-  g_object_set (scale, "add-borders", FALSE, NULL);
+  scale = ges_video_element_selector_make_convert_scale_add_borders
+      (ges_video_element_selector (), "convertscale", &scale_core);
+  g_object_set (scale_core, "add-borders", FALSE, NULL);
   self->capsfilter = gst_element_factory_make ("capsfilter", NULL);
 
   gst_bin_add_many (GST_BIN (self), scale, self->capsfilter, NULL);
   gst_element_link (scale, self->capsfilter);
 
-  self->sink =
-      gst_ghost_pad_new_from_template ("sink", scale->sinkpads->data, template);
+  scale_sink = gst_element_get_static_pad (scale, "sink");
+  self->sink = gst_ghost_pad_new_from_template ("sink", scale_sink, template);
+  gst_object_unref (scale_sink);
   gst_pad_set_chain_function (self->sink, (GstPadChainFunction) chain);
   gst_element_add_pad (GST_ELEMENT (self), self->sink);
   gst_object_unref (template);
 
   template = gst_static_pad_template_get (&gst_video_scale_src_template);
-  pad =
-      gst_ghost_pad_new_from_template ("src", self->capsfilter->srcpads->data,
-      template);
+  capsfilter_src = gst_element_get_static_pad (self->capsfilter, "src");
+  pad = gst_ghost_pad_new_from_template ("src", capsfilter_src, template);
+  gst_object_unref (capsfilter_src);
   gst_element_add_pad (GST_ELEMENT (self), pad);
   gst_object_unref (template);
 }

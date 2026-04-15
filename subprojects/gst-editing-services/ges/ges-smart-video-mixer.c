@@ -478,8 +478,8 @@ ges_smart_mixer_constructed (GObject * obj)
 
   G_OBJECT_CLASS (ges_smart_mixer_parent_class)->constructed (obj);
 
-  self->mixer =
-      gst_element_factory_create (ges_get_compositor_factory (), cname);
+  self->mixer = ges_video_element_selector_make_compositor
+      (ges_video_element_selector (), cname);
   self->ABI.abi.has_operator =
       gst_compositor_operator_get_type_and_default_value (NULL) != G_TYPE_NONE;
   g_free (cname);
@@ -501,13 +501,26 @@ ges_smart_mixer_constructed (GObject * obj)
   g_object_set (identity, "drop-allocation", TRUE, NULL);
   g_assert (identity);
 
-  videoconvert = gst_element_factory_make ("videoconvert", NULL);
-  g_assert (videoconvert);
+  {
+    const GESVideoElementSelector *sel = ges_video_element_selector ();
 
-  gst_bin_add_many (GST_BIN (self), self->mixer, identity, videoconvert, NULL);
-  gst_element_link_many (self->mixer, identity, videoconvert, NULL);
-
-  pad = gst_element_get_static_pad (videoconvert, "src");
+    /* In strict mode the compositor's output is already native memory,
+     * so use the bare colorconvert (no uploader/downloader wrapper).
+     * In non-strict mode wrap it so downstream sysmem consumers get
+     * the right memory back. */
+    if (ges_video_element_selector_is_strict (sel))
+      videoconvert = ges_video_element_selector_make_colorconvert_bare
+          (sel, "smart-mixer-out-convert");
+    else
+      videoconvert =
+          ges_video_element_selector_make_colorconvert (sel,
+          "smart-mixer-out-convert", NULL);
+    g_assert (videoconvert);
+    gst_bin_add_many (GST_BIN (self), self->mixer, identity, videoconvert,
+        NULL);
+    gst_element_link_many (self->mixer, identity, videoconvert, NULL);
+    pad = gst_element_get_static_pad (videoconvert, "src");
+  }
   self->srcpad = gst_ghost_pad_new ("src", pad);
   gst_pad_set_active (self->srcpad, TRUE);
   gst_object_unref (pad);

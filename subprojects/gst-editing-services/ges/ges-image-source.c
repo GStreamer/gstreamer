@@ -121,22 +121,21 @@ pad_added_cb (GstElement * source, GstPad * pad, GstElement * scale)
 static GstElement *
 ges_image_source_create_source (GESSource * source)
 {
-  GstElement *bin, *src, *scale, *freeze, *iconv;
+  GstElement *bin, *src, *convertscale, *freeze;
+  GstElement *scale_core = NULL;
   GstPad *srcpad, *target;
 
   bin = GST_ELEMENT (gst_bin_new ("still-image-bin"));
   src = gst_element_factory_make ("uridecodebin", NULL);
-  scale = gst_element_factory_make ("videoscale", NULL);
+  convertscale = ges_video_element_selector_make_convert_scale_add_borders
+      (ges_video_element_selector (), "image-convertscale", &scale_core);
   freeze = gst_element_factory_make ("imagefreeze", NULL);
-  iconv = gst_element_factory_make ("videoconvert", NULL);
 
-  g_object_set (scale, "add-borders", TRUE, NULL);
+  g_object_set (scale_core, "add-borders", TRUE, NULL);
 
-  gst_bin_add_many (GST_BIN (bin), src, scale, freeze, iconv, NULL);
+  gst_bin_add_many (GST_BIN (bin), src, convertscale, freeze, NULL);
 
-  gst_element_link_pads_full (scale, "src", iconv, "sink",
-      GST_PAD_LINK_CHECK_NOTHING);
-  gst_element_link_pads_full (iconv, "src", freeze, "sink",
+  gst_element_link_pads_full (convertscale, "src", freeze, "sink",
       GST_PAD_LINK_CHECK_NOTHING);
 
   /* FIXME: add capsfilter here with sink caps (see 626518) */
@@ -150,7 +149,7 @@ ges_image_source_create_source (GESSource * source)
   g_object_set (src, "uri", ((GESImageSource *) source)->uri, NULL);
 
   g_signal_connect (G_OBJECT (src), "pad-added",
-      G_CALLBACK (pad_added_cb), scale);
+      G_CALLBACK (pad_added_cb), convertscale);
 
   return bin;
 }

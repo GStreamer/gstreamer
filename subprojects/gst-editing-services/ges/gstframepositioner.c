@@ -93,8 +93,8 @@ gst_compositor_operator_get_type_and_default_value (int *default_operator_value)
   static GType operator_gtype = G_TYPE_NONE;
 
   if (g_once_init_enter (&_init)) {
-    GstElement *compositor =
-        gst_element_factory_create (ges_get_compositor_factory (), NULL);
+    GstElement *compositor = ges_video_element_selector_make_compositor
+        (ges_video_element_selector (), NULL);
 
     GstPad *compositorPad =
         gst_element_request_pad_simple (compositor, "sink_%u");

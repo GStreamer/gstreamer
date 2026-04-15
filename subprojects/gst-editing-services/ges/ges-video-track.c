@@ -103,22 +103,45 @@ _weak_notify_cb (GESTrack * track, GstElement * capsfilter)
 static GstElement *
 create_element_for_raw_video_gap (GESTrack * track)
 {
-  GstElement *bin;
-  GstElement *capsfilter;
+  GstElement *bin = gst_bin_new (NULL);
+  GstElement *videotestsrc = gst_element_factory_make ("videotestsrc", "src");
+  GstElement *videorate = gst_element_factory_make ("videorate", NULL);
+  GstElement *capsfilter = gst_element_factory_make ("capsfilter", "gapfilter");
+  GstElement *uploader =
+      ges_video_element_selector_make_uploader (ges_video_element_selector ());
+  GstElement *tail;
+  GstPad *pad;
+  GstCaps *caps;
 
-  bin = gst_parse_bin_from_description
-      ("videotestsrc pattern=2 name=src ! videorate ! capsfilter name=gapfilter caps=video/x-raw",
-      TRUE, NULL);
+  g_object_set (videotestsrc, "pattern", 2, NULL);
+  caps = gst_caps_from_string ("video/x-raw");
+  g_object_set (capsfilter, "caps", caps, NULL);
+  gst_caps_unref (caps);
 
-  capsfilter = gst_bin_get_by_name (GST_BIN (bin), "gapfilter");
+  gst_bin_add_many (GST_BIN (bin), videotestsrc, videorate, capsfilter, NULL);
+  gst_element_link_many (videotestsrc, videorate, capsfilter, NULL);
+  tail = capsfilter;
+
+  /* When the compositor is strict (e.g. glvideomixerelement accepts
+   * memory:GLMemory only) the gap filler must upload its raw output
+   * itself. Non-strict backends (software compositor, or glvideomixer
+   * bin which uploads internally) don't need an uploader here. */
+  if (uploader) {
+    gst_bin_add (GST_BIN (bin), uploader);
+    gst_element_link (capsfilter, uploader);
+    tail = uploader;
+  }
+
+  pad = gst_element_get_static_pad (tail, "src");
+  gst_element_add_pad (bin, gst_ghost_pad_new ("src", pad));
+  gst_object_unref (pad);
+
   g_object_weak_ref (G_OBJECT (capsfilter), (GWeakNotify) _weak_notify_cb,
       track);
   g_signal_connect (track, "notify::restriction-caps",
       (GCallback) _track_restriction_changed_cb, capsfilter);
 
   _sync_capsfilter_with_track (track, capsfilter);
-
-  gst_object_unref (capsfilter);
 
   return bin;
 }

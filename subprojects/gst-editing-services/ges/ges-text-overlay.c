@@ -154,8 +154,10 @@ ges_text_overlay_create_element (GESTrackElement * track_element)
   };
 
   text = gst_element_factory_make ("textoverlay", NULL);
-  iconv = gst_element_factory_make ("videoconvert", NULL);
-  oconv = gst_element_factory_make ("videoconvert", NULL);
+  iconv = ges_video_element_selector_make_colorconvert
+      (ges_video_element_selector (), "overlay-in-convert", NULL);
+  oconv = ges_video_element_selector_make_colorconvert
+      (ges_video_element_selector (), "overlay-out-convert", NULL);
   self->priv->text_el = text;
   gst_object_ref (text);
 

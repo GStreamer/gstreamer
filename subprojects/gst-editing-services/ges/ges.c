@@ -256,6 +256,7 @@ ges_deinit (void)
 
   ges_asset_cache_deinit ();
   ges_xml_formatter_deinit ();
+  ges_video_element_selector_deinit ();
 
   initialized_thread = NULL;
   G_UNLOCK (init_lock);

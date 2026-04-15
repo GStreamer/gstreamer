@@ -430,8 +430,100 @@ G_GNUC_INTERNAL gint element_start_compare                (GESTimelineElement * 
                                                            GESTimelineElement * b);
 G_GNUC_INTERNAL gint element_end_compare                  (GESTimelineElement * a,
                                                            GESTimelineElement * b);
-G_GNUC_INTERNAL GstElementFactory *
-ges_get_compositor_factory                                (void);
+/**
+ * GESVideoElementSelector:
+ *
+ * Process-lifetime singleton that resolves, for the compositor GES
+ * picks out of the registry, every raw-video primitive the source
+ * filter chain and smart mixer need. Access via the accessors /
+ * makers below - the struct is opaque.
+ */
+typedef struct _GESVideoElementSelector GESVideoElementSelector;
+
+G_GNUC_INTERNAL const GESVideoElementSelector *
+ges_video_element_selector                                (void);
+
+/* Release the singleton's factory references. Called from ges_deinit(). */
+G_GNUC_INTERNAL void
+ges_video_element_selector_deinit                         (void);
+
+/* %TRUE when the compositor's sink only accepts its native memory -
+ * downstream of the selector's makers must stay on native memory. */
+G_GNUC_INTERNAL gboolean
+ges_video_element_selector_is_strict                      (const GESVideoElementSelector * self);
+
+/* Create the compositor element the selector picked. */
+G_GNUC_INTERNAL GstElement *
+ges_video_element_selector_make_compositor                (const GESVideoElementSelector * self,
+                                                           const gchar * name);
+
+/* Create a `[uploader !] colorconvert [! downloader]` bin, or the
+ * bare colorconvert element when the selector represents a
+ * system-memory backend. The downloader is elided when @strict.
+ * @name, when non-%NULL, names the returned top-level element (the
+ * wrapper bin if any, otherwise the core element) — useful for
+ * pipeline debug dumps. @main_element, when non-%NULL, receives a
+ * non-owned pointer to the core element inside the returned bin so
+ * callers can configure it directly (e.g. set properties). */
+G_GNUC_INTERNAL GstElement *
+ges_video_element_selector_make_colorconvert              (const GESVideoElementSelector * self,
+                                                           const gchar * name,
+                                                           GstElement ** main_element);
+
+/* Create a bare colorconvert element (no uploader/downloader wrapper),
+ * intended for use downstream of a strict compositor whose output is
+ * already native memory. */
+G_GNUC_INTERNAL GstElement *
+ges_video_element_selector_make_colorconvert_bare         (const GESVideoElementSelector * self,
+                                                           const gchar * name);
+
+/* Build a convert+scale element for source chains that need both
+ * colorspace conversion and rescaling. Uses @convert_scale when
+ * available, else wraps a `colorconvert ! scale ! colorconvert` chain
+ * — sandwiching the scaler between two colorconverts so the scaler
+ * always sees a format it accepts regardless of the incoming caps.
+ * @main_element, when non-%NULL, receives a pointer to the scaler
+ * (or the combined convert+scale element). */
+G_GNUC_INTERNAL GstElement *
+ges_video_element_selector_make_convert_scale             (const GESVideoElementSelector * self,
+                                                           const gchar * name,
+                                                           GstElement ** main_element);
+
+/* Like _make_convert_scale, but guarantees @main_element exposes an
+ * `add-borders` property - falls back to a sysmem-wrapped videoscale
+ * when the backend's scaler doesn't have it. */
+G_GNUC_INTERNAL GstElement *
+ges_video_element_selector_make_convert_scale_add_borders (const GESVideoElementSelector * self,
+                                                           const gchar * name,
+                                                           GstElement ** main_element);
+
+/* Same shape as _make_colorconvert, but for the deinterlacer. */
+G_GNUC_INTERNAL GstElement *
+ges_video_element_selector_make_deinterlace               (const GESVideoElementSelector * self,
+                                                           const gchar * name,
+                                                           GstElement ** main_element);
+
+/* Same shape as _make_colorconvert, but for the video-flip /
+ * rotation element. */
+G_GNUC_INTERNAL GstElement *
+ges_video_element_selector_make_videoflip                 (const GESVideoElementSelector * self,
+                                                           const gchar * name,
+                                                           GstElement ** main_element);
+
+/* Create the uploader element a system-memory producer must place
+ * before its output when feeding the compositor. Returns %NULL when
+ * the compositor accepts system memory directly — i.e. whenever the
+ * selector is not @strict.
+ */
+GES_API GstElement *
+ges_video_element_selector_make_uploader                  (const GESVideoElementSelector * self);
+
+/* Return a parse-launch description for the colorconvert bin as
+ * built by _make_colorconvert(). Caller takes ownership. Useful when
+ * the result must be embedded in a larger gst_parse_bin_from_description
+ * expression (e.g. effect pad wrappers). */
+G_GNUC_INTERNAL gchar *
+ges_video_element_selector_colorconvert_bin_desc          (const GESVideoElementSelector * self);
 
 G_GNUC_INTERNAL void
 ges_callback_add (GSourceFunc func, gpointer udata, GDestroyNotify notify);
