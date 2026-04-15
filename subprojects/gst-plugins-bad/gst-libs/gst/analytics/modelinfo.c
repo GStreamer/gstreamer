@@ -773,7 +773,8 @@ gst_analytics_modelinfo_get_input_scales_offsets (GstAnalyticsModelInfo *
 
   *output_scales = NULL;
   *output_offsets = NULL;
-  *num_output_ranges = 0;
+  if (num_output_ranges)
+    *num_output_ranges = 0;
 
   /* Get target ranges from modelinfo */
   if (!gst_analytics_modelinfo_get_target_ranges (modelinfo, tensor_name,
@@ -784,7 +785,7 @@ gst_analytics_modelinfo_get_input_scales_offsets (GstAnalyticsModelInfo *
   }
 
   /* Validate that input ranges match target ranges */
-  if (num_input_ranges != num_target_ranges) {
+  if (num_input_ranges != num_target_ranges && num_target_ranges != 1) {
     GST_ERROR
         ("Tensor '%s': number of input ranges (%zu) doesn't match number of "
         "target ranges in modelinfo (%zu)", tensor_name, num_input_ranges,
@@ -795,13 +796,18 @@ gst_analytics_modelinfo_get_input_scales_offsets (GstAnalyticsModelInfo *
   }
 
   /* Allocate output arrays */
-  *output_scales = g_new (gdouble, num_target_ranges);
-  *output_offsets = g_new (gdouble, num_target_ranges);
+  *output_scales = g_new (gdouble, num_input_ranges);
+  *output_offsets = g_new (gdouble, num_input_ranges);
 
   /* Calculate scale and offset for each channel */
-  for (i = 0; i < num_target_ranges; i++) {
-    target_min = target_mins[i];
-    target_max = target_maxs[i];
+  for (i = 0; i < num_input_ranges; i++) {
+    if (num_target_ranges == 1) {
+      target_min = target_mins[0];
+      target_max = target_maxs[0];
+    } else {
+      target_min = target_mins[i];
+      target_max = target_maxs[i];
+    }
     input_min = input_mins[i];
     input_max = input_maxs[i];
 
@@ -820,7 +826,8 @@ gst_analytics_modelinfo_get_input_scales_offsets (GstAnalyticsModelInfo *
         target_max, scale, offset);
   }
 
-  *num_output_ranges = num_target_ranges;
+  if (num_output_ranges)
+    *num_output_ranges = num_input_ranges;
   g_free (target_mins);
   g_free (target_maxs);
 
