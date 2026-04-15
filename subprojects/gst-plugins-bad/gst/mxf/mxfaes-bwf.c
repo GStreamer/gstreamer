@@ -1002,7 +1002,8 @@ mxf_metadata_aes3_audio_essence_descriptor_write_tags (MXFMetadataBase * m,
     t->data = g_malloc (t->size);
     GST_WRITE_UINT32_BE (t->data, self->n_channel_status_mode);
     GST_WRITE_UINT32_BE (t->data + 4, 1);
-    memcpy (t->data + 8, self->channel_status_mode, t->size);
+    memcpy (t->data + 8, self->channel_status_mode,
+        self->n_channel_status_mode);
     mxf_primer_pack_add_mapping (primer, 0x3d10, &t->ul);
     ret = g_list_prepend (ret, t);
   }
@@ -1029,7 +1030,7 @@ mxf_metadata_aes3_audio_essence_descriptor_write_tags (MXFMetadataBase * m,
     t->data = g_malloc (t->size);
     GST_WRITE_UINT32_BE (t->data, self->n_user_data_mode);
     GST_WRITE_UINT32_BE (t->data + 4, 1);
-    memcpy (t->data + 8, self->user_data_mode, t->size);
+    memcpy (t->data + 8, self->user_data_mode, self->n_user_data_mode);
     mxf_primer_pack_add_mapping (primer, 0x3d12, &t->ul);
     ret = g_list_prepend (ret, t);
   }
