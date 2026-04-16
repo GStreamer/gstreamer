@@ -1901,7 +1901,8 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
 }
 
 /*** audio/x-ac4 ***/
-static GstStaticCaps ac4_caps = GST_STATIC_CAPS ("audio/x-ac4");
+static GstStaticCaps ac4_caps = GST_STATIC_CAPS ("audio/x-ac4, "
+    "stream-format=(string)syncframe");
 
 #define AC4_CAPS (gst_static_caps_get(&ac4_caps))
 #define AC4_MAX_PROBE_LENGTH 1024       /* 1KB should be enough for AC4 audio streams */
