@@ -2017,6 +2017,68 @@ GST_START_TEST (test_packetized_avc_drop_corrupt)
 
 GST_END_TEST;
 
+GST_START_TEST (test_non_vcl_nal_duration)
+{
+  GstCaps *in_caps, *out_caps;
+  GstBuffer *buf_in, *buf_out;
+  GstClockTime expected_duration;
+  GstHarness *h = gst_harness_new ("h264parse");
+  const GstClockTime fake_duration = 12345 * GST_MSECOND;
+
+  const gchar *in_caps_str =
+      "video/x-h264, alignment=(string)nal, framerate=30/1";
+  const gchar *out_caps_str = "video/x-h264, alignment=(string)nal";
+
+  in_caps = gst_caps_from_string (in_caps_str);
+  out_caps = gst_caps_from_string (out_caps_str);
+  gst_harness_set_caps (h, in_caps, out_caps);
+
+  /* Push SPS, PPS with an arbitrary non-zero duration */
+  buf_in = wrap_buffer (h264_sps, sizeof (h264_sps), 0, 0);
+  GST_BUFFER_DURATION (buf_in) = fake_duration;
+  fail_unless_equals_int (gst_harness_push (h, buf_in), GST_FLOW_OK);
+
+  buf_in = wrap_buffer (h264_pps, sizeof (h264_pps), 0, 0);
+  GST_BUFFER_DURATION (buf_in) = fake_duration;
+  fail_unless_equals_int (gst_harness_push (h, buf_in), GST_FLOW_OK);
+
+  /* Push an IDR slice (VCL) to complete the AU */
+  buf_in = wrap_buffer (h264_idrframe, sizeof (h264_idrframe), 0, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf_in), GST_FLOW_OK);
+
+  /* With framerate=30/1, a VCL frame should get duration = 1/30 s */
+  expected_duration = gst_util_uint64_scale (GST_SECOND, 1, 30);
+
+  /* First AU produces: AUD + SPS + PPS + slice = 4 buffers
+   * (h264parse inserts an AUD at the start of each AU) */
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 4);
+
+  /* AUD - non-VCL, must have duration=0 */
+  buf_out = gst_harness_pull (h);
+  fail_unless_equals_clocktime (GST_BUFFER_DURATION (buf_out), 0);
+  gst_buffer_unref (buf_out);
+
+  /* SPS - non-VCL, must have duration=0 */
+  buf_out = gst_harness_pull (h);
+  fail_unless_equals_clocktime (GST_BUFFER_DURATION (buf_out), 0);
+  gst_buffer_unref (buf_out);
+
+  /* PPS - non-VCL, must have duration=0 */
+  buf_out = gst_harness_pull (h);
+  fail_unless_equals_clocktime (GST_BUFFER_DURATION (buf_out), 0);
+  gst_buffer_unref (buf_out);
+
+  /* IDR slice - VCL, must have the fps-based duration */
+  buf_out = gst_harness_pull (h);
+  fail_unless_equals_clocktime (GST_BUFFER_DURATION (buf_out),
+      expected_duration);
+  gst_buffer_unref (buf_out);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 
 /*
  * TODO:
@@ -2134,6 +2196,7 @@ main (int argc, char **argv)
     tcase_add_test (tc_chain, test_parse_sei_userdefinedunregistered);
     tcase_add_test (tc_chain, test_parse_to_avc3_without_sps);
     tcase_add_test (tc_chain, test_packetized_avc_drop_corrupt);
+    tcase_add_test (tc_chain, test_non_vcl_nal_duration);
     nf += gst_check_run_suite (s, "h264parse", __FILE__);
   }
 
