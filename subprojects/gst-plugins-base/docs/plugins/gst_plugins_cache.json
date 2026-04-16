@@ -4172,7 +4172,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Filter/Effect/Video",
+                "klass": "Filter/Converter/Video/Scaler",
                 "long-name": "OpenGL color scale",
                 "pad-templates": {
                     "sink": {
