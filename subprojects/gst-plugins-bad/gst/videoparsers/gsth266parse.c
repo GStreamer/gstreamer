@@ -256,6 +256,7 @@ gst_h266_parse_reset_frame (GstH266Parse * h266parse)
   h266parse->have_vps_in_frame = FALSE;
   h266parse->have_sps_in_frame = FALSE;
   h266parse->have_pps_in_frame = FALSE;
+  h266parse->have_vcl_in_frame = FALSE;
   gst_adapter_clear (h266parse->frame_out);
 }
 
@@ -997,6 +998,12 @@ gst_h266_parse_collect_nal (GstH266Parse * h266parse, const guint8 * data,
   return complete;
 }
 
+static gboolean
+gst_h266_parse_nal_is_vcl (const GstH266NalUnit * nalu)
+{
+  return nalu->type <= GST_H266_NAL_SLICE_GDR;
+}
+
 static GstFlowReturn
 gst_h266_parse_handle_frame_packetized (GstBaseParse * parse,
     GstBaseParseFrame * frame)
@@ -1032,6 +1039,8 @@ gst_h266_parse_handle_frame_packetized (GstBaseParse * parse,
 
     /* either way, have a look at it */
     gst_h266_parse_process_nal (h266parse, &nalu);
+
+    h266parse->have_vcl_in_frame |= gst_h266_parse_nal_is_vcl (&nalu);
 
     /* dispatch per NALU if needed */
     if (h266parse->split_packetized) {
@@ -1337,6 +1346,8 @@ gst_h266_parse_handle_frame (GstBaseParse * parse,
       /* Keep any complete NALs collected before this malformed one. */
       goto broken;
     }
+
+    h266parse->have_vcl_in_frame |= gst_h266_parse_nal_is_vcl (&nalu);
 
     if (gst_h266_parse_collect_nal (h266parse, data, size, &nalu)) {
       /* complete current frame, if it exist */
@@ -3114,6 +3125,9 @@ gst_h266_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   buffer = frame->buffer;
 
   gst_h266_parse_update_src_caps (h266parse, NULL);
+
+  if (!h266parse->have_vcl_in_frame)
+    GST_BUFFER_DURATION (buffer) = 0;
 
   if (h266parse->keyframe)
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
