@@ -994,7 +994,7 @@ gst_vulkan_upload_class_init (GstVulkanUploadClass * klass)
   gobject_class->get_property = gst_vulkan_upload_get_property;
 
   gst_element_class_set_static_metadata (gstelement_class, "Vulkan Uploader",
-      "Filter/Video", "A Vulkan data uploader",
+      "Filter/Video/Uploader", "A Vulkan data uploader",
       "Matthew Waters <matthew@centricular.com>");
 
   {

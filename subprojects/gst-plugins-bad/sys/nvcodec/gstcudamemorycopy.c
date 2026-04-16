@@ -1054,7 +1054,7 @@ gst_cuda_upload_class_init (GstCudaUploadClass * klass, gpointer data)
           cdata->src_caps));
 
   gst_element_class_set_static_metadata (element_class,
-      "CUDA uploader", "Filter/Video",
+      "CUDA uploader", "Filter/Video/Uploader",
       "Uploads data into NVIDA GPU via CUDA APIs",
       "Seungha Yang <seungha.yang@navercorp.com>");
 
@@ -1118,7 +1118,7 @@ gst_cuda_download_class_init (GstCudaDownloadClass * klass, gpointer data)
           cdata->src_caps));
 
   gst_element_class_set_static_metadata (element_class,
-      "CUDA downloader", "Filter/Video",
+      "CUDA downloader", "Filter/Video/Downloader",
       "Downloads data from NVIDA GPU via CUDA APIs",
       "Seungha Yang <seungha.yang@navercorp.com>");
 

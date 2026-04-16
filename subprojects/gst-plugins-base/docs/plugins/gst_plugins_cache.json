@@ -4287,7 +4287,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Filter/Video",
+                "klass": "Filter/Video/Downloader",
                 "long-name": "OpenGL downloader",
                 "pad-templates": {
                     "sink": {
@@ -6969,7 +6969,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Filter/Video",
+                "klass": "Filter/Video/Uploader",
                 "long-name": "OpenGL uploader",
                 "pad-templates": {
                     "sink": {

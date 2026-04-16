@@ -864,7 +864,7 @@ gst_gl_download_element_class_init (GstGLDownloadElementClass * klass)
       &gst_gl_download_element_sink_pad_template);
 
   gst_element_class_set_static_metadata (element_class,
-      "OpenGL downloader", "Filter/Video",
+      "OpenGL downloader", "Filter/Video/Downloader",
       "Downloads data from OpenGL", "Matthew Waters <matthew@centricular.com>");
 
   object_class->finalize = gst_gl_download_element_finalize;

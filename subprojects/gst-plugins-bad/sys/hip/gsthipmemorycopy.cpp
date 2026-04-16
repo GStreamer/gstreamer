@@ -1327,7 +1327,7 @@ gst_hip_upload_class_init (GstHipUploadClass * klass)
   auto element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_set_static_metadata (element_class,
-      "HIP Uploader", "Filter/Video",
+      "HIP Uploader", "Filter/Video/Uploader",
       "Uploads system memory into HIP device memory",
       "Seungha Yang <seungha@centricular.com>");
 
@@ -1382,7 +1382,7 @@ gst_hip_download_class_init (GstHipDownloadClass * klass)
   auto element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_set_static_metadata (element_class,
-      "HIP Downloader", "Filter/Video",
+      "HIP Downloader", "Filter/Video/Downloader",
       "Downloads HIP device memory into system memory",
       "Seungha Yang <seungha@centricular.com>");
 

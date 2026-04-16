@@ -497,7 +497,7 @@ gst_vulkan_download_class_init (GstVulkanDownloadClass * klass)
   gstbasetransform_class = (GstBaseTransformClass *) klass;
 
   gst_element_class_set_static_metadata (gstelement_class, "Vulkan Downloader",
-      "Filter/Video", "A Vulkan data downloader",
+      "Filter/Video/Downloader", "A Vulkan data downloader",
       "Matthew Waters <matthew@centricular.com>");
 
   {

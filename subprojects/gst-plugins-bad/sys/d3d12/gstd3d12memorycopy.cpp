@@ -1848,7 +1848,7 @@ gst_d3d12_upload_class_init (GstD3D12UploadClass * klass)
   auto element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_set_static_metadata (element_class,
-      "Direct3D12 Uploader", "Filter/Video",
+      "Direct3D12 Uploader", "Filter/Video/Uploader",
       "Uploads system memory into Direct3D12 texture memory",
       "Seungha Yang <seungha@centricular.com>");
 }
@@ -1874,7 +1874,7 @@ gst_d3d12_download_class_init (GstD3D12DownloadClass * klass)
   auto element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_set_static_metadata (element_class,
-      "Direct3D12 Downloader", "Filter/Video",
+      "Direct3D12 Downloader", "Filter/Video/Downloader",
       "Downloads Direct3D12 texture memory into system memory",
       "Seungha Yang <seungha@centricular.com>");
 }
