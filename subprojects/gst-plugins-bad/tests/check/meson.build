@@ -206,6 +206,7 @@ if host_system == 'darwin'
 
   if subsystem == 'macos'
     base_tests += [
+      [['generic/avfdeviceprovider.c']],
       [['elements/avfdeviceidentity.c']]
     ]
   endif
