@@ -229,6 +229,7 @@ qttext_parse_tag (ParserState * state, const gchar * line, gint * index)
 
   } else if (strncmp (line + *index, "textColor", 9) == 0) {
     if (read_color (line + *index + 9, &r, &g, &b)) {
+      g_free (context->fg_color);
       context->fg_color = make_color (r, g, b);
       GST_DEBUG ("Setting qttext fg color to %s", context->fg_color);
     } else {
@@ -238,6 +239,7 @@ qttext_parse_tag (ParserState * state, const gchar * line, gint * index)
 
   } else if (strncmp (line + *index, "backColor", 9) == 0) {
     if (read_color (line + *index + 9, &r, &g, &b)) {
+      g_free (context->bg_color);
       context->bg_color = make_color (r, g, b);
       GST_DEBUG ("Setting qttext bg color to %s", context->bg_color);
     } else {
