@@ -137,7 +137,7 @@ echo "Publishing $BASE_CI_IMAGE"
 podman push "$BASE_CI_IMAGE"
 
 # Publish an unversioned ref as well that we can always fetch
-if [ "$CI_COMMIT_BRANCH" == "main" ] && [ "$CI_PROJECT_NAMESAPCE" == "gstreamer" ]; then
+if [ "$CI_COMMIT_BRANCH" == "main" ] && [ "$CI_PROJECT_NAMESPACE" == "gstreamer" ]; then
   latest="$CI_REGISTRY_IMAGE/$FDO_REPO_SUFFIX:gst-toolbox-main"
   podman tag "$BASE_CI_IMAGE" "$latest"
   podman push "$latest"
