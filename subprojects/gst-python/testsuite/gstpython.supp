@@ -239,3 +239,27 @@
    fun:gst_init_check
    fun:init_gst
 }
+
+{
+   pygobject API change
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:calloc
+   fun:g_malloc0
+   fun:g_type_create_instance
+   fun:gi_info_new_full
+   fun:pyg_enum_add_full
+   fun:*
+}
+
+{
+   pygobject API change
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:calloc
+   fun:g_malloc0
+   fun:g_type_create_instance
+   fun:gi_info_new_full
+   fun:pyg_flags_add_full
+   fun:*
+}
