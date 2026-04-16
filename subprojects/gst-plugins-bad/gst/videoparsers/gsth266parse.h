@@ -96,6 +96,7 @@ struct _GstH266Parse
   gboolean have_vps_in_frame;
   gboolean have_sps_in_frame;
   gboolean have_pps_in_frame;
+  gboolean have_vcl_in_frame;
 
   gboolean first_frame;
 
