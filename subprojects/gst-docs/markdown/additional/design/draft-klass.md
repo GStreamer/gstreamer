@@ -93,6 +93,16 @@ character. While the / suggests a hierarchy, this is ***not*** the case.
 
     - Connector: allows for new connections in the pipeline. (tee, …)
 
+    - Uploader: moves frames from system memory into a specific
+    non-system memory type (`memory:GLMemory`, `memory:CUDAMemory`,
+    `memory:VulkanImage`, …). Sink pad accepts system memory, src
+    pad produces the target memory. Examples: glupload, cudaupload,
+    vulkanupload.
+
+    - Downloader: the reverse direction - moves frames from a
+    non-system memory type back to system memory. Examples:
+    gldownload, cudadownload, vulkandownload.
+
     - …
 
 #### Based on media type
@@ -186,6 +196,10 @@ character. While the / suggests a hierarchy, this is ***not*** the case.
     decodebin        : Decoder/Demuxer
     level            : Filter/Analyzer/Audio
     tee              : Connector/Debug
+    glupload         : Uploader/Video
+    gldownload       : Downloader/Video
+    cudaupload       : Uploader/Video
+    cudadownload     : Downloader/Video
 
 ### open issues:
 
@@ -220,3 +234,10 @@ character. While the / suggests a hierarchy, this is ***not*** the case.
         klass.contains (Source & Audio & Device)
 
     - filters out audiotestsrc, since it is not a device
+
+- Find the uploader for a specific memory type,  asking
+the registry for an `Uploader/Video` element whose src pad template
+exposes `video/x-raw(memory:GLMemory)` resolves `glupload`
+unambiguously, independently of the factory's name.
+
+        klass.contains (Uploader & Video)
