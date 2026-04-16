@@ -57,7 +57,7 @@ typedef enum
 
 static gint
 autoplug_select_cb (GstElement * bin, GstPad * pad, GstCaps * caps,
-    GstElementFactory * factory, GESUriSource * self)
+    GstElementFactory * factory, GESTrackElement * element)
 {
   GstElement *nlesrc;
   GstCaps *downstream_caps;
@@ -68,19 +68,19 @@ autoplug_select_cb (GstElement * bin, GstPad * pad, GstCaps * caps,
   const gchar *wanted_id =
       gst_discoverer_stream_info_get_stream_id
       (ges_uri_source_asset_get_stream_info (GES_URI_SOURCE_ASSET
-          (ges_extractable_get_asset (GES_EXTRACTABLE (self->element)))));
+          (ges_extractable_get_asset (GES_EXTRACTABLE (element)))));
   gboolean wanted = !g_strcmp0 (stream_id, wanted_id);
 
-  if (!ges_source_get_rendering_smartly (GES_SOURCE (self->element))) {
+  if (!ges_source_get_rendering_smartly (GES_SOURCE (element))) {
     if (!are_raw_caps (caps))
       goto done;
 
     if (!wanted) {
-      GST_INFO_OBJECT (self->element, "Not matching stream id: %s -> SKIPPING",
+      GST_INFO_OBJECT (element, "Not matching stream id: %s -> SKIPPING",
           stream_id);
       res = GST_AUTOPLUG_SELECT_SKIP;
     } else {
-      GST_INFO_OBJECT (self->element, "Using stream %s", stream_id);
+      GST_INFO_OBJECT (element, "Using stream %s", stream_id);
     }
     goto done;
   }
@@ -102,16 +102,16 @@ autoplug_select_cb (GstElement * bin, GstPad * pad, GstCaps * caps,
     goto done;
   }
 
-  nlesrc = ges_track_element_get_nleobject (self->element);
+  nlesrc = ges_track_element_get_nleobject (element);
   downstream_caps = gst_pad_peer_query_caps (nlesrc->srcpads->data, NULL);
   if (downstream_caps && gst_caps_can_intersect (downstream_caps, caps)) {
     if (wanted) {
       res = GST_AUTOPLUG_SELECT_EXPOSE;
-      GST_INFO_OBJECT (self->element,
+      GST_INFO_OBJECT (element,
           "Exposing %" GST_PTR_FORMAT " with stream id: %s", caps, stream_id);
     } else {
       res = GST_AUTOPLUG_SELECT_SKIP;
-      GST_DEBUG_OBJECT (self->element, "Totally skipping %s", stream_id);
+      GST_DEBUG_OBJECT (element, "Totally skipping %s", stream_id);
     }
   }
   gst_clear_caps (&downstream_caps);
@@ -125,7 +125,7 @@ done:
 
 static void
 source_setup_cb (GstElement * decodebin, GstElement * source,
-    GESUriSource * self)
+    GESTrackElement * element)
 {
   GstElementFactory *factory = gst_element_get_factory (source);
 
@@ -133,7 +133,7 @@ source_setup_cb (GstElement * decodebin, GstElement * source,
     return;
   }
 
-  GESTrack *track = ges_track_element_get_track (self->element);
+  GESTrack *track = ges_track_element_get_track (element);
   GESTimeline *subtimeline;
 
   g_object_get (source, "timeline", &subtimeline, NULL);
@@ -160,13 +160,17 @@ ges_uri_source_create_source (GESUriSource * self)
   if (track)
     caps = ges_track_get_caps (track);
 
-  g_signal_connect (decodebin, "source-setup",
-      G_CALLBACK (source_setup_cb), self);
+  /* Use g_signal_connect_object so the closures are automatically
+   * invalidated when `element` (which owns self via its private data)
+   * is destroyed, avoiding use-after-free on uridecodebin worker
+   * threads after the owning track element has been disposed. */
+  g_signal_connect_object (decodebin, "source-setup",
+      G_CALLBACK (source_setup_cb), self->element, 0);
 
   g_object_set (decodebin, "caps", caps,
       "expose-all-streams", FALSE, "uri", self->uri, NULL);
-  g_signal_connect (decodebin, "autoplug-select",
-      G_CALLBACK (autoplug_select_cb), self);
+  g_signal_connect_object (decodebin, "autoplug-select",
+      G_CALLBACK (autoplug_select_cb), self->element, 0);
 
   return decodebin;
 }
@@ -181,7 +185,7 @@ ges_uri_source_track_set_cb (GESTrackElement * element,
   if (!self->decodebin)
     return;
 
-  track = ges_track_element_get_track (GES_TRACK_ELEMENT (element));
+  track = ges_track_element_get_track (element);
   if (!track)
     return;
 
