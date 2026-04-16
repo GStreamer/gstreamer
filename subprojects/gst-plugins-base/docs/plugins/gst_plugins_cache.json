@@ -4202,7 +4202,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Deinterlace",
+                "klass": "Filter/Converter/Video/Deinterlace",
                 "long-name": "OpenGL deinterlacing filter",
                 "pad-templates": {
                     "sink": {

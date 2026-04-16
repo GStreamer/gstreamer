@@ -248,7 +248,7 @@ gst_gl_deinterlace_class_init (GstGLDeinterlaceClass * klass)
   gobject_class->get_property = gst_gl_deinterlace_get_property;
 
   gst_element_class_set_static_metadata (element_class,
-      "OpenGL deinterlacing filter", "Deinterlace",
+      "OpenGL deinterlacing filter", "Filter/Converter/Video/Deinterlace",
       "Deinterlacing based on fragment shaders",
       "Julien Isorce <julien.isorce@mail.com>");
 
