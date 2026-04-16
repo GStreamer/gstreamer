@@ -1454,7 +1454,8 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       if (desc) {
         GST_LOG_OBJECT (demux, "ac4 audio");
         is_audio = TRUE;
-        caps = gst_caps_new_empty_simple ("audio/x-ac4");
+        caps = gst_caps_new_simple ("audio/x-ac4",
+            "stream-format", G_TYPE_STRING, "syncframe", NULL);
         break;
       }
 
@@ -1709,7 +1710,8 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
           break;
         case DRF_ID_AC4:
           is_audio = TRUE;
-          caps = gst_caps_new_empty_simple ("audio/x-ac4");
+          caps = gst_caps_new_simple ("audio/x-ac4",
+              "stream-format", G_TYPE_STRING, "syncframe", NULL);
           break;
         case DRF_ID_VP09:
           is_video = TRUE;
