@@ -90,7 +90,7 @@ gst_tensordecodebin_class_init (GstTensorDecodeBinClass * klass)
 
   /* Element description. */
   gst_element_class_set_static_metadata (element_class, "tensordecodebin",
-      "Tensor Decoder Bin",
+      "Tensordecoder/Bin",
       "Tensor Decode Bin", "Daniel Morin <daniel.morin@collabora.com>");
 
   gst_element_class_add_pad_template (element_class,
