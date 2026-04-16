@@ -1679,7 +1679,7 @@ gst_hip_convert_class_init (GstHipConvertClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "HIP colorspace converter",
-      "Filter/Converter/Video/Hardware",
+      "Filter/Converter/Video/Colorspace/Hardware",
       "Converts video from one colorspace to another using HIP",
       "Seungha Yang <seungha@centricular.com>");
 

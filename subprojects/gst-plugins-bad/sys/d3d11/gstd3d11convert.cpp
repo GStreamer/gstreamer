@@ -2808,7 +2808,7 @@ gst_d3d11_convert_class_init (GstD3D11ConvertClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "Direct3D11 Converter",
-      "Filter/Converter/Scaler/Effect/Video/Hardware",
+      "Filter/Converter/Scaler/Colorspace/Effect/Video/Hardware",
       "Performs resizing, colorspace conversion, cropping, and flipping/rotating using Direct3D11",
       "Seungha Yang <seungha.yang@navercorp.com>, "
       "Jeongki Kim <jeongki.kim@jeongki.kim>");
@@ -3082,7 +3082,7 @@ gst_d3d11_color_convert_class_init (GstD3D11ColorConvertClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "Direct3D11 Colorspace Converter",
-      "Filter/Converter/Video/Hardware",
+      "Filter/Converter/Video/Colorspace/Hardware",
       "Color conversion using Direct3D11",
       "Seungha Yang <seungha@centricular.com>");
 

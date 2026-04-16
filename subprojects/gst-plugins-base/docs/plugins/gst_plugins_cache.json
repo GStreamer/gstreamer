@@ -4142,7 +4142,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Filter/Converter/Video",
+                "klass": "Filter/Converter/Video/Colorspace",
                 "long-name": "OpenGL color converter",
                 "pad-templates": {
                     "sink": {

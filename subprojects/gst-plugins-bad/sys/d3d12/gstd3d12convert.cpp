@@ -2349,7 +2349,7 @@ gst_d3d12_convert_class_init (GstD3D12ConvertClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "Direct3D12 Converter",
-      "Filter/Converter/Scaler/Effect/Video/Hardware",
+      "Filter/Converter/Scaler/Colorspace/Effect/Video/Hardware",
       "Performs resizing, colorspace conversion, cropping, flipping/rotating "
       "and adjusts hue/saturation/brightness/contrast using Direct3D12",
       "Seungha Yang <seungha@centricular.com>");
@@ -2579,7 +2579,7 @@ gst_d3d12_color_convert_class_init (GstD3D12ColorConvertClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "Direct3D12 Colorspace Converter",
-      "Filter/Converter/Video/Hardware",
+      "Filter/Converter/Video/Colorspace/Hardware",
       "Converts colorspace and adjusts hue/saturation/brightness/contrast "
       "using Direct3D12", "Seungha Yang <seungha@centricular.com>");
 

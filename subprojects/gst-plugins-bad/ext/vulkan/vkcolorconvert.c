@@ -900,8 +900,8 @@ gst_vulkan_color_convert_class_init (GstVulkanColorConvertClass * klass)
   gstbasetransform_class = (GstBaseTransformClass *) klass;
 
   gst_element_class_set_static_metadata (gstelement_class,
-      "Vulkan Color Convert", "Filter/Video/Convert", "A Vulkan Color Convert",
-      "Matthew Waters <matthew@centricular.com>");
+      "Vulkan Color Convert", "Filter/Converter/Video/Colorspace",
+      "A Vulkan Color Convert", "Matthew Waters <matthew@centricular.com>");
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_vulkan_sink_template);
