@@ -1,0 +1,4 @@
+./subprojects/gst-plugins-good/tests/files/flv_test/h264/*.h264
+./subprojects/gst-plugins-good/tests/files/flv_test/h265/*.h265
+./subprojects/gst-plugins-bad/tests/files/av1_only.mp4
+./subprojects/gst-plugins-bad/tests/files/h264_opus.mp4

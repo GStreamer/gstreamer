@@ -3,9 +3,10 @@ if get_option('oss_fuzz').disabled()
 endif
 
 fuzz_targets = [
+  ['gst-codec-utils.c', false, ['gstreamer-pbutils-1.0']],
   ['gst-discoverer.c', false, ['gstreamer-pbutils-1.0']],
-  ['gst-tag.c', false, ['gstreamer-tag-1.0']],
   ['gst-subparse.c', false, []],
+  ['gst-tag.c', false, ['gstreamer-tag-1.0']],
   ['typefind.c'],
 ]
 
@@ -27,7 +28,9 @@ foreach target : fuzz_targets
 
   extra_deps = []
   if target.length() >= 3
-    extra_deps = dependency(target.get(2))
+    foreach d : target.get(2)
+      extra_deps += dependency(d)
+    endforeach
   endif
 
   skip_test = false
