@@ -1,0 +1,16 @@
+meta,
+    tool="ges-launch-$(gst_api_version)",
+    ges="compositor-factory=glvideomixerelement",
+    handles-states=true,
+    args={
+        +test-clip, blue, "d=0.1", --track-types, video, --videosink, "fakevideosink sync=false",
+    }
+
+check-ges-video-element-selector,
+    strict=true,
+    memory-feature="memory:GLMemory",
+    compositor-factory=glvideomixerelement,
+    colorconvert-factory=glcolorconvert,
+    uploader-factory=glupload,
+    downloader-factory=gldownload
+stop

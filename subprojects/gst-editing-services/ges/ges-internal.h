@@ -525,6 +525,13 @@ ges_video_element_selector_make_uploader                  (const GESVideoElement
 G_GNUC_INTERNAL gchar *
 ges_video_element_selector_colorconvert_bin_desc          (const GESVideoElementSelector * self);
 
+/* Snapshot the selector's resolved factories and flags into a
+ * GstStructure. Used by the `check-ges-video-element-selector` validate
+ * action to assert selector state without leaking internals into the
+ * ABI. Caller owns the returned structure. */
+G_GNUC_INTERNAL GstStructure *
+ges_video_element_selector_describe                       (const GESVideoElementSelector * self);
+
 G_GNUC_INTERNAL void
 ges_callback_add (GSourceFunc func, gpointer udata, GDestroyNotify notify);
 G_GNUC_INTERNAL void

@@ -1,0 +1,17 @@
+meta,
+    tool="ges-launch-$(gst_api_version)",
+    ges="compositor-factory=compositor",
+    handles-states=true,
+    args={
+        +test-clip, blue, "d=0.1", --track-types, video, --videosink, "fakevideosink sync=false",
+    }
+
+check-ges-video-element-selector,
+    strict=false,
+    memory-feature="",
+    compositor-factory=compositor,
+    colorconvert-factory=videoconvert,
+    convert-scale-factory=videoconvertscale,
+    uploader-factory="",
+    downloader-factory=""
+stop

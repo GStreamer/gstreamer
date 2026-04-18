@@ -1170,6 +1170,82 @@ done:
   return res;
 }
 
+static gboolean
+_selector_match_string (GstStructure * actual, GstStructure * expected,
+    const gchar * field, gchar ** err)
+{
+  const gchar *want = gst_structure_get_string (expected, field);
+  const gchar *got;
+
+  if (!want)
+    return TRUE;
+
+  got = gst_structure_get_string (actual, field);
+  /* Empty string = expect the field to be unset in the selector. */
+  if (*want == '\0') {
+    if (got == NULL)
+      return TRUE;
+    *err = g_strdup_printf ("%s: expected unset, got '%s'", field, got);
+    return FALSE;
+  }
+  if (g_strcmp0 (want, got) == 0)
+    return TRUE;
+  *err = g_strdup_printf ("%s: expected '%s', got '%s'", field, want,
+      got ? got : "(unset)");
+  return FALSE;
+}
+
+static GstValidateExecuteActionReturn
+_check_ges_video_element_selector (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GstStructure *actual;
+  gchar *err = NULL;
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
+  gboolean strict_want;
+
+  actual = ges_video_element_selector_describe (ges_video_element_selector ());
+
+  if (gst_structure_get_boolean (action->structure, "strict", &strict_want)) {
+    gboolean strict_got = FALSE;
+    gst_structure_get_boolean (actual, "strict", &strict_got);
+    if (strict_want != strict_got) {
+      err = g_strdup_printf ("strict: expected %s, got %s",
+          strict_want ? "true" : "false", strict_got ? "true" : "false");
+      goto fail;
+    }
+  }
+
+#define CHECK_FIELD(name) G_STMT_START { \
+    if (!_selector_match_string (actual, action->structure, name, &err)) \
+      goto fail; \
+  } G_STMT_END
+  CHECK_FIELD ("compositor-factory");
+  CHECK_FIELD ("uploader-factory");
+  CHECK_FIELD ("downloader-factory");
+  CHECK_FIELD ("colorconvert-factory");
+  CHECK_FIELD ("convert-scale-factory");
+  CHECK_FIELD ("scale-factory");
+  CHECK_FIELD ("videoflip-factory");
+  CHECK_FIELD ("deinterlace-factory");
+  CHECK_FIELD ("memory-feature");
+#undef CHECK_FIELD
+
+  goto done;
+
+fail:
+  GST_VALIDATE_REPORT_ACTION (scenario, action,
+      SCENARIO_ACTION_EXECUTION_ERROR,
+      "GESVideoElementSelector mismatch: %s (actual: %" GST_PTR_FORMAT ")",
+      err, actual);
+  g_free (err);
+  res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+
+done:
+  gst_structure_free (actual);
+  return res;
+}
+
 #endif
 
 gboolean
@@ -1940,6 +2016,88 @@ ges_validate_register_action_types (void)
 
   gst_validate_register_action_type ("commit", "ges", _commit, NULL,
        "Commit the timeline.", GST_VALIDATE_ACTION_TYPE_ASYNC);
+
+  gst_validate_register_action_type ("check-ges-video-element-selector", "ges",
+      _check_ges_video_element_selector,
+      (GstValidateActionParameter [])  {
+        {
+          .name = "strict",
+          .description = "Expected value of ges_video_element_selector_is_strict().",
+          .mandatory = FALSE,
+          .types = "boolean",
+          NULL
+        },
+        {
+          .name = "memory-feature",
+          .description = "Expected memory feature (e.g. `memory:GLMemory`). "
+              "Empty string asserts the selector is on system memory.",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "compositor-factory",
+          .description = "Expected name of the selected compositor factory.",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "uploader-factory",
+          .description = "Expected uploader factory name. Empty string asserts none.",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "downloader-factory",
+          .description = "Expected downloader factory name. Empty string asserts none.",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "colorconvert-factory",
+          .description = "Expected colorconvert factory name.",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "convert-scale-factory",
+          .description = "Expected combined convert+scale factory name. "
+              "Empty string asserts none (fallback sandwich is used).",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "scale-factory",
+          .description = "Expected scaler factory name.",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "videoflip-factory",
+          .description = "Expected videoflip factory name.",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "deinterlace-factory",
+          .description = "Expected deinterlace factory name.",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {NULL}
+      },
+      "Assert that the GESVideoElementSelector singleton resolved to the "
+      "expected factories and flags. Every field is optional; fields not "
+      "listed in the action are not checked.",
+      GST_VALIDATE_ACTION_TYPE_NONE);
   /*  *INDENT-ON* */
 
   return TRUE;

@@ -1099,3 +1099,35 @@ ges_video_element_selector_colorconvert_bin_desc (const GESVideoElementSelector
 
   return g_string_free (str, FALSE);
 }
+
+GstStructure *
+ges_video_element_selector_describe (const GESVideoElementSelector * self)
+{
+  GstStructure *s;
+
+  g_return_val_if_fail (self != NULL, NULL);
+
+  s = gst_structure_new ("ges-video-element-selector",
+      "strict", G_TYPE_BOOLEAN, self->strict, NULL);
+  if (self->memory_feature)
+    gst_structure_set (s, "memory-feature", G_TYPE_STRING,
+        self->memory_feature, NULL);
+
+#define SET_FACTORY(field, name) G_STMT_START { \
+    if (self->field) \
+      gst_structure_set (s, name, G_TYPE_STRING, \
+          gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (self->field)), \
+          NULL); \
+  } G_STMT_END
+  SET_FACTORY (compositor, "compositor-factory");
+  SET_FACTORY (uploader, "uploader-factory");
+  SET_FACTORY (downloader, "downloader-factory");
+  SET_FACTORY (colorconvert, "colorconvert-factory");
+  SET_FACTORY (convert_scale, "convert-scale-factory");
+  SET_FACTORY (scale, "scale-factory");
+  SET_FACTORY (videoflip, "videoflip-factory");
+  SET_FACTORY (deinterlace, "deinterlace-factory");
+#undef SET_FACTORY
+
+  return s;
+}
