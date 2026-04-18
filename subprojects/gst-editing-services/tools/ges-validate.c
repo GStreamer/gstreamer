@@ -56,6 +56,68 @@ _print_position (GstElement * pipeline)
 #define RUNNER_ON_PIPELINE "runner-monitor"
 #define WRONG_DECODER_ADDED g_quark_from_static_string ("ges::wrong-decoder-added")
 
+/* Walk the registry, return the highest GstRank among factories whose
+ * klass contains "Compositor". */
+static GstRank
+max_compositor_factory_rank (void)
+{
+  GList *all, *l;
+  GstRank max_rank = GST_RANK_NONE;
+
+  all = gst_registry_get_feature_list (gst_registry_get (),
+      GST_TYPE_ELEMENT_FACTORY);
+  for (l = all; l; l = l->next) {
+    GstElementFactory *f = GST_ELEMENT_FACTORY (l->data);
+    const gchar *klass = gst_element_factory_get_metadata (f,
+        GST_ELEMENT_METADATA_KLASS);
+    if (klass && g_strrstr (klass, "Compositor")) {
+      GstRank r = gst_plugin_feature_get_rank (GST_PLUGIN_FEATURE (f));
+      if (r > max_rank)
+        max_rank = r;
+    }
+  }
+  gst_plugin_feature_list_free (all);
+  return max_rank;
+}
+
+/* Apply the `ges` meta field from a validatetest. Currently supports
+ * `compositor-factory=<name>`: bump the named factory above every other
+ * Compositor-klass factory so the selector picks it. Called before the
+ * timeline is built, so GESVideoElementSelector sees the new ranks on
+ * its first resolve. */
+static void
+process_ges_meta (const gchar * ges_config)
+{
+  gchar *struct_str;
+  GstStructure *ges_struct;
+  const gchar *compositor_name;
+
+  struct_str = g_strdup_printf ("ges,%s;", ges_config);
+  ges_struct = gst_structure_from_string (struct_str, NULL);
+  g_free (struct_str);
+  if (!ges_struct) {
+    GST_WARNING ("Failed to parse `ges` meta: %s", ges_config);
+    return;
+  }
+
+  compositor_name = gst_structure_get_string (ges_struct, "compositor-factory");
+  if (compositor_name) {
+    GstElementFactory *factory = gst_element_factory_find (compositor_name);
+    if (factory) {
+      GstRank max_rank = max_compositor_factory_rank ();
+      GstRank new_rank = max_rank + 1;
+      gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), new_rank);
+      GST_INFO ("Setting compositor factory '%s' rank to %d (max was %d)",
+          compositor_name, new_rank, max_rank);
+      gst_object_unref (factory);
+    } else {
+      GST_WARNING ("Could not find compositor factory: %s", compositor_name);
+    }
+  }
+
+  gst_structure_free (ges_struct);
+}
+
 static void
 _validate_report_added_cb (GstValidateRunner * runner,
     GstValidateReport * report, GstPipeline * pipeline)
@@ -319,3 +381,30 @@ ges_validate_print_action_types (const gchar ** types, gint num_types)
 }
 
 #endif
+
+/* Defined unconditionally so static builds without gst-validate still link.
+ * Body is a no-op when HAVE_GST_VALIDATE is undefined. */
+void
+ges_validate_apply_testfile_meta (const gchar * testfile)
+{
+#ifdef HAVE_GST_VALIDATE
+  GList *structs, *l;
+  const gchar *ges_meta = NULL;
+
+  if (!testfile)
+    return;
+
+  structs = gst_validate_utils_structs_parse_from_filename (testfile, NULL,
+      NULL);
+  for (l = structs; l; l = l->next) {
+    GstStructure *s = l->data;
+    if (gst_structure_has_name (s, "meta")) {
+      ges_meta = gst_structure_get_string (s, "ges");
+      break;
+    }
+  }
+  if (ges_meta)
+    process_ges_meta (ges_meta);
+  g_list_free_full (structs, (GDestroyNotify) gst_structure_free);
+#endif
+}

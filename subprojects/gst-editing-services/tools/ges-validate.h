@@ -33,6 +33,13 @@ gboolean
 ges_validate_activate(GstPipeline* pipeline, GESLauncher *launcher, GESLauncherParsedOptions* opts);
 void ges_launch_validate_uri(const gchar* nid);
 
+/* Parse @testfile's `meta` struct and apply its `ges` field - in
+ * particular the `compositor-factory` rank bump. Must run before any
+ * GESTrack is instantiated (its mixing element triggers the selector
+ * singleton's first resolve). Safe no-op if @testfile is NULL or has
+ * no `ges` meta. */
+void ges_validate_apply_testfile_meta (const gchar *testfile);
+
 gint
 ges_validate_clean (GstPipeline *pipeline);
 

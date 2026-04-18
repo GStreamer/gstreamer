@@ -1241,6 +1241,12 @@ _create_pipeline (GESLauncher * self, const gchar * serialized_timeline)
   if (opts->outputuri)
     ges_pipeline_set_mode (self->priv->pipeline, 0);
 
+  /* Apply testfile `ges` meta (e.g. compositor-factory rank bump) before
+   * any track is instantiated - creating a GESVideoTrack triggers the
+   * smart mixer, which resolves GESVideoElementSelector once and caches
+   * the result for the rest of the process lifetime. */
+  ges_validate_apply_testfile_meta (opts->testfile);
+
   if (!_create_timeline (self, serialized_timeline, uri, opts->scenario
           || opts->testfile)) {
     GST_ERROR ("Could not create the timeline");
