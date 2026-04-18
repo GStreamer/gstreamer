@@ -85,41 +85,56 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 G_DEFINE_TYPE (GstFramePositioner, gst_frame_positioner,
     GST_TYPE_BASE_TRANSFORM);
 
+/* Cached compositor-pad `operator` enum type + default value. Reset
+ * via gst_compositor_operator_reset_cache() whenever the selected
+ * compositor changes, so the next query picks up the new backend. */
+static gint operator_cache_initialized = 0;
+static int cached_operator_value = 0;
+static GType cached_operator_gtype = G_TYPE_NONE;
+
+void
+gst_compositor_operator_reset_cache (void)
+{
+  g_atomic_int_set (&operator_cache_initialized, 0);
+  cached_operator_value = 0;
+  cached_operator_gtype = G_TYPE_NONE;
+}
+
 GType
 gst_compositor_operator_get_type_and_default_value (int *default_operator_value)
 {
-  static gsize _init = 0;
-  static int operator_value = 0;
-  static GType operator_gtype = G_TYPE_NONE;
-
-  if (g_once_init_enter (&_init)) {
+  if (!g_atomic_int_get (&operator_cache_initialized)) {
     GstElement *compositor = ges_video_element_selector_make_compositor
         (ges_video_element_selector (), NULL);
 
-    GstPad *compositorPad =
-        gst_element_request_pad_simple (compositor, "sink_%u");
+    if (compositor) {
+      GstPad *compositorPad =
+          gst_element_request_pad_simple (compositor, "sink_%u");
 
-    GParamSpec *pspec =
-        g_object_class_find_property (G_OBJECT_GET_CLASS (compositorPad),
-        "operator");
+      if (compositorPad) {
+        GParamSpec *pspec =
+            g_object_class_find_property (G_OBJECT_GET_CLASS (compositorPad),
+            "operator");
 
-    if (pspec) {
-      operator_value =
-          g_value_get_enum (g_param_spec_get_default_value (pspec));
-      operator_gtype = pspec->value_type;
+        if (pspec) {
+          cached_operator_value =
+              g_value_get_enum (g_param_spec_get_default_value (pspec));
+          cached_operator_gtype = pspec->value_type;
+        }
+
+        gst_element_release_request_pad (compositor, compositorPad);
+        gst_object_unref (compositorPad);
+      }
+      gst_object_unref (compositor);
     }
 
-    gst_element_release_request_pad (compositor, compositorPad);
-    gst_object_unref (compositorPad);
-    gst_object_unref (compositor);
-
-    g_once_init_leave (&_init, 1);
+    g_atomic_int_set (&operator_cache_initialized, 1);
   }
 
   if (default_operator_value)
-    *default_operator_value = operator_value;
+    *default_operator_value = cached_operator_value;
 
-  return operator_gtype;
+  return cached_operator_gtype;
 }
 
 static GstElement *

@@ -28,14 +28,14 @@
 #include <gst/video/video.h>
 
 #include "ges-internal.h"
+#include "gstframepositioner.h"
 
+/* Cheap klass-only filter - no plugin load, so safe to run on every
+ * factory at startup. */
 static gboolean
-find_compositor (GstPluginFeature * feature, gpointer udata)
+find_compositor_klass (GstPluginFeature * feature, gpointer udata)
 {
-  gboolean res = FALSE;
   const gchar *klass;
-  GstPluginFeature *loaded_feature = NULL;
-  GstElement *elem = NULL;
 
   if (G_UNLIKELY (!GST_IS_ELEMENT_FACTORY (feature)))
     return FALSE;
@@ -43,7 +43,17 @@ find_compositor (GstPluginFeature * feature, gpointer udata)
   klass = gst_element_factory_get_metadata (GST_ELEMENT_FACTORY_CAST (feature),
       GST_ELEMENT_METADATA_KLASS);
 
-  if (strstr (klass, "Compositor") == NULL)
+  return klass && strstr (klass, "Compositor") != NULL;
+}
+
+static gboolean
+find_compositor (GstPluginFeature * feature, gpointer udata)
+{
+  gboolean res = FALSE;
+  GstPluginFeature *loaded_feature = NULL;
+  GstElement *elem = NULL;
+
+  if (!find_compositor_klass (feature, udata))
     return FALSE;
 
   loaded_feature = gst_plugin_feature_load (feature);
@@ -715,22 +725,19 @@ done:
 }
 
 static GESVideoElementSelector cached;
-static gsize cached_once = 0;
+static gboolean cache_initialized = FALSE;
+static gboolean rank_signals_connected = FALSE;
+static GList *watched_compositor_features = NULL;
+G_LOCK_DEFINE_STATIC (cache);
 
-const GESVideoElementSelector *
-ges_video_element_selector (void)
+/* Runs with G_LOCK(cache) held. Releases every factory and clears the
+ * singleton fields. Does NOT disconnect `notify::rank` handlers -
+ * callers remain interested in future rank changes for the lifetime of
+ * the process (until ges_deinit). */
+static void
+selector_invalidate_locked (void)
 {
-  if (g_once_init_enter (&cached_once)) {
-    resolve_video_element_selector (&cached);
-    g_once_init_leave (&cached_once, 1);
-  }
-  return &cached;
-}
-
-void
-ges_video_element_selector_deinit (void)
-{
-  if (!g_atomic_pointer_get (&cached_once))
+  if (!cache_initialized)
     return;
 
   gst_clear_object (&cached.compositor);
@@ -742,7 +749,82 @@ ges_video_element_selector_deinit (void)
   gst_clear_object (&cached.videoflip);
   gst_clear_object (&cached.deinterlace);
   memset (&cached, 0, sizeof (cached));
-  cached_once = 0;
+  cache_initialized = FALSE;
+}
+
+static void
+compositor_rank_changed_cb (GstPluginFeature * feature, GParamSpec * pspec,
+    gpointer user_data)
+{
+  GST_DEBUG ("Compositor rank changed for %s, invalidating selector",
+      gst_plugin_feature_get_name (feature));
+
+  G_LOCK (cache);
+  selector_invalidate_locked ();
+  G_UNLOCK (cache);
+
+  /* The FramePositioner's `operator` enum type is derived from whatever
+   * compositor the selector picked - invalidate it in lockstep so the
+   * next selector resolve re-queries. */
+  gst_compositor_operator_reset_cache ();
+}
+
+/* Must run with G_LOCK(cache) held. Idempotent (connects once). */
+static void
+connect_compositor_rank_signals_locked (void)
+{
+  GList *result, *l;
+
+  if (rank_signals_connected)
+    return;
+
+  /* Cheap klass-only scan - we want every Compositor-klass factory
+   * (even ones find_compositor would reject) so any rank bump triggers
+   * invalidation, not just bumps of factories that already passed the
+   * aggregator check. */
+  result = gst_registry_feature_filter (gst_registry_get (),
+      (GstPluginFeatureFilter) find_compositor_klass, FALSE, NULL);
+  for (l = result; l; l = l->next) {
+    GstPluginFeature *feature = GST_PLUGIN_FEATURE (l->data);
+    g_signal_connect (feature, "notify::rank",
+        G_CALLBACK (compositor_rank_changed_cb), NULL);
+    /* Keep a ref so the feature outlives any registry churn and so we
+     * have an anchor to disconnect from at deinit. */
+    watched_compositor_features =
+        g_list_prepend (watched_compositor_features, gst_object_ref (feature));
+  }
+  gst_plugin_feature_list_free (result);
+  rank_signals_connected = TRUE;
+}
+
+const GESVideoElementSelector *
+ges_video_element_selector (void)
+{
+  G_LOCK (cache);
+  connect_compositor_rank_signals_locked ();
+  if (!cache_initialized) {
+    resolve_video_element_selector (&cached);
+    cache_initialized = TRUE;
+  }
+  G_UNLOCK (cache);
+  return &cached;
+}
+
+void
+ges_video_element_selector_deinit (void)
+{
+  GList *l;
+
+  G_LOCK (cache);
+  selector_invalidate_locked ();
+  for (l = watched_compositor_features; l; l = l->next) {
+    g_signal_handlers_disconnect_by_func (l->data,
+        (gpointer) compositor_rank_changed_cb, NULL);
+  }
+  g_list_free_full (watched_compositor_features, gst_object_unref);
+  watched_compositor_features = NULL;
+  rank_signals_connected = FALSE;
+  G_UNLOCK (cache);
 }
 
 /* Wrap `core` with the selector's uploader/downloader. The trivial
