@@ -26,6 +26,7 @@
 #include "gstv4l2h264codec.h"
 
 #include <gst/gst.h>
+#include <gst/pbutils/pbutils.h>
 #include "ext/v4l2-controls.h"
 
 
@@ -228,6 +229,58 @@ v4l2_level_to_string (gint v4l2_level)
   return NULL;
 }
 
+static gint
+v4l2_h264_calculate_level (GstVideoInfo * vinfo, gint v4l2_profile)
+{
+  guint8 profile_idc;
+  const GstH264LevelLimits *level;
+
+  /* Convert V4L2 profile enum to H.264 profile_idc */
+  switch (v4l2_profile) {
+    case V4L2_MPEG_VIDEO_H264_PROFILE_BASELINE:
+    case V4L2_MPEG_VIDEO_H264_PROFILE_CONSTRAINED_BASELINE:
+      profile_idc = 66;
+      break;
+    case V4L2_MPEG_VIDEO_H264_PROFILE_MAIN:
+      profile_idc = 77;
+      break;
+    case V4L2_MPEG_VIDEO_H264_PROFILE_EXTENDED:
+      profile_idc = 88;
+      break;
+    case V4L2_MPEG_VIDEO_H264_PROFILE_HIGH:
+    case V4L2_MPEG_VIDEO_H264_PROFILE_CONSTRAINED_HIGH:
+      profile_idc = 100;
+      break;
+    case V4L2_MPEG_VIDEO_H264_PROFILE_HIGH_10:
+      profile_idc = 110;
+      break;
+    case V4L2_MPEG_VIDEO_H264_PROFILE_HIGH_422:
+      profile_idc = 122;
+      break;
+    case V4L2_MPEG_VIDEO_H264_PROFILE_HIGH_444_PREDICTIVE:
+      profile_idc = 244;
+      break;
+    case V4L2_MPEG_VIDEO_H264_PROFILE_STEREO_HIGH:
+      profile_idc = 128;
+      break;
+    case V4L2_MPEG_VIDEO_H264_PROFILE_MULTIVIEW_HIGH:
+      profile_idc = 118;
+      break;
+    default:
+      profile_idc = 100;
+      break;
+  }
+
+  level = gst_codec_utils_h264_get_level_limits (GST_VIDEO_INFO_WIDTH (vinfo),
+      GST_VIDEO_INFO_HEIGHT (vinfo), GST_VIDEO_INFO_FPS_N (vinfo),
+      GST_VIDEO_INFO_FPS_D (vinfo), 0, 1, profile_idc);
+
+  if (!level)
+    return -1;
+
+  return v4l2_level_from_string (level->name);
+}
+
 const GstV4l2Codec *
 gst_v4l2_h264_get_codec (void)
 {
@@ -240,6 +293,7 @@ gst_v4l2_h264_get_codec (void)
     c.level_cid = V4L2_CID_MPEG_VIDEO_H264_LEVEL;
     c.level_to_string = v4l2_level_to_string;
     c.level_from_string = v4l2_level_from_string;
+    c.calculate_level = v4l2_h264_calculate_level;
     g_once_init_leave (&codec, &c);
   }
   return codec;

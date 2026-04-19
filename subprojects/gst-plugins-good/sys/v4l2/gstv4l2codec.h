@@ -24,6 +24,7 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
@@ -38,6 +39,7 @@ struct _GstV4l2Codec {
   const gchar * (*level_to_string) (gint v4l2_level);
   gint (*level_from_string) (const gchar * level);
 
+  gint (*calculate_level) (GstVideoInfo * vinfo, gint v4l2_profile);
 };
 
 gboolean gst_v4l2_codec_probe_profiles(const GstV4l2Codec * codec, gint video_fd,

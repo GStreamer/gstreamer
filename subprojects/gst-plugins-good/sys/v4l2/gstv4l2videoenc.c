@@ -413,6 +413,35 @@ gst_v4l2_video_enc_set_format (GstVideoEncoder * encoder,
   if (!gst_video_encoder_negotiate (encoder))
     return FALSE;
 
+  /* Calculate and set the level based on video parameters if supported.
+   * Uses the profile negotiated above and saved in self->v4l2_profile.
+   * Must run after negotiate() but before gst_v4l2_object_set_format(). */
+  {
+    GstV4l2VideoEncClass *klass = GST_V4L2_VIDEO_ENC_GET_CLASS (encoder);
+    const GstV4l2Codec *codec = klass->codec;
+
+    if (codec && codec->calculate_level && codec->level_cid) {
+      GstV4l2Object *v4l2object = self->v4l2output;
+      gint v4l2_level =
+          codec->calculate_level (&state->info, self->v4l2_profile);
+
+      if (v4l2_level >= 0) {
+        struct v4l2_control control = { 0, };
+        control.id = codec->level_cid;
+        control.value = v4l2_level;
+
+        if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_S_CTRL,
+                &control) >= 0) {
+          GST_DEBUG_OBJECT (self, "Set level to %s (V4L2 value %d)",
+              codec->level_to_string (v4l2_level), v4l2_level);
+        } else {
+          GST_WARNING_OBJECT (self, "Failed to set level %d: %s",
+              v4l2_level, g_strerror (errno));
+        }
+      }
+    }
+  }
+
   if (!gst_v4l2_object_set_format (self->v4l2output, state->caps, &error)) {
     gst_v4l2_error (self, &error);
     return FALSE;
@@ -503,11 +532,13 @@ negotiate_profile_and_level (GstCapsFeatures * features, GstStructure * s,
 
       if (control.value == v4l2_profile) {
         ctx->profile = profile;
+        ctx->self->v4l2_profile = control.value;
         break;
       }
 
       if (g_list_find_custom (l, profile, g_str_equal)) {
         ctx->profile = profile;
+        ctx->self->v4l2_profile = control.value;
         break;
       }
     }
@@ -636,8 +667,10 @@ gst_v4l2_video_enc_negotiate (GstVideoEncoder * encoder)
       goto g_ctrl_failed;
 
     ctx.profile = codec->profile_to_string (control.value);
+    self->v4l2_profile = control.value;
   }
 
+  /* If level not set by caps, get current level from driver */
   if (codec->level_cid && !ctx.level) {
     struct v4l2_control control = { 0, };
 

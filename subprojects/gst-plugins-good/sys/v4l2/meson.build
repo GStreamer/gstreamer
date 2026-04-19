@@ -111,7 +111,7 @@ if have_v4l2
     v4l2_sources,
     c_args : gst_plugins_good_args,
     include_directories : [configinc, libsinc],
-    dependencies : [gstbase_dep, gstvideo_dep, gstallocators_dep, gudev_dep, libv4l2_dep],
+    dependencies : [gstbase_dep, gstvideo_dep, gstallocators_dep, gstpbutils_dep, gudev_dep, libv4l2_dep],
     install : true,
     install_dir : plugins_install_dir,
   )
