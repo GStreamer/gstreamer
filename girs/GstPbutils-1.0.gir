@@ -2585,6 +2585,42 @@ constance framerate.</doc>
     <record name="EncodingVideoProfileClass" c:type="GstEncodingVideoProfileClass" disguised="1" opaque="1" glib:is-gtype-struct-for="EncodingVideoProfile">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.h"/>
     </record>
+    <record name="H264LevelLimits" c:type="GstH264LevelLimits" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.h">H.264 level limits from Table A-1 of the specification.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.h"/>
+      <field name="name" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.h">the level name (e.g. "3.1", "4", "4.2")</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </field>
+      <field name="level_idc" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.h">the level_idc value</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="max_mbps" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.h">maximum macroblock processing rate (MB/s)</doc>
+        <type name="guint32" c:type="guint32"/>
+      </field>
+      <field name="max_fs" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.h">maximum frame size (MB)</doc>
+        <type name="guint32" c:type="guint32"/>
+      </field>
+      <field name="max_dpb_mbs" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.h">maximum decoded picture buffer size (MB)</doc>
+        <type name="guint32" c:type="guint32"/>
+      </field>
+      <field name="max_br" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.h">maximum video bit rate (kbps)</doc>
+        <type name="guint32" c:type="guint32"/>
+      </field>
+      <field name="max_cpb" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.h">maximum CPB size (kbits)</doc>
+        <type name="guint32" c:type="guint32"/>
+      </field>
+      <field name="min_cr" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.h">minimum compression ratio</doc>
+        <type name="guint32" c:type="guint32"/>
+      </field>
+    </record>
     <function-macro name="IS_DISCOVERER" c:identifier="GST_IS_DISCOVERER" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h"/>
       <parameters>
@@ -3319,6 +3355,47 @@ same format as for gst_codec_utils_h264_get_profile().</doc>
         <parameter name="level" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">A level string from caps</doc>
           <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="codec_utils_h264_get_level_limits" c:identifier="gst_codec_utils_h264_get_level_limits" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">Finds the minimum H.264 level that can handle the given video parameters
+based on the constraints defined in H.264 specification Annex A.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.h"/>
+      <return-value transfer-ownership="none" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">the #GstH264LevelLimits for the
+         minimum level matching the parameters, or %NULL if no suitable
+         level is found.</doc>
+        <type name="H264LevelLimits" c:type="const GstH264LevelLimits*"/>
+      </return-value>
+      <parameters>
+        <parameter name="width" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">the video width in pixels</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="height" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">the video height in pixels</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="fps_n" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">the video frame rate numerator</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="fps_d" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">the video frame rate denominator</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="bitrate" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">the video bitrate in bits per second (0 if unknown)</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+        <parameter name="max_dec_frame_buffering" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">the max size of DPB (0 if unknown)</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+        <parameter name="profile_idc" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">the H.264 profile idc value (e.g., 66 for Baseline, 77 for Main, 100 for High)</doc>
+          <type name="guint8" c:type="guint8"/>
         </parameter>
       </parameters>
     </function>

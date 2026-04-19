@@ -894,6 +894,127 @@ done:
   return ret;
 }
 
+/* Table A-1 - Level limits */
+/* *INDENT-OFF* */
+static const GstH264LevelLimits _h264_levels[] = {
+  /* level   idc   MaxMBPS   MaxFS   MaxDpbMbs  MaxBR   MaxCPB  MinCR */
+  { "1",     10,   1485,     99,     396,       64,     175,    2 },
+  { "1b",    9,    1485,     99,     396,       128,    350,    2 },
+  { "1.1",   11,   3000,     396,    900,       192,    500,    2 },
+  { "1.2",   12,   6000,     396,    2376,      384,    1000,   2 },
+  { "1.3",   13,   11880,    396,    2376,      768,    2000,   2 },
+  { "2",     20,   11880,    396,    2376,      2000,   2000,   2 },
+  { "2.1",   21,   19800,    792,    4752,      4000,   4000,   2 },
+  { "2.2",   22,   20250,    1620,   8100,      4000,   4000,   2 },
+  { "3",     30,   40500,    1620,   8100,      10000,  10000,  2 },
+  { "3.1",   31,   108000,   3600,   18000,     14000,  14000,  4 },
+  { "3.2",   32,   216000,   5120,   20480,     20000,  20000,  4 },
+  { "4",     40,   245760,   8192,   32768,     20000,  25000,  4 },
+  { "4.1",   41,   245760,   8192,   32768,     50000,  62500,  2 },
+  { "4.2",   42,   522240,   8704,   34816,     50000,  62500,  2 },
+  { "5",     50,   589824,   22080,  110400,    135000, 135000, 2 },
+  { "5.1",   51,   983040,   36864,  184320,    240000, 240000, 2 },
+  { "5.2",   52,   2073600,  36864,  184320,    240000, 240000, 2 },
+  { "6",     60,   4177920,  139264, 696320,    240000, 240000, 2 },
+  { "6.1",   61,   8355840,  139264, 696320,    480000, 480000, 2 },
+  { "6.2",   62,   16711680, 139264, 696320,    800000, 800000, 2 },
+};
+
+/* Table A-2 - CPB BR NAL factor + H.10.2.1 (r)
+ * Profile idc values used since pbutils cannot depend on codecparsers. */
+static const struct {
+  guint8 profile_idc;
+  guint cpb_br_nal_factor;
+} _h264_nal_factors[] = {
+    {  66, 1200 },  /* Baseline */
+    {  77, 1200 },  /* Main */
+    {  88, 1200 },  /* Extended */
+    { 128, 1500 },  /* Stereo High */
+    { 118, 1500 },  /* Multiview High */
+    { 100, 1500 },  /* High */
+    { 110, 3600 },  /* High 10 */
+    { 122, 4800 },  /* High 4:2:2 */
+    { 244, 4800 },  /* High 4:4:4 Predictive */
+};
+/* *INDENT-ON* */
+
+static guint
+_get_h264_cpb_nal_factor (guint8 profile_idc)
+{
+  for (guint i = 0; i < G_N_ELEMENTS (_h264_nal_factors); i++) {
+    if (_h264_nal_factors[i].profile_idc == profile_idc)
+      return _h264_nal_factors[i].cpb_br_nal_factor;
+  }
+
+  /* default to non-high profile */
+  return 1200;
+}
+
+/**
+ * gst_codec_utils_h264_get_level_limits:
+ * @width: the video width in pixels
+ * @height: the video height in pixels
+ * @fps_n: the video frame rate numerator
+ * @fps_d: the video frame rate denominator
+ * @bitrate: the video bitrate in bits per second (0 if unknown)
+ * @max_dec_frame_buffering: the max size of DPB (0 if unknown)
+ * @profile_idc: the H.264 profile idc value (e.g., 66 for Baseline, 77 for Main, 100 for High)
+ *
+ * Finds the minimum H.264 level that can handle the given video parameters
+ * based on the constraints defined in H.264 specification Annex A.
+ *
+ * Returns: (nullable) (transfer none): the #GstH264LevelLimits for the
+ *          minimum level matching the parameters, or %NULL if no suitable
+ *          level is found.
+ *
+ * Since: 1.30
+ */
+const GstH264LevelLimits *
+gst_codec_utils_h264_get_level_limits (gint width, gint height, gint fps_n,
+    gint fps_d, guint bitrate, guint max_dec_frame_buffering,
+    guint8 profile_idc)
+{
+  guint mb_width, mb_height, cpb_factor;
+  guint32 pic_size_mbs, max_mbps;
+
+  g_return_val_if_fail (width > 0 && height > 0, NULL);
+  g_return_val_if_fail (fps_d > 0, NULL);
+
+  cpb_factor = _get_h264_cpb_nal_factor (profile_idc);
+  mb_width = GST_ROUND_UP_16 (width) / 16;
+  mb_height = GST_ROUND_UP_16 (height) / 16;
+
+  pic_size_mbs = mb_width * mb_height;
+  if (fps_n > 0) {
+    max_mbps = gst_util_uint64_scale_int_ceil (pic_size_mbs, fps_n, fps_d);
+  } else {
+    max_mbps = 16;
+  }
+
+  for (guint32 i = 0; i < G_N_ELEMENTS (_h264_levels); i++) {
+    const GstH264LevelLimits *level = &_h264_levels[i];
+
+    if (bitrate > 0 && bitrate > (guint64) level->max_br * cpb_factor)
+      continue;
+    if (pic_size_mbs > level->max_fs)
+      continue;
+    if (pic_size_mbs > 0) {
+      gint max_dpb_frames = MIN (level->max_dpb_mbs / pic_size_mbs, 16);
+      if ((gint) max_dec_frame_buffering > max_dpb_frames)
+        continue;
+
+      if (max_mbps > level->max_mbps)
+        continue;
+    }
+
+    return level;
+  }
+
+  GST_WARNING ("No suitable H.264 level found for %dx%d@%d/%d fps, %u bps, "
+      "profile %u", width, height, fps_n, fps_d, bitrate, profile_idc);
+  return NULL;
+}
+
 /* forked from gsth265parse.c */
 typedef struct
 {
