@@ -132,6 +132,10 @@ static const guint8 h266_prefix_aps[] = {
   0x84, 0x80
 };
 
+static const guint8 h266_opi_ols_3[] = {
+  0x00, 0x00, 0x00, 0x01, 0x00, 0x61, 0x88, 0x80
+};
+
 static const guint8 h266_idr[] = {
   0x00, 0x00, 0x00, 0x01, 0x00, 0x41, 0xc4, 0x02, 0x54, 0x03, 0xf0, 0xfc,
   0x85, 0x88, 0x65, 0x35, 0x93, 0x02, 0xab, 0xa3, 0xe2, 0xbf, 0xd5, 0x30,
@@ -522,6 +526,19 @@ bytestream_push_all_nals_as_au (GstHarness * h)
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
 }
 
+static inline void
+bytestream_push_all_nals_with_opi_as_au (GstHarness * h)
+{
+  GstBuffer *buf;
+
+  buf = composite_buffer (10, 0, 7, h266_vps, sizeof (h266_vps),
+      h266_sps, sizeof (h266_sps), h266_pps, sizeof (h266_pps),
+      h266_opi_ols_3, sizeof (h266_opi_ols_3), h266_prefix_aps,
+      sizeof (h266_prefix_aps), h266_idr, sizeof (h266_idr),
+      h266_suffix_sei, sizeof (h266_suffix_sei));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+}
+
 #define bytestream_set_caps(h, in_align, out_align) \
   gst_harness_set_caps_str (h, \
       "video/x-h266, parsed=(boolean)false, stream-format=byte-stream, alignment=" in_align ", framerate=30/1", \
@@ -676,6 +693,53 @@ GST_START_TEST (test_transform_bytestream_vvi1)
       h266_vps, sizeof (h266_vps), h266_sps, sizeof (h266_sps), h266_pps,
       sizeof (h266_pps), h266_prefix_aps, sizeof (h266_prefix_aps), h266_idr,
       sizeof (h266_idr), h266_suffix_sei, sizeof (h266_suffix_sei));
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_transform_bytestream_vvc1_uses_opi_ols_idx)
+{
+  GstHarness *h = gst_harness_new ("h266parse");
+  GstCaps *sinkcaps;
+  GstStructure *s;
+  const GValue *val;
+  GstBuffer *buf;
+  GstMapInfo map;
+  GstH266Parser *parser;
+  GstH266DecoderConfigRecord *config = NULL;
+  GstH266ParserResult res;
+
+  gst_harness_set_caps_str (h,
+      "video/x-h266, parsed=(boolean)false, stream-format=byte-stream, alignment=au",
+      "video/x-h266, parsed=(boolean)true, stream-format=vvc1, alignment=au");
+
+  bytestream_push_all_nals_with_opi_as_au (h);
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+
+  sinkcaps = gst_pad_get_current_caps (h->sinkpad);
+  s = gst_caps_get_structure (sinkcaps, 0);
+
+  val = gst_structure_get_value (s, "codec_data");
+  fail_unless (val != NULL);
+  buf = gst_value_get_buffer (val);
+  fail_unless (buf != NULL);
+
+  parser = gst_h266_parser_new ();
+  fail_unless (gst_buffer_map (buf, &map, GST_MAP_READ));
+  res = gst_h266_parser_parse_decoder_config_record (parser, map.data,
+      map.size, &config);
+  gst_buffer_unmap (buf, &map);
+
+  fail_unless_equals_int (res, GST_H266_PARSER_OK);
+  fail_unless (config != NULL);
+  fail_unless_equals_int (config->ols_idx, 3);
+
+  gst_h266_decoder_config_record_free (config);
+  gst_h266_parser_free (parser);
+  gst_caps_unref (sinkcaps);
+  pull_and_drop (h);
   gst_harness_teardown (h);
 }
 
@@ -1362,6 +1426,7 @@ h266parse_harnessed_suite (void)
 
   tcase_add_test (tc_chain, test_transform_bytestream_vvc1);
   tcase_add_test (tc_chain, test_transform_bytestream_vvi1);
+  tcase_add_test (tc_chain, test_transform_bytestream_vvc1_uses_opi_ols_idx);
   tcase_add_test (tc_chain, test_transform_vvc1_bytestream);
   tcase_add_test (tc_chain, test_transform_vvi1_bytestream);
   tcase_add_test (tc_chain,

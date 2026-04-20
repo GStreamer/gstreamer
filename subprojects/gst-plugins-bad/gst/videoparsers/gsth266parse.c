@@ -307,6 +307,8 @@ gst_h266_parse_reset_stream_info (GstH266Parse * h266parse)
   h266parse->packetized = FALSE;
   h266parse->push_codec = FALSE;
   h266parse->first_frame = TRUE;
+  memset (&h266parse->opi, 0, sizeof (GstH266OPI));
+  h266parse->have_opi = FALSE;
   memset (&h266parse->sei_frame_field, 0, sizeof (GstH266FrameFieldInfo));
   h266parse->interlaced_mode = GST_H266_PARSE_PROGRESSIVE_ONLY;
 
@@ -973,6 +975,21 @@ gst_h266_parse_process_nal (GstH266Parse * h266parse, GstH266NalUnit * nalu)
         GST_WARNING_OBJECT (h266parse, "failed to parse AUD:");
         return FALSE;
       }
+      break;
+    }
+    case GST_H266_NAL_OPI:
+    {
+      GstH266OPI opi;
+
+      pres = gst_h266_parser_parse_opi (nalparser, nalu, &opi);
+      if (pres != GST_H266_PARSER_OK) {
+        GST_WARNING_OBJECT (h266parse, "failed to parse OPI:");
+        return FALSE;
+      }
+
+      h266parse->opi = opi;
+      h266parse->have_opi = TRUE;
+      h266parse->update_caps = TRUE;
       break;
     }
     default:
@@ -1738,10 +1755,12 @@ gst_h266_parse_make_codec_data (GstH266Parse * h266parse)
     guint8 constant_frame_rate = 1;
     guint8 chroma_format_idc = sps->chroma_format_idc;
     GstBuffer *pci;
+    guint16 ols_idx = 0;
 
     /* ols_idx(9) | num_sublayers(3) | constant_frame_rate(2) | chroma_format_idc(2) */
-    /* FIXME: OPI isn't parsed so we don't store an ols_idx in the parser and just write 0 here. */
-    guint16 ols_idx = 0;
+    if (h266parse->have_opi && h266parse->opi.ols_info_present_flag)
+      ols_idx = h266parse->opi.ols_idx;
+
     gst_byte_writer_put_uint16_be (&bw,
         (ols_idx << 7) | (num_sublayers << 4) |
         (constant_frame_rate << 2) | chroma_format_idc);

@@ -104,6 +104,9 @@ struct _GstH266Parse
   GstBuffer *sps_nals[GST_H266_MAX_SPS_COUNT];
   GstBuffer *pps_nals[GST_H266_MAX_PPS_COUNT];
 
+  GstH266OPI opi;
+  gboolean have_opi;
+
   /* FFI SEI Info we need to keep track of */
   GstH266FrameFieldInfo sei_frame_field;
   guint interlaced_mode;
