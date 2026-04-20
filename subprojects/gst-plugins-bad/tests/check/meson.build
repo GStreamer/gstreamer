@@ -29,6 +29,7 @@ base_tests = [
   [['elements/aesenc.c'], not aes_dep.found(), [aes_dep]],
   [['elements/aesdec.c'], not aes_dep.found(), [aes_dep]],
   [['elements/aiffparse.c'], get_option('aiff').disabled()],
+  [['elements/alphacombine.c'], get_option('codecalpha').disabled()],
   [['elements/asfmux.c'], get_option('asfmux').disabled()],
   [['elements/audiovisualizer.c'], get_option('audiovisualizers').disabled()],
   [['elements/autoconvert.c'], get_option('autoconvert').disabled()],
