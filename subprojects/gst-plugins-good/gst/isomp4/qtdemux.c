@@ -18609,12 +18609,24 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
     switch (tag) {
       case ES_DESCRIPTOR_TAG:
+        if (len < 3) {
+          GST_WARNING_OBJECT (qtdemux, "ES descriptor too short (%d < 3)", len);
+          ptr += len;
+          break;
+        }
         GST_DEBUG_OBJECT (qtdemux, "ID 0x%04x", QT_UINT16 (ptr));
         GST_DEBUG_OBJECT (qtdemux, "priority 0x%04x", QT_UINT8 (ptr + 2));
         ptr += 3;
         break;
       case DECODER_CONFIG_DESC_TAG:{
         guint max_bitrate, avg_bitrate;
+
+        if (len < 13) {
+          GST_WARNING_OBJECT (qtdemux,
+              "Decoder config descriptor too short (%d < 13)", len);
+          ptr += len;
+          break;
+        }
 
         object_type_id = QT_UINT8 (ptr);
         stream_type = QT_UINT8 (ptr + 1) >> 2;
@@ -18677,6 +18689,12 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
         ptr += len;
         break;
       case SL_CONFIG_DESC_TAG:
+        if (len < 1) {
+          GST_WARNING_OBJECT (qtdemux,
+              "SL config descriptor too short (%d < 1)", len);
+          ptr += len;
+          break;
+        }
         GST_DEBUG_OBJECT (qtdemux, "data %02x", QT_UINT8 (ptr));
         ptr += 1;
         break;
