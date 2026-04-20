@@ -1673,6 +1673,7 @@ gst_vtdec_session_output_callback (void *decompression_output_ref_con,
     }
   } else if (g_atomic_int_get (&vtdec->require_reset)) {
     GST_INFO_OBJECT (vtdec, "Got decoded frame while reset is scheduled");
+    push_anyway = TRUE;
   }
 
   if (image_buffer) {
@@ -1710,12 +1711,12 @@ gst_vtdec_session_output_callback (void *decompression_output_ref_con,
   /* If negotiate() gets called from the output loop (via finish_frame()),
    * it can attempt to drain and call VTDecompressionSessionWaitForAsynchronousFrames,
    * which will lock up if we decide to wait in this callback, creating a deadlock. */
-  push_anyway = vtdec->is_flushing || vtdec->is_draining;
+  push_anyway |= vtdec->is_flushing || vtdec->is_draining;
   while (!push_anyway
       && gst_vec_deque_get_length (vtdec->reorder_queue) >
       vtdec->dbp_size * 2 + 1) {
     g_cond_wait (&vtdec->queue_cond, &vtdec->queue_mutex);
-    push_anyway = vtdec->is_flushing || vtdec->is_draining;
+    push_anyway |= vtdec->is_flushing || vtdec->is_draining;
   }
 
   gst_vec_deque_push_sorted (vtdec->reorder_queue, frame, sort_frames_by_pts,
