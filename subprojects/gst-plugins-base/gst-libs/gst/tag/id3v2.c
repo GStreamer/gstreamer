@@ -121,7 +121,7 @@ gst_tag_get_id3v2_tag_size (GstBuffer * buffer)
 
   /* Expand the read size to include a footer if there is one */
   if ((flags & ID3V2_HDR_FLAG_FOOTER))
-    result += 10;
+    result += ID3V2_FOOTER_SIZE;
 
   GST_DEBUG ("ID3v2 tag, size: %u bytes", result);
 
@@ -215,7 +215,7 @@ gst_tag_list_from_id3v2_tag (GstBuffer * buffer)
   read_size = gst_tag_get_id3v2_tag_size (buffer);
 
   /* Ignore tag if it has no frames attached, but skip the header then */
-  if (read_size < ID3V2_HDR_SIZE)
+  if (read_size <= ID3V2_HDR_SIZE)
     return NULL;
 
   gst_buffer_map (buffer, &info, GST_MAP_READ);
@@ -239,6 +239,9 @@ gst_tag_list_from_id3v2_tag (GstBuffer * buffer)
   /* This shouldn't really happen! Caller should have checked first */
   if (info.size < read_size)
     goto not_enough_data;
+  if (flags & ID3V2_HDR_FLAG_FOOTER
+      && read_size <= (ID3V2_HDR_SIZE + ID3V2_FOOTER_SIZE))
+    goto invalid_tag_size;
 
   GST_DEBUG ("Reading ID3v2 tag with revision 2.%d.%d of size %u", version >> 8,
       version & 0xff, read_size);
@@ -253,9 +256,8 @@ gst_tag_list_from_id3v2_tag (GstBuffer * buffer)
   work.hdr.frame_data = info.data + ID3V2_HDR_SIZE;
 
   if (flags & ID3V2_HDR_FLAG_FOOTER) {
-    if (read_size < ID3V2_HDR_SIZE + 10)
-      goto not_enough_data;     /* Invalid frame size */
-    work.hdr.frame_data_size = read_size - ID3V2_HDR_SIZE - 10;
+    g_assert (read_size >= (ID3V2_HDR_SIZE + ID3V2_FOOTER_SIZE));       /* checked above */
+    work.hdr.frame_data_size = read_size - ID3V2_HDR_SIZE - ID3V2_FOOTER_SIZE;
   } else {
     g_assert (read_size >= ID3V2_HDR_SIZE);     /* checked above */
     work.hdr.frame_data_size = read_size - ID3V2_HDR_SIZE;
@@ -286,6 +288,12 @@ wrong_version:
     GST_WARNING ("ID3v2 tag is from revision 2.%d.%d, "
         "but decoder only supports 2.%d.%d. Ignoring as per spec.",
         version >> 8, version & 0xff, ID3V2_VERSION >> 8, ID3V2_VERSION & 0xff);
+    gst_buffer_unmap (buffer, &info);
+    return NULL;
+  }
+invalid_tag_size:
+  {
+    GST_WARNING ("ID3v2 tag is too small to contain any frames");
     gst_buffer_unmap (buffer, &info);
     return NULL;
   }
