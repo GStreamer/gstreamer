@@ -865,7 +865,21 @@ static gboolean
 gst_alpha_combine_sink_query (GstPad * pad, GstObject * object,
     GstQuery * query)
 {
+  GstAlphaCombine *self = GST_ALPHA_COMBINE (object);
+
   switch (query->type) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_alpha_combine_sink_getcaps (self, pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+
+      return TRUE;
+      break;
+    }
     case GST_QUERY_ALLOCATION:
     {
       int i;

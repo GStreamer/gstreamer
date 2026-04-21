@@ -83,6 +83,29 @@ allocation_query_func (GstPad * pad, GstObject * parent, GstQuery * query)
   return gst_pad_query_default (pad, parent, query);
 }
 
+static gboolean
+caps_query_func (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  GstCaps *caps = g_object_get_data (G_OBJECT (pad), "caps-query-caps");
+
+  if (GST_QUERY_TYPE (query) == GST_QUERY_CAPS && caps) {
+    GstCaps *filter, *result;
+
+    gst_query_parse_caps (query, &filter);
+    if (filter)
+      result = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    else
+      result = gst_caps_ref (caps);
+
+    gst_query_set_caps_result (query, result);
+    gst_caps_unref (result);
+
+    return TRUE;
+  }
+
+  return gst_pad_query_default (pad, parent, query);
+}
+
 static AlphaCombineFixture *
 setup_alphacombine (void)
 {
