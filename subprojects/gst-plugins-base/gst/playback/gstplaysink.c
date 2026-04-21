@@ -4575,12 +4575,33 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 {
   GST_LOG_OBJECT (playsink, "Triggering reconfiguration");
 
+  /* claim on the 'reconfiguration_in_progress' marker and set it,
+   * to avoid racing against an in-progress reconfiguration that
+   * will (eventually) clear the reconfigure_pending flag */
+  g_mutex_lock (&playsink->reconfigure_lock);
+  while (playsink->reconfiguration_allowed
+      && playsink->reconfiguration_in_progress) {
+    g_cond_wait (&playsink->reconfigure_cond, &playsink->reconfigure_lock);
+  }
+  if (!playsink->reconfiguration_allowed) {
+    g_mutex_unlock (&playsink->reconfigure_lock);
+    return FALSE;
+  }
+  playsink->reconfiguration_in_progress = TRUE;
+  g_mutex_unlock (&playsink->reconfigure_lock);
+
   GST_PLAY_SINK_LOCK (playsink);
   video_set_blocked (playsink, TRUE);
   audio_set_blocked (playsink, TRUE);
   text_set_blocked (playsink, TRUE);
   playsink->reconfigure_pending = TRUE;
   GST_PLAY_SINK_UNLOCK (playsink);
+
+  /* Release the reconfiguration flag */
+  g_mutex_lock (&playsink->reconfigure_lock);
+  playsink->reconfiguration_in_progress = FALSE;
+  g_cond_broadcast (&playsink->reconfigure_cond);
+  g_mutex_unlock (&playsink->reconfigure_lock);
 
   return TRUE;
 }
