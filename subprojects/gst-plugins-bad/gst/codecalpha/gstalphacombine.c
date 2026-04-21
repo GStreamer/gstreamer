@@ -882,6 +882,11 @@ gst_alpha_combine_sink_query (GstPad * pad, GstObject * object,
         gst_query_set_nth_allocation_pool (query, i, NULL, size, min, max);
       }
 
+      /* Downstream allocator hints are not safe to share between both input
+       * decoders either. */
+      while (gst_query_get_n_allocation_params (query) > 0)
+        gst_query_remove_nth_allocation_param (query, 0);
+
       return TRUE;
       break;
     }

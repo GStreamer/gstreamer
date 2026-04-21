@@ -60,6 +60,8 @@ typedef struct
 typedef struct
 {
   GstBufferPool *pool;
+  GstAllocator *allocator;
+  GstAllocationParams params;
   guint size;
   guint min_buffers;
   guint max_buffers;
@@ -74,6 +76,7 @@ allocation_query_func (GstPad * pad, GstObject * parent, GstQuery * query)
   if (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION && data) {
     gst_query_add_allocation_pool (query, data->pool, data->size,
         data->min_buffers, data->max_buffers);
+    gst_query_add_allocation_param (query, data->allocator, &data->params);
     return TRUE;
   }
 
@@ -522,13 +525,16 @@ GST_END_TEST;
 
 GST_START_TEST (test_allocation_query_strips_pool)
 {
-  AllocationQueryData data;
+  AllocationQueryData data = { 0, };
   AlphaCombineFixture *fixture = setup_alphacombine ();
   GstQuery *query = gst_query_new_allocation (NULL, FALSE);
   GstBufferPool *pool = NULL;
   guint size = 0, min_buffers = 0, max_buffers = 0;
 
   data.pool = gst_buffer_pool_new ();
+  data.allocator = gst_allocator_find (NULL);
+  gst_allocation_params_init (&data.params);
+  data.params.align = 63;
   data.size = 4096;
   data.min_buffers = 2;
   data.max_buffers = 7;
@@ -545,8 +551,10 @@ GST_START_TEST (test_allocation_query_strips_pool)
   fail_unless_equals_int (size, data.size);
   fail_unless_equals_int (min_buffers, data.min_buffers);
   fail_unless_equals_int (max_buffers, data.max_buffers);
+  fail_unless_equals_int (gst_query_get_n_allocation_params (query), 0);
 
   gst_query_unref (query);
+  gst_clear_object (&data.allocator);
   gst_object_unref (data.pool);
   cleanup_alphacombine (fixture);
 }
