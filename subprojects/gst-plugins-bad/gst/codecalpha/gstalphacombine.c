@@ -47,9 +47,21 @@
 #include "gstalphacombine.h"
 
 
-#define SUPPORTED_SINK_FORMATS "{ I420, I420_10LE, NV12 }"
-#define SUPPORTED_ALPHA_FORMATS "{ GRAY8, I420, I420_10LE, NV12 }"
-#define SUPPORTED_SRC_FORMATS "{ A420, A420_10LE, AV12 }"
+#define SUPPORTED_SINK_FORMATS "{ I420, YV12, Y42B, Y444, GBR, " \
+    "I420_10LE, I420_10BE, I420_12LE, I420_12BE, " \
+    "I422_10LE, I422_10BE, I422_12LE, I422_12BE, " \
+    "Y444_10LE, Y444_10BE, Y444_12LE, Y444_12BE, " \
+    "Y444_16LE, Y444_16BE, NV12 }"
+#define SUPPORTED_ALPHA_FORMATS "{ GRAY8, I420, YV12, Y42B, Y444, " \
+    "I420_10LE, I420_10BE, I420_12LE, I420_12BE, " \
+    "I422_10LE, I422_10BE, I422_12LE, I422_12BE, " \
+    "Y444_10LE, Y444_10BE, Y444_12LE, Y444_12BE, " \
+    "Y444_16LE, Y444_16BE, GRAY10_LE16, GRAY16_LE, GRAY16_BE, NV12 }"
+#define SUPPORTED_SRC_FORMATS "{ A420, A422, A444, GBRA, " \
+    "A420_10LE, A420_10BE, A420_12LE, A420_12BE, " \
+    "A422_10LE, A422_10BE, A422_12LE, A422_12BE, " \
+    "A444_10LE, A444_10BE, A444_12LE, A444_12BE, " \
+    "A444_16LE, A444_16BE, AV12 }"
 
 #ifndef GST_CAPS_FEATURE_MEMORY_GL_MEMORY
 #define GST_CAPS_FEATURE_MEMORY_GL_MEMORY "memory:GLMemory"
@@ -84,41 +96,49 @@
         SUPPORTED_SRC_FORMATS)
 
 /* *INDENT-OFF* */
-struct {
+#define F(sink, alpha, src) \
+  { GST_VIDEO_FORMAT_ ## sink, GST_VIDEO_FORMAT_ ## alpha, GST_VIDEO_FORMAT_ ## src }
+
+static const struct {
   GstVideoFormat sink;
   GstVideoFormat alpha;
   GstVideoFormat src;
 } format_map[] = {
-  {
-    .sink = GST_VIDEO_FORMAT_I420,
-    .alpha = GST_VIDEO_FORMAT_I420,
-    .src = GST_VIDEO_FORMAT_A420
-  },{
-    .sink = GST_VIDEO_FORMAT_I420,
-    .alpha = GST_VIDEO_FORMAT_GRAY8,
-    .src = GST_VIDEO_FORMAT_A420
- },{
-    .sink = GST_VIDEO_FORMAT_I420,
-    .alpha = GST_VIDEO_FORMAT_NV12,
-    .src = GST_VIDEO_FORMAT_A420
-  }, {
-    .sink = GST_VIDEO_FORMAT_NV12,
-    .alpha = GST_VIDEO_FORMAT_NV12,
-    .src = GST_VIDEO_FORMAT_AV12,
-  }, {
-    .sink = GST_VIDEO_FORMAT_NV12,
-    .alpha = GST_VIDEO_FORMAT_GRAY8,
-    .src = GST_VIDEO_FORMAT_AV12
- },{
-    .sink = GST_VIDEO_FORMAT_NV12,
-    .alpha = GST_VIDEO_FORMAT_I420,
-    .src = GST_VIDEO_FORMAT_AV12
- },{
-    .sink = GST_VIDEO_FORMAT_I420_10LE,
-    .alpha = GST_VIDEO_FORMAT_I420_10LE,
-    .src = GST_VIDEO_FORMAT_A420_10LE
-  },
+  F (I420,       I420,        A420     ),
+  F (I420,       GRAY8,       A420     ),
+  F (I420,       NV12,        A420     ),
+  F (YV12,       YV12,        A420     ),
+  F (YV12,       GRAY8,       A420     ),
+  F (Y42B,       Y42B,        A422     ),
+  F (Y42B,       GRAY8,       A422     ),
+  F (Y444,       Y444,        A444     ),
+  F (Y444,       GRAY8,       A444     ),
+  F (GBR,        GRAY8,       GBRA     ),
+  F (I420_10LE,  I420_10LE,   A420_10LE),
+  F (I420_10LE,  GRAY10_LE16, A420_10LE),
+  F (I420_10BE,  I420_10BE,   A420_10BE),
+  F (I420_12LE,  I420_12LE,   A420_12LE),
+  F (I420_12BE,  I420_12BE,   A420_12BE),
+  F (I422_10LE,  I422_10LE,   A422_10LE),
+  F (I422_10LE,  GRAY10_LE16, A422_10LE),
+  F (I422_10BE,  I422_10BE,   A422_10BE),
+  F (I422_12LE,  I422_12LE,   A422_12LE),
+  F (I422_12BE,  I422_12BE,   A422_12BE),
+  F (Y444_10LE,  Y444_10LE,   A444_10LE),
+  F (Y444_10LE,  GRAY10_LE16, A444_10LE),
+  F (Y444_10BE,  Y444_10BE,   A444_10BE),
+  F (Y444_12LE,  Y444_12LE,   A444_12LE),
+  F (Y444_12BE,  Y444_12BE,   A444_12BE),
+  F (Y444_16LE,  Y444_16LE,   A444_16LE),
+  F (Y444_16LE,  GRAY16_LE,   A444_16LE),
+  F (Y444_16BE,  Y444_16BE,   A444_16BE),
+  F (Y444_16BE,  GRAY16_BE,   A444_16BE),
+  F (NV12,       NV12,        AV12     ),
+  F (NV12,       GRAY8,       AV12     ),
+  F (NV12,       I420,        AV12     ),
 };
+
+#undef F
 /* *INDENT-ON* */
 
 GST_DEBUG_CATEGORY_STATIC (alphacombine_debug);
@@ -595,6 +615,24 @@ gst_alpha_combine_push_alpha_buffer (GstAlphaCombine * self, GstBuffer * buffer)
   return ret;
 }
 
+static void
+gst_alpha_combine_update_output_meta (GstAlphaCombine * self,
+    GstVideoMeta * meta)
+{
+  if (GST_VIDEO_INFO_FORMAT (&self->sink_vinfo) == GST_VIDEO_FORMAT_YV12 &&
+      self->src_format == GST_VIDEO_FORMAT_A420) {
+    /* YV12 stores V before U, but A420 metadata expects Y/U/V/A order. */
+    gsize offset = meta->offset[1];
+    gint stride = meta->stride[1];
+
+    meta->offset[1] = meta->offset[2];
+    meta->offset[2] = offset;
+
+    meta->stride[1] = meta->stride[2];
+    meta->stride[2] = stride;
+  }
+}
+
 static GstFlowReturn
 gst_alpha_combine_sink_chain (GstPad * pad, GstObject * object,
     GstBuffer * src_buffer)
@@ -650,6 +688,7 @@ gst_alpha_combine_sink_chain (GstPad * pad, GstObject * object,
         GST_VIDEO_INFO_FORMAT (&self->sink_vinfo),
         GST_VIDEO_INFO_WIDTH (&self->sink_vinfo),
         GST_VIDEO_INFO_HEIGHT (&self->sink_vinfo));
+  gst_alpha_combine_update_output_meta (self, vmeta);
 
   alpha_skip += gst_buffer_get_size (buffer);
   gst_buffer_append_memory (buffer, alpha_mem);
