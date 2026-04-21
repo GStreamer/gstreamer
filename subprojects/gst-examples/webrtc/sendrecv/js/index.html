@@ -19,6 +19,24 @@
     <script src="webrtc.js"></script>
     <script>
       window.onload = websocketServerConnect;
+      window.addEventListener('DOMContentLoaded', () => {
+        const fragment = window.location.hash.substring(1); // strip the '#'
+        if (!fragment) return;
+
+        const pairs = fragment.split(',');
+        pairs.forEach(pair => {
+          const [id, val] = pair.split('=');
+          if (id === 'remote-offerer') {
+            const el = document.getElementById('remote-offerer');
+            el.checked = (val == '1');
+            el.dispatchEvent(new Event('change'));
+          } else if (id === 'peer-id') {
+            document.getElementById('peer-connect').value = val;
+          } else if (id === 'connect' && val === '1') {
+            window.setTimeout(onConnectClicked, 2000);
+          }
+        });
+      });
     </script>
   </head>
 
