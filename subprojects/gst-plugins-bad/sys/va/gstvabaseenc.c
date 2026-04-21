@@ -697,7 +697,7 @@ gst_va_base_enc_handle_frame (GstVideoEncoder * venc,
         ret = _push_out_one_buffer (base);
 
       if (ret != GST_FLOW_OK)
-        goto error_push_buffer;
+        goto bail;
 
       /* Try to push out all ready frames. */
       do {
@@ -706,7 +706,7 @@ gst_va_base_enc_handle_frame (GstVideoEncoder * venc,
       if (ret == GST_FLOW_OUTPUT_NOT_READY)
         ret = GST_FLOW_OK;
       if (ret != GST_FLOW_OK)
-        goto error_push_buffer;
+        goto bail;
 
       frame_encode = NULL;
       if (!base_class->reorder_frame (base, NULL, FALSE, &frame_encode))
@@ -720,7 +720,7 @@ gst_va_base_enc_handle_frame (GstVideoEncoder * venc,
     if (ret == GST_FLOW_OUTPUT_NOT_READY)
       ret = GST_FLOW_OK;
     if (ret != GST_FLOW_OK)
-      goto error_push_buffer;
+      goto bail;
   }
 
   return ret;
@@ -761,12 +761,8 @@ error_encode:
     gst_video_encoder_finish_frame (venc, frame_encode);
     return ret;
   }
-error_push_buffer:
-  {
-    GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
-        ("Failed to push one frame."), (NULL));
-    return ret;
-  }
+bail:
+  return ret;
 }
 
 static GstFlowReturn
