@@ -51,6 +51,38 @@
 #define SUPPORTED_ALPHA_FORMATS "{ GRAY8, I420, I420_10LE, NV12 }"
 #define SUPPORTED_SRC_FORMATS "{ A420, A420_10LE, AV12 }"
 
+#ifndef GST_CAPS_FEATURE_MEMORY_GL_MEMORY
+#define GST_CAPS_FEATURE_MEMORY_GL_MEMORY "memory:GLMemory"
+#endif
+#ifndef GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE
+#define GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE "memory:VulkanImage"
+#endif
+
+#define SUPPORTED_SINK_CAPS \
+    GST_VIDEO_CAPS_MAKE (SUPPORTED_SINK_FORMATS) ";" \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, \
+        SUPPORTED_SINK_FORMATS) ";" \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, \
+        SUPPORTED_SINK_FORMATS) ";" \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, \
+        SUPPORTED_SINK_FORMATS)
+#define SUPPORTED_ALPHA_CAPS \
+    GST_VIDEO_CAPS_MAKE (SUPPORTED_ALPHA_FORMATS) ";" \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, \
+        SUPPORTED_ALPHA_FORMATS) ";" \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, \
+        SUPPORTED_ALPHA_FORMATS) ";" \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, \
+        SUPPORTED_ALPHA_FORMATS)
+#define SUPPORTED_SRC_CAPS \
+    GST_VIDEO_CAPS_MAKE (SUPPORTED_SRC_FORMATS) ";" \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, \
+        SUPPORTED_SRC_FORMATS) ";" \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, \
+        SUPPORTED_SRC_FORMATS) ";" \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, \
+        SUPPORTED_SRC_FORMATS)
+
 /* *INDENT-OFF* */
 struct {
   GstVideoFormat sink;
@@ -122,6 +154,8 @@ struct _GstAlphaCombine
 
   GstVideoInfo sink_vinfo;
   GstVideoInfo alpha_vinfo;
+  GstCaps *sink_caps;
+  GstCaps *alpha_caps;
   GstVideoFormat src_format;
 
   guint sink_format_cookie;
@@ -141,21 +175,21 @@ static GstStaticPadTemplate gst_alpha_combine_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (SUPPORTED_SINK_FORMATS))
+    GST_STATIC_CAPS (SUPPORTED_SINK_CAPS)
     );
 
 static GstStaticPadTemplate gst_alpha_combine_alpha_template =
 GST_STATIC_PAD_TEMPLATE ("alpha",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (SUPPORTED_ALPHA_FORMATS))
+    GST_STATIC_CAPS (SUPPORTED_ALPHA_CAPS)
     );
 
 static GstStaticPadTemplate gst_alpha_combine_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (SUPPORTED_SRC_FORMATS))
+    GST_STATIC_CAPS (SUPPORTED_SRC_CAPS)
     );
 
 static void
@@ -241,14 +275,196 @@ gst_alpha_combine_unlock_stop (GstAlphaCombine * self, GstPad * pad)
   g_mutex_unlock (&self->buffer_lock);
 }
 
+static gboolean
+gst_alpha_combine_caps_features_are_compatible (GstAlphaCombine * self)
+{
+  const GstCapsFeatures *sink_features;
+  const GstCapsFeatures *alpha_features;
+
+  sink_features = gst_caps_get_features (self->sink_caps, 0);
+  alpha_features = gst_caps_get_features (self->alpha_caps, 0);
+
+  if (gst_caps_features_is_any (sink_features) ||
+      gst_caps_features_is_any (alpha_features)) {
+    GST_ELEMENT_ERROR (self, STREAM, FORMAT, ("Invalid caps features"),
+        ("Actual caps events must not contain ANY caps features."));
+    return FALSE;
+  }
+
+  if (!gst_caps_features_is_equal (sink_features, alpha_features)) {
+    GST_ELEMENT_ERROR (self, STREAM, FORMAT, ("Caps features mismatch"),
+        ("Both input streams must use compatible caps features."));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_alpha_combine_caps_has_feature (GstCaps * caps, const gchar * feature)
+{
+  const GstCapsFeatures *features = gst_caps_get_features (caps, 0);
+
+  return features && gst_caps_features_contains (features, feature);
+}
+
+static gboolean
+gst_alpha_combine_caps_string_field_equal (GstCaps * a, GstCaps * b,
+    const gchar * field)
+{
+  const GstStructure *a_s = gst_caps_get_structure (a, 0);
+  const GstStructure *b_s = gst_caps_get_structure (b, 0);
+  const gchar *a_value = gst_structure_get_string (a_s, field);
+  const gchar *b_value = gst_structure_get_string (b_s, field);
+
+  return a_value && b_value && g_str_equal (a_value, b_value);
+}
+
+static gboolean
+gst_alpha_combine_caps_features_are_supported (GstAlphaCombine * self)
+{
+  const GstCapsFeatures *features = gst_caps_get_features (self->sink_caps, 0);
+
+  if (gst_caps_features_get_size (features) == 0)
+    return TRUE;
+
+  if (gst_caps_features_get_size (features) != 1)
+    goto unsupported;
+
+  if (gst_caps_features_contains (features,
+          GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY) ||
+      gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY)
+      || gst_caps_features_contains (features,
+          GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE))
+    return TRUE;
+
+unsupported:
+  GST_ELEMENT_ERROR (self, STREAM, FORMAT, ("Unsupported memory features"),
+      ("alphacombine only supports plain/system memory, GLMemory, or "
+          "VulkanImage on this branch."));
+  return FALSE;
+}
+
+static gboolean
+gst_alpha_combine_memory_fields_are_compatible (GstAlphaCombine * self)
+{
+  /* As of this writing, GLMemory texture-target is the only memory-feature
+   * caps field we can cheaply validate generically here. */
+  if (gst_alpha_combine_caps_has_feature (self->sink_caps,
+          GST_CAPS_FEATURE_MEMORY_GL_MEMORY) &&
+      !gst_alpha_combine_caps_string_field_equal (self->sink_caps,
+          self->alpha_caps, "texture-target")) {
+    GST_ELEMENT_ERROR (self, STREAM, FORMAT, ("GL caps mismatch"),
+        ("GLMemory inputs must have the same texture-target."));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_alpha_combine_structure_has_format (const GstStructure * structure,
+    GstVideoFormat format)
+{
+  const GValue *formats = gst_structure_get_value (structure, "format");
+  GValue wanted = G_VALUE_INIT;
+  gboolean ret;
+
+  if (!formats)
+    return TRUE;
+
+  g_value_init (&wanted, G_TYPE_STRING);
+  g_value_set_static_string (&wanted, gst_video_format_to_string (format));
+  ret = gst_value_can_intersect (formats, &wanted);
+  g_value_unset (&wanted);
+
+  return ret;
+}
+
+static GstCaps *
+gst_alpha_combine_sink_caps_from_src_caps (GstAlphaCombine * self,
+    GstPad * pad, GstCaps * src_caps)
+{
+  GstCaps *caps;
+  guint i, j;
+
+  if (gst_caps_is_any (src_caps))
+    return gst_pad_get_pad_template_caps (pad);
+
+  caps = gst_caps_new_empty ();
+
+  for (i = 0; i < gst_caps_get_size (src_caps); i++) {
+    const GstStructure *src_s = gst_caps_get_structure (src_caps, i);
+    const GstCapsFeatures *features = gst_caps_get_features (src_caps, i);
+    gboolean seen_formats[GST_VIDEO_FORMAT_LAST] = { FALSE, };
+    GstVideoFormat formats[G_N_ELEMENTS (format_map)];
+    guint n_formats = 0;
+
+    for (j = 0; j < G_N_ELEMENTS (format_map); j++) {
+      GstVideoFormat format;
+
+      if (!gst_alpha_combine_structure_has_format (src_s, format_map[j].src))
+        continue;
+
+      if (pad == self->sink_pad)
+        format = format_map[j].sink;
+      else
+        format = format_map[j].alpha;
+
+      if (seen_formats[format])
+        continue;
+
+      seen_formats[format] = TRUE;
+      formats[n_formats++] = format;
+    }
+
+    for (j = 0; j < n_formats; j++) {
+      GstStructure *s = gst_structure_copy (src_s);
+
+      gst_structure_set (s, "format", G_TYPE_STRING,
+          gst_video_format_to_string (formats[j]), NULL);
+      gst_caps_append_structure_full (caps, s,
+          gst_caps_features_copy (features));
+    }
+  }
+
+  return caps;
+}
+
+static GstCaps *
+gst_alpha_combine_sink_getcaps (GstAlphaCombine * self, GstPad * pad,
+    GstCaps * filter)
+{
+  GstCaps *src_caps, *sink_caps, *template_caps, *ret;
+
+  src_caps = gst_pad_peer_query_caps (self->src_pad, NULL);
+  sink_caps = gst_alpha_combine_sink_caps_from_src_caps (self, pad, src_caps);
+  gst_caps_unref (src_caps);
+
+  template_caps = gst_pad_get_pad_template_caps (pad);
+  ret = gst_caps_intersect_full (sink_caps, template_caps,
+      GST_CAPS_INTERSECT_FIRST);
+  gst_caps_unref (sink_caps);
+  gst_caps_unref (template_caps);
+
+  if (filter) {
+    GstCaps *tmp = gst_caps_intersect_full (filter, ret,
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (ret);
+    ret = tmp;
+  }
+
+  return ret;
+}
+
 /*
  * gst_alpha_combine_negotiate:
  * @self: #GstAlphaCombine pointer
  *
  * Verify that the stream and alpha stream format are compatible and fail
- * otherwise. There is no effort in helping upstream to dynamically negotiate
- * a valid combination to keep the complexity low, and because this would be a
- * very atypical usage.
+ * otherwise. Caps queries only constrain upstream to combinations that could
+ * produce caps accepted downstream; this function still performs the final
+ * validation once both input streams have caps.
  */
 static gboolean
 gst_alpha_combine_negotiate (GstAlphaCombine * self)
@@ -260,6 +476,15 @@ gst_alpha_combine_negotiate (GstAlphaCombine * self)
 
   if (self->src_format != GST_VIDEO_FORMAT_UNKNOWN)
     return TRUE;
+
+  if (!gst_alpha_combine_caps_features_are_compatible (self))
+    return FALSE;
+
+  if (!gst_alpha_combine_caps_features_are_supported (self))
+    return FALSE;
+
+  if (!gst_alpha_combine_memory_fields_are_compatible (self))
+    return FALSE;
 
   for (i = 0; i < G_N_ELEMENTS (format_map); i++) {
     if (format_map[i].sink == sink_format
@@ -386,6 +611,8 @@ gst_alpha_combine_sink_chain (GstPad * pad, GstObject * object,
 
   ret = gst_alpha_combine_peek_alpha_buffer (self, &alpha_buffer);
   if (ret != GST_FLOW_OK) {
+    if (ret != GST_FLOW_FLUSHING && ret != GST_FLOW_EOS)
+      gst_alpha_combine_pop_alpha_buffer (self, ret);
     gst_buffer_unref (src_buffer);
     return ret;
   }
@@ -469,6 +696,8 @@ gst_alpha_combine_set_sink_format (GstAlphaCombine * self, GstCaps * caps)
     GST_ELEMENT_ERROR (self, STREAM, FORMAT, ("Invalid video format"), (NULL));
     return FALSE;
   }
+  gst_caps_replace (&self->sink_caps, caps);
+  self->src_format = GST_VIDEO_FORMAT_UNKNOWN;
 
   sink_format = GST_VIDEO_INFO_FORMAT (&self->sink_vinfo);
 
@@ -527,6 +756,8 @@ gst_alpha_combine_set_alpha_format (GstAlphaCombine * self, GstCaps * caps)
     GST_ELEMENT_ERROR (self, STREAM, FORMAT, ("Invalid video format"), (NULL));
     return FALSE;
   }
+  gst_caps_replace (&self->alpha_caps, caps);
+  self->src_format = GST_VIDEO_FORMAT_UNKNOWN;
 
   self->alpha_format_cookie++;
 
@@ -690,6 +921,8 @@ gst_alpha_combine_change_state (GstElement * element, GstStateChange transition)
       self->src_format = GST_VIDEO_FORMAT_UNKNOWN;
       gst_video_info_init (&self->sink_vinfo);
       gst_video_info_init (&self->alpha_vinfo);
+      gst_caps_replace (&self->sink_caps, NULL);
+      gst_caps_replace (&self->alpha_caps, NULL);
       self->sink_format_cookie = 0;
       self->alpha_format_cookie = 0;
       break;
@@ -717,6 +950,8 @@ gst_alpha_combine_dispose (GObject * object)
 
   gst_buffer_replace (&self->alpha_buffer, NULL);
   gst_buffer_replace (&self->last_alpha_buffer, NULL);
+  gst_caps_replace (&self->sink_caps, NULL);
+  gst_caps_replace (&self->alpha_caps, NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
