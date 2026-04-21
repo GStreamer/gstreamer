@@ -30,6 +30,10 @@
             const el = document.getElementById('remote-offerer');
             el.checked = (val == '1');
             el.dispatchEvent(new Event('change'));
+          } else if (id === 'data-channel') {
+            const el = document.getElementById('data-channel');
+            el.checked = (val == '1');
+            el.dispatchEvent(new Event('change'));
           } else if (id === 'peer-id') {
             document.getElementById('peer-connect').value = val;
           } else if (id === 'connect' && val === '1') {
@@ -58,7 +62,8 @@
       <input id="peer-connect-button" onclick="onConnectClicked();" type="button" value="Connect">
       <!-- Request the peer to send the offer by sending the OFFER_REQUEST message.
         Same as the --remote-offerer flag in the sendrecv C example -->
-      <input id="remote-offerer" type="checkbox" autocomplete="off"><span>Remote offerer</span>
+      <input id="remote-offerer" type="checkbox" autocomplete="off" onchange="onRemoteOffererChanged();"><span>Remote offerer</span>
+      <input id="data-channel" type="checkbox" autocomplete="off" checked><label id="data-channel-label" for="data-channel">Data channel</label>
     </div>
 
     <div>Our id is <b id="peer-id">unknown</b></div>

@@ -43,6 +43,16 @@ function wantRemoteOfferer() {
    return document.getElementById("remote-offerer").checked;
 }
 
+function wantDataChannel() {
+   return document.getElementById("data-channel").checked;
+}
+
+function onRemoteOffererChanged() {
+    var disabled = wantRemoteOfferer();
+    document.getElementById("data-channel").disabled = disabled;
+    document.getElementById("data-channel-label").style.color = disabled ? "gray" : "";
+}
+
 function onConnectClicked() {
     if (document.getElementById("peer-connect-button").value == "Disconnect") {
         resetState();
@@ -212,14 +222,14 @@ function onServerMessage(event) {
                 return;
             }
             if (!callCreateTriggered) {
-                createCall();
+                createCall(true);
                 setStatus("Created peer connection for call, waiting for SDP");
             }
             return;
         case "OFFER_REQUEST":
             // The peer wants us to set up and then send an offer
             if (!callCreateTriggered)
-                createCall();
+                createCall(true);
             return;
         default:
             if (event.data.startsWith("ERROR")) {
@@ -240,7 +250,7 @@ function onServerMessage(event) {
 
             // Incoming JSON signals the beginning of a call
             if (!callCreateTriggered)
-                createCall(msg);
+                createCall(false);
 
             if (msg.sdp != null) {
                 onIncomingSDP(msg.sdp);
@@ -260,7 +270,10 @@ function onServerClose(event) {
         peer_connection.close();
         peer_connection = new RTCPeerConnection(rtc_configuration);
     }
+    send_channel = null;
     callCreateTriggered = false;
+    makingOffer = false;
+    isSettingRemoteAnswerPending = false;
 
     // Reset after a second
     window.setTimeout(websocketServerConnect, 1000);
@@ -370,17 +383,24 @@ function onDataChannel(event) {
     receiveChannel.onmessage = handleDataChannelMessageReceived;
     receiveChannel.onerror = handleDataChannelError;
     receiveChannel.onclose = handleDataChannelClose;
+    // Use the incoming channel to send replies when we didn't create our own
+    if (!send_channel)
+        send_channel = receiveChannel;
 }
 
-function createCall() {
+function createCall(isOfferer) {
     callCreateTriggered = true;
     console.log('Configuring RTCPeerConnection');
-    send_channel = peer_connection.createDataChannel('label', null);
-    send_channel.onopen = handleDataChannelOpen;
-    send_channel.onmessage = handleDataChannelMessageReceived;
-    send_channel.onerror = handleDataChannelError;
-    send_channel.onclose = handleDataChannelClose;
+    // Always accept an incoming data channel if the remote offers one
     peer_connection.ondatachannel = onDataChannel;
+    // Only create our own data channel when we're the one making the offer
+    if (isOfferer && wantDataChannel()) {
+        send_channel = peer_connection.createDataChannel('label', null);
+        send_channel.onopen = handleDataChannelOpen;
+        send_channel.onmessage = handleDataChannelMessageReceived;
+        send_channel.onerror = handleDataChannelError;
+        send_channel.onclose = handleDataChannelClose;
+    }
 
     peer_connection.ontrack = ({track, streams}) => {
         console.log("ontrack triggered");
