@@ -369,6 +369,22 @@ assert_output_buffer (GstBuffer * output, GstBuffer * sink_buffer,
 }
 
 static void
+assert_yv12_planes_reordered_to_a420 (GstBuffer * output,
+    GstBuffer * sink_buffer)
+{
+  GstVideoMeta *out_meta = gst_buffer_get_video_meta (output);
+  GstVideoMeta *sink_meta = gst_buffer_get_video_meta (sink_buffer);
+
+  fail_unless (out_meta != NULL);
+  fail_unless (sink_meta != NULL);
+  fail_unless_equals_int (out_meta->format, GST_VIDEO_FORMAT_A420);
+  fail_unless_equals_uint64 (out_meta->offset[1], sink_meta->offset[2]);
+  fail_unless_equals_uint64 (out_meta->offset[2], sink_meta->offset[1]);
+  fail_unless_equals_int (out_meta->stride[1], sink_meta->stride[2]);
+  fail_unless_equals_int (out_meta->stride[2], sink_meta->stride[1]);
+}
+
+static void
 run_combine_test (GstVideoFormat sink_format, GstVideoFormat alpha_format,
     GstVideoFormat expected_format, guint alpha_plane_memory_prefix)
 {
@@ -400,42 +416,157 @@ run_combine_test (GstVideoFormat sink_format, GstVideoFormat alpha_format,
   cleanup_alphacombine (fixture);
 }
 
-GST_START_TEST (test_i420_i420_to_a420)
+GST_START_TEST (test_yv12_to_a420_reorders_uv_planes)
+{
+  AlphaCombineFixture *fixture = setup_alphacombine ();
+  GstCaps *sink_caps = make_caps (GST_VIDEO_FORMAT_YV12);
+  GstCaps *alpha_caps = make_caps (GST_VIDEO_FORMAT_GRAY8);
+  GstBuffer *sink_buffer = make_video_buffer (GST_VIDEO_FORMAT_YV12, 0);
+  GstBuffer *alpha_buffer = make_video_buffer (GST_VIDEO_FORMAT_GRAY8, 0);
+  GstBuffer *output;
+
+  set_input_caps (fixture, sink_caps, alpha_caps);
+
+  fail_unless_equals_int (gst_pad_push (fixture->alpha_srcpad, alpha_buffer),
+      GST_FLOW_OK);
+  fail_unless_equals_int (gst_pad_push (fixture->sink_srcpad,
+          gst_buffer_ref (sink_buffer)), GST_FLOW_OK);
+
+  assert_output_caps (fixture, GST_VIDEO_FORMAT_A420);
+  output = pop_output_buffer ();
+  assert_output_buffer (output, sink_buffer, 0, GST_VIDEO_FORMAT_YV12,
+      GST_VIDEO_FORMAT_A420);
+  assert_yv12_planes_reordered_to_a420 (output, sink_buffer);
+  gst_buffer_unref (output);
+
+  gst_buffer_unref (sink_buffer);
+  gst_caps_unref (sink_caps);
+  gst_caps_unref (alpha_caps);
+  cleanup_alphacombine (fixture);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_8_bit_planar_formats)
 {
   run_combine_test (GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_I420,
       GST_VIDEO_FORMAT_A420, 0);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_i420_gray8_to_a420)
-{
   run_combine_test (GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_GRAY8,
       GST_VIDEO_FORMAT_A420, 3);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_nv12_nv12_to_av12)
-{
   run_combine_test (GST_VIDEO_FORMAT_NV12, GST_VIDEO_FORMAT_NV12,
       GST_VIDEO_FORMAT_AV12, 0);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_nv12_gray8_to_av12)
-{
   run_combine_test (GST_VIDEO_FORMAT_NV12, GST_VIDEO_FORMAT_GRAY8,
       GST_VIDEO_FORMAT_AV12, 0);
+  run_combine_test (GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_YV12,
+      GST_VIDEO_FORMAT_A420, 0);
+  run_combine_test (GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_Y42B,
+      GST_VIDEO_FORMAT_A422, 0);
+  run_combine_test (GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_GRAY8,
+      GST_VIDEO_FORMAT_A422, 0);
+  run_combine_test (GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_Y444,
+      GST_VIDEO_FORMAT_A444, 0);
+  run_combine_test (GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_GRAY8,
+      GST_VIDEO_FORMAT_A444, 0);
+  run_combine_test (GST_VIDEO_FORMAT_GBR, GST_VIDEO_FORMAT_GRAY8,
+      GST_VIDEO_FORMAT_GBRA, 0);
 }
 
 GST_END_TEST;
 
-GST_START_TEST (test_i420_10le_i420_10le_to_a420_10le)
+GST_START_TEST (test_10_bit_planar_formats)
 {
   run_combine_test (GST_VIDEO_FORMAT_I420_10LE, GST_VIDEO_FORMAT_I420_10LE,
       GST_VIDEO_FORMAT_A420_10LE, 0);
+  run_combine_test (GST_VIDEO_FORMAT_I420_10LE, GST_VIDEO_FORMAT_GRAY10_LE16,
+      GST_VIDEO_FORMAT_A420_10LE, 0);
+  run_combine_test (GST_VIDEO_FORMAT_I420_10BE, GST_VIDEO_FORMAT_I420_10BE,
+      GST_VIDEO_FORMAT_A420_10BE, 0);
+  run_combine_test (GST_VIDEO_FORMAT_I422_10LE, GST_VIDEO_FORMAT_I422_10LE,
+      GST_VIDEO_FORMAT_A422_10LE, 0);
+  run_combine_test (GST_VIDEO_FORMAT_I422_10LE, GST_VIDEO_FORMAT_GRAY10_LE16,
+      GST_VIDEO_FORMAT_A422_10LE, 0);
+  run_combine_test (GST_VIDEO_FORMAT_I422_10BE, GST_VIDEO_FORMAT_I422_10BE,
+      GST_VIDEO_FORMAT_A422_10BE, 0);
+  run_combine_test (GST_VIDEO_FORMAT_Y444_10LE, GST_VIDEO_FORMAT_Y444_10LE,
+      GST_VIDEO_FORMAT_A444_10LE, 0);
+  run_combine_test (GST_VIDEO_FORMAT_Y444_10LE, GST_VIDEO_FORMAT_GRAY10_LE16,
+      GST_VIDEO_FORMAT_A444_10LE, 0);
+  run_combine_test (GST_VIDEO_FORMAT_Y444_10BE, GST_VIDEO_FORMAT_Y444_10BE,
+      GST_VIDEO_FORMAT_A444_10BE, 0);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_12_bit_planar_formats)
+{
+  run_combine_test (GST_VIDEO_FORMAT_I420_12LE, GST_VIDEO_FORMAT_I420_12LE,
+      GST_VIDEO_FORMAT_A420_12LE, 0);
+  run_combine_test (GST_VIDEO_FORMAT_I420_12BE, GST_VIDEO_FORMAT_I420_12BE,
+      GST_VIDEO_FORMAT_A420_12BE, 0);
+  run_combine_test (GST_VIDEO_FORMAT_I422_12LE, GST_VIDEO_FORMAT_I422_12LE,
+      GST_VIDEO_FORMAT_A422_12LE, 0);
+  run_combine_test (GST_VIDEO_FORMAT_I422_12BE, GST_VIDEO_FORMAT_I422_12BE,
+      GST_VIDEO_FORMAT_A422_12BE, 0);
+  run_combine_test (GST_VIDEO_FORMAT_Y444_12LE, GST_VIDEO_FORMAT_Y444_12LE,
+      GST_VIDEO_FORMAT_A444_12LE, 0);
+  run_combine_test (GST_VIDEO_FORMAT_Y444_12BE, GST_VIDEO_FORMAT_Y444_12BE,
+      GST_VIDEO_FORMAT_A444_12BE, 0);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_16_bit_planar_formats)
+{
+  run_combine_test (GST_VIDEO_FORMAT_Y444_16LE, GST_VIDEO_FORMAT_Y444_16LE,
+      GST_VIDEO_FORMAT_A444_16LE, 0);
+  run_combine_test (GST_VIDEO_FORMAT_Y444_16LE, GST_VIDEO_FORMAT_GRAY16_LE,
+      GST_VIDEO_FORMAT_A444_16LE, 0);
+  run_combine_test (GST_VIDEO_FORMAT_Y444_16BE, GST_VIDEO_FORMAT_Y444_16BE,
+      GST_VIDEO_FORMAT_A444_16BE, 0);
+  run_combine_test (GST_VIDEO_FORMAT_Y444_16BE, GST_VIDEO_FORMAT_GRAY16_BE,
+      GST_VIDEO_FORMAT_A444_16BE, 0);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_unsupported_gray_packing)
+{
+  AlphaCombineFixture *fixture = setup_alphacombine ();
+  GstCaps *sink_caps = make_caps (GST_VIDEO_FORMAT_I420_10LE);
+  GstCaps *alpha_caps = make_caps (GST_VIDEO_FORMAT_GRAY10_LE32);
+  GstBuffer *sink_buffer = make_video_buffer (GST_VIDEO_FORMAT_I420_10LE, 0);
+  GstBuffer *alpha_buffer = make_video_buffer (GST_VIDEO_FORMAT_GRAY10_LE32, 0);
+
+  set_input_caps (fixture, sink_caps, alpha_caps);
+
+  /* GRAY10_LE32 is a packed layout, unlike the A420_10LE alpha plane. */
+  fail_unless_equals_int (gst_pad_push (fixture->alpha_srcpad, alpha_buffer),
+      GST_FLOW_NOT_NEGOTIATED);
+  fail_unless_equals_int (n_output_buffers (), 0);
+
+  gst_buffer_unref (sink_buffer);
+  gst_caps_unref (sink_caps);
+  gst_caps_unref (alpha_caps);
+  cleanup_alphacombine (fixture);
+
+  fixture = setup_alphacombine ();
+  sink_caps = make_caps (GST_VIDEO_FORMAT_I420_12LE);
+  alpha_caps = make_caps (GST_VIDEO_FORMAT_GRAY16_LE);
+  sink_buffer = make_video_buffer (GST_VIDEO_FORMAT_I420_12LE, 0);
+  alpha_buffer = make_video_buffer (GST_VIDEO_FORMAT_GRAY16_LE, 0);
+
+  set_input_caps (fixture, sink_caps, alpha_caps);
+
+  /* GRAY16_LE would require reinterpretation as a 12-bit alpha plane. */
+  fail_unless_equals_int (gst_pad_push (fixture->alpha_srcpad, alpha_buffer),
+      GST_FLOW_OK);
+  fail_unless_equals_int (gst_pad_push (fixture->sink_srcpad, sink_buffer),
+      GST_FLOW_NOT_NEGOTIATED);
+  fail_unless_equals_int (n_output_buffers (), 0);
+
+  gst_caps_unref (sink_caps);
+  gst_caps_unref (alpha_caps);
+  cleanup_alphacombine (fixture);
 }
 
 GST_END_TEST;
@@ -1012,11 +1143,12 @@ alphacombine_suite (void)
   tcase_set_timeout (tc_chain, 20);
   suite_add_tcase (s, tc_chain);
 
-  tcase_add_test (tc_chain, test_i420_i420_to_a420);
-  tcase_add_test (tc_chain, test_i420_gray8_to_a420);
-  tcase_add_test (tc_chain, test_nv12_nv12_to_av12);
-  tcase_add_test (tc_chain, test_nv12_gray8_to_av12);
-  tcase_add_test (tc_chain, test_i420_10le_i420_10le_to_a420_10le);
+  tcase_add_test (tc_chain, test_yv12_to_a420_reorders_uv_planes);
+  tcase_add_test (tc_chain, test_8_bit_planar_formats);
+  tcase_add_test (tc_chain, test_10_bit_planar_formats);
+  tcase_add_test (tc_chain, test_12_bit_planar_formats);
+  tcase_add_test (tc_chain, test_16_bit_planar_formats);
+  tcase_add_test (tc_chain, test_unsupported_gray_packing);
   tcase_add_test (tc_chain, test_unsupported_format_pair);
   tcase_add_test (tc_chain, test_color_range_mismatch);
   tcase_add_test (tc_chain, test_gap_reuses_previous_alpha_buffer);
