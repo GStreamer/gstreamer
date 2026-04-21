@@ -41,7 +41,14 @@
   </head>
 
   <body>
-    <div id="video"></div>
+    <div id="incoming"></div>
+    <div id="preview" style="position: relative; display: inline-block;">
+      <div style="position: absolute; bottom: 0; left: 0; padding: 0.5rem 1rem;
+        background: rgba(0,0,0,0.4); color: white; font-size: 2rem;
+        pointer-events: none;" hidden>
+      Preview
+      </div>
+    </div>
     <div>Status: <span id="status">unknown</span></div>
     <div><textarea id="text" cols=40 rows=4></textarea></div>
     <br/>

@@ -77,11 +77,26 @@ function handleIncomingError(error) {
 }
 
 function getVideoElement() {
-    var div = document.getElementById("video");
+    var div = document.getElementById("incoming");
     var video_tag = document.createElement("video");
+    video_tag.id = "incoming-video"
     video_tag.textContent = "Your browser doesn't support video";
     video_tag.autoplay = true;
     video_tag.playsinline = true;
+    div.appendChild(video_tag);
+    return video_tag
+}
+
+function getPreviewElement() {
+    var div = document.getElementById("preview");
+    var preview_text = div.querySelector('div');
+    preview_text.hidden = false;
+    var video_tag = document.createElement("video");
+    video_tag.id = "preview-video"
+    video_tag.textContent = "Your browser doesn't support video";
+    video_tag.autoplay = true;
+    video_tag.playsinline = true;
+    video_tag.muted = true;
     div.appendChild(video_tag);
     return video_tag
 }
@@ -113,7 +128,11 @@ function resetVideo() {
     }
 
     // Remove all video players
-    document.getElementById("video").innerHTML = "";
+    document.querySelectorAll("video").forEach(el => el.remove());
+    // Reset preview text
+    var div = document.getElementById("preview");
+    var preview_text = div.querySelector('div');
+    preview_text.hidden = true;
 }
 
 function onIncomingSDP(sdp) {
@@ -417,8 +436,11 @@ function createCall() {
         for (const track of stream.getTracks()) {
             peer_connection.addTrack(track, stream);
         }
+        var previewElem = getPreviewElement();
+        previewElem.srcObject = stream;
         return stream;
     }).catch(setError);
+
 
     setConnectButtonState("Disconnect");
 }
