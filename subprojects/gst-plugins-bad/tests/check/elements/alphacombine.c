@@ -33,20 +33,20 @@ static const guint test_height = 8;
 static GstStaticPadTemplate sink_src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw")
+    GST_STATIC_CAPS ("video/x-raw(ANY)")
     );
 
 static GstStaticPadTemplate alpha_src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw")
+    GST_STATIC_CAPS ("video/x-raw(ANY)")
     );
 
 static GstStaticPadTemplate output_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw")
+    GST_STATIC_CAPS ("video/x-raw(ANY)")
     );
 
 typedef struct
@@ -137,6 +137,46 @@ static GstCaps *
 make_caps (GstVideoFormat format)
 {
   return make_caps_with_range (format, GST_VIDEO_COLOR_RANGE_0_255);
+}
+
+static GstCaps *
+make_caps_with_feature (GstVideoFormat format, const gchar * feature)
+{
+  GstCaps *caps = make_caps (format);
+
+  gst_caps_set_features (caps, 0,
+      gst_caps_features_new_single_static_str (feature));
+
+  return caps;
+}
+
+static GstCaps *
+make_caps_with_features (GstVideoFormat format, const gchar * feature1,
+    const gchar * feature2)
+{
+  GstCaps *caps = make_caps (format);
+
+  gst_caps_set_features (caps, 0,
+      gst_caps_features_new_static_str (feature1, feature2, NULL));
+
+  return caps;
+}
+
+static GstCaps *
+make_gl_caps (GstVideoFormat format, const gchar * texture_target)
+{
+  GstCaps *caps = make_caps_with_feature (format, "memory:GLMemory");
+
+  gst_caps_set_simple (caps, "texture-target", G_TYPE_STRING,
+      texture_target, NULL);
+
+  return caps;
+}
+
+static GstCaps *
+make_vulkan_image_caps (GstVideoFormat format)
+{
+  return make_caps_with_feature (format, "memory:VulkanImage");
 }
 
 static void
@@ -246,6 +286,36 @@ assert_output_caps (AlphaCombineFixture * fixture, GstVideoFormat format)
   fail_unless_equals_int (GST_VIDEO_INFO_FORMAT (&info), format);
   fail_unless_equals_int (GST_VIDEO_INFO_WIDTH (&info), test_width);
   fail_unless_equals_int (GST_VIDEO_INFO_HEIGHT (&info), test_height);
+  gst_caps_unref (caps);
+}
+
+static void
+assert_output_caps_features (AlphaCombineFixture * fixture,
+    GstVideoFormat format, const GstCapsFeatures * expected_features,
+    const gchar * expected_texture_target)
+{
+  GstCaps *caps;
+  GstVideoInfo info;
+  const GstCapsFeatures *features;
+  const GstStructure *structure;
+
+  caps = gst_pad_get_current_caps (fixture->output_sinkpad);
+  fail_unless (caps != NULL);
+  fail_unless (gst_video_info_from_caps (&info, caps));
+  fail_unless_equals_int (GST_VIDEO_INFO_FORMAT (&info), format);
+
+  features = gst_caps_get_features (caps, 0);
+  fail_unless (gst_caps_features_is_equal (features, expected_features));
+
+  structure = gst_caps_get_structure (caps, 0);
+  if (expected_texture_target) {
+    const gchar *texture_target =
+        gst_structure_get_string (structure, "texture-target");
+
+    fail_unless (texture_target != NULL);
+    fail_unless_equals_string (texture_target, expected_texture_target);
+  }
+
   gst_caps_unref (caps);
 }
 
@@ -483,6 +553,272 @@ GST_START_TEST (test_allocation_query_strips_pool)
 
 GST_END_TEST;
 
+GST_START_TEST (test_pad_templates_expose_supported_memory_backends)
+{
+  GstElementFactory *factory = gst_element_factory_find ("alphacombine");
+  const GList *templates;
+
+  fail_unless (factory != NULL);
+
+  for (templates = gst_element_factory_get_static_pad_templates (factory);
+      templates; templates = templates->next) {
+    GstStaticPadTemplate *static_template = templates->data;
+    GstCaps *caps = gst_static_caps_get (&static_template->static_caps);
+    gboolean has_baseline = FALSE;
+    gboolean has_gl_memory = FALSE;
+    gboolean has_vulkan_image = FALSE;
+    guint i;
+
+    for (i = 0; i < gst_caps_get_size (caps); i++) {
+      const GstCapsFeatures *features = gst_caps_get_features (caps, i);
+
+      fail_if (gst_caps_features_is_any (features));
+      if (gst_caps_features_get_size (features) == 0 ||
+          gst_caps_features_contains (features,
+              GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY))
+        has_baseline = TRUE;
+
+      if (gst_caps_features_contains (features, "memory:GLMemory"))
+        has_gl_memory = TRUE;
+
+      if (gst_caps_features_contains (features, "memory:VulkanImage"))
+        has_vulkan_image = TRUE;
+    }
+
+    fail_unless (has_baseline);
+    fail_unless (has_gl_memory);
+    fail_unless (has_vulkan_image);
+
+    gst_caps_unref (caps);
+  }
+
+  gst_object_unref (factory);
+}
+
+GST_END_TEST;
+
+static void
+run_caps_feature_combine_test (GstCaps * sink_caps, GstCaps * alpha_caps,
+    const GstCapsFeatures * expected_features,
+    const gchar * expected_texture_target)
+{
+  AlphaCombineFixture *fixture = setup_alphacombine ();
+  GstBuffer *sink_buffer = make_video_buffer (GST_VIDEO_FORMAT_I420, 0);
+  GstBuffer *alpha_buffer = make_video_buffer (GST_VIDEO_FORMAT_I420, 0);
+  GstBuffer *output;
+
+  set_input_caps (fixture, sink_caps, alpha_caps);
+  assert_output_caps_features (fixture, GST_VIDEO_FORMAT_A420,
+      expected_features, expected_texture_target);
+
+  fail_unless_equals_int (gst_pad_push (fixture->alpha_srcpad, alpha_buffer),
+      GST_FLOW_OK);
+  fail_unless_equals_int (gst_pad_push (fixture->sink_srcpad, sink_buffer),
+      GST_FLOW_OK);
+  output = pop_output_buffer ();
+  gst_buffer_unref (output);
+
+  gst_caps_unref (sink_caps);
+  gst_caps_unref (alpha_caps);
+  cleanup_alphacombine (fixture);
+}
+
+static void
+run_caps_feature_rejection_test (GstCaps * sink_caps, GstCaps * alpha_caps)
+{
+  AlphaCombineFixture *fixture = setup_alphacombine ();
+  GstBuffer *sink_buffer = make_video_buffer (GST_VIDEO_FORMAT_I420, 0);
+  GstBuffer *alpha_buffer = make_video_buffer (GST_VIDEO_FORMAT_I420, 0);
+  GstFlowReturn alpha_ret;
+
+  set_input_caps (fixture, sink_caps, alpha_caps);
+
+  alpha_ret = gst_pad_push (fixture->alpha_srcpad, alpha_buffer);
+  if (alpha_ret == GST_FLOW_OK) {
+    fail_unless_equals_int (gst_pad_push (fixture->sink_srcpad, sink_buffer),
+        GST_FLOW_NOT_NEGOTIATED);
+
+    fail_unless (gst_pad_push_event (fixture->alpha_srcpad,
+            gst_event_new_flush_start ()));
+    fail_unless (gst_pad_push_event (fixture->sink_srcpad,
+            gst_event_new_flush_start ()));
+  } else {
+    fail_unless_equals_int (alpha_ret, GST_FLOW_NOT_NEGOTIATED);
+    gst_buffer_unref (sink_buffer);
+  }
+
+  fail_unless_equals_int (gst_element_set_state (fixture->element,
+          GST_STATE_READY), GST_STATE_CHANGE_SUCCESS);
+  fail_unless_equals_int (n_output_buffers (), 0);
+
+  gst_caps_unref (sink_caps);
+  gst_caps_unref (alpha_caps);
+  cleanup_alphacombine (fixture);
+}
+
+GST_START_TEST (test_plain_and_system_memory_features_are_compatible)
+{
+  GstCapsFeatures *system_features =
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+  GstCapsFeatures *plain_features = gst_caps_features_new_empty ();
+
+  run_caps_feature_combine_test (make_caps (GST_VIDEO_FORMAT_I420),
+      make_caps (GST_VIDEO_FORMAT_I420), plain_features, NULL);
+  run_caps_feature_combine_test (make_caps_with_feature (GST_VIDEO_FORMAT_I420,
+          GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY),
+      make_caps_with_feature (GST_VIDEO_FORMAT_I420,
+          GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY), system_features, NULL);
+  run_caps_feature_combine_test (make_caps (GST_VIDEO_FORMAT_I420),
+      make_caps_with_feature (GST_VIDEO_FORMAT_I420,
+          GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY), plain_features, NULL);
+  run_caps_feature_combine_test (make_caps_with_feature (GST_VIDEO_FORMAT_I420,
+          GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY),
+      make_caps (GST_VIDEO_FORMAT_I420), system_features, NULL);
+
+  gst_caps_features_free (system_features);
+  gst_caps_features_free (plain_features);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_vulkan_image_features_are_propagated)
+{
+  GstCapsFeatures *features =
+      gst_caps_features_new_single_static_str ("memory:VulkanImage");
+
+  run_caps_feature_combine_test (make_vulkan_image_caps
+      (GST_VIDEO_FORMAT_I420), make_vulkan_image_caps (GST_VIDEO_FORMAT_I420),
+      features, NULL);
+
+  gst_caps_features_free (features);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_unsupported_memory_feature_is_rejected_late)
+{
+  run_caps_feature_rejection_test (make_caps_with_feature
+      (GST_VIDEO_FORMAT_I420, "memory:TestMemory"),
+      make_caps_with_feature (GST_VIDEO_FORMAT_I420, "memory:TestMemory"));
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_gl_and_vulkan_image_mismatch_is_rejected_late)
+{
+  run_caps_feature_rejection_test (make_gl_caps (GST_VIDEO_FORMAT_I420, "2D"),
+      make_vulkan_image_caps (GST_VIDEO_FORMAT_I420));
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_meta_feature_mismatch_is_rejected)
+{
+  AlphaCombineFixture *fixture = setup_alphacombine ();
+  GstCaps *sink_caps = make_caps_with_features (GST_VIDEO_FORMAT_I420,
+      "memory:GLMemory", "meta:GstVideoOverlayComposition");
+  GstCaps *alpha_caps = make_caps_with_feature (GST_VIDEO_FORMAT_I420,
+      "memory:GLMemory");
+
+  gst_caps_set_simple (sink_caps, "texture-target", G_TYPE_STRING, "2D", NULL);
+  gst_caps_set_simple (alpha_caps, "texture-target", G_TYPE_STRING, "2D", NULL);
+
+  fail_if (gst_pad_peer_query_accept_caps (fixture->sink_srcpad, sink_caps));
+  fail_unless (gst_pad_peer_query_accept_caps (fixture->alpha_srcpad,
+          alpha_caps));
+
+  gst_caps_unref (sink_caps);
+  gst_caps_unref (alpha_caps);
+  cleanup_alphacombine (fixture);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_gl_memory_requires_matching_texture_target)
+{
+  GstCapsFeatures *features =
+      gst_caps_features_new_single_static_str ("memory:GLMemory");
+
+  run_caps_feature_combine_test (make_gl_caps (GST_VIDEO_FORMAT_I420, "2D"),
+      make_gl_caps (GST_VIDEO_FORMAT_I420, "2D"), features, "2D");
+  run_caps_feature_rejection_test (make_gl_caps (GST_VIDEO_FORMAT_I420, "2D"),
+      make_gl_caps (GST_VIDEO_FORMAT_I420, "rectangle"));
+
+  gst_caps_features_free (features);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_caps_query_propagates_downstream_glmemory)
+{
+  AlphaCombineFixture *fixture = setup_alphacombine ();
+  GstCaps *downstream_caps = make_gl_caps (GST_VIDEO_FORMAT_AV12, "rectangle");
+  GstCaps *sink_caps;
+  GstCaps *alpha_caps;
+  GstCaps *expected_sink_caps = make_gl_caps (GST_VIDEO_FORMAT_NV12,
+      "rectangle");
+  GstCaps *expected_alpha_nv12_caps = make_gl_caps (GST_VIDEO_FORMAT_NV12,
+      "rectangle");
+  GstCaps *unexpected_raw_caps = make_caps (GST_VIDEO_FORMAT_NV12);
+
+  g_object_set_data (G_OBJECT (fixture->output_sinkpad), "caps-query-caps",
+      downstream_caps);
+  gst_pad_set_query_function (fixture->output_sinkpad, caps_query_func);
+
+  sink_caps = gst_pad_peer_query_caps (fixture->sink_srcpad, NULL);
+  fail_unless (gst_caps_can_intersect (sink_caps, expected_sink_caps));
+  fail_if (gst_caps_can_intersect (sink_caps, unexpected_raw_caps));
+  gst_caps_unref (sink_caps);
+
+  alpha_caps = gst_pad_peer_query_caps (fixture->alpha_srcpad, NULL);
+  fail_unless (gst_caps_can_intersect (alpha_caps, expected_alpha_nv12_caps));
+  fail_if (gst_caps_can_intersect (alpha_caps, unexpected_raw_caps));
+  gst_caps_unref (alpha_caps);
+
+  g_object_set_data (G_OBJECT (fixture->output_sinkpad), "caps-query-caps",
+      NULL);
+  gst_caps_unref (unexpected_raw_caps);
+  gst_caps_unref (expected_alpha_nv12_caps);
+  gst_caps_unref (expected_sink_caps);
+  gst_caps_unref (downstream_caps);
+  cleanup_alphacombine (fixture);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_caps_query_propagates_downstream_vulkan_image)
+{
+  AlphaCombineFixture *fixture = setup_alphacombine ();
+  GstCaps *downstream_caps = make_vulkan_image_caps (GST_VIDEO_FORMAT_AV12);
+  GstCaps *sink_caps;
+  GstCaps *alpha_caps;
+  GstCaps *expected_sink_caps = make_vulkan_image_caps (GST_VIDEO_FORMAT_NV12);
+  GstCaps *unexpected_raw_caps = make_caps (GST_VIDEO_FORMAT_NV12);
+
+  g_object_set_data (G_OBJECT (fixture->output_sinkpad), "caps-query-caps",
+      downstream_caps);
+  gst_pad_set_query_function (fixture->output_sinkpad, caps_query_func);
+
+  sink_caps = gst_pad_peer_query_caps (fixture->sink_srcpad, NULL);
+  fail_unless (gst_caps_can_intersect (sink_caps, expected_sink_caps));
+  fail_if (gst_caps_can_intersect (sink_caps, unexpected_raw_caps));
+  gst_caps_unref (sink_caps);
+
+  alpha_caps = gst_pad_peer_query_caps (fixture->alpha_srcpad, NULL);
+  fail_unless (gst_caps_can_intersect (alpha_caps, expected_sink_caps));
+  fail_if (gst_caps_can_intersect (alpha_caps, unexpected_raw_caps));
+  gst_caps_unref (alpha_caps);
+
+  g_object_set_data (G_OBJECT (fixture->output_sinkpad), "caps-query-caps",
+      NULL);
+  gst_caps_unref (unexpected_raw_caps);
+  gst_caps_unref (expected_sink_caps);
+  gst_caps_unref (downstream_caps);
+  cleanup_alphacombine (fixture);
+}
+
+GST_END_TEST;
 static gboolean
 element_available (const gchar * name)
 {
@@ -655,6 +991,17 @@ alphacombine_suite (void)
   tcase_add_test (tc_chain, test_gap_reuses_previous_alpha_buffer);
   tcase_add_test (tc_chain, test_initial_gap_fails);
   tcase_add_test (tc_chain, test_allocation_query_strips_pool);
+  tcase_add_test (tc_chain,
+      test_pad_templates_expose_supported_memory_backends);
+  tcase_add_test (tc_chain,
+      test_plain_and_system_memory_features_are_compatible);
+  tcase_add_test (tc_chain, test_vulkan_image_features_are_propagated);
+  tcase_add_test (tc_chain, test_unsupported_memory_feature_is_rejected_late);
+  tcase_add_test (tc_chain, test_gl_and_vulkan_image_mismatch_is_rejected_late);
+  tcase_add_test (tc_chain, test_meta_feature_mismatch_is_rejected);
+  tcase_add_test (tc_chain, test_gl_memory_requires_matching_texture_target);
+  tcase_add_test (tc_chain, test_caps_query_propagates_downstream_glmemory);
+  tcase_add_test (tc_chain, test_caps_query_propagates_downstream_vulkan_image);
   tcase_add_test (tc_chain, test_vp8alphadecodebin_smoke);
   tcase_add_test (tc_chain, test_vp9alphadecodebin_smoke);
 
