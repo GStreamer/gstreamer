@@ -244,6 +244,36 @@ GST_START_TEST (test_plugin_feature_rank_property)
 
 GST_END_TEST;
 
+GST_START_TEST (test_plugin_feature_rank_bumps_registry_cookie)
+{
+  GstRegistry *registry = gst_registry_get ();
+  GstPluginFeature *feature = gst_registry_find_feature (registry, "identity",
+      GST_TYPE_ELEMENT_FACTORY);
+  guint rank, cookie_before;
+
+  fail_unless (feature != NULL);
+
+  rank = gst_plugin_feature_get_rank (feature);
+  cookie_before = gst_registry_get_feature_list_cookie (registry);
+
+  /* Real change: cookie must bump so decodebin / parsebin / ... re-scan. */
+  gst_plugin_feature_set_rank (feature, rank + 1);
+  fail_unless (gst_registry_get_feature_list_cookie (registry) !=
+      cookie_before);
+
+  /* No-op change: same rank, cookie stays put. */
+  cookie_before = gst_registry_get_feature_list_cookie (registry);
+  gst_plugin_feature_set_rank (feature, rank + 1);
+  fail_unless_equals_int (gst_registry_get_feature_list_cookie (registry),
+      cookie_before);
+
+  /* Restore to avoid leaking a rank bump to later tests. */
+  gst_plugin_feature_set_rank (feature, rank);
+  gst_clear_object (&feature);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_element_factory_suite (void)
 {
@@ -257,6 +287,7 @@ gst_element_factory_suite (void)
   tcase_add_test (tc_chain, test_can_sink_any_caps);
   tcase_add_test (tc_chain, test_can_sink_all_caps);
   tcase_add_test (tc_chain, test_plugin_feature_rank_property);
+  tcase_add_test (tc_chain, test_plugin_feature_rank_bumps_registry_cookie);
 
   return s;
 }

@@ -2077,3 +2077,15 @@ gst_registry_get_feature_list_cookie (GstRegistry * registry)
 
   return registry->priv->cookie;
 }
+
+/* Called from gst_plugin_feature_set_rank() so cookie-keyed caches
+ * (decodebin, parsebin, playbin, ...) see runtime rank changes. */
+void
+_priv_gst_registry_bump_feature_list_cookie (GstRegistry * registry)
+{
+  g_return_if_fail (GST_IS_REGISTRY (registry));
+
+  GST_OBJECT_LOCK (registry);
+  registry->priv->cookie++;
+  GST_OBJECT_UNLOCK (registry);
+}

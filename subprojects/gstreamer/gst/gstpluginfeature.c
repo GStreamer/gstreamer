@@ -223,17 +223,27 @@ not_found:
 void
 gst_plugin_feature_set_rank (GstPluginFeature * feature, guint rank)
 {
+  GstRegistry *registry;
+
   g_return_if_fail (feature != NULL);
   g_return_if_fail (GST_IS_PLUGIN_FEATURE (feature));
 
   GST_OBJECT_LOCK (feature);
-  if (feature->rank != rank) {
-    feature->rank = rank;
+  if (feature->rank == rank) {
     GST_OBJECT_UNLOCK (feature);
-    g_object_notify (G_OBJECT (feature), "rank");
-  } else {
-    GST_OBJECT_UNLOCK (feature);
+    return;
   }
+  feature->rank = rank;
+  GST_OBJECT_UNLOCK (feature);
+
+  /* Bump the registry's feature-list cookie so cookie-keyed caches
+   * (decodebin, parsebin, playbin, ...) re-scan on the next lookup. */
+  registry = (GstRegistry *) gst_object_get_parent (GST_OBJECT (feature));
+  if (registry)
+    _priv_gst_registry_bump_feature_list_cookie (registry);
+  gst_clear_object (&registry);
+
+  g_object_notify (G_OBJECT (feature), "rank");
 }
 
 /**

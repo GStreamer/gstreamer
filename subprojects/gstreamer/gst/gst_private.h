@@ -157,6 +157,8 @@ gboolean _priv_gst_registry_remove_cache_plugins (GstRegistry *registry);
 
 G_GNUC_INTERNAL  void _priv_gst_registry_cleanup (void);
 
+G_GNUC_INTERNAL  void _priv_gst_registry_bump_feature_list_cookie (GstRegistry *registry);
+
 GST_API
 gboolean _gst_plugin_loader_client_run (const gchar * pipe_name);
 
