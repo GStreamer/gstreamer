@@ -27,6 +27,14 @@
 #include <gst/gl/gl.h>
 #include <gst/gl/gstglfuncs.h>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
+#if defined(__APPLE__) && TARGET_OS_OSX
+#include <gst/gstmacos.h>
+#endif
+
 #include <stdio.h>
 
 static GstGLDisplay *display;
@@ -54,6 +62,14 @@ static const gchar bgra_reorder_data[] = { 0x72, 0x24, 0x49, 0xff };
 static const gchar bgrx_reorder_data[] = { 0x72, 0x24, 0x49, IGNORE_MAGIC };
 static const gchar abgr_reorder_data[] = { 0xff, 0x72, 0x24, 0x49 };
 static const gchar xbgr_reorder_data[] = { IGNORE_MAGIC, 0x72, 0x24, 0x49 };
+static const gchar planar_r_data[] =
+    { 0x49, IGNORE_MAGIC, IGNORE_MAGIC, IGNORE_MAGIC };
+static const gchar planar_g_data[] =
+    { 0x24, IGNORE_MAGIC, IGNORE_MAGIC, IGNORE_MAGIC };
+static const gchar planar_b_data[] =
+    { 0x72, IGNORE_MAGIC, IGNORE_MAGIC, IGNORE_MAGIC };
+static const gchar planar_a_data[] =
+    { 0xff, IGNORE_MAGIC, IGNORE_MAGIC, IGNORE_MAGIC };
 
 static TestFrame test_rgba_reorder[] = {
   {1, 1, GST_VIDEO_FORMAT_RGBA, {(gchar *) & rgba_reorder_data}},
@@ -66,6 +82,22 @@ static TestFrame test_rgba_reorder[] = {
   {1, 1, GST_VIDEO_FORMAT_xBGR, {(gchar *) & xbgr_reorder_data}},
   {1, 1, GST_VIDEO_FORMAT_RGB, {(gchar *) & rgb_reorder_data}},
   {1, 1, GST_VIDEO_FORMAT_BGR, {(gchar *) & bgr_reorder_data}},
+};
+
+static TestFrame test_planar_rgb_reorder[] = {
+  {1, 1, GST_VIDEO_FORMAT_RGBA, {(gchar *) & rgba_reorder_data}},
+  {1, 1, GST_VIDEO_FORMAT_GBR,
+        {(gchar *) planar_g_data, (gchar *) planar_b_data,
+          (gchar *) planar_r_data}},
+  {1, 1, GST_VIDEO_FORMAT_GBRA,
+        {(gchar *) planar_g_data, (gchar *) planar_b_data,
+          (gchar *) planar_r_data, (gchar *) planar_a_data}},
+  {1, 1, GST_VIDEO_FORMAT_RGBP,
+        {(gchar *) planar_r_data, (gchar *) planar_g_data,
+          (gchar *) planar_b_data}},
+  {1, 1, GST_VIDEO_FORMAT_BGRP,
+        {(gchar *) planar_b_data, (gchar *) planar_g_data,
+          (gchar *) planar_r_data}},
 };
 
 #ifndef GST_CAPS_FEATURE_MEMORY_DMABUF
@@ -159,7 +191,6 @@ check_conversion (TestFrame * frames, guint size)
     gint in_width = frames[i].width;
     gint in_height = frames[i].height;
     GstVideoFormat in_v_format = frames[i].v_format;
-    GstVideoFrame in_frame;
     GstCaps *in_caps;
 
     gst_video_info_set_format (&in_info, in_v_format, in_width, in_height);
@@ -183,22 +214,40 @@ check_conversion (TestFrame * frames, guint size)
 
       mem = gst_gl_base_memory_alloc (base_mem_alloc,
           (GstGLAllocationParams *) params);
+      fail_unless (mem != NULL && gst_is_gl_memory (GST_MEMORY_CAST (mem)),
+          "failed to create GstGLMemory for %s plane %d with GL format 0x%x",
+          gst_video_format_to_string (in_v_format), j, tex_format);
       gst_buffer_append_memory (inbuf, GST_MEMORY_CAST (mem));
 
       gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
     }
 
-    fail_unless (gst_video_frame_map (&in_frame, &in_info, inbuf,
-            GST_MAP_READ));
+    fail_unless_equals_int (gst_buffer_n_memory (inbuf),
+        GST_VIDEO_INFO_N_PLANES (&in_info));
 
-    /* sanity check that the correct values were wrapped */
+    /* Avoid gst_video_frame_map() here: without GstVideoMeta it maps the
+     * whole writable buffer and can replace per-plane memories with one merged
+     * memory, changing the GL input layout this test is exercising. */
     for (j = 0; j < GST_VIDEO_INFO_N_PLANES (&in_info); j++) {
+      GstMemory *mem = gst_buffer_peek_memory (inbuf, j);
+      GstMapInfo map;
       int plane_size = _video_info_plane_size (&in_info, j);
+
+      fail_unless (gst_memory_map (mem, &map, GST_MAP_READ),
+          "failed to map %s input plane %d",
+          gst_video_format_to_string (in_v_format), j);
       for (k = 0; k < plane_size; k++) {
         if (frames[i].data[j][k] != IGNORE_MAGIC)
-          fail_unless (((gchar *) in_frame.data[j])[k] == frames[i].data[j][k]);
+          fail_unless (((gchar *) map.data)[k] == frames[i].data[j][k],
+              "%s input mismatch at plane %d offset %d: expected 0x%02x, got 0x%02x",
+              gst_video_format_to_string (in_v_format), j, k,
+              (guint8) frames[i].data[j][k], (guint8) ((gchar *) map.data)[k]);
       }
+      gst_memory_unmap (mem, &map);
     }
+
+    fail_unless_equals_int (gst_buffer_n_memory (inbuf),
+        GST_VIDEO_INFO_N_PLANES (&in_info));
 
     for (j = 0; j < size; j++) {
       GstBuffer *outbuf;
@@ -230,6 +279,9 @@ check_conversion (TestFrame * frames, guint size)
         const gchar *out_str = gst_video_format_to_string (out_v_format);
         GST_WARNING ("failed to convert from %s to %s", in_str, out_str);
       }
+      fail_unless (outbuf != NULL, "failed to convert from %s to %s",
+          gst_video_format_to_string (in_v_format),
+          gst_video_format_to_string (out_v_format));
 
       fail_unless (gst_video_frame_map (&out_frame, &out_info, outbuf,
               GST_MAP_READ));
@@ -242,7 +294,11 @@ check_conversion (TestFrame * frames, guint size)
         for (l = 0; l < plane_size; l++) {
           gchar out_pixel = ((gchar *) out_frame.data[k])[l];
           if (out_data[k][l] != IGNORE_MAGIC && out_pixel != IGNORE_MAGIC)
-            fail_unless (out_pixel == out_data[k][l]);
+            fail_unless (out_pixel == out_data[k][l],
+                "%s to %s mismatch at plane %d offset %d: expected 0x%02x, got 0x%02x",
+                gst_video_format_to_string (in_v_format),
+                gst_video_format_to_string (out_v_format), k, l,
+                (guint8) out_data[k][l], (guint8) out_pixel);
           /* FIXME: check alpha clobbering */
         }
       }
@@ -253,7 +309,6 @@ check_conversion (TestFrame * frames, guint size)
     }
 
     gst_caps_unref (in_caps);
-    gst_video_frame_unmap (&in_frame);
     gst_buffer_unref (inbuf);
 
     fail_unless_equals_int (ref_count, 0);
@@ -271,6 +326,14 @@ GST_START_TEST (test_reorder_buffer)
     size -= 2;
 
   check_conversion (test_rgba_reorder, size);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_planar_rgb_reorder_buffer)
+{
+  check_conversion (test_planar_rgb_reorder,
+      G_N_ELEMENTS (test_planar_rgb_reorder));
 }
 
 GST_END_TEST;
@@ -468,6 +531,7 @@ gst_gl_color_convert_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_checked_fixture (tc_chain, setup, teardown);
   tcase_add_test (tc_chain, test_reorder_buffer);
+  tcase_add_test (tc_chain, test_planar_rgb_reorder_buffer);
   tcase_add_test (tc_chain, test_meta);
   tcase_add_test (tc_chain, test_passthrough);
   /* FIXME add YUV <--> RGB conversion tests */
@@ -475,4 +539,21 @@ gst_gl_color_convert_suite (void)
   return s;
 }
 
+#if defined(__APPLE__) && TARGET_OS_OSX
+static int
+run_tests (void)
+{
+  Suite *s = gst_gl_color_convert_suite ();
+
+  return gst_check_run_suite_nofork (s, "gst_gl_color_convert", __FILE__);
+}
+
+int
+main (int argc, char **argv)
+{
+  gst_check_init (&argc, &argv);
+  return gst_macos_main_simple ((GstMainFuncSimple) run_tests, NULL);
+}
+#else
 GST_CHECK_MAIN (gst_gl_color_convert);
+#endif
