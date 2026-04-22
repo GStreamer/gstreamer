@@ -2269,15 +2269,9 @@ video_format_to_gl_reorder (GstVideoFormat v_format, gint * reorder,
       reorder[3] = 2;
       break;
     case GST_VIDEO_FORMAT_GBR:
-      if (input) {
-        reorder[0] = 2;
-        reorder[1] = 0;
-        reorder[2] = 1;
-      } else {
-        reorder[0] = 0;
-        reorder[1] = 1;
-        reorder[2] = 2;
-      }
+      reorder[0] = 2;
+      reorder[1] = 0;
+      reorder[2] = 1;
       reorder[3] = 3;
       break;
     default:

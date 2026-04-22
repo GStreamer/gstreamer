@@ -584,6 +584,12 @@ gst_gl_video_format_swizzle (GstVideoFormat video_format, int *swizzle)
     case GST_VIDEO_FORMAT_RGBP:
       get_single_planar_format_gl_swizzle_order (GST_VIDEO_FORMAT_RGB, swizzle);
       return TRUE;
+    case GST_VIDEO_FORMAT_GBRA:
+      swizzle[0] = 2;
+      swizzle[1] = 0;
+      swizzle[2] = 1;
+      swizzle[3] = 3;
+      return TRUE;
     case GST_VIDEO_FORMAT_AV12:
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV16:
