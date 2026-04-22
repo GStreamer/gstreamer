@@ -53,3 +53,15 @@ foreach tool : tools
     }
   }
 endforeach
+
+# Static plugin preregistry tool. Built, but doesn't get installed
+gst_registry = get_option('registry')
+if gst_registry and not static_build and meson.can_run_host_binaries()
+  executable('gst-preregistry-generate',
+    'gst-preregistry-generate.c',
+    install: true,
+    include_directories : [configinc],
+    dependencies: [glib_dep, gobject_dep, gmodule_dep, mathlib, gst_dep],
+    c_args: gst_c_args + ['-DG_LOG_DOMAIN="@0@"'.format(exe_name)],
+  )
+endif

@@ -202,7 +202,6 @@ gboolean _gst_disable_registry_cache = FALSE;
 
 static gboolean __registry_reuse_plugin_scanner = TRUE;
 
-static gboolean __registry_static_feature_plugins_only = FALSE;
 #endif
 
 /* Element signals and args */
@@ -1465,6 +1464,104 @@ gst_registry_scan_path (GstRegistry * registry, const gchar * path)
   return result;
 }
 
+#ifndef GST_DISABLE_REGISTRY
+static gboolean
+gst_registry_remove_plugin_by_check (GstRegistry * registry,
+    gboolean (*func) (GstPlugin * plugin), const gchar * func_name);
+static gboolean plugin_is_non_static_features (GstPlugin * plugin);
+
+void
+_priv_gst_registry_create_static_caches (const gchar ** plugin_paths,
+    GError ** out_err)
+{
+  g_return_if_fail (plugin_paths != NULL);
+  GError *error = NULL;
+
+  GstRegistryScanContext context;
+  init_scan_context (&context, NULL);
+
+  gsize i;
+  for (i = 0; plugin_paths[i] && error == NULL; i++) {
+    const gchar *plugin_path = plugin_paths[i];
+
+    GST_INFO ("Scanning plugins for preregistry cache in path %s", plugin_path);
+
+    GstRegistry *registry = g_object_new (GST_TYPE_REGISTRY, NULL);
+
+    context.registry = registry;
+
+    GStatBuf file_status;
+    if (g_stat (plugin_path, &file_status) < 0) {
+      /* Plugin will be removed from cache after the scan completes if it
+       * is still marked 'cached' */
+      g_set_error (&error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
+          _("%s is not accessible"), plugin_path);
+      break;
+    }
+    if (!(file_status.st_mode & S_IFDIR)) {
+      g_set_error (&error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
+          _("%s is not a path"), plugin_path);
+      break;
+    }
+    gchar *canon_plugin_basepath = g_canonicalize_filename (plugin_path, NULL);
+    size_t canon_plugin_basepath_len = strlen (canon_plugin_basepath);
+
+    /* Make sure we'll strip the directory separator later if it isn't included
+     * in this prefix path */
+    if (!G_IS_DIR_SEPARATOR (canon_plugin_basepath[canon_plugin_basepath_len])) {
+      canon_plugin_basepath_len += 1;
+    }
+
+    gst_registry_scan_path_internal (&context, canon_plugin_basepath);
+
+    /* Need to clear the scan context to finish reading from the child scanner */
+    clear_scan_context (&context);
+
+    /* Remove non-static plugins */
+    gst_registry_remove_plugin_by_check (registry,
+        plugin_is_non_static_features,
+        G_STRINGIFY (plugin_is_non_static_features));
+
+    /* Now convert all plugin paths to be relative to the path */
+    for (GList * walk = registry->priv->plugins; walk != NULL;
+        walk = g_list_next (walk)) {
+      GstPlugin *plugin = GST_PLUGIN (walk->data);
+      g_assert (plugin->filename != NULL);
+      g_assert (g_str_has_prefix (plugin->filename, canon_plugin_basepath));
+      gchar *relative_path =
+          g_strdup (plugin->filename + canon_plugin_basepath_len);
+      g_free (plugin->filename);
+      plugin->filename = relative_path;
+      GST_LOG_OBJECT (registry, "Plugin %s has relative path %s",
+          plugin->desc.name, plugin->filename);
+    }
+
+    g_free (canon_plugin_basepath);
+
+    /* Write cache */
+    gchar *registry_file =
+        g_build_filename (plugin_path, GST_REGISTRY_FILE_NAME, NULL);
+    GST_INFO ("Writing preregistry cache in %s", registry_file);
+    if (!priv_gst_registry_binary_write_cache (registry,
+            registry->priv->plugins, registry_file)) {
+      g_set_error (&error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
+          _("Error writing registry cache to %s: %s"),
+          registry_file, g_strerror (errno));
+    }
+
+    g_free (registry_file);
+    gst_clear_object (&registry);
+    context.registry = NULL;
+  }
+
+  if (out_err) {
+    *out_err = error;
+  } else {
+    g_clear_error (&error);
+  }
+}
+#endif /* GST_DISABLE_REGISTRY */
+
 static gboolean
 _gst_plugin_feature_filter_plugin_name (GstPluginFeature * feature,
     gpointer user_data)
@@ -1749,7 +1846,7 @@ priv_gst_count_directories (const char *filepath)
 }
 
 #ifndef GST_DISABLE_REGISTRY
-/* Unref all plugins marked 'cached', to clear old plugins that no
+/* TRUE for all plugins marked 'cached', to clear old plugins that no
  * longer exist. */
 static gboolean
 plugin_is_cached (GstPlugin * plugin)
@@ -1757,19 +1854,27 @@ plugin_is_cached (GstPlugin * plugin)
   return GST_OBJECT_FLAG_IS_SET (plugin, GST_PLUGIN_FLAG_CACHED);
 }
 
-/* Unref all plugins that don't have static features */
+/* TRUE for all plugins that don't have static features, and aren't from a file */
 static gboolean
 plugin_is_non_static_features (GstPlugin * plugin)
 {
-  return !GST_OBJECT_FLAG_IS_SET (plugin, GST_PLUGIN_FLAG_STATIC_FEATURES);
+  gboolean ret =
+      !GST_OBJECT_FLAG_IS_SET (plugin, GST_PLUGIN_FLAG_STATIC_FEATURES)
+      || plugin->filename == NULL;
+  if (ret) {
+    GST_LOG ("Discarding plugin with non-static features: %s",
+        plugin->filename);
+  }
+
+  return ret;
 }
 
-/* Unref all plugins that fail the check performed by 'func',
+/* Unref all plugins where the check performed by 'func' returns TRUE,
  * to remove plugins that are not wanted by some criteria
  * Returns %TRUE if any plugins were removed */
 static gboolean
 gst_registry_remove_plugin_by_check (GstRegistry * registry,
-    gboolean (*func) (GstPlugin * plugin))
+    gboolean (*func) (GstPlugin * plugin), const gchar * func_name)
 {
   GList *g;
   GList *g_next;
@@ -1780,14 +1885,15 @@ gst_registry_remove_plugin_by_check (GstRegistry * registry,
 
   GST_OBJECT_LOCK (registry);
 
-  GST_DEBUG_OBJECT (registry, "removing cached plugins");
+  GST_DEBUG_OBJECT (registry, "removing unwanted plugins using check '%s'",
+      func_name);
   g = registry->priv->plugins;
   while (g) {
     g_next = g->next;
     plugin = g->data;
     if (func (plugin)) {
-      GST_DEBUG_OBJECT (registry, "removing cached plugin \"%s\"",
-          GST_STR_NULL (plugin->filename));
+      GST_DEBUG_OBJECT (registry, "removing plugin '%s' (%s)",
+          plugin->desc.name, GST_STR_NULL (plugin->filename));
       registry->priv->plugins = g_list_delete_link (registry->priv->plugins, g);
       --registry->priv->n_plugins;
       if (G_LIKELY (plugin->basename))
@@ -1923,14 +2029,8 @@ scan_and_update_registry (GstRegistry * default_registry,
 
   /* Remove cached plugins so stale info is cleared. */
   changed |=
-      gst_registry_remove_plugin_by_check (default_registry, plugin_is_cached);
-
-  if (__registry_static_feature_plugins_only) {
-    /* Remove plugins with non-static feature sets */
-    changed |=
-        gst_registry_remove_plugin_by_check (default_registry,
-        plugin_is_non_static_features);
-  }
+      gst_registry_remove_plugin_by_check (default_registry, plugin_is_cached,
+      G_STRINGIFY (plugin_is_cached));
 
   if (!changed) {
     GST_INFO ("Registry cache has not changed");
@@ -1992,10 +2092,6 @@ ensure_current_registry (GError ** error)
         do_update = (strcmp (update_env, "no") != 0);
       }
     }
-  }
-
-  if (g_getenv ("GST_REGISTRY_STATIC_FEATURE_PLUGINS_ONLY")) {
-    __registry_static_feature_plugins_only = TRUE;
   }
 
   if (do_update) {

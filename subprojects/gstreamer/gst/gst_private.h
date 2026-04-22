@@ -164,6 +164,10 @@ G_GNUC_INTERNAL  void _priv_gst_registry_bump_feature_list_cookie (GstRegistry *
 GST_API
 gboolean _gst_plugin_loader_client_run (const gchar * pipe_name);
 
+/* Used by gst-preregistry-generate to create build-time caches of static plugins */
+GST_API
+void _priv_gst_registry_create_static_caches(const gchar **paths, GError **err);
+
 G_GNUC_INTERNAL  GstPlugin * _priv_gst_plugin_load_file_for_registry (const gchar *filename,
                                                                       GstRegistry * registry,
                                                                       GError** error);
