@@ -623,6 +623,8 @@ reasons.
 Before 1.16.3 it was not possible to change the callbacks in a thread-safe
 way.
 
+Since 1.28.3 it is allowed to set the @callbacks to %NULL to unset them.
+
 Note that gst_app_sink_set_callbacks() and
 gst_app_sink_set_simple_callbacks() are mutually exclusive and setting one
 will unset the other.</doc>
@@ -635,7 +637,7 @@ will unset the other.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">a #GstAppSink</doc>
             <type name="AppSink" c:type="GstAppSink*"/>
           </instance-parameter>
-          <parameter name="callbacks" transfer-ownership="none">
+          <parameter name="callbacks" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">the callbacks</doc>
             <type name="AppSinkCallbacks" c:type="GstAppSinkCallbacks*"/>
           </parameter>
@@ -2284,7 +2286,13 @@ If callbacks are installed, no signals will be emitted for performance
 reasons.
 
 Before 1.16.3 it was not possible to change the callbacks in a thread-safe
-way.</doc>
+way.
+
+Since 1.28.3 it is allowed to set the @callbacks to %NULL to unset them.
+
+Note that gst_app_src_set_callbacks() and
+gst_app_src_set_simple_callbacks() are mutually exclusive and setting one
+will unset the other.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -2294,7 +2302,7 @@ way.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">a #GstAppSrc</doc>
             <type name="AppSrc" c:type="GstAppSrc*"/>
           </instance-parameter>
-          <parameter name="callbacks" transfer-ownership="none">
+          <parameter name="callbacks" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">the callbacks</doc>
             <type name="AppSrcCallbacks" c:type="GstAppSrcCallbacks*"/>
           </parameter>
