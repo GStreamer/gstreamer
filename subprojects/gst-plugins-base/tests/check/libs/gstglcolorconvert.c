@@ -473,17 +473,29 @@ comp_src_pad_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 
 GST_START_TEST (test_meta)
 {
+  GstElementFactory *textoverlay_factory;
+  GError *error = NULL;
+  GstElement *pipeline;
+
+  textoverlay_factory = gst_element_factory_find ("textoverlay");
+  if (textoverlay_factory == NULL) {
+    GST_INFO ("Skipping meta test: textoverlay missing");
+    return;
+  }
+  gst_object_unref (textoverlay_factory);
+
   gst_meta_register_custom_simple ("test-glcolorconvert");
 
-  GstElement *pipeline = gst_parse_launch ("videotestsrc "
+  pipeline = gst_parse_launch ("videotestsrc "
       "! video/x-raw,format=YUY2 "
       "! glupload "
       "! textoverlay text=Hello ! textoverlay text=World "
       "! glcolorconvert name=convert "
       "! video/x-raw(ANY),format=RGBA "
-      "! gloverlaycompositor name=comp ! gldownload ! fakesink",
-      NULL);
-  fail_unless (pipeline != NULL);
+      "! gloverlaycompositor name=comp ! gldownload ! fakesink", &error);
+  fail_unless (pipeline != NULL, "Failed to parse pipeline: %s",
+      error ? error->message : "unknown error");
+  g_clear_error (&error);
 
   /* Check buffer before and after glcolorconvert */
   GstElement *conv = gst_bin_get_by_name (GST_BIN (pipeline), "convert");
@@ -513,7 +525,8 @@ GST_START_TEST (test_meta)
   /* Wait for preroll */
   GstState state;
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
-  gst_element_get_state (pipeline, &state, NULL, GST_CLOCK_TIME_NONE);
+  fail_unless_equals_int (gst_element_get_state (pipeline, &state, NULL,
+          GST_SECOND * 10), GST_STATE_CHANGE_SUCCESS);
   fail_unless (state == GST_STATE_PAUSED);
 
   /* Teardown */
