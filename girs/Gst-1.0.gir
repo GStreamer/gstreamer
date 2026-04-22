@@ -37209,7 +37209,10 @@ of the external dependencies change. This is useful for plugins which wrap
 other plugin systems, e.g. a plugin which wraps a plugin-based visualisation
 library and makes visualisations available as GStreamer elements, or a
 codec loader which exposes elements and/or caps dependent on what external
-codec libraries are currently installed.</doc>
+codec libraries are currently installed.
+
+It is an error to register dependencies for any plugin that has been marked
+as only have a static set of features via gst_plugin_set_static_features_flag()</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstplugin.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -37265,7 +37268,10 @@ codec libraries are currently installed.
 
 Convenience wrapper function for gst_plugin_add_dependency() which
 takes simple strings as arguments instead of string arrays, with multiple
-arguments separated by predefined delimiters (see above).</doc>
+arguments separated by predefined delimiters (see above).
+
+It is an error to register dependencies for any plugin that has been marked
+as only have a static set of features via gst_plugin_set_static_features_flag().</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstplugin.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -37614,6 +37620,27 @@ The cache is flushed every time the registry is rebuilt.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">a structure containing the data to cache</doc>
             <type name="Structure" c:type="GstStructure*"/>
           </parameter>
+        </parameters>
+      </method>
+      <method name="set_static_features_flag" c:identifier="gst_plugin_set_static_features_flag" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">Marks this plugin as having no external dependencies, and
+a static set of plugin features, rendering it suitable
+for inclusion in a static build-time registry. Shipping a static
+build-time registry speeds up application startup by avoiding
+scanning of these plugins at run-time.
+
+It is an error to call this function after any gst_plugin_add_dependency()
+or gst_plugin_add_dependency_simple() call, or to call those functions
+once this flag is set.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstplugin.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="plugin" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">the #GstPlugin</doc>
+            <type name="Plugin" c:type="GstPlugin*"/>
+          </instance-parameter>
         </parameters>
       </method>
     </class>
@@ -37986,12 +38013,16 @@ to get a list of plugins that match certain criteria.</doc>
       </parameters>
     </callback>
     <bitfield name="PluginFlags" glib:type-name="GstPluginFlags" glib:get-type="gst_plugin_flags_get_type" c:type="GstPluginFlags">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.h">The plugin loading state</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.h">The plugin loading state and registry flags.</doc>
       <member name="cached" value="16" c:identifier="GST_PLUGIN_FLAG_CACHED" glib:nick="cached" glib:name="GST_PLUGIN_FLAG_CACHED">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.h">Temporarily loaded plugins</doc>
       </member>
       <member name="blacklisted" value="32" c:identifier="GST_PLUGIN_FLAG_BLACKLISTED" glib:nick="blacklisted" glib:name="GST_PLUGIN_FLAG_BLACKLISTED">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.h">The plugin won't be scanned (again)</doc>
+      </member>
+      <member name="static_features" value="64" c:identifier="GST_PLUGIN_FLAG_STATIC_FEATURES" version="1.30" glib:nick="static-features" glib:name="GST_PLUGIN_FLAG_STATIC_FEATURES">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.h">The plugin has no external dependencies and a static set of features,
+rendering it suitable for storing in a static build-time registry.</doc>
       </member>
     </bitfield>
     <callback name="PluginInitFullFunc" c:type="GstPluginInitFullFunc">

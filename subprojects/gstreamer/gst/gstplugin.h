@@ -77,13 +77,25 @@ typedef enum
  * GstPluginFlags:
  * @GST_PLUGIN_FLAG_CACHED: Temporarily loaded plugins
  * @GST_PLUGIN_FLAG_BLACKLISTED: The plugin won't be scanned (again)
+ * @GST_PLUGIN_FLAG_STATIC_FEATURES: The plugin has no external dependencies
+ *                     and a static set of features, rendering it suitable for storing
+ *                     in a static build-time registry. (Since: 1.30)
  *
- * The plugin loading state
+ * The plugin loading state and registry flags.
  */
 typedef enum
 {
   GST_PLUGIN_FLAG_CACHED      = (GST_OBJECT_FLAG_LAST << 0),
-  GST_PLUGIN_FLAG_BLACKLISTED = (GST_OBJECT_FLAG_LAST << 1)
+  GST_PLUGIN_FLAG_BLACKLISTED = (GST_OBJECT_FLAG_LAST << 1),
+  /**
+   * GST_PLUGIN_FLAG_STATIC_FEATURES:
+   *
+   * The plugin has no external dependencies and a static set of features,
+   * rendering it suitable for storing in a static build-time registry.
+   *
+   * Since: 1.30
+   */
+  GST_PLUGIN_FLAG_STATIC_FEATURES = (GST_OBJECT_FLAG_LAST << 2)
 } GstPluginFlags;
 
 /**
@@ -379,6 +391,9 @@ GstPlugin *             gst_plugin_load                 (GstPlugin *plugin) G_GN
 
 GST_API
 GstPlugin *             gst_plugin_load_by_name         (const gchar *name);
+
+GST_API
+void                    gst_plugin_set_static_features_flag (GstPlugin    * plugin);
 
 GST_API
 void                    gst_plugin_add_dependency        (GstPlugin    * plugin,

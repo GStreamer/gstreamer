@@ -444,11 +444,12 @@ _priv_gst_registry_chunks_save_plugin (GList ** list, GstRegistry * registry,
   GList *plugin_features = NULL;
   GList *walk;
 
-  pe = g_new (GstRegistryChunkPluginElement, 1);
+  pe = g_new0 (GstRegistryChunkPluginElement, 1);
   chk =
       gst_registry_chunks_make_data (pe,
       sizeof (GstRegistryChunkPluginElement));
 
+  pe->flags = GST_OBJECT_FLAGS (plugin) & (GST_PLUGIN_FLAG_STATIC_FEATURES);
   pe->file_size = plugin->file_size;
   pe->file_mtime = plugin->file_mtime;
   pe->nfeatures = 0;
@@ -856,8 +857,7 @@ _priv_gst_registry_chunks_load_plugin (GstRegistry * registry, gchar ** in,
   plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
   plugin->priv->registry = registry;
 
-  /* TODO: also set GST_PLUGIN_FLAG_CONST */
-  GST_OBJECT_FLAG_SET (plugin, GST_PLUGIN_FLAG_CACHED);
+  GST_OBJECT_FLAG_SET (plugin, pe->flags | GST_PLUGIN_FLAG_CACHED);
   plugin->file_mtime = pe->file_mtime;
   plugin->file_size = pe->file_size;
 

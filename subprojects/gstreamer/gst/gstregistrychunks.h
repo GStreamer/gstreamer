@@ -56,6 +56,8 @@ typedef struct _GstRegistryChunkGlobalHeader
 /*
  * GstRegistryChunkPluginElement:
  *
+ * @flags: A subset of GstPluginFlags to serialise
+ *
  * @n_deps: Says how many dependency structures follows.
  *
  * @nfeatures: says how many binary plugin feature structures we will have
@@ -66,6 +68,8 @@ typedef struct _GstRegistryChunkGlobalHeader
 
 typedef struct _GstRegistryChunkPluginElement
 {
+  guint flags;
+
   gulong file_size;
   gulong file_mtime;
 

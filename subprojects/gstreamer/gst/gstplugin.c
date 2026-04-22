@@ -1534,6 +1534,31 @@ gst_plugin_list_free (GList * list)
 
 /* ===== plugin dependencies ===== */
 
+/**
+ * gst_plugin_set_static_features_flag:
+ * @plugin: the #GstPlugin
+ *
+ * Marks this plugin as having no external dependencies, and
+ * a static set of plugin features, rendering it suitable
+ * for inclusion in a static build-time registry. Shipping a static
+ * build-time registry speeds up application startup by avoiding
+ * scanning of these plugins at run-time.
+ *
+ * It is an error to call this function after any gst_plugin_add_dependency()
+ * or gst_plugin_add_dependency_simple() call, or to call those functions
+ * once this flag is set.
+ *
+ * Since: 1.30
+ */
+void
+gst_plugin_set_static_features_flag (GstPlugin * plugin)
+{
+  g_return_if_fail (GST_IS_PLUGIN (plugin));
+  g_return_if_fail (plugin->priv->deps == NULL);        /* Must not have any registered dependencies */
+
+  GST_OBJECT_FLAG_SET (plugin, GST_PLUGIN_FLAG_STATIC_FEATURES);
+}
+
 /* Scenarios:
  * ENV + xyz     where ENV can contain multiple values separated by SEPARATOR
  *               xyz may be "" (if ENV contains path to file rather than dir)
@@ -1974,6 +1999,9 @@ gst_plugin_ext_dep_equals (GstPluginDep * dep, const gchar ** env_vars,
  * library and makes visualisations available as GStreamer elements, or a
  * codec loader which exposes elements and/or caps dependent on what external
  * codec libraries are currently installed.
+ *
+ * It is an error to register dependencies for any plugin that has been marked
+ * as only have a static set of features via gst_plugin_set_static_features_flag()
  */
 void
 gst_plugin_add_dependency (GstPlugin * plugin, const gchar ** env_vars,
@@ -1983,6 +2011,8 @@ gst_plugin_add_dependency (GstPlugin * plugin, const gchar ** env_vars,
   GList *l;
 
   g_return_if_fail (GST_IS_PLUGIN (plugin));
+  g_return_if_fail (!GST_OBJECT_FLAG_IS_SET (plugin,
+          GST_PLUGIN_FLAG_STATIC_FEATURES));
 
   if ((env_vars == NULL || env_vars[0] == NULL) &&
       (paths == NULL || paths[0] == NULL)) {
@@ -2045,6 +2075,10 @@ gst_plugin_add_dependency (GstPlugin * plugin, const gchar ** env_vars,
  * Convenience wrapper function for gst_plugin_add_dependency() which
  * takes simple strings as arguments instead of string arrays, with multiple
  * arguments separated by predefined delimiters (see above).
+ *
+ * It is an error to register dependencies for any plugin that has been marked
+ * as only have a static set of features via gst_plugin_set_static_features_flag().
+ *
  */
 void
 gst_plugin_add_dependency_simple (GstPlugin * plugin,
@@ -2054,6 +2088,10 @@ gst_plugin_add_dependency_simple (GstPlugin * plugin,
   gchar **a_evars = NULL;
   gchar **a_paths = NULL;
   gchar **a_names = NULL;
+
+  g_return_if_fail (GST_IS_PLUGIN (plugin));
+  g_return_if_fail (!GST_OBJECT_FLAG_IS_SET (plugin,
+          GST_PLUGIN_FLAG_STATIC_FEATURES));
 
   if (env_vars)
     a_evars = g_strsplit_set (env_vars, ":;,", -1);

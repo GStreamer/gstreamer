@@ -201,6 +201,8 @@ extern GList *_priv_gst_plugin_paths;
 gboolean _gst_disable_registry_cache = FALSE;
 
 static gboolean __registry_reuse_plugin_scanner = TRUE;
+
+static gboolean __registry_static_feature_plugins_only = FALSE;
 #endif
 
 /* Element signals and args */
@@ -1748,9 +1750,26 @@ priv_gst_count_directories (const char *filepath)
 
 #ifndef GST_DISABLE_REGISTRY
 /* Unref all plugins marked 'cached', to clear old plugins that no
- * longer exist. Returns %TRUE if any plugins were removed */
+ * longer exist. */
 static gboolean
-gst_registry_remove_cache_plugins (GstRegistry * registry)
+plugin_is_cached (GstPlugin * plugin)
+{
+  return GST_OBJECT_FLAG_IS_SET (plugin, GST_PLUGIN_FLAG_CACHED);
+}
+
+/* Unref all plugins that don't have static features */
+static gboolean
+plugin_is_non_static_features (GstPlugin * plugin)
+{
+  return !GST_OBJECT_FLAG_IS_SET (plugin, GST_PLUGIN_FLAG_STATIC_FEATURES);
+}
+
+/* Unref all plugins that fail the check performed by 'func',
+ * to remove plugins that are not wanted by some criteria
+ * Returns %TRUE if any plugins were removed */
+static gboolean
+gst_registry_remove_plugin_by_check (GstRegistry * registry,
+    gboolean (*func) (GstPlugin * plugin))
 {
   GList *g;
   GList *g_next;
@@ -1766,7 +1785,7 @@ gst_registry_remove_cache_plugins (GstRegistry * registry)
   while (g) {
     g_next = g->next;
     plugin = g->data;
-    if (GST_OBJECT_FLAG_IS_SET (plugin, GST_PLUGIN_FLAG_CACHED)) {
+    if (func (plugin)) {
       GST_DEBUG_OBJECT (registry, "removing cached plugin \"%s\"",
           GST_STR_NULL (plugin->filename));
       registry->priv->plugins = g_list_delete_link (registry->priv->plugins, g);
@@ -1903,7 +1922,15 @@ scan_and_update_registry (GstRegistry * default_registry,
   changed |= context.changed;
 
   /* Remove cached plugins so stale info is cleared. */
-  changed |= gst_registry_remove_cache_plugins (default_registry);
+  changed |=
+      gst_registry_remove_plugin_by_check (default_registry, plugin_is_cached);
+
+  if (__registry_static_feature_plugins_only) {
+    /* Remove plugins with non-static feature sets */
+    changed |=
+        gst_registry_remove_plugin_by_check (default_registry,
+        plugin_is_non_static_features);
+  }
 
   if (!changed) {
     GST_INFO ("Registry cache has not changed");
@@ -1965,6 +1992,10 @@ ensure_current_registry (GError ** error)
         do_update = (strcmp (update_env, "no") != 0);
       }
     }
+  }
+
+  if (g_getenv ("GST_REGISTRY_STATIC_FEATURE_PLUGINS_ONLY")) {
+    __registry_static_feature_plugins_only = TRUE;
   }
 
   if (do_update) {

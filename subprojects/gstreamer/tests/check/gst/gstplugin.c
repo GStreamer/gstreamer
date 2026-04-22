@@ -360,6 +360,37 @@ GST_START_TEST (test_status_messages)
 
 GST_END_TEST;
 
+static gboolean
+register_check_static_features (GstPlugin * plugin)
+{
+  gst_plugin_set_static_features_flag (plugin);
+
+  /* Must not be able to add a dependency on a plugin with static feature s */
+  const gchar *env_vars[] = { "HOME", NULL };
+  ASSERT_CRITICAL (gst_plugin_add_dependency (plugin, env_vars, NULL, NULL,
+          GST_PLUGIN_DEPENDENCY_FLAG_NONE));
+  ASSERT_CRITICAL (gst_plugin_add_dependency_simple (plugin, "HOME", NULL, NULL,
+          GST_PLUGIN_DEPENDENCY_FLAG_NONE));
+
+  return TRUE;
+}
+
+GST_START_TEST (test_static_features)
+{
+  GstPlugin *plugin;
+
+  fail_unless (gst_plugin_register_static (GST_VERSION_MAJOR,
+          GST_VERSION_MINOR, "static-features", "static-features",
+          register_check_static_features, VERSION, GST_LICENSE, PACKAGE,
+          GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN));
+
+  plugin = gst_registry_find_plugin (gst_registry_get (), "static-features");
+  fail_unless (plugin != NULL);
+  gst_object_unref (plugin);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_plugin_suite (void)
 {
@@ -382,6 +413,7 @@ gst_plugin_suite (void)
   tcase_add_test (tc_chain, test_find_element);
   tcase_add_test (tc_chain, test_version_checks);
   tcase_add_test (tc_chain, test_status_messages);
+  tcase_add_test (tc_chain, test_static_features);
   //tcase_add_test (tc_chain, test_typefind);
 
   return s;
