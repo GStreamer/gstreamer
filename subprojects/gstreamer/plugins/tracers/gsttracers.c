@@ -36,6 +36,8 @@ GType gst_dots_tracer_get_type (void);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
+
   if (!gst_tracer_register (plugin, "dots", gst_dots_tracer_get_type ()))
     return FALSE;
 
