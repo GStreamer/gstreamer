@@ -210,7 +210,8 @@ appsrc_thread_func (gpointer data)
 
   GstCaps *caps = gst_video_info_to_caps (&output_info);
   gst_caps_set_features_simple (caps,
-      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY));
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY,
+          NULL));
   gst_app_src_set_caps (appsrc, caps);
   gst_caps_unref (caps);
 
