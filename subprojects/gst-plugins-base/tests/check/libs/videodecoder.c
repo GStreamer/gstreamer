@@ -1578,7 +1578,106 @@ GST_START_TEST (videodecoder_playback_invalid_ts_packetized_subframes)
 
 GST_END_TEST;
 
+GST_START_TEST (videodecoder_playback_receive_gap_event_when_caching_frame)
+{
+  GstSegment segment;
+  GstBuffer *buffer;
+  guint64 i = 0;
+  GList *events_iter;
+  GstClockTime current_position;
+  GstClockTime gap_ts;
+  GstClockTime gap_duration;
 
+  setup_videodecodertester (NULL, NULL);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  send_startup_events ();
+
+  /* push a new segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* push a buffer, to have the segment attached to it.
+   * unfortunately this buffer can't be decoded as it isn't a keyframe */
+  buffer = create_test_buffer (i++);
+  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+  current_position = GST_BUFFER_PTS (buffer);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  /* Make sure the frame is cached */
+  {
+    GList *list = gst_video_decoder_get_frames (GST_VIDEO_DECODER (dec));
+    fail_unless_equals_int (g_list_length (list), 1);
+    g_list_free_full (list, (GDestroyNotify) gst_video_codec_frame_unref);
+  }
+
+  /* push a gap */
+  gap_ts =
+      gst_util_uint64_scale_round (i, GST_SECOND * TEST_VIDEO_FPS_D,
+      TEST_VIDEO_FPS_N);
+  gap_duration =
+      gst_util_uint64_scale_round (GST_SECOND, TEST_VIDEO_FPS_D,
+      TEST_VIDEO_FPS_N);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_gap (gap_ts,
+              gap_duration)));
+
+  events_iter = events;
+  /* make sure the usual events have been received */
+  {
+    GstEvent *sstart = events_iter->data;
+    fail_unless (GST_EVENT_TYPE (sstart) == GST_EVENT_STREAM_START);
+    events_iter = g_list_next (events_iter);
+  }
+  {
+    GstEvent *caps_event = events_iter->data;
+    fail_unless (GST_EVENT_TYPE (caps_event) == GST_EVENT_CAPS);
+    events_iter = g_list_next (events_iter);
+  }
+  {
+    GstEvent *segment_event = events_iter->data;
+    fail_unless (GST_EVENT_TYPE (segment_event) == GST_EVENT_SEGMENT);
+    events_iter = g_list_next (events_iter);
+  }
+  /* Make sure the gap was pushed which is based on current position */
+  {
+    GstEvent *gap = events_iter->data;
+    fail_unless (GST_EVENT_TYPE (gap) == GST_EVENT_GAP);
+
+    GstClockTime timestamp, duration;
+    gst_event_parse_gap (gap, &timestamp, &duration);
+    fail_unless (timestamp <= current_position);
+
+    events_iter = g_list_next (events_iter);
+  }
+  fail_unless (events_iter == NULL);
+
+  /* release the undecoded frame which is still cached in the decoder. */
+  {
+    GList *l, *ol;
+
+    ol = l = gst_video_decoder_get_frames (GST_VIDEO_DECODER (dec));
+    fail_unless (g_list_length (l) == 1);
+    while (l) {
+      GstVideoCodecFrame *tmp = l->data;
+
+      gst_video_decoder_release_frame (GST_VIDEO_DECODER (dec), tmp);
+
+      l = g_list_next (l);
+    }
+    g_list_free (ol);
+  }
+
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  fail_unless (buffers == NULL);
+
+  cleanup_videodecodertest ();
+}
+
+GST_END_TEST;
 
 static Suite *
 gst_videodecoder_suite (void)
@@ -1615,6 +1714,8 @@ gst_videodecoder_suite (void)
   tcase_add_test (tc, videodecoder_playback_packetized_subframes_metadata_copy);
   tcase_add_test (tc, videodecoder_playback_invalid_ts_packetized);
   tcase_add_test (tc, videodecoder_playback_invalid_ts_packetized_subframes);
+  tcase_add_test (tc,
+      videodecoder_playback_receive_gap_event_when_caching_frame);
 
   return s;
 }
