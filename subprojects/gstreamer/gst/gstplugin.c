@@ -2001,7 +2001,7 @@ gst_plugin_add_dependency (GstPlugin * plugin, const gchar ** env_vars,
  *      or %NULL. Environment variable names may be followed by a path component
  *      which will be added to the content of the environment variable, e.g.
  *      "HOME/.mystuff/plugins:MYSTUFF_PLUGINS_PATH"
- * @paths: (allow-none): one ore more directory paths (separated by ':' or ';' or ','),
+ * @paths: (allow-none): one or more directory paths (separated by ':' or ';' or ','),
  *      or %NULL. Example: "/usr/lib/mystuff/plugins"
  * @names: (allow-none): one or more file names or file name suffixes (separated by commas),
  *      or %NULL

@@ -37234,7 +37234,7 @@ arguments separated by predefined delimiters (see above).</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
           <parameter name="paths" transfer-ownership="none" nullable="1" allow-none="1">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">one ore more directory paths (separated by ':' or ';' or ','),
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">one or more directory paths (separated by ':' or ';' or ','),
      or %NULL. Example: "/usr/lib/mystuff/plugins"</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
