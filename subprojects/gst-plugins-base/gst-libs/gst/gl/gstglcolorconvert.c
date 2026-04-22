@@ -3440,12 +3440,14 @@ _init_convert (GstGLColorConvert * convert)
     float scale_x = display_width / padded_width;
     float scale_y = display_height / padded_height;
 
-    GLfloat crop_vertices[] = {
-      1.0f, 1.0f, 0.0f, scale_x, 0.0f,
-      -1.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-      -1.0f, -1.0f, 0.0f, 0.0f, scale_y,
-      1.0f, -1.0f, 0.0f, scale_x, scale_y,
-    };
+    GLfloat crop_vertices[20];
+    memcpy (crop_vertices, vertices, sizeof (crop_vertices));
+
+    for (int i = 0; i < 4; i++) {
+      crop_vertices[i * 5 + 3] *= scale_x;      // U
+      crop_vertices[i * 5 + 4] *= scale_y;      // V
+    }
+
     gl->BindBuffer (GL_ARRAY_BUFFER, convert->priv->vertex_buffer);
     gl->BufferData (GL_ARRAY_BUFFER, 4 * 5 * sizeof (GLfloat),
         crop_vertices, GL_STATIC_DRAW);
