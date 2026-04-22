@@ -55,7 +55,7 @@ base_tests = [
   [['elements/id3mux.c'], get_option('id3tag').disabled()],
   [['elements/interlace.c'], get_option('interlace').disabled()],
   [['elements/ioutracker.c'], get_option('tensordecoders').disabled(), gstanalytics_dep],
-  [['elements/tfliteinference.c'], get_option('tflite').disabled()],
+  [['elements/tfliteinference.c'], not tensorflow_lite_dep.found() or not tensorflow_lite_header_found],
   [['elements/jpeg2000parse.c'], false, [libparser_dep, gstcodecparsers_dep]],
   [['elements/line21.c'], get_option('closedcaption').disabled()],
   [['elements/mfvideosrc.c'], host_machine.system() != 'windows', ],
