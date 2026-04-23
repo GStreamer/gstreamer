@@ -139,6 +139,7 @@ webrtc_error_ignore_bin_handle_message (GstBin * bin, GstMessage * message)
       _channel_store_error (self->data_channel, error);
       _channel_enqueue_task (self->data_channel, (ChannelTask) _close_procedure,
           NULL, NULL);
+      gst_message_unref (message);
       break;
     }
     default:
