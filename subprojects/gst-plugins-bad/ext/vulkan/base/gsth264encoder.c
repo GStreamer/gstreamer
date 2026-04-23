@@ -1750,22 +1750,27 @@ error_and_purge_all:
 
 enum
 {
+  GST_CHROMA_400 = 0,
   GST_CHROMA_420 = 1,
   GST_CHROMA_422 = 2,
   GST_CHROMA_444 = 3,
   GST_CHROMA_INVALID = 0xFF,
 };
 
-static guint8
-_h264_get_chroma_idc (GstVideoInfo * info)
+static inline guint8
+_chroma_from_video_info (const GstVideoFormatInfo * finfo)
 {
   gint w_sub, h_sub;
 
-  if (!GST_VIDEO_FORMAT_INFO_IS_YUV (info->finfo))
+  /* XXX: GRAY isn't supported  */
+  /* if (GST_VIDEO_FORMAT_INFO_IS_GRAY (finfo)) */
+  /*   return GST_CHROMA_400; */
+
+  if (!GST_VIDEO_FORMAT_INFO_IS_YUV (finfo))
     return GST_CHROMA_INVALID;
 
-  w_sub = 1 << GST_VIDEO_FORMAT_INFO_W_SUB (info->finfo, 1);
-  h_sub = 1 << GST_VIDEO_FORMAT_INFO_H_SUB (info->finfo, 1);
+  w_sub = 1 << GST_VIDEO_FORMAT_INFO_W_SUB (finfo, 1);
+  h_sub = 1 << GST_VIDEO_FORMAT_INFO_H_SUB (finfo, 1);
 
   if (w_sub == 2 && h_sub == 2)
     return GST_CHROMA_420;
@@ -1774,6 +1779,12 @@ _h264_get_chroma_idc (GstVideoInfo * info)
   else if (w_sub == 1 && h_sub == 1)
     return GST_CHROMA_444;
   return GST_CHROMA_INVALID;
+}
+
+static guint8
+_h264_get_chroma_idc (GstVideoInfo * info)
+{
+  return _chroma_from_video_info (info->finfo);
 }
 
 static guint8
@@ -2564,6 +2575,271 @@ gst_h264_encoder_finish (GstVideoEncoder * encoder)
   return gst_h264_encoder_drain (GST_H264_ENCODER (encoder));
 }
 
+enum
+{
+  ALLOW_DEPTH_8 = 1 << 0x0,
+  ALLOW_DEPTH_10 = 1 << 0x1,
+  ALLOW_DEPTH_12 = 1 << 0x2,
+  ALLOW_DEPTH_14 = 1 << 0x3,
+  ALLOW_CHROMA_400 = 0x10 << 0x10,
+  ALLOW_CHROMA_420 = 0x10 << 0x11,
+  ALLOW_CHROMA_422 = 0x10 << 0x12,
+  ALLOW_CHROMA_444 = 0x10 << 0x13,
+};
+
+/* A.2* sections */
+/* *INDENT-OFF* */
+static const struct
+{
+  GstH264Profile prfl;
+  const char *profile;
+  guint allowed_chroma;
+} _h264_profile_allowed_chroma[] = {
+  { GST_H264_PROFILE_HIGH_444, "high-4:4:4", ALLOW_DEPTH_14 | ALLOW_CHROMA_444 },
+  { GST_H264_PROFILE_HIGH_422, "high-4:2:2", ALLOW_DEPTH_10 | ALLOW_CHROMA_422 },
+  { GST_H264_PROFILE_HIGH10, "high-10", ALLOW_DEPTH_10 | ALLOW_CHROMA_420 },
+  { GST_H264_PROFILE_HIGH, "high", ALLOW_DEPTH_8 | ALLOW_CHROMA_420 },
+};
+/* *INDENT-ON* */
+
+static inline void
+_accumulate_profile_flags (const gchar * str, guint * flags)
+{
+  for (int i = 0; i < G_N_ELEMENTS (_h264_profile_allowed_chroma); i++) {
+    if (g_strcmp0 (str, _h264_profile_allowed_chroma[i].profile) == 0) {
+      *flags |= _h264_profile_allowed_chroma[i].allowed_chroma;
+      return;
+    }
+  }
+
+  *flags |= ALLOW_DEPTH_8 | ALLOW_CHROMA_420;
+}
+
+static inline gboolean
+_format_is_valid (GstVideoFormat format, guint flags)
+{
+  if (format == GST_VIDEO_FORMAT_UNKNOWN || format == GST_VIDEO_FORMAT_DMA_DRM)
+    return FALSE;
+
+  const GstVideoFormatInfo *info = gst_video_format_get_info (format);
+  if (!info)
+    return FALSE;
+
+  guint8 chroma = _chroma_from_video_info (info);
+  if (chroma == GST_CHROMA_INVALID)
+    return FALSE;
+
+  guint8 depth = GST_VIDEO_FORMAT_INFO_DEPTH (info, 0);
+
+  for (guint i = 0; i < G_N_ELEMENTS (_h264_profile_allowed_chroma); i++) {
+    guint pflags = _h264_profile_allowed_chroma[i].allowed_chroma;
+    if ((flags & pflags) != pflags)
+      continue;
+
+    switch (_h264_profile_allowed_chroma[i].prfl) {
+      case GST_H264_PROFILE_HIGH_444:
+        return (chroma <= GST_CHROMA_444 && depth <= 14);
+      case GST_H264_PROFILE_HIGH_422:
+        return (chroma <= GST_CHROMA_422 && depth <= 10);
+      case GST_H264_PROFILE_HIGH10:
+        return (chroma <= GST_CHROMA_420 && depth <= 10);
+      default:                 /* the rest of profiles */
+        return (chroma <= GST_CHROMA_420 && depth <= 8);
+    }
+  }
+
+  return FALSE;
+}
+
+static gboolean
+_value_is_valid (const GValue * val, guint flags)
+{
+  GstVideoFormat format;
+
+  if (!G_VALUE_HOLDS_STRING (val))
+    return FALSE;
+
+  format = gst_video_format_from_string (g_value_get_string (val));
+  return _format_is_valid (format, flags);
+}
+
+static gboolean
+_drm_value_is_valid (const GValue * val, guint flags)
+{
+  if (!G_VALUE_HOLDS_STRING (val))
+    return FALSE;
+
+  guint64 modifier = 0;
+  guint32 fourcc =
+      gst_video_dma_drm_fourcc_from_string (g_value_get_string (val),
+      &modifier);
+
+  /* FIXME: shall we deal with drm_fourcc.h ? */
+  if (fourcc == 0 || modifier == 0xffffffffffffffff)    /* INVALID */
+    return FALSE;
+
+  GstVideoFormat format =
+      gst_video_dma_drm_format_to_gst_format (fourcc, modifier);
+  return _format_is_valid (format, flags);
+}
+
+static gboolean
+update_caps_drm_format (GstStructure * s, guint flags)
+{
+  const GValue *val = gst_structure_get_value (s, "drm-format");
+  if (!val)
+    return FALSE;
+
+  if (G_VALUE_HOLDS_STRING (val)) {
+    return _drm_value_is_valid (val, flags);
+  } else if (GST_VALUE_HOLDS_LIST (val)) {
+    GValue new_list = G_VALUE_INIT;
+
+    guint len = gst_value_list_get_size (val);
+    gst_value_list_init (&new_list, len);
+
+    for (guint i = 0; i < len; i++) {
+      const GValue *lval = gst_value_list_get_value (val, i);
+      if (_drm_value_is_valid (lval, flags))
+        gst_value_list_append_value (&new_list, lval);
+    }
+
+    guint new_len = gst_value_list_get_size (&new_list);
+    if (new_len == 1) {
+      const GValue *new_val = gst_value_list_get_value (&new_list, 0);
+      gst_structure_set_value (s, "drm-format", new_val);
+      g_value_unset (&new_list);
+      return TRUE;
+    } else if (new_len > 0) {
+      gst_structure_set_value (s, "drm-format", &new_list);
+      g_value_unset (&new_list);
+      return TRUE;
+    }
+
+    g_value_unset (&new_list);
+  }
+
+  return FALSE;
+}
+
+static gboolean
+update_caps_format (GstStructure * s, guint flags)
+{
+  const GValue *val;
+  GstVideoFormat format;
+
+  val = gst_structure_get_value (s, "format");
+  if (!val)
+    return FALSE;
+
+  if (G_VALUE_HOLDS_STRING (val)) {
+    format = gst_video_format_from_string (g_value_get_string (val));
+    if (format == GST_VIDEO_FORMAT_DMA_DRM) {
+      return update_caps_drm_format (s, flags);
+    } else if (_format_is_valid (format, flags)) {
+      return TRUE;
+    }
+  } else if (GST_VALUE_HOLDS_LIST (val)) {
+    GValue new_list = G_VALUE_INIT;
+
+    guint len = gst_value_list_get_size (val);
+    gst_value_list_init (&new_list, len);
+
+    for (guint i = 0; i < len; i++) {
+      const GValue *lval = gst_value_list_get_value (val, i);
+      if (_value_is_valid (lval, flags))
+        gst_value_list_append_value (&new_list, lval);
+    }
+
+    guint new_len = gst_value_list_get_size (&new_list);
+    if (new_len == 1) {
+      const GValue *new_val = gst_value_list_get_value (&new_list, 0);
+      gst_structure_set_value (s, "format", new_val);
+      g_value_unset (&new_list);
+      return TRUE;
+    } else if (new_len > 0) {
+      gst_structure_set_value (s, "format", &new_list);
+      g_value_unset (&new_list);
+      return TRUE;
+    }
+
+    g_value_unset (&new_list);
+  }
+
+  return FALSE;
+}
+
+static GstCaps *
+gst_h264_encoder_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
+{
+  GstH264Encoder *self = GST_H264_ENCODER (encoder);
+  GstCaps *templ_caps, *allowed, *supported_incaps, *fcaps;
+  guint flags = 0;
+
+  templ_caps =
+      gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SINK_PAD (encoder));
+  allowed = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
+
+  if (!allowed) {
+    /* no peer */
+    supported_incaps = templ_caps;
+    goto bail;
+  } else if (gst_caps_is_empty (allowed)) {
+    /* cannot negotiate, return empty caps */
+    gst_caps_unref (templ_caps);
+    return allowed;
+  }
+
+  /* fill format based on requested profile */
+  for (guint i = 0; i < gst_caps_get_size (allowed); i++) {
+    const GstStructure *allowed_s = gst_caps_get_structure (allowed, i);
+    const GValue *val = gst_structure_get_value (allowed_s, "profile");
+
+    if (!val)
+      continue;
+
+    if (G_VALUE_HOLDS_STRING (val)) {
+      _accumulate_profile_flags (g_value_get_string (val), &flags);
+    } else if (GST_VALUE_HOLDS_LIST (val)) {
+      for (guint j = 0; j < gst_value_list_get_size (val); j++) {
+        const GValue *lval = gst_value_list_get_value (val, j);
+
+        if (G_VALUE_HOLDS_STRING (lval)) {
+          _accumulate_profile_flags (g_value_get_string (lval), &flags);
+        }
+      }
+    }
+  }
+
+  if (flags == 0) {
+    /* downstream did not request profile (a valid one?) */
+    supported_incaps = templ_caps;
+    goto bail;
+  }
+
+  supported_incaps = gst_caps_copy (templ_caps);
+
+  for (guint i = 0; i < gst_caps_get_size (supported_incaps); i++) {
+    GstStructure *s = gst_caps_get_structure (supported_incaps, i);
+    if (!update_caps_format (s, flags)) {
+      gst_caps_unref (supported_incaps);
+      supported_incaps = templ_caps;
+      goto bail;
+    }
+  }
+
+  gst_caps_unref (templ_caps);
+
+bail:
+  GST_LOG_OBJECT (self, "supported caps %" GST_PTR_FORMAT, supported_incaps);
+  fcaps = gst_video_encoder_proxy_getcaps (encoder, supported_incaps, filter);
+  gst_clear_caps (&supported_incaps);
+  gst_clear_caps (&allowed);
+
+  GST_LOG_OBJECT (self, "proxy caps %" GST_PTR_FORMAT, fcaps);
+  return fcaps;
+}
+
 static void
 gst_h264_encoder_init (GstH264Encoder * self)
 {
@@ -2688,6 +2964,7 @@ gst_h264_encoder_class_init (GstH264EncoderClass * klass)
       GST_DEBUG_FUNCPTR (gst_h264_encoder_handle_frame);
   encoder_class->flush = GST_DEBUG_FUNCPTR (gst_h264_encoder_flush);
   encoder_class->finish = GST_DEBUG_FUNCPTR (gst_h264_encoder_finish);
+  encoder_class->getcaps = GST_DEBUG_FUNCPTR (gst_h264_encoder_getcaps);
 
   klass->negotiate = GST_DEBUG_FUNCPTR (gst_h264_encoder_negotiate_default);
 
