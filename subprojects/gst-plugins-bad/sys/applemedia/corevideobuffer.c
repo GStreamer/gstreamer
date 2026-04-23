@@ -163,18 +163,16 @@ gst_core_video_wrap_pixel_buffer (GstBuffer * buf,
     *has_padding = FALSE;
 
   if (CVPixelBufferIsPlanar (pixel_buf)) {
-    gint i, size = 0, plane_offset = 0;
+    gint size = 0;
 
     n_planes = CVPixelBufferGetPlaneCount (pixel_buf);
-    for (i = 0; i < n_planes; i++) {
+    for (gint i = 0; i < n_planes; i++) {
       stride[i] = CVPixelBufferGetBytesPerRowOfPlane (pixel_buf, i);
 
       if (stride[i] != GST_VIDEO_INFO_PLANE_STRIDE (info, i) && has_padding)
         *has_padding = TRUE;
 
       size = stride[i] * CVPixelBufferGetHeightOfPlane (pixel_buf, i);
-      offset[i] = plane_offset;
-      plane_offset += size;
 
       if (do_gl)
         mem = _create_glmem (gpixbuf, info, i, size, cache);
@@ -186,6 +184,7 @@ gst_core_video_wrap_pixel_buffer (GstBuffer * buf,
         mem =
             GST_MEMORY_CAST (gst_apple_core_video_memory_new_wrapped (gpixbuf,
                 i, size));
+      offset[i] = gst_buffer_get_size (buf);
       gst_buffer_append_memory (buf, mem);
     }
   } else {
