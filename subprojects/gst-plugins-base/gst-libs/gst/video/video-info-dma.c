@@ -141,7 +141,7 @@ gst_video_is_dma_drm_caps (const GstCaps * caps)
 {
   GstStructure *structure;
 
-  g_return_val_if_fail (caps != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
 
   if (!gst_caps_is_fixed (caps))
     return FALSE;
@@ -231,7 +231,7 @@ gst_video_info_dma_drm_from_caps (GstVideoInfoDmaDrm * drm_info,
   gboolean ret;
 
   g_return_val_if_fail (drm_info != NULL, FALSE);
-  g_return_val_if_fail (caps != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
 
   if (!gst_video_is_dma_drm_caps (caps))
     return FALSE;
@@ -303,7 +303,7 @@ gst_video_info_dma_drm_new_from_caps (const GstCaps * caps)
 {
   GstVideoInfoDmaDrm *ret;
 
-  g_return_val_if_fail (caps != NULL, NULL);
+  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
   if (!gst_video_is_dma_drm_caps (caps))
     return NULL;
@@ -646,6 +646,8 @@ gst_video_dma_drm_format_from_gst_format (GstVideoFormat format,
 {
   guint i;
 
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, DRM_FORMAT_INVALID);
+
   for (i = 0; i < G_N_ELEMENTS (format_map); i++) {
     if (format_map[i].format == format) {
       if (modifier)
@@ -677,6 +679,8 @@ gst_video_dma_drm_fourcc_to_format (guint32 fourcc)
 {
   guint i;
 
+  g_return_val_if_fail (fourcc != DRM_FORMAT_INVALID, GST_VIDEO_FORMAT_UNKNOWN);
+
   for (i = 0; i < G_N_ELEMENTS (format_map); i++) {
     if (format_map[i].fourcc == fourcc)
       return format_map[i].format;
@@ -704,6 +708,10 @@ GstVideoFormat
 gst_video_dma_drm_format_to_gst_format (guint32 fourcc, guint64 modifier)
 {
   guint i;
+
+  g_return_val_if_fail (fourcc != DRM_FORMAT_INVALID, GST_VIDEO_FORMAT_UNKNOWN);
+  g_return_val_if_fail (modifier != DRM_FORMAT_MOD_INVALID,
+      GST_VIDEO_FORMAT_UNKNOWN);
 
   for (i = 0; i < G_N_ELEMENTS (format_map); i++) {
     if (format_map[i].fourcc == fourcc && format_map[i].modifier == modifier)
