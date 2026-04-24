@@ -1160,7 +1160,7 @@ gst_check_run_suite (Suite * suite, const gchar * name, const gchar * fname)
  *
  * Returns: number of failed tests
  *
- * Since: 1.30
+ * Since: 1.28.3
  */
 gint
 gst_check_run_suite_nofork (Suite * suite, const gchar * name,
