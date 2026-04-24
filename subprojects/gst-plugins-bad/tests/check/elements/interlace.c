@@ -194,6 +194,45 @@ GST_START_TEST (test_framerate_empty_not_negotiated)
 
 GST_END_TEST;
 
+GST_START_TEST (test_upstream_not_fixed)
+{
+  GstBuffer *buffer;
+  GstHarness *h;
+
+  h = gst_harness_new_parse ("videorate ! interlace field-pattern=0");
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw, format=(string)AYUV64, width=(int)1, height=(int)1, multiview-mode=(string)mono, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive");
+  gst_harness_set_sink_caps_str (h,
+      "video/x-raw,interlace-mode=interleaved,framerate=25/1");
+
+  buffer = gst_harness_create_buffer (h, 4);
+  fail_unless_equals_int (gst_harness_push (h, buffer), GST_FLOW_OK);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_downstream_any)
+{
+  GstBuffer *buffer;
+  GstHarness *h;
+
+  h = gst_harness_new ("interlace");
+
+  gst_harness_set (h, "interlace", "field-pattern", 0, NULL);
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw, format=(string)AYUV, width=(int)1, height=(int)1, framerate=(fraction)25/1, multiview-mode=(string)mono, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1");
+
+  buffer = gst_harness_create_buffer (h, 4);
+  fail_unless_equals_int (gst_harness_push (h, buffer), GST_FLOW_OK);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 interlace_suite (void)
 {
@@ -209,6 +248,8 @@ interlace_suite (void)
   tcase_add_test (tc_chain, test_framerate_1_1);
   tcase_add_test (tc_chain, test_framerate_3_2);
   tcase_add_test (tc_chain, test_framerate_empty_not_negotiated);
+  tcase_add_test (tc_chain, test_downstream_any);
+  tcase_add_test (tc_chain, test_upstream_not_fixed);
 
   return s;
 }
