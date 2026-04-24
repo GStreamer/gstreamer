@@ -26,6 +26,7 @@ good_tests = [
   [ 'elements/audiopanorama', get_option('audiofx').disabled(), [gstfft_dep] ],
   [ 'elements/audiowsincband', get_option('audiofx').disabled(), [gstfft_dep] ],
   [ 'elements/audiowsinclimit', get_option('audiofx').disabled(), [gstfft_dep] ],
+  [ 'elements/scaletempo', get_option('audiofx').disabled()],
   [ 'elements/alphacolor', get_option('alpha').disabled()],
   [ 'elements/alpha', get_option('alpha').disabled()],
   [ 'elements/avimux', get_option('avi').disabled(), [gstriff_dep] ],
