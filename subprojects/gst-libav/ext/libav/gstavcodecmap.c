@@ -283,6 +283,8 @@ gst_ffmpeg_channel_layout_to_gst (guint64 channel_layout, gint channels,
       pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
       pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
     } else {
+      guint i;
+
       for (i = 0; i < nchannels && i < 64; i++)
         pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
     }
