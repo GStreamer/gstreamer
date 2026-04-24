@@ -213,8 +213,16 @@ auto_position (GstFramePositioner * self)
     return FALSE;
 
   if (self->track_width == self->natural_width &&
-      self->track_height == self->natural_height)
+      self->track_height == self->natural_height) {
+    /* Clear stale cached scale from a prior non-natural track size. 0
+     * matches the meta-init value and means "follow the track / source
+     * size" for both the property getters and the compositor. */
+    self->width = 0;
+    self->height = 0;
+    self->posx = 0;
+    self->posy = 0;
     return TRUE;
+  }
 
   scaled_height =
       gst_util_uint64_scale_int (self->natural_height, self->track_width,
