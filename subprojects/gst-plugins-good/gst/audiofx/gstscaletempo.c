@@ -618,6 +618,24 @@ gst_scaletempo_transform (GstBaseTransform * trans,
 }
 
 static GstFlowReturn
+gst_scaletempo_generate_output (GstBaseTransform * trans, GstBuffer ** outbuf)
+{
+  GstFlowReturn ret;
+
+  ret = GST_BASE_TRANSFORM_CLASS (parent_class)->generate_output (trans,
+      outbuf);
+
+  /* Empty output carries no audio, the input (if any) was only queued.
+   * Returning GST_BASE_TRANSFORM_FLOW_DROPPED from transform instead would
+   * mark the next output DISCONT. */
+  if (ret == GST_FLOW_OK && *outbuf && gst_buffer_get_size (*outbuf) == 0
+      && !gst_base_transform_is_passthrough (trans))
+    gst_clear_buffer (outbuf);
+
+  return ret;
+}
+
+static GstFlowReturn
 gst_scaletempo_submit_input_buffer (GstBaseTransform * trans,
     gboolean is_discont, GstBuffer * input)
 {
@@ -1061,6 +1079,8 @@ gst_scaletempo_class_init (GstScaletempoClass * klass)
   basetransform_class->transform_size =
       GST_DEBUG_FUNCPTR (gst_scaletempo_transform_size);
   basetransform_class->transform = GST_DEBUG_FUNCPTR (gst_scaletempo_transform);
+  basetransform_class->generate_output =
+      GST_DEBUG_FUNCPTR (gst_scaletempo_generate_output);
   basetransform_class->query = GST_DEBUG_FUNCPTR (gst_scaletempo_query);
   basetransform_class->start = GST_DEBUG_FUNCPTR (gst_scaletempo_start);
   basetransform_class->stop = GST_DEBUG_FUNCPTR (gst_scaletempo_stop);
