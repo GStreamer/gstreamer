@@ -74,7 +74,6 @@
  *
  * @model_file model file
  * @tflite_client opaque pointer to TFLITE client
- * @tflite_disabled true if inference is disabled
  * @video_info @ref GstVideoInfo of sink caps
  */
 typedef struct _GstTFliteInferencePrivate
@@ -82,14 +81,12 @@ typedef struct _GstTFliteInferencePrivate
   GstBaseTransform basetransform;
   gchar *model_file;
   gsize numberOfThreads;
-  gchar *vxdelegate;
   gboolean planar;
   GPtrArray *tensor_templates;
 
   TfLiteInterpreter *interpreter;
   TfLiteInterpreterOptions *interpreter_options;
   TfLiteModel *model;
-  gboolean tflite_disabled;
   GstVideoInfo video_info;
   guint8 *dest;
 
@@ -220,7 +217,6 @@ gst_tflite_inference_init (GstTFliteInference * self)
   priv->numberOfThreads = DEFAULT_THREADS;
   priv->tensor_templates = g_ptr_array_new_with_free_func ((GDestroyNotify)
       gst_tensor_free);
-  priv->tflite_disabled = TRUE;
   priv->scales = NULL;
   priv->offsets = NULL;
 
@@ -260,7 +256,6 @@ gst_tflite_inference_set_property (GObject * object, guint prop_id,
         if (priv->model_file)
           g_free (priv->model_file);
         priv->model_file = g_strdup (filename);
-        priv->tflite_disabled = FALSE;
       } else {
         GST_WARNING_OBJECT (self, "Model file '%s' not found!", filename);
       }
@@ -809,7 +804,6 @@ done:
   return ret;
 
 error:
-
   GST_ERROR_OBJECT (self,
       "Unable to create TFLITE session. Inference is disabled.");
 
