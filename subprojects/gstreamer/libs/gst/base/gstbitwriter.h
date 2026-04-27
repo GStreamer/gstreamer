@@ -178,28 +178,29 @@ gst_bit_writer_put_bits_uint##bits##_unchecked( \
 ) \
 { \
     guint byte_pos, bit_offset; \
-    guint8  *cur_byte; \
+    guint8 *cur_byte, mask; \
     guint fill_bits; \
     \
     byte_pos = (bitwriter->bit_size >> 3); \
     bit_offset = (bitwriter->bit_size & 0x07); \
     cur_byte = bitwriter->data + byte_pos; \
     g_assert (nbits <= bits); \
-    g_assert( bit_offset < 8 && \
+    g_assert (bit_offset < 8 && \
             bitwriter->bit_size <= bitwriter->bit_capacity); \
     \
     while (nbits) { \
         fill_bits = ((8 - bit_offset) < nbits ? (8 - bit_offset) : nbits); \
         nbits -= fill_bits; \
         bitwriter->bit_size += fill_bits; \
+        mask = _gst_bit_writer_bit_filling_mask[fill_bits] << (8 - bit_offset - fill_bits); \
         \
-        *cur_byte |= (((value >> nbits) & _gst_bit_writer_bit_filling_mask[fill_bits]) \
-                      << (8 - bit_offset - fill_bits)); \
+        *cur_byte = ((*cur_byte) & (~mask)) | \
+                    (((value >> nbits) << (8 - bit_offset - fill_bits)) & mask); \
         ++cur_byte; \
         bit_offset = 0; \
     } \
-    g_assert(cur_byte <= \
-           (bitwriter->data + (bitwriter->bit_capacity >> 3))); \
+    g_assert (cur_byte <= \
+              (bitwriter->data + (bitwriter->bit_capacity >> 3))); \
 }
 
 __GST_BIT_WRITER_WRITE_BITS_UNCHECKED (8)
