@@ -26,16 +26,17 @@
 G_BEGIN_DECLS
 
 #ifndef GST_DISABLE_GST_DEBUG
-#define gst_vulkan_buffer_peek_plane_memory(buffer, vinfo, plane)       \
-  _gst_vulkan_buffer_peek_plane_memory(buffer, vinfo, plane, GST_CAT_DEFAULT)
+#define gst_vulkan_buffer_peek_plane_memory(buffer, vinfo, plane, skip) \
+  _gst_vulkan_buffer_peek_plane_memory(buffer, vinfo, plane, skip, GST_CAT_DEFAULT)
 #else
-#define gst_vulkan_buffer_peek_plane_memory(buffer, vinfo, plane)       \
-  _gst_vulkan_buffer_peek_plane_memory(buffer, vinfo, plane, NULL)
+#define gst_vulkan_buffer_peek_plane_memory(buffer, vinfo, plane, skip) \
+  _gst_vulkan_buffer_peek_plane_memory(buffer, vinfo, plane, skip, NULL)
 #endif
 
 GstMemory *             _gst_vulkan_buffer_peek_plane_memory    (GstBuffer * buffer,
                                                                  const GstVideoInfo * vinfo,
                                                                  gint plane,
+                                                                 gsize * skip,
                                                                  GstDebugCategory * cat);
 
 void                    gst_vulkan_buffer_get_plane_dimensions  (GstBuffer * buffer,

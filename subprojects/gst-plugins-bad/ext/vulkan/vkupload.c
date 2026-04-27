@@ -463,7 +463,7 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     VkImageAspectFlags plane_aspect;
     guint32 width, height, row, img_h;
 
-    mem = gst_vulkan_buffer_peek_plane_memory (inbuf, &raw->in_info, i);
+    mem = gst_vulkan_buffer_peek_plane_memory (inbuf, &raw->in_info, i, NULL);
     if (!mem)
       goto unlock_error;
     if (!gst_is_vulkan_buffer_memory (mem)) {
@@ -500,7 +500,8 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     };
     /* *INDENT-ON* */
 
-    mem = gst_vulkan_buffer_peek_plane_memory (*outbuf, &raw->out_info, i);
+    mem = gst_vulkan_buffer_peek_plane_memory (*outbuf, &raw->out_info, i,
+        NULL);
     if (!mem)
       goto unlock_error;
     if (!gst_is_vulkan_image_memory (mem)) {
@@ -734,7 +735,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     VkImageAspectFlags plane_aspect;
     guint32 width, height, row, img_h;
 
-    mem = gst_vulkan_buffer_peek_plane_memory (inbuf, &raw->in_info, i);
+    mem = gst_vulkan_buffer_peek_plane_memory (inbuf, &raw->in_info, i, NULL);
     if (!mem)
       goto unlock_error;
 
@@ -782,7 +783,8 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
 
     buf_mem = (GstVulkanBufferMemory *) mem;
 
-    mem = gst_vulkan_buffer_peek_plane_memory (*outbuf, &raw->out_info, i);
+    mem = gst_vulkan_buffer_peek_plane_memory (*outbuf, &raw->out_info, i,
+        NULL);
     if (!mem)
       goto unlock_error;
     if (!gst_is_vulkan_image_memory (mem)) {
