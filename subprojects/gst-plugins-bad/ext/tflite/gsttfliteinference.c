@@ -66,7 +66,7 @@
 
 #include <tensorflow/lite/c/common.h>
 
-#define DEFAULT_MODEL_FILE              ""
+#define DEFAULT_MODEL_FILE              NULL
 #define DEFAULT_THREADS                 0
 
 /*
@@ -249,15 +249,16 @@ gst_tflite_inference_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_MODEL_FILE:
+      g_free (priv->model_file);
+      priv->model_file = NULL;
+
       filename = g_value_get_string (value);
       if (filename
-          && g_file_test (filename,
+          && !g_file_test (filename,
               (GFileTest) (G_FILE_TEST_EXISTS | G_FILE_TEST_IS_REGULAR))) {
-        if (priv->model_file)
-          g_free (priv->model_file);
-        priv->model_file = g_strdup (filename);
-      } else {
         GST_WARNING_OBJECT (self, "Model file '%s' not found!", filename);
+      } else {
+        priv->model_file = g_strdup (filename);
       }
       break;
     case PROP_THREADS:
