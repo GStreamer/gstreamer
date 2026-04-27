@@ -1,6 +1,7 @@
 tflite_sources = [
   'gsttflite.c',
   'gsttfliteinference.c',
+  'gsttfliteexternalinference.c'
 ]
 
 tflite_headers = [
@@ -8,6 +9,7 @@ tflite_headers = [
   'gsttfliteedgetpuinference.h',
   'gsttflitevsiinference.h',
   'gsttflitexnnpackinference.h',
+  'gsttfliteexternalinference.h'
 ]
 
 edgetpu_sources = [

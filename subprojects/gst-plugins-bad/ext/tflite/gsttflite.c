@@ -30,6 +30,10 @@
 #include "gsttfliteedgetpuinference.h"
 #endif
 
+#ifdef TFLITE_HAS_XNNPACK_DELEGATE
+#include "gsttfliteexternalinference.h"
+#endif
+
 #ifdef TFLITE_VSI
 #include "gsttflitevsiinference.h"
 #endif
@@ -46,6 +50,8 @@ plugin_init (GstPlugin * plugin)
 #ifdef EDGETPU
   ret |= GST_ELEMENT_REGISTER (tflite_edgetpu_inference, plugin);
 #endif
+
+  ret |= GST_ELEMENT_REGISTER (tflite_external_inference, plugin);
 
 #ifdef TFLITE_VSI
   ret |= GST_ELEMENT_REGISTER (tflite_vsi_inference, plugin);
