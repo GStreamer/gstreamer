@@ -105,6 +105,45 @@ GST_START_TEST (test_data)
 
 GST_END_TEST;
 
+GST_START_TEST (test_overwrite_data)
+{
+  GstBitWriter writer;
+  GstBitReader reader;
+  guint8 val_uint8 = 0;
+  guint16 val_uint16 = 0;
+  guint32 val_uint32 = 0;
+  guint64 val_uint64 = 0;
+  guint8 wdata[8] = { 0x00, 0xf1, 0xfe, 0xef, 0x11, 0x22, 0xae, 0xea };
+
+  gst_bit_writer_init_with_data (&writer, wdata, sizeof (wdata), TRUE);
+  gst_bit_writer_set_pos (&writer, 0);
+  fail_unless_equals_int (gst_bit_writer_get_remaining (&writer), 64);
+
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0x3f, 6));
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0x3, 2));
+  fail_unless (gst_bit_writer_put_bits_uint16 (&writer, 0x15, 5));
+  fail_unless (gst_bit_writer_put_bits_uint32 (&writer, 0x31, 10));
+  fail_unless (gst_bit_writer_put_bits_uint64 (&writer, 0x45, 41));
+  fail_unless (gst_bit_writer_align_bytes (&writer, 0));
+
+  gst_bit_reader_init (&reader, gst_bit_writer_get_data (&writer), 8);
+  fail_unless_equals_int (gst_bit_reader_get_size (&reader), 8 * 8);
+  fail_unless (gst_bit_reader_get_bits_uint8 (&reader, &val_uint8, 6));
+  fail_unless_equals_int (val_uint8, 0x3f);
+  fail_unless (gst_bit_reader_get_bits_uint8 (&reader, &val_uint8, 2));
+  fail_unless_equals_int (val_uint8, 0x3);
+  fail_unless (gst_bit_reader_get_bits_uint16 (&reader, &val_uint16, 5));
+  fail_unless_equals_int_hex (val_uint16, 0x15);
+  fail_unless (gst_bit_reader_get_bits_uint32 (&reader, &val_uint32, 10));
+  fail_unless_equals_int_hex (val_uint32, 0x31);
+  fail_unless (gst_bit_reader_get_bits_uint64 (&reader, &val_uint64, 41));
+  fail_unless_equals_int_hex (val_uint64, 0x45);
+
+  gst_bit_writer_reset (&writer);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_reset)
 {
   GstBitWriter writer, *writer2;
@@ -221,6 +260,7 @@ gst_bit_writer_suite (void)
 
   tcase_add_test (tc_chain, test_initialization);
   tcase_add_test (tc_chain, test_data);
+  tcase_add_test (tc_chain, test_overwrite_data);
   tcase_add_test (tc_chain, test_reset);
   tcase_add_test (tc_chain, test_reset_data_unaligned);
 
