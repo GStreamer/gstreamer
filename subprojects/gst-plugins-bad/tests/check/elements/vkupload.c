@@ -30,7 +30,7 @@
 #include <gst/video/video.h>
 #include <gst/vulkan/vulkan.h>
 
-static const gchar *formats[] = { "NV12", "RGBA" };
+static const gchar *formats[] = { "NV12", "RGBA", "I420", "Y42B", "Y444" };
 
 #define STRIDE_TEST_WIDTH 360
 #define STRIDE_TEST_HEIGHT 480

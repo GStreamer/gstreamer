@@ -61,6 +61,61 @@ setup_queue (guint expected_flags)
   fail_unless (GST_IS_VULKAN_QUEUE (queue));
 }
 
+static void
+assert_multi_memory_plane_offsets (const gchar * format)
+{
+  GstBufferPool *pool;
+  GstBuffer *buffer = NULL;
+  GstFlowReturn ret;
+  GstCaps *caps;
+  GstStructure *config;
+  GstVideoInfo info;
+  GstVideoMeta *meta;
+  gsize expected_offset = 0;
+
+  caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, format,
+      "width", G_TYPE_INT, 320, "height", G_TYPE_INT, 240, NULL);
+  fail_unless (caps != NULL);
+  fail_unless (gst_video_info_from_caps (&info, caps));
+  gst_caps_set_features_simple (caps,
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE,
+          NULL));
+
+  pool = gst_vulkan_image_buffer_pool_new (device);
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, caps, 0, 1, 0);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  fail_unless (gst_buffer_pool_set_config (pool, config));
+  gst_buffer_pool_set_active (pool, TRUE);
+
+  ret = gst_buffer_pool_acquire_buffer (pool, &buffer, NULL);
+  fail_unless (ret == GST_FLOW_OK);
+  fail_unless (buffer != NULL);
+
+  fail_unless_equals_int (gst_buffer_n_memory (buffer),
+      GST_VIDEO_INFO_N_PLANES (&info));
+
+  meta = gst_buffer_get_video_meta (buffer);
+  fail_unless (meta != NULL);
+
+  for (guint plane = 0; plane < GST_VIDEO_INFO_N_PLANES (&info); plane++) {
+    guint idx = 0, len = 0;
+    gsize skip = 0;
+
+    fail_unless_equals_int64 (meta->offset[plane], expected_offset);
+    fail_unless (gst_buffer_find_memory (buffer, meta->offset[plane], 1, &idx,
+            &len, &skip));
+    fail_unless_equals_int (idx, plane);
+
+    expected_offset += gst_buffer_peek_memory (buffer, plane)->size;
+  }
+
+  gst_buffer_unref (buffer);
+  gst_buffer_pool_set_active (pool, FALSE);
+  gst_object_unref (pool);
+  gst_caps_unref (caps);
+}
+
 static GstBufferPool *
 create_buffer_pool (const char *format, VkImageUsageFlags usage,
     VkImageLayout initial_layout, guint64 initial_access, GstCaps * dec_caps)
@@ -112,6 +167,16 @@ GST_START_TEST (test_image)
 
   gst_buffer_pool_set_active (pool, FALSE);
   gst_object_unref (pool);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_multi_memory_plane_offsets)
+{
+  static const gchar *formats[] = { "I420", "Y42B", "Y444" };
+
+  for (guint i = 0; i < G_N_ELEMENTS (formats); i++)
+    assert_multi_memory_plane_offsets (formats[i]);
 }
 
 GST_END_TEST;
@@ -229,6 +294,7 @@ vkimagebufferpool_suite (void)
   gst_object_unref (instance);
   if (have_instance) {
     tcase_add_test (tc_basic, test_image);
+    tcase_add_test (tc_basic, test_multi_memory_plane_offsets);
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
     tcase_add_test (tc_basic, test_decoding_image);
     tcase_add_test (tc_basic, test_vulkan_profiles);
