@@ -164,6 +164,8 @@ gst_bit_writer_init_with_data (GstBitWriter * bitwriter, guint8 * data,
   bitwriter->bit_size = (initialized) ? size << 3 : 0;
   bitwriter->auto_grow = FALSE;
   bitwriter->owned = FALSE;
+  if (!initialized)
+    memset (data, 0, size);
 }
 
 /**
