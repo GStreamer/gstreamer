@@ -328,7 +328,7 @@ gst_vulkan_image_buffer_pool_fill_buffer (GstVulkanImageBufferPool * vk_pool,
 
     if (buffer) {
       if (i < GST_VIDEO_MAX_PLANES - 1)
-        offset[i + 1] = mem->size;
+        offset[i + 1] = offset[i] + mem->size;
 
       gst_buffer_append_memory (buffer, mem);
     } else {
