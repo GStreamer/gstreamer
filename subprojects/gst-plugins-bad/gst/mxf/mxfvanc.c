@@ -140,30 +140,31 @@ write_st2038_header (GstBitWriter * writer, guint8 c_not_y_channel_flag,
   gst_bit_writer_put_bits_uint16 (writer, data_count, 10);
 }
 
-static GstBuffer *
-mxf_vanc_to_st2038 (const guint8 * vanc_data, gsize vanc_data_size,
-    guint16 line_number, guint16 payload_sample_count,
-    guint8 payload_sample_coding, guint32 array_count, guint32 array_item_size)
+static void
+mxf_vanc_to_st2038 (GstByteWriter * writer, const guint8 * vanc_data,
+    gsize vanc_data_size, guint16 line_number, guint16 payload_sample_count,
+    guint8 payload_sample_coding)
 {
-  GstBitWriter writer;
-  GstBitReader bit_reader;
-  GstByteReader byte_reader;
+  GstBitWriter bit_writer;
   guint16 checksum, did, sdid, data_count;
   guint8 c_not_y_channel_flag, *data;
   gboolean payload_10bit;
   gsize size;
   guint i;
+  guint8 tmp_data[64 + 256 * 2] = { 0, };
 
   c_not_y_channel_flag = get_c_not_y_channel_flag (payload_sample_coding);
   payload_10bit = is_payload_10bit (payload_sample_coding);
 
   if (payload_10bit) {
+    GstBitReader bit_reader;
+
     gst_bit_reader_init (&bit_reader, vanc_data, vanc_data_size);
 
     /* Check if we can read DID, SDID and Data Count */
     if (gst_bit_reader_get_remaining (&bit_reader) < 32) {
       GST_WARNING ("Insufficient VANC data");
-      return NULL;
+      return;
     }
 
     /* See section 5.4.4 of ST-436 on 10-bit sample coding */
@@ -174,14 +175,15 @@ mxf_vanc_to_st2038 (const guint8 * vanc_data, gsize vanc_data_size,
     /* Skip 2-bit padding */
     gst_bit_reader_skip (&bit_reader, 2);
 
-    if (payload_sample_count - 3 < data_count) {
+    if (payload_sample_count - 3 < (data_count & 0xFF)) {
       GST_WARNING ("Insufficient user data words");
-      return NULL;
+      return;
     }
 
-    gst_bit_writer_init_with_size (&writer, 64 + data_count * 2, FALSE);
-    write_st2038_header (&writer, c_not_y_channel_flag, line_number, did, sdid,
-        data_count);
+    gst_bit_writer_init_with_data (&bit_writer, tmp_data,
+        64 + (data_count & 0xFF) * 2, FALSE);
+    write_st2038_header (&bit_writer, c_not_y_channel_flag, line_number, did,
+        sdid, data_count);
 
     /*
      * See Section 6.7 of ST-291 on Checksum Word.
@@ -192,7 +194,7 @@ mxf_vanc_to_st2038 (const guint8 * vanc_data, gsize vanc_data_size,
      * significant bits of the DID, SDID, DC and UDW.
      */
     checksum = (did & 0x1FF) + (sdid & 0x1FF) + (data_count & 0x1FF);
-    for (i = 0; i < data_count; i++) {
+    for (i = 0; i < (data_count & 0xFF); i++) {
       /*
        * For a 10-bit coding, 4 bytes representing 3 source samples
        * are coded using the high-order 30-bits (bits 2 to 31) of a
@@ -200,23 +202,32 @@ mxf_vanc_to_st2038 (const guint8 * vanc_data, gsize vanc_data_size,
        * bits of the payload data 32-bit word (bits 0 and 1) are set
        * to zero.
        */
-      guint16 udw = gst_bit_reader_get_bits_uint16_unchecked (&bit_reader, 10);
+      guint16 udw;
+      if (!gst_bit_reader_get_bits_uint16 (&bit_reader, &udw, 10)) {
+        GST_WARNING ("Insufficient data available");
+        return;
+      }
       checksum += (udw & 0x1FF);
-      gst_bit_writer_put_bits_uint16 (&writer, udw, 10);
+      gst_bit_writer_put_bits_uint16 (&bit_writer, udw, 10);
 
       if (i % 3 == 2) {
-        gst_bit_reader_skip (&bit_reader, 2);
+        if (!gst_bit_reader_skip (&bit_reader, 2)) {
+          GST_WARNING ("Insufficient data available");
+          return;
+        }
       }
     }
 
-    gst_bit_writer_put_bits_uint16 (&writer, checksum & 0x1FF, 10);
+    gst_bit_writer_put_bits_uint16 (&bit_writer, checksum & 0x1FF, 10);
   } else {
+    GstByteReader byte_reader;
+
     gst_byte_reader_init (&byte_reader, vanc_data, vanc_data_size);
 
     /* Check if we can read DID, SDID and Data Count */
     if (gst_byte_reader_get_remaining (&byte_reader) < 3) {
       GST_WARNING ("Insufficient VANC data");
-      return NULL;
+      return;
     }
 
     did = gst_byte_reader_get_uint8_unchecked (&byte_reader);
@@ -225,11 +236,12 @@ mxf_vanc_to_st2038 (const guint8 * vanc_data, gsize vanc_data_size,
 
     if (payload_sample_count - 3 < data_count) {
       GST_WARNING ("Insufficient user data words");
-      return NULL;
+      return;
     }
 
-    gst_bit_writer_init_with_size (&writer, 64 + data_count * 2, FALSE);
-    write_st2038_header (&writer, c_not_y_channel_flag, line_number,
+    gst_bit_writer_init_with_data (&bit_writer, tmp_data, 64 + data_count * 2,
+        FALSE);
+    write_st2038_header (&bit_writer, c_not_y_channel_flag, line_number,
         with_parity (did), with_parity (sdid), with_parity (data_count));
 
     /*
@@ -238,20 +250,25 @@ mxf_vanc_to_st2038 (const guint8 * vanc_data, gsize vanc_data_size,
      */
     checksum = did + sdid + data_count;
     for (i = 0; i < data_count; i++) {
-      guint8 udw = gst_byte_reader_get_uint8_unchecked (&byte_reader);
+      guint8 udw;
+      if (!gst_byte_reader_get_uint8 (&byte_reader, &udw)) {
+        GST_WARNING ("Insufficient data available");
+        return;
+      }
       checksum += udw;
-      gst_bit_writer_put_bits_uint16 (&writer, with_parity (udw), 10);
+      gst_bit_writer_put_bits_uint16 (&bit_writer, with_parity (udw), 10);
     }
 
-    gst_bit_writer_put_bits_uint16 (&writer, with_parity (checksum & 0xFF), 10);
+    gst_bit_writer_put_bits_uint16 (&bit_writer, with_parity (checksum & 0xFF),
+        10);
   }
 
-  gst_bit_writer_align_bytes (&writer, 1);
+  gst_bit_writer_align_bytes (&bit_writer, 1);
 
-  size = gst_bit_writer_get_size (&writer) / 8;
-  data = gst_bit_writer_reset_and_get_data (&writer);
+  size = gst_bit_writer_get_size (&bit_writer) / 8;
+  data = gst_bit_writer_get_data (&bit_writer);
 
-  return gst_buffer_new_wrapped (data, size);
+  gst_byte_writer_put_data (writer, data, size);
 }
 
 static GstFlowReturn
@@ -264,6 +281,9 @@ mxf_vanc_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
   GstByteReader reader;
   GstFlowReturn ret = GST_FLOW_ERROR;
   guint16 num_packets, i;
+  GstByteWriter writer;
+
+  gst_byte_writer_init (&writer);
 
   /* SMPTE 436M 6.1 */
   if (key->u[12] != 0x17 || key->u[14] != 0x02) {
@@ -314,7 +334,7 @@ mxf_vanc_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     guint8 did, sdid;
     guint8 cdp_size;
 
-    if (gst_byte_reader_get_remaining (&reader) < 16)
+    if (gst_byte_reader_get_remaining (&reader) < 14)
       goto out;
 
     line_num = gst_byte_reader_get_uint16_be_unchecked (&reader);
@@ -325,24 +345,31 @@ mxf_vanc_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     array_count = gst_byte_reader_get_uint32_be_unchecked (&reader);
     array_item_size = gst_byte_reader_get_uint32_be_unchecked (&reader);
 
+    if (array_item_size != 1) {
+      if (!gst_byte_reader_skip (&reader, array_count * array_item_size))
+        goto out;
+      continue;
+    }
+
     if (!HANDLE_AS_ST2038) {
       /* Skip over anything that is not 8 bit VANC */
       if (payload_sample_coding != 4 && payload_sample_coding != 5
           && payload_sample_coding != 6) {
-        if (!gst_byte_reader_skip (&reader, array_count * array_item_size))
+        if (!gst_byte_reader_skip (&reader, array_count))
           goto out;
         continue;
       }
     }
 
-    if (gst_byte_reader_get_remaining (&reader) < array_count * array_item_size)
+    if (gst_byte_reader_get_remaining (&reader) < array_count)
       goto out;
 
     if (gst_byte_reader_get_remaining (&reader) < payload_sample_count)
       goto out;
 
-    if (payload_sample_count < 2) {
-      if (!gst_byte_reader_skip (&reader, array_count * array_item_size))
+    // DID, SDID and CDP size
+    if (payload_sample_count < 3) {
+      if (!gst_byte_reader_skip (&reader, array_count))
         goto out;
       continue;
     }
@@ -355,40 +382,43 @@ mxf_vanc_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
       /* Not S334 EIA-708 */
       if (did != 0x61 && sdid != 0x01) {
         GST_TRACE ("Skipping VANC data with DID/SDID 0x%02X/0x%02X", did, sdid);
-        if (!gst_byte_reader_skip (&reader, array_count * array_item_size - 2))
+        if (!gst_byte_reader_skip (&reader, array_count - 2))
           goto out;
         continue;
       }
 
       cdp_size = gst_byte_reader_get_uint8_unchecked (&reader);
       if (payload_sample_count - 3 < cdp_size) {
-        if (!gst_byte_reader_skip (&reader, array_count * array_item_size - 3))
+        if (!gst_byte_reader_skip (&reader, array_count - 3))
+          goto out;
+        continue;
+      }
+      if (gst_byte_reader_get_remaining (&reader) < cdp_size) {
+        if (!gst_byte_reader_skip (&reader, array_count - 3))
           goto out;
         continue;
       }
 
-      gst_buffer_unmap (buffer, &map);
-      *outbuf =
-          gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL,
-          gst_byte_reader_get_pos (&reader), cdp_size);
-      gst_buffer_unref (buffer);
+      gst_byte_writer_put_data (&writer,
+          gst_byte_reader_get_data_unchecked (&reader, cdp_size), cdp_size);
     } else {
       gsize byte_pos = gst_byte_reader_get_pos (&reader);
-      gsize vanc_data_size = gst_byte_reader_get_remaining (&reader);
 
       /* Convert from ST-436M to ST-2038 */
-      *outbuf = mxf_vanc_to_st2038 (&map.data[byte_pos], vanc_data_size,
-          line_num, payload_sample_count, payload_sample_coding,
-          array_count, array_item_size);
-      if (!outbuf)
-        goto no_data;
+      mxf_vanc_to_st2038 (&writer, &map.data[byte_pos], array_count,
+          line_num, payload_sample_count, payload_sample_coding);
 
-      gst_buffer_unmap (buffer, &map);
-      gst_buffer_unref (buffer);
+      if (!gst_byte_reader_skip (&reader, array_count))
+        goto out;
     }
-
-    return GST_FLOW_OK;
   }
+
+  *outbuf = gst_byte_writer_reset_and_get_buffer (&writer);
+
+  gst_buffer_unmap (buffer, &map);
+  gst_buffer_unref (buffer);
+
+  return GST_FLOW_OK;
 
 no_data:
 
@@ -398,6 +428,7 @@ no_data:
   ret = GST_FLOW_OK;
 
 out:
+  gst_byte_writer_reset (&writer);
   gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
 
