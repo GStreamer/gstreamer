@@ -34,6 +34,10 @@
 #include "gsttflitevsiinference.h"
 #endif
 
+#ifdef TFLITE_HAS_XNNPACK_DELEGATE
+#include "gsttflitexnnpackinference.h"
+#endif
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -45,6 +49,10 @@ plugin_init (GstPlugin * plugin)
 
 #ifdef TFLITE_VSI
   ret |= GST_ELEMENT_REGISTER (tflite_vsi_inference, plugin);
+#endif
+
+#ifdef TFLITE_HAS_XNNPACK_DELEGATE
+  ret |= GST_ELEMENT_REGISTER (tflite_xnnpack_inference, plugin);
 #endif
 
   return ret;

@@ -25,7 +25,8 @@
  * @short_description: Run TFLITE inference model on video buffers
  *
  * This element can apply an TFLITE model to video buffers. It attaches
- * the tensor output to the buffer as a @ref GstTensorMeta.
+ * the tensor output to the buffer as a @ref GstTensorMeta. This element will
+ * ust TFLITE default CPU implementation.
  *
  * To install TFLITE on your system, follow the instructions in the
  * README.md in with this plugin.

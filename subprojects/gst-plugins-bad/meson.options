@@ -180,6 +180,7 @@ option('teletext', type : 'feature', value : 'auto', description : 'Teletext plu
 option('tflite', type : 'feature', value : 'auto', description : 'TensorFlow Lite (LiteRT) plugin')
 option('tflite-edgetpu', type : 'feature', value : 'auto', description : 'TensorFlow Lite (LiteRT) EdgeTPU (Coral) support')
 option('tflite-vsi', type : 'feature', value : 'disabled', description : 'TensorFlow Lite (LiteRT) Verisilicon support')
+option('tflite-xnnpack', type : 'feature', value : 'auto', description : 'TensorFlow Lite (LiteRT) XNNPACK support')
 option('tinyalsa', type : 'feature', value : 'auto', description : 'TinyALSA plugin')
 option('transcode', type : 'feature', value : 'auto', description : 'Transcode plugin')
 option('ttml', type : 'feature', value : 'auto', description : 'TTML subtitle parser and renderer plugin')
