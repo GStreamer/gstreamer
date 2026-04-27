@@ -656,10 +656,10 @@ mxf_st2038_to_vanc_write_func (GstBuffer * buffer,
       break;
 
     /*
-     * Each ANC packet in ST 436M needs:
-     * 2 bytes DID/SDID + 1 byte DC + data_count bytes + 1 checksum byte
+     * Each ANC packet in ST 436M needs 14 bytes plus the byte array of the
+     * actual ANC packet rounded up to a multiple of 4.
      */
-    guint packet_size = 4 + header.data_count;
+    guint packet_size = 14 + GST_ROUND_UP_4 (4 + header.data_count);
     total_anc_size += packet_size;
     num_anc_structures++;
 
@@ -675,9 +675,9 @@ mxf_st2038_to_vanc_write_func (GstBuffer * buffer,
 
   /*
    * Calculate total ST 436M wrapper size:
-   * 16 bytes base header + 4 bytes array count + total ANC data
+   * 2 bytes number of ANC structures + total ANC data size
    */
-  size = 20 + total_anc_size;
+  size = 2 + total_anc_size;
 
   gst_byte_writer_init_with_size (&writer, size, TRUE);
 
@@ -714,14 +714,15 @@ mxf_st2038_to_vanc_write_func (GstBuffer * buffer,
       gst_byte_writer_put_uint8_unchecked (&writer, 4); /* Payload Sample Coding */
     }
 
-    gst_byte_writer_put_uint16_be_unchecked (&writer, total_anc_size);  /* Payload Sample Count */
+    gst_byte_writer_put_uint16_be_unchecked (&writer, 4 + header.data_count);   /* Payload Sample Count */
 
     /*
      * See Section 4.3 of ST-377 on Compound Data Types.
      * First 4 bytes define the number of elements in the array.
      * Last 4 bytes define the length of each element.
      */
-    gst_byte_writer_put_uint32_be_unchecked (&writer, total_anc_size);
+    gst_byte_writer_put_uint32_be_unchecked (&writer,
+        GST_ROUND_UP_4 (4 + header.data_count));
     gst_byte_writer_put_uint32_be_unchecked (&writer, 1);
 
     did_sdid = (header.did << 8) | header.sdid;
@@ -745,6 +746,7 @@ mxf_st2038_to_vanc_write_func (GstBuffer * buffer,
     offset += header.len_bytes;
   }
 
+  g_assert (gst_byte_writer_get_pos (&writer) == size);
   data = gst_byte_writer_reset_and_get_data (&writer);
 
   gst_buffer_unmap (buffer, &map);
