@@ -114,6 +114,8 @@ gst_analytics_od_mtd_meta_transform (GstBuffer * transbuf,
     oddata->y = rect.y;
     oddata->w = rect.w;
     oddata->h = rect.h;
+
+    return TRUE;
   } else if (GST_VIDEO_META_TRANSFORM_IS_SCALE (type)) {
     GstVideoMetaTransform *trans = data;
     gint ow, oh, nw, nh;
@@ -138,11 +140,14 @@ gst_analytics_od_mtd_meta_transform (GstBuffer * transbuf,
 
     oddata->h *= nh;
     oddata->h /= oh;
-  } else {
-    return FALSE;
+
+    return TRUE;
+  } else if (GST_META_TRANSFORM_IS_COPY (type)) {
+    // Data already copied by generic transform function, nothing to do.
+    return TRUE;
   }
 
-  return TRUE;
+  return FALSE;
 }
 
 static const GstAnalyticsMtdImpl od_impl = {

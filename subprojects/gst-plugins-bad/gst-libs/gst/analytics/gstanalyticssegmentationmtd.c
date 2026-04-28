@@ -463,6 +463,8 @@ gst_analytics_segmentation_mtd_transform (GstBuffer * transbuf,
     segdata->masks_loc_y = rect.y;
     segdata->masks_loc_w = rect.w;
     segdata->masks_loc_h = rect.h;
+
+    return TRUE;
   } else if (GST_VIDEO_META_TRANSFORM_IS_SCALE (type)) {
     GstVideoMetaTransform *trans = data;
     gint ow, oh, nw, nh;
@@ -484,9 +486,13 @@ gst_analytics_segmentation_mtd_transform (GstBuffer * transbuf,
     segdata->masks_loc_h *= nh;
     segdata->masks_loc_h /= oh;
 
+    return TRUE;
+  } else if (GST_META_TRANSFORM_IS_COPY (type)) {
+    // Data already copied by generic transform function, nothing to do.
+    return TRUE;
   }
 
-  return TRUE;
+  return FALSE;
 }
 
 /**
