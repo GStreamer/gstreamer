@@ -309,8 +309,24 @@ struct _GstBaseTransformClass {
    */
   GstFlowReturn (*generate_output) (GstBaseTransform *trans, GstBuffer **outbuf);
 
+  /**
+   * GstBaseTransformClass::prepare_allocator:
+   * @trans: the #GstBaseTransform
+   * @caps: the negotiated #GstCaps
+   *
+   * Orchestrates #GstBufferPool & #GstAllocator configuration for
+   * the negotiated @caps. Default implementation relies on an
+   * Allocation #GstQuery & calls `decide_allocation()`.
+   *
+   * Returns: whether the #GstBufferPool & #GstAllocator could be configured.
+   *
+   * Since: 1.30
+   */
+  gboolean          (*prepare_allocator) (GstBaseTransform *trans,
+                                          GstCaps *caps);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE - 2];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 3];
 };
 
 GST_BASE_API
@@ -352,6 +368,13 @@ GST_BASE_API
 void            gst_base_transform_get_allocator    (GstBaseTransform *trans,
                                                      GstAllocator **allocator,
                                                      GstAllocationParams *params);
+
+GST_BASE_API
+gboolean        gst_base_transform_set_allocator    (GstBaseTransform *trans,
+                                                     GstBufferPool * pool,
+                                                     GstAllocator * allocator,
+                                                     const GstAllocationParams * params,
+                                                     GstQuery * query);
 GST_BASE_API
 void		gst_base_transform_reconfigure_sink (GstBaseTransform *trans);
 

@@ -292,6 +292,8 @@ static gboolean gst_base_transform_default_decide_allocation (GstBaseTransform
     * trans, GstQuery * query);
 static gboolean gst_base_transform_default_propose_allocation (GstBaseTransform
     * trans, GstQuery * decide_query, GstQuery * query);
+static gboolean gst_base_transform_default_prepare_allocator (GstBaseTransform
+    * trans, GstCaps * outcaps);
 static gboolean gst_base_transform_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static gboolean gst_base_transform_default_query (GstBaseTransform * trans,
@@ -357,6 +359,8 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
       GST_DEBUG_FUNCPTR (gst_base_transform_default_decide_allocation);
   klass->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_base_transform_default_propose_allocation);
+  klass->prepare_allocator =
+      GST_DEBUG_FUNCPTR (gst_base_transform_default_prepare_allocator);
   klass->transform_size =
       GST_DEBUG_FUNCPTR (gst_base_transform_default_transform_size);
   klass->transform_meta =
@@ -743,9 +747,23 @@ done:
   return caps;
 }
 
-/* takes ownership of the pool, allocator and query */
-static gboolean
-gst_base_transform_set_allocation (GstBaseTransform * trans,
+/**
+ * gst_base_transform_set_allocator:
+ * @trans: a #GstBaseTransform
+ * @pool: (transfer full) (nullable): the #GstBufferPool
+ * @allocator: (transfer full) (nullable): the #GstAllocator
+ * @params: (transfer none) (nullable): the #GstAllocationParams of @allocator
+ * @query: (transfer full) (nullable): the Allocation #GstQuery if any
+ *
+ * Allows #GstBaseTransform sub-classes to set the buffer @pool, memory @allocator,
+ * its @params and the @query if they originate from an Allocation #GstQuery.
+ *
+ * Returns: TRUE on success or FALSE if buffer @pool activation failed
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_base_transform_set_allocator (GstBaseTransform * trans,
     GstBufferPool * pool, GstAllocator * allocator,
     const GstAllocationParams * params, GstQuery * query)
 {
@@ -920,7 +938,8 @@ config_failed:
 }
 
 static gboolean
-gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
+gst_base_transform_default_prepare_allocator (GstBaseTransform * trans,
+    GstCaps * outcaps)
 {
   GstQuery *query;
   gboolean result = TRUE;
@@ -945,7 +964,7 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
      * let the upstream element decide if it wants to use a bufferpool and
      * then we will proxy the downstream pool */
     GST_DEBUG_OBJECT (trans, "we're passthough, delay bufferpool");
-    gst_base_transform_set_allocation (trans, NULL, NULL, NULL, NULL);
+    gst_base_transform_set_allocator (trans, NULL, NULL, NULL, NULL);
     return TRUE;
   }
 
@@ -974,7 +993,7 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
    * after looking at the meta APIs */
   if (priv->passthrough || priv->always_in_place) {
     GST_DEBUG_OBJECT (trans, "no doing passthrough, delay bufferpool");
-    gst_base_transform_set_allocation (trans, NULL, NULL, NULL, NULL);
+    gst_base_transform_set_allocator (trans, NULL, NULL, NULL, NULL);
     gst_query_unref (query);
     return TRUE;
   }
@@ -993,8 +1012,7 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
 
   /* now store */
   result =
-      gst_base_transform_set_allocation (trans, pool, allocator, &params,
-      query);
+      gst_base_transform_set_allocator (trans, pool, allocator, &params, query);
 
   return result;
 
@@ -1323,6 +1341,7 @@ static gboolean
 gst_base_transform_setcaps (GstBaseTransform * trans, GstPad * pad,
     GstCaps * incaps)
 {
+  GstBaseTransformClass *klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
   GstBaseTransformPrivate *priv = trans->priv;
   GstCaps *outcaps, *prev_incaps = NULL, *prev_outcaps = NULL;
   gboolean ret = TRUE;
@@ -1361,9 +1380,9 @@ gst_base_transform_setcaps (GstBaseTransform * trans, GstPad * pad,
       ret = gst_pad_set_caps (trans->srcpad, outcaps);
   }
 
-  if (ret) {
+  if (ret && klass->prepare_allocator) {
     /* try to get a pool when needed */
-    ret = gst_base_transform_do_bufferpool (trans, outcaps);
+    ret = klass->prepare_allocator (trans, outcaps);
   }
 
 done:
@@ -2520,7 +2539,7 @@ gst_base_transform_activate (GstBaseTransform * trans, gboolean active)
     if (priv->pad_mode != GST_PAD_MODE_NONE && bclass->stop)
       result &= bclass->stop (trans);
 
-    gst_base_transform_set_allocation (trans, NULL, NULL, NULL, NULL);
+    gst_base_transform_set_allocator (trans, NULL, NULL, NULL, NULL);
   }
 
   return result;

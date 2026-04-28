@@ -432,8 +432,24 @@ struct _GstAggregatorClass {
   GstSample *       (*peek_next_sample)         (GstAggregator *aggregator,
                                                  GstAggregatorPad * aggregator_pad);
 
+  /**
+   * GstAggregatorClass::prepare_allocator:
+   * @aggregator: the #GstAggregator
+   * @caps: the negotiated #GstCaps
+   *
+   * Orchestrates #GstBufferPool & #GstAllocator configuration for
+   * the negotiated @caps. Default implementation relies on an
+   * Allocation #GstQuery & calls `decide_allocation()`.
+   *
+   * Returns: whether the #GstBufferPool & #GstAllocator could be configured.
+   *
+   * Since: 1.30
+   */
+  gboolean          (*prepare_allocator)        (GstAggregator *aggregator,
+                                                 GstCaps *caps);
+
   /*< private >*/
-  gpointer          _gst_reserved[GST_PADDING_LARGE-5];
+  gpointer          _gst_reserved[GST_PADDING_LARGE - 6];
 };
 
 /************************************
@@ -491,6 +507,13 @@ GST_BASE_API
 void            gst_aggregator_get_allocator       (GstAggregator                 * self,
                                                     GstAllocator                 ** allocator,
                                                     GstAllocationParams           * params);
+
+GST_BASE_API
+gboolean        gst_aggregator_set_allocator       (GstAggregator * self,
+                                                    GstBufferPool * pool,
+                                                    GstAllocator * allocator,
+                                                    const GstAllocationParams * params,
+                                                    GstQuery * query);
 
 GST_BASE_API
 GstClockTime    gst_aggregator_simple_get_next_time (GstAggregator                * self);

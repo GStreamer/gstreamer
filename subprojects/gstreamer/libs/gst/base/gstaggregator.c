@@ -1207,13 +1207,27 @@ gst_aggregator_default_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
   return TRUE;
 }
 
-
-/* takes ownership of the pool, allocator and query */
-static gboolean
-gst_aggregator_set_allocation (GstAggregator * self,
+/**
+ * gst_aggregator_set_allocator:
+ * @self: a #GstAggregator
+ * @pool: (transfer full) (nullable): the #GstBufferPool
+ * @allocator: (transfer full) (nullable): the #GstAllocator
+ * @params: (transfer none) (nullable): the #GstAllocationParams of @allocator
+ * @query: (transfer full) (nullable): the Allocation #GstQuery if any
+ *
+ * Allows #GstAggregator sub-classes to set the buffer @pool, memory @allocator,
+ * its @params and the @query if they originate from an Allocation #GstQuery.
+ *
+ * Returns: TRUE on success or FALSE if buffer @pool activation failed
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_aggregator_set_allocator (GstAggregator * self,
     GstBufferPool * pool, GstAllocator * allocator,
     const GstAllocationParams * params, GstQuery * query)
 {
+  gboolean ret = TRUE;
   GstAllocator *oldalloc;
   GstBufferPool *oldpool;
   GstQuery *oldquery;
@@ -1238,7 +1252,7 @@ gst_aggregator_set_allocation (GstAggregator * self,
 
   if (oldpool) {
     GST_DEBUG_OBJECT (self, "deactivating old pool %p", oldpool);
-    gst_buffer_pool_set_active (oldpool, FALSE);
+    ret = gst_buffer_pool_set_active (oldpool, FALSE);
     gst_object_unref (oldpool);
   }
   if (oldalloc) {
@@ -1247,7 +1261,7 @@ gst_aggregator_set_allocation (GstAggregator * self,
   if (oldquery) {
     gst_query_unref (oldquery);
   }
-  return TRUE;
+  return ret;
 }
 
 
@@ -1264,7 +1278,7 @@ gst_aggregator_decide_allocation (GstAggregator * self, GstQuery * query)
 }
 
 static gboolean
-gst_aggregator_do_allocation (GstAggregator * self, GstCaps * caps)
+gst_aggregator_default_prepare_allocator (GstAggregator * self, GstCaps * caps)
 {
   GstQuery *query;
   gboolean result = TRUE;
@@ -1302,8 +1316,7 @@ gst_aggregator_do_allocation (GstAggregator * self, GstCaps * caps)
     gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
 
   /* now store */
-  result =
-      gst_aggregator_set_allocation (self, pool, allocator, &params, query);
+  result = gst_aggregator_set_allocator (self, pool, allocator, &params, query);
 
   return result;
 
@@ -1397,9 +1410,11 @@ gst_aggregator_default_negotiate (GstAggregator * self)
 
   gst_aggregator_set_src_caps (self, caps);
 
-  if (!gst_aggregator_do_allocation (self, caps)) {
-    GST_WARNING_OBJECT (self, "Allocation negotiation failed");
-    ret = GST_FLOW_NOT_NEGOTIATED;
+  if (agg_klass->prepare_allocator) {
+    if (!agg_klass->prepare_allocator (self, caps)) {
+      GST_WARNING_OBJECT (self, "Allocation negotiation failed");
+      ret = GST_FLOW_NOT_NEGOTIATED;
+    }
   }
 
 done:
@@ -1642,7 +1657,7 @@ gst_aggregator_start (GstAggregator * self)
 
   self->priv->blocked = TRUE;
 
-  gst_aggregator_set_allocation (self, NULL, NULL, NULL, NULL);
+  gst_aggregator_set_allocator (self, NULL, NULL, NULL, NULL);
 
   klass = GST_AGGREGATOR_GET_CLASS (self);
 
@@ -2115,7 +2130,7 @@ gst_aggregator_stop (GstAggregator * agg)
   agg->priv->posted_latency_msg = FALSE;
   agg->priv->blocked = FALSE;
 
-  gst_aggregator_set_allocation (agg, NULL, NULL, NULL, NULL);
+  gst_aggregator_set_allocator (agg, NULL, NULL, NULL, NULL);
 
   if (agg->priv->running) {
     /* As sinkpads get deactivated after the src pad, we
@@ -3081,6 +3096,8 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
   klass->update_src_caps = gst_aggregator_default_update_src_caps;
   klass->fixate_src_caps = gst_aggregator_default_fixate_src_caps;
   klass->negotiated_src_caps = gst_aggregator_default_negotiated_src_caps;
+  klass->prepare_allocator =
+      GST_DEBUG_FUNCPTR (gst_aggregator_default_prepare_allocator);
 
   klass->negotiate = gst_aggregator_default_negotiate;
 

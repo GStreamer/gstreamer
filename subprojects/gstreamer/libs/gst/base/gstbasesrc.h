@@ -269,8 +269,23 @@ struct _GstBaseSrcClass {
   GstFlowReturn (*fill)         (GstBaseSrc *src, guint64 offset, guint size,
                                  GstBuffer *buf);
 
+  /**
+   * GstBaseSrcClass::prepare_allocator:
+   * @src: the #GstBaseSrc
+   * @caps: the negotiated #GstCaps
+   *
+   * Orchestrates #GstBufferPool & #GstAllocator configuration for
+   * the negotiated @caps. Default implementation relies on an
+   * Allocation #GstQuery & calls `decide_allocation()`.
+   *
+   * Returns: whether the #GstBufferPool & #GstAllocator could be configured.
+   *
+   * Since: 1.30
+   */
+  gboolean      (*prepare_allocator) (GstBaseSrc *src, GstCaps *caps);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 1];
 };
 
 GST_BASE_API
@@ -342,6 +357,12 @@ GST_BASE_API
 void            gst_base_src_get_allocator    (GstBaseSrc *src,
                                                GstAllocator **allocator,
                                                GstAllocationParams *params);
+
+GST_BASE_API
+gboolean        gst_base_src_set_allocator    (GstBaseSrc *src,
+                                               GstBufferPool *pool,
+                                               GstAllocator *allocator,
+                                               const GstAllocationParams *params);
 
 GST_BASE_API
 void            gst_base_src_submit_buffer_list (GstBaseSrc    * src,
