@@ -516,6 +516,84 @@ GST_START_TEST (test_parse_detect_stream_with_hdr_sei)
 
 GST_END_TEST;
 
+static inline GstBuffer *wrap_buffer (const guint8 * buf, gsize size,
+    GstClockTime pts, GstBufferFlags flags);
+static inline GstBuffer *composite_buffer (GstClockTime pts,
+    GstBufferFlags flags, gint count, ...);
+static GstCaps *pull_last_caps_event (GstHarness * h);
+
+/* Verify that mastering-display-info and content-light-level are removed from
+ * caps when HDR SEIs disappear from the bitstream.
+ *
+ * Sequence:
+ *   AU1: SPS+PPS+CLLI+MDC+IDR -> state PARSED->ACTIVE, caps WITH HDR fields
+ *   AU2: IDR only (no SEI)    -> state ACTIVE->EXPIRED, caps WITHOUT HDR fields
+ *   AU3: IDR only (no SEI)    -> state stays EXPIRED, no caps event
+ */
+#define bytestream_set_caps(h, in_align, out_align) \
+  gst_harness_set_caps_str (h, \
+      "video/x-h264, parsed=(boolean)false, stream-format=byte-stream, alignment=" in_align ", framerate=30/1", \
+      "video/x-h264, parsed=(boolean)true, stream-format=byte-stream, alignment=" out_align)
+
+GST_START_TEST (test_parse_detect_stream_hdr_sei_expiry)
+{
+  GstHarness *h = gst_harness_new ("h264parse");
+  GstCaps *caps;
+  GstStructure *s;
+  GstBuffer *buf;
+
+  bytestream_set_caps (h, "au", "au");
+
+  /* AU1: full headers + HDR SEIs + IDR -> parser emits caps with HDR fields */
+  buf = composite_buffer (10, 0, 5,
+      h264_sps, sizeof (h264_sps),
+      h264_pps, sizeof (h264_pps),
+      h264_sei_clli, sizeof (h264_sei_clli),
+      h264_sei_mdcv, sizeof (h264_sei_mdcv),
+      h264_idrframe, sizeof (h264_idrframe));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+
+  caps = pull_last_caps_event (h);
+  fail_unless (caps != NULL);
+  s = gst_caps_get_structure (caps, 0);
+  fail_unless (gst_structure_has_field (s, "mastering-display-info"));
+  fail_unless (gst_structure_has_field (s, "content-light-level"));
+  gst_caps_unref (caps);
+  while (gst_harness_buffers_in_queue (h) > 0) {
+    GstBuffer *b = gst_harness_pull (h);
+    gst_buffer_unref (b);
+  }
+
+  /* AU2: IDR without HDR SEIs -> state ACTIVE->EXPIRED -> caps WITHOUT HDR */
+  buf = wrap_buffer (h264_idrframe, sizeof (h264_idrframe), 20, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  caps = pull_last_caps_event (h);
+  fail_unless (caps != NULL);
+  s = gst_caps_get_structure (caps, 0);
+  fail_if (gst_structure_has_field (s, "mastering-display-info"));
+  fail_if (gst_structure_has_field (s, "content-light-level"));
+  gst_caps_unref (caps);
+  while (gst_harness_buffers_in_queue (h) > 0) {
+    GstBuffer *b = gst_harness_pull (h);
+    gst_buffer_unref (b);
+  }
+
+  /* AU3: IDR without HDR SEIs -> state is EXPIRED, no caps event */
+  buf = wrap_buffer (h264_idrframe, sizeof (h264_idrframe), 30, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  caps = pull_last_caps_event (h);
+  fail_if (caps != NULL);
+  while (gst_harness_buffers_in_queue (h) > 0) {
+    GstBuffer *b = gst_harness_pull (h);
+    gst_buffer_unref (b);
+  }
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static GstStaticPadTemplate srctemplate_avc_au_and_bs_au =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -707,6 +785,8 @@ h264parse_suite (void)
   tcase_add_test (tc_chain, test_parse_detect_stream);
   if (ctx_hdr_sei)
     tcase_add_test (tc_chain, test_parse_detect_stream_with_hdr_sei);
+  if (ctx_hdr_sei)
+    tcase_add_test (tc_chain, test_parse_detect_stream_hdr_sei_expiry);
   tcase_add_test (tc_chain, test_sink_caps_reordering);
 
   return s;
@@ -911,6 +991,28 @@ composite_buffer (GstClockTime pts, GstBufferFlags flags, gint count, ...)
   va_end (vl);
 
   return buffer;
+}
+
+static GstCaps *
+pull_last_caps_event (GstHarness * h)
+{
+  GstCaps *caps = NULL;
+  GstEvent *event;
+
+  while ((event = gst_harness_try_pull_event (h)) != NULL) {
+    if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
+      GstCaps *event_caps;
+
+      gst_event_parse_caps (event, &event_caps);
+      if (caps)
+        gst_caps_unref (caps);
+      caps = gst_caps_copy (event_caps);
+    }
+
+    gst_event_unref (event);
+  }
+
+  return caps;
 }
 
 #define pull_and_check_full(h, data, size, pts, flags) \
