@@ -103,7 +103,6 @@ vulkan_defines = []
 optional_deps = []
 has_vulkan_header = false
 vulkan_dep = dependency('', required: false)
-vulkan_inc_dir = ''
 enabled_vulkan_winsys = []
 
 vulkan_conf = configuration_data()
@@ -123,9 +122,9 @@ endforeach
 
 vulkan_plugin_kwargs = {}
 if host_system == 'darwin'
-  # Prefer direct MoltenVK linkage on Darwin instead of the Vulkan loader.
-  # This matches the framework packaging model and avoids depending on local
-  # ICD/loader setup when running the Vulkan plugin.
+  # Prefer a MoltenVK provided by the system or toolchain (e.g. the one Cerbero
+  # ships); fall back to the downloaded moltenvk subproject so builds don't
+  # depend on the local setup.
   objcpp = meson.get_compiler('objcpp')
   vulkan_dep = objcpp.find_library('MoltenVK', required: false)
   if not vulkan_dep.found()
@@ -133,39 +132,13 @@ if host_system == 'darwin'
     # We need this to find libMoltenVK.dylib when installed
     vulkan_plugin_kwargs += {'install_rpath': '@loader_path/..'}
   endif
-elif host_system == 'windows'
-  vulkan_root = run_command(python3, '-c', 'import os; print(os.environ.get("VK_SDK_PATH"))', check: false).stdout().strip()
-  if vulkan_root != '' and vulkan_root != 'None'
-    vulkan_lib_dir = ''
-    if build_machine.cpu_family() == 'x86_64'
-      vulkan_lib_dir = join_paths(vulkan_root, 'Lib')
-    else
-      vulkan_lib_dir = join_paths(vulkan_root, 'Lib32')
-    endif
-
-    vulkan_lib = cc.find_library('vulkan-1', dirs: vulkan_lib_dir,
-                                 required : vulkan_opt)
-
-    vulkan_inc_dir = join_paths(vulkan_root, 'Include')
-    has_vulkan_header = cc.has_header('vulkan/vulkan_core.h',
-                                      args: '-I' + vulkan_inc_dir,
-                                      required: vulkan_opt)
-
-    if vulkan_lib.found() and has_vulkan_header
-      vulkan_dep = declare_dependency(include_directories: include_directories(vulkan_inc_dir),
-                                      dependencies: vulkan_lib)
-    endif
-  endif
 else
-  vulkan_dep = dependency('vulkan', method: 'pkg-config', required: false)
-  if not vulkan_dep.found()
-    vulkan_dep = cc.find_library('vulkan', required: vulkan_opt)
-  endif
+  # Meson's built-in 'vulkan' dependency handles pkg-config (Linux),
+  # VULKAN_SDK / VK_SDK_PATH env vars, and platform-specific lib naming.
+  vulkan_dep = dependency('vulkan', required: vulkan_opt)
 endif
 
-if host_system != 'windows'
-  has_vulkan_header = cc.has_header('vulkan/vulkan_core.h', dependencies: vulkan_dep, required: vulkan_opt)
-endif
+has_vulkan_header = cc.has_header('vulkan/vulkan_core.h', dependencies: vulkan_dep, required: vulkan_opt)
 
 if 'x11' in vulkan_windowing_opt or 'auto' in vulkan_windowing_opt
   vulkan_xcb_required = vulkan_opt.enabled() and 'x11' in vulkan_windowing_opt
@@ -287,8 +260,7 @@ endif
 if host_system == 'windows'
   gdi_dep = cc.find_library('gdi32', required : vulkan_opt)
 
-  # Cannot use internal dependency object with cc.has_header()
-  if gdi_dep.found() and cc.has_header('vulkan/vulkan_win32.h', args: '-I' + vulkan_inc_dir, required: vulkan_opt)
+  if gdi_dep.found() and cc.has_header('vulkan/vulkan_win32.h', dependencies: vulkan_dep, required: vulkan_opt)
     vulkan_priv_sources += ['win32/gstvkwindow_win32.c']
     optional_deps += [gdi_dep]
     vulkan_windowing = true
@@ -341,11 +313,7 @@ static VkVideoEncodeH264ProfileInfoKHR h264_profile;
 static VkVideoEncodeH265ProfileInfoKHR h265_profile;
 '''
 
-  if vulkan_inc_dir != ''
-    have_vk_video = cc.compiles(video_test, dependencies : vulkan_dep,  args: '-I' + vulkan_inc_dir)
-  else
-    have_vk_video = cc.compiles(video_test, dependencies : vulkan_dep)
-  endif
+  have_vk_video = cc.compiles(video_test, dependencies : vulkan_dep)
   if have_vk_video
     vulkan_conf.set('GST_VULKAN_HAVE_VIDEO_EXTENSIONS', 1)
     vulkan_priv_sources += files(
