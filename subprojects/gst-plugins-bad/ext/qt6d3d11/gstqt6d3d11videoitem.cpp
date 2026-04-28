@@ -73,7 +73,9 @@ GstQt6D3D11VideoItemProxy::SetForceAspectRatio (bool force)
 {
   std::lock_guard < std::mutex > lk (lock);
   if (!item)
-    return item->setForceAspectRatio (force);
+    return;
+
+  item->setForceAspectRatio (force);
 }
 
 gint64
