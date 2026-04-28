@@ -508,40 +508,25 @@ gst_socket_timestamp_message_class_init (GstSocketTimestampMessageClass * class)
 #endif
 
 static gboolean
-gst_udpsrc_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
+gst_udpsrc_prepare_allocator (GstBaseSrc * bsrc, GstCaps * caps)
 {
+  gboolean ret;
   GstUDPSrc *udpsrc;
   GstBufferPool *pool;
-  gboolean update;
   GstStructure *config;
-  GstCaps *caps = NULL;
 
   udpsrc = GST_UDPSRC (bsrc);
 
-  if (gst_query_get_n_allocation_pools (query) > 0) {
-    update = TRUE;
-  } else {
-    update = FALSE;
-  }
-
   pool = gst_buffer_pool_new ();
-
   config = gst_buffer_pool_get_config (pool);
-
-  gst_query_parse_allocation (query, &caps, NULL);
-
   gst_buffer_pool_config_set_params (config, caps, udpsrc->mtu, 0, 0);
-
   gst_buffer_pool_set_config (pool, config);
 
-  if (update)
-    gst_query_set_nth_allocation_pool (query, 0, pool, udpsrc->mtu, 0, 0);
-  else
-    gst_query_add_allocation_pool (query, pool, udpsrc->mtu, 0, 0);
+  ret = gst_base_src_set_allocator (bsrc, pool, NULL, NULL);
 
   gst_object_unref (pool);
 
-  return TRUE;
+  return ret;
 }
 
 /* not 100% correct, but a good upper bound for memory allocation purposes */
@@ -811,7 +796,7 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
   gstbasesrc_class->unlock = gst_udpsrc_unlock;
   gstbasesrc_class->unlock_stop = gst_udpsrc_unlock_stop;
   gstbasesrc_class->get_caps = gst_udpsrc_getcaps;
-  gstbasesrc_class->decide_allocation = gst_udpsrc_decide_allocation;
+  gstbasesrc_class->prepare_allocator = gst_udpsrc_prepare_allocator;
 
   gstpushsrc_class->fill = gst_udpsrc_fill;
 
