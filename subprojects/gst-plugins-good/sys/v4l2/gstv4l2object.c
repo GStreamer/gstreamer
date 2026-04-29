@@ -5544,7 +5544,7 @@ gst_v4l2_object_get_caps (GstV4l2Object * v4l2object, GstCaps * filter)
 static gboolean
 gst_v4l2_object_match_buffer_layout (GstV4l2Object * obj, guint n_planes,
     gsize offset[GST_VIDEO_MAX_PLANES], gint stride[GST_VIDEO_MAX_PLANES],
-    gsize buffer_size, guint padded_height)
+    guint padded_height)
 {
   gboolean need_fmt_update = FALSE;
   GstVideoInfo *info = &obj->info.vinfo;
@@ -5765,19 +5765,22 @@ gst_v4l2_object_match_buffer_layout_from_struct (GstV4l2Object * obj,
     return FALSE;
   }
 
-  if (GST_VIDEO_INFO_SIZE (&info) != buffer_size) {
-    GST_WARNING_OBJECT (obj->dbg_obj,
-        "Requested buffer size (%d) doesn't match video info size (%"
-        G_GSIZE_FORMAT ")", buffer_size, GST_VIDEO_INFO_SIZE (&info));
-    return FALSE;
-  }
-
   GST_DEBUG_OBJECT (obj->dbg_obj,
       "try matching buffer layout requested by downstream");
 
-  gst_v4l2_object_match_buffer_layout (obj, GST_VIDEO_INFO_N_PLANES (&info),
-      info.offset, info.stride, buffer_size,
-      GST_VIDEO_INFO_PLANE_HEIGHT (&info, 0, plane_size));
+  if (!gst_v4l2_object_match_buffer_layout (obj,
+          GST_VIDEO_INFO_N_PLANES (&info), info.offset, info.stride,
+          GST_VIDEO_INFO_PLANE_HEIGHT (&info, 0, plane_size))) {
+    GST_WARNING_OBJECT (obj->dbg_obj, "Failed to match buffer layout");
+    return FALSE;
+  }
+
+  if (GST_V4L2_SIZE (obj) < buffer_size) {
+    GST_WARNING_OBJECT (obj->dbg_obj,
+        "Buffer size mismatch: expected %lu, got %u", obj->info.vinfo.size,
+        buffer_size);
+    return FALSE;
+  }
 
   return TRUE;
 }
@@ -5836,8 +5839,18 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
     const GstStructure *params;
     gst_query_parse_nth_allocation_meta (query, video_idx, &params);
 
-    if (params)
-      gst_v4l2_object_match_buffer_layout_from_struct (obj, params, caps, size);
+    if (params) {
+      if (!gst_v4l2_object_match_buffer_layout_from_struct (obj, params, caps,
+              size)) {
+        if (pool) {
+          gst_object_unref (pool);
+          pool = NULL;
+          min = max = 0;
+          size = 0;
+          update = TRUE;
+        }
+      }
+    }
   }
 
   can_share_own_pool = (has_video_meta || !obj->need_video_meta);
@@ -6221,8 +6234,7 @@ gst_v4l2_object_try_import (GstV4l2Object * obj, GstBuffer * buffer)
     gst_video_meta_get_plane_height (vmeta, plane_height);
 
     if (!gst_v4l2_object_match_buffer_layout (obj, vmeta->n_planes,
-            vmeta->offset, vmeta->stride, gst_buffer_get_size (buffer),
-            plane_height[0]))
+            vmeta->offset, vmeta->stride, plane_height[0]))
       return FALSE;
   }
 
