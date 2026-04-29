@@ -203,6 +203,64 @@ check_caps (GstCaps ** codec_caps, GstCaps ** raw_caps)
   return TRUE;
 }
 
+static inline gboolean
+_find_profile (const GValue * profiles, const char *profile_name)
+{
+  if (GST_VALUE_HOLDS_LIST (profiles)) {
+    for (guint i = 0; i < gst_value_list_get_size (profiles); i++) {
+      const GValue *profile = gst_value_list_get_value (profiles, i);
+      if (G_VALUE_HOLDS_STRING (profile)) {
+        const gchar *profile_s = g_value_get_string (profile);
+        if (g_strcmp0 (profile_s, profile_name) == 0)
+          return TRUE;
+      }
+    }
+  } else if (G_VALUE_HOLDS_STRING (profiles)) {
+    const gchar *profile_s = g_value_get_string (profiles);
+    return (g_strcmp0 (profile_s, profile_name) == 0);
+  }
+
+  return FALSE;
+}
+
+/* HACK: add an extra profile if a specific profile is supported */
+static void
+_add_extra_profile (GstCaps * caps, const char *dependency_profile,
+    const char **profile_names)
+{
+  for (guint i = 0; i < gst_caps_get_size (caps); i++) {
+    GstStructure *s = gst_caps_get_structure (caps, i);
+    const GValue *profile_v = gst_structure_get_value (s, "profile");
+    if (!profile_v)
+      continue;
+    if (!_find_profile (profile_v, dependency_profile))
+      continue;
+
+    GValue new_profile = G_VALUE_INIT;
+    g_value_init (&new_profile, GST_TYPE_LIST);
+    if (GST_VALUE_HOLDS_LIST (profile_v))
+      g_value_copy (profile_v, &new_profile);
+    else
+      gst_value_list_append_value (&new_profile, profile_v);
+
+    guint j = 0;
+    while (profile_names[j]) {
+      GValue extra_profile = G_VALUE_INIT;
+
+      g_value_init (&extra_profile, G_TYPE_STRING);
+      g_value_set_string (&extra_profile, profile_names[j]);
+
+      gst_value_list_append_value (&new_profile, &extra_profile);
+      g_value_unset (&extra_profile);
+      j++;
+    }
+
+    gst_structure_set_value (s, "profile", &new_profile);
+    g_value_unset (&new_profile);
+    break;
+  }
+}
+
 static const StdVideoH264ProfileIdc h264_profile_idc[] = {
   STD_VIDEO_H264_PROFILE_IDC_HIGH, STD_VIDEO_H264_PROFILE_IDC_MAIN,
   STD_VIDEO_H264_PROFILE_IDC_BASELINE,
@@ -249,6 +307,8 @@ h264_encode_caps (GstVulkanPhysicalDevice * device,
 {
   GstCaps *codec_caps, *raw_caps;
   const char *stream_format[] = { "byte-stream", NULL };
+  const char *baseline[] = { "baseline", NULL };
+  const char *high[] = { "constrained-high", "progressive-high", NULL };
 
   profile->codec.h264enc.sType =
       VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_PROFILE_INFO_KHR;
@@ -266,6 +326,8 @@ h264_encode_caps (GstVulkanPhysicalDevice * device,
     return FALSE;
 
   h26x_complete_caps (codec_caps, (char **) stream_format);
+  _add_extra_profile (codec_caps, "constrained-baseline", baseline);
+  _add_extra_profile (codec_caps, "high", high);
 
   gst_caps_set_features_simple (raw_caps,
       gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, NULL));
@@ -324,6 +386,8 @@ h264_decode_caps (GstVulkanPhysicalDevice * device,
 {
   GstCaps *codec_caps, *raw_caps;
   const char *stream_format[] = { "avc", "byte-stream", NULL };
+  const char *baseline[] = { "baseline", "extended", NULL };
+  const char *high[] = { "constrained-high", "progressive-high", NULL };
 
   profile->codec.h264dec.sType =
       VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_PROFILE_INFO_KHR;
@@ -345,52 +409,8 @@ h264_decode_caps (GstVulkanPhysicalDevice * device,
     return FALSE;
 
   h26x_complete_caps (codec_caps, (char **) stream_format);
-
-  /* HACK: add baseline and extended profiles if constrained-baseline is
-   * supported */
-  {
-    const GstStructure *structure = gst_caps_get_structure (codec_caps, 0);
-    const GValue *profiles_value =
-        gst_structure_get_value (structure, "profile");
-    gboolean has_constrained_baseline = FALSE;
-
-    if (GST_VALUE_HOLDS_LIST (profiles_value)) {
-      for (int i = 0; i < gst_value_list_get_size (profiles_value); i++) {
-        const GValue *profile = gst_value_list_get_value (profiles_value, i);
-        if (G_VALUE_HOLDS_STRING (profile)) {
-          const gchar *profile_str = g_value_get_string (profile);
-          if (g_strcmp0 (profile_str, "constrained-baseline") == 0) {
-            has_constrained_baseline = TRUE;
-            break;
-          }
-        }
-      }
-    } else if (G_VALUE_HOLDS_STRING (profiles_value)) {
-      const gchar *profile_str = g_value_get_string (profiles_value);
-      has_constrained_baseline =
-          (g_strcmp0 (profile_str, "constrained-baseline") == 0);
-    }
-
-    if (has_constrained_baseline) {
-      const char *profiles[] = { "baseline", "extended" };
-      GValue new_profiles = G_VALUE_INIT;
-
-      g_value_init (&new_profiles, GST_TYPE_LIST);
-      g_value_copy (profiles_value, &new_profiles);
-
-      for (int i = 0; i < G_N_ELEMENTS (profiles); i++) {
-        GValue value = G_VALUE_INIT;
-
-        g_value_init (&value, G_TYPE_STRING);
-        g_value_set_string (&value, profiles[i]);
-        gst_value_list_append_value (&new_profiles, &value);
-        g_value_unset (&value);
-      }
-
-      gst_caps_set_value (codec_caps, "profile", &new_profiles);
-      g_value_unset (&new_profiles);
-    }
-  }
+  _add_extra_profile (codec_caps, "constrained-baseline", baseline);
+  _add_extra_profile (codec_caps, "high", high);
 
   gst_caps_set_features_simple (raw_caps,
       gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, NULL));
