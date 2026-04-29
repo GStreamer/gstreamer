@@ -75,6 +75,7 @@ on_new_sample (GstAppSink * appsink, gpointer user_data)
   GstSample *sample = gst_app_sink_pull_sample (appsink);
   GstBuffer *buffer;
   GstCaps *caps;
+  gboolean enough_samples = FALSE;
 
   if (sample == NULL)
     return GST_FLOW_ERROR;
@@ -84,14 +85,18 @@ on_new_sample (GstAppSink * appsink, gpointer user_data)
 
   if (ctx->result->caps == NULL && caps != NULL)
     ctx->result->caps = gst_caps_ref (caps);
-  if (buffer != NULL)
+  if (buffer != NULL && (ctx->max_samples == 0 ||
+          ctx->result->sample_buffers->len < ctx->max_samples))
     g_ptr_array_add (ctx->result->sample_buffers, gst_buffer_ref (buffer));
 
   if (ctx->max_samples > 0 && ctx->result->sample_buffers->len >=
       ctx->max_samples)
-    g_main_loop_quit (ctx->loop);
+    enough_samples = TRUE;
 
   gst_sample_unref (sample);
+
+  if (enough_samples)
+    g_main_loop_quit (ctx->loop);
 
   return GST_FLOW_OK;
 }
@@ -378,9 +383,9 @@ run_vtdec_sample_collection_pipeline (const gchar * pipeline_tail,
   fail_unless (!result.timeout, "Pipeline timed out");
   fail_unless (!result.error, "Pipeline error: %s",
       result.error_message ? result.error_message : "unknown");
-  fail_unless (result.eos || result.sample_buffers->len == VTDEC_COMPARE_FRAMES,
-      "Pipeline EOS missing before collecting %u samples",
-      VTDEC_COMPARE_FRAMES);
+  fail_unless (result.sample_buffers->len == VTDEC_COMPARE_FRAMES,
+      "Expected %u samples before EOS, got %u",
+      VTDEC_COMPARE_FRAMES, result.sample_buffers->len);
   fail_unless (result.caps != NULL, "Expected output caps");
   fail_unless (result.sample_buffers != NULL && result.sample_buffers->len > 0,
       "Expected samples at appsink");
@@ -574,24 +579,13 @@ vtdec_output_paths_suite (void)
 }
 
 static int
-run_tests (int argc, char **argv, gpointer user_data)
+run_tests ()
 {
-  Suite *s;
-  SRunner *sr;
-
-  (void) argc;
-  (void) argv;
-  (void) user_data;
-
-  s = vtdec_output_paths_suite ();
-  sr = srunner_create (s);
+  Suite *s = vtdec_output_paths_suite ();
   /* VideoToolbox / GL / Vulkan integration is not fork-safe enough for the
    * default check mode on Apple platforms. Run in-process like the other
    * applemedia pipeline tests. */
-  srunner_set_fork_status (sr, CK_NOFORK);
-  srunner_run (sr, NULL, NULL, CK_NORMAL);
-  srunner_free (sr);
-  return 0;
+  return gst_check_run_suite_nofork (s, "vtdec-output-paths", __FILE__);
 }
 
 int
@@ -599,7 +593,7 @@ main (int argc, char **argv)
 {
   gst_check_init (&argc, &argv);
 #if TARGET_OS_OSX
-  return gst_macos_main ((GstMainFunc) run_tests, argc, argv, NULL);
+  return gst_macos_main_simple ((GstMainFuncSimple) run_tests, NULL);
 #else
   return run_tests (argc, argv, NULL);
 #endif
