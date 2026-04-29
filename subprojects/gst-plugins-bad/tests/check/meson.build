@@ -194,7 +194,7 @@ if host_system == 'darwin'
   videotoolbox_dep = dependency('VideoToolbox')
   avfoundation_test_dep = dependency('appleframeworks', modules : ['Foundation', 'AVFoundation'])
   base_tests += [
-    [['elements/avfsources-videometa.c'], false, [avfoundation_test_dep]],
+    [['elements/avfsources-videometa.c'], false, [avfoundation_test_dep], [], false],
     [['pipelines/avfassetsrc-supplemental.c'], false, [videotoolbox_dep]],
     [['pipelines/avfassetsrc-partial.c']],
     [['pipelines/vtdec-output-paths.c']],
@@ -280,6 +280,7 @@ foreach t : base_tests
   endif
 
   extra_sources = t.get(3, [ ])
+  is_parallel = t.get(4, true)
 
   if not skip_test
     exe = executable(test_name, fnames, extra_sources,
@@ -299,7 +300,7 @@ foreach t : base_tests
       'gst-plugins-good', 'gst-plugins-ugly','gst-libav', 'libnice',
       'gst-plugins-bad@' + meson.project_build_root())
     env.set('GST_PLUGIN_SCANNER_1_0', gst_plugin_scanner_path)
-    test(test_name, exe, env: env, timeout: 3 * 60)
+    test(test_name, exe, env: env, timeout: 3 * 60, is_parallel: is_parallel)
   endif
 endforeach
 

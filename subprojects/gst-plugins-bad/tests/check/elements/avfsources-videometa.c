@@ -38,6 +38,7 @@ typedef struct
   gboolean error;
   gboolean timeout;
   gchar *error_message;
+  gchar *error_debug;
   GMainLoop *loop;
 } PipelineObservation;
 
@@ -61,6 +62,7 @@ typedef struct
   gboolean error;
   gboolean timeout;
   gchar *error_message;
+  gchar *error_debug;
   GMainLoop *loop;
 } ReconfigureObservation;
 
@@ -95,6 +97,8 @@ on_bus_message (GstBus * bus, GstMessage * msg, gpointer user_data)
       gst_message_parse_error (msg, &err, &debug);
       if (err != NULL && obs->error_message == NULL && err->message != NULL)
         obs->error_message = g_strdup (err->message);
+      if (debug != NULL && obs->error_debug == NULL)
+        obs->error_debug = g_strdup (debug);
       g_clear_error (&err);
       g_free (debug);
       obs->error = TRUE;
@@ -165,6 +169,8 @@ on_reconfigure_bus_message (GstBus * bus, GstMessage * msg, gpointer user_data)
       gst_message_parse_error (msg, &err, &debug);
       if (err != NULL && obs->error_message == NULL && err->message != NULL)
         obs->error_message = g_strdup (err->message);
+      if (debug != NULL && obs->error_debug == NULL)
+        obs->error_debug = g_strdup (debug);
       g_clear_error (&err);
       g_free (debug);
       obs->error = TRUE;
@@ -517,6 +523,7 @@ observation_clear (PipelineObservation * obs)
     obs->caps = NULL;
   }
   g_clear_pointer (&obs->error_message, g_free);
+  g_clear_pointer (&obs->error_debug, g_free);
 }
 
 static void
@@ -524,8 +531,8 @@ assert_successful_observation (const PipelineObservation * obs,
     const gchar * label)
 {
   fail_unless (!obs->timeout, "%s: timed out", label);
-  fail_unless (!obs->error, "%s: error: %s", label,
-      GST_STR_NULL (obs->error_message));
+  fail_unless (!obs->error, "%s: error: %s debug: %s", label,
+      GST_STR_NULL (obs->error_message), GST_STR_NULL (obs->error_debug));
   fail_unless (obs->got_buffer, "%s: expected at least one buffer", label);
 }
 
@@ -551,6 +558,7 @@ static void
 reconfigure_observation_clear (ReconfigureObservation * obs)
 {
   g_clear_pointer (&obs->error_message, g_free);
+  g_clear_pointer (&obs->error_debug, g_free);
 }
 
 static void
@@ -558,8 +566,8 @@ assert_successful_reconfigure_observation (const ReconfigureObservation * obs,
     const gchar * label)
 {
   fail_unless (!obs->timeout, "%s: timed out", label);
-  fail_unless (!obs->error, "%s: error: %s", label,
-      GST_STR_NULL (obs->error_message));
+  fail_unless (!obs->error, "%s: error: %s debug: %s", label,
+      GST_STR_NULL (obs->error_message), GST_STR_NULL (obs->error_debug));
   fail_unless (obs->got_first_buffer, "%s: expected first buffer", label);
   fail_unless (obs->allocation_queries > 0,
       "%s: expected at least one ALLOCATION query", label);
