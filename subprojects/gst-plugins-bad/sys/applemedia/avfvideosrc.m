@@ -59,6 +59,87 @@ get_oriented_dimensions(GstAVFVideoSourceOrientation orientation, CMVideoDimensi
 static CMTime
 find_range_bound_close_enough_to_fps (AVFrameRateRange *range, int fps_n, int fps_d);
 
+static const gchar *
+gst_avf_error_code_name (NSInteger code)
+{
+#define ERROR_CASE(c) case c: return G_STRINGIFY (c)
+
+  switch ((AVError) code) {
+    ERROR_CASE (AVErrorDeviceAlreadyUsedByAnotherSession);
+    ERROR_CASE (AVErrorDeviceInUseByAnotherApplication);
+    ERROR_CASE (AVErrorDeviceLockedForConfigurationByAnotherProcess);
+    ERROR_CASE (AVErrorApplicationIsNotAuthorized);
+    ERROR_CASE (AVErrorApplicationIsNotAuthorizedToUseDevice);
+    ERROR_CASE (AVErrorDeviceNotConnected);
+    ERROR_CASE (AVErrorDeviceWasDisconnected);
+    default:
+      return "unknown";
+  }
+
+#undef ERROR_CASE
+}
+
+static GstResourceError
+gst_avf_resource_error_from_nserror (NSError * err)
+{
+  if (err == nil || ![[err domain] isEqualToString:AVFoundationErrorDomain])
+    return GST_RESOURCE_ERROR_OPEN_READ;
+
+  switch ((AVError) [err code]) {
+    case AVErrorDeviceAlreadyUsedByAnotherSession:
+    case AVErrorDeviceInUseByAnotherApplication:
+    case AVErrorDeviceLockedForConfigurationByAnotherProcess:
+      return GST_RESOURCE_ERROR_BUSY;
+    case AVErrorApplicationIsNotAuthorized:
+    case AVErrorApplicationIsNotAuthorizedToUseDevice:
+      return GST_RESOURCE_ERROR_NOT_AUTHORIZED;
+    case AVErrorDeviceNotConnected:
+    case AVErrorDeviceWasDisconnected:
+      return GST_RESOURCE_ERROR_NOT_FOUND;
+    default:
+      return GST_RESOURCE_ERROR_OPEN_READ;
+  }
+}
+
+static gchar *
+gst_avf_error_debug_string (NSError * err)
+{
+  NSString *domain = err != nil ? [err domain] : nil;
+  NSString *failure_reason = err != nil ? [err localizedFailureReason] : nil;
+  NSString *recovery_suggestion =
+      err != nil ? [err localizedRecoverySuggestion] : nil;
+  id device = err != nil ? [[err userInfo] objectForKey:AVErrorDeviceKey] : nil;
+  id pid = err != nil ? [[err userInfo] objectForKey:AVErrorPIDKey] : nil;
+  NSString *device_description = device != nil ? [device description] : nil;
+  NSString *pid_description = pid != nil ? [pid description] : nil;
+
+  return g_strdup_printf ("AVFoundation error domain=%s code=%ld (%s), "
+      "failure-reason=%s, recovery-suggestion=%s, device=%s, pid=%s",
+      domain != nil ? [domain UTF8String] : "unknown",
+      err != nil ? (long) [err code] : 0,
+      err != nil ? gst_avf_error_code_name ([err code]) : "unknown",
+      failure_reason != nil ? [failure_reason UTF8String] : "none",
+      recovery_suggestion != nil ? [recovery_suggestion UTF8String] : "none",
+      device_description != nil ? [device_description UTF8String] : "none",
+      pid_description != nil ? [pid_description UTF8String] : "none");
+}
+
+static void
+gst_avf_video_src_post_error (GstElement * element, const gchar * message,
+    NSError * err)
+{
+  NSString *description = err != nil ? [err localizedDescription] : nil;
+  GstResourceError code = gst_avf_resource_error_from_nserror (err);
+  gchar *text = g_strdup_printf ("%s: %s", message,
+      description != nil ? [description UTF8String] : "unknown error");
+  gchar *debug = gst_avf_error_debug_string (err);
+
+  GST_WARNING_OBJECT (element, "error: %s", text);
+  GST_WARNING_OBJECT (element, "error: %s", debug);
+  gst_element_message_full (element, GST_MESSAGE_ERROR, GST_RESOURCE_ERROR,
+      code, text, debug, __FILE__, GST_FUNCTION, __LINE__);
+}
+
 #if TARGET_OS_OSX
 static GstCaps * gst_av_capture_screen_rect_get_caps (CGRect rect,
     gdouble scale, AVCaptureVideoDataOutput *output);
@@ -544,10 +625,7 @@ G_GNUC_END_IGNORE_DEPRECATIONS
   input = [AVCaptureDeviceInput deviceInputWithDevice:device
                                                 error:&err];
   if (input == nil) {
-    GST_ELEMENT_ERROR (element, RESOURCE, BUSY,
-        ("Failed to open device: %s",
-        [[err localizedDescription] UTF8String]),
-        (NULL));
+    gst_avf_video_src_post_error (element, "Failed to open device", err);
     device = nil;
     return NO;
   }
@@ -812,10 +890,11 @@ G_GNUC_END_IGNORE_DEPRECATIONS
 - (BOOL)setDeviceCaps:(const GstVideoInfo *)info
 {
   gboolean found_format = FALSE, found_framerate = FALSE;
+  NSError *err = nil;
 
   GST_DEBUG_OBJECT (element, "Setting device caps");
 
-  if ([device lockForConfiguration:NULL] == YES) {
+  if ([device lockForConfiguration:&err] == YES) {
     for (AVCaptureDeviceFormat *fmt in device.formats.reverseObjectEnumerator) {
       CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions (fmt.formatDescription);
       dimensions = [self orientedDimensions:dimensions];
@@ -846,7 +925,8 @@ G_GNUC_END_IGNORE_DEPRECATIONS
       return NO;
     }
   } else {
-    GST_WARNING ("Couldn't lock device for configuration");
+    gst_avf_video_src_post_error (element,
+        "Couldn't lock device for configuration", err);
     return NO;
   }
   return YES;
