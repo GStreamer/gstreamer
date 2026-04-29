@@ -673,7 +673,8 @@ _h264_get_chroma_subsampling (GstVideoInfo * info)
 
 static GstFlowReturn
 gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
-    GstVideoCodecState * in_state, GstH264Profile profile, GstH264Level * level)
+    GstVideoCodecState * in_state, GstH264Profile profile,
+    GstH264EncoderProfileVariant variant, GstH264Level * level)
 {
   GstVulkanH264Encoder *self = GST_VULKAN_H264_ENCODER (encoder);
   GError *err = NULL;

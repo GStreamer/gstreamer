@@ -173,6 +173,7 @@ struct _GstH264EncoderPrivate
   {
     GstH264Profile profile;
     GstH264Level level;
+    GstH264EncoderProfileVariant variant;
   } stream;
 
   struct
@@ -531,7 +532,8 @@ gst_h264_encoder_generate_gop_structure (GstH264Encoder * self)
   gint32 p_frames;
   gboolean ret;
 
-  if (priv->stream.profile == GST_H264_PROFILE_BASELINE)
+  if (priv->stream.profile == GST_H264_PROFILE_BASELINE
+      || priv->stream.variant == GST_H264_ENCODER_PROFILE_VARIANT_CONSTRAINED)
     priv->gop.params.num_bframes = 0;
 
   ensure_and_adjust_gop_parameters (self);
@@ -711,6 +713,7 @@ gst_h264_encoder_reset (GstH264Encoder * self)
 
   priv->stream.profile = GST_H264_PROFILE_INVALID;
   priv->stream.level = 0;
+  priv->stream.variant = GST_H264_ENCODER_PROFILE_VARIANT_NONE;
 
   priv->gop.params.i_period = 0;
   priv->gop.total_idr_count = 0;
@@ -1802,10 +1805,29 @@ _h264_get_level_idc (const gchar * level)
 }
 
 static GstH264Profile
-gst_h264_encoder_profile_from_string (const char *profile)
+gst_h264_encoder_profile_from_string (const char *profile,
+    GstH264EncoderProfileVariant * variant)
 {
-  if (g_strcmp0 (profile, "constrained-baseline") == 0)
+  /* constrained-baseline is baseline with sps->constraint_set1_flag == 1 */
+  if (g_strcmp0 (profile, "constrained-baseline") == 0) {
+    *variant = GST_H264_ENCODER_PROFILE_VARIANT_CONSTRAINED;
     return GST_H264_PROFILE_BASELINE;
+  }
+
+  /* constrained-high is high with sps->constraint_set4_flag == 1 and
+     sps->constraint_set5_flag == 1 */
+  if (g_strcmp0 (profile, "constrained-high") == 0) {
+    *variant = GST_H264_ENCODER_PROFILE_VARIANT_CONSTRAINED;
+    return GST_H264_PROFILE_HIGH;
+  }
+
+  /* progressive-high is high with sps->constraint_set4_flag == 1 */
+  if (g_strcmp0 (profile, "progressive-high") == 0) {
+    *variant = GST_H264_ENCODER_PROFILE_VARIANT_PROGRESSIVE;
+    return GST_H264_PROFILE_HIGH;
+  }
+
+  *variant = GST_H264_ENCODER_PROFILE_VARIANT_NONE;
   return gst_h264_profile_from_string (profile);
 }
 
@@ -1814,6 +1836,7 @@ struct ProfileCandidate
   char *profile_name;
   GstH264Profile profile;
   guint level;
+  GstH264EncoderProfileVariant variant;
 };
 
 static gboolean
@@ -1821,7 +1844,8 @@ _fill_profile_candidate (const GValue * profile, const GValue * level,
     struct ProfileCandidate *candidate)
 {
   const char *profile_name = g_value_get_string (profile);
-  candidate->profile = gst_h264_encoder_profile_from_string (profile_name);
+  candidate->profile = gst_h264_encoder_profile_from_string (profile_name,
+      &candidate->variant);
   if (candidate->profile == GST_H264_PROFILE_INVALID)
     return FALSE;
 
@@ -1836,7 +1860,7 @@ _fill_profile_candidate (const GValue * profile, const GValue * level,
 static GstFlowReturn
 gst_h264_encoder_negotiate_default (GstH264Encoder * self,
     GstVideoCodecState * in_state, GstH264Profile * profile,
-    GstH264Level * level)
+    GstH264EncoderProfileVariant * variant, GstH264Level * level)
 {
   GstCaps *allowed_caps;
   guint i, num_structures, num_candidates = 0;
@@ -1920,6 +1944,7 @@ gst_h264_encoder_negotiate_default (GstH264Encoder * self,
 
     *profile = candidate->profile;
     *level = candidate->level;
+    *variant = candidate->variant;
     break;
   }
 
@@ -2356,13 +2381,13 @@ gst_h264_encoder_configure (GstH264Encoder * self)
   gst_h264_encoder_reset (self);
 
   ret = klass->negotiate (self, priv->input_state, &priv->stream.profile,
-      &priv->stream.level);
+      &priv->stream.variant, &priv->stream.level);
   if (ret != GST_FLOW_OK)
     return ret;
 
   if (klass->new_sequence) {
     ret = klass->new_sequence (self, priv->input_state, priv->stream.profile,
-        &priv->stream.level);
+        priv->stream.variant, &priv->stream.level);
     if (ret != GST_FLOW_OK)
       return ret;
   }

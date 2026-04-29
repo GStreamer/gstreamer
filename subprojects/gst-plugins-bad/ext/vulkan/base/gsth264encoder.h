@@ -38,6 +38,28 @@ typedef struct _GstH264EncoderFrame GstH264EncoderFrame;
 typedef struct _GstH264LevelDescriptor GstH264LevelDescriptor;
 
 /**
+ * GstH264EncoderProfileVariant:
+ *
+ * The negotiated H.264 profile include constrained and progressive variants.
+ * Constrained profiles don't contain B frames, while progressive only have
+ * progressive frames (non-interlaced).
+ *
+ * @GST_H264_ENCODER_PROFILE_VARIANT_NONE: No variant
+ * @GST_H264_ENCODER_PROFILE_VARIANT_CONSTRAINED: Constrained variant profiles
+ *     (ie no B frames in high profile, see A.2 for more details)
+ * @GST_H264_ENCODER_PROFILE_VARIANT_PROGRESSIVE: Progressive frames only (see
+ *     A.2 for more details)
+ *
+ * Since: 1.30
+ */
+typedef enum
+{
+  GST_H264_ENCODER_PROFILE_VARIANT_NONE = 0,
+  GST_H264_ENCODER_PROFILE_VARIANT_CONSTRAINED,
+  GST_H264_ENCODER_PROFILE_VARIANT_PROGRESSIVE,
+} GstH264EncoderProfileVariant;
+
+/**
  * GstH264LevelDescriptor:
  * @name: level identifier string
  * @level_idc: the #GstH264Level
@@ -102,6 +124,7 @@ struct _GstH264EncoderClass
    * @encoder: a #GstH264Encoder
    * @in_state: (transfer none): the input #GstVideoCodecState
    * @profile: (out) (type gint): the negotiated profile
+   * @variant: (out) (type gint): the negotiated profile's variant
    * @level: (out) (type gint): the negotiated level
    *
    * Optional. Allows the subclass to negotiate downstream the @profile and
@@ -115,6 +138,7 @@ struct _GstH264EncoderClass
   GstFlowReturn      (*negotiate)                            (GstH264Encoder * encoder,
                                                               GstVideoCodecState * in_state,
                                                               GstH264Profile * profile,
+                                                              GstH264EncoderProfileVariant * variant,
                                                               GstH264Level * level);
 
   /**
@@ -122,6 +146,7 @@ struct _GstH264EncoderClass
    * @encoder: a #GstH264Encoder
    * @in_state: (transfer none): the input #GstVideoCodecState
    * @profile:  the negotiated profile
+   * @variant:  the negotiated profile's variant
    * @level: (out): the negotiated level
    *
    * Optional. Allows the subclass to open a session with the hardware
@@ -136,6 +161,7 @@ struct _GstH264EncoderClass
   GstFlowReturn      (*new_sequence)                         (GstH264Encoder * encoder,
                                                               GstVideoCodecState * in_state,
                                                               GstH264Profile profile,
+                                                              GstH264EncoderProfileVariant variant,
                                                               GstH264Level * level);
 
   /**
