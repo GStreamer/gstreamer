@@ -1811,7 +1811,7 @@ gst_h264_encoder_profile_from_string (const char *profile)
 
 struct ProfileCandidate
 {
-  const char *profile_name;
+  char *profile_name;
   GstH264Profile profile;
   guint level;
 };
@@ -1820,13 +1820,17 @@ static gboolean
 _fill_profile_candidate (const GValue * profile, const GValue * level,
     struct ProfileCandidate *candidate)
 {
-  candidate->profile_name = g_value_get_string (profile);
-  candidate->profile =
-      gst_h264_encoder_profile_from_string (candidate->profile_name);
+  const char *profile_name = g_value_get_string (profile);
+  candidate->profile = gst_h264_encoder_profile_from_string (profile_name);
+  if (candidate->profile == GST_H264_PROFILE_INVALID)
+    return FALSE;
+
   candidate->level =
       level ? _h264_get_level_idc (g_value_get_string (level)) : 0;
+  /* kept profile name for logging purposes */
+  candidate->profile_name = g_strdup (profile_name);
 
-  return (candidate->profile != GST_H264_PROFILE_INVALID);
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -1914,9 +1918,13 @@ gst_h264_encoder_negotiate_default (GstH264Encoder * self,
       continue;
     }
 
-    *profile = candidates[i].profile;
-    *level = candidates[i].level;
+    *profile = candidate->profile;
+    *level = candidate->level;
+    break;
   }
+
+  for (i = 0; i < num_candidates; i++)
+    g_free (candidates[i].profile_name);
 
   if (*profile == GST_H264_PROFILE_INVALID) {
     GST_ERROR_OBJECT (self, "No valid profile found");
