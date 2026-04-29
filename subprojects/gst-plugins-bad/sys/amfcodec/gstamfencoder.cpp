@@ -30,6 +30,10 @@
 #include <wrl.h>
 #include <mmsystem.h>
 #endif //G_OS_WIN32
+#ifdef HAVE_GST_VULKAN
+#include <gst/vulkan/gstvkutils.h>
+#include "gstvkamfextensions.h"
+#endif
 #include <string.h>
 #include <queue>
 #include <algorithm>
@@ -383,6 +387,32 @@ struct _GstAmfEncoderPrivate
 #define gst_amf_encoder_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE (GstAmfEncoder, gst_amf_encoder, GST_TYPE_VIDEO_ENCODER);
 
+#ifdef HAVE_GST_VULKAN
+static void
+gst_amf_encoder_attach_requested_vulkan_extensions_context (GstAmfEncoder *
+    self)
+{
+  GstContext *vk_inst_ctx =
+      gst_vulkan_requested_instance_extensions_context_new ();
+  GstContext *vk_dev_ctx =
+      gst_vulkan_requested_device_extensions_context_new ();
+
+#define AMF_VK_PUSH_INSTANCE(name) \
+  gst_vulkan_requested_extensions_context_add (vk_inst_ctx, name);
+#define AMF_VK_PUSH_DEVICE(name) \
+  gst_vulkan_requested_extensions_context_add (vk_dev_ctx, name);
+  AMF_VK_INSTANCE_EXTENSION_NAMES (AMF_VK_PUSH_INSTANCE);
+  AMF_VK_DEVICE_EXTENSION_NAMES (AMF_VK_PUSH_DEVICE);
+#undef AMF_VK_PUSH_INSTANCE
+#undef AMF_VK_PUSH_DEVICE
+
+  gst_element_set_context (GST_ELEMENT (self), vk_inst_ctx);
+  gst_element_set_context (GST_ELEMENT (self), vk_dev_ctx);
+  gst_context_unref (vk_inst_ctx);
+  gst_context_unref (vk_dev_ctx);
+}
+#endif /* HAVE_GST_VULKAN */
+
 static void gst_amf_encoder_dispose (GObject * object);
 static void gst_amf_encoder_finalize (GObject * object);
 static void gst_amf_encoder_set_context (GstElement * element,
@@ -565,6 +595,10 @@ gst_amf_encoder_open (GstVideoEncoder * encoder)
     goto error;
   }
 
+#ifdef HAVE_GST_VULKAN
+  gst_amf_encoder_attach_requested_vulkan_extensions_context (self);
+#endif
+
   return TRUE;
 
 error:
@@ -595,6 +629,8 @@ gst_amf_encoder_open (GstVideoEncoder * encoder)
     GST_ERROR_OBJECT (self, "Failed to init context");
     goto error;
   }
+
+  gst_amf_encoder_attach_requested_vulkan_extensions_context (self);
 
   return TRUE;
 
@@ -1468,6 +1504,11 @@ gst_amf_encoder_sink_query (GstVideoEncoder * encoder, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
+      // This is how it will look like when vulkan_instance and vulkan_device
+      // will be added to priv
+      // if (gst_vulkan_requested_extensions_handle_context_query (GST_ELEMENT_CAST
+      //         (self), query, GST_PAD_SRC, self->priv->vulkan_instance))
+      //   return TRUE;
       if (gst_amf_encoder_handle_context_query (self, query))
         return TRUE;
       break;
@@ -1485,6 +1526,11 @@ gst_amf_encoder_src_query (GstVideoEncoder * encoder, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
+      // This is how it will look like when vulkan_instance and vulkan_device
+      // will be added to priv
+      // if (gst_vulkan_requested_extensions_handle_context_query (GST_ELEMENT_CAST
+      //         (self), query, GST_PAD_SINK, self->priv->vulkan_instance))
+      //   return TRUE;
       if (gst_amf_encoder_handle_context_query (self, query))
         return TRUE;
       break;

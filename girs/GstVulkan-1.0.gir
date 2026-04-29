@@ -740,6 +740,25 @@ and/or use gtk-doc annotations.  -->
         </parameter>
       </parameters>
     </function-macro>
+    <constant name="VULKAN_REQUESTED_DEVICE_EXTENSIONS_CONTEXT_TYPE_STR" value="gst.vulkan.requested-device-extensions" c:type="GST_VULKAN_REQUESTED_DEVICE_EXTENSIONS_CONTEXT_TYPE_STR" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.h">Context type for negotiating Vulkan **device** extensions at runtime.
+The #GstStructure contains a `G_TYPE_STRV` field `extensions` and must be
+anchored on a #GstVulkanInstance (same field name as
+gst_context_set_vulkan_instance(), %GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR)
+so answerers can inspect physical devices, filter requested device extension
+names, and so merge logic can ignore unrelated fragments when instances
+disagree.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="VULKAN_REQUESTED_INSTANCE_EXTENSIONS_CONTEXT_TYPE_STR" value="gst.vulkan.requested-instance-extensions" c:type="GST_VULKAN_REQUESTED_INSTANCE_EXTENSIONS_CONTEXT_TYPE_STR" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.h">Context type for negotiating Vulkan **instance** extensions at runtime.
+The #GstStructure holds a `G_TYPE_STRV` field `extensions`. Merge helpers
+ignore any %GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR field for this type so
+negotiation stays decoupled from a specific #GstVulkanInstance.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
     <function-macro name="VULKAN_SWAPPER" c:identifier="GST_VULKAN_SWAPPER" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkswapper.h"/>
       <parameters>
@@ -7151,6 +7170,40 @@ gst_vulkan_command_buffer_lock().</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="vulkan_element_get_merged_requested_device_extensions_context" c:identifier="gst_vulkan_element_get_merged_requested_device_extensions_context" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">Like gst_vulkan_element_get_merged_requested_instance_extensions_context(),
+but for %GST_VULKAN_REQUESTED_DEVICE_EXTENSIONS_CONTEXT_TYPE_STR. The result
+is only non-%NULL if the merge includes a #GstVulkanInstance anchor
+(extension-only device requests are ignored).</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.h"/>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">merged context, or %NULL</doc>
+        <type name="Gst.Context" c:type="GstContext*"/>
+      </return-value>
+      <parameters>
+        <parameter name="element" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">a #GstElement</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="vulkan_element_get_merged_requested_instance_extensions_context" c:identifier="gst_vulkan_element_get_merged_requested_instance_extensions_context" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">Merges every %GST_VULKAN_REQUESTED_INSTANCE_EXTENSIONS_CONTEXT_TYPE_STR
+context already set on @element into a single #GstContext (extension names
+only; see gst_vulkan_requested_extensions_merge_from_element()).</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.h"/>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">merged context, or %NULL if no
+instance extension names were found</doc>
+        <type name="Gst.Context" c:type="GstContext*"/>
+      </return-value>
+      <parameters>
+        <parameter name="element" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">a #GstElement</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="vulkan_ensure_element_data" c:identifier="gst_vulkan_ensure_element_data" version="1.18">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkutils.c">Perform the steps necessary for retrieving a #GstVulkanInstance and
 (optionally) an #GstVulkanDisplay from the surrounding elements or from
@@ -7705,6 +7758,185 @@ multiple times.  This must be called before any other #GstVulkanMemory operation
           <type name="Vulkan.PresentModeKHR" c:type="VkPresentModeKHR"/>
         </parameter>
       </parameters>
+    </function>
+    <function name="vulkan_requested_device_extensions_context_new" c:identifier="gst_vulkan_requested_device_extensions_context_new" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.h"/>
+      <return-value transfer-ownership="full">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">new device-extension request #GstContext</doc>
+        <type name="Gst.Context" c:type="GstContext*"/>
+      </return-value>
+    </function>
+    <function name="vulkan_requested_extensions_context_add" c:identifier="gst_vulkan_requested_extensions_context_add" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">Appends @extension_name to `extensions`, ignoring duplicates.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="context" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">a #GstContext of type
+  %GST_VULKAN_REQUESTED_INSTANCE_EXTENSIONS_CONTEXT_TYPE_STR or
+  %GST_VULKAN_REQUESTED_DEVICE_EXTENSIONS_CONTEXT_TYPE_STR</doc>
+          <type name="Gst.Context" c:type="GstContext*"/>
+        </parameter>
+        <parameter name="extension_name" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">Vulkan extension name to request</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="vulkan_requested_extensions_context_dup_extensions" c:identifier="gst_vulkan_requested_extensions_context_dup_extensions" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.h"/>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">a copy of
+the `extensions` %NULL-terminated list, or %NULL if unset/empty.</doc>
+        <array c:type="gchar**">
+          <type name="utf8"/>
+        </array>
+      </return-value>
+      <parameters>
+        <parameter name="context" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">a requested-extensions #GstContext</doc>
+          <type name="Gst.Context" c:type="GstContext*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="vulkan_requested_extensions_context_get_vulkan_instance" c:identifier="gst_vulkan_requested_extensions_context_get_vulkan_instance" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">%TRUE if @instance was present in @context</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="context" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">a requested-extension #GstContext</doc>
+          <type name="Gst.Context" c:type="GstContext*"/>
+        </parameter>
+        <parameter name="instance" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">location for the result</doc>
+          <type name="VulkanInstance" c:type="GstVulkanInstance**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="vulkan_requested_extensions_context_set_vulkan_instance" c:identifier="gst_vulkan_requested_extensions_context_set_vulkan_instance" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">Sets or clears the embedded #GstVulkanInstance on @context, using
+%GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR in the #GstStructure (same as
+gst_context_set_vulkan_instance()). This is only meaningful for contexts of
+type %GST_VULKAN_REQUESTED_DEVICE_EXTENSIONS_CONTEXT_TYPE_STR (the instance
+type ignores the field when merging).</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="context" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">a requested-extension #GstContext</doc>
+          <type name="Gst.Context" c:type="GstContext*"/>
+        </parameter>
+        <parameter name="instance" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">#GstVulkanInstance, or %NULL to clear</doc>
+          <type name="VulkanInstance" c:type="GstVulkanInstance*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="vulkan_requested_extensions_global_context_query" c:identifier="gst_vulkan_requested_extensions_global_context_query" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">Runs the local query (merging both peer directions), always posts
+%GST_MESSAGE_NEED_CONTEXT so the application or parent bin can contribute
+extension names, re-merges local contexts after that message, then
+gst_element_set_context() and %GST_MESSAGE_HAVE_CONTEXT when the merge contains
+extension names.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="element" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">a #GstElement</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </parameter>
+        <parameter name="context_type" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">%GST_VULKAN_REQUESTED_INSTANCE_EXTENSIONS_CONTEXT_TYPE_STR</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="vulkan_requested_extensions_handle_context_query" c:identifier="gst_vulkan_requested_extensions_handle_context_query" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">Handles #GST_QUERY_CONTEXT for either requested-extensions context type.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.h"/>
+      <return-value transfer-ownership="none">
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="element" transfer-ownership="none">
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </parameter>
+        <parameter name="query" transfer-ownership="none">
+          <type name="Gst.Query" c:type="GstQuery*"/>
+        </parameter>
+        <parameter name="continue_direction" transfer-ownership="none">
+          <type name="Gst.PadDirection" c:type="GstPadDirection"/>
+        </parameter>
+        <parameter name="instance" transfer-ownership="none">
+          <type name="VulkanInstance" c:type="GstVulkanInstance*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="vulkan_requested_extensions_local_context_query" c:identifier="gst_vulkan_requested_extensions_local_context_query" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">Like gst_vulkan_local_context_query(), but merges requested-extension contexts
+from both peer directions and from contexts already set on @element.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.h"/>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">a #GST_QUERY_CONTEXT carrying the merged
+context when actionable, or %NULL. Does not post bus messages or call
+gst_element_set_context().</doc>
+        <type name="Gst.Query" c:type="GstQuery*"/>
+      </return-value>
+      <parameters>
+        <parameter name="element" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">a #GstElement</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </parameter>
+        <parameter name="context_type" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">%GST_VULKAN_REQUESTED_INSTANCE_EXTENSIONS_CONTEXT_TYPE_STR or
+  %GST_VULKAN_REQUESTED_DEVICE_EXTENSIONS_CONTEXT_TYPE_STR</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="instance" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">the #GstVulkanInstance for device negotiation; required
+    when @context_type is
+    %GST_VULKAN_REQUESTED_DEVICE_EXTENSIONS_CONTEXT_TYPE_STR, otherwise
+    ignored (%NULL)</doc>
+          <type name="VulkanInstance" c:type="GstVulkanInstance*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="vulkan_requested_extensions_merge_from_element" c:identifier="gst_vulkan_requested_extensions_merge_from_element" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">Merges every attached context matching @dst's type into @dst (extension
+names, and for device contexts only, the embedded #GstVulkanInstance when
+@dst does not carry one yet). For device contexts, extension-only sources
+are ignored until an instance anchor exists, and contexts naming different
+non-NULL #GstVulkanInstance objects do not contribute to @dst.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="element" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">a #GstElement</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </parameter>
+        <parameter name="dst" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">writable #GstContext, instance or device requested-extensions type</doc>
+          <type name="Gst.Context" c:type="GstContext*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="vulkan_requested_instance_extensions_context_new" c:identifier="gst_vulkan_requested_instance_extensions_context_new" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.h"/>
+      <return-value transfer-ownership="full">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkrequestedextensions.c">new instance-extension request #GstContext</doc>
+        <type name="Gst.Context" c:type="GstContext*"/>
+      </return-value>
     </function>
     <function name="vulkan_result_to_string" c:identifier="gst_vulkan_result_to_string" version="1.22" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkerror.h"/>

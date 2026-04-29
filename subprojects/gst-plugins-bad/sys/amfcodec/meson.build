@@ -40,6 +40,16 @@ endif
 platform_deps = []
 extra_args = ['-DGST_USE_UNSTABLE_API']
 extra_cpp_args = []
+
+# Optional integration with the GStreamer Vulkan helpers: when available we
+# advertise to neighbouring elements (via a #GstContext query) the Vulkan
+# instance/device extensions AMF expects to be enabled on a shared
+# #GstVulkanInstance / #GstVulkanDevice.
+if gstvulkan_dep.found()
+  platform_deps += [gstvulkan_dep]
+  extra_args += ['-DHAVE_GST_VULKAN=1']
+endif
+
 if host_system == 'windows'
   if not gstd3d11_dep.found()
     if amf_option.enabled()

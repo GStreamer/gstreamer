@@ -127,6 +127,12 @@ gst_vulkan_video_filter_query (GstBaseTransform * bt,
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:{
+      if (gst_vulkan_requested_extensions_handle_context_query (GST_ELEMENT
+              (render), query,
+              direction == GST_PAD_SINK ? GST_PAD_SRC : GST_PAD_SINK,
+              render->instance))
+        return TRUE;
+
       if (gst_vulkan_handle_context_query (GST_ELEMENT (render), query,
               NULL, render->instance, render->device))
         return TRUE;

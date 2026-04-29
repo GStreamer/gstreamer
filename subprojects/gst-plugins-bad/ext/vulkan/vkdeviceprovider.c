@@ -386,6 +386,13 @@ device_context_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
     if (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT) {
       const char *context_type = NULL;
 
+      if (gst_vulkan_requested_extensions_handle_context_query (element, query,
+              GST_PAD_DIRECTION (pad) == GST_PAD_SINK ? GST_PAD_SRC
+              : GST_PAD_SINK, physical->instance)) {
+        ret = GST_PAD_PROBE_HANDLED;
+        goto out;
+      }
+
       gst_query_parse_context_type (query, &context_type);
 
       if (gst_vulkan_instance_handle_context_query (element, query,

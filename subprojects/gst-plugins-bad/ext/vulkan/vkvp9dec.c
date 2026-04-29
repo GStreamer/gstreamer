@@ -234,8 +234,13 @@ gst_vulkan_vp9_decoder_set_context (GstElement * element, GstContext * context)
 }
 
 static gboolean
-_query_context (GstVulkanVp9Decoder * self, GstQuery * query)
+_query_context (GstVulkanVp9Decoder * self, GstQuery * query,
+    GstPadDirection continue_direction)
 {
+  if (gst_vulkan_requested_extensions_handle_context_query (GST_ELEMENT
+          (self), query, continue_direction, self->instance))
+    return TRUE;
+
   if (gst_vulkan_handle_context_query (GST_ELEMENT (self), query, NULL,
           self->instance, self->device))
     return TRUE;
@@ -254,7 +259,8 @@ gst_vulkan_vp9_decoder_src_query (GstVideoDecoder * decoder, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
-      ret = _query_context (GST_VULKAN_VP9_DECODER (decoder), query);
+      ret = _query_context (GST_VULKAN_VP9_DECODER (decoder), query,
+          GST_PAD_SINK);
       break;
     default:
       ret = GST_VIDEO_DECODER_CLASS (parent_class)->src_query (decoder, query);
@@ -271,7 +277,8 @@ gst_vulkan_vp9_decoder_sink_query (GstVideoDecoder * decoder, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
-      ret = _query_context (GST_VULKAN_VP9_DECODER (decoder), query);
+      ret = _query_context (GST_VULKAN_VP9_DECODER (decoder), query,
+          GST_PAD_SRC);
       break;
     default:
       ret = GST_VIDEO_DECODER_CLASS (parent_class)->sink_query (decoder, query);

@@ -23,6 +23,7 @@
 #endif
 
 #include "gstvkutils.h"
+#include "gstvkrequestedextensions.h"
 
 /**
  * SECTION:vkutils
@@ -261,11 +262,51 @@ gst_vulkan_ensure_element_data (GstElement * element,
 
     /* Neighbour found and it updated the display */
     if (!*instance_ptr) {
+
       /* If no neighboor, or application not interested, use system default */
       *instance_ptr = gst_vulkan_instance_new ();
 
       context = gst_context_new (GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR, TRUE);
       gst_context_set_vulkan_instance (context, *instance_ptr);
+
+      /* Collect instance extensions requested by neighbour elements (e.g. AMF),
+       * enumerate instance capabilities, enable those names, then open. */
+      {
+        GstContext *merged_req = NULL;
+        gchar **requested_instance_exts = NULL;
+        gchar **p;
+
+        gst_vulkan_requested_extensions_global_context_query (element,
+            GST_VULKAN_REQUESTED_INSTANCE_EXTENSIONS_CONTEXT_TYPE_STR);
+        merged_req =
+            gst_vulkan_element_get_merged_requested_instance_extensions_context
+            (element);
+        if (merged_req) {
+          requested_instance_exts =
+              gst_vulkan_requested_extensions_context_dup_extensions
+              (merged_req);
+          gst_context_unref (merged_req);
+        }
+        if (requested_instance_exts) {
+          if (!gst_vulkan_instance_fill_info (*instance_ptr, &error)) {
+            GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
+                ("Failed to prepare vulkan instance"), ("%s", error->message));
+            g_strfreev (requested_instance_exts);
+            gst_clear_context (&context);
+            gst_object_unref (*instance_ptr);
+            *instance_ptr = NULL;
+            g_clear_error (&error);
+            return FALSE;
+          }
+          for (p = requested_instance_exts; *p; p++) {
+            if (!gst_vulkan_instance_enable_extension (*instance_ptr, *p)) {
+              GST_INFO_OBJECT (*instance_ptr,
+                  "Could not enable requested instance extension %s", *p);
+            }
+          }
+          g_strfreev (requested_instance_exts);
+        }
+      }
     }
 
     if (!gst_vulkan_instance_open (*instance_ptr, &error)) {
@@ -336,21 +377,68 @@ gst_vulkan_ensure_element_device (GstElement * element,
 
   if (!gst_vulkan_device_run_context_query (element, device_ptr)) {
     GError *error = NULL;
+
     GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
         "No device retrieved from peer elements");
 
-    /* If no neighboor, or application not interested, use system default by device id */
-    *device_ptr =
-        gst_vulkan_instance_create_device_with_index (instance, device_id,
-        &error);
+    /* Allow an application to override device construction via the
+     * GstVulkanInstance::create-device signal. If no handler claims it,
+     * fall back to the default device construction. We cannot use
+     * gst_vulkan_instance_create_device_with_index() here because that
+     * also opens the device immediately, leaving no window to enable
+     * neighbour-requested extensions. */
+    g_signal_emit_by_name (instance, "create-device", device_id, device_ptr);
+    if (!*device_ptr)
+      *device_ptr = gst_vulkan_device_new_with_index (instance, device_id);
 
     if (!*device_ptr) {
       GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
-          ("Failed to create vulkan device"),
-          ("%s", error ? error->message : ""));
-      g_clear_error (&error);
+          ("Failed to create vulkan device"), (NULL));
       return FALSE;
     }
+
+    /* Collect device extensions requested by neighbours; enable them on the
+     * new device before gst_vulkan_device_open(). Pipeline-only negotiation
+     * (no NEED_CONTEXT to the application). Application create-device handlers
+     * should do the same if they substitute a device. */
+    {
+      GstQuery *query;
+      GstContext *merged_req = NULL;
+      gchar **requested_device_exts = NULL;
+      gchar **p;
+
+      query =
+          gst_vulkan_requested_extensions_local_context_query (element,
+          GST_VULKAN_REQUESTED_DEVICE_EXTENSIONS_CONTEXT_TYPE_STR, instance);
+      if (query) {
+        gst_query_parse_context (query, &merged_req);
+        gst_query_unref (query);
+      }
+      if (merged_req) {
+        requested_device_exts =
+            gst_vulkan_requested_extensions_context_dup_extensions (merged_req);
+        gst_context_unref (merged_req);
+      }
+      if (requested_device_exts) {
+        for (p = requested_device_exts; *p; p++) {
+          if (!gst_vulkan_device_enable_extension (*device_ptr, *p)) {
+            GST_INFO_OBJECT (*device_ptr,
+                "Could not enable requested device extension %s", *p);
+          }
+        }
+        g_strfreev (requested_device_exts);
+      }
+    }
+
+    if (!gst_vulkan_device_open (*device_ptr, &error)) {
+      GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
+          ("Failed to open vulkan device"),
+          ("%s", error ? error->message : ""));
+      g_clear_error (&error);
+      gst_clear_object (device_ptr);
+      return FALSE;
+    }
+
     GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
         "Created a new device from %s",
         (*device_ptr)->physical_device->properties.deviceName);
