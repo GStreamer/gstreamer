@@ -23,6 +23,8 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
@@ -57,6 +59,144 @@ static TestFrame test_rgba_reorder[] = {
   {1, 1, GST_VIDEO_FORMAT_ABGR, {(guint8 *) & abgr_reorder_data}},
   {1, 1, GST_VIDEO_FORMAT_xBGR, {(guint8 *) & xbgr_reorder_data}},
 };
+
+static const guint8 alpha_data[] = { 0x33, 0x77, 0xcc, 0xff };
+
+static GstBuffer *
+create_black_av12_buffer (const GstVideoInfo * info)
+{
+  GstBuffer *buf;
+  GstMapInfo map_info;
+
+  fail_unless_equals_int (GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_FORMAT_AV12);
+  fail_unless_equals_int (GST_VIDEO_INFO_WIDTH (info), 2);
+  fail_unless_equals_int (GST_VIDEO_INFO_HEIGHT (info), 2);
+
+  buf = gst_buffer_new_allocate (NULL, GST_VIDEO_INFO_SIZE (info), NULL);
+  fail_unless (buf != NULL);
+  fail_unless (gst_buffer_map (buf, &map_info, GST_MAP_WRITE));
+  memset (map_info.data, 0, map_info.size);
+
+  for (guint y = 0; y < GST_VIDEO_INFO_HEIGHT (info); y++) {
+    guint8 *row = map_info.data + GST_VIDEO_INFO_PLANE_OFFSET (info, 0)
+        + y * GST_VIDEO_INFO_PLANE_STRIDE (info, 0);
+
+    memset (row, 0, GST_VIDEO_INFO_WIDTH (info));
+  }
+
+  for (guint y = 0; y < GST_VIDEO_INFO_COMP_HEIGHT (info, 1); y++) {
+    guint8 *row = map_info.data + GST_VIDEO_INFO_PLANE_OFFSET (info, 1)
+        + y * GST_VIDEO_INFO_PLANE_STRIDE (info, 1);
+
+    for (guint x = 0; x < GST_VIDEO_INFO_COMP_WIDTH (info, 1); x++) {
+      row[x * 2] = 0x80;
+      row[x * 2 + 1] = 0x80;
+    }
+  }
+
+  for (guint y = 0; y < GST_VIDEO_INFO_HEIGHT (info); y++) {
+    guint8 *row = map_info.data + GST_VIDEO_INFO_PLANE_OFFSET (info, 2)
+        + y * GST_VIDEO_INFO_PLANE_STRIDE (info, 2);
+
+    for (guint x = 0; x < GST_VIDEO_INFO_WIDTH (info); x++)
+      row[x] = alpha_data[y * GST_VIDEO_INFO_WIDTH (info) + x];
+  }
+
+  gst_buffer_unmap (buf, &map_info);
+
+  return buf;
+}
+
+static GstBuffer *
+create_black_rgb_family_buffer (const GstVideoInfo * info)
+{
+  GstBuffer *buf;
+  GstMapInfo map_info;
+  gboolean has_alpha = GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_RGBA;
+  if (!has_alpha) {
+    fail_unless_equals_int (GST_VIDEO_INFO_FORMAT (info),
+        GST_VIDEO_FORMAT_RGBx);
+  }
+
+  fail_unless_equals_int (GST_VIDEO_INFO_WIDTH (info), 2);
+  fail_unless_equals_int (GST_VIDEO_INFO_HEIGHT (info), 2);
+
+  buf = gst_buffer_new_allocate (NULL, GST_VIDEO_INFO_SIZE (info), NULL);
+  fail_unless (buf != NULL);
+  fail_unless (gst_buffer_map (buf, &map_info, GST_MAP_WRITE));
+  memset (map_info.data, 0, map_info.size);
+
+  for (guint y = 0; y < GST_VIDEO_INFO_HEIGHT (info); y++) {
+    guint8 *row = map_info.data + GST_VIDEO_INFO_PLANE_OFFSET (info, 0)
+        + y * GST_VIDEO_INFO_PLANE_STRIDE (info, 0);
+
+    for (guint x = 0; x < GST_VIDEO_INFO_WIDTH (info); x++) {
+      row[x * 4 + 0] = 0;
+      row[x * 4 + 1] = 0;
+      row[x * 4 + 2] = 0;
+      /* Non-alpha formats get 0, to validate that conversion gives 0xff */
+      row[x * 4 + 3] = has_alpha ?
+          alpha_data[y * GST_VIDEO_INFO_WIDTH (info) + x] : 0;
+    }
+  }
+
+  gst_buffer_unmap (buf, &map_info);
+
+  return buf;
+}
+
+static GstBuffer *
+convert_buffer (GstVideoInfo * in_info, GstVideoInfo * out_info,
+    GstBuffer * inbuf)
+{
+  GstHarness *h =
+      gst_harness_new_parse
+      ("vulkanupload ! vulkancolorconvert ! vulkandownload");
+  GstCaps *in_caps = gst_video_info_to_caps (in_info);
+  GstCaps *out_caps = gst_video_info_to_caps (out_info);
+  GstBuffer *outbuf;
+
+  gst_harness_set_caps (h, in_caps, out_caps);
+
+  outbuf = gst_harness_push_and_pull (h, inbuf);
+  gst_harness_teardown (h);
+
+  return outbuf;
+}
+
+static void
+check_av12_buffers_equal (GstBuffer * outbuf, GstBuffer * expected,
+    const GstVideoInfo * info)
+{
+  GstMapInfo out_map, expected_map;
+
+  fail_unless (gst_buffer_map (outbuf, &out_map, GST_MAP_READ));
+  fail_unless (gst_buffer_map (expected, &expected_map, GST_MAP_READ));
+
+  for (guint plane = 0; plane < GST_VIDEO_INFO_N_PLANES (info); plane++) {
+    gint comp[GST_VIDEO_MAX_COMPONENTS];
+    guint width, height;
+
+    gst_video_format_info_component (info->finfo, plane, comp);
+    width = GST_VIDEO_INFO_COMP_WIDTH (info, comp[0]) *
+        GST_VIDEO_INFO_COMP_PSTRIDE (info, comp[0]);
+    height = GST_VIDEO_INFO_COMP_HEIGHT (info, comp[0]);
+
+    for (guint y = 0; y < height; y++) {
+      const guint8 *out_row = out_map.data +
+          GST_VIDEO_INFO_PLANE_OFFSET (info, plane) +
+          y * GST_VIDEO_INFO_PLANE_STRIDE (info, plane);
+      const guint8 *expected_row = expected_map.data +
+          GST_VIDEO_INFO_PLANE_OFFSET (info, plane) +
+          y * GST_VIDEO_INFO_PLANE_STRIDE (info, plane);
+
+      fail_unless (memcmp (out_row, expected_row, width) == 0);
+    }
+  }
+
+  gst_buffer_unmap (expected, &expected_map);
+  gst_buffer_unmap (outbuf, &out_map);
+}
 
 GST_START_TEST (test_vulkan_color_convert_rgba_reorder)
 {
@@ -115,6 +255,107 @@ GST_START_TEST (test_vulkan_color_convert_rgba_reorder)
 
 GST_END_TEST;
 
+GST_START_TEST (test_vulkan_color_convert_av12_to_rgba)
+{
+  GstVideoInfo in_info, out_info;
+  GstBuffer *inbuf, *outbuf;
+  GstMapInfo map_info;
+
+  fail_unless (gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_AV12, 2,
+          2));
+  fail_unless (gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_RGBA, 2,
+          2));
+
+  inbuf = create_black_av12_buffer (&in_info);
+  outbuf = convert_buffer (&in_info, &out_info, inbuf);
+  fail_unless (outbuf != NULL);
+
+  fail_unless (gst_buffer_map (outbuf, &map_info, GST_MAP_READ));
+  fail_unless_equals_int (map_info.size, GST_VIDEO_INFO_SIZE (&out_info));
+
+  for (guint i = 0; i < G_N_ELEMENTS (alpha_data); i++) {
+    guint8 *pixel = map_info.data + i * 4;
+
+    /* YUV->RGB math and 8-bit quantization may produce near-black values. */
+    fail_unless (pixel[0] <= 2);
+    fail_unless (pixel[1] <= 2);
+    fail_unless (pixel[2] <= 2);
+    fail_unless_equals_int (pixel[3], alpha_data[i]);
+  }
+
+  gst_buffer_unmap (outbuf, &map_info);
+  gst_buffer_unref (outbuf);
+}
+
+GST_END_TEST;
+
+static void
+check_rgb_family_to_av12 (GstVideoFormat in_format)
+{
+  GstVideoInfo in_info, out_info;
+  GstBuffer *inbuf, *outbuf;
+  GstMapInfo map_info;
+  gboolean has_alpha;
+
+  fail_unless (gst_video_info_set_format (&in_info, in_format, 2, 2));
+  fail_unless (gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_AV12, 2,
+          2));
+
+  has_alpha = GST_VIDEO_FORMAT_INFO_HAS_ALPHA (in_info.finfo);
+  inbuf = create_black_rgb_family_buffer (&in_info);
+  outbuf = convert_buffer (&in_info, &out_info, inbuf);
+  fail_unless (outbuf != NULL);
+
+  fail_unless (gst_buffer_map (outbuf, &map_info, GST_MAP_READ));
+  fail_unless_equals_int (map_info.size, GST_VIDEO_INFO_SIZE (&out_info));
+
+  for (guint y = 0; y < GST_VIDEO_INFO_HEIGHT (&out_info); y++) {
+    guint8 *row = map_info.data + GST_VIDEO_INFO_PLANE_OFFSET (&out_info, 2)
+        + y * GST_VIDEO_INFO_PLANE_STRIDE (&out_info, 2);
+
+    for (guint x = 0; x < GST_VIDEO_INFO_WIDTH (&out_info); x++)
+      fail_unless_equals_int (row[x], has_alpha ?
+          alpha_data[y * GST_VIDEO_INFO_WIDTH (&out_info) + x] : 0xff);
+  }
+
+  gst_buffer_unmap (outbuf, &map_info);
+  gst_buffer_unref (outbuf);
+}
+
+GST_START_TEST (test_vulkan_color_convert_rgba_to_av12)
+{
+  check_rgb_family_to_av12 (GST_VIDEO_FORMAT_RGBA);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_vulkan_color_convert_rgbx_to_av12_alpha)
+{
+  check_rgb_family_to_av12 (GST_VIDEO_FORMAT_RGBx);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_vulkan_color_convert_av12_passthrough)
+{
+  GstVideoInfo info;
+  GstBuffer *inbuf, *outbuf;
+
+  fail_unless (gst_video_info_set_format (&info, GST_VIDEO_FORMAT_AV12, 2, 2));
+
+  inbuf = create_black_av12_buffer (&info);
+  gst_buffer_ref (inbuf);
+  outbuf = convert_buffer (&info, &info, inbuf);
+  fail_unless (outbuf != NULL);
+
+  check_av12_buffers_equal (outbuf, inbuf, &info);
+
+  gst_buffer_unref (inbuf);
+  gst_buffer_unref (outbuf);
+}
+
+GST_END_TEST;
+
 static Suite *
 vkcolorconvert_suite (void)
 {
@@ -130,6 +371,10 @@ vkcolorconvert_suite (void)
   gst_object_unref (instance);
   if (have_instance) {
     tcase_add_test (tc_basic, test_vulkan_color_convert_rgba_reorder);
+    tcase_add_test (tc_basic, test_vulkan_color_convert_av12_to_rgba);
+    tcase_add_test (tc_basic, test_vulkan_color_convert_rgba_to_av12);
+    tcase_add_test (tc_basic, test_vulkan_color_convert_rgbx_to_av12_alpha);
+    tcase_add_test (tc_basic, test_vulkan_color_convert_av12_passthrough);
   }
 
   return s;
