@@ -4810,6 +4810,7 @@ retry:
   /* Don't add pads if we are shutting down */
   DYN_LOCK (dbin);
   if (G_UNLIKELY (dbin->shutdown)) {
+    g_list_free_full (endpads, gst_object_unref);
     GST_WARNING_OBJECT (dbin, "Currently, shutting down, aborting exposing");
     DYN_UNLOCK (dbin);
     return FALSE;
