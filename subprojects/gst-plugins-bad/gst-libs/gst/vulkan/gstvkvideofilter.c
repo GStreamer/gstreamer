@@ -54,9 +54,6 @@ static gboolean gst_vulkan_video_filter_set_caps (GstBaseTransform * bt,
 static GstCaps *gst_vulkan_video_filter_transform_caps (GstBaseTransform *
     bt, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static gboolean
-gst_vulkan_video_filter_propose_allocation (GstBaseTransform * bt,
-    GstQuery * decide_query, GstQuery * query);
-static gboolean
 gst_vulkan_video_filter_decide_allocation (GstBaseTransform * bt,
     GstQuery * query);
 
@@ -102,8 +99,6 @@ gst_vulkan_video_filter_class_init (GstVulkanVideoFilterClass * klass)
   gstbasetransform_class->set_caps = gst_vulkan_video_filter_set_caps;
   gstbasetransform_class->transform_caps =
       gst_vulkan_video_filter_transform_caps;
-  gstbasetransform_class->propose_allocation =
-      gst_vulkan_video_filter_propose_allocation;
   gstbasetransform_class->decide_allocation =
       gst_vulkan_video_filter_decide_allocation;
 }
@@ -199,14 +194,6 @@ gst_vulkan_video_filter_set_caps (GstBaseTransform * bt,
   GST_DEBUG_OBJECT (bt, "set caps: %" GST_PTR_FORMAT, in_caps);
 
   return TRUE;
-}
-
-static gboolean
-gst_vulkan_video_filter_propose_allocation (GstBaseTransform * bt,
-    GstQuery * decide_query, GstQuery * query)
-{
-  /* FIXME: */
-  return FALSE;
 }
 
 static gboolean
