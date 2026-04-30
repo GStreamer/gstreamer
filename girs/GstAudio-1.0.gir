@@ -5266,6 +5266,26 @@ negotiate fails.</doc>
           </parameter>
         </parameters>
       </virtual-method>
+      <virtual-method name="prepare_allocator" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioencoder.h">Orchestrates #GstAllocator configuration for the negotiated @caps.
+Default implementation relies on an Allocation #GstQuery &amp;
+calls `decide_allocation()`.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioencoder.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioencoder.h">whether the #GstAllocator could be configured.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="encoder" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioencoder.h">the #GstAudioEncoder</doc>
+            <type name="AudioEncoder" c:type="GstAudioEncoder*"/>
+          </instance-parameter>
+          <parameter name="caps" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioencoder.h">the negotiated #GstCaps</doc>
+            <type name="Gst.Caps" c:type="GstCaps*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
       <virtual-method name="propose_allocation">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioencoder.h">Optional.
                      Propose buffer allocation parameters for upstream elements.
@@ -5765,6 +5785,28 @@ query will use the caps from the pad.</doc>
           <parameter name="allocation_caps" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioencoder.c">a #GstCaps or %NULL</doc>
             <type name="Gst.Caps" c:type="GstCaps*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_allocator" c:identifier="gst_audio_encoder_set_allocator" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioencoder.c">Allows #GstAudioEncoder sub-classes to set the memory @allocator and
+its @params.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioencoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="enc" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioencoder.c">a #GstAudioEncoder</doc>
+            <type name="AudioEncoder" c:type="GstAudioEncoder*"/>
+          </instance-parameter>
+          <parameter name="allocator" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioencoder.c">the #GstAllocator</doc>
+            <type name="Gst.Allocator" c:type="GstAllocator*"/>
+          </parameter>
+          <parameter name="params" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioencoder.c">the #GstAllocationParams of @allocator</doc>
+            <type name="Gst.AllocationParams" c:type="const GstAllocationParams*"/>
           </parameter>
         </parameters>
       </method>
@@ -6409,8 +6451,27 @@ needed. At minimum @set_format and @handle_frame needs to be overridden.</doc>
           </parameters>
         </callback>
       </field>
+      <field name="prepare_allocator">
+        <callback name="prepare_allocator">
+          <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioencoder.h"/>
+          <return-value transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioencoder.h">whether the #GstAllocator could be configured.</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="encoder" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioencoder.h">the #GstAudioEncoder</doc>
+              <type name="AudioEncoder" c:type="GstAudioEncoder*"/>
+            </parameter>
+            <parameter name="caps" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioencoder.h">the negotiated #GstCaps</doc>
+              <type name="Gst.Caps" c:type="GstCaps*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
       <field name="_gst_reserved" readable="0" private="1">
-        <array zero-terminated="0" fixed-size="17">
+        <array zero-terminated="0" fixed-size="16">
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>

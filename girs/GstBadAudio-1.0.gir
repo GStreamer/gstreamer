@@ -488,6 +488,26 @@ is defined this way (this is all done by the base class automatically):
           </instance-parameter>
         </parameters>
       </virtual-method>
+      <virtual-method name="prepare_allocator" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">Orchestrates #GstAllocator configuration for the negotiated @caps.
+Default implementation relies on an Allocation #GstQuery &amp;
+calls `decide_allocation()`.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">whether the #GstAllocator could be configured.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">the #GstNonstreamAudioDecoder</doc>
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+          <parameter name="caps" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">the negotiated #GstCaps</doc>
+            <type name="Gst.Caps" c:type="GstCaps*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
       <virtual-method name="propose_allocation">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">Optional.
                              Proposes buffer allocation parameters for upstream elements.
@@ -748,6 +768,28 @@ the lock already held).</doc>
           </instance-parameter>
           <parameter name="new_position" transfer-ownership="none">
             <type name="Gst.ClockTime" c:type="GstClockTime"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_allocator" c:identifier="gst_nonstream_audio_decoder_set_allocator" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">Allows #GstNonstreamAudioDecoder sub-classes to set the memory @allocator
+and its @params.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">a #GstNonstreamAudioDecoder</doc>
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+          <parameter name="allocator" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">the #GstAllocator</doc>
+            <type name="Gst.Allocator" c:type="GstAllocator*"/>
+          </parameter>
+          <parameter name="params" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">the #GstAllocationParams of @allocator</doc>
+            <type name="Gst.AllocationParams" c:type="const GstAllocationParams*"/>
           </parameter>
         </parameters>
       </method>
@@ -1342,8 +1384,27 @@ loads_from_sinkpad is TRUE.</doc>
           </parameters>
         </callback>
       </field>
+      <field name="prepare_allocator">
+        <callback name="prepare_allocator">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+          <return-value transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">whether the #GstAllocator could be configured.</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="dec" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">the #GstNonstreamAudioDecoder</doc>
+              <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+            </parameter>
+            <parameter name="caps" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">the negotiated #GstCaps</doc>
+              <type name="Gst.Caps" c:type="GstCaps*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
       <field name="_gst_reserved" readable="0" private="1">
-        <array zero-terminated="0" fixed-size="20">
+        <array zero-terminated="0" fixed-size="19">
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>
