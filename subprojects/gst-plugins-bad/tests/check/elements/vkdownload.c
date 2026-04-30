@@ -47,10 +47,25 @@ cmp_buffers (GstBuffer * buf1, GstBuffer * buf2, const GstVideoInfo * info)
   gint comp[GST_VIDEO_MAX_COMPONENTS], stride1, stride2;
   guint32 width, height;
   gboolean ret = FALSE;
+  GstVideoMeta *meta1, *meta2;
+
+  fail_unless_equals_int (gst_buffer_n_memory (buf1),
+      GST_VIDEO_INFO_N_PLANES (info));
+  fail_unless_equals_int (gst_buffer_n_memory (buf2),
+      GST_VIDEO_INFO_N_PLANES (info));
+
+  meta1 = gst_buffer_get_video_meta (buf1);
+  meta2 = gst_buffer_get_video_meta (buf2);
+  fail_unless (meta1 != NULL);
+  fail_unless (meta2 != NULL);
+  fail_unless_equals_int (meta1->format, meta2->format);
 
   fail_unless (!GST_VIDEO_FORMAT_INFO_IS_COMPLEX (info->finfo));
   fail_unless (gst_video_frame_map (&frame1, info, buf1, GST_MAP_READ));
   fail_unless (gst_video_frame_map (&frame2, info, buf2, GST_MAP_READ));
+
+  fail_unless_equals_int (frame1.info.width, frame2.info.width);
+  fail_unless_equals_int (frame1.info.height, frame2.info.height);
 
   for (int plane = 0; plane < GST_VIDEO_INFO_N_PLANES (info); plane++) {
     guint8 *row1, *row2;
@@ -68,11 +83,18 @@ cmp_buffers (GstBuffer * buf1, GstBuffer * buf2, const GstVideoInfo * info)
     row2 = frame2.data[plane];
 
     for (int i = 0; i < height; i++) {
-      GST_MEMDUMP ("input row:", row1, width);
-      GST_MEMDUMP ("output row:", row2, width);
+      if (memcmp (row1, row2, width) != 0) {
+        guint x;
 
-      if (memcmp (row1, row2, width) != 0)
+        for (x = 0; x < width; x++) {
+          if (row1[x] != row2[x])
+            break;
+        }
+
+        GST_ERROR ("Mismatch plane %d row %d/%u byte %u/%u: expected 0x%02x, "
+            "got 0x%02x", plane, i, height, x, width, row1[x], row2[x]);
         goto bail;
+      }
 
       row1 += stride1;
       row2 += stride2;
@@ -461,6 +483,20 @@ GST_START_TEST (test_vulkan_download_a420_roundtrip)
 
 GST_END_TEST;
 
+GST_START_TEST (test_vulkan_download_nv12_roundtrip)
+{
+  run_multiplane_download_roundtrip_test (GST_VIDEO_FORMAT_NV12);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_vulkan_download_av12_roundtrip)
+{
+  run_multiplane_download_roundtrip_test (GST_VIDEO_FORMAT_AV12);
+}
+
+GST_END_TEST;
+
 static Suite *
 vkdownload_suite (void)
 {
@@ -478,6 +514,8 @@ vkdownload_suite (void)
     tcase_add_test (tc_basic, test_vulkan_download_uses_output_stride);
     tcase_add_test (tc_basic, test_vulkan_download_i420_roundtrip);
     tcase_add_test (tc_basic, test_vulkan_download_a420_roundtrip);
+    tcase_add_test (tc_basic, test_vulkan_download_nv12_roundtrip);
+    tcase_add_test (tc_basic, test_vulkan_download_av12_roundtrip);
   }
 
   return s;
