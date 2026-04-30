@@ -138,8 +138,14 @@ gst_vulkan_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (GST_VIDEO_INFO_FORMAT (&priv->v_info) != GST_VIDEO_FORMAT_ENCODED) {
     priv->v_info.size = 0;
     for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->v_info); i++) {
-      priv->alloc_sizes[i] = GST_VIDEO_INFO_COMP_HEIGHT (&priv->v_info, i) *
-          GST_VIDEO_INFO_PLANE_STRIDE (&priv->v_info, i);
+      gint comp[GST_VIDEO_MAX_COMPONENTS];
+      gint comp_height, plane_stride;
+
+      gst_video_format_info_component (priv->v_info.finfo, i, comp);
+      comp_height = GST_VIDEO_INFO_COMP_HEIGHT (&priv->v_info, comp[0]);
+      plane_stride = GST_VIDEO_INFO_PLANE_STRIDE (&priv->v_info, i);
+
+      priv->alloc_sizes[i] = comp_height * plane_stride;
       priv->v_info.offset[i] = priv->v_info.size;
       priv->v_info.size += priv->alloc_sizes[i];
     }
