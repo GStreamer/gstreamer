@@ -1370,11 +1370,14 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     }
 
     /* Clip to upstream size if known */
-    if (upstream_size > 0 && size + 8 + wav->offset > upstream_size) {
-      GST_WARNING_OBJECT (wav, "Clipping chunk size to file size");
-      g_assert (upstream_size >= wav->offset);
-      g_assert (upstream_size - wav->offset >= 8);
-      size = upstream_size - wav->offset - 8;
+    if (upstream_size > 0) {
+      if (upstream_size < wav->offset + 8) {
+        GST_WARNING_OBJECT (wav, "Bogus file size");
+        upstream_size = -1;
+      } else if (size > upstream_size - wav->offset - 8) {
+        GST_WARNING_OBJECT (wav, "Clipping chunk size to file size");
+        size = upstream_size - wav->offset - 8;
+      }
     }
 
     /* wav is a st00pid format, we don't know for sure where data starts.
