@@ -39,16 +39,21 @@
 #include "shaders/yuy2_to_rgb.frag.h"
 #include "shaders/ayuv_to_rgb.frag.h"
 #include "shaders/nv12_to_rgb.frag.h"
+#include "shaders/av12_to_rgb.frag.h"
 #include "shaders/rgb_to_ayuv.frag.h"
 #include "shaders/rgb_to_yuy2.frag.h"
 #include "shaders/rgb_to_nv12.frag.h"
+#include "shaders/rgb_to_av12.frag.h"
+#include "shaders/rgbx_to_av12.frag.h"
 
 #include "gstvulkanelements.h"
 
 GST_DEBUG_CATEGORY (gst_debug_vulkan_color_convert);
 #define GST_CAT_DEFAULT gst_debug_vulkan_color_convert
 
-#define N_SHADER_INFO (8*8 + 8*3*2)
+/* Shader table size: 8 RGB-like formats converted between each other, plus
+ * 8 RGB-like formats * 4 YUV-like formats * 2 directions (RGB<->YUV). */
+#define N_SHADER_INFO (8*8 + 8*4*2)
 static shader_info shader_infos[N_SHADER_INFO];
 
 static void
@@ -522,6 +527,12 @@ video_format_to_reorder (GstVideoFormat v_format, gint * reorder,
       reorder[2] = 2;
       reorder[3] = 0;
       break;
+    case GST_VIDEO_FORMAT_AV12:
+      reorder[0] = 0;
+      reorder[1] = 1;
+      reorder[2] = 2;
+      reorder[3] = 3;
+      break;
     default:
       g_assert_not_reached ();
       break;
@@ -769,7 +780,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE,
-            "{ BGRA, RGBA, ABGR, ARGB, BGRx, RGBx, xBGR, xRGB, AYUV, YUY2, NV12 }")));
+            "{ BGRA, RGBA, ABGR, ARGB, BGRx, RGBx, xBGR, xRGB, AYUV, YUY2, NV12, AV12 }")));
 
 static GstStaticPadTemplate gst_vulkan_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -777,7 +788,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE,
-            "{ BGRA, RGBA, ABGR, ARGB, BGRx, RGBx, xBGR, xRGB, AYUV, YUY2, NV12 }")));
+            "{ BGRA, RGBA, ABGR, ARGB, BGRx, RGBx, xBGR, xRGB, AYUV, YUY2, NV12, AV12 }")));
 
 enum
 {
@@ -807,6 +818,8 @@ struct yuv_info
   gsize from_frag_size;
   gchar *to_frag;
   gsize to_frag_size;
+  gchar *to_frag_no_alpha;
+  gsize to_frag_no_alpha_size;
 };
 
 static void
@@ -818,13 +831,16 @@ fill_shader_info (void)
   };
   struct yuv_info yuvs[] = {
     {GST_VIDEO_FORMAT_AYUV, ayuv_to_rgb_frag, ayuv_to_rgb_frag_size,
-        rgb_to_ayuv_frag, rgb_to_ayuv_frag_size},
+        rgb_to_ayuv_frag, rgb_to_ayuv_frag_size, NULL, 0},
     {GST_VIDEO_FORMAT_YUY2, yuy2_to_rgb_frag, yuy2_to_rgb_frag_size,
-        rgb_to_yuy2_frag, rgb_to_yuy2_frag_size},
+        rgb_to_yuy2_frag, rgb_to_yuy2_frag_size, NULL, 0},
 /*    {GST_VIDEO_FORMAT_UYVY, yuy2_to_rgb_frag, yuy2_to_rgb_frag_size,
         rgb_to_yuy2_frag, rgb_to_yuy2_frag_size},*/
     {GST_VIDEO_FORMAT_NV12, nv12_to_rgb_frag, nv12_to_rgb_frag_size,
-        rgb_to_nv12_frag, rgb_to_nv12_frag_size},
+        rgb_to_nv12_frag, rgb_to_nv12_frag_size, NULL, 0},
+    {GST_VIDEO_FORMAT_AV12, av12_to_rgb_frag, av12_to_rgb_frag_size,
+          rgb_to_av12_frag, rgb_to_av12_frag_size,
+        rgbx_to_av12_frag, rgbx_to_av12_frag_size},
   };
   guint info_i = 0;
   guint i, j;
@@ -860,13 +876,19 @@ fill_shader_info (void)
 
     for (j = 0; j < G_N_ELEMENTS (yuvs); j++) {
       const GstVideoFormatInfo *to_finfo = gst_video_format_get_info (yuvs[j].format);
+      gboolean use_no_alpha_shader =
+          !GST_VIDEO_FORMAT_INFO_HAS_ALPHA (from_finfo)
+          && yuvs[j].to_frag_no_alpha;
+
       GST_TRACE ("Initializing info for %s -> %s", from_finfo->name, to_finfo->name);
       shader_infos[info_i++] = (shader_info) {
           .from = rgbs[i],
           .to = yuvs[j].format,
           .cmd_create_uniform = yuv_to_rgb_create_uniform_memory,
-          .frag_code = yuvs[j].to_frag,
-          .frag_size = yuvs[j].to_frag_size,
+          .frag_code = use_no_alpha_shader ? yuvs[j].to_frag_no_alpha :
+              yuvs[j].to_frag,
+          .frag_size = use_no_alpha_shader ? yuvs[j].to_frag_no_alpha_size :
+              yuvs[j].to_frag_size,
           .uniform_size = sizeof(struct YUVUpdateData),
           .notify = (GDestroyNotify) unref_memory_if_set,
           .user_data = NULL,
@@ -975,7 +997,7 @@ _init_supported_formats (GstVulkanDevice * device, gboolean output,
       "BGRx", "BGRA", "xRGB", "xBGR", "ARGB", "ABGR", NULL);
 
   _append_value_string_list (supported_formats, "AYUV", "YUY2", /*"UYVY", */
-      "NV12", NULL);
+      "NV12", "AV12", NULL);
 }
 
 /* copies the given caps */
@@ -1143,6 +1165,18 @@ vulkan_color_convert_can_passthrough_info (const GstVideoInfo * in,
   return TRUE;
 }
 
+static void
+video_info_get_plane_dimensions (const GstVideoInfo * info, guint plane,
+    gint * width, gint * height)
+{
+  gint comp[GST_VIDEO_MAX_COMPONENTS];
+
+  gst_video_format_info_component (info->finfo, plane, comp);
+
+  *width = GST_VIDEO_INFO_COMP_WIDTH (info, comp[0]);
+  *height = GST_VIDEO_INFO_COMP_HEIGHT (info, comp[0]);
+}
+
 static gboolean
 gst_vulkan_color_convert_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
     GstCaps * out_caps)
@@ -1283,6 +1317,8 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     out_n_mems = gst_buffer_n_memory (outbuf);
     for (i = 0; i < out_n_mems; i++) {
       GstMemory *mem = gst_buffer_peek_memory (outbuf, i);
+      gint plane_width, plane_height;
+
       if (!gst_is_vulkan_image_memory (mem)) {
         g_set_error_literal (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
             "Output memory must be a GstVulkanImageMemory");
@@ -1290,10 +1326,11 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
       }
       out_img_mems[i] = (GstVulkanImageMemory *) mem;
 
+      video_info_get_plane_dimensions (&conv->quad->out_info, i, &plane_width,
+          &plane_height);
       if (GST_VIDEO_INFO_WIDTH (&conv->quad->out_info) ==
-          GST_VIDEO_INFO_COMP_WIDTH (&conv->quad->out_info, i)
-          && GST_VIDEO_INFO_HEIGHT (&conv->quad->out_info) ==
-          GST_VIDEO_INFO_COMP_HEIGHT (&conv->quad->out_info, i)) {
+          plane_width
+          && GST_VIDEO_INFO_HEIGHT (&conv->quad->out_info) == plane_height) {
         render_img_mems[i] = out_img_mems[i];
         GST_LOG_OBJECT (conv, "using original output memory %p for plane %u",
             out_img_mems[i], i);
@@ -1401,6 +1438,10 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
       VkImageMemoryBarrier out_image_memory_barrier;
       VkImageMemoryBarrier render_image_memory_barrier;
       VkImageBlit blit;
+      gint plane_width, plane_height;
+
+      video_info_get_plane_dimensions (&conv->quad->out_info, i, &plane_width,
+          &plane_height);
 
       /* *INDENT-OFF* */
       render_image_memory_barrier = (VkImageMemoryBarrier) {
@@ -1439,8 +1480,8 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
           .srcOffsets = {
               { 0, 0, 0 },
               {
-                  GST_VIDEO_INFO_COMP_WIDTH (&conv->quad->out_info, i),
-                  GST_VIDEO_INFO_COMP_HEIGHT (&conv->quad->out_info, i),
+                  plane_width,
+                  plane_height,
                   1
               },
           },
@@ -1453,8 +1494,8 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
           .dstOffsets = {
               { 0, 0, 0 },
               {
-                  GST_VIDEO_INFO_COMP_WIDTH (&conv->quad->out_info, i),
-                  GST_VIDEO_INFO_COMP_HEIGHT (&conv->quad->out_info, i),
+                  plane_width,
+                  plane_height,
                   1
               },
           },
