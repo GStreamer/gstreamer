@@ -311,6 +311,8 @@ static gboolean gst_video_encoder_sink_event_default (GstVideoEncoder * encoder,
     GstEvent * event);
 static gboolean gst_video_encoder_src_event_default (GstVideoEncoder * encoder,
     GstEvent * event);
+static gboolean gst_video_encoder_default_prepare_allocator (GstVideoEncoder *
+    encoder, GstCaps * caps);
 static gboolean gst_video_encoder_decide_allocation_default (GstVideoEncoder *
     encoder, GstQuery * query);
 static gboolean gst_video_encoder_propose_allocation_default (GstVideoEncoder *
@@ -681,6 +683,8 @@ gst_video_encoder_class_init (GstVideoEncoderClass * klass)
 
   klass->sink_event = gst_video_encoder_sink_event_default;
   klass->src_event = gst_video_encoder_src_event_default;
+  klass->prepare_allocator =
+      GST_DEBUG_FUNCPTR (gst_video_encoder_default_prepare_allocator);
   klass->propose_allocation = gst_video_encoder_propose_allocation_default;
   klass->decide_allocation = gst_video_encoder_decide_allocation_default;
   klass->negotiate = gst_video_encoder_negotiate_default;
@@ -2120,12 +2124,9 @@ static gboolean
 gst_video_encoder_negotiate_default (GstVideoEncoder * encoder)
 {
   GstVideoEncoderClass *klass = GST_VIDEO_ENCODER_GET_CLASS (encoder);
-  GstAllocator *allocator;
-  GstAllocationParams params;
   gboolean ret = TRUE;
   GstVideoCodecState *state = encoder->priv->output_state;
   GstVideoInfo *info = &state->info;
-  GstQuery *query = NULL;
   GstVideoCodecFrame *frame;
   GstCaps *prevcaps;
   gchar *colorimetry;
@@ -2251,8 +2252,25 @@ gst_video_encoder_negotiate_default (GstVideoEncoder * encoder)
   if (prevcaps)
     gst_caps_unref (prevcaps);
 
-  if (!ret)
-    goto done;
+  if (ret && klass->prepare_allocator) {
+    ret = klass->prepare_allocator (encoder, state->caps);
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_video_encoder_default_prepare_allocator (GstVideoEncoder * encoder,
+    GstCaps * caps)
+{
+  GstVideoEncoderClass *klass = GST_VIDEO_ENCODER_GET_CLASS (encoder);
+  gboolean ret = TRUE;
+  GstVideoCodecState *state = encoder->priv->output_state;
+  GstQuery *query;
+  GstAllocator *allocator;
+  GstAllocationParams params;
+
+  GST_DEBUG_OBJECT (encoder, "doing allocation query");
 
   query = gst_query_new_allocation (state->allocation_caps, TRUE);
   if (!gst_pad_peer_query (encoder->srcpad, query)) {
@@ -2277,10 +2295,7 @@ gst_video_encoder_negotiate_default (GstVideoEncoder * encoder)
     gst_allocation_params_init (&params);
   }
 
-  if (encoder->priv->allocator)
-    gst_object_unref (encoder->priv->allocator);
-  encoder->priv->allocator = allocator;
-  encoder->priv->params = params;
+  gst_video_encoder_set_allocator (encoder, allocator, &params);
 
 done:
   if (query)
@@ -2294,6 +2309,27 @@ no_decide_allocation:
     GST_WARNING_OBJECT (encoder, "Subclass failed to decide allocation");
     goto done;
   }
+}
+
+/**
+ * gst_video_encoder_set_allocator:
+ * @encoder: a #GstVideoEncoder
+ * @allocator: (transfer full) (nullable): the #GstAllocator
+ * @params: (transfer none) (nullable): the #GstAllocationParams of @allocator
+ *
+ * Allows #GstVideoEncoder sub-classes to set the memory @allocator and
+ * its @params.
+ *
+ * Since: 1.30
+ */
+void
+gst_video_encoder_set_allocator (GstVideoEncoder * encoder,
+    GstAllocator * allocator, const GstAllocationParams * params)
+{
+  if (encoder->priv->allocator)
+    gst_object_unref (encoder->priv->allocator);
+  encoder->priv->allocator = allocator;
+  encoder->priv->params = *params;
 }
 
 static gboolean

@@ -295,8 +295,23 @@ struct _GstVideoEncoderClass
                                    GstVideoCodecFrame *frame,
                                    GstMeta * meta);
 
+  /**
+   * GstVideoEncoderClass::prepare_allocator:
+   * @encoder: the #GstVideoEncoder
+   * @caps: the negotiated #GstCaps
+   *
+   * Orchestrates #GstAllocator configuration for the negotiated @caps.
+   * Default implementation relies on an Allocation #GstQuery &
+   * calls `decide_allocation()`.
+   *
+   * Returns: whether the #GstAllocator could be configured.
+   *
+   * Since: 1.30
+   */
+  gboolean      (*prepare_allocator) (GstVideoEncoder *encoder, GstCaps *caps);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE-4];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 5];
 };
 
 GST_VIDEO_API
@@ -368,6 +383,11 @@ GST_VIDEO_API
 void                 gst_video_encoder_get_allocator (GstVideoEncoder *encoder,
                                                       GstAllocator **allocator,
                                                       GstAllocationParams *params);
+
+GST_VIDEO_API
+void                 gst_video_encoder_set_allocator (GstVideoEncoder *encoder,
+                                                      GstAllocator *allocator,
+                                                      const GstAllocationParams *params);
 
 GST_VIDEO_API
 void                 gst_video_encoder_set_min_pts(GstVideoEncoder *encoder, GstClockTime min_pts);

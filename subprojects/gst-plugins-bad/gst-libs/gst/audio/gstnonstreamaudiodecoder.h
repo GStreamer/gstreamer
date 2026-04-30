@@ -372,8 +372,24 @@ struct _GstNonstreamAudioDecoderClass
   gboolean     (*propose_allocation)         (GstNonstreamAudioDecoder * dec,
                                               GstQuery * query);
 
+  /**
+   * GstNonstreamAudioDecoderClass::prepare_allocator:
+   * @dec: the #GstNonstreamAudioDecoder
+   * @caps: the negotiated #GstCaps
+   *
+   * Orchestrates #GstAllocator configuration for the negotiated @caps.
+   * Default implementation relies on an Allocation #GstQuery &
+   * calls `decide_allocation()`.
+   *
+   * Returns: whether the #GstAllocator could be configured.
+   *
+   * Since: 1.30
+   */
+  gboolean      (*prepare_allocator)         (GstNonstreamAudioDecoder * dec,
+                                              GstCaps *caps);
+
   /*< private > */
-  gpointer _gst_reserved[GST_PADDING_LARGE];
+  gpointer _gst_reserved[GST_PADDING_LARGE - 1];
 };
 
 
@@ -405,6 +421,10 @@ GST_AUDIO_BAD_API
 GstBuffer *gst_nonstream_audio_decoder_allocate_output_buffer (GstNonstreamAudioDecoder * dec,
                                                                gsize size) G_GNUC_WARN_UNUSED_RESULT;
 
+GST_AUDIO_BAD_API
+void gst_nonstream_audio_decoder_set_allocator (GstNonstreamAudioDecoder * dec,
+                                                GstAllocator * allocator,
+                                                const GstAllocationParams * params);
 
 G_END_DECLS
 

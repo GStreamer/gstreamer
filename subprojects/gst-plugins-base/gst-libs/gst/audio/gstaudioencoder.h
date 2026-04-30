@@ -242,9 +242,23 @@ struct _GstAudioEncoderClass {
   gboolean      (*src_query)          (GstAudioEncoder *encoder,
 				       GstQuery *query);
 
+  /**
+   * GstAudioEncoderClass::prepare_allocator:
+   * @encoder: the #GstAudioEncoder
+   * @caps: the negotiated #GstCaps
+   *
+   * Orchestrates #GstAllocator configuration for the negotiated @caps.
+   * Default implementation relies on an Allocation #GstQuery &
+   * calls `decide_allocation()`.
+   *
+   * Returns: whether the #GstAllocator could be configured.
+   *
+   * Since: 1.30
+   */
+  gboolean      (*prepare_allocator) (GstAudioEncoder *encoder, GstCaps *caps);
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE-3];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 4];
 };
 
 GST_AUDIO_API
@@ -366,6 +380,11 @@ GST_AUDIO_API
 void            gst_audio_encoder_get_allocator (GstAudioEncoder * enc,
                                                  GstAllocator ** allocator,
                                                  GstAllocationParams * params);
+
+GST_AUDIO_API
+void            gst_audio_encoder_set_allocator (GstAudioEncoder * enc,
+                                                 GstAllocator * allocator,
+                                                 const GstAllocationParams * params);
 
 GST_AUDIO_API
 void            gst_audio_encoder_merge_tags (GstAudioEncoder * enc,

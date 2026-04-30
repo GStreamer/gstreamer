@@ -227,6 +227,9 @@ static gboolean gst_nonstream_audio_decoder_negotiate (GstNonstreamAudioDecoder
 static gboolean
 gst_nonstream_audio_decoder_negotiate_default (GstNonstreamAudioDecoder * dec);
 static gboolean
+gst_nonstream_audio_decoder_default_prepare_allocator (GstNonstreamAudioDecoder
+    * dec, GstCaps * caps);
+static gboolean
 gst_nonstream_audio_decoder_decide_allocation_default (GstNonstreamAudioDecoder
     * dec, GstQuery * query);
 static gboolean
@@ -415,6 +418,8 @@ gst_nonstream_audio_decoder_class_init (GstNonstreamAudioDecoderClass * klass)
   klass->negotiate =
       GST_DEBUG_FUNCPTR (gst_nonstream_audio_decoder_negotiate_default);
 
+  klass->prepare_allocator =
+      GST_DEBUG_FUNCPTR (gst_nonstream_audio_decoder_default_prepare_allocator);
   klass->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_nonstream_audio_decoder_decide_allocation_default);
   klass->propose_allocation =
@@ -1189,9 +1194,6 @@ gst_nonstream_audio_decoder_negotiate_default (GstNonstreamAudioDecoder * dec)
   GstCaps *caps;
   GstNonstreamAudioDecoderClass *klass;
   gboolean res = TRUE;
-  GstQuery *query = NULL;
-  GstAllocator *allocator;
-  GstAllocationParams allocation_params;
 
   g_return_val_if_fail (GST_IS_NONSTREAM_AUDIO_DECODER (dec), FALSE);
   g_return_val_if_fail (GST_AUDIO_INFO_IS_VALID (&(dec->output_audio_info)),
@@ -1216,6 +1218,29 @@ gst_nonstream_audio_decoder_negotiate_default (GstNonstreamAudioDecoder * dec)
 
   dec->output_format_changed = FALSE;
 
+  if (klass->prepare_allocator) {
+    res = klass->prepare_allocator (dec, caps);
+  }
+
+done:
+  return res;
+}
+
+static gboolean
+gst_nonstream_audio_decoder_default_prepare_allocator (GstNonstreamAudioDecoder
+    * dec, GstCaps * caps)
+{
+  GstNonstreamAudioDecoderClass *klass;
+  gboolean res = TRUE;
+  GstQuery *query = NULL;
+  GstAllocator *allocator;
+  GstAllocationParams allocation_params;
+
+  g_return_val_if_fail (GST_IS_NONSTREAM_AUDIO_DECODER (dec), FALSE);
+  g_return_val_if_fail (GST_AUDIO_INFO_IS_VALID (&(dec->output_audio_info)),
+      FALSE);
+
+  klass = GST_NONSTREAM_AUDIO_DECODER_CLASS (G_OBJECT_GET_CLASS (dec));
   query = gst_query_new_allocation (caps, TRUE);
   if (!gst_pad_peer_query (dec->srcpad, query)) {
     GST_DEBUG_OBJECT (dec, "didn't get downstream ALLOCATION hints");
@@ -1240,10 +1265,8 @@ gst_nonstream_audio_decoder_negotiate_default (GstNonstreamAudioDecoder * dec)
     gst_allocation_params_init (&allocation_params);
   }
 
-  if (dec->allocator != NULL)
-    gst_object_unref (dec->allocator);
-  dec->allocator = allocator;
-  dec->allocation_params = allocation_params;
+  gst_nonstream_audio_decoder_set_allocator (dec, allocator,
+      &allocation_params);
 
 done:
   if (query != NULL)
@@ -1259,6 +1282,26 @@ no_decide_allocation:
   }
 }
 
+/**
+ * gst_nonstream_audio_decoder_set_allocator:
+ * @dec: a #GstNonstreamAudioDecoder
+ * @allocator: (transfer full) (nullable): the #GstAllocator
+ * @params: (transfer none) (nullable): the #GstAllocationParams of @allocator
+ *
+ * Allows #GstNonstreamAudioDecoder sub-classes to set the memory @allocator
+ * and its @params.
+ *
+ * Since: 1.30
+ */
+void
+gst_nonstream_audio_decoder_set_allocator (GstNonstreamAudioDecoder * dec,
+    GstAllocator * allocator, const GstAllocationParams * params)
+{
+  if (dec->allocator != NULL)
+    gst_object_unref (dec->allocator);
+  dec->allocator = allocator;
+  dec->allocation_params = *params;
+}
 
 static gboolean
 gst_nonstream_audio_decoder_decide_allocation_default (G_GNUC_UNUSED
