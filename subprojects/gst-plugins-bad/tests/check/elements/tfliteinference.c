@@ -1232,8 +1232,8 @@ GST_END_TEST;
 GST_START_TEST (test_invalid_range_count)
 {
   /* 2 ranges for a 3-channel model must fail */
-  gchar *tmp_model =
-      setup_model_with_ranges ("flatten_float32in_float32out.tflite",
+  gchar *tmp_model = setup_model_with_ranges (GST_TFLITE_TEST_DATA_PATH,
+      "tfliteinference", "flatten_float32in_float32out.tflite",
       "0.0,1.0;0.0,1.0");
   GstElement *e = gst_element_factory_make ("tfliteinference", NULL);
 
