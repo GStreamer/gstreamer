@@ -570,9 +570,7 @@ void gst_aja_src_constructed(GObject *object) {
   G_OBJECT_CLASS(parent_class)->constructed(object);
 
   gchar *aja_clock_name = g_strdup_printf("ajaclock-%s", GST_OBJECT_NAME(self));
-  self->clock =
-      GST_CLOCK(g_object_new(GST_TYPE_SYSTEM_CLOCK, "name", aja_clock_name,
-                             "clock-type", GST_CLOCK_TYPE_MONOTONIC, NULL));
+  self->clock = gst_system_clock_new (aja_clock_name, GST_CLOCK_TYPE_MONOTONIC);
   g_free(aja_clock_name);
 }
 
@@ -2317,8 +2315,7 @@ static void capture_thread_func(AJAThread *thread, void *data) {
 
   // We're getting a system clock for the real-time clock here because
   // g_get_real_time() is less accurate generally.
-  real_time_clock = GST_CLOCK(g_object_new(GST_TYPE_SYSTEM_CLOCK, "clock-type",
-                                           GST_CLOCK_TYPE_REALTIME, NULL));
+  real_time_clock = gst_system_clock_new (NULL, GST_CLOCK_TYPE_REALTIME);
 
   // if we currently have signal
   bool have_signal = true;

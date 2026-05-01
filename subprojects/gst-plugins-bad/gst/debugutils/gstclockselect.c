@@ -186,17 +186,12 @@ gst_clock_select_provide_clock (GstElement * element)
   switch (clock_select->clock_id) {
     case GST_CLOCK_SELECT_CLOCK_ID_MONOTONIC:
       clock =
-          g_object_new (GST_TYPE_SYSTEM_CLOCK, "name", "DebugGstSystemClock",
-          NULL);
-      gst_object_ref_sink (clock);
-      gst_util_set_object_arg (G_OBJECT (clock), "clock-type", "monotonic");
+          gst_system_clock_new ("DebugGstSystemClock",
+          GST_CLOCK_TYPE_MONOTONIC);
       break;
     case GST_CLOCK_SELECT_CLOCK_ID_REALTIME:
       clock =
-          g_object_new (GST_TYPE_SYSTEM_CLOCK, "name", "DebugGstSystemClock",
-          NULL);
-      gst_object_ref_sink (clock);
-      gst_util_set_object_arg (G_OBJECT (clock), "clock-type", "realtime");
+          gst_system_clock_new ("DebugGstSystemClock", GST_CLOCK_TYPE_REALTIME);
       break;
     case GST_CLOCK_SELECT_CLOCK_ID_PTP:
       clock = gst_ptp_clock_new ("ptp-clock", clock_select->ptp_domain);
@@ -206,11 +201,7 @@ gst_clock_select_provide_clock (GstElement * element)
       }
       break;
     case GST_CLOCK_SELECT_CLOCK_ID_TAI:
-      clock =
-          g_object_new (GST_TYPE_SYSTEM_CLOCK, "name", "DebugGstSystemClock",
-          NULL);
-      gst_object_ref_sink (clock);
-      gst_util_set_object_arg (G_OBJECT (clock), "clock-type", "tai");
+      clock = gst_system_clock_new ("DebugGstSystemClock", GST_CLOCK_TYPE_TAI);
       break;
     case GST_CLOCK_SELECT_CLOCK_ID_DEFAULT:
     default:

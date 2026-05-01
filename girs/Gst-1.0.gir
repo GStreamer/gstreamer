@@ -48094,10 +48094,36 @@ Subclasses can however override all of the important methods for sync and
 async notifications to implement their own callback methods or blocking
 wait operations.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstsystemclock.h"/>
+      <constructor name="new" c:identifier="gst_system_clock_new" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsystemclock.c">Creates a new instance of the system clock. Unlike gst_system_clock_obtain()
+this allows to apply custom calibration to it via
+gst_clock_set_calibration(), set a master clock via gst_clock_set_master() or
+change the `clock-type` property without changing the behaviour of the
+default system clock for the whole process.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstsystemclock.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsystemclock.c">the new system clock instance.</doc>
+          <type name="Clock" c:type="GstClock*"/>
+        </return-value>
+        <parameters>
+          <parameter name="name" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsystemclock.c">name of the new clock</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="clock_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsystemclock.c">#GstClockType for the new clock</doc>
+            <type name="ClockType" c:type="GstClockType"/>
+          </parameter>
+        </parameters>
+      </constructor>
       <function name="obtain" c:identifier="gst_system_clock_obtain">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsystemclock.c">Get a handle to the default system clock. The refcount of the
 clock will be increased so you need to unref the clock after
-usage.</doc>
+usage.
+
+Changing the calibration via gst_clock_set_calibration(), setting a master
+clock via gst_clock_set_master() or changing the `clock-type` property on the
+returned clock will change the behaviour for the whole process.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstsystemclock.h"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsystemclock.c">the default clock.

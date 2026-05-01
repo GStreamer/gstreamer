@@ -820,6 +820,10 @@ gst_system_clock_set_default (GstClock * new_clock)
  * clock will be increased so you need to unref the clock after
  * usage.
  *
+ * Changing the calibration via gst_clock_set_calibration(), setting a master
+ * clock via gst_clock_set_master() or changing the `clock-type` property on the
+ * returned clock will change the behaviour for the whole process.
+ *
  * Returns: (transfer full): the default clock.
  *
  * MT safe.
@@ -1517,4 +1521,33 @@ gst_clock_is_system_monotonic (GstClock * clock)
   g_mutex_unlock (&_gst_sysclock_mutex);
 
   return TRUE;
+}
+
+/**
+ * gst_system_clock_new:
+ * @name: (nullable): name of the new clock
+ * @clock_type: #GstClockType for the new clock
+ *
+ * Creates a new instance of the system clock. Unlike gst_system_clock_obtain()
+ * this allows to apply custom calibration to it via
+ * gst_clock_set_calibration(), set a master clock via gst_clock_set_master() or
+ * change the `clock-type` property without changing the behaviour of the
+ * default system clock for the whole process.
+ *
+ * Returns: (transfer full): the new system clock instance.
+ *
+ * Since: 1.30
+ */
+GstClock *
+gst_system_clock_new (const gchar * name, GstClockType clock_type)
+{
+  GstClock *clock;
+
+  clock = g_object_new (GST_TYPE_SYSTEM_CLOCK,
+      "name", name, "clock-type", clock_type, NULL);
+
+  /* Clear floating flag */
+  gst_object_ref_sink (clock);
+
+  return clock;
 }

@@ -88,6 +88,9 @@ GST_API
 GstClock*               gst_system_clock_obtain         (void);
 
 GST_API
+GstClock*               gst_system_clock_new            (const gchar *name, GstClockType clock_type);
+
+GST_API
 void                    gst_system_clock_set_default    (GstClock *new_clock);
 
 GST_API

@@ -524,8 +524,8 @@ main (int argc, char *argv[])
   /* Explicitly set the monotonic system clock as pipeline clock, and
    * calibrate it to be faster/slower by a certain PPM amount to be
    * able to better simulate clock drift behavior. */
-  pipeline_clock = g_object_new (GST_TYPE_SYSTEM_CLOCK, "name",
-      "CustomSystemClock", "clock-type", GST_CLOCK_TYPE_MONOTONIC, NULL);
+  pipeline_clock =
+      gst_system_clock_new ("CustomSystemClock", GST_CLOCK_TYPE_MONOTONIC);
   gst_clock_set_calibration (pipeline_clock, 0, 0,
       1000000 + simulated_drift_ppm, 1000000);
   gst_pipeline_use_clock (GST_PIPELINE (pipeline), pipeline_clock);

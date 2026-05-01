@@ -989,8 +989,7 @@ handle_announce_message (PtpMessage * msg, guint8 iface_idx,
     domain->domain = msg->domain_number;
     clock_name = g_strdup_printf ("ptp-clock-%u", domain->domain);
     domain->domain_clock =
-        g_object_new (GST_TYPE_SYSTEM_CLOCK, "name", clock_name, NULL);
-    gst_object_ref_sink (domain->domain_clock);
+        gst_system_clock_new (clock_name, GST_CLOCK_TYPE_MONOTONIC);
     g_free (clock_name);
     g_queue_init (&domain->pending_syncs);
     domain->last_path_delays_missing = 9;
@@ -1604,8 +1603,7 @@ handle_sync_message (PtpMessage * msg, guint8 iface_idx,
     domain->domain = msg->domain_number;
     clock_name = g_strdup_printf ("ptp-clock-%u", domain->domain);
     domain->domain_clock =
-        g_object_new (GST_TYPE_SYSTEM_CLOCK, "name", clock_name, NULL);
-    gst_object_ref_sink (domain->domain_clock);
+        gst_system_clock_new (clock_name, GST_CLOCK_TYPE_MONOTONIC);
     g_free (clock_name);
     g_queue_init (&domain->pending_syncs);
     domain->last_path_delays_missing = 9;
@@ -2888,9 +2886,7 @@ gst_ptp_init_full (const GstStructure * config)
 
   delay_req_rand = g_rand_new ();
   observation_system_clock =
-      g_object_new (GST_TYPE_SYSTEM_CLOCK, "name", "ptp-observation-clock",
-      NULL);
-  gst_object_ref_sink (observation_system_clock);
+      gst_system_clock_new ("ptp-observation-clock", GST_CLOCK_TYPE_MONOTONIC);
 
   main_context = g_main_context_new ();
   main_loop = g_main_loop_new (main_context, FALSE);
