@@ -33,11 +33,12 @@
  * README.md in with this plugin.
  *
  * ## Example launch command:
- *
- * GST_DEBUG=ssdobjectdetector:5 \
+ * |[
+ * GST_DEBUG=ssdtensordec:5 \
  * gst-launch-1.0 filesrc location=tflite-models/images/bus.jpg ! \
- * jpegdec ! videoconvert ! tfliteedgetpuinference model-file=tflite-models/models/ssd_mobilenet_v1_coco.tflite !  \
- * ssdobjectdetector label-file=tflite-models/labels/COCO_classes.txt  ! videoconvert ! imagefreeze ! autovideosink
+ *   jpegdec ! videoconvert ! tfliteedgetpuinference model-file=tflite-models/models/ssd_mobilenet_v1_coco.tflite !  \
+ *   ssdtensordec label-file=tflite-models/labels/COCO_classes.txt  ! videoconvert ! imagefreeze ! autovideosink
+ * ]|
  *
  */
 #ifdef HAVE_CONFIG_H
