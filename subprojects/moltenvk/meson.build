@@ -25,7 +25,16 @@ endif
 
 downloader = find_program('download-binary.py')
 message(f'Downloading and extracting MoltenVK binaries for @host_system@...')
-ret = run_command(downloader, meson.project_version(), host_system, sha256, check: true)
+# console: true (meson >= 1.11) streams the downloader output to the terminal
+# so the user sees download progress live during meson configure. On older
+# meson the output is still captured into meson-log.txt after the run.
+if meson.version().version_compare('>=1.11')
+  run_command(downloader, meson.project_version(), host_system, sha256,
+    check: true, console: true)
+else
+  run_command(downloader, meson.project_version(), host_system, sha256,
+    check: true)
+endif
 
 cc = meson.get_compiler('c')
 vulkan_dep = declare_dependency(
