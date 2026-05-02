@@ -1240,9 +1240,8 @@ gst_audio_aggregator_update_converters (GstAudioAggregator * aagg,
               "Caps have changed and have a current buffer but conversion failed -- dropping");
         }
       } else {
-        GST_WARNING_OBJECT (aaggpad,
-            "Caps have changed and have a current buffer but can't convert -- dropping");
-        gst_clear_buffer (&aaggpad->priv->buffer);
+        // Otherwise the buffer is simply kept and used for further output. The
+        // subclass must be able to handle it correctly despite srcpad caps changes.
       }
     }
   }
