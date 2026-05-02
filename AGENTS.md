@@ -18,7 +18,7 @@ project.
 ## Humans must interface with the maintainers
 
 - **AI-written PR descriptions or commit messages are banned**. These are easy
-  to recognizable and waste reviewer time. Do not be verbose, be precise and
+  to recognize and waste reviewer time. Do not be verbose, be precise and
   concise.
 - **AI-generated responses to reviewer comments are banned**. This undermines
   the human-to-human interaction fundamental to code review.
