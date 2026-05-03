@@ -397,7 +397,8 @@ gst_sctp_enc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (ret != GST_STATE_CHANGE_FAILURE)
         gst_pad_start_task (self->src_pad,
-            (GstTaskFunction) gst_sctp_enc_srcpad_loop, self->src_pad, NULL);
+            (GstTaskFunction) gst_sctp_enc_srcpad_loop,
+            gst_object_ref (self->src_pad), gst_object_unref);
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
@@ -820,7 +821,8 @@ gst_sctp_enc_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       self->src_ret = GST_FLOW_OK;
       GST_OBJECT_UNLOCK (self);
       gst_pad_start_task (self->src_pad,
-          (GstTaskFunction) gst_sctp_enc_srcpad_loop, self->src_pad, NULL);
+          (GstTaskFunction) gst_sctp_enc_srcpad_loop,
+          gst_object_ref (self->src_pad), gst_object_unref);
 
       ret = gst_pad_event_default (pad, parent, event);
       break;

@@ -3836,7 +3836,7 @@ gst_base_parse_sink_activate (GstPad * sinkpad, GstObject * parent)
   parse->priv->upstream_format = GST_FORMAT_BYTES;
 
   return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_base_parse_loop,
-      sinkpad, NULL);
+      gst_object_ref (sinkpad), gst_object_unref);
   /* fallback */
 baseparse_push:
   {
@@ -4891,7 +4891,8 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
 
     /* Start streaming thread if paused */
     gst_pad_start_task (parse->sinkpad,
-        (GstTaskFunction) gst_base_parse_loop, parse->sinkpad, NULL);
+        (GstTaskFunction) gst_base_parse_loop, gst_object_ref (parse->sinkpad),
+        gst_object_unref);
 
     GST_PAD_STREAM_UNLOCK (parse->sinkpad);
 

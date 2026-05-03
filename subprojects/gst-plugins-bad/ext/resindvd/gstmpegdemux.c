@@ -2136,7 +2136,7 @@ gst_flups_demux_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
     GST_DEBUG ("pull mode activated");
     demux->random_access = TRUE;
     return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_flups_demux_loop,
-        sinkpad, NULL);
+        gst_object_ref (sinkpad), gst_object_unref);
   } else {
     demux->random_access = FALSE;
     return gst_pad_stop_task (sinkpad);

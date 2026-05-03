@@ -865,7 +865,8 @@ gst_uvc_sink_watch (GstUvcSink * self)
   }
 
   if (!gst_pad_start_task (GST_PAD (self->sinkpad),
-          (GstTaskFunction) gst_uvc_sink_task, self, NULL)) {
+          (GstTaskFunction) gst_uvc_sink_task, gst_object_ref (self),
+          gst_object_unref)) {
     GST_ELEMENT_ERROR (self, CORE, THREAD, ("Could not start pad task"),
         ("Could not start pad task"));
     return FALSE;

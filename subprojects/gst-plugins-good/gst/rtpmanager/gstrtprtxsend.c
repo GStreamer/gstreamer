@@ -232,7 +232,8 @@ gst_rtp_rtx_send_set_task_state (GstRtpRtxSend * rtx, RtxTaskState task_state)
         GST_DEBUG_OBJECT (rtx, "Starting RTX task");
         gst_rtp_rtx_send_set_flushing (rtx, FALSE);
         ret = gst_pad_start_task (rtx->srcpad,
-            (GstTaskFunction) gst_rtp_rtx_send_src_loop, rtx, NULL);
+            (GstTaskFunction) gst_rtp_rtx_send_src_loop, gst_object_ref (rtx),
+            gst_object_unref);
       }
       break;
     }

@@ -355,7 +355,8 @@ gst_vtdec_start (GstVideoDecoder * decoder)
   /* Create the output task, but pause it immediately */
   vtdec->pause_task = TRUE;
   if (!gst_pad_start_task (GST_VIDEO_DECODER_SRC_PAD (decoder),
-          (GstTaskFunction) gst_vtdec_output_loop, vtdec, NULL)) {
+          (GstTaskFunction) gst_vtdec_output_loop, gst_object_ref (vtdec),
+          gst_object_unref)) {
     GST_ERROR_OBJECT (vtdec, "failed to start output thread");
     return FALSE;
   }

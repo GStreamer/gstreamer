@@ -406,7 +406,8 @@ flush_srcpad (const GValue * item, gpointer user_data)
   } else {
     gst_data_queue_set_flushing (sctpdec_pad->packet_queue, FALSE);
     gst_pad_start_task (GST_PAD (sctpdec_pad),
-        (GstTaskFunction) gst_sctp_data_srcpad_loop, sctpdec_pad, NULL);
+        (GstTaskFunction) gst_sctp_data_srcpad_loop,
+        gst_object_ref (sctpdec_pad), gst_object_unref);
   }
 }
 
@@ -552,8 +553,8 @@ gst_sctp_dec_src_event (GstPad * pad, GstSctpDec * self, GstEvent * event)
 
       /* Unflush and start task again */
       gst_data_queue_set_flushing (sctpdec_pad->packet_queue, FALSE);
-      gst_pad_start_task (pad, (GstTaskFunction) gst_sctp_data_srcpad_loop, pad,
-          NULL);
+      gst_pad_start_task (pad, (GstTaskFunction) gst_sctp_data_srcpad_loop,
+          gst_object_ref (pad), gst_object_unref);
 
       return gst_pad_event_default (pad, GST_OBJECT (self), event);
     }
@@ -634,7 +635,7 @@ get_pad_for_stream_id (GstSctpDec * self, guint16 stream_id)
   GST_OBJECT_UNLOCK (self);
 
   gst_pad_start_task (new_pad, (GstTaskFunction) gst_sctp_data_srcpad_loop,
-      new_pad, NULL);
+      gst_object_ref (new_pad), gst_object_unref);
 
   gst_object_ref (new_pad);
 

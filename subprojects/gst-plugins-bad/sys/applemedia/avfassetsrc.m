@@ -854,14 +854,15 @@ gst_avf_asset_src_start_reading (GstAVFAssetSrc *self)
     goto exit;
   }
   if (AVF_ASSET_READER_HAS_SUPPORTED_AUDIO (self)) {
-    ret = gst_pad_start_task (self->audiopad, (GstTaskFunction) gst_avf_asset_src_read_audio, self, NULL);
+    ret = gst_pad_start_task (self->audiopad, (GstTaskFunction) gst_avf_asset_src_read_audio, gst_object_ref (self), gst_object_unref);
     if (!ret) {
       GST_ERROR ("Failed to start audio task");
       goto exit;
     }
   } else if (AVF_ASSET_READER_HAS_AUDIO (self) && self->audiopad) {
     ret = gst_pad_start_task (self->audiopad,
-        (GstTaskFunction) gst_avf_asset_src_send_audio_eos, self, NULL);
+        (GstTaskFunction) gst_avf_asset_src_send_audio_eos, gst_object_ref (self),
+        gst_object_unref);
     if (!ret) {
       GST_ERROR ("Failed to start audio EOS task");
       goto exit;
@@ -869,14 +870,15 @@ gst_avf_asset_src_start_reading (GstAVFAssetSrc *self)
   }
 
   if (AVF_ASSET_READER_HAS_SUPPORTED_VIDEO (self)) {
-    ret = gst_pad_start_task (self->videopad, (GstTaskFunction)gst_avf_asset_src_read_video, self, NULL);
+    ret = gst_pad_start_task (self->videopad, (GstTaskFunction)gst_avf_asset_src_read_video, gst_object_ref (self), gst_object_unref);
     if (!ret) {
       GST_ERROR ("Failed to start video task");
       goto exit;
     }
   } else if (AVF_ASSET_READER_HAS_VIDEO (self) && self->videopad) {
     ret = gst_pad_start_task (self->videopad,
-        (GstTaskFunction) gst_avf_asset_src_send_video_eos, self, NULL);
+        (GstTaskFunction) gst_avf_asset_src_send_video_eos, gst_object_ref (self),
+        gst_object_unref);
     if (!ret) {
       GST_ERROR ("Failed to start video EOS task");
       goto exit;

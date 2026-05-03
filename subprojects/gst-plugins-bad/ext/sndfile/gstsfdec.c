@@ -260,7 +260,8 @@ gst_sf_dec_do_seek (GstSFDec * self, GstEvent * event)
   gst_pad_push_event (self->srcpad, gst_event_new_segment (&seg));
 
   gst_pad_start_task (self->sinkpad,
-      (GstTaskFunction) gst_sf_dec_loop, self, NULL);
+      (GstTaskFunction) gst_sf_dec_loop, gst_object_ref (self),
+      gst_object_unref);
 
   GST_PAD_STREAM_UNLOCK (self->sinkpad);
 
@@ -459,7 +460,7 @@ gst_sf_dec_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
         /* if we have a scheduler we can start the task */
         GST_DEBUG_OBJECT (sinkpad, "start task");
         res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_sf_dec_loop,
-            sinkpad, NULL);
+            gst_object_ref (sinkpad), gst_object_unref);
       } else {
         res = gst_pad_stop_task (sinkpad);
       }

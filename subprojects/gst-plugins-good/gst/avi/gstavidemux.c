@@ -4697,7 +4697,7 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
 
   if (!avi->streaming) {
     gst_pad_start_task (avi->sinkpad, (GstTaskFunction) gst_avi_demux_loop,
-        avi->sinkpad, NULL);
+        gst_object_ref (avi->sinkpad), gst_object_unref);
   }
   /* reset the last flow and mark discont, seek is always DISCONT */
   for (i = 0; i < avi->num_streams; i++) {
@@ -5976,7 +5976,7 @@ gst_avi_demux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
       if (active) {
         avi->streaming = FALSE;
         res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_avi_demux_loop,
-            sinkpad, NULL);
+            gst_object_ref (sinkpad), gst_object_unref);
       } else {
         res = gst_pad_stop_task (sinkpad);
       }

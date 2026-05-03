@@ -2639,7 +2639,7 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
         /* reset rate counters */
         reset_rate_timer (queue);
         gst_pad_start_task (queue->srcpad, (GstTaskFunction) gst_queue2_loop,
-            queue->srcpad, NULL);
+            gst_object_ref (queue->srcpad), gst_object_unref);
         GST_QUEUE2_MUTEX_UNLOCK (queue);
       } else {
         GST_QUEUE2_MUTEX_LOCK (queue);
@@ -2720,7 +2720,8 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
                 /* reset rate counters */
                 reset_rate_timer (queue);
                 gst_pad_start_task (queue->srcpad,
-                    (GstTaskFunction) gst_queue2_loop, queue->srcpad, NULL);
+                    (GstTaskFunction) gst_queue2_loop,
+                    gst_object_ref (queue->srcpad), gst_object_unref);
               } else {
                 queue->is_eos = FALSE;
                 queue->unexpected = FALSE;
@@ -3318,8 +3319,8 @@ gst_queue2_handle_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         queue->srcresult = GST_FLOW_OK;
         queue->sinkresult = GST_FLOW_OK;
         if (GST_PAD_MODE (pad) == GST_PAD_MODE_PUSH) {
-          gst_pad_start_task (pad, (GstTaskFunction) gst_queue2_loop, pad,
-              NULL);
+          gst_pad_start_task (pad, (GstTaskFunction) gst_queue2_loop,
+              gst_object_ref (pad), gst_object_unref);
         }
 
       }
@@ -3703,7 +3704,8 @@ gst_queue2_src_activate_push (GstPad * pad, GstObject * parent, gboolean active)
     queue->is_eos = FALSE;
     queue->unexpected = FALSE;
     result =
-        gst_pad_start_task (pad, (GstTaskFunction) gst_queue2_loop, pad, NULL);
+        gst_pad_start_task (pad, (GstTaskFunction) gst_queue2_loop,
+        gst_object_ref (pad), gst_object_unref);
     GST_QUEUE2_MUTEX_UNLOCK (queue);
   } else {
     /* unblock loop function */

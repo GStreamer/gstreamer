@@ -1155,7 +1155,7 @@ gst_dvdemux_handle_pull_seek (GstDVDemux * demux, GstPad * pad,
   /* and restart the task in case it got paused explicitly or by
    * the FLUSH_START event we pushed out. */
   gst_pad_start_task (demux->sinkpad, (GstTaskFunction) gst_dvdemux_loop,
-      demux->sinkpad, NULL);
+      gst_object_ref (demux->sinkpad), gst_object_unref);
 
   /* and release the lock again so we can continue streaming */
   GST_PAD_STREAM_UNLOCK (demux->sinkpad);
@@ -1940,7 +1940,8 @@ gst_dvdemux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
       if (active) {
         demux->seek_handler = gst_dvdemux_handle_pull_seek;
         res = gst_pad_start_task (sinkpad,
-            (GstTaskFunction) gst_dvdemux_loop, sinkpad, NULL);
+            (GstTaskFunction) gst_dvdemux_loop, gst_object_ref (sinkpad),
+            gst_object_unref);
       } else {
         demux->seek_handler = NULL;
         res = gst_pad_stop_task (sinkpad);

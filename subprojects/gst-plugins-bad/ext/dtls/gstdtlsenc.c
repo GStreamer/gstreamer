@@ -477,8 +477,8 @@ src_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
     self->src_ret = GST_FLOW_OK;
     self->send_initial_events = TRUE;
     success =
-        gst_pad_start_task (pad, (GstTaskFunction) src_task_loop, self->src,
-        NULL);
+        gst_pad_start_task (pad, (GstTaskFunction) src_task_loop,
+        gst_object_ref (self->src), gst_object_unref);
     if (!success) {
       GST_WARNING_OBJECT (self, "failed to activate pad task");
     }

@@ -1859,7 +1859,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
   /* and restart the task in case it got paused explicitly or by
    * the FLUSH_START event we pushed out. */
   tres = gst_pad_start_task (src->srcpad, (GstTaskFunction) gst_base_src_loop,
-      src->srcpad, NULL);
+      gst_object_ref (src->srcpad), gst_object_unref);
   if (res && !tres)
     res = FALSE;
 
@@ -1925,7 +1925,7 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
 
       if (start)
         gst_pad_start_task (src->srcpad, (GstTaskFunction) gst_base_src_loop,
-            src->srcpad, NULL);
+            gst_object_ref (src->srcpad), gst_object_unref);
 
       GST_LIVE_UNLOCK (src);
       GST_PAD_STREAM_UNLOCK (src->srcpad);
@@ -1974,7 +1974,7 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
         GST_DEBUG_OBJECT (src,
             "EOS marked, start task for asynchronous handling");
         gst_pad_start_task (src->srcpad, (GstTaskFunction) gst_base_src_loop,
-            src->srcpad, NULL);
+            gst_object_ref (src->srcpad), gst_object_unref);
 
         GST_PAD_STREAM_UNLOCK (src->srcpad);
       } else {
@@ -3967,7 +3967,7 @@ gst_base_src_set_playing (GstBaseSrc * basesrc, gboolean live_play)
     GST_OBJECT_UNLOCK (basesrc->srcpad);
     if (start)
       gst_pad_start_task (basesrc->srcpad, (GstTaskFunction) gst_base_src_loop,
-          basesrc->srcpad, NULL);
+          gst_object_ref (basesrc->srcpad), gst_object_unref);
     GST_DEBUG_OBJECT (basesrc, "signal");
     GST_LIVE_SIGNAL (basesrc);
   }

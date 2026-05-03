@@ -392,7 +392,7 @@ gst_modplug_do_seek (GstModPlug * modplug, GstEvent * event)
       gst_util_uint64_scale_int (cur, modplug->frequency, GST_SECOND);
 
   gst_pad_start_task (modplug->sinkpad,
-      (GstTaskFunction) gst_modplug_loop, modplug, NULL);
+      (GstTaskFunction) gst_modplug_loop, gst_object_ref (modplug), gst_object_unref);
 
   GST_PAD_STREAM_UNLOCK (modplug->sinkpad);
 
@@ -586,7 +586,7 @@ gst_modplug_sinkpad_activate_mode (GstPad * pad, GstObject * parent,
     case GST_PAD_MODE_PULL:
       if (active) {
         res = gst_pad_start_task (pad, (GstTaskFunction) gst_modplug_loop,
-            modplug, NULL);
+            gst_object_ref (modplug), gst_object_unref);
       } else {
         res = gst_pad_stop_task (pad);
       }

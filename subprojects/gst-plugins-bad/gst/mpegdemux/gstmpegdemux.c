@@ -1416,7 +1416,8 @@ gst_ps_demux_handle_seek_pull (GstPsDemux * demux, GstEvent * event)
   demux->segment_seqnum = seek_seqnum;
 
   gst_pad_start_task (demux->sinkpad,
-      (GstTaskFunction) gst_ps_demux_loop, demux->sinkpad, NULL);
+      (GstTaskFunction) gst_ps_demux_loop, gst_object_ref (demux->sinkpad),
+      gst_object_unref);
 
   GST_PAD_STREAM_UNLOCK (demux->sinkpad);
 
@@ -3180,7 +3181,8 @@ gst_ps_demux_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
     GST_DEBUG ("pull mode activated");
     demux->random_access = TRUE;
     return gst_pad_start_task (sinkpad,
-        (GstTaskFunction) gst_ps_demux_loop, sinkpad, NULL);
+        (GstTaskFunction) gst_ps_demux_loop, gst_object_ref (sinkpad),
+        gst_object_unref);
   } else {
     demux->random_access = FALSE;
     return gst_pad_stop_task (sinkpad);

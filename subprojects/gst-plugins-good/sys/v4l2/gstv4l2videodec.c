@@ -1065,7 +1065,8 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     self->output_flow = GST_FLOW_FLUSHING;
     self->draining = FALSE;
     if (!gst_pad_start_task (decoder->srcpad,
-            (GstTaskFunction) gst_v4l2_video_dec_loop, self, NULL))
+            (GstTaskFunction) gst_v4l2_video_dec_loop, gst_object_ref (self),
+            gst_object_unref))
       goto start_task_failed;
   }
 

@@ -5872,7 +5872,8 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
   demux->seqnum = seqnum;
 
   gst_pad_start_task (demux->sinkpad,
-      (GstTaskFunction) gst_mxf_demux_loop, demux->sinkpad, NULL);
+      (GstTaskFunction) gst_mxf_demux_loop, gst_object_ref (demux->sinkpad),
+      gst_object_unref);
 
   GST_PAD_STREAM_UNLOCK (demux->sinkpad);
 
@@ -5887,7 +5888,8 @@ wrong_format:
 unresolved_metadata:
   {
     gst_pad_start_task (demux->sinkpad,
-        (GstTaskFunction) gst_mxf_demux_loop, demux->sinkpad, NULL);
+        (GstTaskFunction) gst_mxf_demux_loop, gst_object_ref (demux->sinkpad),
+        gst_object_unref);
     GST_PAD_STREAM_UNLOCK (demux->sinkpad);
     GST_WARNING_OBJECT (demux, "metadata can't be resolved");
     return FALSE;
@@ -5904,7 +5906,8 @@ invalid_position:
       gst_mxf_demux_push_src_event (demux, e);
     }
     gst_pad_start_task (demux->sinkpad,
-        (GstTaskFunction) gst_mxf_demux_loop, demux->sinkpad, NULL);
+        (GstTaskFunction) gst_mxf_demux_loop, gst_object_ref (demux->sinkpad),
+        gst_object_unref);
     GST_PAD_STREAM_UNLOCK (demux->sinkpad);
     GST_WARNING_OBJECT (demux, "Requested seek position is not valid");
     return FALSE;
@@ -6114,7 +6117,7 @@ gst_mxf_demux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
     if (active) {
       demux->random_access = TRUE;
       return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_mxf_demux_loop,
-          sinkpad, NULL);
+          gst_object_ref (sinkpad), gst_object_unref);
     } else {
       demux->random_access = FALSE;
       return gst_pad_stop_task (sinkpad);

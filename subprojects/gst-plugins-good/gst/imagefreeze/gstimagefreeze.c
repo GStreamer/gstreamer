@@ -865,7 +865,8 @@ gst_image_freeze_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
         if (self->buffer != NULL)
           gst_pad_start_task (self->srcpad,
-              (GstTaskFunction) gst_image_freeze_src_loop, self->srcpad, NULL);
+              (GstTaskFunction) gst_image_freeze_src_loop,
+              gst_object_ref (self->srcpad), gst_object_unref);
 
         g_mutex_unlock (&self->lock);
       }
@@ -985,7 +986,7 @@ gst_image_freeze_sink_chain (GstPad * pad, GstObject * parent,
   gst_buffer_unref (buffer);
 
   gst_pad_start_task (self->srcpad, (GstTaskFunction) gst_image_freeze_src_loop,
-      self->srcpad, NULL);
+      gst_object_ref (self->srcpad), gst_object_unref);
   flow_ret = self->allow_replace ? GST_FLOW_OK : GST_FLOW_EOS;
   g_mutex_unlock (&self->lock);
   return flow_ret;

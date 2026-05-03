@@ -535,7 +535,8 @@ gst_type_find_element_seek (GstTypeFindElement * typefind, GstEvent * event)
   /* restart our task since it might have been stopped when we did the
    * flush. */
   gst_pad_start_task (typefind->sink,
-      (GstTaskFunction) gst_type_find_element_loop, typefind->sink, NULL);
+      (GstTaskFunction) gst_type_find_element_loop,
+      gst_object_ref (typefind->sink), gst_object_unref);
 
   /* streaming can continue now */
   GST_PAD_STREAM_UNLOCK (typefind->sink);
@@ -1334,7 +1335,7 @@ gst_type_find_element_activate_sink (GstPad * pad, GstObject * parent)
 
   /* only start our task if we ourselves decide to start in pull mode */
   return gst_pad_start_task (pad, (GstTaskFunction) gst_type_find_element_loop,
-      pad, NULL);
+      gst_object_ref (pad), gst_object_unref);
 
 typefind_push:
   {

@@ -373,7 +373,8 @@ gst_midi_parse_perform_seek (GstMidiParse * midiparse, GstEvent * event)
    * the FLUSH_START event we pushed out. */
   tres =
       gst_pad_start_task (midiparse->sinkpad,
-      (GstTaskFunction) gst_midi_parse_loop, midiparse->sinkpad, NULL);
+      (GstTaskFunction) gst_midi_parse_loop,
+      gst_object_ref (midiparse->sinkpad), gst_object_unref);
   if (res && !tres)
     res = FALSE;
 
@@ -454,7 +455,7 @@ gst_midi_parse_activatemode (GstPad * pad, GstObject * parent,
     case GST_PAD_MODE_PULL:
       if (active) {
         res = gst_pad_start_task (pad, (GstTaskFunction) gst_midi_parse_loop,
-            pad, NULL);
+            gst_object_ref (pad), gst_object_unref);
       } else {
         res = gst_pad_stop_task (pad);
       }
@@ -1384,7 +1385,8 @@ gst_midi_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       midiparse->state = GST_MIDI_PARSE_STATE_PARSE;
       /* now start the parsing task */
       res = gst_pad_start_task (midiparse->sinkpad,
-          (GstTaskFunction) gst_midi_parse_loop, midiparse->sinkpad, NULL);
+          (GstTaskFunction) gst_midi_parse_loop,
+          gst_object_ref (midiparse->sinkpad), gst_object_unref);
       /* don't forward the event */
       gst_event_unref (event);
       break;

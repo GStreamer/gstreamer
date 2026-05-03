@@ -226,7 +226,8 @@ gst_real_audio_demux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
         demux->seekable = TRUE;
 
         res = gst_pad_start_task (sinkpad,
-            (GstTaskFunction) gst_real_audio_demux_loop, demux, NULL);
+            (GstTaskFunction) gst_real_audio_demux_loop, gst_object_ref (demux),
+            gst_object_unref);
       } else {
         demux->seekable = FALSE;
         res = gst_pad_stop_task (sinkpad);
@@ -841,7 +842,8 @@ gst_real_audio_demux_handle_seek (GstRealAudioDemux * demux, GstEvent * event)
   demux->segment_running = TRUE;
   /* restart our task since it might have been stopped when we did the flush */
   gst_pad_start_task (demux->sinkpad,
-      (GstTaskFunction) gst_real_audio_demux_loop, demux, NULL);
+      (GstTaskFunction) gst_real_audio_demux_loop, gst_object_ref (demux),
+      gst_object_unref);
 
   /* streaming can continue now */
   GST_PAD_STREAM_UNLOCK (demux->sinkpad);

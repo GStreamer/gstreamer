@@ -490,7 +490,8 @@ gst_rist_rtx_send_sink_event (GstPad * pad, GstObject * parent,
       gst_pad_push_event (rtx->srcpad, event);
       gst_rist_rtx_send_set_flushing (rtx, FALSE);
       gst_pad_start_task (rtx->srcpad,
-          (GstTaskFunction) gst_rist_rtx_send_src_loop, rtx, NULL);
+          (GstTaskFunction) gst_rist_rtx_send_src_loop, gst_object_ref (rtx),
+          gst_object_unref);
       return TRUE;
     case GST_EVENT_EOS:
       GST_INFO_OBJECT (rtx, "Got EOS - enqueueing it");
@@ -717,7 +718,8 @@ gst_rist_rtx_send_activate_mode (GstPad * pad, GstObject * parent,
       if (active) {
         gst_rist_rtx_send_set_flushing (rtx, FALSE);
         ret = gst_pad_start_task (rtx->srcpad,
-            (GstTaskFunction) gst_rist_rtx_send_src_loop, rtx, NULL);
+            (GstTaskFunction) gst_rist_rtx_send_src_loop, gst_object_ref (rtx),
+            gst_object_unref);
       } else {
         gst_rist_rtx_send_set_flushing (rtx, TRUE);
         ret = gst_pad_stop_task (rtx->srcpad);

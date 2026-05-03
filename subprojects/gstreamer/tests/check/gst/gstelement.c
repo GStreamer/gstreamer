@@ -101,7 +101,8 @@ test_add_pad_while_paused_pad_activatemode (GstPad * pad, GstObject * parent,
   *(gboolean *) pad->activatemodedata = active;
   fail_unless (mode == GST_PAD_MODE_PUSH);
   if (active)
-    gst_pad_start_task (pad, test_add_pad_while_paused_dummy_task, pad, NULL);
+    gst_pad_start_task (pad, test_add_pad_while_paused_dummy_task,
+        gst_object_ref (pad), gst_object_unref);
   else
     gst_pad_stop_task (pad);
   return TRUE;

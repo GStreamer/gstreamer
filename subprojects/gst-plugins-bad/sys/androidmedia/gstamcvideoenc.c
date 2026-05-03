@@ -1484,7 +1484,8 @@ gst_amc_video_enc_set_format (GstVideoEncoder * encoder,
   self->flushing = FALSE;
   self->downstream_flow_ret = GST_FLOW_OK;
   gst_pad_start_task (GST_VIDEO_ENCODER_SRC_PAD (self),
-      (GstTaskFunction) gst_amc_video_enc_loop, encoder, NULL);
+      (GstTaskFunction) gst_amc_video_enc_loop, gst_object_ref (encoder),
+      gst_object_unref);
 
   r = TRUE;
 
@@ -1532,7 +1533,8 @@ gst_amc_video_enc_flush (GstVideoEncoder * encoder)
   self->drained = TRUE;
   self->downstream_flow_ret = GST_FLOW_OK;
   gst_pad_start_task (GST_VIDEO_ENCODER_SRC_PAD (self),
-      (GstTaskFunction) gst_amc_video_enc_loop, encoder, NULL);
+      (GstTaskFunction) gst_amc_video_enc_loop, gst_object_ref (encoder),
+      gst_object_unref);
 
   GST_DEBUG_OBJECT (self, "Flush encoder");
 

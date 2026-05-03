@@ -165,7 +165,8 @@ gst_net_sim_src_activatemode (GstPad * pad, GstObject * parent,
 
       GST_TRACE_OBJECT (netsim, "ACT: Starting task on srcpad");
       result = gst_pad_start_task (netsim->srcpad,
-          (GstTaskFunction) gst_net_sim_loop, netsim, NULL);
+          (GstTaskFunction) gst_net_sim_loop, gst_object_ref (netsim),
+          gst_object_unref);
 
       GST_TRACE_OBJECT (netsim, "ACT: Wait for task to start");
       g_assert (!netsim->running);

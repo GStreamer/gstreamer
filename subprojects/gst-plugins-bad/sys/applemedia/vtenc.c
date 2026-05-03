@@ -870,7 +870,8 @@ gst_vtenc_start (GstVideoEncoder * enc)
   /* Create the output task, but pause it immediately */
   self->pause_task = TRUE;
   if (!gst_pad_start_task (GST_VIDEO_ENCODER_SRC_PAD (enc),
-          (GstTaskFunction) gst_vtenc_output_loop, self, NULL)) {
+          (GstTaskFunction) gst_vtenc_output_loop, gst_object_ref (self),
+          gst_object_unref)) {
     GST_ERROR_OBJECT (self, "failed to start output thread");
     return FALSE;
   }

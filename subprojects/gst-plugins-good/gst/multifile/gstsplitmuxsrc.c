@@ -1110,7 +1110,8 @@ gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux, guint part,
     splitpad->clear_next_discont = FALSE;
 
     gst_pad_start_task (GST_PAD (splitpad),
-        (GstTaskFunction) gst_splitmux_pad_loop, splitpad, NULL);
+        (GstTaskFunction) gst_splitmux_pad_loop, gst_object_ref (splitpad),
+        gst_object_unref);
   }
   SPLITMUX_SRC_PADS_RUNLOCK (splitmux);
 
@@ -1799,7 +1800,8 @@ splitmux_src_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
       SPLITMUX_SRC_PADS_RLOCK (splitmux);
       /* Restart the task on this pad */
       gst_pad_start_task (GST_PAD (pad),
-          (GstTaskFunction) gst_splitmux_pad_loop, pad, NULL);
+          (GstTaskFunction) gst_splitmux_pad_loop, gst_object_ref (pad),
+          gst_object_unref);
       SPLITMUX_SRC_PADS_RUNLOCK (splitmux);
       break;
     }

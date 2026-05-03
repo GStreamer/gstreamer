@@ -717,7 +717,7 @@ gst_mpeg2enc_handle_frame (GstVideoEncoder * video_encoder,
   if (!enc->started) {
     GST_DEBUG_OBJECT (video_encoder, "handle_frame: START task");
     gst_pad_start_task (video_encoder->srcpad,
-        (GstTaskFunction) gst_mpeg2enc_loop, enc, NULL);
+        (GstTaskFunction) gst_mpeg2enc_loop, gst_object_ref (enc), gst_object_unref);
     enc->started = TRUE;
   }
 

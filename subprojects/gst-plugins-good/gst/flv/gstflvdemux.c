@@ -4161,7 +4161,8 @@ exit:
     gst_pad_pause_task (demux->sinkpad);
   } else {
     gst_pad_start_task (demux->sinkpad,
-        (GstTaskFunction) gst_flv_demux_loop, demux->sinkpad, NULL);
+        (GstTaskFunction) gst_flv_demux_loop, gst_object_ref (demux->sinkpad),
+        gst_object_unref);
   }
 
   GST_PAD_STREAM_UNLOCK (demux->sinkpad);
@@ -4228,7 +4229,7 @@ gst_flv_demux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
         demux->random_access = TRUE;
         demux->segment_seqnum = gst_util_seqnum_next ();
         res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_flv_demux_loop,
-            sinkpad, NULL);
+            gst_object_ref (sinkpad), gst_object_unref);
       } else {
         demux->random_access = FALSE;
         res = gst_pad_stop_task (sinkpad);

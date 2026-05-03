@@ -526,7 +526,7 @@ gst_aiff_parse_perform_seek (GstAiffParse * aiff, GstEvent * event,
     aiff->segment_running = TRUE;
     if (!aiff->streaming) {
       gst_pad_start_task (aiff->sinkpad, (GstTaskFunction) gst_aiff_parse_loop,
-          aiff->sinkpad, NULL);
+          gst_object_ref (aiff->sinkpad), gst_object_unref);
     }
 
     GST_PAD_STREAM_UNLOCK (aiff->sinkpad);
@@ -1821,7 +1821,7 @@ gst_aiff_parse_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
         aiff->segment_running = TRUE;
         res =
             gst_pad_start_task (sinkpad, (GstTaskFunction) gst_aiff_parse_loop,
-            sinkpad, NULL);
+            gst_object_ref (sinkpad), gst_object_unref);
       } else {
         aiff->segment_running = FALSE;
         res = gst_pad_stop_task (sinkpad);

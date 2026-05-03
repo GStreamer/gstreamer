@@ -383,7 +383,7 @@ gst_asf_demux_activate_mode (GstPad * sinkpad, GstObject * parent,
         demux->streaming = FALSE;
 
         res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_asf_demux_loop,
-            demux, NULL);
+            gst_object_ref (demux), gst_object_unref);
       } else {
         res = gst_pad_stop_task (sinkpad);
       }
@@ -840,7 +840,7 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
 skip:
   /* restart our task since it might have been stopped when we did the flush */
   gst_pad_start_task (demux->sinkpad, (GstTaskFunction) gst_asf_demux_loop,
-      demux, NULL);
+      gst_object_ref (demux), gst_object_unref);
 
   /* streaming can continue now */
   GST_PAD_STREAM_UNLOCK (demux->sinkpad);

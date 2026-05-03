@@ -1676,7 +1676,7 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
 
   /* restart streaming, NEWSEGMENT will be sent from the streaming thread. */
   gst_pad_start_task (qtdemux->sinkpad, (GstTaskFunction) gst_qtdemux_loop,
-      qtdemux->sinkpad, NULL);
+      gst_object_ref (qtdemux->sinkpad), gst_object_unref);
 
   GST_PAD_STREAM_UNLOCK (qtdemux->sinkpad);
 
@@ -9046,7 +9046,7 @@ qtdemux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
       if (active) {
         demux->pullbased = TRUE;
         res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_qtdemux_loop,
-            sinkpad, NULL);
+            gst_object_ref (sinkpad), gst_object_unref);
       } else {
         res = gst_pad_stop_task (sinkpad);
       }

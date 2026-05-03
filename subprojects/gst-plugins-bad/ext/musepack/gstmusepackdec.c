@@ -233,7 +233,8 @@ gst_musepackdec_handle_seek_event (GstMusepackDec * dec, GstEvent * event)
   GST_DEBUG_OBJECT (dec, "seek successful");
 
   gst_pad_start_task (dec->sinkpad,
-      (GstTaskFunction) gst_musepackdec_loop, dec->sinkpad, NULL);
+      (GstTaskFunction) gst_musepackdec_loop, gst_object_ref (dec->sinkpad),
+      gst_object_unref);
 
   GST_PAD_STREAM_UNLOCK (dec->sinkpad);
 
@@ -473,7 +474,8 @@ gst_musepackdec_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
     case GST_PAD_MODE_PULL:
       if (active) {
         result = gst_pad_start_task (sinkpad,
-            (GstTaskFunction) gst_musepackdec_loop, sinkpad, NULL);
+            (GstTaskFunction) gst_musepackdec_loop, gst_object_ref (sinkpad),
+            gst_object_unref);
       } else {
         result = gst_pad_stop_task (sinkpad);
       }

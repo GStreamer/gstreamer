@@ -1529,8 +1529,8 @@ static gboolean
 gst_nonstream_audio_decoder_start_task (GstNonstreamAudioDecoder * dec)
 {
   if (!gst_pad_start_task (dec->srcpad,
-          (GstTaskFunction) gst_nonstream_audio_decoder_output_task, dec,
-          NULL)) {
+          (GstTaskFunction) gst_nonstream_audio_decoder_output_task,
+          gst_object_ref (dec), gst_object_unref)) {
     GST_ERROR_OBJECT (dec, "could not start decoder output task");
     return FALSE;
   } else

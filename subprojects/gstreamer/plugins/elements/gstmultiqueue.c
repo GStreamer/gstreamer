@@ -1338,7 +1338,8 @@ gst_single_queue_start (GstMultiQueue * mq, GstSingleQueue * sq)
 
   if (srcpad) {
     res = gst_pad_start_task (srcpad,
-        (GstTaskFunction) gst_multi_queue_loop, srcpad, NULL);
+        (GstTaskFunction) gst_multi_queue_loop, gst_object_ref (srcpad),
+        gst_object_unref);
     gst_object_unref (srcpad);
   }
 

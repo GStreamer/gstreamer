@@ -1924,7 +1924,8 @@ gst_rtp_jitter_buffer_src_activate_mode (GstPad * pad, GstObject * parent,
         /* start pushing out buffers */
         GST_DEBUG_OBJECT (jitterbuffer, "Starting task on srcpad");
         result = gst_pad_start_task (jitterbuffer->priv->srcpad,
-            (GstTaskFunction) gst_rtp_jitter_buffer_loop, jitterbuffer, NULL);
+            (GstTaskFunction) gst_rtp_jitter_buffer_loop,
+            gst_object_ref (jitterbuffer), gst_object_unref);
       } else {
         /* make sure all data processing stops ASAP */
         gst_rtp_jitter_buffer_flush_start (jitterbuffer);

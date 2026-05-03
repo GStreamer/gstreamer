@@ -1534,7 +1534,8 @@ gst_openjpeg_dec_decode_frame_multiple (GstVideoDecoder * decoder,
   if (!self->started) {
     GST_DEBUG_OBJECT (self, "Starting task");
     gst_pad_start_task (GST_VIDEO_DECODER_SRC_PAD (self),
-        (GstTaskFunction) gst_openjpeg_dec_loop, decoder, NULL);
+        (GstTaskFunction) gst_openjpeg_dec_loop, gst_object_ref (decoder),
+        gst_object_unref);
     self->started = TRUE;
   }
   /* Make sure to release the base class stream lock, otherwise

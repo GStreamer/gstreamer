@@ -834,7 +834,8 @@ resume_all_streams (GstMseSrc * self)
     GstPad *pad = GST_PAD (stream->pad);
     if (active) {
       clear_flushing (GST_MSE_SRC_PAD (pad));
-      gst_pad_start_task (pad, (GstTaskFunction) pad_task, pad, NULL);
+      gst_pad_start_task (pad, (GstTaskFunction) pad_task, gst_object_ref (pad),
+          gst_object_unref);
     }
   }
 }
@@ -1111,7 +1112,8 @@ pad_activate_mode (GstMseSrcPad * pad, GstObject * parent, GstPadMode mode,
   }
 
   if (active) {
-    gst_pad_start_task (GST_PAD (pad), (GstTaskFunction) pad_task, pad, NULL);
+    gst_pad_start_task (GST_PAD (pad), (GstTaskFunction) pad_task,
+        gst_object_ref (pad), gst_object_unref);
   } else {
     set_flushing_and_signal (pad);
     gst_media_source_track_flush (pad->track);

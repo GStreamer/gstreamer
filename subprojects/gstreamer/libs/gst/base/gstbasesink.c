@@ -4713,7 +4713,8 @@ gst_base_sink_default_activate_pull (GstBaseSink * basesink, gboolean active)
   if (active) {
     /* start task */
     result = gst_pad_start_task (basesink->sinkpad,
-        (GstTaskFunction) gst_base_sink_loop, basesink->sinkpad, NULL);
+        (GstTaskFunction) gst_base_sink_loop,
+        gst_object_ref (basesink->sinkpad), gst_object_unref);
   } else {
     /* step 2, make sure streaming finishes */
     result = gst_pad_stop_task (basesink->sinkpad);

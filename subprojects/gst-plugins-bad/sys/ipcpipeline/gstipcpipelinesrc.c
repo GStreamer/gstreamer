@@ -362,7 +362,7 @@ gst_ipc_pipeline_src_start_loop (GstIpcPipelineSrc * src)
   g_mutex_unlock (&src->comm.mutex);
 
   gst_pad_start_task (src->srcpad, (GstTaskFunction) gst_ipc_pipeline_src_loop,
-      src, NULL);
+      gst_object_ref (src), gst_object_unref);
 }
 
 static void

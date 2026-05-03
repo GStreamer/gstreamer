@@ -488,7 +488,8 @@ start_play_tune (GstSidDec * siddec)
   siddec->group_id = G_MAXUINT;
 
   res = gst_pad_start_task (siddec->srcpad,
-      (GstTaskFunction) play_loop, siddec->srcpad, NULL);
+      (GstTaskFunction) play_loop, gst_object_ref (siddec->srcpad),
+      gst_object_unref);
   return res;
 
   /* ERRORS */
