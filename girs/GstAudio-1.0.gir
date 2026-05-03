@@ -1295,6 +1295,21 @@ additional information in the info #GstStructure of the returned sample:
           </parameter>
         </parameters>
       </virtual-method>
+      <method name="has_current_output_buffer" c:identifier="gst_audio_aggregator_has_current_output_buffer" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioaggregator.c">This can be used by subclasses to delay renegotiation until the current
+output buffer is finished to avoid dropping/converting it.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioaggregator.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioaggregator.c">%TRUE if there's currently a pending output buffer.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioaggregator.c">A #GstAudioAggregator</doc>
+            <type name="AudioAggregator" c:type="GstAudioAggregator*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="set_sink_caps" c:identifier="gst_audio_aggregator_set_sink_caps">
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioaggregator.h"/>
         <return-value transfer-ownership="none">

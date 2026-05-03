@@ -2674,3 +2674,30 @@ not_negotiated:
     return GST_FLOW_NOT_NEGOTIATED;
   }
 }
+
+/**
+ * gst_audio_aggregator_has_current_output_buffer:
+ * @self: A #GstAudioAggregator
+ *
+ * This can be used by subclasses to delay renegotiation until the current
+ * output buffer is finished to avoid dropping/converting it.
+ *
+ * Returns: %TRUE if there's currently a pending output buffer.
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_audio_aggregator_has_current_output_buffer (GstAudioAggregator * self)
+{
+  gboolean res;
+
+  GST_AUDIO_AGGREGATOR_LOCK (self);
+  GST_OBJECT_LOCK (self);
+
+  res = self->priv->current_buffer != NULL;
+
+  GST_OBJECT_UNLOCK (self);
+  GST_AUDIO_AGGREGATOR_UNLOCK (self);
+
+  return res;
+}
