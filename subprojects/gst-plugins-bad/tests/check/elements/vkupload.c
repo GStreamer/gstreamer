@@ -31,7 +31,7 @@
 #include <gst/vulkan/vulkan.h>
 
 static const gchar *formats[] =
-    { "NV12", "AV12", "RGBA", "I420", "Y42B", "Y444" };
+    { "NV12", "AV12", "RGBA", "I420", "Y42B", "Y444", "GRAY8" };
 
 #define STRIDE_TEST_WIDTH 360
 #define STRIDE_TEST_HEIGHT 480

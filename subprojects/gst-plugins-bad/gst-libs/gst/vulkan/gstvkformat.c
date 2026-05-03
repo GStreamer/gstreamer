@@ -668,6 +668,8 @@ gst_vulkan_format_from_video_info_2 (GstVulkanDevice * device,
           vk_formats_map[i].vkfrmts[0], &props);
       feats_secondary = (tiling == VK_IMAGE_TILING_LINEAR) ?
           props.linear_tiling_feat : props.optimal_tiling_feat;
+    } else {
+      feats_secondary = feats_primary;
     }
 
     if (GST_VIDEO_INFO_IS_RGB (info)) {
