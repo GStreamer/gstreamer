@@ -630,11 +630,6 @@ gst_audio_aggregator_recalculate_latency (GstAudioAggregator * aagg)
       aagg->priv->output_buffer_duration_d);
 
   gst_aggregator_set_latency (GST_AGGREGATOR (aagg), latency, latency);
-
-  GST_OBJECT_LOCK (aagg);
-  /* Force recalculating in aggregate */
-  aagg->priv->samples_per_buffer = 0;
-  GST_OBJECT_UNLOCK (aagg);
 }
 
 
@@ -807,6 +802,11 @@ gst_audio_aggregator_set_property (GObject * object, guint prop_id,
           g_value_get_uint64 (value));
       g_object_notify (object, "output-buffer-duration-fraction");
       gst_audio_aggregator_recalculate_latency (aagg);
+
+      GST_OBJECT_LOCK (aagg);
+      /* Force recalculating in aggregate */
+      aagg->priv->samples_per_buffer = 0;
+      GST_OBJECT_UNLOCK (aagg);
       break;
     case PROP_ALIGNMENT_THRESHOLD:
       aagg->priv->alignment_threshold = g_value_get_uint64 (value);
@@ -821,6 +821,11 @@ gst_audio_aggregator_set_property (GObject * object, guint prop_id,
           gst_value_get_fraction_denominator (value);
       g_object_notify (object, "output-buffer-duration");
       gst_audio_aggregator_recalculate_latency (aagg);
+
+      GST_OBJECT_LOCK (aagg);
+      /* Force recalculating in aggregate */
+      aagg->priv->samples_per_buffer = 0;
+      GST_OBJECT_UNLOCK (aagg);
       break;
     case PROP_IGNORE_INACTIVE_PADS:
       gst_aggregator_set_ignore_inactive_pads (GST_AGGREGATOR (object),
