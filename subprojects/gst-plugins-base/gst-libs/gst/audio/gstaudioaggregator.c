@@ -1275,8 +1275,11 @@ gst_audio_aggregator_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
     GST_INFO_OBJECT (aagg, "setting caps to %" GST_PTR_FORMAT, caps);
     gst_caps_replace (&aagg->current_caps, caps);
 
-    if (old_info.rate != info.rate)
+    if (old_info.rate != info.rate) {
+      /* Force recalculating in aggregate */
       aagg->priv->offset = -1;
+      aagg->priv->samples_per_buffer = 0;
+    }
 
     memcpy (&srcpad->info, &info, sizeof (info));
 
@@ -1312,9 +1315,6 @@ gst_audio_aggregator_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
         gst_clear_buffer (&aagg->priv->current_buffer);
       }
     }
-
-    /* Force recalculating in aggregate */
-    aagg->priv->samples_per_buffer = 0;
   }
 
   GST_OBJECT_UNLOCK (aagg);
