@@ -30,9 +30,7 @@
 #include "gsttfliteedgetpuinference.h"
 #endif
 
-#ifdef TFLITE_HAS_XNNPACK_DELEGATE
 #include "gsttfliteexternalinference.h"
-#endif
 
 #ifdef TFLITE_VSI
 #include "gsttflitevsiinference.h"
