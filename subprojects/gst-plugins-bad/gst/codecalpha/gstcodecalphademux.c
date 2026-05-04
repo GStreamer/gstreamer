@@ -209,7 +209,6 @@ gst_codec_alpha_demux_sink_query (GstPad * sink_pad, GstObject * parent,
   switch (query->type) {
     case GST_QUERY_CAPS:
       gst_query_parse_caps_result (peer_query, &caps);
-      caps = gst_caps_copy (caps);
       caps = gst_codec_alpha_demux_transform_caps (caps, TRUE);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
