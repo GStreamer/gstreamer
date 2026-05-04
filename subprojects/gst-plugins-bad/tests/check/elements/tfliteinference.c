@@ -253,7 +253,7 @@ GST_START_TEST (test_gbrp_caps_input)
       "Expected sink caps to advertise GBRP");
   gst_caps_unref (probe);
 
-  /* Non-passthrough 3-channel model must not advertise GRAY8 */
+  /* Non in-place 3-channel model must not advertise GRAY8 */
   probe = gst_caps_from_string ("video/x-raw, format=GRAY8");
   fail_if (gst_caps_can_intersect (caps, probe),
       "Expected sink caps to NOT advertise GRAY8");
@@ -281,7 +281,7 @@ GST_START_TEST (test_gbrp_caps_input)
 GST_END_TEST;
 
 /* Test that planar RGBP input fed to a uint8 CHW model passes through without conversion and yields correct float32 output. */
-GST_START_TEST (test_planar_uint8_input_passthrough)
+GST_START_TEST (test_planar_uint8_input_in_place)
 {
   gchar *tmp_model = setup_model_with_ranges (GST_TFLITE_TEST_DATA_PATH,
       "tfliteinference", "planar_chw_uint8in_float32out.tflite",
@@ -440,7 +440,7 @@ GST_START_TEST (test_gray8_input_conversion)
   gst_caps_unref (actual_caps);
   gst_caps_unref (expected_caps);
 
-  /* Non-passthrough 1-channel model must advertise GRAY8 and no RGB family */
+  /* Non in-place 1-channel model must advertise GRAY8 and no RGB family */
   sinkpad = gst_element_get_static_pad (h->element, "sink");
   queried = gst_pad_query_caps (sinkpad, NULL);
 
@@ -476,11 +476,11 @@ GST_START_TEST (test_gray8_input_conversion)
 
 GST_END_TEST;
 
-/* Test that a GRAY8 input to a passthrough model (where input and output are
+/* Test that a GRAY8 input to a in-place model (where input and output are
  * the same tensor) is correctly converted to a float32 tensor, and that the
  * sink caps advertise GRAY8.
  */
-GST_START_TEST (test_gray8_input_passthrough)
+GST_START_TEST (test_gray8_input_in_place)
 {
   gchar *tmp_model = setup_model_with_ranges (GST_TFLITE_TEST_DATA_PATH,
       "tfliteinference", "grayscale_uint8in_float32out.tflite", "0.0,255.0");
@@ -947,7 +947,7 @@ GST_START_TEST (test_transform_caps_and_accept_caps)
   fail_if (gst_pad_query_accept_caps (sinkpad, caps));
   gst_caps_unref (caps);
 
-  /* Passthrough uint8 model exposes only the exact guessed format (RGB), not
+  /* In-place uint8 model exposes only the exact guessed format (RGB), not
    * the full RGB family — so RGBA and GRAY8 must be rejected. */
   caps =
       gst_caps_from_string
@@ -964,12 +964,12 @@ GST_START_TEST (test_transform_caps_and_accept_caps)
   caps = gst_pad_query_caps (sinkpad, NULL);
   probe = gst_caps_from_string ("video/x-raw, format=RGBA");
   fail_if (gst_caps_can_intersect (caps, probe),
-      "Passthrough model must not advertise RGBA in caps");
+      "In-place model must not advertise RGBA in caps");
   gst_caps_unref (probe);
 
   probe = gst_caps_from_string ("video/x-raw, format=GRAY8");
   fail_if (gst_caps_can_intersect (caps, probe),
-      "Passthrough RGB model must not advertise GRAY8 in caps");
+      "In-place RGB model must not advertise GRAY8 in caps");
   gst_caps_unref (probe);
   gst_caps_unref (caps);
 
@@ -1248,6 +1248,45 @@ GST_START_TEST (test_invalid_range_count)
 
 GST_END_TEST;
 
+/* Test that in-place models strip GstVideoMeta from upstream allocation. */
+GST_START_TEST (test_in_place_drops_videometa)
+{
+  gchar *model = g_build_filename (GST_TFLITE_TEST_DATA_PATH,
+      "flatten_uint8in_float32out.tflite", NULL);
+  GstHarness *h = harness_new_with_model (model);
+  GstPad *sinkpad;
+  GstQuery *query;
+  GstCaps *caps;
+  guint i, n_metas;
+
+  gst_harness_add_propose_allocation_meta (h, GST_VIDEO_META_API_TYPE, NULL);
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw,format=RGB,width=4,height=4,framerate=30/1");
+
+  sinkpad = gst_element_get_static_pad (h->element, "sink");
+  caps = gst_pad_get_current_caps (sinkpad);
+  fail_unless (caps != NULL);
+  query = gst_query_new_allocation (caps, FALSE);
+  fail_unless (gst_pad_query (sinkpad, query));
+
+  n_metas = gst_query_get_n_allocation_metas (query);
+  for (i = 0; i < n_metas; i++) {
+    fail_if (gst_query_parse_nth_allocation_meta (query, i, NULL)
+        == GST_VIDEO_META_API_TYPE,
+        "GstVideoMeta should be stripped from upstream allocation "
+        "for in-place");
+  }
+
+  gst_query_unref (query);
+  gst_caps_unref (caps);
+  gst_object_unref (sinkpad);
+  gst_harness_teardown (h);
+  g_free (model);
+}
+
+GST_END_TEST;
+
 static Suite *
 tfliteinference_suite (void)
 {
@@ -1257,9 +1296,9 @@ tfliteinference_suite (void)
   suite_add_tcase (s, tc);
   tcase_add_test (tc, test_input_formats);
   tcase_add_test (tc, test_gbrp_caps_input);
-  tcase_add_test (tc, test_planar_uint8_input_passthrough);
+  tcase_add_test (tc, test_planar_uint8_input_in_place);
   tcase_add_test (tc, test_gray8_input_conversion);
-  tcase_add_test (tc, test_gray8_input_passthrough);
+  tcase_add_test (tc, test_gray8_input_in_place);
   tcase_add_test (tc, test_normalization_variants);
   tcase_add_test (tc, test_output_dtypes);
   tcase_add_test (tc, test_dynamic_dims);
@@ -1274,6 +1313,7 @@ tfliteinference_suite (void)
   tcase_add_test (tc, test_timestamp_and_flags_propagation);
   tcase_add_test (tc, test_accept_caps_dimension_mismatch);
   tcase_add_test (tc, test_invalid_range_count);
+  tcase_add_test (tc, test_in_place_drops_videometa);
 
   return s;
 }

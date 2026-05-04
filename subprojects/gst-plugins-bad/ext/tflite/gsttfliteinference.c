@@ -95,6 +95,7 @@ typedef struct _GstTFliteInferencePrivate
   GstCaps *model_outcaps;
 
   gint channels;
+  gboolean in_place;
   gdouble *scales;
   gdouble *offsets;
 
@@ -147,6 +148,9 @@ static GstCaps *gst_tflite_inference_transform_caps (GstBaseTransform *
 static gboolean
 gst_tflite_inference_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps);
+static gboolean
+gst_tflite_inference_propose_allocation (GstBaseTransform * trans,
+    GstQuery * decide_query, GstQuery * query);
 
 G_DEFINE_TYPE_WITH_PRIVATE (GstTFliteInference, gst_tflite_inference,
     GST_TYPE_BASE_TRANSFORM);
@@ -198,6 +202,8 @@ gst_tflite_inference_class_init (GstTFliteInferenceClass * klass)
       GST_DEBUG_FUNCPTR (gst_tflite_inference_set_caps);
   basetransform_class->start = GST_DEBUG_FUNCPTR (gst_tflite_inference_start);
   basetransform_class->stop = GST_DEBUG_FUNCPTR (gst_tflite_inference_stop);
+  basetransform_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_tflite_inference_propose_allocation);
 }
 
 static gboolean
@@ -574,7 +580,6 @@ gst_tflite_inference_start (GstBaseTransform * trans)
     gchar *tensor_name = NULL;
     gint width = 0, height = 0;
     const gchar *gst_format = NULL;
-    gboolean is_passthrough = TRUE;
 
     if (!_get_input_params (self, &data_type, &width, &height, &gst_format,
             &priv->channels, &priv->planar)) {
@@ -635,17 +640,22 @@ gst_tflite_inference_start (GstBaseTransform * trans)
           "height", G_TYPE_INT, height, NULL);
 
     /* Check if all channels are passthrough (scale=1.0, offset=0.0) */
-    is_passthrough = TRUE;
-    if (priv->scales && priv->offsets) {
-      for (i = 0; i < priv->channels; i++) {
-        if (priv->scales[i] != 1.0 || priv->offsets[i] != 0.0) {
-          is_passthrough = FALSE;
-          break;
+    if (data_type == GST_TENSOR_DATA_TYPE_UINT8 && gst_format) {
+      priv->in_place = TRUE;
+      if (priv->scales && priv->offsets) {
+        for (i = 0; i < priv->channels; i++) {
+          if (priv->scales[i] != 1.0 || priv->offsets[i] != 0.0) {
+            priv->in_place = FALSE;
+            break;
+          }
         }
       }
+    } else {
+      priv->in_place = FALSE;
     }
 
-    if (data_type == GST_TENSOR_DATA_TYPE_UINT8 && gst_format && is_passthrough) {
+
+    if (priv->in_place) {
       gst_caps_set_simple (priv->model_incaps, "format", G_TYPE_STRING,
           gst_format, NULL);
     } else if (priv->channels == 1) {
@@ -903,6 +913,38 @@ gst_tflite_inference_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   if (!gst_video_info_from_caps (&priv->video_info, incaps)) {
     GST_ERROR_OBJECT (self, "Failed to parse caps");
     return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_tflite_inference_propose_allocation (GstBaseTransform * trans,
+    GstQuery * decide_query, GstQuery * query)
+{
+  GstTFliteInference *self = GST_TFLITE_INFERENCE (trans);
+  GstTFliteInferencePrivate *priv =
+      gst_tflite_inference_get_instance_private (self);
+
+  if (!GST_BASE_TRANSFORM_CLASS
+      (gst_tflite_inference_parent_class)->propose_allocation (trans,
+          decide_query, query))
+    return FALSE;
+
+  /* When in_place, the data is used direclty by the model without
+   * copying.  Remove GstVideoMeta so upstream does not allocate
+   * buffers with non-default strides that would be misread. */
+  if (priv->in_place) {
+    guint i = 0;
+
+    while (i < gst_query_get_n_allocation_metas (query)) {
+      GType api = gst_query_parse_nth_allocation_meta (query, i, NULL);
+
+      if (api == GST_VIDEO_META_API_TYPE)
+        gst_query_remove_nth_allocation_meta (query, i);
+      else
+        i++;
+    }
   }
 
   return TRUE;
