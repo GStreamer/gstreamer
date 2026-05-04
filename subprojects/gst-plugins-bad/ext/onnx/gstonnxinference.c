@@ -642,8 +642,8 @@ gst_onnx_log_function (void *param, OrtLoggingLevel severity,
       break;
   }
 
-  gst_debug_log (onnx_runtime_debug, level, code_location,
-      "gst_onnx_log_function", 0, obj, "%s", message);
+  GST_CAT_LEVEL_LOG (onnx_runtime_debug, level, obj,
+      "%s: %s", code_location, message);
 }
 
 /* FIXME: This is copied from Gsttfliteinference and we should create something
