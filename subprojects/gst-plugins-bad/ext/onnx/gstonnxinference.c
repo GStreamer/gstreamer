@@ -273,6 +273,14 @@ gst_onnx_execution_provider_get_type (void)
           "cuda"},
 #endif
 #ifdef HAVE_VSI_NPU
+      /**
+       * GstOnnxExecutionProvider::vsi
+       *
+       * VeriSilicon NPU execution provider
+       *
+       * Since: 1.28
+       */
+
       {GST_ONNX_EXECUTION_PROVIDER_VSI,
             "VeriSilicon NPU execution provider",
           "vsi"},
