@@ -280,6 +280,38 @@ GST_START_TEST (test_gbrp_caps_input)
 
 GST_END_TEST;
 
+
+static void
+_caught_log_func (GstDebugCategory * category,
+    GstDebugLevel level,
+    const gchar * file,
+    const gchar * function,
+    gint line, GObject * object, GstDebugMessage * message, gpointer user_data)
+{
+  const gchar *msg = gst_debug_message_get (message);
+
+  fail_unless (user_data);
+  fail_unless (msg);
+
+  fail_if (strstr (msg, user_data), "Unexpected debug message: %s", msg);
+}
+
+#define RUN_WITHOUT_LOG(CODE, CAT, LEVEL, LOG) G_STMT_START {    \
+  GstDebugLevel old_threshold;                                   \
+  GST_DEBUG_CATEGORY (_caught_cat);                              \
+                                                                 \
+  GST_DEBUG_CATEGORY_GET (_caught_cat, CAT);                            \
+  fail_unless (_caught_cat);                                            \
+                                                                        \
+  old_threshold = gst_debug_category_get_threshold (_caught_cat);       \
+  gst_debug_category_set_threshold (_caught_cat, LEVEL);                \
+  gst_debug_add_log_function (_caught_log_func, (gpointer) LOG, NULL);  \
+                                                                        \
+  CODE;                                                                 \
+                                                                        \
+  gst_debug_category_set_threshold (_caught_cat, old_threshold);        \
+  } G_STMT_END
+
 /* Test that planar RGBP input fed to a uint8 CHW model passes through without conversion and yields correct float32 output. */
 GST_START_TEST (test_planar_uint8_input_in_place)
 {
@@ -287,8 +319,9 @@ GST_START_TEST (test_planar_uint8_input_in_place)
       "tfliteinference", "planar_chw_uint8in_float32out.tflite",
       "0.0,255.0;0.0,255.0;0.0,255.0");
   GstHarness *h = harness_new_with_model (tmp_model);
-  GstBuffer *in = create_solid_color_buffer (GST_VIDEO_FORMAT_RGBP,
-      TEST_WIDTH, TEST_HEIGHT, 11, 22, 33, 55);
+  GstAllocationParams alloc_params = { 0, 63, 0, 0 };
+  GstBuffer *in = create_solid_color_buffer_aligned (GST_VIDEO_FORMAT_RGBP,
+      &alloc_params, TEST_WIDTH, TEST_HEIGHT, 11, 22, 33, 55);
   GstBuffer *out;
   GstTensorMeta *tmeta;
   const GstTensor *tensor;
@@ -301,7 +334,9 @@ GST_START_TEST (test_planar_uint8_input_in_place)
   gst_harness_set_src_caps_str (h,
       "video/x-raw,format=RGBP,width=4,height=4,framerate=30/1");
 
-  out = gst_harness_push_and_pull (h, in);
+  RUN_WITHOUT_LOG (out = gst_harness_push_and_pull (h, in), "GST_PERFORMANCE",
+      GST_LEVEL_WARNING, "Could not pass buffer in-place as-is");
+
   fail_unless (out);
   fail_unless (gst_buffer_get_tensor_meta (out) != NULL);
 
@@ -389,8 +424,8 @@ GST_START_TEST (test_gray8_input_conversion)
   gchar *tmp_model = setup_model_with_ranges (GST_TFLITE_TEST_DATA_PATH,
       "tfliteinference", "grayscale_4d.tflite", "0.0,1.0");
   GstHarness *h = harness_new_with_model (tmp_model);
-  GstBuffer *in = create_solid_gray_buffer (GST_VIDEO_FORMAT_GRAY8, TEST_WIDTH,
-      TEST_HEIGHT, 42);
+  GstBuffer *in = create_solid_gray_buffer (GST_VIDEO_FORMAT_GRAY8, NULL,
+      TEST_WIDTH, TEST_HEIGHT, 42);
   GstBuffer *out;
   GstTensorMeta *tmeta;
   const GstTensor *tensor;
@@ -485,8 +520,9 @@ GST_START_TEST (test_gray8_input_in_place)
   gchar *tmp_model = setup_model_with_ranges (GST_TFLITE_TEST_DATA_PATH,
       "tfliteinference", "grayscale_uint8in_float32out.tflite", "0.0,255.0");
   GstHarness *h = harness_new_with_model (tmp_model);
-  GstBuffer *in = create_solid_gray_buffer (GST_VIDEO_FORMAT_GRAY8, TEST_WIDTH,
-      TEST_HEIGHT, 42);
+  GstAllocationParams alloc_params = { 0, 63, 0, 0 };
+  GstBuffer *in = create_solid_gray_buffer (GST_VIDEO_FORMAT_GRAY8,
+      &alloc_params, TEST_WIDTH, TEST_HEIGHT, 42);
   GstBuffer *out;
   GstTensorMeta *tmeta;
   const GstTensor *tensor;
@@ -499,7 +535,9 @@ GST_START_TEST (test_gray8_input_in_place)
   gst_harness_set_src_caps_str (h,
       "video/x-raw,format=GRAY8,width=4,height=4,framerate=30/1");
 
-  out = gst_harness_push_and_pull (h, in);
+  RUN_WITHOUT_LOG (out = gst_harness_push_and_pull (h, in), "GST_PERFORMANCE",
+      GST_LEVEL_WARNING, "Could not pass buffer in-place as-is");
+
   fail_unless (out);
   fail_unless (gst_buffer_get_tensor_meta (out) != NULL);
 
@@ -1333,7 +1371,8 @@ GST_START_TEST (test_padded_stride_with_videometa)
   gst_buffer_add_video_meta_full (in, GST_VIDEO_FRAME_FLAG_NONE,
       GST_VIDEO_FORMAT_RGB, TEST_WIDTH, TEST_HEIGHT, 1, offsets, strides);
 
-  out = gst_harness_push_and_pull (h, in);
+  RUN_WITHOUT_LOG (out = gst_harness_push_and_pull (h, in), "GST_PERFORMANCE",
+      GST_LEVEL_WARNING, "Could not pass buffer in-place as-is");
   fail_unless (out != NULL);
 
   tmeta = gst_buffer_get_tensor_meta (out);

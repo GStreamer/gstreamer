@@ -256,9 +256,17 @@ cleanup_temp_model (gchar * model_path)
 }
 
 GstBuffer *
-create_solid_color_buffer (GstVideoFormat format,
-    guint width, guint height, guint8 r_value, guint8 g_value,
-    guint8 b_value, guint8 a_value)
+create_solid_color_buffer (GstVideoFormat format, guint width, guint height,
+    guint8 r_value, guint8 g_value, guint8 b_value, guint8 a_value)
+{
+  return create_solid_color_buffer_aligned (format, NULL,
+      width, height, r_value, g_value, b_value, a_value);
+}
+
+GstBuffer *
+create_solid_color_buffer_aligned (GstVideoFormat format,
+    GstAllocationParams * alloc_params, guint width, guint height,
+    guint8 r_value, guint8 g_value, guint8 b_value, guint8 a_value)
 {
   GstVideoInfo info;
   GstBuffer *buf;
@@ -267,7 +275,7 @@ create_solid_color_buffer (GstVideoFormat format,
 
   fail_unless (gst_video_info_set_format (&info, format, width, height));
 
-  buf = gst_buffer_new_and_alloc (info.size);
+  buf = gst_buffer_new_allocate (NULL, info.size, alloc_params);
   fail_unless (gst_buffer_map (buf, &map, GST_MAP_WRITE));
 
   for (y = 0; y < height; y++) {
@@ -301,8 +309,8 @@ create_solid_color_buffer (GstVideoFormat format,
 }
 
 GstBuffer *
-create_solid_gray_buffer (GstVideoFormat format, guint width, guint height,
-    guint8 value)
+create_solid_gray_buffer (GstVideoFormat format,
+    GstAllocationParams * alloc_params, guint width, guint height, guint8 value)
 {
   GstVideoInfo info;
   GstBuffer *buf;
@@ -313,7 +321,7 @@ create_solid_gray_buffer (GstVideoFormat format, guint width, guint height,
 
   fail_unless (GST_VIDEO_INFO_IS_GRAY (&info));
 
-  buf = gst_buffer_new_and_alloc (info.size);
+  buf = gst_buffer_new_allocate (NULL, info.size, alloc_params);
   fail_unless (gst_buffer_map (buf, &map, GST_MAP_WRITE));
 
   for (y = 0; y < height; y++) {

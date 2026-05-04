@@ -72,9 +72,13 @@ gchar *setup_model_without_input_info (const gchar * data_path,
 void cleanup_temp_model (gchar * model_path);
 
 GstBuffer *create_solid_color_buffer (GstVideoFormat format,
-    guint width, guint height, guint8 r, guint8 g, guint8 b,
-    guint8 a);
+    guint width, guint height, guint8 r, guint8 g, guint8 b, guint8 a);
 
-GstBuffer *create_solid_gray_buffer (GstVideoFormat format, guint width,
-    guint height, guint8 value);
+GstBuffer *create_solid_color_buffer_aligned (GstVideoFormat format,
+    GstAllocationParams * alloc_params, guint width, guint height, guint8 r,
+    guint8 g, guint8 b, guint8 a);
+
+GstBuffer *create_solid_gray_buffer (GstVideoFormat format,
+    GstAllocationParams * alloc_params, guint width, guint height,
+    guint8 value);
 
