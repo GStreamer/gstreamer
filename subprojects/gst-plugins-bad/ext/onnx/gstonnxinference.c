@@ -412,6 +412,7 @@ gst_onnx_inference_finalize (GObject * object)
 {
   GstOnnxInference *self = GST_ONNX_INFERENCE (object);
 
+  g_free (self->dest);
   g_free (self->model_file);
   g_free (self->scales);
   g_free (self->offsets);
