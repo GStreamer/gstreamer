@@ -3,7 +3,7 @@
 import argparse
 import os
 import subprocess
-from sys import exit
+import sys
 
 
 SCRIPTDIR = os.path.dirname(os.path.realpath(__file__))
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     if not os.path.exists(options.builddir):
         print("GStreamer not built in %s\n\nBuild it and try again" %
               options.builddir)
-        exit(1)
+        sys.exit(1)
     options.builddir = os.path.abspath(options.builddir)
 
     cmd = ["meson", "devenv", "-C", options.builddir, "--workdir", os.getcwd()]
@@ -50,7 +50,17 @@ if __name__ == "__main__":
     else:
         cmd.extend(args)
 
+    # Remove this once we start requiring Meson 1.11
+    # See: https://github.com/mesonbuild/meson/pull/15581
+    env = None
+    if sys.platform == 'linux':
+        env = os.environ.copy()
+        if 'XDG_DATA_DIRS' not in env:
+            env['XDG_DATA_DIRS'] = '/usr/local/share:/usr/share'
+        if 'XDG_CONFIG_DIRS' not in env:
+            env['XDG_CONFIG_DIRS'] = '/etc/xdg'
+
     try:
-        exit(subprocess.call(cmd, close_fds=False))
+        sys.exit(subprocess.call(cmd, close_fds=False, env=env))
     except subprocess.CalledProcessError as e:
-        exit(e.returncode)
+        sys.exit(e.returncode)
