@@ -121,6 +121,7 @@ VALGRIND_BLACKLIST = [
     (r'check.gst-editing-services.check_edit_in_frames_with_framerate_mismatch', 'Massive external library leaks (PipeWire, ALSA, OpenAL) during audio sink autodetection'),
     (r'check.gst-editing-services.pythontests', 'Need to figure out how to introduce python suppressions'),
     (r'check.gst-editing-services.check_keyframes_in_compositor_two_sources', 'Valgrind exit with an exitcode 20 but shows no issue: https://gitlab.freedesktop.org/thiblahute/gst-editing-services/-/jobs/4079972'),
+    (r'check.gst-editing-services.validate.nle.ensure_no_unnecessary_stack_init_seeks', 'Flaky under valgrind: race in basesrc between seg_event push (outside LIVE_LOCK) and FLUSH_START from the init seek'),
     (r'check.gst-plugins-good.elements_splitmuxsrc.test_splitmuxsrc_sparse_streams', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/739'),
     (r'check.gst-plugins-good.elements_udpsrc.test_udpsrc_empty_packet', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/740'),
     (r'check.gst-plugins-bad.elements_svthevc*', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/3011'),
