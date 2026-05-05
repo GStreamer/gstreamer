@@ -1,4 +1,9 @@
-[wrap-git]
-directory=wpebackend-fdo
-url=https://github.com/Igalia/WPEBackend-FDO.git
-revision=3a76a810c0787ad5d515e49de50ffb956f3a04cd
+[wrap-file]
+directory = wpebackend-fdo-1.16.1
+source_url = https://github.com/Igalia/WPEBackend-fdo/releases/download/1.16.1/wpebackend-fdo-1.16.1.tar.xz
+source_fallback_url = https://gstreamer.freedesktop.org/src/mirror/wpebackend-fdo/wpebackend-fdo-1.16.1.tar.xz
+source_filename = wpebackend-fdo-1.16.1.tar.xz
+source_hash = 544ae14012f8e7e426b8cb522eb0aaaac831ad7c35601d1cf31d37670e0ebb3b
+
+[provide]
+wpebackend-fdo-1.0 = wpebackend_fdo_dep
