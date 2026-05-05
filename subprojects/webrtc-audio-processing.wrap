@@ -1,8 +1,10 @@
-[wrap-git]
-directory = webrtc-audio-processing
-url = https://gitlab.freedesktop.org/pulseaudio/webrtc-audio-processing.git
-push-url = git@gitlab.freedesktop.org:pulseaudio/webrtc-audio-processing.git
-revision = bc838790eeb6066d30f019c2a3516bd2b824a5c8
+[wrap-file]
+directory = webrtc-audio-processing-2.1
+source_url = http://freedesktop.org/software/pulseaudio/webrtc-audio-processing/webrtc-audio-processing-2.1.tar.xz
+source_fallback_url = https://gstreamer.freedesktop.org/src/mirror/webrtc-audio-processing/webrtc-audio-processing-2.1.tar.xz
+source_filename = webrtc-audio-processing-2.1.tar.xz
+source_hash = ae9302824b2038d394f10213cab05312c564a038434269f11dbf68f511f9f9fe
+diff_files = webrtc-audio-processing-2.1/0001-Fix-build-with-abseil-cpp-202508.patch, webrtc-audio-processing-2.1/0001-Fix-compilation-with-gcc-15.patch
 
 [provide]
 dependency_names = webrtc-audio-processing-2
