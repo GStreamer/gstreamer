@@ -1,4 +1,9 @@
-[wrap-git]
-directory=libwpe
-url=https://github.com/WebPlatformForEmbedded/libwpe
-revision=8cce32deb48b91f18c5e920fb3666dc409a11219
+[wrap-file]
+directory = libwpe-1.16.3
+source_url = https://github.com/WebPlatformForEmbedded/libwpe/releases/download/1.16.3/libwpe-1.16.3.tar.xz
+source_fallback_url = https://gstreamer.freedesktop.org/src/mirror/libwpe/libwpe-1.16.3.tar.xz
+source_filename = libwpe-1.16.3.tar.xz
+source_hash = c880fa8d607b2aa6eadde7d6d6302b1396ebc38368fe2332fa20e193c7ee1420
+
+[provide]
+libwpe-1.0 = libwpe_dep
