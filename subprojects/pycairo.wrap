@@ -1,4 +1,9 @@
-[wrap-git]
-directory=pycairo
-url=https://github.com/pygobject/pycairo.git
-revision=v1.28.0
+[wrap-file]
+directory = pycairo-1.29.0
+source_url = https://github.com/pygobject/pycairo/releases/download/v1.29.0/pycairo-1.29.0.tar.gz
+source_fallback_url = https://gstreamer.freedesktop.org/src/mirror/pycairo/pycairo-1.29.0.tar.gz
+source_filename = pycairo-1.29.0.tar.gz
+source_hash = f3f7fde97325cae80224c09f12564ef58d0d0f655da0e3b040f5807bd5bd3142
+
+[provide]
+py3cairo = pycairo_dep
