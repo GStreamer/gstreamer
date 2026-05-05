@@ -32,7 +32,8 @@ export LIBGL_ALWAYS_SOFTWARE="true"
 export VK_ICD_FILENAMES="/usr/share/vulkan/icd.d/lvp_icd.json"
 
 ret=0
-meson devenv -C $builddir \
+./gst-env.py \
+    "--builddir=$builddir" \
     gst-validate-launcher "$tests" \
     --jobs "$jobs" \
     --check-bugs \
