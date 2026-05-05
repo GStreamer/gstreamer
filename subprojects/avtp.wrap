@@ -1,7 +1,9 @@
-[wrap-git]
-directory = libavtp
-url = https://github.com/Avnu/libavtp.git
-revision = v0.2.0
+[wrap-file]
+directory = libavtp-0.2.0
+source_url = https://github.com/Avnu/libavtp/archive/refs/tags/v0.2.0.tar.gz
+source_fallback_url = https://gstreamer.freedesktop.org/src/mirror/libavtp/v0.2.0.tar.gz
+source_filename = v0.2.0.tar.gz
+source_hash = 631f5e704a1b7c8f953ca017a382ad945e75c2952c81813ff355e9ab8071b70e
 
 [provide]
 avtp = avtp_dep
