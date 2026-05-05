@@ -860,6 +860,14 @@ gst_tflite_inference_stop (GstBaseTransform * trans)
   return TRUE;
 }
 
+static gboolean
+remove_tensors_from_struct (GstCapsFeatures * features, GstStructure * s,
+    gpointer user_data)
+{
+  gst_structure_remove_field (s, "tensors");
+  return TRUE;
+}
+
 static GstCaps *
 gst_tflite_inference_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter_caps)
@@ -883,19 +891,14 @@ gst_tflite_inference_transform_caps (GstBaseTransform * trans,
     other_caps = gst_caps_intersect (restrictions, priv->model_outcaps);
     gst_caps_unref (restrictions);
   } else if (direction == GST_PAD_SRC) {
-    /* Remove tensors from caps if no upstream element produce tensors. */
+    /* Remove tensors from caps */
     GstCaps *tmp_caps = gst_caps_copy (caps);
-
-    if (!gst_caps_is_empty (tmp_caps)) {
-      GstStructure *tstruct = gst_caps_get_structure (tmp_caps, 0);
-      gst_structure_remove_field (tstruct, "tensors");
-    }
+    gst_caps_map_in_place (tmp_caps, remove_tensors_from_struct, NULL);
 
     other_caps = gst_caps_intersect_full (tmp_caps, priv->model_incaps,
         GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (tmp_caps);
   }
-
 
 done:
   if (filter_caps) {

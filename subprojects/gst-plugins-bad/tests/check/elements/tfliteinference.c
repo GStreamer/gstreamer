@@ -1421,6 +1421,52 @@ GST_START_TEST (test_padded_stride_with_videometa)
 
 GST_END_TEST;
 
+/* Verify that the "tensors" field is stripped from all downstream caps
+ * structures when transforming in the upstream direction, not just the first. */
+GST_START_TEST (test_transform_caps_multi_struct_no_tensors_leak)
+{
+  gchar *model = g_build_filename (GST_TFLITE_TEST_DATA_PATH,
+      "flatten_uint8in_float32out.tflite", NULL);
+  GstHarness *h = harness_new_with_model (model);
+  GstPad *sinkpad = gst_element_get_static_pad (h->element, "sink");
+  GstStructure *tensors_s = gst_structure_new_empty ("tensorgroups");
+  GstCaps *downstream, *sinkpad_caps;
+  guint i;
+
+  /* Build downstream caps with two structures, both carrying "tensors". */
+  downstream = gst_caps_new_simple ("video/x-raw",
+      "format", G_TYPE_STRING, "RGB",
+      "width", G_TYPE_INT, TEST_WIDTH, "height", G_TYPE_INT, TEST_HEIGHT,
+      "framerate", GST_TYPE_FRACTION, 30, 1,
+      "tensors", GST_TYPE_STRUCTURE, tensors_s, NULL);
+  gst_caps_append_structure (downstream,
+      gst_structure_new ("video/x-raw",
+          "format", G_TYPE_STRING, "RGB",
+          "width", G_TYPE_INT, TEST_WIDTH, "height", G_TYPE_INT, TEST_HEIGHT,
+          "framerate", GST_TYPE_FRACTION, 15, 1,
+          "tensors", GST_TYPE_STRUCTURE, tensors_s, NULL));
+  gst_structure_free (tensors_s);
+
+  gst_harness_set_sink_caps (h, downstream);
+
+  sinkpad_caps = gst_pad_query_caps (sinkpad, NULL);
+  fail_unless (sinkpad_caps != NULL);
+  fail_if (gst_caps_is_empty (sinkpad_caps));
+
+  for (i = 0; i < gst_caps_get_size (sinkpad_caps); i++) {
+    const GstStructure *s = gst_caps_get_structure (sinkpad_caps, i);
+    fail_if (gst_structure_has_field (s, "tensors"),
+        "tensors leaked to upstream caps in structure %u", i);
+  }
+
+  gst_caps_unref (sinkpad_caps);
+  gst_object_unref (sinkpad);
+  gst_harness_teardown (h);
+  g_free (model);
+}
+
+GST_END_TEST;
+
 static Suite *
 tfliteinference_suite (void)
 {
@@ -1450,6 +1496,7 @@ tfliteinference_suite (void)
   tcase_add_test (tc, test_invalid_range_count);
   tcase_add_test (tc, test_in_place_drops_videometa);
   tcase_add_test (tc, test_padded_stride_with_videometa);
+  tcase_add_test (tc, test_transform_caps_multi_struct_no_tensors_leak);
 
   return s;
 }
