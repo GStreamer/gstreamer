@@ -14249,7 +14249,10 @@ Filters must be added before the #GstDeviceMonitor is started.</doc>
       </method>
       <method name="get_devices" c:identifier="gst_device_monitor_get_devices" version="1.4">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstdevicemonitor.c">Gets a list of devices from all of the relevant monitors. This may actually
-probe the hardware if the monitor is not currently started.</doc>
+probe the hardware if the monitor is not currently started.
+
+Since 1.28.3, this function will block until the monitor has finished
+starting if gst_device_monitor_start() has been called.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstdevicemonitor.h"/>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstdevicemonitor.c">a #GList of
