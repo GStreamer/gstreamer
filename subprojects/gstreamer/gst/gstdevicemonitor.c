@@ -105,6 +105,7 @@ struct _GstDeviceMonitorPrivate
 {
   gboolean started;
   GThread *start_thread;
+  GCond started_cond;
 
   GstBus *bus;
 
@@ -328,6 +329,7 @@ gst_device_monitor_init (GstDeviceMonitor * self)
   self->priv->started_providers = NULL;
   self->priv->started = FALSE;
   self->priv->start_thread = NULL;
+  g_cond_init (&self->priv->started_cond);
 
   self->priv->last_id = 1;
 }
@@ -391,6 +393,8 @@ gst_device_monitor_dispose (GObject * object)
 
   gst_object_replace ((GstObject **) & self->priv->bus, NULL);
 
+  g_cond_clear (&self->priv->started_cond);
+
   G_OBJECT_CLASS (gst_device_monitor_parent_class)->dispose (object);
 }
 
@@ -400,6 +404,9 @@ gst_device_monitor_dispose (GObject * object)
  *
  * Gets a list of devices from all of the relevant monitors. This may actually
  * probe the hardware if the monitor is not currently started.
+ *
+ * Since 1.28.3, this function will block until the monitor has finished
+ * starting if gst_device_monitor_start() has been called.
  *
  * Returns: (transfer full) (element-type GstDevice) (nullable): a #GList of
  *   #GstDevice
@@ -419,6 +426,10 @@ gst_device_monitor_get_devices (GstDeviceMonitor * monitor)
   g_return_val_if_fail (GST_IS_DEVICE_MONITOR (monitor), NULL);
 
   GST_OBJECT_LOCK (monitor);
+
+  while (monitor->priv->start_thread != NULL) {
+    g_cond_wait (&monitor->priv->started_cond, GST_OBJECT_GET_LOCK (monitor));
+  }
 
   if (monitor->priv->filters->len == 0) {
     GST_OBJECT_UNLOCK (monitor);
@@ -557,6 +568,7 @@ monitor_thread_func (gpointer data)
   }
 
   g_clear_pointer (&monitor->priv->start_thread, g_thread_unref);
+  g_cond_broadcast (&monitor->priv->started_cond);
   GST_OBJECT_UNLOCK (monitor);
 
 done:
@@ -669,6 +681,7 @@ gst_device_monitor_stop (GstDeviceMonitor * monitor)
   /* Steal GThread reference from the monitor */
   thread = monitor->priv->start_thread;
   monitor->priv->start_thread = NULL;
+  g_cond_broadcast (&monitor->priv->started_cond);
   GST_OBJECT_UNLOCK (monitor);
 
   if (thread != NULL) {
