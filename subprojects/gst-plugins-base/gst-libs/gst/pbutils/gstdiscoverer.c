@@ -1504,6 +1504,7 @@ discoverer_collect (GstDiscoverer * dc)
     else
       dc->priv->current_info->live = TRUE;
 
+    DISCO_LOCK (dc);
     if (dc->priv->current_topology) {
       dc->priv->current_info_stream_count = 1;
       dc->priv->current_info->stream_info = parse_stream_topology (dc,
@@ -1511,6 +1512,7 @@ discoverer_collect (GstDiscoverer * dc)
       if (dc->priv->current_info->stream_info)
         dc->priv->current_info->stream_info->stream_number = 0;
     }
+    DISCO_UNLOCK (dc);
 
     /*
      * Images need some special handling. They do not have a duration, have
