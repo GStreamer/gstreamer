@@ -1,0 +1,328 @@
+From e764dd95a0a3969f6656f379f62f5566ddd6645c Mon Sep 17 00:00:00 2001
+From: Sean McGovern <gseanmcg@gmail.com>
+Date: Tue, 31 Aug 2021 12:25:18 -0400
+Subject: [PATCH 1/5] add GitHub CI job
+
+---
+ .github/workflows/build.yml | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+ create mode 100644 .github/workflows/build.yml
+
+diff --git a/.github/workflows/build.yml b/.github/workflows/build.yml
+new file mode 100644
+index 0000000..9f9ec7b
+--- /dev/null
++++ b/.github/workflows/build.yml
+@@ -0,0 +1,37 @@
++name: build
++
++on:
++  push:
++    branches:
++      - master
++  pull_request:
++    branches:
++      - master
++
++jobs:
++  build:
++    strategy:
++      fail-fast: false
++      matrix:
++        include:
++          - os: ubuntu-latest
++            cc: clang
++          - os: ubuntu-latest
++            cc: gcc
++    runs-on: ${{ matrix.os }}
++    steps:
++    - uses: actions/checkout@v2
++
++    - name: Install Linux dependencies
++      if: runner.os == 'Linux'
++      run: |
++        sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu `lsb_release -sc` main universe"
++        sudo apt-get update -y -qq
++        sudo apt-get install meson ninja-build
++
++    - name: Execute build
++      env:
++        CC: ${{ matrix.cc }}
++      run: |
++        meson setup build
++        cd build && ninja
+-- 
+2.53.0
+
+
+From f6ee3b39d0249492fae15dc2a0f8048734ee6f30 Mon Sep 17 00:00:00 2001
+From: Bastien Nocera <hadess@hadess.net>
+Date: Thu, 17 Mar 2022 23:33:09 +0100
+Subject: [PATCH 2/5] Document strrcmp()
+
+So we don't need to reverse-engineer what it does from reading the code.
+The documentation and the argument names are from the Linux kernel.
+
+Closes: #42
+---
+ src/mdns.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/src/mdns.c b/src/mdns.c
+index 7cf28c7..198654c 100644
+--- a/src/mdns.c
++++ b/src/mdns.c
+@@ -713,18 +713,20 @@ mdns_strerror(int r, char *buf, size_t n)
+         return os_strerror(r, buf, n);
+ }
+ 
++/* Test if string s ends in string sub
++ * return 0 if match */
+ static int
+-strrcmp(const char *s1, const char *s2)
++strrcmp(const char *s, const char *sub)
+ {
+         size_t m, n;
+ 
+-        if (!s1 || !s2)
++        if (!s || !sub)
+                 return (1);
+-        m = strlen(s1);
+-        n = strlen(s2);
++        m = strlen(s);
++        n = strlen(sub);
+         if (n > m)
+                 return (1);
+-        return (strncmp(s1 + m - n, s2, n));
++        return (strncmp(s + m - n, sub, n));
+ }
+ 
+ static int
+-- 
+2.53.0
+
+
+From 28156c8fc57bdad72c43c1bdd97ba23bf9ac7874 Mon Sep 17 00:00:00 2001
+From: Bastien Nocera <hadess@hadess.net>
+Date: Mon, 21 Mar 2022 12:01:06 +0100
+Subject: [PATCH 3/5] Simplify generation of pkgconfig file
+
+Use meson's pkgconfig module to generate the pkg-config file, rather
+than using old-school autotools patterns.
+---
+ meson.build        | 11 -----------
+ src/meson.build    |  9 +++++++++
+ src/microdns.pc.in | 10 ----------
+ 3 files changed, 9 insertions(+), 21 deletions(-)
+ delete mode 100644 src/microdns.pc.in
+
+diff --git a/meson.build b/meson.build
+index 5434ac6..e688af5 100644
+--- a/meson.build
++++ b/meson.build
+@@ -182,17 +182,6 @@ pkg_cdata.set('exec_prefix', '${prefix}')
+ pkg_cdata.set('libdir', '${prefix}/@0@'.format(get_option('libdir')))
+ pkg_cdata.set('includedir', '${prefix}/@0@'.format(get_option('includedir')))
+ pkg_cdata.set('VERSION', mdns_version)
+-pkg_cdata.set('LIBSOCKET', host_system == 'windows' ? '-lws2_32 -liphlpapi': '')
+-
+-pkg_install_dir = '@0@/pkgconfig'.format(get_option('libdir'))
+-
+-configure_file(
+-    input: 'src/microdns.pc.in',
+-    output: 'microdns.pc',
+-    configuration: pkg_cdata,
+-    install_dir: pkg_install_dir,
+-    install: true,
+-)
+ 
+ mdns_dep = declare_dependency(link_with : libmicrodns,
+     include_directories : incdirs,
+diff --git a/src/meson.build b/src/meson.build
+index 4b2a92c..5d9a34f 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -19,3 +19,12 @@ libmicrodns = library('microdns', libmicrodns_sources,
+     soversion: mdns_soversion,
+     version: mdns_soname_version,
+ )
++
++pkgconf = import('pkgconfig')
++pkgconf.generate(libraries: libmicrodns,
++                 version: mdns_version,
++                 name: 'microDNS',
++                 description: 'mDNS simple implementation',
++                 filebase: 'microdns',
++                 requires: deps,
++)
+diff --git a/src/microdns.pc.in b/src/microdns.pc.in
+deleted file mode 100644
+index 26137f6..0000000
+--- a/src/microdns.pc.in
++++ /dev/null
+@@ -1,10 +0,0 @@
+-prefix=@prefix@
+-exec_prefix=@exec_prefix@
+-libdir=@libdir@
+-includedir=@includedir@
+-
+-Name: microDNS
+-Description: mDNS simple implementation
+-Version: @VERSION@
+-Libs: -L${libdir} -lmicrodns @LIBSOCKET@
+-Cflags: -I${includedir}
+-- 
+2.53.0
+
+
+From 2b4d2cf337e6dbbb7f3c324fb13a60989cf95a75 Mon Sep 17 00:00:00 2001
+From: Xavier Claessens <xavier.claessens@collabora.com>
+Date: Wed, 20 Apr 2022 10:05:48 -0400
+Subject: [PATCH 4/5] Windows: Require at least Vista
+
+inet_ntop() and struct pollfd are available since Windows Vista, but
+mingw requires to define _WIN32_WINNT.
+
+Fixes: #46
+---
+ meson.build | 29 ++++++++++++++++++++---------
+ 1 file changed, 20 insertions(+), 9 deletions(-)
+
+diff --git a/meson.build b/meson.build
+index e688af5..513c409 100644
+--- a/meson.build
++++ b/meson.build
+@@ -59,21 +59,35 @@ add_project_arguments(cc.get_supported_arguments(warning_flags), language: 'c')
+ cdata = configuration_data()
+ 
+ deps = []
++cc_args = []
+ 
+ host_system = host_machine.system()
+ 
+ if host_system == 'windows'
+     deps += [cc.find_library('ws2_32')]
+     deps += [cc.find_library('iphlpapi')]
++    building_for_vista = cc.compiles('''#include <windows.h>
++        #ifndef WINVER
++        #error "unknown minimum supported OS version"
++        #endif
++        #if (WINVER < _WIN32_WINNT_VISTA)
++        #error "Windows Vista API is not guaranteed"
++        #endif
++        ''',
++        name: 'building for Windows Vista')
++    if not building_for_vista
++        cc_args = [
++            '-D_WIN32_WINNT=_WIN32_WINNT_VISTA',
++            '-DWINVER=_WIN32_WINNT_VISTA',
++        ]
++        add_project_arguments(cc_args, language: 'c')
++    endif
+ endif
+ 
+ inet_ntop_src = '''
+ #ifdef _WIN32
+ #include <ws2tcpip.h>
+ #include <windows.h>
+-# if _WIN32_WINNT < 0x600
+-#  error Needs vista+
+-# endif
+ #else
+ #include <sys/socket.h>
+ #include <arpa/inet.h>
+@@ -83,7 +97,7 @@ int main() {
+ }
+ '''
+ 
+-if cc.links(inet_ntop_src, dependencies: deps)
++if cc.links(inet_ntop_src, dependencies: deps, args: cc_args)
+     cdata.set('HAVE_INET_NTOP', 1)
+ endif
+ 
+@@ -92,9 +106,6 @@ poll_src = '''
+ #ifdef _WIN32
+ #include <winsock2.h>
+ #include <windows.h>
+-# if _WIN32_WINNT < 0x600
+-#  error Needs vista+
+-# endif
+ # if defined(_MSC_VER)
+ #   error
+ # endif
+@@ -106,7 +117,7 @@ int main() {
+ }
+ '''
+ 
+-if cc.links(poll_src, dependencies: deps)
++if cc.links(poll_src, dependencies: deps, args: cc_args)
+     cdata.set('HAVE_POLL', 1)
+ endif
+ 
+@@ -118,7 +129,7 @@ elif host_system == 'windows'
+     pollfd_check_prefix += '#include <winsock2.h>'
+ endif
+ 
+-if cc.has_type('struct pollfd', prefix: pollfd_check_prefix)
++if cc.has_type('struct pollfd', prefix: pollfd_check_prefix, args: cc_args)
+     cdata.set('HAVE_STRUCT_POLLFD', 1)
+ endif
+ 
+-- 
+2.53.0
+
+
+From 2489a7ad11264af39641655e173eeaa6df9c82f5 Mon Sep 17 00:00:00 2001
+From: Xavier Claessens <xavier.claessens@collabora.com>
+Date: Wed, 20 Apr 2022 11:00:28 -0400
+Subject: [PATCH 5/5] Meson: Simplify pkgconfig generator
+
+- pkg_cdata is unused and should have been deleted completely
+- libmicrodns should be passed as first positional argument and not in
+  libraries: keyword argument.
+- deps should not be specified as public requires, they are private
+  dependencies and Meson will add them automatically, no need to mention
+  them.
+---
+ meson.build     | 8 --------
+ src/meson.build | 4 +---
+ 2 files changed, 1 insertion(+), 11 deletions(-)
+
+diff --git a/meson.build b/meson.build
+index 513c409..8a5a03b 100644
+--- a/meson.build
++++ b/meson.build
+@@ -186,14 +186,6 @@ subdir('compat')
+ subdir('include')
+ subdir('src')
+ 
+-pkg_cdata = configuration_data()
+-
+-pkg_cdata.set('prefix', join_paths(get_option('prefix')))
+-pkg_cdata.set('exec_prefix', '${prefix}')
+-pkg_cdata.set('libdir', '${prefix}/@0@'.format(get_option('libdir')))
+-pkg_cdata.set('includedir', '${prefix}/@0@'.format(get_option('includedir')))
+-pkg_cdata.set('VERSION', mdns_version)
+-
+ mdns_dep = declare_dependency(link_with : libmicrodns,
+     include_directories : incdirs,
+     dependencies: deps,
+diff --git a/src/meson.build b/src/meson.build
+index 5d9a34f..b69d848 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -21,10 +21,8 @@ libmicrodns = library('microdns', libmicrodns_sources,
+ )
+ 
+ pkgconf = import('pkgconfig')
+-pkgconf.generate(libraries: libmicrodns,
+-                 version: mdns_version,
++pkgconf.generate(libmicrodns,
+                  name: 'microDNS',
+                  description: 'mDNS simple implementation',
+                  filebase: 'microdns',
+-                 requires: deps,
+ )
+-- 
+2.53.0
+

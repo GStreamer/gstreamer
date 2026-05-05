@@ -1,0 +1,10 @@
+[wrap-file]
+directory = microdns-0.2.0
+source_url = https://github.com/videolabs/libmicrodns/releases/download/0.2.0/microdns-0.2.0.tar.xz
+source_fallback_url = https://gstreamer.freedesktop.org/src/mirror/microdns/microdns-0.2.0.tar.xz
+source_filename = 0.2.0.tar.gz
+source_hash = 2da28e7dda4861d76f797f92ac3e6c3e048333b95f9e4fc3a6548ad8afd8c446
+diff_files = microdns-0.2.0/microdns-meson-fixes.patch
+
+[provide]
+microdns = mdns_dep
