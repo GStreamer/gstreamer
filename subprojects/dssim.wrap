@@ -1,8 +1,9 @@
-[wrap-git]
-directory = dssim
-url = https://github.com/kornelski/dssim.git
-revision = a40c62b95fa2a4223218c973a85dc183e610070a
-depth = 1
+[wrap-file]
+directory = dssim-3.4.0
+source_url = https://github.com/kornelski/dssim/archive/refs/tags/3.4.0.tar.gz
+source_fallback_url = https://gstreamer.freedesktop.org/src/mirror/dssim/3.4.0.tar.gz
+source_filename = 3.4.0.tar.gz
+source_hash = 5267e79f4604558d9f24ce02aa20597396a9b052d0ad1b2f8000d4d6bd162126
 
 [provide]
 dssim = dssim_dep
