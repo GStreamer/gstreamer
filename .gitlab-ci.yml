@@ -289,6 +289,7 @@ pre-commit checks:
   script:
     - export PATH="/usr/local/cargo/bin:$PATH"
     - echo $CI_MERGE_REQUEST_DIFF_BASE_SHA
+    - ./ci/scripts/ban-wrap-git.sh
     - gitlint --commits $CI_MERGE_REQUEST_DIFF_BASE_SHA..HEAD
     - pre-commit run --show-diff-on-failure --from-ref $CI_MERGE_REQUEST_DIFF_BASE_SHA --to-ref HEAD
   rules:
