@@ -1,0 +1,9 @@
+[wrap-file]
+directory = libtheora-1.2.0
+source_url = https://downloads.xiph.org/releases/theora/libtheora-1.2.0.tar.xz
+source_filename = libtheora-1.2.0.tar.xz
+source_hash = ebdf77a8f5c0a8f7a9e42323844fa09502b34eb1d1fece7b5f54da41fe2122ec
+patch_directory = theora
+
+[provide]
+dependency_names = theora, theoradec, theoraenc

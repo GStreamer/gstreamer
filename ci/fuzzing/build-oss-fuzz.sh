@@ -35,33 +35,6 @@ cd $WORK
 
 mkdir -p $OUT/lib/gstreamer-1.0
 
-# build ogg
-pushd $SRC/ogg
-./autogen.sh
-./configure --prefix="$PREFIX" --libdir="$PREFIX/lib"
-make clean
-make -j$(nproc)
-make install
-popd
-
-# build vorbis
-pushd $SRC/vorbis
-./autogen.sh
-./configure --prefix="$PREFIX" --libdir="$PREFIX/lib"
-make clean
-make -j$(nproc)
-make install
-popd
-
-# build theora
-pushd $SRC/theora
-./autogen.sh
-./configure --prefix="$PREFIX" --libdir="$PREFIX/lib"
-make clean
-make -j$(nproc)
-make install
-popd
-
 # Note: We don't use/build orc since it still seems to be problematic
 # with clang and the various sanitizers.
 
@@ -70,7 +43,7 @@ meson \
     --prefix=$PREFIX \
     --libdir=lib \
     --default-library=shared \
-    --force-fallback-for=zlib \
+    --force-fallback-for=zlib,ogg,vorbis,theora \
     -Db_lundef=false \
     -Doss_fuzz=enabled \
     -Dglib:oss_fuzz=enabled \
@@ -93,7 +66,6 @@ meson \
     -Dgst-examples=disabled \
     -Dqt5=disabled \
     -Dorc=disabled \
-    -Dgtk_doc=disabled \
     -Dgstreamer:tracer_hooks=false \
     -Dgst-plugins-base:opus=disabled \
     -Dgst-plugins-base:pango=disabled \
