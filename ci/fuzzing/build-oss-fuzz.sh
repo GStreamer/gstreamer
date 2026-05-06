@@ -52,9 +52,22 @@ meson \
     -Ddoc=disabled \
     -Dexamples=disabled \
     -Dintrospection=disabled \
-    -Dgood=disabled \
+    -Dgood=enabled \
+    -Dgst-plugins-good:auto_features=disabled \
+    -Dgst-plugins-good:isomp4=enabled \
+    -Dgst-plugins-good:matroska=enabled \
+    -Dgst-plugins-good:flv=enabled \
+    -Dgst-plugins-good:avi=enabled \
+    -Dgst-plugins-good:audioparsers=enabled \
+    -Dgst-plugins-good:wavparse=enabled \
+    -Dgst-plugins-good:id3demux=enabled \
+    -Dgst-plugins-good:flac=disabled \
+    -Dbad=enabled \
+    -Dgst-plugins-bad:auto_features=disabled \
+    -Dgst-plugins-bad:mpegtsdemux=enabled \
+    -Dgst-plugins-bad:videoparsers=enabled \
+    -Dgst-plugins-bad:jpegformat=enabled \
     -Dugly=disabled \
-    -Dbad=disabled \
     -Dlibav=disabled \
     -Dges=disabled \
     -Dsharp=disabled \
@@ -67,7 +80,6 @@ meson \
     -Dqt5=disabled \
     -Dorc=disabled \
     -Dgstreamer:tracer_hooks=false \
-    -Dgst-plugins-base:opus=disabled \
     -Dgst-plugins-base:pango=disabled \
     _builddir \
     $SRC/gstreamer

@@ -1,4 +1,13 @@
-subprojects/gst-integration-testsuites/media/defaults/ogg/numerated_frames_blue.ogv
-subprojects/gst-integration-testsuites/media/defaults/ogg/opus.1.ogg
-subprojects/gst-integration-testsuites/media/defaults/ogg/vorbis_theora.0.ogg
-subprojects/gst-integration-testsuites/media/defaults/ogg/vorbis_theora.1.ogg
+subprojects/gst-plugins-base/tests/files/*.ogg
+subprojects/gst-plugins-base/tests/files/*.mkv
+subprojects/gst-plugins-bad/tests/files/*.mp4
+subprojects/gst-plugins-bad/tests/files/*.webm
+subprojects/gst-plugins-bad/tests/files/*.ts
+subprojects/gst-plugins-good/tests/files/*.mp4
+subprojects/gst-plugins-good/tests/files/*.mkv
+subprojects/gst-plugins-good/tests/files/*.wav
+subprojects/gst-plugins-good/tests/files/*.flv
+subprojects/gst-plugins-good/tests/files/*.ogg
+subprojects/gst-plugins-good/tests/files/*.mp3
+subprojects/gst-editing-services/tests/check/assets/*.ogg
+subprojects/gst-rtsp-server/tests/files/*.avi
