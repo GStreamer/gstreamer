@@ -1036,7 +1036,7 @@ gst_flac_enc_update_quality (GstFlacEnc * flacenc, gint quality)
   if (GST_AUDIO_INFO_CHANNELS (info) == 2
       || GST_AUDIO_INFO_CHANNELS (info) == 0) {
     DO_UPDATE (do_mid_side_stereo, mid_side, "mid_side_stereo");
-    DO_UPDATE (loose_mid_side_stereo, loose_mid_side, "loose_mid_side");
+    DO_UPDATE (loose_mid_side_stereo, loose_mid_side, "loose_mid_side_stereo");
   }
 
   DO_UPDATE (blocksize, blocksize, "blocksize");
