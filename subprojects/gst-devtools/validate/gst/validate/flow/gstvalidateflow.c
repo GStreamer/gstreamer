@@ -109,6 +109,10 @@ struct _ValidateFlowOverride
   gsize expected_line_index;
   gboolean live_mismatch_found;
 
+  /* Tracks async mismatch reports queued via gst_call_async() */
+  GMutex async_report_lock;
+  GCond async_report_cond;
+  gint pending_async_reports;
 };
 
 GList *all_overrides = NULL;
@@ -128,6 +132,8 @@ G_DEFINE_TYPE (ValidateFlowOverride, validate_flow_override,
 void
 validate_flow_override_init (ValidateFlowOverride * self)
 {
+  g_mutex_init (&self->async_report_lock);
+  g_cond_init (&self->async_report_cond);
 }
 
 void
@@ -216,12 +222,19 @@ static void
 flow_mismatch_report_run (gpointer user_data)
 {
   FlowMismatchReport *r = user_data;
+  ValidateFlowOverride *flow = r->flow;
 
-  report_mismatch_diff (r->flow, r->line_index, r->expected, r->actual);
-  gst_object_unref (r->flow);
+  report_mismatch_diff (flow, r->line_index, r->expected, r->actual);
   g_free (r->expected);
   g_free (r->actual);
   g_free (r);
+
+  g_mutex_lock (&flow->async_report_lock);
+  flow->pending_async_reports--;
+  g_cond_signal (&flow->async_report_cond);
+  g_mutex_unlock (&flow->async_report_lock);
+
+  gst_object_unref (flow);
 }
 
 static void
@@ -234,6 +247,11 @@ report_mismatch_diff_async (ValidateFlowOverride * flow, gsize line_index,
   r->line_index = line_index;
   r->expected = g_strdup (expected);
   r->actual = g_strdup (actual);
+
+  g_mutex_lock (&flow->async_report_lock);
+  flow->pending_async_reports++;
+  g_mutex_unlock (&flow->async_report_lock);
+
   gst_call_async (flow_mismatch_report_run, r);
 }
 
@@ -725,6 +743,15 @@ runner_stopping (GstValidateRunner * runner, ValidateFlowOverride * flow)
   gsize remaining_index = 0;
   gchar *remaining = NULL;
 
+  /* Wait for all async mismatch reports to complete before proceeding
+   * with shutdown. These run on GStreamer's shared thread pool and access
+   * globals (log_files, newline_regex) that gst_validate_report_deinit()
+   * will free after this signal handler returns. */
+  g_mutex_lock (&flow->async_report_lock);
+  while (flow->pending_async_reports > 0)
+    g_cond_wait (&flow->async_report_cond, &flow->async_report_lock);
+  g_mutex_unlock (&flow->async_report_lock);
+
   g_mutex_lock (&flow->flow_mutex);
   fclose (flow->output_file);
   flow->output_file = NULL;
@@ -797,6 +824,8 @@ validate_flow_override_finalize (GObject * object)
   if (flow->ignored_fields)
     gst_structure_free (flow->ignored_fields);
   g_strfreev (flow->expected_lines);
+  g_mutex_clear (&flow->async_report_lock);
+  g_cond_clear (&flow->async_report_cond);
 
   G_OBJECT_CLASS (validate_flow_override_parent_class)->finalize (object);
 }
