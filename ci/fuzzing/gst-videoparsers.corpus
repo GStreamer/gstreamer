@@ -1,0 +1,10 @@
+subprojects/gst-plugins-good/tests/files/flv_test/h264/*.h264
+subprojects/gst-plugins-good/tests/files/flv_test/h265/*.h265
+subprojects/gst-plugins-bad/tests/files/*.mp4
+subprojects/gst-plugins-bad/tests/files/*.mkv
+subprojects/gst-plugins-good/tests/files/*.mp4
+subprojects/gst-plugins-good/tests/files/*.mkv
+subprojects/gst-plugins-good/tests/files/*.jpg
+subprojects/gst-plugins-bad/tests/check/elements/uvch264demux_data/*.jpg
+subprojects/gst-plugins-bad/tests/files/*.png
+subprojects/gst-plugins-good/tests/files/*.j2k
