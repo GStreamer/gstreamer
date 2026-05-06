@@ -16855,6 +16855,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
           dops = qtdemux_tree_get_child_by_type (stsd_entry, FOURCC_dops);
           if (dops == NULL) {
             GST_WARNING_OBJECT (qtdemux, "Opus Specific Box not found");
+            g_free (codec);
             goto corrupt_file;
           }
 
@@ -16880,12 +16881,14 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
           if (len < offset + dops_len) {
             GST_WARNING_OBJECT (qtdemux,
                 "Opus Sample Entry has bogus size %" G_GUINT32_FORMAT, len);
+            g_free (codec);
             goto corrupt_file;
           }
           if (dops_len < 19) {
             GST_WARNING_OBJECT (qtdemux,
                 "Opus Specific Box has bogus size %" G_GUINT32_FORMAT,
                 dops_len);
+            g_free (codec);
             goto corrupt_file;
           }
 
@@ -16898,6 +16901,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
               GST_WARNING_OBJECT (qtdemux,
                   "Opus Specific Box has bogus size %" G_GUINT32_FORMAT,
                   dops_len);
+              g_free (codec);
               goto corrupt_file;
             }
 
@@ -16920,6 +16924,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
             GST_WARNING_OBJECT (qtdemux,
                 "Opus unexpected nb of channels %d without channel mapping",
                 n_channels);
+            g_free (codec);
             goto corrupt_file;
           }
 
