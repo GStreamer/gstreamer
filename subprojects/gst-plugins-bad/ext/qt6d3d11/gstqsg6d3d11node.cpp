@@ -251,6 +251,22 @@ GstQSG6D3D11Node::SetBuffer (GstBuffer * buffer)
     gst_d3d11_device_unlock (device_);
 
     markDirty (QSGNode::DirtyMaterial);
+  } else if (backbuffer_ && buffer_changed) {
+    GstMapInfo map_info;
+    auto mem = gst_buffer_peek_memory (backbuffer_, 0);
+    auto dmem = GST_D3D11_MEMORY_CAST (mem);
+
+    gst_memory_map (mem,
+        &map_info, (GstMapFlags) (GST_MAP_D3D11 | GST_MAP_WRITE));
+
+    auto rtv = gst_d3d11_memory_get_render_target_view (dmem, 0);
+    auto ctx = gst_d3d11_device_get_device_context_handle (dmem->device);
+
+    FLOAT clear_color[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    ctx->ClearRenderTargetView (rtv, clear_color);
+
+    gst_memory_unmap (mem, &map_info);
+    markDirty (QSGNode::DirtyMaterial);
   }
 
   mapTexture ();

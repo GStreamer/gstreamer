@@ -79,6 +79,9 @@ static void gst_qml6_d3d11_sink_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_qml6_d3d11_sink_set_context (GstElement * element,
     GstContext * context);
+static GstStateChangeReturn
+gst_qml6_d3d11_sink_change_state (GstElement * element,
+    GstStateChange transition);
 static gboolean gst_qml6_d3d11_sink_set_caps (GstBaseSink * sink,
     GstCaps * caps);
 static gboolean gst_qml6_d3d11_sink_start (GstBaseSink * sink);
@@ -135,6 +138,8 @@ gst_qml6_d3d11_sink_class_init (GstQml6D3D11SinkClass * klass)
 
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_qml6_d3d11_sink_set_context);
+  element_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_qml6_d3d11_sink_change_state);
 
   sink_class->set_caps = GST_DEBUG_FUNCPTR (gst_qml6_d3d11_sink_set_caps);
   sink_class->start = GST_DEBUG_FUNCPTR (gst_qml6_d3d11_sink_start);
@@ -250,6 +255,22 @@ gst_qml6_d3d11_sink_set_context (GstElement * element, GstContext * context)
   }
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
+}
+
+static GstStateChangeReturn
+gst_qml6_d3d11_sink_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  auto self = GST_QML6_D3D11_SINK (element);
+  auto priv = self->priv;
+
+  auto ret = GST_ELEMENT_CLASS (parent_class)->change_state (element,
+      transition);
+
+  if (transition == GST_STATE_CHANGE_PAUSED_TO_READY && priv->widget)
+    priv->widget->SetBuffer (nullptr);
+
+  return ret;
 }
 
 static gboolean
