@@ -40,6 +40,14 @@
   ERRORIGNORE " ! " \
   "audio/x-raw,rate=8000 ! " \
   "rtpgstpay name=pay1 pt=97"
+#define VIDEO_PIPELINE_LIVE "videotestsrc is-live=true ! " \
+  ERRORIGNORE " ! " \
+  "video/x-raw,format=I420,width=352,height=288 ! " \
+  "rtpgstpay name=pay0 pt=96"
+#define AUDIO_PIPELINE_LIVE "audiotestsrc is-live=true ! " \
+  ERRORIGNORE " ! " \
+  "audio/x-raw,rate=8000 ! " \
+  "rtpgstpay name=pay1 pt=97"
 
 #define TEST_MOUNT_POINT  "/test"
 #define TEST_PROTO        "RTP/AVP"
@@ -153,7 +161,7 @@ get_client_ports (GstRTSPRange * range)
 
 /* start the tested rtsp server */
 static void
-start_server (gboolean set_shared_factory)
+start_server (gboolean set_shared_factory, gboolean is_live)
 {
   GstRTSPMountPoints *mounts;
   gchar *service;
@@ -164,8 +172,13 @@ start_server (gboolean set_shared_factory)
 
   factory = gst_rtsp_media_factory_new ();
 
-  gst_rtsp_media_factory_set_launch (factory,
-      "( " VIDEO_PIPELINE "  " AUDIO_PIPELINE " )");
+  if (is_live)
+    gst_rtsp_media_factory_set_launch (factory,
+        "( " VIDEO_PIPELINE_LIVE "  " AUDIO_PIPELINE_LIVE " )");
+  else
+    gst_rtsp_media_factory_set_launch (factory,
+        "( " VIDEO_PIPELINE "  " AUDIO_PIPELINE " )");
+
   gst_rtsp_mount_points_add_factory (mounts, TEST_MOUNT_POINT, factory);
   g_object_unref (mounts);
 
@@ -638,7 +651,7 @@ GST_START_TEST (test_connect)
 {
   GstRTSPConnection *conn;
 
-  start_server (FALSE);
+  start_server (FALSE, TRUE);
 
   /* connect to server */
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
@@ -664,7 +677,7 @@ GST_START_TEST (test_describe)
   const gchar *control_video;
   const gchar *control_audio;
 
-  start_server (FALSE);
+  start_server (FALSE, TRUE);
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
 
@@ -735,7 +748,7 @@ GST_START_TEST (test_describe_non_existing_mount_point)
 {
   GstRTSPConnection *conn;
 
-  start_server (FALSE);
+  start_server (FALSE, TRUE);
 
   /* send DESCRIBE request for a non-existing mount point
    * and check that we get a 404 Not Found */
@@ -764,7 +777,7 @@ do_test_setup (GstRTSPLowerTrans lower_transport)
   GstRTSPTransport *video_transport = NULL;
   GstRTSPTransport *audio_transport = NULL;
 
-  start_server (FALSE);
+  start_server (FALSE, TRUE);
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
 
@@ -849,7 +862,7 @@ GST_START_TEST (test_setup_twice)
   gchar *session1 = NULL;
   gchar *session2 = NULL;
 
-  start_server (FALSE);
+  start_server (FALSE, TRUE);
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
 
@@ -921,7 +934,7 @@ GST_START_TEST (test_setup_with_require_header)
   gchar *unsupported = NULL;
   GstRTSPTransport *video_transport = NULL;
 
-  start_server (FALSE);
+  start_server (FALSE, TRUE);
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
 
@@ -983,7 +996,7 @@ GST_START_TEST (test_setup_non_existing_stream)
   GstRTSPConnection *conn;
   GstRTSPRange client_ports;
 
-  start_server (FALSE);
+  start_server (FALSE, TRUE);
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
 
@@ -1230,7 +1243,7 @@ do_test_play (const gchar * range)
 
 GST_START_TEST (test_play)
 {
-  start_server (FALSE);
+  start_server (FALSE, TRUE);
 
   do_test_play (NULL);
 
@@ -1314,7 +1327,7 @@ GST_START_TEST (test_play_without_session)
 {
   GstRTSPConnection *conn;
 
-  start_server (FALSE);
+  start_server (FALSE, TRUE);
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
 
@@ -1374,7 +1387,7 @@ GST_START_TEST (test_play_multithreaded)
   gst_rtsp_thread_pool_set_max_threads (pool, 2);
   g_object_unref (pool);
 
-  start_server (FALSE);
+  start_server (FALSE, TRUE);
 
   do_test_play (NULL);
 
@@ -1434,7 +1447,7 @@ GST_START_TEST (test_play_multithreaded_block_in_describe)
   gst_rtsp_mount_points_add_factory (mounts, TEST_MOUNT_POINT "2", factory);
   g_object_unref (mounts);
 
-  start_server (FALSE);
+  start_server (FALSE, TRUE);
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT "2");
   iterate ();
@@ -1513,7 +1526,7 @@ GST_START_TEST (test_play_multithreaded_timeout_client)
   g_signal_connect (server, "client-connected",
       G_CALLBACK (session_connected_new_session_cb), new_session_timeout_one);
 
-  start_server (FALSE);
+  start_server (FALSE, TRUE);
 
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
@@ -1586,7 +1599,7 @@ GST_START_TEST (test_play_multithreaded_timeout_session)
   g_signal_connect (server, "client-connected",
       G_CALLBACK (session_connected_new_session_cb), new_session_timeout_one);
 
-  start_server (FALSE);
+  start_server (FALSE, TRUE);
 
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
@@ -1683,7 +1696,7 @@ GST_START_TEST (test_play_timeout_connection)
       G_CALLBACK (session_connected_new_session_cb),
       new_connection_and_session_timeout_one);
 
-  start_server (FALSE);
+  start_server (FALSE, TRUE);
 
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
@@ -1788,7 +1801,7 @@ GST_START_TEST (test_play_one_active_stream)
   g_signal_connect (server, "client-connected",
       G_CALLBACK (session_connected_new_session_cb), new_session_timeout_one);
 
-  start_server (FALSE);
+  start_server (FALSE, TRUE);
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
 
@@ -1848,7 +1861,7 @@ GST_START_TEST (test_play_disconnect)
   g_signal_connect (server, "client-connected",
       G_CALLBACK (session_connected_new_session_cb), new_session_timeout_one);
 
-  start_server (FALSE);
+  start_server (FALSE, TRUE);
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
 
@@ -2009,7 +2022,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_play_smpte_range)
 {
-  start_server (FALSE);
+  start_server (FALSE, FALSE);
 
   do_test_play ("npt=5-");
   do_test_play ("smpte=0:00:00-");
@@ -2069,7 +2082,7 @@ test_shared (gpointer (thread_func) (gpointer data))
   if (thread_func == thread_func_tcp)
     start_tcp_server (TRUE);
   else
-    start_server (TRUE);
+    start_server (TRUE, TRUE);
 
   /* Start the first receiver thread. */
   g_mutex_lock (&lock1);
@@ -2509,7 +2522,7 @@ do_test_multiple_transports (GstRTSPLowerTrans trans1, GstRTSPLowerTrans trans2)
 
 GST_START_TEST (test_multiple_transports)
 {
-  start_server (TRUE);
+  start_server (TRUE, TRUE);
   do_test_multiple_transports (GST_RTSP_LOWER_TRANS_UDP,
       GST_RTSP_LOWER_TRANS_TCP);
   stop_server ();
@@ -2537,7 +2550,7 @@ GST_START_TEST (test_suspend_mode_reset_only_audio)
   gst_rtsp_media_factory_set_suspend_mode (factory,
       GST_RTSP_SUSPEND_MODE_RESET);
   gst_rtsp_media_factory_set_launch (factory,
-      "( " VIDEO_PIPELINE "  " AUDIO_PIPELINE " )");
+      "( " VIDEO_PIPELINE_LIVE "  " AUDIO_PIPELINE_LIVE " )");
   gst_rtsp_mount_points_add_factory (mounts, TEST_MOUNT_POINT, factory);
   g_object_unref (mounts);
 
