@@ -602,7 +602,7 @@ gst_ebml_read_ascii (GstEbmlRead * ebml, guint32 * id, gchar ** str_out)
 
   for (iter = str; *iter != '\0'; iter++) {
     if (G_UNLIKELY (*iter & 0x80)) {
-      GST_ERROR_OBJECT (ebml,
+      GST_ERROR_OBJECT (ebml->el,
           "Invalid ASCII string at offset %" G_GUINT64_FORMAT, oldoff);
       g_free (str);
       return GST_FLOW_ERROR;
