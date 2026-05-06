@@ -52,6 +52,8 @@
 #include "coremediabuffer.h"
 #include "vtutil.h"
 
+#include <gst/iosurface/gstiosurface.h>
+
 GST_DEBUG_CATEGORY_STATIC (gst_avf_asset_src_debug);
 #define GST_CAT_DEFAULT gst_avf_asset_src_debug
 
@@ -87,14 +89,27 @@ static GstStaticPadTemplate audio_factory = GST_STATIC_PAD_TEMPLATE ("audio",
     )
 );
 
+#define AVF_ASSET_SRC_VIDEO_FORMATS "NV12"
+#define AVF_ASSET_SRC_VIDEO_CAPS_FIELDS \
+    "framerate = " GST_VIDEO_FPS_RANGE ", " \
+    "width = " GST_VIDEO_SIZE_RANGE ", " \
+    "height = " GST_VIDEO_SIZE_RANGE
+#define AVF_ASSET_SRC_VIDEO_CAPS_WITH_FEATURES(features) \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (features, \
+        AVF_ASSET_SRC_VIDEO_FORMATS) ", " \
+    AVF_ASSET_SRC_VIDEO_CAPS_FIELDS
+#define AVF_ASSET_SRC_VIDEO_CAPS_SYSTEM_MEMORY \
+    "video/x-raw, " \
+    "format = (string) " AVF_ASSET_SRC_VIDEO_FORMATS ", " \
+    AVF_ASSET_SRC_VIDEO_CAPS_FIELDS
+
 static GstStaticPadTemplate video_factory = GST_STATIC_PAD_TEMPLATE ("video",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) NV12, "
-        "framerate = " GST_VIDEO_FPS_RANGE ", "
-        "width = " GST_VIDEO_SIZE_RANGE ", "
-        "height = " GST_VIDEO_SIZE_RANGE
+    GST_STATIC_CAPS (
+        AVF_ASSET_SRC_VIDEO_CAPS_SYSTEM_MEMORY "; "
+        AVF_ASSET_SRC_VIDEO_CAPS_WITH_FEATURES
+        (GST_CAPS_FEATURE_MEMORY_IOSURFACE)
     )
 );
 
@@ -114,6 +129,8 @@ static gboolean gst_avf_asset_src_send_event (GstAVFAssetSrc *self,
     GstEvent *event);
 static GstFlowReturn gst_avf_asset_src_send_start_stream (GstAVFAssetSrc * self,
     GstPad * pad, const gchar * stream_type);
+static GstCaps * gst_avf_asset_src_select_video_caps (GstAVFAssetSrc * self,
+    GstCaps * caps);
 
 static void gst_avf_asset_src_read_audio (GstAVFAssetSrc *self);
 static void gst_avf_asset_src_read_video (GstAVFAssetSrc *self);
@@ -388,6 +405,48 @@ gst_avf_asset_src_get_caps(GstAVFAssetSrc * self, GstPad * pad, GstCaps * filter
   }
 
   return caps;
+}
+
+static gboolean
+gst_avf_asset_src_caps_has_feature (GstCaps * caps, const gchar * feature)
+{
+  GstCapsFeatures *features;
+
+  if (caps == NULL || gst_caps_is_empty (caps) || gst_caps_is_any (caps))
+    return FALSE;
+
+  features = gst_caps_get_features (caps, 0);
+  return features != NULL && gst_caps_features_contains (features, feature);
+}
+
+static GstCaps *
+gst_avf_asset_src_select_video_caps (GstAVFAssetSrc * self, GstCaps * caps)
+{
+  GstCaps *peer_caps;
+  GstCaps *candidates;
+  GstCaps *intersection;
+
+  peer_caps = gst_pad_peer_query_caps (self->videopad, NULL);
+  if (peer_caps == NULL || gst_caps_is_any (peer_caps)) {
+    gst_clear_caps (&peer_caps);
+    return gst_caps_ref (caps);
+  }
+
+  candidates = gst_caps_copy (caps);
+  gst_caps_append (candidates, gst_applemedia_copy_caps_with_feature (caps,
+          GST_CAPS_FEATURE_MEMORY_IOSURFACE));
+
+  intersection =
+      gst_caps_intersect_full (peer_caps, candidates, GST_CAPS_INTERSECT_FIRST);
+  gst_caps_unref (peer_caps);
+  gst_caps_unref (candidates);
+
+  if (gst_caps_is_empty (intersection)) {
+    gst_caps_unref (intersection);
+    return gst_caps_ref (caps);
+  }
+
+  return gst_caps_fixate (intersection);
 }
 
 static gboolean
@@ -749,6 +808,7 @@ gst_avf_asset_src_start (GstAVFAssetSrc *self)
   }
   if (AVF_ASSET_READER_HAS_VIDEO (self)) {
     GstCaps *vcaps = NULL;
+    GstCaps *selected_caps = NULL;
 
     self->videopad = gst_pad_new_from_static_template (&video_factory, "video");
     gst_pad_set_query_function (self->videopad,
@@ -768,13 +828,17 @@ gst_avf_asset_src_start (GstAVFAssetSrc *self)
         vcaps = gst_caps_fixate (vcaps);
       }
     }
-    if (vcaps) {
-      gst_pad_set_caps (self->videopad, vcaps);
-      gst_pad_push_event (self->videopad, gst_event_new_caps (vcaps));
-      gst_caps_unref (vcaps);
-    }
-    gst_pad_push_event (self->videopad, gst_event_new_segment (&segment));
     gst_element_add_pad (GST_ELEMENT (self), self->videopad);
+
+    if (vcaps) {
+      selected_caps = gst_avf_asset_src_select_video_caps (self, vcaps);
+      gst_pad_set_caps (self->videopad, selected_caps);
+      gst_pad_push_event (self->videopad, gst_event_new_caps (selected_caps));
+      gst_caps_unref (selected_caps);
+    }
+
+    gst_pad_push_event (self->videopad, gst_event_new_segment (&segment));
+    gst_clear_caps (&vcaps);
   }
   gst_element_no_more_pads (GST_ELEMENT (self));
 
@@ -784,15 +848,27 @@ gst_avf_asset_src_start (GstAVFAssetSrc *self)
 static void
 gst_avf_asset_src_update_video_allocation (GstAVFAssetSrc * self)
 {
+  GstCaps *base_caps;
   GstCaps *caps;
+  GstCaps *current_caps;
   GstQuery *query;
 
   if (!self->videopad)
     return;
 
-  caps = [GST_AVF_ASSET_SRC_READER (self) videoCaps];
-  if (!caps)
+  base_caps = [GST_AVF_ASSET_SRC_READER (self) videoCaps];
+  if (!base_caps)
     return;
+
+  caps = gst_avf_asset_src_select_video_caps (self, base_caps);
+  gst_caps_unref (base_caps);
+
+  current_caps = gst_pad_get_current_caps (self->videopad);
+  if (!current_caps || !gst_caps_is_equal (current_caps, caps)) {
+    gst_pad_set_caps (self->videopad, caps);
+    gst_pad_push_event (self->videopad, gst_event_new_caps (caps));
+  }
+  gst_clear_caps (&current_caps);
 
   query = gst_query_new_allocation (caps, TRUE);
   if (!gst_pad_peer_query (self->videopad, query)) {
@@ -800,7 +876,9 @@ gst_avf_asset_src_update_video_allocation (GstAVFAssetSrc * self)
   }
 
   self->use_video_meta =
-      gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+      gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL) ||
+      gst_avf_asset_src_caps_has_feature (caps,
+      GST_CAPS_FEATURE_MEMORY_IOSURFACE);
   if (self->reader != NULL) {
     [GST_AVF_ASSET_SRC_READER (self) setUseVideoMeta: self->use_video_meta];
   }
@@ -1154,7 +1232,8 @@ gst_avf_asset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
     settings = [NSDictionary dictionaryWithObjectsAndKeys:
         [NSNumber numberWithInt:
         kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange],
-        kCVPixelBufferPixelFormatTypeKey, nil];
+        kCVPixelBufferPixelFormatTypeKey,
+        [NSDictionary dictionary], kCVPixelBufferIOSurfacePropertiesKey, nil];
   } else {
     return FALSE;
   }

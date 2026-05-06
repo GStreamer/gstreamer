@@ -35,6 +35,7 @@
 
 #include <gst/video/video.h>
 #include <gst/gl/gstglcontext.h>
+#include <gst/iosurface/gstiosurface.h>
 #include "coremediabuffer.h"
 #include "videotexturecache-gl.h"
 #include "helpers.h"
@@ -191,6 +192,20 @@ gst_avf_screen_dup_name (NSScreen * screen, CGDirectDisplayID display_id)
 }
 #endif
 
+#define AVF_VIDEO_SRC_CAPTURE_FORMATS "{ NV12, UYVY, YUY2 }"
+#define AVF_VIDEO_SRC_BGRA_FORMATS "BGRA"
+#define AVF_VIDEO_SRC_VIDEO_CAPS_FIELDS \
+    "framerate = " GST_VIDEO_FPS_RANGE ", " \
+    "width = " GST_VIDEO_SIZE_RANGE ", " \
+    "height = " GST_VIDEO_SIZE_RANGE
+#define AVF_VIDEO_SRC_CAPS_WITH_FEATURES(features, formats) \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (features, formats) ", " \
+    AVF_VIDEO_SRC_VIDEO_CAPS_FIELDS
+#define AVF_VIDEO_SRC_CAPS_SYSTEM_MEMORY(formats) \
+    "video/x-raw, " \
+    "format = (string) " formats ", " \
+    AVF_VIDEO_SRC_VIDEO_CAPS_FIELDS
+
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -206,17 +221,19 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
             "NV12") ", "
         "texture-target = " GST_GL_TEXTURE_TARGET_2D_STR "; "
 #endif
-        "video/x-raw, "
-        "format = (string) { NV12, UYVY, YUY2 }, "
-        "framerate = " GST_VIDEO_FPS_RANGE ", "
-        "width = " GST_VIDEO_SIZE_RANGE ", "
-        "height = " GST_VIDEO_SIZE_RANGE "; "
+        AVF_VIDEO_SRC_CAPS_SYSTEM_MEMORY
+        (AVF_VIDEO_SRC_CAPTURE_FORMATS) "; "
 
-        "video/x-raw, "
-        "format = (string) BGRA, "
-        "framerate = " GST_VIDEO_FPS_RANGE ", "
-        "width = " GST_VIDEO_SIZE_RANGE ", "
-        "height = " GST_VIDEO_SIZE_RANGE "; "
+        AVF_VIDEO_SRC_CAPS_SYSTEM_MEMORY
+        (AVF_VIDEO_SRC_BGRA_FORMATS) "; "
+
+        AVF_VIDEO_SRC_CAPS_WITH_FEATURES
+        (GST_CAPS_FEATURE_MEMORY_IOSURFACE,
+            AVF_VIDEO_SRC_CAPTURE_FORMATS) "; "
+
+        AVF_VIDEO_SRC_CAPS_WITH_FEATURES
+        (GST_CAPS_FEATURE_MEMORY_IOSURFACE,
+            AVF_VIDEO_SRC_BGRA_FORMATS) "; "
 ));
 
 typedef enum _QueueState {
@@ -972,9 +989,9 @@ G_GNUC_END_IGNORE_DEPRECATIONS
         "width: %d height: %d format: %s", width, height,
         gst_video_format_to_string (format));
     int video_format = gst_video_format_to_cvpixelformat (format);
-    output.videoSettings = [NSDictionary
-        dictionaryWithObject:[NSNumber numberWithInt:video_format]
-        forKey:(NSString*)kCVPixelBufferPixelFormatTypeKey];
+    output.videoSettings = [NSDictionary dictionaryWithObjectsAndKeys:
+        [NSNumber numberWithInt:video_format], kCVPixelBufferPixelFormatTypeKey,
+        [NSDictionary dictionary], kCVPixelBufferIOSurfacePropertiesKey, nil];
 
     if (captureScreen) {
 #if TARGET_OS_OSX
@@ -1243,6 +1260,11 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     return TRUE;
 
   features = gst_caps_get_features (alloc_caps, 0);
+  if (features && gst_caps_features_contains (features,
+          GST_CAPS_FEATURE_MEMORY_IOSURFACE)) {
+    useVideoMeta = TRUE;
+  }
+
   if (features && gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
     GstVideoTextureCacheGL *cache_gl;
@@ -1824,7 +1846,7 @@ gst_avf_video_src_set_context (GstElement * element, GstContext * context)
 GstCaps*
 gst_av_capture_device_get_caps (AVCaptureDevice *device, AVCaptureVideoDataOutput *output, GstAVFVideoSourceOrientation orientation)
 {
-  GstCaps *result_caps, *result_gl_caps;
+  GstCaps *result_caps, *result_gl_caps, *result_iosurface_caps;
 #if TARGET_OS_OSX || TARGET_OS_IOS || TARGET_OS_TV
   gboolean is_gl_format;
 #if TARGET_OS_OSX
@@ -1836,6 +1858,7 @@ gst_av_capture_device_get_caps (AVCaptureDevice *device, AVCaptureVideoDataOutpu
 
   result_caps = gst_caps_new_empty ();
   result_gl_caps = gst_caps_new_empty ();
+  result_iosurface_caps = gst_caps_new_empty ();
 
   /* Iterate in reverse order so UYVY is first and BGRA is last */
   for (AVCaptureDeviceFormat *format in device.formats.reverseObjectEnumerator) {
@@ -1878,6 +1901,10 @@ gst_av_capture_device_get_caps (AVCaptureDevice *device, AVCaptureVideoDataOutpu
           caps = GST_AVF_FPS_RANGE_CAPS_NEW (gst_format, dimensions.width,
               dimensions.height, min_fps_n, min_fps_d, max_fps_n, max_fps_d);
 
+        gst_caps_append (result_iosurface_caps,
+            gst_applemedia_copy_caps_with_feature (caps,
+                GST_CAPS_FEATURE_MEMORY_IOSURFACE));
+
 #if TARGET_OS_OSX || TARGET_OS_IOS || TARGET_OS_TV
         is_gl_format = FALSE;
         for (int i = 0; i < G_N_ELEMENTS (gl_formats); i++) {
@@ -1912,7 +1939,10 @@ gst_av_capture_device_get_caps (AVCaptureDevice *device, AVCaptureVideoDataOutpu
     }
   }
 
-  result_gl_caps = gst_caps_simplify (gst_caps_merge (result_gl_caps, result_caps));
+  result_gl_caps =
+      gst_caps_simplify (gst_caps_merge (result_gl_caps, result_caps));
+  result_gl_caps =
+      gst_caps_merge (result_gl_caps, gst_caps_simplify (result_iosurface_caps));
 
   return result_gl_caps;
 }
@@ -1935,11 +1965,17 @@ gst_av_capture_screen_rect_get_caps (CGRect rect, gdouble scale,
         gst_video_format_from_cvpixelformat ([pixel_format integerValue]);
 
     if (gst_format != GST_VIDEO_FORMAT_UNKNOWN) {
-      gst_caps_append (result, gst_caps_new_simple ("video/x-raw",
+      GstCaps *caps = gst_caps_new_simple ("video/x-raw",
               "width", G_TYPE_INT, (gint) (rect.size.width * scale),
               "height", G_TYPE_INT, (gint) (rect.size.height * scale),
               "format", G_TYPE_STRING,
-              gst_video_format_to_string (gst_format), NULL));
+              gst_video_format_to_string (gst_format), NULL);
+      GstCaps *iosurface_caps =
+          gst_applemedia_copy_caps_with_feature (caps,
+          GST_CAPS_FEATURE_MEMORY_IOSURFACE);
+
+      gst_caps_append (result, caps);
+      gst_caps_append (result, iosurface_caps);
     }
   }
 

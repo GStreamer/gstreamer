@@ -118,6 +118,25 @@ gst_video_format_to_cvpixelformat (GstVideoFormat fmt)
   }
 }
 
+GstCaps *
+gst_applemedia_copy_caps_with_feature (GstCaps * caps, const gchar * feature)
+{
+  GstCaps *copy;
+  guint n_structs;
+
+  g_return_val_if_fail (caps != NULL, NULL);
+  g_return_val_if_fail (feature != NULL, NULL);
+
+  copy = gst_caps_copy (caps);
+
+  n_structs = gst_caps_get_size (copy);
+  for (guint i = 0; i < n_structs; i++)
+    gst_caps_set_features (copy, i, gst_caps_features_new_static_str (feature,
+            NULL));
+
+  return copy;
+}
+
 void
 gst_applemedia_init_once (void)
 {

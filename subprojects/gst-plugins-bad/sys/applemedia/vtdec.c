@@ -59,6 +59,7 @@
 #include <gst/video/video.h>
 #include <gst/video/gstvideodecoder.h>
 #include <gst/gl/gstglcontext.h>
+#include <gst/iosurface/gstiosurface.h>
 #include <gst/codecparsers/gstav1parser.h>
 #include <gst/codecparsers/gsth264parser.h>
 #include <gst/codecparsers/gsth265parser.h>
@@ -261,7 +262,9 @@ static SupplementalSupport gst_vtdec_codec_support = NoneSupported;
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(GST_CAPS_FEATURE_MEMORY_GL_MEMORY,\
         VIDEO_SRC_CAPS_GL_FORMATS) ", "                                 \
     "texture-target = (string) rectangle ;"                              \
-    GST_VIDEO_CAPS_MAKE(VIDEO_SRC_CAPS_NATIVE_FORMATS)
+    GST_VIDEO_CAPS_MAKE(VIDEO_SRC_CAPS_NATIVE_FORMATS) ";"              \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(GST_CAPS_FEATURE_MEMORY_IOSURFACE,\
+        VIDEO_SRC_CAPS_NATIVE_FORMATS)
 
 #ifdef APPLEMEDIA_MOLTENVK
 #define VIDEO_SRC_CAPS                                                      \
@@ -288,9 +291,12 @@ gst_vtdec_class_init (GstVtdecClass * klass)
   {
     GstCaps *caps = gst_caps_from_string (VIDEO_SRC_CAPS);
     /* RGBA64_LE is kCVPixelFormatType_64RGBALE, only available on macOS 11.3+ */
-    if (GST_APPLEMEDIA_HAVE_64RGBALE)
+    if (GST_APPLEMEDIA_HAVE_64RGBALE) {
       caps = gst_vtutil_caps_append_video_format (caps, "RGBA64_LE",
           GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+      caps = gst_vtutil_caps_append_video_format (caps, "RGBA64_LE",
+          GST_CAPS_FEATURE_MEMORY_IOSURFACE);
+    }
     gst_element_class_add_pad_template (element_class,
         gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps));
     gst_caps_unref (caps);
@@ -1416,6 +1422,7 @@ gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format,
     gboolean enable_hardware)
 {
   CFMutableDictionaryRef output_image_buffer_attrs;
+  CFDictionaryRef iosurface_properties;
   VTDecompressionOutputCallbackRecord callback;
   CFMutableDictionaryRef videoDecoderSpecification;
   OSStatus status;
@@ -1452,6 +1459,11 @@ gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format,
       vtdec->video_info.width);
   gst_vtutil_dict_set_i32 (output_image_buffer_attrs, kCVPixelBufferHeightKey,
       vtdec->video_info.height);
+  iosurface_properties = CFDictionaryCreate (NULL, NULL, NULL, 0,
+      &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+  CFDictionarySetValue (output_image_buffer_attrs,
+      kCVPixelBufferIOSurfacePropertiesKey, iosurface_properties);
+  CFRelease (iosurface_properties);
 
   callback.decompressionOutputCallback = gst_vtdec_session_output_callback;
   callback.decompressionOutputRefCon = vtdec;
