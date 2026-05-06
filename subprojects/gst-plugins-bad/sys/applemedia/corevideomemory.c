@@ -23,6 +23,9 @@
 
 #include "corevideomemory.h"
 
+#include <gst/iosurface/gstiosurface.h>
+#include <CoreVideo/CVPixelBufferIOSurface.h>
+
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_APPLE_CORE_VIDEO_MEMORY);
 #define GST_CAT_DEFAULT GST_CAT_APPLE_CORE_VIDEO_MEMORY
 
@@ -250,6 +253,28 @@ G_DEFINE_TYPE (GstAppleCoreVideoAllocator, gst_apple_core_video_allocator,
 /* Singleton instance of GstAppleCoreVideoAllocator */
 static GstAppleCoreVideoAllocator *_apple_core_video_allocator;
 
+static gboolean
+gst_apple_core_video_memory_query_iosurface (GstMemory * gmem,
+    IOSurfaceRef * surface, guint * plane)
+{
+  GstAppleCoreVideoMemory *mem = (GstAppleCoreVideoMemory *) gmem;
+  IOSurfaceRef mem_surface;
+
+  if (!gst_is_apple_core_video_memory (gmem))
+    return FALSE;
+
+  mem_surface = CVPixelBufferGetIOSurface (mem->gpixbuf->buf);
+  if (!mem_surface)
+    return FALSE;
+
+  if (surface)
+    *surface = mem_surface;
+  if (plane)
+    *plane = mem->plane;
+
+  return TRUE;
+}
+
 /**
  * gst_apple_core_video_memory_init:
  *
@@ -273,6 +298,9 @@ gst_apple_core_video_memory_init (void)
 
     gst_allocator_register (GST_APPLE_CORE_VIDEO_ALLOCATOR_NAME,
         gst_object_ref (_apple_core_video_allocator));
+    gst_iosurface_memory_register_query_function
+        (GST_TYPE_APPLE_CORE_VIDEO_ALLOCATOR,
+        gst_apple_core_video_memory_query_iosurface);
     g_once_init_leave (&_init, 1);
   }
 }

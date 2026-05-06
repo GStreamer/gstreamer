@@ -24,6 +24,7 @@
 
 #include "iosurfacevulkanmemory.h"
 #include <vulkan/vulkan_metal.h>
+#include <gst/iosurface/gstiosurface.h>
 #include "metal-helpers.h"
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_IO_SURFACE_VULKAN_MEMORY);
@@ -40,6 +41,23 @@ typedef struct
 } ContextThreadData;
 
 static GstAllocator *_io_surface_vulkan_memory_allocator;
+
+static gboolean
+gst_io_surface_vulkan_memory_query_iosurface (GstMemory * gmem,
+    IOSurfaceRef * surface, guint * plane)
+{
+  GstIOSurfaceVulkanMemory *mem = (GstIOSurfaceVulkanMemory *) gmem;
+
+  if (!gst_is_io_surface_vulkan_memory (gmem) || !mem->surface)
+    return FALSE;
+
+  if (surface)
+    *surface = mem->surface;
+  if (plane)
+    *plane = mem->plane;
+
+  return TRUE;
+}
 
 static void
 _mem_free (GstAllocator * allocator, GstMemory * mem)
@@ -129,6 +147,9 @@ gst_io_surface_vulkan_memory_init (void)
 
     gst_allocator_register (GST_IO_SURFACE_VULKAN_MEMORY_ALLOCATOR_NAME,
         gst_object_ref (_io_surface_vulkan_memory_allocator));
+    gst_iosurface_memory_register_query_function
+        (GST_TYPE_IO_SURFACE_VULKAN_MEMORY_ALLOCATOR,
+        gst_io_surface_vulkan_memory_query_iosurface);
     g_once_init_leave (&_init, 1);
   }
 }

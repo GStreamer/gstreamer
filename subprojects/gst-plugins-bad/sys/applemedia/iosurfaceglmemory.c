@@ -24,6 +24,8 @@
 
 #include "iosurfaceglmemory.h"
 
+#include <gst/iosurface/gstiosurface.h>
+
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_IO_SURFACE_GL_MEMORY);
 #define GST_CAT_DEFAULT GST_CAT_IO_SURFACE_GL_MEMORY
 
@@ -40,6 +42,24 @@ static void _io_surface_gl_memory_set_surface (GstIOSurfaceGLMemory * memory,
     IOSurfaceRef surface);
 
 static GstAllocator *_io_surface_gl_memory_allocator;
+
+static gboolean
+gst_io_surface_gl_memory_query_iosurface (GstMemory * gmem,
+    IOSurfaceRef * surface, guint * plane)
+{
+  GstIOSurfaceGLMemory *mem = (GstIOSurfaceGLMemory *) gmem;
+  GstGLMemory *gl_mem = (GstGLMemory *) gmem;
+
+  if (!gst_is_io_surface_gl_memory (gmem) || !mem->surface)
+    return FALSE;
+
+  if (surface)
+    *surface = mem->surface;
+  if (plane)
+    *plane = gl_mem->plane;
+
+  return TRUE;
+}
 
 static gboolean
 _io_surface_gl_memory_create (GstGLBaseMemory * bmem, GError ** error)
@@ -153,6 +173,9 @@ gst_ios_surface_gl_memory_init (void)
 
     gst_allocator_register (GST_IO_SURFACE_GL_MEMORY_ALLOCATOR_NAME,
         gst_object_ref (_io_surface_gl_memory_allocator));
+    gst_iosurface_memory_register_query_function
+        (GST_TYPE_IO_SURFACE_GL_MEMORY_ALLOCATOR,
+        gst_io_surface_gl_memory_query_iosurface);
     g_once_init_leave (&_init, 1);
   }
 }
