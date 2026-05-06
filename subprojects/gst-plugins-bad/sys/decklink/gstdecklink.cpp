@@ -1891,8 +1891,10 @@ init_devices (gpointer data)
       IDeckLinkDisplayModeIterator *mode_iter;
 
       dev->input.device = decklink;
+      GStreamerDecklinkInputCallback *callback = new GStreamerDecklinkInputCallback (&dev->input);
       dev->input.input->
-          SetCallback (new GStreamerDecklinkInputCallback (&dev->input));
+          SetCallback (callback);
+      callback->Release ();
 
       if ((ret = dev->input.input->GetDisplayModeIterator (&mode_iter)) == S_OK) {
         IDeckLinkDisplayMode *mode;
@@ -2315,8 +2317,10 @@ gst_decklink_acquire_nth_input (gint n, gint64 persistent_id, GstElement * src,
   }
 
   g_mutex_lock (&input->lock);
-  input->input->SetVideoInputFrameMemoryAllocator (new
-      GStreamerDecklinkMemoryAllocator);
+  GStreamerDecklinkMemoryAllocator *allocator = new GStreamerDecklinkMemoryAllocator();
+  input->input->SetVideoInputFrameMemoryAllocator (allocator);
+  allocator->Release();
+
   if (is_audio && !input->audiosrc) {
     input->audiosrc = GST_ELEMENT_CAST (gst_object_ref (src));
     g_mutex_unlock (&input->lock);

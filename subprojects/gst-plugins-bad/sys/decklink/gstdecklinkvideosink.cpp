@@ -660,7 +660,7 @@ class GStreamerVideoOutputCallback:public IDeckLinkVideoOutputCallback
 {
 public:
   GStreamerVideoOutputCallback (GstDecklinkVideoSink * sink)
-  :IDeckLinkVideoOutputCallback (), m_refcount (0)
+  :IDeckLinkVideoOutputCallback (), m_refcount (1)
   {
     m_sink = GST_DECKLINK_VIDEO_SINK_CAST (gst_object_ref (sink));
     g_mutex_init (&m_mutex);
@@ -1219,8 +1219,9 @@ gst_decklink_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   }
   g_mutex_unlock (&self->output->lock);
 
-  self->output->output->SetScheduledFrameCompletionCallback (new
-      GStreamerVideoOutputCallback (self));
+  GStreamerVideoOutputCallback *callback = new GStreamerVideoOutputCallback (self);
+  self->output->output->SetScheduledFrameCompletionCallback (callback);
+  callback->Release();
 
   if (self->mode == GST_DECKLINK_MODE_AUTO) {
     BMDPixelFormat f;
