@@ -196,9 +196,10 @@ if host_system == 'darwin'
   avfoundation_test_dep = dependency('appleframeworks', modules : ['Foundation', 'AVFoundation'])
   base_tests += [
     [['elements/avfsources-videometa.c'], false, [avfoundation_test_dep], [], false],
+    [['pipelines/avfsources-output-paths.c'], false, [avfoundation_test_dep, gstiosurface_dep], [], false],
     [['pipelines/avfassetsrc-supplemental.c'], false, [videotoolbox_dep]],
     [['pipelines/avfassetsrc-partial.c']],
-    [['pipelines/vtdec-output-paths.c']],
+    [['pipelines/vtdec-output-paths.c'], false, [gstiosurface_dep]],
   ]
 
   if subsystem == 'macos'
