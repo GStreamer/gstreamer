@@ -575,7 +575,8 @@ gst_stream_type_get_name (GstStreamType stype)
         (GST_STREAM_TYPE_AUDIO        \
          | GST_STREAM_TYPE_VIDEO      \
          | GST_STREAM_TYPE_CONTAINER  \
-         | GST_STREAM_TYPE_TEXT)
+         | GST_STREAM_TYPE_TEXT       \
+         | GST_STREAM_TYPE_METADATA)
 
       if ((stype & (~_GST_STREAM_TYPE_ALL)) != 0)
         break;
