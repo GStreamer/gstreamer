@@ -275,7 +275,8 @@ print_caps (const GstCaps * caps, const gchar * pfx, const gchar * fieldname)
           CAPS_FEATURE_COLOR, features_string, RESET_COLOR);
       g_free (features_string);
     } else {
-      n_print ("%s%s%s%s%s%s\n", pfx, FIELD_NAME_COLOR, fieldname,
+      n_print ("%s%s%s%s%s%s%s\n", pfx, FIELD_NAME_COLOR, fieldname,
+          *fieldname ? ": " : "",
           STRUCT_NAME_COLOR, gst_structure_get_name (structure), RESET_COLOR);
     }
     gst_structure_foreach_id_str (structure, print_field, (gpointer) pfx);
