@@ -591,7 +591,8 @@ gst_stream_type_get_name (GstStreamType stype)
       if ((stype & GST_STREAM_TYPE_METADATA) != 0)
         g_strlcat (str, "+metadata", sizeof (str));
 
-      g_assert (str[0] != '\0');
+      if (str[0] == '\0')
+        break;
 
       return g_intern_string (str + 1);
     }
