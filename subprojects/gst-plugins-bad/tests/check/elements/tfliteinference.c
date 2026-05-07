@@ -312,30 +312,39 @@ _caught_log_func (GstDebugCategory * category,
   gst_debug_category_set_threshold (_caught_cat, old_threshold);        \
   } G_STMT_END
 
-/* Test that planar RGBP input fed to a uint8 CHW model passes through without conversion and yields correct float32 output. */
-GST_START_TEST (test_planar_uint8_input_in_place)
+/* Run one in-place uint8 model test where the input tensor index is intentionally not 0 */
+static void
+run_uint8_input_in_place_test (const gchar * model_name,
+    const gchar * group_name, GstVideoFormat format, gboolean planar)
 {
   gchar *tmp_model = setup_model_with_ranges (GST_TFLITE_TEST_DATA_PATH,
-      "tfliteinference", "planar_chw_uint8in_float32out.tflite",
+      "tfliteinference", model_name,
       "0.0,255.0;0.0,255.0;0.0,255.0");
   GstHarness *h = harness_new_with_model (tmp_model);
   GstAllocationParams alloc_params = { 0, 63, 0, 0 };
-  GstBuffer *in = create_solid_color_buffer_aligned (GST_VIDEO_FORMAT_RGBP,
+  GstBuffer *in = create_solid_color_buffer_aligned (format,
       &alloc_params, TEST_WIDTH, TEST_HEIGHT, 11, 22, 33, 55);
   GstBuffer *out;
   GstTensorMeta *tmeta;
   const GstTensor *tensor;
   gfloat expected[TEST_NUM_PIXELS * TEST_NUM_CHANNELS];
+  gchar *caps_str;
   GstCaps *actual_caps, *expected_caps;
   const TfliteTestTensorInfo out_tensors[] = {
     {"output-0", "float32", "row-major", {1, 48}, 2}
   };
 
-  gst_harness_set_src_caps_str (h,
-      "video/x-raw,format=RGBP,width=4,height=4,framerate=30/1");
+  /* This model keeps the input tensor at global index 2 on purpose so
+   * in-place allocation must use TfLiteInterpreterGetInputTensorIndex().
+   */
+  caps_str = g_strdup_printf ("video/x-raw,format=%s,width=4,height=4,"
+      "framerate=30/1", gst_video_format_to_string (format));
+  gst_harness_set_src_caps_str (h, caps_str);
+  g_free (caps_str);
 
-  RUN_WITHOUT_LOG (out = gst_harness_push_and_pull (h, in), "GST_PERFORMANCE",
-      GST_LEVEL_WARNING, "Could not pass buffer in-place as-is");
+  RUN_WITHOUT_LOG (out = gst_harness_push_and_pull (h, in),
+      "GST_PERFORMANCE", GST_LEVEL_WARNING,
+      "Could not pass buffer in-place as-is");
 
   fail_unless (out);
   fail_unless (gst_buffer_get_tensor_meta (out) != NULL);
@@ -357,20 +366,41 @@ GST_START_TEST (test_planar_uint8_input_in_place)
   fail_unless_equals_int ((gint) tensor->dims[1], 48);
 
   actual_caps = pull_output_caps (h);
-  expected_caps = build_expected_output_caps ("RGBP",
-      TEST_WIDTH, TEST_HEIGHT, 30, 1,
-      "planar_chw_uint8in_float32out-group",
+  expected_caps = build_expected_output_caps (gst_video_format_to_string
+      (format), TEST_WIDTH, TEST_HEIGHT, 30, 1, group_name,
       out_tensors, G_N_ELEMENTS (out_tensors));
   fail_unless (gst_caps_is_equal (actual_caps, expected_caps));
   gst_caps_unref (actual_caps);
   gst_caps_unref (expected_caps);
 
-  fill_expected_chw_rgb_f32 (expected, TEST_NUM_PIXELS, 11.f, 22.f, 33.f);
+  if (planar)
+    fill_expected_chw_rgb_f32 (expected, TEST_NUM_PIXELS, 11.f, 22.f, 33.f);
+  else
+    fill_expected_flat_rgb_f32 (expected, TEST_NUM_PIXELS, 11.f, 22.f, 33.f);
+
   TFLITE_TEST_ASSERT_TENSOR_VALUES_F32 (tensor, expected,
       G_N_ELEMENTS (expected), 1e-6f);
   gst_buffer_unref (out);
   gst_harness_teardown (h);
   cleanup_temp_model (tmp_model);
+}
+
+/* Test that planar RGBP input can run in-place with a model using input tensor index 2. */
+GST_START_TEST (test_planar_uint8_input_in_place)
+{
+  run_uint8_input_in_place_test
+      ("offset_input_planar_chw_uint8in_float32out.tflite",
+      "offset_input_planar_chw_uint8in_float32out-group", GST_VIDEO_FORMAT_RGBP,
+      TRUE);
+}
+
+GST_END_TEST;
+
+/* Test that interleaved RGB input can run in-place with a model using input tensor index 2. */
+GST_START_TEST (test_interleaved_uint8_input_in_place)
+{
+  run_uint8_input_in_place_test ("offset_input_hwc_uint8in_float32out.tflite",
+      "offset_input_hwc_uint8in_float32out-group", GST_VIDEO_FORMAT_RGB, FALSE);
 }
 
 GST_END_TEST;
@@ -1401,6 +1431,7 @@ tfliteinference_suite (void)
   tcase_add_test (tc, test_input_formats);
   tcase_add_test (tc, test_gbrp_caps_input);
   tcase_add_test (tc, test_planar_uint8_input_in_place);
+  tcase_add_test (tc, test_interleaved_uint8_input_in_place);
   tcase_add_test (tc, test_gray8_input_conversion);
   tcase_add_test (tc, test_gray8_input_in_place);
   tcase_add_test (tc, test_normalization_variants);

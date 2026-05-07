@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
 import os
+import flatbuffers
 import numpy as np
 import keras
 from keras import layers, ops
 import tensorflow as tf
+from tensorflow.lite.python import schema_py_generated as tflite_schema
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -94,6 +96,101 @@ def write_modelinfo(model_path, include_ranges=True, per_output_dims_order=None)
         f.write("\n".join(lines).rstrip() + "\n")
 
 
+def make_offset_input_model(out_name, input_name, input_shape):
+    output_size = int(np.prod(input_shape))
+    output_shape = [1, output_size]
+
+    model = tflite_schema.ModelT()
+    model.version = 3
+    model.description = (
+        "Input tensor intentionally not at index 0 for inference testing"
+    )
+
+    buf0 = tflite_schema.BufferT()
+    buf0.data = None
+    shape_const = np.array(output_shape, dtype=np.int32)
+    buf1 = tflite_schema.BufferT()
+    buf1.data = list(shape_const.tobytes())
+    buf2 = tflite_schema.BufferT()
+    buf2.data = None
+    buf3 = tflite_schema.BufferT()
+    buf3.data = None
+    buf4 = tflite_schema.BufferT()
+    buf4.data = None
+    model.buffers = [buf0, buf1, buf2, buf3, buf4]
+
+    cast_opcode = tflite_schema.OperatorCodeT()
+    cast_opcode.builtinCode = tflite_schema.BuiltinOperator.CAST
+    cast_opcode.deprecatedBuiltinCode = tflite_schema.BuiltinOperator.CAST
+    reshape_opcode = tflite_schema.OperatorCodeT()
+    reshape_opcode.builtinCode = tflite_schema.BuiltinOperator.RESHAPE
+    reshape_opcode.deprecatedBuiltinCode = tflite_schema.BuiltinOperator.RESHAPE
+    model.operatorCodes = [cast_opcode, reshape_opcode]
+
+    subgraph = tflite_schema.SubGraphT()
+    subgraph.name = "main"
+
+    t_shape = tflite_schema.TensorT()
+    t_shape.name = "reshape_shape"
+    t_shape.shape = np.array([2], dtype=np.int32)
+    t_shape.type = tflite_schema.TensorType.INT32
+    t_shape.buffer = 1
+
+    t_cast = tflite_schema.TensorT()
+    t_cast.name = "cast_output"
+    t_cast.shape = np.array(input_shape, dtype=np.int32)
+    t_cast.type = tflite_schema.TensorType.FLOAT32
+    t_cast.buffer = 3
+
+    t_input = tflite_schema.TensorT()
+    t_input.name = input_name
+    t_input.shape = np.array(input_shape, dtype=np.int32)
+    t_input.type = tflite_schema.TensorType.UINT8
+    t_input.buffer = 2
+
+    t_output = tflite_schema.TensorT()
+    t_output.name = "output_flat_f32"
+    t_output.shape = np.array(output_shape, dtype=np.int32)
+    t_output.type = tflite_schema.TensorType.FLOAT32
+    t_output.buffer = 4
+
+    # Keep input tensor at global tensor index 2 on purpose.
+    subgraph.tensors = [t_shape, t_cast, t_input, t_output]
+    subgraph.inputs = np.array([2], dtype=np.int32)
+    subgraph.outputs = np.array([3], dtype=np.int32)
+
+    cast_op = tflite_schema.OperatorT()
+    cast_op.opcodeIndex = 0
+    cast_op.inputs = np.array([2], dtype=np.int32)
+    cast_op.outputs = np.array([1], dtype=np.int32)
+    cast_opts = tflite_schema.CastOptionsT()
+    cast_opts.inDataType = tflite_schema.TensorType.UINT8
+    cast_opts.outDataType = tflite_schema.TensorType.FLOAT32
+    cast_op.builtinOptionsType = tflite_schema.BuiltinOptions.CastOptions
+    cast_op.builtinOptions = cast_opts
+
+    reshape_op = tflite_schema.OperatorT()
+    reshape_op.opcodeIndex = 1
+    reshape_op.inputs = np.array([1, 0], dtype=np.int32)
+    reshape_op.outputs = np.array([3], dtype=np.int32)
+    reshape_opts = tflite_schema.ReshapeOptionsT()
+    reshape_opts.newShape = np.array(output_shape, dtype=np.int32)
+    reshape_op.builtinOptionsType = tflite_schema.BuiltinOptions.ReshapeOptions
+    reshape_op.builtinOptions = reshape_opts
+
+    subgraph.operators = [cast_op, reshape_op]
+    model.subgraphs = [subgraph]
+
+    builder = flatbuffers.Builder(1024)
+    model_offset = model.Pack(builder)
+    builder.Finish(model_offset, b"TFL3")
+    out_path = os.path.join(BASE_DIR, out_name)
+    with open(out_path, "wb") as f:
+        f.write(bytes(builder.Output()))
+
+    return out_path
+
+
 def main():
     for n in os.listdir(BASE_DIR):
         if n.endswith(".tflite") or n.endswith(".modelinfo"):
@@ -174,6 +271,20 @@ def main():
     out = layers.Reshape((48,), name="output_flat_f32")(x)
     p = convert_keras(
         keras.Model(inp, out), "planar_chw_uint8in_float32out.tflite"
+    )
+    write_modelinfo(p)
+
+    p = make_offset_input_model(
+        "offset_input_planar_chw_uint8in_float32out.tflite",
+        "input_chw_u8",
+        [1, 3, 4, 4],
+    )
+    write_modelinfo(p)
+
+    p = make_offset_input_model(
+        "offset_input_hwc_uint8in_float32out.tflite",
+        "input_hwc_u8",
+        [1, 4, 4, 3],
     )
     write_modelinfo(p)
 
