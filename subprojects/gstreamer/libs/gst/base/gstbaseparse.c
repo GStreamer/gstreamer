@@ -3227,6 +3227,7 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       parse->priv->detect_buffers_size = 0;
 
       if (ret != GST_FLOW_OK) {
+        gst_buffer_unref (buffer);
         return ret;
       }
 
@@ -3236,6 +3237,7 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
       if (parse->priv->drain) {
         GST_DEBUG_OBJECT (parse, "Draining but did not detect format yet");
+        gst_buffer_unref (buffer);
         return GST_FLOW_ERROR;
       } else if (parse->priv->flushing) {
         g_list_foreach (parse->priv->detect_buffers, (GFunc) gst_buffer_unref,
@@ -3251,6 +3253,12 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       }
     } else {
       /* Something went wrong, subclass responsible for error reporting */
+      gst_buffer_unref (buffer);
+      g_list_foreach (parse->priv->detect_buffers, (GFunc) gst_buffer_unref,
+          NULL);
+      g_list_free (parse->priv->detect_buffers);
+      parse->priv->detect_buffers = NULL;
+      parse->priv->detect_buffers_size = 0;
       return ret;
     }
 
