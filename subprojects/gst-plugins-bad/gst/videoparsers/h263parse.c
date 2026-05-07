@@ -297,7 +297,7 @@ gst_h263_parse_get_params (H263Params * params, GstBuffer * buffer,
           if (!gst_bit_reader_get_bits_uint32 (&br, &epar, 16))
             goto more;
           params->parnum = epar >> 8;
-          params->pardenom = epar & 0xf;
+          params->pardenom = epar & 0xff;
         } else {
           params->parnum = partable[temp8][0];
           params->pardenom = partable[temp8][1];
