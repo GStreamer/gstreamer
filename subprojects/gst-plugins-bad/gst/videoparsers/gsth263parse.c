@@ -236,8 +236,9 @@ gst_h263_parse_set_src_caps (GstH263Parse * h263parse,
     /* Caps didn't have the framerate - get it from params */
     gst_h263_parse_get_par (params, &par_num, &par_denom);
   }
-  gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-      par_num, par_denom, NULL);
+  if (par_denom != 0)
+    gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+        par_num, par_denom, NULL);
 
   if (h263parse->state == GOT_HEADER) {
     gst_caps_set_simple (caps,
