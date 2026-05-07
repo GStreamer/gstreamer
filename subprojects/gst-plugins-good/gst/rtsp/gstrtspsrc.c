@@ -474,6 +474,8 @@ static GstRTSPResult gst_rtspsrc_pause (GstRTSPSrc * src, gboolean async);
 static GstRTSPResult gst_rtspsrc_close (GstRTSPSrc * src, gboolean async,
     gboolean only_close);
 
+static void gst_rtspsrc_stop_keep_alive (GstRTSPSrc * src);
+
 static gboolean gst_rtspsrc_uri_set_uri (GstURIHandler * handler,
     const gchar * uri, GError ** error);
 static gchar *gst_rtspsrc_uri_get_uri (GstURIHandler * handler);
@@ -1853,6 +1855,10 @@ gst_rtspsrc_init (GstRTSPSrc * src)
    * thread in UDP mode. */
   g_rec_mutex_init (&src->stream_rec_lock);
 
+  /* queue of CSeqs of in-flight keep-alive requests (see header) */
+  g_mutex_init (&src->keep_alive_cseq_lock);
+  g_queue_init (&src->keep_alive_cseqs);
+
   /* protects our state changes from multiple invocations */
   g_rec_mutex_init (&src->state_rec_lock);
 
@@ -1890,6 +1896,8 @@ gst_rtspsrc_finalize (GObject * object)
   GstRTSPSrc *rtspsrc;
 
   rtspsrc = GST_RTSPSRC (object);
+
+  gst_rtspsrc_stop_keep_alive (rtspsrc);
 
   gst_rtsp_ext_list_free (rtspsrc->extensions);
   g_free (rtspsrc->conninfo.location);
@@ -1934,6 +1942,8 @@ gst_rtspsrc_finalize (GObject * object)
   /* free locks */
   g_rec_mutex_clear (&rtspsrc->stream_rec_lock);
   g_rec_mutex_clear (&rtspsrc->state_rec_lock);
+  g_mutex_clear (&rtspsrc->keep_alive_cseq_lock);
+  g_queue_clear (&rtspsrc->keep_alive_cseqs);
 
   g_mutex_clear (&rtspsrc->conninfo.send_lock);
   g_mutex_clear (&rtspsrc->conninfo.recv_lock);
@@ -6118,14 +6128,17 @@ send_error:
   }
 }
 
-/* send server keep-alive */
+/* Send a keep-alive request.  When @track_cseq is TRUE, the assigned CSeq
+ * is recorded so synchronous receivers can skip the matching response —
+ * used by the worker for fire-and-forget sends from a separate thread. */
 static GstRTSPResult
-gst_rtspsrc_send_keep_alive (GstRTSPSrc * src)
+gst_rtspsrc_send_keep_alive_internal (GstRTSPSrc * src, gboolean track_cseq)
 {
   GstRTSPMessage request = { 0 };
   GstRTSPResult res;
   GstRTSPMethod method;
   const gchar *control;
+  gchar *cseq_str = NULL;
 
   if (src->do_rtsp_keep_alive == FALSE) {
     GST_DEBUG_OBJECT (src, "do-rtsp-keep-alive is FALSE, not sending.");
@@ -6158,6 +6171,17 @@ gst_rtspsrc_send_keep_alive (GstRTSPSrc * src)
     goto send_error;
 
   gst_rtsp_connection_reset_timeout (src->conninfo.connection);
+
+  if (track_cseq
+      && gst_rtsp_message_get_header (&request, GST_RTSP_HDR_CSEQ, &cseq_str,
+          0) == GST_RTSP_OK && cseq_str != NULL) {
+    guint cseq = (guint) g_ascii_strtoull (cseq_str, NULL, 10);
+    g_mutex_lock (&src->keep_alive_cseq_lock);
+    g_queue_push_tail (&src->keep_alive_cseqs, GUINT_TO_POINTER (cseq));
+    g_mutex_unlock (&src->keep_alive_cseq_lock);
+    GST_DEBUG_OBJECT (src, "tracked keep-alive CSeq=%u", cseq);
+  }
+
   gst_rtsp_message_unset (&request);
 
   return GST_RTSP_OK;
@@ -6165,7 +6189,7 @@ gst_rtspsrc_send_keep_alive (GstRTSPSrc * src)
   /* ERRORS */
 no_control:
   {
-    GST_WARNING_OBJECT (src, "no control url to send keepalive");
+    GST_WARNING_OBJECT (src, "no control url to send keep-alive");
     return GST_RTSP_OK;
   }
 send_error:
@@ -6178,6 +6202,165 @@ send_error:
     g_free (str);
     return res;
   }
+}
+
+/* send server keep-alive */
+static GstRTSPResult
+gst_rtspsrc_send_keep_alive (GstRTSPSrc * src)
+{
+  return gst_rtspsrc_send_keep_alive_internal (src, FALSE);
+}
+
+/* As gst_rtspsrc_send_keep_alive(), but tracks the CSeq so receivers can
+ * skip the matching response. */
+static GstRTSPResult
+gst_rtspsrc_send_keep_alive_tracked (GstRTSPSrc * src)
+{
+  return gst_rtspsrc_send_keep_alive_internal (src, TRUE);
+}
+
+/* Prune the pending-keep-alive queue using @message's CSeq, and return TRUE
+ * if @message is the response to a tracked keep-alive request. */
+static gboolean
+gst_rtspsrc_prune_keep_alive (GstRTSPSrc * src, GstRTSPMessage * message)
+{
+  gchar *cseq_str = NULL;
+  guint cseq;
+  gboolean matched = FALSE;
+
+  if (message->type != GST_RTSP_MESSAGE_RESPONSE)
+    return FALSE;
+
+  if (gst_rtsp_message_get_header (message, GST_RTSP_HDR_CSEQ, &cseq_str, 0)
+      != GST_RTSP_OK || cseq_str == NULL)
+    return FALSE;
+
+  cseq = (guint) g_ascii_strtoull (cseq_str, NULL, 10);
+
+  g_mutex_lock (&src->keep_alive_cseq_lock);
+  while (!g_queue_is_empty (&src->keep_alive_cseqs)) {
+    guint head = GPOINTER_TO_UINT (g_queue_peek_head (&src->keep_alive_cseqs));
+    if (head > cseq)
+      break;                    /* not ours (older/untracked CSeq) */
+    g_queue_pop_head (&src->keep_alive_cseqs);  /* head match or stale */
+    if (head == cseq) {
+      matched = TRUE;
+      break;
+    }
+  }
+  g_mutex_unlock (&src->keep_alive_cseq_lock);
+
+  return matched;
+}
+
+static gboolean
+gst_rtspsrc_keep_alive_timer_cb (GstRTSPSrc * src)
+{
+  GstRTSPResult res;
+  gint64 next_timeout;
+
+  if (!src->conninfo.connection)
+    return G_SOURCE_CONTINUE;
+
+  next_timeout =
+      gst_rtsp_connection_next_timeout_usec (src->conninfo.connection);
+  /* Same condition as the streaming loop in gst_rtspsrc_loop_interleaved(). */
+  if (next_timeout != 0)
+    return G_SOURCE_CONTINUE;
+
+  GST_DEBUG_OBJECT (src,
+      "Keep-alive timeout expired. Sending keep-alive request");
+  res = gst_rtspsrc_send_keep_alive_tracked (src);
+  if (res < 0) {
+    gchar *str = gst_rtsp_strresult (res);
+    GST_WARNING_OBJECT (src, "keep-alive worker send failed: %s", str);
+    g_free (str);
+  }
+  return G_SOURCE_CONTINUE;
+}
+
+static gpointer
+gst_rtspsrc_keep_alive_thread_func (GstRTSPSrc * src)
+{
+  g_main_context_push_thread_default (src->keep_alive_context);
+  g_main_loop_run (src->keep_alive_loop);
+  g_main_context_pop_thread_default (src->keep_alive_context);
+  return NULL;
+}
+
+/* Independent keep-alive timer.
+ *
+ * In non-live + TCP-interleaved mode, the streaming loop reads RTSP control
+ * messages and RTP data over the same TCP connection.  When downstream is
+ * paused, the loop blocks on data push and never reaches the receive call,
+ * so the existing receive-timeout-based keep-alive cannot fire.  This worker
+ * thread fires keep-alives from a separate context to keep the session alive.
+ */
+static void
+gst_rtspsrc_start_keep_alive (GstRTSPSrc * src)
+{
+#define GST_RTSPSRC_KEEP_ALIVE_POLL_INTERVAL_SEC 1
+  if (src->is_live || !src->interleaved)
+    return;
+
+  if (src->keep_alive_thread)
+    return;                     /* already running */
+
+  src->keep_alive_context = g_main_context_new ();
+  src->keep_alive_loop = g_main_loop_new (src->keep_alive_context, FALSE);
+
+  src->keep_alive_source =
+      g_timeout_source_new_seconds (GST_RTSPSRC_KEEP_ALIVE_POLL_INTERVAL_SEC);
+  g_source_set_callback (src->keep_alive_source,
+      (GSourceFunc) gst_rtspsrc_keep_alive_timer_cb, src, NULL);
+  g_source_attach (src->keep_alive_source, src->keep_alive_context);
+
+  src->keep_alive_thread = g_thread_new ("rtspsrc-keep-alive",
+      (GThreadFunc) gst_rtspsrc_keep_alive_thread_func, src);
+
+  GST_DEBUG_OBJECT (src, "keep-alive worker started (poll=%us)",
+      GST_RTSPSRC_KEEP_ALIVE_POLL_INTERVAL_SEC);
+}
+
+static gboolean
+gst_rtspsrc_quit_keep_alive_loop (gpointer loop)
+{
+  g_main_loop_quit ((GMainLoop *) loop);
+  return G_SOURCE_REMOVE;
+}
+
+static void
+gst_rtspsrc_stop_keep_alive (GstRTSPSrc * src)
+{
+  if (!src->keep_alive_thread)
+    return;
+
+  /* Quit via the context so the signal isn't lost if the worker hasn't
+   * reached g_main_loop_run() yet. */
+  g_main_context_invoke (src->keep_alive_context,
+      gst_rtspsrc_quit_keep_alive_loop, src->keep_alive_loop);
+  g_thread_join (src->keep_alive_thread);
+  src->keep_alive_thread = NULL;
+
+  if (src->keep_alive_source) {
+    g_source_destroy (src->keep_alive_source);
+    g_source_unref (src->keep_alive_source);
+    src->keep_alive_source = NULL;
+  }
+
+  g_main_loop_unref (src->keep_alive_loop);
+  src->keep_alive_loop = NULL;
+
+  g_main_context_unref (src->keep_alive_context);
+  src->keep_alive_context = NULL;
+
+  /* The connection is about to be torn down; leftover responses don't
+   * matter anymore. */
+  g_mutex_lock (&src->keep_alive_cseq_lock);
+  g_queue_clear (&src->keep_alive_cseqs);
+  g_mutex_unlock (&src->keep_alive_cseq_lock);
+
+  GST_DEBUG_OBJECT (src, "keep-alive worker stopped");
 }
 
 static GstFlowReturn
@@ -6466,6 +6649,7 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
         /* we ignore response messages */
         GST_DEBUG_OBJECT (src, "ignoring response message");
         DEBUG_RTSP (src, &message);
+        gst_rtspsrc_prune_keep_alive (src, &message);
         break;
       case GST_RTSP_MESSAGE_DATA:
         GST_DEBUG_OBJECT (src, "got data message");
@@ -6486,7 +6670,7 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
         gst_rtsp_connection_next_timeout_usec (src->conninfo.connection);
     if (timeout == 0) {
       GST_DEBUG_OBJECT (src,
-          "Keepalive timeout expired. Sending keep-alive request");
+          "Keep-alive timeout expired. Sending keep-alive request");
       if ((res = gst_rtspsrc_send_keep_alive (src)) == GST_RTSP_EINTR) {
         goto interrupt;
       }
@@ -6628,6 +6812,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
         /* we ignore response and data messages */
         GST_DEBUG_OBJECT (src, "ignoring response message");
         DEBUG_RTSP (src, &message);
+        gst_rtspsrc_prune_keep_alive (src, &message);
         if (message.type_data.response.code == GST_RTSP_STS_UNAUTHORIZED) {
           GST_DEBUG_OBJECT (src, "but is Unauthorized response ...");
           if (gst_rtspsrc_setup_auth (src, &message) && !(retry++)) {
@@ -7276,6 +7461,13 @@ next:
       /* Not a response, receive next message */
       goto next;
     case GST_RTSP_MESSAGE_RESPONSE:
+      /* Drop responses that belong to the keep-alive worker so we keep
+       * waiting for our caller's actual response. */
+      if (gst_rtspsrc_prune_keep_alive (src, response)) {
+        GST_DEBUG_OBJECT (src, "skipping keep-alive response");
+        gst_rtsp_message_unset (response);
+        goto next;
+      }
       /* ok, a response is good */
       GST_DEBUG_OBJECT (src, "received response message");
       break;
@@ -9084,6 +9276,10 @@ gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp,
 
   src->state = GST_RTSP_STATE_READY;
 
+  /* Start the independent keep-alive worker if conditions warrant it.  The
+   * function is a no-op for live streams or non-interleaved transports. */
+  gst_rtspsrc_start_keep_alive (src);
+
   return res;
 
   /* ERRORS */
@@ -9368,6 +9564,10 @@ gst_rtspsrc_close (GstRTSPSrc * src, gboolean async, gboolean only_close)
   const gchar *control;
 
   GST_DEBUG_OBJECT (src, "TEARDOWN...");
+
+  /* Stop the independent keep-alive worker before tearing down the
+   * connection so it cannot fire a send concurrently with TEARDOWN. */
+  gst_rtspsrc_stop_keep_alive (src);
 
   gst_rtspsrc_set_state (src, GST_STATE_READY);
 
