@@ -110,8 +110,6 @@ gst_png_parse_event (GstBaseParse * parse, GstEvent * event)
 {
   gboolean res;
 
-  res = GST_BASE_PARSE_CLASS (parent_class)->sink_event (parse, event);
-
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
       /* the start code and at least 2 empty frames (IHDR and IEND) */
@@ -120,6 +118,8 @@ gst_png_parse_event (GstBaseParse * parse, GstEvent * event)
     default:
       break;
   }
+
+  res = GST_BASE_PARSE_CLASS (parent_class)->sink_event (parse, event);
 
   return res;
 }
