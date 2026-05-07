@@ -5,6 +5,7 @@ endif
 fuzz_targets = [
   ['gst-audio.c', false, ['gstreamer-audio-1.0']],
   ['gst-audio-converter.c', false, ['gstreamer-audio-1.0']],
+  ['gst-audioparsers.c', false, []],
   ['gst-codec-utils.c', false, ['gstreamer-pbutils-1.0']],
   ['gst-discoverer.c', false, ['gstreamer-pbutils-1.0']],
   ['gst-subparse.c', false, []],
