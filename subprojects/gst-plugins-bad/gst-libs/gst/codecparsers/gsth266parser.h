@@ -3527,6 +3527,8 @@ GstH266ParserResult gst_h266_parser_parse_sei          (GstH266Parser * parser,
                                                         GstH266NalUnit * nalu,
                                                         GArray ** messages);
 GST_CODEC_PARSERS_API
+void                gst_h266_sei_clear                 (GstH266SEIMessage * sei);
+GST_CODEC_PARSERS_API
 void                gst_h266_parser_free               (GstH266Parser * parser);
 GST_CODEC_PARSERS_API
 GstH266ParserResult gst_h266_parse_vps                 (GstH266NalUnit * nalu,

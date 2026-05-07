@@ -20357,6 +20357,19 @@ gst_h266_parser_free after use.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="h266_sei_clear" c:identifier="gst_h266_sei_clear" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">Clears @sei fields.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="sei" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">The #GstH266SEIMessage to clear</doc>
+          <type name="H266SEIMessage" c:type="GstH266SEIMessage*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="jpeg2000_colorspace_from_string" c:identifier="gst_jpeg2000_colorspace_from_string">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstjpeg2000sampling.h"/>
       <return-value transfer-ownership="none">
