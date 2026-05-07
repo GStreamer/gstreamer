@@ -991,7 +991,7 @@ gst_av1_parse_negotiate (GstAV1Parse * self, GstCaps * in_caps)
   }
 
   /* prefer TU alignment with obu-stream format as the default */
-  if (gst_av1_parse_caps_has_tu_alignment (self, caps)) {
+  if (caps && gst_av1_parse_caps_has_tu_alignment (self, caps)) {
     self->align = GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT;
     self->stream_format = GST_AV1_PARSE_STREAM_FORMAT_OBU;
     goto done;
