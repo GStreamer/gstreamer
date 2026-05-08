@@ -327,6 +327,23 @@ caps_to_mime (GstCaps * caps)
     return "video/av01";
   } else if (strcmp (name, "video/x-divx") == 0) {
     return "video/mp4v-es";
+  } else if (strcmp (name, "video/x-wmv") == 0) {
+    const gchar *format;
+    gint wmvversion = -1;
+
+    gst_structure_get_int (s, "wmvversion", &wmvversion);
+    format = gst_structure_get_string (s, "format");
+    if (wmvversion == 1)
+      return "video/x-ms-wmv7";
+    else if (wmvversion == 2)
+      return "video/x-ms-wmv8";
+    else if (wmvversion == 3)
+      return "video/x-ms-wmv";
+
+    if (!format || strcmp (format, "WMV3") == 0)
+      return "video/x-ms-wmv";
+    else if (strcmp (format, "WVC1") == 0)
+      return "video/wvc1";
   }
 
   return NULL;
