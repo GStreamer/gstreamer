@@ -2158,6 +2158,14 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
               "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
               "framed", G_TYPE_BOOLEAN, TRUE, NULL);
           encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else if (strcmp (type->mime, "audio/mpeg-L1") == 0) {
+          tmp = gst_structure_new ("audio/mpeg",
+              "mpegversion", G_TYPE_INT, 1,
+              "layer", G_TYPE_INT, 1,
+              "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+          encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
         } else if (strcmp (type->mime, "audio/mpeg-L2") == 0) {
           tmp = gst_structure_new ("audio/mpeg",
               "mpegversion", G_TYPE_INT, 1,
