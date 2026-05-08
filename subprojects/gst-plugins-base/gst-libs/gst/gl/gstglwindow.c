@@ -443,7 +443,7 @@ gst_gl_window_set_window_handle (GstGLWindow * window, guintptr handle)
   GstSetWindowHandleCb *data;
 
   g_return_if_fail (GST_IS_GL_WINDOW (window));
-  g_return_if_fail (handle != 0);
+
 #ifndef G_DISABLE_CHECKS
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_if_fail (window_class->set_window_handle != NULL);
