@@ -447,12 +447,10 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
   properties[PROP_APERTURE] = g_object_class_find_property (gobject_class,
       GST_PHOTOGRAPHY_PROP_APERTURE);
 
-#if 0
   g_object_class_override_property (gobject_class, PROP_EXPOSURE_MODE,
       GST_PHOTOGRAPHY_PROP_EXPOSURE_MODE);
-  properties[PROP_EXPOSURE] = g_object_class_find_property (gobject_class,
+  properties[PROP_EXPOSURE_MODE] = g_object_class_find_property (gobject_class,
       GST_PHOTOGRAPHY_PROP_EXPOSURE_MODE);
-#endif
 
   g_object_class_override_property (gobject_class,
       PROP_IMAGE_CAPTURE_SUPPORTED_CAPS,
