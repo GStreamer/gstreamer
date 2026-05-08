@@ -1,0 +1,1 @@
+application/x-test, foo=(string)"bar baz", num=(int)42, frac=(fraction)30/1, ar=(int)< 1, 2, 3 >
