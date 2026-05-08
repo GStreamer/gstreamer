@@ -51,6 +51,9 @@
 GST_DEBUG_CATEGORY (gst_amc_debug);
 #define GST_CAT_DEFAULT gst_amc_debug
 
+/* Should be advanced whenever the codec cache structure changes */
+#define GST_AMC_CODEC_CACHE_VERSION 1
+
 GQuark gst_amc_codec_info_quark = 0;
 
 static GQueue codec_infos = G_QUEUE_INIT;
@@ -82,12 +85,17 @@ scan_codecs (GstPlugin * plugin)
   gboolean ret = TRUE;
   gint codec_count, i;
   const GstStructure *cache_data;
+  const GValue *arr = NULL;
   GError *error = NULL;
 
   GST_INFO ("Scanning codecs");
 
-  if ((cache_data = gst_plugin_get_cache_data (plugin))) {
-    const GValue *arr = gst_structure_get_value (cache_data, "codecs");
+  cache_data = gst_plugin_get_cache_data (plugin);
+  if (cache_data)
+    arr = gst_structure_get_value (cache_data,
+        "codecs-" G_STRINGIFY (GST_AMC_CODEC_CACHE_VERSION));
+
+  if (arr) {
     guint i, n;
 
     GST_INFO ("Getting codecs from cache");
@@ -122,6 +130,7 @@ scan_codecs (GstPlugin * plugin)
         const GValue *plarr;
         guint k, n3;
         GstAmcCodecType *gst_codec_type = &gst_codec_info->supported_types[j];
+        const GValue *range, *frac;
 
         mime = gst_structure_get_string (sts, "mime");
         gst_codec_type->mime = g_strdup (mime);
@@ -154,6 +163,24 @@ scan_codecs (GstPlugin * plugin)
           l = gst_value_array_get_value (plv, 1);
           gst_codec_type->profile_levels[k].profile = g_value_get_int (p);
           gst_codec_type->profile_levels[k].level = g_value_get_int (l);
+        }
+
+        if (g_str_has_prefix (mime, "video/")) {
+          range = gst_structure_get_value (sts, "width");
+          gst_codec_type->width.lower = gst_value_get_int_range_min (range);
+          gst_codec_type->width.upper = gst_value_get_int_range_max (range);
+
+          range = gst_structure_get_value (sts, "height");
+          gst_codec_type->height.lower = gst_value_get_int_range_min (range);
+          gst_codec_type->height.upper = gst_value_get_int_range_max (range);
+
+          range = gst_structure_get_value (sts, "framerate");
+          frac = gst_value_get_fraction_range_min (range);
+          gst_codec_type->framerate.lower =
+              gst_value_get_fraction_numerator (frac);
+          frac = gst_value_get_fraction_range_max (range);
+          gst_codec_type->framerate.upper =
+              gst_value_get_fraction_numerator (frac);
         }
       }
 
@@ -319,6 +346,24 @@ scan_codecs (GstPlugin * plugin)
       }
 
       if (g_str_has_prefix (gst_codec_type->mime, "video/")) {
+        GstAmcVideoCapabilitiesHandle *vid_caps = NULL;
+
+        /* These function are safe to be called even if the API level
+           does not give us the MediaCodecInfo.VideoCapabilities. In
+           that case we will get the default values. */
+        vid_caps =
+            gst_amc_capabilities_get_video_capabilities (capabilities, &error);
+        gst_codec_type->width =
+            gst_amc_video_capabilities_get_widths (vid_caps, &error);
+        gst_codec_type->height =
+            gst_amc_video_capabilities_get_heights (vid_caps, &error);
+        gst_codec_type->framerate =
+            gst_amc_video_capabilities_get_framerates (vid_caps, &error);
+        gst_amc_capabilities_video_capabilities_handle_free (vid_caps);
+
+        // Ignore framerate lower bound and always allow 0/1.
+        gst_codec_type->framerate.lower = 0;
+
         gst_codec_type->color_formats =
             gst_amc_codec_capabilities_handle_get_color_formats (capabilities,
             &gst_codec_type->n_color_formats, &error);
@@ -512,6 +557,28 @@ scan_codecs (GstPlugin * plugin)
         }
         gst_structure_set_value (sts, "profile-levels", &tmparr);
 
+        if (g_str_has_prefix (gst_codec_type->mime, "video/")) {
+          GValue tmprange = { 0, };
+
+          g_value_init (&tmprange, GST_TYPE_INT_RANGE);
+          gst_value_set_int_range (&tmprange,
+              gst_codec_type->width.lower, gst_codec_type->width.upper);
+          gst_structure_set_value (sts, "width", &tmprange);
+          g_value_unset (&tmprange);
+
+          g_value_init (&tmprange, GST_TYPE_INT_RANGE);
+          gst_value_set_int_range (&tmprange,
+              gst_codec_type->height.lower, gst_codec_type->height.upper);
+          gst_structure_set_value (sts, "height", &tmprange);
+          g_value_unset (&tmprange);
+
+          g_value_init (&tmprange, GST_TYPE_FRACTION_RANGE);
+          gst_value_set_fraction_range_full (&tmprange,
+              gst_codec_type->framerate.lower, 1,
+              gst_codec_type->framerate.upper, 1);
+          gst_structure_set_value (sts, "framerate", &tmprange);
+        }
+
         g_value_init (&stv, GST_TYPE_STRUCTURE);
         gst_value_set_structure (&stv, sts);
         gst_value_array_append_value (&starr, &stv);
@@ -529,7 +596,8 @@ scan_codecs (GstPlugin * plugin)
       gst_structure_free (cs);
     }
 
-    gst_structure_set_value (new_cache_data, "codecs", &arr);
+    gst_structure_set_value (new_cache_data,
+        "codecs-" G_STRINGIFY (GST_AMC_CODEC_CACHE_VERSION), &arr);
     g_value_unset (&arr);
 
     gst_plugin_set_cache_data (plugin, new_cache_data);
@@ -2221,9 +2289,10 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
 
           tmp = gst_structure_new ("video/x-raw",
               "format", G_TYPE_STRING, gst_video_format_to_string (format),
-              "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-              "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+              "width", GST_TYPE_INT_RANGE, type->width.lower, type->width.upper,
+              "height", GST_TYPE_INT_RANGE, type->height.lower,
+              type->height.upper, "framerate", GST_TYPE_FRACTION_RANGE,
+              type->framerate.lower, 1, type->framerate.upper, 1, NULL);
 
           raw_ret = gst_caps_merge_structure (raw_ret, tmp);
         }
@@ -2236,13 +2305,12 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
           gboolean have_profile_level = FALSE;
 
           tmp = gst_structure_new ("video/mpeg",
-              "width", GST_TYPE_INT_RANGE, 16, 4096,
-              "height", GST_TYPE_INT_RANGE, 16, 4096,
-              "framerate", GST_TYPE_FRACTION_RANGE,
-              0, 1, G_MAXINT, 1,
-              "mpegversion", G_TYPE_INT, 4,
-              "systemstream", G_TYPE_BOOLEAN, FALSE,
-              "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+              "width", GST_TYPE_INT_RANGE, type->width.lower, type->width.upper,
+              "height", GST_TYPE_INT_RANGE, type->height.lower,
+              type->height.upper, "framerate", GST_TYPE_FRACTION_RANGE,
+              type->framerate.lower, 1, type->framerate.upper, 1, "mpegversion",
+              G_TYPE_INT, 4, "systemstream", G_TYPE_BOOLEAN, FALSE, "parsed",
+              G_TYPE_BOOLEAN, TRUE, NULL);
 
           if (type->n_profile_levels) {
             for (j = type->n_profile_levels - 1; j >= 0; j--) {
@@ -2299,10 +2367,10 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
           }
 
           tmp = gst_structure_new ("video/x-divx",
-              "width", GST_TYPE_INT_RANGE, 16, 4096,
-              "height", GST_TYPE_INT_RANGE, 16, 4096,
-              "framerate", GST_TYPE_FRACTION_RANGE,
-              0, 1, G_MAXINT, 1,
+              "width", GST_TYPE_INT_RANGE, type->width.lower, type->width.upper,
+              "height", GST_TYPE_INT_RANGE, type->height.lower,
+              type->height.upper, "framerate", GST_TYPE_FRACTION_RANGE,
+              type->framerate.lower, 1, type->framerate.upper, 1,
               "divxversion", GST_TYPE_INT_RANGE, 3, 5,
               "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
           encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
@@ -2311,12 +2379,11 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
           gboolean have_profile_level = FALSE;
 
           tmp = gst_structure_new ("video/x-h263",
-              "width", GST_TYPE_INT_RANGE, 16, 4096,
-              "height", GST_TYPE_INT_RANGE, 16, 4096,
-              "framerate", GST_TYPE_FRACTION_RANGE,
-              0, 1, G_MAXINT, 1,
-              "parsed", G_TYPE_BOOLEAN, TRUE,
-              "variant", G_TYPE_STRING, "itu", NULL);
+              "width", GST_TYPE_INT_RANGE, type->width.lower, type->width.upper,
+              "height", GST_TYPE_INT_RANGE, type->height.lower,
+              type->height.upper, "framerate", GST_TYPE_FRACTION_RANGE,
+              type->framerate.lower, 1, type->framerate.upper, 1, "parsed",
+              G_TYPE_BOOLEAN, TRUE, "variant", G_TYPE_STRING, "itu", NULL);
 
           if (type->n_profile_levels) {
             for (j = type->n_profile_levels - 1; j >= 0; j--) {
@@ -2377,13 +2444,12 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
           gboolean have_constrained_baseline_profile = FALSE;
 
           tmp = gst_structure_new ("video/x-h264",
-              "width", GST_TYPE_INT_RANGE, 16, 4096,
-              "height", GST_TYPE_INT_RANGE, 16, 4096,
-              "framerate", GST_TYPE_FRACTION_RANGE,
-              0, 1, G_MAXINT, 1,
-              "parsed", G_TYPE_BOOLEAN, TRUE,
-              "stream-format", G_TYPE_STRING, "byte-stream",
-              "alignment", G_TYPE_STRING, "au", NULL);
+              "width", GST_TYPE_INT_RANGE, type->width.lower, type->width.upper,
+              "height", GST_TYPE_INT_RANGE, type->height.lower,
+              type->height.upper, "framerate", GST_TYPE_FRACTION_RANGE,
+              type->framerate.lower, 1, type->framerate.upper, 1, "parsed",
+              G_TYPE_BOOLEAN, TRUE, "stream-format", G_TYPE_STRING,
+              "byte-stream", "alignment", G_TYPE_STRING, "au", NULL);
 
           if (type->n_profile_levels) {
             for (j = type->n_profile_levels - 1; j >= 0; j--) {
@@ -2466,13 +2532,12 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
           gboolean have_profile_level = FALSE;
 
           tmp = gst_structure_new ("video/x-h265",
-              "width", GST_TYPE_INT_RANGE, 16, 4096,
-              "height", GST_TYPE_INT_RANGE, 16, 4096,
-              "framerate", GST_TYPE_FRACTION_RANGE,
-              0, 1, G_MAXINT, 1,
-              "parsed", G_TYPE_BOOLEAN, TRUE,
-              "stream-format", G_TYPE_STRING, "byte-stream",
-              "alignment", G_TYPE_STRING, "au", NULL);
+              "width", GST_TYPE_INT_RANGE, type->width.lower, type->width.upper,
+              "height", GST_TYPE_INT_RANGE, type->height.lower,
+              type->height.upper, "framerate", GST_TYPE_FRACTION_RANGE,
+              type->framerate.lower, 1, type->framerate.upper, 1, "parsed",
+              G_TYPE_BOOLEAN, TRUE, "stream-format", G_TYPE_STRING,
+              "byte-stream", "alignment", G_TYPE_STRING, "au", NULL);
 
           if (type->n_profile_levels) {
             for (j = type->n_profile_levels - 1; j >= 0; j--) {
@@ -2531,68 +2596,74 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
           }
         } else if (strcmp (type->mime, "video/x-vnd.on2.vp8") == 0) {
           tmp = gst_structure_new ("video/x-vp8",
-              "width", GST_TYPE_INT_RANGE, 16, 4096,
-              "height", GST_TYPE_INT_RANGE, 16, 4096,
-              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+              "width", GST_TYPE_INT_RANGE, type->width.lower, type->width.upper,
+              "height", GST_TYPE_INT_RANGE, type->height.lower,
+              type->height.upper, "framerate", GST_TYPE_FRACTION_RANGE,
+              type->framerate.lower, 1, type->framerate.upper, 1, NULL);
 
           encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
         } else if (strcmp (type->mime, "video/x-vnd.on2.vp9") == 0) {
           tmp = gst_structure_new ("video/x-vp9",
-              "width", GST_TYPE_INT_RANGE, 16, 4096,
-              "height", GST_TYPE_INT_RANGE, 16, 4096,
-              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+              "width", GST_TYPE_INT_RANGE, type->width.lower, type->width.upper,
+              "height", GST_TYPE_INT_RANGE, type->height.lower,
+              type->height.upper, "framerate", GST_TYPE_FRACTION_RANGE,
+              type->framerate.lower, 1, type->framerate.upper, 1, NULL);
 
           encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
         } else if (strcmp (type->mime, "video/av01") == 0) {
           tmp = gst_structure_new ("video/x-av1",
               "stream-format", G_TYPE_STRING, "obu-stream",
               "alignment", G_TYPE_STRING, "tu",
-              "width", GST_TYPE_INT_RANGE, 16, 4096,
-              "height", GST_TYPE_INT_RANGE, 16, 4096,
-              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+              "width", GST_TYPE_INT_RANGE, type->width.lower, type->width.upper,
+              "height", GST_TYPE_INT_RANGE, type->height.lower,
+              type->height.upper, "framerate", GST_TYPE_FRACTION_RANGE,
+              type->framerate.lower, 1, type->framerate.upper, 1, NULL);
 
           encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
         } else if (strcmp (type->mime, "video/mpeg2") == 0) {
           tmp = gst_structure_new ("video/mpeg",
-              "width", GST_TYPE_INT_RANGE, 16, 4096,
-              "height", GST_TYPE_INT_RANGE, 16, 4096,
-              "framerate", GST_TYPE_FRACTION_RANGE,
-              0, 1, G_MAXINT, 1,
-              "mpegversion", GST_TYPE_INT_RANGE, 1, 2,
-              "systemstream", G_TYPE_BOOLEAN, FALSE,
+              "width", GST_TYPE_INT_RANGE, type->width.lower, type->width.upper,
+              "height", GST_TYPE_INT_RANGE, type->height.lower,
+              type->height.upper, "framerate", GST_TYPE_FRACTION_RANGE,
+              type->framerate.lower, 1, type->framerate.upper, 1, "mpegversion",
+              GST_TYPE_INT_RANGE, 1, 2, "systemstream", G_TYPE_BOOLEAN, FALSE,
               "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
 
           encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
         } else if (strcmp (type->mime, "video/wvc1") == 0) {
           tmp = gst_structure_new ("video/x-wmv",
-              "width", GST_TYPE_INT_RANGE, 16, 4096,
-              "height", GST_TYPE_INT_RANGE, 16, 4096,
-              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
+              "width", GST_TYPE_INT_RANGE, type->width.lower, type->width.upper,
+              "height", GST_TYPE_INT_RANGE, type->height.lower,
+              type->height.upper, "framerate", GST_TYPE_FRACTION_RANGE,
+              type->framerate.lower, 1, type->framerate.upper, 1,
               "format", G_TYPE_STRING, "WVC1", NULL);
 
           encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
         } else if (strcmp (type->mime, "video/x-ms-wmv") == 0) {
           tmp = gst_structure_new ("video/x-wmv",
-              "width", GST_TYPE_INT_RANGE, 16, 4096,
-              "height", GST_TYPE_INT_RANGE, 16, 4096,
-              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
+              "width", GST_TYPE_INT_RANGE, type->width.lower, type->width.upper,
+              "height", GST_TYPE_INT_RANGE, type->height.lower,
+              type->height.upper, "framerate", GST_TYPE_FRACTION_RANGE,
+              type->framerate.lower, 1, type->framerate.upper, 1,
               "format", G_TYPE_STRING, "WMV3",
               "wmvversion", G_TYPE_INT, 3, NULL);
 
           encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
         } else if (strcmp (type->mime, "video/x-ms-wmv8") == 0) {
           tmp = gst_structure_new ("video/x-wmv",
-              "width", GST_TYPE_INT_RANGE, 16, 4096,
-              "height", GST_TYPE_INT_RANGE, 16, 4096,
-              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
+              "width", GST_TYPE_INT_RANGE, type->width.lower, type->width.upper,
+              "height", GST_TYPE_INT_RANGE, type->height.lower,
+              type->height.upper, "framerate", GST_TYPE_FRACTION_RANGE,
+              type->framerate.lower, 1, type->framerate.upper, 1,
               "wmvversion", G_TYPE_INT, 2, NULL);
 
           encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
         } else if (strcmp (type->mime, "video/x-ms-wmv7") == 0) {
           tmp = gst_structure_new ("video/x-wmv",
-              "width", GST_TYPE_INT_RANGE, 16, 4096,
-              "height", GST_TYPE_INT_RANGE, 16, 4096,
-              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
+              "width", GST_TYPE_INT_RANGE, type->width.lower, type->width.upper,
+              "height", GST_TYPE_INT_RANGE, type->height.lower,
+              type->height.upper, "framerate", GST_TYPE_FRACTION_RANGE,
+              type->framerate.lower, 1, type->framerate.upper, 1,
               "wmvversion", G_TYPE_INT, 1, NULL);
 
           encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);

@@ -41,6 +41,11 @@ struct _GstAmcCodecType {
 
   GstAmcCodecProfileLevel * profile_levels;
   gsize n_profile_levels;
+
+  /* video codecs only */
+  GstAmcValueRange width;
+  GstAmcValueRange height;
+  GstAmcValueRange framerate;
 };
 
 typedef enum

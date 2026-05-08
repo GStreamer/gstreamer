@@ -29,10 +29,20 @@ typedef struct _GstAmcCodecInfoHandle GstAmcCodecInfoHandle;
 typedef struct _GstAmcCodecCapabilitiesHandle GstAmcCodecCapabilitiesHandle;
 typedef struct _GstAmcCodecProfileLevel GstAmcCodecProfileLevel;
 
+typedef struct _GstAmcVideoCapabilitiesHandle GstAmcVideoCapabilitiesHandle;
+
 struct _GstAmcCodecProfileLevel
 {
   gint profile;
   gint level;
+};
+
+typedef struct _GstAmcValueRange GstAmcValueRange;
+
+struct _GstAmcValueRange
+{
+  gint lower;
+  gint upper;
 };
 
 gboolean gst_amc_codeclist_get_count (gint * count, GError **err);
@@ -57,6 +67,16 @@ gint * gst_amc_codec_capabilities_handle_get_color_formats (
     GstAmcCodecCapabilitiesHandle * handle, gsize * length, GError ** err);
 GstAmcCodecProfileLevel * gst_amc_codec_capabilities_handle_get_profile_levels (
     GstAmcCodecCapabilitiesHandle * handle, gsize * length, GError ** err);
+
+GstAmcVideoCapabilitiesHandle * gst_amc_capabilities_get_video_capabilities (GstAmcCodecCapabilitiesHandle * handle,
+    GError **err);
+void gst_amc_capabilities_video_capabilities_handle_free (GstAmcVideoCapabilitiesHandle * handle);
+GstAmcValueRange gst_amc_video_capabilities_get_widths (
+  GstAmcVideoCapabilitiesHandle * handle, GError ** err);
+GstAmcValueRange gst_amc_video_capabilities_get_heights (
+  GstAmcVideoCapabilitiesHandle * handle, GError ** err);
+GstAmcValueRange gst_amc_video_capabilities_get_framerates (
+  GstAmcVideoCapabilitiesHandle * handle, GError ** err);
 
 G_END_DECLS
 
