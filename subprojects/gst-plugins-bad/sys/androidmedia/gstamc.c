@@ -2543,6 +2543,39 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
               "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
 
           encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else if (strcmp (type->mime, "video/wvc1") == 0) {
+          tmp = gst_structure_new ("video/x-wmv",
+              "width", GST_TYPE_INT_RANGE, 16, 4096,
+              "height", GST_TYPE_INT_RANGE, 16, 4096,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
+              "format", G_TYPE_STRING, "WVC1", NULL);
+
+          encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else if (strcmp (type->mime, "video/x-ms-wmv") == 0) {
+          tmp = gst_structure_new ("video/x-wmv",
+              "width", GST_TYPE_INT_RANGE, 16, 4096,
+              "height", GST_TYPE_INT_RANGE, 16, 4096,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
+              "format", G_TYPE_STRING, "WMV3",
+              "wmvversion", G_TYPE_INT, 3, NULL);
+
+          encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else if (strcmp (type->mime, "video/x-ms-wmv8") == 0) {
+          tmp = gst_structure_new ("video/x-wmv",
+              "width", GST_TYPE_INT_RANGE, 16, 4096,
+              "height", GST_TYPE_INT_RANGE, 16, 4096,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
+              "wmvversion", G_TYPE_INT, 2, NULL);
+
+          encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else if (strcmp (type->mime, "video/x-ms-wmv7") == 0) {
+          tmp = gst_structure_new ("video/x-wmv",
+              "width", GST_TYPE_INT_RANGE, 16, 4096,
+              "height", GST_TYPE_INT_RANGE, 16, 4096,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
+              "wmvversion", G_TYPE_INT, 1, NULL);
+
+          encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
         } else {
           GST_WARNING ("Unsupported mimetype '%s'", type->mime);
         }

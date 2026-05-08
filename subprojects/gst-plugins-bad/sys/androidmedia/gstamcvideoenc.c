@@ -233,6 +233,22 @@ create_amc_format (GstAmcVideoEnc * encoder, GstVideoCodecState * input_state,
     mime = "video/x-vnd.on2.vp9";
   } else if (strcmp (name, "video/x-av1") == 0) {
     mime = "video/av01";
+  } else if (strcmp (name, "video/x-wmv") == 0) {
+    const gchar *format;
+    gint wmvversion = -1;
+
+    gst_structure_get_int (s, "wmvversion", &wmvversion);
+    format = gst_structure_get_string (s, "format");
+    if (wmvversion == 1)
+      mime = "video/x-ms-wmv7";
+    else if (wmvversion == 2)
+      mime = "video/x-ms-wmv8";
+    else if (wmvversion == 3)
+      mime = "video/x-ms-wmv";
+    else if (!format || strcmp (format, "WMV3") == 0)
+      mime = "video/x-ms-wmv";
+    else if (strcmp (format, "WVC1") == 0)
+      mime = "video/wvc1";
   } else {
     GST_ERROR_OBJECT (encoder, "Failed to convert caps(%s/...) to any mime",
         name);
