@@ -1466,7 +1466,10 @@ lost_sync:
     stream->playlist_fetched = TRUE;
     stream->pending_discont = TRUE;
 
-    gst_hls_demux_reset_for_lost_sync (demux);
+    if (!gst_hls_demux_reset_for_lost_sync (demux)) {
+      GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
+          ("Failed to resynchronise streams after a discontinuity"), (NULL));
+    }
   }
 }
 
