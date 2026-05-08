@@ -205,6 +205,12 @@ make_vulkan_image_caps (GstVideoFormat format)
   return make_caps_with_feature (format, "memory:VulkanImage");
 }
 
+static GstCaps *
+make_iosurface_caps (GstVideoFormat format)
+{
+  return make_caps_with_feature (format, "memory:IOSurface");
+}
+
 static void
 set_input_caps (AlphaCombineFixture * fixture, GstCaps * sink_caps,
     GstCaps * alpha_caps)
@@ -345,26 +351,60 @@ assert_output_caps_features (AlphaCombineFixture * fixture,
   gst_caps_unref (caps);
 }
 
+static GstMemory *
+find_plane_memory (GstBuffer * buffer, gsize offset)
+{
+  guint idx = 0, length = 0;
+  gsize skip = 0;
+
+  fail_unless (gst_buffer_find_memory (buffer, offset, 1, &idx, &length,
+          &skip));
+
+  return gst_buffer_peek_memory (buffer, idx);
+}
+
 static void
 assert_output_buffer (GstBuffer * output, GstBuffer * sink_buffer,
-    guint alpha_plane_memory_prefix, GstVideoFormat sink_format,
-    GstVideoFormat src_format)
+    GstBuffer * alpha_buffer, guint alpha_plane_memory_prefix,
+    GstVideoFormat sink_format, GstVideoFormat src_format)
 {
-  GstVideoMeta *meta;
+  GstVideoMeta *meta = gst_buffer_get_video_meta (output);
+  GstVideoMeta *alpha_meta = gst_buffer_get_video_meta (alpha_buffer);
   guint alpha_plane_idx;
+  guint sink_n_mem, output_n_mem;
+  GstMemory *expected_alpha_mem;
 
-  meta = gst_buffer_get_video_meta (output);
   fail_unless (meta != NULL);
+  fail_unless (alpha_meta != NULL);
 
-  alpha_plane_idx = n_planes_for_format (sink_format);
   fail_unless_equals_int (meta->format, src_format);
   fail_unless_equals_int (meta->width, test_width);
   fail_unless_equals_int (meta->height, test_height);
+
+  alpha_plane_idx = n_planes_for_format (sink_format);
   fail_unless_equals_int (meta->n_planes, alpha_plane_idx + 1);
   fail_unless_equals_int64 (meta->offset[alpha_plane_idx],
       gst_buffer_get_size (sink_buffer) + alpha_plane_memory_prefix);
-  fail_unless_equals_int (gst_buffer_n_memory (output),
-      gst_buffer_n_memory (sink_buffer) + 1);
+  sink_n_mem = gst_buffer_n_memory (sink_buffer);
+  output_n_mem = gst_buffer_n_memory (output);
+  fail_unless_equals_int (output_n_mem, sink_n_mem + 1);
+
+  for (guint i = 0; i < sink_n_mem; i++)
+    fail_unless (gst_buffer_peek_memory (output, i) ==
+        gst_buffer_peek_memory (sink_buffer, i));
+
+  expected_alpha_mem =
+      find_plane_memory (alpha_buffer, alpha_meta->offset[GST_VIDEO_COMP_Y]);
+  fail_unless (gst_buffer_peek_memory (output,
+          sink_n_mem) == expected_alpha_mem);
+
+  for (guint i = 0; i < alpha_plane_idx; i++)
+    fail_unless (find_plane_memory (output, meta->offset[i]) ==
+        find_plane_memory (sink_buffer, meta->offset[i]));
+
+  fail_unless (find_plane_memory (output, meta->offset[alpha_plane_idx]) ==
+      expected_alpha_mem);
+
   assert_parent_buffer_meta_count (output, 2);
 }
 
@@ -405,8 +445,8 @@ run_combine_test (GstVideoFormat sink_format, GstVideoFormat alpha_format,
 
   assert_output_caps (fixture, expected_format);
   output = pop_output_buffer ();
-  assert_output_buffer (output, sink_buffer, alpha_plane_memory_prefix,
-      sink_format, expected_format);
+  assert_output_buffer (output, sink_buffer, alpha_buffer,
+      alpha_plane_memory_prefix, sink_format, expected_format);
   gst_buffer_unref (output);
 
   gst_buffer_unref (sink_buffer);
@@ -434,8 +474,8 @@ GST_START_TEST (test_yv12_to_a420_reorders_uv_planes)
 
   assert_output_caps (fixture, GST_VIDEO_FORMAT_A420);
   output = pop_output_buffer ();
-  assert_output_buffer (output, sink_buffer, 0, GST_VIDEO_FORMAT_YV12,
-      GST_VIDEO_FORMAT_A420);
+  assert_output_buffer (output, sink_buffer, alpha_buffer, 0,
+      GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_A420);
   assert_yv12_planes_reordered_to_a420 (output, sink_buffer);
   gst_buffer_unref (output);
 
@@ -642,8 +682,8 @@ GST_START_TEST (test_gap_reuses_previous_alpha_buffer)
   fail_unless_equals_int (gst_pad_push (fixture->sink_srcpad,
           gst_buffer_ref (sink_buffer)), GST_FLOW_OK);
   output = pop_output_buffer ();
-  assert_output_buffer (output, sink_buffer, 0, GST_VIDEO_FORMAT_I420,
-      GST_VIDEO_FORMAT_A420);
+  assert_output_buffer (output, sink_buffer, alpha_buffer, 0,
+      GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_A420);
   gst_buffer_unref (output);
   gst_buffer_unref (sink_buffer);
 
@@ -729,6 +769,7 @@ GST_START_TEST (test_pad_templates_expose_supported_memory_backends)
     gboolean has_baseline = FALSE;
     gboolean has_gl_memory = FALSE;
     gboolean has_vulkan_image = FALSE;
+    gboolean has_iosurface = FALSE;
     guint i;
 
     for (i = 0; i < gst_caps_get_size (caps); i++) {
@@ -745,11 +786,15 @@ GST_START_TEST (test_pad_templates_expose_supported_memory_backends)
 
       if (gst_caps_features_contains (features, "memory:VulkanImage"))
         has_vulkan_image = TRUE;
+
+      if (gst_caps_features_contains (features, "memory:IOSurface"))
+        has_iosurface = TRUE;
     }
 
     fail_unless (has_baseline);
     fail_unless (has_gl_memory);
     fail_unless (has_vulkan_image);
+    fail_unless (has_iosurface);
 
     gst_caps_unref (caps);
   }
@@ -858,6 +903,19 @@ GST_START_TEST (test_vulkan_image_features_are_propagated)
 
 GST_END_TEST;
 
+GST_START_TEST (test_iosurface_features_are_propagated)
+{
+  GstCapsFeatures *features =
+      gst_caps_features_new_single_static_str ("memory:IOSurface");
+
+  run_caps_feature_combine_test (make_iosurface_caps (GST_VIDEO_FORMAT_I420),
+      make_iosurface_caps (GST_VIDEO_FORMAT_I420), features, NULL);
+
+  gst_caps_features_free (features);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_unsupported_memory_feature_is_rejected_late)
 {
   run_caps_feature_rejection_test (make_caps_with_feature
@@ -912,16 +970,13 @@ GST_START_TEST (test_gl_memory_requires_matching_texture_target)
 
 GST_END_TEST;
 
-GST_START_TEST (test_caps_query_propagates_downstream_glmemory)
+static void
+run_caps_query_propagates_downstream_test (GstCaps * downstream_caps,
+    GstCaps * expected_sink_caps, GstCaps * expected_alpha_caps)
 {
   AlphaCombineFixture *fixture = setup_alphacombine ();
-  GstCaps *downstream_caps = make_gl_caps (GST_VIDEO_FORMAT_AV12, "rectangle");
   GstCaps *sink_caps;
   GstCaps *alpha_caps;
-  GstCaps *expected_sink_caps = make_gl_caps (GST_VIDEO_FORMAT_NV12,
-      "rectangle");
-  GstCaps *expected_alpha_nv12_caps = make_gl_caps (GST_VIDEO_FORMAT_NV12,
-      "rectangle");
   GstCaps *unexpected_raw_caps = make_caps (GST_VIDEO_FORMAT_NV12);
 
   g_object_set_data (G_OBJECT (fixture->output_sinkpad), "caps-query-caps",
@@ -934,53 +989,46 @@ GST_START_TEST (test_caps_query_propagates_downstream_glmemory)
   gst_caps_unref (sink_caps);
 
   alpha_caps = gst_pad_peer_query_caps (fixture->alpha_srcpad, NULL);
-  fail_unless (gst_caps_can_intersect (alpha_caps, expected_alpha_nv12_caps));
+  fail_unless (gst_caps_can_intersect (alpha_caps, expected_alpha_caps));
   fail_if (gst_caps_can_intersect (alpha_caps, unexpected_raw_caps));
   gst_caps_unref (alpha_caps);
 
   g_object_set_data (G_OBJECT (fixture->output_sinkpad), "caps-query-caps",
       NULL);
   gst_caps_unref (unexpected_raw_caps);
-  gst_caps_unref (expected_alpha_nv12_caps);
+  gst_caps_unref (expected_alpha_caps);
   gst_caps_unref (expected_sink_caps);
   gst_caps_unref (downstream_caps);
   cleanup_alphacombine (fixture);
+}
+
+GST_START_TEST (test_caps_query_propagates_downstream_glmemory)
+{
+  run_caps_query_propagates_downstream_test (make_gl_caps
+      (GST_VIDEO_FORMAT_AV12, "rectangle"), make_gl_caps (GST_VIDEO_FORMAT_NV12,
+          "rectangle"), make_gl_caps (GST_VIDEO_FORMAT_NV12, "rectangle"));
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_caps_query_propagates_downstream_vulkan_image)
 {
-  AlphaCombineFixture *fixture = setup_alphacombine ();
-  GstCaps *downstream_caps = make_vulkan_image_caps (GST_VIDEO_FORMAT_AV12);
-  GstCaps *sink_caps;
-  GstCaps *alpha_caps;
-  GstCaps *expected_sink_caps = make_vulkan_image_caps (GST_VIDEO_FORMAT_NV12);
-  GstCaps *unexpected_raw_caps = make_caps (GST_VIDEO_FORMAT_NV12);
-
-  g_object_set_data (G_OBJECT (fixture->output_sinkpad), "caps-query-caps",
-      downstream_caps);
-  gst_pad_set_query_function (fixture->output_sinkpad, caps_query_func);
-
-  sink_caps = gst_pad_peer_query_caps (fixture->sink_srcpad, NULL);
-  fail_unless (gst_caps_can_intersect (sink_caps, expected_sink_caps));
-  fail_if (gst_caps_can_intersect (sink_caps, unexpected_raw_caps));
-  gst_caps_unref (sink_caps);
-
-  alpha_caps = gst_pad_peer_query_caps (fixture->alpha_srcpad, NULL);
-  fail_unless (gst_caps_can_intersect (alpha_caps, expected_sink_caps));
-  fail_if (gst_caps_can_intersect (alpha_caps, unexpected_raw_caps));
-  gst_caps_unref (alpha_caps);
-
-  g_object_set_data (G_OBJECT (fixture->output_sinkpad), "caps-query-caps",
-      NULL);
-  gst_caps_unref (unexpected_raw_caps);
-  gst_caps_unref (expected_sink_caps);
-  gst_caps_unref (downstream_caps);
-  cleanup_alphacombine (fixture);
+  run_caps_query_propagates_downstream_test (make_vulkan_image_caps
+      (GST_VIDEO_FORMAT_AV12), make_vulkan_image_caps (GST_VIDEO_FORMAT_NV12),
+      make_vulkan_image_caps (GST_VIDEO_FORMAT_NV12));
 }
 
 GST_END_TEST;
+
+GST_START_TEST (test_caps_query_propagates_downstream_iosurface)
+{
+  run_caps_query_propagates_downstream_test (make_iosurface_caps
+      (GST_VIDEO_FORMAT_AV12), make_iosurface_caps (GST_VIDEO_FORMAT_NV12),
+      make_iosurface_caps (GST_VIDEO_FORMAT_NV12));
+}
+
+GST_END_TEST;
+
 static gboolean
 element_available (const gchar * name)
 {
@@ -1159,12 +1207,14 @@ alphacombine_suite (void)
   tcase_add_test (tc_chain,
       test_plain_and_system_memory_features_are_compatible);
   tcase_add_test (tc_chain, test_vulkan_image_features_are_propagated);
+  tcase_add_test (tc_chain, test_iosurface_features_are_propagated);
   tcase_add_test (tc_chain, test_unsupported_memory_feature_is_rejected_late);
   tcase_add_test (tc_chain, test_gl_and_vulkan_image_mismatch_is_rejected_late);
   tcase_add_test (tc_chain, test_meta_feature_mismatch_is_rejected);
   tcase_add_test (tc_chain, test_gl_memory_requires_matching_texture_target);
   tcase_add_test (tc_chain, test_caps_query_propagates_downstream_glmemory);
   tcase_add_test (tc_chain, test_caps_query_propagates_downstream_vulkan_image);
+  tcase_add_test (tc_chain, test_caps_query_propagates_downstream_iosurface);
   tcase_add_test (tc_chain, test_vp8alphadecodebin_smoke);
   tcase_add_test (tc_chain, test_vp9alphadecodebin_smoke);
 
