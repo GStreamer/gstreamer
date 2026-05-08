@@ -2174,6 +2174,22 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
               "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
               "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
           encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else if (strcmp (type->mime, "audio/ac3") == 0) {
+          tmp = gst_structure_new ("audio/x-ac3",
+              "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "framed", G_TYPE_BOOLEAN, TRUE, NULL);
+          encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else if (strcmp (type->mime, "audio/eac3") == 0) {
+          tmp = gst_structure_new ("audio/x-eac3",
+              "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "framed", G_TYPE_BOOLEAN, TRUE, NULL);
+          encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else if (strcmp (type->mime, "audio/ac4") == 0) {
+          tmp = gst_structure_new ("audio/x-ac4",
+              "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
         } else {
           GST_WARNING ("Unsupported mimetype '%s'", type->mime);
         }
