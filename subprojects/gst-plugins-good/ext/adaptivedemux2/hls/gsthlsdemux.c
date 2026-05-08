@@ -1208,7 +1208,7 @@ gst_hls_demux_handle_variant_playlist_update_error (GstHLSDemux * demux,
 
 /* Reset hlsdemux in case of live synchronization loss (i.e. when a media
  * playlist update doesn't match at all with the previous one) */
-void
+gboolean
 gst_hls_demux_reset_for_lost_sync (GstHLSDemux * hlsdemux)
 {
   GstAdaptiveDemux *demux = (GstAdaptiveDemux *) hlsdemux;
@@ -1229,7 +1229,12 @@ gst_hls_demux_reset_for_lost_sync (GstHLSDemux * hlsdemux)
       GstM3U8SeekResult seek_result;
 
       /* Resynchronize the variant stream */
-      g_assert (stream->current_position != GST_CLOCK_STIME_NONE);
+      if (stream->current_position == GST_CLOCK_TIME_NONE) {
+        GST_ERROR_OBJECT (stream,
+            "Variant doesn't have a current position to recalculate sync");
+        return FALSE;
+      }
+
       if (gst_hls_media_playlist_get_starting_segment (hls_stream->playlist,
               &seek_result)) {
         hls_stream->current_segment = seek_result.segment;
@@ -1261,6 +1266,8 @@ gst_hls_demux_reset_for_lost_sync (GstHLSDemux * hlsdemux)
       hls_stream->playlist_fetched = FALSE;
     }
   }
+
+  return TRUE;
 }
 
 static void

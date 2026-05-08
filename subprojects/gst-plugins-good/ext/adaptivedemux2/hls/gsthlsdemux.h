@@ -116,7 +116,7 @@ gst_hls_demux_new_track_for_rendition (GstHLSDemux * demux,
     GstCaps * caps, GstStreamFlags flags, GstTagList * tags);
 
 void gst_hls_demux_start_rendition_streams (GstHLSDemux * hlsdemux);
-void gst_hls_demux_reset_for_lost_sync (GstHLSDemux * hlsdemux);
+gboolean gst_hls_demux_reset_for_lost_sync (GstHLSDemux * hlsdemux);
 const GstHLSKey *gst_hls_demux_get_key (GstHLSDemux * demux,
     const gchar * key_url, const gchar * referer, gboolean allow_cache);
 
