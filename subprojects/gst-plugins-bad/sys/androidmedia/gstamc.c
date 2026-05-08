@@ -499,15 +499,15 @@ scan_codecs (GstPlugin * plugin)
   if (ret) {
     GstStructure *new_cache_data = gst_structure_new_empty ("gst-amc-cache");
     GList *l;
-    GValue arr = { 0, };
+    GValue arr = G_VALUE_INIT;
 
     g_value_init (&arr, GST_TYPE_ARRAY);
 
     for (l = codec_infos.head; l; l = l->next) {
       GstAmcCodecInfo *gst_codec_info = l->data;
-      GValue cv = { 0, };
+      GValue cv = G_VALUE_INIT;
       GstStructure *cs = gst_structure_new_empty ("gst-amc-codec");
-      GValue starr = { 0, };
+      GValue starr = G_VALUE_INIT;
       gint i;
 
       gst_structure_set (cs, "name", G_TYPE_STRING, gst_codec_info->name,
@@ -518,8 +518,8 @@ scan_codecs (GstPlugin * plugin)
       for (i = 0; i < gst_codec_info->n_supported_types; i++) {
         GstAmcCodecType *gst_codec_type = &gst_codec_info->supported_types[i];
         GstStructure *sts = gst_structure_new_empty ("gst-amc-supported-type");
-        GValue stv = { 0, };
-        GValue tmparr = { 0, };
+        GValue stv = G_VALUE_INIT;
+        GValue tmparr = G_VALUE_INIT;
         gint j;
 
         gst_structure_set (sts, "mime", G_TYPE_STRING, gst_codec_type->mime,
@@ -527,7 +527,7 @@ scan_codecs (GstPlugin * plugin)
 
         g_value_init (&tmparr, GST_TYPE_ARRAY);
         for (j = 0; j < gst_codec_type->n_color_formats; j++) {
-          GValue tmp = { 0, };
+          GValue tmp = G_VALUE_INIT;
 
           g_value_init (&tmp, G_TYPE_INT);
           g_value_set_int (&tmp, gst_codec_type->color_formats[j]);
@@ -539,8 +539,8 @@ scan_codecs (GstPlugin * plugin)
 
         g_value_init (&tmparr, GST_TYPE_ARRAY);
         for (j = 0; j < gst_codec_type->n_profile_levels; j++) {
-          GValue tmparr2 = { 0, };
-          GValue tmp = { 0, };
+          GValue tmparr2 = G_VALUE_INIT;
+          GValue tmp = G_VALUE_INIT;
 
           g_value_init (&tmparr2, GST_TYPE_ARRAY);
           g_value_init (&tmp, G_TYPE_INT);
@@ -555,7 +555,7 @@ scan_codecs (GstPlugin * plugin)
         gst_structure_set_value (sts, "profile-levels", &tmparr);
 
         if (g_str_has_prefix (gst_codec_type->mime, "video/")) {
-          GValue tmprange = { 0, };
+          GValue tmprange = G_VALUE_INIT;
 
           g_value_init (&tmprange, GST_TYPE_INT_RANGE);
           gst_value_set_int_range (&tmprange,
@@ -2158,8 +2158,8 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
         } else if (strcmp (type->mime, "audio/mp4a-latm") == 0) {
           gint j;
           gboolean have_profile = FALSE;
-          GValue va = { 0, };
-          GValue v = { 0, };
+          GValue va = G_VALUE_INIT;
+          GValue v = G_VALUE_INIT;
 
           g_value_init (&va, GST_TYPE_LIST);
           g_value_init (&v, G_TYPE_STRING);
@@ -2330,8 +2330,8 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
               if (codec_info->is_encoder) {
                 const gchar *level;
                 gint k;
-                GValue va = { 0, };
-                GValue v = { 0, };
+                GValue va = G_VALUE_INIT;
+                GValue v = G_VALUE_INIT;
 
                 g_value_init (&va, GST_TYPE_LIST);
                 g_value_init (&v, G_TYPE_STRING);
@@ -2402,8 +2402,8 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
               if (codec_info->is_encoder) {
                 gint k;
                 gint level;
-                GValue va = { 0, };
-                GValue v = { 0, };
+                GValue va = G_VALUE_INIT;
+                GValue v = G_VALUE_INIT;
 
                 g_value_init (&va, GST_TYPE_LIST);
                 g_value_init (&v, G_TYPE_UINT);
@@ -2482,8 +2482,8 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
               if (codec_info->is_encoder) {
                 const gchar *level;
                 gint k;
-                GValue va = { 0, };
-                GValue v = { 0, };
+                GValue va = G_VALUE_INIT;
+                GValue v = G_VALUE_INIT;
 
                 g_value_init (&va, GST_TYPE_LIST);
                 g_value_init (&v, G_TYPE_STRING);
@@ -2556,7 +2556,7 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
               if (codec_info->is_encoder) {
                 const gchar *level, *tier;
                 gint k;
-                GValue v = { 0, };
+                GValue v = G_VALUE_INIT;
 
                 g_value_init (&v, G_TYPE_STRING);
                 for (k = 1; k <= type->profile_levels[j].level && k != 0;
