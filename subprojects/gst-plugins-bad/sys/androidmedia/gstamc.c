@@ -531,11 +531,9 @@ scan_codecs (GstPlugin * plugin)
 
           g_value_init (&tmp, G_TYPE_INT);
           g_value_set_int (&tmp, gst_codec_type->color_formats[j]);
-          gst_value_array_append_value (&tmparr, &tmp);
-          g_value_unset (&tmp);
+          gst_value_array_append_and_take_value (&tmparr, &tmp);
         }
-        gst_structure_set_value (sts, "color-formats", &tmparr);
-        g_value_unset (&tmparr);
+        gst_structure_take_value (sts, "color-formats", &tmparr);
 
         g_value_init (&tmparr, GST_TYPE_ARRAY);
         for (j = 0; j < gst_codec_type->n_profile_levels; j++) {
@@ -545,14 +543,13 @@ scan_codecs (GstPlugin * plugin)
           g_value_init (&tmparr2, GST_TYPE_ARRAY);
           g_value_init (&tmp, G_TYPE_INT);
           g_value_set_int (&tmp, gst_codec_type->profile_levels[j].profile);
-          gst_value_array_append_value (&tmparr2, &tmp);
+          gst_value_array_append_and_take_value (&tmparr2, &tmp);
+          g_value_init (&tmp, G_TYPE_INT);
           g_value_set_int (&tmp, gst_codec_type->profile_levels[j].level);
-          gst_value_array_append_value (&tmparr2, &tmp);
-          gst_value_array_append_value (&tmparr, &tmparr2);
-          g_value_unset (&tmp);
-          g_value_unset (&tmparr2);
+          gst_value_array_append_and_take_value (&tmparr2, &tmp);
+          gst_value_array_append_and_take_value (&tmparr, &tmparr2);
         }
-        gst_structure_set_value (sts, "profile-levels", &tmparr);
+        gst_structure_take_value (sts, "profile-levels", &tmparr);
 
         if (g_str_has_prefix (gst_codec_type->mime, "video/")) {
           GValue tmprange = G_VALUE_INIT;
@@ -560,42 +557,34 @@ scan_codecs (GstPlugin * plugin)
           g_value_init (&tmprange, GST_TYPE_INT_RANGE);
           gst_value_set_int_range (&tmprange,
               gst_codec_type->width.lower, gst_codec_type->width.upper);
-          gst_structure_set_value (sts, "width", &tmprange);
-          g_value_unset (&tmprange);
+          gst_structure_take_value (sts, "width", &tmprange);
 
           g_value_init (&tmprange, GST_TYPE_INT_RANGE);
           gst_value_set_int_range (&tmprange,
               gst_codec_type->height.lower, gst_codec_type->height.upper);
-          gst_structure_set_value (sts, "height", &tmprange);
-          g_value_unset (&tmprange);
+          gst_structure_take_value (sts, "height", &tmprange);
 
           g_value_init (&tmprange, GST_TYPE_FRACTION_RANGE);
           gst_value_set_fraction_range_full (&tmprange,
               gst_codec_type->framerate.lower, 1,
               gst_codec_type->framerate.upper, 1);
-          gst_structure_set_value (sts, "framerate", &tmprange);
+          gst_structure_take_value (sts, "framerate", &tmprange);
         }
 
         g_value_init (&stv, GST_TYPE_STRUCTURE);
-        gst_value_set_structure (&stv, sts);
-        gst_value_array_append_value (&starr, &stv);
-        g_value_unset (&tmparr);
-        gst_structure_free (sts);
+        g_value_take_boxed (&stv, sts);
+        gst_value_array_append_and_take_value (&starr, &stv);
       }
 
-      gst_structure_set_value (cs, "supported-types", &starr);
-      g_value_unset (&starr);
+      gst_structure_take_value (cs, "supported-types", &starr);
 
       g_value_init (&cv, GST_TYPE_STRUCTURE);
-      gst_value_set_structure (&cv, cs);
-      gst_value_array_append_value (&arr, &cv);
-      g_value_unset (&cv);
-      gst_structure_free (cs);
+      g_value_take_boxed (&cv, cs);
+      gst_value_array_append_and_take_value (&arr, &cv);
     }
 
-    gst_structure_set_value (new_cache_data,
+    gst_structure_take_value (new_cache_data,
         "codecs-" G_STRINGIFY (GST_AMC_CODEC_CACHE_VERSION), &arr);
-    g_value_unset (&arr);
 
     gst_plugin_set_cache_data (plugin, new_cache_data);
   }
@@ -2163,19 +2152,18 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
 
           g_value_init (&va, GST_TYPE_LIST);
           g_value_init (&v, G_TYPE_STRING);
-          g_value_set_string (&v, "raw");
-          gst_value_list_append_value (&va, &v);
-          g_value_set_string (&v, "adts");
-          gst_value_list_append_value (&va, &v);
-          g_value_unset (&v);
+          g_value_set_static_string (&v, "raw");
+          gst_value_list_append_and_take_value (&va, &v);
+          g_value_init (&v, G_TYPE_STRING);
+          g_value_set_static_string (&v, "adts");
+          gst_value_list_append_and_take_value (&va, &v);
 
           tmp = gst_structure_new ("audio/mpeg",
               "mpegversion", G_TYPE_INT, 4,
               "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
               "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
               "framed", G_TYPE_BOOLEAN, TRUE, NULL);
-          gst_structure_set_value (tmp, "stream-format", &va);
-          g_value_unset (&va);
+          gst_structure_take_value (tmp, "stream-format", &va);
 
           for (j = 0; j < type->n_profile_levels; j++) {
             const gchar *profile;
@@ -2328,28 +2316,26 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
               /* Don't put the level restrictions on the sinkpad caps for decoders,
                * see 2b94641a4 */
               if (codec_info->is_encoder) {
-                const gchar *level;
                 gint k;
                 GValue va = G_VALUE_INIT;
-                GValue v = G_VALUE_INIT;
 
                 g_value_init (&va, GST_TYPE_LIST);
-                g_value_init (&v, G_TYPE_STRING);
 
                 for (k = 1; k <= type->profile_levels[j].level && k != 0;
                     k <<= 1) {
+                  const gchar *level;
+                  GValue v = G_VALUE_INIT;
+
                   level = gst_amc_mpeg4_level_to_string (k);
                   if (!level)
                     continue;
 
-                  g_value_set_string (&v, level);
-                  gst_value_list_append_value (&va, &v);
-                  g_value_reset (&v);
+                  g_value_init (&v, G_TYPE_STRING);
+                  g_value_set_static_string (&v, level);
+                  gst_value_list_append_and_take_value (&va, &v);
                 }
 
-                gst_structure_set_value (tmp2, "level", &va);
-                g_value_unset (&va);
-                g_value_unset (&v);
+                gst_structure_take_value (tmp2, "level", &va);
               }
 
               encoded_ret = gst_caps_merge_structure (encoded_ret, tmp2);
@@ -2403,25 +2389,23 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
                 gint k;
                 gint level;
                 GValue va = G_VALUE_INIT;
-                GValue v = G_VALUE_INIT;
 
                 g_value_init (&va, GST_TYPE_LIST);
-                g_value_init (&v, G_TYPE_UINT);
 
                 for (k = 1; k <= type->profile_levels[j].level && k != 0;
                     k <<= 1) {
+                  GValue v = G_VALUE_INIT;
+
                   level = gst_amc_h263_level_to_gst_id (k);
                   if (level == -1)
                     continue;
 
+                  g_value_init (&v, G_TYPE_UINT);
                   g_value_set_uint (&v, level);
-                  gst_value_list_append_value (&va, &v);
-                  g_value_reset (&v);
+                  gst_value_list_append_and_take_value (&va, &v);
                 }
 
-                gst_structure_set_value (tmp2, "level", &va);
-                g_value_unset (&va);
-                g_value_unset (&v);
+                gst_structure_take_value (tmp2, "level", &va);
               }
 
               encoded_ret = gst_caps_merge_structure (encoded_ret, tmp2);
@@ -2480,30 +2464,27 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
               }
 
               if (codec_info->is_encoder) {
-                const gchar *level;
                 gint k;
                 GValue va = G_VALUE_INIT;
-                GValue v = G_VALUE_INIT;
 
                 g_value_init (&va, GST_TYPE_LIST);
-                g_value_init (&v, G_TYPE_STRING);
                 for (k = 1; k <= type->profile_levels[j].level && k != 0;
                     k <<= 1) {
+                  const gchar *level;
+                  GValue v = G_VALUE_INIT;
+
                   level = gst_amc_avc_level_to_string (k);
                   if (!level)
                     continue;
 
-                  g_value_set_string (&v, level);
-                  gst_value_list_append_value (&va, &v);
-                  g_value_reset (&v);
+                  g_value_init (&v, G_TYPE_STRING);
+                  g_value_set_static_string (&v, level);
+                  gst_value_list_append_and_take_value (&va, &v);
                 }
 
-                gst_structure_set_value (tmp2, "level", &va);
                 if (tmp3)
                   gst_structure_set_value (tmp3, "level", &va);
-
-                g_value_unset (&va);
-                g_value_unset (&v);
+                gst_structure_take_value (tmp2, "level", &va);
               }
 
               encoded_ret = gst_caps_merge_structure (encoded_ret, tmp2);
@@ -2554,26 +2535,26 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
               gst_structure_set (tmp2, "profile", G_TYPE_STRING, profile, NULL);
 
               if (codec_info->is_encoder) {
-                const gchar *level, *tier;
                 gint k;
-                GValue v = G_VALUE_INIT;
 
-                g_value_init (&v, G_TYPE_STRING);
                 for (k = 1; k <= type->profile_levels[j].level && k != 0;
                     k <<= 1) {
+                  const gchar *level, *tier;
+                  GValue v = G_VALUE_INIT;
+
                   level = gst_amc_hevc_tier_level_to_string (k, &tier);
                   if (!level || !tier)
                     continue;
 
                   tmp3 = gst_structure_copy (tmp2);
 
-                  g_value_set_string (&v, tier);
-                  gst_structure_set_value (tmp3, "tier", &v);
-                  g_value_reset (&v);
+                  g_value_init (&v, G_TYPE_STRING);
+                  g_value_set_static_string (&v, tier);
+                  gst_structure_take_value (tmp3, "tier", &v);
 
-                  g_value_set_string (&v, level);
-                  gst_structure_set_value (tmp3, "level", &v);
-                  g_value_reset (&v);
+                  g_value_init (&v, G_TYPE_STRING);
+                  g_value_set_static_string (&v, level);
+                  gst_structure_take_value (tmp3, "level", &v);
 
                   encoded_ret = gst_caps_merge_structure (encoded_ret, tmp3);
                   have_profile_level = TRUE;
