@@ -274,9 +274,11 @@ enum
   AACObjectHE = 5,
   AACObjectScalable = 6,
   AACObjectERLC = 17,
+  AACObjectERScalable = 20,
   AACObjectLD = 23,
   AACObjectHE_PS = 29,
-  AACObjectELD = 39
+  AACObjectELD = 39,
+  AACObjectXHE = 42,
 };
 
 /* Copies from AudioFormat.java */
