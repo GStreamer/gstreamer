@@ -1049,6 +1049,9 @@ valgrind ges:
           - "subprojects/gst-plugins-bad/**/*"
           - "subprojects/gst-editing-services/**/*"
           - "subprojects/gst-python/**/*"
+  # valgrind ges jobs started failing again frequently after the CI upgrade to
+  # Fedora 43. Ignore failures for now until someone has time to investigate.
+  allow_failure: true
 
 valgrind rtsp-server:
   extends: '.valgrind fedora x86_64'
