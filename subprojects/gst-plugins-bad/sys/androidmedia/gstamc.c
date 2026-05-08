@@ -1138,7 +1138,8 @@ static const struct
       HEVCProfileMain, "main"}, {
       HEVCProfileMain10, "main-10"}, {
       HEVCProfileMain10HDR10, "main-10"}, {
-      HEVCProfileMain10HDR10Plus, "main-10"}
+      HEVCProfileMain10HDR10Plus, "main-10"}, {
+      HEVCProfileMainStill, "main-still-picture"}
 };
 
 const gchar *
