@@ -34,12 +34,6 @@ should_prefer_ndk ()
   int device_api_level = android_get_device_api_level ();
   const gchar *impl_env = g_getenv ("GST_AMC_PREFERED_IMPL");
 
-  if (device_api_level < 21) {
-    /* NDK media APIs are added in API level 21 (Android 5). Don't bother
-     * trying. It'll fail anyway. */
-    return FALSE;
-  }
-
   if (impl_env) {
     if (g_str_equal (impl_env, "ndk"))
       return TRUE;

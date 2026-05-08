@@ -41,7 +41,6 @@
 #define orc_memcpy memcpy
 #endif
 
-#include "gstamcutils.h"
 #include "gstamcvideoenc.h"
 #include "gstamc-constants.h"
 

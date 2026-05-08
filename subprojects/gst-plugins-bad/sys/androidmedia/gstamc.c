@@ -36,7 +36,6 @@
 #endif
 
 #include "gstamc.h"
-#include "gstamcutils.h"
 #include "gstamc-constants.h"
 
 #include "gstamcvideodec.h"
@@ -47,6 +46,7 @@
 #include <gst/video/video.h>
 #include <gst/audio/audio.h>
 #include <string.h>
+#include <android/api-level.h>
 
 GST_DEBUG_CATEGORY (gst_amc_debug);
 #define GST_CAT_DEFAULT gst_amc_debug
@@ -284,7 +284,7 @@ scan_codecs (GstPlugin * plugin)
     gst_codec_info->is_encoder = is_encoder;
     gst_codec_info->gl_output_only = FALSE;
 
-    if (gst_amc_get_android_level () >= 29) {
+    if (android_get_device_api_level () >= 29) {
       if (!gst_amc_codec_info_handle_is_hardware_accelerated (codec_info,
               &is_hw, &error)) {
         GST_WARNING ("Failed to detect if codec is hardware-accelerated: %s",
@@ -348,9 +348,6 @@ scan_codecs (GstPlugin * plugin)
       if (g_str_has_prefix (gst_codec_type->mime, "video/")) {
         GstAmcVideoCapabilitiesHandle *vid_caps = NULL;
 
-        /* These function are safe to be called even if the API level
-           does not give us the MediaCodecInfo.VideoCapabilities. In
-           that case we will get the default values. */
         vid_caps =
             gst_amc_capabilities_get_video_capabilities (capabilities, &error);
         gst_codec_type->width =

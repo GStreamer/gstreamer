@@ -24,7 +24,6 @@
 #endif
 
 #include "../gstjniutils.h"
-#include "../gstamcutils.h"
 #include "../gstamc-codeclist.h"
 
 #include "gstamc-jni.h"
@@ -97,79 +96,11 @@ static struct
   jmethodID int_value;
 } lang_integer;
 
-static gboolean
-gst_amc_codeclist_jni_static_init_21 (void)
-{
-  JNIEnv *env;
-  GError *err = NULL;
-
-  env = gst_amc_jni_get_env ();
-
-  media_codeccapabilities.get_video_capabilities =
-      gst_amc_jni_get_method_id (env, &err, media_codeccapabilities.klass,
-      "getVideoCapabilities",
-      "()Landroid/media/MediaCodecInfo$VideoCapabilities;");
-  if (!media_codeccapabilities.get_video_capabilities) {
-    GST_ERROR
-        ("Failed to get android.media.MediaCodecInfo getVideoCapabilities(): %s",
-        err->message);
-    g_clear_error (&err);
-    return FALSE;
-  }
-
-  media_videocapabilities.klass =
-      gst_amc_jni_get_class (env, &err,
-      "android/media/MediaCodecInfo$VideoCapabilities");
-  if (!media_videocapabilities.klass) {
-    GST_ERROR
-        ("Failed to get android.media.MediaCodecInfo.VideoCapabilities class: %s",
-        err->message);
-    g_clear_error (&err);
-    return FALSE;
-  }
-
-  media_videocapabilities.get_supported_widths =
-      gst_amc_jni_get_method_id (env, &err, media_videocapabilities.klass,
-      "getSupportedWidths", "()Landroid/util/Range;");
-  if (!media_videocapabilities.get_supported_widths) {
-    GST_ERROR
-        ("Failed to get android.media.MediaCodecInfo.VideoCapabilities getSupportedWidths(): %s",
-        err->message);
-    g_clear_error (&err);
-    return FALSE;
-  }
-
-  media_videocapabilities.get_supported_heights =
-      gst_amc_jni_get_method_id (env, &err, media_videocapabilities.klass,
-      "getSupportedHeights", "()Landroid/util/Range;");
-  if (!media_videocapabilities.get_supported_heights) {
-    GST_ERROR
-        ("Failed to get android.media.MediaCodecInfo.VideoCapabilities getSupportedHeights(): %s",
-        err->message);
-    g_clear_error (&err);
-    return FALSE;
-  }
-
-  media_videocapabilities.get_supported_framerates =
-      gst_amc_jni_get_method_id (env, &err, media_videocapabilities.klass,
-      "getSupportedFrameRates", "()Landroid/util/Range;");
-  if (!media_videocapabilities.get_supported_framerates) {
-    GST_ERROR
-        ("Failed to get android.media.MediaCodecInfo.VideoCapabilities getSupportedFrameRates(): %s",
-        err->message);
-    g_clear_error (&err);
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
 gboolean
 gst_amc_codeclist_jni_static_init (void)
 {
   JNIEnv *env;
   GError *err = NULL;
-  gboolean api_level_gt_21 = android_get_device_api_level () > 21;
 
   env = gst_amc_jni_get_env ();
 
@@ -255,7 +186,7 @@ gst_amc_codeclist_jni_static_init (void)
     return FALSE;
   }
 
-  if (gst_amc_get_android_level () >= 29) {
+  if (android_get_device_api_level () >= 29) {
     media_codecinfo.is_hardware_accelerated =
         gst_amc_jni_get_method_id (env, &err, media_codecinfo.klass,
         "isHardwareAccelerated", "()Z");
@@ -374,8 +305,61 @@ gst_amc_codeclist_jni_static_init (void)
     return FALSE;
   }
 
-  if (api_level_gt_21)
-    return gst_amc_codeclist_jni_static_init_21 ();
+  media_codeccapabilities.get_video_capabilities =
+      gst_amc_jni_get_method_id (env, &err, media_codeccapabilities.klass,
+      "getVideoCapabilities",
+      "()Landroid/media/MediaCodecInfo$VideoCapabilities;");
+  if (!media_codeccapabilities.get_video_capabilities) {
+    GST_ERROR
+        ("Failed to get android.media.MediaCodecInfo getVideoCapabilities(): %s",
+        err->message);
+    g_clear_error (&err);
+    return FALSE;
+  }
+
+  media_videocapabilities.klass =
+      gst_amc_jni_get_class (env, &err,
+      "android/media/MediaCodecInfo$VideoCapabilities");
+  if (!media_videocapabilities.klass) {
+    GST_ERROR
+        ("Failed to get android.media.MediaCodecInfo.VideoCapabilities class: %s",
+        err->message);
+    g_clear_error (&err);
+    return FALSE;
+  }
+
+  media_videocapabilities.get_supported_widths =
+      gst_amc_jni_get_method_id (env, &err, media_videocapabilities.klass,
+      "getSupportedWidths", "()Landroid/util/Range;");
+  if (!media_videocapabilities.get_supported_widths) {
+    GST_ERROR
+        ("Failed to get android.media.MediaCodecInfo.VideoCapabilities getSupportedWidths(): %s",
+        err->message);
+    g_clear_error (&err);
+    return FALSE;
+  }
+
+  media_videocapabilities.get_supported_heights =
+      gst_amc_jni_get_method_id (env, &err, media_videocapabilities.klass,
+      "getSupportedHeights", "()Landroid/util/Range;");
+  if (!media_videocapabilities.get_supported_heights) {
+    GST_ERROR
+        ("Failed to get android.media.MediaCodecInfo.VideoCapabilities getSupportedHeights(): %s",
+        err->message);
+    g_clear_error (&err);
+    return FALSE;
+  }
+
+  media_videocapabilities.get_supported_framerates =
+      gst_amc_jni_get_method_id (env, &err, media_videocapabilities.klass,
+      "getSupportedFrameRates", "()Landroid/util/Range;");
+  if (!media_videocapabilities.get_supported_framerates) {
+    GST_ERROR
+        ("Failed to get android.media.MediaCodecInfo.VideoCapabilities getSupportedFrameRates(): %s",
+        err->message);
+    g_clear_error (&err);
+    return FALSE;
+  }
 
   return TRUE;
 }
