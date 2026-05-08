@@ -1911,7 +1911,6 @@ register_codecs (GstPlugin * plugin)
       }
 
       ret |= gst_element_register (plugin, element_name, rank, subtype);
-      g_free (element_name);
 
       if (codec_info->is_encoder) {
         gst_amc_codec_info_to_caps (codec_info, NULL, &caps);
@@ -1929,6 +1928,7 @@ register_codecs (GstPlugin * plugin)
             caps);
       }
       gst_caps_unref (caps);
+      g_free (element_name);
     }
   }
 
