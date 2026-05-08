@@ -141,6 +141,8 @@ caps_to_mime (GstCaps * caps)
 
       if (!gst_structure_get_int (s, "layer", &layer) || layer == 3)
         return "audio/mpeg";
+      else if (layer == 1)
+        return "audio/mpeg-L1";
       else if (layer == 2)
         return "audio/mpeg-L2";
     } else if (mpegversion == 2 || mpegversion == 4) {
