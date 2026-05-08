@@ -2210,7 +2210,8 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
       }
 
       if (encoded_ret) {
-        if (strcmp (type->mime, "video/mp4v-es") == 0) {
+        if (strcmp (type->mime, "video/mp4v-es") == 0
+            || strcmp (type->mime, "video/mp43") == 0) {
           gint j;
           gboolean have_profile_level = FALSE;
 
