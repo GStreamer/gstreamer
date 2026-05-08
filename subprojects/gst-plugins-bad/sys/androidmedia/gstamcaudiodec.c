@@ -1204,8 +1204,14 @@ gst_amc_audio_dec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
 
 downstream_error:
   {
-    GST_ERROR_OBJECT (self, "Downstream returned %s",
-        gst_flow_get_name (self->downstream_flow_ret));
+    if (self->downstream_flow_ret == GST_FLOW_NOT_LINKED
+        || self->downstream_flow_ret < GST_FLOW_EOS) {
+      GST_ERROR_OBJECT (self, "Downstream returned %s",
+          gst_flow_get_name (self->downstream_flow_ret));
+    } else {
+      GST_DEBUG_OBJECT (self, "Downstream returned %s",
+          gst_flow_get_name (self->downstream_flow_ret));
+    }
     if (minfo.data)
       gst_buffer_unmap (inbuf, &minfo);
     if (inbuf)
