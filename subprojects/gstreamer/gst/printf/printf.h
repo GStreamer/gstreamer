@@ -60,5 +60,11 @@ int __gst_vasprintf (char       **result,
                      char const *format,
                      va_list      args);
 
+int __gst_vasprintf_buf (char       **result,
+                         char        *fixed_buf,
+                         size_t       fixed_buf_size,
+                         char const  *format,
+                         va_list      args);
+
 
 #endif /* __GNULIB_PRINTF_H__ */
