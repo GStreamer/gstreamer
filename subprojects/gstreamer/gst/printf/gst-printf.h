@@ -36,11 +36,10 @@
 #define realloc g_realloc
 #define free    g_free
 
-/* Don't use snprintf(); we have to use sprintf instead and do our own
- * length calculations, because glibc doesn't allow passing %n in a format
- * string if the string is in writable memory (if glibc has been compiled
- * with _FORTIFY_SOURCE=2 which seems to be the case on some distros/systems) */
-#undef HAVE_SNPRINTF
+/* All platforms we support have C99 snprintf. We never append %n to the
+ * reconstructed format string (see vasnprintf.c), so _FORTIFY_SOURCE=2 is
+ * fine. */
+#define HAVE_SNPRINTF 1
 
 /* based on glib's config.h.win32.in */
 #ifdef G_OS_WIN32
