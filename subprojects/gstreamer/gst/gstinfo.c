@@ -146,6 +146,105 @@ static char *gst_info_printf_pointer_extension_func (const char *format,
 #define GST_ENABLE_FORMAT_NONLITERAL_WARNING
 #endif
 
+#undef GST_TIME_ARGS
+#undef GST_STIME_ARGS
+#undef GST_TIME_FORMAT
+#undef GST_STIME_FORMAT
+
+static inline int
+_u32_to_dec (char *p, guint32 v)
+{
+  if (v == 0) {
+    *p = '0';
+    return 1;
+  }
+  char tmp[10];                 /* UINT32_MAX = 4294967295, 10 digits */
+  int n = 0;
+  while (v) {
+    tmp[n++] = '0' + (v % 10);
+    v /= 10;
+  }
+  for (int i = 0; i < n; ++i)
+    p[i] = tmp[n - 1 - i];
+  return n;
+}
+
+/* Internal: writes "[H...]H:MM:SS.nnnnnnnnn" at p, returns the end pointer.
+   Caller guarantees ns < GST_SECOND. */
+static inline char *
+_gst_write_hms_ns (char *p, guint64 sec, guint ns)
+{
+  guint h = (guint) (sec / 3600);       /* fits in 32 bits:
+                                           max ≈ 5.12e6 (unsigned)
+                                           max ≈ 2.56e6 (signed) */
+  guint r = (guint) (sec - (guint64) h * 3600);
+  guint m = r / 60;
+  guint s = r - m * 60;
+
+  p += _u32_to_dec (p, h);
+  *p++ = ':';
+  *p++ = '0' + (m / 10);
+  *p++ = '0' + (m % 10);
+  *p++ = ':';
+  *p++ = '0' + (s / 10);
+  *p++ = '0' + (s % 10);
+  *p++ = '.';
+  for (int i = 8; i >= 0; --i) {
+    p[i] = '0' + (ns % 10);
+    ns /= 10;
+  }
+  return p + 9;
+}
+
+static inline const char *
+_gst_t_str (GstClockTime t, char *buf)
+{
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (t))) {
+    memcpy (buf, "99:99:99.999999999", 19);     /* incl. NUL */
+    return buf;
+  }
+  guint64 sec = t / GST_SECOND;
+  guint ns = (guint) (t - sec * GST_SECOND);
+  *_gst_write_hms_ns (buf, sec, ns) = '\0';
+  return buf;
+}
+
+static inline const char *
+_gst_st_str (GstClockTimeDiff t, char *buf)
+{
+  if (G_UNLIKELY (!GST_CLOCK_STIME_IS_VALID (t))) {
+    memcpy (buf, "+99:99:99.999999999", 20);    /* incl. NUL */
+    return buf;
+  }
+  char *p = buf;
+  guint64 abs_t;
+  if (t < 0) {
+    *p++ = '-';
+    /* Unsigned negation is defined modulo 2^64 and yields the correct
+       magnitude even at t == G_MININT64, where -(gint64)t would be UB.
+       For valid inputs (t != G_MININT64) the magnitude fits in gint64
+       anyway; this idiom just avoids a special case. */
+    abs_t = -(guint64) t;
+  } else {
+    *p++ = '+';
+    abs_t = (guint64) t;
+  }
+  guint64 sec = abs_t / GST_SECOND;
+  guint ns = (guint) (abs_t - sec * GST_SECOND);
+  *_gst_write_hms_ns (p, sec, ns) = '\0';
+  return buf;
+}
+
+/*
+ * The use of compound literals here is fine because the scope is the enclosing
+ * block, which is more than enough. The memory is only used for log formatting
+ * and isn't used outside of the formatting function call.
+ */
+#define GST_TIME_FORMAT  "s"
+#define GST_TIME_ARGS(t) _gst_t_str((t), (char[32]){0})
+
+#define GST_STIME_FORMAT  "s"
+#define GST_STIME_ARGS(t) _gst_st_str((t), (char[32]){0})
 
 #ifdef G_OS_WIN32
 #  define WIN32_LEAN_AND_MEAN   /* prevents from including too many things */
