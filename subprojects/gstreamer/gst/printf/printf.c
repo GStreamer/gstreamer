@@ -157,3 +157,19 @@ __gst_vasprintf (char **result, char const *format, va_list args)
 
   return length;
 }
+
+/* Format into fixed_buf if the result fits, otherwise into a freshly malloc'd
+ * buffer. The caller must check whether *result == fixed_buf to know whether
+ * to free it. */
+int
+__gst_vasprintf_buf (char **result, char *fixed_buf, size_t fixed_buf_size,
+    char const *format, va_list args)
+{
+  size_t length = fixed_buf_size;
+
+  *result = vasnprintf (fixed_buf, &length, format, args);
+  if (*result == NULL)
+    return -1;
+
+  return length;
+}
