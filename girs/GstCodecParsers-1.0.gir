@@ -10737,6 +10737,61 @@ is a complete NALU, else use @gst_h266_parser_identify_nalu.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="insert_sei" c:identifier="gst_h266_parser_insert_sei" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">Copy @au into new #GstBuffer and insert @sei into the #GstBuffer.
+The validation for completeness of @au and @sei is caller's responsibility.
+Both @au and @sei must be byte-stream formatted</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">a SEI inserted #GstBuffer or %NULL
+  if cannot figure out proper position to insert a @sei</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="parser" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">a #GstH266Parser</doc>
+            <type name="H266Parser" c:type="GstH266Parser*"/>
+          </instance-parameter>
+          <parameter name="au" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">a #GstBuffer containing AU data</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+          <parameter name="sei" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">a #GstMemory containing a SEI nal</doc>
+            <type name="Gst.Memory" c:type="GstMemory*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="insert_sei_vvc" c:identifier="gst_h266_parser_insert_sei_vvc" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">Copy @au into new #GstBuffer and insert @sei into the #GstBuffer.
+The validation for completeness of @au and @sei is caller's responsibility.
+Nal prefix type of both @au and @sei must be packetized, and
+also the size of nal length field must be identical to @nal_length_size</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">a SEI inserted #GstBuffer or %NULL
+  if cannot figure out proper position to insert a @sei</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="parser" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">a #GstH266Parser</doc>
+            <type name="H266Parser" c:type="GstH266Parser*"/>
+          </instance-parameter>
+          <parameter name="nal_length_size" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">a size of nal length field, allowed range is [1, 4]</doc>
+            <type name="guint8" c:type="guint8"/>
+          </parameter>
+          <parameter name="au" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">a #GstBuffer containing AU data</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+          <parameter name="sei" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">a #GstMemory containing a SEI nal</doc>
+            <type name="Gst.Memory" c:type="GstMemory*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="parse_aps" c:identifier="gst_h266_parser_parse_aps" version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">Parses @data, and fills the @aps structure.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h"/>
@@ -12011,6 +12066,18 @@ gst_h266_parser_free after use.</doc>
         <field name="registered_user_data" writable="1">
           <type name="H266RegisteredUserData" c:type="GstH266RegisteredUserData"/>
         </field>
+        <field name="user_data_unregistered" introspectable="0" writable="1">
+          <type c:type="GstH274UserDataUnregistered"/>
+        </field>
+        <field name="dsc_initialization" introspectable="0" writable="1">
+          <type c:type="GstH274DigitallySignedContentInitialization"/>
+        </field>
+        <field name="dsc_selection" introspectable="0" writable="1">
+          <type c:type="GstH274DigitallySignedContentSelection"/>
+        </field>
+        <field name="dsc_verification" introspectable="0" writable="1">
+          <type c:type="GstH274DigitallySignedContentVerification"/>
+        </field>
         <field name="padding" readable="0" private="1">
           <array zero-terminated="0" fixed-size="20">
             <type name="gpointer" c:type="gpointer"/>
@@ -12018,6 +12085,21 @@ gst_h266_parser_free after use.</doc>
         </field>
       </union>
     </record>
+    <enumeration name="H266SEINalUnitType" version="1.30" c:type="GstH266SEINalUnitType">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h"/>
+      <member name="auto" value="0" c:identifier="GST_H266_SEI_NAL_UNIT_TYPE_AUTO">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h">The parser will automatically determine the
+SEI NAL unit type based on the SEI message type.</doc>
+      </member>
+      <member name="prefix" value="23" c:identifier="GST_H266_SEI_NAL_UNIT_TYPE_PREFIX">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h">The SEI NAL unit
+will be placed before the slice NAL units in the bitstream.</doc>
+      </member>
+      <member name="suffix" value="24" c:identifier="GST_H266_SEI_NAL_UNIT_TYPE_SUFFIX">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h">The SEI NAL unit
+will be placed after the slice NAL units in the bitstream.</doc>
+      </member>
+    </enumeration>
     <enumeration name="H266SEIPayloadType" version="1.26" c:type="GstH266SEIPayloadType">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h">The type of SEI message.
 More other SEIs are specified in Rec.ITU-T H.274 | ISO/IEC 23002-7.</doc>
@@ -12044,6 +12126,15 @@ More other SEIs are specified in Rec.ITU-T H.274 | ISO/IEC 23002-7.</doc>
       </member>
       <member name="subpic_level_info" value="203" c:identifier="GST_H266_SEI_SUBPIC_LEVEL_INFO">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h">Subpicture Level Information SEI.</doc>
+      </member>
+      <member name="digitally_signed_content_initialization" value="220" c:identifier="GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h">Digitally Signed Content Initialization SEI Message</doc>
+      </member>
+      <member name="digitally_signed_content_selection" value="221" c:identifier="GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h">Digitally Signed Content Selection SEI Message</doc>
+      </member>
+      <member name="digitally_signed_content_verification" value="222" c:identifier="GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h">Digitally Signed Content Verification SEI Message</doc>
       </member>
     </enumeration>
     <record name="H266SPS" c:type="GstH266SPS" version="1.26">
@@ -14044,6 +14135,29 @@ bcw_enabled_flag: specifies whether bi-prediction with CU weights is enabled
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
+    <enumeration name="H274ParserResult" version="1.30" c:type="GstH274ParserResult">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">The result of parsing H274 data.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h"/>
+      <member name="ok" value="0" c:identifier="GST_H274_PARSER_OK">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">The parsing succeeded.</doc>
+      </member>
+      <member name="broken_data" value="1" c:identifier="GST_H274_PARSER_BROKEN_DATA">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">The data to parse is broken.</doc>
+      </member>
+      <member name="broken_link" value="2" c:identifier="GST_H274_PARSER_BROKEN_LINK">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">The link to structure needed for the parsing
+ couldn't be found.</doc>
+      </member>
+      <member name="error" value="3" c:identifier="GST_H274_PARSER_ERROR">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">An error accured when parsing.</doc>
+      </member>
+      <member name="no_nal" value="4" c:identifier="GST_H274_PARSER_NO_NAL">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">No nal found during the parsing.</doc>
+      </member>
+      <member name="no_nal_end" value="5" c:identifier="GST_H274_PARSER_NO_NAL_END">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">Start of the nal found, but not the end.</doc>
+      </member>
+    </enumeration>
     <enumeration name="JPEG2000Colorspace" c:type="GstJPEG2000Colorspace">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstjpeg2000sampling.h"/>
       <member name="none" value="0" c:identifier="GST_JPEG2000_COLORSPACE_NONE">
@@ -20236,6 +20350,69 @@ Frees @sei fields.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="h266_create_sei_memory" c:identifier="gst_h266_create_sei_memory" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">Creates raw byte-stream format (a.k.a Annex B type) SEI nal unit data
+from @messages</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h"/>
+      <return-value transfer-ownership="full">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">a #GstMemory containing a SEI nal unit</doc>
+        <type name="Gst.Memory" c:type="GstMemory*"/>
+      </return-value>
+      <parameters>
+        <parameter name="layer_id" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">a nal unit layer id</doc>
+          <type name="guint8" c:type="guint8"/>
+        </parameter>
+        <parameter name="temporal_id_plus1" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">a nal unit temporal identifier</doc>
+          <type name="guint8" c:type="guint8"/>
+        </parameter>
+        <parameter name="start_code_prefix_length" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">a length of start code prefix, must be 3 or 4</doc>
+          <type name="guint8" c:type="guint8"/>
+        </parameter>
+        <parameter name="messages" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">a GArray of #GstH266SEIMessage</doc>
+          <array name="GLib.Array" c:type="GArray*">
+            <type name="gpointer" c:type="gpointer"/>
+          </array>
+        </parameter>
+        <parameter name="type" transfer-ownership="none">
+          <type name="H266SEINalUnitType" c:type="GstH266SEINalUnitType"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="h266_create_sei_memory_vvc" c:identifier="gst_h266_create_sei_memory_vvc" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">Creates raw packetized format SEI nal unit data from @messages</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h"/>
+      <return-value transfer-ownership="full">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">a #GstMemory containing a PREFIX SEI nal unit</doc>
+        <type name="Gst.Memory" c:type="GstMemory*"/>
+      </return-value>
+      <parameters>
+        <parameter name="layer_id" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">a nal unit layer id</doc>
+          <type name="guint8" c:type="guint8"/>
+        </parameter>
+        <parameter name="temporal_id_plus1" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">a nal unit temporal identifier</doc>
+          <type name="guint8" c:type="guint8"/>
+        </parameter>
+        <parameter name="nal_length_size" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">a size of nal length field, allowed range is [1, 4]</doc>
+          <type name="guint8" c:type="guint8"/>
+        </parameter>
+        <parameter name="messages" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">a GArray of #GstH266SEIMessage</doc>
+          <array name="GLib.Array" c:type="GArray*">
+            <type name="gpointer" c:type="gpointer"/>
+          </array>
+        </parameter>
+        <parameter name="type" transfer-ownership="none">
+          <type name="H266SEINalUnitType" c:type="GstH266SEINalUnitType"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="h266_parse_aps" c:identifier="gst_h266_parse_aps" version="1.26">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">Parses @data, and fills the @aps structure.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h"/>
@@ -20367,6 +20544,244 @@ gst_h266_parser_free after use.</doc>
         <parameter name="sei" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">The #GstH266SEIMessage to clear</doc>
           <type name="H266SEIMessage" c:type="GstH266SEIMessage*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="h266_sei_copy" c:identifier="gst_h266_sei_copy" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">Copies @src_sei into @dst_sei</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">%TRUE if everything went fine, %FALSE otherwise</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="dest_sei" transfer-ownership="none">
+          <type name="H266SEIMessage" c:type="GstH266SEIMessage*"/>
+        </parameter>
+        <parameter name="src_sei" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">The source #GstH266SEIMessage to copy from</doc>
+          <type name="H266SEIMessage" c:type="const GstH266SEIMessage*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="h266_sei_split_messages" c:identifier="gst_h266_sei_split_messages" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">Splits a list of SEI messages into two lists: prefix-allowed and suffix-allowed,
+based on placement rules. Caller must free the returned arrays.
+If a message is allowed in both prefix and suffix, it will be included in the prefix list.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="messages" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">a GArray of #GstH266SEIMessage</doc>
+          <array name="GLib.Array" c:type="const GArray*">
+            <type name="gpointer" c:type="gpointer"/>
+          </array>
+        </parameter>
+        <parameter name="prefix" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">pointer to GArray* for prefix messages</doc>
+          <array name="GLib.Array" c:type="GArray**">
+            <type name="gpointer" c:type="gpointer"/>
+          </array>
+        </parameter>
+        <parameter name="suffix" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.c">pointer to GArray* for suffix messages</doc>
+          <array name="GLib.Array" c:type="GArray**">
+            <type name="gpointer" c:type="gpointer"/>
+          </array>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="h274_parser_parse_dsci" c:identifier="gst_h274_parser_parse_dsci" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">Parse digitally signed content initialization SEI message</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">#GstH274ParserResult</doc>
+        <type name="H274ParserResult" c:type="GstH274ParserResult"/>
+      </return-value>
+      <parameters>
+        <parameter name="dsc_init" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">#GstH274DigitallySignedContentInitialization structure to hold parsed digitally signed content initialization data</doc>
+          <type c:type="GstH274DigitallySignedContentInitialization*"/>
+        </parameter>
+        <parameter name="nr" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">a NalReader to read from</doc>
+          <type c:type="NalReader*"/>
+        </parameter>
+        <parameter name="payload_size" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">size of the payload in bytes</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="h274_parser_parse_dscs" c:identifier="gst_h274_parser_parse_dscs" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">Parse digitally signed content selection SEI message</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">#GstH274ParserResult</doc>
+        <type name="H274ParserResult" c:type="GstH274ParserResult"/>
+      </return-value>
+      <parameters>
+        <parameter name="dsc_sel" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">#GstH274DigitallySignedContentSelection structure to hold parsed digitally signed content selection data</doc>
+          <type c:type="GstH274DigitallySignedContentSelection*"/>
+        </parameter>
+        <parameter name="nr" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">a NalReader to read from</doc>
+          <type c:type="NalReader*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="h274_parser_parse_dscv" c:identifier="gst_h274_parser_parse_dscv" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">Parse digitally signed content verification SEI message</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">#GstH274ParserResult</doc>
+        <type name="H274ParserResult" c:type="GstH274ParserResult"/>
+      </return-value>
+      <parameters>
+        <parameter name="dsc_ver" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">#GstH274DigitallySignedContentVerification structure to hold parsed digitally signed content verification data</doc>
+          <type c:type="GstH274DigitallySignedContentVerification*"/>
+        </parameter>
+        <parameter name="nr" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">a NalReader to read from</doc>
+          <type c:type="NalReader*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="h274_parser_parse_registered_user_data" c:identifier="gst_h274_parser_parse_registered_user_data" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">Parse registered user data SEI message</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">#GstH274ParserResult</doc>
+        <type name="H274ParserResult" c:type="GstH274ParserResult"/>
+      </return-value>
+      <parameters>
+        <parameter name="rud" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">#GstH274RegisteredUserData structure to hold parsed registered user data</doc>
+          <type c:type="GstH274RegisteredUserData*"/>
+        </parameter>
+        <parameter name="nr" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">a NalReader to read from</doc>
+          <type c:type="NalReader*"/>
+        </parameter>
+        <parameter name="payload_size" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">size of the payload in bytes</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="h274_parser_parse_user_data_unregistered" c:identifier="gst_h274_parser_parse_user_data_unregistered" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">Parse user data unregistered SEI message</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">#GstH274ParserResult</doc>
+        <type name="H274ParserResult" c:type="GstH274ParserResult"/>
+      </return-value>
+      <parameters>
+        <parameter name="udu" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">#GstH274UserDataUnregistered structure to hold parsed unregistered user data</doc>
+          <type c:type="GstH274UserDataUnregistered*"/>
+        </parameter>
+        <parameter name="nr" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">a NalReader to read from</doc>
+          <type c:type="NalReader*"/>
+        </parameter>
+        <parameter name="payload_size" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">size of the payload in bytes</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="h274_write_sei_dsci" c:identifier="gst_h274_write_sei_dsci" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">Write digitally signed content initialization SEI message</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">%TRUE if successful, %FALSE otherwise</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="nw" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">a NalWriter to write to</doc>
+          <type c:type="NalWriter*"/>
+        </parameter>
+        <parameter name="dsc_init" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">#GstH274DigitallySignedContentInitialization structure holding digitally signed content initialization data to write</doc>
+          <type c:type="GstH274DigitallySignedContentInitialization*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="h274_write_sei_dscs" c:identifier="gst_h274_write_sei_dscs" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">Write digitally signed content selection SEI message</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">%TRUE if successful, %FALSE otherwise</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="nw" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">a NalWriter to write to</doc>
+          <type c:type="NalWriter*"/>
+        </parameter>
+        <parameter name="dsc_sel" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">#GstH274DigitallySignedContentSelection structure holding digitally signed content selection data to write</doc>
+          <type c:type="GstH274DigitallySignedContentSelection*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="h274_write_sei_dscv" c:identifier="gst_h274_write_sei_dscv" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">Write digitally signed content verification SEI message</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">%TRUE if successful, %FALSE otherwise</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="nw" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">a NalWriter to write to</doc>
+          <type c:type="NalWriter*"/>
+        </parameter>
+        <parameter name="dsc_ver" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">#GstH274DigitallySignedContentVerification structure holding digitally signed content verification data to write</doc>
+          <type c:type="GstH274DigitallySignedContentVerification*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="h274_write_sei_registered_user_data" c:identifier="gst_h274_write_sei_registered_user_data" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">Write registered user data SEI message</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">%TRUE if successful, %FALSE otherwise</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="nw" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">a NalWriter to write to</doc>
+          <type c:type="NalWriter*"/>
+        </parameter>
+        <parameter name="rud" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">#GstH274RegisteredUserData structure holding registered user data to write</doc>
+          <type c:type="GstH274RegisteredUserData*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="h274_write_sei_user_data_unregistered" c:identifier="gst_h274_write_sei_user_data_unregistered" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">Write user data unregistered SEI message</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">%TRUE if successful, %FALSE otherwise</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="nw" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">a NalWriter to write to</doc>
+          <type c:type="NalWriter*"/>
+        </parameter>
+        <parameter name="udu" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">#GstH274UserDataUnregistered structure holding unregistered user data to write</doc>
+          <type c:type="GstH274UserDataUnregistered*"/>
         </parameter>
       </parameters>
     </function>
