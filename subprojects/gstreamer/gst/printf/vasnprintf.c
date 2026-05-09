@@ -692,13 +692,7 @@ vasnprintf (char *resultbuf, size_t *lengthp, const char *format, va_list args)
               break;
           }
           *p = dp->conversion;
-#ifdef HAVE_SNPRINTF
-          p[1] = '%';
-          p[2] = 'n';
-          p[3] = '\0';
-#else
           p[1] = '\0';
-#endif
 
           /* Construct the arguments for calling snprintf or sprintf.  */
           prefix_count = 0;
