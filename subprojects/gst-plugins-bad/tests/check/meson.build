@@ -56,8 +56,8 @@ base_tests = [
   [['elements/id3mux.c'], get_option('id3tag').disabled()],
   [['elements/interlace.c'], get_option('interlace').disabled()],
   [['elements/ioutracker.c'], get_option('tensordecoders').disabled(), gstanalytics_dep],
-  [['elements/tfliteinference.c', 'elements/inference-utils.c'], not tensorflow_lite_dep.found() or not tensorflow_lite_header_found],
-  [['elements/onnxinference.c', 'elements/inference-utils.c'], not onnxrt_dep.found()],
+  [['elements/tfliteinference.c', 'elements/inference-utils.c'], get_option('tflite').disabled() or not tensorflow_lite_dep.found() or not tensorflow_lite_header_found],
+  [['elements/onnxinference.c', 'elements/inference-utils.c'], get_option('onnx').disabled() or not onnxrt_dep.found()],
   [['elements/jpeg2000parse.c'], false, [libparser_dep, gstcodecparsers_dep]],
   [['elements/line21.c'], get_option('closedcaption').disabled()],
   [['elements/mfvideosrc.c'], host_machine.system() != 'windows', ],
@@ -105,7 +105,7 @@ base_tests = [
   [['libs/nalutils.c', '../../gst-libs/gst/codecparsers/nalutils.c'], false, [nalutils_dep]],
   [['libs/mpegts.c'], false, [gstmpegts_dep]],
   [['libs/mpegvideoparser.c'], false, [gstcodecparsers_dep]],
-  [['libs/mse.c'], false, [gstmse_private_test_dep]],
+  [['libs/mse.c'], not gstmse_private_test_dep.found(), [gstmse_private_test_dep]],
   [['libs/planaraudioadapter.c'], false, [gstbadaudio_dep]],
   [['libs/play.c'], not enable_gst_play_tests, [gstplay_dep, libsoup_dep]],
   [['libs/vc1parser.c'], false, [gstcodecparsers_dep]],
@@ -230,11 +230,16 @@ test_defines = [
 
 test_deps = [gst_dep, gstapp_dep, gstbase_dep, gstbadaudio_dep,
              gstbasecamerabin_dep, gstphotography_dep, gstwebrtc_dep,
-             gstmpegts_dep, gstmse_dep, gstplay_dep, gstplayer_dep,
+             gstmpegts_dep, gstplay_dep, gstplayer_dep,
              gstanalytics_dep, gstinsertbin_dep, gst_transcoder_dep,
              gstpbutils_dep, gstcontroller_dep, gstaudio_dep,
              gstvideo_dep, gstrtp_dep, gsturidownloader_dep,
              gstcheck_dep, gio_dep, gsttag_dep]
+
+if get_option('mse').enabled()
+  test_defines += '-DGST_HAVE_MSE'
+  test_deps += gstmse_dep
+endif
 
 pluginsdirs = [  ]
 

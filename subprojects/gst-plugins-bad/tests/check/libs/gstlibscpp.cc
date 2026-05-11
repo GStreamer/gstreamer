@@ -39,7 +39,9 @@
 #include <gst/insertbin/gstinsertbin.h>
 #include <gst/interfaces/photography.h>
 #include <gst/mpegts/mpegts.h>
+#ifdef GST_HAVE_MSE
 #include <gst/mse/mse.h>
+#endif
 /*
 #include <gst/opencv/x>
 */
