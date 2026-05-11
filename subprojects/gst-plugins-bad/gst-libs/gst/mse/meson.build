@@ -1,4 +1,5 @@
 if get_option('mse').disabled()
+  gstmse_private_test_dep = dependency('', required: false)
   subdir_done()
 endif
 
