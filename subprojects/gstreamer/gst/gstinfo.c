@@ -1763,11 +1763,13 @@ static void
 _gst_debug_fprintf (FILE * file, const gchar * format, ...)
 {
   va_list args;
+  gchar inline_buf[1024];
   gchar *str = NULL;
   gint length;
 
   va_start (args, format);
-  length = gst_info_vasprintf (&str, format, args);
+  length = __gst_vasprintf_buf (&str, inline_buf, sizeof (inline_buf),
+      format, args);
   va_end (args);
 
   if (length == 0 || !str)
@@ -1791,7 +1793,8 @@ _gst_debug_fprintf (FILE * file, const gchar * format, ...)
     fflush (file);
   }
 
-  g_free (str);
+  if (str != inline_buf)
+    g_free (str);
 }
 #endif
 
