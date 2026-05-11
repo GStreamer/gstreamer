@@ -448,6 +448,13 @@ _priv_gst_debug_file_name (const gchar * env)
   return name;
 }
 
+#ifdef G_OS_WIN32
+/* HANDLE for the configured log file. This needs to be in static storage
+ * because the address allows us to check when gst_debug_log_default() is
+ * called with a custom FILE* pointer by the user. */
+static HANDLE _gst_debug_log_handle = INVALID_HANDLE_VALUE;
+#endif
+
 /* Initialize the debugging system */
 void
 _priv_gst_debug_init (void)
@@ -462,13 +469,37 @@ _priv_gst_debug_init (void)
         log_file = stdout;
       } else {
         gchar *name = _priv_gst_debug_file_name (env);
+#ifdef G_OS_WIN32
+        wchar_t *wname = g_utf8_to_utf16 (name, -1, NULL, NULL, NULL);
+        if (wname) {
+          /* FILE_APPEND_DATA makes the kernel append each call's buffer
+           * atomically, so multiple threads logging in parallel never
+           * interleave lines and there is no userspace lock to contend on
+           * FILE_SHARE_READ allows other processes to read the file.
+           */
+          _gst_debug_log_handle = CreateFileW (wname, FILE_APPEND_DATA,
+              FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
+              NULL);
+          g_free (wname);
+        }
+        if (_gst_debug_log_handle == INVALID_HANDLE_VALUE) {
+          g_printerr ("Could not open log file '%s' for writing: %u\n", env,
+              (guint) GetLastError ());
+          log_file = stderr;
+        } else {
+          /* Sentinel: _gst_debug_fprintf detects this by pointer-equality and
+           * writes via the HANDLE instead of through the CRT FILE* layer. */
+          log_file = (FILE *) & _gst_debug_log_handle;
+        }
+#else
         log_file = g_fopen (name, "w");
-        g_free (name);
         if (log_file == NULL) {
           g_printerr ("Could not open log file '%s' for writing: %s\n", env,
               g_strerror (errno));
           log_file = stderr;
         }
+#endif
+        g_free (name);
       }
     } else {
       log_file = stderr;
@@ -1786,12 +1817,13 @@ _gst_debug_fprintf (FILE * file, const gchar * format, ...)
     g_printerr ("%s", str);
   } else if (file == stdout) {
     g_print ("%s", str);
+  } else if (file == (FILE *) & _gst_debug_log_handle) {
+    /* By default, we can bypass the CRT's buffering by using WriteFile */
+    DWORD written;
+    WriteFile (_gst_debug_log_handle, str, (DWORD) length, &written, NULL);
   } else {
-    /* We are writing to file. Text editors/viewers should be able to
-     * decode valid UTF-8 string regardless of codepage setting */
+    /* Cater for a custom FILE* user_data in gst_debug_add_log_function */
     fwrite (str, 1, length, file);
-
-    /* FIXME: fflush here might be redundant if setvbuf works as expected */
     fflush (file);
   }
 
@@ -3302,6 +3334,10 @@ _priv_gst_debug_cleanup (void)
     __log_functions = g_slist_delete_link (__log_functions, __log_functions);
   }
   g_rw_lock_writer_unlock (&__log_func_mutex);
+
+#ifdef G_OS_WIN32
+  CloseHandle (_gst_debug_log_handle);
+#endif
 
 #ifdef HAVE_UNWIND
 # ifdef HAVE_DW
