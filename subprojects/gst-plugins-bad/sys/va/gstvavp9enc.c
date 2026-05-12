@@ -139,7 +139,7 @@ struct _GstVaVp9GFGroup
   /* Be different from group_frame_num, include repeat */
   gint output_frame_num;
   gint last_pushed_num;
-  gint last_poped_index;
+  gint last_popped_index;
   guint8 highest_level;
   gboolean use_alt;
   GQueue *reorder_list;
@@ -371,8 +371,8 @@ _vp9_print_gf_group (GstVaVp9Enc * self, GstVaVp9GFGroup * gf_group)
       " GF Group ===========================\n");
   g_string_append_printf (str, " start:%d,  size:%d  ",
       gf_group->start_frame_offset, gf_group->group_frame_num);
-  g_string_append_printf (str, "pushed:%d,  poped:%d  ",
-      pushed_frame_num, gf_group->last_poped_index + 1);
+  g_string_append_printf (str, "pushed:%d,  popped:%d  ",
+      pushed_frame_num, gf_group->last_popped_index + 1);
   g_string_append_printf (str, "\n ALT: %s  max level: %d  output num: %d",
       gf_group->use_alt ? "yes" : "no", gf_group->highest_level,
       gf_group->output_frame_num);
@@ -625,7 +625,7 @@ _vp9_init_gf_group (GstVaVp9GFGroup * gf_group, GQueue * reorder_list)
   gf_group->group_frame_num = 0;
   gf_group->last_pushed_num = -1;
   gf_group->use_alt = FALSE;
-  gf_group->last_poped_index = -1;
+  gf_group->last_popped_index = -1;
   gf_group->output_frame_num = 0;
 
   for (i = 0; i < MAX_GF_GROUP_SIZE * 2; i++) {
@@ -668,11 +668,11 @@ _vp9_start_gf_group (GstVaVp9Enc * self, GstVideoCodecFrame * gf_frame)
   gf_group->last_pushed_num = frame->frame_num;
   gf_group->use_alt = use_alt;
 
-  gf_group->last_poped_index = -1;
+  gf_group->last_popped_index = -1;
   /* An already encoded frame as the GF,
      for example, the ALT of the previous GF group. */
   if (frame->flags & FRAME_FLAG_ALREADY_ENCODED)
-    gf_group->last_poped_index = 0;
+    gf_group->last_popped_index = 0;
 
   for (i = 0; i < MAX_GF_GROUP_SIZE * 2; i++) {
     gf_group->frame_types[i] = FRAME_TYPE_INVALID;
@@ -759,7 +759,7 @@ _vp9_gf_group_push_frame (GstVaVp9GFGroup * gf_group,
 
   if (gf_group->use_alt)
     /* If we already begin pop, no more push again. */
-    g_return_val_if_fail (gf_group->last_poped_index <= 0, FALSE);
+    g_return_val_if_fail (gf_group->last_popped_index <= 0, FALSE);
 
   g_queue_push_tail (gf_group->reorder_list,
       gst_video_codec_frame_ref (gst_frame));
@@ -785,10 +785,10 @@ _vp9_gf_group_pop_frame (GstVaVp9GFGroup * gf_group,
     goto no_frame;
 
   if (!gf_group->use_alt) {
-    g_assert (gf_group->last_poped_index < pushed_frame_num);
+    g_assert (gf_group->last_popped_index < pushed_frame_num);
 
-    if (gf_group->last_poped_index + 1 < pushed_frame_num) {
-      gf_group->last_poped_index++;
+    if (gf_group->last_popped_index + 1 < pushed_frame_num) {
+      gf_group->last_popped_index++;
       goto find_frame;
     }
 
@@ -796,8 +796,8 @@ _vp9_gf_group_pop_frame (GstVaVp9GFGroup * gf_group,
   }
 
   /* The first frame of a GF group has no backward ref, pop immediately. */
-  if (gf_group->last_poped_index < 0) {
-    gf_group->last_poped_index++;
+  if (gf_group->last_popped_index < 0) {
+    gf_group->last_popped_index++;
     goto find_frame;
   }
 
@@ -805,8 +805,8 @@ _vp9_gf_group_pop_frame (GstVaVp9GFGroup * gf_group,
   if (pushed_frame_num < gf_group->group_frame_num)
     goto no_frame;
 
-  gf_group->last_poped_index++;
-  g_assert (gf_group->last_poped_index < gf_group->output_frame_num);
+  gf_group->last_popped_index++;
+  g_assert (gf_group->last_popped_index < gf_group->output_frame_num);
 
 find_frame:
   vaframe = NULL;
@@ -814,7 +814,7 @@ find_frame:
 
   /* If repeating some frame, it should be in reference list,
      or it should be in reorder list. */
-  if (gf_group->frame_types[gf_group->last_poped_index] == FRAME_TYPE_REPEAT) {
+  if (gf_group->frame_types[gf_group->last_popped_index] == FRAME_TYPE_REPEAT) {
     for (i = 0; i < GST_VP9_REF_FRAMES; i++) {
       GstVaVp9EncFrame *vaf;
 
@@ -823,7 +823,7 @@ find_frame:
 
       vaf = _enc_frame (ref_list[i]);
       if (vaf->frame_num == gf_group->start_frame_offset +
-          gf_group->frame_offsets[gf_group->last_poped_index]) {
+          gf_group->frame_offsets[gf_group->last_popped_index]) {
         vaframe = vaf;
         frame = ref_list[i];
         break;
@@ -842,7 +842,7 @@ find_frame:
       f = g_queue_peek_nth (gf_group->reorder_list, i);
       vaf = _enc_frame (f);
       if (vaf->frame_num == gf_group->start_frame_offset +
-          gf_group->frame_offsets[gf_group->last_poped_index]) {
+          gf_group->frame_offsets[gf_group->last_popped_index]) {
         vaframe = vaf;
         frame = f;
         break;
@@ -853,10 +853,10 @@ find_frame:
     /* Clear that frame from reorder list. */
     g_queue_pop_nth (gf_group->reorder_list, i);
 
-    vaframe->type = gf_group->frame_types[gf_group->last_poped_index];
+    vaframe->type = gf_group->frame_types[gf_group->last_popped_index];
     vaframe->pyramid_level =
-        gf_group->pyramid_levels[gf_group->last_poped_index];
-    vaframe->flags = gf_group->flags[gf_group->last_poped_index];
+        gf_group->pyramid_levels[gf_group->last_popped_index];
+    vaframe->flags = gf_group->flags[gf_group->last_popped_index];
 
     /* unref frame popped from reorder queue */
     gst_video_codec_frame_unref (frame);
@@ -882,7 +882,7 @@ _vp9_finish_current_gf_group (GstVaVp9Enc * self, GstVaVp9GFGroup * gf_group)
   g_assert (pushed_frame_num <= gf_group->group_frame_num);
 
   /* Alt comes and already finished. */
-  if (gf_group->use_alt && gf_group->last_poped_index > 0)
+  if (gf_group->use_alt && gf_group->last_popped_index > 0)
     return;
 
   /* Already pushed all frames. */
@@ -894,7 +894,7 @@ _vp9_finish_current_gf_group (GstVaVp9Enc * self, GstVaVp9GFGroup * gf_group)
     gf_group->use_alt = FALSE;
 
   if (gf_group->use_alt == FALSE) {
-    g_assert (gf_group->last_poped_index < pushed_frame_num);
+    g_assert (gf_group->last_popped_index < pushed_frame_num);
 
     gf_group->group_frame_num = pushed_frame_num;
 
@@ -966,15 +966,15 @@ _vp9_gf_group_is_empty (GstVaVp9GFGroup * gf_group)
     return TRUE;
 
   if (gf_group->use_alt == FALSE) {
-    g_assert (gf_group->last_poped_index + 1 <= pushed_frame_num);
-    if (gf_group->last_poped_index + 1 == pushed_frame_num)
+    g_assert (gf_group->last_popped_index + 1 <= pushed_frame_num);
+    if (gf_group->last_popped_index + 1 == pushed_frame_num)
       return TRUE;
 
     return FALSE;
   }
 
-  g_assert (gf_group->last_poped_index < gf_group->output_frame_num);
-  if (gf_group->last_poped_index == gf_group->output_frame_num - 1)
+  g_assert (gf_group->last_popped_index < gf_group->output_frame_num);
+  if (gf_group->last_popped_index == gf_group->output_frame_num - 1)
     return TRUE;
 
   return FALSE;
@@ -983,8 +983,8 @@ _vp9_gf_group_is_empty (GstVaVp9GFGroup * gf_group)
 static inline gboolean
 _vp9_gf_group_is_finished (GstVaVp9GFGroup * gf_group)
 {
-  g_assert (gf_group->last_poped_index < gf_group->output_frame_num);
-  if (gf_group->last_poped_index == gf_group->output_frame_num - 1)
+  g_assert (gf_group->last_popped_index < gf_group->output_frame_num);
+  if (gf_group->last_popped_index == gf_group->output_frame_num - 1)
     return TRUE;
 
   return FALSE;
