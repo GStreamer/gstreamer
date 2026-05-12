@@ -1,0 +1,20 @@
+meta,
+    tool="ges-launch-$(gst_api_version)",
+    ges="compositor-factory=glvideomixer",
+    handles-states=true,
+    args={
+        +title, "hello world", "duration=0.2", --track-types, video, --videosink,
+        "fakevideosink name=videosink sync=false",
+    }
+
+check-ges-video-element-selector,
+    strict=false,
+    memory-feature="memory:GLMemory",
+    compositor-factory=glvideomixer,
+    colorconvert-factory=glcolorconvert,
+    uploader-factory=glupload,
+    downloader-factory=gldownload
+
+play
+
+wait, message-type=eos

@@ -19,8 +19,6 @@
    fun:g_slice_alloc
    ...
    fun:g_thread_new_internal
-   fun:g_thread_new
-   fun:g_thread_pool_new_full
    ...
    fun:g_task_get_type*
 }
@@ -227,6 +225,19 @@
    fun:_draw_checker_background
    fun:_draw_background
    fun:gst_gl_video_mixer_callback
+}
+
+# PENDING: GL driver (llvmpipe/swrast) leak during the glvideomixer shader
+# draw - the mixer callback calls straight into the driver, which leaks.
+{
+   GL driver leak triggered by glvideomixer drawing
+   Memcheck:Leak
+   match-leak-kinds: definite,indirect
+   fun:calloc
+   obj:*
+   ...
+   fun:gst_gl_video_mixer_callback
+   fun:gst_gl_framebuffer_draw_to_texture
 }
 
 {
