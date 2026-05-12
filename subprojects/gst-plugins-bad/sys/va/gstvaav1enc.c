@@ -1909,7 +1909,7 @@ _av1_get_rtformat (GstVaAV1Enc * self, GstVideoFormat format,
 #define update_property_bool(obj, old_val, new_val, prop_id)    \
   update_property (bool, obj, old_val, new_val, prop_id)
 
-static gboolean
+static VAProfile
 _av1_decide_profile (GstVaAV1Enc * self, guint rt_format,
     guint depth, guint chrome)
 {
