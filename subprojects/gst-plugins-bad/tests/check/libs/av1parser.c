@@ -21,6 +21,7 @@
 #include <gst/check/gstcheck.h>
 #include <gst/codecparsers/gstav1parser.h>
 #include <gst/codecparsers/gstav1bitwriter.h>
+#include <gst/glib-compat-private.h>    // g_memdup2()
 
 static const guint8 aom_testdata_av1_1_b8_01_size_16x16[] = {
   0x12, 0x00, 0x0a, 0x0a, 0x00, 0x00, 0x00, 0x01, 0x9f, 0xfb, 0xff, 0xf3,
