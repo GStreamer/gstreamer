@@ -3968,7 +3968,7 @@ _av1_create_tu_output_buffer (GstVaAV1Enc * self,
   GstBuffer *buf = NULL;
   guint num;
 
-  g_assert ((_enc_frame (last_frame)->flags & FRAME_TYPE_REPEAT) == 0);
+  g_assert ((_enc_frame (last_frame)->type & FRAME_TYPE_REPEAT) == 0);
   g_assert ((_enc_frame (last_frame)->flags & FRAME_FLAG_NOT_SHOW) == 0);
   g_assert (self->frames_in_tu_num <= GST_AV1_NUM_REF_FRAMES - 1);
 
