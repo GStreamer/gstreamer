@@ -180,7 +180,7 @@ _find_master_report_on_pad (GstPad * pad, GstValidateReport * report)
 
   pad = _get_actual_pad (pad);
   if (pad == NULL) {
-    GST_ERROR_OBJECT (tmppad, "Does not have a target yet");
+    GST_LOG_OBJECT (tmppad, "Could not resolve proxy pad target or peer yet");
 
     return FALSE;
   }
