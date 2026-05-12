@@ -1847,7 +1847,7 @@ _vp9_ensure_rate_control (GstVaVp9Enc * self)
    *    rate. If "cpb-size" is not set, it is set to the size of
    *    caching 2 second coded data. Encoder will try its best to make
    *    the QP with in the ["max-qp", "min-qp"] range. "mbbrc" can
-   *    enable bit rate control in macro block level. Other paramters
+   *    enable bit rate control in macro block level. Other parameters
    *    are ignored.
    *
    * 3. VBR mode: "rate-control=VBR", then the "bitrate" specify the
@@ -1859,12 +1859,12 @@ _vp9_ensure_rate_control (GstVaVp9Enc * self)
    *    set, the target bit rate will be calculated by the picture
    *    resolution and frame rate. Encoder will try its best to make
    *    the QP with in the ["max-qp", "min-qp"] range. "mbbrc" can
-   *    enable bit rate control in macro block level. Other paramters
+   *    enable bit rate control in macro block level. Other parameters
    *    are ignored.
    *
    * 4. VCM mode: "rate-control=VCM", then the "bitrate" specify the
    *    target bit rate, and encoder will try its best to make the QP
-   *    with in the ["max-qp", "min-qp"] range. Other paramters are
+   *    with in the ["max-qp", "min-qp"] range. Other parameters are
    *    ignored.
    *
    * 5. ICQ mode: "rate-control=ICQ", which is similar to CQP mode
