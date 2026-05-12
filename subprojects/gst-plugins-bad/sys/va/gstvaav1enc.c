@@ -2433,7 +2433,7 @@ _av1_setup_encoding_features (GstVaAV1Enc * self)
 
     self->partition.tile_size_bytes_minus_1 = 3;
     self->features.obu_size_bytes = 4;
-    self->features.tx_mode_support = GST_AV1_TX_MODE_LARGEST;
+    self->features.tx_mode_support = 1 << GST_AV1_TX_MODE_LARGEST;
     self->partition.max_tile_num = 1;
   } else {
     VAConfigAttribValEncAV1Ext2 features_ext2;
