@@ -2561,7 +2561,7 @@ _vp9_create_super_frame_output_buffer (GstVaVp9Enc * self,
   gint frame_size[GST_VP9_MAX_FRAMES_IN_SUPERFRAME] = { 0, };
   guint num;
 
-  g_assert ((_enc_frame (last_frame)->flags & FRAME_TYPE_REPEAT) == 0);
+  g_assert ((_enc_frame (last_frame)->type & FRAME_TYPE_REPEAT) == 0);
   g_assert ((_enc_frame (last_frame)->flags & FRAME_FLAG_NOT_SHOW) == 0);
   g_assert (self->frames_in_super_num <= GST_VP9_MAX_FRAMES_IN_SUPERFRAME - 1);
 
