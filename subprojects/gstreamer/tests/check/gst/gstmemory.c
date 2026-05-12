@@ -25,6 +25,7 @@
 #endif
 
 #include <gst/check/gstcheck.h>
+#include <gst/glib-compat-private.h>    // g_memdup2()
 
 GST_START_TEST (test_submemory)
 {
