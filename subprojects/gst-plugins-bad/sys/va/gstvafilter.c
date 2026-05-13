@@ -1790,6 +1790,17 @@ gst_va_filter_has_compose (GstVaFilter * self)
   return TRUE;
 }
 
+gboolean
+gst_va_filter_supports_premultiplied_alpha (GstVaFilter * self)
+{
+  g_return_val_if_fail (GST_IS_VA_FILTER (self), FALSE);
+
+  if (!gst_va_filter_is_open (self))
+    return FALSE;
+
+  return self->pipeline_caps.blend_flags & VA_BLEND_PREMULTIPLIED_ALPHA;
+}
+
 /**
  * gst_va_filter_compose:
  * @tx: the #GstVaComposeTransaction for input samples and output.
@@ -1838,7 +1849,10 @@ gst_va_filter_compose (GstVaFilter * self, GstVaComposeTransaction * tx)
     VAProcPipelineParameterBuffer params = { 0, };
     VABufferID buffer;
     VASurfaceID in_surface;
-    VABlendState blend = { 0, };
+    VABlendState blend = {
+      .flags = 0,
+      .global_alpha = 1.0,
+    };
 
     in_surface = _get_surface_from_buffer (self, sample->buffer);
     if (in_surface == VA_INVALID_ID)
@@ -1862,12 +1876,14 @@ gst_va_filter_compose (GstVaFilter * self, GstVaComposeTransaction * tx)
     /* only send blend state when sample is not fully opaque */
     if ((self->pipeline_caps.blend_flags & VA_BLEND_GLOBAL_ALPHA)
         && sample->alpha < 1.0) {
-      /* *INDENT-OFF* */
-      blend = (VABlendState) {
-        .flags = VA_BLEND_GLOBAL_ALPHA,
-        .global_alpha = sample->alpha,
-      };
-      /* *INDENT-ON* */
+      blend.flags |= VA_BLEND_GLOBAL_ALPHA;
+      blend.global_alpha = sample->alpha;
+    }
+    if (self->pipeline_caps.blend_flags & VA_BLEND_PREMULTIPLIED_ALPHA
+        && sample->premultiplied_alpha) {
+      blend.flags |= VA_BLEND_PREMULTIPLIED_ALPHA;
+    }
+    if (blend.flags != 0) {
       params.blend_state = &blend;
     }
 

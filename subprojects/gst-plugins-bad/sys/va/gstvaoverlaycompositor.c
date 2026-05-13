@@ -469,7 +469,7 @@ _get_pool (GstElement * element, gpointer data)
 static GstFlowReturn
 gst_va_overlay_compositor_import_rectangle (GstVaOverlayCompositor * self,
     GstVideoOverlayRectangle * rect, GstBuffer ** outbuf,
-    guint16 * width, guint16 * height)
+    guint16 * width, guint16 * height, gboolean * premultiplied_alpha)
 {
   GstVaBaseTransform *vabtrans = GST_VA_BASE_TRANSFORM (self);
 
@@ -477,6 +477,7 @@ gst_va_overlay_compositor_import_rectangle (GstVaOverlayCompositor * self,
   GstVideoMeta *vmeta;
   GstVideoInfo in_info;
   GstVideoInfo out_info;
+  GstVideoOverlayFormatFlags flags;
 
   /* Already hold GST_OBJECT_LOCK */
   GstVaBufferImporter importer = {
@@ -492,8 +493,11 @@ gst_va_overlay_compositor_import_rectangle (GstVaOverlayCompositor * self,
   };
   importer.pool_data = &importer;
 
-  inbuf = gst_video_overlay_rectangle_get_pixels_unscaled_argb (rect,
-      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  flags = gst_video_overlay_rectangle_get_flags (rect);
+  if (!gst_va_filter_supports_premultiplied_alpha (vabtrans->filter)) {
+    flags &= ~GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA;
+  }
+  inbuf = gst_video_overlay_rectangle_get_pixels_unscaled_argb (rect, flags);
   vmeta = gst_buffer_get_video_meta (inbuf);
   gst_video_info_set_format (&in_info, vmeta->format, vmeta->width,
       vmeta->height);
@@ -503,6 +507,8 @@ gst_va_overlay_compositor_import_rectangle (GstVaOverlayCompositor * self,
 
   *width = vmeta->width;
   *height = vmeta->height;
+  *premultiplied_alpha =
+      (flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA) != 0;
 
   return gst_va_buffer_importer_import (&importer, inbuf, outbuf);
 }
@@ -518,6 +524,7 @@ _sample_next (gpointer data)
   GstVideoOverlayRectangle *rectangle = NULL;
   GstBuffer *buf = NULL;
   GstVideoRectangle render_rect;
+  gboolean premultiplied_alpha = FALSE;
 
   if (!gen->inbuf_sent) {
     /* First time the generator got called, return the input frame (background
@@ -575,7 +582,7 @@ _sample_next (gpointer data)
 
     ret = gst_va_overlay_compositor_import_rectangle (gen->compositor,
         rectangle, &buf, &gen->sample.input_region.width,
-        &gen->sample.input_region.height);
+        &gen->sample.input_region.height, &premultiplied_alpha);
     if (ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (gen->compositor, "Failed to import composition "
           "rectangle %d from meta %" GST_PTR_FORMAT, gen->rect, gen->ometa);
@@ -601,6 +608,7 @@ _sample_next (gpointer data)
   };
   /* *INDENT-ON* */
   gen->sample.alpha = gst_video_overlay_rectangle_get_global_alpha (rectangle);
+  gen->sample.premultiplied_alpha = premultiplied_alpha;
 
   return &gen->sample;
 }
