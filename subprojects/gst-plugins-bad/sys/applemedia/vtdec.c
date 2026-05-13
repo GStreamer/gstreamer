@@ -175,6 +175,20 @@ enum
     || (codec) == kCMVideoCodecType_AppleProRes422LT \
     || (codec) == kCMVideoCodecType_AppleProRes422Proxy)
 
+#if TARGET_OS_OSX || TARGET_OS_VISION || TARGET_OS_IOS || TARGET_OS_TV
+#define GST_VTDEC_HAVE_HW_DECODER_SPEC 1
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 140000
+#define GST_VTDEC_HW_DECODER_SPEC_AVAILABLE() \
+    __builtin_available (macOS 10.9, iOS 17.0, tvOS 17.0, *)
+#else
+#define GST_VTDEC_HW_DECODER_SPEC_AVAILABLE() \
+    __builtin_available (macOS 10.9, iOS 17.0, tvOS 17.0, visionOS 1.0, *)
+#endif
+#else
+#define GST_VTDEC_HAVE_HW_DECODER_SPEC 0
+#define GST_VTDEC_HW_DECODER_SPEC_AVAILABLE() FALSE
+#endif
+
 static void gst_vtdec_finalize (GObject * object);
 
 static gboolean gst_vtdec_start (GstVideoDecoder * decoder);
@@ -230,23 +244,49 @@ static void gst_vtdec_set_latency (GstVtdec * vtdec);
 static void gst_vtdec_set_context (GstElement * element, GstContext * context);
 static GstCaps *gst_vtdec_getcaps (GstVideoDecoder * decoder, GstCaps * filter);
 
-static GstStaticPadTemplate gst_vtdec_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h264, stream-format=avc, alignment=au,"
-        " width=(int)[8, MAX], height=(int)[8, MAX];"
-        "video/x-h265, stream-format=(string){ hev1, hvc1 }, alignment=au,"
-        " width=(int)[16, MAX], height=(int)[16, MAX];"
-        "video/x-av1, stream-format=obu-stream, alignment=(string){ tu, frame }, "
-        "width=(int)[64, MAX], height=(int)[64, MAX];"
-        "video/mpeg, mpegversion=2, systemstream=false, parsed=true;"
-        "image/jpeg;"
-        "video/x-prores, variant = { (string)standard, (string)hq, (string)lt,"
-        " (string)proxy, (string)4444, (string)4444xq };"
-        "video/x-vp9, profile=(string){ 0, 2 }, "
-        " width=(int)[64, MAX], height=(int)[64, MAX];")
-    );
+#define VTDEC_CM_FORMAT_NONE ((CMVideoCodecType) 0)
+
+#define VTDEC_H264_SINK_CAPS \
+    "video/x-h264, stream-format=avc, alignment=au," \
+    " width=(int)[8, MAX], height=(int)[8, MAX]"
+#define VTDEC_H265_SINK_CAPS \
+    "video/x-h265, stream-format=(string){ hev1, hvc1 }, alignment=au," \
+    " width=(int)[16, MAX], height=(int)[16, MAX]"
+#define VTDEC_AV1_SINK_CAPS \
+    "video/x-av1, stream-format=obu-stream, alignment=(string){ tu, frame }, " \
+    "width=(int)[64, MAX], height=(int)[64, MAX]"
+#define VTDEC_MPEG2_SINK_CAPS \
+    "video/mpeg, mpegversion=2, systemstream=false, parsed=true"
+#define VTDEC_JPEG_SINK_CAPS "image/jpeg"
+#define VTDEC_PRORES_SINK_CAPS \
+    "video/x-prores, variant = { (string)standard, (string)hq, (string)lt," \
+    " (string)proxy, (string)4444, (string)4444xq }"
+#define VTDEC_VP9_SINK_CAPS \
+    "video/x-vp9, profile=(string){ 0, 2 }, " \
+    " width=(int)[64, MAX], height=(int)[64, MAX]"
+#define VTDEC_LEGACY_SINK_CAPS \
+    VTDEC_H264_SINK_CAPS ";" \
+    VTDEC_H265_SINK_CAPS ";" \
+    VTDEC_AV1_SINK_CAPS ";" \
+    VTDEC_MPEG2_SINK_CAPS ";" \
+    VTDEC_JPEG_SINK_CAPS ";" \
+    VTDEC_PRORES_SINK_CAPS ";" \
+    VTDEC_VP9_SINK_CAPS
+
+#define VTDEC_SINK_TEMPLATE(codec, caps) \
+static GstStaticPadTemplate G_PASTE (G_PASTE (gst_vtdec_, codec), \
+    _sink_template) = \
+    GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, \
+    GST_STATIC_CAPS (caps))
+
+VTDEC_SINK_TEMPLATE (h264, VTDEC_H264_SINK_CAPS);
+VTDEC_SINK_TEMPLATE (h265, VTDEC_H265_SINK_CAPS);
+VTDEC_SINK_TEMPLATE (av1, VTDEC_AV1_SINK_CAPS);
+VTDEC_SINK_TEMPLATE (mpeg2, VTDEC_MPEG2_SINK_CAPS);
+VTDEC_SINK_TEMPLATE (jpeg, VTDEC_JPEG_SINK_CAPS);
+VTDEC_SINK_TEMPLATE (prores, VTDEC_PRORES_SINK_CAPS);
+VTDEC_SINK_TEMPLATE (vp9, VTDEC_VP9_SINK_CAPS);
+VTDEC_SINK_TEMPLATE (legacy, VTDEC_LEGACY_SINK_CAPS);
 
 static SupplementalSupport gst_vtdec_codec_support = NoneSupported;
 
@@ -277,16 +317,46 @@ static SupplementalSupport gst_vtdec_codec_support = NoneSupported;
 G_DEFINE_TYPE (GstVtdec, gst_vtdec, GST_TYPE_VIDEO_DECODER);
 
 static void
+gst_vtdec_configure_subclass (GstVtdecClass * klass,
+    GstStaticPadTemplate * sink_template, CMVideoCodecType cm_format,
+    const gchar * longname)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  g_return_if_fail (sink_template != NULL);
+
+  gst_element_class_add_static_pad_template (element_class, sink_template);
+
+  gst_element_class_set_static_metadata (element_class, longname,
+      "Codec/Decoder/Video/Hardware", "Apple VideoToolbox Decoder",
+      "Ole André Vadla Ravnås <oleavr@soundrop.com>; "
+      "Alessandro Decina <alessandro.d@gmail.com>");
+
+  klass->cm_format = cm_format;
+  klass->require_hardware = FALSE;
+}
+
+static void
+gst_vtdec_configure_inherited_subclass (GstVtdecClass * klass,
+    CMVideoCodecType cm_format, const gchar * longname)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_set_static_metadata (element_class, longname,
+      "Codec/Decoder/Video/Hardware", "Apple VideoToolbox Decoder",
+      "Ole André Vadla Ravnås <oleavr@soundrop.com>; "
+      "Alessandro Decina <alessandro.d@gmail.com>");
+
+  klass->cm_format = cm_format;
+  klass->require_hardware = TRUE;
+}
+
+static void
 gst_vtdec_class_init (GstVtdecClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoDecoderClass *video_decoder_class = GST_VIDEO_DECODER_CLASS (klass);
-
-  /* Setting up pads and setting metadata should be moved to
-     base_class_init if you intend to subclass this class. */
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_vtdec_sink_template);
 
   {
     GstCaps *caps = gst_caps_from_string (VIDEO_SRC_CAPS);
@@ -301,13 +371,6 @@ gst_vtdec_class_init (GstVtdecClass * klass)
         gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps));
     gst_caps_unref (caps);
   }
-
-  gst_element_class_set_static_metadata (element_class,
-      "Apple VideoToolbox decoder",
-      "Codec/Decoder/Video/Hardware",
-      "Apple VideoToolbox Decoder",
-      "Ole André Vadla Ravnås <oleavr@soundrop.com>; "
-      "Alessandro Decina <alessandro.d@gmail.com>");
 
   gobject_class->finalize = gst_vtdec_finalize;
   element_class->set_context = gst_vtdec_set_context;
@@ -330,6 +393,7 @@ gst_vtdec_init (GstVtdec * vtdec)
 {
   g_mutex_init (&vtdec->queue_mutex);
   g_cond_init (&vtdec->queue_cond);
+  vtdec->cm_format = GST_VTDEC_GET_CLASS (vtdec)->cm_format;
 }
 
 void
@@ -984,16 +1048,20 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 {
   gboolean negotiate_now = TRUE;
   GstStructure *structure;
-  CMVideoCodecType cm_format = 0;
+  CMVideoCodecType cm_format = VTDEC_CM_FORMAT_NONE;
   CMFormatDescriptionRef format_description = NULL;
   const char *caps_name;
   GstVtdec *vtdec = GST_VTDEC (decoder);
+  GstVtdecClass *klass = GST_VTDEC_GET_CLASS (vtdec);
 
   GST_DEBUG_OBJECT (vtdec, "set_format");
 
   structure = gst_caps_get_structure (state->caps, 0);
   caps_name = gst_structure_get_name (structure);
-  if (!strcmp (caps_name, "video/x-h264")) {
+
+  if (klass->cm_format != VTDEC_CM_FORMAT_NONE) {
+    cm_format = klass->cm_format;
+  } else if (!strcmp (caps_name, "video/x-h264")) {
     cm_format = kCMVideoCodecType_H264;
   } else if (!strcmp (caps_name, "video/x-h265")) {
     cm_format = kCMVideoCodecType_HEVC;
@@ -1001,7 +1069,13 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
     cm_format = kCMVideoCodecType_MPEG2Video;
   } else if (!strcmp (caps_name, "image/jpeg")) {
     cm_format = kCMVideoCodecType_JPEG;
-  } else if (!strcmp (caps_name, "video/x-prores")) {
+  } else if (!strcmp (caps_name, "video/x-vp9")) {
+    cm_format = kCMVideoCodecType_VP9;
+  } else if (!strcmp (caps_name, "video/x-av1")) {
+    cm_format = kCMVideoCodecType_AV1;
+  }
+
+  if (!strcmp (caps_name, "video/x-prores")) {
     const char *variant = gst_structure_get_string (structure, "variant");
 
     if (variant)
@@ -1011,11 +1085,13 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
       GST_ERROR_OBJECT (vtdec, "Invalid ProRes variant %s", variant);
       return FALSE;
     }
-  } else if (!strcmp (caps_name, "video/x-vp9")) {
-    GST_INFO_OBJECT (vtdec, "cm_format is VP9");
-    cm_format = kCMVideoCodecType_VP9;
-  } else if (!strcmp (caps_name, "video/x-av1")) {
-    cm_format = kCMVideoCodecType_AV1;
+  } else if (cm_format == GST_kCMVideoCodecType_Some_AppleProRes) {
+    GST_ERROR_OBJECT (vtdec, "Expected video/x-prores caps, got %"
+        GST_PTR_FORMAT, state->caps);
+    return FALSE;
+  }
+
+  if (cm_format == kCMVideoCodecType_AV1) {
     if (state->codec_data
         && gst_vtdec_av1_codec_data_has_obu (state->codec_data)) {
       vtdec->av1_needs_sequence_header = FALSE;
@@ -1025,6 +1101,11 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
       GST_INFO_OBJECT (vtdec,
           "Setting up for AV1 - will wait for sequence header");
     }
+  }
+
+  if (cm_format == VTDEC_CM_FORMAT_NONE) {
+    GST_ERROR_OBJECT (vtdec, "Unsupported caps %" GST_PTR_FORMAT, state->caps);
+    return FALSE;
   }
 
   if ((cm_format == kCMVideoCodecType_H264
@@ -1048,6 +1129,12 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
         "waiting for AV1 sequence header before negotiation");
     negotiate_now = FALSE;
   }
+
+  GST_DEBUG_OBJECT (vtdec,
+      "recognized %s as VideoToolbox codec %" GST_FOURCC_FORMAT, caps_name,
+      GST_FOURCC_ARGS (GUINT32_FROM_BE (cm_format)));
+
+  vtdec->cm_format = cm_format;
 
   gst_video_info_from_caps (&vtdec->video_info, state->caps);
 
@@ -1245,7 +1332,7 @@ gst_vtdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
       vtdec->format_description =
           create_format_description_from_codec_data (vtdec,
-          kCMVideoCodecType_AV1, vtdec->input_state->codec_data);
+          vtdec->cm_format, vtdec->input_state->codec_data);
 
       if (!vtdec->format_description) {
         GST_ERROR_OBJECT (vtdec,
@@ -1255,7 +1342,7 @@ gst_vtdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
       }
 
       /* Compute DPB size and set latency for AV1 */
-      if (!gst_vtdec_compute_dpb_size (vtdec, kCMVideoCodecType_AV1,
+      if (!gst_vtdec_compute_dpb_size (vtdec, vtdec->cm_format,
               vtdec->input_state->codec_data)) {
         GST_ERROR_OBJECT (vtdec, "Failed to compute DPB size for AV1");
         ret = GST_FLOW_NOT_NEGOTIATED;
@@ -1434,16 +1521,12 @@ gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format,
       CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
       &kCFTypeDictionaryValueCallBacks);
 
-#if TARGET_OS_OSX || TARGET_OS_VISION || TARGET_OS_IOS || TARGET_OS_TV
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 140000
-  if (__builtin_available (macOS 10.9, iOS 17.0, tvOS 17.0, *)) {
-#else
-  if (__builtin_available (macOS 10.9, iOS 17.0, tvOS 17.0, visionOS 1.0, *)) {
-#endif
+#if GST_VTDEC_HAVE_HW_DECODER_SPEC
+  if (GST_VTDEC_HW_DECODER_SPEC_AVAILABLE ()) {
     gst_vtutil_dict_set_boolean (videoDecoderSpecification,
         kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder,
         enable_hardware);
-    if (enable_hardware && vtdec->require_hardware)
+    if (enable_hardware && GST_VTDEC_GET_CLASS (vtdec)->require_hardware)
       gst_vtutil_dict_set_boolean (videoDecoderSpecification,
           kVTVideoDecoderSpecification_RequireHardwareAcceleratedVideoDecoder,
           TRUE);
@@ -2176,15 +2259,21 @@ gst_vtdec_set_latency (GstVtdec * vtdec)
 }
 
 static gboolean
+gst_vtdec_vp9_supported (void)
+{
+  gst_vtutil_register_supplemental_decoder (kCMVideoCodecType_VP9);
+
+  return VTIsHardwareDecodeSupported (kCMVideoCodecType_VP9);
+}
+
+static gboolean
 gst_vtdec_check_vp9_support (GstVtdec * vtdec)
 {
-  gboolean vp9_supported = FALSE;
+  gboolean vp9_supported;
 
   GST_DEBUG_OBJECT (vtdec, "Checking VP9 VideoToolbox support");
 
-  gst_vtutil_register_supplemental_decoder (kCMVideoCodecType_VP9);
-
-  vp9_supported = VTIsHardwareDecodeSupported (kCMVideoCodecType_VP9);
+  vp9_supported = gst_vtdec_vp9_supported ();
 
   if (vp9_supported) {
     GST_INFO_OBJECT (vtdec, "VP9 hardware decoding is supported");
@@ -2197,16 +2286,22 @@ gst_vtdec_check_vp9_support (GstVtdec * vtdec)
 }
 
 static gboolean
-gst_vtdec_check_av1_support (GstVtdec * vtdec)
+gst_vtdec_av1_supported (void)
 {
-  gboolean av1_supported = FALSE;
-
-  GST_DEBUG_OBJECT (vtdec, "Checking AV1 VideoToolbox support");
-
   gst_vtutil_register_supplemental_decoder (kCMVideoCodecType_AV1);
 
   /* Check if hardware decode is supported for AV1 */
-  av1_supported = VTIsHardwareDecodeSupported (kCMVideoCodecType_AV1);
+  return VTIsHardwareDecodeSupported (kCMVideoCodecType_AV1);
+}
+
+static gboolean
+gst_vtdec_check_av1_support (GstVtdec * vtdec)
+{
+  gboolean av1_supported;
+
+  GST_DEBUG_OBJECT (vtdec, "Checking AV1 VideoToolbox support");
+
+  av1_supported = gst_vtdec_av1_supported ();
 
   if (av1_supported) {
     GST_INFO_OBJECT (vtdec, "AV1 hardware decoding is supported");
@@ -2411,35 +2506,99 @@ gst_vtdec_set_context (GstElement * element, GstContext * context)
   GST_ELEMENT_CLASS (gst_vtdec_parent_class)->set_context (element, context);
 }
 
-#define GST_TYPE_VTDEC_HW   (gst_vtdec_hw_get_type())
-#define GST_VTDEC_HW(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VTDEC_HW,GstVtdecHw))
-#define GST_VTDEC_HW_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VTDEC_HW,GstVtdecHwClass))
-#define GST_IS_VTDEC_HW(obj)   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VTDEC_HW))
-#define GST_IS_VTDEC_HW_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VTDEC_HW))
+#define DEFINE_VTDEC_TYPE(TypeName, type_name, parent_type)                   \
+typedef struct G_PASTE (_, TypeName) TypeName;                                \
+typedef struct G_PASTE (G_PASTE (_, TypeName), Class)                         \
+    G_PASTE (TypeName, Class);                                                \
+struct G_PASTE (_, TypeName)                                                  \
+{                                                                             \
+  GstVtdec parent;                                                            \
+};                                                                            \
+struct G_PASTE (G_PASTE (_, TypeName), Class)                                 \
+{                                                                             \
+  GstVtdecClass parent_class;                                                 \
+};                                                                            \
+GType G_PASTE (type_name, _get_type) (void);                                  \
+static void G_PASTE (type_name, _class_init) (G_PASTE (TypeName, Class) *     \
+    klass);                                                                   \
+static void G_PASTE (type_name, _init) (TypeName * self);                     \
+G_DEFINE_TYPE (TypeName, type_name, parent_type)
 
-typedef GstVtdec GstVtdecHw;
-typedef GstVtdecClass GstVtdecHwClass;
-
-GType gst_vtdec_hw_get_type (void);
-
-G_DEFINE_TYPE (GstVtdecHw, gst_vtdec_hw, GST_TYPE_VTDEC);
-
-static void
-gst_vtdec_hw_class_init (GstVtdecHwClass * klass)
-{
-  gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
-      "Apple VideoToolbox decoder (hardware only)",
-      "Codec/Decoder/Video/Hardware",
-      "Apple VideoToolbox Decoder",
-      "Ole André Vadla Ravnås <oleavr@soundrop.com>; "
-      "Alessandro Decina <alessandro.d@gmail.com>");
+#define DEFINE_VTDEC_SUBCLASS(TypeName, type_name, codec, format, longname)   \
+DEFINE_VTDEC_TYPE (TypeName, type_name, GST_TYPE_VTDEC);                      \
+static void                                                                   \
+G_PASTE (type_name, _class_init) (G_PASTE (TypeName, Class) * klass)          \
+{                                                                             \
+  gst_vtdec_configure_subclass (&klass->parent_class,                         \
+      &G_PASTE (G_PASTE (gst_vtdec_, codec), _sink_template), format,         \
+      longname);                                                              \
+}                                                                             \
+static void                                                                   \
+G_PASTE (type_name, _init) (TypeName * self)                                  \
+{                                                                             \
+  GST_VTDEC (self)->cm_format = GST_VTDEC_GET_CLASS (self)->cm_format;        \
 }
 
-static void
-gst_vtdec_hw_init (GstVtdecHw * vtdec)
-{
-  GST_VTDEC (vtdec)->require_hardware = TRUE;
+#define DEFINE_VTDEC_INHERITED_SUBCLASS(TypeName, type_name, parent_type,     \
+    format, longname)                                                         \
+DEFINE_VTDEC_TYPE (TypeName, type_name, parent_type);                         \
+static void                                                                   \
+G_PASTE (type_name, _class_init) (G_PASTE (TypeName, Class) * klass)          \
+{                                                                             \
+  gst_vtdec_configure_inherited_subclass (&klass->parent_class, format,       \
+      longname);                                                              \
+}                                                                             \
+static void                                                                   \
+G_PASTE (type_name, _init) (TypeName * self)                                  \
+{                                                                             \
+  GST_VTDEC (self)->cm_format = GST_VTDEC_GET_CLASS (self)->cm_format;        \
 }
+
+DEFINE_VTDEC_SUBCLASS (GstVtdecLegacy, gst_vtdec_legacy, legacy,
+    VTDEC_CM_FORMAT_NONE, "Apple VideoToolbox decoder");
+
+DEFINE_VTDEC_SUBCLASS (GstVtH264Dec, gst_vt_h264_dec, h264,
+    kCMVideoCodecType_H264, "Apple VideoToolbox H.264 decoder");
+DEFINE_VTDEC_SUBCLASS (GstVtH265Dec, gst_vt_h265_dec, h265,
+    kCMVideoCodecType_HEVC, "Apple VideoToolbox H.265 decoder");
+DEFINE_VTDEC_SUBCLASS (GstVtAv1Dec, gst_vt_av1_dec, av1,
+    kCMVideoCodecType_AV1, "Apple VideoToolbox AV1 decoder");
+DEFINE_VTDEC_SUBCLASS (GstVtMpeg2Dec, gst_vt_mpeg2_dec, mpeg2,
+    kCMVideoCodecType_MPEG2Video, "Apple VideoToolbox MPEG-2 decoder");
+DEFINE_VTDEC_SUBCLASS (GstVtJpegDec, gst_vt_jpeg_dec, jpeg,
+    kCMVideoCodecType_JPEG, "Apple VideoToolbox JPEG decoder");
+DEFINE_VTDEC_SUBCLASS (GstVtProresDec, gst_vt_prores_dec, prores,
+    GST_kCMVideoCodecType_Some_AppleProRes,
+    "Apple VideoToolbox ProRes decoder");
+DEFINE_VTDEC_SUBCLASS (GstVtVp9Dec, gst_vt_vp9_dec, vp9,
+    kCMVideoCodecType_VP9, "Apple VideoToolbox VP9 decoder");
+
+#if !TARGET_OS_WATCH
+#define DEFINE_VTDEC_HW_SUBCLASS(TypeName, codec, format, longname)           \
+DEFINE_VTDEC_INHERITED_SUBCLASS (TypeName, G_PASTE (G_PASTE (gst_vt_, codec), \
+        _dec_hw), G_PASTE (G_PASTE (gst_vt_, codec), _dec_get_type) (),       \
+    format, longname)
+
+DEFINE_VTDEC_INHERITED_SUBCLASS (GstVtdecLegacyHw, gst_vtdec_legacy_hw,
+    gst_vtdec_legacy_get_type (), VTDEC_CM_FORMAT_NONE,
+    "Apple VideoToolbox decoder (hardware only)");
+
+DEFINE_VTDEC_HW_SUBCLASS (GstVtH264DecHw, h264, kCMVideoCodecType_H264,
+    "Apple VideoToolbox H.264 decoder (hardware only)");
+DEFINE_VTDEC_HW_SUBCLASS (GstVtH265DecHw, h265, kCMVideoCodecType_HEVC,
+    "Apple VideoToolbox H.265 decoder (hardware only)");
+DEFINE_VTDEC_HW_SUBCLASS (GstVtAv1DecHw, av1, kCMVideoCodecType_AV1,
+    "Apple VideoToolbox AV1 decoder (hardware only)");
+DEFINE_VTDEC_HW_SUBCLASS (GstVtMpeg2DecHw, mpeg2, kCMVideoCodecType_MPEG2Video,
+    "Apple VideoToolbox MPEG-2 decoder (hardware only)");
+DEFINE_VTDEC_HW_SUBCLASS (GstVtJpegDecHw, jpeg, kCMVideoCodecType_JPEG,
+    "Apple VideoToolbox JPEG decoder (hardware only)");
+DEFINE_VTDEC_HW_SUBCLASS (GstVtProresDecHw, prores,
+    GST_kCMVideoCodecType_Some_AppleProRes,
+    "Apple VideoToolbox ProRes decoder (hardware only)");
+DEFINE_VTDEC_HW_SUBCLASS (GstVtVp9DecHw, vp9, kCMVideoCodecType_VP9,
+    "Apple VideoToolbox VP9 decoder (hardware only)");
+#endif
 
 static void
 gst_vtdec_init_once (void)
@@ -2458,20 +2617,21 @@ gst_vtdec_init_once (void)
 static gboolean
 gst_vtdec_register_vtdec (GstPlugin * plugin)
 {
-  gint rank = GST_RANK_PRIMARY;
-
   gst_vtdec_init_once ();
 
-#if !TARGET_OS_WATCH
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 140000
-  if (__builtin_available (macOS 10.9, iOS 17.0, tvOS 17.0, *))
-#else
-  if (__builtin_available (macOS 10.9, iOS 17.0, tvOS 17.0, visionOS 1.0, *))
-#endif
-    rank = GST_RANK_SECONDARY;
-#endif
+  /* Keep the legacy catch-all element available by name for compatibility, but
+   * leave autoplugging to the codec-specific elements with independent ranks. */
+  return gst_element_register (plugin, "vtdec", GST_RANK_NONE,
+      gst_vtdec_legacy_get_type ());
+}
 
-  return gst_element_register (plugin, "vtdec", rank, GST_TYPE_VTDEC);
+static GstRank
+gst_vtdec_get_rank (void)
+{
+  if (GST_VTDEC_HW_DECODER_SPEC_AVAILABLE ())
+    return GST_RANK_SECONDARY;
+
+  return GST_RANK_PRIMARY;
 }
 
 #if !TARGET_OS_WATCH
@@ -2480,15 +2640,93 @@ gst_vtdec_register_vtdec_hw (GstPlugin * plugin)
 {
   gst_vtdec_init_once ();
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 140000
-  if (__builtin_available (macOS 10.9, iOS 17.0, tvOS 17.0, *)) {
-#else
-  if (__builtin_available (macOS 10.9, iOS 17.0, tvOS 17.0, visionOS 1.0, *)) {
-#endif
-    return gst_element_register (plugin, "vtdec_hw", GST_RANK_PRIMARY + 1,
-        GST_TYPE_VTDEC_HW);
+  if (GST_VTDEC_HW_DECODER_SPEC_AVAILABLE ()) {
+    /* See gst_vtdec_register_vtdec() for the compatibility rank rationale. */
+    return gst_element_register (plugin, "vtdec_hw", GST_RANK_NONE,
+        gst_vtdec_legacy_hw_get_type ());
   }
 
+  return TRUE;
+}
+#endif
+
+#define DEFINE_VTDEC_REGISTER(codec)                                          \
+static gboolean                                                               \
+G_PASTE (gst_vtdec_register_, codec) (GstPlugin * plugin)                     \
+{                                                                             \
+  gst_vtdec_init_once ();                                                     \
+  return gst_element_register (plugin, "vt" #codec "dec",                     \
+      gst_vtdec_get_rank (),                                                  \
+      G_PASTE (G_PASTE (gst_vt_, codec), _dec_get_type) ());                  \
+}
+
+DEFINE_VTDEC_REGISTER (h264);
+DEFINE_VTDEC_REGISTER (h265);
+
+static gboolean
+gst_vtdec_register_av1 (GstPlugin * plugin)
+{
+  gst_vtdec_init_once ();
+  if (!gst_vtdec_av1_supported ())
+    return TRUE;
+  return gst_element_register (plugin, "vtav1dec", gst_vtdec_get_rank (),
+      gst_vt_av1_dec_get_type ());
+}
+
+DEFINE_VTDEC_REGISTER (mpeg2);
+DEFINE_VTDEC_REGISTER (jpeg);
+DEFINE_VTDEC_REGISTER (prores);
+
+static gboolean
+gst_vtdec_register_vp9 (GstPlugin * plugin)
+{
+  gst_vtdec_init_once ();
+  if (!gst_vtdec_vp9_supported ())
+    return TRUE;
+  return gst_element_register (plugin, "vtvp9dec", gst_vtdec_get_rank (),
+      gst_vt_vp9_dec_get_type ());
+}
+
+#if !TARGET_OS_WATCH
+#define DEFINE_VTDEC_HW_REGISTER(codec)                                       \
+static gboolean                                                               \
+G_PASTE (G_PASTE (gst_vtdec_register_, codec), _hw) (GstPlugin * plugin)      \
+{                                                                             \
+  gst_vtdec_init_once ();                                                     \
+  if (GST_VTDEC_HW_DECODER_SPEC_AVAILABLE ())                                 \
+    return gst_element_register (plugin, "vt" G_STRINGIFY(codec) "dec_hw",    \
+        GST_RANK_PRIMARY + 1,                                                 \
+        G_PASTE (G_PASTE (gst_vt_, codec), _dec_hw_get_type) ());             \
+  return TRUE;                                                                \
+}
+
+DEFINE_VTDEC_HW_REGISTER (h264);
+DEFINE_VTDEC_HW_REGISTER (h265);
+DEFINE_VTDEC_HW_REGISTER (mpeg2);
+DEFINE_VTDEC_HW_REGISTER (jpeg);
+DEFINE_VTDEC_HW_REGISTER (prores);
+
+static gboolean
+gst_vtdec_register_av1_hw (GstPlugin * plugin)
+{
+  gst_vtdec_init_once ();
+  if (GST_VTDEC_HW_DECODER_SPEC_AVAILABLE ()) {
+    if (gst_vtdec_av1_supported ())
+      return gst_element_register (plugin, "vtav1dec_hw", GST_RANK_PRIMARY + 1,
+          gst_vt_av1_dec_hw_get_type ());
+  }
+  return TRUE;
+}
+
+static gboolean
+gst_vtdec_register_vp9_hw (GstPlugin * plugin)
+{
+  gst_vtdec_init_once ();
+  if (GST_VTDEC_HW_DECODER_SPEC_AVAILABLE ()) {
+    if (gst_vtdec_vp9_supported ())
+      return gst_element_register (plugin, "vtvp9dec_hw", GST_RANK_PRIMARY + 1,
+          gst_vt_vp9_dec_hw_get_type ());
+  }
   return TRUE;
 }
 #endif
@@ -2497,13 +2735,44 @@ GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtdec, gst_vtdec_register_vtdec);
 #if !TARGET_OS_WATCH
 GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtdec_hw, gst_vtdec_register_vtdec_hw);
 #endif
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vth264dec, gst_vtdec_register_h264);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vth265dec, gst_vtdec_register_h265);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtav1dec, gst_vtdec_register_av1);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtmpeg2dec, gst_vtdec_register_mpeg2);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtjpegdec, gst_vtdec_register_jpeg);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtproresdec, gst_vtdec_register_prores);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtvp9dec, gst_vtdec_register_vp9);
+#if !TARGET_OS_WATCH
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vth264dec_hw, gst_vtdec_register_h264_hw);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vth265dec_hw, gst_vtdec_register_h265_hw);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtav1dec_hw, gst_vtdec_register_av1_hw);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtmpeg2dec_hw, gst_vtdec_register_mpeg2_hw);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtjpegdec_hw, gst_vtdec_register_jpeg_hw);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtproresdec_hw,
+    gst_vtdec_register_prores_hw);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtvp9dec_hw, gst_vtdec_register_vp9_hw);
+#endif
 
 gboolean
 gst_vtdec_register_elements (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
 
+  ret |= GST_ELEMENT_REGISTER (vth264dec, plugin);
+  ret |= GST_ELEMENT_REGISTER (vth265dec, plugin);
+  ret |= GST_ELEMENT_REGISTER (vtav1dec, plugin);
+  ret |= GST_ELEMENT_REGISTER (vtmpeg2dec, plugin);
+  ret |= GST_ELEMENT_REGISTER (vtjpegdec, plugin);
+  ret |= GST_ELEMENT_REGISTER (vtproresdec, plugin);
+  ret |= GST_ELEMENT_REGISTER (vtvp9dec, plugin);
 #if !TARGET_OS_WATCH
+  ret |= GST_ELEMENT_REGISTER (vth264dec_hw, plugin);
+  ret |= GST_ELEMENT_REGISTER (vth265dec_hw, plugin);
+  ret |= GST_ELEMENT_REGISTER (vtav1dec_hw, plugin);
+  ret |= GST_ELEMENT_REGISTER (vtmpeg2dec_hw, plugin);
+  ret |= GST_ELEMENT_REGISTER (vtjpegdec_hw, plugin);
+  ret |= GST_ELEMENT_REGISTER (vtproresdec_hw, plugin);
+  ret |= GST_ELEMENT_REGISTER (vtvp9dec_hw, plugin);
   ret |= GST_ELEMENT_REGISTER (vtdec_hw, plugin);
 #endif
   ret |= GST_ELEMENT_REGISTER (vtdec, plugin);

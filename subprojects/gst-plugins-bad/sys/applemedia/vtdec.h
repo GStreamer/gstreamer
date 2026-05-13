@@ -40,6 +40,7 @@ G_BEGIN_DECLS
 #define GST_VTDEC_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VTDEC,GstVtdecClass))
 #define GST_IS_VTDEC(obj)   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VTDEC))
 #define GST_IS_VTDEC_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VTDEC))
+#define GST_VTDEC_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_VTDEC,GstVtdecClass))
 
 typedef struct _GstVtdec GstVtdec;
 typedef struct _GstVtdecClass GstVtdecClass;
@@ -65,7 +66,7 @@ struct _GstVtdec
   gboolean is_flushing;
   gboolean is_draining;
   gboolean pause_task;
-  
+
   /* protected by the STREAM_LOCK */
   GstFlowReturn downstream_ret;
 
@@ -77,23 +78,40 @@ struct _GstVtdec
   GstVulkanDevice *device;
 #endif
 
-  gboolean require_hardware;
-
   gboolean av1_needs_sequence_header;  /* TRUE if we need to wait for sequence header OBU before creating session */
   GstBuffer *av1_sequence_header_obu;  /* Store the sequence header OBU for format description */
 
   GstBuffer *vp9_vpcc;
+
+  CMVideoCodecType cm_format;
 };
 
 struct _GstVtdecClass
 {
   GstVideoDecoderClass base_vtdec_class;
+
+  CMVideoCodecType cm_format;
+  gboolean require_hardware;
 };
 
 GType gst_vtdec_get_type (void);
 GST_ELEMENT_REGISTER_DECLARE (vtdec);
+GST_ELEMENT_REGISTER_DECLARE (vth264dec);
+GST_ELEMENT_REGISTER_DECLARE (vth265dec);
+GST_ELEMENT_REGISTER_DECLARE (vtav1dec);
+GST_ELEMENT_REGISTER_DECLARE (vtmpeg2dec);
+GST_ELEMENT_REGISTER_DECLARE (vtjpegdec);
+GST_ELEMENT_REGISTER_DECLARE (vtproresdec);
+GST_ELEMENT_REGISTER_DECLARE (vtvp9dec);
 #if !TARGET_OS_WATCH
 GST_ELEMENT_REGISTER_DECLARE (vtdec_hw);
+GST_ELEMENT_REGISTER_DECLARE (vth264dec_hw);
+GST_ELEMENT_REGISTER_DECLARE (vth265dec_hw);
+GST_ELEMENT_REGISTER_DECLARE (vtav1dec_hw);
+GST_ELEMENT_REGISTER_DECLARE (vtmpeg2dec_hw);
+GST_ELEMENT_REGISTER_DECLARE (vtjpegdec_hw);
+GST_ELEMENT_REGISTER_DECLARE (vtproresdec_hw);
+GST_ELEMENT_REGISTER_DECLARE (vtvp9dec_hw);
 #endif
 
 gboolean gst_vtdec_register_elements (GstPlugin * plugin);
