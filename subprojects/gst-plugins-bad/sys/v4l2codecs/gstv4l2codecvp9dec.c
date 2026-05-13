@@ -123,6 +123,7 @@ struct _GstV4l2CodecVp9Dec
   GstV4l2CodecAllocator *sink_allocator;
   GstV4l2CodecAllocator *src_allocator;
   GstV4l2CodecPool *src_pool;
+  gint min_pool_size;
   gboolean streaming;
   gboolean copy_frames;
   gboolean need_negotiation;
@@ -486,6 +487,8 @@ gst_v4l2_codec_vp9_dec_stop (GstVideoDecoder * decoder)
 
   gst_v4l2_codec_vp9_dec_reset_allocation (self);
 
+  self->min_pool_size = 0;
+
   if (self->output_state)
     gst_video_codec_state_unref (self->output_state);
   self->output_state = NULL;
@@ -669,7 +672,7 @@ gst_v4l2_codec_vp9_dec_decide_allocation (GstVideoDecoder * decoder,
   }
 
   self->src_allocator = gst_v4l2_codec_allocator_new (self->decoder,
-      GST_PAD_SRC, GST_VP9_REF_FRAMES + min + 4);
+      GST_PAD_SRC, self->min_pool_size + min);
   if (!self->src_allocator) {
     GST_ELEMENT_ERROR (self, RESOURCE, NO_SPACE_LEFT,
         ("Not enough memory to allocate source buffers."), (NULL));
@@ -780,6 +783,11 @@ gst_v4l2_codec_vp9_dec_new_sequence (GstVp9Decoder * decoder,
       gst_v4l2_codec_vp9_dec_is_format_change (self, frame_hdr);
 
   gst_v4l2_codec_vp9_dec_fill_dec_params (self, frame_hdr, NULL);
+
+  if (self->min_pool_size != max_dpb_size) {
+    self->min_pool_size = max_dpb_size;
+    self->need_negotiation = TRUE;
+  }
 
   if (decoder->parse_compressed_headers)
     gst_v4l2_codec_vp9_dec_fill_prob_updates (self, frame_hdr);
