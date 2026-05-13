@@ -64,6 +64,23 @@ _overlay_pool_free (OverlayPool * overlay_pool)
   g_clear_pointer (&overlay_pool, g_free);
 }
 
+typedef struct
+{
+  GstVideoOverlayRectangle *rectangle;
+  GstBuffer *buffer;
+  guint16 width;
+  guint16 height;
+  gboolean premultiplied_alpha;
+} OverlayCache;
+
+static void
+_overlay_cache_free (OverlayCache * overlay_cache)
+{
+  gst_video_overlay_rectangle_unref (overlay_cache->rectangle);
+  gst_buffer_unref (overlay_cache->buffer);
+  g_free (overlay_cache);
+}
+
 /* To import an overlay rectangle into VA, the element needs a buffer pool that
  * allocates memory of the corresponding size. Since overlay composition meta
  * can include rectangles of various dimensions, new pools are created as needed
@@ -84,7 +101,10 @@ typedef struct
 {
   GstVaBaseTransform parent;
 
+  /* Items: OverlayPool */
   GSList *pools;
+  /* Items: OverlayCache */
+  GList *overlays;
 } GstVaOverlayCompositor;
 
 static gpointer parent_class = NULL;
@@ -447,6 +467,7 @@ typedef struct
   guint rect;
   GstVaComposeSample sample;
   gboolean inbuf_sent;
+  GList *overlays;
 } GstVaOverlayCompositorSampleGenerator;
 
 static GstBufferPool *
@@ -580,13 +601,42 @@ _sample_next (gpointer data)
       continue;
     }
 
-    ret = gst_va_overlay_compositor_import_rectangle (gen->compositor,
-        rectangle, &buf, &gen->sample.input_region.width,
-        &gen->sample.input_region.height, &premultiplied_alpha);
-    if (ret != GST_FLOW_OK) {
-      GST_WARNING_OBJECT (gen->compositor, "Failed to import composition "
-          "rectangle %d from meta %" GST_PTR_FORMAT, gen->rect, gen->ometa);
-      rectangle = NULL;
+    /* Check if we previously imported this rectangle. */
+    for (GList * l = gen->overlays; l; l = l->next) {
+      OverlayCache *cache = l->data;
+
+      if (cache->rectangle == rectangle) {
+        gen->overlays = g_list_remove_link (gen->overlays, l);
+        gen->compositor->overlays =
+            g_list_insert_before_link (gen->compositor->overlays,
+            gen->compositor->overlays, l);
+        buf = gst_buffer_ref (cache->buffer);
+        gen->sample.input_region.width = cache->width;
+        gen->sample.input_region.height = cache->height;
+        premultiplied_alpha = cache->premultiplied_alpha;
+        break;
+      }
+    }
+
+    if (buf == NULL) {
+      ret = gst_va_overlay_compositor_import_rectangle (gen->compositor,
+          rectangle, &buf, &gen->sample.input_region.width,
+          &gen->sample.input_region.height, &premultiplied_alpha);
+      if (ret != GST_FLOW_OK) {
+        GST_WARNING_OBJECT (gen->compositor, "Failed to import composition "
+            "rectangle %d from meta %" GST_PTR_FORMAT, gen->rect, gen->ometa);
+        rectangle = NULL;
+      } else {
+        /* Cache this rectangle to not re-import next time */
+        OverlayCache *cache = g_new0 (OverlayCache, 1);
+        cache->rectangle = gst_video_overlay_rectangle_ref (rectangle);
+        cache->buffer = gst_buffer_ref (buf);
+        cache->width = gen->sample.input_region.width;
+        cache->height = gen->sample.input_region.height;
+        cache->premultiplied_alpha = premultiplied_alpha;
+        gen->compositor->overlays =
+            g_list_prepend (gen->compositor->overlays, cache);
+      }
     }
 
     gen->rect++;
@@ -629,6 +679,7 @@ gst_va_overlay_compositor_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     .inbuf = inbuf,
     .state = NULL,
     .ometa = NULL,
+    .overlays = g_steal_pointer(&self->overlays),
   };
   tx = (GstVaComposeTransaction) {
     .next = _sample_next,
@@ -651,6 +702,9 @@ gst_va_overlay_compositor_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     self->pools = g_slist_delete_link (self->pools, least_used);
   }
 
+  /* Free remaining overlays, they are not used anymore */
+  g_list_free_full (generator.overlays, (GDestroyNotify) _overlay_cache_free);
+
   return ret;
 }
 
@@ -660,6 +714,7 @@ gst_va_overlay_compositor_stop (GstBaseTransform * bt)
   GstVaOverlayCompositor *self = GST_VA_OVERLAY_COMPOSITOR (bt);
 
   g_clear_slist (&self->pools, (GDestroyNotify) _overlay_pool_free);
+  g_clear_list (&self->overlays, (GDestroyNotify) _overlay_cache_free);
 
   return TRUE;
 }
