@@ -1,19 +1,10 @@
 [wrap-file]
-directory = libdrm-2.4.124
-source_url = https://dri.freedesktop.org/libdrm/libdrm-2.4.124.tar.xz
-source_fallback_url = https://deb.debian.org/debian/pool/main/libd/libdrm/libdrm_2.4.124.orig.tar.xz
-source_filename = libdrm-2.4.124.tar.xz
-source_hash = ac36293f61ca4aafaf4b16a2a7afff312aa4f5c37c9fbd797de9e3c0863ca379
+directory = libdrm-2.4.133
+source_url = https://dri.freedesktop.org/libdrm/libdrm-2.4.133.tar.xz
+source_filename = libdrm-2.4.133.tar.xz
+source_hash = fc68f9d0ba2ea63c9432a299e14fea09fad7a8a66e8039fcd7802ca59f77b4f5
+source_fallback_url = https://wrapdb.mesonbuild.com/v2/libdrm_2.4.133-1/get_source/libdrm-2.4.133.tar.xz
+wrapdb_version = 2.4.133-1
 
 [provide]
-libdrm = ext_libdrm
-libdrm_amdgpu = ext_libdrm_amdgpu
-libdrm_etnaviv = ext_libdrm_etnaviv
-libdrm_exynos = ext_libdrm_exynos
-libdrm_freedreno = ext_libdrm_freedreno
-libdrm_intel = ext_libdrm_intel
-libdrm_libkms = ext_libdrm_libkms
-libdrm_nouveau = ext_libdrm_nouveau
-libdrm_omap = ext_libdrm_omap
-libdrm_radeon = ext_libdrm_radeon
-libdrm_tegra = ext_libdrm_tegra
+dependency_names = libdrm, libdrm_amdgpu, libdrm_etnaviv, libdrm_exynos, libdrm_freedreno, libdrm_intel, libdrm_nouveau, libdrm_omap, libdrm_radeon, libdrm_tegra
