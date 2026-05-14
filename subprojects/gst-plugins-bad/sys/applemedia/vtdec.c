@@ -46,6 +46,209 @@
  *
  */
 
+/**
+ * SECTION:element-vth264dec
+ * @title: vth264dec
+ *
+ * Apple VideoToolbox H.264 decoder, which can either use a HW or a SW
+ * implementation depending on the device.
+ *
+ * ## Example pipeline
+ * |[
+ * gst-launch-1.0 -v filesrc location=file.mp4 ! parsebin ! vth264dec ! videoconvert ! autovideosink
+ * ]| Decode H.264 video from a file.
+ *
+ * Since: 1.30
+ */
+
+/**
+ * SECTION:element-vth264dec_hw
+ * @title: vth264dec_hw
+ *
+ * Apple VideoToolbox H.264 HW-only decoder.
+ *
+ * ## Example pipeline
+ * |[
+ * gst-launch-1.0 -v filesrc location=file.mp4 ! parsebin ! vth264dec_hw ! videoconvert ! autovideosink
+ * ]| Decode H.264 video from a file using a hardware decoder.
+ *
+ * Since: 1.30
+ */
+
+/**
+ * SECTION:element-vth265dec
+ * @title: vth265dec
+ *
+ * Apple VideoToolbox H.265 decoder, which can either use a HW or a SW
+ * implementation depending on the device.
+ *
+ * ## Example pipeline
+ * |[
+ * gst-launch-1.0 -v filesrc location=file.mp4 ! parsebin ! vth265dec ! videoconvert ! autovideosink
+ * ]| Decode H.265 video from a file.
+ *
+ * Since: 1.30
+ */
+
+/**
+ * SECTION:element-vth265dec_hw
+ * @title: vth265dec_hw
+ *
+ * Apple VideoToolbox H.265 HW-only decoder.
+ *
+ * ## Example pipeline
+ * |[
+ * gst-launch-1.0 -v filesrc location=file.mp4 ! parsebin ! vth265dec_hw ! videoconvert ! autovideosink
+ * ]| Decode H.265 video from a file using a hardware decoder.
+ *
+ * Since: 1.30
+ */
+
+/**
+ * SECTION:element-vtav1dec
+ * @title: vtav1dec
+ *
+ * Apple VideoToolbox AV1 decoder, which can either use a HW or a SW
+ * implementation depending on the device.
+ *
+ * ## Example pipeline
+ * |[
+ * gst-launch-1.0 -v filesrc location=file.mp4 ! parsebin ! vtav1dec ! videoconvert ! autovideosink
+ * ]| Decode AV1 video from a file.
+ *
+ * Since: 1.30
+ */
+
+/**
+ * SECTION:element-vtav1dec_hw
+ * @title: vtav1dec_hw
+ *
+ * Apple VideoToolbox AV1 HW-only decoder.
+ *
+ * ## Example pipeline
+ * |[
+ * gst-launch-1.0 -v filesrc location=file.mp4 ! parsebin ! vtav1dec_hw ! videoconvert ! autovideosink
+ * ]| Decode AV1 video from a file using a hardware decoder.
+ *
+ * Since: 1.30
+ */
+
+/**
+ * SECTION:element-vtmpeg2dec
+ * @title: vtmpeg2dec
+ *
+ * Apple VideoToolbox MPEG-2 decoder, which can either use a HW or a SW
+ * implementation depending on the device.
+ *
+ * ## Example pipeline
+ * |[
+ * gst-launch-1.0 -v filesrc location=file.ts ! parsebin ! vtmpeg2dec ! videoconvert ! autovideosink
+ * ]| Decode MPEG-2 video from a file.
+ *
+ * Since: 1.30
+ */
+
+/**
+ * SECTION:element-vtmpeg2dec_hw
+ * @title: vtmpeg2dec_hw
+ *
+ * Apple VideoToolbox MPEG-2 HW-only decoder.
+ *
+ * ## Example pipeline
+ * |[
+ * gst-launch-1.0 -v filesrc location=file.ts ! parsebin ! vtmpeg2dec_hw ! videoconvert ! autovideosink
+ * ]| Decode MPEG-2 video from a file using a hardware decoder.
+ *
+ * Since: 1.30
+ */
+
+/**
+ * SECTION:element-vtjpegdec
+ * @title: vtjpegdec
+ *
+ * Apple VideoToolbox JPEG decoder, which can either use a HW or a SW
+ * implementation depending on the device.
+ *
+ * ## Example pipeline
+ * |[
+ * gst-launch-1.0 -v filesrc location=file.avi ! parsebin ! vtjpegdec ! videoconvert ! autovideosink
+ * ]| Decode Motion JPEG video from an AVI file.
+ *
+ * Since: 1.30
+ */
+
+/**
+ * SECTION:element-vtjpegdec_hw
+ * @title: vtjpegdec_hw
+ *
+ * Apple VideoToolbox JPEG HW-only decoder.
+ *
+ * ## Example pipeline
+ * |[
+ * gst-launch-1.0 -v filesrc location=file.avi ! parsebin ! vtjpegdec_hw ! videoconvert ! autovideosink
+ * ]| Decode Motion JPEG video from an AVI file using a hardware decoder.
+ *
+ * Since: 1.30
+ */
+
+/**
+ * SECTION:element-vtproresdec
+ * @title: vtproresdec
+ *
+ * Apple VideoToolbox ProRes decoder, which can either use a HW or a SW
+ * implementation depending on the device.
+ *
+ * ## Example pipeline
+ * |[
+ * gst-launch-1.0 -v filesrc location=file.mov ! parsebin ! vtproresdec ! videoconvert ! autovideosink
+ * ]| Decode ProRes video from a file.
+ *
+ * Since: 1.30
+ */
+
+/**
+ * SECTION:element-vtproresdec_hw
+ * @title: vtproresdec_hw
+ *
+ * Apple VideoToolbox ProRes HW-only decoder.
+ *
+ * ## Example pipeline
+ * |[
+ * gst-launch-1.0 -v filesrc location=file.mov ! parsebin ! vtproresdec_hw ! videoconvert ! autovideosink
+ * ]| Decode ProRes video from a file using a hardware decoder.
+ *
+ * Since: 1.30
+ */
+
+/**
+ * SECTION:element-vtvp9dec
+ * @title: vtvp9dec
+ *
+ * Apple VideoToolbox VP9 decoder, which can either use a HW or a SW
+ * implementation depending on the device.
+ *
+ * ## Example pipeline
+ * |[
+ * gst-launch-1.0 -v filesrc location=file.webm ! parsebin ! vtvp9dec ! videoconvert ! autovideosink
+ * ]| Decode VP9 video from a file.
+ *
+ * Since: 1.30
+ */
+
+/**
+ * SECTION:element-vtvp9dec_hw
+ * @title: vtvp9dec_hw
+ *
+ * Apple VideoToolbox VP9 HW-only decoder.
+ *
+ * ## Example pipeline
+ * |[
+ * gst-launch-1.0 -v filesrc location=file.webm ! parsebin ! vtvp9dec_hw ! videoconvert ! autovideosink
+ * ]| Decode VP9 video from a file using a hardware decoder.
+ *
+ * Since: 1.30
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
