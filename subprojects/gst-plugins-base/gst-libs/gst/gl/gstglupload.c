@@ -447,17 +447,17 @@ _udmabuf_upload_transform_caps (gpointer impl, GstGLContext * context,
     GstPadDirection direction, GstCaps * caps)
 {
   struct UdmabufUpload *upload = impl;
-  GstCaps *out_caps = NULL;
+  GstCaps *intersected_caps = NULL, *out_caps = NULL;
+  GstCapsFeatures *passthrough;
 
   if (upload->disabled)
     return NULL;
 
+  passthrough = gst_caps_features_from_string
+      (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+
   if (direction == GST_PAD_SINK) {
-    GstCapsFeatures *passthrough =
-        gst_caps_features_from_string
-        (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
     GstCaps *static_caps;
-    GstCaps *intersected_caps;
     GstCaps *tmp;
     guint n;
 
@@ -467,8 +467,6 @@ _udmabuf_upload_transform_caps (gpointer impl, GstGLContext * context,
     gst_caps_unref (static_caps);
 
     if (gst_caps_is_empty (intersected_caps)) {
-      gst_caps_unref (intersected_caps);
-      gst_caps_features_free (passthrough);
       goto out;
     }
 
@@ -564,15 +562,9 @@ _udmabuf_upload_transform_caps (gpointer impl, GstGLContext * context,
       gst_caps_append_structure_full (out_caps, structure,
           gst_caps_features_copy (features));
     }
-
-    gst_caps_unref (intersected_caps);
-    gst_caps_features_free (passthrough);
   } else {
-    GstCapsFeatures *passthrough =
-        gst_caps_features_from_string
-        (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
     GstCaps *static_caps;
-    GstCaps *intersected_caps, *tmp;
+    GstCaps *tmp;
     guint n;
 
     static_caps = gst_static_caps_get (&_udmabuf_upload_src_caps);
@@ -581,7 +573,6 @@ _udmabuf_upload_transform_caps (gpointer impl, GstGLContext * context,
     gst_caps_unref (static_caps);
 
     if (gst_caps_is_empty (intersected_caps)) {
-      gst_caps_unref (intersected_caps);
       goto out;
     }
 
@@ -679,12 +670,12 @@ _udmabuf_upload_transform_caps (gpointer impl, GstGLContext * context,
       gst_caps_append_structure_full (out_caps, structure,
           gst_caps_features_copy (features));
     }
-
-    gst_caps_unref (intersected_caps);
-    gst_caps_features_free (passthrough);
   }
 
 out:
+  gst_clear_caps (&intersected_caps);
+  gst_caps_features_free (passthrough);
+
   GST_DEBUG_OBJECT (upload->upload, "direction %s, transformed\n%"
       GST_PTR_FORMAT "\ninto\n%" GST_PTR_FORMAT,
       direction == GST_PAD_SRC ? "src" : "sink", caps, out_caps);
