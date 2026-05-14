@@ -46,6 +46,7 @@ from fractions import Fraction
 from pathlib import Path
 
 from .utils import GstCaps, which
+from . import config
 from . import reporters
 from . import loggable
 from .loggable import Loggable
@@ -295,7 +296,7 @@ class Test(Loggable):
                     res += " "
                 value = self.proc_env.get(var, None)
                 if value is not None:
-                    res += "%s='%s'" % (var, value)
+                    res += '%s="%s"' % (var, value)
         else:
             res += "[Not displaying environment variables, rerun with -vv for the full command]"
 
@@ -728,6 +729,16 @@ class Test(Loggable):
             shlex.quote(arg) for arg in self.command))
         if self.server_command:
             message = "%s & %s" % (self.server_command, message)
+
+        # Under CI, substitute the build and source roots with shell-style
+        # placeholders so the printed command can be reproduced locally by
+        # setting BUILD_ROOT / SOURCE_ROOT to the local checkout. BUILDDIR is
+        # usually nested inside SRCDIR, so it must be replaced first.
+        if 'CI' in os.environ:
+            if config.BUILDDIR:
+                message = message.replace(config.BUILDDIR, '${BUILD_ROOT}')
+            if config.SRCDIR:
+                message = message.replace(config.SRCDIR, '${SOURCE_ROOT}')
 
         return message
 
