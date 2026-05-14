@@ -33,6 +33,7 @@ LONG_VALGRIND_TESTS = [
     (r'check.[a-z-]*.generic_states.test_state_changes_down_seq', 'enough to run one of the sequences'),
     (r'check.[a-z-]*.generic_states.test_state_changes_up_seq', 'enough to run one of the sequences',),
     (r'check.[a-z-]*.generic_states.test_state_changes_up_and_down_seq', 'enough to run the sequences'),
+    (r'check.gst-plugins-good.elements_rtpfunnel.rtpfunnel_stress', '22m'),
     (r'check.gstreamer.gst_gstelement.test_foreach_pad$', '48s'),
     (r'check.gstreamer.gst_gstinfo.info_post_gst_init_category_registration$', '21s'),
     (r'check.gstreamer.gst_gstsystemclock.test_resolution$', '60s'),
