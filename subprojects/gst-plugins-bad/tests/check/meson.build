@@ -197,6 +197,7 @@ if host_system == 'darwin'
   base_tests += [
     [['elements/avfsources-videometa.c'], false, [avfoundation_test_dep], [], false],
     [['pipelines/avfsources-output-paths.c'], false, [avfoundation_test_dep, gstiosurface_dep], [], false],
+    [['elements/vtdec.c']],
     [['pipelines/avfassetsrc-supplemental.c'], false, [videotoolbox_dep]],
     [['pipelines/avfassetsrc-partial.c']],
     [['pipelines/vtdec-output-paths.c'], false, [gstiosurface_dep]],
