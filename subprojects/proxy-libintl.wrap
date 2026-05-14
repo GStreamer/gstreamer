@@ -1,9 +1,10 @@
 [wrap-file]
 directory = proxy-libintl-0.5
 source_url = https://github.com/frida/proxy-libintl/archive/refs/tags/0.5.tar.gz
-source_fallback_url = https://gstreamer.freedesktop.org/src/mirror/proxy-libintl/0.5.tar.gz
 source_filename = proxy-libintl-0.5.tar.gz
 source_hash = f7a1cbd7579baaf575c66f9d99fb6295e9b0684a28b095967cfda17857595303
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/proxy-libintl_0.5-1/proxy-libintl-0.5.tar.gz
+wrapdb_version = 0.5-1
 
 [provide]
 intl = intl_dep
