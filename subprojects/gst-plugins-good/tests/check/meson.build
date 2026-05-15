@@ -154,6 +154,8 @@ if host_machine.system() != 'windows'
     [ 'elements/apev2mux', not taglib_dep.found() ],
     [ 'elements/vp8enc', not vpx_dep.found() or not have_vp8_encoder ],
     [ 'elements/vp8dec', not vpx_dep.found() or not have_vp8_decoder ],
+    [ 'elements/vpxalphadecodebin', not vpx_dep.found(), [], [],
+      ['codecalpha', 'videoparsersbad'] ],
     [ 'elements/vp9enc', not vpx_dep.found() or not have_vp9_encoder ],
     [ 'pipelines/lame', not lame_dep.found() ],
     [ 'elements/wavpackdec', not wavpack_dep.found() ],
@@ -218,14 +220,15 @@ foreach t : good_tests
   test_name = t.get(0).underscorify()
   extra_sources = t.get(3, [ ])
   extra_deps = t.get(2, [ ])
+  plugin_loading_whitelist = ['gstreamer', 'gst-plugins-base', 'timecode',
+    'gst-plugins-good@' + meson.project_build_root()] + t.get(4, [ ])
   skip_test = t.get(1, false)
   if not skip_test
     env = environment()
     env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
     env.set('GST_STATE_IGNORE_ELEMENTS', state_ignore_elements)
     env.set('CK_DEFAULT_TIMEOUT', '20')
-    env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer', 'gst-plugins-base',
-      'timecode', 'gst-plugins-good@' + meson.project_build_root())
+    env.set('GST_PLUGIN_LOADING_WHITELIST', plugin_loading_whitelist)
     env.set('GST_PLUGIN_PATH_1_0', [meson.global_build_root()] + pluginsdirs)
     env.set('GSETTINGS_BACKEND', 'memory')
 

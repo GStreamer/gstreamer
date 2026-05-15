@@ -1,8 +1,10 @@
 vpx_sources = [
   'gstvp8dec.c',
+  'gstvp8alphadecodebin.c',
   'gstvp8enc.c',
   'gstvp8utils.c',
   'gstvp9dec.c',
+  'gstvp9alphadecodebin.c',
   'gstvp9enc.c',
   'gstvpxdec.c',
   'gstvpxenc.c',
@@ -12,10 +14,12 @@ vpx_sources = [
 
 vpx_headers = [
   'gstvp9enc.h',
+  'gstvp9alphadecodebin.h',
   'gstvpxelements.h',
   'gstvpxdec.h',
   'gstvp8utils.h',
   'gstvp9dec.h',
+  'gstvp8alphadecodebin.h',
   'gstvp8dec.h',
   'gstvpxenums.h',
   'gstvpxenc.h',

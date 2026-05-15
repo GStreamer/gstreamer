@@ -9887,88 +9887,11 @@
                     }
                 },
                 "rank": "none"
-            },
-            "vp8alphadecodebin": {
-                "author": "Nicolas Dufresne <nicolas.dufresne@collabora.com>",
-                "description": "Wrapper bin to decode VP8 with alpha stream.",
-                "hierarchy": [
-                    "GstVp8AlphaDecodeBin",
-                    "GstAlphaDecodeBin",
-                    "GstBin",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "interfaces": [
-                    "GstChildProxy"
-                ],
-                "klass": "Codec/Decoder/Video",
-                "long-name": "VP8 Alpha Decoder",
-                "pad-templates": {
-                    "sink": {
-                        "caps": "video/x-vp8:\n    codec-alpha: true\n",
-                        "direction": "sink",
-                        "presence": "always"
-                    },
-                    "src": {
-                        "caps": "ANY",
-                        "direction": "src",
-                        "presence": "always"
-                    }
-                },
-                "rank": "primary + 10"
-            },
-            "vp9alphadecodebin": {
-                "author": "Nicolas Dufresne <nicolas.dufresne@collabora.com>",
-                "description": "Wrapper bin to decode VP9 with alpha stream.",
-                "hierarchy": [
-                    "GstVp9AlphaDecodeBin",
-                    "GstAlphaDecodeBin",
-                    "GstBin",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "interfaces": [
-                    "GstChildProxy"
-                ],
-                "klass": "Codec/Decoder/Video",
-                "long-name": "VP9 Alpha Decoder",
-                "pad-templates": {
-                    "sink": {
-                        "caps": "video/x-vp9:\n    codec-alpha: true\n      alignment: super-frame\n",
-                        "direction": "sink",
-                        "presence": "always"
-                    },
-                    "src": {
-                        "caps": "ANY",
-                        "direction": "src",
-                        "presence": "always"
-                    }
-                },
-                "rank": "primary + 10"
             }
         },
         "filename": "gstcodecalpha",
         "license": "LGPL",
-        "other-types": {
-            "GstAlphaDecodeBin": {
-                "hierarchy": [
-                    "GstAlphaDecodeBin",
-                    "GstBin",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "interfaces": [
-                    "GstChildProxy"
-                ],
-                "kind": "object"
-            }
-        },
+        "other-types": {},
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
         "tracers": {},

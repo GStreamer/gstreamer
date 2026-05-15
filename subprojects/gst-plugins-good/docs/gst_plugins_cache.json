@@ -27460,6 +27460,36 @@
     "vpx": {
         "description": "VP8/VP9 video encoding and decoding based on libvpx",
         "elements": {
+            "vp8alphadecodebin": {
+                "author": "Nicolas Dufresne <nicolas.dufresne@collabora.com>",
+                "description": "Wrapper bin to decode VP8 with alpha stream.",
+                "hierarchy": [
+                    "GstVp8AlphaDecodeBin",
+                    "GstAlphaDecodeBin",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
+                "klass": "Codec/Decoder/Video",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-vp8:\n    codec-alpha: true\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "primary + 10"
+            },
             "vp8dec": {
                 "author": "David Schleef <ds@entropywave.com>, Sebastian Dröge <sebastian.droege@collabora.co.uk>",
                 "description": "Decode VP8 video streams",
@@ -27521,6 +27551,36 @@
                 },
                 "properties": {},
                 "rank": "primary"
+            },
+            "vp9alphadecodebin": {
+                "author": "Nicolas Dufresne <nicolas.dufresne@collabora.com>",
+                "description": "Wrapper bin to decode VP9 with alpha stream.",
+                "hierarchy": [
+                    "GstVp9AlphaDecodeBin",
+                    "GstAlphaDecodeBin",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
+                "klass": "Codec/Decoder/Video",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-vp9:\n    codec-alpha: true\n      alignment: super-frame\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "primary + 10"
             },
             "vp9dec": {
                 "author": "David Schleef <ds@entropywave.com>, Sebastian Dröge <sebastian.droege@collabora.co.uk>",

@@ -48,9 +48,23 @@ struct _GstVp8AlphaDecodeBin
 G_DEFINE_TYPE (GstVp8AlphaDecodeBin, gst_vp8_alpha_decode_bin,
     GST_TYPE_ALPHA_DECODE_BIN);
 
-GST_ELEMENT_REGISTER_DEFINE (vp8_alpha_decode_bin, "vp8alphadecodebin",
-    GST_RANK_PRIMARY + GST_ALPHA_DECODE_BIN_RANK_OFFSET,
-    GST_TYPE_VP8_ALPHA_DECODE_BIN);
+static gboolean
+gst_vp8_alpha_decode_bin_register (GstPlugin * plugin)
+{
+  GstElementFactory *factory = gst_element_factory_find ("vp8dec");
+
+  if (!factory)
+    return TRUE;
+
+  gst_object_unref (factory);
+
+  return gst_element_register (plugin, "vp8alphadecodebin",
+      GST_RANK_PRIMARY + GST_ALPHA_DECODE_BIN_RANK_OFFSET,
+      GST_TYPE_VP8_ALPHA_DECODE_BIN);
+}
+
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vp8_alpha_decode_bin,
+    gst_vp8_alpha_decode_bin_register);
 
 static void
 gst_vp8_alpha_decode_bin_class_init (GstVp8AlphaDecodeBinClass * klass)
@@ -66,6 +80,7 @@ gst_vp8_alpha_decode_bin_class_init (GstVp8AlphaDecodeBinClass * klass)
       GST_ALPHA_DECODE_BIN_ROLE_ALPHA_DECODER, "vp8dec");
   gst_alpha_decode_bin_class_set_role_factory_name (adbin_class,
       GST_ALPHA_DECODE_BIN_ROLE_COMBINE, "alphacombine");
+
   gst_element_class_add_static_pad_template (element_class, &sink_template);
 
   gst_element_class_set_static_metadata (element_class,

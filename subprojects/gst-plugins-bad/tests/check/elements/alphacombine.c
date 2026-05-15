@@ -22,7 +22,6 @@
 #include "config.h"
 #endif
 
-#include <gst/app/gstappsink.h>
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
 #include <gst/video/video.h>
@@ -1029,159 +1028,6 @@ GST_START_TEST (test_caps_query_propagates_downstream_iosurface)
 
 GST_END_TEST;
 
-static gboolean
-element_available (const gchar * name)
-{
-  GstElementFactory *factory = gst_element_factory_find (name);
-
-  if (factory) {
-    gst_object_unref (factory);
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
-static gboolean
-require_elements_or_skip (const gchar * const *elements, gsize n_elements)
-{
-  gboolean strict = g_getenv ("GST_REQUIRE_TEST_ELEMENTS") != NULL;
-  gsize i;
-
-  for (i = 0; i < n_elements; i++) {
-    if (element_available (elements[i]))
-      continue;
-    if (strict)
-      fail_unless (FALSE, "Missing required element: %s", elements[i]);
-    GST_INFO ("Skipping test, missing required element: %s", elements[i]);
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static GstSample *
-pull_encoded_sample (const gchar * launchline)
-{
-  GError *error = NULL;
-  GstElement *pipeline = gst_parse_launch (launchline, &error);
-  GstElement *appsink;
-  GstStateChangeReturn state_ret;
-  GstSample *sample;
-  GstBus *bus;
-  GstMessage *msg;
-
-  fail_unless (pipeline != NULL, "Failed to parse pipeline: %s",
-      error ? error->message : "unknown error");
-  g_clear_error (&error);
-
-  appsink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
-  fail_unless (appsink != NULL);
-
-  state_ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  fail_unless (state_ret == GST_STATE_CHANGE_SUCCESS ||
-      state_ret == GST_STATE_CHANGE_ASYNC);
-
-  sample = gst_app_sink_try_pull_sample (GST_APP_SINK (appsink),
-      10 * GST_SECOND);
-  fail_unless (sample != NULL);
-
-  bus = gst_element_get_bus (pipeline);
-  msg = gst_bus_pop_filtered (bus, GST_MESSAGE_ERROR);
-  if (msg) {
-    GError *err = NULL;
-    gchar *debug = NULL;
-
-    gst_message_parse_error (msg, &err, &debug);
-    fail ("Encoding pipeline failed: %s (%s)", err->message,
-        debug ? debug : "no debug");
-    g_clear_error (&err);
-    g_free (debug);
-    gst_message_unref (msg);
-  }
-  gst_object_unref (bus);
-
-  gst_element_set_state (pipeline, GST_STATE_NULL);
-  gst_object_unref (appsink);
-  gst_object_unref (pipeline);
-
-  return sample;
-}
-
-static void
-run_alpha_decode_bin_smoke (const gchar * element_name,
-    const gchar * encoded_caps, const gchar * launchline)
-{
-  GstSample *main_sample = pull_encoded_sample (launchline);
-  GstSample *alpha_sample = pull_encoded_sample (launchline);
-  GstBuffer *main_buffer =
-      gst_buffer_copy (gst_sample_get_buffer (main_sample));
-  GstBuffer *alpha_buffer =
-      gst_buffer_copy (gst_sample_get_buffer (alpha_sample));
-  GstCaps *caps = gst_caps_from_string (encoded_caps);
-  GstHarness *h = gst_harness_new (element_name);
-  GstBuffer *out_buffer;
-  GstVideoInfo out_info;
-
-  fail_unless (main_buffer != NULL);
-  fail_unless (alpha_buffer != NULL);
-  fail_unless (gst_buffer_add_video_codec_alpha_meta (main_buffer,
-          alpha_buffer) != NULL);
-
-  fail_unless (caps != NULL);
-  gst_harness_set_src_caps (h, caps);
-  out_buffer = gst_harness_push_and_pull (h, main_buffer);
-  fail_unless (out_buffer != NULL);
-
-  caps = gst_pad_get_current_caps (h->sinkpad);
-  fail_unless (caps != NULL);
-  fail_unless (gst_video_info_from_caps (&out_info, caps));
-  fail_unless (GST_VIDEO_FORMAT_INFO_HAS_ALPHA (out_info.finfo));
-  gst_caps_unref (caps);
-  gst_buffer_unref (out_buffer);
-  gst_harness_teardown (h);
-
-  gst_sample_unref (main_sample);
-  gst_sample_unref (alpha_sample);
-}
-
-GST_START_TEST (test_vp8alphadecodebin_smoke)
-{
-  const gchar *launchline =
-      "videotestsrc num-buffers=1 pattern=smpte ! "
-      "video/x-raw,format=I420,width=16,height=16,framerate=1/1 ! "
-      "vp8enc deadline=1 ! appsink name=sink sync=false";
-  const gchar *required[] = { "vp8enc", "vp8dec" };
-
-  if (!require_elements_or_skip (required, G_N_ELEMENTS (required)))
-    return;
-
-  run_alpha_decode_bin_smoke ("vp8alphadecodebin",
-      "video/x-vp8,codec-alpha=(boolean)true", launchline);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_vp9alphadecodebin_smoke)
-{
-  const gchar *launchline =
-      "videotestsrc num-buffers=1 pattern=smpte ! "
-      "video/x-raw,format=I420,width=16,height=16,framerate=1/1 ! "
-      "vp9enc deadline=1 cpu-used=8 ! vp9parse ! "
-      "video/x-vp9,alignment=(string)super-frame ! "
-      "appsink name=sink sync=false";
-  const gchar *required[] = { "vp9enc", "vp9dec", "vp9parse" };
-
-  if (!require_elements_or_skip (required, G_N_ELEMENTS (required)))
-    return;
-
-  run_alpha_decode_bin_smoke ("vp9alphadecodebin",
-      "video/x-vp9,codec-alpha=(boolean)true,alignment=(string)super-frame",
-      launchline);
-}
-
-GST_END_TEST;
-
 static Suite *
 alphacombine_suite (void)
 {
@@ -1215,8 +1061,6 @@ alphacombine_suite (void)
   tcase_add_test (tc_chain, test_caps_query_propagates_downstream_glmemory);
   tcase_add_test (tc_chain, test_caps_query_propagates_downstream_vulkan_image);
   tcase_add_test (tc_chain, test_caps_query_propagates_downstream_iosurface);
-  tcase_add_test (tc_chain, test_vp8alphadecodebin_smoke);
-  tcase_add_test (tc_chain, test_vp9alphadecodebin_smoke);
 
   return s;
 }
