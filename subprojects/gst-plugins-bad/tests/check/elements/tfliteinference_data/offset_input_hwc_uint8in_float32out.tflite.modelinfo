@@ -1,0 +1,16 @@
+[modelinfo]
+version=1.0
+group-id=offset_input_hwc_uint8in_float32out-group
+
+[input_hwc_u8]
+id=input-0
+type=uint8
+dims=1,4,4,3
+dir=input
+ranges=0.0,255.0
+
+[output_flat_f32]
+id=output-0
+type=float32
+dims=1,48
+dir=output
