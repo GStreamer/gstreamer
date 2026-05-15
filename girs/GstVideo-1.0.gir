@@ -8,6 +8,152 @@ and/or use gtk-doc annotations.  -->
   <c:include name="gst/video/video.h"/>
   <doc:format name="unknown"/>
   <namespace name="GstVideo" version="1.0" shared-library="libgstvideo-1.0.so.0" c:identifier-prefixes="Gst" c:symbol-prefixes="gst">
+    <constant name="ALPHA_DECODE_BIN_RANK_OFFSET" value="10" c:type="GST_ALPHA_DECODE_BIN_RANK_OFFSET" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">Rank offset for alpha decode bin wrappers.
+
+When wrapping a decoder, use the original decoder rank plus this offset. The
+offset is large enough to let an alpha wrapper outrank small rank adjustments
+used by hardware decoders, while keeping lower-ranked wrappers below the
+primary rank threshold.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
+    <class name="AlphaDecodeBin" c:symbol-prefix="alpha_decode_bin" c:type="GstAlphaDecodeBin" version="1.30" parent="Gst.Bin" abstract="1" glib:type-name="GstAlphaDecodeBin" glib:get-type="gst_alpha_decode_bin_get_type" glib:type-struct="AlphaDecodeBinClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">Base class for alpha decode bin wrapper elements.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h"/>
+      <implements name="Gst.ChildProxy"/>
+      <virtual-method name="create_role_element" version="1.30" throws="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">Called when constructing the internal pipeline to let subclasses create an
+element for the requested #GstAlphaDecodeBinRole. Subclasses can use
+@input_caps to select role elements for the encoded stream before data
+flow starts. If the vfunc returns %NULL without setting @error, the
+factory name configured with
+gst_alpha_decode_bin_class_set_role_factory_name() is used as fallback.
+If the vfunc returns %NULL and sets @error, construction fails. If the
+vfunc returns an element and sets @error, the error is logged as a warning
+and ignored.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">a role element, or %NULL to use the
+    configured fallback factory</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">a #GstAlphaDecodeBin</doc>
+            <type name="AlphaDecodeBin" c:type="GstAlphaDecodeBin*"/>
+          </instance-parameter>
+          <parameter name="role" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">a #GstAlphaDecodeBinRole</doc>
+            <type name="AlphaDecodeBinRole" c:type="GstAlphaDecodeBinRole"/>
+          </parameter>
+          <parameter name="input_caps" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">upstream caps allowed on the alpha decode bin
+    sink pad</doc>
+            <type name="Gst.Caps" c:type="const GstCaps*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <field name="parent_instance" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">Parent instance.</doc>
+        <type name="Gst.Bin" c:type="GstBin"/>
+      </field>
+    </class>
+    <record name="AlphaDecodeBinClass" c:type="GstAlphaDecodeBinClass" glib:is-gtype-struct-for="AlphaDecodeBin" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">Base class for bins that decode streams with encoded alpha data by
+demuxing, decoding the color and alpha streams separately, and combining the
+decoded output.
+
+Subclasses must add their own sink pad template. For each
+#GstAlphaDecodeBinRole, subclasses can either create an element from
+@create_role_element or configure a fallback factory name with
+gst_alpha_decode_bin_class_set_role_factory_name().</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h"/>
+      <field name="parent_class" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">Parent class.</doc>
+        <type name="Gst.BinClass" c:type="GstBinClass"/>
+      </field>
+      <field name="create_role_element">
+        <callback name="create_role_element" throws="1">
+          <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h"/>
+          <return-value transfer-ownership="full" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">a role element, or %NULL to use the
+    configured fallback factory</doc>
+            <type name="Gst.Element" c:type="GstElement*"/>
+          </return-value>
+          <parameters>
+            <parameter name="self" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">a #GstAlphaDecodeBin</doc>
+              <type name="AlphaDecodeBin" c:type="GstAlphaDecodeBin*"/>
+            </parameter>
+            <parameter name="role" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">a #GstAlphaDecodeBinRole</doc>
+              <type name="AlphaDecodeBinRole" c:type="GstAlphaDecodeBinRole"/>
+            </parameter>
+            <parameter name="input_caps" transfer-ownership="none" nullable="1" allow-none="1">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">upstream caps allowed on the alpha decode bin
+    sink pad</doc>
+              <type name="Gst.Caps" c:type="const GstCaps*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+      <method name="set_role_factory_name" c:identifier="gst_alpha_decode_bin_class_set_role_factory_name" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">Sets the element factory name to use for @role when constructing instances
+of @klass.
+
+This is usually called from a subclass' class init function. The configured
+factory name is used when the subclass does not implement
+#GstAlphaDecodeBinClass.create_role_element, or when that vfunc returns
+%NULL without setting an error.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="klass" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">a #GstAlphaDecodeBinClass</doc>
+            <type name="AlphaDecodeBinClass" c:type="GstAlphaDecodeBinClass*"/>
+          </instance-parameter>
+          <parameter name="role" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">a #GstAlphaDecodeBinRole</doc>
+            <type name="AlphaDecodeBinRole" c:type="GstAlphaDecodeBinRole"/>
+          </parameter>
+          <parameter name="factory_name" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">element factory name to use for @role, or %NULL
+    to unset the configured factory</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+    </record>
+    <enumeration name="AlphaDecodeBinRole" version="1.30" glib:type-name="GstAlphaDecodeBinRole" glib:get-type="gst_alpha_decode_bin_role_get_type" c:type="GstAlphaDecodeBinRole">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">The element roles used to construct a #GstAlphaDecodeBin subclass.</doc>
+      <member name="demux" value="0" c:identifier="GST_ALPHA_DECODE_BIN_ROLE_DEMUX" glib:nick="demux" glib:name="GST_ALPHA_DECODE_BIN_ROLE_DEMUX">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">the element that separates the encoded
+    color stream from the encoded alpha stream</doc>
+      </member>
+      <member name="color_decoder" value="1" c:identifier="GST_ALPHA_DECODE_BIN_ROLE_COLOR_DECODER" glib:nick="color-decoder" glib:name="GST_ALPHA_DECODE_BIN_ROLE_COLOR_DECODER">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">the decoder for the encoded color
+    stream</doc>
+      </member>
+      <member name="alpha_decoder" value="2" c:identifier="GST_ALPHA_DECODE_BIN_ROLE_ALPHA_DECODER" glib:nick="alpha-decoder" glib:name="GST_ALPHA_DECODE_BIN_ROLE_ALPHA_DECODER">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">the decoder for the encoded alpha
+    stream</doc>
+      </member>
+      <member name="combine" value="3" c:identifier="GST_ALPHA_DECODE_BIN_ROLE_COMBINE" glib:nick="combine" glib:name="GST_ALPHA_DECODE_BIN_ROLE_COMBINE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">the element that combines decoded color
+    and alpha streams into one decoded stream</doc>
+      </member>
+      <member name="count" value="4" c:identifier="GST_ALPHA_DECODE_BIN_ROLE_COUNT" glib:nick="count" glib:name="GST_ALPHA_DECODE_BIN_ROLE_COUNT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstalphadecodebin.h">the number of alpha decode bin roles</doc>
+      </member>
+    </enumeration>
     <record name="AncillaryMeta" c:type="GstAncillaryMeta" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">#GstMeta for carrying SMPTE-291M Ancillary data. Note that all the ADF fields
    (@DID to @checksum) are 10bit values with parity/non-parity high-bits set.</doc>

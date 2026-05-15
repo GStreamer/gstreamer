@@ -59,7 +59,14 @@ gst_vp9_alpha_decode_bin_class_init (GstVp9AlphaDecodeBinClass * klass)
   GstAlphaDecodeBinClass *adbin_class = (GstAlphaDecodeBinClass *) klass;
   GstElementClass *element_class = (GstElementClass *) klass;
 
-  adbin_class->decoder_name = "vp9dec";
+  gst_alpha_decode_bin_class_set_role_factory_name (adbin_class,
+      GST_ALPHA_DECODE_BIN_ROLE_DEMUX, "codecalphademux");
+  gst_alpha_decode_bin_class_set_role_factory_name (adbin_class,
+      GST_ALPHA_DECODE_BIN_ROLE_COLOR_DECODER, "vp9dec");
+  gst_alpha_decode_bin_class_set_role_factory_name (adbin_class,
+      GST_ALPHA_DECODE_BIN_ROLE_ALPHA_DECODER, "vp9dec");
+  gst_alpha_decode_bin_class_set_role_factory_name (adbin_class,
+      GST_ALPHA_DECODE_BIN_ROLE_COMBINE, "alphacombine");
   gst_element_class_add_static_pad_template (element_class, &sink_template);
 
   gst_element_class_set_static_metadata (element_class,
