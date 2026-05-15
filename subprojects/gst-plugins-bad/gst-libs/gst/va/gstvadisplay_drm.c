@@ -142,7 +142,7 @@ gst_va_display_drm_create_va_display (GstVaDisplay * display)
   if (fd < 0) {
     GST_WARNING_OBJECT (self, "Failed to open %s: %s", self->path,
         g_strerror (saved_errno));
-    return 0;
+    return NULL;
   }
 #ifdef HAVE_LIBDRM
   {
@@ -151,7 +151,8 @@ gst_va_display_drm_create_va_display (GstVaDisplay * display)
     version = drmGetVersion (fd);
     if (!version) {
       GST_ERROR_OBJECT (self, "Device %s is not a DRM render node", self->path);
-      return 0;
+      close (fd);
+      return NULL;
     }
     GST_INFO_OBJECT (self, "DRM render node with kernel driver %s",
         version->name);
