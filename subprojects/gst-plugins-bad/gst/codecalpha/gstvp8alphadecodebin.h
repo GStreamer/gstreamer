@@ -21,7 +21,7 @@
 #ifndef __GST_VP8_ALPHA_DECODE_BIN_H__
 #define __GST_VP8_ALPHA_DECODE_BIN_H__
 
-#include "gstalphadecodebin.h"
+#include <gst/video/gstalphadecodebin.h>
 
 G_BEGIN_DECLS
 

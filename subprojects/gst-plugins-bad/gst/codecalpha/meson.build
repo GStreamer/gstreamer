@@ -1,14 +1,12 @@
 codecalpha_sources = [
   'gstplugin.c',
   'gstalphacombine.c',
-  'gstalphadecodebin.c',
   'gstvp8alphadecodebin.c',
   'gstvp9alphadecodebin.c',
   'gstcodecalphademux.c',
 ]
 
 codecalpha_headers = [
-  'gstalphadecodebin.h',
   'gstalphacombine.h',
   'gstvp9alphadecodebin.h',
   'gstcodecalphademux.h',

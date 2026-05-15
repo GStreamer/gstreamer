@@ -22,6 +22,7 @@
 #define __GST_ALPHA_DECODE_BIN_H__
 
 #include <gst/gst.h>
+#include <gst/video/video-prelude.h>
 
 /* When wrapping, use the original rank plus this offset. The ad-hoc rules is
  * that hardware implementation will use PRIMARY+1 or +2 to override the
@@ -34,9 +35,32 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_ALPHA_DECODE_BIN (gst_alpha_decode_bin_get_type())
+
+/**
+ * GstAlphaDecodeBin:
+ *
+ * Base class for alpha decode bin wrapper elements.
+ *
+ * Since: 1.30
+ */
+/**
+ * GstAlphaDecodeBin.parent_instance:
+ *
+ * Parent instance.
+ *
+ * Since: 1.30
+ */
+GST_VIDEO_API
 G_DECLARE_DERIVABLE_TYPE (GstAlphaDecodeBin,
     gst_alpha_decode_bin, GST, ALPHA_DECODE_BIN, GstBin);
 
+/**
+ * GstAlphaDecodeBinClass.parent_class:
+ *
+ * Parent class.
+ *
+ * Since: 1.30
+ */
 struct _GstAlphaDecodeBinClass
 {
   GstBinClass parent_class;

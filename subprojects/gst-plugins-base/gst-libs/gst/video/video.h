@@ -197,6 +197,7 @@ G_END_DECLS
 
 #include <gst/video/colorbalancechannel.h>
 #include <gst/video/colorbalance.h>
+#include <gst/video/gstalphadecodebin.h>
 #include <gst/video/gstvideoaffinetransformationmeta.h>
 #include <gst/video/gstvideoaggregator.h>
 #include <gst/video/gstvideocodecalphameta.h>

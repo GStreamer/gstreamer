@@ -3,6 +3,7 @@ video_sources = files([
   'colorbalancechannel.c',
   'convertframe.c',
   'gstvideoaffinetransformationmeta.c',
+  'gstalphadecodebin.c',
   'gstvideocodecalphameta.c',
   'gstvideodscmeta.c',
   'gstvideoaggregator.c',
@@ -45,6 +46,7 @@ video_sources = files([
 video_headers = files([
   'colorbalance.h',
   'colorbalancechannel.h',
+  'gstalphadecodebin.h',
   'gstvideoaffinetransformationmeta.h',
   'gstvideocodecalphameta.h',
   'gstvideodscmeta.h',
@@ -114,6 +116,7 @@ video_mkenum_headers = [
   'gstvideoutils.h',
   'gstvideoencoder.h',
   'gstvideodecoder.h',
+  'gstalphadecodebin.h',
   'colorbalance.h',
   'navigation.h',
 ]

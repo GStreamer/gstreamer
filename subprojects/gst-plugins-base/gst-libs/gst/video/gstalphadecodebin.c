@@ -22,8 +22,6 @@
 #include "config.h"
 #endif
 
-#include <gst/pbutils/pbutils.h>
-
 #include "gstalphadecodebin.h"
 
 GST_DEBUG_CATEGORY_STATIC (alphadecodebin_debug);
@@ -51,6 +49,23 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("ANY")
     );
 
+static GstMessage *
+gst_alpha_decode_bin_missing_element_message_new (GstElement * element,
+    const gchar * factory_name)
+{
+  GstStructure *s;
+  gchar *description;
+
+  description = g_strdup_printf ("GStreamer element %s", factory_name);
+  s = gst_structure_new ("missing-plugin",
+      "type", G_TYPE_STRING, "element",
+      "detail", G_TYPE_STRING, factory_name,
+      "name", G_TYPE_STRING, description, NULL);
+  g_free (description);
+
+  return gst_message_new_element (GST_OBJECT_CAST (element), s);
+}
+
 static gboolean
 gst_alpha_decode_bin_open (GstAlphaDecodeBin * self)
 {
@@ -59,7 +74,7 @@ gst_alpha_decode_bin_open (GstAlphaDecodeBin * self)
 
   if (priv->missing_element) {
     gst_element_post_message (GST_ELEMENT (self),
-        gst_missing_element_message_new (GST_ELEMENT (self),
+        gst_alpha_decode_bin_missing_element_message_new (GST_ELEMENT (self),
             priv->missing_element));
   } else if (!priv->constructed) {
     GST_ELEMENT_ERROR (self, CORE, FAILED,
