@@ -612,26 +612,6 @@ gst_gl_filter_caps_remove_size (GstCaps * caps)
 }
 
 static GstCaps *
-gst_gl_filter_ensure_caps_contains_features (const GstCaps * caps,
-    const gchar * feature_name)
-{
-  GstCaps *ret = gst_caps_copy (caps);
-  guint n = gst_caps_get_size (ret);
-  guint i = 0;
-
-  for (i = 0; i < n; i++) {
-    GstCapsFeatures *f = gst_caps_get_features (ret, i);
-    if (!gst_caps_features_is_any (f)) {
-      if (!gst_caps_features_contains (f, feature_name)) {
-        gst_caps_features_add (f, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
-      }
-    }
-  }
-
-  return ret;
-}
-
-static GstCaps *
 default_transform_internal_caps (GstGLFilter * filter,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter_caps)
 {
@@ -651,12 +631,6 @@ gst_gl_filter_transform_caps (GstBaseTransform * bt,
 
   tmp = GST_GL_FILTER_GET_CLASS (filter)->transform_internal_caps (filter,
       direction, caps, NULL);
-
-  result =
-      gst_gl_filter_ensure_caps_contains_features (tmp,
-      GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
-  gst_caps_unref (tmp);
-  tmp = result;
 
   if (filter_caps) {
     result =
