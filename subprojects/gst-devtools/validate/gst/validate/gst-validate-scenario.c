@@ -3709,6 +3709,8 @@ _execute_dot_pipeline (GstValidateScenario * scenario,
   gchar *dotname;
   gint details = GST_DEBUG_GRAPH_SHOW_ALL;
   const gchar *name = gst_structure_get_string (action->structure, "name");
+  const gchar *dot_dir =
+      gst_structure_get_string (action->structure, "dot-dir");
   DECLARE_AND_GET_PIPELINE (scenario, action);
 
   gst_structure_get_int (action->structure, "details", &details);
@@ -3717,7 +3719,50 @@ _execute_dot_pipeline (GstValidateScenario * scenario,
   else
     dotname = g_strdup ("validate.action.unnamed");
 
-  GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline), details, dotname);
+  if (dot_dir) {
+    const gchar *base_dir = g_getenv ("GST_DEBUG_DUMP_DOT_DIR");
+
+    if (!base_dir) {
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
+          "`dot-dir` requires the GST_DEBUG_DUMP_DOT_DIR environment variable"
+          " to be set");
+      g_free (dotname);
+      gst_object_unref (pipeline);
+      return FALSE;
+    }
+
+    gchar *full_dir = g_build_filename (base_dir, dot_dir, NULL);
+    if (g_mkdir_with_parents (full_dir, 0755) < 0) {
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
+          "Could not create dot directory '%s': %s", full_dir,
+          g_strerror (errno));
+      g_free (full_dir);
+      g_free (dotname);
+      gst_object_unref (pipeline);
+      return FALSE;
+    }
+
+    GstClockTime now = gst_util_get_timestamp ();
+    gchar *ts_name = g_strdup_printf ("%u.%02u.%02u.%09u-%s.dot",
+        GST_TIME_ARGS (now), dotname);
+    gchar *full_path = g_build_filename (full_dir, ts_name, NULL);
+
+    GError *err = NULL;
+    gchar *buf = gst_debug_bin_to_dot_data (GST_BIN (pipeline), details);
+    if (!g_file_set_contents (full_path, buf, -1, &err)) {
+      GST_WARNING_OBJECT (scenario, "Failed to write dot file '%s': %s",
+          full_path, err->message);
+      g_clear_error (&err);
+    }
+    g_free (buf);
+    g_free (full_path);
+    g_free (ts_name);
+    g_free (full_dir);
+  } else {
+    GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline), details, dotname);
+  }
 
   g_free (dotname);
   gst_object_unref (pipeline);
@@ -8525,10 +8570,39 @@ register_action_types (void)
       "Waits for signal 'signal-name', message 'message-type', or during 'duration' seconds",
       GST_VALIDATE_ACTION_TYPE_DOESNT_NEED_PIPELINE);
 
-  REGISTER_ACTION_TYPE ("dot-pipeline", _execute_dot_pipeline, NULL,
+  REGISTER_ACTION_TYPE ("dot-pipeline", _execute_dot_pipeline,
+      ((GstValidateActionParameter []) {
+        {
+          .name = "name",
+          .description = "Used as the suffix of the generated dot filename "
+                         "(prefixed with `validate.action.`).",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "details",
+          .description = "A #GstDebugGraphDetails bitmask describing what to dump.",
+          .mandatory = FALSE,
+          .types = "int",
+          NULL
+        },
+        {
+          .name = "dot-dir",
+          .description = "Subdirectory of `GST_DEBUG_DUMP_DOT_DIR` in which "
+                         "to write the dot file. Created if it does not "
+                         "exist. `GST_DEBUG_DUMP_DOT_DIR` must still be set.",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {NULL}
+      }),
       "Dots the pipeline (the 'name' property will be used in the dot filename).\n"
       "For more information have a look at the GST_DEBUG_BIN_TO_DOT_FILE documentation.\n"
-      "Note that the GST_DEBUG_DUMP_DOT_DIR env variable needs to be set",
+      "Note that the GST_DEBUG_DUMP_DOT_DIR env variable needs to be set.\n"
+      "When `dot-dir` is set, the file is written into that subdirectory of\n"
+      "`GST_DEBUG_DUMP_DOT_DIR` (created if missing).",
       GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("set-rank", _execute_set_rank_or_disable_feature,
