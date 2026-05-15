@@ -764,6 +764,50 @@ gst_wl_display_sync (GstWlDisplay * self,
   return callback;
 }
 
+/**
+ * gst_wl_display_sync_store:
+ * @self: the #GstWlDisplay
+ * @callback: (out): location to store the resulting #wl_callback pointer
+ * @listener: a listener to attach to the new callback
+ * @data: user data to pass to @listener
+ *
+ * Like gst_wl_display_sync(), but the resulting callback pointer is
+ * written into @callback while the internal sync mutex is still held.
+ *
+ * gst_wl_display_sync() returns the callback to the caller and lets the
+ * caller publish it; if the Wayland event thread dispatches and destroys
+ * the callback before the caller stores the pointer, the caller will end
+ * up writing a stale pointer to its own field, which then leads to a
+ * double-free during teardown.
+ *
+ * This function avoids that race by combining "create + listener-attach
+ * + store" into a single critical section, so by the time the mutex is
+ * released the pointer in @callback is either already valid or already
+ * cleared by the dispatched listener.
+ *
+ * Since: 1.30
+ */
+void
+gst_wl_display_sync_store (GstWlDisplay * self,
+    struct wl_callback **callback,
+    const struct wl_callback_listener *listener, gpointer data)
+{
+  GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
+  struct wl_callback *new_callback;
+
+  g_rec_mutex_lock (&priv->sync_mutex);
+
+  new_callback = wl_display_sync (priv->display_wrapper);
+  if (new_callback && listener)
+    wl_callback_add_listener (new_callback, listener, data);
+
+  /* Store the callback while holding sync_mutex so it cannot be dispatched and
+   * destroyed before the caller publishes the pointer. */
+  *callback = new_callback;
+
+  g_rec_mutex_unlock (&priv->sync_mutex);
+}
+
 /* gst_wl_display_object_destroy
  *
  * A syncronized version of `xxx_destroy` that ensures that the

@@ -50,6 +50,11 @@ struct wl_callback * gst_wl_display_sync(GstWlDisplay * self, const struct wl_ca
 	gpointer data);
 
 GST_WL_API
+void gst_wl_display_sync_store (GstWlDisplay * self,
+    struct wl_callback ** callback,
+    const struct wl_callback_listener * listener, gpointer data);
+
+GST_WL_API
 void gst_wl_display_object_destroy (GstWlDisplay * self, gpointer *object, GDestroyNotify destroy_func);
 
 GST_WL_API

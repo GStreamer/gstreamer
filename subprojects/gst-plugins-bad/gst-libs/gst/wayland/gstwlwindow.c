@@ -1286,8 +1286,8 @@ gst_wl_window_render (GstWlWindow * self, GstBuffer * buffer)
 
   if (!priv->next_buffer) {
     priv->next_buffer = to_render;
-    priv->commit_callback =
-        gst_wl_display_sync (priv->display, &commit_listener, self);
+    gst_wl_display_sync_store (priv->display, &priv->commit_callback,
+        &commit_listener, self);
     wl_display_flush (gst_wl_display_get_display (priv->display));
   } else {
     priv->staged_buffer = to_render;
