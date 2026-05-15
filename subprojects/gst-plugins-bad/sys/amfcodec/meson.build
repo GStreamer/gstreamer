@@ -18,6 +18,11 @@ amf_headers = [
   'gstamfplatform.h',
 ]
 
+if host_system == 'windows'
+  amf_sources += 'gstamfhqscaler.cpp'
+  amf_headers += 'gstamfhqscaler.h'
+endif
+
 doc_sources = []
 foreach s: amf_sources + amf_headers
   doc_sources += meson.current_source_dir() / s
