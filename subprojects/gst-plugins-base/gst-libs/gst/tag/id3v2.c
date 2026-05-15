@@ -157,8 +157,7 @@ empty:
  * with 0xff bytes. This is necessary when ID3v2 tags use data unsynchronisation
  * to prevent accidental detection of 0xff 0x00 sync bytes.
  *
- * Returns: Newly allocated ununsync'd data, or NULL on error. The caller is
- * responsible for freeing the returned buffer.  On error, @size is set to 0.
+ * Returns: Newly allocated ununsync'd data or %NULL if *size is 0.
  */
 guint8 *
 id3v2_ununsync_data (const guint8 * unsync_data, guint32 * size)
@@ -168,7 +167,9 @@ id3v2_ununsync_data (const guint8 * unsync_data, guint32 * size)
 
   g_return_val_if_fail (unsync_data != NULL, NULL);
   g_return_val_if_fail (size != NULL, NULL);
-  g_return_val_if_fail (*size != 0, NULL);
+
+  if (*size == 0)
+    return NULL;
 
   out = g_malloc (*size);
   /* Replace any 0xff 0x00 sequence by 0xff */
