@@ -1,7 +1,10 @@
-# name, condition when to skip the test and extra dependencies
+# name, condition when to skip the test, extra dependencies, extra sources,
+# extra plugin loading whitelist entries
 libav_tests = [
   [ 'elements/avaudenc' ],
   [ 'elements/avdec_adpcm' ],
+  [ 'elements/avvidalphadecodebin', false, [], [],
+    ['vpx', 'codecalpha', 'videoparsersbad'] ],
   [ 'elements/avdemux_ape' ],
   [ 'elements/avvidenc' ],
   [ 'generic/libavcodec-locking' ],
@@ -29,7 +32,7 @@ endif
 gst_plugin_scanner_path = join_paths(gst_plugin_scanner_dir, 'gst-plugin-scanner')
 
 # FIXME: check, also + PTHREAD_CFLAGS
-test_deps = [gst_dep, gstbase_dep, gstcheck_dep, gstaudio_dep,
+test_deps = [gst_dep, gstbase_dep, gstcheck_dep, gstapp_dep, gstaudio_dep,
   gstvideo_dep, gstpbutils_dep]
 
 # FIXME: add valgrind suppression common/gst.supp gst-libav.supp
@@ -38,13 +41,14 @@ foreach t : libav_tests
   test_name = t.get(0).underscorify()
   extra_sources = t.get(3, [ ])
   extra_deps = t.get(2, [ ])
+  plugin_loading_whitelist = ['gstreamer', 'gst-plugins-base',
+    'gst-libav@' + meson.project_build_root()] + t.get(4, [ ])
   skip_test = t.get(1, false)
   if not skip_test
     env = environment()
     env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
     env.set('CK_DEFAULT_TIMEOUT', '20')
-    env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer', 'gst-plugins-base',
-      'gst-libav@' + meson.project_build_root())
+    env.set('GST_PLUGIN_LOADING_WHITELIST', plugin_loading_whitelist)
     env.set('GST_PLUGIN_PATH_1_0', [meson.global_build_root()] + pluginsdirs)
     env.set('GSETTINGS_BACKEND', 'memory')
 
@@ -58,4 +62,3 @@ foreach t : libav_tests
     test(test_name, exe, env: env, timeout: 3 * 60)
   endif
 endforeach
-

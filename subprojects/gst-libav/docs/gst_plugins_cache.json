@@ -12363,6 +12363,36 @@
                 },
                 "rank": "marginal"
             },
+            "avdec_vp8alphadecodebin": {
+                "author": "Dominique Leroux <dominique.p.leroux@gmail.com>",
+                "description": "Wrapper bin to decode VP8 with alpha stream using libav.",
+                "hierarchy": [
+                    "GstAVDecVp8AlphaDecodeBin",
+                    "GstAlphaDecodeBin",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
+                "klass": "Codec/Decoder/Video",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-vp8:\n    codec-alpha: true\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "marginal + 10"
+            },
             "avdec_vp9": {
                 "author": "Wim Taymans <wim.taymans@gmail.com>, Ronald Bultje <rbultje@ronald.bitfreak.net>, Edward Hervey <bilboed@bilboed.com>",
                 "description": "libav vp9 decoder",
@@ -12477,6 +12507,36 @@
                     }
                 },
                 "rank": "marginal"
+            },
+            "avdec_vp9alphadecodebin": {
+                "author": "Dominique Leroux <dominique.p.leroux@gmail.com>",
+                "description": "Wrapper bin to decode VP9 with alpha stream using libav.",
+                "hierarchy": [
+                    "GstAVDecVp9AlphaDecodeBin",
+                    "GstAlphaDecodeBin",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
+                "klass": "Codec/Decoder/Video",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-vp9:\n    codec-alpha: true\n      alignment: super-frame\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "marginal + 10"
             },
             "avdec_vqavideo": {
                 "author": "Wim Taymans <wim.taymans@gmail.com>, Ronald Bultje <rbultje@ronald.bitfreak.net>, Edward Hervey <bilboed@bilboed.com>",

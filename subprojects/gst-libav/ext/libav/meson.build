@@ -7,6 +7,7 @@ libav_sources = [
     'gstavvidenc.c',
     'gstavauddec.c',
     'gstavviddec.c',
+    'gstavvidalphadecodebin.c',
     'gstavcfg.c',
     'gstavdemux.c',
     'gstavmux.c',
@@ -16,6 +17,7 @@ libav_sources = [
 
 libav_headers = [
   'gstavviddec.h',
+  'gstavvidalphadecodebin.h',
   'gstavvidenc.h',
   'gstavcfg.h',
   'gstavprotocol.h',

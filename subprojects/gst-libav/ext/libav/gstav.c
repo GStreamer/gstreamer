@@ -31,6 +31,7 @@
 #include "gstav.h"
 #include "gstavutils.h"
 #include "gstavcfg.h"
+#include "gstavvidalphadecodebin.h"
 
 #ifdef GST_LIBAV_ENABLE_GPL
 #define LICENSE "GPL"
@@ -156,6 +157,8 @@ plugin_init (GstPlugin * plugin)
   gst_ffmpegvidenc_register (plugin);
   gst_ffmpegauddec_register (plugin);
   gst_ffmpegviddec_register (plugin);
+  GST_ELEMENT_REGISTER (avdec_vp8_alpha_decode_bin, plugin);
+  GST_ELEMENT_REGISTER (avdec_vp9_alpha_decode_bin, plugin);
   gst_ffmpegdemux_register (plugin);
   gst_ffmpegmux_register (plugin);
   gst_ffmpegdeinterlace_register (plugin);

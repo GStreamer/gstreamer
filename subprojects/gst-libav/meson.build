@@ -100,6 +100,8 @@ gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
 
 gstvideo_dep = dependency('gstreamer-video-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'video_dep'])
+gstapp_dep = dependency('gstreamer-app-1.0', version : gst_req,
+    fallback : ['gst-plugins-base', 'app_dep'])
 gstaudio_dep = dependency('gstreamer-audio-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'audio_dep'])
 gstpbutils_dep = dependency('gstreamer-pbutils-1.0', version : gst_req,
