@@ -392,10 +392,48 @@ struct _GstValidateActionPrivate
   gboolean pending_set_done;
 
   GMainContext *context;
+  GstTraceSpanId trace_span_id;
 
   GValue it_value;
   GWeakRef sub_pipeline;
 };
+
+GST_DEFINE_TRACE_FORMAT (gst_validate_action,
+    "type", STRING,
+    "name", STRING,
+    "filename", STRING,
+    "lineno", INT,
+    "repeat", INT,
+    "action-number", UINT, "playback-time", INT64, "structure", STRING);
+
+static void
+gst_validate_action_trace_span_begin (GstValidateAction * action)
+{
+  GstTraceFormat *format = gst_validate_action ();
+  gchar *action_structure;
+
+  if (G_LIKELY (!gst_trace_format_is_enabled (format)))
+    return;
+
+  gst_trace_span_end_and_clear (&action->priv->trace_span_id);
+
+  action_structure = action->structure ?
+      gst_structure_to_string (action->structure) : NULL;
+
+  action->priv->trace_span_id =
+      gst_trace_span_begin (format,
+      GST_TRACE_VALUES (STRING (action->type),
+          STRING (action->name),
+          STRING (GST_VALIDATE_ACTION_FILENAME (action)),
+          INT (GST_VALIDATE_ACTION_LINENO (action)),
+          INT (action->repeat),
+          UINT (action->action_number),
+          INT64 (GST_CLOCK_TIME_IS_VALID (action->playback_time)
+              ? (gint64) action->playback_time : -1),
+          STRING (action_structure)));
+
+  g_free (action_structure);
+}
 
 static JsonNode *
 gst_validate_action_serialize (GstValidateAction * action)
@@ -505,6 +543,8 @@ gst_validate_action_return_get_name (GstValidateActionReturn r)
 static void
 _action_free (GstValidateAction * action)
 {
+  gst_trace_span_end_and_clear (&action->priv->trace_span_id);
+
   if (action->structure)
     gst_structure_free (action->structure);
 
@@ -2991,7 +3031,12 @@ gst_validate_execute_action (GstValidateActionType * action_type,
   action->priv->execution_time = gst_util_get_timestamp ();
   action->priv->state = GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS;
   action_type->priv->n_calls++;
+  gst_validate_action_trace_span_begin (action);
   res = action_type->execute (scenario, action);
+  if (res != GST_VALIDATE_EXECUTE_ACTION_ASYNC &&
+      res != GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING &&
+      res != GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS)
+    gst_trace_span_end_and_clear (&action->priv->trace_span_id);
   gst_object_unref (scenario);
 
   return res;
@@ -7306,6 +7351,8 @@ _action_set_done (GstValidateAction * action)
 
   if (scenario == NULL || !action->priv->pending_set_done)
     return G_SOURCE_REMOVE;
+
+  gst_trace_span_end_and_clear (&action->priv->trace_span_id);
 
   action->priv->execution_duration =
       gst_util_get_timestamp () - action->priv->execution_time;
