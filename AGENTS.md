@@ -12,7 +12,7 @@ project.
 
 - Agents **must not** use GitLab (or any GitLab API, CLI, or web UI automation) to:
   - Open or update **merge requests (MRs)**
-  - Create, edit, or close **issues**
+  - Create, edit, or close **issues ("work items")**
   - Post **comments** on merge requests, issues, commits, or discussions
 
 ## Humans must interface with the maintainers
@@ -22,9 +22,9 @@ project.
   precise and concise.
 - **AI-generated responses to reviewer comments are banned**. This undermines
   the human-to-human interaction fundamental to code review.
-- **AI-written issue descriptions or issue comments are banned**. These are easy
-  to recognize and waste triagers' time. Do not be verbose, be precise and
-  concise.
+- **AI-written issue ("work item") descriptions or issue comments are
+  banned**. These are easy to recognize and waste triagers' time. Do not be
+  verbose, be precise and concise.
 
 ## User must demonstrate understanding
 
