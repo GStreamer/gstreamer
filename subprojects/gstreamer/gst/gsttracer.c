@@ -162,7 +162,8 @@ gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type)
   g_return_val_if_fail (name != NULL, FALSE);
   g_return_val_if_fail (g_type_is_a (type, GST_TYPE_TRACER), FALSE);
 
-  registry = gst_registry_get ();
+  registry = gst_plugin_get_registry (plugin);
+
   /* check if feature already exists, if it exists there is no need to update it
    * when the registry is getting updated, outdated plugins and all their
    * features are removed and readded.
@@ -200,8 +201,7 @@ gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type)
   }
   GST_PLUGIN_FEATURE_CAST (factory)->loaded = TRUE;
 
-  gst_registry_add_feature (gst_registry_get (),
-      GST_PLUGIN_FEATURE_CAST (factory));
+  gst_registry_add_feature (registry, GST_PLUGIN_FEATURE_CAST (factory));
 
   return TRUE;
 }

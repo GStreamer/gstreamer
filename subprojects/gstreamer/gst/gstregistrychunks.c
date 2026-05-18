@@ -854,6 +854,7 @@ _priv_gst_registry_chunks_load_plugin (GstRegistry * registry, gchar ** in,
   unpack_element (*in, pe, GstRegistryChunkPluginElement, end, fail);
 
   plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
+  plugin->priv->registry = registry;
 
   /* TODO: also set GST_PLUGIN_FLAG_CONST */
   GST_OBJECT_FLAG_SET (plugin, GST_PLUGIN_FLAG_CACHED);

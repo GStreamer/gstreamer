@@ -215,7 +215,7 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
   g_return_val_if_fail (name != NULL, FALSE);
   g_return_val_if_fail (g_type_is_a (type, GST_TYPE_ELEMENT), FALSE);
 
-  registry = gst_registry_get ();
+  registry = gst_plugin_get_registry (plugin);
 
   /* check if feature already exists, if it exists there is no need to update it
    * when the registry is getting updated, outdated plugins and all their

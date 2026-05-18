@@ -168,7 +168,7 @@ gst_meta_factory_register (GstPlugin * plugin, const GstMetaInfo * meta_info)
   name = g_type_name (meta_info->type);
   g_assert (name != NULL);
 
-  registry = gst_registry_get ();
+  registry = gst_plugin_get_registry (plugin);
 
   /* check if feature already exists, if it exists there is no need to
    * update it for this method of dynamic type */

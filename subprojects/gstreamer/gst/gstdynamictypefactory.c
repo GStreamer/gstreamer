@@ -161,7 +161,7 @@ gst_dynamic_type_register (GstPlugin * plugin, GType dyn_type)
   name = g_type_name (dyn_type);
   g_return_val_if_fail (name != NULL, FALSE);
 
-  registry = gst_registry_get ();
+  registry = gst_plugin_get_registry (plugin);
 
   /* check if feature already exists, if it exists there is no need to
    * update it for this method of dynamic type */

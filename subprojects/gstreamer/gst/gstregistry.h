@@ -124,6 +124,10 @@ gboolean                gst_registry_check_feature_version (GstRegistry *registr
                                                             guint        min_minor,
                                                             guint        min_micro);
 
+/* This is here because gstplugin.h can't include gstregistry.h */
+GST_API
+GstRegistry*           gst_plugin_get_registry	(GstPlugin *plugin);
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRegistry, gst_object_unref)
 
 G_END_DECLS

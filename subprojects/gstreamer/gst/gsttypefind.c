@@ -95,7 +95,7 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
   }
   GST_PLUGIN_FEATURE_CAST (factory)->loaded = TRUE;
 
-  gst_registry_add_feature (gst_registry_get (),
+  gst_registry_add_feature (gst_plugin_get_registry (plugin),
       GST_PLUGIN_FEATURE_CAST (factory));
 
   return TRUE;

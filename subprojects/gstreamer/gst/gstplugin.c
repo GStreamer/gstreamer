@@ -840,8 +840,8 @@ _priv_gst_plugin_load_file_for_registry (const gchar * filename,
     }
   }
 
-  GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "attempt to load plugin \"%s\"",
-      filename);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PLUGIN_LOADING, registry,
+      "attempt to load plugin \"%s\"", filename);
 
   if (!g_module_supported ()) {
     GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "module loading not supported");
@@ -940,6 +940,8 @@ _priv_gst_plugin_load_file_for_registry (const gchar * filename,
     plugin->file_size = file_status.st_size;
     plugin->filename = g_strdup (filename);
     plugin->basename = g_path_get_basename (filename);
+
+    plugin->priv->registry = registry;
   }
 
   plugin->module = module;
@@ -970,15 +972,16 @@ _priv_gst_plugin_load_file_for_registry (const gchar * filename,
     }
   }
 
-  GST_LOG ("Plugin %p for file \"%s\" prepared, calling entry function...",
-      plugin, filename);
+  GST_LOG_OBJECT (registry,
+      "Plugin %p for file \"%s\" prepared, calling entry function...", plugin,
+      filename);
 
   /* this is where we load the actual .so, so let's trap SIGSEGV */
   _gst_plugin_fault_handler_setup ();
   _gst_plugin_fault_handler_filename = plugin->filename;
 
-  GST_LOG ("Plugin %p for file \"%s\" prepared, registering...",
-      plugin, filename);
+  GST_LOG_OBJECT (registry,
+      "Plugin %p for file \"%s\" prepared, registering...", plugin, filename);
 
   if (!gst_plugin_register_func (plugin, desc, NULL)) {
     /* remove signal handler */
@@ -996,7 +999,7 @@ _priv_gst_plugin_load_file_for_registry (const gchar * filename,
   /* remove signal handler */
   _gst_plugin_fault_handler_restore ();
   _gst_plugin_fault_handler_filename = NULL;
-  GST_INFO ("plugin \"%s\" loaded", plugin->filename);
+  GST_INFO_OBJECT (registry, "plugin \"%s\" loaded", plugin->filename);
 
   if (new_plugin) {
     gst_object_ref (plugin);
@@ -1245,6 +1248,28 @@ gst_plugin_set_cache_data (GstPlugin * plugin, GstStructure * cache_data)
     gst_structure_free (plugin->priv->cache_data);
   }
   plugin->priv->cache_data = cache_data;
+}
+
+/**
+ * gst_plugin_get_registry:
+ * @plugin: (transfer none) (nullable): The plugin to retrieve a registry from, or NULL
+ *
+ * Get the #GstRegistry this plugin belongs to, for use when registering
+ * associated #GstPluginFeature during plugin registration. Usually
+ * this is just the default registry, but may differ during pre-built
+ * registry creation. If passed NULL, returns the default registry
+ *
+ * Returns: (transfer none): The #GstRegistry to use for plugin feature registration
+ *
+ * Since: 1.30
+ */
+GstRegistry *
+gst_plugin_get_registry (GstPlugin * plugin)
+{
+  if (plugin != NULL && plugin->priv->registry) {
+    return plugin->priv->registry;
+  }
+  return gst_registry_get ();
 }
 
 #if 0

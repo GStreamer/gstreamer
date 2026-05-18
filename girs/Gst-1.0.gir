@@ -37446,6 +37446,23 @@ stored. This is the case when the registry is getting rebuilt.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="get_registry" c:identifier="gst_plugin_get_registry" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">Get the #GstRegistry this plugin belongs to, for use when registering
+associated #GstPluginFeature during plugin registration. Usually
+this is just the default registry, but may differ during pre-built
+registry creation. If passed NULL, returns the default registry</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstregistry.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">The #GstRegistry to use for plugin feature registration</doc>
+          <type name="Registry" c:type="GstRegistry*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="plugin" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">The plugin to retrieve a registry from, or NULL</doc>
+            <type name="Plugin" c:type="GstPlugin*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="get_release_date_string" c:identifier="gst_plugin_get_release_date_string">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">Get the release date (and possibly time) in form of a string, if available.
 

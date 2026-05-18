@@ -87,6 +87,8 @@ struct _GstPluginPrivate {
   GList *deps;                 /* list of GstPluginDep structures */
   GstStructure *status_info;
   GstStructure *cache_data;
+
+  GstRegistry *registry;       /* Registry that this plugin belongs to */
 };
 
 /* Private function for getting plugin features directly */
