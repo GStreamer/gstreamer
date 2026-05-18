@@ -87,7 +87,7 @@ version_entities = configure_file(input : 'version.in',
 gst_excludes = []
 foreach h: ['gettext.h', 'glib-compat-private.h', 'glib-compat.h',
             'gst_private.h',
-            'gstelementdetails.h', 'gstmacros.h', 'gstmarshal.h',
+            'gstelementdetails.h', 'gstmacros.h', 'gsttracermacros.h', 'gstmarshal.h',
             'math-compat.h', 'parse/grammar.tab.h',
             '../libs/gst/base/gstindex.h',
             '../libs/gst/base/gstindex.c',

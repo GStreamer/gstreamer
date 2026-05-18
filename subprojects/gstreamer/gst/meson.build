@@ -142,6 +142,7 @@ gst_headers = files(
   'gsttoc.h',
   'gsttocsetter.h',
   'gsttracer.h',
+  'gsttracermacros.h',
   'gsttracerfactory.h',
   'gsttracerrecord.h',
   'gsttypefind.h',

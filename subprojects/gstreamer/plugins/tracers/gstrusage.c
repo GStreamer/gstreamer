@@ -62,7 +62,7 @@ typedef struct
 {
   /* time spent in this thread */
   GstClockTime tthread;
-  GstTraceValues *tvs_thread;
+  GstRUsageTraceValues *tvs_thread;
 } GstThreadStats;
 
 static void free_thread_stats (gpointer data);
@@ -77,17 +77,17 @@ free_trace_value (gpointer data)
   g_free (data);
 }
 
-static GstTraceValues *
+static GstRUsageTraceValues *
 make_trace_values (GstClockTime window)
 {
-  GstTraceValues *self = g_new0 (GstTraceValues, 1);
+  GstRUsageTraceValues *self = g_new0 (GstRUsageTraceValues, 1);
   self->window = window;
   g_queue_init (&self->values);
   return self;
 }
 
 static void
-free_trace_values (GstTraceValues * self)
+free_trace_values (GstRUsageTraceValues * self)
 {
   g_queue_foreach (&self->values, (GFunc) free_trace_value, NULL);
   g_queue_clear (&self->values);
@@ -95,10 +95,10 @@ free_trace_values (GstTraceValues * self)
 }
 
 static gboolean
-update_trace_value (GstTraceValues * self, GstClockTime nts,
+update_trace_value (GstRUsageTraceValues * self, GstClockTime nts,
     GstClockTime nval, GstClockTime * dts, GstClockTime * dval)
 {
-  GstTraceValue *lv;
+  GstRUsageTraceValue *lv;
   GstClockTimeDiff dt;
   GstClockTime window = self->window;
   GQueue *q = &self->values;
@@ -106,7 +106,7 @@ update_trace_value (GstTraceValues * self, GstClockTime nts,
   gboolean ret = FALSE;
 
 
-  /* search from the tail of the queue for a good GstTraceValue */
+  /* search from the tail of the queue for a good GstRUsageTraceValue */
   while (node) {
     lv = node->data;
     dt = GST_CLOCK_DIFF (lv->ts, nts);
@@ -136,7 +136,7 @@ update_trace_value (GstTraceValues * self, GstClockTime nts,
   lv = q->head ? q->head->data : NULL;
   if (!lv || (GST_CLOCK_DIFF (lv->ts, nts) > (window / WINDOW_SUBDIV))) {
     /* push the new measurement */
-    lv = g_new0 (GstTraceValue, 1);
+    lv = g_new0 (GstRUsageTraceValue, 1);
     lv->ts = nts;
     lv->val = nval;
     g_queue_push_head (q, lv);

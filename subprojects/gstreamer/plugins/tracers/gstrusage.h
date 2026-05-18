@@ -46,13 +46,13 @@ typedef struct
 {
   GstClockTime ts;
   GstClockTime val;
-} GstTraceValue;
+} GstRUsageTraceValue;
 
 typedef struct
 {
   GstClockTime window;
-  GQueue values;                /* GstTraceValue* */
-} GstTraceValues;
+  GQueue values;                /* GstRUsageTraceValue* */
+} GstRUsageTraceValues;
 
 /**
  * GstRUsageTracer:
@@ -63,7 +63,7 @@ struct _GstRUsageTracer {
   GstTracer 	 parent;
 
   /*< private >*/
-  GstTraceValues *tvs_proc;
+  GstRUsageTraceValues *tvs_proc;
 
   /* for ts calibration */
   gpointer main_thread_id;

@@ -27,6 +27,7 @@
 #include <glib-object.h>
 #include <gst/gstconfig.h>
 #include <gst/gstbin.h>
+#include <gst/gsttracer.h>
 #include <gst/gstutils.h>
 
 G_BEGIN_DECLS
@@ -137,6 +138,30 @@ typedef enum /*< skip >*/
    * Since: 1.30
    */
   GST_TRACER_QUARK_HOOK_OBJECT_PARENT_SET,
+  /**
+   * GST_TRACER_QUARK_HOOK_SPAN_BEGIN:
+   *
+   * Hook for application defined span begin events.
+   *
+   * Since: 1.30
+   */
+  GST_TRACER_QUARK_HOOK_SPAN_BEGIN,
+  /**
+   * GST_TRACER_QUARK_HOOK_SPAN_END:
+   *
+   * Hook for application defined span end events.
+   *
+   * Since: 1.30
+   */
+  GST_TRACER_QUARK_HOOK_SPAN_END,
+  /**
+   * GST_TRACER_QUARK_HOOK_EVENT:
+   *
+   * Hook for application defined point events, named "event".
+   *
+   * Since: 1.30
+   */
+  GST_TRACER_QUARK_HOOK_EVENT,
 
   GST_TRACER_QUARK_MAX
 } GstTracerQuarkId;
@@ -747,6 +772,52 @@ typedef void (*GstTracerHookObjectParentSet) (GObject *self, GstClockTime ts,
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_OBJECT_PARENT_SET), \
     GstTracerHookObjectParentSet, (GST_TRACER_ARGS, object, parent)); \
 }G_STMT_END
+
+/**
+ * GstTracerHookSpanBegin:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @span_id: identifier for matching the begin and end hooks
+ * @format: the registered span format
+ * @values: (array) (nullable): positional values matching @format
+ *
+ * Hook called when a custom span begins, named
+ * "span-begin".
+ *
+ * Since: 1.30
+ */
+typedef void (*GstTracerHookSpanBegin) (GObject *self, GstClockTime ts,
+    GstTraceSpanId span_id, GstTraceFormat *format,
+    const GstTraceValue *values);
+
+/**
+ * GstTracerHookSpanEnd:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @span_id: identifier returned by gst_trace_span_begin()
+ *
+ * Hook called when a custom span ends, named
+ * "span-end".
+ *
+ * Since: 1.30
+ */
+typedef void (*GstTracerHookSpanEnd) (GObject *self, GstClockTime ts,
+    GstTraceSpanId span_id);
+
+/**
+ * GstTracerHookEvent:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @format: the registered event format
+ * @values: (array) (nullable): positional values matching @format
+ *
+ * Hook called when a custom point event is emitted, named
+ * "event".
+ *
+ * Since: 1.30
+ */
+typedef void (*GstTracerHookEvent) (GObject *self, GstClockTime ts,
+    GstTraceFormat *format, const GstTraceValue *values);
 
 /**
  * GstTracerHookMiniObjectUnreffed:

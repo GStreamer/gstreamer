@@ -32,6 +32,7 @@
  */
 
 #include "gst_private.h"
+#include "gstenumtypes.h"
 #include "gsttracer.h"
 #include "gsttracerfactory.h"
 #include "gstvalue.h"
@@ -60,6 +61,7 @@ static const gchar *_quark_strings[] = {
   "pad-chain-list-post", "pad-send-event-pre", "pad-send-event-post",
   "memory-init", "memory-free-pre", "memory-free-post",
   "pool-buffer-queued", "pool-buffer-dequeued", "object-parent-set",
+  "span-begin", "span-end", "event",
 
 
   "none",                       /* This is a special quark for no hook - should always be LAST */
@@ -71,6 +73,46 @@ GQuark _priv_gst_tracer_quark_table[GST_TRACER_QUARK_MAX + 1];
 
 gboolean _priv_tracer_enabled = FALSE;
 GHashTable *_priv_tracers = NULL;
+
+GST_DEBUG_CATEGORY_EXTERN (tracer_debug);
+
+struct _GstTraceFormat
+{
+  GstStructure *fields;         /* name = span name, field-name -> nested GstStructure */
+  gchar *description;
+};
+
+struct _GstTraceFormatBuilder
+{
+  GstStructure *fields;
+  gchar *description;
+};
+
+struct _GstTraceField
+{
+  gchar *name;
+  GstStructure *metadata;       /* "type" (GstTracerFieldType as gint) plus optional metadata keys */
+};
+
+static GPtrArray *_priv_span_formats = NULL;
+static gint _priv_span_id_counter = 0;
+G_LOCK_DEFINE_STATIC (span_formats);
+
+static gboolean
+gst_trace_format_type_is_supported (GstTracerFieldType type)
+{
+  return type >= GST_TRACER_FIELD_TYPE_BOOLEAN &&
+      type <= GST_TRACER_FIELD_TYPE_OBJECT;
+}
+
+static void
+gst_trace_format_free (GstTraceFormat * format)
+{
+  if (format->fields)
+    gst_structure_free (format->fields);
+  g_free (format->description);
+  g_free (format);
+}
 
 static gchar *
 list_available_tracer_properties (GObjectClass * class)
@@ -369,8 +411,12 @@ _priv_gst_tracing_deinit (void)
   GstTracerHook *hook;
 
   _priv_tracer_enabled = FALSE;
-  if (!_priv_tracers)
+  if (!_priv_tracers) {
+    G_LOCK (span_formats);
+    g_clear_pointer (&_priv_span_formats, g_ptr_array_unref);
+    G_UNLOCK (span_formats);
     return;
+  }
 
   /* shutdown tracers for final reports */
   h_list = g_hash_table_get_values (_priv_tracers);
@@ -385,6 +431,10 @@ _priv_gst_tracing_deinit (void)
   g_list_free (h_list);
   g_hash_table_destroy (_priv_tracers);
   _priv_tracers = NULL;
+
+  G_LOCK (span_formats);
+  g_clear_pointer (&_priv_span_formats, g_ptr_array_unref);
+  G_UNLOCK (span_formats);
 }
 
 static void
@@ -459,6 +509,530 @@ gst_tracing_get_active_tracers (void)
   return tracers;
 }
 
+/**
+ * gst_trace_format_builder_new:
+ * @name: the span name
+ *
+ * Creates a new builder for a span format. The builder is used to
+ * declare the span's field schema before registering it with
+ * gst_trace_format_builder_register().
+ *
+ * Returns: (transfer full): a new #GstTraceFormatBuilder
+ *
+ * Since: 1.30
+ */
+GstTraceFormatBuilder *
+gst_trace_format_builder_new (const gchar * name)
+{
+  GstTraceFormatBuilder *builder;
+
+  g_return_val_if_fail (name != NULL && *name != '\0', NULL);
+
+  builder = g_new0 (GstTraceFormatBuilder, 1);
+  builder->fields = gst_structure_new_empty (name);
+
+  return builder;
+}
+
+/**
+ * gst_trace_format_builder_free:
+ * @builder: (transfer full) (nullable): a #GstTraceFormatBuilder
+ *
+ * Frees an unregistered builder.
+ *
+ * Since: 1.30
+ */
+void
+gst_trace_format_builder_free (GstTraceFormatBuilder * builder)
+{
+  if (!builder)
+    return;
+
+  if (builder->fields)
+    gst_structure_free (builder->fields);
+  g_free (builder->description);
+  g_free (builder);
+}
+
+/**
+ * gst_trace_format_builder_set_description:
+ * @builder: a #GstTraceFormatBuilder
+ * @description: (nullable): a human-readable description
+ *
+ * Sets a human-readable description on the format being built. Replaces any
+ * previous description.
+ *
+ * Returns: (transfer none): @builder for chaining
+ *
+ * Since: 1.30
+ */
+GstTraceFormatBuilder *
+gst_trace_format_builder_set_description (GstTraceFormatBuilder *
+    builder, const gchar * description)
+{
+  g_return_val_if_fail (builder != NULL, NULL);
+
+  g_free (builder->description);
+  builder->description = g_strdup (description);
+
+  return builder;
+}
+
+/**
+ * gst_trace_format_builder_add_field:
+ * @builder: a #GstTraceFormatBuilder
+ * @name: the field name
+ * @type: the field #GType
+ *
+ * Adds a positional field to the format. @type must be one of %G_TYPE_BOOLEAN,
+ * %G_TYPE_INT, %G_TYPE_UINT, %G_TYPE_INT64, %G_TYPE_UINT64, %G_TYPE_DOUBLE,
+ * %G_TYPE_STRING or %G_TYPE_POINTER, matching the `GstTraceValue` union
+ * member callers will pass to gst_trace_span_begin(). Duplicate
+ * field names are rejected.
+ *
+ * Returns: (transfer none): @builder for chaining
+ *
+ * Since: 1.30
+ */
+GstTraceFormatBuilder *
+gst_trace_format_builder_add_field (GstTraceFormatBuilder * builder,
+    const gchar * name, GstTracerFieldType type)
+{
+  return gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_new (name, type));
+}
+
+/**
+ * gst_trace_format_builder_add_field_full:
+ * @builder: a #GstTraceFormatBuilder
+ * @field: (transfer full): a #GstTraceField built via gst_trace_field_new()
+ *   and optionally configured with chainable setters such as
+ *   gst_trace_field_set_description()
+ *
+ * Adds a positional field with optional metadata to the format. The field is
+ * consumed and freed by this call; do not use @field afterwards.
+ *
+ * Returns: (transfer none): @builder for chaining
+ *
+ * Since: 1.30
+ */
+GstTraceFormatBuilder *
+gst_trace_format_builder_add_field_full (GstTraceFormatBuilder *
+    builder, GstTraceField * field)
+{
+  gint type = -1;
+
+  g_return_val_if_fail (builder != NULL, NULL);
+  g_return_val_if_fail (field != NULL, builder);
+
+  gst_structure_get (field->metadata, "type", G_TYPE_INT, &type, NULL);
+  if (!gst_trace_format_type_is_supported (type)) {
+    g_warning ("Field '%s' has unsupported field type %d on span format '%s'",
+        field->name, type, gst_structure_get_name (builder->fields));
+    gst_trace_field_free (field);
+    return builder;
+  }
+
+  if (gst_structure_has_field (builder->fields, field->name)) {
+    g_warning ("Field '%s' already declared on span format '%s'",
+        field->name, gst_structure_get_name (builder->fields));
+    gst_trace_field_free (field);
+    return builder;
+  }
+
+  gst_structure_set (builder->fields, field->name, GST_TYPE_STRUCTURE,
+      field->metadata, NULL);
+
+  gst_trace_field_free (field);
+
+  return builder;
+}
+
+/**
+ * gst_trace_field_new:
+ * @name: the field name
+ * @type: the field #GstTracerFieldType
+ *
+ * Creates a transient field descriptor that can be configured with chainable
+ * setters and then consumed by
+ * gst_trace_format_builder_add_field_full().
+ *
+ * Returns: (transfer full): a new #GstTraceField
+ *
+ * Since: 1.30
+ */
+GstTraceField *
+gst_trace_field_new (const gchar * name, GstTracerFieldType type)
+{
+  GstTraceField *field;
+
+  g_return_val_if_fail (name != NULL && *name != '\0', NULL);
+
+  field = g_new0 (GstTraceField, 1);
+  field->name = g_strdup (name);
+  field->metadata = gst_structure_new_empty ("field");
+  gst_structure_set (field->metadata, "type", G_TYPE_INT, (gint) type, NULL);
+
+  return field;
+}
+
+/**
+ * gst_trace_field_free:
+ * @field: (transfer full) (nullable): a #GstTraceField
+ *
+ * Frees a field that has not been added to a builder.
+ *
+ * Since: 1.30
+ */
+void
+gst_trace_field_free (GstTraceField * field)
+{
+  if (!field)
+    return;
+
+  g_free (field->name);
+  if (field->metadata)
+    gst_structure_free (field->metadata);
+  g_free (field);
+}
+
+/**
+ * gst_trace_field_set_description:
+ * @field: a #GstTraceField
+ * @description: (nullable): a human-readable description; %NULL clears any
+ *   previously set description
+ *
+ * Sets the description metadata on @field. Tracers and documentation
+ * generators surface this string when describing the field.
+ *
+ * Returns: (transfer none): @field for chaining
+ *
+ * Since: 1.30
+ */
+GstTraceField *
+gst_trace_field_set_description (GstTraceField * field,
+    const gchar * description)
+{
+  g_return_val_if_fail (field != NULL, NULL);
+
+  if (description == NULL)
+    gst_structure_remove_field (field->metadata, "description");
+  else
+    gst_structure_set (field->metadata, "description", G_TYPE_STRING,
+        description, NULL);
+
+  return field;
+}
+
+/**
+ * gst_trace_format_builder_register:
+ * @builder: (transfer full): a #GstTraceFormatBuilder
+ *
+ * Registers the format declared by @builder and consumes the builder.
+ * The returned format is valid until gst_deinit().
+ *
+ * Returns: (transfer none): the registered #GstTraceFormat
+ *
+ * Since: 1.30
+ */
+GstTraceFormat *
+gst_trace_format_builder_register (GstTraceFormatBuilder * builder)
+{
+  GstTraceFormat *format;
+
+  g_return_val_if_fail (builder != NULL, NULL);
+
+  format = g_new0 (GstTraceFormat, 1);
+  format->fields = g_steal_pointer (&builder->fields);
+  format->description = g_steal_pointer (&builder->description);
+
+  gst_trace_format_builder_free (builder);
+
+  G_LOCK (span_formats);
+  if (!_priv_span_formats)
+    _priv_span_formats = g_ptr_array_new_with_free_func ((GDestroyNotify)
+        gst_trace_format_free);
+  g_ptr_array_add (_priv_span_formats, format);
+  G_UNLOCK (span_formats);
+
+  return format;
+}
+
+/**
+ * gst_trace_format_register: (skip)
+ * @name: the span name
+ * @...: %NULL-terminated list of (field-name, #GType) pairs
+ *
+ * Convenience wrapper around #GstTraceFormatBuilder for the common case
+ * where only the field names and types are declared. Equivalent to creating
+ * a builder, calling gst_trace_format_builder_add_field() for each pair
+ * and then gst_trace_format_builder_register().
+ *
+ * Returns: (transfer none): the registered #GstTraceFormat
+ *
+ * Since: 1.30
+ */
+GstTraceFormat *
+gst_trace_format_register (const gchar * name, ...)
+{
+  GstTraceFormatBuilder *builder;
+  va_list args;
+  const gchar *field_name;
+
+  g_return_val_if_fail (name != NULL, NULL);
+
+  builder = gst_trace_format_builder_new (name);
+
+  va_start (args, name);
+  while ((field_name = va_arg (args, const gchar *)) != NULL)
+  {
+    GstTracerFieldType field_type = (GstTracerFieldType) va_arg (args, int);
+    gst_trace_format_builder_add_field (builder, field_name, field_type);
+  }
+  va_end (args);
+
+  return gst_trace_format_builder_register (builder);
+}
+
+/**
+ * gst_trace_format_get_name:
+ * @format: a #GstTraceFormat
+ *
+ * Returns: (transfer none): the registered span name
+ *
+ * Since: 1.30
+ */
+const gchar *
+gst_trace_format_get_name (GstTraceFormat * format)
+{
+  g_return_val_if_fail (format != NULL, NULL);
+
+  return gst_structure_get_name (format->fields);
+}
+
+/**
+ * gst_trace_format_get_description:
+ * @format: a #GstTraceFormat
+ *
+ * Returns: (transfer none) (nullable): the description set on the builder, or
+ *   %NULL if none was set
+ *
+ * Since: 1.30
+ */
+const gchar *
+gst_trace_format_get_description (GstTraceFormat * format)
+{
+  g_return_val_if_fail (format != NULL, NULL);
+
+  return format->description;
+}
+
+/**
+ * gst_trace_format_get_n_fields:
+ * @format: a #GstTraceFormat
+ *
+ * Returns: the number of fields declared on @format
+ *
+ * Since: 1.30
+ */
+guint
+gst_trace_format_get_n_fields (GstTraceFormat * format)
+{
+  g_return_val_if_fail (format != NULL, 0);
+
+  return gst_structure_n_fields (format->fields);
+}
+
+/**
+ * gst_trace_format_get_field_name:
+ * @format: a #GstTraceFormat
+ * @index: a field index
+ *
+ * Returns: (transfer none): the name of the field at @index, or %NULL if
+ *   @index is out of range
+ *
+ * Since: 1.30
+ */
+const gchar *
+gst_trace_format_get_field_name (GstTraceFormat * format, guint index)
+{
+  g_return_val_if_fail (format != NULL, NULL);
+
+  return gst_structure_nth_field_name (format->fields, index);
+}
+
+/**
+ * gst_trace_format_get_field_structure:
+ * @format: a #GstTraceFormat
+ * @index: a field index
+ *
+ * Returns the raw #GstStructure describing the field at @index. The structure
+ * carries the field's type (`"type"`, a #GstTracerFieldType stored as #gint)
+ * and any optional metadata declared via
+ * gst_trace_format_builder_add_field_full() (e.g. `"description"`).
+ *
+ * Returns: (transfer none) (nullable): the field structure, or %NULL if
+ *   @index is out of range
+ *
+ * Since: 1.30
+ */
+const GstStructure *
+gst_trace_format_get_field_structure (GstTraceFormat * format, guint index)
+{
+  const gchar *name;
+  const GValue *value;
+
+  g_return_val_if_fail (format != NULL, NULL);
+
+  name = gst_structure_nth_field_name (format->fields, index);
+  if (!name)
+    return NULL;
+
+  value = gst_structure_get_value (format->fields, name);
+  if (!value || !G_VALUE_HOLDS (value, GST_TYPE_STRUCTURE))
+    return NULL;
+
+  return gst_value_get_structure (value);
+}
+
+/**
+ * gst_trace_format_get_field_type:
+ * @format: a #GstTraceFormat
+ * @index: a field index
+ *
+ * Returns: the #GstTracerFieldType of the field at @index (defaults to
+ *   %GST_TRACER_FIELD_TYPE_BOOLEAN if @index is out of range)
+ *
+ * Since: 1.30
+ */
+GstTracerFieldType
+gst_trace_format_get_field_type (GstTraceFormat * format, guint index)
+{
+  const GstStructure *field;
+  gint type = GST_TRACER_FIELD_TYPE_BOOLEAN;
+
+  g_return_val_if_fail (format != NULL, GST_TRACER_FIELD_TYPE_BOOLEAN);
+
+  field = gst_trace_format_get_field_structure (format, index);
+  if (!field)
+    return GST_TRACER_FIELD_TYPE_BOOLEAN;
+
+  gst_structure_get (field, "type", G_TYPE_INT, &type, NULL);
+  return (GstTracerFieldType) type;
+}
+
+/**
+ * gst_trace_format_get_field_description:
+ * @format: a #GstTraceFormat
+ * @index: a field index
+ *
+ * Returns: (transfer none) (nullable): the description declared for the field
+ *   at @index, or %NULL if no description was set (or @index is out of range)
+ *
+ * Since: 1.30
+ */
+const gchar *
+gst_trace_format_get_field_description (GstTraceFormat * format, guint index)
+{
+  const GstStructure *field;
+
+  g_return_val_if_fail (format != NULL, NULL);
+
+  field = gst_trace_format_get_field_structure (format, index);
+  if (!field)
+    return NULL;
+
+  return gst_structure_get_string (field, "description");
+}
+
+/**
+ * gst_trace_format_is_enabled:
+ * @format: a #GstTraceFormat
+ *
+ * Cheap check that lets callers skip preparing span values when no tracer
+ * is active. Returns %TRUE whenever any tracer is registered, regardless
+ * of which hooks it listens for.
+ *
+ * Returns: %TRUE if any tracer is active
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_trace_format_is_enabled (GstTraceFormat * format)
+{
+  return format != NULL && _priv_tracer_enabled;
+}
+
+/**
+ * gst_trace_span_begin:
+ * @format: a #GstTraceFormat
+ * @values: (array) (nullable): positional values matching @format
+ *
+ * Emits a span begin hook for @format.
+ *
+ * Values are borrowed for the duration of the hook call. The number of
+ * @values must match the fields of the structure used to register @format.
+ *
+ * Returns: a span id to pass to gst_trace_span_end(), or
+ * %GST_TRACE_SPAN_ID_NONE if no tracer is listening for spans
+ *
+ * Since: 1.30
+ */
+GstTraceSpanId
+gst_trace_span_begin (GstTraceFormat * format, const GstTraceValue * values)
+{
+  GstTraceSpanId span_id;
+
+  if (G_LIKELY (!format || !_priv_tracer_enabled))
+    return GST_TRACE_SPAN_ID_NONE;
+
+  span_id = (GstTraceSpanId)
+      (g_atomic_int_add (&_priv_span_id_counter, 1) + 1);
+  GST_TRACER_DISPATCH (GST_TRACER_QUARK (HOOK_SPAN_BEGIN),
+      GstTracerHookSpanBegin, (GST_TRACER_ARGS, span_id, format, values));
+
+  return span_id;
+}
+
+/**
+ * gst_trace_span_end:
+ * @span_id: a span id returned by gst_trace_span_begin()
+ *
+ * Emits a span end hook. Passing %GST_TRACE_SPAN_ID_NONE is allowed and
+ * is a no-op.
+ *
+ * Since: 1.30
+ */
+void
+gst_trace_span_end (GstTraceSpanId span_id)
+{
+  if (G_LIKELY (span_id == GST_TRACE_SPAN_ID_NONE))
+    return;
+
+  GST_TRACER_DISPATCH (GST_TRACER_QUARK (HOOK_SPAN_END),
+      GstTracerHookSpanEnd, (GST_TRACER_ARGS, span_id));
+}
+
+/**
+ * gst_trace_span_end_and_clear:
+ * @span_id: (inout): a pointer to a #GstTraceSpanId; may not be %NULL
+ *
+ * Ends the span pointed to by @span_id and resets it to
+ * %GST_TRACE_SPAN_ID_NONE. Safe to call when @span_id already holds
+ * %GST_TRACE_SPAN_ID_NONE. Intended for spans stored on long-lived state
+ * (struct fields) where the slot must be cleared after closing the span.
+ *
+ * Since: 1.30
+ */
+void
+gst_trace_span_end_and_clear (GstTraceSpanId * span_id)
+{
+  g_return_if_fail (span_id != NULL);
+
+  gst_trace_span_end (*span_id);
+  *span_id = GST_TRACE_SPAN_ID_NONE;
+}
+
 #else /* !GST_DISABLE_GST_TRACER_HOOKS */
 
 void
@@ -472,4 +1046,134 @@ gst_tracing_get_active_tracers (void)
 {
   return NULL;
 }
+
+GstTraceFormatBuilder *
+gst_trace_format_builder_new (const gchar * name)
+{
+  return NULL;
+}
+
+void
+gst_trace_format_builder_free (GstTraceFormatBuilder * builder)
+{
+}
+
+GstTraceFormatBuilder *
+gst_trace_format_builder_set_description (GstTraceFormatBuilder *
+    builder, const gchar * description)
+{
+  return builder;
+}
+
+GstTraceFormatBuilder *
+gst_trace_format_builder_add_field (GstTraceFormatBuilder * builder,
+    const gchar * name, GstTracerFieldType type)
+{
+  return builder;
+}
+
+GstTraceFormatBuilder *
+gst_trace_format_builder_add_field_full (GstTraceFormatBuilder *
+    builder, GstTraceField * field)
+{
+  return builder;
+}
+
+GstTraceField *
+gst_trace_field_new (const gchar * name, GstTracerFieldType type)
+{
+  return NULL;
+}
+
+GstTraceField *
+gst_trace_field_set_description (GstTraceField * field,
+    const gchar * description)
+{
+  return field;
+}
+
+void
+gst_trace_field_free (GstTraceField * field)
+{
+}
+
+GstTraceFormat *
+gst_trace_format_builder_register (GstTraceFormatBuilder * builder)
+{
+  return NULL;
+}
+
+GstTraceFormat *
+gst_trace_format_register (const gchar * name, ...)
+{
+  return NULL;
+}
+
+const gchar *
+gst_trace_format_get_name (GstTraceFormat * format)
+{
+  return NULL;
+}
+
+const gchar *
+gst_trace_format_get_description (GstTraceFormat * format)
+{
+  return NULL;
+}
+
+guint
+gst_trace_format_get_n_fields (GstTraceFormat * format)
+{
+  return 0;
+}
+
+const gchar *
+gst_trace_format_get_field_name (GstTraceFormat * format, guint index)
+{
+  return NULL;
+}
+
+GstTracerFieldType
+gst_trace_format_get_field_type (GstTraceFormat * format, guint index)
+{
+  return GST_TRACER_FIELD_TYPE_BOOLEAN;
+}
+
+const gchar *
+gst_trace_format_get_field_description (GstTraceFormat * format, guint index)
+{
+  return NULL;
+}
+
+const GstStructure *
+gst_trace_format_get_field_structure (GstTraceFormat * format, guint index)
+{
+  return NULL;
+}
+
+gboolean
+gst_trace_format_is_enabled (GstTraceFormat * format)
+{
+  return FALSE;
+}
+
+GstTraceSpanId
+gst_trace_span_begin (GstTraceFormat * format, const GstTraceValue * values)
+{
+  return GST_TRACE_SPAN_ID_NONE;
+}
+
+void
+gst_trace_span_end (GstTraceSpanId span_id)
+{
+}
+
+void
+gst_trace_span_end_and_clear (GstTraceSpanId * span_id)
+{
+  g_return_if_fail (span_id != NULL);
+
+  *span_id = GST_TRACE_SPAN_ID_NONE;
+}
+
 #endif /* GST_DISABLE_GST_TRACER_HOOKS */

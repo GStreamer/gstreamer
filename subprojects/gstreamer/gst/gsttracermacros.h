@@ -1,0 +1,85 @@
+/* GStreamer
+ * Copyright (C) 2026 Thibault Saunier <tsaunier@igalia.com>
+ *
+ * gsttracermacros.h: internal short-form helpers for GstTraceFormat macros
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ */
+
+#pragma once
+
+/* Internal helpers backing GST_TRACE_VALUES() and GST_DEFINE_TRACE_FORMAT(),
+ * supporting up to 16 (field-name, type) pairs. Implementation detail of the
+ * public macros in gsttracer.h. */
+
+#define _GST_TRACE_NTH_ARG(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13,_14,_15,_16,_17,_18,_19,_20,_21,_22,_23,_24,_25,_26,_27,_28,_29,_30,_31,_32,N,...) N
+#define _GST_TRACE_N_ARGS(...) _GST_TRACE_NTH_ARG(__VA_ARGS__,32,31,30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1)
+#define _GST_TRACE_CONCAT_(a,b) a##b
+#define _GST_TRACE_CONCAT(a,b) _GST_TRACE_CONCAT_(a,b)
+
+#define _GST_TRACE_VALUE_CTOR(a) GST_TRACE_VALUE_ ## a
+#define _GST_TRACE_MAP_VALUES_1(a) _GST_TRACE_VALUE_CTOR(a)
+#define _GST_TRACE_MAP_VALUES_2(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_1(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_3(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_2(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_4(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_3(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_5(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_4(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_6(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_5(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_7(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_6(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_8(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_7(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_9(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_8(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_10(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_9(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_11(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_10(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_12(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_11(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_13(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_12(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_14(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_13(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_15(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_14(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_16(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_15(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_17(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_16(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_18(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_17(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_19(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_18(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_20(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_19(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_21(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_20(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_22(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_21(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_23(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_22(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_24(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_23(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_25(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_24(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_26(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_25(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_27(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_26(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_28(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_27(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_29(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_28(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_30(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_29(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_31(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_30(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES_32(a,...) _GST_TRACE_VALUE_CTOR(a), _GST_TRACE_MAP_VALUES_31(__VA_ARGS__)
+#define _GST_TRACE_MAP_VALUES(...) _GST_TRACE_CONCAT(_GST_TRACE_MAP_VALUES_, _GST_TRACE_N_ARGS(__VA_ARGS__))(__VA_ARGS__)
+
+#define _GST_TRACE_FIELD_TYPE_NAME(t) GST_TRACER_FIELD_TYPE_ ## t
+#define _GST_TRACE_MAP_FIELDS_2(n,t) n, _GST_TRACE_FIELD_TYPE_NAME(t)
+#define _GST_TRACE_MAP_FIELDS_4(n,t,...) n, _GST_TRACE_FIELD_TYPE_NAME(t), _GST_TRACE_MAP_FIELDS_2(__VA_ARGS__)
+#define _GST_TRACE_MAP_FIELDS_6(n,t,...) n, _GST_TRACE_FIELD_TYPE_NAME(t), _GST_TRACE_MAP_FIELDS_4(__VA_ARGS__)
+#define _GST_TRACE_MAP_FIELDS_8(n,t,...) n, _GST_TRACE_FIELD_TYPE_NAME(t), _GST_TRACE_MAP_FIELDS_6(__VA_ARGS__)
+#define _GST_TRACE_MAP_FIELDS_10(n,t,...) n, _GST_TRACE_FIELD_TYPE_NAME(t), _GST_TRACE_MAP_FIELDS_8(__VA_ARGS__)
+#define _GST_TRACE_MAP_FIELDS_12(n,t,...) n, _GST_TRACE_FIELD_TYPE_NAME(t), _GST_TRACE_MAP_FIELDS_10(__VA_ARGS__)
+#define _GST_TRACE_MAP_FIELDS_14(n,t,...) n, _GST_TRACE_FIELD_TYPE_NAME(t), _GST_TRACE_MAP_FIELDS_12(__VA_ARGS__)
+#define _GST_TRACE_MAP_FIELDS_16(n,t,...) n, _GST_TRACE_FIELD_TYPE_NAME(t), _GST_TRACE_MAP_FIELDS_14(__VA_ARGS__)
+#define _GST_TRACE_MAP_FIELDS_18(n,t,...) n, _GST_TRACE_FIELD_TYPE_NAME(t), _GST_TRACE_MAP_FIELDS_16(__VA_ARGS__)
+#define _GST_TRACE_MAP_FIELDS_20(n,t,...) n, _GST_TRACE_FIELD_TYPE_NAME(t), _GST_TRACE_MAP_FIELDS_18(__VA_ARGS__)
+#define _GST_TRACE_MAP_FIELDS_22(n,t,...) n, _GST_TRACE_FIELD_TYPE_NAME(t), _GST_TRACE_MAP_FIELDS_20(__VA_ARGS__)
+#define _GST_TRACE_MAP_FIELDS_24(n,t,...) n, _GST_TRACE_FIELD_TYPE_NAME(t), _GST_TRACE_MAP_FIELDS_22(__VA_ARGS__)
+#define _GST_TRACE_MAP_FIELDS_26(n,t,...) n, _GST_TRACE_FIELD_TYPE_NAME(t), _GST_TRACE_MAP_FIELDS_24(__VA_ARGS__)
+#define _GST_TRACE_MAP_FIELDS_28(n,t,...) n, _GST_TRACE_FIELD_TYPE_NAME(t), _GST_TRACE_MAP_FIELDS_26(__VA_ARGS__)
+#define _GST_TRACE_MAP_FIELDS_30(n,t,...) n, _GST_TRACE_FIELD_TYPE_NAME(t), _GST_TRACE_MAP_FIELDS_28(__VA_ARGS__)
+#define _GST_TRACE_MAP_FIELDS_32(n,t,...) n, _GST_TRACE_FIELD_TYPE_NAME(t), _GST_TRACE_MAP_FIELDS_30(__VA_ARGS__)
+#define _GST_TRACE_MAP_FIELDS(...) _GST_TRACE_CONCAT(_GST_TRACE_MAP_FIELDS_, _GST_TRACE_N_ARGS(__VA_ARGS__))(__VA_ARGS__)
