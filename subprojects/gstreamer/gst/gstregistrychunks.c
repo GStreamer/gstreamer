@@ -465,7 +465,8 @@ _priv_gst_registry_chunks_save_plugin (GList ** list, GstRegistry * registry,
   }
 
   /* pack plugin features */
-  plugin_features = _priv_plugin_get_features (registry, plugin);
+  plugin_features =
+      _priv_gst_registry_get_features_for_plugin (registry, plugin, FALSE);
   for (walk = plugin_features; walk; walk = g_list_next (walk), pe->nfeatures++) {
     GstPluginFeature *feature = GST_PLUGIN_FEATURE (walk->data);
 

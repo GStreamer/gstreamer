@@ -92,8 +92,10 @@ struct _GstPluginPrivate {
 };
 
 /* Private function for getting plugin features directly */
-GList *
-_priv_plugin_get_features(GstRegistry *registry, GstPlugin *plugin);
+G_GNUC_INTERNAL GList *
+_priv_gst_registry_get_features_for_plugin (GstRegistry * registry,
+                                            GstPlugin * plugin,
+                                            gboolean steal_features);
 
 /* Needed by GstMeta (to access meta seq) and GstBuffer (create/free/iterate) */
 typedef struct _GstMetaItem GstMetaItem;
