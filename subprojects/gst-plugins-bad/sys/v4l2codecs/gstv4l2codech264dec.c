@@ -286,6 +286,7 @@ gst_v4l2_codec_h264_dec_reset_allocation (GstV4l2CodecH264Dec * self)
     gst_v4l2_codec_allocator_detach (self->src_allocator);
     g_clear_object (&self->src_allocator);
     g_clear_object (&self->src_pool);
+    self->min_pool_size = 0;
   }
 }
 
@@ -518,7 +519,7 @@ gst_v4l2_codec_h264_dec_decide_allocation (GstVideoDecoder * decoder,
   }
 
   self->src_allocator = gst_v4l2_codec_allocator_new (self->decoder,
-      GST_PAD_SRC, self->min_pool_size + min + 4);
+      GST_PAD_SRC, self->min_pool_size + min);
   if (!self->src_allocator) {
     GST_ELEMENT_ERROR (self, RESOURCE, NO_SPACE_LEFT,
         ("Not enough memory to allocate source buffers."), (NULL));
