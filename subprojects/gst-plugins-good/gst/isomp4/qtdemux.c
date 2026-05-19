@@ -15717,10 +15717,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
               QT_UINT16 (mdcv_data + 8 + 3 * 2 * 2 + 2);
           CUR_STREAM (stream)->
               mastering_display_info.max_display_mastering_luminance =
-              QT_UINT16 (mdcv_data + 8 + 3 * 2 * 2 + 2 * 2);
+              QT_UINT32 (mdcv_data + 8 + 3 * 2 * 2 + 2 * 2);
           CUR_STREAM (stream)->
               mastering_display_info.min_display_mastering_luminance =
-              QT_UINT16 (mdcv_data + 8 + 3 * 2 * 2 + 2 * 2 + 4);
+              QT_UINT32 (mdcv_data + 8 + 3 * 2 * 2 + 2 * 2 + 4);
         }
       }
 
