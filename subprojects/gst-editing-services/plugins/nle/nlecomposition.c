@@ -210,9 +210,35 @@ struct _NleCompositionPrivate
   /* Both protected with object lock */
   gchar *id;
   gboolean drop_tags;
+
+  /* Span from tear-down to first buffer on the new stack. */
+  GstTraceSpanId setup_new_stack_span_id;
+  GstClockTime setup_new_stack_start_ts;
 };
 
 #define ACTION_CALLBACK(__action) (((GCClosure*) (__action))->callback)
+
+#define TRACE_FIELDS                                 \
+    "composition",  STRING,    \
+    "reason",       STRING,    \
+    "seqnum",       UINT,      \
+    "position",     UINT64
+
+#define TRACE_RELINK_FIELDS                          \
+    "composition", STRING,     \
+    "object",      STRING,     \
+    "object-type", STRING
+
+#define TRACE_VALUES(comp, reason, seqnum, position) \
+    STRING (GST_OBJECT_NAME (comp)), \
+    STRING (UPDATE_PIPELINE_REASONS[reason]), \
+    UINT (seqnum), \
+    UINT64 (position)
+
+#define TRACE_RELINK_VALUES(comp, object) \
+    STRING (GST_OBJECT_NAME (comp)), \
+    STRING (GST_ELEMENT_NAME (object)), \
+    STRING (G_OBJECT_TYPE_NAME (object))
 
 #define QUERY_NEEDS_INITIALIZATION_SEEK_MESSAGE_STRUCT_NAME "nlecomposition-query-needs-initialization-seek"
 typedef struct
@@ -592,6 +618,42 @@ _post_start_composition_update_done (NleComposition * comp,
   gst_element_post_message (GST_ELEMENT (comp), msg);
 }
 
+/* Open the bring-up span as the outermost span on the comp task thread so
+ * that Perfetto's per-thread LIFO matching keeps begin/end on the same
+ * level. update_pipeline() keeps the span open (and stamps
+ * setup_new_stack_start_ts) when it actually tears down; if it does not,
+ * _maybe_end_unused_setup_new_stack_span() closes it from the same task. */
+GST_DEFINE_TRACE_FORMAT (nlecomposition_setup_new_stack_to_first_buffer,
+    TRACE_FIELDS);
+static inline void
+_maybe_begin_setup_new_stack_span (NleComposition * comp,
+    NleUpdateStackReason reason, guint seqnum)
+{
+  GstTraceFormat *fmt = nlecomposition_setup_new_stack_to_first_buffer ();
+
+  if (comp->priv->setup_new_stack_span_id != GST_TRACE_SPAN_ID_NONE)
+    return;
+
+  if (!gst_trace_format_is_enabled (fmt))
+    return;
+
+  GST_ERROR_OBJECT (comp,
+      "Starting new stack setup span for reason %s (seqnum:%u)",
+      UPDATE_PIPELINE_REASONS[reason], seqnum);
+  comp->priv->setup_new_stack_span_id =
+      gst_trace_span_begin (fmt, GST_TRACE_VALUES (TRACE_VALUES (comp, reason,
+              seqnum, GST_CLOCK_TIME_NONE)));
+}
+
+static inline void
+_maybe_end_unused_setup_new_stack_span (NleComposition * comp)
+{
+  if (comp->priv->setup_new_stack_span_id != GST_TRACE_SPAN_ID_NONE
+      && !GST_CLOCK_TIME_IS_VALID (comp->priv->setup_new_stack_start_ts))
+    gst_trace_span_end_and_clear (&comp->priv->setup_new_stack_span_id);
+}
+
+GST_DEFINE_TRACE_FORMAT (nlecomposition_seek_pipeline_func, TRACE_FIELDS);
 static void
 _seek_pipeline_func (NleComposition * comp, SeekData * seekd)
 {
@@ -606,6 +668,14 @@ _seek_pipeline_func (NleComposition * comp, SeekData * seekd)
       initializing_stack ? COMP_UPDATE_STACK_NONE : COMP_UPDATE_STACK_ON_SEEK;
   GstClockTime segment_start, segment_stop;
   gboolean reverse;
+
+  _maybe_begin_setup_new_stack_span (comp, reason,
+      gst_event_get_seqnum (seekd->event));
+
+  GstTraceSpanId seek_span =
+      GST_TRACE_BEGIN (nlecomposition_seek_pipeline_func (),
+      TRACE_VALUES (comp, reason,
+          gst_event_get_seqnum (seekd->event), GST_CLOCK_TIME_NONE));
 
   gst_event_parse_seek (seekd->event, &rate, &format, &flags,
       &cur_type, &cur, &stop_type, &stop);
@@ -678,6 +748,10 @@ _seek_pipeline_func (NleComposition * comp, SeekData * seekd)
   if (!initializing_stack)
     _post_start_composition_update_done (seekd->comp,
         gst_event_get_seqnum (seekd->event), COMP_UPDATE_STACK_ON_SEEK);
+
+  gst_trace_span_end (seek_span);
+
+  _maybe_end_unused_setup_new_stack_span (comp);
 }
 
 /*  Must be called with OBJECTS_LOCK taken */
@@ -1455,6 +1529,8 @@ nle_composition_reset (NleComposition * comp)
   priv->flush_seqnum = 0;
 
   _empty_bin (GST_BIN_CAST (priv->current_bin));
+  priv->setup_new_stack_start_ts = GST_CLOCK_TIME_NONE;
+  gst_trace_span_end_and_clear (&priv->setup_new_stack_span_id);
 
   GST_DEBUG_OBJECT (comp, "Composition now resetted");
 }
@@ -1493,6 +1569,8 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
 
     if (priv->waiting_serialized_query_or_buffer) {
       GST_INFO_OBJECT (comp, "update_pipeline DONE");
+      gst_trace_span_end_and_clear (&priv->setup_new_stack_span_id);
+      priv->setup_new_stack_start_ts = GST_CLOCK_TIME_NONE;
       _restart_task (comp);
     }
 
@@ -1915,6 +1993,7 @@ query_ancestors_position (NleComposition * comp)
 }
 
 /* WITH OBJECTS LOCK TAKEN */
+GST_DEFINE_TRACE_FORMAT (nlecomposition_seek_current_stack, TRACE_FIELDS);
 static gboolean
 _seek_current_stack (NleComposition * comp, GstEvent * event,
     gboolean flush_downstream)
@@ -1922,6 +2001,10 @@ _seek_current_stack (NleComposition * comp, GstEvent * event,
   gboolean res;
   NleCompositionPrivate *priv = comp->priv;
   GstPad *peer = gst_pad_get_peer (NLE_OBJECT_SRC (comp));
+
+  GST_TRACE_FUNC (nlecomposition_seek_current_stack,
+      TRACE_VALUES (comp, COMP_UPDATE_STACK_NONE,
+          event ? gst_event_get_seqnum (event) : 0, GST_CLOCK_TIME_NONE));
 
   GST_INFO_OBJECT (comp, "Seeking itself %" GST_PTR_FORMAT, event);
 
@@ -1958,10 +2041,14 @@ _seek_current_stack (NleComposition * comp, GstEvent * event,
   update_stack_reason: The reason for which we need to handle 'seek'
 */
 
+GST_DEFINE_TRACE_FORMAT (nlecomposition_seek_handling, TRACE_FIELDS);
 static gboolean
 seek_handling (NleComposition * comp, gint32 seqnum,
     NleUpdateStackReason update_stack_reason)
 {
+  GST_TRACE_FUNC (nlecomposition_seek_handling,
+      TRACE_VALUES (comp, update_stack_reason, seqnum, GST_CLOCK_TIME_NONE));
+
   GST_DEBUG_OBJECT (comp, "Seek handling update pipeline reason: %s",
       UPDATE_PIPELINE_REASONS[update_stack_reason]);
 
@@ -2471,6 +2558,7 @@ get_stack_list (NleComposition * comp, GstClockTime timestamp,
  *
  * WITH OBJECTS LOCK TAKEN
  */
+GST_DEFINE_TRACE_FORMAT (nlecomposition_compute_toplevel_stack, TRACE_FIELDS);
 static GNode *
 get_clean_toplevel_stack (NleComposition * comp, GstClockTime * timestamp,
     GstClockTime * start_time, GstClockTime * stop_time)
@@ -2480,6 +2568,9 @@ get_clean_toplevel_stack (NleComposition * comp, GstClockTime * timestamp,
   GstClockTime stop = G_MAXUINT64;
   guint highprio;
   gboolean reverse = (comp->priv->segment->rate < 0.0);
+
+  GST_TRACE_FUNC (nlecomposition_compute_toplevel_stack,
+      TRACE_VALUES (comp, COMP_UPDATE_STACK_NONE, 0, *timestamp));
 
   GST_DEBUG_OBJECT (comp, "timestamp:%" GST_TIME_FORMAT,
       GST_TIME_ARGS (*timestamp));
@@ -2543,6 +2634,7 @@ _drop_all_cb (GstPad * pad G_GNUC_UNUSED,
 }
 
 /*  Must be called with OBJECTS_LOCK taken */
+GST_DEFINE_TRACE_FORMAT (nlecomposition_set_current_bin_to_ready, TRACE_FIELDS);
 static void
 _set_current_bin_to_ready (NleComposition * comp, NleUpdateStackReason reason)
 {
@@ -2550,6 +2642,9 @@ _set_current_bin_to_ready (NleComposition * comp, NleUpdateStackReason reason)
   GstPad *ptarget = NULL;
   NleCompositionPrivate *priv = comp->priv;
   GstEvent *flush_event;
+
+  GST_TRACE_FUNC (nlecomposition_set_current_bin_to_ready,
+      TRACE_VALUES (comp, reason, 0, GST_CLOCK_TIME_NONE));
 
   comp->priv->tearing_down_stack = TRUE;
   if (_have_to_flush_downstream (reason)) {
@@ -2618,6 +2713,8 @@ _restart_task (NleComposition * comp)
   GST_INFO_OBJECT (comp, "Restarting task! after %s DONE",
       UPDATE_PIPELINE_REASONS[comp->priv->updating_reason]);
 
+  gst_trace_span_end_and_clear (&comp->priv->setup_new_stack_span_id);
+
   if (comp->priv->updating_reason == COMP_UPDATE_STACK_ON_COMMIT)
     _add_action (comp, G_CALLBACK (_emit_commited_signal_func), comp,
         G_PRIORITY_HIGH);
@@ -2677,6 +2774,8 @@ _commit_func (NleComposition * comp, UpdateCompositionData * ucompo)
   GstClockTime curpos;
   NleCompositionPrivate *priv = comp->priv;
 
+  _maybe_begin_setup_new_stack_span (comp, ucompo->reason, ucompo->seqnum);
+
   _post_start_composition_update (comp, ucompo->seqnum, ucompo->reason);
 
   /* Get current so that it represent the duration it was
@@ -2688,6 +2787,7 @@ _commit_func (NleComposition * comp, UpdateCompositionData * ucompo)
 
     g_signal_emit (comp, _signals[COMMITED_SIGNAL], 0, FALSE);
     _post_start_composition_update_done (comp, ucompo->seqnum, ucompo->reason);
+    _maybe_end_unused_setup_new_stack_span (comp);
 
     return;
   }
@@ -2728,6 +2828,7 @@ _commit_func (NleComposition * comp, UpdateCompositionData * ucompo)
   }
 
   _post_start_composition_update_done (comp, ucompo->seqnum, ucompo->reason);
+  _maybe_end_unused_setup_new_stack_span (comp);
 }
 
 static void
@@ -2735,6 +2836,8 @@ _update_pipeline_func (NleComposition * comp, UpdateCompositionData * ucompo)
 {
   gboolean reverse;
   NleCompositionPrivate *priv = comp->priv;
+
+  _maybe_begin_setup_new_stack_span (comp, ucompo->reason, ucompo->seqnum);
 
   _post_start_composition_update (comp, ucompo->seqnum, ucompo->reason);
 
@@ -2773,6 +2876,7 @@ _update_pipeline_func (NleComposition * comp, UpdateCompositionData * ucompo)
   }
 
   _post_start_composition_update_done (comp, ucompo->seqnum, ucompo->reason);
+  _maybe_end_unused_setup_new_stack_span (comp);
 }
 
 /* Never call when ->task runs! */
@@ -2999,11 +3103,16 @@ update_start_stop_duration (NleComposition * comp)
       GST_TIME_ARGS (cobj->stop), GST_TIME_ARGS (cobj->duration));
 }
 
+GST_DEFINE_TRACE_FORMAT (nlecomposition_relink_link_to_parent,
+    TRACE_RELINK_FIELDS);
 static void
 _link_to_parent (NleComposition * comp, NleObject * newobj,
     NleObject * newparent)
 {
   GstPad *sinkpad;
+
+  GST_TRACE_FUNC (nlecomposition_relink_link_to_parent,
+      TRACE_RELINK_VALUES (comp, newobj));
 
   /* relink to new parent in required order */
   GST_LOG_OBJECT (comp, "Linking %s and %s",
@@ -3027,6 +3136,8 @@ _link_to_parent (NleComposition * comp, NleObject * newobj,
   }
 }
 
+GST_DEFINE_TRACE_FORMAT (nlecomposition_relink_relink_children,
+    TRACE_RELINK_FIELDS);
 static void
 _relink_children_recursively (NleComposition * comp,
     NleObject * newobj, GNode * node, GstEvent * toplevel_seek)
@@ -3034,6 +3145,9 @@ _relink_children_recursively (NleComposition * comp,
   GNode *child;
   guint nbchildren = g_node_n_children (node);
   NleOperation *oper = (NleOperation *) newobj;
+
+  GST_TRACE_FUNC (nlecomposition_relink_relink_children,
+      TRACE_RELINK_VALUES (comp, newobj));
 
   GST_INFO_OBJECT (newobj, "is a %s operation, analyzing the %d children",
       oper->dynamicsinks ? "dynamic" : "regular", nbchildren);
@@ -3072,6 +3186,7 @@ _relink_children_recursively (NleComposition * comp,
  *
  * WITH OBJECTS LOCK TAKEN
  */
+GST_DEFINE_TRACE_FORMAT (nlecomposition_relink_total, TRACE_RELINK_FIELDS);
 static void
 _relink_single_node (NleComposition * comp, GNode * node,
     GstEvent * toplevel_seek)
@@ -3085,6 +3200,9 @@ _relink_single_node (NleComposition * comp, GNode * node,
 
   newparent = G_NODE_IS_ROOT (node) ? NULL : (NleObject *) node->parent->data;
   newobj = (NleObject *) node->data;
+
+  GST_TRACE_FUNC (nlecomposition_relink_total,
+      TRACE_RELINK_VALUES (comp, newobj));
 
   GST_DEBUG_OBJECT (comp, "newobj:%s",
       GST_ELEMENT_NAME ((GstElement *) newobj));
@@ -3225,6 +3343,7 @@ beach:
   return res;
 }
 
+GST_DEFINE_TRACE_FORMAT (nlecomposition_activate_new_stack, TRACE_FIELDS);
 static inline gboolean
 _activate_new_stack (NleComposition * comp, GstEvent * toplevel_seek)
 {
@@ -3232,6 +3351,11 @@ _activate_new_stack (NleComposition * comp, GstEvent * toplevel_seek)
   GstElement *topelement;
 
   NleCompositionPrivate *priv = comp->priv;
+
+  GST_TRACE_FUNC (nlecomposition_activate_new_stack,
+      TRACE_VALUES (comp, COMP_UPDATE_STACK_NONE,
+          toplevel_seek ? gst_event_get_seqnum (toplevel_seek) : 0,
+          GST_CLOCK_TIME_NONE));
 
   if (!priv->current) {
     if ((!priv->objects_start)) {
@@ -3417,12 +3541,13 @@ nle_composition_query_needs_teardown (NleComposition * comp,
  *
  * WITH OBJECTS LOCK TAKEN
  */
+GST_DEFINE_TRACE_FORMAT (nlecomposition_update_pipeline, TRACE_FIELDS);
 static gboolean
 update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
     NleUpdateStackReason update_reason)
 {
-
   GstEvent *toplevel_seek;
+  gboolean res;
 
   GNode *stack = NULL;
   gboolean tear_down = FALSE;
@@ -3437,6 +3562,8 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
       GST_STATE (comp) : GST_STATE_NEXT (comp);
 
   _assert_proper_thread (comp);
+  GST_TRACE_FUNC (nlecomposition_update_pipeline,
+      TRACE_VALUES (comp, update_reason, seqnum, currenttime));
 
   if (currenttime >= duration) {
     currenttime = duration;
@@ -3509,6 +3636,13 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
 
   /* If stacks are different, unlink/relink objects */
   if (tear_down) {
+    /* The action handler running on the comp task already opened this span
+     * via _maybe_begin_setup_new_stack_span() so that begin/end stay at the
+     * same per-thread LIFO level. Open here as a fallback for paths that
+     * may bypass the speculative open (LIFO order is then misnested but the
+     * timing metric is still correct). */
+    priv->setup_new_stack_start_ts = gst_util_get_timestamp ();
+    _maybe_begin_setup_new_stack_span (comp, update_reason, seqnum);
     _dump_stack (comp, update_reason, stack);
     _deactivate_stack (comp, update_reason);
     _relink_new_stack (comp, stack, gst_event_ref (toplevel_seek));
@@ -3547,6 +3681,8 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
     if (toplevel_seek) {
       if (!_pause_task (comp)) {
         gst_event_unref (toplevel_seek);
+        gst_trace_span_end_and_clear (&priv->setup_new_stack_span_id);
+        priv->setup_new_stack_start_ts = GST_CLOCK_TIME_NONE;
         return FALSE;
       }
     } else {
@@ -3556,9 +3692,16 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
 
   /* Activate stack */
   if (tear_down)
-    return _activate_new_stack (comp, toplevel_seek);
-  return _seek_current_stack (comp, toplevel_seek,
-      _have_to_flush_downstream (update_reason));
+    res = _activate_new_stack (comp, toplevel_seek);
+  else
+    res = _seek_current_stack (comp, toplevel_seek,
+        _have_to_flush_downstream (update_reason));
+
+  if (!res) {
+    gst_trace_span_end_and_clear (&priv->setup_new_stack_span_id);
+    priv->setup_new_stack_start_ts = GST_CLOCK_TIME_NONE;
+  }
+  return res;
 }
 
 static gboolean
