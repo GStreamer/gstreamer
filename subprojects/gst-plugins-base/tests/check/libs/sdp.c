@@ -779,7 +779,9 @@ GST_START_TEST (media_from_caps_h264_with_profile_asymmetry_allowed)
   GstSDPResult ret = GST_SDP_OK;
   const gchar *fmtp;
   gboolean profile_level_id_found = FALSE;
+  gboolean level_asymmetry_allowed = FALSE;
   gchar **pairs;
+  const gchar *params;
 
   gst_sdp_message_new (&message);
   gst_sdp_message_parse_buffer ((guint8 *) h264_sdp, length, message);
@@ -789,7 +791,7 @@ GST_START_TEST (media_from_caps_h264_with_profile_asymmetry_allowed)
   caps_video = gst_sdp_media_get_caps_from_media (result_video, 96);
 
   s_video = gst_caps_get_structure (caps_video, 0);
-  fail_if (gst_structure_has_field (s_video, "level-asymmetry-allowed"));
+  fail_if (!gst_structure_has_field (s_video, "level-asymmetry-allowed"));
   fail_unless_equals_string (gst_structure_get_string (s_video, "profile"),
       "constrained-baseline");
 
@@ -804,7 +806,12 @@ GST_START_TEST (media_from_caps_h264_with_profile_asymmetry_allowed)
 
   fmtp = gst_sdp_media_get_attribute_val (&media, "fmtp");
   fail_unless (fmtp != NULL);
-  pairs = g_strsplit (fmtp, ";", 0);
+
+  /* Move to start of params skipping the pt followed by space */
+  params = strchr (fmtp, ' ');
+
+  fail_unless (params);
+  pairs = g_strsplit (params + 1, ";", 0);
   for (int i = 0; pairs[i]; i++) {
     gchar *valpos;
     const gchar *val, *key;
@@ -841,9 +848,15 @@ GST_START_TEST (media_from_caps_h264_with_profile_asymmetry_allowed)
       profile_level_id_found = TRUE;
       break;
     }
+
+    if (!strcmp (key, "level-asymmetry-allowed")) {
+      if (!strcmp (val, "1"))
+        level_asymmetry_allowed = TRUE;
+    }
   }
   g_strfreev (pairs);
   fail_unless (profile_level_id_found);
+  fail_unless (level_asymmetry_allowed);
 
   gst_sdp_media_uninit (&media);
   gst_caps_unref (caps_video);

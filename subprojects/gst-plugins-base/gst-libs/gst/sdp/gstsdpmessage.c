@@ -3605,8 +3605,6 @@ gst_sdp_media_caps_adjust_h264 (GstCaps * caps)
       "'profile-level-id' and only set a 'profile' instead");
   gst_structure_set (s, "profile", G_TYPE_STRING,
       gst_codec_utils_h264_get_profile (sps, 2), NULL);
-
-  gst_structure_remove_fields (s, "level-asymmetry-allowed", NULL);
 }
 
 /**
@@ -4168,13 +4166,16 @@ _add_media_format_from_structure (const GstStructure * s, GstSDPMedia * media)
 
       /* "profile" is our internal representation of the notion of
        * "level-asymmetry-allowed" with caps, convert it back to the SDP
-       * representation */
+       * representation if the field does not exist already in the caps. */
       if (!g_strcmp0 (gst_structure_get_string (s, "encoding-name"), "H264")
           && !g_strcmp0 (fname, "profile")) {
         guint8 profile_idc, constraint_flags;
 
-        g_string_append_printf (fmtp, "%slevel-asymmetry-allowed=1",
-            first ? "" : ";");
+        /* append the level-asymmetry-allowed=1 only if it is not already present
+         * in the caps */
+        if (!gst_structure_has_field (s, "level-asymmetry-allowed"))
+          g_string_append_printf (fmtp, "%slevel-asymmetry-allowed=1",
+              first ? "" : ";");
         if (!gst_structure_has_field (s, "profile-level-id")) {
           if (h264_get_profile_idc (fval, &profile_idc, &constraint_flags))
             g_string_append_printf (fmtp, ";profile-level-id=%02x%02x1f",
