@@ -45,6 +45,7 @@ static struct _elements_entry _elements[] = {
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   gint i = 0;
 
   for (; _elements[i].name; i++)

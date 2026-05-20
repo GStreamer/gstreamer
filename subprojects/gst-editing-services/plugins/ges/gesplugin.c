@@ -33,6 +33,7 @@ extern GType ges_src_get_type ();
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   gboolean res = 1;
 
   res |=
