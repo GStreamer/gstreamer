@@ -191,7 +191,8 @@ GstVideoDSCSelectionMeta * gst_buffer_add_video_dsc_selection_meta (GstBuffer * 
 #define GST_VIDEO_DSC_VERIFICATION_META_API_TYPE \
     (gst_video_dsc_verification_meta_api_get_type())
 
-/** GST_VIDEO_DSC_VERIFICATION_META_INFO:
+/**
+ * GST_VIDEO_DSC_VERIFICATION_META_INFO:
  * 
  * Since: 1.30
  */
