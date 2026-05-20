@@ -41,6 +41,7 @@
 static gboolean
 closedcaption_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   gboolean ret = FALSE;
 
   GST_DEBUG_CATEGORY_INIT (ccutils_debug_cat, "ccutils", 0,

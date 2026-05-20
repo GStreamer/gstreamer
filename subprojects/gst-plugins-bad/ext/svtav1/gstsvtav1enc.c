@@ -1216,6 +1216,7 @@ gst_svtav1enc_parse_parameters_string (GstSvtAv1Enc * svtav1enc)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   return GST_ELEMENT_REGISTER (svtav1enc, plugin);
 }
 

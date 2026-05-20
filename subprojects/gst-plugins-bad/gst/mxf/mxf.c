@@ -27,6 +27,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   gboolean ret = FALSE;
 
   /* mxfmux is disabled for now - it compiles but is completely untested */

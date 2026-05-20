@@ -1310,6 +1310,7 @@ gst_dvbsub_overlay_event_text (GstPad * pad, GstObject * parent,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   return GST_ELEMENT_REGISTER (dvbsuboverlay, plugin);
 }
 

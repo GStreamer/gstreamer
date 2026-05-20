@@ -234,6 +234,7 @@ gst_unix_fd_socket_new (const gchar * socket_path,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   gboolean ret = FALSE;
 
   ret |= GST_ELEMENT_REGISTER (unixfdsrc, plugin);

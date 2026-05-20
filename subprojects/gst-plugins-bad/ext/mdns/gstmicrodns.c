@@ -30,6 +30,7 @@ GST_DEVICE_PROVIDER_REGISTER_DEFINE (microdnsdeviceprovider,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   return GST_DEVICE_PROVIDER_REGISTER (microdnsdeviceprovider, plugin);;
 }
 

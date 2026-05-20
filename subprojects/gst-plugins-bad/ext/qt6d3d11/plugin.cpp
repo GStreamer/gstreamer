@@ -35,6 +35,7 @@ GST_DEBUG_CATEGORY (gst_qt6_d3d11_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   GST_DEBUG_CATEGORY_INIT (gst_qt6_d3d11_debug, "qt6d3d11", 0, "qt6d3d11");
 
   gst_element_register (plugin, "qml6d3d11sink", GST_RANK_NONE,

@@ -28,6 +28,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   gboolean res = FALSE;
 
   res |= GST_ELEMENT_REGISTER (transcodebin, plugin);

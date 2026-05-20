@@ -1138,6 +1138,7 @@ gst_teletextdec_extract_data_units (GstTeletextDec * teletext,
 static gboolean
 teletext_init (GstPlugin * teletext)
 {
+  gst_plugin_set_static_features_flag (teletext);
   GST_DEBUG_CATEGORY_INIT (gst_teletextdec_debug, "teletext", 0,
       "Teletext decoder");
   return gst_element_register (teletext, "teletextdec", GST_RANK_NONE,

@@ -53,6 +53,7 @@ gst_win32_get_monitor_rect (UINT index, RECT * rect)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   if (!gst_element_register (plugin, "gdiscreencapsrc",
           GST_RANK_NONE, GST_TYPE_GDISCREENCAPSRC)) {
     return FALSE;

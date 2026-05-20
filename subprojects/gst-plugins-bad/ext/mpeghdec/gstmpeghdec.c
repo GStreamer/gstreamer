@@ -900,6 +900,7 @@ gst_mpeghdec_class_init (GstMpeghDecClass * klass)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   GST_DEBUG_CATEGORY_INIT (gst_mpeghdec_debug, "mpeghdec", 0, "MPEG-H Decoder");
   return gst_element_register (plugin, "mpeghdec", GST_RANK_PRIMARY,
       GST_TYPE_MPEGHDEC);

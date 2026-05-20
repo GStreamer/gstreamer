@@ -36,6 +36,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   GstRank rank = GST_RANK_SECONDARY;
 
   if (!gst_element_register (plugin, "asiosrc", rank, GST_TYPE_ASIO_SRC))

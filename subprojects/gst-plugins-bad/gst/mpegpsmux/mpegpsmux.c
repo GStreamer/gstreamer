@@ -776,6 +776,7 @@ mpegpsmux_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   return GST_ELEMENT_REGISTER (mpegpsmux, plugin);
 }
 

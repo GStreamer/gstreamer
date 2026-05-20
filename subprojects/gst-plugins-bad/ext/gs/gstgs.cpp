@@ -35,6 +35,7 @@
 #include "gstgssrc.h"
 
 static gboolean plugin_init(GstPlugin* plugin) {
+  gst_plugin_set_static_features_flag(plugin);
   gboolean ret = FALSE;
 
   ret |= GST_ELEMENT_REGISTER(gssrc, plugin);

@@ -41,6 +41,7 @@ const gchar *gst_wpe_get_devenv_extension_path (void)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag(plugin);
   gboolean result;
   gchar *dirname;
   const gchar *filename = gst_plugin_get_filename (plugin);

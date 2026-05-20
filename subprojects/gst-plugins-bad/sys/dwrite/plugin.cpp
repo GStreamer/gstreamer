@@ -38,6 +38,7 @@ GST_DEBUG_CATEGORY (gst_dwrite_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   GST_DEBUG_CATEGORY_INIT (gst_dwrite_debug, "dwrite", 0, "dwrite");
 
   gst_element_register (plugin, "dwritesubtitlemux", GST_RANK_NONE,

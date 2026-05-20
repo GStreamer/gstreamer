@@ -26,6 +26,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   if (!gst_element_register (plugin, "webrtcbin", GST_RANK_PRIMARY,
           GST_TYPE_WEBRTC_BIN))
     return FALSE;

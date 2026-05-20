@@ -645,6 +645,7 @@ gst_d3dvideosink_navigation_send_event (GstNavigation * navigation,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   if (!gst_element_register (plugin, ELEMENT_NAME,
           GST_RANK_SECONDARY, GST_TYPE_D3DVIDEOSINK))
     return FALSE;

@@ -41,6 +41,7 @@ GST_DEBUG_CATEGORY (gst_win32_ipc_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   GST_DEBUG_CATEGORY_INIT (gst_win32_ipc_debug, "win32ipc", 0, "win32ipc");
 
   gst_element_register (plugin,

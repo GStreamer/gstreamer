@@ -32,6 +32,7 @@ GST_DEBUG_CATEGORY (gst_wasapi_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   if (!gst_element_register (plugin, "wasapisink", GST_RANK_PRIMARY,
           GST_TYPE_WASAPI_SINK))
     return FALSE;

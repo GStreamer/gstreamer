@@ -408,6 +408,7 @@ gst_ivf_parse_handle_frame (GstBaseParse * parse,
 static gboolean
 ivfparse_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   return GST_ELEMENT_REGISTER (ivfparse, plugin);
 }
 

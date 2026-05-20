@@ -1848,6 +1848,7 @@ gst_field_analysis_finalize (GObject * object)
 static gboolean
 fieldanalysis_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   return GST_ELEMENT_REGISTER (fieldanalysis, plugin);
 }
 

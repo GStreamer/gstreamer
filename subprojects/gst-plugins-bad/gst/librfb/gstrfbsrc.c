@@ -806,6 +806,7 @@ gst_rfb_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   return GST_ELEMENT_REGISTER (rfbsrc, plugin);
 }
 

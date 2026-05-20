@@ -682,6 +682,7 @@ get_comb_score (GstVideoFrame * top, GstVideoFrame * bottom)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   GST_ELEMENT_REGISTER (ivtc, plugin);
   GST_ELEMENT_REGISTER (combdetect, plugin);
 

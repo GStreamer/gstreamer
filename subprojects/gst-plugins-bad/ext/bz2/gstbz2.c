@@ -30,6 +30,7 @@
 static gboolean
 plugin_init (GstPlugin * p)
 {
+  gst_plugin_set_static_features_flag (p);
   gboolean ret = FALSE;
 
   ret |= GST_ELEMENT_REGISTER (bz2enc, p);

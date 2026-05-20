@@ -37,6 +37,7 @@ plugin_deinit (gpointer data)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   guint rank = GST_RANK_PRIMARY + 1;
 
   /**

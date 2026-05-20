@@ -678,6 +678,7 @@ gst_wildmidi_dec_update_options (GstWildmidiDec * wildmidi_dec)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   return GST_ELEMENT_REGISTER (wildmididec, plugin);
 }
 

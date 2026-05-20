@@ -37,6 +37,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   gboolean result =
       gst_element_register (plugin, "vmaf", GST_RANK_NONE, GST_TYPE_VMAF);
   return result;

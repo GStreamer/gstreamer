@@ -31,6 +31,7 @@ GST_DEBUG_CATEGORY (wpe_src_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   gboolean result;
 
   GST_DEBUG_CATEGORY_INIT (wpe_video_src_debug, "wpevideosrc2", 0,

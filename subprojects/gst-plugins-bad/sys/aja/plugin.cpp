@@ -44,6 +44,7 @@
 #include "gstajasrcdemux.h"
 
 static gboolean plugin_init(GstPlugin* plugin) {
+  gst_plugin_set_static_features_flag(plugin);
   AJADebug::Open();
 
   gst_aja_common_init();
