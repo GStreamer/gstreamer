@@ -287,6 +287,8 @@ gst_v4l2_codec_av1_dec_stop (GstVideoDecoder * decoder)
 
   gst_v4l2_codec_av1_dec_reset_allocation (self);
 
+  self->min_pool_size = 0;
+
   if (self->output_state)
     gst_video_codec_state_unref (self->output_state);
   self->output_state = NULL;
