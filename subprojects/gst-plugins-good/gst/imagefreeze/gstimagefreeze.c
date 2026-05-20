@@ -1365,6 +1365,8 @@ gst_image_freeze_provide_clock (GstElement * element)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
+
   return GST_ELEMENT_REGISTER (imagefreeze, plugin);
 }
 

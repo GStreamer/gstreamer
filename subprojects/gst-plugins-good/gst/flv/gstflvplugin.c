@@ -28,6 +28,8 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
 
+  gst_plugin_set_static_features_flag (plugin);
+
   ret |= GST_ELEMENT_REGISTER (flvdemux, plugin);
   ret |= GST_ELEMENT_REGISTER (flvmux, plugin);
   ret |= GST_ELEMENT_REGISTER (eflvmux, plugin);

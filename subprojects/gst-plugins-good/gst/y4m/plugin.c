@@ -39,6 +39,8 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret;
 
+  gst_plugin_set_static_features_flag (plugin);
+
   ret = GST_ELEMENT_REGISTER (y4mdec, plugin);
   ret |= GST_ELEMENT_REGISTER (y4menc, plugin);
 

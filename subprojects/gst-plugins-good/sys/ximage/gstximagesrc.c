@@ -1439,6 +1439,8 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret;
 
+  gst_plugin_set_static_features_flag (plugin);
+
   if (g_getenv ("GST_XINITTHREADS"))
     XInitThreads ();
 

@@ -28,6 +28,8 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret = TRUE;
 
+  gst_plugin_set_static_features_flag (plugin);
+
   ret |= GST_ELEMENT_REGISTER (hlsdemux2, plugin);
   ret |= GST_ELEMENT_REGISTER (dashdemux2, plugin);
   ret |= GST_ELEMENT_REGISTER (mssdemux2, plugin);

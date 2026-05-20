@@ -28,6 +28,8 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
 
+  gst_plugin_set_static_features_flag (plugin);
+
   ret |= GST_ELEMENT_REGISTER (aacparse, plugin);
   ret |= GST_ELEMENT_REGISTER (amrparse, plugin);
   ret |= GST_ELEMENT_REGISTER (ac3parse, plugin);

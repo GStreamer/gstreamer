@@ -32,6 +32,8 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
 
+  gst_plugin_set_static_features_flag (plugin);
+
   ret |= GST_ELEMENT_REGISTER (qtdemux, plugin);
   ret |= GST_ELEMENT_REGISTER (rtpxqtdepay, plugin);
   ret |= GST_ELEMENT_REGISTER (qtmux, plugin);

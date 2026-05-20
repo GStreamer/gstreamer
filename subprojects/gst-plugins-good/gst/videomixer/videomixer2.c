@@ -2294,6 +2294,8 @@ gst_videomixer2_init (GstVideoMixer2 * mix)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
+
   GST_DEBUG_CATEGORY_INIT (gst_videomixer2_debug, "videomixer", 0,
       "video mixer");
 

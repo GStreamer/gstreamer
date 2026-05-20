@@ -1533,6 +1533,8 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret;
 
+  gst_plugin_set_static_features_flag (plugin);
+
   GST_DEBUG_CATEGORY_INIT (gst_rpi_cam_src_debug, "rpicamsrc",
       0, "rpicamsrc debug");
 

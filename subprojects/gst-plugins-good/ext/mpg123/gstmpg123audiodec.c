@@ -857,6 +857,8 @@ gst_mpg123_audio_dec_get_info_queue_size (GstMpg123AudioDec * mpg123_decoder)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
+
   return GST_ELEMENT_REGISTER (mpg123audiodec, plugin);
 }
 

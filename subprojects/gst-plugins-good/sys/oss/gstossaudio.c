@@ -33,6 +33,8 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
+
   GST_DEVICE_PROVIDER_REGISTER (ossdeviceprovider, plugin);
 
   GST_ELEMENT_REGISTER (osssrc, plugin);

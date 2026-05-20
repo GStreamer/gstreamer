@@ -31,6 +31,8 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
 
+  gst_plugin_set_static_features_flag (plugin);
+
   ret |= GST_ELEMENT_REGISTER (equalizer_nbands, plugin);
   ret |= GST_ELEMENT_REGISTER (equalizer_3bands, plugin);
   ret |= GST_ELEMENT_REGISTER (equalizer_10bands, plugin);

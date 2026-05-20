@@ -31,6 +31,8 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
 
+  gst_plugin_set_static_features_flag (plugin);
+
   ret |= GST_ELEMENT_REGISTER (qmlglsink, plugin);
 
   ret |= GST_ELEMENT_REGISTER (qmlglsrc, plugin);

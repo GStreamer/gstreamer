@@ -59,6 +59,8 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
+
   return gst_element_register (plugin, "scaletempo", GST_RANK_NONE,
       GST_TYPE_SCALETEMPO);
 }

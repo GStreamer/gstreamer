@@ -282,6 +282,8 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean res = GST_ELEMENT_REGISTER (id3metaparse, plugin);
 
+  gst_plugin_set_static_features_flag (plugin);
+
   res |= GST_ELEMENT_REGISTER (id3demux, plugin);
 
   return res;

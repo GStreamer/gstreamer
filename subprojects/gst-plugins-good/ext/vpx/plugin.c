@@ -32,6 +32,8 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
 
+  gst_plugin_set_static_features_flag (plugin);
+
 #ifdef HAVE_VP8_DECODER
   ret |= GST_ELEMENT_REGISTER (vp8dec, plugin);
 #endif

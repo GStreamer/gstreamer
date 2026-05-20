@@ -39,6 +39,8 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
 
+  gst_plugin_set_static_features_flag (plugin);
+
   ret |= GST_ELEMENT_REGISTER (multifilesrc, plugin);
   ret |= GST_ELEMENT_REGISTER (multifilesink, plugin);
   ret |= GST_ELEMENT_REGISTER (splitfilesrc, plugin);
