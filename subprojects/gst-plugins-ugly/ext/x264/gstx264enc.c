@@ -3200,6 +3200,7 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
 static gboolean
 x264_element_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   GST_DEBUG_CATEGORY_INIT (x264_enc_debug, "x264enc", 0,
       "h264 encoding element");
 

@@ -1793,6 +1793,7 @@ gst_dvd_read_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 static gboolean
 dvdread_element_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   GST_DEBUG_CATEGORY_INIT (gstgst_dvd_read_src_debug, "dvdreadsrc", 0,
       "DVD reader element based on dvdreadsrc");
 

@@ -828,6 +828,7 @@ gst_a52dec_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 a52_element_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   return gst_element_register (plugin, "a52dec", GST_RANK_SECONDARY,
       GST_TYPE_A52DEC);
 }

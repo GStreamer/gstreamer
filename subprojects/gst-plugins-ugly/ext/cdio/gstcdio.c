@@ -146,5 +146,6 @@ gst_cdio_log_handler (cdio_log_level_t level, const char *msg)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
   return GST_ELEMENT_REGISTER (cdiocddasrc, plugin);
 }
