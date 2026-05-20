@@ -1317,6 +1317,8 @@ gst_wl_window_flush (GstWlWindow * self)
 {
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
 
+  gst_wl_display_callback_destroy (priv->display, &priv->frame_callback);
+
   g_mutex_lock (&priv->window_lock);
   if (priv->staged_buffer) {
     GST_LOG_OBJECT (self, "drop buffer %p", priv->staged_buffer);
