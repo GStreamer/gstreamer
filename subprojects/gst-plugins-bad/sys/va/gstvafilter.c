@@ -1883,9 +1883,9 @@ gst_va_filter_compose (GstVaFilter * self, GstVaComposeTransaction * tx)
         && sample->premultiplied_alpha) {
       blend.flags |= VA_BLEND_PREMULTIPLIED_ALPHA;
     }
-    if (blend.flags != 0) {
-      params.blend_state = &blend;
-    }
+
+    /* Ensure we do a blend operation and not a copy blit */
+    params.blend_state = &blend;
 
     status = vaCreateBuffer (dpy, self->context,
         VAProcPipelineParameterBufferType, sizeof (params), 1, &params,
