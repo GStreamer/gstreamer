@@ -1134,6 +1134,8 @@ gst_audio_resample_get_property (GObject * object, guint prop_id,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
+
   return GST_ELEMENT_REGISTER (audioresample, plugin);
 }
 

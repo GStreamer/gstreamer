@@ -35,6 +35,8 @@ GST_DEBUG_CATEGORY (type_find_functions_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
+
   /* can't initialize this via a struct as caps can't be statically initialized */
   GST_DEBUG_CATEGORY_INIT (type_find_functions_debug, "typefindfunctions",
       GST_DEBUG_FG_GREEN | GST_DEBUG_BG_RED, "generic type find functions");

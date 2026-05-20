@@ -33,6 +33,8 @@ GST_DYNAMIC_TYPE_REGISTER_DEFINE (video_multiview_flagset,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
+
   return GST_DYNAMIC_TYPE_REGISTER (video_multiview_flagset, plugin) &&
       gst_meta_factory_register (plugin, gst_video_meta_get_info ()) &&
       gst_meta_factory_register (plugin, gst_audio_meta_get_info ());

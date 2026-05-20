@@ -32,6 +32,8 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
 
+  gst_plugin_set_static_features_flag (plugin);
+
   ret |= GST_ELEMENT_REGISTER (oggdemux, plugin);
   ret |= GST_ELEMENT_REGISTER (oggmux, plugin);
   ret |= GST_ELEMENT_REGISTER (ogmaudioparse, plugin);

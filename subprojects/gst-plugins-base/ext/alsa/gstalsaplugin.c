@@ -33,6 +33,8 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
 
+  gst_plugin_set_static_features_flag (plugin);
+
   ret |= GST_DEVICE_PROVIDER_REGISTER (alsadeviceprovider, plugin);
 
   ret |= GST_ELEMENT_REGISTER (alsasrc, plugin);

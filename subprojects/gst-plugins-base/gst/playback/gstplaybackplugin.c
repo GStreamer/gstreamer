@@ -40,6 +40,8 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean res = FALSE;
 
+  gst_plugin_set_static_features_flag (plugin);
+
   res |= GST_ELEMENT_REGISTER (playbin, plugin);
   res |= GST_ELEMENT_REGISTER (playbin3, plugin);
   res |= GST_ELEMENT_REGISTER (playsink, plugin);

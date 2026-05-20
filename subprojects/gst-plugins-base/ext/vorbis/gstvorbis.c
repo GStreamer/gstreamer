@@ -28,6 +28,8 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
 
+  gst_plugin_set_static_features_flag (plugin);
+
   ret |= GST_ELEMENT_REGISTER (vorbisenc, plugin);
   ret |= GST_ELEMENT_REGISTER (vorbisdec, plugin);
   ret |= GST_ELEMENT_REGISTER (vorbisparse, plugin);
