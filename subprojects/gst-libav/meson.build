@@ -57,6 +57,10 @@ cdata.set('LIBAV_SOURCE', '"system install"')
 cdata.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
 cdata.set('PACKAGE', '"gst-libav"')
 
+if get_option('plugin-static-features')
+  cdata.set('GST_LIBAV_STATIC_FEATURES', 1)
+endif
+
 # GStreamer package name and origin url
 gst_package_name = get_option('package-name')
 if gst_package_name == ''

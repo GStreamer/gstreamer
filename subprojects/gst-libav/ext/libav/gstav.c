@@ -131,6 +131,10 @@ gst_ffmpeg_log_callback (void *ptr, int level, const char *fmt, va_list vl)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+#ifdef GST_LIBAV_STATIC_FEATURES
+  gst_plugin_set_static_features_flag (plugin);
+#endif
+
   GST_DEBUG_CATEGORY_INIT (ffmpeg_debug, "libav", 0, "libav elements");
 
   /* Bail if not FFmpeg. We can no longer ensure operation with Libav */

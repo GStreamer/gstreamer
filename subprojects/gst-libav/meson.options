@@ -6,3 +6,5 @@ option('package-origin', type : 'string',
 option('doc', type : 'feature', value : 'auto', yield: true,
        description: 'Enable documentation.')
 option('tests', type : 'feature', value : 'auto', yield : true)
+option('plugin-static-features', type : 'boolean', value : false,
+       description : 'Register the plugin as having a static feature set, to be used when running against a known libav library')
