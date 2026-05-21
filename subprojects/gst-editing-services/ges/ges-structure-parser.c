@@ -68,8 +68,17 @@ ges_structure_parser_parse_string (GESStructureParser * self,
 void
 ges_structure_parser_parse_value (GESStructureParser * self, const gchar * text)
 {
-  /* text starts with '=' */
-  gchar *val_string = g_strconcat ("=(string)", text + 1, NULL);
+  /* text starts with '='. Inside a [...] nested caps/structure literal, pass
+   * the value through verbatim so gst_structure_new_from_string can pick the
+   * natural type (int, fraction, ...). Outside, force (string) so unquoted
+   * tokens like enum names aren't reinterpreted. */
+  gchar *val_string;
+
+  if (self->bracket_depth > 0)
+    val_string = g_strdup (text);
+  else
+    val_string = g_strconcat ("=(string)", text + 1, NULL);
+
   ges_structure_parser_parse_string (self, val_string, FALSE);
   g_free (val_string);
 }
@@ -79,6 +88,14 @@ ges_structure_parser_parse_default (GESStructureParser * self,
     const gchar * text)
 {
   gchar *new_string = NULL;
+
+  /* Match GstStructure's [...] handling in _priv_gst_value_parse_struct_or_caps:
+   * naked bracket counting, no escape handling. Quoted strings go through
+   * parse_string, not here, so a '[' here is always syntactic. */
+  if (text[0] == '[')
+    self->bracket_depth++;
+  else if (text[0] == ']' && self->bracket_depth > 0)
+    self->bracket_depth--;
 
   if (self->add_comma && self->current_string) {
     new_string = g_strconcat (self->current_string, ",", text, NULL);

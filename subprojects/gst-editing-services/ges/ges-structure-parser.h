@@ -40,6 +40,7 @@ struct _GESStructureParser
   /*< private > */
   gchar *current_string;
   gboolean add_comma;
+  gint bracket_depth;
 };
 
 struct _GESStructureParserClass
