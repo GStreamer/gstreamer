@@ -2893,6 +2893,8 @@ only_async_start:
   }
 }
 
+GST_DEFINE_TRACE_FORMAT (gstelement_set_state, "element", STRING, "state",
+    STRING)
 /**
  * gst_element_set_state:
  * @element: a #GstElement to change state of.
@@ -2916,7 +2918,7 @@ only_async_start:
  *
  * MT safe.
  */
-GstStateChangeReturn
+    GstStateChangeReturn
 gst_element_set_state (GstElement * element, GstState state)
 {
   GstElementClass *oclass;
@@ -2924,11 +2926,15 @@ gst_element_set_state (GstElement * element, GstState state)
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_CHANGE_FAILURE);
 
+  GST_TRACE_SCOPE_BEGIN (gstelement_set_state,
+      STRING (GST_ELEMENT_NAME (element)), STRING (gst_state_get_name (state)));
+
   oclass = GST_ELEMENT_GET_CLASS (element);
 
   if (oclass->set_state)
     result = (oclass->set_state) (element, state);
 
+  GST_TRACE_SCOPE_END (gstelement_set_state);
   return result;
 }
 
