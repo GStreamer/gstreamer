@@ -126,11 +126,12 @@
 
 #include "vtenc.h"
 
-#include "coremediabuffer.h"
+#include <gst/iosurface/gstiosurface.h>
+#include <CoreVideo/CVPixelBufferIOSurface.h>
+#include <IOSurface/IOSurfaceRef.h>
 
-#if !TARGET_OS_OSX
+#include "coremediabuffer.h"
 #include "corevideobuffer.h"
-#endif
 
 #include "vtutil.h"
 #include "helpers.h"
@@ -237,6 +238,8 @@ static void gst_vtenc_session_configure_realtime (GstVTEnc * self,
 
 static GstFlowReturn gst_vtenc_encode_frame (GstVTEnc * self,
     GstVideoCodecFrame * frame);
+static CVPixelBufferRef gst_vtenc_create_pixel_buffer_from_iosurface
+    (GstVTEnc * self, GstBuffer * buffer);
 static void gst_vtenc_session_output_callback (void *outputCallbackRefCon,
     void *sourceFrameRefCon, OSStatus status, VTEncodeInfoFlags infoFlags,
     CMSampleBufferRef sampleBuffer);
@@ -272,9 +275,12 @@ gst_vtenc_rate_control_get_type (void)
   return rc_type;
 }
 
-static GstStaticCaps sink_caps =
-GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
-    ("{ AYUV64, UYVY, NV12, I420, P010_10LE }"));
+#define VTENC_SINK_FORMATS "{ AYUV64, UYVY, NV12, I420, P010_10LE }"
+
+static GstStaticCaps sink_caps = GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
+    (VTENC_SINK_FORMATS) ";"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_IOSURFACE,
+        VTENC_SINK_FORMATS));
 
 static void
 gst_vtenc_base_init (GstVTEncClass * klass)
@@ -1942,6 +1948,203 @@ gst_vtenc_is_recoverable_error (OSStatus status)
 }
 
 static gboolean
+gst_vtenc_input_uses_iosurface (GstVTEnc * self)
+{
+  GstCapsFeatures *features;
+
+  if (self->input_state == NULL || self->input_state->caps == NULL)
+    return FALSE;
+
+  features = gst_caps_get_features (self->input_state->caps, 0);
+  return features != NULL && gst_caps_features_contains (features,
+      GST_CAPS_FEATURE_MEMORY_IOSURFACE);
+}
+
+static GstMemory *
+gst_vtenc_peek_video_plane_memory (GstVTEnc * self, GstBuffer * buffer,
+    guint plane)
+{
+  GstVideoMeta *meta = gst_buffer_get_video_meta (buffer);
+  guint idx, length;
+  gsize offset, skip;
+
+  offset = meta ? meta->offset[plane] :
+      GST_VIDEO_INFO_PLANE_OFFSET (&self->video_info, plane);
+
+  if (!gst_buffer_find_memory (buffer, offset, 1, &idx, &length, &skip))
+    return NULL;
+
+  if (skip != 0) {
+    GST_WARNING_OBJECT (self,
+        "IOSurface input plane %u starts inside memory block at offset %"
+        G_GSIZE_FORMAT, plane, skip);
+    return NULL;
+  }
+
+  return gst_buffer_peek_memory (buffer, idx);
+}
+
+static guint
+gst_vtenc_video_plane_row_size (const GstVideoInfo * info, guint plane)
+{
+  gint comp[GST_VIDEO_MAX_COMPONENTS];
+  guint row_size;
+
+  gst_video_format_info_component (info->finfo, plane, comp);
+  row_size = GST_VIDEO_INFO_COMP_WIDTH (info, comp[0]) *
+      GST_VIDEO_INFO_COMP_PSTRIDE (info, comp[0]);
+
+  if (row_size == 0)
+    row_size = GST_VIDEO_INFO_PLANE_STRIDE (info, plane);
+
+  return row_size;
+}
+
+static gboolean
+gst_vtenc_iosurface_plane_matches_video_plane (GstVTEnc * self,
+    IOSurfaceRef surface, guint surface_plane, guint video_plane)
+{
+  gint comp[GST_VIDEO_MAX_COMPONENTS];
+  gsize surface_width, surface_height, surface_stride;
+  guint plane_width, plane_height, row_size;
+
+  if (IOSurfaceGetPlaneCount (surface) == 0) {
+    surface_width = IOSurfaceGetWidth (surface);
+    surface_height = IOSurfaceGetHeight (surface);
+    surface_stride = IOSurfaceGetBytesPerRow (surface);
+  } else {
+    surface_width = IOSurfaceGetWidthOfPlane (surface, surface_plane);
+    surface_height = IOSurfaceGetHeightOfPlane (surface, surface_plane);
+    surface_stride = IOSurfaceGetBytesPerRowOfPlane (surface, surface_plane);
+  }
+
+  gst_video_format_info_component (self->video_info.finfo, video_plane, comp);
+  plane_width = GST_VIDEO_INFO_COMP_WIDTH (&self->video_info, comp[0]);
+  plane_height = GST_VIDEO_INFO_COMP_HEIGHT (&self->video_info, comp[0]);
+  row_size = gst_vtenc_video_plane_row_size (&self->video_info, video_plane);
+
+  if (surface_width != plane_width || surface_height != plane_height ||
+      surface_stride < row_size) {
+    GST_WARNING_OBJECT (self,
+        "IOSurface plane %u does not match video plane %u: surface %"
+        G_GSIZE_FORMAT "x%" G_GSIZE_FORMAT " stride %" G_GSIZE_FORMAT
+        ", video %ux%u row size %u", surface_plane, video_plane,
+        surface_width, surface_height, surface_stride, plane_width,
+        plane_height, row_size);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_vtenc_iosurface_pixel_format_matches (GstVTEnc * self, IOSurfaceRef surface)
+{
+  OSType pixel_format = IOSurfaceGetPixelFormat (surface);
+  GstVideoFormat video_format =
+      gst_video_format_from_cvpixelformat (pixel_format);
+
+  if (video_format != GST_VIDEO_INFO_FORMAT (&self->video_info)) {
+    GST_WARNING_OBJECT (self,
+        "IOSurface pixel format %" GST_FOURCC_FORMAT
+        " does not match negotiated video format %s",
+        GST_FOURCC_ARGS (pixel_format),
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&self->video_info)));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static CVPixelBufferRef
+gst_vtenc_create_pixel_buffer_from_iosurface (GstVTEnc * self,
+    GstBuffer * buffer)
+{
+  IOSurfaceRef shared_surface = NULL;
+  gsize surface_n_planes = 0;
+  guint n_planes = GST_VIDEO_INFO_N_PLANES (&self->video_info);
+  CVPixelBufferRef pbuf = NULL;
+  CVReturn cv_ret;
+
+  if (!gst_is_iosurface_buffer (buffer)) {
+    GST_WARNING_OBJECT (self,
+        "input caps require IOSurface memory, but the buffer is not fully "
+        "IOSurface-backed");
+    goto error;
+  }
+
+  for (guint plane = 0; plane < n_planes; plane++) {
+    GstMemory *mem;
+    IOSurfaceRef surface = NULL;
+    guint surface_plane = G_MAXUINT;
+
+    mem = gst_vtenc_peek_video_plane_memory (self, buffer, plane);
+    if (!mem)
+      goto error;
+
+    if (!gst_iosurface_memory_peek_surface (mem, &surface, &surface_plane) ||
+        surface == NULL) {
+      GST_WARNING_OBJECT (self, "video plane %u is not IOSurface-backed",
+          plane);
+      goto error;
+    }
+
+    if (shared_surface == NULL) {
+      shared_surface = surface;
+      surface_n_planes = IOSurfaceGetPlaneCount (surface);
+
+      if (!gst_vtenc_iosurface_pixel_format_matches (self, surface))
+        goto error;
+
+      if (surface_n_planes == 0 && n_planes != 1) {
+        GST_WARNING_OBJECT (self,
+            "planar video input has non-planar IOSurface backing");
+        goto error;
+      }
+    } else if (surface != shared_surface) {
+      GST_WARNING_OBJECT (self,
+          "video plane %u uses a different IOSurface than plane 0", plane);
+      goto error;
+    }
+
+    if (surface_n_planes == 0) {
+      if (surface_plane != 0) {
+        GST_WARNING_OBJECT (self,
+            "non-planar IOSurface uses invalid plane index %u", surface_plane);
+        goto error;
+      }
+    } else if (surface_plane >= surface_n_planes || surface_plane != plane) {
+      GST_WARNING_OBJECT (self,
+          "video plane %u maps to invalid IOSurface plane %u of %"
+          G_GSIZE_FORMAT, plane, surface_plane, surface_n_planes);
+      goto error;
+    }
+
+    if (!gst_vtenc_iosurface_plane_matches_video_plane (self, surface,
+            surface_plane, plane))
+      goto error;
+  }
+
+  cv_ret = CVPixelBufferCreateWithIOSurface (NULL, shared_surface, NULL, &pbuf);
+
+  if (cv_ret != kCVReturnSuccess) {
+    GST_WARNING_OBJECT (self,
+        "CVPixelBufferCreateWithIOSurface failed: %d", cv_ret);
+    return NULL;
+  }
+
+  GST_LOG_OBJECT (self, "created CVPixelBuffer %p from IOSurface %p", pbuf,
+      shared_surface);
+
+  return pbuf;
+
+error:
+  GST_ELEMENT_ERROR (self, CORE, NEGOTIATION, (NULL),
+      ("Could not use IOSurface-backed input buffer"));
+  return NULL;
+}
+
+static gboolean
 gst_vtenc_push_all_pending_frames (GstVTEnc * self)
 {
   OSStatus status;
@@ -2118,6 +2321,21 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
   meta = gst_buffer_get_core_media_meta (frame->input_buffer);
   if (meta != NULL) {
     pbuf = gst_core_media_buffer_get_pixel_buffer (frame->input_buffer);
+  }
+
+  if (pbuf == NULL) {
+    GstCoreVideoMeta *cvmeta =
+        gst_buffer_get_core_video_meta (frame->input_buffer);
+
+    if (cvmeta != NULL && cvmeta->pixbuf != NULL)
+      pbuf = CVPixelBufferRetain (cvmeta->pixbuf);
+  }
+
+  if (pbuf == NULL && gst_vtenc_input_uses_iosurface (self)) {
+    pbuf = gst_vtenc_create_pixel_buffer_from_iosurface (self,
+        frame->input_buffer);
+    if (pbuf == NULL)
+      goto cv_error;
   }
 #if !TARGET_OS_OSX
   if (pbuf == NULL) {

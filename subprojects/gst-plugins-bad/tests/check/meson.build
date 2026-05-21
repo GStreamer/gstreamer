@@ -200,6 +200,7 @@ if host_system == 'darwin'
     [['pipelines/avfassetsrc-supplemental.c'], false, [videotoolbox_dep]],
     [['pipelines/avfassetsrc-partial.c']],
     [['pipelines/vtdec-output-paths.c'], false, [gstiosurface_dep]],
+    [['pipelines/vtenc-iosurface-input.c'], false, [dependency('appleframeworks', modules : ['CoreFoundation', 'CoreVideo', 'IOSurface']), gstiosurface_dep]],
   ]
 
   if subsystem == 'macos'
