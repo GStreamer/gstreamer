@@ -29,6 +29,8 @@
 
 #define LAST_CONTAINER_QDATA g_quark_from_string("ges-structured-last-container")
 #define LAST_CHILD_QDATA g_quark_from_string("ges-structured-last-child")
+#define EXPLICIT_RESTRICTIONS_QDATA \
+    g_quark_from_string("ges-structured-explicit-restrictions")
 
 static void
 _last_container_weak_ref_free (gpointer data)
@@ -881,9 +883,19 @@ _ges_add_track_from_struct (GESTimeline * timeline,
 
     ges_track_set_restriction_caps (track, caps);
     gst_caps_unref (caps);
+
+    g_object_set_qdata (G_OBJECT (track), EXPLICIT_RESTRICTIONS_QDATA,
+        GINT_TO_POINTER (1));
   }
 
   return ges_timeline_add_track (timeline, track);
+}
+
+gboolean
+_ges_track_has_explicit_restrictions (GESTrack * track)
+{
+  return g_object_get_qdata (G_OBJECT (track),
+      EXPLICIT_RESTRICTIONS_QDATA) != NULL;
 }
 
 gboolean
