@@ -28,13 +28,10 @@
 #endif
 
 #include <gst/gst.h>
+#include "gstamfplatform.h"
 #ifdef G_OS_WIN32
-#include <gst/d3d11/gstd3d11.h>
 #include <wrl.h>
 #include <versionhelpers.h>
-#else
-#include <memory>
-#include <vector>
 #endif //G_OS_WIN32
 #include <core/Factory.h>
 #include "gstamfutils.h"
@@ -170,6 +167,7 @@ plugin_init_vulkan (GstPlugin * plugin)
     gst_amf_av1_enc_register (plugin, nullptr,
         (gpointer) context.GetPtr (), GST_RANK_NONE);
   }
+
   return TRUE;
 }
 #endif // !G_OS_WIN32
