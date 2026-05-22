@@ -82,6 +82,7 @@ plugin_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (gltestsrc, plugin);
   ret |= GST_ELEMENT_REGISTER (gldeinterlace, plugin);
   ret |= GST_ELEMENT_REGISTER (glalpha, plugin);
+  ret |= GST_ELEMENT_REGISTER (glalphacombine, plugin);
   ret |= GST_ELEMENT_REGISTER (gloverlaycompositor, plugin);
 #if defined(HAVE_JPEG) && defined(HAVE_PNG)
   ret |= GST_ELEMENT_REGISTER (gloverlay, plugin);
