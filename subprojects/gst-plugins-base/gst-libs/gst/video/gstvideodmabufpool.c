@@ -57,6 +57,7 @@ struct _GstVideoDmabufPool
 };
 
 GST_DEBUG_CATEGORY_STATIC (gst_video_dmabuf_pool_debug);
+#define GST_CAT_DEFAULT gst_video_dmabuf_pool_debug
 
 G_DEFINE_TYPE_WITH_CODE (GstVideoDmabufPool, gst_video_dmabuf_pool,
     GST_TYPE_VIDEO_BUFFER_POOL,
