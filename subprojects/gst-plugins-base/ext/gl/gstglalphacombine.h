@@ -37,6 +37,18 @@ G_BEGIN_DECLS
 typedef struct _GstGLAlphaCombine GstGLAlphaCombine;
 typedef struct _GstGLAlphaCombineClass GstGLAlphaCombineClass;
 
+/**
+ * GstGLAlphaCombineAlphaComponent:
+ * @GST_GL_ALPHA_COMBINE_ALPHA_COMPONENT_RED: Red component (Since: 1.30)
+ * @GST_GL_ALPHA_COMBINE_ALPHA_COMPONENT_GREEN: Green component (Since: 1.30)
+ * @GST_GL_ALPHA_COMBINE_ALPHA_COMPONENT_BLUE: Blue component (Since: 1.30)
+ * @GST_GL_ALPHA_COMBINE_ALPHA_COMPONENT_ALPHA: Alpha component (Since: 1.30)
+ *
+ * The RGBA component to sample from the alpha input and write to the output
+ * alpha channel.
+ *
+ * Since: 1.30
+ */
 typedef enum
 {
   GST_GL_ALPHA_COMBINE_ALPHA_COMPONENT_RED,
@@ -54,6 +66,11 @@ struct _GstGLAlphaCombine
 
   GstGLShader *shader;
   GstGLMemory *out_tex;
+  GstGLTextureTarget color_texture_target;
+  GstGLTextureTarget alpha_texture_target;
+  GstGLTextureTarget shader_color_texture_target;
+  GstGLTextureTarget shader_alpha_texture_target;
+  guint vao;
   guint vertex_buffer;
   guint vbo_indices;
 

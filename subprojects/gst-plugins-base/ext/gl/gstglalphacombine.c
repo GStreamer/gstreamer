@@ -30,9 +30,11 @@
  * textures, so the alpha stream has already been sampled as RGBA instead of
  * being exposed as a separate luma plane.
  *
- * The sink pads currently accept RGBA GLMemory external-oes textures and the
- * src pad produces RGBA GLMemory 2D textures. By default, the red component of
- * the alpha input is written to the output alpha channel.
+ * The sink pads currently accept RGBA GLMemory 2D and external-oes textures
+ * and the src pad produces RGBA GLMemory 2D textures. By default, the red
+ * component of the alpha input is written to the output alpha channel.
+ *
+ * Since: 1.30
  */
 
 #ifdef HAVE_CONFIG_H
@@ -56,6 +58,13 @@ enum
   PROP_ALPHA_COMPONENT
 };
 
+/**
+ * GstGLAlphaCombine:src:
+ *
+ * The output pad.
+ *
+ * Since: 1.30
+ */
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -66,6 +75,13 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "framerate = " GST_VIDEO_FPS_RANGE ", " "texture-target = (string) 2D")
     );
 
+/**
+ * GstGLAlphaCombine:sink:
+ *
+ * The color input pad.
+ *
+ * Since: 1.30
+ */
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -74,9 +90,16 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
         "width = " GST_VIDEO_SIZE_RANGE ", "
         "height = " GST_VIDEO_SIZE_RANGE ", "
         "framerate = " GST_VIDEO_FPS_RANGE ", "
-        "texture-target = (string) external-oes")
+        "texture-target = (string) { 2D, external-oes }")
     );
 
+/**
+ * GstGLAlphaCombine:alpha:
+ *
+ * The alpha input pad.
+ *
+ * Since: 1.30
+ */
 static GstStaticPadTemplate alpha_factory = GST_STATIC_PAD_TEMPLATE ("alpha",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -85,7 +108,7 @@ static GstStaticPadTemplate alpha_factory = GST_STATIC_PAD_TEMPLATE ("alpha",
         "width = " GST_VIDEO_SIZE_RANGE ", "
         "height = " GST_VIDEO_SIZE_RANGE ", "
         "framerate = " GST_VIDEO_FPS_RANGE ", "
-        "texture-target = (string) external-oes")
+        "texture-target = (string) { 2D, external-oes }")
     );
 
 /* *INDENT-OFF* */
@@ -94,8 +117,8 @@ static const gchar glsl_external_image_extension[] =
 
 static const gchar gl_alpha_combine_frag[] =
     "varying vec2 v_texcoord;\n"
-    "uniform samplerExternalOES color_tex;\n"
-    "uniform samplerExternalOES alpha_tex;\n"
+    "uniform %s color_tex;\n"
+    "uniform %s alpha_tex;\n"
     "uniform vec4 alpha_selector;\n"
     "void main () {\n"
     "  vec4 color = texture2D (color_tex, v_texcoord);\n"
@@ -106,7 +129,6 @@ static const gchar gl_alpha_combine_frag[] =
 /* *INDENT-ON* */
 
 static GType gst_gl_alpha_combine_alpha_component_get_type (void);
-static gboolean gst_gl_alpha_combine_gl_start (GstGLBaseMixer * base_mix);
 static void gst_gl_alpha_combine_gl_stop (GstGLBaseMixer * base_mix);
 static gboolean gst_gl_alpha_combine_process_textures (GstGLMixer * mixer,
     GstGLMemory * out_tex);
@@ -156,6 +178,13 @@ gst_gl_alpha_combine_class_init (GstGLAlphaCombineClass * klass)
   gobject_class->set_property = gst_gl_alpha_combine_set_property;
   gobject_class->get_property = gst_gl_alpha_combine_get_property;
 
+  /**
+   * GstGLAlphaCombine:alpha-component:
+   *
+   * The RGBA component sampled from the alpha input and written to output alpha.
+   *
+   * Since: 1.30
+   */
   g_object_class_install_property (gobject_class, PROP_ALPHA_COMPONENT,
       g_param_spec_enum ("alpha-component", "Alpha component",
           "RGBA component sampled from the alpha input and written to output alpha",
@@ -174,7 +203,6 @@ gst_gl_alpha_combine_class_init (GstGLAlphaCombineClass * klass)
   gst_element_class_add_static_pad_template_with_gtype (element_class,
       &alpha_factory, GST_TYPE_GL_MIXER_PAD);
 
-  base_mix_class->gl_start = gst_gl_alpha_combine_gl_start;
   base_mix_class->gl_stop = gst_gl_alpha_combine_gl_stop;
   base_mix_class->supported_gl_api =
       GST_GL_API_GLES2 | GST_GL_API_OPENGL | GST_GL_API_OPENGL3;
@@ -191,6 +219,10 @@ gst_gl_alpha_combine_init (GstGLAlphaCombine * self)
   GstPadTemplate *templ;
 
   self->alpha_component = DEFAULT_ALPHA_COMPONENT;
+  self->color_texture_target = GST_GL_TEXTURE_TARGET_EXTERNAL_OES;
+  self->alpha_texture_target = GST_GL_TEXTURE_TARGET_EXTERNAL_OES;
+  self->shader_color_texture_target = GST_GL_TEXTURE_TARGET_NONE;
+  self->shader_alpha_texture_target = GST_GL_TEXTURE_TARGET_NONE;
 
   templ = gst_static_pad_template_get (&sink_factory);
   self->color_pad = g_object_new (GST_TYPE_GL_MIXER_PAD,
@@ -242,19 +274,80 @@ gst_gl_alpha_combine_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_gl_alpha_combine_create_shader (GstGLAlphaCombine * self)
+gst_gl_alpha_combine_pad_get_texture_target (GstGLAlphaCombine * self,
+    GstGLMixerPad * pad, GstGLTextureTarget * target)
+{
+  GstCaps *caps = gst_pad_get_current_caps (GST_PAD_CAST (pad));
+  GstStructure *s;
+  const gchar *target_str;
+
+  if (!caps)
+    goto no_caps;
+
+  s = gst_caps_get_structure (caps, 0);
+  target_str = gst_structure_get_string (s, "texture-target");
+  if (!target_str) {
+    *target = GST_GL_TEXTURE_TARGET_2D;
+    gst_caps_unref (caps);
+    return TRUE;
+  }
+
+  *target = gst_gl_texture_target_from_string (target_str);
+  if (*target == GST_GL_TEXTURE_TARGET_NONE)
+    goto unsupported_texture_target;
+
+  gst_caps_unref (caps);
+
+  return TRUE;
+
+no_caps:
+  GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
+      ("Missing current caps on pad %s", GST_PAD_NAME (pad)), (NULL));
+  return FALSE;
+unsupported_texture_target:
+  GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
+      ("Unsupported texture target on pad %s", GST_PAD_NAME (pad)),
+      ("texture-target %s", target_str));
+  gst_caps_unref (caps);
+  return FALSE;
+}
+
+static const gchar *
+gst_gl_alpha_combine_sampler_for_target (GstGLTextureTarget target)
+{
+  switch (target) {
+    case GST_GL_TEXTURE_TARGET_2D:
+      return "sampler2D";
+    case GST_GL_TEXTURE_TARGET_EXTERNAL_OES:
+      return "samplerExternalOES";
+    default:
+      g_assert_not_reached ();
+      return NULL;
+  }
+}
+
+static gboolean
+gst_gl_alpha_combine_create_shader (GstGLAlphaCombine * self,
+    GstGLTextureTarget color_target, GstGLTextureTarget alpha_target)
 {
   GstGLBaseMixer *base_mix = GST_GL_BASE_MIXER (self);
   GError *error = NULL;
   const gchar *frags[3];
+  gchar *frag;
   guint frag_i = 0;
 
-  frags[frag_i++] = glsl_external_image_extension;
+  if (color_target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES ||
+      alpha_target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
+    frags[frag_i++] = glsl_external_image_extension;
   frags[frag_i++] =
       gst_gl_shader_string_get_highest_precision (base_mix->context,
       GST_GLSL_VERSION_NONE,
       GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY);
-  frags[frag_i++] = gl_alpha_combine_frag;
+
+  frag = g_strdup_printf (gl_alpha_combine_frag,
+      gst_gl_alpha_combine_sampler_for_target (color_target),
+      gst_gl_alpha_combine_sampler_for_target (alpha_target));
+  frags[frag_i++] = frag;
 
   if (!(self->shader =
           gst_gl_shader_new_link_with_stages (base_mix->context, &error,
@@ -267,21 +360,28 @@ gst_gl_alpha_combine_create_shader (GstGLAlphaCombine * self)
         ("Failed to initialize alpha combine shader"),
         ("%s", error ? error->message : "Unknown error"));
     g_clear_error (&error);
+    g_free (frag);
     return FALSE;
   }
+
+  self->shader_color_texture_target = color_target;
+  self->shader_alpha_texture_target = alpha_target;
+  g_free (frag);
 
   return TRUE;
 }
 
 static gboolean
-gst_gl_alpha_combine_gl_start (GstGLBaseMixer * base_mix)
+gst_gl_alpha_combine_ensure_shader (GstGLAlphaCombine * self,
+    GstGLTextureTarget color_target, GstGLTextureTarget alpha_target)
 {
-  GstGLAlphaCombine *self = GST_GL_ALPHA_COMBINE (base_mix);
+  if (self->shader &&
+      self->shader_color_texture_target == color_target &&
+      self->shader_alpha_texture_target == alpha_target)
+    return TRUE;
 
-  if (!gst_gl_alpha_combine_create_shader (self))
-    return FALSE;
-
-  return GST_GL_BASE_MIXER_CLASS (parent_class)->gl_start (base_mix);
+  gst_clear_object (&self->shader);
+  return gst_gl_alpha_combine_create_shader (self, color_target, alpha_target);
 }
 
 static void
@@ -292,14 +392,19 @@ gst_gl_alpha_combine_gl_stop (GstGLBaseMixer * base_mix)
       base_mix->context ? base_mix->context->gl_vtable : NULL;
 
   if (gl) {
+    if (self->vao)
+      gl->DeleteVertexArrays (1, &self->vao);
     if (self->vertex_buffer)
       gl->DeleteBuffers (1, &self->vertex_buffer);
     if (self->vbo_indices)
       gl->DeleteBuffers (1, &self->vbo_indices);
   }
 
+  self->vao = 0;
   self->vertex_buffer = 0;
   self->vbo_indices = 0;
+  self->shader_color_texture_target = GST_GL_TEXTURE_TARGET_NONE;
+  self->shader_alpha_texture_target = GST_GL_TEXTURE_TARGET_NONE;
   gst_clear_object (&self->shader);
 
   GST_GL_BASE_MIXER_CLASS (parent_class)->gl_stop (base_mix);
@@ -346,17 +451,23 @@ gst_gl_alpha_combine_callback (gpointer data)
   guint color_tex, alpha_tex;
   gint attr_position_loc, attr_texture_loc;
   GstGLAlphaCombineAlphaComponent alpha_component;
+  GstGLTextureTarget color_target, alpha_target;
 
   GST_OBJECT_LOCK (self);
   color_tex = self->color_pad->current_texture;
   alpha_tex = self->alpha_pad->current_texture;
   alpha_component = self->alpha_component;
+  color_target = self->color_texture_target;
+  alpha_target = self->alpha_texture_target;
   GST_OBJECT_UNLOCK (self);
 
   if (!color_tex || !alpha_tex) {
     GST_DEBUG_OBJECT (self, "Waiting for both color and alpha textures");
     return TRUE;
   }
+
+  if (!gst_gl_alpha_combine_ensure_shader (self, color_target, alpha_target))
+    return FALSE;
 
   gst_gl_context_clear_shader (base_mix->context);
 
@@ -371,16 +482,20 @@ gst_gl_alpha_combine_callback (gpointer data)
   attr_texture_loc =
       gst_gl_shader_get_attribute_location (self->shader, "a_texcoord");
 
+  if (gl->GenVertexArrays) {
+    if (!self->vao)
+      gl->GenVertexArrays (1, &self->vao);
+    gl->BindVertexArray (self->vao);
+  }
+
   gst_gl_alpha_combine_init_vbo (self);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->BindTexture (gst_gl_texture_target_to_gl
-      (GST_GL_TEXTURE_TARGET_EXTERNAL_OES), color_tex);
+  gl->BindTexture (gst_gl_texture_target_to_gl (color_target), color_tex);
   gst_gl_shader_set_uniform_1i (self->shader, "color_tex", 0);
 
   gl->ActiveTexture (GL_TEXTURE1);
-  gl->BindTexture (gst_gl_texture_target_to_gl
-      (GST_GL_TEXTURE_TARGET_EXTERNAL_OES), alpha_tex);
+  gl->BindTexture (gst_gl_texture_target_to_gl (alpha_target), alpha_tex);
   gst_gl_shader_set_uniform_1i (self->shader, "alpha_tex", 1);
   switch (alpha_component) {
     case GST_GL_ALPHA_COMBINE_ALPHA_COMPONENT_GREEN:
@@ -418,13 +533,14 @@ gst_gl_alpha_combine_callback (gpointer data)
   gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
   gl->BindBuffer (GL_ARRAY_BUFFER, 0);
   gl->ActiveTexture (GL_TEXTURE1);
-  gl->BindTexture (gst_gl_texture_target_to_gl
-      (GST_GL_TEXTURE_TARGET_EXTERNAL_OES), 0);
+  gl->BindTexture (gst_gl_texture_target_to_gl (alpha_target), 0);
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->BindTexture (gst_gl_texture_target_to_gl
-      (GST_GL_TEXTURE_TARGET_EXTERNAL_OES), 0);
+  gl->BindTexture (gst_gl_texture_target_to_gl (color_target), 0);
 
   gst_gl_context_clear_shader (base_mix->context);
+
+  if (gl->GenVertexArrays)
+    gl->BindVertexArray (0);
 
   return TRUE;
 }
@@ -447,8 +563,19 @@ gst_gl_alpha_combine_process_textures (GstGLMixer * mixer,
 {
   GstGLAlphaCombine *self = GST_GL_ALPHA_COMBINE (mixer);
   GstGLContext *context = GST_GL_BASE_MIXER (mixer)->context;
+  GstGLTextureTarget color_target, alpha_target;
+
+  if (!gst_gl_alpha_combine_pad_get_texture_target (self, self->color_pad,
+          &color_target) ||
+      !gst_gl_alpha_combine_pad_get_texture_target (self, self->alpha_pad,
+          &alpha_target))
+    return FALSE;
 
   self->out_tex = out_tex;
+  GST_OBJECT_LOCK (self);
+  self->color_texture_target = color_target;
+  self->alpha_texture_target = alpha_target;
+  GST_OBJECT_UNLOCK (self);
 
   gst_gl_context_thread_add (context,
       (GstGLContextThreadFunc) gst_gl_alpha_combine_process_gl, self);

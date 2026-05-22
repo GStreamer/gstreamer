@@ -4040,6 +4040,57 @@
                 },
                 "rank": "none"
             },
+            "glalphacombine": {
+                "author": "GStreamer contributors",
+                "description": "Combines RGBA GL textures by replacing color alpha from an alpha input",
+                "hierarchy": [
+                    "GstGLAlphaCombine",
+                    "GstGLMixer",
+                    "GstGLBaseMixer",
+                    "GstVideoAggregator",
+                    "GstAggregator",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Filter/Editor/Video/Compositor",
+                "pad-templates": {
+                    "alpha": {
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: { (string)2D, (string)external-oes }\n",
+                        "direction": "sink",
+                        "presence": "always",
+                        "type": "GstGLMixerPad"
+                    },
+                    "sink": {
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: { (string)2D, (string)external-oes }\n",
+                        "direction": "sink",
+                        "presence": "always",
+                        "type": "GstGLMixerPad"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n",
+                        "direction": "src",
+                        "presence": "always",
+                        "type": "GstAggregatorPad"
+                    }
+                },
+                "properties": {
+                    "alpha-component": {
+                        "blurb": "RGBA component sampled from the alpha input and written to output alpha",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "red (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstGLAlphaCombineAlphaComponent",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
             "glcolorbalance": {
                 "author": "Matthew Waters <matthew@centricular.com>",
                 "description": "Adjusts brightness, contrast, hue, saturation on a video stream",
@@ -7222,6 +7273,31 @@
         "filename": "gstopengl",
         "license": "LGPL",
         "other-types": {
+            "GstGLAlphaCombineAlphaComponent": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Red component",
+                        "name": "red",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Green component",
+                        "name": "green",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Blue component",
+                        "name": "blue",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "Alpha component",
+                        "name": "alpha",
+                        "value": "3"
+                    }
+                ]
+            },
             "GstGLAlphaMethod": {
                 "kind": "enum",
                 "values": [

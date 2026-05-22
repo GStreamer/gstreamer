@@ -23,6 +23,13 @@
 #include <gst/check/gstcheck.h>
 #include <gst/gl/gstglconfig.h>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if TARGET_OS_OSX
+#include <gst/gstmacos.h>
+#endif
+#endif
+
 #ifndef GST_DISABLE_PARSE
 
 static GstElement *
@@ -35,7 +42,7 @@ setup_pipeline (const gchar * pipe_descr)
   return pipeline;
 }
 
-/* 
+/*
  * run_pipeline:
  * @pipe: the pipeline to run
  * @desc: the description for use in messages
@@ -216,6 +223,22 @@ GST_START_TEST (test_gloverlay)
 }
 
 GST_END_TEST
+GST_START_TEST (test_glalphacombine)
+{
+  const gchar *s;
+  GstState target_state = GST_STATE_PLAYING;
+
+  s = "glalphacombine name=c ! fakesink "
+      "gltestsrc pattern=white num-buffers=10 ! "
+      "video/x-raw(memory:GLMemory),format=RGBA,texture-target=2D ! c.sink "
+      "gltestsrc pattern=black num-buffers=10 ! "
+      "video/x-raw(memory:GLMemory),format=RGBA,texture-target=2D ! c.alpha";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, target_state);
+}
+
+GST_END_TEST
 #define N_SRCS 13
 GST_START_TEST (test_gltestsrc)
 {
@@ -342,6 +365,7 @@ gl_launch_lines_suite (void)
   if (have_gloverlay) {
     tcase_add_test (tc_chain, test_gloverlay);
   }
+  tcase_add_test (tc_chain, test_glalphacombine);
   tcase_add_test (tc_chain, test_gltestsrc);
 
 #if GST_GL_HAVE_OPENGL
@@ -358,4 +382,22 @@ gl_launch_lines_suite (void)
   return s;
 }
 
+
+#if defined(__APPLE__) && TARGET_OS_OSX
+static int
+run_tests (void)
+{
+  Suite *s = gl_launch_lines_suite ();
+
+  return gst_check_run_suite_nofork (s, "gl_launch_lines", __FILE__);
+}
+
+int
+main (int argc, char **argv)
+{
+  gst_check_init (&argc, &argv);
+  return gst_macos_main_simple ((GstMainFuncSimple) run_tests, NULL);
+}
+#else
 GST_CHECK_MAIN (gl_launch_lines);
+#endif
