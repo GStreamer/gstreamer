@@ -138,8 +138,13 @@ static GstGLMemoryEGL *
 _gl_mem_egl_alloc (GstGLBaseMemoryAllocator * allocator,
     GstGLVideoAllocationParams * params)
 {
-  guint alloc_flags = params->parent.alloc_flags;
   GstGLMemoryEGL *mem;
+  GstAllocationParams alloc_params = { 0, };
+  guint alloc_flags;
+
+  alloc_flags = params->parent.alloc_flags;
+  if (params->parent.alloc_params)
+    alloc_params = *params->parent.alloc_params;
 
   g_return_val_if_fail (alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO,
       NULL);
@@ -160,12 +165,13 @@ _gl_mem_egl_alloc (GstGLBaseMemoryAllocator * allocator,
     }
     mem->mem.tex_target = params->target;
     mem->image = gst_egl_image_ref (params->parent.gl_handle);
+    alloc_params.flags |= GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD;
   }
 
   gst_gl_memory_init (GST_GL_MEMORY_CAST (mem), GST_ALLOCATOR_CAST (allocator),
       NULL, params->parent.context, params->target, params->tex_format,
-      params->parent.alloc_params, params->v_info, params->plane,
-      params->valign, params->parent.user_data, params->parent.notify);
+      &alloc_params, params->v_info, params->plane, params->valign,
+      params->parent.user_data, params->parent.notify);
 
   if (!mem->image) {
     gst_allocator_free (GST_ALLOCATOR_CAST (allocator), GST_MEMORY_CAST (mem));
