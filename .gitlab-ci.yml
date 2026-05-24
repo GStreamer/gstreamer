@@ -1037,6 +1037,13 @@ valgrind ges:
   extends: '.valgrind fedora x86_64'
   variables:
     TEST_SUITE: "check.gst-editing-services\\..*"
+    # FIXME: Py_Initialize() aborts under valgrind on the Fedora 43 CI
+    # image (python 3.14.4) inside _Py_CheckRecursiveCall, when GES
+    # loads the python plugin via load_python_formatters(). Looks like
+    # a false positive of Python 3.14's C-stack overflow detection.
+    # Build without the python plugin so it is not loaded. Try
+    # removing this override when bumping FEDORA_TAG.
+    MESON_ARGS: "${SIMPLE_BUILD} -Dpython=disabled"
   rules:
     - changes:
         paths:
@@ -1050,9 +1057,6 @@ valgrind ges:
           - "subprojects/gst-plugins-bad/**/*"
           - "subprojects/gst-editing-services/**/*"
           - "subprojects/gst-python/**/*"
-  # valgrind ges jobs started failing again frequently after the CI upgrade to
-  # Fedora 43. Ignore failures for now until someone has time to investigate.
-  allow_failure: true
 
 valgrind rtsp-server:
   extends: '.valgrind fedora x86_64'
