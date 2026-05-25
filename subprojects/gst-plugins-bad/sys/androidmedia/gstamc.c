@@ -2657,16 +2657,20 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
     guint i, n;
     GST_LOG ("Returning caps for '%s':", codec_info->name);
 
-    GST_LOG (" raw caps:");
-    n = gst_caps_get_size (raw_ret);
-    for (i = 0; i < n; i++) {
-      GST_LOG ("  %" GST_PTR_FORMAT, gst_caps_get_structure (raw_ret, i));
+    if (raw_ret) {
+      GST_LOG (" raw caps:");
+      n = gst_caps_get_size (raw_ret);
+      for (i = 0; i < n; i++) {
+        GST_LOG ("  %" GST_PTR_FORMAT, gst_caps_get_structure (raw_ret, i));
+      }
     }
 
-    GST_LOG (" encoded caps:");
-    n = gst_caps_get_size (encoded_ret);
-    for (i = 0; i < n; i++) {
-      GST_LOG ("  %" GST_PTR_FORMAT, gst_caps_get_structure (encoded_ret, i));
+    if (encoded_ret) {
+      GST_LOG (" encoded caps:");
+      n = gst_caps_get_size (encoded_ret);
+      for (i = 0; i < n; i++) {
+        GST_LOG ("  %" GST_PTR_FORMAT, gst_caps_get_structure (encoded_ret, i));
+      }
     }
   }
 }
