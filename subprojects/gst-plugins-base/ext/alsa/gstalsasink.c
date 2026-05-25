@@ -277,6 +277,7 @@ gst_alsasink_init (GstAlsaSink * alsasink)
   alsasink->hw_support_pause = FALSE;
   g_mutex_init (&alsasink->alsa_lock);
   g_mutex_init (&alsasink->delay_lock);
+  alsasink->abort_device_writing = FALSE;
 
   g_mutex_lock (&output_mutex);
   if (output_ref == 0) {
@@ -1044,33 +1045,64 @@ gst_alsasink_close (GstAudioSink * asink)
  *   Underrun and suspend recovery
  */
 static gint
-xrun_recovery (GstAlsaSink * alsa, snd_pcm_t * handle, gint err)
+xrun_recovery_locked (GstAlsaSink * alsa, gint err)
 {
-  GST_WARNING_OBJECT (alsa, "xrun recovery %d: %s", err, g_strerror (-err));
+  GST_WARNING_OBJECT (alsa, "xrun recovery: %s (%d)", g_strerror (-err), err);
 
-  if (err == -EPIPE) {          /* under-run */
-    err = snd_pcm_prepare (handle);
-    if (err < 0)
+  if (err == -EPIPE) {
+    /* Underrun */
+    if (g_atomic_int_get (&alsa->abort_device_writing)) {
+      return 1;
+    }
+
+    err = snd_pcm_prepare (alsa->handle);
+    GST_ALSA_SINK_UNLOCK (alsa);
+    if (err < 0) {
       GST_WARNING_OBJECT (alsa,
           "Can't recover from underrun, prepare failed: %s",
           snd_strerror (err));
+    }
     gst_audio_base_sink_report_device_failure (GST_AUDIO_BASE_SINK (alsa));
-    return 0;
+    GST_ALSA_SINK_LOCK (alsa);
+
+    err = 0;
   } else if (err == -ESTRPIPE) {
-    while ((err = snd_pcm_resume (handle)) == -EAGAIN)
-      g_usleep (100);           /* wait until the suspend flag is released */
+    /* Suspend */
+    while (!g_atomic_int_get (&alsa->abort_device_writing)) {
+      err = snd_pcm_resume (alsa->handle);
+      if (err != -EAGAIN) {
+        break;
+      }
+
+      /* Sleep a bit to avoid busy-spinning */
+      GST_ALSA_SINK_UNLOCK (alsa);
+      g_usleep (100);
+      GST_ALSA_SINK_LOCK (alsa);
+    }
+
+    if (g_atomic_int_get (&alsa->abort_device_writing)) {
+      return 1;
+    }
 
     if (err < 0) {
-      err = snd_pcm_prepare (handle);
-      if (err < 0)
+      err = snd_pcm_prepare (alsa->handle);
+
+      GST_ALSA_SINK_UNLOCK (alsa);
+      if (err < 0) {
         GST_WARNING_OBJECT (alsa,
             "Can't recover from suspend, prepare failed: %s",
             snd_strerror (err));
+      }
+
+      if (err == 0) {
+        gst_audio_base_sink_report_device_failure (GST_AUDIO_BASE_SINK (alsa));
+      }
+      GST_ALSA_SINK_LOCK (alsa);
     }
-    if (err == 0)
-      gst_audio_base_sink_report_device_failure (GST_AUDIO_BASE_SINK (alsa));
-    return 0;
+
+    err = 0;
   }
+
   return err;
 }
 
@@ -1088,71 +1120,96 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
     guint i;
     guint16 *ptr_tmp = (guint16 *) ptr;
 
-    GST_DEBUG_OBJECT (asink, "swapping bytes");
+    GST_DEBUG_OBJECT (alsa, "swapping bytes");
     for (i = 0; i < length / 2; i++) {
       ptr_tmp[i] = GUINT16_SWAP_LE_BE (ptr_tmp[i]);
     }
   }
 
-  GST_LOG_OBJECT (asink, "received audio samples buffer of %u bytes", length);
+  GST_LOG_OBJECT (alsa, "received audio samples buffer of %u bytes", length);
 
   cptr = length / alsa->bpf;
 
-  GST_ALSA_SINK_LOCK (asink);
-  while (cptr > 0) {
-    /* start by doing a blocking wait for free space. Set the timeout
+  while (cptr > 0 && !g_atomic_int_get (&alsa->abort_device_writing)) {
+    GST_ALSA_SINK_LOCK (alsa);
+    /* Start by doing a blocking wait for free space. Set the timeout
      * to 4 times the period time */
     err = snd_pcm_wait (alsa->handle, (4 * alsa->period_time / 1000));
-    if (err < 0) {
-      GST_DEBUG_OBJECT (asink, "wait error, %d", err);
-    } else {
-      GST_DELAY_SINK_LOCK (asink);
-      err = snd_pcm_writei (alsa->handle, ptr, cptr);
-      GST_DELAY_SINK_UNLOCK (asink);
-    }
-
-    if (err < 0) {
-      GST_DEBUG_OBJECT (asink, "Write error: %s (%d)", snd_strerror (err), err);
-      if (err == -EAGAIN) {
-        /* will continue out of the if/else group */
-      } else if (err == -ENODEV) {
-        goto device_disappeared;
-      } else if (xrun_recovery (alsa, alsa->handle, err) < 0) {
-        goto write_error;
+    if (err > 0) {
+      if (g_atomic_int_get (&alsa->abort_device_writing)) {
+        GST_ALSA_SINK_UNLOCK (alsa);
+        break;
       }
 
-      /* Unlock so that _reset() can run and break an otherwise infinit loop
-       * here */
-      GST_ALSA_SINK_UNLOCK (asink);
-      g_thread_yield ();
-      GST_ALSA_SINK_LOCK (asink);
-      continue;
-    } else if (err == 0 && alsa->hw_support_pause) {
-      /* We might be already paused, if so, just bail */
-      if (snd_pcm_state (alsa->handle) == SND_PCM_STATE_PAUSED)
-        break;
+      GST_DELAY_SINK_LOCK (alsa);
+      err = snd_pcm_writei (alsa->handle, ptr, cptr);
+      GST_DELAY_SINK_UNLOCK (alsa);
+
+      if (err < 0) {
+        GST_DEBUG_OBJECT (alsa, "device write error: %s (%d)",
+            snd_strerror (err), err);
+      }
+    } else if (err < 0) {
+      GST_DEBUG_OBJECT (alsa, "device wait error: %s (%d)", snd_strerror (err),
+          err);
     }
 
-    GST_DEBUG_OBJECT (asink, "written %d frames out of %d", err, cptr);
-    ptr += snd_pcm_frames_to_bytes (alsa->handle, err);
-    cptr -= err;
+    if (err == 0) {
+      /* Device not ready (wait timeout occurred or 0 frame written) */
+      if (alsa->hw_support_pause
+          && snd_pcm_state (alsa->handle) == SND_PCM_STATE_PAUSED) {
+        GST_ALSA_SINK_UNLOCK (alsa);
+        break;
+      }
+
+      GST_DEBUG_OBJECT (alsa, "device not ready");
+      GST_ALSA_SINK_UNLOCK (alsa);
+      continue;
+    }
+
+    if (err > 0) {
+      /* At least one frame written successfully to the device */
+      GST_DEBUG_OBJECT (alsa, "written %d frames out of %d", err, cptr);
+      ptr += snd_pcm_frames_to_bytes (alsa->handle, err);
+      cptr -= err;
+      GST_ALSA_SINK_UNLOCK (alsa);
+      continue;
+    }
+
+    /* An error occurred while waiting or writing to the device */
+    if (err == -ENODEV) {
+      /* Device has disappeared */
+      GST_ALSA_SINK_UNLOCK (alsa);
+      GST_ELEMENT_ERROR (alsa, RESOURCE, WRITE,
+          (_("Error outputting to audio device. "
+                  "The device has been disconnected.")), (NULL));
+      /* We must return `length` to stop the caller from trying writing */
+      cptr = 0;
+      break;
+    }
+
+    if (err == -EAGAIN) {
+      /* Device is not immediately ready */
+      GST_ALSA_SINK_UNLOCK (alsa);
+      /* Sleep a bit to avoid busy-spinning */
+      g_usleep (100);
+      continue;
+    }
+
+    err = xrun_recovery_locked (alsa, err);
+    GST_ALSA_SINK_UNLOCK (alsa);
+
+    if (err > 0) {
+      /* Writing loop aborted */
+      break;
+    } else if (err < 0) {
+      /* Unrecoverable write error, let's skip one period */
+      cptr = 0;
+      break;
+    }
   }
-  GST_ALSA_SINK_UNLOCK (asink);
 
   return length - (cptr * alsa->bpf);
-
-write_error:
-  {
-    GST_ALSA_SINK_UNLOCK (asink);
-    return length;              /* skip one period */
-  }
-device_disappeared:
-  {
-    GST_ELEMENT_ERROR (asink, RESOURCE, WRITE,
-        (_("Error outputting to audio device. "
-                "The device has been disconnected.")), (NULL));
-    goto write_error;
-  }
 }
 
 static guint
@@ -1202,7 +1259,9 @@ gst_alsasink_pause (GstAudioSink * asink)
   alsa = GST_ALSA_SINK (asink);
 
   if (alsa->hw_support_pause == TRUE) {
+    g_atomic_int_set (&alsa->abort_device_writing, TRUE);
     GST_ALSA_SINK_LOCK (asink);
+    g_atomic_int_set (&alsa->abort_device_writing, FALSE);
     snd_pcm_delay (alsa->handle, &delay);
     alsa->pos_in_buffer = delay;
     CHECK (snd_pcm_pause (alsa->handle, 1), pause_error);
@@ -1234,7 +1293,9 @@ gst_alsasink_resume (GstAudioSink * asink)
   alsa = GST_ALSA_SINK (asink);
 
   if (alsa->hw_support_pause == TRUE) {
+    g_atomic_int_set (&alsa->abort_device_writing, TRUE);
     GST_ALSA_SINK_LOCK (asink);
+    g_atomic_int_set (&alsa->abort_device_writing, FALSE);
     CHECK (snd_pcm_pause (alsa->handle, 0), resume_error);
     GST_DEBUG_OBJECT (alsa, "resume done");
     GST_ALSA_SINK_UNLOCK (asink);
@@ -1259,7 +1320,9 @@ gst_alsasink_stop (GstAudioSink * asink)
 
   alsa = GST_ALSA_SINK (asink);
 
+  g_atomic_int_set (&alsa->abort_device_writing, TRUE);
   GST_ALSA_SINK_LOCK (asink);
+  g_atomic_int_set (&alsa->abort_device_writing, FALSE);
   GST_DEBUG_OBJECT (alsa, "drop");
   CHECK (snd_pcm_drop (alsa->handle), drop_error);
   GST_DEBUG_OBJECT (alsa, "prepare");

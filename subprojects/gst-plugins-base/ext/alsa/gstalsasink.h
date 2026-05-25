@@ -81,6 +81,7 @@ struct _GstAlsaSink {
 
   GMutex alsa_lock;
   GMutex delay_lock;
+  gint abort_device_writing;
 };
 
 struct _GstAlsaSinkClass {
