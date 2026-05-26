@@ -249,6 +249,7 @@ struct _GstAggregatorPadPrivate
   GstFlowReturn flow_return;
 
   guint32 last_flush_start_seqnum;
+  /* Next one protected by object lock */
   guint32 last_flush_stop_seqnum;
 
   /* Whether the pad hasn't received a first buffer yet */
@@ -379,9 +380,9 @@ struct _GstAggregatorPrivate
   guint32 seqnum;
   gboolean send_stream_start;   /* protected by srcpad stream lock */
   gboolean send_segment;
-  gboolean flushing;
-  gboolean send_eos;            /* protected by srcpad stream lock */
-  gboolean got_eos_event;       /* protected by srcpad stream lock */
+  gboolean flushing;            /* protected by object lock */
+  gboolean send_eos;            /* protected by src_lock */
+  gboolean got_eos_event;       /* protected by src_lock */
 
   GstCaps *srccaps;             /* protected by the srcpad stream lock */
 
@@ -832,11 +833,13 @@ gst_aggregator_push_eos (GstAggregator * self)
 
   event = gst_event_new_eos ();
 
+  SRC_LOCK (self);
   GST_OBJECT_LOCK (self);
   self->priv->send_eos = FALSE;
   if (self->priv->seqnum != GST_SEQNUM_INVALID)
     gst_event_set_seqnum (event, self->priv->seqnum);
   GST_OBJECT_UNLOCK (self);
+  SRC_UNLOCK (self);
 
   gst_pad_push_event (self->srcpad, event);
 }
@@ -1502,7 +1505,9 @@ gst_aggregator_loop (GstAggregator * self)
   }
 
   GST_LOG_OBJECT (self, "Checking aggregate");
+  SRC_LOCK (self);
   while (priv->send_eos && priv->running) {
+    SRC_UNLOCK (self);
     flow_return = GST_FLOW_OK;
     DoHandleEventsAndQueriesData events_query_data = { FALSE, GST_FLOW_OK };
 
@@ -1521,6 +1526,7 @@ gst_aggregator_loop (GstAggregator * self)
       self->priv->got_eos_event = FALSE;
       SRC_UNLOCK (self);
       gst_aggregator_push_eos (self);
+      SRC_LOCK (self);
       continue;
     }
     SRC_UNLOCK (self);
@@ -1530,6 +1536,7 @@ gst_aggregator_loop (GstAggregator * self)
     if (!gst_aggregator_wait_and_check (self, &timeout)) {
       gst_element_foreach_sink_pad (GST_ELEMENT_CAST (self),
           gst_aggregator_pad_reset_peeked_buffer, NULL);
+      SRC_LOCK (self);
       continue;
     }
 
@@ -1559,8 +1566,10 @@ gst_aggregator_loop (GstAggregator * self)
       priv->selected_samples_called_or_warned = TRUE;
     }
 
-    if (flow_return == GST_AGGREGATOR_FLOW_NEED_DATA)
+    if (flow_return == GST_AGGREGATOR_FLOW_NEED_DATA) {
+      SRC_LOCK (self);
       continue;
+    }
 
     GST_OBJECT_LOCK (self);
     if (flow_return == GST_FLOW_FLUSHING && priv->flushing) {
@@ -1593,9 +1602,12 @@ gst_aggregator_loop (GstAggregator * self)
         gst_aggregator_pad_set_flushing (aggpad, flow_return, TRUE);
       }
       GST_OBJECT_UNLOCK (self);
+      SRC_LOCK (self);
       break;
     }
+    SRC_LOCK (self);
   }
+  SRC_UNLOCK (self);
 
   return flow_return;
 }
@@ -1691,6 +1703,7 @@ gst_aggregator_stop_srcpad_task (GstAggregator * self, GstEvent * flush_start)
   return res;
 }
 
+/* Protected by src lock */
 static void
 gst_aggregator_start_srcpad_task (GstAggregator * self)
 {
@@ -2052,38 +2065,39 @@ gst_aggregator_default_sink_event_pre_queue (GstAggregator * self,
     guint32 seqnum = gst_event_get_seqnum (event);
 
     PAD_FLUSH_LOCK (aggpad);
-    PAD_LOCK (aggpad);
-    aggpad->priv->last_flush_stop_seqnum = seqnum;
-    PAD_UNLOCK (aggpad);
-
-    gst_aggregator_pad_flush (aggpad, self);
 
     GST_PAD_STREAM_LOCK (self->srcpad);
-
-    SRC_LOCK (self);
+    /* Takes pad lock and potentially object lock */
+    gst_aggregator_pad_flush (aggpad, self);
     GST_OBJECT_LOCK (self);
+    aggpad->priv->last_flush_stop_seqnum = seqnum;      /* Protected by object lock */
+
+    /* priv->flushing protected by object lock */
+    /* gst_aggregator_all_flush_stop_received called with object lock held */
     if (priv->flushing && gst_aggregator_all_flush_stop_received (self, seqnum)) {
-      GST_OBJECT_UNLOCK (self);
       /* That means we received FLUSH_STOP/FLUSH_STOP on
        * all sinkpads -- Seeking is Done... sending FLUSH_STOP */
+      GST_OBJECT_UNLOCK (self);
 
       GST_INFO_OBJECT (self, "Have flush stop on all pads");
 
-      gst_aggregator_start_srcpad_task (self);
+      SRC_LOCK (self);
       PAD_LOCK (aggpad);
       GST_DEBUG_OBJECT (aggpad, "Store event in queue: %" GST_PTR_FORMAT,
           event);
+      /* protected by pad_lock */
       g_queue_push_head (&aggpad->priv->data, event);
-      priv->send_eos = TRUE;
-      priv->got_eos_event = FALSE;
-      SRC_BROADCAST (self);
       PAD_UNLOCK (aggpad);
+      /* protected by src_lock, takes object lock */
+      gst_aggregator_start_srcpad_task (self);
+      priv->send_eos = TRUE;    /* protected by src_lock */
+      priv->got_eos_event = FALSE;      /* protected by src_lock */
+      SRC_BROADCAST (self);
       SRC_UNLOCK (self);
     } else {
       /* Eat up this event while waiting for other pads */
       gst_event_unref (event);
       GST_OBJECT_UNLOCK (self);
-      SRC_UNLOCK (self);
     }
     GST_PAD_STREAM_UNLOCK (self->srcpad);
     PAD_FLUSH_UNLOCK (aggpad);
@@ -2810,7 +2824,9 @@ gst_aggregator_src_pad_activate_mode_func (GstPad * pad,
       case GST_PAD_MODE_PUSH:
       {
         GST_INFO_OBJECT (pad, "Activating pad!");
+        SRC_LOCK (self);
         gst_aggregator_start_srcpad_task (self);
+        SRC_UNLOCK (self);
         return TRUE;
       }
       default:
