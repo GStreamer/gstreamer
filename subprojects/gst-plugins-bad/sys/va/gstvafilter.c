@@ -62,6 +62,7 @@ struct _GstVaFilter
 
   guint32 scale_method;
   guint32 interpolation_method;
+  guint32 background_color;
 
   gboolean crop_enabled;
 
@@ -170,6 +171,7 @@ gst_va_filter_init (GstVaFilter * self)
   self->max_height = G_MAXINT;
   self->min_width = 1;
   self->max_width = G_MAXINT;
+  self->background_color = 0xff000000;  /* ARGB black */
 }
 
 GstVaFilter *
@@ -988,6 +990,18 @@ gst_va_filter_set_interpolation_method (GstVaFilter * self, guint32 method)
   return TRUE;
 }
 
+gboolean
+gst_va_filter_set_background_color (GstVaFilter * self, guint32 argb)
+{
+  g_return_val_if_fail (GST_IS_VA_FILTER (self), FALSE);
+
+  GST_OBJECT_LOCK (self);
+  self->background_color = argb;
+  GST_OBJECT_UNLOCK (self);
+
+  return TRUE;
+}
+
 static gboolean
 _from_video_orientation_method (GstVideoOrientationMethod orientation,
     guint * mirror, guint * rotation)
@@ -1657,7 +1671,7 @@ _create_pipeline_buffer (GstVaFilter * self, GstVaSample * src,
     .surface_region = &src->rect,
     .surface_color_standard = self->input_color_standard,
     .output_region = &dst->rect,
-    .output_background_color = 0xff000000, /* ARGB black */
+    .output_background_color = self->background_color,
     .output_color_standard = self->output_color_standard,
     .filters = va_filters,
     .num_filters = num_filters,
@@ -1867,7 +1881,7 @@ gst_va_filter_compose (GstVaFilter * self, GstVaComposeTransaction * tx)
       .surface = in_surface,
       .surface_region = &sample->input_region,
       .output_region = &sample->output_region,
-      .output_background_color = 0xff000000,
+      .output_background_color = self->background_color,
       .filter_flags = self->scale_method | self->interpolation_method,
     };
     /* *INDENT-ON* */

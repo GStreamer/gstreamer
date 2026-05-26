@@ -120,6 +120,7 @@ struct _GstVaVpp
   gint borders_w;
   guint32 scale_method;
   guint32 interpolation_method;
+  guint32 background_color;
 
   gboolean hdr_mapping;
   gboolean has_hdr_meta;
@@ -142,6 +143,7 @@ enum
 {
   PROP_DISABLE_PASSTHROUGH = GST_VA_FILTER_PROP_LAST + 1,
   PROP_ADD_BORDERS,
+  PROP_BACKGROUND_COLOR,
   N_PROPERTIES
 };
 
@@ -256,6 +258,9 @@ _update_properties_unlocked (GstVaVpp * self)
   if (!gst_va_filter_set_interpolation_method (btrans->filter,
           self->interpolation_method))
     GST_WARNING_OBJECT (self, "could not set the filter interpolation method.");
+  if (!gst_va_filter_set_background_color (btrans->filter,
+          self->background_color))
+    GST_WARNING_OBJECT (self, "could not set the background color.");
 }
 
 static void
@@ -337,6 +342,9 @@ gst_va_vpp_set_property (GObject * object, guint prop_id,
     case GST_VA_FILTER_PROP_INTERPOLATION_METHOD:
       self->interpolation_method = g_value_get_enum (value);
       break;
+    case PROP_BACKGROUND_COLOR:
+      self->background_color = (guint32) g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -406,6 +414,9 @@ gst_va_vpp_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case GST_VA_FILTER_PROP_INTERPOLATION_METHOD:
       g_value_set_enum (value, self->interpolation_method);
+      break;
+    case PROP_BACKGROUND_COLOR:
+      g_value_set_uint (value, self->background_color);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2175,6 +2186,21 @@ _install_static_properties (GObjectClass * klass)
   g_object_class_install_property (klass, PROP_ADD_BORDERS,
       PROPERTIES (PROP_ADD_BORDERS));
 
+
+  /**
+   * GstVaPostProc:background-color:
+   *
+   * Sets the background color to use. It is useful when add-borders is enabled.
+   *
+   * Since: 1.30
+   */
+  PROPERTIES (PROP_BACKGROUND_COLOR) = g_param_spec_uint ("background-color",
+      "Background Color", "Background color to use (big-endian ARGB)", 0,
+      UINT32_MAX, 0xff000000 /* ARGB black */ ,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (klass, PROP_BACKGROUND_COLOR,
+      PROPERTIES (PROP_BACKGROUND_COLOR));
+
 }
 
 static void
@@ -2310,6 +2336,7 @@ gst_va_vpp_init (GTypeInstance * instance, gpointer g_class)
   self->direction = GST_VIDEO_ORIENTATION_IDENTITY;
   self->prev_direction = self->direction;
   self->tag_direction = GST_VIDEO_ORIENTATION_AUTO;
+  self->background_color = 0xff000000;  /* ARGB black */
 
   /**
    * GstVaPostProc:denoise:

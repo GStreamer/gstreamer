@@ -123,6 +123,8 @@ gboolean              gst_va_filter_install_deinterlace_properties
                                                            GObjectClass * klass);
 gboolean              gst_va_filter_set_scale_method      (GstVaFilter * self,
                                                            guint32 method);
+gboolean              gst_va_filter_set_background_color  (GstVaFilter * self,
+                                                           guint32 argb);
 gboolean              gst_va_filter_set_interpolation_method
                                                           (GstVaFilter * self,
                                                            guint32 method);
