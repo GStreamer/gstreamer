@@ -14,6 +14,7 @@ fuzz_targets = [
   ['gst-value.c', false, []],
   ['gst-video.c', false, ['gstreamer-video-1.0']],
   ['gst-video-converter.c', false, ['gstreamer-video-1.0']],
+  ['gst-video-vanc.c', false, ['gstreamer-video-1.0']],
   ['gst-videoparsers.c', false, []],
   ['typefind.c'],
 ]
