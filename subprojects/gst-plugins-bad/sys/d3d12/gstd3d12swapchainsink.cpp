@@ -64,6 +64,8 @@ enum
   PROP_BRIGHTNESS,
   PROP_CONTRAST,
   PROP_MAX_MIP_LEVELS,
+  PROP_SRC_ROI_WIDTH,
+  PROP_SRC_ROI_HEIGHT,
 };
 
 #define DEFAULT_ADAPTER -1
@@ -78,6 +80,8 @@ enum
 #define DEFAULT_BRIGHTNESS 0.0
 #define DEFAULT_CONTRAST 1.0
 #define DEFAULT_MAX_MIP_LEVELS 1
+#define DEFAULT_SRC_ROI_WIDTH 0
+#define DEFAULT_SRC_ROI_HEIGHT 0
 
 #define BACK_BUFFER_COUNT 2
 
@@ -253,6 +257,8 @@ struct GstD3D12SwapChainSinkPrivate
   gdouble brightness = DEFAULT_BRIGHTNESS;
   gdouble contrast = DEFAULT_CONTRAST;
   guint mip_levels = DEFAULT_MAX_MIP_LEVELS;
+  guint src_roi_width = DEFAULT_SRC_ROI_WIDTH;
+  guint src_roi_height = DEFAULT_SRC_ROI_HEIGHT;
 };
 /* *INDENT-ON* */
 
@@ -405,6 +411,42 @@ gst_d3d12_swapchain_sink_class_init (GstD3D12SwapChainSinkClass * klass)
           "(0 = generate full mip chain, G_MAXUINT16 = generate only "
           "the target mip level and one additional level)", 0, G_MAXUINT16,
           DEFAULT_MAX_MIP_LEVELS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D12SwapChainSink:src-roi-width:
+   *
+   * Width of the source ROI. Used to compute the correct target mipmap
+   * level - does not crop or resize the input itself. Set this when
+   * only a sub-region of the source is sampled (e.g. via uv-remap of
+   * d3d12swapchainsink). 0 = treat entire input as the ROI (default).
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (object_class, PROP_SRC_ROI_WIDTH,
+      g_param_spec_uint ("src-roi-width",
+          "Source ROI Width",
+          "Width of the source ROI, used to compute the target mipmap "
+          "level (0 = entire input)",
+          0, G_MAXINT, DEFAULT_SRC_ROI_WIDTH,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D12SwapChainSink:src-roi-height:
+   *
+   * Height of the source ROI. Used to compute the correct target mipmap
+   * level - does not crop or resize the input itself. Set this when
+   * only a sub-region of the source is sampled (e.g. via uv-remap of
+   * d3d12swapchainsink). 0 = treat entire input as the ROI (default).
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (object_class, PROP_SRC_ROI_HEIGHT,
+      g_param_spec_uint ("src-roi-height",
+          "Source ROI Height",
+          "Height of the source ROI, used to compute the target mipmap "
+          "level (0 = entire input)",
+          0, G_MAXINT, DEFAULT_SRC_ROI_HEIGHT,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   d3d12_swapchain_sink_signals[SIGNAL_RESIZE] =
@@ -617,6 +659,20 @@ gst_d3d12_swapchain_sink_set_property (GObject * object, guint prop_id,
       if (priv->conv)
         g_object_set (priv->conv, "max-mip-levels", priv->mip_levels, nullptr);
       break;
+    case PROP_SRC_ROI_WIDTH:
+      priv->src_roi_width = g_value_get_uint (value);
+      if (priv->conv) {
+        g_object_set (priv->conv, "src-roi-width",
+            priv->src_roi_width, nullptr);
+      }
+      break;
+    case PROP_SRC_ROI_HEIGHT:
+      priv->src_roi_height = g_value_get_uint (value);
+      if (priv->conv) {
+        g_object_set (priv->conv, "src-roi-height",
+            priv->src_roi_height, nullptr);
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -814,6 +870,12 @@ gst_d3d12_swapchain_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MAX_MIP_LEVELS:
       g_value_set_uint (value, priv->mip_levels);
+      break;
+    case PROP_SRC_ROI_WIDTH:
+      g_value_set_uint (value, priv->src_roi_width);
+      break;
+    case PROP_SRC_ROI_HEIGHT:
+      g_value_set_uint (value, priv->src_roi_height);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1054,7 +1116,8 @@ gst_d3d12_swapchain_sink_render (GstD3D12SwapChainSink * self)
         "dest-height", priv->viewport.h, "hue", priv->hue,
         "saturation", priv->saturation, "brightness", priv->brightness,
         "contrast", priv->contrast, "max-mip-levels", priv->mip_levels,
-        nullptr);
+        "src-roi-width", priv->src_roi_width,
+        "src-roi-height", priv->src_roi_height, nullptr);
     gst_d3d12_overlay_blender_update_viewport (priv->comp, &priv->viewport);
 
     priv->first_present = false;

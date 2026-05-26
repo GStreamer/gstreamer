@@ -145,6 +145,8 @@ using namespace DirectX;
 #define DEFAULT_BRIGHTNESS 0.0
 #define DEFAULT_CONTRAST 1.0
 #define DEFAULT_MAX_MIP_LEVELS 1
+#define DEFAULT_SRC_ROI_WIDTH 0
+#define DEFAULT_SRC_ROI_HEIGHT 0
 
 static const WORD g_indices[6] = { 0, 1, 2, 3, 0, 2 };
 
@@ -265,6 +267,8 @@ enum
   PROP_BRIGHTNESS,
   PROP_CONTRAST,
   PROP_MAX_MIP_LEVELS,
+  PROP_SRC_ROI_WIDTH,
+  PROP_SRC_ROI_HEIGHT,
 };
 
 /* *INDENT-OFF* */
@@ -469,6 +473,9 @@ struct _GstD3D12ConverterPrivate
   GstD3D12ConverterAlphaMode dst_alpha_mode =
       GST_D3D12_CONVERTER_ALPHA_MODE_UNSPECIFIED;
   guint mip_levels = DEFAULT_MAX_MIP_LEVELS;
+  guint src_roi_width = DEFAULT_SRC_ROI_WIDTH;
+  guint src_roi_height = DEFAULT_SRC_ROI_HEIGHT;
+  gboolean update_mipgen_hint = FALSE;
 };
 /* *INDENT-ON* */
 
@@ -565,6 +572,40 @@ gst_d3d12_converter_class_init (GstD3D12ConverterClass * klass)
           "(0 = generate full mip chain, G_MAXUINT16 = generate only "
           "the target mip level and one additional level)", 0, G_MAXUINT16,
           DEFAULT_MAX_MIP_LEVELS, param_flags));
+
+  /**
+   * GstD3D12Converter:src-roi-width:
+   *
+   * Width of the source ROI. Used to compute the correct target mipmap
+   * level - does not crop or resize the input itself. Set this when
+   * only a sub-region of the source is sampled (e.g. via uv-remap of
+   * d3d12swapchainsink). 0 = treat entire input as the ROI (default).
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (object_class, PROP_SRC_ROI_WIDTH,
+      g_param_spec_uint ("src-roi-width",
+          "Source ROI Width",
+          "Width of the source ROI, used to compute the target mipmap "
+          "level (0 = entire input)",
+          0, G_MAXINT, DEFAULT_SRC_ROI_WIDTH, param_flags));
+
+  /**
+   * GstD3D12Converter:src-roi-height:
+   *
+   * Height of the source ROI. Used to compute the correct target mipmap
+   * level - does not crop or resize the input itself. Set this when
+   * only a sub-region of the source is sampled (e.g. via uv-remap of
+   * d3d12swapchainsink). 0 = treat entire input as the ROI (default).
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (object_class, PROP_SRC_ROI_HEIGHT,
+      g_param_spec_uint ("src-roi-height",
+          "Source ROI Height",
+          "Height of the source ROI, used to compute the target mipmap "
+          "level (0 = entire input)",
+          0, G_MAXINT, DEFAULT_SRC_ROI_HEIGHT, param_flags));
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_converter_debug,
       "d3d12converter", 0, "d3d12converter");
@@ -734,6 +775,24 @@ gst_d3d12_converter_set_property (GObject * object, guint prop_id,
     case PROP_MAX_MIP_LEVELS:
       priv->mip_levels = g_value_get_uint (value);
       break;
+    case PROP_SRC_ROI_WIDTH:
+    {
+      auto val = g_value_get_uint (value);
+      if (val != priv->src_roi_width) {
+        priv->src_roi_width = val;
+        priv->update_mipgen_hint = TRUE;
+      }
+      break;
+    }
+    case PROP_SRC_ROI_HEIGHT:
+    {
+      auto val = g_value_get_uint (value);
+      if (val != priv->src_roi_height) {
+        priv->src_roi_height = val;
+        priv->update_mipgen_hint = TRUE;
+      }
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -803,6 +862,12 @@ gst_d3d12_converter_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MAX_MIP_LEVELS:
       g_value_set_uint (value, priv->mip_levels);
+      break;
+    case PROP_SRC_ROI_WIDTH:
+      g_value_set_uint (value, priv->src_roi_width);
+      break;
+    case PROP_SRC_ROI_HEIGHT:
+      g_value_set_uint (value, priv->src_roi_height);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2700,6 +2765,10 @@ calculate_auto_mipgen_level (GstD3D12Converter * self)
 
   guint src_width = (guint) priv->mipgen_desc.Width;
   guint src_height = priv->mipgen_desc.Height;
+  if (priv->src_roi_width > 0)
+    src_width = MIN (src_width, priv->src_roi_width);
+  if (priv->src_roi_height > 0)
+    src_height = MIN (src_height, priv->src_roi_height);
   guint dst_width = priv->dest_width;
   guint dst_height = priv->dest_height;
   switch (priv->video_direction) {
@@ -2867,8 +2936,10 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
       mip_levels = MIN (priv->mip_levels, priv->mipgen_desc.MipLevels);
     }
 
-    if (priv->update_transform || priv->update_dest_rect) {
+    if (priv->update_transform || priv->update_dest_rect ||
+        priv->update_mipgen_hint) {
       calculate_auto_mipgen_level (converter);
+      priv->update_mipgen_hint = FALSE;
       GST_DEBUG_OBJECT (converter,
           "Calculated mip level on viewport size change %d",
           priv->auto_mipgen_level);
