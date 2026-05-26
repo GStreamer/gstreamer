@@ -1952,13 +1952,19 @@ serialize_message (GstRTSPConnection * conn, GstRTSPMessage * message,
     case GST_RTSP_MESSAGE_REQUEST:
       str = g_string_new ("");
 
-      /* create request string, add CSeq */
-      g_string_append_printf (str, "%s %s RTSP/%s\r\n"
-          "CSeq: %d\r\n",
+      /* create request line */
+      g_string_append_printf (str, "%s %s RTSP/%s\r\n",
           gst_rtsp_method_as_text (message->type_data.request.method),
           message->type_data.request.uri,
-          gst_rtsp_version_as_text (message->type_data.request.version),
-          conn->cseq++);
+          gst_rtsp_version_as_text (message->type_data.request.version));
+      /* add CSeq header; also exposes the assigned value on the message so
+       * callers can read it back via gst_rtsp_message_get_header() */
+      {
+        gchar cseq_str[16];
+        g_snprintf (cseq_str, sizeof (cseq_str), "%d", conn->cseq++);
+        gst_rtsp_message_remove_header (message, GST_RTSP_HDR_CSEQ, -1);
+        gst_rtsp_message_add_header (message, GST_RTSP_HDR_CSEQ, cseq_str);
+      }
       /* add session id if we have one */
       if (conn->session_id[0] != '\0') {
         gst_rtsp_message_remove_header (message, GST_RTSP_HDR_SESSION, -1);
