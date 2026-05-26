@@ -9,6 +9,7 @@ fuzz_targets = [
   ['gst-discoverer.c', false, ['gstreamer-pbutils-1.0']],
   ['gst-subparse.c', false, []],
   ['gst-tag.c', false, ['gstreamer-tag-1.0']],
+  ['gst-uri.c', false, []],
   ['gst-value.c', false, []],
   ['gst-video.c', false, ['gstreamer-video-1.0']],
   ['gst-video-converter.c', false, ['gstreamer-video-1.0']],
