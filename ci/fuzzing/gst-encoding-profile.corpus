@@ -1,0 +1,4 @@
+./ci/fuzzing/seeds/gst-encoding-profile/*
+./subprojects/gst-plugins-bad/data/targets/file-extension/*.gep
+./subprojects/gst-plugins-bad/data/targets/online-service/*.gep
+./subprojects/gst-plugins-bad/data/targets/device/*.gep

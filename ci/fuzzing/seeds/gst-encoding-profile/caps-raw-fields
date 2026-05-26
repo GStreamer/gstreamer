@@ -1,0 +1,1 @@
+video/x-raw,format=I420,width=640,height=480:audio/x-raw,format=S16LE,rate=44100,channels=2
