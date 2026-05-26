@@ -500,11 +500,21 @@ _generate_not_negotiated_error_report (GstMessage * msg)
 {
   GString *str;
   GList *tmp;
-  GstElement *element = GST_ELEMENT (GST_MESSAGE_SRC (msg));
+  GstObject *src = GST_MESSAGE_SRC (msg);
+  GstElement *element;
   GstValidatePadMonitor *last_query_caps_fail_monitor = NULL,
       *last_refused_caps_monitor = NULL;
 
   str = g_string_new (NULL);
+
+  if (!src || !GST_IS_ELEMENT (src)) {
+    g_string_append (str,
+        "Error message has no element source — unable to gather negotiation"
+        " details.");
+    return g_string_free (str, FALSE);
+  }
+
+  element = GST_ELEMENT (src);
   g_string_append_printf (str, "Error message posted by: %s",
       GST_OBJECT_NAME (element));
 
@@ -604,7 +614,8 @@ _bus_handler (GstBus * bus, GstMessage * message,
           || g_error_matches (err, GST_STREAM_ERROR, GST_STREAM_ERROR_FORMAT)) {
         gchar *report = _generate_not_negotiated_error_report (message);
 
-        GST_VALIDATE_REPORT (monitor, NOT_NEGOTIATED, "%s", report);
+        GST_VALIDATE_REPORT (monitor, NOT_NEGOTIATED,
+            "Error: %s -- Debug message: %s\n%s", err->message, debug, report);
         g_free (report);
       } else {
         GST_VALIDATE_REPORT (monitor, ERROR_ON_BUS,
