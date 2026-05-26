@@ -209,7 +209,9 @@ Meson 0.59.0+ automatically detects and activates the Visual Studio toolchain wh
 NOTE: If you have other toolchains (MinGW, Clang, etc.) in your PATH, Meson may detect those instead of Visual Studio. To ensure Visual Studio is used:
 - Remove conflicting toolchains from your Windows PATH, or
 - Use the `--vsenv` flag: `meson setup --vsenv builddir`, or
-- Run from a Developer PowerShell for VS 2022 which pre-configures the environment
+- [Run from a Developer PowerShell] for VS 2022 which pre-configures the environment
+
+[Run from a Developer PowerShell]: https://learn.microsoft.com/en-us/visualstudio/ide/reference/command-prompt-powershell?view=visualstudio
 
 #### Building with Visual Studio
 
