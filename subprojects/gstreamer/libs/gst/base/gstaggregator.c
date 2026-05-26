@@ -1851,7 +1851,6 @@ gst_aggregator_default_sink_event (GstAggregator * self,
 {
   gboolean res = TRUE;
   GstPad *pad = GST_PAD (aggpad);
-  GstAggregatorPrivate *priv = self->priv;
 
   GST_DEBUG_OBJECT (aggpad, "Got event: %" GST_PTR_FORMAT, event);
 
@@ -1865,21 +1864,13 @@ gst_aggregator_default_sink_event (GstAggregator * self,
     }
     case GST_EVENT_FLUSH_STOP:
     {
-      GST_OBJECT_LOCK (self);
       /* No need to check if all pads have stream start. If we are here, it
-       * means the task got activated from pre_queue */
-      if (priv->flushing) {
-        GST_OBJECT_UNLOCK (self);
-        /* That means we received FLUSH_STOP/FLUSH_STOP on
-         * all sinkpads -- Seeking is Done... sending FLUSH_STOP */
-        gst_aggregator_flush (self);
-        gst_pad_push_event (self->srcpad, event);
-        event = NULL;
+       * means the task got activated from pre_queue. Forwarding event */
+      gst_aggregator_flush (self);
+      gst_pad_push_event (self->srcpad, event);
+      event = NULL;
 
-        GST_INFO_OBJECT (self, "Flush stopped");
-      } else {
-        GST_OBJECT_UNLOCK (self);
-      }
+      GST_INFO_OBJECT (self, "Flush stopped");
 
       /* We never forward the event */
       goto eat;
@@ -2077,6 +2068,7 @@ gst_aggregator_default_sink_event_pre_queue (GstAggregator * self,
     if (priv->flushing && gst_aggregator_all_flush_stop_received (self, seqnum)) {
       /* That means we received FLUSH_STOP/FLUSH_STOP on
        * all sinkpads -- Seeking is Done... sending FLUSH_STOP */
+      priv->flushing = FALSE;
       GST_OBJECT_UNLOCK (self);
 
       GST_INFO_OBJECT (self, "Have flush stop on all pads");
