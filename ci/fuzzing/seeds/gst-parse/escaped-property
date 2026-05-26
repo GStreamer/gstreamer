@@ -1,0 +1,1 @@
+filesrc location=/tmp/foo\:bar.mp4 ! fakesink

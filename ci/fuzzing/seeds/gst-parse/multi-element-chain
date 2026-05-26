@@ -1,0 +1,1 @@
+videotestsrc ! videoconvert ! videoscale ! video/x-raw,width=320,height=240 ! fakesink

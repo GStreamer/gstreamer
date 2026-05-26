@@ -1,0 +1,1 @@
+videotestsrc ! video/x-raw(memory:DMABuf),format=NV12 ! fakesink

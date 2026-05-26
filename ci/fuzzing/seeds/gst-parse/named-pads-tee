@@ -1,0 +1,1 @@
+videotestsrc name=src ! tee name=t ! queue ! fakesink t. ! queue ! fakesink

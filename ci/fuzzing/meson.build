@@ -8,6 +8,7 @@ fuzz_targets = [
   ['gst-audioparsers.c', false, []],
   ['gst-codec-utils.c', false, ['gstreamer-pbutils-1.0']],
   ['gst-discoverer.c', false, ['gstreamer-pbutils-1.0']],
+  ['gst-parse.c', false, []],
   ['gst-subparse.c', false, []],
   ['gst-tag.c', false, ['gstreamer-tag-1.0']],
   ['gst-uri.c', false, []],
