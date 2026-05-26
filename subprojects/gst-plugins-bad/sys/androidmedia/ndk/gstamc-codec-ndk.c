@@ -537,7 +537,7 @@ gst_amc_codec_ndk_release_output_buffer (GstAmcCodec * codec, gint index,
 
   if (result != AMEDIA_OK) {
     g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
-        "Failed to release input buffer: %d", result);
+        "Failed to release output buffer: %d", result);
     return FALSE;
   }
 
