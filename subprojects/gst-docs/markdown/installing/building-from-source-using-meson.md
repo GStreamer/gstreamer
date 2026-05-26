@@ -57,8 +57,7 @@ that it would download the various GStreamer submodules as well.
 
 ## Setting up the build with Meson
 
-In order to build the current GStreamer development version, which will become
-the 1.20 stable branch in the near future, clone the GStreamer mono repository:
+In order to build the current GStreamer development version, clone the GStreamer mono repository:
 ``` shell
 git clone https://gitlab.freedesktop.org/gstreamer/gstreamer.git
 cd gstreamer
@@ -69,6 +68,9 @@ Or if you have developer access to the repositories:
 git clone git@gitlab.freedesktop.org:gstreamer/gstreamer.git
 cd gstreamer
 ```
+
+If you want to build a specific version >= 1.20, add `-b 1.XX` to the clone command.
+
 If you want to build the stable 1.18 or 1.16 branches, clone `gst-build`:
 
 ``` shell
