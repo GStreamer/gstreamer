@@ -30,6 +30,7 @@
 #endif
 
 #ifdef HAVE_JNI_H
+#include "gstaassetsrc.h"
 #include "gstahcsrc.h"
 #include "gstahssrc.h"
 #include "gstjniutils.h"
@@ -2025,6 +2026,17 @@ amc_init (GstPlugin * plugin)
 
 #ifdef HAVE_JNI_H
 static gboolean
+aasrc_init (GstPlugin * plugin)
+{
+  if (!GST_ELEMENT_REGISTER (aassetsrc, plugin)) {
+    GST_ERROR ("Failed to register Android AAsset source");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 ahc_init (GstPlugin * plugin)
 {
   if (!gst_android_graphics_imageformat_init ()) {
@@ -2079,6 +2091,9 @@ plugin_init (GstPlugin * plugin)
     init_ok = TRUE;
 
 #ifdef HAVE_JNI_H
+  if (aasrc_init (plugin))
+    init_ok = TRUE;
+
   if (ahc_init (plugin))
     init_ok = TRUE;
 

@@ -1,4 +1,5 @@
 androidmedia_sources = [
+  'gstaassetsrc.c',
   'gstamcaudiodec.c',
   'gstamc.c',
   'gstamc-codec.c',
@@ -26,6 +27,7 @@ ndk_sources = [
 ]
 
 androidmedia_headers = [
+  'gstaassetsrc.h',
   'gstahcsrc.h',
   'gstahssrc.h',
   'gstamcaudiodec.h',
@@ -68,12 +70,14 @@ amc_opt = amc_opt.require(host_system == 'android',
 )
 
 have_jni_h = cc.has_header('jni.h', required : amc_opt)
+have_asset_manager_jni_h = cc.has_header('android/asset_manager_jni.h',
+  required : amc_opt)
 
-if amc_opt.disabled() or not have_jni_h
+if amc_opt.disabled() or not have_jni_h or not have_asset_manager_jni_h
   subdir_done()
 endif
 
-extra_deps = []
+extra_deps = [cc.find_library('android', required : true)]
 extra_cargs = [
   '-DHAVE_JNI_H',
   '-DPLUGIN_NAME=androidmedia',
@@ -86,7 +90,6 @@ extra_cargs = [
 if cc.check_header('media/NdkMediaCodec.h')
   androidmedia_sources += ndk_sources
   extra_cargs += [ '-DHAVE_NDKMEDIA' ]
-  extra_deps += [ cc.find_library('android', required : true) ]
 endif
 
 gstandroidmedia = library('gstandroidmedia',
