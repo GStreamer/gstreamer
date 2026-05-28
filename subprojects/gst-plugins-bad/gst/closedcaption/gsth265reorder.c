@@ -1721,26 +1721,109 @@ GstBuffer *
 gst_h265_reorder_insert_sei (GstH265Reorder * reorder, GstBuffer * au,
     GArray * sei)
 {
+  gboolean has_dsc_message = FALSE;
+  guint i;
   GstMemory *mem;
   GstBuffer *new_buf;
 
-  if (reorder->is_hevc)
-    mem = gst_h265_create_sei_memory_hevc (0, 1, reorder->nal_length_size, sei);
-  else
-    mem = gst_h265_create_sei_memory (0, 1, 4, sei);
-
-  if (!mem) {
-    GST_ERROR_OBJECT (reorder, "Couldn't create SEI memory");
+  if (!sei || sei->len == 0) {
+    GST_WARNING_OBJECT (reorder, "Empty SEI array");
     return NULL;
   }
 
-  if (reorder->is_hevc) {
-    new_buf = gst_h265_parser_insert_sei_hevc (reorder->parser,
-        reorder->nal_length_size, au, mem);
-  } else {
-    new_buf = gst_h265_parser_insert_sei (reorder->parser, au, mem);
+  for (i = 0; i < sei->len; i++) {
+    GstH265SEIMessage *sei_msg = &g_array_index (sei, GstH265SEIMessage, i);
+
+    if (sei_msg->payloadType ==
+        GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION
+        || sei_msg->payloadType ==
+        GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION
+        || sei_msg->payloadType ==
+        GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION) {
+      has_dsc_message = TRUE;
+      break;
+    }
   }
 
-  gst_memory_unref (mem);
+  if (!has_dsc_message) {
+    if (reorder->is_hevc)
+      mem = gst_h265_create_sei_memory_hevc (0, 1, reorder->nal_length_size,
+          sei);
+    else
+      mem = gst_h265_create_sei_memory (0, 1, 4, sei);
+
+    if (!mem) {
+      GST_ERROR_OBJECT (reorder, "Couldn't create SEI memory");
+      return NULL;
+    }
+
+    if (reorder->is_hevc) {
+      new_buf = gst_h265_parser_insert_sei_hevc (reorder->parser,
+          reorder->nal_length_size, au, mem);
+    } else {
+      new_buf = gst_h265_parser_insert_sei (reorder->parser, au, mem);
+    }
+
+    gst_memory_unref (mem);
+    return new_buf;
+  }
+
+  /*
+   * For DSC-enabled insertion, process one SEI message at a time — each
+   * message goes into its own separate NAL unit (e.g. DSCI, DSCS, DSCV as
+   * three NALs). This is required for interoperability with the H.265 HM
+   * reference decoder:
+   *
+   * HM's TDecTop.cpp parses prefix SEI NAL units by buffering each NAL
+   * (m_prefixSEINALUs), then iterating with parseSEImessage() which only
+   * extracts the *first* SEI message in the NAL payload. Multiple SEI
+   * messages packed into a single NAL unit would be silently discarded
+   * after the first one.
+   */
+  new_buf = gst_buffer_ref (au);
+
+  for (i = 0; i < sei->len; i++) {
+    GstBuffer *tmp_buf;
+    GArray *single_sei;
+    GstH265SEIMessage *sei_msg;
+
+    single_sei = g_array_new (FALSE, FALSE, sizeof (GstH265SEIMessage));
+    sei_msg = &g_array_index (sei, GstH265SEIMessage, i);
+    g_array_append_val (single_sei, *sei_msg);
+
+    if (reorder->is_hevc)
+      mem = gst_h265_create_sei_memory_hevc (0, 1, reorder->nal_length_size,
+          single_sei);
+    else
+      mem = gst_h265_create_sei_memory (0, 1, 4, single_sei);
+
+    g_array_free (single_sei, TRUE);
+
+    if (!mem) {
+      GST_ERROR_OBJECT (reorder, "Couldn't create SEI memory for message %u",
+          i);
+      gst_buffer_unref (new_buf);
+      return NULL;
+    }
+
+    if (reorder->is_hevc) {
+      tmp_buf = gst_h265_parser_insert_sei_hevc (reorder->parser,
+          reorder->nal_length_size, new_buf, mem);
+    } else {
+      tmp_buf = gst_h265_parser_insert_sei (reorder->parser, new_buf, mem);
+    }
+
+    gst_memory_unref (mem);
+
+    if (!tmp_buf) {
+      GST_ERROR_OBJECT (reorder, "Failed to insert SEI message %u", i);
+      gst_buffer_unref (new_buf);
+      return NULL;
+    }
+
+    gst_buffer_unref (new_buf);
+    new_buf = tmp_buf;
+  }
+
   return new_buf;
 }

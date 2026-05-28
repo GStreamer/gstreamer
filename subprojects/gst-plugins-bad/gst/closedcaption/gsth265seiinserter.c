@@ -48,8 +48,8 @@
  * @title: h265seiinserter
  *
  * Extracts SEI-related metas from buffer and inserts SEI messages.
- * Supports closed caption (GstVideoCaptionMeta) and unregistered user data
- * (GstVideoSEIUserDataUnregisteredMeta) SEI messages.
+ * Supports closed caption (GstVideoCaptionMeta), unregistered user data
+ * (GstVideoSEIUserDataUnregisteredMeta) and DSC SEI messages (GstVideoDSCInitializationMeta, GstVideoDSCSelectionMeta, GstVideoDSCVerificationMeta).
  *
  * Since: 1.30
  */
@@ -98,6 +98,8 @@
 
 #include "gsth265seiinserter.h"
 #include <gst/codecparsers/gsth265parser.h>
+#include <gst/video/gsth274.h>
+#include <gst/video/gstvideodscmeta.h>
 #include <gst/video/video-sei.h>
 #include <string.h>
 
@@ -333,6 +335,68 @@ gst_h265_base_sei_inserter_insert_sei (GstCodecSEIInserter * inserter,
     data = g_malloc (sei_meta->size);
     memcpy (data, sei_meta->data, sei_meta->size);
     udu->data = data;
+
+    g_array_append_val (self->sei_array, sei);
+  }
+
+  /* Process DSC initialization metas */
+  for (i = 0; i < metas->len; i++) {
+    GstMeta *meta = g_ptr_array_index (metas, i);
+    GstVideoDSCInitializationMeta *dsci_meta;
+    GstH265SEIMessage sei;
+    GstH274DigitallySignedContentInitialization *dsc_initialization;
+
+    if (meta->info->api != GST_VIDEO_DSC_INITIALIZATION_META_API_TYPE)
+      continue;
+
+    dsci_meta = (GstVideoDSCInitializationMeta *) meta;
+
+    memset (&sei, 0, sizeof (GstH265SEIMessage));
+    sei.payloadType = GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION;
+    dsc_initialization = &sei.payload.dsc_initialization;
+    gst_h274_dsc_initialization_copy (dsc_initialization,
+        &dsci_meta->dsc_initialization);
+
+    g_array_append_val (self->sei_array, sei);
+  }
+
+  /* Process DSC selection metas */
+  for (i = 0; i < metas->len; i++) {
+    GstMeta *meta = g_ptr_array_index (metas, i);
+    GstVideoDSCSelectionMeta *dscs_meta;
+    GstH265SEIMessage sei;
+    GstH274DigitallySignedContentSelection *dsc_selection;
+
+    if (meta->info->api != GST_VIDEO_DSC_SELECTION_META_API_TYPE)
+      continue;
+
+    dscs_meta = (GstVideoDSCSelectionMeta *) meta;
+
+    memset (&sei, 0, sizeof (GstH265SEIMessage));
+    sei.payloadType = GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION;
+    dsc_selection = &sei.payload.dsc_selection;
+    gst_h274_dsc_selection_copy (dsc_selection, &dscs_meta->dsc_selection);
+
+    g_array_append_val (self->sei_array, sei);
+  }
+
+  /* Process DSC verification metas */
+  for (i = 0; i < metas->len; i++) {
+    GstMeta *meta = g_ptr_array_index (metas, i);
+    GstVideoDSCVerificationMeta *dscv_meta;
+    GstH265SEIMessage sei;
+    GstH274DigitallySignedContentVerification *dsc_verification;
+
+    if (meta->info->api != GST_VIDEO_DSC_VERIFICATION_META_API_TYPE)
+      continue;
+
+    dscv_meta = (GstVideoDSCVerificationMeta *) meta;
+
+    memset (&sei, 0, sizeof (GstH265SEIMessage));
+    sei.payloadType = GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION;
+    dsc_verification = &sei.payload.dsc_verification;
+    gst_h274_dsc_verification_copy (dsc_verification,
+        &dscv_meta->dsc_verification);
 
     g_array_append_val (self->sei_array, sei);
   }
