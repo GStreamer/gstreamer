@@ -4381,7 +4381,7 @@ GST_START_TEST (test_transform_list)
 
 GST_END_TEST;
 
-GST_START_TEST (test_serialize_null_aray)
+GST_START_TEST (test_serialize_null_array)
 {
   gchar *serialized;
   GValue v = G_VALUE_INIT;
@@ -4393,6 +4393,74 @@ GST_START_TEST (test_serialize_null_aray)
   fail_unless_equals_string (serialized, "<  >");
   g_value_unset (&v);
   g_free (serialized);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_transform_array_to_string)
+{
+  GValue v = G_VALUE_INIT, s = G_VALUE_INIT;
+  GValue iv = G_VALUE_INIT;
+
+  g_value_init (&v, GST_TYPE_ARRAY);
+  g_value_init (&iv, G_TYPE_INT);
+  g_value_set_int (&iv, 1);
+  gst_value_array_append_value (&v, &iv);
+  g_value_set_int (&iv, 2);
+  gst_value_array_append_value (&v, &iv);
+  g_value_set_int (&iv, 3);
+  gst_value_array_append_value (&v, &iv);
+  g_value_unset (&iv);
+
+  g_value_init (&s, G_TYPE_STRING);
+  fail_unless (g_value_transform (&v, &s));
+  fail_unless_equals_string (g_value_get_string (&s), "< 1, 2, 3 >");
+
+  g_value_unset (&v);
+  g_value_unset (&s);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_transform_null_array_to_string)
+{
+  GValue v = G_VALUE_INIT, s = G_VALUE_INIT;
+
+  g_value_init (&v, G_TYPE_VALUE_ARRAY);
+  g_value_set_boxed (&v, NULL);
+
+  g_value_init (&s, G_TYPE_STRING);
+
+  fail_unless (g_value_transform (&v, &s));
+  fail_unless_equals_string (g_value_get_string (&s), "<  >");
+
+  g_value_unset (&v);
+  g_value_unset (&s);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_transform_list_to_string)
+{
+  GValue v = G_VALUE_INIT, s = G_VALUE_INIT;
+  GValue iv = G_VALUE_INIT;
+
+  g_value_init (&v, GST_TYPE_LIST);
+  g_value_init (&iv, G_TYPE_INT);
+  g_value_set_int (&iv, 1);
+  gst_value_list_append_value (&v, &iv);
+  g_value_set_int (&iv, 2);
+  gst_value_list_append_value (&v, &iv);
+  g_value_set_int (&iv, 3);
+  gst_value_list_append_value (&v, &iv);
+  g_value_unset (&iv);
+
+  g_value_init (&s, G_TYPE_STRING);
+  fail_unless (g_value_transform (&v, &s));
+  fail_unless_equals_string (g_value_get_string (&s), "{ 1, 2, 3 }");
+
+  g_value_unset (&v);
+  g_value_unset (&s);
 }
 
 GST_END_TEST;
@@ -5368,7 +5436,10 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_serialize_deserialize_structure);
   tcase_add_test (tc_chain, test_transform_array);
   tcase_add_test (tc_chain, test_transform_list);
-  tcase_add_test (tc_chain, test_serialize_null_aray);
+  tcase_add_test (tc_chain, test_transform_array_to_string);
+  tcase_add_test (tc_chain, test_serialize_null_array);
+  tcase_add_test (tc_chain, test_transform_null_array_to_string);
+  tcase_add_test (tc_chain, test_transform_list_to_string);
   tcase_add_test (tc_chain, test_deserialize_with_pspec);
   tcase_add_test (tc_chain, test_deserialize_serialize_nested_structures);
   tcase_add_test (tc_chain, test_serialize_deserialize_segment);
