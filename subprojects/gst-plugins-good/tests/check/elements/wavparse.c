@@ -19,11 +19,135 @@
 #include "config.h"
 #endif
 
+#include <math.h>
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstharness.h>
+#include <gst/riff/riff-ids.h>
 
 #define CORRUPT_HEADER_WAV_PATH GST_TEST_FILES_PATH G_DIR_SEPARATOR_S \
     "corruptheadertestsrc.wav"
 #define SIMPLE_WAV_PATH GST_TEST_FILES_PATH G_DIR_SEPARATOR_S "audiotestsrc.wav"
+
+/* Minimal ID3v2.4 tag with one TXXX REPLAYGAIN_TRACK_GAIN=-8.08 dB frame */
+static const guint8 id3v2_replaygain_txxx[] = {
+  /* ID3v2.4 header (10 bytes) */
+  'I', 'D', '3', 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x29,
+  /* TXXX frame header (10 bytes): id, synchsafe size=31, flags */
+  'T', 'X', 'X', 'X', 0x00, 0x00, 0x00, 0x1f, 0x00, 0x00,
+  /* TXXX frame content (31 bytes): Latin-1, "REPLAYGAIN_TRACK_GAIN\0-8.08 dB" */
+  0x00,
+  'R', 'E', 'P', 'L', 'A', 'Y', 'G', 'A', 'I', 'N', '_',
+  'T', 'R', 'A', 'C', 'K', '_', 'G', 'A', 'I', 'N', 0x00,
+  '-', '8', '.', '0', '8', ' ', 'd', 'B',
+};
+
+static GstBuffer *
+build_wav_with_id3_chunk (guint32 fourcc)
+{
+  GByteArray *ba;
+  GstBuffer *buf;
+  guint8 tmp[4];
+  static const guint8 fmt_data[] = {
+    0x01, 0x00,                 /* PCM */
+    0x01, 0x00,                 /* 1 channel */
+    0x44, 0xac, 0x00, 0x00,     /* 44100 Hz */
+    0x88, 0x58, 0x01, 0x00,     /* byte rate = 88200 */
+    0x02, 0x00,                 /* block align */
+    0x10, 0x00,                 /* 16 bits per sample */
+  };
+
+  ba = g_byte_array_new ();
+
+  /* RIFF header (size placeholder, fixed at end) */
+  g_byte_array_append (ba, (guint8 *) "RIFF", 4);
+  GST_WRITE_UINT32_LE (tmp, 0);
+  g_byte_array_append (ba, tmp, 4);
+  g_byte_array_append (ba, (guint8 *) "WAVE", 4);
+
+  /* fmt chunk */
+  g_byte_array_append (ba, (guint8 *) "fmt ", 4);
+  GST_WRITE_UINT32_LE (tmp, sizeof (fmt_data));
+  g_byte_array_append (ba, tmp, 4);
+  g_byte_array_append (ba, fmt_data, sizeof (fmt_data));
+
+  /* id3/ID3 chunk before data so it is parsed in streaming mode too */
+  GST_WRITE_UINT32_LE (tmp, fourcc);
+  g_byte_array_append (ba, tmp, 4);
+  GST_WRITE_UINT32_LE (tmp, sizeof (id3v2_replaygain_txxx));
+  g_byte_array_append (ba, tmp, 4);
+  g_byte_array_append (ba, id3v2_replaygain_txxx,
+      sizeof (id3v2_replaygain_txxx));
+  /* RIFF chunks must be padded to even size */
+  if (sizeof (id3v2_replaygain_txxx) % 2 != 0) {
+    guint8 pad = 0;
+    g_byte_array_append (ba, &pad, 1);
+  }
+
+  /* data chunk: 4 bytes of silence (2 samples) */
+  g_byte_array_append (ba, (guint8 *) "data", 4);
+  GST_WRITE_UINT32_LE (tmp, 4);
+  g_byte_array_append (ba, tmp, 4);
+  g_byte_array_append (ba, (guint8 *) "\0\0\0\0", 4);
+
+  GST_WRITE_UINT32_LE (ba->data + 4, ba->len - 8);
+
+  buf = gst_buffer_new_memdup (ba->data, ba->len);
+  g_byte_array_free (ba, TRUE);
+  return buf;
+}
+
+static void
+do_test_id3_chunk_tags (guint32 id3_fourcc)
+{
+  GstHarness *h;
+  GstBuffer *buf;
+  GstTagList *tags = NULL;
+  GstEvent *ev;
+  gdouble gain;
+
+  h = gst_harness_new_with_padnames ("wavparse", "sink", "src");
+  gst_harness_set_src_caps_str (h, "audio/x-wav");
+
+  buf = build_wav_with_id3_chunk (id3_fourcc);
+  gst_harness_push (h, buf);
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  while ((ev = gst_harness_pull_event (h)) != NULL) {
+    if (GST_EVENT_TYPE (ev) == GST_EVENT_TAG) {
+      GstTagList *ev_tags;
+      gst_event_parse_tag (ev, &ev_tags);
+      if (tags)
+        gst_tag_list_unref (tags);
+      tags = gst_tag_list_copy (ev_tags);
+    }
+    if (GST_EVENT_TYPE (ev) == GST_EVENT_EOS) {
+      gst_event_unref (ev);
+      break;
+    }
+    gst_event_unref (ev);
+  }
+
+  fail_unless (tags != NULL, "No tag event received from wavparse");
+  fail_unless (gst_tag_list_get_double (tags, GST_TAG_TRACK_GAIN, &gain));
+  fail_unless (fabs (gain - (-8.08)) < 1e-6);
+
+  gst_tag_list_unref (tags);
+  gst_harness_teardown (h);
+}
+
+GST_START_TEST (test_id3_chunk_lowercase_tags)
+{
+  do_test_id3_chunk_tags (GST_RIFF_TAG_id3);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_id3_chunk_uppercase_tags)
+{
+  do_test_id3_chunk_tags (GST_RIFF_TAG_ID3);
+}
+
+GST_END_TEST;
 
 static GstElement *
 create_file_pipeline (const char *path, GstPadMode mode)
@@ -286,6 +410,8 @@ wavparse_suite (void)
   tcase_add_test (tc_chain, test_simple_file_push);
   tcase_add_test (tc_chain, test_seek);
   tcase_add_test (tc_chain, test_query_uri);
+  tcase_add_test (tc_chain, test_id3_chunk_lowercase_tags);
+  tcase_add_test (tc_chain, test_id3_chunk_uppercase_tags);
   return s;
 }
 

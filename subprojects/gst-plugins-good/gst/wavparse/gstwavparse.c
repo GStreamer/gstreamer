@@ -1742,12 +1742,13 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         wav->offset += size;
         break;
       }
+      case GST_RIFF_TAG_ID3:
       case GST_RIFF_TAG_id3:
       {
         const guint data_size = size;
         GstTagList *new_tags;
 
-        GST_DEBUG_OBJECT (wav, "Have 'id3 ' TAG, size: %u", data_size);
+        GST_DEBUG_OBJECT (wav, "Have ID3 TAG, size: %u", data_size);
         if (wav->streaming) {
           if (!gst_wavparse_peek_chunk (wav, &tag, &size)) {
             goto exit;
