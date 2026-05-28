@@ -427,7 +427,7 @@ gst_value_transform_any_list_string (const GValue * src_value,
   guint alen;
 
   array = src_value->data[0].v_pointer;
-  alen = array->len;
+  alen = array ? array->len : 0;
 
   /* estimate minimum string length to minimise re-allocs in GString */
   s = g_string_sized_new (2 + (10 * alen) + 2);
@@ -494,7 +494,7 @@ _gst_value_transform_g_value_array_string (const GValue * src_value,
   guint alen;
 
   array = src_value->data[0].v_pointer;
-  alen = array->n_values;
+  alen = array ? array->n_values : 0;
 
   /* estimate minimum string length to minimise re-allocs in GString */
   s = g_string_sized_new (2 + (10 * alen) + 2);
