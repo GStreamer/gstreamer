@@ -300,10 +300,24 @@ check_parsed_mpeg_frame (GaplessTestInfo * info, guint frame_num)
   gst_sample_unref (sample);
 }
 
+static void
+set_to_state_and_wait (GstElement * pipeline, GstState target_state)
+{
+  GstStateChangeReturn state_ret =
+      gst_element_set_state (pipeline, target_state);
+
+  fail_unless (state_ret != GST_STATE_CHANGE_FAILURE);
+
+  if (state_ret == GST_STATE_CHANGE_ASYNC) {
+    GST_LOG ("waiting for pipeline to reach PAUSED state");
+    state_ret = gst_element_get_state (pipeline, NULL, NULL, -1);
+    fail_unless_equals_int (state_ret, GST_STATE_CHANGE_SUCCESS);
+  }
+}
+
 GST_START_TEST (test_parse_gapless_and_skip_padding_samples)
 {
   GstElement *source, *parser, *appsink, *pipeline;
-  GstStateChangeReturn state_ret;
   guint frame_num;
   GaplessTestInfo info;
 
@@ -327,19 +341,11 @@ GST_START_TEST (test_parse_gapless_and_skip_padding_samples)
     g_free (full_filename);
   }
 
-  g_object_set (G_OBJECT (appsink), "async", FALSE, "sync", FALSE,
+  g_object_set (G_OBJECT (appsink), "sync", FALSE,
       "max-buffers", 1, "enable-last-sample", FALSE, "processing-deadline",
       G_MAXUINT64, NULL);
 
-  state_ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
-
-  fail_unless (state_ret != GST_STATE_CHANGE_FAILURE);
-
-  if (state_ret == GST_STATE_CHANGE_ASYNC) {
-    GST_LOG ("waiting for pipeline to reach PAUSED state");
-    state_ret = gst_element_get_state (pipeline, NULL, NULL, -1);
-    fail_unless_equals_int (state_ret, GST_STATE_CHANGE_SUCCESS);
-  }
+  set_to_state_and_wait (pipeline, GST_STATE_PLAYING);
 
   /* Verify all frames from the test signal. */
   for (frame_num = 0; frame_num < info.num_mpeg_frames; ++frame_num)
@@ -368,24 +374,18 @@ GST_START_TEST (test_parse_gapless_and_skip_padding_samples)
 
   /* Seek back to the first frame. */
   {
-    fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
-        GST_STATE_CHANGE_SUCCESS);
     gst_element_seek_simple (pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH |
         GST_SEEK_FLAG_KEY_UNIT, 0);
-    fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
-        GST_STATE_CHANGE_SUCCESS);
+    set_to_state_and_wait (pipeline, GST_STATE_PLAYING);
 
     check_parsed_mpeg_frame (&info, 1);
   }
 
   /* Seek to the second frame. */
   {
-    fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
-        GST_STATE_CHANGE_SUCCESS);
     gst_element_seek_simple (pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH |
         GST_SEEK_FLAG_KEY_UNIT, info.first_frame_duration);
-    fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
-        GST_STATE_CHANGE_SUCCESS);
+    set_to_state_and_wait (pipeline, GST_STATE_PLAYING);
 
     check_parsed_mpeg_frame (&info, 2);
   }
@@ -396,12 +396,9 @@ GST_START_TEST (test_parse_gapless_and_skip_padding_samples)
     GstClockTime pts = info.first_frame_duration +
         (info.first_padded_end_frame - 2) * info.regular_frame_duration;
 
-    fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
-        GST_STATE_CHANGE_SUCCESS);
     gst_element_seek_simple (pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH |
         GST_SEEK_FLAG_KEY_UNIT, pts);
-    fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
-        GST_STATE_CHANGE_SUCCESS);
+    set_to_state_and_wait (pipeline, GST_STATE_PLAYING);
 
     check_parsed_mpeg_frame (&info, info.first_padded_end_frame);
   }
