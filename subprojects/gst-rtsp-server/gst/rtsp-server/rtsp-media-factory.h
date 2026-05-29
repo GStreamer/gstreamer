@@ -86,6 +86,16 @@ struct _GstRTSPMediaFactoryClass {
 
   GstElement *    (*create_element)     (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
   GstRTSPMedia *  (*construct)          (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
+
+  /**
+   * GstRTSPMediaFactoryClass::create_pipeline:
+   * @factory: a #GstRTSPMediaFactory
+   * @media: a #GstRTSPMedia
+   *
+   * Create a new pipeline and assign it to media.
+   *
+   * Returns: (transfer none) (nullable): the #GstElement pipeline.
+   */
   GstElement *    (*create_pipeline)    (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
   void            (*configure)          (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
 
