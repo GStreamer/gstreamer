@@ -115,25 +115,25 @@ ignore the video.
   **basic-tutorial-3.py**
 
   {{ tutorials/python/basic-tutorial-3.py }}
-  
+
   Then, you can run the file with `python3 basic-tutorial-3.py`
 {{ END_LANG.md }}
 
 ## Walkthrough
 
 {{ C+JS_FALLBACK.md }}
-  {{ tutorials/basic-tutorial-3.c[3:11] }}
+  {{ tutorials/basic-tutorial-3.c[6:15] }}
 
   So far we have kept all the information we needed (pointers
   to [GstElement]s, basically) as local variables. Since this tutorial
   (and most real applications) involves callbacks, we will group all our
   data in a structure for easier handling.
 
-  {{ tutorials/basic-tutorial-3.c[11:15] }}
+  {{ tutorials/basic-tutorial-3.c[16:19] }}
 
   This is a forward reference, to be used later.
 
-  {{ tutorials/basic-tutorial-3.c[28:33] }}
+  {{ tutorials/basic-tutorial-3.c[32:37] }}
 {{ END_LANG.md }}
 
 {{ PY.md }}
@@ -161,7 +161,7 @@ previous tutorial, for audio. It will render the audio stream to the
 audio card.
 
 {{ C+JS_FALLBACK.md }}
-  {{ tutorials/basic-tutorial-3.c[43:52] }}
+  {{ tutorials/basic-tutorial-3.c[47:56] }}
 {{ END_LANG.md }}
 
 {{ PY.md }}
@@ -173,7 +173,7 @@ them with the source, since at this point it contains no source pads. We
 just leave this branch (converter + sink) unlinked, until later on.
 
 {{ C+JS_FALLBACK.md }}
-  {{ tutorials/basic-tutorial-3.c[53:57] }}
+  {{ tutorials/basic-tutorial-3.c[57:61] }}
 {{ END_LANG.md }}
 
 {{ PY.md }}
@@ -187,7 +187,7 @@ the previous tutorial.
 ### Signals
 
 {{ C+JS_FALLBACK.md }}
-  {{ tutorials/basic-tutorial-3.c[58:61] }}
+  {{ tutorials/basic-tutorial-3.c[62:65] }}
 {{ END_LANG.md }}
 
 {{ PY.md }}
@@ -226,7 +226,7 @@ signal. At this point our callback will be
 called:
 
 {{ C+JS_FALLBACK.md }}
-  {{ tutorials/basic-tutorial-3.c[124:127] }}
+  {{ tutorials/basic-tutorial-3.c[126:129] }}
 {{ END_LANG.md }}
 
 {{ PY.md }}
@@ -245,7 +245,7 @@ This is usually the pad to which we want to link.
   `data` is the pointer we provided when attaching to the signal. In this
   example, we use it to pass the `CustomData` pointer.
 
-  {{ tutorials/basic-tutorial-3.c[127:128] }}
+  {{ tutorials/basic-tutorial-3.c[130:131] }}
 
   From `CustomData` we extract the converter element.
 {{ END_LANG.md }}
@@ -262,7 +262,7 @@ and let GStreamer choose the appropriate pads.
 Now we are going to link the pads directly.
 
 {{ C+JS_FALLBACK.md }}
-  {{ tutorials/basic-tutorial-3.c[136:141] }}
+  {{ tutorials/basic-tutorial-3.c[139:144] }}
 {{ END_LANG.md }}
 
 {{ PY.md }}
@@ -274,7 +274,7 @@ this callback will be called. These lines of code will prevent us from
 trying to link to a new pad once we are already linked.
 
 {{ C+JS_FALLBACK.md }}
-  {{ tutorials/basic-tutorial-3.c[142:151] }}
+  {{ tutorials/basic-tutorial-3.c[145:154] }}
 {{ END_LANG.md }}
 
 {{ PY.md }}
@@ -311,7 +311,7 @@ audio pad, and we are not interested in it.
 Otherwise, attempt the link:
 
 {{ C+JS_FALLBACK.md }}
-  {{ tutorials/basic-tutorial-3.c[152:159] }}
+  {{ tutorials/basic-tutorial-3.c[155:162] }}
 {{ END_LANG.md }}
 
 {{ PY.md }}
@@ -349,7 +349,7 @@ states. If you set the pipeline to `PLAYING`, though, GStreamer will make
 the intermediate transitions for you.
 
 {{ C+JS_FALLBACK.md }}
-  {{ tutorials/basic-tutorial-3.c[96:107] }}
+  {{ tutorials/basic-tutorial-3.c[100:109] }}
 {{ END_LANG.md }}
 
 {{ PY.md }}
