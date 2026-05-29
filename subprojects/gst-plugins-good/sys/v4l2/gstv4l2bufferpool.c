@@ -2229,8 +2229,10 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf,
           if ((ret =
                   gst_v4l2_buffer_pool_qbuf (pool, to_queue, group,
                       frame_number))
-              != GST_FLOW_OK)
+              != GST_FLOW_OK) {
+            gst_buffer_unref (to_queue);
             goto queue_failed;
+          }
 
           /* if we are not streaming yet (this is the first buffer, start
            * streaming now */
