@@ -78,6 +78,9 @@ struct _GstMatroskaMuxPad {
   GstClockTime start_ts;
   GstClockTime end_ts;    /* last timestamp + (if available) duration */
   guint64 default_duration_scaled;
+
+  /* last keyframe timestamp for ReferenceBlock calculation (video only) */
+  GstClockTime last_keyframe_ts;
 };
 
 typedef struct _GstMatroskaMuxPadClass {
