@@ -727,6 +727,7 @@ gst_rtp_h265_set_src_caps (GstRtpH265Depay * rtph265depay)
   }
 
   gst_caps_unref (srccaps);
+  gst_clear_caps (&old_caps);
 
   /* Insert SPS and PPS into the stream on next opportunity */
   if (rtph265depay->output_format != GST_H265_STREAM_FORMAT_HVC1
