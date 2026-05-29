@@ -426,8 +426,13 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
   gst_clear_caps (&decode_caps);
   gst_clear_caps (&encode_caps);
 
-  no_multiplane = !(GST_VIDEO_INFO_IS_YUV (&priv->v_info) &&
-      _is_video_usage (requested_usage));
+  gboolean want_multiplanar_opt = gst_buffer_pool_config_has_option (config,
+      GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_MULTIPLANAR_YUV);
+  /* Composite YUV VkImage on two paths: Vulkan Video usage
+   * (traditional), or explicit opt-in for non-video consumers
+   * (DMABUF importers, compute colour-convert, external encoders). */
+  no_multiplane = !(GST_VIDEO_INFO_IS_YUV (&priv->v_info)
+      && (_is_video_usage (requested_usage) || want_multiplanar_opt));
 
   tiling = priv->raw_caps ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
   found = gst_vulkan_format_from_video_info_2 (vk_pool->device,
@@ -445,9 +450,10 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
 
     if (sampleable && !_is_video_usage (requested_usage)) {
       vkmap = gst_vulkan_format_get_map (GST_VIDEO_INFO_FORMAT (&priv->v_info));
+      const gboolean is_per_plane_alloc = vkmap->vkfrmt != priv->vk_fmts[0];
       priv->img_flags = VK_IMAGE_CREATE_ALIAS_BIT;
       if (GST_VIDEO_INFO_N_PLANES (&priv->v_info) > 1
-          && vkmap->vkfrmt != priv->vk_fmts[0]) {
+          && (is_per_plane_alloc || want_multiplanar_opt)) {
         priv->img_flags |= VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT
             | VK_IMAGE_CREATE_EXTENDED_USAGE_BIT;
       }
@@ -669,7 +675,11 @@ gst_vulkan_image_buffer_pool_reset_buffer (GstBufferPool * pool,
 static const gchar **
 gst_vulkan_image_buffer_pool_get_options (GstBufferPool * pool)
 {
-  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, NULL };
+  static const gchar *options[] = {
+    GST_BUFFER_POOL_OPTION_VIDEO_META,
+    GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_MULTIPLANAR_YUV,
+    NULL,
+  };
   return options;
 }
 

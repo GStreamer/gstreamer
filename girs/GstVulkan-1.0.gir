@@ -14,6 +14,14 @@ and/or use gtk-doc annotations.  -->
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.h"/>
       <type name="guint64" c:type="uint64_t"/>
     </alias>
+    <constant name="BUFFER_POOL_OPTION_VULKAN_IMAGE_MULTIPLANAR_YUV" value="GstBufferPoolOptionVulkanImageMultiplanarYUV" c:type="GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_MULTIPLANAR_YUV" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.h">Opt-in for a single multi-planar VkImage (e.g. NV12) instead of
+per-plane images when the format and usage allow it. Use for
+zero-copy interop without Vulkan Video usage bits; unsupported
+combinations fall back to per-plane allocation.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
     <constant name="CAPS_FEATURE_MEMORY_VULKAN_BUFFER" value="memory:VulkanBuffer" c:type="GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER" version="1.18">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbuffermemory.h"/>
       <type name="utf8" c:type="gchar*"/>

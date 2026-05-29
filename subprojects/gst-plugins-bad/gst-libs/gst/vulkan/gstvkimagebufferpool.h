@@ -43,6 +43,20 @@ GType gst_vulkan_image_buffer_pool_get_type (void);
 #define GST_VULKAN_IMAGE_BUFFER_POOL_CAST(obj) ((GstVulkanImageBufferPool*)(obj))
 
 /**
+ * GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_MULTIPLANAR_YUV:
+ *
+ * Opt-in for a single multi-planar VkImage (e.g. NV12) instead of
+ * per-plane images when the format and usage allow it. Use for
+ * zero-copy interop without Vulkan Video usage bits; unsupported
+ * combinations fall back to per-plane allocation.
+ *
+ * Since: 1.30
+ */
+#define GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_MULTIPLANAR_YUV \
+    "GstBufferPoolOptionVulkanImageMultiplanarYUV"
+
+
+/**
  * GstVulkanImageBufferPool:
  * @bufferpool: parent #GstBufferPool
  * @device: the #GstVulkanDevice to allocate images from
