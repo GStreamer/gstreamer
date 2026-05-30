@@ -127,9 +127,11 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_STATES);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_PADS);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_ELEMENT_PADS);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_ELEMENT_FACTORY);
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_TRACER);
 
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_log_debug, "log", 0, "log tracer"); \
+    GST_DEBUG_CATEGORY_GET (GST_CAT_TRACER, "GST_TRACER"); \
     GST_DEBUG_CATEGORY_GET (GST_CAT_BUFFER, "GST_BUFFER"); \
     GST_DEBUG_CATEGORY_GET (GST_CAT_BUFFER_LIST, "GST_BUFFER_LIST"); \
     GST_DEBUG_CATEGORY_GET (GST_CAT_EVENT, "GST_EVENT"); \
@@ -448,6 +450,170 @@ do_pad_unlink_post (GstTracer * self, guint64 ts, GstPad * src,
       ", res=%s", GST_TIME_ARGS (ts), src, sink, bool_to_str (res));
 }
 
+/* Sets one event field on @s from its declared @type and borrowed value @v. */
+static void
+log_event_set_field (GstStructure * s, const gchar * name,
+    GstTracerFieldType type, const GstTraceValue * v)
+{
+  if (!v) {
+    gst_structure_set (s, name, G_TYPE_STRING, "NULL", NULL);
+    return;
+  }
+
+  switch (type) {
+    case GST_TRACER_FIELD_TYPE_BOOLEAN:
+      gst_structure_set (s, name, G_TYPE_BOOLEAN, v->v_boolean, NULL);
+      break;
+    case GST_TRACER_FIELD_TYPE_INT:
+      gst_structure_set (s, name, G_TYPE_INT, v->v_int, NULL);
+      break;
+    case GST_TRACER_FIELD_TYPE_UINT:
+      gst_structure_set (s, name, G_TYPE_UINT, v->v_uint, NULL);
+      break;
+    case GST_TRACER_FIELD_TYPE_INT64:
+      gst_structure_set (s, name, G_TYPE_INT64, v->v_int64, NULL);
+      break;
+    case GST_TRACER_FIELD_TYPE_UINT64:
+      gst_structure_set (s, name, G_TYPE_UINT64, v->v_uint64, NULL);
+      break;
+    case GST_TRACER_FIELD_TYPE_CLOCK_TIME:
+      gst_structure_set (s, name, GST_TYPE_CLOCK_TIME, v->v_uint64, NULL);
+      break;
+    case GST_TRACER_FIELD_TYPE_DOUBLE:
+      gst_structure_set (s, name, G_TYPE_DOUBLE, v->v_double, NULL);
+      break;
+    case GST_TRACER_FIELD_TYPE_STRING:
+      gst_structure_set (s, name, G_TYPE_STRING, v->v_string, NULL);
+      break;
+    case GST_TRACER_FIELD_TYPE_STRUCTURE:
+      gst_structure_set (s, name, GST_TYPE_STRUCTURE, v->v_structure, NULL);
+      break;
+    case GST_TRACER_FIELD_TYPE_OBJECT:{
+      /* Render an opaque identity; @v_object may be a non-GObject mini-object
+       * so only its address is logged, never dereferenced. */
+      gchar *p = g_strdup_printf ("%p", v->v_object);
+      gst_structure_set (s, name, G_TYPE_STRING, p, NULL);
+      g_free (p);
+      break;
+    }
+  }
+}
+
+/* Renders an application-defined point event to the GST_TRACER debug log in
+ * the #GstStructure form `gst-stats` consumes. */
+/* Formats whose schema has already been announced, so each GstTraceFormat is
+ * described exactly once. Formats live until gst_deinit() so the pointer is a
+ * stable key. */
+static GHashTable *announced_formats;   /* set of GstTraceFormat* */
+static GMutex announced_formats_lock;
+
+/* Announce a format's schema as a "<name>.class, <field>=(structure)...;" line
+ * the first time it is rendered, mirroring the legacy GstTracerRecord
+ * announcement so log post-processors (gst-stats, the python tracer framework)
+ * can learn each record's field layout. The field type is reported as the
+ * GstTracerFieldType nick. */
+static void
+maybe_announce_format (GstTraceFormat * format)
+{
+  guint n_fields, i;
+  GstStructure *klass;
+  gchar *name, *str;
+
+  g_mutex_lock (&announced_formats_lock);
+  if (G_UNLIKELY (!announced_formats))
+    announced_formats = g_hash_table_new (NULL, NULL);
+  if (g_hash_table_contains (announced_formats, format)) {
+    g_mutex_unlock (&announced_formats_lock);
+    return;
+  }
+  g_hash_table_add (announced_formats, format);
+  g_mutex_unlock (&announced_formats_lock);
+
+  name = g_strconcat (gst_trace_format_get_name (format), ".class", NULL);
+  klass = gst_structure_new_empty (name);
+  g_free (name);
+
+  n_fields = gst_trace_format_get_n_fields (format);
+  for (i = 0; i < n_fields; i++) {
+    const gchar *fname = gst_trace_format_get_field_name (format, i);
+    const GstStructure *meta = gst_trace_format_get_field_structure (format, i);
+    GstTracerFieldType type = gst_trace_format_get_field_type (format, i);
+    GstTracerValueScope scope;
+    GstStructure *desc;
+
+    /* Mirror the legacy GstTracerRecord schema so existing log post-processors
+     * keep working: a field that relates to an entity is described by a
+     * "scope" sub-structure carrying "related-to", everything else by a
+     * "value" sub-structure. The field type is rendered as its
+     * GstTracerFieldType nick rather than the raw gint it is stored as. */
+    if (meta && gst_structure_get_enum (meta, "scope",
+            GST_TYPE_TRACER_VALUE_SCOPE, (gint *) & scope)) {
+      desc = gst_structure_copy (meta);
+      gst_structure_set_name (desc, "scope");
+      gst_structure_remove_field (desc, "scope");
+      gst_structure_set (desc, "type", GST_TYPE_TRACER_FIELD_TYPE, type,
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, scope, NULL);
+    } else {
+      desc =
+          meta ? gst_structure_copy (meta) : gst_structure_new_empty ("value");
+      gst_structure_set_name (desc, "value");
+      gst_structure_set (desc, "type", GST_TYPE_TRACER_FIELD_TYPE, type, NULL);
+    }
+
+    gst_structure_set (klass, fname, GST_TYPE_STRUCTURE, desc, NULL);
+    gst_structure_free (desc);
+  }
+
+  str = gst_structure_to_string (klass);
+  gst_debug_log (GST_CAT_TRACER, GST_LEVEL_TRACE, "", "", 0, NULL, "%s", str);
+  g_free (str);
+  gst_structure_free (klass);
+}
+
+static void
+do_event (GstTracer * self, GstClockTime ts, GstTraceFormat * format,
+    const GstTraceValue * values)
+{
+  guint n_fields, i, vi;
+  GstStructure *s;
+  gchar *str;
+
+  if (G_UNLIKELY (!format))
+    return;
+
+  maybe_announce_format (format);
+
+  n_fields = gst_trace_format_get_n_fields (format);
+  s = gst_structure_new_empty (gst_trace_format_get_name (format));
+
+  for (i = 0, vi = 0; i < n_fields; i++) {
+    const gchar *fname = gst_trace_format_get_field_name (format, i);
+    GstTracerFieldType type = gst_trace_format_get_field_type (format, i);
+    const GstStructure *meta = gst_trace_format_get_field_structure (format, i);
+    GstTracerValueFlags flags = GST_TRACER_VALUE_FLAGS_NONE;
+
+    gst_structure_get (meta, "flags", GST_TYPE_TRACER_VALUE_FLAGS, &flags,
+        NULL);
+
+    /* Optional fields are preceded by a "have-<field>" boolean. */
+    if (flags & GST_TRACER_VALUE_FLAGS_OPTIONAL) {
+      gchar *have_name = g_strconcat ("have-", fname, NULL);
+      gst_structure_set (s, have_name, G_TYPE_BOOLEAN,
+          values ? values[vi].v_boolean : FALSE, NULL);
+      g_free (have_name);
+      vi++;
+    }
+
+    log_event_set_field (s, fname, type, values ? &values[vi] : NULL);
+    vi++;
+  }
+
+  str = gst_structure_to_string (s);
+  gst_debug_log (GST_CAT_TRACER, GST_LEVEL_TRACE, "", "", 0, NULL, "%s", str);
+  g_free (str);
+  gst_structure_free (s);
+}
+
 /* tracer class */
 
 static void
@@ -557,4 +723,5 @@ gst_log_tracer_init (GstLogTracer * self)
       G_CALLBACK (do_pad_unlink_pre));
   gst_tracing_register_hook (tracer, "pad-unlink-post",
       G_CALLBACK (do_pad_unlink_post));
+  gst_tracing_register_hook (tracer, "event", G_CALLBACK (do_event));
 }

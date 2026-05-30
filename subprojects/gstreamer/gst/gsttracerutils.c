@@ -725,6 +725,54 @@ gst_trace_field_set_description (GstTraceField * field,
 }
 
 /**
+ * gst_trace_field_set_scope:
+ * @field: a #GstTraceField
+ * @scope: the #GstTracerValueScope the field relates to
+ *
+ * Declares which entity (process, thread, element or pad) the field's value
+ * relates to. Post-processing tools such as `gst-stats` use this to group
+ * measurements.
+ *
+ * Returns: (transfer none): @field for chaining
+ *
+ * Since: 1.30
+ */
+GstTraceField *
+gst_trace_field_set_scope (GstTraceField * field, GstTracerValueScope scope)
+{
+  g_return_val_if_fail (field != NULL, NULL);
+
+  gst_structure_set (field->metadata, "scope", GST_TYPE_TRACER_VALUE_SCOPE,
+      scope, NULL);
+
+  return field;
+}
+
+/**
+ * gst_trace_field_set_flags:
+ * @field: a #GstTraceField
+ * @flags: the #GstTracerValueFlags describing the field
+ *
+ * Sets metadata flags on @field. %GST_TRACER_VALUE_FLAGS_OPTIONAL marks the
+ * field as optional: when emitting an event, the field's value must be
+ * preceded by a #gboolean value telling whether it is present.
+ *
+ * Returns: (transfer none): @field for chaining
+ *
+ * Since: 1.30
+ */
+GstTraceField *
+gst_trace_field_set_flags (GstTraceField * field, GstTracerValueFlags flags)
+{
+  g_return_val_if_fail (field != NULL, NULL);
+
+  gst_structure_set (field->metadata, "flags", GST_TYPE_TRACER_VALUE_FLAGS,
+      flags, NULL);
+
+  return field;
+}
+
+/**
  * gst_trace_format_builder_register:
  * @builder: (transfer full): a #GstTraceFormatBuilder
  *
@@ -1033,6 +1081,33 @@ gst_trace_span_end_and_clear (GstTraceSpanId * span_id)
   *span_id = GST_TRACE_SPAN_ID_NONE;
 }
 
+/**
+ * gst_trace_event:
+ * @format: a #GstTraceFormat describing the fields of the event
+ * @values: (array) (nullable): the positional values for @format's fields, in
+ *   declaration order; %NULL logs all fields as unset
+ *
+ * Emits a point event for @format: a single timestamped record with no
+ * duration, the counterpart to the begin/end pair of gst_trace_span_begin()
+ * and the structured replacement for gst_tracer_record_log().
+ *
+ * The event is delivered to tracers through the "event" hook; the `log` tracer
+ * renders it to the GST_TRACER debug log. Values are positional and must match
+ * @format; keep their computation cheap as they are built whenever tracing is
+ * enabled.
+ *
+ * Since: 1.30
+ */
+void
+gst_trace_event (GstTraceFormat * format, const GstTraceValue * values)
+{
+  if (G_UNLIKELY (!format))
+    return;
+
+  GST_TRACER_DISPATCH (GST_TRACER_QUARK (HOOK_EVENT),
+      GstTracerHookEvent, (GST_TRACER_ARGS, format, values));
+}
+
 #else /* !GST_DISABLE_GST_TRACER_HOOKS */
 
 void
@@ -1088,6 +1163,18 @@ gst_trace_field_new (const gchar * name, GstTracerFieldType type)
 GstTraceField *
 gst_trace_field_set_description (GstTraceField * field,
     const gchar * description)
+{
+  return field;
+}
+
+GstTraceField *
+gst_trace_field_set_scope (GstTraceField * field, GstTracerValueScope scope)
+{
+  return field;
+}
+
+GstTraceField *
+gst_trace_field_set_flags (GstTraceField * field, GstTracerValueFlags flags)
 {
   return field;
 }
@@ -1176,4 +1263,8 @@ gst_trace_span_end_and_clear (GstTraceSpanId * span_id)
   *span_id = GST_TRACE_SPAN_ID_NONE;
 }
 
+void
+gst_trace_event (GstTraceFormat * format, const GstTraceValue * values)
+{
+}
 #endif /* GST_DISABLE_GST_TRACER_HOOKS */

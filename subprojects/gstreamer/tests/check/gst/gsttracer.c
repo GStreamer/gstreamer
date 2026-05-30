@@ -46,6 +46,38 @@ static GstTraceSpanId last_span_id;
 static gint begin_count;
 static gint end_count;
 
+static gint event_count;
+static GstTraceFormat *last_event_format;
+static GstTraceValue last_event_values[8];
+
+/* Captures the raw (format, values) delivered by the "event" hook, expanding
+ * the optional have-<field> booleans the same way callers pass them. */
+static void
+event_cb (GObject * tracer, GstClockTime ts, GstTraceFormat * format,
+    const GstTraceValue * values)
+{
+  guint n_fields = gst_trace_format_get_n_fields (format), i, vi = 0;
+
+  fail_unless (GST_IS_TRACER (tracer));
+  fail_unless (values != NULL);
+
+  last_event_format = format;
+  for (i = 0; i < n_fields; i++) {
+    const GstStructure *meta = gst_trace_format_get_field_structure (format, i);
+    GstTracerValueFlags flags = GST_TRACER_VALUE_FLAGS_NONE;
+
+    gst_structure_get (meta, "flags", GST_TYPE_TRACER_VALUE_FLAGS, &flags,
+        NULL);
+    if (flags & GST_TRACER_VALUE_FLAGS_OPTIONAL) {
+      last_event_values[vi] = values[vi];
+      vi++;
+    }
+    last_event_values[vi] = values[vi];
+    vi++;
+  }
+  event_count++;
+}
+
 static void
 gst_test_tracer_class_init (GstTestTracerClass * klass)
 {
@@ -209,6 +241,87 @@ GST_START_TEST (span_format_builder)
 
 GST_END_TEST;
 
+GST_DEFINE_TRACE_FORMAT (test_event,
+    "name", STRING, "count", UINT64, "flag", BOOLEAN)
+    GST_START_TEST (custom_event)
+{
+  GstTracer *tracer;
+  GstTraceFormat *format;
+
+  format = test_event ();
+  fail_unless (format != NULL);
+
+  event_count = 0;
+  last_event_format = NULL;
+
+  /* The event is delivered through the "event" hook. */
+  tracer = g_object_new (gst_test_tracer_get_type (), NULL);
+  gst_object_ref_sink (tracer);
+  gst_tracing_register_hook (tracer, "event", G_CALLBACK (event_cb));
+  gst_object_unref (tracer);
+  fail_unless (gst_trace_format_is_enabled (format));
+
+  gst_trace_event (format, GST_TRACE_VALUES (STRING ("value"),
+          UINT64 (42), BOOLEAN (TRUE)));
+
+  fail_unless_equals_int (event_count, 1);
+  fail_unless_equals_pointer (last_event_format, format);
+  fail_unless_equals_string (gst_trace_format_get_name (last_event_format),
+      "test_event");
+  fail_unless_equals_string (last_event_values[0].v_string, "value");
+  fail_unless_equals_uint64 (last_event_values[1].v_uint64, 42);
+  fail_unless (last_event_values[2].v_boolean == TRUE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (custom_event_optional)
+{
+  GstTracer *tracer;
+  GstTraceFormatBuilder *builder;
+  GstTraceFormat *format;
+  const GstStructure *field;
+  GstTracerValueScope scope;
+
+  builder = gst_trace_format_builder_new ("opt_test");
+  gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_set_scope (gst_trace_field_new ("id",
+              GST_TRACER_FIELD_TYPE_UINT), GST_TRACER_VALUE_SCOPE_PROCESS));
+  gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_set_flags (gst_trace_field_new ("extra",
+              GST_TRACER_FIELD_TYPE_INT64), GST_TRACER_VALUE_FLAGS_OPTIONAL));
+  format = gst_trace_format_builder_register (builder);
+
+  /* scope metadata round-trips */
+  field = gst_trace_format_get_field_structure (format, 0);
+  fail_unless (gst_structure_get_enum (field, "scope",
+          GST_TYPE_TRACER_VALUE_SCOPE, (gint *) & scope));
+  fail_unless_equals_int (scope, GST_TRACER_VALUE_SCOPE_PROCESS);
+
+  event_count = 0;
+  last_event_format = NULL;
+
+  tracer = g_object_new (gst_test_tracer_get_type (), NULL);
+  gst_object_ref_sink (tracer);
+  gst_tracing_register_hook (tracer, "event", G_CALLBACK (event_cb));
+  gst_object_unref (tracer);
+
+  /* id, then have-extra (TRUE) preceding the optional extra value */
+  gst_trace_event (format, GST_TRACE_VALUES (UINT (7),
+          BOOLEAN (TRUE), INT64 (123)));
+
+  fail_unless_equals_int (event_count, 1);
+  fail_unless_equals_pointer (last_event_format, format);
+  fail_unless_equals_string (gst_trace_format_get_name (last_event_format),
+      "opt_test");
+  /* id, then the have-extra boolean preceding the optional extra value */
+  fail_unless_equals_int (last_event_values[0].v_uint, 7);
+  fail_unless (last_event_values[1].v_boolean == TRUE);
+  fail_unless_equals_int (last_event_values[2].v_int64, 123);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_tracer_suite (void)
 {
@@ -218,6 +331,8 @@ gst_tracer_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, span_hooks);
   tcase_add_test (tc_chain, span_format_builder);
+  tcase_add_test (tc_chain, custom_event);
+  tcase_add_test (tc_chain, custom_event_optional);
 
   return s;
 }

@@ -251,6 +251,48 @@ typedef union _GstTraceValue {
 #define GST_TRACE_VALUES(...) \
   ((const GstTraceValue[]) { _GST_TRACE_MAP_VALUES (__VA_ARGS__) })
 
+/**
+ * GstTracerValueScope:
+ * @GST_TRACER_VALUE_SCOPE_PROCESS: the value is related to the process
+ * @GST_TRACER_VALUE_SCOPE_THREAD: the value is related to a thread
+ * @GST_TRACER_VALUE_SCOPE_ELEMENT: the value is related to an #GstElement
+ * @GST_TRACER_VALUE_SCOPE_PAD: the value is related to a #GstPad
+ *
+ * Tracing record will contain fields that contain a measured value or extra
+ * meta-data. One such meta data are values that tell where a measurement was
+ * taken. This enumeration declares to which scope such a meta data field
+ * relates to. If it is e.g. %GST_TRACER_VALUE_SCOPE_PAD, then each of the log
+ * events may contain values for different #GstPads.
+ *
+ * Since: 1.8
+ */
+typedef enum
+{
+  GST_TRACER_VALUE_SCOPE_PROCESS,
+  GST_TRACER_VALUE_SCOPE_THREAD,
+  GST_TRACER_VALUE_SCOPE_ELEMENT,
+  GST_TRACER_VALUE_SCOPE_PAD
+} GstTracerValueScope;
+
+/**
+ * GstTracerValueFlags:
+ * @GST_TRACER_VALUE_FLAGS_NONE: no flags
+ * @GST_TRACER_VALUE_FLAGS_OPTIONAL: the value is optional. When using this flag
+ *   one need to have an additional boolean arg before this value in the
+ *   var-args list passed to  gst_tracer_record_log().
+ * @GST_TRACER_VALUE_FLAGS_AGGREGATED: the value is a combined figure, since the
+ *   start of tracing. Examples are averages or accumulated durations.
+ *
+ * Flag that describe the value. These flags help applications processing the
+ * logs to understand the values.
+ */
+typedef enum
+{
+  GST_TRACER_VALUE_FLAGS_NONE = 0,
+  GST_TRACER_VALUE_FLAGS_OPTIONAL = (1 << 0),
+  GST_TRACER_VALUE_FLAGS_AGGREGATED = (1 << 1),
+} GstTracerValueFlags;
+
 #define GST_TYPE_TRACER            (gst_tracer_get_type())
 #define GST_TRACER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TRACER,GstTracer))
 #define GST_TRACER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TRACER,GstTracerClass))
@@ -323,6 +365,14 @@ GstTraceField * gst_trace_field_new (const gchar * name,
 GST_API
 GstTraceField * gst_trace_field_set_description (
     GstTraceField * field, const gchar * description);
+
+GST_API
+GstTraceField * gst_trace_field_set_scope (
+    GstTraceField * field, GstTracerValueScope scope);
+
+GST_API
+GstTraceField * gst_trace_field_set_flags (
+    GstTraceField * field, GstTracerValueFlags flags);
 
 GST_API
 void gst_trace_field_free (GstTraceField * field);
@@ -421,6 +471,28 @@ void gst_trace_span_end (GstTraceSpanId span_id);
 
 GST_API
 void gst_trace_span_end_and_clear (GstTraceSpanId * span_id);
+
+GST_API
+void gst_trace_event (GstTraceFormat * format,
+                        const GstTraceValue * values);
+
+/**
+ * GST_TRACE_EVENT:
+ * @format: a #GstTraceFormat (typically the result of a getter declared
+ *   with GST_DEFINE_TRACE_FORMAT())
+ * @...: one or more GST_TRACE_VALUE_* entries, in the field order declared
+ *   on @format
+ *
+ * Emits a point event for @format. Unlike GST_TRACE_BEGIN(), an
+ * event has no duration and no matching end; it is the structured
+ * equivalent of the legacy #GstTracerRecord log entry and is emitted whenever
+ * the GST_TRACER debug level is enabled. As with gst_tracer_record_log() the
+ * values are always evaluated, so keep them cheap.
+ *
+ * Since: 1.30
+ */
+#define GST_TRACE_EVENT(format, ...) \
+  gst_trace_event ((format), GST_TRACE_VALUES (__VA_ARGS__))
 
 /**
  * GST_TRACE_BEGIN:
