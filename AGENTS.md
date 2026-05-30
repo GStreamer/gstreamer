@@ -25,6 +25,11 @@ project.
 - **AI-written issue ("work item") descriptions or issue comments are
   banned**. These are easy to recognize and waste triagers' time. Do not be
   verbose, be precise and concise.
+  - An exception is made for issues for defects detected by specialized tooling,
+    including fuzzers and LLM-assisted defect detection. Such issues must be
+    reviewed by a human before creation, must be created by a human and
+    communication with maintainers must be done by a human, but including the
+    verbatim tool output in the issue description is explicitly allowed.
 
 ## User must demonstrate understanding
 
