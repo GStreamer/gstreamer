@@ -28,10 +28,12 @@
  * aassetsrc does not demux or decode media. It uses Android's AAsset API to
  * read both compressed and uncompressed assets. Compressed assets may be less
  * efficient for seeking and reading because Android has to decompress them.
+ * It implements the `android-asset:` URI scheme for automatic source selection
+ * by elements such as uridecodebin.
  *
  * ## Example pipeline
  * |[
- * aassetsrc location=video.webm ! decodebin3 ! videoconvert ! autovideosink
+ * uridecodebin uri=android-asset://video.webm ! videoconvert ! autovideosink
  * ]|
  * This pipeline can be used from an Android application with gst_parse_launch()
  * after GStreamer has been initialized with an Android Context.
@@ -53,6 +55,7 @@
 #include <gst/gsterror.h>
 #include <gst/gstinfo.h>
 #include <gst/gstpadtemplate.h>
+#include <gst/gsturi.h>
 #include <gst/gstutils.h>
 #include <gmodule.h>
 #include <stdio.h>
@@ -63,6 +66,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_aasset_src_debug);
 #define parent_class gst_aasset_src_parent_class
 
 static jobject (*gst_android_get_application_context) (void) = NULL;
+
+#define GST_AASSET_SRC_URI_SCHEME "android-asset"
+#define GST_AASSET_SRC_URI_PREFIX GST_AASSET_SRC_URI_SCHEME "://"
 
 enum
 {
@@ -93,10 +99,14 @@ static GstFlowReturn gst_aasset_src_fill (GstBaseSrc * src, guint64 offset,
     guint size, GstBuffer * buffer);
 static gboolean gst_aasset_src_unlock (GstBaseSrc * src);
 static gboolean gst_aasset_src_unlock_stop (GstBaseSrc * src);
+static void gst_aasset_src_uri_handler_init (gpointer g_iface,
+    gpointer iface_data);
 
 G_DEFINE_TYPE_WITH_CODE (GstAAssetSrc, gst_aasset_src, GST_TYPE_BASE_SRC,
     GST_DEBUG_CATEGORY_INIT (gst_aasset_src_debug, "aassetsrc", 0,
-        "Android AAsset source"));
+        "Android AAsset source");
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
+        gst_aasset_src_uri_handler_init));
 
 GST_ELEMENT_REGISTER_DEFINE (aassetsrc, "aassetsrc", GST_RANK_NONE,
     GST_TYPE_AASSET_SRC);
@@ -133,6 +143,18 @@ gst_aasset_src_clear_asset (GstAAssetSrc * self)
   }
   self->asset_manager = NULL;
   self->size = 0;
+}
+
+static gchar *
+gst_aasset_src_uri_from_location (const gchar * location)
+{
+  gchar *escaped, *uri;
+
+  escaped = g_uri_escape_string (location, "/", FALSE);
+  uri = g_strdup_printf (GST_AASSET_SRC_URI_PREFIX "%s", escaped);
+  g_free (escaped);
+
+  return uri;
 }
 
 static void
@@ -466,4 +488,120 @@ gst_aasset_src_unlock_stop (GstBaseSrc * src)
   GST_OBJECT_UNLOCK (self);
 
   return TRUE;
+}
+
+/*** GSTURIHANDLER INTERFACE *************************************************/
+
+static GstURIType
+gst_aasset_src_uri_get_type (GType type)
+{
+  return GST_URI_SRC;
+}
+
+static const gchar *const *
+gst_aasset_src_uri_get_protocols (GType type)
+{
+  static const gchar *protocols[] = { GST_AASSET_SRC_URI_SCHEME, NULL };
+
+  return protocols;
+}
+
+static gchar *
+gst_aasset_src_uri_get_uri (GstURIHandler * handler)
+{
+  GstAAssetSrc *self = GST_AASSET_SRC (handler);
+  gchar *uri;
+
+  GST_OBJECT_LOCK (self);
+  if (self->location)
+    uri = gst_aasset_src_uri_from_location (self->location);
+  else
+    uri = NULL;
+  GST_OBJECT_UNLOCK (self);
+
+  return uri;
+}
+
+static gboolean
+gst_aasset_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
+{
+  GstAAssetSrc *self = GST_AASSET_SRC (handler);
+  gchar *scheme = NULL;
+  gchar *location = NULL;
+  gchar *asset_path;
+  guint leading_slashes = 0;
+  gboolean ret = FALSE;
+
+  if (uri == NULL || g_strcmp0 (uri, GST_AASSET_SRC_URI_PREFIX) == 0) {
+    GST_OBJECT_LOCK (self);
+    g_clear_pointer (&self->location, g_free);
+    GST_OBJECT_UNLOCK (self);
+    return TRUE;
+  }
+
+  scheme = gst_uri_get_protocol (uri);
+  if (scheme == NULL) {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Invalid " GST_AASSET_SRC_URI_SCHEME " URI '%s'", uri);
+    goto done;
+  }
+
+  if (g_ascii_strcasecmp (scheme, GST_AASSET_SRC_URI_SCHEME) != 0) {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Invalid " GST_AASSET_SRC_URI_SCHEME " URI scheme '%s'",
+        GST_STR_NULL (scheme));
+    goto done;
+  }
+
+  location = gst_uri_get_location (uri);
+  if (location == NULL || *location == '\0') {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Android asset URI has no asset path");
+    goto done;
+  }
+
+  while (location[leading_slashes] == '/')
+    leading_slashes++;
+
+  /* Canonicalize to android-asset://video.webm, accept
+   * android-asset:///video.webm, but reject android-asset:////video.webm
+   * instead of normalizing /video.webm.
+   */
+  if (leading_slashes > 1) {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Android asset URI path must not start with '/'");
+    goto done;
+  }
+
+  asset_path = location + leading_slashes;
+  if (*asset_path == '\0') {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Android asset URI has no asset path");
+    goto done;
+  }
+
+  GST_OBJECT_LOCK (self);
+  g_free (self->location);
+  self->location = g_strdup (asset_path);
+  GST_OBJECT_UNLOCK (self);
+
+  ret = TRUE;
+
+done:
+  g_free (scheme);
+  g_free (location);
+
+  return ret;
+}
+
+static void
+gst_aasset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
+{
+  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
+
+  iface->get_type = gst_aasset_src_uri_get_type;
+  iface->get_protocols = gst_aasset_src_uri_get_protocols;
+  iface->get_uri = gst_aasset_src_uri_get_uri;
+  iface->set_uri = gst_aasset_src_uri_set_uri;
 }
