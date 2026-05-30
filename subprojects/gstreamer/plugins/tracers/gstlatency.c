@@ -28,8 +28,12 @@
  * pipeline latency is traced. The 'flags' parameter can be used to enabled
  * element tracing and/or the latency reported by each element.
  *
+ * The measurements are emitted as structured tracer events. Enable the `log`
+ * tracer alongside it so they are rendered into the `GST_TRACER` debug
+ * category:
+ *
  * ```
- * GST_TRACERS="latency(flags=pipeline+element+reported)" GST_DEBUG=GST_TRACER:7 ./...
+ * GST_TRACERS="latency(flags=pipeline+element+reported);log" GST_DEBUG=GST_TRACER:7 ./...
  * ```
  */
 /* TODO(ensonic): if there are two sources feeding into a mixer/muxer and later
@@ -61,9 +65,9 @@ static GQuark latency_probe_id;
 static GQuark sub_latency_probe_id;
 static GQuark drop_sub_latency_quark;
 
-static GstTracerRecord *tr_latency;
-static GstTracerRecord *tr_element_latency;
-static GstTracerRecord *tr_element_reported_latency;
+static GstTraceFormat *tr_latency;
+static GstTraceFormat *tr_element_latency;
+static GstTraceFormat *tr_element_reported_latency;
 
 /* The private stack for each thread */
 static GPrivate latency_query_stack =
@@ -193,9 +197,12 @@ log_latency (const GstStructure * data, GstElement * sink_parent,
   id_element_sink = g_strdup_printf ("%p", sink_parent);
   element_sink = gst_element_get_name (sink_parent);
   sink = gst_pad_get_name (sink_pad);
-  gst_tracer_record_log (tr_latency, id_element_src, element_src, src,
-      id_element_sink, element_sink, sink, GST_CLOCK_DIFF (src_ts, sink_ts),
-      sink_ts);
+  gst_trace_event (tr_latency,
+      GST_TRACE_VALUES (STRING (id_element_src),
+          STRING (element_src), STRING (src),
+          STRING (id_element_sink),
+          STRING (element_sink), STRING (sink),
+          UINT64 (GST_CLOCK_DIFF (src_ts, sink_ts)), UINT64 (sink_ts)));
   g_free (sink);
   g_free (element_sink);
   g_free (id_element_sink);
@@ -221,8 +228,11 @@ log_element_latency (const GstStructure * data, GstElement * parent,
   value = gst_structure_get_value (data, "latency_probe.ts");
   src_ts = g_value_get_uint64 (value);
 
-  gst_tracer_record_log (tr_element_latency, element_id, element_name, pad_name,
-      GST_CLOCK_DIFF (src_ts, sink_ts), sink_ts);
+  gst_trace_event (tr_element_latency,
+      GST_TRACE_VALUES (STRING (element_id),
+          STRING (element_name),
+          STRING (pad_name),
+          UINT64 (GST_CLOCK_DIFF (src_ts, sink_ts)), UINT64 (sink_ts)));
 
   g_free (pad_name);
   g_free (element_name);
@@ -523,9 +533,12 @@ do_query_post (GstLatencyTracer * tracer, GstClockTime ts, GstPad * pad,
     element_name = gst_element_get_name (element);
 
     /* Log reported latency */
-    gst_tracer_record_log (tr_element_reported_latency, element_id,
-        element_name, live, GST_CLOCK_DIFF (min_prev, min),
-        GST_CLOCK_DIFF (max_prev, max), ts);
+    gst_trace_event (tr_element_reported_latency,
+        GST_TRACE_VALUES (STRING (element_id),
+            STRING (element_name),
+            BOOLEAN (live),
+            UINT64 (GST_CLOCK_DIFF (min_prev, min)),
+            UINT64 (GST_CLOCK_DIFF (max_prev, max)), UINT64 (ts)));
 
     /* Clean up */
     g_free (element_name);
@@ -598,9 +611,28 @@ gst_latency_tracer_set_property (GObject * object, guint prop_id,
 }
 
 static void
+add_scoped_field (GstTraceFormatBuilder * builder, const gchar * name,
+    GstTracerValueScope scope)
+{
+  gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_set_scope (gst_trace_field_new (name,
+              GST_TRACER_FIELD_TYPE_STRING), scope));
+}
+
+static void
+add_described_field (GstTraceFormatBuilder * builder, const gchar * name,
+    GstTracerFieldType type, const gchar * description)
+{
+  gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_set_description (gst_trace_field_new (name, type),
+          description));
+}
+
+static void
 gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstTraceFormatBuilder *builder;
 
   gst_tracer_class_set_use_structure_params (GST_TRACER_CLASS (klass), TRUE);
 
@@ -622,125 +654,41 @@ gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
       g_quark_from_static_string ("drop_sub_latency.quark");
 
   /* announce trace formats */
-  /* *INDENT-OFF* */
-  tr_latency = gst_tracer_record_new ("latency.class",
-      "src-element-id", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
-          "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "related-to", GST_TYPE_TRACER_VALUE_SCOPE,
-          GST_TRACER_VALUE_SCOPE_ELEMENT,
-          NULL),
-      "src-element", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
-          "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "related-to", GST_TYPE_TRACER_VALUE_SCOPE,
-          GST_TRACER_VALUE_SCOPE_ELEMENT,
-          NULL),
-      "src", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
-          "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PAD,
-          NULL),
-      "sink-element-id", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
-          "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "related-to", GST_TYPE_TRACER_VALUE_SCOPE,
-          GST_TRACER_VALUE_SCOPE_ELEMENT,
-          NULL),
-      "sink-element", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
-          "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "related-to", GST_TYPE_TRACER_VALUE_SCOPE,
-          GST_TRACER_VALUE_SCOPE_ELEMENT,
-          NULL),
-      "sink", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
-          "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PAD,
-          NULL),
-      "time", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "description", G_TYPE_STRING,
-              "time it took for the buffer to go from src to sink ns",
-          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
-          "max", G_TYPE_UINT64, G_MAXUINT64,
-          NULL),
-      "ts", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "description", G_TYPE_STRING, "ts when the latency has been logged",
-          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
-          "max", G_TYPE_UINT64, G_MAXUINT64,
-          NULL),
-      NULL);
+  builder = gst_trace_format_builder_new ("latency");
+  add_scoped_field (builder, "src-element-id", GST_TRACER_VALUE_SCOPE_ELEMENT);
+  add_scoped_field (builder, "src-element", GST_TRACER_VALUE_SCOPE_ELEMENT);
+  add_scoped_field (builder, "src", GST_TRACER_VALUE_SCOPE_PAD);
+  add_scoped_field (builder, "sink-element-id", GST_TRACER_VALUE_SCOPE_ELEMENT);
+  add_scoped_field (builder, "sink-element", GST_TRACER_VALUE_SCOPE_ELEMENT);
+  add_scoped_field (builder, "sink", GST_TRACER_VALUE_SCOPE_PAD);
+  add_described_field (builder, "time", GST_TRACER_FIELD_TYPE_UINT64,
+      "time it took for the buffer to go from src to sink ns");
+  add_described_field (builder, "ts", GST_TRACER_FIELD_TYPE_UINT64,
+      "ts when the latency has been logged");
+  tr_latency = gst_trace_format_builder_register (builder);
 
-  tr_element_latency = gst_tracer_record_new ("element-latency.class",
-      "element-id", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
-          "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "related-to", GST_TYPE_TRACER_VALUE_SCOPE,
-          GST_TRACER_VALUE_SCOPE_ELEMENT,
-          NULL),
-      "element", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
-          "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "related-to", GST_TYPE_TRACER_VALUE_SCOPE,
-          GST_TRACER_VALUE_SCOPE_ELEMENT,
-          NULL),
-      "src", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
-          "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PAD,
-          NULL),
-      "time", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "description", G_TYPE_STRING,
-              "time it took for the buffer to go from src to sink ns",
-          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
-          "max", G_TYPE_UINT64, G_MAXUINT64,
-          NULL),
-      "ts", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "description", G_TYPE_STRING, "ts when the latency has been logged",
-          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
-          "max", G_TYPE_UINT64, G_MAXUINT64,
-          NULL),
-      NULL);
+  builder = gst_trace_format_builder_new ("element-latency");
+  add_scoped_field (builder, "element-id", GST_TRACER_VALUE_SCOPE_ELEMENT);
+  add_scoped_field (builder, "element", GST_TRACER_VALUE_SCOPE_ELEMENT);
+  add_scoped_field (builder, "src", GST_TRACER_VALUE_SCOPE_PAD);
+  add_described_field (builder, "time", GST_TRACER_FIELD_TYPE_UINT64,
+      "time it took for the buffer to go from src to sink ns");
+  add_described_field (builder, "ts", GST_TRACER_FIELD_TYPE_UINT64,
+      "ts when the latency has been logged");
+  tr_element_latency = gst_trace_format_builder_register (builder);
 
-
-  tr_element_reported_latency = gst_tracer_record_new (
-      "element-reported-latency.class",
-      "element-id", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
-          "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "related-to", GST_TYPE_TRACER_VALUE_SCOPE,
-          GST_TRACER_VALUE_SCOPE_ELEMENT,
-          NULL),
-      "element", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
-          "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "related-to", GST_TYPE_TRACER_VALUE_SCOPE,
-          GST_TRACER_VALUE_SCOPE_ELEMENT,
-          NULL),
-      "live", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_BOOLEAN,
-          "description", G_TYPE_STRING,
-              "wether the it is a live stream or not",
-          NULL),
-      "min", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "description", G_TYPE_STRING,
-              "the minimum reported latency",
-          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
-          "max", G_TYPE_UINT64, G_MAXUINT64,
-          NULL),
-      "max", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "description", G_TYPE_STRING, "the maximum reported latency",
-          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
-          "max", G_TYPE_UINT64, G_MAXUINT64,
-          NULL),
-      "ts", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "description", G_TYPE_STRING, "ts when the latency has been reported",
-          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
-          "max", G_TYPE_UINT64, G_MAXUINT64,
-          NULL),
-      NULL);
-  /* *INDENT-ON* */
-
-  GST_OBJECT_FLAG_SET (tr_latency, GST_OBJECT_FLAG_MAY_BE_LEAKED);
-  GST_OBJECT_FLAG_SET (tr_element_latency, GST_OBJECT_FLAG_MAY_BE_LEAKED);
-  GST_OBJECT_FLAG_SET (tr_element_reported_latency,
-      GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  builder = gst_trace_format_builder_new ("element-reported-latency");
+  add_scoped_field (builder, "element-id", GST_TRACER_VALUE_SCOPE_ELEMENT);
+  add_scoped_field (builder, "element", GST_TRACER_VALUE_SCOPE_ELEMENT);
+  add_described_field (builder, "live", GST_TRACER_FIELD_TYPE_BOOLEAN,
+      "wether the it is a live stream or not");
+  add_described_field (builder, "min", GST_TRACER_FIELD_TYPE_UINT64,
+      "the minimum reported latency");
+  add_described_field (builder, "max", GST_TRACER_FIELD_TYPE_UINT64,
+      "the maximum reported latency");
+  add_described_field (builder, "ts", GST_TRACER_FIELD_TYPE_UINT64,
+      "ts when the latency has been reported");
+  tr_element_reported_latency = gst_trace_format_builder_register (builder);
 }
 
 static void
