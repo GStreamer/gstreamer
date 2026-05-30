@@ -52,6 +52,7 @@ enum _GstAmcCodecConfig
 {
   AMC_CODEC_CONFIG_NONE,
   AMC_CODEC_CONFIG_WITH_SURFACE,
+  AMC_CODEC_CONFIG_WITH_AHARDWARE_BUFFER,
   AMC_CODEC_CONFIG_WITHOUT_SURFACE,
 };
 
@@ -92,12 +93,18 @@ struct _GstAmcVideoDec
   gboolean drained;
 
   GstAmcSurfaceTexture *surface;
+  GstAmcAImageReader *image_reader;
+  guint ahardware_buffer_max_images;
+  guint downstream_ahardware_buffer_min_buffers;
+  GstVideoCodecFrame *pending_ahardware_buffer_frame;
+  gboolean pending_ahardware_buffer_is_eos;
 
   GstGLDisplay *gl_display;
   GstGLContext *gl_context;
   GstGLContext *other_gl_context;
 
   gboolean downstream_supports_gl;
+  gboolean downstream_supports_ahardware_buffer;
   GstFlowReturn downstream_flow_ret;
 
   gboolean gl_mem_attached;
