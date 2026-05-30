@@ -7,6 +7,28 @@ and/or use gtk-doc annotations.  -->
   <c:include name="gst/allocators/allocators.h"/>
   <doc:format name="unknown"/>
   <namespace name="GstAllocators" version="1.0" shared-library="libgstallocators-1.0.so.0" c:identifier-prefixes="Gst" c:symbol-prefixes="gst">
+    <callback name="AHardwareBufferMemoryQueryFunction" c:type="GstAHardwareBufferMemoryQueryFunction" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">Function used by memory implementations to expose AHardwareBuffer backing
+through gst_ahardware_buffer_memory_peek_buffer().
+
+Returning %TRUE requires setting @buffer. @buffer must be a borrowed
+reference owned by @mem and valid for as long as @mem is alive.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">%TRUE if @mem exposes an AHardwareBuffer.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="mem" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">a #GstMemory</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </parameter>
+        <parameter name="buffer" direction="out" caller-allocates="0" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">location for the `AHardwareBuffer`</doc>
+          <type c:type="AHardwareBuffer**"/>
+        </parameter>
+      </parameters>
+    </callback>
     <constant name="ALLOCATOR_DMABUF" value="dmabuf" c:type="GST_ALLOCATOR_DMABUF">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstdmabuf.h"/>
       <type name="utf8" c:type="gchar*"/>
@@ -25,6 +47,12 @@ gst_memory_is_type().</doc>
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstudmabufallocator.h">Name of this allocator, to be used for example with gst_allocator_find() and
 gst_memory_is_type().</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstudmabufallocator.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="CAPS_FEATURE_MEMORY_AHARDWAREBUFFER" value="memory:AHardwareBuffer" c:type="GST_CAPS_FEATURE_MEMORY_AHARDWAREBUFFER" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">Name of the caps feature for indicating the use of AHardwareBuffer-backed
+memory.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
     <constant name="CAPS_FEATURE_MEMORY_DMABUF" value="memory:DMABuf" c:type="GST_CAPS_FEATURE_MEMORY_DMABUF" version="1.12">
@@ -561,6 +589,53 @@ gst_udmabuf_allocator_init_once() did not register the allocator.</doc>
         <type name="DmaBufAllocatorClass" c:type="GstDmaBufAllocatorClass"/>
       </field>
     </record>
+    <function name="ahardware_buffer_memory_peek_buffer" c:identifier="gst_ahardware_buffer_memory_peek_buffer" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">Queries whether @mem is backed by an AHardwareBuffer and, if so, returns the
+AHardwareBuffer represented by this memory.
+@buffer is only modified if this function returns %TRUE.
+
+The returned AHardwareBuffer is owned by @mem and is valid for as long as
+@mem is alive. Callers must call `AHardwareBuffer_acquire()` if they want to
+keep the AHardwareBuffer beyond @mem's lifetime.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">%TRUE if @mem exposes an AHardwareBuffer.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="mem" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">a #GstMemory</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </parameter>
+        <parameter name="buffer" direction="out" caller-allocates="0" transfer-ownership="none" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">the `AHardwareBuffer`</doc>
+          <type c:type="AHardwareBuffer**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="ahardware_buffer_memory_register_query_function" c:identifier="gst_ahardware_buffer_memory_register_query_function" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">Registers @query as the AHardwareBuffer query function for #GstMemory
+objects allocated by @allocator_type.
+
+This function is intended for memory implementers rather than applications.
+@query must remain valid for the lifetime of the process and must only
+return borrowed AHardwareBuffer references owned by the queried memory.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="allocator_type" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">a #GstAllocator type</doc>
+          <type name="GType" c:type="GType"/>
+        </parameter>
+        <parameter name="query" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">function used to query AHardwareBuffer backing for memory allocated
+    by @allocator_type</doc>
+          <type name="AHardwareBufferMemoryQueryFunction" c:type="GstAHardwareBufferMemoryQueryFunction"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="dmabuf_memory_get_fd" c:identifier="gst_dmabuf_memory_get_fd" version="1.2">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstdmabuf.c">Return the file descriptor associated with @mem.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstdmabuf.h"/>
@@ -621,6 +696,40 @@ an fd.</doc>
       <parameters>
         <parameter name="mem" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstfdmemory.c">#GstMemory</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <docsection name="gstahardwarebuffer">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">The AHardwareBuffer helpers provide a common interface for detecting and
+querying AHardwareBuffer-backed #GstMemory.
+
+The #GST_CAPS_FEATURE_MEMORY_AHARDWAREBUFFER caps feature can be used on
+`video/x-raw` caps to negotiate AHardwareBuffer-backed buffers.</doc>
+    </docsection>
+    <function name="is_ahardware_buffer_buffer" c:identifier="gst_is_ahardware_buffer_buffer" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">%TRUE if @buffer is non-empty and every memory block in @buffer
+exposes an AHardwareBuffer.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">a #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="is_ahardware_buffer_memory" c:identifier="gst_is_ahardware_buffer_memory" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">%TRUE if @mem exposes an AHardwareBuffer.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="mem" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">a #GstMemory</doc>
           <type name="Gst.Memory" c:type="GstMemory*"/>
         </parameter>
       </parameters>
