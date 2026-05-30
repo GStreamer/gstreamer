@@ -31,7 +31,7 @@
  *
  * As a very simple example, you can run your application like this:
  * ```
- * $ GST_TRACERS=factories GST_DEBUG=GST_TRACER:7 gst-launch-1.0 audiotestsrc num-buffers=10 ! fakesink 2> log.txt
+ * $ GST_TRACERS="factories;log" GST_DEBUG=GST_TRACER:7 gst-launch-1.0 audiotestsrc num-buffers=10 ! fakesink 2> log.txt
  * ...
  * $ gst-stats-1.0 log.txt
  * Plugins used: audiotestsrc;coreelements
@@ -55,10 +55,9 @@
 #endif
 
 #include "gstfactories.h"
-
 G_DEFINE_TYPE (GstFactoriesTracer, gst_factories_tracer, GST_TYPE_TRACER);
 
-static GstTracerRecord *tr_factory_used;
+static GstTraceFormat *tr_factory_used;
 
 static void
 do_element_new (GstFactoriesTracer * self, GstClockTime ts,
@@ -88,9 +87,12 @@ do_element_new (GstFactoriesTracer * self, GstClockTime ts,
   if (plugin)
     source_module_name = gst_plugin_get_source (plugin);
 
-  gst_tracer_record_log (tr_factory_used,
-      (guint64) (guintptr) g_thread_self (), ts, "element", factory_name,
-      plugin_name, source_module_name);
+  gst_trace_event (tr_factory_used,
+      GST_TRACE_VALUES (UINT64 ((guint64) (guintptr)
+              g_thread_self ()), UINT64 (ts),
+          STRING ("element"),
+          STRING (factory_name),
+          STRING (plugin_name), STRING (source_module_name)));
 
   g_clear_object (&plugin);
 }
@@ -134,9 +136,12 @@ do_plugin_feature_loaded (GstFactoriesTracer * self, GstClockTime ts,
   if (source_module_name == NULL)
     source_module_name = "";
 
-  gst_tracer_record_log (tr_factory_used,
-      (guint64) (guintptr) g_thread_self (), ts, factory_type, factory_name,
-      plugin_name, source_module_name);
+  gst_trace_event (tr_factory_used,
+      GST_TRACE_VALUES (UINT64 ((guint64) (guintptr)
+              g_thread_self ()), UINT64 (ts),
+          STRING (factory_type),
+          STRING (factory_name),
+          STRING (plugin_name), STRING (source_module_name)));
 
   g_clear_object (&plugin);
 }
@@ -144,37 +149,30 @@ do_plugin_feature_loaded (GstFactoriesTracer * self, GstClockTime ts,
 static void
 gst_factories_tracer_class_init (GstFactoriesTracerClass * klass)
 {
-  /* announce trace formats */
-  /* *INDENT-OFF* */
-  tr_factory_used = gst_tracer_record_new ("factory-used.class",
-      "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
-          NULL),
-      "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "description", G_TYPE_STRING, "event ts",
-          NULL),
-      "factory-type", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "description", G_TYPE_STRING, "type name of the factory",
-          NULL),
-      "factory", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "description", G_TYPE_STRING, "name of the object factory",
-          NULL),
-      "plugin", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "description", G_TYPE_STRING, "name of the plugin",
-          NULL),
-      "source-module", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "description", G_TYPE_STRING, "name of the source module this feature is from",
-          NULL),
-     NULL);
-  /* *INDENT-ON* */
+  GstTraceFormatBuilder *builder;
 
-  GST_OBJECT_FLAG_SET (tr_factory_used, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  /* announce trace format */
+  builder = gst_trace_format_builder_new ("factory-used");
+  gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_set_scope (gst_trace_field_new ("thread-id",
+              GST_TRACER_FIELD_TYPE_UINT64), GST_TRACER_VALUE_SCOPE_THREAD));
+  gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_set_description (gst_trace_field_new ("ts",
+              GST_TRACER_FIELD_TYPE_UINT64), "event ts"));
+  gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_set_description (gst_trace_field_new ("factory-type",
+              GST_TRACER_FIELD_TYPE_STRING), "type name of the factory"));
+  gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_set_description (gst_trace_field_new ("factory",
+              GST_TRACER_FIELD_TYPE_STRING), "name of the object factory"));
+  gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_set_description (gst_trace_field_new ("plugin",
+              GST_TRACER_FIELD_TYPE_STRING), "name of the plugin"));
+  gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_set_description (gst_trace_field_new ("source-module",
+              GST_TRACER_FIELD_TYPE_STRING),
+          "name of the source module this feature is from"));
+  tr_factory_used = gst_trace_format_builder_register (builder);
 }
 
 static void
