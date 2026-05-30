@@ -177,3 +177,81 @@ gst_amc_codec_new_surface_texture (GError ** err)
   g_assert (gst_amc_codec_vtable != NULL);
   return gst_amc_codec_vtable->new_surface_texture (err);
 }
+
+gboolean
+gst_amc_codec_have_ahardware_buffer_output (void)
+{
+  g_assert (gst_amc_codec_vtable != NULL);
+  return gst_amc_codec_vtable->have_ahardware_buffer_output ();
+}
+
+gboolean
+gst_amc_codec_configure_with_image_reader (GstAmcCodec * codec,
+    GstAmcFormat * format, GstAmcAImageReader * reader, GError ** err)
+{
+  g_assert (gst_amc_codec_vtable != NULL);
+  return gst_amc_codec_vtable->configure_with_image_reader (codec, format,
+      reader, err);
+}
+
+GstAmcAImageReader *
+gst_amc_codec_new_image_reader (gint width, gint height, guint max_images,
+    GError ** err)
+{
+  g_assert (gst_amc_codec_vtable != NULL);
+  return gst_amc_codec_vtable->new_image_reader (width, height, max_images,
+      err);
+}
+
+GstAmcAImageReader *
+gst_amc_image_reader_ref (GstAmcAImageReader * reader)
+{
+  g_assert (gst_amc_codec_vtable != NULL);
+  return gst_amc_codec_vtable->image_reader_ref (reader);
+}
+
+void
+gst_amc_image_reader_unref (GstAmcAImageReader * reader)
+{
+  g_assert (gst_amc_codec_vtable != NULL);
+  gst_amc_codec_vtable->image_reader_unref (reader);
+}
+
+void
+gst_amc_image_reader_set_flushing (GstAmcAImageReader * reader,
+    gboolean flushing)
+{
+  g_assert (gst_amc_codec_vtable != NULL);
+  gst_amc_codec_vtable->image_reader_set_flushing (reader, flushing);
+}
+
+void
+gst_amc_image_reader_notify_image_released (GstAmcAImageReader * reader)
+{
+  g_assert (gst_amc_codec_vtable != NULL);
+  gst_amc_codec_vtable->image_reader_notify_image_released (reader);
+}
+
+GstAmcAImageReaderAcquireResult
+gst_amc_image_reader_acquire_next (GstAmcAImageReader * reader,
+    GstAmcAImage ** image, gint * acquire_fence_fd, GError ** err)
+{
+  g_assert (gst_amc_codec_vtable != NULL);
+  return gst_amc_codec_vtable->image_reader_acquire_next (reader, image,
+      acquire_fence_fd, err);
+}
+
+gboolean
+gst_amc_image_get_hardware_buffer (GstAmcAImage * image,
+    AHardwareBuffer ** buffer, GError ** err)
+{
+  g_assert (gst_amc_codec_vtable != NULL);
+  return gst_amc_codec_vtable->image_get_hardware_buffer (image, buffer, err);
+}
+
+void
+gst_amc_image_delete_async (GstAmcAImage * image, gint release_fence_fd)
+{
+  g_assert (gst_amc_codec_vtable != NULL);
+  gst_amc_codec_vtable->image_delete_async (image, release_fence_fd);
+}

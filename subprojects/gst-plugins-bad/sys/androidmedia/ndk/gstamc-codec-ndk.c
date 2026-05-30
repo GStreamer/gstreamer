@@ -34,8 +34,11 @@
 
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
+#include <android/hardware_buffer.h>
 #include <media/NdkMediaError.h>
 #include <media/NdkMediaCodec.h>
+#include <media/NdkImage.h>
+#include <media/NdkImageReader.h>
 
 #include <dlfcn.h>
 
@@ -47,6 +50,27 @@ struct _GstAmcCodec
   /* For JNI-based SurfaceTexture. */
   GstAmcSurface *surface;
 };
+
+struct _GstAmcAImage
+{
+  AImage *image;
+};
+
+struct _GstAmcAImageReader
+{
+  gint refcount;
+  AImageReader *reader;
+  GMutex lock;
+  GCond cond;
+  gboolean image_available;
+  gboolean flushing;
+  guint image_released_seq;
+};
+
+/* Bound the temporary wait for AImageReader to publish the image after
+ * releasing a MediaCodec output buffer. This is slightly above one 60 fps frame
+ * period while still below one 30 fps frame period. */
+#define GST_AMC_AIMAGE_READER_ACQUIRE_TIMEOUT_MS 20
 
 /* The defines are from NdkMediaCodec.h. See the reasoning in the same file. */
 #if defined(__USE_FILE_OFFSET64) && !defined(__LP64__)
@@ -89,6 +113,20 @@ static struct
   /* optional */
     media_status_t (*set_parameters) (AMediaCodec * mData,
       const AMediaFormat * params);
+
+    media_status_t (*image_reader_new_with_usage) (int32_t width,
+      int32_t height, int32_t format, uint64_t usage, int32_t maxImages,
+      AImageReader ** reader);
+  void (*image_reader_delete) (AImageReader * reader);
+    media_status_t (*image_reader_get_window) (AImageReader * reader,
+      ANativeWindow ** window);
+    media_status_t (*image_reader_acquire_next_image_async)
+    (AImageReader * reader, AImage ** image, int *acquireFenceFd);
+    media_status_t (*image_reader_set_image_listener)
+    (AImageReader * reader, AImageReader_ImageListener * listener);
+    media_status_t (*image_get_hardware_buffer) (const AImage * image,
+      AHardwareBuffer ** buffer);
+  void (*image_delete_async) (AImage * image, int releaseFenceFd);
 } a_media_codec;
 
 #undef _off_t_compat
@@ -144,6 +182,22 @@ gst_amc_codec_ndk_static_init (void)
   /* Optional. */
   a_media_codec.set_parameters =
       dlsym (a_media_codec.mediandk_handle, "AMediaCodec_setParameters");
+
+  a_media_codec.image_reader_new_with_usage =
+      dlsym (a_media_codec.mediandk_handle, "AImageReader_newWithUsage");
+  a_media_codec.image_reader_delete =
+      dlsym (a_media_codec.mediandk_handle, "AImageReader_delete");
+  a_media_codec.image_reader_get_window =
+      dlsym (a_media_codec.mediandk_handle, "AImageReader_getWindow");
+  a_media_codec.image_reader_acquire_next_image_async =
+      dlsym (a_media_codec.mediandk_handle,
+      "AImageReader_acquireNextImageAsync");
+  a_media_codec.image_reader_set_image_listener =
+      dlsym (a_media_codec.mediandk_handle, "AImageReader_setImageListener");
+  a_media_codec.image_get_hardware_buffer =
+      dlsym (a_media_codec.mediandk_handle, "AImage_getHardwareBuffer");
+  a_media_codec.image_delete_async =
+      dlsym (a_media_codec.mediandk_handle, "AImage_deleteAsync");
 
   return TRUE;
 }
@@ -551,6 +605,308 @@ gst_amc_codec_ndk_new_surface_texture (GError ** err)
   return (GstAmcSurfaceTexture *) gst_amc_surface_texture_jni_new (err);
 }
 
+static gboolean
+gst_amc_codec_ndk_have_ahardware_buffer_output (void)
+{
+  return a_media_codec.image_reader_new_with_usage
+      && a_media_codec.image_reader_delete
+      && a_media_codec.image_reader_get_window
+      && a_media_codec.image_reader_acquire_next_image_async
+      && a_media_codec.image_reader_set_image_listener
+      && a_media_codec.image_get_hardware_buffer
+      && a_media_codec.image_delete_async;
+}
+
+static gboolean
+gst_amc_codec_ndk_configure_with_image_reader (GstAmcCodec * codec,
+    GstAmcFormat * format, GstAmcAImageReader * reader, GError ** err)
+{
+  ANativeWindow *native_window = NULL;
+  media_status_t result;
+  uint32_t flags = 0;
+
+  g_return_val_if_fail (codec != NULL, FALSE);
+  g_return_val_if_fail (format != NULL, FALSE);
+  g_return_val_if_fail (reader != NULL, FALSE);
+
+  if (!gst_amc_codec_ndk_have_ahardware_buffer_output ()) {
+    g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "AImageReader AHardwareBuffer output is not available");
+    return FALSE;
+  }
+
+  if (codec->is_encoder) {
+    g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "AImageReader output is only supported for decoders");
+    return FALSE;
+  }
+
+  /* The returned ANativeWindow is owned by the AImageReader and stays valid
+   * until the reader is deleted. Unlike ANativeWindow_fromSurface(), this does
+   * not transfer a reference that must be released with ANativeWindow_release().
+   */
+  result = a_media_codec.image_reader_get_window (reader->reader,
+      &native_window);
+  if (result != AMEDIA_OK || !native_window) {
+    g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Failed to get AImageReader window: %d", result);
+    return FALSE;
+  }
+
+  result = a_media_codec.configure (codec->ndk_media_codec,
+      format->ndk_media_format, native_window, NULL, flags);
+  if (result != AMEDIA_OK) {
+    g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Failed to configure codec with AImageReader: %d", result);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static void
+gst_amc_codec_ndk_image_reader_on_image_available (void *context,
+    AImageReader * reader)
+{
+  GstAmcAImageReader *self = context;
+
+  g_mutex_lock (&self->lock);
+  self->image_available = TRUE;
+  g_cond_signal (&self->cond);
+  g_mutex_unlock (&self->lock);
+}
+
+static void
+gst_amc_codec_ndk_image_reader_set_flushing (GstAmcAImageReader * reader,
+    gboolean flushing)
+{
+  g_return_if_fail (reader != NULL);
+
+  g_mutex_lock (&reader->lock);
+  reader->flushing = flushing;
+  if (flushing)
+    g_cond_broadcast (&reader->cond);
+  g_mutex_unlock (&reader->lock);
+}
+
+static void
+gst_amc_codec_ndk_image_reader_notify_image_released (GstAmcAImageReader *
+    reader)
+{
+  g_return_if_fail (reader != NULL);
+
+  g_mutex_lock (&reader->lock);
+  reader->image_released_seq++;
+  g_cond_signal (&reader->cond);
+  g_mutex_unlock (&reader->lock);
+}
+
+static GstAmcAImageReader *
+gst_amc_codec_ndk_new_image_reader (gint width, gint height, guint max_images,
+    GError ** err)
+{
+  GstAmcAImageReader *reader;
+  AImageReader_ImageListener listener;
+  media_status_t result;
+
+  g_return_val_if_fail (width > 0, NULL);
+  g_return_val_if_fail (height > 0, NULL);
+  g_return_val_if_fail (max_images > 0, NULL);
+
+  if (!gst_amc_codec_ndk_have_ahardware_buffer_output ()) {
+    g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "AImageReader AHardwareBuffer output is not available");
+    return NULL;
+  }
+
+  reader = g_new0 (GstAmcAImageReader, 1);
+  reader->refcount = 1;
+  g_mutex_init (&reader->lock);
+  g_cond_init (&reader->cond);
+
+  result = a_media_codec.image_reader_new_with_usage (width, height,
+      AIMAGE_FORMAT_PRIVATE, AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE,
+      max_images, &reader->reader);
+  if (result != AMEDIA_OK || !reader->reader) {
+    g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Failed to create AImageReader: %d", result);
+    g_cond_clear (&reader->cond);
+    g_mutex_clear (&reader->lock);
+    g_free (reader);
+    return NULL;
+  }
+
+  listener.context = reader;
+  listener.onImageAvailable = gst_amc_codec_ndk_image_reader_on_image_available;
+  result = a_media_codec.image_reader_set_image_listener (reader->reader,
+      &listener);
+  if (result != AMEDIA_OK) {
+    g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Failed to set AImageReader listener: %d", result);
+    a_media_codec.image_reader_delete (reader->reader);
+    g_cond_clear (&reader->cond);
+    g_mutex_clear (&reader->lock);
+    g_free (reader);
+    return NULL;
+  }
+
+  return reader;
+}
+
+static GstAmcAImageReader *
+gst_amc_codec_ndk_image_reader_ref (GstAmcAImageReader * reader)
+{
+  g_return_val_if_fail (reader != NULL, NULL);
+
+  g_atomic_int_inc (&reader->refcount);
+  return reader;
+}
+
+static void
+gst_amc_codec_ndk_image_reader_unref (GstAmcAImageReader * reader)
+{
+  g_return_if_fail (reader != NULL);
+
+  if (g_atomic_int_dec_and_test (&reader->refcount)) {
+    if (reader->reader) {
+      a_media_codec.image_reader_set_image_listener (reader->reader, NULL);
+      a_media_codec.image_reader_delete (reader->reader);
+    }
+    g_cond_clear (&reader->cond);
+    g_mutex_clear (&reader->lock);
+    g_free (reader);
+  }
+}
+
+static GstAmcAImageReaderAcquireResult
+gst_amc_codec_ndk_image_reader_acquire_next (GstAmcAImageReader * reader,
+    GstAmcAImage ** image, gint * acquire_fence_fd, GError ** err)
+{
+  GstAmcAImage *ret;
+  media_status_t result;
+  int fence_fd = -1;
+  AImage *aimage = NULL;
+  gint64 end_time;
+
+  g_return_val_if_fail (reader != NULL, GST_AMC_AIMAGE_READER_ACQUIRE_ERROR);
+  g_return_val_if_fail (image != NULL, GST_AMC_AIMAGE_READER_ACQUIRE_ERROR);
+  g_return_val_if_fail (acquire_fence_fd != NULL,
+      GST_AMC_AIMAGE_READER_ACQUIRE_ERROR);
+
+  *image = NULL;
+  *acquire_fence_fd = -1;
+
+  end_time = g_get_monotonic_time () + G_TIME_SPAN_MILLISECOND *
+      GST_AMC_AIMAGE_READER_ACQUIRE_TIMEOUT_MS;
+
+  while (TRUE) {
+    guint image_released_seq;
+    gboolean timed_out = FALSE;
+
+    g_mutex_lock (&reader->lock);
+    if (reader->flushing) {
+      g_mutex_unlock (&reader->lock);
+      return GST_AMC_AIMAGE_READER_ACQUIRE_TRY_AGAIN;
+    }
+    image_released_seq = reader->image_released_seq;
+    g_mutex_unlock (&reader->lock);
+
+    result =
+        a_media_codec.image_reader_acquire_next_image_async (reader->reader,
+        &aimage, &fence_fd);
+    if (result != AMEDIA_IMGREADER_NO_BUFFER_AVAILABLE &&
+        result != AMEDIA_IMGREADER_MAX_IMAGES_ACQUIRED)
+      break;
+
+    if (result == AMEDIA_IMGREADER_MAX_IMAGES_ACQUIRED) {
+      /* All images allowed by the AImageReader are currently acquired by us.
+       * Treat this like downstream backpressure: wait until an AImage-backed
+       * memory is released, while still allowing flushing to interrupt the
+       * decoder task. */
+      g_mutex_lock (&reader->lock);
+      while (image_released_seq == reader->image_released_seq &&
+          !reader->flushing)
+        g_cond_wait (&reader->cond, &reader->lock);
+      if (reader->flushing) {
+        g_mutex_unlock (&reader->lock);
+        break;
+      }
+      g_mutex_unlock (&reader->lock);
+      continue;
+    }
+
+    /* TODO: Avoid waiting here by letting the ImageReader callback wake the
+     * decoder output task, which can then resume a pending released frame and
+     * acquire its AImage. The callback must not push buffers directly. */
+    g_mutex_lock (&reader->lock);
+    while (!reader->image_available && !reader->flushing) {
+      if (!g_cond_wait_until (&reader->cond, &reader->lock, end_time)) {
+        timed_out = TRUE;
+        break;
+      }
+    }
+    if (reader->image_available) {
+      reader->image_available = FALSE;
+      timed_out = FALSE;
+    }
+    if (reader->flushing)
+      timed_out = TRUE;
+    g_mutex_unlock (&reader->lock);
+
+    if (timed_out)
+      break;
+  }
+
+  if (result == AMEDIA_IMGREADER_NO_BUFFER_AVAILABLE ||
+      result == AMEDIA_IMGREADER_MAX_IMAGES_ACQUIRED)
+    return GST_AMC_AIMAGE_READER_ACQUIRE_TRY_AGAIN;
+
+  if (result != AMEDIA_OK || !aimage) {
+    g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Failed to acquire next AImage: %d", result);
+    return GST_AMC_AIMAGE_READER_ACQUIRE_ERROR;
+  }
+
+  ret = g_new0 (GstAmcAImage, 1);
+  ret->image = aimage;
+  *image = ret;
+  *acquire_fence_fd = fence_fd;
+
+  return GST_AMC_AIMAGE_READER_ACQUIRE_OK;
+}
+
+static gboolean
+gst_amc_codec_ndk_image_get_hardware_buffer (GstAmcAImage * image,
+    AHardwareBuffer ** buffer, GError ** err)
+{
+  media_status_t result;
+  AHardwareBuffer *ahardware_buffer = NULL;
+
+  g_return_val_if_fail (image != NULL, FALSE);
+  g_return_val_if_fail (buffer != NULL, FALSE);
+
+  result = a_media_codec.image_get_hardware_buffer (image->image,
+      &ahardware_buffer);
+  if (result != AMEDIA_OK || !ahardware_buffer) {
+    g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Failed to get AHardwareBuffer from AImage: %d", result);
+    return FALSE;
+  }
+
+  *buffer = ahardware_buffer;
+  return TRUE;
+}
+
+static void
+gst_amc_codec_ndk_image_delete_async (GstAmcAImage * image,
+    gint release_fence_fd)
+{
+  g_return_if_fail (image != NULL);
+
+  a_media_codec.image_delete_async (image->image, release_fence_fd);
+  g_free (image);
+}
+
 GstAmcCodecVTable gst_amc_codec_ndk_vtable = {
   .buffer_free = gst_amc_buffer_ndk_free,
   .buffer_set_position_and_limit = gst_amc_buffer_ndk_set_position_and_limit,
@@ -581,4 +937,17 @@ GstAmcCodecVTable gst_amc_codec_ndk_vtable = {
   .release_output_buffer = gst_amc_codec_ndk_release_output_buffer,
 
   .new_surface_texture = gst_amc_codec_ndk_new_surface_texture,
+
+  .have_ahardware_buffer_output =
+      gst_amc_codec_ndk_have_ahardware_buffer_output,
+  .configure_with_image_reader = gst_amc_codec_ndk_configure_with_image_reader,
+  .new_image_reader = gst_amc_codec_ndk_new_image_reader,
+  .image_reader_ref = gst_amc_codec_ndk_image_reader_ref,
+  .image_reader_unref = gst_amc_codec_ndk_image_reader_unref,
+  .image_reader_set_flushing = gst_amc_codec_ndk_image_reader_set_flushing,
+  .image_reader_notify_image_released =
+      gst_amc_codec_ndk_image_reader_notify_image_released,
+  .image_reader_acquire_next = gst_amc_codec_ndk_image_reader_acquire_next,
+  .image_get_hardware_buffer = gst_amc_codec_ndk_image_get_hardware_buffer,
+  .image_delete_async = gst_amc_codec_ndk_image_delete_async,
 };

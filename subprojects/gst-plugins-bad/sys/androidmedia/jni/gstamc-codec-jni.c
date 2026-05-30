@@ -1092,6 +1092,82 @@ gst_amc_codec_jni_new_surface_texture (GError ** err)
   return (GstAmcSurfaceTexture *) gst_amc_surface_texture_jni_new (err);
 }
 
+static gboolean
+gst_amc_codec_jni_have_ahardware_buffer_output (void)
+{
+  return FALSE;
+}
+
+static gboolean
+gst_amc_codec_jni_configure_with_image_reader (GstAmcCodec * codec,
+    GstAmcFormat * format, GstAmcAImageReader * reader, GError ** err)
+{
+  g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+      "AHardwareBuffer output is not supported by the JNI MediaCodec backend");
+  return FALSE;
+}
+
+static GstAmcAImageReader *
+gst_amc_codec_jni_new_image_reader (gint width, gint height, guint max_images,
+    GError ** err)
+{
+  g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+      "AHardwareBuffer output is not supported by the JNI MediaCodec backend");
+  return NULL;
+}
+
+static GstAmcAImageReader *
+gst_amc_codec_jni_image_reader_ref (GstAmcAImageReader * reader)
+{
+  g_assert_not_reached ();
+  return NULL;
+}
+
+static void
+gst_amc_codec_jni_image_reader_unref (GstAmcAImageReader * reader)
+{
+  g_assert_not_reached ();
+}
+
+static void
+gst_amc_codec_jni_image_reader_set_flushing (GstAmcAImageReader * reader,
+    gboolean flushing)
+{
+  g_assert_not_reached ();
+}
+
+static void
+gst_amc_codec_jni_image_reader_notify_image_released (GstAmcAImageReader *
+    reader)
+{
+  g_assert_not_reached ();
+}
+
+static GstAmcAImageReaderAcquireResult
+gst_amc_codec_jni_image_reader_acquire_next (GstAmcAImageReader * reader,
+    GstAmcAImage ** image, gint * acquire_fence_fd, GError ** err)
+{
+  g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+      "AHardwareBuffer output is not supported by the JNI MediaCodec backend");
+  return GST_AMC_AIMAGE_READER_ACQUIRE_ERROR;
+}
+
+static gboolean
+gst_amc_codec_jni_image_get_hardware_buffer (GstAmcAImage * image,
+    AHardwareBuffer ** buffer, GError ** err)
+{
+  g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+      "AHardwareBuffer output is not supported by the JNI MediaCodec backend");
+  return FALSE;
+}
+
+static void
+gst_amc_codec_jni_image_delete_async (GstAmcAImage * image,
+    gint release_fence_fd)
+{
+  g_assert_not_reached ();
+}
+
 GstAmcCodecVTable gst_amc_codec_jni_vtable = {
   .buffer_free = gst_amc_buffer_jni_free,
   .buffer_set_position_and_limit = gst_amc_buffer_jni_set_position_and_limit,
@@ -1122,4 +1198,17 @@ GstAmcCodecVTable gst_amc_codec_jni_vtable = {
   .release_output_buffer = gst_amc_codec_jni_release_output_buffer,
 
   .new_surface_texture = gst_amc_codec_jni_new_surface_texture,
+
+  .have_ahardware_buffer_output =
+      gst_amc_codec_jni_have_ahardware_buffer_output,
+  .configure_with_image_reader = gst_amc_codec_jni_configure_with_image_reader,
+  .new_image_reader = gst_amc_codec_jni_new_image_reader,
+  .image_reader_ref = gst_amc_codec_jni_image_reader_ref,
+  .image_reader_unref = gst_amc_codec_jni_image_reader_unref,
+  .image_reader_set_flushing = gst_amc_codec_jni_image_reader_set_flushing,
+  .image_reader_notify_image_released =
+      gst_amc_codec_jni_image_reader_notify_image_released,
+  .image_reader_acquire_next = gst_amc_codec_jni_image_reader_acquire_next,
+  .image_get_hardware_buffer = gst_amc_codec_jni_image_get_hardware_buffer,
+  .image_delete_async = gst_amc_codec_jni_image_delete_async,
 };
