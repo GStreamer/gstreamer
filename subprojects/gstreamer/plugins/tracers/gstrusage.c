@@ -38,7 +38,6 @@
 #endif
 #include <sys/resource.h>
 #endif
-
 GST_DEBUG_CATEGORY_STATIC (gst_rusage_debug);
 #define GST_CAT_DEFAULT gst_rusage_debug
 
@@ -56,7 +55,7 @@ G_DEFINE_TYPE_WITH_CODE (GstRUsageTracer, gst_rusage_tracer, GST_TYPE_TRACER,
 /* number of cpus to scale cpu-usage in threads */
 static glong num_cpus = 1;
 
-static GstTracerRecord *tr_proc, *tr_thread;
+static GstTraceFormat *tr_proc, *tr_thread;
 
 typedef struct
 {
@@ -238,14 +237,16 @@ do_stats (GstTracer * obj, guint64 ts)
    *   cpufreq-selector -g performance
    *   cpufreq-selector -g ondemand
    */
-  /* *INDENT-OFF* */
   avg_cpuload = (guint) gst_util_uint64_scale (stats->tthread,
       G_GINT64_CONSTANT (1000), ts);
   update_trace_value (stats->tvs_thread, ts, stats->tthread, &dts, &dtproc);
   cur_cpuload = (guint) gst_util_uint64_scale (dtproc,
       G_GINT64_CONSTANT (1000), dts);
-  gst_tracer_record_log (tr_thread, (guint64) (guintptr) thread_id, ts,
-      MIN (avg_cpuload, 1000), MIN (cur_cpuload, 1000), stats->tthread);
+  gst_trace_event (tr_thread,
+      GST_TRACE_VALUES (UINT64 ((guint64) (guintptr) thread_id),
+          UINT64 (ts), UINT (MIN (avg_cpuload,
+                  1000)), UINT (MIN (cur_cpuload, 1000)),
+          UINT64 (stats->tthread)));
 
   avg_cpuload = (guint) gst_util_uint64_scale (tproc / num_cpus,
       G_GINT64_CONSTANT (1000), ts);
@@ -254,9 +255,10 @@ do_stats (GstTracer * obj, guint64 ts)
   G_UNLOCK (_proc);
   cur_cpuload = (guint) gst_util_uint64_scale (dtproc / num_cpus,
       G_GINT64_CONSTANT (1000), dts);
-  gst_tracer_record_log (tr_proc, (guint64) getpid (), ts,
-      MIN (avg_cpuload, 1000), MIN (cur_cpuload, 1000), tproc);
-  /* *INDENT-ON* */
+  gst_trace_event (tr_proc,
+      GST_TRACE_VALUES (UINT64 ((guint64) getpid ()),
+          UINT64 (ts), UINT (MIN (avg_cpuload,
+                  1000)), UINT (MIN (cur_cpuload, 1000)), UINT64 (tproc)));
 }
 
 /* tracer class */
@@ -275,6 +277,7 @@ static void
 gst_rusage_tracer_class_init (GstRUsageTracerClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstTraceFormatBuilder *builder;
 
   gst_tracer_class_set_use_structure_params (GST_TRACER_CLASS (klass), TRUE);
 
@@ -290,71 +293,51 @@ gst_rusage_tracer_class_init (GstRUsageTracerClass * klass)
   GST_DEBUG ("rusage: num_cpus=%ld", num_cpus);
 
   /* announce trace formats */
-  /* *INDENT-OFF* */
-  tr_thread = gst_tracer_record_new ("thread-rusage.class",
-      "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
-          NULL),
-      "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "description", G_TYPE_STRING, "event ts",
-          NULL),
-      "average-cpuload", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "description", G_TYPE_STRING, "average cpu usage per thread in ‰",
-          "flags", GST_TYPE_TRACER_VALUE_FLAGS, GST_TRACER_VALUE_FLAGS_AGGREGATED,
-          "min", G_TYPE_UINT, 0,
-          "max", G_TYPE_UINT, 1000,
-          NULL),
-      "current-cpuload", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "description", G_TYPE_STRING, "current cpu usage per thread in ‰",
-          "min", G_TYPE_UINT, 0,
-          "max", G_TYPE_UINT, 1000,
-          NULL),
-      "time", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "description", G_TYPE_STRING, "time spent in thread in ns",
-          "flags", GST_TYPE_TRACER_VALUE_FLAGS, GST_TRACER_VALUE_FLAGS_AGGREGATED,
-          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
-          "max", G_TYPE_UINT64, G_MAXUINT64,
-          NULL),
-      NULL);
-  tr_proc = gst_tracer_record_new ("proc-rusage.class",
-      "process-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PROCESS,
-          NULL),
-      "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "description", G_TYPE_STRING, "event ts",
-          NULL),
-      "average-cpuload", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "description", G_TYPE_STRING, "average cpu usage per process in ‰",
-          "flags", GST_TYPE_TRACER_VALUE_FLAGS, GST_TRACER_VALUE_FLAGS_AGGREGATED,
-          "min", G_TYPE_UINT, 0,
-          "max", G_TYPE_UINT, 1000,
-          NULL),
-      "current-cpuload", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT,
-          "description", G_TYPE_STRING, "current cpu usage per process in ‰",
-          "min", G_TYPE_UINT, 0,
-          "max", G_TYPE_UINT, 1000,
-          NULL),
-      "time", GST_TYPE_STRUCTURE, gst_structure_new ("value",
-          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
-          "description", G_TYPE_STRING, "time spent in process in ns",
-          "flags", GST_TYPE_TRACER_VALUE_FLAGS, GST_TRACER_VALUE_FLAGS_AGGREGATED,
-          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
-          "max", G_TYPE_UINT64, G_MAXUINT64,
-          NULL),
-      NULL);
-  /* *INDENT-ON* */
+  builder = gst_trace_format_builder_new ("thread-rusage");
+  gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_set_scope (gst_trace_field_new ("thread-id",
+              GST_TRACER_FIELD_TYPE_UINT64), GST_TRACER_VALUE_SCOPE_THREAD));
+  gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_set_description (gst_trace_field_new ("ts",
+              GST_TRACER_FIELD_TYPE_UINT64), "event ts"));
+  gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_set_flags (gst_trace_field_set_description
+          (gst_trace_field_new ("average-cpuload", GST_TRACER_FIELD_TYPE_UINT),
+              "average cpu usage per thread in ‰"),
+          GST_TRACER_VALUE_FLAGS_AGGREGATED));
+  gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_set_description (gst_trace_field_new ("current-cpuload",
+              GST_TRACER_FIELD_TYPE_UINT),
+          "current cpu usage per thread in ‰"));
+  gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_set_flags (gst_trace_field_set_description
+          (gst_trace_field_new ("time", GST_TRACER_FIELD_TYPE_UINT64),
+              "time spent in thread in ns"),
+          GST_TRACER_VALUE_FLAGS_AGGREGATED));
+  tr_thread = gst_trace_format_builder_register (builder);
 
-  GST_OBJECT_FLAG_SET (tr_thread, GST_OBJECT_FLAG_MAY_BE_LEAKED);
-  GST_OBJECT_FLAG_SET (tr_proc, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  builder = gst_trace_format_builder_new ("proc-rusage");
+  gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_set_scope (gst_trace_field_new ("process-id",
+              GST_TRACER_FIELD_TYPE_UINT64), GST_TRACER_VALUE_SCOPE_PROCESS));
+  gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_set_description (gst_trace_field_new ("ts",
+              GST_TRACER_FIELD_TYPE_UINT64), "event ts"));
+  gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_set_flags (gst_trace_field_set_description
+          (gst_trace_field_new ("average-cpuload", GST_TRACER_FIELD_TYPE_UINT),
+              "average cpu usage per process in ‰"),
+          GST_TRACER_VALUE_FLAGS_AGGREGATED));
+  gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_set_description (gst_trace_field_new ("current-cpuload",
+              GST_TRACER_FIELD_TYPE_UINT),
+          "current cpu usage per process in ‰"));
+  gst_trace_format_builder_add_field_full (builder,
+      gst_trace_field_set_flags (gst_trace_field_set_description
+          (gst_trace_field_new ("time", GST_TRACER_FIELD_TYPE_UINT64),
+              "time spent in process in ns"),
+          GST_TRACER_VALUE_FLAGS_AGGREGATED));
+  tr_proc = gst_trace_format_builder_register (builder);
 }
 
 static void
