@@ -149,6 +149,7 @@ struct _GstAV1Parse
   gboolean keyframe;
   gboolean show_frame;
   gboolean seen_non_padding;
+  gboolean lcevc;
   GstVideoParseUserData user_data;
 
   GstClockTime buffer_pts;
@@ -351,6 +352,7 @@ gst_av1_parse_reset (GstAV1Parse * self)
   self->highest_spatial_id = 0;
   self->first_frame = TRUE;
   self->seen_non_padding = FALSE;
+  self->lcevc = FALSE;
   gst_video_clear_user_data (&self->user_data, FALSE);
   gst_av1_parse_reset_obu_data_state (self);
   g_clear_pointer (&self->colorimetry, g_free);
@@ -928,6 +930,9 @@ gst_av1_parse_update_src_caps (GstAV1Parse * self, GstCaps * caps)
         gst_video_hdr_format_to_string (GST_VIDEO_HDR_FORMAT_HDR10_PLUS), NULL);
   }
 
+  if (self->user_data.lcevc_enhancement_data || self->lcevc)
+    gst_caps_set_simple (final_caps, "lcevc", G_TYPE_BOOLEAN, TRUE, NULL);
+
   src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (self));
 
   if (!(src_caps && gst_caps_is_strictly_equal (src_caps, final_caps))) {
@@ -1104,6 +1109,7 @@ gst_av1_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
   /* accept upstream info if provided */
   gst_structure_get_int (str, "width", &self->width);
   gst_structure_get_int (str, "height", &self->height);
+  gst_structure_get_boolean (str, "lcevc", &self->lcevc);
   profile = gst_structure_get_string (str, "profile");
   if (profile)
     self->profile = gst_av1_parse_profile_from_string (profile);
@@ -1662,6 +1668,7 @@ gst_av1_parse_process_itut_t35 (GstAV1Parse * self,
   GstByteReader br;
 
   switch (itut_t35->itu_t_t35_country_code) {
+    case ITU_T_T35_COUNTRY_CODE_UK:
     case ITU_T_T35_COUNTRY_CODE_US:
       break;
     default:
@@ -1682,6 +1689,11 @@ gst_av1_parse_process_itut_t35 (GstAV1Parse * self,
 
   gst_video_parse_user_data (GST_ELEMENT (self), &self->user_data, &br,
       GST_VIDEO_PARSE_UTILS_FIELD_1, provider_code);
+
+  if (!self->lcevc && self->user_data.lcevc_enhancement_data != NULL) {
+    self->lcevc = TRUE;
+    self->update_caps = TRUE;
+  }
 }
 
 /* frame_complete will be set true if it is the frame edge. */
