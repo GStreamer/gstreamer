@@ -671,7 +671,7 @@ gst_wavpack_enc_fix_channel_order (GstWavpackEnc * enc, gint32 * data,
     gint nsamples)
 {
   gint i, j;
-  gint32 tmp[8];
+  gint32 *tmp = g_newa (gint32, enc->channels);
 
   for (i = 0; i < nsamples / enc->channels; i++) {
     for (j = 0; j < enc->channels; j++) {
