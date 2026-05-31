@@ -401,7 +401,7 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
   switch (width) {
     case 8:{
       gint8 *outbuffer = (gint8 *) out_data;
-      gint *reorder_map = dec->channel_reorder_map;
+      const gint *reorder_map = dec->channel_reorder_map;
 
       for (i = 0; i < num_samples; i += dec->channels) {
         for (j = 0; j < dec->channels; j++)
@@ -411,7 +411,7 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
     }
     case 16:{
       gint16 *outbuffer = (gint16 *) out_data;
-      gint *reorder_map = dec->channel_reorder_map;
+      const gint *reorder_map = dec->channel_reorder_map;
 
       for (i = 0; i < num_samples; i += dec->channels) {
         for (j = 0; j < dec->channels; j++)
@@ -421,7 +421,7 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
     }
     case 24:{
       guint8 *outbuffer = (guint8 *) out_data;
-      gint *reorder_map = dec->channel_reorder_map;
+      const gint *reorder_map = dec->channel_reorder_map;
 
       if (depth_shift) {
         for (i = 0; i < num_samples; i += dec->channels) {
@@ -457,7 +457,7 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
     }
     case 32:{
       gint32 *outbuffer = (gint32 *) out_data;
-      gint *reorder_map = dec->channel_reorder_map;
+      const gint *reorder_map = dec->channel_reorder_map;
 
       for (i = 0; i < num_samples; i += dec->channels) {
         for (j = 0; j < dec->channels; j++)

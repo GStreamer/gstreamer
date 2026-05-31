@@ -95,10 +95,10 @@ gst_wavpack_read_metadata (GstWavpackMetadata * wpmd, guint8 * header_data,
   return TRUE;
 }
 
-gint
+guint32
 gst_wavpack_get_default_channel_mask (gint nchannels)
 {
-  gint channel_mask = 0;
+  guint32 channel_mask = 0;
 
   /* Set the default channel mask for the given number of channels.
    * It's the same as for WAVE_FORMAT_EXTENDED:
@@ -168,7 +168,7 @@ static const struct
 #define MAX_CHANNEL_POSITIONS G_N_ELEMENTS (layout_mapping)
 
 gboolean
-gst_wavpack_get_channel_positions (gint num_channels, gint layout,
+gst_wavpack_get_channel_positions (gint num_channels, guint32 layout,
     GstAudioChannelPosition * pos)
 {
   gint i, p;
@@ -223,11 +223,11 @@ gst_wavpack_get_default_channel_positions (gint nchannels)
   return pos;
 }
 
-gint
-gst_wavpack_get_channel_mask_from_positions (GstAudioChannelPosition * pos,
-    gint nchannels)
+guint32
+gst_wavpack_get_channel_mask_from_positions (const GstAudioChannelPosition *
+    pos, gint nchannels)
 {
-  gint channel_mask = 0;
+  guint32 channel_mask = 0;
   gint i, j;
 
   if (nchannels == 1 && pos[0] == GST_AUDIO_CHANNEL_POSITION_MONO) {
@@ -250,8 +250,8 @@ gst_wavpack_get_channel_mask_from_positions (GstAudioChannelPosition * pos,
 }
 
 gboolean
-gst_wavpack_set_channel_mapping (GstAudioChannelPosition * pos, gint nchannels,
-    gint8 * channel_mapping)
+gst_wavpack_set_channel_mapping (const GstAudioChannelPosition * pos,
+    gint nchannels, gint8 * channel_mapping)
 {
   gint i, j;
   gboolean ret = TRUE;
