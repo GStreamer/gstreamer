@@ -55,6 +55,7 @@ struct _GstWavpackDec
   gboolean mode_float;
 
   gint channel_reorder_map[64];
+  gboolean need_reorder;
 
 };
 
