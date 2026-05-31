@@ -122,6 +122,11 @@ enum
 
 #define _PAD_PROBE_TYPE_ALL_BOTH_AND_FLUSH (GST_PAD_PROBE_TYPE_ALL_BOTH | GST_PAD_PROBE_TYPE_EVENT_FLUSH)
 
+/* Some internal aliasing on flow return values to ease reading */
+#define GST_FLOW_PROBE_DROPPED GST_FLOW_CUSTOM_SUCCESS
+#define GST_FLOW_PROBE_HANDLED GST_FLOW_CUSTOM_SUCCESS_1
+#define GST_FLOW_PROBE_UNSENT GST_FLOW_CUSTOM_SUCCESS_2
+
 /* we have a pending and an active event on the pad. On source pads only the
  * active event is used. On sinkpads, events are copied to the pending entry and
  * moved to the active event when the eventfunc returned %TRUE. */
@@ -3973,7 +3978,7 @@ dropped:
     GST_DEBUG_OBJECT (pad, "data is dropped");
     if (data.called_probes_size > N_STACK_ALLOCATE_PROBES)
       g_free (data.called_probes);
-    return GST_FLOW_CUSTOM_SUCCESS;
+    return GST_FLOW_PROBE_DROPPED;
   }
 passed:
   {
@@ -3988,7 +3993,7 @@ handled:
     GST_DEBUG_OBJECT (pad, "data was handled");
     if (data.called_probes_size > N_STACK_ALLOCATE_PROBES)
       g_free (data.called_probes);
-    return GST_FLOW_CUSTOM_SUCCESS_1;
+    return GST_FLOW_PROBE_HANDLED;
   }
 }
 
@@ -4111,7 +4116,7 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
   if (data->event && GST_EVENT_IS_STICKY (data->event) &&
       data_sticky_order <= _to_sticky_order (GST_EVENT_SEGMENT) &&
       data_sticky_order < ev->sticky_order) {
-    data->ret = GST_FLOW_CUSTOM_SUCCESS_1;
+    data->ret = GST_FLOW_PROBE_UNSENT;
   } else {
     GST_OBJECT_UNLOCK (pad);
     /* The event argument remains valid during the unlock as the caller must
@@ -4132,7 +4137,7 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
     GST_TRACER_PAD_PUSH_EVENT_POST (pad, data->ret >= GST_FLOW_OK);
     GST_OBJECT_LOCK (pad);
 
-    if (data->ret == GST_FLOW_CUSTOM_SUCCESS_1)
+    if (data->ret == GST_FLOW_PROBE_HANDLED)
       data->ret = GST_FLOW_OK;
   }
 
@@ -4142,14 +4147,14 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
       GST_DEBUG_OBJECT (pad, "event %s marked received",
           GST_EVENT_TYPE_NAME (event));
       break;
-    case GST_FLOW_CUSTOM_SUCCESS:
+    case GST_FLOW_PROBE_DROPPED:
       /* we can't assume the event is received when it was dropped */
       GST_DEBUG_OBJECT (pad, "event %s was dropped, mark pending",
           GST_EVENT_TYPE_NAME (event));
       GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
       data->ret = GST_FLOW_OK;
       break;
-    case GST_FLOW_CUSTOM_SUCCESS_1:
+    case GST_FLOW_PROBE_UNSENT:
       /* event was ignored and should be sent later */
       GST_DEBUG_OBJECT (pad, "event %s was ignored, mark pending",
           GST_EVENT_TYPE_NAME (event));
@@ -4158,7 +4163,8 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
       break;
     case GST_FLOW_NOT_LINKED:
       /* not linked is not a problem, we are sticky so the event will be
-       * rescheduled to be sent later on re-link, but only for non-EOS events */
+       * rescheduled to be sent later on re-link, except for EOS events
+       * which must be received */
       GST_DEBUG_OBJECT (pad, "pad was not linked, mark pending");
       if (GST_EVENT_TYPE (event) != GST_EVENT_EOS) {
         data->ret = GST_FLOW_OK;
@@ -4222,7 +4228,7 @@ check_sticky (GstPad * pad, GstEvent * event)
 
         /* the event could have been dropped. Because this can only
          * happen if the user asked for it, it's not an error */
-        if (data.ret == GST_FLOW_CUSTOM_SUCCESS)
+        if (data.ret == GST_FLOW_PROBE_DROPPED)
           data.ret = GST_FLOW_OK;
       }
     }
@@ -4360,7 +4366,7 @@ probe_stopped:
 
     /* if a probe dropped without handling, we don't sent it further but assume
      * that the probe did not answer the query and return FALSE */
-    if (ret != GST_FLOW_CUSTOM_SUCCESS_1)
+    if (ret != GST_FLOW_PROBE_HANDLED)
       res = FALSE;
     else
       res = TRUE;
@@ -4477,7 +4483,7 @@ probe_stopped:
 
     /* if a probe dropped without handling, we don't sent it further but
      * assume that the probe did not answer the query and return FALSE */
-    if (ret != GST_FLOW_CUSTOM_SUCCESS_1)
+    if (ret != GST_FLOW_PROBE_HANDLED)
       res = FALSE;
     else
       res = TRUE;
@@ -4632,13 +4638,13 @@ probe_handled:
   /* PASSTHROUGH */
 probe_stopped:
   {
-    /* We unref the buffer, except if the probe handled it (CUSTOM_SUCCESS_1) */
+    /* We unref the buffer, except if the probe handled it (GST_FLOW_PROBE_HANDLED) */
     if (data && !handled)
       gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
 
     switch (ret) {
-      case GST_FLOW_CUSTOM_SUCCESS:
-      case GST_FLOW_CUSTOM_SUCCESS_1:
+      case GST_FLOW_PROBE_DROPPED:
+      case GST_FLOW_PROBE_HANDLED:
         GST_DEBUG_OBJECT (pad, "dropped or handled buffer");
         ret = GST_FLOW_OK;
         break;
@@ -4914,8 +4920,8 @@ probe_stopped:
       gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
 
     switch (ret) {
-      case GST_FLOW_CUSTOM_SUCCESS:
-      case GST_FLOW_CUSTOM_SUCCESS_1:
+      case GST_FLOW_PROBE_DROPPED:
+      case GST_FLOW_PROBE_HANDLED:
         GST_DEBUG_OBJECT (pad, "dropped or handled buffer");
         ret = GST_FLOW_OK;
         break;
@@ -5131,7 +5137,7 @@ probe_stopped:
   {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "probe returned %s", gst_flow_get_name (ret));
-    if (ret == GST_FLOW_CUSTOM_SUCCESS) {
+    if (ret == GST_FLOW_PROBE_DROPPED) {
       if (res_buf) {
         /* the probe filled the buffer and asks us to not call the getrange
          * anymore, we continue with the post probes then. */
@@ -5155,7 +5161,7 @@ probe_stopped_unref:
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "probe returned %s", gst_flow_get_name (ret));
     /* if we drop here, it signals EOS */
-    if (ret == GST_FLOW_CUSTOM_SUCCESS)
+    if (ret == GST_FLOW_PROBE_DROPPED)
       ret = GST_FLOW_EOS;
     pad->ABI.abi.last_flowret = ret;
     GST_OBJECT_UNLOCK (pad);
@@ -5356,7 +5362,7 @@ probe_stopped:
   {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pre probe returned %s",
         gst_flow_get_name (ret));
-    if (ret == GST_FLOW_CUSTOM_SUCCESS) {
+    if (ret == GST_FLOW_PROBE_DROPPED) {
       if (res_buf) {
         /* the probe filled the buffer and asks us to not forward to the peer
          * anymore, we continue with the post probes then */
@@ -5397,7 +5403,7 @@ probe_stopped_unref:
         "post probe returned %s", gst_flow_get_name (ret));
 
     /* if we drop here, it signals EOS */
-    if (ret == GST_FLOW_CUSTOM_SUCCESS)
+    if (ret == GST_FLOW_PROBE_DROPPED)
       ret = GST_FLOW_EOS;
 
     pad->ABI.abi.last_flowret = ret;
@@ -5742,14 +5748,14 @@ inactive:
 probe_stopped:
   {
     GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
-    if (event && ret != GST_FLOW_CUSTOM_SUCCESS_1)
+    if (event && ret != GST_FLOW_PROBE_HANDLED)
       gst_event_unref (event);
 
     switch (ret) {
-      case GST_FLOW_CUSTOM_SUCCESS_1:
+      case GST_FLOW_PROBE_HANDLED:
         GST_DEBUG_OBJECT (pad, "handled event");
         break;
-      case GST_FLOW_CUSTOM_SUCCESS:
+      case GST_FLOW_PROBE_DROPPED:
         GST_DEBUG_OBJECT (pad, "dropped event");
         break;
       default:
@@ -5855,8 +5861,8 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
     /* non-serialized and non-sticky events are pushed right away. */
     ret = gst_pad_push_event_unchecked (pad, event, type);
     /* dropped events by a probe are not an error */
-    res = (ret == GST_FLOW_OK || ret == GST_FLOW_CUSTOM_SUCCESS
-        || ret == GST_FLOW_CUSTOM_SUCCESS_1);
+    res = (ret == GST_FLOW_OK || ret == GST_FLOW_PROBE_DROPPED
+        || ret == GST_FLOW_PROBE_HANDLED);
   } else {
     /* Errors in sticky event pushing are no problem and ignored here
      * as they will cause more meaningful errors during data flow.
@@ -6192,12 +6198,12 @@ probe_stopped:
     if (need_unlock)
       GST_PAD_STREAM_UNLOCK (pad);
     /* Only unref if unhandled */
-    if (event && ret != GST_FLOW_CUSTOM_SUCCESS_1)
+    if (event && ret != GST_FLOW_PROBE_HANDLED)
       gst_event_unref (event);
 
     switch (ret) {
-      case GST_FLOW_CUSTOM_SUCCESS_1:
-      case GST_FLOW_CUSTOM_SUCCESS:
+      case GST_FLOW_PROBE_HANDLED:
+      case GST_FLOW_PROBE_DROPPED:
         GST_DEBUG_OBJECT (pad, "dropped or handled event");
         ret = GST_FLOW_OK;
         break;
