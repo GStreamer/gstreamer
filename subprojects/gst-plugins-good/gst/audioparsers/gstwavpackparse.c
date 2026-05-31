@@ -373,8 +373,15 @@ gst_wavpack_parse_frame_metadata (GstWavpackParse * parse, GstBuffer * buf,
         guint32 mask = 0;
 
         if (size == 6 || size == 7) {
-          CHECK (gst_byte_reader_get_uint16_le (&mbr, &channels));
-          channels = (channels & 0xFFF) + 1;
+          guint8 c0, c1, c2;
+
+          CHECK (gst_byte_reader_get_uint8 (&mbr, &c0));
+          CHECK (gst_byte_reader_get_uint8 (&mbr, &c1));
+          CHECK (gst_byte_reader_get_uint8 (&mbr, &c2));
+
+          channels = (((guint16) c0) | (((guint16) c2 & 0xf) << 8)) + 1;
+          // max_streams = (((guint16) c1) | (((guint16) c2 & 0xf0) << 4)) + 1;
+
           if (size == 6) {
             CHECK (gst_byte_reader_get_uint24_le (&mbr, &mask));
           } else if (size == 7) {
