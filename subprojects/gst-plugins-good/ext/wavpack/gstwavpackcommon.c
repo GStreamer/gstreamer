@@ -206,23 +206,6 @@ gst_wavpack_get_channel_positions (gint num_channels, guint32 layout,
   return TRUE;
 }
 
-GstAudioChannelPosition *
-gst_wavpack_get_default_channel_positions (gint nchannels)
-{
-  GstAudioChannelPosition *pos = g_new (GstAudioChannelPosition, nchannels);
-  gint i;
-
-  if (nchannels == 1) {
-    pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
-    return pos;
-  }
-
-  for (i = 0; i < nchannels; i++)
-    pos[i] = layout_mapping[i].gst_pos;
-
-  return pos;
-}
-
 guint32
 gst_wavpack_get_channel_mask_from_positions (const GstAudioChannelPosition *
     pos, gint nchannels)
