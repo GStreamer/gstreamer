@@ -383,7 +383,7 @@ static gboolean
 gst_wavpack_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
 {
   GstWavpackEnc *enc = GST_WAVPACK_ENC (benc);
-  GstAudioChannelPosition *pos;
+  const GstAudioChannelPosition *pos;
   GstAudioChannelPosition opos[64] = { GST_AUDIO_CHANNEL_POSITION_INVALID, };
   GstCaps *caps;
   guint64 mask = 0;

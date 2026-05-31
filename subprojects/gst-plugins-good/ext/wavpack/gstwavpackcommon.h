@@ -66,10 +66,10 @@ typedef struct
 gboolean gst_wavpack_read_header (WavpackHeader * header, guint8 * buf);
 gboolean gst_wavpack_read_metadata (GstWavpackMetadata * meta,
     guint8 * header_data, guint8 ** p_data);
-gint gst_wavpack_get_default_channel_mask (gint nchannels);
-gboolean gst_wavpack_get_channel_positions (gint nchannels, gint layout, GstAudioChannelPosition *pos);
+guint32 gst_wavpack_get_default_channel_mask (gint nchannels);
+gboolean gst_wavpack_get_channel_positions (gint nchannels, guint32 layout, GstAudioChannelPosition *pos);
 GstAudioChannelPosition *gst_wavpack_get_default_channel_positions (gint nchannels);
-gint gst_wavpack_get_channel_mask_from_positions (GstAudioChannelPosition *pos, gint nchannels);
-gboolean gst_wavpack_set_channel_mapping (GstAudioChannelPosition *pos, gint nchannels, gint8 *channel_mapping);
+guint32 gst_wavpack_get_channel_mask_from_positions (const GstAudioChannelPosition *pos, gint nchannels);
+gboolean gst_wavpack_set_channel_mapping (const GstAudioChannelPosition *pos, gint nchannels, gint8 *channel_mapping);
 
 #endif
