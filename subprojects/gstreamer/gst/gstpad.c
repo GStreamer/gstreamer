@@ -136,7 +136,7 @@ struct _GstPadPrivate
 {
   guint events_cookie;
   GArray *events;
-  guint last_cookie;
+  guint last_events_cookie;
 
   gint using;
   guint probe_list_cookie;
@@ -425,7 +425,7 @@ gst_pad_init (GstPad * pad)
 
   pad->priv->events = g_array_sized_new (FALSE, TRUE, sizeof (PadEvent), 16);
   pad->priv->events_cookie = 0;
-  pad->priv->last_cookie = -1;
+  pad->priv->last_events_cookie = -1;
   g_cond_init (&pad->priv->activation_cond);
 
   pad->ABI.abi.last_flowret = GST_FLOW_FLUSHING;
@@ -4519,7 +4519,7 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
     goto wrong_mode;
 
 #ifdef GST_ENABLE_EXTRA_CHECKS
-  if (G_UNLIKELY (pad->priv->last_cookie != pad->priv->events_cookie)) {
+  if (G_UNLIKELY (pad->priv->last_events_cookie != pad->priv->events_cookie)) {
     if (!find_event_by_type (pad, GST_EVENT_STREAM_START, 0)) {
       g_warning (G_STRLOC
           ":%s:<%s:%s> Got data flow before stream-start event",
@@ -4530,7 +4530,7 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
           ":%s:<%s:%s> Got data flow before segment event",
           G_STRFUNC, GST_DEBUG_PAD_NAME (pad));
     }
-    pad->priv->last_cookie = pad->priv->events_cookie;
+    pad->priv->last_events_cookie = pad->priv->events_cookie;
   }
 #endif
 
@@ -4809,7 +4809,7 @@ gst_pad_push_data (GstPad * pad, GstPadProbeType type, void *data)
     goto wrong_mode;
 
 #ifdef GST_ENABLE_EXTRA_CHECKS
-  if (G_UNLIKELY (pad->priv->last_cookie != pad->priv->events_cookie)) {
+  if (G_UNLIKELY (pad->priv->last_events_cookie != pad->priv->events_cookie)) {
     if (!find_event_by_type (pad, GST_EVENT_STREAM_START, 0)) {
       g_warning (G_STRLOC
           ":%s:<%s:%s> Got data flow before stream-start event",
@@ -4820,7 +4820,7 @@ gst_pad_push_data (GstPad * pad, GstPadProbeType type, void *data)
           ":%s:<%s:%s> Got data flow before segment event",
           G_STRFUNC, GST_DEBUG_PAD_NAME (pad));
     }
-    pad->priv->last_cookie = pad->priv->events_cookie;
+    pad->priv->last_events_cookie = pad->priv->events_cookie;
   }
 #endif
 
