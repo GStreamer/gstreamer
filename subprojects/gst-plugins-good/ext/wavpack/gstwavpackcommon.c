@@ -181,25 +181,15 @@ gst_wavpack_get_channel_positions (gint num_channels, guint32 layout,
   p = 0;
   for (i = 0; i < MAX_CHANNEL_POSITIONS; ++i) {
     if ((layout & layout_mapping[i].ms_mask) != 0) {
-      if (p >= num_channels) {
-        GST_WARNING ("More bits set in the channel layout map than there "
-            "are channels! Broken file");
-        return FALSE;
-      }
-      if (layout_mapping[i].gst_pos == GST_AUDIO_CHANNEL_POSITION_INVALID) {
-        GST_WARNING ("Unsupported channel position (mask 0x%08x) in channel "
-            "layout map - ignoring those channels", layout_mapping[i].ms_mask);
-        /* what to do? just ignore it and let downstream deal with a channel
-         * layout that has INVALID positions in it for now ... */
-      }
       pos[p] = layout_mapping[i].gst_pos;
       ++p;
     }
   }
 
+  // Not all channels found, consider it unpositioned
   if (p != num_channels) {
-    GST_WARNING ("Only %d bits set in the channel layout map, but there are "
-        "supposed to be %d channels! Broken file", p, num_channels);
+    for (i = 0; i < MIN (64, num_channels); i++)
+      pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
     return FALSE;
   }
 
@@ -212,6 +202,7 @@ gst_wavpack_get_channel_mask_from_positions (const GstAudioChannelPosition *
 {
   guint32 channel_mask = 0;
   gint i, j;
+  gint found_channels = 0;
 
   if (nchannels == 1 && pos[0] == GST_AUDIO_CHANNEL_POSITION_MONO) {
     channel_mask = 0x00000004;
@@ -224,10 +215,15 @@ gst_wavpack_get_channel_mask_from_positions (const GstAudioChannelPosition *
     for (j = 0; j < MAX_CHANNEL_POSITIONS; j++) {
       if (pos[i] == layout_mapping[j].gst_pos) {
         channel_mask |= layout_mapping[j].ms_mask;
+        found_channels++;
         break;
       }
     }
   }
+
+  // If not all channels were found consider it unpositioned
+  if (found_channels != nchannels)
+    channel_mask = 0;
 
   return channel_mask;
 }
@@ -238,15 +234,24 @@ gst_wavpack_set_channel_mapping (const GstAudioChannelPosition * pos,
 {
   gint i, j;
   gboolean ret = TRUE;
+  gint found_channels = 0;
 
   for (i = 0; i < nchannels; i++) {
     for (j = 0; j < MAX_CHANNEL_POSITIONS; j++) {
       if (pos[i] == layout_mapping[j].gst_pos) {
         channel_mapping[i] = j;
         ret &= (i == j);
+        found_channels++;
         break;
       }
     }
+  }
+
+  // If not all channels were found, don't reorder anything and consider
+  // it unpositioned
+  if (found_channels != nchannels) {
+    memset (channel_mapping, 0, MIN (64, nchannels));
+    ret = TRUE;
   }
 
   return !ret;
