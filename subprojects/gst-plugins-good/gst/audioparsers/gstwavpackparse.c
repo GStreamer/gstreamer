@@ -302,10 +302,10 @@ gst_wavpack_parse_frame_metadata (GstWavpackParse * parse, GstBuffer * buf,
   if (!wpi->rate)
     wpi->rate = (i < G_N_ELEMENTS (sample_rates)) ? sample_rates[i] : 44100;
   wpi->width = ((wph->flags & FLAG_BYTES_STORED) + 1) * 8;
-  if (!wpi->channels)
+  if (!wpi->channels) {
     wpi->channels = (wph->flags & FLAG_MONO_FLAG) ? 1 : 2;
-  if (!wpi->channel_mask)
     wpi->channel_mask = 5 - wpi->channels;
+  }
   if ((wph->flags & FLAG_FLOAT_DATA) != 0)
     wpi->sample_type = SAMPLE_TYPE_FLOAT;
   else if ((wph->flags & FLAG_DSD_FLAG) != 0)
