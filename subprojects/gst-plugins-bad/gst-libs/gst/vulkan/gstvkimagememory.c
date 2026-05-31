@@ -252,10 +252,10 @@ _vk_image_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
 }
 
 static GstVulkanImageMemory *
-_vk_image_mem_new_wrapped (GstAllocator * allocator, GstMemory * parent,
-    GstVulkanDevice * device, VkImage image, VkFormat format, gsize width,
-    gsize height, VkImageTiling tiling, VkImageUsageFlags usage,
-    gpointer user_data, GDestroyNotify notify)
+_vk_image_mem_new_wrapped_with_image_info (GstAllocator * allocator,
+    GstMemory * parent, GstVulkanDevice * device, VkImage image,
+    const VkImageCreateInfo * image_info, gpointer user_data,
+    GDestroyNotify notify)
 {
   GstVulkanImageMemory *mem = g_new0 (GstVulkanImageMemory, 1);
   GstAllocationParams params = { 0, };
@@ -271,22 +271,25 @@ _vk_image_mem_new_wrapped (GstAllocator * allocator, GstMemory * parent,
   /* XXX: assumes alignment is a power of 2 */
   params.align = mem->requirements.alignment - 1;
   params.flags = GST_MEMORY_FLAG_NOT_MAPPABLE;
-  gst_vulkan_image_memory_init (mem, allocator, parent, device, format, usage,
-      VK_IMAGE_LAYOUT_UNDEFINED, &params, mem->requirements.size, user_data,
-      notify);
+  gst_vulkan_image_memory_init (mem, allocator, parent, device,
+      image_info->format, image_info->usage, image_info->initialLayout, &params,
+      mem->requirements.size, user_data, notify);
   mem->wrapped = TRUE;
+  mem->create_info = *image_info;
+  mem->create_info.pNext = NULL;
+  mem->create_info.queueFamilyIndexCount = 0;
+  mem->create_info.pQueueFamilyIndices = NULL;
 
-  if (!_create_info_from_args (&mem->create_info, format, width, height, tiling,
-          usage)) {
-    GST_CAT_ERROR (GST_CAT_VULKAN_IMAGE_MEMORY, "Incorrect image parameters");
-    goto error;
+  if (image_info->format != VK_FORMAT_UNDEFINED) {
+    err = vkGetPhysicalDeviceImageFormatProperties (gpu, image_info->format,
+        image_info->imageType, image_info->tiling, image_info->usage,
+        image_info->flags, &mem->format_properties);
+    if (gst_vulkan_error_to_g_error (err, &error,
+            "vkGetPhysicalDeviceImageFormatProperties") < 0)
+      goto vk_error;
+  } else {
+    mem->barrier.subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
   }
-
-  err = vkGetPhysicalDeviceImageFormatProperties (gpu, format, VK_IMAGE_TYPE_2D,
-      tiling, usage, 0, &mem->format_properties);
-  if (gst_vulkan_error_to_g_error (err, &error,
-          "vkGetPhysicalDeviceImageFormatProperties") < 0)
-    goto vk_error;
 
   return mem;
 
@@ -303,6 +306,24 @@ error:
     gst_memory_unref ((GstMemory *) mem);
     return NULL;
   }
+}
+
+static GstVulkanImageMemory *
+_vk_image_mem_new_wrapped (GstAllocator * allocator, GstMemory * parent,
+    GstVulkanDevice * device, VkImage image, VkFormat format, gsize width,
+    gsize height, VkImageTiling tiling, VkImageUsageFlags usage,
+    gpointer user_data, GDestroyNotify notify)
+{
+  VkImageCreateInfo image_info;
+
+  if (!_create_info_from_args (&image_info, format, width, height, tiling,
+          usage)) {
+    GST_CAT_ERROR (GST_CAT_VULKAN_IMAGE_MEMORY, "Incorrect image parameters");
+    return NULL;
+  }
+
+  return _vk_image_mem_new_wrapped_with_image_info (allocator, parent, device,
+      image, &image_info, user_data, notify);
 }
 
 static gpointer
@@ -491,6 +512,39 @@ gst_vulkan_image_memory_wrapped (GstVulkanDevice * device, VkImage image,
 
   mem = _vk_image_mem_new_wrapped (_vulkan_image_memory_allocator, NULL, device,
       image, format, width, height, tiling, usage, user_data, notify);
+
+  return (GstMemory *) mem;
+}
+
+/**
+ * gst_vulkan_image_memory_wrapped_with_image_info:
+ * @device: a #GstVulkanDevice
+ * @image: a `VkImage`
+ * @image_info: the `VkImageCreateInfo` used to create @image
+ * @user_data: (nullable): user data for @notify
+ * @notify: a #GDestroyNotify when @image is no longer needed
+ *
+ * Returns: (transfer full) (nullable): a new #GstVulkanImageMemory wrapping
+ *   @image
+ *
+ * Since: 1.30
+ */
+GstMemory *
+gst_vulkan_image_memory_wrapped_with_image_info (GstVulkanDevice * device,
+    VkImage image, const VkImageCreateInfo * image_info, gpointer user_data,
+    GDestroyNotify notify)
+{
+  GstVulkanImageMemory *mem;
+
+  g_return_val_if_fail (GST_IS_VULKAN_DEVICE (device), NULL);
+  g_return_val_if_fail (image != VK_NULL_HANDLE, NULL);
+  g_return_val_if_fail (image_info != NULL, NULL);
+  g_return_val_if_fail (image_info->sType ==
+      VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO, NULL);
+
+  mem = _vk_image_mem_new_wrapped_with_image_info
+      (_vulkan_image_memory_allocator, NULL, device, image, image_info,
+      user_data, notify);
 
   return (GstMemory *) mem;
 }

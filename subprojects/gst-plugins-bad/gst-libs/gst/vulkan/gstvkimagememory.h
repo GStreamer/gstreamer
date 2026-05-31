@@ -205,6 +205,14 @@ GstMemory *     gst_vulkan_image_memory_wrapped         (GstVulkanDevice * devic
                                                          GDestroyNotify notify);
 
 GST_VULKAN_API
+GstMemory *     gst_vulkan_image_memory_wrapped_with_image_info
+                                                        (GstVulkanDevice * device,
+                                                         VkImage image,
+                                                         const VkImageCreateInfo * image_info,
+                                                         gpointer user_data,
+                                                         GDestroyNotify notify);
+
+GST_VULKAN_API
 guint32         gst_vulkan_image_memory_get_width       (GstVulkanImageMemory * image);
 GST_VULKAN_API
 guint32         gst_vulkan_image_memory_get_height      (GstVulkanImageMemory * image);

@@ -111,6 +111,10 @@ gboolean            gst_vulkan_full_screen_quad_set_shaders         (GstVulkanFu
 GST_VULKAN_API
 gboolean            gst_vulkan_full_screen_quad_set_uniform_buffer  (GstVulkanFullScreenQuad * self, GstMemory * uniforms, GError ** error);
 GST_VULKAN_API
+gboolean            gst_vulkan_full_screen_quad_set_sampler         (GstVulkanFullScreenQuad * self, GstVulkanHandle * sampler);
+GST_VULKAN_API
+gboolean            gst_vulkan_full_screen_quad_set_immutable_sampler (GstVulkanFullScreenQuad * self, GstVulkanHandle * sampler);
+GST_VULKAN_API
 gboolean            gst_vulkan_full_screen_quad_set_vertex_buffer   (GstVulkanFullScreenQuad * self, GstMemory * vertices, GError ** error);
 GST_VULKAN_API
 gboolean            gst_vulkan_full_screen_quad_set_index_buffer    (GstVulkanFullScreenQuad * self, GstMemory * indices, gsize n_indices, GError ** error);

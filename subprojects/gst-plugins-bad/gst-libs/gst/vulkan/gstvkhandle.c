@@ -209,6 +209,43 @@ gst_vulkan_handle_free_sampler (GstVulkanHandle * handle, gpointer user_data)
 }
 
 /**
+ * gst_vulkan_handle_free_sampler_ycbcr_conversion:
+ * @handle: a #GstVulkanHandle containing a vulkan `VkSamplerYcbcrConversion`
+ * @user_data: callback user data
+ *
+ * Frees the sampler YCbCr conversion in @handle
+ *
+ * Since: 1.30
+ */
+void
+gst_vulkan_handle_free_sampler_ycbcr_conversion (GstVulkanHandle * handle,
+    gpointer user_data)
+{
+  PFN_vkDestroySamplerYcbcrConversion destroy_conversion;
+
+  g_return_if_fail (handle != NULL);
+  g_return_if_fail (handle->handle != VK_NULL_HANDLE);
+  g_return_if_fail (handle->type ==
+      GST_VULKAN_HANDLE_TYPE_SAMPLER_YCBCR_CONVERSION);
+
+  /* Resolve the Vulkan 1.1 core entry point dynamically, with the
+   * VK_KHR_sampler_ycbcr_conversion entry point as fallback. This also avoids
+   * a link-time dependency on Vulkan 1.1 for Android builds targeting API 26. */
+  destroy_conversion = (PFN_vkDestroySamplerYcbcrConversion)
+      gst_vulkan_device_get_proc_address (handle->device,
+      "vkDestroySamplerYcbcrConversion");
+  if (!destroy_conversion) {
+    destroy_conversion = (PFN_vkDestroySamplerYcbcrConversion)
+        gst_vulkan_device_get_proc_address (handle->device,
+        "vkDestroySamplerYcbcrConversionKHR");
+  }
+  g_return_if_fail (destroy_conversion != NULL);
+
+  destroy_conversion (handle->device->device,
+      (VkSamplerYcbcrConversion) handle->handle, NULL);
+}
+
+/**
  * gst_vulkan_handle_free_framebuffer:
  * @handle: a #GstVulkanHandle containing a vulkan `VkFramebuffer`
  * @user_data: callback user data

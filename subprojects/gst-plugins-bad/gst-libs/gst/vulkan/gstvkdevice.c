@@ -25,6 +25,10 @@
 #include "gstvkdevice.h"
 #include "gstvkphysicaldevice-private.h"
 
+#if defined(__ANDROID__)
+#include <vulkan/vulkan_android.h>
+#endif
+
 #include <string.h>
 
 /**
@@ -247,6 +251,10 @@ static const struct extension optional_extensions[] = {
       VK_MAKE_VERSION (1, 0, 0), NEVER_VK_VERSION),
   OPTIONAL_EXTENSION_VERSION (VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME,
       VK_MAKE_VERSION (1, 0, 0), NEVER_VK_VERSION),
+#if defined(VK_KHR_external_memory)
+  OPTIONAL_EXTENSION_VERSION (VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME,
+      VK_MAKE_VERSION (1, 0, 0), VK_MAKE_VERSION (1, 1, 0)),
+#endif
 #if defined(VK_KHR_get_physical_device_properties2)
   OPTIONAL_EXTENSION_VERSION
       (VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
@@ -265,6 +273,11 @@ static const struct extension optional_extensions[] = {
 #if defined(VK_KHR_synchronization2)
   OPTIONAL_EXTENSION_VERSION (VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
       VK_MAKE_VERSION (1, 1, 0), VK_MAKE_VERSION (1, 3, 0)),
+#endif
+#if defined(VK_ANDROID_external_memory_android_hardware_buffer)
+  OPTIONAL_EXTENSION_VERSION
+      (VK_ANDROID_EXTERNAL_MEMORY_ANDROID_HARDWARE_BUFFER_EXTENSION_NAME,
+      VK_MAKE_VERSION (1, 0, 0), NEVER_VK_VERSION),
 #endif
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
 # if defined(VK_KHR_video_queue)

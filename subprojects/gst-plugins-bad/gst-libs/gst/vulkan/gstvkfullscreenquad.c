@@ -67,6 +67,7 @@ struct _GstVulkanFullScreenQuadPrivate
   VkBlendOp alpha_blend_op;
 
   gboolean enable_clear;
+  GstVulkanHandle *immutable_sampler;
 };
 
 G_DEFINE_TYPE_WITH_CODE (GstVulkanFullScreenQuad, gst_vulkan_full_screen_quad,
@@ -134,12 +135,12 @@ get_and_update_descriptor_set (GstVulkanFullScreenQuad * self,
   GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self);
   GstVulkanDescriptorSet *set;
 
-  if (!self->sampler)
+  if (!self->sampler && !priv->immutable_sampler)
     if (!create_sampler (self, error))
       return NULL;
 
-  if (!(set =
-          gst_vulkan_descriptor_cache_acquire (self->descriptor_cache, error)))
+  if (!(set = gst_vulkan_descriptor_cache_acquire (self->descriptor_cache,
+              error)))
     return NULL;
 
   {
@@ -173,7 +174,8 @@ get_and_update_descriptor_set (GstVulkanFullScreenQuad * self,
       image_info[i] = (VkDescriptorImageInfo) {
           .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
           .imageView = views[i]->view,
-          .sampler = (VkSampler) self->sampler->handle
+          .sampler = priv->immutable_sampler ? VK_NULL_HANDLE :
+              (VkSampler) self->sampler->handle
       };
 
       writes[write_n++] = (VkWriteDescriptorSet) {
@@ -200,6 +202,7 @@ create_descriptor_set_layout (GstVulkanFullScreenQuad * self, GError ** error)
 {
   GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self);
   VkDescriptorSetLayoutBinding bindings[GST_VIDEO_MAX_PLANES + 1] = { {0,} };
+  VkSampler immutable_sampler = VK_NULL_HANDLE;
   VkDescriptorSetLayoutCreateInfo layout_info;
   VkDescriptorSetLayout descriptor_set_layout;
   int descriptor_n = 0;
@@ -215,12 +218,22 @@ create_descriptor_set_layout (GstVulkanFullScreenQuad * self, GError ** error)
       .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT
   };
   n_mems = gst_buffer_n_memory (priv->inbuf);
+  if (priv->immutable_sampler)
+    immutable_sampler = (VkSampler) priv->immutable_sampler->handle;
+
   for (i = 0; i < n_mems; i++) {
+    /*
+     * See the Vulkan spec "Sampler YCbCr Conversion" section:
+     * VkSamplerYcbcrConversion must be fixed at pipeline creation time, which
+     * for this combined-image-sampler descriptor means using an immutable
+     * sampler in the descriptor set layout.
+     */
     bindings[descriptor_n++] = (VkDescriptorSetLayoutBinding) {
       .binding = i+1,
       .descriptorCount = 1,
       .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-      .pImmutableSamplers = NULL,
+      .pImmutableSamplers = priv->immutable_sampler ?
+          &immutable_sampler : NULL,
       .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
     };
   };
@@ -575,7 +588,6 @@ create_descriptor_pool (GstVulkanFullScreenQuad * self, GError ** error)
   GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self);
   VkDescriptorPoolCreateInfo pool_info;
   gsize max_sets = 32;          /* FIXME: don't hardcode this! */
-  guint n_pools = 1;
   VkDescriptorPoolSize pool_sizes[2];
   VkDescriptorPool pool;
   GstVulkanDescriptorPool *ret;
@@ -587,19 +599,16 @@ create_descriptor_pool (GstVulkanFullScreenQuad * self, GError ** error)
       .descriptorCount = max_sets * gst_buffer_n_memory (priv->inbuf),
   };
 
-  if (priv->uniforms) {
-    pool_sizes[1] = (VkDescriptorPoolSize) {
-        .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        .descriptorCount = max_sets
-    };
-    n_pools++;
-  }
+  pool_sizes[1] = (VkDescriptorPoolSize) {
+      .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+      .descriptorCount = max_sets
+  };
 
   pool_info = (VkDescriptorPoolCreateInfo) {
       .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
       .pNext = NULL,
       .flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
-      .poolSizeCount = n_pools,
+      .poolSizeCount = G_N_ELEMENTS (pool_sizes),
       .pPoolSizes = pool_sizes,
       .maxSets = max_sets
   };
@@ -707,6 +716,38 @@ clear_field_mini_object (graphics_pipeline);
 clear_field_mini_object (descriptor_set_layout);
 clear_field_object (cmd_pool);
 clear_field_object (descriptor_cache);
+
+static void
+clear_immutable_sampler (GstVulkanFullScreenQuad * self)
+{
+  GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self);
+  GstVulkanFence *last_fence =
+      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
+
+  if (priv->immutable_sampler)
+    gst_vulkan_trash_list_add (self->trash_list,
+        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
+            gst_vulkan_trash_mini_object_unref,
+            (GstMiniObject *) priv->immutable_sampler));
+  priv->immutable_sampler = NULL;
+
+  gst_vulkan_fence_unref (last_fence);
+}
+
+static void
+clear_buffer (GstVulkanFullScreenQuad * self, GstBuffer ** buffer)
+{
+  GstVulkanFence *last_fence =
+      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
+
+  if (*buffer)
+    gst_vulkan_trash_list_add (self->trash_list,
+        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
+            gst_vulkan_trash_mini_object_unref, (GstMiniObject *) * buffer));
+  *buffer = NULL;
+
+  gst_vulkan_fence_unref (last_fence);
+}
 
 static void
 clear_shaders (GstVulkanFullScreenQuad * self)
@@ -868,6 +909,7 @@ gst_vulkan_full_screen_quad_finalize (GObject * object)
   destroy_pipeline (self);
   clear_cmd_pool (self);
   clear_sampler (self);
+  clear_immutable_sampler (self);
   clear_framebuffer (self);
   clear_descriptor_set (self);
   clear_descriptor_cache (self);
@@ -949,7 +991,9 @@ gst_vulkan_full_screen_quad_set_input_buffer (GstVulkanFullScreenQuad * self,
   priv = GET_PRIV (self);
 
   GST_OBJECT_LOCK (self);
-  gst_buffer_replace (&priv->inbuf, buffer);
+  clear_buffer (self, &priv->inbuf);
+  if (buffer)
+    priv->inbuf = gst_buffer_ref (buffer);
   clear_descriptor_set (self);
   GST_OBJECT_UNLOCK (self);
 
@@ -962,7 +1006,7 @@ gst_vulkan_full_screen_quad_set_input_buffer (GstVulkanFullScreenQuad * self,
  * @buffer: (nullable): the output #GstBuffer to set
  * @error: #GError to fill on failure
  *
- * Returns: whether the input buffer could be changed
+ * Returns: whether the output buffer could be changed
  *
  * Since: 1.18
  */
@@ -977,7 +1021,9 @@ gst_vulkan_full_screen_quad_set_output_buffer (GstVulkanFullScreenQuad * self,
   priv = GET_PRIV (self);
 
   GST_OBJECT_LOCK (self);
-  gst_buffer_replace (&priv->outbuf, buffer);
+  clear_buffer (self, &priv->outbuf);
+  if (buffer)
+    priv->outbuf = gst_buffer_ref (buffer);
   clear_framebuffer (self);
   GST_OBJECT_UNLOCK (self);
 
@@ -1026,7 +1072,7 @@ gst_vulkan_full_screen_quad_set_shaders (GstVulkanFullScreenQuad * self,
  * @uniforms: the uniform data to set. Must be a #GstVulkanBufferMemory
  * @error: a #GError to fill on failure
  *
- * Returns: whether the shaders could be set
+ * Returns: whether the uniform buffer could be set
  *
  * Since: 1.18
  */
@@ -1051,6 +1097,92 @@ gst_vulkan_full_screen_quad_set_uniform_buffer (GstVulkanFullScreenQuad * self,
   GST_OBJECT_UNLOCK (self);
 
   return TRUE;
+}
+
+static gboolean
+gst_vulkan_full_screen_quad_set_sampler_internal (GstVulkanFullScreenQuad *
+    self, GstVulkanHandle * sampler, gboolean immutable)
+{
+  GstVulkanFullScreenQuadPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_VULKAN_FULL_SCREEN_QUAD (self), FALSE);
+  g_return_val_if_fail (sampler != NULL, FALSE);
+  g_return_val_if_fail (sampler->type == GST_VULKAN_HANDLE_TYPE_SAMPLER, FALSE);
+
+  priv = GET_PRIV (self);
+
+  GST_OBJECT_LOCK (self);
+  if (immutable) {
+    if (self->sampler || priv->immutable_sampler != sampler) {
+      destroy_pipeline (self);
+      clear_descriptor_set (self);
+      clear_descriptor_cache (self);
+      clear_sampler (self);
+      clear_immutable_sampler (self);
+      priv->immutable_sampler = gst_vulkan_handle_ref (sampler);
+    }
+  } else {
+    if (priv->immutable_sampler) {
+      destroy_pipeline (self);
+      clear_descriptor_set (self);
+      clear_descriptor_cache (self);
+      clear_immutable_sampler (self);
+    } else if (self->sampler != sampler) {
+      clear_descriptor_set (self);
+    }
+
+    if (self->sampler != sampler) {
+      clear_sampler (self);
+      self->sampler = gst_vulkan_handle_ref (sampler);
+    }
+  }
+  GST_OBJECT_UNLOCK (self);
+
+  return TRUE;
+}
+
+/**
+ * gst_vulkan_full_screen_quad_set_sampler:
+ * @self: the #GstVulkanFullScreenQuad
+ * @sampler: (transfer none): a #GstVulkanHandle
+ *
+ * Sets the sampler used for input image descriptors. The sampler is provided
+ * when updating the descriptor set.
+ *
+ * Returns: whether the sampler was set.
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_vulkan_full_screen_quad_set_sampler (GstVulkanFullScreenQuad * self,
+    GstVulkanHandle * sampler)
+{
+  return gst_vulkan_full_screen_quad_set_sampler_internal (self, sampler,
+      FALSE);
+}
+
+/**
+ * gst_vulkan_full_screen_quad_set_immutable_sampler:
+ * @self: the #GstVulkanFullScreenQuad
+ * @sampler: (transfer none): a #GstVulkanHandle
+ *
+ * Sets the immutable sampler used for input image descriptors. The sampler is
+ * fixed in the descriptor set layout instead of being provided when updating
+ * the descriptor set.
+ *
+ * This is required, for example, for samplers with
+ * `VkSamplerYcbcrConversion`, whose conversion state must be fixed at pipeline
+ * creation time.
+ *
+ * Returns: whether the sampler was set.
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_vulkan_full_screen_quad_set_immutable_sampler (GstVulkanFullScreenQuad *
+    self, GstVulkanHandle * sampler)
+{
+  return gst_vulkan_full_screen_quad_set_sampler_internal (self, sampler, TRUE);
 }
 
 /**
@@ -1095,7 +1227,7 @@ gst_vulkan_full_screen_quad_set_index_buffer (GstVulkanFullScreenQuad * self,
  * @vertices: the vertex data. Must be a #GstVulkanBufferMemory
  * @error: #GError to fill on failure
  *
- * Returns: whether the index data could be set
+ * Returns: whether the vertex data could be set
  *
  * Since: 1.18
  */
@@ -1469,7 +1601,7 @@ fill_command_buffer_internal (GstVulkanFullScreenQuad * self,
         .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
         .pNext = NULL,
         .srcAccessMask = in_views[i]->image->barrier.parent.access_flags,
-        .dstAccessMask = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT,
+        .dstAccessMask = VK_ACCESS_SHADER_READ_BIT,
         .oldLayout = in_views[i]->image->barrier.image_layout,
         .newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
         /* FIXME: implement exclusive transfers */

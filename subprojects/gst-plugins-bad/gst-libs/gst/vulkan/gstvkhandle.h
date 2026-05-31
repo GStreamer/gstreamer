@@ -232,6 +232,9 @@ GST_VULKAN_API
 void                    gst_vulkan_handle_free_sampler               (GstVulkanHandle * handle,
                                                                       gpointer user_data);
 GST_VULKAN_API
+void                    gst_vulkan_handle_free_sampler_ycbcr_conversion (GstVulkanHandle * handle,
+                                                                         gpointer user_data);
+GST_VULKAN_API
 void                    gst_vulkan_handle_free_framebuffer           (GstVulkanHandle * handle,
                                                                       gpointer user_data);
 GST_VULKAN_API

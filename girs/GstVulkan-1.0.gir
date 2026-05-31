@@ -2818,6 +2818,30 @@ See also: gst_vulkan_full_screen_quad_set_blend_factors().</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="set_immutable_sampler" c:identifier="gst_vulkan_full_screen_quad_set_immutable_sampler" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">Sets the immutable sampler used for input image descriptors. The sampler is
+fixed in the descriptor set layout instead of being provided when updating
+the descriptor set.
+
+This is required, for example, for samplers with
+`VkSamplerYcbcrConversion`, whose conversion state must be fixed at pipeline
+creation time.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">whether the sampler was set.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">the #GstVulkanFullScreenQuad</doc>
+            <type name="VulkanFullScreenQuad" c:type="GstVulkanFullScreenQuad*"/>
+          </instance-parameter>
+          <parameter name="sampler" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">a #GstVulkanHandle</doc>
+            <type name="VulkanHandle" c:type="GstVulkanHandle*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="set_index_buffer" c:identifier="gst_vulkan_full_screen_quad_set_index_buffer" version="1.18" throws="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">See also gst_vulkan_full_screen_quad_set_vertex_buffer()</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.h"/>
@@ -2881,7 +2905,7 @@ See also: gst_vulkan_full_screen_quad_set_blend_factors().</doc>
       <method name="set_output_buffer" c:identifier="gst_vulkan_full_screen_quad_set_output_buffer" version="1.18" throws="1">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">whether the input buffer could be changed</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">whether the output buffer could be changed</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
@@ -2892,6 +2916,25 @@ See also: gst_vulkan_full_screen_quad_set_blend_factors().</doc>
           <parameter name="buffer" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">the output #GstBuffer to set</doc>
             <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_sampler" c:identifier="gst_vulkan_full_screen_quad_set_sampler" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">Sets the sampler used for input image descriptors. The sampler is provided
+when updating the descriptor set.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">whether the sampler was set.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">the #GstVulkanFullScreenQuad</doc>
+            <type name="VulkanFullScreenQuad" c:type="GstVulkanFullScreenQuad*"/>
+          </instance-parameter>
+          <parameter name="sampler" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">a #GstVulkanHandle</doc>
+            <type name="VulkanHandle" c:type="GstVulkanHandle*"/>
           </parameter>
         </parameters>
       </method>
@@ -2919,7 +2962,7 @@ See also: gst_vulkan_full_screen_quad_set_blend_factors().</doc>
       <method name="set_uniform_buffer" c:identifier="gst_vulkan_full_screen_quad_set_uniform_buffer" version="1.18" throws="1">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">whether the shaders could be set</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">whether the uniform buffer could be set</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
@@ -2936,7 +2979,7 @@ See also: gst_vulkan_full_screen_quad_set_blend_factors().</doc>
       <method name="set_vertex_buffer" c:identifier="gst_vulkan_full_screen_quad_set_vertex_buffer" version="1.18" throws="1">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">whether the index data could be set</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">whether the vertex data could be set</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
@@ -3206,6 +3249,23 @@ more specific implementations (#GstVulkanCommandBuffer, #GstVulkanCommandPool).<
         <parameters>
           <instance-parameter name="handle" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.c">a #GstVulkanHandle containing a vulkan `VkSampler`</doc>
+            <type name="VulkanHandle" c:type="GstVulkanHandle*"/>
+          </instance-parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.c">callback user data</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="free_sampler_ycbcr_conversion" c:identifier="gst_vulkan_handle_free_sampler_ycbcr_conversion" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.c">Frees the sampler YCbCr conversion in @handle</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="handle" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.c">a #GstVulkanHandle containing a vulkan `VkSamplerYcbcrConversion`</doc>
             <type name="VulkanHandle" c:type="GstVulkanHandle*"/>
           </instance-parameter>
           <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
@@ -3979,6 +4039,36 @@ multiple times.  This must be called before any other #GstVulkanImageMemory oper
           <parameter name="usage" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">usage flags of @image</doc>
             <type name="Vulkan.ImageUsageFlags" c:type="VkImageUsageFlags"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">user data for @notify</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="notify" transfer-ownership="none" scope="async">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">a #GDestroyNotify when @image is no longer needed</doc>
+            <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="wrapped_with_image_info" c:identifier="gst_vulkan_image_memory_wrapped_with_image_info" version="1.30">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">a new #GstVulkanImageMemory wrapping
+  @image</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </return-value>
+        <parameters>
+          <parameter name="device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">a #GstVulkanDevice</doc>
+            <type name="VulkanDevice" c:type="GstVulkanDevice*"/>
+          </parameter>
+          <parameter name="image" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">a `VkImage`</doc>
+            <type name="Vulkan.Image" c:type="VkImage"/>
+          </parameter>
+          <parameter name="image_info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">the `VkImageCreateInfo` used to create @image</doc>
+            <type name="Vulkan.ImageCreateInfo" c:type="const VkImageCreateInfo*"/>
           </parameter>
           <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">user data for @notify</doc>
@@ -7663,6 +7753,36 @@ multiple times.  This must be called before any other #GstVulkanImageMemory oper
         <parameter name="usage" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">usage flags of @image</doc>
           <type name="Vulkan.ImageUsageFlags" c:type="VkImageUsageFlags"/>
+        </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">user data for @notify</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
+        <parameter name="notify" transfer-ownership="none" scope="async">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">a #GDestroyNotify when @image is no longer needed</doc>
+          <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="vulkan_image_memory_wrapped_with_image_info" c:identifier="gst_vulkan_image_memory_wrapped_with_image_info" moved-to="VulkanImageMemory.wrapped_with_image_info" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.h"/>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">a new #GstVulkanImageMemory wrapping
+  @image</doc>
+        <type name="Gst.Memory" c:type="GstMemory*"/>
+      </return-value>
+      <parameters>
+        <parameter name="device" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">a #GstVulkanDevice</doc>
+          <type name="VulkanDevice" c:type="GstVulkanDevice*"/>
+        </parameter>
+        <parameter name="image" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">a `VkImage`</doc>
+          <type name="Vulkan.Image" c:type="VkImage"/>
+        </parameter>
+        <parameter name="image_info" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">the `VkImageCreateInfo` used to create @image</doc>
+          <type name="Vulkan.ImageCreateInfo" c:type="const VkImageCreateInfo*"/>
         </parameter>
         <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">user data for @notify</doc>

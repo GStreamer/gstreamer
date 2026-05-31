@@ -141,6 +141,59 @@ GST_START_TEST (test_image_view_get)
 
 GST_END_TEST;
 
+struct wrapped_image_data
+{
+  VkImage image;
+  gboolean notified;
+};
+
+static void
+wrapped_image_notify (struct wrapped_image_data *data)
+{
+  vkDestroyImage (device->device, data->image, NULL);
+  data->notified = TRUE;
+}
+
+GST_START_TEST (test_image_wrapped_with_image_info)
+{
+  VkImageCreateInfo image_info = {
+    .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+    .imageType = VK_IMAGE_TYPE_2D,
+    .format = VK_FORMAT_R8G8B8A8_UNORM,
+    .extent = {16, 16, 1},
+    .mipLevels = 1,
+    .arrayLayers = 1,
+    .samples = VK_SAMPLE_COUNT_1_BIT,
+    .tiling = VK_IMAGE_TILING_OPTIMAL,
+    .usage = VK_IMAGE_USAGE_SAMPLED_BIT,
+    .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+    .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+  };
+  struct wrapped_image_data data = { 0, };
+  GstVulkanImageMemory *vk_mem;
+  GstMemory *mem;
+
+  fail_unless (vkCreateImage (device->device, &image_info, NULL,
+          &data.image) == VK_SUCCESS);
+
+  mem = gst_vulkan_image_memory_wrapped_with_image_info (device, data.image,
+      &image_info, &data, (GDestroyNotify) wrapped_image_notify);
+  fail_unless (gst_is_vulkan_image_memory (mem));
+
+  vk_mem = (GstVulkanImageMemory *) mem;
+  fail_unless (vk_mem->image == data.image);
+  fail_unless (vk_mem->create_info.format == image_info.format);
+  fail_unless (vk_mem->create_info.extent.width == image_info.extent.width);
+  fail_unless (vk_mem->create_info.extent.height == image_info.extent.height);
+  fail_unless (vk_mem->create_info.usage == image_info.usage);
+  fail_if (data.notified);
+
+  gst_memory_unref (mem);
+  fail_unless (data.notified);
+}
+
+GST_END_TEST;
+
 #define N_THREADS 2
 #define N_MEMORY 4
 #define N_OPS 512
@@ -237,6 +290,7 @@ vkimage_suite (void)
   gst_object_unref (instance);
   if (have_instance) {
     tcase_add_test (tc_basic, test_image_new);
+    tcase_add_test (tc_basic, test_image_wrapped_with_image_info);
     tcase_add_test (tc_basic, test_image_view_new);
     tcase_add_test (tc_basic, test_image_view_get);
     tcase_add_test (tc_basic, test_image_view_stress);

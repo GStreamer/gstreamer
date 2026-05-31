@@ -950,19 +950,6 @@ gst_vulkan_decoder_update_video_session_parameters (GstVulkanDecoder * self,
   return TRUE;
 }
 
-static void
-gst_vulkan_handle_free_sampler_ycbcr_conversion (GstVulkanHandle * handle,
-    gpointer data)
-{
-  g_return_if_fail (handle != NULL);
-  g_return_if_fail (handle->handle != VK_NULL_HANDLE);
-  g_return_if_fail (handle->type ==
-      GST_VULKAN_HANDLE_TYPE_SAMPLER_YCBCR_CONVERSION);
-
-  vkDestroySamplerYcbcrConversion (handle->device->device,
-      (VkSamplerYcbcrConversion) handle->handle, NULL);
-}
-
 /**
  * gst_vulkan_decoder_update_ycbcr_sampler:
  * @self: a #GstVulkanDecoder
