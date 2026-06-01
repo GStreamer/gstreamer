@@ -804,6 +804,11 @@ gst_validate_runner_get_reports (GstValidateRunner * runner)
   return ret;
 }
 
+/* In synthetic mode a single issue type can be detected on hundreds of
+ * reporters, flooding the report with "Detected on <...>" lines. Cap them and
+ * point at GST_VALIDATE_REPORTING_DETAILS=all to get the full listing. */
+#define MAX_SYNTHETIC_DETECTED_ON 5
+
 static GList *
 _do_report_synthesis (GstValidateRunner * runner)
 {
@@ -811,6 +816,11 @@ _do_report_synthesis (GstValidateRunner * runner)
   GList *reports, *tmp;
   gpointer key, value;
   GList *criticals = NULL;
+  gboolean show_all;
+  guint n_printed, n_suppressed;
+
+  show_all = gst_validate_runner_get_default_reporting_level (runner) ==
+      GST_VALIDATE_SHOW_ALL;
 
   /* Take the lock so the hash table won't be modified while we are iterating
    * over it */
@@ -835,17 +845,41 @@ _do_report_synthesis (GstValidateRunner * runner)
     gst_validate_report_print_level (report);
     gst_validate_report_print_detected_on (report);
 
+    n_printed = 1;
+    n_suppressed = 0;
     for (tmp = g_list_next (reports); tmp; tmp = tmp->next) {
-      report = (GstValidateReport *) tmp->data;
-      gst_validate_report_print_detected_on (report);
+      gboolean full_details;
 
-      if ((report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) ||
-          (report->issue->flags & GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS)) {
-        if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL)
-          criticals = g_list_append (criticals, report);
+      report = (GstValidateReport *) tmp->data;
+
+      full_details = (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) ||
+          (report->issue->flags & GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS);
+
+      if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL)
+        criticals = g_list_append (criticals, report);
+
+      /* Critical / full-details reports are always printed in full, they carry
+       * the information one actually needs to debug. */
+      if (full_details) {
+        gst_validate_report_print_detected_on (report);
         gst_validate_report_print_details (report);
+        continue;
       }
+
+      if (!show_all && n_printed >= MAX_SYNTHETIC_DETECTED_ON) {
+        n_suppressed++;
+        continue;
+      }
+
+      gst_validate_report_print_detected_on (report);
+      n_printed++;
     }
+
+    if (n_suppressed)
+      gst_validate_printf (NULL,
+          "%*s ... and %u more (set GST_VALIDATE_REPORTING_DETAILS=all to list them)\n",
+          12, "", n_suppressed);
+
     report = (GstValidateReport *) (reports->data);
     gst_validate_report_print_description (report);
     gst_validate_printf (NULL, "\n");
