@@ -237,6 +237,31 @@ _gst_element_accumulator (GSignalInvocationHint * ihint,
 
 G_DEFINE_TYPE (GstWebRTCBinPad, gst_webrtc_bin_pad, GST_TYPE_GHOST_PAD);
 
+static GstPadProbeReturn
+_drop_recv_data_probe (GstPad * pad, GstPadProbeInfo * info, gpointer unused)
+{
+  if (!(GST_PAD_PROBE_INFO_TYPE (info) &
+          (GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST)))
+    return GST_PAD_PROBE_OK;
+
+  return GST_PAD_PROBE_DROP;
+}
+
+static void
+_remove_recv_drop_probe (GstWebRTCBinPad * pad)
+{
+  if (!pad)
+    return;
+
+  if (pad->recv_drop_id) {
+    if (pad->recv_drop_target)
+      gst_pad_remove_probe (pad->recv_drop_target, pad->recv_drop_id);
+    pad->recv_drop_id = 0;
+  }
+
+  gst_clear_object (&pad->recv_drop_target);
+}
+
 static void
 gst_webrtc_bin_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
@@ -258,6 +283,7 @@ gst_webrtc_bin_pad_finalize (GObject * object)
 {
   GstWebRTCBinPad *pad = GST_WEBRTC_BIN_PAD (object);
 
+  _remove_recv_drop_probe (pad);
   gst_clear_object (&pad->trans);
   gst_clear_caps (&pad->received_caps);
   g_clear_pointer (&pad->msid, g_free);
@@ -5905,6 +5931,16 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
         if (pad) {
           GstPad *target = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
           if (target) {
+            if (bundled && pad->recv_drop_id == 0) {
+              /* Drop late data on this EOS'd branch so its GST_FLOW_EOS return doesn't
+               * propagate into the shared (bundled) rtpbin session. */
+              pad->recv_drop_id = gst_pad_add_probe (target,
+                  GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
+                  (GstPadProbeCallback) _drop_recv_data_probe, NULL, NULL);
+              if (pad->recv_drop_id)
+                pad->recv_drop_target = gst_object_ref (target);
+            }
+
             GstPad *peer = gst_pad_get_peer (target);
             if (peer) {
               gst_pad_send_event (peer, gst_event_new_eos ());
@@ -8657,6 +8693,7 @@ gst_webrtc_bin_release_pad (GstElement * element, GstPad * pad)
     gst_pad_remove_probe (GST_PAD (pad), webrtc_pad->block_id);
     webrtc_pad->block_id = 0;
   }
+  _remove_recv_drop_probe (webrtc_pad);
 
   _remove_pad (webrtc, webrtc_pad);
 

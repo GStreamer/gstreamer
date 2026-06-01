@@ -46,6 +46,8 @@ struct _GstWebRTCBinPad
 
   GstWebRTCRTPTransceiver *trans;
   gulong                block_id;
+  GstPad               *recv_drop_target;
+  gulong                recv_drop_id;
 
   GstCaps              *received_caps;
   char                 *msid;
