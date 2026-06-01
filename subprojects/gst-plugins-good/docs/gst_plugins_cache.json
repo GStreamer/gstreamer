@@ -21865,6 +21865,30 @@
                         "type": "guint64",
                         "writable": true
                     },
+                    "tls-client-certificate": {
+                        "blurb": "Path to a PEM-encoded TLS client certificate file for mTLS",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "tls-client-key": {
+                        "blurb": "Path to a PEM-encoded private key file for the TLS client certificate",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
                     "tls-database": {
                         "blurb": "TLS database with anchor certificate authorities used to validate the server certificate",
                         "conditionally-available": false,

@@ -383,6 +383,8 @@ enum
   PROP_TLS_VALIDATION_FLAGS,
   PROP_TLS_DATABASE,
   PROP_TLS_INTERACTION,
+  PROP_TLS_CLIENT_CERTIFICATE,
+  PROP_TLS_CLIENT_KEY,
   PROP_DO_RETRANSMISSION,
   PROP_NTP_TIME_SOURCE,
   PROP_USER_AGENT,
@@ -421,6 +423,66 @@ gst_rtsp_nat_method_get_type (void)
         g_enum_register_static ("GstRTSPNatMethod", rtsp_nat_method);
   }
   return rtsp_nat_method_type;
+}
+
+/* GTlsInteraction subclass that presents a client certificate loaded from
+ * the tls-client-certificate and tls-client-key properties. */
+
+#define GST_TYPE_RTSPSRC_TLS_INTERACTION (gst_rtspsrc_tls_interaction_get_type())
+G_DECLARE_FINAL_TYPE (GstRTSPSrcTlsInteraction, gst_rtspsrc_tls_interaction,
+    GST, RTSPSRC_TLS_INTERACTION, GTlsInteraction);
+struct _GstRTSPSrcTlsInteraction
+{
+  GTlsInteraction parent;
+  GTlsCertificate *certificate;
+};
+G_DEFINE_TYPE (GstRTSPSrcTlsInteraction, gst_rtspsrc_tls_interaction,
+    G_TYPE_TLS_INTERACTION);
+
+static GTlsInteractionResult
+gst_rtspsrc_tls_interaction_request_certificate (GTlsInteraction * interaction,
+    GTlsConnection * connection, GTlsCertificateRequestFlags flags,
+    GCancellable * cancellable, GError ** error)
+{
+  GstRTSPSrcTlsInteraction *self = GST_RTSPSRC_TLS_INTERACTION (interaction);
+
+  g_tls_connection_set_certificate (connection, self->certificate);
+  return G_TLS_INTERACTION_HANDLED;
+}
+
+static void
+gst_rtspsrc_tls_interaction_finalize (GObject * object)
+{
+  GstRTSPSrcTlsInteraction *self = GST_RTSPSRC_TLS_INTERACTION (object);
+
+  g_clear_object (&self->certificate);
+  G_OBJECT_CLASS (gst_rtspsrc_tls_interaction_parent_class)->finalize (object);
+}
+
+static void
+gst_rtspsrc_tls_interaction_class_init (GstRTSPSrcTlsInteractionClass * klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GTlsInteractionClass *interaction_class = G_TLS_INTERACTION_CLASS (klass);
+
+  gobject_class->finalize = gst_rtspsrc_tls_interaction_finalize;
+  interaction_class->request_certificate =
+      gst_rtspsrc_tls_interaction_request_certificate;
+}
+
+static void
+gst_rtspsrc_tls_interaction_init (GstRTSPSrcTlsInteraction * self)
+{
+}
+
+static GTlsInteraction *
+gst_rtspsrc_tls_interaction_new (GTlsCertificate * cert)
+{
+  GstRTSPSrcTlsInteraction *self;
+
+  self = g_object_new (GST_TYPE_RTSPSRC_TLS_INTERACTION, NULL);
+  self->certificate = g_object_ref (cert);
+  return G_TLS_INTERACTION (self);
 }
 
 #define RTSP_SRC_RESPONSE_ERROR(src, response_msg, err_cat, err_code, error_message) \
@@ -915,6 +977,39 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
       g_param_spec_object ("tls-interaction", "TLS interaction",
           "A GTlsInteraction object to prompt the user for password or certificate",
           G_TYPE_TLS_INTERACTION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRTSPSrc:tls-client-certificate:
+   *
+   * Path to a PEM-encoded TLS client certificate file. When set together
+   * with #GstRTSPSrc:tls-client-key, the certificate is presented
+   * during the TLS handshake for mutual authentication (mTLS).
+   *
+   * These file-based properties are a convenience alternative to setting
+   * the #GstRTSPSrc:tls-interaction property from application code and
+   * can be used from gst-launch-1.0.
+   *
+   * If #GstRTSPSrc:tls-interaction is also set it takes precedence.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_TLS_CLIENT_CERTIFICATE,
+      g_param_spec_string ("tls-client-certificate", "TLS client certificate",
+          "Path to a PEM-encoded TLS client certificate file for mTLS",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRTSPSrc:tls-client-key:
+   *
+   * Path to a PEM-encoded private key file corresponding to
+   * #GstRTSPSrc:tls-client-certificate.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_TLS_CLIENT_KEY,
+      g_param_spec_string ("tls-client-key", "TLS client key file",
+          "Path to a PEM-encoded private key file for the TLS client certificate",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstRTSPSrc::do-retransmission:
@@ -1822,6 +1917,8 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->tls_validation_flags = DEFAULT_TLS_VALIDATION_FLAGS;
   src->tls_database = DEFAULT_TLS_DATABASE;
   src->tls_interaction = DEFAULT_TLS_INTERACTION;
+  src->tls_client_cert_file = NULL;
+  src->tls_client_key_file = NULL;
   src->do_retransmission = DEFAULT_DO_RETRANSMISSION;
   src->ntp_time_source = DEFAULT_NTP_TIME_SOURCE;
   src->user_agent = g_strdup (DEFAULT_USER_AGENT);
@@ -1927,6 +2024,9 @@ gst_rtspsrc_finalize (GObject * object)
 
   if (rtspsrc->tls_interaction)
     g_object_unref (rtspsrc->tls_interaction);
+
+  g_free (rtspsrc->tls_client_cert_file);
+  g_free (rtspsrc->tls_client_key_file);
 
   if (rtspsrc->initial_seek)
     gst_event_unref (rtspsrc->initial_seek);
@@ -2166,6 +2266,14 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       g_clear_object (&rtspsrc->tls_interaction);
       rtspsrc->tls_interaction = g_value_dup_object (value);
       break;
+    case PROP_TLS_CLIENT_CERTIFICATE:
+      g_free (rtspsrc->tls_client_cert_file);
+      rtspsrc->tls_client_cert_file = g_value_dup_string (value);
+      break;
+    case PROP_TLS_CLIENT_KEY:
+      g_free (rtspsrc->tls_client_key_file);
+      rtspsrc->tls_client_key_file = g_value_dup_string (value);
+      break;
     case PROP_DO_RETRANSMISSION:
       rtspsrc->do_retransmission = g_value_get_boolean (value);
       break;
@@ -2362,6 +2470,12 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_TLS_INTERACTION:
       g_value_set_object (value, rtspsrc->tls_interaction);
+      break;
+    case PROP_TLS_CLIENT_CERTIFICATE:
+      g_value_set_string (value, rtspsrc->tls_client_cert_file);
+      break;
+    case PROP_TLS_CLIENT_KEY:
+      g_value_set_string (value, rtspsrc->tls_client_key_file);
       break;
     case PROP_DO_RETRANSMISSION:
       g_value_set_boolean (value, rtspsrc->do_retransmission);
@@ -5890,9 +6004,29 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
           gst_rtsp_connection_set_tls_database (info->connection,
               src->tls_database);
 
-        if (src->tls_interaction)
+        if (src->tls_interaction) {
           gst_rtsp_connection_set_tls_interaction (info->connection,
               src->tls_interaction);
+        } else if (src->tls_client_cert_file && src->tls_client_key_file) {
+          GError *cert_err = NULL;
+          GTlsCertificate *certificate;
+
+          certificate =
+              g_tls_certificate_new_from_files (src->tls_client_cert_file,
+              src->tls_client_key_file, &cert_err);
+          if (certificate) {
+            GTlsInteraction *interaction =
+                gst_rtspsrc_tls_interaction_new (certificate);
+            gst_rtsp_connection_set_tls_interaction (info->connection,
+                interaction);
+            g_object_unref (interaction);
+            g_object_unref (certificate);
+          } else {
+            GST_WARNING_OBJECT (src,
+                "Failed to load TLS client certificate: %s", cert_err->message);
+            g_error_free (cert_err);
+          }
+        }
         gst_rtsp_connection_set_accept_certificate_func (info->connection,
             accept_certificate_cb, src, NULL);
       }

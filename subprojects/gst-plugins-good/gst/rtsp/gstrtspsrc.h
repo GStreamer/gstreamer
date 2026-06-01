@@ -268,6 +268,8 @@ struct _GstRTSPSrc {
   GTlsCertificateFlags tls_validation_flags;
   GTlsDatabase     *tls_database;
   GTlsInteraction  *tls_interaction;
+  gchar            *tls_client_cert_file;
+  gchar            *tls_client_key_file;
   gboolean          do_retransmission;
   gint              ntp_time_source;
   gchar            *user_agent;
