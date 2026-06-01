@@ -588,7 +588,7 @@ _file_get_structures (GFile * file, gchar ** err,
   if (gst_validate_has_colored_output ()) {
     red = gst_debug_construct_term_color (GST_DEBUG_FG_RED);
     bold = gst_debug_construct_term_color (GST_DEBUG_BOLD);
-    endcolor = "\033[0m";
+    endcolor = GST_VALIDATE_END_COLOR;
   } else {
     red = g_strdup ("");
     bold = g_strdup ("");

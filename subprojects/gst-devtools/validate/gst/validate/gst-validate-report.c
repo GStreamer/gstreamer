@@ -46,6 +46,7 @@
 #include "gst-validate-reporter.h"
 #include "gst-validate-monitor.h"
 #include "gst-validate-scenario.h"
+#include "gst-validate-utils.h"
 
 static GstClockTime _gst_validate_report_start_time = 0;
 static GstValidateDebugFlags _gst_validate_flags =
@@ -101,6 +102,31 @@ gst_validate_report_get_type (void)
 
 
 GRegex *newline_regex = NULL;
+static GRegex *ansi_color_regex = NULL;
+
+/* Strips ANSI color escape sequences from @str, returning a newly allocated
+ * copy. Report strings are colorized up front (gated on stdout being a color
+ * terminal), but the same buffer is also written to the debug log, which must
+ * stay escape-free, and to redirected file logs that cannot render color; the
+ * escapes are removed when emitting to those sinks rather than maintaining a
+ * separate plain buffer. */
+static gchar *
+gst_validate_strip_colors (const gchar * str, gssize len)
+{
+  if (G_UNLIKELY (!ansi_color_regex))
+    ansi_color_regex = g_regex_new ("\033\\[[0-9;]*m", 0, 0, NULL);
+
+  return g_regex_replace (ansi_color_regex, str, len, 0, "", 0, NULL);
+}
+
+gchar *
+gst_validate_get_term_color (guint color_flags)
+{
+  if (color_flags && gst_validate_has_colored_output ())
+    return gst_debug_construct_term_color (color_flags);
+
+  return g_strdup ("");
+}
 
 GST_DEBUG_CATEGORY_STATIC (gst_validate_report_debug);
 #undef GST_CAT_DEFAULT
@@ -1025,19 +1051,35 @@ gst_validate_print_action (GstValidateAction * action, const gchar * message)
     gint indent = (gst_validate_action_get_level (action) * 2);
     PrintActionFieldData d = { NULL, indent, 0 };
     GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
+    const gchar *endcolor =
+        gst_validate_has_colored_output ()? GST_VALIDATE_END_COLOR : "";
+    gchar *name_color =
+        gst_validate_get_term_color (GST_DEBUG_FG_GREEN | GST_DEBUG_BOLD);
+    gchar *loc_color = gst_validate_get_term_color (GST_DEBUG_FG_MAGENTA);
+    gchar *scenario_color = gst_validate_get_term_color (GST_DEBUG_FG_BLUE);
     d.str = string = g_string_new (NULL);
 
-    g_string_append_printf (string, "`%s` at %s:%d(%s)", action->type,
-        GST_VALIDATE_ACTION_FILENAME (action),
-        GST_VALIDATE_ACTION_LINENO (action),
-        scenario ? GST_OBJECT_NAME (scenario) : "no scenario");
+    g_string_append_printf (string, "%s`%s`%s at %s%s:%d%s(%s%s%s)",
+        name_color, action->type, endcolor,
+        loc_color, GST_VALIDATE_ACTION_FILENAME (action),
+        GST_VALIDATE_ACTION_LINENO (action), endcolor,
+        scenario_color, scenario ? GST_OBJECT_NAME (scenario) : "no scenario",
+        endcolor);
     gst_object_unref (scenario);
 
-    if (GST_VALIDATE_ACTION_N_REPEATS (action))
-      g_string_append_printf (string, " [%s=%d/%d]",
+    if (GST_VALIDATE_ACTION_N_REPEATS (action)) {
+      gchar *repeat_color = gst_validate_get_term_color (GST_DEBUG_FG_YELLOW);
+
+      g_string_append_printf (string, " %s[%s=%d/%d]%s", repeat_color,
           GST_VALIDATE_ACTION_RANGE_NAME (action) ?
           GST_VALIDATE_ACTION_RANGE_NAME (action) : "repeat", action->repeat,
-          GST_VALIDATE_ACTION_N_REPEATS (action));
+          GST_VALIDATE_ACTION_N_REPEATS (action), endcolor);
+      g_free (repeat_color);
+    }
+
+    g_free (name_color);
+    g_free (loc_color);
+    g_free (scenario_color);
 
     g_string_append (string, " ( ");
     gst_structure_foreach_id_str (action->structure,
@@ -1127,20 +1169,34 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 {
   gint i;
   gchar *tmp;
+  gchar *stripped = NULL;
   GString *string = g_string_new (NULL);
 
   if (source) {
     if (*(GType *) source == GST_TYPE_VALIDATE_ACTION) {
       GstValidateAction *action = (GstValidateAction *) source;
       gint indent = gst_validate_action_get_level (action) * 2;
+      gchar *color = NULL;
+      const gchar *endcolor = "";
 
       if (_action_check_and_set_printed (action))
         goto out;
 
+      if (gst_validate_has_colored_output ()) {
+        color =
+            gst_debug_construct_term_color (GST_DEBUG_FG_GREEN |
+            GST_DEBUG_BOLD);
+        endcolor = GST_VALIDATE_END_COLOR;
+      }
+
       if (!indent)
-        g_string_assign (string, "Executing ");
+        g_string_append_printf (string, "%sExecuting%s ", color ? color : "",
+            endcolor);
       else
-        g_string_append_printf (string, "%*c↳ Executing ", indent - 2, ' ');
+        g_string_append_printf (string, "%*c↳ %sExecuting%s ", indent - 2,
+            ' ', color ? color : "", endcolor);
+
+      g_free (color);
     } else if (*(GType *) source == GST_TYPE_VALIDATE_ACTION_TYPE) {
       gint i;
       gint n_params;
@@ -1259,8 +1315,8 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
   {
     gchar *str;
 
-    str = g_regex_replace (newline_regex, string->str, string->len, 0,
-        "", 0, NULL);
+    stripped = gst_validate_strip_colors (string->str, string->len);
+    str = g_regex_replace (newline_regex, stripped, -1, 0, "", 0, NULL);
 
     if (source)
       GST_INFO ("%s", str);
@@ -1272,9 +1328,19 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 #endif
 
   for (i = 0; log_files[i]; i++) {
-    fprintf (log_files[i], "%s", string->str);
+    const gchar *contents = string->str;
+
+    /* Only keep color escapes for outputs that can render them. */
+    if (!g_log_writer_supports_color (fileno (log_files[i]))) {
+      if (!stripped)
+        stripped = gst_validate_strip_colors (string->str, string->len);
+      contents = stripped;
+    }
+
+    fprintf (log_files[i], "%s", contents);
     fflush (log_files[i]);
   }
+  g_free (stripped);
 
 out:
   g_string_free (string, TRUE);
@@ -1311,26 +1377,53 @@ gst_validate_report_set_master_report (GstValidateReport * report,
   return TRUE;
 }
 
+/* Returns the term color flags to highlight a report of @level, or 0 when that
+ * level should not be colored. */
+static guint
+_report_level_color_flags (GstValidateReportLevel level)
+{
+  switch (level) {
+    case GST_VALIDATE_REPORT_LEVEL_CRITICAL:
+      return GST_DEBUG_FG_RED | GST_DEBUG_BOLD;
+    case GST_VALIDATE_REPORT_LEVEL_WARNING:
+      return GST_DEBUG_FG_YELLOW;
+    case GST_VALIDATE_REPORT_LEVEL_ISSUE:
+      return GST_DEBUG_FG_CYAN;
+    default:
+      return 0;
+  }
+}
+
 void
 gst_validate_report_print_level (GstValidateReport * report)
 {
-  gst_validate_printf (NULL, "%10s : %s (%s)\n",
-      gst_validate_report_level_get_name (report->level),
+  gchar *color =
+      gst_validate_get_term_color (_report_level_color_flags (report->level));
+  const gchar *endcolor = *color ? GST_VALIDATE_END_COLOR : "";
+
+  gst_validate_printf (NULL, "%s%10s%s : %s (%s)\n", color,
+      gst_validate_report_level_get_name (report->level), endcolor,
       report->issue->summary, g_quark_to_string (report->issue->issue_id));
+
+  g_free (color);
 }
 
 void
 gst_validate_report_print_detected_on (GstValidateReport * report)
 {
   GList *tmp;
+  gchar *color =
+      gst_validate_get_term_color (GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD);
+  const gchar *endcolor = *color ? GST_VALIDATE_END_COLOR : "";
 
-  gst_validate_printf (NULL, "%*s Detected on <%s",
-      12, "", report->reporter_name);
+  gst_validate_printf (NULL, "%*s %sDetected on%s <%s",
+      12, "", color, endcolor, report->reporter_name);
   for (tmp = report->shadow_reports; tmp; tmp = tmp->next) {
     GstValidateReport *shadow_report = (GstValidateReport *) tmp->data;
     gst_validate_printf (NULL, ", %s", shadow_report->reporter_name);
   }
   gst_validate_printf (NULL, ">\n");
+  g_free (color);
 }
 
 void
@@ -1385,9 +1478,19 @@ gst_validate_report_print_dotfile (GstValidateReport * report)
 void
 gst_validate_report_print_description (GstValidateReport * report)
 {
-  if (report->issue->description)
-    gst_validate_printf (NULL, "%*s Description : %s\n", 12, "",
-        report->issue->description);
+  gchar *color;
+  const gchar *endcolor;
+
+  if (!report->issue->description)
+    return;
+
+  color = gst_validate_get_term_color (GST_DEBUG_FG_WHITE | GST_DEBUG_BOLD);
+  endcolor = *color ? GST_VALIDATE_END_COLOR : "";
+
+  gst_validate_printf (NULL, "%*s %sDescription :%s %s\n", 12, "", color,
+      endcolor, report->issue->description);
+
+  g_free (color);
 }
 
 void
@@ -1527,7 +1630,7 @@ gst_validate_error_structure (gpointer structure, const gchar * format, ...)
 
   if (g_log_writer_supports_color (fileno (stderr))) {
     color = gst_debug_construct_term_color (GST_DEBUG_FG_RED);
-    endcolor = "\033[0m";
+    endcolor = GST_VALIDATE_END_COLOR;
   }
 
   if (structure) {

@@ -34,6 +34,10 @@ extern G_GNUC_INTERNAL GstDebugCategory *gstvalidate_debug;
 extern G_GNUC_INTERNAL GRegex *newline_regex;
 extern G_GNUC_INTERNAL GstClockTime _priv_start_time;
 
+#define GST_VALIDATE_END_COLOR "\033[0m"
+
+G_GNUC_INTERNAL gchar *gst_validate_get_term_color (guint color_flags);
+
 extern G_GNUC_INTERNAL GQuark _Q_VALIDATE_MONITOR;
 
 /* If an action type is 1 (TRUE) we also consider it is a config to keep backward compatibility */

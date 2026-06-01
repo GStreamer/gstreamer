@@ -7355,20 +7355,33 @@ _action_set_done (GstValidateAction * action)
       break;
   }
 
+  const gchar *endcolor =
+      gst_validate_has_colored_output ()? GST_VALIDATE_END_COLOR : "";
+  gchar *name_color =
+      gst_validate_get_term_color (GST_DEBUG_FG_GREEN | GST_DEBUG_BOLD);
+  gchar *loc_color = gst_validate_get_term_color (GST_DEBUG_FG_MAGENTA);
+  gchar *state_color = gst_validate_get_term_color (action->priv->state ==
+      GST_VALIDATE_EXECUTE_ACTION_ERROR ? GST_DEBUG_FG_RED | GST_DEBUG_BOLD :
+      GST_DEBUG_FG_CYAN);
+
   if (GST_VALIDATE_ACTION_N_REPEATS (action))
     repeat_message =
         g_strdup_printf ("[%d/%d]", action->repeat,
         GST_VALIDATE_ACTION_N_REPEATS (action));
 
   gst_validate_printf (NULL,
-      "%*c⇨ Action `%s` at %s:%d done '%s' %s (duration: %" GST_TIME_FORMAT
-      ")\n\n", (action->priv->subaction_level * 2) - 1, ' ',
-      gst_structure_get_name (action->priv->main_structure),
-      GST_VALIDATE_ACTION_FILENAME (action),
-      GST_VALIDATE_ACTION_LINENO (action),
-      gst_validate_action_return_get_name (action->priv->state),
-      repeat_message ? repeat_message : "",
+      "%*c⇨ Action %s`%s`%s at %s%s:%d%s done '%s%s%s' %s (duration: %"
+      GST_TIME_FORMAT ")\n\n", (action->priv->subaction_level * 2) - 1, ' ',
+      name_color, gst_structure_get_name (action->priv->main_structure),
+      endcolor, loc_color, GST_VALIDATE_ACTION_FILENAME (action),
+      GST_VALIDATE_ACTION_LINENO (action), endcolor,
+      state_color, gst_validate_action_return_get_name (action->priv->state),
+      endcolor, repeat_message ? repeat_message : "",
       GST_TIME_ARGS (action->priv->execution_duration));
+
+  g_free (name_color);
+  g_free (loc_color);
+  g_free (state_color);
 
   GstClockTime max_execution_duration;
   if (gst_validate_action_get_clocktime (scenario, action,

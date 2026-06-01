@@ -385,7 +385,7 @@ done:
 
     if (g_log_writer_supports_color (fileno (stderr))) {
       color = gst_debug_construct_term_color (GST_DEBUG_FG_RED);
-      endcolor = "\033[0m";
+      endcolor = GST_VALIDATE_END_COLOR;
     }
     gst_validate_printf (NULL, "%*s%s> Error%s:\n", indent, "",
         color ? color : "", endcolor);
