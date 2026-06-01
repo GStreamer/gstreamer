@@ -78,6 +78,24 @@ typedef enum {
 } GstFileSinkFileMode;
 
 /**
+ * GstFileSinkShareDenyMode:
+ * @gst_FILE_SINK_SHARE_DENYRW: Deny read/write access (SH_DENYRW)
+ * @GST_FILE_SINK_SHARE_DENYWR: Deny write access (SH_DENYWR)
+ * @GST_FILE_SINK_SHARE_DENYRD: Deny read access (SH_DENYRD)
+ * @GST_FILE_SINK_SHARE_DENYNO: Allow read/write access (SH_DENYNO)
+ *
+ * File sharing mode while wrting, Windows only
+ *
+ * Since: 1.30
+ */
+typedef enum {
+  GST_FILE_SINK_SHARE_DENYRW = 0x10,
+  GST_FILE_SINK_SHARE_DENYWR = 0x20,
+  GST_FILE_SINK_SHARE_DENYRD = 0x30,
+  GST_FILE_SINK_SHARE_DENYNO = 0x40,
+} GstFileSinkShareDenyMode;
+
+/**
  * GstFileSink:
  *
  * Opaque #GstFileSink structure.
@@ -111,6 +129,7 @@ struct _GstFileSink {
   gboolean append;
   gboolean o_sync;
   gint max_transient_error_timeout;
+  GstFileSinkShareDenyMode deny_mode;
 
   gboolean flushing;
 };

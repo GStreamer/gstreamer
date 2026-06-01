@@ -402,6 +402,11 @@ if host_system != 'windows'
 elif cc.has_function('_pipe', prefix : '#include <io.h>')
   cdata.set('HAVE_PIPE', 1)
 endif
+if host_system == 'windows'
+  if cc.has_function('_wfsopen', prefix : '#include <stdio.h>')
+    cdata.set('HAVE__WFSOPEN', 1)
+  endif
+endif
 
 # Platform deps; only ws2_32 and execinfo for now
 platform_deps = []

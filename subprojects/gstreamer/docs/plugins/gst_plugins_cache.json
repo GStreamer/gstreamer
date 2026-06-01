@@ -1001,6 +1001,18 @@
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
+                    },
+                    "share-deny-mode": {
+                        "blurb": "File sharing mode to use while writing, Windows only",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "deny-no (64)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstFileSinkShareDenyMode",
+                        "writable": true
                     }
                 },
                 "rank": "primary"
@@ -2733,6 +2745,31 @@
                         "desc": "Overwrite file without truncating (mode rb+)",
                         "name": "overwrite",
                         "value": "3"
+                    }
+                ]
+            },
+            "GstFileSinkShareDenyMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Deny read/write access (SH_DENYRW)",
+                        "name": "deny-rw",
+                        "value": "16"
+                    },
+                    {
+                        "desc": "Deny write access (SH_DENYWR)",
+                        "name": "deny-w",
+                        "value": "32"
+                    },
+                    {
+                        "desc": "Deny read access (SH_DENYRD)",
+                        "name": "deny-r",
+                        "value": "48"
+                    },
+                    {
+                        "desc": "Allow read/write access (SH_DENYNO)",
+                        "name": "deny-no",
+                        "value": "64"
                     }
                 ]
             },
