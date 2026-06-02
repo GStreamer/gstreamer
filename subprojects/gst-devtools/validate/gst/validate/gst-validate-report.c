@@ -1408,10 +1408,17 @@ gst_validate_report_print_level (GstValidateReport * report)
   g_free (color);
 }
 
+/* A single issue can be detected on hundreds of pads/elements, producing an
+ * unreadably long "Detected on <...>" line. Cap the number of reporters listed
+ * unless GST_VALIDATE_REPORTING_DETAILS=all was requested. */
+#define MAX_DETECTED_ON_REPORTERS 20
+
 void
 gst_validate_report_print_detected_on (GstValidateReport * report)
 {
   GList *tmp;
+  guint n_printed = 1, n_suppressed = 0;
+  gboolean show_all = report->reporting_level == GST_VALIDATE_SHOW_ALL;
   gchar *color =
       gst_validate_get_term_color (GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD);
   const gchar *endcolor = *color ? GST_VALIDATE_END_COLOR : "";
@@ -1420,8 +1427,16 @@ gst_validate_report_print_detected_on (GstValidateReport * report)
       12, "", color, endcolor, report->reporter_name);
   for (tmp = report->shadow_reports; tmp; tmp = tmp->next) {
     GstValidateReport *shadow_report = (GstValidateReport *) tmp->data;
+
+    if (!show_all && n_printed >= MAX_DETECTED_ON_REPORTERS) {
+      n_suppressed++;
+      continue;
+    }
     gst_validate_printf (NULL, ", %s", shadow_report->reporter_name);
+    n_printed++;
   }
+  if (n_suppressed)
+    gst_validate_printf (NULL, ", ... and %u more", n_suppressed);
   gst_validate_printf (NULL, ">\n");
   g_free (color);
 }
