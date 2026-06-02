@@ -53,6 +53,9 @@ struct UploadMethod
   void              (*propose_allocation)       (gpointer impl,
                                                  GstQuery * decide_query,
                                                  GstQuery * query);
+  gboolean          (*update_output_usage)      (gpointer impl,
+                                                 VkImageUsageFlags downstream_usage,
+                                                 VkImageUsageFlags * usage);
   GstFlowReturn     (*perform)                  (gpointer impl,
                                                  GstBuffer * buffer,
                                                  GstBuffer ** outbuf);
@@ -81,6 +84,14 @@ struct _GstVulkanUploadClass
 };
 
 GType gst_vulkan_upload_get_type(void);
+
+GstCaps *       gst_vulkan_upload_set_caps_features_with_passthrough
+                                                           (const GstCaps * caps,
+                                                            const gchar * feature_name,
+                                                            GstCapsFeatures * passthrough);
+void            gst_vulkan_upload_buffer_propose_allocation (gpointer impl,
+                                                             GstQuery * decide_query,
+                                                             GstQuery * query);
 
 GST_ELEMENT_REGISTER_DECLARE (vulkanupload);
 

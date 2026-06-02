@@ -37,8 +37,8 @@
 GST_DEBUG_CATEGORY (gst_debug_vulkan_upload);
 #define GST_CAT_DEFAULT gst_debug_vulkan_upload
 
-static GstCaps *
-_set_caps_features_with_passthrough (const GstCaps * caps,
+GstCaps *
+gst_vulkan_upload_set_caps_features_with_passthrough (const GstCaps * caps,
     const gchar * feature_name, GstCapsFeatures * passthrough)
 {
   guint i, j, m, n;
@@ -103,9 +103,9 @@ _buffer_set_caps (gpointer impl, GstCaps * in_caps, GstCaps * out_caps)
   return TRUE;
 }
 
-static void
-_buffer_propose_allocation (gpointer impl, GstQuery * decide_query,
-    GstQuery * query)
+void
+gst_vulkan_upload_buffer_propose_allocation (gpointer impl,
+    GstQuery * decide_query, GstQuery * query)
 {
   struct BufferUpload *raw = impl;
   gboolean need_pool;
@@ -146,6 +146,13 @@ _buffer_propose_allocation (gpointer impl, GstQuery * decide_query,
   return;
 }
 
+static gboolean
+_default_update_output_usage (gpointer impl, VkImageUsageFlags downstream_usage,
+    VkImageUsageFlags * usage)
+{
+  return TRUE;
+}
+
 static GstFlowReturn
 _buffer_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
 {
@@ -176,7 +183,8 @@ static const struct UploadMethod buffer_upload = {
   _buffer_new_impl,
   _buffer_transform_caps,
   _buffer_set_caps,
-  _buffer_propose_allocation,
+  gst_vulkan_upload_buffer_propose_allocation,
+  _default_update_output_usage,
   _buffer_perform,
   _buffer_free,
 };
@@ -207,11 +215,11 @@ _raw_to_buffer_transform_caps (gpointer impl, GstPadDirection direction,
 
   if (direction == GST_PAD_SINK) {
     ret =
-        _set_caps_features_with_passthrough (caps,
+        gst_vulkan_upload_set_caps_features_with_passthrough (caps,
         GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER, NULL);
   } else {
     ret =
-        _set_caps_features_with_passthrough (caps,
+        gst_vulkan_upload_set_caps_features_with_passthrough (caps,
         GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, NULL);
   }
 
@@ -237,7 +245,7 @@ _raw_to_buffer_propose_allocation (gpointer impl, GstQuery * decide_query,
     GstQuery * query)
 {
   /* a little trickery with the impl pointer */
-  _buffer_propose_allocation (impl, decide_query, query);
+  gst_vulkan_upload_buffer_propose_allocation (impl, decide_query, query);
 }
 
 static gboolean
@@ -308,6 +316,7 @@ static const struct UploadMethod raw_to_buffer_upload = {
   _raw_to_buffer_transform_caps,
   _raw_to_buffer_set_caps,
   _raw_to_buffer_propose_allocation,
+  _default_update_output_usage,
   _raw_to_buffer_perform,
   _raw_to_buffer_free,
 };
@@ -340,11 +349,11 @@ _buffer_to_image_transform_caps (gpointer impl, GstPadDirection direction,
 
   if (direction == GST_PAD_SINK) {
     ret =
-        _set_caps_features_with_passthrough (caps,
+        gst_vulkan_upload_set_caps_features_with_passthrough (caps,
         GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, NULL);
   } else {
     ret =
-        _set_caps_features_with_passthrough (caps,
+        gst_vulkan_upload_set_caps_features_with_passthrough (caps,
         GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER, NULL);
   }
 
@@ -370,7 +379,7 @@ _buffer_to_image_propose_allocation (gpointer impl, GstQuery * decide_query,
     GstQuery * query)
 {
   /* a little trickery with the impl pointer */
-  _buffer_propose_allocation (impl, decide_query, query);
+  gst_vulkan_upload_buffer_propose_allocation (impl, decide_query, query);
 }
 
 static GstFlowReturn
@@ -568,6 +577,7 @@ static const struct UploadMethod buffer_to_image_upload = {
   _buffer_to_image_transform_caps,
   _buffer_to_image_set_caps,
   _buffer_to_image_propose_allocation,
+  _default_update_output_usage,
   _buffer_to_image_perform,
   _buffer_to_image_free,
 };
@@ -603,11 +613,11 @@ _raw_to_image_transform_caps (gpointer impl, GstPadDirection direction,
 
   if (direction == GST_PAD_SINK) {
     ret =
-        _set_caps_features_with_passthrough (caps,
+        gst_vulkan_upload_set_caps_features_with_passthrough (caps,
         GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, NULL);
   } else {
     ret =
-        _set_caps_features_with_passthrough (caps,
+        gst_vulkan_upload_set_caps_features_with_passthrough (caps,
         GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, NULL);
   }
 
@@ -666,7 +676,7 @@ _raw_to_image_propose_allocation (gpointer impl, GstQuery * decide_query,
     GstQuery * query)
 {
   /* a little trickery with the impl pointer */
-  _buffer_propose_allocation (impl, decide_query, query);
+  gst_vulkan_upload_buffer_propose_allocation (impl, decide_query, query);
 }
 
 static GstFlowReturn
@@ -914,6 +924,7 @@ static const struct UploadMethod raw_to_image_upload = {
   _raw_to_image_transform_caps,
   _raw_to_image_set_caps,
   _raw_to_image_propose_allocation,
+  _default_update_output_usage,
   _raw_to_image_perform,
   _raw_to_image_free,
 };
@@ -1414,10 +1425,23 @@ gst_vulkan_upload_decide_allocation (GstBaseTransform * bt, GstQuery * query)
   config = gst_buffer_pool_get_config (pool);
 
   if (GST_IS_VULKAN_IMAGE_BUFFER_POOL (pool)) {
+    VkImageUsageFlags downstream_usage;
+
     gst_vulkan_image_buffer_pool_config_get_allocation_params (config, &usage,
         &mem_props, &layout, &access);
+    /* Keep the peer/default pool usage separate from the extra usage required
+     * by this element, so upload methods can reason about downstream's original
+     * requirements. */
+    downstream_usage = usage;
     /* these usage parameters are essential for upload */
     usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+    if (!upload_methods[vk_upload->current_impl]->update_output_usage
+        (vk_upload->upload_impls[vk_upload->current_impl], downstream_usage,
+            &usage)) {
+      gst_structure_free (config);
+      gst_object_unref (pool);
+      return FALSE;
+    }
   }
 
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
