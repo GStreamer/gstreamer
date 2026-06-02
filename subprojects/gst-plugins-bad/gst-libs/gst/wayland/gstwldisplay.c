@@ -78,6 +78,7 @@ typedef struct _GstWlDisplayPrivate
   gboolean own_display;
   GThread *thread;
   GstPoll *wl_fd_poll;
+  GHashTable *pending_outputs;
 
   GRecMutex sync_mutex;
 } GstWlDisplayPrivate;
@@ -118,6 +119,8 @@ gst_wl_display_init (GstWlDisplay * self)
   g_mutex_init (&priv->outputs_mutex);
   priv->outputs = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
       (GDestroyNotify) g_object_unref);
+  priv->pending_outputs = g_hash_table_new_full (NULL, NULL, NULL,
+      (GDestroyNotify) g_object_unref);
 
   gst_wl_linux_dmabuf_init_once ();
   gst_wl_shm_init_once ();
@@ -150,6 +153,7 @@ gst_wl_display_finalize (GObject * gobject)
 
   g_mutex_clear (&priv->outputs_mutex);
   g_hash_table_unref (priv->outputs);
+  g_hash_table_unref (priv->pending_outputs);
 
   if (priv->color)
     wp_color_manager_v1_destroy (priv->color);
@@ -404,9 +408,10 @@ output_description (void *data, struct wl_output *wl_output,
 static void
 output_done (void *data, struct wl_output *wl_output)
 {
-  GstWlOutput *output = GST_WL_OUTPUT (data);
-  GstWlDisplay *self = g_object_steal_data (G_OBJECT (output), "display");
+  GstWlOutput *shared_output = GST_WL_OUTPUT (data);
+  GstWlDisplay *self = g_object_get_data (G_OBJECT (shared_output), "display");
   GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
+  GstWlOutput *output = gst_wl_output_clone (shared_output);
   const gchar *name = gst_wl_output_get_name (output);
 
   GST_INFO ("Adding output %s (%p):", name, wl_output);
@@ -560,6 +565,7 @@ registry_handle_global (void *data, struct wl_registry *registry,
     GstWlOutput *output = gst_wl_output_new (wl_output, id);
     g_object_set_data (G_OBJECT (output), "display", self);
     wl_output_add_listener (wl_output, &output_listener, output);
+    g_hash_table_replace (priv->pending_outputs, GINT_TO_POINTER (id), output);
   }
 }
 
@@ -574,13 +580,15 @@ registry_handle_global_remove (void *data, struct wl_registry *registry,
 
   GHashTableIter iter;
   gpointer key, value;
-  g_hash_table_iter_init (&iter, priv->outputs);
-  while (g_hash_table_iter_next (&iter, &key, &value)) {
-    GstWlOutput *output = value;
+  if (g_hash_table_remove (priv->pending_outputs, GINT_TO_POINTER (name))) {
+    g_hash_table_iter_init (&iter, priv->outputs);
+    while (g_hash_table_iter_next (&iter, &key, &value)) {
+      GstWlOutput *output = value;
 
-    if (gst_wl_output_get_id (output) == name) {
-      g_hash_table_iter_remove (&iter);
-      break;
+      if (gst_wl_output_get_id (output) == name) {
+        g_hash_table_iter_remove (&iter);
+        break;
+      }
     }
   }
 

@@ -27,6 +27,8 @@ G_BEGIN_DECLS
 /* <private> */
 GstWlOutput *gst_wl_output_new (struct wl_output *output, guint32 id);
 
+GstWlOutput *gst_wl_output_clone (GstWlOutput * self);
+
 void gst_wl_output_set_name (GstWlOutput * self, const gchar *name);
 
 void gst_wl_output_set_description (GstWlOutput * self, const gchar *description);
