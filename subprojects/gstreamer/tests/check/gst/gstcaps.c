@@ -145,6 +145,50 @@ GST_START_TEST (test_static_caps)
 
 GST_END_TEST;
 
+GST_START_TEST (test_static_caps_nested_may_be_leaked)
+{
+  /* *INDENT-OFF* */
+  static GstStaticCaps scaps = GST_STATIC_CAPS (
+      "video/x-raw,"
+        "tensors=(structure)["
+          "tensorgroups,"
+            "out=(/uniquelist){"
+              "(GstCaps)["
+                "tensor/strided,"
+                  "tensor-id=(string)out,"
+                  "type=(string)float32"
+              "]"
+            "}"
+        "]");
+  /* *INDENT-ON* */
+  GstCaps *caps;
+  const GValue *tensors, *uniquelist, *nested;
+
+  caps = gst_static_caps_get (&scaps);
+  fail_unless (caps != NULL);
+  fail_unless (GST_MINI_OBJECT_FLAG_IS_SET (caps,
+          GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED));
+
+  /* Descend tensors -> tensorgroups -> out (uniquelist) -> (GstCaps) */
+  tensors = gst_structure_get_value (gst_caps_get_structure (caps, 0),
+      "tensors");
+  fail_unless (tensors != NULL && GST_VALUE_HOLDS_STRUCTURE (tensors));
+
+  uniquelist = gst_structure_get_value (gst_value_get_structure (tensors),
+      "out");
+  fail_unless (uniquelist != NULL && GST_VALUE_HOLDS_UNIQUE_LIST (uniquelist));
+  fail_unless (gst_value_unique_list_get_size (uniquelist) == 1);
+
+  nested = gst_value_unique_list_get_value (uniquelist, 0);
+  fail_unless (nested != NULL && GST_VALUE_HOLDS_CAPS (nested));
+  fail_unless (GST_MINI_OBJECT_FLAG_IS_SET (gst_value_get_caps (nested),
+          GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED));
+
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 static const gchar non_simple_caps_string[] =
     "video/x-raw, format=(string)I420, framerate=(fraction)[ 1/100, 100 ], "
     "width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]; video/x-raw, "
@@ -2607,6 +2651,7 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_double_append);
   tcase_add_test (tc_chain, test_mutability);
   tcase_add_test (tc_chain, test_static_caps);
+  tcase_add_test (tc_chain, test_static_caps_nested_may_be_leaked);
   tcase_add_test (tc_chain, test_simplify);
   tcase_add_test (tc_chain, test_truncate);
   tcase_add_test (tc_chain, test_fixate);
