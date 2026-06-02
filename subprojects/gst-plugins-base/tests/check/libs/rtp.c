@@ -53,10 +53,10 @@ GST_START_TEST (test_rtp_buffer)
 
   /* check defaults */
   fail_unless_equals_int (gst_rtp_buffer_get_version (&rtp), 2);
-  fail_unless (gst_rtp_buffer_get_padding (&rtp) == TRUE);
-  fail_unless (gst_rtp_buffer_get_extension (&rtp) == FALSE);
+  fail_unless (gst_rtp_buffer_get_padding (&rtp));
+  fail_if (gst_rtp_buffer_get_extension (&rtp));
   fail_unless_equals_int (gst_rtp_buffer_get_csrc_count (&rtp), 0);
-  fail_unless (gst_rtp_buffer_get_marker (&rtp) == FALSE);
+  fail_if (gst_rtp_buffer_get_marker (&rtp));
   fail_unless (gst_rtp_buffer_get_payload_type (&rtp) == 0);
   fail_unless_equals_int (GST_READ_UINT16_BE (data), 0xa000);
 
@@ -70,18 +70,18 @@ GST_START_TEST (test_rtp_buffer)
 
   /* check padding bit */
   gst_rtp_buffer_set_padding (&rtp, TRUE);
-  fail_unless (gst_rtp_buffer_get_padding (&rtp) == TRUE);
+  fail_unless (gst_rtp_buffer_get_padding (&rtp));
   fail_unless_equals_int ((data[0] & 0x20) >> 5, 1);
   gst_rtp_buffer_set_padding (&rtp, FALSE);
-  fail_unless (gst_rtp_buffer_get_padding (&rtp) == FALSE);
+  fail_if (gst_rtp_buffer_get_padding (&rtp));
   fail_unless_equals_int ((data[0] & 0x20) >> 5, 0);
 
   /* check marker bit */
   gst_rtp_buffer_set_marker (&rtp, TRUE);
-  fail_unless (gst_rtp_buffer_get_marker (&rtp) == TRUE);
+  fail_unless (gst_rtp_buffer_get_marker (&rtp));
   fail_unless_equals_int ((data[1] & 0x80) >> 7, 1);
   gst_rtp_buffer_set_marker (&rtp, FALSE);
-  fail_unless (gst_rtp_buffer_get_marker (&rtp) == FALSE);
+  fail_if (gst_rtp_buffer_get_marker (&rtp));
   fail_unless_equals_int ((data[1] & 0x80) >> 7, 0);
 
   /* check sequence offset */
@@ -298,8 +298,8 @@ GST_START_TEST (test_rtp_buffer_set_extension_data)
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
 
   /* should be possible to set the extension data */
-  fail_unless (gst_rtp_buffer_set_extension_data (&rtp, 270, 4) == TRUE);
-  fail_unless (gst_rtp_buffer_get_extension (&rtp) == TRUE);
+  fail_unless (gst_rtp_buffer_set_extension_data (&rtp, 270, 4));
+  fail_unless (gst_rtp_buffer_get_extension (&rtp));
   gst_rtp_buffer_get_extension_data (&rtp, &bits, &pointer, &size);
   fail_unless (bits == 270);
   fail_unless (size == 4);
@@ -309,9 +309,9 @@ GST_START_TEST (test_rtp_buffer_set_extension_data)
   buf = gst_rtp_buffer_new_allocate (20, 0, 0);
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
 
-  fail_unless (gst_rtp_buffer_get_extension (&rtp) == FALSE);
-  fail_unless (gst_rtp_buffer_set_extension_data (&rtp, 333, 2) == TRUE);
-  fail_unless (gst_rtp_buffer_get_extension (&rtp) == TRUE);
+  fail_if (gst_rtp_buffer_get_extension (&rtp));
+  fail_unless (gst_rtp_buffer_set_extension_data (&rtp, 333, 2));
+  fail_unless (gst_rtp_buffer_get_extension (&rtp));
   gst_rtp_buffer_get_extension_data (&rtp, &bits, &pointer, &size);
   fail_unless (bits == 333);
   fail_unless (size == 2);
@@ -323,58 +323,58 @@ GST_START_TEST (test_rtp_buffer_set_extension_data)
   buf = gst_rtp_buffer_new_allocate (20, 0, 0);
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
 
-  fail_unless (gst_rtp_buffer_get_extension (&rtp) == FALSE);
+  fail_if (gst_rtp_buffer_get_extension (&rtp));
 
   fail_unless (gst_rtp_buffer_add_extension_onebyte_header (&rtp, 5,
-          misc_data, 2) == TRUE);
+          misc_data, 2));
   fail_unless (gst_rtp_buffer_get_extension_data (&rtp, &bits, &pointer,
           &size));
   fail_unless (bits == 0xBEDE);
   fail_unless (size == 1);
   data = (guint8 *) pointer;
   fail_unless (data[0] == ((5 << 4) | 1));
-  fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 2,
-          1, &pointer, &size) == FALSE);
+  fail_if (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 2,
+          1, &pointer, &size));
+  fail_if (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 5,
+          1, &pointer, &size));
   fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 5,
-          1, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 5,
-          0, &pointer, &size) == TRUE);
+          0, &pointer, &size));
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
 
   fail_unless (gst_rtp_buffer_add_extension_onebyte_header (&rtp, 5,
-          misc_data, 4) == TRUE);
+          misc_data, 4));
   fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 5,
-          0, &pointer, &size) == TRUE);
+          0, &pointer, &size));
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
   fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 5,
-          1, &pointer, &size) == TRUE);
+          1, &pointer, &size));
   fail_unless (size == 4);
   fail_unless (memcmp (pointer, misc_data, 4) == 0);
-  fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 5,
-          2, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 2,
-          1, &pointer, &size) == FALSE);
+  fail_if (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 5,
+          2, &pointer, &size));
+  fail_if (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 2,
+          1, &pointer, &size));
 
   fail_unless (gst_rtp_buffer_add_extension_onebyte_header (&rtp, 6,
-          misc_data, 2) == TRUE);
+          misc_data, 2));
   fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 5,
-          0, &pointer, &size) == TRUE);
+          0, &pointer, &size));
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
   fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 5,
-          1, &pointer, &size) == TRUE);
+          1, &pointer, &size));
   fail_unless (size == 4);
   fail_unless (memcmp (pointer, misc_data, 4) == 0);
+  fail_if (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 5,
+          3, &pointer, &size));
+  fail_if (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 2,
+          1, &pointer, &size));
+  fail_if (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 6,
+          2, &pointer, &size));
   fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 5,
-          3, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 2,
-          1, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 6,
-          2, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 5,
-          0, &pointer, &size) == TRUE);
+          0, &pointer, &size));
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
 
@@ -385,10 +385,10 @@ GST_START_TEST (test_rtp_buffer_set_extension_data)
   buf = gst_rtp_buffer_new_allocate (20, 0, 0);
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
 
-  fail_unless (gst_rtp_buffer_get_extension (&rtp) == FALSE);
+  fail_if (gst_rtp_buffer_get_extension (&rtp));
 
   fail_unless (gst_rtp_buffer_add_extension_twobytes_header (&rtp, 0, 5,
-          misc_data, 2) == TRUE);
+          misc_data, 2));
   fail_unless (gst_rtp_buffer_get_extension_data (&rtp, &bits, &pointer,
           &size));
   fail_unless (bits == 0x100 << 4);
@@ -396,48 +396,48 @@ GST_START_TEST (test_rtp_buffer_set_extension_data)
   data = (guint8 *) pointer;
   fail_unless (data[0] == 5);
   fail_unless (data[1] == 2);
-  fail_unless (gst_rtp_buffer_get_extension_twobytes_header (&rtp, &appbits, 2,
-          0, &pointer, &size) == FALSE);
+  fail_if (gst_rtp_buffer_get_extension_twobytes_header (&rtp, &appbits, 2,
+          0, &pointer, &size));
+  fail_if (gst_rtp_buffer_get_extension_twobytes_header (&rtp, &appbits, 5,
+          1, &pointer, &size));
   fail_unless (gst_rtp_buffer_get_extension_twobytes_header (&rtp, &appbits, 5,
-          1, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_get_extension_twobytes_header (&rtp, &appbits, 5,
-          0, &pointer, &size) == TRUE);
+          0, &pointer, &size));
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
 
   fail_unless (gst_rtp_buffer_add_extension_twobytes_header (&rtp, 0, 5,
-          misc_data, 4) == TRUE);
+          misc_data, 4));
   fail_unless (gst_rtp_buffer_get_extension_twobytes_header (&rtp, &appbits, 5,
-          0, &pointer, &size) == TRUE);
+          0, &pointer, &size));
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
   fail_unless (gst_rtp_buffer_get_extension_twobytes_header (&rtp, &appbits, 5,
-          1, &pointer, &size) == TRUE);
+          1, &pointer, &size));
   fail_unless (size == 4);
   fail_unless (memcmp (pointer, misc_data, 4) == 0);
-  fail_unless (gst_rtp_buffer_get_extension_twobytes_header (&rtp, &appbits, 5,
-          2, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_get_extension_twobytes_header (&rtp, &appbits, 2,
-          0, &pointer, &size) == FALSE);
+  fail_if (gst_rtp_buffer_get_extension_twobytes_header (&rtp, &appbits, 5,
+          2, &pointer, &size));
+  fail_if (gst_rtp_buffer_get_extension_twobytes_header (&rtp, &appbits, 2,
+          0, &pointer, &size));
 
   fail_unless (gst_rtp_buffer_add_extension_twobytes_header (&rtp, 0, 6,
-          misc_data, 2) == TRUE);
+          misc_data, 2));
   fail_unless (gst_rtp_buffer_get_extension_twobytes_header (&rtp, &appbits, 5,
-          0, &pointer, &size) == TRUE);
+          0, &pointer, &size));
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
   fail_unless (gst_rtp_buffer_get_extension_twobytes_header (&rtp, &appbits, 5,
-          1, &pointer, &size) == TRUE);
+          1, &pointer, &size));
   fail_unless (size == 4);
   fail_unless (memcmp (pointer, misc_data, 4) == 0);
+  fail_if (gst_rtp_buffer_get_extension_twobytes_header (&rtp, &appbits, 5,
+          2, &pointer, &size));
+  fail_if (gst_rtp_buffer_get_extension_twobytes_header (&rtp, &appbits, 2,
+          0, &pointer, &size));
+  fail_if (gst_rtp_buffer_get_extension_twobytes_header (&rtp, &appbits, 6,
+          1, &pointer, &size));
   fail_unless (gst_rtp_buffer_get_extension_twobytes_header (&rtp, &appbits, 5,
-          2, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_get_extension_twobytes_header (&rtp, &appbits, 2,
-          0, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_get_extension_twobytes_header (&rtp, &appbits, 6,
-          1, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_get_extension_twobytes_header (&rtp, &appbits, 5,
-          0, &pointer, &size) == TRUE);
+          0, &pointer, &size));
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
 
@@ -461,8 +461,8 @@ GST_START_TEST (test_rtp_buffer_set_extension_data_shrink_data)
   buf = gst_rtp_buffer_new_allocate (20, 0, 0);
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
 
-  fail_unless (gst_rtp_buffer_set_extension_data (&rtp, 270, 4) == TRUE);
-  fail_unless (gst_rtp_buffer_get_extension (&rtp) == TRUE);
+  fail_unless (gst_rtp_buffer_set_extension_data (&rtp, 270, 4));
+  fail_unless (gst_rtp_buffer_get_extension (&rtp));
   gst_rtp_buffer_get_extension_data (&rtp, &bits, &pointer, &size);
   GST_MEMDUMP ("", pointer, size * 4);
   fail_unless (bits == 270);
@@ -484,7 +484,7 @@ GST_START_TEST (test_rtp_buffer_set_extension_data_shrink_data)
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
   /* shrinking the extension data should still succeed and only output the
    * relevant data */
-  fail_unless (gst_rtp_buffer_set_extension_data (&rtp, 180, 2) == TRUE);
+  fail_unless (gst_rtp_buffer_set_extension_data (&rtp, 180, 2));
   gst_rtp_buffer_get_extension_data (&rtp, &bits, &pointer, &size);
   GST_MEMDUMP ("", pointer, size * 4);
   fail_unless (bits == 180);
@@ -502,7 +502,7 @@ GST_START_TEST (test_rtp_buffer_set_extension_data_shrink_data)
   gst_buffer_unmap (buf, &info);
 
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
-  fail_unless (gst_rtp_buffer_set_extension_data (&rtp, 308, 3) == TRUE);
+  fail_unless (gst_rtp_buffer_set_extension_data (&rtp, 308, 3));
   gst_rtp_buffer_get_extension_data (&rtp, &bits, &pointer, &size);
   GST_MEMDUMP ("", pointer, size * 4);
   fail_unless (bits == 308);
@@ -556,14 +556,14 @@ GST_START_TEST (test_rtp_buffer_list_set_extension)
   gst_buffer_list_iterator_free (it);
 
   /* Test header extensions with a one byte header */
-  fail_unless (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 2,
-          1, &pointer, &size) == FALSE);
+  fail_if (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 2,
+          1, &pointer, &size));
 
   it = gst_buffer_list_iterate (list);
   fail_unless (gst_buffer_list_iterator_next_group (it));
   fail_unless (gst_buffer_list_iterator_next (it) != NULL);
   fail_unless (gst_rtp_buffer_list_add_extension_onebyte_header (it, 5,
-          misc_data, 2) == TRUE);
+          misc_data, 2));
   gst_buffer_list_iterator_free (it);
   it = gst_buffer_list_iterate (list);
   fail_unless (gst_buffer_list_iterator_next_group (it));
@@ -574,12 +574,12 @@ GST_START_TEST (test_rtp_buffer_list_set_extension)
   data = (guint8 *) pointer;
   fail_unless (data[0] == ((5 << 4) | 1));
   gst_buffer_list_iterator_free (it);
-  fail_unless (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 2,
-          0, &pointer, &size) == FALSE);
+  fail_if (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 2,
+          0, &pointer, &size));
+  fail_if (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 5,
+          1, &pointer, &size));
   fail_unless (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 5,
-          1, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 5,
-          0, &pointer, &size) == TRUE);
+          0, &pointer, &size));
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
 
@@ -587,43 +587,43 @@ GST_START_TEST (test_rtp_buffer_list_set_extension)
   fail_unless (gst_buffer_list_iterator_next_group (it));
   fail_unless (gst_buffer_list_iterator_next (it) != NULL);
   fail_unless (gst_rtp_buffer_list_add_extension_onebyte_header (it, 5,
-          misc_data, 4) == TRUE);
+          misc_data, 4));
   gst_buffer_list_iterator_free (it);
   fail_unless (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 5,
-          0, &pointer, &size) == TRUE);
+          0, &pointer, &size));
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
   fail_unless (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 5,
-          1, &pointer, &size) == TRUE);
+          1, &pointer, &size));
   fail_unless (size == 4);
   fail_unless (memcmp (pointer, misc_data, 4) == 0);
-  fail_unless (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 5,
-          2, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 2,
-          0, &pointer, &size) == FALSE);
+  fail_if (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 5,
+          2, &pointer, &size));
+  fail_if (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 2,
+          0, &pointer, &size));
 
   it = gst_buffer_list_iterate (list);
   fail_unless (gst_buffer_list_iterator_next_group (it));
   fail_unless (gst_buffer_list_iterator_next (it) != NULL);
   fail_unless (gst_rtp_buffer_list_add_extension_onebyte_header (it, 6,
-          misc_data, 2) == TRUE);
+          misc_data, 2));
   gst_buffer_list_iterator_free (it);
   fail_unless (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 5,
-          0, &pointer, &size) == TRUE);
+          0, &pointer, &size));
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
   fail_unless (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 5,
-          1, &pointer, &size) == TRUE);
+          1, &pointer, &size));
   fail_unless (size == 4);
   fail_unless (memcmp (pointer, misc_data, 4) == 0);
+  fail_if (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 5,
+          2, &pointer, &size));
+  fail_if (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 2,
+          0, &pointer, &size));
+  fail_if (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 6,
+          1, &pointer, &size));
   fail_unless (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 5,
-          2, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 2,
-          0, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 6,
-          1, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_list_get_extension_onebyte_header (list, 0, 5,
-          0, &pointer, &size) == TRUE);
+          0, &pointer, &size));
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
   gst_buffer_list_unref (list);
@@ -638,7 +638,7 @@ GST_START_TEST (test_rtp_buffer_list_set_extension)
   fail_unless (gst_buffer_list_iterator_next_group (it));
   fail_unless (gst_buffer_list_iterator_next (it) != NULL);
   fail_unless (gst_rtp_buffer_list_add_extension_twobytes_header (it, 0, 5,
-          misc_data, 2) == TRUE);
+          misc_data, 2));
   gst_buffer_list_iterator_free (it);
 
   it = gst_buffer_list_iterate (list);
@@ -651,12 +651,12 @@ GST_START_TEST (test_rtp_buffer_list_set_extension)
   fail_unless (data[0] == 5);
   fail_unless (data[1] == 2);
   gst_buffer_list_iterator_free (it);
+  fail_if (gst_rtp_buffer_list_get_extension_twobytes_header (list, 0,
+          &appbits, 2, 0, &pointer, &size));
+  fail_if (gst_rtp_buffer_list_get_extension_twobytes_header (list, 0,
+          &appbits, 5, 1, &pointer, &size));
   fail_unless (gst_rtp_buffer_list_get_extension_twobytes_header (list, 0,
-          &appbits, 2, 0, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_list_get_extension_twobytes_header (list, 0,
-          &appbits, 5, 1, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_list_get_extension_twobytes_header (list, 0,
-          &appbits, 5, 0, &pointer, &size) == TRUE);
+          &appbits, 5, 0, &pointer, &size));
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
 
@@ -664,43 +664,43 @@ GST_START_TEST (test_rtp_buffer_list_set_extension)
   fail_unless (gst_buffer_list_iterator_next_group (it));
   fail_unless (gst_buffer_list_iterator_next (it) != NULL);
   fail_unless (gst_rtp_buffer_list_add_extension_twobytes_header (it, 0, 5,
-          misc_data, 4) == TRUE);
+          misc_data, 4));
   gst_buffer_list_iterator_free (it);
   fail_unless (gst_rtp_buffer_list_get_extension_twobytes_header (list, 0,
-          &appbits, 5, 0, &pointer, &size) == TRUE);
+          &appbits, 5, 0, &pointer, &size));
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
   fail_unless (gst_rtp_buffer_list_get_extension_twobytes_header (list, 0,
-          &appbits, 5, 1, &pointer, &size) == TRUE);
+          &appbits, 5, 1, &pointer, &size));
   fail_unless (size == 4);
   fail_unless (memcmp (pointer, misc_data, 4) == 0);
-  fail_unless (gst_rtp_buffer_list_get_extension_twobytes_header (list, 0,
-          &appbits, 5, 2, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_list_get_extension_twobytes_header (list, 0,
-          &appbits, 2, 0, &pointer, &size) == FALSE);
+  fail_if (gst_rtp_buffer_list_get_extension_twobytes_header (list, 0,
+          &appbits, 5, 2, &pointer, &size));
+  fail_if (gst_rtp_buffer_list_get_extension_twobytes_header (list, 0,
+          &appbits, 2, 0, &pointer, &size));
 
   it = gst_buffer_list_iterate (list);
   fail_unless (gst_buffer_list_iterator_next_group (it));
   fail_unless (gst_buffer_list_iterator_next (it) != NULL);
   fail_unless (gst_rtp_buffer_list_add_extension_twobytes_header (it, 0, 6,
-          misc_data, 2) == TRUE);
+          misc_data, 2));
   gst_buffer_list_iterator_free (it);
   fail_unless (gst_rtp_buffer_list_get_extension_twobytes_header (list, 0,
-          &appbits, 5, 0, &pointer, &size) == TRUE);
+          &appbits, 5, 0, &pointer, &size));
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
   fail_unless (gst_rtp_buffer_list_get_extension_twobytes_header (list, 0,
-          &appbits, 5, 1, &pointer, &size) == TRUE);
+          &appbits, 5, 1, &pointer, &size));
   fail_unless (size == 4);
   fail_unless (memcmp (pointer, misc_data, 4) == 0);
+  fail_if (gst_rtp_buffer_list_get_extension_twobytes_header (list, 0,
+          &appbits, 5, 2, &pointer, &size));
+  fail_if (gst_rtp_buffer_list_get_extension_twobytes_header (list, 0,
+          &appbits, 2, 0, &pointer, &size));
+  fail_if (gst_rtp_buffer_list_get_extension_twobytes_header (list, 0,
+          &appbits, 6, 1, &pointer, &size));
   fail_unless (gst_rtp_buffer_list_get_extension_twobytes_header (list, 0,
-          &appbits, 5, 2, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_list_get_extension_twobytes_header (list, 0,
-          &appbits, 2, 0, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_list_get_extension_twobytes_header (list, 0,
-          &appbits, 6, 1, &pointer, &size) == FALSE);
-  fail_unless (gst_rtp_buffer_list_get_extension_twobytes_header (list, 0,
-          &appbits, 5, 0, &pointer, &size) == TRUE);
+          &appbits, 5, 0, &pointer, &size));
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
 
@@ -831,13 +831,12 @@ GST_START_TEST (test_rtcp_buffer)
 
   gst_rtcp_buffer_map (buf, GST_MAP_READWRITE, &rtcp);
 
-  fail_unless (gst_rtcp_buffer_validate (buf) == FALSE);
-  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &packet) == FALSE);
+  fail_if (gst_rtcp_buffer_validate (buf));
+  fail_if (gst_rtcp_buffer_get_first_packet (&rtcp, &packet));
   fail_unless (gst_rtcp_buffer_get_packet_count (&rtcp) == 0);
 
   /* add an SR packet */
-  fail_unless (gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_SR,
-          &packet) == TRUE);
+  fail_unless (gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_SR, &packet));
 
   fail_unless (gst_rtcp_packet_get_padding (&packet) == 0);
   fail_unless (gst_rtcp_packet_get_count (&packet) == 0);
@@ -864,27 +863,25 @@ GST_START_TEST (test_rtcp_buffer)
   }
 
   /* go to first packet, this should be the packet we just added */
-  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &packet) == TRUE);
+  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &packet));
 
   fail_unless (gst_rtcp_packet_get_padding (&packet) == 0);
   fail_unless (gst_rtcp_packet_get_count (&packet) == 0);
   fail_unless (gst_rtcp_packet_get_type (&packet) == GST_RTCP_TYPE_SR);
   fail_unless (gst_rtcp_packet_get_length (&packet) == 6);
 
-  fail_unless (gst_rtcp_packet_move_to_next (&packet) == FALSE);
+  fail_if (gst_rtcp_packet_move_to_next (&packet));
 
   /* add some SDES */
-  fail_unless (gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_SDES,
-          &packet) == TRUE);
-  fail_unless (gst_rtcp_packet_sdes_add_item (&packet, 0xff658743) == TRUE);
+  fail_unless (gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_SDES, &packet));
+  fail_unless (gst_rtcp_packet_sdes_add_item (&packet, 0xff658743));
   fail_unless (gst_rtcp_packet_sdes_add_entry (&packet, GST_RTCP_SDES_CNAME,
-          sizeof ("test@foo.bar"), (guint8 *) "test@foo.bar") == TRUE);
+          sizeof ("test@foo.bar"), (guint8 *) "test@foo.bar"));
 
   /* add some BYE */
-  fail_unless (gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_BYE,
-          &packet) == TRUE);
-  fail_unless (gst_rtcp_packet_bye_add_ssrc (&packet, 0x5613212f) == TRUE);
-  fail_unless (gst_rtcp_packet_bye_add_ssrc (&packet, 0x00112233) == TRUE);
+  fail_unless (gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_BYE, &packet));
+  fail_unless (gst_rtcp_packet_bye_add_ssrc (&packet, 0x5613212f));
+  fail_unless (gst_rtcp_packet_bye_add_ssrc (&packet, 0x00112233));
   fail_unless (gst_rtcp_packet_bye_get_ssrc_count (&packet) == 2);
 
   fail_unless (gst_rtcp_packet_get_padding (&packet) == 0);
@@ -893,8 +890,8 @@ GST_START_TEST (test_rtcp_buffer)
   fail_unless (gst_rtcp_packet_get_length (&packet) == 2);
 
   /* move to SDES */
-  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &packet) == TRUE);
-  fail_unless (gst_rtcp_packet_move_to_next (&packet) == TRUE);
+  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &packet));
+  fail_unless (gst_rtcp_packet_move_to_next (&packet));
 
   fail_unless (gst_rtcp_packet_get_padding (&packet) == 0);
   fail_unless (gst_rtcp_packet_get_count (&packet) == 1);
@@ -902,7 +899,7 @@ GST_START_TEST (test_rtcp_buffer)
   fail_unless (gst_rtcp_packet_get_length (&packet) == 5);
 
   /* remove the SDES */
-  fail_unless (gst_rtcp_packet_remove (&packet) == TRUE);
+  fail_unless (gst_rtcp_packet_remove (&packet));
 
   /* we are now at the BYE packet */
   fail_unless (gst_rtcp_packet_get_padding (&packet) == 0);
@@ -912,8 +909,8 @@ GST_START_TEST (test_rtcp_buffer)
 
   /* close and validate */
   gst_rtcp_buffer_unmap (&rtcp);
-  fail_unless (gst_rtcp_buffer_validate (buf) == TRUE);
-  fail_unless (gst_rtcp_buffer_validate_reduced (buf) == TRUE);
+  fail_unless (gst_rtcp_buffer_validate (buf));
+  fail_unless (gst_rtcp_buffer_validate_reduced (buf));
   gst_buffer_unref (buf);
 }
 
@@ -935,18 +932,17 @@ GST_START_TEST (test_rtcp_reduced_buffer)
 
   gst_rtcp_buffer_map (buf, GST_MAP_READWRITE, &rtcp);
 
-  fail_unless (gst_rtcp_buffer_validate (buf) == FALSE);
-  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &packet) == FALSE);
+  fail_if (gst_rtcp_buffer_validate (buf));
+  fail_if (gst_rtcp_buffer_get_first_packet (&rtcp, &packet));
   fail_unless (gst_rtcp_buffer_get_packet_count (&rtcp) == 0);
 
   /* add an SR packet */
-  fail_unless (gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_PSFB,
-          &packet) == TRUE);
+  fail_unless (gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_PSFB, &packet));
 
   /* close and validate */
   gst_rtcp_buffer_unmap (&rtcp);
-  fail_unless (gst_rtcp_buffer_validate (buf) == FALSE);
-  fail_unless (gst_rtcp_buffer_validate_reduced (buf) == TRUE);
+  fail_if (gst_rtcp_buffer_validate (buf));
+  fail_unless (gst_rtcp_buffer_validate_reduced (buf));
   gst_buffer_unref (buf);
 }
 
@@ -1127,8 +1123,8 @@ GST_START_TEST (test_rtcp_buffer_profile_specific_extension)
   fail_unless ((buf = gst_rtcp_buffer_new (1400)) != NULL);
   gst_rtcp_buffer_map (buf, GST_MAP_READWRITE, &rtcp);
 
-  fail_unless (gst_rtcp_buffer_validate (buf) == FALSE);
-  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &packet) == FALSE);
+  fail_if (gst_rtcp_buffer_validate (buf));
+  fail_if (gst_rtcp_buffer_get_first_packet (&rtcp, &packet));
   fail_unless (gst_rtcp_buffer_get_packet_count (&rtcp) == 0);
 
   /* add an SR packet with sender info */
@@ -1204,7 +1200,7 @@ GST_START_TEST (test_rtcp_buffer_profile_specific_extension)
 
   /* close and validate */
   gst_rtcp_buffer_unmap (&rtcp);
-  fail_unless (gst_rtcp_buffer_validate (buf) == TRUE);
+  fail_unless (gst_rtcp_buffer_validate (buf));
   gst_buffer_unref (buf);
 }
 
@@ -2385,15 +2381,14 @@ GST_START_TEST (test_sdes_parsing_out_of_bounds)
   gst_buffer_unmap (buffer, &map);
 
   ret = gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp);
-  fail_unless (ret == TRUE, "Failed to map buffer");
+  fail_unless (ret, "Failed to map buffer");
 
   ret = gst_rtcp_buffer_get_first_packet (&rtcp, &packet);
-  fail_unless (ret == TRUE, "Failed to get first packet");
+  fail_unless (ret, "Failed to get first packet");
 
   /* This should fail because the packet is too short to contain a full SDES item */
   ret = gst_rtcp_packet_sdes_get_entry (&packet, NULL, NULL, NULL);
-  fail_unless (ret == FALSE,
-      "sdes_get_entry should fail on truncated packet (case 1)");
+  fail_if (ret, "sdes_get_entry should fail on truncated packet (case 1)");
 
   gst_rtcp_buffer_unmap (&rtcp);
   gst_buffer_unref (buffer);
@@ -2412,15 +2407,14 @@ GST_START_TEST (test_sdes_parsing_out_of_bounds)
   gst_buffer_unmap (buffer, &map);
 
   ret = gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp);
-  fail_unless (ret == TRUE, "Failed to map buffer");
+  fail_unless (ret, "Failed to map buffer");
 
   ret = gst_rtcp_buffer_get_first_packet (&rtcp, &packet);
-  fail_unless (ret == TRUE, "Failed to get first packet");
+  fail_unless (ret, "Failed to get first packet");
 
   /* This should fail because the item length is out of bounds */
   ret = gst_rtcp_packet_sdes_get_entry (&packet, NULL, NULL, NULL);
-  fail_unless (ret == FALSE,
-      "sdes_get_entry should fail on out-of-bounds length (case 2)");
+  fail_if (ret, "sdes_get_entry should fail on out-of-bounds length (case 2)");
 
   gst_rtcp_buffer_unmap (&rtcp);
   gst_buffer_unref (buffer);
