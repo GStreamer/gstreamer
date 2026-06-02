@@ -91,9 +91,15 @@ static void gst_openjpeg_dec_pause_loop (GstOpenJPEGDec * self,
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define GRAY16 "GRAY16_LE"
 #define YUV10 "Y444_10LE, I422_10LE, I420_10LE"
+#define YUV12 "Y444_12LE, I422_12LE, I420_12LE"
+#define YUV16 "Y444_16LE"
+#define GBR "GBR_10LE, GBR_12LE, GBR_16LE"
 #else
 #define GRAY16 "GRAY16_BE"
 #define YUV10 "Y444_10BE, I422_10BE, I420_10BE"
+#define YUV12 "Y444_12BE, I422_12BE, I420_12BE"
+#define YUV16 "Y444_16BE"
+#define GBR "GBR_10BE, GBR_12BE, GBR_16BE"
 #endif
 
 static GstStaticPadTemplate gst_openjpeg_dec_sink_template =
@@ -112,8 +118,8 @@ static GstStaticPadTemplate gst_openjpeg_dec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ ARGB64, ARGB, xRGB, "
-            "AYUV64, " YUV10 ", "
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ ARGB64, ARGB, xRGB, " GBR ", "
+            "AYUV64, " YUV10 ", " YUV12 ", " YUV16 ", "
             "AYUV, Y444, Y42B, I420, Y41B, YUV9, " "GRAY8, " GRAY16 " }"))
     );
 
@@ -544,47 +550,6 @@ fill_frame_packed8_3 (GstOpenJPEGDec * self, GstVideoFrame * frame,
   }
 }
 
-static void
-fill_frame_packed16_3 (GstOpenJPEGDec * self, GstVideoFrame * frame,
-    opj_image_t * image)
-{
-  gint x, y, y0, y1, w, c;
-  guint16 *data_out, *tmp;
-  const gint *data_in[3];
-  gint dstride;
-  gint shift[3], off[3];
-
-  w = GST_VIDEO_FRAME_WIDTH (frame);
-  data_out = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) / 2;
-
-  for (c = 0; c < 3; c++) {
-    data_in[c] = image->comps[c].data;
-    off[c] = (1 << (image->comps[c].prec - 1)) * image->comps[c].sgnd;
-    shift[c] =
-        MAX (MIN (GST_VIDEO_FRAME_COMP_DEPTH (frame, c) - image->comps[c].prec,
-            8), 0);
-  }
-
-  y0 = image->y0;
-  y1 = image->y1;
-  data_out += y0 * dstride;
-  for (y = y0; y < y1; y++) {
-    tmp = data_out;
-    for (x = 0; x < w; x++) {
-      tmp[1] = off[0] + (*data_in[0] << shift[0]);
-      tmp[2] = off[1] + (*data_in[1] << shift[1]);
-      tmp[3] = off[2] + (*data_in[2] << shift[2]);
-
-      tmp += 4;
-      data_in[0]++;
-      data_in[1]++;
-      data_in[2]++;
-    }
-    data_out += dstride;
-  }
-}
-
 /* for grayscale with alpha */
 static void
 fill_frame_packed8_2 (GstOpenJPEGDec * self, GstVideoFrame * frame,
@@ -760,9 +725,11 @@ fill_frame_planar8_3 (GstOpenJPEGDec * self, GstVideoFrame * frame,
   }
 }
 
+static const gint passthrough_comp_map[3] = { 0, 1, 2 };
+
 static void
-fill_frame_planar16_3 (GstOpenJPEGDec * self, GstVideoFrame * frame,
-    opj_image_t * image)
+fill_frame_planar16_3_with_map (GstOpenJPEGDec * self, GstVideoFrame * frame,
+    opj_image_t * image, const gint * comp_map)
 {
   gint c, x, y, y0, y1, w;
   guint16 *data_out, *tmp;
@@ -772,14 +739,15 @@ fill_frame_planar16_3 (GstOpenJPEGDec * self, GstVideoFrame * frame,
 
   for (c = 0; c < 3; c++) {
     opj_image_comp_t *comp = image->comps + c;
+    gint fc = comp_map[c];
 
-    w = GST_VIDEO_FRAME_COMP_WIDTH (frame, c);
-    dstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, c) / 2;
-    data_out = (guint16 *) GST_VIDEO_FRAME_COMP_DATA (frame, c);
+    w = GST_VIDEO_FRAME_COMP_WIDTH (frame, fc);
+    dstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, fc) / 2;
+    data_out = (guint16 *) GST_VIDEO_FRAME_COMP_DATA (frame, fc);
     data_in = comp->data;
     off = (1 << (comp->prec - 1)) * comp->sgnd;
     shift =
-        MAX (MIN (GST_VIDEO_FRAME_COMP_DEPTH (frame, c) - comp->prec, 8), 0);
+        MAX (MIN (GST_VIDEO_FRAME_COMP_DEPTH (frame, fc) - comp->prec, 8), 0);
 
     /* copy only the stripe content (image) to the full size frame */
     y0 = comp->y0;
@@ -792,6 +760,13 @@ fill_frame_planar16_3 (GstOpenJPEGDec * self, GstVideoFrame * frame,
       data_out += dstride;
     }
   }
+}
+
+static void
+fill_frame_planar16_3 (GstOpenJPEGDec * self, GstVideoFrame * frame,
+    opj_image_t * image)
+{
+  fill_frame_planar16_3_with_map (self, frame, image, passthrough_comp_map);
 }
 
 static void
@@ -888,6 +863,7 @@ static GstFlowReturn
 gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
 {
   GstVideoFormat format;
+  gint prec = get_highest_prec (image);
 
   if (image->color_space == OPJ_CLRSPC_UNKNOWN || image->color_space == 0)
     image->color_space = self->color_space;
@@ -906,13 +882,13 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
           return GST_FLOW_NOT_NEGOTIATED;
         }
 
-        if (get_highest_prec (image) == 8) {
+        if (prec == 8) {
           self->fill_frame = fill_frame_packed8_4;
           format =
               reverse_rgb_channels (self->sampling) ? GST_VIDEO_FORMAT_ABGR :
               GST_VIDEO_FORMAT_ARGB;
 
-        } else if (get_highest_prec (image) <= 16) {
+        } else if (prec <= 16) {
           self->fill_frame = fill_frame_packed16_4;
           format = GST_VIDEO_FORMAT_ARGB64;
         } else {
@@ -927,17 +903,34 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
           return GST_FLOW_NOT_NEGOTIATED;
         }
 
-        if (get_highest_prec (image) == 8) {
+        if (prec == 8) {
           self->fill_frame = fill_frame_packed8_3;
           format =
               reverse_rgb_channels (self->sampling) ? GST_VIDEO_FORMAT_BGR :
               GST_VIDEO_FORMAT_RGB;
-        } else if (get_highest_prec (image) <= 16) {
-          self->fill_frame = fill_frame_packed16_3;
-          format = GST_VIDEO_FORMAT_ARGB64;
+        } else if (prec <= 10) {
+          self->fill_frame = fill_frame_planar16_3;
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+          format = GST_VIDEO_FORMAT_GBR_10LE;
+#else
+          format = GST_VIDEO_FORMAT_GBR_10BE;
+#endif
+        } else if (prec <= 12) {
+          self->fill_frame = fill_frame_planar16_3;
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+          format = GST_VIDEO_FORMAT_GBR_12LE;
+#else
+          format = GST_VIDEO_FORMAT_GBR_12BE;
+#endif
+        } else if (prec <= 16) {
+          self->fill_frame = fill_frame_planar16_3;
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+          format = GST_VIDEO_FORMAT_GBR_16LE;
+#else
+          format = GST_VIDEO_FORMAT_GBR_16BE;
+#endif
         } else {
-          GST_ERROR_OBJECT (self, "Unsupported depth %d",
-              get_highest_prec (image));
+          GST_ERROR_OBJECT (self, "Unsupported depth %d", prec);
           return GST_FLOW_NOT_NEGOTIATED;
         }
       } else {
@@ -953,10 +946,10 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
           return GST_FLOW_NOT_NEGOTIATED;
         }
 
-        if (get_highest_prec (image) == 8) {
+        if (prec == 8) {
           self->fill_frame = fill_frame_planar8_1;
           format = GST_VIDEO_FORMAT_GRAY8;
-        } else if (get_highest_prec (image) <= 16) {
+        } else if (prec <= 16) {
           self->fill_frame = fill_frame_planar16_1;
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
           format = GST_VIDEO_FORMAT_GRAY16_LE;
@@ -964,8 +957,7 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
           format = GST_VIDEO_FORMAT_GRAY16_BE;
 #endif
         } else {
-          GST_ERROR_OBJECT (self, "Unsupported depth %d",
-              get_highest_prec (image));
+          GST_ERROR_OBJECT (self, "Unsupported depth %d", prec);
           return GST_FLOW_NOT_NEGOTIATED;
         }
       } else if (image->numcomps == 2) {
@@ -974,15 +966,14 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
           GST_ERROR_OBJECT (self, "Sub-sampling for GRAY not supported");
           return GST_FLOW_NOT_NEGOTIATED;
         }
-        if (get_highest_prec (image) == 8) {
+        if (prec == 8) {
           self->fill_frame = fill_frame_packed8_2;
           format = GST_VIDEO_FORMAT_ARGB;
-        } else if (get_highest_prec (image) <= 16) {
+        } else if (prec <= 16) {
           self->fill_frame = fill_frame_packed16_2;
           format = GST_VIDEO_FORMAT_ARGB64;
         } else {
-          GST_ERROR_OBJECT (self, "Unsupported depth %d",
-              get_highest_prec (image));
+          GST_ERROR_OBJECT (self, "Unsupported depth %d", prec);
           return GST_FLOW_NOT_NEGOTIATED;
         }
       } else {
@@ -1016,7 +1007,7 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
           return GST_FLOW_NOT_NEGOTIATED;
         }
 
-        if (get_highest_prec (image) == 8) {
+        if (prec == 8) {
           self->fill_frame = fill_frame_packed8_4;
           format = GST_VIDEO_FORMAT_AYUV;
         } else if (image->comps[3].prec <= 16) {
@@ -1027,7 +1018,7 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
           return GST_FLOW_NOT_NEGOTIATED;
         }
       } else if (image->numcomps == 3) {
-        if (get_highest_prec (image) == 8) {
+        if (prec == 8) {
           if (image->comps[1].dx == 1 && image->comps[1].dy == 1) {
             self->fill_frame = fill_frame_planar8_3;
             format = GST_VIDEO_FORMAT_Y444;
@@ -1047,9 +1038,8 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
             self->fill_frame = fill_frame_planar8_3_generic;
             format = GST_VIDEO_FORMAT_AYUV;
           }
-        } else if (get_highest_prec (image) <= 16) {
-          if (image->comps[0].prec == 10 &&
-              image->comps[1].prec == 10 && image->comps[2].prec == 10) {
+        } else if (prec <= 16) {
+          if (prec <= 10) {
             if (image->comps[1].dx == 1 && image->comps[1].dy == 1) {
               self->fill_frame = fill_frame_planar16_3;
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
@@ -1075,13 +1065,48 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
               self->fill_frame = fill_frame_planar16_3_generic;
               format = GST_VIDEO_FORMAT_AYUV64;
             }
+          } else if (prec <= 12) {
+            if (image->comps[1].dx == 1 && image->comps[1].dy == 1) {
+              self->fill_frame = fill_frame_planar16_3;
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+              format = GST_VIDEO_FORMAT_Y444_12LE;
+#else
+              format = GST_VIDEO_FORMAT_Y444_12BE;
+#endif
+            } else if (image->comps[1].dx == 2 && image->comps[1].dy == 1) {
+              self->fill_frame = fill_frame_planar16_3;
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+              format = GST_VIDEO_FORMAT_I422_12LE;
+#else
+              format = GST_VIDEO_FORMAT_I422_12BE;
+#endif
+            } else if (image->comps[1].dx == 2 && image->comps[1].dy == 2) {
+              self->fill_frame = fill_frame_planar16_3;
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+              format = GST_VIDEO_FORMAT_I420_12LE;
+#else
+              format = GST_VIDEO_FORMAT_I420_12BE;
+#endif
+            } else {
+              self->fill_frame = fill_frame_planar16_3_generic;
+              format = GST_VIDEO_FORMAT_AYUV64;
+            }
           } else {
-            self->fill_frame = fill_frame_planar16_3_generic;
-            format = GST_VIDEO_FORMAT_AYUV64;
+            /* 13-16 bit: only 4:4:4 has a native GStreamer format */
+            if (image->comps[1].dx == 1 && image->comps[1].dy == 1) {
+              self->fill_frame = fill_frame_planar16_3;
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+              format = GST_VIDEO_FORMAT_Y444_16LE;
+#else
+              format = GST_VIDEO_FORMAT_Y444_16BE;
+#endif
+            } else {
+              self->fill_frame = fill_frame_planar16_3_generic;
+              format = GST_VIDEO_FORMAT_AYUV64;
+            }
           }
         } else {
-          GST_ERROR_OBJECT (self, "Unsupported depth %d",
-              get_highest_prec (image));
+          GST_ERROR_OBJECT (self, "Unsupported depth %d", prec);
           return GST_FLOW_NOT_NEGOTIATED;
         }
       } else {

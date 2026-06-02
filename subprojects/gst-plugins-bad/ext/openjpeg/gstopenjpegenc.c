@@ -130,17 +130,23 @@ static GstOpenJPEGCodecMessage
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define GRAY16 "GRAY16_LE"
 #define YUV10 "Y444_10LE, I422_10LE, I420_10LE"
+#define YUV12 "Y444_12LE, I422_12LE, I420_12LE"
+#define YUV16 "Y444_16LE"
+#define GBR "GBR_10LE, GBR_12LE, GBR_16LE"
 #else
 #define GRAY16 "GRAY16_BE"
 #define YUV10 "Y444_10BE, I422_10BE, I420_10BE"
+#define YUV12 "Y444_12BE, I422_12BE, I420_12BE"
+#define YUV16 "Y444_16BE"
+#define GBR "GBR_10BE, GBR_12BE, GBR_16BE"
 #endif
 
 static GstStaticPadTemplate gst_openjpeg_enc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ ARGB64, ARGB, xRGB, "
-            "AYUV64, " YUV10 ", "
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ ARGB64, ARGB, xRGB, " GBR ", "
+            "AYUV64, " YUV10 ", " YUV12 ", " YUV16 ", "
             "AYUV, Y444, Y42B, I420, Y41B, YUV9, " "GRAY8, " GRAY16 " }"))
     );
 
@@ -614,7 +620,8 @@ fill_image_packed8_3 (opj_image_t * image, GstVideoFrame * frame)
 }
 
 static void
-fill_image_planar16_3 (opj_image_t * image, GstVideoFrame * frame)
+fill_image_planar16_3_with_map (opj_image_t * image, GstVideoFrame * frame,
+    const gint * comp_map)
 {
   gint c, x, y, w, h;
   const guint16 *data_in, *tmp;
@@ -623,13 +630,14 @@ fill_image_planar16_3 (opj_image_t * image, GstVideoFrame * frame)
 
   for (c = 0; c < 3; c++) {
     opj_image_comp_t *comp = image->comps + c;
+    gint fc = comp_map ? comp_map[c] : c;
 
-    w = GST_VIDEO_FRAME_COMP_WIDTH (frame, c);
+    w = GST_VIDEO_FRAME_COMP_WIDTH (frame, fc);
     h = comp->h;
-    sstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, c) / 2;
+    sstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, fc) / 2;
     data_in =
         (guint16 *) GST_VIDEO_FRAME_COMP_DATA (frame,
-        c) + (image->y0 / comp->dy) * sstride;
+        fc) + (image->y0 / comp->dy) * sstride;
     data_out = comp->data;
 
     for (y = 0; y < h; y++) {
@@ -642,6 +650,12 @@ fill_image_planar16_3 (opj_image_t * image, GstVideoFrame * frame)
       data_in += sstride;
     }
   }
+}
+
+static void
+fill_image_planar16_3 (opj_image_t * image, GstVideoFrame * frame)
+{
+  fill_image_planar16_3_with_map (image, frame, NULL);
 }
 
 static void
@@ -816,6 +830,23 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
     case GST_VIDEO_FORMAT_I422_10BE:
     case GST_VIDEO_FORMAT_I420_10LE:
     case GST_VIDEO_FORMAT_I420_10BE:
+    case GST_VIDEO_FORMAT_Y444_12LE:
+    case GST_VIDEO_FORMAT_Y444_12BE:
+    case GST_VIDEO_FORMAT_I422_12LE:
+    case GST_VIDEO_FORMAT_I422_12BE:
+    case GST_VIDEO_FORMAT_I420_12LE:
+    case GST_VIDEO_FORMAT_I420_12BE:
+    case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_Y444_16BE:
+      self->fill_image = fill_image_planar16_3;
+      ncomps = 3;
+      break;
+    case GST_VIDEO_FORMAT_GBR_10LE:
+    case GST_VIDEO_FORMAT_GBR_10BE:
+    case GST_VIDEO_FORMAT_GBR_12LE:
+    case GST_VIDEO_FORMAT_GBR_12BE:
+    case GST_VIDEO_FORMAT_GBR_16LE:
+    case GST_VIDEO_FORMAT_GBR_16BE:
       self->fill_image = fill_image_planar16_3;
       ncomps = 3;
       break;
@@ -852,16 +883,28 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
       sampling = GST_JPEG2000_SAMPLING_YBRA4444_EXT;
       break;
     case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_GBR_10LE:
+    case GST_VIDEO_FORMAT_GBR_10BE:
+    case GST_VIDEO_FORMAT_GBR_12LE:
+    case GST_VIDEO_FORMAT_GBR_12BE:
+    case GST_VIDEO_FORMAT_GBR_16LE:
+    case GST_VIDEO_FORMAT_GBR_16BE:
       sampling = GST_JPEG2000_SAMPLING_RGB;
       break;
     case GST_VIDEO_FORMAT_Y444_10LE:
     case GST_VIDEO_FORMAT_Y444_10BE:
+    case GST_VIDEO_FORMAT_Y444_12LE:
+    case GST_VIDEO_FORMAT_Y444_12BE:
+    case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_Y444_16BE:
     case GST_VIDEO_FORMAT_Y444:
       sampling = GST_JPEG2000_SAMPLING_YBR444;
       break;
 
     case GST_VIDEO_FORMAT_I422_10LE:
     case GST_VIDEO_FORMAT_I422_10BE:
+    case GST_VIDEO_FORMAT_I422_12LE:
+    case GST_VIDEO_FORMAT_I422_12BE:
     case GST_VIDEO_FORMAT_Y42B:
       sampling = GST_JPEG2000_SAMPLING_YBR422;
       break;
@@ -873,6 +916,8 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
       break;
     case GST_VIDEO_FORMAT_I420_10LE:
     case GST_VIDEO_FORMAT_I420_10BE:
+    case GST_VIDEO_FORMAT_I420_12LE:
+    case GST_VIDEO_FORMAT_I420_12BE:
     case GST_VIDEO_FORMAT_I420:
       sampling = GST_JPEG2000_SAMPLING_YBR420;
       break;
