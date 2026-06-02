@@ -1250,6 +1250,8 @@ gst_rtcp_packet_sdes_get_item_count (GstRTCPPacket * packet)
 gboolean
 gst_rtcp_packet_sdes_first_item (GstRTCPPacket * packet)
 {
+  guint len;
+
   g_return_val_if_fail (packet != NULL, FALSE);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_SDES, FALSE);
 
@@ -1258,6 +1260,13 @@ gst_rtcp_packet_sdes_first_item (GstRTCPPacket * packet)
   packet->entry_offset = 4;
 
   if (packet->count == 0)
+    return FALSE;
+
+  /* don't overrun - use total packet size */
+  len = (packet->length + 1) << 2;
+
+  /* need at least space for the SSRC and one entry */
+  if (packet->item_offset + packet->entry_offset + 4 > len)
     return FALSE;
 
   return TRUE;
@@ -1295,8 +1304,8 @@ gst_rtcp_packet_sdes_next_item (GstRTCPPacket * packet)
   /* skip SSRC */
   offset += 4;
 
-  /* don't overrun */
-  len = (packet->length << 2);
+  /* don't overrun - use total packet size */
+  len = (packet->length + 1) << 2;
 
   while (offset < len) {
     if (data[offset] == 0) {
@@ -1304,9 +1313,13 @@ gst_rtcp_packet_sdes_next_item (GstRTCPPacket * packet)
       offset = (offset + 4) & ~3;
       break;
     }
+    if (offset + 1 >= len)
+      return FALSE;
     offset += data[offset + 1] + 2;
   }
-  if (offset >= len)
+
+  /* needs at least SSRC and one item plus padding */
+  if (offset + 4 + 4 > len)
     return FALSE;
 
   packet->item_offset = offset;
@@ -1328,7 +1341,7 @@ guint32
 gst_rtcp_packet_sdes_get_ssrc (GstRTCPPacket * packet)
 {
   guint32 ssrc;
-  guint8 *data;
+  const guint8 *data;
 
   g_return_val_if_fail (packet != NULL, 0);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_SDES, 0);
@@ -1337,11 +1350,18 @@ gst_rtcp_packet_sdes_get_ssrc (GstRTCPPacket * packet)
 
   /* move to SDES */
   data = packet->rtcp->map.data;
-  data += packet->offset;
+  guint offset = packet->offset;
   /* move to item */
-  data += packet->item_offset;
+  offset += packet->item_offset;
 
-  ssrc = GST_READ_UINT32_BE (data);
+  /* don't overrun - use total packet size */
+  guint len = (packet->length + 1) << 2;
+
+  /* needs at least SSRC and one item plus padding */
+  if (offset + 4 + 4 > len)
+    return 0;
+
+  ssrc = GST_READ_UINT32_BE (data + offset);
 
   return ssrc;
 }
@@ -1375,12 +1395,16 @@ gst_rtcp_packet_sdes_first_entry (GstRTCPPacket * packet)
 
   packet->entry_offset = 4;
 
-  /* don't overrun */
-  len = (packet->length << 2);
+  /* don't overrun - use total packet size */
+  len = (packet->length + 1) << 2;
   if (offset >= len)
     return FALSE;
 
   if (data[offset] == 0)
+    return FALSE;
+
+  /* need at least id, length and padding */
+  if (offset + 4 > len)
     return FALSE;
 
   return TRUE;
@@ -1413,8 +1437,8 @@ gst_rtcp_packet_sdes_next_entry (GstRTCPPacket * packet)
   /* move to entry */
   offset += packet->entry_offset;
 
-  /* don't overrun - check before reading item_len */
-  len = (packet->length << 2);
+  /* don't overrun - use total packet size */
+  len = (packet->length + 1) << 2;
   if (offset + 1 >= len)
     return FALSE;
 
@@ -1430,6 +1454,15 @@ gst_rtcp_packet_sdes_next_entry (GstRTCPPacket * packet)
 
   /* check for end of list */
   if (data[offset] == 0)
+    return FALSE;
+
+  /* need at least id and length */
+  if (offset + 1 >= len)
+    return FALSE;
+
+  /* validate the full entry fits */
+  item_len = data[offset + 1] + 2;
+  if (offset + item_len > len)
     return FALSE;
 
   return TRUE;
@@ -1472,21 +1505,23 @@ gst_rtcp_packet_sdes_get_entry (GstRTCPPacket * packet,
   /* move to entry */
   offset += packet->entry_offset;
 
-  /* Warn if potentially accessing out of bounds */
-  guint pkt_len = (packet->length << 2);
-  if (offset + 1 >= pkt_len) {
-    GST_WARNING ("SDES entry offset %u exceeds packet length %u", offset,
-        pkt_len);
+  /* use total packet size */
+  guint pkt_len = (packet->length + 1) << 2;
+  if (offset + 2 >= pkt_len)
     return FALSE;
-  }
 
-  if (bdata[offset] == 0)
+  guint item_type = bdata[offset];
+  if (item_type == 0)
+    return FALSE;
+
+  guint item_length = bdata[offset + 1];
+  if (offset + 2 + item_length > pkt_len)
     return FALSE;
 
   if (type)
-    *type = bdata[offset];
+    *type = item_type;
   if (len)
-    *len = bdata[offset + 1];
+    *len = item_length;
   if (data)
     *data = &bdata[offset + 2];
 
