@@ -5,6 +5,7 @@ vulkan_sources = [
   'vkdownload.c',
   'vkdeviceprovider.c',
   'vksink.c',
+  'vkupload-ahb.c',
   'vkupload.c',
 ]
 
@@ -66,6 +67,14 @@ endif
 
 extra_deps = []
 extra_args = []
+
+if host_system == 'android' and gstallocators_dep.found()
+  extra_deps += [
+    gstallocators_dep,
+    cc.find_library('android', required : true),
+    gmodule_dep,
+  ]
+endif
 
 vulkan_plugin_enums = []
 

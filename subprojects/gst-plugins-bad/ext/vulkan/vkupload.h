@@ -56,6 +56,10 @@ struct UploadMethod
   gboolean          (*update_output_usage)      (gpointer impl,
                                                  VkImageUsageFlags downstream_usage,
                                                  VkImageUsageFlags * usage);
+  gboolean          (*copy_metadata)            (gpointer impl,
+                                                 GstVulkanUpload * upload,
+                                                 GstBuffer * inbuf,
+                                                 GstBuffer * outbuf);
   GstFlowReturn     (*perform)                  (gpointer impl,
                                                  GstBuffer * buffer,
                                                  GstBuffer ** outbuf);

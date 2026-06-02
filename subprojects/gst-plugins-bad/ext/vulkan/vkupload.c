@@ -33,6 +33,7 @@
 #include "gstvulkanelements.h"
 #include "gstvkutils.h"
 #include "vkupload.h"
+#include "vkupload-ahb.h"
 
 GST_DEBUG_CATEGORY (gst_debug_vulkan_upload);
 #define GST_CAT_DEFAULT gst_debug_vulkan_upload
@@ -153,6 +154,18 @@ _default_update_output_usage (gpointer impl, VkImageUsageFlags downstream_usage,
   return TRUE;
 }
 
+static gboolean
+_default_copy_metadata (gpointer impl, GstVulkanUpload * upload,
+    GstBuffer * inbuf, GstBuffer * outbuf)
+{
+  GstBaseTransform *transform = GST_BASE_TRANSFORM_CAST (upload);
+  GstBaseTransformClass *bclass = GST_BASE_TRANSFORM_GET_CLASS (transform);
+
+  (void) impl;
+
+  return bclass->copy_metadata (transform, inbuf, outbuf);
+}
+
 static GstFlowReturn
 _buffer_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
 {
@@ -185,6 +198,7 @@ static const struct UploadMethod buffer_upload = {
   _buffer_set_caps,
   gst_vulkan_upload_buffer_propose_allocation,
   _default_update_output_usage,
+  _default_copy_metadata,
   _buffer_perform,
   _buffer_free,
 };
@@ -317,6 +331,7 @@ static const struct UploadMethod raw_to_buffer_upload = {
   _raw_to_buffer_set_caps,
   _raw_to_buffer_propose_allocation,
   _default_update_output_usage,
+  _default_copy_metadata,
   _raw_to_buffer_perform,
   _raw_to_buffer_free,
 };
@@ -578,6 +593,7 @@ static const struct UploadMethod buffer_to_image_upload = {
   _buffer_to_image_set_caps,
   _buffer_to_image_propose_allocation,
   _default_update_output_usage,
+  _default_copy_metadata,
   _buffer_to_image_perform,
   _buffer_to_image_free,
 };
@@ -925,6 +941,7 @@ static const struct UploadMethod raw_to_image_upload = {
   _raw_to_image_set_caps,
   _raw_to_image_propose_allocation,
   _default_update_output_usage,
+  _default_copy_metadata,
   _raw_to_image_perform,
   _raw_to_image_free,
 };
@@ -934,6 +951,9 @@ static const struct UploadMethod *upload_methods[] = {
   &raw_to_buffer_upload,
   &raw_to_image_upload,
   &buffer_to_image_upload,
+#if GST_VULKAN_UPLOAD_HAVE_AHB
+  &gst_vulkan_upload_ahb_method,
+#endif
 };
 
 static GstCaps *
@@ -1491,7 +1511,6 @@ static GstFlowReturn
 gst_vulkan_upload_prepare_output_buffer (GstBaseTransform * bt,
     GstBuffer * inbuf, GstBuffer ** outbuf)
 {
-  GstBaseTransformClass *bclass = GST_BASE_TRANSFORM_GET_CLASS (bt);
   GstVulkanUpload *vk_upload = GST_VULKAN_UPLOAD (bt);
   GstFlowReturn ret;
 
@@ -1526,8 +1545,13 @@ restart:
 
   if (ret == GST_FLOW_OK) {
     /* basetransform doesn't unref if they're the same */
-    if (inbuf != *outbuf)
-      bclass->copy_metadata (bt, inbuf, *outbuf);
+    if (inbuf != *outbuf) {
+      const struct UploadMethod *method =
+          upload_methods[vk_upload->current_impl];
+      gpointer method_impl = vk_upload->upload_impls[vk_upload->current_impl];
+
+      method->copy_metadata (method_impl, vk_upload, inbuf, *outbuf);
+    }
   }
 
   return ret;
