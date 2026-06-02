@@ -29,6 +29,7 @@ struct _GstWlOutput
 {
   GObject parent;
 
+  GstWlOutput *shared;
   struct wl_output *output;
   guint32 global_id;
 
@@ -69,7 +70,10 @@ gst_wl_output_finalize (GObject * object)
   g_free (self->geometry.make);
   g_free (self->geometry.model);
 
-  wl_output_destroy (self->output);
+  if (self->shared)
+    g_object_unref (self->shared);
+  if (self->output)
+    wl_output_destroy (self->output);
 
   G_OBJECT_CLASS (gst_wl_output_parent_class)->finalize (object);
 }
@@ -103,6 +107,28 @@ gst_wl_output_new (struct wl_output *output, guint32 global_id)
   self->global_id = global_id;
 
   return self;
+}
+
+GstWlOutput *
+gst_wl_output_clone (GstWlOutput * self)
+{
+  GstWlOutput *clone = GST_WL_OUTPUT (g_object_new (GST_TYPE_WL_OUTPUT, NULL));
+
+  clone->shared = g_object_ref_sink (self);
+  clone->global_id = self->global_id;
+
+  clone->name = g_strdup (self->name);
+  clone->description = g_strdup (self->description);
+
+  clone->scale_factor = self->scale_factor;
+
+  clone->geometry = self->geometry;
+  clone->geometry.make = g_strdup (self->geometry.make);
+  clone->geometry.model = g_strdup (self->geometry.model);
+
+  clone->mode = self->mode;
+
+  return clone;
 }
 
 /**
@@ -222,7 +248,10 @@ gst_wl_output_set_mode (GstWlOutput * self, guint flags, gint width,
 struct wl_output *
 gst_wl_output_get_wl_output (GstWlOutput * self)
 {
-  return self->output;
+  if (self->shared)
+    return self->shared->output;
+  else
+    return self->output;
 }
 
 /**
