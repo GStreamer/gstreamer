@@ -1684,7 +1684,7 @@ get_profile_format_from_possible_factory_name (const gchar * factory_desc,
   if (is_rendering_muxer)
     *is_rendering_muxer = FALSE;
   *new_factory_name = NULL;
-  if (gst_caps_get_size (tmpcaps) != 1)
+  if (!tmpcaps || gst_caps_get_size (tmpcaps) != 1)
     goto done;
 
   tmpstruct = gst_caps_get_structure (tmpcaps, 0);
@@ -1707,12 +1707,14 @@ get_profile_format_from_possible_factory_name (const gchar * factory_desc,
     if (templ->direction == GST_PAD_SRC) {
       GstCaps *tmpcaps = gst_static_caps_get (&templ->static_caps);
 
-      if (gst_caps_get_size (tmpcaps) > 0)
-        caps =
-            gst_caps_new_empty_simple (gst_structure_get_name
-            (gst_caps_get_structure (tmpcaps, 0)));
+      if (tmpcaps) {
+        if (gst_caps_get_size (tmpcaps) > 0)
+          caps =
+              gst_caps_new_empty_simple (gst_structure_get_name
+              (gst_caps_get_structure (tmpcaps, 0)));
 
-      gst_caps_unref (tmpcaps);
+        gst_caps_unref (tmpcaps);
+      }
       if (caps)
         break;
     }
