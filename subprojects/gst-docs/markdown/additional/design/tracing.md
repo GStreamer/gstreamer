@@ -306,8 +306,8 @@ extensions)
     - stack-traces-flags: Flags to use when generating stack trace (does not generate stack trace
       if not set), valid values are “full” to retrieve as much information as possible in the
       backtrace, or “none” for a simple backtrace (usually does not contain line number or source files).
-      This may significantly increase memory consumption. (You can also set the `GST_LEAKS_TRACER_STACK_TRACE`
-      environment variable for that).
+      This may significantly increase memory consumption.
+        example: `GST_TRACERS='leaks(stack-traces-flags=full)' COMMAND`
     - filters: (string): A comma separated list of object types to trace (make sure to enclose in
       quotation marks)
 
@@ -315,12 +315,6 @@ extensions)
 
 ```
 GST_TRACERS=leaks(stack-traces-flags=full,filters=”GstProxyPad”,check-refs=true) COMMAND
-```
-
-**Run the leaks tracer on all (mini)objects logging the references with less complete backtraces**
-
-```
-GST_TRACERS=leaks(stack-traces-flags=fast,check-refs=true) COMMAND
 ```
 
 - If the `GST_LEAKS_TRACER_SIG` env variable is defined the tracer
