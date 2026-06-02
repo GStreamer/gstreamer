@@ -265,7 +265,7 @@ gst_wl_output_get_wl_output (GstWlOutput * self)
 guint32
 gst_wl_output_get_id (GstWlOutput * self)
 {
-  return wl_proxy_get_id ((struct wl_proxy *) self->output);
+  return self->global_id;
 }
 
 /**
