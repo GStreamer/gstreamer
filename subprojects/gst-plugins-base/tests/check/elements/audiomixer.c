@@ -1966,9 +1966,11 @@ GST_END_TEST;
  * and require the audiomixer to output 1.5 second long buffers.
  *
  * After we have input two buffers, we change the output format
- * from S8 to S32, then push a last buffer.
+ * from S8 to S32, then push another buffer. After checking that the buffer
+ * is what we expect, just proceed to prove we continually normally with one
+ * last buffer.
  *
- * This makes audioaggregator convert its "half-mixed" current_buffer,
+ * audioaggregator should drop its "half-mixed" current_buffer,
  * we can then ensure that the second output buffer is as expected.
  */
 GST_START_TEST (test_change_output_caps_mid_output_buffer)
@@ -1984,7 +1986,6 @@ GST_START_TEST (test_change_output_caps_mid_output_buffer)
   GstBuffer *buffer;
   GstCaps *caps;
   GstQuery *drain;
-  GstMapInfo inmap;
   GstMapInfo outmap;
   guint i;
 
@@ -2024,25 +2025,31 @@ GST_START_TEST (test_change_output_caps_mid_output_buffer)
 
   gst_segment_init (&segment, GST_FORMAT_TIME);
   segment.start = 0;
-  segment.stop = 3 * GST_SECOND;
+  segment.stop = 4.5 * GST_SECOND;
   segment.time = 0;
   event = gst_event_new_segment (&segment);
   gst_pad_send_event (sinkpad, event);
+
+  gst_clear_buffer (&handoff_buffer);
+  g_object_set (sink, "signal-handoffs", TRUE, NULL);
+  g_signal_connect (sink, "handoff", (GCallback) handoff_buffer_cb, NULL);
 
   buffer = new_buffer (10, 0, 0, 1 * GST_SECOND, 0);
   ret = gst_pad_chain (sinkpad, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
-  buffer = new_buffer (10, 0, 1 * GST_SECOND, 1 * GST_SECOND, 0);
-  gst_buffer_map (buffer, &inmap, GST_MAP_WRITE);
-  memset (inmap.data, 1, 10);
-  gst_buffer_unmap (buffer, &inmap);
+  buffer = new_buffer (10, 1, 1 * GST_SECOND, 1 * GST_SECOND, 0);
   ret = gst_pad_chain (sinkpad, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
   drain = gst_query_new_drain ();
   gst_pad_query (sinkpad, drain);
   gst_query_unref (drain);
+
+  fail_unless (handoff_buffer);
+  fail_unless_equals_int (gst_buffer_get_size (handoff_buffer), 15);
+  fail_unless_equals_clocktime (GST_BUFFER_PTS (handoff_buffer), 0);
+  gst_clear_buffer (&handoff_buffer);
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (S32),
@@ -2051,14 +2058,7 @@ GST_START_TEST (test_change_output_caps_mid_output_buffer)
   g_object_set (capsfilter, "caps", caps, NULL);
   gst_caps_unref (caps);
 
-  gst_buffer_replace (&handoff_buffer, NULL);
-  g_object_set (sink, "signal-handoffs", TRUE, NULL);
-  g_signal_connect (sink, "handoff", (GCallback) handoff_buffer_cb, NULL);
-
-  buffer = new_buffer (10, 0, 2 * GST_SECOND, 1 * GST_SECOND, 0);
-  gst_buffer_map (buffer, &inmap, GST_MAP_WRITE);
-  memset (inmap.data, 0, 10);
-  gst_buffer_unmap (buffer, &inmap);
+  buffer = new_buffer (10, 2, 2 * GST_SECOND, 1 * GST_SECOND, 0);
   ret = gst_pad_chain (sinkpad, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
@@ -2068,6 +2068,8 @@ GST_START_TEST (test_change_output_caps_mid_output_buffer)
 
   fail_unless (handoff_buffer);
   fail_unless_equals_int (gst_buffer_get_size (handoff_buffer), 60);
+  fail_unless_equals_clocktime (GST_BUFFER_PTS (handoff_buffer),
+      1.5 * GST_SECOND);
 
   gst_buffer_map (handoff_buffer, &outmap, GST_MAP_READ);
   for (i = 0; i < 15; i++) {
@@ -2080,10 +2082,40 @@ GST_START_TEST (test_change_output_caps_mid_output_buffer)
 #endif
 
     if (i < 5) {
-      fail_unless_equals_int (sample, 1 << 24);
-    } else {
+      /* Silence fill */
       fail_unless_equals_int (sample, 0);
+    } else {
+      fail_unless_equals_int (sample, 2 << 24);
     }
+  }
+
+  gst_buffer_unmap (handoff_buffer, &outmap);
+  gst_clear_buffer (&handoff_buffer);
+
+  buffer = new_buffer (15, 3, 3 * GST_SECOND, 1.5 * GST_SECOND, 0);
+  ret = gst_pad_chain (sinkpad, buffer);
+  ck_assert_int_eq (ret, GST_FLOW_OK);
+
+  drain = gst_query_new_drain ();
+  gst_pad_query (sinkpad, drain);
+  gst_query_unref (drain);
+
+  fail_unless (handoff_buffer);
+  fail_unless_equals_int (gst_buffer_get_size (handoff_buffer), 60);
+  fail_unless_equals_clocktime (GST_BUFFER_PTS (handoff_buffer),
+      3 * GST_SECOND);
+
+  gst_buffer_map (handoff_buffer, &outmap, GST_MAP_READ);
+  for (i = 0; i < 15; i++) {
+    guint32 sample;
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    sample = GUINT32_FROM_LE (((guint32 *) outmap.data)[i]);
+#else
+    sample = GUINT32_FROM_BE (((guint32 *) outmap.data)[i]);
+#endif
+
+    fail_unless_equals_int (sample, 3 << 24);
   }
 
   gst_buffer_unmap (handoff_buffer, &outmap);

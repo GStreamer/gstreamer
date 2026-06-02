@@ -1224,27 +1224,21 @@ gst_audio_aggregator_update_converters (GstAudioAggregator * aagg,
     GstAudioAggregatorPadClass *klass =
         GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (aaggpad);
 
+    GST_OBJECT_LOCK (aaggpad);
     if (klass->update_conversion_info)
       klass->update_conversion_info (aaggpad);
 
-    /* If we currently were mixing a buffer, we need to convert it to the new
-     * format */
-    if (aaggpad->priv->buffer) {
-      if (klass->convert_buffer) {
-        GstBuffer *new_converted_buffer =
-            gst_audio_aggregator_convert_buffer (aagg, GST_PAD (aaggpad),
-            old_info, new_info, aaggpad->priv->buffer);
-        gst_buffer_unref (aaggpad->priv->buffer);
-        aaggpad->priv->buffer = new_converted_buffer;
-        if (!new_converted_buffer) {
-          GST_WARNING_OBJECT (aaggpad,
-              "Caps have changed and have a current buffer but conversion failed -- dropping");
-        }
-      } else {
-        // Otherwise the buffer is simply kept and used for further output. The
-        // subclass must be able to handle it correctly despite srcpad caps changes.
-      }
-    }
+    /* If we are currently mixing a converted buffer, we need to convert it to
+     * the new format. Clearing it without using gst_aggregator_pad_drop_buffer
+     * will cause the next aggregation to grab the original buffer from the pad
+     * again, convert and realign it. */
+    if (klass->convert_buffer)
+      gst_clear_buffer (&aaggpad->priv->buffer);
+
+    /* Otherwise the buffer is simply kept and used for further output.
+     * The subclass must be able to handle it correctly despite srcpad
+     * caps changes. */
+    GST_OBJECT_UNLOCK (aaggpad);
   }
 
   return TRUE;
@@ -1295,26 +1289,13 @@ gst_audio_aggregator_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
               srcpad));
 
     if (aagg->priv->current_buffer) {
-      if (srcpad_klass->convert_buffer) {
-        GstBuffer *converted;
-
-        converted =
-            gst_audio_aggregator_convert_buffer (aagg, agg->srcpad, &old_info,
-            &info, aagg->priv->current_buffer);
-        gst_buffer_unref (aagg->priv->current_buffer);
-        aagg->priv->current_buffer = converted;
-        if (!converted) {
-          GST_WARNING_OBJECT (aagg,
-              "Caps have changed and have a current buffer but conversion failed -- dropping");
-          GST_OBJECT_UNLOCK (aagg);
-          GST_AUDIO_AGGREGATOR_UNLOCK (aagg);
-          return FALSE;
-        }
-      } else {
-        GST_WARNING_OBJECT (aagg,
-            "Caps have changed and have a current buffer but can't convert -- dropping");
-        gst_clear_buffer (&aagg->priv->current_buffer);
-      }
+      /* The new format might have a different sample rate or a different
+       * channel configuration. If we just convert the output buffer from the
+       * old format to the next one, we might write glitched data. Best to just
+       * drop it and start with a new buffer. */
+      GST_WARNING_OBJECT (aagg,
+          "Caps have changed and have a current buffer -- dropping");
+      gst_clear_buffer (&aagg->priv->current_buffer);
     }
   }
 
