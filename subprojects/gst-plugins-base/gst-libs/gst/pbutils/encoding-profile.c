@@ -1658,7 +1658,7 @@ combo_search (const gchar * pname)
   /* Splitup */
   split = g_strsplit (pname, "/", 3);
   split_length = g_strv_length (split);
-  if (split_length > 3)
+  if (split_length > 3 || split_length <= 0)
     goto done;
 
   res = gst_encoding_profile_find (split[0],
