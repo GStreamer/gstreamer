@@ -231,6 +231,8 @@ GST_START_TEST (test_openjpeg_simple)
   int i;
   const gchar *in_format_list[] = {
     "ARGB64", "ARGB", "xRGB", "AYUV64", "Y444_10LE", "I422_10LE", "I420_10LE",
+    "Y444_12LE", "I422_12LE", "I420_12LE", "Y444_16LE",
+    "GBR_10LE", "GBR_12LE", "GBR_16LE",
     "AYUV", "Y444", "Y42B", "Y41B", "YUV9", "I420", "GRAY8", "GRAY16_LE"
   };
 
