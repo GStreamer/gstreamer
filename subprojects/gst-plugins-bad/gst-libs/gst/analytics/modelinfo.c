@@ -518,6 +518,11 @@ gst_analytics_modelinfo_load (const gchar * model_filename)
   GST_DEBUG_CATEGORY_INIT (analytics_modelinfo_debug, "modelinfo",
       0, "analytics model info");
 
+  if (!model_filename) {
+    GST_ERROR ("model_filename is NULL");
+    return NULL;
+  }
+
   filename = g_strconcat (model_filename, ".modelinfo", NULL);
   ret = g_key_file_load_from_file (kf, filename, G_KEY_FILE_NONE, NULL);
   g_free (filename);

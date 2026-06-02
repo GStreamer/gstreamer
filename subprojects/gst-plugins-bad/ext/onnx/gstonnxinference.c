@@ -743,9 +743,10 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   }
 
   if (self->model_file == NULL) {
+    GST_OBJECT_UNLOCK (self);
     GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
         ("model-file property not set"));
-    goto done;
+    goto error_no_lock;
   }
 
   modelinfo = gst_analytics_modelinfo_load (self->model_file);
@@ -754,11 +755,6 @@ gst_onnx_inference_start (GstBaseTransform * trans)
         "This could be due to: file not found, unsupported version, "
         "or invalid file format.", self->model_file);
     goto error;
-  }
-
-  if (self->session) {
-    ret = TRUE;
-    goto done;
   }
   // Create environment
   OrtLoggingLevel ort_logging;
@@ -819,10 +815,11 @@ gst_onnx_inference_start (GstBaseTransform * trans)
 
   status = api->SetSessionGraphOptimizationLevel (session_options, onnx_optim);
   if (status) {
+    GST_OBJECT_UNLOCK (self);
     GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
         ("Failed to set optimization level: %s",
             api->GetErrorMessage (status)));
-    goto error;
+    goto error_no_lock;
   }
   // Set execution provider
   switch (self->execution_provider) {
@@ -952,7 +949,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
 
   status = api->SessionGetOutputCount (self->session, &self->output_count);
   if (status) {
-    GST_ERROR_OBJECT (self, "Could to retrieve output count: %s",
+    GST_ERROR_OBJECT (self, "Failed to retrieve output count: %s",
         api->GetErrorMessage (status));
     goto error;
   }
@@ -1322,6 +1319,8 @@ done:
   return ret;
 
 error:
+  GST_OBJECT_UNLOCK (self);
+error_no_lock:
   if (status)
     api->ReleaseStatus (status);
   if (input_type_info)
@@ -1331,7 +1330,6 @@ error:
 
   if (modelinfo)
     gst_analytics_modelinfo_free (modelinfo);
-  GST_OBJECT_UNLOCK (self);
 
   gst_onnx_inference_stop (trans);
   return ret;
