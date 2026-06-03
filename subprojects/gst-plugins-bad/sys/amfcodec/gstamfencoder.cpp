@@ -630,7 +630,9 @@ gst_amf_encoder_open (GstVideoEncoder * encoder)
     goto error;
   }
 
+#ifdef HAVE_GST_VULKAN
   gst_amf_encoder_attach_requested_vulkan_extensions_context (self);
+#endif
 
   return TRUE;
 
