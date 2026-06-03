@@ -1158,8 +1158,10 @@ gst_value_unique_list_append_and_take_value (GValue * value,
   for (i = 0; i < gst_value_unique_list_get_size (value); i++) {
     p_val = gst_value_unique_list_get_value (value, i);
 
-    if (gst_value_compare (p_val, append_value) == GST_VALUE_EQUAL)
-      return;                   /* value already exist in set */
+    if (gst_value_compare (p_val, append_value) == GST_VALUE_EQUAL) {
+      g_value_unset (append_value);
+      return;
+    }
   }
 
   _gst_value_list_append_and_take_value (value, append_value);
