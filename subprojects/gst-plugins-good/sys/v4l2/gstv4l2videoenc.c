@@ -410,37 +410,15 @@ gst_v4l2_video_enc_set_format (GstVideoEncoder * encoder,
   output = gst_video_encoder_set_output_state (encoder, outcaps, state);
   gst_video_codec_state_unref (output);
 
-  if (!gst_video_encoder_negotiate (encoder))
+  self->pending_info = state->info;
+  self->have_pending_info = TRUE;
+
+  if (!gst_video_encoder_negotiate (encoder)) {
+    self->have_pending_info = FALSE;
     return FALSE;
-
-  /* Calculate and set the level based on video parameters if supported.
-   * Uses the profile negotiated above and saved in self->v4l2_profile.
-   * Must run after negotiate() but before gst_v4l2_object_set_format(). */
-  {
-    GstV4l2VideoEncClass *klass = GST_V4L2_VIDEO_ENC_GET_CLASS (encoder);
-    const GstV4l2Codec *codec = klass->codec;
-
-    if (codec && codec->calculate_level && codec->level_cid) {
-      GstV4l2Object *v4l2object = self->v4l2output;
-      gint v4l2_level =
-          codec->calculate_level (&state->info, self->v4l2_profile);
-
-      if (v4l2_level >= 0) {
-        struct v4l2_control control = { 0, };
-        control.id = codec->level_cid;
-        control.value = v4l2_level;
-
-        if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_S_CTRL,
-                &control) >= 0) {
-          GST_DEBUG_OBJECT (self, "Set level to %s (V4L2 value %d)",
-              codec->level_to_string (v4l2_level), v4l2_level);
-        } else {
-          GST_WARNING_OBJECT (self, "Failed to set level %d: %s",
-              v4l2_level, g_strerror (errno));
-        }
-      }
-    }
   }
+
+  self->have_pending_info = FALSE;
 
   if (!gst_v4l2_object_set_format (self->v4l2output, state->caps, &error)) {
     gst_v4l2_error (self, &error);
@@ -462,6 +440,7 @@ struct ProfileLevelCtx
   GstV4l2VideoEnc *self;
   const gchar *profile;
   const gchar *level;
+  gboolean fixed_level;
 };
 
 static gboolean
@@ -551,7 +530,21 @@ negotiate_profile_and_level (GstCapsFeatures * features, GstStructure * s,
   }
 
   if (!failed && codec->level_cid && get_string_list (s, "level", &levels)) {
+    const GValue *level_value = gst_structure_get_value (s, "level");
+    gboolean defer_level;
     GList *l;
+
+    if (level_value && (G_VALUE_HOLDS_STRING (level_value) ||
+            (GST_VALUE_HOLDS_LIST (level_value) &&
+                gst_value_list_get_size (level_value) == 1)))
+      ctx->fixed_level = TRUE;
+
+    defer_level = !ctx->fixed_level && codec->calculate_level &&
+        ctx->self->have_pending_info;
+
+    /* Let calculate_level() select the level from the pending input info. */
+    if (defer_level)
+      goto clear_levels;
 
     for (l = levels.head; l; l = l->next) {
       struct v4l2_control control = { 0, };
@@ -588,6 +581,7 @@ negotiate_profile_and_level (GstCapsFeatures * features, GstStructure * s,
     if (levels.length && !ctx->level)
       failed = TRUE;
 
+  clear_levels:
     g_queue_foreach (&levels, (GFunc) g_free, NULL);
     g_queue_clear (&levels);
   }
@@ -623,7 +617,7 @@ gst_v4l2_video_enc_negotiate (GstVideoEncoder * encoder)
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
   GstV4l2Object *v4l2object = self->v4l2output;
   GstCaps *allowed_caps;
-  struct ProfileLevelCtx ctx = { self, NULL, NULL };
+  struct ProfileLevelCtx ctx = { self, NULL, NULL, FALSE };
   GstVideoCodecState *state;
   GstStructure *s;
   const GstV4l2Codec *codec = klass->codec;
@@ -668,6 +662,40 @@ gst_v4l2_video_enc_negotiate (GstVideoEncoder * encoder)
 
     ctx.profile = codec->profile_to_string (control.value);
     self->v4l2_profile = control.value;
+  }
+
+  if (!ctx.fixed_level && codec->calculate_level && codec->level_cid &&
+      self->have_pending_info) {
+    gint v4l2_level =
+        codec->calculate_level (&self->pending_info, self->v4l2_profile);
+
+    if (v4l2_level >= 0) {
+      struct v4l2_control control = { 0, };
+
+      control.id = codec->level_cid;
+      control.value = v4l2_level;
+
+      if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_S_CTRL, &control) < 0) {
+        GST_WARNING_OBJECT (self, "Failed to set calculated %s level %d: %s",
+            klass->codec_name, v4l2_level, g_strerror (errno));
+      } else {
+        const gchar *level;
+
+        memset (&control, 0, sizeof (control));
+        control.id = codec->level_cid;
+
+        if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_G_CTRL,
+                &control) < 0)
+          goto g_ctrl_failed;
+
+        level = codec->level_to_string (control.value);
+        if (level) {
+          ctx.level = level;
+          GST_DEBUG_OBJECT (self, "Selected calculated %s level %s",
+              klass->codec_name, ctx.level);
+        }
+      }
+    }
   }
 
   /* If level not set by caps, get current level from driver */
