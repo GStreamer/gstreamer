@@ -426,36 +426,31 @@ id3v2_add_id3v2_frame_blob_to_taglist (ID3TagsWorking * work,
 {
   GstBuffer *blob;
   GstSample *sample;
-#if 0
   GstCaps *caps;
   gchar *media_type;
-#endif
   guint i;
+  gchar frame_id[5] = "";
 
   blob = gst_buffer_new_and_alloc (frame_size);
   gst_buffer_fill (blob, 0, frame_data, frame_size);
 
-  sample = gst_sample_new (blob, NULL, NULL, NULL);
-  gst_buffer_unref (blob);
-
   /* Sanitize frame id */
   for (i = 0; i < 4; i++) {
     if (!g_ascii_isalnum (frame_data[i]))
-      frame_data[i] = '_';
+      frame_id[i] = '_';
+    else
+      frame_id[i] = g_ascii_tolower (frame_data[i]);
   }
 
-#if 0
   media_type = g_strdup_printf ("application/x-gst-id3v2-%c%c%c%c-frame",
-      g_ascii_tolower (frame_data[0]), g_ascii_tolower (frame_data[1]),
-      g_ascii_tolower (frame_data[2]), g_ascii_tolower (frame_data[3]));
+      frame_id[0], frame_id[1], frame_id[2], frame_id[3]);
   caps = gst_caps_new_simple (media_type, "version", G_TYPE_INT,
       (gint) ID3V2_VER_MAJOR (work->hdr.version), NULL);
-  gst_buffer_set_caps (blob, caps);
-  gst_caps_unref (caps);
   g_free (media_type);
-#endif
 
-  /* gst_util_dump_mem (GST_BUFFER_DATA (blob), GST_BUFFER_SIZE (blob)); */
+  sample = gst_sample_new (blob, caps, NULL, NULL);
+  gst_buffer_unref (blob);
+  gst_caps_unref (caps);
 
   gst_tag_list_add (work->tags, GST_TAG_MERGE_APPEND,
       GST_TAG_ID3V2_FRAME, sample, NULL);
