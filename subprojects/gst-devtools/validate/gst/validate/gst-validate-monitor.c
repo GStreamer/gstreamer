@@ -227,6 +227,7 @@ gst_validate_monitor_init (GstValidateMonitor * monitor)
 
   g_mutex_init (&monitor->overrides_mutex);
   g_queue_init (&monitor->overrides);
+  g_weak_ref_init (&monitor->pipeline, NULL);
 
   monitor->verbosity = GST_VALIDATE_VERBOSITY_POSITION;
 }
