@@ -663,7 +663,7 @@ parse_relative_volume_adjustment_two (ID3TagsWorking * work)
   const gchar *gain_tag_name = NULL;
   const gchar *peak_tag_name = NULL;
   gdouble gain_dB, peak_val;
-  guint64 peak;
+  guint64 peak = 0;
   guint8 *data, chan, peak_bits;
   gchar *id;
   gint len, datalen, i;
@@ -691,6 +691,13 @@ parse_relative_volume_adjustment_two (ID3TagsWorking * work)
   }
   data += 1 + 2 + 1;
   datalen -= 1 + 2 + 1;
+
+  if (datalen < peak_bits / 8) {
+    GST_WARNING ("only %u bytes left for %d peak bits, ignoring", datalen,
+        (gint) peak_bits);
+    peak_bits = 0;
+  }
+
   if (peak_bits == 16) {
     peak = GST_READ_UINT16_BE (data);
   } else {
