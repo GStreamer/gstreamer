@@ -539,7 +539,7 @@ parse_mdvdsub (ParserState * state, const gchar * line)
     rest = g_strdup (line);
     g_strdelimit (rest, ",", '.');
     fps = g_ascii_strtod (rest, &end);
-    if (end != rest) {
+    if (end != rest && fps > 0.0 && fps <= 240.0) {
       gst_util_double_to_fraction (fps, &state->fps_n, &state->fps_d);
       GST_INFO ("framerate from file: %d/%d ('%s')", state->fps_n,
           state->fps_d, rest);
