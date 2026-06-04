@@ -35,34 +35,34 @@ guint id3v2_read_synch_uint (const guint8 * data, guint size);
 #define ID3V2_VERSION 0x0400
 #define ID3V2_VER_MAJOR(v) ((v) >> 8)
 #define ID3V2_VER_MINOR(v) ((v) & 0xff)
-   
+
 typedef struct {
   guint16 version;
   guint8 flags;
   guint32 size;
-    
-  guint8 *frame_data;
-  guint32 frame_data_size;
+
+  const guint8 *frame_data;
+  gsize frame_data_size;
 
   guint32 ext_hdr_size;
   guint8 ext_flag_bytes;
-  guint8 *ext_flag_data;  
+  const guint8 *ext_flag_data;
 } ID3v2Header;
 
 typedef struct {
   ID3v2Header hdr;
-  
+
   GstBuffer *buffer;
   GstTagList *tags;
 
   /* Current frame decoding */
-  guint cur_frame_size;
+  gsize cur_frame_size;
   gchar *frame_id;
   guint16 frame_flags;
-  
-  guint8 *parse_data;
-  guint parse_size;
-  
+
+  const guint8 *parse_data;
+  gsize parse_size;
+
   /* To collect day/month from obsolete TDAT frame if it exists */
   guint pending_month;
   guint pending_day;
@@ -113,7 +113,7 @@ enum {
 /* From id3v2frames.c */
 gboolean id3v2_parse_frame (ID3TagsWorking *work);
 
-guint8 * id3v2_ununsync_data (const guint8 * unsync_data, guint32 * size);
+guint8 * id3v2_ununsync_data (const guint8 * unsync_data, gsize * size);
 
 GstDebugCategory * id3v2_ensure_debug_category (void);
 
