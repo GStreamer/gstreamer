@@ -548,14 +548,14 @@ struct _MXFMetadataTimelineTrack {
   MXFMetadataTrack parent;
 
   MXFFraction edit_rate;
-  gint64 origin;
+  guint64 origin;
 };
 
 struct _MXFMetadataEventTrack {
   MXFMetadataTrack parent;
 
   MXFFraction event_edit_rate;
-  gint64 event_origin;
+  guint64 event_origin;
 };
 
 struct _MXFMetadataSequence {
@@ -563,7 +563,7 @@ struct _MXFMetadataSequence {
 
   MXFUL data_definition;
 
-  gint64 duration;
+  guint64 duration;
 
   guint32 n_structural_components;
   MXFUUID *structural_components_uids;
@@ -574,13 +574,13 @@ struct _MXFMetadataStructuralComponent {
   MXFMetadata parent;
 
   MXFUL data_definition;
-  gint64 duration;
+  guint64 duration;
 };
 
 struct _MXFMetadataTimecodeComponent {
   MXFMetadataStructuralComponent parent;
 
-  gint64 start_timecode;
+  guint64 start_timecode;
   guint16 rounded_timecode_base;
   gboolean drop_frame;
 };
@@ -588,7 +588,7 @@ struct _MXFMetadataTimecodeComponent {
 struct _MXFMetadataSourceClip {
   MXFMetadataStructuralComponent parent;
 
-  gint64 start_position;
+  guint64 start_position;
   MXFUMID source_package_id;
   MXFMetadataSourcePackage *source_package;
 
@@ -609,7 +609,7 @@ struct _MXFMetadataDMSourceClip {
 struct _MXFMetadataDMSegment {
   MXFMetadataStructuralComponent parent;
 
-  gint64 event_start_position;
+  guint64 event_start_position;
   gchar *event_comment;
 
   guint32 n_track_ids;
@@ -637,7 +637,7 @@ struct _MXFMetadataFileDescriptor {
   guint32 linked_track_id;
 
   MXFFraction sample_rate;
-  gint64 container_duration;
+  guint64 container_duration;
 
   MXFUL essence_container;
   MXFUL codec;
