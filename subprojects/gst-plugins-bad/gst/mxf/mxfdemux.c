@@ -480,7 +480,7 @@ gst_mxf_demux_partition_postcheck (GstMXFDemux * demux,
 
     if (!cand->source_package->is_interleaved) {
       GST_DEBUG_OBJECT (demux,
-          "Assigning single track %d (0x%08x) to partition at offset %"
+          "Assigning single track %u (0x%08x) to partition at offset %"
           G_GUINT64_FORMAT, cand->track_id, cand->track_number,
           partition->partition.this_partition);
 
@@ -601,7 +601,7 @@ gst_mxf_demux_handle_partition_pack (GstMXFDemux * demux, GstMXFKLV * klv)
 
 out:
   GST_DEBUG_OBJECT (demux,
-      "Current partition now %p (body_sid:%d index_sid:%d this_partition:%"
+      "Current partition now %p (body_sid:%u index_sid:%u this_partition:%"
       G_GUINT64_FORMAT ")", p, p->partition.body_sid, p->partition.index_sid,
       p->partition.this_partition);
   demux->current_partition = p;
@@ -874,7 +874,7 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
       track = MXF_METADATA_TIMELINE_TRACK (package->parent.tracks[j]);
       if ((track->parent.type & 0xf0) != 0x30) {
         GST_DEBUG_OBJECT (demux,
-            "Skipping track of type 0x%02x (id:%d number:0x%08x)",
+            "Skipping track of type 0x%02x (id:%u number:0x%08x)",
             track->parent.type, track->parent.track_id,
             track->parent.track_number);
         continue;
@@ -1090,7 +1090,7 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
 
       if (package->is_interleaved) {
         GST_DEBUG_OBJECT (demux,
-            "track comes from interleaved source package with %d track(s), setting delta_id to -1",
+            "track comes from interleaved source package with %u track(s), setting delta_id to -1",
             package->parent.n_tracks);
         if (etrack->wrapping != MXF_ESSENCE_WRAPPING_FRAME_WRAPPING) {
           GST_ELEMENT_ERROR (demux, STREAM, WRONG_TYPE, (NULL),
@@ -1170,11 +1170,11 @@ gst_mxf_demux_show_topology (GstMXFDemux * demux)
       GST_DEBUG_OBJECT (demux, "Unknown package type");
   }
 
-  GST_DEBUG_OBJECT (demux, "Number of Material Package (i.e. output) : %d",
+  GST_DEBUG_OBJECT (demux, "Number of Material Package (i.e. output) : %u",
       g_list_length (material_packages));
   for (tmp = material_packages; tmp; tmp = tmp->next) {
     MXFMetadataMaterialPackage *pack = (MXFMetadataMaterialPackage *) tmp->data;
-    GST_DEBUG_OBJECT (demux, "  Package with %d tracks , UID:%s",
+    GST_DEBUG_OBJECT (demux, "  Package with %u tracks , UID:%s",
         pack->n_tracks, mxf_umid_to_string (&pack->package_uid, str));
     for (i = 0; i < pack->n_tracks; i++) {
       MXFMetadataTrack *track = pack->tracks[i];
@@ -1184,33 +1184,33 @@ gst_mxf_demux_show_topology (GstMXFDemux * demux)
       } else if (MXF_IS_METADATA_TIMELINE_TRACK (track)) {
         MXFMetadataTimelineTrack *mtrack = (MXFMetadataTimelineTrack *) track;
         GST_DEBUG_OBJECT (demux,
-            "    Timeline Track id:%d number:0x%08x name:`%s` edit_rate:%d/%d origin:%"
-            G_GINT64_FORMAT, track->track_id, track->track_number,
+            "    Timeline Track id:%u number:0x%08x name:`%s` edit_rate:%d/%d origin:%"
+            G_GUINT64_FORMAT, track->track_id, track->track_number,
             track->track_name, mtrack->edit_rate.n, mtrack->edit_rate.d,
             mtrack->origin);
       } else {
         GST_DEBUG_OBJECT (demux,
-            "    Non-Timeline-Track id:%d number:0x%08x name:`%s`",
+            "    Non-Timeline-Track id:%u number:0x%08x name:`%s`",
             track->track_id, track->track_number, track->track_name);
       }
       if (track) {
         MXFMetadataSequence *sequence = track->sequence;
         guint si;
         GST_DEBUG_OBJECT (demux,
-            "      Sequence duration:%" G_GINT64_FORMAT
-            " n_structural_components:%d", sequence->duration,
+            "      Sequence duration:%" G_GUINT64_FORMAT
+            " n_structural_components:%u", sequence->duration,
             sequence->n_structural_components);
         for (si = 0; si < sequence->n_structural_components; si++) {
           MXFMetadataStructuralComponent *comp =
               sequence->structural_components[si];
           GST_DEBUG_OBJECT (demux,
-              "        Component #%d duration:%" G_GINT64_FORMAT, si,
+              "        Component #%u duration:%" G_GUINT64_FORMAT, si,
               comp->duration);
           if (MXF_IS_METADATA_SOURCE_CLIP (comp)) {
             MXFMetadataSourceClip *clip = (MXFMetadataSourceClip *) comp;
             GST_DEBUG_OBJECT (demux,
-                "          Clip start_position:%" G_GINT64_FORMAT
-                " source_track_id:%d source_package_id:%s",
+                "          Clip start_position:%" G_GUINT64_FORMAT
+                " source_track_id:%u source_package_id:%s",
                 clip->start_position, clip->source_track_id,
                 mxf_umid_to_string (&clip->source_package_id, str));
           }
@@ -1220,7 +1220,7 @@ gst_mxf_demux_show_topology (GstMXFDemux * demux)
     }
   }
 
-  GST_DEBUG_OBJECT (demux, "Number of File Packages (i.e. input) : %d",
+  GST_DEBUG_OBJECT (demux, "Number of File Packages (i.e. input) : %u",
       g_list_length (file_packages));
   for (tmp = file_packages; tmp; tmp = tmp->next) {
     MXFMetadataMaterialPackage *pack = (MXFMetadataMaterialPackage *) tmp->data;
@@ -1229,7 +1229,7 @@ gst_mxf_demux_show_topology (GstMXFDemux * demux)
     MXFMetadataEssenceContainerData *econt =
         essence_container_for_source_package (storage, src);
     GST_DEBUG_OBJECT (demux,
-        "  Package (body_sid:%d index_sid:%d top_level:%d) with %d tracks , UID:%s",
+        "  Package (body_sid:%u index_sid:%u top_level:%u) with %u tracks , UID:%s",
         econt ? econt->body_sid : 0, econt ? econt->index_sid : 0,
         src->top_level, pack->n_tracks, mxf_umid_to_string (&pack->package_uid,
             str));
@@ -1245,13 +1245,13 @@ gst_mxf_demux_show_topology (GstMXFDemux * demux)
       if (MXF_IS_METADATA_TIMELINE_TRACK (track)) {
         MXFMetadataTimelineTrack *mtrack = (MXFMetadataTimelineTrack *) track;
         GST_DEBUG_OBJECT (demux,
-            "    Timeline Track id:%d number:0x%08x name:`%s` edit_rate:%d/%d origin:%"
-            G_GINT64_FORMAT, track->track_id, track->track_number,
+            "    Timeline Track id:%u number:0x%08x name:`%s` edit_rate:%d/%d origin:%"
+            G_GUINT64_FORMAT, track->track_id, track->track_number,
             track->track_name, mtrack->edit_rate.n, mtrack->edit_rate.d,
             mtrack->origin);
       } else {
         GST_DEBUG_OBJECT (demux,
-            "    Non-Timeline-Track id:%d number:0x%08x name:`%s` type:0x%x",
+            "    Non-Timeline-Track id:%u number:0x%08x name:`%s` type:0x%x",
             track->track_id, track->track_number, track->track_name,
             track->type);
       }
@@ -1274,14 +1274,14 @@ gst_mxf_demux_show_topology (GstMXFDemux * demux)
         }
       }
       GST_DEBUG_OBJECT (demux,
-          "      Sequence duration:%" G_GINT64_FORMAT
-          " n_structural_components:%d", sequence->duration,
+          "      Sequence duration:%" G_GUINT64_FORMAT
+          " n_structural_components:%u", sequence->duration,
           sequence->n_structural_components);
       for (si = 0; si < sequence->n_structural_components; si++) {
         MXFMetadataStructuralComponent *comp =
             sequence->structural_components[si];
         GST_DEBUG_OBJECT (demux,
-            "        Component #%d duration:%" G_GINT64_FORMAT, si,
+            "        Component #%u duration:%" G_GUINT64_FORMAT, si,
             comp->duration);
       }
     }
@@ -1481,7 +1481,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
 
     if (track->parent.type && (track->parent.type & 0xf0) != 0x30) {
       GST_DEBUG_OBJECT (demux,
-          "No essence track. type:0x%02x track_id:%d track_number:0x%08x",
+          "No essence track. type:0x%02x track_id:%u track_number:0x%08x",
           track->parent.type, track->parent.track_id,
           track->parent.track_number);
       if (!pad) {
@@ -1609,10 +1609,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
       pad->current_component_start = source_track->origin;
       pad->current_component_start_position = 0;
 
-      if (component->parent.duration >= -1)
-        pad->current_component_duration = component->parent.duration;
-      else
-        pad->current_component_duration = -1;
+      pad->current_component_duration = component->parent.duration;
 
       if (track->edit_rate.n != source_track->edit_rate.n ||
           track->edit_rate.d != source_track->edit_rate.d) {
@@ -2031,10 +2028,7 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
         parent.duration;
   }
 
-  if (pad->current_component->parent.duration >= -1)
-    pad->current_component_duration = pad->current_component->parent.duration;
-  else
-    pad->current_component_duration = -1;
+  pad->current_component_duration = pad->current_component->parent.duration;
 
   if (pad->material_track->edit_rate.n != source_track->edit_rate.n ||
       pad->material_track->edit_rate.d != source_track->edit_rate.d) {
@@ -2131,7 +2125,7 @@ get_partition_for_stream_offset (GstMXFDemux * demux,
           (demux->segment.rate >
               0.0) ? GST_LEVEL_WARNING : GST_LEVEL_DEBUG, demux,
           "stream_offset %" G_GUINT64_FORMAT
-          " in track body_sid:% index_sid:%d leaks into next unrelated partition (body_sid:%d / index_sid:%d)",
+          " in track body_sid:% index_sid:%u leaks into next unrelated partition (body_sid:%u / index_sid:%u)",
           stream_offset, etrack->body_sid, etrack->index_sid,
           next_partition->partition.body_sid,
           next_partition->partition.index_sid);
@@ -2176,11 +2170,11 @@ get_track_max_temporal_offset (GstMXFDemux * demux,
 }
 
 static guint64
-find_offset (GArray * offsets, gint64 * position, gboolean keyframe)
+find_offset (GArray * offsets, guint64 * position, gboolean keyframe)
 {
   GstMXFDemuxIndex *idx;
   guint64 current_offset = -1;
-  gint64 current_position = *position;
+  guint64 current_position = *position;
 
   if (!offsets || offsets->len <= *position)
     return -1;
@@ -2188,15 +2182,15 @@ find_offset (GArray * offsets, gint64 * position, gboolean keyframe)
   idx = &g_array_index (offsets, GstMXFDemuxIndex, *position);
   if (idx->offset != 0 && (!keyframe || idx->keyframe)) {
     current_offset = idx->offset;
-  } else if (idx->offset != 0) {
+  } else if (idx->offset != 0 && current_position > 0) {
     current_position--;
-    while (current_position >= 0) {
-      GST_LOG ("current_position %" G_GINT64_FORMAT, current_position);
+    while (TRUE) {
+      GST_LOG ("current_position %" G_GUINT64_FORMAT, current_position);
       idx = &g_array_index (offsets, GstMXFDemuxIndex, current_position);
       if (idx->offset == 0) {
         GST_LOG ("breaking offset 0");
         break;
-      } else if (!idx->keyframe) {
+      } else if (!idx->keyframe && current_position > 0) {
         current_position--;
         continue;
       } else {
@@ -2240,7 +2234,7 @@ find_offset (GArray * offsets, gint64 * position, gboolean keyframe)
  */
 static gboolean
 find_edit_entry (GstMXFDemux * demux, GstMXFDemuxEssenceTrack * etrack,
-    gint64 position, gboolean keyframe, GstMXFDemuxIndex * entry)
+    guint64 position, gboolean keyframe, GstMXFDemuxIndex * entry)
 {
   GstMXFDemuxIndexTable *index_table = NULL;
   guint i;
@@ -2249,8 +2243,8 @@ find_edit_entry (GstMXFDemux * demux, GstMXFDemuxEssenceTrack * etrack,
   guint64 stream_offset = G_MAXUINT64, absolute_offset;
 
   GST_DEBUG_OBJECT (demux,
-      "track %d body_sid:%d index_sid:%d delta_id:%d position:%" G_GINT64_FORMAT
-      " keyframe:%d", etrack->track_id, etrack->body_sid,
+      "track %u body_sid:%u index_sid:%u delta_id:%d position:%"
+      G_GUINT64_FORMAT " keyframe:%d", etrack->track_id, etrack->body_sid,
       etrack->index_sid, etrack->delta_id, position, keyframe);
 
   /* Default values */
@@ -2273,13 +2267,13 @@ find_edit_entry (GstMXFDemux * demux, GstMXFDemuxEssenceTrack * etrack,
 
   if (!index_table) {
     GST_DEBUG_OBJECT (demux,
-        "Couldn't find index table for body_sid:%d index_sid:%d",
+        "Couldn't find index table for body_sid:%u index_sid:%u",
         etrack->body_sid, etrack->index_sid);
     return FALSE;
   }
 
   GST_DEBUG_OBJECT (demux,
-      "Looking for position %" G_GINT64_FORMAT
+      "Looking for position %" G_GUINT64_FORMAT
       " in index table (max temporal offset %u)",
       etrack->position, index_table->max_temporal_offset);
 
@@ -2294,7 +2288,7 @@ find_edit_entry (GstMXFDemux * demux, GstMXFDemuxEssenceTrack * etrack,
 search_in_segment:
 
   /* Find matching index segment */
-  GST_DEBUG_OBJECT (demux, "Look for entry in %d segments",
+  GST_DEBUG_OBJECT (demux, "Look for entry in %u segments",
       index_table->segments->len);
   for (i = 0; i < index_table->segments->len; i++) {
     MXFIndexTableSegment *cand =
@@ -2303,15 +2297,16 @@ search_in_segment:
             || position <
             (cand->index_start_position + cand->index_duration))) {
       GST_DEBUG_OBJECT (demux,
-          "Entry is in Segment #%d , start: %" G_GINT64_FORMAT " , duration: %"
-          G_GINT64_FORMAT, i, cand->index_start_position, cand->index_duration);
+          "Entry is in Segment #%u , start: %" G_GUINT64_FORMAT " , duration: %"
+          G_GUINT64_FORMAT, i, cand->index_start_position,
+          cand->index_duration);
       segment = cand;
       break;
     }
   }
   if (!segment) {
     GST_DEBUG_OBJECT (demux,
-        "Didn't find index table segment for position %" G_GINT64_FORMAT,
+        "Didn't find index table segment for position %" G_GUINT64_FORMAT,
         position);
     return FALSE;
   }
@@ -2322,7 +2317,7 @@ search_in_segment:
       GST_LOG_OBJECT (demux,
           "Index table without entries, directly using requested position for keyframe search");
     } else {
-      gint64 candidate;
+      guint64 candidate;
       GST_LOG_OBJECT (demux, "keyframe search");
       /* Search backwards for keyframe */
       for (candidate = position; candidate >= segment->index_start_position;
@@ -2332,8 +2327,8 @@ search_in_segment:
 
         /* Match */
         if (segment_index_entry->flags & 0x80) {
-          GST_LOG_OBJECT (demux, "Found keyframe at position %" G_GINT64_FORMAT,
-              candidate);
+          GST_LOG_OBJECT (demux,
+              "Found keyframe at position %" G_GUINT64_FORMAT, candidate);
           position = candidate;
           break;
         }
@@ -2362,7 +2357,7 @@ search_in_segment:
         /* If we looped past the beginning of this segment, go to the previous one */
         if (candidate == segment->index_start_position) {
           position = candidate - 1;
-          GST_LOG_OBJECT (demux, "Looping with new position %" G_GINT64_FORMAT,
+          GST_LOG_OBJECT (demux, "Looping with new position %" G_GUINT64_FORMAT,
               position);
           goto search_in_segment;
         }
@@ -2393,9 +2388,9 @@ search_in_segment:
 
       if (entry->size > G_MAXUINT32) {
         GST_ERROR_OBJECT (demux,
-            "Suspisciously large entry size %" G_GINT64_FORMAT
+            "Suspisciously large entry size %" G_GUINT64_FORMAT
             " = edit_unit_byte_count %" G_GUINT32_FORMAT " * entry duration %"
-            G_GINT64_FORMAT ", exceeds pullable size => not proceeding",
+            G_GUINT64_FORMAT ", exceeds pullable size => not proceeding",
             entry->size, segment->edit_unit_byte_count, entry->duration);
         entry = NULL;
         return FALSE;
@@ -2439,15 +2434,15 @@ search_in_segment:
         entry->pts = position + segment_index_entry->temporal_offset;
       } else if (position >= index_table->reverse_temporal_offsets->len) {
         GST_WARNING_OBJECT (demux,
-            "Can't apply temporal offset for position %" G_GINT64_FORMAT
-            " (max:%d)", position, index_table->reverse_temporal_offsets->len);
+            "Can't apply temporal offset for position %" G_GUINT64_FORMAT
+            " (max:%u)", position, index_table->reverse_temporal_offsets->len);
       } else {
         entry->pts =
             position + g_array_index (index_table->reverse_temporal_offsets,
             gint8, position);
         GST_LOG_OBJECT (demux,
-            "Applied temporal offset. dts:%" G_GINT64_FORMAT " pts:%"
-            G_GINT64_FORMAT, position, entry->pts);
+            "Applied temporal offset. dts:%" G_GUINT64_FORMAT " pts:%"
+            G_GUINT64_FORMAT, position, entry->pts);
       }
     } else
       entry->pts = position;
@@ -2481,7 +2476,7 @@ search_in_segment:
       offset_partition->partition.body_offset);
 
   GST_LOG_OBJECT (demux,
-      "track %d position:%" G_GINT64_FORMAT " stream_offset %" G_GUINT64_FORMAT
+      "track %u position:%" G_GUINT64_FORMAT " stream_offset %" G_GUINT64_FORMAT
       " matches to absolute offset %" G_GUINT64_FORMAT, etrack->track_id,
       position, stream_offset, absolute_offset);
   entry->initialized = TRUE;
@@ -2517,10 +2512,10 @@ find_entry_for_offset (GstMXFDemux * demux, GstMXFDemuxEssenceTrack * etrack,
   guint64 cp_offset = 0;        /* Offset in Content Package */
   MXFIndexEntry *index_entry = NULL;
   MXFDeltaEntry *delta_entry = NULL;
-  gint64 position = 0;
+  guint64 position = 0;
 
   GST_DEBUG_OBJECT (demux,
-      "track %d body_sid:%d index_sid:%d offset:%" G_GUINT64_FORMAT,
+      "track %u body_sid:%u index_sid:%u offset:%" G_GUINT64_FORMAT,
       etrack->track_id, etrack->body_sid, etrack->index_sid, offset);
 
   /* Default value */
@@ -2536,7 +2531,7 @@ find_entry_for_offset (GstMXFDemux * demux, GstMXFDemuxEssenceTrack * etrack,
       if (idx->initialized && idx->offset != 0 && idx->offset == offset) {
         *retentry = *idx;
         GST_DEBUG_OBJECT (demux,
-            "Found in track index. Position:%" G_GINT64_FORMAT, idx->dts);
+            "Found in track index. Position:%" G_GUINT64_FORMAT, idx->dts);
         return TRUE;
       }
     }
@@ -2564,8 +2559,8 @@ find_entry_for_offset (GstMXFDemux * demux, GstMXFDemuxEssenceTrack * etrack,
   /* Convert to stream offset */
   GST_LOG_OBJECT (demux,
       "offset %" G_GUINT64_FORMAT " this_partition:%" G_GUINT64_FORMAT
-      " essence_container_offset:%" G_GINT64_FORMAT " partition body offset %"
-      G_GINT64_FORMAT, offset, partition->partition.this_partition,
+      " essence_container_offset:%" G_GUINT64_FORMAT " partition body offset %"
+      G_GUINT64_FORMAT, offset, partition->partition.this_partition,
       partition->essence_container_offset, partition->partition.body_offset);
   offset =
       offset - partition->partition.this_partition -
@@ -2579,7 +2574,7 @@ find_entry_for_offset (GstMXFDemux * demux, GstMXFDemuxEssenceTrack * etrack,
     index_segment =
         &g_array_index (index_table->segments, MXFIndexTableSegment, i - 1);
     GST_DEBUG_OBJECT (demux,
-        "Checking segment #%d (essence_offset %" G_GUINT64_FORMAT ")", i - 1,
+        "Checking segment #%u (essence_offset %" G_GUINT64_FORMAT ")", i - 1,
         index_segment->segment_start_offset);
     /* Not in the right segment yet */
     if (offset >= index_segment->segment_start_offset) {
@@ -2619,9 +2614,9 @@ find_entry_for_offset (GstMXFDemux * demux, GstMXFDemuxEssenceTrack * etrack,
 
       if (retentry->size > G_MAXUINT32) {
         GST_ERROR_OBJECT (demux,
-            "Suspisciously large entry size %" G_GINT64_FORMAT
+            "Suspisciously large entry size %" G_GUINT64_FORMAT
             " = edit_unit_byte_count %" G_GUINT32_FORMAT " * entry duration %"
-            G_GINT64_FORMAT ", exceeds pullable size => not proceeding",
+            G_GUINT64_FORMAT ", exceeds pullable size => not proceeding",
             retentry->size, index_segment->edit_unit_byte_count,
             retentry->duration);
         retentry = NULL;
@@ -2675,11 +2670,11 @@ find_entry_for_offset (GstMXFDemux * demux, GstMXFDemuxEssenceTrack * etrack,
       for (delta = 0; delta < index_segment->n_delta_entries; delta++) {
         /* No entry, therefore no slices */
         GST_LOG_OBJECT (demux,
-            "delta #%d offset %" G_GUINT64_FORMAT " cp_offs:%" G_GUINT64_FORMAT
+            "delta #%u offset %" G_GUINT64_FORMAT " cp_offs:%" G_GUINT64_FORMAT
             " element_delta:%u", delta, offset, cp_offset,
             index_segment->delta_entries[delta].element_delta);
         if (cp_offset == index_segment->delta_entries[delta].element_delta) {
-          GST_DEBUG_OBJECT (demux, "Matched to delta %d", delta);
+          GST_DEBUG_OBJECT (demux, "Matched to delta %u", delta);
           etrack->delta_id = delta;
           delta_entry = &index_segment->delta_entries[delta];
           break;
@@ -2696,7 +2691,7 @@ find_entry_for_offset (GstMXFDemux * demux, GstMXFDemuxEssenceTrack * etrack,
         /* Add the offset for this delta */
         delta_offs += index_segment->delta_entries[delta].element_delta;
         if (cp_offset == delta_offs) {
-          GST_DEBUG_OBJECT (demux, "Matched to delta %d", delta);
+          GST_DEBUG_OBJECT (demux, "Matched to delta %u", delta);
           etrack->delta_id = delta;
           delta_entry = &index_segment->delta_entries[delta];
           break;
@@ -2720,21 +2715,21 @@ find_entry_for_offset (GstMXFDemux * demux, GstMXFDemuxEssenceTrack * etrack,
       retentry->pts = position + index_entry->temporal_offset;
     } else if (position >= index_table->reverse_temporal_offsets->len) {
       GST_WARNING_OBJECT (demux,
-          "Can't apply temporal offset for position %" G_GINT64_FORMAT
-          " (max:%d)", position, index_table->reverse_temporal_offsets->len);
+          "Can't apply temporal offset for position %" G_GUINT64_FORMAT
+          " (max:%u)", position, index_table->reverse_temporal_offsets->len);
     } else {
       retentry->pts =
           position + g_array_index (index_table->reverse_temporal_offsets,
           gint8, position);
     }
     GST_LOG_OBJECT (demux,
-        "Applied temporal offset. dts:%" G_GINT64_FORMAT " pts:%"
-        G_GINT64_FORMAT, position, retentry->pts);
+        "Applied temporal offset. dts:%" G_GUINT64_FORMAT " pts:%"
+        G_GUINT64_FORMAT, position, retentry->pts);
   } else
     retentry->pts = position;
 
   /* FIXME : check if position and cp_offs matches the table */
-  GST_LOG_OBJECT (demux, "Found in index table. position:%" G_GINT64_FORMAT,
+  GST_LOG_OBJECT (demux, "Found in index table. position:%" G_GUINT64_FORMAT,
       position);
   retentry->initialized = TRUE;
   retentry->offset = original_offset;
@@ -2825,8 +2820,8 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
   }
 
   GST_DEBUG_OBJECT (demux,
-      "Handling generic container essence (track %d , position:%"
-      G_GINT64_FORMAT ", number: 0x%08x , frame-wrapped:%d)", etrack->track_id,
+      "Handling generic container essence (track %u , position:%"
+      G_GUINT64_FORMAT ", number: 0x%08x , frame-wrapped:%d)", etrack->track_id,
       etrack->position, track_number,
       etrack->wrapping == MXF_ESSENCE_WRAPPING_FRAME_WRAPPING);
 
@@ -2863,8 +2858,8 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
       GST_WARNING_OBJECT (demux, "Essence track position not in index");
     } else if (etrack->position != index_entry.dts) {
       GST_ERROR_OBJECT (demux,
-          "track position doesn't match %" G_GINT64_FORMAT " entry dts %"
-          G_GINT64_FORMAT, etrack->position, index_entry.dts);
+          "track position doesn't match %" G_GUINT64_FORMAT " entry dts %"
+          G_GUINT64_FORMAT, etrack->position, index_entry.dts);
       return GST_FLOW_ERROR;
     }
   } else {
@@ -2874,14 +2869,14 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
       if (etrack->delta_id != MXF_INDEX_DELTA_ID_IGNORE
           && index_entry.offset != offset) {
         GST_ERROR_OBJECT (demux,
-            "demux offset doesn't match %" G_GINT64_FORMAT " entry offset %"
+            "demux offset doesn't match %" G_GUINT64_FORMAT " entry offset %"
             G_GUINT64_FORMAT, offset, index_entry.offset);
         return GST_FLOW_ERROR;
       }
     } else if (index_entry.offset != klv->offset + klv->consumed &&
         index_entry.offset != klv->offset + klv->data_offset) {
       GST_ERROR_OBJECT (demux,
-          "KLV offset doesn't match %" G_GINT64_FORMAT " entry offset %"
+          "KLV offset doesn't match %" G_GUINT64_FORMAT " entry offset %"
           G_GUINT64_FORMAT, klv->offset + klv->consumed, index_entry.offset);
       return GST_FLOW_ERROR;
     }
@@ -2942,7 +2937,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
   }
 
   if (index_entry.initialized) {
-    GST_DEBUG_OBJECT (demux, "Got entry dts:%" G_GINT64_FORMAT " keyframe:%d",
+    GST_DEBUG_OBJECT (demux, "Got entry dts:%" G_GUINT64_FORMAT " keyframe:%d",
         index_entry.dts, index_entry.keyframe);
   }
   if (index_entry.initialized && !index_entry.keyframe)
@@ -2982,8 +2977,8 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
         !GST_BUFFER_FLAG_IS_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
     index_entry.initialized = TRUE;
     GST_DEBUG_OBJECT (demux,
-        "Storing newly discovered information on track %d. dts: %"
-        G_GINT64_FORMAT " offset:%" G_GUINT64_FORMAT " keyframe:%d",
+        "Storing newly discovered information on track %u. dts: %"
+        G_GUINT64_FORMAT " offset:%" G_GUINT64_FORMAT " keyframe:%d",
         etrack->track_id, index_entry.dts, index_entry.offset,
         index_entry.keyframe);
 
@@ -3022,8 +3017,8 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
 
     if (etrack->position < pad->current_essence_track_position) {
       GST_DEBUG_OBJECT (pad,
-          "Not at current component's position (track:%" G_GINT64_FORMAT
-          " essence:%" G_GINT64_FORMAT ")", etrack->position,
+          "Not at current component's position (track:%" G_GUINT64_FORMAT
+          " essence:%" G_GUINT64_FORMAT ")", etrack->position,
           pad->current_essence_track_position);
       continue;
     }
@@ -3241,9 +3236,10 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     pad->current_essence_track_position += index_entry.duration;
 
     if (pad->current_component) {
-      if (pad->current_component_duration > 0 &&
-          pad->current_essence_track_position - pad->current_component_start
-          >= pad->current_component_duration) {
+      if ((pad->current_component_duration > 0
+              && pad->current_component_duration != -1)
+          && pad->current_essence_track_position -
+          pad->current_component_start >= pad->current_component_duration) {
         GST_DEBUG_OBJECT (demux, "Switching to next component");
 
         ret =
@@ -3255,13 +3251,13 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
         } else if (ret != GST_FLOW_EOS) {
           GST_ERROR_OBJECT (demux, "Switching component failed");
         }
-      } else if (etrack->duration > 0
+      } else if ((etrack->duration > 0 && etrack->duration != -1)
           && pad->current_essence_track_position >= etrack->duration) {
         GST_DEBUG_OBJECT (demux,
             "Current component position after end of essence track");
         ret = GST_FLOW_EOS;
       }
-    } else if (etrack->duration > 0
+    } else if ((etrack->duration > 0 && etrack->duration != -1)
         && pad->current_essence_track_position == etrack->duration) {
       GST_DEBUG_OBJECT (demux, "At the end of the essence track");
       ret = GST_FLOW_EOS;
@@ -3651,7 +3647,7 @@ static void
 gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
 {
   GstBuffer *buffer;
-  gint64 filesize = -1;
+  guint64 filesize = -1;
   GstFormat fmt = GST_FORMAT_BYTES;
   guint32 pack_size;
   guint64 old_offset = demux->offset;
@@ -3659,8 +3655,8 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
   GstFlowReturn flow_ret;
   GstMXFKLV klv;
 
-  if (!gst_pad_peer_query_duration (demux->sinkpad, fmt, &filesize) ||
-      fmt != GST_FORMAT_BYTES || filesize == -1) {
+  if (!gst_pad_peer_query_duration (demux->sinkpad, fmt, (gint64 *) & filesize)
+      || fmt != GST_FORMAT_BYTES || filesize == -1) {
     GST_DEBUG_OBJECT (demux, "Can't query upstream size");
     return;
   }
@@ -3955,7 +3951,7 @@ gst_mxf_demux_set_partition_for_offset (GstMXFDemux * demux, guint64 offset)
   }
   if (demux->current_partition)
     GST_DEBUG_OBJECT (demux,
-        "Current partition now %p (body_sid:%d index_sid:%d this_partition:%"
+        "Current partition now %p (body_sid:%u index_sid:%u this_partition:%"
         G_GUINT64_FORMAT ")", demux->current_partition,
         demux->current_partition->partition.body_sid,
         demux->current_partition->partition.index_sid,
@@ -3965,10 +3961,10 @@ gst_mxf_demux_set_partition_for_offset (GstMXFDemux * demux, guint64 offset)
 }
 
 static guint64
-find_closest_offset (GArray * offsets, gint64 * position, gboolean keyframe)
+find_closest_offset (GArray * offsets, guint64 * position, gboolean keyframe)
 {
   GstMXFDemuxIndex *idx;
-  gint64 current_position = *position;
+  guint64 current_position = *position;
 
   if (!offsets || offsets->len == 0)
     return -1;
@@ -3976,10 +3972,9 @@ find_closest_offset (GArray * offsets, gint64 * position, gboolean keyframe)
   current_position = MIN (current_position, offsets->len - 1);
 
   idx = &g_array_index (offsets, GstMXFDemuxIndex, current_position);
-  while (idx->offset == 0 || (keyframe && !idx->keyframe)) {
+  while ((idx->offset == 0 || (keyframe && !idx->keyframe))
+      && current_position > 0) {
     current_position--;
-    if (current_position < 0)
-      break;
     idx = &g_array_index (offsets, GstMXFDemuxIndex, current_position);
   }
 
@@ -3993,24 +3988,24 @@ find_closest_offset (GArray * offsets, gint64 * position, gboolean keyframe)
 
 static guint64
 gst_mxf_demux_find_essence_element (GstMXFDemux * demux,
-    GstMXFDemuxEssenceTrack * etrack, gint64 * position, gboolean keyframe)
+    GstMXFDemuxEssenceTrack * etrack, guint64 * position, gboolean keyframe)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   guint64 old_offset = demux->offset;
   GstMXFDemuxPartition *old_partition = demux->current_partition;
   gint i;
   guint64 offset;
-  gint64 requested_position = *position, index_start_position;
+  guint64 requested_position = *position, index_start_position;
   GstMXFDemuxIndex index_entry = { 0, };
 
-  GST_DEBUG_OBJECT (demux, "Trying to find essence element %" G_GINT64_FORMAT
+  GST_DEBUG_OBJECT (demux, "Trying to find essence element %" G_GUINT64_FORMAT
       " of track 0x%08x with body_sid %u (keyframe %d)", *position,
       etrack->track_number, etrack->body_sid, keyframe);
 
   /* Get entry from index table if present */
   if (find_edit_entry (demux, etrack, *position, keyframe, &index_entry)) {
     GST_DEBUG_OBJECT (demux,
-        "Got position %" G_GINT64_FORMAT " at offset %" G_GUINT64_FORMAT,
+        "Got position %" G_GUINT64_FORMAT " at offset %" G_GUINT64_FORMAT,
         index_entry.dts, index_entry.offset);
     *position = index_entry.dts;
     return index_entry.offset;
@@ -4025,13 +4020,14 @@ gst_mxf_demux_find_essence_element (GstMXFDemux * demux,
     offset = find_closest_offset (etrack->offsets, position, keyframe);
     if (offset != -1)
       GST_DEBUG_OBJECT (demux,
-          "Starting with edit unit %" G_GINT64_FORMAT " for %" G_GINT64_FORMAT
+          "Starting with edit unit %" G_GUINT64_FORMAT " for %" G_GUINT64_FORMAT
           " in generated index at offset %" G_GUINT64_FORMAT, *position,
           requested_position, offset);
     return offset;
   }
 
-  if (etrack->duration > 0 && *position >= etrack->duration) {
+  if ((etrack->duration > 0 && etrack->duration != -1)
+      && *position >= etrack->duration) {
     GST_DEBUG_OBJECT (demux, "Position after end of essence track");
     return -1;
   }
@@ -4046,7 +4042,7 @@ from_track_offset:
   if (offset != -1) {
     demux->offset = offset + demux->run_in;
     GST_DEBUG_OBJECT (demux,
-        "Starting with edit unit %" G_GINT64_FORMAT " for %" G_GINT64_FORMAT
+        "Starting with edit unit %" G_GUINT64_FORMAT " for %" G_GUINT64_FORMAT
         " in generated index at offset %" G_GUINT64_FORMAT,
         index_start_position, requested_position, offset);
   } else {
@@ -4062,7 +4058,7 @@ from_track_offset:
       t->position = index_start_position;
     else
       t->position = (demux->offset == demux->run_in) ? 0 : -1;
-    GST_LOG_OBJECT (demux, "Setting track %d position to %" G_GINT64_FORMAT,
+    GST_LOG_OBJECT (demux, "Setting track %u position to %" G_GUINT64_FORMAT,
         t->track_id, t->position);
   }
 
@@ -4072,7 +4068,7 @@ from_track_offset:
   while (ret == GST_FLOW_OK) {
     GstMXFKLV klv;
 
-    GST_LOG_OBJECT (demux, "Pulling from offset %" G_GINT64_FORMAT,
+    GST_LOG_OBJECT (demux, "Pulling from offset %" G_GUINT64_FORMAT,
         demux->offset);
     ret = gst_mxf_demux_peek_klv_packet (demux, demux->offset, &klv);
 
@@ -4082,7 +4078,7 @@ from_track_offset:
         GstMXFDemuxEssenceTrack *t =
             g_ptr_array_index (demux->essence_tracks, i);
 
-        if (t->position > 0)
+        if (t->position > 0 && t->position != -1)
           t->duration = t->position;
       }
       /* For the searched track this is really our position */
@@ -4100,7 +4096,7 @@ from_track_offset:
     }
 
     GST_LOG_OBJECT (demux,
-        "pulling gave flow:%s track->position:%" G_GINT64_FORMAT,
+        "pulling gave flow:%s track->position:%" G_GUINT64_FORMAT,
         gst_flow_get_name (ret), etrack->position);
     if (G_UNLIKELY (ret != GST_FLOW_OK) && etrack->position <= *position) {
       demux->offset = old_offset;
@@ -4112,8 +4108,8 @@ from_track_offset:
     }
 
     GST_LOG_OBJECT (demux,
-        "Handling gave flow:%s track->position:%" G_GINT64_FORMAT
-        " looking for %" G_GINT64_FORMAT, gst_flow_get_name (ret),
+        "Handling gave flow:%s track->position:%" G_GUINT64_FORMAT
+        " looking for %" G_GUINT64_FORMAT, gst_flow_get_name (ret),
         etrack->position, *position);
 
     /* If we found the position read it from the index again */
@@ -4128,7 +4124,7 @@ from_track_offset:
       demux->current_partition = old_partition;
       if (find_edit_entry (demux, etrack, *position, keyframe, &index_entry)) {
         GST_DEBUG_OBJECT (demux,
-            "Got position %" G_GINT64_FORMAT " at offset %" G_GUINT64_FORMAT,
+            "Got position %" G_GUINT64_FORMAT " at offset %" G_GUINT64_FORMAT,
             index_entry.dts, index_entry.offset);
         *position = index_entry.dts;
         return index_entry.offset;
@@ -4195,9 +4191,9 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
         GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
 
         GST_DEBUG_OBJECT (p,
-            "eos:%d current_essence_track_position:%" G_GINT64_FORMAT
-            " position:%" G_GINT64_FORMAT " duration:%" G_GINT64_FORMAT, p->eos,
-            p->current_essence_track_position,
+            "eos:%d current_essence_track_position:%" G_GUINT64_FORMAT
+            " position:%" G_GUINT64_FORMAT " duration:%" G_GUINT64_FORMAT,
+            p->eos, p->current_essence_track_position,
             p->current_essence_track->position,
             p->current_essence_track->duration);
         if (!p->eos
@@ -4209,7 +4205,7 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
 
       while ((p = gst_mxf_demux_get_earliest_pad (demux))) {
         guint64 offset;
-        gint64 position;
+        guint64 position;
 
         GST_DEBUG_OBJECT (p, "Trying on earliest");
 
@@ -4266,7 +4262,7 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
       if (partition->partition.body_sid != 0) {
         guint64 lowest_offset = G_MAXUINT64;
         GST_DEBUG_OBJECT (demux,
-            "Entered partition (body_sid:%d index_sid:%d body_offset:%"
+            "Entered partition (body_sid:%u index_sid:%u body_offset:%"
             G_GUINT64_FORMAT "), checking positions",
             partition->partition.body_sid, partition->partition.index_sid,
             partition->partition.body_offset);
@@ -4288,7 +4284,7 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
           } else if (partition->single_track->position != 0) {
             GstMXFDemuxIndex entry;
             GST_DEBUG_OBJECT (demux,
-                "Track already at another position : %" G_GINT64_FORMAT,
+                "Track already at another position : %" G_GUINT64_FORMAT,
                 partition->single_track->position);
             if (find_edit_entry (demux, partition->single_track,
                     partition->single_track->position, FALSE, &entry)) {
@@ -4308,7 +4304,7 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
             if (etrack->body_sid != partition->partition.body_sid)
               continue;
             if (etrack->position == -1 && partition->partition.body_offset == 0) {
-              GST_DEBUG_OBJECT (demux, "Resetting track %d to position 0",
+              GST_DEBUG_OBJECT (demux, "Resetting track %u to position 0",
                   etrack->track_id);
 
               etrack->position = 0;
@@ -4367,7 +4363,7 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
             gst_mxf_demux_pad_get_current_time (demux,
                 earliest) > demux->max_drift)) {
       guint64 offset;
-      gint64 position;
+      guint64 position;
 
       GST_DEBUG_OBJECT (demux,
           "Found synchronization issue -- trying to solve");
@@ -4395,7 +4391,7 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
       gst_mxf_demux_set_partition_for_offset (demux, demux->offset);
       GST_DEBUG_OBJECT (demux,
           "Switching to offset %" G_GUINT64_FORMAT " for position %"
-          G_GINT64_FORMAT " on track %d (body_sid:%d index_sid:%d)",
+          G_GUINT64_FORMAT " on track %u (body_sid:%u index_sid:%u)",
           demux->offset, position, earliest->current_essence_track->track_id,
           earliest->current_essence_track->body_sid,
           earliest->current_essence_track->index_sid);
@@ -4754,9 +4750,9 @@ gst_mxf_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
 static gboolean
 gst_mxf_demux_pad_to_track_and_position (GstMXFDemux * demux,
     GstMXFDemuxPad * pad, GstClockTime streamtime,
-    GstMXFDemuxEssenceTrack ** etrack, gint64 * position)
+    GstMXFDemuxEssenceTrack ** etrack, guint64 * position)
 {
-  gint64 material_position;
+  guint64 material_position;
   guint64 sum = 0;
   guint i;
   MXFMetadataSourceClip *clip = NULL;
@@ -4768,7 +4764,7 @@ gst_mxf_demux_pad_to_track_and_position (GstMXFDemux * demux,
       pad->material_track->edit_rate.d * GST_SECOND);
 
   GST_DEBUG_OBJECT (pad,
-      "streamtime %" GST_TIME_FORMAT " position %" G_GINT64_FORMAT,
+      "streamtime %" GST_TIME_FORMAT " position %" G_GUINT64_FORMAT,
       GST_TIME_ARGS (streamtime), material_position);
 
 
@@ -4779,8 +4775,8 @@ gst_mxf_demux_pad_to_track_and_position (GstMXFDemux * demux,
         MXF_METADATA_SOURCE_CLIP (pad->material_track->parent.sequence->
         structural_components[i]);
     GST_LOG_OBJECT (pad,
-        "clip %d start_position:%" G_GINT64_FORMAT " duration %"
-        G_GINT64_FORMAT, clip->source_track_id, clip->start_position,
+        "clip %u start_position:%" G_GUINT64_FORMAT " duration %"
+        G_GUINT64_FORMAT, clip->source_track_id, clip->start_position,
         clip->parent.duration);
     if (clip->parent.duration <= 0)
       break;
@@ -4796,7 +4792,7 @@ gst_mxf_demux_pad_to_track_and_position (GstMXFDemux * demux,
     sum -= clip->parent.duration;
   }
 
-  GST_DEBUG_OBJECT (pad, "Looking for essence track for track_id:%d umid:%s",
+  GST_DEBUG_OBJECT (pad, "Looking for essence track for track_id:%u umid:%s",
       clip->source_track_id, mxf_umid_to_string (&clip->source_package_id,
           str));
 
@@ -4804,13 +4800,13 @@ gst_mxf_demux_pad_to_track_and_position (GstMXFDemux * demux,
   for (i = 0; i < demux->essence_tracks->len; i++) {
     GstMXFDemuxEssenceTrack *track =
         g_ptr_array_index (demux->essence_tracks, i);
-    GST_LOG_OBJECT (pad, "Looking at essence track body_sid:%d index_sid:%d",
+    GST_LOG_OBJECT (pad, "Looking at essence track body_sid:%u index_sid:%u",
         track->body_sid, track->index_sid);
     if (clip->source_track_id == 0 || (track->track_id == clip->source_track_id
             && mxf_umid_is_equal (&clip->source_package_id,
                 &track->source_package_uid))) {
       GST_DEBUG_OBJECT (pad,
-          "Found matching essence track body_sid:%d index_sid:%d",
+          "Found matching essence track body_sid:%u index_sid:%u",
           track->body_sid, track->index_sid);
       *etrack = track;
       *position = material_position - sum;
@@ -4825,7 +4821,7 @@ gst_mxf_demux_pad_to_track_and_position (GstMXFDemux * demux,
 static gboolean
 gst_mxf_demux_pad_get_material_position (GstMXFDemux * demux,
     GstMXFDemuxPad * pad, GstMXFDemuxEssenceTrack * etrack,
-    gint64 position, guint64 * material_position)
+    guint64 position, guint64 * material_position)
 {
   guint i;
   MXFMetadataSourceClip *clip = NULL;
@@ -4840,8 +4836,8 @@ gst_mxf_demux_pad_get_material_position (GstMXFDemux * demux,
         MXF_METADATA_SOURCE_CLIP (pad->material_track->parent.sequence->
         structural_components[i]);
     GST_LOG_OBJECT (pad,
-        "clip %d start_position:%" G_GINT64_FORMAT " duration %"
-        G_GINT64_FORMAT, clip->source_track_id, clip->start_position,
+        "clip %u start_position:%" G_GUINT64_FORMAT " duration %"
+        G_GUINT64_FORMAT, clip->source_track_id, clip->start_position,
         clip->parent.duration);
     if (etrack->track_id == clip->source_track_id
         && mxf_umid_is_equal (&clip->source_package_id,
@@ -4868,7 +4864,7 @@ gst_mxf_demux_pad_get_material_position (GstMXFDemux * demux,
 static gboolean
 gst_mxf_demux_pad_get_stream_time (GstMXFDemux * demux,
     GstMXFDemuxPad * pad, GstMXFDemuxEssenceTrack * etrack,
-    gint64 position, GstClockTime * stream_time)
+    guint64 position, GstClockTime * stream_time)
 {
   guint i;
   guint64 sum = 0;
@@ -4882,8 +4878,8 @@ gst_mxf_demux_pad_get_stream_time (GstMXFDemux * demux,
         MXF_METADATA_SOURCE_CLIP (pad->material_track->parent.sequence->
         structural_components[i]);
     GST_LOG_OBJECT (pad,
-        "clip %d start_position:%" G_GINT64_FORMAT " duration %"
-        G_GINT64_FORMAT, clip->source_track_id, clip->start_position,
+        "clip %u start_position:%" G_GUINT64_FORMAT " duration %"
+        G_GUINT64_FORMAT, clip->source_track_id, clip->start_position,
         clip->parent.duration);
     if (etrack->track_id == clip->source_track_id
         && mxf_umid_is_equal (&clip->source_package_id,
@@ -4975,7 +4971,7 @@ gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
     return ret;
   }
 
-  if (clip->parent.duration > 0)
+  if (clip->parent.duration > 0 && clip->parent.duration != -1)
     sum -= clip->parent.duration;
 
   start -=
@@ -4985,7 +4981,7 @@ gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
   gst_mxf_demux_pad_set_component (demux, p, i);
 
   {
-    gint64 essence_offset = gst_util_uint64_scale (start,
+    guint64 essence_offset = gst_util_uint64_scale (start,
         p->current_essence_track->source_track->edit_rate.n,
         p->current_essence_track->source_track->edit_rate.d * GST_SECOND);
 
@@ -4993,8 +4989,10 @@ gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
     p->current_material_track_position = sum + essence_offset;
   }
 
-  if (p->current_essence_track->duration > 0 &&
-      p->current_essence_track_position >= p->current_essence_track->duration) {
+  if ((p->current_essence_track->duration > 0
+          && p->current_essence_track->duration != -1)
+      && p->current_essence_track_position >=
+      p->current_essence_track->duration) {
     p->current_essence_track_position = p->current_essence_track->duration;
     p->current_material_track_position =
         sum + p->current_component->parent.duration;
@@ -5062,8 +5060,8 @@ gst_mxf_demux_seek_to_previous_keyframe (GstMXFDemux * demux)
     GstMXFDemuxEssenceTrack *cur_track = p->current_essence_track;
 
     GST_LOG_OBJECT (p,
-        "candidate track %d (body_sid:%d index_sid:%d)"
-        ", material track position %" G_GINT64_FORMAT
+        "candidate track %u (body_sid:%u index_sid:%u)"
+        ", material track position %" G_GUINT64_FORMAT
         ", video %d, audio %d, is unencoded %d, is linked %d",
         cur_track->track_id, cur_track->body_sid, cur_track->index_sid,
         p->current_material_track_position,
@@ -5136,7 +5134,7 @@ gst_mxf_demux_seek_to_previous_keyframe (GstMXFDemux * demux)
   /* Find actual chunk start for selected ref pad,
    * preferably on a keyframe */
   {
-    gint64 position = ref_pad->current_essence_track_position;
+    guint64 position = ref_pad->current_essence_track_position;
     new_offset =
         gst_mxf_demux_find_essence_element (demux,
         ref_pad->current_essence_track, &position, TRUE);
@@ -5182,7 +5180,7 @@ gst_mxf_demux_seek_to_previous_keyframe (GstMXFDemux * demux)
   }
 
   GST_DEBUG_OBJECT (ref_pad,
-      "ref track %d (body_sid:%d index_sid:%d)"
+      "ref track %u (body_sid:%u index_sid:%u)"
       ", prev chunk start ts %" GST_TIME_FORMAT
       ", target chunk start ts %" GST_TIME_FORMAT
       ", actual chunk start ts %" GST_TIME_FORMAT,
@@ -5196,7 +5194,7 @@ gst_mxf_demux_seek_to_previous_keyframe (GstMXFDemux * demux)
   /* Align the others on this */
   for (i = 0; i < demux->src->len; i++) {
     GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
-    gint64 position;
+    guint64 position;
 
     if (p == ref_pad)
       continue;
@@ -5282,7 +5280,7 @@ gst_mxf_demux_pad_push_reversed_queue (GstElement * element, GstPad * pad,
     return TRUE;
 
   GST_LOG_OBJECT (p,
-      "Pushing pending reversed items for track %d (body_sid:%d index_sid:%d)",
+      "Pushing pending reversed items for track %u (body_sid:%u index_sid:%u)",
       etrack->track_id, etrack->body_sid, etrack->index_sid);
 
   while ((data = g_queue_pop_head (&p->reorder_queue))) {
@@ -5346,7 +5344,7 @@ gst_mxf_demux_seek_push (GstMXFDemux * demux, GstEvent * event)
   GstFormat format;
   GstSeekFlags flags;
   GstSeekType start_type, stop_type;
-  gint64 start, stop;
+  guint64 start, stop;
   gdouble rate;
   gboolean update, flush, keyframe;
   GstSegment seeksegment;
@@ -5354,7 +5352,7 @@ gst_mxf_demux_seek_push (GstMXFDemux * demux, GstEvent * event)
   guint32 seqnum;
 
   gst_event_parse_seek (event, &rate, &format, &flags,
-      &start_type, &start, &stop_type, &stop);
+      &start_type, (gint64 *) & start, &stop_type, (gint64 *) & stop);
   seqnum = gst_event_get_seqnum (event);
 
   if (rate <= 0.0)
@@ -5394,7 +5392,7 @@ gst_mxf_demux_seek_push (GstMXFDemux * demux, GstEvent * event)
     /* Do the actual seeking */
     for (i = 0; i < demux->src->len; i++) {
       GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
-      gint64 position;
+      guint64 position;
       guint64 off;
 
       /* Reset EOS flag on all pads */
@@ -5516,7 +5514,7 @@ collect_index_table_segments (GstMXFDemux * demux)
 #endif
 
     GST_LOG_OBJECT (demux,
-        "Collecting from segment bodySID:%d indexSID:%d instance_id: %s",
+        "Collecting from segment bodySID:%u indexSID:%u instance_id: %s",
         segment->body_sid, segment->index_sid,
         mxf_uuid_to_string (&segment->instance_id, str));
 
@@ -5552,7 +5550,7 @@ collect_index_table_segments (GstMXFDemux * demux)
       if (delta->pos_table_index == -1) {
         if (t->reordered_delta_entry != -1 && didx != t->reordered_delta_entry)
           GST_WARNING_OBJECT (demux,
-              "Index Table specifies more than one stream using temporal reordering (%d and %d)",
+              "Index Table specifies more than one stream using temporal reordering (%u and %d)",
               didx, t->reordered_delta_entry);
         else
           t->reordered_delta_entry = didx;
@@ -5573,14 +5571,14 @@ collect_index_table_segments (GstMXFDemux * demux)
       continue;
 
     GST_DEBUG_OBJECT (demux,
-        "bodySID:%d indexSID:%d Calculating reverse temporal offset table",
+        "bodySID:%u indexSID:%u Calculating reverse temporal offset table",
         table->body_sid, table->index_sid);
 
     for (segidx = 0; segidx < table->segments->len; segidx++) {
       MXFIndexTableSegment *s =
           &g_array_index (table->segments, MXFIndexTableSegment, segidx);
-      guint start = s->index_start_position;
-      guint stop =
+      guint64 start = s->index_start_position;
+      guint64 stop =
           s->index_duration ? start + s->index_duration : start +
           s->n_index_entries;
       guint entidx = 0;
@@ -5595,8 +5593,8 @@ collect_index_table_segments (GstMXFDemux * demux)
         if (start + entidx + entry->temporal_offset >=
             table->reverse_temporal_offsets->len) {
           GST_ERROR_OBJECT (demux,
-              "Temporal offset exceeds boundaries. entry:%d offset:%d max:%d",
-              start + entidx, entry->temporal_offset,
+              "Temporal offset exceeds boundaries. entry:%" G_GUINT64_FORMAT
+              " offset:%d max:%u", start + entidx, entry->temporal_offset,
               table->reverse_temporal_offsets->len);
         } else {
           /* Applying the temporal offset gives us the entry that should contain this PTS.
@@ -5628,7 +5626,7 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
   GstFormat format;
   GstSeekFlags flags;
   GstSeekType start_type, stop_type;
-  gint64 start, stop;
+  guint64 start, stop;
   gdouble rate;
   gboolean update, flush, keyframe;
   GstSegment seeksegment;
@@ -5637,7 +5635,7 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
   guint32 seqnum;
 
   gst_event_parse_seek (event, &rate, &format, &flags,
-      &start_type, &start, &stop_type, &stop);
+      &start_type, (gint64 *) & start, &stop_type, (gint64 *) & stop);
   seqnum = gst_event_get_seqnum (event);
 
   if (seqnum == demux->seqnum) {
@@ -5723,7 +5721,7 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
   for (i = 0; i < demux->src->len; i++) {
     GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
     GstMXFDemuxEssenceTrack *etrack;
-    gint64 track_pos, seeked_pos;
+    guint64 track_pos, seeked_pos;
 
     /* Get track and track position for requested time, handles out of bound internally */
     if (!gst_mxf_demux_pad_to_track_and_position (demux, p,
@@ -5731,7 +5729,7 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
       goto invalid_position;
 
     GST_LOG_OBJECT (p,
-        "track %d (body_sid:%d index_sid:%d), position %" G_GINT64_FORMAT,
+        "track %u (body_sid:%u index_sid:%u), position %" G_GUINT64_FORMAT,
         etrack->track_id, etrack->body_sid, etrack->index_sid, track_pos);
 
     /* Find supporting keyframe entry */
@@ -5743,9 +5741,9 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
     }
 
     GST_LOG_OBJECT (p,
-        "track %d (body_sid:%d index_sid:%d), position %" G_GINT64_FORMAT
-        " entry position %" G_GINT64_FORMAT, etrack->track_id, etrack->body_sid,
-        etrack->index_sid, track_pos, seeked_pos);
+        "track %u (body_sid:%u index_sid:%u), position %" G_GUINT64_FORMAT
+        " entry position %" G_GUINT64_FORMAT, etrack->track_id,
+        etrack->body_sid, etrack->index_sid, track_pos, seeked_pos);
 
     if (seeked_pos != track_pos) {
       GstClockTime stream_time;
@@ -5772,7 +5770,7 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
     /* Do the actual seeking */
     for (i = 0; i < demux->src->len; i++) {
       GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
-      gint64 position;
+      guint64 position;
       guint64 off;
 
       /* Reset EOS flag on all pads */
@@ -5952,7 +5950,7 @@ gst_mxf_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     case GST_QUERY_POSITION:
     {
       GstFormat format;
-      gint64 pos;
+      guint64 pos;
 
       gst_query_parse_position (query, &format, NULL);
       if (format != GST_FORMAT_TIME && format != GST_FORMAT_DEFAULT)
@@ -5964,7 +5962,7 @@ gst_mxf_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
           gst_mxf_demux_pad_get_current_time (demux, mxfpad);
 
       GST_DEBUG_OBJECT (pad,
-          "Returning position %" G_GINT64_FORMAT " in format %s", pos,
+          "Returning position %" G_GUINT64_FORMAT " in format %s", pos,
           gst_format_get_name (format));
 
       gst_query_set_position (query, format, pos);
@@ -5973,7 +5971,7 @@ gst_mxf_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       break;
     }
     case GST_QUERY_DURATION:{
-      gint64 duration;
+      guint64 duration;
       GstFormat format;
 
       gst_query_parse_duration (query, &format, NULL);
@@ -5987,8 +5985,6 @@ gst_mxf_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       }
 
       duration = mxfpad->material_track->parent.sequence->duration;
-      if (duration <= -1)
-        duration = -1;
 
       if (duration != -1 && format == GST_FORMAT_TIME) {
         if (mxfpad->material_track->edit_rate.n == 0 ||
@@ -6005,7 +6001,7 @@ gst_mxf_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       g_rw_lock_reader_unlock (&demux->metadata_lock);
 
       GST_DEBUG_OBJECT (pad,
-          "Returning duration %" G_GINT64_FORMAT " in format %s", duration,
+          "Returning duration %" G_GUINT64_FORMAT " in format %s", duration,
           gst_format_get_name (format));
 
       gst_query_set_duration (query, format, duration);
@@ -6014,7 +6010,7 @@ gst_mxf_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     }
     case GST_QUERY_SEEKING:{
       GstFormat fmt;
-      gint64 duration;
+      guint64 duration;
 
       ret = TRUE;
       gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
@@ -6023,7 +6019,7 @@ gst_mxf_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
         goto done;
       }
 
-      if (!gst_pad_query_duration (pad, GST_FORMAT_TIME, &duration)) {
+      if (!gst_pad_query_duration (pad, GST_FORMAT_TIME, (gint64 *) & duration)) {
         gst_query_set_seeking (query, fmt, FALSE, -1, -1);
         goto done;
       }
@@ -6049,7 +6045,7 @@ gst_mxf_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     }
     case GST_QUERY_SEGMENT:{
       GstFormat format;
-      gint64 start, stop;
+      guint64 start, stop;
 
       format = demux->segment.format;
 
@@ -6165,7 +6161,7 @@ gst_mxf_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GstMXFDemuxEssenceTrack *t =
             g_ptr_array_index (demux->essence_tracks, i);
 
-        if (t->position > 0)
+        if (t->position > 0 && t->position != -1)
           t->duration = t->position;
       }
 
@@ -6180,7 +6176,7 @@ gst_mxf_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       while ((p = gst_mxf_demux_get_earliest_pad (demux))) {
         guint64 offset;
-        gint64 position;
+        guint64 position;
 
         position = p->current_essence_track_position;
 
@@ -6256,7 +6252,7 @@ gst_mxf_demux_query (GstElement * element, GstQuery * query)
     case GST_QUERY_POSITION:
     {
       GstFormat format;
-      gint64 pos;
+      guint64 pos;
 
       gst_query_parse_position (query, &format, NULL);
       if (format != GST_FORMAT_TIME)
@@ -6265,7 +6261,7 @@ gst_mxf_demux_query (GstElement * element, GstQuery * query)
       pos = demux->segment.position;
 
       GST_DEBUG_OBJECT (demux,
-          "Returning position %" G_GINT64_FORMAT " in format %s", pos,
+          "Returning position %" G_GUINT64_FORMAT " in format %s", pos,
           gst_format_get_name (format));
 
       gst_query_set_position (query, format, pos);
@@ -6274,7 +6270,7 @@ gst_mxf_demux_query (GstElement * element, GstQuery * query)
       break;
     }
     case GST_QUERY_DURATION:{
-      gint64 duration = -1;
+      guint64 duration = -1;
       GstFormat format;
       guint i;
 
@@ -6288,14 +6284,14 @@ gst_mxf_demux_query (GstElement * element, GstQuery * query)
       g_rw_lock_reader_lock (&demux->metadata_lock);
       for (i = 0; i < demux->src->len; i++) {
         GstMXFDemuxPad *pad = g_ptr_array_index (demux->src, i);
-        gint64 pdur = -1;
+        guint64 pdur = -1;
 
         if (!pad->material_track || !pad->material_track->parent.sequence)
           continue;
 
         pdur = pad->material_track->parent.sequence->duration;
         if (pad->material_track->edit_rate.n == 0 ||
-            pad->material_track->edit_rate.d == 0 || pdur <= -1)
+            pad->material_track->edit_rate.d == 0 || pdur == -1)
           continue;
 
         pdur =
@@ -6312,7 +6308,7 @@ gst_mxf_demux_query (GstElement * element, GstQuery * query)
       }
 
       GST_DEBUG_OBJECT (demux,
-          "Returning duration %" G_GINT64_FORMAT " in format %s", duration,
+          "Returning duration %" G_GUINT64_FORMAT " in format %s", duration,
           gst_format_get_name (format));
 
       gst_query_set_duration (query, format, duration);
@@ -6348,7 +6344,7 @@ gst_mxf_demux_query (GstElement * element, GstQuery * query)
     }
     case GST_QUERY_SEGMENT:{
       GstFormat format;
-      gint64 start, stop;
+      guint64 start, stop;
 
       format = demux->segment.format;
 

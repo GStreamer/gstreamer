@@ -2618,7 +2618,7 @@ mxf_metadata_timeline_track_handle_tag (MXFMetadataBase * metadata,
       if (tag_size != 8)
         goto error;
       self->origin = GST_READ_UINT64_BE (tag_data);
-      GST_DEBUG ("  origin = %" G_GINT64_FORMAT, self->origin);
+      GST_DEBUG ("  origin = %" G_GUINT64_FORMAT, self->origin);
       break;
     default:
       ret =
@@ -2724,7 +2724,7 @@ mxf_metadata_event_track_handle_tag (MXFMetadataBase * metadata,
       if (tag_size != 8)
         goto error;
       self->event_origin = GST_READ_UINT64_BE (tag_data);
-      GST_DEBUG ("  event origin = %" G_GINT64_FORMAT, self->event_origin);
+      GST_DEBUG ("  event origin = %" G_GUINT64_FORMAT, self->event_origin);
       break;
     default:
       ret =
@@ -2863,7 +2863,7 @@ mxf_metadata_sequence_handle_tag (MXFMetadataBase * metadata,
       if (tag_size != 8)
         goto error;
       self->duration = GST_READ_UINT64_BE (tag_data);
-      GST_DEBUG ("  duration = %" G_GINT64_FORMAT, self->duration);
+      GST_DEBUG ("  duration = %" G_GUINT64_FORMAT, self->duration);
       break;
     case 0x1001:
       if (!mxf_uuid_array_parse (&self->structural_components_uids,
@@ -3086,7 +3086,7 @@ mxf_metadata_structural_component_handle_tag (MXFMetadataBase * metadata,
       if (tag_size != 8)
         goto error;
       self->duration = GST_READ_UINT64_BE (tag_data);
-      GST_DEBUG ("  duration = %" G_GINT64_FORMAT, self->duration);
+      GST_DEBUG ("  duration = %" G_GUINT64_FORMAT, self->duration);
       break;
     default:
       ret =
@@ -3194,7 +3194,7 @@ mxf_metadata_timecode_component_handle_tag (MXFMetadataBase * metadata,
       if (tag_size != 8)
         goto error;
       self->start_timecode = GST_READ_UINT64_BE (tag_data);
-      GST_DEBUG ("  start timecode = %" G_GINT64_FORMAT, self->start_timecode);
+      GST_DEBUG ("  start timecode = %" G_GUINT64_FORMAT, self->start_timecode);
       break;
     case 0x1503:
       if (tag_size != 1)
@@ -3314,7 +3314,7 @@ mxf_metadata_source_clip_handle_tag (MXFMetadataBase * metadata,
         goto error;
 
       self->start_position = GST_READ_UINT64_BE (tag_data);
-      GST_DEBUG ("  start position = %" G_GINT64_FORMAT, self->start_position);
+      GST_DEBUG ("  start position = %" G_GUINT64_FORMAT, self->start_position);
       break;
     case 0x1101:
       if (tag_size != 32)
@@ -3676,7 +3676,7 @@ mxf_metadata_dm_segment_handle_tag (MXFMetadataBase * metadata,
       if (tag_size != 8)
         goto error;
       self->event_start_position = GST_READ_UINT64_BE (tag_data);
-      GST_DEBUG ("  event start position = %" G_GINT64_FORMAT,
+      GST_DEBUG ("  event start position = %" G_GUINT64_FORMAT,
           self->event_start_position);
       break;
     case 0x0602:
@@ -4182,7 +4182,7 @@ mxf_metadata_file_descriptor_handle_tag (MXFMetadataBase * metadata,
       if (tag_size != 8)
         goto error;
       self->container_duration = GST_READ_UINT64_BE (tag_data);
-      GST_DEBUG ("  container duration = %" G_GINT64_FORMAT,
+      GST_DEBUG ("  container duration = %" G_GUINT64_FORMAT,
           self->container_duration);
       break;
     case 0x3004:

@@ -1104,7 +1104,7 @@ mxf_index_table_segment_parse (const MXFUL * ul,
         if (tag_size != 8)
           goto error;
         segment->index_start_position = GST_READ_UINT64_BE (tag_data);
-        GST_DEBUG ("  index start position = %" G_GINT64_FORMAT,
+        GST_DEBUG ("  index start position = %" G_GUINT64_FORMAT,
             segment->index_start_position);
         found_bitset |= 4;
         break;
@@ -1112,7 +1112,7 @@ mxf_index_table_segment_parse (const MXFUL * ul,
         if (tag_size != 8)
           goto error;
         segment->index_duration = GST_READ_UINT64_BE (tag_data);
-        GST_DEBUG ("  index duration = %" G_GINT64_FORMAT,
+        GST_DEBUG ("  index duration = %" G_GUINT64_FORMAT,
             segment->index_duration);
         found_bitset |= 8;
         break;

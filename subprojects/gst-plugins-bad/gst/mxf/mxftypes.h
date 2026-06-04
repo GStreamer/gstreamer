@@ -154,8 +154,8 @@ typedef struct {
 typedef struct {
   MXFUUID instance_id;
   MXFFraction index_edit_rate;
-  gint64 index_start_position;
-  gint64 index_duration;
+  guint64 index_start_position;
+  guint64 index_duration;
   guint32 edit_unit_byte_count;
   guint32 index_sid;
   guint32 body_sid;
