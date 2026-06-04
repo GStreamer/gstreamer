@@ -1366,6 +1366,7 @@ gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
               /* restore chars overwritten by '\0' */
               *d = '=';
               *ae = '"';
+              *pp = '\0';
             } else if (*ae == '\0' || *ae == ' ') {
               /* end of attr/value pair */
               as = &ae[1];
