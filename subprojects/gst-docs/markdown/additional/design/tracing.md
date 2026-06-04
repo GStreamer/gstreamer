@@ -423,7 +423,7 @@ GST_TRACERS=log gst-launch-1.0 fakesrc num-buffers=10 ! fakesink
 ### Print some pipeline stats on exit:
 
 ```
-GST_DEBUG="GST_TRACER:7" GST_TRACERS="stats;rusage" \
+GST_DEBUG="GST_TRACER:7" GST_TRACERS="stats;rusage;log" \
 GST_DEBUG_FILE=trace.log gst-launch-1.0 fakesrc num-buffers=10 \
 sizetype=fixed ! queue ! fakesink && gst-stats-1.0 trace.log
 ```
@@ -431,7 +431,7 @@ sizetype=fixed ! queue ! fakesink && gst-stats-1.0 trace.log
 ### get ts, average-cpuload, current-cpuload, time and plot
 
 ```
-GST_DEBUG="GST_TRACER:7" GST_TRACERS="stats;rusage" \
+GST_DEBUG="GST_TRACER:7" GST_TRACERS="stats;rusage;log" \
 GST_DEBUG_FILE=trace.log /usr/bin/gst-play-1.0 $HOME/Videos/movie.mp4 &&
 ./scripts/gst-plot-traces.sh --format=png | gnuplot eog trace.log.*.png
 ```

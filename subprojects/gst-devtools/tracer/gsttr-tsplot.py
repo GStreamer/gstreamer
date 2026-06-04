@@ -5,7 +5,7 @@ to spot anomalies, such as processing gaps.
 
 How to run:
 1) generate a log
-GST_DEBUG="GST_TRACER:7" GST_TRACERS=stats GST_DEBUG_FILE=trace.log <application>
+GST_DEBUG="GST_TRACER:7" GST_TRACERS="stats;log" GST_DEBUG_FILE=trace.log <application>
 
 2) generate the images
 python3 gsttr-tsplot.py trace.log <outdir>
