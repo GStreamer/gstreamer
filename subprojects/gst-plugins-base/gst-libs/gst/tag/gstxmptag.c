@@ -1222,7 +1222,7 @@ gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
   len = info.size;
   g_return_val_if_fail (len > 0, NULL);
 
-  xpe = &xps[len + 1];
+  xpe = &xps[len];
 
   /* check header and footer */
   xp1 = g_strstr_len (xps, len, "<?xpacket begin");
