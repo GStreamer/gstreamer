@@ -161,7 +161,7 @@ empty:
  * responsible for freeing the returned buffer.  On error, @size is set to 0.
  */
 guint8 *
-id3v2_ununsync_data (const guint8 * unsync_data, guint32 * size)
+id3v2_ununsync_data (const guint8 * unsync_data, gsize * size)
 {
   gsize in_pos, out_pos;
   guint8 *out;
@@ -183,8 +183,8 @@ id3v2_ununsync_data (const guint8 * unsync_data, guint32 * size)
     }
   }
 
-  GST_DEBUG ("size after un-unsyncing: %" G_GSIZE_FORMAT " (before: %u)",
-      out_pos, *size);
+  GST_DEBUG ("size after un-unsyncing: %" G_GSIZE_FORMAT " (before: %"
+      G_GSIZE_FORMAT ")", out_pos, *size);
 
   *size = out_pos;
   return out;
@@ -421,7 +421,7 @@ convert_fid_to_v240 (gchar * frame_id)
 /* add unknown or unhandled ID3v2 frames to the taglist as binary blobs */
 static void
 id3v2_add_id3v2_frame_blob_to_taglist (ID3TagsWorking * work,
-    guint8 * frame_data, guint frame_size)
+    const guint8 * frame_data, guint frame_size)
 {
   GstBuffer *blob;
   GstSample *sample;
