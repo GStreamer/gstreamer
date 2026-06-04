@@ -11,7 +11,8 @@ def _log_line_regex():
     # LEVEL = "([A-Z]+)\s+"
     LEVEL = "(TRACE)\s+"
     # "0x8165430 "
-    THREAD = r"(0x[0-9a-f]+)\s+"
+    # thread id is logged as a hex pointer (0x...) or a decimal id
+    THREAD = r"(0x[0-9a-f]+|\d+)\s+"
     # "GST_REFCOUNTING ", "flacdec "
     CATEGORY = "([A-Za-z0-9_-]+)\s+"
     # "  3089 "

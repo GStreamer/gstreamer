@@ -27,12 +27,16 @@ class AnalysisRunner(object):
             analyzer.handle_tracer_entry(event)
 
     def is_tracer_class(self, event):
-        return (event[Parser.F_FILENAME] == 'gsttracerrecord.c'
-                and event[Parser.F_CATEGORY] == 'GST_TRACER'
+        # Schema lines are now rendered by the log tracer (empty file/line),
+        # distinguished from data entries by the '.class' structure name.
+        return (event[Parser.F_CATEGORY] == 'GST_TRACER'
+                and not event[Parser.F_LINE] and not event[Parser.F_FILENAME]
                 and '.class' in event[Parser.F_MESSAGE])
 
     def is_tracer_entry(self, event):
-        return (not event[Parser.F_LINE] and not event[Parser.F_FILENAME])
+        return (event[Parser.F_CATEGORY] == 'GST_TRACER'
+                and not event[Parser.F_LINE] and not event[Parser.F_FILENAME]
+                and '.class' not in event[Parser.F_MESSAGE])
 
     def run(self):
         try:
