@@ -263,6 +263,7 @@ gst_dxva_vp9_decoder_copy_reference_frames (GstDxvaVp9Decoder * self,
 
       if (id != 0xff) {
         params->ref_frame_map[i].Index7Bits = id;
+        params->ref_frame_map[i].AssociatedFlag = 0;
         params->ref_frame_coded_width[i] = other->frame_hdr.width;
         params->ref_frame_coded_height[i] = other->frame_hdr.height;
         g_ptr_array_add (priv->ref_pics, other);
