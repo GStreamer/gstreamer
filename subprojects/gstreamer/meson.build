@@ -205,6 +205,8 @@ host_defines = [
   [ 'hppa', 'HAVE_CPU_HPPA' ],
   [ 'm68k', 'HAVE_CPU_M68K' ],
   [ 's390', 'HAVE_CPU_S390' ],
+  [ 'riscv32', 'HAVE_CPU_RISCV32' ],
+  [ 'riscv64', 'HAVE_CPU_RISCV64' ],
 ]
 foreach h : host_defines
   if h.get(0) == host_machine.cpu_family()
