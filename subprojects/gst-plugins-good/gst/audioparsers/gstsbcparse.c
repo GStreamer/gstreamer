@@ -76,7 +76,7 @@ static GstCaps *gst_sbc_parse_get_sink_caps (GstBaseParse * parse,
 static guint8 gst_sbc_calculate_crc8 (const guint8 * data, gint bits_crc);
 static gsize gst_sbc_calc_framelen (guint subbands, GstSbcChannelMode ch_mode,
     guint blocks, guint bitpool);
-static gsize gst_sbc_parse_header (const guint8 * data, guint * rate,
+static gsize gst_sbc_parse_header (const guint8 * data, gsize len, guint * rate,
     guint * n_blocks, GstSbcChannelMode * ch_mode,
     GstSbcAllocationMethod * alloc_method, guint * n_subbands, guint * bitpool);
 
@@ -196,9 +196,8 @@ gst_sbc_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
 
   gst_buffer_map (frame->buffer, &map, GST_MAP_READ);
 
-  g_assert (map.size >= 6);
-
-  frame_len = gst_sbc_parse_header (map.data, &rate, &n_blocks, &ch_mode,
+  frame_len =
+      gst_sbc_parse_header (map.data, map.size, &rate, &n_blocks, &ch_mode,
       &alloc_method, &n_subbands, &bitpool);
 
   GST_LOG_OBJECT (parse, "frame_len: %u", (guint) frame_len);
@@ -255,8 +254,10 @@ gst_sbc_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
   GST_LOG_OBJECT (sbcparse, "parsing up to %d frames", max_frames);
 
   for (i = 1; i < max_frames; ++i) {
-    next_len = gst_sbc_parse_header (map.data + (i * frame_len), &rate,
-        &n_blocks, &ch_mode, &alloc_method, &n_subbands, &bitpool);
+    next_len =
+        gst_sbc_parse_header (map.data + (i * frame_len),
+        map.size - (i * frame_len), &rate, &n_blocks, &ch_mode, &alloc_method,
+        &n_subbands, &bitpool);
 
     if (next_len != frame_len || sbcparse->alloc_method != alloc_method ||
         sbcparse->ch_mode != ch_mode || sbcparse->rate != rate ||
@@ -440,15 +441,17 @@ gst_sbc_calc_framelen (guint subbands, GstSbcChannelMode ch_mode,
 }
 
 static gsize
-gst_sbc_parse_header (const guint8 * data, guint * rate, guint * n_blocks,
-    GstSbcChannelMode * ch_mode, GstSbcAllocationMethod * alloc_method,
-    guint * n_subbands, guint * bitpool)
+gst_sbc_parse_header (const guint8 * data, gsize len, guint * rate,
+    guint * n_blocks, GstSbcChannelMode * ch_mode,
+    GstSbcAllocationMethod * alloc_method, guint * n_subbands, guint * bitpool)
 {
   static const guint16 sbc_rates[4] = { 16000, 32000, 44100, 48000 };
   static const guint8 sbc_blocks[4] = { 4, 8, 12, 16 };
   guint8 crc_data[2 + 1 + 8], crc_bits, i;
 
-  GST_MEMDUMP ("header", data, 8);
+  if (len < 7)
+    return 0;
+  GST_MEMDUMP ("header", data, 7);
 
   if (data[0] != SBC_SYNCBYTE)
     return 0;
@@ -481,6 +484,12 @@ gst_sbc_parse_header (const guint8 * data, guint * rate, guint * n_blocks,
     crc_bits += *n_subbands * 1 * 4;
   else
     crc_bits += *n_subbands * 2 * 4;
+
+  if (len < 1 + (crc_bits + 7) / 8 + 1) {
+    GST_LOG ("not enough header data available for CRC check, got %"
+        G_GSIZE_FORMAT ", expected %u", len, 1 + (crc_bits + 7) / 8 + 1);
+    return 0;
+  }
 
   for (i = 16; i < crc_bits; i += 8) {
     crc_data[i / 8] = data[1 + (i / 8) + 1];
