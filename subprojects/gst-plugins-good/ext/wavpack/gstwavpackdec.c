@@ -335,7 +335,7 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
   if (!gst_wavpack_read_header (&wph, map.data))
     goto invalid_header;
 
-  if (map.size < wph.ckSize + 4 * 1 + 4)
+  if (map.size - 4 * 1 - 4 < wph.ckSize)
     goto input_not_framed;
 
   if (!(wph.flags & INITIAL_BLOCK))
