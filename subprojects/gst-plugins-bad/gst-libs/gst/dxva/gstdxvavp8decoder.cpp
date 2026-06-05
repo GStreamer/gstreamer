@@ -240,6 +240,7 @@ gst_dxva_vp8_decoder_copy_reference_frames (GstDxvaVp8Decoder * self,
         GST_CODEC_PICTURE (decoder->alt_ref_picture));
     if (id != 0xff) {
       params->alt_fb_idx.Index7Bits = id;
+      params->alt_fb_idx.AssociatedFlag = 0;
       g_ptr_array_add (priv->ref_pics, decoder->alt_ref_picture);
     }
   }
@@ -251,6 +252,7 @@ gst_dxva_vp8_decoder_copy_reference_frames (GstDxvaVp8Decoder * self,
 
     if (id != 0xff) {
       params->gld_fb_idx.Index7Bits = id;
+      params->gld_fb_idx.AssociatedFlag = 0;
       g_ptr_array_add (priv->ref_pics, decoder->golden_ref_picture);
     }
   }
@@ -262,6 +264,7 @@ gst_dxva_vp8_decoder_copy_reference_frames (GstDxvaVp8Decoder * self,
 
     if (id != 0xff) {
       params->lst_fb_idx.Index7Bits = id;
+      params->lst_fb_idx.AssociatedFlag = 0;
       g_ptr_array_add (priv->ref_pics, decoder->last_picture);
     }
   }
