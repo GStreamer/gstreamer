@@ -318,6 +318,7 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
   gint width, depth_shift, i, j, num_samples, wavpack_mode;
   gboolean mode_float;
   gint32 *dec_data = NULL;
+  gsize dec_data_size;
   guint8 *out_data;
   GstMapInfo map, omap;
 
@@ -384,7 +385,11 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
 
   g_assert (dec->context != NULL);
   /* alloc output buffer */
-  dec_data = g_malloc (4 * wph.block_samples * dec->channels);
+  dec_data_size = 4;
+  if (!g_size_checked_mul (&dec_data_size, dec_data_size, wph.block_samples) ||
+      !g_size_checked_mul (&dec_data_size, dec_data_size, dec->channels))
+    goto invalid_header;
+  dec_data = g_malloc (dec_data_size);
 
   /* decode */
   decoded = WavpackUnpackSamples (dec->context, dec_data, wph.block_samples);
