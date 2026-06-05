@@ -1167,6 +1167,10 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
     out_args.ConversionArguments.Enable = TRUE;
     out_args.ConversionArguments.pReferenceTexture2D = resource;
     out_args.ConversionArguments.ReferenceSubresource = subresource[0];
+    out_args.ConversionArguments.DecodeColorSpace =
+        DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709;
+    out_args.ConversionArguments.OutputColorSpace =
+        out_args.ConversionArguments.DecodeColorSpace;
   } else {
     out_args.pOutputTexture2D = resource;
     out_args.OutputSubresource = subresource[0];
