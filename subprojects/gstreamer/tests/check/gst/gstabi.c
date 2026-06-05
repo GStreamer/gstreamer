@@ -60,9 +60,14 @@
 #include "struct_arm.h"
 #define HAVE_ABI_SIZES TRUE
 #else
+#ifdef HAVE_CPU_RISCV64
+#include "struct_riscv64.h"
+#define HAVE_ABI_SIZES TRUE
+#else
 /* in case someone wants to generate a new arch */
 #include "struct_i386.h"
 #define HAVE_ABI_SIZES FALSE
+#endif
 #endif
 #endif
 #endif
