@@ -412,12 +412,12 @@ gst_vulkan_ensure_element_device (GstElement * element,
           GST_VULKAN_REQUESTED_DEVICE_EXTENSIONS_CONTEXT_TYPE_STR, instance);
       if (query) {
         gst_query_parse_context (query, &merged_req);
+        if (merged_req) {
+          requested_device_exts =
+              gst_vulkan_requested_extensions_context_dup_extensions
+              (merged_req);
+        }
         gst_query_unref (query);
-      }
-      if (merged_req) {
-        requested_device_exts =
-            gst_vulkan_requested_extensions_context_dup_extensions (merged_req);
-        gst_context_unref (merged_req);
       }
       if (requested_device_exts) {
         for (p = requested_device_exts; *p; p++) {
