@@ -319,6 +319,7 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
   gint32 *dec_data = NULL;
   gsize i, j, dec_data_size, unpacked_size, num_samples;
   uint32_t decoded;
+  guint64 offset;
   guint8 *out_data;
   GstMapInfo map, omap;
 
@@ -390,9 +391,12 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
       !g_size_checked_mul (&dec_data_size, dec_data_size, dec->channels))
     goto invalid_header;
   dec_data = g_malloc (dec_data_size);
+  offset = GST_BUFFER_OFFSET (buf);
 
   /* decode */
   decoded = WavpackUnpackSamples (dec->context, dec_data, wph.block_samples);
+  gst_buffer_unmap (buf, &map);
+  buf = NULL;
   if (decoded != wph.block_samples)
     goto decode_error;
 
@@ -404,7 +408,7 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
   outbuf = gst_audio_decoder_allocate_output_buffer (bdec, unpacked_size);
 
   /* legacy; pass along offset, whatever that might entail */
-  GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buf);
+  GST_BUFFER_OFFSET (outbuf) = offset;
 
   gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
   out_data = omap.data;
@@ -528,9 +532,6 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
   }
 
   gst_buffer_unmap (outbuf, &omap);
-  gst_buffer_unmap (buf, &map);
-  buf = NULL;
-
   g_free (dec_data);
 
   ret = gst_audio_decoder_finish_frame (bdec, outbuf, 1);
