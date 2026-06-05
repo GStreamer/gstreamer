@@ -95,11 +95,13 @@ using namespace Microsoft::WRL;
 class GstD3D12Dpb
 {
 public:
-  GstD3D12Dpb (guint8 size) : size_(size)
+  GstD3D12Dpb (guint8 size, bool array_of_textures)
   {
+    size_ = size;
     textures_.resize (size);
     subresources_.resize (size);
     heaps_.resize (size);
+    array_of_textures_ = array_of_textures;
 
     for (guint i = 0; i < size; i++) {
       dxva_id_.push (i);
@@ -111,20 +113,24 @@ public:
 
   guint8 Acquire (GstD3D12Memory * mem, ID3D12VideoDecoderHeap * heap)
   {
-    std::unique_lock <std::mutex> lk (lock_);
-    while (dxva_id_.empty ())
-      cond_.wait (lk);
-
-    guint8 ret = dxva_id_.front ();
-    dxva_id_.pop ();
-
-    GstD3D12Memory *dmem;
     ID3D12Resource *resource;
     UINT subresource = 0;
 
-    dmem = GST_D3D12_MEMORY_CAST (mem);
-    resource = gst_d3d12_memory_get_resource_handle (dmem);
-    gst_d3d12_memory_get_subresource_index (dmem, 0, &subresource);
+    resource = gst_d3d12_memory_get_resource_handle (mem);
+    gst_d3d12_memory_get_subresource_index (mem, 0, &subresource);
+
+    guint8 ret = 0;
+    if (array_of_textures_) {
+      std::unique_lock <std::mutex> lk (lock_);
+      while (dxva_id_.empty ())
+        cond_.wait (lk);
+
+      ret = dxva_id_.front ();
+      dxva_id_.pop ();
+    } else {
+      /* Use subresource index directly when texture array is in use */
+      ret = (guint8) subresource;
+    }
 
     textures_[ret] = resource;
     subresources_[ret] = subresource;
@@ -142,7 +148,8 @@ public:
       return;
     }
 
-    dxva_id_.push (id);
+    if (array_of_textures_)
+      dxva_id_.push (id);
     textures_[id] = nullptr;
     subresources_[id] = 0;
     heaps_[id] = nullptr;
@@ -177,6 +184,7 @@ private:
   std::vector<UINT> subresources_;
   std::vector<ID3D12VideoDecoderHeap *> heaps_;
   bool flushing = false;
+  bool array_of_textures_ = false;
 };
 
 struct GstD3D12DecoderPicture : public GstMiniObject
@@ -792,7 +800,8 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
 
   gst_caps_unref (caps);
 
-  session->dpb = std::make_shared < GstD3D12Dpb > ((guint8) session->dpb_size);
+  session->dpb = std::make_shared < GstD3D12Dpb > ((guint8) session->dpb_size,
+      session->array_of_textures);
 
   priv->session = std::move (session);
   priv->last_flow = GST_FLOW_OK;
