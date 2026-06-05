@@ -314,11 +314,11 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
   GstBuffer *outbuf = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
   WavpackHeader wph;
-  int32_t decoded, unpacked_size;
-  gint width, depth_shift, i, j, num_samples, wavpack_mode;
+  gint width, depth_shift, wavpack_mode;
   gboolean mode_float;
   gint32 *dec_data = NULL;
-  gsize dec_data_size;
+  gsize i, j, dec_data_size, unpacked_size, num_samples;
+  uint32_t decoded;
   guint8 *out_data;
   GstMapInfo map, omap;
 
