@@ -29,6 +29,9 @@
  * gst_allocator_alloc() method using `memfd_create()` and `UDMABUF_CREATE`.
  * Platforms not supporting that (most non-Linux) will always return %NULL.
  *
+ * The allocator can be disabled by setting the GST_DISABLE_UDMABUF environment
+ * variable.
+ *
  * Since: 1.28
  */
 
@@ -204,12 +207,15 @@ gst_udmabuf_allocator_init (GstUdmabufAllocator * self)
 
   alloc->mem_type = GST_ALLOCATOR_UDMABUF;
 
+  self->udmabuf_dev_fd = -1;
 #if defined(HAVE_MEMFD_CREATE) && defined(HAVE_LINUX_UDMABUF_H)
-  self->udmabuf_dev_fd = open ("/dev/udmabuf", O_RDONLY | O_CLOEXEC, 0);
-  if (self->udmabuf_dev_fd == -1)
-    GST_WARNING_OBJECT (self,
-        "Udmabuf allocator not available, can't open /dev/udmabuf: %s",
-        strerror (errno));
+  if (!g_getenv ("GST_DISABLE_UDMABUF")) {
+    self->udmabuf_dev_fd = open ("/dev/udmabuf", O_RDONLY | O_CLOEXEC, 0);
+    if (self->udmabuf_dev_fd == -1)
+      GST_WARNING_OBJECT (self,
+          "Udmabuf allocator not available, can't open /dev/udmabuf: %s",
+          strerror (errno));
+  }
 #endif
 
   /* Inherited from GstFdAllocator. Unset as we implement alloc(). */

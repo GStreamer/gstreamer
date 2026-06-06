@@ -533,7 +533,10 @@ gst_shm_allocator_init_once() has not been previously called.</doc>
     <class name="UdmabufAllocator" c:symbol-prefix="udmabuf_allocator" c:type="GstUdmabufAllocator" version="1.28" parent="DmaBufAllocator" glib:type-name="GstUdmabufAllocator" glib:get-type="gst_udmabuf_allocator_get_type" glib:type-struct="UdmabufAllocatorClass">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstudmabufallocator.c">This is a subclass of #GstDmaBufAllocator that implements the
 gst_allocator_alloc() method using `memfd_create()` and `UDMABUF_CREATE`.
-Platforms not supporting that (most non-Linux) will always return %NULL.</doc>
+Platforms not supporting that (most non-Linux) will always return %NULL.
+
+The allocator can be disabled by setting the GST_DISABLE_UDMABUF environment
+variable.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstudmabufallocator.h"/>
       <function name="get" c:identifier="gst_udmabuf_allocator_get" version="1.28">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstudmabufallocator.c">Get the #GstUdmabufAllocator singleton if available.</doc>
