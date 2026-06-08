@@ -193,5 +193,11 @@ void             gst_d3d12_window_set_mip_levels (GstD3D12Window * window,
 
 guint            gst_d3d12_window_get_mip_levels (GstD3D12Window * window);
 
+void             gst_d3d12_window_set_most_detailed_mip (GstD3D12Window * window,
+                                                         gboolean immediate,
+                                                         guint value);
+
+guint            gst_d3d12_window_get_most_detailed_mip (GstD3D12Window * window);
+
 G_END_DECLS
 

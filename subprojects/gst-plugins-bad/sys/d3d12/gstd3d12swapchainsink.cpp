@@ -66,6 +66,7 @@ enum
   PROP_MAX_MIP_LEVELS,
   PROP_SRC_ROI_WIDTH,
   PROP_SRC_ROI_HEIGHT,
+  PROP_MOST_DETAILED_MIP,
 };
 
 #define DEFAULT_ADAPTER -1
@@ -82,6 +83,7 @@ enum
 #define DEFAULT_MAX_MIP_LEVELS 1
 #define DEFAULT_SRC_ROI_WIDTH 0
 #define DEFAULT_SRC_ROI_HEIGHT 0
+#define DEFAULT_MOST_DETAILED_MIP 0
 
 #define BACK_BUFFER_COUNT 2
 
@@ -259,6 +261,7 @@ struct GstD3D12SwapChainSinkPrivate
   guint mip_levels = DEFAULT_MAX_MIP_LEVELS;
   guint src_roi_width = DEFAULT_SRC_ROI_WIDTH;
   guint src_roi_height = DEFAULT_SRC_ROI_HEIGHT;
+  guint most_detailed_mip = DEFAULT_MOST_DETAILED_MIP;
 };
 /* *INDENT-ON* */
 
@@ -447,6 +450,23 @@ gst_d3d12_swapchain_sink_class_init (GstD3D12SwapChainSinkClass * klass)
           "Height of the source ROI, used to compute the target mipmap "
           "level (0 = entire input)",
           0, G_MAXINT, DEFAULT_SRC_ROI_HEIGHT,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D12SwapChainSink:most-detailed-mip:
+   *
+   * Index of the most detailed mip level to start generating and sampling
+   * from, skipping the GPU-expensive high-resolution mip levels.
+   *
+   * Ignored when max-mip-levels is %G_MAXUINT16 (fast-path).
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (object_class, PROP_MOST_DETAILED_MIP,
+      g_param_spec_uint ("most-detailed-mip", "Most Detailed Mip",
+          "Index of the most detailed mip level to generate and sample "
+          "(ignored when max-mip-levels is G_MAXUINT16)",
+          0, G_MAXUINT16, DEFAULT_MOST_DETAILED_MIP,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   d3d12_swapchain_sink_signals[SIGNAL_RESIZE] =
@@ -673,6 +693,13 @@ gst_d3d12_swapchain_sink_set_property (GObject * object, guint prop_id,
             priv->src_roi_height, nullptr);
       }
       break;
+    case PROP_MOST_DETAILED_MIP:
+      priv->most_detailed_mip = g_value_get_uint (value);
+      if (priv->conv) {
+        g_object_set (priv->conv, "most-detailed-mip",
+            priv->most_detailed_mip, nullptr);
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -876,6 +903,9 @@ gst_d3d12_swapchain_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SRC_ROI_HEIGHT:
       g_value_set_uint (value, priv->src_roi_height);
+      break;
+    case PROP_MOST_DETAILED_MIP:
+      g_value_set_uint (value, priv->most_detailed_mip);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1117,7 +1147,8 @@ gst_d3d12_swapchain_sink_render (GstD3D12SwapChainSink * self)
         "saturation", priv->saturation, "brightness", priv->brightness,
         "contrast", priv->contrast, "max-mip-levels", priv->mip_levels,
         "src-roi-width", priv->src_roi_width,
-        "src-roi-height", priv->src_roi_height, nullptr);
+        "src-roi-height", priv->src_roi_height,
+        "most-detailed-mip", priv->most_detailed_mip, nullptr);
     gst_d3d12_overlay_blender_update_viewport (priv->comp, &priv->viewport);
 
     priv->first_present = false;

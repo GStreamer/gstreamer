@@ -147,6 +147,7 @@ struct GstD3D12WindowPrivate
   gdouble brightness = 0.0;
   gdouble contrast = 1.0;
   guint mip_levels = 1;
+  guint most_detailed_mip = 0;
 
   /* fullscreen related variables */
   std::atomic<gboolean> fullscreen_on_alt_enter = { FALSE };
@@ -530,7 +531,7 @@ gst_d3d12_window_render (GstD3D12Window * self, SwapChainResource * resource,
           "dest-height", priv->output_rect.h, "hue", priv->hue,
           "saturation", priv->saturation, "brightness", priv->brightness,
           "contrast", priv->contrast, "max-mip-levels", priv->mip_levels,
-          nullptr);
+          "most-detailed-mip", priv->most_detailed_mip, nullptr);
 
       if (gst_d3d12_need_transform (priv->rotation_x, priv->rotation_y,
               priv->rotation_z, priv->scale_x, priv->scale_y)) {
@@ -1162,4 +1163,32 @@ gst_d3d12_window_get_mip_levels (GstD3D12Window * window)
   auto priv = window->priv;
   std::lock_guard < std::recursive_mutex > lk (priv->lock);
   return priv->mip_levels;
+}
+
+void
+gst_d3d12_window_set_most_detailed_mip (GstD3D12Window * window,
+    gboolean immediate, guint value)
+{
+  auto priv = window->priv;
+  gboolean updated = FALSE;
+
+  {
+    std::lock_guard < std::recursive_mutex > lk (priv->lock);
+    if (priv->most_detailed_mip != value) {
+      priv->most_detailed_mip = value;
+      priv->output_updated = TRUE;
+      updated = TRUE;
+    }
+  }
+
+  if (updated && immediate)
+    gst_d3d12_window_set_buffer (window, nullptr);
+}
+
+guint
+gst_d3d12_window_get_most_detailed_mip (GstD3D12Window * window)
+{
+  auto priv = window->priv;
+  std::lock_guard < std::recursive_mutex > lk (priv->lock);
+  return priv->most_detailed_mip;
 }

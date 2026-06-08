@@ -131,6 +131,7 @@ enum
 #define DEFAULT_BRIGHTNESS 0.0
 #define DEFAULT_CONTRAST 1.0
 #define DEFAULT_MAX_MIP_LEVELS 1
+#define DEFAULT_MOST_DETAILED_MIP 0
 
 /* *INDENT-OFF* */
 struct ConvertContext
@@ -241,6 +242,8 @@ struct GstD3D12BaseConvertPrivate
   gboolean need_color_balance = FALSE;
   gboolean mip_levels_updated = FALSE;
   guint mip_levels = DEFAULT_MAX_MIP_LEVELS;
+  gboolean most_detailed_mip_updated = FALSE;
+  guint most_detailed_mip = DEFAULT_MOST_DETAILED_MIP;
 
   std::atomic<guint> async_depth = { DEFAULT_ASYNC_DEPTH };
 
@@ -1789,7 +1792,9 @@ gst_d3d12_base_convert_set_info (GstD3D12BaseFilter * filter,
 
   if (klass->enable_mip_levels) {
     priv->mip_levels_updated = FALSE;
-    g_object_set (ctx->conv, "max-mip-levels", priv->mip_levels, nullptr);
+    priv->most_detailed_mip_updated = FALSE;
+    g_object_set (ctx->conv, "max-mip-levels", priv->mip_levels,
+        "most-detailed-mip", priv->most_detailed_mip, nullptr);
   }
 
   priv->ctx = std::move (ctx);
@@ -1952,6 +1957,12 @@ gst_d3d12_base_convert_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       g_object_set (priv->ctx->conv,
           "max-mip-levels", priv->mip_levels, nullptr);
     }
+
+    if (priv->most_detailed_mip_updated) {
+      priv->most_detailed_mip_updated = FALSE;
+      g_object_set (priv->ctx->conv,
+          "most-detailed-mip", priv->most_detailed_mip, nullptr);
+    }
   }
 
   GstD3D12CmdAlloc *gst_ca;
@@ -2056,6 +2067,7 @@ enum
   PROP_CONVERT_BRIGHTNESS,
   PROP_CONVERT_CONTRAST,
   PROP_CONVERT_MAX_MIP_LEVELS,
+  PROP_CONVERT_MOST_DETAILED_MIP,
 };
 
 struct _GstD3D12Convert
@@ -2238,6 +2250,18 @@ gst_d3d12_base_convert_set_mip_levels (GstD3D12BaseConvert * self, guint value)
   }
 }
 
+static void
+gst_d3d12_base_convert_set_most_detailed_mip (GstD3D12BaseConvert * self,
+    guint value)
+{
+  auto priv = self->priv;
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (priv->most_detailed_mip != value) {
+    priv->most_detailed_mip_updated = TRUE;
+    priv->most_detailed_mip = value;
+  }
+}
+
 G_DEFINE_TYPE_WITH_CODE (GstD3D12Convert, gst_d3d12_convert,
     GST_TYPE_D3D12_BASE_CONVERT,
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_DIRECTION,
@@ -2347,6 +2371,24 @@ gst_d3d12_convert_class_init (GstD3D12ConvertClass * klass)
           DEFAULT_MAX_MIP_LEVELS,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstD3D12Convert:most-detailed-mip:
+   *
+   * Index of the most detailed mip level to start generating and sampling
+   * from, skipping the GPU-expensive high-resolution mip levels.
+   *
+   * Ignored when max-mip-levels is %G_MAXUINT16 (fast-path).
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (object_class,
+      PROP_CONVERT_MOST_DETAILED_MIP,
+      g_param_spec_uint ("most-detailed-mip", "Most Detailed Mip",
+          "Index of the most detailed mip level to generate and sample "
+          "(ignored when max-mip-levels is G_MAXUINT16)",
+          0, G_MAXUINT16, DEFAULT_MOST_DETAILED_MIP,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_element_class_set_static_metadata (element_class,
       "Direct3D12 Converter",
       "Filter/Converter/Scaler/Colorspace/Effect/Video/Hardware",
@@ -2406,6 +2448,10 @@ gst_d3d12_convert_set_property (GObject * object, guint prop_id,
     case PROP_CONVERT_MAX_MIP_LEVELS:
       gst_d3d12_base_convert_set_mip_levels (self, g_value_get_uint (value));
       break;
+    case PROP_CONVERT_MOST_DETAILED_MIP:
+      gst_d3d12_base_convert_set_most_detailed_mip (self,
+          g_value_get_uint (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2450,6 +2496,9 @@ gst_d3d12_convert_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CONVERT_MAX_MIP_LEVELS:
       g_value_set_uint (value, priv->mip_levels);
+      break;
+    case PROP_CONVERT_MOST_DETAILED_MIP:
+      g_value_set_uint (value, priv->most_detailed_mip);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2706,6 +2755,7 @@ enum
   PROP_SCALE_ADD_BORDERS = 1,
   PROP_SCALE_BORDER_COLOR,
   PROP_SCALE_MAX_MIP_LEVELS,
+  PROP_SCALE_MOST_DETAILED_MIP,
 };
 
 struct _GstD3D12Scale
@@ -2761,6 +2811,23 @@ gst_d3d12_scale_class_init (GstD3D12ScaleClass * klass)
           DEFAULT_MAX_MIP_LEVELS,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstD3D12Scale:most-detailed-mip:
+   *
+   * Index of the most detailed mip level to start generating and sampling
+   * from, skipping the GPU-expensive high-resolution mip levels.
+   *
+   * Ignored when max-mip-levels is %G_MAXUINT16 (fast-path).
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (object_class, PROP_SCALE_MOST_DETAILED_MIP,
+      g_param_spec_uint ("most-detailed-mip", "Most Detailed Mip",
+          "Index of the most detailed mip level to generate and sample "
+          "(ignored when max-mip-levels is G_MAXUINT16)",
+          0, G_MAXUINT16, DEFAULT_MOST_DETAILED_MIP,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_element_class_set_static_metadata (element_class,
       "Direct3D12 Scaler",
       "Filter/Converter/Video/Scaler/Hardware",
@@ -2796,6 +2863,10 @@ gst_d3d12_scale_set_property (GObject * object, guint prop_id,
     case PROP_SCALE_MAX_MIP_LEVELS:
       gst_d3d12_base_convert_set_mip_levels (base, g_value_get_uint (value));
       break;
+    case PROP_SCALE_MOST_DETAILED_MIP:
+      gst_d3d12_base_convert_set_most_detailed_mip (base,
+          g_value_get_uint (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2819,6 +2890,9 @@ gst_d3d12_scale_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SCALE_MAX_MIP_LEVELS:
       g_value_set_uint (value, priv->mip_levels);
+      break;
+    case PROP_SCALE_MOST_DETAILED_MIP:
+      g_value_set_uint (value, priv->most_detailed_mip);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

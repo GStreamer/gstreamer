@@ -114,6 +114,7 @@ enum
   PROP_BRIGHTNESS,
   PROP_CONTRAST,
   PROP_MAX_MIP_LEVELS,
+  PROP_MOST_DETAILED_MIP,
 };
 
 #define DEFAULT_ADAPTER -1
@@ -141,6 +142,7 @@ enum
 #define DEFAULT_BRIGHTNESS 0.0
 #define DEFAULT_CONTRAST 1.0
 #define DEFAULT_MAX_MIP_LEVELS 1
+#define DEFAULT_MOST_DETAILED_MIP 0
 
 enum
 {
@@ -584,6 +586,23 @@ gst_d3d12_video_sink_class_init (GstD3D12VideoSinkClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /**
+   * GstD3D12VideoSink:most-detailed-mip:
+   *
+   * Index of the most detailed mip level to start generating and sampling
+   * from, skipping the GPU-expensive high-resolution mip levels.
+   *
+   * Ignored when max-mip-levels is %G_MAXUINT16 (fast-path).
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (object_class, PROP_MOST_DETAILED_MIP,
+      g_param_spec_uint ("most-detailed-mip", "Most Detailed Mip",
+          "Index of the most detailed mip level to generate and sample "
+          "(ignored when max-mip-levels is G_MAXUINT16)",
+          0, G_MAXUINT16, DEFAULT_MOST_DETAILED_MIP,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
    * GstD3D12VideoSink::overlay:
    * @d3d12videosink: the d3d12videosink element that emitted the signal
    * @command_queue: ID3D12CommandQueue
@@ -864,6 +883,10 @@ gst_d3d12_video_sink_set_property (GObject * object, guint prop_id,
         gst_d3d12_window_set_mip_levels (priv->window, priv->redraw_on_update,
             g_value_get_uint (value));
         break;
+      case PROP_MOST_DETAILED_MIP:
+        gst_d3d12_window_set_most_detailed_mip (priv->window,
+            priv->redraw_on_update, g_value_get_uint (value));
+        break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -980,6 +1003,10 @@ gst_d3d12_video_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MAX_MIP_LEVELS:
       g_value_set_uint (value, gst_d3d12_window_get_mip_levels (priv->window));
+      break;
+    case PROP_MOST_DETAILED_MIP:
+      g_value_set_uint (value,
+          gst_d3d12_window_get_most_detailed_mip (priv->window));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
