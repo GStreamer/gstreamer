@@ -32,7 +32,7 @@
 #ifdef G_OS_WIN32
 #include <gst/d3d11/gstd3d11.h>
 #include <wrl.h>
-#else
+#elif defined HAVE_GST_VULKAN
 #include <gst/vulkan/vulkan.h>
 #include <core/VulkanAMF.h>
 #endif
