@@ -67,7 +67,7 @@ struct _GstFFMpegPipe
   guint needed;
 };
 
-int gst_ffmpeg_pipe_open (GstFFMpegPipe *ffpipe, int flags, AVIOContext ** context);
+int gst_ffmpeg_pipe_open (const GstFFMpegPipe *ffpipe, int flags, AVIOContext ** context);
 int gst_ffmpeg_pipe_close (AVIOContext * h);
 
 int gst_ffmpegdata_open (GstPad * pad, int flags, AVIOContext ** context);

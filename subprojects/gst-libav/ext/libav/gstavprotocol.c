@@ -332,17 +332,13 @@ int
 gst_ffmpeg_pipe_close (AVIOContext * h)
 {
   GST_LOG ("Closing pipe");
-  GstProtocolInfo *info;
 
   if (h == NULL)
     return 0;
 
-  info = (GstProtocolInfo *) h->opaque;
-  if (info == NULL)
-    return 0;
-
-  g_free (info);
-
+  // h->opaque is the GstFFMpegPipe* that was passed into
+  // gst_ffmpeg_pipe_open(). This must not be freed as it's
+  // owned by the element.
   h->opaque = NULL;
   av_freep (&h->buffer);
   av_free (h);
@@ -351,7 +347,8 @@ gst_ffmpeg_pipe_close (AVIOContext * h)
 }
 
 int
-gst_ffmpeg_pipe_open (GstFFMpegPipe * ffpipe, int flags, AVIOContext ** context)
+gst_ffmpeg_pipe_open (const GstFFMpegPipe * ffpipe, int flags,
+    AVIOContext ** context)
 {
   static const int buffer_size = 4096;
   unsigned char *buffer = NULL;
