@@ -1363,13 +1363,12 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
   /* ERRORS */
 beach:
   {
-    if (demux->context->pb) {
-      if (demux->seekable)
-        gst_ffmpegdata_close (demux->context->pb);
-      else
-        gst_ffmpeg_pipe_close (demux->context->pb);
+    if (demux->seekable)
+      gst_ffmpegdata_close (iocontext);
+    else
+      gst_ffmpeg_pipe_close (iocontext);
+    if (demux->context)
       demux->context->pb = NULL;
-    }
     avformat_close_input (&demux->context);
 
     GST_ELEMENT_ERROR (demux, LIBRARY, FAILED, (NULL),
