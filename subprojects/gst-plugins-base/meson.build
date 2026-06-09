@@ -470,6 +470,25 @@ int32x4_t testfunc(int16_t *a, int16_t *b) {
   endif
 endif
 
+have_rvv = false
+rvv_args = ''
+if host_machine.cpu_family() == 'riscv64'
+  rvv_args = '-march=rv64gcv'
+  have_rvv = cc.compiles('''
+#include <riscv_vector.h>
+int testfunc(int16_t *a, int16_t *b, int n) {
+  size_t vl = __riscv_vsetvl_e16m4(n);
+  vint16m4_t va = __riscv_vle16_v_i16m4(a, vl);
+  vint16m4_t vb = __riscv_vle16_v_i16m4(b, vl);
+  vint32m8_t prod = __riscv_vwmul_vv_i32m8(va, vb, vl);
+  return 0;
+}
+''', args : rvv_args, name : 'RVV support')
+  if have_rvv
+    core_conf.set('HAVE_RISCV_RVV', true)
+  endif
+endif
+
 # Disable compiler warnings for unused variables and args if gst debug system is disabled
 if gst_dep.type_name() == 'internal'
   gst_proj = subproject('gstreamer')

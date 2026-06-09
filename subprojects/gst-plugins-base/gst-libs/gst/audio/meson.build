@@ -152,6 +152,20 @@ if have_sse41
   simd_dependencies += audio_resampler_sse41
 endif
 
+if have_rvv
+  audio_resampler_rvv = static_library('audio_resampler_rvv',
+    ['audio-resampler-rvv.c', gstaudio_h],
+    c_args : gst_plugins_base_args + [rvv_args],
+    include_directories : [configinc, libsinc],
+    dependencies : [gst_base_dep],
+    pic : true,
+    install : false
+  )
+
+  simd_cargs += ['-DHAVE_RISCV_RVV']
+  simd_dependencies += audio_resampler_rvv
+endif
+
 gstaudio = library('gstaudio-@0@'.format(api_version),
   audio_src, gstaudio_h, gstaudio_c, orc_c, orc_h,
   c_args : gst_plugins_base_args + simd_cargs + ['-DBUILDING_GST_AUDIO', '-DG_LOG_DOMAIN="GStreamer-Audio"'],

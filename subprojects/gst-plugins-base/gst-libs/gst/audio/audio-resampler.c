@@ -826,6 +826,10 @@ static ResampleFunc resample_funcs[] = {
 #  define CHECK_X86
 #  include "audio-resampler-x86.h"
 #endif
+#if defined (HAVE_RISCV_RVV)
+#  define CHECK_RVV
+#  include "audio-resampler-rvv.h"
+#endif
 
 static void
 audio_resampler_init (void)
@@ -841,6 +845,32 @@ audio_resampler_init (void)
 #endif
 #ifdef CHECK_NEON
     audio_resampler_check_neon ();
+#endif
+#ifdef CHECK_RVV
+    if (gst_cpuid_supports_riscv_v ()) {
+      GST_DEBUG ("enable RVV optimisations");
+
+      resample_gint16_full_1 = resample_gint16_full_1_rvv;
+      resample_gint16_linear_1 = resample_gint16_linear_1_rvv;
+      resample_gint16_cubic_1 = resample_gint16_cubic_1_rvv;
+
+      interpolate_gint16_linear = interpolate_gint16_linear_rvv;
+      interpolate_gint16_cubic = interpolate_gint16_cubic_rvv;
+
+      resample_gint32_full_1 = resample_gint32_full_1_rvv;
+      resample_gint32_linear_1 = resample_gint32_linear_1_rvv;
+      resample_gint32_cubic_1 = resample_gint32_cubic_1_rvv;
+
+      interpolate_gint32_linear = interpolate_gint32_linear_rvv;
+      interpolate_gint32_cubic = interpolate_gint32_cubic_rvv;
+
+      resample_gfloat_full_1 = resample_gfloat_full_1_rvv;
+      resample_gfloat_linear_1 = resample_gfloat_linear_1_rvv;
+      resample_gfloat_cubic_1 = resample_gfloat_cubic_1_rvv;
+
+      interpolate_gfloat_linear = interpolate_gfloat_linear_rvv;
+      interpolate_gfloat_cubic = interpolate_gfloat_cubic_rvv;
+    }
 #endif
     g_once_init_leave (&init_gonce, 1);
   }
