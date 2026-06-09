@@ -95,6 +95,7 @@ typedef struct _GstRtmpLocation
   GstRtmpScheme scheme;
   gchar *host;
   guint port;
+  gchar *local_address;
   gchar *application;
   gchar *stream;
   gchar *username;

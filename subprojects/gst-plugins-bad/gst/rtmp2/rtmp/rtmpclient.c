@@ -211,6 +211,7 @@ gst_rtmp_location_copy (GstRtmpLocation * dest, const GstRtmpLocation * src)
   dest->scheme = src->scheme;
   dest->host = g_strdup (src->host);
   dest->port = src->port;
+  dest->local_address = g_strdup (src->local_address);
   dest->application = g_strdup (src->application);
   dest->stream = g_strdup (src->stream);
   dest->username = g_strdup (src->username);
@@ -231,6 +232,7 @@ gst_rtmp_location_clear (GstRtmpLocation * location)
 
   g_clear_pointer (&location->host, g_free);
   location->port = 0;
+  g_clear_pointer (&location->local_address, g_free);
   g_clear_pointer (&location->application, g_free);
   g_clear_pointer (&location->stream, g_free);
   g_clear_pointer (&location->username, g_free);
@@ -456,6 +458,26 @@ socket_connect (GTask * task)
       g_object_unref (socket_client);
       g_object_unref (task);
       return;
+  }
+
+  if (data->location.local_address) {
+    GInetAddress *inet_addr =
+        g_inet_address_new_from_string (data->location.local_address);
+    GSocketAddress *local_addr;
+
+    if (!inet_addr) {
+      g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
+          "Invalid local address '%s'", data->location.local_address);
+      g_object_unref (socket_client);
+      g_object_unref (task);
+      return;
+    }
+
+    GST_DEBUG ("Binding to local address %s", data->location.local_address);
+    local_addr = g_inet_socket_address_new (inet_addr, 0);
+    g_socket_client_set_local_address (socket_client, local_addr);
+    g_object_unref (inet_addr);
+    g_object_unref (local_addr);
   }
 
   addr = g_network_address_new (data->location.host, data->location.port);

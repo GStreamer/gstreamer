@@ -60,6 +60,20 @@ gst_rtmp_location_handler_default_init (GstRtmpLocationHandlerInterface * iface)
           "RTMP server port", 1, 65535,
           gst_rtmp_scheme_get_default_port (DEFAULT_SCHEME),
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstRtmpLocationHandler:local-address:
+   *
+   * Local address to bind the connection to.  Useful to select the
+   * network interface used for the connection on a multi-homed host.
+   * When unset, the operating system picks the source address by
+   * routing.
+   *
+   * Since: 1.29.2
+   */
+  g_object_interface_install_property (iface,
+      g_param_spec_string ("local-address", "Local address",
+          "Local address to bind the connection to", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_interface_install_property (iface,
       g_param_spec_string ("application", "Application",
           "RTMP application path", DEFAULT_APPLICATION,

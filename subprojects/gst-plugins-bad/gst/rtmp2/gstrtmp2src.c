@@ -130,6 +130,7 @@ enum
   PROP_SCHEME,
   PROP_HOST,
   PROP_PORT,
+  PROP_LOCAL_ADDRESS,
   PROP_APPLICATION,
   PROP_STREAM,
   PROP_SECURE_TOKEN,
@@ -193,6 +194,8 @@ gst_rtmp2_src_class_init (GstRtmp2SrcClass * klass)
   g_object_class_override_property (gobject_class, PROP_SCHEME, "scheme");
   g_object_class_override_property (gobject_class, PROP_HOST, "host");
   g_object_class_override_property (gobject_class, PROP_PORT, "port");
+  g_object_class_override_property (gobject_class, PROP_LOCAL_ADDRESS,
+      "local-address");
   g_object_class_override_property (gobject_class, PROP_APPLICATION,
       "application");
   g_object_class_override_property (gobject_class, PROP_STREAM, "stream");
@@ -311,6 +314,12 @@ gst_rtmp2_src_set_property (GObject * object, guint property_id,
       self->location.port = g_value_get_int (value);
       GST_OBJECT_UNLOCK (self);
       break;
+    case PROP_LOCAL_ADDRESS:
+      GST_OBJECT_LOCK (self);
+      g_free (self->location.local_address);
+      self->location.local_address = g_value_dup_string (value);
+      GST_OBJECT_UNLOCK (self);
+      break;
     case PROP_APPLICATION:
       GST_OBJECT_LOCK (self);
       g_free (self->location.application);
@@ -415,6 +424,11 @@ gst_rtmp2_src_get_property (GObject * object, guint property_id,
     case PROP_PORT:
       GST_OBJECT_LOCK (self);
       g_value_set_int (value, self->location.port);
+      GST_OBJECT_UNLOCK (self);
+      break;
+    case PROP_LOCAL_ADDRESS:
+      GST_OBJECT_LOCK (self);
+      g_value_set_string (value, self->location.local_address);
       GST_OBJECT_UNLOCK (self);
       break;
     case PROP_APPLICATION:

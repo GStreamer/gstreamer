@@ -245113,6 +245113,18 @@
                         "type": "gchararray",
                         "writable": true
                     },
+                    "local-address": {
+                        "blurb": "Local address to bind the connection to",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
                     "location": {
                         "blurb": "Location of RTMP stream to access",
                         "conditionally-available": false,
