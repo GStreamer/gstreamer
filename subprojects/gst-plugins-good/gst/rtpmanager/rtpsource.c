@@ -1193,33 +1193,35 @@ init_seq (RTPSource * src, guint16 seq)
 #define BITRATE_INTERVAL (2 * GST_SECOND)
 
 static void
-do_bitrate_estimation (RTPSource * src, GstClockTime running_time,
+do_bitrate_estimation (RTPSource * src, GstClockTime time,
     guint64 * bytes_handled)
 {
   guint64 elapsed;
 
-  if (src->prev_rtime) {
-    elapsed = running_time - src->prev_rtime;
+  if (src->prev_time) {
+    if (time > src->prev_time) {
+      elapsed = time - src->prev_time;
 
-    if (elapsed > BITRATE_INTERVAL) {
-      guint64 rate;
+      if (elapsed > BITRATE_INTERVAL) {
+        guint64 rate;
 
-      rate = gst_util_uint64_scale (*bytes_handled, 8 * GST_SECOND, elapsed);
+        rate = gst_util_uint64_scale (*bytes_handled, 8 * GST_SECOND, elapsed);
 
-      GST_LOG ("Elapsed %" G_GUINT64_FORMAT ", bytes %" G_GUINT64_FORMAT
-          ", rate %" G_GUINT64_FORMAT, elapsed, *bytes_handled, rate);
+        GST_LOG ("Elapsed %" G_GUINT64_FORMAT ", bytes %" G_GUINT64_FORMAT
+            ", rate %" G_GUINT64_FORMAT, elapsed, *bytes_handled, rate);
 
-      if (src->bitrate == 0)
-        src->bitrate = rate;
-      else
-        src->bitrate = ((src->bitrate * 3) + rate) / 4;
+        if (src->bitrate == 0)
+          src->bitrate = rate;
+        else
+          src->bitrate = ((src->bitrate * 3) + rate) / 4;
 
-      src->prev_rtime = running_time;
-      *bytes_handled = 0;
+        src->prev_time = time;
+        *bytes_handled = 0;
+      }
     }
   } else {
     GST_LOG ("Reset bitrate measurement");
-    src->prev_rtime = running_time;
+    src->prev_time = time;
     src->bitrate = 0;
   }
 }
@@ -1504,7 +1506,9 @@ rtp_source_send_rtp (RTPSource * src, RTPPacketInfo * pinfo)
 
   running_time = pinfo->running_time;
 
-  if (GST_CLOCK_TIME_IS_VALID (running_time))
+  if (pinfo->is_rtx)
+    do_bitrate_estimation (src, pinfo->current_time, &src->bytes_sent);
+  else if (GST_CLOCK_TIME_IS_VALID (running_time))
     do_bitrate_estimation (src, running_time, &src->bytes_sent);
 
   rtptime = pinfo->rtptime;

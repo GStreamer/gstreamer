@@ -174,7 +174,7 @@ struct _RTPSource {
 
   /* for bitrate estimation */
   guint64       bitrate;
-  GstClockTime  prev_rtime;
+  GstClockTime  prev_time;
   guint64       bytes_sent;
   guint64       bytes_received;
 
