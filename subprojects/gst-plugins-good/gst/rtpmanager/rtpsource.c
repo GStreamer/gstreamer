@@ -1486,6 +1486,7 @@ rtp_source_send_rtp (RTPSource * src, RTPPacketInfo * pinfo)
 
   /* we are a sender now */
   src->is_sender = TRUE;
+  src->is_rtx = pinfo->is_rtx;
 
   /* we are also a receiver of our packets */
   if (!update_receiver_stats (src, pinfo, FALSE))

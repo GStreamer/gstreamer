@@ -225,6 +225,7 @@ enum
 #define DEFAULT_RTCP_SYNC_SEND_TIME  TRUE
 #define DEFAULT_UPDATE_NTP64_HEADER_EXT  TRUE
 #define DEFAULT_TIMEOUT_INACTIVE_SOURCES TRUE
+#define DEFAULT_RTX_PERCENTAGE       -1
 
 enum
 {
@@ -249,6 +250,7 @@ enum
   PROP_RTCP_SYNC_SEND_TIME,
   PROP_UPDATE_NTP64_HEADER_EXT,
   PROP_TIMEOUT_INACTIVE_SOURCES,
+  PROP_RTX_PERCENTAGE,
 };
 
 #define GST_RTP_SESSION_LOCK(sess)   g_mutex_lock (&(sess)->priv->lock)
@@ -853,6 +855,20 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
           DEFAULT_TIMEOUT_INACTIVE_SOURCES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRtpSession:rtx-percentage:
+   *
+   * The maximum amount of RTX as a percentage of the overall
+   * bitrate (-1 = no throttling)
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_RTX_PERCENTAGE,
+      g_param_spec_int ("rtx-percentage", "RTX percentage",
+          "The maximum amount of RTX as a percentage of the overall bitrate (-1 = no throttling)",
+          -1, G_MAXINT, DEFAULT_RTX_PERCENTAGE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_session_change_state);
   gstelement_class->request_new_pad =
@@ -1035,6 +1051,9 @@ gst_rtp_session_set_property (GObject * object, guint prop_id,
       g_object_set_property (G_OBJECT (priv->session),
           "timeout-inactive-sources", value);
       break;
+    case PROP_RTX_PERCENTAGE:
+      g_object_set_property (G_OBJECT (priv->session), "rtx-percentage", value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1121,6 +1140,9 @@ gst_rtp_session_get_property (GObject * object, guint prop_id,
     case PROP_TIMEOUT_INACTIVE_SOURCES:
       g_object_get_property (G_OBJECT (priv->session),
           "timeout-inactive-sources", value);
+      break;
+    case PROP_RTX_PERCENTAGE:
+      g_object_get_property (G_OBJECT (priv->session), "rtx-percentage", value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

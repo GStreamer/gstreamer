@@ -83,6 +83,7 @@ enum
 #define DEFAULT_TWCC_FEEDBACK_INTERVAL GST_CLOCK_TIME_NONE
 #define DEFAULT_UPDATE_NTP64_HEADER_EXT TRUE
 #define DEFAULT_TIMEOUT_INACTIVE_SOURCES TRUE
+#define DEFAULT_RTX_PERCENTAGE       -1
 
 enum
 {
@@ -112,6 +113,7 @@ enum
   PROP_TWCC_FEEDBACK_INTERVAL,
   PROP_UPDATE_NTP64_HEADER_EXT,
   PROP_TIMEOUT_INACTIVE_SOURCES,
+  PROP_RTX_PERCENTAGE,
   PROP_LAST,
 };
 
@@ -677,6 +679,20 @@ rtp_session_class_init (RTPSessionClass * klass)
       DEFAULT_TIMEOUT_INACTIVE_SOURCES,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+  /**
+   * RTPSession:rtx-percentage:
+   *
+   * The maximum amount of RTX as a percentage of the overall
+   * bitrate (-1 = no throttling)
+   *
+   * Since: 1.30
+   */
+  properties[PROP_RTX_PERCENTAGE] =
+      g_param_spec_int ("rtx-percentage", "RTX percentage",
+      "The maximum amount of RTX as a percentage of the overall bitrate (-1 = no throttling)",
+      -1, G_MAXINT, DEFAULT_RTX_PERCENTAGE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 
   klass->get_source_by_ssrc =
@@ -769,6 +785,11 @@ rtp_session_init (RTPSession * sess)
 
   sess->twcc = rtp_twcc_manager_new (sess->mtu);
   sess->twcc_stats = rtp_twcc_stats_new ();
+
+  sess->rtx_percentage = DEFAULT_RTX_PERCENTAGE;
+  sess->rtx_bitrate = 0;
+  sess->rtx_bytes_sent = 0;
+  sess->prev_rtx_time = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -971,6 +992,9 @@ rtp_session_set_property (GObject * object, guint prop_id,
     case PROP_TIMEOUT_INACTIVE_SOURCES:
       sess->timeout_inactive_sources = g_value_get_boolean (value);
       break;
+    case PROP_RTX_PERCENTAGE:
+      sess->rtx_percentage = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1062,6 +1086,9 @@ rtp_session_get_property (GObject * object, guint prop_id,
       break;
     case PROP_TIMEOUT_INACTIVE_SOURCES:
       g_value_set_boolean (value, sess->timeout_inactive_sources);
+      break;
+    case PROP_RTX_PERCENTAGE:
+      g_value_set_int (value, sess->rtx_percentage);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1236,6 +1263,11 @@ rtp_session_reset (RTPSession * sess)
   sess->stats.nacks_dropped = 0;
   sess->stats.nacks_sent = 0;
   sess->stats.nacks_received = 0;
+
+  /* Reinitialize RTX throttling */
+  sess->rtx_bitrate = 0;
+  sess->rtx_bytes_sent = 0;
+  sess->prev_rtx_time = GST_CLOCK_TIME_NONE;
 
   sess->is_doing_ptp = TRUE;
 
@@ -3449,6 +3481,55 @@ update_ntp64_header_ext (RTPPacketInfo * pinfo)
   }
 }
 
+typedef struct
+{
+  guint64 total;
+  guint64 rtx;
+  GstClockTime current_time;
+  guint64 current_window_rtx;
+} NonRTXBitrateData;
+
+static void
+add_up_non_rtx_bitrate (gpointer key, RTPSource * source, guint64 * total)
+{
+  if (!source->is_rtx) {
+    *total += source->bitrate;
+  }
+}
+
+#define RTX_BITRATE_WINDOW (100 * GST_MSECOND)
+
+/* With session lock */
+static void
+update_rtx_bitrate (RTPSession * sess, GstClockTime current_time,
+    guint64 * bytes_sent)
+{
+  if (GST_CLOCK_TIME_IS_VALID (sess->prev_rtx_time)) {
+    GstClockTime elapsed = current_time - sess->prev_rtx_time;
+
+    if (elapsed > RTX_BITRATE_WINDOW) {
+      guint64 rate;
+
+      rate = gst_util_uint64_scale (*bytes_sent, 8 * GST_SECOND, elapsed);
+
+      if (sess->rtx_bitrate == 0)
+        sess->rtx_bitrate = rate;
+      else
+        sess->rtx_bitrate = ((sess->rtx_bitrate * 3) + rate) / 4;
+
+      GST_LOG_OBJECT (sess, "new RTX rate calculated: %" G_GUINT64_FORMAT,
+          sess->rtx_bitrate);
+
+      sess->prev_rtx_time = current_time;
+      *bytes_sent = 0;
+    }
+  } else {
+    GST_LOG ("Reset instant bitrate measurement");
+    sess->prev_rtx_time = current_time;
+    sess->rtx_bitrate = 0;
+  }
+}
+
 /**
  * rtp_session_send_rtp:
  * @sess: an #RTPSession
@@ -3482,6 +3563,41 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
   if (!update_packet_info (sess, &pinfo, TRUE, TRUE, is_list, data,
           current_time, running_time, ntpnstime))
     goto invalid_packet;
+
+  if (pinfo.is_rtx) {
+    guint64 non_rtx_bitrate = 0;
+    update_rtx_bitrate (sess, pinfo.current_time, &sess->rtx_bytes_sent);
+    g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
+        (GHFunc) add_up_non_rtx_bitrate, &non_rtx_bitrate);
+
+    GST_LOG_OBJECT (sess,
+        "non RTX bitrate: %" G_GUINT64_FORMAT " RTX bitrate: %"
+        G_GUINT64_FORMAT, non_rtx_bitrate, sess->rtx_bitrate);
+
+    if (non_rtx_bitrate > 0 && sess->rtx_bitrate > 0
+        && sess->rtx_percentage >= 0) {
+      guint64 rtx_percentage = gst_util_uint64_scale (sess->rtx_bitrate, 100,
+          non_rtx_bitrate + sess->rtx_bitrate);
+      guint64 rtx_bitrate_budget =
+          gst_util_uint64_scale (non_rtx_bitrate, sess->rtx_percentage, 100);
+      guint64 used_rtx_bitrate =
+          gst_util_uint64_scale (sess->rtx_bytes_sent * 8, GST_SECOND,
+          RTX_BITRATE_WINDOW);
+
+      /* We want to ward against sudden RTX spikes, so also check whether the current window has exceeded the budget */
+      if (rtx_percentage > sess->rtx_percentage
+          || used_rtx_bitrate > rtx_bitrate_budget) {
+        GST_LOG_OBJECT (sess, "dropping RTX to remain within budget");
+        clean_packet_info (&pinfo);
+        RTP_SESSION_UNLOCK (sess);
+        return GST_FLOW_OK;
+      } else {
+        GST_LOG_OBJECT (sess, "We are within RTX budget, letting RTX through");
+      }
+    }
+
+    sess->rtx_bytes_sent += pinfo.bytes;
+  }
 
   /* Update any 64-bit NTP header extensions with the actual NTP time here */
   if (sess->update_ntp64_header_ext)

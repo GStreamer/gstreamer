@@ -19789,6 +19789,20 @@
                         "type": "GstRTPProfile",
                         "writable": true
                     },
+                    "rtx-percentage": {
+                        "blurb": "The maximum amount of RTX as a percentage of the overall bitrate (-1 = no throttling)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
                     "sdes": {
                         "blurb": "The SDES items of this session",
                         "conditionally-available": false,
@@ -20641,6 +20655,20 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "GstRTPProfile",
+                        "writable": true
+                    },
+                    "rtx-percentage": {
+                        "blurb": "The maximum amount of RTX as a percentage of the overall bitrate (-1 = no throttling)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "sdes": {

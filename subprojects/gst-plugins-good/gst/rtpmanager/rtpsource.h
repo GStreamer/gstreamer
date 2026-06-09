@@ -210,6 +210,7 @@ struct _RTPSource {
   guint8        pt;
 
   gboolean      disable_rtcp;
+  gboolean      is_rtx;
 };
 
 struct _RTPSourceClass {

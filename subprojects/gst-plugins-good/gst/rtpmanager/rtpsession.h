@@ -322,6 +322,12 @@ struct _RTPSession {
   /* Transport-wide cc-extension */
   RTPTWCCManager *twcc;
   RTPTWCCStats *twcc_stats;
+
+  /* RTX throttling */
+  gint          rtx_percentage;
+  guint64       rtx_bitrate;
+  GstClockTime  prev_rtx_time;
+  guint64       rtx_bytes_sent;
 };
 
 /**
