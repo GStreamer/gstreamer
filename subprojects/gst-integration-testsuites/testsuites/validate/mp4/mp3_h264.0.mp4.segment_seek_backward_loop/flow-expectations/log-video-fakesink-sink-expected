@@ -304,7 +304,7 @@ buffer: dts=0:00:09.900000000, pts=0:00:10.033333333, dur=0:00:00.033333333, fla
 buffer: dts=0:00:09.933333333, pts=0:00:10.000000000, dur=0:00:00.033333333, flags=delta-unit
 buffer: dts=0:00:09.966666666, pts=0:00:09.966666666, dur=0:00:00.033333334, flags=delta-unit
 event segment-done: GstEventSegmentDone, format=(GstFormat)time, position=(gint64)0;
-event segment: format=TIME, start=0:00:00.066666666, offset=0:00:00.000000000, stop=0:00:10.066666666, rate=-1.000000, flags=0x08, time=0:00:00.000000000, base=0:00:10.031000000, position=0:00:00.066666666
+event segment: format=TIME, start=0:00:00.066666666, offset=0:00:00.000000000, stop=0:00:10.066666666, rate=-1.000000, flags=0x08, time=0:00:00.000000000, base=0:00:10.000000000, position=0:00:00.066666666
 buffer: dts=0:00:00.000000000, pts=0:00:00.066666666, dur=0:00:00.033333333, flags=discont
 buffer: dts=0:00:00.033333333, pts=0:00:00.200000000, dur=0:00:00.033333333, flags=delta-unit
 buffer: dts=0:00:00.066666666, pts=0:00:00.133333333, dur=0:00:00.033333334, flags=delta-unit
@@ -606,7 +606,7 @@ buffer: dts=0:00:09.900000000, pts=0:00:10.033333333, dur=0:00:00.033333333, fla
 buffer: dts=0:00:09.933333333, pts=0:00:10.000000000, dur=0:00:00.033333333, flags=delta-unit
 buffer: dts=0:00:09.966666666, pts=0:00:09.966666666, dur=0:00:00.033333334, flags=delta-unit
 event segment-done: GstEventSegmentDone, format=(GstFormat)time, position=(gint64)0;
-event segment: format=TIME, start=0:00:00.066666666, offset=0:00:00.000000000, stop=0:00:10.066666666, rate=-1.000000, time=0:00:00.000000000, base=0:00:20.062000000, position=0:00:00.066666666
+event segment: format=TIME, start=0:00:00.066666666, offset=0:00:00.000000000, stop=0:00:10.066666666, rate=-1.000000, time=0:00:00.000000000, base=0:00:20.000000000, position=0:00:00.066666666
 buffer: dts=0:00:00.000000000, pts=0:00:00.066666666, dur=0:00:00.033333333, flags=discont
 buffer: dts=0:00:00.033333333, pts=0:00:00.200000000, dur=0:00:00.033333333, flags=delta-unit
 buffer: dts=0:00:00.066666666, pts=0:00:00.133333333, dur=0:00:00.033333334, flags=delta-unit
