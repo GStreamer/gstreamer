@@ -370,6 +370,18 @@ _get_marker_name (guint marker)
 }
 #endif
 
+static gboolean
+jpeg_segment_fits_input (const GstJpegSegment * seg, gsize size)
+{
+  if (seg->size < 0)
+    return FALSE;
+
+  if ((gsize) seg->offset > size)
+    return FALSE;
+
+  return (gsize) seg->size <= size - (gsize) seg->offset;
+}
+
 static GstFlowReturn
 gst_jpeg_decoder_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame)
@@ -397,6 +409,9 @@ gst_jpeg_decoder_handle_frame (GstVideoDecoder * decoder,
   /* E.2.1 Control procedure for decoding compressed image data */
   while (offset < map.size) {
     if (!gst_jpeg_parse (&seg, map.data, map.size, offset))
+      goto unmap_and_error;
+
+    if (!jpeg_segment_fits_input (&seg, map.size))
       goto unmap_and_error;
 
     offset = seg.offset + seg.size;
@@ -443,6 +458,9 @@ gst_jpeg_decoder_handle_frame (GstVideoDecoder * decoder,
 
         for (;;) {
           if (!gst_jpeg_parse (&seg_scan, map.data, map.size, offset))
+            goto unmap_and_error;
+
+          if (!jpeg_segment_fits_input (&seg_scan, map.size))
             goto unmap_and_error;
 
           if (seg_scan.marker < GST_JPEG_MARKER_RST_MIN
