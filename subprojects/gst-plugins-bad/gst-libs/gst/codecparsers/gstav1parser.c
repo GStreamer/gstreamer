@@ -4339,6 +4339,8 @@ gst_av1_parser_parse_tile_list_obu (GstAV1Parser * parser,
   }
 
   for (tile = 0; tile <= tile_list->tile_count_minus_1; tile++) {
+    guint32 tile_data_size;
+
     if (AV1_REMAINING_BITS (br) < 8 + 8 + 8 + 16) {
       retval = GST_AV1_PARSER_NO_MORE_DATA;
       goto error;
@@ -4353,8 +4355,8 @@ gst_av1_parser_parse_tile_list_obu (GstAV1Parser * parser,
     tile_list->entry[tile].coded_tile_data =
         obu->data + gst_bit_reader_get_pos (br) / 8;
     /* skip the coded_tile_data */
-    if (!gst_bit_reader_skip (br,
-            tile_list->entry[tile].tile_data_size_minus_1 + 1)) {
+    tile_data_size = tile_list->entry[tile].tile_data_size_minus_1 + 1;
+    if (!gst_bit_reader_skip (br, tile_data_size * 8)) {
       retval = GST_AV1_PARSER_NO_MORE_DATA;
       goto error;
     }
