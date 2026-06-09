@@ -2142,6 +2142,9 @@ update_packet (GstBuffer ** buffer, guint idx, RTPPacketInfo * pinfo)
   pinfo->bytes += gst_buffer_get_size (*buffer) + pinfo->header_len;
   pinfo->packets++;
 
+  pinfo->is_rtx =
+      GST_BUFFER_FLAG_IS_SET (*buffer, GST_RTP_BUFFER_FLAG_RETRANSMISSION);
+
   if (pinfo->rtp) {
     GstRTPBuffer rtp = { NULL };
 
