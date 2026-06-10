@@ -1,38 +1,33 @@
-From 3b5ad89bffec6fbb7113224d75a5e7fe4d92509c Mon Sep 17 00:00:00 2001
+From 6a12367e3032a3de6e7b3a29772b350a116a1a2d Mon Sep 17 00:00:00 2001
 From: Nirbheek Chauhan <nirbheek@centricular.com>
 Date: Sun, 26 Apr 2026 17:55:34 +0530
-Subject: [PATCH 8/9] meson: Better way to get internal libffi/libintl paths
+Subject: [PATCH 08/10] meson: Better way to get internal libffi/libintl paths
 
 Hard-coding the project directory names is incorrect, because that
 assumes the wraps are git repos.
+
+(cherry picked from commit ec6de3f288ca6d02b9f51d1645b29c2f6ea0292d)
 ---
- gir/meson.build | 32 ++++++++++++++++++++------------
- 1 file changed, 20 insertions(+), 12 deletions(-)
+ gir/meson.build | 31 +++++++++++++++++++------------
+ 1 file changed, 19 insertions(+), 12 deletions(-)
 
 diff --git a/gir/meson.build b/gir/meson.build
-index 94c5b340..600746f7 100644
+index 94c5b340..39e24748 100644
 --- a/gir/meson.build
 +++ b/gir/meson.build
-@@ -198,20 +198,28 @@ elif dep_type == 'internal'
+@@ -198,20 +198,27 @@ elif dep_type == 'internal'
      '-I' + gio_incdir,
    ]
  
 +  fsmod = import('fs')
    # XXX: We need include paths to all glib dependencies too. We assume that the
-   # dependencies are only libffi and proxy-libintl, and that they are used as
+-  # dependencies are only libffi and proxy-libintl, and that they are used as
 -  # subprojects. In the worst case we add paths to non-existent directories.
 -  ffi_incdir = join_paths(meson.global_build_root(), subprojdir, 'libffi', 'include')
 -  glib_includes += ['-I' + ffi_incdir]
 -  intl_incdir = join_paths(meson.global_source_root(), subprojdir, 'proxy-libintl')
 -  glib_includes += ['-I' + intl_incdir]
--
--  ffi_libdir = join_paths(meson.global_build_root(), subprojdir, 'libffi', 'src')
--  intl_libdir = join_paths(meson.global_build_root(), subprojdir, 'proxy-libintl')
--  glib_libpaths = [
--    '-L' + ffi_libdir,
--    '-L' + intl_libdir,
--  ] + glib_libpaths
-+  # subprojects.
++  # dependencies are only libffi and proxy-libintl.
 +  libffi_dep = glib_subproject.get_variable('libffi_dep')
 +  if libffi_dep.type_name() == 'internal'
 +    libffi_subproject = subproject('libffi')
@@ -41,7 +36,13 @@ index 94c5b340..600746f7 100644
 +    libffi_incdir = fsmod.parent(libffi_libdir) / 'include'
 +    glib_includes += ['-I' + libffi_incdir]
 +  endif
-+
+ 
+-  ffi_libdir = join_paths(meson.global_build_root(), subprojdir, 'libffi', 'src')
+-  intl_libdir = join_paths(meson.global_build_root(), subprojdir, 'proxy-libintl')
+-  glib_libpaths = [
+-    '-L' + ffi_libdir,
+-    '-L' + intl_libdir,
+-  ] + glib_libpaths
 +  libintl_dep = glib_subproject.get_variable('libintl')
 +  if libintl_dep.type_name() == 'internal'
 +    libintl_subproject = subproject('proxy-libintl')
@@ -55,5 +56,5 @@ index 94c5b340..600746f7 100644
    glib_command += ['--pkg-export=glib-2.0']
    glib_command += glib_libpaths
 -- 
-2.53.0
+2.53.0.windows.3
 
