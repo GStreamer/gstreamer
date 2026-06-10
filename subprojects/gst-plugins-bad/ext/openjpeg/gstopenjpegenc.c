@@ -1167,9 +1167,9 @@ gst_openjpeg_enc_encode_stripe (GstElement * element, gpointer user_data)
   if (!image)
     ENCODE_ERROR (message, OPENJPEG_ERROR_FILL_IMAGE);
 
-  if (vframe.info.finfo->flags & GST_VIDEO_FORMAT_FLAG_RGB) {
-    self->params.tcp_mct = 1;
-  }
+  /* The MCT is only valid for RGB-family inputs. */
+  self->params.tcp_mct =
+      (vframe.info.finfo->flags & GST_VIDEO_FORMAT_FLAG_RGB) ? 1 : 0;
   opj_setup_encoder (enc, &self->params, image);
   stream = opj_stream_create (4096, OPJ_FALSE);
   if (!stream)
