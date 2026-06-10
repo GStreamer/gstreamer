@@ -1,0 +1,60 @@
+From a48a7fd6c46f1db84d323ed4c73112bff4b29a8c Mon Sep 17 00:00:00 2001
+From: "L. E. Segovia" <amy@centricular.com>
+Date: Tue, 19 May 2026 14:18:25 -0300
+Subject: [PATCH 10/10] giscanner: Disable macros double quote escaping for VS
+ 2026 onwards
+
+This change is not needed with VS 2022, and double escaping is no longer supported as of 2026:
+
+https://developercommunity.visualstudio.com/t/Spurious-C7772-C1903-in-2026-Insiders-wh/11082089
+
+This partially reverts commit ab93f13b200de8ae9ea62d16af57fc3b84cf0312.
+---
+ giscanner/ccompiler.py | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/giscanner/ccompiler.py b/giscanner/ccompiler.py
+index ed05e48d..807a9e77 100644
+--- a/giscanner/ccompiler.py
++++ b/giscanner/ccompiler.py
+@@ -19,6 +19,7 @@
+ #
+ 
+ import os
++import re
+ import shlex
+ import subprocess
+ import tempfile
+@@ -149,6 +150,7 @@ class CCompiler(object):
+     compiler_cmd = ''
+     compiler = None
+     _cflags_no_deprecation_warnings = ''
++    _needs_escaping_macros = True
+ 
+     def __init__(self,
+                  environ=os.environ,
+@@ -214,6 +216,12 @@ class CCompiler(object):
+             else:
+                 self.compiler_cmd = 'cl.exe'
+                 self._cflags_no_deprecation_warnings = "-wd4996"
++                # MSVC 2026 no longer allows escaped quotes in macro definitions.
++                # https://developercommunity.visualstudio.com/t/Spurious-C7772-C1903-in-2026-Insiders-wh/11082089
++                output = subprocess.check_output([self.compiler_cmd], universal_newlines=True, stderr=subprocess.STDOUT)
++                version = re.search(r'\w([0-9]+\.[0-9]+\.[0-9]+)\w', output)
++                if version and version.group(0) >= '19.50':
++                    self._needs_escaping_macros = False
+         else:
+             if (isinstance(self.compiler, Mingw32CCompiler)):
+                 self.compiler_cmd = self.compiler.compiler[0]
+@@ -523,7 +531,7 @@ class CCompiler(object):
+                     # macros for compiling using distutils
+                     # get dropped for MSVC builds, so
+                     # escape the escape character.
+-                    if self.check_is_msvc():
++                    if self._needs_escaping_macros:
+                         macro_value = macro_value.replace('\"', '\\\"')
+                 macros.append((macro_name, macro_value))
+             elif option.startswith('-U'):
+-- 
+2.53.0.windows.3
+
