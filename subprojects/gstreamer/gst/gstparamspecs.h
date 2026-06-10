@@ -115,6 +115,225 @@ G_BEGIN_DECLS
 #define	GST_PARAM_USER_SHIFT	(1 << (G_PARAM_USER_SHIFT + 8))
 
 
+/**
+ * GST_PROP_KIND_LOCATION:
+ *
+ * Kind name for properties naming a resource to be opened, read or
+ * written. The %GST_PROP_KIND_FIELD_SUBTYPE field says how the resource is
+ * addressed.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_LOCATION "location"
+
+/**
+ * GST_PROP_KIND_NETWORK:
+ *
+ * Kind name for properties naming a network endpoint.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_NETWORK "network"
+
+/**
+ * GST_PROP_KIND_SECURITY:
+ *
+ * Kind name for properties holding a credential.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_SECURITY "security"
+
+/**
+ * GST_PROP_KIND_COLOR:
+ *
+ * Kind name for properties describing a color.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_COLOR "color"
+
+/**
+ * GST_PROP_KIND_BITRATE:
+ *
+ * Kind name for properties describing a bitrate. The %GST_PROP_KIND_FIELD_UNIT
+ * field gives the unit of the value; bits per second when absent.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_BITRATE "bitrate"
+
+/**
+ * GST_PROP_KIND_FONT:
+ *
+ * Kind name for properties describing a font.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_FONT "font"
+
+/**
+ * GST_PROP_KIND_FIELD_SUBTYPE:
+ *
+ * Kind field (string) refining how the value is encoded, e.g.
+ * %GST_PROP_KIND_SUBTYPE_PATH.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_FIELD_SUBTYPE "subtype"
+
+/**
+ * GST_PROP_KIND_FIELD_UNIT:
+ *
+ * Kind field (string) giving the unit of a numeric value, e.g.
+ * %GST_PROP_KIND_UNIT_KILOBITS_PER_SEC.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_FIELD_UNIT "unit"
+
+/**
+ * GST_PROP_KIND_FIELD_MIMETYPES:
+ *
+ * Kind field listing the media types the resource is expected to hold,
+ * e.g. `image/png`. Either a string or a #GstValueList of strings, so
+ * readers must check the value type: gst_structure_get_string() returns
+ * %NULL for a list.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_FIELD_MIMETYPES "mimetypes"
+
+/**
+ * GST_PROP_KIND_FIELD_EXTENSIONS:
+ *
+ * Kind field listing the file extensions the resource is expected to have,
+ * without the leading dot, e.g. `onnx`. Either a string or a #GstValueList
+ * of strings, so readers must check the value type:
+ * gst_structure_get_string() returns %NULL for a list.
+ * Meant as a filter hint for file choosers, not as a restriction enforced by
+ * the element.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_FIELD_EXTENSIONS "extensions"
+
+/**
+ * GST_PROP_KIND_SUBTYPE_PATH:
+ *
+ * A resource addressed by a filesystem path, absolute or relative. Use as
+ * %GST_PROP_KIND_FIELD_SUBTYPE of %GST_PROP_KIND_LOCATION.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_SUBTYPE_PATH "path"
+
+/**
+ * GST_PROP_KIND_SUBTYPE_URI:
+ *
+ * A resource addressed by a URI, e.g. `scheme://...`. Whether the URI is
+ * local or remote depends on the value set at runtime, so it is not part of
+ * the hint. Use as %GST_PROP_KIND_FIELD_SUBTYPE of
+ * %GST_PROP_KIND_LOCATION.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_SUBTYPE_URI "uri"
+
+/**
+ * GST_PROP_KIND_SUBTYPE_PATTERN:
+ *
+ * A printf-style pattern expanded into filesystem paths, as used by
+ * `multifilesink` and `splitmuxsink` (e.g. `video%05d.mp4`). Distinct from
+ * %GST_PROP_KIND_SUBTYPE_PATH because picking a single existing file yields a
+ * pattern that matches only itself. Use as
+ * %GST_PROP_KIND_FIELD_SUBTYPE of %GST_PROP_KIND_LOCATION.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_SUBTYPE_PATTERN "pattern"
+
+/**
+ * GST_PROP_KIND_SUBTYPE_DIRECTORY:
+ *
+ * A filesystem path naming a directory rather than a file. Use as
+ * %GST_PROP_KIND_FIELD_SUBTYPE of %GST_PROP_KIND_LOCATION.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_SUBTYPE_DIRECTORY "directory"
+
+/**
+ * GST_PROP_KIND_SUBTYPE_HOSTNAME:
+ *
+ * A host name, IP address or network interface. Use as
+ * %GST_PROP_KIND_FIELD_SUBTYPE of %GST_PROP_KIND_NETWORK.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_SUBTYPE_HOSTNAME "hostname"
+
+/**
+ * GST_PROP_KIND_SUBTYPE_PASSWORD:
+ *
+ * A password, token or other credential. Editors should mask it, and tooling
+ * should keep it out of logs and pipeline dumps. Use as
+ * %GST_PROP_KIND_FIELD_SUBTYPE of %GST_PROP_KIND_SECURITY.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_SUBTYPE_PASSWORD "password"
+
+/**
+ * GST_PROP_KIND_SUBTYPE_ARGB:
+ *
+ * A color packed as `0xAARRGGBB` in an integer property. Use as
+ * %GST_PROP_KIND_FIELD_SUBTYPE of %GST_PROP_KIND_COLOR.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_SUBTYPE_ARGB "argb"
+
+/**
+ * GST_PROP_KIND_UNIT_BITS_PER_SEC:
+ *
+ * Bits per second. Use as %GST_PROP_KIND_FIELD_UNIT of
+ * %GST_PROP_KIND_BITRATE.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_UNIT_BITS_PER_SEC "bits-per-sec"
+
+/**
+ * GST_PROP_KIND_UNIT_KILOBITS_PER_SEC:
+ *
+ * Kilobits per second (1000 bits per second). Use as
+ * %GST_PROP_KIND_FIELD_UNIT of %GST_PROP_KIND_BITRATE.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_UNIT_KILOBITS_PER_SEC "kilobits-per-sec"
+
+/**
+ * GST_PROP_KIND_UNIT_BYTES_PER_SEC:
+ *
+ * Bytes per second. Use as %GST_PROP_KIND_FIELD_UNIT of
+ * %GST_PROP_KIND_BITRATE.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_UNIT_BYTES_PER_SEC "bytes-per-sec"
+
+/**
+ * GST_PROP_KIND_SUBTYPE_DESC:
+ *
+ * A Pango font description, e.g. `Sans Bold 12`. Use as
+ * %GST_PROP_KIND_FIELD_SUBTYPE of %GST_PROP_KIND_FONT.
+ *
+ * Since: 1.30
+ */
+#define GST_PROP_KIND_SUBTYPE_DESC "desc"
+
 /* --- type macros --- */
 
 /**
@@ -207,6 +426,13 @@ GParamSpec  * gst_param_spec_array    (const gchar * name,
                                        const gchar * blurb,
                                        GParamSpec * element_spec,
                                        GParamFlags flags) G_GNUC_MALLOC;
+
+GST_API
+void          gst_param_spec_set_kind (GParamSpec * pspec,
+                                       GstStructure * kind);
+
+GST_API
+const GstStructure * gst_param_spec_get_kind (GParamSpec * pspec);
 
 G_END_DECLS
 

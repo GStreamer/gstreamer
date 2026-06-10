@@ -32789,6 +32789,141 @@ calls the plugin initialization function.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <constant name="PROP_KIND_BITRATE" value="bitrate" c:type="GST_PROP_KIND_BITRATE" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">Kind name for properties describing a bitrate. The %GST_PROP_KIND_FIELD_UNIT
+field gives the unit of the value; bits per second when absent.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="PROP_KIND_COLOR" value="color" c:type="GST_PROP_KIND_COLOR" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">Kind name for properties describing a color.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="PROP_KIND_FIELD_EXTENSIONS" value="extensions" c:type="GST_PROP_KIND_FIELD_EXTENSIONS" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">Kind field listing the file extensions the resource is expected to have,
+without the leading dot, e.g. `onnx`. Either a string or a #GstValueList
+of strings, so readers must check the value type:
+gst_structure_get_string() returns %NULL for a list.
+Meant as a filter hint for file choosers, not as a restriction enforced by
+the element.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="PROP_KIND_FIELD_MIMETYPES" value="mimetypes" c:type="GST_PROP_KIND_FIELD_MIMETYPES" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">Kind field listing the media types the resource is expected to hold,
+e.g. `image/png`. Either a string or a #GstValueList of strings, so
+readers must check the value type: gst_structure_get_string() returns
+%NULL for a list.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="PROP_KIND_FIELD_SUBTYPE" value="subtype" c:type="GST_PROP_KIND_FIELD_SUBTYPE" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">Kind field (string) refining how the value is encoded, e.g.
+%GST_PROP_KIND_SUBTYPE_PATH.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="PROP_KIND_FIELD_UNIT" value="unit" c:type="GST_PROP_KIND_FIELD_UNIT" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">Kind field (string) giving the unit of a numeric value, e.g.
+%GST_PROP_KIND_UNIT_KILOBITS_PER_SEC.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="PROP_KIND_FONT" value="font" c:type="GST_PROP_KIND_FONT" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">Kind name for properties describing a font.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="PROP_KIND_LOCATION" value="location" c:type="GST_PROP_KIND_LOCATION" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">Kind name for properties naming a resource to be opened, read or
+written. The %GST_PROP_KIND_FIELD_SUBTYPE field says how the resource is
+addressed.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="PROP_KIND_NETWORK" value="network" c:type="GST_PROP_KIND_NETWORK" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">Kind name for properties naming a network endpoint.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="PROP_KIND_SECURITY" value="security" c:type="GST_PROP_KIND_SECURITY" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">Kind name for properties holding a credential.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="PROP_KIND_SUBTYPE_ARGB" value="argb" c:type="GST_PROP_KIND_SUBTYPE_ARGB" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">A color packed as `0xAARRGGBB` in an integer property. Use as
+%GST_PROP_KIND_FIELD_SUBTYPE of %GST_PROP_KIND_COLOR.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="PROP_KIND_SUBTYPE_DESC" value="desc" c:type="GST_PROP_KIND_SUBTYPE_DESC" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">A Pango font description, e.g. `Sans Bold 12`. Use as
+%GST_PROP_KIND_FIELD_SUBTYPE of %GST_PROP_KIND_FONT.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="PROP_KIND_SUBTYPE_DIRECTORY" value="directory" c:type="GST_PROP_KIND_SUBTYPE_DIRECTORY" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">A filesystem path naming a directory rather than a file. Use as
+%GST_PROP_KIND_FIELD_SUBTYPE of %GST_PROP_KIND_LOCATION.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="PROP_KIND_SUBTYPE_HOSTNAME" value="hostname" c:type="GST_PROP_KIND_SUBTYPE_HOSTNAME" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">A host name, IP address or network interface. Use as
+%GST_PROP_KIND_FIELD_SUBTYPE of %GST_PROP_KIND_NETWORK.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="PROP_KIND_SUBTYPE_PASSWORD" value="password" c:type="GST_PROP_KIND_SUBTYPE_PASSWORD" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">A password, token or other credential. Editors should mask it, and tooling
+should keep it out of logs and pipeline dumps. Use as
+%GST_PROP_KIND_FIELD_SUBTYPE of %GST_PROP_KIND_SECURITY.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="PROP_KIND_SUBTYPE_PATH" value="path" c:type="GST_PROP_KIND_SUBTYPE_PATH" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">A resource addressed by a filesystem path, absolute or relative. Use as
+%GST_PROP_KIND_FIELD_SUBTYPE of %GST_PROP_KIND_LOCATION.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="PROP_KIND_SUBTYPE_PATTERN" value="pattern" c:type="GST_PROP_KIND_SUBTYPE_PATTERN" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">A printf-style pattern expanded into filesystem paths, as used by
+`multifilesink` and `splitmuxsink` (e.g. `video%05d.mp4`). Distinct from
+%GST_PROP_KIND_SUBTYPE_PATH because picking a single existing file yields a
+pattern that matches only itself. Use as
+%GST_PROP_KIND_FIELD_SUBTYPE of %GST_PROP_KIND_LOCATION.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="PROP_KIND_SUBTYPE_URI" value="uri" c:type="GST_PROP_KIND_SUBTYPE_URI" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">A resource addressed by a URI, e.g. `scheme://...`. Whether the URI is
+local or remote depends on the value set at runtime, so it is not part of
+the hint. Use as %GST_PROP_KIND_FIELD_SUBTYPE of
+%GST_PROP_KIND_LOCATION.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="PROP_KIND_UNIT_BITS_PER_SEC" value="bits-per-sec" c:type="GST_PROP_KIND_UNIT_BITS_PER_SEC" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">Bits per second. Use as %GST_PROP_KIND_FIELD_UNIT of
+%GST_PROP_KIND_BITRATE.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="PROP_KIND_UNIT_BYTES_PER_SEC" value="bytes-per-sec" c:type="GST_PROP_KIND_UNIT_BYTES_PER_SEC" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">Bytes per second. Use as %GST_PROP_KIND_FIELD_UNIT of
+%GST_PROP_KIND_BITRATE.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="PROP_KIND_UNIT_KILOBITS_PER_SEC" value="kilobits-per-sec" c:type="GST_PROP_KIND_UNIT_KILOBITS_PER_SEC" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">Kilobits per second (1000 bits per second). Use as
+%GST_PROP_KIND_FIELD_UNIT of %GST_PROP_KIND_BITRATE.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
     <constant name="PROTECTION_SYSTEM_ID_CAPS_FIELD" value="protection-system" c:type="GST_PROTECTION_SYSTEM_ID_CAPS_FIELD" version="1.6">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstprotection.h">The field name in a GstCaps that is used to signal the UUID of the protection
 system.</doc>
@@ -60322,6 +60457,47 @@ instance_init function.</doc>
         <parameter name="flags" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.c">flags for the property specified</doc>
           <type name="GObject.ParamFlags" c:type="GParamFlags"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="param_spec_get_kind" c:identifier="gst_param_spec_get_kind" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.c">Returns the semantic kind previously set on @pspec with
+gst_param_spec_set_kind().</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <return-value transfer-ownership="none" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.c">the kind of @pspec, or %NULL if none
+was set</doc>
+        <type name="Structure" c:type="const GstStructure*"/>
+      </return-value>
+      <parameters>
+        <parameter name="pspec" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.c">a #GParamSpec</doc>
+          <type name="GObject.ParamSpec" c:type="GParamSpec*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="param_spec_set_kind" c:identifier="gst_param_spec_set_kind" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.c">Tags @pspec with a semantic kind. The structure name says what the
+property *is* (e.g. %GST_PROP_KIND_LOCATION) and its fields refine it,
+for example:
+
+```
+location, subtype=(string)path, mimetypes=(string){image/png,image/jpeg}
+```
+
+A kind can only be set once: it cannot be replaced or cleared afterwards.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="pspec" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.c">a #GParamSpec</doc>
+          <type name="GObject.ParamSpec" c:type="GParamSpec*"/>
+        </parameter>
+        <parameter name="kind" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.c">the kind description</doc>
+          <type name="Structure" c:type="GstStructure*"/>
         </parameter>
       </parameters>
     </function>

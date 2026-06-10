@@ -343,6 +343,7 @@ _add_properties (GString * json, GString * other_types,
   for (i = 0; i < n_props; i++) {
     GValue value = { 0, };
     const gchar *mutable_str = NULL;
+    const GstStructure *kind;
     spec = specs[i];
 
     if (spec->owner_type != type)
@@ -395,6 +396,17 @@ _add_properties (GString * json, GString * other_types,
         spec->flags & GST_PARAM_CONDITIONALLY_AVAILABLE ? "true" : "false",
         mutable_str, g_type_name (G_PARAM_SPEC_VALUE_TYPE (spec)));
     g_free (tmpstr);
+
+    /* only emitted when set, to avoid churning every cached property */
+    kind = gst_param_spec_get_kind (spec);
+    if (kind) {
+      gchar *kind_str = gst_structure_to_string (kind);
+
+      tmpstr = json_strescape (kind_str);
+      g_string_append_printf (json, ",\"kind\": \"%s\"", tmpstr);
+      g_free (tmpstr);
+      g_free (kind_str);
+    }
 
     if (!g_hash_table_contains (seen_other_types,
             g_type_name (spec->value_type))

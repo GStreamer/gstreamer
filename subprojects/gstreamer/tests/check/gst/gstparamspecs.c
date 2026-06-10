@@ -117,6 +117,136 @@ GST_START_TEST (test_param_spec_fraction)
   gst_object_unref (obj);
 }
 
+GST_END_TEST
+GST_START_TEST (test_param_spec_kind)
+{
+  GParamSpec *pspec;
+  const GstStructure *kind;
+  GstStructure *new_kind;
+  const GValue *mimetypes;
+  const GValue *extensions;
+  GValue list = G_VALUE_INIT;
+  GValue v = G_VALUE_INIT;
+  gchar *str;
+
+  pspec = g_param_spec_string ("str", "str", "str", NULL, G_PARAM_READWRITE);
+
+  fail_unless (gst_param_spec_get_kind (pspec) == NULL);
+
+  gst_param_spec_set_kind (pspec, gst_structure_new (GST_PROP_KIND_LOCATION,
+          GST_PROP_KIND_FIELD_SUBTYPE, G_TYPE_STRING,
+          GST_PROP_KIND_SUBTYPE_URI, NULL));
+  kind = gst_param_spec_get_kind (pspec);
+  fail_unless (kind != NULL);
+  fail_unless (gst_structure_has_name (kind, GST_PROP_KIND_LOCATION));
+  fail_unless_equals_string (gst_structure_get_string (kind,
+          GST_PROP_KIND_FIELD_SUBTYPE), GST_PROP_KIND_SUBTYPE_URI);
+
+  /* a kind is permanent: setting again is refused and keeps the first one.
+   * A refused kind is not taken, so the caller still owns it. */
+  new_kind = gst_structure_new_empty ("x-other");
+  ASSERT_CRITICAL (gst_param_spec_set_kind (pspec, new_kind));
+  gst_structure_free (new_kind);
+  ASSERT_CRITICAL (gst_param_spec_set_kind (pspec, NULL));
+  kind = gst_param_spec_get_kind (pspec);
+  fail_unless (gst_structure_has_name (kind, GST_PROP_KIND_LOCATION));
+  fail_unless_equals_string (gst_structure_get_string (kind,
+          GST_PROP_KIND_FIELD_SUBTYPE), GST_PROP_KIND_SUBTYPE_URI);
+  g_param_spec_unref (pspec);
+
+  pspec = g_param_spec_string ("str", "str", "str", NULL, G_PARAM_READWRITE);
+  new_kind = gst_structure_new (GST_PROP_KIND_LOCATION,
+      GST_PROP_KIND_FIELD_SUBTYPE, G_TYPE_STRING, GST_PROP_KIND_SUBTYPE_PATH,
+      NULL);
+  g_value_init (&v, G_TYPE_STRING);
+  g_value_init (&list, GST_TYPE_LIST);
+  g_value_set_static_string (&v, "image/jpeg");
+  gst_value_list_append_value (&list, &v);
+  g_value_set_static_string (&v, "image/png");
+  gst_value_list_append_value (&list, &v);
+  gst_structure_set_value (new_kind, GST_PROP_KIND_FIELD_MIMETYPES, &list);
+  g_value_unset (&list);
+  g_value_unset (&v);
+  gst_param_spec_set_kind (pspec, new_kind);
+  kind = gst_param_spec_get_kind (pspec);
+  fail_unless (gst_structure_has_name (kind, GST_PROP_KIND_LOCATION));
+  fail_unless_equals_string (gst_structure_get_string (kind,
+          GST_PROP_KIND_FIELD_SUBTYPE), GST_PROP_KIND_SUBTYPE_PATH);
+
+  mimetypes = gst_structure_get_value (kind, GST_PROP_KIND_FIELD_MIMETYPES);
+  fail_unless (GST_VALUE_HOLDS_LIST (mimetypes));
+  fail_unless_equals_int (gst_value_list_get_size (mimetypes), 2);
+  fail_unless_equals_string (g_value_get_string (gst_value_list_get_value
+          (mimetypes, 0)), "image/jpeg");
+  fail_unless_equals_string (g_value_get_string (gst_value_list_get_value
+          (mimetypes, 1)), "image/png");
+
+  str = gst_structure_to_string (kind);
+  fail_unless_equals_string (str, "location, subtype=(string)path, "
+      "mimetypes=(string){ image/jpeg, image/png };");
+  g_free (str);
+  g_param_spec_unref (pspec);
+
+  pspec = g_param_spec_string ("str", "str", "str", NULL, G_PARAM_READWRITE);
+  gst_param_spec_set_kind (pspec, gst_structure_new (GST_PROP_KIND_LOCATION,
+          GST_PROP_KIND_FIELD_SUBTYPE, G_TYPE_STRING,
+          GST_PROP_KIND_SUBTYPE_PATH, GST_PROP_KIND_FIELD_EXTENSIONS,
+          G_TYPE_STRING, "onnx", NULL));
+  fail_unless_equals_string (gst_structure_get_string (gst_param_spec_get_kind
+          (pspec), GST_PROP_KIND_FIELD_EXTENSIONS), "onnx");
+  g_param_spec_unref (pspec);
+
+  /* from a string, a field is a plain string or a list depending on syntax */
+  pspec = g_param_spec_string ("str", "str", "str", NULL, G_PARAM_READWRITE);
+  gst_param_spec_set_kind (pspec,
+      gst_structure_new_from_string (GST_PROP_KIND_LOCATION ", "
+          GST_PROP_KIND_FIELD_SUBTYPE "=(string)" GST_PROP_KIND_SUBTYPE_PATH
+          ", " GST_PROP_KIND_FIELD_MIMETYPES
+          "=(string)application/vnd.iccprofile, "
+          GST_PROP_KIND_FIELD_EXTENSIONS "=(string){icc,icm}"));
+  kind = gst_param_spec_get_kind (pspec);
+  fail_unless (kind != NULL);
+
+  mimetypes = gst_structure_get_value (kind, GST_PROP_KIND_FIELD_MIMETYPES);
+  fail_unless (G_VALUE_HOLDS_STRING (mimetypes));
+  fail_unless_equals_string (g_value_get_string (mimetypes),
+      "application/vnd.iccprofile");
+
+  extensions = gst_structure_get_value (kind, GST_PROP_KIND_FIELD_EXTENSIONS);
+  fail_unless (GST_VALUE_HOLDS_LIST (extensions));
+  fail_unless_equals_int (gst_value_list_get_size (extensions), 2);
+  fail_unless_equals_string (g_value_get_string (gst_value_list_get_value
+          (extensions, 0)), "icc");
+  fail_unless_equals_string (g_value_get_string (gst_value_list_get_value
+          (extensions, 1)), "icm");
+  /* a list field is not readable as a plain string */
+  fail_unless (gst_structure_get_string (kind,
+          GST_PROP_KIND_FIELD_EXTENSIONS) == NULL);
+  g_param_spec_unref (pspec);
+
+  /* a single entry in braces stays a list */
+  pspec = g_param_spec_string ("str", "str", "str", NULL, G_PARAM_READWRITE);
+  gst_param_spec_set_kind (pspec,
+      gst_structure_new_from_string (GST_PROP_KIND_LOCATION ", "
+          GST_PROP_KIND_FIELD_EXTENSIONS "=(string){onnx}"));
+  extensions = gst_structure_get_value (gst_param_spec_get_kind (pspec),
+      GST_PROP_KIND_FIELD_EXTENSIONS);
+  fail_unless (GST_VALUE_HOLDS_LIST (extensions));
+  fail_unless_equals_int (gst_value_list_get_size (extensions), 1);
+  fail_unless_equals_string (g_value_get_string (gst_value_list_get_value
+          (extensions, 0)), "onnx");
+
+  /* the hint is not restricted to string properties */
+  g_param_spec_unref (pspec);
+  pspec = g_param_spec_uint ("num", "num", "num", 0, 100, 0, G_PARAM_READWRITE);
+  gst_param_spec_set_kind (pspec, gst_structure_new_empty ("x-mycorp-thing"));
+  fail_unless (gst_structure_has_name (gst_param_spec_get_kind (pspec),
+          "x-mycorp-thing"));
+
+  /* the kind is released with the pspec */
+  g_param_spec_unref (pspec);
+}
+
 GST_END_TEST static Suite *
 gst_param_spec_suite (void)
 {
@@ -125,6 +255,7 @@ gst_param_spec_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_param_spec_fraction);
+  tcase_add_test (tc_chain, test_param_spec_kind);
 
   return s;
 }

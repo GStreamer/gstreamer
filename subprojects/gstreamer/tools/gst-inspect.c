@@ -521,6 +521,7 @@ print_object_properties_info (GObject * obj, GObjectClass * obj_class,
     GValue value = { 0, };
     GParamSpec *param = property_specs[i];
     GType owner_type = param->owner_type;
+    const GstStructure *kind;
 
     /* We're printing pad properties */
     if (obj == NULL && (owner_type == G_TYPE_OBJECT
@@ -871,6 +872,15 @@ print_object_properties_info (GObject * obj, GObjectClass * obj_class,
       g_print (" %sWrite only%s\n", PROP_VALUE_COLOR, RESET_COLOR);
     else
       g_print ("\n");
+
+    kind = gst_param_spec_get_kind (param);
+    if (kind) {
+      gchar *kind_str = gst_structure_to_string (kind);
+
+      n_print ("%sKind%s: %s%s%s\n", PROP_ATTR_NAME_COLOR, RESET_COLOR,
+          PROP_ATTR_VALUE_COLOR, kind_str, RESET_COLOR);
+      g_free (kind_str);
+    }
 
     pop_indent_n (11);
 

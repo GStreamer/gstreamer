@@ -367,3 +367,59 @@ gst_param_spec_array (const gchar * name,
 
   return G_PARAM_SPEC (aspec);
 }
+
+/* --- property kind hint --- */
+
+static GQuark
+gst_param_spec_kind_quark (void)
+{
+  return g_quark_from_static_string ("gst-param-spec-kind");
+}
+
+/**
+ * gst_param_spec_set_kind:
+ * @pspec: (transfer none): a #GParamSpec
+ * @kind: (transfer full): the kind description
+ *
+ * Tags @pspec with a semantic kind. The structure name says what the
+ * property *is* (e.g. %GST_PROP_KIND_LOCATION) and its fields refine it,
+ * for example:
+ *
+ * ```
+ * location, subtype=(string)path, mimetypes=(string){image/png,image/jpeg}
+ * ```
+ *
+ * A kind can only be set once: it cannot be replaced or cleared afterwards.
+ *
+ * Since: 1.30
+ */
+void
+gst_param_spec_set_kind (GParamSpec * pspec, GstStructure * kind)
+{
+  g_return_if_fail (G_IS_PARAM_SPEC (pspec));
+  g_return_if_fail (GST_IS_STRUCTURE (kind));
+  g_return_if_fail (gst_param_spec_get_kind (pspec) == NULL);
+
+  g_param_spec_set_qdata_full (pspec, gst_param_spec_kind_quark (), kind,
+      (GDestroyNotify) gst_structure_free);
+}
+
+/**
+ * gst_param_spec_get_kind:
+ * @pspec: (transfer none): a #GParamSpec
+ *
+ * Returns the semantic kind previously set on @pspec with
+ * gst_param_spec_set_kind().
+ *
+ * Returns: (nullable) (transfer none): the kind of @pspec, or %NULL if none
+ * was set
+ *
+ * Since: 1.30
+ */
+const GstStructure *
+gst_param_spec_get_kind (GParamSpec * pspec)
+{
+  g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), NULL);
+
+  return g_param_spec_get_qdata (pspec, gst_param_spec_kind_quark ());
+}
