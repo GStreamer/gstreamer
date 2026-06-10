@@ -255,6 +255,57 @@ GST_START_TEST (test_openjpeg_simple)
 GST_END_TEST;
 
 
+GST_START_TEST (test_openjpeg_yuv_format_validate_caps)
+{
+  GstElement *pipeline, *dec;
+  GstBus *bus;
+  GstMessage *msg;
+  GstPad *srcpad;
+  GstCaps *caps;
+  const GstStructure *s;
+  const gchar *format;
+
+  pipeline = gst_parse_launch ("videotestsrc num-buffers=1 pattern=gradient ! "
+      "video/x-raw,format=Y444,width=32,height=32 ! "
+      "openjpegenc ! jpeg2000parse ! openjpegdec name=dec ! fakesink", NULL);
+  fail_unless (pipeline != NULL);
+
+  fail_unless (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE,
+      "could not set pipeline to playing");
+
+  bus = gst_element_get_bus (pipeline);
+  msg = gst_bus_timed_pop_filtered (bus, GST_SECOND * 5,
+      GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
+  fail_unless (msg != NULL);
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+  gst_message_unref (msg);
+
+  dec = gst_bin_get_by_name (GST_BIN (pipeline), "dec");
+  fail_unless (dec != NULL);
+  srcpad = gst_element_get_static_pad (dec, "src");
+  fail_unless (srcpad != NULL);
+  caps = gst_pad_get_current_caps (srcpad);
+  fail_unless (caps != NULL);
+
+  s = gst_caps_get_structure (caps, 0);
+  fail_unless (gst_structure_has_name (s, "video/x-raw"));
+  format = gst_structure_get_string (s, "format");
+  fail_unless (format != NULL);
+  fail_unless_equals_string (format, "Y444");
+
+  gst_caps_unref (caps);
+  gst_object_unref (srcpad);
+  gst_object_unref (dec);
+  gst_object_unref (bus);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 openjpeg_suite (void)
 {
@@ -265,6 +316,7 @@ openjpeg_suite (void)
 
   tcase_add_test (tc_chain, test_openjpeg_encode_simple);
   tcase_add_test (tc_chain, test_openjpeg_simple);
+  tcase_add_test (tc_chain, test_openjpeg_yuv_format_validate_caps);
   tcase_set_timeout (tc_chain, 5 * 60);
   return s;
 }
