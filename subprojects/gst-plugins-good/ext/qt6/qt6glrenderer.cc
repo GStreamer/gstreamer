@@ -489,15 +489,11 @@ void GstQt6QuickRenderer::stopGL ()
     /* Invalidating the renderer will cause Qt6 to clear the current qt-tracked OpenGL context.
      * We however may be using the QOpenGLContext for multiple qml6gloverlay
      * elements so need to recurrent it */
-    if (current_qt_context)
-      g_assert (current_qt_context == m_sharedRenderData->m_context);
-    else
+    if (current_qt_context != m_sharedRenderData->m_context)
       m_sharedRenderData->m_context->makeCurrent(m_sharedRenderData->m_surface);
 
     if (m_renderControl)
         m_renderControl->invalidate();
-
-    GST_ERROR ("%p %p", this, QOpenGLContext::currentContext());
 
     QEventLoop loop;
     if (loop.processEvents())
@@ -509,9 +505,6 @@ void GstQt6QuickRenderer::stopAfterGL ()
     GST_DEBUG ("%p stop QOpenGLContext curent: %p stored: %p", this,
         QOpenGLContext::currentContext(), m_sharedRenderData->m_context);
     g_assert (QOpenGLContext::currentContext() == nullptr);
-
-    if (!m_sharedRenderData->m_context->makeCurrent(m_sharedRenderData->m_surface))
-      g_warn_if_reached();
 
     if (m_sharedRenderData)
         shared_render_data_unref (m_sharedRenderData);
