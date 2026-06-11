@@ -25,10 +25,10 @@
 #include "rmutils.h"
 
 gchar *
-gst_rm_utils_read_string8 (const guint8 * data, guint datalen,
-    guint * p_total_len)
+gst_rm_utils_read_string8 (const guint8 * data, gsize datalen,
+    gsize * p_total_len)
 {
-  gint length;
+  gsize length;
 
   if (p_total_len)
     *p_total_len = 0;
@@ -47,10 +47,10 @@ gst_rm_utils_read_string8 (const guint8 * data, guint datalen,
 }
 
 gchar *
-gst_rm_utils_read_string16 (const guint8 * data, guint datalen,
-    guint * p_total_len)
+gst_rm_utils_read_string16 (const guint8 * data, gsize datalen,
+    gsize * p_total_len)
 {
-  gint length;
+  gsize length;
 
   if (p_total_len)
     *p_total_len = 0;
@@ -69,7 +69,7 @@ gst_rm_utils_read_string16 (const guint8 * data, guint datalen,
 }
 
 GstTagList *
-gst_rm_utils_read_tags (const guint8 * data, guint datalen,
+gst_rm_utils_read_tags (const guint8 * data, gsize datalen,
     GstRmUtilsStringReadFunc read_string_func)
 {
   const gchar *gst_tags[] = { GST_TAG_TITLE, GST_TAG_ARTIST,
@@ -80,13 +80,13 @@ gst_rm_utils_read_tags (const guint8 * data, guint datalen,
 
   g_assert (read_string_func != NULL);
 
-  GST_DEBUG ("File Content : (CONT) len = %d", datalen);
+  GST_DEBUG ("File Content : (CONT) len = %" G_GSIZE_FORMAT, datalen);
 
   tags = gst_tag_list_new_empty ();
 
   for (i = 0; i < G_N_ELEMENTS (gst_tags); ++i) {
     gchar *str = NULL;
-    guint total_length = 0;
+    gsize total_length = 0;
 
     str = read_string_func (data, datalen, &total_length);
     data += total_length;
@@ -146,7 +146,7 @@ gst_rm_utils_descramble_dnet_buffer (GstBuffer * buf)
 }
 
 static void
-gst_rm_utils_swap_nibbles (guint8 * data, gint idx1, gint idx2, gint len)
+gst_rm_utils_swap_nibbles (guint8 * data, gsize idx1, gsize idx2, gint len)
 {
   guint8 *d1, *d2, tmp1 = 0, tmp2, tmp1n, tmp2n;
 
@@ -207,7 +207,7 @@ gst_rm_utils_swap_nibbles (guint8 * data, gint idx1, gint idx2, gint len)
   }
 }
 
-static const gint sipr_swap_index[38][2] = {
+static const gsize sipr_swap_index[38][2] = {
   {0, 63}, {1, 22}, {2, 44}, {3, 90},
   {5, 81}, {7, 31}, {8, 86}, {9, 58},
   {10, 36}, {12, 68}, {13, 39}, {14, 73},
@@ -224,15 +224,23 @@ GstBuffer *
 gst_rm_utils_descramble_sipr_buffer (GstBuffer * buf)
 {
   GstMapInfo map;
-  gint n, bs;
-  gsize size;
+  gint n;
+  gsize size, bs;
 
   size = gst_buffer_get_size (buf);
 
   /* split the packet in 96 blocks of nibbles */
+  if (size > G_MAXSIZE / 2) {
+    gst_buffer_unref (buf);
+    return NULL;
+  }
   bs = size * 2 / 96;
   if (bs == 0)
     return buf;
+  if (bs > G_MAXINT) {
+    gst_buffer_unref (buf);
+    return NULL;
+  }
 
   buf = gst_buffer_make_writable (buf);
 
@@ -240,7 +248,7 @@ gst_rm_utils_descramble_sipr_buffer (GstBuffer * buf)
 
   /* we need to perform 38 swaps on the blocks */
   for (n = 0; n < 38; n++) {
-    gint idx1, idx2;
+    gsize idx1, idx2;
 
     /* get the indexes of the blocks of nibbles that need swapping */
     idx1 = bs * sipr_swap_index[n][0];
