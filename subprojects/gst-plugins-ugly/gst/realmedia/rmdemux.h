@@ -128,7 +128,7 @@ struct _GstRMDemux {
   int chunk_index;
 
   guint32 object_id;
-  guint32 size;
+  gsize size;
   guint16 object_version;
 
   /* container tags for all streams */
