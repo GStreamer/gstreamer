@@ -24,18 +24,18 @@
 
 G_BEGIN_DECLS
 
-typedef gchar * (*GstRmUtilsStringReadFunc) (const guint8 * data, guint datalen, guint * p_strlen);
+typedef gchar * (*GstRmUtilsStringReadFunc) (const guint8 * data, gsize datalen, gsize * p_strlen);
 
 gchar         *gst_rm_utils_read_string8  (const guint8 * data,
-                                           guint          datalen,
-                                           guint        * p_totallen);
+                                           gsize          datalen,
+                                           gsize        * p_totallen);
 
 gchar         *gst_rm_utils_read_string16 (const guint8 * data,
-                                           guint          datalen,
-                                           guint        * p_totallen);
+                                           gsize          datalen,
+                                           gsize        * p_totallen);
 
 GstTagList    *gst_rm_utils_read_tags     (const guint8            * data,
-                                           guint                     datalen,
+                                           gsize                     datalen,
                                            GstRmUtilsStringReadFunc  func);
 
 GstBuffer     *gst_rm_utils_descramble_dnet_buffer (GstBuffer * buf);
