@@ -25,6 +25,7 @@
 #include "gstvideoparserselements.h"
 #include "gstjpeg2000parse.h"
 #include <gst/base/base.h>
+#include <string.h>
 
 /* Not used at the moment
 static gboolean gst_jpeg2000_parse_is_cinema(guint16 rsiz)   {
@@ -53,6 +54,147 @@ static gboolean
 gst_jpeg2000_parse_is_part_2 (guint16 rsiz)
 {
   return (rsiz & GST_JPEG2000_PARSE_PROFILE_PART2);
+}
+
+static gboolean
+gst_jpeg2000_parse_box_header (GstByteReader * reader,
+    const guint8 ** box_type, gsize * payload_size)
+{
+  guint32 box_size;
+
+  if (gst_byte_reader_get_remaining (reader) < 8)
+    return FALSE;
+
+  if (!gst_byte_reader_get_uint32_be (reader, &box_size))
+    return FALSE;
+  if (!gst_byte_reader_get_data (reader, 4, box_type))
+    return FALSE;
+
+  if (box_size == 0) {
+    *payload_size = gst_byte_reader_get_remaining (reader);
+  } else if (box_size == 1) {
+    guint64 extended_size;
+
+    if (!gst_byte_reader_get_uint64_be (reader, &extended_size))
+      return FALSE;
+
+    if (extended_size < 16 ||
+        extended_size - 16 > gst_byte_reader_get_remaining (reader))
+      return FALSE;
+
+    *payload_size = (gsize) (extended_size - 16);
+  } else {
+    if (box_size < 8 || box_size - 8 > gst_byte_reader_get_remaining (reader))
+      return FALSE;
+
+    *payload_size = box_size - 8;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_jpeg2000_parse_colr_box (GstByteReader * reader,
+    GstJPEG2000Colorspace * colorspace)
+{
+  guint8 meth;
+  guint32 enumcs;
+
+  if (!gst_byte_reader_get_uint8 (reader, &meth))
+    return FALSE;
+
+  if (meth != 1)
+    return FALSE;
+
+  /* skip PREC and APPROX bytes */
+  if (!gst_byte_reader_skip (reader, 2))
+    return FALSE;
+
+  if (!gst_byte_reader_get_uint32_be (reader, &enumcs))
+    return FALSE;
+
+  switch (enumcs) {
+    case 16:
+      *colorspace = GST_JPEG2000_COLORSPACE_RGB;
+      return TRUE;
+    case 17:
+      *colorspace = GST_JPEG2000_COLORSPACE_GRAY;
+      return TRUE;
+    case 18:
+      *colorspace = GST_JPEG2000_COLORSPACE_YUV;
+      return TRUE;
+    default:
+      return FALSE;
+  }
+}
+
+static gboolean
+gst_jpeg2000_parse_jp2_colorspace (const guint8 * data, gsize size,
+    GstJPEG2000Colorspace * colorspace)
+{
+  GstByteReader reader;
+
+  gst_byte_reader_init (&reader, data, size);
+
+  while (gst_byte_reader_get_remaining (&reader) >= 8) {
+    const guint8 *box_type;
+    gsize payload_size;
+
+    if (!gst_jpeg2000_parse_box_header (&reader, &box_type, &payload_size))
+      return FALSE;
+
+    if (memcmp (box_type, "jp2c", 4) == 0)
+      break;
+
+    if (memcmp (box_type, "jp2h", 4) == 0) {
+      GstByteReader child_reader;
+      const guint8 *child_data;
+
+      if (!gst_byte_reader_get_data (&reader, payload_size, &child_data))
+        return FALSE;
+
+      gst_byte_reader_init (&child_reader, child_data, payload_size);
+
+      while (gst_byte_reader_get_remaining (&child_reader) >= 8) {
+        const guint8 *child_type;
+        const guint8 *child_payload;
+        gsize child_payload_size;
+
+        if (!gst_jpeg2000_parse_box_header (&child_reader, &child_type,
+                &child_payload_size))
+          return FALSE;
+
+        if (!gst_byte_reader_get_data (&child_reader, child_payload_size,
+                &child_payload))
+          return FALSE;
+
+        if (memcmp (child_type, "colr", 4) == 0 && child_payload_size >= 7) {
+          GstByteReader colr_reader;
+
+          gst_byte_reader_init (&colr_reader, child_payload,
+              child_payload_size);
+          if (gst_jpeg2000_parse_colr_box (&colr_reader, colorspace))
+            return TRUE;
+        }
+      }
+    } else {
+      if (!gst_byte_reader_skip (&reader, payload_size))
+        return FALSE;
+    }
+  }
+
+  return FALSE;
+}
+
+static gboolean
+gst_jpeg2000_parse_is_jp2 (const guint8 * data, gsize size)
+{
+  const guint8 signature_box[] = { 'j', 'P', ' ', ' ' };
+  const guint8 ftyp_box[] = { 'f', 't', 'y', 'p' };
+
+  return size >= 24 &&
+      memcmp (data + 4, signature_box, sizeof (signature_box)) == 0 &&
+      memcmp (data + 16, ftyp_box, sizeof (ftyp_box)) == 0;
 }
 
 
@@ -320,7 +462,8 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
   guint eoc_offset = 0;
   GstCaps *current_caps = NULL;
   GstStructure *current_caps_struct = NULL;
-  GstJPEG2000Colorspace colorspace = GST_JPEG2000_COLORSPACE_NONE;
+  GstJPEG2000Colorspace colorspace = jpeg2000parse->colorspace;
+  GstJPEG2000Colorspace sink_colorspace = GST_JPEG2000_COLORSPACE_NONE;
   guint x0 = 0, y0 = 0, x1 = 0, y1 = 0;
   guint width = 0, height = 0;
   guint i;
@@ -354,6 +497,48 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
   }
   gst_byte_reader_init (&reader, map.data, map.size);
   current_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (parse));
+
+  if (current_caps) {
+    const gchar *colorspace_string = NULL;
+    current_caps_struct = gst_caps_get_structure (current_caps, 0);
+    if (!current_caps_struct) {
+      GST_ERROR_OBJECT (jpeg2000parse,
+          "Unable to get structure of current caps struct");
+      ret = GST_FLOW_NOT_NEGOTIATED;
+      goto beach;
+    }
+
+    colorspace_string = gst_structure_get_string (current_caps_struct,
+        "colorspace");
+    if (colorspace_string)
+      sink_colorspace = gst_jpeg2000_colorspace_from_string (colorspace_string);
+    sink_sampling_string = gst_structure_get_string (current_caps_struct,
+        "sampling");
+    if (sink_sampling_string)
+      sink_sampling = gst_jpeg2000_sampling_from_string (sink_sampling_string);
+
+    if (jpeg2000parse->sink_codec_format == GST_JPEG2000_PARSE_NO_CODEC) {
+      jpeg2000parse->sink_codec_format =
+          format_from_media_type (current_caps_struct);
+    }
+  }
+
+  if (jpeg2000parse->sink_codec_format == GST_JPEG2000_PARSE_NO_CODEC &&
+      gst_jpeg2000_parse_is_jp2 (map.data, map.size)) {
+    jpeg2000parse->sink_codec_format = GST_JPEG2000_PARSE_JP2;
+  }
+
+  /* JP2 stores the real colorspace in the header boxes, so parse it before we
+   * skip ahead to the codestream. */
+  if (colorspace == GST_JPEG2000_COLORSPACE_NONE &&
+      jpeg2000parse->sink_codec_format == GST_JPEG2000_PARSE_JP2) {
+    if (gst_jpeg2000_parse_jp2_colorspace (map.data, map.size, &colorspace))
+      jpeg2000parse->colorspace = colorspace;
+  }
+
+  if (colorspace == GST_JPEG2000_COLORSPACE_NONE &&
+      sink_colorspace != GST_JPEG2000_COLORSPACE_NONE)
+    colorspace = sink_colorspace;
 
   /* Parse J2C box */
   if (!jpeg2000parse->parsed_j2c_box) {
@@ -538,27 +723,6 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto beach;
   }
-  if (current_caps) {
-    const gchar *colorspace_string = NULL;
-    current_caps_struct = gst_caps_get_structure (current_caps, 0);
-    if (!current_caps_struct) {
-      GST_ERROR_OBJECT (jpeg2000parse,
-          "Unable to get structure of current caps struct");
-      ret = GST_FLOW_NOT_NEGOTIATED;
-      goto beach;
-    }
-
-    colorspace_string = gst_structure_get_string
-        (current_caps_struct, "colorspace");
-    if (colorspace_string)
-      colorspace = gst_jpeg2000_colorspace_from_string (colorspace_string);
-    sink_sampling_string = gst_structure_get_string
-        (current_caps_struct, "sampling");
-    if (sink_sampling_string)
-      sink_sampling = gst_jpeg2000_sampling_from_string (sink_sampling_string);
-
-  }
-
   if (colorspace == GST_JPEG2000_COLORSPACE_NONE) {
     /* guess color space based on number of components       */
     if (numcomps == 0 || numcomps > 4) {
@@ -623,15 +787,15 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
         GST_WARNING_OBJECT (jpeg2000parse,
             "Sink caps sub-sampling %d,%d for channel %d does not match stream sub-sampling %d,%d",
             dx_caps, dy_caps, compno, dx[compno], dy[compno]);
-        /* try to guess correct color space */
-        if (gst_jpeg2000_sampling_is_mono (sink_sampling))
+        /* JP2 metadata is more authoritative than the downstream hint. */
+        if (colorspace != GST_JPEG2000_COLORSPACE_NONE)
+          inferred_colorspace = colorspace;
+        else if (gst_jpeg2000_sampling_is_mono (sink_sampling))
           inferred_colorspace = GST_JPEG2000_COLORSPACE_GRAY;
         else if (gst_jpeg2000_sampling_is_rgb (sink_sampling))
           inferred_colorspace = GST_JPEG2000_COLORSPACE_RGB;
         else if (gst_jpeg2000_sampling_is_yuv (sink_sampling))
           inferred_colorspace = GST_JPEG2000_COLORSPACE_YUV;
-        else if (colorspace)
-          inferred_colorspace = colorspace;
         if (inferred_colorspace != GST_JPEG2000_COLORSPACE_NONE) {
           sink_sampling = GST_JPEG2000_SAMPLING_NONE;
           colorspace = inferred_colorspace;
@@ -725,9 +889,13 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
   }
 
   /* now we can set the source caps, if something has changed */
+  /* Prefer sampling derived from the bitstream (colorspace from the COLR box
+   * combined with per-component SIZ subsampling factors) over the sink caps
+   * hint, which for JP2 sources is typically absent or reflects downstream
+   * preference rather than the encoded content. */
   source_sampling =
-      sink_sampling !=
-      GST_JPEG2000_SAMPLING_NONE ? sink_sampling : parsed_sampling;
+      parsed_sampling !=
+      GST_JPEG2000_SAMPLING_NONE ? parsed_sampling : sink_sampling;
   if (width != jpeg2000parse->width || height != jpeg2000parse->height
       || jpeg2000parse->sampling != source_sampling
       || jpeg2000parse->colorspace != colorspace) {
