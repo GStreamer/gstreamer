@@ -392,6 +392,12 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
         if (!gst_byte_reader_get_uint32_be (&reader,
                 &jpeg2000parse->frame_size))
           goto beach;
+        /* Clamp frame_size to J2C prefix bytes size to avoid underflow
+         * that would result in requesting a lot of data from baseparse. */
+        if (jpeg2000parse->frame_size <
+            GST_JPEG2000_PARSE_SIZE_OF_J2C_PREFIX_BYTES)
+          jpeg2000parse->frame_size =
+              GST_JPEG2000_PARSE_SIZE_OF_J2C_PREFIX_BYTES;
       }
     }
     jpeg2000parse->parsed_j2c_box = TRUE;
