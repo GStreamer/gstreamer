@@ -79,9 +79,11 @@ plugin_init (GstPlugin * plugin)
   vulkan_element_init (plugin);
 
   if (!have_instance) {
-    GST_WARNING_OBJECT (plugin, "Failed to create vulkan instance: %s",
+    GST_WARNING_OBJECT (plugin,
+        "Failed to create vulkan instance: %s, no elements will be registered",
         error->message);
     g_clear_error (&error);
+    return TRUE;
   }
 
   ret |= GST_DEVICE_PROVIDER_REGISTER (vulkandeviceprovider, plugin);
@@ -100,35 +102,35 @@ plugin_init (GstPlugin * plugin)
 
   ret |= GST_ELEMENT_REGISTER (vulkanoverlaycompositor, plugin);
 #endif
-  if (have_instance && instance->n_physical_devices) {
-    for (gint i = 0; i < instance->n_physical_devices; i++) {
-      GstVulkanDevice *device = gst_vulkan_device_new_with_index (instance, i);
+
+  for (gint i = 0; i < instance->n_physical_devices; i++) {
+    GstVulkanDevice *device = gst_vulkan_device_new_with_index (instance, i);
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-      if (gst_vulkan_device_is_extension_enabled (device,
-              VK_KHR_VIDEO_DECODE_H264_EXTENSION_NAME)) {
-        ret |= gst_vulkan_h264_decoder_register (plugin, device, GST_RANK_NONE);
-      }
-      if (gst_vulkan_device_is_extension_enabled (device,
-              VK_KHR_VIDEO_DECODE_H265_EXTENSION_NAME)) {
-        ret |= gst_vulkan_h265_decoder_register (plugin, device, GST_RANK_NONE);
-      }
-      if (gst_vulkan_device_is_extension_enabled (device,
-              VK_KHR_VIDEO_DECODE_VP9_EXTENSION_NAME)) {
-        ret |= gst_vulkan_vp9_decoder_register (plugin, device, GST_RANK_NONE);
-      }
-      if (gst_vulkan_device_is_extension_enabled (device,
-              VK_KHR_VIDEO_DECODE_AV1_EXTENSION_NAME)) {
-        ret |= gst_vulkan_av1_decoder_register (plugin, device, GST_RANK_NONE);
-      }
-      if (gst_vulkan_device_is_extension_enabled (device,
-              VK_KHR_VIDEO_ENCODE_H264_EXTENSION_NAME)) {
-        ret |= gst_vulkan_h264_encoder_register (plugin, device, GST_RANK_NONE);
-      }
-#endif /* GST_VULKAN_HAVE_VIDEO_EXTENSIONS */
-      ret |= gst_vulkan_sink_register (plugin, device, GST_RANK_NONE);
-      gst_object_unref (device);
+    if (gst_vulkan_device_is_extension_enabled (device,
+            VK_KHR_VIDEO_DECODE_H264_EXTENSION_NAME)) {
+      ret |= gst_vulkan_h264_decoder_register (plugin, device, GST_RANK_NONE);
     }
+    if (gst_vulkan_device_is_extension_enabled (device,
+            VK_KHR_VIDEO_DECODE_H265_EXTENSION_NAME)) {
+      ret |= gst_vulkan_h265_decoder_register (plugin, device, GST_RANK_NONE);
+    }
+    if (gst_vulkan_device_is_extension_enabled (device,
+            VK_KHR_VIDEO_DECODE_VP9_EXTENSION_NAME)) {
+      ret |= gst_vulkan_vp9_decoder_register (plugin, device, GST_RANK_NONE);
+    }
+    if (gst_vulkan_device_is_extension_enabled (device,
+            VK_KHR_VIDEO_DECODE_AV1_EXTENSION_NAME)) {
+      ret |= gst_vulkan_av1_decoder_register (plugin, device, GST_RANK_NONE);
+    }
+    if (gst_vulkan_device_is_extension_enabled (device,
+            VK_KHR_VIDEO_ENCODE_H264_EXTENSION_NAME)) {
+      ret |= gst_vulkan_h264_encoder_register (plugin, device, GST_RANK_NONE);
+    }
+#endif /* GST_VULKAN_HAVE_VIDEO_EXTENSIONS */
+    ret |= gst_vulkan_sink_register (plugin, device, GST_RANK_NONE);
+    gst_object_unref (device);
   }
+
   gst_object_unref (instance);
   return ret;
 }
