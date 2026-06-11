@@ -74,8 +74,9 @@ struct _GstRMDemuxStream
   guint16 leaf_size;            /* subpacket_size     */
   guint32 packet_size;          /* coded_frame_size   */
   guint16 version;
-  guint32 extra_data_size;      /* codec_data_length  */
+  gsize extra_data_size;        /* codec_data_length  */
   guint8 *extra_data;           /* extras             */
+  gsize extra_data_offset;      /* offset into extra_data */
   guint32 bitrate;
 
   gboolean needs_descrambling;
@@ -732,6 +733,7 @@ gst_rmdemux_free_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
   if (stream->subpackets)
     g_ptr_array_free (stream->subpackets, TRUE);
   g_free (stream->index);
+  g_free (stream->extra_data);
   g_free (stream);
 }
 
@@ -1487,8 +1489,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
             (int) 4, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
         if (stream->extra_data_size > 0) {
           /* strip off an unknown byte in the extra data */
-          stream->extra_data_size--;
-          stream->extra_data++;
+          stream->extra_data_offset++;
         }
         stream->needs_descrambling = TRUE;
         stream->subpackets_needed = 1;
@@ -1581,15 +1582,21 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
   if (stream->pad && stream_caps) {
     GstEvent *event;
 
-    GST_LOG_OBJECT (rmdemux, "%d bytes of extra data for stream %s",
-        stream->extra_data_size, GST_PAD_NAME (stream->pad));
+    GST_LOG_OBJECT (rmdemux,
+        "%" G_GSIZE_FORMAT " bytes of extra data for stream %s",
+        stream->extra_data_size - stream->extra_data_offset,
+        GST_PAD_NAME (stream->pad));
 
     /* add codec_data if there is any */
-    if (stream->extra_data_size > 0) {
+    if (stream->extra_data_size - stream->extra_data_offset > 0) {
       GstBuffer *buffer;
 
-      buffer = gst_buffer_new_and_alloc (stream->extra_data_size);
-      gst_buffer_fill (buffer, 0, stream->extra_data, stream->extra_data_size);
+      buffer =
+          gst_buffer_new_and_alloc (stream->extra_data_size -
+          stream->extra_data_offset);
+      gst_buffer_fill (buffer, 0,
+          stream->extra_data + stream->extra_data_offset,
+          stream->extra_data_size - stream->extra_data_offset);
 
       gst_caps_set_simple (stream_caps, "codec_data", GST_TYPE_BUFFER,
           buffer, NULL);
@@ -1832,7 +1839,7 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, gsize length)
       stream->subformat = RMDEMUX_GUINT32_GET (data + 26);
       stream->format = RMDEMUX_GUINT32_GET (data + 30);
       stream->extra_data_size = length - 26;
-      stream->extra_data = (guint8 *) data + 26;
+      stream->extra_data = g_memdup2 (data + 26, length - 26);
       /* Natural way to represent framerates here requires unsigned 32 bit
        * numerator, which we don't have. For the nasty case, approximate...
        */
@@ -1850,9 +1857,9 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, gsize length)
 
       GST_DEBUG_OBJECT (rmdemux,
           "Video stream with fourcc=%" GST_FOURCC_FORMAT
-          " width=%d height=%d rate=%d framerate=%d/%d subformat=%x format=%x extra_data_size=%d",
-          GST_FOURCC_ARGS (stream->fourcc), stream->width, stream->height,
-          stream->rate, stream->framerate_numerator,
+          " width=%d height=%d rate=%d framerate=%d/%d subformat=%x format=%x extra_data_size=%"
+          G_GSIZE_FORMAT, GST_FOURCC_ARGS (stream->fourcc), stream->width,
+          stream->height, stream->rate, stream->framerate_numerator,
           stream->framerate_denominator, stream->subformat, stream->format,
           stream->extra_data_size);
       break;
@@ -1889,10 +1896,11 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, gsize length)
           stream->n_channels = RMDEMUX_GUINT16_GET (data + 54);
           stream->fourcc = RMDEMUX_FOURCC_GET (data + 62);
           stream->extra_data_size = RMDEMUX_GUINT32_GET (data + 69);
-          GST_DEBUG_OBJECT (rmdemux, "%u bytes of extra codec data",
+          GST_DEBUG_OBJECT (rmdemux,
+              "%" G_GSIZE_FORMAT " bytes of extra codec data",
               stream->extra_data_size);
           if (length - 73 >= stream->extra_data_size) {
-            stream->extra_data = (guint8 *) data + 73;
+            stream->extra_data = g_memdup2 (data + 73, stream->extra_data_size);
           } else {
             GST_WARNING_OBJECT (rmdemux, "codec data runs beyond MDPR chunk");
             stream->extra_data_size = 0;
@@ -1913,10 +1921,11 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, gsize length)
           stream->n_channels = RMDEMUX_GUINT16_GET (data + 60);
           stream->fourcc = RMDEMUX_FOURCC_GET (data + 66);
           stream->extra_data_size = RMDEMUX_GUINT32_GET (data + 74);
-          GST_DEBUG_OBJECT (rmdemux, "%u bytes of extra codec data",
+          GST_DEBUG_OBJECT (rmdemux,
+              "%" G_GSIZE_FORMAT " bytes of extra codec data",
               stream->extra_data_size);
           if (length - 78 >= stream->extra_data_size) {
-            stream->extra_data = (guint8 *) data + 78;
+            stream->extra_data = g_memdup2 (data + 78, stream->extra_data_size);
           } else {
             GST_WARNING_OBJECT (rmdemux, "codec data runs beyond MDPR chunk");
             stream->extra_data_size = 0;
