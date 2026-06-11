@@ -373,6 +373,11 @@ gst_rmdemux_validate_offset (GstRMDemux * rmdemux)
         rmdemux->offset);
     return FALSE;
   }
+  if (gst_buffer_get_size (buffer) < 4) {
+    gst_buffer_unref (buffer);
+    GST_DEBUG_OBJECT (rmdemux, "Short read at offset %d", rmdemux->offset);
+    return FALSE;
+  }
   /* TODO: Can we also be seeking to a 'DATA' chunk header? Check this.
    * Also, for the case we currently handle, can we check any more? It's pretty
    * sucky to not be validating a little more heavily than this... */
