@@ -2724,8 +2724,8 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   if (!GST_CLOCK_TIME_IS_VALID (track->start)) {
     track->start = GST_BUFFER_TIMESTAMP (outbuf);
   }
-  if (!GST_CLOCK_TIME_IS_VALID (demux->audio_first_ts)) {
-    demux->video_first_ts = GST_BUFFER_TIMESTAMP (outbuf);
+  if (!GST_CLOCK_TIME_IS_VALID (demux->video_first_ts)) {
+    demux->video_first_ts = GST_BUFFER_PTS (outbuf);
   }
 
   if (G_UNLIKELY (!demux->streams_aware && !demux->no_more_pads
