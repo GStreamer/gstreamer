@@ -1666,7 +1666,7 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, int length)
   GstRMDemuxStream *stream;
   char *stream1_type_string;
   char *stream2_type_string;
-  guint str_len = 0;
+  gsize str_len = 0;
   int stream_type;
   int offset;
   guint32 max_bitrate;
@@ -2194,8 +2194,12 @@ gst_rmdemux_descramble_sipr_audio (GstRMDemux * rmdemux,
   }
 
   outbuf = gst_rm_utils_descramble_sipr_buffer (outbuf);
-
-  ret = gst_pad_push (stream->pad, outbuf);
+  if (outbuf) {
+    ret = gst_pad_push (stream->pad, outbuf);
+  } else {
+    GST_WARNING_OBJECT (rmdemux, "failed to descramble buffer");
+    ret = GST_FLOW_OK;
+  }
 
   gst_rmdemux_stream_clear_cached_subpackets (rmdemux, stream);
 
