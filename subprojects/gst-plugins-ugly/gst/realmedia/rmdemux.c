@@ -150,21 +150,21 @@ static gboolean gst_rmdemux_src_query (GstPad * pad, GstObject * parent,
 static gboolean gst_rmdemux_perform_seek (GstRMDemux * rmdemux,
     GstEvent * event);
 
-static void gst_rmdemux_parse__rmf (GstRMDemux * rmdemux, const guint8 * data,
-    gsize length);
-static void gst_rmdemux_parse_prop (GstRMDemux * rmdemux, const guint8 * data,
-    gsize length);
-static void gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux,
+static gboolean gst_rmdemux_parse__rmf (GstRMDemux * rmdemux,
     const guint8 * data, gsize length);
-static guint gst_rmdemux_parse_indx (GstRMDemux * rmdemux, const guint8 * data,
-    gsize length);
-static void gst_rmdemux_parse_data (GstRMDemux * rmdemux, const guint8 * data,
-    gsize length);
-static void gst_rmdemux_parse_cont (GstRMDemux * rmdemux, const guint8 * data,
-    gsize length);
+static gboolean gst_rmdemux_parse_prop (GstRMDemux * rmdemux,
+    const guint8 * data, gsize length);
+static gboolean gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux,
+    const guint8 * data, gsize length);
+static gboolean gst_rmdemux_parse_indx (GstRMDemux * rmdemux,
+    const guint8 * data, gsize length, gsize * index_length);
+static gboolean gst_rmdemux_parse_data (GstRMDemux * rmdemux,
+    const guint8 * data, gsize length);
+static gboolean gst_rmdemux_parse_cont (GstRMDemux * rmdemux,
+    const guint8 * data, gsize length);
 static GstFlowReturn gst_rmdemux_parse_packet (GstRMDemux * rmdemux,
     GstBuffer * in, guint16 version);
-static void gst_rmdemux_parse_indx_data (GstRMDemux * rmdemux,
+static gboolean gst_rmdemux_parse_indx_data (GstRMDemux * rmdemux,
     const guint8 * data, gsize length);
 static void gst_rmdemux_stream_clear_cached_subpackets (GstRMDemux * rmdemux,
     GstRMDemuxStream * stream);
@@ -1065,13 +1065,22 @@ gst_rmdemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     switch (rmdemux->state) {
       case RMDEMUX_STATE_HEADER:
       {
+        guint32 size;
         if (gst_adapter_available (rmdemux->adapter) < HEADER_SIZE)
           goto unlock;
 
         data = gst_adapter_map (rmdemux->adapter, HEADER_SIZE);
 
         rmdemux->object_id = RMDEMUX_FOURCC_GET (data + 0);
-        rmdemux->size = RMDEMUX_GUINT32_GET (data + 4) - HEADER_SIZE;
+        size = RMDEMUX_GUINT32_GET (data + 4);
+        if (size < HEADER_SIZE) {
+          GST_WARNING_OBJECT (rmdemux, "Bogus looking header, too small size");
+          gst_adapter_unmap (rmdemux->adapter);
+          gst_adapter_flush (rmdemux->adapter, 4);
+
+          break;
+        }
+        rmdemux->size = size - HEADER_SIZE;
         rmdemux->object_version = RMDEMUX_GUINT16_GET (data + 8);
 
         /* Sanity-check. We assume that the FOURCC is printable ASCII */
@@ -1090,7 +1099,7 @@ gst_rmdemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
         GST_LOG_OBJECT (rmdemux, "header found with object_id=%"
             GST_FOURCC_FORMAT
-            " size=%08x object_version=%d",
+            " size=%08" G_GSIZE_FORMAT " object_version=%d",
             GST_FOURCC_ARGS (rmdemux->object_id), rmdemux->size,
             rmdemux->object_version);
 
@@ -1141,7 +1150,8 @@ gst_rmdemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
         if ((rmdemux->object_version == 0) || (rmdemux->object_version == 1)) {
           data = gst_adapter_map (rmdemux->adapter, rmdemux->size);
-          gst_rmdemux_parse__rmf (rmdemux, data, rmdemux->size);
+          if (!gst_rmdemux_parse__rmf (rmdemux, data, rmdemux->size))
+            GST_WARNING_OBJECT (rmdemux, "Failed parsing _rmf");
           gst_adapter_unmap (rmdemux->adapter);
           gst_adapter_flush (rmdemux->adapter, rmdemux->size);
         } else {
@@ -1156,7 +1166,8 @@ gst_rmdemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
           goto unlock;
 
         data = gst_adapter_map (rmdemux->adapter, rmdemux->size);
-        gst_rmdemux_parse_prop (rmdemux, data, rmdemux->size);
+        if (!gst_rmdemux_parse_prop (rmdemux, data, rmdemux->size))
+          GST_WARNING_OBJECT (rmdemux, "Failed parsing prop");
         gst_adapter_unmap (rmdemux->adapter);
         gst_adapter_flush (rmdemux->adapter, rmdemux->size);
 
@@ -1169,7 +1180,8 @@ gst_rmdemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
           goto unlock;
 
         data = gst_adapter_map (rmdemux->adapter, rmdemux->size);
-        gst_rmdemux_parse_mdpr (rmdemux, data, rmdemux->size);
+        if (!gst_rmdemux_parse_mdpr (rmdemux, data, rmdemux->size))
+          GST_WARNING_OBJECT (rmdemux, "Failed parsing mdpr");
         gst_adapter_unmap (rmdemux->adapter);
         gst_adapter_flush (rmdemux->adapter, rmdemux->size);
 
@@ -1182,7 +1194,8 @@ gst_rmdemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
           goto unlock;
 
         data = gst_adapter_map (rmdemux->adapter, rmdemux->size);
-        gst_rmdemux_parse_cont (rmdemux, data, rmdemux->size);
+        if (!gst_rmdemux_parse_cont (rmdemux, data, rmdemux->size))
+          GST_WARNING_OBJECT (rmdemux, "Failed parsing cont");
         gst_adapter_unmap (rmdemux->adapter);
         gst_adapter_flush (rmdemux->adapter, rmdemux->size);
 
@@ -1191,6 +1204,8 @@ gst_rmdemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       }
       case RMDEMUX_STATE_HEADER_DATA:
       {
+        gsize orig_size;
+
         /* If we haven't already done so then signal there are no more pads */
         if (!rmdemux->have_pads) {
           GST_LOG_OBJECT (rmdemux, "no more pads");
@@ -1199,6 +1214,7 @@ gst_rmdemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         }
 
         /* The actual header is only 8 bytes */
+        orig_size = rmdemux->size;
         rmdemux->size = DATA_SIZE;
         GST_LOG_OBJECT (rmdemux, "data available %" G_GSIZE_FORMAT,
             gst_adapter_available (rmdemux->adapter));
@@ -1206,7 +1222,14 @@ gst_rmdemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
           goto unlock;
 
         data = gst_adapter_map (rmdemux->adapter, rmdemux->size);
-        gst_rmdemux_parse_data (rmdemux, data, rmdemux->size);
+        if (!gst_rmdemux_parse_data (rmdemux, data, rmdemux->size)) {
+          GST_WARNING_OBJECT (rmdemux, "Failed parsing header data");
+          gst_adapter_unmap (rmdemux->adapter);
+          /* skip over whole packet size */
+          gst_adapter_flush (rmdemux->adapter, orig_size);
+          rmdemux->state = RMDEMUX_STATE_HEADER;
+          break;
+        }
         gst_adapter_unmap (rmdemux->adapter);
         gst_adapter_flush (rmdemux->adapter, rmdemux->size);
 
@@ -1219,7 +1242,15 @@ gst_rmdemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
           goto unlock;
 
         data = gst_adapter_map (rmdemux->adapter, rmdemux->size);
-        rmdemux->size = gst_rmdemux_parse_indx (rmdemux, data, rmdemux->size);
+        if (!gst_rmdemux_parse_indx (rmdemux, data, rmdemux->size,
+                &rmdemux->size)) {
+          GST_WARNING_OBJECT (rmdemux, "Failed parsing header indx");
+          gst_adapter_unmap (rmdemux->adapter);
+          /* skip over whole packet size */
+          gst_adapter_flush (rmdemux->adapter, rmdemux->size);
+          rmdemux->state = RMDEMUX_STATE_HEADER;
+          break;
+        }
         /* Only flush the header */
         gst_adapter_unmap (rmdemux->adapter);
         gst_adapter_flush (rmdemux->adapter, HEADER_SIZE);
@@ -1235,7 +1266,8 @@ gst_rmdemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
             goto unlock;
 
           data = gst_adapter_map (rmdemux->adapter, rmdemux->size);
-          gst_rmdemux_parse_indx_data (rmdemux, data, rmdemux->size);
+          if (!gst_rmdemux_parse_indx_data (rmdemux, data, rmdemux->size))
+            GST_WARNING_OBJECT (rmdemux, "Failed parsing indx data");
           gst_adapter_unmap (rmdemux->adapter);
           gst_adapter_flush (rmdemux->adapter, rmdemux->size);
         }
@@ -1622,26 +1654,34 @@ beach:
     gst_caps_unref (stream_caps);
 }
 
-static int
+static gsize
 re_skip_pascal_string (const guint8 * ptr)
 {
-  int length;
+  gsize length;
 
   length = ptr[0];
 
   return length + 1;
 }
 
-static void
+static gboolean
 gst_rmdemux_parse__rmf (GstRMDemux * rmdemux, const guint8 * data, gsize length)
 {
+  if (length < 8)
+    return FALSE;
+
   GST_LOG_OBJECT (rmdemux, "file_version: %d", RMDEMUX_GUINT32_GET (data));
   GST_LOG_OBJECT (rmdemux, "num_headers: %d", RMDEMUX_GUINT32_GET (data + 4));
+
+  return TRUE;
 }
 
-static void
+static gboolean
 gst_rmdemux_parse_prop (GstRMDemux * rmdemux, const guint8 * data, gsize length)
 {
+  if (length < 40)
+    return FALSE;
+
   GST_LOG_OBJECT (rmdemux, "max bitrate: %d", RMDEMUX_GUINT32_GET (data));
   GST_LOG_OBJECT (rmdemux, "avg bitrate: %d", RMDEMUX_GUINT32_GET (data + 4));
   GST_LOG_OBJECT (rmdemux, "max packet size: %d",
@@ -1663,9 +1703,11 @@ gst_rmdemux_parse_prop (GstRMDemux * rmdemux, const guint8 * data, gsize length)
       rmdemux->data_offset);
   GST_LOG_OBJECT (rmdemux, "n streams: %d", RMDEMUX_GUINT16_GET (data + 36));
   GST_LOG_OBJECT (rmdemux, "flags: 0x%04x", RMDEMUX_GUINT16_GET (data + 38));
+
+  return TRUE;
 }
 
-static void
+static gboolean
 gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, gsize length)
 {
   GstRMDemuxStream *stream;
@@ -1673,9 +1715,11 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, gsize length)
   char *stream2_type_string;
   gsize str_len = 0;
   int stream_type;
-  int offset;
   guint32 max_bitrate;
   guint32 avg_bitrate;
+
+  if (length < 10)
+    return FALSE;
 
   stream = g_new0 (GstRMDemuxStream, 1);
 
@@ -1707,13 +1751,18 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, gsize length)
         GST_TAG_BITRATE, avg_bitrate, NULL);
   }
 
-  offset = 30;
-  stream1_type_string = gst_rm_utils_read_string8 (data + offset,
-      length - offset, &str_len);
-  offset += str_len;
-  stream2_type_string = gst_rm_utils_read_string8 (data + offset,
-      length - offset, &str_len);
-  offset += str_len;
+  if (length < 30) {
+    gst_rmdemux_free_stream (rmdemux, stream);
+    return FALSE;
+  }
+  data += 30;
+  length -= 30;
+  stream1_type_string = gst_rm_utils_read_string8 (data, length, &str_len);
+  data += str_len;
+  length -= str_len;
+  stream2_type_string = gst_rm_utils_read_string8 (data, length, &str_len);
+  data += str_len;
+  length -= str_len;
 
   /* stream1_type_string for audio and video stream is a "put_whatever_you_want" field :
    * observed values :
@@ -1722,6 +1771,13 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, gsize length)
    *
    * so, we should not rely on it to know which stream type it is
    */
+
+  if (!stream1_type_string || !stream2_type_string) {
+    g_free (stream1_type_string);
+    g_free (stream2_type_string);
+    gst_rmdemux_free_stream (rmdemux, stream);
+    return FALSE;
+  }
 
   GST_LOG_OBJECT (rmdemux, "stream type: %s", stream1_type_string);
   GST_LOG_OBJECT (rmdemux, "MIME type=%s", stream2_type_string);
@@ -1753,27 +1809,36 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, gsize length)
   g_free (stream1_type_string);
   g_free (stream2_type_string);
 
-  offset += 4;
+  if (length < 4) {
+    gst_rmdemux_free_stream (rmdemux, stream);
+    return FALSE;
+  }
+  data += 4;
+  length -= 4;
 
   stream->subtype = stream_type;
   switch (stream_type) {
 
     case GST_RMDEMUX_STREAM_VIDEO:
+      if (length < 34) {
+        gst_rmdemux_free_stream (rmdemux, stream);
+        return FALSE;
+      }
       /* RV10/RV20/RV30/RV40 => video/x-pn-realvideo, version=1,2,3,4 */
-      stream->fourcc = RMDEMUX_FOURCC_GET (data + offset + 8);
-      stream->width = RMDEMUX_GUINT16_GET (data + offset + 12);
-      stream->height = RMDEMUX_GUINT16_GET (data + offset + 14);
-      stream->rate = RMDEMUX_GUINT16_GET (data + offset + 16);
-      stream->subformat = RMDEMUX_GUINT32_GET (data + offset + 26);
-      stream->format = RMDEMUX_GUINT32_GET (data + offset + 30);
-      stream->extra_data_size = length - (offset + 26);
-      stream->extra_data = (guint8 *) data + offset + 26;
+      stream->fourcc = RMDEMUX_FOURCC_GET (data + 8);
+      stream->width = RMDEMUX_GUINT16_GET (data + 12);
+      stream->height = RMDEMUX_GUINT16_GET (data + 14);
+      stream->rate = RMDEMUX_GUINT16_GET (data + 16);
+      stream->subformat = RMDEMUX_GUINT32_GET (data + 26);
+      stream->format = RMDEMUX_GUINT32_GET (data + 30);
+      stream->extra_data_size = length - 26;
+      stream->extra_data = (guint8 *) data + 26;
       /* Natural way to represent framerates here requires unsigned 32 bit
        * numerator, which we don't have. For the nasty case, approximate...
        */
       {
-        guint32 numerator = RMDEMUX_GUINT16_GET (data + offset + 22) * 65536 +
-            RMDEMUX_GUINT16_GET (data + offset + 24);
+        guint32 numerator = RMDEMUX_GUINT16_GET (data + 22) * 65536 +
+            RMDEMUX_GUINT16_GET (data + 24);
         if (numerator > G_MAXINT) {
           stream->framerate_numerator = (gint) (numerator >> 1);
           stream->framerate_denominator = 32768;
@@ -1792,7 +1857,11 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, gsize length)
           stream->extra_data_size);
       break;
     case GST_RMDEMUX_STREAM_AUDIO:{
-      stream->version = RMDEMUX_GUINT16_GET (data + offset + 4);
+      if (length < 6) {
+        gst_rmdemux_free_stream (rmdemux, stream);
+        return FALSE;
+      }
+      stream->version = RMDEMUX_GUINT16_GET (data + 4);
       GST_INFO ("stream version = %u", stream->version);
       switch (stream->version) {
         case 3:
@@ -1806,40 +1875,48 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, gsize length)
           stream->height = 0;
           break;
         case 4:
-          stream->flavor = RMDEMUX_GUINT16_GET (data + offset + 22);
-          stream->packet_size = RMDEMUX_GUINT32_GET (data + offset + 24);
-          /* stream->frame_size = RMDEMUX_GUINT32_GET (data + offset + 42); */
-          stream->leaf_size = RMDEMUX_GUINT16_GET (data + offset + 44);
-          stream->height = RMDEMUX_GUINT16_GET (data + offset + 40);
-          stream->rate = RMDEMUX_GUINT16_GET (data + offset + 48);
-          stream->sample_width = RMDEMUX_GUINT16_GET (data + offset + 52);
-          stream->n_channels = RMDEMUX_GUINT16_GET (data + offset + 54);
-          stream->fourcc = RMDEMUX_FOURCC_GET (data + offset + 62);
-          stream->extra_data_size = RMDEMUX_GUINT32_GET (data + offset + 69);
+          if (length < 73) {
+            gst_rmdemux_free_stream (rmdemux, stream);
+            return FALSE;
+          }
+          stream->flavor = RMDEMUX_GUINT16_GET (data + 22);
+          stream->packet_size = RMDEMUX_GUINT32_GET (data + 24);
+          /* stream->frame_size = RMDEMUX_GUINT32_GET (data + 42); */
+          stream->leaf_size = RMDEMUX_GUINT16_GET (data + 44);
+          stream->height = RMDEMUX_GUINT16_GET (data + 40);
+          stream->rate = RMDEMUX_GUINT16_GET (data + 48);
+          stream->sample_width = RMDEMUX_GUINT16_GET (data + 52);
+          stream->n_channels = RMDEMUX_GUINT16_GET (data + 54);
+          stream->fourcc = RMDEMUX_FOURCC_GET (data + 62);
+          stream->extra_data_size = RMDEMUX_GUINT32_GET (data + 69);
           GST_DEBUG_OBJECT (rmdemux, "%u bytes of extra codec data",
               stream->extra_data_size);
-          if (length - (offset + 73) >= stream->extra_data_size) {
-            stream->extra_data = (guint8 *) data + offset + 73;
+          if (length - 73 >= stream->extra_data_size) {
+            stream->extra_data = (guint8 *) data + 73;
           } else {
             GST_WARNING_OBJECT (rmdemux, "codec data runs beyond MDPR chunk");
             stream->extra_data_size = 0;
           }
           break;
         case 5:
-          stream->flavor = RMDEMUX_GUINT16_GET (data + offset + 22);
-          stream->packet_size = RMDEMUX_GUINT32_GET (data + offset + 24);
-          /* stream->frame_size = RMDEMUX_GUINT32_GET (data + offset + 42); */
-          stream->leaf_size = RMDEMUX_GUINT16_GET (data + offset + 44);
-          stream->height = RMDEMUX_GUINT16_GET (data + offset + 40);
-          stream->rate = RMDEMUX_GUINT16_GET (data + offset + 54);
-          stream->sample_width = RMDEMUX_GUINT16_GET (data + offset + 58);
-          stream->n_channels = RMDEMUX_GUINT16_GET (data + offset + 60);
-          stream->fourcc = RMDEMUX_FOURCC_GET (data + offset + 66);
-          stream->extra_data_size = RMDEMUX_GUINT32_GET (data + offset + 74);
+          if (length < 78) {
+            gst_rmdemux_free_stream (rmdemux, stream);
+            return FALSE;
+          }
+          stream->flavor = RMDEMUX_GUINT16_GET (data + 22);
+          stream->packet_size = RMDEMUX_GUINT32_GET (data + 24);
+          /* stream->frame_size = RMDEMUX_GUINT32_GET (data + 42); */
+          stream->leaf_size = RMDEMUX_GUINT16_GET (data + 44);
+          stream->height = RMDEMUX_GUINT16_GET (data + 40);
+          stream->rate = RMDEMUX_GUINT16_GET (data + 54);
+          stream->sample_width = RMDEMUX_GUINT16_GET (data + 58);
+          stream->n_channels = RMDEMUX_GUINT16_GET (data + 60);
+          stream->fourcc = RMDEMUX_FOURCC_GET (data + 66);
+          stream->extra_data_size = RMDEMUX_GUINT32_GET (data + 74);
           GST_DEBUG_OBJECT (rmdemux, "%u bytes of extra codec data",
               stream->extra_data_size);
-          if (length - (offset + 78) >= stream->extra_data_size) {
-            stream->extra_data = (guint8 *) data + offset + 78;
+          if (length - 78 >= stream->extra_data_size) {
+            stream->extra_data = (guint8 *) data + 78;
           } else {
             GST_WARNING_OBJECT (rmdemux, "codec data runs beyond MDPR chunk");
             stream->extra_data_size = 0;
@@ -1862,32 +1939,60 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, gsize length)
     {
       int element_nb;
 
+      if (length < 12) {
+        gst_rmdemux_free_stream (rmdemux, stream);
+        return FALSE;
+      }
+
       /* Length of this section */
-      GST_DEBUG_OBJECT (rmdemux, "length2: 0x%08x",
-          RMDEMUX_GUINT32_GET (data + offset));
-      offset += 4;
+      GST_DEBUG_OBJECT (rmdemux, "length2: 0x%08x", RMDEMUX_GUINT32_GET (data));
 
       /* Unknown : 00 00 00 00 */
-      offset += 4;
 
       /* Number of variables that would follow (loop iterations) */
-      element_nb = RMDEMUX_GUINT32_GET (data + offset);
-      offset += 4;
+      element_nb = RMDEMUX_GUINT32_GET (data + 8);
+
+      data += 12;
+      length -= 12;
 
       while (element_nb) {
+        gsize str_len;
+
         /* Category Id : 00 00 00 XX 00 00 */
-        offset += 6;
+        if (length < 6 + 1) {
+          gst_rmdemux_free_stream (rmdemux, stream);
+          return FALSE;
+        }
+        data += 6;
+        length -= 6;
 
         /* Variable Name */
-        offset += re_skip_pascal_string (data + offset);
+        str_len = re_skip_pascal_string (data);
+        if (length < str_len) {
+          gst_rmdemux_free_stream (rmdemux, stream);
+          return FALSE;
+        }
+        data += str_len;
+        length -= str_len;
 
         /* Variable Value Type */
         /*   00 00 00 00 00 => integer/boolean, preceded by length */
         /*   00 00 00 02 00 => pascal string, preceded by length, no trailing \0 */
-        offset += 5;
+        if (length < 5 + 1) {
+          gst_rmdemux_free_stream (rmdemux, stream);
+          return FALSE;
+        }
+        data += 5;
+        length -= 5;
 
         /* Variable Value */
-        offset += re_skip_pascal_string (data + offset);
+        str_len = re_skip_pascal_string (data);
+        if (length < str_len) {
+          gst_rmdemux_free_stream (rmdemux, stream);
+          return FALSE;
+        }
+        data += str_len;
+        length -= str_len;
 
         element_nb--;
       }
@@ -1899,13 +2004,19 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, gsize length)
   }
 
   gst_rmdemux_add_stream (rmdemux, stream);
+
+  return TRUE;
 }
 
-static guint
-gst_rmdemux_parse_indx (GstRMDemux * rmdemux, const guint8 * data, gsize length)
+static gboolean
+gst_rmdemux_parse_indx (GstRMDemux * rmdemux, const guint8 * data, gsize length,
+    gsize * index_length)
 {
   int n;
   int id;
+
+  if (length < 10)
+    return FALSE;
 
   n = RMDEMUX_GUINT32_GET (data);
   id = RMDEMUX_GUINT16_GET (data + 4);
@@ -1919,10 +2030,13 @@ gst_rmdemux_parse_indx (GstRMDemux * rmdemux, const guint8 * data, gsize length)
   rmdemux->index_stream = gst_rmdemux_get_stream_by_id (rmdemux, id);
 
   /* Return the length of the index */
-  return 14 * n;
+  if (!g_size_checked_mul (index_length, 14, n))
+    return FALSE;
+
+  return TRUE;
 }
 
-static void
+static gboolean
 gst_rmdemux_parse_indx_data (GstRMDemux * rmdemux, const guint8 * data,
     gsize length)
 {
@@ -1934,16 +2048,16 @@ gst_rmdemux_parse_indx_data (GstRMDemux * rmdemux, const guint8 * data,
   n = length / 14;
 
   if (rmdemux->index_stream == NULL)
-    return;
+    return TRUE;
 
   /* don't parse the index a second time when operating pull-based and
    * reaching the end of the file */
   if (rmdemux->index_stream->index_length > 0) {
     GST_DEBUG_OBJECT (rmdemux, "Already have an index for this stream");
-    return;
+    return TRUE;
   }
 
-  index = g_malloc (sizeof (GstRMDemuxIndex) * n);
+  index = g_new (GstRMDemuxIndex, n);
   rmdemux->index_stream->index = index;
   rmdemux->index_stream->index_length = n;
 
@@ -1956,19 +2070,26 @@ gst_rmdemux_parse_indx_data (GstRMDemux * rmdemux, const guint8 * data,
         index[i].offset);
     data += 14;
   }
+
+  return TRUE;
 }
 
-static void
+static gboolean
 gst_rmdemux_parse_data (GstRMDemux * rmdemux, const guint8 * data, gsize length)
 {
+  if (length < 8)
+    return FALSE;
+
   rmdemux->n_chunks = RMDEMUX_GUINT32_GET (data);
   rmdemux->data_offset = RMDEMUX_GUINT32_GET (data + 4);
   rmdemux->chunk_index = 0;
   GST_DEBUG_OBJECT (rmdemux, "Data chunk found with %d packets "
       "(next data at 0x%08x)", rmdemux->n_chunks, rmdemux->data_offset);
+
+  return TRUE;
 }
 
-static void
+static gboolean
 gst_rmdemux_parse_cont (GstRMDemux * rmdemux, const guint8 * data, gsize length)
 {
   GstTagList *tags;
@@ -1989,6 +2110,8 @@ gst_rmdemux_parse_cont (GstRMDemux * rmdemux, const guint8 * data, gsize length)
 
     gst_tag_list_set_scope (rmdemux->pending_tags, GST_TAG_SCOPE_GLOBAL);
   }
+
+  return TRUE;
 }
 
 static void
