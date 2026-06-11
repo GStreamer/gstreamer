@@ -2145,8 +2145,15 @@ gst_rmdemux_descramble_audio (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
       packet_size, leaf_size, height);
 
   if (!g_uint_checked_mul (&size, height, packet_size)) {
-    GST_ERROR_OBJECT (rmdemux, "overflowing audio packet size");
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (rmdemux, "overflowing audio packet size");
+    gst_rmdemux_stream_clear_cached_subpackets (rmdemux, stream);
+    return GST_FLOW_OK;
+  }
+
+  if (stream->leaf_size == 0) {
+    GST_WARNING_OBJECT (rmdemux, "invalid audio leaf packet size");
+    gst_rmdemux_stream_clear_cached_subpackets (rmdemux, stream);
+    return GST_FLOW_OK;
   }
 
   outbuf = gst_buffer_new_and_alloc (size);
@@ -2155,6 +2162,14 @@ gst_rmdemux_descramble_audio (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
   for (p = 0; p < height; ++p) {
     GstBuffer *b = g_ptr_array_index (stream->subpackets, p);
     GstMapInfo map;
+
+    if (gst_buffer_get_size (b) < packet_size) {
+      GST_ERROR_OBJECT (rmdemux, "too small audio subpacket");
+      gst_buffer_unmap (outbuf, &outmap);
+      gst_buffer_unref (outbuf);
+      gst_rmdemux_stream_clear_cached_subpackets (rmdemux, stream);
+      return GST_FLOW_OK;
+    }
 
     gst_buffer_map (b, &map, GST_MAP_READ);
 
@@ -2243,11 +2258,31 @@ gst_rmdemux_descramble_mp4a_audio (GstRMDemux * rmdemux,
   gst_buffer_map (buf, &map, GST_MAP_READ);
   timestamp = GST_BUFFER_PTS (buf);
 
+  if (map.size < 2) {
+    GST_WARNING_OBJECT (rmdemux, "Too small mp4a buffer");
+    gst_buffer_unmap (buf, &map);
+    gst_buffer_unref (buf);
+    return GST_FLOW_OK;
+  }
   frames = (map.data[1] & 0xf0) >> 4;
   index = 2 * frames + 2;
 
+  if (map.size < 2 * frames + 2) {
+    GST_WARNING_OBJECT (rmdemux, "Too small mp4a buffer");
+    gst_buffer_unmap (buf, &map);
+    gst_buffer_unref (buf);
+    return GST_FLOW_OK;
+  }
+
   for (i = 0; i < frames; i++) {
     guint len = (map.data[i * 2 + 2] << 8) | map.data[i * 2 + 3];
+
+    if (map.size < index + len) {
+      GST_WARNING_OBJECT (rmdemux, "Too small mp4a buffer");
+      gst_buffer_unmap (buf, &map);
+      gst_buffer_unref (buf);
+      return GST_FLOW_OK;
+    }
 
     outbuf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, index, len);
     if (i == 0) {
@@ -2288,8 +2323,9 @@ gst_rmdemux_descramble_sipr_audio (GstRMDemux * rmdemux,
       packet_size, stream->leaf_size, height);
 
   if (!g_uint_checked_mul (&size, height, packet_size)) {
-    GST_ERROR_OBJECT (rmdemux, "overflowing SIPR audio packet size");
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (rmdemux, "overflowing SIPR audio packet size");
+    gst_rmdemux_stream_clear_cached_subpackets (rmdemux, stream);
+    return GST_FLOW_OK;
   }
 
   outbuf = gst_buffer_new_and_alloc (size);
@@ -2303,13 +2339,15 @@ gst_rmdemux_descramble_sipr_audio (GstRMDemux * rmdemux,
       GST_BUFFER_PTS (outbuf) = GST_BUFFER_PTS (b);
     }
 
-    if (gst_buffer_extract (b, 0, outmap.data + packet_size * p,
-            packet_size) != packet_size) {
-      GST_ERROR_OBJECT (rmdemux, "not enough SIPR audio data available");
+    if (gst_buffer_get_size (b) < packet_size) {
+      GST_ERROR_OBJECT (rmdemux, "too small sipr audio subpacket");
       gst_buffer_unmap (outbuf, &outmap);
       gst_buffer_unref (outbuf);
-      return GST_FLOW_ERROR;
+      gst_rmdemux_stream_clear_cached_subpackets (rmdemux, stream);
+      return GST_FLOW_OK;
     }
+
+    gst_buffer_extract (b, 0, outmap.data + packet_size * p, packet_size);
   }
   gst_buffer_unmap (outbuf, &outmap);
 
