@@ -1053,9 +1053,6 @@ gst_vulkan_h264_encoder_new_parameters (GstH264Encoder * encoder,
           &overrides, &feedback, &data_size, &data, &err))
     return GST_FLOW_ERROR;
 
-  /* ignore overrides until we get a use case they are actually needed */
-  feedback.h264.hasStdPPSOverrides = feedback.h264.hasStdSPSOverrides = 0;
-
   if (feedback.h264.hasStdSPSOverrides || feedback.h264.hasStdPPSOverrides) {
     GstH264SPS new_sps;
     GstH264PPS new_pps;
