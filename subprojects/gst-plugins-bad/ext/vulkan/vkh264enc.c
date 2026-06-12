@@ -955,7 +955,7 @@ _h264_parameters_parse (GstVulkanH264Encoder * self, gpointer data,
   gst_h264_sps_clear (&parser.sps[0]);
   gst_h264_pps_clear (&parser.pps[0]);
 
-  return res == GST_H264_PARSER_OK;
+  return res == GST_H264_PARSER_OK || res == GST_H264_PARSER_NO_NAL_END;
 }
 
 static GstFlowReturn
