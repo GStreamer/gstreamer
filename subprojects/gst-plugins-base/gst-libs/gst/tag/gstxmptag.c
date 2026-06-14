@@ -1252,6 +1252,9 @@ gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
   while (*xp1 != '<' && xp1 < xpe)
     xp1++;
 
+  if (xp2 < xp1)
+    goto missing_footer;
+
   /* no tag can be longer than the whole buffer */
   part = g_malloc (xp2 - xp1);
   list = gst_tag_list_new_empty ();
