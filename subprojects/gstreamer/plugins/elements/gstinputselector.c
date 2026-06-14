@@ -923,10 +923,14 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
 
       g_rw_lock_reader_lock (&sel->active_sinkpad_lock);
       GST_INPUT_SELECTOR_LOCK (sel);
+
       if (selpad->clock_id) {
         gst_clock_id_unref (selpad->clock_id);
         selpad->clock_id = NULL;
       }
+      /* Might have changed while waiting */
+      gst_input_selector_maybe_commit_active_pad (sel);
+
       if (cret == GST_CLOCK_OK ||
           cret == GST_CLOCK_EARLY || cret == GST_CLOCK_DONE) {
         GST_INPUT_SELECTOR_UNLOCK (sel);
@@ -1279,6 +1283,8 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   selpad->pushed = TRUE;
 
+  /* See if we need to give someone else a turn now */
+  gst_input_selector_maybe_commit_active_pad (sel);
   GST_INPUT_SELECTOR_UNLOCK (sel);
 
 done:
