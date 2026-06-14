@@ -334,7 +334,7 @@ gst_dwrite_base_overlay_set_property (GObject * object, guint prop_id,
     }
     case PROP_AUTO_RESIZE:
     {
-      gboolean auto_resize = g_value_get_uint (value);
+      gboolean auto_resize = g_value_get_boolean (value);
       if (auto_resize != priv->auto_resize) {
         priv->auto_resize = auto_resize;
         priv->text_format = nullptr;
