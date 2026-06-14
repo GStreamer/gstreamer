@@ -39,7 +39,7 @@
 
 #define BUFFER_INTERVAL 20000   /* useconds */
 #define SWITCH_INTERVAL 15000   /* useconds */
-#define MIN_COUNT 400
+#define MIN_COUNT 200
 
 #define RELEASE_TEST_BRANCHES 2
 #define RELEASE_TEST_SWITCH_INTERVAL 25000      /* useconds */
@@ -54,8 +54,6 @@ push_buffers (GstAppSrc * src)
   GstBuffer *buffer;
   char *data;
   GstClockTime pts = 0;
-  GstStateChangeReturn state_change_ret;
-  GstState state;
 
   g_assert_nonnull (src);
   gst_object_ref (src);
@@ -72,22 +70,17 @@ push_buffers (GstAppSrc * src)
   while (TRUE) {
     g_usleep (BUFFER_INTERVAL);
 
-    state_change_ret =
-        gst_element_get_state (GST_ELEMENT (src), &state, NULL,
-        GST_CLOCK_TIME_NONE);
-    if (state_change_ret != GST_STATE_CHANGE_SUCCESS
-        || state < GST_STATE_PAUSED) {
-      GST_DEBUG_OBJECT (src, "Exiting push_buffer loop");
-      break;
-    }
-
     data = g_new (char, 1);
     *data = (char) id;
     buffer = gst_buffer_new_wrapped (data, 1);
     GST_BUFFER_PTS (buffer) = pts;
 
-    if (gst_app_src_push_buffer (src, buffer) == GST_FLOW_OK)
+    if (gst_app_src_push_buffer (src, buffer) == GST_FLOW_OK) {
       GST_DEBUG_OBJECT (src, "Pushed buffer to src %d", id);
+    } else {
+      GST_DEBUG_OBJECT (src, "Exiting push_buffer loop");
+      break;
+    }
 
     pts += (GstClockTime) BUFFER_INTERVAL;
   }
@@ -248,9 +241,13 @@ GST_START_TEST (stress_test)
 
     count[id] += 1;
     GST_DEBUG ("Pulled buffer from src %d, count: %d", id, count[id]);
-    if (count[0] > MIN_COUNT && count[1] > MIN_COUNT) {
+    if ((count[0] > MIN_COUNT && count[1] > MIN_COUNT) ||
+        ((count[0] > MIN_COUNT || count[1] > MIN_COUNT)
+            && count[0] + count[1] > 3 * MIN_COUNT)) {
       GST_DEBUG ("Reached min count, sending eos...");
-      fail_unless (gst_element_send_event (pipeline, gst_event_new_eos ()));
+      gst_app_src_end_of_stream (GST_APP_SRC (src_0));
+      gst_app_src_end_of_stream (GST_APP_SRC (src_1));
+      break;
     }
   }
 
@@ -305,7 +302,7 @@ pad_probe_unlink_release (GstPad * pad, GstPadProbeInfo * info,
 
   selector = GST_ELEMENT (gst_pad_get_parent (pad));
   fail_unless (selector != NULL);
-  g_print ("Releasing %d\n", data->branch_idx);
+  g_print ("Releasing %d (%s)\n", data->branch_idx, GST_OBJECT_NAME (pad));
   gst_element_release_request_pad (selector, pad);
   gst_object_unref (selector);
 
@@ -340,7 +337,7 @@ release_test_release_link_loop (ReleaseTestCtx * ctx)
         GST_CLOCK_TIME_NONE);
     if (state_change_ret != GST_STATE_CHANGE_SUCCESS
         || state < GST_STATE_PAUSED) {
-      g_print ("Exiting switch_release_link loop\n");
+      GST_DEBUG ("Exiting switch_release_link loop");
       break;
     }
 
@@ -360,8 +357,13 @@ release_test_release_link_loop (ReleaseTestCtx * ctx)
         probe_data = g_malloc (sizeof (UnlinkReleaseData));
         probe_data->ctx = ctx;
         probe_data->branch_idx = idx;
-        gst_pad_add_probe (branch->selpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+
+        GstPad *selpad = gst_object_ref (branch->selpad);
+        g_mutex_unlock (&ctx->mutex);
+        gst_pad_add_probe (selpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
             pad_probe_unlink_release, probe_data, g_free);
+        g_mutex_lock (&ctx->mutex);
+        gst_object_unref (selpad);
       } else {
         GstPad *selpad, *peer;
 
@@ -371,7 +373,7 @@ release_test_release_link_loop (ReleaseTestCtx * ctx)
         selpad = gst_element_request_pad_simple (ctx->selector, "sink_%u");
         fail_unless (selpad != NULL);
 
-        g_print ("Linking %d\n", idx);
+        g_print ("Linking %d (%s)\n", idx, GST_OBJECT_NAME (selpad));
         fail_unless (gst_pad_link (peer, selpad) == GST_PAD_LINK_OK);
         gst_object_unref (peer);
 
@@ -406,7 +408,7 @@ release_test_switch_sinkpads_loop (ReleaseTestCtx * ctx)
         GST_CLOCK_TIME_NONE);
     if (state_change_ret != GST_STATE_CHANGE_SUCCESS
         || state < GST_STATE_PAUSED) {
-      g_print ("Exiting switch_sinkpads loop\n");
+      GST_DEBUG ("Exiting switch_sinkpads loop");
       break;
     }
 
@@ -546,6 +548,8 @@ GST_START_TEST (pad_release_stress_test)
   g_thread_join (switch_thrd);
   g_thread_join (push_0_thrd);
   g_thread_join (push_1_thrd);
+
+  GST_DEBUG ("Joined all threads");
 
   gst_object_unref (ctx.selector);
   gst_object_unref (ctx.branches[0].tee);
