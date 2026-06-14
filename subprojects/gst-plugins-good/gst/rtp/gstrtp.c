@@ -35,8 +35,6 @@ plugin_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (rtpac3pay, plugin);
   ret |= GST_ELEMENT_REGISTER (rtpbvdepay, plugin);
   ret |= GST_ELEMENT_REGISTER (rtpbvpay, plugin);
-  ret |= GST_ELEMENT_REGISTER (rtpceltdepay, plugin);
-  ret |= GST_ELEMENT_REGISTER (rtpceltpay, plugin);
   ret |= GST_ELEMENT_REGISTER (rtpdvdepay, plugin);
   ret |= GST_ELEMENT_REGISTER (rtpdvpay, plugin);
   ret |= GST_ELEMENT_REGISTER (rtpgstdepay, plugin);
