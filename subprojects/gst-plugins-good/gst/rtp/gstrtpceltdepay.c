@@ -71,6 +71,8 @@ static GstBuffer *gst_rtp_celt_depay_process (GstRTPBaseDepayload * depayload,
     GstRTPBuffer * rtp);
 static gboolean gst_rtp_celt_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
+static GstStateChangeReturn gst_rtp_celt_depay_change_state (GstElement *
+    element, GstStateChange transition);
 
 #define gst_rtp_celt_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpCELTDepay, gst_rtp_celt_depay,
@@ -99,6 +101,8 @@ gst_rtp_celt_depay_class_init (GstRtpCELTDepayClass * klass)
       "Extracts CELT audio from RTP packets",
       "Wim Taymans <wim.taymans@gmail.com>");
 
+  gstelement_class->change_state = gst_rtp_celt_depay_change_state;
+
   gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_celt_depay_process;
   gstrtpbasedepayload_class->set_caps = gst_rtp_celt_depay_setcaps;
 }
@@ -108,16 +112,22 @@ gst_rtp_celt_depay_init (GstRtpCELTDepay * rtpceltdepay)
 {
 }
 
+#if 0
 /* len 4 bytes LE,
  * vendor string (len bytes),
  * user_len 4 (0) bytes LE
  */
 static const gchar gst_rtp_celt_comment[] =
     "\045\0\0\0Depayloaded with GStreamer celtdepay\0\0\0\0";
+#endif
 
 static gboolean
 gst_rtp_celt_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
+  // See comment below
+  return FALSE;
+
+#if 0
   GstStructure *structure;
   GstRtpCELTDepay *rtpceltdepay;
   gint clock_rate, nb_channels = 0, frame_size = 0;
@@ -194,11 +204,29 @@ no_clockrate:
     GST_ERROR_OBJECT (depayload, "no clock-rate specified");
     return FALSE;
   }
+#endif
 }
 
 static GstBuffer *
 gst_rtp_celt_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 {
+  /* There is no plausible reason this code should ever be executed in 2026
+   * seeing that this was an experimental audio codec that never really gained
+   * adoption and was superseded by (and included in) Opus more than a decade
+   * ago. There are no decoders or encoders in GStreamer for this, and the
+   * RTP mapping RFC never made it out of draft state either.
+   *
+   * We simply return here as defensive measure.
+   *
+   * We post an error message in the state change function, so this processing
+   * function should never be reached, we just ifdef the code out for clarity.
+   *
+   * If anyone actually does have a legitimate need for this and can provide
+   * sample streams, we will happily implement a depayloader in Rust.
+   */
+  return NULL;
+
+#if 0
   GstBuffer *outbuf = NULL;
   guint8 *payload;
   guint offset, pos, payload_len, total_size, size;
@@ -268,4 +296,32 @@ gst_rtp_celt_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
   }
 
   return NULL;
+#endif
+}
+
+static GstStateChangeReturn
+gst_rtp_celt_depay_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstStateChangeReturn ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      GST_ELEMENT_ERROR (element, STREAM, DECODE,
+          ("This element should not be used."),
+          ("Please report an issue if you encounter this message."));
+      return GST_STATE_CHANGE_FAILURE;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
+  return ret;
 }
