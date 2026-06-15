@@ -986,7 +986,7 @@ GST_START_TEST (test_flushing_seek)
   gst_event_set_seqnum (event, seqnum);
   gst_pad_push_event (data2.srcpad, event);
 
-  /* and the last FLUSH_STOP is forwarded downstream asynchronoysly */
+  /* and the last FLUSH_STOP is forwarded downstream asynchronously */
 
   /*  Check collected */
   gst_pad_add_probe (test.srcpad, GST_PAD_PROBE_TYPE_BUFFER,
