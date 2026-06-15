@@ -1076,19 +1076,19 @@ gst_vulkan_operation_add_dependency_frame (GstVulkanOperation * self,
 
       vkmem = (GstVulkanImageMemory *) mem;
 
-      if (vkmem->barrier.parent.semaphore == VK_NULL_HANDLE)
+      if (!vkmem->barrier.parent.semaphore)
         break;
 
       /* *INDENT-OFF* */
       g_array_append_vals (priv->deps.wait_semaphores, &(VkSemaphoreSubmitInfoKHR) {
           .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR,
-          .semaphore = vkmem->barrier.parent.semaphore,
+          .semaphore = vkmem->barrier.parent.semaphore->handle,
           .value = vkmem->barrier.parent.semaphore_value,
           .stageMask = wait_stage,
         }, 1);
       g_array_append_vals (priv->deps.signal_semaphores, &(VkSemaphoreSubmitInfoKHR) {
           .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR,
-          .semaphore = vkmem->barrier.parent.semaphore,
+          .semaphore = vkmem->barrier.parent.semaphore->handle,
           .value = vkmem->barrier.parent.semaphore_value + 1,
           .stageMask = signal_stage,
         }, 1);
@@ -1140,13 +1140,13 @@ gst_vulkan_operation_add_dependency_frame (GstVulkanOperation * self,
 
       vkmem = (GstVulkanImageMemory *) mem;
 
-      if (vkmem->barrier.parent.semaphore == VK_NULL_HANDLE)
+      if (vkmem->barrier.parent.semaphore)
         break;
 
       g_array_append_val (priv->deps.wait_semaphores,
-          vkmem->barrier.parent.semaphore);
+          vkmem->barrier.parent.semaphore->handle);
       g_array_append_val (priv->deps.signal_semaphores,
-          vkmem->barrier.parent.semaphore);
+          vkmem->barrier.parent.semaphore->handle);
       g_array_append_val (priv->deps.wait_semaphore_values,
           vkmem->barrier.parent.semaphore_value);
       signal_value = vkmem->barrier.parent.semaphore_value + 1;

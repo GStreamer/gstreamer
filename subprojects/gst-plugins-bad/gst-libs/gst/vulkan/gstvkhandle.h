@@ -88,6 +88,7 @@ typedef void (*GstVulkanHandleDestroyNotify) (GstVulkanHandle * handle, gpointer
  * @GST_VULKAN_HANDLE_TYPE_VIDEO_SESSION: video session
  * @GST_VULKAN_HANDLE_TYPE_VIDEO_SESSION_PARAMETERS: video session parameters
  * @GST_VULKAN_HANDLE_TYPE_SAMPLER_YCBCR_CONVERSION: sampler with YCBCR conversion
+ * @GST_VULKAN_HANDLE_TYPE_SEMAPHORE: semaphore
  *
  * Since: 1.18
  */
@@ -124,6 +125,14 @@ typedef enum
    * Since: 1.24
    */
   GST_VULKAN_HANDLE_TYPE_SAMPLER_YCBCR_CONVERSION      = 10,
+  /**
+   * GST_VULKAN_HANDLE_TYPE_SEMAPHORE:
+   *
+   * semaphore
+   *
+   * Since: 1.30
+   */
+  GST_VULKAN_HANDLE_TYPE_SEMAPHORE      = 11,
 } GstVulkanHandleType;
 
 /**
@@ -239,6 +248,9 @@ void                    gst_vulkan_handle_free_framebuffer           (GstVulkanH
                                                                       gpointer user_data);
 GST_VULKAN_API
 void                    gst_vulkan_handle_free_shader                (GstVulkanHandle * handle,
+                                                                      gpointer user_data);
+GST_VULKAN_API
+void                    gst_vulkan_handle_free_semaphore             (GstVulkanHandle * handle,
                                                                       gpointer user_data);
 
 G_END_DECLS

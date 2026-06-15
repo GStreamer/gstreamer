@@ -275,6 +275,55 @@ GST_START_TEST (test_image_view_stress)
 
 GST_END_TEST;
 
+GST_START_TEST (test_image_barrier_new)
+{
+  GstVulkanImageMemory *vk_mem;
+  GstVulkanBarrierImageInfo barrier = { 0, }, new_barrier =
+      { 0, }, set_barrier = { 0, };
+  GstVideoInfo v_info;
+  GstVulkanQueue *queue = NULL;
+
+  gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, 16, 16);
+  vk_mem = create_image_mem (&v_info);
+
+  queue = gst_vulkan_device_select_queue (device, VK_QUEUE_GRAPHICS_BIT);
+  fail_unless (queue);
+  vk_mem->barrier.parent.queue = queue;
+
+  gst_vulkan_image_memory_lock (vk_mem);
+  gst_vulkan_image_memory_peek_barrier_unlocked (vk_mem, &barrier);
+
+  // update the barrier with new information
+  gst_vulkan_barrier_image_info_copy_into (&barrier, &new_barrier);
+  new_barrier.image_layout = VK_IMAGE_LAYOUT_GENERAL;
+  fail_unless (!gst_vulkan_barrier_image_info_is_equal (&barrier,
+          &new_barrier));
+  gst_vulkan_barrier_image_info_copy_into (&new_barrier, &set_barrier);
+
+  // update the memory with the set barrier
+  fail_unless (gst_vulkan_image_memory_compare_exchange_barrier_unlocked
+      (vk_mem, &barrier, &new_barrier));
+
+  // the memory barrier is different from the old barrier so this will fail.
+  fail_if (gst_vulkan_image_memory_compare_exchange_barrier_unlocked (vk_mem,
+          &barrier, &new_barrier));
+
+  gst_vulkan_barrier_image_info_clear (&barrier);
+  gst_vulkan_barrier_image_info_clear (&new_barrier);
+
+  // check the set barrier is the same
+  gst_vulkan_image_memory_peek_barrier_unlocked (vk_mem, &barrier);
+  fail_unless (gst_vulkan_barrier_image_info_is_equal (&barrier, &set_barrier));
+  gst_vulkan_image_memory_unlock (vk_mem);
+
+  gst_vulkan_barrier_image_info_clear (&barrier);
+  gst_vulkan_barrier_image_info_clear (&set_barrier);
+
+  gst_memory_unref ((GstMemory *) vk_mem);
+}
+
+GST_END_TEST;
+
 static Suite *
 vkimage_suite (void)
 {
@@ -291,6 +340,7 @@ vkimage_suite (void)
   if (have_instance) {
     tcase_add_test (tc_basic, test_image_new);
     tcase_add_test (tc_basic, test_image_wrapped_with_image_info);
+    tcase_add_test (tc_basic, test_image_barrier_new);
     tcase_add_test (tc_basic, test_image_view_new);
     tcase_add_test (tc_basic, test_image_view_get);
     tcase_add_test (tc_basic, test_image_view_stress);

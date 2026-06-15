@@ -74,6 +74,15 @@ struct _GstVulkanBarrierImageInfo
   VkImageSubresourceRange subresource_range;
 };
 
+GST_VULKAN_API
+void            gst_vulkan_barrier_image_info_clear        (GstVulkanBarrierImageInfo * info);
+GST_VULKAN_API
+gboolean        gst_vulkan_barrier_image_info_is_equal     (GstVulkanBarrierImageInfo * info,
+                                                            GstVulkanBarrierImageInfo * other);
+GST_VULKAN_API
+void            gst_vulkan_barrier_image_info_copy_into    (GstVulkanBarrierImageInfo * info,
+                                                            GstVulkanBarrierImageInfo * other);
+
 /**
  * GstVulkanImageMemory:
  * @parent: parent #GstMemory
@@ -102,6 +111,7 @@ struct _GstVulkanImageMemory
   VkImageFormatProperties format_properties;
   VkImageUsageFlags usage;
 
+  /* <protected> */
   GstVulkanBarrierImageInfo barrier;
 
   /* <private> */
@@ -224,7 +234,18 @@ GstVulkanImageView *gst_vulkan_image_memory_find_view   (GstVulkanImageMemory * 
 GST_VULKAN_API
 void            gst_vulkan_image_memory_add_view        (GstVulkanImageMemory * image,
                                                          GstVulkanImageView * view);
+GST_VULKAN_API
+void            gst_vulkan_image_memory_lock            (GstVulkanImageMemory * image);
+GST_VULKAN_API
+void            gst_vulkan_image_memory_unlock          (GstVulkanImageMemory * image);
+GST_VULKAN_API
+void            gst_vulkan_image_memory_peek_barrier_unlocked(GstVulkanImageMemory * image,
+                                                         GstVulkanBarrierImageInfo * info);
 
+GST_VULKAN_API
+gboolean        gst_vulkan_image_memory_compare_exchange_barrier_unlocked (GstVulkanImageMemory * image,
+                                                                  GstVulkanBarrierImageInfo * old_info,
+                                                                  GstVulkanBarrierImageInfo * new_info);
 
 G_END_DECLS
 

@@ -79,9 +79,9 @@ struct _GstVulkanBarrierMemoryInfo
    *
    * Timeline semaphore
    *
-   * Since: 1.24
+   * Since: 1.30
    */
-  VkSemaphore semaphore;
+  GstVulkanHandle *semaphore;
   /**
    * GstVulkanBarrierMemoryInfo.semaphore_value:
    *
@@ -94,6 +94,15 @@ struct _GstVulkanBarrierMemoryInfo
   /* <private> */
   gpointer _reserved        [GST_PADDING];
 };
+
+GST_VULKAN_API
+void            gst_vulkan_barrier_memory_info_clear       (GstVulkanBarrierMemoryInfo * info);
+GST_VULKAN_API
+gboolean        gst_vulkan_barrier_memory_info_is_equal    (GstVulkanBarrierMemoryInfo * info,
+                                                            GstVulkanBarrierMemoryInfo * other);
+GST_VULKAN_API
+void            gst_vulkan_barrier_memory_info_copy_into   (GstVulkanBarrierMemoryInfo * info,
+                                                            GstVulkanBarrierMemoryInfo * other);
 
 G_END_DECLS
 

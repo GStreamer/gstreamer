@@ -170,6 +170,7 @@ _vk_image_mem_new_alloc_with_image_info (GstAllocator * allocator,
   if (gst_vulkan_physical_device_check_api_version (device->physical_device, 1,
           2, 0) || gst_vulkan_device_is_extension_enabled (device,
           VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME)) {
+    VkSemaphore semaphore = VK_NULL_HANDLE;
     VkSemaphoreTypeCreateInfo semaphore_type_info = {
       .sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO,
       .semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE,
@@ -181,12 +182,15 @@ _vk_image_mem_new_alloc_with_image_info (GstAllocator * allocator,
     };
 
     err = vkCreateSemaphore (device->device, &semaphore_create_info, NULL,
-        &mem->barrier.parent.semaphore);
+        &semaphore);
     if (gst_vulkan_error_to_g_error (err, &error, "vkCreateSemaphore") < 0)
       goto vk_error;
+
+    mem->barrier.parent.semaphore =
+        gst_vulkan_handle_new_wrapped (device, GST_VULKAN_HANDLE_TYPE_SEMAPHORE,
+        semaphore, gst_vulkan_handle_free_semaphore, NULL);
   }
 #endif
-
 
   err = vkGetPhysicalDeviceImageFormatProperties (gpu, image_info->format,
       VK_IMAGE_TYPE_2D, image_info->tiling, image_info->usage, 0,
@@ -413,15 +417,10 @@ _vk_image_mem_free (GstAllocator * allocator, GstMemory * memory)
   if (mem->image && !mem->wrapped)
     vkDestroyImage (mem->device->device, mem->image, NULL);
 
-  gst_clear_object (&mem->barrier.parent.queue);
+  gst_vulkan_barrier_image_info_clear (&mem->barrier);
 
   if (mem->vk_mem)
     gst_memory_unref ((GstMemory *) mem->vk_mem);
-
-  if (mem->barrier.parent.semaphore) {
-    vkDestroySemaphore (mem->device->device, mem->barrier.parent.semaphore,
-        NULL);
-  }
 
   if (mem->notify)
     mem->notify (mem->user_data);
@@ -730,6 +729,152 @@ gst_vulkan_image_memory_find_view (GstVulkanImageMemory * image,
   g_mutex_unlock (&image->lock);
 
   return ret;
+}
+
+/**
+ * gst_vulkan_image_memory_lock:
+ * @image: a #GstVulkanImageMemory
+ *
+ * Exclusively lock the image memory.
+ *
+ * Since: 1.30
+ */
+void
+gst_vulkan_image_memory_lock (GstVulkanImageMemory * image)
+{
+  g_return_if_fail (gst_is_vulkan_image_memory (GST_MEMORY_CAST (image)));
+
+  g_mutex_lock (&image->lock);
+}
+
+/**
+ * gst_vulkan_image_memory_unlock:
+ * @image: a #GstVulkanImageMemory
+ *
+ * Exclusively unlock the image memory.
+ *
+ * Since: 1.30
+ */
+void
+gst_vulkan_image_memory_unlock (GstVulkanImageMemory * image)
+{
+  g_return_if_fail (gst_is_vulkan_image_memory (GST_MEMORY_CAST (image)));
+
+  g_mutex_unlock (&image->lock);
+}
+
+/**
+ * gst_vulkan_image_memory_peek_barrier_unlocked:
+ * @image: a #GstVulkanImageMemory
+ * @info: (out caller-allocates): destination for the #GstVulkanBarrierImageInfo
+ *
+ * Retrieve the current #GstVulkanBarrierImageInfo for this memory.
+ *
+ * Must be called with gst_vulkan_image_memory_lock() called.
+ *
+ * Since: 1.30
+ */
+void
+gst_vulkan_image_memory_peek_barrier_unlocked (GstVulkanImageMemory * image,
+    GstVulkanBarrierImageInfo * info)
+{
+  g_return_if_fail (info != NULL);
+  g_return_if_fail (gst_is_vulkan_image_memory (GST_MEMORY_CAST (image)));
+
+  gst_vulkan_barrier_image_info_copy_into (&image->barrier, info);
+}
+
+/**
+ * gst_vulkan_image_memory_compare_exchange_barrier_unlocked:
+ * @image: a #GstVulkanImageMemory
+ * @old_info: the previous #GstVulkanBarrierImageInfo
+ * @new_info: the new #GstVulkanBarrierImageInfo
+ *
+ * Attempts to atomically update the barrier stored in @image to @new_info. Only
+ * succeeds if the current barrier is the same as @old_info.
+ *
+ * On failure, the operation should be retried with updated information.
+ *
+ * Must be called with gst_vulkan_image_memory_lock() called.
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_vulkan_image_memory_compare_exchange_barrier_unlocked (GstVulkanImageMemory
+    * image, GstVulkanBarrierImageInfo * old_info,
+    GstVulkanBarrierImageInfo * new_info)
+{
+  g_return_val_if_fail (old_info != NULL, FALSE);
+  g_return_val_if_fail (new_info != NULL, FALSE);
+  g_return_val_if_fail (gst_is_vulkan_image_memory (GST_MEMORY_CAST (image)),
+      FALSE);
+
+  if (!gst_vulkan_barrier_image_info_is_equal (&image->barrier, old_info))
+    goto fail;
+
+  gst_vulkan_barrier_image_info_copy_into (new_info, &image->barrier);
+
+  return TRUE;
+
+fail:
+  return FALSE;
+}
+
+/**
+ * gst_vulkan_barrier_image_info_clear:
+ * @info: a #GstVulkanBarrierImageInfo
+ *
+ * Clear any referenced objects from this @info.
+ *
+ * Since: 1.30
+ */
+void
+gst_vulkan_barrier_image_info_clear (GstVulkanBarrierImageInfo * info)
+{
+  gst_vulkan_barrier_memory_info_clear (&info->parent);
+}
+
+/**
+ * gst_vulkan_barrier_image_info_is_equal:
+ * @info: a #GstVulkanBarrierImageInfo
+ * @other: the other #GstVulkanBarrierImageInfo to compare against
+ *
+ * Returns: whether @info and @other_info are the same.
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_vulkan_barrier_image_info_is_equal (GstVulkanBarrierImageInfo * info,
+    GstVulkanBarrierImageInfo * other)
+{
+  if (!gst_vulkan_barrier_memory_info_is_equal (&info->parent, &other->parent))
+    return FALSE;
+  if (info->image_layout != other->image_layout)
+    return FALSE;
+  if (memcmp (&info->subresource_range, &other->subresource_range,
+          sizeof (info->subresource_range)) != 0)
+    return FALSE;
+  return TRUE;
+}
+
+/**
+ * gst_vulkan_barrier_image_info_copy_into:
+ * @info: a #GstVulkanBarrierImageInfo
+ * @other: the other #GstVulkanBarrierImageInfo to copy into
+ *
+ * Since: 1.30
+ */
+void
+gst_vulkan_barrier_image_info_copy_into (GstVulkanBarrierImageInfo * info,
+    GstVulkanBarrierImageInfo * other)
+{
+  g_return_if_fail (info);
+  g_return_if_fail (other);
+
+  gst_vulkan_barrier_image_info_clear (other);
+  gst_vulkan_barrier_memory_info_copy_into (&info->parent, &other->parent);
+  other->image_layout = info->image_layout;
+  other->subresource_range = info->subresource_range;
 }
 
 G_DEFINE_TYPE (GstVulkanImageMemoryAllocator, gst_vulkan_image_memory_allocator,

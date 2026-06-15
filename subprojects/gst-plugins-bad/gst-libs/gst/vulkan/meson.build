@@ -8,6 +8,7 @@ if vulkan_opt.disabled()
 endif
 
 vulkan_sources = files(
+  'gstvkbarrier.c',
   'gstvkbuffermemory.c',
   'gstvkbufferpool.c',
   'gstvkcommandbuffer.c',

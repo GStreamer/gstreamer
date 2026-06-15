@@ -286,3 +286,23 @@ gst_vulkan_handle_free_shader (GstVulkanHandle * handle, gpointer user_data)
   vkDestroyShaderModule (handle->device->device,
       (VkShaderModule) handle->handle, NULL);
 }
+
+/**
+ * gst_vulkan_handle_free_semaphore:
+ * @handle: a #GstVulkanHandle containing a vulkan `VkSemaphore`
+ * @user_data: callback user data
+ *
+ * Frees the semaphore in @handle
+ *
+ * Since: 1.30
+ */
+void
+gst_vulkan_handle_free_semaphore (GstVulkanHandle * handle, gpointer user_data)
+{
+  g_return_if_fail (handle != NULL);
+  g_return_if_fail (handle->handle != VK_NULL_HANDLE);
+  g_return_if_fail (handle->type == GST_VULKAN_HANDLE_TYPE_SEMAPHORE);
+
+  vkDestroySemaphore (handle->device->device,
+      (VkSemaphore) handle->handle, NULL);
+}
