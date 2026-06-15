@@ -1370,7 +1370,7 @@ gst_ps_demux_handle_seek_pull (GstPsDemux * demux, GstEvent * event)
   if (flush || seeksegment.position != demux->src_segment.position) {
     /* Do the actual seeking */
     if (!gst_ps_demux_do_seek (demux, &seeksegment)) {
-      return FALSE;
+      goto seek_error;
     }
   }
 
@@ -1441,6 +1441,7 @@ no_scr_rate:
 seek_error:
   {
     GST_WARNING_OBJECT (demux, "couldn't perform seek");
+    GST_PAD_STREAM_UNLOCK (demux->sinkpad);
     gst_event_unref (event);
     return FALSE;
   }
