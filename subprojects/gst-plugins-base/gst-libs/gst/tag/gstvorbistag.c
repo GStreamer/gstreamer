@@ -377,6 +377,9 @@ gst_vorbis_tag_add_metadata_block_picture (GstTagList * tags,
   gsize decoded_len;
   const guint8 *data = NULL;
 
+  if (value_len < 2)
+    goto not_enough_data;
+
   /* img_data_base64 points to a temporary copy of the base64 encoded data, so
    * it's safe to do inpace decoding here
    */
@@ -414,13 +417,25 @@ gst_vorbis_tag_add_metadata_block_picture (GstTagList * tags,
 
   return;
 
+/* ERRORS */
+not_enough_data:
+  {
+    GST_WARNING
+        ("METADATA_BLOCK_PICTURE tag with too little base64-encoded data");
+    return;
+  }
 error:
-  GST_WARNING
-      ("Couldn't extract image or image type from METADATA_BLOCK_PICTURE tag");
-  return;
+  {
+    GST_WARNING
+        ("Couldn't extract image or image type from METADATA_BLOCK_PICTURE tag");
+    return;
+  }
 decode_failed:
-  GST_WARNING ("Failed to decode Base64 data from METADATA_BLOCK_PICTURE tag");
-  return;
+  {
+    GST_WARNING
+        ("Failed to decode Base64 data from METADATA_BLOCK_PICTURE tag");
+    return;
+  }
 }
 
 /**
