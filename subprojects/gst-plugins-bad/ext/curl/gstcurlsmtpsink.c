@@ -572,12 +572,12 @@ gst_curl_smtp_sink_set_payload_headers_unlocked (GstCurlBaseSink * bcsink)
     return FALSE;
   }
 
-  hdrs = g_strdup_printf ("\r\n\r\n--%s\r\n"
-      "Content-Type: application/octet-stream; name=\"%s\"\r\n"
+  hdrs = g_strdup_printf ("\r\n\r\n--%s\r\n" "Content-Type: %s; name=\"%s\"\r\n"
       /* TODO: support for other encodings */
       "Content-Transfer-Encoding: BASE64\r\n"
       "Content-Disposition: attachment; filename=\"%s\"\r\n\r\n"
-      "\r\n", BOUNDARY_STRING, bcsink->file_name, bcsink->file_name);
+      "\r\n", BOUNDARY_STRING, sink->content_type ? sink->content_type :
+      "application/octet-stream", bcsink->file_name, bcsink->file_name);
   g_byte_array_append (sink->payload_headers, (guint8 *) hdrs, strlen (hdrs));
   g_free (hdrs);
 
