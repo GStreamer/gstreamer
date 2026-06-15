@@ -1035,24 +1035,24 @@ gst_flac_enc_update_quality (GstFlacEnc * flacenc, gint quality)
 
   if (GST_AUDIO_INFO_CHANNELS (info) == 2
       || GST_AUDIO_INFO_CHANNELS (info) == 0) {
-    DO_UPDATE (do_mid_side_stereo, mid_side, "mid_side_stereo");
-    DO_UPDATE (loose_mid_side_stereo, loose_mid_side, "loose_mid_side_stereo");
+    DO_UPDATE (do_mid_side_stereo, mid_side, "mid-side-stereo");
+    DO_UPDATE (loose_mid_side_stereo, loose_mid_side, "loose-mid-side-stereo");
   }
 
   DO_UPDATE (blocksize, blocksize, "blocksize");
-  DO_UPDATE (max_lpc_order, max_lpc_order, "max_lpc_order");
-  DO_UPDATE (qlp_coeff_precision, qlp_coeff_precision, "qlp_coeff_precision");
+  DO_UPDATE (max_lpc_order, max_lpc_order, "max-lpc-order");
+  DO_UPDATE (qlp_coeff_precision, qlp_coeff_precision, "qlp-coeff-precision");
   DO_UPDATE (do_qlp_coeff_prec_search, qlp_coeff_prec_search,
-      "qlp_coeff_prec_search");
-  DO_UPDATE (do_escape_coding, escape_coding, "escape_coding");
+      "qlp-coeff-prec-search");
+  DO_UPDATE (do_escape_coding, escape_coding, "escape-coding");
   DO_UPDATE (do_exhaustive_model_search, exhaustive_model_search,
-      "exhaustive_model_search");
+      "exhaustive-model-search");
   DO_UPDATE (min_residual_partition_order, min_residual_partition_order,
-      "min_residual_partition_order");
+      "min-residual-partition-order");
   DO_UPDATE (max_residual_partition_order, max_residual_partition_order,
-      "max_residual_partition_order");
+      "max-residual-partition-order");
   DO_UPDATE (rice_parameter_search_dist, rice_parameter_search_dist,
-      "rice_parameter_search_dist");
+      "rice-parameter-search-dist");
 
 #undef DO_UPDATE
 
