@@ -318,7 +318,7 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
 
 static void
 gst_vorbis_tag_add_coverart (GstTagList * tags, gchar * img_data_base64,
-    gint base64_len)
+    gsize base64_len)
 {
   GstSample *img;
   gsize img_len;
@@ -369,7 +369,7 @@ convert_failed:
  */
 static void
 gst_vorbis_tag_add_metadata_block_picture (GstTagList * tags,
-    gchar * value, gint value_len)
+    gchar * value, gsize value_len)
 {
   GstByteReader reader;
   guint32 img_len = 0, img_type = 0;
@@ -455,7 +455,7 @@ gst_tag_list_from_vorbiscomment (const guint8 * data, gsize size,
   gchar *cur, *value;
   guint cur_size;
   guint iterations;
-  guint value_len;
+  gsize value_len;
   GstTagList *list;
 
   g_return_val_if_fail (data != NULL, NULL);
@@ -490,7 +490,8 @@ gst_tag_list_from_vorbiscomment (const guint8 * data, gsize size,
     *value = '\0';
     value++;
     value_len = strlen (value);
-    if (value_len == 0 || !g_utf8_validate (value, value_len, NULL)) {
+    if (value_len == 0 || value_len > G_MAXSSIZE
+        || !g_utf8_validate (value, value_len, NULL)) {
       g_free (cur);
       continue;
     }
