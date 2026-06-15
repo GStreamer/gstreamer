@@ -111,12 +111,14 @@ LLVMFuzzerTestOneInput (const guint8 * data, size_t size)
   }
 
   /* Test 5: XMP tag parsing */
-  buffer =
-      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, (gpointer) data,
-      size, 0, size, NULL, NULL);
-  taglist = gst_tag_list_from_xmp_buffer (buffer);
-  gst_clear_tag_list (&taglist);
-  gst_buffer_unref (buffer);
+  if (size >= 1) {
+    buffer =
+        gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, (gpointer) data,
+        size, 0, size, NULL, NULL);
+    taglist = gst_tag_list_from_xmp_buffer (buffer);
+    gst_clear_tag_list (&taglist);
+    gst_buffer_unref (buffer);
+  }
 
   /* Test 6: Vorbis comment parsing */
   buffer =
