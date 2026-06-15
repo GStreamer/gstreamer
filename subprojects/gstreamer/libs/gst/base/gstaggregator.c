@@ -2072,7 +2072,6 @@ gst_aggregator_default_sink_event_pre_queue (GstAggregator * self,
 
     PAD_FLUSH_LOCK (aggpad);
 
-    GST_PAD_STREAM_LOCK (self->srcpad);
     GST_OBJECT_LOCK (aggpad);
     aggpad->priv->last_flush_stop_seqnum = seqnum;
     GST_OBJECT_UNLOCK (aggpad);
@@ -2092,6 +2091,7 @@ gst_aggregator_default_sink_event_pre_queue (GstAggregator * self,
 
       GST_INFO_OBJECT (self, "Have flush stop on all pads");
 
+      GST_PAD_STREAM_LOCK (self->srcpad);
       SRC_LOCK (self);
       PAD_LOCK (aggpad);
       GST_DEBUG_OBJECT (aggpad, "Store event in queue: %" GST_PTR_FORMAT,
@@ -2105,12 +2105,12 @@ gst_aggregator_default_sink_event_pre_queue (GstAggregator * self,
       priv->got_eos_event = FALSE;      /* protected by src_lock */
       SRC_BROADCAST (self);
       SRC_UNLOCK (self);
+      GST_PAD_STREAM_UNLOCK (self->srcpad);
     } else {
       /* Eat up this event while waiting for other pads */
       gst_event_unref (event);
       GST_OBJECT_UNLOCK (self);
     }
-    GST_PAD_STREAM_UNLOCK (self->srcpad);
     PAD_FLUSH_UNLOCK (aggpad);
 
   } else {
