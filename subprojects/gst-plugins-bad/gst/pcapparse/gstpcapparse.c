@@ -354,6 +354,7 @@ gst_pcap_parse_read_uint32 (GstPcapParse * self, const guint8 * p)
 #define SLL2_HEADER_LEN    20
 #define IP_HEADER_MIN_LEN 20
 #define UDP_HEADER_LEN     8
+#define TCP_HEADER_MIN_LEN 20
 
 #define IP_PROTO_UDP      17
 #define IP_PROTO_TCP      6
@@ -438,7 +439,8 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
     return FALSE;
 
   ip_header_size = (b & 0x0f) * 4;
-  if (buf_ip + ip_header_size > buf + buf_size)
+  if (ip_header_size < IP_HEADER_MIN_LEN ||
+      buf_ip + ip_header_size > buf + buf_size)
     return FALSE;
 
   flags = buf_ip[6] >> 5;
@@ -460,6 +462,11 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
   memcpy (&ip_dst_addr, buf_ip + 16, sizeof (ip_dst_addr));
   buf_proto = buf_ip + ip_header_size;
   ip_packet_len = GUINT16_FROM_BE (*(guint16 *) (buf_ip + 2));
+  if (ip_packet_len < ip_header_size)
+    return FALSE;
+
+  if (buf_proto + 4 > buf + buf_size)
+    return FALSE;
 
   /* ok for tcp and udp */
   src_port = GUINT16_FROM_BE (*((guint16 *) (buf_proto + 0)));
@@ -467,6 +474,8 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
 
   /* extract some params and data according to protocol */
   if (ip_protocol == IP_PROTO_UDP) {
+    if (buf_proto + 6 > buf + buf_size)
+      return FALSE;
     len = GUINT16_FROM_BE (*((guint16 *) (buf_proto + 4)));
     if (len < UDP_HEADER_LEN || buf_proto + len > buf + buf_size)
       return FALSE;
@@ -474,10 +483,13 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
     *payload = buf_proto + UDP_HEADER_LEN;
     *payload_size = len - UDP_HEADER_LEN;
   } else {
-    if (buf_proto + 12 >= buf + buf_size)
+    if (buf_proto + 13 > buf + buf_size)
       return FALSE;
     len = (buf_proto[12] >> 4) * 4;
-    if (buf_proto + len > buf + buf_size)
+    if (len < TCP_HEADER_MIN_LEN || buf_proto + len > buf + buf_size)
+      return FALSE;
+    if (ip_packet_len < ip_header_size + len ||
+        buf_ip + ip_packet_len > buf + buf_size)
       return FALSE;
 
     /* all remaining data following tcp header is payload */
