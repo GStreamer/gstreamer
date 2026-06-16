@@ -155,6 +155,20 @@ struct RfbRectangle
 typedef int (*rectangle_handler) (GstVMncDec * dec, struct RfbRectangle * rect,
     const guint8 * data, int len, gboolean decode);
 
+static gboolean
+vmnc_rect_payload_size (struct RfbRectangle *rect, guint bytes_per_pixel,
+    gsize * size)
+{
+  gsize pixels;
+
+  if (!g_size_checked_mul (&pixels, rect->width, rect->height))
+    return FALSE;
+  if (!g_size_checked_mul (size, pixels, bytes_per_pixel))
+    return FALSE;
+
+  return TRUE;
+}
+
 static int
 vmnc_handle_wmvi_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
     const guint8 * data, int len, gboolean decode)
@@ -395,7 +409,8 @@ vmnc_handle_wmvd_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
 {
   /* Cursor data. */
   int datalen = 2;
-  int type, size;
+  int type;
+  gsize size;
 
   if (len < datalen) {
     GST_LOG_OBJECT (dec, "Cursor data too short");
@@ -405,9 +420,19 @@ vmnc_handle_wmvd_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
   type = RFB_GET_UINT8 (data);
 
   if (type == CURSOR_COLOUR) {
-    datalen += rect->width * rect->height * dec->format.bytes_per_pixel * 2;
+    if (!vmnc_rect_payload_size (rect, dec->format.bytes_per_pixel, &size) ||
+        size > ((gsize) G_MAXINT - datalen) / 2) {
+      GST_WARNING_OBJECT (dec, "Cursor data size overflow");
+      return ERROR_INVALID;
+    }
+    datalen += size * 2;
   } else if (type == CURSOR_ALPHA) {
-    datalen += rect->width * rect->height * 4;
+    if (!vmnc_rect_payload_size (rect, 4, &size) ||
+        size > (gsize) G_MAXINT - datalen) {
+      GST_WARNING_OBJECT (dec, "Cursor data size overflow");
+      return ERROR_INVALID;
+    }
+    datalen += size;
   } else {
     GST_WARNING_OBJECT (dec, "Unknown cursor type: %d", type);
     return ERROR_INVALID;
@@ -422,22 +447,20 @@ vmnc_handle_wmvd_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
   dec->cursor.type = type;
   dec->cursor.width = rect->width;
   dec->cursor.height = rect->height;
-  dec->cursor.type = type;
   dec->cursor.hot_x = rect->x;
   dec->cursor.hot_y = rect->y;
 
   g_free (dec->cursor.cursordata);
   g_free (dec->cursor.cursormask);
 
-  if (type == 0) {
-    size = rect->width * rect->height * dec->format.bytes_per_pixel;
+  if (type == CURSOR_COLOUR) {
     dec->cursor.cursordata = g_malloc (size);
     dec->cursor.cursormask = g_malloc (size);
     memcpy (dec->cursor.cursordata, data + 2, size);
     memcpy (dec->cursor.cursormask, data + 2 + size, size);
   } else {
-    dec->cursor.cursordata = g_malloc (rect->width * rect->height * 4);
-    memcpy (dec->cursor.cursordata, data + 2, rect->width * rect->height * 4);
+    dec->cursor.cursordata = g_malloc (size);
+    memcpy (dec->cursor.cursordata, data + 2, size);
     dec->cursor.cursormask = NULL;
   }
 
