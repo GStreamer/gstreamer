@@ -1081,7 +1081,8 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       h264parse->picture_start = TRUE;
 
       /* don't need to parse the whole slice (header) here */
-      if (*(nalu->data + nalu->offset + nalu->header_bytes) & 0x80) {
+      if (nalu->size > nalu->header_bytes &&
+          *(nalu->data + nalu->offset + nalu->header_bytes) & 0x80) {
         /* means first_mb_in_slice == 0 */
         /* real frame data */
         GST_DEBUG_OBJECT (h264parse, "first_mb_in_slice = 0");
