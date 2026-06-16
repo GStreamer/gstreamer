@@ -41,18 +41,14 @@ static const struct
 };
 
 static gboolean
-cmp_buffers (GstBuffer * buf1, GstBuffer * buf2, const GstVideoInfo * info)
+cmp_buffer_contents (GstBuffer * buf1, GstBuffer * buf2,
+    const GstVideoInfo * info)
 {
   GstVideoFrame frame1, frame2;
   gint comp[GST_VIDEO_MAX_COMPONENTS], stride1, stride2;
   guint32 width, height;
   gboolean ret = FALSE;
   GstVideoMeta *meta1, *meta2;
-
-  fail_unless_equals_int (gst_buffer_n_memory (buf1),
-      GST_VIDEO_INFO_N_PLANES (info));
-  fail_unless_equals_int (gst_buffer_n_memory (buf2),
-      GST_VIDEO_INFO_N_PLANES (info));
 
   meta1 = gst_buffer_get_video_meta (buf1);
   meta2 = gst_buffer_get_video_meta (buf2);
@@ -108,6 +104,17 @@ bail:
   gst_video_frame_unmap (&frame2);
 
   return ret;
+}
+
+static gboolean
+cmp_buffers (GstBuffer * buf1, GstBuffer * buf2, const GstVideoInfo * info)
+{
+  fail_unless_equals_int (gst_buffer_n_memory (buf1),
+      GST_VIDEO_INFO_N_PLANES (info));
+  fail_unless_equals_int (gst_buffer_n_memory (buf2),
+      GST_VIDEO_INFO_N_PLANES (info));
+
+  return cmp_buffer_contents (buf1, buf2, info);
 }
 
 static gboolean
@@ -171,15 +178,9 @@ assert_one_memory_per_plane (GstBuffer * buf, const GstVideoInfo * info,
 }
 
 static gboolean
-fill_multiplane_test_buffer (GstBuffer * buf, const GstVideoInfo * info)
+fill_test_frame (GstBuffer * buf, const GstVideoInfo * info)
 {
   GstVideoFrame frame;
-  GstMemory *mems[GST_VIDEO_MAX_PLANES] = { NULL, };
-
-  for (guint plane = 0; plane < GST_VIDEO_INFO_N_PLANES (info); plane++)
-    mems[plane] = gst_buffer_peek_memory (buf, plane);
-
-  assert_one_memory_per_plane (buf, info, mems);
 
   if (!gst_video_frame_map (&frame, info, buf, GST_MAP_WRITE))
     return FALSE;
@@ -206,6 +207,23 @@ fill_multiplane_test_buffer (GstBuffer * buf, const GstVideoInfo * info)
   }
 
   gst_video_frame_unmap (&frame);
+
+  return TRUE;
+}
+
+static gboolean
+fill_multiplane_test_buffer (GstBuffer * buf, const GstVideoInfo * info)
+{
+  GstMemory *mems[GST_VIDEO_MAX_PLANES] = { NULL, };
+
+  for (guint plane = 0; plane < GST_VIDEO_INFO_N_PLANES (info); plane++)
+    mems[plane] = gst_buffer_peek_memory (buf, plane);
+
+  assert_one_memory_per_plane (buf, info, mems);
+
+  if (!fill_test_frame (buf, info))
+    return FALSE;
+
   assert_one_memory_per_plane (buf, info, mems);
 
   return TRUE;
@@ -365,25 +383,42 @@ create_multiplane_vulkan_image_buffer (GstVulkanDevice * device,
 }
 
 static void
+setup_download_harness (GstHarness ** h, GstVulkanInstance ** instance,
+    GstVulkanDevice ** device)
+{
+  GstContext *context;
+
+  *h = gst_harness_new ("vulkandownload");
+  context = gst_element_get_context ((*h)->element,
+      GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR);
+  fail_unless (context != NULL);
+  fail_unless (gst_context_get_vulkan_instance (context, instance));
+  gst_context_unref (context);
+
+  *device = gst_vulkan_device_new_with_index (*instance, 0);
+  fail_unless (gst_vulkan_device_open (*device, NULL));
+}
+
+static void
+teardown_download_harness (GstHarness * h, GstVulkanInstance ** instance,
+    GstVulkanDevice ** device)
+{
+  gst_harness_teardown (h);
+  gst_clear_object (device);
+  gst_clear_object (instance);
+}
+
+static void
 run_multiplane_download_roundtrip_test (GstVideoFormat format)
 {
   GstVulkanInstance *instance;
   GstVulkanDevice *device;
   GstHarness *h;
-  GstContext *context;
   GstCaps *in_caps, *out_caps;
   GstVideoInfo info;
   GstBuffer *inbuf = NULL, *outbuf = NULL;
 
-  h = gst_harness_new ("vulkandownload");
-  context = gst_element_get_context (h->element,
-      GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR);
-  fail_unless (context != NULL);
-  fail_unless (gst_context_get_vulkan_instance (context, &instance));
-  gst_context_unref (context);
-
-  device = gst_vulkan_device_new_with_index (instance, 0);
-  fail_unless (gst_vulkan_device_open (device, NULL));
+  setup_download_harness (&h, &instance, &device);
 
   inbuf = create_multiplane_vulkan_image_buffer (device, format, 320, 240,
       &info);
@@ -406,9 +441,134 @@ run_multiplane_download_roundtrip_test (GstVideoFormat format)
 
   gst_buffer_unref (inbuf);
   gst_buffer_unref (outbuf);
-  gst_harness_teardown (h);
-  gst_clear_object (&device);
-  gst_clear_object (&instance);
+  teardown_download_harness (h, &instance, &device);
+}
+
+/* Build a single composite multi-planar VkImage (e.g. NV12 backed by
+ * VK_FORMAT_G8_B8R8_2PLANE_420_UNORM), matching the shape the Vulkan image
+ * buffer pool now produces with the multi-planar YUV opt-in. The image is
+ * host-visible and linear so it can be filled and read on the CPU. Returns
+ * NULL when the device does not offer a composite format for @format. */
+static GstBuffer *
+create_composite_vulkan_image_buffer (GstVulkanDevice * device,
+    GstVideoFormat format, guint width, guint height, GstVideoInfo * info)
+{
+  GstBuffer *buf;
+  GstMemory *mem;
+  GstVulkanImageMemory *img_mem;
+  VkImageCreateInfo image_info;
+  VkFormat vk_fmts[GST_VIDEO_MAX_PLANES] = { 0, };
+  int n_imgs = 0;
+  gsize offsets[GST_VIDEO_MAX_PLANES] = { 0, };
+  gint strides[GST_VIDEO_MAX_PLANES] = { 0, };
+  static const VkImageAspectFlagBits plane_aspects[] = {
+    VK_IMAGE_ASPECT_PLANE_0_BIT,
+    VK_IMAGE_ASPECT_PLANE_1_BIT,
+    VK_IMAGE_ASPECT_PLANE_2_BIT,
+  };
+
+  fail_unless (gst_video_info_set_format (info, format, width, height));
+
+  /* Request the composite (single image) Vulkan format. */
+  if (!gst_vulkan_format_from_video_info_2 (device, info,
+          VK_IMAGE_TILING_LINEAR, FALSE,
+          VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+          vk_fmts, &n_imgs, NULL))
+    return NULL;
+  if (n_imgs != 1)
+    return NULL;
+
+  /* *INDENT-OFF* */
+  image_info = (VkImageCreateInfo) {
+    .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+    .imageType = VK_IMAGE_TYPE_2D,
+    .format = vk_fmts[0],
+    .extent = { width, height, 1 },
+    .mipLevels = 1,
+    .arrayLayers = 1,
+    .samples = VK_SAMPLE_COUNT_1_BIT,
+    .tiling = VK_IMAGE_TILING_LINEAR,
+    .usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+    .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+    .initialLayout = VK_IMAGE_LAYOUT_PREINITIALIZED,
+  };
+  /* *INDENT-ON* */
+
+  mem = gst_vulkan_image_memory_alloc_with_image_info (device, &image_info,
+      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+      | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  if (!mem)
+    return NULL;
+
+  img_mem = (GstVulkanImageMemory *) mem;
+
+  for (guint plane = 0; plane < GST_VIDEO_INFO_N_PLANES (info); plane++) {
+    VkImageSubresource subresource = {
+      .aspectMask = plane_aspects[plane],
+      .mipLevel = 0,
+      .arrayLayer = 0,
+    };
+    VkSubresourceLayout layout;
+
+    vkGetImageSubresourceLayout (device->device, img_mem->image, &subresource,
+        &layout);
+    offsets[plane] = layout.offset;
+    strides[plane] = (gint) layout.rowPitch;
+  }
+
+  buf = gst_buffer_new ();
+  fail_unless (buf != NULL);
+  gst_buffer_append_memory (buf, mem);
+
+  fail_unless (gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
+          format, width, height, GST_VIDEO_INFO_N_PLANES (info), offsets,
+          strides) != NULL);
+  fail_unless (fill_test_frame (buf, info));
+
+  return buf;
+}
+
+static void
+run_composite_download_roundtrip_test (GstVideoFormat format)
+{
+  GstVulkanInstance *instance;
+  GstVulkanDevice *device;
+  GstHarness *h;
+  GstCaps *in_caps, *out_caps;
+  GstVideoInfo info;
+  GstBuffer *inbuf = NULL, *outbuf = NULL;
+
+  setup_download_harness (&h, &instance, &device);
+
+  inbuf = create_composite_vulkan_image_buffer (device, format, 320, 240,
+      &info);
+  if (!inbuf) {
+    GST_INFO ("composite image unsupported for %s, skipping",
+        gst_video_format_to_string (format));
+    goto cleanup;
+  }
+  fail_unless_equals_int (gst_buffer_n_memory (inbuf), 1);
+
+  in_caps = gst_video_info_to_caps (&info);
+  fail_unless (in_caps != NULL);
+  gst_caps_set_features_simple (in_caps,
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE,
+          NULL));
+
+  out_caps = gst_video_info_to_caps (&info);
+  fail_unless (out_caps != NULL);
+
+  gst_harness_set_caps (h, in_caps, out_caps);
+
+  outbuf = gst_harness_push_and_pull (h, gst_buffer_ref (inbuf));
+  fail_unless (outbuf != NULL);
+  fail_unless (cmp_buffer_contents (inbuf, outbuf, &info));
+
+  gst_buffer_unref (inbuf);
+  gst_buffer_unref (outbuf);
+
+cleanup:
+  teardown_download_harness (h, &instance, &device);
 }
 
 GST_START_TEST (test_vulkan_download_uses_output_stride)
@@ -416,7 +576,6 @@ GST_START_TEST (test_vulkan_download_uses_output_stride)
   GstVulkanInstance *instance;
   GstVulkanDevice *device;
   GstHarness *h;
-  GstContext *context;
   GstCaps *in_caps, *out_caps;
   GstVideoInfo info;
   GstBuffer *inbuf = NULL, *outbuf = NULL;
@@ -426,15 +585,7 @@ GST_START_TEST (test_vulkan_download_uses_output_stride)
    * instead of the destination one while setting up VkBufferImageCopy.
    * This problem was originally spotted on macOS with just vtdec ! vulkandownload. */
 
-  h = gst_harness_new ("vulkandownload");
-  context = gst_element_get_context (h->element,
-      GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR);
-  fail_unless (context != NULL);
-  fail_unless (gst_context_get_vulkan_instance (context, &instance));
-  gst_context_unref (context);
-
-  device = gst_vulkan_device_new_with_index (instance, 0);
-  fail_unless (gst_vulkan_device_open (device, NULL));
+  setup_download_harness (&h, &instance, &device);
 
   inbuf = create_stride_test_vulkan_image_buffer (device, &info);
   if (!inbuf) {
@@ -462,9 +613,7 @@ GST_START_TEST (test_vulkan_download_uses_output_stride)
   gst_buffer_unref (outbuf);
 
 cleanup:
-  gst_harness_teardown (h);
-  gst_clear_object (&device);
-  gst_clear_object (&instance);
+  teardown_download_harness (h, &instance, &device);
 }
 
 GST_END_TEST;
@@ -497,6 +646,20 @@ GST_START_TEST (test_vulkan_download_av12_roundtrip)
 
 GST_END_TEST;
 
+GST_START_TEST (test_vulkan_download_nv12_composite_roundtrip)
+{
+  run_composite_download_roundtrip_test (GST_VIDEO_FORMAT_NV12);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_vulkan_download_i420_composite_roundtrip)
+{
+  run_composite_download_roundtrip_test (GST_VIDEO_FORMAT_I420);
+}
+
+GST_END_TEST;
+
 static Suite *
 vkdownload_suite (void)
 {
@@ -516,6 +679,8 @@ vkdownload_suite (void)
     tcase_add_test (tc_basic, test_vulkan_download_a420_roundtrip);
     tcase_add_test (tc_basic, test_vulkan_download_nv12_roundtrip);
     tcase_add_test (tc_basic, test_vulkan_download_av12_roundtrip);
+    tcase_add_test (tc_basic, test_vulkan_download_nv12_composite_roundtrip);
+    tcase_add_test (tc_basic, test_vulkan_download_i420_composite_roundtrip);
   }
 
   return s;
