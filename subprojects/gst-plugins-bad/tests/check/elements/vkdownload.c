@@ -382,6 +382,24 @@ create_multiplane_vulkan_image_buffer (GstVulkanDevice * device,
   return buf;
 }
 
+static GstVulkanDevice *
+pull_device_from_element (GstElement * elem)
+{
+  GstContext *context;
+  GstVulkanDevice *device;
+
+  GstQuery *q = gst_query_new_context (GST_VULKAN_DEVICE_CONTEXT_TYPE_STR);
+  GstPad *sinkpad = gst_element_get_static_pad (elem, "sink");
+  fail_unless (gst_pad_query (sinkpad, q));
+  gst_query_parse_context (q, &context);
+  gst_context_get_vulkan_device (context, &device);
+  gst_clear_query (&q);
+  context = NULL;
+  gst_clear_object (&sinkpad);
+
+  return device;
+}
+
 static void
 setup_download_harness (GstHarness ** h, GstVulkanInstance ** instance,
     GstVulkanDevice ** device)
@@ -395,8 +413,9 @@ setup_download_harness (GstHarness ** h, GstVulkanInstance ** instance,
   fail_unless (gst_context_get_vulkan_instance (context, instance));
   gst_context_unref (context);
 
-  *device = gst_vulkan_device_new_with_index (*instance, 0);
-  fail_unless (gst_vulkan_device_open (*device, NULL));
+  // retrieve the vulkandownload created GstVulkanDevice.
+  *device = pull_device_from_element ((*h)->element);
+  fail_unless (device);
 }
 
 static void
