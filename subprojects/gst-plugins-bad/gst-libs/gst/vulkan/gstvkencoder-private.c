@@ -823,7 +823,7 @@ gst_vulkan_encoder_video_session_parameters_overrides (GstVulkanEncoder * self,
   VkVideoEncodeSessionParametersFeedbackInfoKHR feedback_info;
   VkResult res;
   GstVulkanEncoderPrivate *priv;
-  gsize size;
+  gsize size = 0;
   gpointer param_data;
   gboolean write;
 
@@ -886,13 +886,13 @@ gst_vulkan_encoder_video_session_parameters_overrides (GstVulkanEncoder * self,
 
   res = priv->vk.GetEncodedVideoSessionParameters (self->queue->device->device,
       &video_params_info, &feedback_info, &size, NULL);
-  if (gst_vulkan_error_to_g_error (res, error,
-          "vGetEncodedVideoSessionParametersKHR") != VK_SUCCESS)
+  if (!((res == VK_SUCCESS && size > 0) || res == VK_INCOMPLETE)) {
+    gst_vulkan_error_to_g_error (res, error,
+        "vkGetEncodedVideoSessionParametersKHR");
     return FALSE;
+  }
 
-  /* FIXME: forcing because a bug in NVIDIA driver */
-  feedback_info.hasOverrides = 1;
-  if (!feedback_info.hasOverrides || !data || !write)
+  if (!feedback_info.hasOverrides || !data || !write || size == 0)
     return TRUE;
 
   GST_DEBUG_OBJECT (self, "allocating for bitstream parameters %"
@@ -902,7 +902,7 @@ gst_vulkan_encoder_video_session_parameters_overrides (GstVulkanEncoder * self,
   res = priv->vk.GetEncodedVideoSessionParameters (self->queue->device->device,
       &video_params_info, &feedback_info, &size, param_data);
   if (gst_vulkan_error_to_g_error (res, error,
-          "vGetEncodedVideoSessionParametersKHR") != VK_SUCCESS) {
+          "vkGetEncodedVideoSessionParametersKHR") != VK_SUCCESS) {
     g_free (param_data);
     return FALSE;
   }
