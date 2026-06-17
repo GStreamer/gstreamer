@@ -22,6 +22,8 @@
  */
 
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstharness.h>
+#include <gst/video/video.h>
 
 static GstStaticPadTemplate enc_sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -37,6 +39,17 @@ static GstStaticPadTemplate enc_srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
         "format = (string) I420, "
         "width = (int) [16, MAX], "
         "height = (int) [16, MAX], " "framerate = (fraction) [0, MAX]"));
+
+static GstStaticPadTemplate dec_sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-raw"));
+
+static GstStaticPadTemplate jp2_srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("image/jp2"));
+
 
 #define MAX_THREADS 8
 #define NUM_BUFFERS 4
@@ -308,18 +321,241 @@ GST_START_TEST (test_openjpeg_yuv_format_validate_caps)
 GST_END_TEST;
 
 
+/* Push a JP2 file through openjpegdec and return the decoded video buffer.
+ * Caller must gst_buffer_unref() the result. */
+static GstBuffer *
+decode_jp2_reference (const gchar * path)
+{
+  GstElement *dec;
+  GstPad *src, *sink;
+  GstBuffer *in_buf, *out_buf;
+  GstCaps *caps;
+  guint8 *data;
+  gsize size;
+  GError *err = NULL;
+
+  fail_unless (g_file_get_contents (path, (gchar **) & data, &size, &err),
+      "Failed to load JP2 reference file %s: %s", path,
+      err ? err->message : "unknown error");
+  g_clear_error (&err);
+
+  dec = gst_check_setup_element ("openjpegdec");
+  src = gst_check_setup_src_pad (dec, &jp2_srctemplate);
+  sink = gst_check_setup_sink_pad (dec, &dec_sinktemplate);
+  gst_pad_set_active (src, TRUE);
+  gst_pad_set_active (sink, TRUE);
+
+  caps = gst_caps_new_simple ("image/jp2",
+      "width", G_TYPE_INT, 32,
+      "height", G_TYPE_INT, 32, "framerate", GST_TYPE_FRACTION, 1, 1, NULL);
+  gst_check_setup_events (src, dec, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  fail_unless (gst_element_set_state (dec,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE);
+
+  in_buf = gst_buffer_new_wrapped (data, size);
+  GST_BUFFER_PTS (in_buf) = 0;
+  GST_BUFFER_DURATION (in_buf) = GST_SECOND;
+  fail_unless_equals_int (gst_pad_push (src, in_buf), GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+
+  out_buf = gst_buffer_ref (buffers->data);
+
+  gst_check_drop_buffers ();
+  gst_pad_set_active (src, FALSE);
+  gst_pad_set_active (sink, FALSE);
+  gst_check_teardown_src_pad (dec);
+  gst_check_teardown_sink_pad (dec);
+  gst_check_teardown_element (dec);
+
+  return out_buf;
+}
+
+/* Run videotestsrc for format and return the raw video buffer.
+ * Caller must gst_buffer_unref() the result. */
+static GstBuffer *
+get_raw_frame (const gchar * format)
+{
+  GstElement *pipeline, *sink;
+  GstBuffer *out_buf;
+  GstBus *bus;
+  GstMessage *msg;
+  GstSample *sample = NULL;
+  gchar *desc;
+
+  desc = g_strdup_printf ("videotestsrc num-buffers=1 pattern=25 ! "
+      "video/x-raw,format=%s,width=32,height=32,framerate=1/1 ! "
+      "appsink name=sink sync=false wait-on-eos=false", format);
+  pipeline = gst_parse_launch (desc, NULL);
+  g_free (desc);
+  fail_unless (pipeline != NULL);
+
+  sink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  bus = gst_element_get_bus (pipeline);
+  msg = gst_bus_timed_pop_filtered (bus, 5 * GST_SECOND,
+      GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
+  fail_unless (msg != NULL);
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS,
+      "Pipeline error getting raw frame for format %s", format);
+  gst_message_unref (msg);
+  gst_object_unref (bus);
+
+  g_signal_emit_by_name (sink, "pull-sample", &sample);
+  fail_unless (sample != NULL, "No raw sample for format %s", format);
+  out_buf = gst_buffer_ref (gst_sample_get_buffer (sample));
+  gst_sample_unref (sample);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (sink);
+  gst_object_unref (pipeline);
+
+  return out_buf;
+}
+
+/* Push raw_buf through openjpegenc ! openjpegdec and return the decoded buffer.
+ * Caller must gst_buffer_unref() the result. */
+static GstBuffer *
+round_trip_buffer (GstBuffer * raw_buf, const gchar * format)
+{
+  GstHarness *h;
+  GstBuffer *out_buf;
+  GstCaps *caps;
+
+  h = gst_harness_new_parse ("openjpegenc ! jpeg2000parse ! openjpegdec");
+
+  caps = gst_caps_new_simple ("video/x-raw",
+      "format", G_TYPE_STRING, format,
+      "width", G_TYPE_INT, 32,
+      "height", G_TYPE_INT, 32, "framerate", GST_TYPE_FRACTION, 1, 1, NULL);
+  gst_harness_set_src_caps (h, caps);
+
+  out_buf = gst_harness_push_and_pull (h, gst_buffer_ref (raw_buf));
+  fail_unless (out_buf != NULL, "No buffer for format %s", format);
+
+  gst_harness_teardown (h);
+
+  return out_buf;
+}
+
+GST_START_TEST (test_openjpeg_encode_decode_formats)
+{
+  static const struct
+  {
+    const gchar *format;
+    const gchar *filename;
+  } refs[] = {
+    {"ARGB64", "ref_ARGB64.jp2"},
+    {"ARGB", "ref_ARGB.jp2"},
+    {"xRGB", "ref_xRGB.jp2"},
+    {"GBR_10LE", "ref_GBR_10LE.jp2"},
+    {"GBR_12LE", "ref_GBR_12LE.jp2"},
+    {"GBR_16LE", "ref_GBR_16LE.jp2"},
+    {"AYUV64", "ref_AYUV64.jp2"},
+    {"Y444_10LE", "ref_Y444_10LE.jp2"},
+    {"I422_10LE", "ref_I422_10LE.jp2"},
+    {"I420_10LE", "ref_I420_10LE.jp2"},
+    {"Y444_12LE", "ref_Y444_12LE.jp2"},
+    {"I422_12LE", "ref_I422_12LE.jp2"},
+    {"I420_12LE", "ref_I420_12LE.jp2"},
+    {"Y444_16LE", "ref_Y444_16LE.jp2"},
+    {"AYUV", "ref_AYUV.jp2"},
+    {"Y444", "ref_Y444.jp2"},
+    {"Y42B", "ref_Y42B.jp2"},
+    {"I420", "ref_I420.jp2"},
+    {"Y41B", "ref_Y41B.jp2"},
+    {"YUV9", "ref_YUV9.jp2"},
+    {"GRAY8", "ref_GRAY8.jp2"},
+    {"GRAY16_LE", "ref_GRAY16_LE.jp2"},
+  };
+  gint i;
+
+  for (i = 0; i < (gint) G_N_ELEMENTS (refs); i++) {
+    GstBuffer *raw_buf, *ref_jp2_decoded_buf, *rt_raw_buf;
+    GstMapInfo raw_map, ref_jp2_decoded_map, rt_decoded_map;
+    gchar *path;
+
+    GST_LOG ("Testing format: %s", refs[i].format);
+
+    path = g_build_filename (GST_OPENJPEG_TEST_DATA_PATH, refs[i].filename,
+        NULL);
+    raw_buf = get_raw_frame (refs[i].format);
+    ref_jp2_decoded_buf = decode_jp2_reference (path);
+    g_free (path);
+    rt_raw_buf = round_trip_buffer (raw_buf, refs[i].format);
+
+    fail_unless (gst_buffer_map (raw_buf, &raw_map, GST_MAP_READ));
+    fail_unless (gst_buffer_map (ref_jp2_decoded_buf, &ref_jp2_decoded_map,
+            GST_MAP_READ));
+    fail_unless (gst_buffer_map (rt_raw_buf, &rt_decoded_map, GST_MAP_READ));
+
+    /* Decoder validation: decoding the embedded reference must reproduce the
+     * original raw frame (valid because encoding is lossless by default).
+     *
+     * xRGB is compared pixel-by-pixel skipping the X padding byte: the encoder
+     * treats it as 3-component RGB, so the decoded output is RGB (3 bytes/pixel)
+     * rather than xRGB (4 bytes/pixel). */
+    if (g_strcmp0 (refs[i].format, "xRGB") == 0) {
+      gsize p, num_pixels = raw_map.size / 4;
+      fail_unless_equals_int (ref_jp2_decoded_map.size, num_pixels * 3);
+      for (p = 0; p < num_pixels; p++) {
+        guint8 *raw_px = raw_map.data + p * 4;
+        guint8 *dec_px = ref_jp2_decoded_map.data + p * 3;
+        fail_unless (raw_px[1] == dec_px[0] && raw_px[2] == dec_px[1]
+            && raw_px[3] == dec_px[2],
+            "Decoder pixel mismatch for xRGB at pixel %" G_GSIZE_FORMAT, p);
+      }
+    } else {
+      fail_unless (raw_map.size == ref_jp2_decoded_map.size,
+          "Buffer size mismatch for format %s: raw=%" G_GSIZE_FORMAT
+          " ref=%" G_GSIZE_FORMAT, refs[i].format, raw_map.size,
+          ref_jp2_decoded_map.size);
+      fail_unless (memcmp (raw_map.data, ref_jp2_decoded_map.data,
+              raw_map.size) == 0, "Decoder pixel mismatch for format %s",
+          refs[i].format);
+    }
+
+    /* Encoder validation: round-trip output must match the embedded reference. */
+    fail_unless (ref_jp2_decoded_map.size == rt_decoded_map.size,
+        "Buffer size mismatch for format %s: ref=%" G_GSIZE_FORMAT
+        " rt=%" G_GSIZE_FORMAT, refs[i].format, ref_jp2_decoded_map.size,
+        rt_decoded_map.size);
+    fail_unless (memcmp (ref_jp2_decoded_map.data, rt_decoded_map.data,
+            ref_jp2_decoded_map.size) == 0,
+        "Encoder round-trip pixel mismatch for format %s", refs[i].format);
+
+    gst_buffer_unmap (raw_buf, &raw_map);
+    gst_buffer_unmap (ref_jp2_decoded_buf, &ref_jp2_decoded_map);
+    gst_buffer_unmap (rt_raw_buf, &rt_decoded_map);
+    gst_buffer_unref (raw_buf);
+    gst_buffer_unref (ref_jp2_decoded_buf);
+    gst_buffer_unref (rt_raw_buf);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 openjpeg_suite (void)
 {
   Suite *s = suite_create ("openjpeg");
   TCase *tc_chain = tcase_create ("general");
+  TCase *tc_chain_content = tcase_create ("payload-validation");
 
   suite_add_tcase (s, tc_chain);
+  suite_add_tcase (s, tc_chain_content);
 
   tcase_add_test (tc_chain, test_openjpeg_encode_simple);
   tcase_add_test (tc_chain, test_openjpeg_simple);
   tcase_add_test (tc_chain, test_openjpeg_yuv_format_validate_caps);
+
   tcase_set_timeout (tc_chain, 5 * 60);
+
+  tcase_add_test (tc_chain_content, test_openjpeg_encode_decode_formats);
+  tcase_set_timeout (tc_chain_content, 5 * 60);
+
   return s;
 }
 

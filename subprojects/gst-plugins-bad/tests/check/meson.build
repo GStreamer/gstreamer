@@ -228,6 +228,7 @@ test_defines = [
   '-DDASH_MPD_DATADIR=' + fsmod.as_posix(meson.current_source_dir()) + '/elements/dash_mpd_data',
   '-DGST_TFLITE_TEST_DATA_PATH="' + fsmod.as_posix(meson.current_source_dir()) + '/elements/tfliteinference_data"',
   '-DGST_ONNX_TEST_DATA_PATH="' + fsmod.as_posix(meson.current_source_dir()) + '/elements/onnxinference_data"',
+  '-DGST_OPENJPEG_TEST_DATA_PATH="' + fsmod.as_posix(meson.current_source_dir()) + '/elements/openjpeg_data"',
   '-DGST_USE_UNSTABLE_API',
 ]
 
