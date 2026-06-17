@@ -2153,15 +2153,15 @@ find_offset (GArray * offsets, guint64 * position, gboolean keyframe)
     return -1;
 
   idx = &g_array_index (offsets, GstMXFDemuxIndex, *position);
-  if (idx->offset != 0 && (!keyframe || idx->keyframe)) {
+  if (idx->initialized && (!keyframe || idx->keyframe)) {
     current_offset = idx->offset;
-  } else if (idx->offset != 0 && current_position > 0) {
+  } else if (idx->initialized && current_position > 0) {
     current_position--;
     while (TRUE) {
       GST_LOG ("current_position %" G_GUINT64_FORMAT, current_position);
       idx = &g_array_index (offsets, GstMXFDemuxIndex, current_position);
-      if (idx->offset == 0) {
-        GST_LOG ("breaking offset 0");
+      if (!idx->initialized) {
+        GST_LOG ("breaking on uninitialized offset");
         break;
       } else if (!idx->keyframe && current_position > 0) {
         current_position--;
@@ -2499,7 +2499,7 @@ find_entry_for_offset (GstMXFDemux * demux, GstMXFDemuxEssenceTrack * etrack,
       GstMXFDemuxIndex *idx =
           &g_array_index (etrack->offsets, GstMXFDemuxIndex, i);
 
-      if (idx->initialized && idx->offset != 0 && idx->offset == offset) {
+      if (idx->initialized && idx->offset == offset) {
         *retentry = *idx;
         GST_DEBUG_OBJECT (demux,
             "Found in track index. Position:%" G_GUINT64_FORMAT, idx->dts);
@@ -3881,13 +3881,13 @@ find_closest_offset (GArray * offsets, guint64 * position, gboolean keyframe)
   current_position = MIN (current_position, offsets->len - 1);
 
   idx = &g_array_index (offsets, GstMXFDemuxIndex, current_position);
-  while ((idx->offset == 0 || (keyframe && !idx->keyframe))
+  while ((!idx->initialized || (keyframe && !idx->keyframe))
       && current_position > 0) {
     current_position--;
     idx = &g_array_index (offsets, GstMXFDemuxIndex, current_position);
   }
 
-  if (idx->offset != 0 && (!keyframe || idx->keyframe)) {
+  if (idx->initialized && (!keyframe || idx->keyframe)) {
     *position = current_position;
     return idx->offset;
   }
@@ -4026,7 +4026,7 @@ from_track_offset:
             (ret == GST_FLOW_EOS && etrack->position == *position + 1))
         && etrack->offsets && etrack->offsets->len > *position
         && g_array_index (etrack->offsets, GstMXFDemuxIndex,
-            *position).offset != 0) {
+            *position).initialized) {
       GST_DEBUG_OBJECT (demux, "Found at offset %" G_GUINT64_FORMAT,
           demux->offset);
       demux->offset = old_offset;
