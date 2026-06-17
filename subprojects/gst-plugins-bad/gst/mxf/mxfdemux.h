@@ -149,7 +149,7 @@ struct _GstMXFDemuxEssenceTrack
 
 typedef struct
 {
-  /* absolute byte offset excluding run_in, 0 if uninitialized */
+  /* absolute byte offset excluding run_in */
   guint64 offset;
 
   /* PTS edit unit number or G_MAXUINT64 */
