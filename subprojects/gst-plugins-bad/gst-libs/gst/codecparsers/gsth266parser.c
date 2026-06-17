@@ -558,9 +558,13 @@ gst_h266_parse_vui_parameters (GstH266VUIParams * vui, NalReader * nr)
       READ_UINT16 (nr, vui->sar_height, 16);
       vui->par_n = vui->sar_width;
       vui->par_d = vui->sar_height;
-    } else {
+    } else if (vui->aspect_ratio_idc <= 16) {
       vui->par_n = aspect_ratios[vui->aspect_ratio_idc].par_n;
       vui->par_d = aspect_ratios[vui->aspect_ratio_idc].par_d;
+    } else {
+      GST_WARNING ("Invalid bitstream: aspect_ratio_idc set "
+          "to value %d (must be 0-16 or %d)",
+          vui->aspect_ratio_idc, EXTENDED_SAR);
     }
   } else {
     vui->aspect_ratio_constant_flag = 0;
