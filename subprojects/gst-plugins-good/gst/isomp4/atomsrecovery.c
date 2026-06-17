@@ -283,6 +283,8 @@ moov_recov_file_parse_prefix (MoovRecovFile * moovrf)
   if (!read_atom_header (moovrf->file, &fourcc, &size)) {
     return FALSE;
   }
+  if (size < 8)
+    return FALSE;
 
   if (fourcc != FOURCC_ftyp) {
     /* we might have a prefix here */
@@ -293,6 +295,8 @@ moov_recov_file_parse_prefix (MoovRecovFile * moovrf)
 
     /* now read the ftyp */
     if (!read_atom_header (moovrf->file, &fourcc, &size))
+      return FALSE;
+    if (size < 8)
       return FALSE;
   }
 
@@ -315,12 +319,25 @@ moov_recov_file_parse_mvhd (MoovRecovFile * moovrf)
   /* check for sanity */
   if (fourcc != FOURCC_mvhd)
     return FALSE;
+  if (size < 8)
+    return FALSE;
 
   moovrf->mvhd_size = size;
   moovrf->mvhd_pos = ftell (moovrf->file) - 8;
 
+  guint8 version;
+  if (fread (&version, 1, 1, moovrf->file) != 1)
+    return FALSE;
+  if (version != 0) {
+    GST_WARNING ("Version %d mvhd not supported", version);
+    return FALSE;
+  }
+
+  if (size != 108)
+    return FALSE;
+
   /* skip the remaining of the mvhd in the file */
-  return fseek (moovrf->file, size - 8, SEEK_CUR) == 0;
+  return fseek (moovrf->file, size - 8 - 1, SEEK_CUR) == 0;
 }
 
 static gboolean
@@ -357,6 +374,8 @@ mdat_recov_file_find_mdat (FILE * file, GError ** err)
       case FOURCC_ftyp:
       case FOURCC_free:
       case FOURCC_udta:
+        if (size < 8)
+          return FALSE;
         if (fseek (file, size - 8, SEEK_CUR) != 0) {
           goto file_seek_error;
         }
@@ -486,6 +505,8 @@ skip_atom (MoovRecovFile * moovrf, guint32 expected_fourcc)
     return FALSE;
   if (fourcc != expected_fourcc)
     return FALSE;
+  if (size < 8)
+    return FALSE;
 
   return (fseek (moovrf->file, size - 8, SEEK_CUR) == 0);
 }
@@ -502,11 +523,24 @@ moov_recov_parse_tkhd (MoovRecovFile * moovrf, TrakRecovData * trakrd)
     return FALSE;
   if (fourcc != FOURCC_tkhd)
     return FALSE;
+  if (size < 8)
+    return FALSE;
 
   trakrd->tkhd_file_offset = ftell (moovrf->file) - 8;
 
-  /* move 8 bytes forward to the trak_id pos */
-  if (fseek (moovrf->file, 12, SEEK_CUR) != 0)
+  guint8 version;
+  if (fread (&version, 1, 1, moovrf->file) != 1)
+    return FALSE;
+  if (version != 0) {
+    GST_WARNING ("Version %d tkhd not supported", version);
+    return FALSE;
+  }
+
+  if (size != 92)
+    return FALSE;
+
+  /* move 12-1 bytes forward to the trak_id pos */
+  if (fseek (moovrf->file, 12 - 1, SEEK_CUR) != 0)
     return FALSE;
   if (fread (data, 1, 4, moovrf->file) != 4)
     return FALSE;
@@ -530,6 +564,8 @@ moov_recov_parse_stbl (MoovRecovFile * moovrf, TrakRecovData * trakrd)
     return FALSE;
   if (fourcc != FOURCC_stbl)
     return FALSE;
+  if (size < 8)
+    return FALSE;
 
   trakrd->stbl_file_offset = ftell (moovrf->file) - 8;
   trakrd->stbl_size = size;
@@ -539,11 +575,16 @@ moov_recov_parse_stbl (MoovRecovFile * moovrf, TrakRecovData * trakrd)
     return FALSE;
   if (fourcc != FOURCC_stsd)
     return FALSE;
+  if (auxsize < 8)
+    return FALSE;
   if (fseek (moovrf->file, auxsize - 8, SEEK_CUR) != 0)
     return FALSE;
 
   trakrd->stsd_size = auxsize;
   trakrd->post_stsd_offset = ftell (moovrf->file);
+
+  if (trakrd->stbl_size < trakrd->post_stsd_offset - trakrd->stbl_file_offset)
+    return FALSE;
 
   /* as this is the last atom we parse, we don't skip forward */
 
@@ -556,10 +597,13 @@ moov_recov_parse_minf (MoovRecovFile * moovrf, TrakRecovData * trakrd)
   guint32 size;
   guint32 fourcc;
   guint32 auxsize;
+  guint64 offset;
 
   if (!read_atom_header (moovrf->file, &fourcc, &size))
     return FALSE;
   if (fourcc != FOURCC_minf)
+    return FALSE;
+  if (size < 8)
     return FALSE;
 
   trakrd->minf_file_offset = ftell (moovrf->file) - 8;
@@ -571,16 +615,22 @@ moov_recov_parse_minf (MoovRecovFile * moovrf, TrakRecovData * trakrd)
   if (fourcc != FOURCC_vmhd && fourcc != FOURCC_smhd && fourcc != FOURCC_hmhd &&
       fourcc != FOURCC_gmhd)
     return FALSE;
+  if (auxsize < 8)
+    return FALSE;
   if (fseek (moovrf->file, auxsize - 8, SEEK_CUR))
     return FALSE;
 
   /* skip a possible hdlr and the following dinf */
   if (!read_atom_header (moovrf->file, &fourcc, &auxsize))
     return FALSE;
+  if (auxsize < 8)
+    return FALSE;
   if (fourcc == FOURCC_hdlr) {
     if (fseek (moovrf->file, auxsize - 8, SEEK_CUR))
       return FALSE;
     if (!read_atom_header (moovrf->file, &fourcc, &auxsize))
+      return FALSE;
+    if (auxsize < 8)
       return FALSE;
   }
   if (fourcc != FOURCC_dinf)
@@ -590,6 +640,10 @@ moov_recov_parse_minf (MoovRecovFile * moovrf, TrakRecovData * trakrd)
 
   /* now we are ready to read the stbl */
   if (!moov_recov_parse_stbl (moovrf, trakrd))
+    return FALSE;
+
+  offset = ftell (moovrf->file);
+  if (trakrd->minf_size < offset - trakrd->minf_file_offset)
     return FALSE;
 
   return TRUE;
@@ -607,11 +661,24 @@ moov_recov_parse_mdhd (MoovRecovFile * moovrf, TrakRecovData * trakrd)
     return FALSE;
   if (fourcc != FOURCC_mdhd)
     return FALSE;
+  if (size < 8)
+    return FALSE;
 
   trakrd->mdhd_file_offset = ftell (moovrf->file) - 8;
 
+  guint8 version;
+  if (fread (&version, 1, 1, moovrf->file) != 1)
+    return FALSE;
+  if (version != 0) {
+    GST_WARNING ("Version %d mdhd not supported", version);
+    return FALSE;
+  }
+
+  if (size != 32)
+    return FALSE;
+
   /* get the timescale */
-  if (fseek (moovrf->file, 12, SEEK_CUR) != 0)
+  if (fseek (moovrf->file, 12 - 1, SEEK_CUR) != 0)
     return FALSE;
   if (fread (data, 1, 4, moovrf->file) != 4)
     return FALSE;
@@ -626,11 +693,14 @@ moov_recov_parse_mdia (MoovRecovFile * moovrf, TrakRecovData * trakrd)
 {
   guint32 size;
   guint32 fourcc;
+  guint64 offset;
 
   /* make sure we are on a tkhd atom */
   if (!read_atom_header (moovrf->file, &fourcc, &size))
     return FALSE;
   if (fourcc != FOURCC_mdia)
+    return FALSE;
+  if (size < 8)
     return FALSE;
 
   trakrd->mdia_file_offset = ftell (moovrf->file) - 8;
@@ -643,6 +713,11 @@ moov_recov_parse_mdia (MoovRecovFile * moovrf, TrakRecovData * trakrd)
     return FALSE;
   if (!moov_recov_parse_minf (moovrf, trakrd))
     return FALSE;
+
+  offset = ftell (moovrf->file);
+  if (trakrd->mdia_size < offset - trakrd->mdia_file_offset)
+    return FALSE;
+
   return TRUE;
 }
 
@@ -665,6 +740,8 @@ moov_recov_parse_trak (MoovRecovFile * moovrf, TrakRecovData * trakrd)
   if (fourcc != FOURCC_trak) {
     return FALSE;
   }
+  if (size < 8)
+    return FALSE;
   trakrd->trak_size = size;
 
   /* now we should have a trak header 'tkhd' */
@@ -683,6 +760,9 @@ moov_recov_parse_trak (MoovRecovFile * moovrf, TrakRecovData * trakrd)
     return FALSE;
 
   trakrd->extra_atoms_offset = ftell (moovrf->file);
+  if (trakrd->trak_size < trakrd->extra_atoms_offset - offset)
+    return FALSE;
+
   trakrd->extra_atoms_size = size - (trakrd->extra_atoms_offset - offset);
 
   trakrd->file_offset = offset;
