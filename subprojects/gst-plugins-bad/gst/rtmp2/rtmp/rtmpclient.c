@@ -510,6 +510,7 @@ handshake_done (GObject * source, GAsyncResult * result, gpointer user_data)
   ConnectTaskData *data = g_task_get_task_data (task);
   GError *error = NULL;
   gboolean res;
+  GSocket *socket;
 
   res = gst_rtmp_client_handshake_finish (stream, result, &error);
   if (!res) {
@@ -518,6 +519,9 @@ handshake_done (GObject * source, GAsyncResult * result, gpointer user_data)
     g_object_unref (task);
     return;
   }
+
+  socket = g_socket_connection_get_socket (socket_connection);
+  g_socket_set_timeout (socket, 0);
 
   data->connection = gst_rtmp_connection_new (socket_connection,
       g_task_get_cancellable (task));
