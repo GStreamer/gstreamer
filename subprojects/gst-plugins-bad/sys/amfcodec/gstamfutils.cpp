@@ -27,7 +27,8 @@
 
 using namespace amf;
 
-AMFFactory *_factory = nullptr;
+static AMFFactory *_factory = nullptr;
+static amf_uint64 _version = 0;
 static gboolean loaded = FALSE;
 
 static gboolean
@@ -36,6 +37,7 @@ gst_amf_load_library (void)
   AMF_RESULT result;
   GModule *amf_module = nullptr;
   AMFInit_Fn init_func = nullptr;
+  AMFQueryVersion_Fn ver_func = nullptr;
 
   amf_module = g_module_open (AMF_DLL_NAMEA, G_MODULE_BIND_LAZY);
   if (!amf_module)
@@ -43,21 +45,29 @@ gst_amf_load_library (void)
 
   if (!g_module_symbol (amf_module, AMF_INIT_FUNCTION_NAME, (gpointer *)
           & init_func)) {
-    g_module_close (amf_module);
-    amf_module = nullptr;
+    goto fail;
+  }
 
-    return FALSE;
+  if (!g_module_symbol (amf_module, AMF_QUERY_VERSION_FUNCTION_NAME,
+          (gpointer *) & ver_func)) {
+    goto fail;
+  }
+
+  result = ver_func (&_version);
+  if (result != AMF_OK) {
+    goto fail;
   }
 
   result = init_func (AMF_FULL_VERSION, &_factory);
   if (result != AMF_OK) {
-    g_module_close (amf_module);
-    amf_module = nullptr;
-    _factory = nullptr;
-    return FALSE;
+    goto fail;
   }
 
   return TRUE;
+fail:
+  g_module_close (amf_module);
+  _factory = nullptr;
+  return FALSE;
 }
 
 gboolean
@@ -77,6 +87,12 @@ gpointer
 gst_amf_get_factory (void)
 {
   return (gpointer) _factory;
+}
+
+guint64
+gst_amf_get_version (void)
+{
+  return (guint64) _version;
 }
 
 const gchar *

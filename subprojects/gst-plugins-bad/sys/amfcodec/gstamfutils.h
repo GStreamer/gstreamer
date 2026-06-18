@@ -28,6 +28,8 @@ gboolean      gst_amf_init_once (void);
 
 gpointer      gst_amf_get_factory (void);
 
+guint64       gst_amf_get_version (void);
+
 const gchar * gst_amf_result_to_string (AMF_RESULT result);
 #define GST_AMF_RESULT_FORMAT "s (%d)"
 #define GST_AMF_RESULT_ARGS(r) gst_amf_result_to_string (r), r
