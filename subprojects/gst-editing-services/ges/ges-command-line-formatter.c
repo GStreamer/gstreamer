@@ -1197,13 +1197,13 @@ _serialize_object_properties (GObject * object, GESCommandLineOption * option,
 
     if (!name) {
       g_free (value_str);
-      continue;
+      goto next;
     }
 
     if (GES_IS_TRACK_ELEMENT (object) &&
         _serialize_control_binding (GES_TRACK_ELEMENT (object), name, res)) {
       g_free (value_str);
-      continue;
+      goto next;
     }
 
     if (!value_str)
@@ -1333,9 +1333,11 @@ ges_command_line_formatter_get_timeline_uri (GESTimeline * timeline)
 
         option = &options[TEST_CLIP];
       } else if (GES_IS_TITLE_CLIP (clip)) {
+        gchar *text = (gchar *) ges_title_clip_get_text (GES_TITLE_CLIP (clip));
+
         g_string_append (res, " +title ");
-        _sanitize_argument (ges_title_clip_get_text (GES_TITLE_CLIP (clip)),
-            res);
+        _sanitize_argument (text, res);
+        g_free (text);
         option = &options[TITLE];
       } else if (GES_IS_URI_CLIP (clip)) {
         g_string_append (res, " +clip ");
