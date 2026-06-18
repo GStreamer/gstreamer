@@ -246,15 +246,17 @@ gst_avtp_base_depayload_tstamp_to_ptime (GstAvtpBaseDepayload *
   ref_low = ref & 0xFFFFFFFFULL;
   ptime = (ref & 0xFFFFFFFF00000000ULL) | tstamp;
 
-  /* If 'ptime' is less than the our reference time, it means the higher part
-   * from 'ptime' needs to be incremented by 1 in order reflect the correct
-   * presentation time.
+  /* When ever the distance between the reference time and the timestamp
+   * is greater than half the 32-bit range, we adjust the upper 32 bits
+   * of the presentation time to compensate for the rollover of the
+   * avtp or reference timestamp.
    */
-  if (tstamp < G_MAXINT32 && ref_low > G_MAXINT32)
-    ptime += G_MAXUINT32 + 1;
-
-  if (tstamp < G_MAXINT32 && ref_low > G_MAXINT32 && ptime > G_MAXUINT32)
-    ptime -= G_MAXUINT32 + 1;
+  if (tstamp < G_MAXINT32 && ref_low > G_MAXINT32
+      && ref_low - tstamp > G_MAXINT32)
+    ptime += G_GUINT64_CONSTANT (0x100000000);
+  if (tstamp > G_MAXINT32 && ref_low < G_MAXINT32
+      && tstamp - ref_low > G_MAXINT32)
+    ptime -= G_GUINT64_CONSTANT (0x100000000);
 
   GST_LOG_OBJECT (avtpbasedepayload, "AVTP presentation time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (ptime));
