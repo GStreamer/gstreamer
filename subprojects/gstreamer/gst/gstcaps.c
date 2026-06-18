@@ -2547,9 +2547,11 @@ gst_caps_structure_simplify (GstStructure ** result,
       g_free (one);
       g_free (two);
     }
+    gst_id_str_clear (&field.name);
     return ret;
   }
 
+  gst_id_str_clear (&field.name);
   return FALSE;
 }
 
