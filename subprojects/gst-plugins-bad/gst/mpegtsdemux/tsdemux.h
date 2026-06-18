@@ -71,6 +71,8 @@ struct _GstTSDemux
   gboolean have_group_id;
   guint group_id;
 
+  gboolean ignore_continuity_counter;
+
   /* the following vars must be protected with the OBJECT_LOCK as they can be
    * accessed from the application thread and the streaming thread */
   gint requested_program_number; /* Required program number (ignore:-1) */

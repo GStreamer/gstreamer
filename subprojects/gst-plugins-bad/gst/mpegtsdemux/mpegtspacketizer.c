@@ -1059,8 +1059,9 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
   if (packet->payload_unit_start_indicator)
     pointer = *data++;
 
-  if (stream->continuity_counter == CONTINUITY_UNSET ||
-      (stream->continuity_counter + 1) % 16 != packet_cc) {
+  if (!packetizer->ignore_continuity_counter
+      && (stream->continuity_counter == CONTINUITY_UNSET
+          || (stream->continuity_counter + 1) % 16 != packet_cc)) {
     if (stream->continuity_counter != CONTINUITY_UNSET) {
       GST_WARNING ("PID 0x%04x section discontinuity (%d vs %d)", packet->pid,
           stream->continuity_counter, packet_cc);

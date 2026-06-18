@@ -272,6 +272,9 @@ struct _MpegTSPacketizer2 {
   /* offset/bitrate calculator */
   gboolean       calculate_offset;
 
+  /* Ignore continuity counter discontinuities */
+  gboolean       ignore_continuity_counter;
+
   /* Shortcuts for adapter usage */
   guint8 *map_data;
   gsize map_offset;
