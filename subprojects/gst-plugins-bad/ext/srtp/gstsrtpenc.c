@@ -1414,10 +1414,10 @@ gst_srtp_enc_change_state (GstElement * element, GstStateChange transition)
        */
       if (filter->rtcp_cipher != GST_SRTP_CIPHER_AES_128_GCM
           && filter->rtcp_cipher != GST_SRTP_CIPHER_AES_256_GCM
-          && filter->rtcp_cipher != GST_SRTP_CIPHER_NULL
           && filter->rtcp_auth == GST_SRTP_AUTH_NULL) {
         GST_ERROR_OBJECT (filter,
-            "RTCP authentication can't be NULL if encryption is not NULL.");
+            "Cannot have SRTCP NULL authentication unless using GCM / AEAD (RFC 7714). "
+            "SRTCP message authentication is MANDATORY (RFC 3711).");
         return GST_STATE_CHANGE_FAILURE;
       }
       GST_OBJECT_LOCK (filter);

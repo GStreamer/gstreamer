@@ -641,11 +641,10 @@ get_stream_from_caps (GstSrtpDec * filter, GstCaps * caps, guint32 ssrc)
    */
   if (stream->rtcp_cipher != GST_SRTP_CIPHER_AES_128_GCM
       && stream->rtcp_cipher != GST_SRTP_CIPHER_AES_256_GCM
-      && stream->rtcp_cipher != GST_SRTP_CIPHER_NULL
       && stream->rtcp_auth == GST_SRTP_AUTH_NULL) {
     GST_WARNING_OBJECT (filter,
-        "Cannot have SRTP NULL authentication with a not-NULL encryption"
-        " cipher.");
+        "Cannot have SRTCP NULL authentication unless using GCM / AEAD (RFC 7714). "
+        "SRTCP message authentication is MANDATORY (RFC 3711).");
     goto error;
   }
 
