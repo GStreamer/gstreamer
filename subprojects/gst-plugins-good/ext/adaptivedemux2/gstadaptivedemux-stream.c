@@ -1136,6 +1136,13 @@ parsebin_deep_element_added_cb (GstBin * parsebin, GstBin * unused,
   if (G_OBJECT_TYPE (element) == tsdemux_type) {
     GST_DEBUG_OBJECT (demux, "Overriding tsdemux ignore-pcr to TRUE");
     g_object_set (element, "ignore-pcr", TRUE, NULL);
+
+    if (g_object_class_find_property (G_OBJECT_GET_CLASS (element),
+            "ignore-continuity-counter")) {
+      GST_DEBUG_OBJECT (demux,
+          "Overriding tsdemux ignore-continuity-counter to TRUE");
+      g_object_set (element, "ignore-continuity-counter", TRUE, NULL);
+    }
   }
 }
 
