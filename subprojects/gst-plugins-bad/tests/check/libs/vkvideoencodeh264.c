@@ -360,7 +360,7 @@ setup_h264_encoder (guint32 width, gint32 height, gint sps_id, gint pps_id)
   GError *err = NULL;
   uint32_t mbAlignedWidth, mbAlignedHeight;
   GstVulkanVideoProfile profile;
-  StdVideoH264ProfileIdc profile_idc = STD_VIDEO_H264_PROFILE_IDC_HIGH;
+  StdVideoH264ProfileIdc profile_idc = STD_VIDEO_H264_PROFILE_IDC_MAIN;
   GstVulkanEncoderParameters enc_params;
   VkVideoEncodeH264SessionParametersAddInfoKHR params_add;
   GstVulkanEncoderQualityProperties quality_props;
