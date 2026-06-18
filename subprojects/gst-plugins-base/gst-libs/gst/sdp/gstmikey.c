@@ -2480,6 +2480,8 @@ auth_key_length_from_auth_cipher_name (const gchar * auth, const gchar * cipher,
   if (g_strcmp0 (cipher, "aes-128-gcm") == 0
       || g_strcmp0 (cipher, "aes-256-gcm") == 0) {
     *length = 0;
+  } else if (g_strcmp0 (auth, "null") == 0) {
+    *length = 0;
   } else {
     if (g_strcmp0 (auth, "hmac-sha1-32") == 0) {
       *length = HMAC_32_KEY_LEN;
@@ -2669,9 +2671,13 @@ gst_mikey_message_to_caps (const GstMIKEYMessage * msg, GstCaps * caps)
   const GstMIKEYPayload *payload;
   const gchar *srtp_cipher;
   const gchar *srtp_auth;
+  const gchar *srtcp_cipher;
+  const gchar *srtcp_auth;
 
   srtp_cipher = "aes-128-icm";
   srtp_auth = "hmac-sha1-80";
+  srtcp_cipher = "aes-128-icm";
+  srtcp_auth = "hmac-sha1-80";
 
   /* Look for first crypto session */
   if (!(srtp = gst_mikey_message_get_cs_srtp (msg, 0))) {
@@ -2686,6 +2692,9 @@ gst_mikey_message_to_caps (const GstMIKEYMessage * msg, GstCaps * caps)
     GstMIKEYPayloadSP *p = (GstMIKEYPayloadSP *) payload;
     guint len, i;
     guint enc_alg = GST_MIKEY_ENC_NULL;
+    gint srtp_auth_on = -1;
+    gint srtp_enc_on = -1;
+    gint srtcp_enc_on = -1;
 
     if (p->proto != GST_MIKEY_SEC_PROTO_SRTP)
       goto done;
@@ -2760,13 +2769,27 @@ gst_mikey_message_to_caps (const GstMIKEYMessage * msg, GstCaps * caps)
           }
           break;
         case GST_MIKEY_SP_SRTP_SRTP_ENC:
+          srtp_enc_on = param->val[0];
           break;
         case GST_MIKEY_SP_SRTP_SRTCP_ENC:
+          srtcp_enc_on = param->val[0];
+          break;
+        case GST_MIKEY_SP_SRTP_SRTP_AUTH:
+          srtp_auth_on = param->val[0];
           break;
         default:
           break;
       }
     }
+
+    srtcp_cipher = srtp_cipher;
+    srtcp_auth = srtp_auth;
+    if (srtp_enc_on == 0)
+      srtp_cipher = "null";
+    if (srtcp_enc_on == 0)
+      srtcp_cipher = "null";
+    if (srtp_auth_on == 0)
+      srtp_auth = "null";
   }
 
   if (!(payload = gst_mikey_message_find_payload (msg, GST_MIKEY_PT_KEMAC, 0)))
@@ -2811,8 +2834,8 @@ gst_mikey_message_to_caps (const GstMIKEYMessage * msg, GstCaps * caps)
   gst_caps_set_simple (caps,
       "srtp-cipher", G_TYPE_STRING, srtp_cipher,
       "srtp-auth", G_TYPE_STRING, srtp_auth,
-      "srtcp-cipher", G_TYPE_STRING, srtp_cipher,
-      "srtcp-auth", G_TYPE_STRING, srtp_auth, NULL);
+      "srtcp-cipher", G_TYPE_STRING, srtcp_cipher,
+      "srtcp-auth", G_TYPE_STRING, srtcp_auth, NULL);
 
   res = TRUE;
 
