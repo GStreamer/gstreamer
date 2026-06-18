@@ -81,6 +81,16 @@ GST_GL_API
 GstEGLImage *           gst_egl_image_from_texture              (GstGLContext * context,
                                                                  GstGLMemory * gl_mem,
                                                                  guintptr * attribs);
+
+GST_GL_API
+GstEGLImage *           gst_egl_image_create                    (GstGLContext * context,
+                                                                 guint target,
+                                                                 GstGLFormat format,
+                                                                 gpointer client_buffer,
+                                                                 guintptr * attribs,
+                                                                 gpointer user_data,
+                                                                 GDestroyNotify destroy_notify) G_GNUC_WARN_UNUSED_RESULT;
+
 #if GST_GL_HAVE_DMABUF
 GST_GL_API
 GstEGLImage *           gst_egl_image_from_dmabuf               (GstGLContext * context,

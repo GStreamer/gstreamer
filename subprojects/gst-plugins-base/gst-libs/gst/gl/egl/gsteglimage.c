@@ -314,7 +314,7 @@ _gst_egl_image_create (GstGLContext * context, guint target,
   EGLImageKHR img = EGL_NO_IMAGE_KHR;
   GstGLDisplayEGL *display_egl;
   guint attrib_len = 0;
-
+  gboolean needs_context = TRUE;
 
   display_egl = gst_gl_display_egl_from_gl_display (context->display);
   if (!display_egl) {
@@ -326,7 +326,17 @@ _gst_egl_image_create (GstGLContext * context, guint target,
       (EGLDisplay) gst_gl_display_get_handle (GST_GL_DISPLAY (display_egl));
   gst_object_unref (display_egl);
 
-  if (target != EGL_LINUX_DMA_BUF_EXT)
+#ifdef EGL_LINUX_DMA_BUF_EXT
+  if (target == EGL_LINUX_DMA_BUF_EXT)
+    needs_context = FALSE;
+#endif
+
+#ifdef EGL_NATIVE_BUFFER_ANDROID
+  if (target == EGL_NATIVE_BUFFER_ANDROID)
+    needs_context = FALSE;
+#endif
+
+  if (needs_context)
     egl_context = (EGLContext) gst_gl_context_get_gl_context (context);
 
   if (attribs)
@@ -446,6 +456,59 @@ static void
 _destroy_egl_image (GstEGLImage * image, gpointer user_data)
 {
   _gst_egl_image_destroy (image->context, image->image);
+}
+
+typedef struct
+{
+  gpointer user_data;
+  GDestroyNotify destroy_notify;
+} CreateImageWrappedUserData;
+
+static void
+_destroy_wrapped_user_data (GstEGLImage * image, gpointer user_data)
+{
+  _gst_egl_image_destroy (image->context, image->image);
+
+  CreateImageWrappedUserData *wrapped_user_data = user_data;
+  if (wrapped_user_data->destroy_notify)
+    wrapped_user_data->destroy_notify (wrapped_user_data->user_data);
+  g_free (wrapped_user_data);
+}
+
+/**
+ * gst_egl_image_create:
+ * @context: a #GstGLContext (must be an EGL context)
+ * @target: a #GstGLTextureTarget
+ * @format: a #GstGLFormat
+ * @client_buffer: an EGLClientBuffer
+ * @attribs: additional attributes to add to the `eglCreateImage`() call.
+ * @user_data: user data
+ * @user_data_destroy: (destroy user_data) (scope async): called when @user_data is no longer needed
+ *
+ * Returns: (transfer full) (nullable): a #GstEGLImage wrapping @client_buffer or %NULL on failure
+ *
+ * Since: 1.30
+ */
+GstEGLImage *
+gst_egl_image_create (GstGLContext * context, guint target, GstGLFormat format,
+    gpointer client_buffer, guintptr * attribs, gpointer user_data,
+    GDestroyNotify destroy_notify)
+{
+  EGLImageKHR image =
+      _gst_egl_image_create (context, target, client_buffer, attribs);
+  if (image == EGL_NO_IMAGE_KHR) {
+    if (destroy_notify)
+      destroy_notify (user_data);
+    return NULL;
+  }
+
+  CreateImageWrappedUserData *wrapped_user_data =
+      g_new (CreateImageWrappedUserData, 1);
+  wrapped_user_data->user_data = user_data;
+  wrapped_user_data->destroy_notify = destroy_notify;
+
+  return gst_egl_image_new_wrapped (context, image,
+      format, wrapped_user_data, _destroy_wrapped_user_data);
 }
 
 /**

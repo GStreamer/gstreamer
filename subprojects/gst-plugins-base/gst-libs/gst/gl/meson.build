@@ -1015,6 +1015,7 @@ if host_system == 'android' and need_win_android != 'no' and need_platform_egl !
       'android/gstglwindow_android_egl.c'
     ]
   endif
+  gl_misc_deps += [allocators_dep, cc.find_library('android', required : true)]
 endif
 
 gl_nvmm = false

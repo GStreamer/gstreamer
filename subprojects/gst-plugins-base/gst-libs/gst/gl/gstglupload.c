@@ -30,6 +30,7 @@
 #include "gstglfuncs.h"
 
 #if GST_GL_HAVE_PLATFORM_EGL
+#include "egl/gstegl.h"
 #include "egl/gsteglimage.h"
 #include "egl/gsteglimage_private.h"
 #include "egl/gsteglimagecache.h"
@@ -52,6 +53,11 @@
 #if GST_GL_HAVE_VIV_DIRECTVIV
 #include <gst/allocators/gstphysmemory.h>
 #include <gst/gl/gstglfuncs.h>
+#endif
+
+#if defined(__ANDROID__) && defined(EGL_ANDROID_get_native_client_buffer)
+#include <android/hardware_buffer.h>
+#include <gst/allocators/allocators.h>
 #endif
 
 /**
@@ -3419,6 +3425,329 @@ static const UploadMethod _nvmm_upload = {
 
 #endif /* HAVE_NVMM */
 
+#if defined(__ANDROID__) && defined(EGL_ANDROID_get_native_client_buffer)
+struct AHardwareBufferUpload
+{
+  GstGLUpload *upload;
+
+  GstGLVideoAllocationParams *params;
+  guint n_mem;
+
+  GstVideoInfo out_info;
+  /* only used for pointer comparison */
+  gpointer out_caps;
+};
+
+#define GST_CAPS_FEATURE_MEMORY_AHARDWAREBUFFER "memory:AHardwareBuffer"
+
+/* FIXME: other formats? */
+static GstStaticCaps _ahardwarebuffer_upload_caps =
+GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+    (GST_CAPS_FEATURE_MEMORY_AHARDWAREBUFFER,
+        "AHARDWARE_BUFFER"));
+
+static gpointer
+_ahardwarebuffer_upload_new (GstGLUpload * upload)
+{
+  struct AHardwareBufferUpload *ahardwarebuffer =
+      g_new0 (struct AHardwareBufferUpload, 1);
+  ahardwarebuffer->upload = upload;
+  return ahardwarebuffer;
+}
+
+static GstCaps *
+_ahardwarebuffer_upload_transform_caps (gpointer impl, GstGLContext * context,
+    GstPadDirection direction, GstCaps * caps)
+{
+  struct AHardwareBufferUpload *ahardwarebuffer = impl;
+  GstCapsFeatures *passthrough;
+  GstCaps *ret;
+  guint i, n;
+
+  if (context) {
+    const GstGLFuncs *gl = context->gl_vtable;
+
+    if (!gl->EGLImageTargetTexture2D)
+      return NULL;
+
+    /* Don't propose AHardwareBuffer caps feature unless it can be supported */
+    if (gst_gl_context_get_gl_platform (context) != GST_GL_PLATFORM_EGL)
+      return NULL;
+
+    if (!gst_gl_context_check_feature (context, "EGL_KHR_image_base") ||
+        !gst_gl_context_check_feature (context,
+            "EGL_ANDROID_get_native_client_buffer"))
+      return NULL;
+  }
+
+  passthrough = gst_caps_features_from_string
+      (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+
+  if (direction == GST_PAD_SINK) {
+    GstCaps *tmp;
+    GstCapsFeatures *filter_features;
+
+    filter_features =
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_AHARDWAREBUFFER);
+    if (!_filter_caps_with_features (caps, filter_features, &tmp)) {
+      gst_caps_features_free (filter_features);
+      gst_caps_features_free (passthrough);
+      return NULL;
+    }
+    gst_caps_features_free (filter_features);
+
+    ret = _set_caps_features_with_passthrough (tmp,
+        GST_CAPS_FEATURE_MEMORY_GL_MEMORY, passthrough);
+    gst_caps_unref (tmp);
+
+    tmp = _caps_intersect_texture_target (ret,
+        1 << GST_GL_TEXTURE_TARGET_EXTERNAL_OES);
+    gst_caps_unref (ret);
+    ret = tmp;
+
+    n = gst_caps_get_size (ret);
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (ret, i);
+
+      gst_structure_remove_fields (s, "ahb-format", NULL);
+    }
+    gst_caps_set_simple (ret, "format", G_TYPE_STRING, "RGBA", NULL);
+  } else {
+    gint i, n;
+
+    ret =
+        _set_caps_features_with_passthrough (caps,
+        GST_CAPS_FEATURE_MEMORY_AHARDWAREBUFFER, passthrough);
+
+    n = gst_caps_get_size (ret);
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (ret, i);
+
+      gst_structure_remove_fields (s, "texture-target", NULL);
+    }
+    gst_caps_set_simple (ret, "format", G_TYPE_STRING, "AHARDWARE_BUFFER",
+        NULL);
+  }
+
+  gst_caps_features_free (passthrough);
+
+  GST_DEBUG_OBJECT (ahardwarebuffer->upload,
+      "transformed %" GST_PTR_FORMAT " into %" GST_PTR_FORMAT, caps, ret);
+
+  return ret;
+}
+
+static gboolean
+_ahardwarebuffer_upload_accept (gpointer impl, GstBuffer * buffer,
+    GstCaps * in_caps, GstCaps * out_caps)
+{
+  struct AHardwareBufferUpload *ahardwarebuffer = impl;
+  GstVideoInfo *in_info = &ahardwarebuffer->upload->priv->in_info;
+  GstVideoInfo *out_info = &ahardwarebuffer->out_info;
+  GstVideoMeta *meta;
+  GstCapsFeatures *features;
+  guint n_mem;
+  guint i;
+
+  n_mem = gst_buffer_n_memory (buffer);
+  if (n_mem != 1) {
+    GST_DEBUG_OBJECT (ahardwarebuffer->upload,
+        "AHardwareBuffer uploader only supports 1 memory, not %u", n_mem);
+    return FALSE;
+  }
+
+  if (!gst_is_ahardware_buffer_buffer (buffer)) {
+    GST_DEBUG_OBJECT (ahardwarebuffer->upload, "Not an AHardwareBuffer");
+    return FALSE;
+  }
+
+  meta = gst_buffer_get_video_meta (buffer);
+
+  if (!ahardwarebuffer->upload->context->gl_vtable->EGLImageTargetTexture2D)
+    return FALSE;
+
+  /* AHardwareBuffer upload is only supported with EGL contexts. */
+  if (gst_gl_context_get_gl_platform (ahardwarebuffer->upload->context) !=
+      GST_GL_PLATFORM_EGL)
+    return FALSE;
+
+  if (!gst_gl_context_check_feature (ahardwarebuffer->upload->context,
+          "EGL_KHR_image_base")
+      || !gst_gl_context_check_feature (ahardwarebuffer->upload->context,
+          "EGL_ANDROID_get_native_client_buffer"))
+    return FALSE;
+
+  features = gst_caps_get_features (in_caps, 0);
+  if (!gst_caps_features_contains (features,
+          GST_CAPS_FEATURE_MEMORY_AHARDWAREBUFFER))
+    return FALSE;
+
+  /* Update video info based on video meta */
+  if (meta) {
+    in_info->width = meta->width;
+    in_info->height = meta->height;
+
+    for (i = 0; i < meta->n_planes; i++) {
+      in_info->offset[i] = meta->offset[i];
+      in_info->stride[i] = meta->stride[i];
+    }
+  }
+
+  if (out_caps != ahardwarebuffer->out_caps) {
+    ahardwarebuffer->out_caps = out_caps;
+    if (!gst_video_info_from_caps (out_info, out_caps))
+      return FALSE;
+  }
+
+  if (ahardwarebuffer->params)
+    gst_gl_allocation_params_free ((GstGLAllocationParams *)
+        ahardwarebuffer->params);
+  if (!(ahardwarebuffer->params =
+          gst_gl_video_allocation_params_new_wrapped_gl_handle
+          (ahardwarebuffer->upload->context, NULL, out_info, -1, NULL,
+              GST_GL_TEXTURE_TARGET_EXTERNAL_OES, 0, NULL, NULL, NULL))) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static void
+_ahardwarebuffer_upload_propose_allocation (gpointer impl,
+    GstQuery * decide_query, GstQuery * query)
+{
+  /* nothing to do for now. */
+}
+
+static GstGLUploadReturn
+_ahardwarebuffer_upload_perform (gpointer impl, GstBuffer * buffer,
+    GstBuffer ** outbuf)
+{
+  EGLClientBuffer (*gst_eglGetNativeClientBufferANDROID) (AHardwareBuffer *
+      ahb);
+  struct AHardwareBufferUpload *ahardwarebuffer = impl;
+  GstGLMemoryAllocator *allocator = NULL;
+  GstEGLImage *eglimage = NULL;
+  GstMemory *mem;
+  AHardwareBuffer *ahb;
+  AHardwareBuffer_Desc desc;
+  GstGLUploadReturn ret = GST_GL_UPLOAD_ERROR;
+
+  if (gst_buffer_n_memory (buffer) != 1)
+    goto done;
+
+  mem = gst_buffer_peek_memory (buffer, 0);
+  if (!gst_ahardware_buffer_memory_peek_buffer (mem, &ahb) || !ahb)
+    goto done;
+
+  AHardwareBuffer_describe (ahb, &desc);
+
+  GST_TRACE_OBJECT (ahardwarebuffer->upload,
+      "Trying to upload AHardwareBuffer with "
+      "format %08x, width %u, height %u, layers %u, stride %u, usage %016"
+      G_GUINT64_FORMAT "x", desc.format, desc.width, desc.height, desc.layers,
+      desc.stride, desc.usage);
+
+  if (desc.width == 0 || desc.height == 0 || desc.layers == 0) {
+    GST_WARNING_OBJECT (ahardwarebuffer->upload,
+        "Invalid AHardwareBuffer dimensions");
+    goto done;
+  }
+
+  if ((desc.usage & AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE) == 0) {
+    GST_WARNING_OBJECT (ahardwarebuffer->upload,
+        "AHardwareBuffer usage %016" G_GUINT64_FORMAT
+        "x does not include GPU sampled-image usage", desc.usage);
+    goto done;
+  }
+
+  gst_eglGetNativeClientBufferANDROID =
+      gst_gl_context_get_proc_address (ahardwarebuffer->upload->context,
+      "eglGetNativeClientBufferANDROID");
+  if (!gst_eglGetNativeClientBufferANDROID) {
+    GST_WARNING_OBJECT (ahardwarebuffer->upload,
+        "\"eglGetNativeClientBufferANDROID\" not exposed by the implementation");
+    goto done;
+  }
+
+  EGLClientBuffer client_buffer = gst_eglGetNativeClientBufferANDROID (ahb);
+  if (!client_buffer) {
+    GST_WARNING_OBJECT (ahardwarebuffer->upload,
+        "Failed to retrieve EGLClientBuffer from AHardwareBuffer");
+    goto done;
+  }
+
+  guintptr attribs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
+  eglimage = gst_egl_image_create (ahardwarebuffer->upload->context,
+      EGL_NATIVE_BUFFER_ANDROID, GST_GL_RGBA, client_buffer, attribs,
+      gst_memory_ref (mem), (GDestroyNotify) gst_memory_unref);
+  if (!eglimage) {
+    GST_WARNING_OBJECT (ahardwarebuffer->upload, "Failed to wrap constructed "
+        "EGLImage from AHardwareBuffer");
+    goto done;
+  }
+
+  allocator =
+      GST_GL_MEMORY_ALLOCATOR (gst_allocator_find
+      (GST_GL_MEMORY_EGL_ALLOCATOR_NAME));
+
+  /* TODO: buffer pool */
+  *outbuf = gst_buffer_new ();
+  if (!gst_gl_memory_setup_buffer (allocator, *outbuf, ahardwarebuffer->params,
+          NULL, (gpointer *) & eglimage, 1)) {
+    GST_WARNING_OBJECT (ahardwarebuffer->upload, "Failed to setup "
+        "AHardwareBuffer -> EGLImage buffer");
+    goto done;
+  }
+  gst_egl_image_unref (eglimage);
+
+  gst_buffer_add_parent_buffer_meta (*outbuf, buffer);
+
+  {
+    GstGLSyncMeta *sync_meta;
+
+    sync_meta =
+        gst_buffer_add_gl_sync_meta (ahardwarebuffer->upload->context, *outbuf);
+    if (sync_meta) {
+      gst_gl_sync_meta_set_sync_point (sync_meta,
+          ahardwarebuffer->upload->context);
+    }
+  }
+
+  ret = GST_GL_UPLOAD_DONE;
+
+done:
+  gst_clear_object (&allocator);
+
+  return ret;
+}
+
+static void
+_ahardwarebuffer_upload_free (gpointer impl)
+{
+  struct AHardwareBufferUpload *ahardwarebuffer = impl;
+
+  if (ahardwarebuffer->params)
+    gst_gl_allocation_params_free ((GstGLAllocationParams *)
+        ahardwarebuffer->params);
+
+  g_free (impl);
+}
+
+static const UploadMethod _ahardwarebuffer_upload = {
+  "AHardwareBuffer",
+  0,
+  &_ahardwarebuffer_upload_caps,
+  &_ahardwarebuffer_upload_new,
+  &_ahardwarebuffer_upload_transform_caps,
+  &_ahardwarebuffer_upload_accept,
+  &_ahardwarebuffer_upload_propose_allocation,
+  &_ahardwarebuffer_upload_perform,
+  &_ahardwarebuffer_upload_free
+};
+#endif /* defined(__ANDROID__) && defined(EGL_ANDROID_get_native_client_buffer) */
+
 static const UploadMethod *upload_methods[] = {
   &_passthrough_upload,
 #if GST_GL_HAVE_DMABUF
@@ -3436,6 +3765,9 @@ static const UploadMethod *upload_methods[] = {
 #if defined(HAVE_NVMM)
   &_nvmm_upload,
 #endif /* HAVE_NVMM */
+#if defined(__ANDROID__) && defined(EGL_ANDROID_get_native_client_buffer)
+  &_ahardwarebuffer_upload,
+#endif
   &_upload_meta_upload,
   /* Raw data must always be last / least preferred */
   &_raw_data_upload,
