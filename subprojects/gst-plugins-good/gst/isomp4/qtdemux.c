@@ -220,7 +220,7 @@ struct _QtDemuxSegment
   /* global time and duration, all gst time */
   GstClockTime time;            /* global PTS at which the segment starts playing */
   GstClockTime stop_time;       /* global PTS at which the segment finishes playing */
-  GstClockTime duration;
+  GstClockTime duration;        /* -1 if the segment extends to the end of the track media */
   /* media time of trak, all gst time */
   GstClockTime media_start;
   GstClockTime media_stop;
@@ -7070,7 +7070,7 @@ static GstFlowReturn
 gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
     QtDemuxStream * stream, GstBuffer * buf,
     guint64 dts, guint64 pts, guint64 duration, gboolean round_up_duration,
-    gboolean keyframe, guint64 position, guint64 byte_position)
+    gboolean keyframe, GstClockTime position, guint64 byte_position)
 {
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -7100,7 +7100,7 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
 
   /* position reporting */
   if (qtdemux->segment.rate >= 0) {
-    qtdemux->segment.position = QTSTREAMTIME_TO_GSTTIME (stream, position);
+    qtdemux->segment.position = position;
     gst_qtdemux_sync_streams (qtdemux);
   }
 
@@ -7634,8 +7634,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   }
 
   ret = gst_qtdemux_decorate_and_push_buffer (qtdemux, stream, buf,
-      dts, pts, duration, round_up_duration, keyframe,
-      GSTTIME_TO_QTSTREAMTIME (stream, min_time), offset);
+      dts, pts, duration, round_up_duration, keyframe, min_time, offset);
 
   if (size < sample_size) {
     QtDemuxSample *sample = &stream->samples[stream->sample_index];
@@ -8846,12 +8845,13 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
         sample = &stream->samples[stream->sample_index];
 
         if (G_LIKELY (!(STREAM_IS_EOS (stream)))) {
-          GstClockTime global_dts;
+          GstClockTime global_dts_gst, dts_gst;
 
           GST_DEBUG_OBJECT (demux, "stream : %" GST_FOURCC_FORMAT,
               GST_FOURCC_ARGS (CUR_STREAM (stream)->fourcc));
 
           dts = QTSAMPLE_DTS_STREAMTIME (sample);
+          dts_gst = QTSAMPLE_DTS (stream, sample);
           pts = QTSAMPLE_PTS_STREAMTIME (sample);
           duration = QTSAMPLE_DUR_STREAMTIME (sample, dts);
           round_up_duration = QTSAMPLE_DUR_ROUND_UP (stream, sample);
@@ -8864,20 +8864,18 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             segment = &stream->segments[stream->segment_index];
 
             /* Need to convert from time inside the media segment to global time */
-            global_dts =
-                (dts >=
-                segment->media_start) ? ((dts - segment->media_start) +
-                segment->time) : 0;
+            global_dts_gst = (dts_gst >= segment->media_start)
+                ? ((dts_gst - segment->media_start) + segment->time) : 0;
           } else {
-            global_dts = dts;
+            global_dts_gst = dts_gst;
           }
 
           /* Check whether we're after the seek segment stop now. This check uses
            * DTS instead of PTS to make sure no future samples have a PTS before
            * the segment stop. */
           if (G_UNLIKELY (demux->segment.stop != -1
-                  && global_dts != GST_CLOCK_TIME_NONE
-                  && demux->segment.stop <= global_dts
+                  && global_dts_gst != GST_CLOCK_TIME_NONE
+                  && demux->segment.stop <= global_dts_gst
                   && stream->segment.rate >= 0)) {
             GST_DEBUG_OBJECT (demux, "we reached the end of our segment.");
             stream->cur_global_pts = GST_CLOCK_TIME_NONE;       /* this means EOS */
@@ -8904,7 +8902,7 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             g_return_val_if_fail (outbuf != NULL, GST_FLOW_ERROR);
 
             ret = gst_qtdemux_decorate_and_push_buffer (demux, stream, outbuf,
-                dts, pts, duration, round_up_duration, keyframe, dts,
+                dts, pts, duration, round_up_duration, keyframe, global_dts_gst,
                 demux->offset);
           }
 

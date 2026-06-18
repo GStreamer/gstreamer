@@ -1,0 +1,22 @@
+set-globals, media_dir="$(test_dir)/../../../media/"
+meta,
+    handles-states=true,
+    needs-http-server=true,
+    ignore-eos=false,
+    args={
+        "pushfilesrc location=\"$(media_dir)/edit-lists/simple/edit_list_video_23456789_implicit_duration.mp4\" ! qtdemux ! fakesink sync=true async=true name=i",
+    },
+    configs={
+        [validateflow,
+            pad=i:sink,
+            ignored-event-types={
+                tag,
+            },
+            buffers-checksum=as-id],
+    }
+
+pause
+seek, flags=flush+accurate, start=1.00, stop=3.00
+play
+wait, message-type="eos"
+stop

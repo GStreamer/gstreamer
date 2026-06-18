@@ -177,7 +177,11 @@ struct _GstQTDemux {
 
   /* configured playback region. Note that this is a seek segment, not to be
    * confused with an edit list segment. Seeks are done for global time (i.e.
-   * with edit lists applied). */
+   * with edit lists applied). The position field contains global time (i.e.
+   * after edit lists) nanoseconds. It is used as a demuxer-wide cursor,
+   * matching the buffer iteration algorithm of each scheduling mode. In pull
+   * mode, it is monotonic max PTS; in push mode it is the DTS of the latest
+   * buffer taken from the mdat. */
   GstSegment segment;
 
   /* State for key_units trickmode */
@@ -473,7 +477,9 @@ struct _QtDemuxStream
   GstClockTime cur_global_pts;
   guint64 accumulated_base;
 
-  /* the Gst segment we are processing out, used for clipping */
+  /* The Gst segment we are processing out, used for clipping.
+   * position is in media nanoseconds (i.e. before edit lists) and contains
+   * the last buffer presentation end. It is non-monotonic. */
   GstSegment segment;
 
   /* quicktime segments */
