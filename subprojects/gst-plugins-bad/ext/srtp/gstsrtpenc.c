@@ -1401,6 +1401,14 @@ gst_srtp_enc_change_state (GstElement * element, GstStateChange transition)
         }
       }
 
+      /* RFC 3711 says in "5.2. Message Authentication/Integrity: HMAC-SHA1" that
+       * SRTCP authentication tag MUST NOT be smaller than 80 bits.
+       */
+      if (filter->rtcp_auth == GST_SRTP_AUTH_HMAC_SHA1_32) {
+        GST_WARNING_OBJECT (filter,
+            "SRTCP authentication MUST NOT be smaller than HMAC-SHA1-80 (RFC 3711 Section 5.2).");
+      }
+
       /* RFC 3711 says in "3. SRTP Framework" that SRTCP message authentication
        * is MANDATORY. In case of GCM let the pipeline handle any errors.
        */
