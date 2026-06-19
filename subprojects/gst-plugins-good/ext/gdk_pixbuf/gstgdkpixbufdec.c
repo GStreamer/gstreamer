@@ -74,8 +74,7 @@ static gboolean gst_gdk_pixbuf_dec_sink_event (GstPad * pad, GstObject * parent,
 #define gst_gdk_pixbuf_dec_parent_class parent_class
 G_DEFINE_TYPE (GstGdkPixbufDec, gst_gdk_pixbuf_dec, GST_TYPE_ELEMENT);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (gdkpixbufdec, "gdkpixbufdec",
-    GST_RANK_SECONDARY, GST_TYPE_GDK_PIXBUF_DEC,
-    gdk_pixbuf_element_init (plugin));
+    GST_RANK_NONE, GST_TYPE_GDK_PIXBUF_DEC, gdk_pixbuf_element_init (plugin));
 
 static gboolean
 gst_gdk_pixbuf_dec_sink_setcaps (GstGdkPixbufDec * filter, GstCaps * caps)
