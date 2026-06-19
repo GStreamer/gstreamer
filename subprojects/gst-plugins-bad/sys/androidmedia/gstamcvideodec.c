@@ -1793,7 +1793,7 @@ gst_amc_video_dec_stop (GstVideoDecoder * decoder)
   self->draining = FALSE;
   g_cond_broadcast (&self->drain_cond);
   g_mutex_unlock (&self->drain_lock);
-  g_free (self->codec_data);
+  g_clear_pointer (&self->codec_data, g_free);
   self->codec_data_size = 0;
   if (self->input_state)
     gst_video_codec_state_unref (self->input_state);
