@@ -93,6 +93,7 @@ gst_va_surface_copy (GstVaSurfaceCopy * self, VASurfaceID dst, VASurfaceID src)
 {
   VAImage image = {.image_id = VA_INVALID_ID, };
   gboolean ret;
+  const gboolean derived = FALSE;
 
   g_return_val_if_fail (self && GST_IS_VA_DISPLAY (self->display), FALSE);
 
@@ -103,8 +104,15 @@ gst_va_surface_copy (GstVaSurfaceCopy * self, VASurfaceID dst, VASurfaceID src)
 
   /* TODO: Add the VPP copy. */
 
-  if (!va_ensure_image (self->display, src, &self->info, &image, FALSE))
+  /* TODO: we could change to use derived after
+   * https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/42345 */
+  if (!va_ensure_image (self->display, src, &self->info, &image, derived))
     return FALSE;
+
+  if (!derived) {
+    if (!va_get_image (self->display, src, &image))
+      return FALSE;
+  }
 
   if ((ret = va_put_image (self->display, dst, &image)))
     GST_LOG ("shallow copy of %#x to %#x", src, dst);
