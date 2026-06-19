@@ -6756,7 +6756,7 @@
                         "presence": "always"
                     }
                 },
-                "rank": "secondary"
+                "rank": "none"
             },
             "gdkpixbufoverlay": {
                 "author": "Tim-Philipp Müller <tim centricular net>",
