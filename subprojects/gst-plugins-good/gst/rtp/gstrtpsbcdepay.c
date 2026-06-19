@@ -337,7 +337,7 @@ gst_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp)
 
     if (last) {
       if (gst_adapter_available (depay->adapter)) {
-        gint framelen, samples;
+        gint framelen;
         guint8 header[4];
 
         data = gst_adapter_take_buffer (depay->adapter,
