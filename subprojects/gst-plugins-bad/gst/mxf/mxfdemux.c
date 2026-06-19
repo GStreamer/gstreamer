@@ -2988,7 +2988,8 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
         etrack->track_id, index_entry.dts, index_entry.offset,
         index_entry.keyframe);
 
-    g_array_insert_val (etrack->offsets, etrack->position, index_entry);
+    have_new_essence_track_index_entry (demux, etrack, etrack->position,
+        &index_entry);
   }
 
   if (peek)
