@@ -303,6 +303,8 @@ gst_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp)
 
   payload = gst_rtp_buffer_get_payload (rtp);
   payload_len = gst_rtp_buffer_get_payload_len (rtp);
+  if (payload_len < 1)
+    goto bad_packet;
 
   fragment = payload[0] & 0x80;
   start = payload[0] & 0x40;
