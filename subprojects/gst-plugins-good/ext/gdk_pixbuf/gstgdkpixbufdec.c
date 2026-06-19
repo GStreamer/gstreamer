@@ -290,6 +290,7 @@ gst_gdk_pixbuf_dec_flush (GstGdkPixbufDec * filter)
   gint width, height;
   gint n_channels;
   GstVideoFrame frame;
+  GstVideoFormat fmt;
 
   pixbuf = gdk_pixbuf_loader_get_pixbuf (filter->pixbuf_loader);
   if (pixbuf == NULL)
@@ -298,25 +299,25 @@ gst_gdk_pixbuf_dec_flush (GstGdkPixbufDec * filter)
   width = gdk_pixbuf_get_width (pixbuf);
   height = gdk_pixbuf_get_height (pixbuf);
 
-  if (GST_VIDEO_INFO_FORMAT (&filter->info) == GST_VIDEO_FORMAT_UNKNOWN) {
+  n_channels = gdk_pixbuf_get_n_channels (pixbuf);
+  switch (n_channels) {
+    case 3:
+      fmt = GST_VIDEO_FORMAT_RGB;
+      break;
+    case 4:
+      fmt = GST_VIDEO_FORMAT_RGBA;
+      break;
+    default:
+      goto channels_not_supported;
+  }
+
+  if (GST_VIDEO_INFO_FORMAT (&filter->info) != fmt ||
+      GST_VIDEO_INFO_WIDTH (&filter->info) != width ||
+      GST_VIDEO_INFO_HEIGHT (&filter->info) != height) {
     GstVideoInfo info;
-    GstVideoFormat fmt;
     GList *l;
 
     GST_DEBUG ("Set size to %dx%d", width, height);
-
-    n_channels = gdk_pixbuf_get_n_channels (pixbuf);
-    switch (n_channels) {
-      case 3:
-        fmt = GST_VIDEO_FORMAT_RGB;
-        break;
-      case 4:
-        fmt = GST_VIDEO_FORMAT_RGBA;
-        break;
-      default:
-        goto channels_not_supported;
-    }
-
 
     gst_video_info_init (&info);
     if (!gst_video_info_set_format (&info, fmt, width, height))
