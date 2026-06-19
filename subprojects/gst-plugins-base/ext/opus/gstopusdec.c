@@ -364,6 +364,8 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
     GST_DEBUG_OBJECT (dec, "Using a default of 2 channels");
     dec->n_channels = 2;
     pos = NULL;
+  } else if (dec->n_channels > 64) {
+    pos = NULL;
   }
 
   if (dec->sample_rate == 0) {
