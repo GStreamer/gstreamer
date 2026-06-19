@@ -13,7 +13,7 @@ libgstwebrtcnice_headers = files([
 
 libgstwebrtcnice_dep = dependency('', required : false)
 
-libnice_dep = dependency('nice', version : '>=0.1.23', required : get_option('webrtc'),
+libnice_dep = dependency('nice', version : '>=0.1.24', required : get_option('webrtc'),
                          allow_fallback: true, default_options: ['tests=disabled'])
 
 deps = [gstwebrtc_dep, libnice_dep]

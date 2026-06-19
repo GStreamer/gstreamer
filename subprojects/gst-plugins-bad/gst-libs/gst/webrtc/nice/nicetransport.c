@@ -424,18 +424,22 @@ gst_webrtc_nice_get_selected_candidate_pair (GstWebRTCICETransport * ice)
 
   if (nice_agent_get_selected_pair (agent, nice_stream->stream_id, component,
           &local_candidate, &remote_candidate)) {
+    NiceCandidate *local_copy = nice_candidate_copy (local_candidate);
+    NiceCandidate *remote_copy = nice_candidate_copy (remote_candidate);
 
-    gst_webrtc_nice_fill_local_candidate_credentials (agent, local_candidate);
-    gst_webrtc_nice_fill_remote_candidate_credentials (webrtc_ice,
-        remote_candidate);
+    gst_webrtc_nice_fill_local_candidate_credentials (agent, local_copy);
+    gst_webrtc_nice_fill_remote_candidate_credentials (webrtc_ice, remote_copy);
 
     candidates_pair = g_new0 (GstWebRTCICECandidatePair, 1);
     candidates_pair->local =
-        nice_candidate_to_gst (webrtc_ice, agent, local_candidate,
+        nice_candidate_to_gst (webrtc_ice, agent, local_copy,
         GST_WEBRTC_NICE_CANDIDATE_ORIGIN_LOCAL);
     candidates_pair->remote =
-        nice_candidate_to_gst (webrtc_ice, agent, remote_candidate,
+        nice_candidate_to_gst (webrtc_ice, agent, remote_copy,
         GST_WEBRTC_NICE_CANDIDATE_ORIGIN_REMOTE);
+
+    nice_candidate_free (local_copy);
+    nice_candidate_free (remote_copy);
   }
 
   g_object_unref (agent);
