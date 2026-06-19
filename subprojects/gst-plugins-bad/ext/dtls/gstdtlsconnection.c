@@ -1249,8 +1249,9 @@ bio_method_read (BIO * bio, char *out_buffer, int size)
   internal_size = priv->bio_buffer_len - priv->bio_buffer_offset;
 
   if (!priv->bio_buffer) {
-    GST_LOG_OBJECT (self, "BIO: EOF");
-    return 0;
+    GST_LOG_OBJECT (self, "BIO: no data available, retry later");
+    BIO_set_retry_read (bio);
+    return -1;
   }
 
   if (!out_buffer || size <= 0) {
