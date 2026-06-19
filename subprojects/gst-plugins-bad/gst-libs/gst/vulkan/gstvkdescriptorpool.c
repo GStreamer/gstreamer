@@ -232,8 +232,12 @@ gst_vulkan_descriptor_pool_create (GstVulkanDescriptorPool * pool,
   GST_OBJECT_UNLOCK (pool);
 
   cmd = descriptor_set_alloc (pool, n_layouts, layouts, error);
-  if (!cmd)
+  if (!cmd) {
+    GST_OBJECT_LOCK (pool);
+    priv->outstanding--;
+    GST_OBJECT_UNLOCK (pool);
     return NULL;
+  }
 
   return cmd;
 }
