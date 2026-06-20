@@ -1,6 +1,6 @@
 project('ajantv2', ['c', 'cpp'],
-  version : '17.1.0',
-  meson_version : '>= 0.54.0',
+  version : '18.0.0',
+  meson_version : '>= 1.3.0',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized',
                       'c_std=c11',
@@ -9,6 +9,10 @@ project('ajantv2', ['c', 'cpp'],
                       'cpp_rtti=false',
                     ]
 )
+
+if host_machine.system() in ['darwin', 'ios']
+  add_languages('objc', 'objcpp', native: false)
+endif
 
 c = meson.get_compiler('c')
 cxx = meson.get_compiler('cpp')
@@ -28,23 +32,65 @@ if get_option('warning_level') == '0'
   )
 endif
 
+if cxx.get_argument_syntax() == 'msvc'
+  # Meson force enables /permissive- whenever using
+  # cpp_std=c++xx (and not vc++xx).
+  # This causes: ../subprojects/libajantv2-ntv2_18_0_0/ajabase/system/windows/infoimpl.cpp(238): error C2362: "goto cleanup" omitió la inicialización de ''uReturn'
+  # So work around it with the specific VS 2022+ flag, or outright
+  # disable strict conformance.
+  if cxx.has_argument('/Zc:gotoScope-')
+    common_flags += '/Zc:gotoScope-'
+  else
+    common_flags += '/permissive'
+  endif
+endif
+
 conf_data = configuration_data()
-conf_data.set('AJA_NTV2_SDK_VERSION_MAJOR', '17')
+conf_data.set('AJA_NTV2_SDK_VERSION_MAJOR', '18')
 conf_data.set('AJA_NTV2_SDK_VERSION_MINOR', '1')
 conf_data.set('AJA_NTV2_SDK_VERSION_POINT', '0')
 conf_data.set('AJA_NTV2_SDK_BUILD_NUMBER', '0')
-conf_data.set('AJA_NTV2_SDK_BUILD_DATETIME', '2024-07-18T13:40:28-07:00')
+conf_data.set('AJA_NTV2_SDK_BUILD_DATETIME', '2026-06-19T22:57:37Z')
 conf_data.set('AJA_NTV2_SDK_BUILD_TYPE', '')
 configure_file(input : 'ajantv2/includes/ntv2version.h.in',
                output : 'ntv2version.h',
                configuration : conf_data)
 
-thread_dep = dependency('threads')
-rt_dep = cxx.find_library('rt', required : false)
-dl_dep = cxx.find_library('dl', required : false)
-libudev_dep = dependency('libudev', required: true)
+ajantv2_deps = [
+  dependency('threads'),
+]
 
-ajantv2_sources = [
+if host_machine.system() == 'linux'
+  ajantv2_deps += [
+    cxx.find_library('rt', required : false),
+    cxx.find_library('dl', required : false),
+    dependency('libudev'),
+  ]
+elif host_machine.system() == 'darwin'
+  ajantv2_deps += [
+    dependency('appleframeworks', modules : ['Foundation', 'CoreFoundation', 'IOKit']),
+  ]
+elif host_machine.system() == 'windows'
+  ajantv2_deps += [
+    cxx.find_library('advapi32'),
+    cxx.find_library('comctl32'),
+    cxx.find_library('netapi32'),
+    cxx.find_library('odbc32'),
+    cxx.find_library('psapi'),
+    cxx.find_library('rpcrt4'),
+    cxx.find_library('setupapi'),
+    cxx.find_library('shell32'),
+    cxx.find_library('shlwapi'),
+    cxx.find_library('user32'),
+    cxx.find_library('wbemuuid'),
+    cxx.find_library('winmm'),
+    cxx.find_library('ws2_32'),
+    cxx.find_library('wsock32'),
+    cxx.find_library('bcrypt'),
+  ]
+endif
+
+ajantv2_sources = files(
   'ajaanc/src/ancillarydata.cpp',
   'ajaanc/src/ancillarydatafactory.cpp',
   'ajaanc/src/ancillarydata_cea608.cpp',
@@ -98,12 +144,6 @@ ajantv2_sources = [
   'ajabase/system/system.cpp',
   'ajabase/system/systemtime.cpp',
   'ajabase/system/thread.cpp',
-  'ajabase/pnp/linux/pnpimpl.cpp',
-  'ajabase/system/linux/eventimpl.cpp',
-  'ajabase/system/linux/infoimpl.cpp',
-  'ajabase/system/linux/lockimpl.cpp',
-  'ajabase/system/linux/processimpl.cpp',
-  'ajabase/system/linux/threadimpl.cpp',
   'ajantv2/src/ntv2anc.cpp',
   'ajantv2/src/ntv2aux.cpp',
   'ajantv2/src/ntv2audio.cpp',
@@ -126,7 +166,6 @@ ajantv2_sources = [
   'ajantv2/src/ntv2enhancedcsc.cpp',
   'ajantv2/src/ntv2formatdescriptor.cpp',
   'ajantv2/src/ntv2hdmi.cpp',
-  'ajantv2/src/ntv2hevc.cpp',
   'ajantv2/src/ntv2interrupts.cpp',
   'ajantv2/src/ntv2konaflashprogram.cpp',
   'ajantv2/src/ntv2mailbox.cpp',
@@ -148,7 +187,6 @@ ajantv2_sources = [
   'ajantv2/src/ntv2stream.cpp',
   'ajantv2/src/ntv2subscriptions.cpp',
   'ajantv2/src/ntv2supportlogger.cpp',
-  'ajantv2/src/ntv2task.cpp',
   'ajantv2/src/ntv2testpatterngen.cpp',
   'ajantv2/src/ntv2transcode.cpp',
   'ajantv2/src/ntv2utils.cpp',
@@ -156,30 +194,106 @@ ajantv2_sources = [
   'ajantv2/src/ntv2verticalfilter.cpp',
   'ajantv2/src/ntv2vpid.cpp',
   'ajantv2/src/ntv2vpidfromspec.cpp',
+  'ajantv2/src/ntv2link.cpp',
+)
+
+ajantv2_sources_lin = files(
+  'ajabase/pnp/linux/pnpimpl.cpp',
+  'ajabase/system/linux/eventimpl.cpp',
+  'ajabase/system/linux/infoimpl.cpp',
+  'ajabase/system/linux/lockimpl.cpp',
+  'ajabase/system/linux/processimpl.cpp',
+  'ajabase/system/linux/threadimpl.cpp',
   'ajantv2/src/lin/ntv2linuxdriverinterface.cpp',
-]
+)
+
+ajantv2_sources_win = files(
+  'ajabase/pnp/windows/pnpimpl.cpp',
+  'ajabase/system/windows/eventimpl.cpp',
+  'ajabase/system/windows/infoimpl.cpp',
+  'ajabase/system/windows/lockimpl.cpp',
+  'ajabase/system/windows/processimpl.cpp',
+  'ajabase/system/windows/threadimpl.cpp',
+  'ajantv2/src/win/ntv2windriverinterface.cpp',
+)
+
+ajantv2_sources_mac = files(
+  'ajabase/pnp/mac/devicenotifier.cpp',
+  'ajabase/pnp/mac/masterport.cpp',
+  'ajabase/pnp/mac/pnpimpl.cpp',
+  'ajabase/system/mac/eventimpl.cpp',
+  'ajabase/system/mac/infoimpl.mm',
+  'ajabase/system/mac/lockimpl.cpp',
+  'ajabase/system/mac/processimpl.cpp',
+  'ajabase/system/mac/pthreadsextra.cpp',
+  'ajabase/system/mac/threadimpl.cpp',
+  'ajantv2/src/mac/ntv2macdriverinterface.cpp',
+)
 
 ajantv2_args = [
-  '-DAJALinux',
   '-DAJASTATIC',
-  '-DAJA_LINUX',
   '-DAJA_USE_CPLUSPLUS11',
-  '-DNDEBUG',
   '-DNTV2_USE_CPLUSPLUS11',
   '-DNTV2_PREVENT_PLUGIN_LOAD',
 ]
 
-ajantv2_inc = include_directories(
+ajantv2_inc = [include_directories(
   '.',
   'ajaanc/includes',
+  'ajabase',
   'ajantv2/includes',
-  'ajantv2/src/lin',
-)
+)]
+
+if host_machine.system() == 'linux'
+  ajantv2_inc += include_directories(
+    'ajantv2/src/lin',
+  )
+  ajantv2_sources += ajantv2_sources_lin
+  ajantv2_args += [
+    '-DAJALinux',
+    '-DAJA_LINUX',
+  ]
+elif host_machine.system() == 'darwin'
+  ajantv2_inc += include_directories(
+    'ajantv2/src/mac',
+  )
+  ajantv2_sources += ajantv2_sources_mac
+  ajantv2_args += [
+    '-DAJAMac',
+    '-DAJA_MAC',
+    '-D__STDC_CONSTANT_MACROS',
+  ]
+elif host_machine.system() == 'windows'
+  ajantv2_inc += include_directories(
+    'ajantv2/src/win',
+  )
+  ajantv2_sources += ajantv2_sources_win
+  ajantv2_args += [
+    '-DAJA_WINDOWS',
+    '-DMSWindows',
+    '-D_WINDOWS',
+    '-D_CONSOLE',
+    '-DWIN32_LEAN_AND_MEAN',
+    '-D_CRT_SECURE_NO_WARNINGS',
+    '-D_SCL_SECURE_NO_WARNINGS',
+  ]
+endif
+
+if get_option('debug') and get_option('optimization') == '0'
+  ajantv2_args += [
+    '-DAJA_DEBUG',
+    '-D_DEBUG',
+  ]
+else
+  ajantv2_args += [
+    '-DNDEBUG',
+  ]
+endif
 
 libajantv2 = static_library(
   'libajantv2',
   sources: ajantv2_sources,
-  dependencies : [thread_dep, rt_dep, dl_dep, libudev_dep],
+  dependencies : ajantv2_deps,
   cpp_args: [ajantv2_args, common_flags],
   include_directories: ajantv2_inc,
   pic: true,
@@ -191,4 +305,7 @@ libajantv2_dep = declare_dependency(
   compile_args : ajantv2_args,
   link_with: libajantv2,
   include_directories: ajantv2_inc,
+  dependencies: ajantv2_deps,
 )
+
+meson.override_dependency('libajantv2', libajantv2_dep)
