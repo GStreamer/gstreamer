@@ -2292,21 +2292,48 @@ mpegts_packetizer_pts_to_ts_internal (MpegTSPacketizer2 * packetizer,
   pcrtable = get_pcr_table (packetizer, pcr_pid);
 
   if (pcr_pid == 0x1fff && GST_CLOCK_TIME_IS_VALID (packetizer->last_in_time)) {
+    /* pcr_pid = 0x1fff means no PCR table, so figure things out from PTSes */
     if (!GST_CLOCK_TIME_IS_VALID (pcrtable->base_time)) {
+      /* Take the first base time we see as a reference */
       pcrtable->base_time = packetizer->last_in_time;
       pcrtable->base_pcrtime = pts;
     } else if (check_diff) {
-      /* Handle discont and wraparound */
+      /* Handle discont and wraparound:
+       * The wraparound handling code assumes that the PCR gets updated regularly for
+       * being able to detect wraparounds. With ignore-pcr=true, or with no PCR track,
+       * that is not the case and it would stay initialized at 1h forever.
+       * 
+       * To avoid this problem, update the fake PCR whenever the PTS advanced by more
+       * than 5s, and also detect wraparounds in these fake PCRs.
+       */
       guint64 tmp_pts = pts + pcrtable->pcroffset + packetizer->extra_shift;
-      if (pcrtable->base_pcrtime < tmp_pts
-          && tmp_pts - pcrtable->base_pcrtime >= 5 * GST_SECOND) {
+      gint64 pcr_pts_diff = tmp_pts - pcrtable->base_pcrtime;
+
+      if (pcrtable->base_pcrtime < tmp_pts &&
+          pcr_pts_diff >= 5 * GST_SECOND &&
+          pcr_pts_diff < PCR_GST_MAX_VALUE / 2 /* Ignore wrap-under */ ) {
         guint64 diff = tmp_pts - pcrtable->base_pcrtime - 2 * GST_SECOND;
 
         pcrtable->base_time += diff;
         pcrtable->base_pcrtime += diff;
+        GST_DEBUG ("base_pcrtime now %" GST_TIMEP_FORMAT " to catch up to PTS %"
+            GST_TIMEP_FORMAT, &pcrtable->base_pcrtime, &tmp_pts);
       } else if (pcrtable->base_pcrtime > tmp_pts
           && pcrtable->base_pcrtime - tmp_pts > PCR_GST_MAX_VALUE / 2) {
+        GST_DEBUG ("Incrementing PCR offset for wraparound. base_pcrtime %"
+            GST_TIMEP_FORMAT " adjusted PTS %" GST_TIMEP_FORMAT,
+            &pcrtable->base_pcrtime, &tmp_pts);
         pcrtable->pcroffset += PCR_GST_MAX_VALUE;
+      } else if (pcrtable->base_pcrtime < tmp_pts
+          && tmp_pts - pcrtable->base_pcrtime > PCR_GST_MAX_VALUE / 2) {
+        /* This can happen when we get an out-of-order PTS that steps backward to before the
+         * previous rollover. The epoch can flip-flop a bit as we cross over, but settles
+         * once every stream advances enough */
+        GST_DEBUG
+            ("Decrementing PCR offset for backward PTS step. base_pcrtime %"
+            GST_TIMEP_FORMAT " adjusted PTS %" GST_TIMEP_FORMAT,
+            &pcrtable->base_pcrtime, &tmp_pts);
+        pcrtable->pcroffset -= PCR_GST_MAX_VALUE;
       }
     }
   }
