@@ -2299,6 +2299,22 @@ static void capture_thread_func(AJAThread *thread, void *data) {
   NTV2VideoFormat last_detected_video_format = ::NTV2_FORMAT_UNKNOWN;
 
   if (self->capture_cpu_core != G_MAXUINT) {
+#ifdef _WIN32
+    if (self->capture_cpu_core < 64) {
+      const DWORD_PTR mask = 1ULL << self->capture_cpu_core;
+      HANDLE current_thread = GetCurrentThread();
+
+      if (SetThreadAffinityMask(current_thread, mask) == 0) {
+        GST_ERROR_OBJECT(self,
+                         "Failed to set affinity for current thread to core %u",
+                         self->capture_cpu_core);
+      }
+    } else {
+      // SetThreadAffinityMask can only handle up to 64 processors
+      GST_ERROR_OBJECT(self, "Invalid or out of range core %u",
+                       self->capture_cpu_core);
+    }
+#else
     cpu_set_t mask;
     pthread_t current_thread = pthread_self();
 
@@ -2310,6 +2326,7 @@ static void capture_thread_func(AJAThread *thread, void *data) {
                        "Failed to set affinity for current thread to core %u",
                        self->capture_cpu_core);
     }
+#endif
   }
 
   // We're getting a system clock for the real-time clock here because

@@ -1884,6 +1884,22 @@ static void output_thread_func(AJAThread *thread, void *data) {
   AUTOCIRCULATE_TRANSFER transfer;
 
   if (self->output_cpu_core != G_MAXUINT) {
+#ifdef _WIN32
+    if (self->output_cpu_core < 64) {
+      const DWORD_PTR mask = 1ULL << self->output_cpu_core;
+      HANDLE current_thread = GetCurrentThread();
+
+      if (SetThreadAffinityMask(current_thread, mask) == 0) {
+        GST_ERROR_OBJECT(self,
+                         "Failed to set affinity for current thread to core %u",
+                         self->output_cpu_core);
+      }
+    } else {
+      // SetThreadAffinityMask can only handle up to 64 processors
+      GST_ERROR_OBJECT(self, "Invalid or out of range core %u",
+                       self->output_cpu_core);
+    }
+#else
     cpu_set_t mask;
     pthread_t current_thread = pthread_self();
 
@@ -1895,6 +1911,7 @@ static void output_thread_func(AJAThread *thread, void *data) {
                        "Failed to set affinity for current thread to core %u",
                        self->output_cpu_core);
     }
+#endif
   }
 
   g_mutex_lock(&self->queue_lock);
