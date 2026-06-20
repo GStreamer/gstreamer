@@ -1764,9 +1764,7 @@ static gboolean gst_aja_src_unlock_stop(GstBaseSrc *bsrc) {
 static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer) {
   GstAjaSrc *self = GST_AJA_SRC(psrc);
   GstFlowReturn flow_ret = GST_FLOW_OK;
-  QueueItem item = {
-      .type = QUEUE_ITEM_TYPE_DUMMY,
-  };
+  QueueItem item = {QUEUE_ITEM_TYPE_DUMMY};
 
 next_item:
   item.type = QUEUE_ITEM_TYPE_DUMMY;
@@ -2286,7 +2284,8 @@ next_item:
     g_free(__name);                                                         \
     g_free(__dbg);                                                          \
     __msg = gst_message_new_error(GST_OBJECT(el), __err, __fmt_dbg);        \
-    QueueItem item = {.type = QUEUE_ITEM_TYPE_ERROR, .error{.msg = __msg}}; \
+    QueueItem item = {QUEUE_ITEM_TYPE_ERROR};                               \
+    item.error = { __msg };                                                 \
     gst_vec_deque_push_tail_struct(el->queue, &item);                       \
     g_cond_signal(&el->queue_cond);                                         \
   }                                                                         \
@@ -2396,11 +2395,8 @@ restart:
       if (self->video_format == ::NTV2_FORMAT_UNKNOWN) {
         GST_DEBUG_OBJECT(self, "No signal, waiting");
         if (have_signal) {
-          QueueItem item = {
-              .type = QUEUE_ITEM_TYPE_SIGNAL_CHANGE,
-              .signal_change = {.have_signal = FALSE,
-                                .detected_format = ::NTV2_FORMAT_UNKNOWN,
-                                .vpid = 0}};
+          QueueItem item = {QUEUE_ITEM_TYPE_SIGNAL_CHANGE};
+          item.signal_change = {FALSE, ::NTV2_FORMAT_UNKNOWN, 0};
           gst_vec_deque_push_tail_struct(self->queue, &item);
           g_cond_signal(&self->queue_cond);
           have_signal = false;
@@ -2518,11 +2514,8 @@ restart:
       GST_DEBUG_OBJECT(self, "No signal, waiting");
       g_mutex_unlock(&self->queue_lock);
       if (have_signal || current_video_format != last_detected_video_format) {
-        QueueItem item = {
-            .type = QUEUE_ITEM_TYPE_SIGNAL_CHANGE,
-            .signal_change = {.have_signal = FALSE,
-                              .detected_format = ::NTV2_FORMAT_UNKNOWN,
-                              .vpid = 0}};
+        QueueItem item = {QUEUE_ITEM_TYPE_SIGNAL_CHANGE};
+        item.signal_change = {FALSE, ::NTV2_FORMAT_UNKNOWN, 0};
         last_detected_video_format = ::NTV2_FORMAT_UNKNOWN;
         gst_vec_deque_push_tail_struct(self->queue, &item);
         g_cond_signal(&self->queue_cond);
@@ -2553,11 +2546,8 @@ restart:
                        effective_string.c_str());
       g_mutex_unlock(&self->queue_lock);
       if (have_signal || current_video_format != last_detected_video_format) {
-        QueueItem item = {
-            .type = QUEUE_ITEM_TYPE_SIGNAL_CHANGE,
-            .signal_change = {.have_signal = FALSE,
-                              .detected_format = current_video_format,
-                              .vpid = vpid_a}};
+        QueueItem item = {QUEUE_ITEM_TYPE_SIGNAL_CHANGE};
+        item.signal_change = {FALSE, current_video_format, vpid_a};
         last_detected_video_format = current_video_format;
         gst_vec_deque_push_tail_struct(self->queue, &item);
         g_cond_signal(&self->queue_cond);
@@ -2568,11 +2558,8 @@ restart:
       continue;
     } else if (have_signal &&
                current_video_format != last_detected_video_format) {
-      QueueItem item = {
-          .type = QUEUE_ITEM_TYPE_SIGNAL_CHANGE,
-          .signal_change = {.have_signal = TRUE,
-                            .detected_format = current_video_format,
-                            .vpid = vpid_a}};
+      QueueItem item = {QUEUE_ITEM_TYPE_SIGNAL_CHANGE};
+      item.signal_change = {TRUE, current_video_format, vpid_a};
       last_detected_video_format = current_video_format;
       gst_vec_deque_push_tail_struct(self->queue, &item);
       g_cond_signal(&self->queue_cond);
@@ -2611,11 +2598,8 @@ restart:
       AUTOCIRCULATE_TRANSFER transfer;
 
       if (!have_signal) {
-        QueueItem item = {
-            .type = QUEUE_ITEM_TYPE_SIGNAL_CHANGE,
-            .signal_change = {.have_signal = TRUE,
-                              .detected_format = current_video_format,
-                              .vpid = vpid_a}};
+        QueueItem item = {QUEUE_ITEM_TYPE_SIGNAL_CHANGE};
+        item.signal_change = {TRUE, current_video_format, vpid_a};
         gst_vec_deque_push_tail_struct(self->queue, &item);
         g_cond_signal(&self->queue_cond);
         have_signal = true;
@@ -2787,10 +2771,8 @@ restart:
                              "Frame drop of %" GST_TIME_FORMAT " detected",
                              GST_TIME_ARGS(timestamp_end - timestamp));
 
-          QueueItem item = {.type = QUEUE_ITEM_TYPE_FRAMES_DROPPED,
-                            .frames_dropped = {.driver_side = TRUE,
-                                               .timestamp_start = timestamp,
-                                               .timestamp_end = timestamp_end}};
+          QueueItem item = {QUEUE_ITEM_TYPE_FRAMES_DROPPED};
+          item.frames_dropped = {TRUE, timestamp, timestamp_end};
           gst_vec_deque_push_tail_struct(self->queue, &item);
           g_cond_signal(&self->queue_cond);
 
@@ -2961,16 +2943,13 @@ restart:
             GST_WARNING_OBJECT(self,
                                "Element queue overrun, dropping old frame");
 
-            QueueItem item = {
-                .type = QUEUE_ITEM_TYPE_FRAMES_DROPPED,
-                .frames_dropped = {
-                    .driver_side = FALSE,
-                    .timestamp_start = tmp->frame.capture_time,
-                    .timestamp_end =
-                        tmp->frame.capture_time +
-                        gst_util_uint64_scale(GST_SECOND,
-                                              self->configured_info.fps_d,
-                                              self->configured_info.fps_n)}};
+            QueueItem item = {QUEUE_ITEM_TYPE_FRAMES_DROPPED};
+            item.frames_dropped = {
+                FALSE, tmp->frame.capture_time,
+                tmp->frame.capture_time +
+                    gst_util_uint64_scale(GST_SECOND,
+                                          self->configured_info.fps_d,
+                                          self->configured_info.fps_n)};
             queue_item_clear(tmp);
             gst_vec_deque_drop_struct(self->queue, i, NULL);
             gst_vec_deque_push_tail_struct(self->queue, &item);
@@ -2988,19 +2967,17 @@ restart:
         discont = false;
       }
 
-      QueueItem item = {
-          .type = QUEUE_ITEM_TYPE_FRAME,
-          .frame = {.capture_time = capture_time,
-                    .video_buffer = video_buffer,
-                    .audio_buffer = audio_buffer,
-                    .anc_buffer = anc_buffer,
-                    .anc_buffer2 = anc_buffer2,
-                    .tc = time_code,
-                    .detected_format =
-                        (self->quad_mode
-                             ? ::GetQuadSizedVideoFormat(current_video_format)
-                             : current_video_format),
-                    .vpid = vpid_a}};
+      QueueItem item = {QUEUE_ITEM_TYPE_FRAME};
+      item.frame = {
+          capture_time,
+          video_buffer,
+          audio_buffer,
+          anc_buffer,
+          anc_buffer2,
+          time_code,
+          (self->quad_mode ? ::GetQuadSizedVideoFormat(current_video_format)
+                           : current_video_format),
+          vpid_a};
 
       GST_TRACE_OBJECT(self, "Queuing frame %" GST_TIME_FORMAT,
                        GST_TIME_ARGS(capture_time));
@@ -3018,11 +2995,8 @@ restart:
         iterations_without_frame++;
       } else {
         if (have_signal || last_detected_video_format != current_video_format) {
-          QueueItem item = {
-              .type = QUEUE_ITEM_TYPE_SIGNAL_CHANGE,
-              .signal_change = {.have_signal = TRUE,
-                                .detected_format = current_video_format,
-                                .vpid = vpid_a}};
+          QueueItem item = {QUEUE_ITEM_TYPE_SIGNAL_CHANGE};
+          item.signal_change = {TRUE, current_video_format, vpid_a};
           last_detected_video_format = current_video_format;
           gst_vec_deque_push_tail_struct(self->queue, &item);
           g_cond_signal(&self->queue_cond);

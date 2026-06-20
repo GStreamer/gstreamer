@@ -1474,21 +1474,12 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
                                          GstBuffer *buffer) {
   GstAjaSink *self = GST_AJA_SINK(bsink);
   GstFlowReturn flow_ret = GST_FLOW_OK;
-  GstAjaAudioMeta *meta;
+  GstAjaAudioMeta* meta = NULL;
   GstBuffer *item_buffer = NULL, *item_audio_buffer = NULL;
-  GstVideoTimeCodeMeta *tc_meta;
+  GstVideoTimeCodeMeta* tc_meta = NULL;
   QueueItem item = {
-      .type = QUEUE_ITEM_TYPE_FRAME,
-      .video_buffer = NULL,
-      .video_map = GST_MAP_INFO_INIT,
-      .audio_buffer = NULL,
-      .audio_map = GST_MAP_INFO_INIT,
-      .tc = NTV2_RP188(),
-      .anc_buffer = NULL,
-      .anc_map = GST_MAP_INFO_INIT,
-      .anc_buffer2 = NULL,
-      .anc_map2 = GST_MAP_INFO_INIT,
-  };
+      QUEUE_ITEM_TYPE_FRAME, NULL, GST_MAP_INFO_INIT, NULL, GST_MAP_INFO_INIT,
+      NTV2_RP188(),          NULL, GST_MAP_INFO_INIT, NULL, GST_MAP_INFO_INIT};
 
   guint video_buffer_size = ::GetVideoActiveSize(
       self->video_format, ::NTV2_FBF_10BIT_YCBCR, self->vanc_mode);
