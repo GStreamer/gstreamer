@@ -19,6 +19,7 @@
  */
 
 #include <gst/gst.h>
+#include <gst/base/gstbasesrc.h>
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
 
@@ -446,6 +447,138 @@ GST_START_TEST (test_tsdemux_stats)
 
 GST_END_TEST;
 
+static void
+handoff_cb (GstElement * fakesink, GstBuffer * buffer, GstPad * pad,
+    GstClockTime * last_ts)
+{
+  GST_LOG ("Buffer %" GST_PTR_FORMAT, buffer);
+
+  /* Just check that the buffer PTS is within 0.1 seconds of the previous
+   * and no gap is introduced at rollover. PTS can go backward too, so
+   * allow for that by checking absolute TS */
+  GstClockTime pts = GST_BUFFER_PTS (buffer);
+
+  if (GST_CLOCK_TIME_IS_VALID (pts)) {
+    if (GST_CLOCK_TIME_IS_VALID (*last_ts)) {
+      GstClockTime pts_diff = ABS (GST_CLOCK_DIFF (*last_ts, pts));
+      GST_LOG ("PTS %" GST_TIMEP_FORMAT " prev %" GST_TIMEP_FORMAT " diff %"
+          GST_TIMEP_FORMAT, &pts, last_ts, &pts_diff);
+      fail_if (pts_diff > 100 * GST_MSECOND);
+    }
+    *last_ts = pts;
+  }
+}
+
+static void
+demux_pad_added (GstElement * demux, GstPad * srcpad, GstElement * pipeline)
+{
+  (void) demux;
+
+  GstCaps *caps = gst_pad_get_current_caps (srcpad);
+  fail_unless (caps != NULL);
+  gst_caps_unref (caps);
+
+  GstElement *sink = gst_bin_get_by_name (GST_BIN (pipeline), "fakesink");
+  fail_if (sink == NULL);
+  GstPad *target = gst_element_get_static_pad (sink, "sink");
+  fail_if (target == NULL);
+
+  GstPadLinkReturn ret = gst_pad_link (srcpad, target);
+  fail_unless (ret == GST_PAD_LINK_OK || ret == GST_PAD_LINK_WAS_LINKED);
+
+  gst_object_unref (target);
+  gst_object_unref (sink);
+}
+
+GST_START_TEST (test_tsdemux_ignore_pcr_rollover)
+{
+  GstClockTime last_ts = GST_CLOCK_TIME_NONE;
+
+  gchar *filepath =
+      g_build_filename (GST_TEST_FILES_PATH, "test_pcr_rollover.ts", NULL);
+  if (!g_file_test (filepath, G_FILE_TEST_EXISTS)) {
+    GST_INFO ("Skipping test, missing file: %s", filepath);
+    g_free (filepath);
+    return;
+  }
+  GST_LOG ("processing file '%s'", filepath);
+
+  char *data;
+  gsize datalen;
+
+  if (!g_file_get_contents (filepath, &data, &datalen, NULL)) {
+    ck_abort_msg ("Failed to read file contents from %s", filepath);
+    g_free (filepath);
+    return;
+  }
+
+  /* We'll send the entire file as a single zero-timestamp
+   * buffer */
+  GstBuffer *buf = gst_buffer_new_wrapped (data, datalen);
+  GST_BUFFER_PTS (buf) = 0;
+
+  GstElement *pipeline = gst_pipeline_new ("pipeline");
+  fail_unless (pipeline != NULL, "Failed to create pipeline!");
+
+  GstBus *bus = gst_element_get_bus (pipeline);
+
+  GstElement *src = gst_element_factory_make ("appsrc", "src");
+  fail_unless (src != NULL, "Failed to create 'appsrc' element!");
+  g_object_set (src, "format", GST_FORMAT_TIME, NULL);
+
+  GstElement *demux = gst_element_factory_make ("tsdemux", "tsdemux");
+  fail_unless (demux != NULL, "Failed to create 'tsdemux' element!");
+  g_object_set (demux, "ignore-pcr", TRUE, NULL);
+  g_signal_connect (demux, "pad-added", G_CALLBACK (demux_pad_added), pipeline);
+
+  GstElement *sink = gst_element_factory_make ("fakesink", "fakesink");
+  fail_unless (sink != NULL, "Failed to create 'fakesink' element!");
+
+  g_object_set (sink, "signal-handoffs", TRUE, NULL);
+  g_signal_connect (sink, "handoff", G_CALLBACK (handoff_cb), &last_ts);
+
+  gst_bin_add_many (GST_BIN (pipeline), src, demux, sink, NULL);
+
+  fail_unless (gst_element_link (src, demux));
+
+  GstStateChangeReturn state_ret =
+      gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  fail_unless (state_ret != GST_STATE_CHANGE_FAILURE);
+
+  GstFlowReturn flowret = GST_FLOW_OK;
+  g_signal_emit_by_name (src, "push-buffer", buf, &flowret);
+  fail_unless (flowret == GST_FLOW_OK);
+  gst_buffer_unref (buf);
+
+  g_signal_emit_by_name (src, "end-of-stream", &flowret);
+  fail_unless (flowret == GST_FLOW_OK);
+
+  if (state_ret == GST_STATE_CHANGE_ASYNC) {
+    GST_LOG ("waiting for pipeline to reach PAUSED state");
+    state_ret = gst_element_get_state (pipeline, NULL, NULL, -1);
+    fail_unless_equals_int (state_ret, GST_STATE_CHANGE_SUCCESS);
+  }
+
+  state_ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_unless (state_ret != GST_STATE_CHANGE_FAILURE);
+
+  GstMessage *msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
+  fail_unless (msg != NULL, "Expected EOS message on bus!");
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+
+  gst_message_unref (msg);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+
+  gst_object_unref (bus);
+  gst_object_unref (pipeline);
+
+  g_free (filepath);
+}
+
+GST_END_TEST;
+
 static Suite *
 mpegtsdemux_suite (void)
 {
@@ -464,6 +597,7 @@ mpegtsdemux_suite (void)
   suite_add_tcase (s, tc);
   tcase_add_test (tc, test_tsdemux_simple);
   tcase_add_test (tc, test_tsdemux_stats);
+  tcase_add_test (tc, test_tsdemux_ignore_pcr_rollover);
 
   return s;
 }
