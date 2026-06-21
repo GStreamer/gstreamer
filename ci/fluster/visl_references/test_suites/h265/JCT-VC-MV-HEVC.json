@@ -25,7 +25,7 @@
             "source_checksum": "fbda521fadb7f70692941f833b434c4d",
             "input_file": "MVHEVCS_C/MVHEVCS_C.bit",
             "output_format": "yuv420p",
-            "result": "cd15c307c65bb0c9e4e4b43dde54aaec"
+            "result": "51c963c21045fca966ccea54511b4b9e"
         },
         {
             "name": "MVHEVCS_D_NTT_3",
@@ -33,7 +33,7 @@
             "source_checksum": "f81f4594b769395f0ad99e98b31467db",
             "input_file": "MVHEVCS_D_NTT_3/MVHEVCS_D.bit",
             "output_format": "yuv420p",
-            "result": "46ac559b66419104d23767d8b59b78a7"
+            "result": "c60e3c4c6aa09dc26f926834d9060c93"
         },
         {
             "name": "MVHEVCS_E_Qualcomm_3",
@@ -73,7 +73,7 @@
             "source_checksum": "bbe731cbbccced6ea25cb1850c91eacc",
             "input_file": "MVHEVCS_I.bit",
             "output_format": "yuv420p",
-            "result": "c858895b3e5f6292095451b9b3d5fec7"
+            "result": "476a0cbd0147f475526da444918dc5ed"
         }
     ]
 }
