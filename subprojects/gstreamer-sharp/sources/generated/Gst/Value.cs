@@ -572,6 +572,16 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_value_take_structure(IntPtr value, IntPtr structure);
+
+		public static void TakeStructure(GLib.Value value, Gst.Structure structure) {
+			IntPtr native_value = GLib.Marshaller.StructureToPtrAlloc (value);
+			structure.Owned = false;
+			gst_value_take_structure(native_value, structure == null ? IntPtr.Zero : structure.Handle);
+			Marshal.FreeHGlobal (native_value);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_value_union(IntPtr dest, IntPtr value1, IntPtr value2);
 
 		public static bool Union(out GLib.Value dest, GLib.Value value1, GLib.Value value2) {

@@ -139,6 +139,17 @@ namespace Gst.RtspServer {
 		}
 
 		[DllImport("gstrtspserver-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_rtsp_context_get_type();
+
+		public static GLib.GType GType { 
+			get {
+				IntPtr raw_ret = gst_rtsp_context_get_type();
+				GLib.GType ret = new GLib.GType(raw_ret);
+				return ret;
+			}
+		}
+
+		[DllImport("gstrtspserver-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtsp_context_pop_current(IntPtr raw);
 
 		public void PopCurrent() {
@@ -180,8 +191,17 @@ namespace Gst.RtspServer {
 			return this.GetType ().FullName.GetHashCode () ^ Server.GetHashCode () ^ Conn.GetHashCode () ^ Client.GetHashCode () ^ request.GetHashCode () ^ uri.GetHashCode () ^ Method.GetHashCode () ^ Auth.GetHashCode () ^ Token.GetHashCode () ^ Session.GetHashCode () ^ Sessmedia.GetHashCode () ^ Factory.GetHashCode () ^ Media.GetHashCode () ^ Stream.GetHashCode () ^ response.GetHashCode () ^ Trans.GetHashCode ();
 		}
 
-		private static GLib.GType GType {
-			get { return GLib.GType.Pointer; }
+		public static explicit operator GLib.Value (Gst.RtspServer.RTSPContext boxed)
+		{
+			GLib.Value val = GLib.Value.Empty;
+			val.Init (Gst.RtspServer.RTSPContext.GType);
+			val.Val = boxed;
+			return val;
+		}
+
+		public static explicit operator Gst.RtspServer.RTSPContext (GLib.Value val)
+		{
+			return (Gst.RtspServer.RTSPContext) val.Val;
 		}
 #endregion
 	}

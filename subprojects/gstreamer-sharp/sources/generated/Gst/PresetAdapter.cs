@@ -19,7 +19,9 @@ namespace Gst {
 			public DeletePresetNativeDelegate DeletePreset;
 			public SetMetaNativeDelegate SetMeta;
 			public GetMetaNativeDelegate GetMeta;
-			[MarshalAs (UnmanagedType.ByValArray, SizeConst=4)]
+			public GetPropertyNativeDelegate GetProperty;
+			public GetPropertyAlternativesNativeDelegate GetPropertyAlternatives;
+			[MarshalAs (UnmanagedType.ByValArray, SizeConst=2)]
 			private IntPtr[] _gstGstReserved;
 		}
 
@@ -36,6 +38,8 @@ namespace Gst {
 			iface.DeletePreset = new DeletePresetNativeDelegate (DeletePreset_cb);
 			iface.SetMeta = new SetMetaNativeDelegate (SetMeta_cb);
 			iface.GetMeta = new GetMetaNativeDelegate (GetMeta_cb);
+			iface.GetProperty = new GetPropertyNativeDelegate (GetProperty_cb);
+			iface.GetPropertyAlternatives = new GetPropertyAlternativesNativeDelegate (GetPropertyAlternatives_cb);
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -176,6 +180,42 @@ namespace Gst {
 			}
 		}
 
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate bool GetPropertyNativeDelegate (IntPtr inst, IntPtr name, IntPtr prop, IntPtr value);
+
+		static bool GetProperty_cb (IntPtr inst, IntPtr name, IntPtr prop, IntPtr value)
+		{
+			try {
+				IPresetImplementor __obj = GLib.Object.GetObject (inst, false) as IPresetImplementor;
+				bool __result;
+				GLib.Value myvalue;
+				__result = __obj.GetProperty (GLib.Marshaller.Utf8PtrToString (name), GLib.Marshaller.Utf8PtrToString (prop), out myvalue);
+				if (value != IntPtr.Zero) System.Runtime.InteropServices.Marshal.StructureToPtr (myvalue, value, false);
+				return __result;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate IntPtr GetPropertyAlternativesNativeDelegate (IntPtr inst, IntPtr name, IntPtr prop);
+
+		static IntPtr GetPropertyAlternatives_cb (IntPtr inst, IntPtr name, IntPtr prop)
+		{
+			try {
+				IPresetImplementor __obj = GLib.Object.GetObject (inst, false) as IPresetImplementor;
+				string[] __result;
+				__result = __obj.GetPropertyAlternatives (GLib.Marshaller.Utf8PtrToString (name), GLib.Marshaller.Utf8PtrToString (prop));
+				return GLib.Marshaller.StringArrayToNullTermStrvPointer (__result);
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
 		static int class_offset = 2 * IntPtr.Size;
 
 		static void Initialize (IntPtr ptr, IntPtr data)
@@ -190,6 +230,8 @@ namespace Gst {
 			native_iface.DeletePreset = iface.DeletePreset;
 			native_iface.SetMeta = iface.SetMeta;
 			native_iface.GetMeta = iface.GetMeta;
+			native_iface.GetProperty = iface.GetProperty;
+			native_iface.GetPropertyAlternatives = iface.GetPropertyAlternatives;
 			Marshal.StructureToPtr (native_iface, ifaceptr, false);
 		}
 
@@ -326,6 +368,34 @@ namespace Gst {
 				string[] ret = GLib.Marshaller.NullTermPtrToStringArray (raw_ret, true);
 				return ret;
 			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_preset_get_property(IntPtr raw, IntPtr name, IntPtr prop, IntPtr value);
+
+		public bool GetProperty(string name, string prop, GLib.Value value) {
+			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			IntPtr native_prop = GLib.Marshaller.StringToPtrGStrdup (prop);
+			IntPtr native_value = GLib.Marshaller.StructureToPtrAlloc (value);
+			bool raw_ret = gst_preset_get_property(Handle, native_name, native_prop, native_value);
+			bool ret = raw_ret;
+			GLib.Marshaller.Free (native_name);
+			GLib.Marshaller.Free (native_prop);
+			Marshal.FreeHGlobal (native_value);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_preset_get_property_alternatives(IntPtr raw, IntPtr name, IntPtr prop);
+
+		public string[] GetPropertyAlternatives(string name, string prop) {
+			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			IntPtr native_prop = GLib.Marshaller.StringToPtrGStrdup (prop);
+			IntPtr raw_ret = gst_preset_get_property_alternatives(Handle, native_name, native_prop);
+			string[] ret = GLib.Marshaller.NullTermPtrToStringArray (raw_ret, true);
+			GLib.Marshaller.Free (native_name);
+			GLib.Marshaller.Free (native_prop);
+			return ret;
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

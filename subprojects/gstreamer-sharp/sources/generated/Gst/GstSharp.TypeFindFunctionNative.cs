@@ -42,7 +42,9 @@ namespace GstSharp {
 
 		void InvokeNative (Gst.TypeFind find)
 		{
-			native_cb (find == null ? IntPtr.Zero : find.Handle, __data);
+			IntPtr native_find = GLib.Marshaller.StructureToPtrAlloc (find);
+			native_cb (native_find, __data);
+			Marshal.FreeHGlobal (native_find);
 		}
 	}
 
@@ -51,7 +53,7 @@ namespace GstSharp {
 		public void NativeCallback (IntPtr find, IntPtr user_data)
 		{
 			try {
-				managed (find == IntPtr.Zero ? null : (Gst.TypeFind) GLib.Opaque.GetOpaque (find, typeof (Gst.TypeFind), false));
+				managed (Gst.TypeFind.New (find));
 				if (release_on_call)
 					gch.Free ();
 			} catch (Exception e) {

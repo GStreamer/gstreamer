@@ -169,6 +169,15 @@ namespace Gst.PbUtils {
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_codec_utils_h264_get_level_limits(int width, int height, int fps_n, int fps_d, uint bitrate, uint max_dec_frame_buffering, byte profile_idc);
+
+		public static Gst.PbUtils.H264LevelLimits CodecUtilsH264GetLevelLimits(int width, int height, int fps_n, int fps_d, uint bitrate, uint max_dec_frame_buffering, byte profile_idc) {
+			IntPtr raw_ret = gst_codec_utils_h264_get_level_limits(width, height, fps_n, fps_d, bitrate, max_dec_frame_buffering, profile_idc);
+			Gst.PbUtils.H264LevelLimits ret = Gst.PbUtils.H264LevelLimits.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_codec_utils_h264_get_profile([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] sps, uint len);
 
 		public static string CodecUtilsH264GetProfile(byte[] sps) {

@@ -34,6 +34,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_static_caps_get_type();
+
+		public static GLib.GType GType { 
+			get {
+				IntPtr raw_ret = gst_static_caps_get_type();
+				GLib.GType ret = new GLib.GType(raw_ret);
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_static_caps_cleanup(IntPtr raw);
 
 		public void Cleanup() {
@@ -77,8 +88,17 @@ namespace Gst {
 			return this.GetType ().FullName.GetHashCode () ^ Caps.GetHashCode () ^ String.GetHashCode ();
 		}
 
-		private static GLib.GType GType {
-			get { return GLib.GType.Pointer; }
+		public static explicit operator GLib.Value (Gst.StaticCaps boxed)
+		{
+			GLib.Value val = GLib.Value.Empty;
+			val.Init (Gst.StaticCaps.GType);
+			val.Val = boxed;
+			return val;
+		}
+
+		public static explicit operator Gst.StaticCaps (GLib.Value val)
+		{
+			return (Gst.StaticCaps) val.Val;
 		}
 #endregion
 	}

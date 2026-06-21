@@ -212,15 +212,6 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_audio_format_info_get_type();
-
-		public static GLib.GType AudioFormatInfoGetType() {
-			IntPtr raw_ret = gst_audio_format_info_get_type();
-			GLib.GType ret = new GLib.GType(raw_ret);
-			return ret;
-		}
-
-		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_format_to_string(int format);
 
 		public static string AudioFormatToString(Gst.Audio.AudioFormat format) {

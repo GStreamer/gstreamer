@@ -51,6 +51,10 @@ namespace Gst {
 			GLib.Marshaller.Free (native_file_name);
 		}
 
+		public static void BinToDotFile(Gst.Bin bin, Gst.DebugGraphDetails details) {
+			BinToDotFile (bin, details, null);
+		}
+
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_debug_bin_to_dot_file_with_ts(IntPtr bin, int details, IntPtr file_name);
 
@@ -58,6 +62,10 @@ namespace Gst {
 			IntPtr native_file_name = GLib.Marshaller.StringToFilenamePtr (file_name);
 			gst_debug_bin_to_dot_file_with_ts(bin == null ? IntPtr.Zero : bin.Handle, (int) details, native_file_name);
 			GLib.Marshaller.Free (native_file_name);
+		}
+
+		public static void BinToDotFileWithTs(Gst.Bin bin, Gst.DebugGraphDetails details) {
+			BinToDotFileWithTs (bin, details, null);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

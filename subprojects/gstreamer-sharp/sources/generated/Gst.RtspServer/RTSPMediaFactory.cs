@@ -522,6 +522,64 @@ namespace Gst.RtspServer {
 			return GLib.Object.GetObject(__result, true) as Gst.RtspServer.RTSPMedia;
 		}
 
+		static CreatePipelineNativeDelegate CreatePipeline_cb_delegate;
+		static CreatePipelineNativeDelegate CreatePipelineVMCallback {
+			get {
+				if (CreatePipeline_cb_delegate == null)
+					CreatePipeline_cb_delegate = new CreatePipelineNativeDelegate (CreatePipeline_cb);
+				return CreatePipeline_cb_delegate;
+			}
+		}
+
+		static void OverrideCreatePipeline (GLib.GType gtype)
+		{
+			OverrideCreatePipeline (gtype, CreatePipelineVMCallback);
+		}
+
+		static void OverrideCreatePipeline (GLib.GType gtype, CreatePipelineNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("create_pipeline"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate IntPtr CreatePipelineNativeDelegate (IntPtr inst, IntPtr media);
+
+		static IntPtr CreatePipeline_cb (IntPtr inst, IntPtr media)
+		{
+			try {
+				RTSPMediaFactory __obj = GLib.Object.GetObject (inst, false) as RTSPMediaFactory;
+				Gst.Element __result;
+				__result = __obj.OnCreatePipeline (GLib.Object.GetObject(media) as Gst.RtspServer.RTSPMedia);
+				return __result == null ? IntPtr.Zero : __result.Handle;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.RtspServer.RTSPMediaFactory), ConnectionMethod="OverrideCreatePipeline")]
+		protected virtual Gst.Element OnCreatePipeline (Gst.RtspServer.RTSPMedia media)
+		{
+			return InternalCreatePipeline (media);
+		}
+
+		private Gst.Element InternalCreatePipeline (Gst.RtspServer.RTSPMedia media)
+		{
+			CreatePipelineNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("create_pipeline"));
+				unmanaged = (CreatePipelineNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(CreatePipelineNativeDelegate));
+			}
+			if (unmanaged == null) return null;
+
+			IntPtr __result = unmanaged (this.Handle, media == null ? IntPtr.Zero : media.Handle);
+			return GLib.Object.GetObject(__result) as Gst.Element;
+		}
+
 		static ConfigureNativeDelegate Configure_cb_delegate;
 		static ConfigureNativeDelegate ConfigureVMCallback {
 			get {

@@ -13,6 +13,8 @@ namespace Gst {
 		string[] PresetNames { 
 			get;
 		}
+		bool GetProperty(string name, string prop, GLib.Value value);
+		string[] GetPropertyAlternatives(string name, string prop);
 		string[] PropertyNames { 
 			get;
 		}
@@ -36,6 +38,8 @@ namespace Gst {
 		bool DeletePreset (string name);
 		bool SetMeta (string name, string tag, string value);
 		bool GetMeta (string name, string tag, out string value);
+		bool GetProperty (string name, string prop, out GLib.Value value);
+		string[] GetPropertyAlternatives (string name, string prop);
 	}
 #endregion
 }

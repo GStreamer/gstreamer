@@ -112,6 +112,23 @@ namespace Gst.Rtsp {
 		}
 
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_rtsp_connection_get_backchannel_method(IntPtr raw);
+
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_rtsp_connection_set_backchannel_method(IntPtr raw, int method);
+
+		public Gst.Rtsp.RTSPBackchannelHttpMethod BackchannelMethod { 
+			get {
+				int raw_ret = gst_rtsp_connection_get_backchannel_method(Handle);
+				Gst.Rtsp.RTSPBackchannelHttpMethod ret = (Gst.Rtsp.RTSPBackchannelHttpMethod) raw_ret;
+				return ret;
+			}
+			set {
+				gst_rtsp_connection_set_backchannel_method(Handle, (int) value);
+			}
+		}
+
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtsp_connection_get_ignore_x_server_reply(IntPtr raw);
 
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

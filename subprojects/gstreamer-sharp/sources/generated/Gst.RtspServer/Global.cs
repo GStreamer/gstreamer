@@ -12,15 +12,6 @@ namespace Gst.RtspServer {
 	public partial class Global {
 
 		[DllImport("gstrtspserver-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_rtsp_context_get_type();
-
-		public static GLib.GType RtspContextGetType() {
-			IntPtr raw_ret = gst_rtsp_context_get_type();
-			GLib.GType ret = new GLib.GType(raw_ret);
-			return ret;
-		}
-
-		[DllImport("gstrtspserver-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_params_get(IntPtr client, IntPtr ctx);
 
 		public static Gst.Rtsp.RTSPResult RtspParamsGet(Gst.RtspServer.RTSPClient client, Gst.RtspServer.RTSPContext ctx) {

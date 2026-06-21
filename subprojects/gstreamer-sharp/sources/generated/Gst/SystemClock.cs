@@ -13,9 +13,24 @@ namespace Gst {
 
 		public SystemClock (IntPtr raw) : base(raw) {}
 
-		protected SystemClock() : base(IntPtr.Zero)
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_system_clock_new(IntPtr name, int clock_type);
+
+		public SystemClock (string name, Gst.ClockType clock_type) : base (IntPtr.Zero)
 		{
-			CreateNativeObject (new string [0], new GLib.Value [0]);
+			if (GetType () != typeof (SystemClock)) {
+				var vals = new List<GLib.Value> ();
+				var names = new List<string> ();
+				names.Add ("name");
+				vals.Add (new GLib.Value (name));
+				names.Add ("clock_type");
+				vals.Add (new GLib.Value (clock_type));
+				CreateNativeObject (names.ToArray (), vals.ToArray ());
+				return;
+			}
+			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			Raw = gst_system_clock_new(native_name, (int) clock_type);
+			GLib.Marshaller.Free (native_name);
 		}
 
 		[GLib.Property ("clock-type")]

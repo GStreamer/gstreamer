@@ -18,6 +18,24 @@ namespace Gst {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern uint gst_plugin_feature_get_rank(IntPtr raw);
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_plugin_feature_set_rank(IntPtr raw, uint rank);
+
+		[GLib.Property ("rank")]
+		public uint Rank {
+			get  {
+				uint raw_ret = gst_plugin_feature_get_rank(Handle);
+				uint ret = raw_ret;
+				return ret;
+			}
+			set  {
+				gst_plugin_feature_set_rank(Handle, value);
+			}
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -108,23 +126,6 @@ namespace Gst {
 				IntPtr raw_ret = gst_plugin_feature_get_plugin_name(Handle);
 				string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
 				return ret;
-			}
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern uint gst_plugin_feature_get_rank(IntPtr raw);
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_plugin_feature_set_rank(IntPtr raw, uint rank);
-
-		public uint Rank { 
-			get {
-				uint raw_ret = gst_plugin_feature_get_rank(Handle);
-				uint ret = raw_ret;
-				return ret;
-			}
-			set {
-				gst_plugin_feature_set_rank(Handle, value);
 			}
 		}
 

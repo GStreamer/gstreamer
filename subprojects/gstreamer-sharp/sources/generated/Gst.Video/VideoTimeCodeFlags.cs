@@ -14,6 +14,7 @@ namespace Gst.Video {
 		None = 0,
 		DropFrame = 1,
 		Interlaced = 2,
+		Discont = 4,
 	}
 
 	internal class VideoTimeCodeFlagsGType {

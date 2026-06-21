@@ -693,24 +693,6 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_static_caps_get_type();
-
-		public static GLib.GType StaticCapsGetType() {
-			IntPtr raw_ret = gst_static_caps_get_type();
-			GLib.GType ret = new GLib.GType(raw_ret);
-			return ret;
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_static_pad_template_get_type();
-
-		public static GLib.GType StaticPadTemplateGetType() {
-			IntPtr raw_ret = gst_static_pad_template_get_type();
-			GLib.GType ret = new GLib.GType(raw_ret);
-			return ret;
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_stream_error_quark();
 
 		public static uint StreamErrorQuark() {
@@ -738,6 +720,20 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_trace_span_end(ulong span_id);
+
+		public static void TraceSpanEnd(ulong span_id) {
+			gst_trace_span_end(span_id);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_trace_span_end_and_clear(ref ulong span_id);
+
+		public static void TraceSpanEndAndClear(ref ulong span_id) {
+			gst_trace_span_end_and_clear(ref span_id);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_tracing_get_active_tracers();
 
 		public static Gst.Tracer[] TracingGetActiveTracers() {
@@ -753,15 +749,6 @@ namespace Gst {
 			IntPtr native_detail = GLib.Marshaller.StringToPtrGStrdup (detail);
 			gst_tracing_register_hook(tracer == null ? IntPtr.Zero : tracer.Handle, native_detail, func);
 			GLib.Marshaller.Free (native_detail);
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_type_find_get_type();
-
-		public static GLib.GType TypeFindGetType() {
-			IntPtr raw_ret = gst_type_find_get_type();
-			GLib.GType ret = new GLib.GType(raw_ret);
-			return ret;
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

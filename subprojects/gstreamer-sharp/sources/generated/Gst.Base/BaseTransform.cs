@@ -1370,6 +1370,64 @@ namespace Gst.Base {
 			return (Gst.FlowReturn) __result;
 		}
 
+		static PrepareAllocatorNativeDelegate PrepareAllocator_cb_delegate;
+		static PrepareAllocatorNativeDelegate PrepareAllocatorVMCallback {
+			get {
+				if (PrepareAllocator_cb_delegate == null)
+					PrepareAllocator_cb_delegate = new PrepareAllocatorNativeDelegate (PrepareAllocator_cb);
+				return PrepareAllocator_cb_delegate;
+			}
+		}
+
+		static void OverridePrepareAllocator (GLib.GType gtype)
+		{
+			OverridePrepareAllocator (gtype, PrepareAllocatorVMCallback);
+		}
+
+		static void OverridePrepareAllocator (GLib.GType gtype, PrepareAllocatorNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("prepare_allocator"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate bool PrepareAllocatorNativeDelegate (IntPtr inst, IntPtr caps);
+
+		static bool PrepareAllocator_cb (IntPtr inst, IntPtr caps)
+		{
+			try {
+				BaseTransform __obj = GLib.Object.GetObject (inst, false) as BaseTransform;
+				bool __result;
+				__result = __obj.OnPrepareAllocator (caps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (caps, typeof (Gst.Caps), false));
+				return __result;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.Base.BaseTransform), ConnectionMethod="OverridePrepareAllocator")]
+		protected virtual bool OnPrepareAllocator (Gst.Caps caps)
+		{
+			return InternalPrepareAllocator (caps);
+		}
+
+		private bool InternalPrepareAllocator (Gst.Caps caps)
+		{
+			PrepareAllocatorNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("prepare_allocator"));
+				unmanaged = (PrepareAllocatorNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(PrepareAllocatorNativeDelegate));
+			}
+			if (unmanaged == null) return false;
+
+			bool __result = unmanaged (this.Handle, caps == null ? IntPtr.Zero : caps.Handle);
+			return __result;
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -1565,14 +1623,22 @@ namespace Gst.Base {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // generate_output
 							, "submit_input_buffer"
+							, "prepare_allocator"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("prepare_allocator"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // prepare_allocator
+							, "generate_output"
 							, "_gst_reserved"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 						new GLib.AbiField("_gst_reserved"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 18 // _gst_reserved
-							, "generate_output"
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 17 // _gst_reserved
+							, "prepare_allocator"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
@@ -1688,6 +1754,22 @@ namespace Gst.Base {
 
 		public void ReconfigureSrc() {
 			gst_base_transform_reconfigure_src(Handle);
+		}
+
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_base_transform_set_allocator(IntPtr raw, IntPtr pool, IntPtr allocator, IntPtr parms, IntPtr query);
+
+		public bool SetAllocator(Gst.BufferPool pool, Gst.Allocator allocator, Gst.AllocationParams parms, Gst.Query query) {
+			IntPtr native_parms = GLib.Marshaller.StructureToPtrAlloc (parms);
+			query.Owned = false;
+			bool raw_ret = gst_base_transform_set_allocator(Handle, pool == null ? IntPtr.Zero : pool.OwnedHandle, allocator == null ? IntPtr.Zero : allocator.OwnedHandle, native_parms, query == null ? IntPtr.Zero : query.Handle);
+			bool ret = raw_ret;
+			Marshal.FreeHGlobal (native_parms);
+			return ret;
+		}
+
+		public bool SetAllocator() {
+			return SetAllocator (null, null, Gst.AllocationParams.Zero, null);
 		}
 
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

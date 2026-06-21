@@ -59,7 +59,9 @@ namespace Gst {
 		static extern void gst_type_find_factory_call_function(IntPtr raw, IntPtr find);
 
 		public void CallFunction(Gst.TypeFind find) {
-			gst_type_find_factory_call_function(Handle, find == null ? IntPtr.Zero : find.Handle);
+			IntPtr native_find = GLib.Marshaller.StructureToPtrAlloc (find);
+			gst_type_find_factory_call_function(Handle, native_find);
+			Marshal.FreeHGlobal (native_find);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

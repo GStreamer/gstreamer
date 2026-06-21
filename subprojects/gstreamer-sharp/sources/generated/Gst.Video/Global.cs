@@ -86,6 +86,39 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_buffer_add_video_dsc_initialization_meta(IntPtr buffer, IntPtr dsc_initialization);
+
+		public static Gst.Video.VideoDSCInitializationMeta BufferAddVideoDscInitializationMeta(Gst.Buffer buffer, Gst.Video.H274DigitallySignedContentInitialization dsc_initialization) {
+			IntPtr native_dsc_initialization = GLib.Marshaller.StructureToPtrAlloc (dsc_initialization);
+			IntPtr raw_ret = gst_buffer_add_video_dsc_initialization_meta(buffer == null ? IntPtr.Zero : buffer.Handle, native_dsc_initialization);
+			Gst.Video.VideoDSCInitializationMeta ret = Gst.Video.VideoDSCInitializationMeta.New (raw_ret);
+			Marshal.FreeHGlobal (native_dsc_initialization);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_buffer_add_video_dsc_selection_meta(IntPtr buffer, IntPtr dsc_selection);
+
+		public static Gst.Video.VideoDSCSelectionMeta BufferAddVideoDscSelectionMeta(Gst.Buffer buffer, Gst.Video.H274DigitallySignedContentSelection dsc_selection) {
+			IntPtr native_dsc_selection = GLib.Marshaller.StructureToPtrAlloc (dsc_selection);
+			IntPtr raw_ret = gst_buffer_add_video_dsc_selection_meta(buffer == null ? IntPtr.Zero : buffer.Handle, native_dsc_selection);
+			Gst.Video.VideoDSCSelectionMeta ret = Gst.Video.VideoDSCSelectionMeta.New (raw_ret);
+			Marshal.FreeHGlobal (native_dsc_selection);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_buffer_add_video_dsc_verification_meta(IntPtr buffer, IntPtr dsc_verification);
+
+		public static Gst.Video.VideoDSCVerificationMeta BufferAddVideoDscVerificationMeta(Gst.Buffer buffer, Gst.Video.H274DigitallySignedContentVerification dsc_verification) {
+			IntPtr native_dsc_verification = GLib.Marshaller.StructureToPtrAlloc (dsc_verification);
+			IntPtr raw_ret = gst_buffer_add_video_dsc_verification_meta(buffer == null ? IntPtr.Zero : buffer.Handle, native_dsc_verification);
+			Gst.Video.VideoDSCVerificationMeta ret = Gst.Video.VideoDSCVerificationMeta.New (raw_ret);
+			Marshal.FreeHGlobal (native_dsc_verification);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_add_video_gl_texture_upload_meta(IntPtr buffer, int texture_orientation, uint n_textures, int texture_type, Gst.VideoSharp.VideoGLTextureUploadNative upload, IntPtr user_data, IntPtr user_data_copy, IntPtr user_data_free);
 
 		public static Gst.Video.VideoGLTextureUploadMeta BufferAddVideoGlTextureUploadMeta(Gst.Buffer buffer, Gst.Video.VideoGLTextureOrientation texture_orientation, uint n_textures, Gst.Video.VideoGLTextureType texture_type, Gst.Video.VideoGLTextureUpload upload, IntPtr user_data_copy, IntPtr user_data_free) {
@@ -225,6 +258,112 @@ namespace Gst.Video {
 			IntPtr native_align = GLib.Marshaller.StructureToPtrAlloc (align);
 			gst_buffer_pool_config_set_video_alignment(config == null ? IntPtr.Zero : config.Handle, native_align);
 			Marshal.FreeHGlobal (native_align);
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_h274_dsc_initialization_copy(IntPtr dst_dsc_init, IntPtr src_dsc_init);
+
+		public static Gst.Video.H274DigitallySignedContentInitialization H274DscInitializationCopy(Gst.Video.H274DigitallySignedContentInitialization src_dsc_init) {
+			Gst.Video.H274DigitallySignedContentInitialization dst_dsc_init;
+			IntPtr native_dst_dsc_init = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Video.H274DigitallySignedContentInitialization)));
+			IntPtr native_src_dsc_init = GLib.Marshaller.StructureToPtrAlloc (src_dsc_init);
+			gst_h274_dsc_initialization_copy(native_dst_dsc_init, native_src_dsc_init);
+			dst_dsc_init = Gst.Video.H274DigitallySignedContentInitialization.New (native_dst_dsc_init);
+			Marshal.FreeHGlobal (native_dst_dsc_init);
+			Marshal.FreeHGlobal (native_src_dsc_init);
+			return dst_dsc_init;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_h274_dsc_initialization_free(IntPtr dsci);
+
+		public static void H274DscInitializationFree(Gst.Video.H274DigitallySignedContentInitialization dsci) {
+			IntPtr native_dsci = GLib.Marshaller.StructureToPtrAlloc (dsci);
+			gst_h274_dsc_initialization_free(native_dsci);
+			Marshal.FreeHGlobal (native_dsci);
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_h274_dsc_selection_copy(IntPtr dst_dsc_sel, IntPtr src_dsc_sel);
+
+		public static Gst.Video.H274DigitallySignedContentSelection H274DscSelectionCopy(Gst.Video.H274DigitallySignedContentSelection src_dsc_sel) {
+			Gst.Video.H274DigitallySignedContentSelection dst_dsc_sel;
+			IntPtr native_dst_dsc_sel = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Video.H274DigitallySignedContentSelection)));
+			IntPtr native_src_dsc_sel = GLib.Marshaller.StructureToPtrAlloc (src_dsc_sel);
+			gst_h274_dsc_selection_copy(native_dst_dsc_sel, native_src_dsc_sel);
+			dst_dsc_sel = Gst.Video.H274DigitallySignedContentSelection.New (native_dst_dsc_sel);
+			Marshal.FreeHGlobal (native_dst_dsc_sel);
+			Marshal.FreeHGlobal (native_src_dsc_sel);
+			return dst_dsc_sel;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_h274_dsc_selection_free(IntPtr dscs);
+
+		public static void H274DscSelectionFree(Gst.Video.H274DigitallySignedContentSelection dscs) {
+			IntPtr native_dscs = GLib.Marshaller.StructureToPtrAlloc (dscs);
+			gst_h274_dsc_selection_free(native_dscs);
+			Marshal.FreeHGlobal (native_dscs);
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_h274_dsc_verification_copy(IntPtr dst_dsc_ver, IntPtr src_dsc_ver);
+
+		public static Gst.Video.H274DigitallySignedContentVerification H274DscVerificationCopy(Gst.Video.H274DigitallySignedContentVerification src_dsc_ver) {
+			Gst.Video.H274DigitallySignedContentVerification dst_dsc_ver;
+			IntPtr native_dst_dsc_ver = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Video.H274DigitallySignedContentVerification)));
+			IntPtr native_src_dsc_ver = GLib.Marshaller.StructureToPtrAlloc (src_dsc_ver);
+			gst_h274_dsc_verification_copy(native_dst_dsc_ver, native_src_dsc_ver);
+			dst_dsc_ver = Gst.Video.H274DigitallySignedContentVerification.New (native_dst_dsc_ver);
+			Marshal.FreeHGlobal (native_dst_dsc_ver);
+			Marshal.FreeHGlobal (native_src_dsc_ver);
+			return dst_dsc_ver;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_h274_dsc_verification_free(IntPtr dscv);
+
+		public static void H274DscVerificationFree(Gst.Video.H274DigitallySignedContentVerification dscv) {
+			IntPtr native_dscv = GLib.Marshaller.StructureToPtrAlloc (dscv);
+			gst_h274_dsc_verification_free(native_dscv);
+			Marshal.FreeHGlobal (native_dscv);
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_h274_user_data_registered_copy(IntPtr dst_rud, IntPtr src_rud);
+
+		public static Gst.Video.H274RegisteredUserData H274UserDataRegisteredCopy(Gst.Video.H274RegisteredUserData src_rud) {
+			Gst.Video.H274RegisteredUserData dst_rud;
+			IntPtr native_dst_rud = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Video.H274RegisteredUserData)));
+			IntPtr native_src_rud = GLib.Marshaller.StructureToPtrAlloc (src_rud);
+			gst_h274_user_data_registered_copy(native_dst_rud, native_src_rud);
+			dst_rud = Gst.Video.H274RegisteredUserData.New (native_dst_rud);
+			Marshal.FreeHGlobal (native_dst_rud);
+			Marshal.FreeHGlobal (native_src_rud);
+			return dst_rud;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_h274_user_data_registered_free(IntPtr rud);
+
+		public static void H274UserDataRegisteredFree(Gst.Video.H274RegisteredUserData rud) {
+			IntPtr native_rud = GLib.Marshaller.StructureToPtrAlloc (rud);
+			gst_h274_user_data_registered_free(native_rud);
+			Marshal.FreeHGlobal (native_rud);
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_h274_user_data_unregistered_copy(IntPtr dst_udu, IntPtr src_udu);
+
+		public static Gst.Video.H274UserDataUnregistered H274UserDataUnregisteredCopy(Gst.Video.H274UserDataUnregistered src_udu) {
+			Gst.Video.H274UserDataUnregistered dst_udu;
+			IntPtr native_dst_udu = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Video.H274UserDataUnregistered)));
+			IntPtr native_src_udu = GLib.Marshaller.StructureToPtrAlloc (src_udu);
+			gst_h274_user_data_unregistered_copy(native_dst_udu, native_src_udu);
+			dst_udu = Gst.Video.H274UserDataUnregistered.New (native_dst_udu);
+			Marshal.FreeHGlobal (native_dst_udu);
+			Marshal.FreeHGlobal (native_src_udu);
+			return dst_udu;
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -1011,6 +1150,60 @@ namespace Gst.Video {
 		public static string VideoDmaDrmFourccToString(uint fourcc, ulong modifier) {
 			IntPtr raw_ret = gst_video_dma_drm_fourcc_to_string(fourcc, modifier);
 			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_dsc_initialization_meta_api_get_type();
+
+		public static GLib.GType VideoDscInitializationMetaApiGetType() {
+			IntPtr raw_ret = gst_video_dsc_initialization_meta_api_get_type();
+			GLib.GType ret = new GLib.GType(raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_dsc_initialization_meta_get_info();
+
+		public static Gst.MetaInfo VideoDscInitializationMetaGetInfo() {
+			IntPtr raw_ret = gst_video_dsc_initialization_meta_get_info();
+			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_dsc_selection_meta_api_get_type();
+
+		public static GLib.GType VideoDscSelectionMetaApiGetType() {
+			IntPtr raw_ret = gst_video_dsc_selection_meta_api_get_type();
+			GLib.GType ret = new GLib.GType(raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_dsc_selection_meta_get_info();
+
+		public static Gst.MetaInfo VideoDscSelectionMetaGetInfo() {
+			IntPtr raw_ret = gst_video_dsc_selection_meta_get_info();
+			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_dsc_verification_meta_api_get_type();
+
+		public static GLib.GType VideoDscVerificationMetaApiGetType() {
+			IntPtr raw_ret = gst_video_dsc_verification_meta_api_get_type();
+			GLib.GType ret = new GLib.GType(raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_dsc_verification_meta_get_info();
+
+		public static Gst.MetaInfo VideoDscVerificationMetaGetInfo() {
+			IntPtr raw_ret = gst_video_dsc_verification_meta_get_info();
+			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
 			return ret;
 		}
 

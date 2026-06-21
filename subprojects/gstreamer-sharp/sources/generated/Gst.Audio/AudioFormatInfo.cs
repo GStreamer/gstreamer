@@ -46,6 +46,17 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_audio_format_info_get_type();
+
+		public static GLib.GType GType { 
+			get {
+				IntPtr raw_ret = gst_audio_format_info_get_type();
+				GLib.GType ret = new GLib.GType(raw_ret);
+				return ret;
+			}
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_format_info_fill_silence(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]IntPtr[] dest, UIntPtr length);
 
 		public void FillSilence(IntPtr[] dest) {
@@ -77,8 +88,17 @@ namespace Gst.Audio {
 			return this.GetType ().FullName.GetHashCode () ^ Format.GetHashCode () ^ Name.GetHashCode () ^ Description.GetHashCode () ^ Flags.GetHashCode () ^ Endianness.GetHashCode () ^ Width.GetHashCode () ^ Depth.GetHashCode () ^ Silence.GetHashCode () ^ UnpackFormat.GetHashCode () ^ UnpackFunc.GetHashCode () ^ PackFunc.GetHashCode ();
 		}
 
-		private static GLib.GType GType {
-			get { return GLib.GType.Pointer; }
+		public static explicit operator GLib.Value (Gst.Audio.AudioFormatInfo boxed)
+		{
+			GLib.Value val = GLib.Value.Empty;
+			val.Init (Gst.Audio.AudioFormatInfo.GType);
+			val.Val = boxed;
+			return val;
+		}
+
+		public static explicit operator Gst.Audio.AudioFormatInfo (GLib.Value val)
+		{
+			return (Gst.Audio.AudioFormatInfo) val.Val;
 		}
 #endregion
 	}

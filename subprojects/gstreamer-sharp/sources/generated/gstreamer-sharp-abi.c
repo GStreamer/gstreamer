@@ -344,11 +344,6 @@ int main (int argc, char *argv[]) {
 	g_print("\"sizeof(GstStructure)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstStructure));
 	g_print("\"GstStructure.type\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstStructure, type));
 	g_print("\"GstStructure.name\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstStructure, name));
-	g_print("\"sizeof(GstTypeFind)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstTypeFind));
-	g_print("\"GstTypeFind.peek\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstTypeFind, peek));
-	g_print("\"GstTypeFind.suggest\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstTypeFind, suggest));
-	g_print("\"GstTypeFind.data\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstTypeFind, data));
-	g_print("\"GstTypeFind.get_length\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstTypeFind, get_length));
 	g_print("\"sizeof(GstAppSinkClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstAppSinkClass));
 	g_print("\"GstAppSinkClass.eos\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAppSinkClass, eos));
 	g_print("\"GstAppSinkClass.new_preroll\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAppSinkClass, new_preroll));
@@ -448,6 +443,7 @@ int main (int argc, char *argv[]) {
 	g_print("\"GstAudioEncoderClass.transform_meta\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAudioEncoderClass, transform_meta));
 	g_print("\"GstAudioEncoderClass.sink_query\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAudioEncoderClass, sink_query));
 	g_print("\"GstAudioEncoderClass.src_query\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAudioEncoderClass, src_query));
+	g_print("\"GstAudioEncoderClass.prepare_allocator\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAudioEncoderClass, prepare_allocator));
 	g_print("\"sizeof(GstAudioEncoder)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstAudioEncoder));
 	g_print("\"GstAudioEncoder.sinkpad\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAudioEncoder, sinkpad));
 	g_print("\"GstAudioEncoder.srcpad\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAudioEncoder, srcpad));
@@ -560,6 +556,7 @@ int main (int argc, char *argv[]) {
 	g_print("\"GstAggregatorClass.sink_query_pre_queue\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAggregatorClass, sink_query_pre_queue));
 	g_print("\"GstAggregatorClass.finish_buffer_list\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAggregatorClass, finish_buffer_list));
 	g_print("\"GstAggregatorClass.peek_next_sample\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAggregatorClass, peek_next_sample));
+	g_print("\"GstAggregatorClass.prepare_allocator\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAggregatorClass, prepare_allocator));
 	g_print("\"sizeof(GstAggregator)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstAggregator));
 	g_print("\"GstAggregator.srcpad\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAggregator, srcpad));
 	g_print("\"GstAggregator.priv\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAggregator, priv));
@@ -647,6 +644,7 @@ int main (int argc, char *argv[]) {
 	g_print("\"GstBaseSrcClass.create\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstBaseSrcClass, create));
 	g_print("\"GstBaseSrcClass.alloc\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstBaseSrcClass, alloc));
 	g_print("\"GstBaseSrcClass.fill\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstBaseSrcClass, fill));
+	g_print("\"GstBaseSrcClass.prepare_allocator\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstBaseSrcClass, prepare_allocator));
 	g_print("\"sizeof(GstBaseSrc)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstBaseSrc));
 	g_print("\"GstBaseSrc.srcpad\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstBaseSrc, srcpad));
 	g_print("\"GstBaseSrc.live_lock\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstBaseSrc, live_lock));
@@ -690,6 +688,7 @@ int main (int argc, char *argv[]) {
 	g_print("\"GstBaseTransformClass.transform_ip\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstBaseTransformClass, transform_ip));
 	g_print("\"GstBaseTransformClass.submit_input_buffer\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstBaseTransformClass, submit_input_buffer));
 	g_print("\"GstBaseTransformClass.generate_output\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstBaseTransformClass, generate_output));
+	g_print("\"GstBaseTransformClass.prepare_allocator\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstBaseTransformClass, prepare_allocator));
 	g_print("\"sizeof(GstBaseTransform)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstBaseTransform));
 	g_print("\"GstBaseTransform.sinkpad\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstBaseTransform, sinkpad));
 	g_print("\"GstBaseTransform.srcpad\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstBaseTransform, srcpad));
@@ -962,6 +961,7 @@ int main (int argc, char *argv[]) {
 	g_print("\"GstVideoEncoderClass.sink_query\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstVideoEncoderClass, sink_query));
 	g_print("\"GstVideoEncoderClass.src_query\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstVideoEncoderClass, src_query));
 	g_print("\"GstVideoEncoderClass.transform_meta\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstVideoEncoderClass, transform_meta));
+	g_print("\"GstVideoEncoderClass.prepare_allocator\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstVideoEncoderClass, prepare_allocator));
 	g_print("\"sizeof(GstVideoEncoder)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstVideoEncoder));
 	g_print("\"GstVideoEncoder.sinkpad\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstVideoEncoder, sinkpad));
 	g_print("\"GstVideoEncoder.srcpad\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstVideoEncoder, srcpad));

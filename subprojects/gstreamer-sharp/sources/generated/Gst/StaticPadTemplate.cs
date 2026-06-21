@@ -26,6 +26,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_static_pad_template_get_type();
+
+		public static GLib.GType GType { 
+			get {
+				IntPtr raw_ret = gst_static_pad_template_get_type();
+				GLib.GType ret = new GLib.GType(raw_ret);
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_static_pad_template_get(IntPtr raw);
 
 		public Gst.PadTemplate Get() {
@@ -73,8 +84,17 @@ namespace Gst {
 			return this.GetType ().FullName.GetHashCode () ^ NameTemplate.GetHashCode () ^ Direction.GetHashCode () ^ Presence.GetHashCode () ^ StaticCaps.GetHashCode ();
 		}
 
-		private static GLib.GType GType {
-			get { return GLib.GType.Pointer; }
+		public static explicit operator GLib.Value (Gst.StaticPadTemplate boxed)
+		{
+			GLib.Value val = GLib.Value.Empty;
+			val.Init (Gst.StaticPadTemplate.GType);
+			val.Val = boxed;
+			return val;
+		}
+
+		public static explicit operator Gst.StaticPadTemplate (GLib.Value val)
+		{
+			return (Gst.StaticPadTemplate) val.Val;
 		}
 #endregion
 	}
