@@ -2074,8 +2074,9 @@ get_compatible_profile_caps (GstH265SPS * sps, GstH265Profile profile)
     }
 
     gst_caps_set_value (caps, "profile", &compat_profiles);
-    g_value_unset (&compat_profiles);
   }
+
+  g_value_unset (&compat_profiles);
 
   return caps;
 }

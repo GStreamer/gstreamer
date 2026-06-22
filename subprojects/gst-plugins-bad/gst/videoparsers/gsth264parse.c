@@ -1927,8 +1927,9 @@ get_compatible_profile_caps (GstH264SPS * sps)
       g_value_unset (&value);
     }
     gst_caps_set_value (caps, "profile", &compat_profiles);
-    g_value_unset (&compat_profiles);
   }
+
+  g_value_unset (&compat_profiles);
 
   return caps;
 }
