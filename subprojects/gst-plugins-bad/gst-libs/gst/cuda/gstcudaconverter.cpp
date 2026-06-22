@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include "gstcudaconverter.h"
+#include <gst/cuda/gstcuda.h>
 #include <gst/cuda/gstcuda-private.h>
 #include <gst/cuda/gstcudanvrtc-private.h>
 #include <string.h>
@@ -1735,18 +1735,31 @@ default_stream_ordered_alloc_enabled (void)
   return enabled;
 }
 
+/**
+ * gst_cuda_converter_new:
+ * @context: a #GstCudaContext
+ * @in_info: a #GstVideoInfo
+ * @out_info: a #GstVideoInfo
+ * @config: (transfer full) (nullable): a #GstStructure with configuration options
+ *
+ * Creates a new converter instance
+ *
+ * Returns: (transfer full) (nullable): a new #GstCudaConverter instance
+ * or %NULL if conversion is not supported
+ *
+ * Since: 1.30
+ */
 GstCudaConverter *
-gst_cuda_converter_new (const GstVideoInfo * in_info,
-    const GstVideoInfo * out_info, GstCudaContext * context,
-    GstStructure * config)
+gst_cuda_converter_new (GstCudaContext * context, const GstVideoInfo * in_info,
+    const GstVideoInfo * out_info, GstStructure * config)
 {
   GstCudaConverter *self;
   GstCudaConverterPrivate *priv;
   gboolean use_stream_ordered = FALSE;
 
+  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), nullptr);
   g_return_val_if_fail (in_info != nullptr, nullptr);
   g_return_val_if_fail (out_info != nullptr, nullptr);
-  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), nullptr);
 
   self = (GstCudaConverter *) g_object_new (GST_TYPE_CUDA_CONVERTER, nullptr);
 
@@ -1881,10 +1894,23 @@ out:
   return ret;
 }
 
+/**
+ * gst_cuda_converter_convert_frame:
+ * @convert: a #GstCudaConverter
+ * @stream: (nullable): a #GstCudaStream
+ * @src_frame: a #GstVideoFrame
+ * @dst_frame: a #GstVideoFrame
+ *
+ * Performs conversion operation
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.30
+ */
 gboolean
 gst_cuda_converter_convert_frame (GstCudaConverter * converter,
-    GstVideoFrame * src_frame, GstVideoFrame * dst_frame, CUstream stream,
-    gboolean * synchronized)
+    GstCudaStream * stream, GstVideoFrame * src_frame,
+    GstVideoFrame * dst_frame)
 {
   GstCudaConverterPrivate *priv;
   const TextureFormat *format;
@@ -1901,8 +1927,12 @@ gst_cuda_converter_convert_frame (GstCudaConverter * converter,
   gint off_y = 0;
 
   g_return_val_if_fail (GST_IS_CUDA_CONVERTER (converter), FALSE);
+  g_return_val_if_fail (stream == nullptr ||
+      GST_IS_CUDA_STREAM (stream), FALSE);
   g_return_val_if_fail (src_frame != nullptr, FALSE);
   g_return_val_if_fail (dst_frame != nullptr, FALSE);
+
+  auto stream_handle = gst_cuda_stream_get_handle (stream);
 
   priv = converter->priv;
   format = priv->texture_fmt;
@@ -1980,7 +2010,7 @@ gst_cuda_converter_convert_frame (GstCudaConverter * converter,
       goto out;
     }
 
-    if (!gst_cuda_converter_unpack_rgb (converter, src_frame, stream))
+    if (!gst_cuda_converter_unpack_rgb (converter, src_frame, stream_handle))
       goto out;
   } else {
     gboolean need_fallback = FALSE;
@@ -2017,7 +2047,7 @@ gst_cuda_converter_convert_frame (GstCudaConverter * converter,
       }
 
       if (!gst_cuda_converter_copy_to_fallback (converter,
-              src_frame, stream, texture)) {
+              src_frame, stream_handle, texture)) {
         goto out;
       }
     }
@@ -2047,7 +2077,7 @@ gst_cuda_converter_convert_frame (GstCudaConverter * converter,
 
   cuda_ret = CuLaunchKernel (priv->main_func, DIV_UP (width, CUDA_BLOCK_X),
       DIV_UP (height, CUDA_BLOCK_Y), 1, CUDA_BLOCK_X, CUDA_BLOCK_Y, 1, 0,
-      stream, args, nullptr);
+      stream_handle, args, nullptr);
 
   if (!gst_cuda_result (cuda_ret)) {
     GST_ERROR_OBJECT (converter, "Couldn't convert frame");
@@ -2055,10 +2085,7 @@ gst_cuda_converter_convert_frame (GstCudaConverter * converter,
   }
 
   if (need_sync)
-    CuStreamSynchronize (stream);
-
-  if (synchronized)
-    *synchronized = need_sync;
+    CuStreamSynchronize (stream_handle);
 
   ret = TRUE;
 

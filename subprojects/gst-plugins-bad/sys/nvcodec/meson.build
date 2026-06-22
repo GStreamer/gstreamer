@@ -1,7 +1,6 @@
 nvcodec_sources = [
   'gstcudabasetransform.c',
   'gstcudacompositor.cpp',
-  'gstcudaconverter.cpp',
   'gstcudaconvertscale.c',
   'gstcudaipc.cpp',
   'gstcudaipcclient.cpp',
@@ -11,11 +10,6 @@ nvcodec_sources = [
   'gstcudamemorycopy.c',
   'gstnvcodecutils.cpp',
   'plugin.c'
-]
-
-# Only docstring-containing headers need listing here
-nvcodec_headers = [
-  'gstcudaconverter.h'
 ]
 
 nvcodec_dgpu_sources = [
@@ -52,7 +46,7 @@ nvcodec_d3d12_sources = [
 ]
 
 doc_sources = []
-foreach s: nvcodec_sources + nvcodec_dgpu_sources + nvcodec_win32_sources + nvcodec_unix_sources + nvcodec_d3d12_sources + nvcodec_headers
+foreach s: nvcodec_sources + nvcodec_dgpu_sources + nvcodec_win32_sources + nvcodec_unix_sources + nvcodec_d3d12_sources
   doc_sources += meson.current_source_dir() / s
 endforeach
 

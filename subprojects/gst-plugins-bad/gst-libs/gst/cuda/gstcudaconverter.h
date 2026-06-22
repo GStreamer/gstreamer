@@ -20,7 +20,7 @@
 #pragma once
 
 #include <gst/video/video.h>
-#include <gst/cuda/gstcuda.h>
+#include <gst/cuda/gstcuda_fwd.h>
 
 G_BEGIN_DECLS
 
@@ -30,12 +30,12 @@ G_BEGIN_DECLS
 #define GST_CUDA_CONVERTER_GET_CLASS(obj)   (GST_CUDA_CONVERTER_CLASS(G_OBJECT_GET_CLASS(obj)))
 #define GST_IS_CUDA_CONVERTER(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CUDA_CONVERTER))
 #define GST_IS_CUDA_CONVERTER_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CUDA_CONVERTER))
-#define GST_CUDA_CONVERTER_CAST(obj)        ((GstCudaConverter*)(obj))
 
-typedef struct _GstCudaConverter GstCudaConverter;
-typedef struct _GstCudaConverterClass GstCudaConverterClass;
-typedef struct _GstCudaConverterPrivate GstCudaConverterPrivate;
-
+/**
+ * GstCudaConverter:
+ *
+ * Since: 1.30
+ */
 struct _GstCudaConverter
 {
   GstObject parent;
@@ -47,6 +47,11 @@ struct _GstCudaConverter
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstCudaConverterClass:
+ *
+ * Since: 1.30
+ */
 struct _GstCudaConverterClass
 {
   GstObjectClass parent_class;
@@ -55,18 +60,21 @@ struct _GstCudaConverterClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
+
+GST_CUDA_API
 GType gst_cuda_converter_get_type (void);
 
-GstCudaConverter *  gst_cuda_converter_new (const GstVideoInfo * in_info,
+GST_CUDA_API
+GstCudaConverter *  gst_cuda_converter_new (GstCudaContext * context,
+                                            const GstVideoInfo * in_info,
                                             const GstVideoInfo * out_info,
-                                            GstCudaContext * context,
                                             GstStructure * config);
 
+GST_CUDA_API
 gboolean            gst_cuda_converter_convert_frame (GstCudaConverter * converter,
+                                                      GstCudaStream * stream,
                                                       GstVideoFrame * src_frame,
-                                                      GstVideoFrame * dst_frame,
-                                                      CUstream cuda_stream,
-                                                      gboolean * synchronized);
+                                                      GstVideoFrame * dst_frame);
 
 G_END_DECLS
 

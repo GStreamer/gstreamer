@@ -24,7 +24,6 @@
 
 #include <gst/cuda/gstcudautils.h>
 #include "gstcudaconvertscale.h"
-#include "gstcudaconverter.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_cuda_base_convert_debug);
 #define GST_CAT_DEFAULT gst_cuda_base_convert_debug
@@ -1437,8 +1436,8 @@ gst_cuda_base_convert_set_info (GstCudaBaseTransform * btrans,
     self->same_caps = TRUE;
   }
 
-  self->converter = gst_cuda_converter_new (in_info,
-      out_info, btrans->context, NULL);
+  self->converter =
+      gst_cuda_converter_new (btrans->context, in_info, out_info, NULL);
   if (!self->converter) {
     GST_ERROR_OBJECT (self, "Couldn't create converter");
     return FALSE;
@@ -1492,7 +1491,6 @@ gst_cuda_base_convert_transform (GstBaseTransform * trans,
   GstCudaMemory *in_cmem, *out_cmem;
   GstCudaStream *in_stream, *out_stream;
   GstCudaStream *selected_stream = NULL;
-  gboolean sync_done = FALSE;
   GstVideoRectangle in_rect;
 
   GstVideoCropMeta *crop_meta = gst_buffer_get_video_crop_meta (inbuf);
@@ -1568,16 +1566,13 @@ gst_cuda_base_convert_transform (GstBaseTransform * trans,
     }
   }
 
-  if (!gst_cuda_converter_convert_frame (self->converter, &in_frame, &out_frame,
-          gst_cuda_stream_get_handle (selected_stream), &sync_done)) {
+  if (!gst_cuda_converter_convert_frame (self->converter, selected_stream,
+          &in_frame, &out_frame)) {
     GST_ERROR_OBJECT (self, "Failed to convert frame");
     ret = GST_FLOW_ERROR;
   }
 
-  if (sync_done) {
-    GST_TRACE_OBJECT (self, "Sync done by converter");
-    GST_MEMORY_FLAG_UNSET (out_cmem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC);
-  } else if (selected_stream != out_stream) {
+  if (selected_stream != out_stream) {
     GST_MEMORY_FLAG_UNSET (out_cmem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC);
     GST_TRACE_OBJECT (self, "Waiting for convert sync");
     gst_cuda_context_push (btrans->context);

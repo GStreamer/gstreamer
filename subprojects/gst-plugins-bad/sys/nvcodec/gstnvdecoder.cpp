@@ -62,7 +62,6 @@
 #include <gst/cuda/gstcuda.h>
 #include <gst/cuda/gstcuda-private.h>
 #include "gstnvdecoder.h"
-#include "gstcudaconverter.h"
 #include "gstnvcodecutils.h"
 #include <string.h>
 #include <string>
@@ -728,8 +727,8 @@ gst_nv_decoder_copy_frame_to_d3d11 (GstNvDecoder * self,
     return GST_FLOW_ERROR;
   }
 
-  convert_ret = gst_cuda_converter_convert_frame (self->converter, &src_frame,
-      &dst_frame, gst_cuda_stream_get_handle (self->stream), nullptr);
+  convert_ret = gst_cuda_converter_convert_frame (self->converter, self->stream,
+      &src_frame, &dst_frame);
   gst_video_frame_unmap (&dst_frame);
   gst_video_frame_unmap (&src_frame);
   gst_buffer_remove_all_memory (self->export_buf);
@@ -1841,8 +1840,8 @@ gst_nv_decoder_ensure_d3d11_output (GstNvDecoder * self, GstElement * element)
       self->info.height);
 
   if (!self->converter) {
-    self->converter = gst_cuda_converter_new (&self->info, &self->output_info,
-        self->context, nullptr);
+    self->converter = gst_cuda_converter_new (self->context, &self->info,
+        &self->output_info, nullptr);
 
     if (!self->converter) {
       GST_WARNING_OBJECT (element, "Couldn't create converter");

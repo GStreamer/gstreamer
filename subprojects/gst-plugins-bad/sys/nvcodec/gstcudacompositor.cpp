@@ -38,7 +38,6 @@
 
 #include <gst/cuda/gstcuda-private.h>
 #include "gstcudacompositor.h"
-#include "gstcudaconverter.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_cuda_compositor_debug);
 #define GST_CAT_DEFAULT gst_cuda_compositor_debug
@@ -729,7 +728,7 @@ gst_cuda_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
 
   std::lock_guard < std::recursive_mutex > lk (priv->lock);
   if (!priv->conv) {
-    priv->conv = gst_cuda_converter_new (&pad->info, &vagg->info, self->context,
+    priv->conv = gst_cuda_converter_new (self->context, &pad->info, &vagg->info,
         nullptr);
     if (!priv->conv) {
       GST_ERROR_OBJECT (self, "Couldn't create converter");
@@ -1708,8 +1707,8 @@ gst_cuda_compositor_aggregate_frames (GstVideoAggregator * vagg,
     g_object_set (pad_priv->conv, "src-x", x - x_offset, "src-y", y - y_offset,
         "src-width", w + x_offset, "src-height", h + y_offset, nullptr);
 
-    if (!gst_cuda_converter_convert_frame (pad_priv->conv, in_frame,
-            &frame, stream_handle, nullptr)) {
+    if (!gst_cuda_converter_convert_frame (pad_priv->conv, stream, in_frame,
+            &frame)) {
       GST_ERROR_OBJECT (pad, "Couldn't convert frame");
       ret = GST_FLOW_ERROR;
       break;

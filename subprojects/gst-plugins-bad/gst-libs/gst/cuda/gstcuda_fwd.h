@@ -47,3 +47,8 @@ typedef struct _GstCudaMemoryPoolPrivate GstCudaMemoryPoolPrivate;
 typedef struct _GstCudaBufferPool GstCudaBufferPool;
 typedef struct _GstCudaBufferPoolClass GstCudaBufferPoolClass;
 typedef struct _GstCudaBufferPoolPrivate GstCudaBufferPoolPrivate;
+
+typedef struct _GstCudaConverter GstCudaConverter;
+typedef struct _GstCudaConverterClass GstCudaConverterClass;
+typedef struct _GstCudaConverterPrivate GstCudaConverterPrivate;
+
