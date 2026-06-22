@@ -21,9 +21,8 @@
 #include "config.h"
 #endif
 
-#include "gstcudamemory.h"
-#include "gstcudautils.h"
-#include "gstcuda-private.h"
+#include <gst/cuda/gstcuda.h>
+#include <gst/cuda/gstcuda-private.h>
 
 #include <string.h>
 #include <map>

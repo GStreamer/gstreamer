@@ -12,6 +12,7 @@ cuda_sources = files([
 
 cuda_headers = files([
   'cuda-prelude.h',
+  'gstcuda_fwd.h',
   'gstcuda.h',
   'gstcudabufferpool.h',
   'gstcudacontext.h',

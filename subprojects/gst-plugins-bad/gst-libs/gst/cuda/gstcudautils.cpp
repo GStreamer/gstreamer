@@ -21,9 +21,8 @@
 #include "config.h"
 #endif
 
-#include "gstcudautils.h"
-#include "gstcudacontext.h"
-#include "gstcuda-private.h"
+#include <gst/cuda/gstcuda.h>
+#include <gst/cuda/gstcuda-private.h>
 #include <atomic>
 #include <set>
 #include <string>
@@ -46,8 +45,6 @@
 #include "gstcudanvmm-private.h"
 #include <nvbufsurface.h>
 #endif
-
-#include "gstcudamemory.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_cuda_utils_debug);
 #define GST_CAT_DEFAULT gst_cuda_utils_debug

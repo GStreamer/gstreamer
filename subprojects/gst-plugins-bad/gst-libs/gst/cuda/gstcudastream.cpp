@@ -21,10 +21,8 @@
 #include "config.h"
 #endif
 
-#include "cuda-gst.h"
-#include "gstcudastream.h"
-#include "gstcudautils.h"
-#include "gstcuda-private.h"
+#include <gst/cuda/gstcuda.h>
+#include <gst/cuda/gstcuda-private.h>
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category()

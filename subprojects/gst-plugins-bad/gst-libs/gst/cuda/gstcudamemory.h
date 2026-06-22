@@ -20,12 +20,8 @@
 #pragma once
 
 #include <gst/gst.h>
-#include <gst/gstallocator.h>
 #include <gst/video/video.h>
-#include <gst/cuda/cuda-prelude.h>
-#include <gst/cuda/gstcudacontext.h>
-#include <gst/cuda/gstcudastream.h>
-#include <gst/cuda/gstcudamemorypool.h>
+#include <gst/cuda/gstcuda_fwd.h>
 
 G_BEGIN_DECLS
 
@@ -55,17 +51,6 @@ G_BEGIN_DECLS
 #define GST_CUDA_POOL_ALLOCATOR_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_CUDA_POOL_ALLOCATOR,GstCudaPoolAllocatorClass))
 #define GST_IS_CUDA_POOL_ALLOCATOR(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CUDA_POOL_ALLOCATOR))
 #define GST_IS_CUDA_POOL_ALLOCATOR_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_CUDA_POOL_ALLOCATOR))
-
-typedef struct _GstCudaMemory GstCudaMemory;
-typedef struct _GstCudaMemoryPrivate GstCudaMemoryPrivate;
-
-typedef struct _GstCudaAllocator GstCudaAllocator;
-typedef struct _GstCudaAllocatorClass GstCudaAllocatorClass;
-typedef struct _GstCudaAllocatorPrivate GstCudaAllocatorPrivate;
-
-typedef struct _GstCudaPoolAllocator GstCudaPoolAllocator;
-typedef struct _GstCudaPoolAllocatorClass GstCudaPoolAllocatorClass;
-typedef struct _GstCudaPoolAllocatorPrivate GstCudaPoolAllocatorPrivate;
 
 /**
  * GST_MAP_CUDA:

@@ -19,19 +19,13 @@
 
 #pragma once
 
-#include <gst/gst.h>
-#include <gst/cuda/cuda-prelude.h>
-#include <gst/cuda/gstcudacontext.h>
-#include <cuda.h>
+#include <gst/cuda/gstcuda_fwd.h>
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_CUDA_STREAM              (gst_cuda_stream_get_type())
 #define GST_IS_CUDA_STREAM(obj)           (GST_IS_MINI_OBJECT_TYPE(obj, GST_TYPE_CUDA_STREAM))
 #define GST_CUDA_STREAM(obj)              ((GstCudaStream *)obj)
-
-typedef struct _GstCudaStream GstCudaStream;
-typedef struct _GstCudaStreamPrivate GstCudaStreamPrivate;
 
 /**
  * GstCudaStream:

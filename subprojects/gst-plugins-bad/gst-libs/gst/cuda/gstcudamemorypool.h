@@ -20,18 +20,13 @@
 #pragma once
 
 #include <gst/gst.h>
-#include <gst/cuda/cuda-prelude.h>
-#include <gst/cuda/gstcudacontext.h>
-#include <cuda.h>
+#include <gst/cuda/gstcuda_fwd.h>
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_CUDA_MEMORY_POOL         (gst_cuda_memory_pool_get_type())
 #define GST_IS_CUDA_MEMORY_POOL(obj)      (GST_IS_MINI_OBJECT_TYPE(obj, GST_TYPE_CUDA_MEMORY_POOL))
 #define GST_CUDA_MEMORY_POOL(obj)         ((GstCudaMemoryPool *)obj)
-
-typedef struct _GstCudaMemoryPool GstCudaMemoryPool;
-typedef struct _GstCudaMemoryPoolPrivate GstCudaMemoryPoolPrivate;
 
 /**
  * GstCudaMemoryPool:

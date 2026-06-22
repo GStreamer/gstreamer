@@ -19,9 +19,7 @@
 
 #pragma once
 
-#include <gst/gst.h>
-#include <gst/cuda/cuda-prelude.h>
-#include <gst/cuda/cuda-gst.h>
+#include <gst/cuda/gstcuda_fwd.h>
 
 G_BEGIN_DECLS
 
@@ -45,10 +43,6 @@ G_BEGIN_DECLS
  * Since: 1.22
  */
 #define GST_CUDA_CONTEXT_TYPE "gst.cuda.context"
-
-typedef struct _GstCudaContext GstCudaContext;
-typedef struct _GstCudaContextClass GstCudaContextClass;
-typedef struct _GstCudaContextPrivate GstCudaContextPrivate;
 
 /**
  * GstCudaContext:

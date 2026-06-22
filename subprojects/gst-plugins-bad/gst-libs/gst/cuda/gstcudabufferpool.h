@@ -20,10 +20,8 @@
 #pragma once
 
 #include <gst/video/video.h>
-
-#include <gst/cuda/cuda-prelude.h>
+#include <gst/cuda/gstcuda_fwd.h>
 #include <gst/cuda/gstcudamemory.h>
-#include <gst/cuda/gstcudastream.h>
 
 G_BEGIN_DECLS
 
@@ -39,10 +37,6 @@ G_BEGIN_DECLS
  * Since: 1.22
  */
 #define GST_CUDA_BUFFER_POOL_CAST(obj)        ((GstCudaBufferPool*)(obj))
-
-typedef struct _GstCudaBufferPool GstCudaBufferPool;
-typedef struct _GstCudaBufferPoolClass GstCudaBufferPoolClass;
-typedef struct _GstCudaBufferPoolPrivate GstCudaBufferPoolPrivate;
 
 /**
  * GstCudaBufferPool:

@@ -21,12 +21,10 @@
 #include "config.h"
 #endif
 
-#include "cuda-gst.h"
-#include "gstcudanvrtc.h"
-#include "gstcudaloader.h"
+#include <gst/cuda/gstcuda.h>
+#include <gst/cuda/gstcuda-private.h>
 #include <nvrtc.h>
 #include <gmodule.h>
-#include "gstcuda-private.h"
 #include "gstcudanvrtc-private.h"
 #include <string>
 #include <vector>

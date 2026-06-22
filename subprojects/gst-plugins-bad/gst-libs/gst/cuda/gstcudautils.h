@@ -19,11 +19,9 @@
 
 #pragma once
 
-#include <gst/gst.h>
 #include <gst/video/video.h>
-#include <gst/cuda/cuda-prelude.h>
+#include <gst/cuda/gstcuda_fwd.h>
 #include <gst/cuda/cuda-gst.h>
-#include <gst/cuda/gstcudacontext.h>
 
 G_BEGIN_DECLS
 

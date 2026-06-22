@@ -21,10 +21,8 @@
 #include "config.h"
 #endif
 
-#include "cuda-gst.h"
-#include "gstcudamemorypool.h"
-#include "gstcudautils.h"
-#include "gstcuda-private.h"
+#include <gst/cuda/gstcuda.h>
+#include <gst/cuda/gstcuda-private.h>
 #include <string.h>
 
 #ifndef GST_DISABLE_GST_DEBUG
