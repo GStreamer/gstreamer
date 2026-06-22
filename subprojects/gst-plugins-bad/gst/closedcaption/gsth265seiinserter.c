@@ -54,6 +54,44 @@
  * Since: 1.30
  */
 
+/**
+ * SECTION:element-h265timestamper
+ * @title: h265timestamper
+ * @short_description: A timestamp correction element for H.265 streams
+ *
+ * `h265timestamper` updates the DTS (Decoding Time Stamp) of each frame
+ * based on H.265 SPS codec setup data, specifically the frame reordering
+ * information written in the SPS indicating the maximum number of B-frames
+ * allowed.
+ *
+ * In order to determine the DTS of each frame, this element may need to hold
+ * back a few frames in case the codec data indicates that frame reordering is
+ * allowed for the given stream. That means this element may introduce additional
+ * latency for the DTS decision.
+ *
+ * This element can be useful if downstream elements require correct DTS
+ * information but upstream elements either do not provide it at all or the
+ * upstream DTS information is unreliable.
+ *
+ * For example, mp4 muxers typically require both DTS and PTS on the input
+ * buffers, but in case where the input H.265 data comes from Matroska files or
+ * RTP/RTSP streams DTS timestamps may be absent and this element may need to
+ * be used to clean up the DTS timestamps before handing it to the mp4 muxer.
+ *
+ * This is particularly the case where the H.265 stream contains B-frames
+ * (i.e. frame reordering is required), as streams without correct DTS information
+ * will confuse the muxer element and will result in unexpected (or bogus)
+ * duration/framerate/timestamp values in the muxed container stream.
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=video.mkv ! matroskademux ! h265parse ! h265timestamper ! mp4mux ! filesink location=output.mp4
+ * ```
+ *
+ * Since: 1.22
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -550,4 +588,33 @@ gst_h265_sei_inserter_init (GstH265SEIInserter * self)
   /* Set sei_types to ALL for SEI inserter (base class defaults to CC-only) */
   gst_codec_sei_inserter_set_sei_types (GST_CODEC_SEI_INSERTER (self),
       GST_CODEC_SEI_INSERT_ALL);
+}
+
+struct _GstH265Timestamper
+{
+  GstH265BaseSEIInserter parent;
+};
+
+G_DEFINE_TYPE (GstH265Timestamper,
+    gst_h265_timestamper, GST_TYPE_H265_BASE_SEI_INSERTER);
+GST_ELEMENT_REGISTER_DEFINE (h265timestamper, "h265timestamper",
+    GST_RANK_NONE, GST_TYPE_H265_TIMESTAMPER);
+
+static void
+gst_h265_timestamper_class_init (GstH265TimestamperClass * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_set_static_metadata (element_class,
+      "H.265 timestamper", "Codec/Video/Timestamper", "Timestamp H.265 streams",
+      "Seungha Yang <seungha@centricular.com>");
+}
+
+static void
+gst_h265_timestamper_init (GstH265Timestamper * self)
+{
+  GstCodecSEIInserter *inserter = GST_CODEC_SEI_INSERTER (self);
+
+  gst_codec_sei_inserter_set_sei_types (inserter, 0);
+  gst_codec_sei_inserter_set_do_timestamp (inserter, TRUE);
 }

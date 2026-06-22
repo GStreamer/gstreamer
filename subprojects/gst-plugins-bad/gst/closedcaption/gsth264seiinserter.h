@@ -61,4 +61,9 @@ G_DECLARE_FINAL_TYPE (GstH264SEIInserter, gst_h264_sei_inserter,
     GST, H264_SEI_INSERTER, GstH264BaseSEIInserter)
 GST_ELEMENT_REGISTER_DECLARE (h264seiinserter);
 
+#define GST_TYPE_H264_TIMESTAMPER (gst_h264_timestamper_get_type())
+G_DECLARE_FINAL_TYPE (GstH264Timestamper, gst_h264_timestamper,
+    GST, H264_TIMESTAMPER, GstH264BaseSEIInserter)
+GST_ELEMENT_REGISTER_DECLARE (h264timestamper);
+
 G_END_DECLS
