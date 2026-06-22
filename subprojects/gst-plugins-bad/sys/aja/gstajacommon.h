@@ -56,7 +56,11 @@ GstAjaAudioMeta *gst_buffer_add_aja_audio_meta(GstBuffer *buffer,
 
 typedef struct {
   CNTV2Card *device;
+#ifdef _WIN32
+  HANDLE fd;
+#else
   int fd;
+#endif
 } GstAjaNtv2Device;
 
 G_GNUC_INTERNAL

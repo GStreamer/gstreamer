@@ -22,7 +22,11 @@
 #endif
 
 #include <fcntl.h>
+#if !defined(_WIN32)
 #include <sys/file.h>
+#endif
+
+#include <memory>
 
 #include "gstajacommon.h"
 
@@ -705,6 +709,8 @@ GstAllocator *gst_aja_allocator_new(GstAjaNtv2Device *device) {
 }
 
 GstAjaNtv2Device *gst_aja_ntv2_device_obtain(const gchar *device_identifier) {
+  using unique_string_ptr = std::unique_ptr<gchar, decltype(&g_free)>;
+
   CNTV2Device *device = new CNTV2Device();
 
   if (!CNTV2DeviceScanner::GetFirstDeviceFromArgument(device_identifier,
@@ -713,20 +719,52 @@ GstAjaNtv2Device *gst_aja_ntv2_device_obtain(const gchar *device_identifier) {
     return NULL;
   }
 
-  gchar *path = g_strdup_printf("/dev/ajantv2%d", device->GetIndexNumber());
-  int fd = open(path, O_RDONLY);
-  if (fd < 0) {
-    GST_ERROR("Failed to open device node %s: %s", path, g_strerror(errno));
-    delete device;
-    g_free(path);
-    return NULL;
+#if defined(_WIN32)
+  HANDLE fd = NULL;
+  {
+    std::string serial;
+    g_assert(device->GetSerialNumberString(serial));
+    unique_string_ptr path(g_strdup_printf("Global\\\\gst-aja-%s", serial.c_str()), &g_free);
+    fd = CreateMutexA(NULL, FALSE, path.get());
+    if (fd == NULL) {
+      GST_ERROR("Failed to open mutex %s (errno = %lu)", path.get(), GetLastError());
+      delete device;
+      return NULL;
+    }
   }
+#else
+  int fd = -1;
+#if defined(__linux__)
+  {
+    unique_string_ptr path(g_strdup_printf("/dev/ajantv2%d", device->GetIndexNumber()), &g_free);
+    fd = open(path.get(), O_RDONLY);
+    if (fd < 0) {
+      GST_ERROR("Failed to open device node %s: %s", path.get(), g_strerror(errno));
+      delete device;
+      return NULL;
+    }
+  }
+#else
+  {
+    std::string serial;
+    g_assert(device->GetSerialNumberString(serial));
+    if (!serial.empty()) {
+      const gchar* tmpdir = g_get_tmp_dir();
+      unique_string_ptr path (g_strdup_printf("%s/gst-aja-%s.lock", tmpdir, serial.c_str()), &g_free);
+      fd = open(path.get(), O_RDONLY);
+      if (fd < 0) {
+        GST_ERROR("Failed to open lockfile %s: %s", path.get(), g_strerror(errno));
+        delete device;
+        return NULL;
+      }
+    }
+  }
+#endif  // !defined(__linux__)
+#endif
 
   GstAjaNtv2Device *dev = g_atomic_rc_box_new0(GstAjaNtv2Device);
   dev->device = device;
   dev->fd = fd;
-
-  g_free(path);
 
   return dev;
 }
@@ -740,17 +778,29 @@ void gst_aja_ntv2_device_unref(GstAjaNtv2Device *device) {
     GstAjaNtv2Device *dev = (GstAjaNtv2Device *)data;
 
     delete dev->device;
+#ifdef _WIN32
+    CloseHandle(dev->fd);
+#else
     close(dev->fd);
+#endif
   });
 }
 
 GstAjaNtv2DeviceLocker::GstAjaNtv2DeviceLocker(GstAjaNtv2Device *device) {
   _device = gst_aja_ntv2_device_ref(device);
+#if defined(_WIN32)
+  WaitForSingleObject(_device->fd, INFINITE);
+#else
   flock(_device->fd, LOCK_EX);
+#endif
 }
 
 GstAjaNtv2DeviceLocker::~GstAjaNtv2DeviceLocker() {
+#ifdef _WIN32
+  ReleaseMutex(_device->fd);
+#else
   flock(_device->fd, LOCK_UN);
+#endif
   gst_aja_ntv2_device_unref(_device);
 }
 
