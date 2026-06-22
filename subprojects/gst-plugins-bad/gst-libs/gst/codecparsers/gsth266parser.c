@@ -6663,31 +6663,6 @@ gst_h266_create_sei_memory_internal (guint8 layer_id,
     guint32 payload_type_data = msg->payloadType;
     gboolean need_align = FALSE;
 
-    GstH266SEIPlacement placement =
-        gst_h266_sei_get_placement (payload_type_data);
-
-    if (placement == GST_H266_SEI_PLACEMENT_UNKNOWN) {
-      GST_WARNING ("SEI payload type %u has invalid placement, skipping",
-          payload_type_data);
-      continue;
-    }
-
-    if (nal_unit_type == GST_H266_NAL_PREFIX_SEI &&
-        placement != GST_H266_SEI_PLACEMENT_PREFIX &&
-        placement != GST_H266_SEI_PLACEMENT_BOTH) {
-      GST_WARNING ("SEI payload type %u not allowed in prefix NAL, skipping",
-          payload_type_data);
-      continue;
-    }
-
-    if (nal_unit_type == GST_H266_NAL_SUFFIX_SEI &&
-        placement != GST_H266_SEI_PLACEMENT_SUFFIX &&
-        placement != GST_H266_SEI_PLACEMENT_BOTH) {
-      GST_WARNING ("SEI payload type %u not allowed in suffix NAL, skipping",
-          payload_type_data);
-      continue;
-    }
-
     switch (payload_type_data) {
       case GST_H266_SEI_REGISTERED_USER_DATA:{
         GstH266RegisteredUserData *rud = &msg->payload.registered_user_data;
@@ -6708,93 +6683,19 @@ gst_h266_create_sei_memory_internal (guint8 layer_id,
         payload_size_data = 16 + udu->size;
         break;
       }
-      case GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION:{
-        GstH274DigitallySignedContentInitialization *dsc_init =
-            &msg->payload.dsc_initialization;
-
-        guint32 payload_size_bits = 0;
-
-        // dsci_id: 8 bits
-        payload_size_bits += 8;
-
-        // dsci_hash_method_type: 8 bits
-        payload_size_bits += 8;
-
-        // dsci_key_retrieval_mode_idc: ue(v)
-        payload_size_bits += count_ue_bits (dsc_init->key_retrieval_mode_idc);
-
-        if (dsc_init->key_retrieval_mode_idc == 1) {
-          // dsci_use_key_register_idx_flag: 1 bit
-          payload_size_bits += 1;
-
-          if (dsc_init->use_key_register_idx_flag) {
-            // dsci_key_register_idx: ue(v)
-            payload_size_bits += count_ue_bits (dsc_init->key_register_idx);
-          }
-        }
-
-        // dsci_content_uuid_present_flag: 1 bit
-        payload_size_bits += 1;
-
-        if (dsc_init->content_uuid_present_flag) {
-          // dsci_content_uuid: 128 bits
-          payload_size_bits += 128;
-        }
-
-        // dsci_num_verification_substreams_minus1: ue(v)
-        payload_size_bits +=
-            count_ue_bits (dsc_init->num_verification_substreams - 1);
-
-        // dsci_ref_substream_flag[i][j]: nested loop
-        for (guint i = 1; i < dsc_init->num_verification_substreams; i++) {
-          for (guint j = 0; j < i; j++) {
-            payload_size_bits += 1;
-          }
-        }
-
-        // dsci_vss_implicit_association_mode_flag: 1 bit
-        // dsci_signed_content_start_flag: 1 bit
-        // dsci_sei_signing_flag: 1 bit
-        payload_size_bits += 3;
-
-        // Byte alignment
-        if (payload_size_bits % 8 != 0) {
-          payload_size_bits += (8 - (payload_size_bits % 8));
-        }
-
-        // dsci_key_source_uri: string with null terminator (byte-aligned)
-        if (dsc_init->key_source_uri != NULL) {
-          gsize str_len = strlen ((const char *) (dsc_init->key_source_uri));
-          payload_size_bits += (str_len + 1) * 8;       // +1 for null terminator
-        }
-
-        // Convert to bytes
-        payload_size_data = (payload_size_bits + 7) / 8;
-
-        break;
-      }
-      case GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION:{
-        // dscs_id (8 bits) + dscs_verification_substream_id (8 bits)
-        payload_size_data = 2;
-        break;
-      }
-      case GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION:{
-        GstH274DigitallySignedContentVerification *dsc_ver =
-            &msg->payload.dsc_verification;
-
-        // dscv_id (8 bits) + dscv_verification_substream_id (8 bits)
-        // + dscv_signature_length_in_octets_minus1 (24 bits) + dscv_signature
+      case GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION:
         payload_size_data =
-            2 + 3 + dsc_ver->signature_length_in_octets_minus1 + 1;
-
-        // If verification_substream_id == 0, add 1 byte for the 1-bit flag + padding
-        if (dsc_ver->verification_substream_id == 0) {
-          payload_size_data += 1;
-          need_align = TRUE;
-        }
-
+            gst_h274_dsci_get_payload_size (&msg->payload.dsc_initialization);
         break;
-      }
+      case GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION:
+        payload_size_data =
+            gst_h274_dscs_get_payload_size (&msg->payload.dsc_selection);
+        break;
+      case GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION:
+        payload_size_data =
+            gst_h274_dscv_get_payload_size (&msg->payload.dsc_verification,
+            &need_align);
+        break;
       default:
         GST_FIXME ("Unsupported SEI type %d", msg->payloadType);
         continue;
