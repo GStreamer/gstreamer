@@ -6014,15 +6014,15 @@ gst_h266_parser_parse_slice_hdr (GstH266Parser * parser,
           parser->ctb_to_tile_col_bd[pre_ctb_addr_x]
           || (ctb_addr_y != pre_ctb_addr_y
               && sps->entropy_coding_sync_enabled_flag)) {
+        if (sh->num_entry_points >= GST_H266_MAX_ENTRY_POINTS) {
+          GST_WARNING ("Too many entry points: %d.", sh->num_entry_points);
+          goto error;
+        }
         sh->entry_point_start_ctu[sh->num_entry_points] = i;
         sh->num_entry_points++;
       }
     }
 
-    if (sh->num_entry_points > GST_H266_MAX_ENTRY_POINTS) {
-      GST_WARNING ("Too many entry points: %d.", sh->num_entry_points);
-      goto error;
-    }
     if (sh->num_entry_points > 0) {
       READ_UE_MAX (&nr, sh->entry_offset_len_minus1, 31);
       for (i = 0; i < sh->num_entry_points; i++) {
