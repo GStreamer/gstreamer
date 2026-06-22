@@ -3774,6 +3774,12 @@ gst_h266_parser_parse_picture_partition (GstH266SPS * sps,
           } else {              /* tile contains multi slices */
             guint16 slice_height_in_ctus;
 
+            if (pps->num_exp_slices_in_tile[i] > GST_H266_MAX_TILE_ROWS) {
+              GST_WARNING ("Too many exp slices %d",
+                  pps->num_exp_slices_in_tile[i]);
+              goto error;
+            }
+
             for (j = 0; j < pps->num_exp_slices_in_tile[i]; j++) {
               if (i + j >= pps->num_slices_in_pic_minus1) {
                 GST_WARNING ("Too many slices %d", i + j + 1);
