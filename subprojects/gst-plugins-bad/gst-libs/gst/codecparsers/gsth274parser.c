@@ -400,3 +400,83 @@ gst_h274_write_sei_dscv (NalWriter * nw,
 error:
   return FALSE;
 }
+
+guint32
+gst_h274_dsci_get_payload_size (GstH274DigitallySignedContentInitialization *
+    dsc_init)
+{
+  guint32 payload_size_bits = 0;
+
+  g_return_val_if_fail (dsc_init != NULL, 0);
+
+  /* dsci_id */
+  payload_size_bits += 8;
+  /* dsci_hash_method_type */
+  payload_size_bits += 8;
+  payload_size_bits += count_ue_bits (dsc_init->key_retrieval_mode_idc);
+
+  if (dsc_init->key_retrieval_mode_idc == 1) {
+    /* dsci_use_key_register_idx_flag */
+    payload_size_bits += 1;
+    if (dsc_init->use_key_register_idx_flag)
+      payload_size_bits += count_ue_bits (dsc_init->key_register_idx);
+  }
+
+  /* dsci_content_uuid_present_flag */
+  payload_size_bits += 1;
+  if (dsc_init->content_uuid_present_flag)
+    /* dsci_content_uuid */
+    payload_size_bits += 128;
+
+  payload_size_bits +=
+      count_ue_bits (dsc_init->num_verification_substreams - 1);
+
+  for (guint i = 1; i < dsc_init->num_verification_substreams; i++) {
+    for (guint j = 0; j < i; j++)
+      /* dsci_ref_substream_flag[i][j] */
+      payload_size_bits += 1;
+  }
+
+  /* vss_implicit_association_mode/signed_content_start/sei_signing */
+  payload_size_bits += 3;
+
+  if (payload_size_bits % 8 != 0)
+    payload_size_bits += (8 - (payload_size_bits % 8));
+
+  if (dsc_init->key_source_uri != NULL) {
+    gsize str_len = strlen ((const char *) dsc_init->key_source_uri);
+    /* null-terminated string */
+    payload_size_bits += (str_len + 1) * 8;
+  }
+
+  return (payload_size_bits + 7) / 8;
+}
+
+guint32
+gst_h274_dscs_get_payload_size (GstH274DigitallySignedContentSelection *
+    dsc_sel)
+{
+  g_return_val_if_fail (dsc_sel != NULL, 0);
+
+  /* dscs_id + dscs_verification_substream_id */
+  return 2;
+}
+
+guint32
+gst_h274_dscv_get_payload_size (GstH274DigitallySignedContentVerification *
+    dsc_ver, gboolean * need_align)
+{
+  guint32 payload_size_data;
+
+  g_return_val_if_fail (dsc_ver != NULL, 0);
+
+  payload_size_data = 2 + 3 + dsc_ver->signature_length_in_octets_minus1 + 1;
+
+  if (dsc_ver->verification_substream_id == 0) {
+    payload_size_data += 1;
+    if (need_align)
+      *need_align = TRUE;
+  }
+
+  return payload_size_data;
+}

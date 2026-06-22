@@ -29,6 +29,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/video/gsth274.h>
 #include <gst/codecparsers/codecparsers-prelude.h>
 
 G_BEGIN_DECLS
@@ -381,6 +382,9 @@ typedef enum
  * @GST_H265_SEI_TIME_CODE: Time code SEI message (D.2.27) (Since: 1.16)
  * @GST_H265_SEI_MASTERING_DISPLAY_COLOUR_VOLUME: Mastering display colour volume information SEI message (D.2.28) (Since: 1.18)
  * @GST_H265_SEI_CONTENT_LIGHT_LEVEL: Content light level information SEI message (D.2.35) (Since: 1.18)
+ * @GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION: Digitally Signed Content Initialization SEI Message (Since: 1.30)
+ * @GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION: Digitally Signed Content Selection SEI Message (Since: 1.30)
+ * @GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION: Digitally Signed Content Verification SEI Message (Since: 1.30)
  * ...
  *
  * The type of SEI message.
@@ -402,6 +406,30 @@ typedef enum
   GST_H265_SEI_TIME_CODE = 136,
   GST_H265_SEI_MASTERING_DISPLAY_COLOUR_VOLUME = 137,
   GST_H265_SEI_CONTENT_LIGHT_LEVEL = 144,
+  /**
+   * GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION:
+   *
+   * Digitally Signed Content Initialization SEI Message
+   *
+   * Since: 1.30
+   */
+  GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION = 220,
+  /**
+   * GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION:
+   *
+   * Digitally Signed Content Selection SEI Message
+   *
+   * Since: 1.30
+   */
+  GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION = 221,
+  /**
+   * GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION:
+   *
+   * Digitally Signed Content Verification SEI Message
+   *
+   * Since: 1.30
+   */
+  GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION = 222,
       /* and more...  */
 } GstH265SEIPayloadType;
 
@@ -1891,6 +1919,33 @@ struct _GstH265SEIMessage
      * Since: 1.24
      */
     GstH265UserDataUnregistered user_data_unregistered;
+
+    /**
+     * GstH265SEIMessage.payload.dsc_initialization:
+     *
+     * Digitally Signed Content Initialization SEI of #GstH274DigitallySignedContentInitialization.
+     *
+     * Since: 1.30
+     */
+    GstH274DigitallySignedContentInitialization dsc_initialization;
+
+    /**
+     * GstH265SEIMessage.payload.dsc_selection:
+     *
+     * Digitally Signed Content Selection SEI of #GstH274DigitallySignedContentSelection.
+     *
+     * Since: 1.30
+     */
+    GstH274DigitallySignedContentSelection dsc_selection;
+
+    /**
+     * GstH265SEIMessage.payload.dsc_verification:
+     *
+     * Digitally Signed Content Verification SEI of #GstH274DigitallySignedContentVerification.
+     *
+     * Since: 1.30
+     */
+    GstH274DigitallySignedContentVerification dsc_verification;
     /* ... could implement more */
   } payload;
 };

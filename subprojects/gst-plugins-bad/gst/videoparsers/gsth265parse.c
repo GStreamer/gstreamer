@@ -24,6 +24,7 @@
 
 #include <gst/base/base.h>
 #include <gst/pbutils/pbutils.h>
+#include <gst/video/gstvideodscmeta.h>
 #include "gstvideoparserselements.h"
 #include "gsth265parse.h"
 
@@ -219,6 +220,18 @@ gst_h265_parse_reset_frame (GstH265Parse * h265parse)
   gst_video_clear_user_data (&h265parse->user_data);
   gst_video_clear_user_data_unregistered (&h265parse->user_data_unregistered,
       FALSE);
+  if (h265parse->dsc_initialization_state == GST_H265_PARSE_SEI_ACTIVE) {
+    gst_h274_dsc_initialization_clear (&h265parse->dsc_initialization);
+    h265parse->dsc_initialization_state = GST_H265_PARSE_SEI_EXPIRED;
+  }
+  if (h265parse->dsc_selection_state == GST_H265_PARSE_SEI_ACTIVE) {
+    gst_h274_dsc_selection_clear (&h265parse->dsc_selection);
+    h265parse->dsc_selection_state = GST_H265_PARSE_SEI_EXPIRED;
+  }
+  if (h265parse->dsc_verification_state == GST_H265_PARSE_SEI_ACTIVE) {
+    gst_h274_dsc_verification_clear (&h265parse->dsc_verification);
+    h265parse->dsc_verification_state = GST_H265_PARSE_SEI_EXPIRED;
+  }
 }
 
 static void
@@ -271,6 +284,9 @@ gst_h265_parse_reset_stream_info (GstH265Parse * h265parse)
 
   gst_video_content_light_level_init (&h265parse->content_light_level);
   h265parse->content_light_level_state = GST_H265_PARSE_SEI_EXPIRED;
+  h265parse->dsc_initialization_state = GST_H265_PARSE_SEI_EXPIRED;
+  h265parse->dsc_selection_state = GST_H265_PARSE_SEI_EXPIRED;
+  h265parse->dsc_verification_state = GST_H265_PARSE_SEI_EXPIRED;
 }
 
 static void
@@ -697,6 +713,24 @@ gst_h265_parse_process_sei (GstH265Parse * h265parse, GstH265NalUnit * nalu)
 
         break;
       }
+      case GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION:
+        gst_h274_dsc_initialization_clear (&h265parse->dsc_initialization);
+        gst_h274_dsc_initialization_copy (&h265parse->dsc_initialization,
+            &sei.payload.dsc_initialization);
+        h265parse->dsc_initialization_state = GST_H265_PARSE_SEI_ACTIVE;
+        break;
+      case GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION:
+        gst_h274_dsc_selection_clear (&h265parse->dsc_selection);
+        gst_h274_dsc_selection_copy (&h265parse->dsc_selection,
+            &sei.payload.dsc_selection);
+        h265parse->dsc_selection_state = GST_H265_PARSE_SEI_ACTIVE;
+        break;
+      case GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION:
+        gst_h274_dsc_verification_clear (&h265parse->dsc_verification);
+        gst_h274_dsc_verification_copy (&h265parse->dsc_verification,
+            &sei.payload.dsc_verification);
+        h265parse->dsc_verification_state = GST_H265_PARSE_SEI_ACTIVE;
+        break;
       default:
         GST_DEBUG_OBJECT (h265parse, "Unknown SEI payload type %d",
             sei.payloadType);
@@ -871,8 +905,9 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       break;
     case GST_H265_NAL_PREFIX_SEI:
     case GST_H265_NAL_SUFFIX_SEI:
-      /* expected state: got-sps */
-      if (!GST_H265_PARSE_STATE_VALID (h265parse, GST_H265_PARSE_STATE_GOT_SPS))
+      if (nal_type == GST_H265_NAL_SUFFIX_SEI
+          && !GST_H265_PARSE_STATE_VALID (h265parse,
+              GST_H265_PARSE_STATE_GOT_SPS))
         return FALSE;
 
       h265parse->header = TRUE;
@@ -3361,6 +3396,18 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   gst_video_push_user_data_unregistered ((GstElement *) h265parse,
       &h265parse->user_data_unregistered, parse_buffer);
+
+  if (h265parse->dsc_initialization_state == GST_H265_PARSE_SEI_ACTIVE)
+    gst_buffer_add_video_dsc_initialization_meta
+        (parse_buffer, &h265parse->dsc_initialization);
+
+  if (h265parse->dsc_selection_state == GST_H265_PARSE_SEI_ACTIVE)
+    gst_buffer_add_video_dsc_selection_meta
+        (parse_buffer, &h265parse->dsc_selection);
+
+  if (h265parse->dsc_verification_state == GST_H265_PARSE_SEI_ACTIVE)
+    gst_buffer_add_video_dsc_verification_meta
+        (parse_buffer, &h265parse->dsc_verification);
 
   gst_h265_parse_reset_frame (h265parse);
 

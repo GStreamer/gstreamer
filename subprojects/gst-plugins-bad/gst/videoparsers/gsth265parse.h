@@ -141,6 +141,15 @@ struct _GstH265Parse
   GstVideoContentLightLevel content_light_level;
   guint content_light_level_state;
 
+  GstH274DigitallySignedContentInitialization dsc_initialization;
+  guint dsc_initialization_state;
+
+  GstH274DigitallySignedContentSelection dsc_selection;
+  guint dsc_selection_state;
+
+  GstH274DigitallySignedContentVerification dsc_verification;
+  guint dsc_verification_state;
+
   /* For forward predicted trickmode */
   gboolean discard_bidirectional;
 };

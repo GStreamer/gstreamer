@@ -1,0 +1,35 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)1;
+event caps: video/x-h265, alignment=(string)au, bit-depth-chroma=(uint)8, bit-depth-luma=(uint)8, chroma-format=(string)4:2:0, codec_data=(buffer)01016000000000000000000000f000fcfdf8f800002b03200001002040010c08ffff01600000030000030000030000030000030000bc8a5731262c09210001004342010801600000030000030000030000030000030000a0162024596f2295cc498b9246d82ce1084308f13e5fb3f5f36797fa3cca725f7fa3cd9cbfaf0a10c2389e5ed922000100074401c1a5581120, height=(int)144, lcevc=(boolean)false, parsed=(boolean)true, profile=(string)main, stream-format=(string)hvc1, tier=(string)main, width=(int)176;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ Profile\\\)\"\;";
+buffer: dts=0:00:00.000000000, flags=discont marker header, meta=GstVideoDSCInitializationMeta, GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=marker header delta-unit, meta=GstVideoDSCSelectionMeta
+buffer: flags=header delta-unit, meta=GstVideoDSCSelectionMeta, GstVideoDSCVerificationMeta
+event eos: (no structure)

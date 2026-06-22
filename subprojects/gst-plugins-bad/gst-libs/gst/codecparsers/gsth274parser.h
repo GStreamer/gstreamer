@@ -130,6 +130,49 @@ GST_CODEC_PARSERS_API
 GstH274ParserResult gst_h274_parser_parse_dscv (GstH274DigitallySignedContentVerification * dsc_ver, NalReader * nr);
 
 /**
+ * gst_h274_dsci_get_payload_size:
+ * @dsc_init: a #GstH274DigitallySignedContentInitialization
+ *
+ * Calculates the payload size in bytes for a Digitally Signed Content
+ * Initialization SEI message.
+ *
+ * Returns: the payload size in bytes
+ *
+ * Since: 1.30
+ */
+GST_CODEC_PARSERS_API
+guint32 gst_h274_dsci_get_payload_size (GstH274DigitallySignedContentInitialization * dsc_init);
+
+/**
+ * gst_h274_dscs_get_payload_size:
+ * @dsc_sel: a #GstH274DigitallySignedContentSelection
+ *
+ * Calculates the payload size in bytes for a Digitally Signed Content
+ * Selection SEI message.
+ *
+ * Returns: the payload size in bytes
+ *
+ * Since: 1.30
+ */
+GST_CODEC_PARSERS_API
+guint32 gst_h274_dscs_get_payload_size (GstH274DigitallySignedContentSelection * dsc_sel);
+
+/**
+ * gst_h274_dscv_get_payload_size:
+ * @dsc_ver: a #GstH274DigitallySignedContentVerification
+ * @need_align: (out): set to %TRUE if byte-alignment trailing bits are needed
+ *
+ * Calculates the payload size in bytes for a Digitally Signed Content
+ * Verification SEI message.
+ *
+ * Returns: the payload size in bytes
+ *
+ * Since: 1.30
+ */
+GST_CODEC_PARSERS_API
+guint32 gst_h274_dscv_get_payload_size (GstH274DigitallySignedContentVerification * dsc_ver, gboolean * need_align);
+
+/**
  * gst_h274_write_sei_registered_user_data:
  * @nw: a NalWriter to write to
  * @rud: #GstH274RegisteredUserData structure holding registered user data to write

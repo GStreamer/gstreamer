@@ -65,10 +65,46 @@
 #endif
 
 #include "nalutils.h"
+#include "gsth274parser.h"
 #include "gsth265parser.h"
 
 #include <gst/base/gstbytereader.h>
 #include <gst/base/gstbitreader.h>
+
+typedef enum
+{
+  GST_H265_SEI_PLACEMENT_UNKNOWN = 0,
+  GST_H265_SEI_PLACEMENT_PREFIX,
+  GST_H265_SEI_PLACEMENT_SUFFIX,
+  GST_H265_SEI_PLACEMENT_BOTH,
+} GstH265SEIPlacement;
+
+#define GST_H265_SEI_PAYLOAD_TYPE_MAX 256
+G_STATIC_ASSERT (GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION
+    < GST_H265_SEI_PAYLOAD_TYPE_MAX);
+
+/* Placement table: SEI payload type → allowed NAL unit position.
+ * Indexed by payloadType (0-255); unregistered/unknown types default to
+ * GST_H265_SEI_PLACEMENT_UNKNOWN (0). Source: ITU-T H.274 Table A-1 and
+ * ITU-T H.265 Annex D payload placement constraints. */
+static const GstH265SEIPlacement
+    gst_h265_sei_payload_placement[GST_H265_SEI_PAYLOAD_TYPE_MAX] = {
+  [GST_H265_SEI_BUF_PERIOD] = GST_H265_SEI_PLACEMENT_PREFIX,
+  [GST_H265_SEI_PIC_TIMING] = GST_H265_SEI_PLACEMENT_PREFIX,
+  [GST_H265_SEI_REGISTERED_USER_DATA] = GST_H265_SEI_PLACEMENT_BOTH,
+  [GST_H265_SEI_USER_DATA_UNREGISTERED] = GST_H265_SEI_PLACEMENT_BOTH,
+  [GST_H265_SEI_RECOVERY_POINT] = GST_H265_SEI_PLACEMENT_PREFIX,
+  [GST_H265_SEI_TIME_CODE] = GST_H265_SEI_PLACEMENT_PREFIX,
+  [GST_H265_SEI_MASTERING_DISPLAY_COLOUR_VOLUME] =
+      GST_H265_SEI_PLACEMENT_PREFIX,
+  [GST_H265_SEI_CONTENT_LIGHT_LEVEL] = GST_H265_SEI_PLACEMENT_PREFIX,
+  [GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION] =
+      GST_H265_SEI_PLACEMENT_PREFIX,
+  [GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION] =
+      GST_H265_SEI_PLACEMENT_PREFIX,
+  [GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION] =
+      GST_H265_SEI_PLACEMENT_SUFFIX,
+};
 
 #define MAX_DPB_SIZE 16
 
@@ -3351,7 +3387,18 @@ gst_h265_parser_parse_sei_message (GstH265Parser * parser,
         res = gst_h265_parser_parse_content_light_level_info (parser,
             &sei->payload.content_light_level, nr);
         break;
+      case GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION:
+        res = (GstH265ParserResult)
+            gst_h274_parser_parse_dsci (&sei->payload.dsc_initialization, nr,
+            payload_size >> 3);
+        break;
+      case GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION:
+        res = (GstH265ParserResult)
+            gst_h274_parser_parse_dscs (&sei->payload.dsc_selection, nr);
+        break;
       default:
+        GST_DEBUG ("Unsupported prefix SEI payload type %u, skipping",
+            sei->payloadType);
         /* Just consume payloadSize bytes, which does not account for
            emulation prevention bytes */
         if (!nal_reader_skip_long (nr, payload_size))
@@ -3361,7 +3408,13 @@ gst_h265_parser_parse_sei_message (GstH265Parser * parser,
     }
   } else if (nal_type == GST_H265_NAL_SUFFIX_SEI) {
     switch (sei->payloadType) {
+      case GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION:
+        res = (GstH265ParserResult)
+            gst_h274_parser_parse_dscv (&sei->payload.dsc_verification, nr);
+        break;
       default:
+        GST_DEBUG ("Unsupported suffix SEI payload type %u, skipping",
+            sei->payloadType);
         /* Just consume payloadSize bytes, which does not account for
            emulation prevention bytes */
         if (!nal_reader_skip_long (nr, payload_size))
@@ -3507,6 +3560,18 @@ gst_h265_sei_copy (GstH265SEIMessage * dst_sei,
       dst_udu->data = g_malloc (src_udu->size);
       memcpy ((guint8 *) dst_udu->data, src_udu->data, src_udu->size);
     }
+  } else if (dst_sei->payloadType ==
+      GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION) {
+    gst_h274_dsc_initialization_copy (&dst_sei->payload.dsc_initialization,
+        &src_sei->payload.dsc_initialization);
+  } else if (dst_sei->payloadType ==
+      GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION) {
+    gst_h274_dsc_selection_copy (&dst_sei->payload.dsc_selection,
+        &src_sei->payload.dsc_selection);
+  } else if (dst_sei->payloadType ==
+      GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION) {
+    gst_h274_dsc_verification_copy (&dst_sei->payload.dsc_verification,
+        &src_sei->payload.dsc_verification);
   }
 
   return TRUE;
@@ -3539,6 +3604,15 @@ gst_h265_sei_free (GstH265SEIMessage * sei)
     GstH265UserDataUnregistered *udu = &sei->payload.user_data_unregistered;
     g_free ((guint8 *) udu->data);
     udu->data = NULL;
+  } else if (sei->payloadType ==
+      GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION) {
+    gst_h274_dsc_initialization_clear (&sei->payload.dsc_initialization);
+  } else if (sei->payloadType ==
+      GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION) {
+    gst_h274_dsc_selection_clear (&sei->payload.dsc_selection);
+  } else if (sei->payloadType ==
+      GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION) {
+    gst_h274_dsc_verification_clear (&sei->payload.dsc_verification);
   }
 }
 
@@ -4477,6 +4551,14 @@ error:
   return FALSE;
 }
 
+static GstH265SEIPlacement
+gst_h265_sei_get_placement (guint payload_type)
+{
+  if (payload_type < GST_H265_SEI_PAYLOAD_TYPE_MAX)
+    return gst_h265_sei_payload_placement[payload_type];
+  return GST_H265_SEI_PLACEMENT_UNKNOWN;
+}
+
 static GstMemory *
 gst_h265_create_sei_memory_internal (guint8 layer_id, guint8 temporal_id_plus1,
     guint nal_prefix_size, gboolean packetized, GArray * messages)
@@ -4484,6 +4566,9 @@ gst_h265_create_sei_memory_internal (guint8 layer_id, guint8 temporal_id_plus1,
   NalWriter nw;
   gint i;
   gboolean have_written_data = FALSE;
+  gboolean has_prefix_only = FALSE;
+  gboolean has_suffix_only = FALSE;
+  guint8 nal_unit_type = GST_H265_NAL_PREFIX_SEI;
 
   nal_writer_init (&nw, nal_prefix_size, packetized);
 
@@ -4492,11 +4577,31 @@ gst_h265_create_sei_memory_internal (guint8 layer_id, guint8 temporal_id_plus1,
 
   GST_DEBUG ("Create SEI nal from array, len: %d", messages->len);
 
+  for (i = 0; i < messages->len; i++) {
+    GstH265SEIMessage *msg = &g_array_index (messages, GstH265SEIMessage, i);
+    GstH265SEIPlacement placement =
+        gst_h265_sei_get_placement (msg->payloadType);
+
+    if (placement == GST_H265_SEI_PLACEMENT_PREFIX)
+      has_prefix_only = TRUE;
+    else if (placement == GST_H265_SEI_PLACEMENT_SUFFIX)
+      has_suffix_only = TRUE;
+  }
+
+  if (has_prefix_only && has_suffix_only) {
+    GST_ERROR ("Cannot create one H.265 SEI NAL from mixed prefix-only and "
+        "suffix-only payload types");
+    goto error;
+  }
+
+  nal_unit_type = has_suffix_only ? GST_H265_NAL_SUFFIX_SEI :
+      GST_H265_NAL_PREFIX_SEI;
+
   /* nal header */
   /* forbidden_zero_bit */
   WRITE_UINT8 (&nw, 0, 1);
   /* nal_unit_type */
-  WRITE_UINT8 (&nw, GST_H265_NAL_PREFIX_SEI, 6);
+  WRITE_UINT8 (&nw, nal_unit_type, 6);
   /* nuh_layer_id */
   WRITE_UINT8 (&nw, layer_id, 6);
   /* nuh_temporal_id_plus1 */
@@ -4609,6 +4714,19 @@ gst_h265_create_sei_memory_internal (guint8 layer_id, guint8 temporal_id_plus1,
          */
         payload_size_data = 4;
         break;
+      case GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION:
+        payload_size_data =
+            gst_h274_dsci_get_payload_size (&msg->payload.dsc_initialization);
+        break;
+      case GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION:
+        payload_size_data =
+            gst_h274_dscs_get_payload_size (&msg->payload.dsc_selection);
+        break;
+      case GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION:
+        payload_size_data =
+            gst_h274_dscv_get_payload_size (&msg->payload.dsc_verification,
+            &need_align);
+        break;
       default:
         break;
     }
@@ -4677,6 +4795,33 @@ gst_h265_create_sei_memory_internal (guint8 layer_id, guint8 temporal_id_plus1,
         }
         have_written_data = TRUE;
         break;
+      case GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION:
+        GST_DEBUG ("Writing \"Digitally Signed Content Initialization\" done");
+        if (!gst_h274_write_sei_dsci (&nw, &msg->payload.dsc_initialization)) {
+          GST_WARNING
+              ("Failed to write \"Digitally Signed Content Initialization\"");
+          goto error;
+        }
+        have_written_data = TRUE;
+        break;
+      case GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION:
+        GST_DEBUG ("Writing \"Digitally Signed Content Selection\" done");
+        if (!gst_h274_write_sei_dscs (&nw, &msg->payload.dsc_selection)) {
+          GST_WARNING
+              ("Failed to write \"Digitally Signed Content Selection\"");
+          goto error;
+        }
+        have_written_data = TRUE;
+        break;
+      case GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION:
+        GST_DEBUG ("Writing \"Digitally Signed Content Verification\" done");
+        if (!gst_h274_write_sei_dscv (&nw, &msg->payload.dsc_verification)) {
+          GST_WARNING
+              ("Failed to write \"Digitally Signed Content Verification\"");
+          goto error;
+        }
+        have_written_data = TRUE;
+        break;
       default:
         break;
     }
@@ -4715,7 +4860,8 @@ error:
  * Creates raw byte-stream format (a.k.a Annex B type) SEI nal unit data
  * from @messages
  *
- * Returns: a #GstMemory containing a PREFIX SEI nal unit
+ * Returns: a #GstMemory containing a PREFIX or SUFFIX SEI nal unit,
+ *   depending on payload placement
  *
  * Since: 1.18
  */
@@ -4741,7 +4887,8 @@ gst_h265_create_sei_memory (guint8 layer_id, guint8 temporal_id_plus1,
  *
  * Creates raw packetized format SEI nal unit data from @messages
  *
- * Returns: a #GstMemory containing a PREFIX SEI nal unit
+ * Returns: a #GstMemory containing a PREFIX or SUFFIX SEI nal unit,
+ *   depending on payload placement
  *
  * Since: 1.18
  */
@@ -4876,15 +5023,27 @@ gst_h265_parser_insert_sei_internal (GstH265Parser * parser,
     new_mem = gst_memory_ref (sei);
   }
 
-  /* insert sei */
-  gst_buffer_append_memory (new_buffer, new_mem);
+  if (sei_nalu.type == GST_H265_NAL_PREFIX_SEI) {
+    /* insert prefix sei */
+    gst_buffer_append_memory (new_buffer, new_mem);
 
-  /* copy the rest */
-  if (!gst_buffer_copy_into (new_buffer, au,
-          GST_BUFFER_COPY_MEMORY, nalu.sc_offset, -1)) {
-    GST_ERROR ("Failed to copy buffer");
-    gst_clear_buffer (&new_buffer);
-    goto out;
+    /* copy the rest */
+    if (!gst_buffer_copy_into (new_buffer, au,
+            GST_BUFFER_COPY_MEMORY, nalu.sc_offset, -1)) {
+      GST_ERROR ("Failed to copy buffer");
+      gst_clear_buffer (&new_buffer);
+      goto out;
+    }
+  } else {
+    /* suffix sei is appended after the AU payload */
+    if (!gst_buffer_copy_into (new_buffer, au,
+            GST_BUFFER_COPY_MEMORY, nalu.sc_offset, -1)) {
+      GST_ERROR ("Failed to copy buffer");
+      gst_clear_buffer (&new_buffer);
+      goto out;
+    }
+
+    gst_buffer_append_memory (new_buffer, new_mem);
   }
 
 out:

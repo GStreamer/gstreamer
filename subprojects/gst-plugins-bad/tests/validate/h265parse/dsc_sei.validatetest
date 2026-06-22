@@ -1,0 +1,7 @@
+meta,
+    args={
+        "filesrc location=$(test_dir)/../../files/h265-dsc-signed.h265 ! h265parse ! identity name=sink ! fakesink",
+    },
+    configs={
+        "$(validateflow), pad=sink:sink, record-buffers=true",
+    }

@@ -7001,6 +7001,15 @@ profiles.</doc>
         <field name="user_data_unregistered" writable="1">
           <type name="H265UserDataUnregistered" c:type="GstH265UserDataUnregistered"/>
         </field>
+        <field name="dsc_initialization" introspectable="0" writable="1">
+          <type c:type="GstH274DigitallySignedContentInitialization"/>
+        </field>
+        <field name="dsc_selection" introspectable="0" writable="1">
+          <type c:type="GstH274DigitallySignedContentSelection"/>
+        </field>
+        <field name="dsc_verification" introspectable="0" writable="1">
+          <type c:type="GstH274DigitallySignedContentVerification"/>
+        </field>
       </union>
     </record>
     <enumeration name="H265SEIPayloadType" c:type="GstH265SEIPayloadType">
@@ -7028,8 +7037,16 @@ profiles.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.h">Mastering display colour volume information SEI message (D.2.28) (Since: 1.18)</doc>
       </member>
       <member name="content_light_level" value="144" c:identifier="GST_H265_SEI_CONTENT_LIGHT_LEVEL">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.h">Content light level information SEI message (D.2.35) (Since: 1.18)
-...</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.h">Content light level information SEI message (D.2.35) (Since: 1.18)</doc>
+      </member>
+      <member name="digitally_signed_content_initialization" value="220" c:identifier="GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.h">Digitally Signed Content Initialization SEI Message</doc>
+      </member>
+      <member name="digitally_signed_content_selection" value="221" c:identifier="GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.h">Digitally Signed Content Selection SEI Message</doc>
+      </member>
+      <member name="digitally_signed_content_verification" value="222" c:identifier="GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.h">Digitally Signed Content Verification SEI Message</doc>
       </member>
     </enumeration>
     <enumeration name="H265SEIPicStructType" c:type="GstH265SEIPicStructType">
@@ -19936,7 +19953,8 @@ the byte and the all the emulations are inserted.</doc>
 from @messages</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.h"/>
       <return-value transfer-ownership="full">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.c">a #GstMemory containing a PREFIX SEI nal unit</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.c">a #GstMemory containing a PREFIX or SUFFIX SEI nal unit,
+  depending on payload placement</doc>
         <type name="Gst.Memory" c:type="GstMemory*"/>
       </return-value>
       <parameters>
@@ -19964,7 +19982,8 @@ from @messages</doc>
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.c">Creates raw packetized format SEI nal unit data from @messages</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.h"/>
       <return-value transfer-ownership="full">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.c">a #GstMemory containing a PREFIX SEI nal unit</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.c">a #GstMemory containing a PREFIX or SUFFIX SEI nal unit,
+  depending on payload placement</doc>
         <type name="Gst.Memory" c:type="GstMemory*"/>
       </return-value>
       <parameters>
@@ -20590,6 +20609,55 @@ If a message is allowed in both prefix and suffix, it will be included in the pr
           <array name="GLib.Array" c:type="GArray**">
             <type name="gpointer" c:type="gpointer"/>
           </array>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="h274_dsci_get_payload_size" c:identifier="gst_h274_dsci_get_payload_size" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">Calculates the payload size in bytes for a Digitally Signed Content
+Initialization SEI message.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">the payload size in bytes</doc>
+        <type name="guint32" c:type="guint32"/>
+      </return-value>
+      <parameters>
+        <parameter name="dsc_init" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">a #GstH274DigitallySignedContentInitialization</doc>
+          <type c:type="GstH274DigitallySignedContentInitialization*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="h274_dscs_get_payload_size" c:identifier="gst_h274_dscs_get_payload_size" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">Calculates the payload size in bytes for a Digitally Signed Content
+Selection SEI message.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">the payload size in bytes</doc>
+        <type name="guint32" c:type="guint32"/>
+      </return-value>
+      <parameters>
+        <parameter name="dsc_sel" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">a #GstH274DigitallySignedContentSelection</doc>
+          <type c:type="GstH274DigitallySignedContentSelection*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="h274_dscv_get_payload_size" c:identifier="gst_h274_dscv_get_payload_size" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">Calculates the payload size in bytes for a Digitally Signed Content
+Verification SEI message.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">the payload size in bytes</doc>
+        <type name="guint32" c:type="guint32"/>
+      </return-value>
+      <parameters>
+        <parameter name="dsc_ver" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">a #GstH274DigitallySignedContentVerification</doc>
+          <type c:type="GstH274DigitallySignedContentVerification*"/>
+        </parameter>
+        <parameter name="need_align" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth274parser.h">set to %TRUE if byte-alignment trailing bits are needed</doc>
+          <type name="gboolean" c:type="gboolean*"/>
         </parameter>
       </parameters>
     </function>

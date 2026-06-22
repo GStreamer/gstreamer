@@ -148,6 +148,53 @@ static guint8 h265_sei_cll[] = {
   0x00, 0x00, 0x00, 0x01, 0x4e, 0x01, 0x90, 0x04, 0x03, 0xe8, 0x01, 0x90, 0x80
 };
 
+static guint8 h265_sei_dsc_initialization[] = {
+  0x00, 0x00, 0x00, 0x01,
+  0x4e, 0x01,
+  0xDC,
+  0x13,
+
+  0x01,
+  0x00,
+  0xA8,
+
+  0x68, 0x74, 0x74, 0x70, 0x73, 0x3a, 0x2f, 0x2f,
+  0x6b, 0x65, 0x79, 0x2e, 0x63, 0x6f, 0x6d, 0x00,
+
+  0x80
+};
+
+static guint8 h265_sei_dsc_selection[] = {
+  0x00, 0x00, 0x00, 0x01,
+  0x4e, 0x01,
+  0xDD,
+  0x02,
+
+  0x01,
+  0x00,
+
+  0x80
+};
+
+static guint8 h265_sei_dsc_verification[] = {
+  0x00, 0x00, 0x00, 0x01,
+  0x50, 0x01,
+  0xDE,
+  0x26,
+
+  0x01,
+  0x00,
+  0x00, 0x03, 0x00, 0x1F,
+
+  0x6B, 0x86, 0xB2, 0x73, 0xFF, 0x34, 0xFC, 0xE1,
+  0x9D, 0x6B, 0x80, 0x4E, 0xFF, 0x5A, 0x3F, 0x57,
+  0x46, 0xAD, 0xA4, 0xEB, 0xE2, 0x4C, 0x8C, 0xE8,
+  0x81, 0x1A, 0xC7, 0xB7, 0x74, 0xFA, 0x73, 0xD9,
+  0xc0,
+
+  0x80,
+};
+
 GST_START_TEST (test_h265_parse_slice_eos_slice_eob)
 {
   GstH265ParserResult res;
@@ -963,6 +1010,159 @@ GST_START_TEST (test_h265_sei_registered_user_data)
 
 GST_END_TEST;
 
+static gboolean
+check_sei_dsc_initialization (const GstH274DigitallySignedContentInitialization
+    * a, const GstH274DigitallySignedContentInitialization * b);
+
+static gboolean
+check_sei_dsc_selection (const GstH274DigitallySignedContentSelection * a,
+    const GstH274DigitallySignedContentSelection * b);
+
+static gboolean
+check_sei_dsc_verification (const GstH274DigitallySignedContentVerification * a,
+    const GstH274DigitallySignedContentVerification * b);
+
+GST_START_TEST (test_h265_sei_dsc_initialization)
+{
+  GstH265ParserResult res;
+  GstH265NalUnit nalu;
+  GArray *messages = NULL;
+  GstH265SEIMessage *sei;
+  GstH265SEIMessage other_sei;
+  GstH274DigitallySignedContentInitialization *dsc_init;
+  GstH274DigitallySignedContentInitialization *other_dsc_init;
+  GstH265Parser *parser = gst_h265_parser_new ();
+
+  res = gst_h265_parser_identify_nalu_unchecked (parser,
+      h265_sei_dsc_initialization, 0,
+      G_N_ELEMENTS (h265_sei_dsc_initialization), &nalu);
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H265_NAL_PREFIX_SEI);
+
+  res = gst_h265_parser_parse_sei (parser, &nalu, &messages);
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  fail_unless (messages != NULL);
+  assert_equals_int (messages->len, 1);
+
+  sei = &g_array_index (messages, GstH265SEIMessage, 0);
+  assert_equals_int (sei->payloadType,
+      GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION);
+
+  dsc_init = &sei->payload.dsc_initialization;
+  assert_equals_int (dsc_init->id, 1);
+  assert_equals_int (dsc_init->hash_method_type, 0);
+  assert_equals_int (dsc_init->num_verification_substreams, 1);
+  fail_unless (dsc_init->key_source_uri != NULL);
+  fail_unless (strcmp ((const char *) dsc_init->key_source_uri,
+          "https://key.com") == 0);
+
+  memset (&other_sei, 0, sizeof (GstH265SEIMessage));
+  fail_unless (gst_h265_sei_copy (&other_sei, sei));
+  assert_equals_int (other_sei.payloadType,
+      GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION);
+
+  other_dsc_init = &other_sei.payload.dsc_initialization;
+  fail_unless (check_sei_dsc_initialization (dsc_init, other_dsc_init));
+
+  g_array_unref (messages);
+  gst_h265_sei_free (&other_sei);
+  gst_h265_parser_free (parser);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_h265_sei_dsc_selection)
+{
+  GstH265ParserResult res;
+  GstH265NalUnit nalu;
+  GArray *messages = NULL;
+  GstH265SEIMessage *sei;
+  GstH265SEIMessage other_sei;
+  GstH274DigitallySignedContentSelection *dsc_sel;
+  GstH274DigitallySignedContentSelection *other_dsc_sel;
+  GstH265Parser *parser = gst_h265_parser_new ();
+
+  res = gst_h265_parser_identify_nalu_unchecked (parser,
+      h265_sei_dsc_selection, 0, G_N_ELEMENTS (h265_sei_dsc_selection), &nalu);
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H265_NAL_PREFIX_SEI);
+
+  res = gst_h265_parser_parse_sei (parser, &nalu, &messages);
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  fail_unless (messages != NULL);
+  assert_equals_int (messages->len, 1);
+
+  sei = &g_array_index (messages, GstH265SEIMessage, 0);
+  assert_equals_int (sei->payloadType,
+      GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION);
+
+  dsc_sel = &sei->payload.dsc_selection;
+  assert_equals_int (dsc_sel->id, 1);
+  assert_equals_int (dsc_sel->verification_substream_id, 0);
+
+  memset (&other_sei, 0, sizeof (GstH265SEIMessage));
+  fail_unless (gst_h265_sei_copy (&other_sei, sei));
+  assert_equals_int (other_sei.payloadType,
+      GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION);
+
+  other_dsc_sel = &other_sei.payload.dsc_selection;
+  fail_unless (check_sei_dsc_selection (dsc_sel, other_dsc_sel));
+
+  g_array_unref (messages);
+  gst_h265_sei_free (&other_sei);
+  gst_h265_parser_free (parser);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_h265_sei_dsc_verification)
+{
+  GstH265ParserResult res;
+  GstH265NalUnit nalu;
+  GArray *messages = NULL;
+  GstH265SEIMessage *sei;
+  GstH265SEIMessage other_sei;
+  GstH274DigitallySignedContentVerification *dsc_ver;
+  GstH274DigitallySignedContentVerification *other_dsc_ver;
+  GstH265Parser *parser = gst_h265_parser_new ();
+
+  res = gst_h265_parser_identify_nalu_unchecked (parser,
+      h265_sei_dsc_verification, 0, G_N_ELEMENTS (h265_sei_dsc_verification),
+      &nalu);
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H265_NAL_SUFFIX_SEI);
+
+  res = gst_h265_parser_parse_sei (parser, &nalu, &messages);
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  fail_unless (messages != NULL);
+  assert_equals_int (messages->len, 1);
+
+  sei = &g_array_index (messages, GstH265SEIMessage, 0);
+  assert_equals_int (sei->payloadType,
+      GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION);
+
+  dsc_ver = &sei->payload.dsc_verification;
+  assert_equals_int (dsc_ver->id, 1);
+  assert_equals_int (dsc_ver->verification_substream_id, 0);
+  assert_equals_int (dsc_ver->signature_length_in_octets_minus1, 31);
+  fail_unless (dsc_ver->signature != NULL);
+  assert_equals_int (dsc_ver->signed_content_end_flag, 1);
+
+  memset (&other_sei, 0, sizeof (GstH265SEIMessage));
+  fail_unless (gst_h265_sei_copy (&other_sei, sei));
+  assert_equals_int (other_sei.payloadType,
+      GST_H265_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION);
+
+  other_dsc_ver = &other_sei.payload.dsc_verification;
+  fail_unless (check_sei_dsc_verification (dsc_ver, other_dsc_ver));
+
+  g_array_unref (messages);
+  gst_h265_sei_free (&other_sei);
+  gst_h265_parser_free (parser);
+}
+
+GST_END_TEST;
+
 typedef gboolean (*SEICheckFunc) (gconstpointer a, gconstpointer b);
 
 static gboolean
@@ -1072,6 +1272,90 @@ check_sei_cll (const GstH265ContentLightLevel * a,
 {
   return (a->max_content_light_level == b->max_content_light_level) &&
       (a->max_pic_average_light_level == b->max_pic_average_light_level);
+}
+
+static gboolean
+check_sei_dsc_initialization (const GstH274DigitallySignedContentInitialization
+    * a, const GstH274DigitallySignedContentInitialization * b)
+{
+  if (a->id != b->id)
+    return FALSE;
+  if (a->hash_method_type != b->hash_method_type)
+    return FALSE;
+  if (a->key_retrieval_mode_idc != b->key_retrieval_mode_idc)
+    return FALSE;
+  if (a->use_key_register_idx_flag != b->use_key_register_idx_flag)
+    return FALSE;
+  if (a->content_uuid_present_flag != b->content_uuid_present_flag)
+    return FALSE;
+  if (a->num_verification_substreams != b->num_verification_substreams)
+    return FALSE;
+  if (a->vss_implicit_association_mode_flag !=
+      b->vss_implicit_association_mode_flag)
+    return FALSE;
+  if (a->signed_content_start_flag != b->signed_content_start_flag)
+    return FALSE;
+  if (a->sei_signing_flag != b->sei_signing_flag)
+    return FALSE;
+
+  if (a->content_uuid_present_flag) {
+    if (memcmp (a->content_uuid, b->content_uuid, 16) != 0)
+      return FALSE;
+  }
+
+  if (a->ref_substream_flag_len != b->ref_substream_flag_len)
+    return FALSE;
+
+  if (a->ref_substream_flag_len > 0) {
+    if (!a->ref_substream_flag || !b->ref_substream_flag)
+      return FALSE;
+    if (memcmp (a->ref_substream_flag, b->ref_substream_flag,
+            a->ref_substream_flag_len) != 0)
+      return FALSE;
+  }
+
+  if ((a->key_source_uri != NULL) != (b->key_source_uri != NULL))
+    return FALSE;
+  if (a->key_source_uri && strcmp ((const char *) a->key_source_uri,
+          (const char *) b->key_source_uri) != 0)
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+check_sei_dsc_selection (const GstH274DigitallySignedContentSelection * a,
+    const GstH274DigitallySignedContentSelection * b)
+{
+  return a->id == b->id &&
+      a->verification_substream_id == b->verification_substream_id;
+}
+
+static gboolean
+check_sei_dsc_verification (const GstH274DigitallySignedContentVerification * a,
+    const GstH274DigitallySignedContentVerification * b)
+{
+  if (a->id != b->id)
+    return FALSE;
+  if (a->verification_substream_id != b->verification_substream_id)
+    return FALSE;
+  if (a->signature_length_in_octets_minus1 !=
+      b->signature_length_in_octets_minus1)
+    return FALSE;
+
+  if (a->signature_length_in_octets_minus1 + 1 > 0) {
+    if (!a->signature || !b->signature)
+      return FALSE;
+    if (memcmp (a->signature, b->signature,
+            a->signature_length_in_octets_minus1 + 1) != 0)
+      return FALSE;
+  }
+
+  if (a->verification_substream_id == 0 &&
+      a->signed_content_end_flag != b->signed_content_end_flag)
+    return FALSE;
+
+  return TRUE;
 }
 
 GST_START_TEST (test_h265_create_sei)
@@ -1192,6 +1476,112 @@ GST_START_TEST (test_h265_create_sei)
     gst_h265_sei_free (&test_list[i].parsed_message);
 
   g_array_unref (msg_array);
+  gst_h265_parser_free (parser);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_h265_create_sei_dsc_verification_suffix)
+{
+  GstH265Parser *parser;
+  GstH265ParserResult parse_ret;
+  GstH265NalUnit nalu;
+  GArray *msg_array = NULL;
+  GstMemory *mem;
+  GstMapInfo info;
+
+  parser = gst_h265_parser_new ();
+
+  parse_ret = gst_h265_parser_identify_nalu_unchecked (parser,
+      h265_sei_dsc_verification, 0, G_N_ELEMENTS (h265_sei_dsc_verification),
+      &nalu);
+  assert_equals_int (parse_ret, GST_H265_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H265_NAL_SUFFIX_SEI);
+
+  parse_ret = gst_h265_parser_parse_sei (parser, &nalu, &msg_array);
+  assert_equals_int (parse_ret, GST_H265_PARSER_OK);
+  fail_unless (msg_array != NULL);
+  assert_equals_int (msg_array->len, 1);
+
+  mem = gst_h265_create_sei_memory (nalu.layer_id, nalu.temporal_id_plus1,
+      4, msg_array);
+  fail_unless (mem != NULL);
+  fail_unless (gst_memory_map (mem, &info, GST_MAP_READ));
+  parse_ret = gst_h265_parser_identify_nalu_unchecked (parser,
+      info.data, 0, info.size, &nalu);
+  gst_memory_unmap (mem, &info);
+  gst_memory_unref (mem);
+  assert_equals_int (parse_ret, GST_H265_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H265_NAL_SUFFIX_SEI);
+
+  mem = gst_h265_create_sei_memory_hevc (nalu.layer_id, nalu.temporal_id_plus1,
+      4, msg_array);
+  fail_unless (mem != NULL);
+  fail_unless (gst_memory_map (mem, &info, GST_MAP_READ));
+  parse_ret = gst_h265_parser_identify_nalu_hevc (parser,
+      info.data, 0, info.size, 4, &nalu);
+  gst_memory_unmap (mem, &info);
+  gst_memory_unref (mem);
+  assert_equals_int (parse_ret, GST_H265_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H265_NAL_SUFFIX_SEI);
+
+  g_array_unref (msg_array);
+  gst_h265_parser_free (parser);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_h265_create_sei_mixed_prefix_suffix_fails)
+{
+  GstH265Parser *parser;
+  GstH265ParserResult parse_ret;
+  GstH265NalUnit nalu;
+  GArray *messages = NULL;
+  GArray *single = NULL;
+  GstH265SEIMessage sei_msg;
+  GstMemory *mem;
+
+  parser = gst_h265_parser_new ();
+  messages = g_array_new (FALSE, FALSE, sizeof (GstH265SEIMessage));
+
+  parse_ret = gst_h265_parser_identify_nalu_unchecked (parser,
+      h265_sei_dsc_initialization, 0,
+      G_N_ELEMENTS (h265_sei_dsc_initialization), &nalu);
+  assert_equals_int (parse_ret, GST_H265_PARSER_OK);
+  parse_ret = gst_h265_parser_parse_sei (parser, &nalu, &single);
+  assert_equals_int (parse_ret, GST_H265_PARSER_OK);
+  assert_equals_int (single->len, 1);
+  memset (&sei_msg, 0, sizeof (sei_msg));
+  fail_unless (gst_h265_sei_copy (&sei_msg,
+          &g_array_index (single, GstH265SEIMessage, 0)));
+  g_array_append_val (messages, sei_msg);
+  g_array_unref (single);
+
+  parse_ret = gst_h265_parser_identify_nalu_unchecked (parser,
+      h265_sei_dsc_verification, 0, G_N_ELEMENTS (h265_sei_dsc_verification),
+      &nalu);
+  assert_equals_int (parse_ret, GST_H265_PARSER_OK);
+  parse_ret = gst_h265_parser_parse_sei (parser, &nalu, &single);
+  assert_equals_int (parse_ret, GST_H265_PARSER_OK);
+  assert_equals_int (single->len, 1);
+  memset (&sei_msg, 0, sizeof (sei_msg));
+  fail_unless (gst_h265_sei_copy (&sei_msg,
+          &g_array_index (single, GstH265SEIMessage, 0)));
+  g_array_append_val (messages, sei_msg);
+  g_array_unref (single);
+
+  mem = gst_h265_create_sei_memory (0, 1, 4, messages);
+  fail_unless (mem == NULL);
+
+  mem = gst_h265_create_sei_memory_hevc (0, 1, 4, messages);
+  fail_unless (mem == NULL);
+
+  for (guint i = 0; i < messages->len; i++) {
+    GstH265SEIMessage *msg = &g_array_index (messages, GstH265SEIMessage, i);
+    gst_h265_sei_free (msg);
+  }
+
+  g_array_unref (messages);
   gst_h265_parser_free (parser);
 }
 
@@ -1513,7 +1903,12 @@ h265parser_suite (void)
   tcase_add_test (tc_chain, test_h265_parse_scc);
   tcase_add_test (tc_chain, test_h265_nal_type_classification);
   tcase_add_test (tc_chain, test_h265_sei_registered_user_data);
+  tcase_add_test (tc_chain, test_h265_sei_dsc_initialization);
+  tcase_add_test (tc_chain, test_h265_sei_dsc_selection);
+  tcase_add_test (tc_chain, test_h265_sei_dsc_verification);
   tcase_add_test (tc_chain, test_h265_create_sei);
+  tcase_add_test (tc_chain, test_h265_create_sei_dsc_verification_suffix);
+  tcase_add_test (tc_chain, test_h265_create_sei_mixed_prefix_suffix_fails);
   tcase_add_test (tc_chain, test_h265_split_hevc);
   tcase_add_test (tc_chain, test_h265_decoder_config_record);
   tcase_add_test (tc_chain, test_h265_parse_partial_nal);
