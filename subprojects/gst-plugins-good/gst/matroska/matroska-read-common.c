@@ -1654,14 +1654,14 @@ exit:
       }
       ret = GST_FLOW_OK;
     } else {
-      GST_ELEMENT_ERROR (common, STREAM, DEMUX, (NULL),
-          ("Demuxer version (2) is too old to read %s version %d",
+      GST_ELEMENT_ERROR (GST_OBJECT_PARENT (common->sinkpad), STREAM, DEMUX,
+          (NULL), ("Demuxer version (2) is too old to read %s version %d",
               GST_STR_NULL (doctype), version));
       ret = GST_FLOW_ERROR;
     }
   } else {
-    GST_ELEMENT_ERROR (common, STREAM, WRONG_TYPE, (NULL),
-        ("Input is not a matroska stream (doctype=%s)", doctype));
+    GST_ELEMENT_ERROR (GST_OBJECT_PARENT (common->sinkpad), STREAM, WRONG_TYPE,
+        (NULL), ("Input is not a matroska stream (doctype=%s)", doctype));
     ret = GST_FLOW_ERROR;
   }
 
