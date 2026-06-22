@@ -45,7 +45,16 @@ libajantv2_dep = dependency(
 
 found_ajantv2 = libajantv2_dep.found()
 
-# Option #2: Try to put together a synthetic dependency (find lib and headers)
+# Option #2: Try the Cerbero wrap or fall back to the subproject
+libajantv2_dep = dependency('libajantv2',
+                            include_type: 'system',
+                            allow_fallback: true,
+                            required: false,
+                            default_options: ['warning_level=0'])
+
+found_ajantv2 = libajantv2_dep.found()
+
+# Option 3: Try to put together a synthetic dependency (find lib and headers)
 if not found_ajantv2
   ajantv2_deps = [
     dependency('threads'),
@@ -183,16 +192,8 @@ if not found_ajantv2
   endif
 endif
 
-# Option 3: fall back to the subproject
 if not found_ajantv2
-  libajantv2_dep = dependency('libajantv2',
-                              include_type: 'system',
-                              allow_fallback: true,
-                              required: aja_option,
-                              default_options: ['warning_level=0'])
-  if not libajantv2_dep.found()
-    subdir_done()
-  endif
+  subdir_done()
 endif
 
 gstaja = library('gstaja',
