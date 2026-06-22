@@ -50,27 +50,11 @@ struct _GstH264CCInserterClass
 GType gst_h264_cc_inserter_get_type (void);
 GST_ELEMENT_REGISTER_DECLARE (h264ccinserter);
 
-#define GST_TYPE_H264_SEI_INSERTER             (gst_h264_sei_inserter_get_type())
-#define GST_H264_SEI_INSERTER(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_H264_SEI_INSERTER,GstH264SEIInserter))
-#define GST_H264_SEI_INSERTER_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_H264_SEI_INSERTER,GstH264SEIInserterClass))
-#define GST_IS_H264_SEI_INSERTER(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_H264_SEI_INSERTER))
-#define GST_IS_H264_SEI_INSERTER_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_H264_SEI_INSERTER))
-#define GST_H264_SEI_INSERTER_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_H264_SEI_INSERTER,GstH264SEIInserterClass))
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstH264CCInserter, gst_object_unref)
 
-typedef struct _GstH264SEIInserter GstH264SEIInserter;
-typedef struct _GstH264SEIInserterClass GstH264SEIInserterClass;
-
-struct _GstH264SEIInserter
-{
-  GstH264CCInserter parent;
-};
-
-struct _GstH264SEIInserterClass
-{
-  GstH264CCInserterClass parent_class;
-};
-
-GType gst_h264_sei_inserter_get_type (void);
+#define GST_TYPE_H264_SEI_INSERTER (gst_h264_sei_inserter_get_type())
+G_DECLARE_FINAL_TYPE (GstH264SEIInserter, gst_h264_sei_inserter,
+    GST, H264_SEI_INSERTER, GstH264CCInserter)
 GST_ELEMENT_REGISTER_DECLARE (h264seiinserter);
 
 G_END_DECLS

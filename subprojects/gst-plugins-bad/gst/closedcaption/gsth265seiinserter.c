@@ -389,6 +389,11 @@ enum
   PROP_DO_TIMESTAMP
 };
 
+struct _GstH265SEIInserter
+{
+  GstH265CCInserter parent;
+};
+
 static void gst_h265_sei_inserter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_h265_sei_inserter_get_property (GObject * object, guint prop_id,

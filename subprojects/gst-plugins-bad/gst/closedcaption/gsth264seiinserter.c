@@ -404,6 +404,11 @@ enum
   PROP_DO_TIMESTAMP,
 };
 
+struct _GstH264SEIInserter
+{
+  GstH264CCInserter parent;
+};
+
 #define gst_h264_sei_inserter_parent_class sei_inserter_parent_class
 G_DEFINE_TYPE (GstH264SEIInserter,
     gst_h264_sei_inserter, GST_TYPE_H264_CC_INSERTER);

@@ -54,6 +54,14 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h266, alignment=(string) au"));
 
+struct _GstH266SEIInserter
+{
+  GstCodecSEIInserter parent;
+
+  GstH266Reorder *reorder;
+  GArray *sei_array;
+};
+
 static void gst_h266_sei_inserter_finalize (GObject * object);
 
 static gboolean gst_h266_sei_inserter_start (GstCodecSEIInserter * inserter,
