@@ -42,6 +42,7 @@ typedef enum
 
 typedef enum
 {
+  GST_PNM_TYPE_UNKNOWN = 0,
   GST_PNM_TYPE_BITMAP = 1,
   GST_PNM_TYPE_GRAYMAP = 2,
   GST_PNM_TYPE_PIXMAP = 3
