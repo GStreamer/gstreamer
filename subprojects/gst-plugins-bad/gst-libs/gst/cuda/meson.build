@@ -1,4 +1,5 @@
 cuda_sources = files([
+  'gstcudaaggregator.cpp',
   'gstcudabufferpool.cpp',
   'gstcudacontext.cpp',
   'gstcudaconverter.cpp',
@@ -15,6 +16,7 @@ cuda_headers = files([
   'cuda-prelude.h',
   'gstcuda_fwd.h',
   'gstcuda.h',
+  'gstcudaaggregator.h',
   'gstcudabufferpool.h',
   'gstcudacontext.h',
   'gstcudaconverter.h',

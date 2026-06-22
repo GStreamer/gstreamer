@@ -36,4 +36,5 @@
 #include <gst/cuda/gstcudastream.h>
 #include <gst/cuda/gstcudautils.h>
 #include <gst/cuda/gstcudaconverter.h>
+#include <gst/cuda/gstcudaaggregator.h>
 
