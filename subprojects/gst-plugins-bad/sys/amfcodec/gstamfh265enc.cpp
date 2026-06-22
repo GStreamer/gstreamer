@@ -237,6 +237,14 @@ gst_amf_h265_enc_preset_get_type (void)
      * Speed oriented preset
      */
     {AMF_VIDEO_ENCODER_HEVC_QUALITY_PRESET_SPEED, "Speed", "speed"},
+
+    /**
+     * GstAmfH265EncRateControl::high-quality:
+     *
+     * High quality oriented preset
+     */
+    {AMF_VIDEO_ENCODER_HEVC_QUALITY_PRESET_HIGH_QUALITY, "High quality",
+        "high-quality"},
     {0, nullptr, nullptr}
   };
 
@@ -1227,6 +1235,16 @@ gst_amf_h265_enc_set_format (GstAmfEncoder * encoder,
   }
 
   if (self->preset > AMF_VIDEO_ENCODER_HEVC_QUALITY_PRESET_UNKNOWN) {
+    guint64 ver = gst_amf_get_version ();
+    if (self->preset == AMF_VIDEO_ENCODER_HEVC_QUALITY_PRESET_HIGH_QUALITY &&
+        ver < AMF_MAKE_FULL_VERSION (1, 4, 36, 0)) {
+      self->preset = AMF_VIDEO_ENCODER_HEVC_QUALITY_PRESET_QUALITY;
+      GST_WARNING_OBJECT (self, "'High quality' preset (h264/h265) is "
+          "available from AMF 1.4.36 only. Your version is "
+          "%lld.%lld.%lld. Falling back to 'Quality' preset",
+          AMF_GET_MAJOR_VERSION (ver), AMF_GET_MINOR_VERSION (ver),
+          AMF_GET_SUBMINOR_VERSION (ver));
+    }
     result = comp->SetProperty (AMF_VIDEO_ENCODER_HEVC_QUALITY_PRESET,
         (amf_int64) self->preset);
     if (result != AMF_OK) {
