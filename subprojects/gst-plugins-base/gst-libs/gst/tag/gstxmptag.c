@@ -631,7 +631,7 @@ deserialize_exif_altitude (XmpTag * xmptag, GstTagList * taglist,
     return;
   }
 
-  if (sscanf (altitude_str, "%d/%d", &frac_n, &frac_d) != 2) {
+  if (sscanf (altitude_str, "%d/%d", &frac_n, &frac_d) != 2 || frac_d == 0) {
     GST_WARNING ("Failed to parse fraction: %s", altitude_str);
     return;
   }
@@ -724,7 +724,7 @@ deserialize_exif_gps_speed (XmpTag * xmptag, GstTagList * taglist,
     return;
   }
 
-  if (sscanf (speed_str, "%d/%d", &frac_n, &frac_d) != 2) {
+  if (sscanf (speed_str, "%d/%d", &frac_n, &frac_d) != 2 || frac_d == 0) {
     GST_WARNING ("Failed to parse fraction: %s", speed_str);
     return;
   }
@@ -819,7 +819,7 @@ deserialize_exif_gps_direction (XmpTag * xmptag, GstTagList * taglist,
     return;
   }
 
-  if (sscanf (dir_str, "%d/%d", &frac_n, &frac_d) != 2) {
+  if (sscanf (dir_str, "%d/%d", &frac_n, &frac_d) != 2 || frac_d == 0) {
     GST_WARNING ("Failed to parse fraction: %s", dir_str);
     return;
   }
@@ -1136,7 +1136,7 @@ read_one_tag (GstTagList * list, XmpTag * xmptag,
       gdouble value = 0;
       gint frac_n, frac_d;
 
-      if (sscanf (v, "%d/%d", &frac_n, &frac_d) == 2) {
+      if (sscanf (v, "%d/%d", &frac_n, &frac_d) == 2 && frac_d != 0) {
         gst_util_fraction_to_double (frac_n, frac_d, &value);
         gst_tag_list_add (list, merge_mode, tag, value, NULL);
       } else {
