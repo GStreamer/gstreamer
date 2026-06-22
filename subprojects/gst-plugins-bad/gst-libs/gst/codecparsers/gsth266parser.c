@@ -431,7 +431,8 @@ gst_h266_parse_general_constraints_info (GstH266GeneralConstraintsInfo * gci,
     }
 
     /* skip the reserved zero bits */
-    if (!nal_reader_skip (nr, num_additional_bits - num_additional_bits_used))
+    if (!nal_reader_skip_long (nr,
+            num_additional_bits - num_additional_bits_used))
       goto error;
   }
 
