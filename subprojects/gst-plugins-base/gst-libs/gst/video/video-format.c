@@ -8271,6 +8271,8 @@ static const VideoFormat formats[] = {
       PLANE0, OFFS0, SUB4444, PACK_RGB10A2_LE),
 };
 
+G_STATIC_ASSERT (G_N_ELEMENTS (formats) == GST_VIDEO_FORMAT_LAST);
+
 G_GNUC_END_IGNORE_DEPRECATIONS;
 
 static GstVideoFormat
