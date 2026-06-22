@@ -420,8 +420,7 @@ gst_h265_sei_inserter_set_property (GObject * object, guint prop_id,
           g_value_get_boolean (value));
       break;
     default:
-      G_OBJECT_CLASS (sei_inserter_parent_class)->set_property (object, prop_id,
-          value, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -446,8 +445,7 @@ gst_h265_sei_inserter_get_property (GObject * object, guint prop_id,
           gst_codec_sei_inserter_get_do_timestamp (inserter));
       break;
     default:
-      G_OBJECT_CLASS (sei_inserter_parent_class)->get_property (object, prop_id,
-          value, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
