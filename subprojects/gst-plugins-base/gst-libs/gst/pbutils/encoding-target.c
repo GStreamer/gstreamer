@@ -919,11 +919,14 @@ gst_encoding_target_load (const gchar * name, const gchar * category,
     GError ** error)
 {
   gint i;
-  gchar *p, *lname, *lfilename = NULL, *tldir, **encoding_target_dirs;
+  gchar *p, *lname = NULL, *lfilename = NULL, *tldir, **encoding_target_dirs;
   const gchar *envvar;
   GstEncodingTarget *target = NULL;
 
   g_return_val_if_fail (name != NULL, NULL);
+
+  if (!g_utf8_validate (name, -1, NULL))
+    goto invalid_name;
 
   p = lname = g_str_to_ascii (name, NULL);
   for (; *p; ++p)
