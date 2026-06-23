@@ -505,7 +505,8 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
   gint Q;
   guint type, width, height;
   guint16 dri, precision, length;
-  guint8 *qtable;
+  guint8 *qtable = NULL;
+  gsize qtable_len = 0;
 
   rtpjpegdepay = GST_RTP_JPEG_DEPAY (depayload);
 
@@ -611,10 +612,13 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     if (length > payload_len)
       goto empty_packet;
 
-    if (length > 0)
+    if (length > 0) {
       qtable = payload;
-    else
+      qtable_len = length;
+    } else {
       qtable = rtpjpegdepay->qtables[Q];
+      qtable_len = 128;
+    }
 
     payload += length;
     header_len += length;
@@ -652,6 +656,7 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
       if (Q < 128) {
         /* no quant table, see if we have one cached */
         qtable = rtpjpegdepay->qtables[Q];
+        qtable_len = 128;
         if (!qtable) {
           GST_DEBUG_OBJECT (rtpjpegdepay, "making Q %d table", Q);
           /* make and cache the table */
@@ -673,6 +678,10 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
        go dereferencing it in MakeHeaders if we do */
     if (!qtable)
       goto no_qtable;
+
+    if (((precision & 1) ? 128 : 64) + ((precision & 2) ? 128 : 64) !=
+        qtable_len)
+      goto wrong_qtable;
 
     /* max header length, should be big enough */
     outbuf = gst_buffer_new_and_alloc (1000);
@@ -753,6 +762,12 @@ invalid_dimension:
 no_qtable:
   {
     GST_WARNING_OBJECT (rtpjpegdepay, "no qtable");
+    gst_rtp_base_depayload_dropped (depayload);
+    return NULL;
+  }
+wrong_qtable:
+  {
+    GST_WARNING_OBJECT (rtpjpegdepay, "wrong qtable for precision");
     gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
