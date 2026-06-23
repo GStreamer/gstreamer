@@ -77,7 +77,9 @@ struct _GstAjaSrc {
   GstAjaClosedCaptionCaptureMode closed_caption_capture_mode;
   guint queue_size;
   guint start_frame, end_frame;
-  guint capture_cpu_core;
+#if !defined(__APPLE__)
+  guint capture_cpu_core;  // Unsupported only on Apple platforms
+#endif
   gboolean signal;
   gboolean attach_ancillary_meta;
 

@@ -70,7 +70,9 @@ struct _GstAjaSink {
   NTV2Channel channel;
   guint queue_size;
   guint start_frame, end_frame;
-  guint output_cpu_core;
+#if !defined(__APPLE__)
+  guint output_cpu_core;  // Unsupported only on Apple platforms
+#endif
 
   GstAjaAudioSystem audio_system_setting;
   GstAjaOutputDestination output_destination;

@@ -60,6 +60,12 @@
 #include <ajantv2/includes/ntv2rp188.h>
 #include <ajantv2/includes/ntv2vpid.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <pthread.h>
+#endif
+
 #include "gstajacommon.h"
 #include "gstajasrc.h"
 
@@ -102,7 +108,9 @@ enum {
   PROP_START_FRAME,
   PROP_END_FRAME,
   PROP_QUEUE_SIZE,
+#if !defined(__APPLE__)
   PROP_CAPTURE_CPU_CORE,
+#endif
   PROP_SIGNAL,
   PROP_ATTACH_ANCILLARY_META,
 };
@@ -345,6 +353,7 @@ static void gst_aja_src_class_init(GstAjaSrcClass *klass) {
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
                         G_PARAM_CONSTRUCT)));
 
+#if !defined(__APPLE__)
   g_object_class_install_property(
       gobject_class, PROP_CAPTURE_CPU_CORE,
       g_param_spec_uint(
@@ -354,6 +363,7 @@ static void gst_aja_src_class_init(GstAjaSrcClass *klass) {
           0, G_MAXUINT, DEFAULT_CAPTURE_CPU_CORE,
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
                         G_PARAM_CONSTRUCT)));
+#endif
 
   g_object_class_install_property(
       gobject_class, PROP_SIGNAL,
@@ -423,7 +433,9 @@ static void gst_aja_src_init(GstAjaSrc *self) {
   self->timecode_index = DEFAULT_TIMECODE_INDEX;
   self->reference_source = DEFAULT_REFERENCE_SOURCE;
   self->closed_caption_capture_mode = DEFAULT_CLOSED_CAPTION_CAPTURE_MODE;
+#if !defined(__APPLE__)
   self->capture_cpu_core = DEFAULT_CAPTURE_CPU_CORE;
+#endif
   self->attach_ancillary_meta = DEFAULT_ATTACH_ANCILLARY_META;
 
   self->queue =
@@ -487,9 +499,11 @@ void gst_aja_src_set_property(GObject *object, guint property_id,
       self->closed_caption_capture_mode =
           (GstAjaClosedCaptionCaptureMode)g_value_get_enum(value);
       break;
+#if !defined(__APPLE__)
     case PROP_CAPTURE_CPU_CORE:
       self->capture_cpu_core = g_value_get_uint(value);
       break;
+#endif
     case PROP_ATTACH_ANCILLARY_META:
       self->attach_ancillary_meta = g_value_get_boolean(value);
       break;
@@ -549,9 +563,11 @@ void gst_aja_src_get_property(GObject *object, guint property_id, GValue *value,
     case PROP_CLOSED_CAPTION_CAPTURE_MODE:
       g_value_set_enum(value, self->closed_caption_capture_mode);
       break;
+#if !defined(__APPLE__)
     case PROP_CAPTURE_CPU_CORE:
       g_value_set_uint(value, self->capture_cpu_core);
       break;
+#endif
     case PROP_SIGNAL:
       g_value_set_boolean(value, self->signal);
       break;
@@ -2298,6 +2314,9 @@ static void capture_thread_func(AJAThread *thread, void *data) {
   AUTOCIRCULATE_TRANSFER transfer;
   NTV2VideoFormat last_detected_video_format = ::NTV2_FORMAT_UNKNOWN;
 
+#if defined(__APPLE__)
+  pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
+#else
   if (self->capture_cpu_core != G_MAXUINT) {
 #ifdef _WIN32
     if (self->capture_cpu_core < 64) {
@@ -2328,6 +2347,7 @@ static void capture_thread_func(AJAThread *thread, void *data) {
     }
 #endif
   }
+#endif  // defined(__APPLE__)
 
   // We're getting a system clock for the real-time clock here because
   // g_get_real_time() is less accurate generally.
