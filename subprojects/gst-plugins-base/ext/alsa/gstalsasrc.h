@@ -71,6 +71,9 @@ struct _GstAlsaSrc {
   snd_pcm_uframes_t     buffer_size;
   snd_pcm_uframes_t     period_size;
 
+  struct pollfd *pfds;
+  gint nfds;
+
   GMutex                alsa_lock;
 };
 

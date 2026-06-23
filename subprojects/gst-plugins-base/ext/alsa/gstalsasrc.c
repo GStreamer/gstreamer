@@ -38,6 +38,7 @@
 #include "config.h"
 #endif
 #include <sys/ioctl.h>
+#include <poll.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
@@ -821,6 +822,23 @@ gst_alsasrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   spec->segsize = alsa->period_size * alsa->bpf;
   spec->segtotal = alsa->buffer_size / alsa->period_size;
 
+  alsa->nfds = snd_pcm_poll_descriptors_count (alsa->handle);
+  if (alsa->nfds <= 0) {
+    GST_DEBUG_OBJECT (asrc, "Invalid poll descriptor count: %d", alsa->nfds);
+    goto poll_failed;
+  }
+  // In theory a wakeup fd can be added here, but as poll does not hold the mutex
+  // and does not hold a handle to alsa we don't need a wakeup mechanism.
+  alsa->pfds = g_new0 (struct pollfd, alsa->nfds);
+
+  err = snd_pcm_poll_descriptors (alsa->handle, alsa->pfds, alsa->nfds);
+  if (err < 0) {
+    g_free (alsa->pfds);
+    alsa->pfds = NULL;
+    GST_DEBUG_OBJECT (asrc, "poll descriptor error, %d", err);
+    goto poll_failed;
+  }
+
   {
     snd_output_t *out_buf = NULL;
     char *msg = NULL;
@@ -875,6 +893,12 @@ prepare_failed:
         ("Prepare failed: %s", snd_strerror (err)));
     return FALSE;
   }
+poll_failed:
+  {
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Poll failed: %s", snd_strerror (err)));
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -887,6 +911,10 @@ gst_alsasrc_unprepare (GstAudioSrc * asrc)
   snd_pcm_drop (alsa->handle);
   snd_pcm_hw_free (alsa->handle);
   snd_pcm_nonblock (alsa->handle, 1);
+  if (alsa->pfds) {
+    g_free (alsa->pfds);
+    alsa->pfds = NULL;
+  }
 
   return TRUE;
 }
@@ -1003,19 +1031,84 @@ gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length,
   GstAlsaSrc *alsa;
   gint err;
   gint cptr;
+  /* errno temporary variable */
+  gint syserr;
   guint8 *ptr = data;
+  snd_pcm_state_t state;
+  gint nfds;
+  struct pollfd *pfds;
 
   alsa = GST_ALSA_SRC (asrc);
 
   cptr = length / alsa->bpf;
 
   GST_ALSA_SRC_LOCK (asrc);
+  if (G_UNLIKELY (alsa->handle == NULL)) {
+    GST_ALSA_SRC_UNLOCK (asrc);
+    goto read_error;
+  }
+  pfds = alsa->pfds;
+  nfds = alsa->nfds;
+  GST_ALSA_SRC_UNLOCK (asrc);
+  /* 4 times the period time, same timeout as before when using snd_pcm_wait. */
+  gint timeout_ms = MAX (1, (gint) (4 * alsa->period_time / 1000));
+
   while (cptr > 0) {
-    /* start by doing a blocking wait for available data. Set the timeout
-     * to 4 times the period time, similar to alsasink. */
-    err = snd_pcm_wait (alsa->handle, (4 * alsa->period_time / 1000));
+    /* Need to check the state of the PCM device to handle PREPARED state */
+
+    GST_ALSA_SRC_LOCK (asrc);
+    if (G_UNLIKELY (alsa->handle == NULL)) {
+      GST_ALSA_SRC_UNLOCK (asrc);
+      goto read_error;
+    }
+
+    /* For capture, polling might not be ready if in PREPARED state,
+       so we need to check the state and start the PCM if needed.
+       Internally this can be handled by readi function, but since we poll
+       ourselves we need to handle this case here. */
+    state = snd_pcm_state (alsa->handle);
+    if (state == SND_PCM_STATE_PREPARED) {
+      err = snd_pcm_start (alsa->handle);
+      if (err < 0) {
+        GST_ALSA_SRC_UNLOCK (asrc);
+        GST_DEBUG_OBJECT (asrc, "snd_pcm_start failed: %s (%d)",
+            snd_strerror (err), err);
+        goto read_error;
+      }
+    }
+
+    GST_ALSA_SRC_UNLOCK (asrc);
+
+    err = poll (pfds, nfds, timeout_ms);
+    /* mutex lock can smash errno so immediately store possible error */
+    syserr = errno;
+
+    GST_ALSA_SRC_LOCK (asrc);
+
     if (err < 0) {
-      GST_DEBUG_OBJECT (asrc, "wait error, %d", err);
+      err = -syserr;
+      GST_ALSA_SRC_UNLOCK (asrc);
+      GST_DEBUG_OBJECT (asrc, "poll error: %s (%d)", g_strerror (-err), err);
+      goto read_error;
+    }
+
+    unsigned short revents = 0;
+    err = snd_pcm_poll_descriptors_revents (alsa->handle, pfds, nfds, &revents);
+    if (err < 0) {
+      GST_DEBUG_OBJECT (asrc, "poll revents error, %d", err);
+    } else if ((revents & POLLIN) == 0) {
+      /* Poll might return POLLIN, but revents can return 0 so we should not read then.
+         So just attempt to poll again. */
+      GST_ALSA_SRC_UNLOCK (asrc);
+      continue;
+    } else if (revents & POLLERR) {
+      GST_DEBUG_OBJECT (asrc, "poll revents error, %d", err);
+      if (xrun_recovery (alsa, alsa->handle, err) < 0) {
+        GST_ALSA_SRC_UNLOCK (asrc);
+        goto read_error;
+      }
+      GST_ALSA_SRC_UNLOCK (asrc);
+      continue;
     } else {
       err = snd_pcm_readi (alsa->handle, ptr, cptr);
       if (err < 0) {
@@ -1027,23 +1120,20 @@ gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length,
       if (err == -EAGAIN) {
         /* will continue out of the if/else group */
       } else if (err == -ENODEV || err == -EIO) {
+        GST_ALSA_SRC_UNLOCK (asrc);
         goto device_disappeared;
       } else if (xrun_recovery (alsa, alsa->handle, err) < 0) {
+        GST_ALSA_SRC_UNLOCK (asrc);
         goto read_error;
       }
-
-      /* Unlock so that _reset() can run and break an otherwise infinite loop
-       * here */
       GST_ALSA_SRC_UNLOCK (asrc);
-      g_thread_yield ();
-      GST_ALSA_SRC_LOCK (asrc);
       continue;
     }
 
     ptr += snd_pcm_frames_to_bytes (alsa->handle, err);
     cptr -= err;
+    GST_ALSA_SRC_UNLOCK (asrc);
   }
-  GST_ALSA_SRC_UNLOCK (asrc);
 
   /* if driver timestamps are enabled we need to return this here */
   if (alsa->driver_timestamps && timestamp)
@@ -1053,7 +1143,6 @@ gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length,
 
 read_error:
   {
-    GST_ALSA_SRC_UNLOCK (asrc);
     return length;              /* skip one period */
   }
 device_disappeared:
@@ -1061,7 +1150,6 @@ device_disappeared:
     GST_ELEMENT_ERROR (asrc, RESOURCE, READ,
         (_("Error recording from audio device. "
                 "The device has been disconnected.")), (NULL));
-    GST_ALSA_SRC_UNLOCK (asrc);
     return (guint) - 1;
   }
 }
