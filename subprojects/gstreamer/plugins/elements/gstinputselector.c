@@ -707,17 +707,16 @@ gst_selector_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
        * should reconfigure and do a new allocation query
        */
       if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
-        gboolean is_active_pad;
         g_rw_lock_reader_lock (&sel->active_sinkpad_lock);
-        is_active_pad = pad == sel->active_sinkpad;
-        g_rw_lock_reader_unlock (&self->active_sinkpad_lock);
 
-        if (!is_active_pad) {
+        if (pad != sel->active_sinkpad) {
+          g_rw_lock_reader_unlock (&self->active_sinkpad_lock);
           res = FALSE;
           goto done;
         }
 
         res = gst_pad_query_default (pad, parent, query);
+        g_rw_lock_reader_unlock (&self->active_sinkpad_lock);
         break;
       }
     }
