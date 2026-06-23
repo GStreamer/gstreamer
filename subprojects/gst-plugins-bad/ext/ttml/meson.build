@@ -10,7 +10,6 @@ ttmlsubs_sources = [
    'gstttmlparse.c',
    'ttmlparse.c',
    'gstttmlrender.c',
-   'gstttmlelement.c',
    'gstttmlplugin.c',
 ]
 

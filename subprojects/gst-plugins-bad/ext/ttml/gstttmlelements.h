@@ -27,8 +27,6 @@
 
 #include <gst/gst.h>
 
-void ttml_element_init (GstPlugin * plugin);
-
 GST_ELEMENT_REGISTER_DECLARE (ttmlparse);
 GST_ELEMENT_REGISTER_DECLARE (ttmlrender);
 

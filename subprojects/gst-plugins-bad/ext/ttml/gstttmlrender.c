@@ -60,7 +60,7 @@
 #define TTML_RENDER_ALL_CAPS TTML_RENDER_CAPS ";" \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("ANY", GST_VIDEO_FORMATS_ANY)
 
-GST_DEBUG_CATEGORY_EXTERN (ttmlrender_debug);
+GST_DEBUG_CATEGORY (ttmlrender_debug);
 #define GST_CAT_DEFAULT ttmlrender_debug
 
 static GstStaticCaps sw_template_caps = GST_STATIC_CAPS (TTML_RENDER_CAPS);
@@ -3071,18 +3071,8 @@ gst_ttml_render_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 gst_element_ttmlrender_init (GstPlugin * plugin)
 {
-  guint rank = GST_RANK_NONE;
-
-  ttml_element_init (plugin);
-
   GST_DEBUG_CATEGORY_INIT (ttmlrender_debug, "ttmlrender", 0, "TTML renderer");
 
-  /* We don't want this autoplugged by default yet for now */
-  if (g_getenv ("GST_TTML_AUTOPLUG")) {
-    GST_INFO_OBJECT (plugin, "Registering ttml elements with primary rank.");
-    rank = GST_RANK_PRIMARY;
-  }
-
-  return gst_element_register (plugin, "ttmlrender", rank,
+  return gst_element_register (plugin, "ttmlrender", GST_RANK_NONE,
       GST_TYPE_TTML_RENDER);
 }

@@ -605,17 +605,8 @@ gst_ttml_parse_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 gst_element_ttmlparse_init (GstPlugin * plugin)
 {
-  guint rank = GST_RANK_NONE;
-
-  ttml_element_init (plugin);
-
   GST_DEBUG_CATEGORY_INIT (ttmlparse_debug, "ttmlparse", 0, "TTML parser");
 
-  /* We don't want this autoplugged by default yet for now */
-  if (g_getenv ("GST_TTML_AUTOPLUG")) {
-    GST_INFO_OBJECT (plugin, "Registering ttml elements with primary rank.");
-    rank = GST_RANK_PRIMARY;
-  }
-
-  return gst_element_register (plugin, "ttmlparse", rank, GST_TYPE_TTML_PARSE);
+  return gst_element_register (plugin, "ttmlparse", GST_RANK_NONE,
+      GST_TYPE_TTML_PARSE);
 }
