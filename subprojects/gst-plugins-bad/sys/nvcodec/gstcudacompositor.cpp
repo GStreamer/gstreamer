@@ -135,11 +135,8 @@ enum
 enum
 {
   PROP_0,
-  PROP_DEVICE_ID,
   PROP_IGNORE_INACTIVE_PADS,
 };
-
-#define DEFAULT_DEVICE_ID -1
 
 /* *INDENT-OFF* */
 struct GstCudaCompositorPadPrivate
@@ -147,17 +144,9 @@ struct GstCudaCompositorPadPrivate
   ~GstCudaCompositorPadPrivate ()
   {
     gst_clear_object (&conv);
-    gst_clear_buffer (&prepared_buf);
-    if (fallback_pool) {
-      gst_buffer_pool_set_active (fallback_pool, FALSE);
-      gst_object_unref (fallback_pool);
-    }
   }
 
   GstCudaConverter *conv = nullptr;
-  GstBufferPool *fallback_pool = nullptr;
-  GstBuffer *prepared_buf = nullptr;
-  GstVideoInfo pool_info;
 
   gboolean config_updated = FALSE;
 
@@ -172,6 +161,7 @@ struct GstCudaCompositorPadPrivate
   GstCudaCompositorOperator op = DEFAULT_PAD_OPERATOR;
   GstCudaCompositorSizingPolicy sizing_policy = DEFAULT_PAD_SIZING_POLICY;
 };
+/* *INDENT-ON* */
 
 /**
  * GstCudaCompositorPad:
@@ -180,29 +170,14 @@ struct GstCudaCompositorPadPrivate
  */
 struct _GstCudaCompositorPad
 {
-  GstVideoAggregatorConvertPad parent;
+  GstCudaAggregatorPad parent;
 
   GstCudaCompositorPadPrivate *priv;
 };
 
-struct GstCudaCompositorPrivate
-{
-  std::recursive_mutex lock;
-
-  /* properties */
-  gint device_id = DEFAULT_DEVICE_ID;
-};
-/* *INDENT-ON* */
-
 struct _GstCudaCompositor
 {
-  GstVideoAggregator parent;
-
-  GstCudaContext *context;
-  GstCudaStream *stream;
-  GstCudaStream *other_stream;
-
-  GstCudaCompositorPrivate *priv;
+  GstCudaAggregator parent;
 };
 
 static void gst_cuda_compositor_pad_finalize (GObject * object);
@@ -214,12 +189,10 @@ static gboolean
 gst_cuda_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
     GstVideoAggregator * vagg, GstBuffer * buffer,
     GstVideoFrame * prepared_frame);
-static void gst_cuda_compositor_pad_clean_frame (GstVideoAggregatorPad * pad,
-    GstVideoAggregator * vagg, GstVideoFrame * prepared_frame);
 
 #define gst_cuda_compositor_pad_parent_class parent_pad_class
 G_DEFINE_TYPE (GstCudaCompositorPad, gst_cuda_compositor_pad,
-    GST_TYPE_VIDEO_AGGREGATOR_PAD);
+    GST_TYPE_CUDA_AGGREGATOR_PAD);
 
 static void
 gst_cuda_compositor_pad_class_init (GstCudaCompositorPadClass * klass)
@@ -261,8 +234,6 @@ gst_cuda_compositor_pad_class_init (GstCudaCompositorPadClass * klass)
 
   vagg_pad_class->prepare_frame =
       GST_DEBUG_FUNCPTR (gst_cuda_compositor_pad_prepare_frame);
-  vagg_pad_class->clean_frame =
-      GST_DEBUG_FUNCPTR (gst_cuda_compositor_pad_clean_frame);
 
   gst_type_mark_as_plugin_api (GST_TYPE_CUDA_COMPOSITOR_OPERATOR,
       (GstPluginAPIFlags) 0);
@@ -571,106 +542,6 @@ gst_cuda_compositor_pad_check_frame_obscured (GstVideoAggregatorPad * pad,
   return FALSE;
 }
 
-static GstBuffer *
-gst_cuda_compositor_upload_frame (GstCudaCompositor * self,
-    GstVideoAggregatorPad * pad, GstBuffer * buffer)
-{
-  auto cpad = GST_CUDA_COMPOSITOR_PAD (pad);
-  auto priv = cpad->priv;
-  GstVideoFrame src, dst;
-
-  auto mem = gst_buffer_peek_memory (buffer, 0);
-  if (gst_is_cuda_memory (mem)) {
-    auto cmem = GST_CUDA_MEMORY_CAST (mem);
-    if (cmem->context == self->context)
-      return gst_buffer_ref (buffer);
-  }
-
-  if (!gst_video_frame_map (&src, &pad->info, buffer, GST_MAP_READ)) {
-    GST_ERROR_OBJECT (pad, "Couldn't map src frame");
-    return nullptr;
-  }
-
-  auto frame_width = GST_VIDEO_FRAME_WIDTH (&src);
-  auto frame_height = GST_VIDEO_FRAME_HEIGHT (&src);
-
-  if (priv->fallback_pool &&
-      (priv->pool_info.width != frame_width ||
-          priv->pool_info.height != frame_height)) {
-    /* Size can be different if crop meta is in use */
-    GST_DEBUG_OBJECT (pad,
-        "Fallback pool size mismatch, releasing old fallback pool");
-    gst_buffer_pool_set_active (priv->fallback_pool, FALSE);
-    gst_clear_object (&priv->fallback_pool);
-  }
-
-  if (!priv->fallback_pool) {
-    priv->fallback_pool = gst_cuda_buffer_pool_new (self->context);
-    auto config = gst_buffer_pool_get_config (priv->fallback_pool);
-
-    if (self->stream)
-      gst_buffer_pool_config_set_cuda_stream (config, self->stream);
-
-    gst_video_info_set_format (&priv->pool_info,
-        GST_VIDEO_INFO_FORMAT (&pad->info), frame_width, frame_height);
-
-    auto caps = gst_video_info_to_caps (&priv->pool_info);
-    gst_buffer_pool_config_set_params (config,
-        caps, priv->pool_info.size, 0, 0);
-    gst_caps_unref (caps);
-    if (!gst_buffer_pool_set_config (priv->fallback_pool, config)) {
-      GST_ERROR_OBJECT (pad, "Set config failed");
-      gst_clear_object (&priv->fallback_pool);
-      return nullptr;
-    }
-
-    if (!gst_buffer_pool_set_active (priv->fallback_pool, TRUE)) {
-      GST_ERROR_OBJECT (pad, "Set active failed");
-      gst_clear_object (&priv->fallback_pool);
-      return nullptr;
-    }
-  }
-
-  GstBuffer *outbuf = nullptr;
-  gst_buffer_pool_acquire_buffer (priv->fallback_pool, &outbuf, nullptr);
-  if (!outbuf) {
-    GST_ERROR_OBJECT (self, "Couldn't acquire buffer");
-    gst_video_frame_unmap (&src);
-    return nullptr;
-  }
-
-  if (!gst_video_frame_map (&dst, &pad->info, outbuf, GST_MAP_WRITE)) {
-    GST_ERROR_OBJECT (pad, "Couldn't map dst frame");
-    gst_video_frame_unmap (&src);
-    gst_buffer_unref (outbuf);
-    return nullptr;
-  }
-
-  auto ret = gst_video_frame_copy (&dst, &src);
-  gst_video_frame_unmap (&dst);
-  gst_video_frame_unmap (&src);
-
-  if (!ret) {
-    GST_ERROR_OBJECT (pad, "Couldn't copy frame");
-    gst_buffer_unref (outbuf);
-    return nullptr;
-  }
-
-  auto cmeta = gst_buffer_get_video_crop_meta (buffer);
-  if (cmeta) {
-    auto new_cmeta = gst_buffer_get_video_crop_meta (outbuf);
-    if (!new_cmeta)
-      new_cmeta = gst_buffer_add_video_crop_meta (outbuf);
-
-    new_cmeta->x = cmeta->x;
-    new_cmeta->y = cmeta->y;
-    new_cmeta->width = cmeta->width;
-    new_cmeta->width = cmeta->width;
-  }
-
-  return outbuf;
-}
-
 static gboolean
 gst_cuda_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
     GstVideoAggregator * vagg, GstBuffer * buffer,
@@ -679,45 +550,21 @@ gst_cuda_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
   auto self = GST_CUDA_COMPOSITOR_PAD (pad);
   auto priv = self->priv;
 
-  std::lock_guard < std::recursive_mutex > lk (priv->lock);
-  if (gst_cuda_compositor_pad_check_frame_obscured (pad, vagg))
-    return TRUE;
-
-  buffer = gst_cuda_compositor_upload_frame (GST_CUDA_COMPOSITOR (vagg),
-      pad, buffer);
-  if (!buffer)
-    return FALSE;
-
-  if (!gst_video_frame_map (prepared_frame,
-          &pad->info, buffer, (GstMapFlags) (GST_MAP_READ | GST_MAP_CUDA))) {
-    GST_ERROR_OBJECT (self, "Couldn't map frame");
-    gst_buffer_unref (buffer);
-    return FALSE;
+  {
+    std::lock_guard < std::recursive_mutex > lk (priv->lock);
+    if (gst_cuda_compositor_pad_check_frame_obscured (pad, vagg))
+      return TRUE;
   }
 
-  priv->prepared_buf = buffer;
-
-  return TRUE;
-}
-
-static void
-gst_cuda_compositor_pad_clean_frame (GstVideoAggregatorPad * pad,
-    GstVideoAggregator * vagg, GstVideoFrame * prepared_frame)
-{
-  auto self = GST_CUDA_COMPOSITOR_PAD (pad);
-  auto priv = self->priv;
-
-  if (prepared_frame->buffer)
-    gst_video_frame_unmap (prepared_frame);
-
-  memset (prepared_frame, 0, sizeof (GstVideoFrame));
-  gst_clear_buffer (&priv->prepared_buf);
+  return GST_VIDEO_AGGREGATOR_PAD_CLASS (parent_pad_class)->prepare_frame (pad,
+      vagg, buffer, prepared_frame);
 }
 
 static gboolean
 gst_cuda_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
     GstVideoAggregator * vagg)
 {
+  auto cuda_agg = GST_CUDA_AGGREGATOR (vagg);
   auto self = GST_CUDA_COMPOSITOR (vagg);
   auto cpad = GST_CUDA_COMPOSITOR_PAD (pad);
   auto priv = cpad->priv;
@@ -728,8 +575,8 @@ gst_cuda_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
 
   std::lock_guard < std::recursive_mutex > lk (priv->lock);
   if (!priv->conv) {
-    priv->conv = gst_cuda_converter_new (self->context, &pad->info, &vagg->info,
-        nullptr);
+    priv->conv = gst_cuda_converter_new (cuda_agg->context, &pad->info,
+        &vagg->info, nullptr);
     if (!priv->conv) {
       GST_ERROR_OBJECT (self, "Couldn't create converter");
       return FALSE;
@@ -788,7 +635,6 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
 
 static void gst_cuda_compositor_child_proxy_init (gpointer g_iface,
     gpointer iface_data);
-static void gst_cuda_compositor_finalize (GObject * object);
 static void gst_cuda_compositor_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_cuda_compositor_get_property (GObject * object,
@@ -798,15 +644,9 @@ static GstPad *gst_cuda_compositor_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void gst_cuda_compositor_release_pad (GstElement * element,
     GstPad * pad);
-static void gst_cuda_compositor_set_context (GstElement * element,
-    GstContext * context);
 
-static gboolean gst_cuda_compositor_start (GstAggregator * agg);
-static gboolean gst_cuda_compositor_stop (GstAggregator * agg);
 static gboolean gst_cuda_compositor_sink_query (GstAggregator * agg,
     GstAggregatorPad * pad, GstQuery * query);
-static gboolean gst_cuda_compositor_src_query (GstAggregator * agg,
-    GstQuery * query);
 static GstCaps *gst_cuda_compositor_fixate_src_caps (GstAggregator * agg,
     GstCaps * caps);
 static gboolean gst_cuda_compositor_negotiated_src_caps (GstAggregator * agg,
@@ -814,15 +654,13 @@ static gboolean gst_cuda_compositor_negotiated_src_caps (GstAggregator * agg,
 static gboolean
 gst_cuda_compositor_propose_allocation (GstAggregator * agg,
     GstAggregatorPad * pad, GstQuery * decide_query, GstQuery * query);
-static gboolean gst_cuda_compositor_decide_allocation (GstAggregator * agg,
-    GstQuery * query);
 static GstFlowReturn
-gst_cuda_compositor_aggregate_frames (GstVideoAggregator * vagg,
-    GstBuffer * outbuf);
+gst_cuda_compositor_aggregate_cuda_frames (GstCudaAggregator * cagg,
+    GstCudaStream * stream, GstBuffer * outbuf);
 
 #define gst_cuda_compositor_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstCudaCompositor, gst_cuda_compositor,
-    GST_TYPE_VIDEO_AGGREGATOR, G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
+    GST_TYPE_CUDA_AGGREGATOR, G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
         gst_cuda_compositor_child_proxy_init));
 
 static void
@@ -831,18 +669,10 @@ gst_cuda_compositor_class_init (GstCudaCompositorClass * klass)
   auto object_class = G_OBJECT_CLASS (klass);
   auto element_class = GST_ELEMENT_CLASS (klass);
   auto agg_class = GST_AGGREGATOR_CLASS (klass);
-  auto vagg_class = GST_VIDEO_AGGREGATOR_CLASS (klass);
+  auto cagg_class = GST_CUDA_AGGREGATOR_CLASS (klass);
 
-  object_class->finalize = gst_cuda_compositor_finalize;
   object_class->set_property = gst_cuda_compositor_set_property;
   object_class->get_property = gst_cuda_compositor_get_property;
-
-  g_object_class_install_property (object_class, PROP_DEVICE_ID,
-      g_param_spec_int ("cuda-device-id", "Cuda Device ID",
-          "Set the GPU device to use for operations (-1 = auto)",
-          -1, G_MAXINT, DEFAULT_DEVICE_ID,
-          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
-              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (object_class,
       PROP_IGNORE_INACTIVE_PADS, g_param_spec_boolean ("ignore-inactive-pads",
@@ -854,24 +684,17 @@ gst_cuda_compositor_class_init (GstCudaCompositorClass * klass)
       GST_DEBUG_FUNCPTR (gst_cuda_compositor_request_new_pad);
   element_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_cuda_compositor_release_pad);
-  element_class->set_context =
-      GST_DEBUG_FUNCPTR (gst_cuda_compositor_set_context);
 
-  agg_class->start = GST_DEBUG_FUNCPTR (gst_cuda_compositor_start);
-  agg_class->stop = GST_DEBUG_FUNCPTR (gst_cuda_compositor_stop);
   agg_class->sink_query = GST_DEBUG_FUNCPTR (gst_cuda_compositor_sink_query);
-  agg_class->src_query = GST_DEBUG_FUNCPTR (gst_cuda_compositor_src_query);
   agg_class->fixate_src_caps =
       GST_DEBUG_FUNCPTR (gst_cuda_compositor_fixate_src_caps);
   agg_class->negotiated_src_caps =
       GST_DEBUG_FUNCPTR (gst_cuda_compositor_negotiated_src_caps);
   agg_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_cuda_compositor_propose_allocation);
-  agg_class->decide_allocation =
-      GST_DEBUG_FUNCPTR (gst_cuda_compositor_decide_allocation);
 
-  vagg_class->aggregate_frames =
-      GST_DEBUG_FUNCPTR (gst_cuda_compositor_aggregate_frames);
+  cagg_class->aggregate_cuda_frames =
+      GST_DEBUG_FUNCPTR (gst_cuda_compositor_aggregate_cuda_frames);
 
   gst_element_class_add_static_pad_template_with_gtype (element_class,
       &sink_template, GST_TYPE_CUDA_COMPOSITOR_PAD);
@@ -892,35 +715,13 @@ gst_cuda_compositor_class_init (GstCudaCompositorClass * klass)
 static void
 gst_cuda_compositor_init (GstCudaCompositor * self)
 {
-  self->priv = new GstCudaCompositorPrivate ();
-}
-
-static void
-gst_cuda_compositor_finalize (GObject * object)
-{
-  auto self = GST_CUDA_COMPOSITOR (object);
-
-  delete self->priv;
-
-  gst_clear_cuda_stream (&self->other_stream);
-  gst_clear_cuda_stream (&self->stream);
-  gst_clear_object (&self->context);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
 gst_cuda_compositor_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  auto self = GST_CUDA_COMPOSITOR (object);
-  auto priv = self->priv;
-
-  std::lock_guard < std::recursive_mutex > lk (priv->lock);
   switch (prop_id) {
-    case PROP_DEVICE_ID:
-      priv->device_id = g_value_get_int (value);
-      break;
     case PROP_IGNORE_INACTIVE_PADS:
       gst_aggregator_set_ignore_inactive_pads (GST_AGGREGATOR (object),
           g_value_get_boolean (value));
@@ -935,14 +736,7 @@ static void
 gst_cuda_compositor_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  auto self = GST_CUDA_COMPOSITOR (object);
-  auto priv = self->priv;
-
-  std::lock_guard < std::recursive_mutex > lk (priv->lock);
   switch (prop_id) {
-    case PROP_DEVICE_ID:
-      g_value_set_int (value, priv->device_id);
-      break;
     case PROP_IGNORE_INACTIVE_PADS:
       g_value_set_boolean (value,
           gst_aggregator_get_ignore_inactive_pads (GST_AGGREGATOR (object)));
@@ -1029,57 +823,6 @@ gst_cuda_compositor_release_pad (GstElement * element, GstPad * pad)
   GST_ELEMENT_CLASS (parent_class)->release_pad (element, pad);
 }
 
-static void
-gst_cuda_compositor_set_context (GstElement * element, GstContext * context)
-{
-  auto self = GST_CUDA_COMPOSITOR (element);
-  auto priv = self->priv;
-
-  {
-    std::lock_guard < std::recursive_mutex > lk (priv->lock);
-    gst_cuda_handle_set_context (element, context, priv->device_id,
-        &self->context);
-  }
-
-  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
-}
-
-static gboolean
-gst_cuda_compositor_start (GstAggregator * agg)
-{
-  auto self = GST_CUDA_COMPOSITOR (agg);
-  auto priv = self->priv;
-
-  {
-    std::lock_guard < std::recursive_mutex > lk (priv->lock);
-    if (!gst_cuda_ensure_element_context (GST_ELEMENT_CAST (self),
-            priv->device_id, &self->context)) {
-      GST_ERROR_OBJECT (self, "Failed to get context");
-      return FALSE;
-    }
-  }
-
-  self->stream = gst_cuda_stream_new (self->context);
-
-  return GST_AGGREGATOR_CLASS (parent_class)->start (agg);
-}
-
-static gboolean
-gst_cuda_compositor_stop (GstAggregator * agg)
-{
-  auto self = GST_CUDA_COMPOSITOR (agg);
-  auto priv = self->priv;
-
-  {
-    std::lock_guard < std::recursive_mutex > lk (priv->lock);
-    gst_clear_cuda_stream (&self->other_stream);
-    gst_clear_cuda_stream (&self->stream);
-    gst_clear_object (&self->context);
-  }
-
-  return GST_AGGREGATOR_CLASS (parent_class)->stop (agg);
-}
-
 static GstCaps *
 gst_cuda_compositor_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
@@ -1137,19 +880,7 @@ static gboolean
 gst_cuda_compositor_sink_query (GstAggregator * agg,
     GstAggregatorPad * pad, GstQuery * query)
 {
-  auto self = GST_CUDA_COMPOSITOR (agg);
-  auto priv = self->priv;
-
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CONTEXT:
-    {
-      std::lock_guard < std::recursive_mutex > lk (priv->lock);
-      if (gst_cuda_handle_context_query (GST_ELEMENT (agg), query,
-              self->context)) {
-        return TRUE;
-      }
-      break;
-    }
     case GST_QUERY_CAPS:
     {
       GstCaps *filter, *caps;
@@ -1175,25 +906,6 @@ gst_cuda_compositor_sink_query (GstAggregator * agg,
   }
 
   return GST_AGGREGATOR_CLASS (parent_class)->sink_query (agg, pad, query);
-}
-
-static gboolean
-gst_cuda_compositor_src_query (GstAggregator * agg, GstQuery * query)
-{
-  auto self = GST_CUDA_COMPOSITOR (agg);
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CONTEXT:
-      if (gst_cuda_handle_context_query (GST_ELEMENT (agg), query,
-              self->context)) {
-        return TRUE;
-      }
-      break;
-    default:
-      break;
-  }
-
-  return GST_AGGREGATOR_CLASS (parent_class)->src_query (agg, query);
 }
 
 static GstCaps *
@@ -1310,136 +1022,13 @@ static gboolean
 gst_cuda_compositor_propose_allocation (GstAggregator * agg,
     GstAggregatorPad * pad, GstQuery * decide_query, GstQuery * query)
 {
-  auto self = GST_CUDA_COMPOSITOR (agg);
-  GstVideoInfo info;
-  GstCaps *caps;
-
-  gst_query_parse_allocation (query, &caps, nullptr);
-
-  if (!caps)
+  if (!GST_AGGREGATOR_CLASS (parent_class)->propose_allocation (agg,
+          pad, decide_query, query)) {
     return FALSE;
-
-  if (!gst_video_info_from_caps (&info, caps))
-    return FALSE;
-
-  if (gst_query_get_n_allocation_pools (query) == 0) {
-    auto pool = gst_cuda_buffer_pool_new (self->context);
-
-    if (!pool) {
-      GST_ERROR_OBJECT (self, "Failed to create buffer pool");
-      return FALSE;
-    }
-
-    auto config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
-
-    if (self->other_stream)
-      gst_buffer_pool_config_set_cuda_stream (config, self->other_stream);
-    else if (self->stream)
-      gst_buffer_pool_config_set_cuda_stream (config, self->stream);
-
-    guint size = GST_VIDEO_INFO_SIZE (&info);
-    gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
-
-    if (!gst_buffer_pool_set_config (pool, config)) {
-      GST_ERROR_OBJECT (pool, "Couldn't set config");
-      gst_object_unref (pool);
-
-      return FALSE;
-    }
-
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get_params (config,
-        nullptr, &size, nullptr, nullptr);
-    gst_structure_free (config);
-
-    gst_query_add_allocation_pool (query, pool, size, 0, 0);
-    gst_object_unref (pool);
   }
 
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, nullptr);
+  /* We support crop meta as well */
   gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, nullptr);
-
-  return TRUE;
-}
-
-static gboolean
-gst_cuda_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
-{
-  auto self = GST_CUDA_COMPOSITOR (agg);
-  GstCaps *caps;
-  GstBufferPool *pool = nullptr;
-  guint n, size, min, max;
-  GstVideoInfo info;
-
-  gst_query_parse_allocation (query, &caps, nullptr);
-
-  if (!caps) {
-    GST_DEBUG_OBJECT (self, "No output caps");
-    return FALSE;
-  }
-
-  if (!gst_video_info_from_caps (&info, caps)) {
-    GST_ERROR_OBJECT (self, "Invalid caps");
-    return FALSE;
-  }
-
-  n = gst_query_get_n_allocation_pools (query);
-  if (n > 0)
-    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
-
-  /* create our own pool */
-  if (pool) {
-    if (!GST_IS_CUDA_BUFFER_POOL (pool)) {
-      GST_DEBUG_OBJECT (self,
-          "Downstream pool is not cuda, will create new one");
-      gst_clear_object (&pool);
-    } else {
-      auto cpool = GST_CUDA_BUFFER_POOL (pool);
-      if (cpool->context != self->context) {
-        GST_DEBUG_OBJECT (self, "Different context, will create new one");
-        gst_clear_object (&pool);
-      }
-    }
-  }
-
-  size = (guint) info.size;
-
-  if (!pool) {
-    pool = gst_cuda_buffer_pool_new (self->context);
-    min = 0;
-    max = 0;
-  }
-
-  auto config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-  gst_buffer_pool_config_set_params (config, caps, size, min, max);
-  gst_clear_cuda_stream (&self->other_stream);
-  self->other_stream = gst_buffer_pool_config_get_cuda_stream (config);
-  if (self->other_stream) {
-    GST_DEBUG_OBJECT (self, "Downstream provided CUDA stream");
-  } else if (self->stream) {
-    GST_DEBUG_OBJECT (self, "Set our stream to decided buffer pool");
-    gst_buffer_pool_config_set_cuda_stream (config, self->stream);
-  }
-
-  if (!gst_buffer_pool_set_config (pool, config)) {
-    GST_ERROR_OBJECT (self, "Set config failed");
-    gst_object_unref (pool);
-    return FALSE;
-  }
-
-  config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_get_params (config, NULL, &size, NULL, NULL);
-  gst_structure_free (config);
-
-  if (n > 0)
-    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
-  else
-    gst_query_add_allocation_pool (query, pool, size, min, max);
-
-  gst_object_unref (pool);
 
   return TRUE;
 }
@@ -1626,34 +1215,24 @@ gst_cuda_compositor_draw_background (GstCudaCompositor * self,
 }
 
 static GstFlowReturn
-gst_cuda_compositor_aggregate_frames (GstVideoAggregator * vagg,
-    GstBuffer * outbuf)
+gst_cuda_compositor_aggregate_cuda_frames (GstCudaAggregator * cagg,
+    GstCudaStream * stream, GstBuffer * outbuf)
 {
-  auto self = GST_CUDA_COMPOSITOR (vagg);
+  auto self = GST_CUDA_COMPOSITOR (cagg);
+  auto vagg = GST_VIDEO_AGGREGATOR (cagg);
   GList *iter;
   GstFlowReturn ret = GST_FLOW_OK;
   GstVideoFrame frame;
-  GstCudaMemory *cmem;
-  GstCudaStream *stream;
 
   GST_LOG_OBJECT (self, "aggregate");
-
-  if (!gst_cuda_context_push (self->context)) {
-    GST_ERROR_OBJECT (self, "Couldn't push context");
-    return GST_FLOW_ERROR;
-  }
 
   if (!gst_video_frame_map (&frame, &vagg->info, outbuf,
           (GstMapFlags) (GST_MAP_WRITE | GST_MAP_CUDA))) {
     GST_ERROR_OBJECT (self, "Couldn't map output frame");
-    gst_cuda_context_pop (nullptr);
     return GST_FLOW_ERROR;
   }
 
-  cmem = (GstCudaMemory *) gst_buffer_peek_memory (outbuf, 0);
-  stream = gst_cuda_memory_get_stream (cmem);
   auto stream_handle = gst_cuda_stream_get_handle (stream);
-
   if (!gst_cuda_compositor_draw_background (self, &frame, stream_handle)) {
     GST_ERROR_OBJECT (self, "Couldn't draw background");
     ret = GST_FLOW_ERROR;
@@ -1675,12 +1254,6 @@ gst_cuda_compositor_aggregate_frames (GstVideoAggregator * vagg,
       ret = GST_FLOW_ERROR;
       break;
     }
-
-    auto in_cmem = (GstCudaMemory *)
-        gst_buffer_peek_memory (in_frame->buffer, 0);
-    auto in_stream = gst_cuda_memory_get_stream (in_cmem);
-    if (in_stream != stream)
-      gst_cuda_memory_sync (in_cmem);
 
     gint x, y, w, h;
     gint x_offset = 0;
@@ -1721,7 +1294,6 @@ gst_cuda_compositor_aggregate_frames (GstVideoAggregator * vagg,
 
 out:
   gst_video_frame_unmap (&frame);
-  gst_cuda_context_pop (nullptr);
 
   return ret;
 }

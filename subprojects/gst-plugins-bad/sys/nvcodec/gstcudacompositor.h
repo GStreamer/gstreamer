@@ -21,18 +21,17 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <gst/video/gstvideoaggregator.h>
 #include <gst/cuda/gstcuda.h>
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_CUDA_COMPOSITOR_PAD (gst_cuda_compositor_pad_get_type())
 G_DECLARE_FINAL_TYPE (GstCudaCompositorPad, gst_cuda_compositor_pad,
-    GST, CUDA_COMPOSITOR_PAD, GstVideoAggregatorPad)
+    GST, CUDA_COMPOSITOR_PAD, GstCudaAggregatorPad)
 
 #define GST_TYPE_CUDA_COMPOSITOR (gst_cuda_compositor_get_type())
 G_DECLARE_FINAL_TYPE (GstCudaCompositor, gst_cuda_compositor,
-    GST, CUDA_COMPOSITOR, GstVideoAggregator)
+    GST, CUDA_COMPOSITOR, GstCudaAggregator)
 
 G_END_DECLS
 
