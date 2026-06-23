@@ -1033,187 +1033,6 @@ gst_cuda_compositor_propose_allocation (GstAggregator * agg,
   return TRUE;
 }
 
-static gboolean
-gst_cuda_compositor_draw_background (GstCudaCompositor * self,
-    GstVideoFrame * frame, CUstream stream)
-{
-  CUresult ret;
-  CUdeviceptr data;
-  guint width, height, stride;
-  guint16 uv_val;
-  auto format = GST_VIDEO_FRAME_FORMAT (frame);
-  switch (format) {
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_Y444:
-      data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-      width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0);
-      height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
-      stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-
-      ret = CuMemsetD2D8Async (data, stride, 0, width, height, stream);
-      if (!gst_cuda_result (ret))
-        return FALSE;
-
-      for (guint i = 1; i < GST_VIDEO_FRAME_N_PLANES (frame); i++) {
-        data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, i);
-        width = GST_VIDEO_FRAME_COMP_WIDTH (frame, i);
-        height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, i);
-        stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, i);
-
-        ret = CuMemsetD2D8Async (data, stride, 128, width, height, stream);
-        if (!gst_cuda_result (ret))
-          return FALSE;
-      }
-      break;
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-      data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-      width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0);
-      height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
-      stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-
-      ret = CuMemsetD2D8Async (data, stride, 0, width, height, stream);
-      if (!gst_cuda_result (ret))
-        return FALSE;
-
-      data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
-      ret = CuMemsetD2D8Async (data, stride, 128, width, height / 2, stream);
-      if (!gst_cuda_result (ret))
-        return FALSE;
-      break;
-    case GST_VIDEO_FORMAT_P010_10LE:
-    case GST_VIDEO_FORMAT_P012_LE:
-    case GST_VIDEO_FORMAT_P016_LE:
-      data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-      width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0);
-      height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
-      stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-
-      ret = CuMemsetD2D16Async (data, stride, 0, width, height, stream);
-      if (!gst_cuda_result (ret))
-        return FALSE;
-
-      data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
-      ret = CuMemsetD2D16Async (data,
-          stride, G_MAXUINT16 / 2, width, height / 2, stream);
-      if (!gst_cuda_result (ret))
-        return FALSE;
-      break;
-    case GST_VIDEO_FORMAT_I420_10LE:
-    case GST_VIDEO_FORMAT_I420_12LE:
-    case GST_VIDEO_FORMAT_I422_10LE:
-    case GST_VIDEO_FORMAT_I422_12LE:
-    case GST_VIDEO_FORMAT_Y444_10LE:
-    case GST_VIDEO_FORMAT_Y444_12LE:
-    case GST_VIDEO_FORMAT_Y444_16LE:
-      data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-      width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0);
-      height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
-      stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-
-      ret = CuMemsetD2D16Async (data, stride, 0, width, height, stream);
-      if (!gst_cuda_result (ret))
-        return FALSE;
-
-      uv_val = (((guint) 1 << GST_VIDEO_FRAME_COMP_DEPTH (frame, 0)) / 2);
-      for (guint i = 1; i < GST_VIDEO_FRAME_N_PLANES (frame); i++) {
-        data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, i);
-        width = GST_VIDEO_FRAME_COMP_WIDTH (frame, i);
-        height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, i);
-        stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, i);
-
-        ret = CuMemsetD2D16Async (data, stride, uv_val, width, height, stream);
-        if (!gst_cuda_result (ret))
-          return FALSE;
-      }
-      break;
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_RGB10A2_LE:
-    case GST_VIDEO_FORMAT_BGR10A2_LE:
-    case GST_VIDEO_FORMAT_VUYA:
-    {
-      guint32 packed = 0;
-      if (format == GST_VIDEO_FORMAT_ARGB || format == GST_VIDEO_FORMAT_ABGR) {
-        packed = 0xff;
-      } else if (format == GST_VIDEO_FORMAT_RGB10A2_LE ||
-          format == GST_VIDEO_FORMAT_BGR10A2_LE) {
-        packed = ((guint32) 0x3) << 30;
-      } else if (format == GST_VIDEO_FORMAT_VUYA) {
-        packed = (((guint32) 0xff) << 24) | (((guint32) 0x80) << 8) |
-            ((guint32) 0x80);
-      } else {
-        packed = ((guint32) 0xff) << 24;
-      }
-
-      data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-      width = GST_VIDEO_FRAME_WIDTH (frame);
-      height = GST_VIDEO_FRAME_HEIGHT (frame);
-      stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-
-      ret = CuMemsetD2D32Async (data, stride, packed, width, height, stream);
-      if (!gst_cuda_result (ret))
-        return FALSE;
-      break;
-    }
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-      data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-      width = GST_VIDEO_FRAME_WIDTH (frame) * 3;
-      height = GST_VIDEO_FRAME_HEIGHT (frame);
-      stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-
-      ret = CuMemsetD2D8Async (data, stride, 0, width, height, stream);
-      if (!gst_cuda_result (ret))
-        return FALSE;
-      break;
-    case GST_VIDEO_FORMAT_RGBP:
-    case GST_VIDEO_FORMAT_BGRP:
-    case GST_VIDEO_FORMAT_GBR:
-    case GST_VIDEO_FORMAT_GBRA:
-      for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (frame); i++) {
-        guint8 val = 0;
-        if (format == GST_VIDEO_FORMAT_GBRA && i == 3)
-          val = 255;
-
-        data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, i);
-        width = GST_VIDEO_FRAME_COMP_WIDTH (frame, i);
-        height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, i);
-        stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, i);
-
-        ret = CuMemsetD2D8Async (data, stride, val, width, height, stream);
-        if (!gst_cuda_result (ret))
-          return FALSE;
-      }
-      break;
-    case GST_VIDEO_FORMAT_GBR_10LE:
-    case GST_VIDEO_FORMAT_GBR_12LE:
-    case GST_VIDEO_FORMAT_GBR_16LE:
-      for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (frame); i++) {
-        data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, i);
-        width = GST_VIDEO_FRAME_COMP_WIDTH (frame, i);
-        height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, i);
-        stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, i);
-
-        ret = CuMemsetD2D16Async (data, stride, 0, width, height, stream);
-        if (!gst_cuda_result (ret))
-          return FALSE;
-      }
-      break;
-    default:
-      g_assert_not_reached ();
-      return FALSE;
-  }
-
-  return TRUE;
-}
-
 static GstFlowReturn
 gst_cuda_compositor_aggregate_cuda_frames (GstCudaAggregator * cagg,
     GstCudaStream * stream, GstBuffer * outbuf)
@@ -1233,7 +1052,13 @@ gst_cuda_compositor_aggregate_cuda_frames (GstCudaAggregator * cagg,
   }
 
   auto stream_handle = gst_cuda_stream_get_handle (stream);
-  if (!gst_cuda_compositor_draw_background (self, &frame, stream_handle)) {
+  gfloat clear_color[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+  if (GST_VIDEO_INFO_IS_YUV (&vagg->info)) {
+    clear_color[1] = 0.5;
+    clear_color[2] = 0.5;
+  }
+
+  if (!gst_cuda_fill_video_frame (cagg->context, stream, &frame, clear_color)) {
     GST_ERROR_OBJECT (self, "Couldn't draw background");
     ret = GST_FLOW_ERROR;
     goto out;

@@ -27,6 +27,7 @@
 #include <set>
 #include <string>
 #include <mutex>
+#include <algorithm>
 
 #ifdef HAVE_CUDA_GST_GL
 #include <gst/gl/gl.h>
@@ -1955,4 +1956,408 @@ gst_cuda_get_win32_handle_metadata (void)
 #else
   return nullptr;
 #endif
+}
+
+static inline guint16
+scale_clamp_uint (gfloat val, guint depth)
+{
+  auto max = (depth == 16) ? G_MAXUINT16 : ((guint32) 1 << depth) - 1;
+
+  val = std::max < float >(std::min < float >(val * max, (gfloat) max), 0.0f);
+
+  return (guint16) val;
+}
+
+static gboolean
+gst_cuda_fill_video_frame_internal (GstCudaContext * context,
+    GstCudaStream * stream, GstVideoFrame * frame, const gfloat * color_rgba)
+{
+  auto stream_handle = gst_cuda_stream_get_handle (stream);
+  auto format = GST_VIDEO_FRAME_FORMAT (frame);
+  switch (format) {
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_Y444:
+    {
+      for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (frame); i++) {
+        auto data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, i);
+        auto width = GST_VIDEO_FRAME_COMP_WIDTH (frame, i);
+        auto height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, i);
+        auto stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, i);
+
+        auto ret = CuMemsetD2D8Async (data, stride,
+            scale_clamp_uint (color_rgba[i], 8), width, height, stream_handle);
+        if (!gst_cuda_result (ret))
+          return FALSE;
+      }
+
+      return TRUE;
+    }
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+    {
+      auto data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+      auto width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0);
+      auto height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
+      auto stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+      auto y_val = (guint8) scale_clamp_uint (color_rgba[0], 8);
+      auto u_val = scale_clamp_uint (color_rgba[1], 8);
+      auto v_val = scale_clamp_uint (color_rgba[2], 8);
+      guint16 uv_val = 0;
+      if (format == GST_VIDEO_FORMAT_NV12)
+        uv_val = (v_val << 8) | u_val;
+      else
+        uv_val = (u_val << 8) | v_val;
+
+      auto ret = CuMemsetD2D8Async (data,
+          stride, y_val, width, height, stream_handle);
+      if (!gst_cuda_result (ret))
+        return FALSE;
+
+      data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
+      stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
+      width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 1);
+      height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 1);
+
+      ret = CuMemsetD2D16Async (data,
+          stride, uv_val, width, height, stream_handle);
+      return gst_cuda_result (ret);
+    }
+    case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_P012_LE:
+    case GST_VIDEO_FORMAT_P016_LE:
+    {
+      auto data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+      auto width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0);
+      auto height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
+      auto stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+      auto y_val = scale_clamp_uint (color_rgba[0], 16);
+      auto u_val = (guint32) scale_clamp_uint (color_rgba[1], 16);
+      auto v_val = (guint32) scale_clamp_uint (color_rgba[2], 16);
+      guint32 uv_val = (v_val << 16) | u_val;
+
+      auto ret = CuMemsetD2D16Async (data,
+          stride, y_val, width, height, stream_handle);
+      if (!gst_cuda_result (ret))
+        return FALSE;
+
+      data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
+      stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
+      width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 1);
+      height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 1);
+
+      ret = CuMemsetD2D32Async (data,
+          stride, uv_val, width, height, stream_handle);
+      return gst_cuda_result (ret);
+    }
+    case GST_VIDEO_FORMAT_I420_10LE:
+    case GST_VIDEO_FORMAT_I422_10LE:
+    case GST_VIDEO_FORMAT_Y444_10LE:
+    case GST_VIDEO_FORMAT_I420_12LE:
+    case GST_VIDEO_FORMAT_I422_12LE:
+    case GST_VIDEO_FORMAT_Y444_12LE:
+    case GST_VIDEO_FORMAT_Y444_16LE:
+    {
+      for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (frame); i++) {
+        auto data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, i);
+        auto width = GST_VIDEO_FRAME_COMP_WIDTH (frame, i);
+        auto height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, i);
+        auto stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, i);
+        auto depth = GST_VIDEO_FRAME_COMP_DEPTH (frame, i);
+        auto val = scale_clamp_uint (color_rgba[i], depth);
+
+        auto ret = CuMemsetD2D16Async (data,
+            stride, val, width, height, stream_handle);
+        if (!gst_cuda_result (ret))
+          return FALSE;
+      }
+
+      return TRUE;
+    }
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_VUYA:
+    {
+      guint32 packed = 0;
+      auto r_val = (guint32) scale_clamp_uint (color_rgba[0], 8);
+      auto g_val = (guint32) scale_clamp_uint (color_rgba[1], 8);
+      auto b_val = (guint32) scale_clamp_uint (color_rgba[2], 8);
+      auto a_val = (guint32) scale_clamp_uint (color_rgba[3], 8);
+
+      switch (format) {
+        case GST_VIDEO_FORMAT_RGBA:
+          packed = (a_val << 24) | (b_val << 16) | (g_val << 8) | r_val;
+          break;
+        case GST_VIDEO_FORMAT_BGRA:
+        case GST_VIDEO_FORMAT_VUYA:    /* R -> Y, G -> U, B -> V */
+          packed = (a_val << 24) | (r_val << 16) | (g_val << 8) | b_val;
+          break;
+        case GST_VIDEO_FORMAT_RGBx:
+          packed =
+              ((guint32) 0xff << 24) | (b_val << 16) | (g_val << 8) | r_val;
+          break;
+        case GST_VIDEO_FORMAT_BGRx:
+          packed =
+              ((guint32) 0xff << 24) | (r_val << 16) | (g_val << 8) | b_val;
+          break;
+        case GST_VIDEO_FORMAT_ARGB:
+          packed = (b_val << 24) | (g_val << 16) | (r_val << 8) | a_val;
+          break;
+        case GST_VIDEO_FORMAT_ABGR:
+          packed = (r_val << 24) | (g_val << 16) | (b_val << 8) | a_val;
+          break;
+        default:
+          g_assert_not_reached ();
+          return FALSE;
+      }
+
+      auto data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+      auto width = GST_VIDEO_FRAME_WIDTH (frame);
+      auto height = GST_VIDEO_FRAME_HEIGHT (frame);
+      auto stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+
+      auto ret = CuMemsetD2D32Async (data,
+          stride, packed, width, height, stream_handle);
+      return gst_cuda_result (ret);
+    }
+    case GST_VIDEO_FORMAT_RGB10A2_LE:
+    case GST_VIDEO_FORMAT_BGR10A2_LE:
+    {
+      auto r_val = (guint32) scale_clamp_uint (color_rgba[0], 10);
+      auto g_val = (guint32) scale_clamp_uint (color_rgba[1], 10);
+      auto b_val = (guint32) scale_clamp_uint (color_rgba[2], 10);
+      auto a_val = (guint32) scale_clamp_uint (color_rgba[3], 2);
+      guint32 packed = 0;
+
+      if (format == GST_VIDEO_FORMAT_RGB10A2_LE)
+        packed = (a_val << 30) | (b_val << 20) | (g_val << 10) | r_val;
+      else
+        packed = (a_val << 30) | (r_val << 20) | (g_val << 10) | b_val;
+
+      auto data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+      auto width = GST_VIDEO_FRAME_WIDTH (frame);
+      auto height = GST_VIDEO_FRAME_HEIGHT (frame);
+      auto stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+
+      auto ret = CuMemsetD2D32Async (data,
+          stride, packed, width, height, stream_handle);
+
+      return gst_cuda_result (ret);
+    }
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+    {
+      guint8 packed = 0;
+      auto r = scale_clamp_uint (color_rgba[0], 8);
+      auto g = scale_clamp_uint (color_rgba[1], 8);
+      auto b = scale_clamp_uint (color_rgba[2], 8);
+      if (r == 0 && g == 0 && b == 0) {
+        packed = 0;
+      } else if (r == 255 && g == 255 && b == 255) {
+        packed = 255;
+      } else {
+        /* Only black or white can do memset. Fallback to converter */
+        break;
+      }
+
+      auto data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+      auto width = GST_VIDEO_FRAME_WIDTH (frame) * 3;
+      auto height = GST_VIDEO_FRAME_HEIGHT (frame);
+      auto stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+
+      auto ret = CuMemsetD2D8Async (data,
+          stride, packed, width, height, stream_handle);
+      return gst_cuda_result (ret);
+    }
+    case GST_VIDEO_FORMAT_RGBP:
+    case GST_VIDEO_FORMAT_BGRP:
+    case GST_VIDEO_FORMAT_GBR:
+    case GST_VIDEO_FORMAT_GBRA:
+    {
+      for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (frame); i++) {
+        guint color_idx = 0;
+
+        switch (format) {
+          case GST_VIDEO_FORMAT_RGBP:
+            color_idx = i;
+            break;
+          case GST_VIDEO_FORMAT_BGRP:
+            color_idx = 2 - i;
+            break;
+          case GST_VIDEO_FORMAT_GBR:
+          case GST_VIDEO_FORMAT_GBRA:
+            if (i == 0)
+              color_idx = 1;
+            else if (i == 1)
+              color_idx = 2;
+            else if (i == 2)
+              color_idx = 0;
+            else
+              color_idx = 3;
+            break;
+          default:
+            g_assert_not_reached ();
+            return FALSE;
+        }
+
+        auto val = (guint8) scale_clamp_uint (color_rgba[color_idx], 8);
+
+        auto data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, i);
+        auto width = GST_VIDEO_FRAME_COMP_WIDTH (frame, i);
+        auto height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, i);
+        auto stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, i);
+
+        auto ret = CuMemsetD2D8Async (data,
+            stride, val, width, height, stream_handle);
+        if (!gst_cuda_result (ret))
+          return FALSE;
+      }
+
+      return TRUE;
+    }
+    case GST_VIDEO_FORMAT_GBR_10LE:
+    case GST_VIDEO_FORMAT_GBR_12LE:
+    case GST_VIDEO_FORMAT_GBR_16LE:
+    {
+      static const guint gbr_map[] = { 1, 2, 0 };
+
+      for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (frame); i++) {
+        auto data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, i);
+        auto width = GST_VIDEO_FRAME_COMP_WIDTH (frame, i);
+        auto height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, i);
+        auto stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, i);
+        auto depth = GST_VIDEO_FRAME_COMP_DEPTH (frame, i);
+        auto val = scale_clamp_uint (color_rgba[gbr_map[i]], depth);
+
+        auto ret = CuMemsetD2D16Async (data,
+            stride, val, width, height, stream_handle);
+        if (!gst_cuda_result (ret))
+          return FALSE;
+      }
+
+      return TRUE;
+    }
+    default:
+      break;
+  }
+
+  /* Perform slow-path */
+  GstVideoInfo tmp_info;
+  GstVideoFrame tmp_frame;
+  GstVideoFormat tmp_format;
+  if (GST_VIDEO_INFO_IS_RGB (&frame->info))
+    tmp_format = GST_VIDEO_FORMAT_RGBA;
+  else
+    tmp_format = GST_VIDEO_FORMAT_VUYA;
+
+  gst_video_info_set_format (&tmp_info, tmp_format, 16, 16);
+  tmp_info.colorimetry = frame->info.colorimetry;
+
+  auto mem = gst_cuda_allocator_alloc (nullptr, context, stream, &tmp_info);
+  if (!mem)
+    return FALSE;
+  auto cmem = (GstCudaMemory *) mem;
+
+  auto tmp_buf = gst_buffer_new ();
+  gst_buffer_append_memory (tmp_buf, mem);
+  gst_buffer_add_video_meta_full (tmp_buf, GST_VIDEO_FRAME_FLAG_NONE,
+      GST_VIDEO_INFO_FORMAT (&tmp_info), GST_VIDEO_INFO_WIDTH (&tmp_info),
+      GST_VIDEO_INFO_HEIGHT (&tmp_info), GST_VIDEO_INFO_N_PLANES (&tmp_info),
+      cmem->info.offset, cmem->info.stride);
+
+  if (!gst_video_frame_map (&tmp_frame, &tmp_info, tmp_buf, GST_MAP_WRITE_CUDA)) {
+    gst_buffer_unref (tmp_buf);
+    return FALSE;
+  }
+
+  {
+    guint32 packed = 0;
+    auto r_val = (guint32) scale_clamp_uint (color_rgba[0], 8);
+    auto g_val = (guint32) scale_clamp_uint (color_rgba[1], 8);
+    auto b_val = (guint32) scale_clamp_uint (color_rgba[2], 8);
+    auto a_val = (guint32) scale_clamp_uint (color_rgba[3], 8);
+
+    if (tmp_format == GST_VIDEO_FORMAT_RGBA)
+      packed = (a_val << 24) | (b_val << 16) | (g_val << 8) | r_val;
+    else
+      packed = (a_val << 24) | (r_val << 16) | (g_val << 8) | b_val;
+
+    auto data = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (&tmp_frame, 0);
+    auto width = GST_VIDEO_FRAME_WIDTH (&tmp_frame);
+    auto height = GST_VIDEO_FRAME_HEIGHT (&tmp_frame);
+    auto stride = GST_VIDEO_FRAME_PLANE_STRIDE (&tmp_frame, 0);
+
+    auto ret = CuMemsetD2D32Async (data,
+        stride, packed, width, height, stream_handle);
+    gst_video_frame_unmap (&tmp_frame);
+
+    if (!gst_cuda_result (ret)) {
+      gst_buffer_unref (tmp_buf);
+      return FALSE;
+    }
+  }
+
+  if (!gst_video_frame_map (&tmp_frame, &tmp_info, tmp_buf, GST_MAP_READ_CUDA)) {
+    gst_buffer_unref (tmp_buf);
+    return FALSE;
+  }
+
+  auto conv = gst_cuda_converter_new (context,
+      &tmp_info, &frame->info, nullptr);
+  if (!conv) {
+    gst_video_frame_unmap (&tmp_frame);
+    gst_buffer_unref (tmp_buf);
+    return FALSE;
+  }
+
+  auto ret = gst_cuda_converter_convert_frame (conv, stream, &tmp_frame, frame);
+
+  gst_video_frame_unmap (&tmp_frame);
+  CuStreamSynchronize (stream_handle);
+  GST_MEMORY_FLAG_UNSET (mem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC);
+  gst_buffer_unref (tmp_buf);
+  gst_object_unref (conv);
+
+  return ret;
+}
+
+/**
+ * gst_cuda_fill_video_frame:
+ * @context: a #GstCudaContext
+ * @stream: (nullable): a #GstCudaStream
+ * @frame: a #GstVideoFrame to fill
+ * @color_rgba: (array fixed-size=4): normalized RGBA color components
+ * in the range [0.0, 1.0] to fill @frame with
+ *
+ * Performs an operation similar to ID3D11DeviceContext::ClearRenderTargetView.
+ * For non-RGBA formats, the RGBA components of @color_rgba are interpreted
+ * as YUVA values.
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_cuda_fill_video_frame (GstCudaContext * context, GstCudaStream * stream,
+    GstVideoFrame * frame, const gfloat * color_rgba)
+{
+  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), FALSE);
+  g_return_val_if_fail (stream == nullptr || GST_IS_CUDA_STREAM (stream),
+      FALSE);
+  g_return_val_if_fail (frame, FALSE);
+  g_return_val_if_fail (color_rgba, FALSE);
+
+  if (!gst_cuda_context_push (context)) {
+    GST_ERROR_OBJECT (context, "Couldn't push context");
+    return FALSE;
+  }
+
+  auto ret = gst_cuda_fill_video_frame_internal (context,
+      stream, frame, color_rgba);
+  gst_cuda_context_pop (nullptr);
+
+  return ret;
 }
