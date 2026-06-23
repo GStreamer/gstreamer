@@ -97,6 +97,9 @@ static gboolean gst_audio_visualizer_do_bufferpool (GstAudioVisualizer * scope,
 static gboolean
 default_decide_allocation (GstAudioVisualizer * scope, GstQuery * query);
 
+static gboolean copy_metadata (GstAudioVisualizer * scope,
+    GstBuffer * inbuf, GstBuffer * outbuf);
+
 struct _GstAudioVisualizerPrivate
 {
   gboolean negotiated;
@@ -1089,9 +1092,6 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
 
   inbuf = scope->priv->inbuf;
 
-  /* FIXME: the timestamp in the adapter would be different */
-  gst_buffer_copy_into (inbuf, buffer, GST_BUFFER_COPY_METADATA, 0, -1);
-
   gst_adapter_push (scope->priv->adapter, buffer);
 
   /* this is what we want */
@@ -1172,6 +1172,11 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
     if (!(databuf = gst_adapter_get_buffer (scope->priv->adapter, sbpf)))
       break;
 
+    if (!copy_metadata (scope, databuf, outbuf)) {
+      GST_ELEMENT_WARNING (scope, STREAM, NOT_IMPLEMENTED,
+          ("could not copy metadata"), (NULL));
+    }
+
     gst_video_frame_map (&outframe, &scope->vinfo, outbuf,
         GST_MAP_READWRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF);
 
@@ -1240,6 +1245,127 @@ not_negotiated:
     GST_DEBUG_OBJECT (scope, "Failed to renegotiate");
     gst_buffer_unref (buffer);
     return GST_FLOW_NOT_NEGOTIATED;
+  }
+}
+
+typedef struct
+{
+  GstAudioVisualizer *scope;
+  GstBuffer *outbuf;
+  GHashTable *ref_ts_metas;
+} GatherCopyRefTsMetasData;
+
+static gboolean
+gather_ref_timestamp_metas (GstBuffer * inbuf, GstMeta ** meta,
+    GatherCopyRefTsMetasData * data)
+{
+  GstAudioVisualizer *scope = data->scope;
+  const GstMetaInfo *info = (*meta)->info;
+  const GstReferenceTimestampMeta *ref_ts_meta;
+  GstStructure *caps_structure;
+  const gchar *caps_name;
+
+  /* drop metas with tags for now */
+  if (gst_meta_api_type_get_tags (info->api)) {
+    GST_TRACE_OBJECT (scope, "meta has tags %s", g_type_name (info->api));
+    goto not_copying;
+  }
+
+  if (info->api != GST_REFERENCE_TIMESTAMP_META_API_TYPE) {
+    GstMetaTransformCopy copy_data = { FALSE, 0, -1 };
+    if (info->transform_func) {
+      GST_DEBUG_OBJECT (scope, "copying metadata %s", g_type_name (info->api));
+      info->transform_func (data->outbuf, *meta, inbuf,
+          _gst_meta_transform_copy, &copy_data);
+    } else {
+      GST_LOG_OBJECT (scope, "couldn't copy metadata %s",
+          g_type_name (info->api));
+    }
+
+    return TRUE;
+  }
+
+  ref_ts_meta = (const GstReferenceTimestampMeta *) *meta;
+  if (!ref_ts_meta->reference) {
+    goto not_copying;
+  }
+
+  caps_structure = gst_caps_get_structure (ref_ts_meta->reference, 0);
+  if (!caps_structure) {
+    goto not_copying;
+  }
+
+  caps_name = gst_structure_get_name (caps_structure);
+  if (!caps_name) {
+    goto not_copying;
+  }
+
+  GST_LOG_OBJECT (scope,
+      "found ref ts metadata %" GST_PTR_FORMAT ", ts %" GST_TIME_FORMAT
+      ", duration %" GST_TIME_FORMAT, ref_ts_meta->reference,
+      GST_TIME_ARGS (ref_ts_meta->timestamp),
+      GST_TIME_ARGS (ref_ts_meta->duration));
+
+  /* keeping the last reference timestamp meta with this reference name */
+  g_hash_table_replace (data->ref_ts_metas, (gpointer) caps_name, (gpointer)
+      ref_ts_meta);
+
+  return TRUE;
+
+not_copying:
+  {
+    GST_LOG_OBJECT (scope, "not copying metadata %s", g_type_name (info->api));
+    return TRUE;
+  }
+}
+
+static void
+copy_gathered_ref_ts_metas_to_output (const char *_caps_name,
+    GstReferenceTimestampMeta * ref_ts_meta, GatherCopyRefTsMetasData * data)
+{
+
+  GST_DEBUG_OBJECT (data->scope,
+      "copying ref ts metadata %" GST_PTR_FORMAT ", ts %" GST_TIME_FORMAT
+      ", duration %" GST_TIME_FORMAT, ref_ts_meta->reference,
+      GST_TIME_ARGS (ref_ts_meta->timestamp),
+      GST_TIME_ARGS (ref_ts_meta->duration));
+
+  gst_buffer_add_reference_timestamp_meta (data->outbuf, ref_ts_meta->reference,
+      ref_ts_meta->timestamp, ref_ts_meta->duration);
+}
+
+static gboolean
+copy_metadata (GstAudioVisualizer * scope,
+    GstBuffer * inbuf, GstBuffer * outbuf)
+{
+  GatherCopyRefTsMetasData data;
+
+  GST_LOG_OBJECT (scope, "copying metadata");
+
+  /* this should not happen, buffers allocated from a pool or with
+   * new_allocate should always be writable. */
+  if (!gst_buffer_is_writable (outbuf)) {
+    goto not_writable;
+  }
+
+  data.scope = scope;
+  data.outbuf = outbuf;
+  data.ref_ts_metas = g_hash_table_new_full (g_str_hash, g_str_equal,
+      NULL, NULL);
+
+  gst_buffer_foreach_meta (inbuf,
+      (GstBufferForeachMetaFunc) gather_ref_timestamp_metas, &data);
+  g_hash_table_foreach (data.ref_ts_metas,
+      (GHFunc) copy_gathered_ref_ts_metas_to_output, &data);
+
+  g_hash_table_unref (data.ref_ts_metas);
+
+  return TRUE;
+
+not_writable:
+  {
+    GST_WARNING_OBJECT (scope, "buffer %p not writable", outbuf);
+    return FALSE;
   }
 }
 
