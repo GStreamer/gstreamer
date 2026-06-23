@@ -45,6 +45,14 @@ struct _GstAmcValueRange
   gint upper;
 };
 
+typedef struct _GstAmcDoubleRange GstAmcDoubleRange;
+
+struct _GstAmcDoubleRange
+{
+  gdouble lower;
+  gdouble upper;
+};
+
 gboolean gst_amc_codeclist_get_count (gint * count, GError **err);
 GstAmcCodecInfoHandle * gst_amc_codeclist_get_codec_info_at (gint index,
     GError **err);
@@ -71,12 +79,18 @@ GstAmcCodecProfileLevel * gst_amc_codec_capabilities_handle_get_profile_levels (
 GstAmcVideoCapabilitiesHandle * gst_amc_capabilities_get_video_capabilities (GstAmcCodecCapabilitiesHandle * handle,
     GError **err);
 void gst_amc_capabilities_video_capabilities_handle_free (GstAmcVideoCapabilitiesHandle * handle);
-GstAmcValueRange gst_amc_video_capabilities_get_widths (
+GstAmcValueRange gst_amc_video_capabilities_get_supported_widths (
   GstAmcVideoCapabilitiesHandle * handle, GError ** err);
-GstAmcValueRange gst_amc_video_capabilities_get_heights (
+GstAmcValueRange gst_amc_video_capabilities_get_supported_heights (
   GstAmcVideoCapabilitiesHandle * handle, GError ** err);
-GstAmcValueRange gst_amc_video_capabilities_get_framerates (
+GstAmcValueRange gst_amc_video_capabilities_get_supported_framerates (
   GstAmcVideoCapabilitiesHandle * handle, GError ** err);
+GstAmcValueRange gst_amc_video_capabilities_get_supported_widths_for (
+  GstAmcVideoCapabilitiesHandle * handle, gint height, GError ** err);
+GstAmcValueRange gst_amc_video_capabilities_get_supported_heights_for (
+  GstAmcVideoCapabilitiesHandle * handle, gint width, GError ** err);
+GstAmcDoubleRange gst_amc_video_capabilities_get_achievable_framerates_for (
+  GstAmcVideoCapabilitiesHandle * handle, gint width, gint height, GError ** err);
 
 G_END_DECLS
 

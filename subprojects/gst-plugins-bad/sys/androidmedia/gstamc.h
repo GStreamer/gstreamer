@@ -33,6 +33,12 @@ G_BEGIN_DECLS
 typedef struct _GstAmcCodecType GstAmcCodecType;
 typedef struct _GstAmcCodecInfo GstAmcCodecInfo;
 
+// Simplified video capabilities for video codecs
+typedef struct {
+  gint width, height;
+  gint fps_n, fps_d;
+} GstAmcVideoCapability;
+
 struct _GstAmcCodecType {
   gchar *mime;
 
@@ -43,9 +49,8 @@ struct _GstAmcCodecType {
   gsize n_profile_levels;
 
   /* video codecs only */
-  GstAmcValueRange width;
-  GstAmcValueRange height;
-  GstAmcValueRange framerate;
+  GstAmcVideoCapability *supported_video_capabilities;
+  gsize n_supported_video_capabilities;
 };
 
 typedef enum

@@ -81,6 +81,9 @@ static struct
   jmethodID get_supported_heights;
   jmethodID get_supported_widths;
   jmethodID get_supported_framerates;
+  jmethodID get_supported_widths_for;
+  jmethodID get_supported_heights_for;
+  jmethodID get_achievable_framerates_for;
 } media_videocapabilities;
 
 static struct
@@ -95,6 +98,12 @@ static struct
   jclass klass;
   jmethodID int_value;
 } lang_integer;
+
+static struct
+{
+  jclass klass;
+  jmethodID double_value;
+} lang_double;
 
 gboolean
 gst_amc_codeclist_jni_static_init (void)
@@ -305,6 +314,23 @@ gst_amc_codeclist_jni_static_init (void)
     return FALSE;
   }
 
+  lang_double.klass = gst_amc_jni_get_class (env, &err, "java/lang/Double");
+  if (!lang_double.klass) {
+    GST_ERROR ("Failed to get java.lang.Double class: %s", err->message);
+    g_clear_error (&err);
+    return FALSE;
+  }
+
+  lang_double.double_value =
+      gst_amc_jni_get_method_id (env, &err, lang_double.klass, "doubleValue",
+      "()D");
+  if (!lang_double.double_value) {
+    GST_ERROR ("Failed to get java.lang.Double doubleValue(): %s",
+        err->message);
+    g_clear_error (&err);
+    return FALSE;
+  }
+
   media_codeccapabilities.get_video_capabilities =
       gst_amc_jni_get_method_id (env, &err, media_codeccapabilities.klass,
       "getVideoCapabilities",
@@ -356,6 +382,39 @@ gst_amc_codeclist_jni_static_init (void)
   if (!media_videocapabilities.get_supported_framerates) {
     GST_ERROR
         ("Failed to get android.media.MediaCodecInfo.VideoCapabilities getSupportedFrameRates(): %s",
+        err->message);
+    g_clear_error (&err);
+    return FALSE;
+  }
+
+  media_videocapabilities.get_supported_widths_for =
+      gst_amc_jni_get_method_id (env, &err, media_videocapabilities.klass,
+      "getSupportedWidthsFor", "(I)Landroid/util/Range;");
+  if (!media_videocapabilities.get_supported_widths_for) {
+    GST_ERROR
+        ("Failed to get android.media.MediaCodecInfo.VideoCapabilities getSupportedWidthsFor(): %s",
+        err->message);
+    g_clear_error (&err);
+    return FALSE;
+  }
+
+  media_videocapabilities.get_supported_heights_for =
+      gst_amc_jni_get_method_id (env, &err, media_videocapabilities.klass,
+      "getSupportedHeightsFor", "(I)Landroid/util/Range;");
+  if (!media_videocapabilities.get_supported_heights_for) {
+    GST_ERROR
+        ("Failed to get android.media.MediaCodecInfo.VideoCapabilities getSupportedHeightsFor(): %s",
+        err->message);
+    g_clear_error (&err);
+    return FALSE;
+  }
+
+  media_videocapabilities.get_achievable_framerates_for =
+      gst_amc_jni_get_method_id (env, &err, media_videocapabilities.klass,
+      "getAchievableFrameRatesFor", "(II)Landroid/util/Range;");
+  if (!media_videocapabilities.get_achievable_framerates_for) {
+    GST_ERROR
+        ("Failed to get android.media.MediaCodecInfo.VideoCapabilities getAchievableFrameRatesFor(): %s",
         err->message);
     g_clear_error (&err);
     return FALSE;
@@ -742,8 +801,8 @@ gst_amc_from_range (jobject range, GstAmcValueRange * res, GError ** err)
 }
 
 GstAmcValueRange
-gst_amc_video_capabilities_get_widths (GstAmcVideoCapabilitiesHandle * handle,
-    GError ** err)
+gst_amc_video_capabilities_get_supported_widths (GstAmcVideoCapabilitiesHandle *
+    handle, GError ** err)
 {
   GstAmcValueRange ret = { 16, 4096 };
   jobject range;
@@ -763,8 +822,8 @@ out:
 }
 
 GstAmcValueRange
-gst_amc_video_capabilities_get_heights (GstAmcVideoCapabilitiesHandle * handle,
-    GError ** err)
+gst_amc_video_capabilities_get_supported_heights (GstAmcVideoCapabilitiesHandle
+    * handle, GError ** err)
 {
   GstAmcValueRange ret = { 16, 4096 };
   jobject range;
@@ -784,9 +843,8 @@ out:
 }
 
 GstAmcValueRange
-gst_amc_video_capabilities_get_framerates (GstAmcVideoCapabilitiesHandle *
-    handle, GError ** err)
-{
+    gst_amc_video_capabilities_get_supported_framerates
+    (GstAmcVideoCapabilitiesHandle * handle, GError ** err) {
   GstAmcValueRange ret = { 0, G_MAXINT };
   jobject range;
   JNIEnv *env;
@@ -799,6 +857,98 @@ gst_amc_video_capabilities_get_framerates (GstAmcVideoCapabilitiesHandle *
   if (gst_amc_jni_call_object_method (env, err, handle->object,
           media_videocapabilities.get_supported_framerates, &range))
     gst_amc_from_range (range, &ret, err);
+
+out:
+  return ret;
+}
+
+static void
+gst_amc_from_double_range (jobject range, GstAmcDoubleRange * res,
+    GError ** err)
+{
+  jobject lower, upper;
+  JNIEnv *env;
+  gdouble lower_d, upper_d;
+
+  env = gst_amc_jni_get_env ();
+
+  if (!gst_amc_jni_call_object_method (env, err, range,
+          util_range.get_lower, &lower))
+    return;
+
+  if (!gst_amc_jni_call_object_method (env, err, range,
+          util_range.get_upper, &upper))
+    return;
+
+  if (!gst_amc_jni_call_double_method (env, err, lower,
+          lang_double.double_value, &lower_d))
+    return;
+
+  if (!gst_amc_jni_call_double_method (env, err, upper,
+          lang_double.double_value, &upper_d))
+    return;
+
+  res->lower = lower_d;
+  res->upper = upper_d;
+}
+
+GstAmcValueRange
+    gst_amc_video_capabilities_get_supported_widths_for
+    (GstAmcVideoCapabilitiesHandle * handle, gint height, GError ** err) {
+  GstAmcValueRange ret = { 16, 4096 };
+  jobject range;
+  JNIEnv *env;
+
+  if (!handle)
+    goto out;
+
+  env = gst_amc_jni_get_env ();
+
+  if (gst_amc_jni_call_object_method (env, err, handle->object,
+          media_videocapabilities.get_supported_widths_for, &range, height))
+    gst_amc_from_range (range, &ret, err);
+
+out:
+  return ret;
+}
+
+GstAmcValueRange
+    gst_amc_video_capabilities_get_supported_heights_for
+    (GstAmcVideoCapabilitiesHandle * handle, gint width, GError ** err) {
+  GstAmcValueRange ret = { 16, 4096 };
+  jobject range;
+  JNIEnv *env;
+
+  if (!handle)
+    goto out;
+
+  env = gst_amc_jni_get_env ();
+
+  if (gst_amc_jni_call_object_method (env, err, handle->object,
+          media_videocapabilities.get_supported_heights_for, &range, width))
+    gst_amc_from_range (range, &ret, err);
+
+out:
+  return ret;
+}
+
+GstAmcDoubleRange
+    gst_amc_video_capabilities_get_achievable_framerates_for
+    (GstAmcVideoCapabilitiesHandle * handle, gint width, gint height,
+    GError ** err) {
+  GstAmcDoubleRange ret = { 0.0, G_MAXDOUBLE };
+  jobject range;
+  JNIEnv *env;
+
+  if (!handle)
+    goto out;
+
+  env = gst_amc_jni_get_env ();
+
+  if (gst_amc_jni_call_object_method (env, err, handle->object,
+          media_videocapabilities.get_achievable_framerates_for, &range, width,
+          height))
+    gst_amc_from_double_range (range, &ret, err);
 
 out:
   return ret;
