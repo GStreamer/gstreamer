@@ -289,6 +289,10 @@ asf_payload_parse_replicated_data_extensions (AsfStream * stream,
   for (ext = stream->ext_props.payload_extensions; ext->len > 0; ++ext) {
     ext_len = ext->len;
     if (ext_len == 0xFFFF) {    /* extension length is determined by first two bytes in replicated data */
+      if (off + 2 > payload->rep_data_len) {
+        GST_WARNING ("not enough replicated data for reading extension length");
+        return;
+      }
       ext_len = GST_READ_UINT16_LE (payload->rep_data + off);
       off += 2;
     }
@@ -317,7 +321,7 @@ asf_payload_parse_replicated_data_extensions (AsfStream * stream,
           GST_DEBUG ("SYSTEM_CONTENT: interlaced:%d, rff:%d, tff:%d",
               payload->interlaced, payload->rff, payload->tff);
         } else {
-          GST_WARNING ("unexpected SYSTEM_CONTE extensions len %u", ext_len);
+          GST_WARNING ("unexpected SYSTEM_CONTENT extensions len %u", ext_len);
         }
         break;
       case ASF_PAYLOAD_EXTENSION_SYSTEM_PIXEL_ASPECT_RATIO:
@@ -331,14 +335,17 @@ asf_payload_parse_replicated_data_extensions (AsfStream * stream,
         }
         break;
       case ASF_PAYLOAD_EXTENSION_TIMING:
-      {
-        /* dvr-ms timing - this will override packet timestamp */
-        guint64 time = GST_READ_UINT64_LE (payload->rep_data + off + 8);
-        if (time != 0xFFFFFFFFFFFFFFFF)
-          payload->ts = time * 100;
-        else
-          payload->ts = GST_CLOCK_TIME_NONE;
-      }
+        /* FIXME: Is this always 48 bytes? */
+        if (G_LIKELY (ext_len >= 16)) {
+          /* dvr-ms timing - this will override packet timestamp */
+          guint64 time = GST_READ_UINT64_LE (payload->rep_data + off + 8);
+          if (time != 0xFFFFFFFFFFFFFFFF)
+            payload->ts = time * 100;
+          else
+            payload->ts = GST_CLOCK_TIME_NONE;
+        } else {
+          GST_WARNING ("unexpected TIMING extensions len %u", ext_len);
+        }
         break;
       default:
         GST_LOG ("UNKNOWN PAYLOAD EXTENSION!");
@@ -396,8 +403,15 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
     return FALSE;
   }
 
-  memcpy (payload.rep_data, *p_data,
-      MIN (sizeof (payload.rep_data), payload.rep_data_len));
+  /* FIXME: The specification says that this is a uint16 but all our code here
+   * assumes it's at most 255 bytes */
+  if (G_UNLIKELY (payload.rep_data_len > G_MAXUINT8)) {
+    GST_WARNING_OBJECT (demux, "Too long rep data! rep_data_len=%u",
+        payload.rep_data_len);
+    return FALSE;
+  }
+
+  memcpy (payload.rep_data, *p_data, payload.rep_data_len);
 
   *p_data += payload.rep_data_len;
   *p_size -= payload.rep_data_len;
