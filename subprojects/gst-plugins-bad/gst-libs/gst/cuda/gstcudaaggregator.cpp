@@ -54,6 +54,32 @@ struct _GstCudaAggregatorPadPrivate
   GstVideoInfo pool_info;
 };
 
+struct _GstCudaAggregatorConvertPadPrivate
+{
+  ~_GstCudaAggregatorConvertPadPrivate ()
+  {
+    release_resources ();
+  }
+
+  void release_resources ()
+  {
+    gst_clear_buffer (&converted_buf);
+    if (conv_pool) {
+      gst_buffer_pool_set_active (conv_pool, FALSE);
+      gst_object_unref (conv_pool);
+    }
+    gst_clear_object (&conv);
+  }
+
+  GstCudaConverter *conv = nullptr;
+  GstBufferPool *conv_pool = nullptr;
+  GstBuffer *converted_buf = nullptr;
+  GstVideoInfo conversion_info;
+  gboolean converter_config_changed = FALSE;
+
+  std::recursive_mutex lock;
+};
+
 struct _GstCudaAggregatorPrivate
 {
   ~_GstCudaAggregatorPrivate ()
@@ -244,6 +270,282 @@ gst_cuda_aggregator_pad_clean_frame (GstVideoAggregatorPad * pad,
 
   memset (prepared_frame, 0, sizeof (GstVideoFrame));
   gst_clear_buffer (&priv->prepared_buf);
+}
+
+static void gst_cuda_aggregator_convert_pad_finalize (GObject * object);
+static gboolean
+gst_cuda_aggregator_convert_pad_prepare_frame (GstVideoAggregatorPad * pad,
+    GstVideoAggregator * vagg, GstBuffer * buffer,
+    GstVideoFrame * prepared_frame);
+static void
+gst_cuda_aggregator_convert_pad_clean_frame (GstVideoAggregatorPad * pad,
+    GstVideoAggregator * vagg, GstVideoFrame * prepared_frame);
+static void gst_cuda_aggregator_convert_pad_update_conversion_info
+    (GstVideoAggregatorPad * pad);
+static void gst_cuda_aggregator_convert_pad_create_conversion_info
+    (GstCudaAggregatorConvertPad * pad, GstCudaAggregator * agg,
+    GstVideoInfo * convert_info);
+
+#define gst_cuda_aggregator_convert_pad_parent_class parent_convert_pad_class
+G_DEFINE_TYPE (GstCudaAggregatorConvertPad, gst_cuda_aggregator_convert_pad,
+    GST_TYPE_CUDA_AGGREGATOR_PAD);
+
+static void
+gst_cuda_aggregator_convert_pad_class_init (GstCudaAggregatorConvertPadClass *
+    klass)
+{
+  auto object_class = G_OBJECT_CLASS (klass);
+  auto vagg_pad_class = GST_VIDEO_AGGREGATOR_PAD_CLASS (klass);
+
+  object_class->finalize = gst_cuda_aggregator_convert_pad_finalize;
+
+  vagg_pad_class->prepare_frame =
+      GST_DEBUG_FUNCPTR (gst_cuda_aggregator_convert_pad_prepare_frame);
+  vagg_pad_class->clean_frame =
+      GST_DEBUG_FUNCPTR (gst_cuda_aggregator_convert_pad_clean_frame);
+  vagg_pad_class->update_conversion_info =
+      GST_DEBUG_FUNCPTR
+      (gst_cuda_aggregator_convert_pad_update_conversion_info);
+
+  klass->create_conversion_info =
+      GST_DEBUG_FUNCPTR
+      (gst_cuda_aggregator_convert_pad_create_conversion_info);
+}
+
+static void
+gst_cuda_aggregator_convert_pad_init (GstCudaAggregatorConvertPad * self)
+{
+  self->priv = new GstCudaAggregatorConvertPadPrivate ();
+}
+
+static void
+gst_cuda_aggregator_convert_pad_finalize (GObject * object)
+{
+  auto self = GST_CUDA_AGGREGATOR_CONVERT_PAD (object);
+
+  delete self->priv;
+
+  G_OBJECT_CLASS (parent_convert_pad_class)->finalize (object);
+}
+
+static gboolean
+gst_cuda_aggregator_convert_pad_prepare_frame (GstVideoAggregatorPad * pad,
+    GstVideoAggregator * vagg, GstBuffer * buffer,
+    GstVideoFrame * prepared_frame)
+{
+  auto self = GST_CUDA_AGGREGATOR_CONVERT_PAD (pad);
+  auto priv = self->priv;
+  auto cagg = GST_CUDA_AGGREGATOR (vagg);
+
+  {
+    std::lock_guard < std::recursive_mutex > lk (priv->lock);
+    if (priv->converter_config_changed) {
+      auto klass = GST_CUDA_AGGREGATOR_CONVERT_PAD_GET_CLASS (pad);
+      GstVideoInfo conversion_info;
+
+      gst_video_info_init (&conversion_info);
+      klass->create_conversion_info (self, cagg, &conversion_info);
+      if (!conversion_info.finfo) {
+        return FALSE;
+      }
+
+      priv->conversion_info = conversion_info;
+      priv->release_resources ();
+
+      if (!gst_video_info_is_equal (&pad->info, &priv->conversion_info)) {
+        priv->conv = gst_cuda_converter_new (cagg->context, &pad->info,
+            &priv->conversion_info, nullptr);
+
+        if (!priv->conv) {
+          GST_WARNING_OBJECT (pad, "No path found for conversion");
+          return FALSE;
+        }
+
+        priv->conv_pool = gst_cuda_buffer_pool_new (cagg->context);
+        auto config = gst_buffer_pool_get_config (priv->conv_pool);
+        auto stream = cagg->priv->other_stream;
+        if (!stream)
+          stream = cagg->priv->stream;
+
+        gst_buffer_pool_config_set_cuda_stream (config, stream);
+
+        auto caps = gst_video_info_to_caps (&priv->conversion_info);
+        gst_buffer_pool_config_set_params (config,
+            caps, priv->conversion_info.size, 0, 0);
+        gst_caps_unref (caps);
+        if (!gst_buffer_pool_set_config (priv->conv_pool, config)) {
+          GST_ERROR_OBJECT (pad, "Set config failed");
+          priv->release_resources ();
+          return FALSE;
+        }
+
+        if (!gst_buffer_pool_set_active (priv->conv_pool, TRUE)) {
+          GST_ERROR_OBJECT (pad, "Set active failed");
+          priv->release_resources ();
+          return FALSE;
+        }
+
+        GST_DEBUG_OBJECT (pad, "This pad will be converted from %s to %s",
+            gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&pad->info)),
+            gst_video_format_to_string (GST_VIDEO_INFO_FORMAT
+                (&priv->conversion_info)));
+      } else {
+        GST_DEBUG_OBJECT (pad, "This pad will not need conversion");
+      }
+
+      priv->converter_config_changed = FALSE;
+    }
+  }
+
+  /* Performs uploading first */
+  if (!gst_cuda_aggregator_pad_prepare_frame (pad,
+          vagg, buffer, prepared_frame)) {
+    return FALSE;
+  }
+
+  if (!prepared_frame->buffer)
+    return TRUE;
+
+  if (!priv->conv)
+    return TRUE;
+
+  GstBuffer *conv_buf = nullptr;
+  gst_buffer_pool_acquire_buffer (priv->conv_pool, &conv_buf, nullptr);
+  if (!conv_buf) {
+    GST_ERROR_OBJECT (pad, "Couldn't acquire convert dest buffer");
+    return FALSE;
+  }
+
+  GstVideoFrame conv_frame;
+  if (!gst_video_frame_map (&conv_frame,
+          &priv->conversion_info, conv_buf, GST_MAP_WRITE_CUDA)) {
+    GST_ERROR_OBJECT (pad, "Couldn't map dst frame");
+    gst_buffer_unref (conv_buf);
+    return FALSE;
+  }
+
+  auto in_cmem =
+      (GstCudaMemory *) gst_buffer_peek_memory (prepared_frame->buffer, 0);
+
+  /* Stream preference,
+   * 1) associated with input buffer
+   * 2) downstream proposed one
+   * 3) our own stream */
+  auto in_stream = gst_cuda_memory_get_stream (in_cmem);
+  GstCudaStream *stream = in_stream;
+  if (!stream)
+    stream = cagg->priv->other_stream;
+  if (!stream)
+    stream = cagg->priv->stream;
+
+  auto conv_ret = gst_cuda_converter_convert_frame (priv->conv, stream,
+      prepared_frame, &conv_frame);
+  gst_video_frame_unmap (&conv_frame);
+
+  if (!conv_ret) {
+    GST_ERROR_OBJECT (pad, "Couldn't convert frame");
+    gst_buffer_unref (conv_buf);
+    return FALSE;
+  }
+
+  /* Unmap input buffer and remap converted one */
+  gst_cuda_aggregator_pad_clean_frame (pad, vagg, prepared_frame);
+  if (!gst_video_frame_map (prepared_frame,
+          &priv->conversion_info, conv_buf, GST_MAP_READ_CUDA)) {
+    GST_ERROR_OBJECT (self, "Couldn't map frame");
+    gst_buffer_unref (conv_buf);
+    return FALSE;
+  }
+
+  priv->converted_buf = conv_buf;
+
+  return TRUE;
+}
+
+static void
+gst_cuda_aggregator_convert_pad_clean_frame (GstVideoAggregatorPad * pad,
+    GstVideoAggregator * vagg, GstVideoFrame * prepared_frame)
+{
+  auto self = GST_CUDA_AGGREGATOR_CONVERT_PAD (pad);
+  auto priv = self->priv;
+
+  gst_cuda_aggregator_pad_clean_frame (pad, vagg, prepared_frame);
+  gst_clear_buffer (&priv->converted_buf);
+}
+
+static void
+gst_cuda_aggregator_convert_pad_update_conversion_info (GstVideoAggregatorPad *
+    pad)
+{
+  auto self = GST_CUDA_AGGREGATOR_CONVERT_PAD (pad);
+  auto priv = self->priv;
+
+  GST_DEBUG_OBJECT (pad, "Need conversion info update");
+
+  std::lock_guard < std::recursive_mutex > lk (priv->lock);
+  priv->converter_config_changed = TRUE;
+}
+
+/* Same as gstvideoaggregator.c */
+static void
+    gst_cuda_aggregator_convert_pad_create_conversion_info
+    (GstCudaAggregatorConvertPad * pad, GstCudaAggregator * agg,
+    GstVideoInfo * convert_info)
+{
+  auto vpad = GST_VIDEO_AGGREGATOR_PAD (pad);
+  auto vagg = GST_VIDEO_AGGREGATOR (agg);
+  gchar *colorimetry, *best_colorimetry;
+  gchar *chroma, *best_chroma;
+
+  g_return_if_fail (GST_IS_CUDA_AGGREGATOR_CONVERT_PAD (pad));
+  g_return_if_fail (convert_info);
+
+  if (!vpad->info.finfo
+      || GST_VIDEO_INFO_FORMAT (&vpad->info) == GST_VIDEO_FORMAT_UNKNOWN) {
+    return;
+  }
+
+  if (!vagg->info.finfo
+      || GST_VIDEO_INFO_FORMAT (&vagg->info) == GST_VIDEO_FORMAT_UNKNOWN) {
+    return;
+  }
+
+  colorimetry = gst_video_colorimetry_to_string (&vpad->info.colorimetry);
+  chroma = gst_video_chroma_site_to_string (vpad->info.chroma_site);
+
+  best_colorimetry = gst_video_colorimetry_to_string (&vagg->info.colorimetry);
+  best_chroma = gst_video_chroma_site_to_string (vagg->info.chroma_site);
+
+  if (GST_VIDEO_INFO_FORMAT (&vagg->info) != GST_VIDEO_INFO_FORMAT (&vpad->info)
+      || g_strcmp0 (colorimetry, best_colorimetry)
+      || g_strcmp0 (chroma, best_chroma)) {
+    GstVideoInfo tmp_info;
+
+    /* Initialize with the wanted video format and our original width and
+     * height as we don't want to rescale. Then copy over the wanted
+     * colorimetry, and chroma-site and our current pixel-aspect-ratio
+     * and other relevant fields.
+     */
+    gst_video_info_set_format (&tmp_info, GST_VIDEO_INFO_FORMAT (&vagg->info),
+        vpad->info.width, vpad->info.height);
+    tmp_info.chroma_site = vagg->info.chroma_site;
+    tmp_info.colorimetry = vagg->info.colorimetry;
+    tmp_info.par_n = vpad->info.par_n;
+    tmp_info.par_d = vpad->info.par_d;
+    tmp_info.fps_n = vpad->info.fps_n;
+    tmp_info.fps_d = vpad->info.fps_d;
+    tmp_info.flags = vpad->info.flags;
+    tmp_info.interlace_mode = vpad->info.interlace_mode;
+
+    *convert_info = tmp_info;
+  } else {
+    *convert_info = vpad->info;
+  }
+
+  g_free (colorimetry);
+  g_free (best_colorimetry);
+  g_free (chroma);
+  g_free (best_chroma);
 }
 
 static void gst_cuda_aggregator_finalize (GObject * object);

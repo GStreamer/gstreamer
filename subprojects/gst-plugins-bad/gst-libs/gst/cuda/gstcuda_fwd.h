@@ -56,6 +56,10 @@ typedef struct _GstCudaAggregatorPad GstCudaAggregatorPad;
 typedef struct _GstCudaAggregatorPadClass GstCudaAggregatorPadClass;
 typedef struct _GstCudaAggregatorPadPrivate GstCudaAggregatorPadPrivate;
 
+typedef struct _GstCudaAggregatorConvertPad GstCudaAggregatorConvertPad;
+typedef struct _GstCudaAggregatorConvertPadClass GstCudaAggregatorConvertPadClass;
+typedef struct _GstCudaAggregatorConvertPadPrivate GstCudaAggregatorConvertPadPrivate;
+
 typedef struct _GstCudaAggregator GstCudaAggregator;
 typedef struct _GstCudaAggregatorClass GstCudaAggregatorClass;
 typedef struct _GstCudaAggregatorPrivate GstCudaAggregatorPrivate;

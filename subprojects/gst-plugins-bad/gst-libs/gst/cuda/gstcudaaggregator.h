@@ -31,6 +31,13 @@ G_BEGIN_DECLS
 #define GST_IS_CUDA_AGGREGATOR_PAD_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CUDA_AGGREGATOR_PAD))
 #define GST_CUDA_AGGREGATOR_PAD_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_CUDA_AGGREGATOR_PAD,GstCudaAggregatorPadClass))
 
+#define GST_TYPE_CUDA_AGGREGATOR_CONVERT_PAD            (gst_cuda_aggregator_convert_pad_get_type())
+#define GST_CUDA_AGGREGATOR_CONVERT_PAD(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CUDA_AGGREGATOR_CONVERT_PAD, GstCudaAggregatorConvertPad))
+#define GST_CUDA_AGGREGATOR_CONVERT_PAD_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CUDA_AGGREGATOR_CONVERT_PAD, GstCudaAggregatorConvertPadClass))
+#define GST_IS_CUDA_AGGREGATOR_CONVERT_PAD(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CUDA_AGGREGATOR_CONVERT_PAD))
+#define GST_IS_CUDA_AGGREGATOR_CONVERT_PAD_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CUDA_AGGREGATOR_CONVERT_PAD))
+#define GST_CUDA_AGGREGATOR_CONVERT_PAD_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_CUDA_AGGREGATOR_CONVERT_PAD,GstCudaAggregatorConvertPadClass))
+
 #define GST_TYPE_CUDA_AGGREGATOR            (gst_cuda_aggregator_get_type())
 #define GST_CUDA_AGGREGATOR(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CUDA_AGGREGATOR, GstCudaAggregator))
 #define GST_CUDA_AGGREGATOR_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CUDA_AGGREGATOR, GstCudaAggregatorClass))
@@ -68,6 +75,41 @@ struct _GstCudaAggregatorPadClass
 
 GST_CUDA_API
 GType gst_cuda_aggregator_pad_get_type (void);
+
+/**
+ * GstCudaAggregatorConvertPad:
+ *
+ * Since: 1.30
+ */
+struct _GstCudaAggregatorConvertPad
+{
+  GstCudaAggregatorPad parent;
+
+  /* < private > */
+  GstCudaAggregatorConvertPadPrivate *priv;
+
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+/**
+ * GstCudaAggregatorConvertPadClass:
+ *
+ * Since: 1.30
+ */
+struct _GstCudaAggregatorConvertPadClass
+{
+  GstCudaAggregatorPadClass parent_class;
+
+  void (*create_conversion_info) (GstCudaAggregatorConvertPad *pad,
+                                  GstCudaAggregator *agg,
+                                  GstVideoInfo *conversion_info);
+
+  /* < private > */
+  gpointer _gst_reserved[GST_PADDING_LARGE];
+};
+
+GST_CUDA_API
+GType gst_cuda_aggregator_convert_pad_get_type (void);
 
 /**
  * GstCudaAggregator:
