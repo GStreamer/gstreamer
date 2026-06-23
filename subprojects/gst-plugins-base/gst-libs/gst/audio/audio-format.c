@@ -379,20 +379,22 @@ static void pack_ ##name (const GstAudioFormatInfo *info,               \
            SILENT_U20_32BE, PACK_U20_32BE)
      };
 
+G_STATIC_ASSERT (G_N_ELEMENTS (formats) == GST_AUDIO_FORMAT_LAST);
+
 G_DEFINE_POINTER_TYPE (GstAudioFormatInfo, gst_audio_format_info);
 
-/**
- * gst_audio_format_build_integer:
- * @sign: signed or unsigned format
- * @endianness: G_LITTLE_ENDIAN or G_BIG_ENDIAN
- * @width: amount of bits used per sample
- * @depth: amount of used bits in @width
- *
- * Construct a #GstAudioFormat with given parameters.
- *
- * Returns: a #GstAudioFormat or GST_AUDIO_FORMAT_UNKNOWN when no audio format
- * exists with the given parameters.
- */
+     /**
+      * gst_audio_format_build_integer:
+      * @sign: signed or unsigned format
+      * @endianness: G_LITTLE_ENDIAN or G_BIG_ENDIAN
+      * @width: amount of bits used per sample
+      * @depth: amount of used bits in @width
+      *
+      * Construct a #GstAudioFormat with given parameters.
+      *
+      * Returns: a #GstAudioFormat or GST_AUDIO_FORMAT_UNKNOWN when no audio format
+      * exists with the given parameters.
+      */
 GstAudioFormat
 gst_audio_format_build_integer (gboolean sign, gint endianness,
     gint width, gint depth)
