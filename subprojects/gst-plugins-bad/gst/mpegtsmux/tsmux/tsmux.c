@@ -880,14 +880,14 @@ tsmux_packet_out (TsMux * mux, GstBuffer * buf, gint64 pcr,
     return TRUE;
   }
 
-  if (mux->bitrate && do_pcr_checks) {
+  if (mux->bitrate) {
     GST_BUFFER_PTS (buf) =
         gst_util_uint64_scale (mux->n_bytes * 8, GST_SECOND, mux->bitrate);
 
     /* Check and insert a PCR observation for each program if needed,
      * but only for programs that have written their SI at least once,
      * so the stream starts with PAT/PMT */
-    if (mux->first_pcr_ts != G_MININT64) {
+    if (do_pcr_checks && mux->first_pcr_ts != G_MININT64) {
       GList *cur;
 
       for (cur = mux->programs; cur; cur = cur->next) {
