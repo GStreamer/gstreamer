@@ -660,6 +660,20 @@ cc_buffer_push_separated (CCBuffer * buf, const guint8 * cea608_1,
       != 0;
   guint i;
 
+  if (cea608_1_len > MAX_CEA608_LEN) {
+    GST_WARNING_OBJECT (buf,
+        "Truncating CEA608 data for field 1 of %u bytes to %u bytes",
+        cea608_1_len, MAX_CEA608_LEN);
+    cea608_1_len = MAX_CEA608_LEN;
+  }
+
+  if (cea608_2_len > MAX_CEA608_LEN) {
+    GST_WARNING_OBJECT (buf,
+        "Truncating CEA608 data for field 2 of %u bytes to %u bytes",
+        cea608_2_len, MAX_CEA608_LEN);
+    cea608_2_len = MAX_CEA608_LEN;
+  }
+
   if (cea608_1 && cea608_1_len > 0) {
     guint out_i = 0;
     for (i = 0; i < cea608_1_len / 2; i++) {
