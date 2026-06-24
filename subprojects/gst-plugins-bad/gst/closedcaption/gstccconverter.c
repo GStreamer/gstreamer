@@ -874,10 +874,10 @@ convert_cea608_raw_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
 
     gst_buffer_map (inbuf, &in, GST_MAP_READ);
     if (self->in_field == 0) {
-      cc_buffer_push_separated (self->cc_buffer, in.data, in.size, NULL, 0,
+      cc_buffer_push_separated (self->cc_buffer, in.data, 2 * n, NULL, 0,
           NULL, 0);
     } else {
-      cc_buffer_push_separated (self->cc_buffer, NULL, 0, in.data, in.size,
+      cc_buffer_push_separated (self->cc_buffer, NULL, 0, in.data, 2 * n,
           NULL, 0);
     }
     gst_buffer_unmap (inbuf, &in);
