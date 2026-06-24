@@ -106,10 +106,11 @@ gst_rtp_sink_set_property (GObject * object, guint prop_id,
     case PROP_URI:{
       GstUri *uri = NULL;
 
-      GST_RTP_SINK_LOCK (object);
       uri = gst_uri_from_string (g_value_get_string (value));
       if (uri == NULL)
         break;
+
+      GST_RTP_SINK_LOCK (object);
 
       if (self->uri)
         gst_uri_unref (self->uri);
