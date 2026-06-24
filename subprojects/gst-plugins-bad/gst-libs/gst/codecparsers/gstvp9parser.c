@@ -874,6 +874,9 @@ gst_vp9_parser_parse_superframe_info (GstVp9Parser * parser,
       superframe_info->frames_in_superframe *
       superframe_info->bytes_per_framesize;
 
+  if (size < superframe_info->superframe_index_size)
+    goto error;
+
   gst_bit_reader_init (ibr,
       data + size - superframe_info->superframe_index_size,
       superframe_info->superframe_index_size);
