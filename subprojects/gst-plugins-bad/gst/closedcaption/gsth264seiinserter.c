@@ -90,150 +90,88 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h264, alignment=(string) au"));
 
-enum
-{
-  PROP_CC_0,
-  PROP_CC_DO_TIMESTAMP,
-};
+static void gst_h264_base_sei_inserter_finalize (GObject * object);
 
-#define DEFAULT_DO_TIMESTAMP FALSE
-
-static void gst_h264_cc_inserter_finalize (GObject * object);
-static void gst_h264_cc_inserter_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_h264_cc_inserter_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec);
-
-static gboolean gst_h264_cc_inserter_start (GstCodecSEIInserter * inserter,
+static gboolean
+gst_h264_base_sei_inserter_start (GstCodecSEIInserter * inserter,
     gboolean need_reorder);
-static gboolean gst_h264_cc_inserter_stop (GstCodecSEIInserter * inserter);
-static gboolean gst_h264_cc_inserter_set_caps (GstCodecSEIInserter * inserter,
+static gboolean
+gst_h264_base_sei_inserter_stop (GstCodecSEIInserter * inserter);
+static gboolean
+gst_h264_base_sei_inserter_set_caps (GstCodecSEIInserter * inserter,
     GstCaps * caps, GstClockTime * latency);
 static guint
-gst_h264_cc_inserter_get_num_buffered (GstCodecSEIInserter * inserter);
-static gboolean gst_h264_cc_inserter_push (GstCodecSEIInserter * inserter,
+gst_h264_base_sei_inserter_get_num_buffered (GstCodecSEIInserter * inserter);
+static gboolean gst_h264_base_sei_inserter_push (GstCodecSEIInserter * inserter,
     GstVideoCodecFrame * frame, GstClockTime * latency);
-static GstVideoCodecFrame *gst_h264_cc_inserter_pop (GstCodecSEIInserter *
+static GstVideoCodecFrame *gst_h264_base_sei_inserter_pop (GstCodecSEIInserter *
     inserter);
-static void gst_h264_cc_inserter_drain (GstCodecSEIInserter * inserter);
-static GstBuffer *gst_h264_cc_inserter_insert_sei (GstCodecSEIInserter *
+static void gst_h264_base_sei_inserter_drain (GstCodecSEIInserter * inserter);
+static GstBuffer *gst_h264_base_sei_inserter_insert_sei (GstCodecSEIInserter *
     inserter, GstBuffer * buffer, GPtrArray * metas);
 
-#define gst_h264_cc_inserter_parent_class parent_class
-G_DEFINE_TYPE (GstH264CCInserter,
-    gst_h264_cc_inserter, GST_TYPE_CODEC_SEI_INSERTER);
-GST_ELEMENT_REGISTER_DEFINE (h264ccinserter, "h264ccinserter",
-    GST_RANK_NONE, GST_TYPE_H264_CC_INSERTER);
+#define gst_h264_base_sei_inserter_parent_class parent_class
+G_DEFINE_ABSTRACT_TYPE (GstH264BaseSEIInserter,
+    gst_h264_base_sei_inserter, GST_TYPE_CODEC_SEI_INSERTER);
 
+/**
+ * GstH264BaseSEIInserter:
+ *
+ * Since: 1.30
+ */
 static void
-gst_h264_cc_inserter_class_init (GstH264CCInserterClass * klass)
+gst_h264_base_sei_inserter_class_init (GstH264BaseSEIInserterClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstCodecSEIInserterClass *inserter_class =
       GST_CODEC_SEI_INSERTER_CLASS (klass);
 
-  object_class->finalize = gst_h264_cc_inserter_finalize;
-  object_class->set_property = gst_h264_cc_inserter_set_property;
-  object_class->get_property = gst_h264_cc_inserter_get_property;
-
-  /**
-   * GstH264CCInserter:do-timestamp:
-   *
-   * Recalculate DTS based on input PTS and output frame order.
-   *
-   * When enabled, the element ignores any DTS values present on
-   * incoming frames and always derives new DTS values from the input PTS
-   * and the actual output (decode) order of frames.
-   *
-   * Since: 1.30
-   */
-  g_object_class_install_property (object_class, PROP_CC_DO_TIMESTAMP,
-      g_param_spec_boolean ("do-timestamp", "Do Timestamp",
-          "Recalculate DTS from input PTS and output frame order",
-          DEFAULT_DO_TIMESTAMP, GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
-          G_PARAM_STATIC_STRINGS));
+  object_class->finalize = gst_h264_base_sei_inserter_finalize;
 
   gst_element_class_add_static_pad_template (element_class, &sinktemplate);
   gst_element_class_add_static_pad_template (element_class, &srctemplate);
 
-  gst_element_class_set_static_metadata (element_class,
-      "H.264 Closed Caption Inserter",
-      "Codec/Video/Filter",
-      "Insert closed caption SEI messages into H.264 streams",
-      "Seungha Yang <seungha@centricular.com>");
-
-  inserter_class->start = GST_DEBUG_FUNCPTR (gst_h264_cc_inserter_start);
-  inserter_class->stop = GST_DEBUG_FUNCPTR (gst_h264_cc_inserter_stop);
-  inserter_class->set_caps = GST_DEBUG_FUNCPTR (gst_h264_cc_inserter_set_caps);
+  inserter_class->start = GST_DEBUG_FUNCPTR (gst_h264_base_sei_inserter_start);
+  inserter_class->stop = GST_DEBUG_FUNCPTR (gst_h264_base_sei_inserter_stop);
+  inserter_class->set_caps =
+      GST_DEBUG_FUNCPTR (gst_h264_base_sei_inserter_set_caps);
   inserter_class->get_num_buffered =
-      GST_DEBUG_FUNCPTR (gst_h264_cc_inserter_get_num_buffered);
-  inserter_class->push = GST_DEBUG_FUNCPTR (gst_h264_cc_inserter_push);
-  inserter_class->pop = GST_DEBUG_FUNCPTR (gst_h264_cc_inserter_pop);
-  inserter_class->drain = GST_DEBUG_FUNCPTR (gst_h264_cc_inserter_drain);
+      GST_DEBUG_FUNCPTR (gst_h264_base_sei_inserter_get_num_buffered);
+  inserter_class->push = GST_DEBUG_FUNCPTR (gst_h264_base_sei_inserter_push);
+  inserter_class->pop = GST_DEBUG_FUNCPTR (gst_h264_base_sei_inserter_pop);
+  inserter_class->drain = GST_DEBUG_FUNCPTR (gst_h264_base_sei_inserter_drain);
   inserter_class->insert_sei =
-      GST_DEBUG_FUNCPTR (gst_h264_cc_inserter_insert_sei);
+      GST_DEBUG_FUNCPTR (gst_h264_base_sei_inserter_insert_sei);
 
   GST_DEBUG_CATEGORY_INIT (gst_h264_cc_inserter_debug, "h264ccinserter", 0,
       "h264ccinserter");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_H264_BASE_SEI_INSERTER, 0);
 }
 
 static void
-gst_h264_cc_inserter_init (GstH264CCInserter * self)
+gst_h264_base_sei_inserter_init (GstH264BaseSEIInserter * self)
 {
   self->sei_array = g_array_new (FALSE, FALSE, sizeof (GstH264SEIMessage));
   g_array_set_clear_func (self->sei_array, (GDestroyNotify) gst_h264_sei_clear);
 }
 
 static void
-gst_h264_cc_inserter_finalize (GObject * object)
+gst_h264_base_sei_inserter_finalize (GObject * object)
 {
-  GstH264CCInserter *self = GST_H264_CC_INSERTER (object);
+  GstH264BaseSEIInserter *self = GST_H264_BASE_SEI_INSERTER (object);
 
   g_array_unref (self->sei_array);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static void
-gst_h264_cc_inserter_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstCodecSEIInserter *inserter = GST_CODEC_SEI_INSERTER (object);
-
-  switch (prop_id) {
-    case PROP_CC_DO_TIMESTAMP:
-      gst_codec_sei_inserter_set_do_timestamp (inserter,
-          g_value_get_boolean (value));
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_h264_cc_inserter_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstCodecSEIInserter *inserter = GST_CODEC_SEI_INSERTER (object);
-
-  switch (prop_id) {
-    case PROP_CC_DO_TIMESTAMP:
-      g_value_set_boolean (value,
-          gst_codec_sei_inserter_get_do_timestamp (inserter));
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
 static gboolean
-gst_h264_cc_inserter_start (GstCodecSEIInserter * inserter,
+gst_h264_base_sei_inserter_start (GstCodecSEIInserter * inserter,
     gboolean need_reorder)
 {
-  GstH264CCInserter *self = GST_H264_CC_INSERTER (inserter);
+  GstH264BaseSEIInserter *self = GST_H264_BASE_SEI_INSERTER (inserter);
 
   self->reorder = gst_h264_reorder_new (need_reorder);
 
@@ -241,9 +179,9 @@ gst_h264_cc_inserter_start (GstCodecSEIInserter * inserter,
 }
 
 static gboolean
-gst_h264_cc_inserter_stop (GstCodecSEIInserter * inserter)
+gst_h264_base_sei_inserter_stop (GstCodecSEIInserter * inserter)
 {
-  GstH264CCInserter *self = GST_H264_CC_INSERTER (inserter);
+  GstH264BaseSEIInserter *self = GST_H264_BASE_SEI_INSERTER (inserter);
 
   gst_clear_object (&self->reorder);
 
@@ -251,52 +189,52 @@ gst_h264_cc_inserter_stop (GstCodecSEIInserter * inserter)
 }
 
 static gboolean
-gst_h264_cc_inserter_set_caps (GstCodecSEIInserter * inserter, GstCaps * caps,
-    GstClockTime * latency)
+gst_h264_base_sei_inserter_set_caps (GstCodecSEIInserter * inserter,
+    GstCaps * caps, GstClockTime * latency)
 {
-  GstH264CCInserter *self = GST_H264_CC_INSERTER (inserter);
+  GstH264BaseSEIInserter *self = GST_H264_BASE_SEI_INSERTER (inserter);
 
   return gst_h264_reorder_set_caps (self->reorder, caps, latency);
 }
 
 static gboolean
-gst_h264_cc_inserter_push (GstCodecSEIInserter * inserter,
+gst_h264_base_sei_inserter_push (GstCodecSEIInserter * inserter,
     GstVideoCodecFrame * frame, GstClockTime * latency)
 {
-  GstH264CCInserter *self = GST_H264_CC_INSERTER (inserter);
+  GstH264BaseSEIInserter *self = GST_H264_BASE_SEI_INSERTER (inserter);
 
   return gst_h264_reorder_push (self->reorder, frame, latency);
 }
 
 static GstVideoCodecFrame *
-gst_h264_cc_inserter_pop (GstCodecSEIInserter * inserter)
+gst_h264_base_sei_inserter_pop (GstCodecSEIInserter * inserter)
 {
-  GstH264CCInserter *self = GST_H264_CC_INSERTER (inserter);
+  GstH264BaseSEIInserter *self = GST_H264_BASE_SEI_INSERTER (inserter);
 
   return gst_h264_reorder_pop (self->reorder);
 }
 
 static void
-gst_h264_cc_inserter_drain (GstCodecSEIInserter * inserter)
+gst_h264_base_sei_inserter_drain (GstCodecSEIInserter * inserter)
 {
-  GstH264CCInserter *self = GST_H264_CC_INSERTER (inserter);
+  GstH264BaseSEIInserter *self = GST_H264_BASE_SEI_INSERTER (inserter);
 
   gst_h264_reorder_drain (self->reorder);
 }
 
 static guint
-gst_h264_cc_inserter_get_num_buffered (GstCodecSEIInserter * inserter)
+gst_h264_base_sei_inserter_get_num_buffered (GstCodecSEIInserter * inserter)
 {
-  GstH264CCInserter *self = GST_H264_CC_INSERTER (inserter);
+  GstH264BaseSEIInserter *self = GST_H264_BASE_SEI_INSERTER (inserter);
 
   return gst_h264_reorder_get_num_buffered (self->reorder);
 }
 
 static GstBuffer *
-gst_h264_cc_inserter_insert_sei (GstCodecSEIInserter * inserter,
+gst_h264_base_sei_inserter_insert_sei (GstCodecSEIInserter * inserter,
     GstBuffer * buffer, GPtrArray * metas)
 {
-  GstH264CCInserter *self = GST_H264_CC_INSERTER (inserter);
+  GstH264BaseSEIInserter *self = GST_H264_BASE_SEI_INSERTER (inserter);
   guint i;
   GstBuffer *new_buf;
 
@@ -394,6 +332,99 @@ gst_h264_cc_inserter_insert_sei (GstCodecSEIInserter * inserter,
   return new_buf;
 }
 
+enum
+{
+  PROP_CC_0,
+  PROP_CC_DO_TIMESTAMP,
+};
+
+#define DEFAULT_DO_TIMESTAMP FALSE
+
+struct _GstH264CCInserter
+{
+  GstH264BaseSEIInserter parent;
+};
+
+#define gst_h264_cc_inserter_parent_class cc_inserter_parent_class
+G_DEFINE_TYPE (GstH264CCInserter,
+    gst_h264_cc_inserter, GST_TYPE_H264_BASE_SEI_INSERTER);
+GST_ELEMENT_REGISTER_DEFINE (h264ccinserter, "h264ccinserter",
+    GST_RANK_NONE, GST_TYPE_H264_CC_INSERTER);
+
+static void
+gst_h264_cc_inserter_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstCodecSEIInserter *inserter = GST_CODEC_SEI_INSERTER (object);
+
+  switch (prop_id) {
+    case PROP_CC_DO_TIMESTAMP:
+      gst_codec_sei_inserter_set_do_timestamp (inserter,
+          g_value_get_boolean (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_h264_cc_inserter_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstCodecSEIInserter *inserter = GST_CODEC_SEI_INSERTER (object);
+
+  switch (prop_id) {
+    case PROP_CC_DO_TIMESTAMP:
+      g_value_set_boolean (value,
+          gst_codec_sei_inserter_get_do_timestamp (inserter));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_h264_cc_inserter_class_init (GstH264CCInserterClass * klass)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  object_class->set_property = gst_h264_cc_inserter_set_property;
+  object_class->get_property = gst_h264_cc_inserter_get_property;
+
+  /**
+   * GstH264CCInserter:do-timestamp:
+   *
+   * Recalculate DTS based on input PTS and output frame order.
+   *
+   * When enabled, the element ignores any DTS values present on
+   * incoming frames and always derives new DTS values from the input PTS
+   * and the actual output (decode) order of frames.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (object_class, PROP_CC_DO_TIMESTAMP,
+      g_param_spec_boolean ("do-timestamp", "Do Timestamp",
+          "Recalculate DTS from input PTS and output frame order",
+          DEFAULT_DO_TIMESTAMP, GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
+          G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_static_metadata (element_class,
+      "H.264 Closed Caption Inserter",
+      "Codec/Video/Filter",
+      "Insert closed caption SEI messages into H.264 streams",
+      "Seungha Yang <seungha@centricular.com>");
+}
+
+static void
+gst_h264_cc_inserter_init (GstH264CCInserter * self)
+{
+  gst_codec_sei_inserter_set_sei_types (GST_CODEC_SEI_INSERTER (self),
+      GST_CODEC_SEI_INSERT_CC);
+}
+
 /* H264 SEI Inserter - subclass that adds sei-types property */
 
 enum
@@ -406,12 +437,12 @@ enum
 
 struct _GstH264SEIInserter
 {
-  GstH264CCInserter parent;
+  GstH264BaseSEIInserter parent;
 };
 
 #define gst_h264_sei_inserter_parent_class sei_inserter_parent_class
 G_DEFINE_TYPE (GstH264SEIInserter,
-    gst_h264_sei_inserter, GST_TYPE_H264_CC_INSERTER);
+    gst_h264_sei_inserter, GST_TYPE_H264_BASE_SEI_INSERTER);
 GST_ELEMENT_REGISTER_DEFINE (h264seiinserter, "h264seiinserter",
     GST_RANK_NONE, GST_TYPE_H264_SEI_INSERTER);
 

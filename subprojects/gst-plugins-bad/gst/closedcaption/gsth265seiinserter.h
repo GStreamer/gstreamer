@@ -24,17 +24,17 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_H265_CC_INSERTER             (gst_h265_cc_inserter_get_type())
-#define GST_H265_CC_INSERTER(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_H265_CC_INSERTER,GstH265CCInserter))
-#define GST_H265_CC_INSERTER_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_H265_CC_INSERTER,GstH265CCInserterClass))
-#define GST_IS_H265_CC_INSERTER(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_H265_CC_INSERTER))
-#define GST_IS_H265_CC_INSERTER_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_H265_CC_INSERTER))
-#define GST_H265_CC_INSERTER_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_H265_CC_INSERTER,GstH265CCInserterClass))
+#define GST_TYPE_H265_BASE_SEI_INSERTER             (gst_h265_base_sei_inserter_get_type())
+#define GST_H265_BASE_SEI_INSERTER(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_H265_BASE_SEI_INSERTER,GstH265BaseSEIInserter))
+#define GST_H265_BASE_SEI_INSERTER_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_H265_BASE_SEI_INSERTER,GstH265BaseSEIInserterClass))
+#define GST_IS_H265_BASE_SEI_INSERTER(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_H265_BASE_SEI_INSERTER))
+#define GST_IS_H265_BASE_SEI_INSERTER_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_H265_BASE_SEI_INSERTER))
+#define GST_H265_BASE_SEI_INSERTER_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_H265_BASE_SEI_INSERTER,GstH265BaseSEIInserterClass))
 
-typedef struct _GstH265CCInserter GstH265CCInserter;
-typedef struct _GstH265CCInserterClass GstH265CCInserterClass;
+typedef struct _GstH265BaseSEIInserter GstH265BaseSEIInserter;
+typedef struct _GstH265BaseSEIInserterClass GstH265BaseSEIInserterClass;
 
-struct _GstH265CCInserter
+struct _GstH265BaseSEIInserter
 {
   GstCodecSEIInserter parent;
 
@@ -42,19 +42,23 @@ struct _GstH265CCInserter
   GArray *sei_array;
 };
 
-struct _GstH265CCInserterClass
+struct _GstH265BaseSEIInserterClass
 {
   GstCodecSEIInserterClass parent_class;
 };
 
-GType gst_h265_cc_inserter_get_type (void);
-GST_ELEMENT_REGISTER_DECLARE (h265ccinserter);
+GType gst_h265_base_sei_inserter_get_type (void);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstH265CCInserter, gst_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstH265BaseSEIInserter, gst_object_unref)
+
+#define GST_TYPE_H265_CC_INSERTER (gst_h265_cc_inserter_get_type())
+G_DECLARE_FINAL_TYPE (GstH265CCInserter, gst_h265_cc_inserter,
+    GST, H265_CC_INSERTER, GstH265BaseSEIInserter)
+GST_ELEMENT_REGISTER_DECLARE (h265ccinserter);
 
 #define GST_TYPE_H265_SEI_INSERTER (gst_h265_sei_inserter_get_type())
 G_DECLARE_FINAL_TYPE (GstH265SEIInserter, gst_h265_sei_inserter,
-    GST, H265_SEI_INSERTER, GstH265CCInserter)
+    GST, H265_SEI_INSERTER, GstH265BaseSEIInserter)
 GST_ELEMENT_REGISTER_DECLARE (h265seiinserter);
 
 G_END_DECLS
