@@ -991,6 +991,18 @@ gst_app_sink_unlock_stop (GstBaseSink * bsink)
 }
 
 static void
+gst_app_sink_clear_sample_contents (GstAppSink * appsink)
+{
+  GstAppSinkPrivate *priv = appsink->priv;
+
+  priv->sample = gst_sample_make_writable (priv->sample);
+  gst_sample_set_buffer (priv->sample, NULL);
+  gst_sample_set_buffer_list (priv->sample, NULL);
+  gst_sample_set_caps (priv->sample, NULL);
+  gst_sample_set_segment (priv->sample, NULL);
+}
+
+static void
 gst_app_sink_flush_unlocked (GstAppSink * appsink)
 {
   GstMiniObject *obj;
@@ -1004,6 +1016,7 @@ gst_app_sink_flush_unlocked (GstAppSink * appsink)
 
   gst_queue_status_info_reset (&priv->queue_status_info);
 
+  gst_app_sink_clear_sample_contents (appsink);
   gst_caps_replace (&priv->last_caps, NULL);
   g_cond_signal (&priv->cond);
   priv->in = priv->out = priv->dropped = 0;
@@ -1022,11 +1035,7 @@ gst_app_sink_start (GstBaseSink * psink)
   priv->started = TRUE;
   gst_segment_init (&priv->preroll_segment, GST_FORMAT_TIME);
   gst_segment_init (&priv->last_segment, GST_FORMAT_TIME);
-  priv->sample = gst_sample_make_writable (priv->sample);
-  gst_sample_set_buffer (priv->sample, NULL);
-  gst_sample_set_buffer_list (priv->sample, NULL);
-  gst_sample_set_caps (priv->sample, NULL);
-  gst_sample_set_segment (priv->sample, NULL);
+  gst_app_sink_clear_sample_contents (appsink);
   priv->in = priv->out = priv->dropped = 0;
   g_mutex_unlock (&priv->mutex);
 
@@ -1050,11 +1059,7 @@ gst_app_sink_stop (GstBaseSink * psink)
   gst_caps_replace (&priv->last_caps, NULL);
   gst_segment_init (&priv->preroll_segment, GST_FORMAT_UNDEFINED);
   gst_segment_init (&priv->last_segment, GST_FORMAT_UNDEFINED);
-  priv->sample = gst_sample_make_writable (priv->sample);
-  gst_sample_set_buffer (priv->sample, NULL);
-  gst_sample_set_buffer_list (priv->sample, NULL);
-  gst_sample_set_caps (priv->sample, NULL);
-  gst_sample_set_segment (priv->sample, NULL);
+  gst_app_sink_clear_sample_contents (appsink);
   priv->in = priv->out = priv->dropped = 0;
   g_mutex_unlock (&priv->mutex);
 
