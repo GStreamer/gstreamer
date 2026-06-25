@@ -125,8 +125,8 @@ _check_sdp_crypto (SDPSource source, GstWebRTCSessionDescription * sdp,
     if (direction == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE)
       continue;
 
-    if (!IS_EMPTY_SDP_ATTRIBUTE (message_fingerprint)
-        && !IS_EMPTY_SDP_ATTRIBUTE (media_fingerprint)) {
+    if (IS_EMPTY_SDP_ATTRIBUTE (message_fingerprint)
+        && IS_EMPTY_SDP_ATTRIBUTE (media_fingerprint)) {
       g_set_error (error, GST_WEBRTC_ERROR,
           GST_WEBRTC_ERROR_FINGERPRINT_FAILURE,
           "No fingerprint lines in sdp for media %u", i);
