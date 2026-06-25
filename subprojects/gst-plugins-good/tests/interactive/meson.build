@@ -7,10 +7,15 @@ tests = [
   ['videocrop2-test'],
 ]
 
+if gdkpixbuf_dep.found()
+  tests += [
+    ['gdkpixbufoverlay-test', [gstvideo_dep, gdkpixbuf_dep, gio_dep]],
+  ]
+endif
+
 if gtk_dep.found()
   tests += [
     ['gdkpixbufsink-test', gtk_dep],
-    ['gdkpixbufoverlay-test', [gstvideo_dep, gtk_dep]],
   ]
 endif
 
