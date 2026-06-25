@@ -325,7 +325,7 @@ gst_vulkan_physical_device_finalize (GObject * object)
     (type) (s)->name[0],                                                    \
     (type) (s)->name[1])
 #define DEBUG_3(prefix, s, name, format, type)                              \
-  GST_DEBUG_OBJECT (device, prefix " " G_STRINGIFY(limit)                   \
+  GST_DEBUG_OBJECT (device, prefix " " G_STRINGIFY(name)                    \
     ": %" format ", %" format ", %" format,                                 \
     (type) (s)->name[0],                                                    \
     (type) (s)->name[1],                                                    \
