@@ -55,6 +55,36 @@ G_BEGIN_DECLS
  */
 #define GST_VULKAN_EXTENT2D_ARGS(var) (var).width, (var).height
 
+/**
+ * GST_VULKAN_API_VERSION_FORMAT:
+ *
+ * Since: 1.30
+ */
+#define GST_VULKAN_API_VERSION_FORMAT "u.%u.%u"
+
+/**
+ * GST_VULKAN_API_VERSION_ARGS:
+ *
+ * Since: 1.30
+ */
+#define GST_VULKAN_API_VERSION_ARGS(v) VK_VERSION_MAJOR(v), VK_VERSION_MINOR(v), VK_VERSION_PATCH(v)
+
+/**
+ * GST_VULKAN_UUID_FORMAT:
+ *
+ * Since: 1.30
+ */
+#define GST_VULKAN_UUID_FORMAT "02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x"
+
+/**
+ * GST_VULKAN_UUID_ARGS:
+ *
+ * Since: 1.30
+ */
+#define GST_VULKAN_UUID_ARGS(uuid) \
+    uuid[0], uuid[1], uuid[2], uuid[3], uuid[4], uuid[5], uuid[6], uuid[7], \
+    uuid[8], uuid[9], uuid[10], uuid[11], uuid[12], uuid[13], uuid[14], uuid[15]
+
 GST_VULKAN_API
 const gchar *               gst_vulkan_physical_device_type_to_string       (VkPhysicalDeviceType type);
 
@@ -68,6 +98,12 @@ GST_VULKAN_API
 gchar *                     gst_vulkan_sample_count_flags_to_string         (VkSampleCountFlags sample_count_bits);
 GST_VULKAN_API
 const gchar *               gst_vulkan_present_mode_to_string               (VkPresentModeKHR present_mode);
+GST_VULKAN_API
+gchar *                     gst_vulkan_shader_stage_flags_to_string         (VkShaderStageFlags shader_flags);
+GST_VULKAN_API
+gchar *                     gst_vulkan_resolve_mode_flags_to_string         (VkResolveModeFlags resolve_mode);
+GST_VULKAN_API
+gchar *                     gst_vulkan_subgroup_feature_flags_to_string     (VkSubgroupFeatureFlags subgroup_feature);
 
 G_END_DECLS
 

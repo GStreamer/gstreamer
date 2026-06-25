@@ -55,7 +55,7 @@ gchar * G_PASTE(G_PASTE(gst_vulkan_,under_name),_flags_to_string) (VkType flag_b
 }
 
 /* *INDENT-OFF* */
-static const struct 
+static const struct
 {
   VkMemoryPropertyFlagBits flag_bit;
   const char *str;
@@ -80,7 +80,7 @@ static const struct
  */
 FLAGS_TO_STRING(memory_property, VkMemoryPropertyFlags);
 
-static const struct 
+static const struct
 {
   VkMemoryHeapFlagBits flag_bit;
   const char *str;
@@ -97,7 +97,7 @@ static const struct
  */
 FLAGS_TO_STRING(memory_heap, VkMemoryHeapFlags);
 
-static const struct 
+static const struct
 {
   VkQueueFlagBits flag_bit;
   const char *str;
@@ -123,7 +123,7 @@ static const struct
  */
 FLAGS_TO_STRING(queue, VkQueueFlags);
 
-static const struct 
+static const struct
 {
   VkSampleCountFlagBits flag_bit;
   const char *str;
@@ -143,6 +143,96 @@ static const struct
  */
 FLAGS_TO_STRING(sample_count, VkSampleCountFlags);
 /* *INDENT-ON* */
+
+static const struct
+{
+  VkShaderStageFlagBits flag_bit;
+  const char *str;
+} vk_shader_stage_flags_map[] = {
+  {VK_SHADER_STAGE_VERTEX_BIT, "vertex"},
+  {VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT, "tessellation-control"},
+  {VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT, "tessellation-evaluation"},
+  {VK_SHADER_STAGE_GEOMETRY_BIT, "geometry"},
+  {VK_SHADER_STAGE_FRAGMENT_BIT, "fragment"},
+  {VK_SHADER_STAGE_COMPUTE_BIT, "compute"},
+#if defined(VK_KHR_ray_tracing_pipeline)
+  {VK_SHADER_STAGE_RAYGEN_BIT_KHR, "raygen"},
+  {VK_SHADER_STAGE_ANY_HIT_BIT_KHR, "any-hit"},
+  {VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR, "closest-hit"},
+  {VK_SHADER_STAGE_MISS_BIT_KHR, "miss"},
+  {VK_SHADER_STAGE_INTERSECTION_BIT_KHR, "intersection"},
+  {VK_SHADER_STAGE_CALLABLE_BIT_KHR, "callable"},
+#endif
+#if defined(VK_EXT_mesh_shader)
+  {VK_SHADER_STAGE_TASK_BIT_EXT, "task"},
+  {VK_SHADER_STAGE_MESH_BIT_EXT, "mesh"},
+#endif
+};
+
+/**
+ * gst_vulkan_shader_stage_flags_to_string:
+ *
+ * Since: 1.30
+ */
+FLAGS_TO_STRING (shader_stage, VkShaderStageFlags);
+
+static const struct
+{
+  VkResolveModeFlagBits flag_bit;
+  const char *str;
+} vk_resolve_mode_flags_map[] = {
+#if defined(VK_VERSION_1_2)
+  {VK_RESOLVE_MODE_SAMPLE_ZERO_BIT, "sample-zero"},
+  {VK_RESOLVE_MODE_AVERAGE_BIT, "average"},
+  {VK_RESOLVE_MODE_MIN_BIT, "min"},
+  {VK_RESOLVE_MODE_MAX_BIT, "max"},
+#if defined(VK_ANDROID_external_format_resolve)
+  {VK_RESOLVE_MODE_EXTERNAL_FORMAT_DOWNSAMPLE_BIT_ANDROID_BIT,
+      "external-format-downsample"},
+#endif
+#if defined(VK_EXT_custom_resolve)
+  {VK_RESOLVE_MODE_CUSTOM_BIT_EXT, "custom"},
+#endif
+#endif
+};
+
+/**
+ * gst_vulkan_resolve_mode_flags_to_string:
+ *
+ * Since: 1.30
+ */
+FLAGS_TO_STRING (resolve_mode, VkResolveModeFlags);
+
+static const struct
+{
+  VkSubgroupFeatureFlagBits flag_bit;
+  const char *str;
+} vk_subgroup_feature_flags_map[] = {
+#if defined(VK_VERSION_1_1)
+  {VK_SUBGROUP_FEATURE_BASIC_BIT, "basic"},
+  {VK_SUBGROUP_FEATURE_VOTE_BIT, "vote"},
+  {VK_SUBGROUP_FEATURE_ARITHMETIC_BIT, "arithmetic"},
+  {VK_SUBGROUP_FEATURE_BALLOT_BIT, "ballot"},
+  {VK_SUBGROUP_FEATURE_SHUFFLE_BIT, "shuffle"},
+  {VK_SUBGROUP_FEATURE_SHUFFLE_RELATIVE_BIT, "shuffle-relative"},
+  {VK_SUBGROUP_FEATURE_CLUSTERED_BIT, "clustered"},
+  {VK_SUBGROUP_FEATURE_QUAD_BIT, "quad"},
+#if defined(VK_VERSION_1_4)
+  {VK_SUBGROUP_FEATURE_ROTATE_BIT, "rotate"},
+  {VK_SUBGROUP_FEATURE_ROTATE_CLUSTERED_BIT, "rotate-clustered"},
+#endif
+#if defined(VK_EXT_shader_subgroup_partitioned)
+  {VK_SUBGROUP_FEATURE_PARTITIONED_BIT_EXT, "partitioned"},
+#endif
+#endif
+};
+
+/**
+ * gst_vulkan_subgroup_feature_flags_to_string:
+ *
+ * Since: 1.30
+ */
+FLAGS_TO_STRING (subgroup_feature, VkSubgroupFeatureFlags);
 
 /**
  * gst_vulkan_physical_device_type_to_string:

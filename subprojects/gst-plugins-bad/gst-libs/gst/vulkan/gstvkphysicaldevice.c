@@ -330,10 +330,21 @@ gst_vulkan_physical_device_finalize (GObject * object)
     (type) (s)->name[0],                                                    \
     (type) (s)->name[1],                                                    \
     (type) (s)->name[2])
+#define DEBUG_N(prefix, s, name, n, format, type) G_STMT_START {            \
+    if ((s)->name) {                                                                    \
+      for (unsigned int i = 0; i < n; i++) {                                \
+        GST_DEBUG_OBJECT (device, prefix " " G_STRINGIFY(name)              \
+            "[%u]: %" format, i, (type) ((s)->name[i]));                    \
+      }                                                                     \
+    } else {                                                                \
+      GST_DEBUG_OBJECT (device, prefix " " G_STRINGIFY(name) "(null)");     \
+    }                                                                       \
+  } G_STMT_END
 
 #define DEBUG_UINT32(prefix, s, var) DEBUG_1(prefix, s, var, G_GUINT32_FORMAT, guint32)
 #define DEBUG_UINT32_2(prefix, s, var) DEBUG_2(prefix, s, var, G_GUINT32_FORMAT, guint32)
 #define DEBUG_UINT32_3(prefix, s, var) DEBUG_3(prefix, s, var, G_GUINT32_FORMAT, guint32)
+#define DEBUG_UINT32_N(prefix, s, var, n) DEBUG_N(prefix, s, var, n, G_GUINT32_FORMAT, guint32)
 
 #define DEBUG_UINT64(prefix, s, var) DEBUG_1(prefix, s, var, G_GUINT64_FORMAT, guint64)
 
@@ -354,6 +365,10 @@ gst_vulkan_physical_device_finalize (GObject * object)
 #define DEBUG_BOOL_STRUCT(prefix, s, name) DEBUG_BOOL(prefix, name, (s)->name)
 
 #define DEBUG_STRING(prefix, s, str) DEBUG_1(prefix, s, str, "s", gchar *);
+
+#define DEBUG_UUID(prefix, s, uuid)                                         \
+    GST_DEBUG_OBJECT (device, prefix " " G_STRINGIFY(uuid) ": %"            \
+        GST_VULKAN_UUID_FORMAT, GST_VULKAN_UUID_ARGS ((s)->uuid))
 
 static void
 dump_features10 (GstVulkanPhysicalDevice * device,
@@ -844,16 +859,16 @@ dump_properties11 (GstVulkanPhysicalDevice * device,
     VkPhysicalDeviceVulkan11Properties * properties)
 {
   /* *INDENT-OFF* */
-/*    uint8_t                    deviceUUID[VK_UUID_SIZE];
-    uint8_t                    driverUUID[VK_UUID_SIZE];
-    uint8_t                    deviceLUID[VK_LUID_SIZE];*/
-  DEBUG_UINT32 ("properties (1.1)", properties, deviceNodeMask);
+  DEBUG_UUID ("properties (1.1)", properties, deviceUUID);
+  DEBUG_UUID ("properties (1.1)", properties, driverUUID);
 /*    VkBool32                   deviceLUIDValid;*/
+/*  uint8_t                    deviceLUID[VK_LUID_SIZE];*/
+  DEBUG_UINT32 ("properties (1.1)", properties, deviceNodeMask);
   DEBUG_UINT32 ("properties (1.1)", properties, subgroupSize);
-/*    VkShaderStageFlags         subgroupSupportedStages;
-    VkSubgroupFeatureFlags     subgroupSupportedOperations;*/
+  DEBUG_FLAGS ("properties (1.1)", properties, subgroupSupportedStages, shader_stage);
+  DEBUG_FLAGS ("properties (1.1)", properties, subgroupSupportedOperations, subgroup_feature);
   DEBUG_BOOL_STRUCT ("properties (1.1)", properties, subgroupQuadOperationsInAllStages);
-/*    VkPointClippingBehavior    pointClippingBehavior;*/
+  DEBUG_UINT32 ("properties (1.1)", properties, pointClippingBehavior);
   DEBUG_UINT32 ("properties (1.1)", properties, maxMultiviewViewCount);
   DEBUG_UINT32 ("properties (1.1)", properties, maxMultiviewInstanceIndex);
   DEBUG_BOOL_STRUCT ("properties (1.1)", properties, protectedNoFault);
@@ -870,9 +885,11 @@ dump_properties12 (GstVulkanPhysicalDevice * device,
 /*    VkDriverId                           driverID;*/
   DEBUG_STRING ("properties (1.2)", properties, driverName);
   DEBUG_STRING ("properties (1.2)", properties, driverInfo);
-/*    VkConformanceVersion                 conformanceVersion;
-    VkShaderFloatControlsIndependence    denormBehaviorIndependence;
-    VkShaderFloatControlsIndependence    roundingModeIndependence;*/
+  GST_DEBUG_OBJECT (device, "properties (1.2) conformanceVersion %u.%u.%u.%u",
+      properties->conformanceVersion.major, properties->conformanceVersion.minor,
+      properties->conformanceVersion.subminor, properties->conformanceVersion.patch);
+  DEBUG_UINT32 ("properties (1.2)", properties, denormBehaviorIndependence);
+  DEBUG_UINT32 ("properties (1.2)", properties, roundingModeIndependence);
   DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderSignedZeroInfNanPreserveFloat16);
   DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderSignedZeroInfNanPreserveFloat32);
   DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderSignedZeroInfNanPreserveFloat64);
@@ -912,8 +929,8 @@ dump_properties12 (GstVulkanPhysicalDevice * device,
   DEBUG_UINT32 ("properties (1.2)", properties, maxDescriptorSetUpdateAfterBindSampledImages);
   DEBUG_UINT32 ("properties (1.2)", properties, maxDescriptorSetUpdateAfterBindStorageImages);
   DEBUG_UINT32 ("properties (1.2)", properties, maxDescriptorSetUpdateAfterBindInputAttachments);
-/*    VkResolveModeFlags                   supportedDepthResolveModes;
-    VkResolveModeFlags                   supportedStencilResolveModes;*/
+  DEBUG_FLAGS ("properties (1.2)", properties, supportedDepthResolveModes, resolve_mode);
+  DEBUG_FLAGS ("properties (1.2)", properties, supportedStencilResolveModes, resolve_mode);
   DEBUG_BOOL_STRUCT ("properties (1.2)", properties, independentResolveNone);
   DEBUG_BOOL_STRUCT ("properties (1.2)", properties, independentResolve);
   DEBUG_BOOL_STRUCT ("properties (1.2)", properties, filterMinmaxSingleComponentFormats);
@@ -933,7 +950,7 @@ dump_properties13 (GstVulkanPhysicalDevice * device,
   DEBUG_UINT32 ("properties (1.3)", properties, minSubgroupSize);
   DEBUG_UINT32 ("properties (1.3)", properties, maxSubgroupSize);
   DEBUG_UINT32 ("properties (1.3)", properties, maxComputeWorkgroupSubgroups);
-  /* VkShaderStageFlags    requiredSubgroupSizeStages; */
+  DEBUG_FLAGS ("properties (1.3)", properties, requiredSubgroupSizeStages, shader_stage);
   DEBUG_UINT32 ("properties (1.3)", properties, maxInlineUniformBlockSize);
   DEBUG_UINT32 ("properties (1.3)", properties, maxPerStageDescriptorInlineUniformBlocks);
   DEBUG_UINT32 ("properties (1.3)", properties, maxPerStageDescriptorUpdateAfterBindInlineUniformBlocks);
@@ -1000,16 +1017,32 @@ dump_properties14 (GstVulkanPhysicalDevice * device,
   DEBUG_BOOL_STRUCT ("properties (1.4)", properties, blockTexelViewCompatibleMultipleLayers);
   DEBUG_UINT32 ("properties (1.4)", properties, maxCombinedImageSamplerDescriptorCount);
   DEBUG_BOOL_STRUCT ("properties (1.4)", properties, fragmentShadingRateClampCombinerInputs);
-  /* VkPipelineRobustnessBufferBehavior    defaultRobustnessStorageBuffers; */
-  /* VkPipelineRobustnessBufferBehavior    defaultRobustnessUniformBuffers; */
-  /* VkPipelineRobustnessBufferBehavior    defaultRobustnessVertexInputs; */
-  /* VkPipelineRobustnessImageBehavior     defaultRobustnessImages; */
-  DEBUG_UINT32 ("properties (1.4)", properties, copySrcLayoutCount);
-  /* VkImageLayout*                        pCopySrcLayouts); */
-  DEBUG_UINT32 ("properties (1.4)", properties, copyDstLayoutCount);
-  /* VkImageLayout*                        pCopyDstLayouts); */
-  /* uint8_t                               optimalTilingLayoutUUID[VK_UUID_SIZE]); */
+  DEBUG_UINT32 ("properties (1.4)", properties, defaultRobustnessStorageBuffers);
+  DEBUG_UINT32 ("properties (1.4)", properties, defaultRobustnessUniformBuffers);
+  DEBUG_UINT32 ("properties (1.4)", properties, defaultRobustnessVertexInputs);
+  DEBUG_UINT32 ("properties (1.4)", properties, defaultRobustnessImages);
+  DEBUG_UUID ("properties (1.4)", properties, optimalTilingLayoutUUID);
   DEBUG_BOOL_STRUCT ("properties (1.4)", properties, identicalMemoryTypeRequirements);
+  if (properties->copySrcLayoutCount > 0 || properties->copyDstLayoutCount > 0) {
+    VkPhysicalDeviceVulkan14Properties props14 = *properties;
+    VkPhysicalDeviceProperties2 props = (VkPhysicalDeviceProperties2) {
+      .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES,
+      .pNext = &props14,
+    };
+    props14.pCopySrcLayouts = g_alloca (properties->copySrcLayoutCount * sizeof (VkImageLayout));
+    props14.pCopyDstLayouts = g_alloca (properties->copyDstLayoutCount * sizeof (VkImageLayout));
+    PFN_vkGetPhysicalDeviceProperties2 get_props2 = (PFN_vkGetPhysicalDeviceProperties2)
+        gst_vulkan_instance_get_proc_address (device->instance,
+        "vkGetPhysicalDeviceProperties2");
+    get_props2 (device->device, &props);
+    DEBUG_UINT32 ("properties (1.4)", &props14, copySrcLayoutCount);
+    DEBUG_UINT32_N ("properties (1.4)", &props14, pCopySrcLayouts, props14.copySrcLayoutCount);
+    DEBUG_UINT32 ("properties (1.4)", &props14, copyDstLayoutCount);
+    DEBUG_UINT32_N ("properties (1.4)", &props14, pCopyDstLayouts, props14.copyDstLayoutCount);
+  } else {
+    DEBUG_UINT32 ("properties (1.4)", properties, copySrcLayoutCount);
+    DEBUG_UINT32 ("properties (1.4)", properties, copyDstLayoutCount);
+  }
   /* *INDENT-ON* */
 }
 #endif
@@ -1023,15 +1056,12 @@ physical_device_info (GstVulkanPhysicalDevice * device, GError ** error)
 #endif
 
   GST_INFO_OBJECT (device, "physical device %i name \'%s\' type \'%s\' "
-      "api version %u.%u.%u, driver version %u.%u.%u vendor ID 0x%x, "
-      "device ID 0x%x", device->device_index, device->properties.deviceName,
+      "api version %" GST_VULKAN_API_VERSION_FORMAT ", driver version %"
+      GST_VULKAN_API_VERSION_FORMAT "vendor ID 0x%x, device ID 0x%x",
+      device->device_index, device->properties.deviceName,
       gst_vulkan_physical_device_type_to_string (device->properties.deviceType),
-      VK_VERSION_MAJOR (device->properties.apiVersion),
-      VK_VERSION_MINOR (device->properties.apiVersion),
-      VK_VERSION_PATCH (device->properties.apiVersion),
-      VK_VERSION_MAJOR (device->properties.driverVersion),
-      VK_VERSION_MINOR (device->properties.driverVersion),
-      VK_VERSION_PATCH (device->properties.driverVersion),
+      GST_VULKAN_API_VERSION_ARGS (device->properties.apiVersion),
+      GST_VULKAN_API_VERSION_ARGS (device->properties.driverVersion),
       device->properties.vendorID, device->properties.deviceID);
 
   if (!dump_queue_properties (device, error))

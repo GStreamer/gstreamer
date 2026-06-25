@@ -310,6 +310,17 @@ combinations fall back to per-plane allocation.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="VULKAN_API_VERSION_ARGS" c:identifier="GST_VULKAN_API_VERSION_ARGS" version="1.30" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdebug.h"/>
+      <parameters>
+        <parameter name="v">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <constant name="VULKAN_API_VERSION_FORMAT" value="u.%u.%u" c:type="GST_VULKAN_API_VERSION_FORMAT" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdebug.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
     <function-macro name="VULKAN_BUFFER_MEMORY_ALLOCATOR" c:identifier="GST_VULKAN_BUFFER_MEMORY_ALLOCATOR" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbuffermemory.h"/>
       <parameters>
@@ -813,6 +824,17 @@ negotiation stays decoupled from a specific #GstVulkanInstance.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="VULKAN_UUID_ARGS" c:identifier="GST_VULKAN_UUID_ARGS" version="1.30" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdebug.h"/>
+      <parameters>
+        <parameter name="uuid">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <constant name="VULKAN_UUID_FORMAT" value="02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x" c:type="GST_VULKAN_UUID_FORMAT" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdebug.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
     <function-macro name="VULKAN_VIDEO_FILTER" c:identifier="GST_VULKAN_VIDEO_FILTER" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.h"/>
       <parameters>
@@ -7946,6 +7968,17 @@ non-NULL #GstVulkanInstance objects do not contribute to @dst.</doc>
         <type name="Gst.Context" c:type="GstContext*"/>
       </return-value>
     </function>
+    <function name="vulkan_resolve_mode_flags_to_string" c:identifier="gst_vulkan_resolve_mode_flags_to_string" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdebug.h"/>
+      <return-value transfer-ownership="full">
+        <type name="utf8" c:type="gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="resolve_mode" transfer-ownership="none">
+          <type name="Vulkan.ResolveModeFlags" c:type="VkResolveModeFlags"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="vulkan_result_to_string" c:identifier="gst_vulkan_result_to_string" version="1.22" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkerror.h"/>
       <return-value transfer-ownership="none">
@@ -7988,6 +8021,28 @@ non-NULL #GstVulkanInstance objects do not contribute to @dst.</doc>
       <parameters>
         <parameter name="sample_count_bits" transfer-ownership="none">
           <type name="Vulkan.SampleCountFlags" c:type="VkSampleCountFlags"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="vulkan_shader_stage_flags_to_string" c:identifier="gst_vulkan_shader_stage_flags_to_string" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdebug.h"/>
+      <return-value transfer-ownership="full">
+        <type name="utf8" c:type="gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="shader_flags" transfer-ownership="none">
+          <type name="Vulkan.ShaderStageFlags" c:type="VkShaderStageFlags"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="vulkan_subgroup_feature_flags_to_string" c:identifier="gst_vulkan_subgroup_feature_flags_to_string" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdebug.h"/>
+      <return-value transfer-ownership="full">
+        <type name="utf8" c:type="gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="subgroup_feature" transfer-ownership="none">
+          <type name="Vulkan.SubgroupFeatureFlags" c:type="VkSubgroupFeatureFlags"/>
         </parameter>
       </parameters>
     </function>

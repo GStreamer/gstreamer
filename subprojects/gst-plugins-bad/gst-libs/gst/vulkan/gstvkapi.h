@@ -51,4 +51,12 @@
 
 #include <vulkan/vulkan_core.h>
 
+#if !defined(VK_VERSION_1_2)
+#define VkResolveModeFlags guint32
+#endif
+
+#if !defined(VK_VERSION_1_1)
+#define VkSubgroupFeatureFlags guint32
+#endif
+
 #endif /* __GST_VULKAN_API_H__ */

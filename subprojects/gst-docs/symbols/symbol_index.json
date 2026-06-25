@@ -24183,6 +24183,8 @@
   "VLCTable",
   "VP8_BD_VALUE",
   "Video recording",
+  "VkResolveModeFlags",
+  "VkSubgroupFeatureFlags",
   "WARNING_ON_BUS",
   "WRONG_BUFFER",
   "WRONG_FLOW_RETURN",
