@@ -255,7 +255,7 @@ main (int argc, char **argv)
   g_object_set (capsfilter, "caps", filter_caps, NULL);
   gst_caps_unref (filter_caps);
 
-  sink = gst_element_factory_make ("ximagesink", NULL);
+  sink = gst_element_factory_make ("autovideosink", NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), src, q, overlay, capsfilter, sink,
       NULL);
