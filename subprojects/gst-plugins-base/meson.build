@@ -348,7 +348,7 @@ endif
 gmodule_dep = dependency('gmodule-no-export-2.0')
 
 # some of the examples can use gdk-pixbuf and GTK+3
-gdk_pixbuf_dep = dependency('gdk-pixbuf-2.0', required : get_option('examples'))
+gdk_pixbuf_dep = dependency('gdk-pixbuf-2.0', required : get_option('examples'), default_options: {'man': false, 'tests': false})
 gtk_dep = dependency('gtk+-3.0', version : '>= 3.10', required : get_option('examples'))
 # TODO: https://github.com/mesonbuild/meson/issues/3941
 if not get_option('x11').disabled()
