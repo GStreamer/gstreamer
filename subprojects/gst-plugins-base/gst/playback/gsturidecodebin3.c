@@ -2092,8 +2092,12 @@ gst_uri_decode_bin3_change_state (GstElement * element,
   /* ERRORS */
 failure:
   {
-    if (transition == GST_STATE_CHANGE_READY_TO_PAUSED)
+    if (transition == GST_STATE_CHANGE_READY_TO_PAUSED) {
       purge_play_items (uridecodebin);
+      if (uridecodebin->input_item) {
+        uridecodebin->input_item->active = FALSE;
+      }
+    }
     return ret;
   }
 }
