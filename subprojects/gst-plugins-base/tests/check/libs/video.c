@@ -389,10 +389,52 @@ GST_START_TEST (test_video_formats_all)
     fail_if (gst_video_format_from_string (fmt_str) ==
         GST_VIDEO_FORMAT_UNKNOWN);
   }
-  /* Take into account GST_VIDEO_FORMAT_ENCODED, UNKNOWN and DMA_DRM. */
-  fail_unless_equals_int (num, GST_VIDEO_FORMAT_LAST - 3);
+  /* Take into account ENCODED, UNKNOWN and the two opaque formats. */
+  fail_unless_equals_int (num, GST_VIDEO_FORMAT_LAST - 4);
 
   gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_info_ahb_fmt)
+{
+  GstVideoInfo info;
+  GstCaps *caps;
+  GstCaps *roundtrip_caps;
+  const GstStructure *structure;
+  guint len;
+  const GstVideoFormat *formats;
+  gboolean found = FALSE;
+
+  fail_unless_equals_string (gst_video_format_to_string
+      (GST_VIDEO_FORMAT_AHARDWARE_BUFFER), "AHARDWARE_BUFFER");
+  fail_unless_equals_int (gst_video_format_from_string ("AHARDWARE_BUFFER"),
+      GST_VIDEO_FORMAT_AHARDWARE_BUFFER);
+
+  caps = gst_caps_from_string ("video/x-raw(memory:AHardwareBuffer), "
+      "format=AHARDWARE_BUFFER, width=1920, height=1080, framerate=30/1, "
+      "colorimetry=bt709");
+  fail_unless (gst_video_info_from_caps (&info, caps));
+  fail_unless_equals_int (GST_VIDEO_INFO_FORMAT (&info),
+      GST_VIDEO_FORMAT_AHARDWARE_BUFFER);
+  fail_unless_equals_int (info.colorimetry.matrix,
+      GST_VIDEO_COLOR_MATRIX_BT709);
+  roundtrip_caps = gst_video_info_to_caps (&info);
+  structure = gst_caps_get_structure (roundtrip_caps, 0);
+  fail_unless_equals_string (gst_structure_get_string (structure,
+          "colorimetry"), "bt709");
+  gst_caps_unref (roundtrip_caps);
+  gst_caps_unref (caps);
+
+  formats = gst_video_formats_raw (&len);
+  for (guint i = 0; i < len; i++)
+    fail_if (formats[i] == GST_VIDEO_FORMAT_AHARDWARE_BUFFER);
+
+  formats = gst_video_formats_any (&len);
+  for (guint i = 0; i < len; i++)
+    found |= formats[i] == GST_VIDEO_FORMAT_AHARDWARE_BUFFER;
+  fail_unless (found);
 }
 
 GST_END_TEST;
@@ -411,7 +453,7 @@ GST_START_TEST (test_video_formats_pack_unpack)
     gsize vsize, unpack_size;
     guint p;
 
-    if (n == GST_VIDEO_FORMAT_DMA_DRM)
+    if (n == GST_VIDEO_FORMAT_DMA_DRM || n == GST_VIDEO_FORMAT_AHARDWARE_BUFFER)
       continue;
 
     GST_INFO ("testing %s", gst_video_format_to_string (fmt));
@@ -2182,7 +2224,8 @@ GST_START_TEST (test_video_pack_unpack2)
     gdouble unpack_sec, pack_sec;
     ConvertResult res;
 
-    if (format == GST_VIDEO_FORMAT_DMA_DRM)
+    if (format == GST_VIDEO_FORMAT_DMA_DRM ||
+        format == GST_VIDEO_FORMAT_AHARDWARE_BUFFER)
       continue;
 
     finfo = gst_video_format_get_info (format);
@@ -2515,7 +2558,8 @@ run_video_color_convert (ColorType in_type, ColorType out_type)
     GstVideoFrame inframe;
     GstBuffer *inbuffer;
 
-    if (infmt == GST_VIDEO_FORMAT_DMA_DRM)
+    if (infmt == GST_VIDEO_FORMAT_DMA_DRM
+        || infmt == GST_VIDEO_FORMAT_AHARDWARE_BUFFER)
       continue;
 
     if (!check_video_format_is_type (infmt, in_type))
@@ -2533,7 +2577,8 @@ run_video_color_convert (ColorType in_type, ColorType out_type)
       GstBuffer *outbuffer;
       GstVideoConverter *convert;
 
-      if (outfmt == GST_VIDEO_FORMAT_DMA_DRM)
+      if (outfmt == GST_VIDEO_FORMAT_DMA_DRM ||
+          outfmt == GST_VIDEO_FORMAT_AHARDWARE_BUFFER)
         continue;
 
       if (!check_video_format_is_type (outfmt, out_type))
@@ -2627,7 +2672,8 @@ GST_START_TEST (test_video_size_convert)
     gint count, method;
     ConvertResult res;
 
-    if (infmt == GST_VIDEO_FORMAT_DMA_DRM)
+    if (infmt == GST_VIDEO_FORMAT_DMA_DRM
+        || infmt == GST_VIDEO_FORMAT_AHARDWARE_BUFFER)
       continue;
 
     fail_unless (gst_video_info_set_format (&ininfo, infmt, WIDTH_IN,
@@ -3293,6 +3339,7 @@ GST_START_TEST (test_video_formats_pstrides)
         || fmt == GST_VIDEO_FORMAT_NV12_10BE_8L128
         || fmt == GST_VIDEO_FORMAT_NV12_10LE40_4L4
         || fmt == GST_VIDEO_FORMAT_DMA_DRM
+        || fmt == GST_VIDEO_FORMAT_AHARDWARE_BUFFER
         || fmt == GST_VIDEO_FORMAT_MT2110T || fmt == GST_VIDEO_FORMAT_MT2110R) {
       fmt++;
       continue;
@@ -4905,6 +4952,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_auto_video_frame_unmap);
   tcase_add_test (tc_chain, test_video_color_primaries_equivalent);
   tcase_add_test (tc_chain, test_info_dma_drm);
+  tcase_add_test (tc_chain, test_info_ahb_fmt);
   tcase_add_test (tc_chain, test_video_meta_serialize);
   tcase_add_test (tc_chain, test_video_convert_with_config_update);
   tcase_add_test (tc_chain, test_dma_drm_big_engian);

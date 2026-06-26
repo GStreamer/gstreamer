@@ -73,7 +73,7 @@ check_pad_template (GstPadTemplate * tmpl)
   gst_caps_unref (caps);
 
   for (i = 2; i < GST_VIDEO_FORMAT_LAST; ++i) {
-    if (i == GST_VIDEO_FORMAT_DMA_DRM)
+    if (i == GST_VIDEO_FORMAT_DMA_DRM || i == GST_VIDEO_FORMAT_AHARDWARE_BUFFER)
       continue;
 
     if (!formats_supported[i]) {

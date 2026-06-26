@@ -26,6 +26,7 @@
 #include <gst/check/gstcheck.h>
 
 #include <fcntl.h>
+#include <gst/allocators/gstahardwarebuffer.h>
 #include <gst/allocators/gstdmabuf.h>
 #include <gst/allocators/gstfdmemory.h>
 #include <gst/allocators/gstshmallocator.h>
@@ -62,6 +63,71 @@ GST_START_TEST (test_dmabuf)
 
   gst_memory_unref (mem);
   g_object_unref (alloc);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_ahardware_buffer_formats)
+{
+#define AHB_FORMAT(name) { GST_AHARDWARE_BUFFER_FORMAT_ ## name, #name }
+
+  static const struct
+  {
+    guint32 value;
+    const gchar *name;
+  } known[] = {
+    AHB_FORMAT (R8G8B8A8_UNORM),
+    AHB_FORMAT (R8G8B8X8_UNORM),
+    AHB_FORMAT (R8G8B8_UNORM),
+    AHB_FORMAT (R5G6B5_UNORM),
+    AHB_FORMAT (R16G16B16A16_FLOAT),
+    AHB_FORMAT (BLOB),
+    AHB_FORMAT (Y8Cb8Cr8_420),
+    AHB_FORMAT (R10G10B10A2_UNORM),
+    AHB_FORMAT (D16_UNORM),
+    AHB_FORMAT (D24_UNORM),
+    AHB_FORMAT (D24_UNORM_S8_UINT),
+    AHB_FORMAT (D32_FLOAT),
+    AHB_FORMAT (D32_FLOAT_S8_UINT),
+    AHB_FORMAT (S8_UINT),
+    AHB_FORMAT (YCbCr_P010),
+    AHB_FORMAT (R8_UNORM),
+    AHB_FORMAT (R16_UINT),
+    AHB_FORMAT (R16G16_UINT),
+    AHB_FORMAT (R10G10B10A10_UNORM),
+    AHB_FORMAT (YCbCr_P210),
+    AHB_FORMAT (R12_UINT),
+    AHB_FORMAT (R14_UINT),
+    AHB_FORMAT (R12G12_UINT),
+    AHB_FORMAT (R14G14_UINT),
+    AHB_FORMAT (R12G12B12A12_UINT),
+    AHB_FORMAT (R14G14B14A14_UINT),
+    AHB_FORMAT (B10G10R10A2_UNORM),
+    AHB_FORMAT (B10G10R10X2_UNORM),
+  };
+  guint32 value;
+  gchar *str;
+
+  for (guint i = 0; i < G_N_ELEMENTS (known); i++) {
+    str = gst_ahardware_buffer_format_to_caps_string (known[i].value);
+    fail_unless_equals_string (str, known[i].name);
+    fail_unless (gst_ahardware_buffer_format_from_caps_string (str, &value));
+    fail_unless_equals_int (value, known[i].value);
+    g_free (str);
+  }
+
+  str = gst_ahardware_buffer_format_to_caps_string (0x32315659);
+  fail_unless_equals_string (str, "0x32315659");
+  fail_unless (gst_ahardware_buffer_format_from_caps_string (str, &value));
+  fail_unless_equals_int (value, 0x32315659);
+  g_free (str);
+
+  fail_if (gst_ahardware_buffer_format_from_caps_string ("0X32315659", &value));
+  fail_if (gst_ahardware_buffer_format_from_caps_string ("0x123", &value));
+  fail_if (gst_ahardware_buffer_format_from_caps_string ("0xABCDEF01", &value));
+  fail_if (gst_ahardware_buffer_format_from_caps_string ("YUV_VENDOR", &value));
+
+#undef AHB_FORMAT
 }
 
 GST_END_TEST;
@@ -186,6 +252,7 @@ allocators_suite (void)
   tcase_add_test (tc_chain, test_fdmem);
   tcase_add_test (tc_chain, test_fdmem_dont_close);
   tcase_add_test (tc_chain, test_shm_alloc_page_aligned);
+  tcase_add_test (tc_chain, test_ahardware_buffer_formats);
 
   return s;
 }
