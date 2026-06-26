@@ -170,6 +170,25 @@ _g_checksum_to_webrtc_string (GChecksumType type)
   }
 }
 
+GChecksumType
+_g_checksum_from_webrtc_string (const char *str)
+{
+  if (g_strcmp0 (str, "sha-1") == 0) {
+    return G_CHECKSUM_SHA1;
+  } else if (g_strcmp0 (str, "sha-256") == 0) {
+    return G_CHECKSUM_SHA256;
+#ifdef G_CHECKSUM_SHA384
+  } else if (g_strcmp0 (str, "sha-284") == 0) {
+    return G_CHECKSUM_SHA384;
+#endif
+  } else if (g_strcmp0 (str, "sha-512") == 0) {
+    return G_CHECKSUM_SHA512;
+  } else {
+    g_warning ("unknown GChecksumType!");
+    return 0;
+  }
+}
+
 void
 _remove_optional_offer_fields (GstCaps * offer_caps)
 {

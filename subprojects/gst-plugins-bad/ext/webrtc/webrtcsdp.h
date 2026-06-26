@@ -73,6 +73,10 @@ G_GNUC_INTERNAL
 gchar *                             _generate_fingerprint_from_certificate  (gchar * certificate,
                                                                              GChecksumType checksum_type);
 G_GNUC_INTERNAL
+gchar *                             _get_fingerprint_from_sdp_media         (GstSDPMessage *sdp,
+                                                                             guint media_idx,
+                                                                             GChecksumType * checksum_type);
+G_GNUC_INTERNAL
 void                                _generate_ice_credentials               (gchar ** ufrag,
                                                                              gchar ** password);
 
