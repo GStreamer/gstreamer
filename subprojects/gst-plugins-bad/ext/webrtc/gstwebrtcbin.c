@@ -898,6 +898,28 @@ _find_transport_for_ice_transport (GstWebRTCBin * webrtc,
   return stream;
 }
 
+static gboolean
+match_stream_for_dtls_transport (TransportStream * trans,
+    GstWebRTCDTLSTransport * transport)
+{
+  return trans->transport == transport;
+}
+
+static TransportStream *
+_find_transport_for_dtls_transport (GstWebRTCBin * webrtc,
+    GstWebRTCDTLSTransport * transport)
+{
+  TransportStream *stream;
+
+  stream = _find_transport (webrtc, transport,
+      (FindTransportFunc) match_stream_for_dtls_transport);
+
+  GST_TRACE_OBJECT (webrtc,
+      "Found transport %" GST_PTR_FORMAT " for dtls transport %" GST_PTR_FORMAT,
+      stream, transport);
+
+  return stream;
+}
 
 typedef gboolean (*FindPadFunc) (GstWebRTCBinPad * p1, gconstpointer data);
 
@@ -2281,9 +2303,62 @@ _on_ice_transport_notify_gathering_state (GstWebRTCICETransport * transport,
 }
 
 static void
+validate_transport_fingerprint (GstWebRTCSessionDescription *
+    remote_description, TransportStream * stream)
+{
+  if (!remote_description || !stream) {
+    return;
+  }
+  // early return if the fingerprint has already been validated.
+  if (stream->receive_bin->validated_fingerprint)
+    return;
+
+  GChecksumType checksum;
+  char *fingerprint = _get_fingerprint_from_sdp_media (remote_description->sdp,
+      stream->session_id, &checksum);
+
+  if (!fingerprint)
+    return;
+
+  char *peer_pem;
+  g_object_get (stream->transport, "remote-certificate", &peer_pem, NULL);
+  if (peer_pem) {
+    char *expected_fingerprint =
+        _generate_fingerprint_from_certificate (peer_pem, checksum);
+    if (g_strcmp0 (expected_fingerprint, fingerprint) == 0) {
+      transport_receive_bin_set_data_receive_state (stream->receive_bin,
+          RECEIVE_STATE_PASS);
+      stream->receive_bin->validated_fingerprint = TRUE;
+    }
+
+    g_free (expected_fingerprint);
+    g_free (peer_pem);
+  }
+  g_free (fingerprint);
+}
+
+static void
 _on_dtls_transport_notify_state (GstWebRTCDTLSTransport * transport,
     GParamSpec * pspec, GstWebRTCBin * webrtc)
 {
+  GstWebRTCDTLSTransportState dtls_state;
+
+  g_object_get (transport, "state", &dtls_state, NULL);
+
+  if (dtls_state == GST_WEBRTC_DTLS_TRANSPORT_STATE_CONNECTED) {
+    TransportStream *stream =
+        _find_transport_for_dtls_transport (webrtc, transport);
+    GstWebRTCSessionDescription *sdp = NULL;
+
+    if (webrtc->current_remote_description) {
+      sdp = webrtc->current_remote_description;
+    } else if (webrtc->pending_remote_description) {
+      sdp = webrtc->pending_remote_description;
+    }
+
+    validate_transport_fingerprint (sdp, stream);
+  }
+
   _update_peer_connection_state (webrtc);
 }
 
@@ -6049,7 +6124,7 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
    * the dtlssrtp elements before the ssl direction has been set which will
    * throw SSL errors */
   if (receive_state != RECEIVE_STATE_UNSET)
-    transport_receive_bin_set_receive_state (stream->receive_bin,
+    transport_receive_bin_set_dtls_receive_state (stream->receive_bin,
         receive_state);
 }
 
@@ -6189,7 +6264,7 @@ _update_data_channel_from_sdp_media (GstWebRTCBin * webrtc,
   stream->active = TRUE;
 
   receive = TRANSPORT_RECEIVE_BIN (stream->receive_bin);
-  transport_receive_bin_set_receive_state (receive, RECEIVE_STATE_PASS);
+  transport_receive_bin_set_dtls_receive_state (receive, RECEIVE_STATE_PASS);
 }
 
 static gboolean
@@ -6293,6 +6368,7 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
 
     stream = _get_or_create_transport_stream (webrtc, transport_idx,
         _message_media_is_datachannel (sdp->sdp, transport_idx));
+    validate_transport_fingerprint (webrtc->current_remote_description, stream);
     if (!bundled) {
       /* When bundling, these were all set up above, but when not
        * bundling we need to do it now */
@@ -6331,7 +6407,7 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
      * this bundle is completely inactive */
     GST_LOG_OBJECT (webrtc,
         "All mlines in bundle %u are inactive. Blocking receiver", bundle_idx);
-    transport_receive_bin_set_receive_state (bundle_stream->receive_bin,
+    transport_receive_bin_set_dtls_receive_state (bundle_stream->receive_bin,
         RECEIVE_STATE_BLOCK);
   }
 
