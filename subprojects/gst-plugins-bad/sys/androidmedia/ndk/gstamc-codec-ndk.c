@@ -877,13 +877,15 @@ gst_amc_codec_ndk_image_reader_acquire_next (GstAmcAImageReader * reader,
 
 static gboolean
 gst_amc_codec_ndk_image_get_hardware_buffer (GstAmcAImage * image,
-    AHardwareBuffer ** buffer, GError ** err)
+    AHardwareBuffer ** buffer, guint32 * format, GError ** err)
 {
   media_status_t result;
   AHardwareBuffer *ahardware_buffer = NULL;
+  AHardwareBuffer_Desc desc;
 
   g_return_val_if_fail (image != NULL, FALSE);
   g_return_val_if_fail (buffer != NULL, FALSE);
+  g_return_val_if_fail (format != NULL, FALSE);
 
   result = a_media_codec.image_get_hardware_buffer (image->image,
       &ahardware_buffer);
@@ -894,6 +896,8 @@ gst_amc_codec_ndk_image_get_hardware_buffer (GstAmcAImage * image,
   }
 
   *buffer = ahardware_buffer;
+  AHardwareBuffer_describe (ahardware_buffer, &desc);
+  *format = desc.format;
   return TRUE;
 }
 

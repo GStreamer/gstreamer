@@ -392,7 +392,7 @@ gst_amc_video_dec_base_init (gpointer g_class)
     gst_caps_append (all_src_caps,
         gst_caps_from_string ("video/x-raw("
             GST_CAPS_FEATURE_MEMORY_AHARDWAREBUFFER
-            "), format = (string) RGBA"));
+            "), format = (string) AHARDWARE_BUFFER"));
 
   if (codec_info->gl_output_only) {
     gst_caps_unref (src_caps);
@@ -500,6 +500,28 @@ gst_amc_video_dec_get_ahardware_buffer_max_images (GstAmcVideoDec * self)
       MAX_AHARDWARE_BUFFER_MAX_IMAGES);
 }
 
+static void
+gst_amc_video_dec_query_ahardware_buffer_allocation (GstAmcVideoDec * self,
+    GstCaps * caps)
+{
+  GstPad *src_pad = GST_VIDEO_DECODER_SRC_PAD (self);
+  GstQuery *query = gst_query_new_allocation (caps, TRUE);
+
+  if (!gst_pad_peer_query (src_pad, query))
+    goto out;
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    guint min_buffers = 0;
+
+    gst_query_parse_nth_allocation_pool (query, 0, NULL, NULL, &min_buffers,
+        NULL);
+    self->downstream_ahardware_buffer_min_buffers = min_buffers;
+  }
+
+out:
+  gst_query_unref (query);
+}
+
 static gboolean
 gst_amc_video_dec_open (GstVideoDecoder * decoder)
 {
@@ -568,6 +590,7 @@ gst_amc_video_dec_close (GstVideoDecoder * decoder)
 
   g_clear_pointer (&self->image_reader,
       (GDestroyNotify) gst_amc_image_reader_unref);
+  self->ahardware_buffer_format = 0;
 
   if (self->codec) {
     GError *err = NULL;
@@ -855,6 +878,44 @@ gst_amc_video_dec_check_codec_config (GstAmcVideoDec * self)
   return ret;
 }
 
+static const gchar *
+gst_amc_video_dec_codec_config_to_string (GstAmcCodecConfig codec_config)
+{
+  switch (codec_config) {
+    case AMC_CODEC_CONFIG_NONE:
+      return "none";
+    case AMC_CODEC_CONFIG_WITH_SURFACE:
+      return "GL";
+    case AMC_CODEC_CONFIG_WITH_AHARDWARE_BUFFER:
+      return "AHardwareBuffer";
+    case AMC_CODEC_CONFIG_WITHOUT_SURFACE:
+      return "bytebuffer";
+  }
+
+  g_return_val_if_reached ("unknown");
+}
+
+static void
+gst_amc_video_dec_copy_color_metadata (GstCaps * dest, const GstCaps * source)
+{
+  static const gchar *fields[] = { "colorimetry", "chroma-site" };
+  GstStructure *dest_structure;
+  const GstStructure *source_structure;
+
+  if (!dest || !source || gst_caps_is_empty (dest) ||
+      gst_caps_is_empty (source))
+    return;
+
+  dest_structure = gst_caps_get_structure (dest, 0);
+  source_structure = gst_caps_get_structure (source, 0);
+  for (guint i = 0; i < G_N_ELEMENTS (fields); i++) {
+    const GValue *value = gst_structure_get_value (source_structure, fields[i]);
+
+    if (value)
+      gst_structure_set_value (dest_structure, fields[i], value);
+  }
+}
+
 static gboolean
 gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
 {
@@ -899,9 +960,10 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
     return FALSE;
   }
 
-  if (self->codec_config == AMC_CODEC_CONFIG_WITH_SURFACE ||
-      self->codec_config == AMC_CODEC_CONFIG_WITH_AHARDWARE_BUFFER) {
+  if (self->codec_config == AMC_CODEC_CONFIG_WITH_SURFACE) {
     gst_format = GST_VIDEO_FORMAT_RGBA;
+  } else if (self->codec_config == AMC_CODEC_CONFIG_WITH_AHARDWARE_BUFFER) {
+    gst_format = GST_VIDEO_FORMAT_AHARDWARE_BUFFER;
   } else {
     gst_format =
         gst_amc_color_format_to_video_format (klass->codec_info, mime,
@@ -928,6 +990,8 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
     if (output_state->caps)
       gst_caps_unref (output_state->caps);
     output_state->caps = gst_video_info_to_caps (&output_state->info);
+    gst_amc_video_dec_copy_color_metadata (output_state->caps,
+        self->input_state->caps);
     if (self->codec_config == AMC_CODEC_CONFIG_WITH_SURFACE) {
       gst_caps_set_features (output_state->caps, 0,
           gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
@@ -936,6 +1000,7 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
           "external-oes", NULL);
       GST_DEBUG_OBJECT (self, "Configuring for SurfaceTexture output");
     } else {
+      self->ahardware_buffer_format = 0;
       gst_caps_set_features (output_state->caps, 0,
           gst_caps_features_new_static_str
           (GST_CAPS_FEATURE_MEMORY_AHARDWAREBUFFER, NULL));
@@ -987,7 +1052,10 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
       self->color_format_info.crop_bottom, self->color_format_info.frame_size);
 
 out:
-  ret = gst_video_decoder_negotiate (GST_VIDEO_DECODER (self));
+  if (self->codec_config == AMC_CODEC_CONFIG_WITH_AHARDWARE_BUFFER)
+    ret = TRUE;
+  else
+    ret = gst_video_decoder_negotiate (GST_VIDEO_DECODER (self));
 
   gst_video_codec_state_unref (output_state);
   self->input_state_changed = FALSE;
@@ -1430,6 +1498,76 @@ gst_amc_video_dec_clear_pending_ahardware_buffer_frame (GstAmcVideoDec * self)
   gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
 }
 
+static gboolean
+gst_amc_video_dec_negotiate_ahardware_buffer_format (GstAmcVideoDec * self,
+    guint32 ahardware_buffer_format, GError ** err)
+{
+  GstVideoDecoder *decoder = GST_VIDEO_DECODER (self);
+  GstVideoCodecState *old_state;
+  GstVideoCodecState *new_state;
+  gchar *format_str;
+
+  if (self->ahardware_buffer_format != 0 &&
+      self->ahardware_buffer_format == ahardware_buffer_format)
+    return TRUE;
+
+  old_state = gst_video_decoder_get_output_state (decoder);
+  if (!old_state) {
+    g_set_error_literal (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "No AHardwareBuffer output state");
+    return FALSE;
+  }
+
+  new_state = gst_video_decoder_set_output_state (decoder,
+      GST_VIDEO_FORMAT_AHARDWARE_BUFFER,
+      GST_VIDEO_INFO_WIDTH (&old_state->info),
+      GST_VIDEO_INFO_HEIGHT (&old_state->info), old_state);
+  if (!new_state) {
+    gst_video_codec_state_unref (old_state);
+    g_set_error_literal (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Failed to update AHardwareBuffer output state");
+    return FALSE;
+  }
+
+  gst_clear_caps (&new_state->caps);
+  new_state->caps = gst_video_info_to_caps (&new_state->info);
+  gst_amc_video_dec_copy_color_metadata (new_state->caps, old_state->caps);
+  gst_caps_set_features (new_state->caps, 0,
+      gst_caps_features_new_static_str
+      (GST_CAPS_FEATURE_MEMORY_AHARDWAREBUFFER, NULL));
+  format_str =
+      gst_ahardware_buffer_format_to_caps_string (ahardware_buffer_format);
+  gst_caps_set_simple (new_state->caps, "ahb-format", G_TYPE_STRING,
+      format_str, NULL);
+  g_free (format_str);
+
+  if (!gst_video_decoder_negotiate (decoder)) {
+    GstVideoCodecState *restored_state;
+
+    /* set_output_state() replaces the decoder's current state immediately,
+     * so restore it if downstream rejects the refined caps. */
+    restored_state = gst_video_decoder_set_output_state (decoder,
+        GST_VIDEO_INFO_FORMAT (&old_state->info),
+        GST_VIDEO_INFO_WIDTH (&old_state->info),
+        GST_VIDEO_INFO_HEIGHT (&old_state->info), old_state);
+    if (restored_state) {
+      gst_caps_replace (&restored_state->caps, old_state->caps);
+      gst_video_codec_state_unref (restored_state);
+    }
+    gst_video_codec_state_unref (new_state);
+    gst_video_codec_state_unref (old_state);
+    g_set_error_literal (err, GST_CORE_ERROR, GST_CORE_ERROR_NEGOTIATION,
+        "Failed to negotiate the AHardwareBuffer format");
+    return FALSE;
+  }
+
+  self->ahardware_buffer_format = ahardware_buffer_format;
+  gst_video_codec_state_unref (new_state);
+  gst_video_codec_state_unref (old_state);
+
+  return TRUE;
+}
+
 static GstAmcAHardwareBufferFlowResult
 gst_amc_video_dec_try_finish_pending_ahardware_buffer_frame (GstAmcVideoDec *
     self, GstFlowReturn * flow_ret, gboolean * is_eos, GError ** err)
@@ -1440,6 +1578,7 @@ gst_amc_video_dec_try_finish_pending_ahardware_buffer_frame (GstAmcVideoDec *
   GstVideoCodecFrame *frame = self->pending_ahardware_buffer_frame;
   GstAmcAImage *image = NULL;
   AHardwareBuffer *ahardware_buffer = NULL;
+  guint32 ahardware_buffer_format;
   gint acquire_fence_fd = -1;
   GstAmcAImageReaderAcquireResult acquire_result;
   gsize size;
@@ -1460,7 +1599,14 @@ gst_amc_video_dec_try_finish_pending_ahardware_buffer_frame (GstAmcVideoDec *
   if (acquire_result != GST_AMC_AIMAGE_READER_ACQUIRE_OK)
     goto output_error;
 
-  if (!gst_amc_image_get_hardware_buffer (image, &ahardware_buffer, err)) {
+  if (!gst_amc_image_get_hardware_buffer (image, &ahardware_buffer,
+          &ahardware_buffer_format, err)) {
+    gst_amc_aimage_memory_release_image (image, acquire_fence_fd);
+    goto output_error;
+  }
+
+  if (!gst_amc_video_dec_negotiate_ahardware_buffer_format (self,
+          ahardware_buffer_format, err)) {
     gst_amc_aimage_memory_release_image (image, acquire_fence_fd);
     gst_amc_image_reader_notify_image_released (self->image_reader);
     goto output_error;
@@ -2223,6 +2369,10 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
       GST_ELEMENT_WARNING_FROM_ERROR (self, err);
   }
 
+  self->downstream_supports_ahardware_buffer = FALSE;
+  self->downstream_supports_gl = FALSE;
+  self->downstream_ahardware_buffer_min_buffers = 0;
+
   {
     gboolean downstream_supports_ahardware_buffer = FALSE;
     gboolean downstream_supports_gl = FALSE;
@@ -2243,7 +2393,7 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
           (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, "RGBA"));
       GstStaticCaps static_ahb_caps =
           GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-          (GST_CAPS_FEATURE_MEMORY_AHARDWAREBUFFER, "RGBA"));
+          (GST_CAPS_FEATURE_MEMORY_AHARDWAREBUFFER, "AHARDWARE_BUFFER"));
       GstCaps *gl_memory_caps = gst_static_caps_get (&static_caps);
       GstCaps *ahardware_buffer_caps = gst_static_caps_get (&static_ahb_caps);
 
@@ -2251,7 +2401,7 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
           downstream_caps);
 
       /* Check if downstream caps supports
-       * video/x-raw(memory:AHardwareBuffer),format=RGBA or
+       * video/x-raw(memory:AHardwareBuffer),format=AHARDWARE_BUFFER or
        * video/x-raw(memory:GLMemory),format=RGBA */
       n = gst_caps_get_size (downstream_caps);
       for (i = 0; i < n; i++) {
@@ -2283,31 +2433,49 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
       gst_caps_unref (ahardware_buffer_caps);
       gst_caps_unref (gl_memory_caps);
 
-      /* If an opaque surface memory feature is supported,
-       * update the video decoder output state accordingly and negotiate */
-      if (downstream_supports_ahardware_buffer || downstream_supports_gl) {
+      /* If an opaque surface memory feature is supported, update the video
+       * decoder output state accordingly. AHardwareBuffer caps are negotiated
+       * later, once the first AHardwareBuffer descriptor reveals ahb-format. */
+      self->downstream_supports_ahardware_buffer =
+          downstream_supports_ahardware_buffer;
+      self->downstream_supports_gl = downstream_supports_gl;
+
+      if (downstream_supports_ahardware_buffer) {
+        GstVideoCodecState *output_state;
+
+        output_state = gst_video_decoder_set_output_state (decoder,
+            GST_VIDEO_FORMAT_AHARDWARE_BUFFER, state->info.width,
+            state->info.height, state);
+
+        gst_clear_caps (&output_state->caps);
+        output_state->caps = gst_video_info_to_caps (&output_state->info);
+        gst_amc_video_dec_copy_color_metadata (output_state->caps, state->caps);
+        gst_caps_set_features (output_state->caps, 0,
+            gst_caps_features_new_static_str
+            (GST_CAPS_FEATURE_MEMORY_AHARDWAREBUFFER, NULL));
+        gst_amc_video_dec_query_ahardware_buffer_allocation (self,
+            output_state->caps);
+        gst_video_codec_state_unref (output_state);
+      } else if (downstream_supports_gl) {
         GstVideoCodecState *output_state = NULL;
         GstVideoCodecState *prev_output_state = NULL;
 
         prev_output_state = gst_video_decoder_get_output_state (decoder);
 
-        output_state =
-            gst_video_decoder_set_output_state (decoder, GST_VIDEO_FORMAT_RGBA,
-            state->info.width, state->info.height, state);
+        output_state = gst_video_decoder_set_output_state (decoder,
+            GST_VIDEO_FORMAT_RGBA, state->info.width, state->info.height,
+            state);
 
         if (output_state->caps) {
           gst_caps_unref (output_state->caps);
         }
 
         output_state->caps = gst_video_info_to_caps (&output_state->info);
+        gst_amc_video_dec_copy_color_metadata (output_state->caps, state->caps);
         gst_caps_set_features (output_state->caps, 0,
             gst_caps_features_new_static_str
-            (downstream_supports_ahardware_buffer ?
-                GST_CAPS_FEATURE_MEMORY_AHARDWAREBUFFER :
-                GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL));
+            (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL));
 
-        /* gst_amc_video_dec_decide_allocation will update
-         * self->downstream_supports_ahardware_buffer / gl */
         if (!gst_video_decoder_negotiate (decoder)) {
           GST_ERROR_OBJECT (self, "Failed to negotiate");
 
@@ -2330,9 +2498,9 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
   }
 
   GST_INFO_OBJECT (self, "AHardwareBuffer output: %s",
-      self->downstream_supports_ahardware_buffer ? "enabled" : "disabled");
+      self->downstream_supports_ahardware_buffer ? "supported" : "unsupported");
   GST_INFO_OBJECT (self, "GL output: %s",
-      self->downstream_supports_gl ? "enabled" : "disabled");
+      self->downstream_supports_gl ? "supported" : "unsupported");
 
   if (klass->codec_info->gl_output_only && !self->downstream_supports_gl
       && !self->downstream_supports_ahardware_buffer) {
@@ -2348,6 +2516,7 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
         "(configured: %u, downstream minimum: %u)", max_images,
         self->ahardware_buffer_max_images,
         self->downstream_ahardware_buffer_min_buffers);
+    self->ahardware_buffer_format = 0;
     self->image_reader =
         gst_amc_codec_new_image_reader (state->info.width, state->info.height,
         max_images, &err);
@@ -2383,6 +2552,9 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
   } else {
     self->codec_config = AMC_CODEC_CONFIG_WITHOUT_SURFACE;
   }
+
+  GST_INFO_OBJECT (self, "Selected %s output",
+      gst_amc_video_dec_codec_config_to_string (self->codec_config));
 
   format_string = gst_amc_format_to_string (format, &err);
   if (err)
@@ -2455,6 +2627,7 @@ gst_amc_video_dec_flush (GstVideoDecoder * decoder)
   GST_PAD_STREAM_UNLOCK (GST_VIDEO_DECODER_SRC_PAD (self));
   GST_VIDEO_DECODER_STREAM_LOCK (self);
   gst_amc_video_dec_clear_pending_ahardware_buffer_frame (self);
+  self->ahardware_buffer_format = 0;
   gst_amc_codec_flush (self->codec, &err);
   if (err)
     GST_ELEMENT_WARNING_FROM_ERROR (self, err);
@@ -2821,7 +2994,7 @@ _caps_are_rgba_with_gl_memory (GstCaps * caps)
 }
 
 static gboolean
-_caps_are_rgba_with_ahardware_buffer_memory (GstCaps * caps)
+_caps_are_ahb_fmt_with_ahardware_buffer_memory (GstCaps * caps)
 {
   GstVideoInfo info;
   GstCapsFeatures *features;
@@ -2832,7 +3005,7 @@ _caps_are_rgba_with_ahardware_buffer_memory (GstCaps * caps)
   if (!gst_video_info_from_caps (&info, caps))
     return FALSE;
 
-  if (info.finfo->format != GST_VIDEO_FORMAT_RGBA)
+  if (info.finfo->format != GST_VIDEO_FORMAT_AHARDWARE_BUFFER)
     return FALSE;
 
   if (!(features = gst_caps_get_features (caps, 0)))
@@ -2858,7 +3031,6 @@ gst_amc_video_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
   gboolean need_pool = FALSE;
   GstCaps *caps = NULL;
   guint min_buffers = 0;
-//  GError *error = NULL;
 
   if (!GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (bdec, query))
     return FALSE;
@@ -2867,7 +3039,7 @@ gst_amc_video_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
   self->downstream_supports_ahardware_buffer = FALSE;
   self->downstream_ahardware_buffer_min_buffers = 0;
   gst_query_parse_allocation (query, &caps, &need_pool);
-  if (_caps_are_rgba_with_ahardware_buffer_memory (caps)) {
+  if (_caps_are_ahb_fmt_with_ahardware_buffer_memory (caps)) {
     self->downstream_supports_ahardware_buffer =
         gst_amc_codec_have_ahardware_buffer_output ();
     if (gst_query_get_n_allocation_pools (query) > 0) {

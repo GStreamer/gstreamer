@@ -96,6 +96,8 @@ struct _GstAmcVideoDec
   GstAmcAImageReader *image_reader;
   guint ahardware_buffer_max_images;
   guint downstream_ahardware_buffer_min_buffers;
+  /* 0 means no AHardwareBuffer format has been observed yet. */
+  guint32 ahardware_buffer_format;
   GstVideoCodecFrame *pending_ahardware_buffer_frame;
   gboolean pending_ahardware_buffer_is_eos;
 

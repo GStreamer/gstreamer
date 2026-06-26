@@ -159,6 +159,7 @@ struct _GstAmcCodecVTable
 
   gboolean       (* image_get_hardware_buffer)     (GstAmcAImage * image,
                                                     AHardwareBuffer ** buffer,
+                                                    guint32 * format,
                                                     GError ** err);
 
   void           (* image_delete_async)            (GstAmcAImage * image,
@@ -210,7 +211,7 @@ GstAmcAImageReaderAcquireResult gst_amc_image_reader_acquire_next
     (GstAmcAImageReader * reader, GstAmcAImage ** image,
     gint * acquire_fence_fd, GError ** err);
 gboolean gst_amc_image_get_hardware_buffer (GstAmcAImage * image,
-    AHardwareBuffer ** buffer, GError ** err);
+    AHardwareBuffer ** buffer, guint32 * format, GError ** err);
 void gst_amc_image_delete_async (GstAmcAImage * image, gint release_fence_fd);
 
 G_END_DECLS

@@ -243,10 +243,11 @@ gst_amc_image_reader_acquire_next (GstAmcAImageReader * reader,
 
 gboolean
 gst_amc_image_get_hardware_buffer (GstAmcAImage * image,
-    AHardwareBuffer ** buffer, GError ** err)
+    AHardwareBuffer ** buffer, guint32 * format, GError ** err)
 {
   g_assert (gst_amc_codec_vtable != NULL);
-  return gst_amc_codec_vtable->image_get_hardware_buffer (image, buffer, err);
+  return gst_amc_codec_vtable->image_get_hardware_buffer (image, buffer,
+      format, err);
 }
 
 void

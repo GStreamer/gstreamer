@@ -1154,7 +1154,7 @@ gst_amc_codec_jni_image_reader_acquire_next (GstAmcAImageReader * reader,
 
 static gboolean
 gst_amc_codec_jni_image_get_hardware_buffer (GstAmcAImage * image,
-    AHardwareBuffer ** buffer, GError ** err)
+    AHardwareBuffer ** buffer, guint32 * format, GError ** err)
 {
   g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
       "AHardwareBuffer output is not supported by the JNI MediaCodec backend");
