@@ -72,7 +72,6 @@ if host_system == 'android' and gstallocators_dep.found()
   extra_deps += [
     gstallocators_dep,
     cc.find_library('android', required : true),
-    gmodule_dep,
   ]
 endif
 

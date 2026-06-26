@@ -36,6 +36,12 @@ G_BEGIN_DECLS
 
 #if GST_VULKAN_UPLOAD_HAVE_AHB
 extern const struct UploadMethod gst_vulkan_upload_ahb_method;
+void gst_vulkan_upload_ahb_request_device_extensions (GstVulkanUpload * upload);
+#else
+static inline void
+gst_vulkan_upload_ahb_request_device_extensions (GstVulkanUpload * upload)
+{
+}
 #endif
 
 G_END_DECLS

@@ -1200,6 +1200,7 @@ gst_vulkan_upload_change_state (GstElement * element, GstStateChange transition)
             ("Failed to retrieve vulkan instance"), (NULL));
         return GST_STATE_CHANGE_FAILURE;
       }
+      gst_vulkan_upload_ahb_request_device_extensions (vk_upload);
       if (!gst_vulkan_ensure_element_device (element, vk_upload->instance,
               &vk_upload->device, 0)) {
         return GST_STATE_CHANGE_FAILURE;
