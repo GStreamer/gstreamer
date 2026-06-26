@@ -952,18 +952,32 @@ rfb_decoder_fill_rectangle (RfbDecoder * decoder, gint x, gint y, gint w,
 {
   /* fill the whole region with the same color */
 
-  guint32 *offset;
   gint i, j;
 
   if (!rfb_decoder_clip_rectangle (decoder, &x, &y, &w, &h, NULL, NULL))
     return;
 
   for (i = 0; i < h; i++) {
-    offset =
-        (guint32 *) (decoder->frame + ((x + (y +
-                    i) * decoder->rect_width)) * decoder->bytespp);
+    guint8 *offset =
+        decoder->frame + ((x + (y +
+                i) * decoder->rect_width)) * decoder->bytespp;
+
     for (j = 0; j < w; j++) {
-      *(offset++) = color;
+      switch (decoder->bytespp) {
+        case 1:
+          *(guint8 *) offset = (guint8) color;
+          break;
+        case 2:
+          *(guint16 *) offset = (guint16) color;
+          break;
+        case 4:
+          *(guint32 *) offset = color;
+          break;
+        default:
+          /* reject unsupported format */
+          return;
+      }
+      offset += decoder->bytespp;
     }
   }
 }
