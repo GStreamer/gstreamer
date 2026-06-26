@@ -7,6 +7,96 @@ and/or use gtk-doc annotations.  -->
   <c:include name="gst/allocators/allocators.h"/>
   <doc:format name="unknown"/>
   <namespace name="GstAllocators" version="1.0" shared-library="libgstallocators-1.0.so.0" c:identifier-prefixes="Gst" c:symbol-prefixes="gst">
+    <enumeration name="AHardwareBufferFormat" version="1.30" c:type="GstAHardwareBufferFormat">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">Android AHardwareBuffer format values. These correspond to the
+`AHARDWAREBUFFER_FORMAT_*` constants in Android's `hardware_buffer.h`, but
+are available regardless of which Android SDK version is used to build.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h"/>
+      <member name="r8g8b8a8_unorm" value="1" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_R8G8B8A8_UNORM">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">R8G8B8A8_UNORM format</doc>
+      </member>
+      <member name="r8g8b8x8_unorm" value="2" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_R8G8B8X8_UNORM">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">R8G8B8X8_UNORM format</doc>
+      </member>
+      <member name="r8g8b8_unorm" value="3" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_R8G8B8_UNORM">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">R8G8B8_UNORM format</doc>
+      </member>
+      <member name="r5g6b5_unorm" value="4" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_R5G6B5_UNORM">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">R5G6B5_UNORM format</doc>
+      </member>
+      <member name="r16g16b16a16_float" value="22" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_R16G16B16A16_FLOAT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">R16G16B16A16_FLOAT format</doc>
+      </member>
+      <member name="blob" value="33" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_BLOB">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">BLOB format</doc>
+      </member>
+      <member name="y8cb8cr8_420" value="35" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_Y8Cb8Cr8_420">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">Y8Cb8Cr8_420 format</doc>
+      </member>
+      <member name="r10g10b10a2_unorm" value="43" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_R10G10B10A2_UNORM">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">R10G10B10A2_UNORM format</doc>
+      </member>
+      <member name="d16_unorm" value="48" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_D16_UNORM">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">D16_UNORM format</doc>
+      </member>
+      <member name="d24_unorm" value="49" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_D24_UNORM">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">D24_UNORM format</doc>
+      </member>
+      <member name="d24_unorm_s8_uint" value="50" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_D24_UNORM_S8_UINT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">D24_UNORM_S8_UINT format</doc>
+      </member>
+      <member name="d32_float" value="51" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_D32_FLOAT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">D32_FLOAT format</doc>
+      </member>
+      <member name="d32_float_s8_uint" value="52" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_D32_FLOAT_S8_UINT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">D32_FLOAT_S8_UINT format</doc>
+      </member>
+      <member name="s8_uint" value="53" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_S8_UINT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">S8_UINT format</doc>
+      </member>
+      <member name="ycbcr_p010" value="54" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_YCbCr_P010">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">YCbCr_P010 format</doc>
+      </member>
+      <member name="r8_unorm" value="56" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_R8_UNORM">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">R8_UNORM format</doc>
+      </member>
+      <member name="r16_uint" value="57" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_R16_UINT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">R16_UINT format</doc>
+      </member>
+      <member name="r16g16_uint" value="58" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_R16G16_UINT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">R16G16_UINT format</doc>
+      </member>
+      <member name="r10g10b10a10_unorm" value="59" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_R10G10B10A10_UNORM">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">R10G10B10A10_UNORM format</doc>
+      </member>
+      <member name="ycbcr_p210" value="60" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_YCbCr_P210">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">YCbCr_P210 format</doc>
+      </member>
+      <member name="r12_uint" value="61" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_R12_UINT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">R12_UINT format</doc>
+      </member>
+      <member name="r14_uint" value="62" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_R14_UINT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">R14_UINT format</doc>
+      </member>
+      <member name="r12g12_uint" value="63" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_R12G12_UINT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">R12G12_UINT format</doc>
+      </member>
+      <member name="r14g14_uint" value="64" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_R14G14_UINT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">R14G14_UINT format</doc>
+      </member>
+      <member name="r12g12b12a12_uint" value="65" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_R12G12B12A12_UINT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">R12G12B12A12_UINT format</doc>
+      </member>
+      <member name="r14g14b14a14_uint" value="66" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_R14G14B14A14_UINT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">R14G14B14A14_UINT format</doc>
+      </member>
+      <member name="b10g10r10a2_unorm" value="67" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_B10G10R10A2_UNORM">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">B10G10R10A2_UNORM format</doc>
+      </member>
+      <member name="b10g10r10x2_unorm" value="68" c:identifier="GST_AHARDWARE_BUFFER_FORMAT_B10G10R10X2_UNORM">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">B10G10R10X2_UNORM format</doc>
+      </member>
+    </enumeration>
     <callback name="AHardwareBufferMemoryQueryFunction" c:type="GstAHardwareBufferMemoryQueryFunction" version="1.30" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">Function used by memory implementations to expose AHardwareBuffer backing
 through gst_ahardware_buffer_memory_peek_buffer().
@@ -589,6 +679,41 @@ gst_udmabuf_allocator_init_once() did not register the allocator.</doc>
         <type name="DmaBufAllocatorClass" c:type="GstDmaBufAllocatorClass"/>
       </field>
     </record>
+    <function name="ahardware_buffer_format_from_caps_string" c:identifier="gst_ahardware_buffer_format_from_caps_string" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">Parses the canonical string representation used by the `ahb-format` caps
+field.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">%TRUE if @value is a known name or canonical hexadecimal value.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">an AHardwareBuffer format string</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="format" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">location for the Android AHardwareBuffer format value</doc>
+          <type name="guint32" c:type="guint32*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="ahardware_buffer_format_to_caps_string" c:identifier="gst_ahardware_buffer_format_to_caps_string" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">Converts an Android AHardwareBuffer format value to the canonical string
+representation used by the `ahb-format` caps field. Known formats use the
+Android constant suffix and unknown formats use fixed-width hexadecimal.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h"/>
+      <return-value transfer-ownership="full">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">the canonical format string.</doc>
+        <type name="utf8" c:type="gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">an Android AHardwareBuffer format value</doc>
+          <type name="guint32" c:type="guint32"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="ahardware_buffer_memory_peek_buffer" c:identifier="gst_ahardware_buffer_memory_peek_buffer" version="1.30" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">Queries whether @mem is backed by an AHardwareBuffer and, if so, returns the
 AHardwareBuffer represented by this memory.

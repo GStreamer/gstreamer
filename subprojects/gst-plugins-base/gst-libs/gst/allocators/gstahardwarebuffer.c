@@ -23,6 +23,60 @@
 
 #include "gstahardwarebuffer.h"
 
+#if defined(__ANDROID__)
+#include <android/api-level.h>
+
+#if __ANDROID_API__ >= 26
+#include <android/hardware_buffer.h>
+
+#define AHB_FORMAT_ASSERT(name) \
+  G_STATIC_ASSERT ((guint32) GST_AHARDWARE_BUFFER_FORMAT_ ## name == \
+      (guint32) AHARDWAREBUFFER_FORMAT_ ## name)
+
+AHB_FORMAT_ASSERT (R8G8B8A8_UNORM);
+AHB_FORMAT_ASSERT (R8G8B8X8_UNORM);
+AHB_FORMAT_ASSERT (R8G8B8_UNORM);
+AHB_FORMAT_ASSERT (R5G6B5_UNORM);
+AHB_FORMAT_ASSERT (R16G16B16A16_FLOAT);
+AHB_FORMAT_ASSERT (BLOB);
+AHB_FORMAT_ASSERT (R10G10B10A2_UNORM);
+
+/* Guards follow the AOSP native hardware_buffer.h release tags, rounded up
+ * where useful, since Java HardwareBuffer constants can lag the NDK surface. */
+#if __ANDROID_API__ >= 29
+AHB_FORMAT_ASSERT (D16_UNORM);
+AHB_FORMAT_ASSERT (D24_UNORM);
+AHB_FORMAT_ASSERT (D24_UNORM_S8_UINT);
+AHB_FORMAT_ASSERT (D32_FLOAT);
+AHB_FORMAT_ASSERT (D32_FLOAT_S8_UINT);
+AHB_FORMAT_ASSERT (S8_UINT);
+AHB_FORMAT_ASSERT (Y8Cb8Cr8_420);
+#endif
+
+#if __ANDROID_API__ >= 34
+AHB_FORMAT_ASSERT (YCbCr_P010);
+AHB_FORMAT_ASSERT (R8_UNORM);
+AHB_FORMAT_ASSERT (R16_UINT);
+AHB_FORMAT_ASSERT (R16G16_UINT);
+AHB_FORMAT_ASSERT (R10G10B10A10_UNORM);
+#endif
+
+#if __ANDROID_API__ >= 37
+AHB_FORMAT_ASSERT (YCbCr_P210);
+AHB_FORMAT_ASSERT (R12_UINT);
+AHB_FORMAT_ASSERT (R14_UINT);
+AHB_FORMAT_ASSERT (R12G12_UINT);
+AHB_FORMAT_ASSERT (R14G14_UINT);
+AHB_FORMAT_ASSERT (R12G12B12A12_UINT);
+AHB_FORMAT_ASSERT (R14G14B14A14_UINT);
+AHB_FORMAT_ASSERT (B10G10R10A2_UNORM);
+AHB_FORMAT_ASSERT (B10G10R10X2_UNORM);
+#endif
+
+#undef AHB_FORMAT_ASSERT
+#endif
+#endif
+
 /**
  * SECTION:gstahardwarebuffer
  * @title: AHardwareBuffer
@@ -45,6 +99,117 @@ typedef struct
 
 G_LOCK_DEFINE_STATIC (ahardware_buffer_query_functions);
 static GArray *ahardware_buffer_query_functions;
+
+typedef struct
+{
+  guint32 value;
+  const gchar *name;
+} GstAHardwareBufferFormatName;
+
+/* AHardwareBuffer format names are part of the caps contract and must remain
+ * available when inspecting caps on non-Android platforms. */
+#define AHB_FORMAT(name) { GST_AHARDWARE_BUFFER_FORMAT_ ## name, #name }
+
+static const GstAHardwareBufferFormatName ahardware_buffer_formats[] = {
+  AHB_FORMAT (R8G8B8A8_UNORM),
+  AHB_FORMAT (R8G8B8X8_UNORM),
+  AHB_FORMAT (R8G8B8_UNORM),
+  AHB_FORMAT (R5G6B5_UNORM),
+  AHB_FORMAT (R16G16B16A16_FLOAT),
+  AHB_FORMAT (BLOB),
+  AHB_FORMAT (Y8Cb8Cr8_420),
+  AHB_FORMAT (R10G10B10A2_UNORM),
+  AHB_FORMAT (D16_UNORM),
+  AHB_FORMAT (D24_UNORM),
+  AHB_FORMAT (D24_UNORM_S8_UINT),
+  AHB_FORMAT (D32_FLOAT),
+  AHB_FORMAT (D32_FLOAT_S8_UINT),
+  AHB_FORMAT (S8_UINT),
+  AHB_FORMAT (YCbCr_P010),
+  AHB_FORMAT (R8_UNORM),
+  AHB_FORMAT (R16_UINT),
+  AHB_FORMAT (R16G16_UINT),
+  AHB_FORMAT (R10G10B10A10_UNORM),
+  AHB_FORMAT (YCbCr_P210),
+  AHB_FORMAT (R12_UINT),
+  AHB_FORMAT (R14_UINT),
+  AHB_FORMAT (R12G12_UINT),
+  AHB_FORMAT (R14G14_UINT),
+  AHB_FORMAT (R12G12B12A12_UINT),
+  AHB_FORMAT (R14G14B14A14_UINT),
+  AHB_FORMAT (B10G10R10A2_UNORM),
+  AHB_FORMAT (B10G10R10X2_UNORM),
+};
+
+#undef AHB_FORMAT
+
+/**
+ * gst_ahardware_buffer_format_to_caps_string:
+ * @format: an Android AHardwareBuffer format value
+ *
+ * Converts an Android AHardwareBuffer format value to the canonical string
+ * representation used by the `ahb-format` caps field. Known formats use the
+ * Android constant suffix and unknown formats use fixed-width hexadecimal.
+ *
+ * Returns: (transfer full): the canonical format string.
+ *
+ * Since: 1.30
+ */
+gchar *
+gst_ahardware_buffer_format_to_caps_string (guint32 format)
+{
+  for (guint i = 0; i < G_N_ELEMENTS (ahardware_buffer_formats); i++) {
+    if (ahardware_buffer_formats[i].value == format)
+      return g_strdup (ahardware_buffer_formats[i].name);
+  }
+
+  return g_strdup_printf ("0x%08x", format);
+}
+
+/**
+ * gst_ahardware_buffer_format_from_caps_string:
+ * @value: an AHardwareBuffer format string
+ * @format: (out): location for the Android AHardwareBuffer format value
+ *
+ * Parses the canonical string representation used by the `ahb-format` caps
+ * field.
+ *
+ * Returns: %TRUE if @value is a known name or canonical hexadecimal value.
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_ahardware_buffer_format_from_caps_string (const gchar * value,
+    guint32 * format)
+{
+  guint64 parsed;
+
+  g_return_val_if_fail (value != NULL, FALSE);
+  g_return_val_if_fail (format != NULL, FALSE);
+
+  for (guint i = 0; i < G_N_ELEMENTS (ahardware_buffer_formats); i++) {
+    if (g_str_equal (ahardware_buffer_formats[i].name, value)) {
+      *format = ahardware_buffer_formats[i].value;
+      return TRUE;
+    }
+  }
+
+  if (strlen (value) != 10 || value[0] != '0' || value[1] != 'x')
+    return FALSE;
+
+  for (guint i = 2; i < 10; i++) {
+    if (!g_ascii_isxdigit (value[i]) ||
+        (g_ascii_isalpha (value[i]) && !g_ascii_islower (value[i])))
+      return FALSE;
+  }
+
+  if (!g_ascii_string_to_unsigned (value + 2, 16, 0, G_MAXUINT32, &parsed,
+          NULL))
+    return FALSE;
+
+  *format = (guint32) parsed;
+  return TRUE;
+}
 
 /* Returns a process-lifetime query function. There is intentionally no
  * unregister operation, so callers can safely invoke the returned function
