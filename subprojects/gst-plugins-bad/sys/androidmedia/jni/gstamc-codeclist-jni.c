@@ -814,7 +814,7 @@ gst_amc_video_capabilities_get_supported_widths (GstAmcVideoCapabilitiesHandle *
   env = gst_amc_jni_get_env ();
 
   if (gst_amc_jni_call_object_method (env, err, handle->object,
-          media_videocapabilities.get_supported_widths, &range))
+          media_videocapabilities.get_supported_widths, &range) && range)
     gst_amc_from_range (range, &ret, err);
 
 out:
@@ -835,7 +835,7 @@ gst_amc_video_capabilities_get_supported_heights (GstAmcVideoCapabilitiesHandle
   env = gst_amc_jni_get_env ();
 
   if (gst_amc_jni_call_object_method (env, err, handle->object,
-          media_videocapabilities.get_supported_heights, &range))
+          media_videocapabilities.get_supported_heights, &range) && range)
     gst_amc_from_range (range, &ret, err);
 
 out:
@@ -855,7 +855,7 @@ GstAmcValueRange
   env = gst_amc_jni_get_env ();
 
   if (gst_amc_jni_call_object_method (env, err, handle->object,
-          media_videocapabilities.get_supported_framerates, &range))
+          media_videocapabilities.get_supported_framerates, &range) && range)
     gst_amc_from_range (range, &ret, err);
 
 out:
@@ -905,7 +905,8 @@ GstAmcValueRange
   env = gst_amc_jni_get_env ();
 
   if (gst_amc_jni_call_object_method (env, err, handle->object,
-          media_videocapabilities.get_supported_widths_for, &range, height))
+          media_videocapabilities.get_supported_widths_for, &range, height)
+      && range)
     gst_amc_from_range (range, &ret, err);
 
 out:
@@ -925,7 +926,8 @@ GstAmcValueRange
   env = gst_amc_jni_get_env ();
 
   if (gst_amc_jni_call_object_method (env, err, handle->object,
-          media_videocapabilities.get_supported_heights_for, &range, width))
+          media_videocapabilities.get_supported_heights_for, &range, width)
+      && range)
     gst_amc_from_range (range, &ret, err);
 
 out:
@@ -947,7 +949,7 @@ GstAmcDoubleRange
 
   if (gst_amc_jni_call_object_method (env, err, handle->object,
           media_videocapabilities.get_achievable_framerates_for, &range, width,
-          height))
+          height) && range)
     gst_amc_from_double_range (range, &ret, err);
 
 out:
