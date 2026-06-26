@@ -1400,6 +1400,7 @@ fill_planes (GstVideoInfo * info, gsize plane_size[GST_VIDEO_MAX_PLANES])
     }
     case GST_VIDEO_FORMAT_ENCODED:
     case GST_VIDEO_FORMAT_DMA_DRM:
+    case GST_VIDEO_FORMAT_AHARDWARE_BUFFER:
       break;
     case GST_VIDEO_FORMAT_UNKNOWN:
       GST_ERROR ("invalid format");

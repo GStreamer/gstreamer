@@ -177,6 +177,10 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_NV16_10LE40: Fully packed variant of NV16_10LE32 (Since: 1.28)
  * @GST_VIDEO_FORMAT_BGR10x2_LE: packed 4:4:4 RGB (B-G-R-x), 10 bits for R/G/B channel and MSB 2 bits for padding (Since: 1.28)
  * @GST_VIDEO_FORMAT_RGB10x2_LE: packed 4:4:4 RGB (R-G-B-x), 10 bits for R/G/B channel and MSB 2 bits for padding (Since: 1.28)
+ * @GST_VIDEO_FORMAT_AHARDWARE_BUFFER: Android Hardware Buffer special format. It's only
+ *                            used with memory:AHardwareBuffer #GstCapsFeatures,
+ *                            where an extra parameter (ahb-format) describes
+ *                            the AHardwareBuffer format. (Since: 1.30)
  *
  * Enum value describing the most common video formats.
  *
@@ -701,6 +705,17 @@ typedef enum {
    */
   GST_VIDEO_FORMAT_RGB10x2_LE,
 
+  /**
+   * GST_VIDEO_FORMAT_AHARDWARE_BUFFER:
+   *
+   * Android Hardware Buffer special format. It's only used with
+   * memory:AHardwareBuffer #GstCapsFeatures, where an extra parameter
+   * (ahb-format) describes the AHardwareBuffer format.
+   *
+   * Since: 1.30
+   */
+  GST_VIDEO_FORMAT_AHARDWARE_BUFFER,
+
   /* Update GST_VIDEO_FORMAT_LAST below when adding more formats here */
 } GstVideoFormat;
 
@@ -711,7 +726,7 @@ typedef enum {
  *
  * Since: 1.26
  */
-#define GST_VIDEO_FORMAT_LAST (GST_VIDEO_FORMAT_RGB10x2_LE + 1)
+#define GST_VIDEO_FORMAT_LAST (GST_VIDEO_FORMAT_AHARDWARE_BUFFER + 1)
 
 #define GST_VIDEO_MAX_PLANES 4
 #define GST_VIDEO_MAX_COMPONENTS 4
@@ -1229,7 +1244,7 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
  *
  * Since: 1.24
  */
-#define GST_VIDEO_FORMATS_ANY_STR "DMA_DRM, " GST_VIDEO_FORMATS_ALL_STR
+#define GST_VIDEO_FORMATS_ANY_STR "AHARDWARE_BUFFER, DMA_DRM, " GST_VIDEO_FORMATS_ALL_STR
 
 /**
  * GST_VIDEO_FORMATS_ALL:

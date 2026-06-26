@@ -3274,7 +3274,7 @@ template caps.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
-    <constant name="VIDEO_FORMATS_ANY_STR" value="DMA_DRM, " c:type="GST_VIDEO_FORMATS_ANY_STR" version="1.24">
+    <constant name="VIDEO_FORMATS_ANY_STR" value="AHARDWARE_BUFFER, DMA_DRM, " c:type="GST_VIDEO_FORMATS_ANY_STR" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">This is similar to %GST_VIDEO_FORMATS_ALL_STR but includes formats like
 DMA_DRM for which no software converter exists. This should be used for
 passthrough template caps.</doc>
@@ -3624,7 +3624,7 @@ Return the width of one tile in pixels, zero if its not an integer.</doc>
         </parameter>
       </parameters>
     </function-macro>
-    <constant name="VIDEO_FORMAT_LAST" value="142" c:type="GST_VIDEO_FORMAT_LAST" version="1.26">
+    <constant name="VIDEO_FORMAT_LAST" value="143" c:type="GST_VIDEO_FORMAT_LAST" version="1.26">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">Number of video formats in #GstVideoFormat.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h"/>
       <type name="gint" c:type="gint"/>
@@ -11291,6 +11291,11 @@ bits.</doc>
       </member>
       <member name="rgb10x2_le" value="141" c:identifier="GST_VIDEO_FORMAT_RGB10x2_LE" version="1.28" glib:nick="rgb10x2-le" glib:name="GST_VIDEO_FORMAT_RGB10x2_LE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">packed 4:4:4 RGB (R-G-B-x), 10 bits for R/G/B channel and MSB 2 bits for padding.</doc>
+      </member>
+      <member name="ahardware_buffer" value="142" c:identifier="GST_VIDEO_FORMAT_AHARDWARE_BUFFER" version="1.30" glib:nick="ahardware-buffer" glib:name="GST_VIDEO_FORMAT_AHARDWARE_BUFFER">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">Android Hardware Buffer special format. It's only used with
+memory:AHardwareBuffer #GstCapsFeatures, where an extra parameter
+(ahb-format) describes the AHardwareBuffer format.</doc>
       </member>
       <function name="from_fourcc" c:identifier="gst_video_format_from_fourcc">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.c">Converts a FOURCC value into the corresponding #GstVideoFormat.
@@ -20443,9 +20448,9 @@ versions were printing a critical warning and returned %NULL.</doc>
     </function>
     <function name="video_formats_any" c:identifier="gst_video_formats_any" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.c">Return all the raw video formats supported by GStreamer including
-special opaque formats such as %GST_VIDEO_FORMAT_DMA_DRM for which
-no software conversion exists. This should be use for passthrough
-template cpas.</doc>
+special opaque formats such as %GST_VIDEO_FORMAT_DMA_DRM and
+%GST_VIDEO_FORMAT_AHARDWARE_BUFFER for which no software conversion exists. This
+should be used for passthrough template caps.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.c">an array of #GstVideoFormat</doc>

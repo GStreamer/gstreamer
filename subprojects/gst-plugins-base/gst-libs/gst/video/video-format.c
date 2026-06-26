@@ -8269,6 +8269,9 @@ static const VideoFormat formats[] = {
       PLANE0, OFFS0, SUB4444, PACK_BGR10A2_LE),
   MAKE_RGB_LE_FORMAT (RGB10x2_LE, "raw video", DPTH10_10_10, PSTR444,
       PLANE0, OFFS0, SUB4444, PACK_RGB10A2_LE),
+  {0x00000000, {GST_VIDEO_FORMAT_AHARDWARE_BUFFER, "AHARDWARE_BUFFER",
+              "Android Hardware Buffer video", GST_VIDEO_FORMAT_FLAG_COMPLEX,
+          DPTH0, PSTR0, PLANE_NA, OFFS0}},
 };
 
 G_STATIC_ASSERT (G_N_ELEMENTS (formats) == GST_VIDEO_FORMAT_LAST);
@@ -8799,9 +8802,9 @@ gst_video_formats_raw (guint * len)
  * @len: (out): the number of elements in the returned array
  *
  * Return all the raw video formats supported by GStreamer including
- * special opaque formats such as %GST_VIDEO_FORMAT_DMA_DRM for which
- * no software conversion exists. This should be use for passthrough
- * template cpas.
+ * special opaque formats such as %GST_VIDEO_FORMAT_DMA_DRM and
+ * %GST_VIDEO_FORMAT_AHARDWARE_BUFFER for which no software conversion exists. This
+ * should be used for passthrough template caps.
  *
  * Returns: (transfer none) (array length=len): an array of #GstVideoFormat
  * Since: 1.24
