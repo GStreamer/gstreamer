@@ -97,7 +97,7 @@ get_qrcode_content (GstBaseQROverlay * base, GstBuffer * buf,
       if (gst_structure_get_boolean (meta->structure, "keep_data", &keep_data)
           && keep_data) {
         g_free (self->data);
-        self->data = g_strdup (self->data);
+        self->data = g_strdup (data);
       }
       GST_OBJECT_UNLOCK (self);
 
