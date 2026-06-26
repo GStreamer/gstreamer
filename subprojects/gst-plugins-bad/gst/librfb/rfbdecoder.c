@@ -982,6 +982,21 @@ rfb_decoder_fill_rectangle (RfbDecoder * decoder, gint x, gint y, gint w,
   }
 }
 
+static inline guint32
+rfb_decoder_get_pixel (RfbDecoder * decoder, const guint8 * data)
+{
+  switch (decoder->bytespp) {
+    case 1:
+      return RFB_GET_UINT8 (data);
+    case 2:
+      return GUINT16_SWAP_LE_BE (RFB_GET_UINT16 (data));
+    case 4:
+      return GUINT32_SWAP_LE_BE (RFB_GET_UINT32 (data));
+    default:
+      return 0;
+  }
+}
+
 static gboolean
 rfb_decoder_rre_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
     gint rect_w, gint rect_h)
@@ -993,7 +1008,7 @@ rfb_decoder_rre_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
     return FALSE;
 
   number_of_rectangles = RFB_GET_UINT32 (decoder->data);
-  color = GUINT32_SWAP_LE_BE ((RFB_GET_UINT32 (decoder->data + 4)));
+  color = rfb_decoder_get_pixel (decoder, decoder->data + 4);
 
   GST_DEBUG ("number of rectangles :%d", number_of_rectangles);
 
@@ -1005,7 +1020,7 @@ rfb_decoder_rre_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
     if (!rfb_decoder_read (decoder, decoder->bytespp + 8))
       return FALSE;
 
-    color = GUINT32_SWAP_LE_BE ((RFB_GET_UINT32 (decoder->data)));
+    color = rfb_decoder_get_pixel (decoder, decoder->data);
     x = RFB_GET_UINT16 (decoder->data + decoder->bytespp);
     y = RFB_GET_UINT16 (decoder->data + decoder->bytespp + 2);
     w = RFB_GET_UINT16 (decoder->data + decoder->bytespp + 4);
@@ -1029,7 +1044,7 @@ rfb_decoder_corre_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
     return FALSE;
 
   number_of_rectangles = RFB_GET_UINT32 (decoder->data);
-  color = GUINT32_SWAP_LE_BE ((RFB_GET_UINT32 (decoder->data + 4)));
+  color = rfb_decoder_get_pixel (decoder, decoder->data + 4);
 
   GST_DEBUG ("number of rectangles :%d", number_of_rectangles);
 
@@ -1041,7 +1056,7 @@ rfb_decoder_corre_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
     if (!rfb_decoder_read (decoder, decoder->bytespp + 4))
       return FALSE;
 
-    color = GUINT32_SWAP_LE_BE ((RFB_GET_UINT32 (decoder->data)));
+    color = rfb_decoder_get_pixel (decoder, decoder->data);
     x = RFB_GET_UINT8 (decoder->data + decoder->bytespp);
     y = RFB_GET_UINT8 (decoder->data + decoder->bytespp + 1);
     w = RFB_GET_UINT8 (decoder->data + decoder->bytespp + 2);
@@ -1091,7 +1106,7 @@ rfb_decoder_hextile_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
         if (!rfb_decoder_read (decoder, decoder->bytespp))
           return FALSE;
 
-        background = GUINT32_SWAP_LE_BE ((RFB_GET_UINT32 (decoder->data)));
+        background = rfb_decoder_get_pixel (decoder, decoder->data);
       }
       rfb_decoder_fill_rectangle (decoder, x, y,
           (x <= x_max_16 ? 16 : x_end), (y <= y_max_16 ? 16 : y_end),
@@ -1101,7 +1116,7 @@ rfb_decoder_hextile_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
         if (!rfb_decoder_read (decoder, decoder->bytespp))
           return FALSE;
 
-        foreground = GUINT32_SWAP_LE_BE ((RFB_GET_UINT32 (decoder->data)));
+        foreground = rfb_decoder_get_pixel (decoder, decoder->data);
       }
 
       if (subencoding & SUBENCODING_ANYSUBRECTS) {
@@ -1120,8 +1135,7 @@ rfb_decoder_hextile_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
           return FALSE;
 
         while (nr_subrect--) {
-          foreground =
-              GUINT32_SWAP_LE_BE ((RFB_GET_UINT32 (decoder->data + offset)));
+          foreground = rfb_decoder_get_pixel (decoder, decoder->data + offset);
           offset += decoder->bytespp;
           xy = RFB_GET_UINT8 (decoder->data + offset++);
           wh = RFB_GET_UINT8 (decoder->data + offset++);
