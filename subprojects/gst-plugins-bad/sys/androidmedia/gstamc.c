@@ -198,6 +198,7 @@ scan_codecs (GstPlugin * plugin)
   if (!gst_amc_codeclist_get_count (&codec_count, &error)) {
     GST_ERROR ("Failed to get number of available codecs: %s",
         error ? error->message : "unknown error");
+    g_clear_error (&error);
     ret = FALSE;
     goto done;
   }
@@ -221,6 +222,7 @@ scan_codecs (GstPlugin * plugin)
       GST_ERROR ("Failed to get codec info %d: %s", i,
           error ? error->message : "unknown error");
       valid_codec = FALSE;
+      g_clear_error (&error);
       goto next_codec;
     }
 
@@ -229,6 +231,7 @@ scan_codecs (GstPlugin * plugin)
       GST_ERROR ("Failed to get codec name: %s",
           error ? error->message : "unknown error");
       valid_codec = FALSE;
+      g_clear_error (&error);
       goto next_codec;
     }
 
@@ -284,6 +287,7 @@ scan_codecs (GstPlugin * plugin)
       GST_ERROR ("Failed to detect if codec is an encoder: %s",
           error ? error->message : "unknown error");
       valid_codec = FALSE;
+      g_clear_error (&error);
       goto next_codec;
     }
     gst_codec_info->is_encoder = is_encoder;
@@ -311,6 +315,7 @@ scan_codecs (GstPlugin * plugin)
       GST_ERROR ("Failed to get supported types: %s",
           error ? error->message : "unknown error");
       valid_codec = FALSE;
+      g_clear_error (&error);
       goto next_codec;
     }
 
@@ -347,6 +352,7 @@ scan_codecs (GstPlugin * plugin)
         GST_ERROR ("Failed to get capabilities for supported type: %s",
             error ? error->message : "unknown error");
         valid_codec = FALSE;
+        g_clear_error (&error);
         goto next_supported_type;
       }
 
@@ -473,6 +479,7 @@ scan_codecs (GstPlugin * plugin)
           GST_ERROR ("Failed to get color format elements: %s",
               error ? error->message : "unknown error");
           valid_codec = FALSE;
+          g_clear_error (&error);
           goto next_supported_type;
         }
 
@@ -504,6 +511,7 @@ scan_codecs (GstPlugin * plugin)
         GST_ERROR ("Failed to get profile/levels: %s",
             error ? error->message : "unknown error");
         valid_codec = FALSE;
+        g_clear_error (&error);
         goto next_supported_type;
       }
 
