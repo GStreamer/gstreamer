@@ -30,7 +30,7 @@
  * ;                                                             ;
  * ;  ,-nicesrc-, ,-capsfilter-, ,---queue---, ,-dtlssrtpdec-,   ;
  * ;  ;     src o-o sink   src o-o sink  src o-osink  rtp_srco---o rtp_src
- * ;  '---------' '------------' '-----------' ;             ;   ; 
+ * ;  '---------' '------------' '-----------' ;             ;   ;
  * ;                                           ;     rtcp_srco---o rtcp_src
  * ;                                           ;             ;   ;
  * ;                                           ;     data_srco---o data_src
@@ -138,17 +138,13 @@ transport_receive_bin_set_receive_state (TransportReceiveBin * receive,
   if (state == RECEIVE_STATE_PASS) {
     g_object_set (receive->queue, "leaky", 0, NULL);
 
-    if (receive->rtp_block)
-      _free_pad_block (receive->rtp_block);
-    receive->rtp_block = NULL;
-
-    if (receive->rtcp_block)
-      _free_pad_block (receive->rtcp_block);
-    receive->rtcp_block = NULL;
+    if (receive->input_block)
+      _free_pad_block (receive->input_block);
+    receive->input_block = NULL;
   } else {
     g_assert (state == RECEIVE_STATE_BLOCK);
     g_object_set (receive->queue, "leaky", 2, NULL);
-    if (receive->rtp_block == NULL) {
+    if (receive->input_block == NULL) {
       GstWebRTCDTLSTransport *transport;
       GstElement *dtlssrtpdec;
       GstPad *pad, *peer_pad;
@@ -158,9 +154,9 @@ transport_receive_bin_set_receive_state (TransportReceiveBin * receive,
         dtlssrtpdec = transport->dtlssrtpdec;
         pad = gst_element_get_static_pad (dtlssrtpdec, "sink");
         peer_pad = gst_pad_get_peer (pad);
-        receive->rtp_block =
+        receive->input_block =
             _create_pad_block (GST_ELEMENT (receive), peer_pad, 0, NULL, NULL);
-        receive->rtp_block->block_id =
+        receive->input_block->block_id =
             gst_pad_add_probe (peer_pad,
             GST_PAD_PROBE_TYPE_BLOCK |
             GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
@@ -271,13 +267,9 @@ transport_receive_bin_change_state (GstElement * element,
       gst_element_set_locked_state (elem, FALSE);
       gst_element_set_state (elem, GST_STATE_NULL);
 
-      if (receive->rtp_block)
-        _free_pad_block (receive->rtp_block);
-      receive->rtp_block = NULL;
-
-      if (receive->rtcp_block)
-        _free_pad_block (receive->rtcp_block);
-      receive->rtcp_block = NULL;
+      if (receive->input_block)
+        _free_pad_block (receive->input_block);
+      receive->input_block = NULL;
 
       break;
     }
