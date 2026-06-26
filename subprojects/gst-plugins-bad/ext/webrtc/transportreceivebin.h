@@ -46,10 +46,16 @@ struct _TransportReceiveBin
 
   GstPad                    *rtp_src;
   GstPad                    *rtcp_src;
-  struct pad_block          *input_block;
+  GstPad                    *data_src;
   GMutex                     pad_block_lock;
-  ReceiveState               receive_state;
+  ReceiveState               dtls_receive_state;
+  struct pad_block          *input_block;
+  ReceiveState               data_receive_state;
+  struct pad_block          *rtp_block;
+  struct pad_block          *rtcp_block;
+  struct pad_block          *data_block;
   GstElement                *queue;
+  gboolean                   validated_fingerprint;
 };
 
 struct _TransportReceiveBinClass
@@ -57,7 +63,9 @@ struct _TransportReceiveBinClass
   GstBinClass           parent_class;
 };
 
-void        transport_receive_bin_set_receive_state         (TransportReceiveBin * receive,
+void        transport_receive_bin_set_dtls_receive_state    (TransportReceiveBin * receive,
+                                                             ReceiveState state);
+void        transport_receive_bin_set_data_receive_state    (TransportReceiveBin * receive,
                                                              ReceiveState state);
 
 G_END_DECLS

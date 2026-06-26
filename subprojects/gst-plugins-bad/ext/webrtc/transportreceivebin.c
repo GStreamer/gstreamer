@@ -109,18 +109,18 @@ pad_block (GstPad * pad, GstPadProbeInfo * info, TransportReceiveBin * receive)
 }
 
 void
-transport_receive_bin_set_receive_state (TransportReceiveBin * receive,
+transport_receive_bin_set_dtls_receive_state (TransportReceiveBin * receive,
     ReceiveState state)
 {
   GstWebRTCICEConnectionState icestate;
 
   g_mutex_lock (&receive->pad_block_lock);
-  if (receive->receive_state != state) {
+  if (receive->dtls_receive_state != state) {
     GST_DEBUG_OBJECT (receive, "Requested change of receive state to %s",
         _receive_state_to_string (state));
   }
 
-  receive->receive_state = state;
+  receive->dtls_receive_state = state;
 
   g_object_get (receive->stream->transport->transport, "state", &icestate,
       NULL);
@@ -169,11 +169,72 @@ transport_receive_bin_set_receive_state (TransportReceiveBin * receive,
   g_mutex_unlock (&receive->pad_block_lock);
 }
 
+void
+transport_receive_bin_set_data_receive_state (TransportReceiveBin * receive,
+    ReceiveState state)
+{
+  g_mutex_lock (&receive->pad_block_lock);
+  if (receive->data_receive_state != state) {
+    GST_DEBUG_OBJECT (receive, "Requested change of receive state to %s",
+        _receive_state_to_string (state));
+  }
+
+  receive->data_receive_state = state;
+
+  if (state == RECEIVE_STATE_PASS) {
+    if (receive->rtp_block)
+      _free_pad_block (receive->rtp_block);
+    receive->rtp_block = NULL;
+
+    if (receive->rtcp_block)
+      _free_pad_block (receive->rtcp_block);
+    receive->rtcp_block = NULL;
+
+    if (receive->data_block)
+      _free_pad_block (receive->data_block);
+    receive->data_block = NULL;
+  } else {
+    g_assert (state == RECEIVE_STATE_BLOCK);
+
+    if (receive->rtp_block == NULL) {
+      receive->rtp_block =
+          _create_pad_block (GST_ELEMENT (receive), receive->rtp_src, 0, NULL,
+          NULL);
+      receive->rtp_block->block_id =
+          gst_pad_add_probe (receive->rtp_src,
+          GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
+          (GstPadProbeCallback) pad_block, receive, NULL);
+    }
+
+    if (receive->rtcp_block == NULL) {
+      receive->rtcp_block =
+          _create_pad_block (GST_ELEMENT (receive), receive->rtcp_src, 0, NULL,
+          NULL);
+      receive->rtcp_block->block_id =
+          gst_pad_add_probe (receive->rtcp_src,
+          GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
+          (GstPadProbeCallback) pad_block, receive, NULL);
+    }
+
+    if (receive->data_block == NULL) {
+      receive->data_block =
+          _create_pad_block (GST_ELEMENT (receive), receive->data_src, 0, NULL,
+          NULL);
+      receive->data_block->block_id =
+          gst_pad_add_probe (receive->data_src,
+          GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
+          (GstPadProbeCallback) pad_block, receive, NULL);
+    }
+  }
+  g_mutex_unlock (&receive->pad_block_lock);
+}
+
 static void
 _on_notify_ice_connection_state (GstWebRTCICETransport * transport,
     GParamSpec * pspec, TransportReceiveBin * receive)
 {
-  transport_receive_bin_set_receive_state (receive, receive->receive_state);
+  transport_receive_bin_set_dtls_receive_state (receive,
+      receive->dtls_receive_state);
 }
 
 static void
@@ -241,7 +302,10 @@ transport_receive_bin_change_state (GstElement * element,
       /* We want to start blocked, unless someone already switched us
        * to PASS mode. receive_state is set to BLOCKED in _init(),
        * so set up blocks with whatever the mode is now. */
-      transport_receive_bin_set_receive_state (receive, receive->receive_state);
+      transport_receive_bin_set_dtls_receive_state (receive,
+          receive->dtls_receive_state);
+      transport_receive_bin_set_data_receive_state (receive,
+          receive->data_receive_state);
 
       /* XXX: because nice needs the nicesrc internal main loop running in order
        * correctly STUN... */
@@ -270,6 +334,18 @@ transport_receive_bin_change_state (GstElement * element,
       if (receive->input_block)
         _free_pad_block (receive->input_block);
       receive->input_block = NULL;
+
+      if (receive->rtp_block)
+        _free_pad_block (receive->rtp_block);
+      receive->rtp_block = NULL;
+
+      if (receive->rtcp_block)
+        _free_pad_block (receive->rtcp_block);
+      receive->rtcp_block = NULL;
+
+      if (receive->data_block)
+        _free_pad_block (receive->data_block);
+      receive->data_block = NULL;
 
       break;
     }
@@ -303,7 +379,7 @@ transport_receive_bin_constructed (GObject * object)
 {
   TransportReceiveBin *receive = TRANSPORT_RECEIVE_BIN (object);
   GstWebRTCDTLSTransport *transport;
-  GstPad *ghost, *pad;
+  GstPad *pad;
   GstElement *capsfilter;
   GstCaps *caps;
 
@@ -363,8 +439,8 @@ transport_receive_bin_constructed (GObject * object)
   /* expose data_src */
   pad = gst_element_request_pad_simple (receive->stream->transport->dtlssrtpdec,
       "data_src");
-  ghost = gst_ghost_pad_new ("data_src", pad);
-  gst_element_add_pad (GST_ELEMENT (receive), ghost);
+  receive->data_src = gst_ghost_pad_new ("data_src", pad);
+  gst_element_add_pad (GST_ELEMENT (receive), receive->data_src);
   gst_object_unref (pad);
 
   g_signal_connect_after (receive->stream->transport->transport,
@@ -408,6 +484,7 @@ transport_receive_bin_class_init (TransportReceiveBinClass * klass)
 static void
 transport_receive_bin_init (TransportReceiveBin * receive)
 {
-  receive->receive_state = RECEIVE_STATE_BLOCK;
+  receive->dtls_receive_state = RECEIVE_STATE_BLOCK;
+  receive->data_receive_state = RECEIVE_STATE_BLOCK;
   g_mutex_init (&receive->pad_block_lock);
 }
