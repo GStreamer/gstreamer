@@ -794,10 +794,8 @@ gst_amc_from_range (jobject range, GstAmcValueRange * res, GError ** err)
           lang_integer.int_value, &upper_int))
     return;
 
-  if (lower_int != upper_int) {
-    res->lower = MAX (res->lower, lower_int);
-    res->upper = MIN (res->upper, upper_int);
-  }
+  res->lower = lower_int;
+  res->upper = upper_int;
 }
 
 GstAmcValueRange
