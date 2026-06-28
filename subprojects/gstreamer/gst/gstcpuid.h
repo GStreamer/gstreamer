@@ -37,6 +37,9 @@ gboolean gst_cpuid_supports_arm_neon(void);
 GST_API
 gboolean gst_cpuid_supports_arm_neon64(void);
 
+GST_API
+gboolean gst_cpuid_supports_riscv_v(void);
+
 G_END_DECLS
 
 #endif

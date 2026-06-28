@@ -35,6 +35,8 @@
 #define GST_CPUID_CHECK_X86 1
 #elif defined(__aarch64__) || defined(_M_ARM64) || defined(__ARM_NEON) || defined(_M_ARM)
 #define GST_CPUID_CHECK_ARM 1
+#elif defined(__riscv)
+#define GST_CPUID_CHECK_RISCV 1
 #endif
 
 #if defined(__linux__) && defined(__ARM_ARCH)
@@ -42,6 +44,14 @@
 #include <sys/auxv.h>
 #ifndef HWCAP_NEON              // Some Android NDKs lack it.
 #define HWCAP_NEON (1 << 12)
+#endif
+#endif
+
+#if defined(__linux__) && defined(__riscv)
+#include <asm/hwcap.h>
+#include <sys/auxv.h>
+#ifndef COMPAT_HWCAP_ISA_V
+#define COMPAT_HWCAP_ISA_V (1 << ('V' - 'A'))
 #endif
 #endif
 
@@ -133,6 +143,8 @@ typedef struct
 
   guint8 neon;
   guint8 neon64;
+
+  guint8 riscv_v;
 } GstCpuid;
 
 static GstCpuid cpuid;
@@ -161,6 +173,12 @@ _get_supported_sets (void)
 #endif
 #if defined(__aarch64__)
   cpuid.neon64 = cpuid.neon;
+#endif
+
+#elif defined(GST_CPUID_CHECK_RISCV)
+#if defined(__linux__)
+  cpuid.riscv_v =
+      (getauxval (AT_HWCAP) & COMPAT_HWCAP_ISA_V) != 0 ? TRUE : FALSE;
 #endif
 
 #elif defined(GST_CPUID_CHECK_X86)
@@ -403,4 +421,19 @@ gst_cpuid_supports_arm_neon64 (void)
 {
   _gst_cpuid_initialize_supported_sets ();
   return cpuid.neon64;
+}
+
+/**
+ * gst_cpuid_supports_riscv_v
+ *
+ * Since: 1.30
+ *
+ * Returns: %TRUE if RISC-V Vector extension is supported by the CPU, %FALSE otherwise.
+ */
+
+gboolean
+gst_cpuid_supports_riscv_v (void)
+{
+  _gst_cpuid_initialize_supported_sets ();
+  return cpuid.riscv_v;
 }

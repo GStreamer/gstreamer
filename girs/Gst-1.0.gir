@@ -57155,6 +57155,13 @@ Either @new_context or the #GstContext pointed to by @old_context may be %NULL.<
         <type name="gboolean" c:type="gboolean"/>
       </return-value>
     </function>
+    <function name="cpuid_supports_riscv_v" c:identifier="gst_cpuid_supports_riscv_v" version="1.30">
+      <source-position filename="../subprojects/gstreamer/gst/gstcpuid.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcpuid.c">%TRUE if RISC-V Vector extension is supported by the CPU, %FALSE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+    </function>
     <function name="cpuid_supports_x86_3dnow" c:identifier="gst_cpuid_supports_x86_3dnow" version="1.28">
       <source-position filename="../subprojects/gstreamer/gst/gstcpuid.h"/>
       <return-value transfer-ownership="none">
