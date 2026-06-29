@@ -75,6 +75,12 @@ typedef enum {
 
 #define BUFFER_BEFORE_SEGMENT                    _QUARK("buffer::before-segment")
 #define BUFFER_IS_OUT_OF_SEGMENT                 _QUARK("buffer::is-out-of-segment")
+/**
+ * BUFFER_IS_OUT_OF_SEGMENT_ENCODED:
+ *
+ * Since: 1.30
+ */
+#define BUFFER_IS_OUT_OF_SEGMENT_ENCODED         _QUARK("buffer::is-out-of-segment-encoded")
 #define BUFFER_TIMESTAMP_OUT_OF_RECEIVED_RANGE   _QUARK("buffer::timestamp-out-of-received-range")
 #define WRONG_FLOW_RETURN                        _QUARK("buffer::wrong-flow-return")
 #define BUFFER_AFTER_EOS                         _QUARK("buffer::after-eos")

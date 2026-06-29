@@ -383,6 +383,10 @@ gst_validate_report_load_issues (void)
       _("buffer being pushed is out of the current segment's start-stop "
           "range. Meaning it is going to be discarded downstream without "
           "any use"));
+  REGISTER_VALIDATE_ISSUE (IGNORE, BUFFER_IS_OUT_OF_SEGMENT_ENCODED,
+      "non-raw buffer is out of the segment range",
+      _("buffer being pushed is out of the current segment's start-stop "
+          "range. When seeking in non-raw data this is not an issue"));
   REGISTER_VALIDATE_ISSUE (WARNING, BUFFER_TIMESTAMP_OUT_OF_RECEIVED_RANGE,
       "buffer timestamp is out of the received buffer timestamps' range",
       _("a buffer leaving an element should have its timestamps in the range "
