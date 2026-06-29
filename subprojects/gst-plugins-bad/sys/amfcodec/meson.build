@@ -21,6 +21,8 @@ amf_headers = [
 if host_system == 'windows'
   amf_sources += 'gstamfhqscaler.cpp'
   amf_headers += 'gstamfhqscaler.h'
+  amf_sources += 'gstamfvqenhancer.cpp'
+  amf_headers += 'gstamfvqenhancer.h'
 endif
 
 doc_sources = []

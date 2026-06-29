@@ -40,6 +40,7 @@
 #include "gstamfav1enc.h"
 #ifdef G_OS_WIN32
 #include "gstamfhqscaler.h"
+#include "gstamfvqenhancer.h"
 #endif
 
 #include <glib/gi18n-lib.h>
@@ -131,6 +132,8 @@ plugin_init_d3d11 (GstPlugin * plugin)
       gst_amf_av1_enc_register (plugin, device,
           (gpointer) context.GetPtr (), GST_RANK_NONE);
       gst_amf_hq_scaler_register (plugin, GST_DEVICE_CAST (device),
+          (gpointer) context.GetPtr (), GST_RANK_NONE);
+      gst_amf_vq_enhancer_register (plugin, GST_OBJECT_CAST (device),
           (gpointer) context.GetPtr (), GST_RANK_NONE);
     }
 
