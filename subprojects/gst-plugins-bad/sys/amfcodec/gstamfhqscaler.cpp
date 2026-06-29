@@ -89,7 +89,14 @@ struct _GstAmfHQScaler
 struct _GstAmfHQScalerClass
 {
   GstAmfBaseFilterClass parent_class;
+
+  gint64 adapter_luid;
+  guint device_index;
 };
+
+#define GST_AMF_HQS(object) ((GstAmfHQScaler *) (object))
+#define GST_AMF_HQS_GET_CLASS(object) \
+    (G_TYPE_INSTANCE_GET_CLASS ((object),G_TYPE_FROM_INSTANCE (object),GstAmfHQScalerClass))
 
 static void gst_amf_hq_scaler_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -198,24 +205,20 @@ gst_amf_hq_scaler_class_init (GstAmfHQScalerClass * klass, gpointer data)
   base_class->validate_caps =
       GST_DEBUG_FUNCPTR (gst_amf_hq_scaler_validate_caps);
 
+  klass->adapter_luid = cdata->adapter_luid;
+  klass->device_index = cdata->device_index;
+
   gst_type_mark_as_plugin_api (GST_TYPE_AMF_HQS_ALGORITHM,
       (GstPluginAPIFlags) 0);
-
-  g_type_set_qdata (G_TYPE_FROM_CLASS (klass),
-      g_quark_from_static_string ("gst-amf-hqs-cdata"), cdata);
 }
 
 static void
 gst_amf_hq_scaler_init (GstAmfHQScaler * self)
 {
-  GstAmfHQScalerClassData *cdata = (GstAmfHQScalerClassData *)
-      g_type_get_qdata (G_OBJECT_TYPE (self),
-      g_quark_from_static_string ("gst-amf-hqs-cdata"));
+  GstAmfHQScalerClass *klass = GST_AMF_HQS_GET_CLASS (self);
 
-  if (cdata) {
-    gst_amf_base_filter_set_subclass_data (GST_AMF_BASE_FILTER (self),
-        cdata->adapter_luid, cdata->device_index);
-  }
+  gst_amf_base_filter_set_subclass_data (GST_AMF_BASE_FILTER (self),
+      klass->adapter_luid, klass->device_index);
 
   self->algorithm = DEFAULT_ALGORITHM;
   self->sharpness = DEFAULT_SHARPNESS;
@@ -227,7 +230,7 @@ static void
 gst_amf_hq_scaler_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstAmfHQScaler *self = (GstAmfHQScaler *) object;
+  GstAmfHQScaler *self = GST_AMF_HQS (object);
 
   switch (prop_id) {
     case PROP_ALGORITHM:
@@ -252,7 +255,7 @@ static void
 gst_amf_hq_scaler_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstAmfHQScaler *self = (GstAmfHQScaler *) object;
+  GstAmfHQScaler *self = GST_AMF_HQS (object);
 
   switch (prop_id) {
     case PROP_ALGORITHM:
@@ -980,7 +983,7 @@ gst_amf_hq_scaler_configure_component (GstAmfBaseFilter * filter,
     AMFComponent * comp, const GstVideoInfo * in_info,
     const GstVideoInfo * out_info)
 {
-  GstAmfHQScaler *self = (GstAmfHQScaler *) filter;
+  GstAmfHQScaler *self = GST_AMF_HQS (filter);
   AMFSize out_size;
   AMF_RESULT result;
   gint algorithm;
@@ -1136,7 +1139,7 @@ gst_amf_hq_scaler_build_template_caps (AMFComponent * comp, gboolean is_input)
 }
 
 void
-gst_amf_hq_scaler_register (GstPlugin * plugin, GstDevice * device,
+gst_amf_hq_scaler_register (GstPlugin * plugin, GstObject * device,
     gpointer context, guint rank)
 {
   AMFContext *amf_context = (AMFContext *) context;

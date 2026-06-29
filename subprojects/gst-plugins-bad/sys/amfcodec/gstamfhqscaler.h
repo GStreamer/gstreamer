@@ -25,7 +25,7 @@
 G_BEGIN_DECLS
 
 void gst_amf_hq_scaler_register (GstPlugin * plugin,
-                                 GstDevice * device,
+                                 GstObject * device,
                                  gpointer context,
                                  guint rank);
 
