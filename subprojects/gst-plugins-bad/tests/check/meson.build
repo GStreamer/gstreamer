@@ -57,6 +57,7 @@ base_tests = [
   [['elements/id3mux.c'], get_option('id3tag').disabled()],
   [['elements/interlace.c'], get_option('interlace').disabled()],
   [['elements/ioutracker.c'], get_option('tensordecoders').disabled(), gstanalytics_dep],
+  [['elements/yolotensordecoder.c'], get_option('tensordecoders').disabled(), gstanalytics_dep],
   [['elements/tfliteinference.c', 'elements/inference-utils.c'], get_option('tflite').disabled() or not tensorflow_lite_dep.found() or not tensorflow_lite_header_found],
   [['elements/onnxinference.c', 'elements/inference-utils.c'], get_option('onnx').disabled() or not onnxrt_dep.found()],
   [['elements/jpeg2000parse.c'], false, [libparser_dep, gstcodecparsers_dep]],
@@ -233,6 +234,7 @@ test_defines = [
   '-DDASH_MPD_DATADIR=' + fsmod.as_posix(meson.current_source_dir()) + '/elements/dash_mpd_data',
   '-DGST_TFLITE_TEST_DATA_PATH="' + fsmod.as_posix(meson.current_source_dir()) + '/elements/tfliteinference_data"',
   '-DGST_ONNX_TEST_DATA_PATH="' + fsmod.as_posix(meson.current_source_dir()) + '/elements/onnxinference_data"',
+  '-DGST_TENSORDECODERS_TEST_DATA_PATH="' + fsmod.as_posix(meson.current_source_dir()) + '/elements/tensordecoders_data"',
   '-DGST_OPENJPEG_TEST_DATA_PATH="' + fsmod.as_posix(meson.current_source_dir()) + '/elements/openjpeg_data"',
   '-DGST_USE_UNSTABLE_API',
 ]
