@@ -903,6 +903,67 @@ gst_d3d12_buffer_set_fence (GstBuffer * buffer, ID3D12Fence * fence,
   }
 }
 
+/**
+ * gst_d3d12_buffer_make_resident:
+ * @buffer: a #GstBuffer
+ *
+ * Makes all #GstD3D12Memory objects in @buffer resident.
+ *
+ * Returns: %TRUE if all memories in @buffer are #GstD3D12Memory
+ * and were made resident successfully
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_d3d12_buffer_make_resident (GstBuffer * buffer)
+{
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+
+  auto num_mem = gst_buffer_n_memory (buffer);
+  for (guint i = 0; i < num_mem; i++) {
+    auto mem = gst_buffer_peek_memory (buffer, i);
+    if (!gst_is_d3d12_memory (mem))
+      return FALSE;
+
+    if (!gst_d3d12_memory_make_resident (GST_D3D12_MEMORY_CAST (mem)))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_d3d12_buffer_evict:
+ * @buffer: a #GstBuffer
+ *
+ * Evicts all #GstD3D12Memory objects in @buffer.
+ *
+ * Returns: %TRUE if all memories in @buffer are #GstD3D12Memory
+ * and were evicted successfully
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_d3d12_buffer_evict (GstBuffer * buffer)
+{
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+
+  auto num_mem = gst_buffer_n_memory (buffer);
+  for (guint i = 0; i < num_mem; i++) {
+    auto mem = gst_buffer_peek_memory (buffer, i);
+    if (!gst_is_d3d12_memory (mem))
+      return FALSE;
+
+    if (!gst_d3d12_memory_evict (GST_D3D12_MEMORY_CAST (mem)))
+      return FALSE;
+
+    GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
+    GST_MINI_OBJECT_FLAG_UNSET (mem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
+  }
+
+  return TRUE;
+}
+
 static void
 do_align_desc (D3D12_RESOURCE_DESC & desc)
 {

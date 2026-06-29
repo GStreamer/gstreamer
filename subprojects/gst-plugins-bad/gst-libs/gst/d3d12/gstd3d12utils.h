@@ -79,6 +79,12 @@ void      gst_d3d12_buffer_set_fence (GstBuffer * buffer,
                                       gboolean wait);
 
 GST_D3D12_API
+gboolean  gst_d3d12_buffer_make_resident (GstBuffer * buffer);
+
+GST_D3D12_API
+gboolean  gst_d3d12_buffer_evict (GstBuffer * buffer);
+
+GST_D3D12_API
 gboolean  gst_d3d12_get_copyable_footprints (GstD3D12Device * device,
                                              const GstVideoInfo * info,
                                              D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout[GST_VIDEO_MAX_PLANES],

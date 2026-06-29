@@ -124,5 +124,13 @@ GST_D3D12_API
 gboolean                gst_d3d12_device_is_equal                 (GstD3D12Device * device1,
                                                                    GstD3D12Device * device2);
 
+GST_D3D12_API
+HRESULT                 gst_d3d12_device_enqueue_make_resident    (GstD3D12Device * device,
+                                                                   D3D12_RESIDENCY_FLAGS flags,
+                                                                   guint num_objects,
+                                                                   ID3D12Pageable ** objects,
+                                                                   ID3D12Fence ** fence,
+                                                                   guint64 * fence_value);
+
 G_END_DECLS
 

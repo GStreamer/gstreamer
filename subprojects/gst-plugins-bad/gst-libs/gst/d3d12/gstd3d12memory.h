@@ -238,6 +238,12 @@ GST_D3D12_API
 ID3D11Texture2D * gst_d3d12_memory_get_d3d11_texture (GstD3D12Memory * mem,
                                                       ID3D11Device * device11);
 
+GST_D3D12_API
+gboolean          gst_d3d12_memory_make_resident (GstD3D12Memory * mem);
+
+GST_D3D12_API
+gboolean          gst_d3d12_memory_evict (GstD3D12Memory * mem);
+
 /**
  * GstD3D12Allocator:
  *

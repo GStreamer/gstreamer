@@ -389,6 +389,8 @@ struct _GstD3D12MemoryPrivate
 
   ComPtr<ID3D12Fence> fence;
   UINT64 fence_val = 0;
+
+  gboolean resident = TRUE;
 };
 /* *INDENT-ON* */
 
@@ -548,6 +550,45 @@ gst_d3d12_memory_upload (GstD3D12Memory * dmem)
   return TRUE;
 }
 
+static gboolean
+gst_d3d12_memory_make_resident_unlocked (GstD3D12Memory * mem)
+{
+  auto priv = mem->priv;
+
+  if (priv->resident)
+    return TRUE;
+
+  /* Make sure no fence to wait for */
+  gst_d3d12_memory_set_fence_unlocked (mem, nullptr, 0, TRUE);
+
+  ComPtr < ID3D12Fence > fence;
+  guint64 fence_val = 0;
+
+  ID3D12Pageable *obj[] = { priv->resource.Get () };
+
+  auto hr = gst_d3d12_device_enqueue_make_resident (mem->device,
+      D3D12_RESIDENCY_FLAG_NONE, 1, obj, &fence, &fence_val);
+  if (SUCCEEDED (hr)) {
+    priv->resident = TRUE;
+    priv->fence = fence;
+    priv->fence_val = fence_val;
+    return TRUE;
+  }
+
+  if (hr == E_NOINTERFACE) {
+    /* Try sync version */
+    auto device = gst_d3d12_device_get_device_handle (mem->device);
+    hr = device->MakeResident (1, obj);
+
+    if (SUCCEEDED (hr)) {
+      priv->resident = TRUE;
+      return TRUE;
+    }
+  }
+
+  return gst_d3d12_result (hr, mem->device);
+}
+
 static gpointer
 gst_d3d12_memory_map_full (GstMemory * mem, GstMapInfo * info, gsize maxsize)
 {
@@ -555,6 +596,11 @@ gst_d3d12_memory_map_full (GstMemory * mem, GstMapInfo * info, gsize maxsize)
   auto priv = dmem->priv;
   GstMapFlags flags = info->flags;
   std::lock_guard < std::mutex > lk (priv->lock);
+
+  if (!gst_d3d12_memory_make_resident_unlocked (dmem)) {
+    GST_ERROR_OBJECT (mem->allocator, "Couldn't make resident");
+    return nullptr;
+  }
 
   if ((flags & GST_MAP_D3D12) != 0) {
     gst_d3d12_memory_upload (dmem);
@@ -650,6 +696,12 @@ gst_d3d12_memory_sync (GstD3D12Memory * mem)
   auto priv = mem->priv;
 
   std::lock_guard < std::mutex > lk (priv->lock);
+  if (!gst_d3d12_memory_make_resident_unlocked (mem)) {
+    GST_ERROR_OBJECT (GST_MEMORY_CAST (mem)->allocator,
+        "Couldn't make resident");
+    return FALSE;
+  }
+
   gst_d3d12_memory_upload (mem);
   gst_d3d12_memory_set_fence_unlocked (mem, nullptr, 0, TRUE);
 
@@ -1181,6 +1233,64 @@ gst_d3d12_memory_get_d3d11_texture (GstD3D12Memory * mem,
   priv->shared_texture11.push_back (std::move (storage));
 
   return texture11.Get ();
+}
+
+/**
+ * gst_d3d12_memory_make_resident:
+ * @mem: a #GstD3D12Memory
+ *
+ * Make @mem resident via ID3D12Device3::EnqueueMakeResident or
+ * ID3D12Device::MakeResident
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_d3d12_memory_make_resident (GstD3D12Memory * mem)
+{
+  g_return_val_if_fail (gst_is_d3d12_memory (GST_MEMORY_CAST (mem)), FALSE);
+
+  auto priv = mem->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  return gst_d3d12_memory_make_resident_unlocked (mem);
+}
+
+/**
+ * gst_d3d12_memory_evict:
+ * @mem: a #GstD3D12Memory
+ *
+ * A wrapper around ID3D12Device::Evict
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_d3d12_memory_evict (GstD3D12Memory * mem)
+{
+  g_return_val_if_fail (gst_is_d3d12_memory (GST_MEMORY_CAST (mem)), FALSE);
+  g_return_val_if_fail (gst_memory_is_writable (GST_MEMORY_CAST (mem)), FALSE);
+
+  auto priv = mem->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (!priv->resident)
+    return TRUE;
+
+  /* Finish any pending operations if any */
+  gst_d3d12_memory_upload (mem);
+  gst_d3d12_memory_set_fence_unlocked (mem, nullptr, 0, TRUE);
+
+  auto device = gst_d3d12_device_get_device_handle (mem->device);
+
+  ID3D12Pageable *obj[] = { priv->resource.Get () };
+  auto hr = device->Evict (1, obj);
+  if (SUCCEEDED (hr))
+    priv->resident = FALSE;
+
+  return gst_d3d12_result (hr, mem->device);
 }
 
 /* GstD3D12Allocator */

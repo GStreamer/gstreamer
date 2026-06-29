@@ -155,6 +155,7 @@ struct DeviceInner
 
     factory = nullptr;
     adapter = nullptr;
+    device3 = nullptr;
 
     if (removed_reason == S_OK)
       ReportLiveObjects ();
@@ -241,6 +242,7 @@ struct DeviceInner
   }
 
   ComPtr<ID3D12Device> device;
+  ComPtr<ID3D12Device3> device3;
   ComPtr<IDXGIAdapter1> adapter;
   ComPtr<IDXGIFactory2> factory;
   ComPtr<ID3D11On12Device> device11on12;
@@ -291,6 +293,10 @@ struct DeviceInner
   HANDLE dev_removed_event;
   ComPtr<ID3D12Fence> dev_removed_fence;
   std::atomic<HRESULT> removed_reason = { S_OK };
+
+  std::mutex make_resident_lock;
+  ComPtr<ID3D12Fence> make_resident_fence;
+  guint64 make_resident_fence_val = 1;
 
   std::vector<GstD3D12Device*> clients;
 
@@ -1418,6 +1424,17 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
     priv->rtv_heap_pool = gst_d3d12_desc_heap_pool_new (device.Get (),
         &rtv_desc);
     GST_OBJECT_FLAG_SET (priv->rtv_heap_pool, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  }
+
+  priv->device.As (&priv->device3);
+  if (priv->device3) {
+    device->CreateFence (0,
+        D3D12_FENCE_FLAG_SHARED, IID_PPV_ARGS (&priv->make_resident_fence));
+    if (!priv->make_resident_fence) {
+      GST_ERROR_OBJECT (self, "Couldn't create fence");
+      gst_object_unref (self);
+      return nullptr;
+    }
   }
 
   return self;
@@ -2717,4 +2734,48 @@ gst_d3d12_device_acquire_mipmap_texture (GstD3D12Device * device,
   priv->mipmap_cache[key] = entry;
 
   return entry;
+}
+
+/**
+ * gst_d3d12_device_enqueue_make_resident:
+ * @device: a #GstD3D12Device
+ * @flags: a D3D12_RESIDENCY_FLAGS value
+ * @num_objects: the number of objects in @objects
+ * @objects: an array of ID3D12Pageable objects
+ * @fence: (out) (transfer full): a ID3D12Fence signalled when the residency operation completes
+ * @fence_value: (out): the fence value to wait for
+ *
+ * A utility wrapper around ID3D12Device3::EnqueueMakeResident using
+ * a fence managed by #GstD3D12Device.
+ *
+ * Returns: an HRESULT code
+ *
+ * Since: 1.30
+ */
+HRESULT
+gst_d3d12_device_enqueue_make_resident (GstD3D12Device * device,
+    D3D12_RESIDENCY_FLAGS flags, guint num_objects, ID3D12Pageable ** objects,
+    ID3D12Fence ** fence, guint64 * fence_value)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), E_INVALIDARG);
+  g_return_val_if_fail (num_objects > 0, E_INVALIDARG);
+  g_return_val_if_fail (objects, E_INVALIDARG);
+  g_return_val_if_fail (fence, E_INVALIDARG);
+  g_return_val_if_fail (fence_value, E_INVALIDARG);
+
+  auto priv = device->priv->inner;
+  if (!priv->device3)
+    return E_NOINTERFACE;
+
+  std::lock_guard < std::mutex > lk (priv->make_resident_lock);
+  auto hr = priv->device3->EnqueueMakeResident (flags, num_objects,
+      objects, priv->make_resident_fence.Get (), priv->make_resident_fence_val);
+  if (SUCCEEDED (hr)) {
+    *fence = priv->make_resident_fence.Get ();
+    (*fence)->AddRef ();
+    *fence_value = priv->make_resident_fence_val;
+    priv->make_resident_fence_val++;
+  }
+
+  return hr;
 }
