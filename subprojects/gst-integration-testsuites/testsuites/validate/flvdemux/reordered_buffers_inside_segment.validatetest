@@ -1,0 +1,8 @@
+set-globals, media_dir="$(test_dir)/../../../media/"
+meta,
+    configs={
+        [change-issue-severity, issue-id=buffer::is-out-of-segment-encoded, new-severity=critical],
+    },
+    args={
+        "filesrc location=$(media_dir)/defaults/flv/h264_intra_first-small.flv ! flvdemux ! h264parse ! fakesink name=fakesink",
+    }
