@@ -87,6 +87,7 @@ struct _GstFdkAacEnc {
   guint peak_bitrate;
   gboolean afterburner;
 
+  GstClockTime encoder_delay;
   GstFdkAacRateControl rate_control;
   GstFdkAacVbrPreset vbr_preset;
 };
