@@ -2029,11 +2029,22 @@ gst_d3d12_base_convert_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     return GST_FLOW_ERROR;
   }
 
-  gst_d3d12_buffer_set_fence (outbuf, fence, priv->ctx->fence_val, FALSE);
-  gst_d3d12_cmd_queue_set_notify (cq, priv->ctx->fence_val,
-      FENCE_NOTIFY_MINI_OBJECT (fence_data));
+  if (gst_d3d12_device_is_over_budget (priv->ctx->device)) {
+    GST_LOG_OBJECT (self, "Over budget, evicting output");
+    gst_d3d12_cmd_queue_fence_wait (cq, priv->ctx->fence_val);
+    gst_d3d12_fence_data_unref (fence_data);
 
-  priv->ctx->scheduled.push (priv->ctx->fence_val);
+    if (!gst_d3d12_buffer_evict (outbuf)) {
+      GST_DEBUG_OBJECT (self, "Couldn't evict output");
+      return GST_FLOW_ERROR;
+    }
+  } else {
+    gst_d3d12_buffer_set_fence (outbuf, fence, priv->ctx->fence_val, FALSE);
+    gst_d3d12_cmd_queue_set_notify (cq, priv->ctx->fence_val,
+        FENCE_NOTIFY_MINI_OBJECT (fence_data));
+
+    priv->ctx->scheduled.push (priv->ctx->fence_val);
+  }
 
   auto completed = gst_d3d12_device_get_completed_value (priv->ctx->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);

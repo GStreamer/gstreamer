@@ -1276,5 +1276,11 @@ gst_d3d12_fisheye_dewarp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
   gst_d3d12_buffer_set_fence (outbuf, ctx->cq_fence, ctx->fence_val, FALSE);
 
+  if (gst_d3d12_device_is_over_budget (ctx->device) &&
+      !gst_d3d12_buffer_evict (outbuf)) {
+    GST_ERROR_OBJECT (self, "Couldn't evict output");
+    return GST_FLOW_ERROR;
+  }
+
   return GST_FLOW_OK;
 }

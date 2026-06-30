@@ -2478,6 +2478,10 @@ gst_d3d12_compositor_aggregate_frames (GstVideoAggregator * vagg,
       GST_ERROR_OBJECT (self, "Couldn't copy frame");
       return GST_FLOW_ERROR;
     }
+  } else if (gst_d3d12_device_is_over_budget (self->device) &&
+      !gst_d3d12_buffer_evict (outbuf)) {
+    GST_ERROR_OBJECT (self, "Couldn't evict output");
+    return GST_FLOW_ERROR;
   }
 
   return GST_FLOW_OK;

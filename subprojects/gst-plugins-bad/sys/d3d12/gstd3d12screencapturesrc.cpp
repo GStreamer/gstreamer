@@ -1516,6 +1516,7 @@ gst_d3d12_screen_capture_src_create (GstBaseSrc * bsrc, guint64 offset,
 {
   auto self = GST_D3D12_SCREEN_CAPTURE_SRC (bsrc);
   auto priv = self->priv;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   if (!priv->capture) {
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ,
@@ -1523,9 +1524,26 @@ gst_d3d12_screen_capture_src_create (GstBaseSrc * bsrc, guint64 offset,
     return GST_FLOW_NOT_NEGOTIATED;
   }
 #ifdef HAVE_WGC
-  if (priv->selected_capture_api == GST_D3D12_SCREEN_CAPTURE_API_WGC)
-    return gst_d3d12_screen_capture_src_wgc_capture (bsrc, offset, size, buf);
+  if (priv->selected_capture_api == GST_D3D12_SCREEN_CAPTURE_API_WGC) {
+    ret = gst_d3d12_screen_capture_src_wgc_capture (bsrc, offset, size, buf);
+  } else
 #endif
+  {
+    ret = gst_d3d12_screen_capture_src_dxgi_capture (bsrc, offset, size, buf);
+  }
 
-  return gst_d3d12_screen_capture_src_dxgi_capture (bsrc, offset, size, buf);
+  if (ret == GST_FLOW_OK && priv->downstream_supports_d3d12) {
+    auto mem = gst_buffer_peek_memory (*buf, 0);
+    if (gst_is_d3d12_memory (mem)) {
+      auto dmem = GST_D3D12_MEMORY_CAST (mem);
+      if (gst_d3d12_device_is_over_budget (dmem->device) &&
+          !gst_d3d12_memory_evict (dmem)) {
+        GST_ERROR_OBJECT (self, "Couldn't evict output");
+        gst_clear_buffer (buf);
+        return GST_FLOW_ERROR;
+      }
+    }
+  }
+
+  return ret;
 }

@@ -641,6 +641,13 @@ gst_d3d12_overlay_compositor_generate_output (GstBaseTransform * trans,
 
   gst_buffer_foreach_meta (buf, foreach_meta, nullptr);
 
+  if (gst_d3d12_device_is_over_budget (ctx->device) &&
+      !gst_d3d12_buffer_evict (buf)) {
+    GST_ERROR_OBJECT (self, "Couldn't evict output");
+    gst_buffer_unref (buf);
+    return GST_FLOW_ERROR;
+  }
+
   *buffer = buf;
 
   return GST_FLOW_OK;
