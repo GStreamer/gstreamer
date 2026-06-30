@@ -381,6 +381,7 @@ struct _GstD3D12MemoryPrivate
   guint srv_inc_size;
   guint rtv_inc_size;
   guint64 cpu_map_count = 0;
+  gint64 resource_size = 0;
 
   std::mutex lock;
 
@@ -572,6 +573,7 @@ gst_d3d12_memory_make_resident_unlocked (GstD3D12Memory * mem)
     priv->resident = TRUE;
     priv->fence = fence;
     priv->fence_val = fence_val;
+    gst_d3d12_device_update_resident_size (mem->device, priv->resource_size);
     return TRUE;
   }
 
@@ -582,6 +584,7 @@ gst_d3d12_memory_make_resident_unlocked (GstD3D12Memory * mem)
 
     if (SUCCEEDED (hr)) {
       priv->resident = TRUE;
+      gst_d3d12_device_update_resident_size (mem->device, priv->resource_size);
       return TRUE;
     }
   }
@@ -1287,8 +1290,10 @@ gst_d3d12_memory_evict (GstD3D12Memory * mem)
 
   ID3D12Pageable *obj[] = { priv->resource.Get () };
   auto hr = device->Evict (1, obj);
-  if (SUCCEEDED (hr))
+  if (SUCCEEDED (hr)) {
     priv->resident = FALSE;
+    gst_d3d12_device_update_resident_size (mem->device, -priv->resource_size);
+  }
 
   return gst_d3d12_result (hr, mem->device);
 }
@@ -1448,6 +1453,10 @@ gst_d3d12_allocator_free (GstAllocator * allocator, GstMemory * mem)
   GST_LOG_OBJECT (allocator, "Free memory %p", mem);
 
   gst_d3d12_memory_set_fence_unlocked (dmem, nullptr, 0, TRUE);
+  if (dmem->priv->resident && dmem->priv->resource_size > 0) {
+    gst_d3d12_device_update_resident_size (dmem->device,
+        -dmem->priv->resource_size);
+  }
 
   if (dmem->priv->notify)
     dmem->priv->notify (dmem->priv->user_data);
@@ -1532,6 +1541,13 @@ gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
   priv->user_data = user_data;
   priv->notify = notify;
 
+  /* In case of texture-array (used by decoder/encoder), count size only
+   * if this is a wrapper corresponding to the first slice one */
+  if (array_slice == 0) {
+    auto info = GetResourceAllocationInfo (device_handle, 0, 1, &desc);
+    priv->resource_size = (gint64) info.SizeInBytes;
+  }
+
   mem->device = (GstD3D12Device *) gst_object_ref (device);
 
   for (guint i = 0; i < num_subresources; i++) {
@@ -1591,6 +1607,9 @@ gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
 
   GST_LOG_OBJECT (allocator,
       "Allocated new memory %p with size %" G_GUINT64_FORMAT, mem, priv->size);
+
+  if (mem->priv->resource_size > 0)
+    gst_d3d12_device_update_resident_size (device, mem->priv->resource_size);
 
   return GST_MEMORY_CAST (mem);
 }

@@ -71,4 +71,20 @@ GetAdapterLuid (T device)
   return luid;
 #endif
 }
+
+template <typename T>
+D3D12_RESOURCE_ALLOCATION_INFO
+GetResourceAllocationInfo (T device, UINT visibleMask,
+    UINT numResourceDescs, const D3D12_RESOURCE_DESC *pResourceDescs)
+{
+#if defined(_MSC_VER) || !defined(_WIN32)
+  return device->GetResourceAllocationInfo (visibleMask,
+      numResourceDescs, pResourceDescs);
+#else
+  D3D12_RESOURCE_ALLOCATION_INFO ret;
+  device->GetResourceAllocationInfo (&ret, visibleMask,
+      numResourceDescs, pResourceDescs);
+  return ret;
+#endif
+}
 #endif /* __cplusplus */

@@ -153,8 +153,18 @@ struct DeviceInner
     gamma_lut_rs = nullptr;
     mipmap_cache.clear ();
 
+    if (adapter3) {
+      adapter3->UnregisterVideoMemoryBudgetChangeNotification (budget_change_cb_cookie);
+      SetEvent (cancellable);
+      g_clear_pointer (&budget_monitor_thread, g_thread_join);
+
+      CloseHandle (budget_change_event);
+      CloseHandle (cancellable);
+    }
+
     factory = nullptr;
     adapter = nullptr;
+    adapter3 = nullptr;
     device3 = nullptr;
 
     if (removed_reason == S_OK)
@@ -244,6 +254,7 @@ struct DeviceInner
   ComPtr<ID3D12Device> device;
   ComPtr<ID3D12Device3> device3;
   ComPtr<IDXGIAdapter1> adapter;
+  ComPtr<IDXGIAdapter3> adapter3;
   ComPtr<IDXGIFactory2> factory;
   ComPtr<ID3D11On12Device> device11on12;
   std::unordered_map<GstVideoFormat, GstD3D12Format> format_table;
@@ -297,6 +308,12 @@ struct DeviceInner
   std::mutex make_resident_lock;
   ComPtr<ID3D12Fence> make_resident_fence;
   guint64 make_resident_fence_val = 1;
+  HANDLE budget_change_event = nullptr;
+  HANDLE cancellable = nullptr;
+  GThread *budget_monitor_thread = nullptr;
+  DWORD budget_change_cb_cookie = 0;
+  std::atomic<guint64> current_budget = { 0 };
+  std::atomic<gint64> resident_size = { 0 };
 
   std::vector<GstD3D12Device*> clients;
 
@@ -1125,6 +1142,55 @@ struct TestFormatInfo
   D3D12_FORMAT_SUPPORT2 support2;
 };
 
+static gpointer
+gst_d3d12_device_budget_monitor_thread (DeviceInner * priv)
+{
+  HANDLE waitables[] = { priv->budget_change_event, priv->cancellable };
+  bool running = true;
+
+  GST_DEBUG ("Enter budget monitor thread");
+
+  while (running) {
+    auto wait_ret = WaitForMultipleObjects (G_N_ELEMENTS (waitables),
+        waitables, FALSE, INFINITE);
+
+    switch (wait_ret) {
+      case WAIT_OBJECT_0:
+      {
+        DXGI_QUERY_VIDEO_MEMORY_INFO info = { };
+        auto hr = priv->adapter3->QueryVideoMemoryInfo (0,
+            DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &info);
+
+        if (SUCCEEDED (hr)) {
+          GST_DEBUG ("Budget updated, adapter-index: %u, vendor-id: 0x%04x, "
+              "device-id: 0x%04x, Budget: %" G_GUINT64_FORMAT
+              " MB, Current: %" G_GUINT64_FORMAT " MB, "
+              "AvailableForReservation: %" G_GUINT64_FORMAT " MB, "
+              "CurrentReservation: %" G_GUINT64_FORMAT " MB",
+              priv->adapter_index, priv->vendor_id, priv->device_id,
+              info.Budget / 1024 / 1024, info.CurrentUsage / 1024 / 1024,
+              info.AvailableForReservation / 1024 / 1024,
+              info.CurrentReservation / 1024 / 1024);
+          priv->current_budget = info.Budget;
+        }
+        break;
+      }
+      case WAIT_OBJECT_0 + 1:
+        GST_DEBUG ("Cancelled");
+        running = false;
+        break;
+      default:
+        GST_WARNING ("Unexpected wait ret %u", (guint) wait_ret);
+        running = false;
+        break;
+    }
+  }
+
+  GST_DEBUG ("Leave budget monitor thread");
+
+  return nullptr;
+}
+
 static GstD3D12Device *
 gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
 {
@@ -1434,6 +1500,45 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
       GST_ERROR_OBJECT (self, "Couldn't create fence");
       gst_object_unref (self);
       return nullptr;
+    }
+
+
+    priv->adapter.As (&priv->adapter3);
+    if (priv->adapter3) {
+      DXGI_QUERY_VIDEO_MEMORY_INFO info = { };
+      hr = priv->adapter3->QueryVideoMemoryInfo (0,
+          DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &info);
+      if (FAILED (hr)) {
+        priv->adapter3 = nullptr;
+      } else {
+        GST_INFO_OBJECT (self, "Current budget, adapter-index: %u, "
+            "vendor-id: 0x%04x, device-id: 0x%04x, Budget: %" G_GUINT64_FORMAT
+            " MB, Current: %" G_GUINT64_FORMAT " MB, "
+            "AvailableForReservation: %" G_GUINT64_FORMAT " MB, "
+            "CurrentReservation: %" G_GUINT64_FORMAT " MB",
+            priv->adapter_index, priv->vendor_id, priv->device_id,
+            info.Budget / 1024 / 1024,
+            info.CurrentUsage / 1024 / 1024,
+            info.AvailableForReservation / 1024 / 1024,
+            info.CurrentReservation / 1024 / 1024);
+
+        priv->current_budget = info.Budget;
+
+        priv->budget_change_event =
+            CreateEventW (nullptr, FALSE, FALSE, nullptr);
+        priv->cancellable = CreateEventW (nullptr, FALSE, FALSE, nullptr);
+        hr = priv->adapter3->RegisterVideoMemoryBudgetChangeNotificationEvent
+            (priv->budget_change_event, &priv->budget_change_cb_cookie);
+        if (FAILED (hr)) {
+          CloseHandle (priv->budget_change_event);
+          CloseHandle (priv->cancellable);
+          priv->adapter3 = nullptr;
+        } else {
+          priv->budget_monitor_thread = g_thread_new ("d3d12-mem-budget",
+              (GThreadFunc) gst_d3d12_device_budget_monitor_thread,
+              priv.get ());
+        }
+      }
     }
   }
 
@@ -2778,4 +2883,20 @@ gst_d3d12_device_enqueue_make_resident (GstD3D12Device * device,
   }
 
   return hr;
+}
+
+void
+gst_d3d12_device_update_resident_size (GstD3D12Device * device, gint64 size)
+{
+  auto priv = device->priv->inner;
+  priv->resident_size += size;
+
+#ifndef GST_DISABLE_GST_DEBUG
+  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_TRACE) {
+    auto cur_size = priv->resident_size.load () / 1024 / 1024;
+    auto cur_budget = priv->current_budget.load () / 1024 / 1024;
+    GST_TRACE_OBJECT (device, "Budget: %" G_GUINT64_FORMAT
+        " MB, Current: %" G_GINT64_FORMAT " MB", cur_budget, cur_size);
+  }
+#endif
 }

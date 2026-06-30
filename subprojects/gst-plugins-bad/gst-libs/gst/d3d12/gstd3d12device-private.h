@@ -98,5 +98,9 @@ gboolean    gst_d3d12_device_non_zeroed_supported (GstD3D12Device * device);
 GST_D3D12_API
 gboolean    gst_d3d12_device_is_uma (GstD3D12Device * device);
 
+GST_D3D12_API
+void        gst_d3d12_device_update_resident_size (GstD3D12Device * device,
+                                                   gint64 size);
+
 G_END_DECLS
 
