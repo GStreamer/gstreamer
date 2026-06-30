@@ -1026,7 +1026,7 @@ dump_properties14 (GstVulkanPhysicalDevice * device,
   if (properties->copySrcLayoutCount > 0 || properties->copyDstLayoutCount > 0) {
     VkPhysicalDeviceVulkan14Properties props14 = *properties;
     VkPhysicalDeviceProperties2 props = (VkPhysicalDeviceProperties2) {
-      .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES,
+      .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
       .pNext = &props14,
     };
     props14.pCopySrcLayouts = g_alloca (properties->copySrcLayoutCount * sizeof (VkImageLayout));
