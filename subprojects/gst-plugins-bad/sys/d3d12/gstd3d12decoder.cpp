@@ -1306,7 +1306,7 @@ gst_d3d12_decoder_ensure_staging_texture (GstD3D12Decoder * self)
 static gboolean
 gst_d3d12_decoder_can_direct_render (GstD3D12Decoder * self,
     GstVideoDecoder * videodec, GstBuffer * buffer,
-    gint display_width, gint display_height)
+    gint display_width, gint display_height, gboolean * over_budget)
 {
   auto priv = self->priv;
 
@@ -1321,6 +1321,11 @@ gst_d3d12_decoder_can_direct_render (GstD3D12Decoder * self,
   /* We need to crop but downstream does not support crop, need to copy */
   if (priv->session->need_crop && !priv->session->use_crop_meta)
     return FALSE;
+
+  if (gst_d3d12_device_is_over_budget (self->device)) {
+    *over_budget = TRUE;
+    return FALSE;
+  }
 
   return TRUE;
 }
@@ -1393,7 +1398,7 @@ gst_d3d12_decoder_copy_output_12 (GstD3D12Decoder * self, GstBuffer * srcbuf,
 
 static GstFlowReturn
 gst_d3d12_decoder_copy_output (GstD3D12Decoder * self, GstBuffer * src_buf,
-    GstBuffer * dst_buf)
+    GstBuffer * dst_buf, gboolean over_budget)
 {
   auto priv = self->priv;
   auto session = priv->session.get ();
@@ -1432,6 +1437,11 @@ gst_d3d12_decoder_copy_output (GstD3D12Decoder * self, GstBuffer * src_buf,
           GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
 
       GST_TRACE_OBJECT (self, "d3d12 copy done");
+
+      if (over_budget) {
+        GST_LOG_OBJECT (self, "Over budget, evicting output");
+        gst_d3d12_memory_evict (out_dmem);
+      }
 
       return GST_FLOW_OK;
     }
@@ -1610,8 +1620,9 @@ gst_d3d12_decoder_process_output (GstD3D12Decoder * self,
       decoder_pic->output_buffer : decoder_pic->buffer;
 
   priv->session->lock.lock ();
+  gboolean over_budget = FALSE;
   if (gst_d3d12_decoder_can_direct_render (self, videodec,
-          decoder_pic->buffer, display_width, display_height)) {
+          decoder_pic->buffer, display_width, display_height, &over_budget)) {
     GST_LOG_OBJECT (self, "Outputting without copy");
 
     auto mem = gst_buffer_peek_memory (buffer, 0);
@@ -1629,7 +1640,8 @@ gst_d3d12_decoder_process_output (GstD3D12Decoder * self,
       goto error;
     }
 
-    ret = gst_d3d12_decoder_copy_output (self, buffer, frame->output_buffer);
+    ret = gst_d3d12_decoder_copy_output (self, buffer, frame->output_buffer,
+        over_budget);
     if (ret != GST_FLOW_OK)
       goto error;
   }
