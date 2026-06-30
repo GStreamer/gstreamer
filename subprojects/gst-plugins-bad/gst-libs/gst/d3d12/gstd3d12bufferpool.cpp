@@ -50,6 +50,8 @@ static GstFlowReturn gst_d3d12_buffer_pool_alloc_buffer (GstBufferPool * pool,
     GstBuffer ** buffer, GstBufferPoolAcquireParams * params);
 static GstFlowReturn gst_d3d12_buffer_pool_acquire_buffer (GstBufferPool * pool,
     GstBuffer ** buffer, GstBufferPoolAcquireParams * params);
+static void gst_d3d12_buffer_pool_release_buffer (GstBufferPool * pool,
+    GstBuffer * buffer);
 static gboolean gst_d3d12_buffer_pool_start (GstBufferPool * pool);
 static gboolean gst_d3d12_buffer_pool_stop (GstBufferPool * pool);
 
@@ -65,6 +67,7 @@ gst_d3d12_buffer_pool_class_init (GstD3D12BufferPoolClass * klass)
   pool_class->set_config = gst_d3d12_buffer_pool_set_config;
   pool_class->alloc_buffer = gst_d3d12_buffer_pool_alloc_buffer;
   pool_class->acquire_buffer = gst_d3d12_buffer_pool_acquire_buffer;
+  pool_class->release_buffer = gst_d3d12_buffer_pool_release_buffer;
   pool_class->start = gst_d3d12_buffer_pool_start;
   pool_class->stop = gst_d3d12_buffer_pool_stop;
 
@@ -357,6 +360,16 @@ gst_d3d12_buffer_pool_acquire_buffer (GstBufferPool * pool,
   }
 
   return ret;
+}
+
+static void
+gst_d3d12_buffer_pool_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
+{
+  /* Set memory tag to return GstD3D12Memory to the pool. The memory pool
+   * will manage resource residency based on memory budget */
+  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY);
+
+  GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (pool, buffer);
 }
 
 static gboolean
