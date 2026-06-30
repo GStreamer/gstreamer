@@ -52,6 +52,29 @@ function parseElements(content) {
     return elements;
 }
 
+/**
+ * Extracts the top-level pipeline's name and type from a .dot file.
+ *
+ * The pipeline is the `digraph` itself (not a cluster), labelled
+ *   label="<GstPipeline>\n<name>\n[state]...";
+ * so searching by pipeline name/type needs this separate from parseElements().
+ *
+ * @param {string} content - Raw .dot file content
+ * @returns {{name: string, type: string}|null}
+ */
+function parsePipelineInfo(content) {
+    if (!content) return null;
+    const m = content.match(/digraph\s+[A-Za-z0-9_]+\s*\{[^]*?\blabel="([^"]*)"/);
+    if (!m) return null;
+
+    const parts = m[1].split('\\n');
+    const type = (parts[0] || '').replace(/[<>]/g, '').trim();
+    const name = (parts[1] || '').trim();
+    if (!name) return null;
+
+    return { name, type };
+}
+
 function createOverlayElement(dot_info, fname, focusClusterId) {
     let overlay = document.getElementById("overlay");
     if (overlay) {
@@ -184,6 +207,7 @@ async function createNewDotDiv(pipelines_div, dot_info) {
     previewDiv.dot_info = dot_info;
 
     div._elements = parseElements(dot_info.content);
+    div._pipeline = parsePipelineInfo(dot_info.content);
 
     const observer = new IntersectionObserver((entries, observer) => {
         for (const entry of entries) {
@@ -418,10 +442,53 @@ function openElement(pipelineId, clusterId) {
     const previewDiv = div.querySelector('.preview');
     if (!previewDiv || !previewDiv.dot_info) return;
 
+    closeSearchPalette();
     removePipelineOverlay(true);
     setUrlVariable('pipeline', pipelineId);
-    setUrlVariable('element', clusterId);
-    createOverlayElement(previewDiv.dot_info, previewDiv.dot_info.name, clusterId);
+    if (clusterId) {
+        setUrlVariable('element', clusterId);
+    } else {
+        unsetUrlVariable('element');
+    }
+    createOverlayElement(previewDiv.dot_info, previewDiv.dot_info.name, clusterId || undefined);
+}
+
+/* ── Search palette (Ctrl+K) ──────────────────────────────────────────
+ * The search lives in a fixed, top-layer overlay so it can be invoked and
+ * used even while a pipeline graph overlay is open. */
+
+export function isSearchPaletteOpen() {
+    const palette = document.getElementById('search-palette');
+    return !!(palette && palette.classList.contains('open'));
+}
+
+export function openSearchPalette() {
+    const palette = document.getElementById('search-palette');
+    if (!palette) return;
+    palette.classList.add('open');
+    const input = document.getElementById('search');
+    input.focus();
+    input.select();
+    updateElementSearch(input.value.trim());
+}
+
+export function closeSearchPalette() {
+    const palette = document.getElementById('search-palette');
+    if (!palette || !palette.classList.contains('open')) return;
+    palette.classList.remove('open');
+    const input = document.getElementById('search');
+    input.value = '';
+    input.blur();
+    clearElementResults();
+    updateSearch();
+}
+
+export function toggleSearchPalette() {
+    if (isSearchPaletteOpen()) {
+        closeSearchPalette();
+    } else {
+        openSearchPalette();
+    }
 }
 
 function clearElementResults() {
@@ -456,16 +523,33 @@ function setActiveResult(idx) {
 function collectElements() {
     const list = [];
     document.querySelectorAll('.pipelineDiv').forEach(div => {
-        if (!div._elements) return;
         const pipelineName = div.querySelector('h2').textContent;
-        for (const el of div._elements) {
+
+        // The pipeline (dot file) itself is searchable by its name, type and
+        // dump file name, and is rendered before the elements it contains.
+        if (div._pipeline) {
             list.push({
+                kind: 'pipeline',
                 pipelineId: div.id,
                 pipelineName,
-                clusterId: el.clusterId,
-                name: el.name,
-                type: el.type,
+                clusterId: null,
+                name: div._pipeline.name,
+                type: div._pipeline.type,
+                file: pipelineName,
             });
+        }
+
+        if (div._elements) {
+            for (const el of div._elements) {
+                list.push({
+                    kind: 'element',
+                    pipelineId: div.id,
+                    pipelineName,
+                    clusterId: el.clusterId,
+                    name: el.name,
+                    type: el.type,
+                });
+            }
         }
     });
     return list;
@@ -490,9 +574,15 @@ function updateElementSearch(query) {
         includeScore: true,
         threshold: 0.4,
         ignoreLocation: true,
-        keys: ['name', 'type'],
+        keys: ['name', 'type', 'file'],
     });
-    const matches = fuse.search(query).slice(0, 50);
+    /* Pipelines (dot files) first, then elements; each group keeps its own
+     * relevance order. */
+    const matches = fuse.search(query).sort((a, b) => {
+        const ka = a.item.kind === 'pipeline' ? 0 : 1;
+        const kb = b.item.kind === 'pipeline' ? 0 : 1;
+        return ka - kb || a.score - b.score;
+    }).slice(0, 50);
 
     results.innerHTML = '';
     if (matches.length === 0) {
@@ -502,7 +592,7 @@ function updateElementSearch(query) {
 
     for (const { item } of matches) {
         const row = document.createElement('div');
-        row.className = 'search-result';
+        row.className = 'search-result' + (item.kind === 'pipeline' ? ' is-pipeline' : '');
         row.innerHTML =
             `<span class="sr-name"></span>` +
             `<span class="sr-type"></span>` +
@@ -550,15 +640,37 @@ export function connectSearch() {
                 e.preventDefault();
                 target.dispatchEvent(new MouseEvent('mousedown'));
             }
-        } else if (e.key === 'Escape') {
-            clearElementResults();
         }
     });
 
-    input.addEventListener('blur', function () {
-        // Delay so a result's mousedown can run before we hide the list
-        setTimeout(clearElementResults, 150);
+    /* Click on the palette backdrop (outside the box) closes it. */
+    const palette = document.getElementById('search-palette');
+    if (palette) {
+        palette.addEventListener('mousedown', function (e) {
+            if (e.target === palette) closeSearchPalette();
+        });
+    }
+
+    /* Ctrl/Cmd+K toggles the palette; "/" opens it when not already typing. */
+    document.addEventListener('keydown', function (e) {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+            e.preventDefault();
+            toggleSearchPalette();
+        } else if (e.key === '/' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            openSearchPalette();
+        }
     });
+
+    /* Escape closes the palette first, before the pipeline-overlay handlers.
+     * Capture phase + early registration ensures we run before the overlay's
+     * own Escape handling, so closing the palette never closes the graph. */
+    document.addEventListener('keyup', function (e) {
+        if (e.key === 'Escape' && isSearchPaletteOpen()) {
+            e.stopImmediatePropagation();
+            closeSearchPalette();
+        }
+    }, { capture: true });
 }
 
 export function removePipelineOverlay(noHistoryUpdate) {

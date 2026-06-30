@@ -200,27 +200,46 @@
         border-color: #0069ff;
     }
 
-    .search-wrap {
-        position: relative;
-        display: inline-block;
-        text-align: left;
+    .search-palette {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 12000;
+        background: rgba(0, 0, 0, 0.45);
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+    .search-palette.open {
+        display: flex;
+    }
+
+    .search-palette-box {
+        margin-top: 12vh;
+        width: 720px;
+        max-width: 92vw;
+        display: flex;
+        flex-direction: column;
+        background: #222;
+        border: 1px solid #505050;
+        border-radius: 8px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+        padding: 12px;
+    }
+
+    .search-palette-box #search {
+        width: 100%;
+        box-sizing: border-box;
+        margin: 0;
+        font-size: 16px;
     }
 
     #search-results {
         display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        z-index: 200;
-        min-width: 680px;
-        max-width: 92vw;
-        max-height: 50vh;
+        margin-top: 8px;
+        max-height: 60vh;
         overflow-y: auto;
-        background-color: #222;
-        border: 1px solid #404040;
-        border-radius: 4px;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
-        margin-top: -6px;
+        text-align: left;
     }
 
     .search-result {
@@ -267,6 +286,15 @@
         font-style: italic;
     }
 
+    /* Pipeline (dot file) rows: distinct accent, no "in" prefix on the name. */
+    .search-result.is-pipeline .sr-name {
+        color: #ffd479;
+    }
+
+    .search-result.is-pipeline .sr-pipeline::before {
+        content: "";
+    }
+
     button {
         background-color: #2a2a2a;
         color: #e0e0e0;
@@ -284,6 +312,15 @@
 
     button:active {
         background-color: #404040;
+    }
+
+    #open-search kbd {
+        font-family: monospace;
+        font-size: 11px;
+        background: #1a1a1a;
+        border: 1px solid #505050;
+        border-radius: 3px;
+        padding: 1px 4px;
     }
 
     @media screen and (max-height: 250000px) {
@@ -346,7 +383,7 @@
 
   <script src="/js/gstdots.js" type="module"> </script>
   <script type="module">
-    import {updateFromUrl, connectWs, connectSearch, removePipelineOverlay,  dumpPipelines } from '/js/gstdots.js';
+    import {updateFromUrl, connectWs, connectSearch, removePipelineOverlay, dumpPipelines, openSearchPalette } from '/js/gstdots.js';
 
     window.addEventListener('popstate', function(event) {
       updateFromUrl(true);
@@ -358,14 +395,12 @@
       updateFromUrl(true);
 
       document.getElementById('dump-button').addEventListener('click', dumpPipelines);
+      document.getElementById('open-search').addEventListener('click', openSearchPalette);
     });
 
     document.addEventListener('keyup', function(e) {
       if (e.key === 'Escape') {
         removePipelineOverlay();
-      } else if (e.key === '/' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-        e.preventDefault();
-        document.getElementById('search').focus();
       }
     });
 
@@ -390,15 +425,19 @@
     <h1>GStreamer Pipeline graphs</h1>
 
     <div>
-      <span class="search-wrap">
-        <input type="text" id="search" placeholder="Search pipelines or elements ( / )" autocomplete="off">
-        <div id="search-results"></div>
-      </span>
+      <button id="open-search">🔍 Search&nbsp;&nbsp;<kbd>Ctrl</kbd>+<kbd>K</kbd></button>
       <button id="dump-button">Dump Pipelines</button>
       <button id="svg-theme-btn" style="margin-left: 10px;">☀ Light SVGs</button>
       <a href="/pipeline.html" style="margin-left: 10px; color: #a0a0ff; text-decoration: none;">Pipeline Viewer</a>
     </div>
 
     <div id="pipelines"></div>
+
+    <div id="search-palette" class="search-palette">
+      <div class="search-palette-box">
+        <input type="text" id="search" placeholder="Search pipelines or elements…" autocomplete="off">
+        <div id="search-results"></div>
+      </div>
+    </div>
   </body>
 </html>
