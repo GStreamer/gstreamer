@@ -200,6 +200,73 @@
         border-color: #0069ff;
     }
 
+    .search-wrap {
+        position: relative;
+        display: inline-block;
+        text-align: left;
+    }
+
+    #search-results {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 200;
+        min-width: 680px;
+        max-width: 92vw;
+        max-height: 50vh;
+        overflow-y: auto;
+        background-color: #222;
+        border: 1px solid #404040;
+        border-radius: 4px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+        margin-top: -6px;
+    }
+
+    .search-result {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        padding: 6px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #333;
+        white-space: nowrap;
+    }
+
+    .search-result:last-child { border-bottom: none; }
+
+    .search-result:hover,
+    .search-result.active {
+        background-color: #1a4c9e;
+    }
+
+    .search-result .sr-name {
+        color: #ffffff;
+        font-weight: bold;
+        font-family: monospace;
+    }
+
+    .search-result .sr-type {
+        color: #80b0ff;
+        font-size: 12px;
+    }
+
+    .search-result .sr-pipeline {
+        color: #b0b0b0;
+        font-size: 12px;
+        margin-left: auto;
+        padding-left: 20px;
+        flex-shrink: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .search-result .sr-pipeline::before {
+        content: "in ";
+        color: #707070;
+        font-style: italic;
+    }
+
     button {
         background-color: #2a2a2a;
         color: #e0e0e0;
@@ -323,7 +390,10 @@
     <h1>GStreamer Pipeline graphs</h1>
 
     <div>
-      <input type="text" id="search" placeholder="Search for pipeline">
+      <span class="search-wrap">
+        <input type="text" id="search" placeholder="Search pipelines or elements ( / )" autocomplete="off">
+        <div id="search-results"></div>
+      </span>
       <button id="dump-button">Dump Pipelines</button>
       <button id="svg-theme-btn" style="margin-left: 10px;">☀ Light SVGs</button>
       <a href="/pipeline.html" style="margin-left: 10px; color: #a0a0ff; text-decoration: none;">Pipeline Viewer</a>

@@ -97,6 +97,20 @@ body:not(.svg-light-theme) #pipeline-container svg .graph [fill="#ffffff"] {
 }
 
 
+/* Element focused via search: pulse a glow on its cluster box */
+#graph .cluster.focused-cluster {
+    animation: focused-cluster-pulse 1.2s ease-in-out 3;
+}
+#graph .cluster.focused-cluster > polygon,
+#graph .cluster.focused-cluster > path {
+    stroke: #4285f4 !important;
+    stroke-width: 3px !important;
+}
+@keyframes focused-cluster-pulse {
+    0%, 100% { filter: drop-shadow(0 0 2px rgba(66, 133, 244, 0.5)); }
+    50%      { filter: drop-shadow(0 0 12px rgba(66, 133, 244, 1)); }
+}
+
 /* Caps hover tooltip content */
 .caps-tooltip { font-family: monospace; font-size: 12px; line-height: 1.5; }
 .caps-tooltip-sep { height: 5px; }

@@ -2,6 +2,7 @@ let ws = null;
 let pendingObservers = [];
 let observerDebounceTimer = null;
 const OBSERVER_DEBOUNCE_MS = 300;
+let activeResultIndex = -1;
 
 function activatePendingObservers() {
     for (const {observer, target} of pendingObservers) {
@@ -17,7 +18,41 @@ function scheduleObserverActivation() {
     observerDebounceTimer = setTimeout(activatePendingObservers, OBSERVER_DEBOUNCE_MS);
 }
 
-function createOverlayElement(dot_info, fname) {
+/**
+ * Parses element entries out of a GStreamer .dot file content.
+ *
+ * Each element/bin is emitted by GstDebug as
+ *   subgraph cluster_node_<name>_<ptr> {
+ *     ...
+ *     label="<TypeName>\n<element-name>\n[state]...";
+ * The cluster id (the subgraph name) matches the SVG cluster <title>, so we
+ * keep it around to zoom straight to that element after the overlay renders.
+ *
+ * @param {string} content - Raw .dot file content
+ * @returns {Array<{clusterId: string, name: string, type: string}>}
+ */
+function parseElements(content) {
+    const elements = [];
+    if (!content) return elements;
+
+    const re = /subgraph\s+(cluster_node_[A-Za-z0-9_]+)\s*\{[^]*?label="([^"]*)"/g;
+    let m;
+    while ((m = re.exec(content)) !== null) {
+        const clusterId = m[1];
+        const label = m[2];
+        if (!label) continue; // pad-group clusters (_sink/_src) have empty labels
+
+        const parts = label.split('\\n');
+        const type = (parts[0] || '').trim();
+        const name = (parts[1] || '').trim();
+        if (!name) continue;
+
+        elements.push({ clusterId, name, type });
+    }
+    return elements;
+}
+
+function createOverlayElement(dot_info, fname, focusClusterId) {
     let overlay = document.getElementById("overlay");
     if (overlay) {
         console.warn('Overlay already exists');
@@ -79,7 +114,7 @@ function createOverlayElement(dot_info, fname) {
     // Render with d3-graphviz via SvgOverlayManager
     const manager = new window.SvgOverlayManager();
     overlayDiv._svgManager = manager;
-    manager.init(dot_info.content, fname);
+    manager.init(dot_info.content, fname, focusClusterId);
 
     return overlayDiv;
 }
@@ -148,6 +183,8 @@ async function createNewDotDiv(pipelines_div, dot_info) {
     previewDiv.className = "preview";
     previewDiv.dot_info = dot_info;
 
+    div._elements = parseElements(dot_info.content);
+
     const observer = new IntersectionObserver((entries, observer) => {
         for (const entry of entries) {
             if (entry.isIntersecting) {
@@ -166,6 +203,7 @@ async function createNewDotDiv(pipelines_div, dot_info) {
     div.appendChild(previewDiv);
 
     div.onclick = function () {
+        unsetUrlVariable('element');
         setUrlVariable('pipeline', div.id);
         createOverlayElement(previewDiv.dot_info, dot_info.name);
     };
@@ -202,6 +240,7 @@ export function updateFromUrl(noHistoryUpdate) {
     if (window.location.search) {
         const url = new URL(window.location.href);
         const pipeline = url.searchParams.get('pipeline');
+        const element = url.searchParams.get('element');
         if (pipeline) {
             console.log(`Opening overlay for ${pipeline}`);
             let div = document.getElementById(pipeline);
@@ -211,7 +250,7 @@ export function updateFromUrl(noHistoryUpdate) {
             }
             let previewDiv = div.querySelector('.preview');
             if (previewDiv && previewDiv.dot_info) {
-                createOverlayElement(previewDiv.dot_info, pipeline);
+                createOverlayElement(previewDiv.dot_info, pipeline, element);
             }
         }
     }
@@ -367,11 +406,158 @@ function updateSearch() {
     }
 }
 
+/**
+ * Opens the pipeline overlay for `pipelineId` and zooms to `clusterId`.
+ */
+function openElement(pipelineId, clusterId) {
+    const div = document.getElementById(pipelineId);
+    if (!div) {
+        console.warn(`Pipeline ${pipelineId} not found`);
+        return;
+    }
+    const previewDiv = div.querySelector('.preview');
+    if (!previewDiv || !previewDiv.dot_info) return;
+
+    removePipelineOverlay(true);
+    setUrlVariable('pipeline', pipelineId);
+    setUrlVariable('element', clusterId);
+    createOverlayElement(previewDiv.dot_info, previewDiv.dot_info.name, clusterId);
+}
+
+function clearElementResults() {
+    const results = document.getElementById('search-results');
+    if (results) {
+        results.innerHTML = '';
+        results.style.display = 'none';
+    }
+    activeResultIndex = -1;
+}
+
+/**
+ * Highlights the result row at `idx` (with wrap-around) and scrolls it into
+ * view. Keeps `activeResultIndex` in sync for Enter/click selection.
+ */
+function setActiveResult(idx) {
+    const rows = document.querySelectorAll('#search-results .search-result');
+    if (rows.length === 0) {
+        activeResultIndex = -1;
+        return;
+    }
+    if (idx < 0) idx = rows.length - 1;
+    if (idx >= rows.length) idx = 0;
+    activeResultIndex = idx;
+    rows.forEach((r, i) => r.classList.toggle('active', i === idx));
+    rows[idx].scrollIntoView({ block: 'nearest' });
+}
+
+/**
+ * Builds a flat searchable list of every element across all loaded pipelines.
+ */
+function collectElements() {
+    const list = [];
+    document.querySelectorAll('.pipelineDiv').forEach(div => {
+        if (!div._elements) return;
+        const pipelineName = div.querySelector('h2').textContent;
+        for (const el of div._elements) {
+            list.push({
+                pipelineId: div.id,
+                pipelineName,
+                clusterId: el.clusterId,
+                name: el.name,
+                type: el.type,
+            });
+        }
+    });
+    return list;
+}
+
+/**
+ * Fuzzy-matches the query against element names across all pipelines and
+ * renders a results dropdown. Selecting a result opens the right pipeline and
+ * zooms to the element.
+ */
+function updateElementSearch(query) {
+    const results = document.getElementById('search-results');
+    if (!results) return;
+
+    if (!query) {
+        clearElementResults();
+        return;
+    }
+
+    const list = collectElements();
+    const fuse = new window.Fuse(list, {
+        includeScore: true,
+        threshold: 0.4,
+        ignoreLocation: true,
+        keys: ['name', 'type'],
+    });
+    const matches = fuse.search(query).slice(0, 50);
+
+    results.innerHTML = '';
+    if (matches.length === 0) {
+        results.style.display = 'none';
+        return;
+    }
+
+    for (const { item } of matches) {
+        const row = document.createElement('div');
+        row.className = 'search-result';
+        row.innerHTML =
+            `<span class="sr-name"></span>` +
+            `<span class="sr-type"></span>` +
+            `<span class="sr-pipeline"></span>`;
+        row.querySelector('.sr-name').textContent = item.name;
+        row.querySelector('.sr-type').textContent = item.type;
+        row.querySelector('.sr-pipeline').textContent = item.pipelineName.replace('.dot', '');
+        row.addEventListener('mousedown', (e) => {
+            // mousedown (not click) so it fires before the input blur hides us
+            e.preventDefault();
+            clearElementResults();
+            openElement(item.pipelineId, item.clusterId);
+        });
+        row.addEventListener('mouseenter', () => {
+            setActiveResult(Array.prototype.indexOf.call(results.children, row));
+        });
+        results.appendChild(row);
+    }
+    results.style.display = 'block';
+    setActiveResult(0);
+}
+
 export function connectSearch() {
     const input = document.getElementById('search');
     input.addEventListener('input', function () {
         updateSearch();
+        updateElementSearch(input.value.trim());
+    });
 
+    input.addEventListener('keydown', function (e) {
+        const rows = document.querySelectorAll('#search-results .search-result');
+        if (e.key === 'ArrowDown') {
+            if (rows.length) {
+                e.preventDefault();
+                setActiveResult(activeResultIndex + 1);
+            }
+        } else if (e.key === 'ArrowUp') {
+            if (rows.length) {
+                e.preventDefault();
+                setActiveResult(activeResultIndex - 1);
+            }
+        } else if (e.key === 'Enter') {
+            const target = rows[activeResultIndex] || rows[0];
+            if (target) {
+                e.preventDefault();
+                target.dispatchEvent(new MouseEvent('mousedown'));
+            }
+        } else if (e.key === 'Escape') {
+            clearElementResults();
+        }
+    });
+
+    input.addEventListener('blur', function () {
+        // Delay so a result's mousedown can run before we hide the list
+        setTimeout(clearElementResults, 150);
     });
 }
 
@@ -386,6 +572,7 @@ export function removePipelineOverlay(noHistoryUpdate) {
     overlay.parentNode.removeChild(overlay);
     if (!noHistoryUpdate) {
         unsetUrlVariable('pipeline');
+        unsetUrlVariable('element');
     }
     updateSearch();
 }

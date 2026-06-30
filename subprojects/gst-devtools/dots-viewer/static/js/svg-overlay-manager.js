@@ -15,8 +15,10 @@ class SvgOverlayManager {
         this.pipelineTitle = '';
         this._nodesByName = {};
         this._edgesByName = {};
+        this._clustersById = {};
         this._capsMap = {};
         this._highlighted = false;
+        this._focusClusterId = null;
         this._abortController = new AbortController();
     }
 
@@ -35,8 +37,9 @@ class SvgOverlayManager {
      * @param {string} dotContent - DOT graph content to render
      * @param {string} pipelineTitle - Title of the pipeline
      */
-    async init(dotContent, pipelineTitle) {
+    async init(dotContent, pipelineTitle, focusClusterId) {
         this.pipelineTitle = pipelineTitle || '';
+        this._focusClusterId = focusClusterId || null;
 
         this.tooltipManager = new TooltipManager();
         this.pipelineNavigationManager = new PipelineNavigationManager(this.tooltipManager);
@@ -78,6 +81,40 @@ class SvgOverlayManager {
         this.setupKeyboardShortcuts();
         this.setupSaveSvg();
         this.processSvgContent(svg);
+
+        if (this._focusClusterId) {
+            this.focusCluster(this._focusClusterId);
+        }
+    }
+
+    /**
+     * Zooms to and visually emphasizes the element cluster with the given id
+     * (the graphviz subgraph name, e.g. "cluster_node_queue0_0x...").
+     * Used by the element search to jump straight to a searched element.
+     * @param {string} clusterId - The cluster subgraph name to focus
+     */
+    focusCluster(clusterId) {
+        const cluster = this._clustersById[clusterId];
+        if (!cluster) {
+            console.warn(`Cluster ${clusterId} not found in this pipeline`);
+            return;
+        }
+
+        this._zoomToElement(cluster);
+
+        /* Pulse a glow on the focused cluster so it stands out after the jump.
+         * Cleared on the next background click (alongside the highlight). */
+        document.querySelectorAll('#graph .cluster.focused-cluster')
+            .forEach(el => el.classList.remove('focused-cluster'));
+        cluster.classList.add('focused-cluster');
+    }
+
+    /**
+     * Removes the focus emphasis added by focusCluster().
+     */
+    _clearFocus() {
+        document.querySelectorAll('#graph .cluster.focused-cluster')
+            .forEach(el => el.classList.remove('focused-cluster'));
     }
 
     /**
@@ -194,6 +231,14 @@ class SvgOverlayManager {
     _indexElements(svg) {
         this._nodesByName = {};
         this._edgesByName = {};
+        this._clustersById = {};
+
+        svg.querySelectorAll('.cluster').forEach(cluster => {
+            const title = cluster.querySelector('title');
+            if (title) {
+                this._clustersById[title.textContent.trim()] = cluster;
+            }
+        });
 
         svg.querySelectorAll('.node').forEach(node => {
             const title = node.querySelector('title');
@@ -328,6 +373,7 @@ class SvgOverlayManager {
         if (svg) {
             svg.addEventListener('click', () => {
                 that._highlight(null);
+                that._clearFocus();
             });
         }
     }
