@@ -314,6 +314,8 @@ struct DeviceInner
   DWORD budget_change_cb_cookie = 0;
   std::atomic<guint64> current_budget = { 0 };
   std::atomic<gint64> resident_size = { 0 };
+  double overbudget_factor = 0.8;
+  std::atomic<bool> is_over_budget = { false };
 
   std::vector<GstD3D12Device*> clients;
 
@@ -2891,12 +2893,26 @@ gst_d3d12_device_update_resident_size (GstD3D12Device * device, gint64 size)
   auto priv = device->priv->inner;
   priv->resident_size += size;
 
+  auto cur_s = priv->resident_size.load ();
+  auto cur_b = priv->current_budget.load ();
+
+  priv->is_over_budget = cur_b > 0 &&
+      (double) cur_s >= cur_b * priv->overbudget_factor;
+
 #ifndef GST_DISABLE_GST_DEBUG
   if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_TRACE) {
-    auto cur_size = priv->resident_size.load () / 1024 / 1024;
-    auto cur_budget = priv->current_budget.load () / 1024 / 1024;
+    auto cur_size = cur_s / 1024 / 1024;
+    auto cur_budget = cur_b / 1024 / 1024;
     GST_TRACE_OBJECT (device, "Budget: %" G_GUINT64_FORMAT
         " MB, Current: %" G_GINT64_FORMAT " MB", cur_budget, cur_size);
   }
 #endif
+}
+
+gboolean
+gst_d3d12_device_is_over_budget (GstD3D12Device * device)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);
+
+  return device->priv->inner->is_over_budget.load ();
 }

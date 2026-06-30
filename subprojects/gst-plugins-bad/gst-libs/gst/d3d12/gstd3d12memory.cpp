@@ -30,7 +30,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
-#include <queue>
+#include <deque>
 #include <vector>
 #include <map>
 #include <memory>
@@ -1745,7 +1745,7 @@ struct _GstD3D12PoolAllocatorPrivate
   D3D12_CLEAR_VALUE clear_value;
   gboolean clear_value_is_valid = FALSE;
 
-  std::queue<GstMemory *> queue;
+  std::deque<GstMemory *> queue;
 
   std::mutex lock;
   std::condition_variable cond;
@@ -1843,7 +1843,7 @@ gst_d3d12_pool_allocator_start (GstD3D12PoolAllocator * self)
         self->device, priv->resource.Get (), i, nullptr, nullptr);
 
     priv->cur_mems++;
-    priv->queue.push (mem);
+    priv->queue.push_back (mem);
   }
 
   priv->started = TRUE;
@@ -1919,7 +1919,7 @@ gst_d3d12_pool_allocator_clear_queue (GstD3D12PoolAllocator * self)
 
   while (!priv->queue.empty ()) {
     GstMemory *mem = priv->queue.front ();
-    priv->queue.pop ();
+    priv->queue.pop_front ();
     gst_d3d12_pool_allocator_free_memory (self, mem);
   }
 
@@ -1945,6 +1945,29 @@ gst_d3d12_pool_allocator_stop (GstD3D12PoolAllocator * self)
   return TRUE;
 }
 
+/* Must be called with lock */
+static void
+gst_d3d12_pool_allocator_try_evict (GstD3D12PoolAllocator * self)
+{
+  auto priv = self->priv;
+
+  /* Don't try to evict in case of texture-array */
+  if (priv->desc.DepthOrArraySize > 1 ||
+      !gst_d3d12_device_is_over_budget (self->device)) {
+    return;
+  }
+
+  /* Evict all except for the last one */
+  auto size = priv->queue.size ();
+  for (size_t i = 0; i + 1 < size; i++) {
+    auto mem = (GstD3D12Memory *) priv->queue[i];
+
+    /* Do not need to upload unused memory. Remove the flag */
+    GST_MINI_OBJECT_FLAG_UNSET (mem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
+    gst_d3d12_memory_evict (mem);
+  }
+}
+
 static void
 gst_d3d12_pool_allocator_release_memory (GstD3D12PoolAllocator * self,
     GstMemory * mem)
@@ -1957,10 +1980,12 @@ gst_d3d12_pool_allocator_release_memory (GstD3D12PoolAllocator * self,
   mem->allocator = (GstAllocator *) gst_object_ref (_d3d12_memory_allocator);
 
   /* keep it around in our queue */
-  priv->queue.push (mem);
+  priv->queue.push_back (mem);
   priv->outstanding--;
   if (priv->outstanding == 0 && priv->flushing)
     gst_d3d12_pool_allocator_stop (self);
+  else
+    gst_d3d12_pool_allocator_try_evict (self);
   priv->cond.notify_all ();
   priv->lock.unlock ();
 
@@ -2037,8 +2062,8 @@ gst_d3d12_pool_allocator_acquire_memory_internal (GstD3D12PoolAllocator * self,
     }
 
     if (!priv->queue.empty ()) {
-      *memory = priv->queue.front ();
-      priv->queue.pop ();
+      *memory = priv->queue.back ();
+      priv->queue.pop_back ();
       GST_LOG_OBJECT (self, "acquired memory %p", *memory);
       return GST_FLOW_OK;
     }
@@ -2136,8 +2161,20 @@ gst_d3d12_pool_allocator_acquire_memory (GstD3D12PoolAllocator * allocator,
   ret = gst_d3d12_pool_allocator_acquire_memory_internal (allocator,
       memory, lk);
 
+  gst_d3d12_pool_allocator_try_evict (allocator);
+
   if (ret == GST_FLOW_OK) {
     GstMemory *mem = *memory;
+
+    if (!gst_d3d12_memory_make_resident (GST_D3D12_MEMORY_CAST (mem))) {
+      lk.unlock ();
+
+      GST_ERROR_OBJECT (allocator, "Couldn't make resident");
+      gst_memory_unref (mem);
+      *memory = nullptr;
+      return GST_FLOW_ERROR;
+    }
+
     /* Replace default allocator with ours */
     gst_object_unref (mem->allocator);
     mem->allocator = (GstAllocator *) gst_object_ref (allocator);
