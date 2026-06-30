@@ -43,12 +43,10 @@ typedef struct _GstVulkanDependencyFrame GstVulkanDependencyFrame;
 struct _GstVulkanDependencyFrame
 {
   GstVulkanImageMemory *mem[GST_VIDEO_MAX_PLANES];
+  GstVulkanBarrierImageInfo old_info[GST_VIDEO_MAX_PLANES];
+  GstVulkanBarrierImageInfo new_info[GST_VIDEO_MAX_PLANES];
   gboolean updated;
   gboolean semaphored;
-  guint64 dst_stage;
-  guint64 new_access;
-  VkImageLayout new_layout;
-  GstVulkanQueue *new_queue;
 };
 
 struct _GstVulkanOperationPrivate
@@ -245,16 +243,17 @@ gst_vulkan_operation_class_init (GstVulkanOperationClass * klass)
 }
 
 static void
-_dependency_frame_free (gpointer data)
+_dependency_frame_clear (gpointer data)
 {
   GstVulkanDependencyFrame *frame = data;
   guint i;
 
   for (i = 0; i < GST_VIDEO_MAX_PLANES && frame->mem[i] != NULL; i++) {
     gst_memory_unref (GST_MEMORY_CAST (frame->mem[i]));
+    gst_vulkan_barrier_image_info_clear (&frame->old_info[i]);
+    gst_vulkan_barrier_image_info_clear (&frame->new_info[i]);
     frame->mem[i] = NULL;
   }
-  gst_clear_object (&frame->new_queue);
 }
 
 static GArray *
@@ -265,7 +264,7 @@ _get_dependency_frames (GstVulkanOperation * self)
   if (!priv->deps.frames) {
     priv->deps.frames =
         g_array_new (FALSE, FALSE, sizeof (GstVulkanDependencyFrame));
-    g_array_set_clear_func (priv->deps.frames, _dependency_frame_free);
+    g_array_set_clear_func (priv->deps.frames, _dependency_frame_clear);
   }
 
   return priv->deps.frames;
@@ -369,8 +368,6 @@ gst_vulkan_operation_submit2 (GstVulkanOperation * self, GstVulkanFence * fence,
   VkSubmitInfo2KHR submit_info;
   VkResult err;
 
-  GST_OBJECT_LOCK (self);
-
   /* *INDENT-OFF* */
   cmd_buf_info = (VkCommandBufferSubmitInfoKHR) {
     .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO_KHR,
@@ -397,8 +394,6 @@ gst_vulkan_operation_submit2 (GstVulkanOperation * self, GstVulkanFence * fence,
       GST_VULKAN_FENCE_FENCE (fence));
   gst_vulkan_queue_submit_unlock (priv->cmd_pool->queue);
 
-  GST_OBJECT_UNLOCK (self);
-
   if (gst_vulkan_error_to_g_error (err, error, "vkQueueSubmit2KHR") < 0)
     goto error;
 
@@ -421,7 +416,6 @@ gst_vulkan_operation_submit1 (GstVulkanOperation * self, GstVulkanFence * fence,
   VkSubmitInfo submit_info;
   VkResult err;
 
-  GST_OBJECT_LOCK (self);
   /* *INDENT-OFF* */
 #if defined(VK_KHR_timeline_semaphore)
   if (priv->has_timeline) {
@@ -464,12 +458,109 @@ gst_vulkan_operation_submit1 (GstVulkanOperation * self, GstVulkanFence * fence,
   err = vkQueueSubmit (priv->cmd_pool->queue->queue, 1, &submit_info,
       GST_VULKAN_FENCE_FENCE (fence));
   gst_vulkan_queue_submit_unlock (priv->cmd_pool->queue);
-  GST_OBJECT_UNLOCK (self);
 
   if (gst_vulkan_error_to_g_error (err, error, "vkQueueSubmit") < 0)
     return FALSE;
 
   return TRUE;
+}
+
+struct barrier_lock
+{
+  GstVulkanImageMemory *img;
+  int frame_i;
+  int mem_i;
+};
+
+static int
+cmp_barrier_lock (const struct barrier_lock *mem1,
+    const struct barrier_lock *mem2, gpointer user_data)
+{
+  if (mem1->img == mem2->img)
+    return 0;
+  else if (mem1->img < mem2->img)
+    return -1;
+  else
+    return 1;
+}
+
+static gboolean
+take_new_barriers (GstVulkanOperation * op)
+{
+  GstVulkanOperationPrivate *priv = GET_PRIV (op);
+  struct barrier_lock *locks;
+  gboolean ret = TRUE;
+  gsize n_frames = priv->deps.frames ? priv->deps.frames->len : 0;
+  gsize n_locks = 0;
+  int i, j;
+
+  locks =
+      g_alloca0 (sizeof (struct barrier_lock) * n_frames *
+      GST_VIDEO_MAX_PLANES);
+
+  for (i = 0; i < n_frames; i++) {
+    GstVulkanDependencyFrame *frame =
+        &g_array_index (priv->deps.frames, GstVulkanDependencyFrame, i);
+
+    for (j = 0; j < GST_VIDEO_MAX_PLANES && frame->mem[j] != NULL; j++) {
+      locks[n_locks].img = frame->mem[j];
+      locks[n_locks].frame_i = i;
+      locks[n_locks].mem_i = j;
+      n_locks++;
+    }
+  }
+
+  // dynamic locking order to avoid deadlocks, sort the list of memories to lock.
+  g_sort_array (locks, n_locks, sizeof (struct barrier_lock),
+      (GCompareDataFunc) cmp_barrier_lock, NULL);
+
+  for (i = 0; i < n_locks; i++) {
+    gst_vulkan_image_memory_lock (locks[i].img);
+  }
+
+  for (i = 0; i < n_locks; i++) {
+    GstVulkanDependencyFrame *frame =
+        &g_array_index (priv->deps.frames, GstVulkanDependencyFrame,
+        locks[i].frame_i);
+    int mem_i = locks[i].mem_i;
+
+    if (frame->semaphored)
+      frame->new_info[mem_i].parent.semaphore_value++;
+
+    if (frame->updated) {
+      if (!gst_vulkan_image_memory_compare_exchange_barrier_unlocked
+          (frame->mem[mem_i], &frame->old_info[mem_i],
+              &frame->new_info[mem_i])) {
+        // updated barrier info failed to apply, need to unwind and redo the operation.
+        i--;
+        goto undo;
+      }
+    }
+  }
+
+  if (0) {
+  undo:
+    ret = FALSE;
+    for (; i >= 0; i--) {
+      GstVulkanDependencyFrame *frame =
+          &g_array_index (priv->deps.frames, GstVulkanDependencyFrame,
+          locks[i].frame_i);
+      int mem_i = locks[i].mem_i;
+      // resetting to the original barrier information should always succeed
+      // unless another thread is modifying the same barrier without the
+      // relevant locking.
+      if (!gst_vulkan_image_memory_compare_exchange_barrier_unlocked
+          (frame->mem[mem_i], &frame->new_info[mem_i], &frame->old_info[mem_i]))
+        g_warn_if_reached ();
+
+    }
+  }
+
+  for (i = 0; i < n_locks; i++) {
+    gst_vulkan_image_memory_unlock (locks[i].img);
+  }
+
+  return ret;
 }
 
 /**
@@ -495,7 +586,6 @@ gst_vulkan_operation_end (GstVulkanOperation * self, GError ** error)
   GstVulkanFence *fence;
   GstVulkanDevice *device;
   VkResult err;
-  guint i, j;
 
   g_return_val_if_fail (GST_IS_VULKAN_OPERATION (self), FALSE);
 
@@ -514,8 +604,18 @@ gst_vulkan_operation_end (GstVulkanOperation * self, GError ** error)
   gst_vulkan_command_buffer_lock (self->cmd_buf);
   err = vkEndCommandBuffer (self->cmd_buf->cmd);
   gst_vulkan_command_buffer_unlock (self->cmd_buf);
-  if (gst_vulkan_error_to_g_error (err, error, "vkEndCommandBuffer") < 0)
+  if (gst_vulkan_error_to_g_error (err, error, "vkEndCommandBuffer") < 0) {
+    gst_vulkan_fence_unref (fence);
     return FALSE;
+  }
+
+  GST_OBJECT_LOCK (self);
+
+  if (!take_new_barriers (self)) {
+    gst_vulkan_error_to_g_error (VK_ERROR_OUT_OF_DATE_KHR, error,
+        "barrier update failed");
+    goto bail;
+  }
 
   if (priv->has_sync2) {
     if (!gst_vulkan_operation_submit2 (self, fence, error))
@@ -528,30 +628,35 @@ gst_vulkan_operation_end (GstVulkanOperation * self, GError ** error)
           gst_vulkan_trash_mini_object_unref,
           GST_MINI_OBJECT_CAST (self->cmd_buf)));
 
-  gst_vulkan_fence_unref (fence);
+  if (priv->deps.frames) {
+    for (int i = 0; i < priv->deps.frames->len; i++) {
+      GstVulkanDependencyFrame *frame =
+          &g_array_index (priv->deps.frames, GstVulkanDependencyFrame, i);
 
-  gst_vulkan_trash_list_gc (priv->trash_list);
+      if (!frame->semaphored)
+        continue;
 
-  GST_OBJECT_LOCK (self);
+      frame->updated = FALSE;
+      frame->semaphored = FALSE;
 
-  for (i = 0; priv->deps.frames && i < priv->deps.frames->len; i++) {
-    GstVulkanDependencyFrame *frame =
-        &g_array_index (priv->deps.frames, GstVulkanDependencyFrame, i);
+      for (int j = 0; j < GST_VIDEO_MAX_PLANES && frame->mem[j]; j++) {
+        if (frame->old_info[j].parent.semaphore) {
+          gst_vulkan_trash_list_add (priv->trash_list,
+              gst_vulkan_trash_list_acquire (priv->trash_list, fence,
+                  gst_vulkan_trash_mini_object_unref,
+                  gst_mini_object_ref (GST_MINI_OBJECT_CAST (frame->
+                          old_info[j].parent.semaphore))));
+        }
 
-    for (j = 0; j < GST_VIDEO_MAX_PLANES && frame->mem[j] != NULL; j++) {
-      if (frame->updated) {
-        frame->mem[j]->barrier.parent.pipeline_stages = frame->dst_stage;
-        frame->mem[j]->barrier.parent.access_flags = frame->new_access;
-        frame->mem[j]->barrier.parent.queue = frame->new_queue;
-        frame->mem[j]->barrier.image_layout = frame->new_layout;
+        if (frame->new_info[j].parent.semaphore) {
+          gst_vulkan_trash_list_add (priv->trash_list,
+              gst_vulkan_trash_list_acquire (priv->trash_list, fence,
+                  gst_vulkan_trash_mini_object_unref,
+                  gst_mini_object_ref (GST_MINI_OBJECT_CAST (frame->
+                          new_info[j].parent.semaphore))));
+        }
       }
-
-      if (frame->semaphored)
-        frame->mem[j]->barrier.parent.semaphore_value++;
     }
-
-    frame->updated = FALSE;
-    frame->semaphored = FALSE;
   }
 
   g_clear_pointer (&priv->barriers, g_array_unref);
@@ -561,11 +666,16 @@ gst_vulkan_operation_end (GstVulkanOperation * self, GError ** error)
 
   GST_OBJECT_UNLOCK (self);
 
+  gst_vulkan_fence_unref (fence);
+
+  gst_vulkan_trash_list_gc (priv->trash_list);
+
   gst_vulkan_operation_discard_dependencies (self);
 
   return TRUE;
 
 bail:
+  GST_OBJECT_UNLOCK (self);
   gst_vulkan_fence_unref (fence);
   gst_vulkan_operation_reset (self);
   return FALSE;
@@ -632,21 +742,27 @@ _dep_set_buffer (GstVulkanDependencyFrame * dep, GstBuffer * buffer)
       return;
     }
 
-    dep->mem[i] = (GstVulkanImageMemory *) gst_memory_ref (mem);
+    GstVulkanImageMemory *vkmem = (GstVulkanImageMemory *) gst_memory_ref (mem);
+
+    dep->mem[i] = vkmem;
+    gst_vulkan_image_memory_lock (vkmem);
+    gst_vulkan_image_memory_peek_barrier_unlocked (vkmem, &dep->old_info[i]);
+    gst_vulkan_image_memory_unlock (vkmem);
+    gst_vulkan_barrier_image_info_copy_into (&dep->old_info[i],
+        &dep->new_info[i]);
   }
 
   for (; i < GST_VIDEO_MAX_PLANES; i++)
     dep->mem[i] = NULL;
 }
 
-static void
-gst_vulkan_operation_update_frame_unlocked (GstVulkanOperation * self,
-    GstBuffer * frame, guint64 dst_stage, guint64 new_access,
-    VkImageLayout new_layout, GstVulkanQueue * new_queue)
+static GstVulkanDependencyFrame *
+ensure_dep_frame (GstVulkanOperation * self, GstBuffer * frame,
+    gboolean * created)
 {
   GArray *frames;
-  guint i;
   GstVulkanDependencyFrame *dep_frame = NULL;
+  int i;
 
   frames = _get_dependency_frames (self);
   for (i = 0; i < frames->len; i++) {
@@ -663,13 +779,32 @@ gst_vulkan_operation_update_frame_unlocked (GstVulkanOperation * self,
     g_array_append_val (frames, dframe);
     dep_frame =
         &g_array_index (frames, GstVulkanDependencyFrame, frames->len - 1);
+    if (created)
+      *created = TRUE;
+  } else {
+    if (created)
+      *created = FALSE;
   }
 
+  return dep_frame;
+}
+
+static void
+gst_vulkan_operation_update_frame_unlocked (GstVulkanOperation * self,
+    GstBuffer * frame, guint64 dst_stage, guint64 new_access,
+    VkImageLayout new_layout, GstVulkanQueue * new_queue)
+{
+  GstVulkanDependencyFrame *dep_frame = ensure_dep_frame (self, frame, NULL);
+  guint i;
+
   dep_frame->updated = TRUE;
-  dep_frame->dst_stage = dst_stage;
-  dep_frame->new_access = new_access;
-  dep_frame->new_layout = new_layout;
-  dep_frame->new_queue = new_queue ? gst_object_ref (new_queue) : NULL;
+  for (i = 0; i < GST_VIDEO_MAX_PLANES && dep_frame->mem[i]; i++) {
+    dep_frame->new_info[i].parent.pipeline_stages = dst_stage;
+    dep_frame->new_info[i].parent.access_flags = new_access;
+    dep_frame->new_info[i].image_layout = new_layout;
+    gst_object_replace ((GstObject **) & dep_frame->new_info[i].parent.queue,
+        (GstObject *) new_queue);
+  }
 }
 
 /**
@@ -897,7 +1032,8 @@ gst_vulkan_operation_add_frame_barrier (GstVulkanOperation * self,
   GstVulkanOperationPrivate *priv;
 #endif
   GstVulkanDependencyFrame *dep_frame = NULL;
-  GArray *frames, *barriers;
+  GArray *barriers;
+  gboolean new_dep = FALSE;
 
   g_return_val_if_fail (GST_IS_VULKAN_OPERATION (self), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (frame), FALSE);
@@ -908,20 +1044,13 @@ gst_vulkan_operation_add_frame_barrier (GstVulkanOperation * self,
   n_mems = gst_buffer_n_memory (frame);
 
   GST_OBJECT_LOCK (self);
+
   barriers = _get_image_barriers_unlocked (self);
 
-  frames = _get_dependency_frames (self);
-  for (i = 0; i < frames->len; i++) {
-    dep_frame = &g_array_index (frames, GstVulkanDependencyFrame, i);
-    if (_dep_has_buffer (dep_frame, frame))
-      break;
-  }
-
-  if (i >= frames->len || !(dep_frame && dep_frame->updated))
-    dep_frame = NULL;
+  dep_frame = ensure_dep_frame (self, frame, &new_dep);
 
   for (i = 0; i < n_mems; i++) {
-    guint32 queue_familiy_index = VK_QUEUE_FAMILY_IGNORED;
+    guint32 queue_family_index = VK_QUEUE_FAMILY_IGNORED;
     GstVulkanImageMemory *vkmem;
     GstMemory *mem = gst_buffer_peek_memory (frame, i);
 
@@ -934,10 +1063,8 @@ gst_vulkan_operation_add_frame_barrier (GstVulkanOperation * self,
 
     vkmem = (GstVulkanImageMemory *) mem;
 
-    if (dep_frame && dep_frame->new_queue)
-      queue_familiy_index = dep_frame->new_queue->family;
-    else if (vkmem->barrier.parent.queue)
-      queue_familiy_index = vkmem->barrier.parent.queue->family;
+    if (dep_frame->new_info[i].parent.queue)
+      queue_family_index = dep_frame->new_info[i].parent.queue->family;
 
     /* *INDENT-OFF* */
 #if defined(VK_KHR_synchronization2)
@@ -947,17 +1074,15 @@ gst_vulkan_operation_add_frame_barrier (GstVulkanOperation * self,
         .pNext = NULL,
         .srcStageMask = src_stage,
         .dstStageMask = dst_stage,
-        .srcAccessMask = dep_frame ?
-            dep_frame->new_access : vkmem->barrier.parent.access_flags,
+        .srcAccessMask = dep_frame->new_info[i].parent.access_flags,
         .dstAccessMask = new_access,
-        .oldLayout = dep_frame ?
-            dep_frame->new_layout : vkmem->barrier.image_layout,
+        .oldLayout = dep_frame->new_info[i].image_layout,
         .newLayout = new_layout,
-        .srcQueueFamilyIndex = queue_familiy_index,
+        .srcQueueFamilyIndex = queue_family_index,
         .dstQueueFamilyIndex = new_queue ?
             new_queue->family : VK_QUEUE_FAMILY_IGNORED,
         .image = vkmem->image,
-        .subresourceRange = vkmem->barrier.subresource_range,
+        .subresourceRange = dep_frame->new_info[i].subresource_range,
       };
 
       g_array_append_val (barriers, barrier2);
@@ -981,7 +1106,7 @@ gst_vulkan_operation_add_frame_barrier (GstVulkanOperation * self,
         .dstAccessMask = (VkAccessFlags) new_access,
         .oldLayout = vkmem->barrier.image_layout,
         .newLayout = new_layout,
-        .srcQueueFamilyIndex = queue_familiy_index,
+        .srcQueueFamilyIndex = queue_family_index,
         .dstQueueFamilyIndex = new_queue ?
             new_queue->family : VK_QUEUE_FAMILY_IGNORED,
         .image = vkmem->image,
@@ -995,6 +1120,7 @@ gst_vulkan_operation_add_frame_barrier (GstVulkanOperation * self,
 
   gst_vulkan_operation_update_frame_unlocked (self, frame, dst_stage,
       new_access, new_layout, new_queue);
+
   GST_OBJECT_UNLOCK (self);
 
   return TRUE;

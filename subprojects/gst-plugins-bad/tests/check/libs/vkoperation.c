@@ -157,6 +157,98 @@ GST_START_TEST (test_barrier_update)
 
 GST_END_TEST;
 
+GST_START_TEST (test_barrier_update_concurrent)
+{
+  GstVulkanOperation *op = gst_vulkan_operation_new (cmd_pool);
+  GstBufferPool *pool = create_buffer_pool ("RGBA",
+      VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+      VK_IMAGE_LAYOUT_UNDEFINED, 0);
+  GstVulkanImageMemory *image;
+  GstVulkanBarrierImageInfo old_info = { 0, }, new_info = { 0, };
+  GstBuffer *buffer;
+  GError *error = NULL;
+  GstFlowReturn ret;
+
+  fail_unless (gst_vulkan_operation_begin (op, &error));
+  fail_if (error);
+
+  ret = gst_buffer_pool_acquire_buffer (pool, &buffer, NULL);
+  fail_unless (ret == GST_FLOW_OK);
+
+  image = (GstVulkanImageMemory *) gst_buffer_peek_memory (buffer, 0);
+  fail_unless_equals_int (image->barrier.image_layout,
+      VK_IMAGE_LAYOUT_UNDEFINED);
+  fail_unless_equals_int (image->barrier.parent.pipeline_stages,
+      VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+  fail_unless_equals_int (image->barrier.parent.access_flags, 0);
+  gst_vulkan_image_memory_lock (image);
+  gst_vulkan_image_memory_peek_barrier_unlocked (image, &old_info);
+  gst_vulkan_image_memory_unlock (image);
+
+  // Start with one barrier
+  fail_unless (gst_vulkan_operation_add_dependency_frame (op, buffer,
+          VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT));
+
+  fail_unless (gst_vulkan_operation_add_frame_barrier (op, buffer,
+          VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+          VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_GENERAL, NULL));
+
+  // while operation is in progress, change the image memory barrier to
+  // something else.
+  gst_vulkan_barrier_image_info_copy_into (&old_info, &new_info);
+  new_info.parent.pipeline_stages = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+  gst_vulkan_image_memory_lock (image);
+  fail_unless (gst_vulkan_image_memory_compare_exchange_barrier_unlocked (image,
+          &old_info, &new_info));
+  fail_unless_equals_int (image->barrier.image_layout,
+      VK_IMAGE_LAYOUT_UNDEFINED);
+  fail_unless_equals_int (image->barrier.parent.pipeline_stages,
+      VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
+  fail_unless_equals_int (image->barrier.parent.access_flags, 0);
+  gst_vulkan_image_memory_unlock (image);
+
+  gst_vulkan_barrier_image_info_clear (&old_info);
+  gst_vulkan_barrier_image_info_clear (&new_info);
+
+  // The operation will fail as the original barrier is not the same as the
+  // image barrier.
+  fail_if (gst_vulkan_operation_end (op, &error));
+  fail_unless (error);
+  fail_unless_equals_int (error->code, VK_ERROR_OUT_OF_DATE_KHR);
+  g_clear_error (&error);
+
+  fail_unless_equals_int (image->barrier.image_layout,
+      VK_IMAGE_LAYOUT_UNDEFINED);
+  fail_unless_equals_int (image->barrier.parent.pipeline_stages,
+      VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
+  fail_unless_equals_int (image->barrier.parent.access_flags, 0);
+
+  // Redo the operation barrier without any conflicting change.
+  fail_unless (gst_vulkan_operation_begin (op, &error));
+  fail_if (error);
+  fail_unless (gst_vulkan_operation_add_dependency_frame (op, buffer,
+          VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT));
+
+  fail_unless (gst_vulkan_operation_add_frame_barrier (op, buffer,
+          VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+          VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_GENERAL, NULL));
+  fail_unless (gst_vulkan_operation_end (op, &error));
+  fail_if (error);
+
+  fail_unless_equals_int (image->barrier.image_layout, VK_IMAGE_LAYOUT_GENERAL);
+  fail_unless_equals_int (image->barrier.parent.pipeline_stages,
+      VK_PIPELINE_STAGE_TRANSFER_BIT);
+  fail_unless_equals_int (image->barrier.parent.access_flags,
+      VK_ACCESS_TRANSFER_READ_BIT);
+
+  gst_buffer_unref (buffer);
+  gst_buffer_pool_set_active (pool, FALSE);
+  gst_object_unref (pool);
+  gst_object_unref (op);
+}
+
+GST_END_TEST;
+
 static Suite *
 vkoperation_suite (void)
 {
@@ -174,6 +266,7 @@ vkoperation_suite (void)
     tcase_add_test (tc_basic, test_new);
     tcase_add_test (tc_basic, test_operation_empty);
     tcase_add_test (tc_basic, test_barrier_update);
+    tcase_add_test (tc_basic, test_barrier_update_concurrent);
   }
 
   return s;
