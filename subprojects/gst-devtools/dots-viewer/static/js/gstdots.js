@@ -18,61 +18,75 @@ function scheduleObserverActivation() {
     observerDebounceTimer = setTimeout(activatePendingObservers, OBSERVER_DEBOUNCE_MS);
 }
 
-/**
- * Parses element entries out of a GStreamer .dot file content.
- *
- * Each element/bin is emitted by GstDebug as
- *   subgraph cluster_node_<name>_<ptr> {
- *     ...
- *     label="<TypeName>\n<element-name>\n[state]...";
- * The cluster id (the subgraph name) matches the SVG cluster <title>, so we
- * keep it around to zoom straight to that element after the overlay renders.
- *
- * @param {string} content - Raw .dot file content
- * @returns {Array<{clusterId: string, name: string, type: string}>}
- */
-function parseElements(content) {
-    const elements = [];
-    if (!content) return elements;
+let graphvizPromise = null;
 
-    const re = /subgraph\s+(cluster_node_[A-Za-z0-9_]+)\s*\{[^]*?label="([^"]*)"/g;
-    let m;
-    while ((m = re.exec(content)) !== null) {
-        const clusterId = m[1];
-        const label = m[2];
-        if (!label) continue; // pad-group clusters (_sink/_src) have empty labels
-
-        const parts = label.split('\\n');
-        const type = (parts[0] || '').trim();
-        const name = (parts[1] || '').trim();
-        if (!name) continue;
-
-        elements.push({ clusterId, name, type });
+/** Loads (once) and returns the shared graphviz wasm instance. */
+function getGraphviz() {
+    if (!graphvizPromise) {
+        graphvizPromise = window.Graphviz.load();
     }
-    return elements;
+    return graphvizPromise;
 }
 
 /**
- * Extracts the top-level pipeline's name and type from a .dot file.
+ * Splits a GStreamer dot label into its type and object name.
  *
- * The pipeline is the `digraph` itself (not a cluster), labelled
- *   label="<GstPipeline>\n<name>\n[state]...";
- * so searching by pipeline name/type needs this separate from parseElements().
+ * GstDebug encodes both pipeline and element labels as
+ *   "<TypeName>\n<object-name>\n[state]...".
+ * This line convention is the one piece intrinsic to GStreamer's dump format;
+ * the graph structure itself is read from graphviz, not parsed by hand.
+ */
+function labelTypeName(label) {
+    const parts = (label || '').split('\\n');
+    return {
+        type: (parts[0] || '').replace(/[<>]/g, '').trim(),
+        name: (parts[1] || '').trim(),
+    };
+}
+
+/**
+ * Builds the search index for one .dot file by parsing it with graphviz
+ * (the same wasm used to render the overlay) rather than scraping the text.
+ *
+ * Each element/bin is a `cluster_node_<name>_<ptr>` subgraph whose name
+ * matches the SVG cluster <title>, so it can be used to zoom straight to that
+ * element. The top-level pipeline is the graph's own label.
+ *
+ * The `nop2` engine skips layout, so this is cheap (a few ms) and never lays
+ * the graph out twice.
  *
  * @param {string} content - Raw .dot file content
- * @returns {{name: string, type: string}|null}
+ * @returns {Promise<{elements: Array, pipeline: ({name,type}|null)}>}
  */
-function parsePipelineInfo(content) {
-    if (!content) return null;
-    const m = content.match(/digraph\s+[A-Za-z0-9_]+\s*\{[^]*?\blabel="([^"]*)"/);
-    if (!m) return null;
+async function buildSearchIndex(content) {
+    const empty = { elements: [], pipeline: null };
+    if (!content) return empty;
 
-    const parts = m[1].split('\\n');
-    const type = (parts[0] || '').replace(/[<>]/g, '').trim();
-    const name = (parts[1] || '').trim();
-    if (!name) return null;
+    let graph;
+    try {
+        const gv = await getGraphviz();
+        graph = JSON.parse(gv.layout(content, 'json', 'nop2'));
+    } catch (e) {
+        console.warn('dots search: could not parse graph for indexing', e);
+        return empty;
+    }
 
-    return { name, type };
+    const elements = [];
+    for (const obj of (graph.objects || [])) {
+        // Element/bin clusters carry a label; pad-group (_sink/_src) clusters
+        // have an empty one and are skipped.
+        if (!obj.name || !obj.name.startsWith('cluster_node_') || !obj.label) {
+            continue;
+        }
+        const { type, name } = labelTypeName(obj.label);
+        if (!name) continue;
+        elements.push({ clusterId: obj.name, name, type });
+    }
+
+    const { type, name } = labelTypeName(graph.label);
+    const pipeline = name ? { name, type } : null;
+
+    return { elements, pipeline };
 }
 
 function createOverlayElement(dot_info, fname, focusClusterId) {
@@ -206,8 +220,14 @@ async function createNewDotDiv(pipelines_div, dot_info) {
     previewDiv.className = "preview";
     previewDiv.dot_info = dot_info;
 
-    div._elements = parseElements(dot_info.content);
-    div._pipeline = parsePipelineInfo(dot_info.content);
+    // Index the graph for search asynchronously so the websocket handler
+    // isn't blocked; it's ready well before the user opens the search palette.
+    div._elements = [];
+    div._pipeline = null;
+    div._indexed = buildSearchIndex(dot_info.content).then((idx) => {
+        div._elements = idx.elements;
+        div._pipeline = idx.pipeline;
+    });
 
     const observer = new IntersectionObserver((entries, observer) => {
         for (const entry of entries) {
@@ -520,9 +540,12 @@ function setActiveResult(idx) {
 /**
  * Builds a flat searchable list of every element across all loaded pipelines.
  */
-function collectElements() {
+async function collectElements() {
+    const divs = Array.from(document.querySelectorAll('.pipelineDiv'));
+    await Promise.all(divs.map(div => div._indexed).filter(Boolean));
+
     const list = [];
-    document.querySelectorAll('.pipelineDiv').forEach(div => {
+    divs.forEach(div => {
         const pipelineName = div.querySelector('h2').textContent;
 
         // The pipeline (dot file) itself is searchable by its name, type and
@@ -555,12 +578,17 @@ function collectElements() {
     return list;
 }
 
+let searchSeq = 0;
+
 /**
- * Fuzzy-matches the query against element names across all pipelines and
- * renders a results dropdown. Selecting a result opens the right pipeline and
- * zooms to the element.
+ * Fuzzy-matches the query against pipelines and elements across all loaded
+ * dot files and renders a results dropdown. Selecting a result opens the right
+ * pipeline and (for elements) zooms to it.
+ *
+ * Async because the search index is parsed lazily by graphviz; a sequence
+ * guard discards results from a query the user has already typed past.
  */
-function updateElementSearch(query) {
+async function updateElementSearch(query) {
     const results = document.getElementById('search-results');
     if (!results) return;
 
@@ -569,7 +597,9 @@ function updateElementSearch(query) {
         return;
     }
 
-    const list = collectElements();
+    const seq = ++searchSeq;
+    const list = await collectElements();
+    if (seq !== searchSeq) return; // a newer query superseded this one
     const fuse = new window.Fuse(list, {
         includeScore: true,
         threshold: 0.4,
