@@ -511,6 +511,15 @@ export function toggleSearchPalette() {
     }
 }
 
+/**
+ * Returns the div id of the pipeline currently shown in the overlay, or null
+ * if no overlay is open. The open pipeline is tracked in the URL.
+ */
+function currentOverlayPipelineId() {
+    if (!document.getElementById('overlay')) return null;
+    return new URL(window.location.href).searchParams.get('pipeline');
+}
+
 function clearElementResults() {
     const results = document.getElementById('search-results');
     if (results) {
@@ -602,16 +611,23 @@ async function updateElementSearch(query) {
     if (seq !== searchSeq) return; // a newer query superseded this one
     const fuse = new window.Fuse(list, {
         includeScore: true,
-        threshold: 0.4,
+        // Keep this tight: every pipeline shares the "GstPipeline" type, so a
+        // loose threshold makes unrelated queries (e.g. "GESTimeline") fuzzily
+        // match it and surface every pipeline. 0.2 still allows real typos.
+        threshold: 0.2,
         ignoreLocation: true,
         keys: ['name', 'type', 'file'],
     });
-    /* Pipelines (dot files) first, then elements; each group keeps its own
-     * relevance order. */
+    /* Ordering: results from the pipeline currently shown in the overlay come
+     * first, then pipelines (dot files) before elements; each group keeps its
+     * own relevance order. */
+    const current = currentOverlayPipelineId();
     const matches = fuse.search(query).sort((a, b) => {
+        const ca = (current && a.item.pipelineId === current) ? 0 : 1;
+        const cb = (current && b.item.pipelineId === current) ? 0 : 1;
         const ka = a.item.kind === 'pipeline' ? 0 : 1;
         const kb = b.item.kind === 'pipeline' ? 0 : 1;
-        return ka - kb || a.score - b.score;
+        return ca - cb || ka - kb || a.score - b.score;
     }).slice(0, 50);
 
     results.innerHTML = '';
@@ -622,7 +638,9 @@ async function updateElementSearch(query) {
 
     for (const { item } of matches) {
         const row = document.createElement('div');
-        row.className = 'search-result' + (item.kind === 'pipeline' ? ' is-pipeline' : '');
+        row.className = 'search-result'
+            + (item.kind === 'pipeline' ? ' is-pipeline' : '')
+            + (current && item.pipelineId === current ? ' in-current-pipeline' : '');
         row.innerHTML =
             `<span class="sr-name"></span>` +
             `<span class="sr-type"></span>` +
