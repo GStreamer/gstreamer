@@ -69,7 +69,7 @@ typedef struct
 } Property;
 
 // Currently Clip has the most properties.. adapt as needed
-#define MAX_PROPERTIES 8
+#define MAX_PROPERTIES 9
 typedef struct
 {
   const gchar *long_name;
@@ -104,6 +104,14 @@ static GESCommandLineOption options[] = {
               "    ges-launch-1.0 --track-types=audio +clip /path/to/media\n\n"
               "Assuming \"media\" is an audio video sample, this will only play the audio of the\n"
               "sample in its entirety.\n\n"
+              "    ges-launch-1.0 +clip /path/to/media selected-streams=1+3\n\n"
+              "Assuming \"media\" contains several streams, this will only use the streams whose\n"
+              "stream-number (as reported by gst-discoverer-1.0) is 1 or 3. A full stream-id can\n"
+              "be used instead of the stream-number.\n\n"
+              "    ges-launch-1.0 +track audio +track audio +clip /path/to/media selected-streams=2:0+4:1\n\n"
+              "Each entry may be suffixed with ':<track>' to route the stream to a specific track,\n"
+              "given by its index in +track declaration order. Here stream 2 goes to the first\n"
+              "audio track and stream 4 to the second.\n\n"
               "    ges-launch-1.0 +clip /path/to/media1 layer=1 set-alpha 0.9 +clip /path/to/media2 layer=0\n\n"
               "Assume media1 and media2 both contain audio and video and last for 10 seconds.\n\n"
               "This will first add media1 in a new layer of \"priority\" 1, thus implicitly\n"
@@ -146,6 +154,14 @@ static GESCommandLineOption options[] = {
       {
         "layer", "l", 0, NULL,
         "The priority of the layer into which the clip should be added."
+      },
+      {
+        "selected-streams", "ss", 0, NULL,
+        "A '+' separated list of the streams of the URI to use, each entry being"
+        " a stream-number (as reported by gst-discoverer-1.0) or a full"
+        " stream-id, optionally suffixed with ':<track>' to route it to the track"
+        " at that index (in +track declaration order). When unspecified, all the"
+        " streams of the URI are used."
       },
       {NULL, 0, 0, NULL, FALSE},
     },

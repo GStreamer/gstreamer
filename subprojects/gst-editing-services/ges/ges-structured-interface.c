@@ -637,6 +637,116 @@ get_flags_from_string (GType type, const gchar * str_flags, guint * flags)
   return TRUE;
 }
 
+/* Resolves a '+' separated list of stream-numbers or stream-ids into the
+ * matching #GESUriSourceAsset-s of @asset. Returns a (transfer container) list
+ * of borrowed assets, or %NULL and sets @error if a token matches no stream. */
+/* Returns the @n-th (0-based) track of @type in @tracks, or NULL. */
+static GESTrack *
+_nth_track_of_type (GList * tracks, GESTrackType type, guint n)
+{
+  GList *tmp;
+  guint i = 0;
+
+  for (tmp = tracks; tmp; tmp = tmp->next) {
+    if (GES_TRACK (tmp->data)->type == type) {
+      if (i == n)
+        return tmp->data;
+      i++;
+    }
+  }
+
+  return NULL;
+}
+
+/* The stream of @asset matching @spec (a stream-number or a full stream-id), or
+ * NULL. */
+static GESUriSourceAsset *
+_lookup_stream (GESUriClipAsset * asset, const gchar * spec)
+{
+  const GList *tmp;
+  gchar *endptr = NULL;
+  gint64 number = g_ascii_strtoll (spec, &endptr, 10);
+  gboolean is_number = (endptr && *endptr == '\0');
+
+  for (tmp = ges_uri_clip_asset_get_stream_assets (asset); tmp; tmp = tmp->next) {
+    GstDiscovererStreamInfo *info =
+        ges_uri_source_asset_get_stream_info (GES_URI_SOURCE_ASSET (tmp->data));
+
+    if (is_number ? gst_discoverer_stream_info_get_stream_number (info) ==
+        number : !g_strcmp0 (spec,
+            gst_discoverer_stream_info_get_stream_id (info)))
+      return tmp->data;
+  }
+
+  return NULL;
+}
+
+/* Builds the source->track map from a '+' separated list of `<stream>[:<track>]`
+ * entries: <stream> is a stream-number or stream-id, and the optional <track>
+ * is the target track by index (in declaration order). Without <track>, the
+ * stream is routed to the matching-type track at its per-type position. */
+static GESSourceTrackMap *
+_build_source_track_map (GESTimeline * timeline, GESUriClipAsset * asset,
+    const gchar * streams_str, GError ** error)
+{
+  GESSourceTrackMapBuilder *builder = ges_source_track_map_builder_new ();
+  GList *tracks = ges_timeline_get_tracks (timeline);
+  gchar **tokens = g_strsplit (streams_str, "+", -1);
+  guint per_type[2] = { 0, 0 };
+  gint i;
+
+  for (i = 0; tokens[i]; i++) {
+    gchar **parts;
+    GESUriSourceAsset *stream;
+    GESTrack *track = NULL;
+
+    if (tokens[i][0] == '\0')
+      continue;
+
+    parts = g_strsplit (tokens[i], ":", 2);
+    stream = _lookup_stream (asset, parts[0]);
+    if (!stream) {
+      *error = g_error_new (GES_ERROR, 0, "No stream matching '%s' in %s",
+          parts[0], ges_asset_get_id (GES_ASSET (asset)));
+      g_strfreev (parts);
+      goto error;
+    }
+
+    if (parts[1]) {
+      gchar *endptr = NULL;
+      gint64 idx = g_ascii_strtoll (parts[1], &endptr, 10);
+
+      if (endptr && *endptr == '\0' && idx >= 0)
+        track = g_list_nth_data (tracks, idx);
+      if (!track) {
+        *error = g_error_new (GES_ERROR, 0, "No track at index '%s'", parts[1]);
+        g_strfreev (parts);
+        goto error;
+      }
+    } else {
+      GESTrackType type =
+          ges_track_element_asset_get_track_type (GES_TRACK_ELEMENT_ASSET
+          (stream));
+      guint *n = type == GES_TRACK_TYPE_AUDIO ? &per_type[0] : &per_type[1];
+
+      track = _nth_track_of_type (tracks, type, (*n)++);
+    }
+
+    g_strfreev (parts);
+    ges_source_track_map_builder_add (builder, stream, track);
+  }
+
+  g_strfreev (tokens);
+  g_list_free_full (tracks, gst_object_unref);
+  return ges_source_track_map_builder_build (builder);
+
+error:
+  g_strfreev (tokens);
+  g_list_free_full (tracks, gst_object_unref);
+  ges_source_track_map_builder_free (builder);
+  return NULL;
+}
+
 gboolean
 _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
     GError ** error)
@@ -649,6 +759,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   const gchar *text;
   const gchar *pattern;
   const gchar *track_types_str;
+  const gchar *selected_streams_str;
   const gchar *nested_timeline_id;
   gchar *asset_id = NULL;
   gchar *check_asset_id = NULL;
@@ -665,6 +776,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   const gchar *valid_fields[] =
       { "asset-id", "pattern", "name", "layer-priority", "layer", "type",
     "start", "inpoint", "duration", "text", "track-types", "project-uri",
+    "selected-streams",
     NULL
   };
 
@@ -686,6 +798,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   TRY_GET_TIME ("inpoint", &inpoint, &inpoint_frame, 0);
   TRY_GET_TIME ("duration", &duration, &duration_frame, GST_CLOCK_TIME_NONE);
   TRY_GET_STRING ("track-types", &track_types_str, NULL);
+  TRY_GET_STRING ("selected-streams", &selected_streams_str, NULL);
   TRY_GET_STRING ("project-uri", &nested_timeline_id, NULL);
 
   if (track_types_str) {
@@ -765,8 +878,43 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
         ges_uri_clip_asset_get_duration (GES_URI_CLIP_ASSET (asset)));
   }
 
-  clip = ges_layer_add_asset (layer, asset, start, inpoint, duration,
-      track_types);
+  if (selected_streams_str && GES_IS_URI_CLIP_ASSET (asset)) {
+    GESSourceTrackMap *map = _build_source_track_map (timeline,
+        GES_URI_CLIP_ASSET (asset), selected_streams_str, error);
+
+    if (!map) {
+      res = FALSE;
+      goto beach;
+    }
+
+    clip = GES_CLIP (ges_asset_extract (asset, error));
+    if (!clip) {
+      res = FALSE;
+      ges_source_track_map_unref (map);
+      goto beach;
+    }
+
+    if (!GST_CLOCK_TIME_IS_VALID (start))
+      start = ges_layer_get_duration (layer);
+    ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (clip), start);
+    ges_timeline_element_set_inpoint (GES_TIMELINE_ELEMENT (clip), inpoint);
+    if (track_types != GES_TRACK_TYPE_UNKNOWN)
+      ges_clip_set_supported_formats (clip, track_types);
+    if (GST_CLOCK_TIME_IS_VALID (duration))
+      ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip), duration);
+
+    ges_uri_clip_set_source_track_map (GES_URI_CLIP (clip), map);
+    ges_source_track_map_unref (map);
+
+    if (!ges_layer_add_clip_full (layer, clip, error)) {
+      clip = NULL;
+      res = FALSE;
+      goto beach;
+    }
+  } else {
+    clip = ges_layer_add_asset (layer, asset, start, inpoint, duration,
+        track_types);
+  }
 
   if (clip) {
     res = TRUE;
