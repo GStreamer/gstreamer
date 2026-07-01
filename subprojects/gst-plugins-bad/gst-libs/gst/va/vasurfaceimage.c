@@ -304,15 +304,34 @@ va_get_image (GstVaDisplay * display, VASurfaceID surface, VAImage * image)
 gboolean
 va_sync_surface (GstVaDisplay * display, VASurfaceID surface)
 {
-  VADisplay dpy = gst_va_display_get_va_dpy (display);
+  VADisplay dpy;
   VAStatus status;
+  const guint max_retries = 10;
 
-  status = vaSyncSurface (dpy, surface);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_WARNING ("vaSyncSurface: %s", vaErrorStr (status));
-    return FALSE;
+  if (va_check_surface_has_status (display, surface, VASurfaceReady))
+    return TRUE;
+
+  dpy = gst_va_display_get_va_dpy (display);
+
+  for (int i = 0; i < max_retries; i++) {
+    status = vaSyncSurface (dpy, surface);
+    if (status == VA_STATUS_SUCCESS)
+      return TRUE;
+    if (status != VA_STATUS_ERROR_HW_BUSY) {
+      GST_WARNING ("vaSyncSurface: %s", vaErrorStr (status));
+      return FALSE;
+    }
+    /* vaSyncSurface might return VA_STATUS_ERROR_HW_BUSY if the hardware is
+       running multiple streams simultaneously and it cannot handle another
+       one. Wait for 1ms to let the other encoding streams to continue. */
+    GST_LOG ("vaSyncSurface: %s, retrying (%d/%d)", vaErrorStr (status), i + 1,
+        max_retries);
+    g_usleep (1000);
   }
-  return TRUE;
+
+  GST_ERROR ("vaSyncSurface: Surface 0x%x not ready after %d retries",
+      surface, max_retries);
+  return FALSE;
 }
 
 gboolean
