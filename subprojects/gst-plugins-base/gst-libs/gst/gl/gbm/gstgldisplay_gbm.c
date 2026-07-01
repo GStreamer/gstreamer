@@ -466,7 +466,5 @@ cleanup:
   gst_gl_display_gbm_shutdown_gbm (display);
   gst_gl_display_gbm_shutdown_drm (display);
   gst_object_unref (G_OBJECT (display));
-  if (drm_fd >= 0)
-    close (drm_fd);
   return NULL;
 }
