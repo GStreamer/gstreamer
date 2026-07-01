@@ -203,6 +203,7 @@ gst_v4l2_decoder_open (GstV4l2Decoder * self)
   if (self->video_fd < 0) {
     GST_ERROR_OBJECT (self, "Failed to open '%s': %s",
         self->video_device, g_strerror (errno));
+    gst_v4l2_decoder_close (self);
     return FALSE;
   }
 
