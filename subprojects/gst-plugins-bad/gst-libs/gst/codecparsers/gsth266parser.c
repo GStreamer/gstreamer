@@ -2173,30 +2173,39 @@ gst_h266_parser_identify_and_split_nalu_vvc (GstH266Parser * parser,
 GstH266ParserResult
 gst_h266_parser_parse_nal (GstH266Parser * parser, GstH266NalUnit * nalu)
 {
-  GstH266VPS vps;
-  GstH266SPS sps;
-  GstH266PPS pps;
-  GstH266APS aps;
+  GstH266ParserResult res = GST_H266_PARSER_OK;
 
   switch (nalu->type) {
-    case GST_H266_NAL_VPS:
-      return gst_h266_parser_parse_vps (parser, nalu, &vps);
+    case GST_H266_NAL_VPS:{
+      GstH266VPS *vps = g_new (GstH266VPS, 1);
+      res = gst_h266_parser_parse_vps (parser, nalu, vps);
+      g_free (vps);
       break;
-    case GST_H266_NAL_SPS:
-      return gst_h266_parser_parse_sps (parser, nalu, &sps);
+    }
+    case GST_H266_NAL_SPS:{
+      GstH266SPS *sps = g_new (GstH266SPS, 1);
+      res = gst_h266_parser_parse_sps (parser, nalu, sps);
+      g_free (sps);
       break;
-    case GST_H266_NAL_PPS:
-      return gst_h266_parser_parse_pps (parser, nalu, &pps);
+    }
+    case GST_H266_NAL_PPS:{
+      GstH266PPS *pps = g_new (GstH266PPS, 1);
+      res = gst_h266_parser_parse_pps (parser, nalu, pps);
+      g_free (pps);
       break;
+    }
     case GST_H266_NAL_PREFIX_APS:
-    case GST_H266_NAL_SUFFIX_APS:
-      return gst_h266_parser_parse_aps (parser, nalu, &aps);
+    case GST_H266_NAL_SUFFIX_APS:{
+      GstH266APS *aps = g_new (GstH266APS, 1);
+      res = gst_h266_parser_parse_aps (parser, nalu, aps);
+      g_free (aps);
       break;
+    }
     default:
       break;
   }
 
-  return GST_H266_PARSER_OK;
+  return res;
 }
 
 /**
