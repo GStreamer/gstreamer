@@ -95,6 +95,9 @@ struct _GESBaseXmlFormatterPrivate
 
   GESClip *current_clip;
   GstClockTime current_clip_duration;
+  /* accumulated source-to-track routing of the clip being loaded, from the
+   * <source stream-number='...'> attributes; applied at </clip> */
+  GESSourceTrackMapBuilder *current_source_map_builder;
 
   gboolean timeline_auto_transition;
 
@@ -419,6 +422,8 @@ ges_base_xml_formatter_init (GESBaseXmlFormatter * self)
   priv->current_track_element = NULL;
   priv->current_clip = NULL;
   priv->current_clip_duration = GST_CLOCK_TIME_NONE;
+  g_clear_pointer (&priv->current_source_map_builder,
+      ges_source_track_map_builder_free);
   priv->timeline_auto_transition = FALSE;
 }
 
@@ -1109,13 +1114,41 @@ done:
   g_slist_free_full (timed_values, g_free);
 }
 
+/* A core source of @clip backing the URI stream @stream_number, or NULL. */
+static GESTrackElement *
+_get_source_by_stream_number (GESClip * clip, gint stream_number)
+{
+  GList *tmp;
+
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
+    GESTrackElement *el = tmp->data;
+    GESAsset *asset;
+    GstDiscovererStreamInfo *info;
+
+    if (!GES_IS_SOURCE (el))
+      continue;
+
+    asset = ges_extractable_get_asset (GES_EXTRACTABLE (el));
+    if (!GES_IS_URI_SOURCE_ASSET (asset))
+      continue;
+
+    info = ges_uri_source_asset_get_stream_info (GES_URI_SOURCE_ASSET (asset));
+    if (info
+        && gst_discoverer_stream_info_get_stream_number (info) == stream_number)
+      return el;
+  }
+
+  return NULL;
+}
+
 void
 ges_base_xml_formatter_add_source (GESBaseXmlFormatter * self,
     const gchar * track_id, GstStructure * children_properties,
-    GstStructure * properties, const gchar * metadatas)
+    GstStructure * properties, const gchar * metadatas, gint stream_number)
 {
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
   GESTrackElement *element = NULL;
+  GESTrack *track = NULL;
 
   if (priv->state != STATE_LOADING_CLIPS) {
     GST_DEBUG_OBJECT (self, "Not loading source elements in %s state.",
@@ -1124,6 +1157,39 @@ ges_base_xml_formatter_add_source (GESBaseXmlFormatter * self,
   }
 
   if (track_id[0] != '-' && priv->current_clip)
+    track = g_hash_table_lookup (priv->tracks, track_id);
+
+  if (stream_number >= 0 && track && priv->current_clip) {
+    /* The file routes a specific stream to this track; make sure that stream's
+     * source is the one placed there, undoing the default placement. */
+    element = _get_source_by_stream_number (priv->current_clip, stream_number);
+    if (element && ges_track_element_get_track (element) != track) {
+      GESTrackElement *wrong =
+          ges_clip_find_track_element (priv->current_clip, track,
+          GES_TYPE_SOURCE);
+      GESTrack *cur = ges_track_element_get_track (element);
+
+      if (wrong && wrong != element)
+        ges_track_remove_element (track, wrong);
+      gst_clear_object (&wrong);
+      if (cur)
+        ges_track_remove_element (cur, element);
+      ges_clip_add_child_to_track (priv->current_clip, element, track, NULL);
+    }
+
+    /* Rebuild the clip's GESSourceTrackMap so it round-trips on re-save and
+     * matches the authored clip. Applied (and extras pruned) at </clip>. */
+    if (element) {
+      GESUriSourceAsset *sasset =
+          GES_URI_SOURCE_ASSET (ges_extractable_get_asset (GES_EXTRACTABLE
+              (element)));
+
+      if (!priv->current_source_map_builder)
+        priv->current_source_map_builder = ges_source_track_map_builder_new ();
+      ges_source_track_map_builder_add (priv->current_source_map_builder,
+          sasset, track);
+    }
+  } else if (track_id[0] != '-' && priv->current_clip)
     element = _get_element_by_track_id (priv, track_id, priv->current_clip);
   else
     element = priv->current_track_element;
@@ -1350,6 +1416,31 @@ ges_base_xml_formatter_end_current_clip (GESBaseXmlFormatter * self)
   if (_DURATION (priv->current_clip) != priv->current_clip_duration)
     _set_duration0 (GES_TIMELINE_ELEMENT (priv->current_clip),
         priv->current_clip_duration);
+
+  if (priv->current_source_map_builder) {
+    GESSourceTrackMap *map;
+    GList *children, *tmp;
+
+    /* Prune the sources the default placement created but did not route: for a
+     * routed clip, any source left without a track is either an unselected
+     * stream or a stray fan-out copy, so the loaded clip matches the authored
+     * one. */
+    children = ges_container_get_children (GES_CONTAINER (priv->current_clip),
+        FALSE);
+    for (tmp = children; tmp; tmp = tmp->next) {
+      GESTrackElement *el = tmp->data;
+
+      if (GES_IS_SOURCE (el) && !ges_track_element_get_track (el))
+        ges_container_remove (GES_CONTAINER (priv->current_clip),
+            GES_TIMELINE_ELEMENT (el));
+    }
+    g_list_free_full (children, gst_object_unref);
+
+    map = ges_source_track_map_builder_build (priv->current_source_map_builder);
+    priv->current_source_map_builder = NULL;
+    ges_uri_clip_set_source_track_map (GES_URI_CLIP (priv->current_clip), map);
+    ges_source_track_map_unref (map);
+  }
 
   priv->current_clip = NULL;
   priv->current_clip_duration = GST_CLOCK_TIME_NONE;

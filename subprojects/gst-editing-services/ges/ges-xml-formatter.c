@@ -35,8 +35,8 @@
 
 #define parent_class ges_xml_formatter_parent_class
 #define API_VERSION 0
-#define MINOR_VERSION 8
-#define VERSION 0.8
+#define MINOR_VERSION 9
+#define VERSION 0.9
 
 #define COLLECT_STR_OPT (G_MARKUP_COLLECT_STRING | G_MARKUP_COLLECT_OPTIONAL)
 
@@ -723,16 +723,21 @@ _parse_source (GMarkupParseContext * context, const gchar * element_name,
 {
   GstStructure *children_props = NULL, *props = NULL;
   const gchar *track_id = NULL, *children_properties = NULL, *properties =
-      NULL, *metadatas = NULL;
+      NULL, *metadatas = NULL, *stream_number_str = NULL;
+  gint stream_number = -1;
 
   if (!g_markup_collect_attributes (element_name, attribute_names,
           attribute_values, error,
           G_MARKUP_COLLECT_STRING, "track-id", &track_id,
           COLLECT_STR_OPT, "children-properties", &children_properties,
           COLLECT_STR_OPT, "properties", &properties,
+          COLLECT_STR_OPT, "stream-number", &stream_number_str,
           COLLECT_STR_OPT, "metadatas", &metadatas, G_MARKUP_COLLECT_INVALID)) {
     return;
   }
+
+  if (stream_number_str)
+    stream_number = g_ascii_strtoll (stream_number_str, NULL, 10);
 
   if (children_properties) {
     children_props = gst_structure_from_string (children_properties, NULL);
@@ -747,7 +752,7 @@ _parse_source (GMarkupParseContext * context, const gchar * element_name,
   }
 
   ges_base_xml_formatter_add_source (GES_BASE_XML_FORMATTER (self), track_id,
-      children_props, props, metadatas);
+      children_props, props, metadatas, stream_number);
 
 done:
   if (children_props)
@@ -1631,9 +1636,12 @@ _save_source (GESXmlFormatter * self, GString * str,
     GESTimelineElement * element, GESTimeline * timeline, GList * tracks,
     guint depth)
 {
-  gint index, n_props;
+  gint index, n_props, stream_number = -1;
   gboolean serialize;
   gchar *properties, *metas;
+  GESTimelineElement *clip;
+  GESAsset *asset;
+  GESSourceTrackMap *map = NULL;
 
   if (!GES_IS_SOURCE (element))
     return;
@@ -1650,6 +1658,27 @@ _save_source (GESXmlFormatter * self, GString * str,
   append_escaped (str,
       g_markup_printf_escaped
       ("          <source track-id='%i' ", index), depth);
+
+  /* Record which stream this source represents, so a clip that routes its
+   * sources to specific tracks (a GESSourceTrackMap) round-trips. Only emitted
+   * when there is a routing, to keep other files loadable by older GES. */
+  clip = GES_TIMELINE_ELEMENT_PARENT (element);
+  asset = ges_extractable_get_asset (GES_EXTRACTABLE (element));
+  if (GES_IS_URI_CLIP (clip) && GES_IS_URI_SOURCE_ASSET (asset))
+    map = ges_uri_clip_get_source_track_map (GES_URI_CLIP (clip));
+
+  if (map) {
+    GstDiscovererStreamInfo *info =
+        ges_uri_source_asset_get_stream_info (GES_URI_SOURCE_ASSET (asset));
+
+    if (info)
+      stream_number = gst_discoverer_stream_info_get_stream_number (info);
+    if (stream_number >= 0) {
+      self->priv->min_version = MAX (self->priv->min_version, 9);
+      g_string_append_printf (str, "stream-number='%i' ", stream_number);
+    }
+    ges_source_track_map_unref (map);
+  }
 
   properties = _serialize_properties (G_OBJECT (element), &n_props,
       "in-point", "priority", "start", "duration", "track", "track-type"
