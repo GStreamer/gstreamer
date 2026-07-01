@@ -235,7 +235,9 @@ set_pad_properties_from_composition_meta (GstPad * mixer_pad,
       GES_TYPE_META_FRAME_COMPOSITION);
 
   if (!meta) {
-    GST_WARNING ("The current source should use a framecomposition");
+    GST_WARNING_OBJECT (mixer_pad,
+        "Buffer has no GESFrameCompositionMeta, its source is missing a "
+        "framepositioner");
     return;
   }
 

@@ -107,6 +107,7 @@ create_element_for_raw_video_gap (GESTrack * track)
   GstElement *videotestsrc = gst_element_factory_make ("videotestsrc", "src");
   GstElement *videorate = gst_element_factory_make ("videorate", NULL);
   GstElement *capsfilter = gst_element_factory_make ("capsfilter", "gapfilter");
+  GstElement *positioner = gst_element_factory_make ("framepositioner", NULL);
   GstElement *uploader =
       ges_video_element_selector_make_uploader (ges_video_element_selector ());
   GstElement *tail;
@@ -118,8 +119,9 @@ create_element_for_raw_video_gap (GESTrack * track)
   g_object_set (capsfilter, "caps", caps, NULL);
   gst_caps_unref (caps);
 
-  gst_bin_add_many (GST_BIN (bin), videotestsrc, videorate, capsfilter, NULL);
-  gst_element_link_many (videotestsrc, videorate, capsfilter, NULL);
+  gst_bin_add_many (GST_BIN (bin), videotestsrc, positioner, videorate,
+      capsfilter, NULL);
+  gst_element_link_many (videotestsrc, positioner, videorate, capsfilter, NULL);
   tail = capsfilter;
 
   /* When the compositor is strict (e.g. glvideomixerelement accepts
