@@ -215,7 +215,7 @@ gst_h265_parse_reset_frame (GstH265Parse * h265parse)
   h265parse->layer_id = 0;
   h265parse->temporal_id_plus1 = 0;
   gst_adapter_clear (h265parse->frame_out);
-  gst_video_clear_user_data (&h265parse->user_data, FALSE);
+  gst_video_clear_user_data (&h265parse->user_data);
   gst_video_clear_user_data_unregistered (&h265parse->user_data_unregistered,
       FALSE);
 }

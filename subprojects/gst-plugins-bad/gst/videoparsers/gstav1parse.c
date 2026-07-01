@@ -353,7 +353,7 @@ gst_av1_parse_reset (GstAV1Parse * self)
   self->first_frame = TRUE;
   self->seen_non_padding = FALSE;
   self->lcevc = FALSE;
-  gst_video_clear_user_data (&self->user_data, FALSE);
+  gst_video_clear_user_data (&self->user_data);
   gst_av1_parse_reset_obu_data_state (self);
   g_clear_pointer (&self->colorimetry, g_free);
   g_clear_pointer (&self->parser, gst_av1_parser_free);

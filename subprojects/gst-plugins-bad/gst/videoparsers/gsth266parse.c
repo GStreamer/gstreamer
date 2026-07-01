@@ -261,7 +261,7 @@ gst_h266_parse_reset_frame (GstH266Parse * h266parse)
   h266parse->have_sps_in_frame = FALSE;
   h266parse->have_pps_in_frame = FALSE;
   gst_adapter_clear (h266parse->frame_out);
-  gst_video_clear_user_data (&h266parse->user_data, FALSE);
+  gst_video_clear_user_data (&h266parse->user_data);
   gst_video_clear_user_data_unregistered (&h266parse->user_data_unregistered,
       FALSE);
   if (h266parse->dsc_initialization_state == GST_H266_PARSE_SEI_ACTIVE) {
