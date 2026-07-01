@@ -110,9 +110,14 @@ enum
   PROP_HARDWARE,
   PROP_DESCRIPTION,
   PROP_DEVICE_REMOVED_REASON,
+  PROP_MEMORY_BUDGET,
+  PROP_RESIDENT_MEMORY_SIZE,
+  PROP_OVER_BUDGET_FACTOR,
 };
 
 static GParamSpec *pspec_removed_reason = nullptr;
+
+#define DEFAULT_OVER_BUDGET_FACTOR 0.8
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -314,7 +319,7 @@ struct DeviceInner
   DWORD budget_change_cb_cookie = 0;
   std::atomic<guint64> current_budget = { 0 };
   std::atomic<gint64> resident_size = { 0 };
-  double overbudget_factor = 0.8;
+  std::atomic<double> overbudget_factor = { DEFAULT_OVER_BUDGET_FACTOR };
   std::atomic<bool> is_over_budget = { false };
 
   std::vector<GstD3D12Device*> clients;
@@ -697,6 +702,8 @@ static void gst_d3d12_device_dispose (GObject * object);
 static void gst_d3d12_device_finalize (GObject * object);
 static void gst_d3d12_device_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_d3d12_device_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
 static void gst_d3d12_device_setup_format_table (GstD3D12Device * self);
 
 static void
@@ -709,6 +716,7 @@ gst_d3d12_device_class_init (GstD3D12DeviceClass * klass)
   gobject_class->dispose = gst_d3d12_device_dispose;
   gobject_class->finalize = gst_d3d12_device_finalize;
   gobject_class->get_property = gst_d3d12_device_get_property;
+  gobject_class->set_property = gst_d3d12_device_set_property;
 
   g_object_class_install_property (gobject_class, PROP_ADAPTER_INDEX,
       g_param_spec_uint ("adapter-index", "Adapter Index",
@@ -738,6 +746,48 @@ gst_d3d12_device_class_init (GstD3D12DeviceClass * klass)
       G_MININT32, G_MAXINT32, 0, readable_flags);
   g_object_class_install_property (gobject_class, PROP_DEVICE_REMOVED_REASON,
       pspec_removed_reason);
+
+  /**
+   * GstD3D12Device:memory-budget:
+   *
+   * Current local video memory budget
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_MEMORY_BUDGET,
+      g_param_spec_uint64 ("memory-budget", "Memory Budget",
+          "Current local video memory budget in bytes",
+          0, G_MAXUINT64, 0, readable_flags));
+
+  /**
+   * GstD3D12Device:resident-memory-size:
+   *
+   * Currently resident video memory size
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_RESIDENT_MEMORY_SIZE,
+      g_param_spec_uint64 ("resident-memory-size", "Resident Memory Size",
+          "Tracked total size of resident resources in bytes",
+          0, G_MAXUINT64, 0, readable_flags));
+
+  /**
+   * GstD3D12Device:over-budget-factor:
+   *
+   * The factor applied to the memory budget to determine whether
+   * the device is over budget. D3D12 elements may try to evict unused
+   * resources when the device is over budget
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_OVER_BUDGET_FACTOR,
+      g_param_spec_double ("over-budget-factor", "Over Budget Factor",
+          "Factor applied to the \"memory-budget\" for over-budget detection "
+          "(0.0 = always try to evict, "
+          "1.0 = try to evict when \"resident-memory-size\" is greater than "
+          "or equal to \"memory-budget\")",
+          0.0, 1.0, DEFAULT_OVER_BUDGET_FACTOR,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 }
 
 static void
@@ -796,6 +846,35 @@ gst_d3d12_device_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DEVICE_REMOVED_REASON:
       g_value_set_int (value, priv->removed_reason);
+      break;
+    case PROP_MEMORY_BUDGET:
+      g_value_set_uint64 (value, priv->current_budget.load ());
+      break;
+    case PROP_RESIDENT_MEMORY_SIZE:
+    {
+      auto size = priv->resident_size.load ();
+      g_value_set_uint64 (value, size > 0 ? (guint64) size : 0);
+      break;
+    }
+    case PROP_OVER_BUDGET_FACTOR:
+      g_value_set_double (value, priv->overbudget_factor.load ());
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_d3d12_device_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  auto self = GST_D3D12_DEVICE (object);
+  auto priv = self->priv->inner;
+
+  switch (prop_id) {
+    case PROP_OVER_BUDGET_FACTOR:
+      priv->overbudget_factor = g_value_get_double (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
