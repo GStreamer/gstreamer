@@ -89,6 +89,9 @@ typedef struct _GESContainerClass GESContainerClass;
 typedef struct _GESClip GESClip;
 typedef struct _GESClipClass GESClipClass;
 
+typedef struct _GESSourceTrackMap GESSourceTrackMap;
+typedef struct _GESSourceTrackMapBuilder GESSourceTrackMapBuilder;
+
 typedef struct _GESOperationClip GESOperationClip;
 typedef struct _GESOperationClipClass GESOperationClipClass;
 

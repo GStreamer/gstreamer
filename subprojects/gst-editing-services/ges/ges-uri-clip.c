@@ -36,6 +36,7 @@
 #include "ges-video-uri-source.h"
 #include "ges-audio-uri-source.h"
 #include "ges-uri-asset.h"
+#include "ges-source-track-map.h"
 #include "ges-track-element-asset.h"
 #include "ges-extractable.h"
 #include "ges-image-source.h"
@@ -53,6 +54,11 @@ struct _GESUriClipPrivate
 
   gboolean mute;
   gboolean is_image;
+
+  /* When NULL, all the streams of the URI are used with the default per-type
+   * track selection. Otherwise only the mapped streams are used, each routed
+   * to its mapped track. */
+  GESSourceTrackMap *source_track_map;
 };
 
 enum
@@ -62,6 +68,7 @@ enum
   PROP_MUTE,
   PROP_IS_IMAGE,
   PROP_SUPPORTED_FORMATS,
+  PROP_SOURCE_TRACK_MAP,
 };
 
 G_DEFINE_TYPE_WITH_CODE (GESUriClip, ges_uri_clip,
@@ -71,6 +78,8 @@ G_DEFINE_TYPE_WITH_CODE (GESUriClip, ges_uri_clip,
 
 static GList *ges_uri_clip_create_track_elements (GESClip *
     clip, GESTrackType type);
+static GPtrArray *ges_uri_clip_select_element_tracks (GESClip * clip,
+    GESTrackElement * track_element);
 static void ges_uri_clip_set_uri (GESUriClip * self, gchar * uri);
 
 gboolean
@@ -96,6 +105,10 @@ ges_uri_clip_get_property (GObject * object, guint property_id,
     case PROP_SUPPORTED_FORMATS:
       g_value_set_flags (value,
           ges_clip_get_supported_formats (GES_CLIP (object)));
+      break;
+    case PROP_SOURCE_TRACK_MAP:
+      g_value_take_boxed (value,
+          ges_uri_clip_get_source_track_map (GES_URI_CLIP (object)));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -123,6 +136,9 @@ ges_uri_clip_set_property (GObject * object, guint property_id,
       ges_clip_set_supported_formats (GES_CLIP (uriclip),
           g_value_get_flags (value));
       break;
+    case PROP_SOURCE_TRACK_MAP:
+      ges_uri_clip_set_source_track_map (uriclip, g_value_get_boxed (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -135,6 +151,7 @@ ges_uri_clip_finalize (GObject * object)
 
   if (priv->uri)
     g_free (priv->uri);
+  g_clear_pointer (&priv->source_track_map, ges_source_track_map_unref);
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -189,9 +206,27 @@ ges_uri_clip_class_init (GESUriClipClass * klass)
           GES_TYPE_TRACK_TYPE, GES_TRACK_TYPE_UNKNOWN,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GESUriClip:source-track-map:
+   *
+   * The #GESSourceTrackMap routing the URI's streams to tracks, or %NULL to use
+   * all the streams with the default per-type selection. See
+   * ges_uri_clip_set_source_track_map().
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (object_class, PROP_SOURCE_TRACK_MAP,
+      g_param_spec_boxed ("source-track-map", "Source track map",
+          "Routing of the URI's sources to tracks",
+          GES_TYPE_SOURCE_TRACK_MAP,
+          G_PARAM_READWRITE | GES_PARAM_NO_SERIALIZATION |
+          G_PARAM_STATIC_STRINGS));
+
   element_class->set_max_duration = uri_clip_set_max_duration;
 
   clip_class->create_track_elements = ges_uri_clip_create_track_elements;
+  clip_class->ABI.abi.select_element_tracks =
+      ges_uri_clip_select_element_tracks;
 }
 
 static gchar *
@@ -602,6 +637,113 @@ ges_uri_clip_get_uri (GESUriClip * self)
   return ret;
 }
 
+/**
+ * ges_uri_clip_set_source_track_map:
+ * @self: the #GESUriClip
+ * @map: (transfer none) (nullable): the #GESSourceTrackMap routing the URI's
+ * streams to tracks, or %NULL to use all the streams of the URI with the
+ * default per-type track selection.
+ *
+ * Sets which streams of the URI @self uses, and the #GESTrack each of them is
+ * placed into. Only the streams present in @map produce a core child; a stream
+ * mapped to a specific track is placed exactly there (so a URI with several
+ * streams of the same type can be routed to distinct tracks), while a stream
+ * mapped to %NULL is selected but left unplaced (its source is created but put
+ * in no track).
+ *
+ * This must be set before @self is added to a #GESTimeline, since it only
+ * affects the creation and track selection of its core children.
+ *
+ * Since: 1.30
+ */
+void
+ges_uri_clip_set_source_track_map (GESUriClip * self, GESSourceTrackMap * map)
+{
+  GESUriClipPrivate *priv;
+  GESTimeline *_locked_timeline;
+
+  g_return_if_fail (GES_IS_URI_CLIP (self));
+
+  if (map)
+    ges_source_track_map_ref (map);
+
+  priv = self->priv;
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
+  g_clear_pointer (&priv->source_track_map, ges_source_track_map_unref);
+  priv->source_track_map = map;
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
+
+  g_object_notify (G_OBJECT (self), "source-track-map");
+}
+
+/**
+ * ges_uri_clip_get_source_track_map:
+ * @self: the #GESUriClip
+ *
+ * Get the #GESSourceTrackMap set on @self with
+ * ges_uri_clip_set_source_track_map().
+ *
+ * Returns: (transfer full) (nullable): the #GESSourceTrackMap of @self, or
+ * %NULL if it uses all the streams of the URI.
+ *
+ * Since: 1.30
+ */
+GESSourceTrackMap *
+ges_uri_clip_get_source_track_map (GESUriClip * self)
+{
+  GESSourceTrackMap *ret;
+  GESTimeline *_locked_timeline;
+
+  g_return_val_if_fail (GES_IS_URI_CLIP (self), NULL);
+
+  _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
+  ret = self->priv->source_track_map ?
+      ges_source_track_map_ref (self->priv->source_track_map) : NULL;
+  _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
+
+  return ret;
+}
+
+static GPtrArray *
+ges_uri_clip_select_element_tracks (GESClip * clip,
+    GESTrackElement * track_element)
+{
+  GESSourceTrackMap *map;
+  GESUriSourceAsset *stream = NULL;
+  GESAsset *asset;
+  GPtrArray *res;
+  GList *tracks, *tmp;
+
+  /* ref'd snapshot; immutable, so no further locking needed to read it */
+  map = ges_uri_clip_get_source_track_map (GES_URI_CLIP (clip));
+  if (!map)
+    return NULL;                /* no map: defer to the placement signals */
+
+  /* The stream whose track(s) @track_element should go into, for a core
+   * source. */
+  asset = ges_extractable_get_asset (GES_EXTRACTABLE (track_element));
+  if (GES_IS_URI_SOURCE_ASSET (asset))
+    stream = GES_URI_SOURCE_ASSET (asset);
+
+  if (!stream) {
+    /* not a core source of this clip: defer to the legacy default */
+    ges_source_track_map_unref (map);
+    return NULL;
+  }
+
+  /* Authoritatively place in the stream's track(s). An empty array means
+   * "selected but unplaced". */
+  tracks = ges_source_track_map_get_tracks (map, stream);
+  res = g_ptr_array_new_with_free_func (gst_object_unref);
+  for (tmp = tracks; tmp; tmp = tmp->next)
+    g_ptr_array_add (res, gst_object_ref (tmp->data));
+
+  g_list_free_full (tracks, gst_object_unref);
+  ges_source_track_map_unref (map);
+
+  return res;
+}
+
 static GList *
 ges_uri_clip_create_track_elements (GESClip * clip, GESTrackType type)
 {
@@ -609,17 +751,24 @@ ges_uri_clip_create_track_elements (GESClip * clip, GESTrackType type)
   const GList *tmp, *stream_assets;
   GESAsset *asset = GES_TIMELINE_ELEMENT (clip)->asset;
   GESUriClipAsset *uri_asset;
+  GESSourceTrackMap *map;
   GstClockTime max_duration;
 
   g_return_val_if_fail (asset, NULL);
 
   uri_asset = GES_URI_CLIP_ASSET (asset);
+  /* ref'd snapshot; the map is immutable so reads are safe without more locks */
+  map = ges_uri_clip_get_source_track_map (GES_URI_CLIP (clip));
 
   max_duration = ges_uri_clip_asset_get_max_duration (uri_asset);
   stream_assets = ges_uri_clip_asset_get_stream_assets (uri_asset);
 
   for (tmp = stream_assets; tmp; tmp = tmp->next) {
     GESTrackElementAsset *element_asset = GES_TRACK_ELEMENT_ASSET (tmp->data);
+
+    if (map && !ges_source_track_map_contains (map,
+            GES_URI_SOURCE_ASSET (element_asset)))
+      continue;
 
     if (ges_track_element_asset_get_track_type (element_asset) == type) {
       GESTrackElement *element =
@@ -630,6 +779,8 @@ ges_uri_clip_create_track_elements (GESClip * clip, GESTrackType type)
       res = g_list_append (res, element);
     }
   }
+
+  g_clear_pointer (&map, ges_source_track_map_unref);
 
   return res;
 }

@@ -120,6 +120,12 @@ struct _GESClip
  * @can_add_effects: Whether the user can add additional non-core
  * #GESBaseEffect-s to clips from this class, to be applied to the output data
  * of the core elements.
+ * @select_element_tracks: Lets the clip describe its mapping of
+ * #GESTrackElement to #GESTrack placement when the clip is added to a timeline,
+ * so it can route its children without a #GESTimeline::select-element-track or
+ * #GESTimeline::select-tracks-for-object handler. Returns %NULL to defer to
+ * those signals, an empty array to use no track, or the tracks to place (and
+ * copy) the child into. Consulted before the signals. (Since: 1.30)
  */
 struct _GESClipClass
 {
@@ -136,6 +142,26 @@ struct _GESClipClass
     gpointer _ges_reserved[GES_PADDING_LARGE];
     struct {
       gboolean can_add_effects;
+
+      /**
+       * GESClipClass::select_element_tracks:
+       * @clip: A #GESClip
+       * @track_element: A child of @clip
+       *
+       * Lets the clip describe its mapping of @track_element to #GESTrack
+       * placement when the clip is added to a timeline, so it can route its
+       * children without a #GESTimeline::select-element-track or
+       * #GESTimeline::select-tracks-for-object handler. Consulted before those
+       * signals.
+       *
+       * Returns: (transfer full) (nullable) (element-type GESTrack): %NULL to
+       * defer to the signals, an empty array to use no track, or the tracks to
+       * place (and copy) @track_element into.
+       *
+       * Since: 1.30
+       */
+      GPtrArray * (*select_element_tracks) (GESClip * clip,
+          GESTrackElement * track_element);
     } abi;
   } ABI;
 };

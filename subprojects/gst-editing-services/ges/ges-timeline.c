@@ -1481,20 +1481,29 @@ _get_selected_tracks (GESTimeline * timeline, GESClip * clip,
   guint i, j;
   GPtrArray *tracks = NULL;
   GESTrack *track = NULL;
+  GESClipClass *clip_class = GES_CLIP_GET_CLASS (clip);
 
-  g_signal_emit (G_OBJECT (timeline),
-      ges_timeline_signals[SELECT_ELEMENT_TRACK], 0, clip, track_element,
-      &track);
+  /* A clip's declarative routing (e.g. a GESUriClip stream-track-map) is
+   * authoritative when it covers @track_element: opting into it means it
+   * decides, over the placement signals. It returns NULL to defer, an empty
+   * array to place in no track, or the tracks to place (and copy) into. */
+  if (clip_class->ABI.abi.select_element_tracks)
+    tracks = clip_class->ABI.abi.select_element_tracks (clip, track_element);
 
-  if (track) {
-    tracks = g_ptr_array_new ();
-
-    g_ptr_array_add (tracks, track);
-  } else if (!g_signal_has_handler_pending (G_OBJECT (timeline),
-          ges_timeline_signals[SELECT_ELEMENT_TRACK], 0, TRUE)) {
+  if (tracks == NULL) {
     g_signal_emit (G_OBJECT (timeline),
-        ges_timeline_signals[SELECT_TRACKS_FOR_OBJECT], 0, clip, track_element,
-        &tracks);
+        ges_timeline_signals[SELECT_ELEMENT_TRACK], 0, clip, track_element,
+        &track);
+
+    if (track) {
+      tracks = g_ptr_array_new ();
+      g_ptr_array_add (tracks, track);
+    } else if (!g_signal_has_handler_pending (G_OBJECT (timeline),
+            ges_timeline_signals[SELECT_ELEMENT_TRACK], 0, TRUE)) {
+      g_signal_emit (G_OBJECT (timeline),
+          ges_timeline_signals[SELECT_TRACKS_FOR_OBJECT], 0, clip,
+          track_element, &tracks);
+    }
   }
 
   if (tracks == NULL)
