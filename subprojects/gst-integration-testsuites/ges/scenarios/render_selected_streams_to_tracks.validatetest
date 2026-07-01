@@ -1,0 +1,39 @@
+set-globals, media_file="$(test_dir)/../../media/defaults/mp4/multi_audio_5tones.mov"
+meta,
+    tool="ges-launch-$(gst_api_version)",
+    handles-states=true,
+    args={
+        +track, audio, +track, audio, --outputuri, "$(logsdir)/$(test_name).mkv", --format,
+        "video/x-matroska:audio/x-vorbis:audio/x-vorbis",
+    },
+    configs={
+        # Only record once the render seek's flush-stop -> segment has landed:
+        # under load the audiomixer can push a preroll buffer or two downstream
+        # in the seek's flush round-trip (harmless - flushed before the encoder)
+        # which would otherwise be recorded and race the buffer count.
+        "validateflow, pad=gessmartadder0:src, buffers-checksum=dominant-frequency, record-buffers-after-event={ flush-stop, segment }, ignored-event-types={ tag, stream-start, segment, caps, flush-start, flush-stop, eos, stream-group-done }",
+        "validateflow, pad=gessmartadder1:src, buffers-checksum=dominant-frequency, record-buffers-after-event={ flush-stop, segment }, ignored-event-types={ tag, stream-start, segment, caps, flush-start, flush-stop, eos, stream-group-done }",
+    }
+
+# multi_audio_5tones.mov has 5 mono audio streams, each a pure tone 250 Hz
+# apart (300, 550, 800, 1050, 1300 Hz). Route streams 1 (300 Hz) and 3 (800 Hz)
+# to the two audio tracks and render: this only works if each lands in its own
+# track, and it can only be exercised on render (playback collapses same-kind
+# tracks). The validateflow configs record the dominant frequency out of each
+# track's mixer, so track 0 carrying 300 Hz and track 1 carrying 800 Hz proves
+# each stream reached its own track.
+#
+# The mixer emits 10 ms buffers and the rendered audio ends exactly one sample
+# short of the requested duration, so the duration is set to 30 buffers plus
+# that one sample (0.3 s + 1/48000 s) to make every buffer - including the last
+# - a full 10 ms; a shorter final buffer would quantise to a slightly different
+# frequency.
+add-clip,
+    name=clip,
+    asset-id="file://$(media_file)",
+    layer-priority=0,
+    type=GESUriClip,
+    selected-streams="1:0+3:1",
+    duration=0.30002083333
+commit
+set-state, state=playing

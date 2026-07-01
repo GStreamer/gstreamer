@@ -763,6 +763,7 @@ ges.test.edit_deeply_nested_timeline_too_short
 ges.test.input_audio_channels_reorder
 ges.test.play_deeply_nested_back_to_back
 ges.test.play_two_nested_back_to_back
+ges.test.render_selected_streams_to_tracks
 ges.test.seek_on_stack_change_on_internal_subtimeline
 ges.test.timelineelement.set_child_prop_on_all_instances
 ges.test.videoscale_effect
