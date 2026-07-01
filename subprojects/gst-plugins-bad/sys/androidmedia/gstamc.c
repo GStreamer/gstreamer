@@ -361,26 +361,12 @@ scan_codecs (GstPlugin * plugin)
         {
           gint width, height;
         } probe_resolutions[] = {
-          {160, 120},
-          {176, 144},
-          {256, 144},
           {320, 240},
-          {426, 240},
-          {480, 360},
-          {640, 360},
-          {640, 480},
-          {720, 560},
           {720, 576},
           {1280, 720},
           {1920, 1080},
-          {2048, 1080},
-          {2560, 1440},
-          {2880, 1620},
           {3840, 2160},
-          {4096, 2160},
-          {5120, 2160},
           {7680, 4320},
-          {8192, 4320},
         };
         GstAmcVideoCapabilitiesHandle *vid_caps = NULL;
         GArray *supported_video_capabilities =
