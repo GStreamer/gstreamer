@@ -923,39 +923,62 @@ static gboolean
 _h264_parameters_parse (GstVulkanH264Encoder * self, gpointer data,
     gsize data_size, GstH264SPS * sps, GstH264PPS * pps)
 {
-  GstH264ParserResult res, pres;
+  GstH264ParserResult identify, parse;
   GstH264NalUnit nalu = { 0, };
   GstH264NalParser parser = { 0, };
   guint offset = 0;
 
+  if (data_size == 0) {
+    GST_WARNING_OBJECT (self, "No overridden parameters to parse");
+    return FALSE;
+  }
+
+  /* NO_NAL_END means the last NAL has no following start code, so stop after
+   * parsing it; any other non-OK identify result is a hard failure. */
   do {
-    res =
+    if (offset >= data_size)
+      break;
+
+    identify =
         gst_h264_parser_identify_nalu (&parser, data, offset, data_size, &nalu);
-    if (res != GST_H264_PARSER_OK && res != GST_H264_PARSER_NO_NAL_END) {
+    if (identify != GST_H264_PARSER_OK
+        && identify != GST_H264_PARSER_NO_NAL_END) {
       GST_WARNING_OBJECT (self, "Failed to parse overridden parameters");
       return FALSE;
     }
 
     if (nalu.type == GST_H264_NAL_SPS) {
-      pres = gst_h264_parser_parse_sps (&parser, &nalu, sps);
-      if (pres != GST_H264_PARSER_OK)
-        GST_WARNING_OBJECT (self, "Failed to parse overridden SPS");
+      parse = gst_h264_parser_parse_sps (&parser, &nalu, sps);
+      if (parse != GST_H264_PARSER_OK) {
+        gst_h264_sps_clear (sps);
+        GST_ERROR_OBJECT (self, "Failed to parse overridden SPS");
+        return FALSE;
+      }
     } else if (nalu.type == GST_H264_NAL_PPS) {
-      pres = gst_h264_parser_parse_pps (&parser, &nalu, pps);
-      if (pres != GST_H264_PARSER_OK)
-        GST_WARNING_OBJECT (self, "Failed to parse overridden PPS");
+      parse = gst_h264_parser_parse_pps (&parser, &nalu, pps);
+      if (parse != GST_H264_PARSER_OK) {
+        gst_h264_pps_clear (pps);
+        GST_ERROR_OBJECT (self, "Failed to parse overridden PPS");
+        return FALSE;
+      }
     } else {
       GST_WARNING_OBJECT (self, "Unexpected NAL identified: %d", nalu.type);
     }
 
+    if (nalu.size == 0) {
+      GST_WARNING_OBJECT (self, "Zero-sized NAL at offset %u, aborting parse",
+          offset);
+      break;
+    }
     offset = nalu.offset + nalu.size;
-  } while (res == GST_H264_PARSER_OK);
+
+  } while (identify == GST_H264_PARSER_OK);
 
   /* from gst_h264_nal_parser_free */
   gst_h264_sps_clear (&parser.sps[0]);
   gst_h264_pps_clear (&parser.pps[0]);
 
-  return res == GST_H264_PARSER_OK || res == GST_H264_PARSER_NO_NAL_END;
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -1054,8 +1077,8 @@ gst_vulkan_h264_encoder_new_parameters (GstH264Encoder * encoder,
     return GST_FLOW_ERROR;
 
   if (feedback.h264.hasStdSPSOverrides || feedback.h264.hasStdPPSOverrides) {
-    GstH264SPS new_sps;
-    GstH264PPS new_pps;
+    GstH264SPS new_sps = { 0, };
+    GstH264PPS new_pps = { 0, };
     GST_LOG_OBJECT (self, "Vulkan driver overrode parameters:%s%s",
         feedback.h264.hasStdSPSOverrides ? " SPS" : "",
         feedback.h264.hasStdPPSOverrides ? " PPS" : "");
@@ -1070,8 +1093,15 @@ gst_vulkan_h264_encoder_new_parameters (GstH264Encoder * encoder,
       }
 
       ret = gst_vulkan_h264_encoder_update_parameters (self, sps, pps);
-      if (ret != GST_FLOW_OK)
+      if (ret != GST_FLOW_OK) {
+        g_free (data);
         return ret;
+      }
+    } else {
+      GST_ELEMENT_ERROR (self, RESOURCE, READ,
+          ("Unable to parse overriden parameters"), (NULL));
+      g_free (data);
+      return GST_FLOW_ERROR;
     }
   }
 
@@ -1199,7 +1229,7 @@ _write_headers (GstVulkanH264Encoder * self,
       goto bail;
     }
 
-    offset += size + 1;
+    offset += size;
   }
 
   if (pic_type == STD_VIDEO_H264_PICTURE_TYPE_IDR) {
@@ -1222,7 +1252,7 @@ _write_headers (GstVulkanH264Encoder * self,
       goto bail;
     }
 
-    offset += size + 1;
+    offset += size;
   }
 
   if (pic_type == STD_VIDEO_H264_PICTURE_TYPE_I
@@ -1246,7 +1276,7 @@ _write_headers (GstVulkanH264Encoder * self,
       goto bail;
     }
 
-    offset += size + 1;
+    offset += size;
   }
 
   gst_vulkan_encoder_caps (self->encoder, &vk_caps);
@@ -1257,9 +1287,22 @@ _write_headers (GstVulkanH264Encoder * self,
   if (fillers > 0) {
     guint8 nal_buf[4096] = { 0, };
     guint nal_size = sizeof (nal_buf);
+    guint filler_target;
 
+    /* A filler NAL can't be smaller than its header overhead; if the gap is
+     * too small, grow it by whole alignment units until a NAL fits. */
     while (fillers < 7 /* filler header size */ )
       fillers += vk_caps.caps.minBitstreamBufferOffsetAlignment;
+
+    /* Pin the end of the headers to the aligned offset the driver expects,
+     * rather than relying on the emitted filler NAL's exact byte count. */
+    filler_target = offset + fillers;
+    if (filler_target > orig_size) {
+      GST_ERROR_OBJECT (self,
+          "Not enough space for filler NAL: need %u, have %u", filler_target,
+          orig_size);
+      goto bail;
+    }
 
     fillers -= 7 /* filler header size */ ;
 
@@ -1279,7 +1322,7 @@ _write_headers (GstVulkanH264Encoder * self,
       goto bail;
     }
 
-    offset += size + 1;
+    offset = filler_target;
   }
 
   vk_frame->picture.bitstream_header_size = offset;
