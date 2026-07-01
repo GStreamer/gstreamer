@@ -70,8 +70,8 @@ GES_API
 GESUriClip* ges_uri_clip_new (const gchar *uri) G_GNUC_WARN_UNUSED_RESULT;
 
 GES_API
-void ges_uri_clip_set_source_track_map (GESUriClip * self,
-    GESSourceTrackMap * map);
+gboolean ges_uri_clip_set_source_track_map (GESUriClip * self,
+    GESSourceTrackMap * map, GList ** created, GError ** error);
 GES_API
 GESSourceTrackMap * ges_uri_clip_get_source_track_map (GESUriClip * self);
 

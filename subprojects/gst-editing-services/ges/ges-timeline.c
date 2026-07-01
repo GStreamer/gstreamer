@@ -1767,6 +1767,31 @@ done:
   return no_errors;
 }
 
+/* Whether @clip already holds a core child of @type that is not in a track
+ * yet, i.e. one created ahead of time (e.g. by a GESUriClip source-track-map)
+ * and still waiting to be placed. */
+static gboolean
+_clip_has_unplaced_core_child (GESClip * clip, GESTrackType type)
+{
+  GList *tmp, *children = ges_container_get_children (GES_CONTAINER (clip),
+      FALSE);
+  gboolean ret = FALSE;
+
+  for (tmp = children; tmp; tmp = tmp->next) {
+    GESTrackElement *el = tmp->data;
+
+    if (ges_track_element_is_core (el)
+        && ges_track_element_get_track (el) == NULL
+        && (ges_track_element_get_track_type (el) & type)) {
+      ret = TRUE;
+      break;
+    }
+  }
+  g_list_free_full (children, gst_object_unref);
+
+  return ret;
+}
+
 /* returns TRUE if no errors in adding to tracks */
 static gboolean
 add_object_to_tracks (GESTimeline * timeline, GESClip * clip,
@@ -1788,6 +1813,12 @@ add_object_to_tracks (GESTimeline * timeline, GESClip * clip,
   for (tmp = tracks; tmp; tmp = tmp->next) {
     GESTrack *track = GES_TRACK (tmp->data);
     if (new_track && track != new_track)
+      continue;
+
+    /* Sources created ahead of time (e.g. by a GESUriClip source-track-map)
+     * are already children of the clip; skip recreating them and let
+     * _add_clip_children_to_tracks() below place the existing ones. */
+    if (!new_track && _clip_has_unplaced_core_child (clip, track->type))
       continue;
 
     list = ges_clip_create_track_elements (clip, track->type);

@@ -903,8 +903,13 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
     if (GST_CLOCK_TIME_IS_VALID (duration))
       ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip), duration);
 
-    ges_uri_clip_set_source_track_map (GES_URI_CLIP (clip), map);
+    res = ges_uri_clip_set_source_track_map (GES_URI_CLIP (clip), map, NULL,
+        error);
     ges_source_track_map_unref (map);
+    if (!res) {
+      clip = NULL;
+      goto beach;
+    }
 
     if (!ges_layer_add_clip_full (layer, clip, error)) {
       clip = NULL;

@@ -137,7 +137,8 @@ ges_uri_clip_set_property (GObject * object, guint property_id,
           g_value_get_flags (value));
       break;
     case PROP_SOURCE_TRACK_MAP:
-      ges_uri_clip_set_source_track_map (uriclip, g_value_get_boxed (value));
+      ges_uri_clip_set_source_track_map (uriclip, g_value_get_boxed (value),
+          NULL, NULL);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -637,12 +638,121 @@ ges_uri_clip_get_uri (GESUriClip * self)
   return ret;
 }
 
+static GESTrackElement *
+_extract_stream_source (GESUriClipAsset * uri_asset,
+    GESTrackElementAsset * element_asset)
+{
+  GESTrackElement *element =
+      GES_TRACK_ELEMENT (ges_asset_extract (GES_ASSET (element_asset), NULL));
+
+  ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (element),
+      ges_uri_clip_asset_get_max_duration (uri_asset));
+
+  return element;
+}
+
+/* Return the core child of @clip extracted from @stream, or %NULL. */
+static GESTrackElement *
+_find_core_child_for_stream (GESClip * clip, GESUriSourceAsset * stream)
+{
+  GList *tmp, *children = ges_container_get_children (GES_CONTAINER (clip),
+      FALSE);
+  GESTrackElement *ret = NULL;
+
+  for (tmp = children; tmp; tmp = tmp->next) {
+    GESTrackElement *el = tmp->data;
+
+    if (ges_track_element_is_core (el)
+        && ges_extractable_get_asset (GES_EXTRACTABLE (el)) ==
+        GES_ASSET (stream)) {
+      ret = el;
+      break;
+    }
+  }
+  g_list_free_full (children, gst_object_unref);
+
+  return ret;
+}
+
+/* Make @clip's core children match @map: create a core source for each mapped
+ * stream that has none yet, and remove the core child of any stream no longer
+ * in @map. When @clip is already in a timeline, the child-added/child-removed
+ * signals place and unplace the affected sources in the tracks the map names;
+ * otherwise placement happens when the clip is later added to a timeline (see
+ * add_object_to_tracks). Newly created elements are appended to @created. */
+static gboolean
+_sync_sources_to_map (GESUriClip * self, GESSourceTrackMap * map,
+    GList ** created, GError ** error)
+{
+  GESClip *clip = GES_CLIP (self);
+  GESAsset *asset = GES_TIMELINE_ELEMENT (clip)->asset;
+  GESUriClipAsset *uri_asset;
+  GList *tmp, *children;
+  const GList *sa, *stream_assets;
+
+  g_return_val_if_fail (asset, FALSE);
+
+  uri_asset = GES_URI_CLIP_ASSET (asset);
+  stream_assets = ges_uri_clip_asset_get_stream_assets (uri_asset);
+
+  /* prune: drop the core children of streams that left the map */
+  children = ges_container_get_children (GES_CONTAINER (clip), FALSE);
+  for (tmp = children; tmp; tmp = tmp->next) {
+    GESTrackElement *el = tmp->data;
+    GESAsset *el_asset = ges_extractable_get_asset (GES_EXTRACTABLE (el));
+
+    if (!ges_track_element_is_core (el) || !GES_IS_URI_SOURCE_ASSET (el_asset))
+      continue;
+
+    if (!ges_source_track_map_contains (map, GES_URI_SOURCE_ASSET (el_asset)))
+      ges_container_remove (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (el));
+  }
+  g_list_free_full (children, gst_object_unref);
+
+  /* create: add a core source for each mapped stream that has none */
+  for (sa = stream_assets; sa; sa = sa->next) {
+    GESTrackElementAsset *element_asset = GES_TRACK_ELEMENT_ASSET (sa->data);
+    GESTrackElement *element;
+
+    if (!ges_source_track_map_contains (map,
+            GES_URI_SOURCE_ASSET (element_asset)))
+      continue;
+
+    if (_find_core_child_for_stream (clip,
+            GES_URI_SOURCE_ASSET (element_asset)))
+      continue;
+
+    element = _extract_stream_source (uri_asset, element_asset);
+    ges_track_element_set_creator_asset (element, asset);
+    gst_object_ref_sink (element);
+    if (!ges_container_add (GES_CONTAINER (clip),
+            GES_TIMELINE_ELEMENT (element))) {
+      g_set_error (error, GES_ERROR, GES_ERROR_NOT_ENOUGH_INTERNAL_CONTENT,
+          "Could not add the source for stream %" GST_PTR_FORMAT " to the clip",
+          element_asset);
+      gst_object_unref (element);
+      return FALSE;
+    }
+
+    if (created)
+      *created = g_list_append (*created, gst_object_ref (element));
+    gst_object_unref (element);
+  }
+
+  return TRUE;
+}
+
 /**
  * ges_uri_clip_set_source_track_map:
  * @self: the #GESUriClip
  * @map: (transfer none) (nullable): the #GESSourceTrackMap routing the URI's
  * streams to tracks, or %NULL to use all the streams of the URI with the
- * default per-type track selection.
+ * default per-type track selection. The clip stores a private copy, so later
+ * changes to @map do not affect the clip.
+ * @created: (out) (optional) (nullable) (transfer full) (element-type GESTrackElement):
+ * return location for the list of core sources created for the newly mapped
+ * streams, or %NULL to ignore it.
+ * @error: return location for an error, or %NULL to ignore it.
  *
  * Sets which streams of the URI @self uses, and the #GESTrack each of them is
  * placed into. Only the streams present in @map produce a core child; a stream
@@ -651,21 +761,31 @@ ges_uri_clip_get_uri (GESUriClip * self)
  * mapped to %NULL is selected but left unplaced (its source is created but put
  * in no track).
  *
- * This must be set before @self is added to a #GESTimeline, since it only
- * affects the creation and track selection of its core children.
+ * The core sources are created as soon as the map is set: the streams newly
+ * present in @map get a fresh source, and the sources of the streams that left
+ * @map are removed. When @self is already in a #GESTimeline the affected
+ * sources are placed into (or removed from) the mapped tracks immediately.
+ *
+ * Returns: %TRUE if the sources were successfully synchronised to @map.
  *
  * Since: 1.30
  */
-void
-ges_uri_clip_set_source_track_map (GESUriClip * self, GESSourceTrackMap * map)
+gboolean
+ges_uri_clip_set_source_track_map (GESUriClip * self, GESSourceTrackMap * map,
+    GList ** created, GError ** error)
 {
   GESUriClipPrivate *priv;
   GESTimeline *_locked_timeline;
+  gboolean ret = TRUE;
 
-  g_return_if_fail (GES_IS_URI_CLIP (self));
+  g_return_val_if_fail (GES_IS_URI_CLIP (self), FALSE);
+  g_return_val_if_fail (!error || !*error, FALSE);
+
+  if (created)
+    *created = NULL;
 
   if (map)
-    ges_source_track_map_ref (map);
+    map = ges_source_track_map_ref (map);
 
   priv = self->priv;
   _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (self));
@@ -673,7 +793,12 @@ ges_uri_clip_set_source_track_map (GESUriClip * self, GESSourceTrackMap * map)
   priv->source_track_map = map;
   _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (self), _locked_timeline);
 
+  if (map && GES_TIMELINE_ELEMENT (self)->asset)
+    ret = _sync_sources_to_map (self, map, created, error);
+
   g_object_notify (G_OBJECT (self), "source-track-map");
+
+  return ret;
 }
 
 /**
@@ -683,8 +808,8 @@ ges_uri_clip_set_source_track_map (GESUriClip * self, GESSourceTrackMap * map)
  * Get the #GESSourceTrackMap set on @self with
  * ges_uri_clip_set_source_track_map().
  *
- * Returns: (transfer full) (nullable): the #GESSourceTrackMap of @self, or
- * %NULL if it uses all the streams of the URI.
+ * Returns: (transfer full) (nullable): the #GESSourceTrackMap of
+ * @self, or %NULL if it uses all the streams of the URI.
  *
  * Since: 1.30
  */
@@ -764,7 +889,6 @@ ges_uri_clip_create_track_elements (GESClip * clip, GESTrackType type)
   GESAsset *asset = GES_TIMELINE_ELEMENT (clip)->asset;
   GESUriClipAsset *uri_asset;
   GESSourceTrackMap *map;
-  GstClockTime max_duration;
 
   g_return_val_if_fail (asset, NULL);
 
@@ -772,7 +896,6 @@ ges_uri_clip_create_track_elements (GESClip * clip, GESTrackType type)
   /* ref'd snapshot; the map is immutable so reads are safe without more locks */
   map = ges_uri_clip_get_source_track_map (GES_URI_CLIP (clip));
 
-  max_duration = ges_uri_clip_asset_get_max_duration (uri_asset);
   stream_assets = ges_uri_clip_asset_get_stream_assets (uri_asset);
 
   for (tmp = stream_assets; tmp; tmp = tmp->next) {
@@ -782,14 +905,9 @@ ges_uri_clip_create_track_elements (GESClip * clip, GESTrackType type)
             GES_URI_SOURCE_ASSET (element_asset)))
       continue;
 
-    if (ges_track_element_asset_get_track_type (element_asset) == type) {
-      GESTrackElement *element =
-          GES_TRACK_ELEMENT (ges_asset_extract (GES_ASSET (element_asset),
-              NULL));
-      ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (element),
-          max_duration);
-      res = g_list_append (res, element);
-    }
+    if (ges_track_element_asset_get_track_type (element_asset) == type)
+      res = g_list_append (res, _extract_stream_source (uri_asset,
+              element_asset));
   }
 
   g_clear_pointer (&map, ges_source_track_map_unref);

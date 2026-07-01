@@ -1438,7 +1438,8 @@ ges_base_xml_formatter_end_current_clip (GESBaseXmlFormatter * self)
 
     map = ges_source_track_map_builder_build (priv->current_source_map_builder);
     priv->current_source_map_builder = NULL;
-    ges_uri_clip_set_source_track_map (GES_URI_CLIP (priv->current_clip), map);
+    ges_uri_clip_set_source_track_map (GES_URI_CLIP (priv->current_clip), map,
+        NULL, NULL);
     ges_source_track_map_unref (map);
   }
 
