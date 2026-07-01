@@ -479,13 +479,12 @@ gst_video_parse_utils_parse_afd (const guint8 data, GstVideoAFDSpec spec,
  * Clears the user data, resetting it for the next frame
  */
 void
-gst_video_clear_user_data (GstVideoParseUserData * user_data, gboolean free)
+gst_video_clear_user_data (GstVideoParseUserData * user_data)
 {
   user_data->closedcaptions_size = 0;
   user_data->bar_data_size = 0;
   user_data->active_format_flag = 0;
-  if (free)
-    g_clear_pointer (&user_data->lcevc_enhancement_data, gst_buffer_unref);
+  g_clear_pointer (&user_data->lcevc_enhancement_data, gst_buffer_unref);
 }
 
 /*

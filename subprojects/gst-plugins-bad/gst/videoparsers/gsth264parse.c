@@ -214,7 +214,7 @@ gst_h264_parse_finalize (GObject * object)
 
   gst_video_clear_user_data_unregistered (&h264parse->user_data_unregistered,
       TRUE);
-  gst_video_clear_user_data (&h264parse->user_data, TRUE);
+  gst_video_clear_user_data (&h264parse->user_data);
 
   g_object_unref (h264parse->frame_out);
 
@@ -243,7 +243,7 @@ gst_h264_parse_reset_frame (GstH264Parse * h264parse)
   h264parse->have_pps_in_frame = FALSE;
   h264parse->have_aud_in_frame = FALSE;
   gst_adapter_clear (h264parse->frame_out);
-  gst_video_clear_user_data (&h264parse->user_data, FALSE);
+  gst_video_clear_user_data (&h264parse->user_data);
   gst_video_clear_user_data_unregistered (&h264parse->user_data_unregistered,
       FALSE);
 }

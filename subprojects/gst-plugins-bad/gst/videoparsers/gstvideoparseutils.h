@@ -207,8 +207,7 @@ void gst_video_push_user_data (GstElement            * elt,
                                GstVideoParseUserData * user_data,
                                GstBuffer             * buf);
 
-void gst_video_clear_user_data (GstVideoParseUserData * user_data,
-                                gboolean                free);
+void gst_video_clear_user_data (GstVideoParseUserData * user_data);
 
 
 void gst_video_parse_user_data_unregistered (GstElement                        * elt,
