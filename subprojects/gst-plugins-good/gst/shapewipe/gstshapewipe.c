@@ -926,6 +926,7 @@ not_negotiated:
 shutdown:
   {
     GST_DEBUG_OBJECT (self, "Shutting down");
+    g_mutex_unlock (&self->mask_mutex);
     gst_buffer_unref (buffer);
     return GST_FLOW_FLUSHING;
   }
