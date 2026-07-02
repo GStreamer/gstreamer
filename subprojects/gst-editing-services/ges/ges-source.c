@@ -31,6 +31,8 @@
 #include "ges/ges-meta-container.h"
 #include "ges-track-element.h"
 #include "ges-source.h"
+#include "ges-clip.h"
+#include "ges-base-effect.h"
 #include "ges-layer.h"
 #include "gstframepositioner.h"
 struct _GESSourcePrivate
@@ -44,7 +46,26 @@ struct _GESSourcePrivate
   GMutex sub_element_lock;
 
   gboolean is_rendering_smartly;
+
+  /* effects added through ges_source_add_effect() while the source was not yet
+   * in a clip; added to the clip once the source is parented to one */
+  GList *pending_effects;
 };
+
+typedef struct
+{
+  GESBaseEffect *effect;        /* owned (sunk) */
+  gint index;
+} PendingEffect;
+
+static void
+_pending_effect_free (gpointer data)
+{
+  PendingEffect *pe = data;
+
+  gst_object_unref (pe->effect);
+  g_free (pe);
+}
 
 G_DEFINE_TYPE_WITH_PRIVATE (GESSource, ges_source, GES_TYPE_TRACK_ELEMENT);
 
@@ -313,6 +334,8 @@ ges_source_dispose (GObject * object)
   gst_clear_object (&priv->ghostpad);
   g_list_free_full (priv->sub_element_probes,
       (GDestroyNotify) _release_probe_data);
+  g_list_free_full (priv->pending_effects, _pending_effect_free);
+  priv->pending_effects = NULL;
   g_mutex_clear (&priv->sub_element_lock);
 
   G_OBJECT_CLASS (ges_source_parent_class)->dispose (object);
@@ -332,9 +355,126 @@ ges_source_class_init (GESSourceClass * klass)
   GES_TRACK_ELEMENT_CLASS_DEFAULT_HAS_INTERNAL_SOURCE (klass) = TRUE;
 }
 
+/* Translate a per-source effect index (the position within @source's own
+ * effect chain) into the clip-global index ges_clip_add_top_effect() expects,
+ * and add @effect there. Effects bound to different sources live in different
+ * tracks, so their relative (clip-global) order is irrelevant; only @source's
+ * own chain position is honored. @src_index < 0, or beyond @source's current
+ * count, appends. */
+static gboolean
+_clip_add_effect_for_source (GESClip * clip, GESSource * source,
+    GESBaseEffect * effect, gint src_index, GError ** error)
+{
+  gint clip_index = -1;
+
+  if (src_index >= 0) {
+    GList *top = ges_clip_get_top_effects (clip);
+    GList *tmp;
+    gint seen = 0, global = 0;
+
+    for (tmp = top; tmp; tmp = tmp->next, global ++) {
+      GESSource * es = ges_base_effect_get_bound_source (tmp->data);
+      gboolean same = (es == source);
+
+      g_clear_object (&es);
+      if (same) {
+        if (seen == src_index) {
+          clip_index = global;
+          break;
+        }
+        seen++;
+      }
+    }
+    g_list_free_full (top, gst_object_unref);
+  }
+
+  return ges_clip_add_top_effect (clip, effect, clip_index, error);
+}
+
+/* Once the source is parented to a clip, add any effects that were requested
+ * through ges_source_add_effect() while it had no clip. */
+static void
+_source_parent_notify_cb (GESSource * self, GParamSpec * pspec, gpointer unused)
+{
+  GESTimelineElement *parent = GES_TIMELINE_ELEMENT_PARENT (self);
+  GList *pending, *tmp;
+
+  if (!GES_IS_CLIP (parent) || !self->priv->pending_effects)
+    return;
+
+  pending = self->priv->pending_effects;
+  self->priv->pending_effects = NULL;
+
+  for (tmp = pending; tmp; tmp = tmp->next) {
+    PendingEffect *pe = tmp->data;
+    GError *err = NULL;
+
+    if (!_clip_add_effect_for_source (GES_CLIP (parent), self, pe->effect,
+            pe->index, &err)) {
+      GST_ERROR_OBJECT (self, "Could not add deferred effect %" GES_FORMAT
+          ": %s", GES_ARGS (pe->effect), err ? err->message : "unknown");
+      g_clear_error (&err);
+    }
+  }
+
+  g_list_free_full (pending, _pending_effect_free);
+}
+
 static void
 ges_source_init (GESSource * self)
 {
   self->priv = ges_source_get_instance_private (self);
   g_mutex_init (&self->priv->sub_element_lock);
+  g_signal_connect (self, "notify::parent",
+      G_CALLBACK (_source_parent_notify_cb), NULL);
+}
+
+/**
+ * ges_source_add_effect:
+ * @source: a core #GESSource
+ * @effect: (transfer floating): the #GESBaseEffect to add on top of @source
+ * @index: the priority index for @effect within @source's effect chain, or -1
+ *   to append it at the lowest priority
+ * @error: (nullable): return location for an error
+ *
+ * Adds @effect on top of @source, binding it to @source so that it follows it
+ * to whichever #GESTrack(s) @source is placed in (see #GESSourceTrackMap),
+ * instead of being applied to whatever core element happens to share its track.
+ *
+ * If @source is not yet in a #GESClip, the effect is remembered and added once
+ * @source is parented to one.
+ *
+ * Returns: %TRUE if @effect was added.
+ *
+ * Since: 1.30
+ */
+gboolean
+ges_source_add_effect (GESSource * source, GESBaseEffect * effect, gint index,
+    GError ** error)
+{
+  GESTimelineElement *parent;
+  PendingEffect *pe;
+
+  g_return_val_if_fail (GES_IS_SOURCE (source), FALSE);
+  g_return_val_if_fail (GES_IS_BASE_EFFECT (effect), FALSE);
+  g_return_val_if_fail (!error || !*error, FALSE);
+
+  /* Bind before adding: the effect's placement (through the clip's
+   * select_element_tracks vmethod) reads the binding. */
+  ges_base_effect_set_source (effect, source);
+
+  parent = GES_TIMELINE_ELEMENT_PARENT (source);
+  if (GES_IS_CLIP (parent))
+    return _clip_add_effect_for_source (GES_CLIP (parent), source, effect,
+        index, error);
+
+  /* Not in a clip yet: remember the effect and add it once @source is
+   * parented to one (see _source_parent_notify_cb). */
+  pe = g_new0 (PendingEffect, 1);
+  pe->effect = gst_object_ref_sink (effect);
+  pe->index = index;
+  source->priv->pending_effects =
+      g_list_append (source->priv->pending_effects, pe);
+
+  return TRUE;
 }

@@ -646,6 +646,11 @@ G_GNUC_INTERNAL GstClockTime
 ges_base_effect_translate_sink_to_source_time (GESBaseEffect * effect,
                                                GstClockTime time,
                                                GHashTable * time_property_values);
+G_GNUC_INTERNAL void
+ges_base_effect_set_source                    (GESBaseEffect * effect,
+                                               GESSource * source);
+G_GNUC_INTERNAL GESSource *
+ges_base_effect_get_bound_source              (GESBaseEffect * effect);
 G_GNUC_INTERNAL GstElement *
 ges_effect_from_description                   (const gchar *bin_desc,
                                                GESTrackType type,

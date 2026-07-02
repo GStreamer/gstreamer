@@ -83,6 +83,8 @@
 #include "ges-internal.h"
 #include "ges-track-element.h"
 #include "ges-base-effect.h"
+#include "ges-source.h"
+#include "ges-clip.h"
 
 typedef struct _TimePropertyData
 {
@@ -108,6 +110,9 @@ struct _GESBaseEffectPrivate
   GESBaseEffectTimeTranslationFunc sink_to_source;
   gpointer translation_data;
   GDestroyNotify destroy_translation_data;
+
+  /* the core source this effect is explicitly bound to, or unset */
+  GWeakRef source;
 };
 
 G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESBaseEffect, ges_base_effect,
@@ -146,6 +151,7 @@ ges_base_effect_dispose (GObject * object)
   priv->destroy_translation_data = NULL;
   priv->source_to_sink = NULL;
   priv->sink_to_source = NULL;
+  g_weak_ref_clear (&priv->source);
 
   G_OBJECT_CLASS (ges_base_effect_parent_class)->dispose (object);
 }
@@ -165,6 +171,77 @@ static void
 ges_base_effect_init (GESBaseEffect * self)
 {
   self->priv = ges_base_effect_get_instance_private (self);
+  g_weak_ref_init (&self->priv->source, NULL);
+}
+
+/* Internal: explicitly bind @effect to the core @source it is applied on top
+ * of. Called by ges_source_add_effect(). */
+void
+ges_base_effect_set_source (GESBaseEffect * self, GESSource * source)
+{
+  g_return_if_fail (GES_IS_BASE_EFFECT (self));
+  g_return_if_fail (source == NULL || GES_IS_SOURCE (source));
+
+  g_weak_ref_set (&self->priv->source, source);
+}
+
+/* Internal: the source @effect was explicitly bound to, or NULL. Used for
+ * routing (the placement must not fall back to the derived core-in-track). */
+GESSource *
+ges_base_effect_get_bound_source (GESBaseEffect * self)
+{
+  g_return_val_if_fail (GES_IS_BASE_EFFECT (self), NULL);
+
+  return g_weak_ref_get (&self->priv->source);
+}
+
+/**
+ * ges_base_effect_get_source:
+ * @effect: a #GESBaseEffect
+ *
+ * Gets the core #GESSource @effect is applied on top of: the source it was
+ * explicitly bound to (through ges_source_add_effect()) if any, otherwise the
+ * core source of @effect's current track, so the result is meaningful even for
+ * effects added through ges_clip_add_top_effect(). Routing uses the explicit
+ * binding, not this derived value; serialization preserves the effect's track,
+ * so this derived source survives a save/load round-trip.
+ *
+ * Returns: (transfer full) (nullable): the #GESSource, or %NULL. Unref after
+ * usage.
+ *
+ * Since: 1.30
+ */
+GESSource *
+ges_base_effect_get_source (GESBaseEffect * effect)
+{
+  GESSource *source;
+  GESTimelineElement *parent;
+  GESTrack *track;
+  GList *tmp;
+
+  g_return_val_if_fail (GES_IS_BASE_EFFECT (effect), NULL);
+
+  source = g_weak_ref_get (&effect->priv->source);
+  if (source)
+    return source;
+
+  track = ges_track_element_get_track (GES_TRACK_ELEMENT (effect));
+  if (!track)
+    return NULL;
+
+  parent = GES_TIMELINE_ELEMENT_PARENT (effect);
+  if (!GES_IS_CLIP (parent))
+    return NULL;
+
+  for (tmp = GES_CONTAINER_CHILDREN (parent); tmp; tmp = tmp->next) {
+    GESTrackElement *child = tmp->data;
+
+    if (GES_IS_SOURCE (child) && ges_track_element_is_core (child)
+        && ges_track_element_get_track (child) == track)
+      return gst_object_ref (GES_SOURCE (child));
+  }
+
+  return NULL;
 }
 
 static void

@@ -91,4 +91,7 @@ ges_base_effect_set_time_translation_funcs (GESBaseEffect * effect,
 GES_API gboolean
 ges_base_effect_is_time_effect             (GESBaseEffect * effect);
 
+GES_API GESSource *
+ges_base_effect_get_source                 (GESBaseEffect * effect);
+
 G_END_DECLS

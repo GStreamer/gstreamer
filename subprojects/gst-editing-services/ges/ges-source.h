@@ -85,4 +85,8 @@ struct _GESSourceClass {
   gpointer _ges_reserved[GES_PADDING - 2];
 };
 
+GES_API
+gboolean ges_source_add_effect (GESSource * source, GESBaseEffect * effect,
+    gint index, GError ** error);
+
 G_END_DECLS

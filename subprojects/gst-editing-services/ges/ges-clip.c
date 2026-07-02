@@ -3105,6 +3105,43 @@ _cmp_children_by_priority (gconstpointer a_p, gconstpointer b_p)
  * Returns: %TRUE if @effect was successfully added to @clip at @index.
  * Since: 1.18
  */
+/* Warn if @effect has no explicit source binding but @clip already routes
+ * effects per-source: ges_clip_add_top_effect() and ges_source_add_effect()
+ * should not be mixed on the same clip (bound effects are placed on their
+ * source, unbound ones on every matching-type track). */
+#ifndef GST_DISABLE_GST_DEBUG
+static void
+_warn_if_mixing_bound_effects (GESClip * clip, GESBaseEffect * effect)
+{
+  GESSource *bound;
+  GList *top, *tmp;
+
+  /* This only produces a warning, so skip the work unless it would be shown. */
+  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) < GST_LEVEL_WARNING)
+    return;
+
+  bound = ges_base_effect_get_bound_source (effect);
+  if (bound) {
+    gst_object_unref (bound);
+    return;
+  }
+
+  top = ges_clip_get_top_effects (clip);
+  for (tmp = top; tmp; tmp = tmp->next) {
+    GESSource *es = ges_base_effect_get_bound_source (tmp->data);
+
+    if (es) {
+      gst_object_unref (es);
+      GST_WARNING_OBJECT (clip, "Adding an effect with no source binding to a "
+          "clip that already has source-bound effects; do not mix "
+          "ges_clip_add_top_effect() with ges_source_add_effect()");
+      break;
+    }
+  }
+  g_list_free_full (top, gst_object_unref);
+}
+#endif
+
 gboolean
 ges_clip_add_top_effect (GESClip * clip, GESBaseEffect * effect, gint index,
     GError ** error)
@@ -3119,6 +3156,10 @@ ges_clip_add_top_effect (GESClip * clip, GESBaseEffect * effect, gint index,
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
   g_return_val_if_fail (GES_IS_BASE_EFFECT (effect), FALSE);
   g_return_val_if_fail (!error || !*error, FALSE);
+
+#ifndef GST_DISABLE_GST_DEBUG
+  _warn_if_mixing_bound_effects (clip, effect);
+#endif
 
   _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (clip));
 

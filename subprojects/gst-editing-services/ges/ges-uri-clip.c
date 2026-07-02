@@ -709,6 +709,7 @@ ges_uri_clip_select_element_tracks (GESClip * clip,
     GESTrackElement * track_element)
 {
   GESSourceTrackMap *map;
+  GESSource *bound = NULL;
   GESUriSourceAsset *stream = NULL;
   GESAsset *asset;
   GPtrArray *res;
@@ -719,14 +720,24 @@ ges_uri_clip_select_element_tracks (GESClip * clip,
   if (!map)
     return NULL;                /* no map: defer to the placement signals */
 
-  /* The stream whose track(s) @track_element should go into, for a core
-   * source. */
+  /* The stream whose track(s) @track_element should go into: its own, for a
+   * core source; the bound source's, for an explicitly-bound top effect. */
   asset = ges_extractable_get_asset (GES_EXTRACTABLE (track_element));
-  if (GES_IS_URI_SOURCE_ASSET (asset))
+  if (GES_IS_URI_SOURCE_ASSET (asset)) {
     stream = GES_URI_SOURCE_ASSET (asset);
+  } else if (GES_IS_BASE_EFFECT (track_element)) {
+    bound = ges_base_effect_get_bound_source (GES_BASE_EFFECT (track_element));
+    if (bound) {
+      GESAsset *sasset = ges_extractable_get_asset (GES_EXTRACTABLE (bound));
+
+      if (GES_IS_URI_SOURCE_ASSET (sasset))
+        stream = GES_URI_SOURCE_ASSET (sasset);
+    }
+  }
 
   if (!stream) {
-    /* not a core source of this clip: defer to the legacy default */
+    /* an unbound effect (or unknown element): defer to the legacy default */
+    g_clear_object (&bound);
     ges_source_track_map_unref (map);
     return NULL;
   }
@@ -739,6 +750,7 @@ ges_uri_clip_select_element_tracks (GESClip * clip,
     g_ptr_array_add (res, gst_object_ref (tmp->data));
 
   g_list_free_full (tracks, gst_object_unref);
+  g_clear_object (&bound);
   ges_source_track_map_unref (map);
 
   return res;
