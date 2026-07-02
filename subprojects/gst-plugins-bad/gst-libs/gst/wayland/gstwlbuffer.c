@@ -213,6 +213,11 @@ gst_buffer_get_wl_buffer (GstWlWindow * window, GstBuffer * gstbuffer)
     priv = gst_wl_buffer_get_instance_private (wlbuf);
 
     g_mutex_lock (&priv->lock);
+    if (priv->used_by_compositor) {
+      gst_object_unref (wlbuf);
+      g_mutex_unlock (&priv->lock);
+      return NULL;
+    }
     gst_buffer_replace (&priv->current_gstbuffer, gstbuffer);
     g_mutex_unlock (&priv->lock);
   }
