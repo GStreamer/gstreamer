@@ -20,6 +20,7 @@
 #include "test-utils.h"
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
+#include <stdarg.h>
 
 /* This test uri will eventually have to be fixed */
 #define TEST_URI "http://nowhere/blahblahblah"
@@ -273,6 +274,459 @@ GST_START_TEST (test_filesource_images)
 
 GST_END_TEST;
 
+/* A hermetic multi-stream URI: two audio streams and one video stream, so a
+ * single URI exposes several streams of the same type - which is what stream
+ * selection to distinct tracks is about. */
+#define MULTI_STREAM_URI "testbin://audio+audio+video"
+
+/* The @n-th stream asset of type @type, in discovery order. */
+static GESUriSourceAsset *
+_nth_stream_asset (GESUriClipAsset * asset, GESTrackType type, guint n)
+{
+  const GList *tmp;
+  guint i = 0;
+
+  for (tmp = ges_uri_clip_asset_get_stream_assets (asset); tmp; tmp = tmp->next) {
+    GESUriSourceAsset *stream = tmp->data;
+
+    if (ges_track_element_asset_get_track_type (GES_TRACK_ELEMENT_ASSET
+            (stream))
+        != type)
+      continue;
+    if (i++ == n)
+      return stream;
+  }
+  return NULL;
+}
+
+/* The core source child extracted from stream asset @stream, or NULL. A core
+ * source's extractable asset is the very stream asset it was created from, so
+ * that is what ties a placed child back to its stream. */
+static GESTrackElement *
+_core_source_for_stream (GESClip * clip, GESUriSourceAsset * stream)
+{
+  GList *tmp, *children = ges_container_get_children (GES_CONTAINER (clip),
+      FALSE);
+  GESTrackElement *found = NULL;
+
+  for (tmp = children; tmp; tmp = tmp->next) {
+    GESTrackElement *src = tmp->data;
+
+    if (ges_track_element_is_core (src)
+        && ges_extractable_get_asset (GES_EXTRACTABLE (src)) ==
+        GES_ASSET (stream)) {
+      found = src;
+      break;
+    }
+  }
+  g_list_free_full (children, gst_object_unref);
+  return found;
+}
+
+static guint
+_n_core_sources (GESClip * clip)
+{
+  GList *tmp, *children = ges_container_get_children (GES_CONTAINER (clip),
+      FALSE);
+  guint n = 0;
+
+  for (tmp = children; tmp; tmp = tmp->next)
+    if (ges_track_element_is_core (tmp->data))
+      n++;
+  g_list_free_full (children, gst_object_unref);
+  return n;
+}
+
+/* Route @clip's streams following the (stream, track) pairs, and return the
+ * (transfer full) list of the sources created for the newly mapped streams. */
+static GList *
+_route (GESClip * clip, GESUriSourceAsset * first_stream, ...)
+{
+  GESSourceTrackMapBuilder *builder = ges_source_track_map_builder_new ();
+  GESUriSourceAsset *stream = first_stream;
+  GList *created = NULL;
+  GError *error = NULL;
+  va_list args;
+
+  va_start (args, first_stream);
+  while (stream) {
+    GESTrack *track = va_arg (args, GESTrack *);
+
+    ges_source_track_map_builder_add (builder, stream, track);
+    stream = va_arg (args, GESUriSourceAsset *);
+  }
+  va_end (args);
+
+  fail_unless (ges_uri_clip_set_source_track_map (GES_URI_CLIP (clip),
+          ges_source_track_map_builder_build (builder), &created, &error));
+  fail_unless (error == NULL);
+
+  return created;
+}
+
+/* Each mapped stream, including several of the same type, lands in exactly the
+ * track it was routed to. */
+GST_START_TEST (test_filesource_stream_selection_routing)
+{
+  GESTimeline *timeline;
+  GESTrack *audio0, *audio1, *video;
+  GESLayer *layer;
+  GESClip *clip;
+  GESUriClipAsset *asset;
+  GESUriSourceAsset *a0, *a1, *v0;
+  GESSourceTrackMap *map;
+  GList *created, *tracks;
+  GError *error = NULL;
+
+  ges_init ();
+
+  asset = ges_uri_clip_asset_request_sync (MULTI_STREAM_URI, &error);
+  fail_unless (asset != NULL);
+  fail_unless (error == NULL);
+  a0 = _nth_stream_asset (asset, GES_TRACK_TYPE_AUDIO, 0);
+  a1 = _nth_stream_asset (asset, GES_TRACK_TYPE_AUDIO, 1);
+  v0 = _nth_stream_asset (asset, GES_TRACK_TYPE_VIDEO, 0);
+  fail_unless (a0 && a1 && v0 && a0 != a1);
+
+  timeline = ges_timeline_new ();
+  audio0 = GES_TRACK (ges_audio_track_new ());
+  audio1 = GES_TRACK (ges_audio_track_new ());
+  video = GES_TRACK (ges_video_track_new ());
+  fail_unless (ges_timeline_add_track (timeline, audio0));
+  fail_unless (ges_timeline_add_track (timeline, audio1));
+  fail_unless (ges_timeline_add_track (timeline, video));
+  layer = ges_timeline_append_layer (timeline);
+
+  clip = GES_CLIP (ges_asset_extract (GES_ASSET (asset), NULL));
+  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip), GST_SECOND);
+
+  created = _route (clip, a0, audio0, a1, audio1, v0, video, NULL);
+  assert_equals_int (g_list_length (created), 3);
+  g_list_free_full (created, gst_object_unref);
+
+  fail_unless (ges_layer_add_clip (layer, clip));
+
+  assert_equals_int (_n_core_sources (clip), 3);
+  fail_unless (ges_track_element_get_track (_core_source_for_stream (clip,
+              a0)) == audio0);
+  fail_unless (ges_track_element_get_track (_core_source_for_stream (clip,
+              a1)) == audio1);
+  fail_unless (ges_track_element_get_track (_core_source_for_stream (clip,
+              v0)) == video);
+
+  /* the map the clip exposes mirrors the routing */
+  map = ges_uri_clip_get_source_track_map (GES_URI_CLIP (clip));
+  fail_unless (map != NULL);
+  assert_equals_int (ges_source_track_map_get_size (map), 3);
+  fail_unless (ges_source_track_map_contains (map, a0));
+  fail_unless (ges_source_track_map_contains (map, a1));
+  fail_unless (ges_source_track_map_contains (map, v0));
+  tracks = ges_source_track_map_get_tracks (map, a0);
+  assert_equals_int (g_list_length (tracks), 1);
+  fail_unless (tracks->data == audio0);
+  g_list_free_full (tracks, gst_object_unref);
+  ges_source_track_map_unref (map);
+
+  gst_object_unref (asset);
+  gst_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+/* Only the mapped streams produce a core child; the others are not created. */
+GST_START_TEST (test_filesource_stream_selection_prune)
+{
+  GESTimeline *timeline;
+  GESTrack *audio;
+  GESLayer *layer;
+  GESClip *clip;
+  GESUriClipAsset *asset;
+  GESUriSourceAsset *a0, *a1, *v0;
+  GList *created;
+  GError *error = NULL;
+
+  ges_init ();
+
+  asset = ges_uri_clip_asset_request_sync (MULTI_STREAM_URI, &error);
+  fail_unless (asset != NULL);
+  a0 = _nth_stream_asset (asset, GES_TRACK_TYPE_AUDIO, 0);
+  a1 = _nth_stream_asset (asset, GES_TRACK_TYPE_AUDIO, 1);
+  v0 = _nth_stream_asset (asset, GES_TRACK_TYPE_VIDEO, 0);
+  fail_unless (a0 && a1 && v0);
+
+  timeline = ges_timeline_new ();
+  audio = GES_TRACK (ges_audio_track_new ());
+  fail_unless (ges_timeline_add_track (timeline, audio));
+  layer = ges_timeline_append_layer (timeline);
+
+  clip = GES_CLIP (ges_asset_extract (GES_ASSET (asset), NULL));
+  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip), GST_SECOND);
+
+  created = _route (clip, a0, audio, NULL);
+  assert_equals_int (g_list_length (created), 1);
+  g_list_free_full (created, gst_object_unref);
+
+  fail_unless (ges_layer_add_clip (layer, clip));
+
+  assert_equals_int (_n_core_sources (clip), 1);
+  fail_unless (_core_source_for_stream (clip, a0) != NULL);
+  fail_unless (_core_source_for_stream (clip, a1) == NULL);
+  fail_unless (_core_source_for_stream (clip, v0) == NULL);
+
+  gst_object_unref (asset);
+  gst_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+/* Routing one stream to two tracks: the created sources are 1:1 with the
+ * routings (created[0] -> first track, created[1] -> second track), and a
+ * property set on a created source before the clip joins a timeline follows it
+ * into its track. */
+GST_START_TEST (test_filesource_stream_selection_binding)
+{
+  GESTimeline *timeline;
+  GESTrack *audio0, *audio1;
+  GESLayer *layer;
+  GESClip *clip;
+  GESUriClipAsset *asset;
+  GESUriSourceAsset *a0;
+  GESTrackElement *first, *second;
+  GList *created;
+  GError *error = NULL;
+
+  ges_init ();
+
+  asset = ges_uri_clip_asset_request_sync (MULTI_STREAM_URI, &error);
+  fail_unless (asset != NULL);
+  a0 = _nth_stream_asset (asset, GES_TRACK_TYPE_AUDIO, 0);
+  fail_unless (a0 != NULL);
+
+  timeline = ges_timeline_new ();
+  audio0 = GES_TRACK (ges_audio_track_new ());
+  audio1 = GES_TRACK (ges_audio_track_new ());
+  fail_unless (ges_timeline_add_track (timeline, audio0));
+  fail_unless (ges_timeline_add_track (timeline, audio1));
+  layer = ges_timeline_append_layer (timeline);
+
+  clip = GES_CLIP (ges_asset_extract (GES_ASSET (asset), NULL));
+  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip), GST_SECOND);
+
+  created = _route (clip, a0, audio0, a0, audio1, NULL);
+  assert_equals_int (g_list_length (created), 2);
+  first = gst_object_ref (created->data);
+  second = gst_object_ref (created->next->data);
+  g_list_free_full (created, gst_object_unref);
+
+  /* set a property on the first source, before it is placed in any track */
+  ges_track_element_set_active (first, FALSE);
+
+  fail_unless (ges_layer_add_clip (layer, clip));
+
+  fail_unless (ges_track_element_get_track (first) == audio0);
+  fail_unless (ges_track_element_get_track (second) == audio1);
+  fail_if (ges_track_element_is_active (first));
+  fail_unless (ges_track_element_is_active (second));
+
+  gst_object_unref (first);
+  gst_object_unref (second);
+  gst_object_unref (asset);
+  gst_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+/* Changing the map at runtime swaps, prunes and recreates sources, keeping the
+ * identity of the sources that are only moved between tracks. */
+GST_START_TEST (test_filesource_stream_selection_runtime_remap)
+{
+  GESTimeline *timeline;
+  GESTrack *audio0, *audio1;
+  GESLayer *layer;
+  GESClip *clip;
+  GESUriClipAsset *asset;
+  GESUriSourceAsset *a0, *a1;
+  GESTrackElement *src_a0, *src_a1;
+  GList *created;
+  GError *error = NULL;
+
+  ges_init ();
+
+  asset = ges_uri_clip_asset_request_sync (MULTI_STREAM_URI, &error);
+  fail_unless (asset != NULL);
+  a0 = _nth_stream_asset (asset, GES_TRACK_TYPE_AUDIO, 0);
+  a1 = _nth_stream_asset (asset, GES_TRACK_TYPE_AUDIO, 1);
+  fail_unless (a0 && a1 && a0 != a1);
+
+  timeline = ges_timeline_new ();
+  audio0 = GES_TRACK (ges_audio_track_new ());
+  audio1 = GES_TRACK (ges_audio_track_new ());
+  fail_unless (ges_timeline_add_track (timeline, audio0));
+  fail_unless (ges_timeline_add_track (timeline, audio1));
+  layer = ges_timeline_append_layer (timeline);
+
+  clip = GES_CLIP (ges_asset_extract (GES_ASSET (asset), NULL));
+  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip), GST_SECOND);
+
+  created = _route (clip, a0, audio0, a1, audio1, NULL);
+  g_list_free_full (created, gst_object_unref);
+  fail_unless (ges_layer_add_clip (layer, clip));
+
+  src_a0 = gst_object_ref (_core_source_for_stream (clip, a0));
+  src_a1 = gst_object_ref (_core_source_for_stream (clip, a1));
+  fail_unless (ges_track_element_get_track (src_a0) == audio0);
+  fail_unless (ges_track_element_get_track (src_a1) == audio1);
+
+  /* swap the tracks: the same sources move, nothing is (re)created */
+  created = _route (clip, a0, audio1, a1, audio0, NULL);
+  fail_unless (created == NULL);
+  fail_unless (_core_source_for_stream (clip, a0) == src_a0);
+  fail_unless (_core_source_for_stream (clip, a1) == src_a1);
+  fail_unless (ges_track_element_get_track (src_a0) == audio1);
+  fail_unless (ges_track_element_get_track (src_a1) == audio0);
+
+  /* prune a1: its source is removed, a0's is kept */
+  created = _route (clip, a0, audio1, NULL);
+  g_list_free_full (created, gst_object_unref);
+  assert_equals_int (_n_core_sources (clip), 1);
+  fail_unless (_core_source_for_stream (clip, a0) == src_a0);
+  fail_unless (_core_source_for_stream (clip, a1) == NULL);
+
+  /* bring a1 back, in the now free track: a fresh source, distinct from the
+   * removed one */
+  created = _route (clip, a0, audio1, a1, audio0, NULL);
+  g_list_free_full (created, gst_object_unref);
+  assert_equals_int (_n_core_sources (clip), 2);
+  fail_unless (_core_source_for_stream (clip, a0) == src_a0);
+  fail_unless (_core_source_for_stream (clip, a1) != NULL);
+  fail_unless (_core_source_for_stream (clip, a1) != src_a1);
+
+  gst_object_unref (src_a0);
+  gst_object_unref (src_a1);
+  gst_object_unref (asset);
+  gst_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+static void
+_project_loaded_cb (GESProject * project, GESTimeline * timeline,
+    GMainLoop * mainloop)
+{
+  g_main_loop_quit (mainloop);
+}
+
+/* The routing survives an xges save/load round-trip: the reloaded clip has a
+ * source-track-map and its two same-type streams stay in distinct tracks. */
+GST_START_TEST (test_filesource_stream_selection_serialization)
+{
+  GESTimeline *timeline, *loaded;
+  GESTrack *audio0, *audio1, *video;
+  GESLayer *layer;
+  GESClip *clip;
+  GESProject *project;
+  GESUriClipAsset *asset;
+  GESUriSourceAsset *a0, *a1, *v0;
+  GESSourceTrackMap *map;
+  GMainLoop *mainloop;
+  GList *created, *clips, *layers, *tmp;
+  GESTrack *audio_tracks[2] = { NULL, NULL };
+  GESTrack *video_track = NULL;
+  guint n_audio = 0;
+  gchar *uri;
+  GError *error = NULL;
+
+  ges_init ();
+
+  asset = ges_uri_clip_asset_request_sync (MULTI_STREAM_URI, &error);
+  fail_unless (asset != NULL);
+  a0 = _nth_stream_asset (asset, GES_TRACK_TYPE_AUDIO, 0);
+  a1 = _nth_stream_asset (asset, GES_TRACK_TYPE_AUDIO, 1);
+  v0 = _nth_stream_asset (asset, GES_TRACK_TYPE_VIDEO, 0);
+
+  timeline = ges_timeline_new ();
+  audio0 = GES_TRACK (ges_audio_track_new ());
+  audio1 = GES_TRACK (ges_audio_track_new ());
+  video = GES_TRACK (ges_video_track_new ());
+  fail_unless (ges_timeline_add_track (timeline, audio0));
+  fail_unless (ges_timeline_add_track (timeline, audio1));
+  fail_unless (ges_timeline_add_track (timeline, video));
+  layer = ges_timeline_append_layer (timeline);
+
+  clip = GES_CLIP (ges_asset_extract (GES_ASSET (asset), NULL));
+  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip), GST_SECOND);
+  created = _route (clip, a0, audio0, a1, audio1, v0, video, NULL);
+  g_list_free_full (created, gst_object_unref);
+  fail_unless (ges_layer_add_clip (layer, clip));
+
+  uri = ges_test_get_tmp_uri ("stream-selection.xges");
+  fail_unless (ges_timeline_save_to_uri (timeline, uri, NULL, TRUE, &error));
+  fail_unless (error == NULL);
+  gst_object_unref (timeline);
+
+  /* reload into a fresh timeline */
+  mainloop = g_main_loop_new (NULL, FALSE);
+  project = ges_project_new (uri);
+  g_signal_connect (project, "loaded", (GCallback) _project_loaded_cb,
+      mainloop);
+  loaded = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
+  fail_unless (GES_IS_TIMELINE (loaded));
+  g_main_loop_run (mainloop);
+  g_main_loop_unref (mainloop);
+
+  layers = ges_timeline_get_layers (loaded);
+  clips = ges_layer_get_clips (layers->data);
+  g_list_free_full (layers, gst_object_unref);
+  fail_unless (GES_IS_URI_CLIP (clips->data));
+  clip = clips->data;
+
+  map = ges_uri_clip_get_source_track_map (GES_URI_CLIP (clip));
+  fail_unless (map != NULL);
+  assert_equals_int (ges_source_track_map_get_size (map), 3);
+  ges_source_track_map_unref (map);
+
+  assert_equals_int (_n_core_sources (clip), 3);
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
+    GESTrackElement *src = tmp->data;
+
+    if (!ges_track_element_is_core (src))
+      continue;
+    if (GES_IS_AUDIO_URI_SOURCE (src)) {
+      fail_unless (n_audio < 2);
+      audio_tracks[n_audio++] = ges_track_element_get_track (src);
+    } else {
+      fail_unless (GES_IS_VIDEO_URI_SOURCE (src));
+      video_track = ges_track_element_get_track (src);
+    }
+  }
+  /* the two audio streams stayed in two distinct audio tracks, and the video
+   * stream in a third one - a default selection could not achieve that */
+  assert_equals_int (n_audio, 2);
+  fail_unless (audio_tracks[0] != NULL && audio_tracks[1] != NULL);
+  fail_unless (audio_tracks[0] != audio_tracks[1]);
+  fail_unless (video_track != NULL);
+  fail_unless (video_track != audio_tracks[0]
+      && video_track != audio_tracks[1]);
+
+  g_list_free_full (clips, gst_object_unref);
+  g_free (uri);
+  gst_object_unref (asset);
+  gst_object_unref (loaded);
+  gst_object_unref (project);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
 
 static Suite *
 ges_suite (void)
@@ -285,6 +739,11 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_filesource_basic);
   tcase_add_test (tc_chain, test_filesource_images);
   tcase_add_test (tc_chain, test_filesource_properties);
+  tcase_add_test (tc_chain, test_filesource_stream_selection_routing);
+  tcase_add_test (tc_chain, test_filesource_stream_selection_prune);
+  tcase_add_test (tc_chain, test_filesource_stream_selection_binding);
+  tcase_add_test (tc_chain, test_filesource_stream_selection_runtime_remap);
+  tcase_add_test (tc_chain, test_filesource_stream_selection_serialization);
 
   return s;
 }
