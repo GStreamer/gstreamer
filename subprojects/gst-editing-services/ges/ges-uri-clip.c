@@ -674,6 +674,139 @@ _find_core_child_for_stream (GESClip * clip, GESUriSourceAsset * stream)
   return ret;
 }
 
+/* All the core children of @clip extracted from @stream (transfer full). */
+static GList *
+_core_children_for_stream (GESClip * clip, GESUriSourceAsset * stream)
+{
+  GList *tmp, *children = ges_container_get_children (GES_CONTAINER (clip),
+      FALSE);
+  GList *ret = NULL;
+
+  for (tmp = children; tmp; tmp = tmp->next) {
+    GESTrackElement *el = tmp->data;
+
+    if (ges_track_element_is_core (el)
+        && ges_extractable_get_asset (GES_EXTRACTABLE (el)) ==
+        GES_ASSET (stream))
+      ret = g_list_append (ret, gst_object_ref (el));
+  }
+  g_list_free_full (children, gst_object_unref);
+
+  return ret;
+}
+
+static gboolean
+_stream_has_child_in_track (GESClip * clip, GESUriSourceAsset * stream,
+    GESTrack * track)
+{
+  GList *tmp, *children = ges_container_get_children (GES_CONTAINER (clip),
+      FALSE);
+  gboolean ret = FALSE;
+
+  for (tmp = children; tmp; tmp = tmp->next) {
+    GESTrackElement *el = tmp->data;
+
+    if (ges_track_element_is_core (el)
+        && ges_extractable_get_asset (GES_EXTRACTABLE (el)) ==
+        GES_ASSET (stream)
+        && ges_track_element_get_track (el) == track) {
+      ret = TRUE;
+      break;
+    }
+  }
+  g_list_free_full (children, gst_object_unref);
+
+  return ret;
+}
+
+/* Pull @stream's core children out of the tracks @map no longer assigns to it,
+ * keeping a single source (with its bound effects) - which stays in a mapped
+ * track if one already holds it, or becomes trackless to be moved by
+ * _place_stream_tracks(). Surplus copies in unmapped tracks are dropped. This
+ * runs for every stream before any is placed, so swaps free the tracks first. */
+static void
+_vacate_stream_tracks (GESUriClip * self, GESUriSourceAsset * stream,
+    GESSourceTrackMap * map)
+{
+  GESClip *clip = GES_CLIP (self);
+  GList *target = ges_source_track_map_get_tracks (map, stream);
+  GList *children = _core_children_for_stream (clip, stream);
+  GList *tmp;
+  GESTrackElement *keeper = NULL;
+  GESTrack *kt;
+
+  for (tmp = children; tmp && !keeper; tmp = tmp->next) {
+    GESTrack *t = ges_track_element_get_track (tmp->data);
+
+    if (t && g_list_find (target, t))
+      keeper = tmp->data;
+  }
+  if (!keeper && children)
+    keeper = children->data;
+
+  for (tmp = children; tmp; tmp = tmp->next) {
+    GESTrackElement *c = tmp->data;
+    GESTrack *t = ges_track_element_get_track (c);
+
+    if (c == keeper)
+      continue;
+    if (!t || !g_list_find (target, t))
+      ges_container_remove (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (c));
+  }
+
+  if (keeper) {
+    kt = ges_track_element_get_track (keeper);
+    if (kt && !g_list_find (target, kt))
+      ges_track_remove_element (kt, keeper);
+  }
+
+  g_list_free_full (target, gst_object_unref);
+  g_list_free_full (children, gst_object_unref);
+}
+
+/* Place @stream's source into the tracks @map assigns to it: the vacated source
+ * is moved into the first still-empty target track and copied into the rest.
+ * Must run after every stream has been vacated. */
+static gboolean
+_place_stream_tracks (GESUriClip * self, GESUriSourceAsset * stream,
+    GESSourceTrackMap * map, GError ** error)
+{
+  GESClip *clip = GES_CLIP (self);
+  GList *target = ges_source_track_map_get_tracks (map, stream);
+  GList *children = _core_children_for_stream (clip, stream);
+  GList *tmp;
+  GESTrackElement *src = NULL;
+  gboolean ret = TRUE;
+
+  if (!target || !children)
+    goto done;
+
+  /* move the trackless (vacated) source first, so the same element follows */
+  for (tmp = children; tmp; tmp = tmp->next) {
+    if (!ges_track_element_get_track (tmp->data)) {
+      src = tmp->data;
+      break;
+    }
+  }
+  if (!src)
+    src = children->data;
+
+  for (tmp = target; tmp && ret; tmp = tmp->next) {
+    GESTrack *t = tmp->data;
+
+    if (_stream_has_child_in_track (clip, stream, t))
+      continue;
+    if (!ges_clip_add_child_to_track_full (clip, src, t, error))
+      ret = FALSE;
+  }
+
+done:
+  g_list_free_full (target, gst_object_unref);
+  g_list_free_full (children, gst_object_unref);
+
+  return ret;
+}
+
 /* Make @clip's core children match @map: create a core source for each mapped
  * stream that has none yet, and remove the core child of any stream no longer
  * in @map. When @clip is already in a timeline, the child-added/child-removed
@@ -687,6 +820,8 @@ _sync_sources_to_map (GESUriClip * self, GESSourceTrackMap * map,
   GESClip *clip = GES_CLIP (self);
   GESAsset *asset = GES_TIMELINE_ELEMENT (clip)->asset;
   GESUriClipAsset *uri_asset;
+  GESTimeline *timeline =
+      ges_timeline_element_get_timeline (GES_TIMELINE_ELEMENT (clip));
   GList *tmp, *children;
   const GList *sa, *stream_assets;
 
@@ -709,18 +844,35 @@ _sync_sources_to_map (GESUriClip * self, GESSourceTrackMap * map,
   }
   g_list_free_full (children, gst_object_unref);
 
-  /* create: add a core source for each mapped stream that has none */
+  /* vacate every stream from its no-longer-mapped tracks before placing any,
+   * so re-routings that swap tracks free them up first */
+  if (timeline) {
+    for (sa = stream_assets; sa; sa = sa->next) {
+      GESUriSourceAsset *stream = GES_URI_SOURCE_ASSET (sa->data);
+
+      if (ges_source_track_map_contains (map, stream)
+          && _find_core_child_for_stream (clip, stream))
+        _vacate_stream_tracks (self, stream, map);
+    }
+  }
+
+  /* create the mapped streams that have no source yet, and (when already in a
+   * timeline) place the existing ones into the tracks the map names */
   for (sa = stream_assets; sa; sa = sa->next) {
     GESTrackElementAsset *element_asset = GES_TRACK_ELEMENT_ASSET (sa->data);
+    GESUriSourceAsset *stream = GES_URI_SOURCE_ASSET (element_asset);
     GESTrackElement *element;
 
-    if (!ges_source_track_map_contains (map,
-            GES_URI_SOURCE_ASSET (element_asset)))
+    if (!ges_source_track_map_contains (map, stream))
       continue;
 
-    if (_find_core_child_for_stream (clip,
-            GES_URI_SOURCE_ASSET (element_asset)))
+    if (_find_core_child_for_stream (clip, stream)) {
+      if (timeline && !_place_stream_tracks (self, stream, map, error)) {
+        gst_clear_object (&timeline);
+        return FALSE;
+      }
       continue;
+    }
 
     element = _extract_stream_source (uri_asset, element_asset);
     ges_track_element_set_creator_asset (element, asset);
@@ -731,6 +883,7 @@ _sync_sources_to_map (GESUriClip * self, GESSourceTrackMap * map,
           "Could not add the source for stream %" GST_PTR_FORMAT " to the clip",
           element_asset);
       gst_object_unref (element);
+      gst_clear_object (&timeline);
       return FALSE;
     }
 
@@ -738,6 +891,8 @@ _sync_sources_to_map (GESUriClip * self, GESSourceTrackMap * map,
       *created = g_list_append (*created, gst_object_ref (element));
     gst_object_unref (element);
   }
+
+  gst_clear_object (&timeline);
 
   return TRUE;
 }
@@ -763,8 +918,10 @@ _sync_sources_to_map (GESUriClip * self, GESSourceTrackMap * map,
  *
  * The core sources are created as soon as the map is set: the streams newly
  * present in @map get a fresh source, and the sources of the streams that left
- * @map are removed. When @self is already in a #GESTimeline the affected
- * sources are placed into (or removed from) the mapped tracks immediately.
+ * @map are removed. @self can already be in a #GESTimeline, in which case the
+ * sources are placed, removed or moved between tracks to match the new @map
+ * right away; a source re-routed to a different track keeps its identity (and
+ * its bound top effects) rather than being recreated.
  *
  * Returns: %TRUE if the sources were successfully synchronised to @map.
  *

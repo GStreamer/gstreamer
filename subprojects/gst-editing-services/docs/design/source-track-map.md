@@ -32,8 +32,14 @@ set it again.
 
 ## Placement
 
-`ges_uri_clip_create_track_elements()` skips any stream absent from the map, so
-only the mapped sources are created.
+Setting the map creates the core sources right away: `ges_uri_clip_set_source_track_map()`
+extracts one source per mapped stream that has none yet and removes the sources of
+streams that left the map, returning the created ones. When the clip is already in a
+timeline the sources are placed, removed or moved between tracks to match the new map
+immediately, a re-routed source keeping its identity and bound effects rather than being
+recreated; otherwise they are placed when the clip is added to a timeline, where
+`add_object_to_tracks()` reuses the already-created sources instead of recreating them.
+`ges_uri_clip_create_track_elements()` still skips any stream absent from the map.
 
 The track of each element is resolved by `_get_selected_tracks()`
 (`ges-timeline.c`), which first calls the `GESClipClass.select_element_tracks`
