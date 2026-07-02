@@ -4,6 +4,7 @@ gi-index
 	ges-layer.h
 	ges-clip.h
 		ges-uri-clip.h
+		ges-source-track-map.h
 		ges-title-clip.h
 		ges-test-clip.h
 		ges-time-overlay-clip.h

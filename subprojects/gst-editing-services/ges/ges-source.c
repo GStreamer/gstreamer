@@ -50,6 +50,13 @@ struct _GESSourcePrivate
   /* effects added through ges_source_add_effect() while the source was not yet
    * in a clip; added to the clip once the source is parented to one */
   GList *pending_effects;
+
+  /* the track this source is meant to land in, when it was created from a
+   * GESUriClip source-track-map; a GWeakRef so it never keeps the track alive.
+   * @wanted_track_set tells "map-managed, unplaced (NULL track)" apart from
+   * "not map-managed". */
+  GWeakRef wanted_track;
+  gboolean wanted_track_set;
 };
 
 typedef struct
@@ -336,6 +343,7 @@ ges_source_dispose (GObject * object)
       (GDestroyNotify) _release_probe_data);
   g_list_free_full (priv->pending_effects, _pending_effect_free);
   priv->pending_effects = NULL;
+  g_weak_ref_clear (&priv->wanted_track);
   g_mutex_clear (&priv->sub_element_lock);
 
   G_OBJECT_CLASS (ges_source_parent_class)->dispose (object);
@@ -420,11 +428,42 @@ _source_parent_notify_cb (GESSource * self, GParamSpec * pspec, gpointer unused)
   g_list_free_full (pending, _pending_effect_free);
 }
 
+/* Records @track as the track @source is meant to land in, for sources created
+ * from a GESUriClip source-track-map (see ges-uri-clip.c). Kept as a GWeakRef
+ * so it never keeps the track alive; a NULL @track still marks the source as
+ * map-managed but unplaced. */
+void
+ges_source_set_wanted_track (GESSource * source, GESTrack * track)
+{
+  g_return_if_fail (GES_IS_SOURCE (source));
+
+  g_weak_ref_set (&source->priv->wanted_track, track);
+  source->priv->wanted_track_set = TRUE;
+}
+
+gboolean
+ges_source_has_wanted_track (GESSource * source)
+{
+  g_return_val_if_fail (GES_IS_SOURCE (source), FALSE);
+
+  return source->priv->wanted_track_set;
+}
+
+/* Returns: (transfer full) (nullable): the wanted track, or %NULL. */
+GESTrack *
+ges_source_get_wanted_track (GESSource * source)
+{
+  g_return_val_if_fail (GES_IS_SOURCE (source), NULL);
+
+  return g_weak_ref_get (&source->priv->wanted_track);
+}
+
 static void
 ges_source_init (GESSource * self)
 {
   self->priv = ges_source_get_instance_private (self);
   g_mutex_init (&self->priv->sub_element_lock);
+  g_weak_ref_init (&self->priv->wanted_track, NULL);
   g_signal_connect (self, "notify::parent",
       G_CALLBACK (_source_parent_notify_cb), NULL);
 }

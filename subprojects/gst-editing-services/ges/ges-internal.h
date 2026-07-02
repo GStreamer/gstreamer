@@ -652,6 +652,14 @@ ges_base_effect_set_source                    (GESBaseEffect * effect,
                                                GESSource * source);
 G_GNUC_INTERNAL GESSource *
 ges_base_effect_get_bound_source              (GESBaseEffect * effect);
+
+G_GNUC_INTERNAL void
+ges_source_set_wanted_track                   (GESSource * source,
+                                               GESTrack * track);
+G_GNUC_INTERNAL gboolean
+ges_source_has_wanted_track                   (GESSource * source);
+G_GNUC_INTERNAL GESTrack *
+ges_source_get_wanted_track                   (GESSource * source);
 G_GNUC_INTERNAL GstElement *
 ges_effect_from_description                   (const gchar *bin_desc,
                                                GESTrackType type,
