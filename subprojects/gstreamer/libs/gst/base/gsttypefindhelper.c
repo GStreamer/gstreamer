@@ -964,10 +964,6 @@ gst_type_find_helper_for_extension (GstObject * obj, const gchar * extension)
 
     factory = GST_TYPE_FIND_FACTORY (l->data);
 
-    /* we only want to check those factories without a function */
-    if (gst_type_find_factory_has_function (factory))
-      continue;
-
     /* get the extension that this typefind factory can handle */
     ext = gst_type_find_factory_get_extensions (factory);
     if (ext == NULL)
@@ -1029,10 +1025,6 @@ gst_type_find_list_factories_for_caps (GstObject * obj, GstCaps * caps)
     GstCaps *factory_caps;
 
     factory = GST_TYPE_FIND_FACTORY (l->data);
-
-    /* We only want to check those factories without a function */
-    if (gst_type_find_factory_has_function (factory))
-      continue;
 
     /* Get the caps that this typefind factory can handle */
     factory_caps = gst_type_find_factory_get_caps (factory);
