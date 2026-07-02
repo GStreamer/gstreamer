@@ -18,29 +18,34 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 #include <gst/gst.h>
-#include <stdlib.h>
+
+#include <limits.h>
+#include <stdint.h>
 #include <string.h>
+
 #include "lzo.h"
 
-/*! define if we may write up to 12 bytes beyond the output buffer */
-/* #define OUTBUF_PADDED 1 */
-/*! define if we may read up to 8 bytes beyond the input buffer */
-/* #define INBUF_PADDED 1 */
+/// Define if we may write up to 12 bytes beyond the output buffer.
+// #define OUTBUF_PADDED 1
+/// Define if we may read up to 8 bytes beyond the input buffer.
+// #define INBUF_PADDED 1
+
 typedef struct LZOContext
 {
-  const guint8 *in, *in_end;
-  guint8 *out_start, *out, *out_end;
+  const uint8_t *in, *in_end;
+  uint8_t *out_start, *out, *out_end;
   int error;
 } LZOContext;
 
 /*
- * \brief read one byte from input buffer, avoiding overrun
- * \return byte read
+ * @brief Reads one byte from the input buffer, avoiding an overrun.
+ * @return byte read
  */
 static inline int
 get_byte (LZOContext * c)
@@ -58,45 +63,222 @@ get_byte (LZOContext * c)
 #endif
 
 /*
- * \brief decode a length value in the coding used by lzo
- * \param x previous byte value
- * \param mask bits used from x
- * \return decoded length value
+ * @brief Decodes a length value in the coding used by lzo.
+ * @param x previous byte value
+ * @param mask bits used from x
+ * @return decoded length value
  */
 static inline int
 get_len (LZOContext * c, int x, int mask)
 {
   int cnt = x & mask;
   if (!cnt) {
-    while (!(x = get_byte (c)))
+    while (!(x = get_byte (c))) {
+      if (cnt >= INT_MAX - 1000) {
+        c->error |= LZO_ERROR;
+        break;
+      }
       cnt += 255;
+    }
     cnt += mask + x;
   }
   return cnt;
 }
 
-/*#define UNALIGNED_LOADSTORE */
-#define BUILTIN_MEMCPY
-#ifdef UNALIGNED_LOADSTORE
-#define COPY2(d, s) *(guint16 *)(d) = *(guint16 *)(s);
-#define COPY4(d, s) *(guint32 *)(d) = *(guint32 *)(s);
-#elif defined(BUILTIN_MEMCPY)
-#define COPY2(d, s) memcpy(d, s, 2);
-#define COPY4(d, s) memcpy(d, s, 4);
+#ifndef AV_RB16
+#   define AV_RB16(x)                           \
+    ((((const uint8_t*)(x))[0] << 8) |          \
+      ((const uint8_t*)(x))[1])
+#endif
+#ifndef AV_WB16
+#   define AV_WB16(p, val) do {                 \
+        uint16_t d = (val);                     \
+        ((uint8_t*)(p))[1] = (d);               \
+        ((uint8_t*)(p))[0] = (d)>>8;            \
+    } while(0)
+#endif
+
+#ifndef AV_RL16
+#   define AV_RL16(x)                           \
+    ((((const uint8_t*)(x))[1] << 8) |          \
+      ((const uint8_t*)(x))[0])
+#endif
+#ifndef AV_WL16
+#   define AV_WL16(p, val) do {                 \
+        uint16_t d = (val);                     \
+        ((uint8_t*)(p))[0] = (d);               \
+        ((uint8_t*)(p))[1] = (d)>>8;            \
+    } while(0)
+#endif
+
+#ifndef AV_RB32
+#   define AV_RB32(x)                                \
+    (((uint32_t)((const uint8_t*)(x))[0] << 24) |    \
+               (((const uint8_t*)(x))[1] << 16) |    \
+               (((const uint8_t*)(x))[2] <<  8) |    \
+                ((const uint8_t*)(x))[3])
+#endif
+#ifndef AV_WB32
+#   define AV_WB32(p, val) do {                 \
+        uint32_t d = (val);                     \
+        ((uint8_t*)(p))[3] = (d);               \
+        ((uint8_t*)(p))[2] = (d)>>8;            \
+        ((uint8_t*)(p))[1] = (d)>>16;           \
+        ((uint8_t*)(p))[0] = (d)>>24;           \
+    } while(0)
+#endif
+
+#ifndef AV_RL32
+#   define AV_RL32(x)                                \
+    (((uint32_t)((const uint8_t*)(x))[3] << 24) |    \
+               (((const uint8_t*)(x))[2] << 16) |    \
+               (((const uint8_t*)(x))[1] <<  8) |    \
+                ((const uint8_t*)(x))[0])
+#endif
+#ifndef AV_WL32
+#   define AV_WL32(p, val) do {                 \
+        uint32_t d = (val);                     \
+        ((uint8_t*)(p))[0] = (d);               \
+        ((uint8_t*)(p))[1] = (d)>>8;            \
+        ((uint8_t*)(p))[2] = (d)>>16;           \
+        ((uint8_t*)(p))[3] = (d)>>24;           \
+    } while(0)
+#endif
+
+#ifndef AV_RB64
+#   define AV_RB64(x)                                   \
+    (((uint64_t)((const uint8_t*)(x))[0] << 56) |       \
+     ((uint64_t)((const uint8_t*)(x))[1] << 48) |       \
+     ((uint64_t)((const uint8_t*)(x))[2] << 40) |       \
+     ((uint64_t)((const uint8_t*)(x))[3] << 32) |       \
+     ((uint64_t)((const uint8_t*)(x))[4] << 24) |       \
+     ((uint64_t)((const uint8_t*)(x))[5] << 16) |       \
+     ((uint64_t)((const uint8_t*)(x))[6] <<  8) |       \
+      (uint64_t)((const uint8_t*)(x))[7])
+#endif
+#ifndef AV_WB64
+#   define AV_WB64(p, val) do {                 \
+        uint64_t d = (val);                     \
+        ((uint8_t*)(p))[7] = (d);               \
+        ((uint8_t*)(p))[6] = (d)>>8;            \
+        ((uint8_t*)(p))[5] = (d)>>16;           \
+        ((uint8_t*)(p))[4] = (d)>>24;           \
+        ((uint8_t*)(p))[3] = (d)>>32;           \
+        ((uint8_t*)(p))[2] = (d)>>40;           \
+        ((uint8_t*)(p))[1] = (d)>>48;           \
+        ((uint8_t*)(p))[0] = (d)>>56;           \
+    } while(0)
+#endif
+
+#ifndef AV_RL64
+#   define AV_RL64(x)                                   \
+    (((uint64_t)((const uint8_t*)(x))[7] << 56) |       \
+     ((uint64_t)((const uint8_t*)(x))[6] << 48) |       \
+     ((uint64_t)((const uint8_t*)(x))[5] << 40) |       \
+     ((uint64_t)((const uint8_t*)(x))[4] << 32) |       \
+     ((uint64_t)((const uint8_t*)(x))[3] << 24) |       \
+     ((uint64_t)((const uint8_t*)(x))[2] << 16) |       \
+     ((uint64_t)((const uint8_t*)(x))[1] <<  8) |       \
+      (uint64_t)((const uint8_t*)(x))[0])
+#endif
+#ifndef AV_WL64
+#   define AV_WL64(p, val) do {                 \
+        uint64_t d = (val);                     \
+        ((uint8_t*)(p))[0] = (d);               \
+        ((uint8_t*)(p))[1] = (d)>>8;            \
+        ((uint8_t*)(p))[2] = (d)>>16;           \
+        ((uint8_t*)(p))[3] = (d)>>24;           \
+        ((uint8_t*)(p))[4] = (d)>>32;           \
+        ((uint8_t*)(p))[5] = (d)>>40;           \
+        ((uint8_t*)(p))[6] = (d)>>48;           \
+        ((uint8_t*)(p))[7] = (d)>>56;           \
+    } while(0)
+#endif
+
+#ifndef AV_RB24
+#   define AV_RB24(x)                           \
+    ((((const uint8_t*)(x))[0] << 16) |         \
+     (((const uint8_t*)(x))[1] <<  8) |         \
+      ((const uint8_t*)(x))[2])
+#endif
+#ifndef AV_WB24
+#   define AV_WB24(p, d) do {                   \
+        ((uint8_t*)(p))[2] = (d);               \
+        ((uint8_t*)(p))[1] = (d)>>8;            \
+        ((uint8_t*)(p))[0] = (d)>>16;           \
+    } while(0)
+#endif
+
+#ifndef AV_RL24
+#   define AV_RL24(x)                           \
+    ((((const uint8_t*)(x))[2] << 16) |         \
+     (((const uint8_t*)(x))[1] <<  8) |         \
+      ((const uint8_t*)(x))[0])
+#endif
+#ifndef AV_WL24
+#   define AV_WL24(p, d) do {                   \
+        ((uint8_t*)(p))[0] = (d);               \
+        ((uint8_t*)(p))[1] = (d)>>8;            \
+        ((uint8_t*)(p))[2] = (d)>>16;           \
+    } while(0)
+#endif
+
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+#   define AV_RN(s, p)    AV_RB##s(p)
+#   define AV_WN(s, p, v) AV_WB##s(p, v)
 #else
-#define COPY2(d, s) (d)[0] = (s)[0]; (d)[1] = (s)[1];
-#define COPY4(d, s) (d)[0] = (s)[0]; (d)[1] = (s)[1]; (d)[2] = (s)[2]; (d)[3] = (s)[3];
+#   define AV_RN(s, p)    AV_RL##s(p)
+#   define AV_WN(s, p, v) AV_WL##s(p, v)
+#endif
+
+#ifndef AV_RN16
+#   define AV_RN16(p) AV_RN(16, p)
+#endif
+
+#ifndef AV_RN32
+#   define AV_RN32(p) AV_RN(32, p)
+#endif
+
+#ifndef AV_RN64
+#   define AV_RN64(p) AV_RN(64, p)
+#endif
+
+#ifndef AV_WN16
+#   define AV_WN16(p, v) AV_WN(16, p, v)
+#endif
+
+#ifndef AV_WN32
+#   define AV_WN32(p, v) AV_WN(32, p, v)
+#endif
+
+#ifndef AV_WN64
+#   define AV_WN64(p, v) AV_WN(64, p, v)
+#endif
+
+#define AV_COPYU(n, d, s) AV_WN##n(d, AV_RN##n(s));
+
+#ifndef AV_COPY16U
+#   define AV_COPY16U(d, s) AV_COPYU(16, d, s)
+#endif
+
+#ifndef AV_COPY32U
+#   define AV_COPY32U(d, s) AV_COPYU(32, d, s)
+#endif
+
+#ifndef AV_COPY64U
+#   define AV_COPY64U(d, s) AV_COPYU(64, d, s)
 #endif
 
 /*
- * \brief copy bytes from input to output buffer with checking
- * \param cnt number of bytes to copy, must be >= 0
+ * @brief Copies bytes from input to output buffer with checking.
+ * @param cnt number of bytes to copy, must be >= 0
  */
 static inline void
 copy (LZOContext * c, int cnt)
 {
-  register const guint8 *src = c->in;
-  register guint8 *dst = c->out;
+  register const uint8_t *src = c->in;
+  register uint8_t *dst = c->out;
+  g_assert (cnt >= 0);
   if (cnt > c->in_end - src) {
     cnt = MAX (c->in_end - src, 0);
     c->error |= LZO_INPUT_DEPLETED;
@@ -106,7 +288,7 @@ copy (LZOContext * c, int cnt)
     c->error |= LZO_OUTPUT_FULL;
   }
 #if defined(INBUF_PADDED) && defined(OUTBUF_PADDED)
-  COPY4 (dst, src);
+  COPY32U (dst, src);
   src += 4;
   dst += 4;
   cnt -= 4;
@@ -117,48 +299,112 @@ copy (LZOContext * c, int cnt)
   c->out = dst + cnt;
 }
 
-/*
- * \brief copy previously decoded bytes to current position
- * \param back how many bytes back we start
- * \param cnt number of bytes to copy, must be >= 0
- *
- * cnt > back is valid, this will copy the bytes we just copied,
- * thus creating a repeating pattern with a period length of back.
- */
-static inline void
-copy_backptr (LZOContext * c, int back, int cnt)
+static void
+fill16 (uint8_t * dst, int len)
 {
-  register const guint8 *src = &c->out[-back];
-  register guint8 *dst = c->out;
-  if (src < c->out_start || src > dst) {
-    c->error |= LZO_INVALID_BACKPTR;
+  uint32_t v = AV_RN16 (dst - 2);
+
+  v |= v << 16;
+
+  while (len >= 4) {
+    AV_WN32 (dst, v);
+    dst += 4;
+    len -= 4;
+  }
+
+  while (len--) {
+    *dst = dst[-2];
+    dst++;
+  }
+}
+
+static void
+fill24 (uint8_t * dst, int len)
+{
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+  uint32_t v = AV_RB24 (dst - 3);
+  uint32_t a = v << 8 | v >> 16;
+  uint32_t b = v << 16 | v >> 8;
+  uint32_t c = v << 24 | v;
+#else
+  uint32_t v = AV_RL24 (dst - 3);
+  uint32_t a = v | v << 24;
+  uint32_t b = v >> 8 | v << 16;
+  uint32_t c = v >> 16 | v << 8;
+#endif
+
+  while (len >= 12) {
+    AV_WN32 (dst, a);
+    AV_WN32 (dst + 4, b);
+    AV_WN32 (dst + 8, c);
+    dst += 12;
+    len -= 12;
+  }
+
+  if (len >= 4) {
+    AV_WN32 (dst, a);
+    dst += 4;
+    len -= 4;
+  }
+
+  if (len >= 4) {
+    AV_WN32 (dst, b);
+    dst += 4;
+    len -= 4;
+  }
+
+  while (len--) {
+    *dst = dst[-3];
+    dst++;
+  }
+}
+
+static void
+fill32 (uint8_t * dst, int len)
+{
+  uint32_t v = AV_RN32 (dst - 4);
+
+#if GLIB_SIZEOF_VOID_P >= 8
+  uint64_t v2 = v + ((uint64_t) v << 32);
+  while (len >= 32) {
+    AV_WN64 (dst, v2);
+    AV_WN64 (dst + 8, v2);
+    AV_WN64 (dst + 16, v2);
+    AV_WN64 (dst + 24, v2);
+    dst += 32;
+    len -= 32;
+  }
+#endif
+
+  while (len >= 4) {
+    AV_WN32 (dst, v);
+    dst += 4;
+    len -= 4;
+  }
+
+  while (len--) {
+    *dst = dst[-4];
+    dst++;
+  }
+}
+
+static void
+av_memcpy_backptr (uint8_t * dst, int back, int cnt)
+{
+  const uint8_t *src = &dst[-back];
+  if (!back)
     return;
-  }
-  if (cnt > c->out_end - dst) {
-    cnt = MAX (c->out_end - dst, 0);
-    c->error |= LZO_OUTPUT_FULL;
-  }
+
   if (back == 1) {
     memset (dst, *src, cnt);
-    dst += cnt;
+  } else if (back == 2) {
+    fill16 (dst, cnt);
+  } else if (back == 3) {
+    fill24 (dst, cnt);
+  } else if (back == 4) {
+    fill32 (dst, cnt);
   } else {
-#ifdef OUTBUF_PADDED
-    COPY2 (dst, src);
-    COPY2 (dst + 2, src + 2);
-    src += 4;
-    dst += 4;
-    cnt -= 4;
-    if (cnt > 0) {
-      COPY2 (dst, src);
-      COPY2 (dst + 2, src + 2);
-      COPY2 (dst + 4, src + 4);
-      COPY2 (dst + 6, src + 6);
-      src += 8;
-      dst += 8;
-      cnt -= 8;
-    }
-#endif
-    if (cnt > 0) {
+    if (cnt >= 16) {
       int blocklen = back;
       while (cnt > blocklen) {
         memcpy (dst, src, blocklen);
@@ -167,33 +413,75 @@ copy_backptr (LZOContext * c, int back, int cnt)
         blocklen <<= 1;
       }
       memcpy (dst, src, cnt);
+      return;
     }
-    dst += cnt;
+    if (cnt >= 8) {
+      AV_COPY32U (dst, src);
+      AV_COPY32U (dst + 4, src + 4);
+      src += 8;
+      dst += 8;
+      cnt -= 8;
+    }
+    if (cnt >= 4) {
+      AV_COPY32U (dst, src);
+      src += 4;
+      dst += 4;
+      cnt -= 4;
+    }
+    if (cnt >= 2) {
+      AV_COPY16U (dst, src);
+      src += 2;
+      dst += 2;
+      cnt -= 2;
+    }
+    if (cnt)
+      *dst = *src;
   }
-  c->out = dst;
 }
 
 /*
- * \brief decode LZO 1x compressed data
- * \param out output buffer
- * \param outlen size of output buffer, number of bytes left are returned here
- * \param in input buffer
- * \param inlen size of input buffer, number of bytes left are returned here
- * \return 0 on success, otherwise error flags, see lzo.h
+ * @brief Copies previously decoded bytes to current position.
+ * @param back how many bytes back we start, must be > 0
+ * @param cnt number of bytes to copy, must be > 0
  *
- * make sure all buffers are appropriately padded, in must provide
- * LZO_INPUT_PADDING, out must provide LZO_OUTPUT_PADDING additional bytes
+ * cnt > back is valid, this will copy the bytes we just copied,
+ * thus creating a repeating pattern with a period length of back.
  */
+static inline void
+copy_backptr (LZOContext * c, int back, int cnt)
+{
+  register uint8_t *dst = c->out;
+  g_assert (cnt > 0);
+  if (dst - c->out_start < back) {
+    c->error |= LZO_INVALID_BACKPTR;
+    return;
+  }
+  if (cnt > c->out_end - dst) {
+    cnt = MAX (c->out_end - dst, 0);
+    c->error |= LZO_OUTPUT_FULL;
+  }
+  av_memcpy_backptr (dst, back, cnt);
+  c->out = dst + cnt;
+}
+
 int
 lzo1x_decode (void *out, int *outlen, const void *in, int *inlen)
 {
   int state = 0;
   int x;
   LZOContext c;
+  if (*outlen <= 0 || *inlen <= 0) {
+    int res = 0;
+    if (*outlen <= 0)
+      res |= LZO_OUTPUT_FULL;
+    if (*inlen <= 0)
+      res |= LZO_INPUT_DEPLETED;
+    return res;
+  }
   c.in = in;
-  c.in_end = (const guint8 *) in + *inlen;
+  c.in_end = (const uint8_t *) in + *inlen;
   c.out = c.out_start = out;
-  c.out_end = (guint8 *) out + *outlen;
+  c.out_end = (uint8_t *) out + *outlen;
   c.error = 0;
   x = GETB (c);
   if (x > 17) {
@@ -248,45 +536,3 @@ lzo1x_decode (void *out, int *outlen, const void *in, int *inlen)
   *outlen = c.out_end - c.out;
   return c.error;
 }
-
-#ifdef TEST
-#include <stdio.h>
-#include <lzo/lzo1x.h>
-#include "log.h"
-#define MAXSZ (10*1024*1024)
-int
-main (int argc, char *argv[])
-{
-  FILE *in = fopen (argv[1], "rb");
-  guint8 *orig = av_malloc (MAXSZ + 16);
-  guint8 *comp = av_malloc (2 * MAXSZ + 16);
-  guint8 *decomp = av_malloc (MAXSZ + 16);
-  gsize s = fread (orig, 1, MAXSZ, in);
-  lzo_uint clen = 0;
-  long tmp[LZO1X_MEM_COMPRESS];
-  int inlen, outlen;
-  int i;
-  av_log_level = AV_LOG_DEBUG;
-  lzo1x_999_compress (orig, s, comp, &clen, tmp);
-  for (i = 0; i < 300; i++) {
-    START_TIMER inlen = clen;
-    outlen = MAXSZ;
-#ifdef LIBLZO
-    if (lzo1x_decompress_safe (comp, inlen, decomp, &outlen, NULL))
-#elif defined(LIBLZO_UNSAFE)
-    if (lzo1x_decompress (comp, inlen, decomp, &outlen, NULL))
-#else
-    if (lzo1x_decode (decomp, &outlen, comp, &inlen))
-#endif
-      av_log (NULL, AV_LOG_ERROR, "decompression error\n");
-    STOP_TIMER ("lzod")
-  }
-  if (memcmp (orig, decomp, s))
-    av_log (NULL, AV_LOG_ERROR, "decompression incorrect\n");
-  else
-    av_log (NULL, AV_LOG_ERROR, "decompression ok\n");
-
-  fclose (in);
-  return 0;
-}
-#endif
