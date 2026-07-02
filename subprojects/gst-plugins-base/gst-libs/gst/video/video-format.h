@@ -181,6 +181,10 @@ G_BEGIN_DECLS
  *                            used with memory:AHardwareBuffer #GstCapsFeatures,
  *                            where an extra parameter (ahb-format) describes
  *                            the AHardwareBuffer format. (Since: 1.30)
+ * @GST_VIDEO_FORMAT_RGBA_F16LE: packed RGB with alpha, 16-bit floating point (half) per channel (R-G-B-A) (Since: 1.30)
+ * @GST_VIDEO_FORMAT_RGBA_F16BE: packed RGB with alpha, 16-bit floating point (half) per channel (R-G-B-A) (Since: 1.30)
+ * @GST_VIDEO_FORMAT_RGBA_F32LE: packed RGB with alpha, 32-bit floating point per channel (R-G-B-A) (Since: 1.30)
+ * @GST_VIDEO_FORMAT_RGBA_F32BE: packed RGB with alpha, 32-bit floating point per channel (R-G-B-A) (Since: 1.30)
  *
  * Enum value describing the most common video formats.
  *
@@ -716,6 +720,50 @@ typedef enum {
    */
   GST_VIDEO_FORMAT_AHARDWARE_BUFFER,
 
+  /**
+   * GST_VIDEO_FORMAT_RGBA_F16LE:
+   *
+   * packed RGB with alpha, 16-bit floating point (half) per channel (R-G-B-A),
+   * little endian. See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value
+   * conventions.
+   *
+   * Since: 1.30
+   */
+  GST_VIDEO_FORMAT_RGBA_F16LE,
+
+  /**
+   * GST_VIDEO_FORMAT_RGBA_F16BE:
+   *
+   * packed RGB with alpha, 16-bit floating point (half) per channel (R-G-B-A),
+   * big endian. See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value
+   * conventions.
+   *
+   * Since: 1.30
+   */
+  GST_VIDEO_FORMAT_RGBA_F16BE,
+
+  /**
+   * GST_VIDEO_FORMAT_RGBA_F32LE:
+   *
+   * packed RGB with alpha, 32-bit floating point per channel (R-G-B-A),
+   * little endian. See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value
+   * conventions.
+   *
+   * Since: 1.30
+   */
+  GST_VIDEO_FORMAT_RGBA_F32LE,
+
+  /**
+   * GST_VIDEO_FORMAT_RGBA_F32BE:
+   *
+   * packed RGB with alpha, 32-bit floating point per channel (R-G-B-A),
+   * big endian. See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value
+   * conventions.
+   *
+   * Since: 1.30
+   */
+  GST_VIDEO_FORMAT_RGBA_F32BE,
+
   /* Update GST_VIDEO_FORMAT_LAST below when adding more formats here */
 } GstVideoFormat;
 
@@ -726,7 +774,7 @@ typedef enum {
  *
  * Since: 1.26
  */
-#define GST_VIDEO_FORMAT_LAST (GST_VIDEO_FORMAT_AHARDWARE_BUFFER + 1)
+#define GST_VIDEO_FORMAT_LAST (GST_VIDEO_FORMAT_RGBA_F32BE + 1)
 
 #define GST_VIDEO_MAX_PLANES 4
 #define GST_VIDEO_MAX_COMPONENTS 4
@@ -776,7 +824,30 @@ typedef enum
    *
    * Since: 1.22
    */
-  GST_VIDEO_FORMAT_FLAG_SUBTILES = (1 << 9)
+  GST_VIDEO_FORMAT_FLAG_SUBTILES = (1 << 9),
+
+  /**
+   * GST_VIDEO_FORMAT_FLAG_FLOAT:
+   *
+   * The components are stored as IEEE 754 floating point values. The
+   * depth of the components describes the size of the floating point type
+   * in bits (16 for binary16 half precision, 32 for binary32 single
+   * precision). Formats using other floating point encodings of the same
+   * sizes (bfloat16, 8-bit variants such as e4m3 or e5m2, ...) are not
+   * covered by this flag and would be added as distinct formats.
+   *
+   * Component values are normalized: 0.0 and 1.0 correspond to 0 and the
+   * maximum value of a full-range integer format with the same colorimetry.
+   * Float formats are always full-range. Values outside [0.0, 1.0] are
+   * valid; their meaning follows from the colorimetry (with a linear
+   * transfer function, values above 1.0 represent luminance above reference
+   * white and negative values represent colors outside the gamut of the
+   * primaries). Elements processing floats natively should preserve
+   * out-of-range values; converting to an integer format clamps them.
+   *
+   * Since: 1.30
+   */
+  GST_VIDEO_FORMAT_FLAG_FLOAT = (1 << 10)
 } GstVideoFormatFlags;
 
 /* YUV components */
@@ -985,6 +1056,15 @@ struct _GstVideoFormatInfo {
 #define GST_VIDEO_FORMAT_INFO_IS_GRAY(info)      (((info)->flags & GST_VIDEO_FORMAT_FLAG_GRAY) != 0)
 #define GST_VIDEO_FORMAT_INFO_HAS_ALPHA(info)    (((info)->flags & GST_VIDEO_FORMAT_FLAG_ALPHA) != 0)
 #define GST_VIDEO_FORMAT_INFO_IS_LE(info)        (((info)->flags & GST_VIDEO_FORMAT_FLAG_LE) != 0)
+/**
+ * GST_VIDEO_FORMAT_INFO_IS_FLOAT:
+ * @info: a #GstVideoFormatInfo
+ *
+ * Checks if the components of @info are stored as floating point values.
+ *
+ * Since: 1.30
+ */
+#define GST_VIDEO_FORMAT_INFO_IS_FLOAT(info)     (((info)->flags & GST_VIDEO_FORMAT_FLAG_FLOAT) != 0)
 #define GST_VIDEO_FORMAT_INFO_HAS_PALETTE(info)  (((info)->flags & GST_VIDEO_FORMAT_FLAG_PALETTE) != 0)
 #define GST_VIDEO_FORMAT_INFO_IS_COMPLEX(info)   (((info)->flags & GST_VIDEO_FORMAT_FLAG_COMPLEX) != 0)
 #define GST_VIDEO_FORMAT_INFO_IS_TILED(info)     (((info)->flags & GST_VIDEO_FORMAT_FLAG_TILED) != 0)
@@ -1179,7 +1259,8 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
  *
  * Formats are sorted by decreasing "quality", using these criteria by priority:
  *   - number of components
- *   - depth
+ *   - depth (effective for floating point formats: only the mantissa
+ *     counts, so RGBA_F32 ranks as 24 bits and RGBA_F16 as 11)
  *   - subsampling factor of the width
  *   - subsampling factor of the height
  *   - number of planes
@@ -1194,35 +1275,37 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
  * Since: 1.24
  */
 #if G_BYTE_ORDER == G_BIG_ENDIAN
-#define GST_VIDEO_FORMATS_ALL_STR "A444_16BE, A444_16LE, AYUV64, ARGB64, " \
-    "Y416_BE, RGBA64_BE, ARGB64_BE, BGRA64_BE, ABGR64_BE, Y416_LE, RGBA64_LE, " \
-    "ARGB64_LE, BGRA64_LE, ABGR64_LE, A422_16BE, A422_16LE, A420_16BE, " \
-    "A420_16LE, A444_12BE, GBRA_12BE, A444_12LE, GBRA_12LE, Y412_BE, Y412_LE, " \
-    "A422_12BE, A422_12LE, A420_12BE, A420_12LE, A444_10BE, GBRA_10BE, " \
-    "A444_10LE, GBRA_10LE, A422_10BE, A422_10LE, A420_10BE, A420_10LE, Y410, " \
-    "BGR10A2_LE, RGB10A2_LE, A444, GBRA, AYUV, VUYA, RGBA, RBGA, ARGB, BGRA, " \
-    "ABGR, A422, A420, AV12, Y444_16BE, GBR_16BE, Y444_16LE, GBR_16LE, " \
-    "Y216_BE, v216, Y216_LE, P016_BE, P016_LE, Y444_12BE, GBR_12BE, Y444_12LE, " \
-    "GBR_12LE, I422_12BE, I422_12LE, Y212_BE, Y212_LE, I420_12BE, I420_12LE, " \
-    "P012_BE, P012_LE, Y444_10BE, GBR_10BE, Y444_10LE, GBR_10LE, r210, " \
-    "BGR10x2_LE, RGB10x2_LE, I422_10BE, I422_10LE, NV16_10LE40, NV16_10LE32, " \
-    "Y210, UYVP, v210, I420_10BE, I420_10LE, P010_10BE, MT2110R, MT2110T, " \
-    "NV12_10BE_8L128, NV12_10LE40_4L4, P010_10LE, NV12_10LE40, NV12_10LE32, " \
-    "Y444, BGRP, GBR, RGBP, NV24, v308, IYU2, RGBx, xRGB, BGRx, xBGR, RGB, " \
-    "BGR, Y42B, NV16, NV61, YUY2, YVYU, UYVY, VYUY, I420, YV12, NV12, NV21, " \
-    "NV12_16L32S, NV12_32L32, NV12_4L4, NV12_64Z32, NV12_8L128, Y41B, IYU1, " \
-    "YUV9, YVU9, BGR16, RGB16, BGR15, RGB15, RGB8P, GRAY16_BE, GRAY16_LE, " \
-    "GRAY10_LE16, GRAY10_LE32, GRAY8"
+#define GST_VIDEO_FORMATS_ALL_STR "RGBA_F32BE, RGBA_F32LE, A444_16BE, " \
+    "A444_16LE, AYUV64, ARGB64, Y416_BE, RGBA64_BE, ARGB64_BE, BGRA64_BE, " \
+    "ABGR64_BE, Y416_LE, RGBA64_LE, ARGB64_LE, BGRA64_LE, ABGR64_LE, " \
+    "A422_16BE, A422_16LE, A420_16BE, A420_16LE, A444_12BE, GBRA_12BE, " \
+    "A444_12LE, GBRA_12LE, Y412_BE, Y412_LE, A422_12BE, A422_12LE, A420_12BE, " \
+    "A420_12LE, RGBA_F16BE, RGBA_F16LE, A444_10BE, GBRA_10BE, A444_10LE, " \
+    "GBRA_10LE, A422_10BE, A422_10LE, A420_10BE, A420_10LE, Y410, BGR10A2_LE, " \
+    "RGB10A2_LE, A444, GBRA, AYUV, VUYA, RGBA, RBGA, ARGB, BGRA, ABGR, A422, " \
+    "A420, AV12, Y444_16BE, GBR_16BE, Y444_16LE, GBR_16LE, Y216_BE, v216, " \
+    "Y216_LE, P016_BE, P016_LE, Y444_12BE, GBR_12BE, Y444_12LE, GBR_12LE, " \
+    "I422_12BE, I422_12LE, Y212_BE, Y212_LE, I420_12BE, I420_12LE, P012_BE, " \
+    "P012_LE, Y444_10BE, GBR_10BE, Y444_10LE, GBR_10LE, r210, BGR10x2_LE, " \
+    "RGB10x2_LE, I422_10BE, I422_10LE, NV16_10LE40, NV16_10LE32, Y210, UYVP, " \
+    "v210, I420_10BE, I420_10LE, P010_10BE, MT2110R, MT2110T, NV12_10BE_8L128, " \
+    "NV12_10LE40_4L4, P010_10LE, NV12_10LE40, NV12_10LE32, Y444, BGRP, GBR, " \
+    "RGBP, NV24, v308, IYU2, RGBx, xRGB, BGRx, xBGR, RGB, BGR, Y42B, NV16, " \
+    "NV61, YUY2, YVYU, UYVY, VYUY, I420, YV12, NV12, NV21, NV12_16L32S, " \
+    "NV12_32L32, NV12_4L4, NV12_64Z32, NV12_8L128, Y41B, IYU1, YUV9, YVU9, " \
+    "BGR16, RGB16, BGR15, RGB15, RGB8P, GRAY16_BE, GRAY16_LE, GRAY10_LE16, " \
+    "GRAY10_LE32, GRAY8"
 #elif G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define GST_VIDEO_FORMATS_ALL_STR "A444_16LE, A444_16BE, Y416_LE, AYUV64, " \
-    "RGBA64_LE, ARGB64, ARGB64_LE, BGRA64_LE, ABGR64_LE, Y416_BE, RGBA64_BE, " \
-    "ARGB64_BE, BGRA64_BE, ABGR64_BE, A422_16LE, A422_16BE, A420_16LE, " \
-    "A420_16BE, A444_12LE, GBRA_12LE, A444_12BE, GBRA_12BE, Y412_LE, Y412_BE, " \
-    "A422_12LE, A422_12BE, A420_12LE, A420_12BE, A444_10LE, GBRA_10LE, " \
-    "A444_10BE, GBRA_10BE, A422_10LE, A422_10BE, A420_10LE, A420_10BE, " \
-    "BGR10A2_LE, RGB10A2_LE, Y410, A444, GBRA, AYUV, VUYA, RGBA, RBGA, ARGB, " \
-    "BGRA, ABGR, A422, A420, AV12, Y444_16LE, GBR_16LE, Y444_16BE, GBR_16BE, " \
-    "Y216_LE, Y216_BE, v216, P016_LE, P016_BE, Y444_12LE, GBR_12LE, Y444_12BE, " \
+#define GST_VIDEO_FORMATS_ALL_STR "RGBA_F32LE, RGBA_F32BE, A444_16LE, " \
+    "A444_16BE, Y416_LE, AYUV64, RGBA64_LE, ARGB64, ARGB64_LE, BGRA64_LE, " \
+    "ABGR64_LE, Y416_BE, RGBA64_BE, ARGB64_BE, BGRA64_BE, ABGR64_BE, " \
+    "A422_16LE, A422_16BE, A420_16LE, A420_16BE, A444_12LE, GBRA_12LE, " \
+    "A444_12BE, GBRA_12BE, Y412_LE, Y412_BE, A422_12LE, A422_12BE, A420_12LE, " \
+    "A420_12BE, RGBA_F16LE, RGBA_F16BE, A444_10LE, GBRA_10LE, A444_10BE, " \
+    "GBRA_10BE, A422_10LE, A422_10BE, A420_10LE, A420_10BE, BGR10A2_LE, " \
+    "RGB10A2_LE, Y410, A444, GBRA, AYUV, VUYA, RGBA, RBGA, ARGB, BGRA, ABGR, " \
+    "A422, A420, AV12, Y444_16LE, GBR_16LE, Y444_16BE, GBR_16BE, Y216_LE, " \
+    "Y216_BE, v216, P016_LE, P016_BE, Y444_12LE, GBR_12LE, Y444_12BE, " \
     "GBR_12BE, I422_12LE, I422_12BE, Y212_LE, Y212_BE, I420_12LE, I420_12BE, " \
     "P012_LE, P012_BE, Y444_10LE, GBR_10LE, Y444_10BE, GBR_10BE, BGR10x2_LE, " \
     "RGB10x2_LE, r210, I422_10LE, I422_10BE, NV16_10LE40, NV16_10LE32, Y210, " \
@@ -1253,7 +1336,8 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
  *
  * Formats are sorted by decreasing "quality", using these criteria by priority:
  *   - number of components
- *   - depth
+ *   - depth (effective for floating point formats: only the mantissa
+ *     counts, so RGBA_F32 ranks as 24 bits and RGBA_F16 as 11)
  *   - subsampling factor of the width
  *   - subsampling factor of the height
  *   - number of planes

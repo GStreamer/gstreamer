@@ -80,6 +80,26 @@
 
  - `GstVideoCropMeta` contains the cropping region of the video.
 
+## Floating Point Formats
+
+Some formats store components as IEEE 754 floating point values (e.g.
+RGBA\_F16LE below). The following conventions apply to all of them:
+
+ - Component values are normalized: 0.0 and 1.0 correspond to 0 and the
+   maximum value of a full-range integer format with the same colorimetry.
+   Float formats are always full-range; the colorimetry range does not apply
+   to them.
+
+ - Values outside [0.0, 1.0] are valid. Their meaning follows from the
+   colorimetry: with a linear transfer function, values above 1.0 represent
+   luminance above reference white and negative values represent colors
+   outside the gamut of the primaries (as in scRGB).
+
+ - Elements processing float formats natively should preserve out-of-range
+   values. Converting to an integer format clamps them; anything better than
+   clamping (tone mapping) is an element concern, not part of format
+   conversion.
+
 ## Formats
 
 - **"I420"** planar 4:2:0 YUV
@@ -1751,5 +1771,137 @@
 
         Image
           default rstride: width * 8
+          default size:    rstride (image) * height
+```
+
+- **"RGBA\_F16LE"** RGB with alpha channel last, 16-bit floating point (half)
+  per channel, LE (see [Floating Point Formats](#floating-point-formats))
+
+```
+       +--+--+--+--+ +--+--+--+--+
+       |R0|G0|B0|A0| |R1|G1|B1|A1| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: R
+          depth:           16 LE (IEEE 754 half)
+          pstride:         8
+          offset:          0
+
+        Component 1: G
+          depth:           16 LE (IEEE 754 half)
+          pstride:         8
+          offset:          2
+
+        Component 2: B
+          depth:           16 LE (IEEE 754 half)
+          pstride:         8
+          offset:          4
+
+        Component 3: A
+          depth:           16 LE (IEEE 754 half)
+          pstride:         8
+          offset:          6
+
+        Image
+          default rstride: width * 8
+          default size:    rstride (image) * height
+```
+
+- **"RGBA\_F16BE"** RGB with alpha channel last, 16-bit floating point (half)
+  per channel, BE (see [Floating Point Formats](#floating-point-formats))
+
+```
+       +--+--+--+--+ +--+--+--+--+
+       |R0|G0|B0|A0| |R1|G1|B1|A1| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: R
+          depth:           16 BE (IEEE 754 half)
+          pstride:         8
+          offset:          0
+
+        Component 1: G
+          depth:           16 BE (IEEE 754 half)
+          pstride:         8
+          offset:          2
+
+        Component 2: B
+          depth:           16 BE (IEEE 754 half)
+          pstride:         8
+          offset:          4
+
+        Component 3: A
+          depth:           16 BE (IEEE 754 half)
+          pstride:         8
+          offset:          6
+
+        Image
+          default rstride: width * 8
+          default size:    rstride (image) * height
+```
+
+- **"RGBA\_F32LE"** RGB with alpha channel last, 32-bit floating point
+  per channel, LE (see [Floating Point Formats](#floating-point-formats))
+
+```
+       +--+--+--+--+ +--+--+--+--+
+       |R0|G0|B0|A0| |R1|G1|B1|A1| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: R
+          depth:           32 LE (IEEE 754 single)
+          pstride:         16
+          offset:          0
+
+        Component 1: G
+          depth:           32 LE (IEEE 754 single)
+          pstride:         16
+          offset:          4
+
+        Component 2: B
+          depth:           32 LE (IEEE 754 single)
+          pstride:         16
+          offset:          8
+
+        Component 3: A
+          depth:           32 LE (IEEE 754 single)
+          pstride:         16
+          offset:          12
+
+        Image
+          default rstride: width * 16
+          default size:    rstride (image) * height
+```
+
+- **"RGBA\_F32BE"** RGB with alpha channel last, 32-bit floating point
+  per channel, BE (see [Floating Point Formats](#floating-point-formats))
+
+```
+       +--+--+--+--+ +--+--+--+--+
+       |R0|G0|B0|A0| |R1|G1|B1|A1| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: R
+          depth:           32 BE (IEEE 754 single)
+          pstride:         16
+          offset:          0
+
+        Component 1: G
+          depth:           32 BE (IEEE 754 single)
+          pstride:         16
+          offset:          4
+
+        Component 2: B
+          depth:           32 BE (IEEE 754 single)
+          pstride:         16
+          offset:          8
+
+        Component 3: A
+          depth:           32 BE (IEEE 754 single)
+          pstride:         16
+          offset:          12
+
+        Image
+          default rstride: width * 16
           default size:    rstride (image) * height
 ```

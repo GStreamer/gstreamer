@@ -84,9 +84,18 @@ def score_pixel_stride(fmt):
     return [scale_non_power_of_two(x) for x in fmt.pixel_stride]
 
 
+def effective_depth(fmt):
+    # For floating point formats only the mantissa contributes to shade
+    # resolution: half floats (1-5-10) resolve ~11 bits, single precision
+    # (1-8-23) ~24 bits; the exponent buys range, not precision.
+    if fmt.flags & GstVideo.VideoFormatFlags.FLOAT:
+        return [{16: 11, 32: 24}.get(d, d) for d in fmt.depth]
+    return list(fmt.depth)
+
+
 def sort_video_formats(formats, endian):
     return sorted(formats, key=lambda x: (-x.n_components,
-                                          [-d for d in x.depth],
+                                          [-d for d in effective_depth(x)],
                                           x.w_sub,
                                           x.h_sub,
                                           -x.n_planes,
