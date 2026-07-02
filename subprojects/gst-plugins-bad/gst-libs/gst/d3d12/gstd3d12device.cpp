@@ -2481,6 +2481,8 @@ gst_d3d12_device_get_converter_resources (GstD3D12Device * device,
   cl_base = gst_d3d12_cmd_list_get_handle (gst_cl);
   cl_base.As (&cl);
 
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_cl));
+
   cl->CopyResource (index_buf, index_upload);
   index_buf->AddRef ();
   gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_COM (index_buf));
@@ -2578,6 +2580,7 @@ gst_d3d12_device_get_converter_resources (GstD3D12Device * device,
             IID_PPV_ARGS (&gamma_dec_resource));
         if (!gst_d3d12_result (hr, device)) {
           GST_ERROR_OBJECT (device, "Couldn't create LUT texture");
+          gst_d3d12_fence_data_unref (fence_data);
           return hr;
         }
 
