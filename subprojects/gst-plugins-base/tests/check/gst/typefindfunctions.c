@@ -535,6 +535,108 @@ GST_START_TEST (test_subparse)
 
 GST_END_TEST;
 
+GST_START_TEST (test_typefind_with_wav_dts_caps)
+{
+  GstTypeFindProbability prob;
+  const gchar *type;
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstCaps *query_caps;
+  GList *factories;
+  guint8 *p;
+
+  /* WAV header (44 bytes) followed by two DTS frames (96 bytes each).
+   *
+   * The DTS typefinder scans within DTS_MAX_FRAMESIZE bytes and will
+   * find the DTS sync words after the WAV header. The WAV typefinder
+   * matches the RIFF/WAVE signature at offset 0.
+   *
+   * This tests the _with_caps scenario like in gstwavparse.c: where
+   * given a WAV stream, check if the content is actually DTS.
+   */
+  guint8 wav_dts_data[44 + 96 + 96];
+
+  p = wav_dts_data;
+
+  /* WAV header */
+  memcpy (p, "RIFF", 4);
+  GST_WRITE_UINT32_LE (p + 4, sizeof (wav_dts_data) - 8);       /* file size - 8 */
+  memcpy (p + 8, "WAVE", 4);
+  memcpy (p + 12, "fmt ", 4);
+  GST_WRITE_UINT32_LE (p + 16, 16);     /* chunk size */
+  GST_WRITE_UINT16_LE (p + 20, 1);      /* PCM */
+  GST_WRITE_UINT16_LE (p + 22, 1);      /* mono */
+  GST_WRITE_UINT32_LE (p + 24, 44100);  /* sample rate */
+  GST_WRITE_UINT32_LE (p + 28, 88200);  /* byte rate */
+  GST_WRITE_UINT16_LE (p + 32, 2);      /* block align */
+  GST_WRITE_UINT16_LE (p + 34, 16);     /* bits per sample */
+  memcpy (p + 36, "data", 4);
+  GST_WRITE_UINT32_LE (p + 40, 96 * 2); /* data size */
+
+  /* Two DTS frames at offset 44 (inside the WAV data chunk) */
+  GST_WRITE_UINT32_BE (p + 44, 0x7FFE8001);     /* sync */
+  GST_WRITE_UINT16_BE (p + 48, 0x0014); /* num_blocks=5, frame_size high=0 */
+  GST_WRITE_UINT16_BE (p + 50, 0x05F0); /* frame_size low: (95<<4)=0x5F0 */
+  GST_WRITE_UINT16_BE (p + 52, 0x340F); /* sample_rate=48kHz */
+  GST_WRITE_UINT16_BE (p + 54, 0x2400); /* channels=6, lfe=0 */
+  memset (p + 56, 0, 96 - 12);
+
+  /* Second DTS frame at offset 140 */
+  GST_WRITE_UINT32_BE (p + 140, 0x7FFE8001);
+  GST_WRITE_UINT16_BE (p + 144, 0x0014);
+  GST_WRITE_UINT16_BE (p + 146, 0x05F0);
+  GST_WRITE_UINT16_BE (p + 148, 0x340F);
+  GST_WRITE_UINT16_BE (p + 150, 0x2400);
+  memset (p + 152, 0, 96 - 12);
+
+  buf = gst_buffer_new ();
+  gst_buffer_append_memory (buf,
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+          wav_dts_data, sizeof (wav_dts_data), 0, sizeof (wav_dts_data),
+          NULL, NULL));
+  GST_BUFFER_OFFSET (buf) = 0;
+
+  /* list_factories_for_caps with audio/x-wav should return factories */
+  query_caps = gst_caps_from_string ("audio/x-wav");
+  factories = gst_type_find_list_factories_for_caps (NULL, query_caps);
+  fail_unless (factories != NULL);
+  g_list_free_full (factories, (GDestroyNotify) gst_object_unref);
+
+  /* typefind with audio/x-wav should find WAV */
+  prob = 0;
+  caps = gst_type_find_helper_for_buffer_with_caps (NULL, buf,
+      query_caps, &prob);
+  fail_unless (caps != NULL,
+      "WAV+DTS: typefind with audio/x-wav caps should find WAV");
+  type = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+  fail_unless_equals_string (type, "audio/x-wav");
+  fail_unless (prob == GST_TYPE_FIND_MAXIMUM);
+  gst_caps_unref (caps);
+  gst_caps_unref (query_caps);
+
+  /* list_factories_for_caps with audio/x-dts should return factories */
+  query_caps = gst_caps_from_string ("audio/x-dts");
+  factories = gst_type_find_list_factories_for_caps (NULL, query_caps);
+  fail_unless (factories != NULL);
+  g_list_free_full (factories, (GDestroyNotify) gst_object_unref);
+
+  /* typefind with audio/x-dts should find DTS (inside WAV data chunk) */
+  prob = 0;
+  caps = gst_type_find_helper_for_buffer_with_caps (NULL, buf,
+      query_caps, &prob);
+  fail_unless (caps != NULL,
+      "WAV+DTS: typefind with audio/x-dts caps should find DTS");
+  type = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+  fail_unless_equals_string (type, "audio/x-dts");
+  fail_unless (prob == GST_TYPE_FIND_MAXIMUM);
+  gst_caps_unref (caps);
+  gst_caps_unref (query_caps);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 static Suite *
 typefindfunctions_suite (void)
 {
@@ -554,6 +656,7 @@ typefindfunctions_suite (void)
   tcase_add_test (tc_chain, test_manifest_typefinding);
   tcase_add_test (tc_chain, test_webvtt);
   tcase_add_test (tc_chain, test_subparse);
+  tcase_add_test (tc_chain, test_typefind_with_wav_dts_caps);
 
   return s;
 }
