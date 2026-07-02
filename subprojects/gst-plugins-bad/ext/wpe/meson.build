@@ -68,7 +68,7 @@ egl_dep = dependency('egl', required : wpe_feat)
 xkbcommon_dep = dependency('xkbcommon', version : '>= 0.8', required : wpe_feat)
 wl_server_dep = dependency('wayland-server', required : wpe_feat)
 
-if not (wpe_fdo_dep.found() and egl_dep.found() and xkbcommon_dep.found())
+if not (wpe_fdo_dep.found() and egl_dep.found() and xkbcommon_dep.found() and wl_server_dep.found())
   subdir_done()
 endif
 
