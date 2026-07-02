@@ -1,0 +1,6 @@
+buffer: dominant-frequency=431, pts=0:00:00.000000000, dur=0:00:00.023219954, flags=discont
+buffer: dominant-frequency=431, pts=0:00:00.023219954, dur=0:00:00.023219955
+buffer: dominant-frequency=431, pts=0:00:00.046439909, dur=0:00:00.023219954
+buffer: dominant-frequency=431, pts=0:00:00.069659863, dur=0:00:00.023219955
+buffer: dominant-frequency=431, pts=0:00:00.092879818, dur=0:00:00.023219955
+event eos: (no structure)

@@ -41,6 +41,7 @@
 
 #define VALIDATE_FLOW_MISMATCH g_quark_from_static_string ("validateflow::mismatch")
 #define VALIDATE_FLOW_NOT_ATTACHED g_quark_from_static_string ("validateflow::not-attached")
+#define VALIDATE_FLOW_UNSUPPORTED_FORMAT g_quark_from_static_string ("validateflow::unsupported-format")
 
 #define GST_TYPE_VALIDATE_FLOW_CHECKSUM_TYPE (validate_flow_checksum_type_get_type ())
 static GType
@@ -54,6 +55,8 @@ validate_flow_checksum_type_get_type (void)
       {CHECKSUM_TYPE_AS_ID, "AS-ID", "as-id"},
       {CHECKSUM_TYPE_CONTENT_HEX, "raw-hex", "raw-hex"},
       {CHECKSUM_TYPE_CONTENT_TEXT, "raw-text", "raw-text"},
+      {CHECKSUM_TYPE_DOMINANT_FREQUENCY, "dominant-frequency",
+          "dominant-frequency"},
       {G_CHECKSUM_MD5, "MD5", "md5"},
       {G_CHECKSUM_SHA1, "SHA-1", "sha1"},
       {G_CHECKSUM_SHA256, "SHA-256", "sha256"},
@@ -109,6 +112,13 @@ validate_flow_override_class_init (ValidateFlowOverrideClass * klass)
       (VALIDATE_FLOW_NOT_ATTACHED,
           "The pad to monitor was never attached.",
           "The pad to monitor was never attached.",
+          GST_VALIDATE_REPORT_LEVEL_CRITICAL));
+
+  gst_validate_issue_register (gst_validate_issue_new
+      (VALIDATE_FLOW_UNSUPPORTED_FORMAT,
+          "A recorded field can not be computed for the buffer's format.",
+          "The 'dominant-frequency' buffer field requires interleaved raw "
+          "audio in a supported format on the monitored pad.",
           GST_VALIDATE_REPORT_LEVEL_CRITICAL));
 }
 
@@ -292,13 +302,30 @@ validate_flow_override_buffer_handler (GstValidateOverride * override,
 {
   ValidateFlowOverride *flow = VALIDATE_FLOW_OVERRIDE (override);
   gchar *buffer_str;
+  GstCaps *caps = NULL;
+  GstObject *target;
 
   if (flow->error_writing_file || !flow->record_buffers)
     return;
 
+  target = gst_validate_monitor_get_target (pad_monitor);
+  if (GST_IS_PAD (target))
+    caps = gst_pad_get_current_caps (GST_PAD (target));
+  gst_clear_object (&target);
+
+  flow->current_caps = caps;
   buffer_str = validate_flow_format_buffer (flow, buffer);
-  validate_flow_override_printf (flow, "buffer: %s\n", buffer_str);
-  g_free (buffer_str);
+  flow->current_caps = NULL;
+
+  if (buffer_str) {
+    validate_flow_override_printf (flow, "buffer: %s\n", buffer_str);
+    g_free (buffer_str);
+  } else {
+    GST_VALIDATE_REPORT (flow, VALIDATE_FLOW_UNSUPPORTED_FORMAT,
+        "Cannot record the configured buffer field on pad %s for caps %"
+        GST_PTR_FORMAT, flow->pad_name, caps);
+  }
+  gst_clear_caps (&caps);
 }
 
 static gchar *

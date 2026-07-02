@@ -33,8 +33,10 @@
 #include <gst/video/video.h>
 #include <gst/video/video-sei.h>
 #include <gst/audio/gstaudiometa.h>
+#include <gst/audio/audio.h>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 #include <glib/gprintf.h>
 
 #include "../../gst/validate/gst-validate-utils.h"
@@ -441,6 +443,103 @@ buffer_get_meta_string (const ValidateFlowOverride * flow, GstBuffer * buffer)
   return (s != NULL) ? g_string_free (s, FALSE) : NULL;
 }
 
+/* Dominant frequency (Hz) of @buffer's first audio channel, or -1 if @caps is
+ * not interleaved raw audio in a supported format. */
+static gint
+buffer_dominant_frequency (GstBuffer * buffer, GstCaps * caps)
+{
+  GstAudioInfo info;
+  GstMapInfo map;
+  gint rate, channels, bpf, freq = -1;
+  gsize nframes, i, k, kmin, kmax, best_k = 0;
+  gdouble mean = 0, *mono = NULL, best_mag = -1;
+
+  if (!caps || !gst_audio_info_from_caps (&info, caps))
+    return -1;
+  if (GST_AUDIO_INFO_LAYOUT (&info) != GST_AUDIO_LAYOUT_INTERLEAVED)
+    return -1;
+
+  rate = GST_AUDIO_INFO_RATE (&info);
+  channels = GST_AUDIO_INFO_CHANNELS (&info);
+  bpf = GST_AUDIO_INFO_BPF (&info);
+  if (rate <= 0 || channels <= 0 || bpf <= 0)
+    return -1;
+
+  if (!gst_buffer_map (buffer, &map, GST_MAP_READ))
+    return -1;
+  nframes = map.size / bpf;
+  if (nframes < 8) {
+    gst_buffer_unmap (buffer, &map);
+    return -1;
+  }
+
+  mono = g_new (gdouble, nframes);
+#define READ_MONO(TYPE, SCALE) G_STMT_START {                           \
+    const TYPE *d = (const TYPE *) map.data;                            \
+    for (i = 0; i < nframes; i++)                                       \
+      mono[i] = (gdouble) d[i * channels] / (SCALE);                    \
+  } G_STMT_END
+
+  switch (GST_AUDIO_INFO_FORMAT (&info)) {
+    case GST_AUDIO_FORMAT_S16LE:
+      READ_MONO (gint16, 32768.0);
+      break;
+    case GST_AUDIO_FORMAT_S32LE:
+      READ_MONO (gint32, 2147483648.0);
+      break;
+    case GST_AUDIO_FORMAT_F32LE:
+      READ_MONO (gfloat, 1.0);
+      break;
+    case GST_AUDIO_FORMAT_F64LE:
+      READ_MONO (gdouble, 1.0);
+      break;
+    default:
+      g_free (mono);
+      gst_buffer_unmap (buffer, &map);
+      return -1;
+  }
+#undef READ_MONO
+  gst_buffer_unmap (buffer, &map);
+
+  /* remove DC so silence/offset does not bias the correlation */
+  for (i = 0; i < nframes; i++)
+    mean += mono[i];
+  mean /= nframes;
+  for (i = 0; i < nframes; i++)
+    mono[i] -= mean;
+
+  /* Find the strongest DFT bin over ~50 Hz to ~4 kHz with the Goertzel
+   * algorithm. The bin magnitude is phase-independent, so the peak bin - and
+   * thus the reported frequency - is identical for every buffer of the same
+   * tone, unlike a zero-crossing or raw-autocorrelation estimate. */
+  kmin = MAX (1, (gsize) (50.0 * nframes / rate));
+  kmax = MIN (nframes / 2 - 1, (gsize) (4000.0 * nframes / rate));
+  for (k = kmin; k <= kmax; k++) {
+    gdouble omega = 2.0 * G_PI * k / nframes;
+    gdouble coeff = 2.0 * cos (omega);
+    gdouble s0 = 0, s1 = 0, s2 = 0, mag;
+
+    for (i = 0; i < nframes; i++) {
+      s2 = s1;
+      s1 = s0;
+      s0 = mono[i] + coeff * s1 - s2;
+    }
+    mag = s0 * s0 + s1 * s1 - coeff * s0 * s1;
+    if (mag > best_mag) {
+      best_mag = mag;
+      best_k = k;
+    }
+  }
+
+  g_free (mono);
+
+  /* report the peak bin's centre frequency */
+  if (best_k > 0)
+    freq = (gint) round ((gdouble) best_k * rate / nframes);
+
+  return freq;
+}
+
 gchar *
 validate_flow_format_buffer (const ValidateFlowOverride * flow,
     GstBuffer * buffer)
@@ -450,6 +549,7 @@ validate_flow_format_buffer (const ValidateFlowOverride * flow,
   int buffer_parts_index = 0;
   GstMapInfo map;
   gint checksum_type = flow->checksum_type;
+  GstCaps *caps = flow->current_caps;
   GstStructure *logged_fields_struct = flow->logged_fields;
   GstStructure *ignored_fields_struct = flow->ignored_fields;
 
@@ -460,7 +560,19 @@ validate_flow_format_buffer (const ValidateFlowOverride * flow,
       ignored_fields_struct ?
       gst_validate_utils_get_strv (ignored_fields_struct, "buffer") : NULL;
 
-  if (checksum_type != CHECKSUM_TYPE_NONE || (logged_fields
+  if (checksum_type == CHECKSUM_TYPE_DOMINANT_FREQUENCY) {
+    gint freq = buffer_dominant_frequency (buffer, caps);
+
+    /* NULL tells the caller the buffer is not interleaved raw audio in a
+     * supported format, so it can report the misconfiguration. */
+    if (freq < 0) {
+      g_strfreev (logged_fields);
+      g_strfreev (ignored_fields);
+      return NULL;
+    }
+    buffer_parts[buffer_parts_index++] =
+        g_strdup_printf ("dominant-frequency=%d", freq);
+  } else if (checksum_type != CHECKSUM_TYPE_NONE || (logged_fields
           && g_strv_contains (CONSTIFY (logged_fields), "checksum"))) {
     if (!gst_buffer_map (buffer, &map, GST_MAP_READ)) {
       GST_ERROR ("Buffer could not be mapped.");

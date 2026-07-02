@@ -47,6 +47,9 @@ struct _ValidateFlowOverride
   const gchar *pad_name;
   gboolean record_buffers;
   gint checksum_type;
+  /* Caps of the buffer currently being formatted, set by the buffer handler
+   * for fields (e.g. dominant-frequency) that need the audio format. */
+  GstCaps *current_caps;
   gchar *expectations_dir;
   gchar *actual_results_dir;
   gboolean error_writing_file;

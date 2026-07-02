@@ -135,6 +135,10 @@ several overrides and listening to different pads with different settings.
   * `sha512`: sha512 checksum
   * `raw-hex`: Rather than a checksum, record hex-encoded raw buffer contents
   * `raw-text`: Record raw buffer contents assuming they contain text (e.g. subtitles)
+  * `dominant-frequency`: Rather than a checksum, record the dominant frequency (in
+             Hz) of the buffer's first audio channel. Useful to check that the
+             expected audio stream reached a pad regardless of how it was
+             (re)encoded. Only applies to raw audio buffers.
   * *Note*: for backward compatibility reasons, this can be passed as a
             boolean and it will default to 'sha1' if true, 'none' if false.
 * `ignored-fields`: Default: `"stream-start={ stream-id }"` (as they are often

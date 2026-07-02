@@ -1,0 +1,13 @@
+meta,
+    args={
+        "audiotestsrc num-buffers=5 freq=220 ! audioconvert ! audio/x-raw,format=S16LE,channels=1,rate=44100 ! fakesink name=s16 \
+         audiotestsrc num-buffers=5 freq=440 ! audioconvert ! audio/x-raw,format=S32LE,channels=1,rate=44100 ! fakesink name=s32 \
+         audiotestsrc num-buffers=5 freq=1000 ! audioconvert ! audio/x-raw,format=F32LE,channels=1,rate=44100 ! fakesink name=f32 \
+         audiotestsrc num-buffers=5 freq=2000 ! audioconvert ! audio/x-raw,format=F64LE,channels=1,rate=44100 ! fakesink name=f64",
+    },
+    configs={
+        "validateflow, pad=s16:sink, buffers-checksum=dominant-frequency, ignored-event-types={ tag, stream-start, segment, caps }",
+        "validateflow, pad=s32:sink, buffers-checksum=dominant-frequency, ignored-event-types={ tag, stream-start, segment, caps }",
+        "validateflow, pad=f32:sink, buffers-checksum=dominant-frequency, ignored-event-types={ tag, stream-start, segment, caps }",
+        "validateflow, pad=f64:sink, buffers-checksum=dominant-frequency, ignored-event-types={ tag, stream-start, segment, caps }",
+    }

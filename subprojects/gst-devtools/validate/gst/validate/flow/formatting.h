@@ -30,6 +30,7 @@
 #define CHECKSUM_TYPE_NONE -2
 #define CHECKSUM_TYPE_CONTENT_HEX -3
 #define CHECKSUM_TYPE_CONTENT_TEXT -4
+#define CHECKSUM_TYPE_DOMINANT_FREQUENCY -5
 
 gchar* validate_flow_format_buffer(const ValidateFlowOverride *flow, GstBuffer* buffer);
 
