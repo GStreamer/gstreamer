@@ -147,7 +147,7 @@ out:
   g_mutex_unlock (&mem->lock);
   return ret;
 #else /* !HAVE_MMAP */
-  return FALSE;
+  return NULL;
 #endif
 }
 
