@@ -19,17 +19,48 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef FFMPEG_LZO_H
-#define FFMPEG_LZO_H
+#ifndef AVUTIL_LZO_H
+#define AVUTIL_LZO_H
 
-#define LZO_INPUT_DEPLETED 1
-#define LZO_OUTPUT_FULL 2
+/*
+ * @defgroup lavu_lzo LZO
+ * @ingroup lavu_crypto
+ *
+ * @{
+ */
+
+#include <stdint.h>
+
+/* @name Error flags returned by av_lzo1x_decode
+ * @{ */
+/// end of the input buffer reached before decoding finished
+#define LZO_INPUT_DEPLETED  1
+/// decoded data did not fit into output buffer
+#define LZO_OUTPUT_FULL     2
+/// a reference to previously decoded data was wrong
 #define LZO_INVALID_BACKPTR 4
-#define LZO_ERROR 8
+/// a non-specific error in the compressed bitstream
+#define LZO_ERROR           8
+/* @} */
 
-#define LZO_INPUT_PADDING 8
+#define LZO_INPUT_PADDING   8
 #define LZO_OUTPUT_PADDING 12
 
+/*
+ * @brief Decodes LZO 1x compressed data.
+ * @param out output buffer
+ * @param outlen size of output buffer, number of bytes left are returned here
+ * @param in input buffer
+ * @param inlen size of input buffer, number of bytes left are returned here
+ * @return 0 on success, otherwise a combination of the error flags above
+ *
+ * Make sure all buffers are appropriately padded, in must provide
+ * LZO_INPUT_PADDING, out must provide LZO_OUTPUT_PADDING additional bytes.
+ */
 int lzo1x_decode(void *out, int *outlen, const void *in, int *inlen);
 
-#endif /* FFMPEG_LZO_H */
+/*
+ * @}
+ */
+
+#endif /* AVUTIL_LZO_H */
