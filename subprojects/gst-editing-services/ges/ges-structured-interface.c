@@ -681,46 +681,133 @@ _lookup_stream (GESUriClipAsset * asset, const gchar * spec)
   return NULL;
 }
 
+typedef struct
+{
+  gchar *stream_spec;           /* unescaped stream-number or stream-id */
+  gchar *track_spec;            /* unescaped track index, or NULL */
+} StreamEntry;
+
+static void
+_stream_entry_free (gpointer data)
+{
+  StreamEntry *e = data;
+
+  g_free (e->stream_spec);
+  g_free (e->track_spec);
+  g_free (e);
+}
+
+/* Splits @streams_str into '<stream>[:<track>]' entries on unescaped '+',
+ * then each entry on the first unescaped ':'. A '\' escapes the next char
+ * (so '\+', '\:', '\\' become '+', ':', '\' in the spec), so a stream-id
+ * containing ':' or '+' can be given escaped. Returns a (transfer container)
+ * #GPtrArray of #StreamEntry, or %NULL and sets @error on a dangling escape. */
+static GPtrArray *
+_split_stream_entries (const gchar * streams_str, GError ** error)
+{
+  GPtrArray *entries = g_ptr_array_new_with_free_func (_stream_entry_free);
+  GString *stream_spec = g_string_new (NULL);
+  GString *track_spec = NULL;
+  const gchar *p;
+
+  for (p = streams_str; *p; p++) {
+    if (*p == '\\') {
+      /* escape: take the next char literally; a dangling '\' is an error */
+      if (p[1] == '\0') {
+        g_set_error (error, GES_ERROR, 0,
+            "Dangling '\\' in stream selection '%s'", streams_str);
+        goto error;
+      }
+      g_string_append_c (stream_spec, p[1]);
+      p++;
+    } else if (*p == '+') {
+      /* end of entry: flush into a new StreamEntry */
+      StreamEntry *e = g_new (StreamEntry, 1);
+
+      e->stream_spec = g_string_free (stream_spec, FALSE);
+      e->track_spec = track_spec ? g_string_free (track_spec, FALSE) : NULL;
+      g_ptr_array_add (entries, e);
+      stream_spec = g_string_new (NULL);
+      track_spec = NULL;
+    } else if (*p == ':') {
+      /* first unescaped ':' separates stream from track; further ':' go into
+       * the track spec so a track spec is never ambiguous (it is a number) */
+      if (track_spec) {
+        g_string_append_c (track_spec, ':');
+      } else {
+        track_spec = g_string_new (NULL);
+      }
+    } else {
+      if (track_spec)
+        g_string_append_c (track_spec, *p);
+      else
+        g_string_append_c (stream_spec, *p);
+    }
+  }
+
+  /* flush the trailing entry (even if empty, to mirror g_strsplit) */
+  {
+    StreamEntry *e = g_new (StreamEntry, 1);
+
+    e->stream_spec = g_string_free (stream_spec, FALSE);
+    e->track_spec = track_spec ? g_string_free (track_spec, FALSE) : NULL;
+    g_ptr_array_add (entries, e);
+  }
+
+  return entries;
+
+error:
+  g_string_free (stream_spec, TRUE);
+  if (track_spec)
+    g_string_free (track_spec, TRUE);
+  g_ptr_array_unref (entries);
+  return NULL;
+}
+
+
 /* Builds the source->track map from a '+' separated list of `<stream>[:<track>]`
  * entries: <stream> is a stream-number or stream-id, and the optional <track>
  * is the target track by index (in declaration order). Without <track>, the
- * stream is routed to the matching-type track at its per-type position. */
+ * stream is routed to the matching-type track at its per-type position. A '\'
+ * escapes the next char, so a stream-id containing '+' or ':' can be given. */
 static GESSourceTrackMap *
 _build_source_track_map (GESTimeline * timeline, GESUriClipAsset * asset,
     const gchar * streams_str, GError ** error)
 {
   GESSourceTrackMapBuilder *builder = ges_source_track_map_builder_new ();
   GList *tracks = ges_timeline_get_tracks (timeline);
-  gchar **tokens = g_strsplit (streams_str, "+", -1);
+  GPtrArray *entries;
   guint per_type[2] = { 0, 0 };
-  gint i;
+  guint i;
 
-  for (i = 0; tokens[i]; i++) {
-    gchar **parts;
+  entries = _split_stream_entries (streams_str, error);
+  if (!entries)
+    goto error;
+
+  for (i = 0; i < entries->len; i++) {
+    StreamEntry *e = g_ptr_array_index (entries, i);
     GESUriSourceAsset *stream;
     GESTrack *track = NULL;
 
-    if (tokens[i][0] == '\0')
+    if (e->stream_spec[0] == '\0')
       continue;
 
-    parts = g_strsplit (tokens[i], ":", 2);
-    stream = _lookup_stream (asset, parts[0]);
+    stream = _lookup_stream (asset, e->stream_spec);
     if (!stream) {
       *error = g_error_new (GES_ERROR, 0, "No stream matching '%s' in %s",
-          parts[0], ges_asset_get_id (GES_ASSET (asset)));
-      g_strfreev (parts);
+          e->stream_spec, ges_asset_get_id (GES_ASSET (asset)));
       goto error;
     }
 
-    if (parts[1]) {
+    if (e->track_spec) {
       gchar *endptr = NULL;
-      gint64 idx = g_ascii_strtoll (parts[1], &endptr, 10);
+      gint64 idx = g_ascii_strtoll (e->track_spec, &endptr, 10);
 
       if (endptr && *endptr == '\0' && idx >= 0)
         track = g_list_nth_data (tracks, idx);
       if (!track) {
-        *error = g_error_new (GES_ERROR, 0, "No track at index '%s'", parts[1]);
-        g_strfreev (parts);
+        *error = g_error_new (GES_ERROR, 0, "No track at index '%s'",
+            e->track_spec);
         goto error;
       }
     } else {
@@ -732,16 +819,15 @@ _build_source_track_map (GESTimeline * timeline, GESUriClipAsset * asset,
       track = _nth_track_of_type (tracks, type, (*n)++);
     }
 
-    g_strfreev (parts);
     ges_source_track_map_builder_add (builder, stream, track);
   }
 
-  g_strfreev (tokens);
+  g_ptr_array_unref (entries);
   g_list_free_full (tracks, gst_object_unref);
   return ges_source_track_map_builder_build (builder);
 
 error:
-  g_strfreev (tokens);
+  g_clear_pointer (&entries, g_ptr_array_unref);
   g_list_free_full (tracks, gst_object_unref);
   ges_source_track_map_builder_free (builder);
   return NULL;
