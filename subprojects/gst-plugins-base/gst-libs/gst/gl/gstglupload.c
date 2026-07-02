@@ -1678,26 +1678,27 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     if (!gst_video_info_from_caps (out_info, out_caps))
       return FALSE;
 
-    /*
-     * The display path needs to know the size of the texture to clip it, so we
-     * don't display padding data often seen at the bottom of videos. This size
-     * matches the size we use to import the dmabuf. @outcaps will remains
-     * display resolution as expected.
-     */
-    out_info->width = meta->width;
-    out_info->height = meta->height;
+    if (meta) {
+      /*
+       * The display path needs to know the size of the texture to clip it, so we
+       * don't display padding data often seen at the bottom of videos. This size
+       * matches the size we use to import the dmabuf. @outcaps will remains
+       * display resolution as expected.
+       */
+      out_info->width = meta->width;
+      out_info->height = meta->height;
 
-    /*
-     * When we zero-copy tiles, we need to propagate the strides, which contains
-     * the tile dimension. This is because the shader needs to know the padded
-     * size in order to correctly sample into these special buffer.
-     */
-    if (!dmabuf->direct && meta &&
-        GST_VIDEO_FORMAT_INFO_IS_TILED (out_info->finfo)) {
+      /*
+       * When we zero-copy tiles, we need to propagate the strides, which contains
+       * the tile dimension. This is because the shader needs to know the padded
+       * size in order to correctly sample into these special buffer.
+       */
+      if (!dmabuf->direct && GST_VIDEO_FORMAT_INFO_IS_TILED (out_info->finfo)) {
 
-      for (i = 0; i < meta->n_planes; i++) {
-        out_info->offset[i] = meta->offset[i];
-        out_info->stride[i] = meta->stride[i];
+        for (i = 0; i < meta->n_planes; i++) {
+          out_info->offset[i] = meta->offset[i];
+          out_info->stride[i] = meta->stride[i];
+        }
       }
     }
   }
