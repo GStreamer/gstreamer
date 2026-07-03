@@ -268,7 +268,7 @@ gst_rtp_asf_depay_update_padding (GstRtpAsfDepay * depayload, GstBuffer * buf)
   padding = depayload->packet_size - plen;
 
   GST_LOG_OBJECT (depayload,
-      "padding buffer size %" G_GSIZE_FORMAT " to packet size %d", plen,
+      "padding buffer size %" G_GSIZE_FORMAT " to packet size %u", plen,
       depayload->packet_size);
 
   result = gst_buffer_new_and_alloc (depayload->packet_size);
@@ -367,12 +367,14 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   do {
     guint packet_len;
 
+    hdr_len = 4;
+
     /* packet header is at least 4 bytes */
-    if (payload_len < 4)
+    if (payload_len < hdr_len)
       goto too_small;
 
     /*                      1                   2                   3
-     *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 
+     *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
      * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      * |S|L|R|D|I|RES  | Length/Offset                                 |
      * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -398,8 +400,6 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     D = ((payload[0] & 0x10) != 0);
     I = ((payload[0] & 0x08) != 0);
 
-    hdr_len = 4;
-
     len_offs = (payload[1] << 16) | (payload[2] << 8) | payload[3];
 
     if (R) {
@@ -419,7 +419,7 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     }
 
     GST_LOG_OBJECT (depay, "S %d, L %d, R %d, D %d, I %d", S, L, R, D, I);
-    GST_LOG_OBJECT (depay, "payload_len:%d, hdr_len:%d, len_offs:%d",
+    GST_LOG_OBJECT (depay, "payload_len:%u, hdr_len:%u, len_offs:%u",
         payload_len, hdr_len, len_offs);
 
     if (payload_len < hdr_len)
@@ -519,8 +519,8 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 too_small:
   {
     gst_rtp_buffer_unmap (&rtpbuf);
-    GST_WARNING_OBJECT (depayload, "Payload too small, expected at least 4 "
-        "bytes for header, but got only %d bytes", payload_len);
+    GST_WARNING_OBJECT (depayload, "Payload too small, expected at least %u "
+        "bytes for header, but got only %u bytes", hdr_len, payload_len);
     if (gst_buffer_list_length (outbufs) == 0) {
       gst_rtp_base_depayload_dropped (depayload);
       gst_buffer_list_unref (outbufs);
