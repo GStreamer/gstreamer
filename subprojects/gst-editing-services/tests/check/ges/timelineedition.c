@@ -25,11 +25,11 @@
 #define DEEP_CHECK(element, start, inpoint, duration)                          \
 {                                                                              \
   GList *track_elements, *tmp;                                                 \
-  CHECK_OBJECT_PROPS (element, start, inpoint, duration)                      \
+  CHECK_OBJECT_PROPS (element, start, inpoint, duration);                      \
                                                                                \
   track_elements = GES_CONTAINER_CHILDREN (element);                           \
   for (tmp = track_elements; tmp; tmp = tmp->next) {                           \
-    CHECK_OBJECT_PROPS (tmp->data, start, inpoint, duration)                      \
+    CHECK_OBJECT_PROPS (tmp->data, start, inpoint, duration);                  \
   }                                                                            \
 }
 
