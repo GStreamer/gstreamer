@@ -9,7 +9,7 @@ executable('vulkanenc',
   c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
   install: false)
 
-sdl3_dep = dependency('sdl3', version : '>=3.2.0', required : get_option('examples'))
+sdl3_dep = dependency('sdl3', version: '>=3.2.0', required: false)
 
 if sdl3_dep.found()
   executable('sdl3_vulkandec',
