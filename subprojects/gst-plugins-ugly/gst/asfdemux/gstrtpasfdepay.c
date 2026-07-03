@@ -344,6 +344,7 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   guint len_offs;
   GstClockTime timestamp;
   GstRTPBuffer rtpbuf = { NULL };
+  guint packet_len = 0;
 
   depay = GST_RTP_ASF_DEPAY (depayload);
 
@@ -365,8 +366,6 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
   outbufs = gst_buffer_list_new ();
   do {
-    guint packet_len;
-
     hdr_len = 4;
 
     /* packet header is at least 4 bytes */
@@ -445,6 +444,9 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     if (packet_len > payload_len)
       packet_len = payload_len;
 
+    if (packet_len > depay->packet_size)
+      goto too_big;
+
     GST_LOG_OBJECT (depay, "packet len %u, payload len %u, packet_size:%u",
         packet_len, payload_len, depay->packet_size);
 
@@ -463,6 +465,12 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
         gst_adapter_push (depay->adapter, sub);
         /* RTP marker bit M is set if this is last fragment */
         if (gst_rtp_buffer_get_marker (&rtpbuf)) {
+          if (available + packet_len > depay->packet_size) {
+            /* Update packet_len for the debug log further below */
+            packet_len = available + packet_len;
+            gst_adapter_clear (depay->adapter);
+            goto too_big;
+          }
           GST_LOG_OBJECT (depay, "last fragment, assembling packet");
           outbuf =
               gst_adapter_take_buffer (depay->adapter, available + packet_len);
@@ -524,6 +532,19 @@ too_small:
     gst_rtp_buffer_unmap (&rtpbuf);
     GST_WARNING_OBJECT (depayload, "Payload too small, expected at least %u "
         "bytes for header, but got only %u bytes", hdr_len, payload_len);
+    if (gst_buffer_list_length (outbufs) == 0) {
+      gst_rtp_base_depayload_dropped (depayload);
+      gst_buffer_list_unref (outbufs);
+    } else {
+      gst_rtp_base_depayload_push_list (depayload, outbufs);
+    }
+    return NULL;
+  }
+too_big:
+  {
+    gst_rtp_buffer_unmap (&rtpbuf);
+    GST_WARNING_OBJECT (depayload, "Payload too big, expected at most %u "
+        "bytes, but got %u bytes", depay->packet_size, packet_len);
     if (gst_buffer_list_length (outbufs) == 0) {
       gst_rtp_base_depayload_dropped (depayload);
       gst_buffer_list_unref (outbufs);
