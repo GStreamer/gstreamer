@@ -1,0 +1,7 @@
+set-globals, format="RGBA_F16LE"
+
+include, location="videotestsrc-float.meta"
+
+play
+check-last-sample, sink-name=sink, expected-color=(guint)0xff4080c0
+stop

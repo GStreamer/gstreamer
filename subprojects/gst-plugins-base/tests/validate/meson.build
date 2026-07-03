@@ -36,6 +36,16 @@ tests = [
     'videorate/fill_segment_after_caps_changed_before_eos',
     'videorate/drop_out_of_segment',
     'compositor/renogotiate_failing_unsupported_src_format',
+    'videoconvert/to_rgba_f16le',
+    'videoconvert/to_rgba_f16be',
+    'videoconvert/to_rgba_f32le',
+    'videoconvert/to_rgba_f32be',
+    'videoconvert/rgba_f16le_roundtrip',
+    'videotestsrc/rgba_f16le',
+    'videotestsrc/rgba_f16be',
+    'videotestsrc/rgba_f32le',
+    'videotestsrc/rgba_f32be',
+    'videotestsrc/rgba_f16le_smpte100_colors',
     'giosrc/read-growing-file',
     'encodebin/set-encoder-properties',
     'uridecodebin/expose_raw_pad_caps',
@@ -60,6 +70,10 @@ foreach t: tests
     test_env = env
     test_env.set('GST_VALIDATE_LOGSDIR', join_paths(meson.current_build_dir(), test_name))
     test_file = join_paths(meson.current_source_dir(), t + '.validatetest')
+    # Keep the valgrind-scaled timeout (x40) of the float tests within the CI
+    # job walltime so a hanging test is reported instead of silently timing
+    # out the whole job.
+    test_timeout = t.contains('rgba_f') ? 60 : 3 * 60
     test(test_name, gst_tester, args: [test_file, '--use-fakesinks'],
-        env: test_env, timeout : 3 * 60, protocol: 'tap')
+        env: test_env, timeout : test_timeout, protocol: 'tap')
 endforeach

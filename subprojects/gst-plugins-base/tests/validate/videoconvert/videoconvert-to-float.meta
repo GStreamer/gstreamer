@@ -1,0 +1,21 @@
+# Common metadata to check videoconvert conversions to the floating point
+# RGBA formats. The target format is specified by previously setting variables
+# with:
+# ```
+# set-globals, format="<target format>"
+# ```
+# and then `include, location="videoconvert-to-float.meta"` to setup the test
+# with this file.
+#
+# The video content is a solid color so tests can verify the converted
+# frame values with `check-last-sample, expected-color=`.
+meta,
+    handles-states=true,
+    ignore-eos=true,
+    args={
+        "videotestsrc num-buffers=2 pattern=solid-color foreground-color=0xff4080c0 ! video/x-raw,format=RGBA,width=160,height=120,framerate=30/1 ! videoconvert name=convert ! video/x-raw,format=$(format) ! fakesink name=sink sync=false",
+    },
+    configs={
+        "$(validateflow), pad=convert:sink, ignored-event-types={ eos, }",
+        "$(validateflow), pad=convert:src, ignored-event-types={ eos, }",
+    }

@@ -1,0 +1,19 @@
+# Check the color of each 100% SMPTE bar of a RGBA_F16LE frame produced by
+# videotestsrc. The frame is 140 pixels wide so each of the 7 bars is exactly
+# 20 pixels wide, regions are checked with a 2 pixels margin on each side.
+meta,
+    handles-states=true,
+    ignore-eos=true,
+    args={
+        "videotestsrc num-buffers=2 pattern=smpte100 name=src ! video/x-raw,format=RGBA_F16LE,width=140,height=120,framerate=30/1 ! fakesink name=sink sync=false",
+    }
+
+play
+check-last-sample, sink-name=sink, x=2, y=10, width=16, height=20, expected-color=(guint)0xffffffff
+check-last-sample, sink-name=sink, x=22, y=10, width=16, height=20, expected-color=(guint)0xffffff00
+check-last-sample, sink-name=sink, x=42, y=10, width=16, height=20, expected-color=(guint)0xff00ffff
+check-last-sample, sink-name=sink, x=62, y=10, width=16, height=20, expected-color=(guint)0xff00ff00
+check-last-sample, sink-name=sink, x=82, y=10, width=16, height=20, expected-color=(guint)0xffff00ff
+check-last-sample, sink-name=sink, x=102, y=10, width=16, height=20, expected-color=(guint)0xffff0000
+check-last-sample, sink-name=sink, x=122, y=10, width=16, height=20, expected-color=(guint)0xff0000ff
+stop

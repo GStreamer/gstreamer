@@ -1,0 +1,3 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)1;
+event caps: video/x-raw, format=(string)RGBA_F32BE, framerate=(fraction)30/1, height=(int)120, interlace-mode=(string)progressive, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, width=(int)160;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
