@@ -510,6 +510,7 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     /* If we haven't completed a full ASF packet, return but first
        push what we have so far */
     if (!outbuf) {
+      gst_rtp_buffer_unmap (&rtpbuf);
       gst_rtp_base_depayload_push_list (depayload, outbufs);
       return NULL;
     }
