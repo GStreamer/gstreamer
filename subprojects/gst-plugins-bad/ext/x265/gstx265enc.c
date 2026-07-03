@@ -1006,7 +1006,11 @@ gst_x265_enc_init_encoder_locked (GstX265Enc * encoder)
   encoder->api->encoder_parameters (encoder->x265enc, &encoder->x265param);
 
   encoder->push_header = TRUE;
-  encoder->header_buffer = gst_x265_enc_get_header_buffer (encoder);
+  /* With repeat-headers x265 emits VPS/SPS/PPS with every keyframe already,
+   * and prepending a separate header buffer would push the AUD (if enabled)
+   * away from the start of the first access unit */
+  if (!encoder->x265param.bRepeatHeaders)
+    encoder->header_buffer = gst_x265_enc_get_header_buffer (encoder);
 
   return TRUE;
 }

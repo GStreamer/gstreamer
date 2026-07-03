@@ -184,7 +184,7 @@ if host_machine.system() != 'windows'
     [['elements/voaacenc.c'],
         not voaac_dep.found() or not cdata.has('HAVE_UNISTD_H'), [voaac_dep]],
     [['elements/webrtcbin.c'], not libnice_dep.found(), [gstwebrtc_dep]],
-    [['elements/x265enc.c'], not x265_dep.found(), [x265_dep]],
+    [['elements/x265enc.c'], not x265_dep.found(), [x265_dep, gstcodecparsers_dep]],
     [['elements/zbar.c'], not zbar_dep.found(), [zbar_dep]],
     [['elements/zxing.c'], not zxing_dep.found(), [zxing_dep]],
     [['elements/lc3.c'], not lc3_dep.found(), [lc3_dep]],

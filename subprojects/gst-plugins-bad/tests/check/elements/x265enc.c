@@ -21,6 +21,7 @@
  */
 
 #include <gst/check/gstcheck.h>
+#include <gst/codecparsers/gsth265parser.h>
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -40,7 +41,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 static GstPad *sinkpad, *srcpad;
 
 static GstElement *
-setup_x265enc (const gchar * src_caps_str)
+setup_x265enc (const gchar * src_caps_str, const gchar * first_property_name,
+    ...)
 {
   GstElement *x265enc;
   GstCaps *srccaps = NULL;
@@ -53,6 +55,13 @@ setup_x265enc (const gchar * src_caps_str)
 
   x265enc = gst_check_setup_element ("x265enc");
   fail_unless (x265enc != NULL);
+  if (first_property_name) {
+    va_list var_args;
+
+    va_start (var_args, first_property_name);
+    g_object_set_valist (G_OBJECT (x265enc), first_property_name, var_args);
+    va_end (var_args);
+  }
   srcpad = gst_check_setup_src_pad (x265enc, &srctemplate);
   sinkpad = gst_check_setup_sink_pad (x265enc, &sinktemplate);
   gst_pad_set_active (srcpad, TRUE);
@@ -104,7 +113,8 @@ GST_START_TEST (test_encode_simple)
 
   x265enc =
       setup_x265enc
-      ("video/x-raw,format=(string)I420,width=(int)320,height=(int)240,framerate=(fraction)25/1");
+      ("video/x-raw,format=(string)I420,width=(int)320,height=(int)240,framerate=(fraction)25/1",
+      NULL);
 
   gst_segment_init (&seg, GST_FORMAT_TIME);
   seg.stop = gst_util_uint64_scale (10, GST_SECOND, 25);
@@ -160,7 +170,8 @@ GST_START_TEST (test_tiny_picture)
 
   x265enc =
       setup_x265enc
-      ("video/x-raw,format=(string)I420,width=(int)16,height=(int)16,framerate=(fraction)25/1");
+      ("video/x-raw,format=(string)I420,width=(int)16,height=(int)16,framerate=(fraction)25/1",
+      NULL);
 
   gst_segment_init (&seg, GST_FORMAT_TIME);
   seg.stop = gst_util_uint64_scale (10, GST_SECOND, 25);
@@ -205,6 +216,109 @@ GST_START_TEST (test_tiny_picture)
 
 GST_END_TEST;
 
+typedef struct
+{
+  guint num_nals;
+  guint num_vps;
+  guint num_sps;
+  guint num_pps;
+  GstH265NalUnitType first_nal_type;
+} NalStats;
+
+static NalStats
+parse_nal_stats (GstBuffer * buffer)
+{
+  GstH265Parser *parser;
+  GstH265ParserResult res;
+  GstH265NalUnit nalu;
+  GstMapInfo map;
+  guint offset = 0;
+  NalStats stats = { 0, };
+
+  parser = gst_h265_parser_new ();
+  fail_unless (gst_buffer_map (buffer, &map, GST_MAP_READ));
+
+  do {
+    res = gst_h265_parser_identify_nalu (parser, map.data, offset, map.size,
+        &nalu);
+    fail_unless (res == GST_H265_PARSER_OK
+        || res == GST_H265_PARSER_NO_NAL_END);
+
+    if (stats.num_nals == 0)
+      stats.first_nal_type = nalu.type;
+    stats.num_nals++;
+
+    if (nalu.type == GST_H265_NAL_VPS)
+      stats.num_vps++;
+    else if (nalu.type == GST_H265_NAL_SPS)
+      stats.num_sps++;
+    else if (nalu.type == GST_H265_NAL_PPS)
+      stats.num_pps++;
+
+    offset = nalu.offset + nalu.size;
+  } while (res == GST_H265_PARSER_OK);
+
+  gst_buffer_unmap (buffer, &map);
+  gst_h265_parser_free (parser);
+
+  return stats;
+}
+
+GST_START_TEST (test_aud_and_repeat_headers)
+{
+  GstElement *x265enc;
+  GstBuffer *buffer;
+  NalStats stats;
+  gint j;
+  GList *l;
+  GstSegment seg;
+
+  x265enc =
+      setup_x265enc
+      ("video/x-raw,format=(string)I420,width=(int)320,height=(int)240,framerate=(fraction)25/1",
+      "option-string", "aud=1:repeat-headers=1", NULL);
+
+  gst_segment_init (&seg, GST_FORMAT_TIME);
+  seg.stop = gst_util_uint64_scale (10, GST_SECOND, 25);
+
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_segment (&seg)));
+
+  buffer = gst_buffer_new_allocate (NULL, 320 * 240 + 2 * 160 * 120, NULL);
+  gst_buffer_memset (buffer, 0, 0, -1);
+
+  for (j = 0; j < 10; j++) {
+    GST_BUFFER_TIMESTAMP (buffer) = gst_util_uint64_scale (j, GST_SECOND, 25);
+    GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (1, GST_SECOND, 25);
+    fail_unless (gst_pad_push (srcpad, gst_buffer_ref (buffer)) == GST_FLOW_OK);
+  }
+
+  gst_buffer_unref (buffer);
+
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_eos ()));
+
+  fail_unless_equals_int (g_list_length (buffers), 10);
+
+  /* When present, the AUD must be the first NAL of each access unit and
+   * with repeat-headers there must be exactly one set of parameter sets
+   * in the first access unit */
+  stats = parse_nal_stats (GST_BUFFER (buffers->data));
+  fail_unless (stats.num_nals > 0);
+  fail_unless_equals_int (stats.first_nal_type, GST_H265_NAL_AUD);
+  fail_unless_equals_int (stats.num_vps, 1);
+  fail_unless_equals_int (stats.num_sps, 1);
+  fail_unless_equals_int (stats.num_pps, 1);
+
+  for (l = g_list_next (buffers); l; l = l->next) {
+    stats = parse_nal_stats (GST_BUFFER (l->data));
+    fail_unless (stats.num_nals > 0);
+    fail_unless_equals_int (stats.first_nal_type, GST_H265_NAL_AUD);
+  }
+
+  cleanup_x265enc (x265enc);
+}
+
+GST_END_TEST;
+
 static Suite *
 x265enc_suite (void)
 {
@@ -215,6 +329,7 @@ x265enc_suite (void)
 
   tcase_add_test (tc_chain, test_encode_simple);
   tcase_add_test (tc_chain, test_tiny_picture);
+  tcase_add_test (tc_chain, test_aud_and_repeat_headers);
 
   return s;
 }
