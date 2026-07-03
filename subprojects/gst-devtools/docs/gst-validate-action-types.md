@@ -9,6 +9,7 @@ meta,
     [configs=({GstStructure as string})],
     [duration=(double, int)],
     [expected-issues=({GstStructure as string})],
+    [features-rank=({GstStructure as string})],
     [handles-states=(boolean)],
     [ignore-eos=(boolean)],
     [is-config=(boolean)],
@@ -17,7 +18,9 @@ meta,
     [min-audio-track=(int)],
     [min-media-duration=(double)],
     [min-video-track=(int)],
+    [monitor-all-pipelines=(bool)],
     [need-clock-sync=(boolean)],
+    [overrides=({GstStructure as string})],
     [pipeline-name=(string)],
     [reverse-playback=(boolean)],
     [seek=(boolean)],
@@ -133,6 +136,32 @@ array as strings/within quotes.
 
 ---
 
+#### `features-rank` (_optional_)
+
+The `features-rank` field is an array of structures that defines how to
+override `GstPluginFeature::rank` to ensure some features will be used,
+or at contrary won't be used.
+
+For example:
+
+``` yaml
+features-rank = {
+  [mandatory, glvideomixer=9999],
+  [optional, someoptionalfeature=0],
+},
+```
+
+One could also use the `set-feature-rank` scenario action, but that
+happens after GStreamer or other components are initialized which might
+be a problem in some cases.
+
+
+**Possible types**: `{GstStructure as string}`
+
+**Default**: {}
+
+---
+
 #### `handles-states` (_optional_)
 
 Whether the scenario handles pipeline state changes from the beginning
@@ -221,6 +250,16 @@ for the scenario to be usable
 
 ---
 
+#### `monitor-all-pipelines` (_optional_)
+
+This should only be used in `.validatetest` files, and allows forcing to monitor all pipelines instead of only the one the tools wanted to monitor, for example to use `validateflow` on auxiliary pipelines
+
+**Possible types**: `bool`
+
+**Default**: false
+
+---
+
 #### `need-clock-sync` (_optional_)
 
 Whether the scenario needs the execution to be synchronized with the pipeline's
@@ -229,6 +268,41 @@ clock. Letting the user know if it can be used with a 'fakesink sync=false' sink
 **Possible types**: `boolean`
 
 **Default**: true if some action requires a playback-time false otherwise
+
+---
+
+#### `overrides` (_optional_)
+
+The `overrides` field is an array of override structures.
+
+At the moment, these overrides allow you to change the severity level of specific issues,
+for example changing a critical issue to a warning to allow tests to pass
+when encountering known issues.
+
+Use `gst-validate-1.0 --print-issue-types` to print information about all issue types.
+
+For example:
+
+``` yaml
+overrides = {
+    [change-severity, issue-id=runtime::not-negotiated, new-severity=warning],
+    [change-severity, issue-id=g-log::critical, new-severity=info],
+}
+```
+
+**Each override has the following fields**:
+
+* `issue-id`: (string): Issue ID to override - Mandatory
+* `new-severity`: (string): New severity level (critical, warning, issue, ignore) - Mandatory
+
+Currently only `change-severity` overrides are supported.
+
+**Warning**: This field is validate only for [`.validatetest`](gst-validate-test-file.md) files, and not `.scenario`.
+
+
+**Possible types**: `{GstStructure as string}`
+
+**Default**: {}
 
 ---
 
@@ -607,6 +681,7 @@ Specify on what message type the action will be executed.
 ``` validate-scenario
 select-streams,
     indexes=([int]),
+    [n-calls=(int)],
     [playback-time=(double,string)];
 ```
 
@@ -621,6 +696,17 @@ Select the stream on next `GST_STREAM_COLLECTION` message on the bus.
 Indexes of the streams in the StreamCollection to select
 
 **Possible types**: `[int]`
+
+---
+
+#### `n-calls` (_optional_)
+
+Number of times the `select-stream` event should be sent to the pipeline
+ - `0` means 0 or more - `-1` means at least once - Other numbers are exact number of calls
+
+**Possible types**: `int`
+
+**Default**: 1
 
 ---
 
@@ -727,6 +813,7 @@ Specify on what message type the action will be executed.
 ``` validate-scenario
 wait,
     [check=(structure)],
+    [deep-property-path=(string)],
     [duration=(double or string (GstClockTime))],
     [expected-values=(structure)],
     [message-type=(string)],
@@ -752,6 +839,24 @@ Waits for signal 'signal-name', message 'message-type', or during 'duration' sec
 The check action to execute when non blocking signal is received
 
 **Possible types**: `structure`
+
+**Default**: (null)
+
+---
+
+#### `deep-property-path` (_optional_)
+
+The property to wait to be set on the object inside the pipeline that matches the path defined as:
+
+```
+element-name.padname::property-name=new-value
+```
+
+> NOTE: `.padname` is not needed if setting a property on an element
+
+
+
+**Possible types**: `string`
 
 **Default**: (null)
 
@@ -904,16 +1009,51 @@ Specify on what message type the action will be executed.
 
 ``` validate-scenario
 dot-pipeline,
+    [details=(int)],
+    [dot-dir=(string)],
+    [name=(string)],
     [playback-time=(double,string)];
 ```
 
 Dots the pipeline (the 'name' property will be used in the dot filename).
 For more information have a look at the GST_DEBUG_BIN_TO_DOT_FILE documentation.
-Note that the GST_DEBUG_DUMP_DOT_DIR env variable needs to be set
+Note that the GST_DEBUG_DUMP_DOT_DIR env variable needs to be set.
+When `dot-dir` is set, the file is written into that subdirectory of
+`GST_DEBUG_DUMP_DOT_DIR` (created if missing).
 
 **Implementer namespace**: core
 
 ### Parameters
+
+#### `details` (_optional_)
+
+A #GstDebugGraphDetails bitmask describing what to dump.
+
+**Possible types**: `int`
+
+**Default**: (null)
+
+---
+
+#### `dot-dir` (_optional_)
+
+Subdirectory of `GST_DEBUG_DUMP_DOT_DIR` in which to write the dot file. Created if it does not exist. `GST_DEBUG_DUMP_DOT_DIR` must still be set.
+
+**Possible types**: `string`
+
+**Default**: (null)
+
+---
+
+#### `name` (_optional_)
+
+Used as the suffix of the generated dot filename (prefixed with `validate.action.`).
+
+**Possible types**: `string`
+
+**Default**: (null)
+
+---
 
 #### `playback-time` (_optional_)
 
@@ -2074,14 +2214,20 @@ Specify on what message type the action will be executed.
 ``` validate-scenario
 check-last-sample,
     [checksum=(string)],
+    [expected-color=(string, guint or (double){3,4})],
+    [height=(int)],
     [sink-factory-name=(string)],
     [sink-name=(string)],
     [sinkpad-caps=(string)],
     [timecode-frame-number=(string)],
+    [tolerance=(double)],
+    [width=(int)],
+    [x=(int)],
+    [y=(int)],
     [playback-time=(double,string)];
 ```
 
-Checks the last-sample checksum or frame number (set on its  GstVideoTimeCodeMeta) on declared Sink element. This allows checking the checksum of a buffer after a 'seek' or after a GESTimeline 'commit' for example
+Checks the last-sample checksum, frame number (set on its  GstVideoTimeCodeMeta) or the color of a video frame region on the declared Sink element. This allows checking the checksum of a buffer after a 'seek' or after a GESTimeline 'commit' for example
 
 **Implementer namespace**: core
 
@@ -2092,6 +2238,26 @@ Checks the last-sample checksum or frame number (set on its  GstVideoTimeCodeMet
 The reference checksum of the buffer.
 
 **Possible types**: `string`
+
+**Default**: (null)
+
+---
+
+#### `expected-color` (_optional_)
+
+The expected color of the video frame (or of the region specified with 'x', 'y', 'width', 'height'), either as a 0xAARRGGBB value (matching the `videotestsrc` 'foreground-color' property format) or as an array of 3 (RGB) or 4 (RGBA) doubles in the 0.0 - 1.0 range. The frame is converted to RGB before comparing, every pixel of the region must match the expected color within 'tolerance'.
+
+**Possible types**: `string, guint or (double){3,4}`
+
+**Default**: (null)
+
+---
+
+#### `height` (_optional_)
+
+The height of the region to check with 'expected-color', the full frame height if not specified
+
+**Possible types**: `int`
 
 **Default**: (null)
 
@@ -2134,6 +2300,46 @@ The frame number of the buffer as specified on its GstVideoTimeCodeMeta
 **Possible types**: `string`
 
 **Default**: (null)
+
+---
+
+#### `tolerance` (_optional_)
+
+The maximum per component deviation accepted when checking 'expected-color'
+
+**Possible types**: `double`
+
+**Default**: 0.01
+
+---
+
+#### `width` (_optional_)
+
+The width of the region to check with 'expected-color', the full frame width if not specified
+
+**Possible types**: `int`
+
+**Default**: (null)
+
+---
+
+#### `x` (_optional_)
+
+The horizontal offset of the region to check with 'expected-color'
+
+**Possible types**: `int`
+
+**Default**: 0
+
+---
+
+#### `y` (_optional_)
+
+The vertical offset of the region to check with 'expected-color'
+
+**Possible types**: `int`
+
+**Default**: 0
 
 ---
 
@@ -2767,6 +2973,189 @@ Array of action and metadatas to run on the new pipeline
 **Possible types**: `{array of [structures]}`
 
 **Default**: (null)
+
+---
+
+#### `playback-time` (_optional_)
+
+The playback time at which the action will be executed
+
+**Possible variables**:
+
+  * `position`: The current position in the stream
+
+  * `duration`: The duration of the stream
+
+**Possible types**: `double,string`
+
+**Default**: 0.0
+
+---
+
+#### `on-message` (_optional_)
+
+Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
+
+**Possible types**: `string`
+
+**Default**: (null)
+
+---
+
+## http-request
+
+
+``` validate-scenario
+http-request,
+    method=(string),
+    uri=(string),
+    [body=(string)],
+    [expected-response=(string)],
+    [headers=(string)],
+    [playback-time=(double,string)];
+```
+
+Send an HTTP request to a server.
+
+NOTE: This is not expected to be useable on any server but the
+one started with the `start-http-server` action.
+
+Example:
+``` jproperties
+http-request,
+  uri="http://127.0.0.1:$(http_server_port)/test",
+  method=POST,
+  body="test data",
+  headers="text/plain"
+```
+
+
+**Implementer namespace**: core
+
+### Parameters
+
+#### `method` (_mandatory_)
+
+The HTTP method to use (GET, POST, etc)
+
+**Possible types**: `string`
+
+---
+
+#### `uri` (_mandatory_)
+
+The URI to send the request to
+
+**Possible types**: `string`
+
+---
+
+#### `body` (_optional_)
+
+The request body (for POST/PUT requests)
+
+**Possible types**: `string`
+
+**Default**: (null)
+
+---
+
+#### `expected-response` (_optional_)
+
+The exact expected response as a string
+
+**Possible types**: `string`
+
+**Default**: (null)
+
+---
+
+#### `headers` (_optional_)
+
+The request headers as Content-Type
+
+**Possible types**: `string`
+
+**Default**: application/json
+
+---
+
+#### `playback-time` (_optional_)
+
+The playback time at which the action will be executed
+
+**Possible variables**:
+
+  * `position`: The current position in the stream
+
+  * `duration`: The duration of the stream
+
+**Possible types**: `double,string`
+
+**Default**: 0.0
+
+---
+
+#### `on-message` (_optional_)
+
+Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
+
+**Possible types**: `string`
+
+**Default**: (null)
+
+---
+
+## start-http-server
+
+
+``` validate-scenario
+start-http-server,
+    working-directory=(string),
+    [no-pipe=(bool)],
+    [playback-time=(double,string)];
+```
+
+Start an HTTP server in a separate process to serve files from $(working-directory).
+The server is started on any available port and the action sets the `$(http_server_port)`
+variable so it can be used afterward. For subsequent servers started, the
+variable names become `http_server_port_1`, `http_server_port_2`, etc.
+
+The server implementation must be specified through the GST_VALIDATE_LAUNCHER_HTTP_SERVER_PATH
+environment variable. By default, it uses our `RangeHTTPServer.py` implementation which
+provides support for HTTP range requests and directory listing as well as specific POST requests
+for testing purposes (check the file for details).
+
+Example:
+```
+- start-http-server, working-directory=/path/to/media/files
+- set-property, playbin::uri="http://127.0.0.1:$(http_server_port)/video.mp4"
+```
+
+
+**Implementer namespace**: core
+
+### Parameters
+
+#### `working-directory` (_mandatory_)
+
+Server’s current working directory
+
+**Possible types**: `string`
+
+---
+
+#### `no-pipe` (_optional_)
+
+Do not pipe http server stderr/stdout 
+
+**Possible types**: `bool`
+
+**Default**: false
 
 ---
 
