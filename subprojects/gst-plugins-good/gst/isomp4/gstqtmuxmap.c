@@ -153,7 +153,7 @@
 #define EAC3_CAPS \
   "audio/x-eac3, " \
   "alignment = (string) iec61937, " \
-  "parsed = (boolean) true, " \
+  "framed = (boolean) true, " \
   COMMON_AUDIO_CAPS (16, MAX)
 
 #define AMR_CAPS \
