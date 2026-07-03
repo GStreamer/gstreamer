@@ -3010,14 +3010,26 @@ unpack_RGBA_F32LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   int i;
   const guint8 *restrict s = GET_LINE (y);
   guint16 *restrict d = dest;
+  guint16 R, G, B, A;
 
   s += x * 16;
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  video_orc_unpack_RGBA_F32 (d, (const gfloat *) s, width * 4);
+#else
+  video_orc_unpack_RGBA_F32_swap (d, (const gfloat *) s, width * 4);
+#endif
+
   for (i = 0; i < width; i++) {
-    d[i * 4 + 0] = float_to_u16 (GST_READ_FLOAT_LE (s + i * 16 + 12));
-    d[i * 4 + 1] = float_to_u16 (GST_READ_FLOAT_LE (s + i * 16 + 0));
-    d[i * 4 + 2] = float_to_u16 (GST_READ_FLOAT_LE (s + i * 16 + 4));
-    d[i * 4 + 3] = float_to_u16 (GST_READ_FLOAT_LE (s + i * 16 + 8));
+    R = d[i * 4 + 0];
+    G = d[i * 4 + 1];
+    B = d[i * 4 + 2];
+    A = d[i * 4 + 3];
+
+    d[i * 4 + 0] = A;
+    d[i * 4 + 1] = R;
+    d[i * 4 + 2] = G;
+    d[i * 4 + 3] = B;
   }
 }
 
@@ -3028,14 +3040,27 @@ pack_RGBA_F32LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint8 *restrict d = GET_LINE (y);
+  guint32 *restrict d = (guint32 *) GET_LINE (y);
   const guint16 *restrict s = src;
+  guint32 A, R, G, B;
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  video_orc_pack_RGBA_F32 ((gfloat *) d, s, width * 4);
+#else
+  video_orc_pack_RGBA_F32_swap ((gfloat *) d, s, width * 4);
+#endif
+
+  /* rotate ARGB into RGBA as raw 32 bit lanes */
   for (i = 0; i < width; i++) {
-    GST_WRITE_FLOAT_LE (d + i * 16 + 0, s[i * 4 + 1] * (1.0f / 65535.0f));
-    GST_WRITE_FLOAT_LE (d + i * 16 + 4, s[i * 4 + 2] * (1.0f / 65535.0f));
-    GST_WRITE_FLOAT_LE (d + i * 16 + 8, s[i * 4 + 3] * (1.0f / 65535.0f));
-    GST_WRITE_FLOAT_LE (d + i * 16 + 12, s[i * 4 + 0] * (1.0f / 65535.0f));
+    A = d[i * 4 + 0];
+    R = d[i * 4 + 1];
+    G = d[i * 4 + 2];
+    B = d[i * 4 + 3];
+
+    d[i * 4 + 0] = R;
+    d[i * 4 + 1] = G;
+    d[i * 4 + 2] = B;
+    d[i * 4 + 3] = A;
   }
 }
 
@@ -3048,14 +3073,26 @@ unpack_RGBA_F32BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   int i;
   const guint8 *restrict s = GET_LINE (y);
   guint16 *restrict d = dest;
+  guint16 R, G, B, A;
 
   s += x * 16;
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  video_orc_unpack_RGBA_F32_swap (d, (const gfloat *) s, width * 4);
+#else
+  video_orc_unpack_RGBA_F32 (d, (const gfloat *) s, width * 4);
+#endif
+
   for (i = 0; i < width; i++) {
-    d[i * 4 + 0] = float_to_u16 (GST_READ_FLOAT_BE (s + i * 16 + 12));
-    d[i * 4 + 1] = float_to_u16 (GST_READ_FLOAT_BE (s + i * 16 + 0));
-    d[i * 4 + 2] = float_to_u16 (GST_READ_FLOAT_BE (s + i * 16 + 4));
-    d[i * 4 + 3] = float_to_u16 (GST_READ_FLOAT_BE (s + i * 16 + 8));
+    R = d[i * 4 + 0];
+    G = d[i * 4 + 1];
+    B = d[i * 4 + 2];
+    A = d[i * 4 + 3];
+
+    d[i * 4 + 0] = A;
+    d[i * 4 + 1] = R;
+    d[i * 4 + 2] = G;
+    d[i * 4 + 3] = B;
   }
 }
 
@@ -3066,14 +3103,27 @@ pack_RGBA_F32BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint8 *restrict d = GET_LINE (y);
+  guint32 *restrict d = (guint32 *) GET_LINE (y);
   const guint16 *restrict s = src;
+  guint32 A, R, G, B;
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  video_orc_pack_RGBA_F32_swap ((gfloat *) d, s, width * 4);
+#else
+  video_orc_pack_RGBA_F32 ((gfloat *) d, s, width * 4);
+#endif
+
+  /* rotate ARGB into RGBA as raw 32 bit lanes */
   for (i = 0; i < width; i++) {
-    GST_WRITE_FLOAT_BE (d + i * 16 + 0, s[i * 4 + 1] * (1.0f / 65535.0f));
-    GST_WRITE_FLOAT_BE (d + i * 16 + 4, s[i * 4 + 2] * (1.0f / 65535.0f));
-    GST_WRITE_FLOAT_BE (d + i * 16 + 8, s[i * 4 + 3] * (1.0f / 65535.0f));
-    GST_WRITE_FLOAT_BE (d + i * 16 + 12, s[i * 4 + 0] * (1.0f / 65535.0f));
+    A = d[i * 4 + 0];
+    R = d[i * 4 + 1];
+    G = d[i * 4 + 2];
+    B = d[i * 4 + 3];
+
+    d[i * 4 + 0] = R;
+    d[i * 4 + 1] = G;
+    d[i * 4 + 2] = B;
+    d[i * 4 + 3] = A;
   }
 }
 

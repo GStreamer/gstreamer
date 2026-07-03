@@ -2944,3 +2944,66 @@ x4 andnw d, m, p
 loadw t2, s
 convhwb t1, t2
 storeb d, t1
+
+.function video_orc_unpack_RGBA_F32
+.dest 2 d1 guint16
+.source 4 s1 gfloat
+.const 4 c_zero 0x00000000
+.const 4 c_one 0x3f800000
+.const 4 c_scale 0x477fff00
+.const 4 c_half 0x3f000000
+.temp 4 t1
+.temp 4 t2
+
+loadl t1, s1
+cmpeqf t2, t1, t1
+andl t1, t1, t2
+maxf t1, t1, c_zero
+minf t1, t1, c_one
+mulf t1, t1, c_scale
+addf t1, t1, c_half
+convfl t2, t1
+convlw d1, t2
+
+.function video_orc_unpack_RGBA_F32_swap
+.dest 2 d1 guint16
+.source 4 s1 gfloat
+.const 4 c_zero 0x00000000
+.const 4 c_one 0x3f800000
+.const 4 c_scale 0x477fff00
+.const 4 c_half 0x3f000000
+.temp 4 t1
+.temp 4 t2
+
+swapl t1, s1
+cmpeqf t2, t1, t1
+andl t1, t1, t2
+maxf t1, t1, c_zero
+minf t1, t1, c_one
+mulf t1, t1, c_scale
+addf t1, t1, c_half
+convfl t2, t1
+convlw d1, t2
+
+.function video_orc_pack_RGBA_F32
+.dest 4 d1 gfloat
+.source 2 s1 guint16
+.const 4 c_scale 0x37800080
+.temp 4 t1
+.temp 4 t2
+
+convuwl t1, s1
+convlf t2, t1
+mulf d1, t2, c_scale
+
+.function video_orc_pack_RGBA_F32_swap
+.dest 4 d1 gfloat
+.source 2 s1 guint16
+.const 4 c_scale 0x37800080
+.temp 4 t1
+.temp 4 t2
+
+convuwl t1, s1
+convlf t2, t1
+mulf t2, t2, c_scale
+swapl d1, t2
