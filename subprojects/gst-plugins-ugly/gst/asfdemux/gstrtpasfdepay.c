@@ -254,7 +254,7 @@ gst_rtp_asf_depay_update_padding (GstRtpAsfDepay * depayload, GstBuffer * buf)
   GstBuffer *result;
   GstMapInfo map;
   guint8 *data;
-  gint offset = 0;
+  guint offset = 0;
   guint8 aux;
   guint8 seq_type;
   guint8 pad_type;
@@ -280,6 +280,8 @@ gst_rtp_asf_depay_update_padding (GstRtpAsfDepay * depayload, GstBuffer * buf)
   gst_buffer_extract (buf, 0, data, plen);
   gst_buffer_unref (buf);
 
+  if (offset + 1 > depayload->packet_size)
+    goto malformed;
   aux = data[offset++];
   if (aux & 0x80) {
     guint8 err_len = 0;
@@ -293,6 +295,8 @@ gst_rtp_asf_depay_update_padding (GstRtpAsfDepay * depayload, GstBuffer * buf)
     err_len = aux & 0x0F;
     offset += err_len;
 
+    if (offset + 1 > depayload->packet_size)
+      goto malformed;
     aux = data[offset++];
   }
   seq_type = (aux >> 1) & 0x3;
@@ -307,16 +311,22 @@ gst_rtp_asf_depay_update_padding (GstRtpAsfDepay * depayload, GstBuffer * buf)
   switch (pad_type) {
       /* DWORD */
     case 3:
+      if (offset + 4 > depayload->packet_size)
+        goto malformed;
       GST_WRITE_UINT32_LE (&(data[offset]), padding);
       break;
 
       /* WORD */
     case 2:
+      if (offset + 2 > depayload->packet_size)
+        goto malformed;
       GST_WRITE_UINT16_LE (&(data[offset]), padding);
       break;
 
       /* BYTE */
     case 1:
+      if (offset + 1 > depayload->packet_size)
+        goto malformed;
       data[offset] = (guint8) padding;
       break;
 
@@ -328,6 +338,14 @@ gst_rtp_asf_depay_update_padding (GstRtpAsfDepay * depayload, GstBuffer * buf)
   gst_buffer_unmap (result, &map);
 
   return result;
+
+malformed:
+  {
+    GST_WARNING_OBJECT (depayload, "ASF packet too small to contain header");
+    gst_buffer_unmap (result, &map);
+    gst_buffer_unref (result);
+    return NULL;
+  }
 }
 
 /* Docs: 'RTSP Protocol PDF' document from http://sdp.ppona.com/ (page 8) */
@@ -497,6 +515,11 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     }
 
     outbuf = gst_rtp_asf_depay_update_padding (depay, outbuf);
+    if (!outbuf) {
+      gst_rtp_buffer_unmap (&rtpbuf);
+      gst_rtp_base_depayload_push_list (depayload, outbufs);
+      return NULL;
+    }
 
     if (!S)
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
