@@ -273,7 +273,7 @@ gst_rtp_asf_depay_update_padding (GstRtpAsfDepay * depayload, GstBuffer * buf)
 
   result = gst_buffer_new_and_alloc (depayload->packet_size);
 
-  gst_buffer_map (result, &map, GST_MAP_READ);
+  gst_buffer_map (result, &map, GST_MAP_READWRITE);
   data = map.data;
   memset (data + plen, 0, padding);
 
