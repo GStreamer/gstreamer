@@ -5101,85 +5101,167 @@ GST_START_TEST (test_unchanged_after_layer_add_failure)
 
 GST_END_TEST;
 
-#define _assert_timeline_to_internal(clip, child, in, expect_out) \
-{\
-  GError *error = NULL; \
-  GstClockTime found = ges_clip_get_internal_time_from_timeline_time ( \
-        clip, child, (in) * GST_SECOND, &error); \
-  GstClockTime expect =  expect_out * GST_SECOND; \
-  fail_unless (found == expect, "Conversion from timeline time %" \
-      GST_TIME_FORMAT " to the internal time of %" GES_FORMAT " gave %" \
-      GST_TIME_FORMAT " rather than the expected %" GST_TIME_FORMAT \
-      " (error: %s)", GST_TIME_ARGS ((in) * GST_SECOND), \
-      GES_ARGS (child), GST_TIME_ARGS (found), GST_TIME_ARGS (expect), \
-      error ? error->message : "None"); \
-  fail_if (error); \
+static void
+_check_ges_error (const gchar * file, gint line, GError * error,
+    gint error_code)
+{
+  if (!error)
+    _ck_assert_failed (file, line, "Expected an error, but got none", NULL);
+  if (error->domain != GES_ERROR)
+    _ck_assert_failed (file, line, "Error domain check failed",
+        "Error \"%s\" is not in the GES_ERROR domain", error->message, NULL);
+  if (error->code != error_code)
+    _ck_assert_failed (file, line, "Error code check failed",
+        "Error code %i is not the expected %i (%s)", error->code, error_code,
+        error->message, NULL);
+  g_error_free (error);
 }
+
+static void
+_check_timeline_to_internal (const gchar * file, gint line, GESClip * clip,
+    GESTrackElement * child, gdouble in_s, gdouble expect_out_s)
+{
+  GError *error = NULL;
+  GstClockTime in = in_s * GST_SECOND;
+  GstClockTime expect = expect_out_s * GST_SECOND;
+  GstClockTime found =
+      ges_clip_get_internal_time_from_timeline_time (clip, child, in, &error);
+
+  if (found != expect)
+    _ck_assert_failed (file, line, "Conversion check failed",
+        "Conversion from timeline time %" GST_TIME_FORMAT " to the internal "
+        "time of %" GES_FORMAT " gave %" GST_TIME_FORMAT " rather than the "
+        "expected %" GST_TIME_FORMAT " (error: %s)", GST_TIME_ARGS (in),
+        GES_ARGS (child), GST_TIME_ARGS (found), GST_TIME_ARGS (expect),
+        error ? error->message : "None", NULL);
+  if (error)
+    _ck_assert_failed (file, line, "Conversion returned an error",
+        "Conversion from timeline time %" GST_TIME_FORMAT " to the internal "
+        "time of %" GES_FORMAT " returned the error \"%s\"",
+        GST_TIME_ARGS (in), GES_ARGS (child), error->message, NULL);
+  _mark_point (file, line);
+}
+
+static void
+_check_timeline_to_internal_fails (const gchar * file, gint line,
+    GESClip * clip, GESTrackElement * child, gdouble in_s, gint error_code)
+{
+  GError *error = NULL;
+  GstClockTime in = in_s * GST_SECOND;
+  GstClockTime found =
+      ges_clip_get_internal_time_from_timeline_time (clip, child, in, &error);
+
+  if (GST_CLOCK_TIME_IS_VALID (found))
+    _ck_assert_failed (file, line, "Conversion did not fail",
+        "Conversion from timeline time %" GST_TIME_FORMAT " to the internal "
+        "time of %" GES_FORMAT " successfully converted to %" GST_TIME_FORMAT
+        " rather than GST_CLOCK_TIME_NONE", GST_TIME_ARGS (in),
+        GES_ARGS (child), GST_TIME_ARGS (found), NULL);
+  _check_ges_error (file, line, error, error_code);
+  _mark_point (file, line);
+}
+
+static void
+_check_internal_to_timeline (const gchar * file, gint line, GESClip * clip,
+    GESTrackElement * child, gdouble in_s, gdouble expect_out_s)
+{
+  GError *error = NULL;
+  GstClockTime in = in_s * GST_SECOND;
+  GstClockTime expect = expect_out_s * GST_SECOND;
+  GstClockTime found =
+      ges_clip_get_timeline_time_from_internal_time (clip, child, in, &error);
+
+  if (found != expect)
+    _ck_assert_failed (file, line, "Conversion check failed",
+        "Conversion from the internal time %" GST_TIME_FORMAT " of %"
+        GES_FORMAT " to the timeline time gave %" GST_TIME_FORMAT " rather "
+        "than the expected %" GST_TIME_FORMAT, GST_TIME_ARGS (in),
+        GES_ARGS (child), GST_TIME_ARGS (found), GST_TIME_ARGS (expect), NULL);
+  if (error)
+    _ck_assert_failed (file, line, "Conversion returned an error",
+        "Conversion from the internal time %" GST_TIME_FORMAT " of %"
+        GES_FORMAT " to the timeline time returned the error \"%s\"",
+        GST_TIME_ARGS (in), GES_ARGS (child), error->message, NULL);
+  _mark_point (file, line);
+}
+
+static void
+_check_internal_to_timeline_fails (const gchar * file, gint line,
+    GESClip * clip, GESTrackElement * child, gdouble in_s, gint error_code)
+{
+  GError *error = NULL;
+  GstClockTime in = in_s * GST_SECOND;
+  GstClockTime found =
+      ges_clip_get_timeline_time_from_internal_time (clip, child, in, &error);
+
+  if (GST_CLOCK_TIME_IS_VALID (found))
+    _ck_assert_failed (file, line, "Conversion did not fail",
+        "Conversion from the internal time %" GST_TIME_FORMAT " of %"
+        GES_FORMAT " to the timeline time gave %" GST_TIME_FORMAT " rather "
+        "than GST_CLOCK_TIME_NONE", GST_TIME_ARGS (in), GES_ARGS (child),
+        GST_TIME_ARGS (found), NULL);
+  _check_ges_error (file, line, error, error_code);
+  _mark_point (file, line);
+}
+
+static void
+_check_frame_to_timeline (const gchar * file, gint line, GESClip * clip,
+    GESFrameNumber frame, gdouble expect_out_s)
+{
+  GError *error = NULL;
+  GstClockTime expect = expect_out_s * GST_SECOND;
+  GstClockTime found =
+      ges_clip_get_timeline_time_from_source_frame (clip, frame, &error);
+
+  if (found != expect)
+    _ck_assert_failed (file, line, "Conversion check failed",
+        "Conversion from the source frame %" G_GINT64_FORMAT " to the "
+        "timeline time gave %" GST_TIME_FORMAT " rather than the expected %"
+        GST_TIME_FORMAT, frame, GST_TIME_ARGS (found), GST_TIME_ARGS (expect),
+        NULL);
+  if (error)
+    _ck_assert_failed (file, line, "Conversion returned an error",
+        "Conversion from the source frame %" G_GINT64_FORMAT " to the "
+        "timeline time returned the error \"%s\"", frame, error->message, NULL);
+  _mark_point (file, line);
+}
+
+static void
+_check_frame_to_timeline_fails (const gchar * file, gint line, GESClip * clip,
+    GESFrameNumber frame, gint error_code)
+{
+  GError *error = NULL;
+  GstClockTime found =
+      ges_clip_get_timeline_time_from_source_frame (clip, frame, &error);
+
+  if (GST_CLOCK_TIME_IS_VALID (found))
+    _ck_assert_failed (file, line, "Conversion did not fail",
+        "Conversion from the source frame %" G_GINT64_FORMAT " to the "
+        "timeline time gave %" GST_TIME_FORMAT " rather than the expected "
+        "GST_CLOCK_TIME_NONE", frame, GST_TIME_ARGS (found), NULL);
+  _check_ges_error (file, line, error, error_code);
+  _mark_point (file, line);
+}
+
+#define _assert_timeline_to_internal(clip, child, in, expect_out) \
+  _check_timeline_to_internal (__FILE__, __LINE__, clip, child, in, expect_out)
 
 #define _assert_timeline_to_internal_fails(clip, child, in, error_code) \
-{ \
-  GError *error = NULL; \
-  GstClockTime found = ges_clip_get_internal_time_from_timeline_time ( \
-        clip, child, (in) * GST_SECOND, &error); \
-  fail_if (GST_CLOCK_TIME_IS_VALID (found), "Conversion from timeline " \
-      "time %" GST_TIME_FORMAT " to the internal time of %" GES_FORMAT \
-      " successfully converted to %" GST_TIME_FORMAT " rather than " \
-      "GST_CLOCK_TIME_NONE", GST_TIME_ARGS ((in) * GST_SECOND), \
-      GES_ARGS (child), GST_TIME_ARGS (found)); \
-  assert_GESError (error, error_code); \
-}
+  _check_timeline_to_internal_fails (__FILE__, __LINE__, clip, child, in, \
+      error_code)
 
 #define _assert_internal_to_timeline(clip, child, in, expect_out) \
-{\
-  GError *error = NULL; \
-  GstClockTime found = ges_clip_get_timeline_time_from_internal_time ( \
-        clip, child, (in) * GST_SECOND, &error); \
-  GstClockTime expect = expect_out * GST_SECOND; \
-  fail_unless (found == expect, "Conversion from the internal time %" \
-      GST_TIME_FORMAT " of %" GES_FORMAT " to the timeline time gave %" \
-      GST_TIME_FORMAT " rather than the expected %" GST_TIME_FORMAT, \
-      GST_TIME_ARGS ((in) * GST_SECOND), GES_ARGS (child), \
-      GST_TIME_ARGS (found), GST_TIME_ARGS (expect)); \
-  fail_if (error); \
-}
+  _check_internal_to_timeline (__FILE__, __LINE__, clip, child, in, expect_out)
 
 #define _assert_internal_to_timeline_fails(clip, child, in, error_code) \
-{\
-  GError *error = NULL; \
-  GstClockTime found = ges_clip_get_timeline_time_from_internal_time ( \
-        clip, child, (in) * GST_SECOND, &error); \
-  fail_if (GST_CLOCK_TIME_IS_VALID (found), "Conversion from the " \
-      "internal time %" GST_TIME_FORMAT " of %" GES_FORMAT " to the " \
-      "timeline time gave %" GST_TIME_FORMAT " rather than " \
-      "GST_CLOCK_TIME_NONE", GST_TIME_ARGS ((in) * GST_SECOND), \
-      GES_ARGS (child), GST_TIME_ARGS (found)); \
-  assert_GESError (error, error_code); \
-}
+  _check_internal_to_timeline_fails (__FILE__, __LINE__, clip, child, in, \
+      error_code)
 
 #define _assert_frame_to_timeline(clip, frame, expect_out) \
-{\
-  GError *error = NULL; \
-  GstClockTime found = ges_clip_get_timeline_time_from_source_frame ( \
-        clip, frame, &error); \
-  GstClockTime expect = expect_out * GST_SECOND; \
-  fail_unless (found == expect, "Conversion from the source frame %" \
-      G_GINT64_FORMAT " to the timeline time gave %" GST_TIME_FORMAT \
-      " rather than the expected %" GST_TIME_FORMAT, frame, \
-      GST_TIME_ARGS (found), GST_TIME_ARGS (expect)); \
-  fail_if (error); \
-}
+  _check_frame_to_timeline (__FILE__, __LINE__, clip, frame, expect_out)
 
 #define _assert_frame_to_timeline_fails(clip, frame, error_code) \
-{\
-  GError *error = NULL; \
-  GstClockTime found = ges_clip_get_timeline_time_from_source_frame ( \
-        clip, frame, &error); \
-  fail_if (GST_CLOCK_TIME_IS_VALID (found), "Conversion from the " \
-      "source frame %" G_GINT64_FORMAT " to the timeline time gave %" \
-      GST_TIME_FORMAT " rather than the expected GST_CLOCK_TIME_NONE", \
-      frame, GST_TIME_ARGS (found)); \
-  assert_GESError (error, error_code); \
-}
+  _check_frame_to_timeline_fails (__FILE__, __LINE__, clip, frame, error_code)
 
 GST_START_TEST (test_convert_time)
 {

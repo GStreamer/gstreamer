@@ -330,3 +330,36 @@ free_children_properties (GParamSpec ** list, guint num_props)
     g_param_spec_unref (list[i]);
   g_free (list);
 }
+
+void
+ges_test_check_object_props (const gchar * file, gint line, gpointer element,
+    GstClockTime start, GstClockTime inpoint, GstClockTime duration,
+    GstClockTime max_duration, gboolean check_max_duration)
+{
+  if (_START (element) != start)
+    _ck_assert_failed (file, line, "Start check failed",
+        "%s start is %" GST_TIME_FORMAT " != %" GST_TIME_FORMAT,
+        GES_TIMELINE_ELEMENT_NAME (element),
+        GST_TIME_ARGS (_START (element)), GST_TIME_ARGS (start), NULL);
+
+  if (_INPOINT (element) != inpoint)
+    _ck_assert_failed (file, line, "Inpoint check failed",
+        "%s inpoint is %" GST_TIME_FORMAT " != %" GST_TIME_FORMAT,
+        GES_TIMELINE_ELEMENT_NAME (element),
+        GST_TIME_ARGS (_INPOINT (element)), GST_TIME_ARGS (inpoint), NULL);
+
+  if (_DURATION (element) != duration)
+    _ck_assert_failed (file, line, "Duration check failed",
+        "%s duration is %" GST_TIME_FORMAT " != %" GST_TIME_FORMAT,
+        GES_TIMELINE_ELEMENT_NAME (element),
+        GST_TIME_ARGS (_DURATION (element)), GST_TIME_ARGS (duration), NULL);
+
+  if (check_max_duration && _MAX_DURATION (element) != max_duration)
+    _ck_assert_failed (file, line, "Max duration check failed",
+        "%s max-duration is %" GST_TIME_FORMAT " != %" GST_TIME_FORMAT,
+        GES_TIMELINE_ELEMENT_NAME (element),
+        GST_TIME_ARGS (_MAX_DURATION (element)), GST_TIME_ARGS (max_duration),
+        NULL);
+
+  _mark_point (file, line);
+}
