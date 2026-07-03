@@ -403,27 +403,30 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     len_offs = (payload[1] << 16) | (payload[2] << 8) | payload[3];
 
     if (R) {
-      GST_DEBUG ("Relative timestamp field present : %u",
-          GST_READ_UINT32_BE (payload + hdr_len));
       hdr_len += 4;
+      if (payload_len < hdr_len)
+        goto too_small;
+      GST_DEBUG ("Relative timestamp field present : %u",
+          GST_READ_UINT32_BE (payload + hdr_len - 4));
     }
     if (D) {
-      GST_DEBUG ("Duration field present : %u",
-          GST_READ_UINT32_BE (payload + hdr_len));
       hdr_len += 4;
+      if (payload_len < hdr_len)
+        goto too_small;
+      GST_DEBUG ("Duration field present : %u",
+          GST_READ_UINT32_BE (payload + hdr_len - 4));
     }
     if (I) {
-      GST_DEBUG ("LocationId field present : %u",
-          GST_READ_UINT32_BE (payload + hdr_len));
       hdr_len += 4;
+      if (payload_len < hdr_len)
+        goto too_small;
+      GST_DEBUG ("LocationId field present : %u",
+          GST_READ_UINT32_BE (payload + hdr_len - 4));
     }
 
     GST_LOG_OBJECT (depay, "S %d, L %d, R %d, D %d, I %d", S, L, R, D, I);
     GST_LOG_OBJECT (depay, "payload_len:%u, hdr_len:%u, len_offs:%u",
         payload_len, hdr_len, len_offs);
-
-    if (payload_len < hdr_len)
-      goto too_small;
 
     /* skip headers */
     payload_len -= hdr_len;
