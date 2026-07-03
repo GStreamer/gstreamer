@@ -255,6 +255,7 @@ mono-devel
 nasm
 nettle-dev
 ninja-build
+npm
 patch
 python-gi-dev
 python3-all-dev
