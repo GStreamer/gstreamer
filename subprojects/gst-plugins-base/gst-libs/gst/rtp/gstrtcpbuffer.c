@@ -1350,18 +1350,16 @@ gst_rtcp_packet_sdes_get_ssrc (GstRTCPPacket * packet)
 
   /* move to SDES */
   data = packet->rtcp->map.data;
-  guint offset = packet->offset;
-  /* move to item */
-  offset += packet->item_offset;
+  data += packet->offset;
 
   /* don't overrun - use total packet size */
   guint len = (packet->length + 1) << 2;
 
   /* needs at least SSRC and one item plus padding */
-  if (offset + 4 + 4 > len)
+  if (packet->item_offset + 4 + 4 > len)
     return 0;
 
-  ssrc = GST_READ_UINT32_BE (data + offset);
+  ssrc = GST_READ_UINT32_BE (data + packet->item_offset);
 
   return ssrc;
 }
