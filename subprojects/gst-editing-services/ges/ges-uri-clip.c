@@ -755,6 +755,31 @@ _sync_sources_to_map (GESUriClip * self, GESSourceTrackMap * map,
 
   uri_asset = GES_URI_CLIP_ASSET (asset);
 
+  /* A stream can only be routed to a track of its own kind. Reject an
+   * incompatible routing up front - before any source is created or placed -
+   * so a bad map errors cleanly instead of wedging placement. */
+  map_sources = ges_source_track_map_get_sources (map);
+  for (smp = map_sources; smp && ret; smp = smp->next) {
+    GESUriSourceAsset *stream = smp->data;
+    GESTrackType stype =
+        ges_track_element_asset_get_track_type (GES_TRACK_ELEMENT_ASSET
+        (stream));
+    GList *wanted = ges_source_track_map_get_tracks (map, stream);
+
+    for (tmp = wanted; tmp; tmp = tmp->next) {
+      if (!(GES_TRACK (tmp->data)->type & stype)) {
+        g_set_error (error, GES_ERROR, 0, "Stream '%s' cannot be routed to a "
+            "track of a different type", ges_asset_get_id (GES_ASSET (stream)));
+        ret = FALSE;
+        break;
+      }
+    }
+    g_list_free_full (wanted, gst_object_unref);
+  }
+  g_list_free_full (map_sources, gst_object_unref);
+  if (!ret)
+    return FALSE;
+
   /* prune: drop the core children of streams that left the map */
   children = ges_container_get_children (GES_CONTAINER (clip), FALSE);
   for (tmp = children; tmp; tmp = tmp->next) {
