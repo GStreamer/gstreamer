@@ -2671,6 +2671,70 @@ GST_START_TEST (test_sdes_parsing_valid_multiple_items_multiple_entries)
 
 GST_END_TEST;
 
+GST_START_TEST (test_sdes_parsing_valid_in_compound_packet)
+{
+  /* Valid SDES packet as the second packet of an SR+SDES compound packet
+   * (RFC 3550 6.1). Its non-zero offset must not affect SDES parsing. */
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  GstRTCPPacket packet;
+  GstBuffer *buffer;
+  guint8 compound_data[] = {
+    0x80, 0xc8, 0x00, 0x06,     /* V=2, P=0, RC=0, PT=SR, length=6 (28 bytes) */
+    0x12, 0x34, 0x56, 0x78,     /* SSRC */
+    0xed, 0xf2, 0xa1, 0x36,     /* NTP timestamp, most significant word */
+    0x70, 0x42, 0x90, 0x00,     /* NTP timestamp, least significant word */
+    0xcf, 0x35, 0x27, 0x2e,     /* RTP timestamp */
+    0x00, 0x00, 0x14, 0xd9,     /* sender's packet count */
+    0x00, 0x53, 0x72, 0x27,     /* sender's octet count */
+    0x81, 0xca, 0x00, 0x05,     /* V=2, P=0, SC=1, PT=SDES, length=5 (24 bytes) */
+    0x12, 0x34, 0x56, 0x78,     /* SSRC */
+    0x01, 0x0a,                 /* CNAME, length=10 */
+    't', 'e', 's', 't', '@', 'f', 'o', 'o', '.', 'b',
+    0x00,                       /* End of SDES item list */
+    0x00, 0x00, 0x00            /* Pad chunk to 32-bit boundary (not RTCP P-bit padding) */
+  };
+
+  buffer = gst_buffer_new_and_alloc (sizeof (compound_data));
+  gst_buffer_fill (buffer, 0, compound_data, sizeof (compound_data));
+
+  fail_unless (gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp));
+  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &packet));
+  fail_unless_equals_int (gst_rtcp_packet_get_type (&packet), GST_RTCP_TYPE_SR);
+
+  /* move to the SDES packet */
+  fail_unless (gst_rtcp_packet_move_to_next (&packet));
+  fail_unless_equals_int (gst_rtcp_packet_get_type (&packet),
+      GST_RTCP_TYPE_SDES);
+
+  /* Get SSRC */
+  fail_unless_equals_int (gst_rtcp_packet_sdes_get_ssrc (&packet), 0x12345678);
+
+  /* Iterate items */
+  fail_unless (gst_rtcp_packet_sdes_first_item (&packet));
+  fail_unless_equals_int (gst_rtcp_packet_sdes_get_ssrc (&packet), 0x12345678);
+
+  /* Iterate entries */
+  fail_unless (gst_rtcp_packet_sdes_first_entry (&packet));
+  {
+    guint8 *data;
+    guint8 len;
+    GstRTCPSDESType type;
+
+    fail_unless (gst_rtcp_packet_sdes_get_entry (&packet, &type, &len, &data));
+    fail_unless_equals_int (type, GST_RTCP_SDES_CNAME);
+    fail_unless_equals_int (len, 10);
+    fail_unless (memcmp (data, "test@foo.b", 10) == 0);
+  }
+  /* END marker is not an entry */
+  fail_if (gst_rtcp_packet_sdes_next_entry (&packet));
+  fail_if (gst_rtcp_packet_sdes_next_item (&packet));
+
+  gst_rtcp_buffer_unmap (&rtcp);
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_sdes_parsing_truncated_entry)
 {
   /* SDES item with only SSRC and no entry data at all */
@@ -2889,6 +2953,7 @@ rtp_suite (void)
 
   tcase_add_test (tc_chain, test_sdes_parsing_out_of_bounds);
   tcase_add_test (tc_chain, test_sdes_parsing_valid_single_item);
+  tcase_add_test (tc_chain, test_sdes_parsing_valid_in_compound_packet);
   tcase_add_test (tc_chain,
       test_sdes_parsing_valid_single_item_multiple_entries);
   tcase_add_test (tc_chain, test_sdes_parsing_valid_multiple_items);
