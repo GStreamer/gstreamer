@@ -740,8 +740,22 @@ gst_discoverer_stream_info_get_misc (GstDiscovererStreamInfo * info)
  * gst_discoverer_stream_info_get_stream_number:
  * @info: a #GstDiscovererStreamInfo
  *
- * Returns: the stream number, -1 if no index could be determined. This property
- * acts as a unique identifier as a 'int' for the stream.
+ * Get the stream number of @info, a stable identifier of the stream within its
+ * #GstDiscovererInfo.
+ *
+ * The contract of the stream number is:
+ *
+ * * Elementary streams are numbered from 0, in the order the demuxer exposes
+ *   them (their declaration order in the container) - the same order in which a
+ *   #GstStreamCollection enumerates them. This usually matches the stream index
+ *   other tools such as `ffprobe` report, but the order is the demuxer's, so it
+ *   may differ between tools for containers without a canonical stream order.
+ * * Each actual (elementary) stream is given exactly one number. Extra caps
+ *   nodes that a parser may expose for a *single* stream do not get their own
+ *   number.
+ * * A container is not an elementary stream and has a stream number of -1.
+ *
+ * Returns: the stream number, or -1 if it could not be determined.
  *
  * Since: 1.20
  */
