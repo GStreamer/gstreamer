@@ -85,6 +85,9 @@
 
 #include <opencv2/imgproc.hpp>
 #include <opencv2/calib3d.hpp>
+#if CV_MAJOR_VERSION >= 5
+#include <opencv2/objdetect.hpp>
+#endif
 
 #include <gst/opencv/gstopencvutils.h>
 
