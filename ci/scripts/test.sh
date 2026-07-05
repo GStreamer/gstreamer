@@ -31,12 +31,18 @@ export LIBGL_ALWAYS_SOFTWARE="true"
 # This the hardcoded value for llvmpipe
 export VK_ICD_FILENAMES="/usr/share/vulkan/icd.d/lvp_icd.json"
 
+if test "x$CI_PROJECT_NAME" = "xgstreamer-security"; then
+  check_bugs=""
+else
+  check_bugs="--check-bugs"
+fi
+
 ret=0
 ./gst-env.py \
     "--builddir=$builddir" \
     gst-validate-launcher "$tests" \
     --jobs "$jobs" \
-    --check-bugs \
+    $check_bugs \
     --dump-on-failure \
     --mute \
     --shuffle \

@@ -239,6 +239,11 @@ windows amd64 docker:
         "--build-arg", "CI_COMMIT_REF_NAME=$CI_COMMIT_REF_NAME" `
       )
     - ci/docker/windows/container.ps1 $CI_REGISTRY $CI_REGISTRY_USER $CI_REGISTRY_PASSWORD $WINDOWS_IMAGE $WINDOWS_UPSTREAM_IMAGE $DOCKERFILE
+  rules:
+   - if: '$CI_PROJECT_NAME != "gstreamer-security"'
+   # Never run for gstreamer-security repo
+   - if: '$CI_PROJECT_NAME == "gstreamer-security"'
+     when: never
 
 .macos image:
   image: "registry.freedesktop.org/gstreamer/gstreamer/macos-arm64/26-tahoe:2025-09-30.0"
@@ -522,6 +527,9 @@ build debian x86_64 debug:
       -Dvpx:tools=disabled
 
   rules:
+    # Don't run Windows jobs for gstreamer-security repo
+    - if: '$CI_PROJECT_NAME == "gstreamer-security"'
+      when: never
     - !reference [.upstream-branch-rules, rules]
     - changes:
         paths:
@@ -620,6 +628,9 @@ build vs2022 x86:
 build vs2022 arm64:
   extends: '.build windows cross'
   rules:
+    # Don't run Windows jobs for gstreamer-security repo
+    - if: '$CI_PROJECT_NAME == "gstreamer-security"'
+      when: never
     - when: 'manual'
       allow_failure: true
   variables:
@@ -662,6 +673,9 @@ build macos:
     MESON_TEST_ARGS: "gst-plugins-bad:*avf* gst-plugins-bad:*vtdec* gst-plugins-bad:*_vk*"
     SUBPROJECTS_CACHE_DIR: "/Users/gst-ci/subprojects"
   rules:
+    # Don't run macOS jobs for gstreamer-security repo
+    - if: '$CI_PROJECT_NAME == "gstreamer-security"'
+      when: never
     - !reference [.upstream-branch-rules, rules]
     - changes:
         paths:
@@ -1195,6 +1209,9 @@ cerbero trigger:
     - if: '$MESON_COMMIT'
     # Never run post merge
     - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
+      when: never
+    # Never run for gstreamer-security repo
+    - if: '$CI_PROJECT_NAME == "gstreamer-security"'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     # For merge reqest, we want to test user branch
