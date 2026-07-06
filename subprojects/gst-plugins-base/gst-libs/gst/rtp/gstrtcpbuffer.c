@@ -1272,6 +1272,46 @@ gst_rtcp_packet_sdes_first_item (GstRTCPPacket * packet)
   return TRUE;
 }
 
+static guint
+find_sdes_next_item_offset (GstRTCPPacket * packet)
+{
+  guint8 *data;
+  guint offset;
+  guint len;
+
+  g_return_val_if_fail (packet != NULL, 0);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_SDES, 0);
+  g_return_val_if_fail (packet->rtcp != NULL, 0);
+
+  /* if we are at the last item, we are done */
+  if (packet->item_count == packet->count)
+    return 0;
+
+  /* move to SDES */
+  data = packet->rtcp->map.data;
+  data += packet->offset;
+  /* move to item */
+  offset = packet->item_offset;
+  /* skip SSRC */
+  offset += 4;
+
+  /* use total packet size */
+  len = (packet->length + 1) << 2;
+
+  while (offset < len) {
+    if (data[offset] == 0) {
+      /* end of list, round to next 32-bit word */
+      offset = (offset + 4) & ~3;
+      break;
+    }
+    if (offset + 1 >= len)
+      return 0;
+    offset += data[offset + 1] + 2;
+  }
+
+  return offset;
+}
+
 /**
  * gst_rtcp_packet_sdes_next_item:
  * @packet: a valid SDES #GstRTCPPacket
@@ -1283,7 +1323,6 @@ gst_rtcp_packet_sdes_first_item (GstRTCPPacket * packet)
 gboolean
 gst_rtcp_packet_sdes_next_item (GstRTCPPacket * packet)
 {
-  guint8 *data;
   guint offset;
   guint len;
 
@@ -1292,31 +1331,12 @@ gst_rtcp_packet_sdes_next_item (GstRTCPPacket * packet)
   g_return_val_if_fail (packet->rtcp != NULL, FALSE);
   g_return_val_if_fail (packet->rtcp->map.flags & GST_MAP_READ, FALSE);
 
-  /* if we are at the last item, we are done */
-  if (packet->item_count == packet->count)
+  offset = find_sdes_next_item_offset (packet);
+  if (offset == 0)
     return FALSE;
 
-  /* move to SDES */
-  data = packet->rtcp->map.data;
-  data += packet->offset;
-  /* move to item */
-  offset = packet->item_offset;
-  /* skip SSRC */
-  offset += 4;
-
-  /* don't overrun - use total packet size */
+  /* use total packet size */
   len = (packet->length + 1) << 2;
-
-  while (offset < len) {
-    if (data[offset] == 0) {
-      /* end of list, round to next 32-bit word */
-      offset = (offset + 4) & ~3;
-      break;
-    }
-    if (offset + 1 >= len)
-      return FALSE;
-    offset += data[offset + 1] + 2;
-  }
 
   /* needs at least SSRC and one item plus padding */
   if (offset + 4 + 4 > len)
@@ -1583,15 +1603,28 @@ gst_rtcp_packet_sdes_add_item (GstRTCPPacket * packet, guint32 ssrc)
   g_return_val_if_fail (packet->rtcp != NULL, FALSE);
   g_return_val_if_fail (packet->rtcp->map.flags & GST_MAP_WRITE, FALSE);
 
+  maxsize = packet->rtcp->map.maxsize;
+
   /* increment item count when possible */
   if (packet->count >= GST_RTCP_MAX_SDES_ITEM_COUNT)
     goto no_space;
 
-  /* pretend there is a next packet for the next call */
-  packet->count++;
+  /* Find the next free slot. The first item always goes at
+   * item_offset=4 (set by read_packet_header). For subsequent items
+   * we must skip past the current item and bail out if the SDES is
+   * too small to hold another one. Otherwise the next add_item()
+   * would silently overwrite the previous one at the previous
+   * item_offset. */
+  if (packet->count > 0) {
+    offset = find_sdes_next_item_offset (packet);
+    if (offset == 0 || packet->offset + offset + 8 > maxsize)
+      goto no_space;
+    packet->item_offset = offset;
+    packet->item_count++;
+    packet->entry_offset = 4;
+  }
 
-  /* jump over current item */
-  gst_rtcp_packet_sdes_next_item (packet);
+  packet->count++;
 
   /* move to SDES */
   data = packet->rtcp->map.data;
@@ -1600,8 +1633,11 @@ gst_rtcp_packet_sdes_add_item (GstRTCPPacket * packet, guint32 ssrc)
   /* move to current item */
   offset = packet->item_offset;
 
-  /* we need 2 free words now */
-  if (offset + 8 >= maxsize)
+  /* we need 2 free words. packet->offset may be non-zero for a SDES
+   * that follows another packet in a compound buffer, so compare
+   * against the absolute write position. Using the relative offset
+   * would allow appending past the buffer's maxsize. */
+  if (packet->offset + offset + 8 >= maxsize)
     goto no_next;
 
   /* write SSRC */
