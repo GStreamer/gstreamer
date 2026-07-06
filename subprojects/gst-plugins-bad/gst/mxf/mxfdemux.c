@@ -1710,6 +1710,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
 
   g_rw_lock_writer_unlock (&demux->metadata_lock);
 
+  pads = g_list_reverse (pads);
   for (l = pads; l; l = l->next) {
     gst_flow_combiner_add_pad (demux->flowcombiner, l->data);
     gst_element_add_pad (GST_ELEMENT_CAST (demux), l->data);
