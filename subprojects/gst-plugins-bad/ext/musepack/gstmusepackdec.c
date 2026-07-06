@@ -62,7 +62,7 @@ static gboolean gst_musepackdec_sink_activate (GstPad * sinkpad,
 static gboolean gst_musepackdec_sink_activate_mode (GstPad * sinkpad,
     GstObject * parent, GstPadMode mode, gboolean active);
 
-static void gst_musepackdec_loop (GstPad * sinkpad);
+static void gst_musepackdec_loop (GstMusepackDec * musepackdec);
 static GstStateChangeReturn
 gst_musepackdec_change_state (GstElement * element, GstStateChange transition);
 
@@ -233,7 +233,7 @@ gst_musepackdec_handle_seek_event (GstMusepackDec * dec, GstEvent * event)
   GST_DEBUG_OBJECT (dec, "seek successful");
 
   gst_pad_start_task (dec->sinkpad,
-      (GstTaskFunction) gst_musepackdec_loop, gst_object_ref (dec->sinkpad),
+      (GstTaskFunction) gst_musepackdec_loop, gst_object_ref (dec),
       gst_object_unref);
 
   GST_PAD_STREAM_UNLOCK (dec->sinkpad);
@@ -474,7 +474,7 @@ gst_musepackdec_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
     case GST_PAD_MODE_PULL:
       if (active) {
         result = gst_pad_start_task (sinkpad,
-            (GstTaskFunction) gst_musepackdec_loop, gst_object_ref (sinkpad),
+            (GstTaskFunction) gst_musepackdec_loop, gst_object_ref (parent),
             gst_object_unref);
       } else {
         result = gst_pad_stop_task (sinkpad);
@@ -489,17 +489,14 @@ gst_musepackdec_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
 }
 
 static void
-gst_musepackdec_loop (GstPad * sinkpad)
+gst_musepackdec_loop (GstMusepackDec * musepackdec)
 {
-  GstMusepackDec *musepackdec;
   GstFlowReturn flow;
   GstBuffer *out;
   GstMapInfo info;
   mpc_frame_info frame;
   mpc_status err;
   gint num_samples, samplerate, bitspersample;
-
-  musepackdec = GST_MUSEPACK_DEC (GST_PAD_PARENT (sinkpad));
 
   samplerate = g_atomic_int_get (&musepackdec->rate);
 
@@ -586,7 +583,7 @@ eos_and_pause:
 pause_task:
   {
     GST_DEBUG_OBJECT (musepackdec, "Pausing task");
-    gst_pad_pause_task (sinkpad);
+    gst_pad_pause_task (musepackdec->sinkpad);
     return;
   }
 }

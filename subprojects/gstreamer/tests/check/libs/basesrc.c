@@ -1108,6 +1108,101 @@ GST_START_TEST (basesrc_negotiate)
 
 GST_END_TEST;
 
+typedef GstBaseSrc TestRefSrc;
+typedef GstBaseSrcClass TestRefSrcClass;
+
+static GstStaticPadTemplate ref_src_template = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
+static GType test_ref_src_get_type (void);
+
+G_DEFINE_TYPE (TestRefSrc, test_ref_src, GST_TYPE_BASE_SRC);
+
+static void
+test_ref_src_init (TestRefSrc * src)
+{
+}
+
+static GstFlowReturn
+test_ref_src_create (GstBaseSrc * src, guint64 offset, guint size,
+    GstBuffer ** p_buf)
+{
+  ASSERT_OBJECT_REFCOUNT (src, "basesrc in create", 2);
+
+  return GST_FLOW_EOS;
+}
+
+static void
+test_ref_src_class_init (TestRefSrcClass * klass)
+{
+  GstBaseSrcClass *gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
+
+  gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
+      &ref_src_template);
+
+  gstbasesrc_class->create = test_ref_src_create;
+}
+
+static GstPad *my_ref_sinkpad;
+
+static GstStaticPadTemplate ref_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
+static gboolean
+test_ref_event_func (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+    g_mutex_lock (&check_mutex);
+    done = TRUE;
+    g_cond_signal (&check_cond);
+    g_mutex_unlock (&check_mutex);
+  }
+
+  gst_event_unref (event);
+
+  return GST_FLOW_OK;
+}
+
+/* In this test we check that subclasses of base src are guaranteed that their instance
+ * pointer remains valid for the duration of create().
+ *
+ * This means that during create(), an extra ref must be held by the base class.
+ */
+GST_START_TEST (basesrc_create_refcount)
+{
+  GstElement *src;
+
+  src = g_object_new (test_ref_src_get_type (), NULL);
+
+  ASSERT_OBJECT_REFCOUNT (src, "basesrc after initialization", 1);
+
+  my_ref_sinkpad = gst_check_setup_sink_pad (src, &ref_sink_template);
+  gst_pad_set_event_function (my_ref_sinkpad, test_ref_event_func);
+  gst_pad_set_active (my_ref_sinkpad, TRUE);
+
+  done = FALSE;
+
+  gst_element_set_state (src, GST_STATE_PLAYING);
+
+  g_mutex_lock (&check_mutex);
+  while (!done)
+    g_cond_wait (&check_cond, &check_mutex);
+  g_mutex_unlock (&check_mutex);
+
+  gst_element_set_state (src, GST_STATE_NULL);
+
+  ASSERT_OBJECT_REFCOUNT (src, "basesrc after task ended", 1);
+
+  gst_check_teardown_sink_pad (src);
+
+  gst_object_unref (src);
+}
+
+GST_END_TEST;
 static Suite *
 gst_basesrc_suite (void)
 {
@@ -1126,6 +1221,7 @@ gst_basesrc_suite (void)
   tcase_add_test (tc, basesrc_create_bufferlist);
   tcase_add_test (tc, basesrc_time_automatic_eos);
   tcase_add_test (tc, basesrc_negotiate);
+  tcase_add_test (tc, basesrc_create_refcount);
 
   return s;
 }

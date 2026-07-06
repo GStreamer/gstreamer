@@ -2300,7 +2300,7 @@ static GstFlowReturn gst_ogg_demux_read_end_chain (GstOggDemux * ogg,
 
 static gboolean gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
-static void gst_ogg_demux_loop (GstOggPad * pad);
+static void gst_ogg_demux_loop (GstOggDemux * ogg);
 static GstFlowReturn gst_ogg_demux_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
 static gboolean gst_ogg_demux_sink_activate (GstPad * sinkpad,
@@ -3723,7 +3723,7 @@ gst_ogg_demux_perform_seek_pull (GstOggDemux * ogg, GstEvent * event)
     /* restart our task since it might have been stopped when we did the 
      * flush. */
     gst_pad_start_task (ogg->sinkpad, (GstTaskFunction) gst_ogg_demux_loop,
-        gst_object_ref (ogg->sinkpad), gst_object_unref);
+        gst_object_ref (ogg), gst_object_unref);
   }
 
   /* streaming can continue now */
@@ -4063,7 +4063,7 @@ gst_ogg_demux_setup_seek_pull (GstOggDemux * ogg, GstEvent * event)
 
   gst_event_replace (&ogg->seek_event, event);
   gst_pad_start_task (ogg->sinkpad, (GstTaskFunction) gst_ogg_demux_loop,
-      gst_object_ref (ogg->sinkpad), gst_object_unref);
+      gst_object_ref (ogg), gst_object_unref);
   GST_PAD_STREAM_UNLOCK (ogg->sinkpad);
 
   return TRUE;
@@ -4936,14 +4936,13 @@ gst_ogg_demux_sync_streams (GstOggDemux * ogg)
  * - when seeking, we can use the chain info to perform the seek.
  */
 static void
-gst_ogg_demux_loop (GstOggPad * pad)
+gst_ogg_demux_loop (GstOggDemux * ogg)
 {
-  GstOggDemux *ogg;
   gboolean res;
   GstFlowReturn ret = GST_FLOW_ERROR;
   GstEvent *seek;
+  GstPad *pad = ogg->sinkpad;
 
-  ogg = GST_OGG_DEMUX (GST_OBJECT_PARENT (pad));
   seek = ogg->seek_event;
   ogg->seek_event = NULL;
 
@@ -5236,7 +5235,7 @@ gst_ogg_demux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
         ogg->pullmode = TRUE;
 
         res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_ogg_demux_loop,
-            gst_object_ref (sinkpad), gst_object_unref);
+            gst_object_ref (ogg), gst_object_unref);
       } else {
         res = gst_pad_stop_task (sinkpad);
       }

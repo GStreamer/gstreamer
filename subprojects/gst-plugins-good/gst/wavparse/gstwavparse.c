@@ -88,7 +88,7 @@ static GstFlowReturn gst_wavparse_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
 static gboolean gst_wavparse_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
-static void gst_wavparse_loop (GstPad * pad);
+static void gst_wavparse_loop (GstWavParse * wav);
 static gboolean gst_wavparse_srcpad_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 
@@ -626,7 +626,7 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
   /* and start the streaming task again */
   if (!wav->streaming) {
     gst_pad_start_task (wav->sinkpad, (GstTaskFunction) gst_wavparse_loop,
-        gst_object_ref (wav->sinkpad), gst_object_unref);
+        gst_object_ref (wav), gst_object_unref);
   }
 
   GST_PAD_STREAM_UNLOCK (wav->sinkpad);
@@ -2368,12 +2368,12 @@ push_error:
 }
 
 static void
-gst_wavparse_loop (GstPad * pad)
+gst_wavparse_loop (GstWavParse * wav)
 {
   GstFlowReturn ret;
-  GstWavParse *wav = GST_WAVPARSE (GST_PAD_PARENT (pad));
   GstEvent *event;
   gchar *stream_id;
+  GstPad *pad = wav->sinkpad;
 
   GST_LOG_OBJECT (wav, "process data");
 
@@ -3091,7 +3091,7 @@ gst_wavparse_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
       if (active) {
         /* if we have a scheduler we can start the task */
         res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_wavparse_loop,
-            gst_object_ref (sinkpad), gst_object_unref);
+            gst_object_ref (parent), gst_object_unref);
       } else {
         res = gst_pad_stop_task (sinkpad);
       }

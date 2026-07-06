@@ -98,7 +98,7 @@ static GstPad *gst_dtls_enc_request_new_pad (GstElement *, GstPadTemplate *,
 
 static gboolean src_activate_mode (GstPad *, GstObject *, GstPadMode,
     gboolean active);
-static void src_task_loop (GstPad *);
+static void src_task_loop (GstDtlsEnc *);
 static void clear_signals (GstDtlsEnc *);
 
 static GstFlowReturn sink_chain (GstPad *, GstObject *, GstBuffer *);
@@ -478,7 +478,7 @@ src_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
     self->send_initial_events = TRUE;
     success =
         gst_pad_start_task (pad, (GstTaskFunction) src_task_loop,
-        gst_object_ref (self->src), gst_object_unref);
+        gst_object_ref (self), gst_object_unref);
     if (!success) {
       GST_WARNING_OBJECT (self, "failed to activate pad task");
     }
@@ -502,9 +502,8 @@ src_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
 }
 
 static void
-src_task_loop (GstPad * pad)
+src_task_loop (GstDtlsEnc * self)
 {
-  GstDtlsEnc *self = GST_DTLS_ENC (GST_PAD_PARENT (pad));
   GstFlowReturn ret;
   GstBuffer *buffer;
   gboolean check_connection_timeout = FALSE;

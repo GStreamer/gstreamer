@@ -135,7 +135,7 @@ static GstFlowReturn gst_matroska_demux_parse_id (GstMatroskaDemux * demux,
     guint32 id, guint64 length, guint needed);
 
 /* element functions */
-static void gst_matroska_demux_loop (GstPad * pad);
+static void gst_matroska_demux_loop (GstMatroskaDemux * demux);
 
 static gboolean gst_matroska_demux_element_send_event (GstElement * element,
     GstEvent * event);
@@ -3338,7 +3338,7 @@ exit:
    * flush. */
   gst_pad_start_task (demux->common.sinkpad,
       (GstTaskFunction) gst_matroska_demux_loop,
-      gst_object_ref (demux->common.sinkpad), gst_object_unref);
+      gst_object_ref (demux), gst_object_unref);
 
   /* streaming can continue now */
   if (pad_locked) {
@@ -6700,9 +6700,8 @@ seek_failed:
 }
 
 static void
-gst_matroska_demux_loop (GstPad * pad)
+gst_matroska_demux_loop (GstMatroskaDemux * demux)
 {
-  GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (GST_PAD_PARENT (pad));
   GstFlowReturn ret;
   guint32 id;
   guint64 length;
@@ -7127,7 +7126,7 @@ gst_matroska_demux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
       if (active) {
         /* if we have a scheduler we can start the task */
         gst_pad_start_task (sinkpad, (GstTaskFunction) gst_matroska_demux_loop,
-            gst_object_ref (sinkpad), gst_object_unref);
+            gst_object_ref (parent), gst_object_unref);
       } else {
         gst_pad_stop_task (sinkpad);
       }

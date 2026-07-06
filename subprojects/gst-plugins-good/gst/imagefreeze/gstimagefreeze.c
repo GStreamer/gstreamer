@@ -82,7 +82,7 @@ static GstCaps *gst_image_freeze_query_caps (GstImageFreeze * self,
     GstPad * pad, GstCaps * filter);
 static gboolean gst_image_freeze_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
-static void gst_image_freeze_src_loop (GstPad * pad);
+static void gst_image_freeze_src_loop (GstImageFreeze * self);
 static gboolean gst_image_freeze_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static gboolean gst_image_freeze_src_query (GstPad * pad, GstObject * parent,
@@ -866,7 +866,7 @@ gst_image_freeze_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         if (self->buffer != NULL)
           gst_pad_start_task (self->srcpad,
               (GstTaskFunction) gst_image_freeze_src_loop,
-              gst_object_ref (self->srcpad), gst_object_unref);
+              gst_object_ref (self), gst_object_unref);
 
         g_mutex_unlock (&self->lock);
       }
@@ -986,16 +986,15 @@ gst_image_freeze_sink_chain (GstPad * pad, GstObject * parent,
   gst_buffer_unref (buffer);
 
   gst_pad_start_task (self->srcpad, (GstTaskFunction) gst_image_freeze_src_loop,
-      gst_object_ref (self->srcpad), gst_object_unref);
+      gst_object_ref (self), gst_object_unref);
   flow_ret = self->allow_replace ? GST_FLOW_OK : GST_FLOW_EOS;
   g_mutex_unlock (&self->lock);
   return flow_ret;
 }
 
 static void
-gst_image_freeze_src_loop (GstPad * pad)
+gst_image_freeze_src_loop (GstImageFreeze * self)
 {
-  GstImageFreeze *self = GST_IMAGE_FREEZE (GST_PAD_PARENT (pad));
   GstBuffer *buffer;
   guint64 offset;
   GstClockTime timestamp, timestamp_end;
@@ -1003,6 +1002,7 @@ gst_image_freeze_src_loop (GstPad * pad)
   gboolean in_seg, eos;
   GstFlowReturn flow_ret = GST_FLOW_OK;
   gboolean first = FALSE;
+  GstPad *pad = self->srcpad;
 
   g_mutex_lock (&self->lock);
   if (self->flushing) {

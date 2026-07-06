@@ -409,7 +409,7 @@ static GstFlowReturn gst_base_sink_chain (GstPad * pad, GstObject * parent,
 static GstFlowReturn gst_base_sink_chain_list (GstPad * pad, GstObject * parent,
     GstBufferList * list);
 
-static void gst_base_sink_loop (GstPad * pad);
+static void gst_base_sink_loop (GstBaseSink * basesink);
 static gboolean gst_base_sink_pad_activate (GstPad * pad, GstObject * parent);
 static gboolean gst_base_sink_pad_activate_mode (GstPad * pad,
     GstObject * parent, GstPadMode mode, gboolean active);
@@ -4639,17 +4639,14 @@ gst_base_sink_perform_instant_rate_change (GstBaseSink * sink, GstPad * pad,
 /* with STREAM_LOCK
  */
 static void
-gst_base_sink_loop (GstPad * pad)
+gst_base_sink_loop (GstBaseSink * basesink)
 {
-  GstObject *parent;
-  GstBaseSink *basesink;
   GstBuffer *buf = NULL;
   GstFlowReturn result;
   guint blocksize;
   guint64 offset;
-
-  parent = GST_OBJECT_PARENT (pad);
-  basesink = GST_BASE_SINK (parent);
+  GstPad *pad = GST_BASE_SINK_PAD (basesink);
+  GstObject *parent = GST_OBJECT (basesink);
 
   g_assert (basesink->pad_mode == GST_PAD_MODE_PULL);
 
@@ -4784,7 +4781,7 @@ gst_base_sink_default_activate_pull (GstBaseSink * basesink, gboolean active)
     /* start task */
     result = gst_pad_start_task (basesink->sinkpad,
         (GstTaskFunction) gst_base_sink_loop,
-        gst_object_ref (basesink->sinkpad), gst_object_unref);
+        gst_object_ref (basesink), gst_object_unref);
   } else {
     /* step 2, make sure streaming finishes */
     result = gst_pad_stop_task (basesink->sinkpad);
