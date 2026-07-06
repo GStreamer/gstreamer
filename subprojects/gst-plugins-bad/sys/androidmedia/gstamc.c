@@ -2398,6 +2398,9 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
         gint j;
         GValue va = G_VALUE_INIT;
         GValue v = G_VALUE_INIT;
+        /* There are multiple Android formats that map to these so
+         * let's make sure to only add them once */
+        gboolean added_i420 = FALSE, added_nv12 = FALSE;
 
         g_value_init (&va, GST_TYPE_LIST);
 
@@ -2416,6 +2419,14 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
             GST_WARNING ("Unknown color format 0x%08x for codec %s",
                 type->color_formats[j], type->mime);
             continue;
+          } else if (format == GST_VIDEO_FORMAT_I420) {
+            if (added_i420)
+              continue;
+            added_i420 = TRUE;
+          } else if (format == GST_VIDEO_FORMAT_NV12) {
+            if (added_nv12)
+              continue;
+            added_nv12 = TRUE;
           }
 
           g_value_init (&v, G_TYPE_STRING);
