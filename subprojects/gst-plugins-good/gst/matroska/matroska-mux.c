@@ -2866,6 +2866,7 @@ gst_matroska_mux_write_colour (GstMatroskaMux * mux,
       range_id = 1;
       break;
     case GST_VIDEO_COLOR_RANGE_0_255:
+    case GST_VIDEO_COLOR_RANGE_0_1:
       range_id = 2;
   }
 

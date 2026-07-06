@@ -87,8 +87,9 @@ RGBA\_F16LE below). The following conventions apply to all of them:
 
  - Component values are normalized: 0.0 and 1.0 correspond to 0 and the
    maximum value of a full-range integer format with the same colorimetry.
-   Float formats are always full-range; the colorimetry range does not apply
-   to them.
+   Float formats only support the 0_1 colorimetry range
+   (GST_VIDEO_COLOR_RANGE_0_1); the other range values are reserved and are
+   coerced to 0_1 when parsing caps.
 
  - Values outside [0.0, 1.0] are valid. Their meaning follows from the
    colorimetry: with a linear transfer function, values above 1.0 represent

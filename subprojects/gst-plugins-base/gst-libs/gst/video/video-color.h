@@ -39,7 +39,24 @@ G_BEGIN_DECLS
 typedef enum {
   GST_VIDEO_COLOR_RANGE_UNKNOWN = 0,
   GST_VIDEO_COLOR_RANGE_0_255,
-  GST_VIDEO_COLOR_RANGE_16_235
+  GST_VIDEO_COLOR_RANGE_16_235,
+
+  /**
+   * GST_VIDEO_COLOR_RANGE_0_1:
+   *
+   * [0.0..1.0] for floating point components, the only range supported
+   * by floating point formats (the other values are reserved).
+   *
+   * Values outside [0.0, 1.0] are valid: their meaning follows from the
+   * colorimetry (with a linear transfer function, values above 1.0
+   * represent luminance above reference white and negative values
+   * represent colors outside the gamut of the primaries). Elements
+   * processing floats natively should preserve out-of-range values;
+   * converting to an integer format clamps them.
+   *
+   * Since: 1.30
+   */
+  GST_VIDEO_COLOR_RANGE_0_1
 } GstVideoColorRange;
 
 /**

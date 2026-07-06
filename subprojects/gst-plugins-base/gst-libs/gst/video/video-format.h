@@ -838,12 +838,6 @@ typedef enum
    *
    * Component values are normalized: 0.0 and 1.0 correspond to 0 and the
    * maximum value of a full-range integer format with the same colorimetry.
-   * Float formats are always full-range. Values outside [0.0, 1.0] are
-   * valid; their meaning follows from the colorimetry (with a linear
-   * transfer function, values above 1.0 represent luminance above reference
-   * white and negative values represent colors outside the gamut of the
-   * primaries). Elements processing floats natively should preserve
-   * out-of-range values; converting to an integer format clamps them.
    *
    * Since: 1.30
    */

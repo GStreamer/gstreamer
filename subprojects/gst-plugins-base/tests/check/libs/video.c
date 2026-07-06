@@ -1140,6 +1140,8 @@ GST_START_TEST (test_parse_colorimetry)
         _16_235, BT2020, BT2020_12, BT2020),
     MAKE_COLORIMETRY_TEST ("1:4:0:0", "1:4:0:0", NULL,
         _0_255, BT601, UNKNOWN, UNKNOWN),
+    MAKE_COLORIMETRY_TEST ("3:1:7:1", "3:1:7:1", NULL,
+        _0_1, RGB, SRGB, BT709),
   };
   gint i;
 
@@ -1163,6 +1165,60 @@ GST_START_TEST (test_parse_colorimetry)
     if (test->name)
       fail_unless (gst_video_colorimetry_matches (&color, test->name));
   }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_float_default_colorimetry)
+{
+  GstVideoFormat float_formats[] = {
+    GST_VIDEO_FORMAT_RGBA_F16LE, GST_VIDEO_FORMAT_RGBA_F16BE,
+    GST_VIDEO_FORMAT_RGBA_F32LE, GST_VIDEO_FORMAT_RGBA_F32BE,
+  };
+  GstVideoInfo info;
+  GstCaps *caps;
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (float_formats); i++) {
+    fail_unless (gst_video_info_set_format (&info, float_formats[i], 320, 240));
+    fail_unless_equals_int (info.colorimetry.range, GST_VIDEO_COLOR_RANGE_0_1);
+    fail_unless_equals_int (info.colorimetry.matrix,
+        GST_VIDEO_COLOR_MATRIX_RGB);
+    fail_unless_equals_int (info.colorimetry.transfer, GST_VIDEO_TRANSFER_SRGB);
+    fail_unless_equals_int (info.colorimetry.primaries,
+        GST_VIDEO_COLOR_PRIMARIES_BT709);
+
+    caps = gst_video_info_to_caps (&info);
+    fail_unless (caps != NULL);
+    fail_unless (gst_video_info_from_caps (&info, caps));
+    fail_unless_equals_int (info.colorimetry.range, GST_VIDEO_COLOR_RANGE_0_1);
+    gst_caps_unref (caps);
+  }
+
+  /* integer RGB formats keep the full-range default */
+  fail_unless (gst_video_info_set_format (&info, GST_VIDEO_FORMAT_RGBA, 320,
+          240));
+  fail_unless_equals_int (info.colorimetry.range, GST_VIDEO_COLOR_RANGE_0_255);
+
+  /* reserved ranges on float formats are coerced to 0_1, the other
+   * colorimetry fields are preserved */
+  caps = gst_caps_from_string ("video/x-raw, format=RGBA_F16LE, width=320, "
+      "height=240, framerate=30/1, colorimetry=bt709");
+  fail_unless (gst_video_info_from_caps (&info, caps));
+  fail_unless_equals_int (info.colorimetry.range, GST_VIDEO_COLOR_RANGE_0_1);
+  fail_unless_equals_int (info.colorimetry.matrix, GST_VIDEO_COLOR_MATRIX_RGB);
+  fail_unless_equals_int (info.colorimetry.transfer, GST_VIDEO_TRANSFER_BT709);
+  fail_unless_equals_int (info.colorimetry.primaries,
+      GST_VIDEO_COLOR_PRIMARIES_BT709);
+  gst_caps_unref (caps);
+
+  /* and the 0_1 range on integer formats is coerced to 0_255 */
+  caps = gst_caps_from_string ("video/x-raw, format=RGBA, width=320, "
+      "height=240, framerate=30/1, colorimetry=3:1:7:1");
+  fail_unless (gst_video_info_from_caps (&info, caps));
+  fail_unless_equals_int (info.colorimetry.range, GST_VIDEO_COLOR_RANGE_0_255);
+  fail_unless_equals_int (info.colorimetry.transfer, GST_VIDEO_TRANSFER_SRGB);
+  gst_caps_unref (caps);
 }
 
 GST_END_TEST;
@@ -5071,6 +5127,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_parse_caps_rgb);
   tcase_add_test (tc_chain, test_parse_caps_multiview);
   tcase_add_test (tc_chain, test_parse_colorimetry);
+  tcase_add_test (tc_chain, test_float_default_colorimetry);
   tcase_add_test (tc_chain, test_events);
   tcase_add_test (tc_chain, test_convert_frame);
   tcase_add_test (tc_chain, test_convert_frame_async);

@@ -629,6 +629,7 @@ _fill_avpicture (GstFFMpegVidCmp * self, AVFrame * picture,
 
   switch (vframe->info.colorimetry.range) {
     case GST_VIDEO_COLOR_RANGE_0_255:
+    case GST_VIDEO_COLOR_RANGE_0_1:
       picture->color_range = AVCOL_RANGE_JPEG;
       break;
     case GST_VIDEO_COLOR_RANGE_16_235:

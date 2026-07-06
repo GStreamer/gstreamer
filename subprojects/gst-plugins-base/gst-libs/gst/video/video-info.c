@@ -150,6 +150,7 @@ gst_video_info_init (GstVideoInfo * info)
 #define DEFAULT_RGB     2
 #define DEFAULT_GRAY    3
 #define DEFAULT_UNKNOWN 4
+#define DEFAULT_RGB_FLOAT 5
 
 static const GstVideoColorimetry default_color[] = {
   MAKE_COLORIMETRY (_16_235, BT601, BT601, SMPTE170M),
@@ -157,6 +158,7 @@ static const GstVideoColorimetry default_color[] = {
   MAKE_COLORIMETRY (_0_255, RGB, SRGB, BT709),
   MAKE_COLORIMETRY (_0_255, BT601, UNKNOWN, UNKNOWN),
   MAKE_COLORIMETRY (_UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN),
+  MAKE_COLORIMETRY (_0_1, RGB, SRGB, BT709),
 };
 
 static void
@@ -173,7 +175,10 @@ set_default_colorimetry (GstVideoInfo * info)
   } else if (GST_VIDEO_FORMAT_INFO_IS_GRAY (finfo)) {
     info->colorimetry = default_color[DEFAULT_GRAY];
   } else if (GST_VIDEO_FORMAT_INFO_IS_RGB (finfo)) {
-    info->colorimetry = default_color[DEFAULT_RGB];
+    if (GST_VIDEO_FORMAT_INFO_IS_FLOAT (finfo))
+      info->colorimetry = default_color[DEFAULT_RGB_FLOAT];
+    else
+      info->colorimetry = default_color[DEFAULT_RGB];
   } else {
     info->colorimetry = default_color[DEFAULT_UNKNOWN];
   }
@@ -571,6 +576,19 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
         GST_WARNING ("invalid matrix %d for RGB format, using RGB",
             info->colorimetry.matrix);
         info->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+      }
+      if (GST_VIDEO_FORMAT_INFO_IS_FLOAT (info->finfo)) {
+        /* force the 0_1 range for float formats, other ranges are reserved */
+        if (info->colorimetry.range != GST_VIDEO_COLOR_RANGE_UNKNOWN &&
+            info->colorimetry.range != GST_VIDEO_COLOR_RANGE_0_1) {
+          GST_WARNING ("invalid range %d for float format, using 0_1",
+              info->colorimetry.range);
+          info->colorimetry.range = GST_VIDEO_COLOR_RANGE_0_1;
+        }
+      } else if (info->colorimetry.range == GST_VIDEO_COLOR_RANGE_0_1) {
+        /* and 0_1 is only valid for float formats */
+        GST_WARNING ("invalid range 0_1 for integer format, using 0_255");
+        info->colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
       }
     }
   } else {

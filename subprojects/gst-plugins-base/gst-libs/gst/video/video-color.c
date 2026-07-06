@@ -212,6 +212,9 @@ gst_video_color_range_offsets (GstVideoColorRange range,
   switch (range) {
     default:
     case GST_VIDEO_COLOR_RANGE_0_255:
+      /* GST_VIDEO_COLOR_RANGE_0_1: float formats unpack to full-range
+       * integer code values, so the offsets are the same as 0_255 */
+    case GST_VIDEO_COLOR_RANGE_0_1:
       offset[0] = 0;
       if (yuv) {
         offset[1] = 1 << (info->depth[1] - 1);
