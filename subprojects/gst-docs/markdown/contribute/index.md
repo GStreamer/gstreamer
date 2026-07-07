@@ -22,6 +22,25 @@ these operations:
   in order to get full access. Sorry for the hassle, and thanks for your
   understanding.
 
+<a name="large-contributions"></a>
+- New features or significant refactoring by new contributors must only be
+  submitted after talking with the maintainers, such as on
+  [Matrix](https://matrix.to/#/#gstreamer:gstreamer.org) or
+  [Discourse](https://discourse.gstreamer.org/).
+
+  This ensures, among other things, that new contributors take the time to learn
+  the codebase and engage with maintainers to build trust by working on bug
+  fixes and documentation before diving into significant projects. It also
+  ensures that among the maintainers there is actual interest in the
+  contribution and guidance can be provided for how it could be implemented.
+
+  Merge requests that do not follow this procedure risk ending up not getting
+  reviewed by maintainers or may even be rejected.
+
+  Maintainer review capacity is a scarce resource, and a merge request is
+  effectively a request for the project to take over future maintenance of the
+  code, so it's important that it's a good fit for the project.
+
 [user-verification]: https://gitlab.freedesktop.org/freedesktop/freedesktop/issues/new?issuable_template=User%20verification
 
 ## How to File Issues and Request for Enhancements
