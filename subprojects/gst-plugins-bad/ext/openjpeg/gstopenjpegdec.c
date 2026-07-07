@@ -432,7 +432,7 @@ fill_frame_packed8_4 (GstOpenJPEGDec * self, GstVideoFrame * frame,
   gint x, y, y0, y1, w, c;
   guint8 *data_out, *tmp;
   const gint *data_in[4];
-  gint dstride;
+  gsize dstride;
   gint off[4];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
@@ -480,7 +480,7 @@ fill_frame_packed16_4 (GstOpenJPEGDec * self, GstVideoFrame * frame,
   gint x, y, y0, y1, w, c;
   guint16 *data_out, *tmp;
   const gint *data_in[4];
-  gint dstride;
+  gsize dstride;
   gint shift[4], off[4];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
@@ -529,7 +529,7 @@ fill_frame_packed8_3 (GstOpenJPEGDec * self, GstVideoFrame * frame,
   gint x, y, y0, y1, w, c;
   guint8 *data_out, *tmp;
   const gint *data_in[3];
-  gint dstride;
+  gsize dstride;
   gint off[3];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
@@ -570,7 +570,7 @@ fill_frame_packed8_2 (GstOpenJPEGDec * self, GstVideoFrame * frame,
   gint x, y, y0, y1, w, c;
   guint8 *data_out, *tmp;
   const gint *data_in[2];
-  gint dstride;
+  gsize dstride;
   gint off[2];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
@@ -614,7 +614,7 @@ fill_frame_packed16_2 (GstOpenJPEGDec * self, GstVideoFrame * frame,
   gint x, y, y0, y1, w, c;
   guint16 *data_out, *tmp;
   const gint *data_in[2];
-  gint dstride;
+  gsize dstride;
   gint shift[2], off[2];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
@@ -661,7 +661,7 @@ fill_frame_planar8_1 (GstOpenJPEGDec * self, GstVideoFrame * frame,
   gint x, y, y0, y1, w;
   guint8 *data_out, *tmp;
   const gint *data_in;
-  gint dstride;
+  gsize dstride;
   gint off;
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
@@ -693,7 +693,7 @@ fill_frame_planar16_1 (GstOpenJPEGDec * self, GstVideoFrame * frame,
   gint x, y, y0, y1, w;
   guint16 *data_out, *tmp;
   const gint *data_in;
-  gint dstride;
+  gsize dstride;
   gint shift, off;
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
@@ -729,7 +729,8 @@ fill_frame_planar8_3 (GstOpenJPEGDec * self, GstVideoFrame * frame,
   gint c, x, y, y0, y1, w;
   guint8 *data_out, *tmp;
   const gint *data_in;
-  gint dstride, off;
+  gsize dstride;
+  gint off;
 
   for (c = 0; c < 3; c++) {
     opj_image_comp_t *comp = image->comps + c;
@@ -766,7 +767,7 @@ fill_frame_planar16_3_with_map (GstOpenJPEGDec * self, GstVideoFrame * frame,
   gint c, x, y, y0, y1, w;
   guint16 *data_out, *tmp;
   const gint *data_in;
-  gint dstride;
+  gsize dstride;
   gint shift, off;
 
   for (c = 0; c < 3; c++) {
@@ -812,7 +813,7 @@ fill_frame_planar8_3_generic (GstOpenJPEGDec * self, GstVideoFrame * frame,
   gint x, y, y0, y1, w, c;
   guint8 *data_out, *tmp;
   const gint *data_in[3];
-  gint dstride;
+  gsize dstride;
   gint dx[3], dy[3], off[3];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
@@ -853,7 +854,7 @@ fill_frame_planar16_3_generic (GstOpenJPEGDec * self, GstVideoFrame * frame,
   gint x, y, y0, y1, w, c;
   guint16 *data_out, *tmp;
   const gint *data_in[3];
-  gint dstride;
+  gsize dstride;
   gint dx[3], dy[3], shift[3], off[3];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
