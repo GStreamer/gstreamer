@@ -448,7 +448,11 @@ fill_frame_packed8_4 (GstOpenJPEGDec * self, GstVideoFrame * frame,
   y0 = image->y0;
   y1 = image->y1;
   GST_DEBUG_OBJECT (self, "yo=%d y1=%d", y0, y1);
-  data_out += y0 * dstride;
+  if (self->num_stripes > 1) {
+    y0 = MIN (y0, self->output_state->info.height);
+    y1 = MIN (y1, self->output_state->info.height);
+    data_out += y0 * dstride;
+  }
   for (y = y0; y < y1; y++) {
     tmp = data_out;
     for (x = 0; x < w; x++) {
@@ -493,7 +497,11 @@ fill_frame_packed16_4 (GstOpenJPEGDec * self, GstVideoFrame * frame,
 
   y0 = image->y0;
   y1 = image->y1;
-  data_out += y0 * dstride;
+  if (self->num_stripes > 1) {
+    y0 = MIN (y0, self->output_state->info.height);
+    y1 = MIN (y1, self->output_state->info.height);
+    data_out += y0 * dstride;
+  }
   for (y = y0; y < y1; y++) {
     tmp = data_out;
     for (x = 0; x < w; x++) {
@@ -534,7 +542,11 @@ fill_frame_packed8_3 (GstOpenJPEGDec * self, GstVideoFrame * frame,
   };
   y0 = image->y0;
   y1 = image->y1;
-  data_out += y0 * dstride;
+  if (self->num_stripes > 1) {
+    y0 = MIN (y0, self->output_state->info.height);
+    y1 = MIN (y1, self->output_state->info.height);
+    data_out += y0 * dstride;
+  }
   for (y = y0; y < y1; y++) {
     tmp = data_out;
     for (x = 0; x < w; x++) {
@@ -572,7 +584,11 @@ fill_frame_packed8_2 (GstOpenJPEGDec * self, GstVideoFrame * frame,
 
   y0 = image->y0;
   y1 = image->y1;
-  data_out += y0 * dstride;
+  if (self->num_stripes > 1) {
+    y0 = MIN (y0, self->output_state->info.height);
+    y1 = MIN (y1, self->output_state->info.height);
+    data_out += y0 * dstride;
+  }
   for (y = y0; y < y1; y++) {
     tmp = data_out;
     for (x = 0; x < w; x++) {
@@ -615,7 +631,11 @@ fill_frame_packed16_2 (GstOpenJPEGDec * self, GstVideoFrame * frame,
 
   y0 = image->y0;
   y1 = image->y1;
-  data_out += y0 * dstride;
+  if (self->num_stripes > 1) {
+    y0 = MIN (y0, self->output_state->info.height);
+    y1 = MIN (y1, self->output_state->info.height);
+    data_out += y0 * dstride;
+  }
   for (y = y0; y < y1; y++) {
     tmp = data_out;
     for (x = 0; x < w; x++) {
@@ -653,7 +673,11 @@ fill_frame_planar8_1 (GstOpenJPEGDec * self, GstVideoFrame * frame,
 
   y0 = image->y0;
   y1 = image->y1;
-  data_out += y0 * dstride;
+  if (self->num_stripes > 1) {
+    y0 = MIN (y0, self->output_state->info.height);
+    y1 = MIN (y1, self->output_state->info.height);
+    data_out += y0 * dstride;
+  }
   for (y = y0; y < y1; y++) {
     tmp = data_out;
     for (x = 0; x < w; x++)
@@ -685,7 +709,11 @@ fill_frame_planar16_1 (GstOpenJPEGDec * self, GstVideoFrame * frame,
 
   y0 = image->y0;
   y1 = image->y1;
-  data_out += y0 * dstride;
+  if (self->num_stripes > 1) {
+    y0 = MIN (y0, self->output_state->info.height);
+    y1 = MIN (y1, self->output_state->info.height);
+    data_out += y0 * dstride;
+  }
   for (y = y0; y < y1; y++) {
     tmp = data_out;
     for (x = 0; x < w; x++)
@@ -715,7 +743,11 @@ fill_frame_planar8_3 (GstOpenJPEGDec * self, GstVideoFrame * frame,
     /* copy only the stripe content (image) to the full size frame */
     y0 = comp->y0;
     y1 = comp->y0 + comp->h;
-    data_out += y0 * dstride;
+    if (self->num_stripes > 1) {
+      y0 = MIN (y0, self->output_state->info.height);
+      y1 = MIN (y1, self->output_state->info.height);
+      data_out += y0 * dstride;
+    }
     for (y = y0; y < y1; y++) {
       tmp = data_out;
       for (x = 0; x < w; x++)
@@ -752,7 +784,11 @@ fill_frame_planar16_3_with_map (GstOpenJPEGDec * self, GstVideoFrame * frame,
     /* copy only the stripe content (image) to the full size frame */
     y0 = comp->y0;
     y1 = comp->y0 + comp->h;
-    data_out += y0 * dstride;
+    if (self->num_stripes > 1) {
+      y0 = MIN (y0, self->output_state->info.height);
+      y1 = MIN (y1, self->output_state->info.height);
+      data_out += y0 * dstride;
+    }
     for (y = y0; y < y1; y++) {
       tmp = data_out;
       for (x = 0; x < w; x++)
@@ -792,7 +828,11 @@ fill_frame_planar8_3_generic (GstOpenJPEGDec * self, GstVideoFrame * frame,
 
   y0 = image->y0;
   y1 = image->y1;
-  data_out += y0 * dstride;
+  if (self->num_stripes > 1) {
+    y0 = MIN (y0, self->output_state->info.height);
+    y1 = MIN (y1, self->output_state->info.height);
+    data_out += y0 * dstride;
+  }
   for (y = y0; y < y1; y++) {
     tmp = data_out;
     for (x = 0; x < w; x++) {
@@ -832,7 +872,11 @@ fill_frame_planar16_3_generic (GstOpenJPEGDec * self, GstVideoFrame * frame,
 
   y0 = image->y0;
   y1 = image->y1;
-  data_out += y0 * dstride;
+  if (self->num_stripes > 1) {
+    y0 = MIN (y0, self->output_state->info.height);
+    y1 = MIN (y1, self->output_state->info.height);
+    data_out += y0 * dstride;
+  }
   for (y = y0; y < y1; y++) {
     tmp = data_out;
     for (x = 0; x < w; x++) {
