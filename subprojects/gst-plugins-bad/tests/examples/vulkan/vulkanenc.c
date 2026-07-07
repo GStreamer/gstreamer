@@ -32,6 +32,7 @@ static gint width = 640;
 static gint height = 480;
 static guint rc_ctrl = 0;
 static gboolean alive = FALSE;
+static gboolean no_sync = FALSE;
 
 G_LOCK_DEFINE_STATIC (input_lock);
 
@@ -407,6 +408,8 @@ main (gint argc, gchar ** argv)
         "Codec to test: [ *h264 ]"},
     {"alive", 'a', 0, G_OPTION_ARG_NONE, &alive,
         "Set test source as a live stream"},
+    {"no-sync", 0, 0, G_OPTION_ARG_NONE, &no_sync,
+        "Do not sync the sink to the clock, for example in case of slow Vulkan Video drivers."},
     {NULL}
   };
   const struct {
@@ -471,6 +474,7 @@ main (gint argc, gchar ** argv)
   MAKE_ELEMENT_AND_ADD (dec, elements_map[idx].decoder);
   MAKE_ELEMENT_AND_ADD (vpp, "videoconvert");
   MAKE_ELEMENT_AND_ADD (sink, "autovideosink");
+  g_object_set (sink, "sync", !no_sync, NULL);
 
   if (elements_map[idx].parser) {
     MAKE_ELEMENT_AND_ADD (parser, elements_map[idx].parser);
