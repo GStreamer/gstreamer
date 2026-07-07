@@ -1560,7 +1560,7 @@ gst_openjpeg_dec_decode_stripe (GstElement * element, gpointer user_data)
 
   ret = gst_openjpeg_dec_negotiate (self, image);
   if (ret != GST_FLOW_OK)
-    DECODE_ERROR (self, message, OPENJPEG_ERROR_NEGOCIATE, TRUE);
+    DECODE_ERROR (self, message, OPENJPEG_ERROR_NEGOTIATE, TRUE);
 
   if (message->frame->output_buffer == NULL) {
     ret = gst_video_decoder_allocate_output_frame (decoder, message->frame);
@@ -1777,9 +1777,9 @@ error:
       GST_ELEMENT_ERROR (self, LIBRARY, INIT,
           ("Failed to decode OpenJPEG data"), (NULL));
       break;
-    case OPENJPEG_ERROR_NEGOCIATE:
+    case OPENJPEG_ERROR_NEGOTIATE:
       GST_ELEMENT_ERROR (self, LIBRARY, INIT,
-          ("Failed to negociate OpenJPEG data"), (NULL));
+          ("Failed to negotiate OpenJPEG data"), (NULL));
       break;
     case OPENJPEG_ERROR_ALLOCATE:
       GST_ELEMENT_ERROR (self, LIBRARY, INIT,
@@ -1787,7 +1787,7 @@ error:
       break;
     default:
       GST_ELEMENT_ERROR (self, LIBRARY, INIT,
-          ("Failed to encode OpenJPEG data"), (NULL));
+          ("Failed to decode OpenJPEG data"), (NULL));
       break;
   }
 
