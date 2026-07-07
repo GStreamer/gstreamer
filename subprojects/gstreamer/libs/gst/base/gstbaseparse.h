@@ -347,6 +347,9 @@ GST_BASE_API
 void            gst_base_parse_set_infer_ts (GstBaseParse * parse,
                                              gboolean infer_ts);
 GST_BASE_API
+void            gst_base_parse_set_allow_duplicated_pts (GstBaseParse * parse,
+                                                         gboolean allow_duplicated_pts);
+GST_BASE_API
 void            gst_base_parse_set_frame_rate  (GstBaseParse * parse,
                                                 guint          fps_num,
                                                 guint          fps_den,

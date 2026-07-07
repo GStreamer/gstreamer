@@ -224,6 +224,7 @@ struct _GstBaseParsePrivate
   gboolean passthrough;
   gboolean pts_interpolate;
   gboolean infer_ts;
+  gboolean allow_duplicated_pts;
   gboolean syncable;
   gboolean has_timing_info;
   guint fps_num, fps_den;
@@ -677,6 +678,7 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
   /* default parser configuration. subclasses override this in their _init() */
   parse->priv->pts_interpolate = TRUE;
   parse->priv->infer_ts = TRUE;
+  parse->priv->allow_duplicated_pts = FALSE;
 
   GST_DEBUG_OBJECT (parse, "init ok");
 
@@ -3357,6 +3359,15 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     if (GST_CLOCK_TIME_IS_VALID (pts) && (parse->priv->prev_pts != pts)) {
       parse->priv->prev_pts = parse->priv->next_pts = pts;
       updated_prev_pts = TRUE;
+    } else if (parse->priv->allow_duplicated_pts
+        && GST_CLOCK_TIME_IS_VALID (pts)) {
+      /* Set the PTS unconditionally as next PTS even if it didn't change if
+       * duplicated PTS are allowed. Without this the next output would have a
+       * PTS of GST_CLOCK_TIME_NONE instead as next_pts is always reset to
+       * GST_CLOCK_TIME_NONE when pushing a frame.
+       * The same is not necessary for the DTS below as the DTS is not reset
+       * to GST_CLOCK_TIME_NONE unconditionally. */
+      parse->priv->next_pts = pts;
     }
 
     if (GST_CLOCK_TIME_IS_VALID (dts) && (parse->priv->prev_dts != dts)) {
@@ -4191,6 +4202,39 @@ gst_base_parse_set_infer_ts (GstBaseParse * parse, gboolean infer_ts)
 {
   parse->priv->infer_ts = infer_ts;
   GST_INFO_OBJECT (parse, "TS inferring: %s", (infer_ts) ? "yes" : "no");
+}
+
+/**
+ * gst_base_parse_set_allow_duplicated_pts:
+ * @parse: a #GstBaseParse
+ * @allow_duplicated_pts: %TRUE if parser should allow duplicated PTS on the output
+ *
+ * By default, the base class will not allow two frames in a row to have the
+ * same PTS but instead will set the second frame's PTS to GST_CLOCK_TIME_NONE.
+ * Setting @allow_duplicated_pts would allow outputting the same PTS multiple
+ * times.
+ *
+ * For audio parsers this is generally not a good idea to allow as it can lead to
+ * unnecessary resyncs if upstream provides coarse grained timestamps and
+ * decoders and other elements generally interpolate missing timestamps based on
+ * the number of samples so missing timestamps would be fixed up later.
+ *
+ * For video parsers this generally should be allowed as various elements expect
+ * valid timestamps on all video frames and will error out or misbehave
+ * otherwise.
+ *
+ * This value is not reset during PAUSED->READY state changes. Subclasses
+ * can call this function from their instance init function.
+ *
+ * Since: 1.30
+ */
+void
+gst_base_parse_set_allow_duplicated_pts (GstBaseParse * parse,
+    gboolean allow_duplicated_pts)
+{
+  parse->priv->allow_duplicated_pts = allow_duplicated_pts;
+  GST_INFO_OBJECT (parse, "Allow duplicated PTS: %s",
+      allow_duplicated_pts ? "yes" : "no");
 }
 
 /**
@@ -5138,6 +5182,8 @@ gst_base_parse_set_ts_at_offset (GstBaseParse * parse, gsize offset)
   }
   if (GST_CLOCK_TIME_IS_VALID (pts) && (parse->priv->prev_pts != pts))
     parse->priv->prev_pts = parse->priv->next_pts = pts;
+  else if (parse->priv->allow_duplicated_pts && GST_CLOCK_TIME_IS_VALID (pts))
+    parse->priv->next_pts = pts;
 
   if (GST_CLOCK_TIME_IS_VALID (dts) && (parse->priv->prev_dts != dts)) {
     parse->priv->prev_dts = parse->priv->next_dts = dts;

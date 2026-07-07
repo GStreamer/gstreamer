@@ -3636,6 +3636,38 @@ This must be called with sinkpad STREAM_LOCK held.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="set_allow_duplicated_pts" c:identifier="gst_base_parse_set_allow_duplicated_pts" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.c">By default, the base class will not allow two frames in a row to have the
+same PTS but instead will set the second frame's PTS to GST_CLOCK_TIME_NONE.
+Setting @allow_duplicated_pts would allow outputting the same PTS multiple
+times.
+
+For audio parsers this is generally not a good idea to allow as it can lead to
+unnecessary resyncs if upstream provides coarse grained timestamps and
+decoders and other elements generally interpolate missing timestamps based on
+the number of samples so missing timestamps would be fixed up later.
+
+For video parsers this generally should be allowed as various elements expect
+valid timestamps on all video frames and will error out or misbehave
+otherwise.
+
+This value is not reset during PAUSED-&gt;READY state changes. Subclasses
+can call this function from their instance init function.</doc>
+        <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="parse" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.c">a #GstBaseParse</doc>
+            <type name="BaseParse" c:type="GstBaseParse*"/>
+          </instance-parameter>
+          <parameter name="allow_duplicated_pts" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.c">%TRUE if parser should allow duplicated PTS on the output</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="set_average_bitrate" c:identifier="gst_base_parse_set_average_bitrate">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.c">Optionally sets the average bitrate detected in media (if non-zero),
 e.g. based on metadata, as it will be posted to the application.

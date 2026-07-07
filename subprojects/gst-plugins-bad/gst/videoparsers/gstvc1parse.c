@@ -254,6 +254,7 @@ gst_vc1_parse_init (GstVC1Parse * vc1parse)
   /* We have reordered frames - don't interpolate PTS */
   gst_base_parse_set_pts_interpolation (GST_BASE_PARSE (vc1parse), FALSE);
   gst_base_parse_set_infer_ts (GST_BASE_PARSE (vc1parse), FALSE);
+  gst_base_parse_set_allow_duplicated_pts (GST_BASE_PARSE (vc1parse), TRUE);
 }
 
 static void

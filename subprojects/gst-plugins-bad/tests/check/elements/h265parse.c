@@ -811,13 +811,8 @@ test_headers_outalign_nal (GstHarness * h)
   pull_and_check (h, h265_128x128_sps, 10, 0);
   pull_and_check (h, h265_128x128_pps, 10, 0);
 
-  /* FIXME The timestamp should be 10 really, but base parse refuse to repeat
-   * the same TS for two consecutive calls to _finish_frame(), see [0] for
-   * more details. It's not a huge issue, the decoder can fix it for now.
-   *
-   * [0] https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/287
-   */
-  pull_and_check (h, h265_128x128_slice_idr_n_lp, -1, 0);
+  /* The slice retains the PTS from the input buffer (same as headers) */
+  pull_and_check (h, h265_128x128_slice_idr_n_lp, 10, 0);
 }
 
 static void
@@ -1026,9 +1021,9 @@ GST_START_TEST (test_sliced_nal_nal)
   while (gst_harness_buffers_in_queue (h) > 2)
     pull_and_drop (h);
 
-  /* but expect 2 slices */
-  pull_and_check (h, h265_128x128_slice_1_idr_n_lp, -1, 0);
-  pull_and_check (h, h265_128x128_slice_2_idr_n_lp, -1, 0);
+  /* but expect 2 slices, both with the PTS from the input buffer */
+  pull_and_check (h, h265_128x128_slice_1_idr_n_lp, 10, 0);
+  pull_and_check (h, h265_128x128_slice_2_idr_n_lp, 10, 0);
 
   /* push some more */
   buf = wrap_buffer (h265_128x128_slice_1_idr_n_lp,
@@ -1041,7 +1036,7 @@ GST_START_TEST (test_sliced_nal_nal)
       sizeof (h265_128x128_slice_2_idr_n_lp), 100, 0);
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
-  pull_and_check (h, h265_128x128_slice_2_idr_n_lp, -1, 0);
+  pull_and_check (h, h265_128x128_slice_2_idr_n_lp, 100, 0);
 
   gst_harness_teardown (h);
 }
@@ -1061,9 +1056,9 @@ GST_START_TEST (test_sliced_au_nal)
   while (gst_harness_buffers_in_queue (h) > 2)
     pull_and_drop (h);
 
-  /* but expect 2 slices */
-  pull_and_check (h, h265_128x128_slice_1_idr_n_lp, -1, 0);
-  pull_and_check (h, h265_128x128_slice_2_idr_n_lp, -1, 0);
+  /* Both slices from the first AU should have the PTS from the input buffer */
+  pull_and_check (h, h265_128x128_slice_1_idr_n_lp, 10, 0);
+  pull_and_check (h, h265_128x128_slice_2_idr_n_lp, 10, 0);
 
   /* push some more */
   buf = composite_buffer (100, 0, 2,
@@ -1072,7 +1067,7 @@ GST_START_TEST (test_sliced_au_nal)
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 2);
   pull_and_check (h, h265_128x128_slice_1_idr_n_lp, 100, 0);
-  pull_and_check (h, h265_128x128_slice_2_idr_n_lp, -1, 0);
+  pull_and_check (h, h265_128x128_slice_2_idr_n_lp, 100, 0);
 
   gst_harness_teardown (h);
 }

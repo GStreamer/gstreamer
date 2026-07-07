@@ -131,6 +131,7 @@ gst_ivf_parse_reset (GstIvfParse * ivf)
 static void
 gst_ivf_parse_init (GstIvfParse * ivf)
 {
+  gst_base_parse_set_allow_duplicated_pts (GST_BASE_PARSE (ivf), TRUE);
   gst_ivf_parse_reset (ivf);
 }
 

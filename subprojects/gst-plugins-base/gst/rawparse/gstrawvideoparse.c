@@ -331,6 +331,8 @@ gst_raw_video_parse_class_init (GstRawVideoParseClass * klass)
 static void
 gst_raw_video_parse_init (GstRawVideoParse * raw_video_parse)
 {
+  gst_base_parse_set_allow_duplicated_pts (GST_BASE_PARSE (raw_video_parse),
+      TRUE);
   gst_raw_video_parse_init_config (&(raw_video_parse->properties_config));
   gst_raw_video_parse_init_config (&(raw_video_parse->sink_caps_config));
 

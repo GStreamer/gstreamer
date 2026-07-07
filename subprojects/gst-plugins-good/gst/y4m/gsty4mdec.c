@@ -120,6 +120,7 @@ gst_y4m_dec_class_init (GstY4mDecClass * klass)
 static void
 gst_y4m_dec_init (GstY4mDec * y4mdec)
 {
+  gst_base_parse_set_allow_duplicated_pts (GST_BASE_PARSE (y4mdec), TRUE);
 }
 
 static gboolean

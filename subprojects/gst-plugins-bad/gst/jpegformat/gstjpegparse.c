@@ -192,6 +192,7 @@ gst_jpeg_parse_class_init (GstJpegParseClass * klass)
 static void
 gst_jpeg_parse_init (GstJpegParse * parse)
 {
+  gst_base_parse_set_allow_duplicated_pts (GST_BASE_PARSE (parse), TRUE);
   parse->sof = -1;
 }
 

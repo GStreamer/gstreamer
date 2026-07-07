@@ -538,15 +538,10 @@ test_headers_outalign_nal (GstHarness * h)
   pull_and_check (h, h266_sps, 10, 0);
   pull_and_check (h, h266_pps, 10, 0);
 
-  /* FIXME The timestamp should be 10 really, but base parse refuse to repeat
-   * the same TS for two consecutive calls to _finish_frame(), see [0] for
-   * more details. It's not a huge issue, the decoder can fix it for now.
-   *
-   * [0] https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/287
-   */
-  pull_and_check (h, h266_prefix_aps, -1, 0);
-  pull_and_check (h, h266_idr, -1, 0);
-  pull_and_check (h, h266_suffix_sei, -1, 0);
+  /* The remaining NAL units retain the PTS from the input buffer (same as headers) */
+  pull_and_check (h, h266_prefix_aps, 10, 0);
+  pull_and_check (h, h266_idr, 10, 0);
+  pull_and_check (h, h266_suffix_sei, 10, 0);
 }
 
 static void

@@ -373,6 +373,7 @@ gst_av1_parse_init (GstAV1Parse * self)
 {
   gst_base_parse_set_pts_interpolation (GST_BASE_PARSE (self), FALSE);
   gst_base_parse_set_infer_ts (GST_BASE_PARSE (self), FALSE);
+  gst_base_parse_set_allow_duplicated_pts (GST_BASE_PARSE (self), TRUE);
 
   GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (self));
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (self));
