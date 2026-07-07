@@ -7058,6 +7058,34 @@ av1_type_find (GstTypeFind * tf, gpointer unused)
         "alignment", G_TYPE_STRING, "none", NULL);
 }
 
+/*** image/vnd.radiance ***/
+
+static GstStaticCaps radiance_hdr_caps = GST_STATIC_CAPS ("image/vnd.radiance");
+
+#define RADIANCE_HDR_CAPS gst_static_caps_get(&radiance_hdr_caps)
+
+static void
+radiance_type_find (GstTypeFind * tf, gpointer unused)
+{
+  const guint8 *data;
+
+  data = gst_type_find_peek (tf, 0, 10);
+  if (!data)
+    return;
+
+  if (memcmp (data, "#?RADIANCE", 10) == 0) {
+    // Modern Radiance HDR file
+    gst_type_find_suggest_empty_simple (tf, GST_TYPE_FIND_NEARLY_CERTAIN,
+        "image/vnd.radiance");
+    return;
+  } else if (memcmp (data, "#?RGBE", 6) == 0) {
+    // Older Radiance HDR file; the rest use signatureless format
+    gst_type_find_suggest_empty_simple (tf, GST_TYPE_FIND_NEARLY_CERTAIN,
+        "image/vnd.radiance");
+    return;
+  }
+}
+
 /*Type find definition by functions */
 GST_TYPE_FIND_REGISTER_DEFINE (musepack, "audio/x-musepack", GST_RANK_PRIMARY,
     musepack_type_find, "mpc,mpp,mp+", MUSEPACK_CAPS, NULL, NULL);
@@ -7329,3 +7357,7 @@ GST_TYPE_FIND_REGISTER_DEFINE (wsvqa, "application/x-wsvqa", GST_RANK_MARGINAL,
     wsvqa_type_find, "wsvqa", WSVQA_CAPS, NULL, NULL);
 GST_TYPE_FIND_REGISTER_DEFINE (av1, "video/x-av1", GST_RANK_MARGINAL,
     av1_type_find, "av1", AV1_CAPS, NULL, NULL);
+
+GST_TYPE_FIND_REGISTER_DEFINE (radiance, "image/vnd.radiance",
+    GST_RANK_MARGINAL, radiance_type_find, "hdr", RADIANCE_HDR_CAPS, NULL,
+    NULL);
