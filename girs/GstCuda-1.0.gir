@@ -15,6 +15,69 @@ and/or use gtk-doc annotations.  -->
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
+    <function-macro name="CUDA_AGGREGATOR" c:identifier="GST_CUDA_AGGREGATOR" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CUDA_AGGREGATOR_CLASS" c:identifier="GST_CUDA_AGGREGATOR_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CUDA_AGGREGATOR_CONVERT_PAD" c:identifier="GST_CUDA_AGGREGATOR_CONVERT_PAD" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CUDA_AGGREGATOR_CONVERT_PAD_CLASS" c:identifier="GST_CUDA_AGGREGATOR_CONVERT_PAD_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CUDA_AGGREGATOR_CONVERT_PAD_GET_CLASS" c:identifier="GST_CUDA_AGGREGATOR_CONVERT_PAD_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CUDA_AGGREGATOR_GET_CLASS" c:identifier="GST_CUDA_AGGREGATOR_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CUDA_AGGREGATOR_PAD" c:identifier="GST_CUDA_AGGREGATOR_PAD" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CUDA_AGGREGATOR_PAD_CLASS" c:identifier="GST_CUDA_AGGREGATOR_PAD_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CUDA_AGGREGATOR_PAD_GET_CLASS" c:identifier="GST_CUDA_AGGREGATOR_PAD_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="CUDA_ALLOCATOR" c:identifier="GST_CUDA_ALLOCATOR" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>
       <parameters>
@@ -108,6 +171,27 @@ and/or use gtk-doc annotations.  -->
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
+    <function-macro name="CUDA_CONVERTER" c:identifier="GST_CUDA_CONVERTER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaconverter.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CUDA_CONVERTER_CLASS" c:identifier="GST_CUDA_CONVERTER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaconverter.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CUDA_CONVERTER_GET_CLASS" c:identifier="GST_CUDA_CONVERTER_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaconverter.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="CUDA_MEMORY_CAST" c:identifier="GST_CUDA_MEMORY_CAST" version="1.22" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>
       <parameters>
@@ -155,6 +239,182 @@ and/or use gtk-doc annotations.  -->
         </parameter>
       </parameters>
     </function-macro>
+    <class name="CudaAggregator" c:symbol-prefix="cuda_aggregator" c:type="GstCudaAggregator" version="1.30" parent="GstVideo.VideoAggregator" abstract="1" glib:type-name="GstCudaAggregator" glib:get-type="gst_cuda_aggregator_get_type" glib:type-struct="CudaAggregatorClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <virtual-method name="aggregate_cuda_frames" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h">The subclass performs operations on aggregated video frames.
+#GstCudaAggregator performs synchronization before this call,
+if a prepared frame is associated with different #GstCudaStream.
+
+#GstCudaAggregator does not perform synchronization after this call.
+Therefore, the subclass is responsible for any required synchronization
+(e.g., by calling cuStreamSynchronize or setting the NEED_SYNC flag
+on #GstCudaMemory).</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="aggregator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h">a #GstCudaAggregator</doc>
+            <type name="CudaAggregator" c:type="GstCudaAggregator*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h">a #GstCudaStream that subclass can submit commands on</doc>
+            <type name="CudaStream" c:type="GstCudaStream*"/>
+          </parameter>
+          <parameter name="outbuffer" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h">output buffer that subclass can update</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <property name="cuda-device-id" writable="1" transfer-ownership="none" default-value="-1">
+        <type name="gint" c:type="gint"/>
+      </property>
+      <field name="parent">
+        <type name="GstVideo.VideoAggregator" c:type="GstVideoAggregator"/>
+      </field>
+      <field name="context">
+        <type name="CudaContext" c:type="GstCudaContext*"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="CudaAggregatorPrivate" c:type="GstCudaAggregatorPrivate*"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="CudaAggregatorClass" c:type="GstCudaAggregatorClass" glib:is-gtype-struct-for="CudaAggregator" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <field name="parent_class">
+        <type name="GstVideo.VideoAggregatorClass" c:type="GstVideoAggregatorClass"/>
+      </field>
+      <field name="aggregate_cuda_frames">
+        <callback name="aggregate_cuda_frames">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="aggregator" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h">a #GstCudaAggregator</doc>
+              <type name="CudaAggregator" c:type="GstCudaAggregator*"/>
+            </parameter>
+            <parameter name="stream" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h">a #GstCudaStream that subclass can submit commands on</doc>
+              <type name="CudaStream" c:type="GstCudaStream*"/>
+            </parameter>
+            <parameter name="outbuffer" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h">output buffer that subclass can update</doc>
+              <type name="Gst.Buffer" c:type="GstBuffer*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="20">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <class name="CudaAggregatorConvertPad" c:symbol-prefix="cuda_aggregator_convert_pad" c:type="GstCudaAggregatorConvertPad" version="1.30" parent="CudaAggregatorPad" glib:type-name="GstCudaAggregatorConvertPad" glib:get-type="gst_cuda_aggregator_convert_pad_get_type" glib:type-struct="CudaAggregatorConvertPadClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <virtual-method name="create_conversion_info">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="pad" transfer-ownership="none">
+            <type name="CudaAggregatorConvertPad" c:type="GstCudaAggregatorConvertPad*"/>
+          </instance-parameter>
+          <parameter name="agg" transfer-ownership="none">
+            <type name="CudaAggregator" c:type="GstCudaAggregator*"/>
+          </parameter>
+          <parameter name="conversion_info" transfer-ownership="none">
+            <type name="GstVideo.VideoInfo" c:type="GstVideoInfo*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <field name="parent">
+        <type name="CudaAggregatorPad" c:type="GstCudaAggregatorPad"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="CudaAggregatorConvertPadPrivate" c:type="GstCudaAggregatorConvertPadPrivate*"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="CudaAggregatorConvertPadClass" c:type="GstCudaAggregatorConvertPadClass" glib:is-gtype-struct-for="CudaAggregatorConvertPad" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <field name="parent_class">
+        <type name="CudaAggregatorPadClass" c:type="GstCudaAggregatorPadClass"/>
+      </field>
+      <field name="create_conversion_info">
+        <callback name="create_conversion_info">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+          <return-value transfer-ownership="none">
+            <type name="none" c:type="void"/>
+          </return-value>
+          <parameters>
+            <parameter name="pad" transfer-ownership="none">
+              <type name="CudaAggregatorConvertPad" c:type="GstCudaAggregatorConvertPad*"/>
+            </parameter>
+            <parameter name="agg" transfer-ownership="none">
+              <type name="CudaAggregator" c:type="GstCudaAggregator*"/>
+            </parameter>
+            <parameter name="conversion_info" transfer-ownership="none">
+              <type name="GstVideo.VideoInfo" c:type="GstVideoInfo*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="20">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <record name="CudaAggregatorConvertPadPrivate" c:type="GstCudaAggregatorConvertPadPrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcuda_fwd.h"/>
+    </record>
+    <class name="CudaAggregatorPad" c:symbol-prefix="cuda_aggregator_pad" c:type="GstCudaAggregatorPad" version="1.30" parent="GstVideo.VideoAggregatorPad" glib:type-name="GstCudaAggregatorPad" glib:get-type="gst_cuda_aggregator_pad_get_type" glib:type-struct="CudaAggregatorPadClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <field name="parent">
+        <type name="GstVideo.VideoAggregatorPad" c:type="GstVideoAggregatorPad"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="CudaAggregatorPadPrivate" c:type="GstCudaAggregatorPadPrivate*"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="CudaAggregatorPadClass" c:type="GstCudaAggregatorPadClass" glib:is-gtype-struct-for="CudaAggregatorPad" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <field name="parent_class">
+        <type name="GstVideo.VideoAggregatorPadClass" c:type="GstVideoAggregatorPadClass"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="20">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <record name="CudaAggregatorPadPrivate" c:type="GstCudaAggregatorPadPrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcuda_fwd.h"/>
+    </record>
+    <record name="CudaAggregatorPrivate" c:type="GstCudaAggregatorPrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcuda_fwd.h"/>
+    </record>
     <class name="CudaAllocator" c:symbol-prefix="cuda_allocator" c:type="GstCudaAllocator" version="1.22" parent="Gst.Allocator" glib:type-name="GstCudaAllocator" glib:get-type="gst_cuda_allocator_get_type" glib:type-struct="CudaAllocatorClass">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h">A #GstAllocator subclass for cuda memory</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>
@@ -379,7 +639,7 @@ This method is conceptually identical to gst_buffer_pool_set_active method.</doc
       </field>
     </record>
     <record name="CudaAllocatorPrivate" c:type="GstCudaAllocatorPrivate" disguised="1" opaque="1">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcuda_fwd.h"/>
     </record>
     <class name="CudaBufferPool" c:symbol-prefix="cuda_buffer_pool" c:type="GstCudaBufferPool" version="1.22" parent="Gst.BufferPool" glib:type-name="GstCudaBufferPool" glib:get-type="gst_cuda_buffer_pool_get_type" glib:type-struct="CudaBufferPoolClass">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudabufferpool.h"/>
@@ -413,7 +673,7 @@ This method is conceptually identical to gst_buffer_pool_set_active method.</doc
       </field>
     </record>
     <record name="CudaBufferPoolPrivate" c:type="GstCudaBufferPoolPrivate" disguised="1" opaque="1">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudabufferpool.h"/>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcuda_fwd.h"/>
     </record>
     <class name="CudaContext" c:symbol-prefix="cuda_context" c:type="GstCudaContext" version="1.22" parent="Gst.Object" glib:type-name="GstCudaContext" glib:get-type="gst_cuda_context_get_type" glib:type-struct="CudaContextClass">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.h"/>
@@ -586,7 +846,126 @@ so all CUDA functions that operate on the current context are affected.</doc>
       </field>
     </record>
     <record name="CudaContextPrivate" c:type="GstCudaContextPrivate" disguised="1" opaque="1">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.h"/>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcuda_fwd.h"/>
+    </record>
+    <class name="CudaConverter" c:symbol-prefix="cuda_converter" c:type="GstCudaConverter" version="1.30" parent="Gst.Object" glib:type-name="GstCudaConverter" glib:get-type="gst_cuda_converter_get_type" glib:type-struct="CudaConverterClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaconverter.h"/>
+      <constructor name="new" c:identifier="gst_cuda_converter_new" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaconverter.cpp">Creates a new converter instance</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaconverter.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaconverter.cpp">a new #GstCudaConverter instance
+or %NULL if conversion is not supported</doc>
+          <type name="CudaConverter" c:type="GstCudaConverter*"/>
+        </return-value>
+        <parameters>
+          <parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaconverter.cpp">a #GstCudaContext</doc>
+            <type name="CudaContext" c:type="GstCudaContext*"/>
+          </parameter>
+          <parameter name="in_info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaconverter.cpp">a #GstVideoInfo</doc>
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+          </parameter>
+          <parameter name="out_info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaconverter.cpp">a #GstVideoInfo</doc>
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+          </parameter>
+          <parameter name="config" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaconverter.cpp">a #GstStructure with configuration options</doc>
+            <type name="Gst.Structure" c:type="GstStructure*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <method name="convert_frame" c:identifier="gst_cuda_converter_convert_frame" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaconverter.cpp">Performs conversion operation</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaconverter.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaconverter.cpp">%TRUE if successful</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="converter" transfer-ownership="none">
+            <type name="CudaConverter" c:type="GstCudaConverter*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaconverter.cpp">a #GstCudaStream</doc>
+            <type name="CudaStream" c:type="GstCudaStream*"/>
+          </parameter>
+          <parameter name="src_frame" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaconverter.cpp">a #GstVideoFrame</doc>
+            <type name="GstVideo.VideoFrame" c:type="GstVideoFrame*"/>
+          </parameter>
+          <parameter name="dst_frame" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaconverter.cpp">a #GstVideoFrame</doc>
+            <type name="GstVideo.VideoFrame" c:type="GstVideoFrame*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <property name="alpha" writable="1" transfer-ownership="none" default-value="1.000000">
+        <type name="gdouble" c:type="gdouble"/>
+      </property>
+      <property name="blend" writable="1" transfer-ownership="none" default-value="FALSE">
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="dest-height" writable="1" transfer-ownership="none" default-value="0">
+        <type name="gint" c:type="gint"/>
+      </property>
+      <property name="dest-width" writable="1" transfer-ownership="none" default-value="0">
+        <type name="gint" c:type="gint"/>
+      </property>
+      <property name="dest-x" writable="1" transfer-ownership="none" default-value="0">
+        <type name="gint" c:type="gint"/>
+      </property>
+      <property name="dest-y" writable="1" transfer-ownership="none" default-value="0">
+        <type name="gint" c:type="gint"/>
+      </property>
+      <property name="fill-border" writable="1" transfer-ownership="none" default-value="FALSE">
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="src-height" writable="1" transfer-ownership="none" default-value="0">
+        <type name="gint" c:type="gint"/>
+      </property>
+      <property name="src-width" writable="1" transfer-ownership="none" default-value="0">
+        <type name="gint" c:type="gint"/>
+      </property>
+      <property name="src-x" writable="1" transfer-ownership="none" default-value="0">
+        <type name="gint" c:type="gint"/>
+      </property>
+      <property name="src-y" writable="1" transfer-ownership="none" default-value="0">
+        <type name="gint" c:type="gint"/>
+      </property>
+      <property name="video-direction" writable="1" transfer-ownership="none" default-value="GST_VIDEO_ORIENTATION_IDENTITY">
+        <type name="GstVideo.VideoOrientationMethod"/>
+      </property>
+      <field name="parent">
+        <type name="Gst.Object" c:type="GstObject"/>
+      </field>
+      <field name="context">
+        <type name="CudaContext" c:type="GstCudaContext*"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="CudaConverterPrivate" c:type="GstCudaConverterPrivate*"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="CudaConverterClass" c:type="GstCudaConverterClass" glib:is-gtype-struct-for="CudaConverter" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaconverter.h"/>
+      <field name="parent_class">
+        <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <record name="CudaConverterPrivate" c:type="GstCudaConverterPrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcuda_fwd.h"/>
     </record>
     <record name="CudaGraphicsResource" c:type="GstCudaGraphicsResource" version="1.22">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudautils.h"/>
@@ -1024,10 +1403,10 @@ failure</doc>
       </method>
     </record>
     <record name="CudaMemoryPoolPrivate" c:type="GstCudaMemoryPoolPrivate" disguised="1" opaque="1">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemorypool.h"/>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcuda_fwd.h"/>
     </record>
     <record name="CudaMemoryPrivate" c:type="GstCudaMemoryPrivate" disguised="1" opaque="1">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcuda_fwd.h"/>
     </record>
     <bitfield name="CudaMemoryTransfer" c:type="GstCudaMemoryTransfer">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h">CUDA memory transfer flags</doc>
@@ -1174,7 +1553,7 @@ inactive.</doc>
       </field>
     </record>
     <record name="CudaPoolAllocatorPrivate" c:type="GstCudaPoolAllocatorPrivate" disguised="1" opaque="1">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcuda_fwd.h"/>
     </record>
     <enumeration name="CudaQuarkId" version="1.22" c:type="GstCudaQuarkId">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudautils.h"/>
@@ -1252,8 +1631,50 @@ failure</doc>
       </method>
     </record>
     <record name="CudaStreamPrivate" c:type="GstCudaStreamPrivate" disguised="1" opaque="1">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudastream.h"/>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcuda_fwd.h"/>
     </record>
+    <function-macro name="IS_CUDA_AGGREGATOR" c:identifier="GST_IS_CUDA_AGGREGATOR" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_CUDA_AGGREGATOR_CLASS" c:identifier="GST_IS_CUDA_AGGREGATOR_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_CUDA_AGGREGATOR_CONVERT_PAD" c:identifier="GST_IS_CUDA_AGGREGATOR_CONVERT_PAD" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_CUDA_AGGREGATOR_CONVERT_PAD_CLASS" c:identifier="GST_IS_CUDA_AGGREGATOR_CONVERT_PAD_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_CUDA_AGGREGATOR_PAD" c:identifier="GST_IS_CUDA_AGGREGATOR_PAD" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_CUDA_AGGREGATOR_PAD_CLASS" c:identifier="GST_IS_CUDA_AGGREGATOR_PAD_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaaggregator.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="IS_CUDA_ALLOCATOR" c:identifier="GST_IS_CUDA_ALLOCATOR" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>
       <parameters>
@@ -1291,6 +1712,20 @@ failure</doc>
     </function-macro>
     <function-macro name="IS_CUDA_CONTEXT_CLASS" c:identifier="GST_IS_CUDA_CONTEXT_CLASS" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_CUDA_CONVERTER" c:identifier="GST_IS_CUDA_CONVERTER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaconverter.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_CUDA_CONVERTER_CLASS" c:identifier="GST_IS_CUDA_CONVERTER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudaconverter.h"/>
       <parameters>
         <parameter name="klass">
         </parameter>
@@ -1511,6 +1946,36 @@ necessary for #GstCudaContext.</doc>
         <parameter name="cuda_ctx" direction="inout" caller-allocates="0" transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudautils.cpp">the resulting #GstCudaContext</doc>
           <type name="CudaContext" c:type="GstCudaContext**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="cuda_fill_video_frame" c:identifier="gst_cuda_fill_video_frame" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudautils.cpp">Performs an operation similar to ID3D11DeviceContext::ClearRenderTargetView.
+For non-RGBA formats, the RGBA components of @color_rgba are interpreted
+as YUVA values.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudautils.h"/>
+      <return-value transfer-ownership="none">
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="context" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudautils.cpp">a #GstCudaContext</doc>
+          <type name="CudaContext" c:type="GstCudaContext*"/>
+        </parameter>
+        <parameter name="stream" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudautils.cpp">a #GstCudaStream</doc>
+          <type name="CudaStream" c:type="GstCudaStream*"/>
+        </parameter>
+        <parameter name="frame" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudautils.cpp">a #GstVideoFrame to fill</doc>
+          <type name="GstVideo.VideoFrame" c:type="GstVideoFrame*"/>
+        </parameter>
+        <parameter name="color_rgba" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudautils.cpp">normalized RGBA color components
+in the range [0.0, 1.0] to fill @frame with</doc>
+          <array zero-terminated="0" c:type="const gfloat*" fixed-size="4">
+            <type name="gfloat" c:type="gfloat"/>
+          </array>
         </parameter>
       </parameters>
     </function>
