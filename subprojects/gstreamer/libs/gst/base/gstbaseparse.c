@@ -673,6 +673,11 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
 
   /* init state */
   gst_base_parse_reset (parse);
+
+  /* default parser configuration. subclasses override this in their _init() */
+  parse->priv->pts_interpolate = TRUE;
+  parse->priv->infer_ts = TRUE;
+
   GST_DEBUG_OBJECT (parse, "init ok");
 
   GST_OBJECT_FLAG_SET (parse, GST_ELEMENT_FLAG_INDEXABLE);
@@ -889,8 +894,6 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->next_dts = 0;
   parse->priv->syncable = TRUE;
   parse->priv->passthrough = FALSE;
-  parse->priv->pts_interpolate = TRUE;
-  parse->priv->infer_ts = TRUE;
   parse->priv->has_timing_info = FALSE;
   parse->priv->min_bitrate = G_MAXUINT;
   parse->priv->max_bitrate = 0;
