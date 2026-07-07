@@ -1120,16 +1120,27 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
       return GST_FLOW_NOT_NEGOTIATED;
   }
 
+  /* For striped input we have to assume that the upstream caps are correct,
+   * otherwise we can take the signalled image dimensions directly and don't
+   * have to rely on the upstream caps at all. */
+  guint width;
+  guint height;
+  if (self->num_stripes == 1) {
+    width = image->x1 - image->x0;
+    height = image->y1 - image->y0;
+  } else {
+    width = self->input_state->info.width;
+    height = self->input_state->info.height;
+  }
   if (!self->output_state ||
       self->output_state->info.finfo->format != format ||
-      self->output_state->info.width != self->input_state->info.width ||
-      self->output_state->info.height != self->input_state->info.height) {
+      self->output_state->info.width != width ||
+      self->output_state->info.height != height) {
     if (self->output_state)
       gst_video_codec_state_unref (self->output_state);
     self->output_state =
         gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self), format,
-        self->input_state->info.width, self->input_state->info.height,
-        self->input_state);
+        width, height, self->input_state);
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self)))
       return GST_FLOW_NOT_NEGOTIATED;
   }
