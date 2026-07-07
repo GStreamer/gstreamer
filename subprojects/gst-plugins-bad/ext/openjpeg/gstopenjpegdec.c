@@ -1452,8 +1452,8 @@ gst_openjpeg_dec_decode_stripe (GstElement * element, gpointer user_data)
   GstOpenJPEGDec *self = GST_OPENJPEG_DEC (element);
   GstVideoDecoder *decoder = GST_VIDEO_DECODER (element);
   GstOpenJPEGCodecMessage *message = (GstOpenJPEGCodecMessage *) user_data;
-  GstMapInfo map;
-  GstVideoFrame vframe;
+  GstMapInfo map = GST_MAP_INFO_INIT;
+  GstVideoFrame vframe = GST_VIDEO_FRAME_INIT;
   opj_codec_t *dec = NULL;
   opj_stream_t *stream = NULL;
   MemStream mstream;
@@ -1566,6 +1566,11 @@ done:
     g_mutex_unlock (&self->messages_lock);
     g_cond_broadcast (&self->messages_cond);
   }
+
+  if (vframe.buffer)
+    gst_video_frame_unmap (&vframe);
+  if (map.memory)
+    gst_buffer_unmap (message->input_buffer, &map);
 
   if (stream) {
     opj_end_decompress (dec, stream);
