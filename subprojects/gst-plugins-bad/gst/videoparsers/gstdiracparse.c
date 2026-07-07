@@ -140,6 +140,7 @@ gst_dirac_parse_init (GstDiracParse * diracparse)
 {
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (diracparse), 13);
   gst_base_parse_set_pts_interpolation (GST_BASE_PARSE (diracparse), FALSE);
+  gst_base_parse_set_infer_ts (GST_BASE_PARSE (diracparse), FALSE);
   GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (diracparse));
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (diracparse));
 }
