@@ -98,6 +98,8 @@ gst_h263_parse_class_init (GstH263ParseClass * klass)
 static void
 gst_h263_parse_init (GstH263Parse * h263parse)
 {
+  gst_base_parse_set_pts_interpolation (GST_BASE_PARSE (h263parse), FALSE);
+  gst_base_parse_set_infer_ts (GST_BASE_PARSE (h263parse), FALSE);
   GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (h263parse));
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (h263parse));
 }
