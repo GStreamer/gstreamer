@@ -755,6 +755,8 @@ gst_validate_ssim_init (GstPlugin * plugin)
   if (!gst_validate_is_initialized ())
     return FALSE;
 
+  gst_plugin_set_static_features_flag (plugin);
+
   config = gst_validate_plugin_get_config (plugin);
   for (tmp = config; tmp; tmp = tmp->next) {
     gboolean is_config;

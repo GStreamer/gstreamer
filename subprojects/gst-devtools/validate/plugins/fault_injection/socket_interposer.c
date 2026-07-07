@@ -337,6 +337,8 @@ _execute_corrupt_socket_recv (GstValidateScenario * scenario,
 static gboolean
 socket_interposer_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
+
 /*  *INDENT-OFF* */
   gst_validate_register_action_type_dynamic (plugin, "corrupt-socket-recv",
       GST_RANK_PRIMARY,

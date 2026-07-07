@@ -485,6 +485,8 @@ _process_event (GdkEvent * event, gpointer data)
 static gboolean
 gst_validate_gtk_init (GstPlugin * plugin)
 {
+  gst_plugin_set_static_features_flag (plugin);
+
   gdk_event_handler_set (_process_event, NULL, NULL);
 
 /*  *INDENT-OFF* */

@@ -49,6 +49,8 @@ gst_validate_gapplication_init (GstPlugin * plugin)
   GList *config, *tmp;
   const gchar *appname = NULL;
 
+  gst_plugin_set_static_features_flag (plugin);
+
   config = gst_validate_plugin_get_config (plugin);
 
   if (!config)
