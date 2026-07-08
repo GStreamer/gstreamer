@@ -1768,7 +1768,8 @@ _vp9_calculate_coded_size (GstVaVp9Enc * self)
     codedbuf_size = codedbuf_size / 2;
   }
 
-  base->codedbuf_size = codedbuf_size;
+  base->codedbuf_size = gst_va_base_enc_adjust_coded_buffer_size (base,
+      codedbuf_size, self->rc.rc_ctrl_mode, self->rc.target_bitrate_bits);
 
   GST_INFO_OBJECT (self, "Calculate codedbuf size: %u", base->codedbuf_size);
 }

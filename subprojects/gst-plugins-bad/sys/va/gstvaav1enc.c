@@ -2512,6 +2512,9 @@ _av1_calculate_coded_size (GstVaAV1Enc * self)
      We do not calculate SpeedAdj and do not consider still_picture. */
   base->codedbuf_size = un_compressed_size / self->cr;
 
+  base->codedbuf_size = gst_va_base_enc_adjust_coded_buffer_size (base,
+      base->codedbuf_size, self->rc.rc_ctrl_mode, self->rc.target_bitrate_bits);
+
   GST_INFO_OBJECT (self, "Calculate codedbuf size: %u", base->codedbuf_size);
 }
 

@@ -335,6 +335,10 @@ _vp8_calculate_coded_size (GstVaVp8Enc * self)
 
   /* Safe choice, 2 times 4:2:0 framesize plus header. */
   base->codedbuf_size = 3 * width * height + 1278;
+
+  base->codedbuf_size = gst_va_base_enc_adjust_coded_buffer_size (base,
+      base->codedbuf_size, self->rc.rc_ctrl_mode, self->rc.target_bitrate_bits);
+
   GST_INFO_OBJECT (self, "Calculate codedbuf size: %u", base->codedbuf_size);
 }
 
