@@ -609,6 +609,16 @@ gst_vulkan_image_memory_release_view (GstVulkanImageMemory * image,
   g_return_if_fail (image == view->image);
 
   g_mutex_lock (&image->lock);
+
+  /* If the refcount is > 1 at this point, another ref has been taken by a
+   * concurrent gst_vulkan_image_memory_find_view() before we got the lock, so
+   * we must leave the view as outstanding. */
+  if (GST_MINI_OBJECT_REFCOUNT_VALUE (view) > 1) {
+    g_mutex_unlock (&image->lock);
+    gst_vulkan_image_view_unref (view);
+    return;
+  }
+
   GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "image %p removing view %p",
       image, view);
   if (g_ptr_array_find (image->outstanding_views, view, &index)) {
