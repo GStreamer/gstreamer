@@ -247,11 +247,6 @@ gst_vc1_parse_class_init (GstVC1ParseClass * klass)
 static void
 gst_vc1_parse_init (GstVC1Parse * vc1parse)
 {
-  /* Default values for stream-format=raw, i.e.
-   * raw VC1 frames with startcodes */
-  gst_base_parse_set_syncable (GST_BASE_PARSE (vc1parse), TRUE);
-  gst_base_parse_set_has_timing_info (GST_BASE_PARSE (vc1parse), FALSE);
-
   gst_vc1_parse_reset (vc1parse);
   GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (vc1parse));
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (vc1parse));
@@ -306,6 +301,11 @@ gst_vc1_parse_start (GstBaseParse * parse)
 
   GST_DEBUG_OBJECT (parse, "start");
   gst_vc1_parse_reset (vc1parse);
+
+  /* Default values for stream-format=raw, i.e.
+   * raw VC1 frames with startcodes */
+  gst_base_parse_set_syncable (GST_BASE_PARSE (vc1parse), TRUE);
+  gst_base_parse_set_has_timing_info (GST_BASE_PARSE (vc1parse), FALSE);
 
   vc1parse->detecting_stream_format = TRUE;
 
