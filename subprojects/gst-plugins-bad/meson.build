@@ -1,5 +1,5 @@
 project('gst-plugins-bad', 'c', 'cpp',
-  version : '1.28.4.1',
+  version : '1.28.5',
   meson_version : '>= 1.4',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized',
