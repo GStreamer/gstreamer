@@ -127,7 +127,6 @@ gst_irtsp_parse_reset (GstIRTSPParse * IRTSPParse)
 static void
 gst_irtsp_parse_init (GstIRTSPParse * IRTSPParse)
 {
-  gst_base_parse_set_min_frame_size (GST_BASE_PARSE (IRTSPParse), 1);
   gst_irtsp_parse_reset (IRTSPParse);
 }
 
@@ -144,6 +143,7 @@ gst_irtsp_parse_start (GstBaseParse * parse)
 
   GST_DEBUG_OBJECT (parse, "starting");
 
+  gst_base_parse_set_min_frame_size (GST_BASE_PARSE (IRTSPParse), 1);
   gst_irtsp_parse_reset (IRTSPParse);
 
   return TRUE;
