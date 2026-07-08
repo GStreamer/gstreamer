@@ -3970,6 +3970,7 @@ _av1_create_tu_output_buffer (GstVaAV1Enc * self,
   GstVaAV1EncFrame *frame_enc;
   GstBuffer *buf = NULL;
   guint num;
+  gboolean corrupt = FALSE;
 
   g_assert ((_enc_frame (last_frame)->type & FRAME_TYPE_REPEAT) == 0);
   g_assert ((_enc_frame (last_frame)->flags & FRAME_FLAG_NOT_SHOW) == 0);
@@ -4001,10 +4002,15 @@ _av1_create_tu_output_buffer (GstVaAV1Enc * self,
       goto error;
     }
 
+    if (frame_enc->base.picture->corrupt)
+      corrupt = TRUE;
+
     offset += frame_size;
   }
 
   frame_enc = _enc_frame (last_frame);
+  /* If any frame is corrupt, make the whole TU as corrupt. */
+  frame_enc->base.picture->corrupt |= corrupt;
 
   if (frame_enc->cached_frame_header_size > 0) {
     memcpy (data + offset, frame_enc->cached_frame_header,
