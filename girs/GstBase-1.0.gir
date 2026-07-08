@@ -3643,7 +3643,10 @@ e.g. based on metadata, as it will be posted to the application.
 By default, announced average bitrate is estimated. The average bitrate
 is used to estimate the total duration of the stream and to estimate
 a seek position, if there's no index and the format is syncable
-(see gst_base_parse_set_syncable()).</doc>
+(see gst_base_parse_set_syncable()).
+
+This value is reset during PAUSED-&gt;READY state changes. Subclasses must
+call this function from #GstBaseParseClass::start if they want to set a static value.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -3664,7 +3667,10 @@ a seek position, if there's no index and the format is syncable
 when it is able to determine duration and/or notices a change in the media
 duration.  Alternatively, if @interval is non-zero (default), then stream
 duration is determined based on estimated bitrate, and updated every @interval
-frames.</doc>
+frames.
+
+This value is reset during PAUSED-&gt;READY state changes. Subclasses must
+call this function from #GstBaseParseClass::start if they want to set a static value.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -3693,7 +3699,10 @@ frames.</doc>
 and timestamping.  When performing segment clipping, or seeking to a specific
 location, a corresponding decoder might need an initial @lead_in and a
 following @lead_out number of frames to ensure the desired segment is
-entirely filled upon decoding.</doc>
+entirely filled upon decoding.
+
+This value is reset during PAUSED-&gt;READY state changes. Subclasses must
+call this function from #GstBaseParseClass::start if they want to set a static value.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -3724,7 +3733,10 @@ entirely filled upon decoding.</doc>
       <method name="set_has_timing_info" c:identifier="gst_base_parse_set_has_timing_info">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.c">Set if frames carry timing information which the subclass can (generally)
 parse and provide.  In particular, intrinsic (rather than estimated) time
-can be obtained following a seek.</doc>
+can be obtained following a seek.
+
+This value is reset during PAUSED-&gt;READY state changes. Subclasses must
+call this function from #GstBaseParseClass::start if they want to set a static value.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -3744,7 +3756,10 @@ can be obtained following a seek.</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.c">By default, the base class might try to infer PTS from DTS and vice
 versa.  While this is generally correct for audio data, it may not
 be otherwise. Sub-classes implementing such formats should disable
-timestamp inferring.</doc>
+timestamp inferring.
+
+This value is retained over PAUSED-&gt;READY state changes. Subclasses
+can call this function from their instance init function.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -3767,7 +3782,10 @@ particular parsing of the format, it typically corresponds to 1 frame duration.
 
 If the provided values changed from previously provided ones, this will
 also post a LATENCY message on the bus so the pipeline can reconfigure its
-global latency.</doc>
+global latency.
+
+This value is retained over PAUSED-&gt;READY state changes. Subclasses
+can call this function from their instance init function.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -3789,7 +3807,10 @@ global latency.</doc>
       </method>
       <method name="set_min_frame_size" c:identifier="gst_base_parse_set_min_frame_size">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.c">Subclass can use this function to tell the base class that it needs to
-be given buffers of at least @min_size bytes.</doc>
+be given buffers of at least @min_size bytes.
+
+This value is reset during PAUSED-&gt;READY state changes. Subclasses must
+call this function from #GstBaseParseClass::start if they want to set a static value.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -3813,7 +3834,10 @@ applies when operating in push mode). That is, incoming buffers are
 pushed through unmodified, i.e. no #GstBaseParseClass::handle_frame
 will be invoked, but #GstBaseParseClass::pre_push_frame will still be
 invoked, so subclass can perform as much or as little is appropriate for
-passthrough semantics in #GstBaseParseClass::pre_push_frame.</doc>
+passthrough semantics in #GstBaseParseClass::pre_push_frame.
+
+This value is reset during PAUSED-&gt;READY state changes. Subclasses must
+call this function from #GstBaseParseClass::start if they want to set a static value.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -3833,7 +3857,10 @@ passthrough semantics in #GstBaseParseClass::pre_push_frame.</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.c">By default, the base class will guess PTS timestamps using a simple
 interpolation (previous timestamp + duration), which is incorrect for
 data streams with reordering, where PTS can go backward. Sub-classes
-implementing such formats should disable PTS interpolation.</doc>
+implementing such formats should disable PTS interpolation.
+
+This value is retained over PAUSED-&gt;READY state changes. Subclasses
+can call this function from their instance init function.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -3852,7 +3879,10 @@ implementing such formats should disable PTS interpolation.</doc>
       <method name="set_syncable" c:identifier="gst_base_parse_set_syncable">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.c">Set if frame starts can be identified. This is set by default and
 determines whether seeking based on bitrate averages
-is possible for a format/stream.</doc>
+is possible for a format/stream.
+
+This value is reset during PAUSED-&gt;READY state changes. Subclasses must
+call this function from #GstBaseParseClass::start if they want to set a static value.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
