@@ -146,6 +146,10 @@ gboolean              gst_va_base_enc_add_trellis_parameter (GstVaBaseEnc * base
 void                  gst_va_base_enc_add_codec_tag       (GstVaBaseEnc * base,
                                                            const gchar * codec_name);
 void                  gst_va_base_enc_reset_state         (GstVaBaseEnc * base);
+guint                 gst_va_base_enc_adjust_coded_buffer_size (GstVaBaseEnc * base,
+                                                                 guint codedbuf_size,
+                                                                 guint32 rc_ctrl_mode,
+                                                                 guint bitrate_bits);
 GstBuffer *           gst_va_base_enc_create_output_buffer (GstVaBaseEnc * base,
                                                             GstVaEncodePicture * picture,
                                                             const guint8 * prefix_data,

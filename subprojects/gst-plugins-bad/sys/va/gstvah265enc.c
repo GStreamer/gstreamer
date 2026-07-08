@@ -3770,7 +3770,8 @@ _h265_calculate_coded_size (GstVaH265Enc * self)
   codedbuf_size += self->partition.num_slices * (4 +
       GST_ROUND_UP_8 (MAX_SLICE_HDR_SIZE + MAX_SHORT_TERM_REFPICSET_SIZE) / 8);
 
-  base->codedbuf_size = codedbuf_size;
+  base->codedbuf_size = gst_va_base_enc_adjust_coded_buffer_size (base,
+      codedbuf_size, self->rc.rc_ctrl_mode, self->rc.target_bitrate_bits);
   GST_INFO_OBJECT (self, "Calculate codedbuf size: %u", base->codedbuf_size);
 }
 

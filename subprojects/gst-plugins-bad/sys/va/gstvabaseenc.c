@@ -264,6 +264,35 @@ gst_va_base_enc_import_input_buffer (GstVaBaseEnc * base,
   return gst_va_buffer_importer_import (&importer, inbuf, buf);
 }
 
+guint
+gst_va_base_enc_adjust_coded_buffer_size (GstVaBaseEnc * base,
+    guint codedbuf_size, guint32 rc_ctrl_mode, guint bitrate_bits)
+{
+  guint64 want = 0;
+
+  /* Underflow is not allowed in CBR mode, so the driver may pad
+   * every frame up to the per-frame budget (bitrate/framerate).
+   * We double that budget to ensure safety. */
+  if (rc_ctrl_mode == VA_RC_CBR && bitrate_bits > 0) {
+    gint fps_n = GST_VIDEO_INFO_FPS_N (&base->in_info);
+    gint fps_d = GST_VIDEO_INFO_FPS_D (&base->in_info);
+
+    /* variable or unknown framerate, assume a default bitrate */
+    if (fps_n <= 0 || fps_d <= 0) {
+      fps_n = 30;
+      fps_d = 1;
+    }
+
+    want = 2 * (gst_util_uint64_scale (bitrate_bits, fps_d, fps_n) / 8);
+    if (codedbuf_size < want) {
+      codedbuf_size = MIN (want, (guint64) G_MAXINT);
+      GST_INFO_OBJECT (base, "Raise codedbuf size to %u", codedbuf_size);
+    }
+  }
+
+  return codedbuf_size;
+}
+
 GstBuffer *
 gst_va_base_enc_create_output_buffer (GstVaBaseEnc * base,
     GstVaEncodePicture * picture, const guint8 * prefix_data,

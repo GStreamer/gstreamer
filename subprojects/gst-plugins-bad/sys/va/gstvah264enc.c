@@ -1222,6 +1222,9 @@ _calculate_coded_size (GstVaH264Enc * self)
   /* Add 5% for safety */
   base->codedbuf_size = (guint) ((gfloat) codedbuf_size * 1.05);
 
+  base->codedbuf_size = gst_va_base_enc_adjust_coded_buffer_size (base,
+      base->codedbuf_size, self->rc.rc_ctrl_mode, self->rc.target_bitrate_bits);
+
   GST_DEBUG_OBJECT (self, "Calculate codedbuf size: %u", base->codedbuf_size);
 }
 
