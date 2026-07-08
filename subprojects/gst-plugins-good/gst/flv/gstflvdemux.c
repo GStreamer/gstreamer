@@ -1946,7 +1946,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
     track->need_discont = FALSE;
   }
 
-  demux->segment.position = GST_BUFFER_TIMESTAMP (outbuf);
+  demux->segment.position = GST_BUFFER_DTS_OR_PTS (outbuf);
 
   /* Do we need a newsegment event ? */
   if (G_UNLIKELY (track->need_segment)) {
