@@ -97,7 +97,7 @@ are available regardless of which Android SDK version is used to build.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">B10G10R10X2_UNORM format</doc>
       </member>
     </enumeration>
-    <callback name="AHardwareBufferMemoryQueryFunction" c:type="GstAHardwareBufferMemoryQueryFunction" version="1.30" introspectable="0">
+    <callback name="AHardwareBufferMemoryQueryFunction" c:type="GstAHardwareBufferMemoryQueryFunction" version="1.30">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">Function used by memory implementations to expose AHardwareBuffer backing
 through gst_ahardware_buffer_memory_peek_buffer().
 
@@ -113,9 +113,9 @@ reference owned by @mem and valid for as long as @mem is alive.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">a #GstMemory</doc>
           <type name="Gst.Memory" c:type="GstMemory*"/>
         </parameter>
-        <parameter name="buffer" direction="out" caller-allocates="0" transfer-ownership="none">
+        <parameter name="buffer" direction="out" caller-allocates="0" transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">location for the `AHardwareBuffer`</doc>
-          <type c:type="AHardwareBuffer**"/>
+          <type name="gpointer" c:type="AHardwareBuffer**"/>
         </parameter>
       </parameters>
     </callback>

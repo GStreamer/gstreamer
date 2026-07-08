@@ -30,7 +30,7 @@ typedef struct AHardwareBuffer AHardwareBuffer;
 /**
  * GstAHardwareBufferMemoryQueryFunction:
  * @mem: a #GstMemory
- * @buffer: (out) (transfer none): location for the `AHardwareBuffer`
+ * @buffer: (type gpointer) (out) (transfer none): location for the `AHardwareBuffer`
  *
  * Function used by memory implementations to expose AHardwareBuffer backing
  * through gst_ahardware_buffer_memory_peek_buffer().
