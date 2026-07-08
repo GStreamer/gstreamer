@@ -5215,7 +5215,9 @@ connect_rtpbin_with_sendbin (GstWebRTCBin * webrtc, guint session_id,
   gboolean aux_success = FALSE;
   gchar *rtp_pad_name = g_strdup_printf ("send_rtp_src_%u", session_id);
   if (aux_sender) {
-    gst_object_ref_sink (aux_sender);
+    if (g_object_is_floating (aux_sender)) {
+      aux_sender = gst_object_ref_sink (aux_sender);
+    }
     if (!gst_bin_add (GST_BIN (webrtc), aux_sender)) {
       GST_ERROR_OBJECT (webrtc,
           "Unable to add aux_sender %" GST_PTR_FORMAT " to webrtcbin"
