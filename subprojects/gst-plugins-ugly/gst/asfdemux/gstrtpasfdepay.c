@@ -245,9 +245,11 @@ field_size (guint8 field)
   }
 }
 
-/* Set the padding field to te correct value as the spec
- * says it should be se to 0 in the rtp packets
- */
+/* Update the packet with the required amount of padding. For RTP packets the
+ * padding is stripped off and here we need to add it back to create valid
+ * ASF packets again. This requires allocating a packet_size large buffer,
+ * adding zero padding and rewriting the padding length field with the correct
+ * value. */
 static GstBuffer *
 gst_rtp_asf_depay_update_padding (GstRtpAsfDepay * depayload, GstBuffer * buf)
 {
