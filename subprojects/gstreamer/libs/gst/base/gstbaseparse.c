@@ -3944,6 +3944,9 @@ activate_failed:
  * duration.  Alternatively, if @interval is non-zero (default), then stream
  * duration is determined based on estimated bitrate, and updated every @interval
  * frames.
+ *
+ * This value is reset during PAUSED->READY state changes. Subclasses must
+ * call this function from #GstBaseParseClass::start if they want to set a static value.
  */
 void
 gst_base_parse_set_duration (GstBaseParse * parse,
@@ -3995,6 +3998,9 @@ exit:
  * is used to estimate the total duration of the stream and to estimate
  * a seek position, if there's no index and the format is syncable
  * (see gst_base_parse_set_syncable()).
+ *
+ * This value is reset during PAUSED->READY state changes. Subclasses must
+ * call this function from #GstBaseParseClass::start if they want to set a static value.
  */
 void
 gst_base_parse_set_average_bitrate (GstBaseParse * parse, guint bitrate)
@@ -4011,6 +4017,9 @@ gst_base_parse_set_average_bitrate (GstBaseParse * parse, guint bitrate)
  *
  * Subclass can use this function to tell the base class that it needs to
  * be given buffers of at least @min_size bytes.
+ *
+ * This value is reset during PAUSED->READY state changes. Subclasses must
+ * call this function from #GstBaseParseClass::start if they want to set a static value.
  */
 void
 gst_base_parse_set_min_frame_size (GstBaseParse * parse, guint min_size)
@@ -4034,6 +4043,9 @@ gst_base_parse_set_min_frame_size (GstBaseParse * parse, guint min_size)
  * location, a corresponding decoder might need an initial @lead_in and a
  * following @lead_out number of frames to ensure the desired segment is
  * entirely filled upon decoding.
+ *
+ * This value is reset during PAUSED->READY state changes. Subclasses must
+ * call this function from #GstBaseParseClass::start if they want to set a static value.
  */
 void
 gst_base_parse_set_frame_rate (GstBaseParse * parse, guint fps_num,
@@ -4086,6 +4098,9 @@ gst_base_parse_set_frame_rate (GstBaseParse * parse, guint fps_num,
  * Set if frames carry timing information which the subclass can (generally)
  * parse and provide.  In particular, intrinsic (rather than estimated) time
  * can be obtained following a seek.
+ *
+ * This value is reset during PAUSED->READY state changes. Subclasses must
+ * call this function from #GstBaseParseClass::start if they want to set a static value.
  */
 void
 gst_base_parse_set_has_timing_info (GstBaseParse * parse, gboolean has_timing)
@@ -4102,6 +4117,9 @@ gst_base_parse_set_has_timing_info (GstBaseParse * parse, gboolean has_timing)
  * Set if frame starts can be identified. This is set by default and
  * determines whether seeking based on bitrate averages
  * is possible for a format/stream.
+ *
+ * This value is reset during PAUSED->READY state changes. Subclasses must
+ * call this function from #GstBaseParseClass::start if they want to set a static value.
  */
 void
 gst_base_parse_set_syncable (GstBaseParse * parse, gboolean syncable)
@@ -4122,6 +4140,9 @@ gst_base_parse_set_syncable (GstBaseParse * parse, gboolean syncable)
  * will be invoked, but #GstBaseParseClass::pre_push_frame will still be
  * invoked, so subclass can perform as much or as little is appropriate for
  * passthrough semantics in #GstBaseParseClass::pre_push_frame.
+ *
+ * This value is reset during PAUSED->READY state changes. Subclasses must
+ * call this function from #GstBaseParseClass::start if they want to set a static value.
  */
 void
 gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
@@ -4139,6 +4160,9 @@ gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
  * interpolation (previous timestamp + duration), which is incorrect for
  * data streams with reordering, where PTS can go backward. Sub-classes
  * implementing such formats should disable PTS interpolation.
+ *
+ * This value is retained over PAUSED->READY state changes. Subclasses
+ * can call this function from their instance init function.
  */
 void
 gst_base_parse_set_pts_interpolation (GstBaseParse * parse,
@@ -4158,6 +4182,9 @@ gst_base_parse_set_pts_interpolation (GstBaseParse * parse,
  * versa.  While this is generally correct for audio data, it may not
  * be otherwise. Sub-classes implementing such formats should disable
  * timestamp inferring.
+ *
+ * This value is retained over PAUSED->READY state changes. Subclasses
+ * can call this function from their instance init function.
  */
 void
 gst_base_parse_set_infer_ts (GstBaseParse * parse, gboolean infer_ts)
@@ -4179,6 +4206,9 @@ gst_base_parse_set_infer_ts (GstBaseParse * parse, gboolean infer_ts)
  * If the provided values changed from previously provided ones, this will
  * also post a LATENCY message on the bus so the pipeline can reconfigure its
  * global latency.
+ *
+ * This value is retained over PAUSED->READY state changes. Subclasses
+ * can call this function from their instance init function.
  */
 void
 gst_base_parse_set_latency (GstBaseParse * parse, GstClockTime min_latency,
