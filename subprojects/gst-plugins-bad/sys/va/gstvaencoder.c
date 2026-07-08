@@ -1229,6 +1229,7 @@ gst_va_encode_picture_new (GstVaEncoder * self, GstBuffer * raw_buffer)
   pic->raw_buffer = gst_buffer_ref (raw_buffer);
   pic->reconstruct_buffer = reconstruct_buffer;
   pic->coded_buffer = coded_buffer;
+  pic->corrupt = FALSE;
 
   pic->params = g_array_sized_new (FALSE, FALSE, sizeof (VABufferID), 8);
 
