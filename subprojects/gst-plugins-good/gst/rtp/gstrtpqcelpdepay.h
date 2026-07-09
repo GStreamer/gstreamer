@@ -44,7 +44,7 @@ struct _GstRtpQCELPDepay
   GstRTPBaseDepayload depayload;
 
   gboolean interleaved;
-  guint bundling;
+  guint bundling, interleave_value;
   GPtrArray *packets;
 };
 
