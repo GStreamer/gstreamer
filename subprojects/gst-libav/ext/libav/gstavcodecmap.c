@@ -691,7 +691,7 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
 #else
   if (context != NULL && context->channels != -1) {
 #endif
-    GstAudioChannelPosition pos[64];
+    GstAudioChannelPosition pos[64] = { GST_AUDIO_CHANNEL_POSITION_INVALID, };
     guint64 mask;
 
 #if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
@@ -700,11 +700,17 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
         "channels", G_TYPE_INT, context->ch_layout.nb_channels, NULL);
 
     static const AVChannelLayout mono = AV_CHANNEL_LAYOUT_MONO;
-    const gboolean needs_mask = (context->ch_layout.nb_channels == 1 &&
-        av_channel_layout_compare (&context->ch_layout, &mono) != 0)
-        || (context->ch_layout.nb_channels > 1
-        && gst_ffmpeg_channel_layout_to_gst (&context->ch_layout,
-            context->ch_layout.nb_channels, pos));
+    gboolean needs_mask = FALSE;
+
+    if (context->ch_layout.nb_channels == 1 &&
+        av_channel_layout_compare (&context->ch_layout, &mono) != 0) {
+      pos[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
+      needs_mask = TRUE;
+    } else if (context->ch_layout.nb_channels > 1) {
+      gst_ffmpeg_channel_layout_to_gst (&context->ch_layout,
+          context->ch_layout.nb_channels, pos);
+      needs_mask = TRUE;
+    }
 
     if (needs_mask &&
         gst_audio_channel_positions_to_mask (pos,
