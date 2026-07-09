@@ -1940,6 +1940,7 @@ gst_ffmpegdemux_sink_activate_push (GstPad * sinkpad, GstObject * parent,
     g_rec_mutex_lock (&demux->task_lock);
     g_rec_mutex_unlock (&demux->task_lock);
     res = gst_task_join (demux->task);
+    gst_ffmpegdemux_close (demux);
     demux->seekable = FALSE;
   }
 
@@ -1967,6 +1968,7 @@ gst_ffmpegdemux_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
         gst_object_ref (demux), gst_object_unref);
   } else {
     res = gst_pad_stop_task (sinkpad);
+    gst_ffmpegdemux_close (demux);
     demux->seekable = FALSE;
   }
 
@@ -2017,7 +2019,6 @@ gst_ffmpegdemux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_ffmpegdemux_close (demux);
       gst_adapter_clear (demux->ffpipe.adapter);
       g_list_foreach (demux->cached_events, (GFunc) gst_mini_object_unref,
           NULL);
