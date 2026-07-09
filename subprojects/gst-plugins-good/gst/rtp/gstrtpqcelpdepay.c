@@ -209,7 +209,8 @@ flush_packets (GstRtpQCELPDepay * depay)
     outbuf = g_ptr_array_index (depay->packets, i);
     g_ptr_array_index (depay->packets, i) = NULL;
 
-    gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (depay), outbuf);
+    if (outbuf != NULL)
+      gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (depay), outbuf);
   }
 
   /* and reset interleaving state */
