@@ -195,6 +195,31 @@ count_packets (GstRtpQCELPDepay * depay, guint8 * data, guint size)
 }
 
 static void
+unref_packet (GstBuffer * buf)
+{
+  if (buf != NULL)
+    gst_buffer_unref (buf);
+}
+
+static void
+clear_packets (GstRtpQCELPDepay * depay)
+{
+  if (!depay->packets)
+    return;
+
+  GST_DEBUG_OBJECT (depay, "clear packets");
+
+  g_ptr_array_foreach (depay->packets, (GFunc) unref_packet, NULL);
+  g_ptr_array_free (depay->packets, TRUE);
+  depay->packets = NULL;
+
+  /* and reset interleaving state */
+  depay->interleaved = FALSE;
+  depay->interleave_value = 0;
+  depay->bundling = 0;
+}
+
+static void
 flush_packets (GstRtpQCELPDepay * depay)
 {
   guint i, size;
@@ -444,24 +469,28 @@ too_small:
   {
     GST_ELEMENT_WARNING (depay, STREAM, DECODE,
         (NULL), ("QCELP RTP payload too small (%d)", payload_len));
+    clear_packets (depay);
     return NULL;
   }
 invalid_lll:
   {
     GST_ELEMENT_WARNING (depay, STREAM, DECODE,
         (NULL), ("QCELP RTP invalid LLL received (%d)", LLL));
+    clear_packets (depay);
     return NULL;
   }
 invalid_nnn:
   {
     GST_ELEMENT_WARNING (depay, STREAM, DECODE,
         (NULL), ("QCELP RTP invalid NNN received (%d)", NNN));
+    clear_packets (depay);
     return NULL;
   }
 invalid_frame:
   {
     GST_ELEMENT_WARNING (depay, STREAM, DECODE,
         (NULL), ("QCELP RTP invalid frame received"));
+    clear_packets (depay);
     return NULL;
   }
 }
