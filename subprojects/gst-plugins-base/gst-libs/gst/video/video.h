@@ -219,5 +219,6 @@ G_END_DECLS
 #include <gst/video/videooverlay.h>
 #include <gst/video/video-sei.h>
 #include <gst/video/gstvideodmabufpool.h>
+#include <gst/video/gstvideodscmeta.h>
 
 #endif /* __GST_VIDEO_H__ */

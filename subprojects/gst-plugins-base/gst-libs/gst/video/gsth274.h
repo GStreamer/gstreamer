@@ -21,7 +21,7 @@
 #pragma once
 
 #include <gst/gst.h>
-#include <gst/video/gstvideoutils.h>
+#include <gst/video/video-prelude.h>
 
 typedef struct _GstH274RegisteredUserData       GstH274RegisteredUserData;
 typedef struct _GstH274UserDataUnregistered     GstH274UserDataUnregistered;
@@ -84,7 +84,7 @@ struct _GstH274UserDataUnregistered
  * @signed_content_start_flag: Signed content start flag (dsci_signed_content_start_flag)
  * @sei_signing_flag: SEI signing flag (dsci_sei_signing_flag)
  * @key_source_uri: Key source URI string (dsci_key_source_uri)
- * 
+ *
  * Structure defining the H274 digitally signed content initialization.
  *
  * Since: 1.30
@@ -111,7 +111,7 @@ struct _GstH274DigitallySignedContentInitialization
  * GstH274DigitallySignedContentSelection:
  * @id: Selection ID (dscs_id)
  * @verification_substream_id: Verification substream ID (dscs_verification_substream_id)
- * 
+ *
  * Structure defining the H274 digitally signed content selection.
  *
  * Since: 1.30
@@ -129,7 +129,7 @@ struct _GstH274DigitallySignedContentSelection
  * @signature_length_in_octets_minus1: Length of signature (dscv_signature_length_in_octets_minus1 + 1)
  * @signature: (array) (element-type guint8): Signature data array (dscv_signature)
  * @signed_content_end_flag: Signed content end flag (dscv_signed_content_end_flag)
- * 
+ *
  * Structure defining the H274 digitally signed content verification.
  *
  * Since: 1.30
@@ -202,9 +202,9 @@ GType gst_h274_digitally_signed_content_verification_get_type (void);
  * gst_h274_user_data_registered_copy:
  * @dst_rud: (out): Destination User Data Registered structure
  * @src_rud: (in): Source User Data Registered structure
- * 
+ *
  * Copy User Data Registered structure
- * 
+ *
  * Since: 1.30
  */
 GST_VIDEO_API
@@ -215,9 +215,9 @@ void gst_h274_user_data_registered_copy (GstH274RegisteredUserData *dst_rud,
  * gst_h274_user_data_unregistered_copy:
  * @dst_udu: (out): Destination User Data Unregistered structure
  * @src_udu: (in): Source User Data Unregistered structure
- * 
+ *
  * Copy User Data Unregistered structure
- * 
+ *
  * Since: 1.30
  */
 GST_VIDEO_API
@@ -228,9 +228,9 @@ void gst_h274_user_data_unregistered_copy (GstH274UserDataUnregistered *dst_udu,
  * gst_h274_dsc_initialization_copy:
  * @dst_dsc_init: (out): Destination DSC Initialization structure
  * @src_dsc_init: (in): Source DSC Initialization structure
- * 
+ *
  * Copy DSC Initialization structure
- * 
+ *
  * Since: 1.30
  */
 GST_VIDEO_API
@@ -241,9 +241,9 @@ void gst_h274_dsc_initialization_copy (GstH274DigitallySignedContentInitializati
  * gst_h274_dsc_selection_copy:
  * @dst_dsc_sel: (out): Destination DSC Selection structure
  * @src_dsc_sel: (in): Source DSC Selection structure
- * 
+ *
  * Copy DSC Selection structure
- * 
+ *
  * Since: 1.30
  */
 GST_VIDEO_API
@@ -254,9 +254,9 @@ void gst_h274_dsc_selection_copy (GstH274DigitallySignedContentSelection *dst_ds
  * gst_h274_dsc_verification_copy:
  * @dst_dsc_ver: (out): Destination DSC Verification structure
  * @src_dsc_ver: (in): Source DSC Verification structure
- * 
+ *
  * Copy DSC Verification structure
- * 
+ *
  * Since: 1.30
  */
 GST_VIDEO_API
@@ -266,9 +266,9 @@ void gst_h274_dsc_verification_copy (GstH274DigitallySignedContentVerification *
 /**
  * gst_h274_user_data_registered_free:
  * @rud: #GstH274RegisteredUserData structure holding registered user data to free
- * 
+ *
  * Free resources allocated for registered user data SEI message
- * 
+ *
  * Since: 1.30
  */
 GST_VIDEO_API
@@ -277,9 +277,9 @@ void gst_h274_user_data_registered_free (GstH274RegisteredUserData * rud);
 /**
  * gst_h274_user_data_unregistered_free:
  * @udu: #GstH274UserDataUnregistered structure holding unregistered user data to free
- * 
+ *
  * Free resources allocated for user data unregistered SEI message
- * 
+ *
  * Since: 1.30
  */
 GST_VIDEO_API
@@ -288,9 +288,9 @@ void gst_h274_user_data_unregistered_free (GstH274UserDataUnregistered * udu);
 /**
  * gst_h274_dsc_initialization_free:
  * @dsci: #GstH274DigitallySignedContentInitialization structure holding digitally signed content initialization data to free
- * 
+ *
  * Free resources allocated for digitally signed content initialization SEI message
- * 
+ *
  * Since: 1.30
  */
 GST_VIDEO_API
@@ -299,9 +299,9 @@ void gst_h274_dsc_initialization_free (GstH274DigitallySignedContentInitializati
 /**
  * gst_h274_dsc_selection_free:
  * @dscs: #GstH274DigitallySignedContentSelection structure holding digitally signed content selection data to free
- * 
+ *
  * Free resources allocated for digitally signed content selection SEI message
- * 
+ *
  * Since: 1.30
  */
 GST_VIDEO_API
@@ -310,9 +310,9 @@ void gst_h274_dsc_selection_free (GstH274DigitallySignedContentSelection * dscs)
 /**
  * gst_h274_dsc_verification_free:
  * @dscv: #GstH274DigitallySignedContentVerification structure holding digitally signed content verification data to free
- * 
+ *
  * Free resources allocated for digitally signed content verification SEI message
- * 
+ *
  * Since: 1.30
  */
 GST_VIDEO_API
