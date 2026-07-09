@@ -4834,7 +4834,13 @@ gst_matroska_demux_update_stream_seek_ranges (GstMatroskaDemux * demux,
   if (start_time < range->start_time) {
     /* We're walking backward, so we need to find the correct range */
     GList *l = demux->current_seek_range;
-    g_assert (l->prev != NULL); /* We can't be *before* the first range */
+
+    /* The first seek range is always created by the first timestamped block at the start
+     * of the file. Any earlier time should just extend that backward, in the case that
+     * blocks aren't muxed strictly in timestamp order */
+    if (l->prev == NULL) {
+      range->start_time = start_time;
+    }
 
     while (l->prev) {
       GList *prev = l->prev;
