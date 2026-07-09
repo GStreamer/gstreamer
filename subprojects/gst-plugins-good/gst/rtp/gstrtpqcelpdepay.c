@@ -214,6 +214,7 @@ flush_packets (GstRtpQCELPDepay * depay)
 
   /* and reset interleaving state */
   depay->interleaved = FALSE;
+  depay->interleave_value = 0;
   depay->bundling = 0;
 }
 
@@ -299,10 +300,24 @@ gst_rtp_qcelp_depay_process (GstRTPBaseDepayload * depayload,
     if (!depay->interleaved) {
       guint size;
 
+      /* Can't start interleave handling in the middle of an interleave group */
+      if (NNN != 0) {
+        GST_WARNING_OBJECT (depay,
+            "Can't start interleave group in the middle of a group");
+        return NULL;
+      }
+
       GST_DEBUG_OBJECT (depay, "starting interleaving group");
       /* bundling is not allowed to change in one interleave group */
       depay->bundling = count_packets (depay, payload, payload_len);
-      GST_DEBUG_OBJECT (depay, "got bundling of %u", depay->bundling);
+      if (depay->bundling == 0) {
+        GST_WARNING_OBJECT (depay, "Invalid zero bundling");
+        return NULL;
+      }
+
+      depay->interleave_value = LLL;
+      GST_DEBUG_OBJECT (depay, "got bundling of %u with interleave value %u",
+          depay->bundling, depay->interleave_value);
       /* we have one bundle where NNN goes from 0 to L, we don't store the index
        * 0 frames, so L+1 packets. Each packet has 'bundling - 1' packets */
       size = (depay->bundling - 1) * (LLL + 1);
@@ -314,6 +329,28 @@ gst_rtp_qcelp_depay_process (GstRTPBaseDepayload * depayload,
       /* we were previously not interleaved, figure out how much space we
        * need to deinterleave */
       depay->interleaved = TRUE;
+    } else {
+      guint size;
+
+      /* Bundling is not allowed to change in an interleave group but if it does
+       * the erasure / discard code further below will make sure to handle this
+       * gracefully */
+
+      /* Decreasing the interleave value is allowed between interleave groups
+       * only, but increasing it is never allowed */
+      if (depay->interleave_value < LLL) {
+        goto invalid_lll;
+      } else if (depay->interleave_value > LLL) {
+        if (NNN != 0) {
+          goto invalid_nnn;
+        }
+
+        size = (depay->bundling - 1) * (LLL + 1);
+        if (depay->packets == NULL)
+          depay->packets = g_ptr_array_sized_new (size);
+        GST_DEBUG_OBJECT (depay, "resizing packet array to size %u", size);
+        g_ptr_array_set_size (depay->packets, size);
+      }
     }
   } else {
     /* we are not interleaved */
@@ -323,6 +360,7 @@ gst_rtp_qcelp_depay_process (GstRTPBaseDepayload * depayload,
       flush_packets (depay);
     }
     depay->bundling = 0;
+    depay->interleave_value = 0;
   }
 
   index = 0;
