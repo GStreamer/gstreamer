@@ -37,8 +37,6 @@
 #include "gstavutils.h"
 #include "gstavprotocol.h"
 
-#define MAX_STREAMS 20
-
 typedef struct _GstFFMpegDemux GstFFMpegDemux;
 typedef struct _GstFFStream GstFFStream;
 
@@ -72,7 +70,7 @@ struct _GstFFMpegDemux
   /* global tags */
   GstTagList *tags, *upstream_global_tags, *upstream_stream_tags;
 
-  GstFFStream *streams[MAX_STREAMS];
+  GPtrArray *streams;
 
   GstFlowCombiner *flowcombiner;
 
@@ -252,7 +250,6 @@ gst_ffmpegdemux_init (GstFFMpegDemux * demux)
 {
   GstFFMpegDemuxClass *oclass =
       (GstFFMpegDemuxClass *) (G_OBJECT_GET_CLASS (demux));
-  gint n;
 
   demux->sinkpad = gst_pad_new_from_template (oclass->sinktempl, "sink");
   gst_pad_set_activate_function (demux->sinkpad,
@@ -278,9 +275,7 @@ gst_ffmpegdemux_init (GstFFMpegDemux * demux)
 
   demux->context = NULL;
 
-  for (n = 0; n < MAX_STREAMS; n++) {
-    demux->streams[n] = NULL;
-  }
+  demux->streams = g_ptr_array_new ();
   demux->videopads = 0;
   demux->audiopads = 0;
 
@@ -317,6 +312,8 @@ gst_ffmpegdemux_finalize (GObject * object)
   gst_object_unref (demux->task);
   g_rec_mutex_clear (&demux->task_lock);
 
+  g_ptr_array_unref (demux->streams);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -330,10 +327,10 @@ gst_ffmpegdemux_close (GstFFMpegDemux * demux)
     return;
 
   /* remove pads from ourselves */
-  for (n = 0; n < MAX_STREAMS; n++) {
+  for (n = 0; n < demux->streams->len; n++) {
     GstFFStream *stream;
 
-    stream = demux->streams[n];
+    stream = g_ptr_array_index (demux->streams, n);
     if (stream) {
       if (stream->pad) {
         gst_flow_combiner_remove_pad (demux->flowcombiner, stream->pad);
@@ -343,8 +340,8 @@ gst_ffmpegdemux_close (GstFFMpegDemux * demux)
         gst_tag_list_unref (stream->tags);
       g_free (stream);
     }
-    demux->streams[n] = NULL;
   }
+  g_ptr_array_set_size (demux->streams, 0);
   demux->videopads = 0;
   demux->audiopads = 0;
   gst_clear_tag_list (&demux->tags);
@@ -378,8 +375,8 @@ gst_ffmpegdemux_push_event (GstFFMpegDemux * demux, GstEvent * event)
 
   res = TRUE;
 
-  for (n = 0; n < MAX_STREAMS; n++) {
-    GstFFStream *s = demux->streams[n];
+  for (n = 0; n < demux->streams->len; n++) {
+    GstFFStream *s = g_ptr_array_index (demux->streams, n);
 
     if (s && s->pad) {
       gst_event_ref (event);
@@ -396,11 +393,12 @@ static void
 gst_ffmpegdemux_set_flags (GstFFMpegDemux * demux, gboolean discont,
     gboolean eos)
 {
-  GstFFStream *s;
   gint n;
 
-  for (n = 0; n < MAX_STREAMS; n++) {
-    if ((s = demux->streams[n])) {
+  for (n = 0; n < demux->streams->len; n++) {
+    GstFFStream *s = g_ptr_array_index (demux->streams, n);
+
+    if (s) {
       s->discont = discont;
       s->eos = eos;
     }
@@ -411,11 +409,12 @@ gst_ffmpegdemux_set_flags (GstFFMpegDemux * demux, gboolean discont,
 static gboolean
 gst_ffmpegdemux_is_eos (GstFFMpegDemux * demux)
 {
-  GstFFStream *s;
   gint n;
 
-  for (n = 0; n < MAX_STREAMS; n++) {
-    if ((s = demux->streams[n])) {
+  for (n = 0; n < demux->streams->len; n++) {
+    GstFFStream *s = g_ptr_array_index (demux->streams, n);
+
+    if (s) {
       GST_DEBUG ("stream %d %p eos:%d", n, s, s->eos);
       if (!s->eos)
         return FALSE;
@@ -428,11 +427,12 @@ gst_ffmpegdemux_is_eos (GstFFMpegDemux * demux)
 static gboolean
 gst_ffmpegdemux_has_outputted (GstFFMpegDemux * demux)
 {
-  GstFFStream *s;
   gint n;
 
-  for (n = 0; n < MAX_STREAMS; n++) {
-    if ((s = demux->streams[n])) {
+  for (n = 0; n < demux->streams->len; n++) {
+    GstFFStream *s = g_ptr_array_index (demux->streams, n);
+
+    if (s) {
       if (GST_CLOCK_TIME_IS_VALID (s->last_ts))
         return TRUE;
     }
@@ -934,7 +934,9 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
 
   oclass = (GstFFMpegDemuxClass *) G_OBJECT_GET_CLASS (demux);
 
-  if (demux->streams[avstream->index] != NULL)
+  if (demux->streams->len <= avstream->index)
+    g_ptr_array_set_size (demux->streams, avstream->index + 1);
+  if (g_ptr_array_index (demux->streams, avstream->index))
     goto exists;
 
   ctx = avcodec_alloc_context3 (NULL);
@@ -942,7 +944,7 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
 
   /* create new stream */
   stream = g_new0 (GstFFStream, 1);
-  demux->streams[avstream->index] = stream;
+  g_ptr_array_index (demux->streams, avstream->index) = stream;
 
   /* mark stream as unknown */
   stream->unknown = TRUE;
@@ -1007,9 +1009,6 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
         avstream->index, GST_TIME_ARGS (tmp));
   }
 
-  demux->streams[avstream->index] = stream;
-
-
   stream_id =
       gst_pad_create_stream_id_printf (pad, GST_ELEMENT_CAST (demux), "%03u",
       avstream->index);
@@ -1062,7 +1061,7 @@ done:
 exists:
   {
     GST_DEBUG_OBJECT (demux, "Pad existed (stream %d)", avstream->index);
-    stream = demux->streams[avstream->index];
+    stream = g_ptr_array_index (demux->streams, avstream->index);
     goto done;
   }
 unknown_type:
