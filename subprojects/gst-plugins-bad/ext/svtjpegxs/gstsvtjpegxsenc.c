@@ -31,6 +31,14 @@
 GST_DEBUG_CATEGORY_STATIC (svtjpegxsenc_debug);
 #define GST_CAT_DEFAULT svtjpegxsenc_debug
 
+/* The coding-raw and cap-compat encoder knobs require the
+ * svt_jpeg_xs_encoder_api_t::coding_raw_disable and ::cap_compat fields,
+ * which were added in SVT-JPEG-XS API version 0.10. */
+#if SVT_JPEGXS_API_VER_MAJOR > 0 || \
+    (SVT_JPEGXS_API_VER_MAJOR == 0 && SVT_JPEGXS_API_VER_MINOR >= 10)
+#define GST_SVT_JPEG_XS_HAVE_COMPAT_KNOBS 1
+#endif
+
 static const uint8_t BLOCKING = 1;
 
 #define GST_SVT_JPEG_XS_ENC_TYPE_QUANT_MODE (gst_svt_jpeg_xs_enc_quant_mode_get_type())
@@ -112,6 +120,8 @@ typedef struct _GstSvtJpegXsEnc
   int quant_mode;
   int rate_control_mode;
   int coding_signs;
+  gboolean coding_raw;
+  gboolean cap_compat;
 } GstSvtJpegXsEnc;
 
 static void gst_svt_jpeg_xs_enc_set_property (GObject * object,
@@ -139,6 +149,8 @@ enum
   PROP_QUANT_MODE,
   PROP_RATE_CONTROL_MODE,
   PROP_CODING_SIGNS,
+  PROP_CODING_RAW,
+  PROP_CAP_COMPAT,
 };
 
 #define DEFAULT_BITS_PER_PIXEL 3        // or add an auto default for bpp?
@@ -149,6 +161,8 @@ enum
 #define DEFAULT_QUANT_MODE 0
 #define DEFAULT_RATE_CONTROL_MODE 0
 #define DEFAULT_CODING_SIGNS 0
+#define DEFAULT_CODING_RAW TRUE
+#define DEFAULT_CAP_COMPAT FALSE
 
 #define FORMATS_8_BIT "Y444, Y42B, I420"
 
@@ -291,6 +305,50 @@ gst_svt_jpeg_xs_enc_class_init (GstSvtJpegXsEncClass * klass)
           GST_SVT_JPEG_XS_ENC_TYPE_CODING_SIGNS,
           DEFAULT_CODING_SIGNS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+#ifdef GST_SVT_JPEG_XS_HAVE_COMPAT_KNOBS
+  /**
+   * GstSvtJpegXsEnc:coding-raw
+   *
+   * Enable packet-based raw-mode coding. Disabling clears the raw-mode
+   * capability bit and never selects raw packet packing, which some
+   * strict/legacy decoders require.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_CODING_RAW,
+      g_param_spec_boolean ("coding-raw",
+          "Packet-based raw-mode coding",
+          "Enable packet-based raw-mode coding. Disabling clears the raw-mode "
+          "capability bit and never selects raw packet packing, which some "
+          "strict/legacy decoders require.",
+          DEFAULT_CODING_RAW,
+          G_PARAM_READWRITE | GST_PARAM_CONDITIONALLY_AVAILABLE |
+          G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstSvtJpegXsEnc:cap-compat
+   *
+   * Emit an empty CAP marker (Lcap=2) when no capability bit is set. Some
+   * legacy/strict decoders reject a non-empty CAP marker. When the stream
+   * genuinely requires a capability bit (e.g. 4:2:0 sub-sampling) a full
+   * CAP marker is still written to remain conformant.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_CAP_COMPAT,
+      g_param_spec_boolean ("cap-compat",
+          "Legacy decoder CAP-marker compatibility",
+          "Emit an empty CAP marker (Lcap=2) when no capability bit is set. "
+          "Some legacy/strict decoders reject a non-empty CAP marker. When the "
+          "stream genuinely requires a capability bit (e.g. 4:2:0 sub-sampling) "
+          "a full CAP marker is still written to remain conformant.",
+          DEFAULT_CAP_COMPAT,
+          G_PARAM_READWRITE | GST_PARAM_CONDITIONALLY_AVAILABLE |
+          G_PARAM_STATIC_STRINGS));
+#endif
+
   gst_type_mark_as_plugin_api (GST_SVT_JPEG_XS_ENC_TYPE_QUANT_MODE, 0);
   gst_type_mark_as_plugin_api (GST_SVT_JPEG_XS_ENC_TYPE_RATE_CONTROL_MODE, 0);
   gst_type_mark_as_plugin_api (GST_SVT_JPEG_XS_ENC_TYPE_CODING_SIGNS, 0);
@@ -314,6 +372,8 @@ gst_svt_jpeg_xs_enc_init (GstSvtJpegXsEnc * jxsenc)
   jxsenc->quant_mode = DEFAULT_QUANT_MODE;
   jxsenc->rate_control_mode = DEFAULT_RATE_CONTROL_MODE;
   jxsenc->coding_signs = DEFAULT_CODING_SIGNS;
+  jxsenc->coding_raw = DEFAULT_CODING_RAW;
+  jxsenc->cap_compat = DEFAULT_CAP_COMPAT;
   jxsenc->threads = DEFAULT_THREADS;
 }
 
@@ -425,6 +485,12 @@ gst_svt_jpeg_xs_enc_set_format (GstVideoEncoder * encoder,
     enc->rate_control_mode = jxsenc->rate_control_mode;
 
     enc->coding_signs_handling = jxsenc->coding_signs;
+
+#ifdef GST_SVT_JPEG_XS_HAVE_COMPAT_KNOBS
+    // Property is "raw-mode enabled"; library field is the inverse "disable"
+    enc->coding_raw_disable = jxsenc->coding_raw ? 0 : 1;
+    enc->cap_compat = jxsenc->cap_compat ? 1 : 0;
+#endif
 
     GST_OBJECT_UNLOCK (jxsenc);
   }
@@ -887,6 +953,16 @@ gst_svt_jpeg_xs_enc_set_property (GObject * object, guint property_id,
       jxsenc->coding_signs = g_value_get_enum (value);
       GST_OBJECT_UNLOCK (jxsenc);
       break;
+    case PROP_CODING_RAW:
+      GST_OBJECT_LOCK (jxsenc);
+      jxsenc->coding_raw = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (jxsenc);
+      break;
+    case PROP_CAP_COMPAT:
+      GST_OBJECT_LOCK (jxsenc);
+      jxsenc->cap_compat = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (jxsenc);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -940,6 +1016,16 @@ gst_svt_jpeg_xs_enc_get_property (GObject * object, guint property_id,
     case PROP_CODING_SIGNS:
       GST_OBJECT_LOCK (jxsenc);
       g_value_set_enum (value, jxsenc->coding_signs);
+      GST_OBJECT_UNLOCK (jxsenc);
+      break;
+    case PROP_CODING_RAW:
+      GST_OBJECT_LOCK (jxsenc);
+      g_value_set_boolean (value, jxsenc->coding_raw);
+      GST_OBJECT_UNLOCK (jxsenc);
+      break;
+    case PROP_CAP_COMPAT:
+      GST_OBJECT_LOCK (jxsenc);
+      g_value_set_boolean (value, jxsenc->cap_compat);
       GST_OBJECT_UNLOCK (jxsenc);
       break;
     default:
