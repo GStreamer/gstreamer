@@ -328,6 +328,11 @@ struct _RTPSession {
   guint64       rtx_bitrate;
   GstClockTime  prev_rtx_time;
   guint64       rtx_bytes_sent;
+
+  /* DoS protection */
+  guint max_csrcs;
+  guint max_sources;
+  GQueue ssrc_queue; /* Sorted by least recently used */
 };
 
 /**

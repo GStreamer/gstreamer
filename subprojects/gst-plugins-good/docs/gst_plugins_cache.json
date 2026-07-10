@@ -20493,6 +20493,20 @@
                         "type": "guint",
                         "writable": true
                     },
+                    "max-csrcs": {
+                        "blurb": "How many contributing sources to track per SSRC. After the limit is reached the oldest CSRC is timed out. Only applies to receiver sources.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "15",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
                     "max-dropout-time": {
                         "blurb": "The maximum time (milliseconds) of missing packets tolerated.",
                         "conditionally-available": false,
@@ -20517,6 +20531,20 @@
                         "max": "-1",
                         "min": "0",
                         "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "max-sources": {
+                        "blurb": "How many sources to track. After the limit is reached the oldest SSRC / CSRC is timed out. Only applies to receiver sources, and acts as a global limit to the number of tracked sources.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "150",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "ready",
                         "readable": true,
                         "type": "guint",
                         "writable": true

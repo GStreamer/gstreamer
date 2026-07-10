@@ -324,6 +324,9 @@ rtp_source_reset (RTPSource * src)
   src->stats.sent_fir_count = 0;
   src->stats.sent_nack_count = 0;
   src->stats.recv_nack_count = 0;
+
+  g_hash_table_remove_all (src->csrcs);
+  g_queue_clear (&src->csrc_queue);
 }
 
 static void
@@ -357,9 +360,13 @@ rtp_source_init (RTPSource * src)
 
   src->last_keyframe_request = GST_CLOCK_TIME_NONE;
 
+  src->csrcs = g_hash_table_new (g_direct_hash, g_direct_equal);
+  g_queue_init (&src->csrc_queue);
+
   rtp_source_reset (src);
 
   src->pt_set = FALSE;
+  src->lru_link = NULL;
 }
 
 void
@@ -404,6 +411,9 @@ rtp_source_finalize (GObject * object)
   g_hash_table_unref (src->received_rr);
   g_mutex_unlock (&src->received_rr_lock);
   g_mutex_clear (&src->received_rr_lock);
+
+  g_hash_table_unref (src->csrcs);
+  g_queue_clear (&src->csrc_queue);
 
   G_OBJECT_CLASS (rtp_source_parent_class)->finalize (object);
 }
@@ -713,12 +723,13 @@ rtp_source_get_property (GObject * object, guint prop_id,
  * Returns: a new #RTPSource. Use g_object_unref() after usage.
  */
 RTPSource *
-rtp_source_new (guint32 ssrc)
+rtp_source_new (guint32 ssrc, guint max_csrcs)
 {
   RTPSource *src;
 
   src = g_object_new (RTP_TYPE_SOURCE, NULL);
   src->ssrc = ssrc;
+  src->max_csrcs = max_csrcs;
 
   return src;
 }
@@ -765,16 +776,97 @@ rtp_source_get_ssrc (RTPSource * src)
 /**
  * rtp_source_set_as_csrc:
  * @src: an #RTPSource
+ * @ssrc: the SSRC this source is a contributor to
  *
  * Configure @src as a CSRC, this will also validate @src.
  */
 void
-rtp_source_set_as_csrc (RTPSource * src)
+rtp_source_set_as_csrc (RTPSource * src, guint32 ssrc)
 {
   g_return_if_fail (RTP_IS_SOURCE (src));
 
   src->validated = TRUE;
   src->is_csrc = TRUE;
+  src->csrc_ssrc = ssrc;
+}
+
+/**
+ * rtp_source_add_csrc:
+ * @src: an #RTPSource
+ * @csrc: the CSRC of the contributing source
+ *
+ * Track that csrc is a contributor to this source
+ */
+void
+rtp_source_add_csrc (RTPSource * src, guint32 csrc)
+{
+  g_return_if_fail (RTP_IS_SOURCE (src));
+  GList *existing;
+
+  if (g_hash_table_steal_extended (src->csrcs, GUINT_TO_POINTER (csrc), NULL,
+          (gpointer *) & existing)) {
+    g_queue_delete_link (&src->csrc_queue, existing);
+  }
+
+  g_queue_push_tail (&src->csrc_queue, GUINT_TO_POINTER (csrc));
+  g_hash_table_insert (src->csrcs, GUINT_TO_POINTER (csrc),
+      src->csrc_queue.tail);
+}
+
+/**
+ * rtp_source_remove_csrc:
+ * @src: an #RTPSource
+ * @csrc: the CSRC of the contributing source
+ *
+ * Untrack that csrc is a contributor to this source
+ */
+void
+rtp_source_remove_csrc (RTPSource * src, guint32 csrc)
+{
+  g_return_if_fail (RTP_IS_SOURCE (src));
+  GList *existing;
+
+  if (g_hash_table_steal_extended (src->csrcs, GUINT_TO_POINTER (csrc), NULL,
+          (gpointer *) & existing)) {
+    g_queue_delete_link (&src->csrc_queue, existing);
+  }
+}
+
+/**
+ * rtp_source_has_max_csrcs:
+ * @src: an #RTPSource
+ *
+ * Check if @src has reached its max CSRC number (DoS prevention).
+ *
+ * Returns: %TRUE if @src can't accept more CRSCs.
+ */
+gboolean
+rtp_source_has_max_csrcs (RTPSource * src)
+{
+  g_return_val_if_fail (RTP_IS_SOURCE (src), FALSE);
+
+  return g_queue_get_length (&src->csrc_queue) >= src->max_csrcs;
+}
+
+/**
+ * rtp_source_pop_csrc:
+ * @src: an #RTPSource
+ *
+ * Pop the oldest csrc and return it. Only call if rtp_source_has_max_csrcs() is TRUE,
+ * return value may otherwise be a valid identifier (0)
+ */
+guint32
+rtp_source_pop_csrc (RTPSource * src)
+{
+  gpointer existing;
+
+  g_return_val_if_fail (RTP_IS_SOURCE (src), 0);
+  g_return_val_if_fail (g_queue_get_length (&src->csrc_queue) > 0, 0);
+
+  existing = g_queue_pop_head (&src->csrc_queue);
+  g_hash_table_remove (src->csrcs, existing);
+
+  return GPOINTER_TO_UINT (existing);
 }
 
 /**
