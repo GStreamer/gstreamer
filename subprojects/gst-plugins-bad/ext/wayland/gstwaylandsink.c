@@ -1251,6 +1251,13 @@ activate_failed:
   }
 done:
   {
+    /* waylandsink is late by one frame on drop reporting. This is typically not
+     * an issue, unless this is a preroll, since otherwise basesink believes the
+     * preroll have fail and aborts the state change to playing, stalling the pipeline.
+     */
+    if (ret == GST_BASE_SINK_FLOW_DROPPED && GST_BASE_SINK (self)->need_preroll)
+      ret = GST_FLOW_OK;
+
     g_mutex_unlock (&self->render_lock);
     return ret;
   }
