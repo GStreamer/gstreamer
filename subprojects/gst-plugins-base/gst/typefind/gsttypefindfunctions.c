@@ -5980,7 +5980,7 @@ ipmovie_type_find (GstTypeFind * tf, gpointer unused)
     return;
 
   for (gsize i = 0; i < length - sizeof (signature); i++) {
-    if (memcmp (data + i, signature, sizeof (signature)) != 0) {
+    if (memcmp (data + i, signature, sizeof (signature)) == 0) {
       gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, IPMOVIE_CAPS);
       return;
     }
