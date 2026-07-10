@@ -322,6 +322,11 @@ struct _RTPSession {
   /* Transport-wide cc-extension */
   RTPTWCCManager *twcc;
   RTPTWCCStats *twcc_stats;
+
+  /* DoS protection */
+  guint max_csrcs;
+  guint max_sources;
+  GQueue ssrc_queue; /* Sorted by least recently used */
 };
 
 /**

@@ -210,6 +210,13 @@ struct _RTPSource {
   guint8        pt;
 
   gboolean      disable_rtcp;
+
+  guint         max_csrcs;
+  guint32       csrc_ssrc; /* If this source is a CSRC, the SSRC it contributes to */
+  GHashTable    *csrcs; /* If this source is a SSRC, the CSRCs that contribute to it, pointing to csrc_queue */
+  GQueue        csrc_queue; /* Sorted by least recently used */
+
+  GList        *lru_link; /* RTP session stores the link of this source in its LRU SSRC queue here */
 };
 
 struct _RTPSourceClass {
@@ -219,14 +226,18 @@ struct _RTPSourceClass {
 GType rtp_source_get_type (void);
 
 /* managing lifetime of sources */
-RTPSource*      rtp_source_new                 (guint32 ssrc);
+RTPSource*      rtp_source_new                 (guint32 ssrc, guint max_csrcs);
 void            rtp_source_set_callbacks       (RTPSource *src, RTPSourceCallbacks *cb, gpointer data);
 
 /* properties */
 guint32         rtp_source_get_ssrc            (RTPSource *src);
 
-void            rtp_source_set_as_csrc         (RTPSource *src);
+void            rtp_source_set_as_csrc         (RTPSource *src, guint32 ssrc);
 gboolean        rtp_source_is_as_csrc          (RTPSource *src);
+void            rtp_source_add_csrc            (RTPSource * src, guint32 csrc);
+void            rtp_source_remove_csrc         (RTPSource * src, guint32 csrc);
+gboolean        rtp_source_has_max_csrcs       (RTPSource * src);
+guint32         rtp_source_pop_csrc            (RTPSource * src);
 
 gboolean        rtp_source_is_active           (RTPSource *src);
 gboolean        rtp_source_is_validated        (RTPSource *src);
