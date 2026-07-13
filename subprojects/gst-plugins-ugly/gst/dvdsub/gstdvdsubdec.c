@@ -647,7 +647,7 @@ gst_dvd_sub_dec_merge_title (GstDvdSubDec * dec, GstVideoFrame * frame)
   state.target = Y_data + 4 * dec->left + (y * Y_stride);
 
   /* Now draw scanlines until we hit last_y or end of RLE data */
-  for (; ((state.offset[1] < dec->data_size + 2) && (y <= last_y)); y++) {
+  for (; ((state.offset[state.id] < dec->data_size + 2) && (y <= last_y)); y++) {
     /* Set up to draw the highlight if we're in the right scanlines */
     if (y > hl_bottom || y < hl_top) {
       state.hl_left = -1;
