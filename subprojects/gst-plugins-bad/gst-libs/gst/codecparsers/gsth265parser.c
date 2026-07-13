@@ -821,11 +821,18 @@ gst_h265_parser_parse_short_term_ref_pic_sets (GstH265ShortTermRefPicSet *
   gint16 deltaRps = 0;
   gint j, i = 0;
   gint dPoc;
-
   GstH265ShortTermRefPicSetExt *stRPSEXT =
       &sps_ext->short_term_ref_pic_set_ext[stRpsIdx];
+  /* See num_long_term_pics in 7.4.7.1, NumDeltaPocs should not exceed
+   * sps_max_dec_pic_buffering_minus1 */
+  const guint allowed_max_delta =
+      sps->max_dec_pic_buffering_minus1[sps->max_sub_layers_minus1];
 
   GST_DEBUG ("parsing \"ShortTermRefPicSetParameters\"");
+
+  /* double check, already checked during max_dec_pic_buffering_minus1 parsing
+   * though */
+  CHECK_ALLOWED_MAX (allowed_max_delta, MAX_DPB_SIZE - 1);
 
   /* set default values for fields that might not be present in the bitstream
      and have valid defaults */
@@ -852,6 +859,10 @@ gst_h265_parser_parse_short_term_ref_pic_sets (GstH265ShortTermRefPicSet *
     RefRPS = &sps->short_term_ref_pic_set[RefRpsIdx];
     stRPS->NumDeltaPocsOfRefRpsIdx = RefRPS->NumDeltaPocs;
 
+    CHECK_ALLOWED_MAX (RefRPS->NumDeltaPocs, allowed_max_delta);
+    CHECK_ALLOWED_MAX (RefRPS->NumPositivePics, allowed_max_delta);
+    CHECK_ALLOWED_MAX (RefRPS->NumNegativePics, allowed_max_delta);
+
     for (j = 0; j <= RefRPS->NumDeltaPocs; j++) {
       READ_UINT8 (nr, stRPSEXT->used_by_curr_pic_flag[j], 1);
       if (!stRPSEXT->used_by_curr_pic_flag[j])
@@ -863,24 +874,41 @@ gst_h265_parser_parse_short_term_ref_pic_sets (GstH265ShortTermRefPicSet *
     for (j = (RefRPS->NumPositivePics - 1); j >= 0; j--) {
       dPoc = RefRPS->DeltaPocS1[j] + deltaRps;
       if (dPoc < 0 && stRPSEXT->use_delta_flag[RefRPS->NumNegativePics + j]) {
+        CHECK_ALLOWED_MAX (i, allowed_max_delta);
         stRPS->DeltaPocS0[i] = dPoc;
         stRPS->UsedByCurrPicS0[i++] =
             stRPSEXT->used_by_curr_pic_flag[RefRPS->NumNegativePics + j];
       }
     }
+
     if (deltaRps < 0 && stRPSEXT->use_delta_flag[RefRPS->NumDeltaPocs]) {
+      CHECK_ALLOWED_MAX (i, allowed_max_delta);
       stRPS->DeltaPocS0[i] = deltaRps;
       stRPS->UsedByCurrPicS0[i++] =
           stRPSEXT->used_by_curr_pic_flag[RefRPS->NumDeltaPocs];
     }
+
     for (j = 0; j < RefRPS->NumNegativePics; j++) {
       dPoc = RefRPS->DeltaPocS0[j] + deltaRps;
       if (dPoc < 0 && stRPSEXT->use_delta_flag[j]) {
+        /* last valid index is "allowed_max_delta - 1" due to
+         * UsedByCurrPicS0[i++], but intentionally checking against
+         * allowed_max_delta here to avoid handling allowed_max_delta == 0 case.
+         *
+         * Since theoretical maximum value of allowed_max_delta is
+         * 15 (MAX_DPB_SIZE - 1), writing to UsedByCurrPicS0[i] is still
+         * safe because i is incremented after the write.
+         *
+         * Below NumNegativePics validation will do the final bounds check.
+         */
+        CHECK_ALLOWED_MAX (i, allowed_max_delta);
         stRPS->DeltaPocS0[i] = dPoc;
         stRPS->UsedByCurrPicS0[i++] = stRPSEXT->used_by_curr_pic_flag[j];
       }
     }
+
     stRPS->NumNegativePics = i;
+    CHECK_ALLOWED_MAX (stRPS->NumNegativePics, allowed_max_delta);
 
     /* 7-48: calculate NumPositivePics, DeltaPocS1 and UsedByCurrPicS1 */
     i = 0;
@@ -892,29 +920,41 @@ gst_h265_parser_parse_short_term_ref_pic_sets (GstH265ShortTermRefPicSet *
       }
     }
     if (deltaRps > 0 && stRPSEXT->use_delta_flag[RefRPS->NumDeltaPocs]) {
+      CHECK_ALLOWED_MAX (i, allowed_max_delta);
       stRPS->DeltaPocS1[i] = deltaRps;
       stRPS->UsedByCurrPicS1[i++] =
           stRPSEXT->used_by_curr_pic_flag[RefRPS->NumDeltaPocs];
     }
+
     for (j = 0; j < RefRPS->NumPositivePics; j++) {
       dPoc = RefRPS->DeltaPocS1[j] + deltaRps;
       if (dPoc > 0 && stRPSEXT->use_delta_flag[RefRPS->NumNegativePics + j]) {
+        /* last valid index is "allowed_max_delta - 1" due to
+         * UsedByCurrPicS1[i++], but intentionally checking against
+         * allowed_max_delta here to avoid handling allowed_max_delta == 0 case.
+         *
+         * Since theoretical maximum value of allowed_max_delta is
+         * 15 (MAX_DPB_SIZE - 1), writing to UsedByCurrPicS1[i] is still
+         * safe because i is incremented after the write.
+         *
+         * Below NumPositivePics validation will do the final bounds check.
+         */
+        CHECK_ALLOWED_MAX (i, allowed_max_delta);
         stRPS->DeltaPocS1[i] = dPoc;
         stRPS->UsedByCurrPicS1[i++] =
             stRPSEXT->used_by_curr_pic_flag[RefRPS->NumNegativePics + j];
       }
     }
-    stRPS->NumPositivePics = i;
 
+    stRPS->NumPositivePics = i;
+    CHECK_ALLOWED_MAX (stRPS->NumPositivePics, allowed_max_delta);
   } else {
     /* 7-49 */
-    READ_UE_MAX (nr, stRPS->NumNegativePics,
-        sps->max_dec_pic_buffering_minus1[sps->max_sub_layers_minus1]);
+    READ_UE_MAX (nr, stRPS->NumNegativePics, allowed_max_delta);
 
     /* 7-50 */
     READ_UE_MAX (nr, stRPS->NumPositivePics,
-        (sps->max_dec_pic_buffering_minus1[sps->max_sub_layers_minus1] -
-            stRPS->NumNegativePics));
+        (allowed_max_delta - stRPS->NumNegativePics));
 
     for (i = 0; i < stRPS->NumNegativePics; i++) {
       READ_UE_MAX (nr, stRPSEXT->delta_poc_s0_minus1[i], 32767);
@@ -953,6 +993,7 @@ gst_h265_parser_parse_short_term_ref_pic_sets (GstH265ShortTermRefPicSet *
 
   /* 7-57 */
   stRPS->NumDeltaPocs = stRPS->NumPositivePics + stRPS->NumNegativePics;
+  CHECK_ALLOWED_MAX (stRPS->NumDeltaPocs, allowed_max_delta);
 
   return TRUE;
 
