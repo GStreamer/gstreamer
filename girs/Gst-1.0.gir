@@ -1911,6 +1911,13 @@ and (un)set using GST_OBJECT_FLAG_SET() and GST_OBJECT_FLAG_UNSET().</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.h">Indicates whether the bin can handle elements that add/remove source pads
 at any point in time without first posting a no-more-pads signal.</doc>
       </member>
+      <member name="no_auto_ghostpads" value="65536" c:identifier="GST_BIN_FLAG_NO_AUTO_GHOSTPADS" version="1.30" glib:nick="no-auto-ghostpads" glib:name="GST_BIN_FLAG_NO_AUTO_GHOSTPADS">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.h">When a bin with this flag is created from a parse description, the parser
+connects the surrounding graph to the bin's own pads instead of creating
+ghost pads for its first and last children. This lets bins that manage
+their own internal topology, or expose pads dynamically, be built from a
+parse description.</doc>
+      </member>
       <member name="last" value="524288" c:identifier="GST_BIN_FLAG_LAST" glib:nick="last" glib:name="GST_BIN_FLAG_LAST">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.h">The last enum in the series of flags for bins. Derived classes can use this
 as first value in a list of flags.</doc>
@@ -60528,7 +60535,11 @@ within the bin can automatically be created (but only a maximum of
 one ghost pad for each direction will be created; if you expect
 multiple unlinked source pads or multiple unlinked sink pads
 and want them all ghosted, you will have to create the ghost pads
-yourself).</doc>
+yourself).
+
+A bin inside @bin_description that has #GST_BIN_FLAG_NO_AUTO_GHOSTPADS
+set is linked through its own pads, and the pads of its children are
+never ghosted on the returned bin.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstutils.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a
@@ -60556,7 +60567,11 @@ within the bin can automatically be created (but only a maximum of
 one ghost pad for each direction will be created; if you expect
 multiple unlinked source pads or multiple unlinked sink pads
 and want them all ghosted, you will have to create the ghost pads
-yourself).</doc>
+yourself).
+
+A bin inside @bin_description that has #GST_BIN_FLAG_NO_AUTO_GHOSTPADS
+set is linked through its own pads, and the pads of its children are
+never ghosted on the returned bin.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstutils.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a newly-created

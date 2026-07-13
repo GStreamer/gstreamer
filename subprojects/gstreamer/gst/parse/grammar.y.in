@@ -1762,6 +1762,16 @@ bin:	binopener assignments chainlist ')'   {
 						    gst_bin_add (bin, GST_ELEMENT (walk->data));
 						  g_slist_free (chain->elements);
 						  chain->elements = g_slist_prepend (NULL, bin);
+						  if (GST_OBJECT_FLAG_IS_SET (bin, GST_BIN_FLAG_NO_AUTO_GHOSTPADS)) {
+						    /* This bin manages its own pads: connect the surrounding
+						     * graph to the bin itself, not to its first/last children. */
+						    gst_parse_free_reference (&chain->first);
+						    gst_parse_free_reference (&chain->last);
+						    chain->first.element = gst_object_ref (bin);
+						    chain->first.name = NULL; chain->first.pads = NULL;
+						    chain->last.element = gst_object_ref (bin);
+						    chain->last.name = NULL; chain->last.pads = NULL;
+						  }
 						}
 						$$ = chain;
 						/* set the properties now

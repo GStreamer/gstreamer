@@ -605,6 +605,167 @@ gst_parse_test_element_change_state (GstElement * element,
   return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 }
 
+/* A bin with its own sink/src ghost pads on an internal identity, which
+ * keeps the children added from a parse description out of the datapath */
+typedef struct _GstParseManagedBin
+{
+  GstBin parent;
+} GstParseManagedBin;
+
+typedef struct _GstParseManagedBinClass
+{
+  GstBinClass parent;
+} GstParseManagedBinClass;
+
+static GType gst_parse_managed_bin_get_type (void);
+G_DEFINE_TYPE (GstParseManagedBin, gst_parse_managed_bin, GST_TYPE_BIN);
+
+static void
+gst_parse_managed_bin_class_init (GstParseManagedBinClass * klass)
+{
+  gst_element_class_set_metadata (GST_ELEMENT_CLASS (klass),
+      "Managed bin for parse launch tests", "Generic",
+      "Test bin managing its own pads for parse launch tests in core",
+      "GStreamer Devel <gstreamer-devel@lists.sf.net>");
+}
+
+static void
+gst_parse_managed_bin_init (GstParseManagedBin * self)
+{
+  GstElement *identity = gst_element_factory_make ("identity", "internal");
+  GstPad *pad;
+
+  GST_OBJECT_FLAG_SET (self, GST_BIN_FLAG_NO_AUTO_GHOSTPADS);
+  gst_bin_add (GST_BIN (self), identity);
+
+  pad = gst_element_get_static_pad (identity, "sink");
+  gst_element_add_pad (GST_ELEMENT (self), gst_ghost_pad_new ("sink", pad));
+  gst_object_unref (pad);
+  pad = gst_element_get_static_pad (identity, "src");
+  gst_element_add_pad (GST_ELEMENT (self), gst_ghost_pad_new ("src", pad));
+  gst_object_unref (pad);
+}
+
+GST_START_TEST (test_bin_no_auto_ghostpads)
+{
+  GstElement *pipeline, *src, *sink, *bin, *child;
+  GstPad *pad, *peer, *binpad;
+  GstBus *bus;
+  GstMessage *msg;
+
+  fail_unless (gst_element_register (NULL, "parsemanagedbin",
+          GST_RANK_NONE, gst_parse_managed_bin_get_type ()));
+
+  pipeline = setup_pipeline ("fakesrc num-buffers=4 name=src ! "
+      "parsemanagedbin.( name=bin identity name=child ) ! "
+      "fakesink name=sink");
+
+  src = gst_bin_get_by_name (GST_BIN (pipeline), "src");
+  sink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
+  bin = gst_bin_get_by_name (GST_BIN (pipeline), "bin");
+  child = gst_bin_get_by_name (GST_BIN (bin), "child");
+  fail_unless (src && sink && bin && child);
+  fail_unless (GST_OBJECT_PARENT (child) == GST_OBJECT (bin));
+
+  /* The outer graph is linked to the bin's own pads */
+  pad = gst_element_get_static_pad (src, "src");
+  peer = gst_pad_get_peer (pad);
+  binpad = gst_element_get_static_pad (bin, "sink");
+  fail_unless (peer == binpad);
+  gst_object_unref (binpad);
+  gst_object_unref (peer);
+  gst_object_unref (pad);
+
+  pad = gst_element_get_static_pad (sink, "sink");
+  peer = gst_pad_get_peer (pad);
+  binpad = gst_element_get_static_pad (bin, "src");
+  fail_unless (peer == binpad);
+  gst_object_unref (binpad);
+  gst_object_unref (peer);
+  gst_object_unref (pad);
+
+  /* ... and the child is not in the datapath */
+  pad = gst_element_get_static_pad (child, "sink");
+  fail_if (gst_pad_is_linked (pad));
+  gst_object_unref (pad);
+  pad = gst_element_get_static_pad (child, "src");
+  fail_if (gst_pad_is_linked (pad));
+  gst_object_unref (pad);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_ASYNC);
+  bus = gst_element_get_bus (pipeline);
+  msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_EOS);
+  gst_message_unref (msg);
+  gst_object_unref (bus);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (child);
+  gst_object_unref (bin);
+  gst_object_unref (sink);
+  gst_object_unref (src);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
+static void
+check_ghost_target (GstElement * bin, const gchar * pad_name,
+    GstElement * expected_target_parent)
+{
+  GstPad *ghost, *target, *expected_target;
+
+  ghost = gst_element_get_static_pad (bin, pad_name);
+  fail_unless (ghost != NULL && GST_IS_GHOST_PAD (ghost));
+  target = gst_ghost_pad_get_target (GST_GHOST_PAD (ghost));
+  expected_target = gst_element_get_static_pad (expected_target_parent,
+      pad_name);
+  fail_unless (target == expected_target);
+  gst_object_unref (expected_target);
+  gst_object_unref (target);
+  gst_object_unref (ghost);
+}
+
+GST_START_TEST (test_bin_no_auto_ghostpads_parse_bin)
+{
+  GstElement *parsed_bin, *first, *last, *unused_child;
+  GstPad *pad;
+  GError *err = NULL;
+
+  fail_unless (gst_element_register (NULL, "parsemanagedbin",
+          GST_RANK_NONE, gst_parse_managed_bin_get_type ()));
+
+  parsed_bin = gst_parse_bin_from_description ("identity name=first ! "
+      "parsemanagedbin.( identity name=unused_child ) ! identity name=last",
+      TRUE, &err);
+  fail_unless (parsed_bin != NULL && err == NULL);
+
+  first = gst_bin_get_by_name (GST_BIN (parsed_bin), "first");
+  last = gst_bin_get_by_name (GST_BIN (parsed_bin), "last");
+  unused_child = gst_bin_get_by_name (GST_BIN (parsed_bin), "unused_child");
+  fail_unless (first && last && unused_child);
+
+  /* The child kept out of the datapath is not linked, and not ghosted */
+  check_ghost_target (parsed_bin, "sink", first);
+  check_ghost_target (parsed_bin, "src", last);
+
+  pad = gst_element_get_static_pad (unused_child, "sink");
+  fail_if (gst_pad_is_linked (pad));
+  gst_object_unref (pad);
+  pad = gst_element_get_static_pad (unused_child, "src");
+  fail_if (gst_pad_is_linked (pad));
+  gst_object_unref (pad);
+
+  gst_object_unref (unused_child);
+  gst_object_unref (last);
+  gst_object_unref (first);
+  gst_object_unref (parsed_bin);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_missing_elements)
 {
   GstParseContext *ctx;
@@ -852,6 +1013,8 @@ parse_suite (void)
   tcase_add_test (tc_chain, expected_to_fail_pipes);
   tcase_add_test (tc_chain, leaking_fail_pipes);
   tcase_add_test (tc_chain, delayed_link);
+  tcase_add_test (tc_chain, test_bin_no_auto_ghostpads);
+  tcase_add_test (tc_chain, test_bin_no_auto_ghostpads_parse_bin);
   tcase_add_test (tc_chain, test_flags);
   tcase_add_test (tc_chain, test_missing_elements);
   tcase_add_test (tc_chain, test_parsing);

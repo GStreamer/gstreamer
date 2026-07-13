@@ -3445,6 +3445,56 @@ gst_bin_sync_children_states (GstBin * bin)
   return success;
 }
 
+#ifndef GST_DISABLE_PARSE
+static GstPad *bin_find_unlinked_pad_to_ghost (GstBin * bin,
+    GstPadDirection direction);
+
+static gboolean
+find_unlinked_pad_to_ghost_fold (const GValue * item, GValue * ret,
+    gpointer user_data)
+{
+  GstElement *element = g_value_get_object (item);
+  GstPadDirection direction = GPOINTER_TO_INT (user_data);
+  GstPad *pad;
+
+  pad = element_find_unlinked_pad (element, direction);
+  /* The children of such bins are not in the datapath */
+  if (!pad && GST_IS_BIN (element) &&
+      !GST_OBJECT_FLAG_IS_SET (element, GST_BIN_FLAG_NO_AUTO_GHOSTPADS))
+    pad = bin_find_unlinked_pad_to_ghost (GST_BIN_CAST (element), direction);
+
+  if (!pad)
+    return TRUE;
+
+  g_value_take_object (ret, pad);
+  return FALSE;
+}
+
+/* Like gst_bin_find_unlinked_pad() but does not look inside bins with
+ * GST_BIN_FLAG_NO_AUTO_GHOSTPADS set */
+static GstPad *
+bin_find_unlinked_pad_to_ghost (GstBin * bin, GstPadDirection direction)
+{
+  GstIterator *iter;
+  GValue ret = G_VALUE_INIT;
+  GstPad *pad;
+
+  g_value_init (&ret, GST_TYPE_PAD);
+  iter = gst_bin_iterate_elements (bin);
+  while (gst_iterator_fold (iter, find_unlinked_pad_to_ghost_fold, &ret,
+          GINT_TO_POINTER (direction)) == GST_ITERATOR_RESYNC) {
+    g_value_reset (&ret);
+    gst_iterator_resync (iter);
+  }
+  gst_iterator_free (iter);
+
+  pad = g_value_dup_object (&ret);
+  g_value_unset (&ret);
+
+  return pad;
+}
+#endif
+
 /**
  * gst_parse_bin_from_description:
  * @bin_description: command line describing the bin
@@ -3461,6 +3511,10 @@ gst_bin_sync_children_states (GstBin * bin)
  * multiple unlinked source pads or multiple unlinked sink pads
  * and want them all ghosted, you will have to create the ghost pads
  * yourself).
+ *
+ * A bin inside @bin_description that has #GST_BIN_FLAG_NO_AUTO_GHOSTPADS
+ * set is linked through its own pads, and the pads of its children are
+ * never ghosted on the returned bin.
  *
  * Returns: (transfer floating) (type Gst.Bin): a
  *   newly-created bin, or %NULL if an error occurred.
@@ -3492,6 +3546,10 @@ gst_parse_bin_from_description (const gchar * bin_description,
  * multiple unlinked source pads or multiple unlinked sink pads
  * and want them all ghosted, you will have to create the ghost pads
  * yourself).
+ *
+ * A bin inside @bin_description that has #GST_BIN_FLAG_NO_AUTO_GHOSTPADS
+ * set is linked through its own pads, and the pads of its children are
+ * never ghosted on the returned bin.
  *
  * Returns: (transfer floating) (type Gst.Element): a newly-created
  *   element, which is guaranteed to be a bin unless
@@ -3537,11 +3595,11 @@ gst_parse_bin_from_description_full (const gchar * bin_description,
 
   /* find pads and ghost them if necessary */
   if (ghost_unlinked_pads) {
-    if ((pad = gst_bin_find_unlinked_pad (bin, GST_PAD_SRC))) {
+    if ((pad = bin_find_unlinked_pad_to_ghost (bin, GST_PAD_SRC))) {
       gst_element_add_pad (GST_ELEMENT (bin), gst_ghost_pad_new ("src", pad));
       gst_object_unref (pad);
     }
-    if ((pad = gst_bin_find_unlinked_pad (bin, GST_PAD_SINK))) {
+    if ((pad = bin_find_unlinked_pad_to_ghost (bin, GST_PAD_SINK))) {
       gst_element_add_pad (GST_ELEMENT (bin), gst_ghost_pad_new ("sink", pad));
       gst_object_unref (pad);
     }

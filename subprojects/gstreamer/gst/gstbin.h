@@ -67,6 +67,19 @@ typedef enum {
    */
   GST_BIN_FLAG_STREAMS_AWARE	= (GST_ELEMENT_FLAG_LAST << 1),
 
+  /**
+   * GST_BIN_FLAG_NO_AUTO_GHOSTPADS:
+   *
+   * When a bin with this flag is created from a parse description, the parser
+   * connects the surrounding graph to the bin's own pads instead of creating
+   * ghost pads for its first and last children. This lets bins that manage
+   * their own internal topology, or expose pads dynamically, be built from a
+   * parse description.
+   *
+   * Since: 1.30
+   */
+  GST_BIN_FLAG_NO_AUTO_GHOSTPADS = (GST_ELEMENT_FLAG_LAST << 2),
+
   /* padding */
 
   /**
