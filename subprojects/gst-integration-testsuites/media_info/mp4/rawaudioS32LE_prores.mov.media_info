@@ -1,4 +1,4 @@
-<file duration="9988888888" frame-detection="1" skip-parsers="0" uri="file:///../../media/defaults/mp4/rawaudioS32LE_prores.mov" seekable="true">
+<file duration="9989010989" frame-detection="1" skip-parsers="0" uri="file:///../../media/defaults/mp4/rawaudioS32LE_prores.mov" seekable="true">
   <streams caps="video/quicktime">
     <stream type="video" caps="video/x-prores, variant=(string)standard, width=(int)320, height=(int)240, framerate=(fraction)91/3, pixel-aspect-ratio=(fraction)1/1" id="/001">
       <segments>
