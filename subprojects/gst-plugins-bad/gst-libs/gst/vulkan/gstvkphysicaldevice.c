@@ -1154,6 +1154,12 @@ gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
     GError ** error)
 {
   GstVulkanPhysicalDevicePrivate *priv = GET_PRIV (device);
+#if defined (VK_API_VERSION_1_2)
+  PFN_vkGetPhysicalDeviceProperties2 get_props2 = NULL;
+  PFN_vkGetPhysicalDeviceMemoryProperties2 get_mem_props2 = NULL;
+  PFN_vkGetPhysicalDeviceFeatures2 get_features2 = NULL;
+  PFN_vkGetPhysicalDeviceQueueFamilyProperties2 get_queue_props2 = NULL;
+#endif
   VkResult err;
   guint i;
 
@@ -1210,11 +1216,31 @@ gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
 
   vkGetPhysicalDeviceProperties (device->device, &device->properties);
 #if defined (VK_API_VERSION_1_2)
+  /* The Vulkan 1.1 core entry points are only resolvable if both the instance
+   * and the device support it. Fall back to the Vulkan 1.0 queries whenever any
+   * of them is missing, instead of calling a NULL function pointer. */
   if (gst_vulkan_physical_device_check_api_version (device, 1, 2, 0)) {
-    PFN_vkGetPhysicalDeviceProperties2 get_props2;
-    PFN_vkGetPhysicalDeviceMemoryProperties2 get_mem_props2;
-    PFN_vkGetPhysicalDeviceFeatures2 get_features2;
-    PFN_vkGetPhysicalDeviceQueueFamilyProperties2 get_queue_props2;
+    get_props2 = (PFN_vkGetPhysicalDeviceProperties2)
+        gst_vulkan_instance_get_proc_address (device->instance,
+        "vkGetPhysicalDeviceProperties2");
+    get_mem_props2 = (PFN_vkGetPhysicalDeviceMemoryProperties2)
+        gst_vulkan_instance_get_proc_address (device->instance,
+        "vkGetPhysicalDeviceMemoryProperties2");
+    get_features2 = (PFN_vkGetPhysicalDeviceFeatures2)
+        gst_vulkan_instance_get_proc_address (device->instance,
+        "vkGetPhysicalDeviceFeatures2");
+    get_queue_props2 = (PFN_vkGetPhysicalDeviceQueueFamilyProperties2)
+        gst_vulkan_instance_get_proc_address (device->instance,
+        "vkGetPhysicalDeviceQueueFamilyProperties2");
+
+    if (!(get_props2 && get_mem_props2 && get_features2 && get_queue_props2)) {
+      GST_WARNING_OBJECT (device, "Couldn't retrieve the Vulkan 1.1 physical "
+          "device entry points, falling back to the Vulkan 1.0 ones");
+      get_props2 = NULL;
+    }
+  }
+
+  if (get_props2) {
     VkPhysicalDeviceMemoryProperties2 mem_properties10;
 
     /* *INDENT-OFF* */
@@ -1224,29 +1250,17 @@ gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
     };
     /* *INDENT-ON* */
 
-    get_props2 = (PFN_vkGetPhysicalDeviceProperties2)
-        gst_vulkan_instance_get_proc_address (device->instance,
-        "vkGetPhysicalDeviceProperties2");
     get_props2 (device->device, &priv->properties10);
 
-    get_mem_props2 = (PFN_vkGetPhysicalDeviceMemoryProperties2)
-        gst_vulkan_instance_get_proc_address (device->instance,
-        "vkGetPhysicalDeviceMemoryProperties2");
     get_mem_props2 (device->device, &mem_properties10);
     memcpy (&device->memory_properties, &mem_properties10.memoryProperties,
         sizeof (device->memory_properties));
 
     add_extra_features (device);
-    get_features2 = (PFN_vkGetPhysicalDeviceFeatures2)
-        gst_vulkan_instance_get_proc_address (device->instance,
-        "vkGetPhysicalDeviceFeatures2");
     get_features2 (device->device, &priv->features10);
     memcpy (&device->features, &priv->features10.features,
         sizeof (device->features));
 
-    get_queue_props2 = (PFN_vkGetPhysicalDeviceQueueFamilyProperties2)
-        gst_vulkan_instance_get_proc_address (device->instance,
-        "vkGetPhysicalDeviceQueueFamilyProperties2");
     get_queue_props2 (device->device, &device->n_queue_families, NULL);
     if (device->n_queue_families > 0) {
       VkQueueFamilyProperties2 *props;
