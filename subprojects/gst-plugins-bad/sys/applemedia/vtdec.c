@@ -2776,7 +2776,7 @@ DEFINE_VTDEC_SUBCLASS (GstVtProresDec, gst_vt_prores_dec, prores,
 DEFINE_VTDEC_SUBCLASS (GstVtVp9Dec, gst_vt_vp9_dec, vp9,
     kCMVideoCodecType_VP9, "Apple VideoToolbox VP9 decoder");
 
-#if !TARGET_OS_WATCH
+#if !TARGET_OS_WATCH && !TARGET_OS_SIMULATOR
 #define DEFINE_VTDEC_HW_SUBCLASS(TypeName, codec, format, longname)           \
 DEFINE_VTDEC_INHERITED_SUBCLASS (TypeName, G_PASTE (G_PASTE (gst_vt_, codec), \
         _dec_hw), G_PASTE (G_PASTE (gst_vt_, codec), _dec_get_type) (),       \
@@ -2837,7 +2837,7 @@ gst_vtdec_get_rank (void)
   return GST_RANK_PRIMARY;
 }
 
-#if !TARGET_OS_WATCH
+#if !TARGET_OS_WATCH && !TARGET_OS_SIMULATOR
 static gboolean
 gst_vtdec_register_vtdec_hw (GstPlugin * plugin)
 {
@@ -2890,7 +2890,7 @@ gst_vtdec_register_vp9 (GstPlugin * plugin)
       gst_vt_vp9_dec_get_type ());
 }
 
-#if !TARGET_OS_WATCH
+#if !TARGET_OS_WATCH && !TARGET_OS_SIMULATOR
 #define DEFINE_VTDEC_HW_REGISTER(codec)                                       \
 static gboolean                                                               \
 G_PASTE (G_PASTE (gst_vtdec_register_, codec), _hw) (GstPlugin * plugin)      \
@@ -2935,7 +2935,7 @@ gst_vtdec_register_vp9_hw (GstPlugin * plugin)
 #endif
 
 GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtdec, gst_vtdec_register_vtdec);
-#if !TARGET_OS_WATCH
+#if !TARGET_OS_WATCH && !TARGET_OS_SIMULATOR
 GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtdec_hw, gst_vtdec_register_vtdec_hw);
 #endif
 GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vth264dec, gst_vtdec_register_h264);
@@ -2945,7 +2945,7 @@ GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtmpeg2dec, gst_vtdec_register_mpeg2);
 GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtjpegdec, gst_vtdec_register_jpeg);
 GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtproresdec, gst_vtdec_register_prores);
 GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtvp9dec, gst_vtdec_register_vp9);
-#if !TARGET_OS_WATCH
+#if !TARGET_OS_WATCH && !TARGET_OS_SIMULATOR
 GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vth264dec_hw, gst_vtdec_register_h264_hw);
 GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vth265dec_hw, gst_vtdec_register_h265_hw);
 GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtav1dec_hw, gst_vtdec_register_av1_hw);
@@ -2968,7 +2968,7 @@ gst_vtdec_register_elements (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (vtjpegdec, plugin);
   ret |= GST_ELEMENT_REGISTER (vtproresdec, plugin);
   ret |= GST_ELEMENT_REGISTER (vtvp9dec, plugin);
-#if !TARGET_OS_WATCH
+#if !TARGET_OS_WATCH && !TARGET_OS_SIMULATOR
   ret |= GST_ELEMENT_REGISTER (vth264dec_hw, plugin);
   ret |= GST_ELEMENT_REGISTER (vth265dec_hw, plugin);
   ret |= GST_ELEMENT_REGISTER (vtav1dec_hw, plugin);
