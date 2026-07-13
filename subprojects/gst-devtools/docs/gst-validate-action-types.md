@@ -2245,7 +2245,7 @@ The reference checksum of the buffer.
 
 #### `expected-color` (_optional_)
 
-The expected color of the video frame (or of the region specified with 'x', 'y', 'width', 'height'), either as a 0xAARRGGBB value (matching the `videotestsrc` 'foreground-color' property format) or as an array of 3 (RGB) or 4 (RGBA) doubles in the 0.0 - 1.0 range. The frame is converted to RGB before comparing, every pixel of the region must match the expected color within 'tolerance'.
+The expected color of the video frame (or of the region specified with 'x', 'y', 'width', 'height'), either as a 0xAARRGGBB value (matching the `videotestsrc` 'foreground-color' property format) or as an array of 3 (RGB) or 4 (RGBA) doubles (normally in the 0.0 - 1.0 range, but higher values may be used for float frames). The frame is converted to RGB before comparing; float formats are compared at full precision without clamping, other formats through 16-bit RGB. Every pixel of the region must match within 'tolerance'.
 
 **Possible types**: `string, guint or (double){3,4}`
 

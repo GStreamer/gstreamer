@@ -6774,9 +6774,11 @@ check_last_sample_frame_color (GstValidateScenario * scenario,
     GstValidateAction * action, GstSample * sample)
 {
   GstVideoInfo in_info, out_info;
-  GstVideoFrame in_frame, out_frame;
+  GstVideoFrame in_frame, out_frame, *frame = &in_frame;
   GstVideoConverter *converter;
-  GstBuffer *out_buffer;
+  GstVideoFormat f32_format = G_BYTE_ORDER == G_LITTLE_ENDIAN ?
+      GST_VIDEO_FORMAT_RGBA_F32LE : GST_VIDEO_FORMAT_RGBA_F32BE;
+  GstBuffer *out_buffer = NULL;
   GstCaps *caps;
   GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
   gdouble expected[4], got[4] = { 0, }, tolerance = 0.01, max_dev = -1.0;
@@ -6824,36 +6826,53 @@ check_last_sample_frame_color (GstValidateScenario * scenario,
     return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
 
-  gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_ARGB64,
-      in_info.width, in_info.height);
-  out_info.fps_n = in_info.fps_n;
-  out_info.fps_d = in_info.fps_d;
-  out_info.par_n = in_info.par_n;
-  out_info.par_d = in_info.par_d;
-  out_info.interlace_mode = in_info.interlace_mode;
-  out_buffer = gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (&out_info));
-  gst_video_frame_map (&out_frame, &out_info, out_buffer, GST_MAP_WRITE);
+  /* Frames are compared as native-endian RGBA_F32, keeping highest precision.
+   * Only transfer and primaries are copied, so the converter just repacks the
+   * components (and still picks its RGBA_F16 -> RGBA_F32 fast path). */
+  if (GST_VIDEO_INFO_FORMAT (&in_info) != f32_format) {
+    gst_video_info_set_format (&out_info, f32_format, in_info.width,
+        in_info.height);
+    out_info.fps_n = in_info.fps_n;
+    out_info.fps_d = in_info.fps_d;
+    out_info.par_n = in_info.par_n;
+    out_info.par_d = in_info.par_d;
+    out_info.interlace_mode = in_info.interlace_mode;
+    out_info.colorimetry.transfer = in_info.colorimetry.transfer;
+    out_info.colorimetry.primaries = in_info.colorimetry.primaries;
+    out_buffer = gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (&out_info));
+    gst_video_frame_map (&out_frame, &out_info, out_buffer, GST_MAP_WRITE);
 
-  converter = gst_video_converter_new (&in_info, &out_info, NULL);
-  gst_video_converter_frame (converter, &in_frame, &out_frame);
-  gst_video_converter_free (converter);
-  gst_video_frame_unmap (&in_frame);
+    converter = gst_video_converter_new (&in_info, &out_info, NULL);
+    gst_video_converter_frame (converter, &in_frame, &out_frame);
+    gst_video_converter_free (converter);
+    frame = &out_frame;
+  }
 
-  data = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, 0);
-  stride = GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, 0);
+  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   for (j = y; j < y + height; j++) {
-    const guint16 *l = (const guint16 *) (data + j * stride);
+    const gfloat *l = (const gfloat *) (data + j * stride);
 
     for (i = x; i < x + width; i++) {
-      /* ARGB64 stores A, R, G, B, compare as R, G, B, A */
-      gdouble px[4] = { l[i * 4 + 1] / 65535.0, l[i * 4 + 2] / 65535.0,
-        l[i * 4 + 3] / 65535.0, l[i * 4 + 0] / 65535.0
-      };
-      gdouble dev = 0.0;
+      gdouble px[4], dev = 0.0;
 
-      for (k = 0; k < 4; k++)
-        dev = MAX (dev, ABS (px[k] - expected[k]));
+      for (k = 0; k < 4; k++) {
+        gdouble d;
 
+        px[k] = l[i * 4 + k];
+        d = ABS (px[k] - expected[k]);
+
+        /* NaN never compares greater, report it as a mismatch right away */
+        if (isnan (d)) {
+          max_dev = INFINITY;
+          max_x = i;
+          max_y = j;
+          for (k = 0; k < 4; k++)
+            got[k] = l[i * 4 + k];
+          goto done;
+        }
+        dev = MAX (dev, d);
+      }
       if (dev > max_dev) {
         max_dev = dev;
         max_x = i;
@@ -6862,6 +6881,13 @@ check_last_sample_frame_color (GstValidateScenario * scenario,
           got[k] = px[k];
       }
     }
+  }
+
+done:
+  gst_video_frame_unmap (&in_frame);
+  if (out_buffer) {
+    gst_video_frame_unmap (&out_frame);
+    gst_buffer_unref (out_buffer);
   }
 
   if (max_dev > tolerance) {
@@ -6875,9 +6901,6 @@ check_last_sample_frame_color (GstValidateScenario * scenario,
         expected[0], expected[1], expected[2], expected[3], max_dev, tolerance);
     res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
-
-  gst_video_frame_unmap (&out_frame);
-  gst_buffer_unref (out_buffer);
 
   return res;
 }
@@ -9380,10 +9403,13 @@ register_action_types (void)
                          " region specified with 'x', 'y', 'width', 'height'),"
                          " either as a 0xAARRGGBB value (matching the"
                          " `videotestsrc` 'foreground-color' property format)"
-                         " or as an array of 3 (RGB) or 4 (RGBA) doubles in"
-                         " the 0.0 - 1.0 range. The frame is converted to RGB"
-                         " before comparing, every pixel of the region must"
-                         " match the expected color within 'tolerance'.",
+                         " or as an array of 3 (RGB) or 4 (RGBA) doubles"
+                         " (normally in the 0.0 - 1.0 range, but higher values"
+                         " may be used for float frames). The frame is"
+                         " converted to RGB before comparing; float formats are"
+                         " compared at full precision without clamping, other"
+                         " formats through 16-bit RGB. Every pixel of the"
+                         " region must match within 'tolerance'.",
           .mandatory = FALSE,
           .types = "string, guint or (double){3,4}",
           NULL

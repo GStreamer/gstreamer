@@ -1,0 +1,31 @@
+# Check that check-last-sample compares float frames at full precision.
+# videotestsrc stores the 0x40 component (64 / 255) as the nearest half float,
+# 1028 / 4096 = 0.2509765625, which 16-bit RGB cannot represent (the closest
+# is 16448 / 65535 = 0.2509804), so the check fails with the tight tolerance
+# if the frame goes through 16-bit RGB. The RGBA_F16 -> RGBA_F32 conversion
+# is lossless and must keep the same value.
+meta,
+    handles-states=true,
+    ignore-eos=true,
+    args={
+        "videotestsrc num-buffers=1 pattern=solid-color foreground-color=0xff404040 \
+         ! video/x-raw,format=RGBA_F16LE,width=4,height=4 \
+         ! tee name=t \
+         t. ! queue ! fakesink name=f16sink \
+         t. ! queue ! videoconvert ! video/x-raw,format=RGBA_F32LE ! fakesink name=f32sink",
+    }
+
+play
+check-last-sample,
+    sink-name=f16sink,
+    expected-color={
+        0.2509765625, 0.2509765625, 0.2509765625, 1.0,
+    },
+    tolerance=0.000001
+check-last-sample,
+    sink-name=f32sink,
+    expected-color={
+        0.2509765625, 0.2509765625, 0.2509765625, 1.0,
+    },
+    tolerance=0.000001
+stop
