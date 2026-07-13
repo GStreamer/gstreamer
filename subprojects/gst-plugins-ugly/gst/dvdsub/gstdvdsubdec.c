@@ -342,6 +342,8 @@ gst_dvd_sub_dec_parse_subpic (GstDvdSubDec * dec)
         GST_WARNING_OBJECT (dec, "SPU_WIPE not yet implemented");
 
         length = (buf[1] << 8) | (buf[2]);
+
+        PARSE_BYTES_NEEDED (1 + length);
         buf += 1 + length;
 
         dec->buf_dirty = TRUE;
