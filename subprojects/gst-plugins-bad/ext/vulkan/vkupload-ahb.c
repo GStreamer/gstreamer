@@ -627,10 +627,8 @@ _ahb_create_ycbcr_sampler (GstVulkanDevice * device,
     .addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
     .maxLod = 1.0f,
   };
-  VkSamplerYcbcrConversion conversion = VK_NULL_HANDLE;
   GstVulkanHandle *conversion_handle;
   VkSampler sampler = VK_NULL_HANDLE;
-  PFN_vkCreateSamplerYcbcrConversion create_conversion;
   VkResult res;
 
   _ahb_select_ycbcr_filters (format_props->formatFeatures, &chroma_filter,
@@ -672,34 +670,13 @@ _ahb_create_ycbcr_sampler (GstVulkanDevice * device,
       conversion_info.components.a, conversion_info.chromaFilter,
       sampler_info.minFilter, sampler_info.magFilter, yv12_chroma_order);
 
-  /* Resolve the Vulkan 1.1 core entry point dynamically, with the Vulkan 1.0
-   * VK_KHR_sampler_ycbcr_conversion entry point as fallback. */
-  create_conversion = (PFN_vkCreateSamplerYcbcrConversion)
-      gst_vulkan_device_get_proc_address (device,
-      "vkCreateSamplerYcbcrConversion");
-  if (!create_conversion) {
-    create_conversion = (PFN_vkCreateSamplerYcbcrConversion)
-        gst_vulkan_device_get_proc_address (device,
-        "vkCreateSamplerYcbcrConversionKHR");
-  }
-  if (!create_conversion) {
-    g_set_error_literal (error, GST_VULKAN_ERROR,
-        VK_ERROR_EXTENSION_NOT_PRESENT,
-        "vkCreateSamplerYcbcrConversion is unavailable");
-    return NULL;
-  }
-
-  res = create_conversion (device->device, &conversion_info, NULL, &conversion);
-  if (gst_vulkan_error_to_g_error (res, error,
-          "vkCreateSamplerYcbcrConversion") < 0)
+  conversion_handle = gst_vulkan_handle_create_sampler_ycbcr_conversion (device,
+      &conversion_info, error);
+  if (!conversion_handle)
     return NULL;
 
-  conversion_handle = gst_vulkan_handle_new_wrapped (device,
-      GST_VULKAN_HANDLE_TYPE_SAMPLER_YCBCR_CONVERSION,
-      (GstVulkanHandleTypedef) conversion,
-      gst_vulkan_handle_free_sampler_ycbcr_conversion, NULL);
-
-  sampler_conversion_info.conversion = conversion;
+  sampler_conversion_info.conversion =
+      (VkSamplerYcbcrConversion) conversion_handle->handle;
   res = vkCreateSampler (device->device, &sampler_info, NULL, &sampler);
   if (gst_vulkan_error_to_g_error (res, error, "vkCreateSampler") < 0) {
     gst_vulkan_handle_unref (conversion_handle);

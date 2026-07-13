@@ -990,8 +990,6 @@ gst_vulkan_decoder_update_ycbcr_sampler (GstVulkanDecoder * self,
   GstVulkanDecoderPrivate *priv;
   GstVulkanHandle *handle;
   VkSamplerYcbcrConversionCreateInfo create_info;
-  VkSamplerYcbcrConversion ycbr_conversion;
-  VkResult res;
 
   g_return_val_if_fail (GST_IS_VULKAN_DECODER (self), FALSE);
 
@@ -1018,16 +1016,10 @@ gst_vulkan_decoder_update_ycbcr_sampler (GstVulkanDecoder * self,
   };
   /* *INDENT-ON* */
 
-  res = vkCreateSamplerYcbcrConversion (device->device, &create_info, NULL,
-      &ycbr_conversion);
-  if (gst_vulkan_error_to_g_error (res, error,
-          "vkCreateSamplerYcbcrConversion") != VK_SUCCESS)
+  handle = gst_vulkan_handle_create_sampler_ycbcr_conversion (device,
+      &create_info, error);
+  if (!handle)
     return FALSE;
-
-  handle = gst_vulkan_handle_new_wrapped (device,
-      GST_VULKAN_HANDLE_TYPE_SAMPLER_YCBCR_CONVERSION,
-      (GstVulkanHandleTypedef) ycbr_conversion,
-      gst_vulkan_handle_free_sampler_ycbcr_conversion, NULL);
 
   gst_clear_vulkan_handle (&priv->sampler);
   priv->sampler = handle;

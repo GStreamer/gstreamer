@@ -210,6 +210,59 @@ gst_vulkan_handle_free_sampler (GstVulkanHandle * handle, gpointer user_data)
 }
 
 /**
+ * gst_vulkan_handle_create_sampler_ycbcr_conversion:
+ * @device: a #GstVulkanDevice
+ * @create_info: a pointer to a `VkSamplerYcbcrConversionCreateInfo`
+ * @error: a #GError
+ *
+ * Creates a vulkan `VkSamplerYcbcrConversion` from @create_info.
+ *
+ * Returns: (transfer full) (nullable): a #GstVulkanHandle wrapping the created
+ *     `VkSamplerYcbcrConversion`
+ *
+ * Since: 1.30
+ */
+GstVulkanHandle *
+gst_vulkan_handle_create_sampler_ycbcr_conversion (GstVulkanDevice * device,
+    gpointer create_info, GError ** error)
+{
+  PFN_vkCreateSamplerYcbcrConversion create_conversion;
+  VkSamplerYcbcrConversion ycbcr_conversion;
+  VkResult res;
+
+  g_return_val_if_fail (GST_IS_VULKAN_DEVICE (device), NULL);
+  g_return_val_if_fail (create_info != NULL, NULL);
+
+  /* Resolve the Vulkan 1.1 core entry point dynamically, with the
+   * VK_KHR_sampler_ycbcr_conversion entry point as fallback. This also avoids
+   * a link-time dependency on Vulkan 1.1 for Android builds targeting API 26. */
+  create_conversion = (PFN_vkCreateSamplerYcbcrConversion)
+      gst_vulkan_device_get_proc_address (device,
+      "vkCreateSamplerYcbcrConversion");
+  if (!create_conversion) {
+    create_conversion = (PFN_vkCreateSamplerYcbcrConversion)
+        gst_vulkan_device_get_proc_address (device,
+        "vkCreateSamplerYcbcrConversionKHR");
+  }
+  if (!create_conversion) {
+    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_EXTENSION_NOT_PRESENT,
+        "Couldn't find vkCreateSamplerYcbcrConversion");
+    return NULL;
+  }
+
+  res = create_conversion (device->device, create_info, NULL,
+      &ycbcr_conversion);
+  if (gst_vulkan_error_to_g_error (res, error,
+          "vkCreateSamplerYcbcrConversion") != VK_SUCCESS)
+    return NULL;
+
+  return gst_vulkan_handle_new_wrapped (device,
+      GST_VULKAN_HANDLE_TYPE_SAMPLER_YCBCR_CONVERSION,
+      (GstVulkanHandleTypedef) ycbcr_conversion,
+      gst_vulkan_handle_free_sampler_ycbcr_conversion, NULL);
+}
+
+/**
  * gst_vulkan_handle_free_sampler_ycbcr_conversion:
  * @handle: a #GstVulkanHandle containing a vulkan `VkSamplerYcbcrConversion`
  * @user_data: callback user data

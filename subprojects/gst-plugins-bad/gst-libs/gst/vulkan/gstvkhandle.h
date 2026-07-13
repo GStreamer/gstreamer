@@ -241,6 +241,10 @@ GST_VULKAN_API
 void                    gst_vulkan_handle_free_sampler               (GstVulkanHandle * handle,
                                                                       gpointer user_data);
 GST_VULKAN_API
+GstVulkanHandle *       gst_vulkan_handle_create_sampler_ycbcr_conversion (GstVulkanDevice * device,
+                                                                           gpointer create_info,
+                                                                           GError ** error) G_GNUC_WARN_UNUSED_RESULT;
+GST_VULKAN_API
 void                    gst_vulkan_handle_free_sampler_ycbcr_conversion (GstVulkanHandle * handle,
                                                                          gpointer user_data);
 GST_VULKAN_API
