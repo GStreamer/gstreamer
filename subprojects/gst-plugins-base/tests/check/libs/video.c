@@ -1249,6 +1249,84 @@ GST_START_TEST (test_events)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_convert_rgba_float_lossless)
+{
+  /* HDR (> 1.0) and out-of-gamut (< 0.0) values, exact in both float and half
+   * float, so the roundtrip must be bit-exact (the generic ARGB64 path clamps
+   * to [0, 1]). */
+  const gfloat pixel[4] = { 4.0f, 0.5f, -0.25f, 1.0f };
+  const struct
+  {
+    GstVideoFormat f32, f16;
+    gboolean le;
+  } cases[] = {
+    {GST_VIDEO_FORMAT_RGBA_F32LE, GST_VIDEO_FORMAT_RGBA_F16LE, TRUE},
+    {GST_VIDEO_FORMAT_RGBA_F32BE, GST_VIDEO_FORMAT_RGBA_F16BE, FALSE},
+  };
+  guint i, c;
+
+  for (i = 0; i < G_N_ELEMENTS (cases); i++) {
+    GstVideoInfo f32info, f16info;
+    GstVideoFrame frame, frame2;
+    GstBuffer *f32buf, *f16buf, *backbuf;
+    GstVideoConverter *convert;
+    guint8 *d;
+
+    fail_unless (gst_video_info_set_format (&f32info, cases[i].f32, 1, 1));
+    fail_unless (gst_video_info_set_format (&f16info, cases[i].f16, 1, 1));
+
+    /* one-pixel RGBA_F32 source */
+    f32buf = gst_buffer_new_and_alloc (f32info.size);
+    fail_unless (gst_video_frame_map (&frame, &f32info, f32buf, GST_MAP_WRITE));
+    d = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
+    for (c = 0; c < 4; c++) {
+      if (cases[i].le)
+        GST_WRITE_FLOAT_LE (d + c * 4, pixel[c]);
+      else
+        GST_WRITE_FLOAT_BE (d + c * 4, pixel[c]);
+    }
+    gst_video_frame_unmap (&frame);
+
+    /* RGBA_F32 -> RGBA_F16 */
+    f16buf = gst_buffer_new_and_alloc (f16info.size);
+    fail_unless (gst_video_frame_map (&frame, &f32info, f32buf, GST_MAP_READ));
+    fail_unless (gst_video_frame_map (&frame2, &f16info, f16buf,
+            GST_MAP_WRITE));
+    convert = gst_video_converter_new (&f32info, &f16info, NULL);
+    gst_video_converter_frame (convert, &frame, &frame2);
+    gst_video_converter_free (convert);
+    gst_video_frame_unmap (&frame2);
+    gst_video_frame_unmap (&frame);
+
+    /* RGBA_F16 -> RGBA_F32 */
+    backbuf = gst_buffer_new_and_alloc (f32info.size);
+    fail_unless (gst_video_frame_map (&frame, &f16info, f16buf, GST_MAP_READ));
+    fail_unless (gst_video_frame_map (&frame2, &f32info, backbuf,
+            GST_MAP_WRITE));
+    convert = gst_video_converter_new (&f16info, &f32info, NULL);
+    gst_video_converter_frame (convert, &frame, &frame2);
+    gst_video_converter_free (convert);
+    gst_video_frame_unmap (&frame2);
+    gst_video_frame_unmap (&frame);
+
+    /* the roundtrip preserves every component exactly */
+    fail_unless (gst_video_frame_map (&frame, &f32info, backbuf, GST_MAP_READ));
+    d = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
+    for (c = 0; c < 4; c++) {
+      gfloat v = cases[i].le ? GST_READ_FLOAT_LE (d + c * 4)
+          : GST_READ_FLOAT_BE (d + c * 4);
+      fail_unless_equals_float (v, pixel[c]);
+    }
+    gst_video_frame_unmap (&frame);
+
+    gst_buffer_unref (f32buf);
+    gst_buffer_unref (f16buf);
+    gst_buffer_unref (backbuf);
+  }
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_convert_frame)
 {
   GstVideoInfo vinfo;
@@ -5122,6 +5200,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_formats_all);
   tcase_add_test (tc_chain, test_video_formats_pack_unpack);
   tcase_add_test (tc_chain, test_video_formats_float);
+  tcase_add_test (tc_chain, test_video_convert_rgba_float_lossless);
   tcase_add_test (tc_chain, test_guess_framerate);
   tcase_add_test (tc_chain, test_dar_calc);
   tcase_add_test (tc_chain, test_parse_caps_rgb);

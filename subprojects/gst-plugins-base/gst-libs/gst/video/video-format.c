@@ -28,6 +28,7 @@
 
 #include "video-format.h"
 #include "video-orc.h"
+#include "gstvideoutilsprivate.h"
 
 #ifndef restrict
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
@@ -2813,91 +2814,6 @@ pack_ABGR64_BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
-static inline gfloat
-half_to_float (guint16 h)
-{
-  union
-  {
-    guint32 i;
-    gfloat f;
-  } u;
-  guint32 sign = ((guint32) h & 0x8000) << 16;
-  guint32 exponent = (h >> 10) & 0x1f;
-  guint32 mantissa = h & 0x3ff;
-
-  if (exponent == 0) {
-    if (mantissa == 0) {
-      u.i = sign;
-      return u.f;
-    }
-    /* subnormal half: renormalize */
-    exponent = 127 - 15 + 1;
-    while ((mantissa & 0x400) == 0) {
-      mantissa <<= 1;
-      exponent--;
-    }
-    mantissa &= 0x3ff;
-    u.i = sign | (exponent << 23) | (mantissa << 13);
-  } else if (exponent == 31) {
-    u.i = sign | 0x7f800000 | (mantissa << 13);
-  } else {
-    u.i = sign | ((exponent - 15 + 127) << 23) | (mantissa << 13);
-  }
-  return u.f;
-}
-
-static inline guint16
-float_to_half (gfloat f)
-{
-  union
-  {
-    gfloat f;
-    guint32 i;
-  } u;
-  guint32 sign, mantissa, shift, rest, halfway;
-  gint32 exponent;
-  guint16 h;
-
-  u.f = f;
-  sign = (u.i >> 16) & 0x8000;
-  exponent = (gint32) ((u.i >> 23) & 0xff) - 127 + 15;
-  mantissa = u.i & 0x7fffff;
-
-  /* infinity / NaN: NaN keeps the top payload bits, with the (mantissa == 0)
-   * term ensuring a NaN whose payload is truncated away stays a NaN */
-  if (((u.i >> 23) & 0xff) == 0xff) {
-    if (mantissa == 0)
-      return sign | 0x7c00;
-    mantissa >>= 13;
-    return sign | 0x7c00 | mantissa | (mantissa == 0);
-  }
-
-  /* overflow: round to infinity */
-  if (exponent >= 31)
-    return sign | 0x7c00;
-
-  /* subnormal half or underflow to zero, round to nearest even */
-  if (exponent <= 0) {
-    if (exponent < -10)
-      return sign;
-    mantissa |= 0x800000;
-    shift = 14 - exponent;
-    h = mantissa >> shift;
-    rest = mantissa & ((1u << shift) - 1);
-    halfway = 1u << (shift - 1);
-    if (rest > halfway || (rest == halfway && (h & 1)))
-      h++;
-    return sign | h;
-  }
-
-  /* round to nearest even, a carry into the exponent rounds up to infinity */
-  h = (exponent << 10) | (mantissa >> 13);
-  rest = mantissa & 0x1fff;
-  if (rest > 0x1000 || (rest == 0x1000 && (h & 1)))
-    h++;
-  return sign | h;
-}
-
 /* NaN and negative values map to 0 */
 static inline guint16
 float_to_u16 (gfloat v)
@@ -2923,13 +2839,13 @@ unpack_RGBA_F16LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 
   for (i = 0; i < width; i++) {
     d[i * 4 + 0] =
-        float_to_u16 (half_to_float (GST_READ_UINT16_LE (s + i * 8 + 6)));
+        float_to_u16 (gst_half_to_float (GST_READ_UINT16_LE (s + i * 8 + 6)));
     d[i * 4 + 1] =
-        float_to_u16 (half_to_float (GST_READ_UINT16_LE (s + i * 8 + 0)));
+        float_to_u16 (gst_half_to_float (GST_READ_UINT16_LE (s + i * 8 + 0)));
     d[i * 4 + 2] =
-        float_to_u16 (half_to_float (GST_READ_UINT16_LE (s + i * 8 + 2)));
+        float_to_u16 (gst_half_to_float (GST_READ_UINT16_LE (s + i * 8 + 2)));
     d[i * 4 + 3] =
-        float_to_u16 (half_to_float (GST_READ_UINT16_LE (s + i * 8 + 4)));
+        float_to_u16 (gst_half_to_float (GST_READ_UINT16_LE (s + i * 8 + 4)));
   }
 }
 
@@ -2945,13 +2861,13 @@ pack_RGBA_F16LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 
   for (i = 0; i < width; i++) {
     GST_WRITE_UINT16_LE (d + i * 8 + 0,
-        float_to_half (s[i * 4 + 1] * (1.0f / 65535.0f)));
+        gst_float_to_half (s[i * 4 + 1] * (1.0f / 65535.0f)));
     GST_WRITE_UINT16_LE (d + i * 8 + 2,
-        float_to_half (s[i * 4 + 2] * (1.0f / 65535.0f)));
+        gst_float_to_half (s[i * 4 + 2] * (1.0f / 65535.0f)));
     GST_WRITE_UINT16_LE (d + i * 8 + 4,
-        float_to_half (s[i * 4 + 3] * (1.0f / 65535.0f)));
+        gst_float_to_half (s[i * 4 + 3] * (1.0f / 65535.0f)));
     GST_WRITE_UINT16_LE (d + i * 8 + 6,
-        float_to_half (s[i * 4 + 0] * (1.0f / 65535.0f)));
+        gst_float_to_half (s[i * 4 + 0] * (1.0f / 65535.0f)));
   }
 }
 
@@ -2969,13 +2885,13 @@ unpack_RGBA_F16BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 
   for (i = 0; i < width; i++) {
     d[i * 4 + 0] =
-        float_to_u16 (half_to_float (GST_READ_UINT16_BE (s + i * 8 + 6)));
+        float_to_u16 (gst_half_to_float (GST_READ_UINT16_BE (s + i * 8 + 6)));
     d[i * 4 + 1] =
-        float_to_u16 (half_to_float (GST_READ_UINT16_BE (s + i * 8 + 0)));
+        float_to_u16 (gst_half_to_float (GST_READ_UINT16_BE (s + i * 8 + 0)));
     d[i * 4 + 2] =
-        float_to_u16 (half_to_float (GST_READ_UINT16_BE (s + i * 8 + 2)));
+        float_to_u16 (gst_half_to_float (GST_READ_UINT16_BE (s + i * 8 + 2)));
     d[i * 4 + 3] =
-        float_to_u16 (half_to_float (GST_READ_UINT16_BE (s + i * 8 + 4)));
+        float_to_u16 (gst_half_to_float (GST_READ_UINT16_BE (s + i * 8 + 4)));
   }
 }
 
@@ -2991,13 +2907,13 @@ pack_RGBA_F16BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 
   for (i = 0; i < width; i++) {
     GST_WRITE_UINT16_BE (d + i * 8 + 0,
-        float_to_half (s[i * 4 + 1] * (1.0f / 65535.0f)));
+        gst_float_to_half (s[i * 4 + 1] * (1.0f / 65535.0f)));
     GST_WRITE_UINT16_BE (d + i * 8 + 2,
-        float_to_half (s[i * 4 + 2] * (1.0f / 65535.0f)));
+        gst_float_to_half (s[i * 4 + 2] * (1.0f / 65535.0f)));
     GST_WRITE_UINT16_BE (d + i * 8 + 4,
-        float_to_half (s[i * 4 + 3] * (1.0f / 65535.0f)));
+        gst_float_to_half (s[i * 4 + 3] * (1.0f / 65535.0f)));
     GST_WRITE_UINT16_BE (d + i * 8 + 6,
-        float_to_half (s[i * 4 + 0] * (1.0f / 65535.0f)));
+        gst_float_to_half (s[i * 4 + 0] * (1.0f / 65535.0f)));
   }
 }
 
