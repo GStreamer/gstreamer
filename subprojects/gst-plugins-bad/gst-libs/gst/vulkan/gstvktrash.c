@@ -115,6 +115,23 @@ gst_vulkan_trash_init (GstVulkanTrash * trash, GstVulkanFence * fence,
   trash->user_data = user_data;
 }
 
+static void
+gst_vulkan_trash_reinit (GstVulkanTrash * trash, GstVulkanFence * fence,
+    GstVulkanTrashNotify notify, gpointer user_data)
+{
+  g_return_if_fail (fence != NULL);
+  g_return_if_fail (GST_IS_VULKAN_DEVICE (fence->device));
+  g_return_if_fail (notify != NULL);
+  g_assert (trash->fence == NULL);
+
+  GST_TRACE ("Reinitializing trash object %p with fence %" GST_PTR_FORMAT
+      " on device %" GST_PTR_FORMAT, trash, fence, fence->device);
+
+  trash->fence = gst_vulkan_fence_ref (fence);
+  trash->notify = notify;
+  trash->user_data = user_data;
+}
+
 /**
  * gst_vulkan_trash_new:
  * @fence: a #GstVulkanFence
@@ -328,7 +345,14 @@ gst_vulkan_trash_list_wait (GstVulkanTrashList * trash_list, guint64 timeout)
 static gpointer
 gst_vulkan_trash_list_alloc_impl (GstVulkanHandlePool * pool, GError ** error)
 {
-  return g_new0 (GstVulkanTrash, 1);
+  GstVulkanTrash *trash = g_new0 (GstVulkanTrash, 1);
+
+  gst_mini_object_init ((GstMiniObject *) trash, 0,
+      gst_vulkan_trash_get_type (), NULL,
+      (GstMiniObjectDisposeFunction) gst_vulkan_trash_dispose,
+      (GstMiniObjectFreeFunction) gst_vulkan_trash_free);
+
+  return trash;
 }
 
 static void
@@ -393,7 +417,7 @@ gst_vulkan_trash_list_acquire (GstVulkanTrashList * trash_list,
   pool_class = GST_VULKAN_HANDLE_POOL_GET_CLASS (trash_list);
 
   trash = pool_class->acquire (pool, NULL);
-  gst_vulkan_trash_init (trash, fence, notify, user_data);
+  gst_vulkan_trash_reinit (trash, fence, notify, user_data);
   trash->cache = gst_object_ref (trash_list);
 
   GST_TRACE_OBJECT (trash_list, "acquired trash object %p", trash);
