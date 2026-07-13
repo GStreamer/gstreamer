@@ -503,8 +503,9 @@ gst_draw_rle_line (GstDvdSubDec * dec, guchar * buffer, RLE_state * state)
 
   target = state->target;
 
-  x = dec->left;
-  right = dec->right + 1;
+  /* If left/right is still outside the frame, clip it off */
+  x = CLAMP (dec->left, 0, dec->in_width - 1);
+  right = MIN (dec->right + 1, dec->in_width);
 
   while (x < right) {
     gboolean in_hl;
@@ -638,9 +639,11 @@ gst_dvd_sub_dec_merge_title (GstDvdSubDec * dec, GstVideoFrame * frame)
     hl_top = -1;
     hl_bottom = -1;
   }
-  last_y = MIN (dec->bottom, dec->in_height);
 
-  y = dec->top;
+  /* If top/bottom is still outside the frame, clip it off */
+  last_y = MIN (dec->bottom, dec->in_height - 1);
+  y = CLAMP (dec->top, 0, dec->in_height - 1);
+
   state.target = Y_data + 4 * dec->left + (y * Y_stride);
 
   /* Now draw scanlines until we hit last_y or end of RLE data */
