@@ -17,6 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 #include "common.h"
+#include <gst/check/gstharness.h>
 
 typedef struct
 {
@@ -841,6 +842,39 @@ GST_START_TEST (test_nest_deep)
 
 GST_END_TEST;
 
+GST_START_TEST (test_gst_parse_launch)
+{
+  GstHarness *h;
+  GstElement *comp;
+  GstBuffer *buf;
+  gboolean ret = FALSE;
+
+  /* A whole composition, with a nested source, built from a parse description.
+   * This only works because nle objects set GST_BIN_FLAG_NO_AUTO_GHOSTPADS,
+   * so gst_parse_launch() wires the pipeline to the composition's own (dynamic)
+   * src pad rather than ghosting its internal children. */
+  h = gst_harness_new_parse ("nlecomposition. ( nlesource. ( start=0 "
+      "duration=1000000000 inpoint=0 priority=1 "
+      "caps=\"video/x-raw,format=(string)I420,framerate=(fraction)30/1\" "
+      "videotestsrc ) ) ! identity");
+  comp = gst_harness_find_element (h, "nlecomposition");
+  fail_unless (comp != NULL);
+
+  gst_harness_play (h);
+  commit_and_wait (comp, &ret);
+  fail_unless (ret == TRUE);
+
+  buf = gst_harness_pull (h);
+  fail_unless (buf != NULL,
+      "no buffer produced by a gst_parse_launch'd nlecomposition");
+  gst_buffer_unref (buf);
+
+  gst_object_unref (comp);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 
 
 static Suite *
@@ -860,6 +894,7 @@ gnonlin_suite (void)
 
   tcase_add_test (tc_chain, test_dispose_on_commit);
   tcase_add_test (tc_chain, test_ready_before_stack_initialization_seek);
+  tcase_add_test (tc_chain, test_gst_parse_launch);
 
   if (gst_registry_check_feature_version (gst_registry_get (), "audiomixer", 1,
           0, 0)) {

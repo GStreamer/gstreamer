@@ -1,0 +1,18 @@
+# Builds a composition with two sources directly from the launch line.
+meta,
+    handles-states=true,
+    ignore-eos=true,
+    args={
+        "nlecomposition.( name=compo nlesource.( name=s1 start=0 duration=100000000 videotestsrc pattern=blue ) nlesource.( name=s2 start=100000000 duration=100000000 videotestsrc pattern=red ) ) ! video/x-raw,format=RGBA ! $(videosink)",
+    }
+
+pause
+check-last-sample, expected-color=0xff0000ff
+
+seek, start=0.15, flags=accurate+flush
+check-last-sample, expected-color=0xffff0000
+
+play
+check-position, on-message=eos, expected-position=0.2
+
+stop

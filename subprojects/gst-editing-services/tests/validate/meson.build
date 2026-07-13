@@ -17,6 +17,8 @@ tests = [
     'nle/simple_source_playback',
     'nle/simple_source_in_composition_playback',
     'nle/ensure_no_unnecessary_stack_init_seeks',
+    'nle/composition_from_parse_description',
+    'nle/source_from_parse_description',
 ]
 
 env = environment()

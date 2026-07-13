@@ -350,6 +350,10 @@ nle_object_class_init (NleObjectClass * klass)
 static void
 nle_object_init (NleObject * object, NleObjectClass * klass)
 {
+  /* nle objects manage their own topology and expose their pads dynamically;
+   * let gst_parse_launch() wire the surrounding graph to our own pads. */
+  GST_OBJECT_FLAG_SET (object, GST_BIN_FLAG_NO_AUTO_GHOSTPADS);
+
   object->start = object->pending_start = 0;
   object->duration = object->pending_duration = 0;
   object->stop = 0;

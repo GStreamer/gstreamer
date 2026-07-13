@@ -1,0 +1,12 @@
+# Builds a nlesource directly from the launch line.
+meta,
+    handles-states=true,
+    ignore-eos=true,
+    args={
+        "nlesource.( name=s inpoint=0 duration=200000000 videotestsrc ) ! $(videosink)",
+    }
+
+play
+check-position, on-message=eos, expected-position=0.2
+
+stop
