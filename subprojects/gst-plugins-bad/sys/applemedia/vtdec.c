@@ -2317,7 +2317,7 @@ gst_vtdec_register_vtdec (GstPlugin * plugin)
 
   gst_vtdec_init_once ();
 
-#if !TARGET_OS_WATCH
+#if !TARGET_OS_WATCH && !TARGET_OS_SIMULATOR
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 140000
   if (__builtin_available (macOS 10.9, iOS 17.0, tvOS 17.0, *))
 #else
@@ -2329,7 +2329,7 @@ gst_vtdec_register_vtdec (GstPlugin * plugin)
   return gst_element_register (plugin, "vtdec", rank, GST_TYPE_VTDEC);
 }
 
-#if !TARGET_OS_WATCH
+#if !TARGET_OS_WATCH && !TARGET_OS_SIMULATOR
 static gboolean
 gst_vtdec_register_vtdec_hw (GstPlugin * plugin)
 {
@@ -2349,7 +2349,7 @@ gst_vtdec_register_vtdec_hw (GstPlugin * plugin)
 #endif
 
 GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtdec, gst_vtdec_register_vtdec);
-#if !TARGET_OS_WATCH
+#if !TARGET_OS_WATCH && !TARGET_OS_SIMULATOR
 GST_ELEMENT_REGISTER_DEFINE_CUSTOM (vtdec_hw, gst_vtdec_register_vtdec_hw);
 #endif
 
@@ -2358,7 +2358,7 @@ gst_vtdec_register_elements (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
 
-#if !TARGET_OS_WATCH
+#if !TARGET_OS_WATCH && !TARGET_OS_SIMULATOR
   ret |= GST_ELEMENT_REGISTER (vtdec_hw, plugin);
 #endif
   ret |= GST_ELEMENT_REGISTER (vtdec, plugin);
