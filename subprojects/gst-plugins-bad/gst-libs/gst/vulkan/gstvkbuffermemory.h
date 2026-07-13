@@ -74,6 +74,16 @@ struct _GstVulkanBarrierBufferInfo
   VkDeviceSize offset;
   VkDeviceSize size;
 };
+
+GST_VULKAN_API
+void            gst_vulkan_barrier_buffer_info_clear        (GstVulkanBarrierBufferInfo * info);
+GST_VULKAN_API
+gboolean        gst_vulkan_barrier_buffer_info_is_equal     (GstVulkanBarrierBufferInfo * info,
+                                                            GstVulkanBarrierBufferInfo * other);
+GST_VULKAN_API
+void            gst_vulkan_barrier_buffer_info_copy_into    (GstVulkanBarrierBufferInfo * info,
+                                                            GstVulkanBarrierBufferInfo * other);
+
 /**
  * GstVulkanBufferMemory:
  * @parent: parent #GstMemory
@@ -165,6 +175,18 @@ GstMemory *     gst_vulkan_buffer_memory_wrapped         (GstVulkanDevice * devi
                                                           gpointer user_data,
                                                           GDestroyNotify notify);
 
+GST_VULKAN_API
+void            gst_vulkan_buffer_memory_lock            (GstVulkanBufferMemory * buffer);
+GST_VULKAN_API
+void            gst_vulkan_buffer_memory_unlock          (GstVulkanBufferMemory * buffer);
+GST_VULKAN_API
+void            gst_vulkan_buffer_memory_peek_barrier_unlocked(GstVulkanBufferMemory * buffer,
+                                                         GstVulkanBarrierBufferInfo * info);
+
+GST_VULKAN_API
+gboolean        gst_vulkan_buffer_memory_compare_exchange_barrier_unlocked (GstVulkanBufferMemory * buffer,
+                                                                  GstVulkanBarrierBufferInfo * old_info,
+                                                                  GstVulkanBarrierBufferInfo * new_info);
 G_END_DECLS
 
 #endif /* __GST_VULKAN_BUFFER_MEMORY_H__ */

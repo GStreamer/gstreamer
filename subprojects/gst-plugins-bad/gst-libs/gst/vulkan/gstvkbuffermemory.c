@@ -272,7 +272,7 @@ _vk_buffer_mem_free (GstAllocator * allocator, GstMemory * memory)
   if (mem->buffer && !mem->wrapped)
     vkDestroyBuffer (mem->device->device, mem->buffer, NULL);
 
-  gst_clear_object (&mem->barrier.parent.queue);
+  gst_vulkan_barrier_buffer_info_clear (&mem->barrier);
 
   if (mem->vk_mem)
     gst_memory_unref ((GstMemory *) mem->vk_mem);
@@ -366,6 +366,160 @@ gst_vulkan_buffer_memory_wrapped (GstVulkanDevice * device, VkBuffer buffer,
       buffer, usage, user_data, notify);
 
   return (GstMemory *) mem;
+}
+
+/**
+ * gst_vulkan_buffer_memory_lock:
+ * @buffer: a #GstVulkanBufferMemory
+ *
+ * Exclusively lock the buffer memory.
+ *
+ * Note: if you need to lock multiple memories at the same time, you should
+ * use #GstVulkanBarrierState to ensure a determinstic locking order and avoid
+ * deadlocks.
+ *
+ * Since: 1.30
+ */
+void
+gst_vulkan_buffer_memory_lock (GstVulkanBufferMemory * buffer)
+{
+  g_return_if_fail (gst_is_vulkan_buffer_memory (GST_MEMORY_CAST (buffer)));
+
+  GST_CAT_TRACE (GST_CAT_VULKAN_BUFFER_MEMORY, "locking buffer memory %p",
+      buffer);
+  g_mutex_lock (&buffer->lock);
+}
+
+/**
+ * gst_vulkan_buffer_memory_unlock:
+ * @buffer: a #GstVulkanBufferMemory
+ *
+ * Exclusively unlock the buffer memory.
+ *
+ * Since: 1.30
+ */
+void
+gst_vulkan_buffer_memory_unlock (GstVulkanBufferMemory * buffer)
+{
+  g_return_if_fail (gst_is_vulkan_buffer_memory (GST_MEMORY_CAST (buffer)));
+
+  g_mutex_unlock (&buffer->lock);
+  GST_CAT_TRACE (GST_CAT_VULKAN_BUFFER_MEMORY, "unlocked buffer memory %p",
+      buffer);
+}
+
+/**
+ * gst_vulkan_buffer_memory_peek_barrier_unlocked:
+ * @buffer: a #GstVulkanBufferMemory
+ * @info: (out caller-allocates): destination for the #GstVulkanBarrierBufferInfo
+ *
+ * Retrieve the current #GstVulkanBarrierBufferInfo for this memory.
+ *
+ * Must be called with gst_vulkan_buffer_memory_lock() called.
+ *
+ * Since: 1.30
+ */
+void
+gst_vulkan_buffer_memory_peek_barrier_unlocked (GstVulkanBufferMemory * buffer,
+    GstVulkanBarrierBufferInfo * info)
+{
+  g_return_if_fail (info != NULL);
+  g_return_if_fail (gst_is_vulkan_buffer_memory (GST_MEMORY_CAST (buffer)));
+
+  gst_vulkan_barrier_buffer_info_copy_into (&buffer->barrier, info);
+}
+
+/**
+ * gst_vulkan_buffer_memory_compare_exchange_barrier_unlocked:
+ * @buffer: a #GstVulkanBufferMemory
+ * @old_info: the previous #GstVulkanBarrierBufferInfo
+ * @new_info: the new #GstVulkanBarrierBufferInfo
+ *
+ * Attempts to atomically update the barrier stored in @buffer to @new_info. Only
+ * succeeds if the current barrier is the same as @old_info.
+ *
+ * On failure, the operation should be retried with updated information.
+ *
+ * Must be called with gst_vulkan_buffer_memory_lock() called.
+ *
+ * Since: 1.30
+ */
+gboolean
+    gst_vulkan_buffer_memory_compare_exchange_barrier_unlocked
+    (GstVulkanBufferMemory * buffer, GstVulkanBarrierBufferInfo * old_info,
+    GstVulkanBarrierBufferInfo * new_info) {
+  g_return_val_if_fail (old_info != NULL, FALSE);
+  g_return_val_if_fail (new_info != NULL, FALSE);
+  g_return_val_if_fail (gst_is_vulkan_buffer_memory (GST_MEMORY_CAST (buffer)),
+      FALSE);
+
+  if (!gst_vulkan_barrier_buffer_info_is_equal (&buffer->barrier, old_info))
+    goto fail;
+
+  gst_vulkan_barrier_buffer_info_copy_into (new_info, &buffer->barrier);
+
+  return TRUE;
+
+fail:
+  return FALSE;
+}
+
+/**
+ * gst_vulkan_barrier_buffer_info_clear:
+ * @info: a #GstVulkanBarrierBufferInfo
+ *
+ * Clear any referenced objects from this @info.
+ *
+ * Since: 1.30
+ */
+void
+gst_vulkan_barrier_buffer_info_clear (GstVulkanBarrierBufferInfo * info)
+{
+  gst_vulkan_barrier_memory_info_clear (&info->parent);
+  info->offset = 0;
+  info->size = 0;
+}
+
+/**
+ * gst_vulkan_barrier_buffer_info_is_equal:
+ * @info: a #GstVulkanBarrierBufferInfo
+ * @other: the other #GstVulkanBarrierBufferInfo to compare against
+ *
+ * Returns: whether @info and @other_info are the same.
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_vulkan_barrier_buffer_info_is_equal (GstVulkanBarrierBufferInfo * info,
+    GstVulkanBarrierBufferInfo * other)
+{
+  if (!gst_vulkan_barrier_memory_info_is_equal (&info->parent, &other->parent))
+    return FALSE;
+  if (info->offset != other->offset)
+    return FALSE;
+  if (info->size != other->size)
+    return FALSE;
+  return TRUE;
+}
+
+/**
+ * gst_vulkan_barrier_buffer_info_copy_into:
+ * @info: a #GstVulkanBarrierBufferInfo
+ * @other: the other #GstVulkanBarrierBufferInfo to copy into
+ *
+ * Since: 1.30
+ */
+void
+gst_vulkan_barrier_buffer_info_copy_into (GstVulkanBarrierBufferInfo * info,
+    GstVulkanBarrierBufferInfo * other)
+{
+  g_return_if_fail (info);
+  g_return_if_fail (other);
+
+  gst_vulkan_barrier_buffer_info_clear (other);
+  gst_vulkan_barrier_memory_info_copy_into (&info->parent, &other->parent);
+  other->offset = info->offset;
+  other->size = info->size;
 }
 
 G_DEFINE_TYPE (GstVulkanBufferMemoryAllocator,
