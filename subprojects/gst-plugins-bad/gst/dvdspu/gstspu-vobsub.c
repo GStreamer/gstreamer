@@ -146,7 +146,7 @@ gst_dvd_spu_exec_cmd_blk (GstDVDSpu * dvdspu, guint8 * data, guint8 * end)
         data += 1;
         break;
       case SPU_CMD_SET_COLOR:{
-        if (G_UNLIKELY (data + 3 >= end))
+        if (G_UNLIKELY (data + 3 > end))
           return;               /* Invalid SET_COLOR cmd at the end of the blk */
 
         state->vobsub.main_idx[3] = data[1] >> 4;
@@ -164,7 +164,7 @@ gst_dvd_spu_exec_cmd_blk (GstDVDSpu * dvdspu, guint8 * data, guint8 * end)
         break;
       }
       case SPU_CMD_SET_ALPHA:{
-        if (G_UNLIKELY (data + 3 >= end))
+        if (G_UNLIKELY (data + 3 > end))
           return;               /* Invalid SET_ALPHA cmd at the end of the blk */
 
         state->vobsub.main_alpha[3] = data[1] >> 4;
@@ -184,7 +184,7 @@ gst_dvd_spu_exec_cmd_blk (GstDVDSpu * dvdspu, guint8 * data, guint8 * end)
       case SPU_CMD_SET_DAREA:{
         SpuRect *r = &state->vobsub.disp_rect;
 
-        if (G_UNLIKELY (data + 7 >= end))
+        if (G_UNLIKELY (data + 7 > end))
           return;               /* Invalid SET_DAREA cmd at the end of the blk */
 
         r->top = ((data[4] & 0xff) << 4) | ((data[5] & 0xf0) >> 4);
@@ -200,7 +200,7 @@ gst_dvd_spu_exec_cmd_blk (GstDVDSpu * dvdspu, guint8 * data, guint8 * end)
         break;
       }
       case SPU_CMD_DSPXA:{
-        if (G_UNLIKELY (data + 5 >= end))
+        if (G_UNLIKELY (data + 5 > end))
           return;               /* Invalid SET_DSPXE cmd at the end of the blk */
 
         state->vobsub.pix_data[0] = GST_READ_UINT16_BE (data + 1);
@@ -219,13 +219,13 @@ gst_dvd_spu_exec_cmd_blk (GstDVDSpu * dvdspu, guint8 * data, guint8 * end)
         guint16 field_size;
 
         GST_DEBUG_OBJECT (dvdspu, " Set Color & Contrast Change");
-        if (G_UNLIKELY (data + 3 >= end))
+        if (G_UNLIKELY (data + 3 > end))
           return;               /* Invalid CHG_COLCON cmd at the end of the blk */
 
         data++;
         field_size = GST_READ_UINT16_BE (data);
 
-        if (G_UNLIKELY (data + field_size >= end))
+        if (G_UNLIKELY (data + field_size > end))
           return;               /* Invalid CHG_COLCON cmd at the end of the blk */
 
         gst_dvd_spu_parse_chg_colcon (dvdspu, data + 2, data + field_size);
@@ -261,7 +261,7 @@ gst_dvd_spu_setup_cmd_blk (GstDVDSpu * dvdspu, guint16 cmd_blk_offset,
   guint16 delay;
   guint8 *cmd_blk = start + cmd_blk_offset;
 
-  if (G_UNLIKELY (cmd_blk + 5 >= end)) {
+  if (G_UNLIKELY (cmd_blk + 4 > end)) {
     GST_DEBUG_OBJECT (dvdspu, "No valid command block");
     return FALSE;               /* No valid command block to read */
   }
@@ -290,6 +290,9 @@ gst_dvd_spu_dump_dcsq (GstDVDSpu * dvdspu,
   g_return_if_fail (start != NULL);
 
   /* First command */
+  if (start + 4 > end)
+    return;
+
   next_blk = GST_READ_UINT16_BE (start + 2);
   cmd_blk_offset = 0;
 
@@ -303,7 +306,7 @@ gst_dvd_spu_dump_dcsq (GstDVDSpu * dvdspu,
 
     cmd_blk_offset = next_blk;
 
-    if (G_UNLIKELY (start + cmd_blk_offset + 5 >= end))
+    if (G_UNLIKELY (start + cmd_blk_offset + 4 > end))
       break;                    /* No valid command to read */
 
     data = start + cmd_blk_offset;
@@ -385,7 +388,7 @@ gstspu_vobsub_execute_event (GstDVDSpu * dvdspu)
 
   cmd_blk = start + state->vobsub.cur_cmd_blk;
 
-  if (G_UNLIKELY (cmd_blk + 5 >= end)) {
+  if (G_UNLIKELY (cmd_blk + 4 > end)) {
     gst_buffer_unmap (state->vobsub.buf, &map);
     /* Invalid. Finish the buffer and loop again */
     gst_dvd_spu_finish_spu_buf (dvdspu);
