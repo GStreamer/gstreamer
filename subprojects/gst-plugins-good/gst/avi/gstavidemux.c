@@ -1572,6 +1572,10 @@ gst_avi_demux_parse_subindex (GstAviDemux * avi, GstAviStream * stream,
   if (num == 0)
     goto empty_index;
 
+  /* this can't work out well ... */
+  if (num > G_MAXUINT32 >> 1)
+    goto invalid_params;
+
   GST_INFO_OBJECT (avi, "Parsing subindex, nr_entries = %6d", num);
 
   for (i = 0; i < num; i++) {
@@ -1622,6 +1626,11 @@ not_implemented:
     gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
     return FALSE;
+  }
+invalid_params:
+  {
+    GST_ERROR_OBJECT (avi, "invalid subindex parameters (num = %d)", num);
+    goto done;                  /* continue */
   }
 empty_index:
   {
