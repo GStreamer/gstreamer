@@ -216,9 +216,8 @@ upload_buffer_to_image (GstBufferPool * pool, GstBuffer * inbuf,
   GError *error = NULL;
   GstVulkanCommandBuffer *cmd_buf;
   guint i, n_mems, n_planes;
-  GArray *barriers = NULL;
+  GstVulkanBarrierState *barriers = NULL;
   VkImageLayout dst_layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-  VkDependencyInfoKHR dependency_info;
 
   if ((ret = gst_buffer_pool_acquire_buffer (pool, outbuf, NULL))
       != GST_FLOW_OK)
@@ -250,21 +249,9 @@ upload_buffer_to_image (GstBufferPool * pool, GstBuffer * inbuf,
           NULL))
     goto unlock_error;
 
-  barriers = gst_vulkan_operation_retrieve_image_barriers (exec);
-  if (barriers->len == 0) {
-    ret = GST_FLOW_ERROR;
-    goto unlock_error;
-  }
-
-  dependency_info = (VkDependencyInfoKHR) {
-  .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO_KHR,.imageMemoryBarrierCount =
-        barriers->len,.pImageMemoryBarriers =
-        (VkImageMemoryBarrier2 *) barriers->data,};
-
-  gst_vulkan_operation_pipeline_barrier2 (exec, &dependency_info);
-  dst_layout = g_array_index (barriers, VkImageMemoryBarrier2KHR, 0).newLayout;
-
-  g_clear_pointer (&barriers, g_array_unref);
+  barriers = gst_vulkan_operation_get_barriers (exec);
+  gst_vulkan_barrier_state_pipeline_barrier (barriers, cmd_buf,
+      VK_DEPENDENCY_BY_REGION_BIT);
 
   n_mems = gst_buffer_n_memory (*outbuf);
   n_planes = GST_VIDEO_INFO_N_PLANES (&out_info);

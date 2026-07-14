@@ -163,9 +163,10 @@ download_and_check_output_buffer (GstVulkanDecoder * dec, VkFormat vk_format,
   GstCaps *caps = gst_caps_new_simple ("video/x-raw", "format",
       G_TYPE_STRING, gst_video_format_to_string (format), "width", G_TYPE_INT,
       width, "height", G_TYPE_INT, height, NULL);
+  VkImageLayout current_layout;
   GstBuffer *rawbuf;
   GError *error = NULL;
-  GArray *barriers;
+  GstVulkanBarrierState *barriers;
   GstVideoInfo info;
   GstMapInfo mapinfo;
   guint i, n_mems, n_planes;
@@ -192,15 +193,10 @@ download_and_check_output_buffer (GstVulkanDecoder * dec, VkFormat vk_format,
   gst_vulkan_operation_add_frame_barrier (exec, pic->out,
       VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
       VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, NULL);
+  current_layout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 
-  barriers = gst_vulkan_operation_retrieve_image_barriers (exec);
-  /* *INDENT-OFF* */
-  vkCmdPipelineBarrier2 (exec->cmd_buf->cmd, &(VkDependencyInfo) {
-      .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-      .pImageMemoryBarriers = (gpointer) barriers->data,
-      .imageMemoryBarrierCount = barriers->len,
-    });
-  /* *INDENT-ON* */
+  barriers = gst_vulkan_operation_get_barriers (exec);
+  gst_vulkan_barrier_state_pipeline_barrier (barriers, exec->cmd_buf, 0);
 
   n_planes = GST_VIDEO_INFO_N_PLANES (&info);
   n_mems = gst_buffer_n_memory (pic->out);
@@ -249,11 +245,8 @@ download_and_check_output_buffer (GstVulkanDecoder * dec, VkFormat vk_format,
     /* *INDENT-ON* */
 
     vkCmdCopyImageToBuffer (exec->cmd_buf->cmd, img_mem->image,
-        g_array_index (barriers, VkImageMemoryBarrier2, 0).newLayout,
-        buf_mem->buffer, 1, &region);
+        current_layout, buf_mem->buffer, 1, &region);
   }
-
-  g_array_unref (barriers);
 
   fail_unless (gst_vulkan_operation_end (exec, &error));
 

@@ -405,7 +405,7 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   GError *error = NULL;
   GstVulkanCommandBuffer *cmd_buf;
   guint i, n_mems, n_planes;
-  GArray *barriers = NULL;
+  GstVulkanBarrierState *barriers = NULL;
   VkImageLayout dst_layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
   GstBufferPool *pool;
 
@@ -444,34 +444,9 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
           NULL))
     goto unlock_error;
 
-  barriers = gst_vulkan_operation_retrieve_image_barriers (raw->exec);
-  if (barriers->len == 0) {
-    ret = GST_FLOW_ERROR;
-    goto unlock_error;
-  }
-
-  if (gst_vulkan_operation_use_sync2 (raw->exec)) {
-#if defined(VK_KHR_synchronization2)
-    VkDependencyInfoKHR dependency_info = {
-      .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO_KHR,
-      .pImageMemoryBarriers = (gpointer) barriers->data,
-      .imageMemoryBarrierCount = barriers->len,
-    };
-
-    gst_vulkan_operation_pipeline_barrier2 (raw->exec, &dependency_info);
-    dst_layout =
-        g_array_index (barriers, VkImageMemoryBarrier2KHR, 0).newLayout;
-#endif
-  } else {
-    gst_vulkan_command_buffer_lock (cmd_buf);
-    vkCmdPipelineBarrier (cmd_buf->cmd, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-        VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL,
-        barriers->len, (gpointer) barriers->data);
-    gst_vulkan_command_buffer_unlock (cmd_buf);
-
-    dst_layout = g_array_index (barriers, VkImageMemoryBarrier, 0).newLayout;
-  }
-  g_clear_pointer (&barriers, g_array_unref);
+  barriers = gst_vulkan_operation_get_barriers (raw->exec);
+  gst_vulkan_barrier_state_pipeline_barrier (barriers, cmd_buf, 0);
+  dst_layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 
   n_mems = gst_buffer_n_memory (*outbuf);
   n_planes = GST_VIDEO_INFO_N_PLANES (&raw->out_info);
@@ -703,7 +678,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   GstBuffer *in_vk_copy = NULL;
   GstVulkanCommandBuffer *cmd_buf;
   GError *error = NULL;
-  GArray *barriers = NULL;
+  GstVulkanBarrierState *barriers = NULL;
   guint i, n_planes, n_out_mems;
   VkImageLayout dst_layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
   GstBufferPool *pool;
@@ -741,34 +716,9 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
           NULL))
     goto unlock_error;
 
-  barriers = gst_vulkan_operation_retrieve_image_barriers (raw->exec);
-  if (barriers->len == 0) {
-    ret = GST_FLOW_ERROR;
-    goto unlock_error;
-  }
-
-  if (gst_vulkan_operation_use_sync2 (raw->exec)) {
-#if defined(VK_KHR_synchronization2)
-    VkDependencyInfoKHR dependency_info = {
-      .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO_KHR,
-      .pImageMemoryBarriers = (gpointer) barriers->data,
-      .imageMemoryBarrierCount = barriers->len,
-    };
-
-    gst_vulkan_operation_pipeline_barrier2 (raw->exec, &dependency_info);
-    dst_layout =
-        g_array_index (barriers, VkImageMemoryBarrier2KHR, 0).newLayout;
-#endif
-  } else {
-    gst_vulkan_command_buffer_lock (cmd_buf);
-    vkCmdPipelineBarrier (cmd_buf->cmd, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-        VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL,
-        barriers->len, (gpointer) barriers->data);
-    gst_vulkan_command_buffer_unlock (cmd_buf);
-
-    dst_layout = g_array_index (barriers, VkImageMemoryBarrier, 0).newLayout;
-  }
-  g_clear_pointer (&barriers, g_array_unref);
+  barriers = gst_vulkan_operation_get_barriers (raw->exec);
+  gst_vulkan_barrier_state_pipeline_barrier (barriers, cmd_buf, 0);
+  dst_layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 
   n_out_mems = gst_buffer_n_memory (*outbuf);
   n_planes = GST_VIDEO_INFO_N_PLANES (&raw->in_info);

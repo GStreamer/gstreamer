@@ -602,7 +602,6 @@ gst_vulkan_decoder_decode (GstVulkanDecoder * self,
   VkVideoEndCodingInfoKHR decode_end = {
     .sType = VK_STRUCTURE_TYPE_VIDEO_END_CODING_INFO_KHR,
   };
-  GArray *barriers;
   VkImageLayout new_layout;
   GstVulkanCommandBuffer *cmd_buf;
   gboolean ret;
@@ -654,6 +653,8 @@ gst_vulkan_decoder_decode (GstVulkanDecoder * self,
     return FALSE;
 
   cmd_buf = priv->exec->cmd_buf;
+  GstVulkanBarrierState *barriers =
+      gst_vulkan_operation_get_barriers (priv->exec);
 
   if (!gst_vulkan_operation_add_dependency_frame (priv->exec, pic->out,
           VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR,
@@ -693,8 +694,6 @@ gst_vulkan_decoder_decode (GstVulkanDecoder * self,
 
       if (!ref_pic->dpb) {
         guint i, n = gst_buffer_n_memory (ref_buf);
-        GArray *barriers =
-            gst_vulkan_operation_new_extra_image_barriers (priv->exec);
 
         for (i = 0; i < n; i++) {
           GstVulkanImageMemory *vkmem =
@@ -714,12 +713,11 @@ gst_vulkan_decoder_decode (GstVulkanDecoder * self,
             .image = vkmem->image,
             .subresourceRange = vkmem->barrier.subresource_range,
           };
-
-          g_array_append_val (barriers, barrier);
+          gst_vulkan_barrier_state_add_raw_barrier (barriers, &barrier,
+              VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR,
+              VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR);
         }
 
-        gst_vulkan_operation_add_extra_image_barriers (priv->exec, barriers);
-        g_array_unref (barriers);
         gst_vulkan_operation_update_frame (priv->exec, ref_buf,
             VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR,
             VK_ACCESS_2_VIDEO_DECODE_WRITE_BIT_KHR
@@ -738,16 +736,8 @@ gst_vulkan_decoder_decode (GstVulkanDecoder * self,
   }
 
   /* change image layout */
-  barriers = gst_vulkan_operation_retrieve_image_barriers (priv->exec);
-  /* *INDENT-OFF* */
-  vkCmdPipelineBarrier2 (cmd_buf->cmd, &(VkDependencyInfo) {
-      .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-      .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
-      .pImageMemoryBarriers = (VkImageMemoryBarrier2 *) barriers->data,
-      .imageMemoryBarrierCount = barriers->len,
-    });
-  /* *INDENT-ON* */
-  g_array_unref (barriers);
+  gst_vulkan_barrier_state_pipeline_barrier (barriers, cmd_buf,
+      VK_DEPENDENCY_BY_REGION_BIT);
 
   priv->vk.CmdBeginVideoCoding (cmd_buf->cmd, &decode_start);
   gst_vulkan_operation_begin_query (priv->exec,

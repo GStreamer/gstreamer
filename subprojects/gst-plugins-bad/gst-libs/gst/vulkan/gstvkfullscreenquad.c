@@ -672,196 +672,135 @@ create_framebuffer (GstVulkanFullScreenQuad * self, GstVulkanImageView ** views,
   return TRUE;
 }
 
-#define LAST_FENCE_OR_ALWAYS_SIGNALLED(self,device) \
-    self->last_fence ? gst_vulkan_fence_ref (self->last_fence) : gst_vulkan_fence_new_always_signalled (device)
-
+/**
+ * gst_vulkan_full_screen_quad_get_last_fence:
+ * @self: a #GstVulkanFullScreenQuad
+ *
+ * Returns: (transfer full): the last successfully submitted fence or an always signaled fence.
+ *
+ * Since: 1.30
+ */
 GstVulkanFence *
 gst_vulkan_full_screen_quad_get_last_fence (GstVulkanFullScreenQuad * self)
 {
-  GstVulkanFence *ret;
-
-  g_return_val_if_fail (GST_IS_VULKAN_FULL_SCREEN_QUAD (self), NULL);
-
-  GST_OBJECT_LOCK (self);
-  ret = LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
-  GST_OBJECT_UNLOCK (self);
-
-  return ret;
+  return gst_vulkan_operation_get_last_fence (self->exec);
 }
 
-#define clear_field(field,type,trash_free_func) \
+/**
+ * gst_vulkan_full_screen_quad_get_operation:
+ * @self: a #GstVulkanFullScreenQuad
+ *
+ * Returns: (transfer none): the #GstVulkanOperation used for this #GstVulkanFullScreenQuad.
+ *
+ * Since: 1.30
+ */
+GstVulkanOperation *
+gst_vulkan_full_screen_quad_get_operation (GstVulkanFullScreenQuad * self)
+{
+  return self->exec;
+}
+
+#define _clear_field_func_start(field) \
 static void \
 G_PASTE(clear_,field) (GstVulkanFullScreenQuad * self) \
-{ \
+{
+
+#define _clear_field_body_start() \
+  GstVulkanTrashList *trash_list = \
+      gst_vulkan_operation_get_trash_list (self->exec); \
   GstVulkanFence *last_fence = \
-      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device); \
- \
-  if (self->field) \
-    gst_vulkan_trash_list_add (self->trash_list, \
-        gst_vulkan_trash_list_acquire (self->trash_list, last_fence, \
-            trash_free_func, (type) self->field)); \
-  self->field = NULL; \
- \
-  gst_vulkan_fence_unref (last_fence); \
+      gst_vulkan_operation_get_last_fence (self->exec);
+
+#define _clear_field_body(val,type,trash_free_func) \
+  if (val) \
+    gst_vulkan_trash_list_add (trash_list, \
+        gst_vulkan_trash_list_acquire (trash_list, last_fence, \
+            trash_free_func, (type) (val))); \
+  val = NULL;
+
+#define _clear_field_body_end() \
+  gst_vulkan_fence_unref (last_fence);
+
+#define _clear_field_func_end() \
 }
 
-#define clear_field_mini_object(field) clear_field (field,GstMiniObject *,gst_vulkan_trash_mini_object_unref);
-#define clear_field_object(field) clear_field (field,GstObject *,gst_vulkan_trash_object_unref);
+#define clear_field(loc,field,type,trash_free_func) \
+  _clear_field_func_start(field) \
+  _clear_field_body_start() \
+  _clear_field_body(loc->field,type,trash_free_func) \
+  _clear_field_body_end() \
+  _clear_field_func_end()
 
-clear_field_mini_object (descriptor_set);
-clear_field_mini_object (framebuffer);
-clear_field_mini_object (sampler);
+#define clear_field_mini_object(field) clear_field (self,field,GstMiniObject *,gst_vulkan_trash_mini_object_unref);
+#define clear_field_object(field) clear_field (self,field,GstObject *,gst_vulkan_trash_object_unref);
+
+clear_field_mini_object (render_pass);
 clear_field_mini_object (pipeline_layout);
 clear_field_mini_object (graphics_pipeline);
 clear_field_mini_object (descriptor_set_layout);
-clear_field_object (cmd_pool);
 clear_field_object (descriptor_cache);
+clear_field_mini_object (descriptor_set);
+clear_field_mini_object (framebuffer);
+clear_field_mini_object (sampler);
+
+#define clear_private_field(field,type,trash_free_func,extra_code) \
+  _clear_field_func_start(field) \
+  _clear_field_body_start() \
+  GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self); \
+  _clear_field_body(priv->field,type,trash_free_func) \
+  extra_code; \
+  _clear_field_body_end() \
+  _clear_field_func_end()
+
+#define clear_private_field_mini_object(field) clear_private_field (field,GstMiniObject *,gst_vulkan_trash_mini_object_unref,);
+
+clear_private_field_mini_object (immutable_sampler);
+
+clear_private_field (uniforms, GstMiniObject *,
+    gst_vulkan_trash_mini_object_unref, priv->uniform_size = 0);
+clear_private_field (indices, GstMiniObject *,
+    gst_vulkan_trash_mini_object_unref, priv->n_indices = 0);
+clear_private_field_mini_object (vertices);
 
 static void
-clear_immutable_sampler (GstVulkanFullScreenQuad * self)
+clear_shaders (GstVulkanFullScreenQuad * self)
 {
+  _clear_field_body_start ();
   GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self);
-  GstVulkanFence *last_fence =
-      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
-
-  if (priv->immutable_sampler)
-    gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
-            gst_vulkan_trash_mini_object_unref,
-            (GstMiniObject *) priv->immutable_sampler));
-  priv->immutable_sampler = NULL;
-
-  gst_vulkan_fence_unref (last_fence);
+  _clear_field_body (priv->vert, GstMiniObject *,
+      gst_vulkan_trash_mini_object_unref);
+  _clear_field_body (priv->frag, GstMiniObject *,
+      gst_vulkan_trash_mini_object_unref);
+  _clear_field_body_end ();
 }
 
 static void
 clear_buffer (GstVulkanFullScreenQuad * self, GstBuffer ** buffer)
 {
-  GstVulkanFence *last_fence =
-      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
-
-  if (*buffer)
-    gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
-            gst_vulkan_trash_mini_object_unref, (GstMiniObject *) * buffer));
-  *buffer = NULL;
-
-  gst_vulkan_fence_unref (last_fence);
-}
-
-static void
-clear_shaders (GstVulkanFullScreenQuad * self)
-{
-  GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self);
-  GstVulkanFence *last_fence =
-      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
-
-  if (priv->vert)
-    gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
-            gst_vulkan_trash_mini_object_unref, (GstMiniObject *) priv->vert));
-  priv->vert = NULL;
-
-  if (priv->frag)
-    gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
-            gst_vulkan_trash_mini_object_unref, (GstMiniObject *) priv->frag));
-  priv->frag = NULL;
-
-  gst_vulkan_fence_unref (last_fence);
-}
-
-static void
-clear_uniform_data (GstVulkanFullScreenQuad * self)
-{
-  GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self);
-  GstVulkanFence *last_fence =
-      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
-
-  if (priv->uniforms)
-    gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
-            gst_vulkan_trash_mini_object_unref,
-            (GstMiniObject *) priv->uniforms));
-  priv->uniforms = NULL;
-  priv->uniform_size = 0;
-
-  gst_vulkan_fence_unref (last_fence);
-}
-
-static void
-clear_index_data (GstVulkanFullScreenQuad * self)
-{
-  GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self);
-  GstVulkanFence *last_fence =
-      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
-
-  if (priv->indices)
-    gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
-            gst_vulkan_trash_mini_object_unref,
-            (GstMiniObject *) priv->indices));
-  priv->indices = NULL;
-  priv->n_indices = 0;
-
-  gst_vulkan_fence_unref (last_fence);
-}
-
-static void
-clear_vertex_data (GstVulkanFullScreenQuad * self)
-{
-  GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self);
-  GstVulkanFence *last_fence =
-      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
-
-  if (priv->vertices)
-    gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
-            gst_vulkan_trash_mini_object_unref,
-            (GstMiniObject *) priv->vertices));
-  priv->vertices = NULL;
-
-  gst_vulkan_fence_unref (last_fence);
-}
-
-static void
-clear_render_pass (GstVulkanFullScreenQuad * self)
-{
-  GstVulkanFence *last_fence =
-      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
-
-  if (self->render_pass)
-    gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
-            gst_vulkan_trash_mini_object_unref,
-            (GstMiniObject *) self->render_pass));
-  self->render_pass = NULL;
-
-  gst_vulkan_fence_unref (last_fence);
+  _clear_field_body_start ();
+  _clear_field_body (*buffer, GstMiniObject *,
+      gst_vulkan_trash_mini_object_unref);
+  _clear_field_body_end ();
 }
 
 static void
 destroy_pipeline (GstVulkanFullScreenQuad * self)
 {
-  GstVulkanFence *last_fence =
-      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
+  GstVulkanTrashList *trash_list =
+      gst_vulkan_operation_get_trash_list (self->exec);
 
   clear_render_pass (self);
   clear_pipeline_layout (self);
   clear_graphics_pipeline (self);
   clear_descriptor_set_layout (self);
 
-  gst_vulkan_fence_unref (last_fence);
-
-  gst_vulkan_trash_list_gc (self->trash_list);
+  gst_vulkan_trash_list_gc (trash_list);
 }
 
 void
 gst_vulkan_full_screen_quad_init (GstVulkanFullScreenQuad * self)
 {
   GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self);
-
-  self->trash_list = gst_vulkan_trash_fence_list_new ();
 
   priv->src_blend_factor = VK_BLEND_FACTOR_ONE;
   priv->src_alpha_blend_factor = VK_BLEND_FACTOR_ONE;
@@ -884,16 +823,20 @@ GstVulkanFullScreenQuad *
 gst_vulkan_full_screen_quad_new (GstVulkanQueue * queue)
 {
   GstVulkanFullScreenQuad *self;
+  GstVulkanCommandPool *cmd_pool;
   GError *error = NULL;
 
   g_return_val_if_fail (GST_IS_VULKAN_QUEUE (queue), NULL);
 
   self = g_object_new (GST_TYPE_VULKAN_FULL_SCREEN_QUAD, NULL);
   self->queue = gst_object_ref (queue);
-  self->cmd_pool = gst_vulkan_queue_create_command_pool (queue, &error);
-  if (!self->cmd_pool)
+  cmd_pool = gst_vulkan_queue_create_command_pool (queue, &error);
+  if (!cmd_pool)
     GST_WARNING_OBJECT (self, "Failed to create command pool: %s",
         error->message);
+  self->exec = gst_vulkan_operation_new (cmd_pool);
+
+  gst_object_unref (cmd_pool);
 
   gst_object_ref_sink (self);
 
@@ -907,22 +850,17 @@ gst_vulkan_full_screen_quad_finalize (GObject * object)
   GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self);
 
   destroy_pipeline (self);
-  clear_cmd_pool (self);
   clear_sampler (self);
   clear_immutable_sampler (self);
   clear_framebuffer (self);
   clear_descriptor_set (self);
   clear_descriptor_cache (self);
   clear_shaders (self);
-  clear_uniform_data (self);
-  clear_index_data (self);
-  clear_vertex_data (self);
+  clear_uniforms (self);
+  clear_indices (self);
+  clear_vertices (self);
 
-  gst_vulkan_trash_list_wait (self->trash_list, -1);
-  gst_vulkan_trash_list_gc (self->trash_list);
-  gst_clear_object (&self->trash_list);
-
-  gst_clear_mini_object (((GstMiniObject **) & self->last_fence));
+  gst_clear_object (&self->exec);
 
   gst_clear_object (&self->queue);
 
@@ -963,7 +901,7 @@ gst_vulkan_full_screen_quad_set_info (GstVulkanFullScreenQuad * self,
   clear_framebuffer (self);
   clear_descriptor_set (self);
   clear_descriptor_cache (self);
-  clear_uniform_data (self);
+  clear_uniforms (self);
 
   GST_OBJECT_UNLOCK (self);
 
@@ -1089,7 +1027,7 @@ gst_vulkan_full_screen_quad_set_uniform_buffer (GstVulkanFullScreenQuad * self,
   priv = GET_PRIV (self);
 
   GST_OBJECT_LOCK (self);
-  clear_uniform_data (self);
+  clear_uniforms (self);
   if (uniforms) {
     priv->uniforms = gst_memory_ref (uniforms);
     priv->uniform_size = gst_memory_get_sizes (uniforms, NULL, NULL);
@@ -1211,7 +1149,7 @@ gst_vulkan_full_screen_quad_set_index_buffer (GstVulkanFullScreenQuad * self,
   priv = GET_PRIV (self);
 
   GST_OBJECT_LOCK (self);
-  clear_index_data (self);
+  clear_indices (self);
   if (indices) {
     priv->indices = gst_memory_ref (indices);
     priv->n_indices = n_indices;
@@ -1244,7 +1182,7 @@ gst_vulkan_full_screen_quad_set_vertex_buffer (GstVulkanFullScreenQuad * self,
   priv = GET_PRIV (self);
 
   GST_OBJECT_LOCK (self);
-  clear_vertex_data (self);
+  clear_vertices (self);
   if (vertices) {
     priv->vertices = gst_memory_ref (vertices);
   }
@@ -1442,9 +1380,8 @@ gst_vulkan_full_screen_quad_enable_clear (GstVulkanFullScreenQuad * self,
   clear_render_pass (self);
 }
 
-static gboolean
-prepare_draw_internal (GstVulkanFullScreenQuad * self,
-    GstVulkanFence * fence, GError ** error)
+static GstVulkanCommandBuffer *
+prepare_draw_internal (GstVulkanFullScreenQuad * self, GError ** error)
 {
   GstVulkanFullScreenQuadPrivate *priv;
   GstVulkanImageView *in_views[GST_VIDEO_MAX_PLANES] = { NULL, };
@@ -1452,7 +1389,6 @@ prepare_draw_internal (GstVulkanFullScreenQuad * self,
   int i, n_mems;
 
   g_return_val_if_fail (GST_IS_VULKAN_FULL_SCREEN_QUAD (self), FALSE);
-  g_return_val_if_fail (fence != NULL, FALSE);
 
   priv = GET_PRIV (self);
 
@@ -1477,10 +1413,6 @@ prepare_draw_internal (GstVulkanFullScreenQuad * self,
         goto error;
       }
       in_views[i] = gst_vulkan_get_or_create_image_view (img_mem);
-      gst_vulkan_trash_list_add (self->trash_list,
-          gst_vulkan_trash_list_acquire (self->trash_list, fence,
-              gst_vulkan_trash_mini_object_unref,
-              (GstMiniObject *) in_views[i]));
     }
     if (!(self->descriptor_set =
             get_and_update_descriptor_set (self, in_views, n_mems, error)))
@@ -1497,49 +1429,46 @@ prepare_draw_internal (GstVulkanFullScreenQuad * self,
         goto error;
       }
       out_views[i] = gst_vulkan_get_or_create_image_view (img_mem);
-      gst_vulkan_trash_list_add (self->trash_list,
-          gst_vulkan_trash_list_acquire (self->trash_list, fence,
-              gst_vulkan_trash_mini_object_unref,
-              (GstMiniObject *) out_views[i]));
     }
     if (!create_framebuffer (self, out_views, n_mems, error))
       goto error;
   }
 
-  if (!self->cmd_pool)
-    if (!(self->cmd_pool =
-            gst_vulkan_queue_create_command_pool (self->queue, error)))
-      goto error;
+  if (!gst_vulkan_operation_begin (self->exec, error))
+    goto error;
 
-  return TRUE;
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
+    gst_clear_mini_object ((GstMiniObject **) & in_views[i]);
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
+    gst_clear_mini_object ((GstMiniObject **) & out_views[i]);
+
+  return gst_vulkan_command_buffer_ref (self->exec->cmd_buf);
 
 error:
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
     gst_clear_mini_object ((GstMiniObject **) & in_views[i]);
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
     gst_clear_mini_object ((GstMiniObject **) & out_views[i]);
-  return FALSE;
+  return NULL;
 }
 
 /**
  * gst_vulkan_full_screen_quad_prepare_draw:
  * @self: the #GstVulkanFullScreenQuad
- * @fence: a #GstVulkanFence that will be signalled after submission
  * @error: a #GError filled on error
  *
- * Returns: whether the necessary information could be generated for drawing a
- * frame.
+ * Returns: (transfer full): the newly created #GstVulkanCommandBuffer or %NULL on failure.
  *
- * Since: 1.18
+ * Since: 1.30
  */
-gboolean
+GstVulkanCommandBuffer *
 gst_vulkan_full_screen_quad_prepare_draw (GstVulkanFullScreenQuad * self,
-    GstVulkanFence * fence, GError ** error)
+    GError ** error)
 {
-  gboolean ret;
+  GstVulkanCommandBuffer *ret;
 
   GST_OBJECT_LOCK (self);
-  ret = prepare_draw_internal (self, fence, error);
+  ret = prepare_draw_internal (self, error);
   GST_OBJECT_UNLOCK (self);
 
   return ret;
@@ -1547,17 +1476,13 @@ gst_vulkan_full_screen_quad_prepare_draw (GstVulkanFullScreenQuad * self,
 
 static gboolean
 fill_command_buffer_internal (GstVulkanFullScreenQuad * self,
-    GstVulkanCommandBuffer * cmd, GstVulkanFence * fence, GError ** error)
+    GstVulkanCommandBuffer * cmd, GError ** error)
 {
   GstVulkanFullScreenQuadPrivate *priv;
-  GstVulkanImageView *in_views[GST_VIDEO_MAX_PLANES] = { NULL, };
-  GstVulkanImageView *out_views[GST_VIDEO_MAX_PLANES] = { NULL, };
-  int i;
-  guint n_in_mems, n_out_mems;
+  guint n_out_mems;
 
   g_return_val_if_fail (GST_IS_VULKAN_FULL_SCREEN_QUAD (self), FALSE);
   g_return_val_if_fail (cmd != NULL, FALSE);
-  g_return_val_if_fail (fence != NULL, FALSE);
 
   if (GST_VIDEO_INFO_FORMAT (&self->out_info) == GST_VIDEO_FORMAT_UNKNOWN) {
     g_set_error_literal (error, GST_VULKAN_ERROR,
@@ -1567,93 +1492,26 @@ fill_command_buffer_internal (GstVulkanFullScreenQuad * self,
 
   priv = GET_PRIV (self);
 
-  n_in_mems = gst_buffer_n_memory (priv->inbuf);
-  for (i = 0; i < n_in_mems; i++) {
-    GstVulkanImageMemory *img_mem = peek_image_from_buffer (priv->inbuf, i);
-    if (!gst_is_vulkan_image_memory ((GstMemory *) img_mem)) {
-      g_set_error_literal (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
-          "Input memory must be a GstVulkanImageMemory");
-      goto error;
-    }
-    in_views[i] = gst_vulkan_get_or_create_image_view (img_mem);
-    gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_list_acquire (self->trash_list, fence,
-            gst_vulkan_trash_mini_object_unref, (GstMiniObject *) in_views[i]));
-  }
   n_out_mems = gst_buffer_n_memory (priv->outbuf);
-  for (i = 0; i < n_out_mems; i++) {
-    GstVulkanImageMemory *img_mem = peek_image_from_buffer (priv->outbuf, i);
-    if (!gst_is_vulkan_image_memory ((GstMemory *) img_mem)) {
-      g_set_error_literal (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
-          "Output memory must be a GstVulkanImageMemory");
-      goto error;
-    }
-    out_views[i] = gst_vulkan_get_or_create_image_view (img_mem);
-    gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_list_acquire (self->trash_list, fence,
-            gst_vulkan_trash_mini_object_unref,
-            (GstMiniObject *) out_views[i]));
-  }
 
-  for (i = 0; i < n_in_mems; i++) {
-    /* *INDENT-OFF* */
-    VkImageMemoryBarrier in_image_memory_barrier = {
-        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-        .pNext = NULL,
-        .srcAccessMask = in_views[i]->image->barrier.parent.access_flags,
-        .dstAccessMask = VK_ACCESS_SHADER_READ_BIT,
-        .oldLayout = in_views[i]->image->barrier.image_layout,
-        .newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-        /* FIXME: implement exclusive transfers */
-        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .image = in_views[i]->image->image,
-        .subresourceRange = in_views[i]->image->barrier.subresource_range
-    };
-    /* *INDENT-ON* */
+  gst_vulkan_operation_add_dependency_frame (self->exec, priv->inbuf,
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+      VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 
-    vkCmdPipelineBarrier (cmd->cmd,
-        in_views[i]->image->barrier.parent.pipeline_stages,
-        VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1,
-        &in_image_memory_barrier);
+  gst_vulkan_operation_add_frame_barrier (self->exec, priv->inbuf,
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+      VK_ACCESS_INPUT_ATTACHMENT_READ_BIT, VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL,
+      NULL);
 
-    in_views[i]->image->barrier.parent.pipeline_stages =
-        VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    in_views[i]->image->barrier.parent.access_flags =
-        in_image_memory_barrier.dstAccessMask;
-    in_views[i]->image->barrier.image_layout =
-        in_image_memory_barrier.newLayout;
-  }
+  gst_vulkan_operation_add_frame_barrier (self->exec, priv->outbuf,
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+      VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, NULL);
 
-  for (i = 0; i < n_out_mems; i++) {
-    /* *INDENT-OFF* */
-    VkImageMemoryBarrier out_image_memory_barrier = {
-        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-        .pNext = NULL,
-        .srcAccessMask = out_views[i]->image->barrier.parent.access_flags,
-        .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-        .oldLayout = out_views[i]->image->barrier.image_layout,
-        .newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        /* FIXME: implement exclusive transfers */
-        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .image = out_views[i]->image->image,
-        .subresourceRange = out_views[i]->image->barrier.subresource_range
-    };
-    /* *INDENT-ON* */
-
-    vkCmdPipelineBarrier (cmd->cmd,
-        out_views[i]->image->barrier.parent.pipeline_stages,
-        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 0, NULL, 0, NULL, 1,
-        &out_image_memory_barrier);
-
-    out_views[i]->image->barrier.parent.pipeline_stages =
-        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    out_views[i]->image->barrier.parent.access_flags =
-        out_image_memory_barrier.dstAccessMask;
-    out_views[i]->image->barrier.image_layout =
-        out_image_memory_barrier.newLayout;
-  }
+  GstVulkanBarrierState *barriers =
+      gst_vulkan_operation_get_barriers (self->exec);
+  gst_vulkan_barrier_state_pipeline_barrier (barriers, self->exec->cmd_buf, 0);
 
   {
     /* *INDENT-OFF* */
@@ -1694,9 +1552,6 @@ fill_command_buffer_internal (GstVulkanFullScreenQuad * self,
   }
 
   return TRUE;
-
-error:
-  return FALSE;
 }
 
 /**
@@ -1704,6 +1559,8 @@ error:
  * @self: a #GstVulkanFullScreenQuad
  * @cmd: the #GstVulkanCommandBuffer to fill with commands
  * @error: a #GError to fill on error
+ *
+ * @cmd must be return value from gst_vulkan_full_screen_quad_prepare_draw()
  *
  * @cmd must be locked with gst_vulkan_command_buffer_lock().
  *
@@ -1713,93 +1570,54 @@ error:
  */
 gboolean
 gst_vulkan_full_screen_quad_fill_command_buffer (GstVulkanFullScreenQuad * self,
-    GstVulkanCommandBuffer * cmd, GstVulkanFence * fence, GError ** error)
+    GstVulkanCommandBuffer * cmd, GError ** error)
 {
   gboolean ret;
 
+  g_return_val_if_fail (cmd == self->exec->cmd_buf, FALSE);
+
   GST_OBJECT_LOCK (self);
-  ret = fill_command_buffer_internal (self, cmd, fence, error);
+  ret = fill_command_buffer_internal (self, cmd, error);
   GST_OBJECT_UNLOCK (self);
 
   return ret;
 }
 
 static gboolean
-submit_internal (GstVulkanFullScreenQuad * self, GstVulkanCommandBuffer * cmd,
-    GstVulkanFence * fence, GError ** error)
+submit_internal (GstVulkanFullScreenQuad * self, GError ** error)
 {
-  VkResult err;
-
   g_return_val_if_fail (GST_IS_VULKAN_FULL_SCREEN_QUAD (self), FALSE);
-  g_return_val_if_fail (cmd != NULL, FALSE);
-  g_return_val_if_fail (fence != NULL, FALSE);
 
-  {
-    /* *INDENT-OFF* */
-    VkSubmitInfo submit_info = {
-        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-        .pNext = NULL,
-        .waitSemaphoreCount = 0,
-        .pWaitSemaphores = NULL,
-        .pWaitDstStageMask = NULL,
-        .commandBufferCount = 1,
-        .pCommandBuffers = &cmd->cmd,
-        .signalSemaphoreCount = 0,
-        .pSignalSemaphores = NULL,
-    };
-    /* *INDENT-ON* */
-
-    gst_vulkan_queue_submit_lock (self->queue);
-    err =
-        vkQueueSubmit (self->queue->queue, 1, &submit_info,
-        GST_VULKAN_FENCE_FENCE (fence));
-    gst_vulkan_queue_submit_unlock (self->queue);
-    if (gst_vulkan_error_to_g_error (err, error, "vkQueueSubmit") < 0)
-      goto error;
-  }
+  if (!gst_vulkan_operation_end (self->exec, error))
+    return FALSE;
 
   return TRUE;
-
-error:
-  return FALSE;
 }
 
-
 static void
-submit_final_unlocked (GstVulkanFullScreenQuad * self,
-    GstVulkanCommandBuffer * cmd, GstVulkanFence * fence)
+submit_final_unlocked (GstVulkanFullScreenQuad * self)
 {
-  gst_vulkan_trash_list_add (self->trash_list,
-      gst_vulkan_trash_list_acquire (self->trash_list, fence,
-          gst_vulkan_trash_mini_object_unref, GST_MINI_OBJECT_CAST (cmd)));
-
-  gst_vulkan_trash_list_gc (self->trash_list);
-
-  if (self->last_fence)
-    gst_vulkan_fence_unref (self->last_fence);
-  self->last_fence = gst_vulkan_fence_ref (fence);
+  // TODO: unref any cached resources
 }
 
 /**
  * gst_vulkan_full_screen_quad_submit:
  * @self: a #GstVulkanFullScreenQuad
- * @cmd: (transfer full): a #GstVulkanCommandBuffer to submit
- * @fence: a #GstVulkanFence to signal on completion
  * @error: a #GError to fill on error
  *
  * Returns: whether @cmd could be submitted to the queue
  *
- * Since: 1.18
+ * Since: 1.30
  */
 gboolean
 gst_vulkan_full_screen_quad_submit (GstVulkanFullScreenQuad * self,
-    GstVulkanCommandBuffer * cmd, GstVulkanFence * fence, GError ** error)
+    GError ** error)
 {
-  if (!submit_internal (self, cmd, fence, error))
+  if (!submit_internal (self, error))
     return FALSE;
 
   GST_OBJECT_LOCK (self);
-  submit_final_unlocked (self, cmd, fence);
+  submit_final_unlocked (self);
   GST_OBJECT_UNLOCK (self);
 
   return TRUE;
@@ -1826,67 +1644,29 @@ gst_vulkan_full_screen_quad_draw (GstVulkanFullScreenQuad * self,
     GError ** error)
 {
   GstVulkanCommandBuffer *cmd = NULL;
-  GstVulkanFence *fence = NULL;
-  VkResult err;
 
   g_return_val_if_fail (GST_IS_VULKAN_FULL_SCREEN_QUAD (self), FALSE);
 
-  fence = gst_vulkan_device_create_fence (self->queue->device, error);
-  if (!fence)
-    goto error;
-
   GST_OBJECT_LOCK (self);
-  if (!prepare_draw_internal (self, fence, error)) {
+  if (!(cmd = prepare_draw_internal (self, error))) {
     GST_OBJECT_UNLOCK (self);
     goto error;
   }
 
-  if (!(cmd = gst_vulkan_command_pool_create (self->cmd_pool, error))) {
-    GST_OBJECT_UNLOCK (self);
-    goto error;
-  }
-
-  {
-    VkCommandBufferBeginInfo cmd_buf_info = { 0, };
-
-    /* *INDENT-OFF* */
-    cmd_buf_info = (VkCommandBufferBeginInfo) {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-        .pNext = NULL,
-        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-        .pInheritanceInfo = NULL
-    };
-    /* *INDENT-ON* */
-
-    gst_vulkan_command_buffer_lock (cmd);
-    err = vkBeginCommandBuffer (cmd->cmd, &cmd_buf_info);
-    if (gst_vulkan_error_to_g_error (err, error, "vkBeginCommandBuffer") < 0) {
-      GST_OBJECT_UNLOCK (self);
-      goto unlock_error;
-    }
-  }
-
-  if (!fill_command_buffer_internal (self, cmd, fence, error)) {
+  gst_vulkan_command_buffer_lock (cmd);
+  if (!fill_command_buffer_internal (self, cmd, error)) {
     GST_OBJECT_UNLOCK (self);
     goto unlock_error;
   }
-
-  err = vkEndCommandBuffer (cmd->cmd);
   gst_vulkan_command_buffer_unlock (cmd);
-  if (gst_vulkan_error_to_g_error (err, error, "vkEndCommandBuffer") < 0) {
+
+  if (!submit_internal (self, error)) {
     GST_OBJECT_UNLOCK (self);
     goto error;
   }
 
-  if (!submit_internal (self, cmd, fence, error)) {
-    GST_OBJECT_UNLOCK (self);
-    goto error;
-  }
-
-  submit_final_unlocked (self, cmd, fence);
+  submit_final_unlocked (self);
   GST_OBJECT_UNLOCK (self);
-
-  gst_vulkan_fence_unref (fence);
 
   return TRUE;
 
@@ -1895,7 +1675,6 @@ unlock_error:
 
 error:
   gst_clear_mini_object ((GstMiniObject **) & cmd);
-  gst_clear_mini_object ((GstMiniObject **) & fence);
   return FALSE;
 }
 

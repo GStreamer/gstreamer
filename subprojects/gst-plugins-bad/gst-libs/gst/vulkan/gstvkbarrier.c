@@ -36,7 +36,6 @@ void
 gst_vulkan_barrier_memory_info_clear (GstVulkanBarrierMemoryInfo * info)
 {
   gst_clear_object (&info->queue);
-  gst_clear_vulkan_handle (&info->semaphore);
   memset (info, 0, sizeof (*info));
 }
 
@@ -81,6 +80,4 @@ gst_vulkan_barrier_memory_info_copy_into (GstVulkanBarrierMemoryInfo * info,
   memcpy (other, info, sizeof (*info));
   if (other->queue)
     gst_object_ref (other->queue);
-  if (other->semaphore)
-    gst_vulkan_handle_ref (other->semaphore);
 }

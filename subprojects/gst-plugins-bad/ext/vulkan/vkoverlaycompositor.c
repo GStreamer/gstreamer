@@ -115,12 +115,7 @@ vk_overlay_upload (struct vk_overlay *overlay, GstVideoInfo * out_info,
   GstMemory *vkuniforms = NULL;
   VkFormat vk_format;
   GstMapInfo map_info;
-  GstVulkanFence *fence = NULL;
-  GstVulkanCommandBuffer *cmd_buf = NULL;
-  VkBufferMemoryBarrier buffer_memory_barrier;
-  VkImageMemoryBarrier image_memory_barrier;
   VkBufferImageCopy region;
-  VkResult err;
   struct Vertex vertices[4];
   struct swizzle_uniforms uniforms;
 
@@ -191,126 +186,46 @@ vk_overlay_upload (struct vk_overlay *overlay, GstVideoInfo * out_info,
           .depth = 1,
       }
   };
-
-  buffer_memory_barrier = (VkBufferMemoryBarrier) {
-      .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
-      .pNext = NULL,
-      .srcAccessMask = buf_mem->barrier.parent.access_flags,
-      .dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
-      /* FIXME: implement exclusive transfers */
-      .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-      .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-      .buffer = buf_mem->buffer,
-      .offset = region.bufferOffset,
-      .size = region.bufferRowLength * region.bufferImageHeight,
-  };
-
-  image_memory_barrier = (VkImageMemoryBarrier) {
-      .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-      .pNext = NULL,
-      .srcAccessMask = img_mem->barrier.parent.access_flags,
-      .dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
-      .oldLayout = img_mem->barrier.image_layout,
-      .newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-      /* FIXME: implement exclusive transfers */
-      .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-      .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-      .image = img_mem->image,
-      .subresourceRange = img_mem->barrier.subresource_range,
-  };
   /* *INDENT-ON* */
 
-  if (!(cmd_buf =
-          gst_vulkan_command_pool_create (overlay->quad->cmd_pool, error)))
+  if (!gst_vulkan_operation_begin (overlay->quad->exec, error))
     goto error;
 
-  {
-    /* *INDENT-OFF* */
-    VkCommandBufferBeginInfo cmd_buf_info = {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-        .pNext = NULL,
-        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-        .pInheritanceInfo = NULL
-    };
-    /* *INDENT-ON* */
-
-    gst_vulkan_command_buffer_lock (cmd_buf);
-    err = vkBeginCommandBuffer (cmd_buf->cmd, &cmd_buf_info);
-    if (gst_vulkan_error_to_g_error (err, error, "vkBeginCommandBuffer") < 0) {
-      gst_vulkan_command_buffer_unlock (cmd_buf);
-      goto error;
-    }
-  }
-
-  vkCmdPipelineBarrier (cmd_buf->cmd,
+  GstVulkanBarrierState *barriers =
+      gst_vulkan_operation_get_barriers (overlay->quad->exec);
+  gst_vulkan_barrier_state_add_image_barrier (barriers, img_mem,
       buf_mem->barrier.parent.pipeline_stages | img_mem->barrier.
-      parent.pipeline_stages, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 1,
-      &buffer_memory_barrier, 1, &image_memory_barrier);
+      parent.pipeline_stages, VK_PIPELINE_STAGE_TRANSFER_BIT,
+      VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, NULL);
 
-  buf_mem->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
-  buf_mem->barrier.parent.access_flags = buffer_memory_barrier.dstAccessMask;
+  gst_vulkan_barrier_state_add_buffer_barrier (barriers, buf_mem,
+      buf_mem->barrier.parent.pipeline_stages, VK_PIPELINE_STAGE_TRANSFER_BIT,
+      VK_ACCESS_TRANSFER_READ_BIT, NULL);
 
-  img_mem->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
-  img_mem->barrier.parent.access_flags = image_memory_barrier.dstAccessMask;
-  img_mem->barrier.image_layout = image_memory_barrier.newLayout;
+  gst_vulkan_barrier_state_pipeline_barrier (barriers,
+      overlay->quad->exec->cmd_buf, 0);
 
-  vkCmdCopyBufferToImage (cmd_buf->cmd, buf_mem->buffer, img_mem->image,
-      img_mem->barrier.image_layout, 1, &region);
+  vkCmdCopyBufferToImage (overlay->quad->exec->cmd_buf->cmd, buf_mem->buffer,
+      img_mem->image, img_mem->barrier.image_layout, 1, &region);
 
-  err = vkEndCommandBuffer (cmd_buf->cmd);
-  gst_vulkan_command_buffer_unlock (cmd_buf);
-  if (gst_vulkan_error_to_g_error (err, error, "vkEndCommandBuffer") < 0) {
+  if (!gst_vulkan_operation_end (overlay->quad->exec, error))
     goto error;
-  }
 
-  {
-    VkSubmitInfo submit_info = { 0, };
-
-    /* *INDENT-OFF* */
-    submit_info = (VkSubmitInfo) {
-        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-        .pNext = NULL,
-        .waitSemaphoreCount = 0,
-        .pWaitSemaphores = NULL,
-        .pWaitDstStageMask = NULL,
-        .commandBufferCount = 1,
-        .pCommandBuffers = &cmd_buf->cmd,
-        .signalSemaphoreCount = 0,
-        .pSignalSemaphores = NULL,
-    };
-    /* *INDENT-ON* */
-
-    fence =
-        gst_vulkan_device_create_fence (overlay->quad->queue->device, error);
-    if (!fence)
-      goto error;
-
-    gst_vulkan_queue_submit_lock (overlay->quad->queue);
-    err =
-        vkQueueSubmit (overlay->quad->queue->queue, 1, &submit_info,
-        GST_VULKAN_FENCE_FENCE (fence));
-    gst_vulkan_queue_submit_unlock (overlay->quad->queue);
-    if (gst_vulkan_error_to_g_error (err, error, "vkQueueSubmit") < 0)
-      goto error;
-
-    gst_vulkan_trash_list_add (overlay->quad->trash_list,
-        gst_vulkan_trash_list_acquire (overlay->quad->trash_list, fence,
-            gst_vulkan_trash_mini_object_unref,
-            GST_MINI_OBJECT_CAST (cmd_buf)));
-    cmd_buf = NULL;
-    gst_vulkan_trash_list_add (overlay->quad->trash_list,
-        gst_vulkan_trash_list_acquire (overlay->quad->trash_list, fence,
-            gst_vulkan_trash_mini_object_unref,
-            GST_MINI_OBJECT_CAST (vkbuffer)));
-    vkbuffer = NULL;
-    gst_vulkan_trash_list_add (overlay->quad->trash_list,
-        gst_vulkan_trash_list_acquire (overlay->quad->trash_list, fence,
-            gst_vulkan_trash_mini_object_unref,
-            GST_MINI_OBJECT_CAST (gst_memory_ref (vkimage))));
-    gst_vulkan_trash_list_gc (overlay->quad->trash_list);
-    gst_vulkan_fence_unref (fence);
-    fence = NULL;
-  }
+  GstVulkanTrashList *trash_list =
+      gst_vulkan_operation_get_trash_list (overlay->quad->exec);
+  GstVulkanFence *fence =
+      gst_vulkan_operation_get_last_fence (overlay->quad->exec);
+  gst_vulkan_trash_list_add (trash_list,
+      gst_vulkan_trash_list_acquire (trash_list, fence,
+          gst_vulkan_trash_mini_object_unref, GST_MINI_OBJECT_CAST (vkbuffer)));
+  vkbuffer = NULL;
+  gst_vulkan_trash_list_add (trash_list,
+      gst_vulkan_trash_list_acquire (trash_list, fence,
+          gst_vulkan_trash_mini_object_unref,
+          GST_MINI_OBJECT_CAST (gst_memory_ref (vkimage))));
+  gst_vulkan_trash_list_gc (trash_list);
+  gst_vulkan_fence_unref (fence);
+  fence = NULL;
 
   vk_gst_buffer = gst_buffer_new ();
   gst_buffer_append_memory (vk_gst_buffer, vkimage);
@@ -420,10 +335,6 @@ error:
   gst_clear_mini_object ((GstMiniObject **) & vkbuffer);
   gst_clear_mini_object ((GstMiniObject **) & vkvertices);
   gst_clear_mini_object ((GstMiniObject **) & vkuniforms);
-  if (cmd_buf)
-    gst_vulkan_command_buffer_unref (cmd_buf);
-  if (fence)
-    gst_vulkan_fence_unref (fence);
   gst_clear_buffer (&vk_gst_buffer);
   gst_clear_buffer (&overlay_buffer);
 

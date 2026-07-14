@@ -123,8 +123,7 @@ struct _GstVulkanImageMemory
   GPtrArray *views;
   GPtrArray *outstanding_views;
 
-  GstVulkanHandle *timeline_semaphore;
-  guint64 semaphore_value;
+  GstVulkanTimelineSemaphore *timeline_semaphore;
 
   gpointer _padding[GST_PADDING];
 };

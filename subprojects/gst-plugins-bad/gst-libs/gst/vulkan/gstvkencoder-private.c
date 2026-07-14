@@ -1079,7 +1079,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   VkVideoEndCodingInfoKHR end_coding;
   VkVideoReferenceSlotInfoKHR ref_slots[37];
   GstVulkanCommandBuffer *cmd_buf;
-  GArray *barriers;
+  GstVulkanBarrierState *barriers;
   VkVideoEncodeQualityLevelInfoKHR quality_info;
   VkVideoEncodeRateControlLayerInfoKHR rc_layer;
   VkVideoEncodeRateControlInfoKHR rc_info;
@@ -1234,18 +1234,9 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
       VK_ACCESS_2_VIDEO_ENCODE_READ_BIT_KHR,
       VK_IMAGE_LAYOUT_VIDEO_ENCODE_DPB_KHR, NULL);
 
-  barriers = gst_vulkan_operation_retrieve_image_barriers (priv->exec);
-
-  /* *INDENT-OFF* */
-  vkCmdPipelineBarrier2 (cmd_buf->cmd, &(VkDependencyInfo) {
-      .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-      .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
-      .pImageMemoryBarriers = (VkImageMemoryBarrier2 *) barriers->data,
-      .imageMemoryBarrierCount = barriers->len,
-      }
-  );
-  /* *INDENT-ON* */
-  g_array_unref (barriers);
+  barriers = gst_vulkan_operation_get_barriers (priv->exec);
+  gst_vulkan_barrier_state_pipeline_barrier (barriers, cmd_buf,
+      VK_DEPENDENCY_BY_REGION_BIT);
 
   gst_vulkan_operation_begin_query (priv->exec,
       (VkBaseInStructure *) & encode_info, 0);

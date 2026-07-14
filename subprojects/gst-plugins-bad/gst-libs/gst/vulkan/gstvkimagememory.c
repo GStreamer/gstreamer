@@ -111,6 +111,7 @@ gst_vulkan_image_memory_init (GstVulkanImageMemory * mem,
 
   mem->views = g_ptr_array_new ();
   mem->outstanding_views = g_ptr_array_new ();
+  mem->timeline_semaphore = gst_vulkan_timeline_semaphore_new (device);
 
   GST_CAT_DEBUG (GST_CAT_VULKAN_IMAGE_MEMORY,
       "new Vulkan Image memory:%p size:%" G_GSIZE_FORMAT, mem, maxsize);
@@ -163,32 +164,6 @@ _vk_image_mem_new_alloc_with_image_info (GstAllocator * allocator,
   /* XXX: to avoid handling pNext lifetime  */
   mem->create_info.pNext = NULL;
   mem->image = image;
-
-#if defined(VK_KHR_timeline_semaphore)
-  if (gst_vulkan_physical_device_check_api_version (device->physical_device, 1,
-          2, 0) || gst_vulkan_device_is_extension_enabled (device,
-          VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME)) {
-    VkSemaphore semaphore = VK_NULL_HANDLE;
-    VkSemaphoreTypeCreateInfo semaphore_type_info = {
-      .sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO,
-      .semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE,
-      .initialValue = 0,
-    };
-    VkSemaphoreCreateInfo semaphore_create_info = {
-      .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
-      .pNext = &semaphore_type_info,
-    };
-
-    err = vkCreateSemaphore (device->device, &semaphore_create_info, NULL,
-        &semaphore);
-    if (gst_vulkan_error_to_g_error (err, &error, "vkCreateSemaphore") < 0)
-      goto vk_error;
-
-    mem->timeline_semaphore =
-        gst_vulkan_handle_new_wrapped (device, GST_VULKAN_HANDLE_TYPE_SEMAPHORE,
-        semaphore, gst_vulkan_handle_free_semaphore, NULL);
-  }
-#endif
 
   err = vkGetPhysicalDeviceImageFormatProperties (gpu, image_info->format,
       VK_IMAGE_TYPE_2D, image_info->tiling, image_info->usage, 0,
@@ -427,7 +402,7 @@ _vk_image_mem_free (GstAllocator * allocator, GstMemory * memory)
   if (mem->notify)
     mem->notify (mem->user_data);
 
-  gst_clear_vulkan_handle (&mem->timeline_semaphore);
+  gst_clear_vulkan_timeline_semaphore (&mem->timeline_semaphore);
 
   gst_object_unref (mem->device);
 
