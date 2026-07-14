@@ -1283,8 +1283,13 @@ gst_avi_demux_parse_superindex (GstAviDemux * avi,
 
   indexes = g_new (guint64, num + 1);
   for (i = 0; i < num; i++) {
-    if (size < 24 + bpe * (i + 1))
+    gsize required_size;
+
+    if (!g_size_checked_mul (&required_size, bpe, i + 1))
       break;
+    if (size - 24 < required_size)
+      break;
+
     indexes[i] = GST_READ_UINT64_LE (&data[24 + bpe * i]);
     GST_DEBUG_OBJECT (avi, "index %d at %" G_GUINT64_FORMAT, i, indexes[i]);
   }
@@ -1571,8 +1576,11 @@ gst_avi_demux_parse_subindex (GstAviDemux * avi, GstAviStream * stream,
 
   for (i = 0; i < num; i++) {
     GstAviIndexEntry entry;
+    gsize required_size;
 
-    if (map.size < 24 + bpe * (i + 1))
+    if (!g_size_checked_mul (&required_size, bpe, i + 1))
+      break;
+    if (map.size - 24 < required_size)
       break;
 
     /* fill in offset and size. offset contains the keyframe flag in the
