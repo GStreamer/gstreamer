@@ -190,6 +190,8 @@ gst_fake_audio_sink_init (GstFakeAudioSink * self)
         G_CALLBACK (gst_fake_audio_sink_proxy_handoff), self);
     g_signal_connect (child, "preroll-handoff",
         G_CALLBACK (gst_fake_audio_sink_proxy_preroll_handoff), self);
+
+    gst_util_proxy_child_properties_notify (G_OBJECT (self), G_OBJECT (child));
   } else {
     g_warning ("Check your GStreamer installation, "
         "core element 'fakesink' is missing.");
@@ -343,6 +345,14 @@ gst_fake_audio_sink_class_init (GstFakeAudioSinkClass * klass)
           "Number of buffers to accept going EOS", -1, G_MAXINT,
           DEFAULT_NUM_BUFFERS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstFakeAudioSink:enable-last-sample-notify
+   *
+   * Emit the "notify::last-sample" signal when the last sample changes,
+   * forwarded from the wrapped fakesink.
+   *
+   * Since: 1.30
+   */
   base_sink_class = g_type_class_ref (GST_TYPE_BASE_SINK);
   gst_util_proxy_class_properties (object_class, base_sink_class, PROP_LAST);
   g_type_class_unref (base_sink_class);

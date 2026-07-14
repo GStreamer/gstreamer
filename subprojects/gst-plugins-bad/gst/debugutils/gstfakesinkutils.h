@@ -31,6 +31,10 @@ gst_util_proxy_class_properties (GObjectClass *object_class,
                                  GObjectClass *target_class,
                                  guint property_id_offset);
 
+void
+gst_util_proxy_child_properties_notify (GObject *proxy,
+                                        GObject *child);
+
 G_END_DECLS
 
 #endif

@@ -22,6 +22,59 @@
 #include "gstfakesinkutils.h"
 #include <gst/base/gstbasesink.h>
 
+typedef struct
+{
+  GObject *proxy;
+  GParamSpec *pspec;
+} ProxyNotify;
+
+static void
+gst_util_proxy_child_notify (GObject * child, GParamSpec * child_pspec,
+    ProxyNotify * n)
+{
+  g_object_notify_by_pspec (n->proxy, n->pspec);
+}
+
+/* Forward the child's property notifications to @proxy, whose properties were
+ * proxied from @child with gst_util_proxy_class_properties(). Otherwise a
+ * "notify::<prop>" listener on @proxy would never be woken up when the child
+ * updates the underlying property. */
+void
+gst_util_proxy_child_properties_notify (GObject * proxy, GObject * child)
+{
+  GObjectClass *proxy_class = G_OBJECT_GET_CLASS (proxy);
+  GParamSpec **properties;
+  guint n_properties, i;
+
+  /* Key off the child's properties: the proxy also has its own (e.g. GstBin)
+   * properties that do not exist on the child. */
+  properties =
+      g_object_class_list_properties (G_OBJECT_GET_CLASS (child),
+      &n_properties);
+
+  for (i = 0; i < n_properties; i++) {
+    const gchar *name = g_param_spec_get_name (properties[i]);
+    GParamSpec *proxy_pspec = g_object_class_find_property (proxy_class, name);
+    ProxyNotify *n;
+    gchar *detailed_signal;
+
+    if (!proxy_pspec)
+      continue;
+
+    n = g_new (ProxyNotify, 1);
+    n->proxy = proxy;
+    n->pspec = proxy_pspec;
+
+    detailed_signal = g_strconcat ("notify::", name, NULL);
+    g_signal_connect_data (child, detailed_signal,
+        G_CALLBACK (gst_util_proxy_child_notify), n,
+        (GClosureNotify) g_free, 0);
+    g_free (detailed_signal);
+  }
+
+  g_free (properties);
+}
+
 /* TODO complete the types */
 void
 gst_util_proxy_class_properties (GObjectClass * object_class,
