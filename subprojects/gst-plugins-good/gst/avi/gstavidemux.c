@@ -3988,7 +3988,7 @@ gst_avi_demux_parse_ncdt (GstAviDemux * avi, GstBuffer * buf,
               type = NULL;
               break;
           }
-          if (type != NULL && ptr[0] != '\0') {
+          if (type != NULL && left > 0 && ptr[0] != '\0') {
             GST_DEBUG_OBJECT (avi, "mapped tag %u to tag %s", sub_tag, type);
 
             parse_tag_value (avi, taglist, type, ptr, sub_size);
