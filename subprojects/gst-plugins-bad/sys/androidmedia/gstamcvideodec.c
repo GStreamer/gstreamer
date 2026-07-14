@@ -2379,11 +2379,12 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
     GstVideoDecoder *decoder = GST_VIDEO_DECODER (self);
     GstPad *src_pad = GST_VIDEO_DECODER_SRC_PAD (decoder);
     GstCaps *templ_caps = gst_pad_get_pad_template_caps (src_pad);
-    GstCaps *downstream_caps = gst_pad_peer_query_caps (src_pad, templ_caps);
+    GstQuery *query = gst_query_new_caps (templ_caps);
+    gboolean downstream_caps_available = gst_pad_peer_query (src_pad, query);
 
     gst_caps_unref (templ_caps);
 
-    if (downstream_caps) {
+    if (downstream_caps_available) {
       guint i, n;
       /* Surface/AHB caps describe the sampled RGBA result exposed to
        * consumers through API-specific external image handling. They do not
@@ -2396,7 +2397,9 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
           (GST_CAPS_FEATURE_MEMORY_AHARDWAREBUFFER, "AHARDWARE_BUFFER"));
       GstCaps *gl_memory_caps = gst_static_caps_get (&static_caps);
       GstCaps *ahardware_buffer_caps = gst_static_caps_get (&static_ahb_caps);
+      GstCaps *downstream_caps = NULL;
 
+      gst_query_parse_caps_result (query, &downstream_caps);
       GST_DEBUG_OBJECT (self, "Available downstream caps: %" GST_PTR_FORMAT,
           downstream_caps);
 
@@ -2493,8 +2496,12 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
         }
       }
 
-      gst_caps_unref (downstream_caps);
+    } else {
+      GST_INFO_OBJECT (self,
+          "Downstream caps query failed, assuming system memory output");
     }
+
+    gst_query_unref (query);
   }
 
   GST_INFO_OBJECT (self, "AHardwareBuffer output: %s",
