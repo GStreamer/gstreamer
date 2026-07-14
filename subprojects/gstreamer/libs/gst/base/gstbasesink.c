@@ -327,6 +327,8 @@ enum
   PROP_LAST
 };
 
+static GParamSpec *properties[PROP_LAST];
+
 static GstElementClass *parent_class = NULL;
 static gint private_offset = 0;
 
@@ -449,20 +451,20 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   gobject_class->set_property = gst_base_sink_set_property;
   gobject_class->get_property = gst_base_sink_get_property;
 
-  g_object_class_install_property (gobject_class, PROP_SYNC,
+  properties[PROP_SYNC] =
       g_param_spec_boolean ("sync", "Sync", "Sync on the clock", DEFAULT_SYNC,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class, PROP_MAX_LATENESS,
+  properties[PROP_MAX_LATENESS] =
       g_param_spec_int64 ("max-lateness", "Max Lateness",
-          "Maximum number of nanoseconds that a buffer can be late before it "
-          "is dropped (-1 unlimited)", -1, G_MAXINT64, DEFAULT_MAX_LATENESS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "Maximum number of nanoseconds that a buffer can be late before it "
+      "is dropped (-1 unlimited)", -1, G_MAXINT64, DEFAULT_MAX_LATENESS,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class, PROP_QOS,
+  properties[PROP_QOS] =
       g_param_spec_boolean ("qos", "Qos",
-          "Generate Quality-of-Service events upstream", DEFAULT_QOS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "Generate Quality-of-Service events upstream", DEFAULT_QOS,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   /**
    * GstBaseSink:async:
    *
@@ -471,10 +473,10 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    * Use this option when dealing with sparse streams or when synchronisation is
    * not required.
    */
-  g_object_class_install_property (gobject_class, PROP_ASYNC,
+  properties[PROP_ASYNC] =
       g_param_spec_boolean ("async", "Async",
-          "Go asynchronously to PAUSED", DEFAULT_ASYNC,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "Go asynchronously to PAUSED", DEFAULT_ASYNC,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   /**
    * GstBaseSink:ts-offset:
    *
@@ -482,10 +484,10 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    * earlier while a positive value delays playback. This property can be
    * used to fix synchronisation in bad files.
    */
-  g_object_class_install_property (gobject_class, PROP_TS_OFFSET,
+  properties[PROP_TS_OFFSET] =
       g_param_spec_int64 ("ts-offset", "TS Offset",
-          "Timestamp offset in nanoseconds", G_MININT64, G_MAXINT64,
-          DEFAULT_TS_OFFSET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "Timestamp offset in nanoseconds", G_MININT64, G_MAXINT64,
+      DEFAULT_TS_OFFSET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
    * GstBaseSink:enable-last-sample:
@@ -495,10 +497,10 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    * set to %NULL. This can be useful if you need buffers to be released as soon
    * as possible, eg. if you're using a buffer pool.
    */
-  g_object_class_install_property (gobject_class, PROP_ENABLE_LAST_SAMPLE,
+  properties[PROP_ENABLE_LAST_SAMPLE] =
       g_param_spec_boolean ("enable-last-sample", "Enable Last Buffer",
-          "Enable the last-sample property", DEFAULT_ENABLE_LAST_SAMPLE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "Enable the last-sample property", DEFAULT_ENABLE_LAST_SAMPLE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
    * GstBaseSink:last-sample:
@@ -507,20 +509,20 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    * rendering. This property can be used to generate thumbnails. This property
    * can be %NULL when the sink has not yet received a buffer.
    */
-  g_object_class_install_property (gobject_class, PROP_LAST_SAMPLE,
+  properties[PROP_LAST_SAMPLE] =
       g_param_spec_boxed ("last-sample", "Last Sample",
-          "The last sample received in the sink", GST_TYPE_SAMPLE,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+      "The last sample received in the sink", GST_TYPE_SAMPLE,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   /**
    * GstBaseSink:blocksize:
    *
    * The amount of bytes to pull when operating in pull mode.
    */
   /* FIXME 2.0: blocksize property should be int, otherwise min>max.. */
-  g_object_class_install_property (gobject_class, PROP_BLOCKSIZE,
+  properties[PROP_BLOCKSIZE] =
       g_param_spec_uint ("blocksize", "Block size",
-          "Size in bytes to pull per buffer (0 = default)", 0, G_MAXUINT,
-          DEFAULT_BLOCKSIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "Size in bytes to pull per buffer (0 = default)", 0, G_MAXUINT,
+      DEFAULT_BLOCKSIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   /**
    * GstBaseSink:render-delay:
    *
@@ -528,10 +530,10 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    * media. This property will add additional latency to the device in order to
    * make other sinks compensate for the delay.
    */
-  g_object_class_install_property (gobject_class, PROP_RENDER_DELAY,
+  properties[PROP_RENDER_DELAY] =
       g_param_spec_uint64 ("render-delay", "Render Delay",
-          "Additional render delay of the sink in nanoseconds", 0, G_MAXUINT64,
-          DEFAULT_RENDER_DELAY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "Additional render delay of the sink in nanoseconds", 0, G_MAXUINT64,
+      DEFAULT_RENDER_DELAY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   /**
    * GstBaseSink:throttle-time:
    *
@@ -539,11 +541,11 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    * the maximum amount of buffers per second to render. Setting this property
    * to a value bigger than 0 will make the sink create THROTTLE QoS events.
    */
-  g_object_class_install_property (gobject_class, PROP_THROTTLE_TIME,
+  properties[PROP_THROTTLE_TIME] =
       g_param_spec_uint64 ("throttle-time", "Throttle time",
-          "The time to keep between rendered buffers (0 = disabled)", 0,
-          G_MAXUINT64, DEFAULT_THROTTLE_TIME,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "The time to keep between rendered buffers (0 = disabled)", 0,
+      G_MAXUINT64, DEFAULT_THROTTLE_TIME,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   /**
    * GstBaseSink:max-bitrate:
    *
@@ -553,11 +555,11 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    *
    * Since: 1.2
    */
-  g_object_class_install_property (gobject_class, PROP_MAX_BITRATE,
+  properties[PROP_MAX_BITRATE] =
       g_param_spec_uint64 ("max-bitrate", "Max Bitrate",
-          "The maximum bits per second to render (0 = disabled)", 0,
-          G_MAXUINT64, DEFAULT_MAX_BITRATE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "The maximum bits per second to render (0 = disabled)", 0,
+      G_MAXUINT64, DEFAULT_MAX_BITRATE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   /**
    * GstBaseSink:processing-deadline:
    *
@@ -567,12 +569,11 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    *
    * Since: 1.16
    */
-  g_object_class_install_property (gobject_class, PROP_PROCESSING_DEADLINE,
+  properties[PROP_PROCESSING_DEADLINE] =
       g_param_spec_uint64 ("processing-deadline", "Processing deadline",
-          "Maximum processing time for a buffer in nanoseconds", 0,
-          G_MAXUINT64, DEFAULT_PROCESSING_DEADLINE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
+      "Maximum processing time for a buffer in nanoseconds", 0,
+      G_MAXUINT64, DEFAULT_PROCESSING_DEADLINE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
    * GstBaseSink:stats:
@@ -586,10 +587,12 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    *
    * Since: 1.18
    */
-  g_object_class_install_property (gobject_class, PROP_STATS,
+  properties[PROP_STATS] =
       g_param_spec_boxed ("stats", "Statistics",
-          "Sink Statistics", GST_TYPE_STRUCTURE,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+      "Sink Statistics", GST_TYPE_STRUCTURE,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_sink_change_state);
