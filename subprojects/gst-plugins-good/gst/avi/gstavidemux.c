@@ -3834,13 +3834,13 @@ gst_avi_demux_parse_strd (GstAviDemux * avi, GstBuffer * buf)
 
       ptr += 98;
       left -= 98;
-      if (!memcmp (ptr, "FUJIFILM", 8)) {
+      if (left >= 10 && !memcmp (ptr, "FUJIFILM", 8)) {
         GST_MEMDUMP_OBJECT (avi, "fujifim tag", ptr, 48);
 
         ptr += 10;
         left -= 10;
         sub_size = 0;
-        while (ptr[sub_size] && sub_size < left)
+        while (sub_size < left && ptr[sub_size])
           sub_size++;
 
         if (avi->globaltags == NULL)
@@ -3851,21 +3851,24 @@ gst_avi_demux_parse_strd (GstAviDemux * avi, GstBuffer * buf)
         parse_tag_value (avi, avi->globaltags, GST_TAG_DEVICE_MODEL, ptr,
             sub_size);
 
-        while (ptr[sub_size] == '\0' && sub_size < left)
+        while (sub_size < left && ptr[sub_size] == '\0')
           sub_size++;
 
         ptr += sub_size;
         left -= sub_size;
         sub_size = 0;
-        while (ptr[sub_size] && sub_size < left)
+        while (sub_size < left && ptr[sub_size])
           sub_size++;
-        if (ptr[4] == ':')
-          ptr[4] = '-';
-        if (ptr[7] == ':')
-          ptr[7] = '-';
 
-        parse_tag_value (avi, avi->globaltags, GST_TAG_DATE_TIME, ptr,
-            sub_size);
+        if (sub_size >= 8) {
+          if (ptr[4] == ':')
+            ptr[4] = '-';
+          if (ptr[7] == ':')
+            ptr[7] = '-';
+
+          parse_tag_value (avi, avi->globaltags, GST_TAG_DATE_TIME, ptr,
+              sub_size);
+        }
       }
     }
   }
