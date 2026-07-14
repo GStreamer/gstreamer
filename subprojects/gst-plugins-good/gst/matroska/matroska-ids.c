@@ -277,8 +277,9 @@ gst_matroska_parse_flac_stream_headers (gpointer codec_data,
 {
   GstBufferList *list = NULL;
   GstBuffer *hdr;
-  guint8 *pdata = codec_data;
-  guint len, off;
+  const guint8 *pdata = codec_data;
+  gsize off;
+  guint len;
 
   GST_MEMDUMP ("flac codec data", codec_data, codec_data_size);
 
@@ -301,14 +302,14 @@ gst_matroska_parse_flac_stream_headers (gpointer codec_data,
   /* skip fLaC marker */
   off = 4;
 
-  while (off < codec_data_size - 3) {
+  while (off < codec_data_size - 4) {
     len = GST_READ_UINT8 (pdata + off + 1) << 16;
     len |= GST_READ_UINT8 (pdata + off + 2) << 8;
     len |= GST_READ_UINT8 (pdata + off + 3);
 
     GST_DEBUG ("header packet: len=%u bytes, flags=0x%02x", len, pdata[off]);
 
-    if (off + len > codec_data_size) {
+    if (len > codec_data_size - 4 || off + len > codec_data_size - 4) {
       gst_buffer_list_unref (list);
       return NULL;
     }
