@@ -5456,6 +5456,13 @@ set to %NULL. This can be useful if you need buffers to be released as soon
 as possible, eg. if you're using a buffer pool.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
+      <property name="enable-last-sample-notify" version="1.30" writable="1" transfer-ownership="none" default-value="FALSE">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Enable emission of the "notify::last-sample" signal. This is disabled by
+default as it can be expensive: the notification is emitted for every
+buffer that updates the last sample. It has no effect unless
+#GstBaseSink:enable-last-sample is also %TRUE.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
       <property name="last-sample" transfer-ownership="none" getter="get_last_sample">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">The last buffer that arrived in the sink and was used for preroll or for
 rendering. This property can be used to generate thumbnails. This property

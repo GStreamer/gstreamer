@@ -223,6 +223,7 @@ struct _GstBaseSinkPrivate
 
   /* the last buffer we prerolled or rendered. Useful for making snapshots */
   gint enable_last_sample;      /* atomic */
+  gint enable_last_sample_notify;       /* atomic */
   GstBuffer *last_buffer;
   GstCaps *last_caps;
   GstBufferList *last_buffer_list;
@@ -303,6 +304,7 @@ struct _GstBaseSinkPrivate
 #define DEFAULT_BLOCKSIZE           4096
 #define DEFAULT_RENDER_DELAY        0
 #define DEFAULT_ENABLE_LAST_SAMPLE  TRUE
+#define DEFAULT_ENABLE_LAST_SAMPLE_NOTIFY FALSE
 #define DEFAULT_THROTTLE_TIME       0
 #define DEFAULT_MAX_BITRATE         0
 #define DEFAULT_DROP_OUT_OF_SEGMENT TRUE
@@ -317,6 +319,7 @@ enum
   PROP_ASYNC,
   PROP_TS_OFFSET,
   PROP_ENABLE_LAST_SAMPLE,
+  PROP_ENABLE_LAST_SAMPLE_NOTIFY,
   PROP_LAST_SAMPLE,
   PROP_BLOCKSIZE,
   PROP_RENDER_DELAY,
@@ -500,6 +503,23 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   properties[PROP_ENABLE_LAST_SAMPLE] =
       g_param_spec_boolean ("enable-last-sample", "Enable Last Buffer",
       "Enable the last-sample property", DEFAULT_ENABLE_LAST_SAMPLE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstBaseSink:enable-last-sample-notify:
+   *
+   * Enable emission of the "notify::last-sample" signal. This is disabled by
+   * default as it can be expensive: the notification is emitted for every
+   * buffer that updates the last sample. It has no effect unless
+   * #GstBaseSink:enable-last-sample is also %TRUE.
+   *
+   * Since: 1.30
+   */
+  properties[PROP_ENABLE_LAST_SAMPLE_NOTIFY] =
+      g_param_spec_boolean ("enable-last-sample-notify",
+      "Enable Last Sample Notify",
+      "Emit the notify::last-sample signal when the last sample changes",
+      DEFAULT_ENABLE_LAST_SAMPLE_NOTIFY,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
@@ -723,6 +743,8 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   priv->blocksize = DEFAULT_BLOCKSIZE;
   priv->cached_clock_id = NULL;
   g_atomic_int_set (&priv->enable_last_sample, DEFAULT_ENABLE_LAST_SAMPLE);
+  g_atomic_int_set (&priv->enable_last_sample_notify,
+      DEFAULT_ENABLE_LAST_SAMPLE_NOTIFY);
   priv->throttle_time = DEFAULT_THROTTLE_TIME;
   priv->max_bitrate = DEFAULT_MAX_BITRATE;
 
@@ -1043,14 +1065,20 @@ gst_base_sink_get_last_sample (GstBaseSink * sink)
   return res;
 }
 
-/* with OBJECT_LOCK */
-static void
+/* with OBJECT_LOCK
+ *
+ * Returns %TRUE if the stored buffer actually changed, in which case the
+ * caller is responsible for emitting a notification on the "last-sample"
+ * property once it has dropped the OBJECT_LOCK. */
+static gboolean
 gst_base_sink_set_last_buffer_unlocked (GstBaseSink * sink, GstBuffer * buffer)
 {
   GstBuffer *old;
+  gboolean changed;
 
   old = sink->priv->last_buffer;
-  if (G_LIKELY (old != buffer)) {
+  changed = (old != buffer);
+  if (G_LIKELY (changed)) {
     GST_DEBUG_OBJECT (sink, "setting last buffer to %p", buffer);
     if (G_LIKELY (buffer))
       gst_buffer_ref (buffer);
@@ -1070,17 +1098,25 @@ gst_base_sink_set_last_buffer_unlocked (GstBaseSink * sink, GstBuffer * buffer)
     gst_buffer_unref (old);
     GST_OBJECT_LOCK (sink);
   }
+
+  return changed;
 }
 
-/* with OBJECT_LOCK */
-static void
+/* with OBJECT_LOCK
+ *
+ * Returns %TRUE if the stored buffer list actually changed, in which case the
+ * caller is responsible for emitting a notification on the "last-sample"
+ * property once it has dropped the OBJECT_LOCK. */
+static gboolean
 gst_base_sink_set_last_buffer_list_unlocked (GstBaseSink * sink,
     GstBufferList * buffer_list)
 {
   GstBufferList *old;
+  gboolean changed;
 
   old = sink->priv->last_buffer_list;
-  if (G_LIKELY (old != buffer_list)) {
+  changed = (old != buffer_list);
+  if (G_LIKELY (changed)) {
     GST_DEBUG_OBJECT (sink, "setting last buffer list to %p", buffer_list);
     if (G_LIKELY (buffer_list))
       gst_mini_object_ref (GST_MINI_OBJECT_CAST (buffer_list));
@@ -1096,29 +1132,45 @@ gst_base_sink_set_last_buffer_list_unlocked (GstBaseSink * sink,
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (old));
     GST_OBJECT_LOCK (sink);
   }
+
+  return changed;
 }
 
 static void
 gst_base_sink_set_last_buffer (GstBaseSink * sink, GstBuffer * buffer)
 {
+  gboolean notify;
+
   if (!g_atomic_int_get (&sink->priv->enable_last_sample))
     return;
 
   GST_OBJECT_LOCK (sink);
-  gst_base_sink_set_last_buffer_unlocked (sink, buffer);
+  notify = gst_base_sink_set_last_buffer_unlocked (sink, buffer);
   GST_OBJECT_UNLOCK (sink);
+
+  /* g_object_notify() may re-enter application code, so only notify after
+   * dropping the OBJECT_LOCK to avoid lock-order issues. */
+  if (notify && g_atomic_int_get (&sink->priv->enable_last_sample_notify))
+    g_object_notify_by_pspec (G_OBJECT (sink), properties[PROP_LAST_SAMPLE]);
 }
 
 static void
 gst_base_sink_set_last_buffer_list (GstBaseSink * sink,
     GstBufferList * buffer_list)
 {
+  gboolean notify;
+
   if (!g_atomic_int_get (&sink->priv->enable_last_sample))
     return;
 
   GST_OBJECT_LOCK (sink);
-  gst_base_sink_set_last_buffer_list_unlocked (sink, buffer_list);
+  notify = gst_base_sink_set_last_buffer_list_unlocked (sink, buffer_list);
   GST_OBJECT_UNLOCK (sink);
+
+  /* g_object_notify() may re-enter application code, so only notify after
+   * dropping the OBJECT_LOCK to avoid lock-order issues. */
+  if (notify && g_atomic_int_get (&sink->priv->enable_last_sample_notify))
+    g_object_notify_by_pspec (G_OBJECT (sink), properties[PROP_LAST_SAMPLE]);
 }
 
 /**
@@ -1137,10 +1189,17 @@ gst_base_sink_set_last_sample_enabled (GstBaseSink * sink, gboolean enabled)
   /* Only take lock if we change the value */
   if (g_atomic_int_compare_and_exchange (&sink->priv->enable_last_sample,
           !enabled, enabled) && !enabled) {
+    gboolean notify;
+
     GST_OBJECT_LOCK (sink);
-    gst_base_sink_set_last_buffer_unlocked (sink, NULL);
-    gst_base_sink_set_last_buffer_list_unlocked (sink, NULL);
+    notify = gst_base_sink_set_last_buffer_unlocked (sink, NULL);
+    notify |= gst_base_sink_set_last_buffer_list_unlocked (sink, NULL);
     GST_OBJECT_UNLOCK (sink);
+
+    /* g_object_notify() may re-enter application code, so only notify after
+     * dropping the OBJECT_LOCK to avoid lock-order issues. */
+    if (notify && g_atomic_int_get (&sink->priv->enable_last_sample_notify))
+      g_object_notify_by_pspec (G_OBJECT (sink), properties[PROP_LAST_SAMPLE]);
   }
 }
 
@@ -1591,6 +1650,10 @@ gst_base_sink_set_property (GObject * object, guint prop_id,
     case PROP_ENABLE_LAST_SAMPLE:
       gst_base_sink_set_last_sample_enabled (sink, g_value_get_boolean (value));
       break;
+    case PROP_ENABLE_LAST_SAMPLE_NOTIFY:
+      g_atomic_int_set (&sink->priv->enable_last_sample_notify,
+          g_value_get_boolean (value));
+      break;
     case PROP_THROTTLE_TIME:
       gst_base_sink_set_throttle_time (sink, g_value_get_uint64 (value));
       break;
@@ -1633,6 +1696,10 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_ENABLE_LAST_SAMPLE:
       g_value_set_boolean (value, gst_base_sink_is_last_sample_enabled (sink));
+      break;
+    case PROP_ENABLE_LAST_SAMPLE_NOTIFY:
+      g_value_set_boolean (value,
+          g_atomic_int_get (&sink->priv->enable_last_sample_notify));
       break;
     case PROP_BLOCKSIZE:
       g_value_set_uint (value, gst_base_sink_get_blocksize (sink));
