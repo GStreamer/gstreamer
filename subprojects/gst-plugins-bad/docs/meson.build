@@ -121,7 +121,6 @@ if build_gir
       'codecparsers': codecparsers_gir[0].full_path(),
       'codecs': codecs_gir[0].full_path(),
       'dxva': dxva_gir[0].full_path(),
-      'mse': mse_gir[0].full_path(),
       'analytics': analytics_gir[0].full_path(),
     }
 
@@ -137,9 +136,13 @@ if build_gir
       codecparsers_gir[0],
       codecs_gir[0],
       dxva_gir[0],
-      mse_gir[0],
       analytics_gir[0],
     ]
+
+    if gstmse_private_test_dep.found()
+      libs_doc_gi_conf += {'mse': mse_gir[0].full_path()}
+      libs_doc_depends += [mse_gir[0]]
+    endif
 
     if get_variable('gst_cuda_gir', []).length() > 0
         libs_doc_gi_conf += {'cuda': gst_cuda_gir[0].full_path()}
