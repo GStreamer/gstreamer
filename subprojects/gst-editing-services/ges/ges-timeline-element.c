@@ -329,16 +329,18 @@ static gboolean
 _lookup_child (GESTimelineElement * self, const gchar * prop_name,
     GObject ** child, GParamSpec ** pspec)
 {
-  gchar **names, *name, *classename;
+  gchar **names, *name, *qualifier;
   gboolean res;
   gint i;
 
-  classename = NULL;
+  qualifier = NULL;
   res = FALSE;
 
+  /* "prop" or "qualifier::prop", the qualifier being the child's type name,
+   * the property owner's type name or the child's object name */
   names = g_strsplit (prop_name, "::", 2);
   if (names[1] != NULL) {
-    classename = names[0];
+    qualifier = names[0];
     name = names[1];
   } else
     name = names[0];
@@ -346,23 +348,27 @@ _lookup_child (GESTimelineElement * self, const gchar * prop_name,
   for (i = 0; i < self->priv->children_props->len; i++) {
     ChildPropSpec *childprop =
         &g_array_index (self->priv->children_props, ChildPropSpec, i);
-    if (g_strcmp0 (childprop->pspec->name, name) == 0) {
-      if (classename == NULL
-          || g_strcmp0 (G_OBJECT_TYPE_NAME (G_OBJECT (childprop->child)),
-              classename) == 0
-          || g_strcmp0 (g_type_name (childprop->pspec->owner_type),
-              classename) == 0) {
-        GST_DEBUG_OBJECT (self, "The %s property from %s has been found", name,
-            classename);
-        if (child)
-          *child = gst_object_ref (childprop->child);
 
-        if (pspec)
-          *pspec = g_param_spec_ref (childprop->pspec);
-        res = TRUE;
-        break;
-      }
-    }
+    if (g_strcmp0 (childprop->pspec->name, name) != 0)
+      continue;
+
+    if (qualifier != NULL
+        && g_strcmp0 (G_OBJECT_TYPE_NAME (G_OBJECT (childprop->child)),
+            qualifier) != 0
+        && g_strcmp0 (g_type_name (childprop->pspec->owner_type),
+            qualifier) != 0 && !(GST_IS_OBJECT (childprop->child)
+            && g_strcmp0 (GST_OBJECT_NAME (childprop->child), qualifier) == 0))
+      continue;
+
+    GST_DEBUG_OBJECT (self, "The %s property from %s has been found", name,
+        qualifier ? qualifier : "any child");
+    if (child)
+      *child = gst_object_ref (childprop->child);
+
+    if (pspec)
+      *pspec = g_param_spec_ref (childprop->pspec);
+    res = TRUE;
+    break;
   }
   g_strfreev (names);
 
@@ -385,6 +391,34 @@ ges_timeline_element_get_children_properties (GESTimelineElement * self,
             ChildPropSpec, i).pspec);
   }
 
+  return pspec;
+}
+
+/* Like ges_timeline_element_get_children_properties(), also returning the
+ * child of each property in @children. Both arrays hold references and are
+ * freed with g_free() */
+GParamSpec **
+ges_timeline_element_get_children_properties_with_children (GESTimelineElement *
+    self, GObject *** children, guint * n_properties)
+{
+  GParamSpec **pspec;
+  GObject **objs;
+  guint i;
+
+  _LOCK (self);
+  *n_properties = self->priv->children_props->len;
+  pspec = g_new (GParamSpec *, *n_properties);
+  objs = g_new (GObject *, *n_properties);
+
+  for (i = 0; i < *n_properties; i++) {
+    ChildPropSpec *cp =
+        &g_array_index (self->priv->children_props, ChildPropSpec, i);
+    pspec[i] = g_param_spec_ref (cp->pspec);
+    objs[i] = g_object_ref (cp->child);
+  }
+  _UNLOCK (self);
+
+  *children = objs;
   return pspec;
 }
 
@@ -931,12 +965,13 @@ set_child_property (GESTimelineElement * self, ChildPropSpec * childprop,
 
 static gboolean
 set_child_property_by_pspec (GESTimelineElement * self,
-    GParamSpec * pspec, const GValue * value, GError ** error)
+    GParamSpec * pspec, GObject * target_child, const GValue * value,
+    GError ** error)
 {
   gint i;
   ChildPropSpec *childprop;
 
-  gboolean found = FALSE, res = TRUE;
+  gboolean found = FALSE, res = TRUE, set_on_all;
 
   for (i = 0; i < self->priv->children_props->len; i++) {
     childprop = &g_array_index (self->priv->children_props, ChildPropSpec, i);
@@ -944,10 +979,17 @@ set_child_property_by_pspec (GESTimelineElement * self,
     if (ges_pspec_hash (childprop->pspec) != ges_pspec_hash (pspec))
       continue;
 
+    /* Unless the property is set on all instances, only set @target_child,
+     * the child the property name resolved to */
+    set_on_all = !!(childprop->flags &
+        GES_TIMELINE_ELEMENT_CHILD_PROP_FLAG_SET_ON_ALL_INSTANCES);
+
+    if (!set_on_all && target_child && childprop->child != target_child)
+      continue;
+
     found = TRUE;
     res &= set_child_property (self, childprop, value, error);
-    if (!(childprop->flags &
-            GES_TIMELINE_ELEMENT_CHILD_PROP_FLAG_SET_ON_ALL_INSTANCES))
+    if (!set_on_all)
       break;
   }
 
@@ -2130,7 +2172,7 @@ ges_timeline_element_set_child_property_by_pspec (GESTimelineElement * self,
   g_return_if_fail (G_IS_PARAM_SPEC (pspec));
 
   _LOCK (self);
-  set_child_property_by_pspec (self, pspec, value, NULL);
+  set_child_property_by_pspec (self, pspec, NULL, value, NULL);
   _UNLOCK (self);
 }
 
@@ -2147,14 +2189,16 @@ ges_timeline_element_set_child_property_by_pspec (GESTimelineElement * self,
  * "TypeName::prop-name", where "prop-name" is the name of the property
  * to set (as used in g_object_set()), and "TypeName" is the type name of
  * the child (as returned by G_OBJECT_TYPE_NAME()). The latter format is
- * useful when two children of different types share the same property
- * name.
+ * useful when two children share the same property name. Since 1.30, that
+ * "TypeName" qualifier may also be a child's #GstObject name (as returned
+ * by GST_OBJECT_NAME()), which disambiguates two children of the same type,
+ * e.g. "a::saturation".
  *
  * The first child found with the given "prop-name" property that was
- * registered with ges_timeline_element_add_child_property() (and of the
- * type "TypeName", if it was given) will have the corresponding
+ * registered with ges_timeline_element_add_child_property() (and matching
+ * the qualifier, if one was given) will have the corresponding
  * property set to @value. Other children that may have also matched the
- * property name (and type name) are left unchanged!
+ * property name (and qualifier) are left unchanged!
  *
  * Returns: %TRUE if the property was found and set.
  * Since: 1.18
@@ -2164,6 +2208,7 @@ ges_timeline_element_set_child_property_full (GESTimelineElement * self,
     const gchar * property_name, const GValue * value, GError ** error)
 {
   GParamSpec *pspec;
+  GObject *child = NULL;
   gboolean res = FALSE;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
@@ -2171,11 +2216,12 @@ ges_timeline_element_set_child_property_full (GESTimelineElement * self,
 
   _LOCK (self);
 
-  if (!ges_timeline_element_lookup_child (self, property_name, NULL, &pspec))
+  if (!ges_timeline_element_lookup_child (self, property_name, &child, &pspec))
     goto not_found;
 
-  res = set_child_property_by_pspec (self, pspec, value, error);
+  res = set_child_property_by_pspec (self, pspec, child, value, error);
 
+  gst_object_unref (child);
   g_param_spec_unref (pspec);
   goto done;
 
@@ -2223,12 +2269,14 @@ ges_timeline_element_set_child_property (GESTimelineElement * self,
  * "TypeName::prop-name", where "prop-name" is the name of the property
  * to get (as used in g_object_get()), and "TypeName" is the type name of
  * the child (as returned by G_OBJECT_TYPE_NAME()). The latter format is
- * useful when two children of different types share the same property
- * name.
+ * useful when two children share the same property name. Since 1.30, that
+ * "TypeName" qualifier may also be a child's #GstObject name (as returned
+ * by GST_OBJECT_NAME()), which disambiguates two children of the same type,
+ * e.g. "a::saturation".
  *
  * The first child found with the given "prop-name" property that was
- * registered with ges_timeline_element_add_child_property() (and of the
- * type "TypeName", if it was given) will have the corresponding
+ * registered with ges_timeline_element_add_child_property() (and matching
+ * the qualifier, if one was given) will have the corresponding
  * property copied into @value.
  *
  * Note that ges_timeline_element_get_child_properties() may be more
@@ -2289,12 +2337,14 @@ done:
  * "TypeName::prop-name", where "prop-name" is the name of the property
  * to look up (as used in g_object_get()), and "TypeName" is the type name
  * of the child (as returned by G_OBJECT_TYPE_NAME()). The latter format is
- * useful when two children of different types share the same property
- * name.
+ * useful when two children share the same property name. Since 1.30, that
+ * "TypeName" qualifier may also be a child's #GstObject name (as returned
+ * by GST_OBJECT_NAME()), which disambiguates two children of the same type,
+ * e.g. "a::saturation".
  *
  * The first child found with the given "prop-name" property that was
- * registered with ges_timeline_element_add_child_property() (and of the
- * type "TypeName", if it was given) will be passed to @child, and the
+ * registered with ges_timeline_element_add_child_property() (and matching
+ * the qualifier, if one was given) will be passed to @child, and the
  * registered specification of this property will be passed to @pspec.
  *
  * Returns: %TRUE if a child corresponding to the property was found, in
@@ -2334,6 +2384,7 @@ ges_timeline_element_set_child_property_valist (GESTimelineElement * self,
 {
   const gchar *name;
   GParamSpec *pspec;
+  GObject *child = NULL;
 
   gchar *error = NULL;
   GValue value = { 0, };
@@ -2349,7 +2400,7 @@ ges_timeline_element_set_child_property_valist (GESTimelineElement * self,
 
   /* iterate over pairs */
   while (name) {
-    if (!ges_timeline_element_lookup_child (self, name, NULL, &pspec))
+    if (!ges_timeline_element_lookup_child (self, name, &child, &pspec))
       goto not_found;
 
     memset (&value, 0, sizeof (value));
@@ -2359,8 +2410,9 @@ ges_timeline_element_set_child_property_valist (GESTimelineElement * self,
     if (error)
       goto cant_copy;
 
-    set_child_property_by_pspec (self, pspec, &value, NULL);
+    set_child_property_by_pspec (self, pspec, child, &value, NULL);
 
+    gst_object_unref (child);
     g_param_spec_unref (pspec);
     g_value_unset (&value);
 
@@ -2380,6 +2432,7 @@ cant_copy:
     GST_WARNING_OBJECT (self, "error copying value %s in %p: %s", pspec->name,
         self, error);
 
+    gst_object_unref (child);
     g_param_spec_unref (pspec);
     g_value_unset (&value);
     _UNLOCK (self);

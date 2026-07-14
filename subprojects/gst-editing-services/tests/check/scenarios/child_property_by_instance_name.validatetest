@@ -1,0 +1,28 @@
+# Two videobalance in one effect, addressed by instance name: a::saturation=0
+# greys a red clip and b::saturation=2 cannot bring the colour back. If both
+# values reached the same child, the clip would stay red.
+meta,
+    tool="ges-launch-$(gst_api_version)",
+    handles-states=true,
+    args={
+        --track-types, video, --videosink, "fakevideosink name=videosink sync=false",
+    }
+
+add-clip, name=c0, asset-id=GESTestClip, layer-priority=0, type=GESTestClip, start=0, duration=1.0
+set-child-properties,
+    element-name=c0,
+    pattern=red
+
+container-add-child,
+    container-name=c0,
+    asset-id="videobalance name=a ! videobalance name=b",
+    child-type=GESEffect,
+    child-name=effect
+
+set-child-property, element-name=effect, property=a::saturation, value=0.0
+set-child-property, element-name=effect, property=b::saturation, value=2.0
+
+pause
+check-last-sample, sink-name=videosink, expected-color=<0.22, 0.22, 0.22>, tolerance=0.05
+
+stop

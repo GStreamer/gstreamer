@@ -436,6 +436,10 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_add_control_binding (GESBaseXmlForma
                                                                   gint mode,
                                                                   const gchar *track_id,
                                                                   GSList * timed_values);
+G_GNUC_INTERNAL void ges_base_xml_formatter_add_indexed_children_properties (GESBaseXmlFormatter * self,
+                                                                  const gchar * track_id,
+                                                                  GstStructure * children_properties,
+                                                                  GError ** error);
 
 G_GNUC_INTERNAL void ges_base_xml_formatter_set_timeline_properties(GESBaseXmlFormatter * self,
                                                                     GESTimeline *timeline,
@@ -636,6 +640,12 @@ G_GNUC_INTERNAL void ges_track_element_copy_properties          (GESTimelineElem
                                                                  GESTimelineElement * elementcopy);
 G_GNUC_INTERNAL void ges_track_element_set_layer_active         (GESTrackElement *element, gboolean active);
 
+G_GNUC_INTERNAL gboolean ges_track_element_set_control_source_for_child (GESTrackElement * object,
+                                                                         GstControlSource * source,
+                                                                         const gchar * property_name,
+                                                                         GstElement * element,
+                                                                         GParamSpec * pspec,
+                                                                         const gchar * binding_type);
 G_GNUC_INTERNAL void ges_track_element_copy_bindings (GESTrackElement *element,
                                                       GESTrackElement *new_element,
                                                       guint64 position);
@@ -749,6 +759,9 @@ G_GNUC_INTERNAL gboolean            ges_timeline_element_add_child_property_full
 G_GNUC_INTERNAL GList *           ges_timeline_element_get_children_from_child_property (GESTimelineElement * self,
                                                                                          GParamSpec * pspec);
 G_GNUC_INTERNAL GParamSpec **       ges_timeline_element_get_children_properties (GESTimelineElement * self,
+                                                                                  guint * n_properties);
+G_GNUC_INTERNAL GParamSpec **       ges_timeline_element_get_children_properties_with_children (GESTimelineElement * self,
+                                                                                  GObject *** children,
                                                                                   guint * n_properties);
 G_GNUC_INTERNAL gboolean            ges_timeline_element_remove_child_property_full  (GESTimelineElement * self,
                                                                                       GParamSpec * pspec,

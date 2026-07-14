@@ -32,6 +32,7 @@
 #include "ges.h"
 #include <glib/gstdio.h>
 #include "ges-internal.h"
+#include "glib-compat-private.h"
 
 #define parent_class ges_xml_formatter_parent_class
 #define API_VERSION 0
@@ -717,6 +718,35 @@ _parse_binding (GMarkupParseContext * context, const gchar * element_name,
 }
 
 static inline void
+_parse_indexed_children_properties (GMarkupParseContext * context,
+    const gchar * element_name, const gchar ** attribute_names,
+    const gchar ** attribute_values, GESXmlFormatter * self, GError ** error)
+{
+  const gchar *track_id = NULL, *properties = NULL;
+  GstStructure *children_props;
+
+  if (!g_markup_collect_attributes (element_name, attribute_names,
+          attribute_values, error,
+          COLLECT_STR_OPT, "track_id", &track_id,
+          G_MARKUP_COLLECT_STRING, "properties", &properties,
+          G_MARKUP_COLLECT_INVALID)) {
+    return;
+  }
+
+  children_props = gst_structure_from_string (properties, NULL);
+  if (children_props == NULL) {
+    g_set_error (error, G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT,
+        "element '%s', children properties '%s' could not be deserialized",
+        element_name, properties);
+    return;
+  }
+
+  ges_base_xml_formatter_add_indexed_children_properties
+      (GES_BASE_XML_FORMATTER (self), track_id, children_props, error);
+  gst_structure_free (children_props);
+}
+
+static inline void
 _parse_source (GMarkupParseContext * context, const gchar * element_name,
     const gchar ** attribute_names, const gchar ** attribute_values,
     GESXmlFormatter * self, GError ** error)
@@ -941,6 +971,12 @@ _parse_element_start (GMarkupParseContext * context, const gchar * element_name,
   else if (g_strcmp0 (element_name, "binding") == 0)
     _parse_binding (context, element_name, attribute_names,
         attribute_values, self, error);
+  else if (g_strcmp0 (element_name, "indexed-binding") == 0)
+    _parse_binding (context, element_name, attribute_names,
+        attribute_values, self, error);
+  else if (g_strcmp0 (element_name, "indexed-children-properties") == 0)
+    _parse_indexed_children_properties (context, element_name,
+        attribute_names, attribute_values, self, error);
   else if (g_strcmp0 (element_name, "group") == 0)
     _parse_group (context, element_name, attribute_names,
         attribute_values, self, error);
@@ -1408,46 +1444,194 @@ _save_tracks (GESXmlFormatter * self, GString * str, GESTimeline * timeline,
   g_list_free_full (tracks, gst_object_unref);
 }
 
-static inline void
+static gint
+_compare_child_props (const guint * a, const guint * b, GParamSpec ** pspecs)
+{
+  return g_strcmp0 (pspecs[*a]->name, pspecs[*b]->name);
+}
+
+/* Writes the children-properties attribute and returns the properties of the
+ * other children sharing a key, to be saved with
+ * _save_indexed_children_properties() */
+static GstStructure *
 _save_children_properties (GString * str, GESTimelineElement * element,
     guint depth)
 {
-  GstStructure *structure;
-  GParamSpec **pspecs, *spec;
-  guint i, n_props;
+  GstStructure *structure, *indexed;
+  GParamSpec **pspecs, **listed, *spec;
+  GObject **children;
+  GHashTable *ranks, *saved;
+  guint i, n_props, n_listed, rank, *order;
   gchar *struct_str;
 
-  pspecs = ges_timeline_element_list_children_properties (element, &n_props);
+  pspecs =
+      ges_timeline_element_get_children_properties_with_children (element,
+      &children, &n_props);
 
+  /* Subclasses can hide properties through list_children_properties(), only
+   * those it returns are saved */
+  saved = g_hash_table_new (NULL, NULL);
+  listed = ges_timeline_element_list_children_properties (element, &n_listed);
+  for (i = 0; i < n_listed; i++) {
+    g_hash_table_add (saved, listed[i]);
+    g_param_spec_unref (listed[i]);
+  }
+  g_free (listed);
+
+  /* Sorted by name, stable so that children sharing a key keep their order */
+  order = g_new (guint, n_props);
+  for (i = 0; i < n_props; i++)
+    order[i] = i;
+  g_sort_array (order, n_props, sizeof (guint),
+      (GCompareDataFunc) _compare_child_props, pspecs);
+
+  ranks = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
   structure = gst_structure_new_empty ("properties");
+  indexed = gst_structure_new_empty ("properties");
   for (i = 0; i < n_props; i++) {
     GValue val = { 0 };
-    spec = pspecs[i];
+    gchar *spec_name;
+    spec = pspecs[order[i]];
 
-    if (ges_util_can_serialize_spec (spec)) {
-      gchar *spec_name =
-          g_strdup_printf ("%s::%s", g_type_name (spec->owner_type),
-          spec->name);
+    /* "TypeName::prop" resolves to the first child with that property, so it
+     * keeps that child's value. The Nth other child sharing it is written as
+     * "TypeName.N::prop", in an element older versions ignore. */
+    spec_name =
+        g_strdup_printf ("%s::%s", g_type_name (spec->owner_type), spec->name);
+    rank = GPOINTER_TO_UINT (g_hash_table_lookup (ranks, spec_name));
+    g_hash_table_insert (ranks, g_strdup (spec_name),
+        GUINT_TO_POINTER (rank + 1));
 
-      _init_value_from_spec_for_serialization (&val, spec);
-      ges_timeline_element_get_child_property_by_pspec (element, spec, &val);
-      /* A NULL structure can't be serialized, and means "unset" */
-      if (!G_VALUE_HOLDS (&val, GST_TYPE_STRUCTURE) ||
-          gst_value_get_structure (&val))
-        gst_structure_set_value (structure, spec_name, &val);
-
+    if (!ges_util_can_serialize_spec (spec)
+        || !g_hash_table_contains (saved, spec)) {
       g_free (spec_name);
-      g_value_unset (&val);
+      continue;
     }
-    g_param_spec_unref (spec);
+
+    if (rank > 0) {
+      g_free (spec_name);
+      spec_name = g_strdup_printf ("%s.%u::%s", g_type_name (spec->owner_type),
+          rank, spec->name);
+    }
+
+    _init_value_from_spec_for_serialization (&val, spec);
+    g_object_get_property (children[order[i]], spec->name, &val);
+    /* A NULL structure can't be serialized, and means "unset" */
+    if (!G_VALUE_HOLDS (&val, GST_TYPE_STRUCTURE) ||
+        gst_value_get_structure (&val))
+      gst_structure_set_value (rank > 0 ? indexed : structure, spec_name, &val);
+
+    g_free (spec_name);
+    g_value_unset (&val);
+  }
+  g_hash_table_unref (ranks);
+  g_hash_table_unref (saved);
+  g_free (order);
+  for (i = 0; i < n_props; i++) {
+    g_param_spec_unref (pspecs[i]);
+    g_object_unref (children[i]);
   }
   g_free (pspecs);
+  g_free (children);
 
   struct_str = gst_structure_to_string (structure);
   append_escaped (str,
       g_markup_printf_escaped (" children-properties='%s'", struct_str), 0);
   gst_structure_free (structure);
   g_free (struct_str);
+
+  if (gst_structure_n_fields (indexed) == 0)
+    gst_clear_structure (&indexed);
+
+  return indexed;
+}
+
+/* Takes @indexed, from _save_children_properties(). @track_id is -2 for a
+ * clip's own children properties */
+static void
+_save_indexed_children_properties (GString * str, GstStructure * indexed,
+    gint track_id, guint depth)
+{
+  gchar *struct_str;
+
+  if (!indexed)
+    return;
+
+  struct_str = gst_structure_to_string (indexed);
+  if (track_id == -2)
+    append_escaped (str,
+        g_markup_printf_escaped
+        ("            <indexed-children-properties properties='%s'/>\n",
+            struct_str), depth);
+  else
+    append_escaped (str,
+        g_markup_printf_escaped
+        ("            <indexed-children-properties track_id='%d' properties='%s'/>\n",
+            track_id, struct_str), depth);
+  g_free (struct_str);
+  gst_structure_free (indexed);
+}
+
+/* The key to save a binding on @prop of @child under, NULL to keep @key.
+ * Object names are not stable across loads, so a name-qualified @key becomes
+ * "TypeName::prop" for the first child with that key, "TypeName.N::prop" for
+ * the Nth other one (see _save_children_properties()), then @indexed is set */
+static gchar *
+_binding_save_key (GESTimelineElement * element, GObject * child,
+    const gchar * prop, const gchar * key, gboolean * indexed)
+{
+  GParamSpec **pspecs, *spec = NULL;
+  GObject **children;
+  const gchar *sep;
+  gchar *qualifier = NULL, *save_key = NULL;
+  gboolean by_name = FALSE;
+  guint i, n_props, match = 0, rank = 0;
+
+  *indexed = FALSE;
+  sep = g_strstr_len (key, -1, "::");
+  if (sep)
+    qualifier = g_strndup (key, sep - key);
+
+  pspecs = ges_timeline_element_get_children_properties_with_children (element,
+      &children, &n_props);
+  for (i = 0; i < n_props && !spec; i++) {
+    if (children[i] == child && g_strcmp0 (pspecs[i]->name, prop) == 0) {
+      spec = pspecs[i];
+      match = i;
+    }
+  }
+
+  if (spec) {
+    /* A child name may itself be a registered GType name. Compare against the
+     * types that child-property lookup actually accepts instead. */
+    by_name = qualifier
+        && g_strcmp0 (qualifier, G_OBJECT_TYPE_NAME (child)) != 0
+        && g_strcmp0 (qualifier, g_type_name (spec->owner_type)) != 0;
+
+    for (i = 0; i < match; i++) {
+      if (pspecs[i]->owner_type == spec->owner_type
+          && g_strcmp0 (pspecs[i]->name, prop) == 0)
+        rank++;
+    }
+
+    *indexed = rank > 0;
+    if (rank > 0)
+      save_key = g_strdup_printf ("%s.%u::%s", g_type_name (spec->owner_type),
+          rank, prop);
+    else if (by_name)
+      save_key = g_strdup_printf ("%s::%s", g_type_name (spec->owner_type),
+          prop);
+  }
+
+  for (i = 0; i < n_props; i++) {
+    g_param_spec_unref (pspecs[i]);
+    g_object_unref (children[i]);
+  }
+  g_free (pspecs);
+  g_free (children);
+  g_free (qualifier);
+
+  return save_key;
 }
 
 /* TODO : Use this function for every track element with controllable properties */
@@ -1460,7 +1644,7 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index,
   gpointer key, value;
 
   bindings_hashtable =
-      ges_track_element_get_all_control_bindings (trackelement);
+      ges_track_element_get_all_control_bindings_full (trackelement);
 
   g_hash_table_iter_init (&iter, bindings_hashtable);
 
@@ -1468,13 +1652,22 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index,
   while (g_hash_table_iter_next (&iter, &key, &value)) {
     if (GST_IS_DIRECT_CONTROL_BINDING ((GstControlBinding *) value)) {
       GstControlSource *source;
+      GstObject *target;
       gboolean absolute = FALSE;
       GstDirectControlBinding *binding;
+      gboolean indexed = FALSE;
+      gchar *save_key;
 
       binding = (GstDirectControlBinding *) value;
 
       g_object_get (binding, "control-source", &source,
-          "absolute", &absolute, NULL);
+          "absolute", &absolute, "object", &target, NULL);
+
+      save_key = target ?
+          _binding_save_key (GES_TIMELINE_ELEMENT (trackelement),
+          G_OBJECT (target), GST_CONTROL_BINDING (binding)->name, key,
+          &indexed) : NULL;
+      gst_clear_object (&target);
 
       if (GST_IS_INTERPOLATION_CONTROL_SOURCE (source)) {
         GstTimedValue *timed_values;
@@ -1483,8 +1676,10 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index,
 
         append_escaped (str,
             g_markup_printf_escaped
-            ("            <binding type='%s' source_type='interpolation' property='%s'",
-                absolute ? "direct-absolute" : "direct", (gchar *) key), depth);
+            ("            <%s type='%s' source_type='interpolation' property='%s'",
+                indexed ? "indexed-binding" : "binding",
+                absolute ? "direct-absolute" : "direct",
+                save_key ? save_key : (gchar *) key), depth);
 
         g_object_get (source, "mode", &mode, NULL);
         append_escaped (str, g_markup_printf_escaped (" mode='%d'", mode),
@@ -1516,10 +1711,12 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index,
       } else
         GST_DEBUG ("control source not in [interpolation]");
 
+      g_free (save_key);
       gst_object_unref (source);
     } else
       GST_DEBUG ("Binding type not in [direct, direct-absolute]");
   }
+  g_hash_table_unref (bindings_hashtable);
 }
 
 static inline void
@@ -1529,6 +1726,7 @@ _save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
   GESTrack *tck;
   GList *tmp, *tracks;
   gchar *properties, *metas;
+  GstStructure *indexed;
   guint track_id = 0;
   gboolean serialize;
   gchar *extractable_id;
@@ -1571,9 +1769,12 @@ _save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
   g_free (properties);
   g_free (metas);
 
-  _save_children_properties (str, GES_TIMELINE_ELEMENT (trackelement), depth);
+  indexed =
+      _save_children_properties (str, GES_TIMELINE_ELEMENT (trackelement),
+      depth);
   append_escaped (str, g_markup_printf_escaped (">\n"), depth);
 
+  _save_indexed_children_properties (str, indexed, -1, depth);
   _save_keyframes (str, trackelement, -1, depth);
 
   append_escaped (str, g_markup_printf_escaped ("          </effect>\n"),
@@ -1618,6 +1819,7 @@ _save_source (GESXmlFormatter * self, GString * str,
   gint index, n_props, stream_number = -1;
   gboolean serialize;
   gchar *properties, *metas;
+  GstStructure *indexed;
   GESTimelineElement *clip;
   GESAsset *asset;
   GESSourceTrackMap *map = NULL;
@@ -1674,8 +1876,9 @@ _save_source (GESXmlFormatter * self, GString * str,
   g_string_append_printf (str, "metadatas='%s' ", metas);
   g_free (metas);
 
-  _save_children_properties (str, element, depth);
+  indexed = _save_children_properties (str, element, depth);
   append_escaped (str, g_markup_printf_escaped (">\n"), depth);
+  _save_indexed_children_properties (str, indexed, index, depth);
   _save_keyframes (str, GES_TRACK_ELEMENT (element), index, depth);
   append_escaped (str, g_markup_printf_escaped ("          </source>\n"),
       depth);
@@ -1686,6 +1889,7 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline,
     guint depth)
 {
   gchar *properties, *metas;
+  GstStructure *indexed;
   GESLayer *layer;
   GESClip *clip;
   GList *tmplayer, *tmpclip, *clips;
@@ -1753,11 +1957,14 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline,
               _DURATION (clip), _INPOINT (clip), 0, properties, metas), depth);
       g_free (metas);
 
+      indexed = NULL;
       if (GES_IS_TRANSITION_CLIP (clip)) {
-        _save_children_properties (str, GES_TIMELINE_ELEMENT (clip), depth);
+        indexed =
+            _save_children_properties (str, GES_TIMELINE_ELEMENT (clip), depth);
         self->priv->min_version = MAX (self->priv->min_version, 4);
       }
       g_string_append (str, ">\n");
+      _save_indexed_children_properties (str, indexed, -2, depth);
 
       g_free (extractable_id);
       g_free (properties);

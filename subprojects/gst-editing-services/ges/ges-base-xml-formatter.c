@@ -650,6 +650,63 @@ done:
   return accepted;
 }
 
+/* Resolves the "TypeName.N::prop" keys the xml formatter writes for the Nth
+ * other child sharing "TypeName::prop". Returns FALSE if @name is not such a
+ * key, sets @child to NULL if it is but does not resolve. @child and
+ * @pspec must not be NULL. */
+static gboolean
+_lookup_indexed_child (GESTimelineElement * element, const gchar * name,
+    GObject ** child, GParamSpec ** pspec)
+{
+  const gchar *sep, *dot;
+  GParamSpec **pspecs;
+  GObject **children;
+  gchar *type_name, *end;
+  guint64 rank;
+  guint i, n_props, n = 0;
+
+  g_assert (child && pspec);
+
+  sep = g_strstr_len (name, -1, "::");
+  dot = sep ? g_strrstr_len (name, sep - name, ".") : NULL;
+  if (!dot || dot == name || !g_ascii_isdigit (dot[1]))
+    return FALSE;
+
+  rank = g_ascii_strtoull (dot + 1, &end, 10);
+  if (end != sep || rank > G_MAXUINT)
+    return FALSE;
+
+  *child = NULL;
+  type_name = g_strndup (name, dot - name);
+  pspecs = ges_timeline_element_get_children_properties_with_children (element,
+      &children, &n_props);
+  for (i = 0; i < n_props; i++) {
+    if (!*child && g_strcmp0 (pspecs[i]->name, sep + 2) == 0
+        && g_strcmp0 (g_type_name (pspecs[i]->owner_type), type_name) == 0
+        && n++ == rank) {
+      *child = g_object_ref (children[i]);
+      *pspec = g_param_spec_ref (pspecs[i]);
+    }
+    g_param_spec_unref (pspecs[i]);
+    g_object_unref (children[i]);
+  }
+  g_free (pspecs);
+  g_free (children);
+  g_free (type_name);
+
+  return TRUE;
+}
+
+static gboolean
+_lookup_serialized_child (GESTimelineElement * element, const gchar * name,
+    GObject ** child, GParamSpec ** pspec)
+{
+  if (_lookup_indexed_child (element, name, child, pspec) && *child)
+    return TRUE;
+
+  return ges_timeline_element_lookup_child (element, name, child, pspec);
+}
+
 static gboolean
 _set_child_property (const GstIdStr * fieldname, const GValue * value,
     SetChildPropertyData * data)
@@ -660,8 +717,8 @@ _set_child_property (const GstIdStr * fieldname, const GValue * value,
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (data->formatter);
 
   /* FIXME: error handling? */
-  if (!ges_timeline_element_lookup_child (tlelement,
-          gst_id_str_as_str (fieldname), &object, &pspec)) {
+  if (!_lookup_serialized_child (tlelement, gst_id_str_as_str (fieldname),
+          &object, &pspec)) {
 #ifndef GST_DISABLE_GST_DEBUG
     gchar *tmp = gst_value_serialize (value);
     GST_ERROR_OBJECT (tlelement, "Could not set %s=%s",
@@ -1314,6 +1371,41 @@ ges_base_xml_formatter_add_track (GESBaseXmlFormatter * self,
         metadatas);
 }
 
+/* Children properties of same-type children past the first one, saved apart
+ * so that older versions skip them. @track_id is resolved as for bindings,
+ * NULL for the current clip */
+void
+ges_base_xml_formatter_add_indexed_children_properties (GESBaseXmlFormatter *
+    self, const gchar * track_id, GstStructure * children_properties,
+    GError ** error)
+{
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+  GESTimelineElement *element;
+  SetChildPropertyData data = { self, NULL };
+
+  if (priv->state != STATE_LOADING_CLIPS)
+    return;
+
+  if (!track_id)
+    element = GES_TIMELINE_ELEMENT (priv->current_clip);
+  else if (track_id[0] != '-' && priv->current_clip)
+    element = GES_TIMELINE_ELEMENT (_get_element_by_track_id (priv, track_id,
+            priv->current_clip));
+  else
+    element = GES_TIMELINE_ELEMENT (priv->current_track_element);
+
+  if (element == NULL) {
+    GST_WARNING_OBJECT (self,
+        "No element to set indexed children properties on");
+    return;
+  }
+
+  data.tlelement = element;
+  gst_structure_foreach_id_str (children_properties,
+      (GstStructureForeachIdStrFunc) _set_child_property, &data);
+  _take_untrusted_error (self, error);
+}
+
 void
 ges_base_xml_formatter_add_control_binding (GESBaseXmlFormatter * self,
     const gchar * binding_type, const gchar * source_type,
@@ -1341,12 +1433,26 @@ ges_base_xml_formatter_add_control_binding (GESBaseXmlFormatter * self,
 
   if (!g_strcmp0 (source_type, "interpolation")) {
     GstControlSource *source;
+    GObject *child = NULL;
+    GParamSpec *pspec = NULL;
+    gchar *name;
 
     source = gst_interpolation_control_source_new ();
 
-    /* add first before setting values to avoid clamping */
-    ges_track_element_set_control_source (element, source,
-        property_name, binding_type);
+    /* add first before setting values to avoid clamping. A child saved by
+     * index is bound directly, registered under its current name */
+    if (_lookup_indexed_child (GES_TIMELINE_ELEMENT (element), property_name,
+            &child, &pspec) && GST_IS_ELEMENT (child)) {
+      name = g_strdup_printf ("%s::%s", GST_OBJECT_NAME (child), pspec->name);
+      ges_track_element_set_control_source_for_child (element, source, name,
+          GST_ELEMENT (child), pspec, binding_type);
+      g_free (name);
+    } else {
+      ges_track_element_set_control_source (element, source, property_name,
+          binding_type);
+    }
+    g_clear_object (&child);
+    g_clear_pointer (&pspec, g_param_spec_unref);
 
     g_object_set (source, "mode", mode, NULL);
     if (!gst_timed_value_control_source_set_from_list

@@ -2132,51 +2132,24 @@ ges_track_element_remove_control_binding (GESTrackElement * object,
   return ret;
 }
 
-/**
- * ges_track_element_set_control_source:
- * @object: A #GESTrackElement
- * @source: The control source to bind the child property to
- * @property_name: The name of the child property to control
- * @binding_type: The type of binding to create ("direct" or
- * "direct-absolute")
- *
- * Creates a #GstControlBinding for the specified child property of the
- * track element using the given control source. The given @property_name
- * should refer to an existing child property of the track element, as
- * used in ges_timeline_element_lookup_child().
- *
- * If @binding_type is "direct", then the control binding is created with
- * gst_direct_control_binding_new() using the given control source. If
- * @binding_type is "direct-absolute", it is created with
- * gst_direct_control_binding_new_absolute() instead.
- *
- * Returns: %TRUE if the specified child property could be bound to
- * @source, or %FALSE if an error occurred.
- */
+static gboolean
+_hash_value_equal (gpointer key, gpointer value, gpointer user_data)
+{
+  return value == user_data;
+}
+
+/* Binds @source to the @pspec property of @element, a child of @object,
+ * registered under @property_name */
 gboolean
-ges_track_element_set_control_source (GESTrackElement * object,
-    GstControlSource * source,
-    const gchar * property_name, const gchar * binding_type)
+ges_track_element_set_control_source_for_child (GESTrackElement * object,
+    GstControlSource * source, const gchar * property_name,
+    GstElement * element, GParamSpec * pspec, const gchar * binding_type)
 {
   gboolean ret = FALSE;
   GESTrackElementPrivate *priv;
-  GstElement *element;
-  GstControlBinding *binding;
+  GstControlBinding *binding, *replaced = NULL;
   gboolean direct, direct_absolute;
   GESTimeline *_locked_timeline;
-
-  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
-
-  if (G_UNLIKELY (!(GST_IS_CONTROL_SOURCE (source)))) {
-    GST_WARNING
-        ("You need to provide a non-null control source to build a new control binding");
-    return FALSE;
-  }
-
-  if (!ges_track_element_lookup_child (object, property_name, &element, NULL)) {
-    GST_WARNING ("You need to provide a valid and controllable property name");
-    return FALSE;
-  }
 
   _locked_timeline = _ges_timeline_element_lock (GES_TIMELINE_ELEMENT (object));
 
@@ -2194,18 +2167,21 @@ ges_track_element_set_control_source (GESTrackElement * object,
 
   if (GST_IS_FRAME_POSITIONNER (element)) {
     if (!gst_frame_positioner_check_can_add_binding (GST_FRAME_POSITIONNER
-            (element), property_name)) {
+            (element), pspec->name)) {
       goto done;
     }
   }
 
+  /* @property_name may be qualified (e.g. "a::saturation"), the binding takes
+   * the bare name */
   if (direct_absolute)
     binding = gst_direct_control_binding_new_absolute (GST_OBJECT (element),
-        property_name, source);
+        pspec->name, source);
   else
     binding = gst_direct_control_binding_new (GST_OBJECT (element),
-        property_name, source);
+        pspec->name, source);
 
+  replaced = gst_object_get_control_binding (GST_OBJECT (element), pspec->name);
   ret = gst_object_add_control_binding (GST_OBJECT (element), binding);
   if (!ret) {
     GST_ERROR_OBJECT (object, "Could not add control binding");
@@ -2213,6 +2189,13 @@ ges_track_element_set_control_source (GESTrackElement * object,
 
     goto done;
   }
+
+  /* The new binding replaced any previous one on that child property, which
+   * may have been registered under another name (e.g. "prop" and
+   * "TypeName::prop") */
+  if (replaced)
+    g_hash_table_foreach_remove (priv->bindings_hashtable,
+        _hash_value_equal, replaced);
 
   /* FIXME: maybe we should force the
    * "ChildTypeName:property-name"
@@ -2243,7 +2226,58 @@ ges_track_element_set_control_source (GESTrackElement * object,
 done:
   _ges_timeline_element_unlock (GES_TIMELINE_ELEMENT (object),
       _locked_timeline);
+  gst_clear_object (&replaced);
+
+  return ret;
+}
+
+/**
+ * ges_track_element_set_control_source:
+ * @object: A #GESTrackElement
+ * @source: The control source to bind the child property to
+ * @property_name: The name of the child property to control
+ * @binding_type: The type of binding to create ("direct" or
+ * "direct-absolute")
+ *
+ * Creates a #GstControlBinding for the specified child property of the
+ * track element using the given control source. The given @property_name
+ * should refer to an existing child property of the track element, as
+ * used in ges_timeline_element_lookup_child().
+ *
+ * If @binding_type is "direct", then the control binding is created with
+ * gst_direct_control_binding_new() using the given control source. If
+ * @binding_type is "direct-absolute", it is created with
+ * gst_direct_control_binding_new_absolute() instead.
+ *
+ * Returns: %TRUE if the specified child property could be bound to
+ * @source, or %FALSE if an error occurred.
+ */
+gboolean
+ges_track_element_set_control_source (GESTrackElement * object,
+    GstControlSource * source,
+    const gchar * property_name, const gchar * binding_type)
+{
+  gboolean ret;
+  GstElement *element;
+  GParamSpec *pspec;
+
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
+
+  if (G_UNLIKELY (!(GST_IS_CONTROL_SOURCE (source)))) {
+    GST_WARNING
+        ("You need to provide a non-null control source to build a new control binding");
+    return FALSE;
+  }
+
+  if (!ges_track_element_lookup_child (object, property_name, &element, &pspec)) {
+    GST_WARNING ("You need to provide a valid and controllable property name");
+    return FALSE;
+  }
+
+  ret = ges_track_element_set_control_source_for_child (object, source,
+      property_name, element, pspec, binding_type);
   gst_object_unref (element);
+  g_param_spec_unref (pspec);
 
   return ret;
 }

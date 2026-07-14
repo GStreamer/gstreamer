@@ -543,6 +543,106 @@ GST_START_TEST (test_effect_set_properties)
 
 GST_END_TEST;
 
+/* Binds @property_name, a name of videobalance "saturation", returns the
+ * stored binding */
+static GstControlBinding *
+_add_control_source (GESTrackElement * effect, const gchar * property_name)
+{
+  GstControlSource *source;
+  GstControlBinding *binding;
+  GHashTable *bindings;
+
+  source = GST_CONTROL_SOURCE (gst_interpolation_control_source_new ());
+  fail_unless (ges_track_element_set_control_source (effect, source,
+          property_name, "direct"));
+  gst_object_unref (source);
+
+  bindings = ges_track_element_get_all_control_bindings_full (effect);
+  binding = g_hash_table_lookup (bindings, property_name);
+  fail_unless (binding);
+  gst_object_ref (binding);
+  g_hash_table_unref (bindings);
+
+  return binding;
+}
+
+/* Checks @binding is on "saturation" of the child named @name, unrefs it */
+static void
+_assert_binding_target (GstControlBinding * binding, const gchar * name)
+{
+  GstObject *target;
+
+  g_object_get (binding, "object", &target, NULL);
+  assert_equals_string (GST_OBJECT_NAME (target), name);
+  assert_equals_string (binding->name, "saturation");
+  gst_object_unref (target);
+  gst_object_unref (binding);
+}
+
+/* Fails if @absent is one of the @n binding names */
+static void
+_assert_bindings (GESTrackElement * effect, guint n, const gchar * absent)
+{
+  GHashTable *bindings;
+
+  bindings = ges_track_element_get_all_control_bindings_full (effect);
+  assert_equals_int (g_hash_table_size (bindings), n);
+  if (absent)
+    fail_if (g_hash_table_contains (bindings, absent));
+  g_hash_table_unref (bindings);
+}
+
+GST_START_TEST (test_effect_control_binding_names)
+{
+  GESTimeline *timeline;
+  GESLayer *layer;
+  GESClip *clip;
+  GESTrackElement *effect;
+  gdouble a_saturation, b_saturation;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_append_layer (timeline);
+  clip = GES_CLIP (ges_test_clip_new ());
+  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip), GST_SECOND);
+  fail_unless (ges_layer_add_clip (layer, clip));
+
+  effect = GES_TRACK_ELEMENT (ges_effect_new
+      ("videobalance name=a ! videobalance name=b"));
+  fail_unless (ges_container_add (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (effect)));
+
+  /* Two names for the same child property: the second binding replaces the
+   * first one, which must not stay registered under its own name */
+  gst_object_unref (_add_control_source (effect, "saturation"));
+  gst_object_unref (_add_control_source (effect,
+          "GstVideoBalance::saturation"));
+  _assert_bindings (effect, 1, "saturation");
+  fail_unless (ges_track_element_remove_control_binding (effect,
+          "GstVideoBalance::saturation"));
+  _assert_bindings (effect, 0, NULL);
+
+  /* Instance-qualified names set each same-type child separately */
+  ges_timeline_element_set_child_properties (GES_TIMELINE_ELEMENT (effect),
+      "a::saturation", 0.5, "b::saturation", 1.5, NULL);
+  ges_timeline_element_get_child_properties (GES_TIMELINE_ELEMENT (effect),
+      "a::saturation", &a_saturation, "b::saturation", &b_saturation, NULL);
+  assert_equals_float (a_saturation, 0.5);
+  assert_equals_float (b_saturation, 1.5);
+
+  /* and bind each of them */
+  _assert_binding_target (_add_control_source (effect, "a::saturation"), "a");
+  _assert_binding_target (_add_control_source (effect, "b::saturation"), "b");
+  _assert_bindings (effect, 2, NULL);
+
+  gst_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
 static void
 effect_added_cb (GESClip * clip, GESBaseEffect * trop, gboolean * effect_added)
 {
@@ -1385,6 +1485,358 @@ GST_START_TEST (test_load_xges_untrusted_effect_clip)
 
 GST_END_TEST;
 
+static GESTrackElement *
+_get_effect (GESTimeline * timeline)
+{
+  GList *layers, *clips, *tmp;
+  GESTrackElement *effect = NULL;
+
+  layers = ges_timeline_get_layers (timeline);
+  clips = ges_layer_get_clips (layers->data);
+  for (tmp = GES_CONTAINER_CHILDREN (clips->data); tmp; tmp = tmp->next) {
+    if (GES_IS_EFFECT (tmp->data))
+      effect = tmp->data;
+  }
+  g_list_free_full (clips, gst_object_unref);
+  g_list_free_full (layers, gst_object_unref);
+  fail_unless (effect);
+
+  return effect;
+}
+
+/* The two videobalance of @effect, @first being the one
+ * "GstVideoBalance::brightness" resolves to */
+static void
+_get_balances (GESTrackElement * effect, GstObject ** first,
+    GstObject ** second)
+{
+  GstObject *bin;
+  GParamSpec *pspec;
+  GList *tmp;
+
+  fail_unless (ges_timeline_element_lookup_child (GES_TIMELINE_ELEMENT (effect),
+          "GstVideoBalance::brightness", (GObject **) first, &pspec));
+  g_param_spec_unref (pspec);
+
+  *second = NULL;
+  bin = gst_object_get_parent (*first);
+  for (tmp = GST_BIN_CHILDREN (bin); tmp; tmp = tmp->next) {
+    if (tmp->data != *first
+        && G_OBJECT_TYPE (tmp->data) == G_OBJECT_TYPE (*first))
+      *second = gst_object_ref (tmp->data);
+  }
+  gst_object_unref (bin);
+  fail_unless (*second);
+}
+
+static void
+_bind_by_name (GESTrackElement * effect, GstObject * child, gdouble value)
+{
+  GstControlSource *source;
+  gchar *name;
+
+  source = GST_CONTROL_SOURCE (gst_interpolation_control_source_new ());
+  name = g_strdup_printf ("%s::saturation", GST_OBJECT_NAME (child));
+  fail_unless (ges_track_element_set_control_source (effect, source, name,
+          "direct"));
+  gst_timed_value_control_source_set (GST_TIMED_VALUE_CONTROL_SOURCE (source),
+      0, value);
+  gst_object_unref (source);
+  g_free (name);
+}
+
+static void
+_assert_binding_value (GstObject * child, gdouble expected)
+{
+  GstControlBinding *binding;
+  GstControlSource *source = NULL;
+  gdouble value = 0.0;
+  gboolean valid = FALSE;
+
+  binding = gst_object_get_control_binding (child, "saturation");
+  if (binding) {
+    g_object_get (binding, "control-source", &source, NULL);
+    if (source)
+      valid = gst_control_source_get_value (source, 0, &value);
+    gst_clear_object (&source);
+    gst_object_unref (binding);
+  }
+
+  fail_unless (valid);
+  assert_equals_float (value, expected);
+}
+
+GST_START_TEST (test_save_reload_same_type_children)
+{
+  GESTimeline *timeline;
+  GESLayer *layer;
+  GESClip *clip;
+  GESTrackElement *effect;
+  GstObject *first, *second;
+  gdouble brightness;
+  gchar *uri, *path, *contents, *attribute, *name;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_append_layer (timeline);
+  clip = GES_CLIP (ges_test_clip_new ());
+  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip), GST_SECOND);
+  fail_unless (ges_layer_add_clip (layer, clip));
+
+  effect = GES_TRACK_ELEMENT (ges_effect_new ("videobalance ! videobalance"));
+  fail_unless (ges_container_add (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (effect)));
+  _get_balances (effect, &first, &second);
+
+  /* A default object name may also be registered as a GType name */
+  name = g_strdup (GST_OBJECT_NAME (first));
+  if (!g_type_from_name (name))
+    g_type_register_static_simple (G_TYPE_OBJECT, name, sizeof (GObjectClass),
+        NULL, sizeof (GObject), NULL, 0);
+  fail_unless (g_type_from_name (name) != 0);
+  g_free (name);
+
+  g_object_set (first, "brightness", -0.2, NULL);
+  g_object_set (second, "brightness", -0.1, NULL);
+
+  /* Keyframe both children by their default names, which are not stable */
+  _bind_by_name (effect, first, 0.25);
+  _bind_by_name (effect, second, 0.75);
+  gst_object_unref (first);
+  gst_object_unref (second);
+
+  uri = ges_test_get_tmp_uri ("same-type-children.xges");
+  fail_unless (ges_timeline_save_to_uri (timeline, uri, NULL, TRUE, NULL));
+  gst_object_unref (timeline);
+
+  /* The first child keeps the keys older versions understand, the second
+   * one is saved in elements they ignore */
+  path = gst_uri_get_location (uri);
+  fail_unless (g_file_get_contents (path, &contents, NULL, NULL));
+  attribute = g_strstr_len (contents, -1, "<effect ");
+  fail_unless (attribute);
+  attribute = g_strstr_len (attribute, -1, " children-properties='");
+  fail_unless (attribute);
+  attribute = g_strndup (attribute,
+      g_strstr_len (attribute + 22, -1, "'") - attribute);
+  fail_unless (g_strstr_len (attribute, -1,
+          "GstVideoBalance::brightness=(double)-0.2"));
+  fail_if (g_strstr_len (attribute, -1, "GstVideoBalance.1::"));
+  g_free (attribute);
+  fail_unless (g_strstr_len (contents, -1,
+          "<indexed-children-properties track_id='-1' properties='properties, "
+          "GstVideoBalance.1::brightness=(double)-0.1"));
+  fail_unless (g_strstr_len (contents, -1,
+          "<binding type='direct' source_type='interpolation' "
+          "property='GstVideoBalance::saturation'"));
+  fail_unless (g_strstr_len (contents, -1,
+          "<indexed-binding type='direct' source_type='interpolation' "
+          "property='GstVideoBalance.1::saturation'"));
+  g_free (contents);
+  g_free (path);
+
+  /* Reloading in the same process gives the elements new default names */
+  fail_if (load_xges_file (uri, TRUE, NULL, NULL, &timeline, NULL));
+  _get_balances (_get_effect (timeline), &first, &second);
+  g_object_get (first, "brightness", &brightness, NULL);
+  assert_equals_float (brightness, -0.2);
+  g_object_get (second, "brightness", &brightness, NULL);
+  assert_equals_float (brightness, -0.1);
+  _assert_binding_value (first, 0.25);
+  _assert_binding_value (second, 0.75);
+  gst_object_unref (first);
+  gst_object_unref (second);
+
+  gst_object_unref (timeline);
+  g_free (uri);
+
+  ges_deinit ();
+}
+
+
+GST_END_TEST;
+
+static GParamSpec **(*parent_list_children_properties) (GESTimelineElement *
+    self, guint * n_properties);
+
+static GParamSpec **
+_list_children_properties_without_hue (GESTimelineElement * self,
+    guint * n_properties)
+{
+  GParamSpec **pspecs;
+  guint i, n = 0;
+
+  pspecs = parent_list_children_properties (self, n_properties);
+  for (i = 0; i < *n_properties; i++) {
+    if (g_strcmp0 (pspecs[i]->name, "hue") == 0)
+      g_param_spec_unref (pspecs[i]);
+    else
+      pspecs[n++] = pspecs[i];
+  }
+  *n_properties = n;
+
+  return pspecs;
+}
+
+static void
+_set_child_integer_property (GESTimelineElement * element,
+    const gchar * property_name, gint number)
+{
+  GObject *child = NULL;
+  GParamSpec *pspec = NULL;
+  GValue value = G_VALUE_INIT;
+
+  fail_unless (ges_timeline_element_lookup_child (element, property_name,
+          &child, &pspec));
+  g_value_init (&value, pspec->value_type);
+  if (G_VALUE_HOLDS_INT (&value))
+    g_value_set_int (&value, number);
+  else {
+    fail_unless (G_VALUE_HOLDS_UINT (&value));
+    g_value_set_uint (&value, number);
+  }
+  fail_unless (ges_timeline_element_set_child_property (element,
+          property_name, &value));
+
+  g_value_unset (&value);
+  g_object_unref (child);
+  g_param_spec_unref (pspec);
+}
+
+static gint
+_get_transition_border (GESTimelineElement * transition)
+{
+  GValue value = G_VALUE_INIT;
+  gint border;
+
+  fail_unless (ges_timeline_element_get_child_property (transition, "border",
+          &value));
+  if (G_VALUE_HOLDS_INT (&value))
+    border = g_value_get_int (&value);
+  else {
+    fail_unless (G_VALUE_HOLDS_UINT (&value));
+    border = g_value_get_uint (&value);
+  }
+  g_value_unset (&value);
+
+  return border;
+}
+
+GST_START_TEST (test_save_reload_transition_clip_children)
+{
+  GESTimeline *timeline, *loaded;
+  GESLayer *layer;
+  GESClip *clip;
+  GList *children, *tmp, *layers, *clips;
+  gchar *uri;
+
+  ges_init ();
+
+  timeline = ges_timeline_new ();
+  fail_unless (ges_timeline_add_track (timeline,
+          GES_TRACK (ges_video_track_new ())));
+  fail_unless (ges_timeline_add_track (timeline,
+          GES_TRACK (ges_video_track_new ())));
+  layer = ges_timeline_append_layer (timeline);
+  clip = GES_CLIP (ges_transition_clip_new_for_nick ((gchar *) "bar-wipe-lr"));
+  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip), GST_SECOND);
+  fail_unless (ges_layer_add_clip (layer, clip));
+
+  children = ges_container_get_children (GES_CONTAINER (clip), FALSE);
+  fail_unless_equals_int (g_list_length (children), 2);
+  for (tmp = children; tmp; tmp = tmp->next) {
+    GstObject *child;
+    GParamSpec *pspec;
+    gchar *name;
+    gint border = tmp == children ? 100 : 50;
+
+    fail_unless (ges_timeline_element_lookup_child (tmp->data, "border",
+            (GObject **) & child, &pspec));
+    name = g_strdup_printf ("%s::%s", GST_OBJECT_NAME (child), pspec->name);
+    _set_child_integer_property (GES_TIMELINE_ELEMENT (clip), name, border);
+    g_free (name);
+    gst_object_unref (child);
+    g_param_spec_unref (pspec);
+  }
+  g_list_free_full (children, gst_object_unref);
+
+  uri = ges_test_get_tmp_uri ("transition-same-type-children.xges");
+  fail_unless (ges_timeline_save_to_uri (timeline, uri, NULL, TRUE, NULL));
+  gst_object_unref (timeline);
+
+  fail_if (load_xges_file (uri, TRUE, NULL, NULL, &loaded, NULL));
+  layers = ges_timeline_get_layers (loaded);
+  clips = ges_layer_get_clips (layers->data);
+  fail_unless (GES_IS_TRANSITION_CLIP (clips->data));
+  children = ges_container_get_children (GES_CONTAINER (clips->data), FALSE);
+  fail_unless_equals_int (g_list_length (children), 2);
+  assert_equals_int (_get_transition_border (children->data), 100);
+  assert_equals_int (_get_transition_border (children->next->data), 50);
+
+  g_list_free_full (children, gst_object_unref);
+  g_list_free_full (clips, gst_object_unref);
+  g_list_free_full (layers, gst_object_unref);
+  gst_object_unref (loaded);
+  g_free (uri);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_save_hidden_children_properties)
+{
+  GESTimeline *timeline;
+  GESLayer *layer;
+  GESClip *clip;
+  GESTimelineElement *effect;
+  GESTimelineElementClass *klass;
+  gchar *uri, *path, *contents;
+  gboolean saved;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_append_layer (timeline);
+  clip = GES_CLIP (ges_test_clip_new ());
+  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip), GST_SECOND);
+  fail_unless (ges_layer_add_clip (layer, clip));
+
+  effect = GES_TIMELINE_ELEMENT (ges_effect_new
+      ("videobalance name=a ! videobalance name=b"));
+  fail_unless (ges_container_add (GES_CONTAINER (clip), effect));
+  ges_timeline_element_set_child_properties (effect, "a::hue", 0.5,
+      "b::hue", -0.5, "a::brightness", -0.2, "b::brightness", -0.1, NULL);
+
+  /* Properties a subclass does not list are not saved */
+  klass = g_type_class_ref (GES_TYPE_EFFECT);
+  parent_list_children_properties = klass->list_children_properties;
+  klass->list_children_properties = _list_children_properties_without_hue;
+  uri = ges_test_get_tmp_uri ("hidden-children-properties.xges");
+  saved = ges_timeline_save_to_uri (timeline, uri, NULL, TRUE, NULL);
+  klass->list_children_properties = parent_list_children_properties;
+  g_type_class_unref (klass);
+  fail_unless (saved);
+
+  path = gst_uri_get_location (uri);
+  fail_unless (g_file_get_contents (path, &contents, NULL, NULL));
+  fail_if (g_strstr_len (contents, -1, "::hue="));
+  fail_unless (g_strstr_len (contents, -1,
+          "GstVideoBalance::brightness=(double)-0.1"));
+  fail_unless (g_strstr_len (contents, -1,
+          "GstVideoBalance.1::brightness=(double)-0.2"));
+  g_free (contents);
+  g_free (path);
+  g_free (uri);
+
+  gst_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -1400,6 +1852,10 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_effect_clip);
   tcase_add_test (tc_chain, test_priorities_clip);
   tcase_add_test (tc_chain, test_effect_set_properties);
+  tcase_add_test (tc_chain, test_effect_control_binding_names);
+  tcase_add_test (tc_chain, test_save_reload_same_type_children);
+  tcase_add_test (tc_chain, test_save_hidden_children_properties);
+  tcase_add_test (tc_chain, test_save_reload_transition_clip_children);
   tcase_add_test (tc_chain, test_clip_signals);
   tcase_add_test (tc_chain, test_split_clip_effect_priorities);
   tcase_add_test (tc_chain, test_move_time_effect);

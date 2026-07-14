@@ -1,0 +1,36 @@
+# Two same-type children keep their own "brightness" across save + reload:
+# a -0.2 and b -0.1 darken a white clip to ~0.65, losing either one makes it
+# brighter.
+meta,
+    tool="ges-launch-$(gst_api_version)",
+    handles-states=true,
+    args={
+        --track-types, video, --videosink, "fakevideosink name=videosink sync=false",
+    }
+
+set-vars, project_uri="file://$(logsdir)/persist.xges"
+
+add-clip, name=c0, asset-id=GESTestClip, layer-priority=0, type=GESTestClip, start=0, duration=1.0
+set-child-properties,
+    element-name=c0,
+    pattern=white
+
+container-add-child,
+    container-name=c0,
+    asset-id="videobalance name=a ! videobalance name=b",
+    child-type=GESEffect,
+    child-name=effect
+
+set-child-property, element-name=effect, property=a::brightness, value=-0.2
+set-child-property, element-name=effect, property=b::brightness, value=-0.1
+
+pause
+check-last-sample, sink-name=videosink, expected-color=<0.65, 0.65, 0.65>, tolerance=0.03
+
+serialize-project, uri="$(project_uri)"
+load-project, uri="$(project_uri)"
+
+pause
+check-last-sample, sink-name=videosink, expected-color=<0.65, 0.65, 0.65>, tolerance=0.03
+
+stop

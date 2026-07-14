@@ -112,6 +112,8 @@ if gstvalidate_dep.found() and not get_option('tools').disabled()
     'check_selector_glvideomixer': true,
     'check_selector_glvideomixerelement_strict': true,
     'check_selector_title_glvideomixer': true,
+    'child_property_by_instance_name': true,
+    'child_property_same_type_save_reload': true,
   }
 
   foreach scenario, is_validatetest: scenarios

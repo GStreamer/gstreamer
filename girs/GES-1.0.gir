@@ -11409,12 +11409,14 @@ then edit its content.</doc>
 "TypeName::prop-name", where "prop-name" is the name of the property
 to look up (as used in g_object_get()), and "TypeName" is the type name
 of the child (as returned by G_OBJECT_TYPE_NAME()). The latter format is
-useful when two children of different types share the same property
-name.
+useful when two children share the same property name. Since 1.30, that
+"TypeName" qualifier may also be a child's #GstObject name (as returned
+by GST_OBJECT_NAME()), which disambiguates two children of the same type,
+e.g. "a::saturation".
 
 The first child found with the given "prop-name" property that was
-registered with ges_timeline_element_add_child_property() (and of the
-type "TypeName", if it was given) will be passed to @child, and the
+registered with ges_timeline_element_add_child_property() (and matching
+the qualifier, if one was given) will be passed to @child, and the
 registered specification of this property will be passed to @pspec.</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h"/>
         <return-value transfer-ownership="none">
@@ -11939,12 +11941,14 @@ optionally by more name/return location pairs, followed by %NULL</doc>
 "TypeName::prop-name", where "prop-name" is the name of the property
 to get (as used in g_object_get()), and "TypeName" is the type name of
 the child (as returned by G_OBJECT_TYPE_NAME()). The latter format is
-useful when two children of different types share the same property
-name.
+useful when two children share the same property name. Since 1.30, that
+"TypeName" qualifier may also be a child's #GstObject name (as returned
+by GST_OBJECT_NAME()), which disambiguates two children of the same type,
+e.g. "a::saturation".
 
 The first child found with the given "prop-name" property that was
-registered with ges_timeline_element_add_child_property() (and of the
-type "TypeName", if it was given) will have the corresponding
+registered with ges_timeline_element_add_child_property() (and matching
+the qualifier, if one was given) will have the corresponding
 property copied into @value.
 
 Note that ges_timeline_element_get_child_properties() may be more
@@ -12240,12 +12244,14 @@ returned array</doc>
 "TypeName::prop-name", where "prop-name" is the name of the property
 to look up (as used in g_object_get()), and "TypeName" is the type name
 of the child (as returned by G_OBJECT_TYPE_NAME()). The latter format is
-useful when two children of different types share the same property
-name.
+useful when two children share the same property name. Since 1.30, that
+"TypeName" qualifier may also be a child's #GstObject name (as returned
+by GST_OBJECT_NAME()), which disambiguates two children of the same type,
+e.g. "a::saturation".
 
 The first child found with the given "prop-name" property that was
-registered with ges_timeline_element_add_child_property() (and of the
-type "TypeName", if it was given) will be passed to @child, and the
+registered with ges_timeline_element_add_child_property() (and matching
+the qualifier, if one was given) will be passed to @child, and the
 registered specification of this property will be passed to @pspec.</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h"/>
         <return-value transfer-ownership="none">
@@ -12492,14 +12498,16 @@ ges_timeline_element_add_child_property() is set to @value.</doc>
 "TypeName::prop-name", where "prop-name" is the name of the property
 to set (as used in g_object_set()), and "TypeName" is the type name of
 the child (as returned by G_OBJECT_TYPE_NAME()). The latter format is
-useful when two children of different types share the same property
-name.
+useful when two children share the same property name. Since 1.30, that
+"TypeName" qualifier may also be a child's #GstObject name (as returned
+by GST_OBJECT_NAME()), which disambiguates two children of the same type,
+e.g. "a::saturation".
 
 The first child found with the given "prop-name" property that was
-registered with ges_timeline_element_add_child_property() (and of the
-type "TypeName", if it was given) will have the corresponding
+registered with ges_timeline_element_add_child_property() (and matching
+the qualifier, if one was given) will have the corresponding
 property set to @value. Other children that may have also matched the
-property name (and type name) are left unchanged!</doc>
+property name (and qualifier) are left unchanged!</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline-element.c">%TRUE if the property was found and set.</doc>
