@@ -127,7 +127,7 @@ static void gst_avi_demux_parse_idit (GstAviDemux * avi, GstBuffer * buf);
 static void gst_avi_demux_parse_strd (GstAviDemux * avi, GstBuffer * buf);
 
 static void parse_tag_value (GstAviDemux * avi, GstTagList * taglist,
-    const gchar * type, guint8 * ptr, guint tsize);
+    const gchar * type, const guint8 * ptr, guint tsize);
 
 /* GObject methods */
 
@@ -1241,7 +1241,7 @@ gst_avi_demux_parse_superindex (GstAviDemux * avi,
     GstBuffer * buf, guint64 ** _indexes)
 {
   GstMapInfo map;
-  guint8 *data;
+  const guint8 *data;
   guint16 bpe = 16;
   guint32 num, i;
   guint64 *indexes;
@@ -1529,7 +1529,7 @@ gst_avi_demux_parse_subindex (GstAviDemux * avi, GstAviStream * stream,
     GstBuffer * buf)
 {
   GstMapInfo map;
-  guint8 *data;
+  const guint8 *data;
   guint16 bpe;
   guint32 num, i;
   guint64 baseoff;
@@ -1980,7 +1980,7 @@ gst_avi_demux_check_caps (GstAviDemux * avi, GstAviStream * stream,
     /* some muxers put invalid bytestream stuff in h264 extra data */
     val = gst_structure_get_value (s, "codec_data");
     if (val && (buf = gst_value_get_buffer (val))) {
-      guint8 *data;
+      const guint8 *data;
       gint size;
       GstMapInfo map;
 
@@ -2743,7 +2743,7 @@ gst_avi_demux_parse_index (GstAviDemux * avi, GstBuffer * buf)
 {
   GstMapInfo map;
   guint i, num, n;
-  gst_riff_index_entry *index;
+  const gst_riff_index_entry *index;
   GstClockTime stamp;
   GstAviStream *stream;
   GstAviIndexEntry entry;
@@ -3727,7 +3727,7 @@ static void
 gst_avi_demux_parse_idit (GstAviDemux * avi, GstBuffer * buf)
 {
   GstMapInfo map;
-  gchar *ptr;
+  const gchar *ptr;
   gsize left;
   gchar *safedata = NULL;
 
@@ -3745,7 +3745,7 @@ gst_avi_demux_parse_idit (GstAviDemux * avi, GstBuffer * buf)
    */
 
   /* skip eventual initial whitespace */
-  ptr = (gchar *) map.data;
+  ptr = (const gchar *) map.data;
   left = map.size;
 
   while (left > 0 && g_ascii_isspace (ptr[0])) {
@@ -3782,7 +3782,7 @@ non_parsable:
 
 static void
 parse_tag_value (GstAviDemux * avi, GstTagList * taglist, const gchar * type,
-    guint8 * ptr, guint tsize)
+    const guint8 * ptr, guint tsize)
 {
   static const gchar *env_vars[] = { "GST_AVI_TAG_ENCODING",
     "GST_RIFF_TAG_ENCODING", "GST_TAG_ENCODING", NULL
@@ -3822,7 +3822,7 @@ gst_avi_demux_parse_strd (GstAviDemux * avi, GstBuffer * buf)
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
   if (map.size > 4) {
-    guint8 *ptr = map.data;
+    const guint8 *ptr = map.data;
     gsize left = map.size;
 
     /* parsing based on
@@ -3861,13 +3861,17 @@ gst_avi_demux_parse_strd (GstAviDemux * avi, GstBuffer * buf)
           sub_size++;
 
         if (sub_size >= 8) {
-          if (ptr[4] == ':')
-            ptr[4] = '-';
-          if (ptr[7] == ':')
-            ptr[7] = '-';
+          guint8 *ptr_dup = g_memdup2 (ptr, sub_size);
 
-          parse_tag_value (avi, avi->globaltags, GST_TAG_DATE_TIME, ptr,
+          if (ptr_dup[4] == ':')
+            ptr_dup[4] = '-';
+          if (ptr_dup[7] == ':')
+            ptr_dup[7] = '-';
+
+          parse_tag_value (avi, avi->globaltags, GST_TAG_DATE_TIME, ptr_dup,
               sub_size);
+
+          g_free (ptr_dup);
         }
       }
     }
@@ -3890,7 +3894,7 @@ gst_avi_demux_parse_ncdt (GstAviDemux * avi, GstBuffer * buf,
     GstTagList ** _taglist)
 {
   GstMapInfo info;
-  guint8 *ptr;
+  const guint8 *ptr;
   gsize left;
   guint tsize;
   guint32 tag;
@@ -3959,14 +3963,27 @@ gst_avi_demux_parse_ncdt (GstAviDemux * avi, GstBuffer * buf,
               type = GST_TAG_ENCODER;
               break;
             case 0x13:         /* CreationDate */
-              type = GST_TAG_DATE_TIME;
-              if (left > 7) {
-                if (ptr[4] == ':')
-                  ptr[4] = '-';
-                if (ptr[7] == ':')
-                  ptr[7] = '-';
+            {
+              type = NULL;
+
+              if (left > 7 && ptr[0] != '\0') {
+                guint8 *ptr_dup = g_memdup2 (ptr, sub_size);
+
+                if (ptr_dup[4] == ':')
+                  ptr_dup[4] = '-';
+                if (ptr_dup[7] == ':')
+                  ptr_dup[7] = '-';
+
+                GST_DEBUG_OBJECT (avi, "mapped tag %u to tag %s", sub_tag,
+                    GST_TAG_DATE_TIME);
+
+                parse_tag_value (avi, taglist, GST_TAG_DATE_TIME, ptr_dup,
+                    sub_size);
+
+                g_free (ptr_dup);
               }
               break;
+            }
             default:
               type = NULL;
               break;
