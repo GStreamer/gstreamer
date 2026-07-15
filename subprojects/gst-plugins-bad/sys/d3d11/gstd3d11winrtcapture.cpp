@@ -968,7 +968,7 @@ again:
     self->height = desc.Height;
     if (!self->window_handle || !self->client_only) {
       self->capture_width = self->width;
-      self->capture_height = self->capture_height;
+      self->capture_height = self->height;
     }
 
     size_changed = TRUE;
