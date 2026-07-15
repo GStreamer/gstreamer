@@ -4872,8 +4872,8 @@ Intended for use within implementations of
       </virtual-method>
       <method name="get_framebuffer" c:identifier="gst_gl_mixer_get_framebuffer" version="1.24">
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
-        <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.c">(nullable): The #GstGLFramebuffer in use by this @mix</doc>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.c">The #GstGLFramebuffer in use by this @mix</doc>
           <type name="GLFramebuffer" c:type="GstGLFramebuffer*"/>
         </return-value>
         <parameters>

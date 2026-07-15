@@ -800,7 +800,7 @@ gst_gl_mixer_stop (GstAggregator * agg)
  * gst_gl_mixer_get_framebuffer:
  * @mix: the #GstGLMixer
  *
- * Returns: (transfer full): (nullable): The #GstGLFramebuffer in use by this @mix
+ * Returns: (transfer full) (nullable): The #GstGLFramebuffer in use by this @mix
  *
  * Since: 1.24
  */
