@@ -109,7 +109,6 @@ gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
   GstVideoMeta *vmeta;
   guint nplanes = 0, flags = 0;
   struct zwp_linux_buffer_params_v1 *params;
-  gint64 timeout;
   ConstructBufferData data = { 0 };
 
   g_return_val_if_fail (gst_wl_display_check_format_for_dmabuf (display,
@@ -180,14 +179,8 @@ gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
   /* Wait for the request answer */
   wl_display_flush (gst_wl_display_get_display (display));
   data.wbuf = (gpointer) 0x1;
-  timeout = g_get_monotonic_time () + G_TIME_SPAN_SECOND;
-  while (data.wbuf == (gpointer) 0x1) {
-    if (!g_cond_wait_until (&data.cond, &data.lock, timeout)) {
-      GST_ERROR_OBJECT (mem->allocator, "zwp_linux_buffer_params_v1 time out");
-      zwp_linux_buffer_params_v1_destroy (params);
-      data.wbuf = NULL;
-    }
-  }
+  while (data.wbuf == (gpointer) 0x1)
+    g_cond_wait (&data.cond, &data.lock);
 
 out:
   if (!data.wbuf) {
