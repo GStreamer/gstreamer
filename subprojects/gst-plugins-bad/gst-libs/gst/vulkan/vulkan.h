@@ -54,6 +54,7 @@
 #include <gst/vulkan/gstvkvideofilter.h>
 
 /* helper vulkan objects */
+#include <gst/vulkan/gstvkbarrierstate.h>
 #include <gst/vulkan/gstvkdescriptorcache.h>
 #include <gst/vulkan/gstvktrash.h>
 #include <gst/vulkan/gstvkswapper.h>

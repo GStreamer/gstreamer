@@ -92,8 +92,6 @@ gst_vulkan_image_memory_init (GstVulkanImageMemory * mem,
   mem->barrier.parent.type = GST_VULKAN_BARRIER_TYPE_IMAGE;
   mem->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
   mem->barrier.parent.access_flags = 0;
-  mem->barrier.parent.semaphore = VK_NULL_HANDLE;
-  mem->barrier.parent.semaphore_value = 0;
   mem->barrier.image_layout = layout;
   /* *INDENT-OFF* */
   mem->barrier.subresource_range = (VkImageSubresourceRange) {
@@ -186,7 +184,7 @@ _vk_image_mem_new_alloc_with_image_info (GstAllocator * allocator,
     if (gst_vulkan_error_to_g_error (err, &error, "vkCreateSemaphore") < 0)
       goto vk_error;
 
-    mem->barrier.parent.semaphore =
+    mem->timeline_semaphore =
         gst_vulkan_handle_new_wrapped (device, GST_VULKAN_HANDLE_TYPE_SEMAPHORE,
         semaphore, gst_vulkan_handle_free_semaphore, NULL);
   }
@@ -338,6 +336,7 @@ _vk_image_mem_map_full (GstVulkanImageMemory * mem, GstMapInfo * info,
 
   /* FIXME: possible layout transformation needed */
   g_mutex_lock (&mem->lock);
+  GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "locked image memory %p", mem);
 
   if (!mem->vk_mem) {
     g_mutex_unlock (&mem->lock);
@@ -352,6 +351,7 @@ _vk_image_mem_map_full (GstVulkanImageMemory * mem, GstMapInfo * info,
     return NULL;
   }
   g_mutex_unlock (&mem->lock);
+  GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "unlocked image memory %p", mem);
 
   return vk_map_info->data;
 }
@@ -360,8 +360,10 @@ static void
 _vk_image_mem_unmap_full (GstVulkanImageMemory * mem, GstMapInfo * info)
 {
   g_mutex_lock (&mem->lock);
+  GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "locked image memory %p", mem);
   gst_memory_unmap ((GstMemory *) mem->vk_mem, info->user_data[0]);
   g_mutex_unlock (&mem->lock);
+  GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "unlocked image memory %p", mem);
 
   g_free (info->user_data[0]);
 }
@@ -424,6 +426,8 @@ _vk_image_mem_free (GstAllocator * allocator, GstMemory * memory)
 
   if (mem->notify)
     mem->notify (mem->user_data);
+
+  gst_clear_vulkan_handle (&mem->timeline_semaphore);
 
   gst_object_unref (mem->device);
 
@@ -608,12 +612,15 @@ gst_vulkan_image_memory_release_view (GstVulkanImageMemory * image,
   g_return_if_fail (image == view->image);
 
   g_mutex_lock (&image->lock);
+  GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "locked image memory %p", image);
 
   /* If the refcount is > 1 at this point, another ref has been taken by a
    * concurrent gst_vulkan_image_memory_find_view() before we got the lock, so
    * we must leave the view as outstanding. */
   if (GST_MINI_OBJECT_REFCOUNT_VALUE (view) > 1) {
     g_mutex_unlock (&image->lock);
+    GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "unlocked image memory %p",
+        image);
     gst_vulkan_image_view_unref (view);
     return;
   }
@@ -629,6 +636,8 @@ gst_vulkan_image_memory_release_view (GstVulkanImageMemory * image,
   }
   view->image = NULL;
   g_mutex_unlock (&image->lock);
+  GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "unlocked image memory %p",
+      image);
   gst_memory_unref ((GstMemory *) image);
 }
 
@@ -648,8 +657,11 @@ gst_vulkan_image_memory_add_view (GstVulkanImageMemory * image,
   g_return_if_fail (image == view->image);
 
   g_mutex_lock (&image->lock);
+  GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "locked image memory %p", image);
   if (find_view_index_unlocked (image, view) != -1) {
     g_warn_if_reached ();
+    GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "unlocked image memory %p",
+        image);
     g_mutex_unlock (&image->lock);
     return;
   }
@@ -658,6 +670,8 @@ gst_vulkan_image_memory_add_view (GstVulkanImageMemory * image,
       image, view);
 
   g_mutex_unlock (&image->lock);
+  GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "unlocked image memory %p",
+      image);
 }
 
 struct view_data
@@ -708,6 +722,7 @@ gst_vulkan_image_memory_find_view (GstVulkanImageMemory * image,
   g_return_val_if_fail (find_func != NULL, NULL);
 
   g_mutex_lock (&image->lock);
+  GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "locked image memory %p", image);
   view.img = image;
   view.find_func = find_func;
   view.find_data = user_data;
@@ -727,6 +742,8 @@ gst_vulkan_image_memory_find_view (GstVulkanImageMemory * image,
   GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "Image %p found view %p",
       image, ret);
   g_mutex_unlock (&image->lock);
+  GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "unlocked image memory %p",
+      image);
 
   return ret;
 }
@@ -737,6 +754,10 @@ gst_vulkan_image_memory_find_view (GstVulkanImageMemory * image,
  *
  * Exclusively lock the image memory.
  *
+ * Note: if you need to lock multiple memories at the same time, you should
+ * use #GstVulkanBarrierState to ensure a determinstic locking order and avoid
+ * deadlocks.
+ *
  * Since: 1.30
  */
 void
@@ -744,6 +765,7 @@ gst_vulkan_image_memory_lock (GstVulkanImageMemory * image)
 {
   g_return_if_fail (gst_is_vulkan_image_memory (GST_MEMORY_CAST (image)));
 
+  GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "locking image memory %p", image);
   g_mutex_lock (&image->lock);
 }
 
@@ -761,6 +783,8 @@ gst_vulkan_image_memory_unlock (GstVulkanImageMemory * image)
   g_return_if_fail (gst_is_vulkan_image_memory (GST_MEMORY_CAST (image)));
 
   g_mutex_unlock (&image->lock);
+  GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "unlocked image memory %p",
+      image);
 }
 
 /**

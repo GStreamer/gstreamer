@@ -9,6 +9,7 @@ endif
 
 vulkan_sources = files(
   'gstvkbarrier.c',
+  'gstvkbarrierstate.c',
   'gstvkbuffermemory.c',
   'gstvkbufferpool.c',
   'gstvkcommandbuffer.c',
@@ -45,6 +46,7 @@ vulkan_sources = files(
 vulkan_headers = files(
   'gstvkapi.h',
   'gstvkbarrier.h',
+  'gstvkbarrierstate.h',
   'gstvkbuffermemory.h',
   'gstvkbufferpool.h',
   'gstvkcommandbuffer.h',
