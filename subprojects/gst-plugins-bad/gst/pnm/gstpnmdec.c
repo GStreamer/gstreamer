@@ -170,7 +170,7 @@ gst_pnmdec_negotiate (GstVideoDecoder * decoder)
         GST_DEBUG ("Received caps from peer: %" GST_PTR_FORMAT, peercaps);
         if (gst_caps_is_empty (peercaps)) {
           gst_caps_unref (peercaps);
-          return FALSE;
+          return GST_FLOW_NOT_NEGOTIATED;
         }
 
         if (!gst_caps_is_fixed (peercaps))
