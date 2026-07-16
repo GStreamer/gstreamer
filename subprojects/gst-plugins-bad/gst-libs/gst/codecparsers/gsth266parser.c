@@ -6191,6 +6191,7 @@ gst_h266_parser_parse_sei_message (GstH266SEIMessage * sei, NalReader * nr,
 
 error:
   GST_WARNING ("error parsing \"Sei message\"");
+  gst_h266_sei_clear (sei);
   return GST_H266_PARSER_ERROR;
 }
 
