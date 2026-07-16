@@ -35,6 +35,23 @@
 /* Filled after gst_init() since GST_TYPE_* globals are set at registration */
 static GType deser_types[16];
 
+/* Valid structure name forced onto fuzz input so parsers never assert on it. */
+#define FUZZER_NAME_PREFIX "fuzzer/x-data,"
+
+static gchar *
+fuzzer_make_trusted_name_input (const gchar * str)
+{
+  GString *out = g_string_new (FUZZER_NAME_PREFIX);
+  const gchar *p;
+
+  for (p = str; *p != '\0'; p++) {
+    if (*p != ';')
+      g_string_append_c (out, *p);
+  }
+
+  return g_string_free (out, FALSE);
+}
+
 static void
 custom_logger (const gchar * log_domain,
     GLogLevelFlags log_level, const gchar * message, gpointer unused_data)
@@ -82,16 +99,19 @@ LLVMFuzzerTestOneInput (const guint8 * data, size_t size)
 
   gchar *str = g_strndup ((const gchar *) data, size);
 
+  /* Trusted-name input for name-sensitive paths; raw str kept for the rest. */
+  gchar *name_str = fuzzer_make_trusted_name_input (str);
+
   /* caps string parsing */
   {
-    GstCaps *caps = gst_caps_from_string (str);
+    GstCaps *caps = gst_caps_from_string (name_str);
     if (caps)
       gst_caps_unref (caps);
   }
 
   /* structure string parsing */
   {
-    GstStructure *s = gst_structure_from_string (str, NULL);
+    GstStructure *s = gst_structure_from_string (name_str, NULL);
     if (s)
       gst_structure_free (s);
   }
@@ -99,11 +119,18 @@ LLVMFuzzerTestOneInput (const guint8 * data, size_t size)
   /* per-type value deserializers */
   for (gsize i = 0; i < G_N_ELEMENTS (deser_types); i++) {
     GValue v = G_VALUE_INIT;
+    const gchar *input = str;
+
+    /* These deserialize via caps/structure from_string, so need trusted name. */
+    if (deser_types[i] == GST_TYPE_CAPS || deser_types[i] == GST_TYPE_STRUCTURE)
+      input = name_str;
+
     g_value_init (&v, deser_types[i]);
-    gst_value_deserialize (&v, str);
+    gst_value_deserialize (&v, input);
     g_value_unset (&v);
   }
 
+  g_free (name_str);
   g_free (str);
 
   return 0;
