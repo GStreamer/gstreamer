@@ -399,7 +399,11 @@ gst_y4m_dec_parse_magic (GstY4mDec * y4mdec, gpointer data, gsize size,
 
   /* what ever until '\n' */
   for (i = 0; i < MAX_STREAM_HEADER_LENGTH; i++) {
-    header[i] = gst_byte_reader_get_uint8_unchecked (&br);
+    if (!gst_byte_reader_get_uint8 (&br, (guint8 *) & header[i])) {
+      GST_ERROR_OBJECT (y4mdec, "Not enough data for Y4M header");
+      return FALSE;
+    }
+
     if (header[i] == '\n') {
       header[i] = 0;
       break;
