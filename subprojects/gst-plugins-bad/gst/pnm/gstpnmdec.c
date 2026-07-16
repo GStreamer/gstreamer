@@ -215,6 +215,9 @@ gst_pnmdec_negotiate (GstVideoDecoder * decoder)
   output_state =
       gst_video_decoder_set_output_state (decoder, fmt,
       pnmdec->mngr.info.width, pnmdec->mngr.info.height, pnmdec->input_state);
+  if (!output_state)
+    return GST_FLOW_NOT_NEGOTIATED;
+
   gst_video_codec_state_unref (output_state);
 
   if (!gst_video_decoder_negotiate (decoder))
