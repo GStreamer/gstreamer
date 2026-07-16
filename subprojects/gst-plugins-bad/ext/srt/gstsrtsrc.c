@@ -63,6 +63,22 @@
  *    muxtwo. ! queue ! srtsink uri="srt://127.0.0.1:5000?mode=caller&streamid=two"
  * |] This pipeline shows two SRT callers sending to the same port with different `streamid`
  *
+ * `srtsrc` also supports listening on an endpoint without a stream ID, in which case
+ * the stream ID will be updated upon connection of a sender:
+ *
+ * ```
+ * gst-launch-1.0 -v srtsrc uri="srt://127.0.0.1:5000?mode=listener" ! tsparse ! queue ! filesink location=output.ts
+ * ```
+ *
+ * ```
+ * gst-launch-1.0 -v videotestsrc pattern=ball ! queue ! x264enc ! mpegtsmux alignment=7 ! queue ! \
+ *   srtsink uri="srt://127.0.0.1:5000?mode=caller&streamid=one"
+ * ```
+ *
+ * You can use this in combination with connection sharing to ingest multiple streams
+ * on the same endpoint, by spinning up a new srtsrc in a `notify::streamid` signal handler.
+ *
+ * The connections RecMutex is held during emission of the signal.
  */
 
 #ifdef HAVE_CONFIG_H
