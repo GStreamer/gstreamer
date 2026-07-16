@@ -532,6 +532,9 @@ gst_pnmdec_parse (GstVideoDecoder * decoder, GstVideoCodecFrame * frame,
         r = GST_FLOW_OK;
         goto out;
       case GST_PNM_INFO_MNGR_RESULT_FINISHED:
+        offset = s->mngr.data_offset;
+        if (size < offset)
+          goto need_more_data;
 
         r = gst_pnmdec_negotiate (decoder);
         if (r != GST_FLOW_OK)
@@ -544,7 +547,6 @@ gst_pnmdec_parse (GstVideoDecoder * decoder, GstVideoCodecFrame * frame,
           GST_DEBUG_OBJECT (s, "Allocating output frame of size %u", s->size);
           s->buf = gst_buffer_new_and_alloc (s->size);
         }
-        offset = s->mngr.data_offset;
         gst_adapter_flush (adapter, offset);
         size = size - offset;
     }
