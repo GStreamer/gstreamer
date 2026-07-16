@@ -6029,6 +6029,18 @@ error_with_ret:
   return ret;
 }
 
+// This is public API since 1.30
+static void
+gst_h266_sei_clear (GstH266SEIMessage * sei)
+{
+  if (sei->payloadType == GST_H266_SEI_REGISTERED_USER_DATA) {
+    GstH266RegisteredUserData *rud = &sei->payload.registered_user_data;
+    g_free ((guint8 *) rud->data);
+    rud->data = NULL;
+  }
+  memset (sei, 0, sizeof (GstH266SEIMessage));
+}
+
 static GstH266ParserResult
 gst_h266_parser_parse_sei_message (GstH266SEIMessage * sei, NalReader * nr,
     GstH266Parser * parser, guint8 nal_type, guint8 nal_tid)
@@ -6150,19 +6162,8 @@ gst_h266_parser_parse_sei_message (GstH266SEIMessage * sei, NalReader * nr,
 
 error:
   GST_WARNING ("error parsing \"Sei message\"");
+  gst_h266_sei_clear (sei);
   return GST_H266_PARSER_ERROR;
-}
-
-// This is public API since 1.30
-static void
-gst_h266_sei_clear (GstH266SEIMessage * sei)
-{
-  if (sei->payloadType == GST_H266_SEI_REGISTERED_USER_DATA) {
-    GstH266RegisteredUserData *rud = &sei->payload.registered_user_data;
-    g_free ((guint8 *) rud->data);
-    rud->data = NULL;
-  }
-  memset (sei, 0, sizeof (GstH266SEIMessage));
 }
 
 /**
