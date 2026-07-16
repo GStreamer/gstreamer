@@ -427,7 +427,8 @@ gst_y4m_dec_process_header (GstY4mDec * y4mdec, GstBuffer * buffer,
     return FALSE;
   }
 
-  g_assert (mapinfo.size >= MAX_STREAM_HEADER_LENGTH);
+  if (mapinfo.size < MAX_STREAM_HEADER_LENGTH)
+    goto bail;
 
   if (!gst_y4m_dec_parse_magic (y4mdec, mapinfo.data, mapinfo.size, stream_hdr))
     goto bail;
