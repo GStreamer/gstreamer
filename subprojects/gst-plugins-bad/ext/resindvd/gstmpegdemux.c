@@ -1819,42 +1819,48 @@ need_more_data:
 static GstFlowReturn
 gst_flups_demux_parse_psm (GstFluPSDemux * demux)
 {
-  guint16 length = 0, info_length = 0, es_map_length = 0;
+  guint16 psm_length, info_length = 0, es_map_length = 0;
   guint8 psm_version = 0;
-  const guint8 *data, *es_map_base;
+  GstByteReader br;
 #ifndef GST_DISABLE_GST_DEBUG
   gboolean applicable;
 #endif
 
+  /* Need at least 6 bytes for start code + length */
   if (gst_adapter_available (demux->adapter) < 6)
     goto need_more_data;
 
-  /* start code + length */
-  data = gst_adapter_map (demux->adapter, 6);
+  {
+    const guint8 *data;
 
-  /* skip start code */
-  data += 4;
+    /* start code + length */
+    data = gst_adapter_map (demux->adapter, 6);
+    /* skip start code */
+    data += 4;
+    psm_length = GST_READ_UINT16_BE (data);
+    GST_DEBUG_OBJECT (demux, "PSM length %u", psm_length);
 
-  length = GST_READ_UINT16_BE (data);
-  GST_DEBUG_OBJECT (demux, "length %u", length);
+    if (G_UNLIKELY (psm_length > 0x3FA))
+      goto psm_len_error;
+    psm_length += 6;            /* Add start code + size to length */
 
-  if (G_UNLIKELY (length > 0x3FA))
-    goto psm_len_error;
+    gst_adapter_unmap (demux->adapter);
 
-  length += 6;
+    if (gst_adapter_available (demux->adapter) < psm_length)
+      goto need_more_data;
 
-  gst_adapter_unmap (demux->adapter);
+    data = gst_adapter_map (demux->adapter, psm_length);
 
-  if (gst_adapter_available (demux->adapter) < length)
-    goto need_more_data;
-
-  data = gst_adapter_map (demux->adapter, length);
+    gst_byte_reader_init (&br, data, psm_length);
+  }
 
   /* skip start code and length */
-  data += 6;
+  if (!gst_byte_reader_skip (&br, 6))
+    goto fail_invalid;
 
   /* Read PSM applicable bit together with version */
-  psm_version = GST_READ_UINT8 (data);
+  if (!gst_byte_reader_get_uint8 (&br, &psm_version))
+    goto fail_invalid;
 #ifndef GST_DISABLE_GST_DEBUG
   applicable = (psm_version & 0x80) >> 7;
 #endif
@@ -1862,62 +1868,70 @@ gst_flups_demux_parse_psm (GstFluPSDemux * demux)
   GST_DEBUG_OBJECT (demux, "PSM version %u (applicable now %u)", psm_version,
       applicable);
 
-  /* Jump over version and marker bit */
-  data += 2;
+  /* Jump over the next byte (marker bit) */
+  if (!gst_byte_reader_skip (&br, 1))
+    goto fail_invalid;
 
   /* Read PS info length */
-  info_length = GST_READ_UINT16_BE (data);
-  /* Cap it to PSM length - needed bytes for ES map length and CRC */
-  info_length = MIN (length - 16, info_length);
+  if (!gst_byte_reader_get_uint16_be (&br, &info_length))
+    goto fail_invalid;
   GST_DEBUG_OBJECT (demux, "PS info length %u bytes", info_length);
-
-  /* Jump over that section */
-  data += (2 + info_length);
+  /* Skip the PS info, we don't use it */
+  if (!gst_byte_reader_skip (&br, info_length))
+    goto fail_invalid;
 
   /* Read ES map length */
-  es_map_length = GST_READ_UINT16_BE (data);
-  /* Cap it to PSM remaining length -  CRC */
-  es_map_length = MIN (length - (16 + info_length), es_map_length);
+  if (!gst_byte_reader_get_uint16_be (&br, &es_map_length))
+    goto fail_invalid;
   GST_DEBUG_OBJECT (demux, "ES map length %u bytes", es_map_length);
 
-  /* Jump over the size */
-  data += 2;
-
   /* Now read the ES map */
-  es_map_base = data;
-  while (es_map_base + 4 <= data + es_map_length) {
-    guint8 stream_type = 0, stream_id = 0;
-    guint16 stream_info_length = 0;
+  {
+    GstByteReader es_map_br;
+    if (!gst_byte_reader_get_sub_reader (&br, &es_map_br, es_map_length))
+      goto fail_invalid;
 
-    stream_type = GST_READ_UINT8 (es_map_base);
-    es_map_base++;
-    stream_id = GST_READ_UINT8 (es_map_base);
-    es_map_base++;
-    stream_info_length = GST_READ_UINT16_BE (es_map_base);
-    es_map_base += 2;
-    /* Cap stream_info_length */
-    stream_info_length = MIN (data + es_map_length - es_map_base,
-        stream_info_length);
+    while (gst_byte_reader_get_remaining (&es_map_br) >= 4) {
+      guint8 stream_type = 0, stream_id = 0;
+      guint16 stream_info_length = 0;
 
-    GST_DEBUG_OBJECT (demux, "Stream type %02X with id %02X and %u bytes info",
-        stream_type, stream_id, stream_info_length);
-    if (G_LIKELY (stream_id != 0xbd))
-      demux->psm[stream_id] = stream_type;
-    else {
-      /* Ignore stream type for private_stream_1 and discover it looking at
-       * the stream data.
-       * Fixes demuxing some clips with lpcm that was wrongly declared as
-       * mpeg audio */
-      GST_DEBUG_OBJECT (demux, "stream type for private_stream_1 ignored");
+      if (!gst_byte_reader_get_uint8 (&es_map_br, &stream_type) ||
+          !gst_byte_reader_get_uint8 (&es_map_br, &stream_id) ||
+          !gst_byte_reader_get_uint16_be (&es_map_br, &stream_info_length))
+        break;
+
+      GST_DEBUG_OBJECT (demux,
+          "Stream type %02X with id %02X and %u bytes info", stream_type,
+          stream_id, stream_info_length);
+
+      if (G_LIKELY (stream_id != 0xbd))
+        demux->psm[stream_id] = stream_type;
+      else {
+        /* Ignore stream type for private_stream_1 and discover it looking at
+         * the stream data.
+         * Fixes demuxing some clips with lpcm that was wrongly declared as
+         * mpeg audio */
+        GST_DEBUG_OBJECT (demux, "stream type for private_stream_1 ignored");
+      }
+
+      /* FIXME: We could use the descriptors instead of skipping them */
+      if (!gst_byte_reader_skip (&es_map_br, stream_info_length))
+        break;
     }
-    es_map_base += stream_info_length;
   }
+  /* We ignore the 4-byte CRC at the end */
 
   gst_adapter_unmap (demux->adapter);
-  gst_adapter_flush (demux->adapter, length);
-  ADAPTER_OFFSET_FLUSH (length);
+  gst_adapter_flush (demux->adapter, psm_length);
+  ADAPTER_OFFSET_FLUSH (psm_length);
   return GST_FLOW_OK;
 
+fail_invalid:
+  GST_DEBUG_OBJECT (demux, "Failed to parse PSM. Skipping");
+  gst_adapter_unmap (demux->adapter);
+  gst_adapter_flush (demux->adapter, psm_length);
+  ADAPTER_OFFSET_FLUSH (psm_length);
+  return GST_FLOW_LOST_SYNC;
 psm_len_error:
   {
     GST_DEBUG_OBJECT (demux, "error in PSM length");
