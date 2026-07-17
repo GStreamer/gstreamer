@@ -1234,7 +1234,7 @@ again:
   if (!gst_vulkan_operation_add_frame_barrier (priv->exec, pic->dpb_buffer,
           VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
           VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR,
-          VK_ACCESS_2_VIDEO_ENCODE_READ_BIT_KHR,
+          VK_ACCESS_2_VIDEO_ENCODE_WRITE_BIT_KHR,
           VK_IMAGE_LAYOUT_VIDEO_ENCODE_DPB_KHR, NULL))
     goto reset_and_error;
 
