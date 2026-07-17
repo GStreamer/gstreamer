@@ -264,7 +264,7 @@ void gst_h274_dsc_verification_copy (GstH274DigitallySignedContentVerification *
     const GstH274DigitallySignedContentVerification * src_dsc_ver);
 
 /**
- * gst_h274_user_data_registered_free:
+ * gst_h274_user_data_registered_clear:
  * @rud: #GstH274RegisteredUserData structure holding registered user data to free
  *
  * Free resources allocated for registered user data SEI message
@@ -272,10 +272,10 @@ void gst_h274_dsc_verification_copy (GstH274DigitallySignedContentVerification *
  * Since: 1.30
  */
 GST_VIDEO_API
-void gst_h274_user_data_registered_free (GstH274RegisteredUserData * rud);
+void gst_h274_user_data_registered_clear (GstH274RegisteredUserData * rud);
 
 /**
- * gst_h274_user_data_unregistered_free:
+ * gst_h274_user_data_unregistered_clear:
  * @udu: #GstH274UserDataUnregistered structure holding unregistered user data to free
  *
  * Free resources allocated for user data unregistered SEI message
@@ -283,10 +283,10 @@ void gst_h274_user_data_registered_free (GstH274RegisteredUserData * rud);
  * Since: 1.30
  */
 GST_VIDEO_API
-void gst_h274_user_data_unregistered_free (GstH274UserDataUnregistered * udu);
+void gst_h274_user_data_unregistered_clear (GstH274UserDataUnregistered * udu);
 
 /**
- * gst_h274_dsc_initialization_free:
+ * gst_h274_dsc_initialization_clear:
  * @dsci: #GstH274DigitallySignedContentInitialization structure holding digitally signed content initialization data to free
  *
  * Free resources allocated for digitally signed content initialization SEI message
@@ -294,10 +294,10 @@ void gst_h274_user_data_unregistered_free (GstH274UserDataUnregistered * udu);
  * Since: 1.30
  */
 GST_VIDEO_API
-void gst_h274_dsc_initialization_free (GstH274DigitallySignedContentInitialization * dsci);
+void gst_h274_dsc_initialization_clear (GstH274DigitallySignedContentInitialization * dsci);
 
 /**
- * gst_h274_dsc_selection_free:
+ * gst_h274_dsc_selection_clear:
  * @dscs: #GstH274DigitallySignedContentSelection structure holding digitally signed content selection data to free
  *
  * Free resources allocated for digitally signed content selection SEI message
@@ -305,10 +305,10 @@ void gst_h274_dsc_initialization_free (GstH274DigitallySignedContentInitializati
  * Since: 1.30
  */
 GST_VIDEO_API
-void gst_h274_dsc_selection_free (GstH274DigitallySignedContentSelection * dscs);
+void gst_h274_dsc_selection_clear (GstH274DigitallySignedContentSelection * dscs);
 
 /**
- * gst_h274_dsc_verification_free:
+ * gst_h274_dsc_verification_clear:
  * @dscv: #GstH274DigitallySignedContentVerification structure holding digitally signed content verification data to free
  *
  * Free resources allocated for digitally signed content verification SEI message
@@ -316,4 +316,4 @@ void gst_h274_dsc_selection_free (GstH274DigitallySignedContentSelection * dscs)
  * Since: 1.30
  */
 GST_VIDEO_API
-void gst_h274_dsc_verification_free (GstH274DigitallySignedContentVerification * dscv);
+void gst_h274_dsc_verification_clear (GstH274DigitallySignedContentVerification * dscv);

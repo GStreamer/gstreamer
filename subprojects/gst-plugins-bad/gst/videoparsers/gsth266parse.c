@@ -266,15 +266,15 @@ gst_h266_parse_reset_frame (GstH266Parse * h266parse)
   gst_video_clear_user_data_unregistered (&h266parse->user_data_unregistered,
       FALSE);
   if (h266parse->dsc_initialization_state == GST_H266_PARSE_SEI_ACTIVE) {
-    gst_h274_dsc_initialization_free (&h266parse->dsc_initialization);
+    gst_h274_dsc_initialization_clear (&h266parse->dsc_initialization);
     h266parse->dsc_initialization_state = GST_H266_PARSE_SEI_EXPIRED;
   }
   if (h266parse->dsc_selection_state == GST_H266_PARSE_SEI_ACTIVE) {
-    gst_h274_dsc_selection_free (&h266parse->dsc_selection);
+    gst_h274_dsc_selection_clear (&h266parse->dsc_selection);
     h266parse->dsc_selection_state = GST_H266_PARSE_SEI_EXPIRED;
   }
   if (h266parse->dsc_verification_state == GST_H266_PARSE_SEI_ACTIVE) {
-    gst_h274_dsc_verification_free (&h266parse->dsc_verification);
+    gst_h274_dsc_verification_clear (&h266parse->dsc_verification);
     h266parse->dsc_verification_state = GST_H266_PARSE_SEI_EXPIRED;
   }
 }
@@ -655,7 +655,7 @@ gst_h266_parse_process_sei (GstH266Parse * h266parse, GstH266NalUnit * nalu)
             &sei.payload.user_data_unregistered);
         break;
       case GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION:
-        gst_h274_dsc_initialization_free (&h266parse->dsc_initialization);
+        gst_h274_dsc_initialization_clear (&h266parse->dsc_initialization);
         gst_h274_dsc_initialization_copy (&h266parse->dsc_initialization,
             &sei.payload.dsc_initialization);
         h266parse->dsc_initialization_state = GST_H266_PARSE_SEI_ACTIVE;
@@ -666,7 +666,7 @@ gst_h266_parse_process_sei (GstH266Parse * h266parse, GstH266NalUnit * nalu)
         h266parse->dsc_selection_state = GST_H266_PARSE_SEI_ACTIVE;
         break;
       case GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION:
-        gst_h274_dsc_verification_free (&h266parse->dsc_verification);
+        gst_h274_dsc_verification_clear (&h266parse->dsc_verification);
         gst_h274_dsc_verification_copy (&h266parse->dsc_verification,
             &sei.payload.dsc_verification);
         h266parse->dsc_verification_state = GST_H266_PARSE_SEI_ACTIVE;

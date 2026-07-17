@@ -32,7 +32,7 @@ gst_h274_registered_user_data_get_type (void)
   if (g_once_init_enter (&gst_h274_registered_user_data_type)) {
     GType type = g_boxed_type_register_static ("GstH274RegisteredUserData",
         (GBoxedCopyFunc) gst_h274_user_data_registered_copy,
-        (GBoxedFreeFunc) gst_h274_user_data_registered_free);
+        (GBoxedFreeFunc) gst_h274_user_data_registered_clear);
     g_once_init_leave (&gst_h274_registered_user_data_type, type);
   }
   return gst_h274_registered_user_data_type;
@@ -46,7 +46,7 @@ gst_h274_user_data_unregistered_get_type (void)
   if (g_once_init_enter (&gst_h274_user_data_unregistered_type)) {
     GType type = g_boxed_type_register_static ("GstH274UserDataUnregistered",
         (GBoxedCopyFunc) gst_h274_user_data_unregistered_copy,
-        (GBoxedFreeFunc) gst_h274_user_data_unregistered_free);
+        (GBoxedFreeFunc) gst_h274_user_data_unregistered_clear);
     g_once_init_leave (&gst_h274_user_data_unregistered_type, type);
   }
   return gst_h274_user_data_unregistered_type;
@@ -62,7 +62,7 @@ gst_h274_digitally_signed_content_initialization_get_type (void)
         g_boxed_type_register_static
         ("GstH274DigitallySignedContentInitialization",
         (GBoxedCopyFunc) gst_h274_dsc_initialization_copy,
-        (GBoxedFreeFunc) gst_h274_dsc_initialization_free);
+        (GBoxedFreeFunc) gst_h274_dsc_initialization_clear);
     g_once_init_leave (&gst_h274_dsc_init_type, type);
   }
   return gst_h274_dsc_init_type;
@@ -77,7 +77,7 @@ gst_h274_digitally_signed_content_selection_get_type (void)
     GType type =
         g_boxed_type_register_static ("GstH274DigitallySignedContentSelection",
         (GBoxedCopyFunc) gst_h274_dsc_selection_copy,
-        (GBoxedFreeFunc) gst_h274_dsc_selection_free);
+        (GBoxedFreeFunc) gst_h274_dsc_selection_clear);
     g_once_init_leave (&gst_h274_dsc_sel_type, type);
   }
   return gst_h274_dsc_sel_type;
@@ -93,7 +93,7 @@ gst_h274_digitally_signed_content_verification_get_type (void)
         g_boxed_type_register_static
         ("GstH274DigitallySignedContentVerification",
         (GBoxedCopyFunc) gst_h274_dsc_verification_copy,
-        (GBoxedFreeFunc) gst_h274_dsc_verification_free);
+        (GBoxedFreeFunc) gst_h274_dsc_verification_clear);
     g_once_init_leave (&gst_h274_dsc_ver_type, type);
   }
   return gst_h274_dsc_ver_type;
@@ -215,7 +215,7 @@ gst_h274_dsc_verification_copy (GstH274DigitallySignedContentVerification *
 }
 
 void
-gst_h274_user_data_registered_free (GstH274RegisteredUserData * rud)
+gst_h274_user_data_registered_clear (GstH274RegisteredUserData * rud)
 {
   g_free ((gpointer) rud->data);
   rud->data = NULL;
@@ -223,7 +223,7 @@ gst_h274_user_data_registered_free (GstH274RegisteredUserData * rud)
 }
 
 void
-gst_h274_user_data_unregistered_free (GstH274UserDataUnregistered * udu)
+gst_h274_user_data_unregistered_clear (GstH274UserDataUnregistered * udu)
 {
   g_free ((gpointer) udu->data);
   udu->data = NULL;
@@ -231,7 +231,7 @@ gst_h274_user_data_unregistered_free (GstH274UserDataUnregistered * udu)
 }
 
 void
-gst_h274_dsc_initialization_free (GstH274DigitallySignedContentInitialization *
+gst_h274_dsc_initialization_clear (GstH274DigitallySignedContentInitialization *
     dsci)
 {
   g_free (dsci->ref_substream_flag);
@@ -243,13 +243,13 @@ gst_h274_dsc_initialization_free (GstH274DigitallySignedContentInitialization *
 }
 
 void
-gst_h274_dsc_selection_free (GstH274DigitallySignedContentSelection * dscs)
+gst_h274_dsc_selection_clear (GstH274DigitallySignedContentSelection * dscs)
 {
   /* Nothing to free */
 }
 
 void
-gst_h274_dsc_verification_free (GstH274DigitallySignedContentVerification *
+gst_h274_dsc_verification_clear (GstH274DigitallySignedContentVerification *
     dscv)
 {
   g_free (dscv->signature);

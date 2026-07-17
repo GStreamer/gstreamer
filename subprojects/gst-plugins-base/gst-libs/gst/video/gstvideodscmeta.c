@@ -130,7 +130,7 @@ gst_video_dsc_initialization_meta_free (GstMeta * meta, GstBuffer * buffer)
 {
   GstVideoDSCInitializationMeta *dsc_meta =
       (GstVideoDSCInitializationMeta *) meta;
-  gst_h274_dsc_initialization_free (&dsc_meta->dsc_initialization);
+  gst_h274_dsc_initialization_clear (&dsc_meta->dsc_initialization);
 }
 
 const GstMetaInfo *
@@ -251,7 +251,7 @@ static void
 gst_video_dsc_selection_meta_free (GstMeta * meta, GstBuffer * buffer)
 {
   GstVideoDSCSelectionMeta *dsc_meta = (GstVideoDSCSelectionMeta *) meta;
-  gst_h274_dsc_selection_free (&dsc_meta->dsc_selection);
+  gst_h274_dsc_selection_clear (&dsc_meta->dsc_selection);
 }
 
 const GstMetaInfo *
@@ -353,7 +353,7 @@ static void
 gst_video_dsc_verification_meta_free (GstMeta * meta, GstBuffer * buffer)
 {
   GstVideoDSCVerificationMeta *dsc_meta = (GstVideoDSCVerificationMeta *) meta;
-  gst_h274_dsc_verification_free (&dsc_meta->dsc_verification);
+  gst_h274_dsc_verification_clear (&dsc_meta->dsc_verification);
 }
 
 const GstMetaInfo *

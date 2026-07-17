@@ -6210,19 +6210,20 @@ gst_h266_sei_clear (GstH266SEIMessage * sei)
   g_return_if_fail (sei != NULL);
 
   if (sei->payloadType == GST_H266_SEI_REGISTERED_USER_DATA) {
-    gst_h274_user_data_registered_free ((GstH274RegisteredUserData *) &
+    gst_h274_user_data_registered_clear ((GstH274RegisteredUserData *) &
         sei->payload.registered_user_data);
   } else if (sei->payloadType == GST_H266_SEI_USER_DATA_UNREGISTERED) {
-    gst_h274_user_data_unregistered_free (&sei->payload.user_data_unregistered);
+    gst_h274_user_data_unregistered_clear (&sei->
+        payload.user_data_unregistered);
   } else if (sei->payloadType ==
       GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_INITIALIZATION) {
-    gst_h274_dsc_initialization_free (&sei->payload.dsc_initialization);
+    gst_h274_dsc_initialization_clear (&sei->payload.dsc_initialization);
   } else if (sei->payloadType ==
       GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_SELECTION) {
-    gst_h274_dsc_selection_free (&sei->payload.dsc_selection);
+    gst_h274_dsc_selection_clear (&sei->payload.dsc_selection);
   } else if (sei->payloadType ==
       GST_H266_SEI_DIGITALLY_SIGNED_CONTENT_VERIFICATION) {
-    gst_h274_dsc_verification_free (&sei->payload.dsc_verification);
+    gst_h274_dsc_verification_clear (&sei->payload.dsc_verification);
   } else {
     GST_FIXME ("Unsupported SEI type");
   }

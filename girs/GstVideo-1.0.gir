@@ -767,7 +767,7 @@ preferred.</doc>
           <type name="guint8"/>
         </array>
       </field>
-      <method name="free" c:identifier="gst_h274_user_data_unregistered_free" version="1.30">
+      <method name="clear" c:identifier="gst_h274_user_data_unregistered_clear" version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h">Free resources allocated for user data unregistered SEI message</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h"/>
         <return-value transfer-ownership="none">
@@ -18123,6 +18123,19 @@ to automatically add #GstVideoMeta to the buffers.</doc>
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-sei.c">A collection of objects and methods to assist with SEI User Data Unregistered
 metadata in H.264 and H.265 streams.</doc>
     </docsection>
+    <function name="h274_dsc_initialization_clear" c:identifier="gst_h274_dsc_initialization_clear" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h">Free resources allocated for digitally signed content initialization SEI message</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="dsci" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h">#GstH274DigitallySignedContentInitialization structure holding digitally signed content initialization data to free</doc>
+          <type name="H274DigitallySignedContentInitialization" c:type="GstH274DigitallySignedContentInitialization*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="h274_dsc_initialization_copy" c:identifier="gst_h274_dsc_initialization_copy" version="1.30">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h">Copy DSC Initialization structure</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h"/>
@@ -18140,16 +18153,16 @@ metadata in H.264 and H.265 streams.</doc>
         </parameter>
       </parameters>
     </function>
-    <function name="h274_dsc_initialization_free" c:identifier="gst_h274_dsc_initialization_free" version="1.30">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h">Free resources allocated for digitally signed content initialization SEI message</doc>
+    <function name="h274_dsc_selection_clear" c:identifier="gst_h274_dsc_selection_clear" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h">Free resources allocated for digitally signed content selection SEI message</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h"/>
       <return-value transfer-ownership="none">
         <type name="none" c:type="void"/>
       </return-value>
       <parameters>
-        <parameter name="dsci" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h">#GstH274DigitallySignedContentInitialization structure holding digitally signed content initialization data to free</doc>
-          <type name="H274DigitallySignedContentInitialization" c:type="GstH274DigitallySignedContentInitialization*"/>
+        <parameter name="dscs" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h">#GstH274DigitallySignedContentSelection structure holding digitally signed content selection data to free</doc>
+          <type name="H274DigitallySignedContentSelection" c:type="GstH274DigitallySignedContentSelection*"/>
         </parameter>
       </parameters>
     </function>
@@ -18170,16 +18183,16 @@ metadata in H.264 and H.265 streams.</doc>
         </parameter>
       </parameters>
     </function>
-    <function name="h274_dsc_selection_free" c:identifier="gst_h274_dsc_selection_free" version="1.30">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h">Free resources allocated for digitally signed content selection SEI message</doc>
+    <function name="h274_dsc_verification_clear" c:identifier="gst_h274_dsc_verification_clear" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h">Free resources allocated for digitally signed content verification SEI message</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h"/>
       <return-value transfer-ownership="none">
         <type name="none" c:type="void"/>
       </return-value>
       <parameters>
-        <parameter name="dscs" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h">#GstH274DigitallySignedContentSelection structure holding digitally signed content selection data to free</doc>
-          <type name="H274DigitallySignedContentSelection" c:type="GstH274DigitallySignedContentSelection*"/>
+        <parameter name="dscv" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h">#GstH274DigitallySignedContentVerification structure holding digitally signed content verification data to free</doc>
+          <type name="H274DigitallySignedContentVerification" c:type="GstH274DigitallySignedContentVerification*"/>
         </parameter>
       </parameters>
     </function>
@@ -18200,16 +18213,16 @@ metadata in H.264 and H.265 streams.</doc>
         </parameter>
       </parameters>
     </function>
-    <function name="h274_dsc_verification_free" c:identifier="gst_h274_dsc_verification_free" version="1.30">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h">Free resources allocated for digitally signed content verification SEI message</doc>
+    <function name="h274_user_data_registered_clear" c:identifier="gst_h274_user_data_registered_clear" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h">Free resources allocated for registered user data SEI message</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h"/>
       <return-value transfer-ownership="none">
         <type name="none" c:type="void"/>
       </return-value>
       <parameters>
-        <parameter name="dscv" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h">#GstH274DigitallySignedContentVerification structure holding digitally signed content verification data to free</doc>
-          <type name="H274DigitallySignedContentVerification" c:type="GstH274DigitallySignedContentVerification*"/>
+        <parameter name="rud" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h">#GstH274RegisteredUserData structure holding registered user data to free</doc>
+          <type name="H274RegisteredUserData" c:type="GstH274RegisteredUserData*"/>
         </parameter>
       </parameters>
     </function>
@@ -18227,19 +18240,6 @@ metadata in H.264 and H.265 streams.</doc>
         <parameter name="src_rud" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h">Source User Data Registered structure</doc>
           <type name="H274RegisteredUserData" c:type="const GstH274RegisteredUserData*"/>
-        </parameter>
-      </parameters>
-    </function>
-    <function name="h274_user_data_registered_free" c:identifier="gst_h274_user_data_registered_free" version="1.30">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h">Free resources allocated for registered user data SEI message</doc>
-      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h"/>
-      <return-value transfer-ownership="none">
-        <type name="none" c:type="void"/>
-      </return-value>
-      <parameters>
-        <parameter name="rud" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gsth274.h">#GstH274RegisteredUserData structure holding registered user data to free</doc>
-          <type name="H274RegisteredUserData" c:type="GstH274RegisteredUserData*"/>
         </parameter>
       </parameters>
     </function>

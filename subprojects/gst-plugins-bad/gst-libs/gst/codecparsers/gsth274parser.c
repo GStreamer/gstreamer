@@ -237,7 +237,7 @@ gst_h274_parser_parse_dsci (GstH274DigitallySignedContentInitialization * dsci,
 error:
   GST_WARNING ("error parsing \"Digitally Signed Content Initialization\"");
 
-  gst_h274_dsc_initialization_free (dsci);
+  gst_h274_dsc_initialization_clear (dsci);
 
   return GST_H274_PARSER_ERROR;
 }
@@ -367,7 +367,7 @@ gst_h274_parser_parse_dscv (GstH274DigitallySignedContentVerification * dscv,
 error:
   GST_WARNING ("error parsing \"Digitally Signed Content Verification\"");
 
-  gst_h274_dsc_verification_free (dscv);
+  gst_h274_dsc_verification_clear (dscv);
 
   return GST_H274_PARSER_ERROR;
 }
