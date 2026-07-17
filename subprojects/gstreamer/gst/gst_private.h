@@ -91,6 +91,8 @@ struct _GstPluginPrivate {
   GstRegistry *registry;       /* Registry that this plugin belongs to */
 };
 
+/* Symbols with leading __ are reserved/UB in C, so we use _priv_gst */
+
 /* Private function for getting plugin features directly */
 G_GNUC_INTERNAL GList *
 _priv_gst_registry_get_features_for_plugin (GstRegistry * registry,
@@ -105,7 +107,6 @@ struct _GstMetaItem {
   GstMeta meta;
 };
 
-/* FIXME: could rename all priv_gst_* functions to __gst_* now */
 G_GNUC_INTERNAL  gboolean priv_gst_plugin_loading_have_whitelist (void);
 
 G_GNUC_INTERNAL  guint32  priv_gst_plugin_loading_get_whitelist_hash (void);
