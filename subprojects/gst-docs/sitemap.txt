@@ -131,6 +131,7 @@
 		deploying/windows.md
 		deploying/multiplatform-using-cerbero.md
 	contribute/index.md
+		contribute/developer-policy.md
 	additional/index.md
 		additional/splitup.md
 		additional/design/index.md
