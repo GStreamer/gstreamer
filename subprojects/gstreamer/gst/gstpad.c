@@ -5643,15 +5643,18 @@ sticky_changed (GstPad * pad, PadEvent * ev, gpointer user_data)
 static void
 push_changed_sticky_events_before (GstPad * pad, GstEvent * event)
 {
-  PushStickyData data = { GST_FLOW_OK, FALSE, event, pad->priv->peer_cookie };
-  GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PENDING_EVENTS);
-
   /* Push all sticky events before our current one
-   * that have changed */
+   * that have changed, looping and trying again if interrupted */
   do {
+    PushStickyData data = { GST_FLOW_OK, FALSE, event, pad->priv->peer_cookie };
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PENDING_EVENTS);
+
     events_foreach (pad, sticky_changed, &data);
-  } while (data.ret == GST_FLOW_PROBE_INTERRUPTED
-      && GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_PENDING_EVENTS));
+
+    if (data.ret != GST_FLOW_PROBE_INTERRUPTED) {
+      break;
+    }
+  } while (TRUE);
 }
 
 /* should be called with pad LOCK */

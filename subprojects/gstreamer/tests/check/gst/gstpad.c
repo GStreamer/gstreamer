@@ -2692,6 +2692,126 @@ GST_START_TEST (test_sticky_events)
 
 GST_END_TEST;
 
+typedef struct
+{
+  GstPad *srcpad;
+  GstPad *sinkpad;
+  gint caps_drops;
+  gboolean relinked;
+  gint push_done;
+} StickyRelinkData;
+
+static GstPadProbeReturn
+sticky_relink_drop_caps_probe (GstPad * pad, GstPadProbeInfo * info,
+    gpointer user_data)
+{
+  StickyRelinkData *data = user_data;
+  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
+
+  if (GST_EVENT_TYPE (event) != GST_EVENT_CAPS)
+    return GST_PAD_PROBE_OK;
+
+  /* the first caps push comes from the caps push in the test body, the
+   * second from the trigger push's own sticky check and the third from
+   * inside push_changed_sticky_events_before(). Re-linking there changes
+   * the peer cookie after that loop captured it */
+  if (g_atomic_int_add (&data->caps_drops, 1) + 1 == 3) {
+    gst_pad_unlink (pad, data->sinkpad);
+    fail_unless (gst_pad_link_full (pad, data->sinkpad,
+            GST_PAD_LINK_CHECK_NOTHING) == GST_PAD_LINK_OK);
+    data->relinked = TRUE;
+  }
+
+  return GST_PAD_PROBE_DROP;
+}
+
+static gboolean
+sticky_relink_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  gst_event_unref (event);
+  return TRUE;
+}
+
+static gpointer
+sticky_relink_push_trigger (gpointer user_data)
+{
+  StickyRelinkData *data = user_data;
+
+  gst_pad_push_event (data->srcpad,
+      gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+          gst_structure_new_empty ("test/serialized-trigger")));
+  g_atomic_int_set (&data->push_done, 1);
+
+  return NULL;
+}
+
+/* Test that re-linking a pad while its sticky events are being re-sent
+ * does not livelock the re-push loop in
+ * push_changed_sticky_events_before() */
+GST_START_TEST (test_sticky_events_relink_during_repush)
+{
+  GstCaps *caps;
+  StickyRelinkData data = { NULL, };
+  GThread *thread;
+  gint64 deadline;
+
+  data.srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  fail_unless (data.srcpad != NULL);
+  data.sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+  fail_unless (data.sinkpad != NULL);
+  gst_pad_set_event_function (data.sinkpad, sticky_relink_sink_event);
+  gst_pad_set_active (data.srcpad, TRUE);
+  gst_pad_set_active (data.sinkpad, TRUE);
+  fail_unless (GST_PAD_LINK_SUCCESSFUL (gst_pad_link (data.srcpad,
+              data.sinkpad)));
+
+  /* push the initial sticky events, all received downstream */
+  fail_unless (gst_pad_push_event (data.srcpad,
+          gst_event_new_stream_start ("test")));
+  caps = gst_caps_new_simple ("foo/bar", "rate", G_TYPE_INT, 44100, NULL);
+  fail_unless (gst_pad_push_event (data.srcpad, gst_event_new_caps (caps)));
+  gst_caps_unref (caps);
+  fail_unless (gst_pad_push_event (data.srcpad,
+          gst_event_new_segment (&dummy_segment)));
+
+  gst_pad_add_probe (data.srcpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      sticky_relink_drop_caps_probe, &data, NULL);
+
+  /* new caps, dropped by the probe. The pad now has a pending sticky
+   * event */
+  caps = gst_caps_new_simple ("foo/bar", "rate", G_TYPE_INT, 48000, NULL);
+  fail_unless (gst_pad_push_event (data.srcpad, gst_event_new_caps (caps)));
+  gst_caps_unref (caps);
+
+  /* pushing any serialized event now re-sends the pending caps and the
+   * probe re-links the pad during the re-send. The push must return */
+  thread =
+      g_thread_new ("sticky-relink-push", sticky_relink_push_trigger, &data);
+
+  deadline = g_get_monotonic_time () + 10 * G_USEC_PER_SEC;
+  while (!g_atomic_int_get (&data.push_done)) {
+    fail_unless (g_get_monotonic_time () < deadline,
+        "sticky event re-push livelocked after a mid-push re-link "
+        "(%d caps drops)", g_atomic_int_get (&data.caps_drops));
+    g_usleep (G_USEC_PER_SEC / 100);
+  }
+
+  g_thread_join (thread);
+
+  /* guard against the scenario silently not being exercised anymore if
+   * the sticky pushing code paths change */
+  fail_unless (data.relinked);
+  fail_unless (g_atomic_int_get (&data.caps_drops) >= 4,
+      "the pending caps was never re-pushed after the re-link");
+
+  gst_pad_set_active (data.srcpad, FALSE);
+  gst_pad_set_active (data.sinkpad, FALSE);
+  gst_object_unref (data.srcpad);
+  gst_object_unref (data.sinkpad);
+}
+
+GST_END_TEST;
+
 static GstFlowReturn next_return;
 
 static GstFlowReturn
@@ -3523,6 +3643,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_block_async_full_destroy_dispose);
   tcase_add_test (tc_chain, test_block_async_replace_callback_no_flush);
   tcase_add_test (tc_chain, test_sticky_events);
+  tcase_add_test (tc_chain, test_sticky_events_relink_during_repush);
   tcase_add_test (tc_chain, test_last_flow_return_push);
   tcase_add_test (tc_chain, test_last_flow_return_pull);
   tcase_add_test (tc_chain, test_flush_stop_inactive);
