@@ -25,6 +25,7 @@
 
 #include <string.h>
 
+#include <gst/base/gstbytereader.h>
 #include <gst/video/video.h>
 #include <gst/tag/tag.h>
 #include <gst/pbutils/pbutils.h>
@@ -1293,6 +1294,7 @@ gst_flups_demux_reset_psm (GstFluPSDemux * demux)
 static GstFlowReturn
 gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
 {
+  GstByteReader br;
   const guint8 *data;
   guint length;
   guint32 scr1, scr2;
@@ -1301,6 +1303,7 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
   guint64 scr_rate_d;
   GstClockTime new_time;
   guint avail = gst_adapter_available (demux->adapter);
+  guint8 b;
 
   GST_LOG ("parsing pack start");
 
@@ -1308,18 +1311,19 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
     goto need_more_data;
 
   data = gst_adapter_map (demux->adapter, PACK_START_SIZE);
+  gst_byte_reader_init (&br, data, PACK_START_SIZE);
 
   /* skip start code */
-  data += 4;
+  gst_byte_reader_skip_unchecked (&br, 4);
 
-  scr1 = GST_READ_UINT32_BE (data);
-  scr2 = GST_READ_UINT32_BE (data + 4);
+  scr1 = gst_byte_reader_get_uint32_be_unchecked (&br);
 
   /* fixed length to begin with, start code and two scr values */
-  length = 8 + 4;
+  length = 4 + 8;
 
   /* start parsing the stream */
-  if ((*data & 0xc0) == 0x40) {
+  /* MPEG2: first 2 bits of scr1 are '01' */
+  if ((scr1 & 0xc0000000) == 0x40000000) {
     guint32 scr_ext;
     guint32 next32;
     guint8 stuffing_bytes;
@@ -1330,6 +1334,10 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
     /* mpeg2 has more data */
     length += 2;
 
+    /* Peek scr2 at bytes 8-11 without advancing (next32 overlaps at bytes 10-13) */
+    if (!gst_byte_reader_peek_uint32_be (&br, &scr2))
+      goto fail_invalid;
+
     /* :2=01 ! scr:3 ! marker:1==1 ! scr:15 ! marker:1==1 ! scr:15 */
 
     /* check markers */
@@ -1339,9 +1347,8 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
     scr = ((guint64) scr1 & 0x38000000) << 3;
     scr |= ((guint64) scr1 & 0x03fff800) << 4;
     scr |= ((guint64) scr1 & 0x000003ff) << 5;
-    scr |= ((guint64) scr2 & 0xf8000000) >> 27;
-
     /* marker:1==1 ! scr_ext:9 ! marker:1==1 */
+    scr |= ((guint64) scr2 & 0xf8000000) >> 27;
     if (G_UNLIKELY ((scr2 & 0x04010000) != 0x04010000))
       goto lost_sync;
 
@@ -1357,9 +1364,14 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
     }
     /* SCR has been converted into units of 90Khz ticks to make it comparable
        to DTS/PTS, that also implies 1 tick rounding error */
-    data += 6;
+
+    /* Skip to byte 10 (scr2 peeks at bytes 8-11, next32 overlaps at bytes 10-13) */
+    if (!gst_byte_reader_skip (&br, 2))
+      goto fail_invalid;
+
     /* PMR:22 ! :2==11 ! reserved:5 ! stuffing_len:3 */
-    next32 = GST_READ_UINT32_BE (data);
+    if (!gst_byte_reader_get_uint32_be (&br, &next32))
+      goto fail_invalid;
     if (G_UNLIKELY ((next32 & 0x00000300) != 0x00000300))
       goto lost_sync;
 
@@ -1368,13 +1380,18 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
     stuffing_bytes = (next32 & 0x07);
     GST_LOG_OBJECT (demux, "stuffing bytes: %d", stuffing_bytes);
 
-    data += 4;
     length += stuffing_bytes;
     while (stuffing_bytes--) {
-      if (*data++ != 0xff)
+      if (!gst_byte_reader_get_uint8 (&br, &b))
+        goto fail_invalid;
+      if (b != 0xff)
         goto lost_sync;
     }
   } else {
+    /* MPEG-1 pack header */
+    if (!gst_byte_reader_get_uint32_be (&br, &scr2))
+      goto fail_invalid;
+
     GST_DEBUG ("Found MPEG1 stream");
     demux->is_mpeg2_pack = FALSE;
 
@@ -1520,6 +1537,13 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
   ADAPTER_OFFSET_FLUSH (length);
   return GST_FLOW_OK;
 
+fail_invalid:
+  GST_DEBUG_OBJECT (demux, "Failed to parse pack start. Skipping");
+  gst_adapter_unmap (demux->adapter);
+  gst_adapter_flush (demux->adapter, length);
+  ADAPTER_OFFSET_FLUSH (length);
+  return GST_FLOW_LOST_SYNC;
+
 lost_sync:
   {
     GST_DEBUG_OBJECT (demux, "lost sync");
@@ -1563,11 +1587,14 @@ static GstFlowReturn
 gst_flups_demux_parse_sys_head (GstFluPSDemux * demux)
 {
   guint16 length;
+  guint8 byte_val;
+  GstByteReader br;
   const guint8 *data;
 #ifndef GST_DISABLE_GST_DEBUG
   gboolean csps;
 #endif
 
+  /* Need at least 6 bytes for start code + length */
   if (gst_adapter_available (demux->adapter) < 6)
     goto need_more_data;
 
@@ -1580,6 +1607,10 @@ gst_flups_demux_parse_sys_head (GstFluPSDemux * demux)
   length = GST_READ_UINT16_BE (data);
   GST_DEBUG_OBJECT (demux, "length %d", length);
 
+  /* Minimum header_length is 6 (96 bits of fixed header after start code + length) */
+  if (G_UNLIKELY (length < 6))
+    goto sys_len_error;
+
   length += 6;
 
   gst_adapter_unmap (demux->adapter);
@@ -1588,27 +1619,34 @@ gst_flups_demux_parse_sys_head (GstFluPSDemux * demux)
 
   data = gst_adapter_map (demux->adapter, length);
 
+  gst_byte_reader_init (&br, data, length);
+
   /* skip start code and length */
-  data += 6;
+  if (!gst_byte_reader_skip (&br, 6))
+    goto fail_invalid;
 
   /* marker:1==1 ! rate_bound:22 | marker:1==1 */
-  if ((*data & 0x80) != 0x80)
+  if (!gst_byte_reader_get_uint8 (&br, &byte_val))
+    goto fail_invalid;
+  if ((byte_val & 0x80) != 0x80)
     goto marker_expected;
 
   {
     guint32 rate_bound;
+    guint8 b1, b2;
 
-    if ((data[2] & 0x01) != 0x01)
+    if (!gst_byte_reader_get_uint8 (&br, &b1) ||
+        !gst_byte_reader_get_uint8 (&br, &b2))
+      goto fail_invalid;
+    if ((b2 & 0x01) != 0x01)
       goto marker_expected;
 
-    rate_bound = ((guint32) data[0] & 0x7f) << 15;
-    rate_bound |= ((guint32) data[1]) << 7;
-    rate_bound |= ((guint32) data[2] & 0xfe) >> 1;
+    rate_bound = ((guint32) byte_val & 0x7f) << 15;
+    rate_bound |= ((guint32) b1) << 7;
+    rate_bound |= ((guint32) b2 & 0xfe) >> 1;
     rate_bound *= MPEG_MUX_RATE_MULT;
 
     GST_DEBUG_OBJECT (demux, "rate bound %u", rate_bound);
-
-    data += 3;
   }
 
   /* audio_bound:6==1 ! fixed:1 | constrained:1 */
@@ -1616,18 +1654,22 @@ gst_flups_demux_parse_sys_head (GstFluPSDemux * demux)
 #ifndef GST_DISABLE_GST_DEBUG
     guint8 audio_bound;
     gboolean fixed;
+#endif
 
+    if (!gst_byte_reader_get_uint8 (&br, &byte_val))
+      goto fail_invalid;
+
+#ifndef GST_DISABLE_GST_DEBUG
     /* max number of simultaneous audio streams active */
-    audio_bound = (data[0] & 0xfc) >> 2;
+    audio_bound = (byte_val & 0xfc) >> 2;
     /* fixed or variable bitrate */
-    fixed = (data[0] & 0x02) == 0x02;
+    fixed = (byte_val & 0x02) == 0x02;
     /* meeting constraints */
-    csps = (data[0] & 0x01) == 0x01;
+    csps = (byte_val & 0x01) == 0x01;
 
     GST_DEBUG_OBJECT (demux, "audio_bound %d, fixed %d, constrained %d",
         audio_bound, fixed, csps);
 #endif
-    data += 1;
   }
 
   /* audio_lock:1 | video_lock:1 | marker:1==1 | video_bound:5 */
@@ -1636,22 +1678,26 @@ gst_flups_demux_parse_sys_head (GstFluPSDemux * demux)
     gboolean audio_lock;
     gboolean video_lock;
     guint8 video_bound;
-
-    audio_lock = (data[0] & 0x80) == 0x80;
-    video_lock = (data[0] & 0x40) == 0x40;
 #endif
 
-    if ((data[0] & 0x20) != 0x20)
+    if (!gst_byte_reader_get_uint8 (&br, &byte_val))
+      goto fail_invalid;
+
+#ifndef GST_DISABLE_GST_DEBUG
+    audio_lock = (byte_val & 0x80) == 0x80;
+    video_lock = (byte_val & 0x40) == 0x40;
+#endif
+
+    if ((byte_val & 0x20) != 0x20)
       goto marker_expected;
 
 #ifndef GST_DISABLE_GST_DEBUG
     /* max number of simultaneous video streams active */
-    video_bound = (data[0] & 0x1f);
+    video_bound = (byte_val & 0x1f);
 
     GST_DEBUG_OBJECT (demux, "audio_lock %d, video_lock %d, video_bound %d",
         audio_lock, video_lock, video_bound);
 #endif
-    data += 1;
   }
 
   /* packet_rate_restriction:1 | reserved:7==0x7F */
@@ -1659,56 +1705,74 @@ gst_flups_demux_parse_sys_head (GstFluPSDemux * demux)
 #ifndef GST_DISABLE_GST_DEBUG
     gboolean packet_rate_restriction;
 #endif
-    if ((data[0] & 0x7f) != 0x7f)
+
+    if (!gst_byte_reader_get_uint8 (&br, &byte_val))
+      goto fail_invalid;
+
+    if ((byte_val & 0x7f) != 0x7f)
       goto marker_expected;
 #ifndef GST_DISABLE_GST_DEBUG
     /* only valid if csps is set */
     if (csps) {
-      packet_rate_restriction = (data[0] & 0x80) == 0x80;
+      packet_rate_restriction = (byte_val & 0x80) == 0x80;
 
       GST_DEBUG_OBJECT (demux, "packet_rate_restriction %d",
           packet_rate_restriction);
     }
 #endif
   }
-  data += 1;
 
   {
-    gint stream_count = (length - 12) / 3;
-    gint i;
+    guint stream_entries_length;
+    GstByteReader stream_br;
 
-    GST_DEBUG_OBJECT (demux, "number of streams: %d ", stream_count);
+    stream_entries_length = gst_byte_reader_get_remaining (&br);
+    GST_DEBUG_OBJECT (demux, "stream entries: number of entries %u, %u bytes",
+        (length - 12) / 3, stream_entries_length);
 
-    for (i = 0; i < stream_count; i++) {
+    if (!gst_byte_reader_get_sub_reader (&br, &stream_br,
+            stream_entries_length))
+      goto fail_invalid;
+
+    while (gst_byte_reader_get_remaining (&stream_br) >= 3) {
       guint8 stream_id;
 #ifndef GST_DISABLE_GST_DEBUG
       gboolean STD_buffer_bound_scale;
       guint16 STD_buffer_size_bound;
       guint32 buf_byte_size_bound;
 #endif
-      stream_id = *data++;
+
+      if (!gst_byte_reader_get_uint8 (&stream_br, &stream_id))
+        break;
       if (!(stream_id & 0x80))
         goto sys_len_error;
 
-      /* check marker bits */
-      if ((*data & 0xC0) != 0xC0)
-        goto no_placeholder_bits;
+      {
+        guint16 buffer_info;
+
+        if (!gst_byte_reader_get_uint16_be (&stream_br, &buffer_info))
+          break;
+
+        /* check marker bits */
+        if ((buffer_info & 0xC000) != 0xC000)
+          goto no_placeholder_bits;
+
 #ifndef GST_DISABLE_GST_DEBUG
-      STD_buffer_bound_scale = *data & 0x20;
-      STD_buffer_size_bound = ((guint16) (*data++ & 0x1F)) << 8;
-      STD_buffer_size_bound |= *data++;
+        STD_buffer_bound_scale = (buffer_info & 0x2000) != 0;
+        STD_buffer_size_bound = buffer_info & 0x1FFF;
 
-      if (STD_buffer_bound_scale == 0) {
-        buf_byte_size_bound = STD_buffer_size_bound * 128;
-      } else {
-        buf_byte_size_bound = STD_buffer_size_bound * 1024;
-      }
+        if (STD_buffer_bound_scale == 0) {
+          buf_byte_size_bound = STD_buffer_size_bound * 128;
+        } else {
+          buf_byte_size_bound = STD_buffer_size_bound * 1024;
+        }
 
-      GST_DEBUG_OBJECT (demux, "STD_buffer_bound_scale %d",
-          STD_buffer_bound_scale);
-      GST_DEBUG_OBJECT (demux, "STD_buffer_size_bound %d or %d bytes",
-          STD_buffer_size_bound, buf_byte_size_bound);
+        GST_DEBUG_OBJECT (demux, "STD_buffer_bound_scale %d",
+            STD_buffer_bound_scale);
+        GST_DEBUG_OBJECT (demux, "STD_buffer_size_bound %d or %d bytes",
+            STD_buffer_size_bound, buf_byte_size_bound);
 #endif
+      }
     }
   }
 
@@ -1718,6 +1782,13 @@ gst_flups_demux_parse_sys_head (GstFluPSDemux * demux)
   return GST_FLOW_OK;
 
   /* ERRORS */
+fail_invalid:
+  GST_DEBUG_OBJECT (demux, "Failed to parse system header. Skipping");
+  gst_adapter_unmap (demux->adapter);
+  gst_adapter_flush (demux->adapter, length);
+  ADAPTER_OFFSET_FLUSH (length);
+  return GST_FLOW_LOST_SYNC;
+
 marker_expected:
   {
     GST_DEBUG_OBJECT (demux, "expecting marker");
