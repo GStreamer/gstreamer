@@ -71,7 +71,7 @@ struct _GstKMSAllocatorClass {
   GstAllocatorClass parent_class;
 };
 
-GType gst_kms_allocator_get_type (void) G_GNUC_CONST;
+GType gst_kms_allocator_get_type (void);
 
 gboolean gst_is_kms_memory (GstMemory *mem);
 guint32 gst_kms_memory_get_fb_id (GstMemory *mem);

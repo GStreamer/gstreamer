@@ -31,7 +31,7 @@ typedef struct _GstCpuThrottlingClock GstCpuThrottlingClock;
 typedef struct _GstCpuThrottlingClockClass GstCpuThrottlingClockClass;
 typedef struct _GstCpuThrottlingClockPrivate GstCpuThrottlingClockPrivate;
 
-GType gst_cpu_throttling_clock_get_type (void) G_GNUC_CONST;
+GType gst_cpu_throttling_clock_get_type (void);
 
 #define GST_TYPE_CPU_THROTTLING_CLOCK (gst_cpu_throttling_clock_get_type ())
 #define GST_CPU_THROTTLING_CLOCK(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_CPU_THROTTLING_CLOCK, GstCpuThrottlingClock))

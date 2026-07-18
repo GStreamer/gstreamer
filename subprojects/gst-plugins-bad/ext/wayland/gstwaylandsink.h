@@ -83,7 +83,7 @@ struct _GstWaylandSinkClass
   GstVideoSinkClass parent;
 };
 
-GType gst_wayland_sink_get_type (void) G_GNUC_CONST;
+GType gst_wayland_sink_get_type (void);
 
 GST_ELEMENT_REGISTER_DECLARE (waylandsink);
 

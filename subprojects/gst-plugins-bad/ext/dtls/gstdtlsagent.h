@@ -61,7 +61,7 @@ struct _GstDtlsAgentClass {
     GstObjectClass parent_class;
 };
 
-GType gst_dtls_agent_get_type(void) G_GNUC_CONST;
+GType gst_dtls_agent_get_type(void);
 
 /*
  * Returns the certificate used by the agent.

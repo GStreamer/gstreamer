@@ -102,7 +102,7 @@ struct _GstTtmlRenderClass {
     GMutex       *pango_lock;
 };
 
-GType gst_ttml_render_get_type(void) G_GNUC_CONST;
+GType gst_ttml_render_get_type(void);
 
 G_END_DECLS
 

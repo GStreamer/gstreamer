@@ -43,9 +43,9 @@ G_BEGIN_DECLS
 #define RSN_IS_VIDEODEC(obj)            (G_TYPE_CHECK_INSTANCE_TYPE((obj),RSN_TYPE_VIDEODEC))
 #define RSN_IS_VIDEODEC_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE((klass),RSN_TYPE_VIDEODEC))
 
-GType           rsn_dec_get_type           (void) G_GNUC_CONST;
-GType           rsn_audiodec_get_type      (void) G_GNUC_CONST;
-GType           rsn_videodec_get_type      (void) G_GNUC_CONST;
+GType           rsn_dec_get_type           (void);
+GType           rsn_audiodec_get_type      (void);
+GType           rsn_videodec_get_type      (void);
 
 typedef struct _RsnDec             RsnDec;
 typedef struct _RsnDecClass        RsnDecClass;
