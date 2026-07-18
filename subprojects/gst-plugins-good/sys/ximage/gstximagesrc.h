@@ -41,7 +41,7 @@ G_BEGIN_DECLS
 typedef struct _GstXImageSrc GstXImageSrc;
 typedef struct _GstXImageSrcClass GstXImageSrcClass;
 
-GType gst_ximage_src_get_type (void) G_GNUC_CONST;
+GType gst_ximage_src_get_type (void);
 
 struct _GstXImageSrc
 {
