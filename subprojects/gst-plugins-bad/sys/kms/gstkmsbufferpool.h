@@ -75,7 +75,7 @@ struct _GstKMSBufferPoolClass
   GstVideoBufferPoolClass parent_class;
 };
 
-GType gst_kms_buffer_pool_get_type (void) G_GNUC_CONST;
+GType gst_kms_buffer_pool_get_type (void);
 
 GstBufferPool *gst_kms_buffer_pool_new (void);
 

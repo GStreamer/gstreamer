@@ -99,7 +99,7 @@ typedef struct _GstTestSrcBin GstTestSrcBin;
 typedef struct _GstTestSrcBinClass GstTestSrcBinClass;
 
 /* *INDENT-OFF* */
-GType gst_test_src_bin_get_type (void) G_GNUC_CONST;
+GType gst_test_src_bin_get_type (void);
 /* *INDENT-ON* */
 
 struct _GstTestSrcBinClass

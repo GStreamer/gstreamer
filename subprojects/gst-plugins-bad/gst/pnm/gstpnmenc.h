@@ -50,7 +50,7 @@ struct _GstPnmencClass
   GstVideoEncoderClass parent;
 };
 
-GType gst_pnmenc_get_type (void) G_GNUC_CONST;
+GType gst_pnmenc_get_type (void);
 GST_ELEMENT_REGISTER_DECLARE (pnmenc);
 
 G_END_DECLS

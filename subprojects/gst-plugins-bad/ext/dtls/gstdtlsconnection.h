@@ -94,7 +94,7 @@ struct _GstDtlsConnectionClass {
     GstObjectClass parent_class;
 };
 
-GType gst_dtls_connection_get_type(void) G_GNUC_CONST;
+GType gst_dtls_connection_get_type(void);
 
 gboolean gst_dtls_connection_start(GstDtlsConnection *, gboolean is_client, GError **err);
 void gst_dtls_connection_check_timeout(GstDtlsConnection *);

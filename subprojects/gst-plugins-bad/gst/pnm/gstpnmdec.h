@@ -53,7 +53,7 @@ struct _GstPnmdecClass
   GstVideoDecoderClass parent_class ;
 };
 
-GType gst_pnmdec_get_type (void) G_GNUC_CONST;
+GType gst_pnmdec_get_type (void);
 GST_ELEMENT_REGISTER_DECLARE (pnmdec);
 G_END_DECLS
 

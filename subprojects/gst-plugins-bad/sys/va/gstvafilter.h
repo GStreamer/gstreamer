@@ -58,10 +58,10 @@ enum {
 };
 
 #define GST_TYPE_VA_SCALE_METHOD gst_va_scale_method_get_type()
-GType gst_va_scale_method_get_type (void) G_GNUC_CONST;
+GType gst_va_scale_method_get_type (void);
 
 #define GST_TYPE_VA_INTERPOLATION_METHOD gst_va_interpolation_method_get_type()
-GType gst_va_interpolation_method_get_type (void) G_GNUC_CONST;
+GType gst_va_interpolation_method_get_type (void);
 
 typedef struct _GstVaSample GstVaSample;
 struct _GstVaSample

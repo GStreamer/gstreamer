@@ -60,7 +60,7 @@ struct _GstDtlsCertificateClass {
     GObjectClass parent_class;
 };
 
-GType gst_dtls_certificate_get_type(void) G_GNUC_CONST;
+GType gst_dtls_certificate_get_type(void);
 
 /* internal */
 GstDtlsCertificateInternalCertificate _gst_dtls_certificate_get_internal_certificate(GstDtlsCertificate *);

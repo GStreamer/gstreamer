@@ -32,8 +32,7 @@ typedef struct _GstBz2dec GstBz2dec;
 typedef struct _GstBz2decClass GstBz2decClass;
 
 GType
-gst_bz2dec_get_type (void)
-    G_GNUC_CONST;
+gst_bz2dec_get_type (void);
 
 GST_ELEMENT_REGISTER_DECLARE (bz2dec);
 

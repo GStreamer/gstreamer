@@ -114,7 +114,7 @@ struct _GstKMSSinkClass {
   GstVideoSinkClass parent_class;
 };
 
-GType gst_kms_sink_get_type (void) G_GNUC_CONST;
+GType gst_kms_sink_get_type (void);
 GST_ELEMENT_REGISTER_DECLARE (kmssink);
 G_END_DECLS
 
