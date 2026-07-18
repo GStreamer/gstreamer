@@ -110,7 +110,7 @@ struct _GstGdkAnimationIterClass {
   GdkPixbufAnimationIterClass   parent_class;
 };
 
-GType gst_gdk_animation_iter_get_type (void) G_GNUC_CONST;
+GType gst_gdk_animation_iter_get_type (void);
 
 G_END_DECLS
 
