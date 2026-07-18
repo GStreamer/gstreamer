@@ -100,7 +100,7 @@ struct _GstTextRenderClass {
     GstElementClass parent_class;
 };
 
-GType gst_text_render_get_type(void) G_GNUC_CONST;
+GType gst_text_render_get_type(void);
 
 G_END_DECLS
 
