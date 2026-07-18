@@ -67,7 +67,7 @@ struct _GESSmartMixer
 };
 
 G_GNUC_INTERNAL
-GType ges_smart_mixer_get_type (void) G_GNUC_CONST;
+GType ges_smart_mixer_get_type (void);
 
 G_GNUC_INTERNAL GstPad *
 ges_smart_mixer_get_mixer_pad (GESSmartMixer *self, GstPad **mixerpad);

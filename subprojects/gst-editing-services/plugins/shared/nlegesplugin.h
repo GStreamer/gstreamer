@@ -33,7 +33,7 @@ typedef struct
 
 /* *INDENT-OFF* */
 #define NLE_TYPE_QUERY_PARENT_NLE_OBJECT nle_query_parent_nle_object_get_type ()
-GType nle_query_parent_nle_object_get_type (void) G_GNUC_CONST;
+GType nle_query_parent_nle_object_get_type (void);
 /* *INDENT-ON* */
 
 void nle_query_parent_nle_object_release (NleQueryParentNleObject * query);
