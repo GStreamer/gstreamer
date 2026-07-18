@@ -49,7 +49,7 @@ struct _GESStructureParserClass
   GObjectClass parent_class;
 };
 
-G_GNUC_INTERNAL GType ges_structure_parser_get_type (void) G_GNUC_CONST;
+G_GNUC_INTERNAL GType ges_structure_parser_get_type (void);
 
 G_GNUC_INTERNAL GError * ges_structure_parser_get_error (GESStructureParser *self);
 G_GNUC_INTERNAL void ges_structure_parser_parse_string (GESStructureParser *self, const gchar *string, gboolean is_symbol);

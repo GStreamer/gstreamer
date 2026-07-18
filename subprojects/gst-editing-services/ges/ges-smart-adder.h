@@ -61,7 +61,7 @@ struct _GESSmartAdder
 };
 
 GES_API
-GType         ges_smart_adder_get_type (void) G_GNUC_CONST;
+GType         ges_smart_adder_get_type (void);
 
 GES_API
 GstElement*   ges_smart_adder_new      (GESTrack *track);

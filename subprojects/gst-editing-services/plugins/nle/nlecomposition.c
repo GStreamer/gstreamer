@@ -249,7 +249,7 @@ typedef struct
 
 /* *INDENT-OFF* */
 #define NLE_TYPE_COMPOSITION_QUERY_NEEDS_INITIALIZATION_SEEK nle_composition_query_needs_initialization_seek_get_type ()
-GType nle_composition_query_needs_initialization_seek_get_type (void) G_GNUC_CONST;
+GType nle_composition_query_needs_initialization_seek_get_type (void);
 G_DEFINE_BOXED_TYPE (NleCompositionQueryNeedsInitializationSeek,
     nle_composition_query_needs_initialization_seek,
     g_atomic_rc_box_acquire, g_atomic_rc_box_release);
@@ -266,7 +266,7 @@ typedef struct
 
 /* *INDENT-OFF* */
 #define NLE_TYPE_COMPOSITION_QUERY_PIPELINE_POSITION nle_composition_query_pipeline_position_get_type ()
-GType nle_composition_query_pipeline_position_get_type (void) G_GNUC_CONST;
+GType nle_composition_query_pipeline_position_get_type (void);
 G_DEFINE_BOXED_TYPE (NleCompositionQueryPipelinePosition,
     nle_composition_query_pipeline_position,
     g_atomic_rc_box_acquire, g_atomic_rc_box_release);
