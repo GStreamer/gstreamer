@@ -2517,8 +2517,10 @@ gst_mikey_message_new_from_caps (GstCaps * caps)
   guint8 byte;
   guint8 enc_alg;
   guint8 auth_alg;
-  guint8 enc_key_length;
-  guint8 auth_key_length;
+  guint8 enc_key_length = 0;
+  guint8 auth_key_length = 0;
+  guint8 salt_key_length = 0;
+  gsize key_length = 0;
   GstStructure *s;
   GstMapInfo info;
   GstBuffer *srtpkey;
@@ -2567,6 +2569,15 @@ gst_mikey_message_new_from_caps (GstCaps * caps)
     return NULL;
   }
 
+  /* By default the whole srtp-key buffer is used as the master key. When a
+   * cipher is present and the buffer is larger than the encryption key, the
+   * trailing bytes are the session salt. */
+  key_length = gst_buffer_get_size (srtpkey);
+  if (enc_key_length > 0 && key_length > enc_key_length) {
+    salt_key_length = key_length - enc_key_length;
+    key_length = enc_key_length;
+  }
+
   msg = gst_mikey_message_new ();
   /* unencrypted MIKEY message, we send this over TLS so this is allowed */
   gst_mikey_message_set_info (msg, GST_MIKEY_VERSION, GST_MIKEY_TYPE_PSK_INIT,
@@ -2589,6 +2600,11 @@ gst_mikey_message_new_from_caps (GstCaps * caps)
       /* encryption key length */
       gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_ENC_KEY_LEN, 1,
           &enc_key_length);
+      if (salt_key_length) {
+        /* session salt key length */
+        gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_SALT_KEY_LEN,
+            1, &salt_key_length);
+      }
     }
     if (auth) {
       /* HMAC-SHA1 or NULL in case of GCM */
@@ -2617,11 +2633,15 @@ gst_mikey_message_new_from_caps (GstCaps * caps)
   /* make unencrypted KEMAC */
   payload = gst_mikey_payload_new (GST_MIKEY_PT_KEMAC);
   gst_mikey_payload_kemac_set (payload, GST_MIKEY_ENC_NULL, GST_MIKEY_MAC_NULL);
-  /* add the key in KEMAC */
+  /* add the key||salt in KEMAC */
   pkd = gst_mikey_payload_new (GST_MIKEY_PT_KEY_DATA);
   gst_buffer_map (srtpkey, &info, GST_MAP_READ);
-  gst_mikey_payload_key_data_set_key (pkd, GST_MIKEY_KD_TEK, info.size,
+  gst_mikey_payload_key_data_set_key (pkd, GST_MIKEY_KD_TEK, key_length,
       info.data);
+  if (salt_key_length) {
+    gst_mikey_payload_key_data_set_salt (pkd, salt_key_length,
+        info.data + key_length);
+  }
   gst_buffer_unmap (srtpkey, &info);
   /* add optional SPI/MKI
    * See: https://www.rfc-editor.org/rfc/rfc3830.html#section-6.14
