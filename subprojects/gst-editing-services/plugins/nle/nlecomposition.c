@@ -637,9 +637,6 @@ _maybe_begin_setup_new_stack_span (NleComposition * comp,
   if (!gst_trace_format_is_enabled (fmt))
     return;
 
-  GST_ERROR_OBJECT (comp,
-      "Starting new stack setup span for reason %s (seqnum:%u)",
-      UPDATE_PIPELINE_REASONS[reason], seqnum);
   comp->priv->setup_new_stack_span_id =
       gst_trace_span_begin (fmt, GST_TRACE_VALUES (TRACE_VALUES (comp, reason,
               seqnum, GST_CLOCK_TIME_NONE)));
