@@ -80,7 +80,7 @@ struct _GstValidateOverride
 };
 
 GST_VALIDATE_API
-GType gst_validate_override_get_type (void) G_GNUC_CONST;
+GType gst_validate_override_get_type (void);
 
 /* TYPE MACROS */
 #ifndef __GI_SCANNER__
