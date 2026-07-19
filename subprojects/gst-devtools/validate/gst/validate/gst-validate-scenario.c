@@ -4078,7 +4078,11 @@ _execute_check_pad_caps (GstValidateScenario * scenario,
   GstStructure *expected_struct = NULL;
   GstCaps *expected = NULL, *current_caps = NULL;
   const gchar *pad_name, *comparison_type =
-      gst_structure_get_string (action->structure, "comparision-mode");
+      gst_structure_get_string (action->structure, "comparison-type");
+
+  if (!comparison_type)
+    comparison_type =
+        gst_structure_get_string (action->structure, "comparision-mode");
 
   DECLARE_AND_GET_PIPELINE (scenario, action);
 
@@ -4105,7 +4109,7 @@ _execute_check_pad_caps (GstValidateScenario * scenario,
   if (!comparison_type || !g_strcmp0 (comparison_type, "intersect")) {
     REPORT_UNLESS (expected, done, "Can't intersect with NULL expected caps");
     REPORT_UNLESS (gst_caps_can_intersect (expected, current_caps), done,
-        "Caps can't intesect. Expected: \n - %" GST_PTR_FORMAT "\nGot:\n - %"
+        "Caps can't intersect. Expected: \n - %" GST_PTR_FORMAT "\nGot:\n - %"
         GST_PTR_FORMAT, expected, current_caps);
   } else if (!g_strcmp0 (comparison_type, "equal")) {
     REPORT_UNLESS ((expected == NULL && current_caps == NULL)
@@ -4113,7 +4117,7 @@ _execute_check_pad_caps (GstValidateScenario * scenario,
         "Caps do not match. Expected: %" GST_PTR_FORMAT " got %" GST_PTR_FORMAT,
         expected, current_caps);
   } else {
-    REPORT_UNLESS (FALSE, done, "Invalid caps `comparision-type`: '%s'",
+    REPORT_UNLESS (FALSE, done, "Invalid caps `comparison-type`: '%s'",
         comparison_type);
   }
 

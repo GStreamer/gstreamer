@@ -1,0 +1,31 @@
+meta,
+    handles-states=true,
+    args={
+        "videotestsrc num-buffers=1 ! video/x-raw,format=I420,width=320,height=240,framerate=30/1 ! fakesink name=sink",
+    },
+    expected-issues={
+        [expected-issue,
+            level=critical,
+            issue-id=scenario::execution-error,
+            details="Caps do not match.*"],
+        [expected-issue,
+            level=critical,
+            issue-id=scenario::execution-error,
+            details="Caps do not match.*"],
+    }
+
+pause;
+
+check-current-pad-caps, target-element-name=sink, pad=sink, expected-caps=[video/x-raw, width=320]
+check-current-pad-caps,
+    target-element-name=sink,
+    pad=sink,
+    expected-caps=[video/x-raw, width=320],
+    comparison-type=equal
+check-current-pad-caps,
+    target-element-name=sink,
+    pad=sink,
+    expected-caps=[video/x-raw, width=320],
+    comparision-mode=equal
+
+stop;
