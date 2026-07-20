@@ -213,6 +213,7 @@ alloc_failed:
 buffer_too_small:
   {
     GST_ERROR_OBJECT (self, "dumb buffer too small to store an image.");
+    gst_memory_unref (dma_mem);
     return GST_FLOW_ERROR;
   }
 }
