@@ -79,6 +79,8 @@ static gboolean gst_rtp_qcelp_depay_setcaps (GstRTPBaseDepayload * depayload,
 static GstBuffer *gst_rtp_qcelp_depay_process (GstRTPBaseDepayload * depayload,
     GstRTPBuffer * rtp);
 
+static void clear_packets (GstRtpQCELPDepay * depay);
+
 #define gst_rtp_qcelp_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpQCELPDepay, gst_rtp_qcelp_depay,
     GST_TYPE_RTP_BASE_DEPAYLOAD);
@@ -123,15 +125,9 @@ gst_rtp_qcelp_depay_init (GstRtpQCELPDepay * rtpqcelpdepay)
 static void
 gst_rtp_qcelp_depay_finalize (GObject * object)
 {
-  GstRtpQCELPDepay *depay;
+  GstRtpQCELPDepay *depay = GST_RTP_QCELP_DEPAY (object);
 
-  depay = GST_RTP_QCELP_DEPAY (object);
-
-  if (depay->packets != NULL) {
-    g_ptr_array_foreach (depay->packets, (GFunc) gst_buffer_unref, NULL);
-    g_ptr_array_free (depay->packets, TRUE);
-    depay->packets = NULL;
-  }
+  clear_packets (depay);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
