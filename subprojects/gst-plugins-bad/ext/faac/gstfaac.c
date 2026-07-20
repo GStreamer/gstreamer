@@ -43,6 +43,39 @@
 
 #include "gstfaac.h"
 
+#if FAAC_VERSION_MAJOR >= 1
+/* Legacy constant names for the faac >= 2.0 enums (same numeric values);
+ * MAIN/SSR/LTP only remain so the mpegversion=2 profile switch compiles. */
+#define MAIN  1
+#define LOW   FAAC_OBJ_LOW
+#define SSR   3
+#define LTP   4
+#define MPEG4 FAAC_MPEG4
+#define MPEG2 FAAC_MPEG2
+#define SHORTCTL_NORMAL  FAAC_SHORTCTL_NORMAL
+#define SHORTCTL_NOSHORT FAAC_SHORTCTL_NOSHORT
+#define SHORTCTL_NOLONG  FAAC_SHORTCTL_NOLONG
+
+/* Minimal wrappers keeping the faacEnc* call shape used below */
+static int
+faacEncEncode (faac_encoder * handle, gint32 * input, unsigned int samples,
+    unsigned char *output, unsigned int output_size)
+{
+  guint32 bytes_written = 0;
+
+  if (faac_encoder_encode (handle, input, samples, output, output_size,
+          &bytes_written) < 0)
+    return -1;
+  return bytes_written;
+}
+
+static void
+faacEncClose (faac_encoder * handle)
+{
+  faac_encoder_close (&handle);
+}
+#endif /* FAAC_VERSION_MAJOR >= 1 */
+
 #define SAMPLE_RATES " 8000, " \
                     "11025, " \
                     "12000, " \
@@ -70,20 +103,28 @@
     "width = (int) 32, "
     "rate = (int) [ 8000, 96000], " "channels = (int) [ 1, 6]"
 #endif
+#if FAAC_VERSION_MAJOR >= 1
+/* faac >= 2.0 only implements the LC object type */
+#define MPEG4_PROFILES "lc"
+#define MPEG2_PROFILES "lc"
+#else
+#define MPEG4_PROFILES "{ main, lc, ssr, ltp }"
+#define MPEG2_PROFILES "{ main, lc }"
+#endif
 #define SRC_CAPS \
     "audio/mpeg, "                     \
     "mpegversion = (int) 4, "   \
     "channels = (int) [ 1, 6 ], "      \
     "rate = (int) {" SAMPLE_RATES "}, "   \
     "stream-format = (string) { adts, raw }, " \
-    "base-profile = (string) { main, lc, ssr, ltp }, " \
+    "base-profile = (string) " MPEG4_PROFILES ", " \
     "framed = (boolean) true; " \
     "audio/mpeg, "                     \
     "mpegversion = (int) 2, "   \
     "channels = (int) [ 1, 6 ], "      \
     "rate = (int) {" SAMPLE_RATES "}, "   \
     "stream-format = (string) { adts, raw }, " \
-    "profile = (string) { main, lc }," \
+    "profile = (string) " MPEG2_PROFILES "," \
     "framed = (boolean) true; "
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -466,6 +507,78 @@ gst_faac_negotiate (GstFaac * faac)
 static gboolean
 gst_faac_open_encoder (GstFaac * faac, GstAudioInfo * info)
 {
+#if FAAC_VERSION_MAJOR >= 1
+  faac_encoder *handle = NULL;
+  faac_params params;
+  faac_encoder_info enc_info;
+  guint maxbitrate;
+
+  g_return_val_if_fail (info->rate != 0 && info->channels != 0, FALSE);
+
+  /* clean up in case of re-configure */
+  gst_faac_close_encoder (faac);
+
+  if (faac_params_init (&params) < 0)
+    goto setup_failed;
+
+  params.sample_rate = info->rate;
+  params.num_channels = info->channels;
+  params.mpeg_version = (faac->mpegversion == 4) ? FAAC_MPEG4 : FAAC_MPEG2;
+  params.object_type = FAAC_OBJ_LOW;
+  params.joint_mode = faac->midside ? FAAC_JOINT_MS : FAAC_JOINT_NONE;
+  params.use_lfe = FALSE;
+  params.use_tns = faac->tns;
+  params.input_format = (enum faac_input_format) faac->format;
+  params.output_format =
+      faac->outputformat ? FAAC_STREAM_ADTS : FAAC_STREAM_RAW;
+  params.short_control = (enum faac_shortctl_mode) faac->shortctl;
+  /* default 0 to start with, libfaac chooses based on bitrate */
+  params.bandwidth = 0;
+
+  if (faac->brtype == VBR) {
+    params.bit_rate = 0;
+    params.quant_quality = faac->quality;
+  } else if (faac->brtype == ABR) {
+    params.bit_rate = faac->bitrate / info->channels;
+    params.quant_quality = 0;
+
+    /* check, warn and correct if the max bitrate for the given samplerate is
+     * exceeded. Maximum of 6144 bit for a channel */
+    maxbitrate =
+        (unsigned int) (6144.0 * (double) info->rate / (double) 1024.0 + .5);
+    if (params.bit_rate > maxbitrate) {
+      GST_ELEMENT_WARNING (faac, RESOURCE, SETTINGS, (NULL),
+          ("bitrate %u exceeds maximum allowed bitrate of %u for samplerate %d. "
+              "Setting bitrate to %u", params.bit_rate, maxbitrate,
+              info->rate, maxbitrate));
+      params.bit_rate = maxbitrate;
+    }
+  }
+
+  if (faac_encoder_open (&params, &handle) < 0)
+    goto setup_failed;
+
+  faac->handle = handle;
+
+  enc_info.struct_size = sizeof (enc_info);
+  if (faac_encoder_get_info (handle, &enc_info) < 0)
+    goto setup_failed;
+
+  faac->samples = enc_info.frame_samples;
+  faac->bytes = enc_info.max_output_bytes;
+
+  GST_DEBUG_OBJECT (faac, "faac needs samples %d, output size %d",
+      faac->samples, faac->bytes);
+
+  /* let's see what really happened,
+   * note that this may not really match desired rate */
+  GST_DEBUG_OBJECT (faac, "average bitrate: %u kbps",
+      (enc_info.bit_rate + 500) / 1000 * info->channels);
+  GST_DEBUG_OBJECT (faac, "quantization quality: %u", enc_info.quant_quality);
+  GST_DEBUG_OBJECT (faac, "bandwidth: %u Hz", enc_info.bandwidth);
+
+  return TRUE;
+#else
   faacEncHandle *handle;
   faacEncConfiguration *conf;
   guint maxbitrate;
@@ -534,6 +647,7 @@ gst_faac_open_encoder (GstFaac * faac, GstAudioInfo * info)
   GST_DEBUG_OBJECT (faac, "bandwidth: %d Hz", conf->bandWidth);
 
   return TRUE;
+#endif /* FAAC_VERSION_MAJOR >= 1 */
 
   /* ERRORS */
 setup_failed:
@@ -570,11 +684,28 @@ gst_faac_configure_source_pad (GstFaac * faac, GstAudioInfo * info)
 
     /* get the config string */
     GST_DEBUG_OBJECT (faac, "retrieving decoder info");
+#if FAAC_VERSION_MAJOR >= 1
+    {
+      /* library-owned buffer, valid until close; must not be freed */
+      const guint8 *asc = NULL;
+      guint32 asc_len = 0;
+
+      if (faac_encoder_asc (faac->handle, &asc, &asc_len) < 0) {
+        gst_caps_unref (srccaps);
+        goto invalid_codec_data;
+      }
+      config = (guint8 *) asc;
+      config_len = asc_len;
+    }
+#else
     faacEncGetDecoderSpecificInfo (faac->handle, &config, &config_len);
+#endif
 
     if (!gst_codec_utils_aac_caps_set_level_and_profile (srccaps, config,
             config_len)) {
+#if FAAC_VERSION_MAJOR < 1
       free (config);
+#endif
       gst_caps_unref (srccaps);
       goto invalid_codec_data;
     }
@@ -593,7 +724,9 @@ gst_faac_configure_source_pad (GstFaac * faac, GstAudioInfo * info)
       gst_buffer_unref (codec_data);
     }
 
+#if FAAC_VERSION_MAJOR < 1
     free (config);
+#endif
   } else {
     const gchar *profile;
 
