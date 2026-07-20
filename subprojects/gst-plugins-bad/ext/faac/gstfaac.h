@@ -25,6 +25,11 @@
 
 #include <faac.h>
 
+/* faac < 2.0 (legacy faacEnc* API) does not define version macros */
+#ifndef FAAC_VERSION_MAJOR
+#define FAAC_VERSION_MAJOR 0
+#endif
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_FAAC \
@@ -64,7 +69,11 @@ struct _GstFaac {
            midside;
 
   /* FAAC object */
+#if FAAC_VERSION_MAJOR >= 1
+  faac_encoder *handle;
+#else
   faacEncHandle handle;
+#endif
 };
 
 struct _GstFaacClass {

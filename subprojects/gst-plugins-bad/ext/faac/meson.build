@@ -16,7 +16,7 @@ plugin_sources += {
 }
 
 faac_dep = cc.find_library('faac', required : get_option('faac'))
-have_faac_h = cc.has_header_symbol('faac.h', 'faacEncOpen')
+have_faac_h = cc.has_header_symbol('faac.h', 'faacEncOpen') or cc.has_header_symbol('faac.h', 'faac_encoder_open')
 if not have_faac_h and get_option('faac').enabled()
   error('faac plugin enabled: found libfaac, but not faac.h')
 endif
