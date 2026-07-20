@@ -526,7 +526,10 @@ gst_wl_window_new_toplevel_full (GstWlDisplay * display,
     struct wl_output *wl_output = NULL;
     if (output_name) {
       output = gst_wl_display_get_output_by_name (priv->display, output_name);
-      wl_output = gst_wl_output_get_wl_output (output);
+      if (output)
+        wl_output = gst_wl_output_get_wl_output (output);
+      else
+        GST_WARNING_OBJECT (self, "Output '%s' not found", output_name);
     }
 
     zwp_fullscreen_shell_v1_present_surface (fullscreen_shell,
